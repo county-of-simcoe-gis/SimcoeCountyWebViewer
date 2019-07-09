@@ -1,68 +1,74 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# Simcoe County OpenLayers Map Viewer
 
-## Available Scripts
+## Live beta site can be found [here](https://opengis.simcoe.ca/public)
 
-In the project directory, you can run:
+The goal of this project is to replace [this viewer](https://maps.simcoe.ca/public) using an open source environment. The existing viewer is built using the ESRI 3.x JS api/DOJO with the Web App Builder and ArcGIS Server.
 
-### `npm start`
+This app is built using React, OpenLayers and GeoServer. Many components are configurable to point to your own WMS/WFS, XYZ services. Some components use a custom rest api, such as the search and property report.
 
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+**GeoServer Server Rest API end points need to be enabled for this app to work!**
 
-The page will reload if you make edits.<br>
-You will also see any lint errors in the console.
+It's built using a framework to easily create your own tools and themes (instructions below) using the provided templates. Control what layers, tools and themes are loaded using the config at the root of the src folder.
 
-### `npm test`
+The Table of Contents (layers tab) utilizes groups in GeoServer.
 
-Launches the test runner in the interactive watch mode.<br>
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Heads up. This project is <b>not</b> complete and missing many components but the "core" framework and design is in place. New functionality will be posted to the beta site above.
 
-### `npm run build`
+Contributions are welcome. Even if you only clone it and add tools to your own project, please share them back and I'll integrate them if useful.
 
-Builds the app for production to the `build` folder.<br>
-It correctly bundles React in production mode and optimizes the build for the best performance.
+This app works in conjunction with these supporting projects.
 
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
+1. [WebApi](https://github.com/county-of-simcoe-gis/SimcoeCountyWebApi)
+2. [Feedback](https://github.com/county-of-simcoe-gis/SimcoeCountyFeedback)
+3. [GeoServerLayerInfo](https://github.com/county-of-simcoe-gis/SimcoeCountyGeoServerLayerInfo)
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+![](https://opengis.simcoe.ca/public/demo.gif)
 
-### `npm run eject`
+## Getting Started
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Prerequisites
 
-Instead, it will copy all the configuration files and the transitive dependencies (Webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+```
+Node JS
+```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+### Installing
 
-## Learn More
+```
+In the src directory, type `npm install` in the terminal.<br>
+In the src directory, type `npm start` in the terminal.
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Deployment
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+In the project diretory, type `npm run build` in the terminal. Details can be found with [Create React App](https://github.com/facebook/create-react-app)
 
-### Code Splitting
+## To create a new tool
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
+1. Create new directory for tool in 'src/sidebar/components/tools/yourToolName'
+2. Copy template files into the previous directory from 'src/componentTemplate/ToolComponent.jsx' and 'src/componentTemplate/toolComponent.css
+3. Rename the files to your component name (case sentive)
+4. Add tool to the main config in 'src/config.json'. Copy existing tool text in the config, for an example.
 
-### Analyzing the Bundle Size
+## To create a new theme
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
+1. Create new directory for theme in 'src/sidebar/components/theme/yourThemeName'
+2. Copy template files into the previous directory from 'src/componentTemplate/ThemeComponent.jsx' and 'src/componentTemplate/themeComponent.css
+3. Rename the files to your component name (case sentive)
+4. Add theme to the main config in 'src/config.json'. Copy existing theme text in the config, for an example.
 
-### Making a Progressive Web App
+## Built With
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
+- [React](https://reactjs.org/) - The web framework used
+- [OpenLayers](https://openlayers.org/) - Mapping framework
+- [GeoServer](http://geoserver.org/) - Backend Map Server
 
-### Advanced Configuration
+## Authors
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
+- **Al Proulx** - _Initial work_ - [Al Proulx](https://github.com/iquitwow)
 
-### Deployment
+## License
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
-
-### `npm run build` fails to minify
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details

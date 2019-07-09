@@ -1,0 +1,77 @@
+{
+  "themeColor": "#ececec",
+  "expandInitialList": false,
+  "popupWidth": 280,
+  "layers": [
+      {
+          "label": " Residential",
+          "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Themes_Dynamic/MapServer",
+          "layerId": 19,
+          "checked": true,
+          "imageFieldName": "IMAGE_URL",
+          "hiddenFields":  ["MUNI","MLSNO"],
+          "featureReport": {
+              "nameFieldName": "MLSNO",
+              "municipalityFieldName": "MUNI",
+              "typeId": "SC_Properties For Sale"
+          }
+
+      },
+
+      {
+          "label": "Condos",
+          "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Themes_Dynamic/MapServer",
+          "layerId": 20,
+          "checked": false,
+          "imageFieldName": "IMAGE_URL",
+          "hiddenFields":  ["MUNI","MLSNO"],
+          "featureReport": {
+              "nameFieldName": "MLSNO",
+              "municipalityFieldName": "MUNI",
+              "typeId": "SC_Properties For Sale"
+          }
+      },
+
+      {
+          "label": "Commercial",
+          "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Themes_Dynamic/MapServer",
+          "layerId": 21,
+          "checked": false,
+          "imageFieldName": "IMAGE_URL",
+          "hiddenFields":  ["MUNI","MLSNO"],
+          "featureReport": {
+              "nameFieldName": "MLSNO",
+              "municipalityFieldName": "MUNI",
+              "typeId": "SC_Properties For Sale"
+          }
+      },
+
+      {
+          "label": "Farm",
+          "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Themes_Dynamic/MapServer",
+          "layerId": 22,
+          "checked": false,
+          "imageFieldName": "IMAGE_URL",
+          "hiddenFields":  ["MUNI","MLSNO"],
+          "featureReport": {
+              "nameFieldName": "MLSNO",
+              "municipalityFieldName": "MUNI",
+              "typeId": "SC_Properties For Sale"
+          }
+      },
+
+      {
+          "label": "Vacant Land",
+          "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Themes_Dynamic/MapServer",
+          "layerId": 23,
+          "checked": false,
+          "imageFieldName": "IMAGE_URL",
+          "hiddenFields":  ["MUNI","MLSNO"],
+          "featureReport": {
+              "nameFieldName": "MLSNO",
+              "municipalityFieldName": "MUNI",
+              "typeId": "SC_Properties For Sale"
+          }
+      }
+  ]
+}

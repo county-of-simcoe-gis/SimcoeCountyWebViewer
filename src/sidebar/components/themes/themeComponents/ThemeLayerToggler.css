@@ -1,0 +1,32 @@
+.sc-theme-layer-toggler-container{
+  margin-top: 5px;
+  margin-left: 5px;
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.sc-theme-layer-container{
+  display: table;
+  margin-top: 5px;
+  margin-left: 5px;
+  width: 95%;
+}
+
+.sc-theme-layer-toggler-label{
+  /* display: table-cell; */
+  font-size: 10pt;
+  width: 70%;
+}
+
+.sc-theme-layer-toggler-symbol{
+  width: 5%;
+  display: table-cell;
+  vertical-align: bottom;
+  text-align: center;
+}
+
+.sc-theme-layer-toggler-count{
+  font-size: 8pt;
+  /* width: 5px; */
+  color: #ababab;
+}

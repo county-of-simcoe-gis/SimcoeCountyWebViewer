@@ -1,0 +1,42 @@
+.sc-base-layers-container{
+  padding-bottom: 5px;
+}
+
+.sc-base-layers-controls{
+  display: table;
+  margin-top: 5px;
+  margin-left: 5px;
+  margin-bottom: 15px;
+  width: 95%;
+}
+
+.sc-base-layers-label{
+  display: table-cell;
+  font-size: 10pt;
+  width: 70%;
+}
+
+.sc-base-layers-slider-container{
+  display: table-cell;
+  width: 30%;
+  font-size: 7pt;
+  text-align: center;
+}
+
+.sc-base-layers-transparency{
+  position: absolute;
+  right: 37px;
+  top: 47px;
+  
+  user-select: none;
+  color: #ababab;
+}
+
+.sc-base-layers-legend{
+  margin: 5px;
+}
+
+.sc-base-layers-legend-img {
+  max-width: 100%;
+  height: auto;
+}

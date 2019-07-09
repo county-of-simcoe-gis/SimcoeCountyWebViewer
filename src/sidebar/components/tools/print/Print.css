@@ -1,0 +1,51 @@
+.sc-print-container{
+  padding: 10px;
+}
+
+.sc-print-map-title-input{
+  width: 100%;
+  height: 30px;
+  margin-bottom: 5px;
+}
+
+.sc-print-button{
+  float: right;
+  width: 100px;
+  font-size: 12pt;
+}
+
+.sc-print-advanced-options-collapsible{
+  height: 30px;
+  width: 205px;
+  background-color: #c9e7f9;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  user-select: none;
+  line-height: 30px;
+  padding-left: 36px;
+  background-image: url(./images/settings.png), url(./images/down.png);
+  background-position-y: center, center;
+  background-repeat: no-repeat, no-repeat;
+  background-position-x: 5px, 218px;
+}
+
+.sc-print-advanced-options-collapsible.open{
+  background-image: url(./images/settings.png), url(./images/collapsed.png);
+}
+
+.sc-print-advanced-options-content-outer{
+  margin-left: -35px;
+}
+
+.sc-print-advanced-options-force-scale-input{
+  width: 75px;
+  height: 20px;
+  margin-bottom: 5px;
+}
+
+.sc-print-loading{
+  display: inline-flex;
+  position: absolute;
+  left: 264px;
+  top: 332px;
+}

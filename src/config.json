@@ -1,0 +1,51 @@
+{
+  "includeAppStats": true,
+  "appStatsUrl": "https://opengis.simcoe.ca/api/appStats/",
+  "parcelLayer": {
+    "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
+    "rollNumberFieldName": "ARN"
+  },
+
+  "sidebarToolComponents": [
+    {
+      "id": 1,
+      "name": "Measure",
+      "componentName": "Measure",
+      "description": "This tool will allow for the measurement of distance and areas in various units.",
+      "imageName": "measure.png"
+    },
+    {
+      "id": 2,
+      "name": "Coordinates",
+      "componentName": "Coordinates",
+      "description": "Get coordinates throughout the map in a variety of different coordinate systems.",
+      "imageName": "coordinates.png"
+    },
+    {
+      "id": 3,
+      "name": "Print",
+      "componentName": "Print",
+      "description": "This tool allows users to print their map view in a variety of formats such as pdf and jpeg.",
+      "imageName": "print.png"
+    }
+  ],
+
+  "sidebarThemeComponents": [
+    {
+      "id": 1,
+      "name": "Solid Waste Facilities",
+      "componentName": "SolidWasteFacilities",
+      "description": "Provides information about waste facilities, and information as to where to purchase bag tags.",
+      "imageName": "solidWasteFacilities.png",
+      "config": "./configSolidWasteFacilities.json"
+    },
+    {
+      "id": 2,
+      "name": "Forestry",
+      "componentName": "Forestry",
+      "description": "View County Forests and Recreation features, conservation, provincial and municipal parks.",
+      "imageName": "forestry.png",
+      "config": "./configForestry.json"
+    }
+  ]
+}

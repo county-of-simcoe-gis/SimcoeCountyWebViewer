@@ -1,0 +1,74 @@
+.sc-popup-header{
+    height: 25px;
+    padding-top: 6px;
+    background: linear-gradient(to bottom, #3980CC 0%,#2865A2 100%);
+    border-bottom: 2px solid #E7A614;
+    color: #FFF !important;
+    line-height: 20px;
+    padding-left: 6px;
+    cursor: default;
+    font-size: 15px;
+    border-radius: 3px !important;
+    
+}
+
+.sc-popup-header-close-button{
+  z-index: 500;
+    /* position: absolute;
+    top: 2px;
+    cursor: pointer;
+    background: url(../dijit/images/popup.png) no-repeat; */
+}
+
+@media only screen and (max-width: 770px) {
+  .sc-property-report-click-more-info {
+      width: 60%  !important;
+  }
+
+  .sc-property-report-click-close{
+    width: 37% !important;
+  }
+  .ol-popup {
+    position: absolute;
+    background-color: white;
+    /* padding: 15px 25px 15px 15px; */
+    border: 1px solid #cccccc;
+    bottom: 0px;
+    top: unset;
+    right: 0px;
+    left: -50px;
+    border-radius: 3px !important;
+    width: 100%;
+    max-width: none !important;
+  }
+
+  .ol-popup-content {
+    max-width: none;
+    width: 100%;  
+  }
+
+  .ol-selectable {
+    position: absolute;
+    left: 50px !important;
+    top: 238px !important;
+    right: 0px !important;
+    bottom: 0px;
+    width: 100%;
+  }
+    .ol-selectable.hidden{
+      bottom: -1000px;
+    }
+
+  .ol-popup-content{
+    position: relative;
+    width: 100%;
+    max-width: none !important;
+    z-index: 1;
+    padding: 6px !important;
+    background-color: #FFFFFF !important;
+    overflow: scroll;
+    /* max-height: 320px !important; */
+    /* min-height: 50px !important; */
+  }
+}
+
