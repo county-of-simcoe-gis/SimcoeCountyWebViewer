@@ -22,7 +22,7 @@ This app works in conjunction with these supporting projects.
 2. [Feedback](https://github.com/county-of-simcoe-gis/SimcoeCountyFeedback)
 3. [GeoServerLayerInfo](https://github.com/county-of-simcoe-gis/SimcoeCountyGeoServerLayerInfo)
 
-![](https://opengis.simcoe.ca/public/demo.gif)
+![](demo.gif)
 
 ## Getting Started
 
