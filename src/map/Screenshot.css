@@ -1,0 +1,68 @@
+.sc-screenshot-container{
+  bottom: 45px;
+  /* left: 375px; */
+  left: 451px;
+  position: absolute;
+  text-align: center;
+  cursor: pointer;
+  padding: 3px !important;
+  padding-left: 5px !important;
+  padding-right: 5px !important;
+  background-color: rgba(255, 255, 255, 0.5);
+  border: 1px solid #949494;
+  border-radius: 3px;
+  box-shadow: 0 0 10px 0px;
+  z-index: 100 !important;
+
+}
+  .sc-screenshot-container.slidein {
+      transform: translateX(-381px);
+      transition: transform 300ms ease-in;
+  }
+  .sc-screenshot-container.slideout {
+      transform: translateX(-76px);
+      transition: transform 300ms ease-in;
+  }
+
+.sc-screenshot-tooltip{
+  width: 100px;
+}
+@media only screen and (max-width: 770px) {
+
+.sc-screenshot-container{
+  display: none;
+  /* top: 61px;
+  left: 10px;
+  height: 37px;
+  width: 37px;
+  position: absolute; */
+}
+
+  .sc-screenshot-container-slideout {
+      -webkit-transition: none !important;
+      -moz-transition: none !important;
+      -o-transition: none !important;
+      transition: none !important;
+      transform: none !important;
+  }
+
+  .sc-screenshot-container-slidein {
+      -webkit-transition: none !important;
+      -moz-transition: none !important;
+      -o-transition: none !important;
+      transition: none !important;
+      transform: none !important;
+  }
+}
+
+@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+  /* IE10+ CSS styles go here */
+  .sc-screenshot-tooltip{
+    display: none;
+    /* position: fixed !important;
+    z-index: 1000000 !important;
+    margin-bottom: 1000px !important;
+    margin-top: 0px !important; */
+  }
+
+}

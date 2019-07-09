@@ -1,0 +1,105 @@
+.sc-map-footer-scale{
+    /* color: #808080; */
+    color: black; 
+    text-shadow: white 0.1em 0.1em 0.2em;
+    padding-top: 3px;
+    margin-top: 0px;
+    font-size: 8pt;
+    text-align: center
+}
+
+.sc-map-footer-scale-only{
+  color: black;
+  text-shadow: white 0.1em 0.1em 0.4em;
+  font-size: 8pt;
+  text-align: center;
+  right: 6px;
+  bottom: 25px;
+  position: absolute;
+  width: 100px;
+}
+
+.sc-map-footer-tools-button-bar {
+  right: 5px;
+  bottom: 40px;
+  height: 37px;
+  width: 190px;
+  position: absolute;
+  font-size: 10px;
+  text-align: center;
+  padding: 4px;
+}
+
+  .sc-map-footer-tools-button-bar a {
+      color: #fff;
+      padding: 4px 5px;
+      display: inline-block;
+      padding-right: 7px;
+      padding-left: 7px;
+      border-radius: 5px;
+      text-decoration: none;
+  }
+
+      .sc-map-footer-tools-button-bar a:hover {
+          background-color: #4974a9;
+      }
+
+.sc-map-footer-tools-button-bar-icons {
+  background-color: rgba(0,0,0,0.25);
+  border-radius: 5px;
+  color: #fff;
+  height: 45px;
+  display: inline-block;
+  cursor: pointer;
+}
+
+  .sc-map-footer-tools-button-bar-icons:hover {
+      background-color: rgba(0,0,0,0.5);
+  }
+
+.sc-map-footer-tools-button-bar-title {
+  font-size: 12px;
+  color: #808080;
+}
+
+.sc-map-footer-tools-button-bar-scale {
+  color: #808080;
+  padding-top: 3px;
+  margin-top: 2px;
+}
+
+.sc-map-footer-tools-white-label {
+  color: #fff !important;
+}
+
+#sc-map-footer-tools-help-link {
+  display: none;
+}
+
+@media only screen and (max-width: 770px) {
+
+  #sc-map-footer-tools-help-link {
+      display: inline-block;
+  }
+
+  .sc-map-footer-tools-button-bar-title {
+      display: none;
+  }
+
+  .sc-map-footer-tools-button-bar-scale {
+      display: none;
+  }
+
+  .sc-map-footer-tools-button-bar-icons {
+      height: 31px;
+  }
+
+  .sc-map-footer-tools-link-text {
+      display: none;
+  }
+
+  .sc-map-footer-tools-button-bar{
+    bottom: 7px;
+    right: 0px;
+  }
+}

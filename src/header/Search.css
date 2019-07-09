@@ -1,0 +1,124 @@
+#sc-search-textbox{
+    height: 35px;
+    width: 100%;
+    font-family: Verdana,Arial,sans-serif;
+    font-size: 22px;
+    width: 100%;
+    padding-left: 7px;
+    box-shadow: none;
+    /* background: url(./images/magnify.png) 100% 50% / auto no-repeat scroll padding-box border-box rgb(255, 255, 255); */
+  display: table-cell;
+}
+
+    #sc-search-textbox:focus {
+        border: 1px solid #F9C280 !important;
+    }
+
+
+.sc-search-icon-initial{
+    position: absolute;
+    right: 20px;
+    top: 16px;
+}
+
+    .sc-search-icon-initial-hidden{
+        display: none;   
+    }
+
+.sc-search-icon-active{
+    position: absolute;
+    right: 27px;
+    top: 15px; 
+    cursor: pointer;
+}
+    .sc-search-icon-active-hidden{
+        display: none;   
+    }
+
+.sc-search-highlight-words{
+    font-weight: bold !important;
+    background: none !important;
+}
+
+.sc-search-item{
+    font-size: 16px;
+    width: 97%;
+    padding: 6px;
+    border-bottom: 1px solid #e5e5e5;
+    min-width: 450px;
+    cursor: pointer;
+    font-family: Verdana,Arial,sans-serif;
+}
+
+.sc-search-item-highlighted {
+    font-size: 16px;
+    width: 97%;
+    padding: 6px;
+    border-bottom: 1px solid #e5e5e5;
+    min-width: 450px;
+    cursor: pointer;
+    border: 1px solid #F9C280 !important;
+    background-color: #428bca;
+    font-family: Verdana,Arial,sans-serif;
+}
+.sc-search-menu{
+    position: absolute;
+    /* top: 100%; */
+    /* left: 0px; */
+    z-index: 99999999;
+    display: block;
+    right: auto;
+    float: left;
+    background-color: white;
+    cursor: pointer;
+    
+}
+
+.sc-search-item-left{
+    width: 31px;
+    float: left;
+    margin-top: 5px;
+}
+
+.sc-search-item-content{
+    margin-left: 16px;
+}
+
+.sc-search-item-sub-content{
+    font-size: 10px;
+}
+
+.sc-search-popup-content-button{
+    width:100%;
+    margin-bottom: 5px;
+}
+/* MOBILE */
+@media only screen and (max-width: 770px) {
+    #sc-search-textbox{
+        height: 35px;
+        width: 100%;
+        font-family: Verdana,Arial,sans-serif;
+        font-size: 22px;
+        width: 100%;
+        padding-left: 7px;
+        box-shadow: none;
+        background: url(./images/magnify.png) 100% 50% / auto no-repeat scroll padding-box border-box rgb(255, 255, 255);
+    
+    }
+
+    .sc-search-icon-initial{
+        display: none;   
+    }
+
+    .sc-search-icon-initial-hidden{
+        display: none;   
+    }
+
+    .sc-search-icon-active{
+        display: none;  
+    }
+        .sc-search-icon-active-hidden{
+            display: none;   
+        }
+
+}

@@ -1,0 +1,149 @@
+#sc-basemap-main-container{
+    left: auto;
+    top: 56px;
+    right: 7px;
+    height: 33px;
+    position: absolute;
+    background-color: #fff;
+    border: 1px solid #CCC;
+    padding: 4px;
+    opacity: 0.9;
+    border-radius: 4px;
+    display: table;
+    z-index: 0;    
+}
+    #sc-basemap-main-container:hover{
+        opacity: 1;
+    }
+#sc-basemap-imagery-slider-container .rc-slider-mark{
+    top: -23px;
+}
+#sc-basemap-imagery-slider-container .rc-slider-mark-text{
+    color: #337ab7 !important;
+    text-decoration: underline;
+    cursor: pointer !important;
+    -webkit-user-select: none; /* Chrome all / Safari all */
+    -moz-user-select: none; /* Firefox all */
+    -ms-user-select: none; /* IE 10+ */
+    user-select: none;
+}
+    #sc-basemap-imagery-slider-container:hover{
+        opacity: 1;
+    }
+
+.sc-basemap-imagery-slider-container{
+    right: 107px;
+    width: 78px;
+    height: 280px;
+    top: 100px;
+    background-color: #fff;
+    border-radius: 4px;
+    position: absolute;
+    user-select: none;
+    opacity: 0.9;
+}
+
+.sc-basemap-collapse-button{
+    display: table-cell;
+    background-image: url(./images/tab-close.png);
+    background-position: center center;
+    background-repeat: no-repeat;
+    color: #999;
+    min-width: 20px !important;
+    cursor: pointer;
+    border-right: 1px solid #ccc;
+}
+    .sc-basemap-collapse-button.closed{
+        background-image: url(./images/tab-open.png);
+    }
+.sc-basemap-imagery{
+    display: table-cell;
+    padding-left: 5px;
+    width: 83px;
+}
+
+.sc-basemap-imagery-button{
+    width: 69px;
+}
+
+.sc-basemap-topo-button{
+    width: 69px;
+}
+
+.sc-basemap-topo{
+    display: table-cell;
+    padding-left: 5px;
+    width: 83px;
+}
+
+.sc-basemap-arrow{
+    width: 12px;
+    height: 32px;
+    float: right;
+    background-image: url(./images/arrow-down.png) !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+}
+
+.sc-basemap-topo-container{
+    right: 8px;
+    width: 92px;
+    /* height: 280px; */
+    top: 100px;
+    background-color: #fff;
+    border-radius: 4px;
+    position: absolute;
+    user-select: none;
+    opacity: 0.9;
+    font-size: 9pt;
+}
+
+.sc-basemap-topo-item-container{
+    text-align: center;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 5px;
+    user-select: none;
+    font-weight: bold;
+}
+
+    .sc-basemap-topo-item-container.active{
+        background: linear-gradient(to bottom, rgba(240,249,255,1) 0%,rgb(191, 214, 228) 100%);
+        border: 1px solid #90b5d5;
+    }
+
+.sc-basemap-topo-image{
+    width: 70px;
+    border: 1px solid #CCC;
+    /* margin-left: 4px; */
+}
+
+.sc-basemap-streets-label{
+  display: block;
+  font-size : 10pt;
+  margin-left: 11px;
+  padding-bottom: 5px;
+  padding-top: 7px;
+}
+
+.sc-basemap-streets-checkbox{
+  width: 13px;
+  height: 13px;
+  padding: 0;
+  margin:0;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+  *overflow: hidden;
+  transform: scale(1.1, 1.1);
+}
+
+@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+    .sc-basemap-main-container{
+
+        /* right: 20px; */
+   
+    }
+    .sc-basemap-imagery-slider-container{
+        right: 75px;
+    }   
+}

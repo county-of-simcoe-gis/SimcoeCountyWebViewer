@@ -1,0 +1,36 @@
+.sc-mymaps-popup-container{
+  font-size: 12px;
+}
+
+.sc-mymaps-popup-label-input {
+  width: 246px;
+  height: 15px;
+  padding: 5px;
+  font-size: 16px;
+  color: #367CC5;
+  border-radius: 3px;
+  outline: none;
+  border: 1px solid #CECECE;
+  margin-top: 5px;
+}
+
+.sc-mymaps-popup-footer-button{
+  width: 30%;
+  margin-right: 5px;
+}
+
+.sc-mymaps-footer-buttons-container{
+  padding-top: 4px;
+  text-align: center;  
+}
+
+.sc-mymaps-footer-buttons-img{
+  padding-right: 5px;
+}
+
+@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+  .sc-mymaps-popup-footer-button{
+    width: 30%;
+    margin-right: 5px;
+  }
+}
