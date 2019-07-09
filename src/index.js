@@ -1,7 +1,7 @@
 // import 'react-app-polyfill/ie11';
 import React from "react";
 import ReactDOM from "react-dom";
-import "./Index.css";
+import "./index.css";
 import * as serviceWorker from "./serviceWorker";
 import App from "./App";
 
