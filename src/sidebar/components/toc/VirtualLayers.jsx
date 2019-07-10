@@ -61,6 +61,9 @@ class VirtualLayers extends Component {
   render() {
     const { items, getRef, height } = this.props;
 
+    // MOBILE TWEEK
+    let mobileAdjustment = -1;
+    if (window.innerWidth <= 400) mobileAdjustment = 400 - window.innerWidth;
     return (
       <List
         id="sc-toc-virtual-layers"
@@ -68,7 +71,7 @@ class VirtualLayers extends Component {
         rowHeight={this.getRowHeight}
         rowRenderer={this.renderRow}
         rowCount={items.length}
-        width={360}
+        width={mobileAdjustment !== -1 ? 360 - mobileAdjustment : 360}
         height={height}
         style={{ outline: "none" }}
       />
