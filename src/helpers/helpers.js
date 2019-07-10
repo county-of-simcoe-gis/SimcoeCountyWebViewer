@@ -181,7 +181,10 @@ export function showMessage(title = "Info", messageText = "Message", color = "gr
   var existingMsg = document.getElementById(domId);
   if (existingMsg !== undefined && existingMsg !== null) existingMsg.remove();
 
-  const message = ReactDOM.render(<ShowMessage id={domId} key={domId} title={title} message={messageText} color={color} />, document.getElementById("sc-sidebar-message-container"));
+  const message = ReactDOM.render(
+    <ShowMessage id={domId} key={domId} title={title} message={messageText} color={color} />,
+    document.getElementById("sc-sidebar-message-container")
+  );
 
   setTimeout(() => {
     try {
@@ -280,7 +283,8 @@ export function isParcelClickEnabled() {
 
 //https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Bag%20Tag%20Locations&outputFormat=application/json
 export function getWFSVectorSource(serverUrl, layerName, callback, sortField = "") {
-  const wfsUrlTemplate = (serverURL, layerName, sortField) => `${serverURL}wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&sortBy=${sortField}`;
+  const wfsUrlTemplate = (serverURL, layerName, sortField) =>
+    `${serverURL}wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&sortBy=${sortField}`;
   const wfsUrl = wfsUrlTemplate(serverUrl, layerName, sortField);
   getJSON(wfsUrl, result => {
     const geoJSON = new GeoJSON().readFeatures(result);
@@ -456,6 +460,8 @@ export function toTitleCase(str) {
 // OL BUG
 export function convertMouseUpToClick(e) {
   const evt = new CustomEvent("click", { bubbles: true });
+  evt.pageY = e.pageY;
+  evt.pageX = e.pageX;
   evt.stopPropagation = () => {};
   e.target.dispatchEvent(evt);
 }
