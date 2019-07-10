@@ -261,7 +261,14 @@ class Layers extends Component {
     var evtClone = Object.assign({}, evt);
     const menu = (
       <Portal>
-        <FloatingMenu key={helpers.getUID()} buttonEvent={evtClone} autoY={true} item={this.props.info} onMenuItemClick={action => this.onMenuItemClick(action, layerInfo)}>
+        <FloatingMenu
+          key={helpers.getUID()}
+          buttonEvent={evtClone}
+          autoY={true}
+          item={this.props.info}
+          onMenuItemClick={action => this.onMenuItemClick(action, layerInfo)}
+          styleMode={helpers.isMobile() ? "left" : "right"}
+        >
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-metadata">
             <FloatingMenuItem imageName={"metadata.png"} label="Metadata" />
           </MenuItem>
@@ -273,7 +280,14 @@ class Layers extends Component {
           </MenuItem>
           <MenuItem className="sc-layers-slider" key="sc-floating-menu-opacity">
             Adjust Transparency
-            <SliderWithTooltip tipFormatter={this.sliderTipFormatter} max={1} min={0} step={0.05} defaultValue={layerInfo.opacity} onChange={evt => this.onSliderChange(evt, layerInfo)} />
+            <SliderWithTooltip
+              tipFormatter={this.sliderTipFormatter}
+              max={1}
+              min={0}
+              step={0.05}
+              defaultValue={layerInfo.opacity}
+              onChange={evt => this.onSliderChange(evt, layerInfo)}
+            />
           </MenuItem>
         </FloatingMenu>
       </Portal>
@@ -285,7 +299,10 @@ class Layers extends Component {
   onMenuItemClick = (action, layerInfo) => {
     if (action === "sc-floating-menu-metadata") {
       TOCHelpers.getLayerInfo(layerInfo, result => {
-        helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl);
+        if (helpers.isMobile()) {
+          window.emitter.emit("setSidebarVisiblity", "CLOSE");
+          helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl, false, "full");
+        } else helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl);
       });
     } else if (action === "sc-floating-menu-zoom-to-layer") {
       TOCHelpers.getLayerInfo(layerInfo, result => {
