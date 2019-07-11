@@ -13,8 +13,6 @@ class OLOverlayCheckbox extends React.Component {
     // if (isIE) document.getElementById("sc-ol-checkbox").checked = !evt.target.checked;
 
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    console.log(isSafari);
-
     if (isSafari) {
       // SAFARI IS SPECIAL
       const type = evt.target.tagName.toLowerCase();
