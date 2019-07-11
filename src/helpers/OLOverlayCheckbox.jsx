@@ -9,15 +9,29 @@ import * as helpers from "./helpers";
 class OLOverlayCheckbox extends React.Component {
   onCheckboxClick = evt => {
     // STUPID IE BUG NOT SETTING THE CHECKBOX!!!!
-    const isIE = /*@cc_on!@*/ false || !!document.documentMode;
-    if (isIE) document.getElementById("sc-ol-checkbox").checked = !evt.target.checked;
+    // const isIE = /*@cc_on!@*/ false || !!document.documentMode;
+    // if (isIE) document.getElementById("sc-ol-checkbox").checked = !evt.target.checked;
 
-    this.props.parentClickHandler(!this.node.checked);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    console.log(isSafari);
+
+    if (isSafari) {
+      // SAFARI IS SPECIAL
+      const type = evt.target.tagName.toLowerCase();
+      if (type === "label") {
+        document.getElementById("sc-ol-checkbox").checked = !this.node.checked;
+        this.props.parentClickHandler(this.node.checked);
+      } else {
+        this.props.parentClickHandler(!this.node.checked);
+      }
+    } else {
+      this.props.parentClickHandler(!this.node.checked);
+    }
   };
 
   render() {
     // FORCE CHECKBOX UPDATE
-    if (this.node !== undefined) this.node.checked = this.props.defaultChecked;
+    //if (this.node !== undefined) this.node.checked = this.props.defaultChecked;
 
     return (
       <label htmlFor="sc-ol-checkbox" onClick={this.onCheckboxClick} onMouseUp={helpers.convertMouseUpToClick}>
