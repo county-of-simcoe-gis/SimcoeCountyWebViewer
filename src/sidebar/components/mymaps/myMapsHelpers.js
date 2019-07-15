@@ -1,32 +1,38 @@
-import Draw, {createBox} from 'ol/interaction/Draw.js';
-import {Vector as VectorSource} from 'ol/source.js';
-import {Circle as CircleStyle, Fill, Stroke, Style} from 'ol/style.js';
-import {Vector as VectorLayer} from 'ol/layer.js';
-import Collection from 'ol/Collection';
-import {asArray} from 'ol/color';
-import GeoJSON from 'ol/format/GeoJSON.js';
-import DoubleClickZoom from 'ol/interaction/DoubleClickZoom';
+import Draw, { createBox } from "ol/interaction/Draw.js";
+import { Vector as VectorSource } from "ol/source.js";
+import { Circle as CircleStyle, Fill, Stroke, Style, Icon } from "ol/style.js";
+import { Vector as VectorLayer } from "ol/layer.js";
+import Collection from "ol/Collection";
+import { asArray } from "ol/color";
+import GeoJSON from "ol/format/GeoJSON.js";
+import DoubleClickZoom from "ol/interaction/DoubleClickZoom";
+import Point from "ol/geom/Point.js";
+import LineString from "ol/geom/LineString.js";
+import Feature from "ol/Feature";
+import { transform } from "ol/proj.js";
+
 import * as helpers from "../../../helpers/helpers";
 
 // GET FEATURE FROM MYMAPS LAYER
-export function getFeatureById(id){
+export function getFeatureById(id) {
   let feature = null;
   window.map.getLayers().forEach(layer => {
-    if (layer.getProperties().name === 'myMaps'){
-      layer.getSource().getFeatures().forEach(feat => {
-        if (feat.getProperties().id === id)
-          feature = feat;
+    if (layer.getProperties().name === "myMaps") {
+      layer
+        .getSource()
+        .getFeatures()
+        .forEach(feat => {
+          if (feat.getProperties().id === id) feature = feat;
           return;
-      });
-    }    
+        });
+    }
   });
 
   return feature;
 }
 
-export function getStyleFromJSON(styleJSON){
-  if (styleJSON === undefined)
-    return getDrawStyle("#e809e5");
+export function getStyleFromJSON(styleJSON) {
+  if (styleJSON === undefined) return getDrawStyle("#e809e5");
 
   // FILL
   const fill = new Fill({
@@ -61,12 +67,12 @@ export function getStyleFromJSON(styleJSON){
   return style;
 }
 
-export function getDrawStyle(drawColor){
+export function getDrawStyle(drawColor, strokeWidth = 3) {
   // UPDATE FILL COLOR OPACITY
   var hexColor = drawColor;
   var color = asArray(hexColor);
   color = color.slice();
-  color[3] = 0.2;  // change the alpha of the color
+  color[3] = 0.2; // change the alpha of the color
 
   let drawStyle = new Style({
     fill: new Fill({
@@ -74,7 +80,7 @@ export function getDrawStyle(drawColor){
     }),
     stroke: new Stroke({
       color: drawColor,
-      width: 3
+      width: strokeWidth
     }),
     image: new CircleStyle({
       radius: 5,
@@ -91,38 +97,76 @@ export function getDrawStyle(drawColor){
 }
 
 // GET STORAGE AND PARSE
-export function getItemsFromStorage(storageKey){
+export function getItemsFromStorage(storageKey) {
   const storage = localStorage.getItem(storageKey);
-  if (storage === null)
-    return [];
+  if (storage === null) return [];
 
   const data = JSON.parse(storage);
   return data;
 }
 
 // BUG https://github.com/openlayers/openlayers/issues/3610
-  //Control active state of double click zoom interaction
-export function controlDoubleClickZoom(active){
-    //Find double click interaction
-    var interactions = window.map.getInteractions();
-    for (var i = 0; i < interactions.getLength(); i++) {
-        var interaction = interactions.item(i);                          
-        if (interaction instanceof DoubleClickZoom) {
-            interaction.setActive(active);
-        }
+//Control active state of double click zoom interaction
+export function controlDoubleClickZoom(active) {
+  //Find double click interaction
+  var interactions = window.map.getInteractions();
+  for (var i = 0; i < interactions.getLength(); i++) {
+    var interaction = interactions.item(i);
+    if (interaction instanceof DoubleClickZoom) {
+      interaction.setActive(active);
     }
+  }
 }
 
 // HANDLE LABELS
 export function setFeatureLabel(itemInfo) {
   let feature = getFeatureById(itemInfo.id);
   let style = feature.getStyle();
-  if (itemInfo.labelVisible){
-    const textStyle = helpers.createTextStyle(feature, "label",undefined,undefined,undefined,"15px",undefined,-8,'bold',undefined,undefined,true,itemInfo.labelRotation,undefined,undefined,'#ffffff', 0.1);
+  if (itemInfo.labelVisible) {
+    const textStyle = helpers.createTextStyle(
+      feature,
+      "label",
+      undefined,
+      undefined,
+      undefined,
+      "15px",
+      undefined,
+      -8,
+      "bold",
+      undefined,
+      undefined,
+      true,
+      itemInfo.labelRotation,
+      undefined,
+      undefined,
+      "#ffffff",
+      0.1
+    );
     style.setText(textStyle);
     feature.setStyle(style);
   } else {
     style.setText(null);
     feature.setStyle(style);
   }
+}
+
+export function convertLineToArrow(geometry) {
+  // GET 10% OF THE END OF LINE TO USE AS ARROW
+  const start = geometry.getCoordinateAt(0.8);
+  const end = geometry.getCoordinateAt(1);
+
+  // RIGHT OF LINE
+  var lineStr1 = new LineString([start, end]);
+  lineStr1.rotate(0.7853981634, end);
+
+  // LEFT OF LINE
+  var lineStr2 = new LineString([start, end]);
+  lineStr2.rotate(-0.7853981634, end);
+
+  var clone = geometry.clone();
+  clone.appendCoordinate(lineStr1.getFirstCoordinate());
+  clone.appendCoordinate(lineStr2.getFirstCoordinate());
+  clone.appendCoordinate(end);
+
+  return clone;
 }

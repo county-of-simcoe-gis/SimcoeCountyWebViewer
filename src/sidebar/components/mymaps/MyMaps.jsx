@@ -19,7 +19,7 @@ import Portal from "../../../helpers/Portal.jsx";
 // OPEN LAYERS
 import Draw, { createBox } from "ol/interaction/Draw.js";
 import { Vector as VectorSource } from "ol/source.js";
-import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style.js";
+import { Circle as CircleStyle, Fill, Stroke, Style, Icon } from "ol/style.js";
 import { Vector as VectorLayer } from "ol/layer.js";
 import Collection from "ol/Collection";
 import GeoJSON from "ol/format/GeoJSON.js";
@@ -142,11 +142,22 @@ class MyMaps extends Component {
 
     if (labelText === null) labelText = "Drawing " + (this.state.items.length + 1);
 
-    feature.setStyle(this.state.drawStyle);
-    feature.setProperties({ id: featureId, label: labelText });
+    if (this.state.drawType === "Arrow") {
+      // CONVERT LINE TO ARROW
+      const arrow = myMapsHelpers.convertLineToArrow(feature.getGeometry());
+      feature.setGeometry(arrow);
+
+      // GIVE IT A BIGGER STROKE BY DEFAULT
+      const arrowStyle = myMapsHelpers.getDrawStyle(this.state.drawColor, 6);
+      feature.setStyle(arrowStyle);
+    } else {
+      feature.setStyle(this.state.drawStyle);
+    }
+
+    feature.setProperties({ id: featureId, label: labelText, labelVisible: false });
 
     // CONVERT CIRCLE TO POLYGON (GEOJSON DOESNT SUPPORT CIRCLES)
-    if (feature.getGeometry().getType() === "Circle") {
+    if (feature.getGeometry() !== undefined && feature.getGeometry().getType() === "Circle") {
       var polygon = fromCircle(feature.getGeometry());
       feature.setGeometry(polygon);
     }
@@ -245,8 +256,15 @@ class MyMaps extends Component {
         const item = this.state.items.filter(item => {
           return item.id === itemInfo.id;
         })[0];
+
+        if (this.popupRef !== undefined) {
+          this.popupRef.props.item.labelVisible = item.labelVisible;
+          this.popupRef.forceUpdate();
+        }
+
         myMapsHelpers.setFeatureLabel(item);
         this.saveStateToStorage();
+        this.forceUpdate();
       }
     );
   };
@@ -292,6 +310,7 @@ class MyMaps extends Component {
         const item = this.state.items.filter(item => {
           return item.id === itemInfo.id;
         })[0];
+
         myMapsHelpers.setFeatureLabel(item);
         this.saveStateToStorage();
       }
@@ -412,10 +431,15 @@ class MyMaps extends Component {
       return;
     }
 
+    let drawType = this.state.drawType;
+    if (drawType === "Rectangle") drawType = "Circle";
+    else if (drawType === "Arrow") drawType = "LineString";
+
     // CREATE A NEW DRAW
     this.draw = new Draw({
       features: new Collection([]),
-      type: this.state.drawType === "Rectangle" ? "Circle" : this.state.drawType,
+      //type: this.state.drawType === "Rectangle" ? "Circle" : this.state.drawType,
+      type: drawType,
       geometryFunction: this.state.drawType === "Rectangle" ? createBox() : undefined,
       style: this.state.drawStyle
     });
