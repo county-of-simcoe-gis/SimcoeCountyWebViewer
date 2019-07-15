@@ -8,10 +8,6 @@ import * as helpers from "./helpers";
 
 class OLOverlayCheckbox extends React.Component {
   onCheckboxClick = evt => {
-    // STUPID IE BUG NOT SETTING THE CHECKBOX!!!!
-    // const isIE = /*@cc_on!@*/ false || !!document.documentMode;
-    // if (isIE) document.getElementById("sc-ol-checkbox").checked = !evt.target.checked;
-
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     if (isSafari) {
       // SAFARI IS SPECIAL
@@ -25,21 +21,24 @@ class OLOverlayCheckbox extends React.Component {
     } else {
       this.props.parentClickHandler(!this.node.checked);
     }
+
+    document.getElementById("map").focus();
   };
 
   render() {
     // FORCE CHECKBOX UPDATE
-    //if (this.node !== undefined) this.node.checked = this.props.defaultChecked;
+    if (this.node !== undefined) {
+      if (this.node.checked !== this.props.defaultChecked) this.node.checked = this.props.defaultChecked;
+    }
 
     return (
-      <label htmlFor="sc-ol-checkbox" onClick={this.onCheckboxClick} onMouseUp={helpers.convertMouseUpToClick}>
+      <label htmlFor="sc-ol-checkbox" onMouseUp={helpers.convertMouseUpToClick} onClick={this.onCheckboxClick}>
         <input
           id="sc-ol-checkbox"
           contentEditable="false"
           style={{ verticalAlign: "middle" }}
           type="checkbox"
           defaultChecked={this.props.defaultChecked}
-          onChange={this.onChange}
           ref={input => {
             this.node = input;
           }}

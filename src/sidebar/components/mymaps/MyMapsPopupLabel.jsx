@@ -59,13 +59,17 @@ class MyMapsPopupLabel extends Component {
     return (
       <div>
         <div className="sc-mymaps-popup-label-toggler">
-          <OLOverlayCheckbox
-            label={"Show Label"}
-            defaultChecked={this.props.item.labelVisible}
-            parentClickHandler={checked => {
-              this.onLabelVisibilityChange(checked);
-            }}
-          />
+          <div className="sc-mymaps-popup-checkbox">
+            <OLOverlayCheckbox
+              label={"Show Label"}
+              defaultChecked={this.props.item.labelVisible}
+              id={this.props.item.id}
+              parentClickHandler={checked => {
+                this.onLabelVisibilityChange(checked);
+              }}
+            />
+          </div>
+
           <div className="sc-mymaps-popup-slider">
             <input type="range" min={this.sliderMin} max={this.sliderMax} value={this.state.sliderValue} step="1" onChange={this.onSliderChange} />
             <label className="sc-mymaps-popup-slider-label">Rotate</label>
