@@ -104,6 +104,9 @@ class SCMap extends Component {
 
       helpers.flashPoint(coords);
     }
+
+    // APP STAT
+    helpers.addAppStat("STARTUP", "MAP_LOAD");
   }
 
   onMenuItemClick = key => {
