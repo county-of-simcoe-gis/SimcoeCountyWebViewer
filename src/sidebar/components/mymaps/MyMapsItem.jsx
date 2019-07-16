@@ -26,7 +26,7 @@ class MyMapsItem extends Component {
 
   // DELETE BUTTON
   onItemDelete = evt => {
-    this.props.onItemDelete(this.props.info);
+    this.props.onItemDelete(this.props.info.id);
   };
 
   // VISIBILITY CHECKBOX
@@ -88,7 +88,7 @@ class MyMapsItem extends Component {
         onLabelChange={this.props.onLabelChange}
         onLabelVisibilityChange={this.props.onLabelVisibilityChange}
         onLabelRotationChange={this.props.onLabelRotationChange}
-        onDeleteButtonClick={() => this.props.onItemDelete(this.props.info)}
+        onDeleteButtonClick={() => this.props.onItemDelete(this.props.info.id)}
       />,
       "Drawing Options",
       () => {

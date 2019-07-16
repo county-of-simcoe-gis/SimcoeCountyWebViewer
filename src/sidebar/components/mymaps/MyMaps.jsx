@@ -81,7 +81,12 @@ class MyMaps extends Component {
         if (layer === null) return;
 
         if (layer.get("name") !== undefined && layer.get("name") === "myMaps") {
-          this.showDrawingOptionsPopup(feature, evt);
+          if (this.state.drawType === "Eraser") {
+            // REMOVE ITEM FROM SOURCE
+            this.onItemDelete(feature.get("id"));
+            return;
+          } else this.showDrawingOptionsPopup(feature, evt);
+
           return;
         }
       });
@@ -281,11 +286,11 @@ class MyMaps extends Component {
   };
 
   // DELETE CLICK
-  onItemDelete = itemInfo => {
+  onItemDelete = id => {
     this.setState(
       {
         items: this.state.items.filter(function(item) {
-          return item.id !== itemInfo.id;
+          return item.id !== id;
         })
       },
       () => {
@@ -293,7 +298,7 @@ class MyMaps extends Component {
         this.saveStateToStorage();
 
         // REMOVE ITEM FROM SOURCE
-        this.removeItemFromVectorSource(itemInfo);
+        this.removeItemFromVectorSource(id);
       }
     );
   };
@@ -446,6 +451,10 @@ class MyMaps extends Component {
 
     // GET DRAW TYPE
     let drawType = this.state.drawType;
+
+    // DELETE/REMOVE TOOL
+    if (drawType === "Eraser") return;
+
     if (drawType === "Rectangle") drawType = "Circle";
     else if (drawType === "Arrow") drawType = "LineString";
     else if (drawType === "Text") drawType = "Point";
@@ -472,10 +481,10 @@ class MyMaps extends Component {
     window.map.addInteraction(this.draw);
   };
 
-  removeItemFromVectorSource = itemInfo => {
+  removeItemFromVectorSource = idParam => {
     this.vectorSource.getFeatures().forEach(feature => {
       const id = feature.getProperties().id;
-      if (id === itemInfo.id) this.vectorSource.removeFeature(feature);
+      if (id === idParam) this.vectorSource.removeFeature(feature);
       return;
     });
   };
