@@ -137,24 +137,33 @@ class MyMaps extends Component {
   };
 
   addNewItem = (feature, labelText = null, fromEmmiter = false) => {
-    // SET STYLE OF FEATURE
+    // UID FOR FEATURE
     const featureId = helpers.getUID();
 
+    // NEW NAME OF FEATURE
     if (labelText === null) labelText = "Drawing " + (this.state.items.length + 1);
 
+    // GIVE TEXT A CUSTOM MESSAGE
+    if (this.state.drawType === "Text") labelText = "Enter Custom Text";
+
+    let customStyle = null;
     if (this.state.drawType === "Arrow") {
       // CONVERT LINE TO ARROW
       const arrow = myMapsHelpers.convertLineToArrow(feature.getGeometry());
       feature.setGeometry(arrow);
 
       // GIVE IT A BIGGER STROKE BY DEFAULT
-      const arrowStyle = myMapsHelpers.getDrawStyle(this.state.drawColor, 6);
-      feature.setStyle(arrowStyle);
+      customStyle = myMapsHelpers.getDrawStyle(this.state.drawColor, false, 6);
+      feature.setStyle(customStyle);
+    } else if (this.state.drawType === "Text") {
+      labelText = "Enter Custom Text";
+      customStyle = myMapsHelpers.getDrawStyle(this.state.drawColor, true);
+      feature.setStyle(customStyle);
     } else {
       feature.setStyle(this.state.drawStyle);
     }
 
-    feature.setProperties({ id: featureId, label: labelText, labelVisible: false });
+    feature.setProperties({ id: featureId, label: labelText, labelVisible: false, drawType: this.state.drawType });
 
     // CONVERT CIRCLE TO POLYGON (GEOJSON DOESNT SUPPORT CIRCLES)
     if (feature.getGeometry() !== undefined && feature.getGeometry().getType() === "Circle") {
@@ -166,15 +175,16 @@ class MyMaps extends Component {
     const itemInfo = {
       id: featureId,
       label: labelText,
-      labelVisible: false,
+      labelVisible: this.state.drawType === "Text" ? true : false,
       labelStyle: null,
       labelRotation: 0,
       featureGeoJSON: new GeoJSON({ dataProjection: "EPSG:3857", featureProjection: "EPSG:3857" }).writeFeature(feature, {
         dataProjection: "EPSG:3857",
         featureProjection: "EPSG:3857"
       }),
-      style: this.state.drawStyle,
-      visible: true
+      style: customStyle === null ? this.state.drawStyle : customStyle,
+      visible: true,
+      drawType: this.state.drawType
     };
 
     // ADD NEW FEATURE TO STATE
@@ -189,6 +199,7 @@ class MyMaps extends Component {
 
         // UPDATE STORAGE
         this.saveStateToStorage();
+        this.importGeometries();
       }
     );
 
@@ -301,14 +312,14 @@ class MyMaps extends Component {
   };
 
   // LABEL VISIBILITY CHECKBOX FROM POPUP
-  onLabelVisibilityChange = (itemInfo, visible) => {
+  onLabelVisibilityChange = (itemId, visible) => {
     this.setState(
       {
-        items: this.state.items.map(item => (item.id === itemInfo.id ? Object.assign({}, item, { labelVisible: visible }) : item))
+        items: this.state.items.map(item => (item.id === itemId ? Object.assign({}, item, { labelVisible: visible }) : item))
       },
       () => {
         const item = this.state.items.filter(item => {
-          return item.id === itemInfo.id;
+          return item.id === itemId;
         })[0];
 
         myMapsHelpers.setFeatureLabel(item);
@@ -319,6 +330,7 @@ class MyMaps extends Component {
 
   // IMPORT SAVED ITEMS FROM STORAGE
   importGeometries = () => {
+    this.vectorLayer.getSource().clear();
     this.state.items.forEach(item => {
       const style = myMapsHelpers.getStyleFromJSON(item.style);
       let feature = helpers.getFeatureFromGeoJSON(item.featureGeoJSON);
@@ -374,7 +386,7 @@ class MyMaps extends Component {
       />,
       "Drawing Options",
       () => {
-        this.popupRef = undefined;
+        //this.popupRef = undefined;
       }
     );
   };
@@ -427,18 +439,20 @@ class MyMaps extends Component {
     // REMOVE THE LAST DRAW
     if (this.draw !== null) window.map.removeInteraction(this.draw);
 
+    // DO NOTHING IF ITS CANCEL
     if (this.state.drawType === "Cancel") {
       return;
     }
 
+    // GET DRAW TYPE
     let drawType = this.state.drawType;
     if (drawType === "Rectangle") drawType = "Circle";
     else if (drawType === "Arrow") drawType = "LineString";
+    else if (drawType === "Text") drawType = "Point";
 
     // CREATE A NEW DRAW
     this.draw = new Draw({
       features: new Collection([]),
-      //type: this.state.drawType === "Rectangle" ? "Circle" : this.state.drawType,
       type: drawType,
       geometryFunction: this.state.drawType === "Rectangle" ? createBox() : undefined,
       style: this.state.drawStyle

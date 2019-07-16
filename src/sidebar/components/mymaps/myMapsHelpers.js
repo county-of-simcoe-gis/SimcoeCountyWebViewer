@@ -67,12 +67,12 @@ export function getStyleFromJSON(styleJSON) {
   return style;
 }
 
-export function getDrawStyle(drawColor, strokeWidth = 3) {
+export function getDrawStyle(drawColor, isText = false, strokeWidth = 3) {
   // UPDATE FILL COLOR OPACITY
   var hexColor = drawColor;
   var color = asArray(hexColor);
   color = color.slice();
-  color[3] = 0.2; // change the alpha of the color
+  color[3] = isText ? 0 : 0.2; // change the alpha of the color
 
   let drawStyle = new Style({
     fill: new Fill({
@@ -85,10 +85,10 @@ export function getDrawStyle(drawColor, strokeWidth = 3) {
     image: new CircleStyle({
       radius: 5,
       stroke: new Stroke({
-        color: drawColor
+        color: isText ? color : drawColor
       }),
       fill: new Fill({
-        color: drawColor
+        color: isText ? color : drawColor
       })
     })
   });
@@ -142,9 +142,12 @@ export function setFeatureLabel(itemInfo) {
       "#ffffff",
       0.1
     );
+
     style.setText(textStyle);
+    feature.setProperties({ labelVisible: true });
     feature.setStyle(style);
   } else {
+    feature.setProperties({ labelVisible: false });
     style.setText(null);
     feature.setStyle(style);
   }

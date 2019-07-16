@@ -266,6 +266,11 @@
   padding-left: 38px;
 }
 
+.sc-mymaps-popup-slider.disabled {
+  pointer-events: none;
+  opacity: 0.4;
+}
+
 .sc-mymaps-popup-slider input[type="range"] {
   -webkit-appearance: none;
 }
@@ -369,6 +374,11 @@ input[type="range"]::-ms-tooltip {
 
 .sc-mymaps-popup-checkbox {
   display: table-cell;
+}
+
+.sc-mymaps-popup-checkbox.disabled {
+  pointer-events: none;
+  opacity: 0.4;
 }
 
 @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {

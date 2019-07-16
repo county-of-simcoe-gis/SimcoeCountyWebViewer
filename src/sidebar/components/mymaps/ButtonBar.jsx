@@ -54,7 +54,7 @@ const ButtonBar = props => {
         isActive={props.activeButton === "Arrow" ? true : false}
       />
       <DrawButton
-        disabled={true}
+        disabled={false}
         title="Add text on the map"
         imageName="text.png"
         onClick={() => {
@@ -63,7 +63,7 @@ const ButtonBar = props => {
         isActive={props.activeButton === "Text" ? true : false}
       />
       <DrawButton
-        disabled={true}
+        disabled={false}
         title="Erase items on the map"
         imageName="eraser.png"
         onClick={() => {
