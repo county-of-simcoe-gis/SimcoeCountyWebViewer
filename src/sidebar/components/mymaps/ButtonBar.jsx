@@ -71,7 +71,7 @@ const ButtonBar = props => {
         }}
         isActive={props.activeButton === "Eraser" ? true : false}
       />
-      <DrawButton
+      {/* <DrawButton
         disabled={true}
         title="Adjust Map Maps Settings"
         imageName="settings.png"
@@ -79,7 +79,7 @@ const ButtonBar = props => {
           props.onClick("Settings");
         }}
         isActive={props.activeButton === "Settings" ? true : false}
-      />
+      /> */}
       <DrawButton
         title="Cancel current drawing tool"
         imageName="none.png"

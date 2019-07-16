@@ -1,0 +1,39 @@
+.sc-mymaps-footer-buttons {
+  height: 33px;
+  bottom: 0px;
+  position: absolute;
+  width: 97%;
+  padding-top: 6px;
+  border-top: 1px solid #bbb;
+  text-align: center;
+  background-color: white;
+  bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  display: table;
+}
+
+.sc-mymaps-footer-button {
+  width: 48%;
+  cursor: pointer;
+  display: inline-table;
+}
+
+.sc-mymaps-footer-button.delete {
+  background-color: #e5e5e5;
+  background-image: url(./images/eraser.png);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-position-x: 26px;
+  text-align: center;
+}
+
+.sc-mymaps-footer-button.tools {
+  background-color: #e5e5e5;
+  background-image: url(./images/toolbox.png);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-position-x: 15px;
+  margin-left: 5px;
+  text-align: center;
+}
