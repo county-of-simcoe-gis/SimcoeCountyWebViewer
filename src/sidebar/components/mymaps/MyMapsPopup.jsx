@@ -32,7 +32,7 @@ class MyMapsPopup extends Component {
         <FooterButtons
           onToolsButtonClick={evt => this.props.onToolsButtonClick(evt, this.props.item)}
           onDeleteButtonClick={() => {
-            this.props.onDeleteButtonClick(this.props.item);
+            this.props.onDeleteButtonClick(this.props.item.id);
             window.popup.hide();
           }}
         />
