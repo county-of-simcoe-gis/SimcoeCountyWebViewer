@@ -41,7 +41,7 @@ class MyMapsPopupLabel extends Component {
   };
 
   onLabelVisibilityChange = checked => {
-    this.props.onLabelVisibilityChange(this.props.item, checked);
+    this.props.onLabelVisibilityChange(this.props.item.id, checked);
   };
 
   // THIS IS REQUIRED WHEN CHANGING LABEL FROM POPUP
@@ -59,7 +59,7 @@ class MyMapsPopupLabel extends Component {
     return (
       <div>
         <div className="sc-mymaps-popup-label-toggler">
-          <div className="sc-mymaps-popup-checkbox">
+          <div className={this.props.item.drawType === "Text" ? "sc-mymaps-popup-checkbox disabled" : "sc-mymaps-popup-checkbox"}>
             <OLOverlayCheckbox
               label={"Show Label"}
               defaultChecked={this.props.item.labelVisible}
