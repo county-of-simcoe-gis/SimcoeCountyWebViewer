@@ -63,7 +63,6 @@ class PropertyReportClick extends Component {
         if (layer === null) return;
 
         if (layer.get("disableParcelClick") !== undefined && layer.get("disableParcelClick") === true) {
-          console.log("OTHER FEATURE, DISABLED");
           disable = true;
           return;
         }
@@ -157,15 +156,29 @@ class PropertyReportClick extends Component {
       </InfoRow>
     );
 
-    rows.push(<InfoRow key={helpers.getUID()} label={"Pointer Coordinates"} value={"Lat: " + Math.round(coords[1] * 10000) / 10000 + "  Long: " + Math.round(coords[0] * 10000) / 10000} />);
+    rows.push(
+      <InfoRow key={helpers.getUID()} label={"Pointer Coordinates"} value={"Lat: " + Math.round(coords[1] * 10000) / 10000 + "  Long: " + Math.round(coords[0] * 10000) / 10000} />
+    );
 
     rows.push(
-      <button key={helpers.getUID()} id={helpers.getUID()} className="sc-button sc-property-report-click-more-info" onClick={this.onMoreInfoClick} onMouseUp={helpers.convertMouseUpToClick}>
+      <button
+        key={helpers.getUID()}
+        id={helpers.getUID()}
+        className="sc-button sc-property-report-click-more-info"
+        onClick={this.onMoreInfoClick}
+        onMouseUp={helpers.convertMouseUpToClick}
+      >
         More Information
       </button>
     );
     rows.push(
-      <button key={helpers.getUID()} id={helpers.getUID()} className="sc-button sc-property-report-click-close" onClick={this.onCloseClick} onMouseUp={helpers.convertMouseUpToClick}>
+      <button
+        key={helpers.getUID()}
+        id={helpers.getUID()}
+        className="sc-button sc-property-report-click-close"
+        onClick={this.onCloseClick}
+        onMouseUp={helpers.convertMouseUpToClick}
+      >
         Close
       </button>
     );
@@ -182,6 +195,7 @@ class PropertyReportClick extends Component {
 
       const feature = geoJSON[0];
       const arn = result.features[0].properties.arn;
+      feature.setProperties({ arn: arn });
       console.log(feature);
       this.setState({ shareURL: this.getShareURL(arn), feature: feature });
 

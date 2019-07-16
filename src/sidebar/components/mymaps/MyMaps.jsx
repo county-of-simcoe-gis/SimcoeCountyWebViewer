@@ -15,6 +15,7 @@ import * as myMapsHelpers from "./myMapsHelpers";
 import MyMapsPopup from "./MyMapsPopup.jsx";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import Portal from "../../../helpers/Portal.jsx";
+import MyMapsFooter from "./MyMapsFooter.jsx";
 
 // OPEN LAYERS
 import Draw, { createBox } from "ol/interaction/Draw.js";
@@ -111,7 +112,6 @@ class MyMaps extends Component {
   onDrawStart = evt => {
     // ENABLE PARCEL CLICK
     window.disableParcelClick = true;
-    this.drawActive = true;
 
     // ADD DRAWN FEATURE TO MAIN SOURCE
     this.vectorSource.addFeature(evt.feature);
@@ -168,7 +168,7 @@ class MyMaps extends Component {
       feature.setStyle(this.state.drawStyle);
     }
 
-    feature.setProperties({ id: featureId, label: labelText, labelVisible: false, drawType: this.state.drawType });
+    feature.setProperties({ id: featureId, label: labelText, labelVisible: false, drawType: this.state.drawType, isParcel: false });
 
     // CONVERT CIRCLE TO POLYGON (GEOJSON DOESNT SUPPORT CIRCLES)
     if (feature.getGeometry() !== undefined && feature.getGeometry().getType() === "Circle") {
@@ -205,6 +205,9 @@ class MyMaps extends Component {
         // UPDATE STORAGE
         this.saveStateToStorage();
         this.importGeometries();
+
+        // SHOW POPUP IF WE'RE ADDING TEXT
+        if (itemInfo.drawType === "Text") this.showDrawingOptionsPopup(feature);
       }
     );
 
@@ -212,6 +215,11 @@ class MyMaps extends Component {
       window.emitter.emit("setSidebarVisiblity", "OPEN");
       window.emitter.emit("activateTab", "mymaps");
       helpers.showMessage("My Maps", "Feature Added to MyMaps");
+
+      // FLAG AS PARCEL
+      if (feature.get("arn") !== undefined) {
+        feature.setProperties({ isParcel: true });
+      }
 
       // ADD FEATURE TO MAIN SOURCE
       this.vectorSource.addFeature(feature);
@@ -434,7 +442,48 @@ class MyMaps extends Component {
     ReactDOM.render(menu, document.getElementById("portal-root"));
   };
 
-  onMenuItemClick = action => {};
+  onMenuItemClick = action => {
+    if (action === "sc-floating-menu-show-all") {
+      this.toggleAllVisibility(true);
+    } else if (action === "sc-floating-menu-hide-all") {
+      this.toggleAllVisibility(false);
+    } else if (action === "sc-floating-menu-delete-selected") {
+      this.deleteSelected(true);
+    } else if (action === "sc-floating-menu-delete-unselected") {
+      this.deleteSelected(false);
+    }
+  };
+
+  deleteSelected = selected => {
+    this.state.items.forEach(item => {
+      setTimeout(() => {
+        if (selected && item.visible) this.onItemDelete(item.id);
+        else if (!selected && !item.visible) this.onItemDelete(item.id);
+      }, 200);
+    });
+  };
+
+  toggleAllVisibility = visible => {
+    this.setState(
+      {
+        items: this.state.items.map(item => Object.assign({}, item, { visible: visible }))
+      },
+      () => {
+        this.saveStateToStorage();
+        this.vectorSource.getFeatures().forEach(feature => {
+          const item = this.state.items.filter(item => {
+            return item.id === feature.get("id");
+          })[0];
+
+          if (visible) feature.setStyle(myMapsHelpers.getStyleFromJSON(item.style));
+          else feature.setStyle(new Style({}));
+
+          myMapsHelpers.setFeatureLabel(item);
+          this.updateItemVisibility(item, visible);
+        });
+      }
+    );
+  };
 
   saveStateToStorage = () => {
     localStorage.setItem(this.storageKey, JSON.stringify(this.state));
@@ -515,6 +564,11 @@ class MyMaps extends Component {
     });
   };
 
+  onDeleteAllClick = () => {
+    this.setState({ items: [] });
+    this.vectorLayer.getSource().clear();
+  };
+
   render() {
     return (
       <div id={"sc-mymaps-container"} className="sc-mymaps-container">
@@ -537,6 +591,7 @@ class MyMaps extends Component {
             ))}
           </TransitionGroup>
         </MyMapsItems>
+        <MyMapsFooter onMenuItemClick={this.onMenuItemClick} onDeleteAllClick={this.onDeleteAllClick} />
       </div>
     );
   }

@@ -35,9 +35,10 @@ class MyMapsItem extends Component {
     this.props.onItemCheckboxChange(this.props.info, evt.target.checked);
   };
 
-  // THIS IS REQUIRED WHEN CHANGING LABEL FROM POPUP
+  // THIS IS REQUIRED WHEN CHANGING LABEL FROM POPUP OR SHOW/HIDE ALL FROM PARENT
   componentWillReceiveProps(nextProps) {
     if (nextProps.info.label !== this.state.label) this.setState({ label: nextProps.info.label });
+    if (nextProps.info.visible !== this.state.checked) this.setState({ checked: nextProps.info.visible });
   }
 
   onToolboxClick = evt => {
