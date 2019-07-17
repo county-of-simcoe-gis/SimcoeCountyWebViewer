@@ -16,6 +16,7 @@ class MyMapsPopupLabel extends Component {
     this.state = {
       label: props.item.label,
       sliderValue: this.props.item.labelRotation
+      //checked: this.props.item.labelVisible
     };
   }
 
@@ -41,12 +42,19 @@ class MyMapsPopupLabel extends Component {
   };
 
   onLabelVisibilityChange = checked => {
-    this.props.onLabelVisibilityChange(this.props.item.id, checked);
+    console.log(!checked);
+    //this.setState({ checked: !checked });
+    this.props.onLabelVisibilityChange(this.props.item.id, !checked);
+    // console.log(checked);
+    // this.setState({ checked: checked });
+    // this.props.onLabelVisibilityChange(this.props.item.id, checked);
   };
 
   // THIS IS REQUIRED WHEN CHANGING LABEL FROM POPUP
   componentWillReceiveProps(nextProps) {
+    console.log(nextProps);
     if (nextProps.item.label !== this.state.label) this.setState({ label: nextProps.item.label });
+    //if (nextProps.item.labelVisible !== this.state.checked) this.setState({ checked: nextProps.item.labelVisible });
   }
 
   // SLIDER CHANGE EVENT
@@ -56,18 +64,50 @@ class MyMapsPopupLabel extends Component {
   };
 
   render() {
+    console.log(this.props.item.labelVisible);
+    //console.log(this.state.checked);
     return (
       <div>
         <div className="sc-mymaps-popup-label-toggler">
           <div className={this.props.item.drawType === "Text" ? "sc-mymaps-popup-checkbox disabled" : "sc-mymaps-popup-checkbox"}>
-            <OLOverlayCheckbox
+            {/* <OLOverlayCheckbox
               label={"Show Label"}
               defaultChecked={this.props.item.labelVisible}
               id={this.props.item.id}
               parentClickHandler={checked => {
                 this.onLabelVisibilityChange(checked);
               }}
-            />
+            /> */}
+            <label
+              style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none", KhtmlUserSelect: "none", MozUserSelect: "none", MsUserSelect: "none", UserSelect: "none" }}
+              onMouseUp={helpers.convertMouseUpToClick}
+              onClick={evt => {
+                //console.log("label");
+                var chk = document.getElementById("sc-mymaps-popup-label-checkbox");
+                console.log(chk.checked);
+                this.onLabelVisibilityChange(chk.checked);
+              }}
+            >
+              <input
+                style={{ position: "relative", top: "1.5px" }}
+                id="sc-mymaps-popup-label-checkbox"
+                type="checkbox"
+                // onChange={() => {
+                //   console.log("change");
+                // }}
+                // onClick={evt => {
+                //   this.onLabelVisibilityChange(evt.target.checked);
+                //   //this.props.onLabelVisibilityChange(this.props.item.id, evt.checked);
+                // }}
+                //onMouseUp={helpers.convertMouseUpToClick}
+                //checked={this.state.checked}
+                //defaultChecked={this.state.checked}
+                //defaultChecked={this.props.item.labelVisible}
+                checked={this.props.item.labelVisible}
+                readOnly
+              />
+              Show Label
+            </label>
           </div>
 
           <div className="sc-mymaps-popup-slider">

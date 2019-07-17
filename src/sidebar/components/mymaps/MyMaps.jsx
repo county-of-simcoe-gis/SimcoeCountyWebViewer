@@ -326,6 +326,7 @@ class MyMaps extends Component {
 
   // LABEL VISIBILITY CHECKBOX FROM POPUP
   onLabelVisibilityChange = (itemId, visible) => {
+    console.log(visible);
     this.setState(
       {
         items: this.state.items.map(item => (item.id === itemId ? Object.assign({}, item, { labelVisible: visible }) : item))

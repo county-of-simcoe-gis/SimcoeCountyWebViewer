@@ -1,7 +1,7 @@
 .sc-mymaps-item-container-header {
   height: 33px;
-  background: linear-gradient(to bottom, rgb(255, 255, 255) 0%,rgba(204, 204, 204, 0.51) 100%);
-  border-bottom: 1px solid #DDD;
+  background: linear-gradient(to bottom, rgb(255, 255, 255) 0%, rgba(204, 204, 204, 0.51) 100%);
+  border-bottom: 1px solid #ddd;
 }
 
 .sc-mymaps-item-container-item {
@@ -14,46 +14,45 @@
   margin-right: 5px;
 }
 
-  .sc-mymaps-item-container-item:first-child {
-      margin-top: 3px;
-  }
+.sc-mymaps-item-container-item:first-child {
+  margin-top: 3px;
+}
 
-  .sc-mymaps-item-container-item > div {
-      display: table-cell;
-      vertical-align: middle;
-      min-width: 48px;
-  }
+.sc-mymaps-item-container-item > div {
+  display: table-cell;
+  vertical-align: middle;
+  min-width: 48px;
+}
 
-  .sc-mymaps-item-container-item > .right {
-      width: 77px;
-      padding-left: 5px;
-      text-align: center;
-  }
+.sc-mymaps-item-container-item > .right {
+  width: 77px;
+  padding-left: 5px;
+  text-align: center;
+}
 
-  .sc-mymaps-item-container-item:hover {
-      box-shadow: 0px 0px 10px 2px rgba(112, 200, 255, 0.75);
-  }
+.sc-mymaps-item-container-item:hover {
+  box-shadow: 0px 0px 10px 2px rgba(112, 200, 255, 0.75);
+}
 
-  .sc-mymaps-item-container-item.remove {
-      background-color: #DDD;
-      color: #FFF;
-  }
-
+.sc-mymaps-item-container-item.remove {
+  background-color: #ddd;
+  color: #fff;
+}
 
 .sc-mymaps-item-container-item-text-input {
   width: 100%;
   padding: 4px;
   font-size: 16px;
-  color: #367CC5;
+  color: #367cc5;
   border-radius: 3px;
   outline: none;
-  border: 1px solid #CECECE;
+  border: 1px solid #cecece;
   margin-left: 5px;
 }
 
-  .sc-mymaps-item-container-item-text-input:focus {
-      box-shadow: 0px 0px 5px 2px rgba(152, 228, 255, 0.8);
-  }
+.sc-mymaps-item-container-item-text-input:focus {
+  box-shadow: 0px 0px 5px 2px rgba(152, 228, 255, 0.8);
+}
 
 .sc-mymaps-item-container-item button {
   min-height: 20px !important;
@@ -75,16 +74,15 @@
 }
 
 /* Safari 10.1+ (alternate method) */
-@media not all and (min-resolution:.001dpcm)
-{ @supports (-webkit-appearance:none) {
-
-  .sc-mymaps-item-container-item > .right {
-    width: 80px;
-    padding-left: 5px;
-    text-align: center;
+@media not all and (min-resolution: 0.001dpcm) {
+  @supports (-webkit-appearance: none) {
+    .sc-mymaps-item-container-item > .right {
+      width: 80px;
+      padding-left: 5px;
+      text-align: center;
+    }
+    .sc-mymaps-item-container-item-text-input {
+      width: 97%;
+    }
   }
-  .sc-mymaps-item-container-item-text-input {
-    width: 97%;
-  }
-
-}}
+}
