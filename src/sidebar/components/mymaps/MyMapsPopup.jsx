@@ -28,7 +28,7 @@ class MyMapsPopup extends Component {
           onLabelVisibilityChange={this.props.onLabelVisibilityChange}
           onLabelRotationChange={this.props.onLabelRotationChange}
         />
-        {/* <MyMapsSymbolizer item={this.props.item}></MyMapsSymbolizer> */}
+        {/* <MyMapsSymbolizer item={this.props.item} /> */}
         <FooterButtons
           onToolsButtonClick={evt => this.props.onToolsButtonClick(evt, this.props.item)}
           onDeleteButtonClick={() => {

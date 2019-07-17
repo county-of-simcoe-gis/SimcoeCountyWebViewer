@@ -108,10 +108,10 @@ class MyMapsItem extends Component {
               <img src={images["eraser.png"]} alt="eraser" />
             </button>
           </div>
-          <div>
+          <div className={this.state.checked ? "" : "sc-disabled"}>
             <input className="sc-mymaps-item-container-item-text-input" value={this.state.label} onChange={this.onLabelTextChange} />
           </div>
-          <div className="right">
+          <div className={this.state.checked ? "right" : "right disabled"}>
             <button className="sc-button" style={{ marginLeft: "15px" }}>
               <img src={images["color-picker.png"]} alt="colorpicker" />
             </button>
