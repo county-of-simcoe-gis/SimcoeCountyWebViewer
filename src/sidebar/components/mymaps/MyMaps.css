@@ -252,14 +252,17 @@
 
 .sc-mymaps-popup-slider-label {
   position: absolute;
-  right: 59px;
-  top: 18px;
+  right: 50px;
+  top: 11px;
 }
 .sc-mymaps-popup-slider {
-  float: right;
   font-size: 7pt;
   display: table-cell;
   padding-left: 38px;
+  padding-top: -14px;
+  position: absolute;
+  top: 6px;
+  right: 15px;
 }
 
 .sc-mymaps-popup-slider.disabled {
@@ -369,7 +372,8 @@ input[type="range"]::-ms-tooltip {
 }
 
 .sc-mymaps-popup-checkbox {
-  display: table-cell;
+  position: relative;
+  top: -2px;
 }
 
 .sc-mymaps-popup-checkbox.disabled {

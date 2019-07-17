@@ -270,7 +270,7 @@ class MyMaps extends Component {
     );
   };
 
-  // LABEL TEXTBOX
+  // LABEL ROTATION
   onLabelRotationChange = (itemInfo, rotation) => {
     this.setState(
       {
@@ -281,14 +281,8 @@ class MyMaps extends Component {
           return item.id === itemInfo.id;
         })[0];
 
-        if (this.popupRef !== undefined) {
-          this.popupRef.props.item.labelVisible = item.labelVisible;
-          this.popupRef.forceUpdate();
-        }
-
         myMapsHelpers.setFeatureLabel(item);
         this.saveStateToStorage();
-        this.forceUpdate();
       }
     );
   };
@@ -326,7 +320,6 @@ class MyMaps extends Component {
 
   // LABEL VISIBILITY CHECKBOX FROM POPUP
   onLabelVisibilityChange = (itemId, visible) => {
-    console.log(visible);
     this.setState(
       {
         items: this.state.items.map(item => (item.id === itemId ? Object.assign({}, item, { labelVisible: visible }) : item))
@@ -390,6 +383,7 @@ class MyMaps extends Component {
     window.popup.show(
       center,
       <MyMapsPopup
+        key={helpers.getUID()}
         onRef={ref => (this.popupRef = ref)}
         item={item}
         onLabelChange={this.onLabelChange}
