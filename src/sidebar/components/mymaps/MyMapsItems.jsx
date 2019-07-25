@@ -13,7 +13,7 @@ class MyMapsItems extends Component {
         <div className={this.props.children.props.children.length === 0 ? "sc-mymaps-items-no-data" : "sc-hidden"}>
           There are currently no items to display. Please use the drawing tools above to create your own personal map item.
         </div>
-        <div>{this.props.children}</div>
+        <div className="sc-mymaps-items-container-list">{this.props.children}</div>
       </div>
     );
   }

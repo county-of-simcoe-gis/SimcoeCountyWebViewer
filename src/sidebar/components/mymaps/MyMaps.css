@@ -1,7 +1,7 @@
 .sc-mymaps-container {
   position: absolute;
   margin-bottom: 0px;
-  overflow: auto;
+  /* overflow: auto; */
   padding: 0px !important;
   bottom: 0px;
   top: 66px;
