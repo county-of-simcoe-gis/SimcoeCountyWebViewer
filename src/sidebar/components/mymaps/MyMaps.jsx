@@ -158,14 +158,16 @@ class MyMaps extends Component {
       feature.setGeometry(arrow);
 
       // GIVE IT A BIGGER STROKE BY DEFAULT
-      customStyle = myMapsHelpers.getDrawStyle(this.state.drawColor, false, 6);
+      customStyle = myMapsHelpers.getDefaultDrawStyle(this.state.drawColor, false, 6, feature.getGeometry().getType());
       feature.setStyle(customStyle);
     } else if (this.state.drawType === "Text") {
       labelText = "Enter Custom Text";
-      customStyle = myMapsHelpers.getDrawStyle(this.state.drawColor, true);
+      customStyle = myMapsHelpers.getDefaultDrawStyle(this.state.drawColor, true, undefined, undefined, feature.getGeometry().getType());
       feature.setStyle(customStyle);
     } else {
-      feature.setStyle(this.state.drawStyle);
+      customStyle = myMapsHelpers.getDefaultDrawStyle(this.state.drawColor, undefined, undefined, undefined, feature.getGeometry().getType());
+      feature.setStyle(customStyle);
+      //feature.setStyle(this.state.drawStyle);
     }
 
     feature.setProperties({ id: featureId, label: labelText, labelVisible: false, drawType: this.state.drawType, isParcel: false });
@@ -189,7 +191,8 @@ class MyMaps extends Component {
       }),
       style: customStyle === null ? this.state.drawStyle : customStyle,
       visible: true,
-      drawType: this.state.drawType
+      drawType: this.state.drawType,
+      geometryType: feature.getGeometry().getType()
     };
 
     // ADD NEW FEATURE TO STATE
@@ -339,7 +342,7 @@ class MyMaps extends Component {
   importGeometries = () => {
     this.vectorLayer.getSource().clear();
     this.state.items.forEach(item => {
-      const style = myMapsHelpers.getStyleFromJSON(item.style);
+      const style = myMapsHelpers.getStyleFromJSON(item.style, item.pointType);
       let feature = helpers.getFeatureFromGeoJSON(item.featureGeoJSON);
 
       // VISIBILITY
@@ -354,7 +357,7 @@ class MyMaps extends Component {
   };
 
   updateStyle = () => {
-    const drawStyle = myMapsHelpers.getDrawStyle(this.state.drawColor);
+    const drawStyle = myMapsHelpers.getDefaultDrawStyle(this.state.drawColor);
     this.setState({ drawStyle: drawStyle }, () => {
       // UPDATE THE DRAW TO PICK UP NEW STYLE
       this.setDrawControl();
@@ -364,7 +367,76 @@ class MyMaps extends Component {
     });
   };
 
-  showDrawingOptionsPopup = (feature, evt = null) => {
+  setStyleById = (itemId, style, pointType, strokeType) => {
+    this.vectorSource.getFeatures().forEach(feature => {
+      const id = feature.getProperties().id;
+      if (id === itemId) {
+        feature.setStyle(style);
+
+        let itemUpdate = null;
+        if (pointType !== undefined) itemUpdate = { style: style, pointType: pointType };
+        else if (strokeType !== undefined) itemUpdate = { style: style, strokeType: strokeType };
+        else itemUpdate = { style: style };
+
+        this.setState(
+          {
+            // UPDATE LABEL
+            items: this.state.items.map(item => (item.id === itemId ? Object.assign({}, item, itemUpdate) : item))
+          },
+          () => {
+            // SAVE STATE TO STORAGE
+            this.saveStateToStorage();
+
+            const item = this.state.items.filter(item => {
+              return item.id === itemId;
+            })[0];
+
+            myMapsHelpers.setFeatureLabel(item);
+          }
+        );
+
+        return;
+      }
+    });
+  };
+
+  onRadiusSliderChange = (itemId, style) => {
+    this.setStyleById(itemId, style);
+  };
+
+  onRotationSliderChange = (itemId, style) => {
+    this.setStyleById(itemId, style);
+  };
+
+  onFillOpacitySliderChange = (itemId, style) => {
+    this.setStyleById(itemId, style);
+  };
+
+  onStrokeOpacitySliderChange = (itemId, style) => {
+    this.setStyleById(itemId, style);
+  };
+
+  onPointStyleDropDown = (itemId, style, pointType) => {
+    this.setStyleById(itemId, style, pointType);
+  };
+
+  onFillColorPickerChange = (itemId, style) => {
+    this.setStyleById(itemId, style);
+  };
+
+  onStrokeColorPickerChange = (itemId, style) => {
+    this.setStyleById(itemId, style);
+  };
+
+  onStrokeWidthSliderChange = (itemId, style) => {
+    this.setStyleById(itemId, style);
+  };
+
+  onStrokeTypeDropDown = (itemId, style, strokeType) => {
+    this.setStyleById(itemId, style, undefined, strokeType);
+  };
+
+  showDrawingOptionsPopup = (feature, evt = null, activeTool = "none") => {
     // GET FEATURE AND CENTER
     var featureId = feature.getProperties().id;
     var item = this.state.items.filter(item => {
@@ -384,6 +456,7 @@ class MyMaps extends Component {
       center,
       <MyMapsPopup
         key={helpers.getUID()}
+        activeTool={activeTool}
         onRef={ref => (this.popupRef = ref)}
         item={item}
         onLabelChange={this.onLabelChange}
@@ -391,6 +464,16 @@ class MyMaps extends Component {
         onLabelRotationChange={this.onLabelRotationChange}
         onToolsButtonClick={this.onToolsButtonClick}
         onDeleteButtonClick={this.onItemDelete}
+        onPointStyleDropDown={this.onPointStyleDropDown}
+        onRadiusSliderChange={this.onRadiusSliderChange}
+        onFillOpacitySliderChange={this.onFillOpacitySliderChange}
+        onFillColorPickerChange={this.onFillColorPickerChange}
+        onAngleSliderChange={this.onAngleSliderChange}
+        onRotationSliderChange={this.onRotationSliderChange}
+        onStrokeOpacitySliderChange={this.onStrokeOpacitySliderChange}
+        onStrokeColorPickerChange={this.onStrokeColorPickerChange}
+        onStrokeWidthSliderChange={this.onStrokeWidthSliderChange}
+        onStrokeTypeDropDown={this.onStrokeTypeDropDown}
       />,
       "Drawing Options",
       () => {
@@ -470,7 +553,7 @@ class MyMaps extends Component {
             return item.id === feature.get("id");
           })[0];
 
-          if (visible) feature.setStyle(myMapsHelpers.getStyleFromJSON(item.style));
+          if (visible) feature.setStyle(myMapsHelpers.getStyleFromJSON(item.style, item.pointType));
           else feature.setStyle(new Style({}));
 
           myMapsHelpers.setFeatureLabel(item);
@@ -538,7 +621,7 @@ class MyMaps extends Component {
       const id = feature.getProperties().id;
       if (id === itemInfo.id) {
         if (visible) {
-          feature.setStyle(myMapsHelpers.getStyleFromJSON(itemInfo.style));
+          feature.setStyle(myMapsHelpers.getStyleFromJSON(itemInfo.style, itemInfo.pointType));
           myMapsHelpers.setFeatureLabel(itemInfo);
         } else feature.setStyle(new Style({}));
 
@@ -551,7 +634,7 @@ class MyMaps extends Component {
     this.vectorSource.getFeatures().forEach(feature => {
       const id = feature.getProperties().id;
       if (id === itemInfo.id) {
-        if (visible) feature.setStyle(myMapsHelpers.getStyleFromJSON(itemInfo.style));
+        if (visible) feature.setStyle(myMapsHelpers.getStyleFromJSON(itemInfo.style, itemInfo.pointType));
         else feature.setStyle(new Style({}));
 
         return;
@@ -560,7 +643,9 @@ class MyMaps extends Component {
   };
 
   onDeleteAllClick = () => {
-    this.setState({ items: [] });
+    this.setState({ items: [] }, () => {
+      this.saveStateToStorage();
+    });
     this.vectorLayer.getSource().clear();
   };
 
@@ -581,6 +666,7 @@ class MyMaps extends Component {
                   onItemCheckboxChange={this.onItemCheckboxChange}
                   onLabelVisibilityChange={this.onLabelVisibilityChange}
                   onLabelRotationChange={this.onLabelRotationChange}
+                  showDrawingOptionsPopup={this.showDrawingOptionsPopup}
                 />
               </CSSTransition>
             ))}
