@@ -1,4 +1,6 @@
 import React from "react";
+//import { helpers } from "@turf/turf";
+import * as helpers from "../../../../helpers/helpers";
 
 const inputMsg = "(listening for input)";
 export const LiveCoordinates = props => {
@@ -23,7 +25,7 @@ export const LiveCoordinates = props => {
 
         <div className="sc-coordinates-row sc-arrow">
           <label>Latitude:</label>
-          <span>{props.liveLatLongCoords === null ? inputMsg: props.liveLatLongCoords[1]}</span>
+          <span>{props.liveLatLongCoords === null ? inputMsg : props.liveLatLongCoords[1]}</span>
         </div>
 
         <div className="sc-coordinates-row sc-arrow">
@@ -65,8 +67,8 @@ export const CustomCoordinates = props => {
   return (
     <div>
       <div className="sc-coordinates-heading">{props.title}</div>
-      <CoordinateRow label="X Coordinate" value={props.valueX} onChange={props.onChangeX} inputId={props.inputIdX} />
-      <CoordinateRow label="Y Coordinate" value={props.valueY} onChange={props.onChangeY} inputId={props.inputIdY} />
+      <CoordinateRow label="X Coordinate" value={props.valueX} onChange={props.onChangeX} inputId={props.inputIdX} onEnterKey={props.onZoomClick} />
+      <CoordinateRow label="Y Coordinate" value={props.valueY} onChange={props.onChangeY} inputId={props.inputIdY} onEnterKey={props.onZoomClick} />
       <CoordinateActions onZoomClick={props.onZoomClick} onMyMapsClick={() => props.onMyMapsClick(props.valueX, props.valueY)} />
     </div>
   );
@@ -79,7 +81,11 @@ export const CoordinateActions = props => {
       <span className="sc-fakeLink" onClick={props.onZoomClick}>
         zoom
       </span>{" "}
-      ] [ <span className="sc-fakeLink" onClick={props.onMyMapsClick}>add to my Maps</span> ]
+      ] [{" "}
+      <span className="sc-fakeLink" onClick={props.onMyMapsClick}>
+        add to my Maps
+      </span>{" "}
+      ]
     </div>
   );
 };
@@ -96,6 +102,9 @@ export const CoordinateRow = props => {
           type="text"
           placeholder={inputMsg}
           onChange={props.onChange}
+          onKeyDown={evt => {
+            if (evt.key === "Enter") props.onEnterKey();
+          }}
         />
       </span>
     </div>
