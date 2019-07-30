@@ -76,7 +76,10 @@ class Coordinates extends Component {
     this.onMapMoveEvent = window.map.on("moveend", this.onMapMoveEnd);
 
     // REGISTER CUSTOM PROJECTIONS
-    proj4.defs([["EPSG:26917", "+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs "], ["EPSG:26717", "+proj=utm +zone=17 +ellps=clrk66 +datum=NAD27 +units=m +no_defs "]]);
+    proj4.defs([
+      ["EPSG:26917", "+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs "],
+      ["EPSG:26717", "+proj=utm +zone=17 +ellps=clrk66 +datum=NAD27 +units=m +no_defs "]
+    ]);
     register(proj4);
 
     // INITIAL EXTENT
@@ -185,9 +188,9 @@ class Coordinates extends Component {
     } else if (proj === "latlong") {
       webMercatorCoords = transform([x, y], "EPSG:4326", "EPSG:3857");
     } else if (proj === "nad83") {
-      webMercatorCoords = transform([this.state.inputNad83XValue, this.state.inputNad83YValue], this.nad83Proj, "EPSG:3857");
+      webMercatorCoords = transform([x, y], this.nad83Proj, "EPSG:3857");
     } else if (proj === "nad27") {
-      webMercatorCoords = transform([this.state.inputNad27XValue, this.state.inputNad27YValue], this.nad27Proj, "EPSG:3857");
+      webMercatorCoords = transform([x, y], this.nad27Proj, "EPSG:3857");
     } else return;
 
     this.createPoint(webMercatorCoords, true);
@@ -195,7 +198,7 @@ class Coordinates extends Component {
 
   render() {
     return (
-      <PanelComponent key={helpers.getUID()} onClose={this.props.onClose} name={this.props.name} type="tools">
+      <PanelComponent onClose={this.props.onClose} name={this.props.name} type="tools">
         <div className="sc-coordinates-container">
           <LiveCoordinates key={helpers.getUID()} liveWebMercatorCoords={this.state.liveWebMercatorCoords} liveLatLongCoords={this.state.liveLatLongCoords} />
 
@@ -207,7 +210,6 @@ class Coordinates extends Component {
 
           <div className="sc-container">
             <CustomCoordinates
-              key={helpers.getUID()}
               title="Map Coordinates (Web Mercator)"
               valueX={this.state.inputWebMercatorXValue}
               valueY={this.state.inputWebMercatorYValue}
@@ -225,12 +227,14 @@ class Coordinates extends Component {
               }}
               inputIdX="sc-coordinate-webmercator-x"
               inputIdY="sc-coordinate-webmercator-y"
+              onEnterKey={() => {
+                this.onZoomClick("webmercator", this.state.inputWebMercatorXValue, this.state.inputWebMercatorYValue);
+              }}
             />
 
             <div className="sc-coordinates-divider">&nbsp;</div>
 
             <CustomCoordinates
-              key={helpers.getUID()}
               title="Latitude/Longitude (WGS84)"
               valueX={this.state.inputLatLongXValue}
               valueY={this.state.inputLatLongYValue}
@@ -248,12 +252,14 @@ class Coordinates extends Component {
               }}
               inputIdX="sc-coordinate-latlong-x"
               inputIdY="sc-coordinate-latlong-y"
+              onEnterKey={() => {
+                this.onZoomClick("latlong", this.state.inputLatLongXValue, this.state.inputLatLongYValue);
+              }}
             />
 
             <div className="sc-coordinates-divider">&nbsp;</div>
 
             <CustomCoordinates
-              key={helpers.getUID()}
               title="North American Datum (NAD) 83 - Zone 17"
               valueX={this.state.inputNad83XValue}
               valueY={this.state.inputNad83YValue}
@@ -271,12 +277,14 @@ class Coordinates extends Component {
               }}
               inputIdX="sc-coordinate-nad83-x"
               inputIdY="sc-coordinate-nad83-y"
+              onEnterKey={() => {
+                this.onZoomClick("nad83", this.state.inputNad83XValue, this.state.inputNad83YValue);
+              }}
             />
 
             <div className="sc-coordinates-divider">&nbsp;</div>
 
             <CustomCoordinates
-              key={helpers.getUID()}
               title="North American Datum (NAD) 27 - Zone 17"
               valueX={this.state.inputNad27XValue}
               valueY={this.state.inputNad27YValue}
@@ -294,12 +302,21 @@ class Coordinates extends Component {
               }}
               inputIdX="sc-coordinate-nad27-x"
               inputIdY="sc-coordinate-nad27-y"
+              onEnterKey={() => {
+                this.onZoomClick("nad27", this.state.inputNad27XValue, this.state.inputNad27YValue);
+              }}
             />
           </div>
 
           <div className="sc-title sc-coordinates-title">Map Extent</div>
 
-          <MapExtent key={helpers.getUID()} extentMinX={this.state.extentMinX} extentMinY={this.state.extentMinY} extentMaxX={this.state.extentMaxX} extentMaxY={this.state.extentMaxY} />
+          <MapExtent
+            key={helpers.getUID()}
+            extentMinX={this.state.extentMinX}
+            extentMinY={this.state.extentMinY}
+            extentMaxX={this.state.extentMaxX}
+            extentMaxY={this.state.extentMaxY}
+          />
 
           <div className="sc-title sc-coordinates-title">Map Scale</div>
           <div className="sc-container">
