@@ -537,6 +537,11 @@ class MyMaps extends Component {
     } else if (action === "sc-floating-menu-symbolizer") {
       const feature = myMapsHelpers.getFeatureById(item.id);
       this.showDrawingOptionsPopup(feature, null, "symbolizer");
+    } else if (action === "sc-floating-menu-zoomto") {
+      const feature = myMapsHelpers.getFeatureById(item.id);
+      helpers.zoomToFeature(feature);
+    } else if (action === "sc-floating-menu-delete") {
+      this.onItemDelete(item.id);
     }
   };
 
@@ -557,6 +562,12 @@ class MyMaps extends Component {
           </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-symbolizer">
             <FloatingMenuItem imageName={"color-picker.png"} label="Symbolize" />
+          </MenuItem>
+          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoomto">
+            <FloatingMenuItem imageName={"zoom.png"} label="Zoom To" />
+          </MenuItem>
+          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-delete">
+            <FloatingMenuItem imageName={"eraser.png"} label="Delete" />
           </MenuItem>
           <SubMenu className="sc-floating-menu-toolbox-submenu" title={<FloatingMenuItem imageName={"edit.png"} label="Edit Tools" />} key="1">
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-edit-all">
