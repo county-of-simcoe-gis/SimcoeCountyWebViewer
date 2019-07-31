@@ -130,7 +130,7 @@ class MyMaps extends Component {
 
       // RE-ENABLE PARCEL CLICK
       window.disableParcelClick = false;
-    }, 251);
+    }, 1000);
 
     // ADD NEW ITEM
     this.addNewItem(evt.feature);
@@ -152,23 +152,24 @@ class MyMaps extends Component {
     if (this.state.drawType === "Text") labelText = "Enter Custom Text";
 
     let customStyle = null;
-    if (this.state.drawType === "Arrow") {
-      // CONVERT LINE TO ARROW
-      const arrow = myMapsHelpers.convertLineToArrow(feature.getGeometry());
-      feature.setGeometry(arrow);
+    if (!fromEmmiter) {
+      if (this.state.drawType === "Arrow") {
+        // CONVERT LINE TO ARROW
+        const arrow = myMapsHelpers.convertLineToArrow(feature.getGeometry());
+        feature.setGeometry(arrow);
 
-      // GIVE IT A BIGGER STROKE BY DEFAULT
-      customStyle = myMapsHelpers.getDefaultDrawStyle(this.state.drawColor, false, 6, feature.getGeometry().getType());
-      feature.setStyle(customStyle);
-    } else if (this.state.drawType === "Text") {
-      labelText = "Enter Custom Text";
-      customStyle = myMapsHelpers.getDefaultDrawStyle(this.state.drawColor, true, undefined, undefined, feature.getGeometry().getType());
-      feature.setStyle(customStyle);
-    } else {
-      customStyle = myMapsHelpers.getDefaultDrawStyle(this.state.drawColor, undefined, undefined, undefined, feature.getGeometry().getType());
-      feature.setStyle(customStyle);
-      //feature.setStyle(this.state.drawStyle);
-    }
+        // GIVE IT A BIGGER STROKE BY DEFAULT
+        customStyle = myMapsHelpers.getDefaultDrawStyle(this.state.drawColor, false, 6, feature.getGeometry().getType());
+        feature.setStyle(customStyle);
+      } else if (this.state.drawType === "Text") {
+        labelText = "Enter Custom Text";
+        customStyle = myMapsHelpers.getDefaultDrawStyle(this.state.drawColor, true, undefined, undefined, feature.getGeometry().getType());
+        feature.setStyle(customStyle);
+      } else {
+        customStyle = myMapsHelpers.getDefaultDrawStyle(this.state.drawColor, undefined, undefined, undefined, feature.getGeometry().getType());
+        feature.setStyle(customStyle);
+      }
+    } else customStyle = feature.getStyle();
 
     feature.setProperties({ id: featureId, label: labelText, labelVisible: false, drawType: this.state.drawType, isParcel: false });
 
@@ -202,12 +203,12 @@ class MyMaps extends Component {
         drawType: "Cancel"
       }),
       () => {
-        // UPDATE FEATURE LABEL
-        myMapsHelpers.setFeatureLabel(itemInfo);
-
         // UPDATE STORAGE
         this.saveStateToStorage();
         this.importGeometries();
+
+        // UPDATE FEATURE LABEL
+        myMapsHelpers.setFeatureLabel(itemInfo);
 
         // SHOW POPUP IF WE'RE ADDING TEXT
         if (itemInfo.drawType === "Text") this.showDrawingOptionsPopup(feature);
@@ -462,7 +463,7 @@ class MyMaps extends Component {
         onLabelChange={this.onLabelChange}
         onLabelVisibilityChange={this.onLabelVisibilityChange}
         onLabelRotationChange={this.onLabelRotationChange}
-        onToolsButtonClick={this.onToolsButtonClick}
+        onFooterToolsButtonClick={this.onFooterToolsButtonClick}
         onDeleteButtonClick={this.onItemDelete}
         onPointStyleDropDown={this.onPointStyleDropDown}
         onRadiusSliderChange={this.onRadiusSliderChange}
@@ -474,6 +475,7 @@ class MyMaps extends Component {
         onStrokeColorPickerChange={this.onStrokeColorPickerChange}
         onStrokeWidthSliderChange={this.onStrokeWidthSliderChange}
         onStrokeTypeDropDown={this.onStrokeTypeDropDown}
+        onMyMapItemToolsButtonClick={this.onMyMapItemToolsButtonClick}
       />,
       "Drawing Options",
       () => {
@@ -482,7 +484,7 @@ class MyMaps extends Component {
     );
   };
 
-  onToolsButtonClick = (evt, item) => {
+  onFooterToolsButtonClick = (evt, item) => {
     var evtClone = Object.assign({}, evt);
     const menu = (
       <Portal>
@@ -520,7 +522,7 @@ class MyMaps extends Component {
     ReactDOM.render(menu, document.getElementById("portal-root"));
   };
 
-  onMenuItemClick = action => {
+  onMenuItemClick = (action, item) => {
     if (action === "sc-floating-menu-show-all") {
       this.toggleAllVisibility(true);
     } else if (action === "sc-floating-menu-hide-all") {
@@ -529,7 +531,55 @@ class MyMaps extends Component {
       this.deleteSelected(true);
     } else if (action === "sc-floating-menu-delete-unselected") {
       this.deleteSelected(false);
+    } else if (action === "sc-floating-menu-buffer") {
+      const feature = myMapsHelpers.getFeatureById(item.id);
+      this.showDrawingOptionsPopup(feature, null, "buffer");
+    } else if (action === "sc-floating-menu-symbolizer") {
+      const feature = myMapsHelpers.getFeatureById(item.id);
+      this.showDrawingOptionsPopup(feature, null, "symbolizer");
     }
+  };
+
+  onMyMapItemToolsButtonClick = (evt, item) => {
+    var evtClone = Object.assign({}, evt);
+    const menu = (
+      <Portal>
+        <FloatingMenu
+          key={helpers.getUID()}
+          buttonEvent={evtClone}
+          classNamesToIgnore={["sc-mymaps-popup-footer-button", "sc-mymaps-footer-buttons-img"]}
+          onMenuItemClick={action => {
+            this.onMenuItemClick(action, item);
+          }}
+        >
+          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-buffer">
+            <FloatingMenuItem imageName={"buffer.png"} label="Buffer" />
+          </MenuItem>
+          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-symbolizer">
+            <FloatingMenuItem imageName={"color-picker.png"} label="Symbolize" />
+          </MenuItem>
+          <SubMenu className="sc-floating-menu-toolbox-submenu" title={<FloatingMenuItem imageName={"edit.png"} label="Edit Tools" />} key="1">
+            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-edit-all">
+              {<FloatingMenuItem imageName={"edit-all.png"} label="Enable All Edit Tools" />}
+            </MenuItem>
+            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-edit-vertices">
+              {<FloatingMenuItem imageName={"edit-vertices.png"} label="Vertices Only" />}
+            </MenuItem>
+            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-edit-move">
+              {<FloatingMenuItem imageName={"edit-move.png"} label="Move Only" />}
+            </MenuItem>
+            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-edit-rotate">
+              {<FloatingMenuItem imageName={"edit-rotate.png"} label="Rotate" />}
+            </MenuItem>
+            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-edit-scale">
+              {<FloatingMenuItem imageName={"edit-scale.png"} label="Scale" />}
+            </MenuItem>
+          </SubMenu>
+        </FloatingMenu>
+      </Portal>
+    );
+
+    ReactDOM.render(menu, document.getElementById("portal-root"));
   };
 
   deleteSelected = selected => {
@@ -667,6 +717,8 @@ class MyMaps extends Component {
                   onLabelVisibilityChange={this.onLabelVisibilityChange}
                   onLabelRotationChange={this.onLabelRotationChange}
                   showDrawingOptionsPopup={this.showDrawingOptionsPopup}
+                  onFooterToolsButtonClick={this.onFooterToolsButtonClick}
+                  onMyMapItemToolsButtonClick={this.onMyMapItemToolsButtonClick}
                 />
               </CSSTransition>
             ))}

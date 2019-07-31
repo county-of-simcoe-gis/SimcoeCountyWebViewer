@@ -7,30 +7,26 @@ import { Vector as VectorLayer } from "ol/layer";
 import { Vector as VectorSource } from "ol/source.js";
 import WKT from "ol/format/WKT.js";
 import { Fill, Icon, Stroke, Style, Circle as CircleStyle } from "ol/style.js";
-import {transform} from 'ol/proj.js';
-import {CopyToClipboard} from 'react-copy-to-clipboard';
+import { transform } from "ol/proj.js";
+import { CopyToClipboard } from "react-copy-to-clipboard";
 
 // URLS
 const searchURL = searchText => `https://maps.simcoe.ca/giswebapi/api/search/?query=${searchText}`;
 const searchInfoURL = locationID => `https://maps.simcoe.ca/giswebapi/api/search/?locationID=${locationID}`;
-const googleDirectionsURL = (lat,long) => `https://www.google.com/maps?saddr=My+Location&daddr=${lat},${long}`;
+const googleDirectionsURL = (lat, long) => `https://www.google.com/maps?saddr=My+Location&daddr=${lat},${long}`;
 
 // VECTOR LAYERS
 let searchGeoLayer = null;
 let searchIconLayer = null;
 
 // LOCATION ID (FROM SEARCH)
-const locationId = helpers.getURLParameter("LOCATIONID", false);  
+const locationId = helpers.getURLParameter("LOCATIONID", false);
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-  require.context("./images", false, /\.(png|jpe?g|svg)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
 function importAllImages(r) {
   let images = {};
-  r.keys().map((item, index) => 
-    images[item.replace("./", "")] = r(item)
-  );
+  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
   return images;
 }
 
@@ -58,8 +54,8 @@ const styles = {
 };
 
 class Search extends Component {
-  constructor(props){
-    super(props)
+  constructor(props) {
+    super(props);
 
     // BIND THIS TO THE CLICK FUNCTION
     this.removeMarkersClick = this.removeMarkersClick.bind(this);
@@ -69,95 +65,99 @@ class Search extends Component {
     value: "",
     searchResults: [],
     hover: false,
-    iconInitialClass : "sc-search-icon-initial",
-    iconActiveClass : "sc-search-icon-active-hidden"
+    iconInitialClass: "sc-search-icon-initial",
+    iconActiveClass: "sc-search-icon-active-hidden"
   };
 
   requestTimer = null;
 
-  componentDidMount() { 
-
+  componentDidMount() {
     // HANDLE URL PARAMETER
-    if (locationId !== null){
+    if (locationId !== null) {
       // CALL API TO GET LOCATION DETAILS
-      helpers.getJSON(searchInfoURL(locationId), (result) => this.jsonCallback(result));
+      helpers.getJSON(searchInfoURL(locationId), result => this.jsonCallback(result));
     }
   }
 
-  removeMarkersClick(){
+  removeMarkersClick() {
     this.cleanup();
   }
 
-  myMapsClick = (evt) => {
+  myMapsClick = evt => {
     const result = this.state.searchResults[0];
 
     // ADD MYMAPS
-    window.emitter.emit('addMyMapsFeature', searchGeoLayer.getSource().getFeatures()[0], result.Name );
+    window.emitter.emit("addMyMapsFeature", searchGeoLayer.getSource().getFeatures()[0], result.Name);
 
     // CLEAN UP
     this.cleanup();
-  }
+  };
 
-  directionsClick(evt){
-
+  directionsClick(evt) {
     // GET CURRENT FEATURE
-    var coords = searchIconLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
+    var coords = searchIconLayer
+      .getSource()
+      .getFeatures()[0]
+      .getGeometry()
+      .getCoordinates();
 
     // CONVER TO LAT LONG
-    var latLongCoords = transform(coords, 'EPSG:3857', 'EPSG:4326');
+    var latLongCoords = transform(coords, "EPSG:3857", "EPSG:4326");
 
     // OPEN GOOGLE DIRECTIONS
-    var url = googleDirectionsURL(latLongCoords[1], latLongCoords[0])
+    var url = googleDirectionsURL(latLongCoords[1], latLongCoords[0]);
     window.open(url, "_blank");
-    
   }
 
   // INIT SEARCH LAYERS
   initsearchLayers() {
-    if ( (window.map != null) && (searchGeoLayer == null) ) {
-
+    if (window.map != null && searchGeoLayer == null) {
       // HOLDS LINES AND POLYS
-      searchGeoLayer = new VectorLayer({source: new VectorSource({
-        features: []
-      })});
-      searchGeoLayer.set('name', 'sc-search-geo');
+      searchGeoLayer = new VectorLayer({
+        source: new VectorSource({
+          features: []
+        })
+      });
+      searchGeoLayer.set("name", "sc-search-geo");
       window.map.addLayer(searchGeoLayer);
 
       // HOLDS CENTROID (CLICKABLE)
-      searchIconLayer = new VectorLayer({source: new VectorSource({
-        features: []
-      })});
+      searchIconLayer = new VectorLayer({
+        source: new VectorSource({
+          features: []
+        })
+      });
       searchIconLayer.setStyle(styles["point"]);
-      searchIconLayer.set('name', 'sc-search-icon');
-      searchIconLayer.set('disableParcelClick', true);
+      searchIconLayer.set("name", "sc-search-icon");
+      searchIconLayer.set("disableParcelClick", true);
       window.map.addLayer(searchIconLayer);
 
-      window.map.on('singleclick', (evt) =>{
-
+      window.map.on("singleclick", evt => {
         var feature = window.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
           if (layer === null) return;
-          
-          if (layer.get('name') !== undefined && layer.get('name') === 'sc-search-icon')
-            return feature;
+
+          if (layer.get("name") !== undefined && layer.get("name") === "sc-search-icon") return feature;
         });
 
-        if (feature !== undefined){
-          window.popup.show(evt.coordinate, 
-            <PopupContent 
+        if (feature !== undefined) {
+          window.popup.show(
+            evt.coordinate,
+            <PopupContent
               key={helpers.getUID()}
-              removeMarkersClick={this.removeMarkersClick} 
+              removeMarkersClick={this.removeMarkersClick}
               myMapsClick={this.myMapsClick}
               shareLocationId={this.state.searchResults[0].LocationID}
-              directionsClick={(evt) => this.directionsClick(evt)}
-            ></PopupContent>, "Actions");
+              directionsClick={evt => this.directionsClick(evt)}
+            />,
+            "Actions"
+          );
         }
       });
     }
   }
 
   getWKTFeature(wktString) {
-    if (wktString === undefined)
-      return;
+    if (wktString === undefined) return;
 
     // READ WKT
     var wkt = new WKT();
@@ -168,12 +168,11 @@ class Search extends Component {
     return feature;
   }
 
-  jsonCallback(result){
-
+  jsonCallback(result) {
     // SOME FEATURES HAVEN"T BEEN PROCESSED YET
-    if (result.WKTShape === undefined || result.WKTShape === "" || result.WKTShape === null){
-      console.log("WKT Shape is empty.")
-      return
+    if (result.WKTShape === undefined || result.WKTShape === "" || result.WKTShape === null) {
+      console.log("WKT Shape is empty.");
+      return;
     }
 
     this.initsearchLayers();
@@ -192,27 +191,23 @@ class Search extends Component {
     searchGeoLayer.setZIndex(100);
     searchIconLayer.setZIndex(100);
     // SET STYLE AND ZOOM
-    if (result.WKTShape.indexOf("POINT") !== -1){
+    if (result.WKTShape.indexOf("POINT") !== -1) {
       searchGeoLayer.setStyle(styles["point"]);
       window.map.getView().fit(wktShape.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
       window.map.getView().setZoom(18);
-    } 
-    else if (result.WKTShape.indexOf("LINESTRING") !== -1 || result.WKTShape.indexOf("MULTILINESTRING") !== -1){
+    } else if (result.WKTShape.indexOf("LINESTRING") !== -1 || result.WKTShape.indexOf("MULTILINESTRING") !== -1) {
       searchGeoLayer.setStyle(styles["poly"]);
       window.map.getView().fit(wktShape.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
       window.map.getView().setZoom(window.map.getView().getZoom() - 1);
-    }
-    else{
+    } else {
       searchGeoLayer.setStyle(styles["poly"]);
       window.map.getView().fit(wktShape.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
       window.map.getView().setZoom(window.map.getView().getZoom() - 2);
     }
-    
   }
 
   // WHEN USER SELECTS ITEM
   onItemSelect(value, item) {
-
     // CLEAR PREVIOUS SOURCE
     searchGeoLayer.getSource().clear();
 
@@ -220,7 +215,7 @@ class Search extends Component {
     this.setState({ value, searchResults: [item] });
     if (item.LocationID == null) {
       // HANDLES GEOCODE RESULT
-      
+
       // READ WKT
       const feature = this.getWKTFeature(item.WKTShape);
 
@@ -235,14 +230,12 @@ class Search extends Component {
       window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
       window.map.getView().setZoom(18);
     } else {
-
       // CALL API TO GET LOCATION DETAILS
-      helpers.getJSON(searchInfoURL(item.LocationID), (result) => this.jsonCallback(result));
-
+      helpers.getJSON(searchInfoURL(item.LocationID), result => this.jsonCallback(result));
     }
   }
 
-  cleanup(){
+  cleanup() {
     // REMOVE FEATURES
     searchGeoLayer.getSource().clear();
     searchIconLayer.getSource().clear();
@@ -250,79 +243,62 @@ class Search extends Component {
     // HIDE POPUP
     window.popup.hide();
 
-    this.setState({value: ''});
+    this.setState({ value: "" });
   }
 
   render() {
     // INIT LAYER
     this.initsearchLayers();
 
-    
     return (
-        <div>
-        <Autocomplete  
-        tabIndex="1"
-        inputProps={{ id: "sc-search-textbox", placeholder: "Search..." ,name:"sc-search-textbox"}}
-        className="sc-search-textbox"
-        wrapperStyle={{
-          position: "relative",
-          display: "inline-block",
-          width: "100%"
-        }}  
-        value={this.state.value}
-        items={this.state.searchResults}
-        getItemValue={item => item.Name}
-        onSelect={(value, item) => {
-          this.onItemSelect(value, item);
-        }}
-        onChange={(event, value) => {
-          this.setState({ value });
-          if (value !== "") {
-            this.setState({iconInitialClass: "sc-search-icon-initial-hidden"});
-            this.setState({iconActiveClass: "sc-search-icon-active"});
+      <div>
+        <Autocomplete
+          tabIndex="1"
+          inputProps={{ id: "sc-search-textbox", placeholder: "Search...", name: "sc-search-textbox" }}
+          className="sc-search-textbox"
+          wrapperStyle={{
+            position: "relative",
+            display: "inline-block",
+            width: "100%",
+            zIndex: "100000"
+          }}
+          value={this.state.value}
+          items={this.state.searchResults}
+          getItemValue={item => item.Name}
+          onSelect={(value, item) => {
+            this.onItemSelect(value, item);
+          }}
+          onChange={(event, value) => {
+            this.setState({ value });
+            if (value !== "") {
+              this.setState({ iconInitialClass: "sc-search-icon-initial-hidden" });
+              this.setState({ iconActiveClass: "sc-search-icon-active" });
 
-            helpers.getJSON(searchURL(value), responseJson =>
-              this.setState({ searchResults: responseJson })
-            );
-          } else {
-            this.setState({iconInitialClass: "sc-search-icon-initial"});
-            this.setState({iconActiveClass: "sc-search-icon-active-hidden"});
+              helpers.getJSON(searchURL(value), responseJson => this.setState({ searchResults: responseJson }));
+            } else {
+              this.setState({ iconInitialClass: "sc-search-icon-initial" });
+              this.setState({ iconActiveClass: "sc-search-icon-active-hidden" });
 
-            this.setState({ searchResults: [] });
-          }
-        }}
-        renderMenu={children => (
-          <div className="sc-search-menu">{children}</div>
-        )}
-        renderItem={(item, isHighlighted) => (
-          <div 
-            className={
-              isHighlighted ? "sc-search-item-highlighted" : "sc-search-item"
+              this.setState({ searchResults: [] });
             }
-            key={helpers.getUID()}
-          >
-            <div className="sc-search-item-left">
-              <img src={require("./images/map-marker-light-blue.png")} alt="blue pin"/>
-            </div>
-              <div className="sc-search-item-content"  >
-                <Highlighter
-                  highlightClassName="sc-search-highlight-words"
-                  searchWords={[this.state.value]}
-                  textToHighlight={item.Name}
-                ></Highlighter>
-
-                <div className="sc-search-item-sub-content">
-                  {" - " + item.Muni + " (" + item.Type + ")"}
-                </div>
+          }}
+          renderMenu={children => <div className="sc-search-menu">{children}</div>}
+          renderItem={(item, isHighlighted) => (
+            <div className={isHighlighted ? "sc-search-item-highlighted" : "sc-search-item"} key={helpers.getUID()}>
+              <div className="sc-search-item-left">
+                <img src={require("./images/map-marker-light-blue.png")} alt="blue pin" />
               </div>
-          </div>
-        )}
-        >
-        </Autocomplete>
-        <img className={this.state.iconInitialClass} src={images['magnify.png']} alt="search"></img>
-        <img className={this.state.iconActiveClass} src={images['clear.png']} alt="clear" onClick={this.cleanup}></img>
-        </div>
-      
+              <div className="sc-search-item-content">
+                <Highlighter highlightClassName="sc-search-highlight-words" searchWords={[this.state.value]} textToHighlight={item.Name} />
+
+                <div className="sc-search-item-sub-content">{" - " + item.Muni + " (" + item.Type + ")"}</div>
+              </div>
+            </div>
+          )}
+        />
+        <img className={this.state.iconInitialClass} src={images["magnify.png"]} alt="search" />
+        <img className={this.state.iconActiveClass} src={images["clear.png"]} alt="clear" onClick={this.cleanup} />
+      </div>
     );
   }
 }
@@ -330,44 +306,49 @@ class Search extends Component {
 export default Search;
 
 class PopupContent extends Component {
-  constructor(props){
-    super(props)
-    this.state = { 
+  constructor(props) {
+    super(props);
+    this.state = {
       copied: false,
       shareURL: this.getShareURL()
-     }
+    };
   }
 
   getShareURL = value => {
-    console.log(this.props.shareLocationId)
+    console.log(this.props.shareLocationId);
     //GET URL
     var url = window.location.href;
 
     //ADD LOCATIONID
-    if (url.indexOf("?") > 0)
-        url = url + "&LOCATIONID=" + this.props.shareLocationId;
-    else
-        url = url + "?LOCATIONID=" + this.props.shareLocationId;
+    if (url.indexOf("?") > 0) url = url + "&LOCATIONID=" + this.props.shareLocationId;
+    else url = url + "?LOCATIONID=" + this.props.shareLocationId;
 
     return url;
-  }
+  };
 
   onShareClick = event => {
-    this.setState({copied: true});
+    this.setState({ copied: true });
     helpers.showMessage("Share", "Link has been copied to your clipboard.", "green", 2000);
-  }
-  
-  render() { 
+  };
 
+  render() {
     return (
       <div>
-        <button className="sc-button sc-search-popup-content-button" onMouseUp={helpers.convertMouseUpToClick} onClick={this.props.removeMarkersClick}>Remove Markers</button>
-        <button className="sc-button sc-search-popup-content-button" onMouseUp={helpers.convertMouseUpToClick} onClick={this.props.myMapsClick}>Add to My Maps</button>
+        <button className="sc-button sc-search-popup-content-button" onMouseUp={helpers.convertMouseUpToClick} onClick={this.props.removeMarkersClick}>
+          Remove Markers
+        </button>
+        <button className="sc-button sc-search-popup-content-button" onMouseUp={helpers.convertMouseUpToClick} onClick={this.props.myMapsClick}>
+          Add to My Maps
+        </button>
         <CopyToClipboard text={this.state.shareURL}>
-          <button className="sc-button sc-search-popup-content-button" onMouseUp={helpers.convertMouseUpToClick} onClick={this.onShareClick}>Share this Location</button>
+          <button className="sc-button sc-search-popup-content-button" onMouseUp={helpers.convertMouseUpToClick} onClick={this.onShareClick}>
+            Share this Location
+          </button>
         </CopyToClipboard>
-        <button className="sc-button sc-search-popup-content-button" onMouseUp={helpers.convertMouseUpToClick} onClick={this.props.directionsClick}>Directions to Here</button>
-      </div> 
-      );
+        <button className="sc-button sc-search-popup-content-button" onMouseUp={helpers.convertMouseUpToClick} onClick={this.props.directionsClick}>
+          Directions to Here
+        </button>
+      </div>
+    );
   }
 }
