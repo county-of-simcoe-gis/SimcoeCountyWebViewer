@@ -1,10 +1,8 @@
 import React, { Component } from "react";
-import ReactDOM from "react-dom";
-import { SketchPicker, CompactPicker } from "react-color";
+import { CompactPicker } from "react-color";
 import * as helpers from "../../../helpers/helpers";
 import * as myMapsHelpers from "./myMapsHelpers";
 import "./MyMapsSymbolizer.css";
-import Portal from "../../../helpers/Portal.jsx";
 import ColorPicker from "./ColorPicker";
 import { PointType, StyleSize, FillColor, StrokeType, StrokeColor, StrokeWidth, Rotation, PolygonType } from "./MyMapsSymbolizerComponents";
 
@@ -53,7 +51,6 @@ class MyMapsSymbolizer extends Component {
     const pointType = this.props.item.pointType !== undefined ? this.props.item.pointType : "circle";
     const strokeType = this.props.item.strokeType !== undefined ? this.props.item.strokeType : "normal";
 
-    console.log(strokeType);
     this.state = {
       fillColorPickerVisible: false,
       selectedPointStyleDropDown: pointType,

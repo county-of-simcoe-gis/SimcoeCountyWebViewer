@@ -70,6 +70,7 @@ class PropertyReportClick extends Component {
 
       if (disable) return;
 
+      console.log(window.disableParcelClick);
       const parcelURL = parcelURLTemplate(mainConfig.parcelLayer.url, evt.coordinate[0], evt.coordinate[1]);
       this.showPropertyWindow(parcelURL, evt);
 

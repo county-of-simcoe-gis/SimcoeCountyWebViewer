@@ -1,3 +1,8 @@
+import React, { Component } from "react";
+import ReactDOM from "react-dom";
+import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
+import { SubMenu, Item as MenuItem } from "rc-menu";
+import Portal from "../../../helpers/Portal.jsx";
 import Draw, { createBox } from "ol/interaction/Draw.js";
 import { Vector as VectorSource } from "ol/source.js";
 import { Circle as CircleStyle, Fill, Stroke, Style, Icon, RegularShape } from "ol/style.js";
@@ -32,7 +37,6 @@ export function getFeatureById(id) {
 }
 
 export function getStyleFromJSON(styleJSON, pointType) {
-  console.log(styleJSON);
   if (styleJSON === undefined) return getDefaultDrawStyle("#e809e5");
 
   // FILL
@@ -128,7 +132,6 @@ export function getStyleFromJSON(styleJSON, pointType) {
 }
 
 export function getDefaultDrawStyle(drawColor, isText = false, strokeWidth = 3, pointType = "circle", geometryType) {
-  console.log(geometryType);
   if (isText === undefined) isText = false;
   if (strokeWidth === undefined) strokeWidth = 3;
 
@@ -362,4 +365,30 @@ export function convertLineToArrow(geometry) {
   clone.appendCoordinate(end);
 
   return clone;
+}
+
+export function importMyMaps(id) {
+  // const storage = localStorage.getItem("myMaps");
+  // if (storage === null) return [];
+  // const data = JSON.parse(storage);
+  // helpers.postJSON("https://opengis.simcoe.ca/api/postMyMaps/", data, result => {
+  //   console.log(result);
+  // });
+  // helpers.getJSON("https://opengis.simcoe.ca/api/getMyMaps/6a8cf8c6-b3a0-11e9-9d64-005056b2f523", result => {
+  //   console.log(result);
+  // });
+  // return;
+}
+
+export function exportMyMaps(id) {
+  // const storage = localStorage.getItem("myMaps");
+  // if (storage === null) return [];
+  // const data = JSON.parse(storage);
+  // helpers.postJSON("https://opengis.simcoe.ca/api/postMyMaps/", data, result => {
+  //   console.log(result);
+  // });
+  // helpers.getJSON("https://opengis.simcoe.ca/api/getMyMaps/6a8cf8c6-b3a0-11e9-9d64-005056b2f523", result => {
+  //   console.log(result);
+  // });
+  // return;
 }

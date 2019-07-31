@@ -1,8 +1,10 @@
 import React, { Component, useState } from "react";
 import MyMapsSymbolizer from "./MyMapsSymbolizer.jsx";
+import MyMapsBuffer from "./MyMapsBuffer";
 import MyMapsPopupLabel from "./MyMapsPopupLabel";
 import "./MyMapsPopup.css";
 import * as helpers from "../../../helpers/helpers";
+import * as myMapsHelpers from "./myMapsHelpers";
 
 class MyMapsPopup extends Component {
   state = {};
@@ -42,8 +44,9 @@ class MyMapsPopup extends Component {
           onStrokeWidthSliderChange={this.props.onStrokeWidthSliderChange}
           onStrokeTypeDropDown={this.props.onStrokeTypeDropDown}
         />
+        <MyMapsBuffer visible={this.props.activeTool === "buffer"} item={this.props.item} />
         <FooterButtons
-          onToolsButtonClick={evt => this.props.onToolsButtonClick(evt, this.props.item)}
+          onMyMapItemToolsButtonClick={evt => this.props.onMyMapItemToolsButtonClick(evt, this.props.item)}
           onDeleteButtonClick={() => {
             this.props.onDeleteButtonClick(this.props.item.id);
             window.popup.hide();
@@ -63,7 +66,7 @@ function FooterButtons(props) {
         className="sc-button sc-mymaps-popup-footer-button"
         key={helpers.getUID()}
         id={helpers.getUID()}
-        onClick={evt => props.onToolsButtonClick(evt)}
+        onClick={evt => props.onMyMapItemToolsButtonClick(evt)}
         onMouseUp={helpers.convertMouseUpToClick}
       >
         <img src={images["toolbox.png"]} className={"sc-mymaps-footer-buttons-img"} />

@@ -247,6 +247,8 @@ export default class Popup extends Overlay {
 
     isMoving = false;
 
+    window.emitter.emit("popupClosing", null);
+
     if (closeCallback !== null) {
       closeCallback();
     }
