@@ -35,11 +35,13 @@ class Sidebar extends Component {
       // SELECTED TAB
       tabIndex: 0,
 
+      isMyMapsEditing: false,
+
       // COMPONENTS
       activeTabComponents: {
         layers: <TOC key={helpers.getUID()} />,
         // layers: <TOCv2 key={helpers.getUID()}></TOCv2>,
-        mymaps: <MyMaps key={helpers.getUID()} />,
+        mymaps: <MyMaps key={helpers.getUID()} onMyMapsEditing={this.onMyMapsEditing} />,
         reports: {
           default: <Reports key={helpers.getUID()} />,
           loadedComponent: null
@@ -55,6 +57,10 @@ class Sidebar extends Component {
       }
     };
   }
+
+  onMyMapsEditing = isMyMapsEditing => {
+    this.setState({ isMyMapsEditing });
+  };
 
   onSetSidebarOpen(open) {
     this.setState({ sidebarOpen: open });
@@ -262,7 +268,13 @@ class Sidebar extends Component {
           if (Component.props.name === name) {
             // CREATE TOOL COMPONENT
             var comp = (
-              <Component key={helpers.getUID()} name={Component.props.name} onClose={this.onPanelComponentClose} onSidebarVisibility={this.togglePanelVisibility} config={Component.props.config} />
+              <Component
+                key={helpers.getUID()}
+                name={Component.props.name}
+                onClose={this.onPanelComponentClose}
+                onSidebarVisibility={this.togglePanelVisibility}
+                config={Component.props.config}
+              />
             );
             let activeTabComponents = this.state.activeTabComponents;
             activeTabComponents.tools.loadedComponent = comp;
@@ -281,7 +293,13 @@ class Sidebar extends Component {
           if (Component.props.name === name) {
             // CREATE THEME COMPONENT
             var comp = (
-              <Component key={helpers.getUID()} name={Component.props.name} onClose={this.onPanelComponentClose} onSidebarVisibility={this.togglePanelVisibility} config={Component.props.config} />
+              <Component
+                key={helpers.getUID()}
+                name={Component.props.name}
+                onClose={this.onPanelComponentClose}
+                onSidebarVisibility={this.togglePanelVisibility}
+                config={Component.props.config}
+              />
             );
             let activeTabComponents = this.state.activeTabComponents;
             activeTabComponents.themes.loadedComponent = comp;
@@ -350,7 +368,7 @@ class Sidebar extends Component {
                   <TabButton imageURL={images["tools-32x32.png"]} name="Tools" active={this.state.activeTabComponents.tools.loadedComponent} />
                 </Tab>
                 <Tab id="tab-mymaps">
-                  <TabButton imageURL={images["map-32x32.png"]} name="My Maps" />
+                  <TabButton imageURL={images["map-32x32.png"]} name="My Maps" active={this.state.isMyMapsEditing} />
                 </Tab>
                 <Tab id="tab-themes">
                   <TabButton imageURL={images["theme-32x32.png"]} name="Themes" active={this.state.activeTabComponents.themes.loadedComponent} />
@@ -375,9 +393,14 @@ class Sidebar extends Component {
             <div id="sc-sidebar-advanced-tab" className={this.state.tabClassName} onClick={this.togglePanelVisibility}>
               <img src={require("./images/close-tab.png")} alt="Close Tab" />
             </div>
-            <SidebarSlim onClick={this.slimSidebarButtonClick} themeActive={this.state.activeTabComponents.themes.loadedComponent} toolActive={this.state.activeTabComponents.tools.loadedComponent} />
+            <SidebarSlim
+              onClick={this.slimSidebarButtonClick}
+              themeActive={this.state.activeTabComponents.themes.loadedComponent}
+              toolActive={this.state.activeTabComponents.tools.loadedComponent}
+              isMyMapsEditing={this.state.isMyMapsEditing}
+            />
             <div id="sc-sidebar-message-container" />
-            {/* <MenuButton></MenuButton> */}
+            {/* <MenuButton /> */}
           </React.Fragment>
         }
         open={this.state.sidebarOpen}

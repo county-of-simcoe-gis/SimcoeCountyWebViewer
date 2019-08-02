@@ -15,10 +15,10 @@ import * as myMapsHelpers from "./myMapsHelpers";
 import MyMapsPopup from "./MyMapsPopup.jsx";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import Portal from "../../../helpers/Portal.jsx";
-import MyMapsFooter from "./MyMapsFooter.jsx";
 
 // OPEN LAYERS
 import Draw, { createBox } from "ol/interaction/Draw.js";
+import { defaults as defaultInteractions, Modify, Select, Translate } from "ol/interaction.js";
 import { Vector as VectorSource } from "ol/source.js";
 import { Circle as CircleStyle, Fill, Stroke, Style, Icon } from "ol/style.js";
 import { Vector as VectorLayer } from "ol/layer.js";
@@ -26,6 +26,7 @@ import Collection from "ol/Collection";
 import GeoJSON from "ol/format/GeoJSON.js";
 import { fromCircle } from "ol/geom/Polygon.js";
 import * as turf from "@turf/turf";
+import MyMapsAdvanced from "./MyMapsAdvanced";
 
 class MyMaps extends Component {
   constructor(props) {
@@ -37,12 +38,14 @@ class MyMaps extends Component {
     this.vectorLayer = null;
     this.draw = null;
     this.popupRef = undefined;
-
+    this.modify = null;
+    this.translate = null;
     this.state = {
       drawType: "Cancel",
       drawColor: "#e809e5",
       drawStyle: null,
-      items: []
+      items: [],
+      isEditing: false
     };
 
     // LISTEN FOR MAP TO MOUNT
@@ -76,7 +79,7 @@ class MyMaps extends Component {
     window.map.addLayer(this.vectorLayer);
 
     window.map.on("singleclick", evt => {
-      if (this.draw !== null) return;
+      if (this.draw !== null || this.state.isEditing) return;
 
       window.map.forEachFeatureAtPixel(evt.pixel, (feature, layer) => {
         if (layer === null) return;
@@ -498,7 +501,7 @@ class MyMaps extends Component {
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-buffer">
             <FloatingMenuItem imageName={"buffer.png"} label="Buffer" />
           </MenuItem>
-          <SubMenu className="sc-floating-menu-toolbox-submenu" title={<FloatingMenuItem imageName={"edit.png"} label="Edit Tools" />} key="1">
+          {/* <SubMenu className="sc-floating-menu-toolbox-submenu" title={<FloatingMenuItem imageName={"edit.png"} label="Edit Tools" />} key="1">
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-edit-all">
               {<FloatingMenuItem imageName={"edit-all.png"} label="Enable All Edit Tools" />}
             </MenuItem>
@@ -514,7 +517,7 @@ class MyMaps extends Component {
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-edit-scale">
               {<FloatingMenuItem imageName={"edit-scale.png"} label="Scale" />}
             </MenuItem>
-          </SubMenu>
+          </SubMenu> */}
         </FloatingMenu>
       </Portal>
     );
@@ -542,6 +545,8 @@ class MyMaps extends Component {
       helpers.zoomToFeature(feature);
     } else if (action === "sc-floating-menu-delete") {
       this.onItemDelete(item.id);
+    } else if (action === "sc-floating-menu-edit-vertices") {
+      this.editVertices(item.id);
     }
   };
 
@@ -569,7 +574,7 @@ class MyMaps extends Component {
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-delete">
             <FloatingMenuItem imageName={"eraser.png"} label="Delete" />
           </MenuItem>
-          <SubMenu className="sc-floating-menu-toolbox-submenu" title={<FloatingMenuItem imageName={"edit.png"} label="Edit Tools" />} key="1">
+          {/* <SubMenu className="sc-floating-menu-toolbox-submenu" title={<FloatingMenuItem imageName={"edit.png"} label="Edit Tools" />} key="1">
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-edit-all">
               {<FloatingMenuItem imageName={"edit-all.png"} label="Enable All Edit Tools" />}
             </MenuItem>
@@ -585,7 +590,7 @@ class MyMaps extends Component {
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-edit-scale">
               {<FloatingMenuItem imageName={"edit-scale.png"} label="Scale" />}
             </MenuItem>
-          </SubMenu>
+          </SubMenu> */}
         </FloatingMenu>
       </Portal>
     );
@@ -625,7 +630,9 @@ class MyMaps extends Component {
   };
 
   saveStateToStorage = () => {
-    localStorage.setItem(this.storageKey, JSON.stringify(this.state));
+    const stateClone = Object.assign({}, this.state);
+    delete stateClone["isEditing"];
+    localStorage.setItem(this.storageKey, JSON.stringify(stateClone));
   };
 
   setDrawControl = () => {
@@ -710,12 +717,88 @@ class MyMaps extends Component {
     this.vectorLayer.getSource().clear();
   };
 
+  onEditFeatures = (editOn, option) => {
+    this.setState({ isEditing: editOn });
+
+    // CREATE INTERACTIONS
+    this.initializeEditor();
+
+    if (!editOn) {
+      this.modify.setActive(false);
+      this.translate.setActive(false);
+    } else if (option === "vertices") {
+      this.modify.setActive(true);
+      this.translate.setActive(false);
+    } else if (option === "translate") {
+      this.translate.setActive(true);
+      this.modify.setActive(false);
+    }
+    this.props.onMyMapsEditing(editOn);
+  };
+
+  initializeEditor = () => {
+    if (this.modify === null) {
+      // VERTEX
+      this.modify = new Modify({ source: this.vectorSource });
+      this.modify.on("modifyend", e => {
+        this.updateFeatureGeometries(e.features.getArray());
+      });
+      window.map.addInteraction(this.modify);
+
+      // MOVE
+      this.translate = new Translate({ source: this.vectorSource });
+      this.translate.on("translateend", e => {
+        this.updateFeatureGeometries(e.features.getArray());
+      });
+      window.map.addInteraction(this.translate);
+    }
+  };
+
+  updateFeatureGeometries = features => {
+    features.forEach(feature => {
+      this.updateFeatureGeoJSON(feature, () => {
+        // SAVE TO STORAGE
+        this.saveStateToStorage();
+      });
+    });
+  };
+
+  onMyMapsImport = savedState => {
+    const items = JSON.parse(savedState.json).items;
+
+    let itemsToAdd = [];
+    items.forEach(item => {
+      const searchItem = this.state.items.filter(stateItem => {
+        return stateItem.id === item.id;
+      })[0];
+
+      if (searchItem === undefined) {
+        itemsToAdd.push(item);
+      }
+    });
+
+    if (itemsToAdd.length > 0) {
+      // ADD NEW FEATURE TO STATE
+      this.setState(
+        prevState => ({
+          items: [...items, ...prevState.items],
+          drawType: "Cancel"
+        }),
+        () => {
+          // UPDATE STORAGE
+          this.saveStateToStorage();
+          this.importGeometries();
+        }
+      );
+    }
+  };
+
   render() {
     return (
       <div id={"sc-mymaps-container"} className="sc-mymaps-container">
-        <ButtonBar onClick={this.onButtonBarClick} activeButton={this.state.drawType} />
-        <ColorBar onClick={this.onColorBarClick} activeColor={this.state.drawColor} />
-        <MyMapsItems>
+        <ButtonBar onClick={this.onButtonBarClick} activeButton={this.state.drawType} isEditing={this.state.isEditing} />
+        <ColorBar onClick={this.onColorBarClick} activeColor={this.state.drawColor} isEditing={this.state.isEditing} />
+        <MyMapsItems isEditing={this.state.isEditing}>
           <TransitionGroup>
             {this.state.items.map(myMapsItem => (
               <CSSTransition key={myMapsItem.id} timeout={500} classNames="sc-mymaps-item">
@@ -735,7 +818,7 @@ class MyMaps extends Component {
             ))}
           </TransitionGroup>
         </MyMapsItems>
-        <MyMapsFooter onMenuItemClick={this.onMenuItemClick} onDeleteAllClick={this.onDeleteAllClick} />
+        <MyMapsAdvanced onEditFeatures={this.onEditFeatures} onMenuItemClick={this.onMenuItemClick} onDeleteAllClick={this.onDeleteAllClick} onMyMapsImport={this.onMyMapsImport} />
       </div>
     );
   }
