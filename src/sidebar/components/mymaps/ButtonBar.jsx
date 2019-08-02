@@ -2,9 +2,10 @@ import React from "react";
 import "./ButtonBar.css";
 import DrawButton from "./DrawButton.jsx";
 
+//className={props.isEditing ? "sc-mymaps-button-bar sc-disabled" : "sc-mymaps-button-bar"}
 const ButtonBar = props => {
   return (
-    <div className="sc-mymaps-button-bar">
+    <div className={props.isEditing ? "sc-mymaps-button-bar sc-disabled" : "sc-mymaps-button-bar"}>
       <DrawButton
         title="Draw a point on the map"
         imageName="point.png"

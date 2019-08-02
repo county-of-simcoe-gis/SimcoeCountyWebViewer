@@ -10,3 +10,11 @@
   bottom: 45px;
   overflow: auto;
 }
+
+.sc-mymaps-items-container-header-editing {
+  position: absolute;
+  right: 16px;
+  top: 112px;
+  font-weight: bold;
+  color: forestgreen;
+}

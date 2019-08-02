@@ -367,28 +367,20 @@ export function convertLineToArrow(geometry) {
   return clone;
 }
 
-export function importMyMaps(id) {
-  // const storage = localStorage.getItem("myMaps");
-  // if (storage === null) return [];
-  // const data = JSON.parse(storage);
-  // helpers.postJSON("https://opengis.simcoe.ca/api/postMyMaps/", data, result => {
-  //   console.log(result);
-  // });
-  // helpers.getJSON("https://opengis.simcoe.ca/api/getMyMaps/6a8cf8c6-b3a0-11e9-9d64-005056b2f523", result => {
-  //   console.log(result);
-  // });
-  // return;
+export function importMyMaps(id, callback2) {
+  helpers.getJSON(`https://opengis.simcoe.ca/api/getMyMaps/${id}`, result => {
+    //helpers.getJSON(`http://localhost:8085/getMyMaps/${id}`, result => {
+    console.log(result);
+    callback2(result);
+  });
 }
 
-export function exportMyMaps(id) {
-  // const storage = localStorage.getItem("myMaps");
-  // if (storage === null) return [];
-  // const data = JSON.parse(storage);
-  // helpers.postJSON("https://opengis.simcoe.ca/api/postMyMaps/", data, result => {
-  //   console.log(result);
-  // });
-  // helpers.getJSON("https://opengis.simcoe.ca/api/getMyMaps/6a8cf8c6-b3a0-11e9-9d64-005056b2f523", result => {
-  //   console.log(result);
-  // });
-  // return;
+export function exportMyMaps(callback2) {
+  const storage = localStorage.getItem("myMaps");
+  if (storage === null) return [];
+  const data = JSON.parse(storage);
+  helpers.postJSON("https://opengis.simcoe.ca/api/postMyMaps/", data, result => {
+    //helpers.postJSON("http://localhost:8085/postMyMaps/", data, result => {
+    callback2(result);
+  });
 }

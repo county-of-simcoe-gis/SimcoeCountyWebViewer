@@ -96,15 +96,18 @@ export default class Popup extends Overlay {
     // Apply workaround to enable scrolling of content div on touch devices
     Popup.enableTouchScroll_(this.content);
 
+    let activeIds = [];
     this.container.onmouseover = function() {
       window.map.getInteractions().forEach(function(interaction) {
+        if (interaction.getActive()) activeIds.push(interaction.ol_uid);
+
         interaction.setActive(false);
       });
       window.popupActive = true;
     };
     this.container.onmouseout = function() {
       window.map.getInteractions().forEach(function(interaction) {
-        interaction.setActive(true);
+        if (activeIds.includes(interaction.ol_uid)) interaction.setActive(true);
       });
       window.popupActive = false;
     };
@@ -118,8 +121,12 @@ export default class Popup extends Overlay {
    */
   show(coord, html, title = "Info", callback = null) {
     // WEIRD MOBILE STUFF PATCH WHERE CONTAINER STAYS OVER MAP
-    var x = document.getElementsByClassName("ol-selectable")[0];
-    x.classList.remove("sc-hidden");
+    // var x = document.getElementsByClassName("ol-selectable")[0];
+    // x.classList.remove("sc-hidden");
+    const containers = document.getElementsByClassName("ol-selectable");
+    Array.prototype.forEach.call(containers, el => {
+      el.classList.remove("sc-hidden");
+    });
 
     // SET TITLE
     this.headerTitle.innerHTML = title;
@@ -241,9 +248,10 @@ export default class Popup extends Overlay {
    * @returns {Popup} The Popup instance
    */
   hide() {
-    // WEIRD MOBILE STUFF PATCH WHERE CONTAINER STAYS OVER MAP
-    var x = document.getElementsByClassName("ol-selectable")[0];
-    x.classList.add("sc-hidden");
+    const containers = document.getElementsByClassName("ol-selectable");
+    Array.prototype.forEach.call(containers, el => {
+      el.classList.add("sc-hidden");
+    });
 
     isMoving = false;
 
