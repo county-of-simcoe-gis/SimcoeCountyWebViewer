@@ -4,6 +4,7 @@ import * as helpers from "../helpers/helpers";
 import BasemapConfig from "./basemapSwitcherConfig.json";
 import Slider from "rc-slider";
 import {Group as LayerGroup} from 'ol/layer.js';
+import { log } from "util";
 
 class BasemapSwitcher extends Component {
   constructor(props) {
@@ -50,6 +51,7 @@ class BasemapSwitcher extends Component {
 
       //var layer = helpers.getArcGISTiledLayer(service.url);
       var layer = helpers.getSimcoeTileXYZLayer(service.url);
+      console.log(service.url);
       
       // LAYER PROPS
       layer.setProperties({ index: index, name: service.name });
@@ -75,6 +77,9 @@ class BasemapSwitcher extends Component {
       //var streetsLayer = helpers.getArcGISTiledLayer(BasemapConfig.streetService);
       var streetsLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.streetService);
       streetsLayer.setZIndex(BasemapConfig.imageryServices.length);
+      console.log(BasemapConfig.imageryServices);
+      
+
       window.map.addLayer(streetsLayer);
       this.setState({streetsLayer: streetsLayer});
     }
