@@ -4,6 +4,7 @@ import * as helpers from "../helpers/helpers";
 import BasemapConfig from "./basemapSwitcherConfig.json";
 import Slider from "rc-slider";
 import {Group as LayerGroup} from 'ol/layer.js';
+import { log } from "util";
 
 class BasemapSwitcher extends Component {
   constructor(props) {
@@ -50,9 +51,8 @@ class BasemapSwitcher extends Component {
 
       //var layer = helpers.getArcGISTiledLayer(service.url);
       var layer = helpers.getSimcoeTileXYZLayer(service.url);
-      
       // LAYER PROPS
-      layer.setProperties({ index: index, name: service.name });
+      layer.setProperties({ index: index, name: service.name, service:service });
       layer.setZIndex(index);
       layer.setVisible(false);
 
@@ -74,6 +74,7 @@ class BasemapSwitcher extends Component {
     if (BasemapConfig.streetService !==  undefined){
       //var streetsLayer = helpers.getArcGISTiledLayer(BasemapConfig.streetService);
       var streetsLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.streetService);
+      streetsLayer.setProperties({service:BasemapConfig.imageryServices });
       streetsLayer.setZIndex(BasemapConfig.imageryServices.length);
       window.map.addLayer(streetsLayer);
       this.setState({streetsLayer: streetsLayer});
@@ -82,6 +83,7 @@ class BasemapSwitcher extends Component {
     // LOAD BATHYMETRY LAYER
     if (BasemapConfig.bathymetryService !==  undefined){
       var bathymetryLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.bathymetryService);
+      bathymetryLayer.setProperties({service:BasemapConfig.bathymetryService });
       bathymetryLayer.setZIndex(0);
       window.map.addLayer(bathymetryLayer);
       this.setState({bathymetryLayer: bathymetryLayer});
@@ -90,6 +92,7 @@ class BasemapSwitcher extends Component {
     // LOAD WORLD LAYER
     if (BasemapConfig.worldImageryService !==  undefined){
       var worldImageryLayer = helpers.getESRITileXYZLayer(BasemapConfig.worldImageryService);
+      worldImageryLayer.setProperties({service:BasemapConfig.worldImageryService });
       worldImageryLayer.setZIndex(0);
       worldImageryLayer.setMinResolution(300);
       window.map.addLayer(worldImageryLayer);
@@ -125,7 +128,7 @@ class BasemapSwitcher extends Component {
 
       // USING LAYER GROUPS FOR TOPO
       let layerGroup = new LayerGroup({layers: serviceLayers, visible: false});
-      layerGroup.setProperties({ index: basemapIndex, name: serviceGroup.name });
+      layerGroup.setProperties({ index: basemapIndex, name: serviceGroup.name, service:serviceGroup });
       window.map.addLayer(layerGroup);
       basemapList.push(layerGroup);
       basemapIndex++;
@@ -188,15 +191,20 @@ class BasemapSwitcher extends Component {
       if (value === -1)
         layer.setVisible(false);
       else {
+        
         const layerIndex = layer.getProperties().index;
         const indexRatio = 1 - Math.abs(layerIndex - value);
         if (layerIndex === value) {
           layer.setOpacity(1);
           layer.setVisible(true);
+          console.log("active");
+          console.log(layer.getProperties());
           
         } else if ( indexRatio < 0 ){
           layer.setOpacity(0);
           layer.setVisible(false);
+          console.log("inactive");
+          console.log(layer.getProperties());
         }
         else{
           layer.setOpacity(indexRatio);
@@ -320,11 +328,18 @@ class BasemapSwitcher extends Component {
   setTopoLayerVisiblity(activeIndex){
     for (let index = 0; index < this.state.topoLayers.length; index++) {
       let layer = this.state.topoLayers[index];
+     
       const layerIndex = layer.getProperties().index;
       if (layerIndex === activeIndex) {
         layer.setVisible(true);
+        console.log("active");
+        console.log(layer.getProperties());
+
+        window.Object.create({printLayer:layer.getProperties()})
       } else {
-          layer.setVisible(false);
+        layer.setVisible(false);
+        console.log("inactive");
+        console.log(layer.getProperties());
       }
     }
   }
