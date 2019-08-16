@@ -24,7 +24,7 @@ export function printRequestOptions(mapLayers, metaData, mapState){
         }
       }
 
-    printRequest.attributes.map.layer = mapLayers[2];
+    printRequest.attributes.map.layers = mapLayers[2].values_;
     printRequest.outputFormat = mapState.printFormatSelectedOption.value;
     
     switch (mapState.printSizeSelectedOption.value) {
