@@ -51,11 +51,8 @@ class BasemapSwitcher extends Component {
 
       //var layer = helpers.getArcGISTiledLayer(service.url);
       var layer = helpers.getSimcoeTileXYZLayer(service.url);
-      
       // LAYER PROPS
-      console.log(service.url);
-      // url property added to get access to layer's url for mapfish print 
-      layer.setProperties({ index: index, name: service.name, url:service.url});
+      layer.setProperties({ index: index, name: service.name, service:service });
       layer.setZIndex(index);
       layer.setVisible(false);
 
@@ -77,9 +74,7 @@ class BasemapSwitcher extends Component {
     if (BasemapConfig.streetService !==  undefined){
       //var streetsLayer = helpers.getArcGISTiledLayer(BasemapConfig.streetService);
       var streetsLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.streetService);
-      console.log(BasemapConfig.streetService);
-      // service property added to get access to layer's url for mapfish print 
-      streetsLayer.setProperties({service:BasemapConfig.imageryServices});
+      streetsLayer.setProperties({service:BasemapConfig.imageryServices });
       streetsLayer.setZIndex(BasemapConfig.imageryServices.length);
       window.map.addLayer(streetsLayer);
       this.setState({streetsLayer: streetsLayer});
@@ -88,9 +83,7 @@ class BasemapSwitcher extends Component {
     // LOAD BATHYMETRY LAYER
     if (BasemapConfig.bathymetryService !==  undefined){
       var bathymetryLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.bathymetryService);
-      console.log(BasemapConfig.bathymetryService);
-      // service property added to get access to layer's url for mapfish print 
-      bathymetryLayer.setProperties({service:BasemapConfig.bathymetryService});
+      bathymetryLayer.setProperties({service:BasemapConfig.bathymetryService });
       bathymetryLayer.setZIndex(0);
       window.map.addLayer(bathymetryLayer);
       this.setState({bathymetryLayer: bathymetryLayer});
@@ -99,9 +92,7 @@ class BasemapSwitcher extends Component {
     // LOAD WORLD LAYER
     if (BasemapConfig.worldImageryService !==  undefined){
       var worldImageryLayer = helpers.getESRITileXYZLayer(BasemapConfig.worldImageryService);
-      console.log(BasemapConfig.worldImageryService);
-      // service property added to get access to layer's url for mapfish print 
-      bathymetryLayer.setProperties({service:worldImageryLayer.worldImageryService});
+      worldImageryLayer.setProperties({service:BasemapConfig.worldImageryService });
       worldImageryLayer.setZIndex(0);
       worldImageryLayer.setMinResolution(300);
       window.map.addLayer(worldImageryLayer);
@@ -137,9 +128,7 @@ class BasemapSwitcher extends Component {
 
       // USING LAYER GROUPS FOR TOPO
       let layerGroup = new LayerGroup({layers: serviceLayers, visible: false});
-      console.log(serviceGroup.layers);
-      // url property added to get access to layer's url for mapfish print 
-      layerGroup.setProperties({ index: basemapIndex, name: serviceGroup.name, url:serviceGroup.layers });
+      layerGroup.setProperties({ index: basemapIndex, name: serviceGroup.name, service:serviceGroup });
       window.map.addLayer(layerGroup);
       basemapList.push(layerGroup);
       basemapIndex++;
@@ -202,15 +191,20 @@ class BasemapSwitcher extends Component {
       if (value === -1)
         layer.setVisible(false);
       else {
+        
         const layerIndex = layer.getProperties().index;
         const indexRatio = 1 - Math.abs(layerIndex - value);
         if (layerIndex === value) {
           layer.setOpacity(1);
           layer.setVisible(true);
+          console.log("active");
+          console.log(layer.getProperties());
           
         } else if ( indexRatio < 0 ){
           layer.setOpacity(0);
           layer.setVisible(false);
+          console.log("inactive");
+          console.log(layer.getProperties());
         }
         else{
           layer.setOpacity(indexRatio);
@@ -334,11 +328,18 @@ class BasemapSwitcher extends Component {
   setTopoLayerVisiblity(activeIndex){
     for (let index = 0; index < this.state.topoLayers.length; index++) {
       let layer = this.state.topoLayers[index];
+     
       const layerIndex = layer.getProperties().index;
       if (layerIndex === activeIndex) {
         layer.setVisible(true);
+        console.log("active");
+        console.log(layer.getProperties());
+
+        window.Object.create({printLayer:layer.getProperties()})
       } else {
-          layer.setVisible(false);
+        layer.setVisible(false);
+        console.log("inactive");
+        console.log(layer.getProperties());
       }
     }
   }
