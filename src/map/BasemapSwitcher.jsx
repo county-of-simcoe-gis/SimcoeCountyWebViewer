@@ -51,10 +51,11 @@ class BasemapSwitcher extends Component {
 
       //var layer = helpers.getArcGISTiledLayer(service.url);
       var layer = helpers.getSimcoeTileXYZLayer(service.url);
-      console.log(service.url);
       
       // LAYER PROPS
-      layer.setProperties({ index: index, name: service.name });
+      console.log(service.url);
+      // url property added to get access to layer's url for mapfish print 
+      layer.setProperties({ index: index, name: service.name, url:service.url});
       layer.setZIndex(index);
       layer.setVisible(false);
 
@@ -76,10 +77,10 @@ class BasemapSwitcher extends Component {
     if (BasemapConfig.streetService !==  undefined){
       //var streetsLayer = helpers.getArcGISTiledLayer(BasemapConfig.streetService);
       var streetsLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.streetService);
+      console.log(BasemapConfig.streetService);
+      // service property added to get access to layer's url for mapfish print 
+      streetsLayer.setProperties({service:BasemapConfig.imageryServices});
       streetsLayer.setZIndex(BasemapConfig.imageryServices.length);
-      console.log(BasemapConfig.imageryServices);
-      
-
       window.map.addLayer(streetsLayer);
       this.setState({streetsLayer: streetsLayer});
     }
@@ -87,6 +88,9 @@ class BasemapSwitcher extends Component {
     // LOAD BATHYMETRY LAYER
     if (BasemapConfig.bathymetryService !==  undefined){
       var bathymetryLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.bathymetryService);
+      console.log(BasemapConfig.bathymetryService);
+      // service property added to get access to layer's url for mapfish print 
+      bathymetryLayer.setProperties({service:BasemapConfig.bathymetryService});
       bathymetryLayer.setZIndex(0);
       window.map.addLayer(bathymetryLayer);
       this.setState({bathymetryLayer: bathymetryLayer});
@@ -95,6 +99,9 @@ class BasemapSwitcher extends Component {
     // LOAD WORLD LAYER
     if (BasemapConfig.worldImageryService !==  undefined){
       var worldImageryLayer = helpers.getESRITileXYZLayer(BasemapConfig.worldImageryService);
+      console.log(BasemapConfig.worldImageryService);
+      // service property added to get access to layer's url for mapfish print 
+      bathymetryLayer.setProperties({service:worldImageryLayer.worldImageryService});
       worldImageryLayer.setZIndex(0);
       worldImageryLayer.setMinResolution(300);
       window.map.addLayer(worldImageryLayer);
@@ -123,14 +130,16 @@ class BasemapSwitcher extends Component {
           }
             
             // LAYER PROPS
-            layer.setProperties({ index: index, name: service.name });
+            layer.setProperties({ index: index, name: service.name});
             serviceLayers.push(layer);
             index++;
         });
 
       // USING LAYER GROUPS FOR TOPO
       let layerGroup = new LayerGroup({layers: serviceLayers, visible: false});
-      layerGroup.setProperties({ index: basemapIndex, name: serviceGroup.name });
+      console.log(serviceGroup.layers);
+      // url property added to get access to layer's url for mapfish print 
+      layerGroup.setProperties({ index: basemapIndex, name: serviceGroup.name, url:serviceGroup.layers });
       window.map.addLayer(layerGroup);
       basemapList.push(layerGroup);
       basemapIndex++;
