@@ -29,6 +29,7 @@ class BasemapSwitcher extends Component {
 
     // LISTEN FOR MAP TO MOUNT
     window.emitter.addListener("mapLoaded", () => this.onMapLoad());
+    
   }
 
   // CREATE YEAR MARKS ON THE SLIDER
@@ -147,11 +148,11 @@ class BasemapSwitcher extends Component {
     const basemap = helpers.getURLParameter("BASEMAP") !==  null ? helpers.getURLParameter("BASEMAP").toUpperCase() : null;
     const name = helpers.getURLParameter("NAME") !==  null ? helpers.getURLParameter("NAME").toUpperCase() : null;
     const imagerySliderOpen = helpers.getURLParameter("SLIDER_OPEN") !==  null ? helpers.getURLParameter("SLIDER_OPEN").toUpperCase(): null;
-
-
+    
+    
     if (basemap === "IMAGERY"){
       this.enableImagery();
-
+      
       if (imagerySliderOpen === "TRUE")
         this.setState({ imageryPanelOpen: true });
         
@@ -197,18 +198,21 @@ class BasemapSwitcher extends Component {
         if (layerIndex === value) {
           layer.setOpacity(1);
           layer.setVisible(true);
-          console.log("active");
-          console.log(layer.getProperties());
-          
+          window.printRequestLayers = function(){
+            console.log("active");
+            return layer.getProperties()
+          }
         } else if ( indexRatio < 0 ){
           layer.setOpacity(0);
           layer.setVisible(false);
-          console.log("inactive");
-          console.log(layer.getProperties());
         }
         else{
           layer.setOpacity(indexRatio);
           layer.setVisible(true);
+          window.printRequestLayers = function(){
+            console.log("active");
+            return layer.getProperties()
+          }
         }
       }
     }
@@ -332,19 +336,19 @@ class BasemapSwitcher extends Component {
       const layerIndex = layer.getProperties().index;
       if (layerIndex === activeIndex) {
         layer.setVisible(true);
-        console.log("active");
-        console.log(layer.getProperties());
-
-        window.Object.create({printLayer:layer.getProperties()})
+        window.printRequestLayers = function(){
+          console.log("active");
+          return layer.getProperties()
+        }
       } else {
         layer.setVisible(false);
-        console.log("inactive");
-        console.log(layer.getProperties());
       }
     }
   }
 
   render() {
+
+    
 
     // STYLE USED BY SLIDER
     const sliderWrapperStyle = {

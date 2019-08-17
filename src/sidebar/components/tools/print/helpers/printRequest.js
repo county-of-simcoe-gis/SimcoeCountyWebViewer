@@ -82,10 +82,12 @@ export function printRequestOptions(mapLayers, metaData, mapState){
             break;
       }
 
-      console.log(mapLayers);
+      //console.log(mapLayers);
       
 
-      console.log(printRequest);
+      //console.log(printRequest);
+
+      console.log(window.printRequestLayers());
 
       //console.log(JSON.stringify({printRequest}));
 

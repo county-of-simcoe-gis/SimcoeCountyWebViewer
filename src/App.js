@@ -9,16 +9,14 @@ ReactGA.initialize("UA-3104541-53");
 ReactGA.pageview(window.location.pathname + window.location.search);
 
 class App extends Component {
-  state = {
-    printRequestProp: {}
-   }
+
   render() {
     return (
       <div>
         <div id="portal-root" />
         <Header />
-        <Sidebar printRequestProp={this.state.printRequestProp}  />
-        <SCMap printRequestProp={this.state.printRequestProp} />
+        <Sidebar />
+        <SCMap />
       </div>
     );
   }
