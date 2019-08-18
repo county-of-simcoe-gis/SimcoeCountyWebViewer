@@ -34,6 +34,19 @@ export function printRequestOptions(mapLayers, metaData, mapState){
         geoJson: geoJsonData,
     });
 
+    for (const key in mapLayers) {
+        let eachLayer = mapLayers[key]
+        if (eachLayer.values_.serviceUrl) {
+            console.log(eachLayer.values_.serviceUrl); 
+        }
+        if (eachLayer.values_.service) {
+            console.log(eachLayer.values_.service); 
+        }
+        if (eachLayer.values_.serviceGroup) {
+            console.log(eachLayer.values_.serviceGroup); 
+        }
+    }
+
     printRequest.attributes.map.center = [5, 45];
     printRequest.attributes.map.scale = mapState.forceScale;
     printRequest.attributes.map.projection = "EPSG:4326";
@@ -82,12 +95,12 @@ export function printRequestOptions(mapLayers, metaData, mapState){
             break;
       }
 
-      //console.log(mapLayers);
+      console.log(mapLayers);
       
 
       //console.log(printRequest);
 
-      console.log(window.printRequestLayers());
+      //console.log(window.printRequestLayers());
 
       //console.log(JSON.stringify({printRequest}));
 
@@ -98,4 +111,8 @@ export function printRequestOptions(mapLayers, metaData, mapState){
     //     console.log(response);
     //     //return response.json();
     //   }) 
+
+
+
+    //layerGroups Basemaps OSM Streets
 }
