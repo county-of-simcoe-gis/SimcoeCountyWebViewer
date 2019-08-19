@@ -13,6 +13,7 @@ export function printRequestOptions(mapLayers, metaData, mapState){
     let printRequest ={
         layout: "",
         outputFormat: "",
+        dpi: 300,
         attributes: {
           title:"",
           date:"",
@@ -37,13 +38,32 @@ export function printRequestOptions(mapLayers, metaData, mapState){
     for (const key in mapLayers) {
         let eachLayer = mapLayers[key]
         if (eachLayer.values_.serviceUrl) {
-            console.log(eachLayer.values_.serviceUrl); 
+            layers.push({
+                type:"tiled",
+                baseURL:eachLayer.values_.serviceUrl
+            });
         }
         if (eachLayer.values_.service) {
-            console.log(eachLayer.values_.service); 
+            layers.push({
+                type:"tiled",
+                baseURL:eachLayer.values_.service.url
+            });
         }
         if (eachLayer.values_.serviceGroup) {
-            console.log(eachLayer.values_.serviceGroup); 
+            let serviceGroupLayer = eachLayer.values_.serviceGroup.layers
+            for (const key in serviceGroupLayer) {
+                if ((serviceGroupLayer[key].type)==="OSM") {
+                    layers.push({
+                        type:"OSM",
+                        baseURL:"http://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    });
+                } else {
+                    layers.push({
+                        type:"tiled",
+                        baseURL:serviceGroupLayer[key].url
+                    });
+                }    
+            }
         }
     }
 
@@ -95,12 +115,8 @@ export function printRequestOptions(mapLayers, metaData, mapState){
             break;
       }
 
-      console.log(mapLayers);
-      
+      console.log(printRequest);
 
-      //console.log(printRequest);
-
-      //console.log(window.printRequestLayers());
 
       //console.log(JSON.stringify({printRequest}));
 
