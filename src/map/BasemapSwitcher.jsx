@@ -53,7 +53,7 @@ class BasemapSwitcher extends Component {
       //var layer = helpers.getArcGISTiledLayer(service.url);
       var layer = helpers.getSimcoeTileXYZLayer(service.url);
       // LAYER PROPS
-      layer.setProperties({ index: index, name: service.name});
+      layer.setProperties({ index: index, name: service.name, service});
       layer.setZIndex(index);
       layer.setVisible(false);
 
