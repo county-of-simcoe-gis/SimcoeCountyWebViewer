@@ -37,8 +37,10 @@ Node JS
 ### Installing
 
 ```
-In the src directory, type `npm install` in the terminal.<br>
-In the src directory, type `npm start` in the terminal.
+git clone https://github.com/county-of-simcoe-gis/SimcoeCountyWebViewer.git
+cd SimcoeCountyWebViewer
+npm install
+npm start
 ```
 
 ## Deployment

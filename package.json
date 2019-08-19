@@ -37,6 +37,7 @@
     "react-scripts": "2.1.3",
     "react-select": "^2.4.1",
     "react-sidebar": "^3.0.2",
+    "react-slick": "^0.25.2",
     "react-sortable-hoc": "^1.9.1",
     "react-sortable-hoc-ie-optimization": "^0.8.5",
     "react-sortable-tree": "^2.6.0",
@@ -47,6 +48,7 @@
     "react-transition-group": "^4.0.1",
     "react-virtualized": "^9.21.0",
     "shortid": "^2.2.14",
+    "slick-carousel": "^1.8.1",
     "xml2js": "^0.4.19"
   },
   "scripts": {

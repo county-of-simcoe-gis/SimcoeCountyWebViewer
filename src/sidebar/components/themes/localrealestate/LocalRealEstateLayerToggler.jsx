@@ -1,14 +1,13 @@
 import React, { Component } from "react";
-import "./ThemeLayerToggler.css";
+import "./LocalRealEstateLayerToggler.css";
 import * as helpers from "../../../../helpers/helpers";
-import ThemePopupContent from "./ThemePopupContent.jsx";
 import url from "url";
 import GeoJSON from "ol/format/GeoJSON.js";
 import { getCenter } from "ol/extent";
 import { unByKey } from "ol/Observable.js";
+import LocalRealEstatePopupContent from "./LocalRealEstatePopupContent.jsx";
 
-// LOOK AT THEME CONFIG FOR EXAMPLE OBJECT BEING PASSED HERE
-class ThemeLayerToggler extends Component {
+class LocalRealEstateLayerToggler extends Component {
   constructor(props) {
     super(props);
 
@@ -37,10 +36,9 @@ class ThemeLayerToggler extends Component {
         const extent = feature.getGeometry().getExtent();
         const center = getCenter(extent);
         helpers.zoomToFeature(feature);
-        const entries = Object.entries(feature.getProperties());
         window.popup.show(
           center,
-          <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.mainConfig.popupLogoImage} layerConfig={this.props.layerConfig} />,
+          <LocalRealEstatePopupContent key={helpers.getUID()} feature={feature} photosUrl={this.props.photosUrl} onViewed={this.props.onViewed} />,
           this.props.layerConfig.displayName
         );
       },
@@ -75,7 +73,6 @@ class ThemeLayerToggler extends Component {
     });
 
     this.mapClickEvent = window.map.on("click", evt => {
-      console.log("toggle click");
       var viewResolution = window.map.getView().getResolution();
       var url = this.state.layer.getSource().getGetFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
       if (url) {
@@ -87,12 +84,9 @@ class ThemeLayerToggler extends Component {
 
           const geoJSON = new GeoJSON().readFeatures(result);
           const feature = geoJSON[0];
-
-          const entries = Object.entries(feature.getProperties());
-          console.log(entries);
           window.popup.show(
             evt.coordinate,
-            <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={this.props.layerConfig} />,
+            <LocalRealEstatePopupContent key={helpers.getUID()} feature={feature} photosUrl={this.props.config.photosUrl} onViewed={this.props.onViewed} />,
             this.props.layerConfig.displayName
           );
         });
@@ -106,7 +100,7 @@ class ThemeLayerToggler extends Component {
   onCheckboxChange = evt => {
     this.setState({ visible: evt.target.checked });
     this.state.layer.setVisible(evt.target.checked);
-    this.props.onLayerVisiblityChange(this.state.layer);
+    this.props.onLayerVisiblityChange(this.props.layerConfig.displayName, evt.target.checked);
   };
 
   componentWillUnmount() {
@@ -117,21 +111,35 @@ class ThemeLayerToggler extends Component {
 
   render() {
     return (
-      <div className="sc-theme-layer-container">
+      <div className="sc-theme-local-real-estate-layer-container">
         <div
-          className={this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle ? "sc-theme-layer-toggler-symbol" : "sc-theme-layer-toggler-symbol-with-box"}
+          className={
+            this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle
+              ? "sc-theme-local-real-estate-layer-toggler-symbol"
+              : "sc-theme-local-real-estate-layer-toggler-symbol-with-box"
+          }
         >
           <img src={this.state.styleUrl} alt="style" />
         </div>
-        <div className={this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle ? "" : "sc-theme-layer-toggler-label-with-box-container"}>
+        <div
+          className={this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle ? "" : "sc-theme-local-real-estate-layer-toggler-label-with-box-container"}
+        >
           <label
-            className={this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle ? "sc-theme-layer-toggler-label" : "sc-theme-layer-toggler-label-with-box"}
+            className={
+              this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle
+                ? "sc-theme-local-real-estate-layer-toggler-label"
+                : "sc-theme-local-real-estate-layer-toggler-label-with-box"
+            }
           >
             <input type="checkbox" checked={this.state.visible} style={{ verticalAlign: "middle" }} onChange={this.onCheckboxChange} />
             {this.props.layerConfig.displayName}
           </label>
           <label
-            className={this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle ? "sc-theme-layer-toggler-count" : "sc-theme-layer-toggler-count-with-box"}
+            className={
+              this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle
+                ? "sc-theme-local-real-estate-layer-toggler-count"
+                : "sc-theme-local-real-estate-layer-toggler-count-with-box"
+            }
           >
             {" (" + this.state.recordCount + ")"}
           </label>
@@ -143,4 +151,12 @@ class ThemeLayerToggler extends Component {
   }
 }
 
-export default ThemeLayerToggler;
+export default LocalRealEstateLayerToggler;
+
+// IMPORT ALL IMAGES
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
+function importAllImages(r) {
+  let images = {};
+  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
+  return images;
+}
