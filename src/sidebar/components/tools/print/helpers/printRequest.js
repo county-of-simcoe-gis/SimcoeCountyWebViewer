@@ -8,7 +8,8 @@ export function printRequestOptions(mapLayers, metaData, mapState){
     const year = dateObj.getUTCFullYear();
     const myMapLayers = myMapsHelpers.getItemsFromStorage("myMaps");
 
-    let layers = []
+    //init list for layers to render on main map
+    let renderMaplayers = []
 
     let printRequest ={
         layout: "",
@@ -25,26 +26,31 @@ export function printRequestOptions(mapLayers, metaData, mapState){
           scale:""
         }
     }
-
-    let geoJsonData = myMapLayers.items.map((l)=>{
-        return l.featureGeoJSON
+    //myMaps custom layers
+    let myMaps = myMapLayers.items.map((l)=>{
+        return ([l.featureGeoJSON, l.Polygon, l.label, l.style.fill.color, l.style.stroke.color])
     });
 
-    layers.push({
+    renderMaplayers.push({
         type:"geojson",
-        geoJson: geoJsonData,
+        geoJson: myMaps[0],
+        style:{
+            type: myMaps[1],
+            fillColor: myMaps[3],
+            strokeColor: myMaps[4]
+        }
     });
 
     for (const key in mapLayers) {
         let eachLayer = mapLayers[key]
         if (eachLayer.values_.serviceUrl) {
-            layers.push({
+            renderMaplayers.push({
                 type:"tiled",
                 baseURL:eachLayer.values_.serviceUrl
             });
         }
         if (eachLayer.values_.service) {
-            layers.push({
+            renderMaplayers.push({
                 type:"tiled",
                 baseURL:eachLayer.values_.service.url
             });
@@ -53,12 +59,12 @@ export function printRequestOptions(mapLayers, metaData, mapState){
             let serviceGroupLayer = eachLayer.values_.serviceGroup.layers
             for (const key in serviceGroupLayer) {
                 if ((serviceGroupLayer[key].type)==="OSM") {
-                    layers.push({
+                    renderMaplayers.push({
                         type:"OSM",
                         baseURL:"http://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     });
                 } else {
-                    layers.push({
+                    renderMaplayers.push({
                         type:"tiled",
                         baseURL:serviceGroupLayer[key].url
                     });
@@ -71,7 +77,7 @@ export function printRequestOptions(mapLayers, metaData, mapState){
     printRequest.attributes.map.scale = mapState.forceScale;
     printRequest.attributes.map.projection = "EPSG:4326";
     printRequest.attributes.map.rotation = 0;
-    printRequest.attributes.map.layers = layers;
+    printRequest.attributes.map.layers = renderMaplayers;
     printRequest.outputFormat = mapState.printFormatSelectedOption.value;
     
     switch (mapState.printSizeSelectedOption.value) {
@@ -99,7 +105,7 @@ export function printRequestOptions(mapLayers, metaData, mapState){
             printRequest.attributes.date = year + "/" + month + "/" + day; 
             printRequest.attributes.scale= "1 : "+mapState.forceScale;
             printRequest.attributes.scaleBar = {}
-            printRequest.attributes.overview.layers = layers;
+            printRequest.attributes.overview.layers = renderMaplayers;
             break;
         case 'Map Only':
             printRequest.layout ="Map_Only";
