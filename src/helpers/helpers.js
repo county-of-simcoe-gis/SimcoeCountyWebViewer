@@ -31,6 +31,8 @@ import mainConfig from "../config.json";
 export function addAppStat(type, description) {
   if (mainConfig.includeAppStats === false) return;
 
+  // IGNORE LOCAL HOST DEV
+  if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") return;
   //https://opengis.simcoe.ca/api/appStats/opengis/click/property%20report
   const appStatsTemplate = (type, description) => `${mainConfig.appStatsUrl}opengis/${type}/${description}`;
 
@@ -583,4 +585,11 @@ export function postJSON(url, data = {}, callback) {
     .then(json => {
       callback(json);
     });
+}
+
+export function featureToGeoJson(feature) {
+  return new GeoJSON({ dataProjection: "EPSG:3857", featureProjection: "EPSG:3857" }).writeFeature(feature, {
+    dataProjection: "EPSG:3857",
+    featureProjection: "EPSG:3857"
+  });
 }

@@ -1,0 +1,39 @@
+.sc-theme-real-estate-recent-container {
+  width: 100%;
+}
+
+.sc-theme-real-estate-recent-item-container {
+  display: flex;
+  margin-bottom: 5px;
+}
+
+.sc-theme-real-estate-recent-image {
+  width: 140px;
+  height: 100px;
+}
+
+.sc-theme-real-estate-recent-info {
+  margin-left: 15px;
+  width: 100%;
+}
+
+.sc-theme-real-estate-recent-button {
+  max-height: 24px;
+  min-height: 24px;
+  width: 56px;
+}
+
+.sc-theme-real-estate-button-container {
+  width: 100%;
+  text-align: end;
+  margin-top: 24px;
+  left: 65px;
+  display: block;
+  float: right;
+}
+
+.sc-theme-real-estate-remove-all {
+  font-size: 9pt;
+  margin-left: 68px;
+  text-transform: lowercase;
+}

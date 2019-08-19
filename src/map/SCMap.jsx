@@ -38,7 +38,8 @@ class SCMap extends Component {
     this.state = {
       mapClassName: "sc-map",
       shareURL: null,
-      parcelClickText: "Disable Property Click"
+      parcelClickText: "Disable Property Click",
+      isIE: false
     };
   }
 
@@ -107,6 +108,16 @@ class SCMap extends Component {
 
     // APP STAT
     helpers.addAppStat("STARTUP", "MAP_LOAD");
+
+    // WARNING FOR IE
+    var ua = window.navigator.userAgent;
+    var msie = ua.indexOf("MSIE ");
+
+    if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
+      // If Internet Explorer, return version number
+      this.setState({ isIE: true });
+      helpers.showURLWindow("https://opengis.simcoe.ca/public/ieWarning.html");
+    }
   }
 
   onMenuItemClick = key => {

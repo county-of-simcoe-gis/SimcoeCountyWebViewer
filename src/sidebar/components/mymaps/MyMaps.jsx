@@ -189,10 +189,7 @@ class MyMaps extends Component {
       labelVisible: this.state.drawType === "Text" ? true : false,
       labelStyle: null,
       labelRotation: 0,
-      featureGeoJSON: new GeoJSON({ dataProjection: "EPSG:3857", featureProjection: "EPSG:3857" }).writeFeature(feature, {
-        dataProjection: "EPSG:3857",
-        featureProjection: "EPSG:3857"
-      }),
+      featureGeoJSON: helpers.featureToGeoJson(feature),
       style: customStyle === null ? this.state.drawStyle : customStyle,
       visible: true,
       drawType: this.state.drawType,
@@ -501,23 +498,6 @@ class MyMaps extends Component {
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-buffer">
             <FloatingMenuItem imageName={"buffer.png"} label="Buffer" />
           </MenuItem>
-          {/* <SubMenu className="sc-floating-menu-toolbox-submenu" title={<FloatingMenuItem imageName={"edit.png"} label="Edit Tools" />} key="1">
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-edit-all">
-              {<FloatingMenuItem imageName={"edit-all.png"} label="Enable All Edit Tools" />}
-            </MenuItem>
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-edit-vertices">
-              {<FloatingMenuItem imageName={"edit-vertices.png"} label="Vertices Only" />}
-            </MenuItem>
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-edit-move">
-              {<FloatingMenuItem imageName={"edit-move.png"} label="Move Only" />}
-            </MenuItem>
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-edit-rotate">
-              {<FloatingMenuItem imageName={"edit-rotate.png"} label="Rotate" />}
-            </MenuItem>
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-edit-scale">
-              {<FloatingMenuItem imageName={"edit-scale.png"} label="Scale" />}
-            </MenuItem>
-          </SubMenu> */}
         </FloatingMenu>
       </Portal>
     );
@@ -574,23 +554,6 @@ class MyMaps extends Component {
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-delete">
             <FloatingMenuItem imageName={"eraser.png"} label="Delete" />
           </MenuItem>
-          {/* <SubMenu className="sc-floating-menu-toolbox-submenu" title={<FloatingMenuItem imageName={"edit.png"} label="Edit Tools" />} key="1">
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-edit-all">
-              {<FloatingMenuItem imageName={"edit-all.png"} label="Enable All Edit Tools" />}
-            </MenuItem>
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-edit-vertices">
-              {<FloatingMenuItem imageName={"edit-vertices.png"} label="Vertices Only" />}
-            </MenuItem>
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-edit-move">
-              {<FloatingMenuItem imageName={"edit-move.png"} label="Move Only" />}
-            </MenuItem>
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-edit-rotate">
-              {<FloatingMenuItem imageName={"edit-rotate.png"} label="Rotate" />}
-            </MenuItem>
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-edit-scale">
-              {<FloatingMenuItem imageName={"edit-scale.png"} label="Scale" />}
-            </MenuItem>
-          </SubMenu> */}
         </FloatingMenu>
       </Portal>
     );

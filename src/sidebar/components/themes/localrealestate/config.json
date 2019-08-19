@@ -1,77 +1,66 @@
 {
-  "themeColor": "#ececec",
-  "expandInitialList": false,
-  "popupWidth": 280,
+  "photosUrl": "https://opengis.simcoe.ca/featurereports?",
+  "apiUrl": "https://opengis.simcoe.ca/api/getRealEstateInfo/",
   "layers": [
-      {
-          "label": " Residential",
-          "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Themes_Dynamic/MapServer",
-          "layerId": 19,
-          "checked": true,
-          "imageFieldName": "IMAGE_URL",
-          "hiddenFields":  ["MUNI","MLSNO"],
-          "featureReport": {
-              "nameFieldName": "MLSNO",
-              "municipalityFieldName": "MUNI",
-              "typeId": "SC_Properties For Sale"
-          }
-
-      },
-
-      {
-          "label": "Condos",
-          "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Themes_Dynamic/MapServer",
-          "layerId": 20,
-          "checked": false,
-          "imageFieldName": "IMAGE_URL",
-          "hiddenFields":  ["MUNI","MLSNO"],
-          "featureReport": {
-              "nameFieldName": "MLSNO",
-              "municipalityFieldName": "MUNI",
-              "typeId": "SC_Properties For Sale"
-          }
-      },
-
-      {
-          "label": "Commercial",
-          "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Themes_Dynamic/MapServer",
-          "layerId": 21,
-          "checked": false,
-          "imageFieldName": "IMAGE_URL",
-          "hiddenFields":  ["MUNI","MLSNO"],
-          "featureReport": {
-              "nameFieldName": "MLSNO",
-              "municipalityFieldName": "MUNI",
-              "typeId": "SC_Properties For Sale"
-          }
-      },
-
-      {
-          "label": "Farm",
-          "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Themes_Dynamic/MapServer",
-          "layerId": 22,
-          "checked": false,
-          "imageFieldName": "IMAGE_URL",
-          "hiddenFields":  ["MUNI","MLSNO"],
-          "featureReport": {
-              "nameFieldName": "MLSNO",
-              "municipalityFieldName": "MUNI",
-              "typeId": "SC_Properties For Sale"
-          }
-      },
-
-      {
-          "label": "Vacant Land",
-          "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Themes_Dynamic/MapServer",
-          "layerId": 23,
-          "checked": false,
-          "imageFieldName": "IMAGE_URL",
-          "hiddenFields":  ["MUNI","MLSNO"],
-          "featureReport": {
-              "nameFieldName": "MLSNO",
-              "municipalityFieldName": "MUNI",
-              "typeId": "SC_Properties For Sale"
-          }
+    {
+      "displayName": "Residential",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:Local Real Estate - Residential",
+      "visible": true,
+      "zIndex": 200,
+      "boxStyle": true,
+      "UrlParameter": {
+        "parameterName": "MLSNO",
+        "fieldName": "mlsno"
       }
+    },
+    {
+      "displayName": "Commercial",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:Local Real Estate - Commercial",
+      "visible": false,
+      "zIndex": 201,
+      "boxStyle": true,
+      "UrlParameter": {
+        "parameterName": "MLSNO",
+        "fieldName": "mlsno"
+      }
+    },
+    {
+      "displayName": "Farm",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:Local Real Estate - Farm",
+      "visible": false,
+      "zIndex": 202,
+      "boxStyle": true,
+      "UrlParameter": {
+        "parameterName": "MLSNO",
+        "fieldName": "mlsno"
+      }
+    },
+    {
+      "displayName": "Vacant Land",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:Local Real Estate - Vacant Land",
+      "visible": false,
+      "zIndex": 203,
+      "boxStyle": true,
+      "UrlParameter": {
+        "parameterName": "MLSNO",
+        "fieldName": "mlsno"
+      }
+    },
+    {
+      "displayName": "All",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:Local Real Estate - All",
+      "visible": false,
+      "zIndex": 203,
+      "boxStyle": true,
+      "UrlParameter": {
+        "parameterName": "MLSNO",
+        "fieldName": "mlsno"
+      }
+    }
   ]
 }
