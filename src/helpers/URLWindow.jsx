@@ -19,7 +19,14 @@ class URLWindow extends Component {
   };
   componentDidMount() {
     document.addEventListener("keydown", this.escFunction, false);
+
+    // LISTEN FOR SIDEPANEL CHANGES
+    window.emitter.addListener("sidebarChanged", isSidebarOpen => this.sidebarChanged(isSidebarOpen));
   }
+
+  sidebarChanged = isSidebarOpen => {
+    this.forceUpdate();
+  };
 
   escFunction = event => {
     if (event.keyCode === 27) {
