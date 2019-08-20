@@ -11,9 +11,8 @@ import arrayMove from "array-move";
 import "./Layers.css";
 import * as helpers from "../../../helpers/helpers";
 import * as TOCHelpers from "./TOCHelpers.jsx";
-import LayerItem from "./LayerItem.jsx";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
-import Menu, { SubMenu, Item as MenuItem, Divider } from "rc-menu";
+import { Item as MenuItem } from "rc-menu";
 import Portal from "../../../helpers/Portal.jsx";
 import TOCConfig from "./TOCConfig.json";
 
