@@ -80,6 +80,8 @@ export function getBase64FromImageUrl(url, callback) {
 // BASIC INFO RETURNED FOR PERFORMANCE TO LOAD LAYERS IN THE TOC
 // SECOND CALL IS MADE TO GET THE REST OF THE LAYER INFO AND STYLES
 export async function getBasicLayerListByGroup(group, dataStore, callback) {
+  const defaultOpacity = 0.5;
+
   const layerGroupURL = group.groupUrl;
   const visibleLayers = group.visibleLayers === undefined ? [] : group.visibleLayers;
 
@@ -130,6 +132,7 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
     let layer = null;
     layer = helpers.getImageWMSLayer(serverUrl + "/wms", groupLayerInfo.name);
     layer.setVisible(layerVisible);
+    layer.setOpacity(defaultOpacity);
     layer.setProperties({ name: groupLayerInfo.name });
     layer.setZIndex(layerIndex);
     window.map.addLayer(layer);
@@ -146,7 +149,7 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
       visible: layerVisible, // LAYER VISIBLE IN MAP, UPDATED BY CHECKBOX
       layer: layer, // OL LAYER OBJECT
       rootLayerUrl: rootLayerUrl, // ROOT LAYER INFO FROM GROUP END POINT
-      opacity: 1 // OPACITY OF LAYER
+      opacity: defaultOpacity // OPACITY OF LAYER
     });
 
     layerIndex--;
