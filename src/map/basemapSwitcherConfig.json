@@ -1,91 +1,89 @@
 {
-    "streetService": "https://maps.simcoe.ca/arcgis/rest/services/Public/Streets_Cache/MapServer",
-    "bathymetryService": "https://maps.simcoe.ca/arcgis/rest/services/Public/Bathymetry_Cache/MapServer",
-    "worldImageryService" : "https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer",
-    "topoServices": [
+  "streetService": "https://maps.simcoe.ca/arcgis/rest/services/Public/Streets_Cache/MapServer",
+  "bathymetryService": "https://maps.simcoe.ca/arcgis/rest/services/Public/Bathymetry_Cache/MapServer",
+  "worldImageryService": "https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer",
+  "topoServices": [
+    {
+      "name": "Topographic",
+      "image": "esri-topo.png",
+      "layers": [
         {
-            "name" : "Topographic",
-            "image" : "esri-topo.png",
-            "layers": [
-              {
-                "url" : "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer",
-                "type" : "SIMCOE_TILED"
-              },
-              {
-                "url" : "https://maps.simcoe.ca/arcgis/rest/services/Public/Topo_Cache/MapServer",
-                "type" : "SIMCOE_TILED"
-              }
-            ]
-            
+          "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer",
+          "type": "SIMCOE_TILED"
         },
         {
-            "name" : "Streets",
-            "image" : "esri-streets.png",
-            "layers": [
-                {
-                    "url" : "https://maps.simcoe.ca/arcgis/rest/services/Public/Streets_Black_And_White_Cache/MapServer",
-                    "type" : "SIMCOE_TILED"
-                }
-            ]
-            
-            
-        },
-        {
-            "name" : "Open Street Map",
-            "image" : "osm-topo.jpg",
-            "layers": [
-                {
-                    "url" : "",
-                    "type" : "OSM"
-                }
-            ]
-            
-        },
-        {
-            "name" : "LIO Topo",
-            "image" : "lio-topo.png",
-            "layers": [
-                {
-                   "url" : "https://ws.giscache.lrc.gov.on.ca/arcgis/rest/services/LIO_Cartographic/LIO_Topographic/MapServer",
-                "type" : "ESRI_TILED"
-                }
-            ]
-            
+          "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Topo_Cache/MapServer",
+          "type": "SIMCOE_TILED"
         }
-    ],
-    "imageryServices":[
+      ]
+    },
+    {
+      "name": "Streets",
+      "image": "esri-streets.png",
+      "layers": [
         {
-            "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_1954_Cache/MapServer",
-            "name": "1954"
-        },
-        {
-            "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_1989_Cache/MapServer",
-            "name": "1989"
-        },
-        {
-            "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_1997_Cache/MapServer",
-            "name": "1997"
-        },
-        {
-            "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2002_Cache/MapServer",
-            "name": "2002"
-        },
-        {
-            "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2008_Cache/MapServer",
-            "name": "2008"
-        },
-        {
-            "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2012_Cache/MapServer",
-            "name": "2012"
-        },
-        {
-            "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2013_Cache/MapServer",
-            "name": "2013"
-        },
-        {
-            "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2016_Cache/MapServer",
-            "name": "2016"
+          "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Streets_Black_And_White_Cache/MapServer",
+          "type": "SIMCOE_TILED"
         }
-    ]
-    
+      ]
+    },
+    {
+      "name": "Open Street Map",
+      "image": "osm-topo.jpg",
+      "layers": [
+        {
+          "url": "",
+          "type": "OSM"
+        }
+      ]
+    },
+    {
+      "name": "LIO Topo",
+      "image": "lio-topo.png",
+      "layers": [
+        {
+          "url": "https://ws.giscache.lrc.gov.on.ca/arcgis/rest/services/LIO_Cartographic/LIO_Topographic/MapServer",
+          "type": "ESRI_TILED"
+        }
+      ]
+    }
+  ],
+  "imageryServices": [
+    {
+      "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_1954_Cache/MapServer",
+      "name": "1954"
+    },
+    {
+      "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_1989_Cache/MapServer",
+      "name": "1989"
+    },
+    {
+      "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_1997_Cache/MapServer",
+      "name": "1997"
+    },
+    {
+      "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2002_Cache/MapServer",
+      "name": "2002"
+    },
+    {
+      "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2008_Cache/MapServer",
+      "name": "2008"
+    },
+    {
+      "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2012_Cache/MapServer",
+      "name": "2012"
+    },
+    {
+      "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2013_Cache/MapServer",
+      "name": "2013"
+    },
+    {
+      "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2016_Cache/MapServer",
+      "name": "2016"
+    },
+    {
+      "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2018_Cache/MapServer",
+      "name": "2018"
+    }
+  ]
 }

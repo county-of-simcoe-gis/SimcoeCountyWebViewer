@@ -28,7 +28,14 @@ class LocalRealEstateRecents extends Component {
                 <CSSTransition key={feature.get("mlsno")} classNames="sc-theme-real-estate-recent-item-container" timeout={200}>
                   <div className="sc-container sc-theme-real-estate-recent-item-container">
                     <div>
-                      <img className="sc-theme-real-estate-recent-image" src={feature.get("thumb_url")} />
+                      <img
+                        className="sc-theme-real-estate-recent-image"
+                        src={feature.get("thumb_url")}
+                        onError={e => {
+                          e.target.onerror = null;
+                          e.target.src = images["noPhoto.png"];
+                        }}
+                      />
                     </div>
                     <div className="sc-theme-real-estate-recent-info">
                       <InfoRow key={helpers.getUID()} label={"Address"} value={feature.get("Address")} />
@@ -65,3 +72,11 @@ class LocalRealEstateRecents extends Component {
 }
 
 export default LocalRealEstateRecents;
+
+// IMPORT ALL IMAGES
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
+function importAllImages(r) {
+  let images = {};
+  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
+  return images;
+}

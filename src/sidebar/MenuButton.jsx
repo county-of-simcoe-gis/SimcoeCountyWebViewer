@@ -128,7 +128,7 @@ class MenuButton extends Component {
     //className="sc-menu-button-img"
     return (
       <div>
-        <div className="sc-menu-button-container" onClick={this.onMenuButtonClick}>
+        <div className="sc-menu-button-container" style={{ cursor: "pointer" }} onClick={this.onMenuButtonClick}>
           <button className="sc-menu-more-button">
             <img src={images["more.png"]} style={{ pointerEvents: "none" }} />
             <br />

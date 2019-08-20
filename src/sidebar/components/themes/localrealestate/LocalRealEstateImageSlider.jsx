@@ -83,8 +83,10 @@ class LocalRealEstateImageSlider extends Component {
     });
     this.setState({ images });
 
-    if (images.length > 0) document.getElementById(this.imageSliderId).classList.remove("sc-hidden");
-    else document.getElementById(this.imageSliderId).classList.add("sc-hidden");
+    if (document.getElementById(this.imageSliderId) !== null) {
+      if (images.length > 0) document.getElementById(this.imageSliderId).classList.remove("sc-hidden");
+      else document.getElementById(this.imageSliderId).classList.add("sc-hidden");
+    }
   };
 
   initLayer = () => {
@@ -211,20 +213,7 @@ class LocalRealEstateImageSlider extends Component {
   }
 }
 
-// <div key={helpers.getUID()} style={{ width: 300 }}>
-//               <img src={image} />
-//             </div>
 export default LocalRealEstateImageSlider;
-
-// function SampleNextArrow(props) {
-//   const { className, style, onClick } = props;
-//   return <div className={className} style={{ ...style, display: "block", background: "red" }} onClick={onClick} />;
-// }
-
-// function SamplePrevArrow(props) {
-//   const { className, style, onClick } = props;
-//   return <div className={className} style={{ ...style, display: "block", background: "green" }} onClick={onClick} />;
-// }
 
 // IMPORT ALL IMAGES
 const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
