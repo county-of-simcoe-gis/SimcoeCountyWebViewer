@@ -49,8 +49,10 @@ class LocalRealEstateImageSlider extends Component {
   };
 
   onSidebarChange = () => {
-    if (window.sidebarOpen) document.getElementById(this.imageSliderId).classList.remove("in");
-    else document.getElementById(this.imageSliderId).classList.add("in");
+    if (document.getElementById(this.imageSliderId) !== null) {
+      if (window.sidebarOpen) document.getElementById(this.imageSliderId).classList.remove("in");
+      else document.getElementById(this.imageSliderId).classList.add("in");
+    }
   };
 
   componentDidMount() {
