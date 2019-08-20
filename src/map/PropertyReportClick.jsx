@@ -11,8 +11,8 @@ import { Vector as VectorSource } from "ol/source.js";
 import { Stroke, Style } from "ol/style.js";
 import { transform } from "ol/proj.js";
 
-// https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json&cql_filter=INTERSECTS(shape,%20POINT%20(-8874151.72%205583068.78))
-const parcelURLTemplate = (mainURL, x, y) => `${mainURL}&cql_filter=INTERSECTS(shape,%20POINT%20(${x}%20${y}))`;
+// https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json&cql_filter=INTERSECTS(geom,%20POINT%20(-8874151.72%205583068.78))
+const parcelURLTemplate = (mainURL, x, y) => `${mainURL}&cql_filter=INTERSECTS(geom,%20POINT%20(${x}%20${y}))`;
 
 let parcelLayer = new VectorLayer({
   style: new Style({
