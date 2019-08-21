@@ -1,57 +1,57 @@
 .header {
-    border-bottom: 1px solid #bbbbbb;
-    left: 0px;
-    top: 0px;
-    right: 0px;
-    bottom: auto;
-    width: 100%;
-    height: 52px;
-    max-height: 52px;
-    padding: 0px;
-    z-index: auto;
-    position: absolute;
-    background: linear-gradient(to bottom, rgba(255,255,255,1) 0%,rgba(229,229,229,1) 100%);
-    display: table;
+  border-bottom: 1px solid #bbbbbb;
+  left: 0px;
+  top: 0px;
+  right: 0px;
+  bottom: auto;
+  width: 100%;
+  height: 52px;
+  max-height: 52px;
+  padding: 0px;
+  z-index: auto;
+  position: absolute;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+  display: table;
 }
 
-#sc-header-left{
-    min-width: 110px;
+#sc-header-left {
+  min-width: 110px;
 }
 
-#sc-header-center{
-    width: 100%;
+#sc-header-center {
+  width: 100%;
 }
 
-#sc-header-right{
-    width: 300px;
-    text-align: right;
-    display: table-cell;
-    padding-right: 15px;
-    min-width: 237px;
-    padding-top: 5px;
+#sc-header-right {
+  width: 300px;
+  text-align: right;
+  display: table-cell;
+  padding-right: 15px;
+  min-width: 237px;
+  padding-top: 5px;
 }
 
-.sc-header-right-buttons{
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-    width: 84px;
-    height: 37px;
-    border: 1px solid transparent;
+.sc-header-right-buttons {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  width: 84px;
+  height: 37px;
+  border: 1px solid transparent;
 }
 
-.sc-header-right-buttons:hover{
-    border: 1px solid #2074B7;
-    box-shadow: 0px 0px 5px #80B9FF;
+.sc-header-right-buttons:hover {
+  border: 1px solid #2074b7;
+  box-shadow: 0px 0px 5px #80b9ff;
 }
 
-#sc-header-help-button:focus{
-    outline: 0;
+#sc-header-help-button:focus {
+  outline: 0;
 }
 
-#sc-header-advanced-button{
-    width: 80px;
-    margin-left: 5px;
+#sc-header-advanced-button {
+  width: 80px;
+  margin-left: 5px;
 }
 
 #sc-header-burger-button {
@@ -66,21 +66,21 @@
   padding-top: 2px;
 }
 
-.sc-header-dot-menu-container{
+.sc-header-dot-menu-container {
   display: table-cell;
   padding-right: 11px;
   width: 20px;
 }
 
-.sc-header-dot-menu-img{
+.sc-header-dot-menu-img {
   text-align: center;
   vertical-align: middle;
-  
+
   border-radius: 100%;
   padding: 7px;
   margin-bottom: 8px;
 }
-.sc-header-dot-menu-img:hover{
+.sc-header-dot-menu-img:hover {
   background-color: rgba(255, 255, 255, 0.5);
 }
 /* .sc-header-dot-menu-container{
@@ -97,7 +97,15 @@
     border-radius: 100%;
   } */
 
-#sc-header-bar-logo{
+.sc-header-feedback-container {
+  width: 40px;
+  text-align: center;
+  vertical-align: middle;
+  display: table-cell;
+  cursor: pointer;
+}
+
+#sc-header-bar-logo {
   display: table-cell;
   vertical-align: bottom;
   padding-left: 9px;
@@ -107,52 +115,50 @@
   display: none;
 }
 
-#sc-header-search-container{
+#sc-header-search-container {
   display: table-cell;
   padding-top: 6px;
-  padding-right: 25px;
+  padding-right: 12px;
 }
 
 /* MOBILE */
 @media only screen and (max-width: 770px) {
-
   #sc-header-burger-button {
     display: table-cell;
-  cursor: pointer;
-  margin-left: 12px;
-  width: 46px;
-  height: 44px;
-  vertical-align: middle;
-  text-align: center;
-  padding-left: 0px;
-  padding-top: 2px;
+    cursor: pointer;
+    margin-left: 12px;
+    width: 46px;
+    height: 44px;
+    vertical-align: middle;
+    text-align: center;
+    padding-left: 0px;
+    padding-top: 2px;
   }
 
-    #sc-header-bar-button {
-      display: none;
-        /* display: block;
+  #sc-header-bar-button {
+    display: none;
+    /* display: block;
         cursor: pointer;
         margin-left: 0px;
         width: 46px;
         height: 44px;
         background-image: url(./images/bar-button.png); */
-    }
+  }
 
-    #sc-header-bar-logo{
-        display: none;
-    }
+  #sc-header-bar-logo {
+    display: none;
+  }
 
-    #sc-header-right{
-        display: none;
-    }
+  #sc-header-right {
+    display: none;
+  }
 
-    #sc-header-left {
-        min-width: 47px;
-    }
+  #sc-header-left {
+    min-width: 47px;
+  }
 
-    #sc-header-center {
-        width: 100%;
-        padding-right: 13px;
-    }
-    
+  #sc-header-center {
+    width: 100%;
+    padding-right: 13px;
+  }
 }

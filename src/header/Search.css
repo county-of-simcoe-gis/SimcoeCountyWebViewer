@@ -16,8 +16,9 @@
 
 .sc-search-icon-initial {
   position: absolute;
-  right: 20px;
+  right: 49px;
   top: 16px;
+  z-index: 10000000;
 }
 
 .sc-search-icon-initial-hidden {
