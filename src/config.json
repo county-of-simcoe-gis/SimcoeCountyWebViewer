@@ -55,11 +55,18 @@
       "imageName": "localrealestate.png"
     },
     {
-      "id": 3,
+      "id": 4,
       "name": "Road Construction",
       "componentName": "RoadConstruction",
       "description": "View this year's road and bridge construction locations.",
       "imageName": "roadsConstruction.png"
+    },
+    {
+      "id": 5,
+      "name": "Child Care Facilities",
+      "componentName": "ChildCareFacilities",
+      "description": "Provide users with a list of Child care facilities as well as additional information about each facility.",
+      "imageName": "childCareFacilities.png"
     }
   ]
 }
