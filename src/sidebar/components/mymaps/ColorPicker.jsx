@@ -21,7 +21,8 @@ export default class ColorPicker {
   }
 
   show() {
-    document.getElementById("portal-root").classList.remove("sc-hidden");
+    if (document.getElementById("sc-color-picker-container") !== null) document.getElementById("sc-color-picker-container").classList.remove("sc-hidden");
+
     const portalStyle = {
       position: "absolute",
       zIndex: 10000,
@@ -31,7 +32,9 @@ export default class ColorPicker {
 
     const menu = (
       <Portal>
-        <div style={portalStyle}>{this.elements}</div>
+        <div id="sc-color-picker-container" style={portalStyle}>
+          {this.elements}
+        </div>
       </Portal>
     );
 
@@ -39,6 +42,6 @@ export default class ColorPicker {
   }
 
   hide() {
-    document.getElementById("portal-root").classList.add("sc-hidden");
+    if (document.getElementById("sc-color-picker-container") !== null) document.getElementById("sc-color-picker-container").classList.add("sc-hidden");
   }
 }

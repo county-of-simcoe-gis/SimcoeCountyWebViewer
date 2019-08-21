@@ -53,6 +53,13 @@
       "componentName": "LocalRealEstate",
       "description": "View listings by categories and view photos for the listing with the option to link to the Realtor.ca listing",
       "imageName": "localrealestate.png"
+    },
+    {
+      "id": 3,
+      "name": "Road Construction",
+      "componentName": "RoadConstruction",
+      "description": "View this year's road and bridge construction locations.",
+      "imageName": "roadsConstruction.png"
     }
   ]
 }
