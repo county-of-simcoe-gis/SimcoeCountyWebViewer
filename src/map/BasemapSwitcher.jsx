@@ -53,7 +53,7 @@ class BasemapSwitcher extends Component {
       //var layer = helpers.getArcGISTiledLayer(service.url);
       var layer = helpers.getSimcoeTileXYZLayer(service.url);
       // LAYER PROPS
-      layer.setProperties({ index: index, name: service.name, service});
+      layer.setProperties({ index: index, name: service.name, orthoServiceUrl:service.url});
       layer.setZIndex(index);
       layer.setVisible(false);
 
@@ -75,7 +75,7 @@ class BasemapSwitcher extends Component {
     if (BasemapConfig.streetService !==  undefined){
       //var streetsLayer = helpers.getArcGISTiledLayer(BasemapConfig.streetService);
       var streetsLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.streetService);
-      streetsLayer.setProperties({serviceUrl:BasemapConfig.streetService}); 
+      streetsLayer.setProperties({baseMapUrl:BasemapConfig.streetService, baseMapName: "streets"}); 
       streetsLayer.setZIndex(BasemapConfig.imageryServices.length);
       window.map.addLayer(streetsLayer);
       this.setState({streetsLayer: streetsLayer});
@@ -84,7 +84,7 @@ class BasemapSwitcher extends Component {
     // LOAD BATHYMETRY LAYER
     if (BasemapConfig.bathymetryService !==  undefined){
       var bathymetryLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.bathymetryService);
-      bathymetryLayer.setProperties({serviceUrl:BasemapConfig.bathymetryService });
+      bathymetryLayer.setProperties({baseMapUrl:BasemapConfig.bathymetryService, baseMapName: "bathymetry"}); 
       bathymetryLayer.setZIndex(0);
       window.map.addLayer(bathymetryLayer);
       this.setState({bathymetryLayer: bathymetryLayer});
@@ -93,7 +93,7 @@ class BasemapSwitcher extends Component {
     // LOAD WORLD LAYER
     if (BasemapConfig.worldImageryService !==  undefined){
       var worldImageryLayer = helpers.getESRITileXYZLayer(BasemapConfig.worldImageryService);
-      worldImageryLayer.setProperties({serviceUrl:BasemapConfig.worldImageryService });
+      worldImageryLayer.setProperties({baseMapUrl:BasemapConfig.worldImageryService, baseMapName: "world map"}); 
       worldImageryLayer.setZIndex(0);
       worldImageryLayer.setMinResolution(300);
       window.map.addLayer(worldImageryLayer);
