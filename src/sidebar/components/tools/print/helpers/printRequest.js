@@ -1,3 +1,5 @@
+'use strict';
+
 import * as  myMapsHelpers from "../../../mymaps/myMapsHelpers";
 
 export function printRequestOptions(mapLayers, description, mapState){
@@ -7,7 +9,27 @@ export function printRequestOptions(mapLayers, description, mapState){
     const day = dateObj.getUTCDate();
     const year = dateObj.getUTCFullYear();
     const myMapLayers = myMapsHelpers.getItemsFromStorage("myMaps");
+    
+    //converts rgb to hexadecimal color
+    let rgbToHex = function (r,g,b,a) { 
+        r = r.toString(16);
+        g = g.toString(16);
+        b = b.toString(16);
+        a = (Math.round(a)).toString(16);
+        
+        if (r.length == 1)
+            r = "0" + r;
+        if (g.length == 1)
+            g = "0" + g;
+        if (b.length == 1)
+            b = "0" + b;
+        if (a.length == 1)
+            a =  "" + a;
 
+        return "#" + r + g + b + a;
+    };
+
+    
     //init list for layers to render on main map
     let renderMaplayers = []
 
@@ -27,18 +49,29 @@ export function printRequestOptions(mapLayers, description, mapState){
         }
     }
 
+
+        
+     
     //myMaps custom 
     let myMapLayersList = myMapLayers.items.map((l)=>{
-        return ({
-            type:"geoJson",
-            geoJson: l.featureGeoJSON, 
-            name: l.label, 
-            style:{
-                type: l.Polygon,
-                fillColor: l.style.fill_.color_, 
-                strokeColor: l.style.stroke_.color_
-            }        
-        })
+        let obj = {}
+        obj.type="geoJson";
+        obj.geoJson = l.featureGeoJSON;
+        obj.name = l.label;
+        obj.style = {
+            version:l.id,
+            "*":{
+                symbolizers: [{
+                    type: l.Polygon,
+                    fillColor:rgbToHex(...l.style.fill_.color_) , 
+                    strokeColor: rgbToHex(...l.style.stroke_.color_),
+                    fillOpacity: 1,
+                    strokeOpacity: 1,
+                    strokeWidth: l.style.stroke_.width_
+                }]
+            }
+        }
+        return (obj)
     }); 
     for (const key in myMapLayersList) {
         renderMaplayers.push(myMapLayersList[key]);
