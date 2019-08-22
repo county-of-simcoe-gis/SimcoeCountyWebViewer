@@ -9,7 +9,8 @@ export function printRequestOptions(mapLayers, description, mapState){
     const day = dateObj.getUTCDate();
     const year = dateObj.getUTCFullYear();
     const myMapLayers = myMapsHelpers.getItemsFromStorage("myMaps");
-    
+    const currentMapViewCenter = window.map.getView().values_.center
+
     //converts rgb to hexadecimal color
     let rgbToHex = function (r,g,b,a) { 
         r = r.toString(16);
@@ -149,7 +150,7 @@ export function printRequestOptions(mapLayers, description, mapState){
         "name": ""
     }
 
-    printRequest.attributes.map.center = [5, 45];
+    printRequest.attributes.map.center = currentMapViewCenter;
     printRequest.attributes.map.scale = mapState.forceScale;
     printRequest.attributes.map.projection = "EPSG:4326";
     printRequest.attributes.map.rotation = 0;
@@ -198,7 +199,7 @@ export function printRequestOptions(mapLayers, description, mapState){
             break;
       }
 
-      //console.log(mapLayers);
+      console.log(mapLayers);
 
 
       console.log(JSON.stringify(printRequest));
@@ -220,3 +221,5 @@ export function printRequestOptions(mapLayers, description, mapState){
 
     //layerGroups Basemaps OSM Streets
 }
+
+//https://gis.stackexchange.com/questions/153233/mapfish-print-v3-blank-map   link to help
