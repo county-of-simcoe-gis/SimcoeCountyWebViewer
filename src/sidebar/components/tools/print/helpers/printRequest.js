@@ -50,9 +50,6 @@ export function printRequestOptions(mapLayers, description, mapState){
         }
     }
 
-
-        
-     
     //myMaps custom 
     let myMapLayersList = myMapLayers.items.map((l)=>{
         let obj = {}
@@ -78,76 +75,73 @@ export function printRequestOptions(mapLayers, description, mapState){
         renderMaplayers.push(myMapLayersList[key]);
     }
     
-
     for (const key in mapLayers) {
-        let eachLayer = mapLayers[key]
-        if (eachLayer.values_.baseMapUrl) {
-            renderMaplayers.push({
-                type:"tiledwms",
-                baseURL:eachLayer.values_.baseMapUrl,
-                opacity:eachLayer.values_.opacity,
-                layers:[eachLayer.values_.baseMapName],
-                tileSize:[
-                  256,
-                  256
-                ]
-            });
+
+        let eachLayer = mapLayers[key];
+
+        if (eachLayer.values_.service==="TileLayer") {
+            let tiles = eachLayer.values_.source.tileCache.entries_;
+            for (const i in tiles) {
+                renderMaplayers.push({
+                    type:"tiledwms",
+                    baseURL:tiles[i].value_.src_,
+                    opacity:eachLayer.values_.opacity,
+                    tileSize:[
+                      256,
+                      256
+                    ],
+                    layers:[0,1],
+                    imageFormat: "image/png",
+                });
+            }
         }
-        if (eachLayer.values_.orthoServiceUrl) {
-            renderMaplayers.push({
-                type:"tiledwms",
-                baseURL:eachLayer.values_.orthoServiceUrl,
-                opacity:eachLayer.values_.opacity,
-                layers:[eachLayer.values_.name],
-                tileSize:[
-                  256,
-                  256
-                ]
-            });
-        }
-        if (eachLayer.values_.serviceGroup) {
-            let serviceGroupLayer = eachLayer.values_.serviceGroup.layers
-            for (const key in serviceGroupLayer) {
-                if ((serviceGroupLayer[key].type)==="OSM") {
-                    renderMaplayers.push({
-                        type:"OSM",
-                        baseURL:"http://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    });
-                } else {
-                    renderMaplayers.push({
-                        type:"tiledwms",
-                        baseURL:serviceGroupLayer[key].url,
-                        opacity:eachLayer.values_.opacity,
-                        layers:[""],
-                        tileSize:[
-                            256,
-                            256
-                        ]
-                    });
-                }    
+
+        if (eachLayer.values_.service==="LayerGroup") {
+            let tiles = eachLayer.values_.layers.array_[0].values_.source.tileCache.entries_;
+            for (const i in tiles) {
+                console.log(tiles[i].value_.src_);
+                renderMaplayers.push({
+                    type:"tiledwms",
+                    baseURL:tiles[i].value_.src_,
+                    opacity:eachLayer.values_.opacity,
+                    tileSize:[
+                      256,
+                      256
+                    ],
+                    layers:[0,1],
+                    imageFormat: "image/png",
+                });
             }
         }
     }
     let templegend = {
         classes: [
             {
-                icons: ["https://image.flaticon.com/icons/svg/785/785116.svg"],
-                name: "fire"
-            },
-            {
-                icons: ["https://image.flaticon.com/icons/svg/616/616489.svg"],
-                name: "star"
-            },
-            {
-                icons: ["https://image.flaticon.com/icons/svg/148/148798.svg"],
-                name: "share"
-            },
-            {
-                icons: ["https://image.flaticon.com/icons/svg/149/149004.svg"],
-                name: "mobile"
-            }
+                icons:[
+                   "https://www.realdecoy.com/wp-content/uploads/siggen-social-icons/twitter1.png?897572"
+                ],
+                name:"twitter"
+             },
+             {
+                icons:[
+                   "https://www.realdecoy.com/wp-content/uploads/siggen-social-icons/facebook1.png?897572"
+                ],
+                name:"facebook"
+             },
+             {
+                icons:[
+                   "https://www.realdecoy.com/wp-content/uploads/siggen-social-icons/instagram1.png?897572"
+                ],
+                name:"instagram"
+             },
+             {
+                icons:[
+                   "https://www.realdecoy.com/wp-content/uploads/siggen-social-icons/linkedin1.png?897572"
+                ],
+                name:"linkedin"
+             }  
         ],
-        "name": ""
+        name: "Legend"
     }
 
     printRequest.attributes.map.center = currentMapViewCenter;
@@ -200,6 +194,8 @@ export function printRequestOptions(mapLayers, description, mapState){
       }
 
       console.log(mapLayers);
+
+      //console.log(printRequest);
 
 
       console.log(JSON.stringify(printRequest));
