@@ -9,7 +9,7 @@ import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
 import { Circle as CircleStyle, Icon, Fill, Stroke, Style } from "ol/style.js";
 
-const searchStreetsURL = searchText => `http://localhost:8085/getStreetNames/${searchText}`;
+const searchStreetsURL = searchText => `https://opengis.simcoe.ca/api/getStreetNames/${searchText}`;
 
 class SearchAddresses extends Component {
   constructor(props) {
@@ -55,6 +55,7 @@ class SearchAddresses extends Component {
       }),
       style: iconStyle
     });
+
     window.map.addLayer(layer);
     this.vectorLayer = layer;
 
