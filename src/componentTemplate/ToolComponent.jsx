@@ -6,16 +6,16 @@ import PanelComponent from "../../../PanelComponent";
 class ToolComponent extends Component {
   state = {};
 
-  onClose() {
+  onClose = () => {
     // ADD CLEAN UP HERE (e.g. Map Layers, Popups, etc)
 
     // CALL PARENT WITH CLOSE
     this.props.onClose();
-  }
+  };
 
   render() {
     return (
-      <PanelComponent onClose={this.props.onClose} name={this.props.name} type="tools">
+      <PanelComponent onClose={this.onClose} name={this.props.name} type="tools">
         <div>Put your components in here.</div>
       </PanelComponent>
     );

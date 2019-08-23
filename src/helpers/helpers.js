@@ -296,7 +296,7 @@ export function getWFSVectorSource(serverUrl, layerName, callback, sortField = "
 }
 
 //https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Bag%20Tag%20Locations&outputFormat=application/json
-export function getWFSGeoJSON(serverUrl, layerName, callback, sortField = null, extent = null, cqlFilter = null) {
+export function getWFSGeoJSON(serverUrl, layerName, callback, sortField = null, extent = null, cqlFilter = null, count = null) {
   // SORTING
   let additionalParams = "";
   if (sortField !== null) additionalParams += "&sortBy=" + sortField;
@@ -308,11 +308,15 @@ export function getWFSGeoJSON(serverUrl, layerName, callback, sortField = null, 
   }
 
   // ATTRIBUTE WHERECLAUSE
-  if (cqlFilter !== null) additionalParams += "&cql_filter=" + cqlFilter;
+  if (cqlFilter !== null && cqlFilter.length !== 0) additionalParams += "&cql_filter=" + cqlFilter;
+
+  // COUNT
+  if (count !== null) additionalParams += "&count=" + count;
 
   // USE TEMPLATE FOR READABILITY
   const wfsUrlTemplate = (serverURL, layerName) => `${serverURL}wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json`;
   const wfsUrl = wfsUrlTemplate(serverUrl, layerName) + additionalParams;
+  console.log(wfsUrl);
   getJSON(wfsUrl, result => {
     const geoJSON = new GeoJSON().readFeatures(result);
     callback(geoJSON);
