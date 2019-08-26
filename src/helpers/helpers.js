@@ -19,6 +19,7 @@ import { easeOut } from "ol/easing";
 import { Fill, Stroke, Style, Circle as CircleStyle, Text as TextStyle } from "ol/style";
 import XYZ from "ol/source/XYZ.js";
 import { unByKey } from "ol/Observable.js";
+import WKT from "ol/format/WKT.js";
 
 //OTHER
 import { parseString } from "xml2js";
@@ -596,4 +597,16 @@ export function featureToGeoJson(feature) {
     dataProjection: "EPSG:3857",
     featureProjection: "EPSG:3857"
   });
+}
+
+export function getWKTFeature(wktString) {
+  if (wktString === undefined) return;
+
+  // READ WKT
+  var wkt = new WKT();
+  var feature = wkt.readFeature(wktString, {
+    dataProjection: "EPSG:3857",
+    featureProjection: "EPSG:3857"
+  });
+  return feature;
 }

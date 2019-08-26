@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import "./ToolComponent.css";
-import * as helpers from "./../helpers";
+import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
 
 class ToolComponent extends Component {

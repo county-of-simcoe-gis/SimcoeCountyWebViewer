@@ -5,7 +5,6 @@ import "./Search.css";
 import Highlighter from "react-highlight-words";
 import { Vector as VectorLayer } from "ol/layer";
 import { Vector as VectorSource } from "ol/source.js";
-import WKT from "ol/format/WKT.js";
 import { Fill, Icon, Stroke, Style, Circle as CircleStyle } from "ol/style.js";
 import { transform } from "ol/proj.js";
 import { CopyToClipboard } from "react-copy-to-clipboard";
@@ -60,6 +59,8 @@ class Search extends Component {
     // BIND THIS TO THE CLICK FUNCTION
     this.removeMarkersClick = this.removeMarkersClick.bind(this);
     this.cleanup = this.cleanup.bind(this);
+
+    this.storageKey = "searchHistory";
   }
   state = {
     value: "",
@@ -156,17 +157,17 @@ class Search extends Component {
     }
   }
 
-  getWKTFeature(wktString) {
-    if (wktString === undefined) return;
+  // getWKTFeature(wktString) {
+  //   if (wktString === undefined) return;
 
-    // READ WKT
-    var wkt = new WKT();
-    var feature = wkt.readFeature(wktString, {
-      dataProjection: "EPSG:3857",
-      featureProjection: "EPSG:3857"
-    });
-    return feature;
-  }
+  //   // READ WKT
+  //   var wkt = new WKT();
+  //   var feature = wkt.readFeature(wktString, {
+  //     dataProjection: "EPSG:3857",
+  //     featureProjection: "EPSG:3857"
+  //   });
+  //   return feature;
+  // }
 
   jsonCallback(result) {
     // SOME FEATURES HAVEN"T BEEN PROCESSED YET
@@ -175,14 +176,19 @@ class Search extends Component {
       return;
     }
 
+    this.saveStateToStorage(result);
+
+    // EMTI SEARCH COMPLETE
+    window.emitter.emit("searchComplete", result);
+
     this.initsearchLayers();
 
     // SET STATE CURRENT ITEM
     this.setState({ searchResults: [result] });
 
     // READ WKT
-    const wktShape = this.getWKTFeature(result.WKTShape);
-    const wktPoint = this.getWKTFeature(result.WKTPoint);
+    const wktShape = helpers.getWKTFeature(result.WKTShape);
+    const wktPoint = helpers.getWKTFeature(result.WKTPoint);
 
     // SET SOURCE
     searchGeoLayer.getSource().addFeature(wktShape);
@@ -206,6 +212,25 @@ class Search extends Component {
     }
   }
 
+  saveStateToStorage = item => {
+    let savedSearches = this.getStorage();
+
+    item.dateAdded = new Date().toLocaleString();
+    savedSearches.unshift(item);
+
+    if (savedSearches.length >= 25) savedSearches.pop();
+    localStorage.setItem(this.storageKey, JSON.stringify(savedSearches));
+  };
+
+  // GET STORAGE
+  getStorage() {
+    const storage = localStorage.getItem(this.storageKey);
+    if (storage === null) return [];
+
+    const data = JSON.parse(storage);
+    return data;
+  }
+
   // WHEN USER SELECTS ITEM
   onItemSelect(value, item) {
     // CLEAR PREVIOUS SOURCE
@@ -217,7 +242,7 @@ class Search extends Component {
       // HANDLES GEOCODE RESULT
 
       // READ WKT
-      const feature = this.getWKTFeature(item.WKTShape);
+      const feature = helpers.getWKTFeature(item.WKTShape);
 
       // SET SOURCE
       searchGeoLayer.getSource().addFeature(feature);
@@ -229,6 +254,11 @@ class Search extends Component {
       //helpers.flashPoint(feature.getGeometry().getCoordinates(), 18);
       window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
       window.map.getView().setZoom(18);
+
+      this.saveStateToStorage(item);
+
+      // EMTI SEARCH COMPLETE
+      window.emitter.emit("searchComplete", item);
     } else {
       // CALL API TO GET LOCATION DETAILS
       helpers.getJSON(searchInfoURL(item.LocationID), result => this.jsonCallback(result));
