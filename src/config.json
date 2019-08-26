@@ -34,6 +34,13 @@
       "componentName": "SearchAddresses",
       "description": "This tool allows you to search Addresses.",
       "imageName": "searchAddresses.png"
+    },
+    {
+      "id": 5,
+      "name": "Search History",
+      "componentName": "SearchHistory",
+      "description": "This tool provides users with a list of their 25 most recent searches.",
+      "imageName": "searchHistory.png"
     }
   ],
 

@@ -27,9 +27,10 @@
 
 .sc-search-icon-active {
   position: absolute;
-  right: 27px;
+  right: 52px;
   top: 15px;
   cursor: pointer;
+  z-index: 100000;
 }
 .sc-search-icon-active-hidden {
   display: none;
