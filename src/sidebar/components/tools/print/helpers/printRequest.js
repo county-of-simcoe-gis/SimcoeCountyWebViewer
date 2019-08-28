@@ -1,6 +1,7 @@
 'use strict';
 
 import * as  myMapsHelpers from "../../../mymaps/myMapsHelpers";
+import tileMapLayerConfigs from "./wmts_json_config_entries";
 
 export function printRequestOptions(mapLayers, description, mapState){
 
@@ -30,7 +31,6 @@ export function printRequestOptions(mapLayers, description, mapState){
         return "#" + r + g + b + a;
     };
 
-    
     //init list for layers to render on main map
     let renderMaplayers = []
 
@@ -54,7 +54,7 @@ export function printRequestOptions(mapLayers, description, mapState){
     let myMapLayersList = myMapLayers.items.map((l)=>{
         let obj = {}
         obj.type="geoJson";
-        obj.geoJson = l.featureGeoJSON;
+        obj.geoJson = {type: "FeatureCollection",features: [JSON.parse(l.featureGeoJSON)]};
         obj.name = l.label;
         obj.style = {
             version:l.id,
@@ -74,46 +74,34 @@ export function printRequestOptions(mapLayers, description, mapState){
     for (const key in myMapLayersList) {
         renderMaplayers.push(myMapLayersList[key]);
     }
-    
-    for (const key in mapLayers) {
 
-        let eachLayer = mapLayers[key];
-
-        if (eachLayer.values_.service==="TileLayer") {
-            let tiles = eachLayer.values_.source.tileCache.entries_;
-            for (const i in tiles) {
-                renderMaplayers.push({
-                    type:"tiledwms",
-                    baseURL:tiles[i].value_.src_,
-                    opacity:eachLayer.values_.opacity,
-                    tileSize:[
-                      256,
-                      256
-                    ],
-                    layers:[0,1],
-                    imageFormat: "image/png",
-                });
-            }
-        }
-
-        if (eachLayer.values_.service==="LayerGroup") {
-            let tiles = eachLayer.values_.layers.array_[0].values_.source.tileCache.entries_;
-            for (const i in tiles) {
-                console.log(tiles[i].value_.src_);
-                renderMaplayers.push({
-                    type:"tiledwms",
-                    baseURL:tiles[i].value_.src_,
-                    opacity:eachLayer.values_.opacity,
-                    tileSize:[
-                      256,
-                      256
-                    ],
-                    layers:[0,1],
-                    imageFormat: "image/png",
-                });
-            }
-        }
+    //filter tilelayers and passes only visible layers configs to be rendered
+    let tileLayers = (mapLayers.filter((l)=>l.values_.serviceType==="TileLayer"? l:false)).map((l)=>l.values_.service);
+    for (const key in tileLayers) {
+        if (tileMapLayerConfigs[tileLayers[key]]) {
+            renderMaplayers.push(tileMapLayerConfigs[tileLayers[key]]);
+        }     
     }
+
+    //filter grouplayers and passes only visible layers configs to be rendered
+    let groupLayers = (mapLayers.filter((l)=>l.values_.serviceType==="LayerGroup"? l:false)).map((l)=>l.values_.service);
+
+    //filter imagelayers and passes only visible layers  be rendered
+    let imageLayers = (mapLayers.filter((l)=>l.type==="IMAGE"? l:false)).map((l)=>l.values_.name)
+    renderMaplayers.push({
+            type: "wms",
+            baseURL: "https://opengis.simcoe.ca/geoserver/wms",
+            serverType: "geoserver",
+            opacity: 1,
+            layers: imageLayers,
+            imageFormat: "image/png",
+            customParams: {
+                "TRANSPARENT": "true"
+            }
+        }
+    );
+    
+
     let templegend = {
         classes: [
             {
@@ -146,7 +134,7 @@ export function printRequestOptions(mapLayers, description, mapState){
 
     printRequest.attributes.map.center = currentMapViewCenter;
     printRequest.attributes.map.scale = mapState.forceScale;
-    printRequest.attributes.map.projection = "EPSG:4326";
+    printRequest.attributes.map.projection = "EPSG:3857";
     printRequest.attributes.map.rotation = 0;
     printRequest.attributes.map.dpi = 300;
     printRequest.attributes.map.layers = renderMaplayers;
@@ -195,16 +183,16 @@ export function printRequestOptions(mapLayers, description, mapState){
 
       console.log(mapLayers);
 
-      //console.log(printRequest);
+      console.log(printRequest);
 
 
-      console.log(JSON.stringify(printRequest));
+      //console.log(JSON.stringify(printRequest));
     //   let headers = new Headers();
 
     //   headers.append('Access-Control-Allow-Origin', 'http://localhost:8080');
     //   headers.append('Access-Control-Allow-Credentials', 'true');
 
-    //   fetch(`http://localhost:8080/print/${printRequest.layout}/report.${mapState.printFormatSelectedOption.value}`, {
+    //   fetch(`http://localhost:8080/print/print/${printRequest.layout}/report.${mapState.printFormatSelectedOption.value}`, {
     //     method: 'POST',
     //     headers: headers,
     //     body: JSON.stringify(printRequest)
