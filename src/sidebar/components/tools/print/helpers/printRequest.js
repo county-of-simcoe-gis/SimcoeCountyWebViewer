@@ -76,15 +76,19 @@ export function printRequestOptions(mapLayers, description, mapState){
     }
 
     //filter tilelayers and passes only visible layers configs to be rendered
-    let tileLayers = (mapLayers.filter((l)=>l.values_.serviceType==="TileLayer"? l:false)).map((l)=>l.values_.service);
+    let tileLayers = (mapLayers.filter((l)=>(Object.getPrototypeOf(l)).constructor.name==="TileLayer"? l:false)).map((l)=>l.values_.service);
+    console.log(tileLayers);
+    
     for (const key in tileLayers) {
         if (tileMapLayerConfigs[tileLayers[key]]) {
             renderMaplayers.push(tileMapLayerConfigs[tileLayers[key]]);
         }     
     }
 
+    
+
     //filter grouplayers and passes only visible layers configs to be rendered
-    let groupLayers = (mapLayers.filter((l)=>l.values_.serviceType==="LayerGroup"? l:false)).map((l)=>l.values_.service);
+    let groupLayers = (mapLayers.filter((l)=>(Object.getPrototypeOf(l)).constructor.name==="LayerGroup"? l:false)).map((l)=>l.values_.service);
 
     //filter imagelayers and passes only visible layers  be rendered
     let imageLayers = (mapLayers.filter((l)=>l.type==="IMAGE"? l:false)).map((l)=>l.values_.name)
