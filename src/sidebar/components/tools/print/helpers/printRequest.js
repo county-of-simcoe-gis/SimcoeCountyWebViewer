@@ -12,25 +12,6 @@ export function printRequestOptions(mapLayers, description, mapState){
     const myMapLayers = myMapsHelpers.getItemsFromStorage("myMaps");
     const currentMapViewCenter = window.map.getView().values_.center
 
-    //converts rgb to hexadecimal color
-    let rgbToHex = function (r,g,b,a) { 
-        r = r.toString(16);
-        g = g.toString(16);
-        b = b.toString(16);
-        a = (Math.round(a)).toString(16);
-        
-        if (r.length == 1)
-            r = "0" + r;
-        if (g.length == 1)
-            g = "0" + g;
-        if (b.length == 1)
-            b = "0" + b;
-        if (a.length == 1)
-            a =  "" + a;
-
-        return "#" + r + g + b + a;
-    };
-
     //init list for layers to render on main map
     let renderMaplayers = []
 
@@ -49,6 +30,25 @@ export function printRequestOptions(mapLayers, description, mapState){
           scale:""
         }
     }
+
+    //converts rgb to hexadecimal color
+    let rgbToHex = function (r,g,b,a) { 
+        r = r.toString(16);
+        g = g.toString(16);
+        b = b.toString(16);
+        a = (Math.round(a)).toString(16);
+        
+        if (r.length == 1)
+            r = "0" + r;
+        if (g.length == 1)
+            g = "0" + g;
+        if (b.length == 1)
+            b = "0" + b;
+        if (a.length == 1)
+            a =  "" + a;
+
+        return "#" + r + g + b + a;
+    };
 
     //myMaps custom 
     let myMapLayersList = myMapLayers.items.map((l)=>{
@@ -75,36 +75,31 @@ export function printRequestOptions(mapLayers, description, mapState){
         renderMaplayers.push(myMapLayersList[key]);
     }
 
-    //filter tilelayers and passes only visible layers configs to be rendered
-    let tileLayers = (mapLayers.filter((l)=>(Object.getPrototypeOf(l)).constructor.name==="TileLayer"? l:false)).map((l)=>l.values_.service);
-    console.log(tileLayers);
-    
-    for (const key in tileLayers) {
-        if (tileMapLayerConfigs[tileLayers[key]]) {
-            renderMaplayers.push(tileMapLayerConfigs[tileLayers[key]]);
-        }     
+    let getLayerFromTypes = (l)=>{
+        if (l.type==="TILE") {
+            renderMaplayers.push(tileMapLayerConfigs[l.values_.service])    
+        }
+        if(l.type==="IMAGE"){
+            renderMaplayers.push({
+                    type: "wms",
+                    baseURL: "https://opengis.simcoe.ca/geoserver/wms",
+                    serverType: "geoserver",
+                    opacity: 1,
+                    layers: l.values_.name,
+                    imageFormat: "image/png",
+                    customParams: {
+                        "TRANSPARENT": "true"
+                    }
+                }
+            );
+        }
+        if(l.type==="VECTOR"){
+
+        }
     }
 
-    
+    mapLayers.map((l)=>getLayerFromTypes(l))
 
-    //filter grouplayers and passes only visible layers configs to be rendered
-    let groupLayers = (mapLayers.filter((l)=>(Object.getPrototypeOf(l)).constructor.name==="LayerGroup"? l:false)).map((l)=>l.values_.service);
-
-    //filter imagelayers and passes only visible layers  be rendered
-    let imageLayers = (mapLayers.filter((l)=>l.type==="IMAGE"? l:false)).map((l)=>l.values_.name)
-    renderMaplayers.push({
-            type: "wms",
-            baseURL: "https://opengis.simcoe.ca/geoserver/wms",
-            serverType: "geoserver",
-            opacity: 1,
-            layers: imageLayers,
-            imageFormat: "image/png",
-            customParams: {
-                "TRANSPARENT": "true"
-            }
-        }
-    );
-    
 
     let templegend = {
         classes: [
