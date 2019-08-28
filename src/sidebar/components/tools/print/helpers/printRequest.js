@@ -83,7 +83,7 @@ export function printRequestOptions(mapLayers, description, mapState){
             let tiles = eachLayer.values_.source.tileCache.entries_;
             for (const i in tiles) {
                 renderMaplayers.push({
-                    type:"tiledwms",
+                    type:"wmts",
                     baseURL:tiles[i].value_.src_,
                     opacity:eachLayer.values_.opacity,
                     tileSize:[
@@ -101,7 +101,7 @@ export function printRequestOptions(mapLayers, description, mapState){
             for (const i in tiles) {
                 console.log(tiles[i].value_.src_);
                 renderMaplayers.push({
-                    type:"tiledwms",
+                    type:"wmts",
                     baseURL:tiles[i].value_.src_,
                     opacity:eachLayer.values_.opacity,
                     tileSize:[
