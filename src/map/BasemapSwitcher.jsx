@@ -53,7 +53,7 @@ class BasemapSwitcher extends Component {
       //var layer = helpers.getArcGISTiledLayer(service.url);
       var layer = helpers.getSimcoeTileXYZLayer(service.url);
       // LAYER PROPS
-      layer.setProperties({ index: index, name: service.name, service:"TileLayer"});
+      layer.setProperties({ index: index, name: service.name, service:`Ortho_${service.name}_Cache`, serviceType:"TileLayer"});
       layer.setZIndex(index);
       layer.setVisible(false);
 
@@ -75,7 +75,7 @@ class BasemapSwitcher extends Component {
     if (BasemapConfig.streetService !==  undefined){
       //var streetsLayer = helpers.getArcGISTiledLayer(BasemapConfig.streetService);
       var streetsLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.streetService);
-      streetsLayer.setProperties({service:"TileLayer"}); 
+      streetsLayer.setProperties({service:"Public_Streets_Cache", serviceType:"TileLayer"}); 
       streetsLayer.setZIndex(BasemapConfig.imageryServices.length);
       window.map.addLayer(streetsLayer);
       this.setState({streetsLayer: streetsLayer});
@@ -84,7 +84,7 @@ class BasemapSwitcher extends Component {
     // LOAD BATHYMETRY LAYER
     if (BasemapConfig.bathymetryService !==  undefined){
       var bathymetryLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.bathymetryService);
-      bathymetryLayer.setProperties({service:"TileLayer"}); 
+      bathymetryLayer.setProperties({service:"Public_Bathymetry_Cache", serviceType:"TileLayer"}); 
       bathymetryLayer.setZIndex(0);
       window.map.addLayer(bathymetryLayer);
       this.setState({bathymetryLayer: bathymetryLayer});
@@ -93,7 +93,7 @@ class BasemapSwitcher extends Component {
     // LOAD WORLD LAYER
     if (BasemapConfig.worldImageryService !==  undefined){
       var worldImageryLayer = helpers.getESRITileXYZLayer(BasemapConfig.worldImageryService);
-      worldImageryLayer.setProperties({service:"TileLayer"}); 
+      worldImageryLayer.setProperties({service:"World_Imagery", serviceType:"TileLayer"}); 
       worldImageryLayer.setZIndex(0);
       worldImageryLayer.setMinResolution(300);
       window.map.addLayer(worldImageryLayer);
@@ -129,7 +129,7 @@ class BasemapSwitcher extends Component {
 
       // USING LAYER GROUPS FOR TOPO
       let layerGroup = new LayerGroup({layers: serviceLayers, visible: false});
-      layerGroup.setProperties({ index: basemapIndex, service:"LayerGroup" });
+      layerGroup.setProperties({ index: basemapIndex, serviceType:"LayerGroup"});
       window.map.addLayer(layerGroup);
       basemapList.push(layerGroup);
       basemapIndex++;
