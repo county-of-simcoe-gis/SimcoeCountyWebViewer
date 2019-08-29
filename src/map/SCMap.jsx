@@ -34,7 +34,7 @@ class SCMap extends Component {
     super(props);
 
     this.contextCoords = null;
-
+    this.storageExtentKey = "map_extent";
     this.state = {
       mapClassName: "sc-map",
       shareURL: null,
@@ -57,6 +57,12 @@ class SCMap extends Component {
       interactions: defaultInteractions({ keyboard: true, altShiftDragRotate: false, pinchRotate: false }),
       keyboardEventTarget: document
     });
+
+    const storage = localStorage.getItem(this.storageKey);
+    if (storage !== null) {
+      const extent = JSON.parse(storage);
+      map.getView().fit(extent, map.getSize(), { duration: 1000 });
+    }
 
     window.map = map;
     window.popup = new Popup();
@@ -88,6 +94,12 @@ class SCMap extends Component {
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoomout">
               <FloatingMenuItem imageName={"zoom-out.png"} label="Zoom Out" />
             </MenuItem>
+            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-save-map-extent">
+              <FloatingMenuItem imageName={"globe-icon.png"} label="Save as Default Extent" />
+            </MenuItem>
+            {/* <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-report-problem">
+              <FloatingMenuItem imageName={"error.png"} label="Report a problem" />
+            </MenuItem> */}
           </FloatingMenu>
         </Portal>
       );
@@ -125,8 +137,18 @@ class SCMap extends Component {
     else if (key === "sc-floating-menu-zoomout") window.map.getView().setZoom(window.map.getView().getZoom() - 1);
     else if (key === "sc-floating-menu-property-click") window.emitter.emit("showPropertyReport", this.contextCoords);
     else if (key === "sc-floating-menu-add-mymaps") this.addMyMaps();
+    else if (key === "sc-floating-menu-save-map-extent") this.saveMapExtent();
+    else if (key === "sc-floating-menu-report-problem") this.reportProblem();
 
     helpers.addAppStat("Right Click", key);
+  };
+
+  reportProblem = () => {};
+
+  saveMapExtent = () => {
+    const extent = window.map.getView().calculateExtent(window.map.getSize());
+    localStorage.setItem(this.storageKey, JSON.stringify(extent));
+    helpers.showMessage("Map Extent", "Your map extent has been saved.");
   };
 
   addMyMaps = () => {
