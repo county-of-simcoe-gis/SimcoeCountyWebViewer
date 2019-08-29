@@ -1,9 +1,10 @@
 import tileMapLayerConfigs from "./wmts_json_config_entries";
 
-export function printRequestOptions(mapLayers, description, mapState) {
+export function printRequestOptions(mapLayers, description, printSelectedOption) {
 
     //grabs current map view central coordinates
     const currentMapViewCenter = window.map.getView().values_.center
+    const legendServiceUrl = "https://opengis.simcoe.ca/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=";
 
     // init print request object
     let printRequest = {
@@ -22,16 +23,20 @@ export function printRequestOptions(mapLayers, description, mapState) {
         }
     }
 
-    //init list for main and overview map layers to render on main map
-    let mainMapLayers = []
-    let overviewMap = []
+    //init list for legend, main and overview map layers to render on main map
+    let mainMapLayers = [];
+    let overviewMap = [];
+    let legend = {
+        name: "Legend",
+        classes: []
+    };
 
     //converts rgb to hexadecimal color
     let rgbToHex = function (r, g, b, a) {
         r = r.toString(16);
         g = g.toString(16);
         b = b.toString(16);
-        a = (Math.round(a)).toString(16);
+        a = (a.toString().split('.')[1]) + "0";
 
         if (r.length == 1)
             r = "0" + r;
@@ -62,74 +67,46 @@ export function printRequestOptions(mapLayers, description, mapState) {
                     "TRANSPARENT": "true"
                 }
             });
+            legend.classes.push({
+                icons: [legendServiceUrl + l.values_.source.params_.LAYERS],
+                name: l.values_.source.params_.LAYERS.split(":")[1]
+            });
         }
-        if (l.type === "VECTOR") {
-            if (l.values_.name === "myMaps") {
-                for (const f in (Object.values(l.values_.source.undefIdIndex_))) {
-                    console.log(f);
-                    mainMapLayers.push({
-                        type: "geoJson",
-                        geoJson: {
-                            type: "FeatureCollection",
-                            features: [{
-                                type: "Feature",
-                                geometry: {
-                                    type: f.values_.drawType,
-                                    coordinates: f.values_.geometry.flatCoordinates
-                                }
-                            }]
-                        },
-                        name: f.values_.label,
-                        style: {
-                            version: f.values_.id,
-                            "*": {
-                                symbolizers: [{
-                                    type: l.Polygon,
-                                    fillColor: rgbToHex(...f.style_.fill_.color_),
-                                    strokeColor: rgbToHex(...f.style_.stroke_.color_),
-                                    fillOpacity: 1,
-                                    strokeOpacity: 1,
-                                    strokeWidth: f.style_.stroke_.width_
-                                }]
+        if (l.type === "VECTOR" && l.values_.name === "myMaps") {
+            let drawablefeatures = Object.values(l.values_.source.undefIdIndex_);
+            for (const key in drawablefeatures) {
+                let f = drawablefeatures[key];
+                mainMapLayers.push({
+                    type: "geoJson",
+                    geoJson: {
+                        type: "FeatureCollection",
+                        features: [{
+                            type: "Feature",
+                            geometry: {
+                                type: Object.getPrototypeOf(f.values_.geometry).constructor.name,
+                                coordinates: f.values_.geometry.flatCoordinates
                             }
+                        }]
+                    },
+                    name: f.values_.label,
+                    style: {
+                        version: f.values_.id,
+                        "*": {
+                            symbolizers: [{
+                                type: f.values_.drawType,
+                                fillColor: rgbToHex(...f.style_.fill_.color_),
+                                strokeColor: rgbToHex(...f.style_.stroke_.color_),
+                                fillOpacity: 1,
+                                strokeOpacity: 1,
+                                strokeWidth: f.style_.stroke_.width_
+                            }]
                         }
-                    })
-                }
+                    }
+                });
             }
         }
     }
     mapLayers.map((l) => getLayerFromTypes(l))
-
-    // construct legend object 
-    let templegend = {
-        classes: [
-            {
-                icons: [
-                    "https://www.realdecoy.com/wp-content/uploads/siggen-social-icons/twitter1.png?897572"
-                ],
-                name: "twitter"
-            },
-            {
-                icons: [
-                    "https://www.realdecoy.com/wp-content/uploads/siggen-social-icons/facebook1.png?897572"
-                ],
-                name: "facebook"
-            },
-            {
-                icons: [
-                    "https://www.realdecoy.com/wp-content/uploads/siggen-social-icons/instagram1.png?897572"
-                ],
-                name: "instagram"
-            },
-            {
-                icons: [
-                    "https://www.realdecoy.com/wp-content/uploads/siggen-social-icons/linkedin1.png?897572"
-                ],
-                name: "linkedin"
-            }
-        ],
-        name: "Legend"
-    }
 
 
     // ..........................................................................
@@ -138,36 +115,36 @@ export function printRequestOptions(mapLayers, description, mapState) {
 
     //shared print request properties
     printRequest.attributes.map.center = currentMapViewCenter;
-    printRequest.attributes.map.scale = mapState.forceScale;
+    printRequest.attributes.map.scale = printSelectedOption.forceScale;
     printRequest.attributes.map.projection = "EPSG:3857";
     printRequest.attributes.map.rotation = 0;
     printRequest.attributes.map.dpi = 300;
     printRequest.attributes.map.layers = mainMapLayers;
-    printRequest.outputFormat = mapState.printFormatSelectedOption.value;
+    printRequest.outputFormat = printSelectedOption.printFormatSelectedOption.value;
 
     //switch for specific print request properties based on layout selected
-    switch (mapState.printSizeSelectedOption.value) {
+    switch (printSelectedOption.printSizeSelectedOption.value) {
         case '8X11 Portrait':
             printRequest.layout = "letter portrait";
-            printRequest.attributes.title = mapState.mapTtitle;
+            printRequest.attributes.title = printSelectedOption.mapTtitle;
             printRequest.attributes.description = description;
-            printRequest.attributes.scale = "1 : " + mapState.forceScale;
-            printRequest.attributes.scaleBar = mapState.forceScale;
+            printRequest.attributes.scale = "1 : " + printSelectedOption.forceScale;
+            printRequest.attributes.scaleBar = printSelectedOption.forceScale;
             break;
         case '11X8 Landscape':
             printRequest.layout = "letter landscape";
-            printRequest.attributes.title = mapState.mapTtitle;
+            printRequest.attributes.title = printSelectedOption.mapTtitle;
             printRequest.attributes.description = description;
-            printRequest.attributes.scale = "1 : " + mapState.forceScale;
-            printRequest.attributes.scaleBar = mapState.forceScale;
+            printRequest.attributes.scale = "1 : " + printSelectedOption.forceScale;
+            printRequest.attributes.scaleBar = printSelectedOption.forceScale;
             break;
         case '8X11 Portrait Overview':
             printRequest.layout = "letter portrait overview";
-            printRequest.attributes.title = mapState.mapTtitle;
+            printRequest.attributes.title = printSelectedOption.mapTtitle;
             printRequest.attributes.description = description;
-            printRequest.attributes.legend = templegend;
-            printRequest.attributes.scale = "1 : " + mapState.forceScale;
-            printRequest.attributes.scaleBar = mapState.forceScale;
+            printRequest.attributes.legend = legend;
+            printRequest.attributes.scale = "1 : " + printSelectedOption.forceScale;
+            printRequest.attributes.scaleBar = printSelectedOption.forceScale;
             printRequest.attributes.overview.layers = overviewMap;
             break;
         case 'Map Only':
@@ -190,16 +167,17 @@ export function printRequestOptions(mapLayers, description, mapState) {
 
     console.log(mapLayers);
 
-    console.log(printRequest);
+    //console.log(printRequest);
+    console.log(JSON.stringify(printRequest));
 
 
-    //console.log(JSON.stringify(printRequest));
     //   let headers = new Headers();
+    //   let origin = window.location.origin;
 
-    //   headers.append('Access-Control-Allow-Origin', 'http://localhost:8080');
+    //   headers.append('Access-Control-Allow-Origin', origin);
     //   headers.append('Access-Control-Allow-Credentials', 'true');
 
-    //   fetch(`http://localhost:8080/print/print/${printRequest.layout}/report.${mapState.printFormatSelectedOption.value}`, {
+    //   fetch(`${origin}/print/print/${printRequest.layout}/report.${printSelectedOption.printFormatSelectedOption.value}`, {
     //     method: 'POST',
     //     headers: headers,
     //     body: JSON.stringify(printRequest)
