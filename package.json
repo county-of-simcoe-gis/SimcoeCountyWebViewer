@@ -7,6 +7,7 @@
     "@turf/turf": "^5.1.6",
     "array-move": "^2.0.0",
     "create-react-class": "^15.6.3",
+    "eslint-utils": "^1.4.1",
     "fbemitter": "^2.1.1",
     "file-saver": "^2.0.1",
     "html2canvas": "^1.0.0-rc.1",
