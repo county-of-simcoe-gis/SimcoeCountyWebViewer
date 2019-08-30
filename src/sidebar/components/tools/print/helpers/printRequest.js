@@ -13,7 +13,6 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
         dpi: 300,
         attributes: {
             title: "",
-            date: "",
             description: "",
             map: {},
             overview: {},
@@ -53,7 +52,13 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
     //extract and transform map layers to fit mapfish print request attribute.map.layers structure
     let getLayerFromTypes = (l) => {
         if (l.type === "TILE") {
-            mainMapLayers.push(tileMapLayerConfigs[l.values_.service])
+             
+            return tileMapLayerConfigs[l.values_.service] ? 
+            (
+                mainMapLayers.push(tileMapLayerConfigs[l.values_.service]), 
+                overviewMap.push(tileMapLayerConfigs[l.values_.service])
+            ):false
+
         }
         if (l.type === "IMAGE") {
             mainMapLayers.push({
@@ -68,7 +73,7 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
                 }
             });
             legend.classes.push({
-                icons: [legendServiceUrl + l.values_.source.params_.LAYERS],
+                icons: [legendServiceUrl + (l.values_.source.params_.LAYERS.replace(/ /g,"%20"))],
                 name: l.values_.source.params_.LAYERS.split(":")[1]
             });
         }
@@ -76,6 +81,12 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
             let drawablefeatures = Object.values(l.values_.source.undefIdIndex_);
             for (const key in drawablefeatures) {
                 let f = drawablefeatures[key];
+                let flat_coords = f.values_.geometry.flatCoordinates
+                let coords = [];
+                //transforms flattened coords to geoJson format grouped coords
+                for (let i = 0, t=1; i < flat_coords.length; i+=2, t+=2) {
+                    coords.push([flat_coords[i],flat_coords[t]]); 
+                } 
                 mainMapLayers.push({
                     type: "geoJson",
                     geoJson: {
@@ -84,7 +95,14 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
                             type: "Feature",
                             geometry: {
                                 type: Object.getPrototypeOf(f.values_.geometry).constructor.name,
-                                coordinates: f.values_.geometry.flatCoordinates
+                                coordinates: coords
+                            },
+                            properties: {
+                                id: f.values_.id,
+                                label: f.values_.label,
+                                labelVisible: f.values_.labelVisible,
+                                drawType: f.values_.drawType,
+                                isParcel: f.values_.isParcel
                             }
                         }]
                     },
@@ -106,7 +124,7 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
             }
         }
     }
-    mapLayers.map((l) => getLayerFromTypes(l))
+    mapLayers.forEach((l) => getLayerFromTypes(l));
 
 
     // ..........................................................................
@@ -119,6 +137,7 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
     printRequest.attributes.map.projection = "EPSG:3857";
     printRequest.attributes.map.rotation = 0;
     printRequest.attributes.map.dpi = 300;
+    printRequest.attributes.map.longitudeFirst = true;
     printRequest.attributes.map.layers = mainMapLayers;
     printRequest.outputFormat = printSelectedOption.printFormatSelectedOption.value;
 
@@ -146,6 +165,12 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
             printRequest.attributes.scale = "1 : " + printSelectedOption.forceScale;
             printRequest.attributes.scaleBar = printSelectedOption.forceScale;
             printRequest.attributes.overview.layers = overviewMap;
+            printRequest.attributes.overview.center = [-8875141.45, 5543492.45];
+            printRequest.attributes.overview.scale = 577791;
+            printRequest.attributes.overview.dpi = 300;
+            printRequest.attributes.map.rotation = 0;
+            printRequest.attributes.overview.longitudeFirst = true;
+            printRequest.attributes.overview.projection = "EPSG:3857";
             break;
         case 'Map Only':
             printRequest.layout = "map only";
@@ -167,8 +192,8 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
 
     console.log(mapLayers);
 
-    //console.log(printRequest);
-    console.log(JSON.stringify(printRequest));
+    console.log(printRequest);
+    //console.log(JSON.stringify(printRequest));
 
 
     //   let headers = new Headers();
