@@ -61,7 +61,7 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
                 baseURL: "https://opengis.simcoe.ca/geoserver/wms",
                 serverType: "geoserver",
                 opacity: 1,
-                layers: l.values_.name,
+                layers: [l.values_.name],
                 imageFormat: "image/png",
                 customParams: {
                     "TRANSPARENT": "true"
