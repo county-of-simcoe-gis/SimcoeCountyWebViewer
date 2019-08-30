@@ -1,10 +1,10 @@
 {
     "type": "WMTS",
     "baseURL": "https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/WMTS/1.0.0/WMTSCapabilities.xml",
+    "layer": "World_Imagery",
     "imageFormat": "image/png",
     "opacity": 1.0,
     "style": "Default Style",
-    "layer": "World_Imagery",
     "version": "1.0.0",
     "requestEncoding": "KVP",
     "customParams": {

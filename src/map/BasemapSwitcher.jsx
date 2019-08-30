@@ -75,7 +75,7 @@ class BasemapSwitcher extends Component {
     if (BasemapConfig.streetService !==  undefined){
       //var streetsLayer = helpers.getArcGISTiledLayer(BasemapConfig.streetService);
       var streetsLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.streetService);
-      streetsLayer.setProperties({service:"Public_Streets_Cache"}); 
+      streetsLayer.setProperties({service:"Streets_Cache"}); 
       streetsLayer.setZIndex(BasemapConfig.imageryServices.length);
       window.map.addLayer(streetsLayer);
       this.setState({streetsLayer: streetsLayer});
@@ -84,7 +84,7 @@ class BasemapSwitcher extends Component {
     // LOAD BATHYMETRY LAYER
     if (BasemapConfig.bathymetryService !==  undefined){
       var bathymetryLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.bathymetryService);
-      bathymetryLayer.setProperties({service:"Public_Bathymetry_Cache"}); 
+      bathymetryLayer.setProperties({service:"Bathymetry_Cache"}); 
       bathymetryLayer.setZIndex(0);
       window.map.addLayer(bathymetryLayer);
       this.setState({bathymetryLayer: bathymetryLayer});
