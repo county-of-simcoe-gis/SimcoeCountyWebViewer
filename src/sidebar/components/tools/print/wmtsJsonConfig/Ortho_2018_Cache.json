@@ -7,6 +7,9 @@
     "layer": "Ortho_2018_Cache",
     "version": "1.0.0",
     "requestEncoding": "KVP",
+    "customParams": {
+        "TRANSPARENT": "true"
+    },
     "matrixSet": "EPSG:3857",
     "matrices": [{
             "identifier": "0",
