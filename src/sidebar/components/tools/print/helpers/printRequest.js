@@ -1,4 +1,8 @@
 import tileMapLayerConfigs from "./wmts_json_config_entries";
+import * as helpers from "../../../../../helpers/helpers";
+
+const scales = helpers.getMapScale();
+
 
 export function printRequestOptions(mapLayers, description, printSelectedOption) {
 
@@ -119,7 +123,7 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
                                 strokeWidth: f.style_.stroke_.width_
                             }]
                         }
-                    }
+                    },
                 });
             }
         }
@@ -130,6 +134,9 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
     // ..........................................................................
     // Build of Print Request Object
     // ..........................................................................
+
+    console.log(scales);
+
 
     //shared print request properties
     printRequest.attributes.map.center = currentMapViewCenter;
@@ -193,7 +200,7 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
     console.log(mapLayers);
 
     console.log(printRequest);
-    //console.log(JSON.stringify(printRequest));
+    console.log(JSON.stringify(printRequest));
 
 
     //   let headers = new Headers();
