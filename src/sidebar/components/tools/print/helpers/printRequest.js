@@ -1,14 +1,14 @@
 import tileMapLayerConfigs from "./wmts_json_config_entries";
 import * as helpers from "../../../../../helpers/helpers";
 
-const scales = helpers.getMapScale();
-
-
 export function printRequestOptions(mapLayers, description, printSelectedOption) {
 
     //grabs current map view central coordinates
     const currentMapViewCenter = window.map.getView().values_.center
     const legendServiceUrl = "https://opengis.simcoe.ca/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=";
+    const currentMapScale = helpers.getMapScale();
+    const mapProjection = window.map.getView().getProjection().code_
+    const mapCenter = [-8875141.45, 5543492.45];
 
     // init print request object
     let printRequest = {
@@ -135,16 +135,13 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
     // Build of Print Request Object
     // ..........................................................................
 
-    console.log(scales);
-
-
     //shared print request properties
     printRequest.attributes.map.center = currentMapViewCenter;
-    printRequest.attributes.map.scale = printSelectedOption.forceScale;
-    printRequest.attributes.map.projection = "EPSG:3857";
+    printRequest.attributes.map.projection = mapProjection;
+    printRequest.attributes.map.scale = currentMapScale;
+    printRequest.attributes.map.longitudeFirst = true;
     printRequest.attributes.map.rotation = 0;
     printRequest.attributes.map.dpi = 300;
-    printRequest.attributes.map.longitudeFirst = true;
     printRequest.attributes.map.layers = mainMapLayers;
     printRequest.outputFormat = printSelectedOption.printFormatSelectedOption.value;
 
@@ -154,30 +151,30 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
             printRequest.layout = "letter portrait";
             printRequest.attributes.title = printSelectedOption.mapTtitle;
             printRequest.attributes.description = description;
-            printRequest.attributes.scale = "1 : " + printSelectedOption.forceScale;
-            printRequest.attributes.scaleBar = printSelectedOption.forceScale;
+            printRequest.attributes.scaleBar = currentMapScale;
+            printRequest.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             break;
         case '11X8 Landscape':
             printRequest.layout = "letter landscape";
             printRequest.attributes.title = printSelectedOption.mapTtitle;
             printRequest.attributes.description = description;
-            printRequest.attributes.scale = "1 : " + printSelectedOption.forceScale;
-            printRequest.attributes.scaleBar = printSelectedOption.forceScale;
+            printRequest.attributes.scaleBar = currentMapScale;
+            printRequest.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             break;
         case '8X11 Portrait Overview':
             printRequest.layout = "letter portrait overview";
             printRequest.attributes.title = printSelectedOption.mapTtitle;
             printRequest.attributes.description = description;
+            printRequest.attributes.scaleBar = currentMapScale;
+            printRequest.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             printRequest.attributes.legend = legend;
-            printRequest.attributes.scale = "1 : " + printSelectedOption.forceScale;
-            printRequest.attributes.scaleBar = printSelectedOption.forceScale;
-            printRequest.attributes.overview.layers = overviewMap;
-            printRequest.attributes.overview.center = [-8875141.45, 5543492.45];
-            printRequest.attributes.overview.scale = 577791;
-            printRequest.attributes.overview.dpi = 300;
-            printRequest.attributes.map.rotation = 0;
+            printRequest.attributes.overview.center = mapCenter;
+            printRequest.attributes.overview.projection = mapProjection;
+            printRequest.attributes.overview.scale = printSelectedOption.forceScale;
             printRequest.attributes.overview.longitudeFirst = true;
-            printRequest.attributes.overview.projection = "EPSG:3857";
+            printRequest.attributes.overview.rotation = 0;
+            printRequest.attributes.overview.dpi = 300;
+            printRequest.attributes.overview.layers = overviewMap;
             break;
         case 'Map Only':
             printRequest.layout = "map only";
@@ -200,7 +197,7 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
     console.log(mapLayers);
 
     console.log(printRequest);
-    console.log(JSON.stringify(printRequest));
+    //console.log(JSON.stringify(printRequest));
 
 
     //   let headers = new Headers();
