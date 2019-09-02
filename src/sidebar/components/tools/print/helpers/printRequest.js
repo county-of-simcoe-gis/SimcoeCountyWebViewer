@@ -9,6 +9,7 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
     const currentMapScale = helpers.getMapScale();
     const mapProjection = window.map.getView().getProjection().code_
     const mapCenter = [-8875141.45, 5543492.45];
+    let geoJsonLayersCount = 0;
 
     // init print request object
     let printRequest = {
@@ -52,38 +53,15 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
 
         return "#" + r + g + b + a;
     };
+    
 
     //extract and transform map layers to fit mapfish print request attribute.map.layers structure
     let getLayerFromTypes = (l) => {
-        if (l.type === "TILE") {
-             
-            return tileMapLayerConfigs[l.values_.service] ? 
-            (
-                mainMapLayers.push(tileMapLayerConfigs[l.values_.service]), 
-                overviewMap.push(tileMapLayerConfigs[l.values_.service])
-            ):false
-
-        }
-        if (l.type === "IMAGE") {
-            mainMapLayers.push({
-                type: "wms",
-                baseURL: "https://opengis.simcoe.ca/geoserver/wms",
-                serverType: "geoserver",
-                opacity: 1,
-                layers: [l.values_.name],
-                imageFormat: "image/png",
-                customParams: {
-                    "TRANSPARENT": "true"
-                }
-            });
-            legend.classes.push({
-                icons: [legendServiceUrl + (l.values_.source.params_.LAYERS.replace(/ /g,"%20"))],
-                name: l.values_.source.params_.LAYERS.split(":")[1]
-            });
-        }
+        
         if (l.type === "VECTOR" && l.values_.name === "myMaps") {
             let drawablefeatures = Object.values(l.values_.source.undefIdIndex_);
             for (const key in drawablefeatures) {
+                geoJsonLayersCount +=1
                 let f = drawablefeatures[key];
                 let flat_coords = f.values_.geometry.flatCoordinates
                 let coords = [];
@@ -126,6 +104,34 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
                     },
                 });
             }
+        }
+        
+        if (l.type === "IMAGE") {
+            //image icon layers are spliced/inserted in after geoJson layers. 
+            mainMapLayers.splice(geoJsonLayersCount,0,{
+                type: "wms",
+                baseURL: "https://opengis.simcoe.ca/geoserver/wms",
+                serverType: "geoserver",
+                opacity: 1,
+                layers: [l.values_.name],
+                imageFormat: "image/png",
+                customParams: {
+                    "TRANSPARENT": "true"
+                }
+            });
+            legend.classes.push({
+                icons: [legendServiceUrl + (l.values_.source.params_.LAYERS.replace(/ /g,"%20"))],
+                name: l.values_.source.params_.LAYERS.split(":")[1]
+            });
+        }
+        if (l.type === "TILE") {
+             
+            return tileMapLayerConfigs[l.values_.service] ? 
+            (
+                mainMapLayers.push(tileMapLayerConfigs[l.values_.service]), 
+                overviewMap.push(tileMapLayerConfigs[l.values_.service])
+            ):false
+
         }
     }
     mapLayers.forEach((l) => getLayerFromTypes(l));
@@ -197,7 +203,7 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
     console.log(mapLayers);
 
     console.log(printRequest);
-    //console.log(JSON.stringify(printRequest));
+    console.log(JSON.stringify(printRequest));
 
 
     //   let headers = new Headers();
