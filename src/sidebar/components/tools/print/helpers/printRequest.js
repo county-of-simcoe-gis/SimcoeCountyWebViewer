@@ -53,8 +53,7 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
 
         return "#" + r + g + b + a;
     };
-    
-
+ 
     //extract and transform map layers to fit mapfish print request attribute.map.layers structure
     let getLayerFromTypes = (l) => {
         
@@ -107,6 +106,7 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
         }
         
         if (l.type === "IMAGE") {
+
             //image icon layers are spliced/inserted in after geoJson layers. 
             mainMapLayers.splice(geoJsonLayersCount,0,{
                 type: "wms",
@@ -125,14 +125,18 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
             });
         }
         if (l.type === "TILE") {
-             
-            return tileMapLayerConfigs[l.values_.service] ? 
-            (
-                mainMapLayers.push(tileMapLayerConfigs[l.values_.service]), 
+            //allows for streets to be top most basmap layer
+            if (l.values_.service==='Streets_Cache') {
+                mainMapLayers.splice(geoJsonLayersCount,0,tileMapLayerConfigs[l.values_.service])
+                overviewMap.splice(geoJsonLayersCount,0,tileMapLayerConfigs[l.values_.service])
+            }else{
+                mainMapLayers.push(tileMapLayerConfigs[l.values_.service])
                 overviewMap.push(tileMapLayerConfigs[l.values_.service])
-            ):false
-
+            }
         }
+
+        
+        
     }
     mapLayers.forEach((l) => getLayerFromTypes(l));
 
