@@ -28,6 +28,8 @@ import Portal from "../helpers/Portal.jsx";
 import * as helpers from "../helpers/helpers";
 
 const scaleLineControl = new ScaleLine();
+const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
+  `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True`;
 
 class SCMap extends Component {
   constructor(props) {
@@ -58,7 +60,7 @@ class SCMap extends Component {
       keyboardEventTarget: document
     });
 
-    const storage = localStorage.getItem(this.storageKey);
+    const storage = localStorage.getItem(this.storageExtentKey);
     if (storage !== null) {
       const extent = JSON.parse(storage);
       map.getView().fit(extent, map.getSize(), { duration: 1000 });
@@ -97,9 +99,9 @@ class SCMap extends Component {
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-save-map-extent">
               <FloatingMenuItem imageName={"globe-icon.png"} label="Save as Default Extent" />
             </MenuItem>
-            {/* <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-report-problem">
+            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-report-problem">
               <FloatingMenuItem imageName={"error.png"} label="Report a problem" />
-            </MenuItem> */}
+            </MenuItem>
           </FloatingMenu>
         </Portal>
       );
@@ -110,12 +112,21 @@ class SCMap extends Component {
     const x = helpers.getURLParameter("X");
     const y = helpers.getURLParameter("Y");
     const sr = helpers.getURLParameter("SR") === null ? "WEB" : helpers.getURLParameter("SR");
-
-    if (x !== null || y !== null) {
+    if (x !== null && y !== null) {
       let coords = [x, y];
       if (sr === "WGS84") coords = fromLonLat([Math.round(x * 100000) / 100000, Math.round(y * 100000) / 100000]);
 
       helpers.flashPoint(coords);
+    }
+
+    // HANDLE URL PARAMETERS (ZOOM TO EXTENT)
+    const xmin = helpers.getURLParameter("XMIN");
+    const ymin = helpers.getURLParameter("YMIN");
+    const xmax = helpers.getURLParameter("XMAX");
+    const ymax = helpers.getURLParameter("YMAX");
+    if (xmin !== null && ymin !== null && xmax !== null && ymax !== null) {
+      const extent = [xmin, xmax, ymin, ymax];
+      window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
     }
 
     // APP STAT
@@ -143,11 +154,26 @@ class SCMap extends Component {
     helpers.addAppStat("Right Click", key);
   };
 
-  reportProblem = () => {};
+  reportProblem = () => {
+    // APP STATS
+    helpers.addAppStat("Report Problem", "Right Click Map");
+
+    const scale = helpers.getMapScale();
+    const extent = window.map.getView().calculateExtent(window.map.getSize());
+    const xmin = extent[0];
+    const xmax = extent[1];
+    const ymin = extent[2];
+    const ymax = extent[3];
+    const center = window.map.getView().getCenter();
+
+    const feedbackUrl = feedbackTemplate(xmin, xmax, ymin, ymax, center[0], center[1], scale);
+
+    helpers.showURLWindow(feedbackUrl, false, "full");
+  };
 
   saveMapExtent = () => {
     const extent = window.map.getView().calculateExtent(window.map.getSize());
-    localStorage.setItem(this.storageKey, JSON.stringify(extent));
+    localStorage.setItem(this.storageExtentKey, JSON.stringify(extent));
     helpers.showMessage("Map Extent", "Your map extent has been saved.");
   };
 

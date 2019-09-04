@@ -375,12 +375,24 @@ export function importMyMaps(id, callback2) {
   });
 }
 
-export function exportMyMaps(callback2) {
+export function exportMyMaps(callback2, id = null) {
   const storage = localStorage.getItem("myMaps");
   if (storage === null) return [];
   const data = JSON.parse(storage);
+
+  let item = null;
+  if (id !== null) {
+    item = data.items.filter(item => {
+      return item.id === id;
+    })[0];
+
+    item.label = "Feedback: " + item.label;
+    if (item !== null) {
+      data.items = [item];
+    }
+  }
+
   helpers.postJSON("https://opengis.simcoe.ca/api/postMyMaps/", data, result => {
-    //helpers.postJSON("http://localhost:8085/postMyMaps/", data, result => {
     callback2(result);
   });
 }
