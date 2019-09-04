@@ -159,21 +159,21 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
     switch (printSelectedOption.printSizeSelectedOption.value) {
         case '8X11 Portrait':
             printRequest.layout = "letter portrait";
-            printRequest.attributes.title = printSelectedOption.mapTtitle;
+            printRequest.attributes.title = printSelectedOption.mapTitle;
             printRequest.attributes.description = description;
             printRequest.attributes.scaleBar = currentMapScale;
             printRequest.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             break;
         case '11X8 Landscape':
             printRequest.layout = "letter landscape";
-            printRequest.attributes.title = printSelectedOption.mapTtitle;
+            printRequest.attributes.title = printSelectedOption.mapTitle;
             printRequest.attributes.description = description;
             printRequest.attributes.scaleBar = currentMapScale;
             printRequest.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             break;
         case '8X11 Portrait Overview':
             printRequest.layout = "letter portrait overview";
-            printRequest.attributes.title = printSelectedOption.mapTtitle;
+            printRequest.attributes.title = printSelectedOption.mapTitle;
             printRequest.attributes.description = description;
             printRequest.attributes.scaleBar = currentMapScale;
             printRequest.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -213,17 +213,28 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
     //   let headers = new Headers();
     //   let origin = window.location.origin;
 
-    //   headers.append('Access-Control-Allow-Origin', origin);
-    //   headers.append('Access-Control-Allow-Credentials', 'true');
+    // headers.append('Access-Control-Allow-Origin', origin);
+    // headers.append('Access-Control-Allow-Credentials', 'true');
+    // headers.append('Content-Type', 'application/json');
 
-    //   fetch(`${origin}/print/print/${printRequest.layout}/report.${printSelectedOption.printFormatSelectedOption.value}`, {
+    // fetch(`${origin}/print/print/${printRequest.layout}/report.${printSelectedOption.printFormatSelectedOption.value}`, {
     //     method: 'POST',
     //     headers: headers,
     //     body: JSON.stringify(printRequest)
-    //   }).then(function(response) {
-    //     console.log(response);
-    //     return response.json();
-    //   }) 
+    // })
+    // .then(response => response.json())
+    
+    // .then((response) => {
+        
+    //     console.log('Success:', JSON.stringify(response))
+    // })
+    // .catch(error => console.error('Error:', error))
+
+    // let checkStatus = (response)=>{
+    //     fetch(`${origin}${response.status}`)
+    //     .then(data => data.json())
+    //     .then(data =>data.done===true? window.open(`${origin}${data.downloadURL}`):false)
+    // }
 
 
 }
