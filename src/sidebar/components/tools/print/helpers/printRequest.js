@@ -1,15 +1,15 @@
 import tileMapLayerConfigs from "./wmts_json_config_entries";
 import * as helpers from "../../../../../helpers/helpers";
 
-export function printRequestOptions(mapLayers, description, printSelectedOption) {
+export async function printRequestOptions(mapLayers, description, printSelectedOption) {
 
-    //grabs current map view central coordinates
+    const iconServiceUrl = "https://opengis.simcoe.ca/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=";
     const currentMapViewCenter = window.map.getView().values_.center
-    const legendServiceUrl = "https://opengis.simcoe.ca/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=";
-    const currentMapScale = helpers.getMapScale();
     const mapProjection = window.map.getView().getProjection().code_
+    const currentMapScale = helpers.getMapScale();
     const mapCenter = [-8875141.45, 5543492.45];
     let geoJsonLayersCount = 0;
+    let printAppId = '';
 
     // init print request object
     let printRequest = {
@@ -27,13 +27,18 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
         }
     }
 
-    //init list for legend, main and overview map layers to render on main map
+    //init list for legend, main and overview map layers to render on template
     let mainMapLayers = [];
     let overviewMap = [];
     let legend = {
         name: "Legend",
         classes: []
     };
+
+
+    // ..........................................................................
+    // RGBA to HEXIDECIMAL Converter
+    // ..........................................................................
 
     //converts rgb to hexadecimal color
     let rgbToHex = function (r, g, b, a) {
@@ -53,21 +58,30 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
 
         return "#" + r + g + b + a;
     };
- 
-    //extract and transform map layers to fit mapfish print request attribute.map.layers structure
-    let getLayerFromTypes = (l) => {
-        
+
+
+    // ..........................................................................
+    // Layer Transformer
+    // ..........................................................................
+
+    //extract and transform map layers to fit mapfish print request map structure
+    let transformMapLayers = (l) => {
+
         if (l.type === "VECTOR" && l.values_.name === "myMaps") {
             let drawablefeatures = Object.values(l.values_.source.undefIdIndex_);
             for (const key in drawablefeatures) {
-                geoJsonLayersCount +=1
+
+                geoJsonLayersCount += 1
+
                 let f = drawablefeatures[key];
                 let flat_coords = f.values_.geometry.flatCoordinates
-                let coords = [];
+                let grouped_coords = [];
+
                 //transforms flattened coords to geoJson format grouped coords
-                for (let i = 0, t=1; i < flat_coords.length; i+=2, t+=2) {
-                    coords.push([flat_coords[i],flat_coords[t]]); 
-                } 
+                for (let i = 0, t = 1; i < flat_coords.length; i += 2, t += 2) {
+                    grouped_coords.push([flat_coords[i], flat_coords[t]]);
+                }
+
                 mainMapLayers.push({
                     type: "geoJson",
                     geoJson: {
@@ -76,7 +90,7 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
                             type: "Feature",
                             geometry: {
                                 type: Object.getPrototypeOf(f.values_.geometry).constructor.name,
-                                coordinates: coords
+                                coordinates: grouped_coords
                             },
                             properties: {
                                 id: f.values_.id,
@@ -104,11 +118,11 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
                 });
             }
         }
-        
+
         if (l.type === "IMAGE") {
 
             //image icon layers are spliced/inserted in after geoJson layers. 
-            mainMapLayers.splice(geoJsonLayersCount,0,{
+            mainMapLayers.splice(geoJsonLayersCount, 0, {
                 type: "wms",
                 baseURL: "https://opengis.simcoe.ca/geoserver/wms",
                 serverType: "geoserver",
@@ -120,85 +134,97 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
                 }
             });
             legend.classes.push({
-                icons: [legendServiceUrl + (l.values_.source.params_.LAYERS.replace(/ /g,"%20"))],
+                icons: [iconServiceUrl + (l.values_.source.params_.LAYERS.replace(/ /g, "%20"))],
                 name: l.values_.source.params_.LAYERS.split(":")[1]
             });
         }
+
         if (l.type === "TILE") {
-            //allows for streets to be top most basmap layer
-            if (l.values_.service==='Streets_Cache') {
-                mainMapLayers.splice(geoJsonLayersCount,0,tileMapLayerConfigs[l.values_.service])
-                overviewMap.splice(geoJsonLayersCount,0,tileMapLayerConfigs[l.values_.service])
-            }else{
+            //allows for streets to be top most basemap layer
+            if (l.values_.service === 'Streets_Cache') {
+                mainMapLayers.splice(geoJsonLayersCount, 0, tileMapLayerConfigs[l.values_.service])
+                overviewMap.splice(geoJsonLayersCount, 0, tileMapLayerConfigs[l.values_.service])
+            } else {
                 mainMapLayers.push(tileMapLayerConfigs[l.values_.service])
                 overviewMap.push(tileMapLayerConfigs[l.values_.service])
             }
         }
-
-        
-        
     }
-    mapLayers.forEach((l) => getLayerFromTypes(l));
+    mapLayers.forEach((l) => transformMapLayers(l));
 
 
     // ..........................................................................
-    // Build of Print Request Object
+    // Print Request Object Builder
     // ..........................................................................
 
-    //shared print request properties
-    printRequest.attributes.map.center = currentMapViewCenter;
-    printRequest.attributes.map.projection = mapProjection;
-    printRequest.attributes.map.scale = currentMapScale;
-    printRequest.attributes.map.longitudeFirst = true;
-    printRequest.attributes.map.rotation = 0;
-    printRequest.attributes.map.dpi = 300;
-    printRequest.attributes.map.layers = mainMapLayers;
-    printRequest.outputFormat = printSelectedOption.printFormatSelectedOption.value;
+    let buildPrintRequest = (p, options) => {
 
-    //switch for specific print request properties based on layout selected
-    switch (printSelectedOption.printSizeSelectedOption.value) {
-        case '8X11 Portrait':
-            printRequest.layout = "letter portrait";
-            printRequest.attributes.title = printSelectedOption.mapTitle;
-            printRequest.attributes.description = description;
-            printRequest.attributes.scaleBar = currentMapScale;
-            printRequest.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            break;
-        case '11X8 Landscape':
-            printRequest.layout = "letter landscape";
-            printRequest.attributes.title = printSelectedOption.mapTitle;
-            printRequest.attributes.description = description;
-            printRequest.attributes.scaleBar = currentMapScale;
-            printRequest.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            break;
-        case '8X11 Portrait Overview':
-            printRequest.layout = "letter portrait overview";
-            printRequest.attributes.title = printSelectedOption.mapTitle;
-            printRequest.attributes.description = description;
-            printRequest.attributes.scaleBar = currentMapScale;
-            printRequest.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            printRequest.attributes.legend = legend;
-            printRequest.attributes.overview.center = mapCenter;
-            printRequest.attributes.overview.projection = mapProjection;
-            printRequest.attributes.overview.scale = printSelectedOption.forceScale;
-            printRequest.attributes.overview.longitudeFirst = true;
-            printRequest.attributes.overview.rotation = 0;
-            printRequest.attributes.overview.dpi = 300;
-            printRequest.attributes.overview.layers = overviewMap;
-            break;
-        case 'Map Only':
-            printRequest.layout = "map only";
-            break;
-        case 'Map Only Portrait':
-            printRequest.layout = "map only portrait";
-            break;
-        case 'Map Only Landscape':
-            printRequest.layout = "map only landscape";
-            break;
-        default:
-            printRequest.layout = "letter portrait";
-            break;
+        //shared print request properties
+        p.attributes.map.center = currentMapViewCenter;
+        p.attributes.map.projection = mapProjection;
+        p.attributes.map.scale = currentMapScale;
+        p.attributes.map.longitudeFirst = true;
+        p.attributes.map.rotation = 0;
+        p.attributes.map.dpi = 300;
+        p.attributes.map.layers = mainMapLayers;
+        p.outputFormat = options.printFormatSelectedOption.value;
+
+        //switch for specific print request properties based on layout selected
+        switch (options.printSizeSelectedOption.value) {
+            case '8X11 Portrait':
+                printAppId = "letter_portrait";
+                p.layout = "letter portrait";
+                p.attributes.title = options.mapTitle;
+                p.attributes.description = description;
+                p.attributes.scaleBar = currentMapScale;
+                p.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                break;
+            case '11X8 Landscape':
+                printAppId = "letter_landscape";
+                p.layout = "letter landscape";
+                p.attributes.title = options.mapTitle;
+                p.attributes.description = description;
+                p.attributes.scaleBar = currentMapScale;
+                p.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                break;
+            case '8X11 Portrait Overview':
+                printAppId = "letter_portrait_overview";
+                p.layout = "letter portrait overview";
+                p.attributes.title = options.mapTitle;
+                p.attributes.description = description;
+                p.attributes.scaleBar = currentMapScale;
+                p.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                p.attributes.legend = legend;
+                p.attributes.overview.center = mapCenter;
+                p.attributes.overview.projection = mapProjection;
+                p.attributes.overview.scale = options.forceScale;
+                p.attributes.overview.longitudeFirst = true;
+                p.attributes.overview.rotation = 0;
+                p.attributes.overview.dpi = 300;
+                p.attributes.overview.layers = overviewMap;
+                break;
+            case 'Map Only':
+                printAppId = "map_only";
+                p.layout = "map only";
+                break;
+            case 'Map Only Portrait':
+                printAppId = "map_only_portrait";
+                p.layout = "map only portrait";
+                break;
+            case 'Map Only Landscape':
+                printAppId = "map_only_landscape";
+                p.layout = "map only landscape";
+                break;
+            default:
+                printAppId = "letter_portrait";
+                p.layout = "letter portrait";
+                break;
+        }
+
     }
+    buildPrintRequest(printRequest, printSelectedOption)
+
+
 
     // ..........................................................................
     // Post and await print result via request object
@@ -207,34 +233,57 @@ export function printRequestOptions(mapLayers, description, printSelectedOption)
     console.log(mapLayers);
 
     console.log(printRequest);
-    console.log(JSON.stringify(printRequest));
 
+    let origin = window.location.origin;
+    let testOrigin = 'http://localhost:8080'
+    let interval = 5000;
 
-    //   let headers = new Headers();
-    //   let origin = window.location.origin;
-
-    // headers.append('Access-Control-Allow-Origin', origin);
-    // headers.append('Access-Control-Allow-Credentials', 'true');
-    // headers.append('Content-Type', 'application/json');
-
-    // fetch(`${origin}/print/print/${printRequest.layout}/report.${printSelectedOption.printFormatSelectedOption.value}`, {
-    //     method: 'POST',
-    //     headers: headers,
-    //     body: JSON.stringify(printRequest)
-    // })
-    // .then(response => response.json())
-    
-    // .then((response) => {
+    //check print Status
+    let checkStatus = (response)=>{
         
-    //     console.log('Success:', JSON.stringify(response))
-    // })
-    // .catch(error => console.error('Error:', error))
+        fetch(`${testOrigin}${response.statusURL}`)
+        .then(data => data.json())
+        .then((data)=>{
+            setTimeout(() => {
+                if (data.done===true) {
+                    interval=0
+                    window.open(`${testOrigin}${data.downloadURL}`)
+                }else{
+                    if (interval===25000) {
+                        interval=5000
+                    }else{
+                        interval+=5000
+                        checkStatus(response)
+                    }
+                }
+            }, interval);
+        })
+        console.log('interval: '+interval);
+    }
 
-    // let checkStatus = (response)=>{
-    //     fetch(`${origin}${response.status}`)
-    //     .then(data => data.json())
-    //     .then(data =>data.done===true? window.open(`${origin}${data.downloadURL}`):false)
-    // }
+    let  data = encodeURIComponent(JSON.stringify(printRequest))
+    let url =`${testOrigin}/print/print/${printAppId}/report.${(printSelectedOption.printFormatSelectedOption.value).toLowerCase()}`;
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'  
+        },
+        body: data
+    })
+    .then(response => response.json())
+    .then((response) => {
+        checkStatus(response)
+    })
+    .catch(error => console.error('Error:', error))
+
+    
+
+    
+
+    
+
+    
 
 
 }
