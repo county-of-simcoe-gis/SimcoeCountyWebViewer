@@ -36,7 +36,6 @@ class MyMapsAdvanced extends Component {
 
   onImport = () => {
     // BASIC CHECKING
-    console.log(this.state.inputText.length);
     if (this.state.inputText.length !== 36) {
       helpers.showMessage("MyMaps Import", "Invalid ID was entered.", "red");
       return;
@@ -73,14 +72,7 @@ class MyMapsAdvanced extends Component {
             <div className="sc-mymaps-advanced-import-container">
               <label className="sc-mymaps-advanced-main-label">Import/Save</label>
               <div>
-                <input
-                  className={this.inputId}
-                  id={this.inputId}
-                  type="text"
-                  placeholder="6a8cf8c6-b3a0-11e9-9d64-005056b2f523"
-                  onChange={this.onInputChange}
-                  value={this.state.inputText}
-                />
+                <input className={this.inputId} id={this.inputId} type="text" placeholder="Enter ID here" onChange={this.onInputChange} value={this.state.inputText} />
                 {/* <Select
                   styles={selectStyles}
                   // isSearchable={false}

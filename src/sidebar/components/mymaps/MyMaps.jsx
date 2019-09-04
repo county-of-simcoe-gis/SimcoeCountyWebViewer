@@ -28,6 +28,9 @@ import { fromCircle } from "ol/geom/Polygon.js";
 import * as turf from "@turf/turf";
 import MyMapsAdvanced from "./MyMapsAdvanced";
 
+const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale, myMapsId, featureId) =>
+  `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True&MY_MAPS_ID=${myMapsId}&MY_MAPS_FEATURE_ID=${featureId}`;
+
 class MyMaps extends Component {
   constructor(props) {
     super(props);
@@ -62,6 +65,28 @@ class MyMaps extends Component {
       this.updateStyle();
       this.importGeometries();
     });
+
+    // URL PARAMETER
+    const myMapsId = helpers.getURLParameter("MY_MAPS_ID");
+    if (myMapsId !== null) {
+      myMapsHelpers.importMyMaps(myMapsId, result => {
+        if (result.error !== undefined) helpers.showMessage("MyMaps Import", "That MyMaps ID was NOT found!", "red");
+        else {
+          helpers.showMessage("MyMaps Import", "Success!  MyMaps imported.");
+          this.onMyMapsImport(result);
+
+          const featureId = helpers.getURLParameter("MY_MAPS_FEATURE_ID");
+          if (featureId !== null) {
+            const item = this.state.items.filter(item => {
+              return item.id === featureId;
+            })[0];
+
+            let feature = helpers.getFeatureFromGeoJSON(item.featureGeoJSON);
+            helpers.zoomToFeature(feature);
+          }
+        }
+      });
+    }
   }
 
   onMapLoad = () => {
@@ -527,7 +552,29 @@ class MyMaps extends Component {
       this.onItemDelete(item.id);
     } else if (action === "sc-floating-menu-edit-vertices") {
       this.editVertices(item.id);
+    } else if (action === "sc-floating-menu-report-problem") {
+      this.onReportProblem(item.id);
     }
+  };
+
+  onReportProblem = id => {
+    myMapsHelpers.exportMyMaps(result => {
+      // APP STATS
+      helpers.addAppStat("Report Problem", "My Maps Toolbox");
+
+      const scale = helpers.getMapScale();
+      const extent = window.map.getView().calculateExtent(window.map.getSize());
+      const xmin = extent[0];
+      const xmax = extent[1];
+      const ymin = extent[2];
+      const ymax = extent[3];
+      const center = window.map.getView().getCenter();
+
+      const feedbackUrl = feedbackTemplate(xmin, xmax, ymin, ymax, center[0], center[1], scale, result.id, id);
+
+      console.log(feedbackUrl);
+      helpers.showURLWindow(feedbackUrl, false, "full");
+    }, id);
   };
 
   onMyMapItemToolsButtonClick = (evt, item) => {
@@ -553,6 +600,9 @@ class MyMaps extends Component {
           </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-delete">
             <FloatingMenuItem imageName={"eraser.png"} label="Delete" />
+          </MenuItem>
+          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-report-problem">
+            <FloatingMenuItem imageName={"error.png"} label="Report a Problem" />
           </MenuItem>
         </FloatingMenu>
       </Portal>
