@@ -400,6 +400,7 @@ class Sidebar extends Component {
                 {this.state.activeTabComponents.reports.loadedComponent ? this.state.activeTabComponents.reports.loadedComponent : this.state.activeTabComponents.reports.default}
               </TabPanel>
             </Tabs>
+
             <div id="sc-sidebar-advanced-tab" className={this.state.tabClassName} onClick={this.togglePanelVisibility}>
               <img src={require("./images/close-tab.png")} alt="Close Tab" />
             </div>

@@ -26,7 +26,7 @@ class SearchAddresses extends Component {
     this.createPointLayer();
   }
 
-  // LINE USED WHEN HOVERING OVER IMAGE RIBBON
+  // POINT LAYER TO STORE SEARCH RESULTS
   createPointLayer = () => {
     var shadowStyle = new Style({
       image: new CircleStyle({
