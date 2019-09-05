@@ -20,6 +20,7 @@ import { Fill, Stroke, Style, Circle as CircleStyle, Text as TextStyle } from "o
 import XYZ from "ol/source/XYZ.js";
 import { unByKey } from "ol/Observable.js";
 import WKT from "ol/format/WKT.js";
+import { transform } from "ol/proj.js";
 
 //OTHER
 import { parseString } from "xml2js";
@@ -609,4 +610,24 @@ export function getWKTFeature(wktString) {
     featureProjection: "EPSG:3857"
   });
   return feature;
+}
+
+export function formatReplace(fmt, ...args) {
+  if (!fmt.match(/^(?:(?:(?:[^{}]|(?:\{\{)|(?:\}\}))+)|(?:\{[0-9]+\}))+$/)) {
+    throw new Error("invalid format string.");
+  }
+  return fmt.replace(/((?:[^{}]|(?:\{\{)|(?:\}\}))+)|(?:\{([0-9]+)\})/g, (m, str, index) => {
+    if (str) {
+      return str.replace(/(?:{{)|(?:}})/g, m => m[0]);
+    } else {
+      if (index >= args.length) {
+        throw new Error("argument index is out of range in format");
+      }
+      return args[index];
+    }
+  });
+}
+
+export function toLatLongFrmoWebMercator(coords) {
+  return transform(coords, "EPSG:3857", "EPSG:4326");
 }

@@ -1,58 +1,61 @@
-#sc-panel-component-header{
-    width: 100%;
-    /* position: relative; */
-    top: 0px;
-    left: 0px;
-    right: 0px;
-    bottom: 0px;
-    height: 43px;
-    overflow: auto;
+#sc-panel-component-header {
+  width: 100%;
+  /* position: relative; */
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  height: 43px;
+  overflow: auto;
 }
 
-#sc-panel-component-title{
-    padding: 5px;
-    text-shadow: 0.5px 0.5px #fff;
-    padding-top: 6px;
-    font-size: 18px;
-    font-weight: bold;
-    color: #5b5b5b;
-    background-color: #ececec;
-    overflow: hidden;
+#sc-panel-component-title {
+  padding: 5px;
+  text-shadow: 0.5px 0.5px #fff;
+  padding-top: 6px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #5b5b5b;
+  background-color: #ececec;
+  overflow: hidden;
 }
 
-#sc-panel-component-title-container{
-    width: 100%;
-    overflow: hidden;
+#sc-panel-component-title-container {
+  width: 100%;
+  overflow: hidden;
 }
 
-#sc-panel-component-tool-icon{
-    width: 36px;
-    float: left;
+#sc-panel-component-tool-icon {
+  width: 36px;
+  float: left;
 }
 
-#sc-panel-component-tool-text{
-    float: left;
-    padding-top: 3px;
+.sc-panel-component-tool-text {
+  float: left;
+  padding-top: 3px;
+}
+.sc-panel-component-tool-text.small {
+  font-size: 13pt;
 }
 
-#sc-panel-component-tool-controls{
-    float: right;
-    cursor: pointer;
-    height: 29px;
-    width: 65px;
-    text-align: center;
+#sc-panel-component-tool-controls {
+  float: right;
+  cursor: pointer;
+  height: 29px;
+  width: 65px;
+  text-align: center;
 }
 
-#sc-panel-component-tool-img{
-    border: 1px solid rgba(202,202,202,.69);
-    padding: 1px;
-    border-radius: 2px;
+#sc-panel-component-tool-img {
+  border: 1px solid rgba(202, 202, 202, 0.69);
+  padding: 1px;
+  border-radius: 2px;
 }
 
-#sc-panel-component-tool-close{
-    background-color: #6ea8cf;
-    border: 1px solid #6ea8cf;
-    padding: 1px;
-    border-radius: 2px;
-    margin-left: 5px;
+#sc-panel-component-tool-close {
+  background-color: #6ea8cf;
+  border: 1px solid #6ea8cf;
+  padding: 1px;
+  border-radius: 2px;
+  margin-left: 5px;
 }

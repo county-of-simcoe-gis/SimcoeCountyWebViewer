@@ -1,0 +1,114 @@
+.sc-tool-lot-and-concession-container {
+  padding: 5px;
+  color: #666666;
+}
+
+.sc-tool-lot-and-concession-header {
+  font-size: 9pt;
+}
+
+.sc-tool-lot-and-concession-controls {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  height: 148px;
+}
+
+.sc-tool-lot-and-concession-control {
+  display: table-cell;
+}
+.sc-tool-lot-and-concession-control.label {
+  width: 108px;
+  font-size: 8pt;
+}
+
+.sc-tool-lot-and-concession-control.input {
+  width: 238px;
+  font-size: 10pt;
+}
+
+.sc-tool-lot-and-concession-number {
+  width: 233px;
+  height: 24px;
+}
+
+.sc-tool-lot-and-concession-control-row {
+  display: table;
+  margin-top: 5px;
+}
+
+.sc-tool-lot-and-concession-button-container {
+  float: right;
+  height: 34px;
+}
+
+.sc-tool-lot-and-concession-button {
+  display: table-cell;
+  width: 112px;
+  height: 31px;
+}
+
+.sc-tool-lot-and-concession-no-results {
+  background-color: #d9edf7;
+}
+
+#sc-tool-lot-and-concession-street-search {
+  width: 233px;
+  height: 24px;
+}
+
+.sc-tool-lot-and-concession-street-search-menu {
+  position: absolute;
+  z-index: 99999999;
+  display: block;
+  right: auto;
+  float: left;
+  background-color: white;
+  cursor: pointer;
+  top: 30px;
+  bottom: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 300px;
+  max-width: 330px;
+  min-width: 330px;
+}
+
+.sc-tool-lot-and-concession-street-search-item {
+  font-size: 16px;
+  padding: 6px;
+  border-bottom: 1px solid #e5e5e5;
+  cursor: pointer;
+  font-family: Verdana, Arial, sans-serif;
+}
+
+.sc-tool-lot-and-concession-street-search-highlighted {
+  font-size: 16px;
+  padding: 6px;
+  border-bottom: 1px solid #e5e5e5;
+  cursor: pointer;
+  border: 1px solid #f9c280 !important;
+  background-color: #428bca;
+  font-family: Verdana, Arial, sans-serif;
+}
+
+.sc-tool-lot-and-concession-item-right {
+  display: inline-block;
+  margin-left: 5px;
+}
+
+.sc-tool-lot-and-concession-results {
+  position: absolute;
+  top: 303px;
+  bottom: 0px;
+  overflow-y: auto;
+  width: 97%;
+}
+
+.sc-tool-lot-and-concession-item {
+  margin-bottom: 5px;
+  font-size: 10pt;
+}
+
+.sc-tool-lot-and-concession-item:hover {
+  background-color: #d9edf7;
+}

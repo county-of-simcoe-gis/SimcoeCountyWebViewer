@@ -90,12 +90,12 @@ class SCMap extends Component {
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-add-mymaps">
               <FloatingMenuItem imageName={"point.png"} label="Add Marker Point" />
             </MenuItem>
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoomin">
+            {/* <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoomin">
               <FloatingMenuItem imageName={"zoom-in.png"} label="Zoom In" />
             </MenuItem>
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoomout">
               <FloatingMenuItem imageName={"zoom-out.png"} label="Zoom Out" />
-            </MenuItem>
+            </MenuItem> */}
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-save-map-extent">
               <FloatingMenuItem imageName={"globe-icon.png"} label="Save as Default Extent" />
             </MenuItem>
