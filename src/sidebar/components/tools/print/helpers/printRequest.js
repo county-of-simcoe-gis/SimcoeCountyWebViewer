@@ -7,9 +7,13 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
     const currentMapViewCenter = window.map.getView().values_.center
     const mapProjection = window.map.getView().getProjection().code_
     const currentMapScale = helpers.getMapScale();
+    const longitudeFirst = true;
     const mapCenter = [-8875141.45, 5543492.45];
+    const mapScale = 3000000;
+    const rotation = 0;
+    const dpi = 300;
     let geoJsonLayersCount = 0;
-    let printAppId = '';
+    let printAppId = null;
 
     // init print request object
     let printRequest = {
@@ -20,9 +24,11 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
             title: "",
             description: "",
             map: {},
-            overview: {},
+            overviewMap: {},
             legend: {},
-            scaleBar: {},
+            scaleBar: {
+                geodetic: currentMapScale
+            },
             scale: ""
         }
     }
@@ -163,9 +169,9 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
         p.attributes.map.center = currentMapViewCenter;
         p.attributes.map.projection = mapProjection;
         p.attributes.map.scale = currentMapScale;
-        p.attributes.map.longitudeFirst = true;
-        p.attributes.map.rotation = 0;
-        p.attributes.map.dpi = 300;
+        p.attributes.map.longitudeFirst = longitudeFirst;
+        p.attributes.map.rotation = rotation;
+        p.attributes.map.dpi = dpi;
         p.attributes.map.layers = mainMapLayers;
         p.outputFormat = options.printFormatSelectedOption.value;
 
@@ -176,7 +182,6 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
                 p.layout = "letter portrait";
                 p.attributes.title = options.mapTitle;
                 p.attributes.description = description;
-                p.attributes.scaleBar = currentMapScale;
                 p.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                 break;
             case '11X8 Landscape':
@@ -184,7 +189,6 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
                 p.layout = "letter landscape";
                 p.attributes.title = options.mapTitle;
                 p.attributes.description = description;
-                p.attributes.scaleBar = currentMapScale;
                 p.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                 break;
             case '8X11 Portrait Overview':
@@ -192,16 +196,15 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
                 p.layout = "letter portrait overview";
                 p.attributes.title = options.mapTitle;
                 p.attributes.description = description;
-                p.attributes.scaleBar = currentMapScale;
                 p.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                 p.attributes.legend = legend;
-                p.attributes.overview.center = mapCenter;
-                p.attributes.overview.projection = mapProjection;
-                p.attributes.overview.scale = options.forceScale;
-                p.attributes.overview.longitudeFirst = true;
-                p.attributes.overview.rotation = 0;
-                p.attributes.overview.dpi = 300;
-                p.attributes.overview.layers = overviewMap;
+                p.attributes.overviewMap.center = mapCenter;
+                p.attributes.overviewMap.projection = mapProjection;
+                p.attributes.overviewMap.scale = mapScale;
+                p.attributes.overviewMap.longitudeFirst = longitudeFirst;
+                p.attributes.overviewMap.rotation = rotation;
+                p.attributes.overviewMap.dpi = dpi;
+                p.attributes.overviewMap.layers = overviewMap;
                 break;
             case 'Map Only':
                 printAppId = "map_only";
@@ -223,67 +226,54 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
 
     }
     buildPrintRequest(printRequest, printSelectedOption)
-
-
-
-    // ..........................................................................
-    // Post and await print result via request object
-    // ..........................................................................
-
-    console.log(mapLayers);
-
+    
     console.log(printRequest);
+    
 
+    // ..........................................................................
+    // Post request and check print status for print job retreival
+    // ..........................................................................
+    let interval = 5000;
     let origin = window.location.origin;
     let testOrigin = 'http://localhost:8080'
-    let interval = 5000;
+    let encodedPrintRequest = encodeURIComponent(JSON.stringify(printRequest))
+    let url = `${testOrigin}/print/print/${printAppId}/report.${(printSelectedOption.printFormatSelectedOption.value).toLowerCase()}`;
 
     //check print Status
-    let checkStatus = (response)=>{
-        
+    let checkStatus = (response) => {
+
         fetch(`${testOrigin}${response.statusURL}`)
-        .then(data => data.json())
-        .then((data)=>{
-            setTimeout(() => {
-                if (data.done===true) {
-                    interval=0
-                    window.open(`${testOrigin}${data.downloadURL}`)
-                }else{
-                    if (interval===25000) {
-                        interval=5000
-                    }else{
-                        interval+=5000
-                        checkStatus(response)
+            .then(data => data.json())
+            .then((data) => {
+                setTimeout(() => {
+                    if (data.done === true) {
+                        interval = 0
+                        window.open(`${testOrigin}${data.downloadURL}`)
+                    } else {
+                        if (interval < 30000) {
+                            interval += 5000
+                            checkStatus(response)
+                        } else {
+                            interval = 5000
+                        }
                     }
-                }
-            }, interval);
-        })
-        console.log('interval: '+interval);
+                    console.log('status: ' + data.done);
+                    console.log('interval: ' + interval);
+                }, interval);
+            })
     }
 
-    let  data = encodeURIComponent(JSON.stringify(printRequest))
-    let url =`${testOrigin}/print/print/${printAppId}/report.${(printSelectedOption.printFormatSelectedOption.value).toLowerCase()}`;
-
     fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'  
-        },
-        body: data
-    })
-    .then(response => response.json())
-    .then((response) => {
-        checkStatus(response)
-    })
-    .catch(error => console.error('Error:', error))
-
-    
-
-    
-
-    
-
-    
-
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: encodedPrintRequest
+        })
+        .then(response => response.json())
+        .then((response) => {
+            checkStatus(response)
+        })
+        .catch(error => console.error('Error:', error))
 
 }
