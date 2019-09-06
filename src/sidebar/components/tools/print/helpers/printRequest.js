@@ -107,7 +107,6 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
                 }else{
                     style.type = Object.getPrototypeOf(f.values_.geometry).constructor.name;
                 }
-                
                 if (f.style_.fill_ != null) {
                     style.fillColor = rgbToHex(...f.style_.fill_.color_);
                     style.fillOpacity = Number(([...f.style_.fill_.color_])[3]);
@@ -115,9 +114,19 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
                 style.strokeColor = rgbToHex(...f.style_.stroke_.color_);
                 style.strokeOpacity = Number(([...f.style_.stroke_.color_])[3]);
                 style.strokeWidth = Number(f.style_.stroke_.width_);
-
-                console.log((removeNull(style)));
-                
+                style.strokeDashstyle = "dash";
+                style.fontFamily= "sans-serif";
+                style.fontSize= "12px";
+                style.fontStyle= "normal";
+                style.fontWeight= "bold";
+                style.haloColor= "#123456";
+                style.haloOpacity= 0.7;
+                style.haloRadius= 3.0;
+                style.label= f.values_.label;
+                style.labelAlign= "cm";
+                style.labelRotation= 45;
+                style.labelXOffset= -25.0;
+                style.labelYOffset= -35.0;
 
                 mainMapLayers.push({
                     type: "geojson",
@@ -285,7 +294,7 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
                     }, interval);
                 } else if ((data.done === true) && (data.status === "error")) {
                     // be handled as a gracefully displayed error message
-                    console.log(data.error);
+                    // console.log(data.error);
                     helpers.showMessage("Print Failed", "please report to admin", "red", 10000);
                 }
             })
