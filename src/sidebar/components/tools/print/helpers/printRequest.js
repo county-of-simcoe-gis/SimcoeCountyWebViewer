@@ -43,11 +43,11 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
 
 
     // ..........................................................................
-    // RGBA to HEXIDECIMAL Converter
+    // Util functions
     // ..........................................................................
 
     //converts rgb to hexadecimal color
-    let rgbToHex = function (r, g, b, a) {
+    let rgbToHex = (r, g, b, a) => {
         r = r.toString(16);
         g = g.toString(16);
         b = b.toString(16);
@@ -62,8 +62,22 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
         if (a.length == 1)
             a = "" + a;
 
-        return "#" + r + g + b + a;
+        return "#" + r + g + b;
     };
+
+
+    //remove null and undefined values from object
+    let removeNull = (obj) => {
+        let propNames = Object.getOwnPropertyNames(obj);
+        for (let i = 0; i < propNames.length; i++) {
+            let propName = propNames[i];
+            if (obj[propName] === null || obj[propName] === undefined) {
+                delete obj[propName];
+            }
+        }
+        return obj;
+        
+    }
 
 
     // ..........................................................................
@@ -82,14 +96,31 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
                 let f = drawablefeatures[key];
                 let flat_coords = f.values_.geometry.flatCoordinates
                 let grouped_coords = [];
-
                 //transforms flattened coords to geoJson format grouped coords
                 for (let i = 0, t = 1; i < flat_coords.length; i += 2, t += 2) {
                     grouped_coords.push([flat_coords[i], flat_coords[t]]);
                 }
 
+                let style = {};
+                if (Object.getPrototypeOf(f.values_.geometry).constructor.name==="LineString") {
+                    style.type = "Line"
+                }else{
+                    style.type = Object.getPrototypeOf(f.values_.geometry).constructor.name;
+                }
+                
+                if (f.style_.fill_ != null) {
+                    style.fillColor = rgbToHex(...f.style_.fill_.color_);
+                    style.fillOpacity = Number(([...f.style_.fill_.color_])[3]);
+                }
+                style.strokeColor = rgbToHex(...f.style_.stroke_.color_);
+                style.strokeOpacity = Number(([...f.style_.stroke_.color_])[3]);
+                style.strokeWidth = Number(f.style_.stroke_.width_);
+
+                console.log((removeNull(style)));
+                
+
                 mainMapLayers.push({
-                    type: "geoJson",
+                    type: "geojson",
                     geoJson: {
                         type: "FeatureCollection",
                         features: [{
@@ -109,18 +140,11 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
                     },
                     name: f.values_.label,
                     style: {
-                        version: f.values_.id,
+                        version: "2",
                         "*": {
-                            symbolizers: [{
-                                type: f.values_.drawType,
-                                fillColor: rgbToHex(...f.style_.fill_.color_),
-                                strokeColor: rgbToHex(...f.style_.stroke_.color_),
-                                fillOpacity: 1,
-                                strokeOpacity: 1,
-                                strokeWidth: f.style_.stroke_.width_
-                            }]
+                            symbolizers: [(removeNull(style))]
                         }
-                    },
+                    }
                 });
             }
         }
@@ -226,9 +250,9 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
 
     }
     buildPrintRequest(printRequest, printSelectedOption)
-    
+
+    console.log(mapLayers);
     console.log(printRequest);
-    
 
     // ..........................................................................
     // Post request and check print status for print job retreival
@@ -239,30 +263,34 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
     let encodedPrintRequest = encodeURIComponent(JSON.stringify(printRequest))
     let url = `${testOrigin}/print/print/${printAppId}/report.${(printSelectedOption.printFormatSelectedOption.value).toLowerCase()}`;
 
-    //check print Status
+    //check print Status and retreive print
     let checkStatus = (response) => {
 
         fetch(`${testOrigin}${response.statusURL}`)
             .then(data => data.json())
             .then((data) => {
-                setTimeout(() => {
-                    if (data.done === true) {
-                        interval = 0
-                        window.open(`${testOrigin}${data.downloadURL}`)
-                    } else {
+                console.log(data);
+                if ((data.done === true) && (data.status === "finished")) {
+                    interval = 0
+                    window.open(`${testOrigin}${data.downloadURL}`)
+                } else if ((data.done === false) && (data.status === "running")) {
+                    setTimeout(() => {
                         if (interval < 30000) {
-                            interval += 5000
+                            interval += 2500
                             checkStatus(response)
                         } else {
                             interval = 5000
+                            checkStatus(response)
                         }
-                    }
-                    console.log('status: ' + data.done);
-                    console.log('interval: ' + interval);
-                }, interval);
+                    }, interval);
+                } else if ((data.done === true) && (data.status === "error")) {
+                    // be handled as a gracefully displayed error message
+                    console.log(data.error);
+                    helpers.showMessage("Print Failed", "please report to admin", "red", 10000);
+                }
             })
     }
-
+    //post request to server and check status
     fetch(url, {
             method: 'POST',
             headers: {
