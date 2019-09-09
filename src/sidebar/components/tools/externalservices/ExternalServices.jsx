@@ -58,7 +58,7 @@ class ExternalServices extends Component {
     });
 
     const center = window.map.getView().getCenter();
-    this.setState({ coords: helpers.toLatLongFrmoWebMercator(center) });
+    this.setState({ coords: helpers.toLatLongFromWebMercator(center) });
     const feature = new Feature(new Point(center));
     this.vectorLayer = new VectorLayer({
       zIndex: 10000,
@@ -77,7 +77,7 @@ class ExternalServices extends Component {
   };
 
   updateFeature = coords => {
-    const latLongCoords = helpers.toLatLongFrmoWebMercator(coords);
+    const latLongCoords = helpers.toLatLongFromWebMercator(coords);
     this.setState({ coords: latLongCoords });
     const feature = new Feature(new Point(coords));
     this.vectorLayer.getSource().clear();

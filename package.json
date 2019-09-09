@@ -4,7 +4,6 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@turf/turf": "^5.1.6",
     "array-move": "^2.0.0",
     "create-react-class": "^15.6.3",
     "eslint-utils": "^1.4.1",
@@ -70,5 +69,6 @@
   "jshintConfig": {
     "loopfunc": true,
     "jsx-a11y/anchor-is-valid": true
-  }
+  },
+  "devDependencies": {}
 }
