@@ -15,6 +15,7 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
     let geoJsonLayersCount = 0;
     let printAppId = null;
 
+
     // init print request object
     let printRequest = {
         layout: "",
@@ -43,7 +44,7 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
 
 
     // ..........................................................................
-    // Util functions
+    // helper methods
     // ..........................................................................
 
     //converts rgb to hexadecimal color
@@ -65,6 +66,63 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
         return "#" + r + g + b;
     };
 
+    // Changes XML to JSON
+    let xmlToJson = (xml) => {
+        let obj = {};
+
+        if (xml.nodeType == 1) { // element
+            // do attributes
+            if (xml.attributes.length > 0) {
+                obj["@attributes"] = {};
+                for (let j = 0; j < xml.attributes.length; j++) {
+                    let attribute = xml.attributes.item(j);
+                    obj["@attributes"][attribute.nodeName] = attribute.nodeValue;
+                }
+            }
+        } else if (xml.nodeType == 3) { // text
+            obj = xml.nodeValue;
+        }
+
+        // do children
+        if (xml.hasChildNodes()) {
+            for (let i = 0; i < xml.childNodes.length; i++) {
+                let item = xml.childNodes.item(i);
+                let nodeName = item.nodeName;
+                if (typeof (obj[nodeName]) == "undefined") {
+                    obj[nodeName] = xmlToJson(item);
+                } else {
+                    if (typeof (obj[nodeName].push) == "undefined") {
+                        let old = obj[nodeName];
+                        obj[nodeName] = [];
+                        obj[nodeName].push(old);
+                    }
+                    obj[nodeName].push(xmlToJson(item));
+                }
+            }
+        }
+        return obj;
+    };
+
+    // loads tileMatrix from basemap Urls
+    let loadTileMatrix = async (url) => {
+
+        let response = await fetch(url)
+        let data = await response.text()
+        let xml = (new window.DOMParser()).parseFromString(data, "text/xml")
+        let json = xmlToJson(xml)
+        let flatTileMatrix = json.Capabilities.Contents.TileMatrixSet[0].TileMatrix
+        let tileMatrix = flatTileMatrix.map((m) => {
+            return {
+                identifier: m["ows:Identifier"]["#text"],
+                scaleDenominator: Number(m["ScaleDenominator"]["#text"]),
+                topLeftCorner: [-2.0037508342787E7, 2.0037508342787E7],
+                tileSize: [256, 256],
+                matrixSize: [Number(m["MatrixHeight"]["#text"]), Number(m["MatrixWidth"]["#text"])]
+            }
+
+        })
+        return tileMatrix
+    }
 
     //remove null and undefined values from object
     let removeNull = (obj) => {
@@ -76,8 +134,12 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
             }
         }
         return obj;
-        
     }
+
+    let transformGeoJson = (l) =>{
+
+    }
+
 
 
     // ..........................................................................
@@ -85,13 +147,12 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
     // ..........................................................................
 
     //extract and transform map layers to fit mapfish print request map structure
-    let transformMapLayers = (l) => {
+    let transformMapLayers = async (l) => {
 
         if (l.type === "VECTOR" && l.values_.name === "myMaps") {
             let drawablefeatures = Object.values(l.values_.source.undefIdIndex_);
+            geoJsonLayersCount = drawablefeatures.length
             for (const key in drawablefeatures) {
-
-                geoJsonLayersCount += 1
 
                 let f = drawablefeatures[key];
                 let flat_coords = f.values_.geometry.flatCoordinates
@@ -101,32 +162,32 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
                     grouped_coords.push([flat_coords[i], flat_coords[t]]);
                 }
 
-                let style = {};
-                if (Object.getPrototypeOf(f.values_.geometry).constructor.name==="LineString") {
-                    style.type = "Line"
-                }else{
-                    style.type = Object.getPrototypeOf(f.values_.geometry).constructor.name;
+                let styles = {};
+                if (Object.getPrototypeOf(f.values_.geometry).constructor.name === "LineString") {
+                    styles.type = "Line"
+                } else {
+                    styles.type = Object.getPrototypeOf(f.values_.geometry).constructor.name;
                 }
                 if (f.style_.fill_ != null) {
-                    style.fillColor = rgbToHex(...f.style_.fill_.color_);
-                    style.fillOpacity = Number(([...f.style_.fill_.color_])[3]);
+                    styles.fillColor = rgbToHex(...f.style_.fill_.color_);
+                    styles.fillOpacity = Number(([...f.style_.fill_.color_])[3]);
                 }
-                style.strokeColor = rgbToHex(...f.style_.stroke_.color_);
-                style.strokeOpacity = Number(([...f.style_.stroke_.color_])[3]);
-                style.strokeWidth = Number(f.style_.stroke_.width_);
-                style.strokeDashstyle = "dash";
-                style.fontFamily= "sans-serif";
-                style.fontSize= "12px";
-                style.fontStyle= "normal";
-                style.fontWeight= "bold";
-                style.haloColor= "#123456";
-                style.haloOpacity= 0.7;
-                style.haloRadius= 3.0;
-                style.label= f.values_.label;
-                style.labelAlign= "cm";
-                style.labelRotation= 45;
-                style.labelXOffset= -25.0;
-                style.labelYOffset= -35.0;
+                styles.strokeColor = rgbToHex(...f.style_.stroke_.color_);
+                styles.strokeOpacity = Number(([...f.style_.stroke_.color_])[3]);
+                styles.strokeWidth = Number(f.style_.stroke_.width_);
+                styles.strokeDashstyle = "dash";
+                styles.fontFamily = "sans-serif";
+                styles.fontSize = "12px";
+                styles.fontStyle = "normal";
+                styles.fontWeight = "bold";
+                styles.haloColor = "#123456";
+                styles.haloOpacity = 0.7;
+                styles.haloRadius = 3.0;
+                styles.label = f.values_.label;
+                styles.labelAlign = "cm";
+                styles.labelRotation = 45;
+                styles.labelXOffset = -25.0;
+                styles.labelYOffset = -35.0;
 
                 mainMapLayers.push({
                     type: "geojson",
@@ -151,7 +212,7 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
                     style: {
                         version: "2",
                         "*": {
-                            symbolizers: [(removeNull(style))]
+                            symbolizers: [(removeNull(styles))]
                         }
                     }
                 });
@@ -180,12 +241,17 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
 
         if (l.type === "TILE") {
             //allows for streets to be top most basemap layer
+            let tileMapLayer = tileMapLayerConfigs[l.values_.service]
+            let url = tileMapLayer.baseURL.replace("/tile/{TileMatrix}/{TileRow}/{TileCol}", "/WMTS/1.0.0/WMTSCapabilities.xml")
+            let tileMatrix = await loadTileMatrix(url)
+            tileMapLayer.matrices=[...tileMatrix]
+  
             if (l.values_.service === 'Streets_Cache') {
-                mainMapLayers.splice(geoJsonLayersCount, 0, tileMapLayerConfigs[l.values_.service])
-                overviewMap.splice(geoJsonLayersCount, 0, tileMapLayerConfigs[l.values_.service])
+                mainMapLayers.splice(geoJsonLayersCount, 0, tileMapLayer)
+                overviewMap.splice(geoJsonLayersCount, 0, tileMapLayer)
             } else {
-                mainMapLayers.push(tileMapLayerConfigs[l.values_.service])
-                overviewMap.push(tileMapLayerConfigs[l.values_.service])
+                mainMapLayers.push(tileMapLayer)
+                overviewMap.push(tileMapLayer)
             }
         }
     }
@@ -300,17 +366,22 @@ export async function printRequestOptions(mapLayers, description, printSelectedO
             })
     }
     //post request to server and check status
-    fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: encodedPrintRequest
-        })
-        .then(response => response.json())
-        .then((response) => {
-            checkStatus(response)
-        })
-        .catch(error => console.error('Error:', error))
+    // fetch(url, {
+    //         method: 'POST',
+    //         headers: {
+    //             'Content-Type': 'application/json'
+    //         },
+    //         body: encodedPrintRequest
+    //     })
+    //     .then(response => response.json())
+    //     .then((response) => {
+    //         checkStatus(response)
+    //     })
+    //     .catch(error => console.error('Error:', error))
+
+
+
+
+
 
 }
