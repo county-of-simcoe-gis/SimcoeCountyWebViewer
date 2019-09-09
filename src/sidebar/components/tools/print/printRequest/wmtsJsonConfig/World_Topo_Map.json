@@ -1,6 +1,6 @@
 {
     "type": "WMTS",
-    "baseURL": "https://maps.simcoe.ca/arcgis/rest/services/Public/World_Topo_Map/MapServer/tile/{TileMatrix}/{TileRow}/{TileCol}",
+    "baseURL": "https://server.arcgisonline.com/arcgis/rest/services/World_Topo_Map/MapServer/tile/{TileMatrix}/{TileRow}/{TileCol}",
     "layer": "World_Topo_Map",
     "imageFormat": "image/png",
     "opacity": 1.0,

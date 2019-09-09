@@ -56,12 +56,10 @@ export default async (mapLayers, description, printSelectedOption) => {
         let data = await response.text()
         let xml = (new window.DOMParser()).parseFromString(data, "text/xml")
         let json = utils.xmlToJson(xml)
-        console.log(json);
-        
         let flatTileMatrix = null;
         if (type ==="OSM") {
             flatTileMatrix = json.Capabilities.Contents.TileMatrixSet.TileMatrix
-        }else{
+        }else{   
             flatTileMatrix = json.Capabilities.Contents.TileMatrixSet[0].TileMatrix
         }
         let tileMatrix = flatTileMatrix.map((m) => {
@@ -79,14 +77,16 @@ export default async (mapLayers, description, printSelectedOption) => {
 
     let loadWMTSConfig = async (url, type) => {
         let serviceName = utils.extractServiceName(url)
-        console.log(serviceName);
-        
         let tileMapLayer = null; 
         let tileMapUrl = null;
         if (type === "OSM") {
             tileMapLayer =tileMapLayerConfigs["Wmts_Osm"]
             tileMapUrl = tileMapLayer.baseURL.replace("https://tile-a.openstreetmap.fr/{Style}{TileMatrix}/{TileCol}/{TileRow}.png", "https://osmlab.github.io/wmts-osm/WMTSCapabilities.xml")
-        }else{
+        }if(type==="ESRI_TILED"){
+            tileMapLayer = tileMapLayerConfigs["LIO_Cartographic_LIO_Topographic"]
+            tileMapUrl = tileMapLayer.baseURL.replace("/WMTS/tile/1.0.0/LIO_Cartographic_LIO_Topographic/{TileMatrix}/{TileRow}/{TileCol}", "/WMTS/1.0.0/WMTSCapabilities.xml")
+        }
+        else{
             tileMapLayer = tileMapLayerConfigs[serviceName]
             tileMapUrl = tileMapLayer.baseURL.replace("/tile/{TileMatrix}/{TileRow}/{TileCol}", "/WMTS/1.0.0/WMTSCapabilities.xml")
         }
@@ -165,6 +165,32 @@ export default async (mapLayers, description, printSelectedOption) => {
         }
     }
 
+    let configureTileLayer = async (l) => {
+        //allows for streets to be top most basemap layer
+        if (utils.extractServiceName(l.values_.url) === 'Streets_Cache') {
+            mainMapLayers.splice(geoJsonLayersCount, 0, await loadWMTSConfig(l.values_.url, l.type))
+            overviewMap.splice(geoJsonLayersCount, 0, await loadWMTSConfig(l.values_.url, l.type))
+        } else {
+            mainMapLayers.push(await loadWMTSConfig(l.values_.url, l.type))
+            overviewMap.push(await loadWMTSConfig(l.values_.url, l.type))
+        }
+    }
+
+    let configureLayerGroup = async (l) => {
+
+        for (const key in l.values_.layers.array_) {
+            let layers = l.values_.layers.array_[key]
+
+            if (layers.values_.service.type === "OSM") {
+                mainMapLayers.splice(geoJsonLayersCount, 0, await loadWMTSConfig(osmUrl, layers.values_.service.type))
+                overviewMap.splice(geoJsonLayersCount, 0, await loadWMTSConfig(osmUrl, layers.values_.service.type))
+            } else {
+                mainMapLayers.splice(geoJsonLayersCount, 0, await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type))
+                overviewMap.splice(geoJsonLayersCount, 0, await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type))
+            }
+        }
+    }
+
     let configureImageLayer = (l) => {
         //image icon layers are spliced/inserted in after geoJson layers. 
         mainMapLayers.splice(geoJsonLayersCount, 0, {
@@ -184,47 +210,22 @@ export default async (mapLayers, description, printSelectedOption) => {
         });
     }
 
-    let configureTileLayer = async (l) => {
-        //allows for streets to be top most basemap layer
-        if (utils.extractServiceName(l.values_.url) === 'Streets_Cache') {
-            mainMapLayers.splice(geoJsonLayersCount, 0, await loadWMTSConfig(l.values_.url, "SIMCOE"))
-            overviewMap.splice(geoJsonLayersCount, 0, await loadWMTSConfig(l.values_.url, "SIMCOE"))
-        } else {
-            mainMapLayers.push(await loadWMTSConfig(l.values_.url, "SIMCOE"))
-            overviewMap.push(await loadWMTSConfig(l.values_.url, "SIMCOE"))
-        }
-    }
-
-    let configureLayerGroup = async (l) => {
-
-        for (const key in l.values_.layers.array_) {
-            let layers = l.values_.layers.array_[key]
-
-            if (layers.values_.service.type === "OSM") {
-                mainMapLayers.splice(geoJsonLayersCount, 0, await loadWMTSConfig(osmUrl, "OSM"))
-                overviewMap.splice(geoJsonLayersCount, 0, await loadWMTSConfig(osmUrl, "OSM"))
-            } else {
-                mainMapLayers.splice(geoJsonLayersCount, 0, await loadWMTSConfig(layers.values_.service.url, "SIMCOE"))
-                overviewMap.splice(geoJsonLayersCount, 0, await loadWMTSConfig(layers.values_.service.url, "SIMCOE"))
-            }
-        }
-    }
-
-    let getLayerByType = (l) => {
+    let getLayerByType = async (l) => {
 
         if (Object.getPrototypeOf(l).constructor.name === "VectorLayer" && l.values_.name === "myMaps") {
             configureVectorMyMapsLayer(l);
         }
 
-        if (Object.getPrototypeOf(l).constructor.name === "ImageLayer") {
-            configureImageLayer(l);
+        if (Object.getPrototypeOf(l).constructor.name === "LayerGroup") {
+            configureLayerGroup(l);
         }
 
         if (Object.getPrototypeOf(l).constructor.name === "TileLayer") {
             configureTileLayer(l);
         }
-        if (Object.getPrototypeOf(l).constructor.name === "LayerGroup") {
-            configureLayerGroup(l);
+        
+        if (Object.getPrototypeOf(l).constructor.name === "ImageLayer") {
+            configureImageLayer(l);
         }
     }
     //iterate through each map layer passed in the window.map
