@@ -1,0 +1,17 @@
+{
+    "type": "WMTS",
+    "baseURL": "https://maps.simcoe.ca/arcgis/rest/services/Public/LIO_Cartographic/MapServer/tile/{TileMatrix}/{TileRow}/{TileCol}",
+    "layer": "LIO_Cartographic",
+    "imageFormat": "image/png",
+    "opacity": 1.0,
+    "style": "Default Style",
+    "version": "1.0.0",
+    "dimensions": [],
+    "dimensionParams": {},
+    "requestEncoding": "REST",
+    "customParams": {
+        "TRANSPARENT": "true"
+    },
+    "matrixSet": "EPSG:3857",
+    "matrices": []
+}

@@ -66,4 +66,10 @@ let removeNull = (obj) => {
     return obj;
 }
 
-export default {rgbToHex, xmlToJson, removeNull}
+let extractServiceName = (url)=>{
+    let serviceUrl = url.split("/")
+    let serviceName = serviceUrl[serviceUrl.length - 2]
+    return serviceName
+}
+
+export default {rgbToHex, xmlToJson, removeNull, extractServiceName}

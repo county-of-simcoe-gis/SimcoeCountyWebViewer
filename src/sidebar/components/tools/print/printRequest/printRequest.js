@@ -5,8 +5,9 @@ import utils from "./utils";
 export default async (mapLayers, description, printSelectedOption) => {
 
     const iconServiceUrl = "https://opengis.simcoe.ca/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=";
-    const currentMapViewCenter = window.map.getView().values_.center
-    const mapProjection = window.map.getView().getProjection().code_
+    const osmUrl = "https://osmlab.github.io/wmts-osm/WMTSCapabilities.xml"
+    const currentMapViewCenter = window.map.getView().values_.center;
+    const mapProjection = window.map.getView().getProjection().code_;
     const currentMapScale = helpers.getMapScale();
     const mapCenter = [-8875141.45, 5543492.45];
     const longitudeFirst = true;
@@ -49,13 +50,18 @@ export default async (mapLayers, description, printSelectedOption) => {
     // ..........................................................................
 
     //pulls in tile matrix from each basemap tilelayer capabilities
-    let loadTileMatrix = async (url) => {
+    let loadTileMatrix = async (url, type) => {
 
         let response = await fetch(url)
         let data = await response.text()
         let xml = (new window.DOMParser()).parseFromString(data, "text/xml")
         let json = utils.xmlToJson(xml)
-        let flatTileMatrix = json.Capabilities.Contents.TileMatrixSet[0].TileMatrix
+        let flatTileMatrix = null;
+        if (type ==="OSM") {
+            flatTileMatrix = json.Capabilities.Contents.TileMatrixSet.TileMatrix
+        }else{
+            flatTileMatrix = json.Capabilities.Contents.TileMatrixSet[0].TileMatrix
+        }
         let tileMatrix = flatTileMatrix.map((m) => {
             return {
                 identifier: m["ows:Identifier"]["#text"],
@@ -67,6 +73,22 @@ export default async (mapLayers, description, printSelectedOption) => {
 
         })
         return tileMatrix
+    }
+
+    let loadWMTSConfig = async (url, type) => {
+        let serviceName = utils.extractServiceName(url)
+        let tileMapLayer = null; 
+        let tileMapUrl = null;
+        if (type === "OSM") {
+            tileMapLayer =tileMapLayerConfigs["Wmts_Osm"]
+            tileMapUrl = tileMapLayer.baseURL.replace("https://tile-a.openstreetmap.fr/{Style}{TileMatrix}/{TileCol}/{TileRow}.png", "https://osmlab.github.io/wmts-osm/WMTSCapabilities.xml")
+        }else{
+            tileMapLayer = tileMapLayerConfigs[serviceName]
+            tileMapUrl = tileMapLayer.baseURL.replace("/tile/{TileMatrix}/{TileRow}/{TileCol}", "/WMTS/1.0.0/WMTSCapabilities.xml")
+        }
+        let tileMatrix = await loadTileMatrix(tileMapUrl, type)
+        tileMapLayer.matrices = [...tileMatrix]
+        return tileMapLayer
     }
 
     let configureVectorMyMapsLayer = (l) => {
@@ -159,34 +181,46 @@ export default async (mapLayers, description, printSelectedOption) => {
     }
 
     let configureTileLayer = async (l) => {
-        let tileMapLayer = tileMapLayerConfigs[l.values_.service]
-        let url = tileMapLayer.baseURL.replace("/tile/{TileMatrix}/{TileRow}/{TileCol}", "/WMTS/1.0.0/WMTSCapabilities.xml")
-        let tileMatrix = await loadTileMatrix(url)
-        tileMapLayer.matrices = [...tileMatrix]
-
         //allows for streets to be top most basemap layer
-        if (l.values_.service === 'Streets_Cache') {
-            mainMapLayers.splice(geoJsonLayersCount, 0, tileMapLayer)
-            overviewMap.splice(geoJsonLayersCount, 0, tileMapLayer)
+        if (utils.extractServiceName(l.values_.url) === 'Streets_Cache') {
+            mainMapLayers.splice(geoJsonLayersCount, 0, await loadWMTSConfig(l.values_.url, "SIMCOE"))
+            overviewMap.splice(geoJsonLayersCount, 0, await loadWMTSConfig(l.values_.url, "SIMCOE"))
         } else {
-            mainMapLayers.push(tileMapLayer)
-            overviewMap.push(tileMapLayer)
+            mainMapLayers.push(await loadWMTSConfig(l.values_.url, "SIMCOE"))
+            overviewMap.push(await loadWMTSConfig(l.values_.url, "SIMCOE"))
         }
     }
 
-    let getLayerByType = async (l) => {
+    let configureLayerGroup = async (l) => {
 
-        if (l.type === "VECTOR" && l.values_.name === "myMaps") {
-            configureVectorMyMapsLayer(l)
+        for (const key in l.values_.layers.array_) {
+            let layers = l.values_.layers.array_[key]
+
+            if (layers.values_.service.type === "OSM") {
+                mainMapLayers.splice(geoJsonLayersCount, 0, await loadWMTSConfig(osmUrl, "OSM"))
+                overviewMap.splice(geoJsonLayersCount, 0, await loadWMTSConfig(osmUrl, "OSM"))
+            } else {
+                mainMapLayers.splice(geoJsonLayersCount, 0, await loadWMTSConfig(layers.values_.service.url, "SIMCOE"))
+                overviewMap.splice(geoJsonLayersCount, 0, await loadWMTSConfig(layers.values_.service.url, "SIMCOE"))
+            }
+        }
+    }
+
+    let getLayerByType = (l) => {
+
+        if (Object.getPrototypeOf(l).constructor.name === "VectorLayer" && l.values_.name === "myMaps") {
+            configureVectorMyMapsLayer(l);
         }
 
-        if (l.type === "IMAGE") {
-            configureImageLayer(l)
+        if (Object.getPrototypeOf(l).constructor.name === "ImageLayer") {
+            configureImageLayer(l);
         }
 
-        if (l.type === "TILE") {
-            configureTileLayer(l)
-
+        if (Object.getPrototypeOf(l).constructor.name === "TileLayer") {
+            configureTileLayer(l);
+        }
+        if (Object.getPrototypeOf(l).constructor.name === "LayerGroup") {
+            configureLayerGroup(l);
         }
     }
     //iterate through each map layer passed in the window.map
@@ -267,7 +301,7 @@ export default async (mapLayers, description, printSelectedOption) => {
     // ..........................................................................
     // Post request and check print status for print job retreival
     // ..........................................................................
-    
+
     let interval = 5000;
     let origin = window.location.origin;
     let testOrigin = 'http://localhost:8080'

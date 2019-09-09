@@ -53,7 +53,7 @@ class BasemapSwitcher extends Component {
       //var layer = helpers.getArcGISTiledLayer(service.url);
       var layer = helpers.getSimcoeTileXYZLayer(service.url);
       // LAYER PROPS
-      layer.setProperties({ index: index, name: service.name, service:`Ortho_${service.name}_Cache`});
+      layer.setProperties({ index: index, name: service.name, url:service.url});
       layer.setZIndex(index);
       layer.setVisible(false);
 
@@ -75,7 +75,7 @@ class BasemapSwitcher extends Component {
     if (BasemapConfig.streetService !==  undefined){
       //var streetsLayer = helpers.getArcGISTiledLayer(BasemapConfig.streetService);
       var streetsLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.streetService);
-      streetsLayer.setProperties({service:"Streets_Cache"}); 
+      streetsLayer.setProperties({url:BasemapConfig.streetService}); 
       streetsLayer.setZIndex(BasemapConfig.imageryServices.length);
       window.map.addLayer(streetsLayer);
       this.setState({streetsLayer: streetsLayer});
@@ -84,7 +84,7 @@ class BasemapSwitcher extends Component {
     // LOAD BATHYMETRY LAYER
     if (BasemapConfig.bathymetryService !==  undefined){
       var bathymetryLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.bathymetryService);
-      bathymetryLayer.setProperties({service:"Bathymetry_Cache"}); 
+      bathymetryLayer.setProperties({url:BasemapConfig.bathymetryService}); 
       bathymetryLayer.setZIndex(0);
       window.map.addLayer(bathymetryLayer);
       this.setState({bathymetryLayer: bathymetryLayer});
@@ -93,7 +93,7 @@ class BasemapSwitcher extends Component {
     // LOAD WORLD LAYER
     if (BasemapConfig.worldImageryService !==  undefined){
       var worldImageryLayer = helpers.getESRITileXYZLayer(BasemapConfig.worldImageryService);
-      worldImageryLayer.setProperties({service:"World_Imagery"}); 
+      worldImageryLayer.setProperties({url:BasemapConfig.worldImageryService}); 
       worldImageryLayer.setZIndex(0);
       worldImageryLayer.setMinResolution(300);
       window.map.addLayer(worldImageryLayer);
