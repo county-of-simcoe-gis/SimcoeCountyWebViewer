@@ -3,7 +3,7 @@ import Select from "react-select";
 import Collapsible from 'react-collapsible';
 import PanelComponent from "../../../PanelComponent";
 import * as helpers from "../../../../helpers/helpers";
-import * as printHelpers from "./helpers/printRequest";
+import  printRequest from "./printRequest/printRequest";
 import "./Print.css";
 import { log } from "util";
 
@@ -133,7 +133,7 @@ class Print extends Component {
     // =======================
     // SEND PRINT SERVER REQUEST HERE
     // =======================
-    printHelpers.printRequestOptions(printLayers, termsOfUse,  this.state);
+    printRequest(printLayers, termsOfUse,  this.state);
     
     // ONCE PRINT IS COMPLETE (RETURNED FROM SERVER)
     //helpers.showMessage("Print", "Your print has been downloaded");
