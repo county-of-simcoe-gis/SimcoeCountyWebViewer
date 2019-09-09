@@ -56,6 +56,8 @@ export default async (mapLayers, description, printSelectedOption) => {
         let data = await response.text()
         let xml = (new window.DOMParser()).parseFromString(data, "text/xml")
         let json = utils.xmlToJson(xml)
+        console.log(json);
+        
         let flatTileMatrix = null;
         if (type ==="OSM") {
             flatTileMatrix = json.Capabilities.Contents.TileMatrixSet.TileMatrix
@@ -77,6 +79,8 @@ export default async (mapLayers, description, printSelectedOption) => {
 
     let loadWMTSConfig = async (url, type) => {
         let serviceName = utils.extractServiceName(url)
+        console.log(serviceName);
+        
         let tileMapLayer = null; 
         let tileMapUrl = null;
         if (type === "OSM") {
