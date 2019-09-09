@@ -1,7 +1,7 @@
 {
     "type": "WMTS",
-    "baseURL": "https://maps.simcoe.ca/arcgis/rest/services/Public/LIO_Cartographic/MapServer/tile/{TileMatrix}/{TileRow}/{TileCol}",
-    "layer": "LIO_Cartographic",
+    "baseURL": "https://ws.giscache.lrc.gov.on.ca/arcgis/rest/services/LIO_Cartographic/LIO_Topographic/MapServer/WMTS/tile/1.0.0/LIO_Cartographic_LIO_Topographic/{TileMatrix}/{TileRow}/{TileCol}",
+    "layer": "LIO_Cartographic_LIO_Topographic",
     "imageFormat": "image/png",
     "opacity": 1.0,
     "style": "Default Style",

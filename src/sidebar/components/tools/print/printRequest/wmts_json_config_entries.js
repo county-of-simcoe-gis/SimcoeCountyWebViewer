@@ -14,7 +14,7 @@ import Wmts_Osm from './wmtsJsonConfig/Wmts_Osm';
 import World_Topo_Map from './wmtsJsonConfig/World_Topo_Map.json';
 import Topo_Cache from './wmtsJsonConfig/Topo_Cache.json';
 import Streets_Black_And_White_Cache from './wmtsJsonConfig/Streets_Black_And_White_Cache.json';
-import LIO_Cartographic from './wmtsJsonConfig/LIO_Cartographic.json';
+import LIO_Cartographic_LIO_Topographic from './wmtsJsonConfig/LIO_Cartographic_LIO_Topographic.json';
 
 export default {
     Streets_Cache,
@@ -32,6 +32,6 @@ export default {
     World_Topo_Map,
     Topo_Cache,
     Streets_Black_And_White_Cache,
-    LIO_Cartographic,
+    LIO_Cartographic_LIO_Topographic,
     Wmts_Osm
 };
