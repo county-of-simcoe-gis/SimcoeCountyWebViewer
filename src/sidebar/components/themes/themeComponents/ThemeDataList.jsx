@@ -3,7 +3,6 @@ import "./ThemeDataList.css";
 import * as helpers from "../../../../helpers/helpers";
 import { InfoRowValue } from "../../../../helpers/InfoRow.jsx";
 import ThemePopupContent from "./ThemePopupContent.jsx";
-import * as turf from "@turf/turf";
 
 class ThemeDataList extends Component {
   constructor(props) {
@@ -73,17 +72,16 @@ class ThemeDataList extends Component {
   };
 
   itemClick = feature => {
-    // GET CENTER
-    const geoType = feature.getGeometry().getType();
-    let center = feature.getGeometry().flatCoordinates;
-    console.log(geoType);
-    if (geoType !== "Point") center = turf.centroid(feature.getGeometry());
-
-    // SHOW POPUP
-    const entries = Object.entries(feature.getProperties());
-    window.popup.show(center, <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={this.props.layerConfig} />);
-    helpers.zoomToFeature(feature);
-    window.map.getView().setZoom(15);
+    helpers.getGeometryCenter(feature.getGeometry(), center => {
+      // SHOW POPUP
+      const entries = Object.entries(feature.getProperties());
+      window.popup.show(
+        center.flatCoordinates,
+        <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={this.props.layerConfig} />
+      );
+      helpers.zoomToFeature(feature);
+      window.map.getView().setZoom(15);
+    });
   };
 
   // HANDLES TOGGLE LAYER CHANGES

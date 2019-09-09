@@ -25,7 +25,6 @@ import { Vector as VectorLayer } from "ol/layer.js";
 import Collection from "ol/Collection";
 import GeoJSON from "ol/format/GeoJSON.js";
 import { fromCircle } from "ol/geom/Polygon.js";
-import * as turf from "@turf/turf";
 import MyMapsAdvanced from "./MyMapsAdvanced";
 
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale, myMapsId, featureId) =>
@@ -470,43 +469,71 @@ class MyMaps extends Component {
     })[0];
     let center = null;
     if (evt === null) {
-      const geo = new GeoJSON().writeFeatureObject(feature);
-      var feature = new GeoJSON().readFeature(turf.centroid(geo));
-      center = feature.getGeometry().flatCoordinates;
+      helpers.getGeometryCenter(feature.getGeometry(), center => {
+        // SHOW POPUP
+        window.popup.show(
+          center.flatCoordinates,
+          <MyMapsPopup
+            key={helpers.getUID()}
+            activeTool={activeTool}
+            onRef={ref => (this.popupRef = ref)}
+            item={item}
+            onLabelChange={this.onLabelChange}
+            onLabelVisibilityChange={this.onLabelVisibilityChange}
+            onLabelRotationChange={this.onLabelRotationChange}
+            onFooterToolsButtonClick={this.onFooterToolsButtonClick}
+            onDeleteButtonClick={this.onItemDelete}
+            onPointStyleDropDown={this.onPointStyleDropDown}
+            onRadiusSliderChange={this.onRadiusSliderChange}
+            onFillOpacitySliderChange={this.onFillOpacitySliderChange}
+            onFillColorPickerChange={this.onFillColorPickerChange}
+            onAngleSliderChange={this.onAngleSliderChange}
+            onRotationSliderChange={this.onRotationSliderChange}
+            onStrokeOpacitySliderChange={this.onStrokeOpacitySliderChange}
+            onStrokeColorPickerChange={this.onStrokeColorPickerChange}
+            onStrokeWidthSliderChange={this.onStrokeWidthSliderChange}
+            onStrokeTypeDropDown={this.onStrokeTypeDropDown}
+            onMyMapItemToolsButtonClick={this.onMyMapItemToolsButtonClick}
+          />,
+          "Drawing Options",
+          () => {
+            //this.popupRef = undefined;
+          }
+        );
+      });
     } else {
       center = evt.coordinate;
+      // SHOW POPUP
+      window.popup.show(
+        center,
+        <MyMapsPopup
+          key={helpers.getUID()}
+          activeTool={activeTool}
+          onRef={ref => (this.popupRef = ref)}
+          item={item}
+          onLabelChange={this.onLabelChange}
+          onLabelVisibilityChange={this.onLabelVisibilityChange}
+          onLabelRotationChange={this.onLabelRotationChange}
+          onFooterToolsButtonClick={this.onFooterToolsButtonClick}
+          onDeleteButtonClick={this.onItemDelete}
+          onPointStyleDropDown={this.onPointStyleDropDown}
+          onRadiusSliderChange={this.onRadiusSliderChange}
+          onFillOpacitySliderChange={this.onFillOpacitySliderChange}
+          onFillColorPickerChange={this.onFillColorPickerChange}
+          onAngleSliderChange={this.onAngleSliderChange}
+          onRotationSliderChange={this.onRotationSliderChange}
+          onStrokeOpacitySliderChange={this.onStrokeOpacitySliderChange}
+          onStrokeColorPickerChange={this.onStrokeColorPickerChange}
+          onStrokeWidthSliderChange={this.onStrokeWidthSliderChange}
+          onStrokeTypeDropDown={this.onStrokeTypeDropDown}
+          onMyMapItemToolsButtonClick={this.onMyMapItemToolsButtonClick}
+        />,
+        "Drawing Options",
+        () => {
+          //this.popupRef = undefined;
+        }
+      );
     }
-
-    // SHOW POPUP
-    window.popup.show(
-      center,
-      <MyMapsPopup
-        key={helpers.getUID()}
-        activeTool={activeTool}
-        onRef={ref => (this.popupRef = ref)}
-        item={item}
-        onLabelChange={this.onLabelChange}
-        onLabelVisibilityChange={this.onLabelVisibilityChange}
-        onLabelRotationChange={this.onLabelRotationChange}
-        onFooterToolsButtonClick={this.onFooterToolsButtonClick}
-        onDeleteButtonClick={this.onItemDelete}
-        onPointStyleDropDown={this.onPointStyleDropDown}
-        onRadiusSliderChange={this.onRadiusSliderChange}
-        onFillOpacitySliderChange={this.onFillOpacitySliderChange}
-        onFillColorPickerChange={this.onFillColorPickerChange}
-        onAngleSliderChange={this.onAngleSliderChange}
-        onRotationSliderChange={this.onRotationSliderChange}
-        onStrokeOpacitySliderChange={this.onStrokeOpacitySliderChange}
-        onStrokeColorPickerChange={this.onStrokeColorPickerChange}
-        onStrokeWidthSliderChange={this.onStrokeWidthSliderChange}
-        onStrokeTypeDropDown={this.onStrokeTypeDropDown}
-        onMyMapItemToolsButtonClick={this.onMyMapItemToolsButtonClick}
-      />,
-      "Drawing Options",
-      () => {
-        //this.popupRef = undefined;
-      }
-    );
   };
 
   onFooterToolsButtonClick = (evt, item) => {

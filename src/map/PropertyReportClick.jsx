@@ -3,13 +3,11 @@ import mainConfig from "../config.json";
 import * as helpers from "../helpers/helpers";
 import "./PropertyReportClick.css";
 import InfoRow from "../helpers/InfoRow.jsx";
-import * as turf from "@turf/turf";
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import GeoJSON from "ol/format/GeoJSON.js";
 import { Vector as VectorLayer } from "ol/layer.js";
 import { Vector as VectorSource } from "ol/source.js";
 import { Stroke, Style } from "ol/style.js";
-import { transform } from "ol/proj.js";
 
 // https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json&cql_filter=INTERSECTS(geom,%20POINT%20(-8874151.72%205583068.78))
 const parcelURLTemplate = (mainURL, x, y) => `${mainURL}&cql_filter=INTERSECTS(geom,%20POINT%20(${x}%20${y}))`;
@@ -200,30 +198,47 @@ class PropertyReportClick extends Component {
       console.log(feature);
       this.setState({ shareURL: this.getShareURL(arn), feature: feature });
 
+      console.log(result);
       // GET CENTER COORDS
       var latLongCoords = null;
       var pointerPoint = null;
       if (clickEvt === null) {
-        const center = turf.centroid(result);
-        pointerPoint = center.geometry.coordinates;
-        latLongCoords = transform(center.geometry.coordinates, "EPSG:3857", "EPSG:4326");
-        window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize());
-      } else {
-        latLongCoords = transform(clickEvt.coordinate, "EPSG:3857", "EPSG:4326");
-        pointerPoint = clickEvt.coordinate;
-      }
+        console.log("in");
+        helpers.getGeometryCenter(feature.getGeometry(), center => {
+          pointerPoint = center.flatCoordinates;
+          latLongCoords = helpers.toLatLongFromWebMercator(pointerPoint);
+          console.log(latLongCoords);
+          window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize());
 
-      // GET FULL INFO
-      if (feature !== undefined) {
-        const infoURL = "https://maps.simcoe.ca/giswebapi/api/propertyreport?arn=" + arn;
-        helpers.getJSON(infoURL, result => {
-          result.pointCoordinates = latLongCoords;
-          result.shareURL = this.getShareURL(arn);
-          this.setState({ propInfo: result });
-          window.popup.show(pointerPoint, this.getPopupContent(result), "Property Information", () => {
-            parcelLayer.getSource().clear();
-          });
+          // GET FULL INFO
+          if (feature !== undefined) {
+            const infoURL = "https://maps.simcoe.ca/giswebapi/api/propertyreport?arn=" + arn;
+            helpers.getJSON(infoURL, result => {
+              result.pointCoordinates = latLongCoords;
+              result.shareURL = this.getShareURL(arn);
+              this.setState({ propInfo: result });
+              window.popup.show(pointerPoint, this.getPopupContent(result), "Property Information", () => {
+                parcelLayer.getSource().clear();
+              });
+            });
+          }
         });
+      } else {
+        latLongCoords = helpers.toLatLongFromWebMercator(clickEvt.coordinate);
+        pointerPoint = clickEvt.coordinate;
+
+        // GET FULL INFO
+        if (feature !== undefined) {
+          const infoURL = "https://maps.simcoe.ca/giswebapi/api/propertyreport?arn=" + arn;
+          helpers.getJSON(infoURL, result => {
+            result.pointCoordinates = latLongCoords;
+            result.shareURL = this.getShareURL(arn);
+            this.setState({ propInfo: result });
+            window.popup.show(pointerPoint, this.getPopupContent(result), "Property Information", () => {
+              parcelLayer.getSource().clear();
+            });
+          });
+        }
       }
     });
   };

@@ -21,6 +21,9 @@ import XYZ from "ol/source/XYZ.js";
 import { unByKey } from "ol/Observable.js";
 import WKT from "ol/format/WKT.js";
 import { transform } from "ol/proj.js";
+import Projection from "ol/proj/Projection.js";
+import proj4 from "proj4";
+import { register } from "ol/proj/proj4";
 
 //OTHER
 import { parseString } from "xml2js";
@@ -28,6 +31,16 @@ import shortid from "shortid";
 import ShowMessage from "./ShowMessage.jsx";
 import URLWindow from "./URLWindow.jsx";
 import mainConfig from "../config.json";
+
+// REGISTER CUSTOM PROJECTIONS
+proj4.defs([["EPSG:26917", "+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs "]]);
+register(proj4);
+
+// UTM NAD 83
+const _nad83Proj = new Projection({
+  code: "EPSG:26917",
+  extent: [194772.8107, 2657478.7094, 805227.1893, 9217519.4415]
+});
 
 // APP STAT
 export function addAppStat(type, description) {
@@ -628,6 +641,44 @@ export function formatReplace(fmt, ...args) {
   });
 }
 
-export function toLatLongFrmoWebMercator(coords) {
+export function toLatLongFromWebMercator(coords) {
   return transform(coords, "EPSG:3857", "EPSG:4326");
+}
+
+export function getGeoJSONFromGeometry(geometry) {
+  const parser = new GeoJSON();
+  return parser.writeGeometry(geometry);
+}
+
+export function getGeometryFromGeoJSON(geometry) {
+  const parser = new GeoJSON();
+  return parser.readGeometry(geometry);
+}
+
+export function bufferGeometry(geometry, distanceMeters, callback) {
+  const url = mainConfig.apiUrl + "postBufferGeometry/";
+
+  // PROJECT TO UTM FOR ACCURACY
+  const utmNad83Geometry = geometry.transform("EPSG:3857", _nad83Proj);
+  const geoJSON = this.getGeoJSONFromGeometry(utmNad83Geometry);
+  const obj = { geoJSON: geoJSON, distance: distanceMeters, srid: "26917" };
+
+  this.postJSON(url, obj, result => {
+    // REPROJECT BACK TO WEB MERCATOR
+    const olGeoBuffer = this.getGeometryFromGeoJSON(result.geojson);
+    const utmNad83GeometryBuffer = olGeoBuffer.transform("EPSG:26917", "EPSG:3857");
+
+    callback(utmNad83GeometryBuffer);
+  });
+}
+
+export function getGeometryCenter(geometry, callback) {
+  const url = mainConfig.apiUrl + "postGetGeometryCenter/";
+  const geoJSON = this.getGeoJSONFromGeometry(geometry);
+  const obj = { geoJSON: geoJSON, srid: "3857" };
+
+  this.postJSON(url, obj, result => {
+    const olGeo = this.getGeometryFromGeoJSON(result.geojson);
+    callback(olGeo);
+  });
 }
