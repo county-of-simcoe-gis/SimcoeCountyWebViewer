@@ -39,6 +39,7 @@ export default async (mapLayers, description, printSelectedOption) => {
     //init list for legend, main and overview map layers to render on template
     let mainMapLayers = [];
     let overviewMap = [];
+    let baseMapLayers = [];
     let legend = {
         name: "Legend",
         classes: []
@@ -58,9 +59,9 @@ export default async (mapLayers, description, printSelectedOption) => {
         let xml = (new window.DOMParser()).parseFromString(data, "text/xml")
         let json = utils.xmlToJson(xml)
         let flatTileMatrix = null;
-        if (type ==="OSM") {
+        if (type === "OSM") {
             flatTileMatrix = json.Capabilities.Contents.TileMatrixSet.TileMatrix
-        }else{   
+        } else {
             flatTileMatrix = json.Capabilities.Contents.TileMatrixSet[0].TileMatrix
         }
         let tileMatrix = flatTileMatrix.map((m) => {
@@ -77,19 +78,16 @@ export default async (mapLayers, description, printSelectedOption) => {
     }
 
     let loadWMTSConfig = async (url, type) => {
-        let tileMapLayer = null; 
+        let tileMapLayer = null;
         let tileMapUrl = null;
-        console.log(type);
-        
         if (type === "OSM") {
             tileMapLayer = tileMapLayerConfigs["Wmts_Osm"]
             tileMapUrl = url
-        }else{
-            if(type==="ESRI_TILED"){
+        } else {
+            if (type === "ESRI_TILED") {
                 tileMapLayer = tileMapLayerConfigs["LIO_Cartographic_LIO_Topographic"]
                 tileMapUrl = tileMapLayer.baseURL.replace("/WMTS/tile/1.0.0/LIO_Cartographic_LIO_Topographic/{TileMatrix}/{TileRow}/{TileCol}", "/WMTS/1.0.0/WMTSCapabilities.xml")
-            }
-            else{
+            } else {
                 tileMapLayer = tileMapLayerConfigs[utils.extractServiceName(url)]
                 tileMapUrl = tileMapLayer.baseURL.replace("/tile/{TileMatrix}/{TileRow}/{TileCol}", "/WMTS/1.0.0/WMTSCapabilities.xml")
             }
@@ -171,13 +169,9 @@ export default async (mapLayers, description, printSelectedOption) => {
 
     let configureTileLayer = async (l) => {
         //allows for streets to be top most basemap layer
-        if (utils.extractServiceName(l.values_.url) === 'Streets_Cache') {
-            mainMapLayers.push(await loadWMTSConfig(l.values_.url, l.type))
-            overviewMap.push(await loadWMTSConfig(l.values_.url, l.type))
-        } else {
-            mainMapLayers.push(await loadWMTSConfig(l.values_.url, l.type))
-            overviewMap.push(await loadWMTSConfig(l.values_.url, l.type))
-        }
+        let layer = await loadWMTSConfig(l.values_.url, l.type);
+        mainMapLayers.push(layer)
+        overviewMap.push(layer)
     }
 
     let configureLayerGroup = async (l) => {
@@ -227,7 +221,7 @@ export default async (mapLayers, description, printSelectedOption) => {
         if (Object.getPrototypeOf(l).constructor.name === "TileLayer") {
             await configureTileLayer(l);
         }
-        
+
         if (Object.getPrototypeOf(l).constructor.name === "ImageLayer") {
             await configureImageLayer(l);
         }
@@ -304,8 +298,8 @@ export default async (mapLayers, description, printSelectedOption) => {
     }
     templateSwitcher(printRequest, printSelectedOption)
 
-    //console.log(mapLayers);
-    //console.log(printRequest);
+    console.log(mapLayers);
+    console.log(printRequest);
 
     // ..........................................................................
     // Post request and check print status for print job retreival
