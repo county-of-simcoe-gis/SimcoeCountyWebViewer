@@ -15,7 +15,6 @@ export default async (mapLayers, description, printSelectedOption) => {
     const rotation = 0;
     const dpi = 300;
     let geoJsonLayersCount = 0;
-    let imageLayerCount = 0;
     let printAppId = null;
 
 
@@ -51,9 +50,7 @@ export default async (mapLayers, description, printSelectedOption) => {
     // ..........................................................................
 
     //pulls in tile matrix from each basemap tilelayer capabilities
-    let sortMapLayers = (mapLayers) =>{
 
-    }
     let loadTileMatrix = async (url, type) => {
 
         let response = await fetch(url)
