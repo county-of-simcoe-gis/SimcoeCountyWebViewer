@@ -15,6 +15,7 @@ export default async (mapLayers, description, printSelectedOption) => {
     const rotation = 0;
     const dpi = 300;
     let geoJsonLayersCount = 0;
+    let imageLayerCount = 0;
     let printAppId = null;
 
 
@@ -50,6 +51,9 @@ export default async (mapLayers, description, printSelectedOption) => {
     // ..........................................................................
 
     //pulls in tile matrix from each basemap tilelayer capabilities
+    let sortMapLayers = (mapLayers) =>{
+
+    }
     let loadTileMatrix = async (url, type) => {
 
         let response = await fetch(url)
@@ -76,19 +80,22 @@ export default async (mapLayers, description, printSelectedOption) => {
     }
 
     let loadWMTSConfig = async (url, type) => {
-        let serviceName = utils.extractServiceName(url)
         let tileMapLayer = null; 
         let tileMapUrl = null;
+        console.log(type);
+        
         if (type === "OSM") {
-            tileMapLayer =tileMapLayerConfigs["Wmts_Osm"]
-            tileMapUrl = tileMapLayer.baseURL.replace("https://tile-a.openstreetmap.fr/{Style}{TileMatrix}/{TileCol}/{TileRow}.png", "https://osmlab.github.io/wmts-osm/WMTSCapabilities.xml")
-        }if(type==="ESRI_TILED"){
-            tileMapLayer = tileMapLayerConfigs["LIO_Cartographic_LIO_Topographic"]
-            tileMapUrl = tileMapLayer.baseURL.replace("/WMTS/tile/1.0.0/LIO_Cartographic_LIO_Topographic/{TileMatrix}/{TileRow}/{TileCol}", "/WMTS/1.0.0/WMTSCapabilities.xml")
-        }
-        else{
-            tileMapLayer = tileMapLayerConfigs[serviceName]
-            tileMapUrl = tileMapLayer.baseURL.replace("/tile/{TileMatrix}/{TileRow}/{TileCol}", "/WMTS/1.0.0/WMTSCapabilities.xml")
+            tileMapLayer = tileMapLayerConfigs["Wmts_Osm"]
+            tileMapUrl = url
+        }else{
+            if(type==="ESRI_TILED"){
+                tileMapLayer = tileMapLayerConfigs["LIO_Cartographic_LIO_Topographic"]
+                tileMapUrl = tileMapLayer.baseURL.replace("/WMTS/tile/1.0.0/LIO_Cartographic_LIO_Topographic/{TileMatrix}/{TileRow}/{TileCol}", "/WMTS/1.0.0/WMTSCapabilities.xml")
+            }
+            else{
+                tileMapLayer = tileMapLayerConfigs[utils.extractServiceName(url)]
+                tileMapUrl = tileMapLayer.baseURL.replace("/tile/{TileMatrix}/{TileRow}/{TileCol}", "/WMTS/1.0.0/WMTSCapabilities.xml")
+            }
         }
         let tileMatrix = await loadTileMatrix(tileMapUrl, type)
         tileMapLayer.matrices = [...tileMatrix]
@@ -168,8 +175,8 @@ export default async (mapLayers, description, printSelectedOption) => {
     let configureTileLayer = async (l) => {
         //allows for streets to be top most basemap layer
         if (utils.extractServiceName(l.values_.url) === 'Streets_Cache') {
-            mainMapLayers.splice(geoJsonLayersCount, 0, await loadWMTSConfig(l.values_.url, l.type))
-            overviewMap.splice(geoJsonLayersCount, 0, await loadWMTSConfig(l.values_.url, l.type))
+            mainMapLayers.push(await loadWMTSConfig(l.values_.url, l.type))
+            overviewMap.push(await loadWMTSConfig(l.values_.url, l.type))
         } else {
             mainMapLayers.push(await loadWMTSConfig(l.values_.url, l.type))
             overviewMap.push(await loadWMTSConfig(l.values_.url, l.type))
@@ -182,11 +189,11 @@ export default async (mapLayers, description, printSelectedOption) => {
             let layers = l.values_.layers.array_[key]
 
             if (layers.values_.service.type === "OSM") {
-                mainMapLayers.splice(geoJsonLayersCount, 0, await loadWMTSConfig(osmUrl, layers.values_.service.type))
-                overviewMap.splice(geoJsonLayersCount, 0, await loadWMTSConfig(osmUrl, layers.values_.service.type))
+                mainMapLayers.push(await loadWMTSConfig(osmUrl, layers.values_.service.type))
+                overviewMap.push(await loadWMTSConfig(osmUrl, layers.values_.service.type))
             } else {
-                mainMapLayers.splice(geoJsonLayersCount, 0, await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type))
-                overviewMap.splice(geoJsonLayersCount, 0, await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type))
+                mainMapLayers.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type))
+                overviewMap.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type))
             }
         }
     }
@@ -213,19 +220,19 @@ export default async (mapLayers, description, printSelectedOption) => {
     let getLayerByType = async (l) => {
 
         if (Object.getPrototypeOf(l).constructor.name === "VectorLayer" && l.values_.name === "myMaps") {
-            configureVectorMyMapsLayer(l);
+            await configureVectorMyMapsLayer(l);
         }
 
         if (Object.getPrototypeOf(l).constructor.name === "LayerGroup") {
-            configureLayerGroup(l);
+            await configureLayerGroup(l);
         }
 
         if (Object.getPrototypeOf(l).constructor.name === "TileLayer") {
-            configureTileLayer(l);
+            await configureTileLayer(l);
         }
         
         if (Object.getPrototypeOf(l).constructor.name === "ImageLayer") {
-            configureImageLayer(l);
+            await configureImageLayer(l);
         }
     }
     //iterate through each map layer passed in the window.map
