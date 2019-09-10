@@ -304,8 +304,8 @@ export default async (mapLayers, description, printSelectedOption) => {
     }
     templateSwitcher(printRequest, printSelectedOption)
 
-    console.log(mapLayers);
-    console.log(printRequest);
+    //console.log(mapLayers);
+    //console.log(printRequest);
 
     // ..........................................................................
     // Post request and check print status for print job retreival
