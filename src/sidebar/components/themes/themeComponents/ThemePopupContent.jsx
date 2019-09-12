@@ -5,8 +5,6 @@ import { InfoRow } from "../../../../helpers/InfoRow.jsx";
 
 // CONTENT FOR POPUP
 const ThemePopupContent = props => {
-  console.log(props);
-
   // HANDLE URL FIELD AND PASS IT BACK AS PARAMETER TO CLICK
   let urlField = "";
   if (props.layerConfig.moreInfoUrlFieldName !== undefined) {

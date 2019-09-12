@@ -15,6 +15,7 @@ import * as myMapsHelpers from "./myMapsHelpers";
 import MyMapsPopup from "./MyMapsPopup.jsx";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import Portal from "../../../helpers/Portal.jsx";
+import Identify from "../../../map/Identify.jsx";
 
 // OPEN LAYERS
 import Draw, { createBox } from "ol/interaction/Draw.js";
@@ -24,6 +25,7 @@ import { Circle as CircleStyle, Fill, Stroke, Style, Icon } from "ol/style.js";
 import { Vector as VectorLayer } from "ol/layer.js";
 import Collection from "ol/Collection";
 import GeoJSON from "ol/format/GeoJSON.js";
+import WKT from "ol/format/WKT.js";
 import { fromCircle } from "ol/geom/Polygon.js";
 import MyMapsAdvanced from "./MyMapsAdvanced";
 
@@ -169,6 +171,12 @@ class MyMaps extends Component {
   };
 
   addNewItem = (feature, labelText = null, fromEmmiter = false) => {
+    const wkt = new WKT().writeGeometry(feature.getGeometry(), {
+      dataProjection: "EPSG:3857",
+      featureProjection: "EPSG:3857"
+    });
+    console.log(wkt);
+
     // UID FOR FEATURE
     const featureId = helpers.getUID();
 
@@ -581,7 +589,14 @@ class MyMaps extends Component {
       this.editVertices(item.id);
     } else if (action === "sc-floating-menu-report-problem") {
       this.onReportProblem(item.id);
+    } else if (action === "sc-floating-menu-identify") {
+      this.onIdentify(item.id);
     }
+  };
+
+  onIdentify = id => {
+    const feature = myMapsHelpers.getFeatureById(id);
+    window.emitter.emit("loadReport", <Identify geometry={feature.getGeometry()}></Identify>);
   };
 
   onReportProblem = id => {
@@ -630,6 +645,9 @@ class MyMaps extends Component {
           </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-report-problem">
             <FloatingMenuItem imageName={"error.png"} label="Report a Problem" />
+          </MenuItem>
+          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-identify">
+            <FloatingMenuItem imageName={"identify.png"} label="Identify" />
           </MenuItem>
         </FloatingMenu>
       </Portal>

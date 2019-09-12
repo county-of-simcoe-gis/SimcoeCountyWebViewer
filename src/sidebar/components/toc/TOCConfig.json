@@ -1,13 +1,12 @@
 {
   "layerInfoURL": "https://opengis.simcoe.ca/layerInfo/?URL=",
+  "layerDownloadURL": "https://opengis.simcoe.ca/layerInfo/?SHOW_DOWNLOAD=1&URL=",
   "layerGroups": [
     {
       "url": "https://opengis.simcoe.ca/geoserver/rest/layergroups/Popular.json",
       "defaultGroup": false,
       "dataStore": "paradise",
-      "visibleLayers" : [
-        "Assessment Parcel"
-      ]
+      "visibleLayers": ["Assessment Parcel"]
     },
     {
       "url": "https://opengis.simcoe.ca/geoserver/rest/layergroups/Historical.json",
@@ -18,9 +17,7 @@
       "url": "https://opengis.simcoe.ca/geoserver/rest/layergroups/All Layers.json",
       "defaultGroup": true,
       "dataStore": "paradise",
-      "visibleLayers" : [
-        "Assessment Parcel"
-      ]
+      "visibleLayers": ["Assessment Parcel"]
     }
   ]
 }

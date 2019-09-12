@@ -26,6 +26,7 @@ import FloatingMenu, { FloatingMenuItem } from "../helpers/FloatingMenu.jsx";
 import Menu, { SubMenu, Item as MenuItem, Divider } from "rc-menu";
 import Portal from "../helpers/Portal.jsx";
 import * as helpers from "../helpers/helpers";
+import Identify from "./Identify";
 
 const scaleLineControl = new ScaleLine();
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
@@ -102,6 +103,9 @@ class SCMap extends Component {
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-report-problem">
               <FloatingMenuItem imageName={"error.png"} label="Report a problem" />
             </MenuItem>
+            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-identify">
+              <FloatingMenuItem imageName={"identify.png"} label="Identify" />
+            </MenuItem>
           </FloatingMenu>
         </Portal>
       );
@@ -150,8 +154,13 @@ class SCMap extends Component {
     else if (key === "sc-floating-menu-add-mymaps") this.addMyMaps();
     else if (key === "sc-floating-menu-save-map-extent") this.saveMapExtent();
     else if (key === "sc-floating-menu-report-problem") this.reportProblem();
-
+    else if (key === "sc-floating-menu-identify") this.identify();
     helpers.addAppStat("Right Click", key);
+  };
+
+  identify = () => {
+    const point = new Point(this.contextCoords);
+    window.emitter.emit("loadReport", <Identify geometry={point}></Identify>);
   };
 
   reportProblem = () => {

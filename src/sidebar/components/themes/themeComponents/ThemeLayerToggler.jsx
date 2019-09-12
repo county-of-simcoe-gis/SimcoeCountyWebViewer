@@ -55,7 +55,7 @@ class ThemeLayerToggler extends Component {
     const layer = helpers.getImageWMSLayer(url.resolve(this.props.layerConfig.serverUrl, "wms"), this.props.layerConfig.layerName, "geoserver", null, 50);
     layer.setVisible(this.props.layerConfig.visible);
     layer.setZIndex(this.props.layerConfig.zIndex);
-    layer.setProperties({ name: this.props.layerConfig.layerName });
+    layer.setProperties({ name: this.props.layerConfig.layerName, disableParcelClick: true });
     window.map.addLayer(layer);
     return layer;
   };
@@ -75,7 +75,6 @@ class ThemeLayerToggler extends Component {
     });
 
     this.mapClickEvent = window.map.on("click", evt => {
-      console.log("toggle click");
       var viewResolution = window.map.getView().getResolution();
       var url = this.state.layer.getSource().getGetFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
       if (url) {

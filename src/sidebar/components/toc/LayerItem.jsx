@@ -28,7 +28,18 @@ class LayerItem extends Component {
               checked={layerInfo.visible}
             />
           </div>
-          <Highlighter highlightClassName="sc-search-toc-highlight-words" searchWords={[this.props.searchText]} textToHighlight={layerInfo.name} />
+          <Highlighter
+            className="sc-toc-item-layer-label"
+            highlightClassName="sc-search-toc-highlight-words"
+            searchWords={[this.props.searchText]}
+            textToHighlight={helpers.replaceAllInString(layerInfo.name, "_", " ")}
+          />
+          <div
+            className={this.props.layerInfo.liveLayer === null || !this.props.layerInfo.liveLayer ? "sc-hidden" : "sc-toc-item-layer-info-live-layer"}
+            title="This layer is Interactable in the map."
+          >
+            <img src={images["callout.png"]}></img>
+          </div>
         </div>
         <div className="sc-toc-item-toolbox" title="Layer Options" onClick={evt => this.props.onLayerOptionsClick(evt, this.props.layerInfo)}>
           <img src={images["more-options.png"]} />

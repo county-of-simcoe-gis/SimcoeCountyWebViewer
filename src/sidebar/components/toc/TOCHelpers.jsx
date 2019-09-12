@@ -115,6 +115,13 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
     const styleUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=${layerName}`;
     const styleUrl = styleUrlTemplate(serverUrl, groupLayerInfo.name);
 
+    //https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json&cql_filter=INTERSECTS(geom,%20POINT%20(-8874151.72%205583068.78))
+    //`${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&cql_filter=INTERSECTS(geom,${geomery})`
+
+    const wfsUrlTemplate = (serverUrl, layerName) =>
+      `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&cql_filter=`;
+    const wfsUrl = wfsUrlTemplate(serverUrl, groupLayerInfo.name);
+
     // SKIP NESTED GROUP LAYERS
     if (groupLayerInfo["@type"] !== "layer") {
       if (i === len - 1) {
@@ -137,6 +144,7 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
     layer.setZIndex(layerIndex);
     window.map.addLayer(layer);
 
+    console.log(rootLayerUrl);
     layerList.push({
       name: layerNameOnly, // FRIENDLY NAME
       height: 30, // HEIGHT OF DOM ROW FOR AUTOSIZER
@@ -149,7 +157,10 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
       visible: layerVisible, // LAYER VISIBLE IN MAP, UPDATED BY CHECKBOX
       layer: layer, // OL LAYER OBJECT
       rootLayerUrl: rootLayerUrl, // ROOT LAYER INFO FROM GROUP END POINT
-      opacity: defaultOpacity // OPACITY OF LAYER
+      opacity: defaultOpacity, // OPACITY OF LAYER
+      keywords: [],
+      liveLayer: null,
+      wfsUrl: wfsUrl
     });
 
     layerIndex--;
@@ -233,27 +244,27 @@ export function getLayerInfo(layerInfo, callback) {
   });
 }
 
-export async function getBasicGroupsAndLayers(callback) {
-  let groups = [];
-  let defaultLayers = [];
-  let defaultGroupName = "";
-  for (var i = 0, len = TOCConfig.layerGroups.length; i < len; i++) {
-    const group = TOCConfig.layerGroups[i];
-    const groupURL = group.url;
-    const defaultGroup = group.defaultGroup;
+// export async function getBasicGroupsAndLayers(callback) {
+//   let groups = [];
+//   let defaultLayers = [];
+//   let defaultGroupName = "";
+//   for (var i = 0, len = TOCConfig.layerGroups.length; i < len; i++) {
+//     const group = TOCConfig.layerGroups[i];
+//     const groupURL = group.url;
+//     const defaultGroup = group.defaultGroup;
 
-    // eslint-disable-next-line
-    await this.getLayerListByGroup(groupURL, group.dataStore, (groupName, layerList) => {
-      groups.push({ name: groupName, layerList: layerList, default: defaultGroup, label: groupName, value: groupName });
-      if (defaultGroup) {
-        defaultLayers = layerList;
-        defaultGroupName = groupName;
-      }
-    });
-  }
+//     // eslint-disable-next-line
+//     await this.getLayerListByGroup(groupURL, group.dataStore, (groupName, layerList) => {
+//       groups.push({ name: groupName, layerList: layerList, default: defaultGroup, label: groupName, value: groupName });
+//       if (defaultGroup) {
+//         defaultLayers = layerList;
+//         defaultGroupName = groupName;
+//       }
+//     });
+//   }
 
-  callback(groups, defaultLayers, defaultGroupName);
-}
+//   callback(groups, defaultLayers, defaultGroupName);
+// }
 
 export function getStyles(groups) {
   // URL FOR PULLING LEGEND FROM GEOSERVER
