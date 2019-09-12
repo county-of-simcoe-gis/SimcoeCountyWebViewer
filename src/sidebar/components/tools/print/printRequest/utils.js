@@ -67,8 +67,19 @@ let removeNull = (obj) => {
 }
 
 let extractServiceName = (url)=>{
-    let serviceUrl = url.split("/")
-    let serviceName = serviceUrl[serviceUrl.length - 2]
+    let serviceUrl = ((url.split("/services/"))[1]).split("/")
+    let filtered = serviceUrl.filter(e=> e !== "MapServer");
+    console.log(serviceUrl);
+    
+    let serviceName = "";
+    if (filtered.length===1) {
+        serviceName=`${filtered[0]}`
+        
+    }
+    if (filtered.lenght>1) {
+        serviceName=`${filtered[0]}_${filtered[1]}`
+       
+    }
     return serviceName
 }
 
