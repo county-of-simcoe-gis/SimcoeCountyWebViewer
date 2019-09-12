@@ -42,19 +42,18 @@ class Identify extends Component {
     for (let index = 0; index < layers.length; index++) {
       const layer = layers[index];
       if (layer.getVisible() && layer.type === "IMAGE") {
-        let name = layer.get("name");
-        const scProps = layer.scProps;
-
-        if (name !== null && scProps !== undefined) {
-          if (name.indexOf(":") !== -1) name = name.split(":")[1];
+        const name = layer.get("name");
+        const wfsUrl = layer.get("wfsUrl");
+        const rootInfoUrl = layer.get("rootInfoUrl");
+        if (name !== null && wfsUrl !== null) {
           let features = [];
 
           const wfsUrlTemplate = (baseWfs, geometry) => `${baseWfs}INTERSECTS(geom,${geometry})`;
-          const wfsUrlQuery = wfsUrlTemplate(scProps.wfsUrl, wktGeometry);
+          const wfsUrlQuery = wfsUrlTemplate(wfsUrl, wktGeometry);
           helpers.getJSON(wfsUrlQuery, result => {
             const featureList = new GeoJSON().readFeatures(result);
             if (featureList.length > 0) {
-              this.getDisplayName(featureList[0], scProps.rootInfoUrl, displayName => {
+              this.getDisplayName(featureList[0], rootInfoUrl, displayName => {
                 featureList.forEach(feature => {
                   features.push(feature);
                 });

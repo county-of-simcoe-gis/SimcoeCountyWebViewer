@@ -144,7 +144,7 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
     layer.setZIndex(layerIndex);
     window.map.addLayer(layer);
 
-    console.log(rootLayerUrl);
+    //console.log(rootLayerUrl);
     layerList.push({
       name: layerNameOnly, // FRIENDLY NAME
       height: 30, // HEIGHT OF DOM ROW FOR AUTOSIZER

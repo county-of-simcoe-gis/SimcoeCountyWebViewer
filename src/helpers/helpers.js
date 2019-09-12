@@ -31,6 +31,7 @@ import shortid from "shortid";
 import ShowMessage from "./ShowMessage.jsx";
 import URLWindow from "./URLWindow.jsx";
 import mainConfig from "../config.json";
+import { InfoRow } from "./InfoRow.jsx";
 
 // REGISTER CUSTOM PROJECTIONS
 proj4.defs([["EPSG:26917", "+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs "]]);
@@ -167,7 +168,7 @@ export function getOSMLayer() {
 }
 
 // GET WMS Image Layer
-export function getImageWMSLayer(serverURL, layers, serverType = "geoserver", cqlFilter = null, zIndex = null) {
+export function getImageWMSLayer(serverURL, layers, serverType = "geoserver", cqlFilter = null, zIndex = null, disableParcelClick = null) {
   let imageLayer = new ImageLayer({
     visible: false,
     zIndex: zIndex,
@@ -188,8 +189,9 @@ export function getImageWMSLayer(serverURL, layers, serverType = "geoserver", cq
   const rootInfoTemplate = (serverUrl, workspace, layerNameOnly) => `${serverUrl}/rest/workspaces/${workspace}/layers/${layerNameOnly}.json`;
   const rootInfoUrl = rootInfoTemplate(serverURL.replace("/wms", ""), workspace, layerNameOnly);
 
-  imageLayer.setProperties({ name: layerNameOnly });
-  imageLayer.scProps = { wfsUrl: wfsUrl, rootInfoUrl: rootInfoUrl };
+  if (layerNameOnly === "Assessment Parcel") disableParcelClick = false;
+
+  imageLayer.setProperties({ wfsUrl: wfsUrl, name: layerNameOnly, rootInfoUrl: rootInfoUrl, disableParcelClick: disableParcelClick });
   return imageLayer;
 }
 // GET CURRENT MAP SCALE
@@ -693,8 +695,24 @@ export function getGeometryCenter(geometry, callback) {
 }
 
 export function replaceAllInString(str, find, replace) {
-  return str.replace(new RegExp(escapeRegExp(find), "g"), replace);
+  return str.replace(new RegExp(_escapeRegExp(find), "g"), replace);
 }
-function escapeRegExp(str) {
+function _escapeRegExp(str) {
   return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+}
+
+export function showFeaturePopup(coord, feature) {
+  window.popup.show(coord, <FeaturePopupContent feature={feature}></FeaturePopupContent>);
+}
+
+function FeaturePopupContent(props) {
+  return (
+    <div>
+      {Object.entries(props.feature.getProperties()).map(row => {
+        if (row[0] !== "geometry" && row[0].substring(0, 1) !== "_") {
+          return <InfoRow key={getUID()} value={row[1]} label={row[0]} />;
+        } else return null;
+      })}
+    </div>
+  );
 }

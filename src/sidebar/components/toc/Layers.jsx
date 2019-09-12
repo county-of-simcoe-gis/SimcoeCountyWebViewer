@@ -6,6 +6,7 @@ import { sortableContainer, sortableElement } from "react-sortable-hoc";
 import { List, AutoSizer } from "react-virtualized";
 import VirtualLayers from "./VirtualLayers.jsx";
 import arrayMove from "array-move";
+import GeoJSON from "ol/format/GeoJSON.js";
 
 // CUSTOM
 import "./Layers.css";
@@ -30,11 +31,57 @@ class Layers extends Component {
       allLayers: {},
       layers: []
     };
+
+    // LISTEN FOR MAP TO MOUNT
+    window.emitter.addListener("mapLoaded", () => this.onMapLoad());
   }
 
-  // componentDidMount() {
-  //   window.map.on("singleclick");
-  // }
+  onMapLoad = () => {
+    window.map.on("singleclick", evt => {
+      const viewResolution = window.map.getView().getResolution();
+      console.log(this.state.layers);
+      this.state.layers.forEach(layer => {
+        if (layer.visible && layer.liveLayer) {
+          var url = layer.layer.getSource().getGetFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
+          if (url) {
+            helpers.getJSON(url, result => {
+              const features = result.features;
+              if (features.length > 0) {
+                const geoJSON = new GeoJSON().readFeatures(result);
+                const feature = geoJSON[0];
+                helpers.showFeaturePopup(evt.coordinate, feature);
+              }
+            });
+          }
+        }
+      });
+      // const layers = window.map.getLayers().getArray();
+      // console.log(layers);
+      // let layerList = [];
+      // for (let index = 0; index < layers.length; index++) {
+      //   const layer = layers[index];
+      //   const name = layer.get("name");
+      //   // FILTER LAYERS FROM SEARCH INPUT
+      //   const layers = this.state.layers.filter(layerItem => {
+      //     if (layerItem.get("name") === name && layer.liveLayer && layer.visible) return layer;
+      //   });
+
+      // console.log(layers);
+      // if (layer.getVisible()) {
+      // var url = layer.getSource().getGetFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
+      // if (url) {
+      //   await helpers.getJSONWait(url, result => {
+      //     const features = result.features;
+      //     if (features.length > 0) {
+      //       disable = true;
+      //       return;
+      //     }
+      //   });
+      // }
+      // }
+      // }
+    });
+  };
 
   resetLayers = () => {
     // SHUT OFF VISIBILITY
@@ -72,14 +119,17 @@ class Layers extends Component {
           // GET FULL INFO
           this.state.layers.forEach(layerRoot => {
             //console.log(layerRoot);
-            //console.log(layer.rootLayerUrl);
+            //console.log(layerRoot.rootLayerUrl);
             helpers.getJSON(layerRoot.rootLayerUrl, layerSub => {
               const href = layerSub.layer.resource.href;
-              helpers.getJSON(href, layer => {
+              helpers.getJSON(href.replace("http:", "https:"), layer => {
                 const keywords = layer.featureType.keywords.string;
                 //console.log(keywords.string);
                 let liveLayer = false;
-                if (keywords.includes("LIVE_LAYER")) liveLayer = true;
+                if (keywords.includes("LIVE_LAYER")) {
+                  layerRoot.layer.setProperties({ disableParcelClick: true });
+                  liveLayer = true;
+                }
                 this.setState({
                   // UPDATE LAYER
                   layers: this.state.layers.map(item => (item.name === layerRoot.name ? Object.assign({}, item, { keywords, liveLayer }) : item))
