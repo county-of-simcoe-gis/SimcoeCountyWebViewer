@@ -168,9 +168,7 @@ export function getOSMLayer() {
 
 // GET WMS Image Layer
 export function getImageWMSLayer(serverURL, layers, serverType = "geoserver", cqlFilter = null, zIndex = null) {
-  //console.log(serverURL)
-  //console.log(layers)
-  return new ImageLayer({
+  let imageLayer = new ImageLayer({
     visible: false,
     zIndex: zIndex,
     source: new ImageWMS({
@@ -181,6 +179,18 @@ export function getImageWMSLayer(serverURL, layers, serverType = "geoserver", cq
       crossOrigin: "anonymous"
     })
   });
+
+  const wfsUrlTemplate = (serverUrl, layer) => `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layer}&outputFormat=application/json&cql_filter=`;
+  const wfsUrl = wfsUrlTemplate(serverURL.replace("/wms", ""), layers);
+
+  const workspace = layers.split(":")[0];
+  const layerNameOnly = layers.split(":")[1];
+  const rootInfoTemplate = (serverUrl, workspace, layerNameOnly) => `${serverUrl}/rest/workspaces/${workspace}/layers/${layerNameOnly}.json`;
+  const rootInfoUrl = rootInfoTemplate(serverURL.replace("/wms", ""), workspace, layerNameOnly);
+
+  imageLayer.setProperties({ name: layerNameOnly });
+  imageLayer.scProps = { wfsUrl: wfsUrl, rootInfoUrl: rootInfoUrl };
+  return imageLayer;
 }
 // GET CURRENT MAP SCALE
 export function getMapScale() {
@@ -331,7 +341,6 @@ export function getWFSGeoJSON(serverUrl, layerName, callback, sortField = null, 
   // USE TEMPLATE FOR READABILITY
   const wfsUrlTemplate = (serverURL, layerName) => `${serverURL}wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json`;
   const wfsUrl = wfsUrlTemplate(serverUrl, layerName) + additionalParams;
-  console.log(wfsUrl);
   getJSON(wfsUrl, result => {
     const geoJSON = new GeoJSON().readFeatures(result);
     callback(geoJSON);
@@ -660,12 +669,12 @@ export function bufferGeometry(geometry, distanceMeters, callback) {
 
   // PROJECT TO UTM FOR ACCURACY
   const utmNad83Geometry = geometry.transform("EPSG:3857", _nad83Proj);
-  const geoJSON = this.getGeoJSONFromGeometry(utmNad83Geometry);
+  const geoJSON = getGeoJSONFromGeometry(utmNad83Geometry);
   const obj = { geoJSON: geoJSON, distance: distanceMeters, srid: "26917" };
 
-  this.postJSON(url, obj, result => {
+  postJSON(url, obj, result => {
     // REPROJECT BACK TO WEB MERCATOR
-    const olGeoBuffer = this.getGeometryFromGeoJSON(result.geojson);
+    const olGeoBuffer = getGeometryFromGeoJSON(result.geojson);
     const utmNad83GeometryBuffer = olGeoBuffer.transform("EPSG:26917", "EPSG:3857");
 
     callback(utmNad83GeometryBuffer);
@@ -674,11 +683,18 @@ export function bufferGeometry(geometry, distanceMeters, callback) {
 
 export function getGeometryCenter(geometry, callback) {
   const url = mainConfig.apiUrl + "postGetGeometryCenter/";
-  const geoJSON = this.getGeoJSONFromGeometry(geometry);
+  const geoJSON = getGeoJSONFromGeometry(geometry);
   const obj = { geoJSON: geoJSON, srid: "3857" };
 
-  this.postJSON(url, obj, result => {
-    const olGeo = this.getGeometryFromGeoJSON(result.geojson);
+  postJSON(url, obj, result => {
+    const olGeo = getGeometryFromGeoJSON(result.geojson);
     callback(olGeo);
   });
+}
+
+export function replaceAllInString(str, find, replace) {
+  return str.replace(new RegExp(escapeRegExp(find), "g"), replace);
+}
+function escapeRegExp(str) {
+  return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
 }

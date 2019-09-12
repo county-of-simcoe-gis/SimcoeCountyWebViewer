@@ -15,6 +15,7 @@ import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.js
 import { Item as MenuItem } from "rc-menu";
 import Portal from "../../../helpers/Portal.jsx";
 import TOCConfig from "./TOCConfig.json";
+import { callbackify } from "util";
 
 const SortableVirtualList = sortableContainer(VirtualLayers, { withRef: true });
 
@@ -30,6 +31,10 @@ class Layers extends Component {
       layers: []
     };
   }
+
+  // componentDidMount() {
+  //   window.map.on("singleclick");
+  // }
 
   resetLayers = () => {
     // SHUT OFF VISIBILITY
@@ -63,7 +68,26 @@ class Layers extends Component {
       allLayers[group.value] = layers;
 
       this.setState({ layers: layers, allLayers: allLayers }, () => {
-        this.sortLayers(this.state.layers, sortAlpha);
+        this.sortLayers(this.state.layers, sortAlpha, () => {
+          // GET FULL INFO
+          this.state.layers.forEach(layerRoot => {
+            //console.log(layerRoot);
+            //console.log(layer.rootLayerUrl);
+            helpers.getJSON(layerRoot.rootLayerUrl, layerSub => {
+              const href = layerSub.layer.resource.href;
+              helpers.getJSON(href, layer => {
+                const keywords = layer.featureType.keywords.string;
+                //console.log(keywords.string);
+                let liveLayer = false;
+                if (keywords.includes("LIVE_LAYER")) liveLayer = true;
+                this.setState({
+                  // UPDATE LAYER
+                  layers: this.state.layers.map(item => (item.name === layerRoot.name ? Object.assign({}, item, { keywords, liveLayer }) : item))
+                });
+              });
+            });
+          });
+        });
       });
     });
   };
@@ -96,7 +120,7 @@ class Layers extends Component {
     return data;
   }
 
-  sortLayers = (layers, sortAlpha) => {
+  sortLayers = (layers, sortAlpha, callback = undefined) => {
     let newLayers = Object.assign([{}], layers);
     if (sortAlpha) newLayers.sort(this.sortByAlphaCompare);
     else newLayers.sort(this.sortByIndexCompare);
@@ -104,7 +128,9 @@ class Layers extends Component {
     let allLayers = this.state.allLayers;
     allLayers[this.props.group.value] = newLayers;
 
-    this.setState({ layers: newLayers, allLayers: allLayers });
+    this.setState({ layers: newLayers, allLayers: allLayers }, () => {
+      if (callback !== undefined) callback();
+    });
   };
 
   // REFRESH IF PROPS FROM PARENT HAVE CHANGED - GROUPS DROP DOWN CHANGE.
@@ -310,7 +336,16 @@ class Layers extends Component {
         window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
       });
     } else if (action === "sc-floating-menu-download") {
-      helpers.showMessage("Download", "Coming Soon", "green", 2000);
+      helpers.showMessage("Download", "Coming Soon!");
+      // TOCHelpers.getLayerInfo(layerInfo, result => {
+      //   if (result.featureType.name === "Assessment Parcel") helpers.showMessage("Download", "Parcels are not available for download");
+      //   else {
+      //     if (helpers.isMobile()) {
+      //       window.emitter.emit("setSidebarVisiblity", "CLOSE");
+      //       helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl, false, "full");
+      //     } else helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl);
+      //   }
+      // });
     }
 
     helpers.addAppStat("Layer Options", action);

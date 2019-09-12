@@ -1,0 +1,121 @@
+.sc-property-report-container {
+  bottom: 0;
+  top: 0;
+}
+
+.sc-property-report-html-title {
+  font-size: 18px;
+  color: #185b82;
+  border-bottom: 1px solid #bbbbbb;
+  padding-bottom: 7px;
+  background-color: #e6e6e6;
+  color: #4a4a4a;
+  text-align: center;
+  padding-top: 6px;
+  text-shadow: 1px 1px 0px rgba(255, 255, 255, 1);
+}
+
+.sc-property-report-html-container {
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  margin-bottom: 10px;
+  padding: 5px;
+  border-radius: 0px 0px 3px 3px;
+  -moz-border-radius: 0px 0px 3px 3px;
+  -webkit-border-radius: 0px 0px 3px 3px;
+  /* color: #666 !important; */
+}
+
+.sc-property-report-html-heading {
+  font-size: 12px;
+  font-weight: bold;
+  color: #494949;
+  padding-top: 5px;
+  padding-left: 5px;
+  /* border-bottom: 1px solid #DDDDDD; */
+  text-transform: uppercase;
+  /* margin-bottom: 4px; */
+  background-color: #dfdfdf;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 3px 3px 0px 0px;
+  -moz-border-radius: 3px 3px 0px 0px;
+  -webkit-border-radius: 3px 3px 0px 0px;
+}
+
+.sc-property-report-html-heading.icon {
+  background-repeat: no-repeat;
+  background-position: 5px 5px;
+  padding-left: 30px;
+}
+
+.sc-property-report-html-heading.general {
+  background-image: url("./images/information.png");
+}
+
+.sc-property-report-html-heading.emergency {
+  background-image: url("./images/emergency.png");
+}
+
+.sc-property-report-html-heading.waste {
+  background-image: url("./images/waste.png");
+}
+
+.sc-property-report-html-heading.school {
+  background-image: url("./images/school.png");
+}
+
+.sc-property-report-html-heading.other {
+  background-image: url("./images/other.png");
+}
+
+.sc-property-report-html-heading.pdf {
+  background-image: url("./images/pdf.png");
+}
+
+.sc-property-report-html-label {
+  font-size: 13px;
+  font-weight: bolder;
+}
+
+.sc-property-report-html-value {
+  font-size: 12px;
+  padding-bottom: 2px;
+  padding-top: 2px;
+  padding-left: 20px;
+  background-image: url("./images/arrow_curve.gif");
+  background-position-y: 1px;
+  background-repeat: no-repeat;
+  color: #666 !important;
+}
+
+.sc-property-report-html-value.sub {
+  padding-left: 30px;
+  background-position-x: 10px;
+}
+.sc-property-report-html-value:hover {
+  color: #ff0000;
+}
+
+.sc-property-report-html-title-address {
+  border-bottom: 1px solid #d6d6d6;
+  padding-bottom: 5px;
+}
+
+.sc-property-report-html-title-button-container {
+  padding-top: 5px;
+  text-align: center;
+}
+
+.sc-property-report-info-container {
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 5px;
+}
+
+.sc-property-report-html-market {
+  font-size: 9px;
+  color: #555;
+  padding-bottom: 4px !important;
+}

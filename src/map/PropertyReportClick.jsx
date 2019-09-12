@@ -8,6 +8,7 @@ import GeoJSON from "ol/format/GeoJSON.js";
 import { Vector as VectorLayer } from "ol/layer.js";
 import { Vector as VectorSource } from "ol/source.js";
 import { Stroke, Style } from "ol/style.js";
+import PropertyReport from "./PropertyReport";
 
 // https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json&cql_filter=INTERSECTS(geom,%20POINT%20(-8874151.72%205583068.78))
 const parcelURLTemplate = (mainURL, x, y) => `${mainURL}&cql_filter=INTERSECTS(geom,%20POINT%20(${x}%20${y}))`;
@@ -48,7 +49,7 @@ class PropertyReportClick extends Component {
     }
 
     // LISTEN FOR MAP CLICK
-    window.map.on("singleclick", evt => {
+    window.map.on("singleclick", async evt => {
       // SCALE
       if (helpers.getMapScale() > 20000) return;
 
@@ -56,19 +57,38 @@ class PropertyReportClick extends Component {
       let disable = window.disableParcelClick;
       if (disable) return;
 
+      // VECTOR LAYERS
       // CHECK FOR ANY OTHER LAYERS THAT SHOULD DISABLE
       window.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
         if (layer === null) return;
-
         if (layer.get("disableParcelClick") !== undefined && layer.get("disableParcelClick") === true) {
           disable = true;
           return;
         }
       });
 
-      if (disable) return;
+      // IMAGE LAYERS
+      // CHECK FOR ANY OTHER LAYERS THAT SHOULD DISABLE
+      var viewResolution = window.map.getView().getResolution();
+      const layers = window.map.getLayers().getArray();
+      for (let index = 0; index < layers.length; index++) {
+        if (disable) break;
+        const layer = layers[index];
+        if (layer.get("disableParcelClick") && layer.getVisible() && layer.type === "IMAGE") {
+          var url = layer.getSource().getGetFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
+          if (url) {
+            await helpers.getJSONWait(url, result => {
+              const features = result.features;
+              if (features.length > 0) {
+                disable = true;
+                return;
+              }
+            });
+          }
+        }
+      }
 
-      console.log(window.disableParcelClick);
+      if (disable) return;
       const parcelURL = parcelURLTemplate(mainConfig.parcelLayer.url, evt.coordinate[0], evt.coordinate[1]);
       this.showPropertyWindow(parcelURL, evt);
 
@@ -195,10 +215,8 @@ class PropertyReportClick extends Component {
       const feature = geoJSON[0];
       const arn = result.features[0].properties.arn;
       feature.setProperties({ arn: arn });
-      console.log(feature);
       this.setState({ shareURL: this.getShareURL(arn), feature: feature });
 
-      console.log(result);
       // GET CENTER COORDS
       var latLongCoords = null;
       var pointerPoint = null;
@@ -249,165 +267,3 @@ class PropertyReportClick extends Component {
 }
 
 export default PropertyReportClick;
-
-class PropertyReport extends React.Component {
-  render() {
-    const info = this.props.propInfo;
-    console.log(info);
-    return (
-      <div className="sc-property-report-container">
-        <div className="sc-property-report-html-title">
-          <div className="sc-property-report-html-title-address">{info.Address}</div>
-          <div className="sc-property-report-html-title-button-container">
-            <button className="sc-button sc-button-orange" style={{ width: "45%" }} onClick={this.props.onZoomClick}>
-              Zoom
-            </button>
-            <a rel="noopener noreferrer" href={info.ReportURL} target="_blank" style={{ paddingLeft: "10px" }}>
-              <button className="sc-button sc-button-blue" style={{ width: "45%" }}>
-                Download
-              </button>
-            </a>
-          </div>
-        </div>
-        <div className="sc-property-report-info-container">
-          {/* GENERAL INFO */}
-          <div className="sc-property-report-html-heading icon general">General Information</div>
-          <div className="sc-property-report-html-container">
-            <div>
-              <div>
-                <div className="sc-property-report-html-label">Roll Number: </div>
-                <div className="sc-property-report-html-value">{info.ARN}</div>
-              </div>
-              <div>
-                <div className="sc-property-report-html-label">Property Type: </div>
-                <div className="sc-property-report-html-value">{info.PropertyType}</div>
-              </div>
-              <div>
-                <div className="sc-property-report-html-label">Address: </div>
-                <div className="sc-property-report-html-value">{info.Address}</div>
-              </div>
-              <div>
-                <div className="sc-property-report-html-label">Assessed Value: </div>
-                <div className="sc-property-report-html-value">
-                  <img src={"data:image/png;base64," + info.AssessedValue} alt="assessed" />
-                </div>
-                <div className="sc-property-report-html-market">(may not reflect current market value)</div>
-              </div>
-            </div>
-          </div>
-
-          {/* EMERGENCY  */}
-          <div className="sc-property-report-html-heading icon general">Emergency Service</div>
-          <div className="sc-property-report-html-container">
-            <div>
-              <div>
-                <div className="sc-property-report-html-label">Police Station: </div>
-                <div className="sc-property-report-html-value">{info.EmergencyService.PoliceStation}</div>
-              </div>
-              <div>
-                <div className="sc-property-report-html-label">Closest Firehall: </div>
-                <div className="sc-property-report-html-value">{info.EmergencyService.FireStation}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* WASTE COLLECTION */}
-          <div className="sc-property-report-html-heading icon general">WASTE COLLECTION</div>
-          <div className="sc-property-report-html-container">
-            <div>
-              <div>
-                <div className="sc-property-report-html-label">Garbage/Recycling Collection Day: </div>
-                <div className="sc-property-report-html-value">{info.WasteCollection.GarbageDay}</div>
-              </div>
-              <div>
-                <div className="sc-property-report-html-label">Bag Tag Locations: </div>
-                <div className="sc-property-report-html-value">{info.WasteCollection.BagTagleLocation1}</div>
-                <div className="sc-property-report-html-value">{info.WasteCollection.BagTagleLocation2}</div>
-                <div className="sc-property-report-html-value">{info.WasteCollection.BagTagleLocation3}</div>
-              </div>
-              <div>
-                <div className="sc-property-report-html-label">Waste Management Facility: </div>
-                <div className="sc-property-report-html-value">General Waste</div>
-                <div className="sc-property-report-html-value sub">{info.WasteCollection.LandfillLocation_General}</div>
-                <div className="sc-property-report-html-value">Hazardous Waste</div>
-                <div className="sc-property-report-html-value sub">{info.WasteCollection.LandfillLocation_Hazardous}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* SCHOOLS */}
-          <div className="sc-property-report-html-heading icon general">SCHOOLS</div>
-          <div className="sc-property-report-html-container">
-            <div>
-              <div>
-                <div className="sc-property-report-html-label">Catholic Elementary: </div>
-                <div className="sc-property-report-html-value">{info.Schools.CatholicElementry}</div>
-              </div>
-            </div>
-            <div>
-              <div>
-                <div className="sc-property-report-html-label">Catholic Secondary: </div>
-                <div className="sc-property-report-html-value">{info.Schools.CatholicSecondary}</div>
-              </div>
-            </div>
-            <div>
-              <div>
-                <div className="sc-property-report-html-label">Catholic School Board Website: </div>
-                <div className="sc-property-report-html-value">
-                  <a rel="noopener noreferrer" href={info.Schools.CatholicBoardWebsiteURL} target="_blank">
-                    {info.Schools.CatholicBoardWebsiteURL}
-                  </a>
-                </div>
-              </div>
-            </div>
-            <div>
-              <div>
-                <div className="sc-property-report-html-label">Public Elementary: </div>
-                <div className="sc-property-report-html-value">{info.Schools.PublicElementry}</div>
-              </div>
-            </div>
-            <div>
-              <div>
-                <div className="sc-property-report-html-label">Public Secondary: </div>
-                <div className="sc-property-report-html-value">{info.Schools.PublicSecondary}</div>
-              </div>
-            </div>
-            <div>
-              <div>
-                <div className="sc-property-report-html-label">Public School Board Website: </div>
-                <div className="sc-property-report-html-value">
-                  <a rel="noopener noreferrer" href={info.Schools.PublicBoardWebsiteURL} target="_blank">
-                    {info.Schools.PublicBoardWebsiteURL}
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* OTHER */}
-          <div className="sc-property-report-html-heading icon general">OTHER</div>
-          <div className="sc-property-report-html-container">
-            <div>
-              <div>
-                <div className="sc-property-report-html-label">Library: </div>
-                <div className="sc-property-report-html-value">{info.Other.Library}</div>
-              </div>
-              <div>
-                <div className="sc-property-report-html-label">Closest Fire Hydrant: </div>
-                <div className="sc-property-report-html-value">{info.Other.ClosestFireHydrant}</div>
-              </div>
-              <div>
-                <div className="sc-property-report-html-label">Municipal Admin Centre: </div>
-                <div className="sc-property-report-html-value">{info.Other.MunicipalAdminCentre}</div>
-              </div>
-              <div>
-                <div className="sc-property-report-html-label">Closest Hospital: </div>
-                <div className="sc-property-report-html-value">{info.Other.ClosestHospital}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-}

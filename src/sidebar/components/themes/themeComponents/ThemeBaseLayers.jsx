@@ -73,7 +73,7 @@ class ThemeBaseLayers extends Component {
       layer.setVisible(this.state.visible);
       layer.setOpacity(this.state.sliderValue);
       layer.setZIndex(this.props.config.baseLayers.zIndex);
-      layer.setProperties({ name: layerObj.displayName, clickable: layerObj.clickable });
+      layer.setProperties({ name: layerObj.displayName, clickable: layerObj.clickable, disableParcelClick: true });
       window.map.addLayer(layer);
       layers.push(layer);
     });

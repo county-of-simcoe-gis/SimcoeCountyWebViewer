@@ -4,10 +4,7 @@ import MyMapsFooter from "./MyMapsFooter.jsx";
 import Collapsible from "react-collapsible";
 import Switch from "react-switch";
 import * as helpers from "../../../helpers/helpers";
-import Select from "react-select";
 import * as myMapsHelpers from "./myMapsHelpers";
-import { CopyToClipboard } from "react-copy-to-clipboard";
-import { copyFile } from "fs";
 import copy from "copy-to-clipboard";
 
 class MyMapsAdvanced extends Component {
