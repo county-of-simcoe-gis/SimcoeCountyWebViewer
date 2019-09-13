@@ -16,7 +16,6 @@ import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.js
 import { Item as MenuItem } from "rc-menu";
 import Portal from "../../../helpers/Portal.jsx";
 import TOCConfig from "./TOCConfig.json";
-import { callbackify } from "util";
 
 const SortableVirtualList = sortableContainer(VirtualLayers, { withRef: true });
 
@@ -130,9 +129,23 @@ class Layers extends Component {
                   layerRoot.layer.setProperties({ disableParcelClick: true });
                   liveLayer = true;
                 }
+
+                let opacity = 1;
+                if (layerRoot.visible) {
+                  opacity = keywords.find(item => {
+                    if (item.indexOf("OPACITY") !== -1) {
+                      return item;
+                    }
+                  });
+                  if (opacity !== undefined) {
+                    opacity = opacity.split("=")[1];
+                  }
+                }
+
+                //console.log(opacity);
                 this.setState({
                   // UPDATE LAYER
-                  layers: this.state.layers.map(item => (item.name === layerRoot.name ? Object.assign({}, item, { keywords, liveLayer }) : item))
+                  layers: this.state.layers.map(item => (item.name === layerRoot.name ? Object.assign({}, item, { keywords, liveLayer, opacity: parseFloat(opacity) }) : item))
                 });
               });
             });
@@ -142,6 +155,7 @@ class Layers extends Component {
     });
   };
 
+  // isVisibleFromConfig()
   sortByAlphaCompare(a, b) {
     if (a.name < b.name) {
       return -1;

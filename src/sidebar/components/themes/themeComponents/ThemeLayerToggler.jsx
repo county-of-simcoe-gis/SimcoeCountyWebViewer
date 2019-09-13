@@ -75,6 +75,8 @@ class ThemeLayerToggler extends Component {
     });
 
     this.mapClickEvent = window.map.on("click", evt => {
+      if (window.isDrawingOrEditing) return;
+
       var viewResolution = window.map.getView().getResolution();
       var url = this.state.layer.getSource().getGetFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
       if (url) {

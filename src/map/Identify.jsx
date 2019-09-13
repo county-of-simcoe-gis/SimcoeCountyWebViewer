@@ -108,6 +108,7 @@ class Identify extends Component {
     });
     window.map.addLayer(this.vectorLayerShadow);
   };
+
   getDisplayName = (feature, rootInfoUrl, callback) => {
     if (rootInfoUrl === undefined || rootInfoUrl === null) {
       return this.getDisplayName(feature);
@@ -115,7 +116,7 @@ class Identify extends Component {
       // GET DISPLAY NAME FROM KEYWORD IN GEOSERVER
       helpers.getJSON(rootInfoUrl, layerSub => {
         const href = layerSub.layer.resource.href;
-        helpers.getJSON(href, layer => {
+        helpers.getJSON(href.replace("http:", "https:"), layer => {
           const keywords = layer.featureType.keywords.string;
           let displayName = keywords.find(item => {
             if (item.indexOf("DISPLAY_NAME") !== -1) {

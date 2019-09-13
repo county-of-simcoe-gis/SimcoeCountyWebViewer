@@ -57,6 +57,10 @@ class PropertyReportClick extends Component {
       let disable = window.disableParcelClick;
       if (disable) return;
 
+      // DISABLE POPUPS
+      disable = window.isDrawingOrEditing;
+      if (disable) return;
+
       // VECTOR LAYERS
       // CHECK FOR ANY OTHER LAYERS THAT SHOULD DISABLE
       window.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
