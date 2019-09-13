@@ -139,8 +139,11 @@ class MyMaps extends Component {
 
   // DRAW START
   onDrawStart = evt => {
-    // ENABLE PARCEL CLICK
+    // DISAABLE PARCEL CLICK
     window.disableParcelClick = true;
+
+    // DISABLE POPUPS
+    window.isDrawingOrEditing = true;
 
     // ADD DRAWN FEATURE TO MAIN SOURCE
     this.vectorSource.addFeature(evt.feature);
@@ -159,6 +162,9 @@ class MyMaps extends Component {
 
       // RE-ENABLE PARCEL CLICK
       window.disableParcelClick = false;
+
+      // RE-ENABLE POPUPS
+      window.isDrawingOrEditing = false;
     }, 1000);
 
     // ADD NEW ITEM

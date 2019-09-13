@@ -59,6 +59,12 @@ class Sidebar extends Component {
   }
 
   onMyMapsEditing = isMyMapsEditing => {
+    // DISABLE PARCEL CLICK
+    window.disableParcelClick = isMyMapsEditing;
+
+    // DISABLE POPUPS
+    window.isDrawingOrEditing = isMyMapsEditing;
+
     this.setState({ isMyMapsEditing });
   };
 
