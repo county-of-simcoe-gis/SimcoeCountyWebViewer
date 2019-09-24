@@ -51,20 +51,10 @@ export default async (mapLayers, description, printSelectedOption) => {
     // Configure Each Layer according to Mapfish Standard
     // ..........................................................................
 
-    
-
-    let transformBaseMapConfig  = (bmc) => {
-
-        let wmtsCongif = {};
-        let bmcObj = bmc
-        
+    let flattenBasemapConfig = (bmc) =>{
+        let bmcObj = bmc;
         let bmcObjKeys = Object.keys(bmcObj);
-        
-        
-        bmcObjKeys.forEach((propKey)=>{
-            
-
-            
+        bmcObjKeys.forEach((propKey)=>{   
             if (propKey==="topoServices") {
                 
                 for (const key in bmc[propKey]) {
@@ -73,64 +63,95 @@ export default async (mapLayers, description, printSelectedOption) => {
                    
                     for (const key in topoElem.layers ) {
                         let eachlayer =  topoElem.layers[key];
-                        console.log(eachlayer);
-                        
-                       
-
-    
-                        flat_bmcObj_list.push({url:eachlayer.url, name:utils.extractServiceName(eachlayer.url)})
+                        if (eachlayer.type === 'OSM') {    
+                            flat_bmcObj_list.push({url:eachlayer.url, name:"OSM", type:bmc[propKey]})
+                        }else{
+                            flat_bmcObj_list.push({url:eachlayer.url, name:utils.extractServiceName(eachlayer.url), type:bmc[propKey]})
+                        }
                     }
-                    
-                }
-                
+                } 
             }
-            // if (bmc[propKey]==="imageryServices") {
-            //     for (const key in bmc[propKey]) {
-            //         let eachlayer =  (bmc[propKey])[key];
-            //         console.log(eachlayer.url);
+            if (bmc[propKey]==="imageryServices") {
+                for (const key in bmc[propKey]) {
+                    let eachlayer =  (bmc[propKey])[key];
+                    console.log(eachlayer.url);
                     
-            //         flat_bmcObj_list.push({url:eachlayer.url, name:utils.extractServiceName(eachlayer.url)})
-            //     }
-            // }
-            // flat_bmcObj_list.push({url:bmc[propKey], name:utils.extractServiceName(bmc[propKey])})
+                    flat_bmcObj_list.push({url:eachlayer.url, name:utils.extractServiceName(eachlayer.url), type:bmc[propKey]})
+                }
+            }
+            flat_bmcObj_list.push({url:bmc[propKey], name:utils.extractServiceName(bmc[propKey]), type:bmc[propKey]})
         });
 
-        // wmtsCongif.type="WMTS";
-        // wmtsCongif.imageFormat="image/png";
-        // wmtsCongif.opacity=1.0;
-        // wmtsCongif.style="Default Style";
-        // wmtsCongif.version="1.0.0";
-        // wmtsCongif.dimensions=[];
-        // wmtsCongif.dimensionParams={};
-        // wmtsCongif.requestEncoding="REST";
-        // wmtsCongif.customParams={"TRANSPARENT": "true"};
-        // wmtsCongif.matrixSet= "EPSG:3857";
+        return flat_bmcObj_list;
+    }
+
+    let transformBaseMapConfig  = (bmc) => {
+
+        let wmtsCongif = {};
+        let bmcObj = bmc;
         
-        // if (bmcObj.topoServices) {
-        //     for (const key in bmcObj.topoServices) {
-        //         if (bmcObj.topoServices[key].layer.type==="OCM") {
-        //             wmtsCongif.baseURL="https://tile-a.openstreetmap.fr/{Style}{TileMatrix}/{TileCol}/{TileRow}.png";
-        //             wmtsCongif.layer="wmts-osm" 
-        //         }if (bmcObj.topoServices[key].layer.type==="ESRI_TILED") {
-        //             wmtsCongif.baseURL=bmcObj.topoServices[key].layer.url+"/WMTS/tile/1.0.0/LIO_Cartographic_LIO_Topographic/{TileMatrix}/{TileRow}/{TileCol}";
-        //             wmtsCongif.layer=utils.extractServiceName(bmcObj.topoServices[key].layer.url)
-        //         }
-        //     }
-        // if (bmcObj.imageryServices) {
-        //     for (const key in bmcObj.imageryServices) {
-        //         wmtsCongif.baseURL=bmcObj.imageryServices[key].layer.url+"/WMTS/tile/{TileMatrix}/{TileRow}/{TileCol}";
-        //         wmtsCongif.layer=utils.extractServiceName(bmcObj.imageryServices[key].layer.url)
-        //     }
-        // } 
-        // }else{
-        //     wmtsCongif.baseURL="";
-        //     wmtsCongif.layer="";
-        // }
-        // wmtsCongif.matrices=[];
+        let flattened_bmc_list = flattenBasemapConfig(bmcObj)
+       console.log(flattened_bmc_list);
+       
+        
+        wmtsCongif.type="WMTS";
+        wmtsCongif.imageFormat="image/png";
+        wmtsCongif.opacity=1.0;
+        wmtsCongif.style="Default Style";
+        wmtsCongif.version="1.0.0";
+        wmtsCongif.dimensions=[];
+        wmtsCongif.dimensionParams={};
+        wmtsCongif.requestEncoding="REST";
+        wmtsCongif.customParams={"TRANSPARENT": "true"};
+        wmtsCongif.matrixSet= "EPSG:3857";
+
+        for (const key in flattened_bmc_list) {
+            let eachLayer = flattened_bmc_list[key];
+            if (eachLayer.type==="topoServices") {
+                if (eachLayer.name==="OSM") {
+                    wmtsCongif.baseURL="https://tile-a.openstreetmap.fr/{Style}{TileMatrix}/{TileCol}/{TileRow}.png";
+                    wmtsCongif.layer="wmts-osm" 
+                }
+                if (eachLayer.name==="LIO_Cartographic_LIO_Topographic") {
+                    wmtsCongif.baseURL=bmcObj.topoServices[key].layer.url+"/WMTS/tile/1.0.0/LIO_Cartographic_LIO_Topographic/{TileMatrix}/{TileRow}/{TileCol}";
+                        wmtsCongif.layer=utils.extractServiceName(bmcObj.topoServices[key].layer.url)
+                } 
+            }
+           
+            if (eachLayer.type==="imageryServices") {
+                wmtsCongif.baseURL=bmcObj.imageryServices[key].layer.url+"/WMTS/tile/{TileMatrix}/{TileRow}/{TileCol}";
+                wmtsCongif.layer=utils.extractServiceName(bmcObj.imageryServices[key].layer.url)
+            }
+        }
+
+
+
+        
+        if (bmcObj.topoServices) {
+            for (const key in bmcObj.topoServices) {
+                if (bmcObj.topoServices[key].layer.type==="OSM") {
+                    wmtsCongif.baseURL="https://tile-a.openstreetmap.fr/{Style}{TileMatrix}/{TileCol}/{TileRow}.png";
+                    wmtsCongif.layer="wmts-osm" 
+                }if (bmcObj.topoServices[key].layer.type==="ESRI_TILED") {
+                    wmtsCongif.baseURL=bmcObj.topoServices[key].layer.url+"/WMTS/tile/1.0.0/LIO_Cartographic_LIO_Topographic/{TileMatrix}/{TileRow}/{TileCol}";
+                    wmtsCongif.layer=utils.extractServiceName(bmcObj.topoServices[key].layer.url)
+                }
+            }
+        if (bmcObj.imageryServices) {
+            for (const key in bmcObj.imageryServices) {
+                wmtsCongif.baseURL=bmcObj.imageryServices[key].layer.url+"/WMTS/tile/{TileMatrix}/{TileRow}/{TileCol}";
+                wmtsCongif.layer=utils.extractServiceName(bmcObj.imageryServices[key].layer.url)
+            }
+        } 
+        }else{
+            wmtsCongif.baseURL="";
+            wmtsCongif.layer="";
+        }
+        wmtsCongif.matrices=[];
         return;
         
     }
-    
+    console.log(flat_bmcObj_list);
     console.log(transformBaseMapConfig(BasemapConfig));
     
     
@@ -159,163 +180,144 @@ export default async (mapLayers, description, printSelectedOption) => {
         return tileMatrix
     }
 
-    let loadWMTSConfig = async (url, type) => {
-        let tileMapLayer = null; 
-        let tileMapUrl = null;
-        if (type === "OSM") {
-            tileMapLayer = tileMapLayerConfigs["Wmts_Osm"]
-            tileMapUrl = url
-        }else{
-            if(type==="ESRI_TILED"){
-                tileMapLayer = tileMapLayerConfigs["LIO_Cartographic_LIO_Topographic"]
-                tileMapUrl = tileMapLayer.baseURL.replace("/WMTS/tile/1.0.0/LIO_Cartographic_LIO_Topographic/{TileMatrix}/{TileRow}/{TileCol}", "/WMTS/1.0.0/WMTSCapabilities.xml")
-            }
-            else{
-                tileMapLayer = tileMapLayerConfigs[utils.extractServiceName(url)]
-                tileMapUrl = tileMapLayer.baseURL.replace("/tile/{TileMatrix}/{TileRow}/{TileCol}", "/WMTS/1.0.0/WMTSCapabilities.xml")
-            }
-        }
-        let tileMatrix = await loadTileMatrix(tileMapUrl, type)
-        tileMapLayer.matrices = [...tileMatrix]
-        return tileMapLayer
-    }
 
-    let configureVectorMyMapsLayer = (l) => {
-        let drawablefeatures = Object.values(l.values_.source.undefIdIndex_);
-        geoJsonLayersCount = drawablefeatures.length
-        for (const key in drawablefeatures) {
 
-            let f = drawablefeatures[key];
-            let flat_coords = f.values_.geometry.flatCoordinates
-            let grouped_coords = [];
-            //transforms flattened coords to geoJson format grouped coords
-            for (let i = 0, t = 1; i < flat_coords.length; i += 2, t += 2) {
-                grouped_coords.push([flat_coords[i], flat_coords[t]]);
-            }
+    // let configureVectorMyMapsLayer = (l) => {
+    //     let drawablefeatures = Object.values(l.values_.source.undefIdIndex_);
+    //     geoJsonLayersCount = drawablefeatures.length
+    //     for (const key in drawablefeatures) {
 
-            let styles = {};
-            if (Object.getPrototypeOf(f.values_.geometry).constructor.name === "LineString") {
-                styles.type = "Line"
-            } else {
-                styles.type = Object.getPrototypeOf(f.values_.geometry).constructor.name;
-            }
-            if (f.style_.fill_ != null) {
-                styles.fillColor = utils.rgbToHex(...f.style_.fill_.color_);
-                styles.fillOpacity = Number(([...f.style_.fill_.color_])[3]);
-                styles.strokeColor = utils.rgbToHex(...f.style_.stroke_.color_);
-            }
+    //         let f = drawablefeatures[key];
+    //         let flat_coords = f.values_.geometry.flatCoordinates
+    //         let grouped_coords = [];
+    //         //transforms flattened coords to geoJson format grouped coords
+    //         for (let i = 0, t = 1; i < flat_coords.length; i += 2, t += 2) {
+    //             grouped_coords.push([flat_coords[i], flat_coords[t]]);
+    //         }
+
+    //         let styles = {};
+    //         if (Object.getPrototypeOf(f.values_.geometry).constructor.name === "LineString") {
+    //             styles.type = "Line"
+    //         } else {
+    //             styles.type = Object.getPrototypeOf(f.values_.geometry).constructor.name;
+    //         }
+    //         if (f.style_.fill_ != null) {
+    //             styles.fillColor = utils.rgbToHex(...f.style_.fill_.color_);
+    //             styles.fillOpacity = Number(([...f.style_.fill_.color_])[3]);
+    //             styles.strokeColor = utils.rgbToHex(...f.style_.stroke_.color_);
+    //         }
             
-            styles.strokeOpacity = Number(([...f.style_.stroke_.color_])[3]);
-            styles.strokeWidth = Number(f.style_.stroke_.width_);
-            styles.strokeDashstyle = "dash";
-            styles.fontFamily = "sans-serif";
-            styles.fontSize = "12px";
-            styles.fontStyle = "normal";
-            styles.fontWeight = "bold";
-            styles.haloColor = "#123456";
-            styles.haloOpacity = 0.7;
-            styles.haloRadius = 3.0;
-            styles.label = f.values_.label;
-            styles.labelAlign = "cm";
-            styles.labelRotation = 45;
-            styles.labelXOffset = -25.0;
-            styles.labelYOffset = -35.0;
+    //         styles.strokeOpacity = Number(([...f.style_.stroke_.color_])[3]);
+    //         styles.strokeWidth = Number(f.style_.stroke_.width_);
+    //         styles.strokeDashstyle = "dash";
+    //         styles.fontFamily = "sans-serif";
+    //         styles.fontSize = "12px";
+    //         styles.fontStyle = "normal";
+    //         styles.fontWeight = "bold";
+    //         styles.haloColor = "#123456";
+    //         styles.haloOpacity = 0.7;
+    //         styles.haloRadius = 3.0;
+    //         styles.label = f.values_.label;
+    //         styles.labelAlign = "cm";
+    //         styles.labelRotation = 45;
+    //         styles.labelXOffset = -25.0;
+    //         styles.labelYOffset = -35.0;
 
-            mainMapLayers.push({
-                type: "geojson",
-                geoJson: {
-                    type: "FeatureCollection",
-                    features: [{
-                        type: "Feature",
-                        geometry: {
-                            type: Object.getPrototypeOf(f.values_.geometry).constructor.name,
-                            coordinates: grouped_coords
-                        },
-                        properties: {
-                            id: f.values_.id,
-                            label: f.values_.label,
-                            labelVisible: f.values_.labelVisible,
-                            drawType: f.values_.drawType,
-                            isParcel: f.values_.isParcel
-                        }
-                    }]
-                },
-                name: f.values_.label,
-                style: {
-                    version: "2",
-                    "*": {
-                        symbolizers: [(utils.removeNull(styles))]
-                    }
-                }
-            });
-        }
-    }
+    //         mainMapLayers.push({
+    //             type: "geojson",
+    //             geoJson: {
+    //                 type: "FeatureCollection",
+    //                 features: [{
+    //                     type: "Feature",
+    //                     geometry: {
+    //                         type: Object.getPrototypeOf(f.values_.geometry).constructor.name,
+    //                         coordinates: grouped_coords
+    //                     },
+    //                     properties: {
+    //                         id: f.values_.id,
+    //                         label: f.values_.label,
+    //                         labelVisible: f.values_.labelVisible,
+    //                         drawType: f.values_.drawType,
+    //                         isParcel: f.values_.isParcel
+    //                     }
+    //                 }]
+    //             },
+    //             name: f.values_.label,
+    //             style: {
+    //                 version: "2",
+    //                 "*": {
+    //                     symbolizers: [(utils.removeNull(styles))]
+    //                 }
+    //             }
+    //         });
+    //     }
+    // }
 
-    let configureTileLayer = async (l) => {
-        //allows for streets to be top most basemap layer
-        if (utils.extractServiceName(l.values_.url) === 'Streets_Cache') {
-            mainMapLayers.push(await loadWMTSConfig(l.values_.url, l.type))
-            overviewMap.push(await loadWMTSConfig(l.values_.url, l.type))
-        } else {
-            mainMapLayers.push(await loadWMTSConfig(l.values_.url, l.type))
-            overviewMap.push(await loadWMTSConfig(l.values_.url, l.type))
-        }
-    }
+    // let configureTileLayer = async (l) => {
+    //     //allows for streets to be top most basemap layer
+    //     if (utils.extractServiceName(l.values_.url) === 'Streets_Cache') {
+    //         mainMapLayers.push(await loadWMTSConfig(l.values_.url, l.type))
+    //         overviewMap.push(await loadWMTSConfig(l.values_.url, l.type))
+    //     } else {
+    //         mainMapLayers.push(await loadWMTSConfig(l.values_.url, l.type))
+    //         overviewMap.push(await loadWMTSConfig(l.values_.url, l.type))
+    //     }
+    // }
 
-    let configureLayerGroup = async (l) => {
+    // let configureLayerGroup = async (l) => {
 
-        for (const key in l.values_.layers.array_) {
-            let layers = l.values_.layers.array_[key]
+    //     for (const key in l.values_.layers.array_) {
+    //         let layers = l.values_.layers.array_[key]
 
-            if (layers.values_.service.type === "OSM") {
-                mainMapLayers.push(await loadWMTSConfig(osmUrl, layers.values_.service.type))
-                overviewMap.push(await loadWMTSConfig(osmUrl, layers.values_.service.type))
-            } else {
-                mainMapLayers.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type))
-                overviewMap.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type))
-            }
-        }
-    }
+    //         if (layers.values_.service.type === "OSM") {
+    //             mainMapLayers.push(await loadWMTSConfig(osmUrl, layers.values_.service.type))
+    //             overviewMap.push(await loadWMTSConfig(osmUrl, layers.values_.service.type))
+    //         } else {
+    //             mainMapLayers.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type))
+    //             overviewMap.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type))
+    //         }
+    //     }
+    // }
 
-    let configureImageLayer = (l) => {
-        //image icon layers are spliced/inserted in after geoJson layers. 
-        mainMapLayers.splice(geoJsonLayersCount, 0, {
-            type: "wms",
-            baseURL: "https://opengis.simcoe.ca/geoserver/wms",
-            serverType: "geoserver",
-            opacity: 1,
-            layers: [l.values_.name],
-            imageFormat: "image/png",
-            customParams: {
-                "TRANSPARENT": "true"
-            }
-        });
-        legend.classes.push({
-            icons: [iconServiceUrl + (l.values_.source.params_.LAYERS.replace(/ /g, "%20"))],
-            name: l.values_.source.params_.LAYERS.split(":")[1]
-        });
-    }
+    // let configureImageLayer = (l) => {
+    //     //image icon layers are spliced/inserted in after geoJson layers. 
+    //     mainMapLayers.splice(geoJsonLayersCount, 0, {
+    //         type: "wms",
+    //         baseURL: "https://opengis.simcoe.ca/geoserver/wms",
+    //         serverType: "geoserver",
+    //         opacity: 1,
+    //         layers: [l.values_.name],
+    //         imageFormat: "image/png",
+    //         customParams: {
+    //             "TRANSPARENT": "true"
+    //         }
+    //     });
+    //     legend.classes.push({
+    //         icons: [iconServiceUrl + (l.values_.source.params_.LAYERS.replace(/ /g, "%20"))],
+    //         name: l.values_.source.params_.LAYERS.split(":")[1]
+    //     });
+    // }
 
-    let getLayerByType = async (l) => {
+    // let getLayerByType = async (l) => {
 
-        if (Object.getPrototypeOf(l).constructor.name === "VectorLayer" && l.values_.name === "myMaps") {
-            await configureVectorMyMapsLayer(l);
-        }
+    //     if (Object.getPrototypeOf(l).constructor.name === "VectorLayer" && l.values_.name === "myMaps") {
+    //         await configureVectorMyMapsLayer(l);
+    //     }
 
-        if (Object.getPrototypeOf(l).constructor.name === "LayerGroup") {
-            await configureLayerGroup(l);
-        }
+    //     if (Object.getPrototypeOf(l).constructor.name === "LayerGroup") {
+    //         await configureLayerGroup(l);
+    //     }
 
-        if (Object.getPrototypeOf(l).constructor.name === "TileLayer") {
-            await configureTileLayer(l);
-        }
+    //     if (Object.getPrototypeOf(l).constructor.name === "TileLayer") {
+    //         await configureTileLayer(l);
+    //     }
         
-        if (Object.getPrototypeOf(l).constructor.name === "ImageLayer") {
-            await configureImageLayer(l);
-        }
-    }
-    //iterate through each map layer passed in the window.map
-    mapLayers.forEach((l) => getLayerByType(l));
+    //     if (Object.getPrototypeOf(l).constructor.name === "ImageLayer") {
+    //         await configureImageLayer(l);
+    //     }
+    // }
+    // //iterate through each map layer passed in the window.map
+    // mapLayers.forEach((l) => getLayerByType(l));
 
 
     // ..........................................................................
