@@ -129,7 +129,7 @@ class BasemapSwitcher extends Component {
 
       // USING LAYER GROUPS FOR TOPO
       let layerGroup = new LayerGroup({layers: serviceLayers, visible: false});
-      layerGroup.setProperties({ index: basemapIndex});
+      layerGroup.setProperties({index: basemapIndex});
       window.map.addLayer(layerGroup);
       basemapList.push(layerGroup);
       basemapIndex++;
