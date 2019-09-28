@@ -1,5 +1,6 @@
 import * as helpers from "../../../../../helpers/helpers";
 import utils from "./utils";
+import { promised } from "q";
 
 export default async (mapLayers, description, printSelectedOption) => {
 
@@ -56,12 +57,8 @@ export default async (mapLayers, description, printSelectedOption) => {
 
     let mainMap = [];
     let overviewMap = [];
-<<<<<<< HEAD
-    let baseMapLayers = [];
-=======
     let sortedMainMap = [];
     let sortedOverviewMap = [];
->>>>>>> d4f0ba0c532b70e1fd90e4d83c513834b65952f1
     let legend = {
         name: "Legend",
         classes: []
@@ -95,24 +92,8 @@ export default async (mapLayers, description, printSelectedOption) => {
         return tileMatrix;
     }
 
-<<<<<<< HEAD
-    let loadWMTSConfig = async (url, type) => {
-        let tileMapLayer = null;
-        let tileMapUrl = null;
-        if (type === "OSM") {
-            tileMapLayer = tileMapLayerConfigs["Wmts_Osm"]
-            tileMapUrl = url
-        } else {
-            if (type === "ESRI_TILED") {
-                tileMapLayer = tileMapLayerConfigs["LIO_Cartographic_LIO_Topographic"]
-                tileMapUrl = tileMapLayer.baseURL.replace("/WMTS/tile/1.0.0/LIO_Cartographic_LIO_Topographic/{TileMatrix}/{TileRow}/{TileCol}", "/WMTS/1.0.0/WMTSCapabilities.xml")
-            } else {
-                tileMapLayer = tileMapLayerConfigs[utils.extractServiceName(url)]
-                tileMapUrl = tileMapLayer.baseURL.replace("/tile/{TileMatrix}/{TileRow}/{TileCol}", "/WMTS/1.0.0/WMTSCapabilities.xml")
-            }
-=======
     //build and loads wmts config for each layer
-    let loadWMTSConfig = (url, type, opacity) => {
+    let loadWMTSConfig = async (url, type, opacity) => {
 
         let wmtsCongif = {};
 
@@ -134,12 +115,11 @@ export default async (mapLayers, description, printSelectedOption) => {
         if (type === "OSM") {
             wmtsCongif.baseURL = "https://tile-a.openstreetmap.fr/{Style}{TileMatrix}/{TileCol}/{TileRow}.png";
             wmtsCongif.layer = "wmts-osm"
-            wmtsCongif.matrices = loadTileMatrix(osmUrl, type);
+            wmtsCongif.matrices = await loadTileMatrix(osmUrl, type);
         } else {
             wmtsCongif.baseURL = url + "/WMTS/tile/1.0.0/" + utils.extractServiceName(url) + "/{TileMatrix}/{TileRow}/{TileCol}";
             wmtsCongif.layer = utils.extractServiceName(url);
-            wmtsCongif.matrices = loadTileMatrix(url + "/WMTS/1.0.0/WMTSCapabilities.xml", type);
->>>>>>> d4f0ba0c532b70e1fd90e4d83c513834b65952f1
+            wmtsCongif.matrices = await loadTileMatrix(url + "/WMTS/1.0.0/WMTSCapabilities.xml", type);
         }
         return wmtsCongif;
     }
@@ -168,10 +148,11 @@ export default async (mapLayers, description, printSelectedOption) => {
                 styles.fillColor = utils.rgbToHex(...f.style_.fill_.color_);
                 styles.fillOpacity = Number(([...f.style_.fill_.color_])[3]);
                 styles.strokeColor = utils.rgbToHex(...f.style_.stroke_.color_);
+                styles.strokeOpacity = Number(([...f.style_.stroke_.color_])[3]);
+                styles.strokeWidth = Number(f.style_.stroke_.width_);
             }
 
-            styles.strokeOpacity = Number(([...f.style_.stroke_.color_])[3]);
-            styles.strokeWidth = Number(f.style_.stroke_.width_);
+            
             styles.strokeDashstyle = "dash";
             styles.fontFamily = "sans-serif";
             styles.fontSize = "12px";
@@ -216,32 +197,24 @@ export default async (mapLayers, description, printSelectedOption) => {
         }
     }
 
-<<<<<<< HEAD
     let configureTileLayer = async (l) => {
-        //allows for streets to be top most basemap layer
-        let layer = await loadWMTSConfig(l.values_.url, l.type);
-        mainMapLayers.push(layer)
-        overviewMap.push(layer)
-=======
-    let configureTileLayer = (l) => {
-        mainMap.push(loadWMTSConfig(l.values_.url, "IMAGERY", l.values_.opacity))
-        overviewMap.push(loadWMTSConfig(l.values_.url, "IMAGERY", l.values_.opacity))
->>>>>>> d4f0ba0c532b70e1fd90e4d83c513834b65952f1
+        mainMap.push(await loadWMTSConfig(l.values_.url, "IMAGERY", l.values_.opacity))
+        overviewMap.push(await loadWMTSConfig(l.values_.url, "IMAGERY", l.values_.opacity))
     }
 
-    let configureLayerGroup = (l) => {
+    let configureLayerGroup = async (l) => {
 
         for (const key in l.values_.layers.array_) {
             let layers = l.values_.layers.array_[key]
 
             if (layers.values_.service.type === "OSM") {
-                mainMap.push(loadWMTSConfig(osmUrl, layers.values_.service.type, l.values_.opacity))
-                overviewMap.push(loadWMTSConfig(osmUrl, layers.values_.service.type, l.values_.opacity))
+                mainMap.push(await loadWMTSConfig(osmUrl, layers.values_.service.type, l.values_.opacity))
+                overviewMap.push(await loadWMTSConfig(osmUrl, layers.values_.service.type, l.values_.opacity))
                 
                 
             } else {
-                mainMap.push(loadWMTSConfig(layers.values_.service.url, layers.values_.service.type, l.values_.opacity))
-                overviewMap.push(loadWMTSConfig(layers.values_.service.url, layers.values_.service.type, l.values_.opacity))
+                mainMap.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type, l.values_.opacity))
+                overviewMap.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type, l.values_.opacity))
             }
         }
     }
@@ -265,18 +238,18 @@ export default async (mapLayers, description, printSelectedOption) => {
         });
     }
 
-    let getLayerByType = (l) => {
+    let getLayerByType = async (l) => {
 
         if (Object.getPrototypeOf(l).constructor.name === "VectorLayer" && l.values_.name === "myMaps") {
             configureVectorMyMapsLayer(l);
         }
 
         if (Object.getPrototypeOf(l).constructor.name === "LayerGroup") {
-            configureLayerGroup(l);
+            await configureLayerGroup(l);
         }
 
         if (Object.getPrototypeOf(l).constructor.name === "TileLayer") {
-            configureTileLayer(l);
+            await configureTileLayer(l);
         }
 
         if (Object.getPrototypeOf(l).constructor.name === "ImageLayer") {
@@ -284,8 +257,11 @@ export default async (mapLayers, description, printSelectedOption) => {
         }
     }
     //iterate through each map layer passed in the window.map
-    mapLayers.forEach((l) => getLayerByType(l));
-
+    let mapLayerList = mapLayers.map((l) =>  getLayerByType(l));
+    
+    await Promise.all(mapLayerList);
+    
+    
     let sortLayers = (layers, sorted) => {
         sorter.forEach((key) => {
             let found = false;
@@ -309,8 +285,8 @@ export default async (mapLayers, description, printSelectedOption) => {
     }
     sortLayers(mainMap, sortedMainMap);
     sortLayers(overviewMap, sortedOverviewMap);
-    // console.log(sortedMainMap);
-    // console.log(sortedOverviewMap);
+    //console.log(sortedMainMap);
+    //console.log(sortedOverviewMap);
 
     // ..........................................................................
     // Print Request Template Switcher
@@ -380,8 +356,9 @@ export default async (mapLayers, description, printSelectedOption) => {
     }
     switchTemplates(printRequest, printSelectedOption)
 
-    console.log(mapLayers);
-    console.log(printRequest);
+    //console.log(mapLayers);
+    //console.log(printRequest);
+    //console.log(JSON.stringify(printRequest));
 
     // ..........................................................................
     // Post request and check print status for print job retreival
@@ -421,17 +398,17 @@ export default async (mapLayers, description, printSelectedOption) => {
             })
     }
     //post request to server and check status
-    // fetch(url, {
-    //         method: 'POST',
-    //         headers: {
-    //             'Content-Type': 'application/json'
-    //         },
-    //         body: encodedPrintRequest
-    //     })
-    //     .then(response => response.json())
-    //     .then((response) => {
-    //         checkStatus(response)
-    //     })
-    //     .catch(error => console.error('Error:', error))
+    fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: encodedPrintRequest
+        })
+        .then(response => response.json())
+        .then((response) => {
+            checkStatus(response)
+        })
+        .catch(error => console.error('Error:', error))
 
 }
