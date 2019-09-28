@@ -1,4 +1,3 @@
-import tileMapLayerConfigs from "./wmts_json_config_entries";
 import * as helpers from "../../../../../helpers/helpers";
 import utils from "./utils";
 
@@ -14,9 +13,28 @@ export default async (mapLayers, description, printSelectedOption) => {
     const mapScale = 3000000;
     const rotation = 0;
     const dpi = 300;
+    const sorter = [
+        "LIO_Cartographic_LIO_Topographic",
+        "Streets_Black_And_White_Cache",
+        "World_Topo_Map",
+        "wmts-osm",
+        "Topo_Cache",
+        "Streets_Cache",
+        "Ortho_2018_Cache",
+        "Ortho_2016_Cache",
+        "Ortho_2013_Cache",
+        "Ortho_2012_Cache",
+        "Ortho_2008_Cache",
+        "Ortho_2002_Cache",
+        "Ortho_1997_Cache",
+        "Ortho_1989_Cache",
+        "Ortho_1954_Cache",
+        "Bathymetry_Cache",
+        "World_Imagery",
+    ];
+
     let geoJsonLayersCount = 0;
     let printAppId = null;
-
 
     // init print request object
     let printRequest = {
@@ -36,28 +54,29 @@ export default async (mapLayers, description, printSelectedOption) => {
         }
     }
 
-    //init list for legend, main and overview map layers to render on template
-    let mainMapLayers = [];
+    let mainMap = [];
     let overviewMap = [];
+<<<<<<< HEAD
     let baseMapLayers = [];
+=======
+    let sortedMainMap = [];
+    let sortedOverviewMap = [];
+>>>>>>> d4f0ba0c532b70e1fd90e4d83c513834b65952f1
     let legend = {
         name: "Legend",
         classes: []
     };
-
 
     // ..........................................................................
     // Configure Each Layer according to Mapfish Standard
     // ..........................................................................
 
     //pulls in tile matrix from each basemap tilelayer capabilities
-
     let loadTileMatrix = async (url, type) => {
-
-        let response = await fetch(url)
-        let data = await response.text()
-        let xml = (new window.DOMParser()).parseFromString(data, "text/xml")
-        let json = utils.xmlToJson(xml)
+        let response = await fetch(url);
+        let data = await response.text();
+        let xml = (new window.DOMParser()).parseFromString(data, "text/xml");
+        let json = utils.xmlToJson(xml)    
         let flatTileMatrix = null;
         if (type === "OSM") {
             flatTileMatrix = json.Capabilities.Contents.TileMatrixSet.TileMatrix
@@ -72,11 +91,11 @@ export default async (mapLayers, description, printSelectedOption) => {
                 tileSize: [256, 256],
                 matrixSize: [Number(m["MatrixHeight"]["#text"]), Number(m["MatrixWidth"]["#text"])]
             }
-
-        })
-        return tileMatrix
+        });
+        return tileMatrix;
     }
 
+<<<<<<< HEAD
     let loadWMTSConfig = async (url, type) => {
         let tileMapLayer = null;
         let tileMapUrl = null;
@@ -91,11 +110,40 @@ export default async (mapLayers, description, printSelectedOption) => {
                 tileMapLayer = tileMapLayerConfigs[utils.extractServiceName(url)]
                 tileMapUrl = tileMapLayer.baseURL.replace("/tile/{TileMatrix}/{TileRow}/{TileCol}", "/WMTS/1.0.0/WMTSCapabilities.xml")
             }
+=======
+    //build and loads wmts config for each layer
+    let loadWMTSConfig = (url, type, opacity) => {
+
+        let wmtsCongif = {};
+
+        wmtsCongif.type = "WMTS";
+        wmtsCongif.imageFormat = "image/png";
+        wmtsCongif.opacity = opacity;
+        wmtsCongif.style = "Default Style";
+        wmtsCongif.version = "1.0.0";
+        wmtsCongif.dimensions = [];
+        wmtsCongif.dimensionParams = {};
+        wmtsCongif.requestEncoding = "REST";
+        wmtsCongif.customParams = {
+            "TRANSPARENT": "true"
+        };
+        wmtsCongif.matrixSet = "EPSG:3857";
+        wmtsCongif.baseURL = null;
+        wmtsCongif.layer = null;
+        wmtsCongif.matrices = null;
+        if (type === "OSM") {
+            wmtsCongif.baseURL = "https://tile-a.openstreetmap.fr/{Style}{TileMatrix}/{TileCol}/{TileRow}.png";
+            wmtsCongif.layer = "wmts-osm"
+            wmtsCongif.matrices = loadTileMatrix(osmUrl, type);
+        } else {
+            wmtsCongif.baseURL = url + "/WMTS/tile/1.0.0/" + utils.extractServiceName(url) + "/{TileMatrix}/{TileRow}/{TileCol}";
+            wmtsCongif.layer = utils.extractServiceName(url);
+            wmtsCongif.matrices = loadTileMatrix(url + "/WMTS/1.0.0/WMTSCapabilities.xml", type);
+>>>>>>> d4f0ba0c532b70e1fd90e4d83c513834b65952f1
         }
-        let tileMatrix = await loadTileMatrix(tileMapUrl, type)
-        tileMapLayer.matrices = [...tileMatrix]
-        return tileMapLayer
+        return wmtsCongif;
     }
+
 
     let configureVectorMyMapsLayer = (l) => {
         let drawablefeatures = Object.values(l.values_.source.undefIdIndex_);
@@ -119,8 +167,9 @@ export default async (mapLayers, description, printSelectedOption) => {
             if (f.style_.fill_ != null) {
                 styles.fillColor = utils.rgbToHex(...f.style_.fill_.color_);
                 styles.fillOpacity = Number(([...f.style_.fill_.color_])[3]);
+                styles.strokeColor = utils.rgbToHex(...f.style_.stroke_.color_);
             }
-            styles.strokeColor = utils.rgbToHex(...f.style_.stroke_.color_);
+
             styles.strokeOpacity = Number(([...f.style_.stroke_.color_])[3]);
             styles.strokeWidth = Number(f.style_.stroke_.width_);
             styles.strokeDashstyle = "dash";
@@ -137,7 +186,7 @@ export default async (mapLayers, description, printSelectedOption) => {
             styles.labelXOffset = -25.0;
             styles.labelYOffset = -35.0;
 
-            mainMapLayers.push({
+            mainMap.push({
                 type: "geojson",
                 geoJson: {
                     type: "FeatureCollection",
@@ -167,31 +216,39 @@ export default async (mapLayers, description, printSelectedOption) => {
         }
     }
 
+<<<<<<< HEAD
     let configureTileLayer = async (l) => {
         //allows for streets to be top most basemap layer
         let layer = await loadWMTSConfig(l.values_.url, l.type);
         mainMapLayers.push(layer)
         overviewMap.push(layer)
+=======
+    let configureTileLayer = (l) => {
+        mainMap.push(loadWMTSConfig(l.values_.url, "IMAGERY", l.values_.opacity))
+        overviewMap.push(loadWMTSConfig(l.values_.url, "IMAGERY", l.values_.opacity))
+>>>>>>> d4f0ba0c532b70e1fd90e4d83c513834b65952f1
     }
 
-    let configureLayerGroup = async (l) => {
+    let configureLayerGroup = (l) => {
 
         for (const key in l.values_.layers.array_) {
             let layers = l.values_.layers.array_[key]
 
             if (layers.values_.service.type === "OSM") {
-                mainMapLayers.push(await loadWMTSConfig(osmUrl, layers.values_.service.type))
-                overviewMap.push(await loadWMTSConfig(osmUrl, layers.values_.service.type))
+                mainMap.push(loadWMTSConfig(osmUrl, layers.values_.service.type, l.values_.opacity))
+                overviewMap.push(loadWMTSConfig(osmUrl, layers.values_.service.type, l.values_.opacity))
+                
+                
             } else {
-                mainMapLayers.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type))
-                overviewMap.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type))
+                mainMap.push(loadWMTSConfig(layers.values_.service.url, layers.values_.service.type, l.values_.opacity))
+                overviewMap.push(loadWMTSConfig(layers.values_.service.url, layers.values_.service.type, l.values_.opacity))
             }
         }
     }
 
     let configureImageLayer = (l) => {
-        //image icon layers are spliced/inserted in after geoJson layers. 
-        mainMapLayers.splice(geoJsonLayersCount, 0, {
+
+        mainMap.push({
             type: "wms",
             baseURL: "https://opengis.simcoe.ca/geoserver/wms",
             serverType: "geoserver",
@@ -208,33 +265,58 @@ export default async (mapLayers, description, printSelectedOption) => {
         });
     }
 
-    let getLayerByType = async (l) => {
+    let getLayerByType = (l) => {
 
         if (Object.getPrototypeOf(l).constructor.name === "VectorLayer" && l.values_.name === "myMaps") {
-            await configureVectorMyMapsLayer(l);
+            configureVectorMyMapsLayer(l);
         }
 
         if (Object.getPrototypeOf(l).constructor.name === "LayerGroup") {
-            await configureLayerGroup(l);
+            configureLayerGroup(l);
         }
 
         if (Object.getPrototypeOf(l).constructor.name === "TileLayer") {
-            await configureTileLayer(l);
+            configureTileLayer(l);
         }
 
         if (Object.getPrototypeOf(l).constructor.name === "ImageLayer") {
-            await configureImageLayer(l);
+            configureImageLayer(l);
         }
     }
     //iterate through each map layer passed in the window.map
     mapLayers.forEach((l) => getLayerByType(l));
 
+    let sortLayers = (layers, sorted) => {
+        sorter.forEach((key) => {
+            let found = false;
+            layers = layers.filter((l) => {
+                if (l.type === "geojson") {
+                    sorted.push(l);
+                }
+                if (l.type === "wms") {
+                    sorted.splice(geoJsonLayersCount, 0, l)
+                }
+                if (l.type === "WMTS") {
+                    if (!found && l.layer === key) {
+                        sorted.push(l);
+                        found = true;
+                        return false;
+                    } else
+                        return true;
+                }
+            })
+        });
+    }
+    sortLayers(mainMap, sortedMainMap);
+    sortLayers(overviewMap, sortedOverviewMap);
+    // console.log(sortedMainMap);
+    // console.log(sortedOverviewMap);
 
     // ..........................................................................
     // Print Request Template Switcher
     // ..........................................................................
 
-    let templateSwitcher = (p, options) => {
+    let switchTemplates = (p, options) => {
 
         //shared print request properties
         p.attributes.map.center = currentMapViewCenter;
@@ -243,7 +325,7 @@ export default async (mapLayers, description, printSelectedOption) => {
         p.attributes.map.longitudeFirst = longitudeFirst;
         p.attributes.map.rotation = rotation;
         p.attributes.map.dpi = dpi;
-        p.attributes.map.layers = mainMapLayers;
+        p.attributes.map.layers = sortedMainMap;
         p.outputFormat = options.printFormatSelectedOption.value;
 
         //switch for specific print request properties based on layout selected
@@ -275,7 +357,7 @@ export default async (mapLayers, description, printSelectedOption) => {
                 p.attributes.overviewMap.longitudeFirst = longitudeFirst;
                 p.attributes.overviewMap.rotation = rotation;
                 p.attributes.overviewMap.dpi = dpi;
-                p.attributes.overviewMap.layers = overviewMap;
+                p.attributes.overviewMap.layers = sortedOverviewMap;
                 break;
             case 'Map Only':
                 printAppId = "map_only";
@@ -296,7 +378,7 @@ export default async (mapLayers, description, printSelectedOption) => {
         }
 
     }
-    templateSwitcher(printRequest, printSelectedOption)
+    switchTemplates(printRequest, printSelectedOption)
 
     console.log(mapLayers);
     console.log(printRequest);
