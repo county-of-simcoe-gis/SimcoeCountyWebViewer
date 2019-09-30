@@ -132,7 +132,7 @@ class Print extends Component {
     // =======================
     // SEND PRINT SERVER REQUEST HERE
     // =======================
-    printRequest(printLayers, termsOfUse,  this.state);
+    printRequest.printRequest(printLayers, termsOfUse,  this.state);
     
     // ONCE PRINT IS COMPLETE (RETURNED FROM SERVER)
     //helpers.showMessage("Print", "Your print has been downloaded");
