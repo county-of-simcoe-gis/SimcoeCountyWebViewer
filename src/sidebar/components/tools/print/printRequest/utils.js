@@ -21,7 +21,7 @@ let rgbToHex = (r, g, b, a) => {
 let xmlToJson = (xml) => {
     let obj = {};
 
-    if (xml.nodeType == 1) { // element
+    if (xml.nodeType === 1) { // element
         // do attributes
         if (xml.attributes.length > 0) {
             obj["@attributes"] = {};
@@ -30,7 +30,7 @@ let xmlToJson = (xml) => {
                 obj["@attributes"][attribute.nodeName] = attribute.nodeValue;
             }
         }
-    } else if (xml.nodeType == 3) { // text
+    } else if (xml.nodeType === 3) { // text
         obj = xml.nodeValue;
     }
 

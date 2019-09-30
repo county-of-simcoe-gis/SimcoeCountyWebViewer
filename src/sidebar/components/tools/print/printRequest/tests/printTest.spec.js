@@ -2,9 +2,9 @@ import * as printRequest from "../printRequest";
 import testPrintJson from "../testData/testPrintPortraitLetter.json";
 import testPrintOptions from "../testData/testPrintOptions.json";
 
-const testWMTSConfigObject = (JSON.parse(testPrintJson).attributes.map.layers)[4];
-const testOSMTileMatrix = (JSON.parse(testPrintJson).attributes.map.layers)[4].matrices;
-const testPrintOutpout = JSON.parse(testPrintJson);
+const testWMTSConfigObject = (testPrintJson.attributes.map.layers)[4];
+const testOSMTileMatrix = (testPrintJson.attributes.map.layers)[4].matrices;
+const testPrintOutpout = testPrintJson;
 const description = "This map, either in whole or in part, may not be reproduced without the written authority from© The Corporation of the County of Simcoe.This map is intended for personal use, has been produced using data from a variety of sourcesand may not be current or accurate.Produced (in part) under license from:© Her Majesty the Queen in Right of Canada, Department of Natural Resources:© Queens Printer, Ontario Ministry of Natural Resources:© Teranet Enterprises Inc. and its suppliers:© Members of the Ontario Geospatial Data Exchange.All rights reserved. THIS IS NOT A PLAN OF SURVEY."
 
 function getPrintLayers() {
