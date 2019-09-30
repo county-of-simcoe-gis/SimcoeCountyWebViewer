@@ -95,7 +95,6 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     ];
 
     let geoJsonLayersCount = 0;
-    let printAppId = null;
 
     // init print request object
     let printRequest = {
@@ -253,6 +252,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
             configureImageLayer(l);
         }
     }
+
     //iterate through each map layer passed in the window.map
     let mapLayerList = mapLayers.map((l) => getLayerByType(l));
 
@@ -302,21 +302,18 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
         //switch for specific print request properties based on layout selected
         switch (options.printSizeSelectedOption.value) {
             case '8X11 Portrait':
-                printAppId = "letter_portrait";
                 p.layout = "letter portrait";
                 p.attributes.title = options.mapTitle;
                 p.attributes.description = description;
                 p.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                 break;
             case '11X8 Landscape':
-                printAppId = "letter_landscape";
                 p.layout = "letter landscape";
                 p.attributes.title = options.mapTitle;
                 p.attributes.description = description;
                 p.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                 break;
             case '8X11 Portrait Overview':
-                printAppId = "letter_portrait_overview";
                 p.layout = "letter portrait overview";
                 p.attributes.title = options.mapTitle;
                 p.attributes.description = description;
@@ -331,19 +328,15 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 p.attributes.overviewMap.layers = sortedOverviewMap;
                 break;
             case 'Map Only':
-                printAppId = "map_only";
                 p.layout = "map only";
                 break;
             case 'Map Only Portrait':
-                printAppId = "map_only_portrait";
                 p.layout = "map only portrait";
                 break;
             case 'Map Only Landscape':
-                printAppId = "map_only_landscape";
                 p.layout = "map only landscape";
                 break;
             default:
-                printAppId = "letter_portrait";
                 p.layout = "letter portrait";
                 break;
         }

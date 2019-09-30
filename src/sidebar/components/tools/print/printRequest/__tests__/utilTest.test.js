@@ -1,26 +1,16 @@
 import utils from "../utils";
-import xml2js from "xml2js";
-import fs from "fs";
-const parser = new xml2js.Parser({
-    attrkey: "ATTR"
-});
+import fs  from "fs";
 
-let xml_string = fs.readFileSync(__dirname + "/testXML.xml", "utf8");
-
-let xml = parser.parseString(xml_string, function (error, result) {
-    if (error === null) {
-        return result
-    } else {
-        console.log(error);
-    }
-});
+let xml_string = fs.readFileSync(__dirname +"/testXML.xml", "utf8");
+let parser = new DOMParser();
+let xml = parser.parseFromString(xml_string, "text/xml");
 
 test('converts rgb', () => {
     expect(utils.rgbToHex(91, 91, 91, 1)).toBe("#5b5b5b");
 });
 
 test('converts xml to json data', () => {
-    expect(utils.xmlToJson(xml)).toBe({
+    expect(utils.xmlToJson(xml)).toEqual({
         "note": {
             "body": {
                 "#text": "Don't forget me this weekend!"
