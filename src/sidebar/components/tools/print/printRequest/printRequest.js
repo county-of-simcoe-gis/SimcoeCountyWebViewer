@@ -3,7 +3,7 @@ import utils from "./utils";
 
 
 // ..........................................................................
-// Configure Each Layer according to Mapfish Standard
+// Load Tile matrix and build out WMTS Object
 // ..........................................................................
 
 //pulls in tile matrix from each basemap tilelayer capabilities
@@ -74,7 +74,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     const mapScale = 3000000;
     const rotation = 0;
     const dpi = 300;
-    const sorter = [
+    const mapLayerSorter = [
         "LIO_Cartographic_LIO_Topographic",
         "Streets_Black_And_White_Cache",
         "World_Topo_Map",
@@ -235,8 +235,6 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
         });
     }
 
-
-
     let getLayerByType = async (l) => {
 
         if (Object.getPrototypeOf(l).constructor.name === "VectorLayer" && l.values_.name === "myMaps") {
@@ -257,12 +255,12 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     }
     //iterate through each map layer passed in the window.map
     let mapLayerList = mapLayers.map((l) => getLayerByType(l));
-
+    
+    //wait for list of layer promises to be resolved
     await Promise.all(mapLayerList);
 
-
     let sortLayers = (layers, sorted) => {
-        sorter.forEach((key) => {
+        mapLayerSorter.forEach((key) => {
             let found = false;
             layers = layers.filter((l) => {
                 if (l.type === "geojson") {
@@ -284,8 +282,6 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     }
     sortLayers(mainMap, sortedMainMap);
     sortLayers(overviewMap, sortedOverviewMap);
-    //console.log(sortedMainMap);
-    //console.log(sortedOverviewMap);
 
     // ..........................................................................
     // Print Request Template Switcher
