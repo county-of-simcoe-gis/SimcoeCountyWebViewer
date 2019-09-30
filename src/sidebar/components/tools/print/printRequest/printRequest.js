@@ -1,8 +1,68 @@
 import * as helpers from "../../../../../helpers/helpers";
 import utils from "./utils";
-import { promised } from "q";
 
-export default async (mapLayers, description, printSelectedOption) => {
+
+// ..........................................................................
+// Configure Each Layer according to Mapfish Standard
+// ..........................................................................
+
+//pulls in tile matrix from each basemap tilelayer capabilities
+export async function loadTileMatrix(url, type) {
+    let response = await fetch(url);
+    let data = await response.text();
+    let xml = (new window.DOMParser()).parseFromString(data, "text/xml");
+    let json = utils.xmlToJson(xml)
+    let flatTileMatrix = null;
+    if (type === "OSM") {
+        flatTileMatrix = json.Capabilities.Contents.TileMatrixSet.TileMatrix
+    } else {
+        flatTileMatrix = json.Capabilities.Contents.TileMatrixSet[0].TileMatrix
+    }
+    let tileMatrix = flatTileMatrix.map((m) => {
+        return {
+            identifier: m["ows:Identifier"]["#text"],
+            scaleDenominator: Number(m["ScaleDenominator"]["#text"]),
+            topLeftCorner: [-2.0037508342787E7, 2.0037508342787E7],
+            tileSize: [256, 256],
+            matrixSize: [Number(m["MatrixHeight"]["#text"]), Number(m["MatrixWidth"]["#text"])]
+        }
+    });
+    return tileMatrix;
+}
+
+//build and loads wmts config for each layer
+export async function loadWMTSConfig(url, type, opacity) {
+
+    let wmtsCongif = {};
+
+    wmtsCongif.type = "WMTS";
+    wmtsCongif.imageFormat = "image/png";
+    wmtsCongif.opacity = opacity;
+    wmtsCongif.style = "Default Style";
+    wmtsCongif.version = "1.0.0";
+    wmtsCongif.dimensions = [];
+    wmtsCongif.dimensionParams = {};
+    wmtsCongif.requestEncoding = "REST";
+    wmtsCongif.customParams = {
+        "TRANSPARENT": "true"
+    };
+    wmtsCongif.matrixSet = "EPSG:3857";
+    wmtsCongif.baseURL = null;
+    wmtsCongif.layer = null;
+    wmtsCongif.matrices = null;
+    if (type === "OSM") {
+        wmtsCongif.baseURL = "https://tile-a.openstreetmap.fr/{Style}{TileMatrix}/{TileCol}/{TileRow}.png";
+        wmtsCongif.layer = "wmts-osm"
+        wmtsCongif.matrices = await loadTileMatrix(url, type);
+    } else {
+        wmtsCongif.baseURL = url + "/WMTS/tile/1.0.0/" + utils.extractServiceName(url) + "/{TileMatrix}/{TileRow}/{TileCol}";
+        wmtsCongif.layer = utils.extractServiceName(url);
+        wmtsCongif.matrices = await loadTileMatrix(url + "/WMTS/1.0.0/WMTSCapabilities.xml", type);
+    }
+    return wmtsCongif;
+}
+
+export async function printRequest(mapLayers, description, printSelectedOption) {
 
     const iconServiceUrl = "https://opengis.simcoe.ca/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=";
     const osmUrl = "https://osmlab.github.io/wmts-osm/WMTSCapabilities.xml"
@@ -64,67 +124,6 @@ export default async (mapLayers, description, printSelectedOption) => {
         classes: []
     };
 
-    // ..........................................................................
-    // Configure Each Layer according to Mapfish Standard
-    // ..........................................................................
-
-    //pulls in tile matrix from each basemap tilelayer capabilities
-    let loadTileMatrix = async (url, type) => {
-        let response = await fetch(url);
-        let data = await response.text();
-        let xml = (new window.DOMParser()).parseFromString(data, "text/xml");
-        let json = utils.xmlToJson(xml)    
-        let flatTileMatrix = null;
-        if (type === "OSM") {
-            flatTileMatrix = json.Capabilities.Contents.TileMatrixSet.TileMatrix
-        } else {
-            flatTileMatrix = json.Capabilities.Contents.TileMatrixSet[0].TileMatrix
-        }
-        let tileMatrix = flatTileMatrix.map((m) => {
-            return {
-                identifier: m["ows:Identifier"]["#text"],
-                scaleDenominator: Number(m["ScaleDenominator"]["#text"]),
-                topLeftCorner: [-2.0037508342787E7, 2.0037508342787E7],
-                tileSize: [256, 256],
-                matrixSize: [Number(m["MatrixHeight"]["#text"]), Number(m["MatrixWidth"]["#text"])]
-            }
-        });
-        return tileMatrix;
-    }
-
-    //build and loads wmts config for each layer
-    let loadWMTSConfig = async (url, type, opacity) => {
-
-        let wmtsCongif = {};
-
-        wmtsCongif.type = "WMTS";
-        wmtsCongif.imageFormat = "image/png";
-        wmtsCongif.opacity = opacity;
-        wmtsCongif.style = "Default Style";
-        wmtsCongif.version = "1.0.0";
-        wmtsCongif.dimensions = [];
-        wmtsCongif.dimensionParams = {};
-        wmtsCongif.requestEncoding = "REST";
-        wmtsCongif.customParams = {
-            "TRANSPARENT": "true"
-        };
-        wmtsCongif.matrixSet = "EPSG:3857";
-        wmtsCongif.baseURL = null;
-        wmtsCongif.layer = null;
-        wmtsCongif.matrices = null;
-        if (type === "OSM") {
-            wmtsCongif.baseURL = "https://tile-a.openstreetmap.fr/{Style}{TileMatrix}/{TileCol}/{TileRow}.png";
-            wmtsCongif.layer = "wmts-osm"
-            wmtsCongif.matrices = await loadTileMatrix(osmUrl, type);
-        } else {
-            wmtsCongif.baseURL = url + "/WMTS/tile/1.0.0/" + utils.extractServiceName(url) + "/{TileMatrix}/{TileRow}/{TileCol}";
-            wmtsCongif.layer = utils.extractServiceName(url);
-            wmtsCongif.matrices = await loadTileMatrix(url + "/WMTS/1.0.0/WMTSCapabilities.xml", type);
-        }
-        return wmtsCongif;
-    }
-
-
     let configureVectorMyMapsLayer = (l) => {
         let drawablefeatures = Object.values(l.values_.source.undefIdIndex_);
         geoJsonLayersCount = drawablefeatures.length
@@ -152,7 +151,7 @@ export default async (mapLayers, description, printSelectedOption) => {
                 styles.strokeWidth = Number(f.style_.stroke_.width_);
             }
 
-            
+
             styles.strokeDashstyle = "dash";
             styles.fontFamily = "sans-serif";
             styles.fontSize = "12px";
@@ -210,8 +209,6 @@ export default async (mapLayers, description, printSelectedOption) => {
             if (layers.values_.service.type === "OSM") {
                 mainMap.push(await loadWMTSConfig(osmUrl, layers.values_.service.type, l.values_.opacity))
                 overviewMap.push(await loadWMTSConfig(osmUrl, layers.values_.service.type, l.values_.opacity))
-                
-                
             } else {
                 mainMap.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type, l.values_.opacity))
                 overviewMap.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type, l.values_.opacity))
@@ -238,6 +235,8 @@ export default async (mapLayers, description, printSelectedOption) => {
         });
     }
 
+
+
     let getLayerByType = async (l) => {
 
         if (Object.getPrototypeOf(l).constructor.name === "VectorLayer" && l.values_.name === "myMaps") {
@@ -257,11 +256,11 @@ export default async (mapLayers, description, printSelectedOption) => {
         }
     }
     //iterate through each map layer passed in the window.map
-    let mapLayerList = mapLayers.map((l) =>  getLayerByType(l));
-    
+    let mapLayerList = mapLayers.map((l) => getLayerByType(l));
+
     await Promise.all(mapLayerList);
-    
-    
+
+
     let sortLayers = (layers, sorted) => {
         sorter.forEach((key) => {
             let found = false;
