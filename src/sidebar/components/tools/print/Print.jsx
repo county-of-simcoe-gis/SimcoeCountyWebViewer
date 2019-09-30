@@ -117,7 +117,7 @@ class Print extends Component {
     this.props.onClose();
   }
 
-  onDownloadButtonClick = evt => {
+  onDownloadButtonClick = async evt => {
     //this.setState({isPrinting: true});
     const {printSelectedOption} = this.state;
     //console.log(this.state);  
@@ -126,17 +126,63 @@ class Print extends Component {
 
     // GET VISIBLE LAYERS
     const printLayers = this.getPrintLayers();
-    //console.log(printLayers);
-
 
     // =======================
     // SEND PRINT SERVER REQUEST HERE
     // =======================
-    printRequest.printRequest(printLayers, termsOfUse,  this.state);
-    
-    // ONCE PRINT IS COMPLETE (RETURNED FROM SERVER)
-    //helpers.showMessage("Print", "Your print has been downloaded");
-    //this.setState({isPrinting: false}); // THIS WILL RE-ENABLE BUTTON AND HIDE LOADING MSG
+    const printData = await printRequest.printRequest(printLayers, termsOfUse,  this.state);
+    const printAppId = printData.layout.replace(" ","_");
+    const outputFormat = printData.outputFormat.toLowerCase();
+    console.log(printData);
+    //console.log(JSON.stringify(printData)); 
+    let interval = 5000;
+    let origin = window.location.origin;
+    let testOrigin = 'http://localhost:8080'
+    let encodedPrintRequest = encodeURIComponent(JSON.stringify(printData))
+    let url = `${testOrigin}/print/print/${printAppId}/report.${outputFormat}`;
+
+    //check print Status and retreive print
+    let checkStatus = (response) => {
+
+        fetch(`${testOrigin}${response.statusURL}`)
+            .then(data => data.json())
+            .then((data) => {
+                console.log(data);
+                if ((data.done === true) && (data.status === "finished")) {
+                    interval = 0
+                    helpers.showMessage("Print", "Your print has been downloaded", "green", 10000);
+                    window.open(`${testOrigin}${data.downloadURL}`);
+                    this.setState({isPrinting: false}); // THIS WILL RE-ENABLE BUTTON AND HIDE LOADING MSG
+                } else if ((data.done === false) && (data.status === "running")) {
+                    setTimeout(() => {
+                        if (interval < 30000) {
+                            interval += 2500
+                            checkStatus(response)
+                        } else {
+                            interval = 5000
+                            checkStatus(response)
+                        }
+                    }, interval);
+                } else if ((data.done === true) && (data.status === "error")) {
+                    // be handled as a gracefully displayed error message
+                    // console.log(data.error);
+                    helpers.showMessage("Print Failed", "please report to admin", "red", 10000);
+                }
+            })
+    }
+    //post request to server and check status
+    // fetch(url, {
+    //         method: 'POST',
+    //         headers: {
+    //             'Content-Type': 'application/json'
+    //         },
+    //         body: encodedPrintRequest
+    //     })
+    //     .then(response => response.json())
+    //     .then((response) => {
+    //         checkStatus(response)
+    //     })
+    //     .catch(error => console.error('Error:', error))
   };
 
   getPrintLayers = () => {
