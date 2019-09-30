@@ -3,9 +3,8 @@ import Select from "react-select";
 import Collapsible from 'react-collapsible';
 import PanelComponent from "../../../PanelComponent";
 import * as helpers from "../../../../helpers/helpers";
-import  printRequest from "./printRequest/printRequest";
+import * as printRequest from "./printRequest/printRequest";
 import "./Print.css";
-import { log } from "util";
 
 const termsOfUse = "This map, either in whole or in part, may not be reproduced without the written authority from" + 
   "© The Corporation of the County of Simcoe." + 
