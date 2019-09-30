@@ -17,14 +17,20 @@ function getPrintLayers() {
     return layers;
 }
 
-test('loads tile matrix from capabilities url', () => {
-    expect(printRequest.loadTileMatrix("https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2016_Cache/MapServer/WMTS/1.0.0/WMTSCapabilities.xml", "TILE")).toBe(testOSMTileMatrix);
+test('loads tile matrix from capabilities url', async() => {
+    expect.assertions(1);
+    const data = await printRequest.loadTileMatrix("https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2016_Cache/MapServer/WMTS/1.0.0/WMTSCapabilities.xml", "TILE");
+    expect(data).toEqual(testOSMTileMatrix);
 });
 
-test('builds wmts config object and loads in tilematrix', () => {
-    expect(printRequest.loadWMTSConfig("https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2016_Cache/MapServer/WMTS/1.0.0/WMTSCapabilities.xml", "TILE", 1)).toBe(testWMTSConfigObject);
+test('builds wmts config object and loads in tilematrix', async () => {
+    expect.assertions(1);
+    const data = await printRequest.loadWMTSConfig("https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2016_Cache/MapServer/WMTS/1.0.0/WMTSCapabilities.xml", "TILE", 1);
+    expect(data).toEqual(testWMTSConfigObject);
 });
 
-test('output and and send JSON string to mapfish print server', () => {
-    expect(printRequest.printRequest(getPrintLayers, description, testPrintOptions)).toBe(testPrintOutpout);
+test('output and and send JSON string to mapfish print server', async () => {
+    expect.assertions(1);
+    const data = await printRequest.printRequest(getPrintLayers, description, testPrintOptions);
+    expect(data).toEqual(testPrintOutpout);
 });
