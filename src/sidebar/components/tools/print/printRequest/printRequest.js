@@ -255,7 +255,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     }
     //iterate through each map layer passed in the window.map
     let mapLayerList = mapLayers.map((l) => getLayerByType(l));
-    
+
     //wait for list of layer promises to be resolved
     await Promise.all(mapLayerList);
 
@@ -349,61 +349,9 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
         }
 
     }
+
     switchTemplates(printRequest, printSelectedOption)
-
     //console.log(mapLayers);
-    //console.log(printRequest);
-    //console.log(JSON.stringify(printRequest));
 
-    // ..........................................................................
-    // Post request and check print status for print job retreival
-    // ..........................................................................
-
-    let interval = 5000;
-    let origin = window.location.origin;
-    let testOrigin = 'http://localhost:8080'
-    let encodedPrintRequest = encodeURIComponent(JSON.stringify(printRequest))
-    let url = `${testOrigin}/print/print/${printAppId}/report.${(printSelectedOption.printFormatSelectedOption.value).toLowerCase()}`;
-
-    //check print Status and retreive print
-    let checkStatus = (response) => {
-
-        fetch(`${testOrigin}${response.statusURL}`)
-            .then(data => data.json())
-            .then((data) => {
-                console.log(data);
-                if ((data.done === true) && (data.status === "finished")) {
-                    interval = 0
-                    window.open(`${testOrigin}${data.downloadURL}`)
-                } else if ((data.done === false) && (data.status === "running")) {
-                    setTimeout(() => {
-                        if (interval < 30000) {
-                            interval += 2500
-                            checkStatus(response)
-                        } else {
-                            interval = 5000
-                            checkStatus(response)
-                        }
-                    }, interval);
-                } else if ((data.done === true) && (data.status === "error")) {
-                    // be handled as a gracefully displayed error message
-                    // console.log(data.error);
-                    helpers.showMessage("Print Failed", "please report to admin", "red", 10000);
-                }
-            })
-    }
-    //post request to server and check status
-    fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: encodedPrintRequest
-        })
-        .then(response => response.json())
-        .then((response) => {
-            checkStatus(response)
-        })
-        .catch(error => console.error('Error:', error))
-
+    return printRequest;
 }
