@@ -4,7 +4,6 @@ import * as helpers from "../helpers/helpers";
 import BasemapConfig from "./basemapSwitcherConfig.json";
 import Slider from "rc-slider";
 import {Group as LayerGroup} from 'ol/layer.js';
-import { log } from "util";
 
 class BasemapSwitcher extends Component {
   constructor(props) {
