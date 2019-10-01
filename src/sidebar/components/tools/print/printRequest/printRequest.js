@@ -24,7 +24,7 @@ export async function loadTileMatrix(url, type) {
             scaleDenominator: Number(m["ScaleDenominator"]["#text"]),
             topLeftCorner: [-2.0037508342787E7, 2.0037508342787E7],
             tileSize: [256, 256],
-            matrixSize: [Number(m["MatrixHeight"]["#text"]), Number(m["MatrixWidth"]["#text"])]
+            matrixSize: [Number(m["MatrixWidth"]["#text"]), Number(m["MatrixHeight"]["#text"])]
         }
     });
     return tileMatrix;
@@ -51,11 +51,11 @@ export async function loadWMTSConfig(url, type, opacity) {
     wmtsCongif.layer = null;
     wmtsCongif.matrices = null;
     if (type === "OSM") {
-        wmtsCongif.baseURL = "https://tile-a.openstreetmap.fr/{Style}{TileMatrix}/{TileCol}/{TileRow}.png";
+        wmtsCongif.baseURL = "https://a.tile.openstreetmap.org/{TileMatrix}/{TileCol}/{TileRow}.png";
         wmtsCongif.layer = "wmts-osm"
         wmtsCongif.matrices = await loadTileMatrix(url, type);
     } else {
-        wmtsCongif.baseURL = url + "/WMTS/tile/1.0.0/" + utils.extractServiceName(url) + "/{TileMatrix}/{TileRow}/{TileCol}";
+        wmtsCongif.baseURL = url + "/tile/{TileMatrix}/{TileRow}/{TileCol}";
         wmtsCongif.layer = utils.extractServiceName(url);
         wmtsCongif.matrices = await loadTileMatrix(url + "/WMTS/1.0.0/WMTSCapabilities.xml", type);
     }
@@ -68,6 +68,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     const osmUrl = "https://osmlab.github.io/wmts-osm/WMTSCapabilities.xml"
     const currentMapViewCenter = window.map.getView().values_.center;
     const mapProjection = window.map.getView().getProjection().code_;
+    const mapExtent = window.map.getView().getProjection().extent_;
     const currentMapScale = helpers.getMapScale();
     const mapCenter = [-8875141.45, 5543492.45];
     const longitudeFirst = true;
@@ -290,14 +291,30 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     let switchTemplates = (p, options) => {
 
         //shared print request properties
-        p.attributes.map.center = currentMapViewCenter;
         p.attributes.map.projection = mapProjection;
-        p.attributes.map.scale = currentMapScale;
         p.attributes.map.longitudeFirst = longitudeFirst;
         p.attributes.map.rotation = rotation;
         p.attributes.map.dpi = dpi;
         p.attributes.map.layers = sortedMainMap;
         p.outputFormat = options.printFormatSelectedOption.value;
+        
+        switch (options.mapScaleOption) {
+            case "forceScale":
+                p.attributes.map.scale = options.forceScale;
+                p.attributes.map.center = currentMapViewCenter;
+                break;
+            case "preserveMapScale":
+                p.attributes.map.scale = currentMapScale;
+                p.attributes.map.center = currentMapViewCenter;
+                break;
+            case "preserveMapExtent":
+                p.attributes.map.bbox = mapExtent;
+                break;
+            default:
+                p.attributes.map.scale = currentMapScale;
+                p.attributes.map.center = currentMapViewCenter;
+                break;
+        }
 
         //switch for specific print request properties based on layout selected
         switch (options.printSizeSelectedOption.value) {
@@ -329,6 +346,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 break;
             case 'Map Only':
                 p.layout = "map only";
+                p.attributes.map.maxHeight  = options.mapOnlyHeight;
+                p.attributes.map.maxWidth  = options.mapOnlyWidth;
                 break;
             case 'Map Only Portrait':
                 p.layout = "map only portrait";
