@@ -165,14 +165,7 @@ class TOC extends Component {
           </div>
           <div className="sc-toc-groups-container">
             <div id="sc-toc-groups-dropdown" title="Click here for more layers">
-              <Select
-                styles={groupsDropDownStyles}
-                isSearchable={false}
-                onChange={this.onGroupDropDownChange}
-                options={this.state.layerGroups}
-                value={this.state.selectedGroup}
-                placeholder="Click Here for more Layers..."
-              />
+              <Select styles={groupsDropDownStyles} isSearchable={false} onChange={this.onGroupDropDownChange} options={this.state.layerGroups} value={this.state.selectedGroup} placeholder="Click Here for more Layers..." />
             </div>
           </div>
           <div>
