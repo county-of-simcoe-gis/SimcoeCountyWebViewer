@@ -51,7 +51,7 @@ export async function loadWMTSConfig(url, type, opacity) {
     wmtsCongif.layer = null;
     wmtsCongif.matrices = null;
     if (type === "OSM") {
-        wmtsCongif.baseURL = "https://a.tile.openstreetmap.org/{TileMatrix}/{TileCol}/{TileRow}.png";
+        wmtsCongif.baseURL = "https://a.tile.openstreetmap.org/{TileMatrix}/{TileRow}/{TileCol}.png";
         wmtsCongif.layer = "wmts-osm"
         wmtsCongif.matrices = await loadTileMatrix(url, type);
     } else {
@@ -64,7 +64,6 @@ export async function loadWMTSConfig(url, type, opacity) {
 
 export async function printRequest(mapLayers, description, printSelectedOption) {
 
-    const iconServiceUrl = "https://opengis.simcoe.ca/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=";
     const osmUrl = "https://osmlab.github.io/wmts-osm/WMTSCapabilities.xml"
     const currentMapViewCenter = window.map.getView().values_.center;
     const mapProjection = window.map.getView().getProjection().code_;
@@ -107,7 +106,6 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
             description: "",
             map: {},
             overviewMap: {},
-            legend: {},
             scaleBar: {
                 geodetic: currentMapScale
             },
@@ -119,10 +117,10 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     let overviewMap = [];
     let sortedMainMap = [];
     let sortedOverviewMap = [];
-    let legend = {
-        name: "Legend",
-        classes: []
-    };
+    // let legend = {
+    //     name: "Legend",
+    //     classes: []
+    // };
 
     let configureVectorMyMapsLayer = (l) => {
         let drawablefeatures = Object.values(l.values_.source.undefIdIndex_);
@@ -138,6 +136,22 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
             }
 
             let styles = {};
+            //default label config
+            let labels = {
+                type :"text",
+                fontFamily :"sans-serif",
+                fontSize :"0px",
+                fontStyle :"normal",
+                fontWeight :"bold",
+                haloColor :"#123456",
+                haloOpacity :0,
+                haloRadius :0,
+                label :"",
+                labelAlign :"cm",
+                labelRotation :0,
+                labelXOffset :0,
+                labelYOffset :0
+            };
             if (Object.getPrototypeOf(f.values_.geometry).constructor.name === "LineString") {
                 styles.type = "Line"
             } else {
@@ -146,25 +160,45 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
             if (f.style_.fill_ != null) {
                 styles.fillColor = utils.rgbToHex(...f.style_.fill_.color_);
                 styles.fillOpacity = Number(([...f.style_.fill_.color_])[3]);
+            }
+            if (f.style_.stroke_ != null) {
                 styles.strokeColor = utils.rgbToHex(...f.style_.stroke_.color_);
                 styles.strokeOpacity = Number(([...f.style_.stroke_.color_])[3]);
                 styles.strokeWidth = Number(f.style_.stroke_.width_);
+                if (f.style_.stroke_.lineDash === [10]) {
+                    styles.strokeDashstyle = "dash";
+                }
+                if (f.style_.stroke_.lineDash === [1,5]) {
+                    styles.strokeDashstyle = "dot";
+                }
+                if (typeof f.style_.stroke_.lineDash === "undefined"||f.style_.stroke_.lineDash===null) {
+                    styles.strokeDashstyle = "normal";
+                }
             }
 
-
-            styles.strokeDashstyle = "dash";
-            styles.fontFamily = "sans-serif";
-            styles.fontSize = "12px";
-            styles.fontStyle = "normal";
-            styles.fontWeight = "bold";
-            styles.haloColor = "#123456";
-            styles.haloOpacity = 0.7;
-            styles.haloRadius = 3.0;
-            styles.label = f.values_.label;
-            styles.labelAlign = "cm";
-            styles.labelRotation = 45;
-            styles.labelXOffset = -25.0;
-            styles.labelYOffset = -35.0;
+            //configuration for labels
+            if (f.style_.text_ != null) {
+                labels.type = "text";
+                labels.haloOpacity = 1;
+                labels.label = f.values_.label;
+                labels.labelAlign = "cm";
+                labels.labelRotation = f.style_.text_.rotation_;
+                labels.labelXOffset = f.style_.text_.offsetX_;
+                labels.labelYOffset = f.style_.text_.offsetY_;
+                if (f.style_.text_.fill_ != null) {
+                    labels.fontColor = f.style_.text_.fill_.color_ //utils.stringToColour()
+                }
+                if (f.style_.text_.stroke_ != null) {
+                    labels.haloRadius = f.style_.text_.stroke_.width_;
+                    labels.haloColor = f.style_.text_.stroke_.color_;
+                }
+                if (f.style_.text_.font_ != null) {
+                    labels.fontFamily = (f.style_.text_.font_).split(" ")[2];
+                    labels.fontSize = (f.style_.text_.font_).split(" ")[1];
+                    labels.fontStyle = "normal";
+                    labels.fontWeight = (f.style_.text_.font_).split(" ")[0];
+                }
+            }
 
             mainMap.push({
                 type: "geojson",
@@ -189,7 +223,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 style: {
                     version: "2",
                     "*": {
-                        symbolizers: [(utils.removeNull(styles))]
+                        symbolizers: [(utils.removeNull(styles)), labels]
                     }
                 }
             });
@@ -229,10 +263,10 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 "TRANSPARENT": "true"
             }
         });
-        legend.classes.push({
-            icons: [iconServiceUrl + (l.values_.source.params_.LAYERS.replace(/ /g, "%20"))],
-            name: l.values_.source.params_.LAYERS.split(":")[1]
-        });
+        // legend.classes.push({
+        //     icons: [iconServiceUrl + (l.values_.source.params_.LAYERS.replace(/ /g, "%20"))],
+        //     name: l.values_.source.params_.LAYERS.split(":")[1]
+        // });
     }
 
     let getLayerByType = async (l) => {
@@ -297,7 +331,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
         p.attributes.map.dpi = dpi;
         p.attributes.map.layers = sortedMainMap;
         p.outputFormat = options.printFormatSelectedOption.value;
-        
+
         switch (options.mapScaleOption) {
             case "forceScale":
                 p.attributes.map.scale = options.forceScale;
@@ -335,7 +369,6 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 p.attributes.title = options.mapTitle;
                 p.attributes.description = description;
                 p.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                p.attributes.legend = legend;
                 p.attributes.overviewMap.center = mapCenter;
                 p.attributes.overviewMap.projection = mapProjection;
                 p.attributes.overviewMap.scale = mapScale;
@@ -346,8 +379,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 break;
             case 'Map Only':
                 p.layout = "map only";
-                p.attributes.map.maxHeight  = options.mapOnlyHeight;
-                p.attributes.map.maxWidth  = options.mapOnlyWidth;
+                p.attributes.map.maxHeight = options.mapOnlyHeight;
+                p.attributes.map.maxWidth = options.mapOnlyWidth;
                 break;
             case 'Map Only Portrait':
                 p.layout = "map only portrait";
@@ -363,7 +396,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     }
 
     switchTemplates(printRequest, printSelectedOption)
-    //console.log(mapLayers);
+    console.log(mapLayers);
+    console.log(printRequest);
 
     return printRequest;
 }
