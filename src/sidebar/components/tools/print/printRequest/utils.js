@@ -17,6 +17,19 @@ let rgbToHex = (r, g, b, a) => {
     return "#" + r + g + b;
 };
 
+let stringToColour = function(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    let colour = '#';
+    for (let i = 0; i < 3; i++) {
+      let value = (hash >> (i * 8)) & 0xFF;
+      colour += ('00' + value.toString(16)).substr(-2);
+    }
+    return colour;
+  }
+
 // Changes XML to JSON
 let xmlToJson = (xml) => {
     let obj = {};
@@ -81,4 +94,4 @@ let extractServiceName = (url)=>{
     return serviceName
 }
 
-export default {rgbToHex, xmlToJson, removeNull, extractServiceName}
+export default {rgbToHex, stringToColour, xmlToJson, removeNull, extractServiceName}

@@ -9,6 +9,10 @@ test('converts rgb', () => {
     expect(utils.rgbToHex(91, 91, 91, 1)).toBe("#5b5b5b");
 });
 
+test('converts string to hash color', () => {
+    expect(utils.stringToColour("greenish")).toBe("#9bc63b");
+});
+
 test('converts xml to json data', () => {
     expect(utils.xmlToJson(xml)).toEqual({
         "note": {
