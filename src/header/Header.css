@@ -118,7 +118,7 @@
 #sc-header-search-container {
   display: table-cell;
   padding-top: 6px;
-  padding-right: 12px;
+  /* padding-right: 12px; */
 }
 
 /* MOBILE */

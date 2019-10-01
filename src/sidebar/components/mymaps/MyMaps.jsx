@@ -29,8 +29,7 @@ import WKT from "ol/format/WKT.js";
 import { fromCircle } from "ol/geom/Polygon.js";
 import MyMapsAdvanced from "./MyMapsAdvanced";
 
-const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale, myMapsId, featureId) =>
-  `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True&MY_MAPS_ID=${myMapsId}&MY_MAPS_FEATURE_ID=${featureId}`;
+const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale, myMapsId, featureId) => `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True&MY_MAPS_ID=${myMapsId}&MY_MAPS_FEATURE_ID=${featureId}`;
 
 class MyMaps extends Component {
   constructor(props) {
@@ -177,12 +176,6 @@ class MyMaps extends Component {
   };
 
   addNewItem = (feature, labelText = null, fromEmmiter = false) => {
-    const wkt = new WKT().writeGeometry(feature.getGeometry(), {
-      dataProjection: "EPSG:3857",
-      featureProjection: "EPSG:3857"
-    });
-    console.log(wkt);
-
     // UID FOR FEATURE
     const featureId = helpers.getUID();
 
@@ -485,68 +478,16 @@ class MyMaps extends Component {
     if (evt === null) {
       helpers.getGeometryCenter(feature.getGeometry(), center => {
         // SHOW POPUP
-        window.popup.show(
-          center.flatCoordinates,
-          <MyMapsPopup
-            key={helpers.getUID()}
-            activeTool={activeTool}
-            onRef={ref => (this.popupRef = ref)}
-            item={item}
-            onLabelChange={this.onLabelChange}
-            onLabelVisibilityChange={this.onLabelVisibilityChange}
-            onLabelRotationChange={this.onLabelRotationChange}
-            onFooterToolsButtonClick={this.onFooterToolsButtonClick}
-            onDeleteButtonClick={this.onItemDelete}
-            onPointStyleDropDown={this.onPointStyleDropDown}
-            onRadiusSliderChange={this.onRadiusSliderChange}
-            onFillOpacitySliderChange={this.onFillOpacitySliderChange}
-            onFillColorPickerChange={this.onFillColorPickerChange}
-            onAngleSliderChange={this.onAngleSliderChange}
-            onRotationSliderChange={this.onRotationSliderChange}
-            onStrokeOpacitySliderChange={this.onStrokeOpacitySliderChange}
-            onStrokeColorPickerChange={this.onStrokeColorPickerChange}
-            onStrokeWidthSliderChange={this.onStrokeWidthSliderChange}
-            onStrokeTypeDropDown={this.onStrokeTypeDropDown}
-            onMyMapItemToolsButtonClick={this.onMyMapItemToolsButtonClick}
-          />,
-          "Drawing Options",
-          () => {
-            //this.popupRef = undefined;
-          }
-        );
+        window.popup.show(center.flatCoordinates, <MyMapsPopup key={helpers.getUID()} activeTool={activeTool} onRef={ref => (this.popupRef = ref)} item={item} onLabelChange={this.onLabelChange} onLabelVisibilityChange={this.onLabelVisibilityChange} onLabelRotationChange={this.onLabelRotationChange} onFooterToolsButtonClick={this.onFooterToolsButtonClick} onDeleteButtonClick={this.onItemDelete} onPointStyleDropDown={this.onPointStyleDropDown} onRadiusSliderChange={this.onRadiusSliderChange} onFillOpacitySliderChange={this.onFillOpacitySliderChange} onFillColorPickerChange={this.onFillColorPickerChange} onAngleSliderChange={this.onAngleSliderChange} onRotationSliderChange={this.onRotationSliderChange} onStrokeOpacitySliderChange={this.onStrokeOpacitySliderChange} onStrokeColorPickerChange={this.onStrokeColorPickerChange} onStrokeWidthSliderChange={this.onStrokeWidthSliderChange} onStrokeTypeDropDown={this.onStrokeTypeDropDown} onMyMapItemToolsButtonClick={this.onMyMapItemToolsButtonClick} />, "Drawing Options", () => {
+          //this.popupRef = undefined;
+        });
       });
     } else {
       center = evt.coordinate;
       // SHOW POPUP
-      window.popup.show(
-        center,
-        <MyMapsPopup
-          key={helpers.getUID()}
-          activeTool={activeTool}
-          onRef={ref => (this.popupRef = ref)}
-          item={item}
-          onLabelChange={this.onLabelChange}
-          onLabelVisibilityChange={this.onLabelVisibilityChange}
-          onLabelRotationChange={this.onLabelRotationChange}
-          onFooterToolsButtonClick={this.onFooterToolsButtonClick}
-          onDeleteButtonClick={this.onItemDelete}
-          onPointStyleDropDown={this.onPointStyleDropDown}
-          onRadiusSliderChange={this.onRadiusSliderChange}
-          onFillOpacitySliderChange={this.onFillOpacitySliderChange}
-          onFillColorPickerChange={this.onFillColorPickerChange}
-          onAngleSliderChange={this.onAngleSliderChange}
-          onRotationSliderChange={this.onRotationSliderChange}
-          onStrokeOpacitySliderChange={this.onStrokeOpacitySliderChange}
-          onStrokeColorPickerChange={this.onStrokeColorPickerChange}
-          onStrokeWidthSliderChange={this.onStrokeWidthSliderChange}
-          onStrokeTypeDropDown={this.onStrokeTypeDropDown}
-          onMyMapItemToolsButtonClick={this.onMyMapItemToolsButtonClick}
-        />,
-        "Drawing Options",
-        () => {
-          //this.popupRef = undefined;
-        }
-      );
+      window.popup.show(center, <MyMapsPopup key={helpers.getUID()} activeTool={activeTool} onRef={ref => (this.popupRef = ref)} item={item} onLabelChange={this.onLabelChange} onLabelVisibilityChange={this.onLabelVisibilityChange} onLabelRotationChange={this.onLabelRotationChange} onFooterToolsButtonClick={this.onFooterToolsButtonClick} onDeleteButtonClick={this.onItemDelete} onPointStyleDropDown={this.onPointStyleDropDown} onRadiusSliderChange={this.onRadiusSliderChange} onFillOpacitySliderChange={this.onFillOpacitySliderChange} onFillColorPickerChange={this.onFillColorPickerChange} onAngleSliderChange={this.onAngleSliderChange} onRotationSliderChange={this.onRotationSliderChange} onStrokeOpacitySliderChange={this.onStrokeOpacitySliderChange} onStrokeColorPickerChange={this.onStrokeColorPickerChange} onStrokeWidthSliderChange={this.onStrokeWidthSliderChange} onStrokeTypeDropDown={this.onStrokeTypeDropDown} onMyMapItemToolsButtonClick={this.onMyMapItemToolsButtonClick} />, "Drawing Options", () => {
+        //this.popupRef = undefined;
+      });
     }
   };
 
@@ -554,13 +495,7 @@ class MyMaps extends Component {
     var evtClone = Object.assign({}, evt);
     const menu = (
       <Portal>
-        <FloatingMenu
-          key={helpers.getUID()}
-          buttonEvent={evtClone}
-          item={this.props.info}
-          onMenuItemClick={this.onMenuItemClick}
-          classNamesToIgnore={["sc-mymaps-popup-footer-button", "sc-mymaps-footer-buttons-img"]}
-        >
+        <FloatingMenu key={helpers.getUID()} buttonEvent={evtClone} item={this.props.info} onMenuItemClick={this.onMenuItemClick} classNamesToIgnore={["sc-mymaps-popup-footer-button", "sc-mymaps-footer-buttons-img"]}>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-buffer">
             <FloatingMenuItem imageName={"buffer.png"} label="Buffer" />
           </MenuItem>
@@ -866,18 +801,7 @@ class MyMaps extends Component {
           <TransitionGroup>
             {this.state.items.map(myMapsItem => (
               <CSSTransition key={myMapsItem.id} timeout={500} classNames="sc-mymaps-item">
-                <MyMapsItem
-                  key={myMapsItem.id}
-                  info={myMapsItem}
-                  onLabelChange={this.onLabelChange}
-                  onItemDelete={this.onItemDelete}
-                  onItemCheckboxChange={this.onItemCheckboxChange}
-                  onLabelVisibilityChange={this.onLabelVisibilityChange}
-                  onLabelRotationChange={this.onLabelRotationChange}
-                  showDrawingOptionsPopup={this.showDrawingOptionsPopup}
-                  onFooterToolsButtonClick={this.onFooterToolsButtonClick}
-                  onMyMapItemToolsButtonClick={this.onMyMapItemToolsButtonClick}
-                />
+                <MyMapsItem key={myMapsItem.id} info={myMapsItem} onLabelChange={this.onLabelChange} onItemDelete={this.onItemDelete} onItemCheckboxChange={this.onItemCheckboxChange} onLabelVisibilityChange={this.onLabelVisibilityChange} onLabelRotationChange={this.onLabelRotationChange} showDrawingOptionsPopup={this.showDrawingOptionsPopup} onFooterToolsButtonClick={this.onFooterToolsButtonClick} onMyMapItemToolsButtonClick={this.onMyMapItemToolsButtonClick} />
               </CSSTransition>
             ))}
           </TransitionGroup>

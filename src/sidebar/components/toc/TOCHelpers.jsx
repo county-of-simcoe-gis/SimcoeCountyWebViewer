@@ -80,7 +80,7 @@ export function getBase64FromImageUrl(url, callback) {
 // BASIC INFO RETURNED FOR PERFORMANCE TO LOAD LAYERS IN THE TOC
 // SECOND CALL IS MADE TO GET THE REST OF THE LAYER INFO AND STYLES
 export async function getBasicLayerListByGroup(group, dataStore, callback) {
-  const defaultOpacity = 0.5;
+  const defaultOpacity = 1;
 
   const layerGroupURL = group.groupUrl;
   const visibleLayers = group.visibleLayers === undefined ? [] : group.visibleLayers;
@@ -100,6 +100,16 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
   // RETURN IF WE DON"T HAVE ANYTHING TO PROCESS
   if (groupLayerList === null) return;
 
+  let liveLayers = [];
+  if (layerGroupInfo.layerGroup.keywords !== undefined) {
+    const keywords = layerGroupInfo.layerGroup.keywords.string;
+    const liveLayerKeyword = keywords.find(function(item) {
+      return item.indexOf("LIVE_LAYERS") !== -1;
+    });
+
+    if (liveLayerKeyword !== undefined) liveLayers = liveLayerKeyword.split("=")[1];
+  }
+
   // SAVED DATA
   const savedData = helpers.getItemsFromStorage(storageKey);
   const savedLayers = savedData[group.value];
@@ -118,8 +128,7 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
     //https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json&cql_filter=INTERSECTS(geom,%20POINT%20(-8874151.72%205583068.78))
     //`${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&cql_filter=INTERSECTS(geom,${geomery})`
 
-    const wfsUrlTemplate = (serverUrl, layerName) =>
-      `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&cql_filter=`;
+    const wfsUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&cql_filter=`;
     const wfsUrl = wfsUrlTemplate(serverUrl, groupLayerInfo.name);
 
     // SKIP NESTED GROUP LAYERS
@@ -129,6 +138,10 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
       }
       continue;
     }
+
+    // LIVE LAYER
+    let liveLayer = false;
+    if (liveLayers.includes(layerNameOnly)) liveLayer = true;
 
     let layerVisible = false;
     if (savedLayers !== undefined) {
@@ -159,7 +172,7 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
       rootLayerUrl: rootLayerUrl, // ROOT LAYER INFO FROM GROUP END POINT
       opacity: defaultOpacity, // OPACITY OF LAYER
       keywords: [],
-      liveLayer: null,
+      liveLayer: liveLayer,
       wfsUrl: wfsUrl
     });
 
@@ -268,8 +281,7 @@ export function getLayerInfo(layerInfo, callback) {
 
 export function getStyles(groups) {
   // URL FOR PULLING LEGEND FROM GEOSERVER
-  const styleURLTemplate = (serverURL, layerName, styleName) =>
-    `${serverURL}/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=${layerName}&STYLE=${styleName}`;
+  const styleURLTemplate = (serverURL, layerName, styleName) => `${serverURL}/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=${layerName}&STYLE=${styleName}`;
 
   for (let index = 0; index < groups.length; index++) {
     const group = groups[index];

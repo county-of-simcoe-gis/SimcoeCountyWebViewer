@@ -38,7 +38,6 @@ class Layers extends Component {
   onMapLoad = () => {
     window.map.on("singleclick", evt => {
       const viewResolution = window.map.getView().getResolution();
-      console.log(this.state.layers);
       this.state.layers.forEach(layer => {
         if (layer.visible && layer.liveLayer) {
           var url = layer.layer.getSource().getGetFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
@@ -54,31 +53,6 @@ class Layers extends Component {
           }
         }
       });
-      // const layers = window.map.getLayers().getArray();
-      // console.log(layers);
-      // let layerList = [];
-      // for (let index = 0; index < layers.length; index++) {
-      //   const layer = layers[index];
-      //   const name = layer.get("name");
-      //   // FILTER LAYERS FROM SEARCH INPUT
-      //   const layers = this.state.layers.filter(layerItem => {
-      //     if (layerItem.get("name") === name && layer.liveLayer && layer.visible) return layer;
-      //   });
-
-      // console.log(layers);
-      // if (layer.getVisible()) {
-      // var url = layer.getSource().getGetFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
-      // if (url) {
-      //   await helpers.getJSONWait(url, result => {
-      //     const features = result.features;
-      //     if (features.length > 0) {
-      //       disable = true;
-      //       return;
-      //     }
-      //   });
-      // }
-      // }
-      // }
     });
   };
 
@@ -119,36 +93,34 @@ class Layers extends Component {
           this.state.layers.forEach(layerRoot => {
             //console.log(layerRoot);
             //console.log(layerRoot.rootLayerUrl);
-            helpers.getJSON(layerRoot.rootLayerUrl, layerSub => {
-              const href = layerSub.layer.resource.href;
-              helpers.getJSON(href.replace("http:", "https:"), layer => {
-                const keywords = layer.featureType.keywords.string;
-                //console.log(keywords.string);
-                let liveLayer = false;
-                if (keywords.includes("LIVE_LAYER")) {
-                  layerRoot.layer.setProperties({ disableParcelClick: true });
-                  liveLayer = true;
-                }
-
-                let opacity = 1;
-                if (layerRoot.visible) {
-                  opacity = keywords.find(item => {
-                    if (item.indexOf("OPACITY") !== -1) {
-                      return item;
-                    }
-                  });
-                  if (opacity !== undefined) {
-                    opacity = opacity.split("=")[1];
-                  }
-                }
-
-                //console.log(opacity);
-                this.setState({
-                  // UPDATE LAYER
-                  layers: this.state.layers.map(item => (item.name === layerRoot.name ? Object.assign({}, item, { keywords, liveLayer, opacity: parseFloat(opacity) }) : item))
-                });
-              });
-            });
+            // helpers.getJSON(layerRoot.rootLayerUrl, layerSub => {
+            //   const href = layerSub.layer.resource.href;
+            //   helpers.getJSON(href.replace("http:", "https:"), layer => {
+            //     const keywords = layer.featureType.keywords.string;
+            //     //console.log(keywords.string);
+            //     let liveLayer = false;
+            //     if (keywords.includes("LIVE_LAYER")) {
+            //       layerRoot.layer.setProperties({ disableParcelClick: true });
+            //       liveLayer = true;
+            //     }
+            //     let opacity = 1;
+            //     if (layerRoot.visible) {
+            //       opacity = keywords.find(item => {
+            //         if (item.indexOf("OPACITY") !== -1) {
+            //           return item;
+            //         }
+            //       });
+            //       if (opacity !== undefined) {
+            //         opacity = opacity.split("=")[1];
+            //       }
+            //     }
+            //     //console.log(opacity);
+            //     this.setState({
+            //       // UPDATE LAYER
+            //       layers: this.state.layers.map(item => (item.name === layerRoot.name ? Object.assign({}, item, { keywords, liveLayer, opacity: parseFloat(opacity) }) : item))
+            //     });
+            //   });
+            // });
           });
         });
       });
@@ -283,9 +255,7 @@ class Layers extends Component {
         this.setState(
           {
             // UPDATE LEGEND
-            layers: this.state.layers.map(layer =>
-              layer.name === layerInfo.name ? Object.assign({}, layer, { showLegend: showLegend, height: rowHeight, legendHeight: height, legendImage: imgData }) : layer
-            )
+            layers: this.state.layers.map(layer => (layer.name === layerInfo.name ? Object.assign({}, layer, { showLegend: showLegend, height: rowHeight, legendHeight: height, legendImage: imgData }) : layer))
           },
           () => {
             document.getElementById(this.virtualId).scrollTop += this.lastPosition;
@@ -350,14 +320,7 @@ class Layers extends Component {
     var evtClone = Object.assign({}, evt);
     const menu = (
       <Portal>
-        <FloatingMenu
-          key={helpers.getUID()}
-          buttonEvent={evtClone}
-          autoY={true}
-          item={this.props.info}
-          onMenuItemClick={action => this.onMenuItemClick(action, layerInfo)}
-          styleMode={helpers.isMobile() ? "left" : "right"}
-        >
+        <FloatingMenu key={helpers.getUID()} buttonEvent={evtClone} autoY={true} item={this.props.info} onMenuItemClick={action => this.onMenuItemClick(action, layerInfo)} styleMode={helpers.isMobile() ? "left" : "right"}>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-metadata">
             <FloatingMenuItem imageName={"metadata.png"} label="Metadata" />
           </MenuItem>
@@ -369,14 +332,7 @@ class Layers extends Component {
           </MenuItem>
           <MenuItem className="sc-layers-slider" key="sc-floating-menu-opacity">
             Adjust Transparency
-            <SliderWithTooltip
-              tipFormatter={this.sliderTipFormatter}
-              max={1}
-              min={0}
-              step={0.05}
-              defaultValue={layerInfo.opacity}
-              onChange={evt => this.onSliderChange(evt, layerInfo)}
-            />
+            <SliderWithTooltip tipFormatter={this.sliderTipFormatter} max={1} min={0} step={0.05} defaultValue={layerInfo.opacity} onChange={evt => this.onSliderChange(evt, layerInfo)} />
           </MenuItem>
         </FloatingMenu>
       </Portal>

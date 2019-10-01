@@ -13,7 +13,8 @@ class Identify extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      layers: []
+      layers: [],
+      isLoading: false
     };
 
     this.createShadowLayer();
@@ -32,7 +33,7 @@ class Identify extends Component {
   }
 
   refreshLayers = props => {
-    this.setState({ layers: [] });
+    this.setState({ layers: [], isLoading: true });
 
     const { geometry } = props;
     const wktGeometry = new WKT().writeGeometry(geometry);
@@ -48,7 +49,14 @@ class Identify extends Component {
         if (name !== null && wfsUrl !== null) {
           let features = [];
 
-          const wfsUrlTemplate = (baseWfs, geometry) => `${baseWfs}INTERSECTS(geom,${geometry})`;
+          let wfsUrlTemplate = (baseWfs, geometry) => `${baseWfs}INTERSECTS(geom,${geometry})`;
+
+          // ADD A SMAL BUFFER TO PICK UP POINTS
+          const scale = helpers.getMapScale();
+          if (scale < 20000) wfsUrlTemplate = (baseWfs, geometry) => `${baseWfs}DWITHIN(geom,${geometry}, 15,meters)`;
+          // if (helpers.getMapScale() > 2000) wfsUrlTemplate = (baseWfs, geometry) => `${baseWfs}DWITHIN(geom,${geometry}, 30,meters)`;
+          // else if (helpers.getMapScale() > 40000) wfsUrlTemplate = (baseWfs, geometry) => `${baseWfs}DWITHIN(geom,${geometry}, 10000,meters)`;
+
           const wfsUrlQuery = wfsUrlTemplate(wfsUrl, wktGeometry);
           helpers.getJSON(wfsUrlQuery, result => {
             const featureList = new GeoJSON().readFeatures(result);
@@ -67,6 +75,8 @@ class Identify extends Component {
         console.log("vector");
       }
     }
+
+    this.setState({ isLoading: false });
   };
 
   onMouseEnter = feature => {
@@ -111,7 +121,7 @@ class Identify extends Component {
 
   getDisplayName = (feature, rootInfoUrl, callback) => {
     if (rootInfoUrl === undefined || rootInfoUrl === null) {
-      return this.getDisplayName(feature);
+      return this.getDisplayNameFromFeature(feature);
     } else {
       // GET DISPLAY NAME FROM KEYWORD IN GEOSERVER
       helpers.getJSON(rootInfoUrl, layerSub => {
@@ -133,7 +143,7 @@ class Identify extends Component {
 
   getDisplayNameFromFeature = feature => {
     // LOOK FOR EXISTING FIELDS
-    const nameFields = ["name", "display_name"];
+    const nameFields = ["name", "display_name", "Name", "Display Name"];
     let displayName = "";
     nameFields.forEach(fieldName => {
       const name = feature.get(fieldName);
@@ -166,8 +176,12 @@ class Identify extends Component {
   render() {
     return (
       <div>
-        <div className={this.state.layers.length === 0 ? "sc-identify-loading" : "sc-hidden"}>
-          <img src={images["loading.gif"]}></img>
+        <div className={this.state.layers.length === 0 && !this.state.isLoading ? "sc-identify-loading" : "sc-hidden"}>
+          No Features were selected. Please try again.
+          {/* <img src={images["loading.gif"]}></img> */}
+        </div>
+        <div className={this.state.isLoading ? "sc-identify-loading" : "sc-hidden"}>
+          <img src={images["loading.gif"]} alt="Loading"></img>
         </div>
         <div className={this.state.layers.length === 0 ? "sc-hidden" : "sc-identify-container"}>
           {this.state.layers.map(layer => (
@@ -190,14 +204,7 @@ const Layer = props => {
       <Collapsible trigger={layer.name} open={open}>
         <div className="sc-identify-layer-content-container">
           {props.layer.features.map(feature => (
-            <FeatureItem
-              key={helpers.getUID()}
-              displayName={props.layer.displayName}
-              feature={feature}
-              onZoomClick={props.onZoomClick}
-              onMouseEnter={props.onMouseEnter}
-              onMouseLeave={props.onMouseLeave}
-            ></FeatureItem>
+            <FeatureItem key={helpers.getUID()} displayName={props.layer.displayName} feature={feature} onZoomClick={props.onZoomClick} onMouseEnter={props.onMouseEnter} onMouseLeave={props.onMouseLeave}></FeatureItem>
           ))}
         </div>
       </Collapsible>

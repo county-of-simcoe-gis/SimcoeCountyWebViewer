@@ -9,6 +9,7 @@ import { Vector as VectorLayer } from "ol/layer.js";
 import { Vector as VectorSource } from "ol/source.js";
 import { Stroke, Style } from "ol/style.js";
 import PropertyReport from "./PropertyReport";
+import copy from "copy-to-clipboard";
 
 // https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json&cql_filter=INTERSECTS(geom,%20POINT%20(-8874151.72%205583068.78))
 const parcelURLTemplate = (mainURL, x, y) => `${mainURL}&cql_filter=INTERSECTS(geom,%20POINT%20(${x}%20${y}))`;
@@ -81,6 +82,7 @@ class PropertyReportClick extends Component {
         if (layer.get("disableParcelClick") && layer.getVisible() && layer.type === "IMAGE") {
           var url = layer.getSource().getGetFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
           if (url) {
+            // eslint-disable-next-line
             await helpers.getJSONWait(url, result => {
               const features = result.features;
               if (features.length > 0) {
@@ -141,6 +143,7 @@ class PropertyReportClick extends Component {
     window.emitter.emit("loadReport", <PropertyReport propInfo={this.state.propInfo} onZoomClick={this.onZoomClick} />);
   };
 
+  //copy(result.id);
   // BUILDS POPUP CONTENT
   getPopupContent = propInfo => {
     const arn = propInfo.ARN;
@@ -151,7 +154,21 @@ class PropertyReportClick extends Component {
 
     let rows = [];
     rows.push(<InfoRow key={helpers.getUID()} label={"Address"} value={address} />);
-    rows.push(<InfoRow key={helpers.getUID()} label={"Roll Number"} value={arn} />);
+    rows.push(
+      <InfoRow key={helpers.getUID()} label={"Roll Number"} value={arn}>
+        <img
+          src={images["copy16.png"]}
+          alt="copy"
+          title="Copy to Clipboard"
+          style={{ marginBottom: "-3px", marginLeft: "5px", cursor: "pointer" }}
+          onMouseUp={helpers.convertMouseUpToClick}
+          onClick={() => {
+            copy(arn);
+            helpers.showMessage("Copy", "Roll Number copied to clipboard.");
+          }}
+        ></img>
+      </InfoRow>
+    );
 
     rows.push(
       <InfoRow key={helpers.getUID()} label={"Assessed Value"}>
@@ -179,29 +196,15 @@ class PropertyReportClick extends Component {
       </InfoRow>
     );
 
-    rows.push(
-      <InfoRow key={helpers.getUID()} label={"Pointer Coordinates"} value={"Lat: " + Math.round(coords[1] * 10000) / 10000 + "  Long: " + Math.round(coords[0] * 10000) / 10000} />
-    );
+    rows.push(<InfoRow key={helpers.getUID()} label={"Pointer Coordinates"} value={"Lat: " + Math.round(coords[1] * 10000) / 10000 + "  Long: " + Math.round(coords[0] * 10000) / 10000} />);
 
     rows.push(
-      <button
-        key={helpers.getUID()}
-        id={helpers.getUID()}
-        className="sc-button sc-property-report-click-more-info"
-        onClick={this.onMoreInfoClick}
-        onMouseUp={helpers.convertMouseUpToClick}
-      >
+      <button key={helpers.getUID()} id={helpers.getUID()} className="sc-button sc-property-report-click-more-info" onClick={this.onMoreInfoClick} onMouseUp={helpers.convertMouseUpToClick}>
         More Information
       </button>
     );
     rows.push(
-      <button
-        key={helpers.getUID()}
-        id={helpers.getUID()}
-        className="sc-button sc-property-report-click-close"
-        onClick={this.onCloseClick}
-        onMouseUp={helpers.convertMouseUpToClick}
-      >
+      <button key={helpers.getUID()} id={helpers.getUID()} className="sc-button sc-property-report-click-close" onClick={this.onCloseClick} onMouseUp={helpers.convertMouseUpToClick}>
         Close
       </button>
     );
@@ -271,3 +274,11 @@ class PropertyReportClick extends Component {
 }
 
 export default PropertyReportClick;
+
+// IMPORT ALL IMAGES
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
+function importAllImages(r) {
+  let images = {};
+  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
+  return images;
+}

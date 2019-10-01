@@ -104,7 +104,7 @@ class SearchAddresses extends Component {
 
     helpers.getWFSGeoJSON(
       "https://opengis.simcoe.ca/geoserver/",
-      "simcoe:Address Number",
+      "simcoe:Address_Number",
       result => {
         this.updateFeatures(result);
       },
@@ -187,13 +187,7 @@ class SearchAddresses extends Component {
             <div className="sc-theme-search-addresses-control-row">
               <label className="sc-theme-search-addresses-control label">Address Number:</label>
               <div className="sc-theme-search-addresses-control input">
-                <input
-                  className="sc-theme-search-addresses-number"
-                  type="text"
-                  placeholder="Enter Address Number"
-                  onClick={this.onAddressNumberClick}
-                  onChange={this.onAddressNumberChange}
-                />
+                <input className="sc-theme-search-addresses-number" type="text" placeholder="Enter Address Number" onClick={this.onAddressNumberClick} onChange={this.onAddressNumberChange} />
               </div>
             </div>
             <div className="sc-theme-search-addresses-control-row">
@@ -221,8 +215,7 @@ class SearchAddresses extends Component {
                       this.setState({ iconActiveClass: "sc-search-icon-active" });
 
                       helpers.getJSON(searchStreetsURL(value), responseJson => {
-                        console.log(responseJson);
-                        this.setState({ streetItems: responseJson });
+                        if (responseJson.error === undefined) this.setState({ streetItems: responseJson });
                       });
                     } else {
                       this.setState({ iconInitialClass: "sc-search-icon-initial" });
@@ -256,9 +249,7 @@ class SearchAddresses extends Component {
               </button>
             </div>
           </div>
-          <div className={this.state.features.length === 0 ? "sc-container sc-tool-search-addresses-no-results" : "sc-hidden"}>
-            Please enter an Address in the textboxes above then click SEARCH button.
-          </div>
+          <div className={this.state.features.length === 0 ? "sc-container sc-tool-search-addresses-no-results" : "sc-hidden"}>Please enter an Address in the textboxes above then click SEARCH button.</div>
           <div className="sc-tool-search-addresses-results">
             {this.state.features.map(feature => {
               return <Results key={helpers.getUID()} feature={feature} onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave} onFeatureClick={this.onFeatureClick} />;
