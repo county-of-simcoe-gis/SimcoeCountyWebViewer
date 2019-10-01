@@ -176,6 +176,7 @@ class MyMaps extends Component {
   };
 
   addNewItem = (feature, labelText = null, fromEmmiter = false) => {
+    console.log(feature);
     // UID FOR FEATURE
     const featureId = helpers.getUID();
 

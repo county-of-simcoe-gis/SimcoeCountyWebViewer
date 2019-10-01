@@ -40,7 +40,7 @@ class Layers extends Component {
       const viewResolution = window.map.getView().getResolution();
       this.state.layers.forEach(layer => {
         if (layer.visible && layer.liveLayer) {
-          var url = layer.layer.getSource().getGetFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
+          var url = layer.layer.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
           if (url) {
             helpers.getJSON(url, result => {
               const features = result.features;

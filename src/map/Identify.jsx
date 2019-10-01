@@ -39,10 +39,11 @@ class Identify extends Component {
     const wktGeometry = new WKT().writeGeometry(geometry);
 
     const layers = window.map.getLayers().getArray();
+
     let layerList = [];
     for (let index = 0; index < layers.length; index++) {
       const layer = layers[index];
-      if (layer.getVisible() && layer.type === "IMAGE") {
+      if (layer.getVisible() && layer.get("wfsUrl") !== undefined) {
         const name = layer.get("name");
         const wfsUrl = layer.get("wfsUrl");
         let displayName = layer.get("displayName");
@@ -62,8 +63,7 @@ class Identify extends Component {
           helpers.getJSON(wfsUrlQuery, result => {
             const featureList = new GeoJSON().readFeatures(result);
             if (featureList.length > 0) {
-              if (displayName === "") displayName = this.getDisplayNameFromFeature(featureList[0]);
-
+              if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
               featureList.forEach(feature => {
                 features.push(feature);
               });
@@ -72,8 +72,6 @@ class Identify extends Component {
             }
           });
         }
-      } else if (layer.getVisible() && layer.type === "VECTOR") {
-        console.log("vector");
       }
     }
 
@@ -142,6 +140,7 @@ class Identify extends Component {
       }
     }
 
+    console.log(displayName);
     // STILL NOTHING, SO TAKE FIRST FIELD
     if (displayName === "") displayName = Object.keys(feature.values_)[0];
 

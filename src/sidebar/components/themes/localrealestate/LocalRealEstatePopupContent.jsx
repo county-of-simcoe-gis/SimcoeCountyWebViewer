@@ -50,10 +50,10 @@ const LocalRealEstatePopupContent = props => {
         } else return null;
       })}
       <div className="sc-theme-popup-content-button-container">
-        <button className="sc-button sc-theme-popup-content-button" onClick={onPhotosClick} onMouseUp={helpers.convertMouseUpToClick}>
+        <button className="sc-button sc-theme-popup-content-button" onClick={onPhotosClick}>
           Photos
         </button>
-        <button className="sc-button sc-theme-popup-content-button padded" onClick={onListingClick} onMouseUp={helpers.convertMouseUpToClick}>
+        <button className="sc-button sc-theme-popup-content-button padded" onClick={onListingClick}>
           Listing
         </button>
         <button
@@ -61,7 +61,6 @@ const LocalRealEstatePopupContent = props => {
           onClick={() => {
             window.popup.hide();
           }}
-          onMouseUp={helpers.convertMouseUpToClick}
         >
           Close
         </button>

@@ -30,7 +30,7 @@ class ThemeBaseLayers extends Component {
       this.state.layers.forEach(layer => {
         if (!layer.getProperties().clickable) return;
 
-        var url = layer.getSource().getGetFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
+        var url = layer.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
         if (url) {
           helpers.getJSON(url, result => {
             const features = result.features;
@@ -44,11 +44,7 @@ class ThemeBaseLayers extends Component {
             const entries = Object.entries(feature.getProperties());
             const layerName = layer.getProperties().name;
             const layerConfig = this.getLayerConfigByName(layerName);
-            window.popup.show(
-              evt.coordinate,
-              <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={layerConfig} />,
-              layer.getProperties().name
-            );
+            window.popup.show(evt.coordinate, <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={layerConfig} />, layer.getProperties().name);
           });
         }
       });

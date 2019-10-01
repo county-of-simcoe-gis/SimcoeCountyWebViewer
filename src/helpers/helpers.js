@@ -25,6 +25,7 @@ import Projection from "ol/proj/Projection.js";
 import proj4 from "proj4";
 import { register } from "ol/proj/proj4";
 import { fromLonLat } from "ol/proj";
+import { getVectorContext } from "ol/render";
 
 //OTHER
 import { parseString } from "xml2js";
@@ -126,7 +127,7 @@ export function getSimcoeTileXYZLayer(url) {
 
       const z = tileCoord[0];
       const x = tileCoord[1];
-      const y = -tileCoord[2] - 1;
+      const y = tileCoord[2];
 
       //if ( z < 17 || x < 0 || y < 0) return undefined;
 
@@ -255,7 +256,6 @@ export function getJSON(url, callback) {
 
 // GET JSON WAIT
 export async function getJSONWait(url, callback) {
-  console.log(url);
   let data = await await fetch(url)
     .then(res => {
       const resp = res.json();
@@ -396,18 +396,18 @@ export function flashPoint(coords, zoom = 15, duration = 5000) {
   });
   marker.setStyle(mstyle);
 
-  pulsate("blue", marker, 5000, mstyle, () => {
+  pulsate(vectorLayer, "blue", marker, 5000, mstyle, () => {
     window.map.removeLayer(vectorLayer);
   });
 
   window.map.getView().animate({ center: coords, zoom: zoom });
 }
 
-function pulsate(color, feature, duration, mstyle, callback) {
+function pulsate(vectorLayer, color, feature, duration, mstyle, callback) {
   var start = new Date().getTime();
 
-  var key = window.map.on("postcompose", function(event) {
-    var vectorContext = event.vectorContext;
+  var key = vectorLayer.on("postrender", function(event) {
+    var vectorContext = getVectorContext(event);
     var frameState = event.frameState;
     var flashGeom = feature.getGeometry().clone();
     var elapsed = frameState.time - start;
@@ -446,6 +446,50 @@ function pulsate(color, feature, duration, mstyle, callback) {
 
     window.map.render();
   });
+
+  // var key = window.map.on("postrender", function(event) {
+  //   console.log(event);
+  //   //var vectorContext = getVectorContext(event);
+  //   if (event.vectorContext === undefined) return;
+  //   var vectorContext = event.vectorContext;
+  //   var frameState = event.frameState;
+  //   var flashGeom = feature.getGeometry().clone();
+  //   var elapsed = frameState.time - start;
+  //   var elapsedRatio = elapsed / duration;
+  //   var radius = easeOut(elapsedRatio) * 35 + 5;
+  //   var opacity = easeOut(1 - elapsedRatio);
+  //   var fillOpacity = easeOut(0.5 - elapsedRatio);
+
+  //   vectorContext.setStyle(
+  //     new Style({
+  //       image: new CircleStyle({
+  //         radius: radius,
+  //         snapToPixel: false,
+  //         fill: new Fill({
+  //           color: "rgba(119, 170, 203, " + fillOpacity + ")"
+  //         }),
+  //         stroke: new Stroke({
+  //           color: "rgba(119, 170, 203, " + opacity + ")",
+  //           width: 2 + opacity
+  //         })
+  //       })
+  //     })
+  //   );
+
+  //   vectorContext.drawGeometry(flashGeom);
+
+  //   // Draw the marker (again)
+  //   vectorContext.setStyle(mstyle);
+  //   vectorContext.drawGeometry(feature.getGeometry());
+
+  //   if (elapsed > duration) {
+  //     unByKey(key);
+  //     //pulsate(color, feature, duration); // recursive function
+  //     callback();
+  //   }
+
+  //   window.map.render();
+  // });
 }
 
 export function centerMap(coords, zoom) {
@@ -475,13 +519,13 @@ export function toTitleCase(str) {
 // OL BUG
 // WORKAROUND - OL BUG -- https://github.com/openlayers/openlayers/issues/6948#issuecomment-374915823
 // OL BUG
-export function convertMouseUpToClick(e) {
-  const evt = new CustomEvent("click", { bubbles: true });
-  evt.pageY = e.pageY;
-  evt.pageX = e.pageX;
-  evt.stopPropagation = () => {};
-  e.target.dispatchEvent(evt);
-}
+// export function convertMouseUpToClick(e) {
+//   const evt = new CustomEvent("click", { bubbles: true });
+//   evt.pageY = e.pageY;
+//   evt.pageX = e.pageX;
+//   evt.stopPropagation = () => {};
+//   e.target.dispatchEvent(evt);
+// }
 
 // GET FEATURE FROM GEOJSON
 export function getFeatureFromGeoJSON(geoJSON) {

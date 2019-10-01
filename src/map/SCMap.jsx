@@ -29,8 +29,7 @@ import * as helpers from "../helpers/helpers";
 import Identify from "./Identify";
 
 const scaleLineControl = new ScaleLine();
-const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
-  `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True`;
+const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) => `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True`;
 
 class SCMap extends Component {
   constructor(props) {

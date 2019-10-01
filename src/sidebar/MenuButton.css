@@ -49,6 +49,7 @@
   margin-top: 2px;
   box-shadow: 2px 2px 5px 0px rgba(77, 77, 77, 1);
   text-align: left;
+  max-height: 400px;
 }
 
 .sc-menu-button-list-container.sideBarOpen {
@@ -66,14 +67,7 @@
   border: 1px solid #90b5d5;
   background: rgb(242, 245, 246); /* Old browsers */
   background: -moz-linear-gradient(top, rgba(242, 245, 246, 1) 0%, rgba(227, 234, 237, 1) 37%, rgba(200, 215, 220, 1) 100%); /* FF3.6+ */
-  background: -webkit-gradient(
-    linear,
-    left top,
-    left bottom,
-    color-stop(0%, rgba(242, 245, 246, 1)),
-    color-stop(37%, rgba(227, 234, 237, 1)),
-    color-stop(100%, rgba(200, 215, 220, 1))
-  ); /* Chrome,Safari4+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, rgba(242, 245, 246, 1)), color-stop(37%, rgba(227, 234, 237, 1)), color-stop(100%, rgba(200, 215, 220, 1))); /* Chrome,Safari4+ */
   background: -webkit-linear-gradient(top, rgba(242, 245, 246, 1) 0%, rgba(227, 234, 237, 1) 37%, rgba(200, 215, 220, 1) 100%); /* Chrome10+,Safari5.1+ */
   background: -o-linear-gradient(top, rgba(242, 245, 246, 1) 0%, rgba(227, 234, 237, 1) 37%, rgba(200, 215, 220, 1) 100%); /* Opera 11.10+ */
   background: -ms-linear-gradient(top, rgba(242, 245, 246, 1) 0%, rgba(227, 234, 237, 1) 37%, rgba(200, 215, 220, 1) 100%); /* IE10+ */

@@ -24,7 +24,7 @@ const ThemePopupContent = props => {
         } else return null;
       })}
       <div className={props.layerConfig.moreInfoUrlFieldName === undefined ? "sc-hidden" : ""}>
-        <button className="sc-button sc-theme-popup-content-more-info" onClick={() => helpers.showURLWindow(urlField, false)} onMouseUp={helpers.convertMouseUpToClick}>
+        <button className="sc-button sc-theme-popup-content-more-info" onClick={() => helpers.showURLWindow(urlField, false)}>
           More Information
         </button>
         <button
@@ -32,7 +32,6 @@ const ThemePopupContent = props => {
           onClick={() => {
             window.popup.hide();
           }}
-          onMouseUp={helpers.convertMouseUpToClick}
         >
           Close
         </button>
