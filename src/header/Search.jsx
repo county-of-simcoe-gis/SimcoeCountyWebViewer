@@ -8,11 +8,27 @@ import { Vector as VectorSource } from "ol/source.js";
 import { Fill, Icon, Stroke, Style, Circle as CircleStyle } from "ol/style.js";
 import { transform } from "ol/proj.js";
 import { CopyToClipboard } from "react-copy-to-clipboard";
+import Feature from "ol/Feature";
+import Point from "ol/geom/Point";
+import Select from "react-select";
 
 // URLS
-const searchURL = searchText => `https://maps.simcoe.ca/giswebapi/api/search/?query=${searchText}`;
-const searchInfoURL = locationID => `https://maps.simcoe.ca/giswebapi/api/search/?locationID=${locationID}`;
+// const searchURL = searchText => `https://maps.simcoe.ca/giswebapi/api/search/?query=${searchText}`;
+// const searchInfoURL = locationID => `https://maps.simcoe.ca/giswebapi/api/search/?locationID=${locationID}`;
 const googleDirectionsURL = (lat, long) => `https://www.google.com/maps?saddr=My+Location&daddr=${lat},${long}`;
+
+// PRODUCTION
+const searchURL = (searchText, type, muni, limit) => `https://opengis.simcoe.ca/api/async/search/?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
+const searchInfoURL = locationID => `https://opengis.simcoe.ca/api/searchById/${locationID}`;
+const searchTypesURL = "https://opengis.simcoe.ca/api/getSearchTypes";
+
+// DEV
+// const searchTypesURL = "http://localhost:8085/getSearchTypes";
+// const searchURL = (searchText, type, muni, limit) => `http://localhost:8085/async/search/?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
+// const searchInfoURL = locationID => `http://localhost:8085/searchById/${locationID}`;
+
+// DEFAULT SEARCH LIMIT
+const defaultSearchLimit = 10;
 
 // VECTOR LAYERS
 let searchGeoLayer = null;
@@ -67,7 +83,10 @@ class Search extends Component {
     searchResults: [],
     hover: false,
     iconInitialClass: "sc-search-icon-initial",
-    iconActiveClass: "sc-search-icon-active-hidden"
+    iconActiveClass: "sc-search-icon-active-hidden",
+    showMore: false,
+    searchTypes: [],
+    selectedType: ""
   };
 
   requestTimer = null;
@@ -78,7 +97,30 @@ class Search extends Component {
       // CALL API TO GET LOCATION DETAILS
       helpers.getJSON(searchInfoURL(locationId), result => this.jsonCallback(result));
     }
+
+    helpers.getJSON(searchTypesURL, result => {
+      let items = [];
+      items.push({ label: "All", value: "All" });
+      result.forEach(type => {
+        const obj = { label: type, value: type };
+        items.push(obj);
+      });
+      items.push({ label: "Open Street Map", value: "Open Street Map" });
+      this.setState({ searchTypes: items, selectedType: items[0] });
+    });
   }
+
+  onTypeDropDownChange = selectedType => {
+    this.setState({ selectedType: selectedType }, async () => {
+      let limit = defaultSearchLimit;
+      if (this.state.showMore) limit = 50;
+      await helpers.getJSONWait(searchURL(this.state.value, this.state.selectedType.value, undefined, limit), responseJson => {
+        console.log(responseJson);
+        if (responseJson !== undefined) this.setState({ searchResults: responseJson });
+        else this.setState({ searchResults: [] });
+      });
+    });
+  };
 
   removeMarkersClick() {
     this.cleanup();
@@ -88,7 +130,8 @@ class Search extends Component {
     const result = this.state.searchResults[0];
 
     // ADD MYMAPS
-    window.emitter.emit("addMyMapsFeature", searchGeoLayer.getSource().getFeatures()[0], result.Name);
+    if (searchGeoLayer.getSource().getFeatures().length === 0) window.emitter.emit("addMyMapsFeature", searchIconLayer.getSource().getFeatures()[0], result.Name);
+    else window.emitter.emit("addMyMapsFeature", searchGeoLayer.getSource().getFeatures()[0], result.Name);
 
     // CLEAN UP
     this.cleanup();
@@ -117,7 +160,8 @@ class Search extends Component {
       searchGeoLayer = new VectorLayer({
         source: new VectorSource({
           features: []
-        })
+        }),
+        zIndex: 1000
       });
       searchGeoLayer.set("name", "sc-search-geo");
       window.map.addLayer(searchGeoLayer);
@@ -126,7 +170,8 @@ class Search extends Component {
       searchIconLayer = new VectorLayer({
         source: new VectorSource({
           features: []
-        })
+        }),
+        zIndex: 1000
       });
       searchIconLayer.setStyle(styles["point"]);
       searchIconLayer.set("name", "sc-search-icon");
@@ -141,17 +186,7 @@ class Search extends Component {
         });
 
         if (feature !== undefined) {
-          window.popup.show(
-            evt.coordinate,
-            <PopupContent
-              key={helpers.getUID()}
-              removeMarkersClick={this.removeMarkersClick}
-              myMapsClick={this.myMapsClick}
-              shareLocationId={this.state.searchResults[0].LocationID}
-              directionsClick={evt => this.directionsClick(evt)}
-            />,
-            "Actions"
-          );
+          window.popup.show(evt.coordinate, <PopupContent key={helpers.getUID()} feature={feature} removeMarkersClick={this.removeMarkersClick} myMapsClick={this.myMapsClick} shareLocationId={this.state.searchResults[0].LocationID} directionsClick={evt => this.directionsClick(evt)} />, "Actions");
         }
       });
     }
@@ -171,10 +206,13 @@ class Search extends Component {
 
   jsonCallback(result) {
     // SOME FEATURES HAVEN"T BEEN PROCESSED YET
-    if (result.WKTShape === undefined || result.WKTShape === "" || result.WKTShape === null) {
-      console.log("WKT Shape is empty.");
-      return;
-    }
+    // if (result.WKTShape === undefined || result.WKTShape === "" || result.WKTShape === null) {
+    //   console.log("WKT Shape is empty.");
+    //   return;
+    // }
+
+    // GET FIRST FEATURE
+    //const result = resultArray[0];
 
     this.saveStateToStorage(result);
 
@@ -187,27 +225,30 @@ class Search extends Component {
     this.setState({ searchResults: [result] });
 
     // READ WKT
-    const wktShape = helpers.getWKTFeature(result.WKTShape);
-    const wktPoint = helpers.getWKTFeature(result.WKTPoint);
+    // const wktShape = helpers.getWKTFeature(result.WKTShape);
+    // const wktPoint = helpers.getWKTFeature(result.WKTPoint);
+    const fullFeature = helpers.getFeatureFromGeoJSON(result.geojson);
+    let pointFeature = helpers.getFeatureFromGeoJSON(result.geojson_point);
+    pointFeature.setProperties({ isPlaceOrGeocode: false });
 
     // SET SOURCE
-    searchGeoLayer.getSource().addFeature(wktShape);
-    searchIconLayer.getSource().addFeature(wktPoint);
+    searchGeoLayer.getSource().addFeature(fullFeature);
+    searchIconLayer.getSource().addFeature(pointFeature);
 
     searchGeoLayer.setZIndex(100);
     searchIconLayer.setZIndex(100);
     // SET STYLE AND ZOOM
-    if (result.WKTShape.indexOf("POINT") !== -1) {
+    if (result.geojson.indexOf("Point") !== -1) {
       searchGeoLayer.setStyle(styles["point"]);
-      window.map.getView().fit(wktShape.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
+      window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
       window.map.getView().setZoom(18);
-    } else if (result.WKTShape.indexOf("LINESTRING") !== -1 || result.WKTShape.indexOf("MULTILINESTRING") !== -1) {
+    } else if (result.geojson.indexOf("Line") !== -1 || result.geojson.indexOf("Multiline") !== -1) {
       searchGeoLayer.setStyle(styles["poly"]);
-      window.map.getView().fit(wktShape.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
+      window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
       window.map.getView().setZoom(window.map.getView().getZoom() - 1);
     } else {
       searchGeoLayer.setStyle(styles["poly"]);
-      window.map.getView().fit(wktShape.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
+      window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
       window.map.getView().setZoom(window.map.getView().getZoom() - 2);
     }
   }
@@ -236,32 +277,38 @@ class Search extends Component {
     // CLEAR PREVIOUS SOURCE
     searchGeoLayer.getSource().clear();
 
+    console.log(this.state.value);
     // SET STATE CURRENT ITEM
     this.setState({ value, searchResults: [item] });
-    if (item.LocationID == null) {
-      // HANDLES GEOCODE RESULT
+    if (item.place_id !== undefined || item.location_id == null) {
+      this.initsearchLayers();
 
-      // READ WKT
-      const feature = helpers.getWKTFeature(item.WKTShape);
+      // SET STATE CURRENT ITEM
+      this.setState({ searchResults: [item] });
+
+      // HANDLE OSM RESULT
+      let coords = [];
+      let feature = null;
+      if (item.place_id !== undefined) {
+        coords = helpers.toWebMercatorFromLatLong([item.x, Math.abs(item.y)]);
+        feature = new Feature(new Point(coords));
+      } else feature = new Feature(new Point([item.x, item.y]));
+
+      feature.setProperties({ isPlaceOrGeocode: true });
 
       // SET SOURCE
-      searchGeoLayer.getSource().addFeature(feature);
+      searchIconLayer.getSource().addFeature(feature);
 
-      // SET STYLE
-      searchGeoLayer.setStyle(styles["geocode"]);
+      searchGeoLayer.setZIndex(100);
+      searchIconLayer.setZIndex(100);
 
-      // ZOOM AND FLASH POINT
-      //helpers.flashPoint(feature.getGeometry().getCoordinates(), 18);
+      // SET STYLE AND ZOOM
+      searchGeoLayer.setStyle(styles["point"]);
       window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
       window.map.getView().setZoom(18);
-
-      this.saveStateToStorage(item);
-
-      // EMTI SEARCH COMPLETE
-      window.emitter.emit("searchComplete", item);
     } else {
       // CALL API TO GET LOCATION DETAILS
-      helpers.getJSON(searchInfoURL(item.LocationID), result => this.jsonCallback(result));
+      helpers.getJSON(searchInfoURL(item.location_id), result => this.jsonCallback(result));
     }
   }
 
@@ -276,13 +323,75 @@ class Search extends Component {
     this.setState({ value: "" });
   }
 
+  onMoreOptionsClick = evt => {
+    console.log("more");
+    this.setState(
+      prevState => ({
+        showMore: !prevState.showMore
+      }),
+      async () => {
+        let limit = defaultSearchLimit;
+        if (this.state.showMore) limit = 50;
+        await helpers.getJSONWait(searchURL(this.state.value, this.state.selectedType.value, undefined, limit), responseJson => {
+          console.log(responseJson);
+          if (responseJson !== undefined) this.setState({ searchResults: responseJson });
+          else this.setState({ searchResults: [] });
+        });
+      }
+    );
+  };
+
   render() {
     // INIT LAYER
     this.initsearchLayers();
 
+    let dropDownWidth = 50;
+    if (this.state.selectedType !== "") dropDownWidth = dropDownWidth + this.state.selectedType.label.length * 9;
+
+    if (this.autoCompleteRef !== undefined) {
+      const el = document.getElementById("sc-search-textbox");
+      el.setAttribute("style", "padding-left: " + (dropDownWidth + 5) + "px");
+    }
+
+    const groupsDropDownStyles = {
+      control: provided => ({
+        ...provided,
+        minHeight: "38px",
+        // width: "150px"
+        width: dropDownWidth + "px",
+        borderRadius: "unset",
+        borderBottom: "none"
+      }),
+      indicatorsContainer: provided => ({
+        ...provided,
+        height: "38px"
+      }),
+      clearIndicator: provided => ({
+        ...provided,
+        padding: "5px"
+      }),
+      dropdownIndicator: provided => ({
+        ...provided,
+        padding: "5px"
+      }),
+      menu: provided => ({
+        ...provided,
+        width: "200px"
+      }),
+      container: provided => ({
+        ...provided,
+        width: "100%"
+      })
+    };
+
     return (
       <div>
+        <div className="sc-search-types-container">
+          <Select styles={groupsDropDownStyles} isSearchable={false} onChange={this.onTypeDropDownChange} options={this.state.searchTypes} value={this.state.selectedType} />
+        </div>
+
         <Autocomplete
+          ref={el => (this.autoCompleteRef = el)}
           tabIndex="1"
           inputProps={{ id: "sc-search-textbox", placeholder: "Search...", name: "sc-search-textbox" }}
           className="sc-search-textbox"
@@ -294,17 +403,23 @@ class Search extends Component {
           }}
           value={this.state.value}
           items={this.state.searchResults}
-          getItemValue={item => item.Name}
+          getItemValue={item => item.name}
           onSelect={(value, item) => {
             this.onItemSelect(value, item);
           }}
-          onChange={(event, value) => {
+          onChange={async (event, value) => {
             this.setState({ value });
             if (value !== "") {
               this.setState({ iconInitialClass: "sc-search-icon-initial-hidden" });
               this.setState({ iconActiveClass: "sc-search-icon-active" });
 
-              helpers.getJSON(searchURL(value), responseJson => this.setState({ searchResults: responseJson }));
+              let limit = defaultSearchLimit;
+              if (this.state.showMore) limit = 50;
+              await helpers.getJSONWait(searchURL(value, this.state.selectedType.value, undefined, limit), responseJson => {
+                console.log(responseJson);
+                if (responseJson !== undefined) this.setState({ searchResults: responseJson });
+                else this.setState({ searchResults: [] });
+              });
             } else {
               this.setState({ iconInitialClass: "sc-search-icon-initial" });
               this.setState({ iconActiveClass: "sc-search-icon-active-hidden" });
@@ -312,16 +427,20 @@ class Search extends Component {
               this.setState({ searchResults: [] });
             }
           }}
-          renderMenu={children => <div className="sc-search-menu">{children}</div>}
+          renderMenu={children => (
+            <div>
+              <div className={this.state.showMore && this.state.searchResults.length > 9 ? "sc-search-menu sc-search-menu-scrollable" : "sc-search-menu"}>{children}</div>
+              <MoreOptions numResults={this.state.searchResults.length} onMoreOptionsClick={this.onMoreOptionsClick} showMore={this.state.showMore}></MoreOptions>
+            </div>
+          )}
           renderItem={(item, isHighlighted) => (
             <div className={isHighlighted ? "sc-search-item-highlighted" : "sc-search-item"} key={helpers.getUID()}>
               <div className="sc-search-item-left">
                 <img src={require("./images/map-marker-light-blue.png")} alt="blue pin" />
               </div>
               <div className="sc-search-item-content">
-                <Highlighter highlightClassName="sc-search-highlight-words" searchWords={[this.state.value]} textToHighlight={item.Name} />
-
-                <div className="sc-search-item-sub-content">{" - " + item.Muni + " (" + item.Type + ")"}</div>
+                <Highlighter highlightClassName="sc-search-highlight-words" searchWords={[this.state.value]} textToHighlight={item.name} />
+                <div className="sc-search-item-sub-content">{" - " + item.municipality + " (" + item.type + ")"}</div>
               </div>
             </div>
           )}
@@ -342,10 +461,12 @@ class PopupContent extends Component {
       copied: false,
       shareURL: this.getShareURL()
     };
+
+    this.isPlaceOrGeocode = this.props.feature.get("isPlaceOrGeocode");
   }
 
   getShareURL = value => {
-    console.log(this.props.shareLocationId);
+    console.log(this.props);
     //GET URL
     var url = window.location.href;
 
@@ -371,7 +492,7 @@ class PopupContent extends Component {
           Add to My Maps
         </button>
         <CopyToClipboard text={this.state.shareURL}>
-          <button className="sc-button sc-search-popup-content-button" onMouseUp={helpers.convertMouseUpToClick} onClick={this.onShareClick}>
+          <button className={this.isPlaceOrGeocode ? "sc-hidden" : "sc-button sc-search-popup-content-button"} onMouseUp={helpers.convertMouseUpToClick} onClick={this.onShareClick}>
             Share this Location
           </button>
         </CopyToClipboard>
@@ -382,3 +503,13 @@ class PopupContent extends Component {
     );
   }
 }
+
+const MoreOptions = props => {
+  return (
+    <div className={props.numResults > 9 || props.showMore ? "sc-search-menu-options" : "sc-hidden"}>
+      <button className="sc-button sc-search-more-options-button" onClick={props.onMoreOptionsClick}>
+        {props.showMore ? "Show Less" : "Show More"}
+      </button>
+    </div>
+  );
+};

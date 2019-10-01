@@ -24,6 +24,7 @@ import { transform } from "ol/proj.js";
 import Projection from "ol/proj/Projection.js";
 import proj4 from "proj4";
 import { register } from "ol/proj/proj4";
+import { fromLonLat } from "ol/proj";
 
 //OTHER
 import { parseString } from "xml2js";
@@ -106,20 +107,7 @@ export function getOSMTileXYZLayer(url) {
 }
 
 export function getSimcoeTileXYZLayer(url) {
-  const resolutions = [
-    305.74811314055756,
-    152.87405657041106,
-    76.43702828507324,
-    38.21851414253662,
-    19.10925707126831,
-    9.554628535634155,
-    4.77731426794937,
-    2.388657133974685,
-    1.1943285668550503,
-    0.5971642835598172,
-    0.29858214164761665,
-    0.1492252984505969
-  ];
+  const resolutions = [305.74811314055756, 152.87405657041106, 76.43702828507324, 38.21851414253662, 19.10925707126831, 9.554628535634155, 4.77731426794937, 2.388657133974685, 1.1943285668550503, 0.5971642835598172, 0.29858214164761665, 0.1492252984505969];
   const projExtent = window.map
     .getView()
     .getProjection()
@@ -210,10 +198,7 @@ export function showMessage(title = "Info", messageText = "Message", color = "gr
   var existingMsg = document.getElementById(domId);
   if (existingMsg !== undefined && existingMsg !== null) existingMsg.remove();
 
-  const message = ReactDOM.render(
-    <ShowMessage id={domId} key={domId} title={title} message={messageText} color={color} />,
-    document.getElementById("sc-sidebar-message-container")
-  );
+  const message = ReactDOM.render(<ShowMessage id={domId} key={domId} title={title} message={messageText} color={color} />, document.getElementById("sc-sidebar-message-container"));
 
   setTimeout(() => {
     try {
@@ -270,6 +255,7 @@ export function getJSON(url, callback) {
 
 // GET JSON WAIT
 export async function getJSONWait(url, callback) {
+  console.log(url);
   let data = await await fetch(url)
     .then(res => {
       const resp = res.json();
@@ -312,8 +298,7 @@ export function isParcelClickEnabled() {
 
 //https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Bag%20Tag%20Locations&outputFormat=application/json
 export function getWFSVectorSource(serverUrl, layerName, callback, sortField = "") {
-  const wfsUrlTemplate = (serverURL, layerName, sortField) =>
-    `${serverURL}wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&sortBy=${sortField}`;
+  const wfsUrlTemplate = (serverURL, layerName, sortField) => `${serverURL}wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&sortBy=${sortField}`;
   const wfsUrl = wfsUrlTemplate(serverUrl, layerName, sortField);
   getJSON(wfsUrl, result => {
     const geoJSON = new GeoJSON().readFeatures(result);
@@ -504,25 +489,7 @@ export function getFeatureFromGeoJSON(geoJSON) {
 }
 
 // SEE EXAMPLE VALUES FROM HERE:  https://openlayers.org/en/latest/examples/vector-labels.html
-export function createTextStyle(
-  feature,
-  fieldName = "name",
-  maxScale = 100000000,
-  align = "center",
-  baseline = "middle",
-  size = "10px",
-  offsetX = 0,
-  offsetY = 0,
-  weight = "normal",
-  placement = "point",
-  maxAngleDegrees = 78,
-  overflow = false,
-  rotation = 0,
-  font = "arial",
-  fillColor = "black",
-  outlineColor = "black",
-  outlineWidth = 1
-) {
+export function createTextStyle(feature, fieldName = "name", maxScale = 100000000, align = "center", baseline = "middle", size = "10px", offsetX = 0, offsetY = 0, weight = "normal", placement = "point", maxAngleDegrees = 78, overflow = false, rotation = 0, font = "arial", fillColor = "black", outlineColor = "black", outlineWidth = 1) {
   //console.log(align)
   offsetX = parseInt(offsetX, 10);
   offsetY = parseInt(offsetY, 10);
@@ -654,6 +621,11 @@ export function formatReplace(fmt, ...args) {
 
 export function toLatLongFromWebMercator(coords) {
   return transform(coords, "EPSG:3857", "EPSG:4326");
+}
+
+export function toWebMercatorFromLatLong(coords) {
+  return fromLonLat(coords);
+  //return transform(coords, "EPSG:4326", "EPSG:3857");
 }
 
 export function getGeoJSONFromGeometry(geometry) {
