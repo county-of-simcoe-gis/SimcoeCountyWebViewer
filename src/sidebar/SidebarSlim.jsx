@@ -3,8 +3,7 @@ import "./SidebarSlim.css";
 import MenuButton from "./MenuButton.jsx";
 import * as helpers from "../helpers/helpers";
 
-const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
-  `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
+const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) => `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
 
 const onFeedbackClick = () => {
   // APP STATS
@@ -44,7 +43,7 @@ const SidebarSlim = props => {
       <div className="sc-sidebar-slim-button-container" onClick={() => props.onClick("mymaps")}>
         <span className={props.isMyMapsEditing ? "sc-tab-button-dot-themes" : "sc-hidden"} />
         <button className="sc-sidebar-slim-button">
-          <img src={images["map-32x32.png"]} />
+          <img src={images["map-32x32.png"]} alt="My Maps" />
           <br />
           <span>My Maps</span>
         </button>
@@ -52,14 +51,14 @@ const SidebarSlim = props => {
       <div className="sc-sidebar-slim-button-container" onClick={() => props.onClick("themes")}>
         <span className={props.themeActive ? "sc-tab-button-dot-themes" : "sc-hidden"} />
         <button className="sc-sidebar-slim-button">
-          <img src={images["theme-32x32.png"]} />
+          <img src={images["theme-32x32.png"]} alt="Themes" />
           <br />
           <span>Themes</span>
         </button>
       </div>
       <div className="sc-sidebar-slim-button-container" onClick={() => props.onClick("reports")}>
         <button className="sc-sidebar-slim-button">
-          <img src={images["report-32x32.png"]} />
+          <img src={images["report-32x32.png"]} alt="Reports" />
           <br />
           <span>Reports</span>
         </button>

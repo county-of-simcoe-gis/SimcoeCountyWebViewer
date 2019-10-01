@@ -36,11 +36,7 @@ class LocalRealEstateLayerToggler extends Component {
         const extent = feature.getGeometry().getExtent();
         const center = getCenter(extent);
         helpers.zoomToFeature(feature);
-        window.popup.show(
-          center,
-          <LocalRealEstatePopupContent key={helpers.getUID()} feature={feature} photosUrl={this.props.photosUrl} onViewed={this.props.onViewed} />,
-          this.props.layerConfig.displayName
-        );
+        window.popup.show(center, <LocalRealEstatePopupContent key={helpers.getUID()} feature={feature} photosUrl={this.props.photosUrl} onViewed={this.props.onViewed} />, this.props.layerConfig.displayName);
       },
       null,
       null,
@@ -60,10 +56,7 @@ class LocalRealEstateLayerToggler extends Component {
 
   componentDidMount() {
     // GET LEGEND
-    const styleUrlTemplate = (serverURL, layerName, styleName) =>
-      `${serverURL}/wms?REQUEST=GetLegendGraphic&VERSION=1.1&FORMAT=image/png&WIDTH=20&HEIGHT=20&TRANSPARENT=true&LAYER=${layerName}&STYLE=${
-        styleName === undefined ? "" : styleName
-      }`;
+    const styleUrlTemplate = (serverURL, layerName, styleName) => `${serverURL}/wms?REQUEST=GetLegendGraphic&VERSION=1.1&FORMAT=image/png&WIDTH=20&HEIGHT=20&TRANSPARENT=true&LAYER=${layerName}&STYLE=${styleName === undefined ? "" : styleName}`;
     const styleUrl = styleUrlTemplate(this.props.layerConfig.serverUrl, this.props.layerConfig.layerName, this.props.layerConfig.legendStyleName);
     this.setState({ styleUrl: styleUrl });
 
@@ -77,7 +70,7 @@ class LocalRealEstateLayerToggler extends Component {
       if (window.isDrawingOrEditing) return;
 
       var viewResolution = window.map.getView().getResolution();
-      var url = this.state.layer.getSource().getGetFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
+      var url = this.state.layer.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
       if (url) {
         helpers.getJSON(url, result => {
           const features = result.features;
@@ -87,11 +80,7 @@ class LocalRealEstateLayerToggler extends Component {
 
           const geoJSON = new GeoJSON().readFeatures(result);
           const feature = geoJSON[0];
-          window.popup.show(
-            evt.coordinate,
-            <LocalRealEstatePopupContent key={helpers.getUID()} feature={feature} photosUrl={this.props.config.photosUrl} onViewed={this.props.onViewed} />,
-            this.props.layerConfig.displayName
-          );
+          window.popup.show(evt.coordinate, <LocalRealEstatePopupContent key={helpers.getUID()} feature={feature} photosUrl={this.props.config.photosUrl} onViewed={this.props.onViewed} />, this.props.layerConfig.displayName);
         });
       }
     });
@@ -115,37 +104,15 @@ class LocalRealEstateLayerToggler extends Component {
   render() {
     return (
       <div className="sc-theme-local-real-estate-layer-container">
-        <div
-          className={
-            this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle
-              ? "sc-theme-local-real-estate-layer-toggler-symbol"
-              : "sc-theme-local-real-estate-layer-toggler-symbol-with-box"
-          }
-        >
+        <div className={this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle ? "sc-theme-local-real-estate-layer-toggler-symbol" : "sc-theme-local-real-estate-layer-toggler-symbol-with-box"}>
           <img src={this.state.styleUrl} alt="style" />
         </div>
-        <div
-          className={this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle ? "" : "sc-theme-local-real-estate-layer-toggler-label-with-box-container"}
-        >
-          <label
-            className={
-              this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle
-                ? "sc-theme-local-real-estate-layer-toggler-label"
-                : "sc-theme-local-real-estate-layer-toggler-label-with-box"
-            }
-          >
+        <div className={this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle ? "" : "sc-theme-local-real-estate-layer-toggler-label-with-box-container"}>
+          <label className={this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle ? "sc-theme-local-real-estate-layer-toggler-label" : "sc-theme-local-real-estate-layer-toggler-label-with-box"}>
             <input type="checkbox" checked={this.state.visible} style={{ verticalAlign: "middle" }} onChange={this.onCheckboxChange} />
             {this.props.layerConfig.displayName}
           </label>
-          <label
-            className={
-              this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle
-                ? "sc-theme-local-real-estate-layer-toggler-count"
-                : "sc-theme-local-real-estate-layer-toggler-count-with-box"
-            }
-          >
-            {" (" + this.state.recordCount + ")"}
-          </label>
+          <label className={this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle ? "sc-theme-local-real-estate-layer-toggler-count" : "sc-theme-local-real-estate-layer-toggler-count-with-box"}>{" (" + this.state.recordCount + ")"}</label>
         </div>
 
         <div>{this.props.children}</div>

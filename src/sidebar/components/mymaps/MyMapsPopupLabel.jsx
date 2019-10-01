@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import * as helpers from "../../../helpers/helpers";
 import * as myMapsHelpers from "./myMapsHelpers";
 import "./MyMapsPopupLabel.css";
-import OLOverlayCheckbox from "../../../helpers/OLOverlayCheckbox.jsx";
 import Slider from "rc-slider";
 import { MouseWheelZoom } from "ol/interaction";
 
@@ -15,7 +14,8 @@ class MyMapsPopupLabel extends Component {
 
     this.state = {
       label: props.item.label,
-      labelRotation: this.props.item.labelRotation
+      labelRotation: this.props.item.labelRotation,
+      showLabel: this.props.item.labelVisible
     };
   }
 
@@ -40,8 +40,9 @@ class MyMapsPopupLabel extends Component {
     this.props.onLabelChange(this.props.item, evt.target.value);
   };
 
-  onLabelVisibilityChange = checked => {
-    this.props.onLabelVisibilityChange(this.props.item.id, !checked);
+  onLabelVisibilityChange = event => {
+    this.props.onLabelVisibilityChange(this.props.item.id, event.target.checked);
+    this.setState({ showLabel: event.target.checked });
   };
 
   // THIS IS REQUIRED WHEN CHANGING LABEL FROM POPUP
@@ -55,19 +56,21 @@ class MyMapsPopupLabel extends Component {
     this.props.onLabelRotationChange(this.props.item, evt.target.value);
   };
 
+  // onChangeTest = evt => {
+  //   this.setState({ checkedTest: evt.target.checked });
+  // };
+
   render() {
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
     return (
       <div>
         <div className="sc-mymaps-popup-label-toggler">
           <div className={this.props.item.drawType === "Text" ? "sc-mymaps-popup-checkbox disabled" : "sc-mymaps-popup-checkbox"}>
-            <OLOverlayCheckbox
-              label={"Show Label"}
-              checked={this.props.item.labelVisible}
-              id={this.props.item.id}
-              onCheckboxClick={checked => {
-                this.onLabelVisibilityChange(checked);
-              }}
-            />
+            <label style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none", KhtmlUserSelect: "none", MozUserSelect: "none", MsUserSelect: "none", UserSelect: "none" }} onClick={this.onLabelVisibilityChange}>
+              <input style={isSafari ? { position: "relative" } : { position: "relative", top: "1.5px" }} type="checkbox" defaultChecked={this.state.showLabel} />
+              Show Label
+            </label>
           </div>
 
           <div className="sc-mymaps-popup-slider">

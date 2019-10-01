@@ -86,7 +86,6 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
   let layerList = [];
   // MAIN GROUP INFO CALL
   let layerGroupInfo = await helpers.getJSONWait(layerGroupURL);
-  console.log(layerGroupInfo);
   if (layerGroupInfo === undefined) return;
 
   let groupLayerList = null;

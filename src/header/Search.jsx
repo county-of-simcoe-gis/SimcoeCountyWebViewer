@@ -115,7 +115,6 @@ class Search extends Component {
       let limit = defaultSearchLimit;
       if (this.state.showMore) limit = 50;
       await helpers.getJSONWait(searchURL(this.state.value, this.state.selectedType.value, undefined, limit), responseJson => {
-        console.log(responseJson);
         if (responseJson !== undefined) this.setState({ searchResults: responseJson });
         else this.setState({ searchResults: [] });
       });
@@ -129,6 +128,7 @@ class Search extends Component {
   myMapsClick = evt => {
     const result = this.state.searchResults[0];
 
+    if (searchIconLayer.getSource().getFeatures()[0] === undefined) return;
     // ADD MYMAPS
     if (searchGeoLayer.getSource().getFeatures().length === 0) window.emitter.emit("addMyMapsFeature", searchIconLayer.getSource().getFeatures()[0], result.Name);
     else window.emitter.emit("addMyMapsFeature", searchGeoLayer.getSource().getFeatures()[0], result.Name);
@@ -186,34 +186,13 @@ class Search extends Component {
         });
 
         if (feature !== undefined) {
-          window.popup.show(evt.coordinate, <PopupContent key={helpers.getUID()} feature={feature} removeMarkersClick={this.removeMarkersClick} myMapsClick={this.myMapsClick} shareLocationId={this.state.searchResults[0].LocationID} directionsClick={evt => this.directionsClick(evt)} />, "Actions");
+          window.popup.show(evt.coordinate, <PopupContent key={helpers.getUID()} feature={feature} removeMarkersClick={this.removeMarkersClick} myMapsClick={this.myMapsClick} shareLocationId={this.state.searchResults[0].location_id} directionsClick={evt => this.directionsClick(evt)} />, "Actions");
         }
       });
     }
   }
 
-  // getWKTFeature(wktString) {
-  //   if (wktString === undefined) return;
-
-  //   // READ WKT
-  //   var wkt = new WKT();
-  //   var feature = wkt.readFeature(wktString, {
-  //     dataProjection: "EPSG:3857",
-  //     featureProjection: "EPSG:3857"
-  //   });
-  //   return feature;
-  // }
-
   jsonCallback(result) {
-    // SOME FEATURES HAVEN"T BEEN PROCESSED YET
-    // if (result.WKTShape === undefined || result.WKTShape === "" || result.WKTShape === null) {
-    //   console.log("WKT Shape is empty.");
-    //   return;
-    // }
-
-    // GET FIRST FEATURE
-    //const result = resultArray[0];
-
     this.saveStateToStorage(result);
 
     // EMTI SEARCH COMPLETE
@@ -224,9 +203,7 @@ class Search extends Component {
     // SET STATE CURRENT ITEM
     this.setState({ searchResults: [result] });
 
-    // READ WKT
-    // const wktShape = helpers.getWKTFeature(result.WKTShape);
-    // const wktPoint = helpers.getWKTFeature(result.WKTPoint);
+    // GET GEOJSON VALUES
     const fullFeature = helpers.getFeatureFromGeoJSON(result.geojson);
     let pointFeature = helpers.getFeatureFromGeoJSON(result.geojson_point);
     pointFeature.setProperties({ isPlaceOrGeocode: false });
@@ -277,7 +254,6 @@ class Search extends Component {
     // CLEAR PREVIOUS SOURCE
     searchGeoLayer.getSource().clear();
 
-    console.log(this.state.value);
     // SET STATE CURRENT ITEM
     this.setState({ value, searchResults: [item] });
     if (item.place_id !== undefined || item.location_id == null) {
@@ -324,7 +300,6 @@ class Search extends Component {
   }
 
   onMoreOptionsClick = evt => {
-    console.log("more");
     this.setState(
       prevState => ({
         showMore: !prevState.showMore
@@ -333,7 +308,6 @@ class Search extends Component {
         let limit = defaultSearchLimit;
         if (this.state.showMore) limit = 50;
         await helpers.getJSONWait(searchURL(this.state.value, this.state.selectedType.value, undefined, limit), responseJson => {
-          console.log(responseJson);
           if (responseJson !== undefined) this.setState({ searchResults: responseJson });
           else this.setState({ searchResults: [] });
         });
@@ -416,7 +390,6 @@ class Search extends Component {
               let limit = defaultSearchLimit;
               if (this.state.showMore) limit = 50;
               await helpers.getJSONWait(searchURL(value, this.state.selectedType.value, undefined, limit), responseJson => {
-                console.log(responseJson);
                 if (responseJson !== undefined) this.setState({ searchResults: responseJson });
                 else this.setState({ searchResults: [] });
               });
@@ -466,7 +439,6 @@ class PopupContent extends Component {
   }
 
   getShareURL = value => {
-    console.log(this.props);
     //GET URL
     var url = window.location.href;
 
@@ -485,18 +457,18 @@ class PopupContent extends Component {
   render() {
     return (
       <div>
-        <button className="sc-button sc-search-popup-content-button" onMouseUp={helpers.convertMouseUpToClick} onClick={this.props.removeMarkersClick}>
+        <button className="sc-button sc-search-popup-content-button" onClick={this.props.removeMarkersClick}>
           Remove Markers
         </button>
-        <button className="sc-button sc-search-popup-content-button" onMouseUp={helpers.convertMouseUpToClick} onClick={this.props.myMapsClick}>
+        <button className="sc-button sc-search-popup-content-button" onClick={this.props.myMapsClick}>
           Add to My Maps
         </button>
         <CopyToClipboard text={this.state.shareURL}>
-          <button className={this.isPlaceOrGeocode ? "sc-hidden" : "sc-button sc-search-popup-content-button"} onMouseUp={helpers.convertMouseUpToClick} onClick={this.onShareClick}>
+          <button className={this.isPlaceOrGeocode ? "sc-hidden" : "sc-button sc-search-popup-content-button"} onClick={this.onShareClick}>
             Share this Location
           </button>
         </CopyToClipboard>
-        <button className="sc-button sc-search-popup-content-button" onMouseUp={helpers.convertMouseUpToClick} onClick={this.props.directionsClick}>
+        <button className="sc-button sc-search-popup-content-button" onClick={this.props.directionsClick}>
           Directions to Here
         </button>
       </div>
@@ -506,7 +478,7 @@ class PopupContent extends Component {
 
 const MoreOptions = props => {
   return (
-    <div className={props.numResults > 9 || props.showMore ? "sc-search-menu-options" : "sc-hidden"}>
+    <div className={props.numResults > 9 ? "sc-search-menu-options" : "sc-hidden"}>
       <button className="sc-button sc-search-more-options-button" onClick={props.onMoreOptionsClick}>
         {props.showMore ? "Show Less" : "Show More"}
       </button>

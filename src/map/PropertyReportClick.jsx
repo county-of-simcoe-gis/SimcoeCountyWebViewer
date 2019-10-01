@@ -20,7 +20,8 @@ let parcelLayer = new VectorLayer({
       color: "#E78080",
       width: 3
     })
-  })
+  }),
+  source: new VectorSource()
 });
 parcelLayer.setZIndex(500);
 
@@ -80,7 +81,7 @@ class PropertyReportClick extends Component {
         if (disable) break;
         const layer = layers[index];
         if (layer.get("disableParcelClick") && layer.getVisible() && layer.type === "IMAGE") {
-          var url = layer.getSource().getGetFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
+          var url = layer.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
           if (url) {
             // eslint-disable-next-line
             await helpers.getJSONWait(url, result => {
@@ -161,7 +162,6 @@ class PropertyReportClick extends Component {
           alt="copy"
           title="Copy to Clipboard"
           style={{ marginBottom: "-3px", marginLeft: "5px", cursor: "pointer" }}
-          onMouseUp={helpers.convertMouseUpToClick}
           onClick={() => {
             copy(arn);
             helpers.showMessage("Copy", "Roll Number copied to clipboard.");
@@ -181,16 +181,16 @@ class PropertyReportClick extends Component {
 
     rows.push(
       <InfoRow className="sc-no-select" key={helpers.getUID()} label={"Tools"}>
-        <span className="sc-fakeLink" onClick={this.addToMyMaps} onMouseUp={helpers.convertMouseUpToClick}>
+        <span className="sc-fakeLink" onClick={this.addToMyMaps}>
           [Add to My Maps]&nbsp;
         </span>
         <CopyToClipboard key={helpers.getUID()} text={this.state.shareURL}>
-          <span className="sc-fakeLink" onClick={this.onShareClick} onMouseUp={helpers.convertMouseUpToClick}>
+          <span className="sc-fakeLink" onClick={this.onShareClick}>
             [Share]
           </span>
         </CopyToClipboard>
         &nbsp;
-        <span className="sc-fakeLink" onClick={() => helpers.showURLWindow("https://maps.simcoe.ca/terms.html", false, "full")} onMouseUp={helpers.convertMouseUpToClick}>
+        <span className="sc-fakeLink" onClick={() => helpers.showURLWindow("https://maps.simcoe.ca/terms.html", false, "full")}>
           [Terms]
         </span>
       </InfoRow>
@@ -199,12 +199,12 @@ class PropertyReportClick extends Component {
     rows.push(<InfoRow key={helpers.getUID()} label={"Pointer Coordinates"} value={"Lat: " + Math.round(coords[1] * 10000) / 10000 + "  Long: " + Math.round(coords[0] * 10000) / 10000} />);
 
     rows.push(
-      <button key={helpers.getUID()} id={helpers.getUID()} className="sc-button sc-property-report-click-more-info" onClick={this.onMoreInfoClick} onMouseUp={helpers.convertMouseUpToClick}>
+      <button key={helpers.getUID()} id={helpers.getUID()} className="sc-button sc-property-report-click-more-info" onClick={this.onMoreInfoClick}>
         More Information
       </button>
     );
     rows.push(
-      <button key={helpers.getUID()} id={helpers.getUID()} className="sc-button sc-property-report-click-close" onClick={this.onCloseClick} onMouseUp={helpers.convertMouseUpToClick}>
+      <button key={helpers.getUID()} id={helpers.getUID()} className="sc-button sc-property-report-click-close" onClick={this.onCloseClick}>
         Close
       </button>
     );
