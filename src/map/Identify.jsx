@@ -45,7 +45,8 @@ class Identify extends Component {
       if (layer.getVisible() && layer.type === "IMAGE") {
         const name = layer.get("name");
         const wfsUrl = layer.get("wfsUrl");
-        const rootInfoUrl = layer.get("rootInfoUrl");
+        let displayName = layer.get("displayName");
+
         if (name !== null && wfsUrl !== null) {
           let features = [];
 
@@ -61,13 +62,13 @@ class Identify extends Component {
           helpers.getJSON(wfsUrlQuery, result => {
             const featureList = new GeoJSON().readFeatures(result);
             if (featureList.length > 0) {
-              this.getDisplayName(featureList[0], rootInfoUrl, displayName => {
-                featureList.forEach(feature => {
-                  features.push(feature);
-                });
-                if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName });
-                this.setState({ layers: layerList });
+              if (displayName === "") displayName = this.getDisplayNameFromFeature(featureList[0]);
+
+              featureList.forEach(feature => {
+                features.push(feature);
               });
+              if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName });
+              this.setState({ layers: layerList });
             }
           });
         }
@@ -117,28 +118,6 @@ class Identify extends Component {
       style: shadowStyle
     });
     window.map.addLayer(this.vectorLayerShadow);
-  };
-
-  getDisplayName = (feature, rootInfoUrl, callback) => {
-    if (rootInfoUrl === undefined || rootInfoUrl === null) {
-      return this.getDisplayNameFromFeature(feature);
-    } else {
-      // GET DISPLAY NAME FROM KEYWORD IN GEOSERVER
-      helpers.getJSON(rootInfoUrl, layerSub => {
-        const href = layerSub.layer.resource.href;
-        helpers.getJSON(href.replace("http:", "https:"), layer => {
-          const keywords = layer.featureType.keywords.string;
-          let displayName = keywords.find(item => {
-            if (item.indexOf("DISPLAY_NAME") !== -1) {
-              return item;
-            }
-          });
-
-          if (displayName !== undefined) callback(displayName.split("=")[1]);
-          else callback(this.getDisplayNameFromFeature(feature));
-        });
-      });
-    }
   };
 
   getDisplayNameFromFeature = feature => {

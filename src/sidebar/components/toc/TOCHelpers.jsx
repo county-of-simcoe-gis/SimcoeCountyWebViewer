@@ -13,13 +13,13 @@ export function getGroups() {
   let groups = [];
   for (var i = 0, len = TOCConfig.layerGroups.length; i < len; i++) {
     const group = TOCConfig.layerGroups[i];
-    const groupUrl = group.url;
+    const groupUrl = TOCConfig.layerGroupURL + group.name;
     const isDefault = group.defaultGroup;
-    const groupName = groupUrl.substring(groupUrl.lastIndexOf("/") + 1).split(".")[0];
+    const groupName = group.name;
     const groupObj = {
       value: groupName,
       label: groupName,
-      groupUrl: groupUrl,
+      url: groupUrl,
       defaultGroup: isDefault,
       visibleLayers: group.visibleLayers
     };
@@ -80,14 +80,13 @@ export function getBase64FromImageUrl(url, callback) {
 // BASIC INFO RETURNED FOR PERFORMANCE TO LOAD LAYERS IN THE TOC
 // SECOND CALL IS MADE TO GET THE REST OF THE LAYER INFO AND STYLES
 export async function getBasicLayerListByGroup(group, dataStore, callback) {
-  const defaultOpacity = 1;
-
-  const layerGroupURL = group.groupUrl;
+  const layerGroupURL = group.url;
   const visibleLayers = group.visibleLayers === undefined ? [] : group.visibleLayers;
 
   let layerList = [];
   // MAIN GROUP INFO CALL
   let layerGroupInfo = await helpers.getJSONWait(layerGroupURL);
+  console.log(layerGroupInfo);
   if (layerGroupInfo === undefined) return;
 
   let groupLayerList = null;
@@ -120,6 +119,8 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
     const workspace = groupLayerInfo.name.split(":")[0];
     const layerNameOnly = groupLayerInfo.name.split(":")[1];
     const rootLayerUrl = groupLayerInfo.href.replace("http:", "https:");
+    const layerDetails = groupLayerInfo.layerDetails;
+    const layerKeywords = layerDetails.featureType.keywords.string;
 
     const serverUrl = rootLayerUrl.split("/rest/")[0];
     const styleUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=${layerName}`;
@@ -140,8 +141,13 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
     }
 
     // LIVE LAYER
-    let liveLayer = false;
-    if (liveLayers.includes(layerNameOnly)) liveLayer = true;
+    let liveLayer = _isLiveLayer(layerKeywords);
+
+    //DISPLAY NAME
+    let displayName = _getDisplayName(layerKeywords);
+
+    // OPACITY
+    let opacity = _getOpacity(layerKeywords);
 
     let layerVisible = false;
     if (savedLayers !== undefined) {
@@ -152,8 +158,8 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
     let layer = null;
     layer = helpers.getImageWMSLayer(serverUrl + "/wms", groupLayerInfo.name);
     layer.setVisible(layerVisible);
-    layer.setOpacity(defaultOpacity);
-    layer.setProperties({ name: groupLayerInfo.name });
+    layer.setOpacity(opacity);
+    layer.setProperties({ name: groupLayerInfo.name, displayName: displayName });
     layer.setZIndex(layerIndex);
     window.map.addLayer(layer);
 
@@ -170,16 +176,44 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
       visible: layerVisible, // LAYER VISIBLE IN MAP, UPDATED BY CHECKBOX
       layer: layer, // OL LAYER OBJECT
       rootLayerUrl: rootLayerUrl, // ROOT LAYER INFO FROM GROUP END POINT
-      opacity: defaultOpacity, // OPACITY OF LAYER
-      keywords: [],
-      liveLayer: liveLayer,
-      wfsUrl: wfsUrl
+      opacity: opacity, // OPACITY OF LAYER
+      liveLayer: liveLayer, // LIVE LAYER FLAG
+      wfsUrl: wfsUrl,
+      displayName: displayName // DISPLAY NAME USED BY IDENTIFY
     });
 
     layerIndex--;
   }
 
   callback(layerList);
+}
+
+function _isLiveLayer(keywords) {
+  const liveLayerKeyword = keywords.find(function(item) {
+    return item.indexOf("LIVE_LAYER") !== -1;
+  });
+  if (liveLayerKeyword !== undefined) return true;
+  else return false;
+}
+
+function _getDisplayName(keywords) {
+  const displayNameKeyword = keywords.find(function(item) {
+    return item.indexOf("DISPLAY_NAME") !== -1;
+  });
+  if (displayNameKeyword !== undefined) {
+    const val = displayNameKeyword.split("=")[1];
+    return val;
+  } else return "";
+}
+
+function _getOpacity(keywords) {
+  const opacityKeyword = keywords.find(function(item) {
+    return item.indexOf("OPACITY") !== -1;
+  });
+  if (opacityKeyword !== undefined) {
+    const val = opacityKeyword.split("=")[1];
+    return parseFloat(val);
+  } else return 1;
 }
 
 export function disableLayersVisiblity(layers, callback) {
