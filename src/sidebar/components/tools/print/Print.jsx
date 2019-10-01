@@ -131,10 +131,9 @@ class Print extends Component {
     // SEND PRINT SERVER REQUEST HERE
     // =======================
     const printData = await printRequest.printRequest(printLayers, termsOfUse,  this.state);
-    const printAppId = printData.layout.replace(" ","_");
+    const printAppId = printData.layout.replace(/ /g,"_");
     const outputFormat = printData.outputFormat.toLowerCase();
-    console.log(printData);
-    //console.log(JSON.stringify(printData)); 
+    // console.log(JSON.stringify(printData)); 
     let interval = 5000;
     let origin = window.location.origin;
     let testOrigin = 'http://localhost:8080'
@@ -171,18 +170,18 @@ class Print extends Component {
             })
     }
     //post request to server and check status
-    // fetch(url, {
-    //         method: 'POST',
-    //         headers: {
-    //             'Content-Type': 'application/json'
-    //         },
-    //         body: encodedPrintRequest
-    //     })
-    //     .then(response => response.json())
-    //     .then((response) => {
-    //         checkStatus(response)
-    //     })
-    //     .catch(error => console.error('Error:', error))
+    fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: encodedPrintRequest
+        })
+        .then(response => response.json())
+        .then((response) => {
+            checkStatus(response)
+        })
+        .catch(error => console.error('Error:', error))
   };
 
   getPrintLayers = () => {
