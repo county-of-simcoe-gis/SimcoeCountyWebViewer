@@ -165,7 +165,8 @@ class Print extends Component {
                 } else if ((data.done === true) && (data.status === "error")) {
                     // be handled as a gracefully displayed error message
                     // console.log(data.error);
-                    helpers.showMessage("Print Failed", "please report to admin", "red", 10000);
+                    helpers.showMessage("Print Failed", "please report issue to site admin", "red", 10000);
+                    this.setState({isPrinting: false});
                 }
             })
     }
@@ -179,7 +180,8 @@ class Print extends Component {
         })
         .then(response => response.json())
         .then((response) => {
-            checkStatus(response)
+            this.setState({isPrinting: true});
+            checkStatus(response);
         })
         .catch(error => console.error('Error:', error))
   };
