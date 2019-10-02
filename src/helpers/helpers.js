@@ -94,7 +94,7 @@ export function getArcGISTiledLayer(url) {
 export function getESRITileXYZLayer(url) {
   return new TileLayer({
     source: new XYZ({
-      attributions: 'Tiles © <a href="https://services.arcgisonline.com/ArcGIS/' + 'rest/services/World_Topo_Map/MapServer">ArcGIS</a>',
+      attributions: 'Tiles © <a href="https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer">ArcGIS</a>',
       url: url + "/tile/{z}/{y}/{x}"
     })
   });
@@ -377,10 +377,6 @@ export function flashPoint(coords, zoom = 15, duration = 5000) {
     })
   });
   window.map.addLayer(vectorLayer);
-
-  var marker = new Feature({
-    geometry: new Point(coords)
-  });
   var mstyle = new Style({
     image: new CircleStyle({
       radius: 5,

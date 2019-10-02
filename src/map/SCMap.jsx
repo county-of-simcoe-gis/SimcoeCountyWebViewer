@@ -15,15 +15,13 @@ import FooterTools from "./FooterTools.jsx";
 import { defaults as defaultControls, ScaleLine, FullScreen } from "ol/control.js";
 import BasemapSwitcher from "./BasemapSwitcher";
 import PropertyReportClick from "./PropertyReportClick.jsx";
-import Screenshot from "./Screenshot.jsx";
-import ContextMenu from "ol-contextmenu";
 import "ol-contextmenu/dist/ol-contextmenu.css";
 import { fromLonLat } from "ol/proj";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 
 import FloatingMenu, { FloatingMenuItem } from "../helpers/FloatingMenu.jsx";
-import Menu, { SubMenu, Item as MenuItem, Divider } from "rc-menu";
+import { Item as MenuItem } from "rc-menu";
 import Portal from "../helpers/Portal.jsx";
 import * as helpers from "../helpers/helpers";
 import Identify from "./Identify";
@@ -77,8 +75,6 @@ class SCMap extends Component {
 
     window.map.getViewport().addEventListener("contextmenu", evt => {
       evt.preventDefault();
-      var evtClone = Object.assign({}, evt);
-
       this.contextCoords = window.map.getEventCoordinate(evt);
 
       const menu = (
@@ -139,6 +135,7 @@ class SCMap extends Component {
     var ua = window.navigator.userAgent;
     var msie = ua.indexOf("MSIE ");
 
+    // eslint-disable-next-line
     if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
       // If Internet Explorer, return version number
       this.setState({ isIE: true });
