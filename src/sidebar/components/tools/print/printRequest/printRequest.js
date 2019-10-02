@@ -138,19 +138,19 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
             let styles = {};
             //default label config
             let labels = {
-                type :"text",
-                fontFamily :"sans-serif",
-                fontSize :"0px",
-                fontStyle :"normal",
-                fontWeight :"bold",
-                haloColor :"#123456",
-                haloOpacity :0,
-                haloRadius :0,
-                label :"",
-                labelAlign :"cm",
-                labelRotation :0,
-                labelXOffset :0,
-                labelYOffset :0
+                type: "text",
+                fontFamily: "sans-serif",
+                fontSize: "0px",
+                fontStyle: "normal",
+                fontWeight: "bold",
+                haloColor: "#123456",
+                haloOpacity: 0,
+                haloRadius: 0,
+                label: "",
+                labelAlign: "cm",
+                labelRotation: 0,
+                labelXOffset: 0,
+                labelYOffset: 0
             };
             if (Object.getPrototypeOf(f.values_.geometry).constructor.name === "LineString") {
                 styles.type = "Line"
@@ -165,14 +165,15 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 styles.strokeColor = utils.rgbToHex(...f.style_.stroke_.color_);
                 styles.strokeOpacity = Number(([...f.style_.stroke_.color_])[3]);
                 styles.strokeWidth = Number(f.style_.stroke_.width_);
-                if (f.style_.stroke_.lineDash === [10]) {
+
+                let dash = [10];
+                let dot = [1, 5];
+                if (f.style_.stroke_.lineDash_ !== null && f.style_.stroke_.lineDash_[0] === dash[0]) {
                     styles.strokeDashstyle = "dash";
                 }
-                if (f.style_.stroke_.lineDash === [1,5]) {
+                if (f.style_.stroke_.lineDash_ !== null && f.style_.stroke_.lineDash_[0] === dot[0] && f.style_.stroke_.lineDash_[1] === dot[1]) {
                     styles.strokeDashstyle = "dot";
-                }
-                if (typeof f.style_.stroke_.lineDash === "undefined"||f.style_.stroke_.lineDash===null) {
-                    styles.strokeDashstyle = "normal";
+                    styles.strokeLinecap= "round";
                 }
             }
 
@@ -189,7 +190,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                     labels.fontColor = f.style_.text_.fill_.color_ //utils.stringToColour()
                 }
                 if (f.style_.text_.stroke_ != null) {
-                    labels.haloRadius = f.style_.text_.stroke_.width_;
+                    labels.haloRadius = 1;
                     labels.haloColor = f.style_.text_.stroke_.color_;
                 }
                 if (f.style_.text_.font_ != null) {
