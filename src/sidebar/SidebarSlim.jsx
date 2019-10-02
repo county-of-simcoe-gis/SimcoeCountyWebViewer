@@ -27,7 +27,7 @@ const SidebarSlim = props => {
     <div className={window.sidebarOpen ? "sc-hidden" : "sc-sidebar-slim-container"}>
       <div className="sc-sidebar-slim-button-container" onClick={() => props.onClick("layers")}>
         <button className="sc-sidebar-slim-button">
-          <img src={images["legend-32x32.png"]} />
+          <img src={images["legend-32x32.png"]} alt="Layers" />
           <br />
           <span>Layers</span>
         </button>
@@ -35,7 +35,7 @@ const SidebarSlim = props => {
       <div className="sc-sidebar-slim-button-container" onClick={() => props.onClick("tools")}>
         <span className={props.toolActive ? "sc-tab-button-dot-tools" : "sc-hidden"} />
         <button className="sc-sidebar-slim-button">
-          <img src={images["tools-32x32.png"]} />
+          <img src={images["tools-32x32.png"]} alt="Tools" />
           <br />
           <span>Tools</span>
         </button>

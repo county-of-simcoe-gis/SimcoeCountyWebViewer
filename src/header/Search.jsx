@@ -119,6 +119,8 @@ class Search extends Component {
         else this.setState({ searchResults: [] });
       });
     });
+
+    helpers.addAppStat("Search Type DropDown", selectedType.value);
   };
 
   removeMarkersClick() {
@@ -313,6 +315,8 @@ class Search extends Component {
         });
       }
     );
+
+    helpers.addAppStat("Search More Button", "Click");
   };
 
   render() {
