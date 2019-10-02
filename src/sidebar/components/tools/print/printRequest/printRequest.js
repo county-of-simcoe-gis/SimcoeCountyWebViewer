@@ -47,27 +47,18 @@ export async function loadWMTSConfig(url, type, opacity) {
         "TRANSPARENT": "true"
     };
     wmtsCongif.matrixSet = "EPSG:3857";
-    wmtsCongif.baseURL = null;
-    wmtsCongif.layer = null;
-    wmtsCongif.matrices = null;
-    if (type === "OSM") {
-        wmtsCongif.baseURL = "https://tile.openstreetmap.org/{TileMatrix}/{TileCol}/{TileRow}"+".png";
-        wmtsCongif.layer = "wmts-osm"
-        wmtsCongif.matrices = await loadTileMatrix(url, type);
-    } else {
-        wmtsCongif.baseURL = url + "/tile/{TileMatrix}/{TileRow}/{TileCol}";
-        wmtsCongif.layer = utils.extractServiceName(url);
-        wmtsCongif.matrices = await loadTileMatrix(url + "/WMTS/1.0.0/WMTSCapabilities.xml", type);
-    }
+    wmtsCongif.baseURL = url + "/tile/{TileMatrix}/{TileRow}/{TileCol}";
+    wmtsCongif.layer = utils.extractServiceName(url);
+    wmtsCongif.matrices = await loadTileMatrix(url + "/WMTS/1.0.0/WMTSCapabilities.xml", type);
+
     return wmtsCongif;
 }
 
 export async function printRequest(mapLayers, description, printSelectedOption) {
 
-    const osmUrl = "https://osmlab.github.io/wmts-osm/WMTSCapabilities.xml"
     const currentMapViewCenter = window.map.getView().values_.center;
     const mapProjection = window.map.getView().getProjection().code_;
-    const mapExtent = window.map.getView().getProjection().extent_;
+    const mapExtent = window.map.getView().calculateExtent();
     const currentMapScale = helpers.getMapScale();
     const mapCenter = [-8875141.45, 5543492.45];
     const longitudeFirst = true;
@@ -93,6 +84,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
         "World_Imagery",
     ];
 
+    //count for geoJsonLayers to assist in placing wms layers
     let geoJsonLayersCount = 0;
 
     // init print request object
@@ -172,7 +164,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 }
                 if (f.style_.stroke_.lineDash_ !== null && f.style_.stroke_.lineDash_[0] === dot[0] && f.style_.stroke_.lineDash_[1] === dot[1]) {
                     styles.strokeDashstyle = "dot";
-                    styles.strokeLinecap= "round";
+                    styles.strokeLinecap = "round";
                 }
             }
 
@@ -242,15 +234,22 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
 
             if (layers.values_.service.type === "OSM") {
                 mainMap.push({
-                    baseURL: "https://tile.openstreetmap.org/{z}/{x}/{-y}.png",
+                    baseURL: "http://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
                     type: "OSM",
-                    imageExtension: "png",
-
+                    opacity: 1,
+                    imageFormat: "image/png",
+                    customParams: {
+                        "TRANSPARENT": "true"
+                    }
                 });
                 overviewMap.push({
-                    baseURL: "https://tile.openstreetmap.org/{z}/{x}/{-y}.png",
+                    baseURL: "http://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
                     type: "OSM",
-                    imageExtension: "png"
+                    opacity: 1,
+                    imageFormat: "image/png",
+                    customParams: {
+                        "TRANSPARENT": "true"
+                    }
                 });
             } else {
                 mainMap.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type, l.values_.opacity))
@@ -327,10 +326,9 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
             })
         });
     }
-    
-    
     sortLayers(mainMap, sortedMainMap);
     sortLayers(overviewMap, sortedOverviewMap);
+
     // ..........................................................................
     // Print Request Template Switcher
     // ..........................................................................
@@ -382,8 +380,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 p.attributes.title = options.mapTitle;
                 p.attributes.description = description;
                 p.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                p.attributes.overviewMap.center = mapCenter;
                 p.attributes.overviewMap.projection = mapProjection;
+                p.attributes.overviewMap.center = currentMapViewCenter;
                 p.attributes.overviewMap.scale = mapScale;
                 p.attributes.overviewMap.longitudeFirst = longitudeFirst;
                 p.attributes.overviewMap.rotation = rotation;
@@ -392,8 +390,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 break;
             case 'Map Only':
                 p.layout = "map only";
-                p.attributes.map.maxHeight = options.mapOnlyHeight;
-                p.attributes.map.maxWidth = options.mapOnlyWidth;
+                p.attributes.map.height = options.mapOnlyHeight;
+                p.attributes.map.width = options.mapOnlyWidth;
                 break;
             case 'Map Only Portrait':
                 p.layout = "map only portrait";
@@ -409,7 +407,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     }
 
     switchTemplates(printRequest, printSelectedOption)
-    //console.log(mapLayers);
+    console.log(mapLayers);
     console.log(printRequest);
 
     return printRequest;
