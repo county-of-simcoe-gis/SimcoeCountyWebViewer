@@ -51,7 +51,7 @@ export async function loadWMTSConfig(url, type, opacity) {
     wmtsCongif.layer = null;
     wmtsCongif.matrices = null;
     if (type === "OSM") {
-        wmtsCongif.baseURL = "https://a.tile.openstreetmap.org/{TileMatrix}/{TileRow}/{TileCol}.png";
+        wmtsCongif.baseURL = "https://tile.openstreetmap.org/{TileMatrix}/{TileCol}/{TileRow}"+".png";
         wmtsCongif.layer = "wmts-osm"
         wmtsCongif.matrices = await loadTileMatrix(url, type);
     } else {
@@ -78,7 +78,6 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
         "LIO_Cartographic_LIO_Topographic",
         "Streets_Black_And_White_Cache",
         "World_Topo_Map",
-        "wmts-osm",
         "Topo_Cache",
         "Streets_Cache",
         "Ortho_2018_Cache",
@@ -242,8 +241,17 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
             let layers = l.values_.layers.array_[key]
 
             if (layers.values_.service.type === "OSM") {
-                mainMap.push(await loadWMTSConfig(osmUrl, layers.values_.service.type, l.values_.opacity))
-                overviewMap.push(await loadWMTSConfig(osmUrl, layers.values_.service.type, l.values_.opacity))
+                mainMap.push({
+                    baseURL: "https://tile.openstreetmap.org/{z}/{x}/{-y}.png",
+                    type: "OSM",
+                    imageExtension: "png",
+
+                });
+                overviewMap.push({
+                    baseURL: "https://tile.openstreetmap.org/{z}/{x}/{-y}.png",
+                    type: "OSM",
+                    imageExtension: "png"
+                });
             } else {
                 mainMap.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type, l.values_.opacity))
                 overviewMap.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type, l.values_.opacity))
@@ -305,6 +313,9 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 if (l.type === "wms") {
                     sorted.splice(geoJsonLayersCount, 0, l)
                 }
+                if (l.type === "OSM") {
+                    sorted.push(l)
+                }
                 if (l.type === "WMTS") {
                     if (!found && l.layer === key) {
                         sorted.push(l);
@@ -316,9 +327,10 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
             })
         });
     }
+    
+    
     sortLayers(mainMap, sortedMainMap);
     sortLayers(overviewMap, sortedOverviewMap);
-
     // ..........................................................................
     // Print Request Template Switcher
     // ..........................................................................
@@ -397,7 +409,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     }
 
     switchTemplates(printRequest, printSelectedOption)
-    console.log(mapLayers);
+    //console.log(mapLayers);
     console.log(printRequest);
 
     return printRequest;
