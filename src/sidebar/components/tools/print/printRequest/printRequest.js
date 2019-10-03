@@ -59,8 +59,9 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     const currentMapViewCenter = window.map.getView().values_.center;
     const mapProjection = window.map.getView().getProjection().code_;
     const mapExtent = window.map.getView().calculateExtent();
+    const mapExtentHeight = window.map.getSize()[1]
+    const mapExtentWidth = window.map.getSize()[0]
     const currentMapScale = helpers.getMapScale();
-    const mapCenter = [-8875141.45, 5543492.45];
     const longitudeFirst = true;
     const mapScale = 3000000;
     const rotation = 0;
@@ -83,8 +84,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
         "Bathymetry_Cache",
         "World_Imagery",
     ];
-
-    let mapfishOutputFormats = {
+    const mapfishOutputFormats = {
         JPG:"jpeg",
         PNG:"png",
         PDF:"pdf"
@@ -117,10 +117,6 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     //stroke format for geoJson
     let dash = [10];
     let dot = [1, 5];
-    // let legend = {
-    //     name: "Legend",
-    //     classes: []
-    // };
 
     let configureVectorMyMapsLayer = (l) => {
         let drawablefeatures = Object.values(l.values_.source.undefIdIndex_);
@@ -192,10 +188,11 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                     labels.haloColor = f.style_.text_.stroke_.color_;
                 }
                 if (f.style_.text_.font_ != null) {
-                    labels.fontFamily = (f.style_.text_.font_).split(" ")[2];
-                    labels.fontSize = (f.style_.text_.font_).split(" ")[1];
+                    let fontStyle = (f.style_.text_.font_).split(" ");
+                    labels.fontFamily = fontStyle[2];
+                    labels.fontSize = fontStyle[1];
+                    labels.fontWeight = fontStyle[0];
                     labels.fontStyle = "normal";
-                    labels.fontWeight = (f.style_.text_.font_).split(" ")[0];
                 }
             }
 
@@ -278,10 +275,6 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 "TRANSPARENT": "true"
             }
         });
-        // legend.classes.push({
-        //     icons: [iconServiceUrl + (l.values_.source.params_.LAYERS.replace(/ /g, "%20"))],
-        //     name: l.values_.source.params_.LAYERS.split(":")[1]
-        // });
     }
 
     let getLayerByType = async (l) => {
@@ -342,6 +335,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
 
     let switchTemplates = (p, options) => {
 
+        
+
         //shared print request properties
         p.attributes.map.projection = mapProjection;
         p.attributes.map.longitudeFirst = longitudeFirst;
@@ -360,6 +355,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 p.attributes.map.center = currentMapViewCenter;
                 break;
             case "preserveMapExtent":
+                p.attributes.map.height = mapExtentHeight;
+                p.attributes.map.width = mapExtentWidth;
                 p.attributes.map.bbox = mapExtent;
                 break;
             default:
