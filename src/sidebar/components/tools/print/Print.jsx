@@ -132,7 +132,7 @@ class Print extends Component {
     // =======================
     const printData = await printRequest.printRequest(printLayers, termsOfUse,  this.state);
     const printAppId = printData.layout.replace(/ /g,"_");
-    const outputFormat = printData.outputFormat.toLowerCase();
+    const outputFormat = printData.outputFormat;
     // console.log(JSON.stringify(printData)); 
     let interval = 5000;
     let origin = window.location.origin;
