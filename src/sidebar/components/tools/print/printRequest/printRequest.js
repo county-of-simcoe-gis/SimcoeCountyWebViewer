@@ -84,6 +84,12 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
         "World_Imagery",
     ];
 
+    let mapfishOutputFormats = {
+        JPG:"jpeg",
+        PNG:"png",
+        PDF:"pdf"
+    }
+
     //count for geoJsonLayers to assist in placing wms layers
     let geoJsonLayersCount = 0;
 
@@ -108,6 +114,9 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     let overviewMap = [];
     let sortedMainMap = [];
     let sortedOverviewMap = [];
+    //stroke format for geoJson
+    let dash = [10];
+    let dot = [1, 5];
     // let legend = {
     //     name: "Legend",
     //     classes: []
@@ -157,8 +166,6 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 styles.strokeOpacity = Number(([...f.style_.stroke_.color_])[3]);
                 styles.strokeWidth = Number(f.style_.stroke_.width_);
 
-                let dash = [10];
-                let dot = [1, 5];
                 if (f.style_.stroke_.lineDash_ !== null && f.style_.stroke_.lineDash_[0] === dash[0]) {
                     styles.strokeDashstyle = "dash";
                 }
@@ -341,8 +348,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
         p.attributes.map.rotation = rotation;
         p.attributes.map.dpi = dpi;
         p.attributes.map.layers = sortedMainMap;
-        p.outputFormat = options.printFormatSelectedOption.value;
-
+        p.outputFormat = mapfishOutputFormats[options.printFormatSelectedOption.value]; 
+       
         switch (options.mapScaleOption) {
             case "forceScale":
                 p.attributes.map.scale = options.forceScale;
