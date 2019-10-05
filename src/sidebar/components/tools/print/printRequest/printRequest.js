@@ -59,8 +59,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     const currentMapViewCenter = window.map.getView().values_.center;
     const mapProjection = window.map.getView().getProjection().code_;
     const mapExtent = window.map.getView().calculateExtent();
-    const mapExtentHeight = window.map.getSize()[1]
-    const mapExtentWidth = window.map.getSize()[0]
+    const viewPortHeight = window.map.getSize()[1]
+    const viewPortWidth = window.map.getSize()[0]
     const currentMapScale = helpers.getMapScale();
     const longitudeFirst = true;
     const mapScale = 3000000;
@@ -89,6 +89,15 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
         PNG:"png",
         PDF:"pdf"
     }
+    // template dimensions to be used for preserve map extensions
+    const templateDimensions = {};
+    templateDimensions["8X11 Portrait"]=[570,639];
+    templateDimensions["11X8 Landscape"]=[750,450];
+    templateDimensions["8X11 Portrait Overview"]=[];
+    templateDimensions["Map Only"]=[viewPortWidth,viewPortHeight];
+    templateDimensions["Map Only Portrait"]=[570,752];
+    templateDimensions["Map Only Landscape"]=[750,572];
+
 
     //count for geoJsonLayers to assist in placing wms layers
     let geoJsonLayersCount = 0;
@@ -355,8 +364,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 p.attributes.map.center = currentMapViewCenter;
                 break;
             case "preserveMapExtent":
-                p.attributes.map.height = mapExtentHeight;
-                p.attributes.map.width = mapExtentWidth;
+                p.attributes.map.height = utils.computeDimension(...(templateDimensions[options.printSizeSelectedOption.value]),viewPortWidth,viewPortHeight).newHeight;
+                p.attributes.map.width = utils.computeDimension(...(templateDimensions[options.printSizeSelectedOption.value]),viewPortWidth,viewPortHeight).newWidth;
                 p.attributes.map.bbox = mapExtent;
                 break;
             default:
@@ -372,6 +381,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 p.attributes.title = options.mapTitle;
                 p.attributes.description = description;
                 p.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                
                 break;
             case '11X8 Landscape':
                 p.layout = "letter landscape";
