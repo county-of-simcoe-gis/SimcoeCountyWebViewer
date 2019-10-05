@@ -94,4 +94,19 @@ let extractServiceName = (url)=>{
     return serviceName
 }
 
-export default {rgbToHex, stringToColour, xmlToJson, removeNull, extractServiceName}
+let computeDimension = (templateWidth, templateHeight, viewportWidth, viewportHeight) =>{
+    let dimensions = {};
+
+    if ((viewportHeight>viewportWidth)||(viewportHeight===viewportWidth)) {
+        dimensions.newWidth = templateHeight/(viewportHeight/viewportWidth);
+        dimensions.newHeight = templateHeight;
+    }
+    else if(viewportHeight<viewportWidth) {
+        dimensions.newWidth = templateWidth;
+        dimensions.newHeight = templateHeight/(viewportWidth/viewportHeight);
+    }
+
+    return dimensions
+}
+
+export default {rgbToHex, stringToColour, xmlToJson, removeNull, extractServiceName, computeDimension}
