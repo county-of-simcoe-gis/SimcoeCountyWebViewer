@@ -203,7 +203,7 @@ const FeatureItem = props => {
         <div className="sc-fakeLink sc-identify-feature-header-label" onClick={() => setOpen(!open)}>
           {displayName + ": " + feature.get(displayName)}
         </div>
-        <img className="sc-identify-feature-header-img" src={images["zoom-in.png"]} onClick={() => props.onZoomClick(feature)}></img>
+        <img className="sc-identify-feature-header-img" src={images["zoom-in.png"]} onClick={() => props.onZoomClick(feature)} alt="Zoom In"></img>
       </div>
       <div className={open ? "sc-identify-feature-content" : "sc-hidden"}>
         {Object.keys(featureProps).map((keyName, i) => {

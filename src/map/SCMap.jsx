@@ -45,6 +45,7 @@ class SCMap extends Component {
 
   componentDidMount() {
     const centerCoords = [-8875141.45, 5543492.45];
+    const resolutions = [305.74811314055756, 152.87405657041106, 76.43702828507324, 38.21851414253662, 19.10925707126831, 9.554628535634155, 4.77731426794937, 2.388657133974685, 1.1943285668550503, 0.5971642835598172, 0.29858214164761665, 0.1492252984505969];
     var map = new Map({
       controls: defaultControls().extend([scaleLineControl, new FullScreen()]),
       layers: [],
@@ -53,6 +54,7 @@ class SCMap extends Component {
         center: centerCoords,
         zoom: 10,
         maxZoom: 20
+        //resolutions: resolutions
       }),
       interactions: defaultInteractions({ keyboard: true, altShiftDragRotate: false, pinchRotate: false }),
       keyboardEventTarget: document

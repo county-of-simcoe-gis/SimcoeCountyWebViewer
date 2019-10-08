@@ -13,8 +13,15 @@ class FooterTools extends Component {
 
     this.onMapLoad = this.onMapLoad.bind(this);
     this.state = {
-      scale: ""
+      scale: "",
+      basemapType: "IMAGERY"
     };
+
+    // LISTEN FOR MAP TO MOUNT
+    window.emitter.addListener("basemapChanged", type => {
+      console.log(type);
+      this.setState({ basemapType: type });
+    });
   }
 
   onMapLoad() {
@@ -61,8 +68,9 @@ class FooterTools extends Component {
   };
 
   render() {
+    console.log(this.state.basemapType);
     return (
-      <div className="sc-map-footer-scale-only">{"Scale: 1:" + this.state.scale}</div>
+      <div className={this.state.basemapType === "IMAGERY" ? "sc-map-footer-scale-only imagery" : "sc-map-footer-scale-only topo"}>{"Scale: 1:" + this.state.scale}</div>
       //   <div className="sc-map-footer-tools-button-bar sc-no-select ">
       //     <div id="sc-map-footer-tools-title-label" className="sc-map-footer-tools-button-bar-title"></div>
       //       <div className="sc-map-footer-tools-button-bar-icons">
