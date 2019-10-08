@@ -158,7 +158,7 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
     layer = helpers.getImageWMSLayer(serverUrl + "/wms", groupLayerInfo.name);
     layer.setVisible(layerVisible);
     layer.setOpacity(opacity);
-    layer.setProperties({ name: groupLayerInfo.name, displayName: displayName });
+    layer.setProperties({ name: layerNameOnly, displayName: displayName });
     layer.setZIndex(layerIndex);
     window.map.addLayer(layer);
 

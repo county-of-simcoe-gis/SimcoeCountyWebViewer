@@ -135,7 +135,7 @@
 /* MOBILE */
 @media only screen and (max-width: 770px) {
   #sc-search-textbox {
-    height: 35px;
+    height: 41px;
     width: 100%;
     font-family: Verdana, Arial, sans-serif;
     font-size: 22px;
@@ -166,7 +166,7 @@
 /* Portrait and Landscape */
 @media only screen and (min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 1) {
   #sc-search-textbox {
-    height: 30px;
+    height: 41px;
   }
 }
 
@@ -175,7 +175,7 @@
 /* Portrait and Landscape */
 @media only screen and (min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2) {
   #sc-search-textbox {
-    height: 30px;
+    height: 41px;
   }
 }
 
@@ -184,7 +184,7 @@
 /* Portrait and Landscape */
 @media only screen and (min-device-width: 834px) and (max-device-width: 1112px) and (-webkit-min-device-pixel-ratio: 2) {
   #sc-search-textbox {
-    height: 30px;
+    height: 41px;
   }
 }
 
@@ -193,7 +193,7 @@
 /* Portrait and Landscape */
 @media only screen and (min-device-width: 1024px) and (max-device-width: 1366px) and (-webkit-min-device-pixel-ratio: 2) {
   #sc-search-textbox {
-    height: 30px;
+    height: 41px;
   }
 }
 
@@ -202,7 +202,7 @@
 /* Portrait and Landscape */
 @media only screen and (min-device-width: 320px) and (max-device-width: 480px) and (-webkit-min-device-pixel-ratio: 2) {
   #sc-search-textbox {
-    height: 30px;
+    height: 41px;
   }
 }
 
@@ -211,7 +211,7 @@
 /* Portrait and Landscape */
 @media only screen and (min-device-width: 320px) and (max-device-width: 568px) and (-webkit-min-device-pixel-ratio: 2) {
   #sc-search-textbox {
-    height: 30px;
+    height: 41px;
   }
 }
 
@@ -220,7 +220,7 @@
 /* Portrait and Landscape */
 @media only screen and (min-device-width: 375px) and (max-device-width: 667px) and (-webkit-min-device-pixel-ratio: 2) {
   #sc-search-textbox {
-    height: 30px;
+    height: 41px;
   }
 }
 
@@ -229,7 +229,7 @@
 /* Portrait and Landscape */
 @media only screen and (min-device-width: 414px) and (max-device-width: 736px) and (-webkit-min-device-pixel-ratio: 3) {
   #sc-search-textbox {
-    height: 30px;
+    height: 41px;
   }
 }
 
@@ -238,6 +238,6 @@
 /* Portrait and Landscape */
 @media only screen and (min-device-width: 375px) and (max-device-width: 812px) and (-webkit-min-device-pixel-ratio: 3) {
   #sc-search-textbox {
-    height: 30px;
+    height: 41px;
   }
 }

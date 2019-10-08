@@ -237,6 +237,9 @@ class BasemapSwitcher extends Component {
     this.state.streetsLayer.setVisible(this.state.streetsCheckbox);
     this.state.worldImageryLayer.setVisible(this.state.streetsCheckbox);
     this.setTopoLayerVisiblity(-1);
+
+    // EMIT A BASEMAP CHANGE
+    window.emitter.emit("basemapChanged", "IMAGERY");
   };
 
   disableImagery = value => {
@@ -268,6 +271,9 @@ class BasemapSwitcher extends Component {
 
     this.setState({ activeButton: "topo" });
     this.setTopoLayerVisiblity(this.state.topoActiveIndex);
+
+    // EMIT A BASEMAP CHANGE
+    window.emitter.emit("basemapChanged", "TOPO");
   };
 
   disableTopo = value => {
