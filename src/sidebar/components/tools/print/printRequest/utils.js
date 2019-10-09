@@ -94,18 +94,27 @@ let extractServiceName = (url)=>{
     return serviceName
 }
 
-let computeDimension = (templateWidth, templateHeight, viewportWidth, viewportHeight) =>{
+let computeDimension = (templateWidth, templateHeight, extent) =>{
     let dimensions = {};
+    const xMin = extent[0];
+    const xMax = extent[2];
+    const yMin = extent[1];
+    const yMax = extent[3];
+    const extentWidth = Math.abs(Math.abs(xMin) - Math.abs(xMax))
+    const extentHeight = Math.abs(Math.abs(yMin) - Math.abs(yMax))
 
-    if ((viewportHeight>viewportWidth)||(viewportHeight===viewportWidth)) {
-        dimensions.newWidth = templateHeight/(viewportHeight/viewportWidth);
+    if ((extentHeight>extentWidth)||(extentHeight===extentWidth)) {
+        dimensions.newWidth = (extentWidth/extentHeight)*templateHeight;
         dimensions.newHeight = templateHeight;
+        dimensions.x = (Math.abs(extentWidth-dimensions.newWidth))/2
     }
-    else if(viewportHeight<viewportWidth) {
+    else if(extentHeight<extentWidth) {
         dimensions.newWidth = templateWidth;
-        dimensions.newHeight = templateHeight/(viewportWidth/viewportHeight);
+        dimensions.newHeight = (extentHeight/extentWidth)*templateWidth;
+        dimensions.y = (Math.abs(extentHeight-dimensions.newHeight))/2
     }
-
+    //console.log(dimensions);
+    
     return dimensions
 }
 

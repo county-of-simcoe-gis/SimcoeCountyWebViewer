@@ -82,21 +82,21 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
         "Ortho_1989_Cache",
         "Ortho_1954_Cache",
         "Bathymetry_Cache",
-        "World_Imagery",
+        "World_Imagery"
     ];
     const mapfishOutputFormats = {
-        JPG:"jpeg",
-        PNG:"png",
-        PDF:"pdf"
+        JPG: "jpeg",
+        PNG: "png",
+        PDF: "pdf"
     }
     // template dimensions to be used for preserve map extensions
     const templateDimensions = {};
-    templateDimensions["8X11 Portrait"]=[570,639];
-    templateDimensions["11X8 Landscape"]=[750,450];
-    templateDimensions["8X11 Portrait Overview"]=[];
-    templateDimensions["Map Only"]=[viewPortWidth,viewPortHeight];
-    templateDimensions["Map Only Portrait"]=[570,752];
-    templateDimensions["Map Only Landscape"]=[750,572];
+    templateDimensions["8X11 Portrait"] = [570, 639];
+    templateDimensions["11X8 Landscape"] = [750, 450];
+    templateDimensions["8X11 Portrait Overview"] = [570, 450];
+    templateDimensions["Map Only"] = [viewPortWidth, viewPortHeight];
+    templateDimensions["Map Only Portrait"] = [570, 752];
+    templateDimensions["Map Only Landscape"] = [750, 572];
 
 
     //count for geoJsonLayers to assist in placing wms layers
@@ -344,7 +344,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
 
     let switchTemplates = (p, options) => {
 
-        
+
 
         //shared print request properties
         p.attributes.map.projection = mapProjection;
@@ -352,8 +352,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
         p.attributes.map.rotation = rotation;
         p.attributes.map.dpi = dpi;
         p.attributes.map.layers = sortedMainMap;
-        p.outputFormat = mapfishOutputFormats[options.printFormatSelectedOption.value]; 
-       
+        p.outputFormat = mapfishOutputFormats[options.printFormatSelectedOption.value];
+
         switch (options.mapScaleOption) {
             case "forceScale":
                 p.attributes.map.scale = options.forceScale;
@@ -364,8 +364,10 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 p.attributes.map.center = currentMapViewCenter;
                 break;
             case "preserveMapExtent":
-                p.attributes.map.height = utils.computeDimension(...(templateDimensions[options.printSizeSelectedOption.value]),viewPortWidth,viewPortHeight).newHeight;
-                p.attributes.map.width = utils.computeDimension(...(templateDimensions[options.printSizeSelectedOption.value]),viewPortWidth,viewPortHeight).newWidth;
+                p.attributes.map.height = utils.computeDimension(...(templateDimensions[options.printSizeSelectedOption.value]), mapExtent).newHeight;
+                p.attributes.map.width = utils.computeDimension(...(templateDimensions[options.printSizeSelectedOption.value]), mapExtent).newWidth;
+                // p.attributes.map.x = utils.computeDimension(...(templateDimensions[options.printSizeSelectedOption.value]), mapExtent).x;
+                // p.attributes.map.y = utils.computeDimension(...(templateDimensions[options.printSizeSelectedOption.value]), mapExtent).y;
                 p.attributes.map.bbox = mapExtent;
                 break;
             default:
@@ -381,7 +383,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 p.attributes.title = options.mapTitle;
                 p.attributes.description = description;
                 p.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                
+
                 break;
             case '11X8 Landscape':
                 p.layout = "letter landscape";
@@ -423,6 +425,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     switchTemplates(printRequest, printSelectedOption)
     console.log(mapLayers);
     console.log(printRequest);
+    console.log(JSON.stringify(printRequest));
 
     return printRequest;
 }
