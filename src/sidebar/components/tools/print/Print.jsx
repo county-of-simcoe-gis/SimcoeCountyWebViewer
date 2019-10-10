@@ -163,9 +163,7 @@ class Print extends Component {
                         }
                     }, interval);
                 } else if ((data.done === true) && (data.status === "error")) {
-                    // be handled as a gracefully displayed error message
-                    // console.log(data.error);
-                    helpers.showMessage("Print Failed", "please report issue to site admin", "red", 10000);
+                    helpers.showMessage("Print Failed", "please report issue to site admin", "red", 15000);
                     this.setState({isPrinting: false});
                 }
             })
@@ -183,7 +181,7 @@ class Print extends Component {
             this.setState({isPrinting: true});
             checkStatus(response);
         })
-        .catch(error => console.error('Error:', error))
+        .catch(error =>  helpers.showMessage("Print Failed",`${error}`, "red", 15000))
   };
 
   getPrintLayers = () => {
