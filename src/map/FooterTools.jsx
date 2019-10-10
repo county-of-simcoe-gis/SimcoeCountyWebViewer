@@ -3,7 +3,8 @@ import React, { Component } from "react";
 import "./FooterTools.css";
 import * as helpers from "../helpers/helpers";
 
-const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) => `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
+const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
+  `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
 
 class FooterTools extends Component {
   constructor(props) {
@@ -68,9 +69,17 @@ class FooterTools extends Component {
   };
 
   render() {
-    console.log(this.state.basemapType);
+    const col = document.getElementsByClassName("ol-scale-line-inner");
+    if (col.length > 0) {
+      const olScaleBar = col[0];
+      let scScaleBar = document.getElementById("sc-scale-bar-text");
+      scScaleBar.setAttribute("style", "width: " + olScaleBar.style.width);
+    }
+
     return (
-      <div className={this.state.basemapType === "IMAGERY" ? "sc-map-footer-scale-only imagery" : "sc-map-footer-scale-only topo"}>{"Scale: 1:" + this.state.scale}</div>
+      <div id="sc-scale-bar-text" className={this.state.basemapType === "IMAGERY" ? "sc-map-footer-scale-only imagery" : "sc-map-footer-scale-only topo"}>
+        {"Scale: 1:" + this.state.scale}
+      </div>
       //   <div className="sc-map-footer-tools-button-bar sc-no-select ">
       //     <div id="sc-map-footer-tools-title-label" className="sc-map-footer-tools-button-bar-title"></div>
       //       <div className="sc-map-footer-tools-button-bar-icons">
