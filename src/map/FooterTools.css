@@ -15,6 +15,7 @@
   bottom: 25px;
   position: absolute;
   width: 100px;
+  min-width: 100px !important;
 }
 
 .sc-map-footer-scale-only.topo {

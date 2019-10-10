@@ -153,6 +153,7 @@ class Sidebar extends Component {
     var isLoading = false;
     for (var i = 1; i <= 100; i++) {
       if (isLoading) return;
+      // eslint-disable-next-line
       (index => {
         setTimeout(() => {
           if (isLoading) return;
@@ -285,13 +286,7 @@ class Sidebar extends Component {
           if (Component.props.name === name) {
             // CREATE TOOL COMPONENT
             var comp = (
-              <Component
-                key={helpers.getUID()}
-                name={Component.props.name}
-                onClose={this.onPanelComponentClose}
-                onSidebarVisibility={this.togglePanelVisibility}
-                config={Component.props.config}
-              />
+              <Component key={helpers.getUID()} name={Component.props.name} onClose={this.onPanelComponentClose} onSidebarVisibility={this.togglePanelVisibility} config={Component.props.config} />
             );
             let activeTabComponents = this.state.activeTabComponents;
             activeTabComponents.tools.loadedComponent = comp;
@@ -310,13 +305,7 @@ class Sidebar extends Component {
           if (Component.props.name === name) {
             // CREATE THEME COMPONENT
             var comp = (
-              <Component
-                key={helpers.getUID()}
-                name={Component.props.name}
-                onClose={this.onPanelComponentClose}
-                onSidebarVisibility={this.togglePanelVisibility}
-                config={Component.props.config}
-              />
+              <Component key={helpers.getUID()} name={Component.props.name} onClose={this.onPanelComponentClose} onSidebarVisibility={this.togglePanelVisibility} config={Component.props.config} />
             );
             let activeTabComponents = this.state.activeTabComponents;
             activeTabComponents.themes.loadedComponent = comp;
