@@ -19,17 +19,18 @@ import Identify from "../../../map/Identify.jsx";
 
 // OPEN LAYERS
 import Draw, { createBox } from "ol/interaction/Draw.js";
-import { defaults as defaultInteractions, Modify, Select, Translate } from "ol/interaction.js";
+import { Modify, Translate } from "ol/interaction.js";
 import { Vector as VectorSource } from "ol/source.js";
-import { Circle as CircleStyle, Fill, Stroke, Style, Icon } from "ol/style.js";
+import { Style } from "ol/style.js";
 import { Vector as VectorLayer } from "ol/layer.js";
 import Collection from "ol/Collection";
 import GeoJSON from "ol/format/GeoJSON.js";
-import WKT from "ol/format/WKT.js";
 import { fromCircle } from "ol/geom/Polygon.js";
 import MyMapsAdvanced from "./MyMapsAdvanced";
+import Overlay from "ol/Overlay.js";
 
-const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale, myMapsId, featureId) => `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True&MY_MAPS_ID=${myMapsId}&MY_MAPS_FEATURE_ID=${featureId}`;
+const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale, myMapsId, featureId) =>
+  `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True&MY_MAPS_ID=${myMapsId}&MY_MAPS_FEATURE_ID=${featureId}`;
 
 class MyMaps extends Component {
   constructor(props) {
@@ -43,12 +44,17 @@ class MyMaps extends Component {
     this.popupRef = undefined;
     this.modify = null;
     this.translate = null;
+    this.tooltipElement = null;
+    this.tooltip = null;
+    this.bearing = null;
     this.state = {
       drawType: "Cancel",
       drawColor: "#e809e5",
       drawStyle: null,
       items: [],
-      isEditing: false
+      isEditing: false,
+      toolTipClass: "sc-hidden",
+      toolTipId: helpers.getUID()
     };
 
     // LISTEN FOR MAP TO MOUNT
@@ -146,10 +152,28 @@ class MyMaps extends Component {
 
     // ADD DRAWN FEATURE TO MAIN SOURCE
     this.vectorSource.addFeature(evt.feature);
+
+    if (this.state.drawType === "Bearing") {
+      this.sketch = evt.feature;
+      var tooltipCoord = evt.coordinate;
+      this.listener = this.sketch.getGeometry().on("change", evt => {
+        var geom = evt.target;
+        this.bearing = myMapsHelpers.getBearing(geom.getFirstCoordinate(), geom.getLastCoordinate());
+        tooltipCoord = geom.getLastCoordinate();
+        this.tooltipElement.innerHTML = this.bearing;
+        this.tooltip.setPosition(tooltipCoord);
+        this.setState({ toolTipClass: "sc-mymaps-tooltip" });
+      });
+    }
   };
 
   // DRAW END
   onDrawEnd = evt => {
+    this.setState({ tooltipClass: "sc-hidden" });
+    if (this.state.drawType === "Bearing") {
+      this.tooltipElement.innerHTML = "";
+    }
+
     // CANCEL DRAW
     window.map.removeInteraction(this.draw);
 
@@ -181,7 +205,9 @@ class MyMaps extends Component {
     const featureId = helpers.getUID();
 
     // NEW NAME OF FEATURE
-    if (labelText === null) labelText = "Drawing " + (this.state.items.length + 1);
+    if (labelText === null && this.state.drawType !== "Bearing") labelText = "Drawing " + (this.state.items.length + 1);
+
+    if (this.state.drawType === "Bearing") labelText = "Bearing: " + this.bearing;
 
     // GIVE TEXT A CUSTOM MESSAGE
     if (this.state.drawType === "Text") labelText = "Enter Custom Text";
@@ -218,7 +244,7 @@ class MyMaps extends Component {
     const itemInfo = {
       id: featureId,
       label: labelText,
-      labelVisible: this.state.drawType === "Text" ? true : false,
+      labelVisible: this.state.drawType === "Text" || this.state.drawType === "Bearing" ? true : false,
       labelStyle: null,
       labelRotation: 0,
       featureGeoJSON: helpers.featureToGeoJson(feature),
@@ -479,16 +505,68 @@ class MyMaps extends Component {
     if (evt === null) {
       helpers.getGeometryCenter(feature.getGeometry(), center => {
         // SHOW POPUP
-        window.popup.show(center.flatCoordinates, <MyMapsPopup key={helpers.getUID()} activeTool={activeTool} onRef={ref => (this.popupRef = ref)} item={item} onLabelChange={this.onLabelChange} onLabelVisibilityChange={this.onLabelVisibilityChange} onLabelRotationChange={this.onLabelRotationChange} onFooterToolsButtonClick={this.onFooterToolsButtonClick} onDeleteButtonClick={this.onItemDelete} onPointStyleDropDown={this.onPointStyleDropDown} onRadiusSliderChange={this.onRadiusSliderChange} onFillOpacitySliderChange={this.onFillOpacitySliderChange} onFillColorPickerChange={this.onFillColorPickerChange} onAngleSliderChange={this.onAngleSliderChange} onRotationSliderChange={this.onRotationSliderChange} onStrokeOpacitySliderChange={this.onStrokeOpacitySliderChange} onStrokeColorPickerChange={this.onStrokeColorPickerChange} onStrokeWidthSliderChange={this.onStrokeWidthSliderChange} onStrokeTypeDropDown={this.onStrokeTypeDropDown} onMyMapItemToolsButtonClick={this.onMyMapItemToolsButtonClick} />, "Drawing Options", () => {
-          //this.popupRef = undefined;
-        });
+        window.popup.show(
+          center.flatCoordinates,
+          <MyMapsPopup
+            key={helpers.getUID()}
+            activeTool={activeTool}
+            onRef={ref => (this.popupRef = ref)}
+            item={item}
+            onLabelChange={this.onLabelChange}
+            onLabelVisibilityChange={this.onLabelVisibilityChange}
+            onLabelRotationChange={this.onLabelRotationChange}
+            onFooterToolsButtonClick={this.onFooterToolsButtonClick}
+            onDeleteButtonClick={this.onItemDelete}
+            onPointStyleDropDown={this.onPointStyleDropDown}
+            onRadiusSliderChange={this.onRadiusSliderChange}
+            onFillOpacitySliderChange={this.onFillOpacitySliderChange}
+            onFillColorPickerChange={this.onFillColorPickerChange}
+            onAngleSliderChange={this.onAngleSliderChange}
+            onRotationSliderChange={this.onRotationSliderChange}
+            onStrokeOpacitySliderChange={this.onStrokeOpacitySliderChange}
+            onStrokeColorPickerChange={this.onStrokeColorPickerChange}
+            onStrokeWidthSliderChange={this.onStrokeWidthSliderChange}
+            onStrokeTypeDropDown={this.onStrokeTypeDropDown}
+            onMyMapItemToolsButtonClick={this.onMyMapItemToolsButtonClick}
+          />,
+          "Drawing Options",
+          () => {
+            //this.popupRef = undefined;
+          }
+        );
       });
     } else {
       center = evt.coordinate;
       // SHOW POPUP
-      window.popup.show(center, <MyMapsPopup key={helpers.getUID()} activeTool={activeTool} onRef={ref => (this.popupRef = ref)} item={item} onLabelChange={this.onLabelChange} onLabelVisibilityChange={this.onLabelVisibilityChange} onLabelRotationChange={this.onLabelRotationChange} onFooterToolsButtonClick={this.onFooterToolsButtonClick} onDeleteButtonClick={this.onItemDelete} onPointStyleDropDown={this.onPointStyleDropDown} onRadiusSliderChange={this.onRadiusSliderChange} onFillOpacitySliderChange={this.onFillOpacitySliderChange} onFillColorPickerChange={this.onFillColorPickerChange} onAngleSliderChange={this.onAngleSliderChange} onRotationSliderChange={this.onRotationSliderChange} onStrokeOpacitySliderChange={this.onStrokeOpacitySliderChange} onStrokeColorPickerChange={this.onStrokeColorPickerChange} onStrokeWidthSliderChange={this.onStrokeWidthSliderChange} onStrokeTypeDropDown={this.onStrokeTypeDropDown} onMyMapItemToolsButtonClick={this.onMyMapItemToolsButtonClick} />, "Drawing Options", () => {
-        //this.popupRef = undefined;
-      });
+      window.popup.show(
+        center,
+        <MyMapsPopup
+          key={helpers.getUID()}
+          activeTool={activeTool}
+          onRef={ref => (this.popupRef = ref)}
+          item={item}
+          onLabelChange={this.onLabelChange}
+          onLabelVisibilityChange={this.onLabelVisibilityChange}
+          onLabelRotationChange={this.onLabelRotationChange}
+          onFooterToolsButtonClick={this.onFooterToolsButtonClick}
+          onDeleteButtonClick={this.onItemDelete}
+          onPointStyleDropDown={this.onPointStyleDropDown}
+          onRadiusSliderChange={this.onRadiusSliderChange}
+          onFillOpacitySliderChange={this.onFillOpacitySliderChange}
+          onFillColorPickerChange={this.onFillColorPickerChange}
+          onAngleSliderChange={this.onAngleSliderChange}
+          onRotationSliderChange={this.onRotationSliderChange}
+          onStrokeOpacitySliderChange={this.onStrokeOpacitySliderChange}
+          onStrokeColorPickerChange={this.onStrokeColorPickerChange}
+          onStrokeWidthSliderChange={this.onStrokeWidthSliderChange}
+          onStrokeTypeDropDown={this.onStrokeTypeDropDown}
+          onMyMapItemToolsButtonClick={this.onMyMapItemToolsButtonClick}
+        />,
+        "Drawing Options",
+        () => {
+          //this.popupRef = undefined;
+        }
+      );
     }
   };
 
@@ -496,7 +574,13 @@ class MyMaps extends Component {
     var evtClone = Object.assign({}, evt);
     const menu = (
       <Portal>
-        <FloatingMenu key={helpers.getUID()} buttonEvent={evtClone} item={this.props.info} onMenuItemClick={this.onMenuItemClick} classNamesToIgnore={["sc-mymaps-popup-footer-button", "sc-mymaps-footer-buttons-img"]}>
+        <FloatingMenu
+          key={helpers.getUID()}
+          buttonEvent={evtClone}
+          item={this.props.info}
+          onMenuItemClick={this.onMenuItemClick}
+          classNamesToIgnore={["sc-mymaps-popup-footer-button", "sc-mymaps-footer-buttons-img"]}
+        >
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-buffer">
             <FloatingMenuItem imageName={"buffer.png"} label="Buffer" />
           </MenuItem>
@@ -651,15 +735,19 @@ class MyMaps extends Component {
     if (drawType === "Eraser") return;
 
     if (drawType === "Rectangle") drawType = "Circle";
-    else if (drawType === "Arrow") drawType = "LineString";
+    else if (drawType === "Arrow" || drawType === "Bearing") drawType = "LineString";
     else if (drawType === "Text") drawType = "Point";
+
+    // ACTIVE TOOLTIP
+    if (this.state.drawType === "Bearing") this.activateToolTip();
 
     // CREATE A NEW DRAW
     this.draw = new Draw({
       features: new Collection([]),
       type: drawType,
       geometryFunction: this.state.drawType === "Rectangle" ? createBox() : undefined,
-      style: this.state.drawStyle
+      style: this.state.drawStyle,
+      maxPoints: this.state.drawType === "Bearing" ? 2 : undefined
     });
 
     // END DRAWING
@@ -676,6 +764,35 @@ class MyMaps extends Component {
     window.map.addInteraction(this.draw);
   };
 
+  activateToolTip = () => {
+    this.tooltipElement = document.getElementById(this.state.toolTipId);
+    this.tooltip = new Overlay({
+      element: this.tooltipElement,
+      offset: [0, -15],
+      positioning: "bottom-center"
+    });
+    window.map.addOverlay(this.tooltip);
+
+    this.setState({ toolTipClass: "sc-mymaps-tooltip" });
+    this.pointerMoveEvent = window.map.on("pointermove", this.pointerMoveHandler);
+    this.mouseOutEvent = window.map.getViewport().addEventListener("mouseout", () => this.onMouseOutEvent);
+  };
+
+  // POINTER MOVE HANDLER
+  pointerMoveHandler = evt => {
+    if (!window.isDrawingOrEditing) {
+      this.setState({ tooltipClass: "sc-hidden" });
+      this.tooltipElement.innerHTML = "";
+      return;
+    }
+
+    this.tooltip.setPosition(evt.coordinate);
+    //this.setState({ toolTipClass: "sc-mymaps-tooltip", measureToolTipClass: "sc-measure-tooltip" });
+  };
+
+  onMouseOutEvent = () => {
+    this.setState({ toolTipClass: "sc-hidden" });
+  };
   removeItemFromVectorSource = idParam => {
     this.vectorSource.getFeatures().forEach(feature => {
       const id = feature.getProperties().id;
@@ -802,12 +919,24 @@ class MyMaps extends Component {
           <TransitionGroup>
             {this.state.items.map(myMapsItem => (
               <CSSTransition key={myMapsItem.id} timeout={500} classNames="sc-mymaps-item">
-                <MyMapsItem key={myMapsItem.id} info={myMapsItem} onLabelChange={this.onLabelChange} onItemDelete={this.onItemDelete} onItemCheckboxChange={this.onItemCheckboxChange} onLabelVisibilityChange={this.onLabelVisibilityChange} onLabelRotationChange={this.onLabelRotationChange} showDrawingOptionsPopup={this.showDrawingOptionsPopup} onFooterToolsButtonClick={this.onFooterToolsButtonClick} onMyMapItemToolsButtonClick={this.onMyMapItemToolsButtonClick} />
+                <MyMapsItem
+                  key={myMapsItem.id}
+                  info={myMapsItem}
+                  onLabelChange={this.onLabelChange}
+                  onItemDelete={this.onItemDelete}
+                  onItemCheckboxChange={this.onItemCheckboxChange}
+                  onLabelVisibilityChange={this.onLabelVisibilityChange}
+                  onLabelRotationChange={this.onLabelRotationChange}
+                  showDrawingOptionsPopup={this.showDrawingOptionsPopup}
+                  onFooterToolsButtonClick={this.onFooterToolsButtonClick}
+                  onMyMapItemToolsButtonClick={this.onMyMapItemToolsButtonClick}
+                />
               </CSSTransition>
             ))}
           </TransitionGroup>
         </MyMapsItems>
         <MyMapsAdvanced onEditFeatures={this.onEditFeatures} onMenuItemClick={this.onMenuItemClick} onDeleteAllClick={this.onDeleteAllClick} onMyMapsImport={this.onMyMapsImport} />
+        <div id={this.state.toolTipId} className={window.isDrawingOrEditing && this.state.drawType === "Bearing" ? this.state.toolTipClass : "sc-hidden"}></div>
       </div>
     );
   }

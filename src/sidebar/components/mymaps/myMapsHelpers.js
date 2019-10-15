@@ -396,3 +396,32 @@ export function exportMyMaps(callback2, id = null) {
     callback2(result);
   });
 }
+
+function _radians(n) {
+  return n * (Math.PI / 180);
+}
+function _degrees(n) {
+  return n * (180 / Math.PI);
+}
+
+export function getBearing(fromPoint, toPoint) {
+  const fromPointLL = helpers.toLatLongFromWebMercator(fromPoint);
+  const toPointLL = helpers.toLatLongFromWebMercator(toPoint);
+
+  var startLat = _radians(fromPointLL[1]);
+  var startLong = _radians(fromPointLL[0]);
+  var endLat = _radians(toPointLL[1]);
+  var endLong = _radians(toPointLL[0]);
+
+  var dLong = endLong - startLong;
+
+  var dPhi = Math.log(Math.tan(endLat / 2.0 + Math.PI / 4.0) / Math.tan(startLat / 2.0 + Math.PI / 4.0));
+  if (Math.abs(dLong) > Math.PI) {
+    if (dLong > 0.0) dLong = -(2.0 * Math.PI - dLong);
+    else dLong = 2.0 * Math.PI + dLong;
+  }
+
+  const deg = (_degrees(Math.atan2(dLong, dPhi)) + 360.0) % 360.0;
+  const degRounded = Math.round(deg * 100) / 100;
+  return degRounded;
+}

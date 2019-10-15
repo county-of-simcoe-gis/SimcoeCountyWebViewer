@@ -65,6 +65,15 @@ const ButtonBar = props => {
       />
       <DrawButton
         disabled={false}
+        title="Add Bearing Line"
+        imageName="compass.png"
+        onClick={() => {
+          props.onClick("Bearing");
+        }}
+        isActive={props.activeButton === "Bearing" ? true : false}
+      />
+      <DrawButton
+        disabled={false}
         title="Erase items on the map"
         imageName="eraser.png"
         onClick={() => {
