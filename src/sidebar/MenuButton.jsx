@@ -4,7 +4,8 @@ import * as helpers from "../helpers/helpers";
 import ComponentsConfig from "../config.json";
 import { saveAs } from "file-saver";
 
-const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) => `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
+const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
+  `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
 
 class MenuButton extends Component {
   state = {
@@ -28,7 +29,7 @@ class MenuButton extends Component {
   getTools = () => {
     let itemList = [];
     ComponentsConfig.sidebarToolComponents.forEach(tool => {
-      itemList.push(<MenuItem onClick={() => this.itemClick(tool.componentName, "tools")} key={helpers.getUID()} name={tool.name} iconClass={"sc-menu-tools-icon"} />);
+      itemList.push(<MenuItem onClick={() => this.itemClick(tool.name, "tools")} key={helpers.getUID()} name={tool.name} iconClass={"sc-menu-tools-icon"} />);
     });
 
     return itemList;
@@ -51,7 +52,9 @@ class MenuButton extends Component {
     itemList.push(<MenuItem onClick={this.onScreenshotClick} key={helpers.getUID()} name={"Take a Screenshot"} iconClass={"sc-menu-screenshot-icon"} />);
     itemList.push(<MenuItem key={helpers.getUID()} name={"Map Legend"} iconClass={"sc-menu-legend-icon"} onClick={() => helpers.showMessage("Legend", "Coming Soon")} />);
     itemList.push(<MenuItem onClick={() => helpers.showURLWindow("https://maps.simcoe.ca/public_help", false, "full")} key={helpers.getUID()} name={"Help"} iconClass={"sc-menu-help-icon"} />);
-    itemList.push(<MenuItem onClick={() => helpers.showURLWindow("https://maps.simcoe.ca/terms.html", false, "full")} key={helpers.getUID()} name={"Terms and Conditions"} iconClass={"sc-menu-terms-icon"} />);
+    itemList.push(
+      <MenuItem onClick={() => helpers.showURLWindow("https://maps.simcoe.ca/terms.html", false, "full")} key={helpers.getUID()} name={"Terms and Conditions"} iconClass={"sc-menu-terms-icon"} />
+    );
     return itemList;
   };
 
