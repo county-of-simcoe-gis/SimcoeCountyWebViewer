@@ -14,6 +14,7 @@ import SidebarComponent from "react-sidebar";
 import ComponentsConfig from "../config.json";
 import SidebarSlim from "./SidebarSlim.jsx";
 
+// TEST COMMENT
 class Sidebar extends Component {
   constructor(props) {
     super(props);
