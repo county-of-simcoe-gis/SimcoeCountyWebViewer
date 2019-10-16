@@ -7,7 +7,7 @@ import utils from "./utils";
 // ..........................................................................
 
 //pulls in tile matrix from each basemap tilelayer capabilities
-export async function loadTileMatrix(url, type) {
+export async function loadTileMatrix(url, type, projExtent) {
     let response = await fetch(url);
     let data = await response.text();
     let xml = (new window.DOMParser()).parseFromString(data, "text/xml");
@@ -22,7 +22,7 @@ export async function loadTileMatrix(url, type) {
         return {
             identifier: m["ows:Identifier"]["#text"],
             scaleDenominator: Number(m["ScaleDenominator"]["#text"]),
-            topLeftCorner: [-2.0037508342787E7, 2.0037508342787E7],
+            topLeftCorner: [projExtent[0], projExtent[2]],
             tileSize: [256, 256],
             matrixSize: [Number(m["MatrixWidth"]["#text"]), Number(m["MatrixHeight"]["#text"])]
         }
@@ -31,7 +31,7 @@ export async function loadTileMatrix(url, type) {
 }
 
 //build and loads wmts config for each layer
-export async function loadWMTSConfig(url, type, opacity) {
+export async function loadWMTSConfig(url, type, opacity, projExtent) {
 
     let wmtsCongif = {};
 
@@ -49,7 +49,7 @@ export async function loadWMTSConfig(url, type, opacity) {
     wmtsCongif.matrixSet = "EPSG:3857";
     wmtsCongif.baseURL = url + "/tile/{TileMatrix}/{TileRow}/{TileCol}";
     wmtsCongif.layer = utils.extractServiceName(url);
-    wmtsCongif.matrices = await loadTileMatrix(url + "/WMTS/1.0.0/WMTSCapabilities.xml", type);
+    wmtsCongif.matrices = await loadTileMatrix(url + "/WMTS/1.0.0/WMTSCapabilities.xml", type, projExtent);
 
     return wmtsCongif;
 }
@@ -59,6 +59,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     const currentMapViewCenter = window.map.getView().values_.center;
     const mapProjection = window.map.getView().getProjection().code_;
     const mapExtent = window.map.getView().calculateExtent();
+    const projExtent = window.map.getView().getProjection().getExtent();
     const viewPortHeight = window.map.getSize()[1]
     const viewPortWidth = window.map.getSize()[0]
     const currentMapScale = helpers.getMapScale();
@@ -66,6 +67,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     const mapScale = 3000000;
     const rotation = 0;
     const dpi = 300;
+
     const mapLayerSorter = [
         "LIO_Cartographic_LIO_Topographic",
         "Streets_Black_And_White_Cache",
@@ -133,11 +135,13 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
         for (const key in drawablefeatures) {
 
             let f = drawablefeatures[key];
-            let flat_coords = f.values_.geometry.flatCoordinates
+            let flat_coords = (f.style_.fill_===null && f.style_.stroke_ === null)?false:f.values_.geometry.flatCoordinates;
             let grouped_coords = [];
             //transforms flattened coords to geoJson format grouped coords
-            for (let i = 0, t = 1; i < flat_coords.length; i += 2, t += 2) {
-                grouped_coords.push([flat_coords[i], flat_coords[t]]);
+            if (flat_coords) {
+                for (let i = 0, t = 1; i < flat_coords.length; i += 2, t += 2) {
+                    grouped_coords.push([flat_coords[i], flat_coords[t]]);
+                } 
             }
 
             let styles = {};
@@ -236,8 +240,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     }
 
     let configureTileLayer = async (l) => {
-        mainMap.push(await loadWMTSConfig(l.values_.url, "IMAGERY", l.values_.opacity))
-        overviewMap.push(await loadWMTSConfig(l.values_.url, "IMAGERY", l.values_.opacity))
+        mainMap.push(await loadWMTSConfig(l.values_.url, "IMAGERY", l.values_.opacity, projExtent))
+        overviewMap.push(await loadWMTSConfig(l.values_.url, "IMAGERY", l.values_.opacity, projExtent))
     }
 
     let configureLayerGroup = async (l) => {
@@ -247,26 +251,28 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
 
             if (layers.values_.service.type === "OSM") {
                 mainMap.push({
-                    baseURL: "http://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                    baseURL: "http://tile.openstreetmap.org/{z}/{x}/{y}.png",
                     type: "OSM",
                     opacity: 1,
-                    imageFormat: "image/png",
+                    tileSize: [256, 256],
+                    imageExtension: "png",
                     customParams: {
                         "TRANSPARENT": "true"
                     }
                 });
                 overviewMap.push({
-                    baseURL: "http://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                    baseURL: "http://tile.openstreetmap.org/{z}/{x}/{y}.png",
                     type: "OSM",
                     opacity: 1,
-                    imageFormat: "image/png",
+                    tileSize: [256, 256],
+                    imageExtension: "png",
                     customParams: {
                         "TRANSPARENT": "true"
                     }
                 });
             } else {
-                mainMap.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type, l.values_.opacity))
-                overviewMap.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type, l.values_.opacity))
+                mainMap.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type, l.values_.opacity, projExtent))
+                overviewMap.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type, l.values_.opacity, projExtent))
             }
         }
     }
@@ -344,8 +350,6 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
 
     let switchTemplates = (p, options) => {
 
-
-
         //shared print request properties
         p.attributes.map.projection = mapProjection;
         p.attributes.map.longitudeFirst = longitudeFirst;
@@ -366,8 +370,6 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
             case "preserveMapExtent":
                 p.attributes.map.height = utils.computeDimension(...(templateDimensions[options.printSizeSelectedOption.value]), mapExtent).newHeight;
                 p.attributes.map.width = utils.computeDimension(...(templateDimensions[options.printSizeSelectedOption.value]), mapExtent).newWidth;
-                // p.attributes.map.x = utils.computeDimension(...(templateDimensions[options.printSizeSelectedOption.value]), mapExtent).x;
-                // p.attributes.map.y = utils.computeDimension(...(templateDimensions[options.printSizeSelectedOption.value]), mapExtent).y;
                 p.attributes.map.bbox = mapExtent;
                 break;
             default:
@@ -424,8 +426,9 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
 
     switchTemplates(printRequest, printSelectedOption)
     console.log(mapLayers);
-    console.log(printRequest);
-    console.log(JSON.stringify(printRequest));
+    //console.log(printRequest);
+    //console.log(JSON.stringify(printRequest));
 
     return printRequest;
 }
+
