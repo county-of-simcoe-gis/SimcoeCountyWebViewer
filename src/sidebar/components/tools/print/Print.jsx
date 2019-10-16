@@ -138,19 +138,19 @@ class Print extends Component {
     let origin = "https://opengis.simcoe.ca";
     let testOrigin = 'http://localhost:8080'
     let encodedPrintRequest = encodeURIComponent(JSON.stringify(printData))
-    let url = `${testOrigin}/print/print/${printAppId}/report.${outputFormat}`;
+    let url = `${origin}/print/print/${printAppId}/report.${outputFormat}`;
 
     //check print Status and retreive print
     let checkStatus = (response) => {
 
-        fetch(`${testOrigin}${response.statusURL}`)
+        fetch(`${origin}${response.statusURL}`)
             .then(data => data.json())
             .then((data) => {
                 console.log(data);
                 if ((data.done === true) && (data.status === "finished")) {
                     interval = 0
                     helpers.showMessage("Print", "Your print has been downloaded", "green", 10000);
-                    window.open(`${testOrigin}${data.downloadURL}`);
+                    window.open(`${origin}${data.downloadURL}`);
                     this.setState({isPrinting: false}); // THIS WILL RE-ENABLE BUTTON AND HIDE LOADING MSG
                 } else if ((data.done === false) && (data.status === "running")) {
                     setTimeout(() => {
