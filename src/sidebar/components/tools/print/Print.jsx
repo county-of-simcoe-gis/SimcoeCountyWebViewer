@@ -135,7 +135,7 @@ class Print extends Component {
     const outputFormat = printData.outputFormat;
     // console.log(JSON.stringify(printData)); 
     let interval = 5000;
-    let origin = window.location.origin;
+    let origin = "https://opengis.simcoe.ca";
     let testOrigin = 'http://localhost:8080'
     let encodedPrintRequest = encodeURIComponent(JSON.stringify(printData))
     let url = `${testOrigin}/print/print/${printAppId}/report.${outputFormat}`;
@@ -178,10 +178,11 @@ class Print extends Component {
         })
         .then(response => response.json())
         .then((response) => {
-            this.setState({isPrinting: true});
-            checkStatus(response);
+          this.setState({isPrinting: true});
+          checkStatus(response); 
         })
-        .catch(error =>  helpers.showMessage("Print Failed",`${error}`, "red", 15000))
+        .catch(error => helpers.showMessage("Print Failed",`There has been a problem with your fetch operation: ${error.message}`, "red", 15000))
+
   };
 
   getPrintLayers = () => {
