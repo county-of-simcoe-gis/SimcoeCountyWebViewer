@@ -119,7 +119,7 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
     const layerNameOnly = groupLayerInfo.name.split(":")[1];
     const rootLayerUrl = groupLayerInfo.href.replace("http:", "https:");
     const layerDetails = groupLayerInfo.layerDetails;
-    const layerKeywords = layerDetails.featureType.keywords.string;
+    const layerKeywords = layerDetails.featureType.keywords[0].string;
 
     const serverUrl = rootLayerUrl.split("/rest/")[0];
     const styleUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=${layerName}`;
