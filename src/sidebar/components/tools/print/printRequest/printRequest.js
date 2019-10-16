@@ -238,14 +238,26 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
             });
         }
     }
-
+    
     let configureTileLayer = async (l) => {
-        mainMap.push(await loadWMTSConfig(l.values_.url, "IMAGERY", l.values_.opacity, projExtent))
-        overviewMap.push(await loadWMTSConfig(l.values_.url, "IMAGERY", l.values_.opacity, projExtent))
+
+        let tileUrl = null
+
+        if (Object.getPrototypeOf(l.values_.source).constructor.name ==='XYZ') {
+            tileUrl = l.values_.source.key_.split("/tile")[0];;
+        }
+
+        if (Object.getPrototypeOf(l.values_.source).constructor.name ==='TileImage') {
+            let entries = l.values_.source.tileCache.entries_;
+            tileUrl = (entries[Object.keys(entries)[0]]).value_.src_.split("/tile")[0]; 
+        }
+
+        mainMap.push(await loadWMTSConfig(tileUrl, "IMAGERY", l.values_.opacity, projExtent))
+        overviewMap.push(await loadWMTSConfig(tileUrl, "IMAGERY", l.values_.opacity, projExtent))
     }
 
-    let configureLayerGroup = async (l) => {
 
+    let configureLayerGroup = async (l) => {
         for (const key in l.values_.layers.array_) {
             let layers = l.values_.layers.array_[key]
 
@@ -271,8 +283,18 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                     }
                 });
             } else {
-                mainMap.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type, l.values_.opacity, projExtent))
-                overviewMap.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type, l.values_.opacity, projExtent))
+                let tileUrl = null;
+                if (Object.getPrototypeOf(layers.values_.source).constructor.name ==='TileImage') {
+                    let entries = layers.values_.source.tileCache.entries_;
+                    tileUrl = (entries[Object.keys(entries)[0]]).value_.src_.split("/tile")[0]; 
+                }
+                if (Object.getPrototypeOf(layers.values_.source).constructor.name ==='TileArcGISRest') {
+                    let entries = layers.values_.source.tileCache.entries_;
+                    tileUrl = (entries[Object.keys(entries)[0]]).value_.src_.split("/export?")[0]; 
+                }
+
+                mainMap.push(await loadWMTSConfig(tileUrl, layers.values_.service.type, l.values_.opacity, projExtent))
+                overviewMap.push(await loadWMTSConfig(tileUrl, layers.values_.service.type, l.values_.opacity, projExtent))
             }
         }
     }
