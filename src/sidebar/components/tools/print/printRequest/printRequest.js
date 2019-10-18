@@ -130,117 +130,120 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     let dot = [1, 5];
 
     let configureVectorMyMapsLayer = (l) => {
-        let drawablefeatures = Object.values(l.values_.source.undefIdIndex_);
-        geoJsonLayersCount = drawablefeatures.length
-        for (const key in drawablefeatures) {
 
-            let f = drawablefeatures[key];
-            let grouped_coords = [];
-            let styles = {};
-            //default label config
-            let labels = {
-                type: "text",
-                fontFamily: "sans-serif",
-                fontSize: "0px",
-                fontStyle: "normal",
-                fontWeight: "bold",
-                haloColor: "#123456",
-                haloOpacity: 0,
-                haloRadius: 0,
-                label: "",
-                labelAlign: "cm",
-                labelRotation: 0,
-                labelXOffset: 0,
-                labelYOffset: 0
-            };
-
-            if (f.style_.fill_ !== null && f.style_.stroke_ !== null) {
-                let flat_coords = f.values_.geometry.flatCoordinates;
-
-                //transforms flattened coords to geoJson format grouped coords
-                if (flat_coords) {
-                    for (let i = 0, t = 1; i < flat_coords.length; i += 2, t += 2) {
-                        grouped_coords.push([flat_coords[i], flat_coords[t]]);
-                    }
-                }
-
-                if (Object.getPrototypeOf(f.values_.geometry).constructor.name === "LineString") {
-                    styles.type = "Line"
-                } else {
-                    styles.type = Object.getPrototypeOf(f.values_.geometry).constructor.name;
-                }
-                if (f.style_.fill_ != null) {
-                    styles.fillColor = utils.rgbToHex(...f.style_.fill_.color_);
-                    styles.fillOpacity = Number(([...f.style_.fill_.color_])[3]);
-                }
-                if (f.style_.stroke_ != null) {
-                    styles.strokeColor = utils.rgbToHex(...f.style_.stroke_.color_);
-                    styles.strokeOpacity = Number(([...f.style_.stroke_.color_])[3]);
-                    styles.strokeWidth = Number(f.style_.stroke_.width_);
-
-                    if (f.style_.stroke_.lineDash_ !== null && f.style_.stroke_.lineDash_[0] === dash[0]) {
-                        styles.strokeDashstyle = "dash";
-                    }
-                    if (f.style_.stroke_.lineDash_ !== null && f.style_.stroke_.lineDash_[0] === dot[0] && f.style_.stroke_.lineDash_[1] === dot[1]) {
-                        styles.strokeDashstyle = "dot";
-                        styles.strokeLinecap = "round";
-                    }
-                }
-
-                //configuration for labels
-                if (f.style_.text_ != null) {
-                    labels.type = "text";
-                    labels.haloOpacity = 1;
-                    labels.label = f.values_.label;
-                    labels.labelAlign = "cm";
-                    labels.labelRotation = f.style_.text_.rotation_;
-                    labels.labelXOffset = f.style_.text_.offsetX_;
-                    labels.labelYOffset = f.style_.text_.offsetY_;
-                    if (f.style_.text_.fill_ != null) {
-                        labels.fontColor = f.style_.text_.fill_.color_ //utils.stringToColour()
-                    }
-                    if (f.style_.text_.stroke_ != null) {
-                        labels.haloRadius = 1;
-                        labels.haloColor = f.style_.text_.stroke_.color_;
-                    }
-                    if (f.style_.text_.font_ != null) {
-                        let fontStyle = (f.style_.text_.font_).split(" ");
-                        labels.fontFamily = fontStyle[2];
-                        labels.fontSize = fontStyle[1];
-                        labels.fontWeight = fontStyle[0];
-                        labels.fontStyle = "normal";
-                    }
-                }
-
-                mainMap.push({
-                    type: "geojson",
-                    geoJson: {
-                        type: "FeatureCollection",
-                        features: [{
-                            type: "Feature",
-                            geometry: {
-                                type: Object.getPrototypeOf(f.values_.geometry).constructor.name,
-                                coordinates: grouped_coords
-                            },
-                            properties: {
-                                id: f.values_.id,
-                                label: f.values_.label,
-                                labelVisible: f.values_.labelVisible,
-                                drawType: f.values_.drawType,
-                                isParcel: f.values_.isParcel
-                            }
-                        }]
-                    },
-                    name: f.values_.label,
-                    style: {
-                        version: "2",
-                        "*": {
-                            symbolizers: [(utils.removeNull(styles)), labels]
+        if (typeof l.values_.source.uidIndex_ != "undefined") {
+            let drawablefeatures = Object.values(l.values_.source.uidIndex_);
+            geoJsonLayersCount = drawablefeatures.length
+            for (const key in drawablefeatures) {
+    
+                let f = drawablefeatures[key];
+                let grouped_coords = [];
+                let styles = {};
+                //default label config
+                let labels = {
+                    type: "text",
+                    fontFamily: "sans-serif",
+                    fontSize: "0px",
+                    fontStyle: "normal",
+                    fontWeight: "bold",
+                    haloColor: "#123456",
+                    haloOpacity: 0,
+                    haloRadius: 0,
+                    label: "",
+                    labelAlign: "cm",
+                    labelRotation: 0,
+                    labelXOffset: 0,
+                    labelYOffset: 0
+                };
+    
+                if (f.style_.fill_ !== null && f.style_.stroke_ !== null) {
+                    let flat_coords = f.values_.geometry.flatCoordinates;
+    
+                    //transforms flattened coords to geoJson format grouped coords
+                    if (flat_coords) {
+                        for (let i = 0, t = 1; i < flat_coords.length; i += 2, t += 2) {
+                            grouped_coords.push([flat_coords[i], flat_coords[t]]);
                         }
                     }
-                });
+    
+                    if (Object.getPrototypeOf(f.values_.geometry).constructor.name === "LineString") {
+                        styles.type = "Line"
+                    } else {
+                        styles.type = Object.getPrototypeOf(f.values_.geometry).constructor.name;
+                    }
+                    if (f.style_.fill_ != null) {
+                        styles.fillColor = utils.rgbToHex(...f.style_.fill_.color_);
+                        styles.fillOpacity = Number(([...f.style_.fill_.color_])[3]);
+                    }
+                    if (f.style_.stroke_ != null) {
+                        styles.strokeColor = utils.rgbToHex(...f.style_.stroke_.color_);
+                        styles.strokeOpacity = Number(([...f.style_.stroke_.color_])[3]);
+                        styles.strokeWidth = Number(f.style_.stroke_.width_);
+    
+                        if (f.style_.stroke_.lineDash_ !== null && f.style_.stroke_.lineDash_[0] === dash[0]) {
+                            styles.strokeDashstyle = "dash";
+                        }
+                        if (f.style_.stroke_.lineDash_ !== null && f.style_.stroke_.lineDash_[0] === dot[0] && f.style_.stroke_.lineDash_[1] === dot[1]) {
+                            styles.strokeDashstyle = "dot";
+                            styles.strokeLinecap = "round";
+                        }
+                    }
+    
+                    //configuration for labels
+                    if (f.style_.text_ != null) {
+                        labels.type = "text";
+                        labels.haloOpacity = 1;
+                        labels.label = f.values_.label;
+                        labels.labelAlign = "cm";
+                        labels.labelRotation = f.style_.text_.rotation_;
+                        labels.labelXOffset = f.style_.text_.offsetX_;
+                        labels.labelYOffset = f.style_.text_.offsetY_;
+                        if (f.style_.text_.fill_ != null) {
+                            labels.fontColor = f.style_.text_.fill_.color_ //utils.stringToColour()
+                        }
+                        if (f.style_.text_.stroke_ != null) {
+                            labels.haloRadius = 1;
+                            labels.haloColor = f.style_.text_.stroke_.color_;
+                        }
+                        if (f.style_.text_.font_ != null) {
+                            let fontStyle = (f.style_.text_.font_).split(" ");
+                            labels.fontFamily = fontStyle[2];
+                            labels.fontSize = fontStyle[1];
+                            labels.fontWeight = fontStyle[0];
+                            labels.fontStyle = "normal";
+                        }
+                    }
+    
+                    mainMap.push({
+                        type: "geojson",
+                        geoJson: {
+                            type: "FeatureCollection",
+                            features: [{
+                                type: "Feature",
+                                geometry: {
+                                    type: Object.getPrototypeOf(f.values_.geometry).constructor.name,
+                                    coordinates: grouped_coords
+                                },
+                                properties: {
+                                    id: f.values_.id,
+                                    label: f.values_.label,
+                                    labelVisible: f.values_.labelVisible,
+                                    drawType: f.values_.drawType,
+                                    isParcel: f.values_.isParcel
+                                }
+                            }]
+                        },
+                        name: f.values_.label,
+                        style: {
+                            version: "2",
+                            "*": {
+                                symbolizers: [(utils.removeNull(styles)), labels]
+                            }
+                        }
+                    });
+                } 
             } 
-        }
+        }  
     }
 
     let configureTileLayer = async (l) => {
@@ -438,6 +441,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
         }
     }
     switchTemplates(printRequest, printSelectedOption);
+    //console.log(printRequest);
 
     return printRequest;
 }
