@@ -7,17 +7,12 @@ import utils from "./utils";
 // ..........................................................................
 
 //pulls in tile matrix from each basemap tilelayer capabilities
-export async function loadTileMatrix(url, type, projExtent) {
+export async function loadTileMatrix(url) {
     let response = await fetch(url);
     let data = await response.text();
     let xml = (new window.DOMParser()).parseFromString(data, "text/xml");
     let json = utils.xmlToJson(xml)
-    let flatTileMatrix = null;
-    if (type === "OSM") {
-        flatTileMatrix = json.Capabilities.Contents.TileMatrixSet.TileMatrix
-    } else {
-        flatTileMatrix = json.Capabilities.Contents.TileMatrixSet[0].TileMatrix
-    }
+    let flatTileMatrix = json.Capabilities.Contents.TileMatrixSet[0].TileMatrix;
     let tileMatrix = flatTileMatrix.map((m) => {
         return {
             identifier: m["ows:Identifier"]["#text"],
@@ -31,7 +26,7 @@ export async function loadTileMatrix(url, type, projExtent) {
 }
 
 //build and loads wmts config for each layer
-export async function loadWMTSConfig(url, type, opacity, projExtent) {
+export async function loadWMTSConfig(url, opacity) {
 
     let wmtsCongif = {};
 
@@ -43,31 +38,37 @@ export async function loadWMTSConfig(url, type, opacity, projExtent) {
     wmtsCongif.dimensions = [];
     wmtsCongif.dimensionParams = {};
     wmtsCongif.requestEncoding = "REST";
+    wmtsCongif.failOnError = true;
     wmtsCongif.customParams = {
-        "TRANSPARENT": "true"
+        "TRANSPARENT": "true",
+        "COLOR":"#ff4e4e00"
     };
     wmtsCongif.matrixSet = "EPSG:3857";
     wmtsCongif.baseURL = url + "/tile/{TileMatrix}/{TileRow}/{TileCol}";
     wmtsCongif.layer = utils.extractServiceName(url);
-    wmtsCongif.matrices = await loadTileMatrix(url + "/WMTS/1.0.0/WMTSCapabilities.xml", type, projExtent);
+    wmtsCongif.matrices = await loadTileMatrix(url + "/WMTS/1.0.0/WMTSCapabilities.xml");
 
     return wmtsCongif;
 }
-
+// ..........................................................................
+// Building pring request According to mapfish v3 config standards
+// ..........................................................................
 export async function printRequest(mapLayers, description, printSelectedOption) {
+    //osm layer used from maptiler:api.maptiler.com due to osm user agent user restriction policy
+    const osmBaseUrl =  "https://api.maptiler.com/maps/streets/256/{z}/{x}/{y}.png?key=6vlppHmCcPoEbI6f1RBX";
 
     const currentMapViewCenter = window.map.getView().values_.center;
     const mapProjection = window.map.getView().getProjection().code_;
     const mapExtent = window.map.getView().calculateExtent();
-    const projExtent = window.map.getView().getProjection().getExtent();
     const viewPortHeight = window.map.getSize()[1]
     const viewPortWidth = window.map.getSize()[0]
     const currentMapScale = helpers.getMapScale();
     const longitudeFirst = true;
-    const mapScale = 3000000;
+    const mapScale = 2990000;
     const rotation = 0;
     const dpi = 300;
 
+    
     const mapLayerSorter = [
         "LIO_Cartographic_LIO_Topographic",
         "Streets_Black_And_White_Cache",
@@ -256,8 +257,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
             tileUrl = (entries[Object.keys(entries)[0]]).value_.src_.split("/tile")[0];
         }
 
-        mainMap.push(await loadWMTSConfig(tileUrl, "IMAGERY", l.values_.opacity, projExtent))
-        overviewMap.push(await loadWMTSConfig(tileUrl, "IMAGERY", l.values_.opacity, projExtent))
+        mainMap.push(await loadWMTSConfig(tileUrl, l.values_.opacity));
+        overviewMap.push(await loadWMTSConfig(tileUrl, l.values_.opacity));
     }
 
     let configureLayerGroup = async (l) => {
@@ -266,13 +267,13 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
 
             if (layers.values_.service.type === "OSM") {
                 mainMap.push({
-                    baseURL:"https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png",
+                    baseURL:osmBaseUrl,
                     type:"OSM",
                     imageExtension:"png"
 
                 });
                 overviewMap.push({
-                    baseURL:"https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png",
+                    baseURL:osmBaseUrl,
                     type:"OSM",
                     imageExtension:"png"
                 });
@@ -287,8 +288,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                     tileUrl = (entries[Object.keys(entries)[0]]).value_.src_.split("/export?")[0];
                 }
 
-                mainMap.push(await loadWMTSConfig(tileUrl, layers.values_.service.type, l.values_.opacity, projExtent))
-                overviewMap.push(await loadWMTSConfig(tileUrl, layers.values_.service.type, l.values_.opacity, projExtent))
+                mainMap.push(await loadWMTSConfig(tileUrl, l.values_.opacity));
+                overviewMap.push(await loadWMTSConfig(tileUrl, l.values_.opacity));
             }
         }
     }
@@ -437,13 +438,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 p.layout = "letter portrait";
                 break;
         }
-
     }
-
-    switchTemplates(printRequest, printSelectedOption)
-    console.log(mapLayers);
-    //console.log(printRequest);
-    //console.log(JSON.stringify(printRequest));
+    switchTemplates(printRequest, printSelectedOption);
 
     return printRequest;
 }
