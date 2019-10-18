@@ -146,7 +146,7 @@ class Print extends Component {
         fetch(`${origin}${response.statusURL}`)
             .then(data => data.json())
             .then((data) => {
-                console.log(data);
+                //console.log(data);
                 if ((data.done === true) && (data.status === "finished")) {
                     interval = 0
                     helpers.showMessage("Print", "Your print has been downloaded", "green", 10000);
