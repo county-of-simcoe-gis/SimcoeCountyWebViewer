@@ -381,6 +381,28 @@ input[type="range"]::-ms-tooltip {
   opacity: 0.4;
 }
 
+.sc-mymaps-tooltip {
+  position: relative;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  color: white;
+  padding: 4px 8px;
+  white-space: nowrap;
+  opacity: 1;
+  font-weight: bold;
+}
+
+.sc-mymaps-tooltip:before,
+.sc-mymaps-tooltip-static:before {
+  border-top: 6px solid rgba(0, 0, 0, 0.5);
+  border-right: 6px solid transparent;
+  border-left: 6px solid transparent;
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  margin-left: -7px;
+  left: 50%;
+}
 @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
   /* IE10+ CSS styles go here */
   .sc-mymaps-popup-slider input[type="range"] {

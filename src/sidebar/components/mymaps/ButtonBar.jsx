@@ -2,9 +2,10 @@ import React from "react";
 import "./ButtonBar.css";
 import DrawButton from "./DrawButton.jsx";
 
+//className={props.isEditing ? "sc-mymaps-button-bar sc-disabled" : "sc-mymaps-button-bar"}
 const ButtonBar = props => {
   return (
-    <div className="sc-mymaps-button-bar">
+    <div className={props.isEditing ? "sc-mymaps-button-bar sc-disabled" : "sc-mymaps-button-bar"}>
       <DrawButton
         title="Draw a point on the map"
         imageName="point.png"
@@ -61,6 +62,15 @@ const ButtonBar = props => {
           props.onClick("Text");
         }}
         isActive={props.activeButton === "Text" ? true : false}
+      />
+      <DrawButton
+        disabled={false}
+        title="Add Bearing Line"
+        imageName="compass.png"
+        onClick={() => {
+          props.onClick("Bearing");
+        }}
+        isActive={props.activeButton === "Bearing" ? true : false}
       />
       <DrawButton
         disabled={false}

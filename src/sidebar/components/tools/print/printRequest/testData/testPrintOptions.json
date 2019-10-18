@@ -1,0 +1,45 @@
+{
+    "printSizes": [{
+        "value": "8X11 Portrait",
+        "label": "8X11 Portrait (Letter)"
+    }, {
+        "value": "11X8 Landscape",
+        "label": "11X8 Landscape (Letter)"
+    }, {
+        "value": "8X11 Portrait Overview",
+        "label": "8X11 Portrait with Overview"
+    }, {
+        "value": "Map Only",
+        "label": "Map Only"
+    }, {
+        "value": "Map Only Portrait",
+        "label": "Map Only Portrait"
+    }, {
+        "value": "Map Only Landscape",
+        "label": "Map Only Landscape"
+    }],
+    "printFormats": [{
+        "value": "PDF",
+        "label": "PDF"
+    }, {
+        "value": "PNG",
+        "label": "PNG"
+    }, {
+        "value": "JPG",
+        "label": "JPG"
+    }],
+    "mapTitle": "County of Simcoe - Web Map",
+    "printSizeSelectedOption": {
+        "value": "8X11 Portrait",
+        "label": "8X11 Portrait (Letter)"
+    },
+    "printFormatSelectedOption": {
+        "value": "PDF",
+        "label": "PDF"
+    },
+    "forceScale": 577791,
+    "mapScaleOption": "forceScale",
+    "mapOnlyHeight": 855,
+    "mapOnlyWidth": 643,
+    "isPrinting": false
+}

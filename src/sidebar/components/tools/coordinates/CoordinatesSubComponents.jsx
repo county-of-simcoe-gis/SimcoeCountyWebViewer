@@ -1,6 +1,4 @@
 import React from "react";
-//import { helpers } from "@turf/turf";
-import * as helpers from "../../../../helpers/helpers";
 
 const inputMsg = "(listening for input)";
 export const LiveCoordinates = props => {

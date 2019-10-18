@@ -6,14 +6,14 @@ import { sortableContainer, sortableElement } from "react-sortable-hoc";
 import { List, AutoSizer } from "react-virtualized";
 import VirtualLayers from "./VirtualLayers.jsx";
 import arrayMove from "array-move";
+import GeoJSON from "ol/format/GeoJSON.js";
 
 // CUSTOM
 import "./Layers.css";
 import * as helpers from "../../../helpers/helpers";
 import * as TOCHelpers from "./TOCHelpers.jsx";
-import LayerItem from "./LayerItem.jsx";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
-import Menu, { SubMenu, Item as MenuItem, Divider } from "rc-menu";
+import { Item as MenuItem } from "rc-menu";
 import Portal from "../../../helpers/Portal.jsx";
 import TOCConfig from "./TOCConfig.json";
 
@@ -30,7 +30,31 @@ class Layers extends Component {
       allLayers: {},
       layers: []
     };
+
+    // LISTEN FOR MAP TO MOUNT
+    window.emitter.addListener("mapLoaded", () => this.onMapLoad());
   }
+
+  onMapLoad = () => {
+    window.map.on("singleclick", evt => {
+      const viewResolution = window.map.getView().getResolution();
+      this.state.layers.forEach(layer => {
+        if (layer.visible && layer.liveLayer) {
+          var url = layer.layer.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
+          if (url) {
+            helpers.getJSON(url, result => {
+              const features = result.features;
+              if (features.length > 0) {
+                const geoJSON = new GeoJSON().readFeatures(result);
+                const feature = geoJSON[0];
+                helpers.showFeaturePopup(evt.coordinate, feature);
+              }
+            });
+          }
+        }
+      });
+    });
+  };
 
   resetLayers = () => {
     // SHUT OFF VISIBILITY
@@ -64,11 +88,46 @@ class Layers extends Component {
       allLayers[group.value] = layers;
 
       this.setState({ layers: layers, allLayers: allLayers }, () => {
-        this.sortLayers(this.state.layers, sortAlpha);
+        this.sortLayers(this.state.layers, sortAlpha, () => {
+          // GET FULL INFO
+          this.state.layers.forEach(layerRoot => {
+            //console.log(layerRoot);
+            //console.log(layerRoot.rootLayerUrl);
+            // helpers.getJSON(layerRoot.rootLayerUrl, layerSub => {
+            //   const href = layerSub.layer.resource.href;
+            //   helpers.getJSON(href.replace("http:", "https:"), layer => {
+            //     const keywords = layer.featureType.keywords.string;
+            //     //console.log(keywords.string);
+            //     let liveLayer = false;
+            //     if (keywords.includes("LIVE_LAYER")) {
+            //       layerRoot.layer.setProperties({ disableParcelClick: true });
+            //       liveLayer = true;
+            //     }
+            //     let opacity = 1;
+            //     if (layerRoot.visible) {
+            //       opacity = keywords.find(item => {
+            //         if (item.indexOf("OPACITY") !== -1) {
+            //           return item;
+            //         }
+            //       });
+            //       if (opacity !== undefined) {
+            //         opacity = opacity.split("=")[1];
+            //       }
+            //     }
+            //     //console.log(opacity);
+            //     this.setState({
+            //       // UPDATE LAYER
+            //       layers: this.state.layers.map(item => (item.name === layerRoot.name ? Object.assign({}, item, { keywords, liveLayer, opacity: parseFloat(opacity) }) : item))
+            //     });
+            //   });
+            // });
+          });
+        });
       });
     });
   };
 
+  // isVisibleFromConfig()
   sortByAlphaCompare(a, b) {
     if (a.name < b.name) {
       return -1;
@@ -97,7 +156,7 @@ class Layers extends Component {
     return data;
   }
 
-  sortLayers = (layers, sortAlpha) => {
+  sortLayers = (layers, sortAlpha, callback = undefined) => {
     let newLayers = Object.assign([{}], layers);
     if (sortAlpha) newLayers.sort(this.sortByAlphaCompare);
     else newLayers.sort(this.sortByIndexCompare);
@@ -105,7 +164,9 @@ class Layers extends Component {
     let allLayers = this.state.allLayers;
     allLayers[this.props.group.value] = newLayers;
 
-    this.setState({ layers: newLayers, allLayers: allLayers });
+    this.setState({ layers: newLayers, allLayers: allLayers }, () => {
+      if (callback !== undefined) callback();
+    });
   };
 
   // REFRESH IF PROPS FROM PARENT HAVE CHANGED - GROUPS DROP DOWN CHANGE.
@@ -194,9 +255,7 @@ class Layers extends Component {
         this.setState(
           {
             // UPDATE LEGEND
-            layers: this.state.layers.map(layer =>
-              layer.name === layerInfo.name ? Object.assign({}, layer, { showLegend: showLegend, height: rowHeight, legendHeight: height, legendImage: imgData }) : layer
-            )
+            layers: this.state.layers.map(layer => (layer.name === layerInfo.name ? Object.assign({}, layer, { showLegend: showLegend, height: rowHeight, legendHeight: height, legendImage: imgData }) : layer))
           },
           () => {
             document.getElementById(this.virtualId).scrollTop += this.lastPosition;
@@ -261,14 +320,7 @@ class Layers extends Component {
     var evtClone = Object.assign({}, evt);
     const menu = (
       <Portal>
-        <FloatingMenu
-          key={helpers.getUID()}
-          buttonEvent={evtClone}
-          autoY={true}
-          item={this.props.info}
-          onMenuItemClick={action => this.onMenuItemClick(action, layerInfo)}
-          styleMode={helpers.isMobile() ? "left" : "right"}
-        >
+        <FloatingMenu key={helpers.getUID()} buttonEvent={evtClone} autoY={true} item={this.props.info} onMenuItemClick={action => this.onMenuItemClick(action, layerInfo)} styleMode={helpers.isMobile() ? "left" : "right"}>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-metadata">
             <FloatingMenuItem imageName={"metadata.png"} label="Metadata" />
           </MenuItem>
@@ -280,14 +332,7 @@ class Layers extends Component {
           </MenuItem>
           <MenuItem className="sc-layers-slider" key="sc-floating-menu-opacity">
             Adjust Transparency
-            <SliderWithTooltip
-              tipFormatter={this.sliderTipFormatter}
-              max={1}
-              min={0}
-              step={0.05}
-              defaultValue={layerInfo.opacity}
-              onChange={evt => this.onSliderChange(evt, layerInfo)}
-            />
+            <SliderWithTooltip tipFormatter={this.sliderTipFormatter} max={1} min={0} step={0.05} defaultValue={layerInfo.opacity} onChange={evt => this.onSliderChange(evt, layerInfo)} />
           </MenuItem>
         </FloatingMenu>
       </Portal>
@@ -311,7 +356,16 @@ class Layers extends Component {
         window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
       });
     } else if (action === "sc-floating-menu-download") {
-      helpers.showMessage("Download", "Coming Soon", "green", 2000);
+      helpers.showMessage("Download", "Coming Soon!");
+      // TOCHelpers.getLayerInfo(layerInfo, result => {
+      //   if (result.featureType.name === "Assessment Parcel") helpers.showMessage("Download", "Parcels are not available for download");
+      //   else {
+      //     if (helpers.isMobile()) {
+      //       window.emitter.emit("setSidebarVisiblity", "CLOSE");
+      //       helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl, false, "full");
+      //     } else helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl);
+      //   }
+      // });
     }
 
     helpers.addAppStat("Layer Options", action);

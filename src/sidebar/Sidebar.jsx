@@ -14,6 +14,7 @@ import SidebarComponent from "react-sidebar";
 import ComponentsConfig from "../config.json";
 import SidebarSlim from "./SidebarSlim.jsx";
 
+// TEST COMMENT
 class Sidebar extends Component {
   constructor(props) {
     super(props);
@@ -35,11 +36,13 @@ class Sidebar extends Component {
       // SELECTED TAB
       tabIndex: 0,
 
+      isMyMapsEditing: false,
+
       // COMPONENTS
       activeTabComponents: {
         layers: <TOC key={helpers.getUID()} />,
         // layers: <TOCv2 key={helpers.getUID()}></TOCv2>,
-        mymaps: <MyMaps key={helpers.getUID()} />,
+        mymaps: <MyMaps key={helpers.getUID()} onMyMapsEditing={this.onMyMapsEditing} />,
         reports: {
           default: <Reports key={helpers.getUID()} />,
           loadedComponent: null
@@ -55,6 +58,16 @@ class Sidebar extends Component {
       }
     };
   }
+
+  onMyMapsEditing = isMyMapsEditing => {
+    // DISABLE PARCEL CLICK
+    window.disableParcelClick = isMyMapsEditing;
+
+    // DISABLE POPUPS
+    window.isDrawingOrEditing = isMyMapsEditing;
+
+    this.setState({ isMyMapsEditing });
+  };
 
   onSetSidebarOpen(open) {
     this.setState({ sidebarOpen: open });
@@ -93,6 +106,7 @@ class Sidebar extends Component {
   async componentDidMount() {
     // IMPORT TOOLS FROM CONFIG
     const tools = ComponentsConfig.sidebarToolComponents;
+    let index = 0;
     tools.map(async component => await this.addComponent(component, "tools"));
 
     // IMPORT THEMES FROM CONFIG
@@ -136,27 +150,38 @@ class Sidebar extends Component {
   }
 
   initToolAndThemeUrlParameter = () => {
-    // HANDLE ADVANCED MODE PARAMETER
-    var toolParam = helpers.getURLParameter("TOOL");
-    var themeParam = helpers.getURLParameter("THEME");
-    if (toolParam != null) {
-      this.togglePanelVisibility();
-      window.sidebarOpen = true;
-      this.setState({ sidebarOpen: true });
+    var i = 0;
+    var isLoading = false;
+    for (var i = 1; i <= 100; i++) {
+      if (isLoading) return;
+      // eslint-disable-next-line
+      (index => {
+        setTimeout(() => {
+          if (isLoading) return;
 
-      // TRIED TO USE PROMISES...
-      setTimeout(() => {
-        this.activateItemFromEmmiter(toolParam, "tools");
-      }, 1000);
-    } else if (themeParam != null) {
-      this.togglePanelVisibility();
-      window.sidebarOpen = true;
-      this.setState({ sidebarOpen: true });
+          if (ComponentsConfig.sidebarToolComponents.length + ComponentsConfig.sidebarThemeComponents.length === this.state.toolComponents.length) {
+            isLoading = true;
+            // HANDLE ADVANCED MODE PARAMETER
+            var toolParam = helpers.getURLParameter("TOOL");
+            var themeParam = helpers.getURLParameter("THEME");
+            if (toolParam != null) {
+              window.sidebarOpen = true;
+              this.setState({ sidebarOpen: true });
+              this.togglePanelVisibility();
 
-      // TRIED TO USE PROMISES...
-      setTimeout(() => {
-        this.activateItemFromEmmiter(themeParam, "themes");
-      }, 1000);
+              // TRIED TO USE PROMISES...
+              this.activateItemFromEmmiter(toolParam, "tools");
+            } else if (themeParam != null) {
+              window.sidebarOpen = true;
+              this.setState({ sidebarOpen: true });
+              this.togglePanelVisibility();
+
+              // TRIED TO USE PROMISES...
+              this.activateItemFromEmmiter(themeParam, "themes");
+            }
+          }
+        }, i * 100);
+      })(i);
     }
   };
 
@@ -287,7 +312,6 @@ class Sidebar extends Component {
             activeTabComponents.themes.loadedComponent = comp;
             this.setState({ activeTabComponents: activeTabComponents });
             //helpers.showMessage("Property Report", "Property Report Click is disabled while theme is active.", "green" , 5000);
-            console.log("in");
             return comp;
           } else return null;
         });
@@ -350,7 +374,7 @@ class Sidebar extends Component {
                   <TabButton imageURL={images["tools-32x32.png"]} name="Tools" active={this.state.activeTabComponents.tools.loadedComponent} />
                 </Tab>
                 <Tab id="tab-mymaps">
-                  <TabButton imageURL={images["map-32x32.png"]} name="My Maps" />
+                  <TabButton imageURL={images["map-32x32.png"]} name="My Maps" active={this.state.isMyMapsEditing} />
                 </Tab>
                 <Tab id="tab-themes">
                   <TabButton imageURL={images["theme-32x32.png"]} name="Themes" active={this.state.activeTabComponents.themes.loadedComponent} />
@@ -372,12 +396,18 @@ class Sidebar extends Component {
                 {this.state.activeTabComponents.reports.loadedComponent ? this.state.activeTabComponents.reports.loadedComponent : this.state.activeTabComponents.reports.default}
               </TabPanel>
             </Tabs>
+
             <div id="sc-sidebar-advanced-tab" className={this.state.tabClassName} onClick={this.togglePanelVisibility}>
               <img src={require("./images/close-tab.png")} alt="Close Tab" />
             </div>
-            <SidebarSlim onClick={this.slimSidebarButtonClick} themeActive={this.state.activeTabComponents.themes.loadedComponent} toolActive={this.state.activeTabComponents.tools.loadedComponent} />
+            <SidebarSlim
+              onClick={this.slimSidebarButtonClick}
+              themeActive={this.state.activeTabComponents.themes.loadedComponent}
+              toolActive={this.state.activeTabComponents.tools.loadedComponent}
+              isMyMapsEditing={this.state.isMyMapsEditing}
+            />
             <div id="sc-sidebar-message-container" />
-            {/* <MenuButton></MenuButton> */}
+            {/* <MenuButton /> */}
           </React.Fragment>
         }
         open={this.state.sidebarOpen}

@@ -1,17 +1,12 @@
 .sc-mymaps-footer-buttons {
   height: 33px;
   bottom: 0px;
-  position: absolute;
   width: 97%;
   padding-top: 6px;
   border-top: 1px solid #bbb;
   text-align: center;
-  background-color: white;
-  bottom: 0px;
   padding-bottom: 5px;
-  padding-left: 5px;
-  padding-right: 5px;
-  display: table;
+  padding-top: 10px;
 }
 
 .sc-mymaps-footer-button {

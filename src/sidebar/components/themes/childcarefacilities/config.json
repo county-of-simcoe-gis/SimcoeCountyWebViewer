@@ -1,0 +1,27 @@
+{
+  "themeColor": "#C9E7F9",
+  "expandInitialList": false,
+  "disableParcelClick": true,
+  "baseLayers": {
+    "defaultVisibility": true,
+    "opacity": 0.7,
+    "zIndex": 50,
+    "layers": []
+  },
+  "toggleLayers": [
+    {
+      "displayName": "Child Care Facilities",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:Child_Care_Facilities",
+      "visible": true,
+      "expanded": true,
+      "zIndex": 52,
+      "legendStyleName": "",
+      "displayFieldName": "Name",
+      "UrlParameter": {
+        "parameterName": "Name",
+        "fieldName": "Name"
+      }
+    }
+  ]
+}
