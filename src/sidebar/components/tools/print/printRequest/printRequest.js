@@ -40,8 +40,7 @@ export async function loadWMTSConfig(url, opacity) {
     wmtsCongif.requestEncoding = "REST";
     wmtsCongif.failOnError = true;
     wmtsCongif.customParams = {
-        "TRANSPARENT": "true",
-        "COLOR":"#ff4e4e00"
+        "TRANSPARENT": "true"
     };
     wmtsCongif.matrixSet = "EPSG:3857";
     wmtsCongif.baseURL = url + "/tile/{TileMatrix}/{TileRow}/{TileCol}";
@@ -327,7 +326,6 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
             configureImageLayer(l);
         }
     }
-
     //iterate through each map layer passed in the window.map
     let mapLayerList = mapLayers.map((l) => getLayerByType(l));
 

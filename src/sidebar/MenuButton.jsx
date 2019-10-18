@@ -29,7 +29,7 @@ class MenuButton extends Component {
   getTools = () => {
     let itemList = [];
     ComponentsConfig.sidebarToolComponents.forEach(tool => {
-      itemList.push(<MenuItem onClick={() => this.itemClick(tool.componentName, "tools")} key={helpers.getUID()} name={tool.name} iconClass={"sc-menu-tools-icon"} />);
+      itemList.push(<MenuItem onClick={() => this.itemClick(tool.name, "tools")} key={helpers.getUID()} name={tool.name} iconClass={"sc-menu-tools-icon"} />);
     });
 
     return itemList;
@@ -48,19 +48,12 @@ class MenuButton extends Component {
   // CUSTOM ENTRIES, COMMENT OUT IF YOU DON"T WANT IT
   getOthers = () => {
     let itemList = [];
-    // itemList.push(<MenuItem key={helpers.getUID()} name={"Feedback"} iconClass={"sc-menu-feedback-icon"} onClick={this.onFeedbackClick}></MenuItem>);
+    itemList.push(<MenuItem key={helpers.getUID()} name={"Feedback"} iconClass={"sc-menu-feedback-icon"} onClick={this.onFeedbackClick} />);
     itemList.push(<MenuItem onClick={this.onScreenshotClick} key={helpers.getUID()} name={"Take a Screenshot"} iconClass={"sc-menu-screenshot-icon"} />);
-    // itemList.push(<MenuItem key={helpers.getUID()} name={"Map Legend"} iconClass={"sc-menu-legend-icon"} onClick={() => helpers.showMessage("Legend", "Coming Soon")}></MenuItem>);
+    itemList.push(<MenuItem key={helpers.getUID()} name={"Map Legend"} iconClass={"sc-menu-legend-icon"} onClick={() => helpers.showMessage("Legend", "Coming Soon")} />);
+    itemList.push(<MenuItem onClick={() => helpers.showURLWindow("https://maps.simcoe.ca/public_help", false, "full")} key={helpers.getUID()} name={"Help"} iconClass={"sc-menu-help-icon"} />);
     itemList.push(
-      <MenuItem onClick={() => helpers.showURLWindow("https://maps.simcoe.ca/public_help", false, "full")} key={helpers.getUID()} name={"Help"} iconClass={"sc-menu-help-icon"} />
-    );
-    itemList.push(
-      <MenuItem
-        onClick={() => helpers.showURLWindow("https://maps.simcoe.ca/terms.html", false, "full")}
-        key={helpers.getUID()}
-        name={"Terms and Conditions"}
-        iconClass={"sc-menu-terms-icon"}
-      />
+      <MenuItem onClick={() => helpers.showURLWindow("https://maps.simcoe.ca/terms.html", false, "full")} key={helpers.getUID()} name={"Terms and Conditions"} iconClass={"sc-menu-terms-icon"} />
     );
     return itemList;
   };
@@ -75,6 +68,7 @@ class MenuButton extends Component {
   };
 
   onMenuButtonClick = value => {
+    console.log("button click");
     this.setState({ isOpen: !this.state.isOpen });
     helpers.addAppStat("Menu", "Click");
   };
@@ -123,14 +117,23 @@ class MenuButton extends Component {
 
   render() {
     const menuListClassName = this.getMenuClassName();
-
+    //console.log(menuListClassName);
+    //className="sc-menu-button-img"
     return (
       <div>
-        <div id="sc-menu-button-container" className={"sc-menu-button-container"} onClick={this.onMenuButtonClick}>
+        <div className="sc-menu-button-container" style={{ cursor: "pointer" }} onClick={this.onMenuButtonClick}>
+          <button className="sc-menu-more-button">
+            <img src={images["more.png"]} style={{ pointerEvents: "none" }} alt="More" />
+            <br />
+            <span style={{ pointerEvents: "none" }}>More</span>
+          </button>
+        </div>
+
+        {/* <div id="sc-menu-button-container" className={"sc-menu-button-container"} onClick={this.onMenuButtonClick}>
           <button id="sc-menu-button" className="sc-button-blue">
             <span className="sc-menu-button-icon">More...</span>
           </button>
-        </div>
+        </div> */}
         <div id="sc-menu-button-list-container" className={menuListClassName}>
           <div className="sc-menu-list-item-heading" style={{ paddingTop: "0px" }}>
             MAP THEMES
@@ -151,9 +154,6 @@ export default MenuButton;
 
 class MenuItem extends Component {
   state = {};
-  onClick() {
-    console.log("click");
-  }
   render() {
     return (
       <div className="sc-menu-list-item" onClick={this.props.onClick}>
@@ -161,4 +161,12 @@ class MenuItem extends Component {
       </div>
     );
   }
+}
+
+// IMPORT ALL IMAGES
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
+function importAllImages(r) {
+  let images = {};
+  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
+  return images;
 }

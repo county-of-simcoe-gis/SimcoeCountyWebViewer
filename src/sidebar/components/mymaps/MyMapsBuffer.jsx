@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import "./MyMapsBuffer.css";
 import ColorPicker from "./ColorPicker";
 import { CompactPicker } from "react-color";
-import GeoJSON from "ol/format/GeoJSON.js";
 import * as helpers from "../../../helpers/helpers";
 import Feature from "ol/Feature";
 import { Stroke, Style, Fill, Circle as CircleStyle } from "ol/style";
@@ -30,8 +29,6 @@ class MyMapsBuffer extends Component {
     });
 
     this.webAPIUrl = "https://opengis.simcoe.ca/api/postBufferGeometry/";
-    //this.webAPIUrl = "http://localhost:8085/postBufferGeometry/";
-    this.parser = new GeoJSON();
 
     this.state = {
       color: { r: 85, g: 243, b: 30, a: 1 },
@@ -98,19 +95,10 @@ class MyMapsBuffer extends Component {
   onPreviewBufferClick = evt => {
     // GET FEATURE
     const feature = helpers.getFeatureFromGeoJSON(this.props.item.featureGeoJSON);
-
-    // PROJECT TO UTM FOR ACCURACY
-    const utmNad83Geometry = feature.getGeometry().transform("EPSG:3857", this.nad83Proj);
-    const geoJSON = this.parser.writeGeometry(utmNad83Geometry);
     const distanceMeters = this.convertToMeters();
-    const obj = { geoJSON: geoJSON, distance: distanceMeters, srid: "26917" };
-
-    helpers.postJSON(this.webAPIUrl, obj, result => {
-      // REPROJECT BACK TO WEB MERCATOR
-      const olGeoBuffer = this.parser.readGeometry(result.geojson);
-      const utmNad83GeometryBuffer = olGeoBuffer.transform("EPSG:26917", "EPSG:3857");
+    helpers.bufferGeometry(feature.getGeometry(), distanceMeters, bufferGeometry => {
       this.bufferFeature = new Feature({
-        geometry: utmNad83GeometryBuffer
+        geometry: bufferGeometry
       });
 
       this.bufferFeature.setStyle(this.getStyle());
@@ -119,6 +107,27 @@ class MyMapsBuffer extends Component {
 
       this.setState({ addMessageVisible: true });
     });
+
+    // PROJECT TO UTM FOR ACCURACY
+    // const utmNad83Geometry = feature.getGeometry().transform("EPSG:3857", this.nad83Proj);
+    // const geoJSON = helpers.getGeoJSONFromGeometry(utmNad83Geometry);
+    // const distanceMeters = this.convertToMeters();
+    // const obj = { geoJSON: geoJSON, distance: distanceMeters, srid: "26917" };
+
+    // helpers.postJSON(this.webAPIUrl, obj, result => {
+    //   // REPROJECT BACK TO WEB MERCATOR
+    //   const olGeoBuffer = helpers.getGeometryFromGeoJSON(result.geojson);
+    //   const utmNad83GeometryBuffer = olGeoBuffer.transform("EPSG:26917", "EPSG:3857");
+    //   this.bufferFeature = new Feature({
+    //     geometry: utmNad83GeometryBuffer
+    //   });
+
+    //   this.bufferFeature.setStyle(this.getStyle());
+    //   this.vectorLayer.getSource().clear();
+    //   this.vectorLayer.getSource().addFeature(this.bufferFeature);
+
+    //   this.setState({ addMessageVisible: true });
+    // });
   };
 
   convertToMeters = () => {

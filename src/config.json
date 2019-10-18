@@ -1,6 +1,7 @@
 {
   "includeAppStats": true,
   "appStatsUrl": "https://opengis.simcoe.ca/api/appStats/",
+  "apiUrl": "https://opengis.simcoe.ca/api/",
   "parcelLayer": {
     "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
     "rollNumberFieldName": "ARN"
@@ -27,6 +28,34 @@
       "componentName": "Print",
       "description": "This tool allows users to print their map view in a variety of formats such as pdf and jpeg.",
       "imageName": "print.png"
+    },
+    {
+      "id": 4,
+      "name": "Search Addresses",
+      "componentName": "SearchAddresses",
+      "description": "This tool allows you to search Addresses.",
+      "imageName": "searchAddresses.png"
+    },
+    {
+      "id": 5,
+      "name": "Search History",
+      "componentName": "SearchHistory",
+      "description": "This tool provides users with a list of their 25 most recent searches.",
+      "imageName": "searchHistory.png"
+    },
+    {
+      "id": 6,
+      "name": "Lot And Concession",
+      "componentName": "LotAndConcession",
+      "description": "This tool allows you to search Lot and Concessions.",
+      "imageName": "lotAndConcession.png"
+    },
+    {
+      "id": 7,
+      "name": "External Services (Street View)",
+      "componentName": "ExternalServices",
+      "description": "This tool links a map location to many other External Map Services.",
+      "imageName": "externalServices.png"
     }
   ],
 
@@ -46,6 +75,27 @@
       "description": "View County Forests and Recreation features, conservation, provincial and municipal parks.",
       "imageName": "forestry.png",
       "config": "./configForestry.json"
+    },
+    {
+      "id": 3,
+      "name": "Local Real Estate",
+      "componentName": "LocalRealEstate",
+      "description": "View listings by categories and view photos for the listing with the option to link to the Realtor.ca listing",
+      "imageName": "localrealestate.png"
+    },
+    {
+      "id": 4,
+      "name": "Road Construction",
+      "componentName": "RoadConstruction",
+      "description": "View this year's road and bridge construction locations.",
+      "imageName": "roadsConstruction.png"
+    },
+    {
+      "id": 5,
+      "name": "Child Care Facilities",
+      "componentName": "ChildCareFacilities",
+      "description": "Provide users with a list of Child care facilities as well as additional information about each facility.",
+      "imageName": "childCareFacilities.png"
     }
   ]
 }

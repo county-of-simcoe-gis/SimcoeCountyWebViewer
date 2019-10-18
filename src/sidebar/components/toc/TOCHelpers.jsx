@@ -13,13 +13,13 @@ export function getGroups() {
   let groups = [];
   for (var i = 0, len = TOCConfig.layerGroups.length; i < len; i++) {
     const group = TOCConfig.layerGroups[i];
-    const groupUrl = group.url;
+    const groupUrl = TOCConfig.layerGroupURL + group.name;
     const isDefault = group.defaultGroup;
-    const groupName = groupUrl.substring(groupUrl.lastIndexOf("/") + 1).split(".")[0];
+    const groupName = group.name;
     const groupObj = {
       value: groupName,
       label: groupName,
-      groupUrl: groupUrl,
+      url: groupUrl,
       defaultGroup: isDefault,
       visibleLayers: group.visibleLayers
     };
@@ -80,7 +80,7 @@ export function getBase64FromImageUrl(url, callback) {
 // BASIC INFO RETURNED FOR PERFORMANCE TO LOAD LAYERS IN THE TOC
 // SECOND CALL IS MADE TO GET THE REST OF THE LAYER INFO AND STYLES
 export async function getBasicLayerListByGroup(group, dataStore, callback) {
-  const layerGroupURL = group.groupUrl;
+  const layerGroupURL = group.url;
   const visibleLayers = group.visibleLayers === undefined ? [] : group.visibleLayers;
 
   let layerList = [];
@@ -98,6 +98,16 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
   // RETURN IF WE DON"T HAVE ANYTHING TO PROCESS
   if (groupLayerList === null) return;
 
+  let liveLayers = [];
+  if (layerGroupInfo.layerGroup.keywords !== undefined) {
+    const keywords = layerGroupInfo.layerGroup.keywords.string;
+    const liveLayerKeyword = keywords.find(function(item) {
+      return item.indexOf("LIVE_LAYERS") !== -1;
+    });
+
+    if (liveLayerKeyword !== undefined) liveLayers = liveLayerKeyword.split("=")[1];
+  }
+
   // SAVED DATA
   const savedData = helpers.getItemsFromStorage(storageKey);
   const savedLayers = savedData[group.value];
@@ -108,10 +118,18 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
     const workspace = groupLayerInfo.name.split(":")[0];
     const layerNameOnly = groupLayerInfo.name.split(":")[1];
     const rootLayerUrl = groupLayerInfo.href.replace("http:", "https:");
+    const layerDetails = groupLayerInfo.layerDetails;
+    const layerKeywords = layerDetails.featureType.keywords[0].string;
 
     const serverUrl = rootLayerUrl.split("/rest/")[0];
     const styleUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=${layerName}`;
     const styleUrl = styleUrlTemplate(serverUrl, groupLayerInfo.name);
+
+    //https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json&cql_filter=INTERSECTS(geom,%20POINT%20(-8874151.72%205583068.78))
+    //`${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&cql_filter=INTERSECTS(geom,${geomery})`
+
+    const wfsUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&cql_filter=`;
+    const wfsUrl = wfsUrlTemplate(serverUrl, groupLayerInfo.name);
 
     // SKIP NESTED GROUP LAYERS
     if (groupLayerInfo["@type"] !== "layer") {
@@ -120,6 +138,15 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
       }
       continue;
     }
+
+    // LIVE LAYER
+    let liveLayer = _isLiveLayer(layerKeywords);
+
+    //DISPLAY NAME
+    let displayName = _getDisplayName(layerKeywords);
+
+    // OPACITY
+    let opacity = _getOpacity(layerKeywords);
 
     let layerVisible = false;
     if (savedLayers !== undefined) {
@@ -130,10 +157,12 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
     let layer = null;
     layer = helpers.getImageWMSLayer(serverUrl + "/wms", groupLayerInfo.name);
     layer.setVisible(layerVisible);
-    layer.setProperties({ name: groupLayerInfo.name });
+    layer.setOpacity(opacity);
+    layer.setProperties({ name: layerNameOnly, displayName: displayName });
     layer.setZIndex(layerIndex);
     window.map.addLayer(layer);
 
+    //console.log(rootLayerUrl);
     layerList.push({
       name: layerNameOnly, // FRIENDLY NAME
       height: 30, // HEIGHT OF DOM ROW FOR AUTOSIZER
@@ -146,13 +175,44 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
       visible: layerVisible, // LAYER VISIBLE IN MAP, UPDATED BY CHECKBOX
       layer: layer, // OL LAYER OBJECT
       rootLayerUrl: rootLayerUrl, // ROOT LAYER INFO FROM GROUP END POINT
-      opacity: 1 // OPACITY OF LAYER
+      opacity: opacity, // OPACITY OF LAYER
+      liveLayer: liveLayer, // LIVE LAYER FLAG
+      wfsUrl: wfsUrl,
+      displayName: displayName // DISPLAY NAME USED BY IDENTIFY
     });
 
     layerIndex--;
   }
 
   callback(layerList);
+}
+
+function _isLiveLayer(keywords) {
+  const liveLayerKeyword = keywords.find(function(item) {
+    return item.indexOf("LIVE_LAYER") !== -1;
+  });
+  if (liveLayerKeyword !== undefined) return true;
+  else return false;
+}
+
+function _getDisplayName(keywords) {
+  const displayNameKeyword = keywords.find(function(item) {
+    return item.indexOf("DISPLAY_NAME") !== -1;
+  });
+  if (displayNameKeyword !== undefined) {
+    const val = displayNameKeyword.split("=")[1];
+    return val;
+  } else return "";
+}
+
+function _getOpacity(keywords) {
+  const opacityKeyword = keywords.find(function(item) {
+    return item.indexOf("OPACITY") !== -1;
+  });
+  if (opacityKeyword !== undefined) {
+    const val = opacityKeyword.split("=")[1];
+    return parseFloat(val);
+  } else return 1;
 }
 
 export function disableLayersVisiblity(layers, callback) {
@@ -230,32 +290,31 @@ export function getLayerInfo(layerInfo, callback) {
   });
 }
 
-export async function getBasicGroupsAndLayers(callback) {
-  let groups = [];
-  let defaultLayers = [];
-  let defaultGroupName = "";
-  for (var i = 0, len = TOCConfig.layerGroups.length; i < len; i++) {
-    const group = TOCConfig.layerGroups[i];
-    const groupURL = group.url;
-    const defaultGroup = group.defaultGroup;
+// export async function getBasicGroupsAndLayers(callback) {
+//   let groups = [];
+//   let defaultLayers = [];
+//   let defaultGroupName = "";
+//   for (var i = 0, len = TOCConfig.layerGroups.length; i < len; i++) {
+//     const group = TOCConfig.layerGroups[i];
+//     const groupURL = group.url;
+//     const defaultGroup = group.defaultGroup;
 
-    // eslint-disable-next-line
-    await this.getLayerListByGroup(groupURL, group.dataStore, (groupName, layerList) => {
-      groups.push({ name: groupName, layerList: layerList, default: defaultGroup, label: groupName, value: groupName });
-      if (defaultGroup) {
-        defaultLayers = layerList;
-        defaultGroupName = groupName;
-      }
-    });
-  }
+//     // eslint-disable-next-line
+//     await this.getLayerListByGroup(groupURL, group.dataStore, (groupName, layerList) => {
+//       groups.push({ name: groupName, layerList: layerList, default: defaultGroup, label: groupName, value: groupName });
+//       if (defaultGroup) {
+//         defaultLayers = layerList;
+//         defaultGroupName = groupName;
+//       }
+//     });
+//   }
 
-  callback(groups, defaultLayers, defaultGroupName);
-}
+//   callback(groups, defaultLayers, defaultGroupName);
+// }
 
 export function getStyles(groups) {
   // URL FOR PULLING LEGEND FROM GEOSERVER
-  const styleURLTemplate = (serverURL, layerName, styleName) =>
-    `${serverURL}/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=${layerName}&STYLE=${styleName}`;
+  const styleURLTemplate = (serverURL, layerName, styleName) => `${serverURL}/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=${layerName}&STYLE=${styleName}`;
 
   for (let index = 0; index < groups.length; index++) {
     const group = groups[index];

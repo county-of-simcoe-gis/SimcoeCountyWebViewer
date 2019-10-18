@@ -1,0 +1,114 @@
+.sc-identify-container {
+  position: absolute;
+  top: 5px;
+  bottom: 0px;
+  left: 5px;
+  right: 0px;
+  overflow-y: auto;
+}
+
+.sc-identify-layer-content-container {
+  padding: 5px;
+  background-color: white;
+}
+
+.sc-identify-feature-content {
+  line-height: 1.5;
+  padding-left: 10px;
+}
+
+.sc-identify-feature-header {
+  /* background-image: url(./images/zoom-in.png);
+  background-position-y: center;
+  background-repeat: no-repeat;
+  background-position-x: 313px; */
+  line-height: 1.5;
+  border: 1px solid #ddd;
+  background-color: #e8e8e8;
+  box-shadow: 0 0 10px #d0d0d0;
+  padding-left: 10px;
+  margin-bottom: 10px;
+}
+
+.sc-identify-feature-header-label {
+  display: inline-block;
+  width: 300px;
+}
+
+.sc-identify-feature-header-img {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.sc-identify-loading {
+  text-align: center;
+  margin-top: 10px;
+}
+#sc-identify-layer-container > .Collapsible {
+  /* width: 312px; */
+  margin: 5px;
+  background-color: #e8e8e8;
+  /* border: 1px solid #ddd; */
+  cursor: pointer;
+  line-height: 30px;
+  /* padding-left: 31px; */
+  /* position: absolute;
+  bottom: 0px; */
+  /* height: 30px;
+  width: 327px;
+  margin: 5px;
+  background-color: #e8e8e8;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  line-height: 30px;
+  padding-left: 31px; */
+}
+
+#sc-identify-layer-container .Collapsible__trigger {
+  display: block;
+  background-image: url(./images/metadata.png), url(./images/down.png);
+  background-position-y: center, 5px;
+  background-repeat: no-repeat, no-repeat;
+  background-position-x: 36px, 350px;
+  width: 331px;
+  margin-left: -31px;
+  padding-left: 28px;
+  font-weight: bold;
+  padding-top: 1px;
+  padding-left: 59px;
+  /* position: fixed;
+  display: inline-block;
+  width: 331px;
+  margin-left: -31px;
+  padding-left: 28px;
+  font-weight: bold;
+  padding-top: 1px;
+  background-image: url(./images/settings.png), url(./images/down.png);
+  background-position-y: center, 9px;
+  background-repeat: no-repeat, no-repeat;
+  background-position-x: 5px, 332px; */
+}
+
+#sc-identify-layer-container .is-closed {
+  /* background-image: url(./images/settings.png), url(./images/up.png); */
+}
+
+#sc-identify-layer-container .Collapsible__contentOuter {
+  /* position: absolute;
+  margin-left: -32px;
+  bottom: 31px;
+  width: 358px;
+  border-style: solid;
+  border-bottom: none;
+  border-color: #d8dadc;
+  border-width: thin;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 0px;
+  border-bottom-left-radius: 0px;
+  background-color: white; */
+}

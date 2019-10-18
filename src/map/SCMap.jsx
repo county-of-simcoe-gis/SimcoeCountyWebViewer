@@ -15,35 +15,37 @@ import FooterTools from "./FooterTools.jsx";
 import { defaults as defaultControls, ScaleLine, FullScreen } from "ol/control.js";
 import BasemapSwitcher from "./BasemapSwitcher";
 import PropertyReportClick from "./PropertyReportClick.jsx";
-import Screenshot from "./Screenshot.jsx";
-import ContextMenu from "ol-contextmenu";
 import "ol-contextmenu/dist/ol-contextmenu.css";
 import { fromLonLat } from "ol/proj";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 
 import FloatingMenu, { FloatingMenuItem } from "../helpers/FloatingMenu.jsx";
-import Menu, { SubMenu, Item as MenuItem, Divider } from "rc-menu";
+import { Item as MenuItem } from "rc-menu";
 import Portal from "../helpers/Portal.jsx";
 import * as helpers from "../helpers/helpers";
+import Identify from "./Identify";
 
 const scaleLineControl = new ScaleLine();
+const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) => `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True`;
 
 class SCMap extends Component {
   constructor(props) {
     super(props);
 
     this.contextCoords = null;
-
+    this.storageExtentKey = "map_extent";
     this.state = {
       mapClassName: "sc-map",
       shareURL: null,
-      parcelClickText: "Disable Property Click"
+      parcelClickText: "Disable Property Click",
+      isIE: false
     };
   }
 
   componentDidMount() {
     const centerCoords = [-8875141.45, 5543492.45];
+    const resolutions = [305.74811314055756, 152.87405657041106, 76.43702828507324, 38.21851414253662, 19.10925707126831, 9.554628535634155, 4.77731426794937, 2.388657133974685, 1.1943285668550503, 0.5971642835598172, 0.29858214164761665, 0.1492252984505969];
     var map = new Map({
       controls: defaultControls().extend([scaleLineControl, new FullScreen()]),
       layers: [],
@@ -52,10 +54,17 @@ class SCMap extends Component {
         center: centerCoords,
         zoom: 10,
         maxZoom: 20
+        //resolutions: resolutions
       }),
       interactions: defaultInteractions({ keyboard: true, altShiftDragRotate: false, pinchRotate: false }),
       keyboardEventTarget: document
     });
+
+    const storage = localStorage.getItem(this.storageExtentKey);
+    if (storage !== null) {
+      const extent = JSON.parse(storage);
+      map.getView().fit(extent, map.getSize(), { duration: 1000 });
+    }
 
     window.map = map;
     window.popup = new Popup();
@@ -68,8 +77,6 @@ class SCMap extends Component {
 
     window.map.getViewport().addEventListener("contextmenu", evt => {
       evt.preventDefault();
-      var evtClone = Object.assign({}, evt);
-
       this.contextCoords = window.map.getEventCoordinate(evt);
 
       const menu = (
@@ -81,11 +88,20 @@ class SCMap extends Component {
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-add-mymaps">
               <FloatingMenuItem imageName={"point.png"} label="Add Marker Point" />
             </MenuItem>
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoomin">
+            {/* <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoomin">
               <FloatingMenuItem imageName={"zoom-in.png"} label="Zoom In" />
             </MenuItem>
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoomout">
               <FloatingMenuItem imageName={"zoom-out.png"} label="Zoom Out" />
+            </MenuItem> */}
+            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-save-map-extent">
+              <FloatingMenuItem imageName={"globe-icon.png"} label="Save as Default Extent" />
+            </MenuItem>
+            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-report-problem">
+              <FloatingMenuItem imageName={"error.png"} label="Report a problem" />
+            </MenuItem>
+            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-identify">
+              <FloatingMenuItem imageName={"identify.png"} label="Identify" />
             </MenuItem>
           </FloatingMenu>
         </Portal>
@@ -97,16 +113,36 @@ class SCMap extends Component {
     const x = helpers.getURLParameter("X");
     const y = helpers.getURLParameter("Y");
     const sr = helpers.getURLParameter("SR") === null ? "WEB" : helpers.getURLParameter("SR");
-
-    if (x !== null || y !== null) {
+    if (x !== null && y !== null) {
       let coords = [x, y];
       if (sr === "WGS84") coords = fromLonLat([Math.round(x * 100000) / 100000, Math.round(y * 100000) / 100000]);
 
       helpers.flashPoint(coords);
     }
 
+    // HANDLE URL PARAMETERS (ZOOM TO EXTENT)
+    const xmin = helpers.getURLParameter("XMIN");
+    const ymin = helpers.getURLParameter("YMIN");
+    const xmax = helpers.getURLParameter("XMAX");
+    const ymax = helpers.getURLParameter("YMAX");
+    if (xmin !== null && ymin !== null && xmax !== null && ymax !== null) {
+      const extent = [xmin, xmax, ymin, ymax];
+      window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
+    }
+
     // APP STAT
     helpers.addAppStat("STARTUP", "MAP_LOAD");
+
+    // WARNING FOR IE
+    var ua = window.navigator.userAgent;
+    var msie = ua.indexOf("MSIE ");
+
+    // eslint-disable-next-line
+    if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
+      // If Internet Explorer, return version number
+      this.setState({ isIE: true });
+      helpers.showURLWindow("https://opengis.simcoe.ca/public/ieWarning.html");
+    }
   }
 
   onMenuItemClick = key => {
@@ -114,8 +150,38 @@ class SCMap extends Component {
     else if (key === "sc-floating-menu-zoomout") window.map.getView().setZoom(window.map.getView().getZoom() - 1);
     else if (key === "sc-floating-menu-property-click") window.emitter.emit("showPropertyReport", this.contextCoords);
     else if (key === "sc-floating-menu-add-mymaps") this.addMyMaps();
-
+    else if (key === "sc-floating-menu-save-map-extent") this.saveMapExtent();
+    else if (key === "sc-floating-menu-report-problem") this.reportProblem();
+    else if (key === "sc-floating-menu-identify") this.identify();
     helpers.addAppStat("Right Click", key);
+  };
+
+  identify = () => {
+    const point = new Point(this.contextCoords);
+    window.emitter.emit("loadReport", <Identify geometry={point}></Identify>);
+  };
+
+  reportProblem = () => {
+    // APP STATS
+    helpers.addAppStat("Report Problem", "Right Click Map");
+
+    const scale = helpers.getMapScale();
+    const extent = window.map.getView().calculateExtent(window.map.getSize());
+    const xmin = extent[0];
+    const xmax = extent[1];
+    const ymin = extent[2];
+    const ymax = extent[3];
+    const center = window.map.getView().getCenter();
+
+    const feedbackUrl = feedbackTemplate(xmin, xmax, ymin, ymax, center[0], center[1], scale);
+
+    helpers.showURLWindow(feedbackUrl, false, "full");
+  };
+
+  saveMapExtent = () => {
+    const extent = window.map.getView().calculateExtent(window.map.getSize());
+    localStorage.setItem(this.storageExtentKey, JSON.stringify(extent));
+    helpers.showMessage("Map Extent", "Your map extent has been saved.");
   };
 
   addMyMaps = () => {

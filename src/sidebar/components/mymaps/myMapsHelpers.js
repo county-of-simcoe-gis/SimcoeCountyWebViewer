@@ -367,28 +367,61 @@ export function convertLineToArrow(geometry) {
   return clone;
 }
 
-export function importMyMaps(id) {
-  // const storage = localStorage.getItem("myMaps");
-  // if (storage === null) return [];
-  // const data = JSON.parse(storage);
-  // helpers.postJSON("https://opengis.simcoe.ca/api/postMyMaps/", data, result => {
-  //   console.log(result);
-  // });
-  // helpers.getJSON("https://opengis.simcoe.ca/api/getMyMaps/6a8cf8c6-b3a0-11e9-9d64-005056b2f523", result => {
-  //   console.log(result);
-  // });
-  // return;
+export function importMyMaps(id, callback2) {
+  helpers.getJSON(`https://opengis.simcoe.ca/api/getMyMaps/${id}`, result => {
+    //helpers.getJSON(`http://localhost:8085/getMyMaps/${id}`, result => {
+    console.log(result);
+    callback2(result);
+  });
 }
 
-export function exportMyMaps(id) {
-  // const storage = localStorage.getItem("myMaps");
-  // if (storage === null) return [];
-  // const data = JSON.parse(storage);
-  // helpers.postJSON("https://opengis.simcoe.ca/api/postMyMaps/", data, result => {
-  //   console.log(result);
-  // });
-  // helpers.getJSON("https://opengis.simcoe.ca/api/getMyMaps/6a8cf8c6-b3a0-11e9-9d64-005056b2f523", result => {
-  //   console.log(result);
-  // });
-  // return;
+export function exportMyMaps(callback2, id = null) {
+  const storage = localStorage.getItem("myMaps");
+  if (storage === null) return [];
+  const data = JSON.parse(storage);
+
+  let item = null;
+  if (id !== null) {
+    item = data.items.filter(item => {
+      return item.id === id;
+    })[0];
+
+    item.label = "Feedback: " + item.label;
+    if (item !== null) {
+      data.items = [item];
+    }
+  }
+
+  helpers.postJSON("https://opengis.simcoe.ca/api/postMyMaps/", data, result => {
+    callback2(result);
+  });
+}
+
+function _radians(n) {
+  return n * (Math.PI / 180);
+}
+function _degrees(n) {
+  return n * (180 / Math.PI);
+}
+
+export function getBearing(fromPoint, toPoint) {
+  const fromPointLL = helpers.toLatLongFromWebMercator(fromPoint);
+  const toPointLL = helpers.toLatLongFromWebMercator(toPoint);
+
+  var startLat = _radians(fromPointLL[1]);
+  var startLong = _radians(fromPointLL[0]);
+  var endLat = _radians(toPointLL[1]);
+  var endLong = _radians(toPointLL[0]);
+
+  var dLong = endLong - startLong;
+
+  var dPhi = Math.log(Math.tan(endLat / 2.0 + Math.PI / 4.0) / Math.tan(startLat / 2.0 + Math.PI / 4.0));
+  if (Math.abs(dLong) > Math.PI) {
+    if (dLong > 0.0) dLong = -(2.0 * Math.PI - dLong);
+    else dLong = 2.0 * Math.PI + dLong;
+  }
+
+  const deg = (_degrees(Math.atan2(dLong, dPhi)) + 360.0) % 360.0;
+  const degRounded = Math.round(deg * 100) / 100;
+  return degRounded;
 }

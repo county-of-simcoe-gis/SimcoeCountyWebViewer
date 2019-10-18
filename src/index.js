@@ -13,13 +13,9 @@ window.sidebarOpen = null; // SIDEBAR OPEN BOOLEAN
 window.emitter = new EventEmitter(); // USE THIS TO LISTEN/BROADCAST EVENTS (e.g. sidebarChange)
 window.popup = null; // ONE POPUP FOR ALL
 window.disableParcelClick = false; // PROPERTY PARCEL CLICK.  USE THIS TO DISABLE
+window.isDrawingOrEditing = false;
 
-ReactDOM.render(
-  <React.Fragment>
-    <App />
-  </React.Fragment>,
-  document.getElementById("root")
-);
+ReactDOM.render(<App />, document.getElementById("root"));
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
