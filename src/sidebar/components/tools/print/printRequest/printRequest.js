@@ -38,7 +38,6 @@ export async function loadWMTSConfig(url, opacity) {
     wmtsCongif.dimensions = [];
     wmtsCongif.dimensionParams = {};
     wmtsCongif.requestEncoding = "REST";
-    wmtsCongif.failOnError = true;
     wmtsCongif.customParams = {
         "TRANSPARENT": "true"
     };
@@ -131,7 +130,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
 
     let configureVectorMyMapsLayer = (l) => {
 
-        if (typeof l.values_.source.uidIndex_ != "undefined") {
+        if (typeof l.values_.source.uidIndex_ !== "undefined") {
             let drawablefeatures = Object.values(l.values_.source.uidIndex_);
             geoJsonLayersCount = drawablefeatures.length
             for (const key in drawablefeatures) {
