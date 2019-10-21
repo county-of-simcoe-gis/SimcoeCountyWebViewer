@@ -52,9 +52,10 @@ export async function loadWMTSConfig(url, opacity) {
 // Building pring request According to mapfish v3 config standards
 // ..........................................................................
 export async function printRequest(mapLayers, description, printSelectedOption) {
-    //osm layer used from maptiler:api.maptiler.com due to osm user agent user restriction policy
-    const osmBaseUrl =  "https://api.maptiler.com/maps/streets/256/{z}/{x}/{y}.png?key=6vlppHmCcPoEbI6f1RBX";
-
+    //alternative osm layer used from maptiler:api.maptiler.com due to osm user agent user restriction policy
+    //"https://api.maptiler.com/maps/streets/256/{z}/{x}/{y}.png?key=6vlppHmCcPoEbI6f1RBX";
+    
+    const osmBaseUrl = "https://tile.openstreetmap.org/{z}/{x}/{y}.png" 
     const currentMapViewCenter = window.map.getView().values_.center;
     const mapProjection = window.map.getView().getProjection().code_;
     const mapExtent = window.map.getView().calculateExtent();
