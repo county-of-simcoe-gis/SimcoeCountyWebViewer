@@ -9,6 +9,7 @@ ReactGA.initialize("UA-3104541-53");
 ReactGA.pageview(window.location.pathname + window.location.search);
 
 class App extends Component {
+
   render() {
     return (
       <div>
