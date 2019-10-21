@@ -8,6 +8,7 @@ import utils from "./utils";
 
 //pulls in tile matrix from each basemap tilelayer capabilities
 export async function loadTileMatrix(url) {
+
     let response = await fetch(url);
     let data = await response.text();
     let xml = (new window.DOMParser()).parseFromString(data, "text/xml");
@@ -67,7 +68,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     const rotation = 0;
     const dpi = 300;
 
-    
+    const groupLayerNames = ["Topographic", "Streets", "Open Street Map", "LIO Topo"];
+
     const mapLayerSorter = [
         "LIO_Cartographic_LIO_Topographic",
         "Streets_Black_And_White_Cache",
@@ -166,10 +168,10 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                         }
                     }
     
-                    if (Object.getPrototypeOf(f.values_.geometry).constructor.name === "LineString") {
+                    if (f.values_.drawType === "LineString") {
                         styles.type = "Line"
                     } else {
-                        styles.type = Object.getPrototypeOf(f.values_.geometry).constructor.name;
+                        styles.type = f.values_.drawType;
                     }
                     if (f.style_.fill_ != null) {
                         styles.fillColor = utils.rgbToHex(...f.style_.fill_.color_);
@@ -221,7 +223,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                             features: [{
                                 type: "Feature",
                                 geometry: {
-                                    type: Object.getPrototypeOf(f.values_.geometry).constructor.name,
+                                    type: f.values_.drawType,
                                     coordinates: grouped_coords
                                 },
                                 properties: {
@@ -250,11 +252,9 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
 
         let tileUrl = null
 
-        if (Object.getPrototypeOf(l.values_.source).constructor.name === 'XYZ') {
+        if (l.values_.source.key_=== "https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}") {
             tileUrl = l.values_.source.key_.split("/tile")[0];;
-        }
-
-        if (Object.getPrototypeOf(l.values_.source).constructor.name === 'TileImage') {
+        }else{
             let entries = l.values_.source.tileCache.entries_;
             tileUrl = (entries[Object.keys(entries)[0]]).value_.src_.split("/tile")[0];
         }
@@ -266,8 +266,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     let configureLayerGroup = async (l) => {
         for (const key in l.values_.layers.array_) {
             let layers = l.values_.layers.array_[key]
-
-            if (Object.getPrototypeOf(layers.values_.source).constructor.name === "OSM") {
+  
+            if (layers.values_.source.key_=== "http://a.tile.openstreetmap.org/{z}/{x}/{y}.png") {
                 mainMap.push({
                     baseURL:osmBaseUrl,
                     type:"OSM",
@@ -279,17 +279,18 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                     type:"OSM",
                     imageExtension:"png"
                 });
-            } else {
-                let tileUrl = null;
-                if (Object.getPrototypeOf(layers.values_.source).constructor.name === 'TileImage') {
+            }
+            else if (layers.values_.source.key_=== "") {
+                let tileUrl = null;  
+
+                if (typeof layers.values_.source.urls !== "undefined" && layers.values_.source.urls !== null) {
+                    if (layers.values_.source.urls[0] === "https://ws.giscache.lrc.gov.on.ca/arcgis/rest/services/LIO_Cartographic/LIO_Topographic/MapServer") {
+                        tileUrl = "https://ws.giscache.lrc.gov.on.ca/arcgis/rest/services/LIO_Cartographic/LIO_Topographic/MapServer";
+                    }
+                }else{
                     let entries = layers.values_.source.tileCache.entries_;
                     tileUrl = (entries[Object.keys(entries)[0]]).value_.src_.split("/tile")[0];
                 }
-                if (Object.getPrototypeOf(layers.values_.source).constructor.name === 'TileArcGISRest') {
-                    let entries = layers.values_.source.tileCache.entries_;
-                    tileUrl = (entries[Object.keys(entries)[0]]).value_.src_.split("/export?")[0];
-                }
-
                 mainMap.push(await loadWMTSConfig(tileUrl, l.values_.opacity));
                 overviewMap.push(await loadWMTSConfig(tileUrl, l.values_.opacity));
             }
@@ -313,20 +314,22 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
 
     let getLayerByType = async (l) => {
 
-        if (Object.getPrototypeOf(l).constructor.name === "VectorLayer" && l.values_.name === "myMaps") {
+        if (l.values_.name === "myMaps") {
             configureVectorMyMapsLayer(l);
         }
 
-        if (Object.getPrototypeOf(l).constructor.name === "LayerGroup") {
+        if (groupLayerNames.includes(l.values_.name)===true) {
             await configureLayerGroup(l);
         }
 
-        if (Object.getPrototypeOf(l).constructor.name === "TileLayer") {
-            await configureTileLayer(l);
-        }
-
-        if (Object.getPrototypeOf(l).constructor.name === "ImageLayer") {
-            configureImageLayer(l);
+        if (typeof l.values_.source !== "undefined") {
+            if (typeof l.values_.source.tileCache !== "undefined") {
+                await configureTileLayer(l);
+            }
+    
+            if (typeof l.values_.source.wfsUrl !== "undefined") {
+                configureImageLayer(l);
+            };
         }
     }
     //iterate through each map layer passed in the window.map
@@ -443,6 +446,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     }
     //ensures that template configuration is executed before print request object is sent
     await switchTemplates(printRequest, printSelectedOption);
+    //console.log(mapLayers);
     //console.log(printRequest);
 
     return printRequest;
