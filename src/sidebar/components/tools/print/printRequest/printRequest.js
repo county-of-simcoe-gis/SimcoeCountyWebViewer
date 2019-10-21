@@ -266,7 +266,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
         for (const key in l.values_.layers.array_) {
             let layers = l.values_.layers.array_[key]
 
-            if (layers.values_.service.type === "OSM") {
+            if (Object.getPrototypeOf(layers.values_.source).constructor.name === "OSM") {
                 mainMap.push({
                     baseURL:osmBaseUrl,
                     type:"OSM",
