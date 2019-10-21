@@ -136,7 +136,7 @@ class Print extends Component {
     // console.log(JSON.stringify(printData)); 
     let interval = 5000;
     let origin = "https://opengis.simcoe.ca";
-    let testOrigin = 'http://localhost:8080'
+    //let testOrigin = 'http://localhost:8080'
     let encodedPrintRequest = encodeURIComponent(JSON.stringify(printData))
     let url = `${origin}/print/print/${printAppId}/report.${outputFormat}`;
 

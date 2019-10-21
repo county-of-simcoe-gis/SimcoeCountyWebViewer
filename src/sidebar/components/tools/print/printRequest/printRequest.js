@@ -335,8 +335,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     //wait for list of layer promises to be resolved
     await Promise.all(mapLayerList);
 
-    let sortLayers = (layers, sorted) => {
-        mapLayerSorter.forEach((key) => {
+    let sortLayers = async (layers, sorted) => {
+       mapLayerSorter.forEach((key) => {
             let found = false;
             layers = layers.filter((l) => {
                 if (l.type === "geojson") {
@@ -359,14 +359,15 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
             })
         });
     }
-    sortLayers(mainMap, sortedMainMap);
-    sortLayers(overviewMap, sortedOverviewMap);
+    //ensures that the sorted layers executes after the intitial mapLayerList is resolved
+    await sortLayers(mainMap, sortedMainMap);
+    await sortLayers(overviewMap, sortedOverviewMap);
 
     // ..........................................................................
     // Print Request Template Switcher
     // ..........................................................................
 
-    let switchTemplates = (p, options) => {
+    let switchTemplates = async (p, options) => {
 
         //shared print request properties
         p.attributes.map.projection = mapProjection;
@@ -440,7 +441,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 break;
         }
     }
-    switchTemplates(printRequest, printSelectedOption);
+    //ensures that template configuration is executed before print request object is sent
+    await switchTemplates(printRequest, printSelectedOption);
     //console.log(printRequest);
 
     return printRequest;
