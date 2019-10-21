@@ -8,6 +8,7 @@ import utils from "./utils";
 
 //pulls in tile matrix from each basemap tilelayer capabilities
 export async function loadTileMatrix(url) {
+
     let response = await fetch(url);
     let data = await response.text();
     let xml = (new window.DOMParser()).parseFromString(data, "text/xml");
@@ -265,8 +266,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     let configureLayerGroup = async (l) => {
         for (const key in l.values_.layers.array_) {
             let layers = l.values_.layers.array_[key]
-
-            if (layers.values_.name === "Open Street Map") {
+  
+            if (layers.values_.source.key_=== "http://a.tile.openstreetmap.org/{z}/{x}/{y}.png") {
                 mainMap.push({
                     baseURL:osmBaseUrl,
                     type:"OSM",
@@ -278,17 +279,18 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                     type:"OSM",
                     imageExtension:"png"
                 });
-            } else {
-                let tileUrl = null;
+            }
+            else if (layers.values_.source.key_=== "") {
+                let tileUrl = null;  
 
-                if (layers.values_.name === "LIO Topo") {
-                    let entries = layers.values_.source.tileCache.entries_;
-                    tileUrl = (entries[Object.keys(entries)[0]]).value_.src_.split("/export?")[0];
+                if (typeof layers.values_.source.urls !== "undefined" && layers.values_.source.urls !== null) {
+                    if (layers.values_.source.urls[0] === "https://ws.giscache.lrc.gov.on.ca/arcgis/rest/services/LIO_Cartographic/LIO_Topographic/MapServer") {
+                        tileUrl = "https://ws.giscache.lrc.gov.on.ca/arcgis/rest/services/LIO_Cartographic/LIO_Topographic/MapServer";
+                    }
                 }else{
                     let entries = layers.values_.source.tileCache.entries_;
                     tileUrl = (entries[Object.keys(entries)[0]]).value_.src_.split("/tile")[0];
                 }
-
                 mainMap.push(await loadWMTSConfig(tileUrl, l.values_.opacity));
                 overviewMap.push(await loadWMTSConfig(tileUrl, l.values_.opacity));
             }
@@ -444,7 +446,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     }
     //ensures that template configuration is executed before print request object is sent
     await switchTemplates(printRequest, printSelectedOption);
-    console.log(mapLayers);
+    //console.log(mapLayers);
     //console.log(printRequest);
 
     return printRequest;
