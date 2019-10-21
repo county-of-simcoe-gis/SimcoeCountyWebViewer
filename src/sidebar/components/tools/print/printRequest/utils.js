@@ -17,11 +17,24 @@ let rgbToHex = (r, g, b, a) => {
     return "#" + r + g + b;
 };
 
+let stringToColour = function(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    let colour = '#';
+    for (let i = 0; i < 3; i++) {
+      let value = (hash >> (i * 8)) & 0xFF;
+      colour += ('00' + value.toString(16)).substr(-2);
+    }
+    return colour;
+  }
+
 // Changes XML to JSON
 let xmlToJson = (xml) => {
     let obj = {};
 
-    if (xml.nodeType == 1) { // element
+    if (xml.nodeType === 1) { // element
         // do attributes
         if (xml.attributes.length > 0) {
             obj["@attributes"] = {};
@@ -30,7 +43,7 @@ let xmlToJson = (xml) => {
                 obj["@attributes"][attribute.nodeName] = attribute.nodeValue;
             }
         }
-    } else if (xml.nodeType == 3) { // text
+    } else if (xml.nodeType === 3) { // text
         obj = xml.nodeValue;
     }
 
@@ -81,4 +94,28 @@ let extractServiceName = (url)=>{
     return serviceName
 }
 
-export default {rgbToHex, xmlToJson, removeNull, extractServiceName}
+let computeDimension = (templateWidth, templateHeight, extent) =>{
+    let dimensions = {};
+    const xMin = extent[0];
+    const xMax = extent[2];
+    const yMin = extent[1];
+    const yMax = extent[3];
+    const extentWidth = Math.abs(Math.abs(xMin) - Math.abs(xMax))
+    const extentHeight = Math.abs(Math.abs(yMin) - Math.abs(yMax))
+
+    if ((extentHeight>extentWidth)||(extentHeight===extentWidth)) {
+        dimensions.newWidth = (extentWidth/extentHeight)*templateHeight;
+        dimensions.newHeight = templateHeight;
+        dimensions.x = (Math.abs(extentWidth-dimensions.newWidth))/2
+    }
+    else if(extentHeight<extentWidth) {
+        dimensions.newWidth = templateWidth;
+        dimensions.newHeight = (extentHeight/extentWidth)*templateWidth;
+        dimensions.y = (Math.abs(extentHeight-dimensions.newHeight))/2
+    }
+    //console.log(dimensions);
+    
+    return dimensions
+}
+
+export default {rgbToHex, stringToColour, xmlToJson, removeNull, extractServiceName, computeDimension}

@@ -7,31 +7,26 @@ import utils from "./utils";
 // ..........................................................................
 
 //pulls in tile matrix from each basemap tilelayer capabilities
-export async function loadTileMatrix(url, type) {
+export async function loadTileMatrix(url) {
     let response = await fetch(url);
     let data = await response.text();
     let xml = (new window.DOMParser()).parseFromString(data, "text/xml");
     let json = utils.xmlToJson(xml)
-    let flatTileMatrix = null;
-    if (type === "OSM") {
-        flatTileMatrix = json.Capabilities.Contents.TileMatrixSet.TileMatrix
-    } else {
-        flatTileMatrix = json.Capabilities.Contents.TileMatrixSet[0].TileMatrix
-    }
+    let flatTileMatrix = json.Capabilities.Contents.TileMatrixSet[0].TileMatrix;
     let tileMatrix = flatTileMatrix.map((m) => {
         return {
             identifier: m["ows:Identifier"]["#text"],
             scaleDenominator: Number(m["ScaleDenominator"]["#text"]),
-            topLeftCorner: [-2.0037508342787E7, 2.0037508342787E7],
+            topLeftCorner: [Number((m["TopLeftCorner"]["#text"]).split(" ")[0]), Number((m["TopLeftCorner"]["#text"]).split(" ")[1])],
             tileSize: [256, 256],
-            matrixSize: [Number(m["MatrixHeight"]["#text"]), Number(m["MatrixWidth"]["#text"])]
+            matrixSize: [Number(m["MatrixWidth"]["#text"]), Number(m["MatrixHeight"]["#text"])]
         }
     });
     return tileMatrix;
 }
 
 //build and loads wmts config for each layer
-export async function loadWMTSConfig(url, type, opacity) {
+export async function loadWMTSConfig(url, opacity) {
 
     let wmtsCongif = {};
 
@@ -47,38 +42,36 @@ export async function loadWMTSConfig(url, type, opacity) {
         "TRANSPARENT": "true"
     };
     wmtsCongif.matrixSet = "EPSG:3857";
-    wmtsCongif.baseURL = null;
-    wmtsCongif.layer = null;
-    wmtsCongif.matrices = null;
-    if (type === "OSM") {
-        wmtsCongif.baseURL = "https://tile-a.openstreetmap.fr/{Style}{TileMatrix}/{TileCol}/{TileRow}.png";
-        wmtsCongif.layer = "wmts-osm"
-        wmtsCongif.matrices = await loadTileMatrix(url, type);
-    } else {
-        wmtsCongif.baseURL = url + "/WMTS/tile/1.0.0/" + utils.extractServiceName(url) + "/{TileMatrix}/{TileRow}/{TileCol}";
-        wmtsCongif.layer = utils.extractServiceName(url);
-        wmtsCongif.matrices = await loadTileMatrix(url + "/WMTS/1.0.0/WMTSCapabilities.xml", type);
-    }
+    wmtsCongif.baseURL = url + "/tile/{TileMatrix}/{TileRow}/{TileCol}";
+    wmtsCongif.layer = utils.extractServiceName(url);
+    wmtsCongif.matrices = await loadTileMatrix(url + "/WMTS/1.0.0/WMTSCapabilities.xml");
+
     return wmtsCongif;
 }
-
+// ..........................................................................
+// Building pring request According to mapfish v3 config standards
+// ..........................................................................
 export async function printRequest(mapLayers, description, printSelectedOption) {
-
-    const iconServiceUrl = "https://opengis.simcoe.ca/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=";
-    const osmUrl = "https://osmlab.github.io/wmts-osm/WMTSCapabilities.xml"
+    //alternative osm layer used from maptiler:api.maptiler.com due to osm user agent user restriction policy
+    //"https://api.maptiler.com/maps/streets/256/{z}/{x}/{y}.png?key=6vlppHmCcPoEbI6f1RBX";
+    
+    const osmBaseUrl = "https://tile.openstreetmap.org/{z}/{x}/{y}.png" 
     const currentMapViewCenter = window.map.getView().values_.center;
     const mapProjection = window.map.getView().getProjection().code_;
+    const mapExtent = window.map.getView().calculateExtent();
+    const viewPortHeight = window.map.getSize()[1]
+    const viewPortWidth = window.map.getSize()[0]
     const currentMapScale = helpers.getMapScale();
-    const mapCenter = [-8875141.45, 5543492.45];
     const longitudeFirst = true;
-    const mapScale = 3000000;
+    const mapScale = 2990000;
     const rotation = 0;
     const dpi = 300;
+
+    
     const mapLayerSorter = [
         "LIO_Cartographic_LIO_Topographic",
         "Streets_Black_And_White_Cache",
         "World_Topo_Map",
-        "wmts-osm",
         "Topo_Cache",
         "Streets_Cache",
         "Ortho_2018_Cache",
@@ -91,11 +84,25 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
         "Ortho_1989_Cache",
         "Ortho_1954_Cache",
         "Bathymetry_Cache",
-        "World_Imagery",
+        "World_Imagery"
     ];
+    const mapfishOutputFormats = {
+        JPG: "jpeg",
+        PNG: "png",
+        PDF: "pdf"
+    }
+    // template dimensions to be used for preserve map extensions
+    const templateDimensions = {};
+    templateDimensions["8X11 Portrait"] = [570, 639];
+    templateDimensions["11X8 Landscape"] = [750, 450];
+    templateDimensions["8X11 Portrait Overview"] = [570, 450];
+    templateDimensions["Map Only"] = [viewPortWidth, viewPortHeight];
+    templateDimensions["Map Only Portrait"] = [570, 752];
+    templateDimensions["Map Only Landscape"] = [750, 572];
 
+
+    //count for geoJsonLayers to assist in placing wms layers
     let geoJsonLayersCount = 0;
-    let printAppId = null;
 
     // init print request object
     let printRequest = {
@@ -107,7 +114,6 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
             description: "",
             map: {},
             overviewMap: {},
-            legend: {},
             scaleBar: {
                 geodetic: currentMapScale
             },
@@ -119,99 +125,173 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     let overviewMap = [];
     let sortedMainMap = [];
     let sortedOverviewMap = [];
-    let legend = {
-        name: "Legend",
-        classes: []
-    };
+    //stroke format for geoJson
+    let dash = [10];
+    let dot = [1, 5];
 
     let configureVectorMyMapsLayer = (l) => {
-        let drawablefeatures = Object.values(l.values_.source.undefIdIndex_);
-        geoJsonLayersCount = drawablefeatures.length
-        for (const key in drawablefeatures) {
 
-            let f = drawablefeatures[key];
-            let flat_coords = f.values_.geometry.flatCoordinates
-            let grouped_coords = [];
-            //transforms flattened coords to geoJson format grouped coords
-            for (let i = 0, t = 1; i < flat_coords.length; i += 2, t += 2) {
-                grouped_coords.push([flat_coords[i], flat_coords[t]]);
-            }
-
-            let styles = {};
-            if (Object.getPrototypeOf(f.values_.geometry).constructor.name === "LineString") {
-                styles.type = "Line"
-            } else {
-                styles.type = Object.getPrototypeOf(f.values_.geometry).constructor.name;
-            }
-            if (f.style_.fill_ != null) {
-                styles.fillColor = utils.rgbToHex(...f.style_.fill_.color_);
-                styles.fillOpacity = Number(([...f.style_.fill_.color_])[3]);
-                styles.strokeColor = utils.rgbToHex(...f.style_.stroke_.color_);
-                styles.strokeOpacity = Number(([...f.style_.stroke_.color_])[3]);
-                styles.strokeWidth = Number(f.style_.stroke_.width_);
-            }
-
-
-            styles.strokeDashstyle = "dash";
-            styles.fontFamily = "sans-serif";
-            styles.fontSize = "12px";
-            styles.fontStyle = "normal";
-            styles.fontWeight = "bold";
-            styles.haloColor = "#123456";
-            styles.haloOpacity = 0.7;
-            styles.haloRadius = 3.0;
-            styles.label = f.values_.label;
-            styles.labelAlign = "cm";
-            styles.labelRotation = 45;
-            styles.labelXOffset = -25.0;
-            styles.labelYOffset = -35.0;
-
-            mainMap.push({
-                type: "geojson",
-                geoJson: {
-                    type: "FeatureCollection",
-                    features: [{
-                        type: "Feature",
-                        geometry: {
-                            type: Object.getPrototypeOf(f.values_.geometry).constructor.name,
-                            coordinates: grouped_coords
-                        },
-                        properties: {
-                            id: f.values_.id,
-                            label: f.values_.label,
-                            labelVisible: f.values_.labelVisible,
-                            drawType: f.values_.drawType,
-                            isParcel: f.values_.isParcel
+        if (typeof l.values_.source.uidIndex_ !== "undefined") {
+            let drawablefeatures = Object.values(l.values_.source.uidIndex_);
+            geoJsonLayersCount = drawablefeatures.length
+            for (const key in drawablefeatures) {
+    
+                let f = drawablefeatures[key];
+                let grouped_coords = [];
+                let styles = {};
+                //default label config
+                let labels = {
+                    type: "text",
+                    fontFamily: "sans-serif",
+                    fontSize: "0px",
+                    fontStyle: "normal",
+                    fontWeight: "bold",
+                    haloColor: "#123456",
+                    haloOpacity: 0,
+                    haloRadius: 0,
+                    label: "",
+                    labelAlign: "cm",
+                    labelRotation: 0,
+                    labelXOffset: 0,
+                    labelYOffset: 0
+                };
+    
+                if (f.style_.fill_ !== null && f.style_.stroke_ !== null) {
+                    let flat_coords = f.values_.geometry.flatCoordinates;
+    
+                    //transforms flattened coords to geoJson format grouped coords
+                    if (flat_coords) {
+                        for (let i = 0, t = 1; i < flat_coords.length; i += 2, t += 2) {
+                            grouped_coords.push([flat_coords[i], flat_coords[t]]);
                         }
-                    }]
-                },
-                name: f.values_.label,
-                style: {
-                    version: "2",
-                    "*": {
-                        symbolizers: [(utils.removeNull(styles))]
                     }
-                }
-            });
-        }
+    
+                    if (Object.getPrototypeOf(f.values_.geometry).constructor.name === "LineString") {
+                        styles.type = "Line"
+                    } else {
+                        styles.type = Object.getPrototypeOf(f.values_.geometry).constructor.name;
+                    }
+                    if (f.style_.fill_ != null) {
+                        styles.fillColor = utils.rgbToHex(...f.style_.fill_.color_);
+                        styles.fillOpacity = Number(([...f.style_.fill_.color_])[3]);
+                    }
+                    if (f.style_.stroke_ != null) {
+                        styles.strokeColor = utils.rgbToHex(...f.style_.stroke_.color_);
+                        styles.strokeOpacity = Number(([...f.style_.stroke_.color_])[3]);
+                        styles.strokeWidth = Number(f.style_.stroke_.width_);
+    
+                        if (f.style_.stroke_.lineDash_ !== null && f.style_.stroke_.lineDash_[0] === dash[0]) {
+                            styles.strokeDashstyle = "dash";
+                        }
+                        if (f.style_.stroke_.lineDash_ !== null && f.style_.stroke_.lineDash_[0] === dot[0] && f.style_.stroke_.lineDash_[1] === dot[1]) {
+                            styles.strokeDashstyle = "dot";
+                            styles.strokeLinecap = "round";
+                        }
+                    }
+    
+                    //configuration for labels
+                    if (f.style_.text_ != null) {
+                        labels.type = "text";
+                        labels.haloOpacity = 1;
+                        labels.label = f.values_.label;
+                        labels.labelAlign = "cm";
+                        labels.labelRotation = f.style_.text_.rotation_;
+                        labels.labelXOffset = f.style_.text_.offsetX_;
+                        labels.labelYOffset = f.style_.text_.offsetY_;
+                        if (f.style_.text_.fill_ != null) {
+                            labels.fontColor = f.style_.text_.fill_.color_ //utils.stringToColour()
+                        }
+                        if (f.style_.text_.stroke_ != null) {
+                            labels.haloRadius = 1;
+                            labels.haloColor = f.style_.text_.stroke_.color_;
+                        }
+                        if (f.style_.text_.font_ != null) {
+                            let fontStyle = (f.style_.text_.font_).split(" ");
+                            labels.fontFamily = fontStyle[2];
+                            labels.fontSize = fontStyle[1];
+                            labels.fontWeight = fontStyle[0];
+                            labels.fontStyle = "normal";
+                        }
+                    }
+    
+                    mainMap.push({
+                        type: "geojson",
+                        geoJson: {
+                            type: "FeatureCollection",
+                            features: [{
+                                type: "Feature",
+                                geometry: {
+                                    type: Object.getPrototypeOf(f.values_.geometry).constructor.name,
+                                    coordinates: grouped_coords
+                                },
+                                properties: {
+                                    id: f.values_.id,
+                                    label: f.values_.label,
+                                    labelVisible: f.values_.labelVisible,
+                                    drawType: f.values_.drawType,
+                                    isParcel: f.values_.isParcel
+                                }
+                            }]
+                        },
+                        name: f.values_.label,
+                        style: {
+                            version: "2",
+                            "*": {
+                                symbolizers: [(utils.removeNull(styles)), labels]
+                            }
+                        }
+                    });
+                } 
+            } 
+        }  
     }
 
     let configureTileLayer = async (l) => {
-        mainMap.push(await loadWMTSConfig(l.values_.url, "IMAGERY", l.values_.opacity))
-        overviewMap.push(await loadWMTSConfig(l.values_.url, "IMAGERY", l.values_.opacity))
+
+        let tileUrl = null
+
+        if (Object.getPrototypeOf(l.values_.source).constructor.name === 'XYZ') {
+            tileUrl = l.values_.source.key_.split("/tile")[0];;
+        }
+
+        if (Object.getPrototypeOf(l.values_.source).constructor.name === 'TileImage') {
+            let entries = l.values_.source.tileCache.entries_;
+            tileUrl = (entries[Object.keys(entries)[0]]).value_.src_.split("/tile")[0];
+        }
+
+        mainMap.push(await loadWMTSConfig(tileUrl, l.values_.opacity));
+        overviewMap.push(await loadWMTSConfig(tileUrl, l.values_.opacity));
     }
 
     let configureLayerGroup = async (l) => {
-
         for (const key in l.values_.layers.array_) {
             let layers = l.values_.layers.array_[key]
 
-            if (layers.values_.service.type === "OSM") {
-                mainMap.push(await loadWMTSConfig(osmUrl, layers.values_.service.type, l.values_.opacity))
-                overviewMap.push(await loadWMTSConfig(osmUrl, layers.values_.service.type, l.values_.opacity))
+            if (Object.getPrototypeOf(layers.values_.source).constructor.name === "OSM") {
+                mainMap.push({
+                    baseURL:osmBaseUrl,
+                    type:"OSM",
+                    imageExtension:"png"
+
+                });
+                overviewMap.push({
+                    baseURL:osmBaseUrl,
+                    type:"OSM",
+                    imageExtension:"png"
+                });
             } else {
-                mainMap.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type, l.values_.opacity))
-                overviewMap.push(await loadWMTSConfig(layers.values_.service.url, layers.values_.service.type, l.values_.opacity))
+                let tileUrl = null;
+                if (Object.getPrototypeOf(layers.values_.source).constructor.name === 'TileImage') {
+                    let entries = layers.values_.source.tileCache.entries_;
+                    tileUrl = (entries[Object.keys(entries)[0]]).value_.src_.split("/tile")[0];
+                }
+                if (Object.getPrototypeOf(layers.values_.source).constructor.name === 'TileArcGISRest') {
+                    let entries = layers.values_.source.tileCache.entries_;
+                    tileUrl = (entries[Object.keys(entries)[0]]).value_.src_.split("/export?")[0];
+                }
+
+                mainMap.push(await loadWMTSConfig(tileUrl, l.values_.opacity));
+                overviewMap.push(await loadWMTSConfig(tileUrl, l.values_.opacity));
             }
         }
     }
@@ -228,10 +308,6 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
             customParams: {
                 "TRANSPARENT": "true"
             }
-        });
-        legend.classes.push({
-            icons: [iconServiceUrl + (l.values_.source.params_.LAYERS.replace(/ /g, "%20"))],
-            name: l.values_.source.params_.LAYERS.split(":")[1]
         });
     }
 
@@ -269,6 +345,9 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 if (l.type === "wms") {
                     sorted.splice(geoJsonLayersCount, 0, l)
                 }
+                if (l.type === "OSM") {
+                    sorted.push(l)
+                }
                 if (l.type === "WMTS") {
                     if (!found && l.layer === key) {
                         sorted.push(l);
@@ -290,40 +369,55 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     let switchTemplates = (p, options) => {
 
         //shared print request properties
-        p.attributes.map.center = currentMapViewCenter;
         p.attributes.map.projection = mapProjection;
-        p.attributes.map.scale = currentMapScale;
         p.attributes.map.longitudeFirst = longitudeFirst;
         p.attributes.map.rotation = rotation;
         p.attributes.map.dpi = dpi;
         p.attributes.map.layers = sortedMainMap;
-        p.outputFormat = options.printFormatSelectedOption.value;
+        p.outputFormat = mapfishOutputFormats[options.printFormatSelectedOption.value];
+
+        switch (options.mapScaleOption) {
+            case "forceScale":
+                p.attributes.map.scale = options.forceScale;
+                p.attributes.map.center = currentMapViewCenter;
+                break;
+            case "preserveMapScale":
+                p.attributes.map.scale = currentMapScale;
+                p.attributes.map.center = currentMapViewCenter;
+                break;
+            case "preserveMapExtent":
+                p.attributes.map.height = utils.computeDimension(...(templateDimensions[options.printSizeSelectedOption.value]), mapExtent).newHeight;
+                p.attributes.map.width = utils.computeDimension(...(templateDimensions[options.printSizeSelectedOption.value]), mapExtent).newWidth;
+                p.attributes.map.bbox = mapExtent;
+                break;
+            default:
+                p.attributes.map.scale = currentMapScale;
+                p.attributes.map.center = currentMapViewCenter;
+                break;
+        }
 
         //switch for specific print request properties based on layout selected
         switch (options.printSizeSelectedOption.value) {
             case '8X11 Portrait':
-                printAppId = "letter_portrait";
                 p.layout = "letter portrait";
                 p.attributes.title = options.mapTitle;
                 p.attributes.description = description;
                 p.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
                 break;
             case '11X8 Landscape':
-                printAppId = "letter_landscape";
                 p.layout = "letter landscape";
                 p.attributes.title = options.mapTitle;
                 p.attributes.description = description;
                 p.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                 break;
             case '8X11 Portrait Overview':
-                printAppId = "letter_portrait_overview";
                 p.layout = "letter portrait overview";
                 p.attributes.title = options.mapTitle;
                 p.attributes.description = description;
                 p.attributes.scale = "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                p.attributes.legend = legend;
-                p.attributes.overviewMap.center = mapCenter;
                 p.attributes.overviewMap.projection = mapProjection;
+                p.attributes.overviewMap.center = currentMapViewCenter;
                 p.attributes.overviewMap.scale = mapScale;
                 p.attributes.overviewMap.longitudeFirst = longitudeFirst;
                 p.attributes.overviewMap.rotation = rotation;
@@ -331,27 +425,23 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 p.attributes.overviewMap.layers = sortedOverviewMap;
                 break;
             case 'Map Only':
-                printAppId = "map_only";
                 p.layout = "map only";
+                p.attributes.map.height = options.mapOnlyHeight;
+                p.attributes.map.width = options.mapOnlyWidth;
                 break;
             case 'Map Only Portrait':
-                printAppId = "map_only_portrait";
                 p.layout = "map only portrait";
                 break;
             case 'Map Only Landscape':
-                printAppId = "map_only_landscape";
                 p.layout = "map only landscape";
                 break;
             default:
-                printAppId = "letter_portrait";
                 p.layout = "letter portrait";
                 break;
         }
-
     }
-
-    switchTemplates(printRequest, printSelectedOption)
-    //console.log(mapLayers);
+    switchTemplates(printRequest, printSelectedOption);
+    //console.log(printRequest);
 
     return printRequest;
 }

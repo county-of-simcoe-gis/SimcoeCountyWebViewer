@@ -3,6 +3,7 @@ import Select from "react-select";
 import Collapsible from 'react-collapsible';
 import PanelComponent from "../../../PanelComponent";
 import * as helpers from "../../../../helpers/helpers";
+import * as printRequest from "./printRequest/printRequest";
 import "./Print.css";
 
 const termsOfUse = "This map, either in whole or in part, may not be reproduced without the written authority from" + 
@@ -116,11 +117,12 @@ class Print extends Component {
     this.props.onClose();
   }
 
-  onDownloadButtonClick = evt => {
-    this.setState({isPrinting: true});
-    const { printSelectedOption} = this.state;
+  onDownloadButtonClick = async evt => {
+    //this.setState({isPrinting: true});
+    const {printSelectedOption} = this.state;
+    //console.log(this.state);  
 
-    helpers.showMessage("Print", "Coming soon!");
+   // helpers.showMessage("Print", "Coming soon!");
 
     // GET VISIBLE LAYERS
     const printLayers = this.getPrintLayers();
@@ -128,10 +130,59 @@ class Print extends Component {
     // =======================
     // SEND PRINT SERVER REQUEST HERE
     // =======================
-    
-    // ONCE PRINT IS COMPLETE (RETURNED FROM SERVER)
-    //helpers.showMessage("Print", "Your print has been downloaded");
-    //this.setState({isPrinting: false}); // THIS WILL RE-ENABLE BUTTON AND HIDE LOADING MSG
+    const printData = await printRequest.printRequest(printLayers, termsOfUse,  this.state);
+    const printAppId = printData.layout.replace(/ /g,"_");
+    const outputFormat = printData.outputFormat;
+    // console.log(JSON.stringify(printData)); 
+    let interval = 5000;
+    let origin = "https://opengis.simcoe.ca";
+    let testOrigin = 'http://localhost:8080'
+    let encodedPrintRequest = encodeURIComponent(JSON.stringify(printData))
+    let url = `${origin}/print/print/${printAppId}/report.${outputFormat}`;
+
+    //check print Status and retreive print
+    let checkStatus = (response) => {
+
+        fetch(`${origin}${response.statusURL}`)
+            .then(data => data.json())
+            .then((data) => {
+                //console.log(data);
+                if ((data.done === true) && (data.status === "finished")) {
+                    interval = 0
+                    helpers.showMessage("Print", "Your print has been downloaded", "green", 10000);
+                    window.open(`${origin}${data.downloadURL}`);
+                    this.setState({isPrinting: false}); // THIS WILL RE-ENABLE BUTTON AND HIDE LOADING MSG
+                } else if ((data.done === false) && (data.status === "running")) {
+                    setTimeout(() => {
+                        if (interval < 30000) {
+                            interval += 2500
+                            checkStatus(response)
+                        } else {
+                            interval = 5000
+                            checkStatus(response)
+                        }
+                    }, interval);
+                } else if ((data.done === true) && (data.status === "error")) {
+                    helpers.showMessage("Print Failed", "please report issue to site admin", "red", 15000);
+                    this.setState({isPrinting: false});
+                }
+            })
+    }
+    //post request to server and check status
+    fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: encodedPrintRequest
+        })
+        .then(response => response.json())
+        .then((response) => {
+          this.setState({isPrinting: true});
+          checkStatus(response); 
+        })
+        .catch(error => helpers.showMessage("Print Failed",`There has been a problem with your fetch operation: ${error.message}`, "red", 15000))
+
   };
 
   getPrintLayers = () => {
