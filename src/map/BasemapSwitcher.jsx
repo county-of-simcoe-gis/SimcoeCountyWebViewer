@@ -350,7 +350,18 @@ class BasemapSwitcher extends Component {
           <label className="sc-basemap-streets-label">
             <input className="sc-basemap-streets-checkbox" id="sc-basemap-streets-checkbox" type="checkbox" onChange={this.onStreetsCheckbox} checked={this.state.streetsCheckbox}></input>&nbsp;Streets
           </label>
-          <Slider included={false} style={sliderWrapperStyle} marks={this.state.imagerySliderMarks} vertical={true} max={this.state.imagerySliderMax} min={this.state.imagerySliderMin} step={0.01} defaultValue={this.state.imagerySliderDefaultValue} onChange={this.onSliderChange} value={this.state.imagerySliderValue} />
+          <Slider
+            included={false}
+            style={sliderWrapperStyle}
+            marks={this.state.imagerySliderMarks}
+            vertical={true}
+            max={this.state.imagerySliderMax}
+            min={this.state.imagerySliderMin}
+            step={0.01}
+            defaultValue={this.state.imagerySliderDefaultValue}
+            onChange={this.onSliderChange}
+            value={this.state.imagerySliderValue}
+          />
         </div>
         <div className={this.state.topoPanelOpen ? "sc-basemap-topo-container" : "sc-hidden"}>
           {BasemapConfig.topoServices.map((service, index) => (

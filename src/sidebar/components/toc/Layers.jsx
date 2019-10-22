@@ -35,6 +35,10 @@ class Layers extends Component {
     window.emitter.addListener("mapLoaded", () => this.onMapLoad());
   }
 
+  componentWillUpdate() {
+    window.emitter.emit("layersLoaded", this.state.layers.length);
+  }
+
   onMapLoad = () => {
     window.map.on("singleclick", evt => {
       const viewResolution = window.map.getView().getResolution();
@@ -255,7 +259,9 @@ class Layers extends Component {
         this.setState(
           {
             // UPDATE LEGEND
-            layers: this.state.layers.map(layer => (layer.name === layerInfo.name ? Object.assign({}, layer, { showLegend: showLegend, height: rowHeight, legendHeight: height, legendImage: imgData }) : layer))
+            layers: this.state.layers.map(layer =>
+              layer.name === layerInfo.name ? Object.assign({}, layer, { showLegend: showLegend, height: rowHeight, legendHeight: height, legendImage: imgData }) : layer
+            )
           },
           () => {
             document.getElementById(this.virtualId).scrollTop += this.lastPosition;
@@ -320,7 +326,14 @@ class Layers extends Component {
     var evtClone = Object.assign({}, evt);
     const menu = (
       <Portal>
-        <FloatingMenu key={helpers.getUID()} buttonEvent={evtClone} autoY={true} item={this.props.info} onMenuItemClick={action => this.onMenuItemClick(action, layerInfo)} styleMode={helpers.isMobile() ? "left" : "right"}>
+        <FloatingMenu
+          key={helpers.getUID()}
+          buttonEvent={evtClone}
+          autoY={true}
+          item={this.props.info}
+          onMenuItemClick={action => this.onMenuItemClick(action, layerInfo)}
+          styleMode={helpers.isMobile() ? "left" : "right"}
+        >
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-metadata">
             <FloatingMenuItem imageName={"metadata.png"} label="Metadata" />
           </MenuItem>
