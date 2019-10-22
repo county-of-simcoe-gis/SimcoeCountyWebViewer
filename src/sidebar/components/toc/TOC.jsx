@@ -3,7 +3,6 @@ import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import ReactTooltip from "react-tooltip";
 import Select from "react-select";
-import Slider, { createSliderWithTooltip } from "rc-slider";
 import "rc-slider/assets/index.css";
 import Switch from "react-switch";
 import { isMobile } from "react-device-detect";
@@ -14,11 +13,8 @@ import * as helpers from "../../../helpers/helpers";
 import * as TOCHelpers from "./TOCHelpers.jsx";
 import Layers from "./Layers.jsx";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
-import Menu, { SubMenu, Item as MenuItem, Divider } from "rc-menu";
+import { Item as MenuItem } from "rc-menu";
 import Portal from "../../../helpers/Portal.jsx";
-
-// SLIDER
-const SliderWithTooltip = createSliderWithTooltip(Slider);
 
 class TOC extends Component {
   constructor(props) {
@@ -26,13 +22,20 @@ class TOC extends Component {
     this.state = {
       layerGroups: [],
       selectedGroup: {},
-      layerList: [],
       isLoading: false,
       searchText: "",
       sortAlpha: this.getInitialSort(),
-      defaultGroup: undefined
+      defaultGroup: undefined,
+      layerCount: 0
     };
+
+    // LISTEN FOR LAYERS TO LOAD
+    window.emitter.addListener("layersLoaded", numLayers => this.onLayersLoad(numLayers));
   }
+
+  onLayersLoad = numLayers => {
+    if (this.state.layerCount !== numLayers) this.setState({ layerCount: numLayers });
+  };
 
   getInitialSort = () => {
     if (isMobile) return true;
@@ -158,18 +161,32 @@ class TOC extends Component {
         </div>
         <div className={this.state.isLoading ? "sc-toc-main-container sc-hidden" : "sc-toc-main-container"}>
           <div className="sc-toc-search-container">
-            <input id="sc-toc-search-textbox" className="sc-toc-search-textbox" placeholder="Filter Layers..." onChange={this.onSearchLayersChange} />
+            <input id="sc-toc-search-textbox" className="sc-toc-search-textbox" placeholder={"Filter (" + this.state.layerCount + " layers)..."} onChange={this.onSearchLayersChange} />
             <div data-tip="Save Layer Visibility" data-for="sc-toc-save-tooltip" className="sc-toc-search-save-image" onClick={this.onSaveClick}>
               <ReactTooltip id="sc-toc-save-tooltip" className="sc-toc-save-tooltip" multiline={false} place="right" type="dark" effect="solid" />
             </div>
           </div>
           <div className="sc-toc-groups-container">
             <div id="sc-toc-groups-dropdown" title="Click here for more layers">
-              <Select styles={groupsDropDownStyles} isSearchable={false} onChange={this.onGroupDropDownChange} options={this.state.layerGroups} value={this.state.selectedGroup} placeholder="Click Here for more Layers..." />
+              <Select
+                styles={groupsDropDownStyles}
+                isSearchable={false}
+                onChange={this.onGroupDropDownChange}
+                options={this.state.layerGroups}
+                value={this.state.selectedGroup}
+                placeholder="Click Here for more Layers..."
+              />
             </div>
           </div>
           <div>
-            <Layers ref={ref => (this.layerRef = ref)} group={this.state.selectedGroup} searchText={this.state.searchText} sortAlpha={this.state.sortAlpha} />
+            <Layers
+              ref={ref => {
+                this.layerRef = ref;
+              }}
+              group={this.state.selectedGroup}
+              searchText={this.state.searchText}
+              sortAlpha={this.state.sortAlpha}
+            />
           </div>
 
           <div className="sc-toc-footer-container">
@@ -185,10 +202,6 @@ class TOC extends Component {
             <button className="sc-button sc-toc-footer-button tools" onClick={this.onToolsClick}>
               Additional Tools
             </button>
-            {/* <button id="sc-toc-button-expand" className="sc-button sc-toc-footer-button" onClick={this.onLayersExpand}>Expand</button>&nbsp;
-              <button id="sc-toc-button-collapse" className="sc-button sc-toc-footer-button" onClick={this.onLayersExpand}>Collapse</button>&nbsp;
-              <button className="sc-button sc-toc-footer-button" onClick={this.refreshTOC}>Reset</button>&nbsp;
-              <button className="sc-button sc-toc-footer-button">Legend</button>&nbsp; */}
           </div>
         </div>
       </div>
