@@ -36,7 +36,7 @@ class Layers extends Component {
   }
 
   componentWillUpdate() {
-    window.emitter.emit("layersLoaded", this.state.layers.length);
+    if (this.state.layers !== undefined) window.emitter.emit("layersLoaded", this.state.layers.length);
   }
 
   onMapLoad = () => {
