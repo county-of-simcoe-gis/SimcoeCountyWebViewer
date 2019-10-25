@@ -27,7 +27,8 @@ import * as helpers from "../helpers/helpers";
 import Identify from "./Identify";
 
 const scaleLineControl = new ScaleLine();
-const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) => `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True`;
+const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
+  `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True`;
 
 class SCMap extends Component {
   constructor(props) {
@@ -45,7 +46,20 @@ class SCMap extends Component {
 
   componentDidMount() {
     const centerCoords = [-8875141.45, 5543492.45];
-    const resolutions = [305.74811314055756, 152.87405657041106, 76.43702828507324, 38.21851414253662, 19.10925707126831, 9.554628535634155, 4.77731426794937, 2.388657133974685, 1.1943285668550503, 0.5971642835598172, 0.29858214164761665, 0.1492252984505969];
+    const resolutions = [
+      305.74811314055756,
+      152.87405657041106,
+      76.43702828507324,
+      38.21851414253662,
+      19.10925707126831,
+      9.554628535634155,
+      4.77731426794937,
+      2.388657133974685,
+      1.1943285668550503,
+      0.5971642835598172,
+      0.29858214164761665,
+      0.1492252984505969
+    ];
     var map = new Map({
       controls: defaultControls().extend([scaleLineControl, new FullScreen()]),
       layers: [],
@@ -103,6 +117,9 @@ class SCMap extends Component {
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-identify">
               <FloatingMenuItem imageName={"identify.png"} label="Identify" />
             </MenuItem>
+            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-more">
+              <FloatingMenuItem imageName={"more-16.png"} label="More..." />
+            </MenuItem>
           </FloatingMenu>
         </Portal>
       );
@@ -153,7 +170,16 @@ class SCMap extends Component {
     else if (key === "sc-floating-menu-save-map-extent") this.saveMapExtent();
     else if (key === "sc-floating-menu-report-problem") this.reportProblem();
     else if (key === "sc-floating-menu-identify") this.identify();
+    else if (key === "sc-floating-menu-more") this.moreOptions();
     helpers.addAppStat("Right Click", key);
+  };
+
+  moreOptions = () => {
+    // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
+    window.emitter.emit("setSidebarVisiblity", "CLOSE");
+
+    // OPEN MORE MENU
+    window.emitter.emit("openMoreMenu");
   };
 
   identify = () => {

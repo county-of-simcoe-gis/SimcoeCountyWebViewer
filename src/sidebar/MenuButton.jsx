@@ -24,6 +24,9 @@ class MenuButton extends Component {
       },
       true
     );
+
+    // LISTEN FOR MORE BUTTON
+    window.emitter.addListener("openMoreMenu", () => this.setState({ isOpen: true }));
   }
 
   // LOAD TOOLS FROM CONFIG
@@ -69,7 +72,6 @@ class MenuButton extends Component {
   };
 
   onMenuButtonClick = value => {
-    console.log("button click");
     this.setState({ isOpen: !this.state.isOpen });
     helpers.addAppStat("Menu", "Click");
   };
