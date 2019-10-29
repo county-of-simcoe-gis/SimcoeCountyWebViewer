@@ -229,7 +229,9 @@ class MyMaps extends Component {
         customStyle = myMapsHelpers.getDefaultDrawStyle(this.state.drawColor, undefined, undefined, undefined, feature.getGeometry().getType());
         feature.setStyle(customStyle);
       }
-    } else customStyle = feature.getStyle();
+    } else {
+      customStyle = feature.getStyle();
+    }
 
     feature.setProperties({ id: featureId, label: labelText, labelVisible: false, drawType: this.state.drawType, isParcel: false });
 
@@ -500,6 +502,7 @@ class MyMaps extends Component {
     var item = this.state.items.filter(item => {
       return item.id === featureId;
     })[0];
+
     let center = null;
     if (evt === null) {
       helpers.getGeometryCenter(feature.getGeometry(), center => {

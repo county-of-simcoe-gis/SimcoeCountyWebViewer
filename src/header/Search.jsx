@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import * as helpers from "../helpers/helpers";
+import * as myMapsHelpers from "../sidebar/components/mymaps/myMapsHelpers";
 import Autocomplete from "react-autocomplete";
 import "./Search.css";
 import Highlighter from "react-highlight-words";
@@ -68,6 +69,21 @@ const styles = {
   })
 };
 
+const defaultStyle = new Style({
+  stroke: new Stroke({
+    width: 4,
+    color: [255, 0, 0, 0.8]
+  }),
+  fill: new Fill({
+    color: [255, 0, 0, 0] // USE OPACITY
+  }),
+  image: new CircleStyle({
+    opacity: 0.5,
+    radius: 7,
+    fill: new Fill({ color: [236, 156, 155, 0.7] })
+  })
+});
+
 class Search extends Component {
   constructor(props) {
     super(props);
@@ -129,7 +145,6 @@ class Search extends Component {
 
   myMapsClick = evt => {
     const result = this.state.searchResults[0];
-
     if (searchIconLayer.getSource().getFeatures()[0] === undefined) return;
     // ADD MYMAPS
     if (searchGeoLayer.getSource().getFeatures().length === 0) window.emitter.emit("addMyMapsFeature", searchIconLayer.getSource().getFeatures()[0], result.Name);
@@ -188,7 +203,18 @@ class Search extends Component {
         });
 
         if (feature !== undefined) {
-          window.popup.show(evt.coordinate, <PopupContent key={helpers.getUID()} feature={feature} removeMarkersClick={this.removeMarkersClick} myMapsClick={this.myMapsClick} shareLocationId={this.state.searchResults[0].location_id} directionsClick={evt => this.directionsClick(evt)} />, "Actions");
+          window.popup.show(
+            evt.coordinate,
+            <PopupContent
+              key={helpers.getUID()}
+              feature={feature}
+              removeMarkersClick={this.removeMarkersClick}
+              myMapsClick={this.myMapsClick}
+              shareLocationId={this.state.searchResults[0].location_id}
+              directionsClick={evt => this.directionsClick(evt)}
+            />,
+            "Actions"
+          );
         }
       });
     }
@@ -216,12 +242,13 @@ class Search extends Component {
 
     searchGeoLayer.setZIndex(100);
     searchIconLayer.setZIndex(100);
+
     // SET STYLE AND ZOOM
     if (result.geojson.indexOf("Point") !== -1) {
       searchGeoLayer.setStyle(styles["point"]);
       window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
       window.map.getView().setZoom(18);
-    } else if (result.geojson.indexOf("Line") !== -1 || result.geojson.indexOf("Multiline") !== -1) {
+    } else if (result.geojson.indexOf("Line") !== -1) {
       searchGeoLayer.setStyle(styles["poly"]);
       window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
       window.map.getView().setZoom(window.map.getView().getZoom() - 1);
@@ -229,6 +256,29 @@ class Search extends Component {
       searchGeoLayer.setStyle(styles["poly"]);
       window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
       window.map.getView().setZoom(window.map.getView().getZoom() - 2);
+    }
+
+    //fullFeature.setStyle(myMapsHelpers.getDefaultDrawStyle([255, 0, 0, 0.8], false, 2, fullFeature.getGeometry().getType()));
+    //fullFeature.setStyle(defaultStyle);
+    if (result.geojson.indexOf("Point") !== -1) {
+      const pointStyle = new Style({
+        image: new CircleStyle({
+          radius: 5,
+          stroke: new Stroke({
+            color: [0, 0, 0, 1],
+            width: 2
+          }),
+          fill: new Fill({
+            color: [250, 40, 255, 1]
+          })
+        })
+      });
+
+      fullFeature.setStyle(pointStyle);
+    } else {
+      let defaultStyle = myMapsHelpers.getDefaultDrawStyle([255, 0, 0, 0.8], false, 2, fullFeature.getGeometry().getType());
+      defaultStyle.setFill(new Fill({ color: [255, 0, 0, 0] }));
+      fullFeature.setStyle(defaultStyle);
     }
   }
 

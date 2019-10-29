@@ -37,7 +37,7 @@ export function getFeatureById(id) {
 }
 
 export function getStyleFromJSON(styleJSON, pointType) {
-  if (styleJSON === undefined) return getDefaultDrawStyle("#e809e5");
+  if (styleJSON === undefined || styleJSON === null) return getDefaultDrawStyle("#e809e5");
 
   // FILL
   let fill = null;
@@ -60,8 +60,12 @@ export function getStyleFromJSON(styleJSON, pointType) {
   // IMAGE / CIRCLESTYLE
   let image = null;
   if (styleJSON.image_ !== null) {
-    const imageFill = new Fill({ color: styleJSON.image_.fill_.color_ });
-    const imageStroke = new Stroke({ color: styleJSON.image_.stroke_.color_, width: styleJSON.image_.stroke_.width_, lineDash: styleJSON.image_.stroke_.lineDash_ });
+    const imageFill = new Fill({ color: styleJSON.image_.fill_ === undefined ? [255, 0, 0, 1] : styleJSON.image_.fill_.color_ });
+    const imageStroke = new Stroke({
+      color: styleJSON.image_.stroke_ === undefined ? [255, 0, 0, 0.7] : styleJSON.image_.stroke_.color_,
+      width: styleJSON.image_.stroke_ === undefined ? 1 : styleJSON.image_.stroke_.width_,
+      lineDash: styleJSON.image_.stroke_ === undefined ? null : styleJSON.image_.stroke_.lineDash_
+    });
 
     if (pointType === undefined || pointType === "circle") {
       image = new CircleStyle({
@@ -341,8 +345,11 @@ export function setFeatureLabel(itemInfo) {
     feature.setStyle(style);
   } else {
     feature.setProperties({ labelVisible: false });
-    style.setText(null);
-    feature.setStyle(style);
+
+    if (style !== null) {
+      style.setText(null);
+      feature.setStyle(style);
+    }
   }
 }
 
