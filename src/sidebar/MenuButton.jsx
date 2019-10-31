@@ -3,6 +3,7 @@ import "./MenuButton.css";
 import * as helpers from "../helpers/helpers";
 import ComponentsConfig from "../config.json";
 import { saveAs } from "file-saver";
+import htmlToImage from "html-to-image";
 
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
   `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
@@ -23,6 +24,9 @@ class MenuButton extends Component {
       },
       true
     );
+
+    // LISTEN FOR MORE BUTTON
+    window.emitter.addListener("openMoreMenu", () => this.setState({ isOpen: true }));
   }
 
   // LOAD TOOLS FROM CONFIG
@@ -68,7 +72,6 @@ class MenuButton extends Component {
   };
 
   onMenuButtonClick = value => {
-    console.log("button click");
     this.setState({ isOpen: !this.state.isOpen });
     helpers.addAppStat("Menu", "Click");
   };
@@ -80,16 +83,12 @@ class MenuButton extends Component {
   };
 
   onScreenshotClick = () => {
-    window.map.once("rendercomplete", function(event) {
-      var canvas = event.context.canvas;
-      if (navigator.msSaveBlob) {
-        navigator.msSaveBlob(canvas.msToBlob(), "map.png");
-      } else {
-        canvas.toBlob(function(blob) {
-          saveAs(blob, "map.png");
-        });
-      }
+    window.map.once("rendercomplete", function() {
+      htmlToImage.toBlob(window.map.getTargetElement()).then(function(blob) {
+        window.saveAs(blob, "map.png");
+      });
     });
+
     window.map.renderSync();
 
     this.setState({ isOpen: false });
@@ -117,8 +116,6 @@ class MenuButton extends Component {
 
   render() {
     const menuListClassName = this.getMenuClassName();
-    //console.log(menuListClassName);
-    //className="sc-menu-button-img"
     return (
       <div>
         <div className="sc-menu-button-container" style={{ cursor: "pointer" }} onClick={this.onMenuButtonClick}>
