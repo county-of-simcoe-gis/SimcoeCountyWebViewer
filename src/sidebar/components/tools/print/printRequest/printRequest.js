@@ -148,8 +148,6 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 Bearing: "Line"
             }
 
-            
-
             for (const key in myMapsData) {
                 let styles = {};
 
@@ -469,7 +467,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     await switchTemplates(printRequest, printSelectedOption);
     //console.log(mapLayers);
     //console.log(printRequest);
-    console.log(JSON.stringify(printRequest));
+    //console.log(JSON.stringify(printRequest));
 
     return printRequest;
 }
