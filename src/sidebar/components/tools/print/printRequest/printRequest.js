@@ -55,8 +55,8 @@ export async function loadWMTSConfig(url, opacity) {
 export async function printRequest(mapLayers, description, printSelectedOption) {
     //alternative osm layer used from maptiler:api.maptiler.com due to osm user agent user restriction policy
     //"https://api.maptiler.com/maps/streets/256/{z}/{x}/{y}.png?key=6vlppHmCcPoEbI6f1RBX";
-    
-    const osmBaseUrl = "https://tile.openstreetmap.org/{z}/{x}/{y}.png" 
+
+    const osmBaseUrl = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
     const currentMapViewCenter = window.map.getView().values_.center;
     const mapProjection = window.map.getView().getProjection().code_;
     const mapExtent = window.map.getView().calculateExtent();
@@ -127,95 +127,117 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     let overviewMap = [];
     let sortedMainMap = [];
     let sortedOverviewMap = [];
-    //stroke format for geoJson
-    let dash = [10];
-    let dot = [1, 5];
+
 
     let configureVectorMyMapsLayer = (l) => {
 
         if (typeof l.values_.source.uidIndex_ !== "undefined") {
-            let drawablefeatures = Object.values(l.values_.source.uidIndex_);
-            geoJsonLayersCount = drawablefeatures.length
-            for (const key in drawablefeatures) {
-    
-                let f = drawablefeatures[key];
-                let grouped_coords = [];
+
+            let myMapsData = JSON.parse(localStorage.getItem('myMaps')).items;
+
+            // geometry type config
+            let drawTypeOption = {
+                Point: "Point",
+                LineString: "Line",
+                Polygon: "Polygon",
+                Circle: "Polygon",
+                Rectangle: "Polygon",
+                Arrow: "Line",
+                Text: "Point",
+                Cancel: "Polygon",
+                Bearing: "Line"
+            }
+
+            
+
+            for (const key in myMapsData) {
                 let styles = {};
+
                 //default label config
                 let labels = {
                     type: "text",
-                    fontFamily: "sans-serif",
-                    fontSize: "0px",
+                    fontFamily: "arial",
+                    fontSize: "15px",
                     fontStyle: "normal",
                     fontWeight: "bold",
-                    haloColor: "#123456",
-                    haloOpacity: 0,
-                    haloRadius: 0,
+                    haloColor: "#FFFFFF",
+                    haloOpacity: 1,
+                    haloRadius: 0.5,
                     label: "",
+                    fillColor: "#000",
                     labelAlign: "cm",
                     labelRotation: 0,
                     labelXOffset: 0,
                     labelYOffset: 0
-                };
-    
-                if (f.style_.fill_ !== null && f.style_.stroke_ !== null) {
-                    let flat_coords = f.values_.geometry.flatCoordinates;
-    
-                    //transforms flattened coords to geoJson format grouped coords
-                    if (flat_coords) {
-                        for (let i = 0, t = 1; i < flat_coords.length; i += 2, t += 2) {
-                            grouped_coords.push([flat_coords[i], flat_coords[t]]);
+                }
+                let f = myMapsData[key];
+                if (f.visible === true) {
+                    geoJsonLayersCount += 1;
+
+                    let featureGeoJSON = JSON.parse(f.featureGeoJSON);
+                    let grouped_coords = [...featureGeoJSON.geometry.coordinates];
+
+                    //configuration for styles
+                    styles.type = drawTypeOption[f.drawType];
+                    if (f.style.fill_ !== null) {
+                        styles.fillColor = utils.rgbToHex(...f.style.fill_.color_);
+                        styles.fillOpacity = Number(([...f.style.fill_.color_])[3]);
+                    }
+                    if (f.style.stroke_ !== null) {
+                        styles.strokeColor = utils.rgbToHex(...f.style.stroke_.color_);
+                        styles.strokeOpacity = Number(([...f.style.stroke_.color_])[3]);
+                        styles.strokeWidth = Number(f.style.stroke_.width_);
+                        
+                    }
+                    if (f.strokeType) {
+                        styles.strokeDashstyle =  f.strokeType
+                        if (f.strokeType === "dot") {
+                            styles.strokeLinecap = "round" 
                         }
                     }
-    
-                    if (f.values_.drawType === "LineString") {
-                        styles.type = "Line"
-                    } else {
-                        styles.type = f.values_.drawType;
-                    }
-                    if (f.style_.fill_ != null) {
-                        styles.fillColor = utils.rgbToHex(...f.style_.fill_.color_);
-                        styles.fillOpacity = Number(([...f.style_.fill_.color_])[3]);
-                    }
-                    if (f.style_.stroke_ != null) {
-                        styles.strokeColor = utils.rgbToHex(...f.style_.stroke_.color_);
-                        styles.strokeOpacity = Number(([...f.style_.stroke_.color_])[3]);
-                        styles.strokeWidth = Number(f.style_.stroke_.width_);
-    
-                        if (f.style_.stroke_.lineDash_ !== null && f.style_.stroke_.lineDash_[0] === dash[0]) {
-                            styles.strokeDashstyle = "dash";
-                        }
-                        if (f.style_.stroke_.lineDash_ !== null && f.style_.stroke_.lineDash_[0] === dot[0] && f.style_.stroke_.lineDash_[1] === dot[1]) {
-                            styles.strokeDashstyle = "dot";
-                            styles.strokeLinecap = "round";
+                    if(f.drawType==="Point"){
+                        styles.graphicOpacity = Number(([...f.style.image_.fill_.color_])[3]);
+                        styles.pointRadius = f.style.image_.radius_;
+                        styles.rotation = f.style.image_.rotation_;
+                        styles.fillColor = utils.rgbToHex(...f.style.image_.fill_.color_)
+                        styles.fillOpacity =  Number(([...f.style.image_.fill_.color_])[3])
+                        styles.strokeColor =  utils.rgbToHex(...f.style.image_.stroke_.color_);
+                        styles.strokeOpacity =  Number(([...f.style.image_.stroke_.color_])[3]);
+                        styles.strokeWidth = Number(f.style.image_.stroke_.width_);
+                        if(f.pointType){
+                            styles.graphicName = f.pointType
                         }
                     }
-    
+
                     //configuration for labels
-                    if (f.style_.text_ != null) {
-                        labels.type = "text";
-                        labels.haloOpacity = 1;
-                        labels.label = f.values_.label;
-                        labels.labelAlign = "cm";
-                        labels.labelRotation = f.style_.text_.rotation_;
-                        labels.labelXOffset = f.style_.text_.offsetX_;
-                        labels.labelYOffset = f.style_.text_.offsetY_;
-                        if (f.style_.text_.fill_ != null) {
-                            labels.fontColor = f.style_.text_.fill_.color_ //utils.stringToColour()
-                        }
-                        if (f.style_.text_.stroke_ != null) {
-                            labels.haloRadius = 1;
-                            labels.haloColor = f.style_.text_.stroke_.color_;
-                        }
-                        if (f.style_.text_.font_ != null) {
-                            let fontStyle = (f.style_.text_.font_).split(" ");
-                            labels.fontFamily = fontStyle[2];
-                            labels.fontSize = fontStyle[1];
-                            labels.fontWeight = fontStyle[0];
-                            labels.fontStyle = "normal";
+                    if (f.labelVisible === true) {
+                        if (f.style.text_ !== null) {
+                            labels.type = "text";
+                            labels.haloOpacity = 1;
+                            labels.label = f.label;
+                            labels.labelAlign = "cm";
+                            labels.labelRotation = f.labelRotation ? f.labelRotation : 0;
+                            labels.labelXOffset = f.style.text_.offsetX_;
+                            labels.labelYOffset = f.style.text_.offsetY_;
+                            if (f.style.text_.fill_ != null) {
+                                labels.fontColor = f.style.text_.fill_.color_ //utils.stringToColour()
+                            }
+                            if (f.style.text_.stroke_ != null) {
+                                labels.haloRadius = 1;
+                                labels.haloColor = f.style.text_.stroke_.color_;
+                            }
+                            if (f.style.text_.font_ != null) {
+                                let fontStyle = (f.style.text_.font_).split(" ");
+                                labels.fontFamily = fontStyle[2];
+                                labels.fontSize = fontStyle[1];
+                                labels.fontWeight = fontStyle[0];
+                                labels.fontStyle = "normal";
+                            }
+                        }else{
+                            labels.label = f.label;
                         }
                     }
-    
+
                     mainMap.push({
                         type: "geojson",
                         geoJson: {
@@ -223,38 +245,38 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                             features: [{
                                 type: "Feature",
                                 geometry: {
-                                    type: f.values_.drawType,
+                                    type: f.geometryType,
                                     coordinates: grouped_coords
                                 },
                                 properties: {
-                                    id: f.values_.id,
-                                    label: f.values_.label,
-                                    labelVisible: f.values_.labelVisible,
-                                    drawType: f.values_.drawType,
-                                    isParcel: f.values_.isParcel
+                                    id: f.id,
+                                    label: f.label?f.label:false,
+                                    labelVisible: f.labelVisible?f.labelVisible:false,
+                                    drawType: f.geometryType,
+                                    isParcel: f.isParcel?f.isParcel:false
                                 }
                             }]
                         },
-                        name: f.values_.label,
+                        name: f.label,
                         style: {
                             version: "2",
                             "*": {
-                                symbolizers: [(utils.removeNull(styles)), labels]
+                                symbolizers: [styles, labels]
                             }
                         }
                     });
-                } 
-            } 
-        }  
+                }
+            }
+        }
     }
 
     let configureTileLayer = async (l) => {
 
         let tileUrl = null
 
-        if (l.values_.source.key_=== "https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}") {
+        if (l.values_.source.key_ === "https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}") {
             tileUrl = l.values_.source.key_.split("/tile")[0];;
-        }else{
+        } else {
             let entries = l.values_.source.tileCache.entries_;
             tileUrl = (entries[Object.keys(entries)[0]]).value_.src_.split("/tile")[0];
         }
@@ -266,28 +288,27 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     let configureLayerGroup = async (l) => {
         for (const key in l.values_.layers.array_) {
             let layers = l.values_.layers.array_[key]
-  
-            if (layers.values_.source.key_=== "http://a.tile.openstreetmap.org/{z}/{x}/{y}.png") {
+
+            if (layers.values_.source.key_ === "http://a.tile.openstreetmap.org/{z}/{x}/{y}.png") {
                 mainMap.push({
-                    baseURL:osmBaseUrl,
-                    type:"OSM",
-                    imageExtension:"png"
+                    baseURL: osmBaseUrl,
+                    type: "OSM",
+                    imageExtension: "png"
 
                 });
                 overviewMap.push({
-                    baseURL:osmBaseUrl,
-                    type:"OSM",
-                    imageExtension:"png"
+                    baseURL: osmBaseUrl,
+                    type: "OSM",
+                    imageExtension: "png"
                 });
-            }
-            else if (layers.values_.source.key_=== "") {
-                let tileUrl = null;  
+            } else if (layers.values_.source.key_ === "") {
+                let tileUrl = null;
 
                 if (typeof layers.values_.source.urls !== "undefined" && layers.values_.source.urls !== null) {
                     if (layers.values_.source.urls[0] === "https://ws.giscache.lrc.gov.on.ca/arcgis/rest/services/LIO_Cartographic/LIO_Topographic/MapServer") {
                         tileUrl = "https://ws.giscache.lrc.gov.on.ca/arcgis/rest/services/LIO_Cartographic/LIO_Topographic/MapServer";
                     }
-                }else{
+                } else {
                     let entries = layers.values_.source.tileCache.entries_;
                     tileUrl = (entries[Object.keys(entries)[0]]).value_.src_.split("/tile")[0];
                 }
@@ -318,7 +339,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
             configureVectorMyMapsLayer(l);
         }
 
-        if (groupLayerNames.includes(l.values_.name)===true) {
+        if (groupLayerNames.includes(l.values_.name) === true) {
             await configureLayerGroup(l);
         }
 
@@ -326,7 +347,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
             if (typeof l.values_.source.tileCache !== "undefined") {
                 await configureTileLayer(l);
             }
-    
+
             if (typeof l.values_.source.wfsUrl !== "undefined") {
                 configureImageLayer(l);
             };
@@ -339,7 +360,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     await Promise.all(mapLayerList);
 
     let sortLayers = async (layers, sorted) => {
-       mapLayerSorter.forEach((key) => {
+        mapLayerSorter.forEach((key) => {
             let found = false;
             layers = layers.filter((l) => {
                 if (l.type === "geojson") {
@@ -448,6 +469,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     await switchTemplates(printRequest, printSelectedOption);
     //console.log(mapLayers);
     //console.log(printRequest);
+    console.log(JSON.stringify(printRequest));
 
     return printRequest;
 }
