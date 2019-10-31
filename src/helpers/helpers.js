@@ -95,8 +95,10 @@ export function getESRITileXYZLayer(url) {
   return new TileLayer({
     source: new XYZ({
       attributions: 'Tiles © <a href="https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer">ArcGIS</a>',
-      url: url + "/tile/{z}/{y}/{x}"
-    })
+      url: url + "/tile/{z}/{y}/{x}",
+      crossOrigin: "anonymous"
+    }) //,
+    //crossOrigin: "anonymous"
   });
 }
 
@@ -108,7 +110,20 @@ export function getOSMTileXYZLayer(url) {
 }
 
 export function getSimcoeTileXYZLayer(url) {
-  const resolutions = [305.74811314055756, 152.87405657041106, 76.43702828507324, 38.21851414253662, 19.10925707126831, 9.554628535634155, 4.77731426794937, 2.388657133974685, 1.1943285668550503, 0.5971642835598172, 0.29858214164761665, 0.1492252984505969];
+  const resolutions = [
+    305.74811314055756,
+    152.87405657041106,
+    76.43702828507324,
+    38.21851414253662,
+    19.10925707126831,
+    9.554628535634155,
+    4.77731426794937,
+    2.388657133974685,
+    1.1943285668550503,
+    0.5971642835598172,
+    0.29858214164761665,
+    0.1492252984505969
+  ];
   const projExtent = window.map
     .getView()
     .getProjection()
@@ -529,7 +544,25 @@ export function getFeatureFromGeoJSON(geoJSON) {
 }
 
 // SEE EXAMPLE VALUES FROM HERE:  https://openlayers.org/en/latest/examples/vector-labels.html
-export function createTextStyle(feature, fieldName = "name", maxScale = 100000000, align = "center", baseline = "middle", size = "10px", offsetX = 0, offsetY = 0, weight = "normal", placement = "point", maxAngleDegrees = 78, overflow = false, rotation = 0, font = "arial", fillColor = "black", outlineColor = "black", outlineWidth = 1) {
+export function createTextStyle(
+  feature,
+  fieldName = "name",
+  maxScale = 100000000,
+  align = "center",
+  baseline = "middle",
+  size = "10px",
+  offsetX = 0,
+  offsetY = 0,
+  weight = "normal",
+  placement = "point",
+  maxAngleDegrees = 78,
+  overflow = false,
+  rotation = 0,
+  font = "arial",
+  fillColor = "black",
+  outlineColor = "black",
+  outlineWidth = 1
+) {
   //console.log(align)
   offsetX = parseInt(offsetX, 10);
   offsetY = parseInt(offsetY, 10);
