@@ -133,7 +133,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
 
         if (typeof l.values_.source.uidIndex_ !== "undefined") {
 
-            let myMapsData = JSON.parse(localStorage.getItem('myMaps')).items;
+            let myMapsData = (JSON.parse(localStorage.getItem('myMaps')).items).reverse();
 
             // geometry type config
             let drawTypeOption = {
