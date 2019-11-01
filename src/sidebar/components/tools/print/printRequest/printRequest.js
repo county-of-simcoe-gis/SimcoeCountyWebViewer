@@ -187,8 +187,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                         styles.strokeWidth = Number(f.style.stroke_.width_);
                         
                     }
-                    if (f.strokeType) {
-                        styles.strokeDashstyle =  f.strokeType
+                    if (f.strokeType==="dot"||f.strokeType==="dash") {
+                        styles.strokeDashstyle =  f.strokeType;
                         if (f.strokeType === "dot") {
                             styles.strokeLinecap = "round" 
                         }
