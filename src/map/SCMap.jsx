@@ -96,6 +96,9 @@ class SCMap extends Component {
       const menu = (
         <Portal>
           <FloatingMenu key={helpers.getUID()} buttonEvent={evt} onMenuItemClick={this.onMenuItemClick} styleMode="left" autoY={true}>
+            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-basic-mode">
+              <FloatingMenuItem imageName={"collased.png"} label="Switch To Basic" />
+            </MenuItem>
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-property-click">
               <FloatingMenuItem imageName={"report.png"} label="Property Report" />
             </MenuItem>
@@ -171,7 +174,12 @@ class SCMap extends Component {
     else if (key === "sc-floating-menu-report-problem") this.reportProblem();
     else if (key === "sc-floating-menu-identify") this.identify();
     else if (key === "sc-floating-menu-more") this.moreOptions();
+    else if (key === "sc-floating-menu-basic-mode") this.basicMode();
     helpers.addAppStat("Right Click", key);
+  };
+
+  basicMode = () => {
+    window.emitter.emit("setSidebarVisiblity", "CLOSE");
   };
 
   moreOptions = () => {

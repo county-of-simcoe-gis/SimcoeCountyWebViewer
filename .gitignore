@@ -1,5 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# COUNTY
+/src/sidebar/components/tools/styler
 sc_copyToServer.bat
 .vscode
 config_dev.json
