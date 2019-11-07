@@ -464,7 +464,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     //ensures that template configuration is executed before print request object is sent
     await switchTemplates(printRequest, printSelectedOption);
     //console.log(mapLayers);
-    console.log(printRequest);
+    //console.log(printRequest);
     //console.log(JSON.stringify(printRequest));
 
     return printRequest;
