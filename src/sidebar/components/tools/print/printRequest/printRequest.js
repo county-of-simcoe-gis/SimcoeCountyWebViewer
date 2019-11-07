@@ -102,7 +102,6 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     templateDimensions["Map Only Portrait"] = [570, 752];
     templateDimensions["Map Only Landscape"] = [750, 572];
 
-
     //count for geoJsonLayers to assist in placing wms layers
     let geoJsonLayersCount = 0;
 
@@ -127,7 +126,6 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     let overviewMap = [];
     let sortedMainMap = [];
     let sortedOverviewMap = [];
-
 
     let configureVectorMyMapsLayer = (l) => {
 
@@ -209,12 +207,12 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
 
                     //configuration for labels
                     if (f.labelVisible === true) {
+                        labels.labelRotation = f.labelRotation!==0 ? f.labelRotation : "0";
                         if (f.style.text_ !== null) {
                             labels.type = "text";
                             labels.haloOpacity = 1;
                             labels.label = f.label;
                             labels.labelAlign = "cm";
-                            labels.labelRotation = f.labelRotation ? f.labelRotation : 0;
                             labels.labelXOffset = f.style.text_.offsetX_;
                             labels.labelYOffset = f.style.text_.offsetY_;
                             if (f.style.text_.fill_ != null) {
@@ -466,7 +464,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     //ensures that template configuration is executed before print request object is sent
     await switchTemplates(printRequest, printSelectedOption);
     //console.log(mapLayers);
-    //console.log(printRequest);
+    console.log(printRequest);
     //console.log(JSON.stringify(printRequest));
 
     return printRequest;
