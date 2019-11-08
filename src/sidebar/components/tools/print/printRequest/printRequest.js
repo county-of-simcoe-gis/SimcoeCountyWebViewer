@@ -320,7 +320,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
             type: "wms",
             baseURL: "https://opengis.simcoe.ca/geoserver/wms",
             serverType: "geoserver",
-            opacity: 1,
+            opacity: l.values_.opacity,
             layers: [l.values_.name],
             imageFormat: "image/png",
             customParams: {
@@ -344,7 +344,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                 await configureTileLayer(l);
             }
 
-            if (typeof l.values_.source.wfsUrl !== "undefined") {
+            if (typeof l.values_.wfsUrl !== "undefined") {
                 configureImageLayer(l);
             };
         }
@@ -463,8 +463,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     }
     //ensures that template configuration is executed before print request object is sent
     await switchTemplates(printRequest, printSelectedOption);
-    //console.log(mapLayers);
-    //console.log(printRequest);
+    // console.log(mapLayers);
+    // console.log(printRequest);
     //console.log(JSON.stringify(printRequest));
 
     return printRequest;
