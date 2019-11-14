@@ -1,0 +1,80 @@
+.sc-tool-weather-slider-container {
+  display: inline-table;
+}
+
+.sc-tool-weather-radar-button {
+  display: table-cell;
+  margin-right: 7px;
+}
+.sc-tool-weather-slider {
+  display: table-cell;
+  width: 300px;
+}
+
+.sc-tool-weather-radar-label {
+  position: absolute;
+  left: 92px;
+  top: 190px;
+  font-size: 10pt;
+}
+
+.sc-tool-weather-opacity {
+  position: absolute;
+  top: 334px;
+  left: 157px;
+  font-size: 10pt;
+  color: darkgrey;
+}
+
+.sc-tool-weather-time-container {
+  margin-top: 10px;
+  margin-bottom: 5px;
+}
+
+.sc-tool-weather-radar-footer {
+  margin-top: 10px;
+  display: inline-table;
+  text-align: center;
+}
+
+.sc-tool-weather-radar-rain {
+  display: table-cell;
+}
+.sc-tool-weather-radar-winter {
+  display: table-cell;
+}
+
+.sc-tool-weather-radar-credits {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.sc-tool-weather-date-container {
+  display: inline-table;
+}
+
+.sc-tool-weather-date-container[type="checkbox"] {
+  width: 200px;
+}
+
+.sc-tool-weather-date-input {
+  width: 200px;
+}
+
+.sc-tool-weather-radar-refresh-container {
+  font-size: 11pt;
+  margin-bottom: 5px;
+  margin-top: 5px;
+}
+
+.sc-tool-weather-radar-update-button {
+  position: relative;
+  bottom: 16px;
+  left: 7px;
+}
+
+.sc-tool-weather-radar-loading {
+  position: relative;
+  top: 49px;
+  right: 25px;
+}
