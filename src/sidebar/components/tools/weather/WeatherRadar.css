@@ -1,3 +1,11 @@
+.sc-tool-weather-radar-container {
+  position: absolute;
+  top: 141px;
+  bottom: 0px;
+  overflow-y: auto;
+  width: 365px;
+  overflow-x: hidden;
+}
 .sc-tool-weather-slider-container {
   display: inline-table;
 }
@@ -14,7 +22,7 @@
 .sc-tool-weather-radar-label {
   position: absolute;
   left: 92px;
-  top: 190px;
+  top: 51px;
   font-size: 10pt;
 }
 
@@ -68,13 +76,17 @@
 }
 
 .sc-tool-weather-radar-update-button {
-  position: relative;
-  bottom: 16px;
-  left: 7px;
+  position: absolute;
+  top: 143px;
+  right: 6px;
 }
 
 .sc-tool-weather-radar-loading {
   position: relative;
   top: 49px;
   right: 25px;
+}
+
+.react-datepicker-popper {
+  z-index: 10000000000000000000000000000000 !important;
 }
