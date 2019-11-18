@@ -9,7 +9,7 @@ import Static from "ol/source/ImageStatic";
 
 // API URL
 const radarUrlTemplate = (fromDate, toDate) => `https://maps.simcoe.ca/giswebapi/api/Weather/getRadarImages/?fromDate=${fromDate}&toDate=${toDate}`;
-const date3HoursBehind = new Date(new Date().setHours(new Date().getHours() - 3));
+let date3HoursBehind = new Date(new Date().setHours(new Date().getHours() - 3));
 
 class WeatherRadar extends Component {
   constructor(props) {
@@ -41,10 +41,22 @@ class WeatherRadar extends Component {
     }, 60000);
   }
 
+  componentWillUnmount() {
+    this.radarImages.forEach(layer => {
+      window.map.removeLayer(layer);
+    });
+  }
+
   fetchRadarImages = () => {
     if (!this.state.autoRefresh) return;
 
     this.setState({ isLoading: true });
+
+    if (this.state.timeSettingValue === "last3hours") {
+      date3HoursBehind = new Date(new Date().setHours(new Date().getHours() - 3));
+      this.setState({ endDate: this.roundTime(new Date()), startDate: this.roundTime(date3HoursBehind) });
+    }
+
     helpers.getJSON(radarUrlTemplate(this.getDateString(this.state.startDate), this.getDateString(this.state.endDate)), result => {
       this.radarImages.forEach(layer => {
         window.map.removeLayer(layer);
@@ -73,8 +85,6 @@ class WeatherRadar extends Component {
 
       // SET START AND END DATE
       this.setStartAndEndDateDefault();
-
-      console.log("fetched");
     });
   };
 
@@ -163,14 +173,15 @@ class WeatherRadar extends Component {
     }
   };
 
-  onTimeLast3HoursChange = evt => {
-    this.setState({ timeLast3Hours: evt.target.checked }, () => {
-      this.setStartAndEndDateDefault();
-    });
-  };
-
   onTimeSettingsChange = evt => {
-    this.setState({ timeSettingValue: evt.target.value });
+    this.setState({ timeSettingValue: evt.target.value }, () => {
+      if (this.state.timeSettingValue === "last3hours") {
+        date3HoursBehind = new Date(new Date().setHours(new Date().getHours() - 3));
+        this.setState({ endDate: this.roundTime(new Date()), startDate: this.roundTime(date3HoursBehind) }, () => {
+          this.fetchRadarImages();
+        });
+      }
+    });
   };
 
   onWKRChange = evt => {
@@ -272,7 +283,7 @@ class WeatherRadar extends Component {
     };
 
     return (
-      <div>
+      <div className="sc-tool-weather-radar-container">
         <div className="sc-tool-weather-radar-refresh-container">
           <img src={images["refresh.png"]} alt="refreshtimer" style={{ verticalAlign: "bottom" }}></img>
           <input type="checkbox" checked={this.state.autoRefresh} onChange={this.onAutoRefreshChange}></input>
@@ -307,7 +318,26 @@ class WeatherRadar extends Component {
             <div className={this.state.timeSettingValue === "last3hours" ? "sc-disabled" : ""} style={{ marginBottom: "5px" }}>
               <div className="sc-tool-weather-date-container">
                 <label>Start:</label>
-                <DatePicker className="sc-input  sc-tool-weather-date-input" selected={this.state.startDate} onChange={this.onStartDateChange} showTimeSelect dateFormat="MMMM d, yyyy h:mm aa" />
+                <DatePicker
+                  className="sc-input  sc-tool-weather-date-input"
+                  popperPlacement="bottom"
+                  preventOverflow
+                  popperModifiers={{
+                    flip: {
+                      behavior: ["bottom"] // don't allow it to flip to be above
+                    },
+                    preventOverflow: {
+                      enabled: false // tell it not to try to stay within the view (this prevents the popper from covering the element you clicked)
+                    },
+                    hide: {
+                      enabled: false // turn off since needs preventOverflow to be enabled
+                    }
+                  }}
+                  selected={this.state.startDate}
+                  onChange={this.onStartDateChange}
+                  showTimeSelect
+                  dateFormat="MMMM d, yyyy h:mm aa"
+                />
               </div>
               <div className="sc-tool-weather-date-container" style={{ marginTop: "5px" }}>
                 <label style={{ marginRight: "5px" }}>End:</label>
@@ -318,9 +348,22 @@ class WeatherRadar extends Component {
                   showTimeSelect
                   dateFormat="MMMM d, yyyy h:mm aa"
                   timeIntervals={10}
+                  popperPlacement="bottom"
+                  preventOverflow
+                  popperModifiers={{
+                    flip: {
+                      behavior: ["bottom"] // don't allow it to flip to be above
+                    },
+                    preventOverflow: {
+                      enabled: false // tell it not to try to stay within the view (this prevents the popper from covering the element you clicked)
+                    },
+                    hide: {
+                      enabled: false // turn off since needs preventOverflow to be enabled
+                    }
+                  }}
                 />
               </div>
-              <button className="sc-button sc-tool-weather-radar-update-button" style={{ width: "80px" }} onClick={this.onUpdateButtonClick}>
+              <button className="sc-button sc-tool-weather-radar-update-button" style={{ width: "70px" }} onClick={this.onUpdateButtonClick}>
                 Update
               </button>
             </div>

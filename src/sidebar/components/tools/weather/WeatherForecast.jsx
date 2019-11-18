@@ -125,7 +125,7 @@ const Warning = props => {
   const priority = info.$.priority;
   const description = info.$.description;
   return (
-    <div className={"sc-tool-weather-forecast-warning " + priority}>
+    <div className={type === "ENDED" ? "sc-tool-weather-forecast-warning ended" : "sc-tool-weather-forecast-warning " + priority}>
       <a href={url} target="_blank" rel="noopener noreferrer">
         {type + ": " + description}
       </a>
