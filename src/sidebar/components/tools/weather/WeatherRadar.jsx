@@ -45,6 +45,7 @@ class WeatherRadar extends Component {
     this.radarImages.forEach(layer => {
       window.map.removeLayer(layer);
     });
+    clearInterval(this.radarInterval);
   }
 
   fetchRadarImages = () => {
