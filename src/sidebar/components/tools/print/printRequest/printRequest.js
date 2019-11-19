@@ -321,11 +321,12 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
             baseURL: "https://opengis.simcoe.ca/geoserver/wms",
             serverType: "geoserver",
             opacity: l.values_.opacity,
-            layers: [l.values_.name],
+            layers: [l.values_.source.params_.LAYERS],
             imageFormat: "image/png",
             customParams: {
                 "TRANSPARENT": "true"
-            }
+            },
+            version:"1.3.0"
         });
     }
 
@@ -463,8 +464,8 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     }
     //ensures that template configuration is executed before print request object is sent
     await switchTemplates(printRequest, printSelectedOption);
-    // console.log(mapLayers);
-    // console.log(printRequest);
+    //console.log(mapLayers);
+    //console.log(printRequest);
     //console.log(JSON.stringify(printRequest));
 
     return printRequest;
