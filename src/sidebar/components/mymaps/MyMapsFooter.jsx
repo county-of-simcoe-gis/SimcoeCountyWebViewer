@@ -37,6 +37,9 @@ const MyMapsFooter = props => {
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-delete-unselected">
             <FloatingMenuItem imageName={"eraser.png"} label="Delete UnSelected" />
           </MenuItem>
+          {/* <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-export-to-shapefile">
+            <FloatingMenuItem imageName={"export-to-shapefile.png"} label="Export to Shapefile" />
+          </MenuItem> */}
         </FloatingMenu>
       </Portal>
     );
