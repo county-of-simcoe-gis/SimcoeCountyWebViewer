@@ -39,7 +39,7 @@ const MyMapsFooter = props => {
           </MenuItem>
           {/* <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-export-to-shapefile">
             <FloatingMenuItem imageName={"export-to-shapefile.png"} label="Export to Shapefile" />
-          </MenuItem> */}
+    </MenuItem> */}
         </FloatingMenu>
       </Portal>
     );

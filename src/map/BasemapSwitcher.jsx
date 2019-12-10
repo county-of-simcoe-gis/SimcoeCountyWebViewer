@@ -23,6 +23,8 @@ class BasemapSwitcher extends Component {
       topoPanelOpen: false,
       topoLayers: [],
       topoActiveIndex: 0,
+      topoCheckbox: true,
+      topoOverlayLayers: [],
       activeButton: "imagery"
     };
 
@@ -97,7 +99,8 @@ class BasemapSwitcher extends Component {
 
     // LOAD BASEMAP LAYERS
     let basemapList = [];
-    let basemapIndex = 0;
+    let overlayerList = [];
+    //let basemapIndex = 0;
     BasemapConfig.topoServices.forEach(serviceGroup => {
       index = 0;
       let serviceLayers = [];
@@ -114,17 +117,49 @@ class BasemapSwitcher extends Component {
         }
 
         // LAYER PROPS
-        layer.setProperties({ index: index, name: service.name });
+        layer.setProperties({ index: index, name: service.name, isOverlay: false });
         serviceLayers.push(layer);
         index++;
       });
 
-      // USING LAYER GROUPS FOR TOPO
-      let layerGroup = new LayerGroup({ layers: serviceLayers, visible: false });
-      layerGroup.setProperties({ index: basemapIndex, name: serviceGroup.name });
-      window.map.addLayer(layerGroup);
-      basemapList.push(layerGroup);
-      basemapIndex++;
+      const groupUrl = serviceGroup.groupUrl;
+      // console.log(groupUrl);
+      if (groupUrl !== undefined) {
+        helpers.getJSONWait(groupUrl, result => {
+          // console.log(result);
+          const groupLayers = result.layerGroup.publishables.published;
+          index++;
+          let overlayLayers = [];
+          groupLayers.forEach(groupLayerInfo => {
+            const layerNameOnly = groupLayerInfo.name.split(":")[1];
+            const rootLayerUrl = groupLayerInfo.href.replace("http:", "https:");
+            const serverUrl = rootLayerUrl.split("/rest/")[0];
+            let groupLayer = helpers.getImageWMSLayer(serverUrl + "/wms", groupLayerInfo.name);
+            groupLayer.setVisible(true);
+            groupLayer.setProperties({ index: index, name: layerNameOnly, isOverlay: true });
+            serviceLayers.push(groupLayer);
+            // overlayLayers.push(groupLayer)
+            index++;
+          });
+
+          // USING LAYER GROUPS FOR TOPO
+          let layerGroup = new LayerGroup({ layers: serviceLayers, visible: false });
+          layerGroup.setProperties({ index: serviceGroup.index, name: serviceGroup.name });
+          window.map.addLayer(layerGroup);
+          basemapList.push(layerGroup);
+          // let layerGroup = new LayerGroup({ layers: serviceLayers, visible: false });
+          // layerGroup.setProperties({ index: serviceGroup.index, name: serviceGroup.name });
+          // window.map.addLayer(layerGroup);
+          // basemapList.push(layerGroup);
+        });
+      } else {
+        // USING LAYER GROUPS FOR TOPO
+        let layerGroup = new LayerGroup({ layers: serviceLayers, visible: false });
+        layerGroup.setProperties({ index: serviceGroup.index, name: serviceGroup.name });
+        window.map.addLayer(layerGroup);
+        basemapList.push(layerGroup);
+        //basemapIndex++;
+      }
     });
 
     this.setState({ topoLayers: basemapList });
@@ -255,6 +290,13 @@ class BasemapSwitcher extends Component {
     this.setState({ streetsCheckbox: evt.target.checked });
   };
 
+  onTopoCheckbox = evt => {
+    //this.state.streetsLayer.setVisible(evt.target.checked);
+    this.setState({ topoCheckbox: evt.target.checked }, () => {
+      this.enableTopo();
+    });
+  };
+
   onCollapsedClick = evt => {
     // HIDE OPEN PANELS
     if (this.state.containerCollapsed === false) {
@@ -312,6 +354,13 @@ class BasemapSwitcher extends Component {
       let layer = this.state.topoLayers[index];
       const layerIndex = layer.getProperties().index;
       if (layerIndex === activeIndex) {
+        //let layers = layer.getLayers();
+
+        layer.getLayers().forEach(layer => {
+          if (layer.get("isOverlay") && this.state.topoCheckbox) layer.setVisible(true);
+          else if (layer.get("isOverlay") && !this.state.topoCheckbox) layer.setVisible(false);
+        });
+
         layer.setVisible(true);
       } else {
         layer.setVisible(false);
@@ -364,6 +413,9 @@ class BasemapSwitcher extends Component {
           />
         </div>
         <div className={this.state.topoPanelOpen ? "sc-basemap-topo-container" : "sc-hidden"}>
+          <label className="sc-basemap-topo-label">
+            <input className="sc-basemap-topo-checkbox" id="sc-basemap-topo-checkbox" type="checkbox" onChange={this.onTopoCheckbox} checked={this.state.topoCheckbox}></input>&nbsp;Overlay
+          </label>
           {BasemapConfig.topoServices.map((service, index) => (
             <BasemapItem key={helpers.getUID()} index={index} topoActiveIndex={this.state.topoActiveIndex} service={service} onTopoItemClick={this.onTopoItemClick} />
           ))}

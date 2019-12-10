@@ -19,6 +19,12 @@
       "defaultGroup": true,
       "dataStore": "paradise",
       "visibleLayers": ["Assessment Parcel"]
+    },
+    {
+      "name": "Topo Overlay",
+      "defaultGroup": false,
+      "dataStore": "paradise",
+      "visibleLayers": []
     }
   ]
 }
