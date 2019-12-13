@@ -3,12 +3,13 @@ import ReactDOM from "react-dom";
 import "./Header.css";
 import Search from "./Search.jsx";
 import * as helpers from "../helpers/helpers";
+import mainConfig from "../config.json";
 import FloatingMenu, { FloatingMenuItem } from "../helpers/FloatingMenu.jsx";
 import Menu, { SubMenu, Item as MenuItem, Divider } from "rc-menu";
 import Portal from "../helpers/Portal.jsx";
 
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
-  `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
+  `${mainConfig.feedbackUrl}?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
 class Header extends Component {
   state = {};
 
@@ -21,7 +22,7 @@ class Header extends Component {
   }
 
   helpButtonHandler() {
-    helpers.showURLWindow("https://maps.simcoe.ca/public_help", false, "full");
+    helpers.showURLWindow(mainConfig.helpUrl, false, "full");
   }
 
   onDotMenuClick = evt => {
@@ -72,13 +73,13 @@ class Header extends Component {
           <img src={require("./images/bar-button.png")} alt="Header Logo" />
         </div>
         <div id="sc-header-bar-logo">
-          <img src={require("./images/logo.png")} alt="Header Logo" />
+         {/* <img src={require("./images/logo.png")} alt="Header Logo" />*/}
         </div>
         <div id="sc-header-search-container">
           <Search />
         </div>
-        <div className="sc-header-feedback-container" title="Feedback" onClick={this.onFeedbackClick}>
-          <img style={{ marginTop: "5px" }} src={images["feedback.png"]} />
+        <div className="sc-header-feedback-container" title="Feedback" >
+          
         </div>
         {/* <div className="sc-header-dot-menu-container" onClick={this.onDotMenuClick}><img className="sc-header-dot-menu-img" src={images['vertical-dot-menu.png']} alt="dots"></img></div> */}
       </div>

@@ -13,7 +13,7 @@ export function getGroups() {
   let groups = [];
   for (var i = 0, len = TOCConfig.layerGroups.length; i < len; i++) {
     const group = TOCConfig.layerGroups[i];
-    const groupUrl = TOCConfig.layerGroupURL + group.name;
+    const groupUrl = TOCConfig.layerGroupURL + group.json ;
     const isDefault = group.defaultGroup;
     const groupName = group.name;
     const groupObj = {
@@ -106,6 +106,16 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
     });
 
     if (liveLayerKeyword !== undefined) liveLayers = liveLayerKeyword.split("=")[1];
+  }else{
+    const keywords = [
+                  "features",
+                  "ssview_sc_civicaddresspts"
+                ];
+    const liveLayerKeyword = keywords.find(function(item) {
+      return item.indexOf("LIVE_LAYERS") !== -1;
+    });
+
+    if (liveLayerKeyword !== undefined) liveLayers = liveLayerKeyword.split("=")[1];
   }
 
   // SAVED DATA
@@ -119,15 +129,17 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
     const layerNameOnly = groupLayerInfo.name.split(":")[1];
     const rootLayerUrl = groupLayerInfo.href.replace("http:", "https:");
     const layerDetails = groupLayerInfo.layerDetails;
-    const layerKeywords = layerDetails.featureType.keywords[0].string;
+    let layerKeywords = [
+                  "features",
+                  ""
+                ];
+
 
     const serverUrl = rootLayerUrl.split("/rest/")[0];
     const styleUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=${layerName}`;
     const styleUrl = styleUrlTemplate(serverUrl, groupLayerInfo.name);
 
     //https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json&cql_filter=INTERSECTS(geom,%20POINT%20(-8874151.72%205583068.78))
-    //`${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&cql_filter=INTERSECTS(geom,${geomery})`
-
     const wfsUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&cql_filter=`;
     const wfsUrl = wfsUrlTemplate(serverUrl, groupLayerInfo.name);
 
@@ -162,7 +174,7 @@ export async function getBasicLayerListByGroup(group, dataStore, callback) {
     layer.setZIndex(layerIndex);
     window.map.addLayer(layer);
 
-    //console.log(rootLayerUrl);
+    console.log(rootLayerUrl);
     layerList.push({
       name: layerNameOnly, // FRIENDLY NAME
       height: 30, // HEIGHT OF DOM ROW FOR AUTOSIZER
@@ -290,27 +302,6 @@ export function getLayerInfo(layerInfo, callback) {
   });
 }
 
-// export async function getBasicGroupsAndLayers(callback) {
-//   let groups = [];
-//   let defaultLayers = [];
-//   let defaultGroupName = "";
-//   for (var i = 0, len = TOCConfig.layerGroups.length; i < len; i++) {
-//     const group = TOCConfig.layerGroups[i];
-//     const groupURL = group.url;
-//     const defaultGroup = group.defaultGroup;
-
-//     // eslint-disable-next-line
-//     await this.getLayerListByGroup(groupURL, group.dataStore, (groupName, layerList) => {
-//       groups.push({ name: groupName, layerList: layerList, default: defaultGroup, label: groupName, value: groupName });
-//       if (defaultGroup) {
-//         defaultLayers = layerList;
-//         defaultGroupName = groupName;
-//       }
-//     });
-//   }
-
-//   callback(groups, defaultLayers, defaultGroupName);
-// }
 
 export function getStyles(groups) {
   // URL FOR PULLING LEGEND FROM GEOSERVER
@@ -318,17 +309,17 @@ export function getStyles(groups) {
 
   for (let index = 0; index < groups.length; index++) {
     const group = groups[index];
-    //console.log(group)
+    console.log(group)
     let layerList = group.layerList;
     //let layerIndex = 0;
     layerList.forEach(layer => {
-      //console.log(layer);
+      console.log(layer);
       helpers.getJSON(layer.subLayerInfoURL.replace("http", "https"), subLayerInfo => {
-        //console.log(subLayerInfo);
+        console.log(subLayerInfo);
         //layerIndex++;
         let styleURL = "";
         if (subLayerInfo.layer.styles === undefined) {
-          //console.log(subLayerInfo)
+          console.log(subLayerInfo)
           // GET FIRST CUSTOM DEFAULT STYLE
           if (subLayerInfo.layer.defaultStyle !== undefined) styleURL = styleURLTemplate(layer.serverURL, subLayerInfo.layer.name, subLayerInfo.layer.defaultStyle.name);
         } else {

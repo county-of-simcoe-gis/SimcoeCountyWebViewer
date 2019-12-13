@@ -7,6 +7,7 @@ import { CopyToClipboard } from "react-copy-to-clipboard";
 import GeoJSON from "ol/format/GeoJSON.js";
 import { Vector as VectorLayer } from "ol/layer.js";
 import { Vector as VectorSource } from "ol/source.js";
+import ImageLayer from 'ol/layer/Image';
 import { Stroke, Style } from "ol/style.js";
 import PropertyReport from "./PropertyReport";
 import copy from "copy-to-clipboard";
@@ -52,54 +53,113 @@ class PropertyReportClick extends Component {
 
     // LISTEN FOR MAP CLICK
     window.map.on("singleclick", async evt => {
+      console.log("PROPERTY REPORT CLICK");
       // SCALE
-      if (helpers.getMapScale() > 20000) return;
+      console.log("Map Scale: ",helpers.getMapScale());
+      if (helpers.getMapScale() > 200000) return;
 
       //GLOBAL DISABLE
       let disable = window.disableParcelClick;
+      console.log("disable: ",disable);
       if (disable) return;
 
       // DISABLE POPUPS
       disable = window.isDrawingOrEditing;
+      console.log("isDrawingOrEditing: ",disable);
       if (disable) return;
 
       // VECTOR LAYERS
       // CHECK FOR ANY OTHER LAYERS THAT SHOULD DISABLE
       window.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
+        
         if (layer === null) return;
         if (layer.get("disableParcelClick") !== undefined && layer.get("disableParcelClick") === true) {
           disable = true;
           return;
         }
       });
-
+      console.log("disable (after feature pixel): ",disable);
       // IMAGE LAYERS
       // CHECK FOR ANY OTHER LAYERS THAT SHOULD DISABLE
       var viewResolution = window.map.getView().getResolution();
+      console.log("viewResolution: ",viewResolution);
       const layers = window.map.getLayers().getArray();
+      console.log("layers: ",layers);
+      var urlList = [];
       for (let index = 0; index < layers.length; index++) {
         if (disable) break;
         const layer = layers[index];
-        if (layer.get("disableParcelClick") && layer.getVisible() && layer.type === "IMAGE") {
-          var url = layer.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
+        console.log(layer.get("disableParcelClick") ,layer.getVisible() , (layer instanceof ImageLayer));
+        if ((layer.get("disableParcelClick") === null || layer.get("disableParcelClick")) && layer.getVisible() && (layer instanceof ImageLayer)) {
+          //var url = layer.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
+          var url = layer.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "text/html" });
+          console.log("url: ",url);
           if (url) {
+            urlList.push(url);
+            //helpers.showURLWindow(url, false);
+
             // eslint-disable-next-line
-            await helpers.getJSONWait(url, result => {
-              const features = result.features;
-              if (features.length > 0) {
-                disable = true;
-                return;
-              }
-            });
+            //await helpers.getJSONWait(url, result => {
+             // const features = result.features;
+             // if (features.length > 0) {
+             //   disable = true;
+             //   return;
+             // }
+           // });
           }
         }
       }
+      if (urlList.length > 0){
+        var builtUrl = [];
+        //https://intra.dev.regionalgis.mto.gov.on.ca/geoserver/ows?
+        //SERVICE=WMS&
+        //REQUEST=GetFeatureInfo&
+        //FORMAT=image/png&
+        //TRANSPARENT=TRUE&
+        //STYLES=&
+        //VERSION=1.3.0&
+        //LAYERS=Contracts:contracts_linear_capital,Contracts:contracts_point_capital&
+        //WIDTH=1072&
+        //HEIGHT=897&
+        //CRS=EPSG:3857&
+        //BBOX=-9556015.25264963,5768887.277878936,-9228253.275362952,6043143.335366016&
+        //INFO_FORMAT=text/html&
+        //QUERY_LAYERS=Contracts:contracts_linear_capital,Contracts:contracts_point_capital&
+        //FEATURE_COUNT=25&I=538&J=403
+        let layers = "";
+        for (let index = 0; index < urlList.length; index++) {
+          builtUrl.push(helpers.getJsonFromUrl(urlList[index]));
+          layers += (index>0 ? "," : "") + builtUrl[index].LAYERS;
+        }
+        console.log("JSON URL: ", builtUrl);
+        let outputUrl = "https://intra.dev.regionalgis.mto.gov.on.ca/geoserver/ows?" 
+                        + "SERVICE=WMS&"
+                        + "REQUEST=GetFeatureInfo&"
+                        + "FORMAT=image/png&"
+                        + "TRANSPARENT=TRUE&"
+                        + "STYLES=&"
+                        + "VERSION=1.3.0&"
+                        + "LAYERS=" +layers+"&"
+                        + "WIDTH=" + builtUrl[0].WIDTH+ "&"
+                        + "HEIGHT=" + builtUrl[0].HEIGHT+ "&"
+                        + "CRS=" + builtUrl[0].CRS+ "&"
+                        + "BBOX=" + builtUrl[0].BBOX+ "&"
+                        + "INFO_FORMAT=text/html&"
+                        + "QUERY_LAYERS=" +layers+"&"
+                        + "FEATURE_COUNT=25&"
+                        + "I=" + builtUrl[0].I + "&"
+                        + "J=" + builtUrl[0].J ;
+        console.log(outputUrl);
+        helpers.showURLWindow(outputUrl, false);
+        return;
+      }else{return;}
+     
 
-      if (disable) return;
-      const parcelURL = parcelURLTemplate(mainConfig.parcelLayer.url, evt.coordinate[0], evt.coordinate[1]);
-      this.showPropertyWindow(parcelURL, evt);
+      //if (disable) return;
+      //const parcelURL = parcelURLTemplate(mainConfig.parcelLayer.url, evt.coordinate[0], evt.coordinate[1]);
+      //this.showPropertyWindow(parcelURL, evt);
 
-      helpers.addAppStat("Property click", "Click");
+      //helpers.addAppStat("Property click", "Click");
     });
 
     // LISTEN FOR CALLS
@@ -190,7 +250,7 @@ class PropertyReportClick extends Component {
           </span>
         </CopyToClipboard>
         &nbsp;
-        <span className="sc-fakeLink" onClick={() => helpers.showURLWindow("https://maps.simcoe.ca/terms.html", false, "full")}>
+        <span className="sc-fakeLink" onClick={() => helpers.showURLWindow(mainConfig.tosUrl, false, "full")}>
           [Terms]
         </span>
       </InfoRow>
@@ -237,7 +297,7 @@ class PropertyReportClick extends Component {
 
           // GET FULL INFO
           if (feature !== undefined) {
-            const infoURL = "https://maps.simcoe.ca/giswebapi/api/propertyreport?arn=" + arn;
+            const infoURL = "${mainConfig.propertyReportUrl}?arn=" + arn;
             helpers.getJSON(infoURL, result => {
               result.pointCoordinates = latLongCoords;
               result.shareURL = this.getShareURL(arn);
@@ -254,7 +314,7 @@ class PropertyReportClick extends Component {
 
         // GET FULL INFO
         if (feature !== undefined) {
-          const infoURL = "https://maps.simcoe.ca/giswebapi/api/propertyreport?arn=" + arn;
+          const infoURL = "${mainConfig.propertyReportUrl}?arn=" + arn;
           helpers.getJSON(infoURL, result => {
             result.pointCoordinates = latLongCoords;
             result.shareURL = this.getShareURL(arn);

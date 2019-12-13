@@ -1,9 +1,21 @@
 {
   "includeAppStats": true,
-  "appStatsUrl": "https://opengis.simcoe.ca/api/appStats/",
-  "apiUrl": "https://opengis.simcoe.ca/api/",
+  "originUrl": "https://opengis.simcoe.ca",
+  "appStatsUrl": "http://localhost:8085/appStats/",
+  "apiUrl": "http://localhost:8085/",
+  "apiGISUrl": "https://maps.simcoe.ca/giswebapi/api/",
+  "apiPostBufferGeometryUrl": "http://localhost:8085/postBufferGeometry/",
+  "feedbackUrl": "https://opengis.simcoe.ca/feedback/",
+  "helpUrl": "https://maps.simcoe.ca/public_help",
+  "searchURL": "http://localhost:8085/async/search/",
+  "searchInfoURL": "http://localhost:8085/searchById/",
+  "searchTypesURL": "http://localhost:8085/getSearchTypes",
+  "tosUrl": "https://maps.simcoe.ca/terms.html",
+  "ieWarningUrl": "https://opengis.simcoe.ca/public/ieWarning.html",
+  "propertyReportUrl": "https://maps.simcoe.ca/giswebapi/api/propertyreport",
+  "geoserverUrl": "https://intra.dev.regionalgis.mto.gov.on.ca/geoserver/",
   "parcelLayer": {
-    "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
+    "url": "https://intra.dev.regionalgis.mto.gov.on.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
     "rollNumberFieldName": "ARN"
   },
 
@@ -30,27 +42,6 @@
       "imageName": "print.png"
     },
     {
-      "id": 4,
-      "name": "Search Addresses",
-      "componentName": "SearchAddresses",
-      "description": "This tool allows you to search Addresses.",
-      "imageName": "searchAddresses.png"
-    },
-    {
-      "id": 5,
-      "name": "Search History",
-      "componentName": "SearchHistory",
-      "description": "This tool provides users with a list of their 25 most recent searches.",
-      "imageName": "searchHistory.png"
-    },
-    {
-      "id": 6,
-      "name": "Lot And Concession",
-      "componentName": "LotAndConcession",
-      "description": "This tool allows you to search Lot and Concessions.",
-      "imageName": "lotAndConcession.png"
-    },
-    {
       "id": 7,
       "name": "External Services (Street View)",
       "componentName": "ExternalServices",
@@ -66,43 +57,5 @@
     }
   ],
 
-  "sidebarThemeComponents": [
-    {
-      "id": 1,
-      "name": "Solid Waste Facilities",
-      "componentName": "SolidWasteFacilities",
-      "description": "Provides information about waste facilities, and information as to where to purchase bag tags.",
-      "imageName": "solidWasteFacilities.png",
-      "config": "./configSolidWasteFacilities.json"
-    },
-    {
-      "id": 2,
-      "name": "Forestry",
-      "componentName": "Forestry",
-      "description": "View County Forests and Recreation features, conservation, provincial and municipal parks.",
-      "imageName": "forestry.png",
-      "config": "./configForestry.json"
-    },
-    {
-      "id": 3,
-      "name": "Local Real Estate",
-      "componentName": "LocalRealEstate",
-      "description": "View listings by categories and view photos for the listing with the option to link to the Realtor.ca listing",
-      "imageName": "localrealestate.png"
-    },
-    {
-      "id": 4,
-      "name": "Road Construction",
-      "componentName": "RoadConstruction",
-      "description": "View this year's road and bridge construction locations.",
-      "imageName": "roadsConstruction.png"
-    },
-    {
-      "id": 5,
-      "name": "Child Care Facilities",
-      "componentName": "ChildCareFacilities",
-      "description": "Provide users with a list of Child care facilities as well as additional information about each facility.",
-      "imageName": "childCareFacilities.png"
-    }
-  ]
+  "sidebarThemeComponents": []
 }

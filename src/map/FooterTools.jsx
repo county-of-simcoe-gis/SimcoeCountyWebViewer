@@ -1,10 +1,11 @@
 /*jshint loopfunc:true */
 import React, { Component } from "react";
 import "./FooterTools.css";
+import mainConfig from "../config.json";
 import * as helpers from "../helpers/helpers";
 
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
-  `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
+  `${mainConfig.feedbackUrl}?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
 
 class FooterTools extends Component {
   constructor(props) {
@@ -63,7 +64,7 @@ class FooterTools extends Component {
   };
 
   onTermsClick = () => {
-    helpers.showURLWindow("https://maps.simcoe.ca/terms.html", false, "full");
+    helpers.showURLWindow(mainConfig.tosUrl, false, "full");
     // APP STATS
     helpers.addAppStat("Terms", "Click (Footer)");
   };
@@ -80,28 +81,6 @@ class FooterTools extends Component {
       <div id="sc-scale-bar-text" className={this.state.basemapType === "IMAGERY" ? "sc-map-footer-scale-only imagery" : "sc-map-footer-scale-only topo"}>
         {"Scale: 1:" + this.state.scale}
       </div>
-      //   <div className="sc-map-footer-tools-button-bar sc-no-select ">
-      //     <div id="sc-map-footer-tools-title-label" className="sc-map-footer-tools-button-bar-title"></div>
-      //       <div className="sc-map-footer-tools-button-bar-icons">
-      //           <a id="sc-map-footer-tools-print-link" title="Print this map" onClick={this.onPrintClick} >
-      //               <div><img src={images["print.png"]} alt="print" /></div>
-      //               <div className="sc-map-footer-tools-link-text">Print</div>
-      //           </a>
-      //           <a id="sc-map-footer-tools-legend-link" title="View Map Legend"  onClick={this.onLegendClick}>
-      //               <div><img src={images["legend-footer.png"]} alt="legend" /></div>
-      //               <div className="sc-map-footer-tools-link-text">Legend</div>
-      //           </a>
-      //           <a id="sc-map-footer-tools-feedback-link" title="Send us your feedback"  onClick={this.onFeedbackClick}>
-      //               <div><img src={images["feedback-footer.png"]} alt="feedback" /></div>
-      //               <div className="sc-map-footer-tools-link-text">Feedback</div>
-      //           </a>
-      //           <a id="sc-map-footer-tools-terms-link" title="View Terms and Conditions"  onClick={this.onTermsClick} >
-      //               <div><img src={images["terms-footer.png"]} alt="terms"/></div>
-      //               <div className="sc-map-footer-tools-link-text">Terms</div>
-      //           </a>
-      //       </div>
-      //     <div className="sc-map-footer-scale">{"Scale: 1:" + this.state.scale}</div>
-      // </div>
     );
   }
 }

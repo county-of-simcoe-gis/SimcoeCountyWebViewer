@@ -51,7 +51,7 @@ export function addAppStat(type, description) {
 
   // IGNORE LOCAL HOST DEV
   if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") return;
-  //https://opengis.simcoe.ca/api/appStats/opengis/click/property%20report
+
   const appStatsTemplate = (type, description) => `${mainConfig.appStatsUrl}opengis/${type}/${description}`;
 
   httpGetText(appStatsTemplate(type, description));
@@ -193,7 +193,7 @@ export function getImageWMSLayer(serverURL, layers, serverType = "geoserver", cq
   const rootInfoTemplate = (serverUrl, workspace, layerNameOnly) => `${serverUrl}/rest/workspaces/${workspace}/layers/${layerNameOnly}.json`;
   const rootInfoUrl = rootInfoTemplate(serverURL.replace("/wms", ""), workspace, layerNameOnly);
 
-  if (layerNameOnly === "Assessment Parcel") disableParcelClick = false;
+  //if (layerNameOnly === "Assessment Parcel") disableParcelClick = false;
 
   imageLayer.setProperties({ wfsUrl: wfsUrl, name: layerNameOnly, rootInfoUrl: rootInfoUrl, disableParcelClick: disableParcelClick });
   return imageLayer;
@@ -258,6 +258,7 @@ export function httpGetText(url, callback) {
 
 // GET JSON (NO WAITING)
 export function getJSON(url, callback) {
+  console.log("getJSON", url);
   return fetch(url)
     .then(response => response.json())
     .then(responseJson => {
@@ -271,10 +272,11 @@ export function getJSON(url, callback) {
 
 // GET JSON WAIT
 export async function getJSONWait(url, callback) {
+  console.log("getJSONWait", url);
   let data = await await fetch(url)
     .then(res => {
       const resp = res.json();
-      //console.log(resp);
+      console.log(resp);
       return resp;
     })
     .catch(err => {
@@ -289,6 +291,7 @@ export async function getJSONWait(url, callback) {
 }
 
 export function getObjectFromXMLUrl(url, callback) {
+  console.log("getObjectFromXMLUrl", url);
   return fetch(url)
     .then(response => response.text())
     .then(responseText => {
@@ -348,6 +351,7 @@ export function getWFSGeoJSON(serverUrl, layerName, callback, sortField = null, 
     callback(geoJSON);
   });
 }
+
 
 export function getWFSLayerRecordCount(serverUrl, layerName, callback) {
   const recordCountUrlTemplate = (serverURL, layerName) => `${serverURL}wfs?REQUEST=GetFeature&VERSION=1.1&typeName=${layerName}&RESULTTYPE=hits`;
@@ -458,49 +462,6 @@ function pulsate(vectorLayer, color, feature, duration, mstyle, callback) {
     window.map.render();
   });
 
-  // var key = window.map.on("postrender", function(event) {
-  //   console.log(event);
-  //   //var vectorContext = getVectorContext(event);
-  //   if (event.vectorContext === undefined) return;
-  //   var vectorContext = event.vectorContext;
-  //   var frameState = event.frameState;
-  //   var flashGeom = feature.getGeometry().clone();
-  //   var elapsed = frameState.time - start;
-  //   var elapsedRatio = elapsed / duration;
-  //   var radius = easeOut(elapsedRatio) * 35 + 5;
-  //   var opacity = easeOut(1 - elapsedRatio);
-  //   var fillOpacity = easeOut(0.5 - elapsedRatio);
-
-  //   vectorContext.setStyle(
-  //     new Style({
-  //       image: new CircleStyle({
-  //         radius: radius,
-  //         snapToPixel: false,
-  //         fill: new Fill({
-  //           color: "rgba(119, 170, 203, " + fillOpacity + ")"
-  //         }),
-  //         stroke: new Stroke({
-  //           color: "rgba(119, 170, 203, " + opacity + ")",
-  //           width: 2 + opacity
-  //         })
-  //       })
-  //     })
-  //   );
-
-  //   vectorContext.drawGeometry(flashGeom);
-
-  //   // Draw the marker (again)
-  //   vectorContext.setStyle(mstyle);
-  //   vectorContext.drawGeometry(feature.getGeometry());
-
-  //   if (elapsed > duration) {
-  //     unByKey(key);
-  //     //pulsate(color, feature, duration); // recursive function
-  //     callback();
-  //   }
-
-  //   window.map.render();
-  // });
 }
 
 export function centerMap(coords, zoom) {
@@ -526,17 +487,6 @@ export function toTitleCase(str) {
     return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
   });
 }
-
-// OL BUG
-// WORKAROUND - OL BUG -- https://github.com/openlayers/openlayers/issues/6948#issuecomment-374915823
-// OL BUG
-// export function convertMouseUpToClick(e) {
-//   const evt = new CustomEvent("click", { bubbles: true });
-//   evt.pageY = e.pageY;
-//   evt.pageX = e.pageX;
-//   evt.stopPropagation = () => {};
-//   e.target.dispatchEvent(evt);
-// }
 
 // GET FEATURE FROM GEOJSON
 export function getFeatureFromGeoJSON(geoJSON) {
@@ -632,6 +582,35 @@ export function getItemsFromStorage(key) {
 
   const data = JSON.parse(storage);
   return data;
+}
+
+export function getJsonFromUrl(url) {
+  
+  var question = url.indexOf("?");
+  var hash = url.indexOf("#");
+  if(hash==-1 && question==-1) return {};
+  if(hash==-1) hash = url.length;
+  var query = question==-1 || hash==question+1 ? url.substring(hash) : 
+  url.substring(question+1,hash);
+  var result = {};
+  query.split("&").forEach(function(part) {
+    if(!part) return;
+    part = part.split("+").join(" "); // replace every + with space, regexp-free version
+    var eq = part.indexOf("=");
+    var key = eq>-1 ? part.substr(0,eq) : part;
+    var val = eq>-1 ? decodeURIComponent(part.substr(eq+1)) : "";
+    var from = key.indexOf("[");
+    if(from==-1) result[decodeURIComponent(key)] = val;
+    else {
+      var to = key.indexOf("]",from);
+      var index = decodeURIComponent(key.substring(from+1,to));
+      key = decodeURIComponent(key.substring(0,from));
+      if(!result[key]) result[key] = [];
+      if(!index) result[key].push(val);
+      else result[key][index] = val;
+    }
+  });
+  return result;
 }
 
 export function postJSON(url, data = {}, callback) {

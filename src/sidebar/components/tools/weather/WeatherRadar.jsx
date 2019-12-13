@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import "./WeatherRadar.css";
 import * as helpers from "../../../../helpers/helpers";
+import mainConfig from "../../../../config.json";
 import Slider from "rc-slider";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -8,7 +9,7 @@ import ImageLayer from "ol/layer/Image";
 import Static from "ol/source/ImageStatic";
 
 // API URL
-const radarUrlTemplate = (fromDate, toDate) => `https://maps.simcoe.ca/giswebapi/api/Weather/getRadarImages/?fromDate=${fromDate}&toDate=${toDate}`;
+const radarUrlTemplate = (fromDate, toDate) => `${mainConfig.apiGISUrl}Weather/getRadarImages/?fromDate=${fromDate}&toDate=${toDate}`;
 let date3HoursBehind = new Date(new Date().setHours(new Date().getHours() - 3));
 
 class WeatherRadar extends Component {

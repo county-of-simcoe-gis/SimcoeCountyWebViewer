@@ -1,4 +1,5 @@
 import * as helpers from "../../../../../helpers/helpers";
+import mainConfig from "../../../../../config.json";
 import utils from "./utils";
 
 
@@ -318,7 +319,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
 
         mainMap.push({
             type: "wms",
-            baseURL: "https://opengis.simcoe.ca/geoserver/wms",
+            baseURL: mainConfig.geoserverUrl,
             serverType: "geoserver",
             opacity: l.values_.opacity,
             layers: [l.values_.source.params_.LAYERS],

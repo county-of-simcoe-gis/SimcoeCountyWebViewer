@@ -153,6 +153,7 @@ class Identify extends Component {
 
   render() {
     return (
+      
       <div>
         <div className={this.state.layers.length === 0 && !this.state.isLoading ? "sc-identify-loading" : "sc-hidden"}>
           No Features were selected. Please try again.

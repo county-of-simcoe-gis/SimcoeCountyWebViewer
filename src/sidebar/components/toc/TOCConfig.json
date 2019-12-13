@@ -1,24 +1,108 @@
 {
-  "layerInfoURL": "https://opengis.simcoe.ca/layerInfo/?URL=",
-  "layerDownloadURL": "https://opengis.simcoe.ca/layerInfo/?SHOW_DOWNLOAD=1&URL=",
-  "layerGroupURL": "https://opengis.simcoe.ca/geoserverRestApi/getLayerGroup/",
+  "layerInfoURL": "https://intra.dev.regionalgis.mto.gov.on.ca/geoserver/rest/layers/",
+  "layerDownloadURL": "",
+  "layerGroupURL": "https://intra.dev.regionalgis.mto.gov.on.ca/geoserver/rest/layergroups/",
   "layerGroups": [
     {
-      "name": "Popular",
-      "defaultGroup": false,
-      "dataStore": "paradise",
-      "visibleLayers": ["Assessment Parcel"]
-    },
-    {
-      "name": "Historical",
-      "defaultGroup": false,
-      "dataStore": "paradise"
-    },
-    {
-      "name": "All Layers",
+      "name": "Roads",
+      "json" : "Roads.json",
       "defaultGroup": true,
-      "dataStore": "paradise",
-      "visibleLayers": ["Assessment Parcel"]
+      "visibleLayers": ["road_interest:mto_jurisdiction"]
+    },
+    
+    {
+      "name": "Title Records (Smart TR)",
+      "json" : "Title Records (Smart TR).json",
+      "defaultGroup": false
+      
+    },
+    {
+      "name": "5 Year Capital Program (Unofficial)",
+      "json" : "5 Year Capital Program (Unofficial).json",
+      "defaultGroup": false
+    },
+    {
+      "name": "Access Management and Functional Classifications",
+      "json" : "Access Management and Functional Classifications.json",
+      "defaultGroup": false
+    },
+    {
+      "name": "Aggregate Site",
+      "json" : "Aggregate Site.json",
+      "defaultGroup": false
     }
+    ,
+    {
+      "name": "Beaver Pond Water Level Controllers",
+      "json" : "Beaver Pond Water Level Controllers.json",
+      "defaultGroup": false
+    },
+    {
+      "name": "Chainage",
+      "json" : "Chainage.json",
+      "defaultGroup": false
+    },
+    {
+      "name": "Contracts and Design Criterias",
+      "json" : "Contracts and Design Criterias.json",
+      "defaultGroup": false
+    },
+    {
+      "name": "Culvert Portal (NER)",
+      "json" : "Culvert Portal (NER).json",
+      "defaultGroup": false
+    },
+    {
+      "name": "Electoral Districts - Provincial Parks Reg - MTM Zones - Program Funding and NER Areas",
+      "json" : "Electoral Districts - Provincial Parks Reg - MTM Zones - Program Funding and NER Areas.json",
+      "defaultGroup": false
+    }
+    ,
+    {
+      "name": "Environmental Data",
+      "json" : "Environmental Data.json",
+      "defaultGroup": false
+    },
+    {
+      "name": "Environmental Data(Provincial)",
+      "json" : "Environmental Data(Provincial).json",
+      "defaultGroup": false
+    },
+    {
+      "name": "First Nations - Municipalities - Districts - Counties",
+      "json" : "First Nations - Municipalities - Districts - Counties.json",
+      "defaultGroup": false
+    },
+    {
+      "name": "Google Maps ( Google Street View)",
+      "json" : "Google Maps ( Google Street View).json",
+      "defaultGroup": false
+    },
+    {
+      "name": "Invasive Species Inventory",
+      "json" : "Invasive Species Inventory.json",
+      "defaultGroup": false
+    },
+    {
+      "name": "LHRS Nodes and Routes",
+      "json" : "LHRS Nodes and Routes.json",
+      "defaultGroup": false
+    },
+    {
+      "name": "Legal Agreements",
+      "json" : "Legal Agreements.json",
+      "defaultGroup": false
+    },
+    {
+      "name": "Local Roads Board (LRB)- Local Service Boards",
+      "json" : "Local Roads Board (LRB)- Local Service Boards.json",
+      "defaultGroup": false
+    },
+    {
+      "name": "OpenLayers_Layer_group",
+      "json" : "OpenLayers_Layer_group.json",
+      "defaultGroup": false
+    }
+    
   ]
 }

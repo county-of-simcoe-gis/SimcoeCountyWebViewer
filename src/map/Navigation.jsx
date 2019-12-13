@@ -27,8 +27,8 @@ class Navigation extends Component {
 
   // ZOOM TO FULL EXTENT
   zoomFullExtent() {
-    if (window.sidebarOpen) window.map.getView().animate({ center: [-8875141.45, 5543492.45], zoom: 10 });
-    else window.map.getView().animate({ center: [-8878504.68, 5543492.45], zoom: 10 });
+    if (window.sidebarOpen) window.map.getView().animate({ center: [-8796181, 5782715], zoom: 8 });
+    else window.map.getView().animate({ center: [-8796181, 5782715], zoom: 8 });
   }
 
   // ZOOM TO CURRENT LOCATION

@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import * as helpers from "../helpers/helpers";
+import mainConfig from "../config.json";
 import * as myMapsHelpers from "../sidebar/components/mymaps/myMapsHelpers";
 import Autocomplete from "react-autocomplete";
 import "./Search.css";
@@ -14,19 +15,12 @@ import Point from "ol/geom/Point";
 import Select from "react-select";
 
 // URLS
-// const searchURL = searchText => `https://maps.simcoe.ca/giswebapi/api/search/?query=${searchText}`;
-// const searchInfoURL = locationID => `https://maps.simcoe.ca/giswebapi/api/search/?locationID=${locationID}`;
 const googleDirectionsURL = (lat, long) => `https://www.google.com/maps?saddr=My+Location&daddr=${lat},${long}`;
 
 // PRODUCTION
-const searchURL = (searchText, type, muni, limit) => `https://opengis.simcoe.ca/api/async/search/?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
-const searchInfoURL = locationID => `https://opengis.simcoe.ca/api/searchById/${locationID}`;
-const searchTypesURL = "https://opengis.simcoe.ca/api/getSearchTypes";
-
-// DEV
-// const searchTypesURL = "http://localhost:8085/getSearchTypes";
-// const searchURL = (searchText, type, muni, limit) => `http://localhost:8085/async/search/?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
-// const searchInfoURL = locationID => `http://localhost:8085/searchById/${locationID}`;
+const searchURL = (searchText, type, muni, limit) => `${mainConfig.searchURL}?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
+const searchInfoURL = locationID => `${mainConfig.searchInfoURL}${locationID}`;
+const searchTypesURL = mainConfig.searchTypesURL;
 
 // DEFAULT SEARCH LIMIT
 const defaultSearchLimit = 10;

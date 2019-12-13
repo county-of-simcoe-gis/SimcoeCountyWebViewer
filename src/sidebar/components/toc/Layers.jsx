@@ -95,13 +95,13 @@ class Layers extends Component {
         this.sortLayers(this.state.layers, sortAlpha, () => {
           // GET FULL INFO
           this.state.layers.forEach(layerRoot => {
-            //console.log(layerRoot);
-            //console.log(layerRoot.rootLayerUrl);
+            console.log(layerRoot);
+            console.log(layerRoot.rootLayerUrl);
             // helpers.getJSON(layerRoot.rootLayerUrl, layerSub => {
             //   const href = layerSub.layer.resource.href;
             //   helpers.getJSON(href.replace("http:", "https:"), layer => {
             //     const keywords = layer.featureType.keywords.string;
-            //     //console.log(keywords.string);
+            //    // console.log(keywords.string);
             //     let liveLayer = false;
             //     if (keywords.includes("LIVE_LAYER")) {
             //       layerRoot.layer.setProperties({ disableParcelClick: true });

@@ -11,6 +11,7 @@ import "./Navigation";
 import Navigation from "./Navigation";
 import { defaults as defaultInteractions } from "ol/interaction.js";
 import Popup from "../helpers/Popup.jsx";
+import mainConfig from "../config.json";
 import FooterTools from "./FooterTools.jsx";
 import { defaults as defaultControls, ScaleLine, FullScreen } from "ol/control.js";
 import BasemapSwitcher from "./BasemapSwitcher";
@@ -28,7 +29,7 @@ import Identify from "./Identify";
 
 const scaleLineControl = new ScaleLine();
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
-  `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True`;
+  `${mainConfig.feedbackUrl}?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True`;
 
 class SCMap extends Component {
   constructor(props) {
@@ -45,7 +46,7 @@ class SCMap extends Component {
   }
 
   componentDidMount() {
-    const centerCoords = [-8875141.45, 5543492.45];
+    const centerCoords = [-8796181, 5782715];
     const resolutions = [
       305.74811314055756,
       152.87405657041106,
@@ -66,7 +67,7 @@ class SCMap extends Component {
       target: "map",
       view: new View({
         center: centerCoords,
-        zoom: 10,
+        zoom: 8,
         maxZoom: 20
         //resolutions: resolutions
       }),
@@ -161,7 +162,7 @@ class SCMap extends Component {
     if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
       // If Internet Explorer, return version number
       this.setState({ isIE: true });
-      helpers.showURLWindow("https://opengis.simcoe.ca/public/ieWarning.html");
+      helpers.showURLWindow(mainConfig.ieWarningUrl);
     }
   }
 
@@ -274,9 +275,7 @@ class SCMap extends Component {
             helpers.addAppStat("GitHub", "Button");
           }}
         >
-          <GitHubButton href="https://github.com/county-of-simcoe-gis" data-size="large" aria-label="Follow @simcoecountygis on GitHub">
-            Follow @simcoecountygis
-          </GitHubButton>
+          
         </div>
       </div>
     );

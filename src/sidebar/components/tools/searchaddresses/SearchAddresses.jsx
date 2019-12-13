@@ -3,13 +3,14 @@ import Select from "react-select";
 import "./SearchAddresses.css";
 import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
+import mainConfig from "../../../../config.json";
 import Autocomplete from "react-autocomplete";
 import Highlighter from "react-highlight-words";
 import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
 import { Circle as CircleStyle, Icon, Fill, Stroke, Style } from "ol/style.js";
 
-const searchStreetsURL = searchText => `https://opengis.simcoe.ca/api/getStreetNames/${searchText}`;
+const searchStreetsURL = searchText => `${mainConfig.apiUrl}/getStreetNames/${searchText}`;
 
 class SearchAddresses extends Component {
   constructor(props) {
@@ -103,7 +104,7 @@ class SearchAddresses extends Component {
     }
 
     helpers.getWFSGeoJSON(
-      "https://opengis.simcoe.ca/geoserver/",
+      mainConfig.geoserverUrl,
       "simcoe:Address_Number",
       result => {
         this.updateFeatures(result);

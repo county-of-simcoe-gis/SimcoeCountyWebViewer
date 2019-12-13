@@ -333,36 +333,15 @@ class BasemapSwitcher extends Component {
       <div>
         <div id="sc-basemap-main-container">
           <div id="sc-basemap-collapse-button" className={this.state.containerCollapsed ? "sc-basemap-collapse-button closed" : "sc-basemap-collapse-button"} onClick={this.onCollapsedClick} />
-          <div className={this.state.containerCollapsed ? "sc-hidden" : "sc-basemap-imagery"}>
-            <button className={this.state.activeButton === "imagery" ? "sc-button sc-basemap-imagery-button active" : "sc-button sc-basemap-imagery-button"} onClick={this.onImageryButtonClick}>
-              Imagery
-            </button>
-            <button className="sc-button sc-basemap-arrow" onClick={this.onImageryArrowClick}></button>
-          </div>
+          
           <div className={this.state.containerCollapsed ? "sc-hidden" : "sc-basemap-topo"}>
             <button className={this.state.activeButton === "topo" ? "sc-button sc-basemap-topo-button active" : "sc-button sc-basemap-topo-button"} onClick={this.onTopoButtonClick}>
-              Topo
+              Basemap
             </button>
             <button className="sc-button sc-basemap-arrow" onClick={this.onTopoArrowClick}></button>
           </div>
         </div>
-        <div id="sc-basemap-imagery-slider-container" className={this.state.imageryPanelOpen ? "sc-basemap-imagery-slider-container" : "sc-hidden"}>
-          <label className="sc-basemap-streets-label">
-            <input className="sc-basemap-streets-checkbox" id="sc-basemap-streets-checkbox" type="checkbox" onChange={this.onStreetsCheckbox} checked={this.state.streetsCheckbox}></input>&nbsp;Streets
-          </label>
-          <Slider
-            included={false}
-            style={sliderWrapperStyle}
-            marks={this.state.imagerySliderMarks}
-            vertical={true}
-            max={this.state.imagerySliderMax}
-            min={this.state.imagerySliderMin}
-            step={0.01}
-            defaultValue={this.state.imagerySliderDefaultValue}
-            onChange={this.onSliderChange}
-            value={this.state.imagerySliderValue}
-          />
-        </div>
+
         <div className={this.state.topoPanelOpen ? "sc-basemap-topo-container" : "sc-hidden"}>
           {BasemapConfig.topoServices.map((service, index) => (
             <BasemapItem key={helpers.getUID()} index={index} topoActiveIndex={this.state.topoActiveIndex} service={service} onTopoItemClick={this.onTopoItemClick} />

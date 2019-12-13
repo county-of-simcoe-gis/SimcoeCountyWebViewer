@@ -3,12 +3,13 @@ import Select from "react-select";
 import "./LotAndConcession.css";
 import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
+import mainConfig from "../../../../config.json";
 import { extend } from "ol/extent.js";
 import { Circle as CircleStyle, Icon, Fill, Stroke, Style } from "ol/style.js";
 import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
 
-const serverUrl = "https://opengis.simcoe.ca/geoserver/wms/";
+const serverUrl = `${mainConfig.geoserverUrl}wms/`;
 
 class ToolComponent extends Component {
   constructor(props) {
@@ -82,7 +83,7 @@ class ToolComponent extends Component {
     window.map.addLayer(this.layer);
 
     helpers.getWFSGeoJSON(
-      "https://opengis.simcoe.ca/geoserver/",
+      this.serverUrl,
       this.layerName,
       result => {
         this.updateFeatures(result);
