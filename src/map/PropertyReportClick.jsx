@@ -153,6 +153,8 @@ class PropertyReportClick extends Component {
         helpers.showURLWindow(outputUrl, false);
         return;
       }else{return;}
+
+      
      
 
       //if (disable) return;
