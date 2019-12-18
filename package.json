@@ -1,6 +1,6 @@
 {
   "name": "openlayers",
-  "homepage": "https://opengis.simcoe.ca/public",
+  "homepage": "https://intra.dev.regionalgis.mto.gov.on.ca/map",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

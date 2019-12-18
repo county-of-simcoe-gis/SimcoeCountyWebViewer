@@ -12,7 +12,7 @@ const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
   `${mainConfig.feedbackUrl}?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
 class Header extends Component {
   state = {};
-
+  
   burgerButtonHandler() {
     // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
     if (window.sidebarOpen) window.emitter.emit("setSidebarVisiblity", "CLOSE");

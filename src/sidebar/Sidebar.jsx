@@ -389,7 +389,7 @@ class Sidebar extends Component {
                 {this.state.activeTabComponents.tools.loadedComponent ? this.state.activeTabComponents.tools.loadedComponent : this.state.activeTabComponents.tools.default}
               </TabPanel>
               <TabPanel id="tab-mymaps-content">{this.state.activeTabComponents.mymaps}</TabPanel>
-              <TabPanel id="tab-themes-content">
+              <TabPanel id="tab-themes-content" >
                 {this.state.activeTabComponents.themes.loadedComponent ? this.state.activeTabComponents.themes.loadedComponent : this.state.activeTabComponents.themes.default}
               </TabPanel>
               <TabPanel id="tab-reports-content">
