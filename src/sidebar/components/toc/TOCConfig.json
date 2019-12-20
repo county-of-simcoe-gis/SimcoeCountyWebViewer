@@ -1,24 +1,37 @@
 {
   "layerInfoURL": "https://opengis.simcoe.ca/layerInfo/?URL=",
   "layerDownloadURL": "https://opengis.simcoe.ca/layerInfo/?SHOW_DOWNLOAD=1&URL=",
-  "layerGroupURL": "https://opengis.simcoe.ca/geoserverRestApi/getLayerGroup/",
   "layerGroups": [
     {
       "name": "Popular",
+      "displayName": "Popular",
       "defaultGroup": false,
       "dataStore": "paradise",
-      "visibleLayers": ["Assessment Parcel"]
+      "visibleLayers": ["Assessment Parcel"],
+      "url": "https://opengis.simcoe.ca/geoserver/simcoe/Popular/ows?service=wms&version=1.3.0&request=GetCapabilities"
     },
     {
       "name": "Historical",
+      "displayName": "Historical",
       "defaultGroup": false,
-      "dataStore": "paradise"
+      "dataStore": "paradise",
+      "url": "https://opengis.simcoe.ca/geoserver/simcoe/Historical/ows?service=wms&version=1.3.0&request=GetCapabilities"
     },
     {
-      "name": "All Layers",
+      "name": "All_Layers",
+      "displayName": "All Layers",
       "defaultGroup": true,
       "dataStore": "paradise",
-      "visibleLayers": ["Assessment Parcel"]
+      "visibleLayers": ["Assessment Parcel"],
+      "url": "https://opengis.simcoe.ca/geoserver/simcoe/All_Layers/ows?service=wms&version=1.3.0&request=GetCapabilities"
+    },
+    {
+      "name": "Topo_Overlay",
+      "displayName": "Topo Overlay",
+      "defaultGroup": false,
+      "dataStore": "paradise",
+      "visibleLayers": [],
+      "url": "https://opengis.simcoe.ca/geoserver/simcoe/Topo_Overlay/ows?service=wms&version=1.3.0&request=GetCapabilities"
     }
   ]
 }
