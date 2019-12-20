@@ -4,7 +4,7 @@ import "./Header.css";
 import Search from "./Search.jsx";
 import * as helpers from "../helpers/helpers";
 import FloatingMenu, { FloatingMenuItem } from "../helpers/FloatingMenu.jsx";
-import Menu, { SubMenu, Item as MenuItem, Divider } from "rc-menu";
+import { Item as MenuItem } from "rc-menu";
 import Portal from "../helpers/Portal.jsx";
 import mainConfig from "../config.json";
 
@@ -18,10 +18,6 @@ class Header extends Component {
     else window.emitter.emit("setSidebarVisiblity", "OPEN");
 
     helpers.addAppStat("Burger Button", "Click");
-  }
-
-  helpButtonHandler() {
-    helpers.showURLWindow("https://maps.simcoe.ca/public_help", false, "full");
   }
 
   onDotMenuClick = evt => {
