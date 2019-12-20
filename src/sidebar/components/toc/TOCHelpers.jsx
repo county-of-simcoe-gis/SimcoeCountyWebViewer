@@ -105,6 +105,9 @@ export function getLayerListByGroup(group, callback) {
         const wfsUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&cql_filter=`;
         const wfsUrl = wfsUrlTemplate(serverUrl, layerInfo.Name[0]);
 
+        const metadataUrlTemplate = (serverUrl, layerName) => `${serverUrl}/rest/layers/${layerName}.json`;
+        const metadataUrl = metadataUrlTemplate(serverUrl, layerInfo.Name[0]);
+
         // LIVE LAYER
         let liveLayer = _isLiveLayer(keywords);
 
@@ -141,7 +144,7 @@ export function getLayerListByGroup(group, callback) {
           legendImage: null, // IMAGE DATA, STORED ONCE USER VIEWS LEGEND
           visible: layerVisible, // LAYER VISIBLE IN MAP, UPDATED BY CHECKBOX
           layer: layer, // OL LAYER OBJECT
-          //rootLayerUrl: rootLayerUrl, // ROOT LAYER INFO FROM GROUP END POINT
+          metadataUrl: metadataUrl, // ROOT LAYER INFO FROM GROUP END POINT
           opacity: opacity, // OPACITY OF LAYER
           liveLayer: liveLayer, // LIVE LAYER FLAG
           wfsUrl: wfsUrl,
@@ -250,7 +253,7 @@ export function updateLayerIndex(layers, callback) {
 }
 
 export function getLayerInfo(layerInfo, callback) {
-  helpers.getJSON(layerInfo.rootLayerUrl.replace("http:", "https:"), result => {
+  helpers.getJSON(layerInfo.metadataUrl.replace("http:", "https:"), result => {
     const fullInfoUrl = result.layer.resource.href.replace("http:", "https:");
     helpers.getJSON(fullInfoUrl, result => {
       result.featureType.fullUrl = fullInfoUrl.replace("http:", "https:");

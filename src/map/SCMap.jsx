@@ -84,6 +84,11 @@ class SCMap extends Component {
     window.popup = new Popup();
     window.map.addOverlay(window.popup);
 
+    // window.map.on("keypress", function(result) {
+    //   result.stopPropagation();
+    //   console.log(result);
+    // });
+
     // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
     window.emitter.emit("mapLoaded");
 
