@@ -4,6 +4,7 @@ import * as helpers from "../helpers/helpers";
 import BasemapConfig from "./basemapSwitcherConfig.json";
 import Slider from "rc-slider";
 import { Group as LayerGroup } from "ol/layer.js";
+import xml2js from "xml2js";
 
 class BasemapSwitcher extends Component {
   constructor(props) {
@@ -99,7 +100,6 @@ class BasemapSwitcher extends Component {
 
     // LOAD BASEMAP LAYERS
     let basemapList = [];
-    let overlayerList = [];
     //let basemapIndex = 0;
     BasemapConfig.topoServices.forEach(serviceGroup => {
       index = 0;
@@ -123,34 +123,32 @@ class BasemapSwitcher extends Component {
       });
 
       const groupUrl = serviceGroup.groupUrl;
-      // console.log(groupUrl);
       if (groupUrl !== undefined) {
-        helpers.getJSONWait(groupUrl, result => {
-          // console.log(result);
-          const groupLayers = result.layerGroup.publishables.published;
-          index++;
-          let overlayLayers = [];
-          groupLayers.forEach(groupLayerInfo => {
-            const layerNameOnly = groupLayerInfo.name.split(":")[1];
-            const rootLayerUrl = groupLayerInfo.href.replace("http:", "https:");
-            const serverUrl = rootLayerUrl.split("/rest/")[0];
-            let groupLayer = helpers.getImageWMSLayer(serverUrl + "/wms", groupLayerInfo.name);
-            groupLayer.setVisible(true);
-            groupLayer.setProperties({ index: index, name: layerNameOnly, isOverlay: true });
-            serviceLayers.push(groupLayer);
-            // overlayLayers.push(groupLayer)
-            index++;
-          });
+        // GET XML
+        helpers.httpGetText(groupUrl, result => {
+          var parser = new xml2js.Parser();
 
-          // USING LAYER GROUPS FOR TOPO
-          let layerGroup = new LayerGroup({ layers: serviceLayers, visible: false });
-          layerGroup.setProperties({ index: serviceGroup.index, name: serviceGroup.name });
-          window.map.addLayer(layerGroup);
-          basemapList.push(layerGroup);
-          // let layerGroup = new LayerGroup({ layers: serviceLayers, visible: false });
-          // layerGroup.setProperties({ index: serviceGroup.index, name: serviceGroup.name });
-          // window.map.addLayer(layerGroup);
-          // basemapList.push(layerGroup);
+          // PARSE TO JSON
+          parser.parseString(result, function(err, result) {
+            const groupLayerList = result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer;
+            index++;
+            groupLayerList.forEach(layerInfo => {
+              const layerNameOnly = layerInfo.Name[0].split(":")[1];
+              const serverUrl = groupUrl.split("/geoserver/")[0] + "/geoserver";
+
+              let groupLayer = helpers.getImageWMSLayer(serverUrl + "/wms", layerInfo.Name[0]);
+              groupLayer.setVisible(true);
+              groupLayer.setProperties({ index: index, name: layerNameOnly, isOverlay: true });
+              serviceLayers.push(groupLayer);
+              index++;
+            });
+
+            // USING LAYER GROUPS FOR TOPO
+            let layerGroup = new LayerGroup({ layers: serviceLayers, visible: false });
+            layerGroup.setProperties({ index: serviceGroup.index, name: serviceGroup.name });
+            window.map.addLayer(layerGroup);
+            basemapList.push(layerGroup);
+          });
         });
       } else {
         // USING LAYER GROUPS FOR TOPO
