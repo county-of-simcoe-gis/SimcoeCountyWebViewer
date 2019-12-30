@@ -48,6 +48,7 @@ class Identify extends Component {
 
         // QUERY USING WMS
         var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "application/json" });
+        url += "&feature_count=1000000";
         if (url) {
           helpers.getJSON(url, result => {
             const features = result.features;
