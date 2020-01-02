@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import ReactDOM from "react-dom";
 import * as helpers from "../helpers/helpers";
 import * as myMapsHelpers from "../sidebar/components/mymaps/myMapsHelpers";
 import Autocomplete from "react-autocomplete";
@@ -124,6 +125,16 @@ class Search extends Component {
       items.push({ label: "Open Street Map", value: "Open Street Map" });
       this.setState({ searchTypes: items, selectedType: items[0] });
     });
+
+    // LISTEN FOR MAP TO MOUNT
+    // window.emitter.addListener("mapLoaded", () => {
+    //   window.map.on("keypress", result => {
+    //     console.log("map");
+    //     console.log(this.isSearching);
+    //     if (this.isSearching) result.stopPropagation();
+    //     //console.log(result);
+    //   });
+    // });
   }
 
   onTypeDropDownChange = selectedType => {
@@ -421,7 +432,17 @@ class Search extends Component {
         <Autocomplete
           ref={el => (this.autoCompleteRef = el)}
           tabIndex="1"
-          inputProps={{ id: "sc-search-textbox", placeholder: "Search...", name: "sc-search-textbox" }}
+          inputProps={{
+            id: "sc-search-textbox",
+            placeholder: "Search...",
+            name: "sc-search-textbox",
+            onFocus: result => {
+              console.log("got focus");
+            },
+            onBlur: result => {
+              console.log("lost focus");
+            }
+          }}
           className="sc-search-textbox"
           wrapperStyle={{
             position: "relative",

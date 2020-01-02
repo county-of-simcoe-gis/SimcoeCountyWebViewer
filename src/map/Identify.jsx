@@ -8,6 +8,7 @@ import InfoRow from "../helpers/InfoRow.jsx";
 import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
 import { Circle as CircleStyle, Icon, Fill, Stroke, Style } from "ol/style.js";
+import { Image as ImageLayer } from "ol/layer.js";
 
 class Identify extends Component {
   constructor(props) {
@@ -36,34 +37,29 @@ class Identify extends Component {
     this.setState({ layers: [], isLoading: true });
 
     const { geometry } = props;
-    const wktGeometry = new WKT().writeGeometry(geometry);
-
     const layers = window.map.getLayers().getArray();
 
     let layerList = [];
     for (let index = 0; index < layers.length; index++) {
       const layer = layers[index];
-      if (layer.getVisible() && layer.get("wfsUrl") !== undefined) {
+      if (layer.getVisible() && layer instanceof ImageLayer) {
         const name = layer.get("name");
-        const wfsUrl = layer.get("wfsUrl");
         let displayName = layer.get("displayName");
 
-        if (name !== null && wfsUrl !== null) {
-          let features = [];
+        // QUERY USING WMS
+        var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "application/json" });
+        url += "&feature_count=1000000";
+        if (url) {
+          helpers.getJSON(url, result => {
+            const features = result.features;
+            if (features.length === 0) {
+              return;
+            }
 
-          let wfsUrlTemplate = (baseWfs, geometry) => `${baseWfs}INTERSECTS(geom,${geometry})`;
-
-          // ADD A SMAL BUFFER TO PICK UP POINTS
-          const scale = helpers.getMapScale();
-          if (scale < 20000) wfsUrlTemplate = (baseWfs, geometry) => `${baseWfs}DWITHIN(geom,${geometry}, 15,meters)`;
-          // if (helpers.getMapScale() > 2000) wfsUrlTemplate = (baseWfs, geometry) => `${baseWfs}DWITHIN(geom,${geometry}, 30,meters)`;
-          // else if (helpers.getMapScale() > 40000) wfsUrlTemplate = (baseWfs, geometry) => `${baseWfs}DWITHIN(geom,${geometry}, 10000,meters)`;
-
-          const wfsUrlQuery = wfsUrlTemplate(wfsUrl, wktGeometry);
-          helpers.getJSON(wfsUrlQuery, result => {
             const featureList = new GeoJSON().readFeatures(result);
             if (featureList.length > 0) {
               if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
+              let features = [];
               featureList.forEach(feature => {
                 features.push(feature);
               });
@@ -182,7 +178,14 @@ const Layer = props => {
       <Collapsible trigger={layer.name} open={open}>
         <div className="sc-identify-layer-content-container">
           {props.layer.features.map(feature => (
-            <FeatureItem key={helpers.getUID()} displayName={props.layer.displayName} feature={feature} onZoomClick={props.onZoomClick} onMouseEnter={props.onMouseEnter} onMouseLeave={props.onMouseLeave}></FeatureItem>
+            <FeatureItem
+              key={helpers.getUID()}
+              displayName={props.layer.displayName}
+              feature={feature}
+              onZoomClick={props.onZoomClick}
+              onMouseEnter={props.onMouseEnter}
+              onMouseLeave={props.onMouseLeave}
+            ></FeatureItem>
           ))}
         </div>
       </Collapsible>
@@ -194,6 +197,7 @@ const FeatureItem = props => {
   const [open, setOpen] = useState(false);
   const { feature, displayName } = props;
 
+  console.log(feature);
   const featureProps = feature.getProperties();
   const keys = Object.keys(featureProps);
 

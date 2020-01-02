@@ -44,7 +44,11 @@ class ThemeBaseLayers extends Component {
             const entries = Object.entries(feature.getProperties());
             const layerName = layer.getProperties().name;
             const layerConfig = this.getLayerConfigByName(layerName);
-            window.popup.show(evt.coordinate, <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={layerConfig} />, layer.getProperties().name);
+            window.popup.show(
+              evt.coordinate,
+              <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={layerConfig} />,
+              layer.getProperties().name
+            );
           });
         }
       });
