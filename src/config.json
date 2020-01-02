@@ -1,4 +1,6 @@
 {
+  "headerLogoImageName": "logo.png",
+  "feedbackUrl": "https://opengis.simcoe.ca/feedback",
   "includeAppStats": true,
   "appStatsUrl": "https://opengis.simcoe.ca/api/appStats/",
   "apiUrl": "https://opengis.simcoe.ca/api/",

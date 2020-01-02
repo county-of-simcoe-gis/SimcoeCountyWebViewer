@@ -19,6 +19,7 @@ import "ol-contextmenu/dist/ol-contextmenu.css";
 import { fromLonLat } from "ol/proj";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
+import { MouseWheelZoom } from "ol/interaction";
 
 import FloatingMenu, { FloatingMenuItem } from "../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
@@ -70,7 +71,12 @@ class SCMap extends Component {
         maxZoom: 20
         //resolutions: resolutions
       }),
-      interactions: defaultInteractions({ keyboard: true, altShiftDragRotate: false, pinchRotate: false }),
+      interactions: defaultInteractions({ keyboard: true, altShiftDragRotate: false, pinchRotate: false, mouseWheelZoom: false }).extend([
+        new MouseWheelZoom({
+          duration: 0,
+          constrainResolution: true
+        })
+      ]),
       keyboardEventTarget: document
     });
 
@@ -83,6 +89,11 @@ class SCMap extends Component {
     window.map = map;
     window.popup = new Popup();
     window.map.addOverlay(window.popup);
+
+    // window.map.on("keypress", function(result) {
+    //   result.stopPropagation();
+    //   console.log(result);
+    // });
 
     // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
     window.emitter.emit("mapLoaded");
