@@ -47,7 +47,7 @@ class SCMap extends Component {
   }
 
   componentDidMount() {
-    const centerCoords = [-8875141.45, 5543492.45];
+    const centerCoords = mainConfig.centerCoords;
     const resolutions = [
       305.74811314055756,
       152.87405657041106,
@@ -68,8 +68,8 @@ class SCMap extends Component {
       target: "map",
       view: new View({
         center: centerCoords,
-        zoom: 10,
-        maxZoom: 20
+        zoom: mainConfig.defaultZoom,
+        maxZoom: mainConfig.maxZoom
         //resolutions: resolutions
       }),
       interactions: defaultInteractions({ keyboard: true, altShiftDragRotate: false, pinchRotate: false, mouseWheelZoom: false }).extend([

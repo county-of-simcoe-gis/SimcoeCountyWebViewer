@@ -16,7 +16,9 @@
     "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
     "rollNumberFieldName": "ARN"
   },
-
+  "centerCoords": [-8878504.68, 5543492.45],
+  "defaultZoom": 10,
+  "maxZoom": 20,
   "sidebarToolComponents": [
     {
       "id": 1,

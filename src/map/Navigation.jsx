@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import "./Navigation.css";
 import { fromLonLat } from "ol/proj";
 import * as helpers from "../helpers/helpers";
+import mainConfig from "../config.json";
 
 class Navigation extends Component {
   constructor(props) {
@@ -27,8 +28,8 @@ class Navigation extends Component {
 
   // ZOOM TO FULL EXTENT
   zoomFullExtent() {
-    if (window.sidebarOpen) window.map.getView().animate({ center: [-8875141.45, 5543492.45], zoom: 10 });
-    else window.map.getView().animate({ center: [-8878504.68, 5543492.45], zoom: 10 });
+    if (window.sidebarOpen) window.map.getView().animate({ center: mainConfig.centerCoords, zoom: mainConfig.defaultZoom });
+    else window.map.getView().animate({ center: mainConfig.centerCoords, zoom: mainConfig.defaultZoom });
   }
 
   // ZOOM TO CURRENT LOCATION
