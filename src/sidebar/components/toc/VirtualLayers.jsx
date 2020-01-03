@@ -10,16 +10,10 @@ import "./VirtualLayers.css";
 
 // LIST ITEM SORTABLE
 const SortableItem = sortableElement(({ value, style, item, onLegendToggle, onCheckboxChange, searchText, onLayerOptionsClick }) => {
+  item.elementId = item.name + helpers.getUID();
   return (
-    <li style={style} className="sc-toc-layer-list-item sc-noselect">
-      <LayerItem
-        key={helpers.getUID()}
-        layerInfo={item}
-        onLegendToggle={onLegendToggle}
-        onCheckboxChange={onCheckboxChange}
-        searchText={searchText}
-        onLayerOptionsClick={onLayerOptionsClick}
-      />
+    <li style={style} className="sc-toc-layer-list-item sc-noselect" id={item.elementId}>
+      <LayerItem key={helpers.getUID()} layerInfo={item} onLegendToggle={onLegendToggle} onCheckboxChange={onCheckboxChange} searchText={searchText} onLayerOptionsClick={onLayerOptionsClick} />
     </li>
   );
 });

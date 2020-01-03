@@ -62,7 +62,16 @@ class Header extends Component {
     const imageName = mainConfig.headerLogoImageName;
     return (
       <div className="header">
-        <div id="sc-header-burger-button" onClick={this.burgerButtonHandler}>
+        <div
+          id="sc-header-burger-button"
+          onClick={this.burgerButtonHandler}
+          tabIndex="2"
+          onKeyPress={evt => {
+            if (evt.key === "Enter") {
+              this.burgerButtonHandler();
+            }
+          }}
+        >
           <img src={require("./images/burger-button.png")} alt="Header Logo" />
         </div>
         <div id="sc-header-bar-button">

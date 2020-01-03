@@ -31,7 +31,22 @@ class TOC extends Component {
 
     // LISTEN FOR LAYERS TO LOAD
     window.emitter.addListener("layersLoaded", numLayers => this.onLayersLoad(numLayers));
+
+    // LISTEN FOR SEARCH RESULT
+    window.emitter.addListener("activeTocLayer", layerItem => this.onActivateLayer(layerItem));
   }
+
+  onActivateLayer = layerItem => {
+    window.emitter.emit("setSidebarVisiblity", "OPEN");
+    window.emitter.emit("activateTab", "layers");
+
+    this.state.layerGroups.forEach(layerGroup => {
+      if (layerGroup.label === layerItem.layerGroup) {
+        this.setState({ selectedGroup: layerGroup });
+        return;
+      }
+    });
+  };
 
   onLayersLoad = numLayers => {
     if (this.state.layerCount !== numLayers) this.setState({ layerCount: numLayers });
@@ -186,6 +201,7 @@ class TOC extends Component {
               group={this.state.selectedGroup}
               searchText={this.state.searchText}
               sortAlpha={this.state.sortAlpha}
+              allGroups={this.state.layerGroups}
             />
           </div>
 
