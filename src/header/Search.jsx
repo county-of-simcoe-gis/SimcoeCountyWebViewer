@@ -20,7 +20,7 @@ const apiUrl = mainConfig.apiUrl
 const googleDirectionsURL = (lat, long) => `https://www.google.com/maps?saddr=My+Location&daddr=${lat},${long}`;
 const searchURL = (searchText, type, muni, limit) => `${apiUrl}async/search/?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
 const searchInfoURL = locationID => `${apiUrl}searchById/${locationID}`;
-const searchTypesURL = apiUrl + "getSearchTypes";
+const searchTypesURL = apiUrl => `${apiUrl}/getSearchTypes`;
 
 // DEFAULT SEARCH LIMIT
 const defaultSearchLimit = 10;
