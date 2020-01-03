@@ -92,7 +92,7 @@ class ExternalServices extends Component {
 
       if (feature !== undefined) {
         const arn = feature.get("arn");
-        const infoURL = "https://maps.simcoe.ca/giswebapi/api/propertyreport?arn=" + arn;
+        const infoURL = mainConfig.propertyReportUrl + "?arn=" + arn;
         helpers.getJSON(infoURL, result => {
           const address = result.Address;
           this.setState({ address });

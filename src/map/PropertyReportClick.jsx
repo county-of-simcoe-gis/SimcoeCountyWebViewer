@@ -190,7 +190,7 @@ class PropertyReportClick extends Component {
           </span>
         </CopyToClipboard>
         &nbsp;
-        <span className="sc-fakeLink" onClick={() => helpers.showURLWindow("https://maps.simcoe.ca/terms.html", false, "full")}>
+        <span className="sc-fakeLink" onClick={() => helpers.showURLWindow(mainConfig.termsUrl, false, "full")}>
           [Terms]
         </span>
       </InfoRow>
@@ -237,7 +237,7 @@ class PropertyReportClick extends Component {
 
           // GET FULL INFO
           if (feature !== undefined) {
-            const infoURL = "https://maps.simcoe.ca/giswebapi/api/propertyreport?arn=" + arn;
+            const infoURL = mainConfig.propertyReportUrl + "?arn=" + arn;
             helpers.getJSON(infoURL, result => {
               result.pointCoordinates = latLongCoords;
               result.shareURL = this.getShareURL(arn);
@@ -254,7 +254,7 @@ class PropertyReportClick extends Component {
 
         // GET FULL INFO
         if (feature !== undefined) {
-          const infoURL = "https://maps.simcoe.ca/giswebapi/api/propertyreport?arn=" + arn;
+          const infoURL = mainConfig.propertyReportUrl + "?arn=" + arn;
           helpers.getJSON(infoURL, result => {
             result.pointCoordinates = latLongCoords;
             result.shareURL = this.getShareURL(arn);

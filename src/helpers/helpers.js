@@ -51,7 +51,7 @@ export function addAppStat(type, description) {
 
   // IGNORE LOCAL HOST DEV
   if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") return;
-  //https://opengis.simcoe.ca/api/appStats/opengis/click/property%20report
+
   const appStatsTemplate = (type, description) => `${mainConfig.appStatsUrl}opengis/${type}/${description}`;
 
   httpGetText(appStatsTemplate(type, description));

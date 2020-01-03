@@ -17,6 +17,7 @@ import Feature from "ol/Feature";
 import { transform } from "ol/proj.js";
 
 import * as helpers from "../../../helpers/helpers";
+import mainConfig from "../../../config.json";
 
 // GET FEATURE FROM MYMAPS LAYER
 export function getFeatureById(id) {
@@ -375,7 +376,7 @@ export function convertLineToArrow(geometry) {
 }
 
 export function importMyMaps(id, callback2) {
-  helpers.getJSON(`https://opengis.simcoe.ca/api/getMyMaps/${id}`, result => {
+  helpers.getJSON(`${mainConfig.apiUrl}getMyMaps/${id}`, result => {
     //helpers.getJSON(`http://localhost:8085/getMyMaps/${id}`, result => {
     console.log(result);
     callback2(result);
@@ -399,7 +400,7 @@ export function exportMyMaps(callback2, id = null) {
     }
   }
 
-  helpers.postJSON("https://opengis.simcoe.ca/api/postMyMaps/", data, result => {
+  helpers.postJSON(mainConfig.apiUrl + "postMyMaps/", data, result => {
     callback2(result);
   });
 }

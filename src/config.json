@@ -1,9 +1,16 @@
 {
   "headerLogoImageName": "logo.png",
+  "originUrl":"https://opengis.simcoe.ca",
   "feedbackUrl": "https://opengis.simcoe.ca/feedback",
+  "geoserverUrl": "https://opengis.simcoe.ca/geoserver/",
   "includeAppStats": true,
   "appStatsUrl": "https://opengis.simcoe.ca/api/appStats/",
   "apiUrl": "https://opengis.simcoe.ca/api/",
+  "termsUrl": "https://maps.simcoe.ca/terms.html",
+  "helpUrl": "https://maps.simcoe.ca/public_help",
+  "ieWarningUrl": "https://opengis.simcoe.ca/public/ieWarning.html",
+  "propertyReportUrl": "https://maps.simcoe.ca/giswebapi/api/propertyreport",
+  "weatherRadarApiUrl": "https://maps.simcoe.ca/giswebapi/api/Weather/getRadarImages/",
   "parcelLayer": {
     "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
     "rollNumberFieldName": "ARN"
