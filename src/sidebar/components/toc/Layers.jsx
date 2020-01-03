@@ -33,7 +33,78 @@ class Layers extends Component {
 
     // LISTEN FOR MAP TO MOUNT
     window.emitter.addListener("mapLoaded", () => this.onMapLoad());
+
+    // LISTEN FOR SEARCH RESULT
+    window.emitter.addListener("activeTocLayer", layerItem => this.onActivateLayer(layerItem));
   }
+
+  onActivateLayer = layerItem => {
+    let layersCopy = Object.assign([], this.state.allLayers[helpers.replaceAllInString(layerItem.layerGroup, " ", "_")]);
+    layersCopy.forEach(layer => {
+      if (helpers.replaceAllInString(layer.name, "_", " ") === layerItem.name) {
+        layer.visible = true;
+        layer.layer.setVisible(true);
+
+        //document.getElementById(layer.elementId).scrollIntoView();
+        document.getElementById(this.virtualId).scrollTop = 0;
+        var i = 0;
+        // var isScrolling = false;
+        var elemFound = false;
+        for (var i = 1; i <= 100; i++) {
+          if (elemFound) return;
+          // eslint-disable-next-line
+          (index => {
+            setTimeout(() => {
+              if (elemFound) return;
+
+              const elem = document.getElementById(layer.elementId);
+              if (elem !== null) {
+                elemFound = true;
+                const topPos = elem.offsetTop;
+                document.getElementById(this.virtualId).scrollTop = topPos;
+              } else {
+                // isScrolling = true;
+                document.getElementById(this.virtualId).scrollTop += i * 10;
+                // isScrolling = false;
+              }
+            }, i * 100);
+          })(i);
+        }
+
+        // setTimeout(() => {
+        //   let elemFound = false;
+        //   let isScrolling = false;
+        //   for (var i = 0; i < 10000; i += 10) {
+        //     if (elemFound) break;
+
+        //     do {
+        //       console.log("waiting...");
+        //     } while (isScrolling);
+        //     const elem = document.getElementById(layer.elementId);
+        //     if (elem !== null) {
+        //       console.log("found");
+        //       elemFound = true;
+        //       const topPos = elem.offsetTop;
+        //       console.log(topPos);
+        //       setTimeout(() => {
+        //         document.getElementById(this.virtualId).scrollTop = topPos;
+        //       }, 10);
+
+        //       if (elemFound) break;
+        //     } else {
+        //       isScrolling = true;
+        //       setTimeout(() => {
+        //         console.log("scrolling");
+        //         if (!elemFound) document.getElementById(this.virtualId).scrollTop += i;
+        //         isScrolling = false;
+        //       }, 10);
+        //     }
+        //   }
+        //   this.setState({ layers: layersCopy });
+        // }, 500);
+      }
+    });
+  };
 
   componentWillUpdate() {
     if (this.state.layers !== undefined) window.emitter.emit("layersLoaded", this.state.layers.length);
@@ -92,40 +163,19 @@ class Layers extends Component {
       allLayers[group.value] = layers;
 
       this.setState({ layers: layers, allLayers: allLayers }, () => {
-        this.sortLayers(this.state.layers, sortAlpha, () => {
-          // GET FULL INFO
-          this.state.layers.forEach(layerRoot => {
-            //console.log(layerRoot);
-            //console.log(layerRoot.rootLayerUrl);
-            // helpers.getJSON(layerRoot.rootLayerUrl, layerSub => {
-            //   const href = layerSub.layer.resource.href;
-            //   helpers.getJSON(href.replace("http:", "https:"), layer => {
-            //     const keywords = layer.featureType.keywords.string;
-            //     //console.log(keywords.string);
-            //     let liveLayer = false;
-            //     if (keywords.includes("LIVE_LAYER")) {
-            //       layerRoot.layer.setProperties({ disableParcelClick: true });
-            //       liveLayer = true;
-            //     }
-            //     let opacity = 1;
-            //     if (layerRoot.visible) {
-            //       opacity = keywords.find(item => {
-            //         if (item.indexOf("OPACITY") !== -1) {
-            //           return item;
-            //         }
-            //       });
-            //       if (opacity !== undefined) {
-            //         opacity = opacity.split("=")[1];
-            //       }
-            //     }
-            //     //console.log(opacity);
-            //     this.setState({
-            //       // UPDATE LAYER
-            //       layers: this.state.layers.map(item => (item.name === layerRoot.name ? Object.assign({}, item, { keywords, liveLayer, opacity: parseFloat(opacity) }) : item))
-            //     });
-            //   });
-            // });
-          });
+        this.sortLayers(this.state.layers, sortAlpha);
+
+        // FETCH THE REST OF THE GROUPS
+        this.props.allGroups.forEach(groupItem => {
+          const layersItem = this.state.allLayers[groupItem.value];
+
+          if (layersItem === undefined) {
+            TOCHelpers.getBasicLayers(groupItem, layers => {
+              let allLayers = this.state.allLayers;
+              allLayers[groupItem.value] = layers;
+              this.setState({ allLayers: allLayers });
+            });
+          }
         });
       });
     });
@@ -169,6 +219,7 @@ class Layers extends Component {
     allLayers[this.props.group.value] = newLayers;
 
     this.setState({ layers: newLayers, allLayers: allLayers }, () => {
+      window.allLayers = this.state.allLayers;
       if (callback !== undefined) callback();
     });
   };
@@ -230,6 +281,8 @@ class Layers extends Component {
       }
     );
 
+    console.log(document.getElementById(this.virtualId).scrollTop);
+    console.log(this.lastPosition);
     document.getElementById(this.virtualId).scrollTop += this.lastPosition;
   };
 
