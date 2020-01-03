@@ -16,10 +16,11 @@ import Select from "react-select";
 import { KeyboardPan, KeyboardZoom } from "ol/interaction.js";
 
 // URLS
+const apiUrl = mainConfig.apiUrl
 const googleDirectionsURL = (lat, long) => `https://www.google.com/maps?saddr=My+Location&daddr=${lat},${long}`;
-const searchURL = (searchText, type, muni, limit) => `${mainConfig.apiUrl}async/search/?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
-const searchInfoURL = locationID => `${mainConfig.apiUrl}searchById/${locationID}`;
-const searchTypesURL = mainConfig.apiUrl + "getSearchTypes";
+const searchURL = (searchText, type, muni, limit) => `${apiUrl}async/search/?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
+const searchInfoURL = locationID => `${apiUrl}searchById/${locationID}`;
+const searchTypesURL = apiUrl + "getSearchTypes";
 
 // DEFAULT SEARCH LIMIT
 const defaultSearchLimit = 10;
