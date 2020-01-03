@@ -2,9 +2,10 @@
 import React, { Component } from "react";
 import "./FooterTools.css";
 import * as helpers from "../helpers/helpers";
+import mainConfig from "../config.json";
 
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
-  `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
+  `${mainConfig.feedbackUrl}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
 
 class FooterTools extends Component {
   constructor(props) {
@@ -63,7 +64,7 @@ class FooterTools extends Component {
   };
 
   onTermsClick = () => {
-    helpers.showURLWindow("https://maps.simcoe.ca/terms.html", false, "full");
+    helpers.showURLWindow(mainConfig.termsUrl, false, "full");
     // APP STATS
     helpers.addAppStat("Terms", "Click (Footer)");
   };

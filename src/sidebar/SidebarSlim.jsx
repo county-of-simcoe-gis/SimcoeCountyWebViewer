@@ -2,9 +2,10 @@ import React from "react";
 import "./SidebarSlim.css";
 import MenuButton from "./MenuButton.jsx";
 import * as helpers from "../helpers/helpers";
+import mainConfig from "../config.json";
 
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
-  `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
+  `${mainConfig.feedbackUrl}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
 
 const onFeedbackClick = () => {
   // APP STATS

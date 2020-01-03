@@ -16,6 +16,7 @@ import MyMapsPopup from "./MyMapsPopup.jsx";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import Portal from "../../../helpers/Portal.jsx";
 import Identify from "../../../map/Identify.jsx";
+import mainConfig from "../../../config.json";
 
 // OPEN LAYERS
 import Draw, { createBox } from "ol/interaction/Draw.js";
@@ -31,7 +32,7 @@ import Overlay from "ol/Overlay.js";
 import * as shpWrite from "shp-write";
 
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale, myMapsId, featureId) =>
-  `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True&MY_MAPS_ID=${myMapsId}&MY_MAPS_FEATURE_ID=${featureId}`;
+  `${mainConfig.feedbackUrl}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True&MY_MAPS_ID=${myMapsId}&MY_MAPS_FEATURE_ID=${featureId}`;
 
 class MyMaps extends Component {
   constructor(props) {
