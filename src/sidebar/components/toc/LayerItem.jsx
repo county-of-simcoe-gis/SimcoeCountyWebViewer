@@ -9,6 +9,9 @@ class LayerItem extends Component {
     this.state = {};
   }
 
+  componentWillReceiveProps(nextProps) {
+    console.log(nextProps);
+  }
   render() {
     const { layerInfo } = this.props;
     return (
@@ -20,13 +23,7 @@ class LayerItem extends Component {
             <div className="sc-toc-item-lines-expanded" />
           </div>
           <div className="sc-toc-item-checkbox">
-            <input
-              id="sc-toc-item-checkbox"
-              key={helpers.getUID()}
-              type="checkbox"
-              onChange={() => this.props.onCheckboxChange(this.props.layerInfo)}
-              checked={layerInfo.visible}
-            />
+            <input id="sc-toc-item-checkbox" key={helpers.getUID()} type="checkbox" onChange={() => this.props.onCheckboxChange(this.props.layerInfo)} checked={layerInfo.visible} />
           </div>
           <Highlighter
             className="sc-toc-item-layer-label"

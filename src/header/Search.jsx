@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import ReactDOM from "react-dom";
 import * as helpers from "../helpers/helpers";
 import mainConfig from "../config.json";
 import * as myMapsHelpers from "../sidebar/components/mymaps/myMapsHelpers";
@@ -14,9 +13,9 @@ import { CopyToClipboard } from "react-copy-to-clipboard";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import Select from "react-select";
+import { KeyboardPan, KeyboardZoom } from "ol/interaction.js";
 
 // URLS
-
 const googleDirectionsURL = (lat, long) => `https://www.google.com/maps?saddr=My+Location&daddr=${lat},${long}`;
 const searchURL = (searchText, type, muni, limit) => `${mainConfig.apiUrl}async/search/?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
 const searchInfoURL = locationID => `${mainConfig.apiUrl}searchById/${locationID}`;
@@ -85,7 +84,6 @@ class Search extends Component {
     // BIND THIS TO THE CLICK FUNCTION
     this.removeMarkersClick = this.removeMarkersClick.bind(this);
     this.cleanup = this.cleanup.bind(this);
-
     this.storageKey = "searchHistory";
   }
   state = {
@@ -105,10 +103,10 @@ class Search extends Component {
     // HANDLE URL PARAMETER
     if (locationId !== null) {
       // CALL API TO GET LOCATION DETAILS
-      helpers.getJSON(searchInfoURL(locationId), result => this.jsonCallback(result));
+      helpers.getJSON(searchInfoURL(apiUrl, locationId), result => this.jsonCallback(result));
     }
 
-    helpers.getJSON(searchTypesURL, result => {
+    helpers.getJSON(searchTypesURL(apiUrl), result => {
       let items = [];
       items.push({ label: "All", value: "All" });
       result.forEach(type => {
@@ -116,25 +114,35 @@ class Search extends Component {
         items.push(obj);
       });
       items.push({ label: "Open Street Map", value: "Open Street Map" });
+      items.push({ label: "Map Layer", value: "Map Layer" });
+      items.push({ label: "Tool", value: "Tool" });
+      items.push({ label: "Theme", value: "Theme" });
       this.setState({ searchTypes: items, selectedType: items[0] });
     });
 
-    // LISTEN FOR MAP TO MOUNT
-    // window.emitter.addListener("mapLoaded", () => {
-    //   window.map.on("keypress", result => {
-    //     console.log("map");
-    //     console.log(this.isSearching);
-    //     if (this.isSearching) result.stopPropagation();
-    //     //console.log(result);
-    //   });
-    // });
+    // PATCH TO CLOSE MENU WHEN MAP IS CLICKED
+    this.clickEvent = document.body.addEventListener(
+      "click",
+      evt => {
+        if (document.activeElement.id !== "sc-search-textbox") return;
+
+        if (typeof evt.target.className === "string") {
+          evt.target.className.split(" ").forEach(className => {
+            if (className === "ol-overlaycontainer-stopevent") {
+              document.getElementById("map").focus();
+            }
+          });
+        }
+      },
+      true
+    );
   }
 
   onTypeDropDownChange = selectedType => {
     this.setState({ selectedType: selectedType }, async () => {
       let limit = defaultSearchLimit;
       if (this.state.showMore) limit = 50;
-      await helpers.getJSONWait(searchURL(this.state.value, this.state.selectedType.value, undefined, limit), responseJson => {
+      await helpers.getJSONWait(searchURL(apiUrl, this.state.value, this.state.selectedType.value, undefined, limit), responseJson => {
         if (responseJson !== undefined) this.setState({ searchResults: responseJson });
         else this.setState({ searchResults: [] });
       });
@@ -307,6 +315,23 @@ class Search extends Component {
 
   // WHEN USER SELECTS ITEM
   onItemSelect(value, item) {
+    if (item.type === "Map Layer") {
+      window.emitter.emit("activeTocLayer", item);
+      return;
+    }
+
+    if (item.type === "Tool") {
+      window.emitter.emit("activateTab", "tools");
+      window.emitter.emit("activateSidebarItem", item.name, "tools");
+      return;
+    }
+
+    if (item.type === "Theme") {
+      window.emitter.emit("activateTab", "themes");
+      window.emitter.emit("activateSidebarItem", item.name, "themes");
+      return;
+    }
+
     // CLEAR PREVIOUS SOURCE
     searchGeoLayer.getSource().clear();
 
@@ -340,7 +365,7 @@ class Search extends Component {
       window.map.getView().setZoom(18);
     } else {
       // CALL API TO GET LOCATION DETAILS
-      helpers.getJSON(searchInfoURL(item.location_id), result => this.jsonCallback(result));
+      helpers.getJSON(searchInfoURL(apiUrl, item.location_id), result => this.jsonCallback(result));
     }
   }
 
@@ -363,14 +388,77 @@ class Search extends Component {
       async () => {
         let limit = defaultSearchLimit;
         if (this.state.showMore) limit = 50;
-        await helpers.getJSONWait(searchURL(this.state.value, this.state.selectedType.value, undefined, limit), responseJson => {
-          if (responseJson !== undefined) this.setState({ searchResults: responseJson });
-          else this.setState({ searchResults: [] });
+        await helpers.getJSONWait(searchURL(apiUrl, this.state.value, this.state.selectedType.value, undefined, limit), responseJson => {
+          if (responseJson !== undefined) this.searchResultsHandler(responseJson, limit);
+          else this.searchResultsHandler(responseJson, limit);
         });
       }
     );
 
     helpers.addAppStat("Search More Button", "Click");
+  };
+
+  searchLayers = () => {};
+
+  searchResultsHandler = (results, limit) => {
+    let newResults = Object.assign([], results);
+    if (this.state.value.length < 2) {
+      this.setState({ searchResults: [] });
+      return;
+    }
+    const selectedType = this.state.selectedType.value;
+
+    // SET IMAGE NAME
+    newResults.forEach(layer => {
+      layer.imageName = "map-marker-light-blue.png";
+    });
+
+    // SEARCH LAYERS
+    if (selectedType === "All" || selectedType === "Map Layer") {
+      let layers = [];
+      Object.entries(window.allLayers).map(row => {
+        const groupName = helpers.replaceAllInString(row[0], "_", " ");
+        const layerItems = row[1];
+        layerItems.forEach(layer => {
+          if (layer.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
+            layers.push({ name: helpers.replaceAllInString(layer.name, "_", " "), type: "Map Layer", layerGroup: groupName, imageName: "layers.png" });
+          }
+        });
+      });
+      newResults = layers.concat(newResults);
+    }
+
+    // TOOLS
+    if (selectedType === "All" || selectedType === "Tool") {
+      let tools = [];
+      mainConfig.sidebarToolComponents.forEach(tool => {
+        if (tool.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
+          tools.push({ name: helpers.replaceAllInString(tool.name, "_", " "), type: "Tool", imageName: "tools.png" });
+        }
+      });
+      newResults = tools.concat(newResults);
+    }
+
+    // THEMES
+    if (selectedType === "All" || selectedType === "Theme") {
+      let themes = [];
+      mainConfig.sidebarThemeComponents.forEach(theme => {
+        if (theme.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
+          themes.push({ name: helpers.replaceAllInString(theme.name, "_", " "), type: "Theme", imageName: "themes.png" });
+        }
+      });
+      newResults = themes.concat(newResults);
+    }
+
+    this.setState({ searchResults: newResults });
+  };
+
+  disableKeyboardEvents = disable => {
+    window.map.getInteractions().forEach(function(interaction) {
+      if (interaction instanceof KeyboardPan || interaction instanceof KeyboardZoom) {
+        interaction.setActive(!disable);
+      }
+    });
   };
 
   render() {
@@ -418,22 +506,22 @@ class Search extends Component {
 
     return (
       <div>
-        <div className="sc-search-types-container">
-          <Select styles={groupsDropDownStyles} isSearchable={false} onChange={this.onTypeDropDownChange} options={this.state.searchTypes} value={this.state.selectedType} />
+        <div className="sc-search-types-container" tabIndex="-1">
+          <Select tabIndex="-1" styles={groupsDropDownStyles} isSearchable={false} onChange={this.onTypeDropDownChange} options={this.state.searchTypes} value={this.state.selectedType} />
         </div>
 
         <Autocomplete
           ref={el => (this.autoCompleteRef = el)}
-          tabIndex="1"
           inputProps={{
             id: "sc-search-textbox",
+            tabIndex: "1",
             placeholder: "Search...",
             name: "sc-search-textbox",
             onFocus: result => {
-              console.log("got focus");
+              this.disableKeyboardEvents(true);
             },
             onBlur: result => {
-              console.log("lost focus");
+              this.disableKeyboardEvents(false);
             }
           }}
           className="sc-search-textbox"
@@ -457,9 +545,8 @@ class Search extends Component {
 
               let limit = defaultSearchLimit;
               if (this.state.showMore) limit = 50;
-              await helpers.getJSONWait(searchURL(value, this.state.selectedType.value, undefined, limit), responseJson => {
-                if (responseJson !== undefined) this.setState({ searchResults: responseJson });
-                else this.setState({ searchResults: [] });
+              await helpers.getJSONWait(searchURL(apiUrl, value, this.state.selectedType.value, undefined, limit), responseJson => {
+                if (responseJson !== undefined) this.searchResultsHandler(responseJson, defaultSearchLimit);
               });
             } else {
               this.setState({ iconInitialClass: "sc-search-icon-initial" });
@@ -474,17 +561,23 @@ class Search extends Component {
               <MoreOptions numResults={this.state.searchResults.length} onMoreOptionsClick={this.onMoreOptionsClick} showMore={this.state.showMore}></MoreOptions>
             </div>
           )}
-          renderItem={(item, isHighlighted) => (
-            <div className={isHighlighted ? "sc-search-item-highlighted" : "sc-search-item"} key={helpers.getUID()}>
-              <div className="sc-search-item-left">
-                <img src={require("./images/map-marker-light-blue.png")} alt="blue pin" />
+          renderItem={(item, isHighlighted) => {
+            let type = "Unknown";
+            if (item.type === "Map Layer") type = item.layerGroup;
+            else if (item.type === "Tool" || item.type === "Theme") type = "";
+            else type = item.municipality;
+            return (
+              <div className={isHighlighted ? "sc-search-item-highlighted" : "sc-search-item"} key={helpers.getUID()}>
+                <div className="sc-search-item-left">
+                  <img src={images[item.imageName]} alt="blue pin" />
+                </div>
+                <div className="sc-search-item-content">
+                  <Highlighter highlightClassName="sc-search-highlight-words" searchWords={[this.state.value]} textToHighlight={item.name} />
+                  <div className="sc-search-item-sub-content">{type === "" ? item.type : " - " + type + " (" + item.type + ")"}</div>
+                </div>
               </div>
-              <div className="sc-search-item-content">
-                <Highlighter highlightClassName="sc-search-highlight-words" searchWords={[this.state.value]} textToHighlight={item.name} />
-                <div className="sc-search-item-sub-content">{" - " + item.municipality + " (" + item.type + ")"}</div>
-              </div>
-            </div>
-          )}
+            );
+          }}
         />
         <img className={this.state.iconInitialClass} src={images["magnify.png"]} alt="search" />
         <img className={this.state.iconActiveClass} src={images["clear.png"]} alt="clear" onClick={this.cleanup} />
