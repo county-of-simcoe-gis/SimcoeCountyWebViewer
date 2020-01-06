@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import * as helpers from "../helpers/helpers";
+import mainConfig from "../config.json";
 import * as myMapsHelpers from "../sidebar/components/mymaps/myMapsHelpers";
 import Autocomplete from "react-autocomplete";
 import "./Search.css";
@@ -12,14 +13,13 @@ import { CopyToClipboard } from "react-copy-to-clipboard";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import Select from "react-select";
-import * as config from "../config.json";
 import { KeyboardPan, KeyboardZoom } from "ol/interaction.js";
 
 // URLS
+const apiUrl = mainConfig.apiUrl
 const googleDirectionsURL = (lat, long) => `https://www.google.com/maps?saddr=My+Location&daddr=${lat},${long}`;
-const apiUrl = config.apiUrl;
-const searchURL = (apiUrl, searchText, type, muni, limit) => `${apiUrl}/async/search/?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
-const searchInfoURL = (apiUrl, locationID) => `${apiUrl}/searchById/${locationID}`;
+const searchURL = (searchText, type, muni, limit) => `${apiUrl}async/search/?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
+const searchInfoURL = locationID => `${apiUrl}searchById/${locationID}`;
 const searchTypesURL = apiUrl => `${apiUrl}/getSearchTypes`;
 
 // DEFAULT SEARCH LIMIT
@@ -432,7 +432,7 @@ class Search extends Component {
     // TOOLS
     if (selectedType === "All" || selectedType === "Tool") {
       let tools = [];
-      config.sidebarToolComponents.forEach(tool => {
+      mainConfig.sidebarToolComponents.forEach(tool => {
         if (tool.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
           tools.push({ name: helpers.replaceAllInString(tool.name, "_", " "), type: "Tool", imageName: "tools.png" });
         }
@@ -443,7 +443,7 @@ class Search extends Component {
     // THEMES
     if (selectedType === "All" || selectedType === "Theme") {
       let themes = [];
-      config.sidebarThemeComponents.forEach(theme => {
+      mainConfig.sidebarThemeComponents.forEach(theme => {
         if (theme.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
           themes.push({ name: helpers.replaceAllInString(theme.name, "_", " "), type: "Theme", imageName: "themes.png" });
         }

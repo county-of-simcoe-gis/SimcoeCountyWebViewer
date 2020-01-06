@@ -3,6 +3,7 @@ import "./MyMapsBuffer.css";
 import ColorPicker from "./ColorPicker";
 import { CompactPicker } from "react-color";
 import * as helpers from "../../../helpers/helpers";
+import mainConfig from "../../../config.json";
 import Feature from "ol/Feature";
 import { Stroke, Style, Fill, Circle as CircleStyle } from "ol/style";
 import VectorLayer from "ol/layer/Vector";
@@ -28,7 +29,7 @@ class MyMapsBuffer extends Component {
       extent: [194772.8107, 2657478.7094, 805227.1893, 9217519.4415]
     });
 
-    this.webAPIUrl = "https://opengis.simcoe.ca/api/postBufferGeometry/";
+    this.webAPIUrl = mainConfig.apiUrl + "postBufferGeometry/";
 
     this.state = {
       color: { r: 85, g: 243, b: 30, a: 1 },
