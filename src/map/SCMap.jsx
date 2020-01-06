@@ -25,11 +25,12 @@ import FloatingMenu, { FloatingMenuItem } from "../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
 import Portal from "../helpers/Portal.jsx";
 import * as helpers from "../helpers/helpers";
+import mainConfig from "../config.json";
 import Identify from "./Identify";
 
 const scaleLineControl = new ScaleLine();
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
-  `https://opengis.simcoe.ca/feedback/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True`;
+  `${mainConfig.feedbackUrl}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True`;
 
 class SCMap extends Component {
   constructor(props) {
@@ -46,7 +47,7 @@ class SCMap extends Component {
   }
 
   componentDidMount() {
-    const centerCoords = [-8875141.45, 5543492.45];
+    const centerCoords = mainConfig.centerCoords;
     const resolutions = [
       305.74811314055756,
       152.87405657041106,
@@ -67,8 +68,8 @@ class SCMap extends Component {
       target: "map",
       view: new View({
         center: centerCoords,
-        zoom: 10,
-        maxZoom: 20
+        zoom: mainConfig.defaultZoom,
+        maxZoom: mainConfig.maxZoom
         //resolutions: resolutions
       }),
       interactions: defaultInteractions({ keyboard: true, altShiftDragRotate: false, pinchRotate: false, mouseWheelZoom: false }).extend([
@@ -165,7 +166,7 @@ class SCMap extends Component {
     if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
       // If Internet Explorer, return version number
       this.setState({ isIE: true });
-      helpers.showURLWindow("https://opengis.simcoe.ca/public/ieWarning.html");
+      helpers.showURLWindow(mainConfig.ieWarningUrl);
     }
   }
 

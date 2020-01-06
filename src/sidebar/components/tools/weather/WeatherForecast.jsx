@@ -1,8 +1,9 @@
 import React, { Component } from "react";
 import "./WeatherForecast.css";
 import * as helpers from "../../../../helpers/helpers";
+import mainConfig from "../../../../config.json";
 import config from "./config.json";
-const urlTemplate = cityCode => `https://opengis.simcoe.ca/api/getCityWeather/${cityCode}`;
+const urlTemplate = cityCode => `${mainConfig.apiUrl}getCityWeather/${cityCode}`;
 
 class WeatherForecast extends Component {
   constructor(props) {

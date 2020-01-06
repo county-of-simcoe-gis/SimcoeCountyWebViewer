@@ -3,6 +3,7 @@ import Select from "react-select";
 import Collapsible from 'react-collapsible';
 import PanelComponent from "../../../PanelComponent";
 import * as helpers from "../../../../helpers/helpers";
+import mainConfig from "../../../../config.json";
 import * as printRequest from "./printRequest/printRequest";
 import "./Print.css";
 
@@ -135,7 +136,7 @@ class Print extends Component {
     const outputFormat = printData.outputFormat;
     // console.log(JSON.stringify(printData)); 
     let interval = 5000;
-    let origin = "https://opengis.simcoe.ca";
+    let origin = mainConfig.originUrl;
     //let testOrigin = 'http://localhost:8080'
     let encodedPrintRequest = encodeURIComponent(JSON.stringify(printData))
     let url = `${origin}/print/print/${printAppId}/report.${outputFormat}`;
