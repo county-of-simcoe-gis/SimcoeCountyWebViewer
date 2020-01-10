@@ -62,17 +62,33 @@ class TOC extends Component {
   }
 
   refreshTOC = callback => {
-    const groupInfo = TOCHelpers.getGroups();
-    this.setState(
-      {
-        layerGroups: groupInfo[0],
-        selectedGroup: groupInfo[1],
-        defaultGroup: groupInfo[1]
-      },
-      () => {
-        if (callback !== undefined) callback();
+      const geoserverUrl= helpers.getURLParameter("GEO_URL");
+      if (geoserverUrl !== undefined && geoserverUrl !== null){
+        TOCHelpers.getGroupsGC( geoserverUrl + "/ows?service=wms&version=1.3.0&request=GetCapabilities",result => {
+          const groupInfo = result;
+          this.setState(
+            {
+              layerGroups: groupInfo[0],
+              selectedGroup: groupInfo[1],
+              defaultGroup: groupInfo[1]
+            },
+            () => {
+              if (callback !== undefined) callback();
+            }
+          );
+        });
+      } else {
+      const groupInfo = TOCHelpers.getGroups();
+        this.setState(
+          {
+            layerGroups: groupInfo[0],
+            selectedGroup: groupInfo[1],
+            defaultGroup: groupInfo[1]
+          },
+          () => {
+            if (callback !== undefined) callback();
+          });
       }
-    );
   };
 
   onGroupDropDownChange = selectedGroup => {
