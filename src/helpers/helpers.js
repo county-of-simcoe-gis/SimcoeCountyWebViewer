@@ -243,7 +243,7 @@ export function getURLParameter(parameterName, decoded = true) {
   else return encodeURIComponent(param);
 }
 
-// HTTP GET
+// HTTP GET (NO WAITING)
 export function httpGetText(url, callback) {
   return fetch(url)
     .then(response => response.text())
@@ -255,6 +255,25 @@ export function httpGetText(url, callback) {
       console.error(error);
     });
 }
+
+// HTTP GET WAIT
+export async function httpGetTextWait(url, callback) {
+  let data = await fetch(url)
+  .then(response => {
+    const resp = response.text();
+    //console.log(resp);
+    return resp;
+  })
+  .catch(err => {
+    console.log("Error: ", err);
+  });
+  if (callback !== undefined) {
+    //console.log(data);
+    callback(data);
+  }
+  return data;
+}
+
 
 // GET JSON (NO WAITING)
 export function getJSON(url, callback) {
@@ -737,6 +756,11 @@ export function getGeometryCenter(geometry, callback) {
     const olGeo = getGeometryFromGeoJSON(result.geojson);
     callback(olGeo);
   });
+}
+export async function asyncForEach(array, callback) {
+  for (let index = 0; index < array.length; index++) {
+    await callback(array[index], index, array);
+  }
 }
 
 export function replaceAllInString(str, find, replace) {
