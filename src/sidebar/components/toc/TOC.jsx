@@ -33,16 +33,16 @@ class TOC extends Component {
     window.emitter.addListener("layersLoaded", numLayers => this.onLayersLoad(numLayers));
 
     // LISTEN FOR SEARCH RESULT
-    window.emitter.addListener("activeTocLayer", layerItem => this.onActivateLayer(layerItem));
+    window.emitter.addListener("activeTocLayerGroup", (groupName, callback) => this.onActivateLayer(groupName, callback));
   }
 
-  onActivateLayer = layerItem => {
+  onActivateLayer = (groupName, callback) => {
     window.emitter.emit("setSidebarVisiblity", "OPEN");
     window.emitter.emit("activateTab", "layers");
 
     this.state.layerGroups.forEach(layerGroup => {
-      if (layerGroup.label === layerItem.layerGroup) {
-        this.setState({ selectedGroup: layerGroup });
+      if (layerGroup.label === groupName) {
+        this.setState({ selectedGroup: layerGroup }, () => callback());
         return;
       }
     });

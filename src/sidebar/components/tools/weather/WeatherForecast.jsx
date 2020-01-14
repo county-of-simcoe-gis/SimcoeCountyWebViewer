@@ -82,7 +82,7 @@ const Forecast = props => {
               <Warning key={helpers.getUID()} info={event} url={warningUrl}></Warning>
             ))}
           </div>
-          <div className="sc-tool-weather-forecast-days-container">
+          <div className={warningEvents.length === 2 ? "sc-tool-weather-forecast-days-container two-warnings" : "sc-tool-weather-forecast-days-container"}>
             <div className="sc-tool-weather-forecast-day-container" title={forecast1.textSummary[0]}>
               <div className="sc-tool-weather-forecast-day-details">
                 <label>{forecast1.period[0].$.textForecastName}</label>

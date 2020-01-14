@@ -96,10 +96,20 @@ class WeatherRadar extends Component {
     const lastImage = this.radarImages[this.radarImages.length - 1];
     const endDate = lastImage.get("radarDate");
     this.setState({ startDate: startDate, endDate: endDate, radarDateSliderValue: endDate }, () => {
-      window.map.once("postrender", event => {
-        this.updateRadarVisibility();
-        this.setState({ isLoading: false });
-      });
+      window.map.once(
+        "postrender",
+        event => {
+          this.updateRadarVisibility();
+          this.setState({ isLoading: false });
+        },
+        () => {
+          //const steps = Math.round((this.state.endDate - this.state.startDate) / (1000 * 60) / 10);
+          //var stepValue = this.state.startDate;
+          this.setState({ radarDateSliderValue: this.state.endDate }, () => {
+            this.updateRadarVisibility();
+          });
+        }
+      );
     });
   };
 
@@ -129,6 +139,7 @@ class WeatherRadar extends Component {
 
   // SLIDER CHANGE EVENT
   onRadarDateSliderChange = value => {
+    console.log(value);
     this.setState(prevState => ({ radarDateSliderValue: value }));
     this.updateRadarVisibility();
   };
