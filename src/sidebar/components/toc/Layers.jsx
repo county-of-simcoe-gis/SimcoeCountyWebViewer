@@ -43,12 +43,9 @@ class Layers extends Component {
     layersCopy.forEach(layer => {
       if (helpers.replaceAllInString(layer.name, "_", " ") === layerItem.name) {
         layer.visible = true;
-        layer.layer.setVisible(true);
-
-        //document.getElementById(layer.elementId).scrollIntoView();
         document.getElementById(this.virtualId).scrollTop = 0;
+
         var i = 0;
-        // var isScrolling = false;
         var elemFound = false;
         for (var i = 1; i <= 100; i++) {
           if (elemFound) return;
@@ -58,14 +55,16 @@ class Layers extends Component {
               if (elemFound) return;
 
               const elem = document.getElementById(layer.elementId);
+              console.log(elem);
               if (elem !== null) {
                 elemFound = true;
                 const topPos = elem.offsetTop;
-                document.getElementById(this.virtualId).scrollTop = topPos;
+                document.getElementById(this.virtualId).scrollTop = topPos + 1;
+                setTimeout(() => {
+                  document.getElementById(this.virtualId).scrollTop = topPos;
+                }, 50);
               } else {
-                // isScrolling = true;
                 document.getElementById(this.virtualId).scrollTop += i * 10;
-                // isScrolling = false;
               }
             }, i * 100);
           })(i);
@@ -517,6 +516,7 @@ class Layers extends Component {
                 searchText={this.props.searchText}
                 onLayerOptionsClick={this.onLayerOptionsClick}
                 sortAlpha={this.props.sortAlpha}
+                //scrollToIndex={50}
               />
             );
           }}
