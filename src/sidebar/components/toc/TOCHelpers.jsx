@@ -10,16 +10,20 @@ const storageKey = "layers";
 
 
 // GET GROUPS FROM GET CAPABILITIES
-export async function getGroupsGC(url, callback) {
+export async function getGroupsGC(url,layerDepth, callback) {
   let defaultGroup = null;
   let isDefault = true;
   let groups = [];
+  
   helpers.httpGetText(url, result => {
     var parser = new xml2js.Parser();
 
     // PARSE TO JSON
     parser.parseString(result, function(err, result) {
-      const groupLayerList = result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer;
+      let groupLayerList = layerDepth === 1 ? 
+                            result.WMS_Capabilities.Capability[0].Layer[0].Layer : 
+                              layerDepth === 2 ? result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer :
+                                result.WMS_Capabilities.Capability[0].Layer[0].Layer ;
        groupLayerList.forEach(layerInfo => {
         if (layerInfo.Layer !== undefined){
           const groupName = layerInfo.Name[0];
@@ -49,6 +53,8 @@ export async function getGroupsGC(url, callback) {
                 layerIndex--;
               if (currentLayer.Layer === undefined ){
                   visibleLayers.push(currentLayer.Name[0]);
+                }else{
+                  buildLayers(currentLayer.Layer);
                 }
               });
             }
@@ -150,6 +156,8 @@ export function getBase64FromImageUrl(url, callback) {
   img.src = url;
 }
 
+
+
 export async function buildLayerByGroup(group, layer, layerIndex, callback){
   // SAVED DATA
   const savedData = helpers.getItemsFromStorage(storageKey);
@@ -159,7 +167,8 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback){
     const visibleLayers = group.visibleLayers === undefined ? [] : group.visibleLayers;
 
     const layerNameOnly = layer.Name[0].split(":")[1];
-    const layerTitle = layer.Title;
+    let layerTitle = layer.Title[0];
+    if (layerTitle === undefined) layerTitle = layerNameOnly;
     const keywords = layer.KeywordList[0].Keyword;
     const styleUrl = layer.Style[0].LegendURL[0].OnlineResource[0].$["xlink:href"];
     const serverUrl = group.fullGroupUrl.split("/geoserver/")[0] + "/geoserver";
@@ -194,8 +203,8 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback){
     window.map.addLayer(newLayer);
 
     const returnLayer = {
-        name: layerNameOnly, // FRIENDLY NAME
-        title: layerTitle,
+        name: layerTitle, // FRIENDLY NAME
+        //title: layerTitle,
         height: 30, // HEIGHT OF DOM ROW FOR AUTOSIZER
         drawIndex: layerIndex, // INDEX USED BY VIRTUAL LIST
         index: layerIndex, // INDEX USED BY VIRTUAL LIST

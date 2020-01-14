@@ -43,17 +43,19 @@ class Layers extends Component {
     const groupName = layer => {return helpers.replaceAllInString(layer.layerGroup, " ", "_");}
 
     let layersCopy = Object.assign([], this.state.allLayers[groupName(layerItem)]);
+    var i = 1;
     layersCopy.forEach(layer => {
+      i++;
       if (layerName(layer) === layerItem.name) {
         layer.visible = true;
         layer.layer.setVisible(true);
         if (layer.elementId !== undefined){
           //document.getElementById(layer.elementId).scrollIntoView();
           document.getElementById(this.virtualId).scrollTop = 0;
-          var i = 0;
+          
           // var isScrolling = false;
           var elemFound = false;
-          for (var i = 1; i <= 100; i++) {
+         
             if (elemFound) return;
             // eslint-disable-next-line
             (index => {
@@ -70,9 +72,9 @@ class Layers extends Component {
                   document.getElementById(this.virtualId).scrollTop += i * 10;
                   // isScrolling = false;
                 }
-              }, i * 100);
+              }, i*100 );
             })(i);
-          }
+          
         }
       }
     });
@@ -115,13 +117,14 @@ class Layers extends Component {
     }
 
     this.setState({ layers: undefined, allLayers: [] }, () => {
-      this.refreshLayers(this.props.group, this.props.sortAlpha);
+      this.refreshLayers(this.props.group, this.props.sortAlpha,this.props.allGroups);
     });
   };
 
-  refreshLayers = (group, sortAlpha) => {
+  refreshLayers = (group, sortAlpha, allGroups) => {
     let layers = [];
     layers = this.state.allLayers[group.value];
+    
     if (layers === undefined) {
       layers = group.layers;
       if (layers !== undefined) {
@@ -143,7 +146,7 @@ class Layers extends Component {
             }
           });
         }
-        fetchGroups(this.props.allGroups);
+        fetchGroups(allGroups);
         this.setState({ layers: layers, allLayers: allLayers }, () => {
           this.sortLayers(this.state.layers, sortAlpha);
         });
@@ -176,7 +179,7 @@ class Layers extends Component {
             }
           });
         };
-        fetchGroups(this.props.allGroups);
+        fetchGroups(allGroups);
       });
     });
     
@@ -227,34 +230,37 @@ class Layers extends Component {
 
   // REFRESH IF PROPS FROM PARENT HAVE CHANGED - GROUPS DROP DOWN CHANGE.
   componentWillReceiveProps(nextProps) {
+    let allGroups = [];
+    let allLayers = this.state.allLayers;
+    const nextLayers = allLayers[nextProps.group.value];
     if (nextProps.sortAlpha !== this.props.sortAlpha) {
       this.sortLayers(this.state.layers, nextProps.sortAlpha);
     }
-
+   
     if (nextProps.group.value !== this.props.group.value) {
       const layers = this.state.allLayers[this.props.group.value];
       if (layers !== undefined) {
         // DISABLE LAYER VISIBILITY FROM PREVIOUS GROUP
         TOCHelpers.disableLayersVisiblity(layers, newLayers => {
-          let allLayers = this.state.allLayers;
+          
           allLayers[this.props.group.value] = newLayers;
           this.setState({ allLayers: allLayers }, () => {
             // ENABLE LAYER VISIBILITY FROM PREVIOUS GROUP
-            const nextLayers = this.state.allLayers[nextProps.group.value];
+           
             if (nextLayers !== undefined) {
               TOCHelpers.enableLayersVisiblity(nextLayers, newLayers => {
                 let allLayers = this.state.allLayers;
                 allLayers[nextProps.group.value] = newLayers;
-                this.setState({ layers: newLayers, allLayers: allLayers }, () => {
-                  this.refreshLayers(nextProps.group, nextProps.sortAlpha);
+                this.setState({ layers: newLayers, allLayers: allLayers, allGroups:allGroups }, () => {
+                  this.refreshLayers(nextProps.group, nextProps.sortAlpha,nextProps.allGroups);
                 });
               });
             } else {
-              this.refreshLayers(nextProps.group, nextProps.sortAlpha);
+              this.refreshLayers(nextProps.group, nextProps.sortAlpha,nextProps.allGroups);
             }
           });
         });
-      } else this.refreshLayers(nextProps.group, nextProps.sortAlpha);
+      } else this.refreshLayers(nextProps.group, nextProps.sortAlpha,nextProps.allGroups);
     }
   }
 
