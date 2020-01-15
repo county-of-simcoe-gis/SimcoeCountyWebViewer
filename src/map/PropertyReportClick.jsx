@@ -198,17 +198,47 @@ class PropertyReportClick extends Component {
 
     rows.push(<InfoRow key={helpers.getUID()} label={"Pointer Coordinates"} value={"Lat: " + Math.round(coords[1] * 10000) / 10000 + "  Long: " + Math.round(coords[0] * 10000) / 10000} />);
 
-    rows.push(
-      <button key={helpers.getUID()} id={helpers.getUID()} className="sc-button sc-property-report-click-more-info" onClick={this.onMoreInfoClick}>
-        More Information
-      </button>
-    );
-    rows.push(
-      <button key={helpers.getUID()} id={helpers.getUID()} className="sc-button sc-property-report-click-close" onClick={this.onCloseClick}>
-        Close
-      </button>
-    );
-    return rows;
+    // rows.push(
+    //   <button key={helpers.getUID()} id={helpers.getUID()} className="sc-button sc-property-report-click-more-info" onClick={this.onMoreInfoClick}>
+    //     More Information
+    //   </button>
+    // );
+    // rows.push(
+    //   <button key={helpers.getUID()} id={helpers.getUID()} className="sc-button sc-property-report-click-close" onClick={this.onCloseClick}>
+    //     Close
+    //   </button>
+    // );
+    // return (
+    //   <div className="sc-property-report-top-container">
+    //     {rows}
+
+    //     <button key={helpers.getUID()} id={helpers.getUID()} className="sc-button sc-property-report-click-more-info" onClick={this.onMoreInfoClick}>
+    //       More Information
+    //     </button>
+
+    //     <button key={helpers.getUID()} id={helpers.getUID()} className="sc-button sc-property-report-click-close" onClick={this.onCloseClick}>
+    //       Close
+    //     </button>
+    //   </div>
+    // );
+
+    const PropertyReportContent = props => {
+      return (
+        <div>
+          <div className="sc-property-report-top-container">{rows}</div>
+
+          <button key={helpers.getUID()} id={helpers.getUID()} className="sc-button sc-property-report-click-more-info" onClick={this.onMoreInfoClick}>
+            More Information
+          </button>
+
+          <button key={helpers.getUID()} id={helpers.getUID()} className="sc-button sc-property-report-click-close" onClick={this.onCloseClick}>
+            Close
+          </button>
+        </div>
+      );
+    };
+
+    return <PropertyReportContent></PropertyReportContent>;
   };
 
   showPropertyWindow = (wmsURL, clickEvt = null) => {
