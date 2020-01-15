@@ -1,8 +1,17 @@
 .sc-property-report-click-more-info {
-  width: 172px;
+  width: 150px;
   margin-right: 5px;
   margin-top: 5px;
 }
 .sc-property-report-click-close {
   width: 80px;
+}
+
+.sc-property-report-top-container {
+  position: relative;
+  top: 0px;
+  bottom: 0px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 200px;
 }

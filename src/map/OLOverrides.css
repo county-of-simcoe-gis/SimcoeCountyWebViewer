@@ -61,8 +61,7 @@
   background-color: #fff !important;
   max-height: 240px !important;
   min-height: 50px !important;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 .ol-popup-closer {
