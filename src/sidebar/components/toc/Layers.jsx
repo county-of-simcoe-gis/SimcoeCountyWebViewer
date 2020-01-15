@@ -55,7 +55,6 @@ class Layers extends Component {
               if (elemFound) return;
 
               const elem = document.getElementById(layer.elementId);
-              console.log(elem);
               if (elem !== null) {
                 elemFound = true;
                 const topPos = elem.offsetTop;
