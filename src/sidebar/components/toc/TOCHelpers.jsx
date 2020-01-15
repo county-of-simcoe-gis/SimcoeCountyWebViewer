@@ -12,7 +12,7 @@ const storageKey = "layers";
 // GET GROUPS FROM GET CAPABILITIES
 export async function getGroupsGC(url,layerDepth, callback) {
   let defaultGroup = null;
-  let isDefault = true;
+  let isDefault = false;
   let groups = [];
   
   helpers.httpGetText(url, result => {
@@ -24,13 +24,30 @@ export async function getGroupsGC(url,layerDepth, callback) {
                             result.WMS_Capabilities.Capability[0].Layer[0].Layer : 
                               layerDepth === 2 ? result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer :
                                 result.WMS_Capabilities.Capability[0].Layer[0].Layer ;
+      let parentGroup = layerDepth === 1 ? 
+                              result.WMS_Capabilities.Capability[0].Layer[0] : 
+                                layerDepth === 2 ? result.WMS_Capabilities.Capability[0].Layer[0].Layer[0] :
+                                  result.WMS_Capabilities.Capability[0].Layer[0];
+      let parentKeywords = [];
+      if (parentGroup.KeywordList[0] !== undefined) parentKeywords = parentGroup.KeywordList[0].Keyword;
+      let mapCenter = [];
+      if (parentKeywords.length > 0) mapCenter = _getCenterCoordinates(parentKeywords);
+      let mapZoom = 0;
+      if (parentKeywords.length > 0) mapZoom = _getZoom(parentKeywords);
+      let defaultGroupName = "";
+      if (parentKeywords.length > 0) defaultGroupName = _getDefaultGroup(parentKeywords);
+      if (mapCenter.length > 0 && mapZoom > 0) window.map.getView().animate({ center: mapCenter, zoom: mapZoom });                         
        groupLayerList.forEach(layerInfo => {
         if (layerInfo.Layer !== undefined){
           const groupName = layerInfo.Name[0];
+          if (groupName === defaultGroupName) isDefault = true;
           const groupDisplayName = layerInfo.Title[0];
           const groupUrl =   url.split("/geoserver/")[0] + "/geoserver/" + groupName + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
           const fullGroupUrl = url.split("/geoserver/")[0] + "/geoserver/" + groupName + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
+          let keywords = [];
+          if (layerInfo.KeywordList[0] !== undefined) keywords = layerInfo.KeywordList[0].Keyword;
           let visibleLayers = [];
+          if (keywords !== undefined) visibleLayers = _getVisibleLayers(keywords);
           let layerList = [];
           if(layerInfo.Layer !== undefined){
             const groupLayerList = layerInfo.Layer;
@@ -74,7 +91,7 @@ export async function getGroupsGC(url,layerDepth, callback) {
           groups.push(groupObj);
           if (isDefault) {
             defaultGroup = groupObj;
-            isDefault= false;
+            isDefault = false;
           }
         }
         
@@ -82,6 +99,7 @@ export async function getGroupsGC(url,layerDepth, callback) {
         }
       });
     });
+    if (defaultGroup===undefined) defaultGroup = groups[0];
     callback([groups, defaultGroup]);
   });
 }
@@ -196,7 +214,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback){
 
     // LAYER PROPS
     let newLayer = helpers.getImageWMSLayer(serverUrl + "/wms", layer.Name[0]);
-    newLayer.setVisible(layerVisible);
+    newLayer.setVisible(!group.defaultGroup ? false : layerVisible);
     newLayer.setOpacity(opacity);
     newLayer.setProperties({ name: layerNameOnly, displayName: displayName });
     newLayer.setZIndex(layerIndex);
@@ -257,6 +275,17 @@ export function getLayerListByGroup(group, callback) {
   });
 }
 
+function _getDefaultGroup(keywords) {
+  if (keywords === undefined)  return false;
+  const defaultKeyword = keywords.find(function(item) {
+    return item.indexOf("DEFAULT_GROUP") !== -1;
+  });
+  if (defaultKeyword !== undefined) {
+    const val = defaultKeyword.split("=")[1];
+    return val;
+  } else return "";
+}
+
 function _isLiveLayer(keywords) {
   if (keywords === undefined)  return false;
   const liveLayerKeyword = keywords.find(function(item) {
@@ -275,6 +304,39 @@ function _getDisplayName(keywords) {
     const val = displayNameKeyword.split("=")[1];
     return val;
   } else return "";
+}
+
+function _getVisibleLayers(keywords) {
+  if (keywords === undefined)  return "";
+  const visibleLayersKeyword = keywords.find(function(item) {
+    return item.indexOf("VISIBLE_LAYERS") !== -1;
+  });
+  if (visibleLayersKeyword !== undefined) {
+    const val = visibleLayersKeyword.split("=")[1];
+    return val.split(",");
+  } else return [];
+}
+
+function _getCenterCoordinates(keywords) {
+  if (keywords === undefined)  return "";
+  const centerCoordinatesKeyword = keywords.find(function(item) {
+    return item.indexOf("MAP_CENTER") !== -1;
+  });
+  if (centerCoordinatesKeyword !== undefined) {
+    const val = centerCoordinatesKeyword.split("=")[1];
+    return val.split(",");
+  } else return [];
+}
+
+function _getZoom(keywords) {
+  if (keywords === undefined) return 1;
+  const zoomKeyword = keywords.find(function(item) {
+    return item.indexOf("MAP_ZOOM") !== -1;
+  });
+  if (zoomKeyword !== undefined) {
+    const val = zoomKeyword.split("=")[1];
+    return parseInt(val);
+  } else return 0;
 }
 
 function _getOpacity(keywords) {
