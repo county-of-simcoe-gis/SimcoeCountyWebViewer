@@ -48,33 +48,30 @@ class Layers extends Component {
       i++;
       if (layerName(layer) === layerItem.name) {
         layer.visible = true;
-        layer.layer.setVisible(true);
-        if (layer.elementId !== undefined){
-          //document.getElementById(layer.elementId).scrollIntoView();
-          document.getElementById(this.virtualId).scrollTop = 0;
-          
-          // var isScrolling = false;
-          var elemFound = false;
-         
-            if (elemFound) return;
-            // eslint-disable-next-line
-            (index => {
-              setTimeout(() => {
-                if (elemFound) return;
+        document.getElementById(this.virtualId).scrollTop = 0;
 
-                const elem = document.getElementById(layer.elementId);
-                if (elem !== null) {
-                  elemFound = true;
-                  const topPos = elem.offsetTop;
+        var i = 0;
+        var elemFound = false;
+        for (var i = 1; i <= 100; i++) {
+          if (elemFound) return;
+          // eslint-disable-next-line
+          (index => {
+            setTimeout(() => {
+              if (elemFound) return;
+
+              const elem = document.getElementById(layer.elementId);
+              if (elem !== null) {
+                elemFound = true;
+                const topPos = elem.offsetTop;
+                document.getElementById(this.virtualId).scrollTop = topPos + 1;
+                setTimeout(() => {
                   document.getElementById(this.virtualId).scrollTop = topPos;
-                } else {
-                  // isScrolling = true;
-                  document.getElementById(this.virtualId).scrollTop += i * 10;
-                  // isScrolling = false;
-                }
-              }, i*100 );
-            })(i);
-          
+                }, 50);
+              } else {
+                document.getElementById(this.virtualId).scrollTop += i * 10;
+              }
+            }, i * 100);
+          })(i);
         }
       }
     });
@@ -524,6 +521,7 @@ class Layers extends Component {
                 searchText={this.props.searchText}
                 onLayerOptionsClick={this.onLayerOptionsClick}
                 sortAlpha={this.props.sortAlpha}
+                //scrollToIndex={50}
               />
             );
           }}

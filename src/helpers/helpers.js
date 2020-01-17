@@ -628,7 +628,7 @@ function _getText(feature, fieldName = "name", maxScale, type = "normal", placem
 function stringDivider(str, width, spaceReplacer) {
   if (str.length > width) {
     var p = width;
-    while (p > 0 && (str[p] !== " " && str[p] !== "-")) {
+    while (p > 0 && str[p] !== " " && str[p] !== "-") {
       p--;
     }
     if (p > 0) {

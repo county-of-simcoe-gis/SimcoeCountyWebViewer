@@ -23,6 +23,9 @@
   display: inline-table;
 }
 
+.sc-tool-weather-forecast-days-container.two-warnings {
+  margin-top: 30px;
+}
 .sc-tool-weather-forecast-day-details {
   display: inline-grid;
   text-align: center;
