@@ -68,6 +68,7 @@ class VirtualLayers extends Component {
         width={mobileAdjustment !== -1 ? 360 - mobileAdjustment : 360}
         height={height}
         style={{ outline: "none" }}
+        //scrollToIndex={50}
       />
     );
   }

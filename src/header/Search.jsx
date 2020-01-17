@@ -317,7 +317,9 @@ class Search extends Component {
   // WHEN USER SELECTS ITEM
   onItemSelect(value, item) {
     if (item.type === "Map Layer") {
-      window.emitter.emit("activeTocLayer", item);
+      window.emitter.emit("activeTocLayerGroup", item.layerGroup, () => {
+        window.emitter.emit("activeTocLayer", item);
+      });
       return;
     }
 
@@ -422,7 +424,8 @@ class Search extends Component {
         const layerItems = row[1];
         layerItems.forEach(layer => {
           if (layer.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
-            layers.push({ name: helpers.replaceAllInString(layer.name, "_", " "), type: "Map Layer", layerGroup: groupName, imageName: "layers.png" });
+            //console.log(layer);
+            layers.push({ name: helpers.replaceAllInString(layer.name, "_", " "), type: "Map Layer", layerGroup: groupName, imageName: "layers.png", index: layer.index });
           }
         });
       });
