@@ -14,6 +14,7 @@ export async function getGroupsGC(url,layerDepth, callback) {
   let defaultGroup = null;
   let isDefault = false;
   let groups = [];
+  const remove_underscore = name => {return helpers.replaceAllInString(name, "_", " ");}
   
   helpers.httpGetText(url, result => {
     var parser = new xml2js.Parser();
@@ -55,11 +56,11 @@ export async function getGroupsGC(url,layerDepth, callback) {
             let layerIndex = groupLayerList.length + layerIndexStart;
             const tmpGroupObj = {
               value: groupName,
-              label: groupDisplayName,
+              label: remove_underscore(groupDisplayName),
               url: groupUrl,
               defaultGroup: isDefault,
               visibleLayers:visibleLayers,
-              fullGroupUrl: fullGroupUrl
+              wmsGroupUrl: fullGroupUrl
             };
           
             const buildLayers = (layers) => {
@@ -80,11 +81,11 @@ export async function getGroupsGC(url,layerDepth, callback) {
 
         const groupObj = {
               value: groupName,
-              label: groupDisplayName,
+              label: remove_underscore(groupDisplayName),
               url: groupUrl,
               defaultGroup: isDefault,
               visibleLayers:visibleLayers,
-              fullGroupUrl: fullGroupUrl,
+              wmsGroupUrl: fullGroupUrl,
               layers: layerList
             };
         if (groupObj.layers.length >=1){
@@ -141,10 +142,6 @@ export function getBasicLayers(group, callback) {
       callback(layerList);
     });
   }
-
-  // await this.getBasicLayerListByGroup(group, group.dataStore, layerList => {
-  //   callback(layerList);
-  // });
 }
 
 export function getFullInfoLayers(layers, callback) {
@@ -199,7 +196,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback){
     if (layerTitle === undefined) layerTitle = layerNameOnly;
     const keywords = layer.KeywordList[0].Keyword;
     const styleUrl = layer.Style[0].LegendURL[0].OnlineResource[0].$["xlink:href"];
-    const serverUrl = group.fullGroupUrl.split("/geoserver/")[0] + "/geoserver";
+    const serverUrl = group.wmsGroupUrl.split("/geoserver/")[0] + "/geoserver";
     const wfsUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&cql_filter=`;
     const wfsUrl = wfsUrlTemplate(serverUrl, layer.Name[0]);
 
@@ -211,7 +208,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback){
 
     //DISPLAY NAME
     let displayName = _getDisplayName(keywords);
-
+    if (displayName==="") displayName =layerTitle;
     // OPACITY
     let opacity = _getOpacity(keywords);
 
@@ -226,13 +223,13 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback){
     let newLayer = helpers.getImageWMSLayer(serverUrl + "/wms", layer.Name[0]);
     newLayer.setVisible(!group.defaultGroup ? false : layerVisible);
     newLayer.setOpacity(opacity);
-    newLayer.setProperties({ name: layerNameOnly, displayName: displayName });
+    newLayer.setProperties({ name: layerTitle, displayName: displayName });
     newLayer.setZIndex(layerIndex);
     window.map.addLayer(newLayer);
 
     const returnLayer = {
-        name: layerTitle, // FRIENDLY NAME
-        //title: layerTitle,
+        name: displayName, // FRIENDLY NAME
+        title: layerTitle,
         height: 30, // HEIGHT OF DOM ROW FOR AUTOSIZER
         drawIndex: layerIndex, // INDEX USED BY VIRTUAL LIST
         index: layerIndex, // INDEX USED BY VIRTUAL LIST
@@ -251,6 +248,36 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback){
       callback(returnLayer);
   }
  
+}
+
+
+export function getLayerListByGroupWMS(group, callback) {
+  // SAVED DATA
+  const savedData = helpers.getItemsFromStorage(storageKey);
+  const savedLayers = savedData[group.value];
+
+  // GET XML
+  helpers.httpGetText(group.wmsGroupUrl, result => {
+    var parser = new xml2js.Parser();
+
+    // PARSE TO JSON
+    parser.parseString(result, function(err, result) {
+      const groupLayerList = result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer;
+      const visibleLayers = group.visibleLayers === undefined ? [] : group.visibleLayers;
+      let layerIndex = groupLayerList.length + layerIndexStart;
+      let layerList = [];
+      groupLayerList.forEach(layerInfo => {
+        if (layerInfo.Layer === undefined){
+          buildLayerByGroup(group,layerInfo,layerIndex,result => {
+            layerList.push(result);
+          });
+          layerIndex--;
+        }
+      });
+
+      callback(layerList);
+    });
+  });
 }
 
 export function getLayerListByGroup(group, callback) {

@@ -38,11 +38,12 @@ class TOC extends Component {
   }
 
   onActivateLayer = (groupName, callback) => {
+    const remove_underscore = name => {return helpers.replaceAllInString(name, "_", " ");}
     window.emitter.emit("setSidebarVisiblity", "OPEN");
     window.emitter.emit("activateTab", "layers");
 
     this.state.layerGroups.forEach(layerGroup => {
-      if (layerGroup.label === groupName) {
+      if (remove_underscore(layerGroup.value) === groupName) {
         this.setState({ selectedGroup: layerGroup }, () => callback());
         return;
       }

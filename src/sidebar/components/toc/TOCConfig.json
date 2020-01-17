@@ -1,7 +1,9 @@
 {
+  "geoserverLayerGroupsUrl" : "https://intra.dev.regionalgis.mto.gov.on.ca/geoserver/Config_Test",
+  "geoserverLayerDepth" : 2,
   "layerInfoURL": "https://opengis.simcoe.ca/layerInfo/?URL=",
   "layerDownloadURL": "https://opengis.simcoe.ca/layerInfo/?SHOW_DOWNLOAD=1&URL=",
-  "useCustomRestUrl": true,
+  "useCustomRestUrl": false,
   "layerGroups": [
     {
       "name": "Popular",
