@@ -11,6 +11,7 @@ import { isMobile } from "react-device-detect";
 import "./TOC.css";
 import * as helpers from "../../../helpers/helpers";
 import * as TOCHelpers from "./TOCHelpers.jsx";
+import TOCConfig from "./TOCConfig.json";
 import Layers from "./Layers.jsx";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
@@ -37,11 +38,12 @@ class TOC extends Component {
   }
 
   onActivateLayer = (groupName, callback) => {
+    const remove_underscore = name => {return helpers.replaceAllInString(name, "_", " ");}
     window.emitter.emit("setSidebarVisiblity", "OPEN");
     window.emitter.emit("activateTab", "layers");
 
     this.state.layerGroups.forEach(layerGroup => {
-      if (layerGroup.label === groupName) {
+      if (remove_underscore(layerGroup.value) === groupName) {
         this.setState({ selectedGroup: layerGroup }, () => callback());
         return;
       }
@@ -62,17 +64,36 @@ class TOC extends Component {
   }
 
   refreshTOC = callback => {
-    const groupInfo = TOCHelpers.getGroups();
-    this.setState(
-      {
-        layerGroups: groupInfo[0],
-        selectedGroup: groupInfo[1],
-        defaultGroup: groupInfo[1]
-      },
-      () => {
-        if (callback !== undefined) callback();
+      let geoserverUrl= helpers.getURLParameter("GEO_URL");
+      let layerDepth = helpers.getURLParameter("depth");
+      if (geoserverUrl === null) geoserverUrl = TOCConfig.geoserverLayerGroupsUrl;
+      if (layerDepth === null) layerDepth = TOCConfig.geoserverLayerDepth;
+      if (geoserverUrl !== undefined && geoserverUrl !== null){
+        TOCHelpers.getGroupsGC( geoserverUrl + "/ows?service=wms&version=1.3.0&request=GetCapabilities",layerDepth ,result => {
+          const groupInfo = result;
+          this.setState(
+            {
+              layerGroups: groupInfo[0],
+              selectedGroup: groupInfo[1],
+              defaultGroup: groupInfo[1]
+            },
+            () => {
+              if (callback !== undefined) callback();
+            }
+          );
+        });
+      } else {
+      const groupInfo = TOCHelpers.getGroups();
+        this.setState(
+          {
+            layerGroups: groupInfo[0],
+            selectedGroup: groupInfo[1],
+            defaultGroup: groupInfo[1]
+          },
+          () => {
+            if (callback !== undefined) callback();
+          });
       }
-    );
   };
 
   onGroupDropDownChange = selectedGroup => {
