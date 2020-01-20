@@ -40,7 +40,7 @@ export async function getGroupsGC(url,layerDepth, callback) {
       if (mapCenter.length > 0 && mapZoom > 0) window.map.getView().animate({ center: mapCenter, zoom: mapZoom });                         
        groupLayerList.forEach(layerInfo => {
         if (layerInfo.Layer !== undefined){
-          const groupName = layerInfo.Name[0];
+          const groupName = layerInfo.Name[0].indexOf(":") !== -1 ? layerInfo.Name[0].split(":")[1] : layerInfo.Name[0];
           if (groupName === defaultGroupName) isDefault = true;
           const groupDisplayName = layerInfo.Title[0];
           const groupUrl =   url.split("/geoserver/")[0] + "/geoserver/" + groupName + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
@@ -100,7 +100,7 @@ export async function getGroupsGC(url,layerDepth, callback) {
         }
       });
     });
-    if (defaultGroup===undefined) defaultGroup = groups[0];
+    if (defaultGroup===undefined || defaultGroup===null) defaultGroup = groups[0];
     callback([groups, defaultGroup]);
   });
 }
@@ -243,7 +243,9 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback){
         opacity: opacity, // OPACITY OF LAYER
         liveLayer: liveLayer, // LIVE LAYER FLAG
         wfsUrl: wfsUrl,
-        displayName: displayName // DISPLAY NAME USED BY IDENTIFY
+        displayName: displayName, // DISPLAY NAME USED BY IDENTIFY
+        group: group.name
+
       };
       callback(returnLayer);
   }
@@ -397,7 +399,8 @@ export function getLayerListByGroupCustomRest(group, callback) {
         opacity: opacity, // OPACITY OF LAYER
         liveLayer: liveLayer, // LIVE LAYER FLAG
         wfsUrl: wfsUrl,
-        displayName: displayName // DISPLAY NAME USED BY IDENTIFY
+        displayName: displayName, // DISPLAY NAME USED BY IDENTIFY
+        group: group.name
       });
 
       layerIndex--;
