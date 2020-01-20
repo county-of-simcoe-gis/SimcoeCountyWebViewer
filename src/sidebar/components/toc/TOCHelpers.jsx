@@ -100,7 +100,7 @@ export async function getGroupsGC(url,layerDepth, callback) {
         }
       });
     });
-    if (defaultGroup===undefined) defaultGroup = groups[0];
+    if (defaultGroup===undefined || defaultGroup===null) defaultGroup = groups[0];
     callback([groups, defaultGroup]);
   });
 }
