@@ -39,10 +39,16 @@ class Layers extends Component {
   }
 
   onActivateLayer = layerItem => {
-    let layersCopy = Object.assign([], this.state.allLayers[helpers.replaceAllInString(layerItem.layerGroup, " ", "_")]);
+    const layerName = layer => {return helpers.replaceAllInString(layer.name, "_", " ");}
+    const groupName = layer => {return helpers.replaceAllInString(layer.layerGroup, " ", "_");}
+
+    let layersCopy = Object.assign([], this.state.allLayers[groupName(layerItem)]);
+
     layersCopy.forEach(layer => {
-      if (helpers.replaceAllInString(layer.name, "_", " ") === layerItem.name) {
+      if (layerName(layer) === layerItem.name) {
         layer.visible = true;
+        layer.layer.setVisible(true);
+        
         document.getElementById(this.virtualId).scrollTop = 0;
 
         var i = 0;
@@ -68,38 +74,6 @@ class Layers extends Component {
             }, i * 100);
           })(i);
         }
-
-        // setTimeout(() => {
-        //   let elemFound = false;
-        //   let isScrolling = false;
-        //   for (var i = 0; i < 10000; i += 10) {
-        //     if (elemFound) break;
-
-        //     do {
-        //       console.log("waiting...");
-        //     } while (isScrolling);
-        //     const elem = document.getElementById(layer.elementId);
-        //     if (elem !== null) {
-        //       console.log("found");
-        //       elemFound = true;
-        //       const topPos = elem.offsetTop;
-        //       console.log(topPos);
-        //       setTimeout(() => {
-        //         document.getElementById(this.virtualId).scrollTop = topPos;
-        //       }, 10);
-
-        //       if (elemFound) break;
-        //     } else {
-        //       isScrolling = true;
-        //       setTimeout(() => {
-        //         console.log("scrolling");
-        //         if (!elemFound) document.getElementById(this.virtualId).scrollTop += i;
-        //         isScrolling = false;
-        //       }, 10);
-        //     }
-        //   }
-        //   this.setState({ layers: layersCopy });
-        // }, 500);
       }
     });
   };
@@ -141,15 +115,42 @@ class Layers extends Component {
     }
 
     this.setState({ layers: undefined, allLayers: [] }, () => {
-      this.refreshLayers(this.props.group, this.props.sortAlpha);
+      this.refreshLayers(this.props.group, this.props.sortAlpha,this.props.allGroups);
     });
   };
 
-  refreshLayers = (group, sortAlpha) => {
-    let layers = this.state.allLayers[group.value];
+  refreshLayers = (group, sortAlpha, allGroups) => {
+    let layers = [];
+    layers = this.state.allLayers[group.value];
 
-    // CHECK IF WE ALREADY FETCHED THEM
+    if (layers === undefined) {
+      layers = group.layers;
     if (layers !== undefined) {
+        let allLayers = this.state.allLayers;
+        allLayers[group.value] = layers;
+        
+        // FETCH THE REST OF THE GROUPS
+        const fetchGroups = (allGroups) => {
+            allGroups.forEach(groupItem => {
+            if (group.value !== groupItem.value) {
+              let layersItems = this.state.allLayers[groupItem.value];
+              if (layersItems === undefined) {
+                layersItems = groupItem.layers;
+                if (layersItems !== undefined) {
+                  let allLayers = this.state.allLayers;
+                  allLayers[groupItem.value] = layersItems;
+                }
+              }
+            }
+          });
+        }
+        fetchGroups(allGroups);
+        this.setState({ layers: layers, allLayers: allLayers }, () => {
+          this.sortLayers(this.state.layers, sortAlpha);
+        });
+        return;
+      }
+    }else{
       this.setState({ layers: layers }, () => {
         this.sortLayers(this.state.layers, sortAlpha);
       });
@@ -163,8 +164,8 @@ class Layers extends Component {
       this.setState({ layers: layers, allLayers: allLayers }, () => {
         this.sortLayers(this.state.layers, sortAlpha);
 
-        // FETCH THE REST OF THE GROUPS
-        this.props.allGroups.forEach(groupItem => {
+        const fetchGroups = (allGroups) =>{ // FETCH THE REST OF THE GROUPS
+          allGroups.forEach(groupItem => {
           const layersItem = this.state.allLayers[groupItem.value];
 
           if (layersItem === undefined) {
@@ -175,8 +176,11 @@ class Layers extends Component {
             });
           }
         });
+        };
+        fetchGroups(allGroups);
       });
     });
+    
   };
 
   // isVisibleFromConfig()
@@ -224,6 +228,9 @@ class Layers extends Component {
 
   // REFRESH IF PROPS FROM PARENT HAVE CHANGED - GROUPS DROP DOWN CHANGE.
   componentWillReceiveProps(nextProps) {
+    let allGroups = [];
+    let allLayers = this.state.allLayers;
+    const nextLayers = allLayers[nextProps.group.value];
     if (nextProps.sortAlpha !== this.props.sortAlpha) {
       this.sortLayers(this.state.layers, nextProps.sortAlpha);
     }
@@ -233,25 +240,25 @@ class Layers extends Component {
       if (layers !== undefined) {
         // DISABLE LAYER VISIBILITY FROM PREVIOUS GROUP
         TOCHelpers.disableLayersVisiblity(layers, newLayers => {
-          let allLayers = this.state.allLayers;
+          
           allLayers[this.props.group.value] = newLayers;
           this.setState({ allLayers: allLayers }, () => {
             // ENABLE LAYER VISIBILITY FROM PREVIOUS GROUP
-            const nextLayers = this.state.allLayers[nextProps.group.value];
+           
             if (nextLayers !== undefined) {
               TOCHelpers.enableLayersVisiblity(nextLayers, newLayers => {
                 let allLayers = this.state.allLayers;
                 allLayers[nextProps.group.value] = newLayers;
-                this.setState({ layers: newLayers, allLayers: allLayers }, () => {
-                  this.refreshLayers(nextProps.group, nextProps.sortAlpha);
+                this.setState({ layers: newLayers, allLayers: allLayers, allGroups:allGroups }, () => {
+                  this.refreshLayers(nextProps.group, nextProps.sortAlpha,nextProps.allGroups);
                 });
               });
             } else {
-              this.refreshLayers(nextProps.group, nextProps.sortAlpha);
+              this.refreshLayers(nextProps.group, nextProps.sortAlpha,nextProps.allGroups);
             }
           });
         });
-      } else this.refreshLayers(nextProps.group, nextProps.sortAlpha);
+      } else this.refreshLayers(nextProps.group, nextProps.sortAlpha,nextProps.allGroups);
     }
   }
 
@@ -279,8 +286,6 @@ class Layers extends Component {
       }
     );
 
-    console.log(document.getElementById(this.virtualId).scrollTop);
-    console.log(this.lastPosition);
     document.getElementById(this.virtualId).scrollTop += this.lastPosition;
   };
 
