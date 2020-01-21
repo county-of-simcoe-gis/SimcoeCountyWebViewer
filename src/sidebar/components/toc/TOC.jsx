@@ -43,7 +43,7 @@ class TOC extends Component {
     window.emitter.emit("activateTab", "layers");
 
     this.state.layerGroups.forEach(layerGroup => {
-      if (remove_underscore(layerGroup.value) === groupName) {
+      if (layerGroup.value === groupName) {
         this.setState({ selectedGroup: layerGroup }, () => callback());
         return;
       }

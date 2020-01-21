@@ -24,27 +24,29 @@ export async function getGroupsGC(url,layerDepth, callback) {
       let groupLayerList = layerDepth === 1 ? 
                             result.WMS_Capabilities.Capability[0].Layer[0].Layer : 
                               layerDepth === 2 ? result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer :
+                              layerDepth === 3 ? result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer[0].Layer :
                                 result.WMS_Capabilities.Capability[0].Layer[0].Layer ;
       let parentGroup = layerDepth === 1 ? 
                               result.WMS_Capabilities.Capability[0].Layer[0] : 
                                 layerDepth === 2 ? result.WMS_Capabilities.Capability[0].Layer[0].Layer[0] :
+                                layerDepth === 3 ? result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer[0]:
                                   result.WMS_Capabilities.Capability[0].Layer[0];
-      let parentKeywords = [];
-      if (parentGroup.KeywordList[0] !== undefined) parentKeywords = parentGroup.KeywordList[0].Keyword;
+      let parentKeywords = parentGroup.KeywordList;
+      if (parentKeywords !== undefined) parentKeywords = parentKeywords[0].Keyword;
       let mapCenter = [];
-      if (parentKeywords.length > 0) mapCenter = _getCenterCoordinates(parentKeywords);
+      if (parentKeywords !== undefined && parentKeywords.length > 0) mapCenter = _getCenterCoordinates(parentKeywords);
       let mapZoom = 0;
-      if (parentKeywords.length > 0) mapZoom = _getZoom(parentKeywords);
+      if (parentKeywords !== undefined && parentKeywords.length > 0) mapZoom = _getZoom(parentKeywords);
       let defaultGroupName = "";
-      if (parentKeywords.length > 0) defaultGroupName = _getDefaultGroup(parentKeywords);
+      if (parentKeywords !== undefined && parentKeywords.length > 0) defaultGroupName = _getDefaultGroup(parentKeywords);
       if (mapCenter.length > 0 && mapZoom > 0) window.map.getView().animate({ center: mapCenter, zoom: mapZoom });                         
        groupLayerList.forEach(layerInfo => {
         if (layerInfo.Layer !== undefined){
-          const groupName = layerInfo.Name[0].indexOf(":") !== -1 ? layerInfo.Name[0].split(":")[1] : layerInfo.Name[0];
-          if (groupName === defaultGroupName) isDefault = true;
+          const groupName = layerInfo.Name[0];
+          if (groupName.indexOf(defaultGroupName) !== -1) isDefault = true;
           const groupDisplayName = layerInfo.Title[0];
-          const groupUrl =   url.split("/geoserver/")[0] + "/geoserver/" + groupName + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
-          const fullGroupUrl = url.split("/geoserver/")[0] + "/geoserver/" + groupName + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
+          const groupUrl =   url.split("/geoserver/")[0] + "/geoserver/" + helpers.replaceAllInString(groupName, ":", "/") + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
+          const fullGroupUrl = url.split("/geoserver/")[0] + "/geoserver/" + helpers.replaceAllInString(groupName, ":", "/") + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
           let keywords = [];
           if (layerInfo.KeywordList[0] !== undefined) keywords = layerInfo.KeywordList[0].Keyword;
           let visibleLayers = [];
@@ -215,7 +217,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback){
     // SET VISIBILITY
     let layerVisible = false;
     if (savedLayers !== undefined) {
-      const savedLayer = savedLayers[layerNameOnly];
+      const savedLayer = savedLayers[displayName];
       if (savedLayer !== undefined && savedLayer.visible) layerVisible = true;
     } else if (visibleLayers.includes(layerNameOnly)) layerVisible = true;
 
