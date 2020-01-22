@@ -1,5 +1,5 @@
 {
-  "geoserverLayerGroupsUrl": "https://opengis.simcoe.ca/geoserver/Config_Public_Default",
+  "geoserverLayerGroupsUrl": "https://opengis.simcoe.ca/geoserver/simcoe/Config_Public_Default",
   "geoserverLayerDepth": 2,
   "layerInfoURL": "https://opengis.simcoe.ca/layerInfo/?URL=",
   "layerDownloadURL": "https://opengis.simcoe.ca/layerInfo/?SHOW_DOWNLOAD=1&URL=",
