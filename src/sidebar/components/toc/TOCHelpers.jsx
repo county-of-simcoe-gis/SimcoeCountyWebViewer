@@ -7,10 +7,11 @@ const layerIndexStart = 100;
 
 // LOCAL STORAGE KEY
 const storageKey = "layers";
-
+const storageMapDefaultsKey = "map_defaults";
+const storageExtentKey = "map_extent";
 
 // GET GROUPS FROM GET CAPABILITIES
-export async function getGroupsGC(url,layerDepth, callback) {
+export async function getGroupsGC(url, urlType, callback) {
   let defaultGroup = null;
   let isDefault = false;
   let groups = [];
@@ -21,16 +22,14 @@ export async function getGroupsGC(url,layerDepth, callback) {
 
     // PARSE TO JSON
     parser.parseString(result, function(err, result) {
-      let groupLayerList = layerDepth === 1 ? 
+      let groupLayerList = urlType === "root" ? 
                             result.WMS_Capabilities.Capability[0].Layer[0].Layer : 
-                              layerDepth === 2 ? result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer :
-                              layerDepth === 3 ? result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer[0].Layer :
+                            urlType === "group" ? result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer :
                                 result.WMS_Capabilities.Capability[0].Layer[0].Layer ;
-      let parentGroup = layerDepth === 1 ? 
-                              result.WMS_Capabilities.Capability[0].Layer[0] : 
-                                layerDepth === 2 ? result.WMS_Capabilities.Capability[0].Layer[0].Layer[0] :
-                                layerDepth === 3 ? result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer[0]:
-                                  result.WMS_Capabilities.Capability[0].Layer[0];
+      let parentGroup = urlType === "root" ? 
+                              result.WMS_Capabilities.Capability[0].Layer[0].Layer[0] : 
+                              urlType === "group" ? result.WMS_Capabilities.Capability[0].Layer[0].Layer[0] :
+                                  result.WMS_Capabilities.Capability[0].Layer[0].Layer[0];
       let parentKeywords = parentGroup.KeywordList;
       if (parentKeywords !== undefined) parentKeywords = parentKeywords[0].Keyword;
       let mapCenter = [];
@@ -39,7 +38,15 @@ export async function getGroupsGC(url,layerDepth, callback) {
       if (parentKeywords !== undefined && parentKeywords.length > 0) mapZoom = _getZoom(parentKeywords);
       let defaultGroupName = "";
       if (parentKeywords !== undefined && parentKeywords.length > 0) defaultGroupName = _getDefaultGroup(parentKeywords);
-      if (mapCenter.length > 0 && mapZoom > 0) window.map.getView().animate({ center: mapCenter, zoom: mapZoom });                         
+      if (mapCenter.length > 0 && mapZoom > 0) {
+        sessionStorage.removeItem(storageMapDefaultsKey); 
+        sessionStorage.setItem(storageMapDefaultsKey, JSON.stringify({ center: mapCenter, zoom: mapZoom }));
+        const storage = localStorage.getItem(storageExtentKey);
+        if (storage === null) 
+        {
+          window.map.getView().animate({ center: mapCenter, zoom: mapZoom });     
+        }      
+      }              
        groupLayerList.forEach(layerInfo => {
         if (layerInfo.Layer !== undefined){
           const groupName = layerInfo.Name[0];
@@ -213,7 +220,8 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback){
     if (displayName==="") displayName =layerTitle;
     // OPACITY
     let opacity = _getOpacity(keywords);
-
+    const minScale = layer.MinScaleDenominator;
+    const maxScale = layer.MaxScaleDenominator;
     // SET VISIBILITY
     let layerVisible = false;
     if (savedLayers !== undefined) {
@@ -243,10 +251,13 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback){
         layer: newLayer, // OL LAYER OBJECT
         metadataUrl: metadataUrl, // ROOT LAYER INFO FROM GROUP END POINT
         opacity: opacity, // OPACITY OF LAYER
+        minScale: minScale, //MinScaleDenominator from geoserver
+        maxScale: maxScale, //MaxScaleDenominator from geoserver
         liveLayer: liveLayer, // LIVE LAYER FLAG
         wfsUrl: wfsUrl,
         displayName: displayName, // DISPLAY NAME USED BY IDENTIFY
-        group: group.name
+        group: group.value,
+        groupName: group.label
 
       };
       callback(returnLayer);
@@ -332,10 +343,10 @@ export function getLayerListByGroupCustomRest(group, callback) {
   const savedData = helpers.getItemsFromStorage(storageKey);
   const savedLayers = savedData[group.value];
 
-  console.log(group);
-  console.log(group.customRestUrl);
+  //console.log(group);
+  //console.log(group.customRestUrl);
   helpers.getJSON(group.customRestUrl, layerGroupInfo => {
-    console.log(layerGroupInfo);
+    //console.log(layerGroupInfo);
     let groupLayerList = null;
     if (Array.isArray(layerGroupInfo.layerGroup.publishables.published)) {
       if (layerGroupInfo.layerGroup.publishables.published.length > 0) groupLayerList = layerGroupInfo.layerGroup.publishables.published;
@@ -352,6 +363,8 @@ export function getLayerListByGroupCustomRest(group, callback) {
     groupLayerList.forEach(layerInfo => {
       //console.log(layerInfo);
       const layerNameOnly = layerInfo.name.split(":")[1];
+      let layerTitle = layerInfo.layerDetails.featureType.title[0];
+      if (layerTitle === undefined) layerTitle = layerNameOnly;
       const keywords = layerInfo.layerDetails.featureType.keywords[0].string;
       const serverUrl = layerInfo.href.split("/rest/")[0];
       const styleUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=${layerName}`;
@@ -366,14 +379,14 @@ export function getLayerListByGroupCustomRest(group, callback) {
 
       //DISPLAY NAME
       let displayName = _getDisplayName(keywords);
-
+      if (displayName==="") displayName =layerTitle;
       // // OPACITY
       let opacity = _getOpacity(keywords);
 
       // SET VISIBILITY
       let layerVisible = false;
       if (savedLayers !== undefined) {
-        const savedLayer = savedLayers[layerNameOnly];
+        const savedLayer = savedLayers[displayName];
         if (savedLayer !== undefined && savedLayer.visible) layerVisible = true;
       } else if (visibleLayers.includes(layerNameOnly)) layerVisible = true;
 
@@ -381,13 +394,14 @@ export function getLayerListByGroupCustomRest(group, callback) {
       let layer = helpers.getImageWMSLayer(serverUrl + "/wms", layerInfo.name);
       layer.setVisible(layerVisible);
       layer.setOpacity(opacity);
-      layer.setProperties({ name: layerNameOnly, displayName: displayName });
+      layer.setProperties({ name: layerTitle, displayName: displayName });
       layer.setZIndex(layerIndex);
       window.map.addLayer(layer);
 
       // LAYER OBJECT USED BY TOC
       layerList.push({
-        name: layerNameOnly, // FRIENDLY NAME
+        name: displayName, // FRIENDLY NAME
+        title: layerTitle,
         height: 30, // HEIGHT OF DOM ROW FOR AUTOSIZER
         drawIndex: layerIndex, // INDEX USED BY VIRTUAL LIST
         index: layerIndex, // INDEX USED BY VIRTUAL LIST
@@ -400,9 +414,12 @@ export function getLayerListByGroupCustomRest(group, callback) {
         metadataUrl: metadataUrl, // ROOT LAYER INFO FROM GROUP END POINT
         opacity: opacity, // OPACITY OF LAYER
         liveLayer: liveLayer, // LIVE LAYER FLAG
+        minScale: undefined, //placeholder MinScaleDenominator
+        maxScale: undefined, //placeholder MaxScaleDenominator
         wfsUrl: wfsUrl,
         displayName: displayName, // DISPLAY NAME USED BY IDENTIFY
-        group: group.name
+        group: group.value,
+        groupName: group.label
       });
 
       layerIndex--;

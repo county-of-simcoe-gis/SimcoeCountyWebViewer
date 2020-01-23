@@ -20,6 +20,7 @@ import Portal from "../../../helpers/Portal.jsx";
 class TOC extends Component {
   constructor(props) {
     super(props);
+    this.storageMapDefaultsKey = "map_defaults";
     this.state = {
       layerGroups: [],
       selectedGroup: {},
@@ -64,12 +65,20 @@ class TOC extends Component {
   }
 
   refreshTOC = callback => {
+      sessionStorage.removeItem(this.storageMapDefaultsKey); 
       let geoserverUrl= helpers.getURLParameter("GEO_URL");
-      let layerDepth = helpers.getURLParameter("depth");
-      if (geoserverUrl === null) geoserverUrl = TOCConfig.geoserverLayerGroupsUrl;
-      if (layerDepth === null) layerDepth = TOCConfig.geoserverLayerDepth;
+      let geoserverUrlType = helpers.getURLParameter("GEO_TYPE");
+      if (geoserverUrl === null) 
+      {
+        geoserverUrl = TOCConfig.geoserverLayerGroupsUrl;
+      }
+      else
+      {
+          geoserverUrl = geoserverUrl + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
+      }
+      if (geoserverUrlType === null) geoserverUrlType = TOCConfig.geoserverLayerGroupsUrlType;
       if (geoserverUrl !== undefined && geoserverUrl !== null){
-        TOCHelpers.getGroupsGC( geoserverUrl + "/ows?service=wms&version=1.3.0&request=GetCapabilities",layerDepth ,result => {
+        TOCHelpers.getGroupsGC(geoserverUrl,geoserverUrlType ,result => {
           const groupInfo = result;
           this.setState(
             {
@@ -116,6 +125,7 @@ class TOC extends Component {
   };
 
   reset = () => {
+    
     const defaultGroup = this.state.defaultGroup;
     this.setState({ sortAlpha: false, selectedGroup: defaultGroup }, () => {
       this.refreshTOC(() => {
