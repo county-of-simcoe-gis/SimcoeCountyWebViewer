@@ -420,12 +420,11 @@ class Search extends Component {
     if (selectedType === "All" || selectedType === "Map Layer") {
       let layers = [];
       Object.entries(window.allLayers).map(row => {
-        const groupName = helpers.replaceAllInString(row[0], "_", " ");
         const layerItems = row[1];
         layerItems.forEach(layer => {
           if (layer.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
             //console.log(layer);
-            layers.push({ name: helpers.replaceAllInString(layer.name, "_", " "), type: "Map Layer", layerGroup: groupName, imageName: "layers.png", index: layer.index });
+            layers.push({ name:layer.displayName, type: "Map Layer", layerGroupName:layer.groupName , layerGroup: layer.group, imageName: "layers.png", index: layer.index });
           }
         });
       });
@@ -568,7 +567,7 @@ class Search extends Component {
           )}
           renderItem={(item, isHighlighted) => {
             let type = "Unknown";
-            if (item.type === "Map Layer") type = item.layerGroup;
+            if (item.type === "Map Layer") type = item.layerGroupName;
             else if (item.type === "Tool" || item.type === "Theme") type = "";
             else type = item.municipality;
             return (
