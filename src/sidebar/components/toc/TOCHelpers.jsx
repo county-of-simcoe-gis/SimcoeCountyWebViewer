@@ -200,7 +200,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback){
   if (layer.Layer === undefined){
     const visibleLayers = group.visibleLayers === undefined ? [] : group.visibleLayers;
 
-    const layerNameOnly = layer.Name[0].split(":")[1];
+    const layerNameOnly = layer.Name[0];
     let layerTitle = layer.Title[0];
     if (layerTitle === undefined) layerTitle = layerNameOnly;
     const keywords = layer.KeywordList[0].Keyword;
@@ -225,7 +225,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback){
     // SET VISIBILITY
     let layerVisible = false;
     if (savedLayers !== undefined) {
-      const savedLayer = savedLayers[displayName];
+      const savedLayer = savedLayers[layerNameOnly];
       if (savedLayer !== undefined && savedLayer.visible) layerVisible = true;
     } else if (visibleLayers.includes(layerNameOnly)) layerVisible = true;
 
@@ -233,13 +233,12 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback){
     let newLayer = helpers.getImageWMSLayer(serverUrl + "/wms", layer.Name[0]);
     newLayer.setVisible(!group.defaultGroup ? false : layerVisible);
     newLayer.setOpacity(opacity);
-    newLayer.setProperties({ name: layerTitle, displayName: displayName });
+    newLayer.setProperties({ name: layerNameOnly, displayName: displayName });
     newLayer.setZIndex(layerIndex);
     window.map.addLayer(newLayer);
 
     const returnLayer = {
-        name: displayName, // FRIENDLY NAME
-        title: layerTitle,
+        name: layerNameOnly, // FRIENDLY NAME
         height: 30, // HEIGHT OF DOM ROW FOR AUTOSIZER
         drawIndex: layerIndex, // INDEX USED BY VIRTUAL LIST
         index: layerIndex, // INDEX USED BY VIRTUAL LIST
@@ -362,7 +361,7 @@ export function getLayerListByGroupCustomRest(group, callback) {
     let layerList = [];
     groupLayerList.forEach(layerInfo => {
       //console.log(layerInfo);
-      const layerNameOnly = layerInfo.name.split(":")[1];
+      const layerNameOnly = layerInfo.name;
       let layerTitle = layerInfo.layerDetails.featureType.title[0];
       if (layerTitle === undefined) layerTitle = layerNameOnly;
       const keywords = layerInfo.layerDetails.featureType.keywords[0].string;
@@ -386,7 +385,7 @@ export function getLayerListByGroupCustomRest(group, callback) {
       // SET VISIBILITY
       let layerVisible = false;
       if (savedLayers !== undefined) {
-        const savedLayer = savedLayers[displayName];
+        const savedLayer = savedLayers[layerNameOnly];
         if (savedLayer !== undefined && savedLayer.visible) layerVisible = true;
       } else if (visibleLayers.includes(layerNameOnly)) layerVisible = true;
 
@@ -394,14 +393,13 @@ export function getLayerListByGroupCustomRest(group, callback) {
       let layer = helpers.getImageWMSLayer(serverUrl + "/wms", layerInfo.name);
       layer.setVisible(layerVisible);
       layer.setOpacity(opacity);
-      layer.setProperties({ name: layerTitle, displayName: displayName });
+      layer.setProperties({ name: layerNameOnly, displayName: displayName });
       layer.setZIndex(layerIndex);
       window.map.addLayer(layer);
 
       // LAYER OBJECT USED BY TOC
       layerList.push({
-        name: displayName, // FRIENDLY NAME
-        title: layerTitle,
+        name: layerNameOnly, // FRIENDLY NAME
         height: 30, // HEIGHT OF DOM ROW FOR AUTOSIZER
         drawIndex: layerIndex, // INDEX USED BY VIRTUAL LIST
         index: layerIndex, // INDEX USED BY VIRTUAL LIST
