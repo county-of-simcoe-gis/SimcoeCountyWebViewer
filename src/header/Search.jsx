@@ -424,7 +424,7 @@ class Search extends Component {
         layerItems.forEach(layer => {
           if (layer.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
             //console.log(layer);
-            layers.push({ name:layer.displayName, type: "Map Layer", layerGroupName:layer.groupName , layerGroup: layer.group, imageName: "layers.png", index: layer.index });
+            layers.push({ fullName:layer.name, name:layer.displayName, type: "Map Layer", layerGroupName:layer.groupName , layerGroup: layer.group, imageName: "layers.png", index: layer.index });
           }
         });
       });
