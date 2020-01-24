@@ -7,10 +7,11 @@ const layerIndexStart = 100;
 
 // LOCAL STORAGE KEY
 const storageKey = "layers";
-
+const storageMapDefaultsKey = "map_defaults";
+const storageExtentKey = "map_extent";
 
 // GET GROUPS FROM GET CAPABILITIES
-export async function getGroupsGC(url,layerDepth, callback) {
+export async function getGroupsGC(url, urlType, callback) {
   let defaultGroup = null;
   let isDefault = false;
   let groups = [];
@@ -21,16 +22,14 @@ export async function getGroupsGC(url,layerDepth, callback) {
 
     // PARSE TO JSON
     parser.parseString(result, function(err, result) {
-      let groupLayerList = layerDepth === 1 ? 
+      let groupLayerList = urlType === "root" ? 
                             result.WMS_Capabilities.Capability[0].Layer[0].Layer : 
-                              layerDepth === 2 ? result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer :
-                              layerDepth === 3 ? result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer[0].Layer :
+                            urlType === "group" ? result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer :
                                 result.WMS_Capabilities.Capability[0].Layer[0].Layer ;
-      let parentGroup = layerDepth === 1 ? 
-                              result.WMS_Capabilities.Capability[0].Layer[0] : 
-                                layerDepth === 2 ? result.WMS_Capabilities.Capability[0].Layer[0].Layer[0] :
-                                layerDepth === 3 ? result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer[0]:
-                                  result.WMS_Capabilities.Capability[0].Layer[0];
+      let parentGroup = urlType === "root" ? 
+                              result.WMS_Capabilities.Capability[0].Layer[0].Layer[0] : 
+                              urlType === "group" ? result.WMS_Capabilities.Capability[0].Layer[0].Layer[0] :
+                                  result.WMS_Capabilities.Capability[0].Layer[0].Layer[0];
       let parentKeywords = parentGroup.KeywordList;
       if (parentKeywords !== undefined) parentKeywords = parentKeywords[0].Keyword;
       let mapCenter = [];
@@ -39,11 +38,19 @@ export async function getGroupsGC(url,layerDepth, callback) {
       if (parentKeywords !== undefined && parentKeywords.length > 0) mapZoom = _getZoom(parentKeywords);
       let defaultGroupName = "";
       if (parentKeywords !== undefined && parentKeywords.length > 0) defaultGroupName = _getDefaultGroup(parentKeywords);
-      if (mapCenter.length > 0 && mapZoom > 0) window.map.getView().animate({ center: mapCenter, zoom: mapZoom });                         
+      if (mapCenter.length > 0 && mapZoom > 0) {
+        sessionStorage.removeItem(storageMapDefaultsKey); 
+        sessionStorage.setItem(storageMapDefaultsKey, JSON.stringify({ center: mapCenter, zoom: mapZoom }));
+        const storage = localStorage.getItem(storageExtentKey);
+        if (storage === null) 
+        {
+          window.map.getView().animate({ center: mapCenter, zoom: mapZoom });     
+        }      
+      }              
        groupLayerList.forEach(layerInfo => {
         if (layerInfo.Layer !== undefined){
           const groupName = layerInfo.Name[0];
-          if (groupName.indexOf(defaultGroupName) !== -1) isDefault = true;
+          if (groupName.toUpperCase() === defaultGroupName.toUpperCase()) isDefault = true;
           const groupDisplayName = layerInfo.Title[0];
           const groupUrl =   url.split("/geoserver/")[0] + "/geoserver/" + helpers.replaceAllInString(groupName, ":", "/") + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
           const fullGroupUrl = url.split("/geoserver/")[0] + "/geoserver/" + helpers.replaceAllInString(groupName, ":", "/") + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
@@ -67,16 +74,19 @@ export async function getGroupsGC(url,layerDepth, callback) {
           
             const buildLayers = (layers) => {
                 layers.forEach(currentLayer => {
-                buildLayerByGroup(tmpGroupObj,currentLayer,layerIndex,result => {
-                  layerList.push(result);
+                  if(!isDuplicate(layerList, currentLayer.Name[0])) {
+                    buildLayerByGroup(tmpGroupObj,currentLayer,layerIndex,result => {
+                      layerList.push(result);
+                    });
+                    layerIndex--;
+                  if (currentLayer.Layer === undefined ){
+                      visibleLayers.push(currentLayer.Name[0]);
+                    }else{
+                      buildLayers(currentLayer.Layer);
+                    }
+                  }
+                 
                 });
-                layerIndex--;
-              if (currentLayer.Layer === undefined ){
-                  visibleLayers.push(currentLayer.Name[0]);
-                }else{
-                  buildLayers(currentLayer.Layer);
-                }
-              });
             }
             buildLayers(layerInfo.Layer);
           }
@@ -106,6 +116,7 @@ export async function getGroupsGC(url,layerDepth, callback) {
     callback([groups, defaultGroup]);
   });
 }
+
 // GET GROUPS FROM CONFIG
 export function getGroups() {
   let defaultGroup = null;
@@ -183,7 +194,15 @@ export function getBase64FromImageUrl(url, callback) {
   img.src = url;
 }
 
-
+export function isDuplicate(layerList, newLayerName){
+  let returnValue = false;
+  layerList.forEach(layer => {
+    if (layer.name === newLayerName) {
+      returnValue = true;
+    }
+  }); 
+  return returnValue;
+}
 
 export async function buildLayerByGroup(group, layer, layerIndex, callback){
   // SAVED DATA
@@ -193,7 +212,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback){
   if (layer.Layer === undefined){
     const visibleLayers = group.visibleLayers === undefined ? [] : group.visibleLayers;
 
-    const layerNameOnly = layer.Name[0].split(":")[1];
+    const layerNameOnly = layer.Name[0];
     let layerTitle = layer.Title[0];
     if (layerTitle === undefined) layerTitle = layerNameOnly;
     const keywords = layer.KeywordList[0].Keyword;
@@ -213,11 +232,12 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback){
     if (displayName==="") displayName =layerTitle;
     // OPACITY
     let opacity = _getOpacity(keywords);
-
+    const minScale = layer.MinScaleDenominator;
+    const maxScale = layer.MaxScaleDenominator;
     // SET VISIBILITY
     let layerVisible = false;
     if (savedLayers !== undefined) {
-      const savedLayer = savedLayers[displayName];
+      const savedLayer = savedLayers[layerNameOnly];
       if (savedLayer !== undefined && savedLayer.visible) layerVisible = true;
     } else if (visibleLayers.includes(layerNameOnly)) layerVisible = true;
 
@@ -225,13 +245,12 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback){
     let newLayer = helpers.getImageWMSLayer(serverUrl + "/wms", layer.Name[0]);
     newLayer.setVisible(!group.defaultGroup ? false : layerVisible);
     newLayer.setOpacity(opacity);
-    newLayer.setProperties({ name: layerTitle, displayName: displayName });
+    newLayer.setProperties({ name: layerNameOnly, displayName: displayName });
     newLayer.setZIndex(layerIndex);
     window.map.addLayer(newLayer);
 
     const returnLayer = {
-        name: displayName, // FRIENDLY NAME
-        title: layerTitle,
+        name: layerNameOnly, // FRIENDLY NAME
         height: 30, // HEIGHT OF DOM ROW FOR AUTOSIZER
         drawIndex: layerIndex, // INDEX USED BY VIRTUAL LIST
         index: layerIndex, // INDEX USED BY VIRTUAL LIST
@@ -243,10 +262,13 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback){
         layer: newLayer, // OL LAYER OBJECT
         metadataUrl: metadataUrl, // ROOT LAYER INFO FROM GROUP END POINT
         opacity: opacity, // OPACITY OF LAYER
+        minScale: minScale, //MinScaleDenominator from geoserver
+        maxScale: maxScale, //MaxScaleDenominator from geoserver
         liveLayer: liveLayer, // LIVE LAYER FLAG
         wfsUrl: wfsUrl,
         displayName: displayName, // DISPLAY NAME USED BY IDENTIFY
-        group: group.name
+        group: group.value,
+        groupName: group.label
 
       };
       callback(returnLayer);
@@ -271,11 +293,13 @@ export function getLayerListByGroupWMS(group, callback) {
       let layerIndex = groupLayerList.length + layerIndexStart;
       let layerList = [];
       groupLayerList.forEach(layerInfo => {
-        if (layerInfo.Layer === undefined){
-          buildLayerByGroup(group,layerInfo,layerIndex,result => {
-            layerList.push(result);
-          });
-          layerIndex--;
+        if(!isDuplicate(layerList, layerInfo.Name[0])){
+          if (layerInfo.Layer === undefined){
+            buildLayerByGroup(group,layerInfo,layerIndex,result => {
+              layerList.push(result);
+            });
+            layerIndex--;
+          }
         }
       });
 
@@ -283,6 +307,7 @@ export function getLayerListByGroupWMS(group, callback) {
     });
   });
 }
+
 
 export function getLayerListByGroup(group, callback) {
   
@@ -301,15 +326,16 @@ export function getLayerListByGroup(group, callback) {
       let layerList = [];
      
       groupLayerList.forEach(layerInfo => {
-        
-        if (layerInfo.Layer === undefined){
-          buildLayerByGroup(group,layerInfo,layerIndex,result => {
-            layerList.push(result);
-          });
-          layerIndex--;
+        if(!isDuplicate(layerList, layerInfo.Name[0])) {
+          if (layerInfo.Layer === undefined){
+            buildLayerByGroup(group,layerInfo,layerIndex,result => {
+              layerList.push(result);
+            });
+            layerIndex--;
+          }
         }
-        
       });
+
       callback(layerList);
     });
     
@@ -332,10 +358,10 @@ export function getLayerListByGroupCustomRest(group, callback) {
   const savedData = helpers.getItemsFromStorage(storageKey);
   const savedLayers = savedData[group.value];
 
-  console.log(group);
-  console.log(group.customRestUrl);
+  //console.log(group);
+  //console.log(group.customRestUrl);
   helpers.getJSON(group.customRestUrl, layerGroupInfo => {
-    console.log(layerGroupInfo);
+    //console.log(layerGroupInfo);
     let groupLayerList = null;
     if (Array.isArray(layerGroupInfo.layerGroup.publishables.published)) {
       if (layerGroupInfo.layerGroup.publishables.published.length > 0) groupLayerList = layerGroupInfo.layerGroup.publishables.published;
@@ -351,63 +377,70 @@ export function getLayerListByGroupCustomRest(group, callback) {
     let layerList = [];
     groupLayerList.forEach(layerInfo => {
       //console.log(layerInfo);
-      const layerNameOnly = layerInfo.name.split(":")[1];
-      const keywords = layerInfo.layerDetails.featureType.keywords[0].string;
-      const serverUrl = layerInfo.href.split("/rest/")[0];
-      const styleUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=${layerName}`;
-      const styleUrl = styleUrlTemplate(serverUrl, layerInfo.name);
-      const wfsUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&cql_filter=`;
-      const wfsUrl = wfsUrlTemplate(serverUrl, layerInfo.name);
-      const metadataUrlTemplate = (serverUrl, layerName) => `${serverUrl}/rest/layers/${layerName}.json`;
-      const metadataUrl = metadataUrlTemplate(serverUrl, layerInfo.name);
+      const layerNameOnly = layerInfo.name;
+      if(!isDuplicate(layerList, layerNameOnly)) {
+        let layerTitle = layerInfo.layerDetails.featureType.title[0];
+        if (layerTitle === undefined) layerTitle = layerNameOnly;
+        const keywords = layerInfo.layerDetails.featureType.keywords[0].string;
+        const serverUrl = layerInfo.href.split("/rest/")[0];
+        const styleUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=${layerName}`;
+        const styleUrl = styleUrlTemplate(serverUrl, layerInfo.name);
+        const wfsUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&cql_filter=`;
+        const wfsUrl = wfsUrlTemplate(serverUrl, layerInfo.name);
+        const metadataUrlTemplate = (serverUrl, layerName) => `${serverUrl}/rest/layers/${layerName}.json`;
+        const metadataUrl = metadataUrlTemplate(serverUrl, layerInfo.name);
 
-      // LIVE LAYER
-      let liveLayer = _isLiveLayer(keywords);
+        // LIVE LAYER
+        let liveLayer = _isLiveLayer(keywords);
 
-      //DISPLAY NAME
-      let displayName = _getDisplayName(keywords);
+        //DISPLAY NAME
+        let displayName = _getDisplayName(keywords);
+        if (displayName==="") displayName =layerTitle;
+        // // OPACITY
+        let opacity = _getOpacity(keywords);
 
-      // // OPACITY
-      let opacity = _getOpacity(keywords);
+        // SET VISIBILITY
+        let layerVisible = false;
+        if (savedLayers !== undefined) {
+          const savedLayer = savedLayers[layerNameOnly];
+          if (savedLayer !== undefined && savedLayer.visible) layerVisible = true;
+        } else if (visibleLayers.includes(layerNameOnly)) layerVisible = true;
 
-      // SET VISIBILITY
-      let layerVisible = false;
-      if (savedLayers !== undefined) {
-        const savedLayer = savedLayers[layerNameOnly];
-        if (savedLayer !== undefined && savedLayer.visible) layerVisible = true;
-      } else if (visibleLayers.includes(layerNameOnly)) layerVisible = true;
+        // LAYER PROPS
+        let layer = helpers.getImageWMSLayer(serverUrl + "/wms", layerInfo.name);
+        layer.setVisible(layerVisible);
+        layer.setOpacity(opacity);
+        layer.setProperties({ name: layerNameOnly, displayName: displayName });
+        layer.setZIndex(layerIndex);
+        window.map.addLayer(layer);
 
-      // LAYER PROPS
-      let layer = helpers.getImageWMSLayer(serverUrl + "/wms", layerInfo.name);
-      layer.setVisible(layerVisible);
-      layer.setOpacity(opacity);
-      layer.setProperties({ name: layerNameOnly, displayName: displayName });
-      layer.setZIndex(layerIndex);
-      window.map.addLayer(layer);
+        // LAYER OBJECT USED BY TOC
+        layerList.push({
+          name: layerNameOnly, // FRIENDLY NAME
+          height: 30, // HEIGHT OF DOM ROW FOR AUTOSIZER
+          drawIndex: layerIndex, // INDEX USED BY VIRTUAL LIST
+          index: layerIndex, // INDEX USED BY VIRTUAL LIST
+          styleUrl: styleUrl, // WMS URL TO LEGEND SWATCH IMAGE
+          showLegend: false, // SHOW LEGEND USING PLUS-MINUS IN TOC
+          legendHeight: -1, // HEIGHT OF IMAGE USED BY AUTOSIZER
+          legendImage: null, // IMAGE DATA, STORED ONCE USER VIEWS LEGEND
+          visible: layerVisible, // LAYER VISIBLE IN MAP, UPDATED BY CHECKBOX
+          layer: layer, // OL LAYER OBJECT
+          metadataUrl: metadataUrl, // ROOT LAYER INFO FROM GROUP END POINT
+          opacity: opacity, // OPACITY OF LAYER
+          liveLayer: liveLayer, // LIVE LAYER FLAG
+          minScale: undefined, //placeholder MinScaleDenominator
+          maxScale: undefined, //placeholder MaxScaleDenominator
+          wfsUrl: wfsUrl,
+          displayName: displayName, // DISPLAY NAME USED BY IDENTIFY
+          group: group.value,
+          groupName: group.label
+        });
 
-      // LAYER OBJECT USED BY TOC
-      layerList.push({
-        name: layerNameOnly, // FRIENDLY NAME
-        height: 30, // HEIGHT OF DOM ROW FOR AUTOSIZER
-        drawIndex: layerIndex, // INDEX USED BY VIRTUAL LIST
-        index: layerIndex, // INDEX USED BY VIRTUAL LIST
-        styleUrl: styleUrl, // WMS URL TO LEGEND SWATCH IMAGE
-        showLegend: false, // SHOW LEGEND USING PLUS-MINUS IN TOC
-        legendHeight: -1, // HEIGHT OF IMAGE USED BY AUTOSIZER
-        legendImage: null, // IMAGE DATA, STORED ONCE USER VIEWS LEGEND
-        visible: layerVisible, // LAYER VISIBLE IN MAP, UPDATED BY CHECKBOX
-        layer: layer, // OL LAYER OBJECT
-        metadataUrl: metadataUrl, // ROOT LAYER INFO FROM GROUP END POINT
-        opacity: opacity, // OPACITY OF LAYER
-        liveLayer: liveLayer, // LIVE LAYER FLAG
-        wfsUrl: wfsUrl,
-        displayName: displayName, // DISPLAY NAME USED BY IDENTIFY
-        group: group.name
-      });
-
-      layerIndex--;
+        layerIndex--;
+      }
     });
-
+    
     callback(layerList);
   });
 }

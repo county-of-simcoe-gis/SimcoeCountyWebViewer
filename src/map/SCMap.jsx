@@ -35,7 +35,7 @@ const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
 class SCMap extends Component {
   constructor(props) {
     super(props);
-
+    this.storageMapDefaultsKey = "map_defaults";
     this.contextCoords = null;
     this.storageExtentKey = "map_extent";
     this.state = {
@@ -47,7 +47,15 @@ class SCMap extends Component {
   }
 
   componentDidMount() {
-    const centerCoords = mainConfig.centerCoords;
+    let centerCoords = mainConfig.centerCoords;
+    let defaultZoom = mainConfig.defaultZoom;
+    const defaultsStorage = sessionStorage.getItem(this.storageMapDefaultsKey); 
+    const storage = localStorage.getItem(this.storageExtentKey);
+    if (defaultsStorage !== null && storage === null) {
+      const detaults = JSON.parse(defaultsStorage);
+      if (detaults.zoom !== undefined) defaultZoom = detaults.zoom;
+      if (detaults.center !== undefined) centerCoords = detaults.center;
+    }
     const resolutions = [
       305.74811314055756,
       152.87405657041106,
@@ -68,7 +76,7 @@ class SCMap extends Component {
       target: "map",
       view: new View({
         center: centerCoords,
-        zoom: mainConfig.defaultZoom,
+        zoom: defaultZoom,
         maxZoom: mainConfig.maxZoom
         //resolutions: resolutions
       }),
@@ -80,8 +88,6 @@ class SCMap extends Component {
       ]),
       keyboardEventTarget: document
     });
-
-    const storage = localStorage.getItem(this.storageExtentKey);
     if (storage !== null) {
       const extent = JSON.parse(storage);
       map.getView().fit(extent, map.getSize(), { duration: 1000 });

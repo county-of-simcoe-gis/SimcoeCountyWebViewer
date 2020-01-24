@@ -29,7 +29,7 @@ class LayerItem extends Component {
             className="sc-toc-item-layer-label"
             highlightClassName="sc-search-toc-highlight-words"
             searchWords={[this.props.searchText]}
-            textToHighlight={helpers.replaceAllInString(layerInfo.name, "_", " ")}
+            textToHighlight={layerInfo.displayName}
           />
           <div
             className={this.props.layerInfo.liveLayer === null || !this.props.layerInfo.liveLayer ? "sc-hidden" : "sc-toc-item-layer-info-live-layer"}

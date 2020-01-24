@@ -3,19 +3,20 @@ import "./Navigation.css";
 import { fromLonLat } from "ol/proj";
 import * as helpers from "../helpers/helpers";
 import mainConfig from "../config.json";
-
+const storageMapDefaultsKey = "map_defaults";
 class Navigation extends Component {
   constructor(props) {
     super(props);
-
+    
     this.state = {
-      containerClassName: "nav-container"
+      containerClassName: "nav-container",
+
     };
 
     // LISTEN FOR SIDEPANEL CHANGES
     window.emitter.addListener("sidebarChanged", isSidebarOpen => this.sidebarChanged(isSidebarOpen));
   }
-
+  
   // ZOOM IN BUTTON
   zoomIn() {
     window.map.getView().setZoom(window.map.getView().getZoom() + 1);
@@ -28,8 +29,17 @@ class Navigation extends Component {
 
   // ZOOM TO FULL EXTENT
   zoomFullExtent() {
-    if (window.sidebarOpen) window.map.getView().animate({ center: mainConfig.centerCoords, zoom: mainConfig.defaultZoom });
-    else window.map.getView().animate({ center: mainConfig.centerCoords, zoom: mainConfig.defaultZoom });
+    let centerCoords = mainConfig.centerCoords;
+    let defaultZoom = mainConfig.defaultZoom;
+    const defaultStorage = sessionStorage.getItem(storageMapDefaultsKey); 
+    if (defaultStorage !== null) {
+      const detaults = JSON.parse(defaultStorage);
+      if (detaults.zoom !== undefined) defaultZoom = detaults.zoom;
+      if (detaults.center !== undefined) centerCoords = detaults.center;
+    }
+    window.map.getView().animate({ center: centerCoords, zoom: defaultZoom });
+ 
+    
   }
 
   // ZOOM TO CURRENT LOCATION
