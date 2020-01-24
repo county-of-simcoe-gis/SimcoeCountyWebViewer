@@ -44,8 +44,8 @@ class Identify extends Component {
       const layer = layers[index];
       if (layer.getVisible() && layer instanceof ImageLayer) {
         const name = layer.get("name");
-        let displayName = layer.get("displayName");
-
+        let displayName ="";// layer.get("displayName");
+        let type = layer.get("displayName")
         // QUERY USING WMS
         var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "application/json" });
         url += "&feature_count=1000000";
@@ -63,7 +63,7 @@ class Identify extends Component {
               featureList.forEach(feature => {
                 features.push(feature);
               });
-              if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName });
+              if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type });
               this.setState({ layers: layerList });
             }
           });
@@ -136,7 +136,7 @@ class Identify extends Component {
       }
     }
 
-    console.log(displayName);
+    //console.log(displayName);
     // STILL NOTHING, SO TAKE FIRST FIELD
     if (displayName === "") displayName = Object.keys(feature.values_)[0];
 
@@ -175,7 +175,7 @@ const Layer = props => {
 
   return (
     <div id="sc-identify-layer-container">
-      <Collapsible trigger={layer.name} open={open}>
+      <Collapsible trigger={layer.type} open={open}>
         <div className="sc-identify-layer-content-container">
           {props.layer.features.map(feature => (
             <FeatureItem
@@ -197,22 +197,22 @@ const FeatureItem = props => {
   const [open, setOpen] = useState(false);
   const { feature, displayName } = props;
 
-  console.log(feature);
+  //console.log(feature);
   const featureProps = feature.getProperties();
   const keys = Object.keys(featureProps);
-
+  const featureName =feature.get(displayName) ;
   return (
     <div>
       <div className="sc-identify-feature-header" onMouseEnter={() => props.onMouseEnter(feature)} onMouseLeave={props.onMouseLeave}>
         <div className="sc-fakeLink sc-identify-feature-header-label" onClick={() => setOpen(!open)}>
-          {displayName + ": " + feature.get(displayName)}
+          {displayName + ": " + featureName}
         </div>
         <img className="sc-identify-feature-header-img" src={images["zoom-in.png"]} onClick={() => props.onZoomClick(feature)} alt="Zoom In"></img>
       </div>
       <div className={open ? "sc-identify-feature-content" : "sc-hidden"}>
-        {Object.keys(featureProps).map((keyName, i) => {
+        {keys.map((keyName, i) => {
           const val = featureProps[keyName];
-          if (keyName !== "geometry" && keyName !== "geom") return <InfoRow key={helpers.getUID()} label={keyName} value={val}></InfoRow>;
+          if (keyName !== "geometry" && keyName !== "geom" && typeof val !== "object") return <InfoRow key={helpers.getUID()} label={keyName} value={val}></InfoRow>;
           // <div key={helpers.getUID()}>TEST</div>
         })}
       </div>

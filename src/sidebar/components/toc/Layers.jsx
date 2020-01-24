@@ -39,13 +39,12 @@ class Layers extends Component {
   }
 
   onActivateLayer = layerItem => {
-    const layerName = layer => {return helpers.replaceAllInString(layer.name, "_", " ");}
     const groupName = layer => {return helpers.replaceAllInString(layer.layerGroup, " ", "_");}
 
     let layersCopy = Object.assign([], this.state.allLayers[groupName(layerItem)]);
 
     layersCopy.forEach(layer => {
-      if (layerName(layer) === layerItem.name) {
+      if (layer.name === layerItem.fullName) {
         layer.visible = true;
         layer.layer.setVisible(true);
         
@@ -493,7 +492,7 @@ class Layers extends Component {
     const layers = this.state.layers.filter(layer => {
       if (this.props.searchText === "") return layer;
 
-      if (layer.name.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1) return layer;
+      if (layer.displayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1) return layer;
     });
 
     return (
