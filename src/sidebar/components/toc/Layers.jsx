@@ -492,7 +492,7 @@ class Layers extends Component {
     const layers = this.state.layers.filter(layer => {
       if (this.props.searchText === "") return layer;
 
-      if (layer.name.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1) return layer;
+      if (layer.displayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1) return layer;
     });
 
     return (
