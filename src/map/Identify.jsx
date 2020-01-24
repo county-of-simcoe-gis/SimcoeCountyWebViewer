@@ -136,7 +136,7 @@ class Identify extends Component {
       }
     }
 
-    console.log(displayName);
+    //console.log(displayName);
     // STILL NOTHING, SO TAKE FIRST FIELD
     if (displayName === "") displayName = Object.keys(feature.values_)[0];
 
@@ -197,7 +197,7 @@ const FeatureItem = props => {
   const [open, setOpen] = useState(false);
   const { feature, displayName } = props;
 
-  console.log(feature);
+  //console.log(feature);
   const featureProps = feature.getProperties();
   const keys = Object.keys(featureProps);
   const featureName =feature.get(displayName) ;
@@ -212,7 +212,7 @@ const FeatureItem = props => {
       <div className={open ? "sc-identify-feature-content" : "sc-hidden"}>
         {keys.map((keyName, i) => {
           const val = featureProps[keyName];
-          if (keyName !== "geometry" && keyName !== "geom") return <InfoRow key={helpers.getUID()} label={keyName} value={val}></InfoRow>;
+          if (keyName !== "geometry" && keyName !== "geom" && typeof val !== "object") return <InfoRow key={helpers.getUID()} label={keyName} value={val}></InfoRow>;
           // <div key={helpers.getUID()}>TEST</div>
         })}
       </div>
