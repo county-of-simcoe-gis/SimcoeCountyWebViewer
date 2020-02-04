@@ -2,7 +2,7 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import Slider, { createSliderWithTooltip } from "rc-slider";
-import { sortableContainer } from "react-sortable-hoc";
+import { sortableContainer, sortableElement } from "react-sortable-hoc";
 import { AutoSizer } from "react-virtualized";
 import VirtualLayers from "./VirtualLayers.jsx";
 import arrayMove from "array-move";
@@ -12,10 +12,11 @@ import GeoJSON from "ol/format/GeoJSON.js";
 import "./Layers.css";
 import * as helpers from "../../../helpers/helpers";
 import * as TOCHelpers from "../common/TOCHelpers.jsx";
+import TOCConfig from "../common/TOCConfig.json";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
 import Portal from "../../../helpers/Portal.jsx";
-import TOCConfig from "../common/TOCConfig.json";
+
 
 const SortableVirtualList = sortableContainer(VirtualLayers, { withRef: true });
 
@@ -25,30 +26,44 @@ class Layers extends Component {
 
     this.storageKey = "layers";
     this.lastPosition = null;
-    this.virtualId = "sc-toc-virtual-layers";
+    
     this.state = {
-      allLayers: {},
-      layers: []
+      layers: [],
+      forceAllLegend: undefined
     };
-
+    
+     // LISTEN FOR RESET LAYERS
+     window.emitter.addListener("resetLayers", (group) => {if (group === this.props.group.value) this.resetLayers()});
+    // LISTEN FOR TURN OFF LAYERS
+    window.emitter.addListener("turnOffLayers", (group) => {if (group === this.props.group.value) this.turnOffLayers()});
+    // LISTEN FOR TOGGLE ALL LEGEND
+    window.emitter.addListener("toggleAllLegend", (type) => this.toggleAllLegends(type));
     // LISTEN FOR MAP TO MOUNT
     window.emitter.addListener("mapLoaded", () => this.onMapLoad());
 
     // LISTEN FOR SEARCH RESULT
-    window.emitter.addListener("activeTocLayer", layerItem => this.onActivateLayer(layerItem));
+    window.emitter.addListener("activeTocLayer", layerItem => {if (layerItem.layerGroup === this.props.group.value) this.onActivateLayer(layerItem)});
   }
 
-  onActivateLayer = layerItem => {
-    const groupName = layer => {return helpers.replaceAllInString(layer.layerGroup, " ", "_");}
+  getVirtualId()  {
+    return "sc-toc-virtual-layers" + this.props.group.value;
+  }
 
-    let layersCopy = Object.assign([], this.state.allLayers[groupName(layerItem)]);
+  componentDidMount() {
+    
+    if ( this.state.layers.length === 0){
+    this.setState({ layers: this.props.group.layers }, () => {});
+    }
+  }
+  onActivateLayer = layerItem => {
+    let layersCopy = Object.assign([], this.state.layers);
 
     layersCopy.forEach(layer => {
       if (layer.name === layerItem.fullName) {
         layer.visible = true;
         layer.layer.setVisible(true);
         
-        document.getElementById(this.virtualId).scrollTop = 0;
+        document.getElementById(this.getVirtualId()).scrollTop = 0;
 
         var i = 0;
         var elemFound = false;
@@ -63,12 +78,12 @@ class Layers extends Component {
               if (elem !== null) {
                 elemFound = true;
                 const topPos = elem.offsetTop;
-                document.getElementById(this.virtualId).scrollTop = topPos + 1;
+                document.getElementById(this.getVirtualId()).scrollTop = topPos + 1;
                 setTimeout(() => {
-                  document.getElementById(this.virtualId).scrollTop = topPos;
+                  document.getElementById(this.getVirtualId()).scrollTop = topPos;
                 }, 50);
               } else {
-                document.getElementById(this.virtualId).scrollTop += i * 10;
+                document.getElementById(this.getVirtualId()).scrollTop += i * 10;
               }
             }, i * 100);
           })(i);
@@ -77,9 +92,7 @@ class Layers extends Component {
     });
   };
 
-  componentWillUpdate() {
-    if (this.state.layers !== undefined) window.emitter.emit("layersLoaded", this.state.layers.length);
-  }
+
 
   onMapLoad = () => {
     window.map.on("singleclick", evt => {
@@ -104,82 +117,35 @@ class Layers extends Component {
 
   resetLayers = () => {
     // SHUT OFF VISIBILITY
-    for (var key in this.state.allLayers) {
-      if (!this.state.allLayers.hasOwnProperty(key)) continue;
+    for (var key in this.state.layers) {
+      if (!this.state.layers.hasOwnProperty(key)) continue;
 
-      var obj = this.state.allLayers[key];
-      obj.forEach(layer => {
-        layer.layer.setVisible(false);
-      });
+      var obj = this.state.layers[key];
+      obj.layer.setVisible(false);
+      
     }
 
-    this.setState({ layers: undefined, allLayers: [] }, () => {
-      this.refreshLayers(this.props.group, this.props.sortAlpha,this.props.allGroups);
+    this.setState({ layers: undefined}, () => {
+      this.refreshLayers(this.props.group, this.props.sortAlpha);
     });
   };
 
-  refreshLayers = (group, sortAlpha, allGroups) => {
+  refreshLayers = (group, sortAlpha) => {
     let layers = [];
-    layers = this.state.allLayers[group.value];
+    layers = this.state.layers;
 
     if (layers === undefined) {
       layers = group.layers;
-    if (layers !== undefined) {
-        let allLayers = this.state.allLayers;
-        allLayers[group.value] = layers;
-        
-        // FETCH THE REST OF THE GROUPS
-        const fetchGroups = (allGroups) => {
-            allGroups.forEach(groupItem => {
-            if (group.value !== groupItem.value) {
-              let layersItems = this.state.allLayers[groupItem.value];
-              if (layersItems === undefined) {
-                layersItems = groupItem.layers;
-                if (layersItems !== undefined) {
-                  let allLayers = this.state.allLayers;
-                  allLayers[groupItem.value] = layersItems;
-                }
-              }
-            }
-          });
-        }
-        fetchGroups(allGroups);
-        this.setState({ layers: layers, allLayers: allLayers }, () => {
+        this.setState({ layers: layers }, () => {
           this.sortLayers(this.state.layers, sortAlpha);
         });
         return;
-      }
     }else{
       this.setState({ layers: layers }, () => {
         this.sortLayers(this.state.layers, sortAlpha);
       });
       return;
     }
-
-    TOCHelpers.getBasicLayers(group, layers => {
-      let allLayers = this.state.allLayers;
-      allLayers[group.value] = layers;
-
-      this.setState({ layers: layers, allLayers: allLayers }, () => {
-        this.sortLayers(this.state.layers, sortAlpha);
-
-        const fetchGroups = (allGroups) =>{ // FETCH THE REST OF THE GROUPS
-          allGroups.forEach(groupItem => {
-          const layersItem = this.state.allLayers[groupItem.value];
-
-          if (layersItem === undefined) {
-            TOCHelpers.getBasicLayers(groupItem, layers => {
-              let allLayers = this.state.allLayers;
-              allLayers[groupItem.value] = layers;
-              this.setState({ allLayers: allLayers });
-            });
-          }
-        });
-        };
-        fetchGroups(allGroups);
-      });
-    });
-    
   };
 
   // isVisibleFromConfig()
@@ -215,49 +181,37 @@ class Layers extends Component {
     let newLayers = Object.assign([{}], layers);
     if (sortAlpha) newLayers.sort(this.sortByAlphaCompare);
     else newLayers.sort(this.sortByIndexCompare);
-
-    let allLayers = this.state.allLayers;
-    allLayers[this.props.group.value] = newLayers;
-
-    this.setState({ layers: newLayers, allLayers: allLayers }, () => {
-      window.allLayers = this.state.allLayers;
+    this.setState({ layers: newLayers  }, () => {
+      
       if (callback !== undefined) callback();
     });
   };
 
   // REFRESH IF PROPS FROM PARENT HAVE CHANGED - GROUPS DROP DOWN CHANGE.
   componentWillReceiveProps(nextProps) {
-    let allGroups = [];
-    let allLayers = this.state.allLayers;
-    const nextLayers = allLayers[nextProps.group.value];
+    
+    const nextLayers = nextProps.group.layers;
     if (nextProps.sortAlpha !== this.props.sortAlpha) {
       this.sortLayers(this.state.layers, nextProps.sortAlpha);
     }
-
+    
     if (nextProps.group.value !== this.props.group.value) {
-      const layers = this.state.allLayers[this.props.group.value];
+      const layers = nextProps.group.layers;
       if (layers !== undefined) {
         // DISABLE LAYER VISIBILITY FROM PREVIOUS GROUP
         TOCHelpers.disableLayersVisiblity(layers, newLayers => {
-          
-          allLayers[this.props.group.value] = newLayers;
-          this.setState({ allLayers: allLayers }, () => {
-            // ENABLE LAYER VISIBILITY FROM PREVIOUS GROUP
-           
             if (nextLayers !== undefined) {
               TOCHelpers.enableLayersVisiblity(nextLayers, newLayers => {
-                let allLayers = this.state.allLayers;
-                allLayers[nextProps.group.value] = newLayers;
-                this.setState({ layers: newLayers, allLayers: allLayers, allGroups:allGroups }, () => {
-                  this.refreshLayers(nextProps.group, nextProps.sortAlpha,nextProps.allGroups);
+                this.setState({ layers: newLayers }, () => {
+                  this.refreshLayers(nextProps.group, nextProps.sortAlpha);
                 });
               });
             } else {
-              this.refreshLayers(nextProps.group, nextProps.sortAlpha,nextProps.allGroups);
+              this.refreshLayers(nextProps.group, nextProps.sortAlpha);
             }
           });
-        });
-      } else this.refreshLayers(nextProps.group, nextProps.sortAlpha,nextProps.allGroups);
+      
+      } else this.refreshLayers(nextProps.group, nextProps.sortAlpha);
     }
   }
 
@@ -278,29 +232,28 @@ class Layers extends Component {
       },
       () => {
         TOCHelpers.updateLayerIndex(this.state.layers, newLayers => {
-          let allLayers = this.state.allLayers;
-          allLayers[this.props.group.value] = newLayers;
-          this.setState({ layers: newLayers, allLayers: allLayers });
+          
+          this.setState({ layers: newLayers });
         });
       }
     );
 
-    document.getElementById(this.virtualId).scrollTop += this.lastPosition;
+    document.getElementById(this.getVirtualId()).scrollTop += this.lastPosition;
   };
 
   // TRACK CURSOR SO I CAN RETURN IT TO SAME LOCATION AFTER ACTIONS
   onSortMove = e => {
-    this.lastPosition = document.getElementById(this.virtualId).scrollTop;
+    this.lastPosition = document.getElementById(this.getVirtualId()).scrollTop;
   };
 
-  // LEGEND FOR EACH LAYER
-  onLegendToggle = layerInfo => {
-    this.legendVisiblity(layerInfo);
-  };
-
+    // LEGEND FOR EACH LAYER
+    onLegendToggle = layerInfo => {
+      this.legendVisiblity(layerInfo);
+      
+    };
   // TOGGLE LEGEND
   legendVisiblity = (layerInfo, forceAll) => {
-    this.lastPosition = document.getElementById(this.virtualId).scrollTop;
+    this.lastPosition = document.getElementById(this.getVirtualId()).scrollTop;
 
     let showLegend = !layerInfo.showLegend;
     if (forceAll !== undefined) {
@@ -319,9 +272,8 @@ class Layers extends Component {
             )
           },
           () => {
-            document.getElementById(this.virtualId).scrollTop += this.lastPosition;
-            let allLayers = this.state.allLayers;
-            allLayers[this.props.group.value] = this.state.layers;
+            document.getElementById(this.getVirtualId()).scrollTop += this.lastPosition;
+          
           }
         );
       });
@@ -333,9 +285,9 @@ class Layers extends Component {
           layers: this.state.layers.map(layer => (layer.name === layerInfo.name ? Object.assign({}, layer, { showLegend: showLegend, height: rowHeight }) : layer))
         },
         () => {
-          document.getElementById(this.virtualId).scrollTop += this.lastPosition;
-          let allLayers = this.state.allLayers;
-          allLayers[this.props.group.value] = this.state.layers;
+          document.getElementById(this.getVirtualId()).scrollTop += this.lastPosition;
+          
+         
         }
       );
     }
@@ -343,7 +295,7 @@ class Layers extends Component {
 
   // CHECKBOX FOR EACH LAYER
   onCheckboxChange = layerInfo => {
-    this.lastPosition = document.getElementById(this.virtualId).scrollTop;
+    this.lastPosition = document.getElementById(this.getVirtualId()).scrollTop;
     const visible = !layerInfo.visible;
     layerInfo.layer.setVisible(visible);
     layerInfo.visible = visible;
@@ -353,9 +305,8 @@ class Layers extends Component {
         layers: this.state.layers.map(layer => (layer.name === layerInfo.name ? Object.assign({}, layer, { visible: visible }) : layer))
       },
       () => {
-        document.getElementById(this.virtualId).scrollTop += this.lastPosition;
-        let allLayers = this.state.allLayers;
-        allLayers[this.props.group.value] = this.state.layers;
+        document.getElementById(this.getVirtualId()).scrollTop += this.lastPosition;
+        
       }
     );
   };
@@ -370,8 +321,7 @@ class Layers extends Component {
         layers: this.state.layers.map(layer => (layer.name === layerInfo.name ? Object.assign({}, layer, { opacity: opacity }) : layer))
       },
       () => {
-        let allLayers = this.state.allLayers;
-        allLayers[this.props.group.value] = this.state.layers;
+        
       }
     );
   };
@@ -425,15 +375,6 @@ class Layers extends Component {
       });
     } else if (action === "sc-floating-menu-download") {
       helpers.showMessage("Download", "Coming Soon!");
-      // TOCHelpers.getLayerInfo(layerInfo, result => {
-      //   if (result.featureType.name === "Assessment Parcel") helpers.showMessage("Download", "Parcels are not available for download");
-      //   else {
-      //     if (helpers.isMobile()) {
-      //       window.emitter.emit("setSidebarVisiblity", "CLOSE");
-      //       helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl, false, "full");
-      //     } else helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl);
-      //   }
-      // });
     }
 
     helpers.addAppStat("Layer Options", action);
@@ -453,35 +394,11 @@ class Layers extends Component {
     }
   };
 
-  saveLayerOptions = () => {
-    // GATHER INFO TO SAVE
-    let layers = {};
-    for (var key in this.state.allLayers) {
-      if (!this.state.allLayers.hasOwnProperty(key)) continue;
-
-      var obj = this.state.allLayers[key];
-      let savedLayers = {};
-      obj.forEach(layer => {
-        const saveLayer = {
-          name: layer.name,
-          visible: layer.visible
-        };
-        savedLayers[layer.name] = saveLayer;
-      });
-
-      layers[key] = savedLayers;
-    }
-
-    localStorage.setItem(this.storageKey, JSON.stringify(layers));
-
-    helpers.showMessage("Save", "Layer Visibility has been saved.");
-  };
 
   turnOffLayers = () => {
     TOCHelpers.turnOffLayers(this.state.layers, newLayers => {
-      let allLayers = this.state.allLayers;
-      allLayers[this.props.group.value] = newLayers;
-      this.setState({ layers: newLayers, allLayers: allLayers }, () => {});
+     
+      this.setState({ layers: newLayers}, () => {});
     });
   };
 
@@ -497,11 +414,13 @@ class Layers extends Component {
 
     return (
       <div className="sc-toc-layer-container">
-        <AutoSizer disableWidth>
-          {({ height }) => {
+        <AutoSizer >
+          {({ width,height }) => {
             return (
+              
               <SortableVirtualList
                 key={helpers.getUID()}
+                virtual_key={this.getVirtualId()}
                 getRef={this.registerListRef}
                 ref={instance => {
                   this.SortableVirtualList = instance;
@@ -511,6 +430,7 @@ class Layers extends Component {
                 helperClass={"sc-layer-list-sortable-helper"}
                 rowHeight={height}
                 height={height}
+                width={width}
                 lockAxis={"y"}
                 onSortMove={this.onSortMove}
                 distance={5}
@@ -521,7 +441,9 @@ class Layers extends Component {
                 sortAlpha={this.props.sortAlpha}
                 //scrollToIndex={50}
               />
+           
             );
+
           }}
         </AutoSizer>
       </div>
