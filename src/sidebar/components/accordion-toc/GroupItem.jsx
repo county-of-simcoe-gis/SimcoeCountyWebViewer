@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import * as helpers from "../../../helpers/helpers";
-import Layers from "./Layers.jsx.js";
+import Layers from "./Layers.jsx";
 import "./GroupItem.css";
 class GroupItem extends Component {
   constructor(props) {
