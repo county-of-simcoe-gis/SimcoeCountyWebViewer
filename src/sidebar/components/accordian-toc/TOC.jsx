@@ -2,7 +2,6 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import ReactTooltip from "react-tooltip";
-import Select from "react-select";
 import "rc-slider/assets/index.css";
 import Switch from "react-switch";
 import { isMobile } from "react-device-detect";
@@ -12,7 +11,7 @@ import "./TOC.css";
 import * as helpers from "../../../helpers/helpers";
 import * as TOCHelpers from "../common/TOCHelpers.jsx";
 import TOCConfig from "../common/TOCConfig.json";
-import Layers from "./Layers.jsx";
+import GroupItem from "./GroupItem.jsx";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
 import Portal from "../../../helpers/Portal.jsx";
@@ -21,9 +20,13 @@ class TOC extends Component {
   constructor(props) {
     super(props);
     this.storageMapDefaultsKey = "map_defaults";
+    this.storageKey = "layers";
     this.state = {
       layerGroups: [],
       selectedGroup: {},
+    
+      saveLayerOptions:[],
+      onMenuItemClick:[],
       isLoading: false,
       searchText: "",
       sortAlpha: this.getInitialSort(),
@@ -31,37 +34,33 @@ class TOC extends Component {
       layerCount: 0
     };
 
-    // LISTEN FOR LAYERS TO LOAD
-    window.emitter.addListener("layersLoaded", numLayers => this.onLayersLoad(numLayers));
-
     // LISTEN FOR SEARCH RESULT
-    window.emitter.addListener("activeTocLayerGroup", (groupName, callback) => this.onActivateLayer(groupName, callback));
+    window.emitter.addListener("activeTocLayerGroup", (groupName, callback) => this.onActivateLayer(callback));
   }
-
-  onActivateLayer = (groupName, callback) => {
-    const remove_underscore = name => {return helpers.replaceAllInString(name, "_", " ");}
-    window.emitter.emit("setSidebarVisiblity", "OPEN");
-    window.emitter.emit("activateTab", "layers");
-
-    this.state.layerGroups.forEach(layerGroup => {
-      if (layerGroup.value === groupName) {
-        this.setState({ selectedGroup: layerGroup }, () => callback());
-        return;
-      }
-    });
-  };
-
-  onLayersLoad = numLayers => {
-    if (this.state.layerCount !== numLayers) this.setState({ layerCount: numLayers });
-  };
-
   getInitialSort = () => {
     if (isMobile) return true;
     else return false;
   };
+  onActivateLayer = (callback) => {
+    window.emitter.emit("setSidebarVisiblity", "OPEN");
+    window.emitter.emit("activateTab", "layers");  
+    callback();
+  };
+
+  onLayersLoad = () => {
+    if (window.allLayers !== undefined){
+        let layerCount = 0;
+        window.allLayers.map(group => {
+          layerCount += group.length;
+          });
+      if (this.state.layerCount !== layerCount) this.setState({ layerCount: layerCount });
+    }
+  };
+
 
   componentDidMount() {
     this.refreshTOC();
+    
   }
 
   refreshTOC = callback => {
@@ -90,6 +89,12 @@ class TOC extends Component {
               if (callback !== undefined) callback();
             }
           );
+          let allLayers = [];
+          this.state.layerGroups.forEach(group =>{
+            allLayers.push(group.layers);
+          });
+          window.allLayers = allLayers;
+          this.onLayersLoad();
         });
       } else {
       const groupInfo = TOCHelpers.getGroups();
@@ -102,7 +107,10 @@ class TOC extends Component {
           () => {
             if (callback !== undefined) callback();
           });
+          window.allLayers = this.state.layerGroups;
+          this.onLayersLoad();
       }
+     
   };
 
   onGroupDropDownChange = selectedGroup => {
@@ -114,23 +122,15 @@ class TOC extends Component {
     this.setState({ searchText: searchText });
   };
 
-  onSortSwitchChange = sortAlpha => {
-    this.setState({ sortAlpha: sortAlpha });
-
-    if (sortAlpha) {
-      helpers.showMessage("Sorting", "Layer re-ordering disabled.", "yellow");
-    }
-
-    helpers.addAppStat("TOC Sort", sortAlpha);
-  };
-
   reset = () => {
     
     const defaultGroup = this.state.defaultGroup;
     this.setState({ sortAlpha: false, selectedGroup: defaultGroup }, () => {
       this.refreshTOC(() => {
         setTimeout(() => {
-          this.layerRef.resetLayers();
+          this.state.layerGroups.forEach(group => {
+            window.emitter.emit("resetLayers", group.value);
+          })
         }, 100);
       });
     });
@@ -164,20 +164,58 @@ class TOC extends Component {
 
   onMenuItemClick = action => {
     if (action === "sc-floating-menu-expand") {
-      this.layerRef.toggleAllLegends("OPEN");
+      window.emitter.emit("toggleAllLegend", "OPEN");
     } else if (action === "sc-floating-menu-collapse") {
-      this.layerRef.toggleAllLegends("CLOSE");
+      window.emitter.emit("toggleAllLegend", "CLOSE");
     } else if (action === "sc-floating-menu-legend") {
       helpers.showMessage("Legend", "Coming Soon");
     } else if (action === "sc-floating-menu-visility") {
-      this.layerRef.turnOffLayers();
+      this.state.layerGroups.forEach(group => {
+        window.emitter.emit("turnOffLayers", group.value);
+       })
     }
 
     helpers.addAppStat("TOC Tools", action);
   };
+  onSortSwitchChange = sortAlpha => {
+    this.setState({ sortAlpha: sortAlpha });
 
+    if (sortAlpha) {
+      helpers.showMessage("Sorting", "Layer re-ordering disabled.", "yellow");
+    }
+
+    helpers.addAppStat("TOC Sort", sortAlpha);
+  };
   onSaveClick = () => {
-    this.layerRef.saveLayerOptions();
+    this.saveLayerOptions();
+  };
+
+
+  saveLayerOptions = () => {
+    // GATHER INFO TO SAVE
+    let layers = {};
+    for (var key in window.allLayers) {
+      
+      if (!window.allLayers.hasOwnProperty(key)) continue;
+
+      var obj = window.allLayers[key];
+      let savedLayers = {};
+      let groupName = "";
+      obj.forEach(layer => {
+        groupName = layer.group;
+        const saveLayer = {
+          name: layer.name,
+          visible: layer.visible
+        };
+        savedLayers[layer.name] = saveLayer;
+      });
+
+      layers[groupName] = savedLayers;
+    }
+
+    localStorage.setItem(this.storageKey, JSON.stringify(layers));
+
+    helpers.showMessage("Save", "Layer Visibility has been saved.");
   };
 
   render() {
@@ -199,7 +237,6 @@ class TOC extends Component {
         padding: "5px"
       })
     };
-
     return (
       <div>
         <div className={this.state.isLoading ? "sc-toc-main-container-loading" : "sc-toc-main-container-loading sc-hidden"}>
@@ -212,28 +249,23 @@ class TOC extends Component {
               <ReactTooltip id="sc-toc-save-tooltip" className="sc-toc-save-tooltip" multiline={false} place="right" type="dark" effect="solid" />
             </div>
           </div>
-          <div className="sc-toc-groups-container">
-            <div id="sc-toc-groups-dropdown" title="Click here for more layers">
-              <Select
-                styles={groupsDropDownStyles}
-                isSearchable={false}
-                onChange={this.onGroupDropDownChange}
-                options={this.state.layerGroups}
-                value={this.state.selectedGroup}
-                placeholder="Click Here for more Layers..."
+        
+          <div className="toc-group-list">
+         { this.state.layerGroups.map((group) => (
+              <GroupItem
+                key={"group-item" + group.value}
+                
+                group={group}
+                searchText={this.state.searchText}
+                sortAlpha={this.state.sortAlpha}
+                allGroups={this.state.layerGroups}
+                panelOpen={this.state.selectedGroup.value === group.value}
+                
+                saveLayerOptions={this.state.saveLayerOptions[group.value]}
+
               />
-            </div>
-          </div>
-          <div>
-            <Layers
-              ref={ref => {
-                this.layerRef = ref;
-              }}
-              group={this.state.selectedGroup}
-              searchText={this.state.searchText}
-              sortAlpha={this.state.sortAlpha}
-              allGroups={this.state.layerGroups}
-            />
+              
+          ))}
           </div>
 
           <div className="sc-toc-footer-container">

@@ -1,5 +1,5 @@
 import * as helpers from "../../../helpers/helpers";
-import TOCConfig from "./TOCConfig.json";
+import TOCConfig from "../common/TOCConfig.json";
 import xml2js from "xml2js";
 
 // INDEX WHERE THE TOC LAYERS SHOULD START DRAWING AT
