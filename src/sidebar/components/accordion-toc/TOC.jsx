@@ -11,7 +11,7 @@ import "./TOC.css";
 import * as helpers from "../../../helpers/helpers";
 import * as TOCHelpers from "../common/TOCHelpers.jsx";
 import TOCConfig from "../common/TOCConfig.json";
-import GroupItem from "./GroupItem.jsx";
+import GroupItem from "./GroupItem.jsx.js";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
 import Portal from "../../../helpers/Portal.jsx";

@@ -4,7 +4,7 @@ import { sortableElement } from "react-sortable-hoc";
 import { List } from "react-virtualized";
 
 // CUSTOM
-import LayerItem from "./LayerItem.jsx";
+import LayerItem from "./LayerItem.jsx.js";
 import * as helpers from "../../../helpers/helpers";
 import "./VirtualLayers.css";
 

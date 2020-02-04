@@ -4,7 +4,7 @@ import ReactDOM from "react-dom";
 import Slider, { createSliderWithTooltip } from "rc-slider";
 import { sortableContainer, sortableElement } from "react-sortable-hoc";
 import { AutoSizer } from "react-virtualized";
-import VirtualLayers from "./VirtualLayers.jsx";
+import VirtualLayers from "./VirtualLayers.jsx.js";
 import arrayMove from "array-move";
 import GeoJSON from "ol/format/GeoJSON.js";
 
