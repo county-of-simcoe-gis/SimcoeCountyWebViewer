@@ -298,6 +298,7 @@ class Layers extends Component {
     this.lastPosition = document.getElementById(this.getVirtualId()).scrollTop;
     const visible = !layerInfo.visible;
     layerInfo.layer.setVisible(visible);
+    window.emitter.emit("updateActiveTocLayers");
     layerInfo.visible = visible;
     this.setState(
       {
@@ -409,7 +410,10 @@ class Layers extends Component {
     const layers = this.state.layers.filter(layer => {
       if (this.props.searchText === "") return layer;
 
-      if (layer.displayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1) return layer;
+      if (layer.displayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1){
+        
+        return layer;
+      } 
     });
 
     return (

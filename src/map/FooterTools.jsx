@@ -21,7 +21,6 @@ class FooterTools extends Component {
 
     // LISTEN FOR MAP TO MOUNT
     window.emitter.addListener("basemapChanged", type => {
-      console.log(type);
       this.setState({ basemapType: type });
     });
   }

@@ -8,7 +8,22 @@
 .sc-toc-main-container {
   display: block;
 }
-
+.sc-toc-groups-active-layers-badge {
+  background: grey;
+  border-radius: 5px;
+  text-align: center;
+  padding: 2px;
+  color: white;
+  float:right;
+  margin-top: -3px;
+}
+.sc-toc-groups-active-layers {
+  background-image:url(./images/layers.png);
+  width:30px;
+  height: 30px;
+  background-repeat: space;
+  float:right;
+}
 .sc-toc-main-container-loading {
   display: block;
   position: relative;
@@ -204,10 +219,7 @@
   margin-bottom: 5px;
   max-height: 400px;
 }
-.sc-toc-group-list-item-container{
-  max-height: 400px;
-  min-height: 200px;
-}
+
 .sc-toc-group-list-header-label{
   padding-top: 12px;
   width: 90%;
