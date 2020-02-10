@@ -424,7 +424,7 @@ class Search extends Component {
         layerItems.forEach(layer => {
           if (layer.displayName.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
             //console.log(layer);
-            layers.push({ fullName:layer.name, name:layer.displayName, type: "Map Layer", layerGroupName:layer.groupName , layerGroup: layer.group, imageName: "layers.png", index: layer.index });
+            layers.push({ fullName:layer.name, name:layer.displayName,isVisible: layer.layer.getVisible(), type: "Map Layer", layerGroupName:layer.groupName , layerGroup: layer.group, imageName: "layers.png", index: layer.index });
           }
         });
       });
@@ -575,9 +575,9 @@ class Search extends Component {
                 <div className="sc-search-item-left">
                   <img src={images[item.imageName]} alt="blue pin" />
                 </div>
-                <div className="sc-search-item-content">
+                <div className="sc-search-item-content"> 
                   <Highlighter highlightClassName="sc-search-highlight-words" searchWords={[this.state.value]} textToHighlight={item.name} />
-                  <div className="sc-search-item-sub-content">{type === "" ? item.type : " - " + type + " (" + item.type + ")"}</div>
+                  <div className="sc-search-item-sub-content">{type === "" ? item.type : " - " + type + " (" + item.type + (item.type === "Map Layer" && item.isVisible ? " - Currently Visible" : "") + ")"}</div>
                 </div>
               </div>
             );
