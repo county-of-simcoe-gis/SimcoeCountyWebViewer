@@ -289,8 +289,8 @@ class Search extends Component {
 
       fullFeature.setStyle(pointStyle);
     } else {
-      let defaultStyle = myMapsHelpers.getDefaultDrawStyle([255, 0, 0, 0.8], false, 2, fullFeature.getGeometry().getType());
-      defaultStyle.setFill(new Fill({ color: [255, 0, 0, 0] }));
+      let defaultStyle = myMapsHelpers.getDefaultDrawStyle([102, 255, 102, 0.3], false, 6, fullFeature.getGeometry().getType());
+      defaultStyle.setFill(new Fill({ color: [102, 255, 102, 0.3] }));
       fullFeature.setStyle(defaultStyle);
     }
   }
@@ -359,8 +359,8 @@ class Search extends Component {
       // SET SOURCE
       searchIconLayer.getSource().addFeature(feature);
 
-      searchGeoLayer.setZIndex(100);
-      searchIconLayer.setZIndex(100);
+    // searchGeoLayer.setZIndex(100);
+    // searchIconLayer.setZIndex(100);
 
       // SET STYLE AND ZOOM
       searchGeoLayer.setStyle(styles["point"]);
