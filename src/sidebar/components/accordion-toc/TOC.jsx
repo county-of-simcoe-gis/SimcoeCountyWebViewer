@@ -172,7 +172,8 @@ class TOC extends Component {
     } else if (action === "sc-floating-menu-visility") {
       this.state.layerGroups.forEach(group => {
         window.emitter.emit("turnOffLayers", group.value);
-       })
+       });
+       window.emitter.emit("updateActiveTocLayers");
     }
 
     helpers.addAppStat("TOC Tools", action);
