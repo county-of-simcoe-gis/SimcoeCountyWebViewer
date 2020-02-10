@@ -6,6 +6,12 @@
   right: 0px;
   overflow-y: auto;
 }
+.sc-identiy-feature-iframe {
+  border-width: 0px;
+  height: fit-content;
+  height: -webkit-fill-available;
+  width:100%;
+}
 
 .sc-identify-layer-content-container {
   padding: 5px;
