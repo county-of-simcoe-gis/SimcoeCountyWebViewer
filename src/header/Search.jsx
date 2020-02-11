@@ -191,7 +191,7 @@ class Search extends Component {
         source: new VectorSource({
           features: []
         }),
-        zIndex: 1000
+        zIndex: 100000
       });
       searchGeoLayer.set("name", "sc-search-geo");
       window.map.addLayer(searchGeoLayer);
@@ -201,7 +201,7 @@ class Search extends Component {
         source: new VectorSource({
           features: []
         }),
-        zIndex: 1000
+        zIndex: 100000
       });
       searchIconLayer.setStyle(styles["point"]);
       searchIconLayer.set("name", "sc-search-icon");
@@ -253,8 +253,8 @@ class Search extends Component {
     searchGeoLayer.getSource().addFeature(fullFeature);
     searchIconLayer.getSource().addFeature(pointFeature);
 
-    searchGeoLayer.setZIndex(100);
-    searchIconLayer.setZIndex(100);
+    //searchGeoLayer.setZIndex(100);
+    //searchIconLayer.setZIndex(100);
 
     // SET STYLE AND ZOOM
     if (result.geojson.indexOf("Point") !== -1) {
