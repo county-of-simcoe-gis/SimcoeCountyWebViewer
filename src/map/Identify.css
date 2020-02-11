@@ -10,6 +10,7 @@
   border-width: 0px;
   height: fit-content;
   height: -webkit-fill-available;
+  max-height:350px;
   width:100%;
 }
 
