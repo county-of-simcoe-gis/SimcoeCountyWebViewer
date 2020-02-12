@@ -146,9 +146,10 @@ class MyMaps extends Component {
 
   // DRAW START
   onDrawStart = evt => {
-    // DISAABLE PARCEL CLICK
+    // DISABLE PARCEL CLICK
     window.disableParcelClick = true;
-
+    // DISABLE IDENTIFY CLICK
+    window.disableIdentifyClick = true;
     // DISABLE POPUPS
     window.isDrawingOrEditing = true;
 
@@ -187,7 +188,8 @@ class MyMaps extends Component {
 
       // RE-ENABLE PARCEL CLICK
       window.disableParcelClick = false;
-
+      // DISABLE IDENTIFY CLICK
+      window.disableIdentifyClick = false;
       // RE-ENABLE POPUPS
       window.isDrawingOrEditing = false;
     }, 1000);

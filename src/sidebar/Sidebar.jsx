@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import "./Sidebar.css";
 import * as helpers from "../helpers/helpers";
-import TOC from "./components/toc/TOC";
 //import TOCv1 from './components/toc/TOCV1.jsx'
 //import TOCv2 from './components/toc/TOCv2.jsx'
 import SidebarItemList from "./SidebarItemList";
@@ -62,7 +61,8 @@ class Sidebar extends Component {
   onMyMapsEditing = isMyMapsEditing => {
     // DISABLE PARCEL CLICK
     window.disableParcelClick = isMyMapsEditing;
-
+    // DISABLE IDENTIFY CLICK
+    window.disableIdentifyClick = isMyMapsEditing;
     // DISABLE POPUPS
     window.isDrawingOrEditing = isMyMapsEditing;
 

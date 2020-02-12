@@ -30,10 +30,10 @@ class GroupItem extends Component {
 
   onActivateLayer = (callback) => {
     let panelOpen = this.state.panelOpen;
+    this.setActiveLayerCount();
     if (!panelOpen) {
       panelOpen= !panelOpen;
       this.setState({ panelOpen: panelOpen, userPanelOpen:panelOpen },() => {
-          this.setActiveLayerCount();
           callback();} );
     }
   };

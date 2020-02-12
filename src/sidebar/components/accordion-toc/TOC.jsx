@@ -15,12 +15,18 @@ import GroupItem from "./GroupItem.jsx";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
 import Portal from "../../../helpers/Portal.jsx";
-
+import Identify from "../../../map/Identify";
+import Point from "ol/geom/Point";
+import { Vector as VectorLayer } from "ol/layer";
+import { Vector as VectorSource } from "ol/source.js";
+import Feature from "ol/Feature";
+import { Icon, Style} from "ol/style.js";
 class TOC extends Component {
   constructor(props) {
     super(props);
     this.storageMapDefaultsKey = "map_defaults";
     this.storageKey = "layers";
+    this.identifyIconLayer = undefined;
     this.state = {
       layerGroups: [],
       selectedGroup: {},
@@ -36,7 +42,48 @@ class TOC extends Component {
 
     // LISTEN FOR SEARCH RESULT
     window.emitter.addListener("activeTocLayerGroup", (groupName, callback) => this.onActivateLayer(callback));
+
+    // LISTEN FOR MAP TO MOUNT
+    window.emitter.addListener("mapLoaded", () => this.onMapLoad());
   }
+  addIdentifyLayer = () => {
+    this.identifyIconLayer = new VectorLayer({
+      name: "sc-identify",
+      source: new VectorSource({
+        features: []
+      }),
+      zIndex: 100000
+    });
+    this.identifyIconLayer.setStyle(new Style({
+        image: new Icon({
+        anchor: [0.5, 1],
+        src: images["identify-marker.png"]
+      })
+    }));
+    this.identifyIconLayer.set("name", "sc-identify-icon");
+  }
+
+  onMapLoad = () => {
+    window.map.on("singleclick", evt => {
+      // DISABLE IDENTIFY CLICK
+      let disable = window.disableIdentifyClick;
+      if (disable) return;
+      // DISABLE POPUPS
+      disable = window.isDrawingOrEditing;
+      if (disable) return;
+
+      // CLEAR PREVIOUS SOURCE
+      this.identifyIconLayer.getSource().clear();
+      window.map.removeLayer(this.identifyIconLayer);
+
+      const point = new Point(evt.coordinate);
+      const feature = new Feature(point);
+      this.identifyIconLayer.getSource().addFeature(feature);
+      window.map.addLayer(this.identifyIconLayer);
+      window.emitter.emit("loadReport", <Identify geometry={point}></Identify>);
+    });
+  };
+
   getInitialSort = () => {
     if (isMobile) return true;
     else return false;
@@ -59,6 +106,8 @@ class TOC extends Component {
 
 
   componentDidMount() {
+    
+    this.addIdentifyLayer();
     this.refreshTOC();
     
   }
@@ -81,9 +130,9 @@ class TOC extends Component {
           const groupInfo = result;
           this.setState(
             {
-              layerGroups: groupInfo[0],
-              selectedGroup: groupInfo[1],
-              defaultGroup: groupInfo[1]
+              layerGroups: groupInfo[0]//,
+              //selectedGroup: groupInfo[1],
+              //defaultGroup: groupInfo[1]
             },
             () => {
               if (callback !== undefined) callback();
@@ -100,9 +149,9 @@ class TOC extends Component {
       const groupInfo = TOCHelpers.getGroups();
         this.setState(
           {
-            layerGroups: groupInfo[0],
-            selectedGroup: groupInfo[1],
-            defaultGroup: groupInfo[1]
+            layerGroups: groupInfo[0]//,
+            //selectedGroup: groupInfo[1],
+            //defaultGroup: groupInfo[1]
           },
           () => {
             if (callback !== undefined) callback();
