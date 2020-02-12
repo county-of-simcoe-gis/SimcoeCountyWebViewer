@@ -38,8 +38,7 @@ class Layers extends Component {
     window.emitter.addListener("turnOffLayers", (group) => {if (group === this.props.group.value) this.turnOffLayers()});
     // LISTEN FOR TOGGLE ALL LEGEND
     window.emitter.addListener("toggleAllLegend", (type) => this.toggleAllLegends(type));
-    // LISTEN FOR MAP TO MOUNT
-    window.emitter.addListener("mapLoaded", () => this.onMapLoad());
+    
 
     // LISTEN FOR SEARCH RESULT
     window.emitter.addListener("activeTocLayer", layerItem => {if (layerItem.layerGroup === this.props.group.value) this.onActivateLayer(layerItem)});
@@ -94,26 +93,7 @@ class Layers extends Component {
 
 
 
-  onMapLoad = () => {
-    window.map.on("singleclick", evt => {
-      const viewResolution = window.map.getView().getResolution();
-      this.state.layers.forEach(layer => {
-        if (layer.visible && layer.liveLayer) {
-          var url = layer.layer.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
-          if (url) {
-            helpers.getJSON(url, result => {
-              const features = result.features;
-              if (features.length > 0) {
-                const geoJSON = new GeoJSON().readFeatures(result);
-                const feature = geoJSON[0];
-                helpers.showFeaturePopup(evt.coordinate, feature);
-              }
-            });
-          }
-        }
-      });
-    });
-  };
+  
 
   resetLayers = () => {
     // SHUT OFF VISIBILITY
@@ -298,6 +278,7 @@ class Layers extends Component {
     this.lastPosition = document.getElementById(this.getVirtualId()).scrollTop;
     const visible = !layerInfo.visible;
     layerInfo.layer.setVisible(visible);
+    window.emitter.emit("updateActiveTocLayers");
     layerInfo.visible = visible;
     this.setState(
       {
@@ -409,7 +390,10 @@ class Layers extends Component {
     const layers = this.state.layers.filter(layer => {
       if (this.props.searchText === "") return layer;
 
-      if (layer.displayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1) return layer;
+      if (layer.displayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1){
+        
+        return layer;
+      } 
     });
 
     return (
