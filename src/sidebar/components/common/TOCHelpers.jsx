@@ -243,7 +243,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback){
 
     // LAYER PROPS
     let newLayer = helpers.getImageWMSLayer(serverUrl + "/wms", layer.Name[0]);
-    newLayer.setVisible(!group.defaultGroup ? false : layerVisible);
+    newLayer.setVisible( layerVisible);
     newLayer.setOpacity(opacity);
     newLayer.setProperties({ name: layerNameOnly, displayName: displayName });
     newLayer.setZIndex(layerIndex);
