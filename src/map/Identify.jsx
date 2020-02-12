@@ -1,6 +1,7 @@
 import React, { Component, useState } from "react";
 import "./Identify.css";
 import * as helpers from "../helpers/helpers";
+import mainConfig from "../config.json";
 import Collapsible from "react-collapsible";
 import WKT from "ol/format/WKT.js";
 import { GeoJSON } from "ol/format.js";
@@ -48,6 +49,9 @@ class Identify extends Component {
         let type = layer.get("displayName")
         // QUERY USING WMS
         var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "application/json" });
+        let html_url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "text/html" });
+        html_url += "&feature_count=1000000";
+        
         url += "&feature_count=1000000";
         if (url) {
           helpers.getJSON(url, result => {
@@ -63,7 +67,7 @@ class Identify extends Component {
               featureList.forEach(feature => {
                 features.push(feature);
               });
-              if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type });
+              if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, html_url: html_url });
               this.setState({ layers: layerList });
             }
           });
@@ -182,25 +186,46 @@ const Layer = props => {
               key={helpers.getUID()}
               displayName={props.layer.displayName}
               feature={feature}
+              html_url={layer.html_url}
               onZoomClick={props.onZoomClick}
               onMouseEnter={props.onMouseEnter}
               onMouseLeave={props.onMouseLeave}
             ></FeatureItem>
           ))}
+          
         </div>
       </Collapsible>
     </div>
   );
 };
 
+const IFrame = props => {
+  let src = props.src;
+  if (props.filter === "" ) {
+    return ("");
+  }else{
+    src += "&CQL_FILTER=" + props.filter;
+  }
+  return (
+      <div>
+        <iframe src={src} className="sc-identiy-feature-iframe" />
+      </div>
+    );
+}
+
 const FeatureItem = props => {
   const [open, setOpen] = useState(false);
-  const { feature, displayName } = props;
+  const { feature, displayName, html_url } = props;
 
   //console.log(feature);
   const featureProps = feature.getProperties();
   const keys = Object.keys(featureProps);
   const featureName =feature.get(displayName) ;
+  let cql_filter = "";
+  keys.map((keyName) => {
+    const val = featureProps[keyName];
+    if (cql_filter === "" && (keyName.toLowerCase().indexOf("id") !== -1 && val !== null) && mainConfig.htmlIdentify) cql_filter += keyName + "=" + val;
+  })
   return (
     <div>
       <div className="sc-identify-feature-header" onMouseEnter={() => props.onMouseEnter(feature)} onMouseLeave={props.onMouseLeave}>
@@ -210,9 +235,11 @@ const FeatureItem = props => {
         <img className="sc-identify-feature-header-img" src={images["zoom-in.png"]} onClick={() => props.onZoomClick(feature)} alt="Zoom In"></img>
       </div>
       <div className={open ? "sc-identify-feature-content" : "sc-hidden"}>
+       <IFrame src={html_url} filter={cql_filter} />
+       
         {keys.map((keyName, i) => {
           const val = featureProps[keyName];
-          if (keyName !== "geometry" && keyName !== "geom" && typeof val !== "object") return <InfoRow key={helpers.getUID()} label={keyName} value={val}></InfoRow>;
+          if (cql_filter==="" && keyName !== "geometry" && keyName !== "geom" && typeof val !== "object") return <InfoRow key={helpers.getUID()} label={keyName} value={val}></InfoRow>;
           // <div key={helpers.getUID()}>TEST</div>
         })}
       </div>
