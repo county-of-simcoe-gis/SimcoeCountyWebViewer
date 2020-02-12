@@ -36,7 +36,7 @@ class BasemapSwitcher extends Component {
   // CREATE YEAR MARKS ON THE SLIDER
   getImagerySliderMarks() {
     const numServices = BasemapConfig.imageryServices.length;
-    if (numServices < 2) return {};
+    //if (numServices < 2) return {};
 
     let marks = {};
     for (let index = 0; index < numServices; index++) {
@@ -365,7 +365,26 @@ class BasemapSwitcher extends Component {
       }
     }
   }
-
+  slider = (sliderWrapperStyle) => {
+    if (this.state.imagerySliderMarks !== undefined){
+      return (
+        <Slider
+          included={false}
+          style={sliderWrapperStyle}
+          marks={this.state.imagerySliderMarks}
+          vertical={true}
+          max={this.state.imagerySliderMax}
+          min={this.state.imagerySliderMin}
+          step={0.01}
+          defaultValue={this.state.imagerySliderDefaultValue}
+          onChange={this.onSliderChange}
+          value={this.state.imagerySliderValue}
+        />
+      );
+    }else{
+      return;
+    }
+  }
   render() {
     // STYLE USED BY SLIDER
     const sliderWrapperStyle = {
@@ -397,18 +416,8 @@ class BasemapSwitcher extends Component {
           <label className="sc-basemap-streets-label">
             <input className="sc-basemap-streets-checkbox" id="sc-basemap-streets-checkbox" type="checkbox" onChange={this.onStreetsCheckbox} checked={this.state.streetsCheckbox}></input>&nbsp;Streets
           </label>
-          <Slider
-            included={false}
-            style={sliderWrapperStyle}
-            marks={this.state.imagerySliderMarks}
-            vertical={true}
-            max={this.state.imagerySliderMax}
-            min={this.state.imagerySliderMin}
-            step={0.01}
-            defaultValue={this.state.imagerySliderDefaultValue}
-            onChange={this.onSliderChange}
-            value={this.state.imagerySliderValue}
-          />
+          {this.slider(sliderWrapperStyle)}
+          
         </div>
         <div className={this.state.topoPanelOpen ? "sc-basemap-topo-container" : "sc-hidden"}>
           <label className="sc-basemap-topo-label">

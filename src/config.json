@@ -5,6 +5,8 @@
   "feedbackUrl": "https://github.com/reed-tom/SimcoeCountyWebViewer/labels/feedback",
   "geoserverUrl": "https://intra.dev.regionalgis.mto.gov.on.ca/geoserver/",
   "includeAppStats": true,
+  "htmlIdentify":true,
+  "leftClickIdentify":false,
   "appStatsUrl": "https://intra.dev.regionalgis.mto.gov.on.ca:5443/WebApi/appStats/",
   "apiUrl": "https://intra.dev.regionalgis.mto.gov.on.ca:5443/WebApi/",
   "termsUrl": "https://intra.dev.regionalgis.mto.gov.on.ca/geomatics/splash/1/view",
@@ -19,6 +21,7 @@
   "centerCoords": [-8878504.68, 5543492.45],
   "defaultZoom": 10,
   "maxZoom": 20,
+ 
   "sidebarToolComponents": [
     {
       "id": 1,
@@ -79,6 +82,6 @@
   ],
 
   "sidebarThemeComponents": [
-   
+    
   ]
 }
