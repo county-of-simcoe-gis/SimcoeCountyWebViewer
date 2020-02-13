@@ -39,11 +39,10 @@ class SCMap extends Component {
     this.contextCoords = null;
     this.storageExtentKey = "map_extent";
     this.state = {
-      mapClassName: "sc-map",
+      mapClassName: "sc-map identify",
       shareURL: null,
       parcelClickText: "Disable Property Click",
-      isIE: false,
-      cursor: "standard"
+      isIE: false
     };
     // LISTEN FOR MAP CURSOR TO CHANGE
     window.emitter.addListener("changeCursor", cursorStyle => this.changeCursor(cursorStyle));
