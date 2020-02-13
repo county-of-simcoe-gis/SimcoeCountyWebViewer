@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import "./Sidebar.css";
 import * as helpers from "../helpers/helpers";
+//import TOC from "./components/accordion-toc/TOC";
 import TOC from "./components/toc/TOC";
 //import TOCv1 from './components/toc/TOCV1.jsx'
 //import TOCv2 from './components/toc/TOCv2.jsx'
@@ -66,8 +67,12 @@ class Sidebar extends Component {
     window.disableIdentifyClick = isMyMapsEditing;
     // DISABLE POPUPS
     window.isDrawingOrEditing = isMyMapsEditing;
-
-    this.setState({ isMyMapsEditing });
+    if (isMyMapsEditing){
+      window.emitter.emit("changeCursor","standard");
+    }else{
+      window.emitter.emit("changeCursor","identify");
+    }
+    this.setState({ isMyMapsEditing:isMyMapsEditing });
   };
 
   onSetSidebarOpen(open) {
@@ -246,11 +251,26 @@ class Sidebar extends Component {
 
   activateTab(tabName) {
     // SET SELECTED TAB
-    if (tabName === "layers") this.setState({ tabIndex: 0 });
-    else if (tabName === "tools") this.setState({ tabIndex: 1 });
-    else if (tabName === "mymaps") this.setState({ tabIndex: 2 });
-    else if (tabName === "themes") this.setState({ tabIndex: 3 });
-    else if (tabName === "reports") this.setState({ tabIndex: 4 });
+    if (tabName === "layers") {
+      this.onMyMapsEditing(false);
+      this.setState({ tabIndex: 0 });
+    }
+    else if (tabName === "tools"){
+      this.onMyMapsEditing(true);
+      this.setState({ tabIndex: 1 });
+    }
+    else if (tabName === "mymaps") {
+      this.onMyMapsEditing(true);
+      this.setState({ tabIndex: 2 });
+    }
+    else if (tabName === "themes") {
+      this.onMyMapsEditing(false);
+      this.setState({ tabIndex: 3 });
+    }
+    else if (tabName === "reports"){ 
+      this.onMyMapsEditing(false);
+      this.setState({ tabIndex: 4 });
+    }
     else console.log("NO VALID TAB FOUND");
   }
 
@@ -346,11 +366,26 @@ class Sidebar extends Component {
 
   onTabSelect = tabIndex => {
     this.setState({ tabIndex });
-    if (tabIndex === 0) helpers.addAppStat("Tab", "Layers");
-    else if (tabIndex === 1) helpers.addAppStat("Tab", "Tools");
-    else if (tabIndex === 2) helpers.addAppStat("Tab", "MyMaps");
-    else if (tabIndex === 3) helpers.addAppStat("Tab", "Themes");
-    else if (tabIndex === 4) helpers.addAppStat("Tab", "Reports");
+    if (tabIndex === 0) {
+      this.onMyMapsEditing(false);
+      helpers.addAppStat("Tab", "Layers");
+    }
+    else if (tabIndex === 1) {
+      this.onMyMapsEditing(true);
+      helpers.addAppStat("Tab", "Tools");
+    }
+    else if (tabIndex === 2) { 
+      this.onMyMapsEditing(true);
+      helpers.addAppStat("Tab", "MyMaps");
+    }
+    else if (tabIndex === 3) {
+      this.onMyMapsEditing(true);
+      helpers.addAppStat("Tab", "Themes");
+    }
+    else if (tabIndex === 4) {
+      this.onMyMapsEditing(false);
+      helpers.addAppStat("Tab", "Reports");
+    }
   };
 
   //<Tabs forceRenderTabPanel={true} onSelect={tabIndex => this.setState({ tabIndex })} selectedIndex={this.state.tabIndex}>

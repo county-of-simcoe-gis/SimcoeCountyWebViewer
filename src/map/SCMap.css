@@ -82,6 +82,13 @@
     right: 304px;
   }
 
+  .standard {
+    cursor:pointer;
+  }
+  .identify {
+    cursor:help;
+  }
+
 @media only screen and (max-width: 770px) {
    .sc-map{
     position: absolute;

@@ -42,8 +42,11 @@ class SCMap extends Component {
       mapClassName: "sc-map",
       shareURL: null,
       parcelClickText: "Disable Property Click",
-      isIE: false
+      isIE: false,
+      cursor: "standard"
     };
+    // LISTEN FOR MAP CURSOR TO CHANGE
+    window.emitter.addListener("changeCursor", cursorStyle => this.changeCursor(cursorStyle));
   }
 
   componentDidMount() {
@@ -175,7 +178,19 @@ class SCMap extends Component {
       helpers.showURLWindow(mainConfig.ieWarningUrl);
     }
   }
-
+  changeCursor = (cursorStyle) =>
+  {
+    let cursorStyles = ["standard", "identify"];
+    cursorStyles.splice( cursorStyles.indexOf(cursorStyle), 1 );
+    let classes = this.state.mapClassName.split(" ");
+    if (classes.indexOf(cursorStyle) === -1){
+      cursorStyles.forEach(styleName => {
+        if (classes.indexOf(styleName) !== -1) classes.splice(classes.indexOf(styleName), 1 );
+      });
+      classes.push(cursorStyle);
+      this.setState({mapClassName:classes.join(" ")});
+    }
+  }
   onMenuItemClick = key => {
     if (key === "sc-floating-menu-zoomin") window.map.getView().setZoom(window.map.getView().getZoom() + 1);
     else if (key === "sc-floating-menu-zoomout") window.map.getView().setZoom(window.map.getView().getZoom() - 1);
