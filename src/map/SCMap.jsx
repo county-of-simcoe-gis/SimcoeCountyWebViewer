@@ -39,7 +39,7 @@ class SCMap extends Component {
     this.contextCoords = null;
     this.storageExtentKey = "map_extent";
     this.state = {
-      mapClassName: "sc-map identify",
+      mapClassName: "sc-map",
       shareURL: null,
       parcelClickText: "Disable Property Click",
       isIE: false
@@ -49,6 +49,9 @@ class SCMap extends Component {
   }
 
   componentDidMount() {
+    if (mainConfig.leftClickIdentify) {
+      this.setState({mapClassName:"sc-map identify"});
+    }
     let centerCoords = mainConfig.centerCoords;
     let defaultZoom = mainConfig.defaultZoom;
     const defaultsStorage = sessionStorage.getItem(this.storageMapDefaultsKey); 

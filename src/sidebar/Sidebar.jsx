@@ -67,10 +67,12 @@ class Sidebar extends Component {
     window.disableIdentifyClick = isMyMapsEditing;
     // DISABLE POPUPS
     window.isDrawingOrEditing = isMyMapsEditing;
-    if (isMyMapsEditing){
-      window.emitter.emit("changeCursor","standard");
-    }else{
-      window.emitter.emit("changeCursor","identify");
+    if(ComponentsConfig.leftClickIdentify){
+      if (isMyMapsEditing){
+        window.emitter.emit("changeCursor","standard");
+      }else{
+        window.emitter.emit("changeCursor","identify");
+      }
     }
     this.setState({ isMyMapsEditing:isMyMapsEditing });
   };

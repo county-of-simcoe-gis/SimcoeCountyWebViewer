@@ -326,9 +326,6 @@ class Layers extends Component {
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoom-to-layer">
             <FloatingMenuItem imageName={"zoom-in.png"} label="Zoom to Layer" />
           </MenuItem>
-          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-download">
-            <FloatingMenuItem imageName={"download.png"} label="Download" />
-          </MenuItem>
           <MenuItem className="sc-layers-slider" key="sc-floating-menu-opacity">
             Adjust Transparency
             <SliderWithTooltip tipFormatter={this.sliderTipFormatter} max={1} min={0} step={0.05} defaultValue={layerInfo.opacity} onChange={evt => this.onSliderChange(evt, layerInfo)} />
@@ -354,9 +351,7 @@ class Layers extends Component {
         const extent = [boundingBox.minx, boundingBox.miny, boundingBox.maxx, boundingBox.maxy];
         window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
       });
-    } else if (action === "sc-floating-menu-download") {
-      helpers.showMessage("Download", "Coming Soon!");
-    }
+    } 
 
     helpers.addAppStat("Layer Options", action);
   };
@@ -385,7 +380,7 @@ class Layers extends Component {
 
   render() {
     if (this.state.layers === undefined) return <div />;
-
+    
     // FILTER LAYERS FROM SEARCH INPUT
     const layers = this.state.layers.filter(layer => {
       if (this.props.searchText === "") return layer;
@@ -397,11 +392,9 @@ class Layers extends Component {
     });
 
     return (
-      <div className="sc-toc-layer-container">
-        <AutoSizer >
-          {({ width,height }) => {
-            return (
-              
+     
+      <div className="sc-toc-layer-container" key={helpers.getUID()}>
+        <div>  
               <SortableVirtualList
                 key={helpers.getUID()}
                 virtual_key={this.getVirtualId()}
@@ -412,9 +405,8 @@ class Layers extends Component {
                 items={layers}
                 onSortEnd={this.onSortEnd}
                 helperClass={"sc-layer-list-sortable-helper"}
-                rowHeight={height}
-                height={height}
-                width={width}
+                rowHeight={30}
+                
                 lockAxis={"y"}
                 onSortMove={this.onSortMove}
                 distance={5}
@@ -425,11 +417,7 @@ class Layers extends Component {
                 sortAlpha={this.props.sortAlpha}
                 //scrollToIndex={50}
               />
-           
-            );
-
-          }}
-        </AutoSizer>
+        </div>
       </div>
     );
   }
