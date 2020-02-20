@@ -192,21 +192,21 @@
   color: #373737;
   font-weight: bold;
   font-size: 14px;
-  background-image: url(./images/down.png);
-  background-position: right center;
+  background-image: url(./images/plus.png);
+  background-position: left center;
   background-repeat: no-repeat;
   display: table;
-  background-color: #C9E7F9;
+  background-color: #ebebeb;
   width: 100%;
-  height: 40px;
   border: 1px solid #ddd;
-  background-position-x: 96%;
+  background-position-x: 1%;
   cursor: pointer;
   user-select: none;
   padding:2px;
+  padding-left:4%;
 }
   .sc-toc-group-list-header.open{
-    background-image: url(./images/collapsed.png);
+    background-image: url(./images/minus.png);
   }
 .sc-toc-group-list-container {
   border: 1px solid #ddd;
@@ -221,7 +221,6 @@
 }
 
 .sc-toc-group-list-header-label{
-  padding-top: 12px;
   width: 90%;
 }
 

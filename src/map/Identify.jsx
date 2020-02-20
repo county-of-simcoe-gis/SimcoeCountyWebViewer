@@ -221,21 +221,23 @@ const IFrame = props => {
 const FeatureItem = props => {
   const [open, setOpen] = useState(false);
   const { feature, displayName, html_url } = props;
-
+  
   //console.log(feature);
   const featureProps = feature.getProperties();
   const keys = Object.keys(featureProps);
   const featureName =feature.get(displayName) ;
   let cql_filter = "";
+  const isSameOrigin = html_url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !== -1;
+
   keys.map((keyName) => {
     const val = featureProps[keyName];
-    if (cql_filter === "" && (keyName.toLowerCase().indexOf("id") !== -1 && val !== null) && mainConfig.htmlIdentify) cql_filter += keyName + "=" + val;
+    if (cql_filter === "" && (keyName.toLowerCase().indexOf("id") !== -1 && val !== null) && mainConfig.htmlIdentify && isSameOrigin) cql_filter += keyName + "=" + val;
   })
   return (
     <div>
       <div className="sc-identify-feature-header" onMouseEnter={() => props.onMouseEnter(feature)} onMouseLeave={props.onMouseLeave}>
         <div className="sc-fakeLink sc-identify-feature-header-label" onClick={() => setOpen(!open)}>
-          {displayName + ": " + featureName}
+          {mainConfig.excludeIdentifyTitleName ? featureName : displayName + ": " + featureName}
         </div>
         <img className="sc-identify-feature-header-img" src={images["zoom-in.png"]} onClick={() => props.onZoomClick(feature)} alt="Zoom In"></img>
       </div>

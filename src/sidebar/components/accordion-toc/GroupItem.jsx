@@ -111,7 +111,7 @@ class GroupItem extends Component {
       
             <div  className={"sc-toc-group-list-container"} key={"sc-toc-group-list-container" + this.props.group.value} >
             <div  className={this.state.panelOpen ? "sc-toc-group-list-header open" : "sc-toc-group-list-header"} onClick={this.onHeaderClick}>
-              <div className={"sc-toc-group-list-header-label"}>&nbsp;&nbsp;{this.props.group.label}<div className={"sc-toc-groups-active-layers"}><span className={"sc-toc-groups-active-layers-badge"}>{this.state.activeLayerCount}</span></div></div>
+              <div className={"sc-toc-group-list-header-label"}>&nbsp;&nbsp;{this.props.group.label} <span>- ({this.state.activeLayerCount}/{this.props.group.layers.length})</span></div>
             </div>
            
                 
