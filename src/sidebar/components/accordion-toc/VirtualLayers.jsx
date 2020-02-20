@@ -66,8 +66,8 @@ class VirtualLayers extends Component {
         rowHeight={this.getRowHeight}
         rowRenderer={this.renderRow}
         rowCount={items.length}
-        width={width}
-        height={height}
+        width={351}
+        height={30 * items.length }
         style={{ outline: "none" }}
         //scrollToIndex={50}
       />
