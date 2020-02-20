@@ -10,6 +10,8 @@ import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
 import { Circle as CircleStyle, Icon, Fill, Stroke, Style } from "ol/style.js";
 import { Image as ImageLayer } from "ol/layer.js";
+import { AutoSizer } from "react-virtualized";
+import useIframeContentHeight from "react-use-iframe-content-height";
 
 class Identify extends Component {
   constructor(props) {
@@ -49,8 +51,9 @@ class Identify extends Component {
         let type = layer.get("displayName")
         // QUERY USING WMS
         var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "application/json" });
-        let html_url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "text/html" });
-        html_url += "&feature_count=1000000";
+        
+        let html_url = mainConfig.htmlIdentify ? layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "text/html" }) + "&feature_count=1000000" : "" ;
+
         
         url += "&feature_count=1000000";
         if (url) {
@@ -201,14 +204,16 @@ const Layer = props => {
 
 const IFrame = props => {
   let src = props.src;
+  const [iframeRef, iframeHeight] = useIframeContentHeight();
   if (props.filter === "" ) {
     return ("");
   }else{
     src += "&CQL_FILTER=" + props.filter;
   }
+
   return (
-      <div>
-        <iframe src={src} className="sc-identiy-feature-iframe" />
+      <div className="sc-identiy-feature-iframe">
+        <iframe key={helpers.getUID()} ref={iframeRef} height={iframeHeight} src={src}  />
       </div>
     );
 }
@@ -234,16 +239,21 @@ const FeatureItem = props => {
         </div>
         <img className="sc-identify-feature-header-img" src={images["zoom-in.png"]} onClick={() => props.onZoomClick(feature)} alt="Zoom In"></img>
       </div>
-      <div className={open ? "sc-identify-feature-content" : "sc-hidden"}>
-       <IFrame src={html_url} filter={cql_filter} />
-       
-        {keys.map((keyName, i) => {
-          const val = featureProps[keyName];
-          if (cql_filter==="" && keyName !== "geometry" && keyName !== "geom" && typeof val !== "object") return <InfoRow key={helpers.getUID()} label={keyName} value={val}></InfoRow>;
-          // <div key={helpers.getUID()}>TEST</div>
-        })}
+  
+        
+        <div className={open ? "sc-identify-feature-content" : "sc-hidden"}  >
+      
+        <IFrame key={helpers.getUID()} src={html_url} filter={cql_filter} />
+        
+        
+          {keys.map((keyName, i) => {
+            const val = featureProps[keyName];
+            if (cql_filter==="" && keyName !== "geometry" && keyName !== "geom" && typeof val !== "object") return <InfoRow key={helpers.getUID()} label={keyName} value={val}></InfoRow>;
+            // <div key={helpers.getUID()}>TEST</div>
+          })}
+        </div>
+  
       </div>
-    </div>
   );
 };
 
