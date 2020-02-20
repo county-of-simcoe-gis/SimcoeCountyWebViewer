@@ -9,6 +9,7 @@ import { isMobile } from "react-device-detect";
 // CUSTOM
 import "./TOC.css";
 import * as helpers from "../../../helpers/helpers";
+import mainConfig from "../../../config.json";
 import * as TOCHelpers from "../common/TOCHelpers.jsx";
 import TOCConfig from "../common/TOCConfig.json";
 import GroupItem from "./GroupItem.jsx";
@@ -64,24 +65,26 @@ class TOC extends Component {
   }
 
   onMapLoad = () => {
-    window.map.on("singleclick", evt => {
-      // DISABLE IDENTIFY CLICK
-      let disable = window.disableIdentifyClick;
-      if (disable) return;
-      // DISABLE POPUPS
-      disable = window.isDrawingOrEditing;
-      if (disable) return;
+    if (mainConfig.leftClickIdentify) {
+      window.map.on("singleclick", evt => {
+        // DISABLE IDENTIFY CLICK
+        let disable = window.disableIdentifyClick;
+        if (disable) return;
+        // DISABLE POPUPS
+        disable = window.isDrawingOrEditing;
+        if (disable) return;
 
-      // CLEAR PREVIOUS SOURCE
-      this.identifyIconLayer.getSource().clear();
-      window.map.removeLayer(this.identifyIconLayer);
+        // CLEAR PREVIOUS SOURCE
+        this.identifyIconLayer.getSource().clear();
+        window.map.removeLayer(this.identifyIconLayer);
 
-      const point = new Point(evt.coordinate);
-      const feature = new Feature(point);
-      this.identifyIconLayer.getSource().addFeature(feature);
-      window.map.addLayer(this.identifyIconLayer);
-      window.emitter.emit("loadReport", <Identify geometry={point}></Identify>);
-    });
+        const point = new Point(evt.coordinate);
+        const feature = new Feature(point);
+        this.identifyIconLayer.getSource().addFeature(feature);
+        window.map.addLayer(this.identifyIconLayer);
+        window.emitter.emit("loadReport", <Identify geometry={point}></Identify>);
+      });
+    }
   };
 
   getInitialSort = () => {
