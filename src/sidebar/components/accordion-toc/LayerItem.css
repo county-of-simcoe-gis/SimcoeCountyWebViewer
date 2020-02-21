@@ -67,10 +67,10 @@
   background: url(./images/verticle_dots.png) 0px repeat-y;
 }
 .sc-toc-item-layer-info-container-open-horizontal-lines {
-  height: 5px;
+  height: 2px;
   width: 11px;
   position: relative;
-  top: 15px;
+  top: 135px;
   right: 2px;
   background: url(./images/horizontal_dots.png) 0px no-repeat;
 }
