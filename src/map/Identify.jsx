@@ -175,11 +175,28 @@ class Identify extends Component {
 }
 export default Identify;
 
+function _getLayerObj(layerName, callback) {
+  let data= {};
+  window.allLayers.forEach(group => {
+    group.forEach(layer => {
+      if (layer.name.toLowerCase() === layerName.toLowerCase()) data = layer;
+    });
+  });
+
+  if (callback !== undefined) {
+    //console.log(data);
+    callback(data);
+  }
+  return data;
+}
+
 const Layer = props => {
   const [open, setOpen] = useState(true);
 
   const { layer } = props;
-
+  let layerObj = {};
+  _getLayerObj(layer.name, returnResult => layerObj=returnResult);
+ 
   return (
     <div id="sc-identify-layer-container">
       <Collapsible trigger={layer.type} open={open}>
@@ -188,6 +205,8 @@ const Layer = props => {
             <FeatureItem
               key={helpers.getUID()}
               displayName={props.layer.displayName}
+              identifyTitleColumn={layerObj !== undefined ? layerObj.identifyTitleColumn : ""}
+              identifyIdColumn={layerObj !== undefined ? layerObj.identifyIdColumn : "" }
               feature={feature}
               html_url={layer.html_url}
               onZoomClick={props.onZoomClick}
@@ -220,18 +239,23 @@ const IFrame = props => {
 
 const FeatureItem = props => {
   const [open, setOpen] = useState(false);
-  const { feature, displayName, html_url } = props;
-  
+  let { feature, displayName, html_url,identifyTitleColumn,identifyIdColumn } = props;
+  if (identifyTitleColumn!==undefined && identifyTitleColumn !== "") displayName = identifyTitleColumn;
   //console.log(feature);
   const featureProps = feature.getProperties();
   const keys = Object.keys(featureProps);
-  const featureName =feature.get(displayName) ;
+  let featureName = feature.get(displayName) ;
+  if (featureName === "") featureName = "N/A";
   let cql_filter = "";
   const isSameOrigin = html_url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !== -1;
 
   keys.map((keyName) => {
     const val = featureProps[keyName];
-    if (cql_filter === "" && (keyName.toLowerCase().indexOf("id") !== -1 && val !== null) && mainConfig.htmlIdentify && isSameOrigin) cql_filter += keyName + "=" + val;
+    if (identifyIdColumn !==undefined && identifyIdColumn !== "" ){
+      if (cql_filter === "" && (keyName.toLowerCase().indexOf(identifyIdColumn.toLowerCase()) !== -1 && val !== null) && mainConfig.htmlIdentify && isSameOrigin) cql_filter += keyName + "=" + val;
+    }else{
+      if (cql_filter === "" && (keyName.toLowerCase().indexOf("id") !== -1 && val !== null) && mainConfig.htmlIdentify && isSameOrigin) cql_filter += keyName + "=" + val;
+    }
   })
   return (
     <div>
