@@ -42,13 +42,9 @@
 .sc-toc-layer-container {
   max-width: 400px;
   width: 100%;
- 
+  
 }
 
-.sc-toc-layer-container>div {
-  min-height: 200px;
-  max-height: 700px;
-}
 
 .sc-toc-item-ul-container {
   list-style-type: none;
@@ -197,31 +193,56 @@
   color: #373737;
   font-weight: bold;
   font-size: 14px;
-  background-image: url(./images/down.png);
-  background-position: right center;
+  background-image: url(./images/folder.png);
+  background-position-x: 3%;
+  background-position-y: center;
   background-repeat: no-repeat;
   display: table;
-  background-color: #C9E7F9;
+  background-color: #fff;
   width: 100%;
-  height: 40px;
-  border: 1px solid #ddd;
-  background-position-x: 96%;
+  border: 0px solid #ddd;
   cursor: pointer;
   user-select: none;
   padding:2px;
+  padding-left:7%;
 }
   .sc-toc-group-list-header.open{
-    background-image: url(./images/collapsed.png);
+    background-image: url(./images/folder_open.png);
+    
   }
+
 .sc-toc-group-list-container {
-  border: 1px solid #ddd;
+  border: 0px solid #ddd;
   border-radius: 3px;
   margin-bottom: 5px;
-  max-height: 400px;
+}
+
+.sc-toc-group-list-item-container {
+  height: 22px;
+  width: 11px;
+  position: relative;
+  top: -5px;
+  right: -16px;
+  display: table-cell;
+
+  background: url(./images/verticle_dots.png) 0px repeat-y;
+}
+
+.sc-toc-group-list-item-container>div {
+  position: relative;
+  top: 10px;
+  right: -6px;
+  width: 95%;
+ }
+
+.sc-toc-layer-container>div>div {
+  height: unset!important;
+}
+.sc-toc-layer-container>div>div>div {
+  max-height: unset;
 }
 
 .sc-toc-group-list-header-label{
-  padding-top: 12px;
   width: 90%;
 }
 

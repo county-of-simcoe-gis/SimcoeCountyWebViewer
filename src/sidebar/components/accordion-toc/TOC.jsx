@@ -9,6 +9,7 @@ import { isMobile } from "react-device-detect";
 // CUSTOM
 import "./TOC.css";
 import * as helpers from "../../../helpers/helpers";
+import mainConfig from "../../../config.json";
 import * as TOCHelpers from "../common/TOCHelpers.jsx";
 import TOCConfig from "../common/TOCConfig.json";
 import GroupItem from "./GroupItem.jsx";
@@ -64,24 +65,26 @@ class TOC extends Component {
   }
 
   onMapLoad = () => {
-    window.map.on("singleclick", evt => {
-      // DISABLE IDENTIFY CLICK
-      let disable = window.disableIdentifyClick;
-      if (disable) return;
-      // DISABLE POPUPS
-      disable = window.isDrawingOrEditing;
-      if (disable) return;
+    if (mainConfig.leftClickIdentify) {
+      window.map.on("singleclick", evt => {
+        // DISABLE IDENTIFY CLICK
+        let disable = window.disableIdentifyClick;
+        if (disable) return;
+        // DISABLE POPUPS
+        disable = window.isDrawingOrEditing;
+        if (disable) return;
 
-      // CLEAR PREVIOUS SOURCE
-      this.identifyIconLayer.getSource().clear();
-      window.map.removeLayer(this.identifyIconLayer);
+        // CLEAR PREVIOUS SOURCE
+        this.identifyIconLayer.getSource().clear();
+        window.map.removeLayer(this.identifyIconLayer);
 
-      const point = new Point(evt.coordinate);
-      const feature = new Feature(point);
-      this.identifyIconLayer.getSource().addFeature(feature);
-      window.map.addLayer(this.identifyIconLayer);
-      window.emitter.emit("loadReport", <Identify geometry={point}></Identify>);
-    });
+        const point = new Point(evt.coordinate);
+        const feature = new Feature(point);
+        this.identifyIconLayer.getSource().addFeature(feature);
+        window.map.addLayer(this.identifyIconLayer);
+        window.emitter.emit("loadReport", <Identify geometry={point}></Identify>);
+      });
+    }
   };
 
   getInitialSort = () => {
@@ -191,7 +194,7 @@ class TOC extends Component {
     var evtClone = Object.assign({}, evt);
     const menu = (
       <Portal>
-        <FloatingMenu key={helpers.getUID()} buttonEvent={evtClone} item={this.props.info} onMenuItemClick={action => this.onMenuItemClick(action)} styleMode="right" yOffset={90}>
+        <FloatingMenu key={helpers.getUID()} buttonEvent={evtClone} item={this.props.info} onMenuItemClick={action => this.onMenuItemClick(action)} styleMode="right" yOffset={120}>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-expand">
             <FloatingMenuItem imageName={"plus16.png"} label="Expand Layers" />
           </MenuItem>
@@ -203,6 +206,9 @@ class TOC extends Component {
           </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-legend">
             <FloatingMenuItem imageName={"legend16.png"} label="Show Legend" />
+          </MenuItem>
+          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-clear-local">
+            <FloatingMenuItem imageName={"eraser.png"} label="Clear My Saved Data" />
           </MenuItem>
         </FloatingMenu>
       </Portal>
@@ -218,6 +224,9 @@ class TOC extends Component {
       window.emitter.emit("toggleAllLegend", "CLOSE");
     } else if (action === "sc-floating-menu-legend") {
       helpers.showMessage("Legend", "Coming Soon");
+    } else if (action === "sc-floating-menu-clear-local") {
+      localStorage.clear();
+      helpers.showMessage("Local Data Cleared", "Your local data has been cleared");
     } else if (action === "sc-floating-menu-visility") {
       this.state.layerGroups.forEach(group => {
         window.emitter.emit("turnOffLayers", group.value);
@@ -309,7 +318,7 @@ class TOC extends Component {
                 searchText={this.state.searchText}
                 sortAlpha={this.state.sortAlpha}
                 allGroups={this.state.layerGroups}
-                panelOpen={this.state.selectedGroup.value === group.value}
+                panelOpen={false}
                 
                 saveLayerOptions={this.state.saveLayerOptions[group.value]}
 
