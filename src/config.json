@@ -1,19 +1,20 @@
 {
-  "headerLogoImageName": "logo.png",
-  "title": "County of Simcoe GIS - OpenLayers and React",
-  "originUrl": "https://opengis.simcoe.ca",
-  "feedbackUrl": "https://opengis.simcoe.ca/feedback",
-  "geoserverUrl": "https://opengis.simcoe.ca/geoserver/",
+  "headerLogoImageName": "blank-logo.png",
+  "title": "Geomatics GIS - OpenLayers and React",
+  "originUrl": "https://intra.dev.regionalgis.mto.gov.on.ca/",
+  "feedbackUrl": "https://github.com/reed-tom/SimcoeCountyWebViewer/labels/feedback",
+  "geoserverUrl": "https://intra.dev.regionalgis.mto.gov.on.ca/geoserver/",
   "includeAppStats": true,
+
   "appStatsUrl": "https://opengis.simcoe.ca/api/appStats/",
   "apiUrl": "https://opengis.simcoe.ca/api/",
   "termsUrl": "https://maps.simcoe.ca/terms.html",
   "helpUrl": "https://maps.simcoe.ca/public_help",
   "ieWarningUrl": "https://opengis.simcoe.ca/public/ieWarning.html",
   "propertyReportUrl": "https://maps.simcoe.ca/giswebapi/api/propertyreport",
-  "htmlIdentify":true,
-  "leftClickIdentify":true,
-  "excludeIdentifyTitleName":true,
+  "htmlIdentify":false,
+  "leftClickIdentify":false,
+  "excludeIdentifyTitleName":false,
   "weatherRadarApiUrl": "https://maps.simcoe.ca/giswebapi/api/Weather/getRadarImages/",
   "parcelLayer": {
     "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
@@ -22,6 +23,7 @@
   "centerCoords": [-8878504.68, 5543492.45],
   "defaultZoom": 10,
   "maxZoom": 20,
+ 
   "sidebarToolComponents": [
     {
       "id": 1,
@@ -82,43 +84,6 @@
   ],
 
   "sidebarThemeComponents": [
-    {
-      "id": 1,
-      "name": "Solid Waste Facilities",
-      "componentName": "SolidWasteFacilities",
-      "description": "Provides information about waste facilities, and information as to where to purchase bag tags.",
-      "imageName": "solidWasteFacilities.png",
-      "config": "./configSolidWasteFacilities.json"
-    },
-    {
-      "id": 2,
-      "name": "Forestry",
-      "componentName": "Forestry",
-      "description": "View County Forests and Recreation features, conservation, provincial and municipal parks.",
-      "imageName": "forestry.png",
-      "config": "./configForestry.json"
-    },
-    {
-      "id": 3,
-      "name": "Local Real Estate",
-      "componentName": "LocalRealEstate",
-      "description": "View listings by categories and view photos for the listing with the option to link to the Realtor.ca listing",
-      "imageName": "localrealestate.png"
-    },
-    {
-      "id": 4,
-      "name": "Road Construction",
-      "componentName": "RoadConstruction",
-      "description": "View this year's road and bridge construction locations.",
-      "imageName": "roadsConstruction.png"
-    },
-    {
-      "id": 5,
-      "name": "Child Care Facilities",
-      "componentName": "ChildCareFacilities",
-      "description": "Provide users with a list of Child care facilities as well as additional information about each facility.",
-      "imageName": "childCareFacilities.png",
-      "secure": false
-    }
+    
   ]
 }
