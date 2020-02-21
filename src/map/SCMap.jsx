@@ -302,7 +302,9 @@ class SCMap extends Component {
             helpers.addAppStat("GitHub", "Button");
           }}
         >
-          
+          <GitHubButton href="https://github.com/county-of-simcoe-gis" data-size="large" aria-label="Follow @simcoecountygis on GitHub">	
+            Follow @simcoecountygis	
+          </GitHubButton>
         </div>
       </div>
     );
