@@ -1,5 +1,5 @@
 {
-  "geoserverLayerGroupsUrl": "https://intra.dev.regionalgis.mto.gov.on.ca/geoserver/NER_Works/ows?service=wms&version=1.3.0&request=GetCapabilities",
+  "geoserverLayerGroupsUrl": "https://opengis.simcoe.ca/geoserver/simcoe/Config_Public_Default/ows?service=wms&version=1.3.0&request=GetCapabilities",
   "geoserverLayerGroupsUrlType": "group",
   "layerInfoURL": "https://opengis.simcoe.ca/layerInfo/?URL=",
   "layerDownloadURL": "https://opengis.simcoe.ca/layerInfo/?SHOW_DOWNLOAD=1&URL=",
