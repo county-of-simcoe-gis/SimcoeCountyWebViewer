@@ -14,7 +14,7 @@
   "propertyReportUrl": "https://maps.simcoe.ca/giswebapi/api/propertyreport",
   "htmlIdentify":false,
   "leftClickIdentify":false,
-
+  "excludeIdentifyTitleName":false,
   "weatherRadarApiUrl": "https://maps.simcoe.ca/giswebapi/api/Weather/getRadarImages/",
   "parcelLayer": {
     "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
