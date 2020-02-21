@@ -42,6 +42,7 @@
 .sc-toc-layer-container {
   max-width: 400px;
   width: 100%;
+  
 }
 
 
@@ -192,13 +193,13 @@
   color: #373737;
   font-weight: bold;
   font-size: 14px;
-  background-image: url(./images/plus.png);
+  background-image: url(./images/folder.png);
   background-position: left center;
   background-repeat: no-repeat;
   display: table;
-  background-color: #ebebeb;
+  background-color: #fff;
   width: 100%;
-  border: 1px solid #ddd;
+  border: 0px solid #ddd;
   background-position-x: 1%;
   cursor: pointer;
   user-select: none;
@@ -206,13 +207,34 @@
   padding-left:4%;
 }
   .sc-toc-group-list-header.open{
-    background-image: url(./images/minus.png);
+    background-image: url(./images/folder_open.png);
+    
   }
+
 .sc-toc-group-list-container {
-  border: 1px solid #ddd;
+  border: 0px solid #ddd;
   border-radius: 3px;
   margin-bottom: 5px;
 }
+
+.sc-toc-group-list-item-container {
+  height: 22px;
+  width: 11px;
+  position: relative;
+  top: -5px;
+  right: -6px;
+  display: table-cell;
+
+  background: url(./images/verticle_dots.png) 0px repeat-y;
+}
+
+.sc-toc-group-list-item-container>div {
+  position: relative;
+  top: 10px;
+  right: -6px;
+  width: 95%;
+ }
+
 .sc-toc-layer-container>div>div {
   height: unset!important;
 }
