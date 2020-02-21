@@ -194,17 +194,17 @@
   font-weight: bold;
   font-size: 14px;
   background-image: url(./images/folder.png);
-  background-position: left center;
+  background-position-x: 3%;
+  background-position-y: center;
   background-repeat: no-repeat;
   display: table;
   background-color: #fff;
   width: 100%;
   border: 0px solid #ddd;
-  background-position-x: 1%;
   cursor: pointer;
   user-select: none;
   padding:2px;
-  padding-left:4%;
+  padding-left:7%;
 }
   .sc-toc-group-list-header.open{
     background-image: url(./images/folder_open.png);
@@ -222,7 +222,7 @@
   width: 11px;
   position: relative;
   top: -5px;
-  right: -6px;
+  right: -16px;
   display: table-cell;
 
   background: url(./images/verticle_dots.png) 0px repeat-y;
