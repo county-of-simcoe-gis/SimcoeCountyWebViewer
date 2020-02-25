@@ -72,7 +72,6 @@ export default class Popup extends Overlay {
     this.headerContainer.appendChild(this.headerCloseContainer);
     this.container.appendChild(this.headerContainer);
 
-    var that = this;
     this.closer.addEventListener(
       "click",
       evt => {

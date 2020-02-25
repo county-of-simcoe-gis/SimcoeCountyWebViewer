@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React from "react";
 import { InfoRow } from "../../../../helpers/InfoRow.jsx";
 import * as helpers from "../../../../helpers/helpers";
 import "./LocalRealEstatePopupContent.css";

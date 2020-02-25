@@ -2,8 +2,8 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import Slider, { createSliderWithTooltip } from "rc-slider";
-import { sortableContainer, sortableElement } from "react-sortable-hoc";
-import { List, AutoSizer } from "react-virtualized";
+import { sortableContainer } from "react-sortable-hoc";
+import { AutoSizer } from "react-virtualized";
 import VirtualLayers from "./VirtualLayers.jsx";
 import arrayMove from "array-move";
 import GeoJSON from "ol/format/GeoJSON.js";
@@ -39,7 +39,9 @@ class Layers extends Component {
   }
 
   onActivateLayer = layerItem => {
-    const groupName = layer => {return helpers.replaceAllInString(layer.layerGroup, " ", "_");}
+    const groupName = layer => {
+      return helpers.replaceAllInString(layer.layerGroup, " ", "_");
+    };
 
     let layersCopy = Object.assign([], this.state.allLayers[groupName(layerItem)]);
 
@@ -47,12 +49,12 @@ class Layers extends Component {
       if (layer.name === layerItem.fullName) {
         layer.visible = true;
         layer.layer.setVisible(true);
-        
+
         document.getElementById(this.virtualId).scrollTop = 0;
 
         var i = 0;
         var elemFound = false;
-        for (var i = 1; i <= 100; i++) {
+        for (i = 1; i <= 100; i++) {
           if (elemFound) return;
           // eslint-disable-next-line
           (index => {
@@ -114,7 +116,7 @@ class Layers extends Component {
     }
 
     this.setState({ layers: undefined, allLayers: [] }, () => {
-      this.refreshLayers(this.props.group, this.props.sortAlpha,this.props.allGroups);
+      this.refreshLayers(this.props.group, this.props.sortAlpha, this.props.allGroups);
     });
   };
 
@@ -124,13 +126,13 @@ class Layers extends Component {
 
     if (layers === undefined) {
       layers = group.layers;
-    if (layers !== undefined) {
+      if (layers !== undefined) {
         let allLayers = this.state.allLayers;
         allLayers[group.value] = layers;
-        
+
         // FETCH THE REST OF THE GROUPS
-        const fetchGroups = (allGroups) => {
-            allGroups.forEach(groupItem => {
+        const fetchGroups = allGroups => {
+          allGroups.forEach(groupItem => {
             if (group.value !== groupItem.value) {
               let layersItems = this.state.allLayers[groupItem.value];
               if (layersItems === undefined) {
@@ -142,14 +144,14 @@ class Layers extends Component {
               }
             }
           });
-        }
+        };
         fetchGroups(allGroups);
         this.setState({ layers: layers, allLayers: allLayers }, () => {
           this.sortLayers(this.state.layers, sortAlpha);
         });
         return;
       }
-    }else{
+    } else {
       this.setState({ layers: layers }, () => {
         this.sortLayers(this.state.layers, sortAlpha);
       });
@@ -163,23 +165,23 @@ class Layers extends Component {
       this.setState({ layers: layers, allLayers: allLayers }, () => {
         this.sortLayers(this.state.layers, sortAlpha);
 
-        const fetchGroups = (allGroups) =>{ // FETCH THE REST OF THE GROUPS
+        const fetchGroups = allGroups => {
+          // FETCH THE REST OF THE GROUPS
           allGroups.forEach(groupItem => {
-          const layersItem = this.state.allLayers[groupItem.value];
+            const layersItem = this.state.allLayers[groupItem.value];
 
-          if (layersItem === undefined) {
-            TOCHelpers.getBasicLayers(groupItem, layers => {
-              let allLayers = this.state.allLayers;
-              allLayers[groupItem.value] = layers;
-              this.setState({ allLayers: allLayers });
-            });
-          }
-        });
+            if (layersItem === undefined) {
+              TOCHelpers.getBasicLayers(groupItem, layers => {
+                let allLayers = this.state.allLayers;
+                allLayers[groupItem.value] = layers;
+                this.setState({ allLayers: allLayers });
+              });
+            }
+          });
         };
         fetchGroups(allGroups);
       });
     });
-    
   };
 
   // isVisibleFromConfig()
@@ -239,25 +241,24 @@ class Layers extends Component {
       if (layers !== undefined) {
         // DISABLE LAYER VISIBILITY FROM PREVIOUS GROUP
         TOCHelpers.disableLayersVisiblity(layers, newLayers => {
-          
           allLayers[this.props.group.value] = newLayers;
           this.setState({ allLayers: allLayers }, () => {
             // ENABLE LAYER VISIBILITY FROM PREVIOUS GROUP
-           
+
             if (nextLayers !== undefined) {
               TOCHelpers.enableLayersVisiblity(nextLayers, newLayers => {
                 let allLayers = this.state.allLayers;
                 allLayers[nextProps.group.value] = newLayers;
-                this.setState({ layers: newLayers, allLayers: allLayers, allGroups:allGroups }, () => {
-                  this.refreshLayers(nextProps.group, nextProps.sortAlpha,nextProps.allGroups);
+                this.setState({ layers: newLayers, allLayers: allLayers, allGroups: allGroups }, () => {
+                  this.refreshLayers(nextProps.group, nextProps.sortAlpha, nextProps.allGroups);
                 });
               });
             } else {
-              this.refreshLayers(nextProps.group, nextProps.sortAlpha,nextProps.allGroups);
+              this.refreshLayers(nextProps.group, nextProps.sortAlpha, nextProps.allGroups);
             }
           });
         });
-      } else this.refreshLayers(nextProps.group, nextProps.sortAlpha,nextProps.allGroups);
+      } else this.refreshLayers(nextProps.group, nextProps.sortAlpha, nextProps.allGroups);
     }
   }
 
@@ -489,6 +490,7 @@ class Layers extends Component {
     if (this.state.layers === undefined) return <div />;
 
     // FILTER LAYERS FROM SEARCH INPUT
+    // eslint-disable-next-line
     const layers = this.state.layers.filter(layer => {
       if (this.props.searchText === "") return layer;
 

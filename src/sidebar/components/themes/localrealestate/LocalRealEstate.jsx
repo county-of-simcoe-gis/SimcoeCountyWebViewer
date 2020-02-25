@@ -154,16 +154,11 @@ class LocalRealEstate extends Component {
         <div className="sc-theme-real-estate-main-container">
           <div className="sc-title sc-underline">THEME LAYERS</div>
           <div className="sc-container" style={{ marginBottom: "5px" }}>
-            {config.layers.map(layerConfig => {
+            {// eslint-disable-next-line
+            config.layers.map(layerConfig => {
               if (layerConfig.displayName !== "All")
                 return (
-                  <LocalRealEstateLayerToggler
-                    key={layerConfig.displayName}
-                    layerConfig={layerConfig}
-                    config={config}
-                    onLayerVisiblityChange={this.onLayerVisiblityChange}
-                    onViewed={this.onViewed}
-                  />
+                  <LocalRealEstateLayerToggler key={layerConfig.displayName} layerConfig={layerConfig} config={config} onLayerVisiblityChange={this.onLayerVisiblityChange} onViewed={this.onViewed} />
                 );
             })}
           </div>

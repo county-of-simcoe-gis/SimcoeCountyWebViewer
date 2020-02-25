@@ -250,7 +250,9 @@ class SearchAddresses extends Component {
               </button>
             </div>
           </div>
-          <div className={this.state.features.length === 0 ? "sc-container sc-tool-search-addresses-no-results" : "sc-hidden"}>Please enter an Address in the textboxes above then click SEARCH button.</div>
+          <div className={this.state.features.length === 0 ? "sc-container sc-tool-search-addresses-no-results" : "sc-hidden"}>
+            Please enter an Address in the textboxes above then click SEARCH button.
+          </div>
           <div className="sc-tool-search-addresses-results">
             {this.state.features.map(feature => {
               return <Results key={helpers.getUID()} feature={feature} onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave} onFeatureClick={this.onFeatureClick} />;
@@ -279,7 +281,7 @@ const Results = props => {
       }}
       onClick={() => props.onFeatureClick(props.feature)}
     >
-      <img src={images["map-marker-icon.png"]} style={{ marginBottom: "8px" }} />
+      <img src={images["map-marker-icon.png"]} style={{ marginBottom: "8px" }} alt="marker icon" />
       <div className="sc-tool-search-addresses-item-right">
         <label>{fullAddress}</label>
         <label style={{ display: "block", fontSize: "12px" }}>{muni}</label>

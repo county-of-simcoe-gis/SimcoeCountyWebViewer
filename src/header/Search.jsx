@@ -63,21 +63,6 @@ const styles = {
   })
 };
 
-const defaultStyle = new Style({
-  stroke: new Stroke({
-    width: 4,
-    color: [255, 0, 0, 0.8]
-  }),
-  fill: new Fill({
-    color: [255, 0, 0, 0] // USE OPACITY
-  }),
-  image: new CircleStyle({
-    opacity: 0.5,
-    radius: 7,
-    fill: new Fill({ color: [236, 156, 155, 0.7] })
-  })
-});
-
 class Search extends Component {
   constructor(props) {
     super(props);
@@ -419,12 +404,13 @@ class Search extends Component {
     // SEARCH LAYERS
     if (selectedType === "All" || selectedType === "Map Layer") {
       let layers = [];
+      // eslint-disable-next-line
       Object.entries(window.allLayers).map(row => {
         const layerItems = row[1];
         layerItems.forEach(layer => {
           if (layer.displayName.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
             //console.log(layer);
-            layers.push({ fullName:layer.name, name:layer.displayName, type: "Map Layer", layerGroupName:layer.groupName , layerGroup: layer.group, imageName: "layers.png", index: layer.index });
+            layers.push({ fullName: layer.name, name: layer.displayName, type: "Map Layer", layerGroupName: layer.groupName, layerGroup: layer.group, imageName: "layers.png", index: layer.index });
           }
         });
       });
@@ -434,6 +420,7 @@ class Search extends Component {
     // TOOLS
     if (selectedType === "All" || selectedType === "Tool") {
       let tools = [];
+      // eslint-disable-next-line
       mainConfig.sidebarToolComponents.forEach(tool => {
         if (tool.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
           tools.push({ name: helpers.replaceAllInString(tool.name, "_", " "), type: "Tool", imageName: "tools.png" });

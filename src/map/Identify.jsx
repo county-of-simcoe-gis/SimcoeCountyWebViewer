@@ -2,12 +2,11 @@ import React, { Component, useState } from "react";
 import "./Identify.css";
 import * as helpers from "../helpers/helpers";
 import Collapsible from "react-collapsible";
-import WKT from "ol/format/WKT.js";
 import { GeoJSON } from "ol/format.js";
 import InfoRow from "../helpers/InfoRow.jsx";
 import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
-import { Circle as CircleStyle, Icon, Fill, Stroke, Style } from "ol/style.js";
+import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style.js";
 import { Image as ImageLayer } from "ol/layer.js";
 
 class Identify extends Component {
@@ -44,8 +43,8 @@ class Identify extends Component {
       const layer = layers[index];
       if (layer.getVisible() && layer instanceof ImageLayer) {
         const name = layer.get("name");
-        let displayName ="";// layer.get("displayName");
-        let type = layer.get("displayName")
+        let displayName = ""; // layer.get("displayName");
+        let type = layer.get("displayName");
         // QUERY USING WMS
         var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "application/json" });
         url += "&feature_count=1000000";
@@ -169,7 +168,7 @@ class Identify extends Component {
 export default Identify;
 
 const Layer = props => {
-  const [open, setOpen] = useState(true);
+  const [open] = useState(true);
 
   const { layer } = props;
 
@@ -200,7 +199,7 @@ const FeatureItem = props => {
   //console.log(feature);
   const featureProps = feature.getProperties();
   const keys = Object.keys(featureProps);
-  const featureName =feature.get(displayName) ;
+  const featureName = feature.get(displayName);
   return (
     <div>
       <div className="sc-identify-feature-header" onMouseEnter={() => props.onMouseEnter(feature)} onMouseLeave={props.onMouseLeave}>
@@ -210,7 +209,8 @@ const FeatureItem = props => {
         <img className="sc-identify-feature-header-img" src={images["zoom-in.png"]} onClick={() => props.onZoomClick(feature)} alt="Zoom In"></img>
       </div>
       <div className={open ? "sc-identify-feature-content" : "sc-hidden"}>
-        {keys.map((keyName, i) => {
+        {// eslint-disable-next-line
+        keys.map((keyName, i) => {
           const val = featureProps[keyName];
           if (keyName !== "geometry" && keyName !== "geom" && typeof val !== "object") return <InfoRow key={helpers.getUID()} label={keyName} value={val}></InfoRow>;
           // <div key={helpers.getUID()}>TEST</div>

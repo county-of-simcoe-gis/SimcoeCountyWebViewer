@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React from "react";
 import "./PropertyReport.css";
 
 class PropertyReport extends React.Component {

@@ -1,16 +1,11 @@
-import React, { Component } from "react";
+import React from "react";
 import "./MyMapsSymbolizer.css";
 
 export const PointType = props => {
   return (
     <React.Fragment>
       <label className={props.visible ? "sc-mymaps-style-label" : "sc-hidden"}>Style:</label>
-      <select
-        className={props.visible ? "sc-mymaps-style-dropdown" : "sc-hidden"}
-        name="pointSymbols"
-        value={props.selectedPointStyleDropDown}
-        onChange={props.onPointStyleDropDown}
-      >
+      <select className={props.visible ? "sc-mymaps-style-dropdown" : "sc-hidden"} name="pointSymbols" value={props.selectedPointStyleDropDown} onChange={props.onPointStyleDropDown}>
         <option value="circle">Circle</option>
         <option value="cross">Cross</option>
         <option value="square">Square</option>
@@ -26,12 +21,7 @@ export const PolygonType = props => {
   return (
     <React.Fragment>
       <label className={props.visible ? "sc-mymaps-style-label" : "sc-hidden"}>Style:</label>
-      <select
-        className={props.visible ? "sc-mymaps-style-dropdown" : "sc-hidden"}
-        name="polygonSymbols"
-        value={props.selectedPolygonStyleDropDown}
-        onChange={props.onPolygonStyleDropDown}
-      >
+      <select className={props.visible ? "sc-mymaps-style-dropdown" : "sc-hidden"} name="polygonSymbols" value={props.selectedPolygonStyleDropDown} onChange={props.onPolygonStyleDropDown}>
         <option value="none">None</option>
         <option value="solid">Solid</option>
         <option value="horizontal">Horizontal</option>
@@ -47,15 +37,7 @@ export const StyleSize = props => {
     <React.Fragment>
       <label className={props.visible ? "sc-mymaps-sub-label" : "sc-hidden"}>Size:</label>
       <div className={props.visible ? "sc-mymaps-symbolizer-slider size" : "sc-hidden"}>
-        <input
-          type="range"
-          style={{ width: "169px" }}
-          min={props.sliderRadiusMin}
-          max={props.sliderRadiusMax}
-          value={props.radius}
-          step="1"
-          onChange={props.onRadiusSliderChange}
-        />
+        <input type="range" style={{ width: "169px" }} min={props.sliderRadiusMin} max={props.sliderRadiusMax} value={props.radius} step="1" onChange={props.onRadiusSliderChange} />
       </div>
     </React.Fragment>
   );
@@ -66,11 +48,7 @@ export const FillColor = props => {
     <React.Fragment>
       <label className={!props.visible ? "sc-hidden" : props.isPolygon ? "sc-mymaps-style-label" : "sc-mymaps-sub-label"}>Color:</label>
       <div className={props.visible ? "sc-mymaps-fill-color-button" : "sc-hidden"}>
-        <button
-          id={props.colorPickerButtonId}
-          style={{ backgroundColor: props.rgbFill, width: "30px", height: "15px", cursor: "pointer" }}
-          onMouseUp={props.onFillColorPickerButton}
-        />
+        <button id={props.colorPickerButtonId} style={{ backgroundColor: props.rgbFill, width: "30px", height: "15px", cursor: "pointer" }} onMouseUp={props.onFillColorPickerButton} />
         <div className="sc-mymaps-symbolizer-slider opacity">
           <input
             key={"sc-mymaps-symbolizer-fill-opacity"}
@@ -106,11 +84,7 @@ export const StrokeColor = props => {
     <React.Fragment>
       <label className="sc-mymaps-sub-label">Color:</label>
       <div className="sc-mymaps-fill-color-button">
-        <button
-          id={props.colorPickerButtonId}
-          style={{ backgroundColor: props.rgbStroke, width: "30px", height: "15px", cursor: "pointer" }}
-          onMouseUp={props.onStrokeColorPickerButton}
-        />
+        <button id={props.colorPickerButtonId} style={{ backgroundColor: props.rgbStroke, width: "30px", height: "15px", cursor: "pointer" }} onMouseUp={props.onStrokeColorPickerButton} />
         <div className="sc-mymaps-symbolizer-slider opacity">
           <input
             key={"sc-mymaps-symbolizer-stroke-opacity"}

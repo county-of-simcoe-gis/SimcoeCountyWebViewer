@@ -25,21 +25,16 @@ class LayerItem extends Component {
           <div className="sc-toc-item-checkbox">
             <input id="sc-toc-item-checkbox" key={helpers.getUID()} type="checkbox" onChange={() => this.props.onCheckboxChange(this.props.layerInfo)} checked={layerInfo.visible} />
           </div>
-          <Highlighter
-            className="sc-toc-item-layer-label"
-            highlightClassName="sc-search-toc-highlight-words"
-            searchWords={[this.props.searchText]}
-            textToHighlight={layerInfo.displayName}
-          />
+          <Highlighter className="sc-toc-item-layer-label" highlightClassName="sc-search-toc-highlight-words" searchWords={[this.props.searchText]} textToHighlight={layerInfo.displayName} />
           <div
             className={this.props.layerInfo.liveLayer === null || !this.props.layerInfo.liveLayer ? "sc-hidden" : "sc-toc-item-layer-info-live-layer"}
             title="This layer is Interactable in the map."
           >
-            <img src={images["callout.png"]}></img>
+            <img src={images["callout.png"]} alt="callout"></img>
           </div>
         </div>
         <div className="sc-toc-item-toolbox" title="Layer Options" onClick={evt => this.props.onLayerOptionsClick(evt, this.props.layerInfo)}>
-          <img src={images["more-options.png"]} />
+          <img src={images["more-options.png"]} alt="more options" />
         </div>
         <div className={this.props.layerInfo.showLegend ? "sc-toc-layer-info-container" : "sc-hidden"}>
           <div className="sc-toc-item-layer-info-container-open-vertical-lines" />

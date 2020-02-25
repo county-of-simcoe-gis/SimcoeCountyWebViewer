@@ -16,6 +16,20 @@ class WeatherForecast extends Component {
 
   componentDidMount() {
     this.refreshWeather();
+
+    fetch("https://opengis2.simcoe.ca/appstats", {
+      method: "GET",
+      mode: "no-cors",
+      credentials: "include"
+    })
+      .then(response => response.text())
+      .then(responseJson => {
+        // CALLBACK WITH RESULT
+        console.log(responseJson);
+      })
+      .catch(error => {
+        console.error(error);
+      });
   }
 
   refreshWeather = () => {

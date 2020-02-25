@@ -1,5 +1,4 @@
-import { SketchPicker } from "react-color";
-import React, { Component } from "react";
+import React from "react";
 import ReactDOM from "react-dom";
 import Portal from "../../../helpers/Portal.jsx";
 
