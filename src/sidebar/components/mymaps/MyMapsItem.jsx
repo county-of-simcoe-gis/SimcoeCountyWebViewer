@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import "./MyMapsItem.css";
-import * as helpers from "../../../helpers/helpers";
 import * as myMapsHelpers from "./myMapsHelpers";
 import Feature from "ol/Feature";
 import VectorLayer from "ol/layer/Vector";

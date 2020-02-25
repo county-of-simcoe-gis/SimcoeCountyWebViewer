@@ -1,28 +1,26 @@
 import React from "react";
 import "./SidebarSlim.css";
 import MenuButton from "./MenuButton.jsx";
-import * as helpers from "../helpers/helpers";
-import mainConfig from "../config.json";
 
-const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
-  `${mainConfig.feedbackUrl}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
+// const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
+//   `${mainConfig.feedbackUrl}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
 
-const onFeedbackClick = () => {
-  // APP STATS
-  helpers.addAppStat("Feedback", "Click (Footer)");
+// const onFeedbackClick = () => {
+//   // APP STATS
+//   helpers.addAppStat("Feedback", "Click (Footer)");
 
-  const scale = helpers.getMapScale();
-  const extent = window.map.getView().calculateExtent(window.map.getSize());
-  const xmin = extent[0];
-  const xmax = extent[1];
-  const ymin = extent[2];
-  const ymax = extent[3];
-  const center = window.map.getView().getCenter();
+//   const scale = helpers.getMapScale();
+//   const extent = window.map.getView().calculateExtent(window.map.getSize());
+//   const xmin = extent[0];
+//   const xmax = extent[1];
+//   const ymin = extent[2];
+//   const ymax = extent[3];
+//   const center = window.map.getView().getCenter();
 
-  const feedbackUrl = feedbackTemplate(xmin, xmax, ymin, ymax, center[0], center[1], scale);
+//   const feedbackUrl = feedbackTemplate(xmin, xmax, ymin, ymax, center[0], center[1], scale);
 
-  helpers.showURLWindow(feedbackUrl, false, "full");
-};
+//   helpers.showURLWindow(feedbackUrl, false, "full");
+// };
 
 const SidebarSlim = props => {
   return (

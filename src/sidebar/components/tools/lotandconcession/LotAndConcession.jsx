@@ -5,7 +5,7 @@ import * as helpers from "../../../../helpers/helpers";
 import mainConfig from "../../../../config.json";
 import PanelComponent from "../../../PanelComponent";
 import { extend } from "ol/extent.js";
-import { Circle as CircleStyle, Icon, Fill, Stroke, Style } from "ol/style.js";
+import { Fill, Stroke, Style } from "ol/style.js";
 import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
 
@@ -316,11 +316,3 @@ const munis = [
     label: "WEST GWILLIMBURY"
   }
 ];
-
-// IMPORT ALL IMAGES
-const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
-function importAllImages(r) {
-  let images = {};
-  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
-  return images;
-}

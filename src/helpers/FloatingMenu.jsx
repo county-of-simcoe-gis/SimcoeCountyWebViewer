@@ -1,6 +1,5 @@
 import React, { Component } from "react";
-import ReactDOM from "react-dom";
-import Menu, { SubMenu, Item as MenuItem, Divider } from "rc-menu";
+import Menu from "rc-menu";
 import "rc-menu/assets/index.css";
 import "./FloatingMenu.css";
 
@@ -131,7 +130,7 @@ function importAllImages(r) {
 export function FloatingMenuItem(props) {
   return (
     <div className="sc-floating-menu-toolbox-menu-icon-label-container">
-      <img className="sc-floating-menu-toolbox-menu-icon" src={images[props.imageName]} />
+      <img className="sc-floating-menu-toolbox-menu-icon" src={images[props.imageName]} alt={props.imageName} />
       <label className="sc-floating-menu-toolbox-menu-label">{props.label}</label>
     </div>
   );

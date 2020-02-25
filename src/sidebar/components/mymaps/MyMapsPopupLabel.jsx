@@ -1,9 +1,5 @@
 import React, { Component } from "react";
-import * as helpers from "../../../helpers/helpers";
-import * as myMapsHelpers from "./myMapsHelpers";
 import "./MyMapsPopupLabel.css";
-import Slider from "rc-slider";
-import { MouseWheelZoom } from "ol/interaction";
 
 class MyMapsPopupLabel extends Component {
   constructor(props) {
@@ -67,7 +63,10 @@ class MyMapsPopupLabel extends Component {
       <div>
         <div className="sc-mymaps-popup-label-toggler">
           <div className={this.props.item.drawType === "Text" ? "sc-mymaps-popup-checkbox disabled" : "sc-mymaps-popup-checkbox"}>
-            <label style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none", KhtmlUserSelect: "none", MozUserSelect: "none", MsUserSelect: "none", UserSelect: "none" }} onClick={this.onLabelVisibilityChange}>
+            <label
+              style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none", KhtmlUserSelect: "none", MozUserSelect: "none", MsUserSelect: "none", UserSelect: "none" }}
+              onClick={this.onLabelVisibilityChange}
+            >
               <input style={isSafari ? { position: "relative" } : { position: "relative", top: "1.5px" }} type="checkbox" defaultChecked={this.state.showLabel} />
               Show Label
             </label>

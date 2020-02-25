@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import "./MenuButton.css";
 import * as helpers from "../helpers/helpers";
 import mainConfig from "../config.json";
-import { saveAs } from "file-saver";
 import htmlToImage from "html-to-image";
 
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
@@ -56,9 +55,7 @@ class MenuButton extends Component {
     itemList.push(<MenuItem onClick={this.onScreenshotClick} key={helpers.getUID()} name={"Take a Screenshot"} iconClass={"sc-menu-screenshot-icon"} />);
     itemList.push(<MenuItem key={helpers.getUID()} name={"Map Legend"} iconClass={"sc-menu-legend-icon"} onClick={() => helpers.showMessage("Legend", "Coming Soon")} />);
     itemList.push(<MenuItem onClick={() => helpers.showURLWindow(mainConfig.helpUrl, false, "full")} key={helpers.getUID()} name={"Help"} iconClass={"sc-menu-help-icon"} />);
-    itemList.push(
-      <MenuItem onClick={() => helpers.showURLWindow(mainConfig.termsUrl, false, "full")} key={helpers.getUID()} name={"Terms and Conditions"} iconClass={"sc-menu-terms-icon"} />
-    );
+    itemList.push(<MenuItem onClick={() => helpers.showURLWindow(mainConfig.termsUrl, false, "full")} key={helpers.getUID()} name={"Terms and Conditions"} iconClass={"sc-menu-terms-icon"} />);
     return itemList;
   };
 

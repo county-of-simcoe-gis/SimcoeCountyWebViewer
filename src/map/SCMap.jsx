@@ -49,27 +49,27 @@ class SCMap extends Component {
   componentDidMount() {
     let centerCoords = mainConfig.centerCoords;
     let defaultZoom = mainConfig.defaultZoom;
-    const defaultsStorage = sessionStorage.getItem(this.storageMapDefaultsKey); 
+    const defaultsStorage = sessionStorage.getItem(this.storageMapDefaultsKey);
     const storage = localStorage.getItem(this.storageExtentKey);
     if (defaultsStorage !== null && storage === null) {
       const detaults = JSON.parse(defaultsStorage);
       if (detaults.zoom !== undefined) defaultZoom = detaults.zoom;
       if (detaults.center !== undefined) centerCoords = detaults.center;
     }
-    const resolutions = [
-      305.74811314055756,
-      152.87405657041106,
-      76.43702828507324,
-      38.21851414253662,
-      19.10925707126831,
-      9.554628535634155,
-      4.77731426794937,
-      2.388657133974685,
-      1.1943285668550503,
-      0.5971642835598172,
-      0.29858214164761665,
-      0.1492252984505969
-    ];
+    // const resolutions = [
+    //   305.74811314055756,
+    //   152.87405657041106,
+    //   76.43702828507324,
+    //   38.21851414253662,
+    //   19.10925707126831,
+    //   9.554628535634155,
+    //   4.77731426794937,
+    //   2.388657133974685,
+    //   1.1943285668550503,
+    //   0.5971642835598172,
+    //   0.29858214164761665,
+    //   0.1492252984505969
+    // ];
     var map = new Map({
       controls: defaultControls().extend([scaleLineControl, new FullScreen()]),
       layers: [],

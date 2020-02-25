@@ -252,6 +252,7 @@ export function httpGetText(url, callback) {
       if (callback !== undefined) callback(responseText);
     })
     .catch(error => {
+      httpGetText(url.replace("opengis.simcoe.ca", "opengis2.simcoe.ca"), callback);
       console.error(error);
     });
 }
@@ -259,21 +260,20 @@ export function httpGetText(url, callback) {
 // HTTP GET WAIT
 export async function httpGetTextWait(url, callback) {
   let data = await fetch(url)
-  .then(response => {
-    const resp = response.text();
-    //console.log(resp);
-    return resp;
-  })
-  .catch(err => {
-    console.log("Error: ", err);
-  });
+    .then(response => {
+      const resp = response.text();
+      //console.log(resp);
+      return resp;
+    })
+    .catch(err => {
+      console.log("Error: ", err);
+    });
   if (callback !== undefined) {
     //console.log(data);
     callback(data);
   }
   return data;
 }
-
 
 // GET JSON (NO WAITING)
 export function getJSON(url, callback) {
@@ -767,6 +767,7 @@ export function replaceAllInString(str, find, replace) {
   return str.replace(new RegExp(_escapeRegExp(find), "g"), replace);
 }
 function _escapeRegExp(str) {
+  // eslint-disable-next-line
   return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
 }
 

@@ -2,7 +2,7 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
-import Menu, { SubMenu, Item as MenuItem, Divider } from "rc-menu";
+import { Item as MenuItem } from "rc-menu";
 
 // CUSTOM
 import "./MyMaps.css";
@@ -974,11 +974,3 @@ class MyMaps extends Component {
 }
 
 export default MyMaps;
-
-// IMPORT ALL IMAGES
-const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
-function importAllImages(r) {
-  let images = {};
-  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
-  return images;
-}
