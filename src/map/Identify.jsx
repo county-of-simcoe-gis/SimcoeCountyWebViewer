@@ -8,6 +8,7 @@ import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
 import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style.js";
 import { Image as ImageLayer } from "ol/layer.js";
+import Feature from "ol/Feature";
 
 class Identify extends Component {
   constructor(props) {
@@ -39,22 +40,21 @@ class Identify extends Component {
     const layers = window.map.getLayers().getArray();
 
     let layerList = [];
+
     for (let index = 0; index < layers.length; index++) {
       const layer = layers[index];
       if (layer.getVisible() && layer instanceof ImageLayer) {
         const name = layer.get("name");
         let displayName = ""; // layer.get("displayName");
         let type = layer.get("displayName");
-        // QUERY USING WMS
-        var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "application/json" });
-        url += "&feature_count=1000000";
-        if (url) {
-          helpers.getJSON(url, result => {
-            const features = result.features;
-            if (features.length === 0) {
-              return;
-            }
-
+        let wfsUrl = layer.get("wfsUrl");
+        if (geometry.getType() !== "Point") {
+          const feature = new Feature(geometry);
+          const wktString = helpers.getWKTStringFromFeature(feature);
+          wfsUrl += "INTERSECTS(geom," + wktString + ")";
+          // QUERY USING WFS
+          // eslint-disable-next-line
+          helpers.getJSON(wfsUrl, result => {
             const featureList = new GeoJSON().readFeatures(result);
             if (featureList.length > 0) {
               if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
@@ -66,6 +66,29 @@ class Identify extends Component {
               this.setState({ layers: layerList });
             }
           });
+        } else {
+          // QUERY USING WMS
+          var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "application/json" });
+          url += "&feature_count=1000000";
+          if (url) {
+            helpers.getJSON(url, result => {
+              const features = result.features;
+              if (features.length === 0) {
+                return;
+              }
+
+              const featureList = new GeoJSON().readFeatures(result);
+              if (featureList.length > 0) {
+                if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
+                let features = [];
+                featureList.forEach(feature => {
+                  features.push(feature);
+                });
+                if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type });
+                this.setState({ layers: layerList });
+              }
+            });
+          }
         }
       }
     }
