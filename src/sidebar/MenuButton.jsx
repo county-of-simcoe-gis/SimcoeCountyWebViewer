@@ -66,6 +66,7 @@ class MenuButton extends Component {
 
   itemClick = (name, type) => {
     window.emitter.emit("activateSidebarItem", name, type);
+    window.emitter.emit("setSidebarVisiblity", "OPEN");
     this.setState({ isOpen: !this.state.isOpen });
   };
 
