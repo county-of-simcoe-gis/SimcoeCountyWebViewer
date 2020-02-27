@@ -49,6 +49,7 @@ class MyMaps extends Component {
     this.tooltipElement = null;
     this.tooltip = null;
     this.bearing = null;
+    this.currentDrawFeature = null;
     this.state = {
       drawType: "Cancel",
       drawColor: "#e809e5",
@@ -132,6 +133,15 @@ class MyMaps extends Component {
 
   // BUTTON BAR CLICK
   onButtonBarClick = type => {
+    if (this.draw !== null) {
+      window.map.removeInteraction(this.draw);
+
+      if (this.currentDrawFeature !== null) {
+        this.vectorSource.removeFeature(this.currentDrawFeature);
+        this.currentDrawFeature = null;
+      }
+    }
+
     this.setState({ drawType: type }, () => {
       this.setDrawControl();
     });
@@ -153,6 +163,7 @@ class MyMaps extends Component {
     window.isDrawingOrEditing = true;
 
     // ADD DRAWN FEATURE TO MAIN SOURCE
+    this.currentDrawFeature = evt.feature;
     this.vectorSource.addFeature(evt.feature);
 
     if (this.state.drawType === "Bearing") {
@@ -171,6 +182,7 @@ class MyMaps extends Component {
 
   // DRAW END
   onDrawEnd = evt => {
+    console.log("ending");
     this.setState({ tooltipClass: "sc-hidden" });
     if (this.state.drawType === "Bearing") {
       this.tooltipElement.innerHTML = "";
@@ -308,7 +320,11 @@ class MyMaps extends Component {
     );
   };
   // LABEL TEXTBOX
-  onLabelChange = (itemInfo, label) => {
+  onLabelChange = (itemId, label) => {
+    const itemInfo = this.state.items.filter(item => {
+      return item.id === itemId;
+    })[0];
+
     // IF WE HAVE A REF TO A POPUP, SEND THE UPDATE
     if (this.popupRef !== undefined) {
       this.popupRef.parentLabelChanged(itemInfo, label);
@@ -385,6 +401,13 @@ class MyMaps extends Component {
 
   // LABEL VISIBILITY CHECKBOX FROM POPUP
   onLabelVisibilityChange = (itemId, visible) => {
+    if (this.popupRef !== undefined) {
+      const item = this.state.items.filter(item => {
+        return item.id === itemId;
+      })[0];
+      this.popupRef.parentLabelVisibleChanged(item, visible);
+    }
+
     this.setState(
       {
         items: this.state.items.map(item => (item.id === itemId ? Object.assign({}, item, { labelVisible: visible }) : item))
@@ -396,6 +419,7 @@ class MyMaps extends Component {
 
         myMapsHelpers.setFeatureLabel(item);
         this.saveStateToStorage();
+        this.importGeometries();
       }
     );
   };

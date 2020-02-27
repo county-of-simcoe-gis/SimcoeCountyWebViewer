@@ -1,39 +1,49 @@
-.sc-mymaps-button-container{
+.sc-mymaps-button-container {
   display: table-cell;
-  border-right: 1px solid #E8E8E8;
+  border-right: 1px solid #e8e8e8;
   /* margin-left: 33px; */
 }
-  .sc-mymaps-button-container.active {
-    background: rgb(242,245,246); /* Old browsers */
-    background: -moz-linear-gradient(top, rgba(242,245,246,1) 0%, rgba(227,234,237,1) 37%, rgba(200,215,220,1) 100%); /* FF3.6+ */
-    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(242,245,246,1)), color-stop(37%,rgba(227,234,237,1)), color-stop(100%,rgba(200,215,220,1))); /* Chrome,Safari4+ */
-    background: -webkit-linear-gradient(top, rgba(242,245,246,1) 0%,rgba(227,234,237,1) 37%,rgba(200,215,220,1) 100%); /* Chrome10+,Safari5.1+ */
-    background: -o-linear-gradient(top, rgba(242,245,246,1) 0%,rgba(227,234,237,1) 37%,rgba(200,215,220,1) 100%); /* Opera 11.10+ */
-    background: -ms-linear-gradient(top, rgba(242,245,246,1) 0%,rgba(227,234,237,1) 37%,rgba(200,215,220,1) 100%); /* IE10+ */
-    background: linear-gradient(to bottom, rgba(242,245,246,1) 0%,rgba(227,234,237,1) 37%,rgba(200,215,220,1) 100%); /* W3C */
-    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f2f5f6', endColorstr='#c8d7dc',GradientType=0 ); /* IE6-9 */
-    border: 1px solid rgb(144, 181, 213);
-    border: 1px solid rgb(151, 195, 232);
-    box-shadow: 0px 0px 5px rgba(136, 231, 255, 0.74);
-  }
+.sc-mymaps-button-container.active {
+  background: rgb(242, 245, 246); /* Old browsers */
+  background: -moz-linear-gradient(top, rgba(242, 245, 246, 1) 0%, rgba(227, 234, 237, 1) 37%, rgba(200, 215, 220, 1) 100%); /* FF3.6+ */
+  background: -webkit-gradient(
+    linear,
+    left top,
+    left bottom,
+    color-stop(0%, rgba(242, 245, 246, 1)),
+    color-stop(37%, rgba(227, 234, 237, 1)),
+    color-stop(100%, rgba(200, 215, 220, 1))
+  ); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top, rgba(242, 245, 246, 1) 0%, rgba(227, 234, 237, 1) 37%, rgba(200, 215, 220, 1) 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top, rgba(242, 245, 246, 1) 0%, rgba(227, 234, 237, 1) 37%, rgba(200, 215, 220, 1) 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(top, rgba(242, 245, 246, 1) 0%, rgba(227, 234, 237, 1) 37%, rgba(200, 215, 220, 1) 100%); /* IE10+ */
+  background: linear-gradient(to bottom, rgba(242, 245, 246, 1) 0%, rgba(227, 234, 237, 1) 37%, rgba(200, 215, 220, 1) 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f2f5f6', endColorstr='#c8d7dc',GradientType=0 ); /* IE6-9 */
+  border: 1px solid rgb(144, 181, 213);
+  border: 1px solid rgb(151, 195, 232);
+  box-shadow: 0px 0px 5px rgba(136, 231, 255, 0.74);
+}
 
-  .sc-mymaps-button-container button:hover {
-    background-color: #ededed;
-  }
+.sc-mymaps-button-container button:hover {
+  background-color: #ededed;
+}
 
-
-.sc-mymaps-button{
+.sc-mymaps-button {
   height: 38px;
-  width: 38px;
+  width: 34px;
   border: none;
   /* border-right: 1px solid #E8E8E8; */
   background-color: transparent;
   cursor: pointer;
-  margin-left: -2px;
-  margin-right: -2px;
+  /* margin-left: -2px; */
+  /* margin-right: -2px; */
   border-radius: 4px;
 }
 
-.sc-mymaps-button.disabled{
+/* .sc-mymaps-button:hover {
+  background-color: #ededed;
+} */
+
+.sc-mymaps-button.disabled {
   opacity: 0.5;
 }
