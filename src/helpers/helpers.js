@@ -76,8 +76,8 @@ export function isMobile() {
 }
 
 // SHOW URL WINDOW
-export function showURLWindow(url, showFooter = false, mode = "normal") {
-  ReactDOM.render(<URLWindow key={shortid.generate()} mode={mode} showFooter={showFooter} url={url} />, document.getElementById("map-modal-window"));
+export function showURLWindow(url, showFooter = false, mode = "normal", honorDontShow = false) {
+  ReactDOM.render(<URLWindow key={shortid.generate()} mode={mode} showFooter={showFooter} url={url} honorDontShow={honorDontShow} />, document.getElementById("map-modal-window"));
 }
 
 // GET ARCGIS TILED LAYER
@@ -378,7 +378,12 @@ export function getWFSLayerRecordCount(serverUrl, layerName, callback) {
 }
 
 export function zoomToFeature(feature) {
-  window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
+  //window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
+  if (feature.getGeometry().getType() === "Point") {
+    window.map.getView().fit(feature.getGeometry().getExtent(), { duration: 1000, minResolution: 1 });
+  } else {
+    window.map.getView().fit(feature.getGeometry().getExtent(), { duration: 1000 });
+  }
 }
 
 // THIS RETURNS THE ACTUAL REACT ELEMENT USING DOM ID
@@ -693,6 +698,23 @@ export function getWKTFeature(wktString) {
     featureProjection: "EPSG:3857"
   });
   return feature;
+}
+
+export function getWKTStringFromFeature(feature) {
+  var wkt = new WKT();
+  const wktString = wkt.writeFeature(feature);
+  console.log(wktString);
+  return wktString;
+
+  // if (wktString === undefined) return;
+
+  // // READ WKT
+  // var wkt = new WKT();
+  // var feature = wkt.readFeature(wktString, {
+  //   dataProjection: "EPSG:3857",
+  //   featureProjection: "EPSG:3857"
+  // });
+  // return feature;
 }
 
 export function formatReplace(fmt, ...args) {
