@@ -306,6 +306,7 @@ export function controlDoubleClickZoom(active) {
 export function setFeatureLabel(itemInfo) {
   let feature = getFeatureById(itemInfo.id);
   let style = feature.getStyle();
+
   if (itemInfo.labelVisible) {
     const textStyle = helpers.createTextStyle(
       feature,

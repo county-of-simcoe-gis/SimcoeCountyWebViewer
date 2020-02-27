@@ -161,7 +161,7 @@ class MyMapsBuffer extends Component {
       <div className={this.props.visible ? "sc-fieldset" : "sc-hidden"}>
         <legend>
           <img src={images["buffer.png"]} alt="buffer" />
-          Buffer
+          &nbsp; Buffer
         </legend>
         <div className="sc-mymaps-buffer-container">
           <label style={{ gridColumnStart: "1" }}>Distance:</label>

@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import "./UrlWindow.css";
+import { TileCache } from "ol";
 
 class URLWindow extends Component {
   constructor(props) {
@@ -8,6 +9,8 @@ class URLWindow extends Component {
     this.state = {
       hide: false
     };
+
+    this.storageKeyWhatsNew = "sc_dontshowagain";
   }
 
   onCloseClick = value => {
@@ -18,6 +21,12 @@ class URLWindow extends Component {
     window.open(this.props.url, "_blank");
   };
   componentDidMount() {
+    console.log(this.props);
+    if (this.props.honorDontShow) {
+      const saved = this.getStorage();
+      if (saved.includes(this.props.url)) this.setState({ hide: true });
+    }
+
     document.addEventListener("keydown", this.escFunction, false);
 
     // LISTEN FOR SIDEPANEL CHANGES
@@ -33,6 +42,29 @@ class URLWindow extends Component {
       this.setState({ hide: true });
     }
   };
+
+  onDontShowThisAgain = () => {
+    this.saveToStorage();
+  };
+
+  saveToStorage = () => {
+    let saved = this.getStorage();
+
+    if (!saved.includes(this.props.url)) {
+      saved.push(this.props.url);
+      localStorage.setItem(this.storageKeyWhatsNew, JSON.stringify(saved));
+    }
+    this.setState({ hide: true });
+  };
+
+  // GET STORAGE
+  getStorage() {
+    const storage = localStorage.getItem(this.storageKeyWhatsNew);
+    if (storage === null) return [];
+
+    const data = JSON.parse(storage);
+    return data;
+  }
 
   render() {
     //className={this.state.hide ? "sc-hidden" :"sc-url-window-map-container"}
@@ -63,7 +95,7 @@ class URLWindow extends Component {
           <button className="sc-button" onClick={this.onCloseClick}>
             Close Window
           </button>
-          <button id="sc-url-window-dont-show-this-again" className="sc-button">
+          <button id="sc-url-window-dont-show-this-again" className="sc-button" onClick={this.onDontShowThisAgain}>
             Don't Show this Again
           </button>
         </div>

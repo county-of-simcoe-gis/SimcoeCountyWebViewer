@@ -30,10 +30,17 @@ class MyMapsPopupLabel extends Component {
     }
   };
 
+  // HANDLE PARENT LABEL VISIBLITY CHANGE
+  parentLabelVisibilityChange = (itemInfo, visible) => {
+    if (itemInfo.id === this.props.item.id) {
+      this.setState({ showLabel: visible });
+    }
+  };
+
   // HANDLE LABEL CHANGE IN POPUP
   onLabelChange = evt => {
     this.setState({ label: evt.target.value });
-    this.props.onLabelChange(this.props.item, evt.target.value);
+    this.props.onLabelChange(this.props.item.id, evt.target.value);
   };
 
   onLabelVisibilityChange = event => {
@@ -43,7 +50,13 @@ class MyMapsPopupLabel extends Component {
 
   // THIS IS REQUIRED WHEN CHANGING LABEL FROM POPUP
   componentWillReceiveProps(nextProps) {
+    console.log(nextProps);
     if (nextProps.item.label !== this.state.label) this.setState({ label: nextProps.item.label });
+
+    if (nextProps.item.labelVisible !== this.state.labelVisible) {
+      console.log("updating visible");
+      this.setState({ labelVisible: nextProps.item.labelVisible });
+    }
   }
 
   // SLIDER CHANGE EVENT

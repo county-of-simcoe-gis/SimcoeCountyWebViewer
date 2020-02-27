@@ -15,8 +15,16 @@ class MyMapsPopup extends Component {
     this.props.onRef(undefined);
   }
 
+  componentWillReceiveProps(nextProps) {
+    // this.popupLabelRef.forceUpdate();
+  }
+
   parentLabelChanged = (itemInfo, newLabel) => {
     this.popupLabelRef.parentLabelChange(itemInfo, newLabel);
+  };
+
+  parentLabelVisibleChanged = (itemInfo, visible) => {
+    this.popupLabelRef.parentLabelVisibilityChange(itemInfo, visible);
   };
 
   render() {
