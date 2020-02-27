@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import "./UrlWindow.css";
-import { TileCache } from "ol";
 
 class URLWindow extends Component {
   constructor(props) {
