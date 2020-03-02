@@ -67,39 +67,10 @@ class MyMaps extends Component {
     window.emitter.addListener("addMyMapsFeature", (feature, labelText) => this.addNewItem(feature, labelText, true));
   }
 
-  componentDidMount() {
-    // GET ITEMS FROM STORAGE
-    const data = myMapsHelpers.getItemsFromStorage(this.storageKey);
-    this.setState(data, () => {
-      this.updateStyle();
-      this.importGeometries();
-    });
-
-    // URL PARAMETER
-    const myMapsId = helpers.getURLParameter("MY_MAPS_ID");
-    if (myMapsId !== null) {
-      myMapsHelpers.importMyMaps(myMapsId, result => {
-        if (result.error !== undefined) helpers.showMessage("MyMaps Import", "That MyMaps ID was NOT found!", "red");
-        else {
-          helpers.showMessage("MyMaps Import", "Success!  MyMaps imported.");
-          this.onMyMapsImport(result);
-
-          const featureId = helpers.getURLParameter("MY_MAPS_FEATURE_ID");
-          if (featureId !== null) {
-            const item = this.state.items.filter(item => {
-              return item.id === featureId;
-            })[0];
-
-            let feature = helpers.getFeatureFromGeoJSON(item.featureGeoJSON);
-            helpers.zoomToFeature(feature);
-          }
-        }
-      });
-    }
-  }
+  componentDidMount() {}
 
   onMapLoad = () => {
-    this.updateStyle();
+    //this.updateStyle();
     this.vectorSource = new VectorSource();
     this.vectorLayer = new VectorLayer({
       source: this.vectorSource,
@@ -129,6 +100,35 @@ class MyMaps extends Component {
         }
       });
     });
+
+    // GET ITEMS FROM STORAGE
+    const data = myMapsHelpers.getItemsFromStorage(this.storageKey);
+    this.setState(data, () => {
+      this.updateStyle();
+      this.importGeometries();
+    });
+
+    // URL PARAMETER
+    const myMapsId = helpers.getURLParameter("MY_MAPS_ID");
+    if (myMapsId !== null) {
+      myMapsHelpers.importMyMaps(myMapsId, result => {
+        if (result.error !== undefined) helpers.showMessage("MyMaps Import", "That MyMaps ID was NOT found!", "red");
+        else {
+          helpers.showMessage("MyMaps Import", "Success!  MyMaps imported.");
+          this.onMyMapsImport(result);
+
+          const featureId = helpers.getURLParameter("MY_MAPS_FEATURE_ID");
+          if (featureId !== null) {
+            const item = this.state.items.filter(item => {
+              return item.id === featureId;
+            })[0];
+
+            let feature = helpers.getFeatureFromGeoJSON(item.featureGeoJSON);
+            helpers.zoomToFeature(feature);
+          }
+        }
+      });
+    }
   };
 
   // BUTTON BAR CLICK

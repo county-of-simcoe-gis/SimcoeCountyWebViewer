@@ -97,9 +97,6 @@ class SCMap extends Component {
     window.popup = new Popup();
     window.map.addOverlay(window.popup);
 
-    // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
-    window.emitter.emit("mapLoaded");
-
     window.map.getViewport().addEventListener("contextmenu", evt => {
       evt.preventDefault();
       this.contextCoords = window.map.getEventCoordinate(evt);
@@ -177,6 +174,16 @@ class SCMap extends Component {
       // SHOW TERMS
       //helpers.showURLWindow("https://maps.simcoe.ca/terms.html", true, "full", true);
     }
+
+    // MAP LOADED
+    this.initialLoad = false;
+    //window.emitter.emit("mapLoaded");
+    window.map.once("rendercomplete", event => {
+      if (!this.initialLoad) {
+        window.emitter.emit("mapLoaded");
+        this.initialLoad = true;
+      }
+    });
   }
 
   onMenuItemClick = key => {
