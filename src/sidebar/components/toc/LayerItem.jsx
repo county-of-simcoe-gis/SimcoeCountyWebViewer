@@ -32,6 +32,9 @@ class LayerItem extends Component {
           >
             <img src={images["callout.png"]} alt="callout"></img>
           </div>
+          <div className={this.props.layerInfo.canDownload === null || !this.props.layerInfo.canDownload ? "sc-hidden" : "sc-toc-item-layer-info-download"} title="This layer can be downloaded.">
+            <img src={images["download.png"]} alt="can download"></img>
+          </div>
         </div>
         <div className="sc-toc-item-toolbox" title="Layer Options" onClick={evt => this.props.onLayerOptionsClick(evt, this.props.layerInfo)}>
           <img src={images["more-options.png"]} alt="more options" />

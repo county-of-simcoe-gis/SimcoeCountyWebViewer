@@ -230,6 +230,9 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
     // LIVE LAYER
     let liveLayer = _isLiveLayer(keywords);
 
+    // DOWNLOAD
+    let canDownload = _getCanDownload(keywords);
+
     //DISPLAY NAME
     let displayName = _getDisplayName(keywords);
     if (displayName === "") displayName = layerTitle;
@@ -271,7 +274,8 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
       wfsUrl: wfsUrl,
       displayName: displayName, // DISPLAY NAME USED BY IDENTIFY
       group: group.value,
-      groupName: group.label
+      groupName: group.label,
+      canDownload: canDownload // INDICATES WETHER LAYER CAN BE DOWNLOADED
     };
     callback(returnLayer);
   }
@@ -391,6 +395,9 @@ export function getLayerListByGroupCustomRest(group, callback) {
         // LIVE LAYER
         let liveLayer = _isLiveLayer(keywords);
 
+        // DOWNLOAD
+        let canDownload = _getCanDownload(keywords);
+
         //DISPLAY NAME
         let displayName = _getDisplayName(keywords);
         if (displayName === "") displayName = layerTitle;
@@ -432,7 +439,8 @@ export function getLayerListByGroupCustomRest(group, callback) {
           wfsUrl: wfsUrl,
           displayName: displayName, // DISPLAY NAME USED BY IDENTIFY
           group: group.value,
-          groupName: group.label
+          groupName: group.label,
+          canDownload: canDownload // INDICATES WETHER LAYER CAN BE DOWNLOADED
         });
 
         layerIndex--;
