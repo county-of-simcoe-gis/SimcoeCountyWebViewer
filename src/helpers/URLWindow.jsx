@@ -20,7 +20,6 @@ class URLWindow extends Component {
     window.open(this.props.url, "_blank");
   };
   componentDidMount() {
-    console.log(this.props);
     if (this.props.honorDontShow) {
       const saved = this.getStorage();
       if (saved.includes(this.props.url)) this.setState({ hide: true });

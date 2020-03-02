@@ -173,6 +173,9 @@ class SCMap extends Component {
       // If Internet Explorer, return version number
       this.setState({ isIE: true });
       helpers.showURLWindow(mainConfig.ieWarningUrl);
+    } else {
+      // SHOW TERMS
+      //helpers.showURLWindow("https://maps.simcoe.ca/terms.html", true, "full", true);
     }
   }
 

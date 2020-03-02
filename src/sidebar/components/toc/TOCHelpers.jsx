@@ -1,6 +1,7 @@
 import * as helpers from "../../../helpers/helpers";
 import TOCConfig from "./TOCConfig.json";
 import xml2js from "xml2js";
+import { parseBooleans } from "xml2js/lib/processors";
 
 // INDEX WHERE THE TOC LAYERS SHOULD START DRAWING AT
 const layerIndexStart = 100;
@@ -504,6 +505,15 @@ function _getOpacity(keywords) {
     const val = opacityKeyword.split("=")[1];
     return parseFloat(val);
   } else return 1;
+}
+
+function _getCanDownload(keywords) {
+  if (keywords === undefined) return false;
+  const downloadLayerKeyword = keywords.find(function(item) {
+    return item.indexOf("DOWNLOAD") !== -1;
+  });
+  if (downloadLayerKeyword !== undefined) return true;
+  else return false;
 }
 
 export function disableLayersVisiblity(layers, callback) {
