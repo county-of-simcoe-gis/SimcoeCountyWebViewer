@@ -1,7 +1,6 @@
 import * as helpers from "../../../helpers/helpers";
 import TOCConfig from "./TOCConfig.json";
 import xml2js from "xml2js";
-import { parseBooleans } from "xml2js/lib/processors";
 
 // INDEX WHERE THE TOC LAYERS SHOULD START DRAWING AT
 const layerIndexStart = 100;
