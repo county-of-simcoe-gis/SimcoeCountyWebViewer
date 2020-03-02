@@ -71,27 +71,35 @@ class Search extends Component {
     this.removeMarkersClick = this.removeMarkersClick.bind(this);
     this.cleanup = this.cleanup.bind(this);
     this.storageKey = "searchHistory";
+
+    // LISTEN FOR MAP TO MOUNT
+    window.emitter.addListener("mapLoaded", () => this.onMapLoad());
+
+    this.state = {
+      value: "",
+      searchResults: [],
+      hover: false,
+      iconInitialClass: "sc-search-icon-initial",
+      iconActiveClass: "sc-search-icon-active-hidden",
+      showMore: false,
+      searchTypes: [],
+      selectedType: ""
+    };
   }
-  state = {
-    value: "",
-    searchResults: [],
-    hover: false,
-    iconInitialClass: "sc-search-icon-initial",
-    iconActiveClass: "sc-search-icon-active-hidden",
-    showMore: false,
-    searchTypes: [],
-    selectedType: ""
-  };
 
   requestTimer = null;
 
-  componentDidMount() {
+  onMapLoad = () => {
     // HANDLE URL PARAMETER
     if (locationId !== null) {
       // CALL API TO GET LOCATION DETAILS
-      helpers.getJSON(searchInfoURL(apiUrl, locationId), result => this.jsonCallback(result));
+      setTimeout(() => {
+        helpers.getJSON(searchInfoURL(apiUrl, locationId), result => this.jsonCallback(result));
+      }, 500);
     }
+  };
 
+  componentDidMount() {
     helpers.getJSON(searchTypesURL(apiUrl), result => {
       let items = [];
       items.push({ label: "All", value: "All" });
@@ -553,6 +561,7 @@ class Search extends Component {
             </div>
           )}
           renderItem={(item, isHighlighted) => {
+            console.log(item.imageName);
             let type = "Unknown";
             if (item.type === "Map Layer") type = item.layerGroupName;
             else if (item.type === "Tool" || item.type === "Theme") type = "";
@@ -560,7 +569,7 @@ class Search extends Component {
             return (
               <div className={isHighlighted ? "sc-search-item-highlighted" : "sc-search-item"} key={helpers.getUID()}>
                 <div className="sc-search-item-left">
-                  <img src={images[item.imageName]} alt="blue pin" />
+                  <img src={item.imageName === undefined ? images["map-marker-light-blue.png"] : images[item.imageName]} alt="blue pin" />
                 </div>
                 <div className="sc-search-item-content">
                   <Highlighter highlightClassName="sc-search-highlight-words" searchWords={[this.state.value]} textToHighlight={item.name} />
