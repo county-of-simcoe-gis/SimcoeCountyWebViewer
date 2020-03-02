@@ -23,6 +23,13 @@
   margin-left: 5px;
 }
 
+.sc-toc-item-layer-info-download {
+  display: inline-table;
+  vertical-align: middle;
+  margin-left: 5px;
+  margin-bottom: 2px;
+}
+
 .sc-toc-item-plus-minus-container {
   display: inline-table;
   vertical-align: middle;
