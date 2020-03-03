@@ -22,10 +22,20 @@ class LayerItem extends Component {
             <div className="sc-toc-item-plus-minus-sign" />
             <div className="sc-toc-item-lines-expanded" />
           </div>
-          <div className="sc-toc-item-checkbox">
+          {/* <div className="sc-toc-item-checkbox">
             <input id="sc-toc-item-checkbox" key={helpers.getUID()} type="checkbox" onChange={() => this.props.onCheckboxChange(this.props.layerInfo)} checked={layerInfo.visible} />
-          </div>
-          <Highlighter className="sc-toc-item-layer-label" highlightClassName="sc-search-toc-highlight-words" searchWords={[this.props.searchText]} textToHighlight={layerInfo.displayName} />
+          </div> */}
+          <label>
+            <input id="sc-toc-item-checkbox" key={helpers.getUID()} type="checkbox" onChange={() => this.props.onCheckboxChange(this.props.layerInfo)} checked={layerInfo.visible} />
+            <Highlighter
+              //htmlFor="sc-toc-item-checkbox"
+              className="sc-toc-item-layer-label"
+              highlightClassName="sc-search-toc-highlight-words"
+              searchWords={[this.props.searchText]}
+              textToHighlight={layerInfo.displayName}
+            ></Highlighter>
+          </label>
+
           <div
             className={this.props.layerInfo.liveLayer === null || !this.props.layerInfo.liveLayer ? "sc-hidden" : "sc-toc-item-layer-info-live-layer"}
             title="This layer is Interactable in the map."
