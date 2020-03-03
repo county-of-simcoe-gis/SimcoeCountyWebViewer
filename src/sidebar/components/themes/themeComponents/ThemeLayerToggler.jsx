@@ -38,7 +38,11 @@ class ThemeLayerToggler extends Component {
         const center = getCenter(extent);
         helpers.zoomToFeature(feature);
         const entries = Object.entries(feature.getProperties());
-        window.popup.show(center, <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.mainConfig.popupLogoImage} layerConfig={this.props.layerConfig} />, this.props.layerConfig.displayName);
+        window.popup.show(
+          center,
+          <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.mainConfig.popupLogoImage} layerConfig={this.props.layerConfig} />,
+          this.props.layerConfig.displayName
+        );
       },
       null,
       null,
@@ -58,7 +62,8 @@ class ThemeLayerToggler extends Component {
 
   componentDidMount() {
     // GET LEGEND
-    const styleUrlTemplate = (serverURL, layerName, styleName) => `${serverURL}/wms?REQUEST=GetLegendGraphic&VERSION=1.1&FORMAT=image/png&WIDTH=20&HEIGHT=20&TRANSPARENT=true&LAYER=${layerName}&STYLE=${styleName === undefined ? "" : styleName}`;
+    const styleUrlTemplate = (serverURL, layerName, styleName) =>
+      `${serverURL}/wms?REQUEST=GetLegendGraphic&VERSION=1.1&FORMAT=image/png&WIDTH=20&HEIGHT=20&TRANSPARENT=true&LAYER=${layerName}&STYLE=${styleName === undefined ? "" : styleName}`;
     const styleUrl = styleUrlTemplate(this.props.layerConfig.serverUrl, this.props.layerConfig.layerName, this.props.layerConfig.legendStyleName);
     this.setState({ styleUrl: styleUrl });
 
@@ -83,8 +88,11 @@ class ThemeLayerToggler extends Component {
           const feature = geoJSON[0];
 
           const entries = Object.entries(feature.getProperties());
-          console.log(entries);
-          window.popup.show(evt.coordinate, <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={this.props.layerConfig} />, this.props.layerConfig.displayName);
+          window.popup.show(
+            evt.coordinate,
+            <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={this.props.layerConfig} />,
+            this.props.layerConfig.displayName
+          );
         });
       }
     });
@@ -116,7 +124,9 @@ class ThemeLayerToggler extends Component {
             <input type="checkbox" checked={this.state.visible} style={{ verticalAlign: "middle" }} onChange={this.onCheckboxChange} />
             {this.props.layerConfig.displayName}
           </label>
-          <label className={this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle ? "sc-theme-layer-toggler-count" : "sc-theme-layer-toggler-count-with-box"}>{" (" + this.state.recordCount + ")"}</label>
+          <label className={this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle ? "sc-theme-layer-toggler-count" : "sc-theme-layer-toggler-count-with-box"}>
+            {" (" + this.state.recordCount + ")"}
+          </label>
         </div>
 
         <div>{this.props.children}</div>

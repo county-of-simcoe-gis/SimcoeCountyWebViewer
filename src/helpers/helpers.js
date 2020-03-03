@@ -377,12 +377,15 @@ export function getWFSLayerRecordCount(serverUrl, layerName, callback) {
   });
 }
 
-export function zoomToFeature(feature) {
-  //window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
-  if (feature.getGeometry().getType() === "Point") {
-    window.map.getView().fit(feature.getGeometry().getExtent(), { duration: 1000, minResolution: 1 });
+export function zoomToFeature(feature, animate = true) {
+  if (animate) {
+    if (feature.getGeometry().getType() === "Point") {
+      window.map.getView().fit(feature.getGeometry().getExtent(), { duration: 1000, minResolution: 1 });
+    } else {
+      window.map.getView().fit(feature.getGeometry().getExtent(), { duration: 1000 });
+    }
   } else {
-    window.map.getView().fit(feature.getGeometry().getExtent(), { duration: 1000 });
+    window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
   }
 }
 

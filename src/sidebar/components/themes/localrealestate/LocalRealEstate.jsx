@@ -10,6 +10,7 @@ import LocalRealEstateRecents from "./LocalRealEstateRecents.jsx";
 import LocalRealEstatePopupContent from "./LocalRealEstatePopupContent.jsx";
 import { getCenter } from "ol/extent";
 
+//disableParcelClick
 class LocalRealEstate extends Component {
   constructor(props) {
     super(props);
@@ -28,7 +29,7 @@ class LocalRealEstate extends Component {
   }
 
   componentDidMount() {
-    window.disableParcelClick = true;
+    //window.disableParcelClick = true;
     // CREATE DIV FOR SLIDER
     document.body.appendChild(this.imageSlider);
 
@@ -49,7 +50,7 @@ class LocalRealEstate extends Component {
     );
   };
   componentWillUnmount() {
-    window.disableParcelClick = false;
+    //window.disableParcelClick = false;
     this.imageSlider.remove();
   }
 
