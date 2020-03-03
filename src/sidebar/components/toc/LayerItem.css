@@ -110,5 +110,14 @@
     .sc-toc-item-checkbox {
       transform: scale(1, 1);
     }
+
+    .sc-toc-item-layer-label {
+      bottom: 0px;
+    }
+
+    .sc-toc-item-plus-minus-container {
+      margin-top: 3px;
+      margin-right: 4px;
+      }
   }
 }
