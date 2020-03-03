@@ -75,11 +75,8 @@ class ThemeDataList extends Component {
     helpers.getGeometryCenter(feature.getGeometry(), center => {
       // SHOW POPUP
       const entries = Object.entries(feature.getProperties());
-      window.popup.show(
-        center.flatCoordinates,
-        <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={this.props.layerConfig} />
-      );
-      helpers.zoomToFeature(feature);
+      window.popup.show(center.flatCoordinates, <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={this.props.layerConfig} />);
+      helpers.zoomToFeature(feature, false);
       window.map.getView().setZoom(15);
     });
   };
