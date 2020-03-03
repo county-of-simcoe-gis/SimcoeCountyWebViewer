@@ -55,7 +55,7 @@ class BasemapSwitcher extends Component {
 
       // LAYER PROPS
       layer.setProperties({ index: index, name: service.name });
-      layer.setZIndex(index);
+      layer.setZIndex(index + 1);
       layer.setVisible(false);
 
       // SET MAIN LAYER VISIBLE
