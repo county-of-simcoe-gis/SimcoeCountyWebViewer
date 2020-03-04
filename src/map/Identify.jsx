@@ -46,7 +46,7 @@ class Identify extends Component {
       if (layer.getVisible() && layer instanceof ImageLayer) {
         const name = layer.get("name");
         let displayName = ""; // layer.get("displayName");
-        let type = layer.get("displayName");
+        let type = layer.get("identifyDisplayName");
         let wfsUrl = layer.get("wfsUrl");
         if (geometry.getType() !== "Point") {
           const feature = new Feature(geometry);

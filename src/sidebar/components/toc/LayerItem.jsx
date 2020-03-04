@@ -32,7 +32,7 @@ class LayerItem extends Component {
               className="sc-toc-item-layer-label"
               highlightClassName="sc-search-toc-highlight-words"
               searchWords={[this.props.searchText]}
-              textToHighlight={layerInfo.displayName}
+              textToHighlight={layerInfo.tocDisplayName}
             ></Highlighter>
           </label>
 

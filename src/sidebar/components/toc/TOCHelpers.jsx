@@ -232,9 +232,12 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
     // DOWNLOAD
     let canDownload = _getCanDownload(keywords);
 
-    //DISPLAY NAME
-    let displayName = _getDisplayName(keywords);
-    if (displayName === "") displayName = layerTitle;
+    // IDENTIFY DISPLAY NAME
+    let identifyDisplayName = _getDisplayName(keywords);
+
+    // TOC DISPLAY NAME
+    const tocDisplayName = layerTitle;
+
     // OPACITY
     let opacity = _getOpacity(keywords);
     const minScale = layer.MinScaleDenominator;
@@ -250,7 +253,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
     let newLayer = helpers.getImageWMSLayer(serverUrl + "/wms", layer.Name[0]);
     newLayer.setVisible(!group.defaultGroup ? false : layerVisible);
     newLayer.setOpacity(opacity);
-    newLayer.setProperties({ name: layerNameOnly, displayName: displayName });
+    newLayer.setProperties({ name: layerNameOnly, displayName: tocDisplayName });
     newLayer.setZIndex(layerIndex);
     window.map.addLayer(newLayer);
 
@@ -271,7 +274,8 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
       maxScale: maxScale, //MaxScaleDenominator from geoserver
       liveLayer: liveLayer, // LIVE LAYER FLAG
       wfsUrl: wfsUrl,
-      displayName: displayName, // DISPLAY NAME USED BY IDENTIFY
+      identifyDisplayName: identifyDisplayName, // DISPLAY NAME USED BY IDENTIFY
+      tocDisplayName: tocDisplayName, // DISPLAY NAME USED FOR TOC LAYER NAME
       group: group.value,
       groupName: group.label,
       canDownload: canDownload // INDICATES WETHER LAYER CAN BE DOWNLOADED
@@ -397,9 +401,12 @@ export function getLayerListByGroupCustomRest(group, callback) {
         // DOWNLOAD
         let canDownload = _getCanDownload(keywords);
 
-        //DISPLAY NAME
-        let displayName = _getDisplayName(keywords);
-        if (displayName === "") displayName = layerTitle;
+        // IDENTIFY DISPLAY NAME
+        let identifyDisplayName = _getDisplayName(keywords);
+
+        // TOC DISPLAY NAME
+        const tocDisplayName = layerTitle;
+
         // // OPACITY
         let opacity = _getOpacity(keywords);
 
@@ -414,7 +421,7 @@ export function getLayerListByGroupCustomRest(group, callback) {
         let layer = helpers.getImageWMSLayer(serverUrl + "/wms", layerInfo.name);
         layer.setVisible(layerVisible);
         layer.setOpacity(opacity);
-        layer.setProperties({ name: layerNameOnly, displayName: displayName });
+        layer.setProperties({ name: layerNameOnly, displayName: tocDisplayName });
         layer.setZIndex(layerIndex);
         window.map.addLayer(layer);
 
@@ -436,7 +443,8 @@ export function getLayerListByGroupCustomRest(group, callback) {
           minScale: undefined, //placeholder MinScaleDenominator
           maxScale: undefined, //placeholder MaxScaleDenominator
           wfsUrl: wfsUrl,
-          displayName: displayName, // DISPLAY NAME USED BY IDENTIFY
+          identifyDisplayName: identifyDisplayName, // DISPLAY NAME USED BY IDENTIFY
+          tocDisplayName: tocDisplayName, // DISPLAY NAME USED FOR TOC LAYER NAME
           group: group.value,
           groupName: group.label,
           canDownload: canDownload // INDICATES WETHER LAYER CAN BE DOWNLOADED
@@ -462,7 +470,7 @@ function _isLiveLayer(keywords) {
 function _getDisplayName(keywords) {
   if (keywords === undefined) return "";
   const displayNameKeyword = keywords.find(function(item) {
-    return item.indexOf("DISPLAY_NAME") !== -1;
+    return item.indexOf("IDENTIFY_DISPLAY_NAME") !== -1;
   });
   if (displayNameKeyword !== undefined) {
     const val = displayNameKeyword.split("=")[1];
