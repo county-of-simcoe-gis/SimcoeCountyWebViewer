@@ -802,7 +802,7 @@ export function showFeaturePopup(coord, feature) {
 
 function FeaturePopupContent(props) {
   return (
-    <div>
+    <div className="sc-live-layer-popup-content">
       {Object.entries(props.feature.getProperties()).map(row => {
         if (row[0] !== "geometry" && row[0].substring(0, 1) !== "_") {
           return <InfoRow key={getUID()} value={row[1]} label={row[0]} />;
