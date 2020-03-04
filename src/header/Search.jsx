@@ -543,7 +543,6 @@ class Search extends Component {
 
               let limit = defaultSearchLimit;
               if (this.state.showMore) limit = 50;
-              console.log(apiUrl);
               await helpers.getJSONWait(searchURL(apiUrl, value, this.state.selectedType.value, undefined, limit), responseJson => {
                 if (responseJson !== undefined) this.searchResultsHandler(responseJson, defaultSearchLimit);
               });
@@ -561,7 +560,6 @@ class Search extends Component {
             </div>
           )}
           renderItem={(item, isHighlighted) => {
-            console.log(item.imageName);
             let type = "Unknown";
             if (item.type === "Map Layer") type = item.layerGroupName;
             else if (item.type === "Tool" || item.type === "Theme") type = "";
