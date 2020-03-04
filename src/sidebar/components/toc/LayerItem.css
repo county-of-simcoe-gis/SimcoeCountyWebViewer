@@ -34,6 +34,7 @@
   display: inline-table;
   vertical-align: middle;
   cursor: pointer;
+  margin-right: 3px;
 }
 
 .sc-toc-item-toolbox {
@@ -118,6 +119,6 @@
     .sc-toc-item-plus-minus-container {
       margin-top: 3px;
       margin-right: 4px;
-      }
+    }
   }
 }
