@@ -416,9 +416,9 @@ class Search extends Component {
       Object.entries(window.allLayers).map(row => {
         const layerItems = row[1];
         layerItems.forEach(layer => {
-          if (layer.displayName.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
+          if (layer.tocDisplayName.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
             //console.log(layer);
-            layers.push({ fullName: layer.name, name: layer.displayName, type: "Map Layer", layerGroupName: layer.groupName, layerGroup: layer.group, imageName: "layers.png", index: layer.index });
+            layers.push({ fullName: layer.name, name: layer.tocDisplayName, type: "Map Layer", layerGroupName: layer.groupName, layerGroup: layer.group, imageName: "layers.png", index: layer.index });
           }
         });
       });
