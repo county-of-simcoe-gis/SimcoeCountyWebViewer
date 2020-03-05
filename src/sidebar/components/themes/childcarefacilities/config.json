@@ -12,7 +12,7 @@
     {
       "displayName": "Child Care Facilities",
       "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-      "layerName": "simcoe:Child_Care_Facilities",
+      "layerName": "simcoe:Child_Care_Facility_Theme",
       "visible": true,
       "expanded": true,
       "zIndex": 52,

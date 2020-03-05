@@ -124,7 +124,7 @@ class TOC extends Component {
 
   reset = () => {
     const defaultGroup = this.state.defaultGroup;
-    this.setState({ sortAlpha: false, selectedGroup: defaultGroup }, () => {
+    this.setState({ sortAlpha: false, selectedGroup: defaultGroup, searchText: "" }, () => {
       this.refreshTOC(() => {
         setTimeout(() => {
           this.layerRef.resetLayers();
@@ -204,7 +204,13 @@ class TOC extends Component {
         </div>
         <div className={this.state.isLoading ? "sc-toc-main-container sc-hidden" : "sc-toc-main-container"}>
           <div className="sc-toc-search-container">
-            <input id="sc-toc-search-textbox" className="sc-toc-search-textbox" placeholder={"Filter (" + this.state.layerCount + " layers)..."} onChange={this.onSearchLayersChange} />
+            <input
+              id="sc-toc-search-textbox"
+              className="sc-toc-search-textbox"
+              placeholder={"Filter (" + this.state.layerCount + " layers)..."}
+              onChange={this.onSearchLayersChange}
+              value={this.state.searchText}
+            />
             <div data-tip="Save Layer Visibility" data-for="sc-toc-save-tooltip" className="sc-toc-search-save-image" onClick={this.onSaveClick}>
               <ReactTooltip id="sc-toc-save-tooltip" className="sc-toc-save-tooltip" multiline={false} place="right" type="dark" effect="solid" />
             </div>
