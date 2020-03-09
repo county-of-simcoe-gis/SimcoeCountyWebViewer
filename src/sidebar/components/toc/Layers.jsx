@@ -186,10 +186,10 @@ class Layers extends Component {
 
   // isVisibleFromConfig()
   sortByAlphaCompare(a, b) {
-    if (a.displayName < b.displayName) {
+    if (a.tocDisplayName < b.tocDisplayName) {
       return -1;
     }
-    if (a.displayName > b.displayName) {
+    if (a.tocDisplayName > b.tocDisplayName) {
       return 1;
     }
     return 0;
