@@ -396,6 +396,9 @@ class Layers extends Component {
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoom-to-layer">
             <FloatingMenuItem imageName={"zoom-in.png"} label="Zoom to Layer" />
           </MenuItem>
+          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoom-to-layer-visible">
+            <FloatingMenuItem imageName={"zoom-in.png"} label="Zoom to Visible Scale" />
+          </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-download">
             <FloatingMenuItem imageName={"download.png"} label="Download" />
           </MenuItem>
@@ -424,6 +427,8 @@ class Layers extends Component {
         const extent = [boundingBox.minx, boundingBox.miny, boundingBox.maxx, boundingBox.maxy];
         window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
       });
+    } else if (action === "sc-floating-menu-zoom-to-layer-visible") {
+      this.zoomToVisibleScale(layerInfo);
     } else if (action === "sc-floating-menu-download") {
       helpers.showMessage("Download", "Coming Soon!");
       // TOCHelpers.getLayerInfo(layerInfo, result => {
@@ -440,6 +445,41 @@ class Layers extends Component {
     helpers.addAppStat("Layer Options", action);
   };
 
+  zoomToVisibleScale = layerInfo => {
+    const scales = [1155581, 577791, 288895, 144448, 72224, 36112, 18056, 9028, 4514, 2257, 1128, 564];
+
+    const scale = helpers.getMapScale();
+    let minScale = 0;
+    let maxScale = 100000000000;
+    if (layerInfo.minScale !== undefined) minScale = layerInfo.minScale[0];
+    if (layerInfo.maxScale !== undefined) maxScale = layerInfo.maxScale[0];
+
+    if (scale >= minScale && scale <= maxScale) {
+      helpers.showMessage("Zoom to Visible Scale", "Layer is already visible at this scale.");
+      return;
+    }
+
+    if (scale < minScale) {
+      const flipped = scales.reverse();
+      let index = 20;
+      flipped.forEach(scaleItem => {
+        if (scaleItem >= minScale) {
+          window.map.getView().setZoom(index);
+          return;
+        }
+        index--;
+      });
+    } else if (scale > maxScale) {
+      let index = 9;
+      scales.forEach(scaleItem => {
+        if (scaleItem <= maxScale) {
+          window.map.getView().setZoom(index);
+          return;
+        }
+        index++;
+      });
+    }
+  };
   toggleAllLegends = type => {
     let showLegend = true;
     if (type === "CLOSE") showLegend = false;

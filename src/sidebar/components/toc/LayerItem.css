@@ -10,6 +10,11 @@
   font-weight: bold;
 }
 
+.sc-toc-item-container.not-in-scale {
+  font-weight: bold;
+  color: dimgrey;
+}
+
 .sc-toc-item-layer-label {
   display: inline-table;
   position: relative;
