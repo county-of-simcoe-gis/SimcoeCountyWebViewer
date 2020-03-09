@@ -34,6 +34,7 @@ import ShowMessage from "./ShowMessage.jsx";
 import URLWindow from "./URLWindow.jsx";
 import mainConfig from "../config.json";
 import { InfoRow } from "./InfoRow.jsx";
+import blankImage from "./images/blank.png";
 
 // REGISTER CUSTOM PROJECTIONS
 proj4.defs([["EPSG:26917", "+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs "]]);
@@ -151,7 +152,18 @@ export function getSimcoeTileXYZLayer(url) {
     tileGrid: tileGrid,
     crossOrigin: "anonymous"
   });
-  source.on("tileloaderror", function() {});
+  source.on("tileloaderror", function(event) {
+    // BROWSER STILL KICKS OUT 404 ERRORS.  ANYBODY KNOW A WAY TO PREVENT THE ERRORS IN THE BROWSER?
+    //console.log("erro");
+    event.tile.getImage().src = blankImage;
+    // var tileLoadFunction = function(imageTile, src) {
+    //   imageTile.getImage().src = blankImage;
+    // };
+    // if (event.tile.tileLoadFunction_ !== tileLoadFunction) {
+    //   event.tile.tileLoadFunction_ = tileLoadFunction;
+    //   event.tile.load();
+    // }
+  });
 
   return new TileLayer({
     projection: "EPSG:4326",
