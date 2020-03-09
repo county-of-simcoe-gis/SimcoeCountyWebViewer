@@ -415,9 +415,6 @@ class Sidebar extends Component {
                 <Tab id="tab-mymaps">
                   <TabButton imageURL={images["map-32x32.png"]} name="My Maps" active={this.state.isMyMapsEditing} />
                 </Tab>
-                <Tab id="tab-themes">
-                  <TabButton imageURL={images["theme-32x32.png"]} name="Themes" active={this.state.activeTabComponents.themes.loadedComponent} />
-                </Tab>
                 <Tab id="tab-reports">
                   <TabButton imageURL={images["report-32x32.png"]} name="Reports" />
                 </Tab>
@@ -428,9 +425,6 @@ class Sidebar extends Component {
                 {this.state.activeTabComponents.tools.loadedComponent ? this.state.activeTabComponents.tools.loadedComponent : this.state.activeTabComponents.tools.default}
               </TabPanel>
               <TabPanel id="tab-mymaps-content">{this.state.activeTabComponents.mymaps}</TabPanel>
-              <TabPanel id="tab-themes-content">
-                {this.state.activeTabComponents.themes.loadedComponent ? this.state.activeTabComponents.themes.loadedComponent : this.state.activeTabComponents.themes.default}
-              </TabPanel>
               <TabPanel id="tab-reports-content">
                 {this.state.activeTabComponents.reports.loadedComponent ? this.state.activeTabComponents.reports.loadedComponent : this.state.activeTabComponents.reports.default}
               </TabPanel>
@@ -441,7 +435,6 @@ class Sidebar extends Component {
             </div>
             <SidebarSlim
               onClick={this.slimSidebarButtonClick}
-              themeActive={this.state.activeTabComponents.themes.loadedComponent}
               toolActive={this.state.activeTabComponents.tools.loadedComponent}
               isMyMapsEditing={this.state.isMyMapsEditing}
             />

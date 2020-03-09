@@ -50,14 +50,7 @@ const SidebarSlim = props => {
           <span>My Maps</span>
         </button>
       </div>
-      <div className="sc-sidebar-slim-button-container" onClick={() => props.onClick("themes")}>
-        <span className={props.themeActive ? "sc-tab-button-dot-themes" : "sc-hidden"} />
-        <button className="sc-sidebar-slim-button">
-          <img src={images["theme-32x32.png"]} alt="Themes" />
-          <br />
-          <span>Themes</span>
-        </button>
-      </div>
+      
       <div className="sc-sidebar-slim-button-container" onClick={() => props.onClick("reports")}>
         <button className="sc-sidebar-slim-button">
           <img src={images["report-32x32.png"]} alt="Reports" />
