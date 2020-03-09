@@ -225,22 +225,25 @@ const FeatureItem = props => {
   const keys = Object.keys(featureProps);
   let featureName = feature.get(displayName);
 
+  let layerName = props.layerName;
+  if (layerName.split(":").length > 1) {
+    layerName = layerName.split(":")[1];
+    layerName = helpers.replaceAllInString(layerName, "_", " ");
+  }
+
   // THIS IS FALLBACK IN CASE THERE ARE NO ATTRIBUTES EXCEPT GEOMETRY
   if (displayName === "geometry") {
-    let layerName = props.layerName;
-    if (layerName.split(":").length > 1) {
-      layerName = layerName.split(":")[1];
-      layerName = helpers.replaceAllInString(layerName, "_", " ");
-    }
-    displayName = "No attributes found for: " + layerName;
+    if (keys.length === 1) displayName = "No attributes found";
     featureName = "";
   }
   return (
     <div>
       <div className="sc-identify-feature-header" onMouseEnter={() => props.onMouseEnter(feature)} onMouseLeave={props.onMouseLeave}>
-        <div className="sc-fakeLink sc-identify-feature-header-label" onClick={() => setOpen(!open)}>
-          {displayName + ": " + featureName}
+        <div style={{ width: "290px" }} onClick={() => setOpen(!open)}>
+          <div className="sc-fakeLink sc-identify-feature-header-label">{displayName + ": " + featureName}</div>
+          <div className="sc-identify-layer-name">{"- " + layerName}</div>
         </div>
+
         <img className="sc-identify-feature-header-img" src={images["zoom-in.png"]} onClick={() => props.onZoomClick(feature)} alt="Zoom In"></img>
       </div>
       <div className={open ? "sc-identify-feature-content" : "sc-hidden"}>
