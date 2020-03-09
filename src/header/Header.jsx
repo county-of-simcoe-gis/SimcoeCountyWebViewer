@@ -83,8 +83,8 @@ class Header extends Component {
         <div id="sc-header-search-container">
           <Search />
         </div>
-        <div className="sc-header-feedback-container" title="Feedback" onClick={this.onFeedbackClick}>
-          <img style={{ marginTop: "5px" }} src={images["feedback.png"]} alt="feedback" />
+        <div className="sc-header-feedback-container" >
+          
         </div>
         {/* <div className="sc-header-dot-menu-container" onClick={this.onDotMenuClick}><img className="sc-header-dot-menu-img" src={images['vertical-dot-menu.png']} alt="dots"></img></div> */}
       </div>
