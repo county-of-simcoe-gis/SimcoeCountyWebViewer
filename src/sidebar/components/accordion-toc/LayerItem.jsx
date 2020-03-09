@@ -56,6 +56,7 @@ class LayerItem extends Component {
           highlightClassName="sc-search-toc-highlight-words"
           searchWords={[this.props.searchText]}
           textToHighlight={this.state.layer.displayName}
+          onClick={() => this.props.onCheckboxChange(this.state.layer)}
         />
         
       </div>
