@@ -195,6 +195,7 @@ const Layer = props => {
 
   const { layer } = props;
 
+  console.log(layer);
   return (
     <div id="sc-identify-layer-container">
       <Collapsible trigger={layer.type} open={open}>
@@ -207,6 +208,7 @@ const Layer = props => {
               onZoomClick={props.onZoomClick}
               onMouseEnter={props.onMouseEnter}
               onMouseLeave={props.onMouseLeave}
+              layerName={props.layer.name}
             ></FeatureItem>
           ))}
         </div>
@@ -217,12 +219,22 @@ const Layer = props => {
 
 const FeatureItem = props => {
   const [open, setOpen] = useState(false);
-  const { feature, displayName } = props;
+  let { feature, displayName } = props;
 
-  //console.log(feature);
   const featureProps = feature.getProperties();
   const keys = Object.keys(featureProps);
-  const featureName = feature.get(displayName);
+  let featureName = feature.get(displayName);
+
+  // THIS IS FALLBACK IN CASE THERE ARE NO ATTRIBUTES EXCEPT GEOMETRY
+  if (displayName === "geometry") {
+    let layerName = props.layerName;
+    if (layerName.split(":").length > 1) {
+      layerName = layerName.split(":")[1];
+      layerName = helpers.replaceAllInString(layerName, "_", " ");
+    }
+    displayName = "No attributes found for: " + layerName;
+    featureName = "";
+  }
   return (
     <div>
       <div className="sc-identify-feature-header" onMouseEnter={() => props.onMouseEnter(feature)} onMouseLeave={props.onMouseLeave}>
@@ -234,9 +246,11 @@ const FeatureItem = props => {
       <div className={open ? "sc-identify-feature-content" : "sc-hidden"}>
         {// eslint-disable-next-line
         keys.map((keyName, i) => {
-          const val = featureProps[keyName];
-          if (keyName !== "geometry" && keyName !== "geom" && typeof val !== "object") return <InfoRow key={helpers.getUID()} label={keyName} value={val}></InfoRow>;
-          // <div key={helpers.getUID()}>TEST</div>
+          // UNDERSCORES IN FRONT OF FIELD NAME INDICATES ITS FOR INTERNAL USE ONLY
+          if (keyName.substring(0, 1) !== "_") {
+            const val = featureProps[keyName];
+            if (keyName !== "geometry" && keyName !== "geom" && typeof val !== "object") return <InfoRow key={helpers.getUID()} label={keyName} value={val}></InfoRow>;
+          }
         })}
       </div>
     </div>

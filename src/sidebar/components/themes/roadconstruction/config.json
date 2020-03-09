@@ -31,10 +31,10 @@
       "visible": true,
       "expanded": false,
       "zIndex": 51,
-      "displayFieldName": "Road_Name",
+      "displayFieldName": "_Road_Name",
       "UrlParameter": {
         "parameterName": "Name",
-        "fieldName": "Road_Name"
+        "fieldName": "_Road_Name"
       }
     }
   ]
