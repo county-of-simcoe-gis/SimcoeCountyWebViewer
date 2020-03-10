@@ -45,9 +45,9 @@ const SidebarSlim = props => {
       <div className="sc-sidebar-slim-button-container" onClick={() => props.onClick("mymaps")}>
         <span className={props.isMyMapsEditing ? "sc-tab-button-dot-themes" : "sc-hidden"} />
         <button className="sc-sidebar-slim-button">
-          <img src={images["map-32x32.png"]} alt="My Maps" />
+          <img src={images["map-32x32.png"]} alt="Draw" />
           <br />
-          <span>My Maps</span>
+          <span>Draw</span>
         </button>
       </div>
       
@@ -59,12 +59,7 @@ const SidebarSlim = props => {
         </button>
       </div>
       <div className="sc-sidebar-slim-footer-container">
-        {/* <button className="sc-sidebar-slim-footer-button" onClick={onFeedbackClick}>
-          Feedback
-        </button>
-        <button className="sc-sidebar-slim-footer-button" onClick={() => helpers.showMessage("Legend", "Coming Soon")}>
-          Legend
-        </button> */}
+        
         <MenuButton />
       </div>
     </div>

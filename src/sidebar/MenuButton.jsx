@@ -63,7 +63,7 @@ class MenuButton extends Component {
   };
 
   getMyMaps = () => {
-    return <MenuItem onClick={() => this.itemClick("mymaps", "mymaps")} key={helpers.getUID()} name={"My Maps"} iconClass={"sc-menu-mymaps-icon"} />;
+    return <MenuItem onClick={() => this.itemClick("mymaps", "mymaps")} key={helpers.getUID()} name={"Draw"} iconClass={"sc-menu-mymaps-icon"} />;
   };
 
   itemClick = (name, type) => {

@@ -8,7 +8,7 @@ class MyMapsItems extends Component {
     return (
       <div className="sc-container sc-mymaps-item-container">
         <div className="sc-mymaps-items-container-header">
-          <img src={images["myItemsIcon.png"]} alt="My Maps Icon" />
+          <img src={images["myItemsIcon.png"]} alt="Draw Icon" />
           <label className={this.props.isEditing ? "sc-mymaps-items-container-header-editing" : "sc-hidden"}>Editing Mode On</label>
         </div>
         <div className={this.props.children.props.children.length === 0 ? "sc-mymaps-items-no-data" : "sc-hidden"}>

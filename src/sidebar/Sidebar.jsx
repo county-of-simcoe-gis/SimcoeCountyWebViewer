@@ -413,7 +413,7 @@ class Sidebar extends Component {
                   <TabButton imageURL={images["tools-32x32.png"]} name="Tools" active={this.state.activeTabComponents.tools.loadedComponent} />
                 </Tab>
                 <Tab id="tab-mymaps">
-                  <TabButton imageURL={images["map-32x32.png"]} name="My Maps" active={this.state.isMyMapsEditing} />
+                  <TabButton imageURL={images["map-32x32.png"]} name="Draw" active={this.state.isMyMapsEditing} />
                 </Tab>
                 <Tab id="tab-reports">
                   <TabButton imageURL={images["report-32x32.png"]} name="Reports" />
