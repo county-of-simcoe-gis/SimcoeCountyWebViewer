@@ -141,19 +141,23 @@ class Identify extends Component {
     const nameFields = ["name", "display_name", "Name", "Display Name"];
     let displayName = "";
     nameFields.forEach(fieldName => {
-      const name = feature.get(fieldName);
-      if (name !== undefined) {
-        displayName = fieldName;
-        return displayName;
+      if (fieldName.substring(0, 1) !== "_") {
+        const name = feature.get(fieldName);
+        if (name !== undefined) {
+          displayName = fieldName;
+          return displayName;
+        }
       }
     });
 
     // FIND FIRST STRING FIELD
     if (displayName === "") {
       for (const [fieldName, value] of Object.entries(feature.values_)) {
-        if (typeof value === "string" || value instanceof String) {
-          displayName = fieldName;
-          return displayName;
+        if (fieldName.substring(0, 1) !== "_") {
+          if (typeof value === "string" || value instanceof String) {
+            displayName = fieldName;
+            return displayName;
+          }
         }
       }
     }
