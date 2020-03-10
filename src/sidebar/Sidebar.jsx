@@ -259,7 +259,7 @@ class Sidebar extends Component {
       this.setState({ tabIndex: 0 });
     }
     else if (tabName === "tools"){
-      this.onMyMapsEditing(true);
+      this.onMyMapsEditing(false);
       this.setState({ tabIndex: 1 });
     }
     else if (tabName === "mymaps") {
@@ -374,7 +374,7 @@ class Sidebar extends Component {
       helpers.addAppStat("Tab", "Layers");
     }
     else if (tabIndex === 1) {
-      this.onMyMapsEditing(true);
+      this.onMyMapsEditing(false);
       helpers.addAppStat("Tab", "Tools");
     }
     else if (tabIndex === 2) { 
@@ -382,7 +382,7 @@ class Sidebar extends Component {
       helpers.addAppStat("Tab", "MyMaps");
     }
     else if (tabIndex === 3) {
-      this.onMyMapsEditing(true);
+      this.onMyMapsEditing(false);
       helpers.addAppStat("Tab", "Themes");
     }
     else if (tabIndex === 4) {
