@@ -266,13 +266,9 @@ class Sidebar extends Component {
       this.onMyMapsEditing(true);
       this.setState({ tabIndex: 2 });
     }
-    else if (tabName === "themes") {
-      this.onMyMapsEditing(false);
-      this.setState({ tabIndex: 3 });
-    }
     else if (tabName === "reports"){ 
       this.onMyMapsEditing(false);
-      this.setState({ tabIndex: 4 });
+      this.setState({ tabIndex: 3 });
     }
     else console.log("NO VALID TAB FOUND");
   }
@@ -351,11 +347,6 @@ class Sidebar extends Component {
       let activeTabComponents = this.state.activeTabComponents;
       activeTabComponents.tools.loadedComponent = null;
       this.setState({ activeTabComponents: activeTabComponents });
-    } else if (this.state.tabIndex === 3) {
-      // SET THEMES
-      let activeTabComponents = this.state.activeTabComponents;
-      activeTabComponents.themes.loadedComponent = null;
-      this.setState({ activeTabComponents: activeTabComponents });
     }
   }
 
@@ -382,10 +373,6 @@ class Sidebar extends Component {
       helpers.addAppStat("Tab", "MyMaps");
     }
     else if (tabIndex === 3) {
-      this.onMyMapsEditing(false);
-      helpers.addAppStat("Tab", "Themes");
-    }
-    else if (tabIndex === 4) {
       this.onMyMapsEditing(false);
       helpers.addAppStat("Tab", "Reports");
     }

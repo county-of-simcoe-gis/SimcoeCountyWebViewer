@@ -12,7 +12,7 @@ import Navigation from "./Navigation";
 import { defaults as defaultInteractions } from "ol/interaction.js";
 import Popup from "../helpers/Popup.jsx";
 import FooterTools from "./FooterTools.jsx";
-import { defaults as defaultControls, ScaleLine, FullScreen } from "ol/control.js";
+import { defaults as defaultControls, ScaleLine } from "ol/control.js";
 import BasemapSwitcher from "./BasemapSwitcher";
 import PropertyReportClick from "./PropertyReportClick.jsx";
 import "ol-contextmenu/dist/ol-contextmenu.css";
@@ -294,16 +294,6 @@ class SCMap extends Component {
         <FooterTools />
         <BasemapSwitcher />
         <PropertyReportClick />
-        {/* <Screenshot></Screenshot> */}
-        {/* https://buttons.github.io/ */}
-        <div
-          className={window.sidebarOpen ? "sc-map-github-button slideout" : "sc-map-github-button slidein"}
-          onClick={() => {
-            helpers.addAppStat("GitHub", "Button");
-          }}
-        >
-          
-        </div>
       </div>
     );
   }
