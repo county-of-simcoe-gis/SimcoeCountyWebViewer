@@ -220,7 +220,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback){
     let layerTitle = layer.Title[0];
     if (layerTitle === undefined) layerTitle = layerNameOnly;
     const keywords = layer.KeywordList[0].Keyword;
-    const styleUrl = layer.Style[0].LegendURL[0].OnlineResource[0].$["xlink:href"];
+    const styleUrl = layer.Style !== undefined ? layer.Style[0].LegendURL[0].OnlineResource[0].$["xlink:href"] : "";
     const serverUrl = group.wmsGroupUrl.split("/geoserver/")[0] + "/geoserver";
     const wfsUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&cql_filter=`;
     const wfsUrl = wfsUrlTemplate(serverUrl, layer.Name[0]);
@@ -577,8 +577,8 @@ export function turnOffLayers(layers, callback) {
   for (let index = 0; index < layers.length; index++) {
     const layer = layers[index];
     layer.layer.setVisible(false);
+    layer.visible = false;
     let newLayer = Object.assign({}, layer);
-    newLayer.visible = false;
     newLayers.push(newLayer);
     if (index === layers.length - 1) callback(newLayers);
   }
