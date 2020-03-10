@@ -1,27 +1,22 @@
 {
   "streetService": "",
   "bathymetryService": "",
-  "worldImageryService": "https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer",
+  "worldImageryService": "https://intra.ws.giscache.lrc.gov.on.ca/arcgis/rest/services/LIO_Cartographic/LIO_Topographic/MapServer",
   "topoServices": [
     {
-      "name": "Imagery with Labels",
-      "image": "topo-blank.png",
-      "index": 0,
+      "name": "Blank",
+      "image": "Simple_Background.png",
+      "index":0,
       "layers": [
         {
-          "url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer",
-          "type": "ESRI_TILED"
-        },
-        {
-          "url": "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer",
+          "url": "https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer",
           "type": "ESRI_TILED"
         }
       ]
-      
     },
     {
       "name": "LIO - Ontario Imagery",
-      "image": "topo-blank.png",
+      "image": "LIO_Imagery.png",
       "index": 1,
       "layers": [
         {
@@ -29,54 +24,42 @@
           "type": "ESRI_TILED"
         }
       ]
+      
     },
     {
-      "name": "Terrain with Labels",
-      "image": "topo-blank.png",
+      "name": "LIO - Topographic",
+      "image": "LIO_Topo.png",
       "index": 2,
       "layers": [
         {
-          "url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer",
-          "type": "ESRI_TILED"
-        },
-        {
-          "url": "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Reference_Overlay/MapServer",
+          "url": "https://intra.ws.giscache.lrc.gov.on.ca/arcgis/rest/services/LIO_Cartographic/LIO_Topographic/MapServer",
           "type": "ESRI_TILED"
         }
       ]
     },
-  
+    {
+      "name": "ESRI World Imagery",
+      "image": "Esri_Word_Imagery.png",
+      "index": 3,
+      "layers": [
+        {
+          "url": "https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer",
+          "type": "ESRI_TILED"
+        }
+      ]
+    },
     {
       "name": "Open Street Map",
       "image": "osm-topo.jpg",
-      "index": 2,
+      "index": 4,
       "layers": [
         {
           "url": "",
           "type": "OSM"
         }
       ]
-    },
-    {
-      "name": "LIO Topo",
-      "image": "lio-topo.png",
-      "index": 3,
-      "layers": [
-        {
-          "url": "https://ws.giscache.lrc.gov.on.ca/arcgis/rest/services/LIO_Cartographic/LIO_Topographic/MapServer",
-          "type": "ESRI_TILED"
-        }
-      ]
     }
-  ],
-  "imageryServices": [
-    {
-      "url": "https://intra.ws.giscache.lrc.gov.on.ca/arcgis/rest/services/LIO_Imagery/Ontario_Imagery_Service/MapServer",
-      "name": "Current"
-    },
-    {
-      "url": "https://intra.ws.giscache.lrc.gov.on.ca/arcgis/rest/services/LIO_Imagery/Ontario_Imagery_Service/MapServer",
-      "name": "Current"
-    }
+
+    
   ]
 }
