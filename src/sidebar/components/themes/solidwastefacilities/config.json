@@ -1,20 +1,19 @@
-{ 
+{
   "themeColor": "#C9E7F9",
   "expandInitialList": false,
   "disableParcelClick": true,
-  "baseLayers": 
-  {
+  "baseLayers": {
     "defaultVisibility": true,
     "opacity": 0.7,
-    "zIndex" : 50,
-    "layers" : [
+    "zIndex": 50,
+    "layers": [
       {
         "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-        "layerName": "simcoe:Solid Waste Collection Days",
-        "displayName":"Solid Waste Collection Days",
+        "layerName": "simcoe:Curbside_Waste_Collection_Day",
+        "displayName": "Solid Waste Collection Days",
         "clickable": false
       }
-    ]  
+    ]
   },
   "toggleLayers": [
     {
@@ -41,8 +40,8 @@
       "zIndex": 51,
       "displayFieldName": "Name",
       "UrlParameter": {
-          "parameterName": "BAGTAG",
-          "fieldName": "ARN" 
+        "parameterName": "BAGTAG",
+        "fieldName": "ARN"
       }
     }
   ]
