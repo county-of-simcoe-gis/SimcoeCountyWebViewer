@@ -76,7 +76,7 @@ class SCMap extends Component {
       0.1492252984505969
     ];
     var map = new Map({
-      controls: defaultControls().extend([scaleLineControl, new FullScreen()]),
+      controls: defaultControls().extend([scaleLineControl]),
       layers: [],
       target: "map",
       view: new View({
