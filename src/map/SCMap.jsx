@@ -13,7 +13,7 @@ import { defaults as defaultInteractions } from "ol/interaction.js";
 import Popup from "../helpers/Popup.jsx";
 import FooterTools from "./FooterTools.jsx";
 import { defaults as defaultControls, ScaleLine } from "ol/control.js";
-import BasemapSwitcher from "./BasemapSwitcher";
+import BasemapSwitcher from "./BasicBasemapSwitcher";
 import PropertyReportClick from "./PropertyReportClick.jsx";
 import "ol-contextmenu/dist/ol-contextmenu.css";
 import { fromLonLat } from "ol/proj";
