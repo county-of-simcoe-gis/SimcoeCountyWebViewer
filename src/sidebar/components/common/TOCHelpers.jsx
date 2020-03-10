@@ -577,8 +577,8 @@ export function turnOffLayers(layers, callback) {
   for (let index = 0; index < layers.length; index++) {
     const layer = layers[index];
     layer.layer.setVisible(false);
+    layer.visible = false;
     let newLayer = Object.assign({}, layer);
-    newLayer.visible = false;
     newLayers.push(newLayer);
     if (index === layers.length - 1) callback(newLayers);
   }
