@@ -223,25 +223,6 @@ class Sidebar extends Component {
         // ACTIVATE THE NEW ITEM
         this.activateSidebarItem(name, type);
       });
-    } else if (type === "themes") {
-      // SAME THEME WAS SELECTED
-      if (active.themes.loadedComponent != null && type === "themes" && active.themes.loadedComponent.props.name === name) {
-        this.activateTab("themes");
-        return;
-      }
-
-      this.setState({ tabIndex: 3 }, () => {
-        //CLEAR LOADED THEME
-        let activeTabComponents = this.state.activeTabComponents;
-        activeTabComponents.themes.loadedComponent = null;
-        this.setState({ activeTabComponents: activeTabComponents });
-
-        // ASK THEMES TO CLOSE
-        window.emitter.emit("closeToolsOrThemes", type);
-
-        // ACTIVATE THE NEW ITEM
-        this.activateSidebarItem(name, type);
-      });
     } else if (type === "mymaps") {
       this.activateTab("mymaps");
     } else if (type === "reports") {
@@ -259,7 +240,7 @@ class Sidebar extends Component {
       this.setState({ tabIndex: 0 });
     }
     else if (tabName === "tools"){
-      this.onMyMapsEditing(false);
+      this.onMyMapsEditing(true);
       this.setState({ tabIndex: 1 });
     }
     else if (tabName === "mymaps") {
@@ -318,26 +299,7 @@ class Sidebar extends Component {
       }
 
       helpers.addAppStat("Tool", name);
-    } else {
-      var loadedTheme = this.state.activeTabComponents.themes.loadedComponent;
-      if (loadedTheme != null) this.setState({ activeComponent: loadedTheme });
-      else {
-        this.state.toolComponents.map(Component => {
-          if (Component.props.name === name) {
-            // CREATE THEME COMPONENT
-            var comp = (
-              <Component key={helpers.getUID()} name={Component.props.name} onClose={this.onPanelComponentClose} onSidebarVisibility={this.togglePanelVisibility} config={Component.props.config} />
-            );
-            let activeTabComponents = this.state.activeTabComponents;
-            activeTabComponents.themes.loadedComponent = comp;
-            this.setState({ activeTabComponents: activeTabComponents });
-            //helpers.showMessage("Property Report", "Property Report Click is disabled while theme is active.", "green" , 5000);
-            return comp;
-          } else return null;
-        });
-      }
-      helpers.addAppStat("Theme", name);
-    }
+    } 
   }
 
   onPanelComponentClose(evt) {
@@ -365,7 +327,7 @@ class Sidebar extends Component {
       helpers.addAppStat("Tab", "Layers");
     }
     else if (tabIndex === 1) {
-      this.onMyMapsEditing(false);
+      this.onMyMapsEditing(true);
       helpers.addAppStat("Tab", "Tools");
     }
     else if (tabIndex === 2) { 
@@ -443,7 +405,7 @@ export default Sidebar;
 const TabButton = props => {
   return (
     <div>
-      <span className={props.active ? "sc-tab-button-dot" : "sc-hidden"} />
+      
       <img src={props.imageURL} alt={props.name} />
       <br />
       <span>{props.name}</span>
