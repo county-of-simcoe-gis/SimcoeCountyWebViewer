@@ -33,7 +33,8 @@ class Layers extends Component {
     };
     
      // LISTEN FOR RESET LAYERS
-     window.emitter.addListener("resetLayers", (group) => {if (group === this.props.group.value) this.resetLayers()});
+     //window.emitter.addListener("resetLayers", (group) => {if (group === this.props.group.value) this.resetLayers()});
+     window.emitter.addListener("resetLayers", (group) => {if (group === this.props.group.value)window.location.reload(false)});
     // LISTEN FOR TURN OFF LAYERS
     window.emitter.addListener("turnOffLayers", (group) => {if (group === this.props.group.value) this.turnOffLayers()});
     // LISTEN FOR TOGGLE ALL LEGEND
@@ -91,10 +92,6 @@ class Layers extends Component {
     });
   };
 
-
-
-  
-
   resetLayers = () => {
     // SHUT OFF VISIBILITY
     for (var key in this.state.layers) {
@@ -102,7 +99,6 @@ class Layers extends Component {
 
       var obj = this.state.layers[key];
       obj.layer.setVisible(false);
-      
     }
 
     this.setState({ layers: undefined}, () => {
