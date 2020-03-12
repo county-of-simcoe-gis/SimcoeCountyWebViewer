@@ -293,7 +293,7 @@ class SCMap extends Component {
         <Navigation />
         <FooterTools />
         <BasemapSwitcher />
-        <PropertyReportClick />
+        
       </div>
     );
   }

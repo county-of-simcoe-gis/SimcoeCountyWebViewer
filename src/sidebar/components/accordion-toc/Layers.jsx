@@ -33,8 +33,8 @@ class Layers extends Component {
     };
     
      // LISTEN FOR RESET LAYERS
-     //window.emitter.addListener("resetLayers", (group) => {if (group === this.props.group.value) this.resetLayers()});
-     window.emitter.addListener("resetLayers", (group) => {if (group === this.props.group.value)window.location.reload(false)});
+     window.emitter.addListener("resetLayers", (group) => {if (group === this.props.group.value) this.resetLayers()});
+     //window.emitter.addListener("resetLayers", (group) => {if (group === this.props.group.value)window.location.reload(false)});
     // LISTEN FOR TURN OFF LAYERS
     window.emitter.addListener("turnOffLayers", (group) => {if (group === this.props.group.value) this.turnOffLayers()});
     // LISTEN FOR TOGGLE ALL LEGEND
@@ -59,7 +59,7 @@ class Layers extends Component {
     let layersCopy = Object.assign([], this.state.layers);
 
     layersCopy.forEach(layer => {
-      if (layer.name === layerItem.fullName) {
+      if (layer.name === layerItem.fullName || layer.name === layerItem.name) {
         layer.visible = true;
         layer.layer.setVisible(true);
         
@@ -75,16 +75,11 @@ class Layers extends Component {
               if (elemFound) return;
 
               const elem = document.getElementById(layer.elementId);
+              
               if (elem !== null) {
                 elemFound = true;
-                const topPos = elem.offsetTop;
-                document.getElementById(this.getVirtualId()).scrollTop = topPos + 1;
-                setTimeout(() => {
-                  document.getElementById(this.getVirtualId()).scrollTop = topPos;
-                }, 50);
-              } else {
-                document.getElementById(this.getVirtualId()).scrollTop += i * 10;
-              }
+                elem.scrollIntoView();
+              } 
             }, i * 100);
           })(i);
         }
@@ -101,9 +96,10 @@ class Layers extends Component {
       obj.layer.setVisible(false);
     }
 
-    this.setState({ layers: undefined}, () => {
-      this.refreshLayers(this.props.group, this.props.sortAlpha);
+    this.setState({ layers: this.props.group.layers }, () => {
+      this.sortLayers(this.state.layers,  this.props.sortAlpha);
     });
+   
   };
 
   refreshLayers = (group, sortAlpha) => {
@@ -271,7 +267,6 @@ class Layers extends Component {
 
   // CHECKBOX FOR EACH LAYER
   onCheckboxChange = layerInfo => {
-    this.lastPosition = document.getElementById(this.getVirtualId()).scrollTop;
     const visible = !layerInfo.visible;
     layerInfo.layer.setVisible(visible);
     window.emitter.emit("updateActiveTocLayers");
@@ -281,11 +276,36 @@ class Layers extends Component {
         // UPDATE LEGEND
         layers: this.state.layers.map(layer => (layer.name === layerInfo.name ? Object.assign({}, layer, { visible: visible }) : layer))
       },
-      () => {
-        document.getElementById(this.getVirtualId()).scrollTop += this.lastPosition;
+      () => { 
         
       }
     );
+    
+    let layersCopy = Object.assign([], this.state.layers);
+    layersCopy.forEach(layer => {
+      if ( layer.name === layerInfo.name) {
+        document.getElementById(this.getVirtualId()).scrollTop = 0;
+
+        var i = 0;
+        var elemFound = false;
+        for (var i = 1; i <= 100; i++) {
+          if (elemFound) return;
+          // eslint-disable-next-line
+          (index => {
+            setTimeout(() => {
+              if (elemFound) return;
+
+              const elem = document.getElementById(layer.elementId);
+              
+              if (elem !== null) {
+                elemFound = true;
+                elem.scrollIntoView();
+              } 
+            }, i * 10);
+          })(i);
+        }
+      }
+    });
   };
 
   // OPACITY SLIDER FOR EACH LAYER
