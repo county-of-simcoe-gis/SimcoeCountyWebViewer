@@ -179,11 +179,11 @@ class TOC extends Component {
     const defaultGroup = this.state.defaultGroup;
     this.setState({ sortAlpha: false, selectedGroup: defaultGroup }, () => {
       this.refreshTOC(() => {
-        setTimeout(() => {
+       
           this.state.layerGroups.forEach(group => {
             window.emitter.emit("resetLayers", group.value);
           })
-        }, 100);
+        
       });
     });
 
