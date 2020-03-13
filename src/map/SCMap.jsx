@@ -148,21 +148,23 @@ class SCMap extends Component {
     const xmax = helpers.getURLParameter("XMAX");
     const ymax = helpers.getURLParameter("YMAX");
 
-    if (x !== null && y !== null) {
-      // URL PARAMETERS (ZOOM TO XY)
-      let coords = [x, y];
-      if (sr === "WGS84") coords = fromLonLat([Math.round(x * 100000) / 100000, Math.round(y * 100000) / 100000]);
+    setTimeout(() => {
+      if (x !== null && y !== null) {
+        // URL PARAMETERS (ZOOM TO XY)
+        let coords = [x, y];
+        if (sr === "WGS84") coords = fromLonLat([Math.round(x * 100000) / 100000, Math.round(y * 100000) / 100000]);
 
-      helpers.flashPoint(coords);
-    } else if (xmin !== null && ymin !== null && xmax !== null && ymax !== null) {
-      //URL PARAMETERS (ZOOM TO EXTENT)
-      const extent = [xmin, xmax, ymin, ymax];
-      window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
-    } else if (storage !== null) {
-      // ZOOM TO SAVED EXTENT
-      const extent = JSON.parse(storage);
-      map.getView().fit(extent, map.getSize(), { duration: 1000 });
-    }
+        helpers.flashPoint(coords);
+      } else if (xmin !== null && ymin !== null && xmax !== null && ymax !== null) {
+        //URL PARAMETERS (ZOOM TO EXTENT)
+        const extent = [xmin, xmax, ymin, ymax];
+        window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
+      } else if (storage !== null) {
+        // ZOOM TO SAVED EXTENT
+        const extent = JSON.parse(storage);
+        map.getView().fit(extent, map.getSize(), { duration: 1000 });
+      }
+    }, 1500);
 
     // APP STAT
     helpers.addAppStat("STARTUP", "MAP_LOAD");
