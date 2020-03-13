@@ -15,7 +15,7 @@
       "layerName": "simcoe:Child_Care_Facility_Theme",
       "visible": true,
       "expanded": true,
-      "zIndex": 52,
+      "zIndex": 201,
       "legendStyleName": "",
       "displayFieldName": "Name",
       "UrlParameter": {

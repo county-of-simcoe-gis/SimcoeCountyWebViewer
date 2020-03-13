@@ -1,29 +1,52 @@
-{ 
+{
   "themeColor": "#C9E7F9",
   "expandInitialList": false,
   "disableParcelClick": true,
   "popupLogoImage": "forestry-logo.png",
-  "baseLayers": 
-  {
+  "baseLayers": {
     "defaultVisibility": true,
     "opacity": 0.7,
-    "zIndex" : 50,
+    "zIndex": 201,
     "legendImageName": "forestry-legend.png",
-    "layers" : [
+    "layers": [
       {
         "serverUrl": "https://opengis.simcoe.ca/geoserver/",
         "layerName": "simcoe:Forest Tract Polygons Theme",
-        "displayName":"Forest Tracts",
+        "displayName": "Forest Tracts",
         "clickable": true,
         "moreInfoUrlFieldName": "_url"
       },
       {
         "serverUrl": "https://opengis.simcoe.ca/geoserver/",
         "layerName": "simcoe:Conservation Area Polygons Theme",
-        "displayName":"Conservation Area",
+        "displayName": "Conservation Area",
+        "clickable": true
+      },
+      {
+        "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+        "layerName": "simcoe:Muncipal_Park_Polygons_Theme",
+        "displayName": "Municipal Park",
+        "clickable": true
+      },
+      {
+        "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+        "layerName": "simcoe:Provincial_Park_Polygons_Theme",
+        "displayName": "Provincial Park",
+        "clickable": true
+      },
+      {
+        "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+        "layerName": "simcoe:Crown_Land_Polygons_Theme",
+        "displayName": "Crown Land",
+        "clickable": true
+      },
+      {
+        "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+        "layerName": "simcoe:Conservation_Area_Polygons_Theme",
+        "displayName": "Conservation Areas",
         "clickable": true
       }
-    ]  
+    ]
   },
   "toggleLayers": [
     {
@@ -32,7 +55,7 @@
       "layerName": "simcoe:Forest Tract Points Theme",
       "visible": true,
       "expanded": true,
-      "zIndex": 55,
+      "zIndex": 202,
       "legendStyleName": "",
       "displayFieldName": "_tractName",
       "moreInfoUrlFieldName": "_url",
@@ -48,11 +71,11 @@
       "legendStyleName": "",
       "visible": false,
       "expanded": false,
-      "zIndex": 54,
+      "zIndex": 203,
       "displayFieldName": "Name",
       "UrlParameter": {
-          "parameterName": "NVCACONSERVATIONAREA",
-          "fieldName": "Name" 
+        "parameterName": "NVCACONSERVATIONAREA",
+        "fieldName": "Name"
       }
     },
     {
@@ -62,7 +85,7 @@
       "legendStyleName": "",
       "visible": false,
       "expanded": false,
-      "zIndex": 53,
+      "zIndex": 204,
       "displayFieldName": "Name"
     },
     {
@@ -72,7 +95,7 @@
       "legendStyleName": "",
       "visible": false,
       "expanded": false,
-      "zIndex": 52,
+      "zIndex": 205,
       "displayFieldName": "_parkname"
     },
     {
@@ -82,7 +105,7 @@
       "legendStyleName": "",
       "visible": false,
       "expanded": false,
-      "zIndex": 51,
+      "zIndex": 206,
       "displayFieldName": "_parkname"
     }
   ]

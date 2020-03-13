@@ -246,8 +246,8 @@ class Search extends Component {
     searchGeoLayer.getSource().addFeature(fullFeature);
     searchIconLayer.getSource().addFeature(pointFeature);
 
-    searchGeoLayer.setZIndex(100);
-    searchIconLayer.setZIndex(100);
+    searchGeoLayer.setZIndex(300);
+    searchIconLayer.setZIndex(300);
 
     // SET STYLE AND ZOOM
     if (result.geojson.indexOf("Point") !== -1) {
