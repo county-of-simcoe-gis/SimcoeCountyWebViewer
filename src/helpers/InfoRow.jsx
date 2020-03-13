@@ -17,7 +17,7 @@ export const InfoRow = props => {
     );
 
   return (
-    <div>
+    <div className="sc-info-window-row">
       <div className="sc-info-window-label">{props.label}</div>
       <div className={props.imageData ? "sc-hidden" : "sc-info-window-value"}>
         {value}

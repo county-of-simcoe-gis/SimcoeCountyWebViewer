@@ -5,6 +5,7 @@ import mainConfig from "../config.json";
 import Collapsible from "react-collapsible";
 import WKT from "ol/format/WKT.js";
 import { GeoJSON } from "ol/format.js";
+import Feature from 'ol/Feature';
 import InfoRow from "../helpers/InfoRow.jsx";
 import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
@@ -34,6 +35,7 @@ class Identify extends Component {
 
   componentWillUnmount() {
     window.map.removeLayer(this.vectorLayerShadow);
+    window.map.removeLayer(this.vectorLayerShadowSecondary);
   }
 
   refreshLayers = props => {
@@ -83,11 +85,19 @@ class Identify extends Component {
 
   onMouseEnter = feature => {
     this.vectorLayerShadow.getSource().clear();
+    this.vectorLayerShadowSecondary.getSource().clear();
+
+    if (feature.values_.extent_geom !== undefined){
+      var extentFeature = helpers.getFeatureFromGeoJSON(feature.values_.extent_geom);
+      this.vectorLayerShadowSecondary.getSource().addFeature(extentFeature);
+    }
     this.vectorLayerShadow.getSource().addFeature(feature);
+
   };
 
   onMouseLeave = () => {
     this.vectorLayerShadow.getSource().clear();
+    this.vectorLayerShadowSecondary.getSource().clear();
   };
 
   createShadowLayer = () => {
@@ -111,6 +121,25 @@ class Identify extends Component {
       })
     });
 
+    const shadowStyleSecondary = new Style({
+      stroke: new Stroke({
+        color: [0, 0, 128, 0.1],
+        width: 0
+      }),
+      fill: new Fill({
+        color: [0, 0, 128, 0.1]
+      }),
+      image: new CircleStyle({
+        radius: 10,
+        stroke: new Stroke({
+          color: [0, 0, 128, 0.1],
+          width: 0
+        }),
+        fill: new Fill({
+          color: [0, 0, 128, 0.1]
+        })
+      })
+    });
     this.vectorLayerShadow = new VectorLayer({
       source: new VectorSource({
         features: []
@@ -118,7 +147,15 @@ class Identify extends Component {
       zIndex: 100000,
       style: shadowStyle
     });
+    this.vectorLayerShadowSecondary = new VectorLayer({
+      source: new VectorSource({
+        features: []
+      }),
+      zIndex: 100000,
+      style: shadowStyleSecondary
+    });
     window.map.addLayer(this.vectorLayerShadow);
+    window.map.addLayer(this.vectorLayerShadowSecondary);
   };
 
   getDisplayNameFromFeature = feature => {
@@ -253,8 +290,6 @@ const FeatureItem = props => {
     const val = featureProps[keyName];
     if (identifyIdColumn !==undefined && identifyIdColumn !== "" ){
       if (cql_filter === "" && (keyName.toLowerCase().indexOf(identifyIdColumn.toLowerCase()) !== -1 && val !== null) && mainConfig.htmlIdentify && isSameOrigin) cql_filter += keyName + "=" + val;
-    }else{
-      if (cql_filter === "" && (keyName.toLowerCase().indexOf("id") !== -1 && val !== null) && mainConfig.htmlIdentify && isSameOrigin) cql_filter += keyName + "=" + val;
     }
   })
   return (
