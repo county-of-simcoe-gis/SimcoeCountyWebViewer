@@ -5,7 +5,7 @@
   "baseLayers": {
     "defaultVisibility": true,
     "opacity": 0.7,
-    "zIndex": 50,
+    "zIndex": 201,
     "layers": [
       {
         "serverUrl": "https://opengis.simcoe.ca/geoserver/",
@@ -22,7 +22,7 @@
       "layerName": "simcoe:Public Landfills Theme",
       "visible": true,
       "expanded": true,
-      "zIndex": 52,
+      "zIndex": 202,
       "legendStyleName": "",
       "displayFieldName": "Name",
       "UrlParameter": {
@@ -37,7 +37,7 @@
       "legendStyleName": "",
       "visible": true,
       "expanded": false,
-      "zIndex": 51,
+      "zIndex": 203,
       "displayFieldName": "Name",
       "UrlParameter": {
         "parameterName": "BAGTAG",

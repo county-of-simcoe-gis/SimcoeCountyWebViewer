@@ -15,7 +15,7 @@
       "layerName": "simcoe:Road Construction - Bridges",
       "visible": true,
       "expanded": true,
-      "zIndex": 52,
+      "zIndex": 202,
       "legendStyleName": "",
       "displayFieldName": "Name",
       "UrlParameter": {
@@ -30,7 +30,7 @@
       "legendStyleName": "",
       "visible": true,
       "expanded": false,
-      "zIndex": 51,
+      "zIndex": 201,
       "displayFieldName": "_Road_Name",
       "UrlParameter": {
         "parameterName": "Name",
