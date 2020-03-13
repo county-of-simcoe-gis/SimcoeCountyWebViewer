@@ -122,8 +122,10 @@ class PropertyReportClick extends Component {
     var url = window.location.href;
 
     //ADD LOCATIONID
-    if (url.indexOf("?") > 0) url = url + "&ARN=" + arn;
-    else url = url + "?ARN=" + arn;
+    if (url.indexOf("?") > 0) {
+      let newUrl = helpers.removeURLParameter(url, "ARN");
+      url = newUrl + "&ARN=" + arn;
+    } else url = url + "?ARN=" + arn;
 
     return url;
   };
