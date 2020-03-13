@@ -27,6 +27,7 @@
 .sc-identify-feature-content {
   line-height: 1.5;
   padding-left: 10px;
+  padding-bottom: 10px;
 }
 
 .sc-identify-feature-header {
@@ -86,7 +87,7 @@
   background-position-y: center, 5px;
   background-repeat: no-repeat, no-repeat;
   background-position-x: 36px, 350px;
-  width: 331px;
+  width: 315px;
   margin-left: -31px;
   padding-left: 28px;
   font-weight: bold;
