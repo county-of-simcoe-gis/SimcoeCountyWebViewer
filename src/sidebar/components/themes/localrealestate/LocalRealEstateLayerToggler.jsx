@@ -74,6 +74,8 @@ class LocalRealEstateLayerToggler extends Component {
       // DISABLE POPUPS
       if (window.isDrawingOrEditing) return;
 
+      if (!this.state.visible) return;
+
       var viewResolution = window.map.getView().getResolution();
       var url = this.state.layer.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
       if (url) {
