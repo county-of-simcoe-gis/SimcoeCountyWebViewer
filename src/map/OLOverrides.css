@@ -121,6 +121,9 @@
   .ol-scale-line {
     left: 5px;
   }
+  .ol-overlaycontainer-stopevent {
+    z-index: 1 !important;
+  }
 }
 
 @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
