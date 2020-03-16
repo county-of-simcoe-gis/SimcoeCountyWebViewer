@@ -95,18 +95,18 @@ export default class Popup extends Overlay {
     // Apply workaround to enable scrolling of content div on touch devices
     Popup.enableTouchScroll_(this.content);
 
-    let activeIds = [];
-    this.container.onmouseover = function() {
-      window.map.getInteractions().forEach(function(interaction) {
-        if (interaction.getActive()) activeIds.push(interaction.ol_uid);
+    this.activeIds = [];
+    this.container.onmouseover = () => {
+      window.map.getInteractions().forEach(interaction => {
+        if (interaction.getActive()) this.activeIds.push(interaction.ol_uid);
 
         interaction.setActive(false);
       });
       window.popupActive = true;
     };
-    this.container.onmouseout = function() {
-      window.map.getInteractions().forEach(function(interaction) {
-        if (activeIds.includes(interaction.ol_uid)) interaction.setActive(true);
+    this.container.onmouseout = () => {
+      window.map.getInteractions().forEach(interaction => {
+        if (this.activeIds.includes(interaction.ol_uid)) interaction.setActive(true);
       });
       window.popupActive = false;
     };
@@ -258,6 +258,13 @@ export default class Popup extends Overlay {
 
     if (closeCallback !== null) {
       closeCallback();
+    }
+
+    // PATCH FOR MOBILE TO RE-ENABLE MAP INTERACTIONS
+    if (helpers.isMobile()) {
+      window.map.getInteractions().forEach(interaction => {
+        if (this.activeIds.includes(interaction.ol_uid)) interaction.setActive(true);
+      });
     }
 
     return this;
