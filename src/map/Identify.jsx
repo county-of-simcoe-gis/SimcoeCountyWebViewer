@@ -123,20 +123,20 @@ class Identify extends Component {
 
     const shadowStyleSecondary = new Style({
       stroke: new Stroke({
-        color: [0, 0, 128, 0.1],
-        width: 0
+        color: [255,0 , 0, 0.4],
+        width: 6
       }),
       fill: new Fill({
-        color: [0, 0, 128, 0.1]
+        color: [255,0 , 0, 0]
       }),
       image: new CircleStyle({
         radius: 10,
         stroke: new Stroke({
-          color: [0, 0, 128, 0.1],
-          width: 0
+          color: [255,0 , 0, 0.4],
+          width: 6
         }),
         fill: new Fill({
-          color: [0, 0, 128, 0.1]
+          color: [255,0 , 0, 0]
         })
       })
     });
@@ -309,7 +309,7 @@ const FeatureItem = props => {
         
           {keys.map((keyName, i) => {
             const val = featureProps[keyName];
-            if (cql_filter==="" && keyName !== "geometry" && keyName !== "geom" && typeof val !== "object") return <InfoRow key={helpers.getUID()} label={keyName} value={val}></InfoRow>;
+            if (cql_filter==="" && keyName !== "geometry" && keyName !== "geom" && typeof val !== "object" && keyName.toLowerCase().indexOf("geom") === -1) return <InfoRow key={helpers.getUID()} label={keyName} value={val}></InfoRow>;
             // <div key={helpers.getUID()}>TEST</div>
           })}
         </div>
