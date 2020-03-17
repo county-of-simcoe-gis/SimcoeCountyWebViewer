@@ -21,7 +21,7 @@ class MyMapsItem extends Component {
   // LABEL INPUT
   onLabelTextChange = evt => {
     this.setState({ label: evt.target.value });
-    this.props.onLabelChange(this.props.info, evt.target.value);
+    this.props.onLabelChange(this.props.info.id, evt.target.value);
   };
 
   // DELETE BUTTON
