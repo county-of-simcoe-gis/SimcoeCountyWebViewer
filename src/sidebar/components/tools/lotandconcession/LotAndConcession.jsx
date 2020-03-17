@@ -68,10 +68,10 @@ class ToolComponent extends Component {
     let sql = "_description <> 'Road Allowance'";
     if (this.state.selectedMuni.value !== "SEARCH ALL") sql += " AND _geog_twp = '" + this.state.selectedMuni.value + "'";
     if (this.state.lotNumber.length !== 0) {
-      sql += " AND _lot = '" + this.state.lotNumber + "' ";
+      sql += " AND _lot = '" + this.state.lotNumber.toUpperCase() + "' ";
     }
     if (this.state.concessionNumber.length !== 0) {
-      sql += " AND _con = '" + this.state.concessionNumber + "' ";
+      sql += " AND _con = '" + this.state.concessionNumber.toUpperCase() + "' ";
     }
 
     // if (sql === "") sql = "lot <> ' ' AND con <> ' '";
