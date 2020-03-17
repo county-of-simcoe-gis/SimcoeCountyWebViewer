@@ -321,12 +321,14 @@ class MyMaps extends Component {
   };
   // LABEL TEXTBOX
   onLabelChange = (itemId, label) => {
+    console.log(itemId);
     const itemInfo = this.state.items.filter(item => {
       return item.id === itemId;
     })[0];
 
     // IF WE HAVE A REF TO A POPUP, SEND THE UPDATE
     if (this.popupRef !== undefined) {
+      console.log(itemInfo);
       this.popupRef.parentLabelChanged(itemInfo, label);
     }
 
