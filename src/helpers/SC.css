@@ -196,7 +196,7 @@ p {
   font-size: 11px;
   padding: 3px;
   word-wrap: break-word;
-  border-color:#808080!important;
+  border-color:#f1efeffa!important;
   border: solid;
   border-width: 1px;
   width:25%;
@@ -205,13 +205,13 @@ p {
 .sc-info-window-value {
   display: table-cell;
   color: #484848;
-  font-size: 11px;
+  font-size: 12px;
   word-wrap: break-word;
   padding: 3px;
   width:75%;
   border: solid;
   border-width: 1px;
-  border-color:#808080;
+  border-color:#f1efeffa;
 }
 
 .sc-no-select {
