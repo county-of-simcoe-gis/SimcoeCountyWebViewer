@@ -123,8 +123,8 @@ class Identify extends Component {
 
     const shadowStyleSecondary = new Style({
       stroke: new Stroke({
-        color: [255,0 , 0, 0.4],
-        width: 6
+        color: [0,255 , 68, 0.4],
+        width: 4
       }),
       fill: new Fill({
         color: [255,0 , 0, 0]
@@ -132,8 +132,8 @@ class Identify extends Component {
       image: new CircleStyle({
         radius: 10,
         stroke: new Stroke({
-          color: [255,0 , 0, 0.4],
-          width: 6
+          color: [0,255 , 68, 0.4],
+          width: 4
         }),
         fill: new Fill({
           color: [255,0 , 0, 0]
@@ -285,7 +285,7 @@ const FeatureItem = props => {
   if (featureName === "") featureName = "N/A";
   let cql_filter = "";
   const isSameOrigin = html_url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !== -1;
-
+  const excludedKeys = ["id", "geometry","geom","extent_geom","gid", "globalid", "objectid", "bplan_gid"];
   keys.map((keyName) => {
     const val = featureProps[keyName];
     if (identifyIdColumn !==undefined && identifyIdColumn !== "" ){
@@ -309,7 +309,7 @@ const FeatureItem = props => {
         
           {keys.map((keyName, i) => {
             const val = featureProps[keyName];
-            if (cql_filter==="" && keyName !== "geometry" && keyName !== "geom" && typeof val !== "object" && keyName.toLowerCase().indexOf("geom") === -1) return <InfoRow key={helpers.getUID()} label={keyName} value={val}></InfoRow>;
+            if (cql_filter==="" &&  typeof val !== "object" && !excludedKeys.includes(keyName.toLowerCase())) return <InfoRow key={helpers.getUID()} label={helpers.toTitleCase(keyName.replace("_"," "))} value={val}></InfoRow>;
             // <div key={helpers.getUID()}>TEST</div>
           })}
         </div>
