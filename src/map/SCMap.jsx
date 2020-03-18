@@ -164,7 +164,7 @@ class SCMap extends Component {
         const extent = JSON.parse(storage);
         map.getView().fit(extent, map.getSize(), { duration: 1000 });
       }
-    }, 1500);
+    }, 2000);
 
     // APP STAT
     helpers.addAppStat("STARTUP", "MAP_LOAD");
