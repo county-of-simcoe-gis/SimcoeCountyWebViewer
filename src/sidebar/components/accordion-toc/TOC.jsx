@@ -46,7 +46,18 @@ class TOC extends Component {
     
     // LISTEN FOR MAP TO MOUNT
     window.emitter.addListener("mapLoaded", () => this.onMapLoad());
+
+    // CLEAR IDENTIFY MARKER AND RESULTS
+    window.emitter.addListener("clearIdentify", () => this.clearIdentify());
   }
+
+  clearIdentify = () => {
+    // CLEAR PREVIOUS IDENTIFY RESULTS
+    this.identifyIconLayer.getSource().clear();
+    window.map.removeLayer(this.identifyIconLayer);
+    window.emitter.emit("loadReport", <div></div>);
+  }
+
   addIdentifyLayer = () => {
     this.identifyIconLayer = new VectorLayer({
       name: "sc-identify",

@@ -38,6 +38,10 @@ class Identify extends Component {
     window.map.removeLayer(this.vectorLayerShadowSecondary);
   }
 
+  clearIdentify = () => {
+    window.emitter.emit("clearIdentify");
+  }
+
   refreshLayers = props => {
     this.setState({ layers: [], isLoading: true });
 
@@ -194,6 +198,7 @@ class Identify extends Component {
   render() {
     return (
       <div>
+        <button className="sc-button sc-identify-clear-button" onClick={this.clearIdentify}>Clear Results</button>
         <div className={this.state.layers.length === 0 && !this.state.isLoading ? "sc-identify-loading" : "sc-hidden"}>
           No Features were selected. Please try again.
           {/* <img src={images["loading.gif"]}></img> */}
@@ -206,6 +211,7 @@ class Identify extends Component {
             <Layer key={helpers.getUID()} layer={layer} onZoomClick={this.onZoomClick} onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave}></Layer>
           ))}
         </div>
+          
       </div>
     );
   }
