@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import "./BasemapSwitcher.css";
 import * as helpers from "../helpers/helpers";
 import BasemapConfig from "./basemapSwitcherConfig.json";
-import Slider from "rc-slider";
 import { Group as LayerGroup } from "ol/layer.js";
 import xml2js from "xml2js";
 
@@ -16,7 +15,7 @@ class BasemapSwitcher extends Component {
       containerCollapsed: false,
       topoPanelOpen: false,
       topoLayers: [],
-      topoActiveIndex: 4,
+      topoActiveIndex: 0,
       topoCheckbox: true,
       topoOverlayLayers: [],
       activeButton: "topo"
@@ -29,7 +28,7 @@ class BasemapSwitcher extends Component {
   onMapLoad() {
     let index = 0;
     // LOAD WORLD LAYER
-    if (BasemapConfig.worldImageryService !== undefined) {
+    if (BasemapConfig.worldImageryService !== undefined || BasemapConfig.worldImageryService !== "") {
       var worldImageryLayer = helpers.getESRITileXYZLayer(BasemapConfig.worldImageryService);
       worldImageryLayer.setZIndex(0);
       //worldImageryLayer.setMinResolution(300);
@@ -101,7 +100,7 @@ class BasemapSwitcher extends Component {
     });
 
     this.setState({ topoLayers: basemapList });
-    this.setState({ topoActiveIndex: 4 });
+    this.setState({ topoActiveIndex: 0 });
     
     // NEED TO WAIT A TAD FOR LAYERS TO INIT
     setTimeout(() => {
