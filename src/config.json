@@ -15,6 +15,7 @@
   "helpUrl": "https://intra.dev.regionalgis.mto.gov.on.ca/geomatics/kb/?active=1&recent=0&me=0&area=14&type=0",
   "ieWarningUrl": "https://intra.dev.regionalgis.mto.gov.on.ca/geomatics/splash/2/view",
   "propertyReportUrl": "https://intra.dev.regionalgis.mto.gov.on.ca:5443/WebApi/propertyreport",
+  "imageViewerUrl": "https://intra.dev.regionalgis.mto.gov.on.ca/geomatics/image_viewer/?path=", 
   "centerCoords": [-9135500, 6020500],
   "defaultZoom": 7,
   "maxZoom": 20,
