@@ -253,7 +253,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
     let newLayer = helpers.getImageWMSLayer(serverUrl + "/wms", layer.Name[0]);
     newLayer.setVisible(!group.defaultGroup ? false : layerVisible);
     newLayer.setOpacity(opacity);
-    newLayer.setProperties({ name: layerNameOnly, displayName: tocDisplayName });
+    newLayer.setProperties({ name: layerNameOnly, displayName: tocDisplayName, disableParcelClick: liveLayer });
     newLayer.setZIndex(layerIndex);
     window.map.addLayer(newLayer);
 
@@ -421,7 +421,7 @@ export function getLayerListByGroupCustomRest(group, callback) {
         let layer = helpers.getImageWMSLayer(serverUrl + "/wms", layerInfo.name);
         layer.setVisible(layerVisible);
         layer.setOpacity(opacity);
-        layer.setProperties({ name: layerNameOnly, displayName: tocDisplayName });
+        layer.setProperties({ name: layerNameOnly, displayName: tocDisplayName, disableParcelClick: liveLayer });
         layer.setZIndex(layerIndex);
         window.map.addLayer(layer);
 
