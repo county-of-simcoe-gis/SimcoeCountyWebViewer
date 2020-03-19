@@ -1,7 +1,7 @@
 {
   "streetService": "",
   "bathymetryService": "",
-  "worldImageryService": "https://intra.ws.giscache.lrc.gov.on.ca/arcgis/rest/services/LIO_Cartographic/LIO_Topographic/MapServer",
+  "worldImageryService": "https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer",
   "topoServices": [
     {
       "name": "Blank",
