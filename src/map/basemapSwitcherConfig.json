@@ -13,7 +13,7 @@
           "type": "SIMCOE_TILED"
         },
         {
-          "url": "http://it-adm-8h701sd2:6080/arcgis/rest/services/Public/OpenGISTopoCacheTen6Oct8/MapServer",
+          "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/OpenGIS_Topo/MapServer",
           "type": "SIMCOE_TILED"
         }
       ],
