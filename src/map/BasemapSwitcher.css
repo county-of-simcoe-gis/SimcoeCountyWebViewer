@@ -10,7 +10,7 @@
   opacity: 0.9;
   border-radius: 4px;
   display: table;
-  z-index: 0;
+  z-index: 2;
 }
 #sc-basemap-main-container:hover {
   opacity: 1;
@@ -41,6 +41,7 @@
   position: absolute;
   user-select: none;
   opacity: 0.9;
+  z-index: 2;
 }
 
 .sc-basemap-collapse-button {
