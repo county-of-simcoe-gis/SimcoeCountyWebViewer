@@ -195,6 +195,8 @@ class Identify extends Component {
     helpers.zoomToFeature(feature);
   };
 
+  
+
   render() {
     return (
       <div>
@@ -285,6 +287,12 @@ const FeatureItem = props => {
   let { feature, displayName, html_url,identifyTitleColumn,identifyIdColumn } = props;
   if (identifyTitleColumn!==undefined && identifyTitleColumn !== "") displayName = identifyTitleColumn;
   //console.log(feature);
+
+  var extentFeature = undefined;
+  if (feature.values_.extent_geom !== undefined){
+    extentFeature = helpers.getFeatureFromGeoJSON(feature.values_.extent_geom);
+  }
+
   const featureProps = feature.getProperties();
   const keys = Object.keys(featureProps);
   let featureName = feature.get(displayName) ;
@@ -305,6 +313,7 @@ const FeatureItem = props => {
           {mainConfig.excludeIdentifyTitleName ? featureName : displayName + ": " + featureName}
         </div>
         <img className="sc-identify-feature-header-img" src={images["zoom-in.png"]} onClick={() => props.onZoomClick(feature)} alt="Zoom In"></img>
+        {extentFeature !== undefined ? <img className="sc-identify-feature-header-img" src={images["extent-zoom-in.png"]} onClick={() => props.onZoomClick(extentFeature)} alt="Zoom In To Extent"></img> : ""}
       </div>
   
         
