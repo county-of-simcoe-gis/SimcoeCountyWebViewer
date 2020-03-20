@@ -99,8 +99,8 @@ class SCMap extends Component {
 
       const menu = (
         <Portal>
-          <FloatingMenu key={helpers.getUID()} buttonEvent={evt} onMenuItemClick={this.onMenuItemClick} styleMode="left" autoY={true}>
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-basic-mode">
+          <FloatingMenu key={helpers.getUID()} buttonEvent={evt} onMenuItemClick={this.onMenuItemClick} autoY={true} autoX={true}>
+            <MenuItem className={helpers.isMobile() ? "sc-hidden" : "sc-floating-menu-toolbox-menu-item"} key="sc-floating-menu-basic-mode">
               <FloatingMenuItem imageName={"collased.png"} label="Switch To Basic" />
             </MenuItem>
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-property-click">
