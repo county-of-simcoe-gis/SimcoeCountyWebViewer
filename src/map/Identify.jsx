@@ -91,7 +91,7 @@ class Identify extends Component {
     this.vectorLayerShadow.getSource().clear();
     this.vectorLayerShadowSecondary.getSource().clear();
 
-    if (feature.values_.extent_geom !== undefined){
+    if (feature.values_.extent_geom !== undefined && feature.values_.extent_geom !== null){
       var extentFeature = helpers.getFeatureFromGeoJSON(feature.values_.extent_geom);
       this.vectorLayerShadowSecondary.getSource().addFeature(extentFeature);
     }
