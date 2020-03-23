@@ -87,7 +87,7 @@ class MyMapsPopupLabel extends Component {
 
           <div className="sc-mymaps-popup-slider">
             <input type="range" min={this.sliderMin} max={this.sliderMax} value={this.state.labelRotation} step="1" onChange={this.onSliderChange} />
-            <label className="sc-mymaps-popup-slider-label">Rotate</label>
+            <label className="sc-mymaps-popup-slider-label">Rotate Label</label>
           </div>
         </div>
         <div>
