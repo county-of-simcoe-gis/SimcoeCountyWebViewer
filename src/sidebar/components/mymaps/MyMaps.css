@@ -252,7 +252,7 @@
 
 .sc-mymaps-popup-slider-label {
   position: absolute;
-  right: 50px;
+  right: 40px;
   top: 11px;
 }
 .sc-mymaps-popup-slider {
@@ -444,7 +444,7 @@ input[type="range"]::-ms-tooltip {
 
   .sc-mymaps-popup-slider-label {
     position: relative;
-    right: -43px;
+    right: -31px;
     top: -7px;
   }
 }
