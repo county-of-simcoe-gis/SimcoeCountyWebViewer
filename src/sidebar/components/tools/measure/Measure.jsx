@@ -304,6 +304,7 @@ class Measure extends Component {
     this.draw.on(
       "drawstart",
       evt => {
+        window.isMeasuring = true;
         this.vectorSource.clear();
 
         // set sketch
@@ -337,7 +338,8 @@ class Measure extends Component {
     this.draw.on(
       "drawend",
       () => {
-        //RESET TOOLTIPO
+        window.isMeasuring = false;
+        //RESET TOOLTIP
         this.measureTooltipElement.innerHTML = "";
         this.measureTooltip.setPosition([0, 0]);
         this.setState({ measureToolTipClass: "sc-hidden" });
@@ -395,6 +397,7 @@ class Measure extends Component {
     window.map.removeLayer(this.vectorLayer);
 
     window.disableParcelClick = false;
+    window.isMeasuring = false;
   }
 
   onClose = () => {
@@ -412,6 +415,7 @@ class Measure extends Component {
     this.setState({ measureToolTipClass: "sc-hidden", helpToolTipClass: "sc-hidden", activeTool: false });
 
     window.disableParcelClick = false;
+    window.isMeasuring = false;
   };
 
   onGeometryButtonClick = (type, unitType) => {
