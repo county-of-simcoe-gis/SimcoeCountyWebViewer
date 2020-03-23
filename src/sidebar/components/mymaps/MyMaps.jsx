@@ -133,6 +133,11 @@ class MyMaps extends Component {
 
   // BUTTON BAR CLICK
   onButtonBarClick = type => {
+    if (window.isMeasuring !== undefined && window.isMeasuring) {
+      helpers.showMessage("Measure", "Active measure in progress.  Close the measure tool or cancel your measure to continue.", undefined, 3000);
+      return;
+    }
+
     if (this.draw !== null) {
       window.map.removeInteraction(this.draw);
 
