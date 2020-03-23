@@ -289,7 +289,7 @@ const FeatureItem = props => {
   //console.log(feature);
 
   var extentFeature = undefined;
-  if (feature.values_.extent_geom !== undefined){
+  if (feature.values_.extent_geom !== undefined && feature.values_.extent_geom !== null){
     extentFeature = helpers.getFeatureFromGeoJSON(feature.values_.extent_geom);
   }
 
