@@ -98,24 +98,24 @@ export async function getGroupsGC(url, urlType, callback) {
             buildLayers(layerInfo.Layer);
           }
 
-          const groupObj = {
-            value: groupName,
-            label: remove_underscore(groupDisplayName),
-            url: groupUrl,
-            defaultGroup: isDefault,
-            visibleLayers: visibleLayers,
-            wmsGroupUrl: fullGroupUrl,
-            layers: layerList
-          };
-          if (groupObj.layers.length >= 1) {
-            groups.push(groupObj);
-            if (isDefault) {
-              defaultGroup = groupObj;
-              isDefault = false;
-            }
+        const groupObj = {
+              value: groupName,
+              label: remove_underscore(groupDisplayName),
+              url: groupUrl,
+              prefix:groupPrefix,
+              defaultGroup: isDefault,
+              visibleLayers:visibleLayers,
+              wmsGroupUrl: fullGroupUrl,
+              layers: layerList
+            };
+        if (groupObj.layers.length >=1){
+          groups.push(groupObj);
+          if (isDefault) {
+            defaultGroup = groupObj;
+            isDefault = false;
           }
         }
-      });
+      }});
     });
     if (defaultGroup === undefined || defaultGroup === null) defaultGroup = groups[0];
     callback([groups, defaultGroup]);
@@ -221,7 +221,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
     let layerTitle = layer.Title[0];
     if (layerTitle === undefined) layerTitle = layerNameOnly;
     const keywords = layer.KeywordList[0].Keyword;
-    const styleUrl = layer.Style[0].LegendURL[0].OnlineResource[0].$["xlink:href"].replace("http", "https");
+    const styleUrl = layer.Style !== undefined ? layer.Style[0].LegendURL[0].OnlineResource[0].$["xlink:href"].replace("http", "https") : "";
     const serverUrl = group.wmsGroupUrl.split("/geoserver/")[0] + "/geoserver";
     const wfsUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&cql_filter=`;
     const wfsUrl = wfsUrlTemplate(serverUrl, layer.Name[0]);
@@ -241,6 +241,13 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
     // TOC DISPLAY NAME
     const tocDisplayName = layerTitle;
 
+    //DISPLAY NAME
+    let displayName = _getDisplayName(keywords);
+    if (displayName==="") displayName =layerTitle;
+    
+    if (group.prefix !== undefined) {
+      displayName = group.prefix !== "" ? group.prefix + ' - ' + displayName : displayName;
+    }
     // OPACITY
     let opacity = _getOpacity(keywords);
 
@@ -286,7 +293,12 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
       tocDisplayName: tocDisplayName, // DISPLAY NAME USED FOR TOC LAYER NAME
       group: group.value,
       groupName: group.label,
-      canDownload: canDownload // INDICATES WETHER LAYER CAN BE DOWNLOADED
+      canDownload: canDownload, // INDICATES WETHER LAYER CAN BE DOWNLOADED
+      displayName: displayName, // DISPLAY NAME USED BY IDENTIFY
+      group: group.value,
+      groupName: group.label,
+      identifyTitleColumn: identifyTitleColumn,
+      identifyIdColumn: identifyIdColumn
     };
     callback(returnLayer);
   }
@@ -457,7 +469,9 @@ export function getLayerListByGroupCustomRest(group, callback) {
           tocDisplayName: tocDisplayName, // DISPLAY NAME USED FOR TOC LAYER NAME
           group: group.value,
           groupName: group.label,
-          canDownload: canDownload // INDICATES WETHER LAYER CAN BE DOWNLOADED
+          canDownload: canDownload, // INDICATES WETHER LAYER CAN BE DOWNLOADED
+          identifyTitleColumn: identifyTitleColumn,
+          identifyIdColumn: identifyIdColumn
         });
 
         layerIndex--;
