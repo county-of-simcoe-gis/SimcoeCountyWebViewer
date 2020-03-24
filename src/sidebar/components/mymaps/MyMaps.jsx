@@ -61,7 +61,7 @@ class MyMaps extends Component {
     };
 
     // LISTEN FOR MAP TO MOUNT
-    window.emitter.addListener("mapLoaded", () => this.onMapLoad());
+    window.emitter.addListener("mapParametersComplete", () => this.onMapLoad());
 
     // LISTEN FOR OTHER COMPONENTS ADDING A FEATURE
     window.emitter.addListener("addMyMapsFeature", (feature, labelText) => this.addNewItem(feature, labelText, true));

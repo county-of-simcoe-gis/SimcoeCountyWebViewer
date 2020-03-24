@@ -31,6 +31,9 @@ class TOC extends Component {
       layerCount: 0
     };
 
+    // LISTEN FOR MAP TO MOUNT
+    window.emitter.addListener("mapLoaded", () => this.onMapLoad());
+
     // LISTEN FOR LAYERS TO LOAD
     window.emitter.addListener("layersLoaded", numLayers => this.onLayersLoad(numLayers));
 
@@ -38,6 +41,9 @@ class TOC extends Component {
     window.emitter.addListener("activeTocLayerGroup", (groupName, callback) => this.onActivateLayer(groupName, callback));
   }
 
+  onMapLoad = () => {
+    this.refreshTOC();
+  };
   onActivateLayer = (groupName, callback) => {
     //const remove_underscore = name => {return helpers.replaceAllInString(name, "_", " ");}
     window.emitter.emit("setSidebarVisiblity", "OPEN");
@@ -61,7 +67,7 @@ class TOC extends Component {
   };
 
   componentDidMount() {
-    this.refreshTOC();
+    // this.refreshTOC();
   }
 
   refreshTOC = callback => {
