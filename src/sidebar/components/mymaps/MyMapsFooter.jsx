@@ -1,10 +1,10 @@
-import React, { Component } from "react";
+import React from "react";
 import ReactDOM from "react-dom";
 import "./MyMapsFooter.css";
 import * as helpers from "../../../helpers/helpers";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import Portal from "../../../helpers/Portal.jsx";
-import Menu, { SubMenu, Item as MenuItem, Divider } from "rc-menu";
+import { Item as MenuItem, Divider } from "rc-menu";
 
 const MyMapsFooter = props => {
   // USE HOOKS
@@ -60,11 +60,3 @@ const MyMapsFooter = props => {
 };
 
 export default MyMapsFooter;
-
-// IMPORT ALL IMAGES
-const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
-function importAllImages(r) {
-  let images = {};
-  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
-  return images;
-}

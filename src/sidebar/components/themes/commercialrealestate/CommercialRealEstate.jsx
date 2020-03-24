@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import "./CommercialRealEstate.css";
-import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";

@@ -20,8 +20,9 @@ const apiUrl = mainConfig.apiUrl;
 const googleDirectionsURL = (lat, long) => `https://www.google.com/maps?saddr=My+Location&daddr=${lat},${long}`;
 const searchURL = (apiUrl, searchText, type, muni, limit) => `${apiUrl}async/search/?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
 const searchInfoURL = (apiUrl, locationID) => `${apiUrl}searchById/${locationID}`;
-const searchTypesURL = apiUrl => `${apiUrl}/getSearchTypes`;
+const searchTypesURL = apiUrl => `${apiUrl}getSearchTypes`;
 
+console.log(searchTypesURL(apiUrl));
 // DEFAULT SEARCH LIMIT
 const defaultSearchLimit = 10;
 
@@ -63,21 +64,6 @@ const styles = {
   })
 };
 
-const defaultStyle = new Style({
-  stroke: new Stroke({
-    width: 4,
-    color: [255, 0, 0, 0.8]
-  }),
-  fill: new Fill({
-    color: [255, 0, 0, 0] // USE OPACITY
-  }),
-  image: new CircleStyle({
-    opacity: 0.5,
-    radius: 7,
-    fill: new Fill({ color: [236, 156, 155, 0.7] })
-  })
-});
-
 class Search extends Component {
   constructor(props) {
     super(props);
@@ -86,27 +72,35 @@ class Search extends Component {
     this.removeMarkersClick = this.removeMarkersClick.bind(this);
     this.cleanup = this.cleanup.bind(this);
     this.storageKey = "searchHistory";
+
+    // LISTEN FOR MAP TO MOUNT
+    window.emitter.addListener("mapLoaded", () => this.onMapLoad());
+
+    this.state = {
+      value: "",
+      searchResults: [],
+      hover: false,
+      iconInitialClass: "sc-search-icon-initial",
+      iconActiveClass: "sc-search-icon-active-hidden",
+      showMore: false,
+      searchTypes: [],
+      selectedType: ""
+    };
   }
-  state = {
-    value: "",
-    searchResults: [],
-    hover: false,
-    iconInitialClass: "sc-search-icon-initial",
-    iconActiveClass: "sc-search-icon-active-hidden",
-    showMore: false,
-    searchTypes: [],
-    selectedType: ""
-  };
 
   requestTimer = null;
 
-  componentDidMount() {
+  onMapLoad = () => {
     // HANDLE URL PARAMETER
     if (locationId !== null) {
       // CALL API TO GET LOCATION DETAILS
-      helpers.getJSON(searchInfoURL(apiUrl, locationId), result => this.jsonCallback(result));
+      setTimeout(() => {
+        helpers.getJSON(searchInfoURL(apiUrl, locationId), result => this.jsonCallback(result));
+      }, 500);
     }
+  };
 
+  componentDidMount() {
     helpers.getJSON(searchTypesURL(apiUrl), result => {
       let items = [];
       items.push({ label: "All", value: "All" });
@@ -253,8 +247,8 @@ class Search extends Component {
     searchGeoLayer.getSource().addFeature(fullFeature);
     searchIconLayer.getSource().addFeature(pointFeature);
 
-    //searchGeoLayer.setZIndex(100);
-    //searchIconLayer.setZIndex(100);
+    searchGeoLayer.setZIndex(300);
+    searchIconLayer.setZIndex(300);
 
     // SET STYLE AND ZOOM
     if (result.geojson.indexOf("Point") !== -1) {
@@ -419,12 +413,13 @@ class Search extends Component {
     // SEARCH LAYERS
     if (selectedType === "All" || selectedType === "Map Layer") {
       let layers = [];
+      // eslint-disable-next-line
       Object.entries(window.allLayers).map(row => {
         const layerItems = row[1];
         layerItems.forEach(layer => {
-          if (layer.displayName.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
+          if (layer.tocDisplayName.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
             //console.log(layer);
-            layers.push({ fullName:layer.name, name:layer.displayName,isVisible: layer.layer.getVisible(), type: "Map Layer", layerGroupName:layer.groupName , layerGroup: layer.group, imageName: "layers.png", index: layer.index });
+            layers.push({ fullName: layer.name, name: layer.tocDisplayName, type: "Map Layer", layerGroupName: layer.groupName, layerGroup: layer.group, imageName: "layers.png", index: layer.index });
           }
         });
       });
@@ -434,6 +429,7 @@ class Search extends Component {
     // TOOLS
     if (selectedType === "All" || selectedType === "Tool") {
       let tools = [];
+      // eslint-disable-next-line
       mainConfig.sidebarToolComponents.forEach(tool => {
         if (tool.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
           tools.push({ name: helpers.replaceAllInString(tool.name, "_", " "), type: "Tool", imageName: "tools.png" });
@@ -548,7 +544,6 @@ class Search extends Component {
 
               let limit = defaultSearchLimit;
               if (this.state.showMore) limit = 50;
-              console.log(apiUrl);
               await helpers.getJSONWait(searchURL(apiUrl, value, this.state.selectedType.value, undefined, limit), responseJson => {
                 if (responseJson !== undefined) this.searchResultsHandler(responseJson, defaultSearchLimit);
               });
@@ -573,7 +568,7 @@ class Search extends Component {
             return (
               <div className={isHighlighted ? "sc-search-item-highlighted" : "sc-search-item"} key={helpers.getUID()}>
                 <div className="sc-search-item-left">
-                  <img src={images[item.imageName]} alt="blue pin" />
+                  <img src={item.imageName === undefined ? images["map-marker-light-blue.png"] : images[item.imageName]} alt="blue pin" />
                 </div>
                 <div className="sc-search-item-content"> 
                   <Highlighter highlightClassName="sc-search-highlight-words" searchWords={[this.state.value]} textToHighlight={item.name} />

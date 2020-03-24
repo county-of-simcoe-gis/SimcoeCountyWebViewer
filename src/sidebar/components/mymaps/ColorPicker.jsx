@@ -1,5 +1,4 @@
-import { SketchPicker } from "react-color";
-import React, { Component } from "react";
+import React from "react";
 import ReactDOM from "react-dom";
 import Portal from "../../../helpers/Portal.jsx";
 
@@ -9,15 +8,17 @@ export default class ColorPicker {
     this.elements = elements;
     this.callerId = callerId;
 
+    this.documentClick = evt => {
+      const e = document.elementFromPoint(evt.pageX, evt.pageY);
+      if (evt.target.id !== this.callerId && e.getAttribute("spellcheck") === null) {
+        this.hide();
+      }
+    };
+
+    this.clickHandler = this.documentClick.bind(this);
+
     // CLICK ANYWHERE ELSE WILL CLOSE MENU
-    this.clickEvent = document.body.addEventListener(
-      "click",
-      evt => {
-        const e = document.elementFromPoint(evt.pageX, evt.pageY);
-        if (evt.target.id !== this.callerId && e.getAttribute("spellcheck") === null) this.hide();
-      },
-      true
-    );
+    document.body.addEventListener("click", this.clickHandler);
   }
 
   show() {
@@ -43,5 +44,7 @@ export default class ColorPicker {
 
   hide() {
     if (document.getElementById("sc-color-picker-container") !== null) document.getElementById("sc-color-picker-container").classList.add("sc-hidden");
+
+    document.body.removeEventListener("click", this.clickHandler);
   }
 }

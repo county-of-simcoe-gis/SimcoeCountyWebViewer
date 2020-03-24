@@ -1,10 +1,8 @@
 import React, { Component } from "react";
 import "./CommercialRealEstateSearch.css";
-import * as helpers from "../../../../helpers/helpers";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 import CommercialRealEstateSearchPropTypes from "./CommercialRealEstateSearchPropTypes.jsx";
-import Select from "react-select";
 import * as CommercialRealEstateSearchObjects from "./CommercialRealEstateObjects";
 import CommercialRealEstateSearchType from "./CommercialRealEstateSearchType.jsx";
 import CommercialRealEstateSearchBuildingSpace from "./CommercialRealEstateSearchBuildingSpace";

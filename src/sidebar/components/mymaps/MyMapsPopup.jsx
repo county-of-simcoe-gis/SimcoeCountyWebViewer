@@ -1,10 +1,9 @@
-import React, { Component, useState } from "react";
+import React, { Component } from "react";
 import MyMapsSymbolizer from "./MyMapsSymbolizer.jsx";
 import MyMapsBuffer from "./MyMapsBuffer";
 import MyMapsPopupLabel from "./MyMapsPopupLabel";
 import "./MyMapsPopup.css";
 import * as helpers from "../../../helpers/helpers";
-import * as myMapsHelpers from "./myMapsHelpers";
 
 class MyMapsPopup extends Component {
   state = {};
@@ -16,15 +15,42 @@ class MyMapsPopup extends Component {
     this.props.onRef(undefined);
   }
 
+  componentWillReceiveProps(nextProps) {
+    // this.popupLabelRef.forceUpdate();
+  }
+
   parentLabelChanged = (itemInfo, newLabel) => {
     this.popupLabelRef.parentLabelChange(itemInfo, newLabel);
+  };
+
+  parentLabelVisibleChanged = (itemInfo, visible) => {
+    this.popupLabelRef.parentLabelVisibilityChange(itemInfo, visible);
   };
 
   render() {
     return (
       <div className="sc-mymaps-popup-container">
-        <MyMapsPopupLabel onRef={ref => (this.popupLabelRef = ref)} item={this.props.item} onLabelChange={this.props.onLabelChange} onLabelVisibilityChange={this.props.onLabelVisibilityChange} onLabelRotationChange={this.props.onLabelRotationChange} />
-        <MyMapsSymbolizer key={helpers.getUID()} visible={this.props.activeTool === "symbolizer"} item={this.props.item} onPointStyleDropDown={this.props.onPointStyleDropDown} onRadiusSliderChange={this.props.onRadiusSliderChange} onFillColorPickerChange={this.props.onFillColorPickerChange} onFillOpacitySliderChange={this.props.onFillOpacitySliderChange} onRotationSliderChange={this.props.onRotationSliderChange} onStrokeOpacitySliderChange={this.props.onStrokeOpacitySliderChange} onStrokeColorPickerChange={this.props.onStrokeColorPickerChange} onStrokeWidthSliderChange={this.props.onStrokeWidthSliderChange} onStrokeTypeDropDown={this.props.onStrokeTypeDropDown} />
+        <MyMapsPopupLabel
+          onRef={ref => (this.popupLabelRef = ref)}
+          item={this.props.item}
+          onLabelChange={this.props.onLabelChange}
+          onLabelVisibilityChange={this.props.onLabelVisibilityChange}
+          onLabelRotationChange={this.props.onLabelRotationChange}
+        />
+        <MyMapsSymbolizer
+          key={helpers.getUID()}
+          visible={this.props.activeTool === "symbolizer"}
+          item={this.props.item}
+          onPointStyleDropDown={this.props.onPointStyleDropDown}
+          onRadiusSliderChange={this.props.onRadiusSliderChange}
+          onFillColorPickerChange={this.props.onFillColorPickerChange}
+          onFillOpacitySliderChange={this.props.onFillOpacitySliderChange}
+          onRotationSliderChange={this.props.onRotationSliderChange}
+          onStrokeOpacitySliderChange={this.props.onStrokeOpacitySliderChange}
+          onStrokeColorPickerChange={this.props.onStrokeColorPickerChange}
+          onStrokeWidthSliderChange={this.props.onStrokeWidthSliderChange}
+          onStrokeTypeDropDown={this.props.onStrokeTypeDropDown}
+        />
         <MyMapsBuffer visible={this.props.activeTool === "buffer"} item={this.props.item} />
         <FooterButtons
           onMyMapItemToolsButtonClick={evt => this.props.onMyMapItemToolsButtonClick(evt, this.props.item)}

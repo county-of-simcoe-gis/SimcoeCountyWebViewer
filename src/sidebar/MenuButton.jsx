@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import "./MenuButton.css";
 import * as helpers from "../helpers/helpers";
 import mainConfig from "../config.json";
-import { saveAs } from "file-saver";
 import htmlToImage from "html-to-image";
 
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
@@ -52,13 +51,12 @@ class MenuButton extends Component {
   // CUSTOM ENTRIES, COMMENT OUT IF YOU DON"T WANT IT
   getOthers = () => {
     let itemList = [];
+    itemList.push(<MenuItem onClick={() => helpers.showURLWindow(mainConfig.whatsNewUrl, true, "full", false)} key={helpers.getUID()} name={"What's New"} iconClass={"sc-menu-terms-icon"} />);
     itemList.push(<MenuItem key={helpers.getUID()} name={"Feedback"} iconClass={"sc-menu-feedback-icon"} onClick={this.onFeedbackClick} />);
     itemList.push(<MenuItem onClick={this.onScreenshotClick} key={helpers.getUID()} name={"Take a Screenshot"} iconClass={"sc-menu-screenshot-icon"} />);
     itemList.push(<MenuItem key={helpers.getUID()} name={"Map Legend"} iconClass={"sc-menu-legend-icon"} onClick={() => helpers.showMessage("Legend", "Coming Soon")} />);
     itemList.push(<MenuItem onClick={() => helpers.showURLWindow(mainConfig.helpUrl, false, "full")} key={helpers.getUID()} name={"Help"} iconClass={"sc-menu-help-icon"} />);
-    itemList.push(
-      <MenuItem onClick={() => helpers.showURLWindow(mainConfig.termsUrl, false, "full")} key={helpers.getUID()} name={"Terms and Conditions"} iconClass={"sc-menu-terms-icon"} />
-    );
+    itemList.push(<MenuItem onClick={() => helpers.showURLWindow(mainConfig.termsUrl, false, "full")} key={helpers.getUID()} name={"Terms and Conditions"} iconClass={"sc-menu-terms-icon"} />);
     return itemList;
   };
 
@@ -68,6 +66,7 @@ class MenuButton extends Component {
 
   itemClick = (name, type) => {
     window.emitter.emit("activateSidebarItem", name, type);
+    window.emitter.emit("setSidebarVisiblity", "OPEN");
     this.setState({ isOpen: !this.state.isOpen });
   };
 
@@ -117,7 +116,7 @@ class MenuButton extends Component {
   render() {
     const menuListClassName = this.getMenuClassName();
     return (
-      <div>
+      <div className={window.sidebarOpen ? "sc-hidden" : "sc-menu-button-main-container"}>
         <div className="sc-menu-button-container" style={{ cursor: "pointer" }} onClick={this.onMenuButtonClick}>
           <button className="sc-menu-more-button">
             <img src={images["more.png"]} style={{ pointerEvents: "none" }} alt="More" />

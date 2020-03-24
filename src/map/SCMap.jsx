@@ -54,27 +54,27 @@ class SCMap extends Component {
     }
     let centerCoords = mainConfig.centerCoords;
     let defaultZoom = mainConfig.defaultZoom;
-    const defaultsStorage = sessionStorage.getItem(this.storageMapDefaultsKey); 
+    const defaultsStorage = sessionStorage.getItem(this.storageMapDefaultsKey);
     const storage = localStorage.getItem(this.storageExtentKey);
     if (defaultsStorage !== null && storage === null) {
       const detaults = JSON.parse(defaultsStorage);
       if (detaults.zoom !== undefined) defaultZoom = detaults.zoom;
       if (detaults.center !== undefined) centerCoords = detaults.center;
     }
-    const resolutions = [
-      305.74811314055756,
-      152.87405657041106,
-      76.43702828507324,
-      38.21851414253662,
-      19.10925707126831,
-      9.554628535634155,
-      4.77731426794937,
-      2.388657133974685,
-      1.1943285668550503,
-      0.5971642835598172,
-      0.29858214164761665,
-      0.1492252984505969
-    ];
+    // const resolutions = [
+    //   305.74811314055756,
+    //   152.87405657041106,
+    //   76.43702828507324,
+    //   38.21851414253662,
+    //   19.10925707126831,
+    //   9.554628535634155,
+    //   4.77731426794937,
+    //   2.388657133974685,
+    //   1.1943285668550503,
+    //   0.5971642835598172,
+    //   0.29858214164761665,
+    //   0.1492252984505969
+    // ];
     var map = new Map({
       controls: defaultControls().extend([scaleLineControl, new FullScreen()]),
       layers: [],
@@ -93,17 +93,10 @@ class SCMap extends Component {
       ]),
       keyboardEventTarget: document
     });
-    if (storage !== null) {
-      const extent = JSON.parse(storage);
-      map.getView().fit(extent, map.getSize(), { duration: 1000 });
-    }
 
     window.map = map;
     window.popup = new Popup();
     window.map.addOverlay(window.popup);
-
-    // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
-    window.emitter.emit("mapLoaded");
 
     window.map.getViewport().addEventListener("contextmenu", evt => {
       evt.preventDefault();
@@ -111,8 +104,8 @@ class SCMap extends Component {
 
       const menu = (
         <Portal>
-          <FloatingMenu key={helpers.getUID()} buttonEvent={evt} onMenuItemClick={this.onMenuItemClick} styleMode="left" autoY={true}>
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-basic-mode">
+          <FloatingMenu key={helpers.getUID()} buttonEvent={evt} onMenuItemClick={this.onMenuItemClick} autoY={true} autoX={true}>
+            <MenuItem className={helpers.isMobile() ? "sc-hidden" : "sc-floating-menu-toolbox-menu-item"} key="sc-floating-menu-basic-mode">
               <FloatingMenuItem imageName={"collased.png"} label="Switch To Basic" />
             </MenuItem>
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-property-click">
@@ -145,26 +138,38 @@ class SCMap extends Component {
       ReactDOM.render(menu, document.getElementById("portal-root"));
     });
 
-    // HANDLE URL PARAMETERS (ZOOM TO XY)
+    // *******************************************
+    // THIS SECTION HANDLES ZOOMING URL PARAMETERS
+    // *******************************************
+
+    // GET URL PARAMETERS (ZOOM TO XY)
     const x = helpers.getURLParameter("X");
     const y = helpers.getURLParameter("Y");
     const sr = helpers.getURLParameter("SR") === null ? "WEB" : helpers.getURLParameter("SR");
-    if (x !== null && y !== null) {
-      let coords = [x, y];
-      if (sr === "WGS84") coords = fromLonLat([Math.round(x * 100000) / 100000, Math.round(y * 100000) / 100000]);
 
-      helpers.flashPoint(coords);
-    }
-
-    // HANDLE URL PARAMETERS (ZOOM TO EXTENT)
+    // GET URL PARAMETERS (ZOOM TO EXTENT)
     const xmin = helpers.getURLParameter("XMIN");
     const ymin = helpers.getURLParameter("YMIN");
     const xmax = helpers.getURLParameter("XMAX");
     const ymax = helpers.getURLParameter("YMAX");
-    if (xmin !== null && ymin !== null && xmax !== null && ymax !== null) {
-      const extent = [xmin, xmax, ymin, ymax];
-      window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
-    }
+
+    setTimeout(() => {
+      if (x !== null && y !== null) {
+        // URL PARAMETERS (ZOOM TO XY)
+        let coords = [x, y];
+        if (sr === "WGS84") coords = fromLonLat([Math.round(x * 100000) / 100000, Math.round(y * 100000) / 100000]);
+
+        helpers.flashPoint(coords);
+      } else if (xmin !== null && ymin !== null && xmax !== null && ymax !== null) {
+        //URL PARAMETERS (ZOOM TO EXTENT)
+        const extent = [xmin, xmax, ymin, ymax];
+        window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
+      } else if (storage !== null) {
+        // ZOOM TO SAVED EXTENT
+        const extent = JSON.parse(storage);
+        map.getView().fit(extent, map.getSize(), { duration: 1000 });
+      }
+    }, 2000);
 
     // APP STAT
     helpers.addAppStat("STARTUP", "MAP_LOAD");
@@ -178,7 +183,20 @@ class SCMap extends Component {
       // If Internet Explorer, return version number
       this.setState({ isIE: true });
       helpers.showURLWindow(mainConfig.ieWarningUrl);
+    } else {
+      // SHOW TERMS
+      //helpers.showURLWindow("https://maps.simcoe.ca/terms.html", true, "full", true);
     }
+
+    // MAP LOADED
+    this.initialLoad = false;
+    //window.emitter.emit("mapLoaded");
+    window.map.once("rendercomplete", event => {
+      if (!this.initialLoad) {
+        window.emitter.emit("mapLoaded");
+        this.initialLoad = true;
+      }
+    });
   }
   changeCursor = (cursorStyle) =>
   {

@@ -10,6 +10,11 @@
   font-weight: bold;
 }
 
+.sc-toc-item-container.not-in-scale {
+  font-weight: bold;
+  color: dimgrey;
+}
+
 .sc-toc-item-layer-label {
   display: inline-table;
   position: relative;
@@ -23,10 +28,18 @@
   margin-left: 5px;
 }
 
+.sc-toc-item-layer-info-download {
+  display: inline-table;
+  vertical-align: middle;
+  margin-left: 5px;
+  margin-bottom: 2px;
+}
+
 .sc-toc-item-plus-minus-container {
   display: inline-table;
   vertical-align: middle;
   cursor: pointer;
+  margin-right: 3px;
 }
 
 .sc-toc-item-toolbox {
@@ -102,6 +115,15 @@
   @supports (-webkit-appearance: none) {
     .sc-toc-item-checkbox {
       transform: scale(1, 1);
+    }
+
+    .sc-toc-item-layer-label {
+      bottom: 0px;
+    }
+
+    .sc-toc-item-plus-minus-container {
+      margin-top: 3px;
+      margin-right: 4px;
     }
   }
 }
