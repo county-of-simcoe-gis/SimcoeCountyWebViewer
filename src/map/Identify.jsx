@@ -219,7 +219,7 @@ const Layer = props => {
 
   const { layer } = props;
 
-  console.log(layer);
+  //console.log(layer);
   let layerObj = {};
   _getLayerObj(layer.name, returnResult => layerObj=returnResult);
  
@@ -287,7 +287,9 @@ const FeatureItem = props => {
   }
   if (featureName === "") featureName = "N/A";
   let cql_filter = "";
-  const isSameOrigin = html_url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !== -1;
+
+  let isSameOrigin = true;
+  if (html_url !== undefined) isSameOrigin = html_url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !== -1;
 
   keys.map((keyName) => {
     const val = featureProps[keyName];

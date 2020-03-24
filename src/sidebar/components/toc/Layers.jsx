@@ -222,7 +222,7 @@ class Layers extends Component {
     allLayers[this.props.group.value] = newLayers;
 
     this.setState({ layers: newLayers, allLayers: allLayers }, () => {
-      window.allLayers = this.state.allLayers;
+      window.allLayers = Object.values(this.state.allLayers);
       if (callback !== undefined) callback();
     });
   };
