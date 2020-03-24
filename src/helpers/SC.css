@@ -395,3 +395,12 @@ input[type="number"]::-webkit-outer-spin-button {
   line-height: 16px;
   padding: 6px 10px 5px;
 }
+
+.sc-live-layer-popup-content {
+  position: relative;
+  top: 0;
+  bottom: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 240px;
+}

@@ -79,10 +79,13 @@ class LocalRealEstateImageSlider extends Component {
     let index = 0;
     this.vectorSource.forEachFeatureIntersectingExtent(extent, result => {
       if (index === this.maxFeatures) return;
-      if (props.visibleLayers.includes(result.get("prop_type")))
+
+      if (props.visibleLayers.includes(result.get("prop_type"))) {
         images.push({ url: result.get("thumb_url"), address: result.get("Address"), mlsno: result.get("mlsno"), feature: result });
-      index++;
+        index++;
+      }
     });
+
     this.setState({ images });
 
     if (document.getElementById(this.imageSliderId) !== null) {
@@ -205,6 +208,7 @@ class LocalRealEstateImageSlider extends Component {
                     e.target.onerror = null;
                     e.target.src = images["noPhoto.png"];
                   }}
+                  alt="not found"
                 />
               </div>
             );

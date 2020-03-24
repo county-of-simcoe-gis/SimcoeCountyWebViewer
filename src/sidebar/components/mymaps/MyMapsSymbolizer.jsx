@@ -4,13 +4,16 @@ import * as helpers from "../../../helpers/helpers";
 import * as myMapsHelpers from "./myMapsHelpers";
 import "./MyMapsSymbolizer.css";
 import ColorPicker from "./ColorPicker";
-import { PointType, StyleSize, FillColor, StrokeType, StrokeColor, StrokeWidth, Rotation, PolygonType } from "./MyMapsSymbolizerComponents";
+import { PointType, StyleSize, FillColor, StrokeType, StrokeColor, StrokeWidth, Rotation } from "./MyMapsSymbolizerComponents";
 
 class MyMapsSymbolizer extends Component {
   constructor(props) {
     super(props);
 
-    this.pointStyleOptions = [{ value: "circle", label: "Circle" }, { value: "cross", label: "Cross" }];
+    this.pointStyleOptions = [
+      { value: "circle", label: "Circle" },
+      { value: "cross", label: "Cross" }
+    ];
     this.dropDown = React.createRef();
     this.colorPickerButtonId = "sc-mymaps-color-picker-button";
 

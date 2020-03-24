@@ -12,11 +12,9 @@ import MyMaps from "./components/mymaps/MyMaps";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 import SidebarComponent from "react-sidebar";
-//import MenuButton from './MenuButton.jsx';
 import ComponentsConfig from "../config.json";
 import SidebarSlim from "./SidebarSlim.jsx";
 
-// TEST COMMENT
 class Sidebar extends Component {
   constructor(props) {
     super(props);
@@ -115,7 +113,6 @@ class Sidebar extends Component {
   async componentDidMount() {
     // IMPORT TOOLS FROM CONFIG
     const tools = ComponentsConfig.sidebarToolComponents;
-    let index = 0;
     tools.map(async component => await this.addComponent(component, "tools"));
 
     // IMPORT THEMES FROM CONFIG
@@ -161,7 +158,7 @@ class Sidebar extends Component {
   initToolAndThemeUrlParameter = () => {
     var i = 0;
     var isLoading = false;
-    for (var i = 1; i <= 100; i++) {
+    for (i = 1; i <= 100; i++) {
       if (isLoading) return;
       // eslint-disable-next-line
       (index => {

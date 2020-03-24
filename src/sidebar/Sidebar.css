@@ -1,6 +1,7 @@
 .sc-sidebar {
   overflow-y: visible !important;
   width: 370px;
+  z-index: 3 !important;
 }
 
 #sc-sidebar-content {

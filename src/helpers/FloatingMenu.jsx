@@ -1,6 +1,5 @@
 import React, { Component } from "react";
-import ReactDOM from "react-dom";
-import Menu, { SubMenu, Item as MenuItem, Divider } from "rc-menu";
+import Menu from "rc-menu";
 import "rc-menu/assets/index.css";
 import "./FloatingMenu.css";
 
@@ -10,7 +9,7 @@ class FloatingMenu extends Component {
     super(props);
     this.state = {
       isVisible: true,
-      styleMode: this.props.styleMode === undefined ? "right" : this.props.styleMode,
+      //styleMode: this.props.styleMode === undefined ? "right" : this.props.styleMode,
       style: {
         position: "absolute",
         zIndex: 10000,
@@ -68,6 +67,7 @@ class FloatingMenu extends Component {
     if (this.state === undefined || !this.state.isVisible) callback({ display: "none" });
 
     let yOffset = 0;
+    let xOffset = 0;
     let style = null;
     window.requestAnimationFrame(() => {
       if (this.props.autoY) {
@@ -79,13 +79,29 @@ class FloatingMenu extends Component {
         }
       }
 
+      if (this.props.styleMode === "right") {
+        xOffset = this.props.buttonEvent.pageX;
+      } else if (this.props.styleMode === "left") {
+        xOffset = this.props.buttonEvent.pageX - 180;
+      } else if (this.props.autoX) {
+        if (this.props.buttonEvent.pageX < 180) {
+          xOffset = this.props.buttonEvent.pageX;
+        } else {
+          xOffset = this.props.buttonEvent.pageX - 180;
+        }
+      } else {
+        xOffset = this.props.buttonEvent.pageX;
+      }
+
       if (this.props.yOffset !== undefined) yOffset = this.props.yOffset;
+      if (this.props.xOffset !== undefined) xOffset = this.props.xOffset;
 
       style = {
         position: "absolute",
         zIndex: 1000,
         top: this.props.buttonEvent.pageY - yOffset,
-        left: this.state.styleMode === "right" ? this.props.buttonEvent.pageX : this.props.buttonEvent.pageX - 180,
+        //left: this.state.styleMode === "right" ? this.props.buttonEvent.pageX : this.props.buttonEvent.pageX - 180,
+        left: xOffset,
         backgroundColor: "white",
         width: "180px"
       };
@@ -131,7 +147,7 @@ function importAllImages(r) {
 export function FloatingMenuItem(props) {
   return (
     <div className="sc-floating-menu-toolbox-menu-icon-label-container">
-      <img className="sc-floating-menu-toolbox-menu-icon" src={images[props.imageName]} />
+      <img className="sc-floating-menu-toolbox-menu-icon" src={images[props.imageName]} alt={props.imageName} />
       <label className="sc-floating-menu-toolbox-menu-label">{props.label}</label>
     </div>
   );

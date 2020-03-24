@@ -2,7 +2,7 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
-import Menu, { SubMenu, Item as MenuItem, Divider } from "rc-menu";
+import { Item as MenuItem } from "rc-menu";
 
 // CUSTOM
 import "./MyMaps.css";
@@ -49,6 +49,7 @@ class MyMaps extends Component {
     this.tooltipElement = null;
     this.tooltip = null;
     this.bearing = null;
+    this.currentDrawFeature = null;
     this.state = {
       drawType: "Cancel",
       drawColor: "#e809e5",
@@ -66,39 +67,10 @@ class MyMaps extends Component {
     window.emitter.addListener("addMyMapsFeature", (feature, labelText) => this.addNewItem(feature, labelText, true));
   }
 
-  componentDidMount() {
-    // GET ITEMS FROM STORAGE
-    const data = myMapsHelpers.getItemsFromStorage(this.storageKey);
-    this.setState(data, () => {
-      this.updateStyle();
-      this.importGeometries();
-    });
-
-    // URL PARAMETER
-    const myMapsId = helpers.getURLParameter("MY_MAPS_ID");
-    if (myMapsId !== null) {
-      myMapsHelpers.importMyMaps(myMapsId, result => {
-        if (result.error !== undefined) helpers.showMessage("MyMaps Import", "That MyMaps ID was NOT found!", "red");
-        else {
-          helpers.showMessage("MyMaps Import", "Success!  MyMaps imported.");
-          this.onMyMapsImport(result);
-
-          const featureId = helpers.getURLParameter("MY_MAPS_FEATURE_ID");
-          if (featureId !== null) {
-            const item = this.state.items.filter(item => {
-              return item.id === featureId;
-            })[0];
-
-            let feature = helpers.getFeatureFromGeoJSON(item.featureGeoJSON);
-            helpers.zoomToFeature(feature);
-          }
-        }
-      });
-    }
-  }
+  componentDidMount() {}
 
   onMapLoad = () => {
-    this.updateStyle();
+    //this.updateStyle();
     this.vectorSource = new VectorSource();
     this.vectorLayer = new VectorLayer({
       source: this.vectorSource,
@@ -128,10 +100,48 @@ class MyMaps extends Component {
         }
       });
     });
+
+    // GET ITEMS FROM STORAGE
+    const data = myMapsHelpers.getItemsFromStorage(this.storageKey);
+    this.setState(data, () => {
+      this.updateStyle();
+      this.importGeometries();
+    });
+
+    // URL PARAMETER
+    const myMapsId = helpers.getURLParameter("MY_MAPS_ID");
+    if (myMapsId !== null) {
+      myMapsHelpers.importMyMaps(myMapsId, result => {
+        if (result.error !== undefined) helpers.showMessage("MyMaps Import", "That MyMaps ID was NOT found!", "red");
+        else {
+          helpers.showMessage("MyMaps Import", "Success!  MyMaps imported.");
+          this.onMyMapsImport(result);
+
+          const featureId = helpers.getURLParameter("MY_MAPS_FEATURE_ID");
+          if (featureId !== null) {
+            const item = this.state.items.filter(item => {
+              return item.id === featureId;
+            })[0];
+
+            let feature = helpers.getFeatureFromGeoJSON(item.featureGeoJSON);
+            helpers.zoomToFeature(feature);
+          }
+        }
+      });
+    }
   };
 
   // BUTTON BAR CLICK
   onButtonBarClick = type => {
+    if (this.draw !== null) {
+      window.map.removeInteraction(this.draw);
+
+      if (this.currentDrawFeature !== null) {
+        this.vectorSource.removeFeature(this.currentDrawFeature);
+        this.currentDrawFeature = null;
+      }
+    }
+
     this.setState({ drawType: type }, () => {
       this.setDrawControl();
     });
@@ -154,6 +164,7 @@ class MyMaps extends Component {
     window.isDrawingOrEditing = true;
 
     // ADD DRAWN FEATURE TO MAIN SOURCE
+    this.currentDrawFeature = evt.feature;
     this.vectorSource.addFeature(evt.feature);
 
     if (this.state.drawType === "Bearing") {
@@ -172,6 +183,7 @@ class MyMaps extends Component {
 
   // DRAW END
   onDrawEnd = evt => {
+    console.log("ending");
     this.setState({ tooltipClass: "sc-hidden" });
     if (this.state.drawType === "Bearing") {
       this.tooltipElement.innerHTML = "";
@@ -310,9 +322,15 @@ class MyMaps extends Component {
     );
   };
   // LABEL TEXTBOX
-  onLabelChange = (itemInfo, label) => {
+  onLabelChange = (itemId, label) => {
+    console.log(itemId);
+    const itemInfo = this.state.items.filter(item => {
+      return item.id === itemId;
+    })[0];
+
     // IF WE HAVE A REF TO A POPUP, SEND THE UPDATE
     if (this.popupRef !== undefined) {
+      console.log(itemInfo);
       this.popupRef.parentLabelChanged(itemInfo, label);
     }
 
@@ -387,6 +405,13 @@ class MyMaps extends Component {
 
   // LABEL VISIBILITY CHECKBOX FROM POPUP
   onLabelVisibilityChange = (itemId, visible) => {
+    if (this.popupRef !== undefined) {
+      const item = this.state.items.filter(item => {
+        return item.id === itemId;
+      })[0];
+      this.popupRef.parentLabelVisibleChanged(item, visible);
+    }
+
     this.setState(
       {
         items: this.state.items.map(item => (item.id === itemId ? Object.assign({}, item, { labelVisible: visible }) : item))
@@ -398,6 +423,7 @@ class MyMaps extends Component {
 
         myMapsHelpers.setFeatureLabel(item);
         this.saveStateToStorage();
+        this.importGeometries();
       }
     );
   };
@@ -976,11 +1002,3 @@ class MyMaps extends Component {
 }
 
 export default MyMaps;
-
-// IMPORT ALL IMAGES
-const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
-function importAllImages(r) {
-  let images = {};
-  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
-  return images;
-}

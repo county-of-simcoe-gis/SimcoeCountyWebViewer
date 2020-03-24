@@ -39,7 +39,9 @@ class Layers extends Component {
   }
 
   onActivateLayer = layerItem => {
-    const groupName = layer => {return helpers.replaceAllInString(layer.layerGroup, " ", "_");}
+    const groupName = layer => {
+      return helpers.replaceAllInString(layer.layerGroup, " ", "_");
+    };
 
     let layersCopy = Object.assign([], this.state.allLayers[groupName(layerItem)]);
 
@@ -47,12 +49,12 @@ class Layers extends Component {
       if (layer.name === layerItem.fullName) {
         layer.visible = true;
         layer.layer.setVisible(true);
-        
+
         document.getElementById(this.virtualId).scrollTop = 0;
 
         var i = 0;
         var elemFound = false;
-        for (var i = 1; i <= 100; i++) {
+        for (i = 1; i <= 100; i++) {
           if (elemFound) return;
           // eslint-disable-next-line
           (index => {
@@ -114,7 +116,7 @@ class Layers extends Component {
     }
 
     this.setState({ layers: undefined, allLayers: [] }, () => {
-      this.refreshLayers(this.props.group, this.props.sortAlpha,this.props.allGroups);
+      this.refreshLayers(this.props.group, this.props.sortAlpha, this.props.allGroups);
     });
   };
 
@@ -124,13 +126,13 @@ class Layers extends Component {
 
     if (layers === undefined) {
       layers = group.layers;
-    if (layers !== undefined) {
+      if (layers !== undefined) {
         let allLayers = this.state.allLayers;
         allLayers[group.value] = layers;
-        
+
         // FETCH THE REST OF THE GROUPS
-        const fetchGroups = (allGroups) => {
-            allGroups.forEach(groupItem => {
+        const fetchGroups = allGroups => {
+          allGroups.forEach(groupItem => {
             if (group.value !== groupItem.value) {
               let layersItems = this.state.allLayers[groupItem.value];
               if (layersItems === undefined) {
@@ -142,14 +144,14 @@ class Layers extends Component {
               }
             }
           });
-        }
+        };
         fetchGroups(allGroups);
         this.setState({ layers: layers, allLayers: allLayers }, () => {
           this.sortLayers(this.state.layers, sortAlpha);
         });
         return;
       }
-    }else{
+    } else {
       this.setState({ layers: layers }, () => {
         this.sortLayers(this.state.layers, sortAlpha);
       });
@@ -163,31 +165,31 @@ class Layers extends Component {
       this.setState({ layers: layers, allLayers: allLayers }, () => {
         this.sortLayers(this.state.layers, sortAlpha);
 
-        const fetchGroups = (allGroups) =>{ // FETCH THE REST OF THE GROUPS
+        const fetchGroups = allGroups => {
+          // FETCH THE REST OF THE GROUPS
           allGroups.forEach(groupItem => {
-          const layersItem = this.state.allLayers[groupItem.value];
+            const layersItem = this.state.allLayers[groupItem.value];
 
-          if (layersItem === undefined) {
-            TOCHelpers.getBasicLayers(groupItem, layers => {
-              let allLayers = this.state.allLayers;
-              allLayers[groupItem.value] = layers;
-              this.setState({ allLayers: allLayers });
-            });
-          }
-        });
+            if (layersItem === undefined) {
+              TOCHelpers.getBasicLayers(groupItem, layers => {
+                let allLayers = this.state.allLayers;
+                allLayers[groupItem.value] = layers;
+                this.setState({ allLayers: allLayers });
+              });
+            }
+          });
         };
         fetchGroups(allGroups);
       });
     });
-    
   };
 
   // isVisibleFromConfig()
   sortByAlphaCompare(a, b) {
-    if (a.displayName < b.displayName) {
+    if (a.tocDisplayName < b.tocDisplayName) {
       return -1;
     }
-    if (a.displayName > b.displayName) {
+    if (a.tocDisplayName > b.tocDisplayName) {
       return 1;
     }
     return 0;
@@ -220,7 +222,7 @@ class Layers extends Component {
     allLayers[this.props.group.value] = newLayers;
 
     this.setState({ layers: newLayers, allLayers: allLayers }, () => {
-      window.allLayers = this.state.allLayers;
+      window.allLayers = Object.values(this.state.allLayers);
       if (callback !== undefined) callback();
     });
   };
@@ -239,25 +241,24 @@ class Layers extends Component {
       if (layers !== undefined) {
         // DISABLE LAYER VISIBILITY FROM PREVIOUS GROUP
         TOCHelpers.disableLayersVisiblity(layers, newLayers => {
-          
           allLayers[this.props.group.value] = newLayers;
           this.setState({ allLayers: allLayers }, () => {
             // ENABLE LAYER VISIBILITY FROM PREVIOUS GROUP
-           
+
             if (nextLayers !== undefined) {
               TOCHelpers.enableLayersVisiblity(nextLayers, newLayers => {
                 let allLayers = this.state.allLayers;
                 allLayers[nextProps.group.value] = newLayers;
-                this.setState({ layers: newLayers, allLayers: allLayers, allGroups:allGroups }, () => {
-                  this.refreshLayers(nextProps.group, nextProps.sortAlpha,nextProps.allGroups);
+                this.setState({ layers: newLayers, allLayers: allLayers, allGroups: allGroups }, () => {
+                  this.refreshLayers(nextProps.group, nextProps.sortAlpha, nextProps.allGroups);
                 });
               });
             } else {
-              this.refreshLayers(nextProps.group, nextProps.sortAlpha,nextProps.allGroups);
+              this.refreshLayers(nextProps.group, nextProps.sortAlpha, nextProps.allGroups);
             }
           });
         });
-      } else this.refreshLayers(nextProps.group, nextProps.sortAlpha,nextProps.allGroups);
+      } else this.refreshLayers(nextProps.group, nextProps.sortAlpha, nextProps.allGroups);
     }
   }
 
@@ -395,6 +396,9 @@ class Layers extends Component {
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoom-to-layer">
             <FloatingMenuItem imageName={"zoom-in.png"} label="Zoom to Layer" />
           </MenuItem>
+          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoom-to-layer-visible">
+            <FloatingMenuItem imageName={"zoom-in.png"} label="Zoom to Visible Scale" />
+          </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-download">
             <FloatingMenuItem imageName={"download.png"} label="Download" />
           </MenuItem>
@@ -423,6 +427,8 @@ class Layers extends Component {
         const extent = [boundingBox.minx, boundingBox.miny, boundingBox.maxx, boundingBox.maxy];
         window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
       });
+    } else if (action === "sc-floating-menu-zoom-to-layer-visible") {
+      this.zoomToVisibleScale(layerInfo);
     } else if (action === "sc-floating-menu-download") {
       helpers.showMessage("Download", "Coming Soon!");
       // TOCHelpers.getLayerInfo(layerInfo, result => {
@@ -439,6 +445,41 @@ class Layers extends Component {
     helpers.addAppStat("Layer Options", action);
   };
 
+  zoomToVisibleScale = layerInfo => {
+    const scales = [1155581, 577791, 288895, 144448, 72224, 36112, 18056, 9028, 4514, 2257, 1128, 564];
+
+    const scale = helpers.getMapScale();
+    let minScale = 0;
+    let maxScale = 100000000000;
+    if (layerInfo.minScale !== undefined) minScale = layerInfo.minScale[0];
+    if (layerInfo.maxScale !== undefined) maxScale = layerInfo.maxScale[0];
+
+    if (scale >= minScale && scale <= maxScale) {
+      helpers.showMessage("Zoom to Visible Scale", "Layer is already visible at this scale.");
+      return;
+    }
+
+    if (scale < minScale) {
+      const flipped = scales.reverse();
+      let index = 20;
+      flipped.forEach(scaleItem => {
+        if (scaleItem >= minScale) {
+          window.map.getView().setZoom(index);
+          return;
+        }
+        index--;
+      });
+    } else if (scale > maxScale) {
+      let index = 9;
+      scales.forEach(scaleItem => {
+        if (scaleItem <= maxScale) {
+          window.map.getView().setZoom(index);
+          return;
+        }
+        index++;
+      });
+    }
+  };
   toggleAllLegends = type => {
     let showLegend = true;
     if (type === "CLOSE") showLegend = false;
@@ -489,10 +530,11 @@ class Layers extends Component {
     if (this.state.layers === undefined) return <div />;
 
     // FILTER LAYERS FROM SEARCH INPUT
+    // eslint-disable-next-line
     const layers = this.state.layers.filter(layer => {
       if (this.props.searchText === "") return layer;
 
-      if (layer.displayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1) return layer;
+      if (layer.tocDisplayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1) return layer;
     });
 
     return (

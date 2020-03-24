@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import "./MyMapsItem.css";
-import * as helpers from "../../../helpers/helpers";
 import * as myMapsHelpers from "./myMapsHelpers";
 import Feature from "ol/Feature";
 import VectorLayer from "ol/layer/Vector";
@@ -22,7 +21,7 @@ class MyMapsItem extends Component {
   // LABEL INPUT
   onLabelTextChange = evt => {
     this.setState({ label: evt.target.value });
-    this.props.onLabelChange(this.props.info, evt.target.value);
+    this.props.onLabelChange(this.props.info.id, evt.target.value);
   };
 
   // DELETE BUTTON

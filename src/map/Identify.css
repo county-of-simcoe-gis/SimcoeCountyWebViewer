@@ -53,8 +53,10 @@
 }
 
 .sc-identify-feature-header-img {
-  display: inline-block;
-  vertical-align: middle;
+  position: relative;
+  right: 12px;
+  float: right;
+  bottom: 28px;
 }
 
 .sc-identify-loading {
@@ -128,4 +130,9 @@
   border-bottom-right-radius: 0px;
   border-bottom-left-radius: 0px;
   background-color: white; */
+}
+
+.sc-identify-layer-name {
+  font-size: 9pt;
+  color: dimgray;
 }
