@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React from "react";
 import { InfoRow } from "../../../../helpers/InfoRow.jsx";
 import * as helpers from "../../../../helpers/helpers";
 import "./LocalRealEstatePopupContent.css";
@@ -38,10 +38,14 @@ const LocalRealEstatePopupContent = props => {
     props.onViewed(feature);
   };
 
+  const useNoPhoto = ev => {
+    ev.target.src = images["noPhoto.png"];
+  };
+
   return (
     <div>
       <div style={{ textAlign: "center" }}>
-        <img src={urlThumb} alt="logo" />
+        <img src={urlThumb} alt="logo" onError={useNoPhoto} />
       </div>
       {entries.map(row => {
         if (row[0] !== "Address" && row[0] !== "Municipality") return null;
@@ -70,3 +74,11 @@ const LocalRealEstatePopupContent = props => {
 };
 
 export default LocalRealEstatePopupContent;
+
+// IMPORT ALL IMAGES
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
+function importAllImages(r) {
+  let images = {};
+  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
+  return images;
+}

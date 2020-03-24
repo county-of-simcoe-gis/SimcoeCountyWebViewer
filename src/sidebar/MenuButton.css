@@ -67,7 +67,14 @@
   border: 1px solid #90b5d5;
   background: rgb(242, 245, 246); /* Old browsers */
   background: -moz-linear-gradient(top, rgba(242, 245, 246, 1) 0%, rgba(227, 234, 237, 1) 37%, rgba(200, 215, 220, 1) 100%); /* FF3.6+ */
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, rgba(242, 245, 246, 1)), color-stop(37%, rgba(227, 234, 237, 1)), color-stop(100%, rgba(200, 215, 220, 1))); /* Chrome,Safari4+ */
+  background: -webkit-gradient(
+    linear,
+    left top,
+    left bottom,
+    color-stop(0%, rgba(242, 245, 246, 1)),
+    color-stop(37%, rgba(227, 234, 237, 1)),
+    color-stop(100%, rgba(200, 215, 220, 1))
+  ); /* Chrome,Safari4+ */
   background: -webkit-linear-gradient(top, rgba(242, 245, 246, 1) 0%, rgba(227, 234, 237, 1) 37%, rgba(200, 215, 220, 1) 100%); /* Chrome10+,Safari5.1+ */
   background: -o-linear-gradient(top, rgba(242, 245, 246, 1) 0%, rgba(227, 234, 237, 1) 37%, rgba(200, 215, 220, 1) 100%); /* Opera 11.10+ */
   background: -ms-linear-gradient(top, rgba(242, 245, 246, 1) 0%, rgba(227, 234, 237, 1) 37%, rgba(200, 215, 220, 1) 100%); /* IE10+ */
@@ -136,12 +143,18 @@
   font-size: 9pt;
 }
 
+.sc-menu-button-main-container {
+  position: absolute;
+  bottom: 9px;
+  right: -49px;
+}
+
 @media only screen and (max-width: 770px) {
-  #sc-menu-button-container {
+  .sc-menu-button-container {
     display: none;
   }
 
   #sc-menu-button-list-container {
-    display: none;
+    bottom: 0px;
   }
 }

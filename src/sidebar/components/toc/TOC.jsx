@@ -39,7 +39,7 @@ class TOC extends Component {
   }
 
   onActivateLayer = (groupName, callback) => {
-    const remove_underscore = name => {return helpers.replaceAllInString(name, "_", " ");}
+    //const remove_underscore = name => {return helpers.replaceAllInString(name, "_", " ");}
     window.emitter.emit("setSidebarVisiblity", "OPEN");
     window.emitter.emit("activateTab", "layers");
 
@@ -65,34 +65,18 @@ class TOC extends Component {
   }
 
   refreshTOC = callback => {
-      sessionStorage.removeItem(this.storageMapDefaultsKey); 
-      let geoserverUrl= helpers.getURLParameter("GEO_URL");
-      let geoserverUrlType = helpers.getURLParameter("GEO_TYPE");
-      if (geoserverUrl === null) 
-      {
-        geoserverUrl = TOCConfig.geoserverLayerGroupsUrl;
-      }
-      else
-      {
-          geoserverUrl = geoserverUrl + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
-      }
-      if (geoserverUrlType === null) geoserverUrlType = TOCConfig.geoserverLayerGroupsUrlType;
-      if (geoserverUrl !== undefined && geoserverUrl !== null){
-        TOCHelpers.getGroupsGC(geoserverUrl,geoserverUrlType ,result => {
-          const groupInfo = result;
-          this.setState(
-            {
-              layerGroups: groupInfo[0],
-              selectedGroup: groupInfo[1],
-              defaultGroup: groupInfo[1]
-            },
-            () => {
-              if (callback !== undefined) callback();
-            }
-          );
-        });
-      } else {
-      const groupInfo = TOCHelpers.getGroups();
+    sessionStorage.removeItem(this.storageMapDefaultsKey);
+    let geoserverUrl = helpers.getURLParameter("GEO_URL");
+    let geoserverUrlType = helpers.getURLParameter("GEO_TYPE");
+    if (geoserverUrl === null) {
+      geoserverUrl = TOCConfig.geoserverLayerGroupsUrl;
+    } else {
+      geoserverUrl = geoserverUrl + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
+    }
+    if (geoserverUrlType === null) geoserverUrlType = TOCConfig.geoserverLayerGroupsUrlType;
+    if (geoserverUrl !== undefined && geoserverUrl !== null) {
+      TOCHelpers.getGroupsGC(geoserverUrl, geoserverUrlType, result => {
+        const groupInfo = result;
         this.setState(
           {
             layerGroups: groupInfo[0],
@@ -101,8 +85,22 @@ class TOC extends Component {
           },
           () => {
             if (callback !== undefined) callback();
-          });
-      }
+          }
+        );
+      });
+    } else {
+      const groupInfo = TOCHelpers.getGroups();
+      this.setState(
+        {
+          layerGroups: groupInfo[0],
+          selectedGroup: groupInfo[1],
+          defaultGroup: groupInfo[1]
+        },
+        () => {
+          if (callback !== undefined) callback();
+        }
+      );
+    }
   };
 
   onGroupDropDownChange = selectedGroup => {
@@ -125,9 +123,8 @@ class TOC extends Component {
   };
 
   reset = () => {
-    
     const defaultGroup = this.state.defaultGroup;
-    this.setState({ sortAlpha: false, selectedGroup: defaultGroup }, () => {
+    this.setState({ sortAlpha: false, selectedGroup: defaultGroup, searchText: "" }, () => {
       this.refreshTOC(() => {
         setTimeout(() => {
           this.layerRef.resetLayers();
@@ -207,7 +204,13 @@ class TOC extends Component {
         </div>
         <div className={this.state.isLoading ? "sc-toc-main-container sc-hidden" : "sc-toc-main-container"}>
           <div className="sc-toc-search-container">
-            <input id="sc-toc-search-textbox" className="sc-toc-search-textbox" placeholder={"Filter (" + this.state.layerCount + " layers)..."} onChange={this.onSearchLayersChange} />
+            <input
+              id="sc-toc-search-textbox"
+              className="sc-toc-search-textbox"
+              placeholder={"Filter (" + this.state.layerCount + " layers)..."}
+              onChange={this.onSearchLayersChange}
+              value={this.state.searchText}
+            />
             <div data-tip="Save Layer Visibility" data-for="sc-toc-save-tooltip" className="sc-toc-search-save-image" onClick={this.onSaveClick}>
               <ReactTooltip id="sc-toc-save-tooltip" className="sc-toc-save-tooltip" multiline={false} place="right" type="dark" effect="solid" />
             </div>

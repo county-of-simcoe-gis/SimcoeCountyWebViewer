@@ -35,6 +35,7 @@ class LocalRealEstateRecents extends Component {
                           e.target.onerror = null;
                           e.target.src = images["noPhoto.png"];
                         }}
+                        alt="not found"
                       />
                     </div>
                     <div className="sc-theme-real-estate-recent-info">
