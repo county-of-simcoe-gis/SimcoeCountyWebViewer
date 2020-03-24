@@ -10,8 +10,8 @@ import { isMobile } from "react-device-detect";
 // CUSTOM
 import "./TOC.css";
 import * as helpers from "../../../helpers/helpers";
-import * as TOCHelpers from "./TOCHelpers.jsx";
-import TOCConfig from "./TOCConfig.json";
+import * as TOCHelpers from "../common/TOCHelpers.jsx";
+import TOCConfig from "../common/TOCConfig.json";
 import Layers from "./Layers.jsx";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";

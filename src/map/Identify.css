@@ -7,6 +7,18 @@
   overflow-y: auto;
 }
 
+.sc-identiy-feature-iframe {
+  width:100%;
+  height:100%; 
+}
+
+.sc-identiy-feature-iframe>iframe {
+  border-width: 0px;
+  width:100%;
+  
+  
+}
+
 .sc-identify-layer-content-container {
   padding: 5px;
   background-color: white;

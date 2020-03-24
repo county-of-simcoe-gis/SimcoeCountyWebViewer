@@ -1,6 +1,7 @@
 import React, { Component, useState } from "react";
 import "./Identify.css";
 import * as helpers from "../helpers/helpers";
+import mainConfig from "../config.json";
 import Collapsible from "react-collapsible";
 import { GeoJSON } from "ol/format.js";
 import InfoRow from "../helpers/InfoRow.jsx";
@@ -62,7 +63,7 @@ class Identify extends Component {
               featureList.forEach(feature => {
                 features.push(feature);
               });
-              if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type });
+              if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, html_url: html_url });
               this.setState({ layers: layerList });
             }
           });
@@ -194,6 +195,21 @@ class Identify extends Component {
 }
 export default Identify;
 
+function _getLayerObj(layerName, callback) {
+  let data= {};
+  window.allLayers.forEach(group => {
+    group.forEach(layer => {
+      if (layer.name.toLowerCase() === layerName.toLowerCase()) data = layer;
+    });
+  });
+
+  if (callback !== undefined) {
+    //console.log(data);
+    callback(data);
+  }
+  return data;
+}
+
 const Layer = props => {
   const [open] = useState(true);
 
@@ -208,18 +224,38 @@ const Layer = props => {
             <FeatureItem
               key={helpers.getUID()}
               displayName={props.layer.displayName}
+              identifyTitleColumn={layerObj !== undefined ? layerObj.identifyTitleColumn : ""}
+              identifyIdColumn={layerObj !== undefined ? layerObj.identifyIdColumn : "" }
               feature={feature}
+              html_url={layer.html_url}
               onZoomClick={props.onZoomClick}
               onMouseEnter={props.onMouseEnter}
               onMouseLeave={props.onMouseLeave}
               layerName={props.layer.name}
             ></FeatureItem>
           ))}
+          
         </div>
       </Collapsible>
     </div>
   );
 };
+
+const IFrame = props => {
+  let src = props.src;
+  const [iframeRef, iframeHeight] = useIframeContentHeight();
+  if (props.filter === "" ) {
+    return ("");
+  }else{
+    src += "&CQL_FILTER=" + props.filter;
+  }
+
+  return (
+      <div className="sc-identiy-feature-iframe">
+        <iframe key={helpers.getUID()} ref={iframeRef} height={iframeHeight} src={src}  />
+      </div>
+    );
+}
 
 const FeatureItem = props => {
   const [open, setOpen] = useState(false);
@@ -260,7 +296,6 @@ const FeatureItem = props => {
           }
         })}
       </div>
-    </div>
   );
 };
 

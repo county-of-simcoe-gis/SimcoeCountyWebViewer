@@ -1,5 +1,5 @@
 import * as helpers from "../../../helpers/helpers";
-import TOCConfig from "./TOCConfig.json";
+import TOCConfig from "../common/TOCConfig.json";
 import xml2js from "xml2js";
 
 // INDEX WHERE THE TOC LAYERS SHOULD START DRAWING AT
@@ -62,7 +62,9 @@ export async function getGroupsGC(url, urlType, callback) {
           let keywords = [];
           if (layerInfo.KeywordList[0] !== undefined) keywords = layerInfo.KeywordList[0].Keyword;
           let visibleLayers = [];
+          let groupPrefix = "";
           if (keywords !== undefined) visibleLayers = _getVisibleLayers(keywords);
+          if (keywords !== undefined) groupPrefix = _getGroupPrefix(keywords);
           let layerList = [];
           if (layerInfo.Layer !== undefined) {
             const groupLayerList = layerInfo.Layer;
@@ -72,6 +74,7 @@ export async function getGroupsGC(url, urlType, callback) {
               value: groupName,
               label: remove_underscore(groupDisplayName),
               url: groupUrl,
+              prefix:groupPrefix,
               defaultGroup: isDefault,
               visibleLayers: visibleLayers,
               wmsGroupUrl: fullGroupUrl
@@ -240,6 +243,11 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
 
     // OPACITY
     let opacity = _getOpacity(keywords);
+
+    //IDENTIFY 
+    let identifyTitleColumn = _getIdentifyTitle(keywords);
+    let identifyIdColumn = _getIdentifyId(keywords);
+
     const minScale = layer.MinScaleDenominator;
     const maxScale = layer.MaxScaleDenominator;
     // SET VISIBILITY
@@ -251,7 +259,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
 
     // LAYER PROPS
     let newLayer = helpers.getImageWMSLayer(serverUrl + "/wms", layer.Name[0]);
-    newLayer.setVisible(!group.defaultGroup ? false : layerVisible);
+    newLayer.setVisible( layerVisible);
     newLayer.setOpacity(opacity);
     newLayer.setProperties({ name: layerNameOnly, displayName: tocDisplayName, disableParcelClick: liveLayer });
     newLayer.setZIndex(layerIndex);
@@ -409,7 +417,9 @@ export function getLayerListByGroupCustomRest(group, callback) {
 
         // // OPACITY
         let opacity = _getOpacity(keywords);
-
+        //IDENTIFY 
+        let identifyTitleColumn = _getIdentifyTitle(keywords);
+        let identifyIdColumn = _getIdentifyId(keywords);
         // SET VISIBILITY
         let layerVisible = false;
         if (savedLayers !== undefined) {
@@ -467,6 +477,17 @@ function _isLiveLayer(keywords) {
   else return false;
 }
 
+function _getGroupPrefix(keywords) {
+  if (keywords === undefined)  return "";
+  const groupPrefixKeyword = keywords.find(function(item) {
+    return item.indexOf("GROUP_PREFIX") !== -1;
+  });
+  if (groupPrefixKeyword !== undefined) {
+    const val = groupPrefixKeyword.split("=")[1];
+    return val;
+  } else return "";
+}
+
 function _getDisplayName(keywords) {
   if (keywords === undefined) return "";
   const displayNameKeyword = keywords.find(function(item) {
@@ -474,6 +495,28 @@ function _getDisplayName(keywords) {
   });
   if (displayNameKeyword !== undefined) {
     const val = displayNameKeyword.split("=")[1];
+    return val;
+  } else return "";
+}
+
+function _getIdentifyTitle(keywords) {
+  if (keywords === undefined)  return "";
+  const identifyTitleColumn = keywords.find(function(item) {
+    return item.indexOf("IDENTIFY_TITLE_COLUMN") !== -1;
+  });
+  if (identifyTitleColumn !== undefined) {
+    const val = identifyTitleColumn.split("=")[1];
+    return val;
+  } else return "";
+}
+
+function _getIdentifyId(keywords) {
+  if (keywords === undefined)  return "";
+  const identifyIdColumn = keywords.find(function(item) {
+    return item.indexOf("IDENTIFY_ID_COLUMN") !== -1;
+  });
+  if (identifyIdColumn !== undefined) {
+    const val = identifyIdColumn.split("=")[1];
     return val;
   } else return "";
 }
@@ -547,8 +590,8 @@ export function turnOffLayers(layers, callback) {
   for (let index = 0; index < layers.length; index++) {
     const layer = layers[index];
     layer.layer.setVisible(false);
+    layer.visible = false;
     let newLayer = Object.assign({}, layer);
-    newLayer.visible = false;
     newLayers.push(newLayer);
     if (index === layers.length - 1) callback(newLayers);
   }
