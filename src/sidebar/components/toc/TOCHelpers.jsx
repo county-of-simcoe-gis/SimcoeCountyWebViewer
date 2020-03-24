@@ -115,6 +115,8 @@ export async function getGroupsGC(url, urlType, callback) {
       });
     });
     if (defaultGroup === undefined || defaultGroup === null) defaultGroup = groups[0];
+
+    window.emitter.emit("tocLoaded", null);
     callback([groups, defaultGroup]);
   });
 }

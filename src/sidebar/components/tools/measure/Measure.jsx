@@ -422,9 +422,11 @@ class Measure extends Component {
     if (type === "Clear") {
       this.reset();
       this.setState({ geometryType: type, unitType: unitType });
+      window.isMeasuring = false;
     } else {
       this.setState({ geometryType: type, unitType: unitType }, () => {
         this.addInteraction();
+        window.isMeasuring = true;
       });
     }
   };
