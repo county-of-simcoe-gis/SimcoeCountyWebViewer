@@ -59,7 +59,7 @@
   z-index: 1;
   padding: 6px !important;
   background-color: #fff !important;
-  max-height: 240px !important;
+  max-height: 275px !important;
   min-height: 50px !important;
   overflow: hidden;
 }
@@ -120,6 +120,9 @@
   }
   .ol-scale-line {
     left: 5px;
+  }
+  .ol-overlaycontainer-stopevent {
+    z-index: 1 !important;
   }
 }
 

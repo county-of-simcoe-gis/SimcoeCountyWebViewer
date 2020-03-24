@@ -7,7 +7,7 @@ import * as config from "./config.json";
 import GeoJSON from "ol/format/GeoJSON.js";
 import { Vector as VectorLayer } from "ol/layer.js";
 import { Vector as VectorSource } from "ol/source.js";
-import { Circle as CircleStyle, Icon, Fill, Stroke, Style } from "ol/style.js";
+import { Icon, Style } from "ol/style.js";
 import Point from "ol/geom/Point";
 import Feature from "ol/Feature";
 import { unByKey } from "ol/Observable.js";
@@ -115,8 +115,7 @@ class ExternalServices extends Component {
     return (
       <PanelComponent onClose={this.onClose} name={this.props.name} type="tools">
         <div className="sc-tool-external-services-container" style={{ fontSize: "11pt" }}>
-          Explore a selected location using a variety of external service providers (i.e. Google Maps, Yahoo and Bing). Simply click on a location and select the desired link that
-          appears.
+          Explore a selected location using a variety of external service providers (i.e. Google Maps, Yahoo and Bing). Simply click on a location and select the desired link that appears.
           <div>
             {this.state.groups.map(group => (
               <ExternalServicesGroup key={helpers.getUID()} group={group} coords={this.state.coords} address={this.state.address}></ExternalServicesGroup>
@@ -137,7 +136,7 @@ const ExternalServicesGroup = props => {
     <div className="sc-tool-external-services-item-group">
       <div className="sc-container sc-tool-external-services-item-header">
         <div className="sc-tool-external-services-item-header">
-          <img className="sc-tool-external-services-item-image" src={images[group.icon]}></img>
+          <img className="sc-tool-external-services-item-image" src={images[group.icon]} alt={group.groupName}></img>
           <span className="">{group.groupName}</span>
         </div>
       </div>
@@ -153,10 +152,11 @@ const ExternalServicesGroup = props => {
 const ExternalServicesLink = props => {
   const { link, coords, address } = props;
 
+  // eslint-disable-next-line
   const template = (x, y, address) => eval("`" + link.url + "`");
   return (
     <div className="sc-tool-external-services-item-link">
-      <a href={template(coords[0], coords[1], address)} target="_blank">
+      <a href={template(coords[0], coords[1], address)} target="_blank" rel="noopener noreferrer">
         {link.name}
       </a>
     </div>

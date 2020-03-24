@@ -5,7 +5,7 @@ import { CompactPicker } from "react-color";
 import * as helpers from "../../../helpers/helpers";
 import mainConfig from "../../../config.json";
 import Feature from "ol/Feature";
-import { Stroke, Style, Fill, Circle as CircleStyle } from "ol/style";
+import { Stroke, Style, Fill } from "ol/style";
 import VectorLayer from "ol/layer/Vector";
 import { Vector as VectorSource } from "ol/source.js";
 import Projection from "ol/proj/Projection.js";
@@ -160,8 +160,8 @@ class MyMapsBuffer extends Component {
     return (
       <div className={this.props.visible ? "sc-fieldset" : "sc-hidden"}>
         <legend>
-          <img src={images["buffer.png"]} />
-          Buffer
+          <img src={images["buffer.png"]} alt="buffer" />
+          &nbsp; Buffer
         </legend>
         <div className="sc-mymaps-buffer-container">
           <label style={{ gridColumnStart: "1" }}>Distance:</label>

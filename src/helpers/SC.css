@@ -200,6 +200,7 @@ p {
   background-position: left;
   font-size: 11px;
   word-wrap: break-word;
+  min-height: 10px;
 }
 
 .sc-no-select {
@@ -382,4 +383,13 @@ input[type="number"]::-webkit-outer-spin-button {
   border: 1px solid #aeaeae;
   line-height: 16px;
   padding: 6px 10px 5px;
+}
+
+.sc-live-layer-popup-content {
+  position: relative;
+  top: 0;
+  bottom: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 240px;
 }

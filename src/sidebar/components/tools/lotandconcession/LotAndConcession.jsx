@@ -5,7 +5,7 @@ import * as helpers from "../../../../helpers/helpers";
 import mainConfig from "../../../../config.json";
 import PanelComponent from "../../../PanelComponent";
 import { extend } from "ol/extent.js";
-import { Circle as CircleStyle, Icon, Fill, Stroke, Style } from "ol/style.js";
+import { Fill, Stroke, Style } from "ol/style.js";
 import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
 
@@ -22,7 +22,7 @@ class ToolComponent extends Component {
       features: []
     };
     this.layer = null;
-    this.layerName = "simcoe:Lot And Concession - Tool";
+    this.layerName = "simcoe:Lot_And_Concession_Tool";
     this.createShadowLayer();
   }
 
@@ -65,13 +65,13 @@ class ToolComponent extends Component {
     }
 
     if (this.layer !== null) window.map.removeLayer(this.layer);
-    let sql = "description <> 'Road Allowance'";
-    if (this.state.selectedMuni.value !== "SEARCH ALL") sql += " AND geog_twp = '" + this.state.selectedMuni.value + "'";
+    let sql = "_description <> 'Road Allowance'";
+    if (this.state.selectedMuni.value !== "SEARCH ALL") sql += " AND _geog_twp = '" + this.state.selectedMuni.value + "'";
     if (this.state.lotNumber.length !== 0) {
-      sql += " AND lot = '" + this.state.lotNumber + "' ";
+      sql += " AND _lot = '" + this.state.lotNumber.toUpperCase() + "' ";
     }
     if (this.state.concessionNumber.length !== 0) {
-      sql += " AND con = '" + this.state.concessionNumber + "' ";
+      sql += " AND _con = '" + this.state.concessionNumber.toUpperCase() + "' ";
     }
 
     // if (sql === "") sql = "lot <> ' ' AND con <> ' '";
@@ -88,7 +88,7 @@ class ToolComponent extends Component {
       result => {
         this.updateFeatures(result);
       },
-      "lot,con",
+      "_lot,_con",
       null,
       sql,
       1000
@@ -96,7 +96,6 @@ class ToolComponent extends Component {
   };
 
   updateFeatures = features => {
-    console.log(features);
     this.setState({ features });
 
     let extent = features[0]
@@ -209,9 +208,9 @@ class ToolComponent extends Component {
 export default ToolComponent;
 
 const Results = props => {
-  const lot = props.feature.get("lot");
-  const con = props.feature.get("con");
-  const muni = props.feature.get("geog_twp");
+  const lot = props.feature.get("_lot");
+  const con = props.feature.get("_con");
+  const muni = props.feature.get("_geog_twp");
   return (
     <div
       className="sc-container sc-tool-lot-and-concession-item"
@@ -316,11 +315,3 @@ const munis = [
     label: "WEST GWILLIMBURY"
   }
 ];
-
-// IMPORT ALL IMAGES
-const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
-function importAllImages(r) {
-  let images = {};
-  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
-  return images;
-}

@@ -50,7 +50,7 @@ class MyMapsAdvanced extends Component {
   onSave = () => {
     this.setState({ copied: true });
     myMapsHelpers.exportMyMaps(result => {
-      helpers.showMessage("MyMaps Save", "MyMaps have been saved!  Your ID has been saved to clipboard.");
+      helpers.showMessage("MyMaps Save", "MyMaps have been saved!  Your ID has been saved to clipboard.", undefined, 5000);
       helpers.glowContainer(this.inputId);
       this.setState({ inputText: result.id });
       copy(result.id);
@@ -118,21 +118,21 @@ class MyMapsAdvanced extends Component {
 
 export default MyMapsAdvanced;
 
-const selectStyles = {
-  control: provided => ({
-    ...provided,
-    minHeight: "30px"
-  }),
-  indicatorsContainer: provided => ({
-    ...provided,
-    height: "30px"
-  }),
-  clearIndicator: provided => ({
-    ...provided,
-    padding: "5px"
-  }),
-  dropdownIndicator: provided => ({
-    ...provided,
-    padding: "5px"
-  })
-};
+// const selectStyles = {
+//   control: provided => ({
+//     ...provided,
+//     minHeight: "30px"
+//   }),
+//   indicatorsContainer: provided => ({
+//     ...provided,
+//     height: "30px"
+//   }),
+//   clearIndicator: provided => ({
+//     ...provided,
+//     padding: "5px"
+//   }),
+//   dropdownIndicator: provided => ({
+//     ...provided,
+//     padding: "5px"
+//   })
+// };
