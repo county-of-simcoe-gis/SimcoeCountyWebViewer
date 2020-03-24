@@ -11,11 +11,11 @@ import GeoJSON from "ol/format/GeoJSON.js";
 // CUSTOM
 import "./Layers.css";
 import * as helpers from "../../../helpers/helpers";
-import * as TOCHelpers from "./TOCHelpers.jsx";
+import * as TOCHelpers from "../common/TOCHelpers.jsx";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
 import Portal from "../../../helpers/Portal.jsx";
-import TOCConfig from "./TOCConfig.json";
+import TOCConfig from "../common/TOCConfig.json";
 
 const SortableVirtualList = sortableContainer(VirtualLayers, { withRef: true });
 

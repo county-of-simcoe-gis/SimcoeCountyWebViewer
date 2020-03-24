@@ -185,7 +185,7 @@ class Search extends Component {
         source: new VectorSource({
           features: []
         }),
-        zIndex: 1000
+        zIndex: 100000
       });
       searchGeoLayer.set("name", "sc-search-geo");
       window.map.addLayer(searchGeoLayer);
@@ -195,7 +195,7 @@ class Search extends Component {
         source: new VectorSource({
           features: []
         }),
-        zIndex: 1000
+        zIndex: 100000
       });
       searchIconLayer.setStyle(styles["point"]);
       searchIconLayer.set("name", "sc-search-icon");
@@ -283,8 +283,8 @@ class Search extends Component {
 
       fullFeature.setStyle(pointStyle);
     } else {
-      let defaultStyle = myMapsHelpers.getDefaultDrawStyle([255, 0, 0, 0.8], false, 2, fullFeature.getGeometry().getType());
-      defaultStyle.setFill(new Fill({ color: [255, 0, 0, 0] }));
+      let defaultStyle = myMapsHelpers.getDefaultDrawStyle([102, 255, 102, 0.3], false, 6, fullFeature.getGeometry().getType());
+      defaultStyle.setFill(new Fill({ color: [102, 255, 102, 0.3] }));
       fullFeature.setStyle(defaultStyle);
     }
   }
@@ -353,8 +353,8 @@ class Search extends Component {
       // SET SOURCE
       searchIconLayer.getSource().addFeature(feature);
 
-      searchGeoLayer.setZIndex(100);
-      searchIconLayer.setZIndex(100);
+    // searchGeoLayer.setZIndex(100);
+    // searchIconLayer.setZIndex(100);
 
       // SET STYLE AND ZOOM
       searchGeoLayer.setStyle(styles["point"]);
@@ -570,9 +570,9 @@ class Search extends Component {
                 <div className="sc-search-item-left">
                   <img src={item.imageName === undefined ? images["map-marker-light-blue.png"] : images[item.imageName]} alt="blue pin" />
                 </div>
-                <div className="sc-search-item-content">
+                <div className="sc-search-item-content"> 
                   <Highlighter highlightClassName="sc-search-highlight-words" searchWords={[this.state.value]} textToHighlight={item.name} />
-                  <div className="sc-search-item-sub-content">{type === "" ? item.type : " - " + type + " (" + item.type + ")"}</div>
+                  <div className="sc-search-item-sub-content">{type === "" ? item.type : " - " + type + " (" + item.type + (item.type === "Map Layer" && item.isVisible ? " - Currently Visible" : "") + ")"}</div>
                 </div>
               </div>
             );

@@ -44,9 +44,14 @@ class SCMap extends Component {
       parcelClickText: "Disable Property Click",
       isIE: false
     };
+    // LISTEN FOR MAP CURSOR TO CHANGE
+    window.emitter.addListener("changeCursor", cursorStyle => this.changeCursor(cursorStyle));
   }
 
   componentDidMount() {
+    if (mainConfig.leftClickIdentify) {
+      this.setState({mapClassName:"sc-map identify"});
+    }
     let centerCoords = mainConfig.centerCoords;
     let defaultZoom = mainConfig.defaultZoom;
     const defaultsStorage = sessionStorage.getItem(this.storageMapDefaultsKey);
@@ -193,7 +198,19 @@ class SCMap extends Component {
       }
     });
   }
-
+  changeCursor = (cursorStyle) =>
+  {
+    let cursorStyles = ["standard", "identify"];
+    cursorStyles.splice( cursorStyles.indexOf(cursorStyle), 1 );
+    let classes = this.state.mapClassName.split(" ");
+    if (classes.indexOf(cursorStyle) === -1){
+      cursorStyles.forEach(styleName => {
+        if (classes.indexOf(styleName) !== -1) classes.splice(classes.indexOf(styleName), 1 );
+      });
+      classes.push(cursorStyle);
+      this.setState({mapClassName:classes.join(" ")});
+    }
+  }
   onMenuItemClick = key => {
     if (key === "sc-floating-menu-zoomin") window.map.getView().setZoom(window.map.getView().getZoom() + 1);
     else if (key === "sc-floating-menu-zoomout") window.map.getView().setZoom(window.map.getView().getZoom() - 1);
@@ -303,8 +320,8 @@ class SCMap extends Component {
             helpers.addAppStat("GitHub", "Button");
           }}
         >
-          <GitHubButton href="https://github.com/county-of-simcoe-gis" data-size="large" aria-label="Follow @simcoecountygis on GitHub">
-            Follow @simcoecountygis
+          <GitHubButton href="https://github.com/county-of-simcoe-gis" data-size="large" aria-label="Follow @simcoecountygis on GitHub">	
+            Follow @simcoecountygis	
           </GitHubButton>
         </div>
       </div>
