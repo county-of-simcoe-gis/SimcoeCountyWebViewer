@@ -10,6 +10,8 @@ import VectorLayer from "ol/layer/Vector";
 import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style.js";
 import { Image as ImageLayer } from "ol/layer.js";
 import Feature from "ol/Feature";
+import { AutoSizer } from "react-virtualized";
+import useIframeContentHeight from "react-use-iframe-content-height";
 
 class Identify extends Component {
   constructor(props) {
@@ -47,7 +49,9 @@ class Identify extends Component {
       if (layer.getVisible() && layer instanceof ImageLayer) {
         const name = layer.get("name");
         let displayName = ""; // layer.get("displayName");
+        let html_url = mainConfig.htmlIdentify ? layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "text/html" }) + "&feature_count=1000000" : "" ;
         let type = layer.get("identifyDisplayName");
+        //let type = layer.get("displayName")
         let wfsUrl = layer.get("wfsUrl");
         if (geometry.getType() !== "Point") {
           const feature = new Feature(geometry);
@@ -216,6 +220,9 @@ const Layer = props => {
   const { layer } = props;
 
   console.log(layer);
+  let layerObj = {};
+  _getLayerObj(layer.name, returnResult => layerObj=returnResult);
+ 
   return (
     <div id="sc-identify-layer-container">
       <Collapsible trigger={layer.type} open={open}>
@@ -259,7 +266,9 @@ const IFrame = props => {
 
 const FeatureItem = props => {
   const [open, setOpen] = useState(false);
-  let { feature, displayName } = props;
+  let { feature, displayName, html_url,identifyTitleColumn,identifyIdColumn } = props;
+  if (identifyTitleColumn!==undefined && identifyTitleColumn !== "") displayName = identifyTitleColumn;
+
 
   const featureProps = feature.getProperties();
   const keys = Object.keys(featureProps);
@@ -276,25 +285,44 @@ const FeatureItem = props => {
     if (keys.length === 1) displayName = "No attributes found";
     featureName = "";
   }
+  if (featureName === "") featureName = "N/A";
+  let cql_filter = "";
+  const isSameOrigin = html_url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !== -1;
+
+  keys.map((keyName) => {
+    const val = featureProps[keyName];
+    if (identifyIdColumn !==undefined && identifyIdColumn !== "" ){
+      if (cql_filter === "" && (keyName.toLowerCase().indexOf(identifyIdColumn.toLowerCase()) !== -1 && val !== null) && mainConfig.htmlIdentify && isSameOrigin) cql_filter += keyName + "=" + val;
+    }else{
+      if (cql_filter === "" && (keyName.toLowerCase().indexOf("id") !== -1 && val !== null) && mainConfig.htmlIdentify && isSameOrigin) cql_filter += keyName + "=" + val;
+    }
+  })
   return (
     <div>
       <div className="sc-identify-feature-header" onMouseEnter={() => props.onMouseEnter(feature)} onMouseLeave={props.onMouseLeave}>
         <div style={{ width: "290px" }} onClick={() => setOpen(!open)}>
-          <div className="sc-fakeLink sc-identify-feature-header-label">{displayName + ": " + featureName}</div>
+          <div className="sc-fakeLink sc-identify-feature-header-label">
+            {mainConfig.excludeIdentifyTitleName ? featureName : displayName + ": " + featureName}
+          </div>
           <div className="sc-identify-layer-name">{"- " + layerName}</div>
         </div>
 
         <img className="sc-identify-feature-header-img" src={images["zoom-in.png"]} onClick={() => props.onZoomClick(feature)} alt="Zoom In"></img>
       </div>
-      <div className={open ? "sc-identify-feature-content" : "sc-hidden"}>
-        {// eslint-disable-next-line
-        keys.map((keyName, i) => {
-          // UNDERSCORES IN FRONT OF FIELD NAME INDICATES ITS FOR INTERNAL USE ONLY
-          if (keyName.substring(0, 1) !== "_") {
+  
+        
+        <div className={open ? "sc-identify-feature-content" : "sc-hidden"}  >
+      
+        <IFrame key={helpers.getUID()} src={html_url} filter={cql_filter} />
+        
+        
+          {keys.map((keyName, i) => {
             const val = featureProps[keyName];
-            if (keyName !== "geometry" && keyName !== "geom" && typeof val !== "object") return <InfoRow key={helpers.getUID()} label={keyName} value={val}></InfoRow>;
-          }
-        })}
+            if (cql_filter==="" && keyName !== "geometry" && keyName !== "geom" && typeof val !== "object") return <InfoRow key={helpers.getUID()} label={keyName} value={val}></InfoRow>;
+            // <div key={helpers.getUID()}>TEST</div>
+          })}
+        </div>
+  
       </div>
   );
 };
