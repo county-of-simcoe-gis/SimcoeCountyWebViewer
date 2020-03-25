@@ -202,13 +202,18 @@ export function getPointStyle(pointType = "circle", radius = 5, strokeColor = "b
       })
     });
   } else if (pointType === "star") {
+    let radius2 = 0;
+    if (radius < 15) radius2 = 4;
+    else if (radius > 15 && radius < 40) radius2 = 8;
+    else if (radius > 40 && radius < 70) radius2 = 16;
+    else radius2 = 22;
     style = new Style({
       image: new RegularShape({
         fill: fill,
         stroke: stroke,
         points: 5,
         radius: radius,
-        radius2: 4,
+        radius2: radius2,
         angle: 0,
         rotation: rotation
       })
