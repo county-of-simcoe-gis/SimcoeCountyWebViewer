@@ -77,8 +77,11 @@ export function isMobile() {
 }
 
 // SHOW URL WINDOW
-export function showURLWindow(url, showFooter = false, mode = "normal", honorDontShow = false) {
-  ReactDOM.render(<URLWindow key={shortid.generate()} mode={mode} showFooter={showFooter} url={url} honorDontShow={honorDontShow} />, document.getElementById("map-modal-window"));
+export function showURLWindow(url, showFooter = false, mode = "normal", honorDontShow = false, hideScroll = false) {
+  ReactDOM.render(
+    <URLWindow key={shortid.generate()} mode={mode} showFooter={showFooter} url={url} honorDontShow={honorDontShow} hideScroll={hideScroll} />,
+    document.getElementById("map-modal-window")
+  );
 }
 
 // GET ARCGIS TILED LAYER
