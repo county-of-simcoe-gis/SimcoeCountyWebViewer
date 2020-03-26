@@ -70,7 +70,9 @@ class URLWindow extends Component {
     if (this.state.hide) className = "sc-hidden";
     else if (this.props.mode === "full") className = "full";
     else if (!window.sidebarOpen) className = "full";
-    //const className = this.state.hide ? "sc-hidden" : this.props.mode === "full" ? "full" : ""
+
+    let hideScrollClassName = "";
+    if (this.props.hideScroll) hideScrollClassName = "sc-url-window-content-no-scroll";
     return (
       <div id="sc-url-window-container" className={className}>
         <div className="sc-url-window-header">
@@ -86,8 +88,8 @@ class URLWindow extends Component {
             </button>
           </div>
         </div>
-        <div id="sc-url-window-content" className={this.props.showFooter ? "sc-url-window-content with-footer" : "sc-url-window-content"}>
-          <iframe className="sc-url-window-iframe" src={this.props.url} frameBorder="0" title="Information" />
+        <div id="sc-url-window-content" className={this.props.showFooter ? "sc-url-window-content with-footer " + hideScrollClassName : "sc-url-window-content " + hideScrollClassName}>
+          <iframe id="sc-url-window-iframe" className="sc-url-window-iframe" src={this.props.url} frameBorder="0" title="Information" />
         </div>
         <div className={this.props.showFooter ? "sc-url-window-footer" : "sc-hidden"}>
           <button className="sc-button" onClick={this.onCloseClick}>
