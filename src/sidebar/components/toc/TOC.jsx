@@ -34,6 +34,9 @@ class TOC extends Component {
     // LISTEN FOR MAP TO MOUNT
     window.emitter.addListener("mapLoaded", () => this.onMapLoad());
 
+    // LISTEN FOR MAP LEGEND
+    window.emitter.addListener("openLegend", () => this.openLegend());
+
     // LISTEN FOR LAYERS TO LOAD
     window.emitter.addListener("layersLoaded", numLayers => this.onLayersLoad(numLayers));
 
@@ -110,7 +113,10 @@ class TOC extends Component {
   };
 
   onGroupDropDownChange = selectedGroup => {
-    this.setState({ selectedGroup: selectedGroup });
+    this.setState({ selectedGroup: selectedGroup }, () => {
+      const legend = document.getElementById("sc-url-window-iframe").contentWindow.document.getElementById("sc-legend-app-main-container");
+      if (legend !== null) this.openLegend();
+    });
   };
 
   onSearchLayersChange = evt => {
@@ -171,12 +177,33 @@ class TOC extends Component {
     } else if (action === "sc-floating-menu-collapse") {
       this.layerRef.toggleAllLegends("CLOSE");
     } else if (action === "sc-floating-menu-legend") {
-      helpers.showMessage("Legend", "Coming Soon");
+      this.openLegend();
     } else if (action === "sc-floating-menu-visility") {
       this.layerRef.turnOffLayers();
     }
 
     helpers.addAppStat("TOC Tools", action);
+  };
+
+  openLegend = () => {
+    console.log(this.state.layerGroups);
+    let params = "";
+    this.state.layerGroups.forEach(group => {
+      let name = "";
+      if (group.value.indexOf(":") !== -1) {
+        name = group.value.split(":")[1];
+      } else name = group.value;
+
+      if (params === "") {
+        if (this.state.selectedGroup.value === group.value) params += "?" + name + "=1";
+        else params += "?" + name + "=0";
+      } else {
+        if (this.state.selectedGroup.value === group.value) params += "&" + name + "=1";
+        else params += "&" + name + "=0";
+      }
+    });
+
+    helpers.showURLWindow("https://opengis.simcoe.ca/legend/" + params, false, "normal", true, true);
   };
 
   onSaveClick = () => {
