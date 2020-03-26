@@ -87,6 +87,9 @@
   border-radius: 0px;
   overflow: auto;
 }
+.sc-url-window-content-no-scroll {
+  overflow: hidden;
+}
 
 .with-footer {
   bottom: 40px;
