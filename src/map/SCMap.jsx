@@ -93,11 +93,17 @@ class SCMap extends Component {
       ]),
       keyboardEventTarget: document
     });
+    if (storage !== null) {
+      const extent = JSON.parse(storage);
+      map.getView().fit(extent, map.getSize(), { duration: 1000 });
+    }
 
     window.map = map;
     window.popup = new Popup();
     window.map.addOverlay(window.popup);
 
+    // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
+    window.emitter.emit("mapLoaded");
     window.map.getViewport().addEventListener("contextmenu", evt => {
       evt.preventDefault();
       this.contextCoords = window.map.getEventCoordinate(evt);

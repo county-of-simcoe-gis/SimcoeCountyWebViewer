@@ -53,10 +53,8 @@
 }
 
 .sc-identify-feature-header-img {
-  position: relative;
-  right: 12px;
-  float: right;
-  bottom: 28px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .sc-identify-loading {

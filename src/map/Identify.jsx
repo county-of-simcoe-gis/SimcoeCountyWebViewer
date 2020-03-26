@@ -7,7 +7,7 @@ import { GeoJSON } from "ol/format.js";
 import InfoRow from "../helpers/InfoRow.jsx";
 import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
-import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style.js";
+import { Circle as CircleStyle, Icon, Fill, Stroke, Style } from "ol/style.js";
 import { Image as ImageLayer } from "ol/layer.js";
 import Feature from "ol/Feature";
 import { AutoSizer } from "react-virtualized";
@@ -55,8 +55,8 @@ class Identify extends Component {
         const name = layer.get("name");
         let displayName = ""; // layer.get("displayName");
         let html_url = mainConfig.htmlIdentify ? layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "text/html" }) + "&feature_count=1000000" : "" ;
-        let type = layer.get("identifyDisplayName");
-        //let type = layer.get("displayName")
+        //let type = layer.get("identifyDisplayName");
+        let type = layer.get("displayName")
         let wfsUrl = layer.get("wfsUrl");
         if (geometry.getType() !== "Point") {
           const feature = new Feature(geometry);
@@ -79,6 +79,8 @@ class Identify extends Component {
         } else {
           // QUERY USING WMS
           var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "application/json" });
+        
+        let html_url = mainConfig.htmlIdentify ? layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "text/html" }) + "&feature_count=1000000" : "" ;
           url += "&feature_count=1000000";
           if (url) {
             helpers.getJSON(url, result => {
@@ -259,7 +261,7 @@ function _getLayerObj(layerName, callback) {
 }
 
 const Layer = props => {
-  const [open] = useState(true);
+  const [open, setOpen] = useState(true);
 
   const { layer } = props;
 
@@ -351,13 +353,9 @@ const FeatureItem = props => {
   return (
     <div>
       <div className="sc-identify-feature-header" onMouseEnter={() => props.onMouseEnter(feature)} onMouseLeave={props.onMouseLeave}>
-        <div style={{ width: "290px" }} onClick={() => setOpen(!open)}>
-          <div className="sc-fakeLink sc-identify-feature-header-label">
+        <div className="sc-fakeLink sc-identify-feature-header-label" onClick={() => setOpen(!open)}>
             {mainConfig.excludeIdentifyTitleName ? featureName : displayName + ": " + featureName}
           </div>
-          <div className="sc-identify-layer-name">{"- " + layerName}</div>
-        </div>
-
         <img className="sc-identify-feature-header-img" src={images["zoom-in.png"]} onClick={() => props.onZoomClick(feature)} alt="Zoom In"></img>
         {extentFeature !== undefined ? <img className="sc-identify-feature-header-img" src={images["extent-zoom-in.png"]} onClick={() => props.onZoomClick(extentFeature)} alt="Zoom In To Extent"></img> : ""}
       </div>

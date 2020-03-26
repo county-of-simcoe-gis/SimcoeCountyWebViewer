@@ -207,16 +207,13 @@ class TOC extends Component {
       <Portal>
         <FloatingMenu key={helpers.getUID()} buttonEvent={evtClone} item={this.props.info} onMenuItemClick={action => this.onMenuItemClick(action)} styleMode="right" yOffset={120}>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-expand">
-            <FloatingMenuItem imageName={"plus16.png"} label="Expand Layers" />
+            <FloatingMenuItem imageName={"plus16.png"} label="Show Legend" />
           </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-collapse">
-            <FloatingMenuItem imageName={"minus16.png"} label="Collapse Layers" />
+            <FloatingMenuItem imageName={"minus16.png"} label="Hide Legend" />
           </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-visility">
             <FloatingMenuItem imageName={"layers-off.png"} label="Turn off Layers" />
-          </MenuItem>
-          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-legend">
-            <FloatingMenuItem imageName={"legend16.png"} label="Show Legend" />
           </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-clear-local">
             <FloatingMenuItem imageName={"eraser.png"} label="Clear My Saved Data" />
@@ -233,8 +230,6 @@ class TOC extends Component {
       window.emitter.emit("toggleAllLegend", "OPEN");
     } else if (action === "sc-floating-menu-collapse") {
       window.emitter.emit("toggleAllLegend", "CLOSE");
-    } else if (action === "sc-floating-menu-legend") {
-      helpers.showMessage("Legend", "Coming Soon");
     } else if (action === "sc-floating-menu-clear-local") {
       localStorage.clear();
       helpers.showMessage("Local Data Cleared", "Your local data has been cleared");
