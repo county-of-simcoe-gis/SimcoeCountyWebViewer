@@ -9,7 +9,9 @@
 .sc-toc-item-container.on {
   font-weight: bold;
 }
-
+.sc-toc-item-container.not-in-scale {
+  color: dimgrey;
+}
 .sc-toc-item-layer-label {
   display: inline-table;
   position: relative;
