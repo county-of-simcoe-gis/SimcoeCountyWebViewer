@@ -60,7 +60,6 @@ const SidebarSlim = props => {
         
         <MenuButton />
       </div>
-      <MenuButton />
     </div>
   );
 };

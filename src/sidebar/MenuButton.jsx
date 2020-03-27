@@ -125,11 +125,7 @@ class MenuButton extends Component {
           </button>
         </div>
 
-        {/* <div id="sc-menu-button-container" className={"sc-menu-button-container"} onClick={this.onMenuButtonClick}>
-          <button id="sc-menu-button" className="sc-button-blue">
-            <span className="sc-menu-button-icon">More...</span>
-          </button>
-        </div> */}
+      
         <div id="sc-menu-button-list-container" className={menuListClassName}>
           <div className="sc-menu-list-item-heading" style={{ paddingTop: "0px" }}>
             MAP THEMES

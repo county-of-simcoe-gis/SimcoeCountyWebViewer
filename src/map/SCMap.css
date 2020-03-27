@@ -1,6 +1,6 @@
 .sc-map{
     position: absolute;
-    background-color: rgb(238, 238, 238);
+    /*background-color: rgb(238, 238, 238);*/
     overflow: hidden;
     min-width: 1px;
     min-height: 1px;
