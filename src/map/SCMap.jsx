@@ -164,7 +164,6 @@ class SCMap extends Component {
   }
 
   handleUrlParameters = () => {
-    const defaultsStorage = sessionStorage.getItem(this.storageMapDefaultsKey);
     const storage = localStorage.getItem(this.storageExtentKey);
 
     // GET URL PARAMETERS (ZOOM TO XY)
