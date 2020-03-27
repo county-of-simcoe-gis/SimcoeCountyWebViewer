@@ -54,29 +54,7 @@ class Identify extends Component {
       if (layer.getVisible() && layer instanceof ImageLayer) {
         const name = layer.get("name");
         let displayName = ""; // layer.get("displayName");
-        let html_url = mainConfig.htmlIdentify ? layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "text/html" }) + "&feature_count=1000000" : "" ;
-        //let type = layer.get("identifyDisplayName");
         let type = layer.get("displayName")
-        let wfsUrl = layer.get("wfsUrl");
-        if (geometry.getType() !== "Point") {
-          const feature = new Feature(geometry);
-          const wktString = helpers.getWKTStringFromFeature(feature);
-          wfsUrl += "INTERSECTS(geom," + wktString + ")";
-          // QUERY USING WFS
-          // eslint-disable-next-line
-          helpers.getJSON(wfsUrl, result => {
-            const featureList = new GeoJSON().readFeatures(result);
-            if (featureList.length > 0) {
-              if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
-              let features = [];
-              featureList.forEach(feature => {
-                features.push(feature);
-              });
-              if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, html_url: html_url });
-              this.setState({ layers: layerList });
-            }
-          });
-        } else {
           // QUERY USING WMS
           var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "application/json" });
         
@@ -96,14 +74,14 @@ class Identify extends Component {
                 featureList.forEach(feature => {
                   features.push(feature);
                 });
-                if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type });
+                if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, html_url: html_url });
                 this.setState({ layers: layerList });
               }
             });
           }
         }
       }
-    }
+  
 
     this.setState({ isLoading: false });
   };

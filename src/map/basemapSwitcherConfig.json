@@ -1,7 +1,7 @@
 {
   "streetService": "",
   "bathymetryService": "",
-  "worldImageryService": "https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer",
+  "worldImageryService": "",
   "topoServices": [
     {
       "name": "Blank",
@@ -9,7 +9,7 @@
       "index":0,
       "layers": [
         {
-          "url": "https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer",
+          "url": "",
           "type": "ESRI_TILED"
         }
       ]

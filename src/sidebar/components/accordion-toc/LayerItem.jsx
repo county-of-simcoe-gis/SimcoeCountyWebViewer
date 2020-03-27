@@ -48,6 +48,11 @@ class LayerItem extends Component {
       if (this._isMounted) this.forceUpdate();
     });
   }
+
+  componentWillUnmount() {
+    this._isMounted = false;
+  }
+  
   componentWillReceiveProps(nextProps) {
     let layer = this.state.layer;
     if (layer === undefined){
