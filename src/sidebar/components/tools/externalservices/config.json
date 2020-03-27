@@ -33,12 +33,12 @@
       "links": [
         {
           "name": "Bing Maps",
-          "url": "http://bing.com/maps/default.aspx?cp=${y}~${x}",
+          "url": "http://bing.com/maps/default.aspx?cp=${y}~${x}&lvl=17",
           "requiresPropertyInfo": false
         },
         {
-          "name": "Bing Birds Eye",
-          "url": "http://bing.com/maps/default.aspx?cp=${y}~${x}&style=o",
+          "name": "Bing Aerial",
+          "url": "http://bing.com/maps/default.aspx?cp=${y}~${x}&style=h&lvl=17",
           "requiresPropertyInfo": false
         },
         {
