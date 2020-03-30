@@ -3,7 +3,7 @@
 This mapping application will be replacing our [existing site](https://maps.simcoe.ca/public).
 
 We want your <b>feedback</b>! Click on the star in upper right corner and provide your comments please.
-![](/docs/feedback.png)
+![](feedback.png)
 
 ## Here's some of the new Features we've added.
 
@@ -29,7 +29,7 @@ We want your <b>feedback</b>! Click on the star in upper right corner and provid
 - More Topo map options
 - Ability to turn off Overlay layers for Topo
 
-![imagery panel](/docs/imagery.gif "Imagery/ Topo Basemap")
+![imagery panel](imagery.gif "Imagery/ Topo Basemap")
 
 <a name="toc"></a>
 
@@ -41,7 +41,7 @@ We want your <b>feedback</b>! Click on the star in upper right corner and provid
 - Right Click menu in the map
 - Each layer has options for - Metadata, Transparency, Zoom, etc
   <!--   layers panel gif   -->
-  ![layers panel](/docs/layers.gif "Layers")
+  ![layers panel](layers.gif "Layers")
 
 ### _My Maps_
 
