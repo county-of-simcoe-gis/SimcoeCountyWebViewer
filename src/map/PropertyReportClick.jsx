@@ -199,7 +199,7 @@ class PropertyReportClick extends Component {
           </span>
         </CopyToClipboard>
         &nbsp;
-        <span className="sc-fakeLink" onClick={() => helpers.showURLWindow(mainConfig.termsUrl, false, "full")}>
+        <span className="sc-fakeLink" onClick={() => helpers.showURLWindow(mainConfig.termsUrl, false, "full", true, true)}>
           [Terms]
         </span>
       </InfoRow>
