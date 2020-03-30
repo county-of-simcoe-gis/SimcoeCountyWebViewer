@@ -9,6 +9,7 @@
   top: 135px;
   bottom: 45px;
   overflow: auto;
+  width: 99%;
 }
 
 .sc-mymaps-items-container-header-editing {
