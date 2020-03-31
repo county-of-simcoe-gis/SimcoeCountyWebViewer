@@ -19,3 +19,11 @@
   font-weight: bold;
   color: forestgreen;
 }
+@media only screen and (max-width: 770px) {
+  /* .sc-mymaps-items-container-list {
+    width: 100%;
+  } */
+  /* .sc-mymaps-item-container-item-text-input {
+    margin-left: 0px;
+  } */
+}
