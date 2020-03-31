@@ -1,4 +1,4 @@
-# What's new - [opengis.simcoe.ca](https://opengis.simcoe.ca)
+# What's new - [opengis.simcoe.ca](https://opengis.simcoe.ca) [May 1st, 2020]
 
 This mapping application will be replacing our [existing site](https://maps.simcoe.ca/public).
 
@@ -7,29 +7,12 @@ We want your <b>feedback</b>! Click on the star in upper right corner and provid
 
 ## Here's some of the new Features we've added.
 
+- [Layers/Table of Contents](#toc)
 - [Search Improvements](#search)
 - [Basemap switcher - Imagery / Topo](#basemaps)
-- [Layers/Table of Contents](#toc)
-- [Other Enhancements](#other)
-  <a name="search"></a><br/>
-
-## Search Bar
-
-"Search by Types" for more refined results and "Show More" button allows you to view more results.
-
-- Search by Types
-- Show More Button
-
-![search panel](/docs/search.gif "Search Bar")
-
-<a name="basemaps"></a>
-
-## Basemap Switcher - Imagery / Topo
-
-- More Topo map options
-- Ability to turn off Overlay layers for Topo
-
-![imagery panel](imagery.gif "Imagery/ Topo Basemap")
+- [Right Click Menu](#right-click)
+- [Import/Export MyMaps](#mymaps)
+- [Identify](#identify)
 
 <a name="toc"></a>
 
@@ -38,23 +21,48 @@ We want your <b>feedback</b>! Click on the star in upper right corner and provid
 - Downloadable Layers
 - Re-order layers in the map
 - Sorting A-Z
-- Right Click menu in the map
 - Each layer has options for - Metadata, Transparency, Zoom, etc
-  <!--   layers panel gif   -->
-  ![layers panel](layers.gif "Layers")
+- Choose what group of layers to view
 
-### _My Maps_
+![layers panel](layers.gif "Layers")
 
-- Improved Sharing: Import & Save
-  <!--   maps panel gif   -->
-  ![maps panel](/docs/maps.gif "My Maps")
+<a name="search"></a><br/>
 
-<a name="other"></a>
+## Search Bar
 
-## Other Enhancements
+- Search by Types for more refined results
+- Show More Button allows you to view more results
 
-### Right-Click Menu
+![search panel](search.gif "Search Bar")
+<a name="basemaps"></a>
+
+## Basemap Switcher - Imagery / Topo
+
+- More Topo map options
+- Ability to turn off Overlay layers for Topo
+
+![imagery panel](imagery.gif "Imagery/ Topo Basemap")
+<a name="mymaps"></a>
+
+## Import Export MyMaps
+
+- Share your MyMaps markup
+- Import into a different computer or browser
+
+![maps panel](maps.gif "My Maps")
+
+<a name="right-click"></a>
+
+## Right-Click Menu
 
 Right Click the map window for more options (e.g. Switch To Basic)
 
-![Righy Click](/docs/right-click.gif "Right Click")
+![Right Click](right-click.gif "Right Click")
+
+<a name="identify"></a>
+
+## Identify
+
+Identify visible features in the map
+
+![Identify](identify.gif "Identify")
