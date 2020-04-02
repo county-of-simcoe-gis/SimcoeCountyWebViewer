@@ -32,6 +32,7 @@ We want your <b>feedback</b>! Click on the star in upper right corner and provid
 
 - Search by Types for more refined results
 - Show More Button allows you to view more results
+- Layers, Tools and Themes are now searchable
 
 ![search panel](search.gif "Search Bar")
 <a name="basemaps"></a>
