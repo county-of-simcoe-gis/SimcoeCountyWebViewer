@@ -314,7 +314,7 @@ const FeatureItem = props => {
     if (keys.length === 1) displayName = "No attributes found";
     featureName = "";
   }
-  if (featureName === "") featureName = "N/A";
+  if (featureName === null || featureName === undefined || featureName === "" ) featureName = "N/A";
   let cql_filter = "";
  
   const excludedKeys = ["id", "geometry","geom","extent_geom","gid", "globalid", "objectid", "bplan_gid"];
