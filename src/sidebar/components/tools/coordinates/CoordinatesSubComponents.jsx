@@ -11,24 +11,61 @@ export const LiveCoordinates = props => {
       <div className="sc-container">
         <div className="sc-coordinates-row sc-arrow">
           <label>X Coordinate:</label>
-          <span>{props.liveWebMercatorCoords === null ? inputMsg : props.liveWebMercatorCoords[0]}</span>
+          <span>{props.liveWebMercatorCoords === null ? inputMsg : props.liveWebMercatorCoords[0].toFixed(2)}</span>
         </div>
 
         <div className="sc-coordinates-row sc-arrow">
           <label>Y Coordinate:</label>
-          <span>{props.liveWebMercatorCoords === null ? inputMsg : props.liveWebMercatorCoords[1]}</span>
+          <span>{props.liveWebMercatorCoords === null ? inputMsg : props.liveWebMercatorCoords[1].toFixed(2)}</span>
         </div>
 
         <div className="sc-coordinates-divider">&nbsp;</div>
 
         <div className="sc-coordinates-row sc-arrow">
           <label>Latitude:</label>
-          <span>{props.liveLatLongCoords === null ? inputMsg : props.liveLatLongCoords[1]}</span>
+          <span>{props.liveLatLongCoords === null ? inputMsg : props.liveLatLongCoords[1].toFixed(7)}</span>
         </div>
 
         <div className="sc-coordinates-row sc-arrow">
           <label>Longitude:</label>
-          <span>{props.liveLatLongCoords === null ? inputMsg : props.liveLatLongCoords[0]}</span>
+          <span>{props.liveLatLongCoords === null ? inputMsg : props.liveLatLongCoords[0].toFixed(7)}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+export const LatLong = props => {
+  return (
+    <div>
+     
+      <div className="sc-container">
+        <div className="sc-coordinates-row sc-arrow">
+          <label>Latitude:</label>
+          <span>{props.coords === null ? inputMsg : props.coords[0].toFixed(7)}</span>
+        </div>
+
+        <div className="sc-coordinates-row sc-arrow">
+          <label>Longitude:</label>
+          <span>{props.coords === null ? inputMsg : props.coords[1].toFixed(7)}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const ProjectedCoordinates = props => {
+  return (
+    <div>
+      
+      <div className="sc-container">
+        <div className="sc-coordinates-row sc-arrow">
+          <label>X Coordinate:</label>
+          <span>{props.coords === null ? inputMsg : props.coords[0].toFixed(props.precision)}</span>
+        </div>
+
+        <div className="sc-coordinates-row sc-arrow">
+          <label>Y Coordinate:</label>
+          <span>{props.coords === null ? inputMsg : props.coords[1].toFixed(props.precision)}</span>
         </div>
       </div>
     </div>
@@ -40,22 +77,22 @@ export const MapExtent = props => {
     <div className="sc-container">
       <div className="sc-coordinates-row sc-arrow">
         <label>Min X:</label>
-        <span>{props.extentMinX === null ? inputMsg : props.extentMinX}</span>
+        <span>{props.extentMinX === null ? inputMsg : props.extentMinX.toFixed(2)}</span>
       </div>
 
       <div className="sc-coordinates-row sc-arrow">
         <label>Max X:</label>
-        <span>{props.extentMaxX === null ? inputMsg : props.extentMaxX}</span>
+        <span>{props.extentMaxX === null ? inputMsg : props.extentMaxX.toFixed(2)}</span>
       </div>
 
       <div className="sc-coordinates-row sc-arrow">
         <label>Min Y:</label>
-        <span>{props.extentMinY === null ? inputMsg : props.extentMinY}</span>
+        <span>{props.extentMinY === null ? inputMsg : props.extentMinY.toFixed(2)}</span>
       </div>
 
       <div className="sc-coordinates-row sc-arrow">
         <label>Max Y:</label>
-        <span>{props.extentMaxY === null ? inputMsg : props.extentMaxY}</span>
+        <span>{props.extentMaxY === null ? inputMsg : props.extentMaxY.toFixed(2)}</span>
       </div>
     </div>
   );
@@ -75,15 +112,8 @@ export const CustomCoordinates = props => {
 export const CoordinateActions = props => {
   return (
     <div className="sc-coordinates-row">
-      <label>&nbsp;</label>[{" "}
-      <span className="sc-fakeLink" onClick={props.onZoomClick}>
-        zoom
-      </span>{" "}
-      ] [{" "}
-      <span className="sc-fakeLink" onClick={props.onMyMapsClick}>
-        add to my Maps
-      </span>{" "}
-      ]
+      [&nbsp;<span className="sc-fakeLink" onClick={props.onZoomClick}>zoom</span>&nbsp;]
+      [&nbsp;<span className="sc-fakeLink" onClick={props.onMyMapsClick}>add to my Maps</span>&nbsp;]
     </div>
   );
 };
@@ -91,7 +121,7 @@ export const CoordinateActions = props => {
 export const CoordinateRow = props => {
   return (
     <div className="sc-coordinates-row sc-arrow">
-      <label>{props.label + ":"}:</label>
+      <label>{props.label}:</label>
       <span>
         <input
           id={props.inputId}
