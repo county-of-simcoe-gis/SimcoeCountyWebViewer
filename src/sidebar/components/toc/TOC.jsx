@@ -210,6 +210,8 @@ class TOC extends Component {
               placeholder={"Filter (" + this.state.layerCount + " layers)..."}
               onChange={this.onSearchLayersChange}
               value={this.state.searchText}
+              onFocus={evt => {helpers.disableKeyboardEvents(true);}}
+              onBlur={evt => {helpers.disableKeyboardEvents(false);}}
             />
             <div data-tip="Save Layer Visibility" data-for="sc-toc-save-tooltip" className="sc-toc-search-save-image" onClick={this.onSaveClick}>
               <ReactTooltip id="sc-toc-save-tooltip" className="sc-toc-save-tooltip" multiline={false} place="right" type="dark" effect="solid" />

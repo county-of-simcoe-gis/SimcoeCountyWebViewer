@@ -26,6 +26,7 @@ import proj4 from "proj4";
 import { register } from "ol/proj/proj4";
 import { fromLonLat } from "ol/proj";
 import { getVectorContext } from "ol/render";
+import { KeyboardPan, KeyboardZoom } from "ol/interaction.js";
 
 //OTHER
 import { parseString } from "xml2js";
@@ -782,6 +783,16 @@ export function bufferGeometry(geometry, distanceMeters, callback) {
 
     callback(utmNad83GeometryBuffer);
   });
+}
+
+export function disableKeyboardEvents(disable) {
+  if (window.map !== undefined && window.map !== null){
+    window.map.getInteractions().forEach(function(interaction) {
+      if (interaction instanceof KeyboardPan || interaction instanceof KeyboardZoom) {
+        interaction.setActive(!disable);
+      }
+    });
+  }
 }
 
 export function getGeometryCenter(geometry, callback) {
