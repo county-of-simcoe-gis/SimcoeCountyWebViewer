@@ -1,4 +1,5 @@
 import React from "react";
+import * as helpers from "../../../../helpers/helpers";
 
 const inputMsg = "(listening for input)";
 export const LiveCoordinates = props => {
@@ -133,6 +134,8 @@ export const CoordinateRow = props => {
           onKeyDown={evt => {
             if (evt.key === "Enter") props.onEnterKey();
           }}
+          onFocus={evt => {helpers.disableKeyboardEvents(true);}}
+          onBlur={evt => {helpers.disableKeyboardEvents(false);}}
         />
       </span>
     </div>

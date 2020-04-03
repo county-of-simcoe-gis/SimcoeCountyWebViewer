@@ -13,7 +13,7 @@ import { CopyToClipboard } from "react-copy-to-clipboard";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import Select from "react-select";
-import { KeyboardPan, KeyboardZoom } from "ol/interaction.js";
+
 
 // URLS
 const apiUrl = mainConfig.apiUrl;
@@ -467,13 +467,7 @@ class Search extends Component {
     this.setState({ searchResults: newResults });
   };
 
-  disableKeyboardEvents = disable => {
-    window.map.getInteractions().forEach(function(interaction) {
-      if (interaction instanceof KeyboardPan || interaction instanceof KeyboardZoom) {
-        interaction.setActive(!disable);
-      }
-    });
-  };
+  
 
   render() {
     // INIT LAYER
@@ -532,10 +526,10 @@ class Search extends Component {
             placeholder: "Search...",
             name: "sc-search-textbox",
             onFocus: result => {
-              this.disableKeyboardEvents(true);
+              helpers.disableKeyboardEvents(true);
             },
             onBlur: result => {
-              this.disableKeyboardEvents(false);
+              helpers.disableKeyboardEvents(false);
             }
           }}
           className="sc-search-textbox"

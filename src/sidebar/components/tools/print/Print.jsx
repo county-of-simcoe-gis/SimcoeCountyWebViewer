@@ -224,7 +224,13 @@ class Print extends Component {
         <div className="sc-print-container">
           {/* MAP TITLE */}
           <label style={{ fontWeight: "bold" }}>Map Title:</label>
-          <input className="sc-print-map-title-input" onChange={this.onMapTitleChange} value={this.state.mapTitle}></input>
+          <input 
+            className="sc-print-map-title-input" 
+            onChange={this.onMapTitleChange} 
+            value={this.state.mapTitle}
+            onFocus={evt => {helpers.disableKeyboardEvents(true);}}
+            onBlur={evt => {helpers.disableKeyboardEvents(false);}}
+            ></input>
 
           {/* PRINT SIZE */}
           <label style={{ fontWeight: "bold" }}>Select Paper Size:</label>

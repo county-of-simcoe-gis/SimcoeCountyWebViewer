@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import "./MyMapsPopupLabel.css";
+import * as helpers from "../../../helpers/helpers";
 
 class MyMapsPopupLabel extends Component {
   constructor(props) {
@@ -91,7 +92,13 @@ class MyMapsPopupLabel extends Component {
           </div>
         </div>
         <div>
-          <input className="sc-mymaps-popup-label-input" type="text" value={this.state.label} onChange={this.onLabelChange} />
+          <input 
+            className="sc-mymaps-popup-label-input" 
+            type="text" 
+            value={this.state.label} 
+            onChange={this.onLabelChange}
+            onFocus={evt => {helpers.disableKeyboardEvents(true);}}
+            onBlur={evt => {helpers.disableKeyboardEvents(false);}} />
         </div>
       </div>
     );

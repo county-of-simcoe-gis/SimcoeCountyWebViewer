@@ -313,7 +313,9 @@ class SCMap extends Component {
     return (
       <div>
         <div id="map-modal-window" />
-        <div id="map" className={this.state.mapClassName} tabIndex="0" />
+        <div id="map" 
+          className={this.state.mapClassName} tabIndex="0"
+          />
         <Navigation />
         <FooterTools />
         <BasemapSwitcher />

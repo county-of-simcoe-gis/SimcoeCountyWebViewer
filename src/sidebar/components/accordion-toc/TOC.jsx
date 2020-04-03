@@ -309,7 +309,14 @@ class TOC extends Component {
         </div>
         <div className={this.state.isLoading ? "sc-toc-main-container sc-hidden" : "sc-toc-main-container"}>
           <div className="sc-toc-search-container">
-            <input id="sc-toc-search-textbox" className="sc-toc-search-textbox" placeholder={"Filter (" + this.state.layerCount + " layers)..."} onChange={this.onSearchLayersChange} />
+            <input id="sc-toc-search-textbox"
+              className="sc-toc-search-textbox" 
+              placeholder={"Filter (" + this.state.layerCount + " layers)..."} 
+              type="text"
+              onChange={this.onSearchLayersChange}
+              onFocus={evt => {helpers.disableKeyboardEvents(true);}}
+              onBlur={evt => {helpers.disableKeyboardEvents(false);}}
+               />
             <div data-tip="Save Layer Visibility" data-for="sc-toc-save-tooltip" className="sc-toc-search-save-image" onClick={this.onSaveClick}>
               <ReactTooltip id="sc-toc-save-tooltip" className="sc-toc-save-tooltip" multiline={false} place="right" type="dark" effect="solid" />
             </div>
