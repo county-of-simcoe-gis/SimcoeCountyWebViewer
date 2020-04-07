@@ -43,13 +43,6 @@
       "imageName": "print.png"
     },
     {
-      "id": 4,
-      "name": "Search Addresses",
-      "componentName": "SearchAddresses",
-      "description": "This tool allows you to search Addresses.",
-      "imageName": "searchAddresses.png"
-    },
-    {
       "id": 5,
       "name": "Search History",
       "componentName": "SearchHistory",
