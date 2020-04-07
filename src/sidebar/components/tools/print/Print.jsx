@@ -8,8 +8,6 @@ import * as printRequest from "./printRequest/printRequest";
 import "./Print.css";
 
 const termsOfUse =
-  "This map, either in whole or in part, may not be reproduced without the written authority from" +
-  "© The Corporation of the County of Simcoe." +
   "This map is intended for personal use, has been produced using data from a variety of sources" +
   "and may not be current or accurate." +
   "Produced (in part) under license from:" +
@@ -72,7 +70,7 @@ class Print extends Component {
         label: "JPG"
       }
     ],
-    mapTitle: "County of Simcoe - Web Map",
+    mapTitle: "Web Map",
     printSizeSelectedOption: null,
     printFormatSelectedOption: null,
     forceScale: helpers.getMapScale(),

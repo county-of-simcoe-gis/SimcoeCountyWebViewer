@@ -6,7 +6,7 @@ class Reports extends Component {
     render() { 
         if (this.props.children === undefined)
           return ( <p className="sc-reports-tab-init">There is currently no report generated. <br></br>
-            Please click on a property to generate a property report.</p> );
+            Please click on a property to generate a report.</p> );
 
         return ( <div className="sc-reports-tab-content">{this.props.children}</div> );
     }

@@ -295,8 +295,6 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
       groupName: group.label,
       canDownload: canDownload, // INDICATES WETHER LAYER CAN BE DOWNLOADED
       displayName: displayName, // DISPLAY NAME USED BY IDENTIFY
-      group: group.value,
-      groupName: group.label,
       identifyTitleColumn: identifyTitleColumn,
       identifyIdColumn: identifyIdColumn
     };

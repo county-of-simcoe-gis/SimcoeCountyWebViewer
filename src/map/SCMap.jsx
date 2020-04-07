@@ -114,9 +114,7 @@ class SCMap extends Component {
             <MenuItem className={helpers.isMobile() ? "sc-hidden" : "sc-floating-menu-toolbox-menu-item"} key="sc-floating-menu-basic-mode">
               <FloatingMenuItem imageName={"collased.png"} label="Switch To Basic" />
             </MenuItem>
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-property-click">
-              <FloatingMenuItem imageName={"report.png"} label="Property Report" />
-            </MenuItem>
+            
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-add-mymaps">
               <FloatingMenuItem imageName={"point.png"} label="Add Marker Point" />
             </MenuItem>
@@ -191,7 +189,7 @@ class SCMap extends Component {
       helpers.showURLWindow(mainConfig.ieWarningUrl);
     } else {
       // SHOW TERMS
-      //helpers.showURLWindow("https://maps.simcoe.ca/terms.html", true, "full", true);
+      helpers.showURLWindow(mainConfig.termsUrl, false, "full")
     }
 
     // MAP LOADED
