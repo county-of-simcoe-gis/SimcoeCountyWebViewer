@@ -52,7 +52,6 @@ class MenuButton extends Component {
   // CUSTOM ENTRIES, COMMENT OUT IF YOU DON"T WANT IT
   getOthers = () => {
     let itemList = [];
-    itemList.push(<MenuItem onClick={() => helpers.showURLWindow(mainConfig.whatsNewUrl, true, "full", false)} key={helpers.getUID()} name={"What's New"} iconClass={"sc-menu-terms-icon"} />);
     itemList.push(<MenuItem key={helpers.getUID()} name={"Feedback"} iconClass={"sc-menu-feedback-icon"} onClick={this.onFeedbackClick} />);
     itemList.push(<MenuItem onClick={this.onScreenshotClick} key={helpers.getUID()} name={"Take a Screenshot"} iconClass={"sc-menu-screenshot-icon"} />);
     itemList.push(<MenuItem key={helpers.getUID()} name={"Map Legend"} iconClass={"sc-menu-legend-icon"} onClick={() => helpers.showMessage("Legend", "Coming Soon")} />);
@@ -129,11 +128,6 @@ class MenuButton extends Component {
 
       
         <div id="sc-menu-button-list-container" className={menuListClassName}>
-          <div className="sc-menu-list-item-heading" style={{ paddingTop: "0px" }}>
-            MAP THEMES
-          </div>
-          {this.getThemes()}
-          {/* <div className="sc-menu-list-item-heading">CREATE CUSTOM DRAWINGS</div>{this.getMyMaps()} */}
           <div className="sc-menu-list-item-heading">MAP TOOLS</div>
           {this.getTools()}
           <div className="sc-menu-list-item-heading">OTHER</div>

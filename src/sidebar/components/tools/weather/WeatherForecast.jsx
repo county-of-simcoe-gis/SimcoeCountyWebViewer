@@ -17,7 +17,7 @@ class WeatherForecast extends Component {
   componentDidMount() {
     this.refreshWeather();
 
-    fetch("https://opengis2.simcoe.ca/appstats", {
+    fetch(mainConfig.appStatsUrl, {
       method: "GET",
       mode: "no-cors",
       credentials: "include"
