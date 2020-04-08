@@ -1,7 +1,7 @@
 import React from "react";
 
 const inputMsg = "(listening for input)";
-export const LiveCoordinates = props => {
+export const LiveCoordinates = (props) => {
   return (
     <div>
       <div className="sc-title">Live Coordinates</div>
@@ -10,24 +10,24 @@ export const LiveCoordinates = props => {
 
       <div className="sc-container">
         <div className="sc-coordinates-row sc-arrow">
-          <label>X Coordinate:</label>
+          <label className="sc-coordinates-live-label">X Coordinate (meters):</label>
           <span>{props.liveWebMercatorCoords === null ? inputMsg : props.liveWebMercatorCoords[0]}</span>
         </div>
 
         <div className="sc-coordinates-row sc-arrow">
-          <label>Y Coordinate:</label>
+          <label className="sc-coordinates-live-label">Y Coordinate (meters):</label>
           <span>{props.liveWebMercatorCoords === null ? inputMsg : props.liveWebMercatorCoords[1]}</span>
         </div>
 
         <div className="sc-coordinates-divider">&nbsp;</div>
 
         <div className="sc-coordinates-row sc-arrow">
-          <label>Latitude:</label>
+          <label className="sc-coordinates-live-label">Latitude (degrees):</label>
           <span>{props.liveLatLongCoords === null ? inputMsg : props.liveLatLongCoords[1]}</span>
         </div>
 
         <div className="sc-coordinates-row sc-arrow">
-          <label>Longitude:</label>
+          <label className="sc-coordinates-live-label">Longitude (degrees):</label>
           <span>{props.liveLatLongCoords === null ? inputMsg : props.liveLatLongCoords[0]}</span>
         </div>
       </div>
@@ -35,7 +35,7 @@ export const LiveCoordinates = props => {
   );
 };
 
-export const MapExtent = props => {
+export const MapExtent = (props) => {
   return (
     <div className="sc-container">
       <div className="sc-coordinates-row sc-arrow">
@@ -61,7 +61,7 @@ export const MapExtent = props => {
   );
 };
 
-export const CustomCoordinates = props => {
+export const CustomCoordinates = (props) => {
   return (
     <div>
       <div className="sc-coordinates-heading">{props.title}</div>
@@ -72,7 +72,7 @@ export const CustomCoordinates = props => {
   );
 };
 
-export const CoordinateActions = props => {
+export const CoordinateActions = (props) => {
   return (
     <div className="sc-coordinates-row">
       <label>&nbsp;</label>[{" "}
@@ -88,7 +88,7 @@ export const CoordinateActions = props => {
   );
 };
 
-export const CoordinateRow = props => {
+export const CoordinateRow = (props) => {
   return (
     <div className="sc-coordinates-row sc-arrow">
       <label>{props.label + ":"}:</label>
@@ -100,7 +100,7 @@ export const CoordinateRow = props => {
           type="text"
           placeholder={inputMsg}
           onChange={props.onChange}
-          onKeyDown={evt => {
+          onKeyDown={(evt) => {
             if (evt.key === "Enter") props.onEnterKey();
           }}
         />

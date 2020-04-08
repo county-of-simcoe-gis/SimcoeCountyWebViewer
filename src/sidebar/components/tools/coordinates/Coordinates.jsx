@@ -8,7 +8,7 @@ import proj4 from "proj4";
 import { register } from "ol/proj/proj4";
 import Projection from "ol/proj/Projection.js";
 import { Vector as VectorLayer } from "ol/layer";
-import { Fill, Style, Circle as CircleStyle } from "ol/style.js";
+import { Fill, Style, Circle as CircleStyle, Icon } from "ol/style.js";
 import { Vector as VectorSource } from "ol/source.js";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
@@ -32,34 +32,47 @@ class Coordinates extends Component {
       extentMinY: null,
       extentMaxX: null,
       extentMaxY: null,
-      mapScale: helpers.getMapScale()
+      mapScale: helpers.getMapScale(),
     };
 
     this.vectorLayer = new VectorLayer({
       source: new VectorSource({
-        features: []
+        features: [],
       }),
       style: new Style({
-        image: new CircleStyle({
-          opacity: 0.5,
-          radius: 5,
-          fill: new Fill({ color: "#EE2E2E" })
-        })
-      })
+        image: new Icon({
+          // anchor: [0.5, 0.5],
+          // anchorXUnits: "fraction",
+          // anchorYUnits: "pixels",
+          src: images["cross-hair.png"],
+        }),
+      }),
     });
+    // this.vectorLayer = new VectorLayer({
+    //   source: new VectorSource({
+    //     features: []
+    //   }),
+    //   style: new Style({
+    //     image: new CircleStyle({
+    //       opacity: 0.5,
+    //       radius: 5,
+    //       fill: new Fill({ color: "#EE2E2E" })
+    //     })
+    //   })
+    // });
     this.vectorLayer.setZIndex(500);
     window.map.addLayer(this.vectorLayer);
 
     // UTM NAD 83
     this.nad83Proj = new Projection({
       code: "EPSG:26917",
-      extent: [194772.8107, 2657478.7094, 805227.1893, 9217519.4415]
+      extent: [194772.8107, 2657478.7094, 805227.1893, 9217519.4415],
     });
 
     // UTM NAD 27
     this.nad27Proj = new Projection({
       code: "EPSG:26717",
-      extent: [169252.3099, 885447.906, 830747.6901, 9217404.5493]
+      extent: [169252.3099, 885447.906, 830747.6901, 9217404.5493],
     });
   }
 
@@ -76,14 +89,13 @@ class Coordinates extends Component {
     this.onMapMoveEvent = window.map.on("moveend", this.onMapMoveEnd);
 
     // REGISTER CUSTOM PROJECTIONS
-    proj4.defs([
-      ["EPSG:26917", "+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs "],
-      ["EPSG:26717", "+proj=utm +zone=17 +ellps=clrk66 +datum=NAD27 +units=m +no_defs "]
-    ]);
+    proj4.defs([["EPSG:26917", "+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs "], ["EPSG:26717", "+proj=utm +zone=17 +ellps=clrk66 +datum=NAD27 +units=m +no_defs "]]);
     register(proj4);
 
     // INITIAL EXTENT
     this.updateExtent();
+
+    window.isCoordinateToolOpen = true;
   }
 
   // WHEN MAP EXTENT CHANGES
@@ -99,11 +111,11 @@ class Coordinates extends Component {
     window.emitter.emit("addMyMapsFeature", this.vectorLayer.getSource().getFeatures()[0], "X:" + x + ", Y:" + y);
   };
 
-  onMapMoveEnd = evt => {
+  onMapMoveEnd = (evt) => {
     this.updateExtent();
   };
 
-  onMapClick = evt => {
+  onMapClick = (evt) => {
     const webMercatorCoords = evt.coordinate;
     const latLongCoords = transform(webMercatorCoords, "EPSG:3857", "EPSG:4326");
     const utmNad83Coords = transform(webMercatorCoords, "EPSG:3857", this.nad83Proj);
@@ -117,7 +129,7 @@ class Coordinates extends Component {
       inputNad83XValue: utmNad83Coords[0],
       inputNad83YValue: utmNad83Coords[1],
       inputNad27XValue: utmNad27Coords[0],
-      inputNad27YValue: utmNad27Coords[1]
+      inputNad27YValue: utmNad27Coords[1],
     });
 
     this.glowContainers();
@@ -129,7 +141,7 @@ class Coordinates extends Component {
     // CREATE POINT
     this.vectorLayer.getSource().clear();
     const pointFeature = new Feature({
-      geometry: new Point(webMercatorCoords)
+      geometry: new Point(webMercatorCoords),
     });
     this.vectorLayer.getSource().addFeature(pointFeature);
 
@@ -149,13 +161,13 @@ class Coordinates extends Component {
   }
 
   // POINTER MOVE HANDLER
-  onPointerMoveHandler = evt => {
+  onPointerMoveHandler = (evt) => {
     const webMercatorCoords = evt.coordinate;
     const latLongCoords = transform(webMercatorCoords, "EPSG:3857", "EPSG:4326");
 
     this.setState({
       liveWebMercatorCoords: webMercatorCoords,
-      liveLatLongCoords: latLongCoords
+      liveLatLongCoords: latLongCoords,
     });
   };
 
@@ -169,6 +181,8 @@ class Coordinates extends Component {
 
     // REMOVE THE LAYER
     window.map.removeLayer(this.vectorLayer);
+
+    window.isCoordinateToolOpen = false;
   }
 
   onClose() {
@@ -210,13 +224,13 @@ class Coordinates extends Component {
 
           <div className="sc-container">
             <CustomCoordinates
-              title="Map Coordinates (Web Mercator)"
+              title="Map Coordinates (Web Mercator - Meters)"
               valueX={this.state.inputWebMercatorXValue}
               valueY={this.state.inputWebMercatorYValue}
-              onChangeX={evt => {
+              onChangeX={(evt) => {
                 this.setState({ inputWebMercatorXValue: evt.target.value });
               }}
-              onChangeY={evt => {
+              onChangeY={(evt) => {
                 this.setState({ inputWebMercatorYValue: evt.target.value });
               }}
               onZoomClick={() => {
@@ -235,13 +249,13 @@ class Coordinates extends Component {
             <div className="sc-coordinates-divider">&nbsp;</div>
 
             <CustomCoordinates
-              title="Latitude/Longitude (WGS84)"
+              title="Latitude/Longitude (WGS84 - Degrees)"
               valueX={this.state.inputLatLongXValue}
               valueY={this.state.inputLatLongYValue}
-              onChangeX={evt => {
+              onChangeX={(evt) => {
                 this.setState({ inputLatLongXValue: evt.target.value });
               }}
-              onChangeY={evt => {
+              onChangeY={(evt) => {
                 this.setState({ inputLatLongYValue: evt.target.value });
               }}
               onZoomClick={() => {
@@ -260,13 +274,13 @@ class Coordinates extends Component {
             <div className="sc-coordinates-divider">&nbsp;</div>
 
             <CustomCoordinates
-              title="North American Datum (NAD) 83 - Zone 17"
+              title="North American Datum (NAD) 83 - Zone 17 (meters)"
               valueX={this.state.inputNad83XValue}
               valueY={this.state.inputNad83YValue}
-              onChangeX={evt => {
+              onChangeX={(evt) => {
                 this.setState({ inputNad83XValue: evt.target.value });
               }}
-              onChangeY={evt => {
+              onChangeY={(evt) => {
                 this.setState({ inputNad83YValue: evt.target.value });
               }}
               onZoomClick={() => {
@@ -285,13 +299,13 @@ class Coordinates extends Component {
             <div className="sc-coordinates-divider">&nbsp;</div>
 
             <CustomCoordinates
-              title="North American Datum (NAD) 27 - Zone 17"
+              title="North American Datum (NAD) 27 - Zone 17 (meters)"
               valueX={this.state.inputNad27XValue}
               valueY={this.state.inputNad27YValue}
-              onChangeX={evt => {
+              onChangeX={(evt) => {
                 this.setState({ inputNad27XValue: evt.target.value });
               }}
-              onChangeY={evt => {
+              onChangeY={(evt) => {
                 this.setState({ inputNad27YValue: evt.target.value });
               }}
               onZoomClick={() => {
@@ -310,13 +324,7 @@ class Coordinates extends Component {
 
           <div className="sc-title sc-coordinates-title">Map Extent</div>
 
-          <MapExtent
-            key={helpers.getUID()}
-            extentMinX={this.state.extentMinX}
-            extentMinY={this.state.extentMinY}
-            extentMaxX={this.state.extentMaxX}
-            extentMaxY={this.state.extentMaxY}
-          />
+          <MapExtent key={helpers.getUID()} extentMinX={this.state.extentMinX} extentMinY={this.state.extentMinY} extentMaxX={this.state.extentMaxX} extentMaxY={this.state.extentMaxY} />
 
           <div className="sc-title sc-coordinates-title">Map Scale</div>
           <div className="sc-container">
@@ -332,3 +340,11 @@ class Coordinates extends Component {
 }
 
 export default Coordinates;
+
+// IMPORT ALL IMAGES
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
+function importAllImages(r) {
+  let images = {};
+  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
+  return images;
+}
