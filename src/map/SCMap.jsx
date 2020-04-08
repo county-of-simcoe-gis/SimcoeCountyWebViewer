@@ -27,6 +27,7 @@ import Portal from "../helpers/Portal.jsx";
 import * as helpers from "../helpers/helpers";
 import mainConfig from "../config.json";
 import Identify from "./Identify";
+import AttributeTable from "../helpers/AttributeTable.jsx";
 
 const scaleLineControl = new ScaleLine();
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
@@ -42,11 +43,15 @@ class SCMap extends Component {
       mapClassName: "sc-map",
       shareURL: null,
       parcelClickText: "Disable Property Click",
-      isIE: false
+      isIE: false,
+      mapBottom: 0,
     };
 
     // LISTEN FOR TOC TO LOAD
     window.emitter.addListener("tocLoaded", () => this.handleUrlParameters());
+
+    // LISTEN FOR ATTRIBUTE TABLE SIZE
+    window.emitter.addListener("attributeTableResize", (height) => this.onAttributeTableResize(height));
   }
 
   componentDidMount() {
@@ -80,23 +85,23 @@ class SCMap extends Component {
       view: new View({
         center: centerCoords,
         zoom: defaultZoom,
-        maxZoom: mainConfig.maxZoom
+        maxZoom: mainConfig.maxZoom,
         //resolutions: resolutions
       }),
       interactions: defaultInteractions({ keyboard: true, altShiftDragRotate: false, pinchRotate: false, mouseWheelZoom: false }).extend([
         new MouseWheelZoom({
           duration: 0,
-          constrainResolution: true
-        })
+          constrainResolution: true,
+        }),
       ]),
-      keyboardEventTarget: document
+      keyboardEventTarget: document,
     });
 
     window.map = map;
     window.popup = new Popup();
     window.map.addOverlay(window.popup);
 
-    window.map.getViewport().addEventListener("contextmenu", evt => {
+    window.map.getViewport().addEventListener("contextmenu", (evt) => {
       evt.preventDefault();
       this.contextCoords = window.map.getEventCoordinate(evt);
 
@@ -155,13 +160,45 @@ class SCMap extends Component {
 
     // MAP LOADED
     this.initialLoad = false;
-    window.map.once("rendercomplete", event => {
+    window.map.once("rendercomplete", (event) => {
       if (!this.initialLoad) {
         window.emitter.emit("mapLoaded");
         this.initialLoad = true;
       }
     });
+
+    window.map.on("change:size", () => {
+      if (!window.isAttributeTableResizing) {
+        window.emitter.emit("mapResize");
+      }
+    });
+
+    // ATTRIBUTE TABLE TESTING
+    // helpers.getWFSGeoJSON(
+    //   "https://opengis.simcoe.ca/geoserver/",
+    //   "simcoe:Airport",
+    //   (result) => {
+    //     if (result.length === 0) return;
+
+    //     window.emitter.emit("openAttributeTable", { name: "Airport", geoJson: result });
+    //   },
+    //   null,
+    //   null,
+    //   null
+    // );
   }
+
+  onAttributeTableResize = (height) => {
+    console.log(height);
+    console.log("att resize event in map");
+    this.setState({ mapBottom: Math.abs(height) }, () => {
+      //this.forceUpdate();
+      window.map.updateSize();
+      // setTimeout(function() {
+      //   window.map.updateSize();
+      // }, 300);
+    });
+  };
 
   handleUrlParameters = () => {
     const storage = localStorage.getItem(this.storageExtentKey);
@@ -196,7 +233,7 @@ class SCMap extends Component {
     window.emitter.emit("mapParametersComplete");
   };
 
-  onMenuItemClick = key => {
+  onMenuItemClick = (key) => {
     if (key === "sc-floating-menu-zoomin") window.map.getView().setZoom(window.map.getView().getZoom() + 1);
     else if (key === "sc-floating-menu-zoomout") window.map.getView().setZoom(window.map.getView().getZoom() - 1);
     else if (key === "sc-floating-menu-property-click") window.emitter.emit("showPropertyReport", this.contextCoords);
@@ -223,7 +260,7 @@ class SCMap extends Component {
 
   identify = () => {
     const point = new Point(this.contextCoords);
-    window.emitter.emit("loadReport", <Identify geometry={point}></Identify>);
+    window.emitter.emit("loadReport", <Identify geometry={point} />);
   };
 
   reportProblem = () => {
@@ -287,12 +324,12 @@ class SCMap extends Component {
   }
 
   render() {
-    window.emitter.addListener("sidebarChanged", isSidebarOpen => this.sidebarChanged(isSidebarOpen));
+    window.emitter.addListener("sidebarChanged", (isSidebarOpen) => this.sidebarChanged(isSidebarOpen));
 
     return (
       <div>
         <div id="map-modal-window" />
-        <div id="map" className={this.state.mapClassName} tabIndex="0" />
+        <div id="map" className={this.state.mapClassName} tabIndex="0" style={{ bottom: this.state.mapBottom }} />
         <Navigation />
         <FooterTools />
         <BasemapSwitcher />
@@ -309,6 +346,7 @@ class SCMap extends Component {
             Follow @simcoecountygis
           </GitHubButton>
         </div>
+        <AttributeTable />
       </div>
     );
   }
