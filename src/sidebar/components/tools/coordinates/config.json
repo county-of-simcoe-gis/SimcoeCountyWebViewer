@@ -1,42 +1,94 @@
 {
     "coordinate_systems":[
         {
-            "projection": "WGS 84",
+            "projection": "None",
             "precision":7,
             "zones": [
                 {
-                    "name": "Geographic",
-                    "zone": "Geographic",
+                    "name": "Geographic - Lat, Long",
+                    "zone": "Geographic - Lat, Long",
                     "code": "EPSG:4326",
                     "boundary": [180, -90, -180, 90]
                 }
             ]
         },
-        {
-            "projection": "Web Mercator",
+        {	
+            "projection": "MTM (NAD83)",
             "precision":2,
             "zones": [
-                {
-                    "name": "Geographic",
-                    "zone": "Geographic",
-                    "code": "EPSG:3857",
-                    "boundary": [180, -90, -180, 90]
-                }
-            ]
-        },
-        {
-            "projection": "CSRS (NAD83) / Ontario MNR Lambert",
-            "precision":2,
-            "zones": [
-                {
-                    "name": "Geographic",
-                    "zone": "Geographic",
-                    "code": "EPSG:3162",
-                    "boundary": [180, -90, -180, 90],
-                    "extent": [276224.0846, 5320655.7891, 723775.9154, 9106037.1690],
-                    "def":["EPSG:3162","+proj=lcc +lat_1=44.5 +lat_2=53.5 +lat_0=0 +lon_0=-85 +x_0=930000 +y_0=6430000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
-                }
-            ]
+                  {
+                      "name": "MTMZone8",
+                      "zone": "8",
+                      "code": "EPSG:2950",
+                      "extent":[186520.9794, 4984429.4038, 423079.0206, 6939545.2562],
+                      "boundary": [-72.0, 44.9,-75.0, 45.7],
+                      "def": ["EPSG:2950","+proj=tmerc +lat_0=0 +lon_0=-73.5 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
+                  },
+                  {
+                      "name": "MTMZone9",
+                      "zone": "9",
+                      "code": "EPSG:2951",
+                      "extent": [187119.0831, 5016655.1259, 422480.9169, 6939545.2562],
+                      "boundary": [-75.0, 43.60, -78.0, 46.30],
+                      "def": ["EPSG:2951","+proj=tmerc +lat_0=0 +lon_0=-76.5 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
+                  },
+                  {
+                      "name": "MTMZone10",
+                      "zone": "10",
+                      "code": "EPSG:2952",
+                      "extent": [284708.7738, 5110057.5726, 420710.4323, 6932859.9920],
+                      "boundary": [[-80.250, 42, -81, 46],[-79.50, 42, -80.25, 47],[-78.00, 42, -79.50, 47.325]],
+                      "def": ["EPSG:2952","+proj=tmerc +lat_0=0 +lon_0=-79.5 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
+                  },
+                  {
+                      "name": "MTMZone11",
+                      "zone": "11",
+                      "code": "EPSG:26891",
+                      "extent": [214050.0658, 4616206.8633, 429686.0222, 5096670.4351],
+                      "boundary": [-81, 41.50, -83, 46],
+                      "def": ["EPSG:26891","+proj=tmerc +lat_0=0 +lon_0=-82.5 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
+                  },
+                  {
+                      "name": "MTMZone12",
+                      "zone": "12",
+                      "code": "EPSG:26892",
+                      "extent": [188617.1146, 5096670.4351, 420982.8854, 6131040.4099],
+                      "boundary":[[-80.25, 46, -82.5, 55.20], [-79.5, 47, -80.25, 51.70]],
+                      "def": ["EPSG:26892","+proj=tmerc +lat_0=0 +lon_0=-81 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
+                  },
+                  {
+                      "name": "MTMZone13",
+                      "zone": "13",
+                      "code": "EPSG:26893",
+                      "extent": [188617.1146, 5096670.4351, 420982.8854, 6156640.8990],
+                      "boundary":[-82.5, 46, -85.5, 55.50],
+                      "def": ["EPSG:26893","+proj=tmerc +lat_0=0 +lon_0=-84 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
+                  },
+                  {
+                      "name": "MTMZone14",
+                      "zone": "14",
+                      "code": "EPSG:26894",
+                      "extent": [191154.7596, 5230050.2455, 418445.2404, 6286883.3724],
+                      "boundary":[-85.5, 47.150, -88.5, 55.50],
+                      "def": ["EPSG:26894","+proj=tmerc +lat_0=0 +lon_0=-87 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
+                  },
+                  {
+                      "name": "MTMZone15",
+                      "zone": "15",
+                      "code": "EPSG:26895",
+                      "extent": [192442.4789, 5296749.9632, 417157.5211, 6304696.1015],
+                      "boundary":[-88.5, 47.950, -91.5, 56.95],
+                      "def": ["EPSG:26895","+proj=tmerc +lat_0=0 +lon_0=-90 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
+                  },
+                  {
+                      "name": "MTMZone16",
+                      "zone": "16",
+                      "code": "EPSG:26896",
+                      "extent": [192874.4840, 5318984.6537, 416725.5160, 6131040.4099],
+                      "boundary":[-91.5, 48, -94.5, 55.30],
+                      "def": ["EPSG:26896","+proj=tmerc +lat_0=0 +lon_0=-93 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
+                  }
+                 ]
         },
         {	
             "projection": "UTM (NAD83)",
@@ -119,83 +171,33 @@
                 }
             ]
         },
-        {	
-          "projection": "MTM (NAD83)",
-          "precision":2,
-          "zones": [
+        {
+            "projection": "Ontario MNR Lambert (NAD83)",
+            "precision":2,
+            "zones": [
                 {
-                    "name": "MTMZone8",
-                    "zone": "8",
-                    "code": "EPSG:2950",
-                    "extent":[186520.9794, 4984429.4038, 423079.0206, 6939545.2562],
-                    "boundary": [-72.0, 44.9,-75.0, 45.7],
-                    "def": ["EPSG:2950","+proj=tmerc +lat_0=0 +lon_0=-73.5 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
-                },
-                {
-                    "name": "MTMZone9",
-                    "zone": "9",
-                    "code": "EPSG:2951",
-                    "extent": [187119.0831, 5016655.1259, 422480.9169, 6939545.2562],
-                    "boundary": [-75.0, 43.60, -78.0, 46.30],
-                    "def": ["EPSG:2951","+proj=tmerc +lat_0=0 +lon_0=-76.5 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
-                },
-                {
-                    "name": "MTMZone10",
-                    "zone": "10",
-                    "code": "EPSG:2952",
-                    "extent": [284708.7738, 5110057.5726, 420710.4323, 6932859.9920],
-                    "boundary": [[-80.250, 42, -81, 46],[-79.50, 42, -80.25, 47],[-78.00, 42, -79.50, 47.325]],
-                    "def": ["EPSG:2952","+proj=tmerc +lat_0=0 +lon_0=-79.5 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
-                },
-                {
-                    "name": "MTMZone11",
-                    "zone": "11",
-                    "code": "EPSG:26891",
-                    "extent": [214050.0658, 4616206.8633, 429686.0222, 5096670.4351],
-                    "boundary": [-81, 41.50, -83, 46],
-                    "def": ["EPSG:26891","+proj=tmerc +lat_0=0 +lon_0=-82.5 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
-                },
-                {
-                    "name": "MTMZone12",
-                    "zone": "12",
-                    "code": "EPSG:26892",
-                    "extent": [188617.1146, 5096670.4351, 420982.8854, 6131040.4099],
-                    "boundary":[[-80.25, 46, -82.5, 55.20], [-79.5, 47, -80.25, 51.70]],
-                    "def": ["EPSG:26892","+proj=tmerc +lat_0=0 +lon_0=-81 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
-                },
-                {
-                    "name": "MTMZone13",
-                    "zone": "13",
-                    "code": "EPSG:26893",
-                    "extent": [188617.1146, 5096670.4351, 420982.8854, 6156640.8990],
-                    "boundary":[-82.5, 46, -85.5, 55.50],
-                    "def": ["EPSG:26893","+proj=tmerc +lat_0=0 +lon_0=-84 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
-                },
-                {
-                    "name": "MTMZone14",
-                    "zone": "14",
-                    "code": "EPSG:26894",
-                    "extent": [191154.7596, 5230050.2455, 418445.2404, 6286883.3724],
-                    "boundary":[-85.5, 47.150, -88.5, 55.50],
-                    "def": ["EPSG:26894","+proj=tmerc +lat_0=0 +lon_0=-87 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
-                },
-                {
-                    "name": "MTMZone15",
-                    "zone": "15",
-                    "code": "EPSG:26895",
-                    "extent": [192442.4789, 5296749.9632, 417157.5211, 6304696.1015],
-                    "boundary":[-88.5, 47.950, -91.5, 56.95],
-                    "def": ["EPSG:26895","+proj=tmerc +lat_0=0 +lon_0=-90 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
-                },
-                {
-                    "name": "MTMZone16",
-                    "zone": "16",
-                    "code": "EPSG:26896",
-                    "extent": [192874.4840, 5318984.6537, 416725.5160, 6131040.4099],
-                    "boundary":[-91.5, 48, -94.5, 55.30],
-                    "def": ["EPSG:26896","+proj=tmerc +lat_0=0 +lon_0=-93 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
+                    "name": "Geographic",
+                    "zone": "Geographic",
+                    "code": "EPSG:3162",
+                    "boundary": [180, -90, -180, 90],
+                    "extent": [276224.0846, 5320655.7891, 723775.9154, 9106037.1690],
+                    "def":["EPSG:3162","+proj=lcc +lat_1=44.5 +lat_2=53.5 +lat_0=0 +lon_0=-85 +x_0=930000 +y_0=6430000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
                 }
-               ]
-        }	
+            ]
+        },
+        {
+            "projection": "Web Mercator",
+            "precision":2,
+            "zones": [
+                {
+                    "name": "Geographic",
+                    "zone": "Geographic",
+                    "code": "EPSG:3857",
+                    "boundary": [180, -90, -180, 90]
+                }
+            ]
+        }
+        
+        
     ]
 }
