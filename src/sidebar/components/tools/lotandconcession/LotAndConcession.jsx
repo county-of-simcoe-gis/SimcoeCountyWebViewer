@@ -270,10 +270,6 @@ const munis = [
     label: "MEDONTE",
   },
   {
-    value: "MORRISON",
-    label: "MORRISON",
-  },
-  {
     value: "NOTTAWASAGA",
     label: "NOTTAWASAGA",
   },
@@ -286,8 +282,8 @@ const munis = [
     label: "ORO",
   },
   {
-    value: "MARA",
-    label: "MARA",
+    value: "RAMA",
+    label: "RAMA",
   },
   {
     value: "SUNNIDALE",
