@@ -393,24 +393,6 @@ class Coordinates extends Component {
               }}
             />
           </div>
-          
-          <div className="sc-title sc-coordinates-title">Map Extent (Web Mercator)</div>
-
-          <MapExtent
-            key={helpers.getUID()}
-            extentMinX={this.state.extentMinX}
-            extentMinY={this.state.extentMinY}
-            extentMaxX={this.state.extentMaxX}
-            extentMaxY={this.state.extentMaxY}
-          />
-
-          <div className="sc-title sc-coordinates-title">Map Scale</div>
-          <div className="sc-container">
-            <div className="sc-coordinates-row sc-arrow">
-              <label>Scale</label>
-              <span>{"1:" + this.state.mapScale}</span>
-            </div>
-          </div>
         </div>
       </PanelComponent>
     );
