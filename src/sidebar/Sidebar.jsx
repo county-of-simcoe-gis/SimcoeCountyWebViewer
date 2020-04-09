@@ -32,7 +32,7 @@ class Sidebar extends Component {
       // CLASSES
       tabClassName: "sidebar-advanced-tab",
       sidebarOpen: false,
-
+      defaultSidebarOpen: true,
       // SELECTED TAB
       tabIndex: 0,
 
@@ -125,7 +125,7 @@ class Sidebar extends Component {
     const url = new URL(window.location.href.toUpperCase());
     const viewerMode = url.searchParams.get("MODE");
     window.sidebarOpen = false;
-    if (viewerMode !== null && viewerMode === "ADVANCED") {
+    if ((viewerMode !== null && viewerMode === "ADVANCED") || this.state.defaultSidebarOpen) {
       this.togglePanelVisibility();
       window.sidebarOpen = true;
       this.setState({ sidebarOpen: true });
