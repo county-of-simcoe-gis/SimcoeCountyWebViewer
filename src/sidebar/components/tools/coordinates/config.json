@@ -1,12 +1,12 @@
 {
     "coordinate_systems":[
         {
-            "projection": "None",
+            "projection": "Lat / Long",
             "precision":7,
             "zones": [
                 {
-                    "name": "Geographic - Lat, Long",
-                    "zone": "Geographic - Lat, Long",
+                    "name": " ",
+                    "zone": " ",
                     "code": "EPSG:4326",
                     "boundary": [180, -90, -180, 90]
                 }
@@ -176,8 +176,8 @@
             "precision":2,
             "zones": [
                 {
-                    "name": "Geographic",
-                    "zone": "Geographic",
+                    "name": " ",
+                    "zone": " ",
                     "code": "EPSG:3162",
                     "boundary": [180, -90, -180, 90],
                     "extent": [276224.0846, 5320655.7891, 723775.9154, 9106037.1690],
@@ -190,8 +190,8 @@
             "precision":2,
             "zones": [
                 {
-                    "name": "Geographic",
-                    "zone": "Geographic",
+                    "name": " ",
+                    "zone": " ",
                     "code": "EPSG:3857",
                     "boundary": [180, -90, -180, 90]
                 }

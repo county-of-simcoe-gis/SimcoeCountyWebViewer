@@ -190,11 +190,7 @@ class TOC extends Component {
     const defaultGroup = this.state.defaultGroup;
     this.setState({ sortAlpha: false, selectedGroup: defaultGroup }, () => {
       this.refreshTOC(() => {
-       
-          this.state.layerGroups.forEach(group => {
-            window.emitter.emit("resetLayers", group.value);
-          })
-        
+            window.emitter.emit("resetLayers", null);
       });
     });
 
@@ -234,10 +230,8 @@ class TOC extends Component {
       localStorage.clear();
       helpers.showMessage("Local Data Cleared", "Your local data has been cleared");
     } else if (action === "sc-floating-menu-visility") {
-      this.state.layerGroups.forEach(group => {
-        window.emitter.emit("turnOffLayers", group.value);
-       });
-       window.emitter.emit("updateActiveTocLayers");
+       window.emitter.emit("turnOffLayers", null);
+       window.emitter.emit("updateActiveTocLayers", null);
     }
 
     helpers.addAppStat("TOC Tools", action);

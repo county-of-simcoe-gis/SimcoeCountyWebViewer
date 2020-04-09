@@ -10,7 +10,7 @@
 }
 
 .sc-coordinates-title {
-  margin-top: 15px;
+  margin-top: 18px;
   margin-bottom: 0px !important;
 }
 
@@ -24,12 +24,12 @@
 .sc-coordinates-heading {
   padding-bottom: 5px;
   color: #4073C1;
-  font-size: 11px;
+  font-size: 16px;
 }
 
 .sc-coordinates-action-bar{
   text-align:right;
-  font-size:11px;
+  font-size:16px;
 }
 
 .sc-coordinates-row {
@@ -46,12 +46,12 @@
       display: inline-block;
       font-weight: bold;
       padding-left: 20px;
-      font-size: 11px;
+      font-size: 16px;
   }
 
   .sc-coordinates-row span {
       color: #8E8E8E;
-      font-size: 11px;
+      font-size: 16px;
   }
 
 .sc-coordinates-table {
@@ -67,6 +67,7 @@
   display: table-header-group;
   font-weight: bold;
   text-align: center;
+  font-size: 18px;
 }
 .sc-coordinates-cell {
 	display: table-cell;
@@ -75,7 +76,7 @@
 .sc-coordinates-input {
   color: #8E8E8E;
   padding: 3px;
-  font-size: 12px;
+  font-size: 16px;
   width: 170px;
   border: 1px solid #CCC;
   padding-left: 5px;
@@ -83,4 +84,7 @@
 
   .sc-coordinates-input:focus {
       border-color: #4A8EC7;
+  }
+  .sc-float-right{
+    text-align: right;
   }
