@@ -60,12 +60,12 @@ export const ProjectedCoordinates = props => {
       
       <div className="sc-container">
         <div className="sc-coordinates-row sc-arrow">
-          <label>X Coordinate:</label>
+          <label>X / Long:</label>
           <span>{props.coords === null ? inputMsg : props.coords[0].toFixed(props.precision)}</span>
         </div>
 
         <div className="sc-coordinates-row sc-arrow">
-          <label>Y Coordinate:</label>
+          <label>Y / Lat:</label>
           <span>{props.coords === null ? inputMsg : props.coords[1].toFixed(props.precision)}</span>
         </div>
       </div>
@@ -103,8 +103,8 @@ export const CustomCoordinates = props => {
   return (
     <div>
       <div className="sc-coordinates-heading">{props.title}</div>
-      <CoordinateRow label="X Coordinate" value={props.valueX} onChange={props.onChangeX} inputId={props.inputIdX} onEnterKey={props.onZoomClick} />
-      <CoordinateRow label="Y Coordinate" value={props.valueY} onChange={props.onChangeY} inputId={props.inputIdY} onEnterKey={props.onZoomClick} />
+      <CoordinateRow label="X / Long" value={props.valueX} onChange={props.onChangeX} inputId={props.inputIdX} onEnterKey={props.onZoomClick} />
+      <CoordinateRow label="Y / Lat" value={props.valueY} onChange={props.onChangeY} inputId={props.inputIdY} onEnterKey={props.onZoomClick} />
       <CoordinateActions onZoomClick={props.onZoomClick} onMyMapsClick={() => props.onMyMapsClick(props.valueX, props.valueY)} />
     </div>
   );
@@ -112,7 +112,7 @@ export const CustomCoordinates = props => {
 
 export const CoordinateActions = props => {
   return (
-    <div className="sc-coordinates-row">
+    <div className="sc-coordinates-row sc-float-right">
       [&nbsp;<span className="sc-fakeLink" onClick={props.onZoomClick}>zoom</span>&nbsp;]
       [&nbsp;<span className="sc-fakeLink" onClick={props.onMyMapsClick}>add to my Maps</span>&nbsp;]
     </div>

@@ -33,7 +33,7 @@ class MyMapsBuffer extends Component {
 
     this.state = {
       color: { r: 85, g: 243, b: 30, a: 1 },
-      distance: 50,
+      distance: 0,
       units: "meters",
       addMessageVisible: false
     };
@@ -90,6 +90,7 @@ class MyMapsBuffer extends Component {
   onColorPickerChange = color => {
     this.setState({ color: color.rgb }, () => {
       this.vectorLayer.setStyle(this.getStyle());
+      this.onPreviewBufferClick();
     });
   };
 
@@ -142,11 +143,17 @@ class MyMapsBuffer extends Component {
     }
   };
   onDistanceChange = evt => {
-    this.setState({ distance: evt.target.value });
+    var value = parseFloat(evt.target.value);
+    if(isNaN(value)) value = 0;
+    this.setState({ distance: value }, () => {
+      this.onPreviewBufferClick(evt);
+    });
   };
 
   onUnitsChange = evt => {
-    this.setState({ units: evt.target.value });
+    this.setState({ units: evt.target.value }, () => {
+      this.onPreviewBufferClick(evt);
+    });
   };
 
   onAddBufferToMyMaps = () => {
@@ -181,9 +188,7 @@ class MyMapsBuffer extends Component {
             title="Change Buffer Color"
             onMouseUp={this.onColorPickerButton}
           />
-          <button style={{ gridColumnStart: "2", gridRowStart: "3" }} onMouseUp={this.onPreviewBufferClick}>
-            Preview Buffer
-          </button>
+          
           <label
             className={this.state.addMessageVisible ? "sc-fakeLink" : "sc-hidden"}
             style={{ gridColumnStart: "1", gridColumnEnd: "3", gridRowStart: "4", textAlign: "-webkit-center", alignSelf: "center" }}

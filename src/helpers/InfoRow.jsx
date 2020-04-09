@@ -1,8 +1,13 @@
 import React from "react";
 import mainConfig from "../config.json";
+import moment from "moment";
 export const InfoRow = props => {
   // CONVERT URL'S TO LINKS
   let value = props.value;
+  var formats = [
+    moment.ISO_8601,
+    "YYYY-MM-DDZ",
+  ];
   if (
     props.value != null &&
     props.value
@@ -29,6 +34,12 @@ export const InfoRow = props => {
             Click To Open
           </a>
         );
+      }
+      else if (
+        props.value != null &&
+        moment(props.value, formats, true).isValid()
+      ){
+        value = moment(props.value).format("YYYY-MM-DD");
       }
     
 

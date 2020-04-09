@@ -10,9 +10,9 @@ class MyMapsPopupLabel extends Component {
     this.sliderMax = 360;
 
     this.state = {
-      label: props.item.label,
-      labelRotation: this.props.item.labelRotation,
-      showLabel: this.props.item.labelVisible
+      label: props.item !== undefined ? props.item.label : "",
+      labelRotation: props.item !== undefined ? this.props.item.labelRotation : 0,
+      showLabel: props.item !== undefined ? this.props.item.labelVisible : false
     };
   }
 

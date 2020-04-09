@@ -189,7 +189,10 @@ class SCMap extends Component {
       helpers.showURLWindow(mainConfig.ieWarningUrl);
     } else {
       // SHOW TERMS
-      helpers.showURLWindow(mainConfig.termsUrl, false, "full")
+      if (helpers.isMobile()) {
+        window.emitter.emit("setSidebarVisiblity", "CLOSE");
+        helpers.showURLWindow(mainConfig.termsUrl, false, "full");
+      } else helpers.showURLWindow(mainConfig.termsUrl);
     }
 
     // MAP LOADED

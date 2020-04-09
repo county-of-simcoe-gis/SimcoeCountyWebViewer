@@ -41,7 +41,8 @@ class Coordinates extends Component {
       selectProjectionOptions: [],
       selectProjectionOption: undefined,
       selectProjectionZoneOptions: [],
-      selectProjectionZoneOption: undefined
+      selectProjectionZoneOption: undefined,
+      hideZone:false
       
     };
     this.currentPrecision = 2;
@@ -115,11 +116,12 @@ class Coordinates extends Component {
     }else{
       this.calculatedZone = undefined
     }
-    
+    const hide = defs.length <= 2 ? true : false;
     if (this.calculatedZone !== undefined ) currentZone = this.calculatedZone;
-    this.setState({selectProjectionZoneOptions:defs,selectProjectionZoneOption: currentZone});
+    this.setState({selectProjectionZoneOptions:defs,selectProjectionZoneOption: currentZone, hideZone: hide});
   }
 
+ 
   _getProj4Defs = () => {
     let defs = [];
     coordinateConfig.coordinate_systems.forEach(proj => {
@@ -198,7 +200,7 @@ class Coordinates extends Component {
     const webMercatorCoords = evt.coordinate;
     const latLongCoords = transform(webMercatorCoords, "EPSG:3857", "EPSG:4326");
     const selectedCoords = transform(webMercatorCoords, "EPSG:3857", this.currentProjection);
-    const inputTitle = "Map Coordinates"+ (this.state.selectProjectionOption === undefined ? "" : " (" +this.state.selectProjectionOption.label + (this.state.selectProjectionZoneOption === undefined ? "" : " - " +this.state.selectProjectionZoneOption.label) + ")");
+    const inputTitle = (this.state.selectProjectionOption === undefined ? "" : this.state.selectProjectionOption.label + (this.state.selectProjectionZoneOption === undefined || this.state.selectProjectionZoneOption.label.trim() === "" ? "" : " - " +this.state.selectProjectionZoneOption.label) );
     const inputProjection = this.currentProjection;
     this.setState({
       inputWebMercatorXValue: webMercatorCoords[0],
@@ -288,7 +290,7 @@ class Coordinates extends Component {
   onChangeProjectionZoneSelect = selection => {
     if (selection.value !== 'auto') {
       this.currentProjection=selection.value;
-      const inputTitle = "Map Coordinates"+ (this.state.selectProjectionOption === undefined ? "" : " (" +this.state.selectProjectionOption.label + (selection === undefined ? "" : " - " +selection.label) + ")");
+      const inputTitle = (this.state.selectProjectionOption === undefined ? "" : this.state.selectProjectionOption.label + (selection === undefined || selection.label.trim() === "" ? "" : " - " +selection.label));
       this.setState({ selectProjectionZoneOption:selection,inputProjection: this.currentProjection,inputProjectionTitle: inputTitle },() => {
         this.onPointUpdate(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
       });
@@ -343,7 +345,7 @@ class Coordinates extends Component {
                   Projection
                 </div> 
                 <div className="sc-coordinates-cell">
-                  Zone
+                 <span className={this.state.hideZone ? "sc-hidden" : ""} >Zone</span> 
                 </div>  
               </div>
               <div className="sc-coordinates-row">
@@ -351,19 +353,14 @@ class Coordinates extends Component {
                 <Select id="sc-coordinate-select" onChange={this.onChangeProjectionSelect} options={this.state.selectProjectionOptions} value={this.state.selectProjectionOption} />
                 </div> 
                 <div className="sc-coordinates-cell">
-                <Select id="sc-zone-select" onChange={this.onChangeProjectionZoneSelect} options={this.state.selectProjectionZoneOptions} value={this.state.selectProjectionZoneOption} />
+                <Select id="sc-zone-select" onChange={this.onChangeProjectionZoneSelect} className={this.state.hideZone ? "sc-hidden" : ""} options={this.state.selectProjectionZoneOptions} value={this.state.selectProjectionZoneOption} />
                 </div>  
               </div>
           </div>         
           <div className="sc-description">Live coordinates of your current pointer/mouse position.</div>
           <ProjectedCoordinates key={helpers.getUID()} coords={this.state.liveCoords} precision={this.currentPrecision}  />
           
-          <div className="sc-title sc-coordinates-title">Selected Coordinates</div>
-
-          <div className="sc-description">
-            Capture points in a variety of different coordinate systems or enter your own locations and zoom to its location. Simply click on the map to capture locations.
-          </div>
-          
+          <div className="sc-title sc-coordinates-title">Captured / Selected Coordinates</div>
           <div className="sc-container">
             <CustomCoordinates
               title={this.state.inputProjectionTitle}
@@ -392,6 +389,9 @@ class Coordinates extends Component {
                 this.onZoomClick(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
               }}
             />
+          </div>
+          <div className="sc-description">
+            Capture points in a variety of different coordinate systems or enter your own locations and zoom to its location. Simply click on the map to capture locations.
           </div>
         </div>
       </PanelComponent>
