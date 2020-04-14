@@ -69,7 +69,14 @@ class MyMapsAdvanced extends Component {
             <div className="sc-mymaps-advanced-import-container">
               <label className="sc-mymaps-advanced-main-label">Import/Save</label>
               <div>
-                <input className={this.inputId} id={this.inputId} type="text" placeholder="Enter ID here" onChange={this.onInputChange} value={this.state.inputText} />
+                <input 
+                  className={this.inputId} 
+                  id={this.inputId} type="text" 
+                  placeholder="Enter ID here" 
+                  onChange={this.onInputChange} 
+                  onFocus={evt => {helpers.disableKeyboardEvents(true);}} 
+                  onBlur={evt => {helpers.disableKeyboardEvents(false);}} 
+                  value={this.state.inputText} />
                 {/* <Select
                   styles={selectStyles}
                   // isSearchable={false}

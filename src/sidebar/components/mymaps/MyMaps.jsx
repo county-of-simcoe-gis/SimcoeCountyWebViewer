@@ -535,10 +535,10 @@ class MyMaps extends Component {
 
     let center = null;
     if (evt === null) {
-      helpers.getGeometryCenter(feature.getGeometry(), center => {
+      helpers.getGeometryCenter(feature.getGeometry(), featureCenter => {
         // SHOW POPUP
         window.popup.show(
-          center.flatCoordinates,
+          featureCenter.flatCoordinates ,
           <MyMapsPopup
             key={helpers.getUID()}
             activeTool={activeTool}

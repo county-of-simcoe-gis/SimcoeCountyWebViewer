@@ -12,23 +12,22 @@ class GroupItem extends Component {
       visible: true,
       newProps : false,
       userPanelOpen: false,
-      activeLayerCount : 0
+      activeLayerCount: 0
     };
     window.emitter.addListener("activeTocLayerGroup", (groupName, callback) => {if (groupName === this.props.group.value) this.onActivateLayer(callback)});
-    window.emitter.addListener("updateActiveTocLayers", () => { this.setActiveLayerCount()});
-
+    window.emitter.addListener("updateActiveTocLayers",(groupName) => {if (groupName === this.props.group.value) this.setActiveLayerCount()});
   }
 
   setActiveLayerCount = () => {
-    let activeLayerCount = this.props.group.layers.filter(layer => {
+    this.setState({activeLayerCount: this.activeCount()})
+  }
+  activeCount = () => {
+    return this.props.group.layers.filter(layer => {
       if (layer.layer.getVisible()){
         return layer;
       } 
     }).length;
-
-    this.setState({activeLayerCount: activeLayerCount})
   }
-
   onActivateLayer = (callback) => {
     let panelOpen = this.state.panelOpen;
     this.setActiveLayerCount();
@@ -110,7 +109,7 @@ class GroupItem extends Component {
      return(
       
             <div  className={"sc-toc-group-list-container"} key={"sc-toc-group-list-container" + this.props.group.value} >
-            <div  className={this.state.panelOpen ? "sc-toc-group-list-header open" : "sc-toc-group-list-header"} onClick={this.onHeaderClick}>
+            <div  className={(this.state.panelOpen ? "sc-toc-group-list-header open" : "sc-toc-group-list-header") + (this.state.activeLayerCount>0 ? " active" : "")} onClick={this.onHeaderClick}>
               <div className={"sc-toc-group-list-header-label"}>&nbsp;&nbsp;{this.props.group.label} <span>- ({this.state.activeLayerCount}/{this.props.group.layers.length})</span></div>
             </div>
            

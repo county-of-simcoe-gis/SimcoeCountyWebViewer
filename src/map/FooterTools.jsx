@@ -16,7 +16,7 @@ class FooterTools extends Component {
     this.onMapLoad = this.onMapLoad.bind(this);
     this.state = {
       scale: "",
-      basemapType: "IMAGERY"
+      basemapType: "TOPO"
     };
 
     // LISTEN FOR MAP TO MOUNT

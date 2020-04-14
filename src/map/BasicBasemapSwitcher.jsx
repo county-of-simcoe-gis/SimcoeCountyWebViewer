@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import "./BasemapSwitcher.css";
 import * as helpers from "../helpers/helpers";
 import BasemapConfig from "./basemapSwitcherConfig.json";
-import Slider from "rc-slider";
 import { Group as LayerGroup } from "ol/layer.js";
 import xml2js from "xml2js";
 
@@ -11,13 +10,6 @@ class BasemapSwitcher extends Component {
     super(props);
 
     this.state = {
-      imagerySliderMarks: this.getImagerySliderMarks(),
-      imagerySliderMin: 0,
-      imagerySliderMax: BasemapConfig.imageryServices.length - 1,
-      imagerySliderDefaultValue: BasemapConfig.imageryServices.length - 1,
-      imagerySliderValue: BasemapConfig.imageryServices.length - 1,
-      imageryLayers: [],
-      imageryPanelOpen: false,
       streetsLayer: null,
       streetsCheckbox: true,
       containerCollapsed: false,
@@ -26,78 +18,23 @@ class BasemapSwitcher extends Component {
       topoActiveIndex: 0,
       topoCheckbox: true,
       topoOverlayLayers: [],
-      activeButton: "imagery"
+      activeButton: "topo"
     };
 
     // LISTEN FOR MAP TO MOUNT
     window.emitter.addListener("mapLoaded", () => this.onMapLoad());
   }
 
-  // CREATE YEAR MARKS ON THE SLIDER
-  getImagerySliderMarks() {
-    const numServices = BasemapConfig.imageryServices.length;
-    //if (numServices < 2) return {};
-
-    let marks = {};
-    for (let index = 0; index < numServices; index++) {
-      marks[index] = BasemapConfig.imageryServices[index].name;
-    }
-    return marks;
-  }
-
   onMapLoad() {
-    // LOAD IMAGERY LAYERS
-    let layerList = [];
     let index = 0;
-    BasemapConfig.imageryServices.forEach(service => {
-      //var layer = helpers.getArcGISTiledLayer(service.url);
-      var layer = helpers.getSimcoeTileXYZLayer(service.url);
-
-      // LAYER PROPS
-      layer.setProperties({ index: index, name: service.name });
-      layer.setZIndex(index + 1);
-      layer.setVisible(false);
-
-      // SET MAIN LAYER VISIBLE
-      if (BasemapConfig.imageryServices.length - 1 === index) {
-        layer.setVisible(true);
-        this.setState({ imagerySliderValue: index });
-      }
-
-      // ADD THE LAYER
-      window.map.addLayer(layer);
-      layerList.push(layer);
-      index++;
-    });
-
-    this.setState({ imageryLayers: layerList });
-
-    // LOAD IMAGERY STREETS LAYER
-    if (BasemapConfig.streetService !== undefined) {
-      //var streetsLayer = helpers.getArcGISTiledLayer(BasemapConfig.streetService);
-      var streetsLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.streetService);
-      streetsLayer.setZIndex(BasemapConfig.imageryServices.length);
-      window.map.addLayer(streetsLayer);
-      this.setState({ streetsLayer: streetsLayer });
-    }
-
-    // LOAD BATHYMETRY LAYER
-    if (BasemapConfig.bathymetryService !== undefined) {
-      var bathymetryLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.bathymetryService);
-      bathymetryLayer.setZIndex(0);
-      window.map.addLayer(bathymetryLayer);
-      this.setState({ bathymetryLayer: bathymetryLayer });
-    }
-
     // LOAD WORLD LAYER
-    if (BasemapConfig.worldImageryService !== undefined) {
+    if (BasemapConfig.worldImageryService !== undefined || BasemapConfig.worldImageryService !== "") {
       var worldImageryLayer = helpers.getESRITileXYZLayer(BasemapConfig.worldImageryService);
       worldImageryLayer.setZIndex(0);
       //worldImageryLayer.setMinResolution(300);
       window.map.addLayer(worldImageryLayer);
       this.setState({ worldImageryLayer: worldImageryLayer });
     }
-
     // LOAD BASEMAP LAYERS
     let basemapList = [];
     //let basemapIndex = 0;
@@ -131,27 +68,24 @@ class BasemapSwitcher extends Component {
           // PARSE TO JSON
           parser.parseString(result, function(err, result) {
             const groupLayerList = result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer;
-
-            index = groupLayerList.length + index;
-            let overlayIndex = index;
-            //index++;
-
+            index++;
             groupLayerList.forEach(layerInfo => {
               const layerNameOnly = layerInfo.Name[0].split(":")[1];
               const serverUrl = groupUrl.split("/geoserver/")[0] + "/geoserver";
 
               let groupLayer = helpers.getImageWMSLayer(serverUrl + "/wms", layerInfo.Name[0]);
               groupLayer.setVisible(true);
-              groupLayer.setZIndex(overlayIndex);
-              groupLayer.setProperties({ index: overlayIndex, name: layerNameOnly, isOverlay: true });
+              groupLayer.setProperties({ index: index, name: layerNameOnly, isOverlay: true });
+              
               serviceLayers.push(groupLayer);
-              overlayIndex--;
+              index++;
             });
 
             // USING LAYER GROUPS FOR TOPO
             let layerGroup = new LayerGroup({ layers: serviceLayers, visible: false });
             layerGroup.setProperties({ index: serviceGroup.index, name: serviceGroup.name });
             window.map.addLayer(layerGroup);
+            
             basemapList.push(layerGroup);
           });
         });
@@ -167,7 +101,7 @@ class BasemapSwitcher extends Component {
 
     this.setState({ topoLayers: basemapList });
     this.setState({ topoActiveIndex: 0 });
-
+    
     // NEED TO WAIT A TAD FOR LAYERS TO INIT
     setTimeout(() => {
       this.handleURLParameters();
@@ -178,26 +112,8 @@ class BasemapSwitcher extends Component {
   handleURLParameters = value => {
     const basemap = helpers.getURLParameter("BASEMAP") !== null ? helpers.getURLParameter("BASEMAP").toUpperCase() : null;
     const name = helpers.getURLParameter("NAME") !== null ? helpers.getURLParameter("NAME").toUpperCase() : null;
-    const imagerySliderOpen = helpers.getURLParameter("SLIDER_OPEN") !== null ? helpers.getURLParameter("SLIDER_OPEN").toUpperCase() : null;
 
-    if (basemap === "IMAGERY") {
-      this.enableImagery();
-
-      if (imagerySliderOpen === "TRUE") this.setState({ imageryPanelOpen: true });
-
-      if (name !== undefined) {
-        for (let index = 0; index < this.state.imageryLayers.length; index++) {
-          const layer = this.state.imageryLayers[index];
-          const layerName = layer.getProperties().name.toUpperCase();
-          if (layerName === name) {
-            this.updateImageryLayers(index);
-            this.setState({ imagerySliderValue: index, imagerySliderDefaultValue: index });
-            return;
-          }
-        }
-      }
-    } else if (basemap === "TOPO") {
-      this.disableImagery();
+    if (basemap === "TOPO") {
       this.enableTopo();
 
       for (let index = 0; index < this.state.topoLayers.length; index++) {
@@ -209,83 +125,6 @@ class BasemapSwitcher extends Component {
         }
       }
     }
-  };
-
-  // CALLED WHEN SLIDING OR TO RESET
-  updateImageryLayers(value) {
-    for (let index = 0; index < this.state.imageryLayers.length; index++) {
-      let layer = this.state.imageryLayers[index];
-      if (value === -1) layer.setVisible(false);
-      else {
-        const layerIndex = layer.getProperties().index;
-        const indexRatio = 1 - Math.abs(layerIndex - value);
-        if (layerIndex === value) {
-          layer.setOpacity(1);
-          layer.setVisible(true);
-        } else if (indexRatio < 0) {
-          layer.setOpacity(0);
-          layer.setVisible(false);
-        } else {
-          layer.setOpacity(indexRatio);
-          layer.setVisible(true);
-        }
-      }
-    }
-  }
-
-  // SLIDER CHANGE EVENT
-  onSliderChange = value => {
-    this.updateImageryLayers(value);
-    this.setState({ imagerySliderValue: value });
-  };
-
-  // PANEL DROP DOWN BUTTON
-  onImageryArrowClick = value => {
-    // DISABLE TOPO
-    this.disableTopo();
-
-    // ENABLE IMAGERY
-    this.setState({ topoPanelOpen: false, activeButton: "imagery", imageryPanelOpen: !this.state.imageryPanelOpen });
-    this.updateImageryLayers(this.state.imagerySliderValue);
-    this.state.streetsLayer.setVisible(this.state.streetsCheckbox);
-    this.state.worldImageryLayer.setVisible(this.state.streetsCheckbox);
-
-    // APP STATS
-    helpers.addAppStat("Imagery", "Arrow");
-  };
-
-  onImageryButtonClick = value => {
-    // DISABLE TOPO
-    this.disableTopo();
-
-    // CLOSE PANEL, ONLY IF ALREADY OPEN
-    if (this.state.imageryPanelOpen) this.setState({ imageryPanelOpen: !this.state.imageryPanelOpen });
-
-    this.enableImagery();
-
-    // APP STATS
-    helpers.addAppStat("Imagery", "Button");
-  };
-
-  enableImagery = value => {
-    // ENABLE IMAGERY
-    this.updateImageryLayers(this.state.imagerySliderValue);
-
-    this.setState({ topoPanelOpen: false, activeButton: "imagery" });
-    this.state.streetsLayer.setVisible(this.state.streetsCheckbox);
-    this.state.worldImageryLayer.setVisible(this.state.streetsCheckbox);
-    this.setTopoLayerVisiblity(-1);
-
-    // EMIT A BASEMAP CHANGE
-    window.emitter.emit("basemapChanged", "IMAGERY");
-  };
-
-  disableImagery = value => {
-    // DISABLE IMAGERY
-    this.state.streetsLayer.setVisible(false);
-    this.state.worldImageryLayer.setVisible(false);
-    this.setState({ imageryPanelOpen: false });
-    this.updateImageryLayers(-1);
   };
 
   onStreetsCheckbox = evt => {
@@ -311,9 +150,6 @@ class BasemapSwitcher extends Component {
   };
 
   enableTopo = value => {
-    // DISABLE IMAGERY
-    this.disableImagery();
-
     this.setState({ activeButton: "topo" });
     this.setTopoLayerVisiblity(this.state.topoActiveIndex);
 
@@ -370,26 +206,7 @@ class BasemapSwitcher extends Component {
       }
     }
   }
-  slider = (sliderWrapperStyle) => {
-    if (this.state.imagerySliderMarks !== undefined){
-      return (
-        <Slider
-          included={false}
-          style={sliderWrapperStyle}
-          marks={this.state.imagerySliderMarks}
-          vertical={true}
-          max={this.state.imagerySliderMax}
-          min={this.state.imagerySliderMin}
-          step={0.01}
-          defaultValue={this.state.imagerySliderDefaultValue}
-          onChange={this.onSliderChange}
-          value={this.state.imagerySliderValue}
-        />
-      );
-    }else{
-      return;
-    }
-  }
+
   render() {
     // STYLE USED BY SLIDER
     const sliderWrapperStyle = {
@@ -404,15 +221,9 @@ class BasemapSwitcher extends Component {
       <div>
         <div id="sc-basemap-main-container">
           <div id="sc-basemap-collapse-button" className={this.state.containerCollapsed ? "sc-basemap-collapse-button closed" : "sc-basemap-collapse-button"} onClick={this.onCollapsedClick} />
-          <div className={this.state.containerCollapsed ? "sc-hidden" : "sc-basemap-imagery"}>
-            <button className={this.state.activeButton === "imagery" ? "sc-button sc-basemap-imagery-button active" : "sc-button sc-basemap-imagery-button"} onClick={this.onImageryButtonClick}>
-              Imagery
-            </button>
-            <button className="sc-button sc-basemap-arrow" onClick={this.onImageryArrowClick}></button>
-          </div>
           <div className={this.state.containerCollapsed ? "sc-hidden" : "sc-basemap-topo"}>
             <button className={this.state.activeButton === "topo" ? "sc-button sc-basemap-topo-button active" : "sc-button sc-basemap-topo-button"} onClick={this.onTopoButtonClick}>
-              Topo
+              Basemap
             </button>
             <button className="sc-button sc-basemap-arrow" onClick={this.onTopoArrowClick}></button>
           </div>
@@ -420,9 +231,7 @@ class BasemapSwitcher extends Component {
         <div id="sc-basemap-imagery-slider-container" className={this.state.imageryPanelOpen ? "sc-basemap-imagery-slider-container" : "sc-hidden"}>
           <label className="sc-basemap-streets-label">
             <input className="sc-basemap-streets-checkbox" id="sc-basemap-streets-checkbox" type="checkbox" onChange={this.onStreetsCheckbox} checked={this.state.streetsCheckbox}></input>&nbsp;Streets
-          </label>
-          {this.slider(sliderWrapperStyle)}
-          
+          </label>          
         </div>
         <div className={this.state.topoPanelOpen ? "sc-basemap-topo-container" : "sc-hidden"}>
           <label className="sc-basemap-topo-label">

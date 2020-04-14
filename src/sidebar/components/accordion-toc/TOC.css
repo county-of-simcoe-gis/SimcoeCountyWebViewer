@@ -211,6 +211,12 @@
     
   }
 
+  .sc-toc-group-list-header.active{
+    font-style: italic;
+    color: #001b96;
+    
+  }
+
 .sc-toc-group-list-container {
   border: 0px solid #ddd;
   border-radius: 3px;

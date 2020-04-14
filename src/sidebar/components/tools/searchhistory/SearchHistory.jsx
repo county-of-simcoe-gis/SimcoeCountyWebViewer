@@ -39,7 +39,7 @@ class ToolComponent extends Component {
   };
 
   onZoomClick = item => {
-    helpers.zoomToFeature(helpers.getWKTFeature(item.WKTShape));
+    helpers.zoomToFeature(helpers.getFeatureFromGeoJSON(item.geojson));
   };
 
   onRemoveClick = item => {

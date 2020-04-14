@@ -3,6 +3,7 @@ import "./MenuButton.css";
 import * as helpers from "../helpers/helpers";
 import mainConfig from "../config.json";
 import htmlToImage from "html-to-image";
+import { saveAs } from 'file-saver';
 
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
   `${mainConfig.feedbackUrl}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
@@ -51,7 +52,6 @@ class MenuButton extends Component {
   // CUSTOM ENTRIES, COMMENT OUT IF YOU DON"T WANT IT
   getOthers = () => {
     let itemList = [];
-    itemList.push(<MenuItem onClick={() => helpers.showURLWindow(mainConfig.whatsNewUrl, true, "full", false)} key={helpers.getUID()} name={"What's New"} iconClass={"sc-menu-terms-icon"} />);
     itemList.push(<MenuItem key={helpers.getUID()} name={"Feedback"} iconClass={"sc-menu-feedback-icon"} onClick={this.onFeedbackClick} />);
     itemList.push(<MenuItem onClick={this.onScreenshotClick} key={helpers.getUID()} name={"Take a Screenshot"} iconClass={"sc-menu-screenshot-icon"} />);
     itemList.push(<MenuItem key={helpers.getUID()} name={"Map Legend"} iconClass={"sc-menu-legend-icon"} onClick={() => helpers.showMessage("Legend", "Coming Soon")} />);
@@ -61,7 +61,7 @@ class MenuButton extends Component {
   };
 
   getMyMaps = () => {
-    return <MenuItem onClick={() => this.itemClick("mymaps", "mymaps")} key={helpers.getUID()} name={"My Maps"} iconClass={"sc-menu-mymaps-icon"} />;
+    return <MenuItem onClick={() => this.itemClick("mymaps", "mymaps")} key={helpers.getUID()} name={"Draw"} iconClass={"sc-menu-mymaps-icon"} />;
   };
 
   itemClick = (name, type) => {
@@ -83,7 +83,8 @@ class MenuButton extends Component {
 
   onScreenshotClick = () => {
     window.map.once("rendercomplete", function() {
-      htmlToImage.toBlob(window.map.getTargetElement()).then(function(blob) {
+      htmlToImage.toBlob(window.map.getTargetElement())
+      .then(function(blob) {
         window.saveAs(blob, "map.png");
       });
     });
@@ -125,17 +126,8 @@ class MenuButton extends Component {
           </button>
         </div>
 
-        {/* <div id="sc-menu-button-container" className={"sc-menu-button-container"} onClick={this.onMenuButtonClick}>
-          <button id="sc-menu-button" className="sc-button-blue">
-            <span className="sc-menu-button-icon">More...</span>
-          </button>
-        </div> */}
+      
         <div id="sc-menu-button-list-container" className={menuListClassName}>
-          <div className="sc-menu-list-item-heading" style={{ paddingTop: "0px" }}>
-            MAP THEMES
-          </div>
-          {this.getThemes()}
-          {/* <div className="sc-menu-list-item-heading">CREATE CUSTOM DRAWINGS</div>{this.getMyMaps()} */}
           <div className="sc-menu-list-item-heading">MAP TOOLS</div>
           {this.getTools()}
           <div className="sc-menu-list-item-heading">OTHER</div>

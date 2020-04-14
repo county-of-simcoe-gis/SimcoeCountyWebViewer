@@ -33,9 +33,10 @@ class Layers extends Component {
     };
     
      // LISTEN FOR RESET LAYERS
-     window.emitter.addListener("resetLayers", (group) => {if (group === this.props.group.value) this.resetLayers()});
+     window.emitter.addListener("resetLayers", (group) => {if (group === this.props.group.value || group === null) this.resetLayers()});
+     //window.emitter.addListener("resetLayers", (group) => {if (group === this.props.group.value)window.location.reload(false)});
     // LISTEN FOR TURN OFF LAYERS
-    window.emitter.addListener("turnOffLayers", (group) => {if (group === this.props.group.value) this.turnOffLayers()});
+    window.emitter.addListener("turnOffLayers", (group) => {if (group === this.props.group.value || group === null) this.turnOffLayers()});
     // LISTEN FOR TOGGLE ALL LEGEND
     window.emitter.addListener("toggleAllLegend", (type) => this.toggleAllLegends(type));
     
@@ -58,7 +59,7 @@ class Layers extends Component {
     let layersCopy = Object.assign([], this.state.layers);
 
     layersCopy.forEach(layer => {
-      if (layer.name === layerItem.fullName) {
+      if (layer.name === layerItem.fullName || layer.name === layerItem.name) {
         layer.visible = true;
         layer.layer.setVisible(true);
         
@@ -86,10 +87,6 @@ class Layers extends Component {
     });
   };
 
-
-
-  
-
   resetLayers = () => {
     // SHUT OFF VISIBILITY
     for (var key in this.state.layers) {
@@ -97,7 +94,6 @@ class Layers extends Component {
 
       var obj = this.state.layers[key];
       obj.layer.setVisible(false);
-      
     }
 
     this.setState({ layers: this.props.group.layers }, () => {
@@ -273,7 +269,7 @@ class Layers extends Component {
   onCheckboxChange = layerInfo => {
     const visible = !layerInfo.visible;
     layerInfo.layer.setVisible(visible);
-    window.emitter.emit("updateActiveTocLayers");
+    window.emitter.emit("updateActiveTocLayers",  this.props.group.value);
     layerInfo.visible = visible;
     this.setState(
       {
@@ -285,31 +281,6 @@ class Layers extends Component {
       }
     );
     
-    let layersCopy = Object.assign([], this.state.layers);
-    layersCopy.forEach(layer => {
-      if ( layer.name === layerInfo.name) {
-        document.getElementById(this.getVirtualId()).scrollTop = 0;
-
-        var i = 0;
-        var elemFound = false;
-        for (var i = 1; i <= 100; i++) {
-          if (elemFound) return;
-          // eslint-disable-next-line
-          (index => {
-            setTimeout(() => {
-              if (elemFound) return;
-
-              const elem = document.getElementById(layer.elementId);
-              
-              if (elem !== null) {
-                elemFound = true;
-                elem.scrollIntoView();
-              } 
-            }, i * 10);
-          })(i);
-        }
-      }
-    });
   };
 
   // OPACITY SLIDER FOR EACH LAYER

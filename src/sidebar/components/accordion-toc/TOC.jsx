@@ -43,10 +43,21 @@ class TOC extends Component {
 
     // LISTEN FOR SEARCH RESULT
     window.emitter.addListener("activeTocLayerGroup", (groupName, callback) => this.onActivateLayer(callback));
-
+    
     // LISTEN FOR MAP TO MOUNT
     window.emitter.addListener("mapLoaded", () => this.onMapLoad());
+
+    // CLEAR IDENTIFY MARKER AND RESULTS
+    window.emitter.addListener("clearIdentify", () => this.clearIdentify());
   }
+
+  clearIdentify = () => {
+    // CLEAR PREVIOUS IDENTIFY RESULTS
+    this.identifyIconLayer.getSource().clear();
+    window.map.removeLayer(this.identifyIconLayer);
+    window.emitter.emit("loadReport", <div></div>);
+  }
+
   addIdentifyLayer = () => {
     this.identifyIconLayer = new VectorLayer({
       name: "sc-identify",
@@ -179,11 +190,7 @@ class TOC extends Component {
     const defaultGroup = this.state.defaultGroup;
     this.setState({ sortAlpha: false, selectedGroup: defaultGroup }, () => {
       this.refreshTOC(() => {
-       
-          this.state.layerGroups.forEach(group => {
-            window.emitter.emit("resetLayers", group.value);
-          })
-        
+            window.emitter.emit("resetLayers", null);
       });
     });
 
@@ -196,16 +203,13 @@ class TOC extends Component {
       <Portal>
         <FloatingMenu key={helpers.getUID()} buttonEvent={evtClone} item={this.props.info} onMenuItemClick={action => this.onMenuItemClick(action)} styleMode="right" yOffset={120}>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-expand">
-            <FloatingMenuItem imageName={"plus16.png"} label="Expand Layers" />
+            <FloatingMenuItem imageName={"plus16.png"} label="Show Legend" />
           </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-collapse">
-            <FloatingMenuItem imageName={"minus16.png"} label="Collapse Layers" />
+            <FloatingMenuItem imageName={"minus16.png"} label="Hide Legend" />
           </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-visility">
             <FloatingMenuItem imageName={"layers-off.png"} label="Turn off Layers" />
-          </MenuItem>
-          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-legend">
-            <FloatingMenuItem imageName={"legend16.png"} label="Show Legend" />
           </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-clear-local">
             <FloatingMenuItem imageName={"eraser.png"} label="Clear My Saved Data" />
@@ -222,16 +226,12 @@ class TOC extends Component {
       window.emitter.emit("toggleAllLegend", "OPEN");
     } else if (action === "sc-floating-menu-collapse") {
       window.emitter.emit("toggleAllLegend", "CLOSE");
-    } else if (action === "sc-floating-menu-legend") {
-      helpers.showMessage("Legend", "Coming Soon");
     } else if (action === "sc-floating-menu-clear-local") {
       localStorage.clear();
       helpers.showMessage("Local Data Cleared", "Your local data has been cleared");
     } else if (action === "sc-floating-menu-visility") {
-      this.state.layerGroups.forEach(group => {
-        window.emitter.emit("turnOffLayers", group.value);
-       });
-       window.emitter.emit("updateActiveTocLayers");
+       window.emitter.emit("turnOffLayers", null);
+       window.emitter.emit("updateActiveTocLayers", null);
     }
 
     helpers.addAppStat("TOC Tools", action);
@@ -303,7 +303,14 @@ class TOC extends Component {
         </div>
         <div className={this.state.isLoading ? "sc-toc-main-container sc-hidden" : "sc-toc-main-container"}>
           <div className="sc-toc-search-container">
-            <input id="sc-toc-search-textbox" className="sc-toc-search-textbox" placeholder={"Filter (" + this.state.layerCount + " layers)..."} onChange={this.onSearchLayersChange} />
+            <input id="sc-toc-search-textbox"
+              className="sc-toc-search-textbox" 
+              placeholder={"Filter (" + this.state.layerCount + " layers)..."} 
+              type="text"
+              onChange={this.onSearchLayersChange}
+              onFocus={evt => {helpers.disableKeyboardEvents(true);}}
+              onBlur={evt => {helpers.disableKeyboardEvents(false);}}
+               />
             <div data-tip="Save Layer Visibility" data-for="sc-toc-save-tooltip" className="sc-toc-search-save-image" onClick={this.onSaveClick}>
               <ReactTooltip id="sc-toc-save-tooltip" className="sc-toc-save-tooltip" multiline={false} place="right" type="dark" effect="solid" />
             </div>
