@@ -12,8 +12,8 @@ import Navigation from "./Navigation";
 import { defaults as defaultInteractions } from "ol/interaction.js";
 import Popup from "../helpers/Popup.jsx";
 import FooterTools from "./FooterTools.jsx";
-import { defaults as defaultControls, ScaleLine, FullScreen } from "ol/control.js";
-import BasemapSwitcher from "./BasemapSwitcher";
+import { defaults as defaultControls, ScaleLine } from "ol/control.js";
+import BasemapSwitcher from "./BasicBasemapSwitcher";
 import PropertyReportClick from "./PropertyReportClick.jsx";
 import "ol-contextmenu/dist/ol-contextmenu.css";
 import { fromLonLat } from "ol/proj";
@@ -76,7 +76,7 @@ class SCMap extends Component {
     //   0.1492252984505969
     // ];
     var map = new Map({
-      controls: defaultControls().extend([scaleLineControl, new FullScreen()]),
+      controls: defaultControls().extend([scaleLineControl]),
       layers: [],
       target: "map",
       view: new View({
@@ -93,11 +93,17 @@ class SCMap extends Component {
       ]),
       keyboardEventTarget: document
     });
+    if (storage !== null) {
+      const extent = JSON.parse(storage);
+      map.getView().fit(extent, map.getSize(), { duration: 1000 });
+    }
 
     window.map = map;
     window.popup = new Popup();
     window.map.addOverlay(window.popup);
 
+    // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
+    window.emitter.emit("mapLoaded");
     window.map.getViewport().addEventListener("contextmenu", evt => {
       evt.preventDefault();
       this.contextCoords = window.map.getEventCoordinate(evt);
@@ -108,9 +114,7 @@ class SCMap extends Component {
             <MenuItem className={helpers.isMobile() ? "sc-hidden" : "sc-floating-menu-toolbox-menu-item"} key="sc-floating-menu-basic-mode">
               <FloatingMenuItem imageName={"collased.png"} label="Switch To Basic" />
             </MenuItem>
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-property-click">
-              <FloatingMenuItem imageName={"report.png"} label="Property Report" />
-            </MenuItem>
+            
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-add-mymaps">
               <FloatingMenuItem imageName={"point.png"} label="Add Marker Point" />
             </MenuItem>
@@ -185,7 +189,10 @@ class SCMap extends Component {
       helpers.showURLWindow(mainConfig.ieWarningUrl);
     } else {
       // SHOW TERMS
-      //helpers.showURLWindow("https://maps.simcoe.ca/terms.html", true, "full", true);
+      if (helpers.isMobile()) {
+        window.emitter.emit("setSidebarVisiblity", "CLOSE");
+        helpers.showURLWindow(mainConfig.termsUrl, false, "full");
+      } else helpers.showURLWindow(mainConfig.termsUrl);
     }
 
     // MAP LOADED
@@ -307,23 +314,13 @@ class SCMap extends Component {
     return (
       <div>
         <div id="map-modal-window" />
-        <div id="map" className={this.state.mapClassName} tabIndex="0" />
+        <div id="map" 
+          className={this.state.mapClassName} tabIndex="0"
+          />
         <Navigation />
         <FooterTools />
         <BasemapSwitcher />
-        <PropertyReportClick />
-        {/* <Screenshot></Screenshot> */}
-        {/* https://buttons.github.io/ */}
-        <div
-          className={window.sidebarOpen ? "sc-map-github-button slideout" : "sc-map-github-button slidein"}
-          onClick={() => {
-            helpers.addAppStat("GitHub", "Button");
-          }}
-        >
-          <GitHubButton href="https://github.com/county-of-simcoe-gis" data-size="large" aria-label="Follow @simcoecountygis on GitHub">	
-            Follow @simcoecountygis	
-          </GitHubButton>
-        </div>
+        
       </div>
     );
   }

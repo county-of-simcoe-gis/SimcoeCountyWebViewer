@@ -5,15 +5,31 @@ import Highlighter from "react-highlight-words";
 import { AutoSizer } from "react-virtualized";
 import "./LayerItem.css";
 class LayerItem extends Component {
+  _isMounted = false;
   constructor(props) {
     super(props);
 
     this.state = {
       layer:undefined
     };
+    this.isVisibleAtScale = true;
   }
 
+
+  setVisibleScale = () => {
+    const { layerInfo } = this.props;
+    const scale = helpers.getMapScale();
+    let isVisibleAtScale = true;
+    let minScale = 0;
+    let maxScale = 100000000000;
+    if (layerInfo.minScale !== undefined) minScale = layerInfo.minScale[0];
+    if (layerInfo.maxScale !== undefined) maxScale = layerInfo.maxScale[0];
+    if (scale <= minScale || scale >= maxScale) isVisibleAtScale = false;
+    this.isVisibleAtScale = isVisibleAtScale;
+  };
+
   componentWillMount(){
+    this.setVisibleScale();
     let layer = this.state.layer;
     if (layer === undefined){
       layer = this.props.layerInfo
@@ -25,7 +41,18 @@ class LayerItem extends Component {
       if (layer !== this.props.layerInfo) this.setState({layer: this.props.layerInfo });
     }
   }
+  componentDidMount() {
+    this._isMounted = true;
+    window.map.on("moveend", () => {
+      this.setVisibleScale();
+      if (this._isMounted) this.forceUpdate();
+    });
+  }
 
+  componentWillUnmount() {
+    this._isMounted = false;
+  }
+  
   componentWillReceiveProps(nextProps) {
     let layer = this.state.layer;
     if (layer === undefined){
@@ -40,9 +67,13 @@ class LayerItem extends Component {
   }
   
   render() {
+    let containerClassName = "sc-toc-item-container";
+    if (!this.isVisibleAtScale) containerClassName += " not-in-scale";
+    if (this.state.layer.visible) containerClassName += " on";
+
     return (
     <div>
-      <div className={this.state.layer.visible ? "sc-toc-item-container on" : "sc-toc-item-container"}>
+      <div className={containerClassName}>
         <div className="sc-toc-item-plus-minus-container" onClick={() => this.props.onLegendToggle(this.state.layer)}>
           <img src={this.state.layer.showLegend ? images["minus.png"] : images["plus.png"]} alt="minus" />
           <div className="sc-toc-item-plus-minus-sign" />

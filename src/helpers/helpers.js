@@ -26,6 +26,7 @@ import proj4 from "proj4";
 import { register } from "ol/proj/proj4";
 import { fromLonLat } from "ol/proj";
 import { getVectorContext } from "ol/render";
+import { KeyboardPan, KeyboardZoom } from "ol/interaction.js";
 
 //OTHER
 import { parseString } from "xml2js";
@@ -78,7 +79,13 @@ export function isMobile() {
 
 // SHOW URL WINDOW
 export function showURLWindow(url, showFooter = false, mode = "normal", honorDontShow = false) {
-  ReactDOM.render(<URLWindow key={shortid.generate()} mode={mode} showFooter={showFooter} url={url} honorDontShow={honorDontShow} />, document.getElementById("map-modal-window"));
+  let isSameOrigin = true;
+  if (url !== undefined) isSameOrigin = url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !== -1;
+  if (isSameOrigin) {
+    ReactDOM.render(<URLWindow key={shortid.generate()} mode={mode} showFooter={showFooter} url={url} honorDontShow={honorDontShow} />, document.getElementById("map-modal-window"));
+  }else{
+    window.open(url, "_blank");
+  }
 }
 
 // GET ARCGIS TILED LAYER
@@ -264,7 +271,6 @@ export function httpGetText(url, callback) {
       if (callback !== undefined) callback(responseText);
     })
     .catch(error => {
-      httpGetText(url.replace("opengis.simcoe.ca", "opengis2.simcoe.ca"), callback);
       console.error(error);
     });
 }
@@ -782,6 +788,16 @@ export function bufferGeometry(geometry, distanceMeters, callback) {
 
     callback(utmNad83GeometryBuffer);
   });
+}
+
+export function disableKeyboardEvents(disable) {
+  if (window.map !== undefined && window.map !== null){
+    window.map.getInteractions().forEach(function(interaction) {
+      if (interaction instanceof KeyboardPan || interaction instanceof KeyboardZoom) {
+        interaction.setActive(!disable);
+      }
+    });
+  }
 }
 
 export function getGeometryCenter(geometry, callback) {

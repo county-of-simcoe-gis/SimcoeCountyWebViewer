@@ -13,7 +13,7 @@ import { CopyToClipboard } from "react-copy-to-clipboard";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import Select from "react-select";
-import { KeyboardPan, KeyboardZoom } from "ol/interaction.js";
+
 
 // URLS
 const apiUrl = mainConfig.apiUrl;
@@ -64,6 +64,21 @@ const styles = {
   })
 };
 
+const defaultStyle = new Style({
+  stroke: new Stroke({
+    width: 4,
+    color: [255, 0, 0, 0.8]
+  }),
+  fill: new Fill({
+    color: [255, 0, 0, 0] // USE OPACITY
+  }),
+  image: new CircleStyle({
+    opacity: 0.5,
+    radius: 7,
+    fill: new Fill({ color: [236, 156, 155, 0.7] })
+  })
+});
+
 class Search extends Component {
   constructor(props) {
     super(props);
@@ -111,7 +126,7 @@ class Search extends Component {
       items.push({ label: "Open Street Map", value: "Open Street Map" });
       items.push({ label: "Map Layer", value: "Map Layer" });
       items.push({ label: "Tool", value: "Tool" });
-      items.push({ label: "Theme", value: "Theme" });
+     
       this.setState({ searchTypes: items, selectedType: items[0] });
     });
 
@@ -185,7 +200,7 @@ class Search extends Component {
         source: new VectorSource({
           features: []
         }),
-        zIndex: 1000
+        zIndex: 100000
       });
       searchGeoLayer.set("name", "sc-search-geo");
       window.map.addLayer(searchGeoLayer);
@@ -195,7 +210,7 @@ class Search extends Component {
         source: new VectorSource({
           features: []
         }),
-        zIndex: 1000
+        zIndex: 100000
       });
       searchIconLayer.setStyle(styles["point"]);
       searchIconLayer.set("name", "sc-search-icon");
@@ -247,8 +262,8 @@ class Search extends Component {
     searchGeoLayer.getSource().addFeature(fullFeature);
     searchIconLayer.getSource().addFeature(pointFeature);
 
-    searchGeoLayer.setZIndex(300);
-    searchIconLayer.setZIndex(300);
+    //searchGeoLayer.setZIndex(100);
+    //searchIconLayer.setZIndex(100);
 
     // SET STYLE AND ZOOM
     if (result.geojson.indexOf("Point") !== -1) {
@@ -283,8 +298,8 @@ class Search extends Component {
 
       fullFeature.setStyle(pointStyle);
     } else {
-      let defaultStyle = myMapsHelpers.getDefaultDrawStyle([255, 0, 0, 0.8], false, 2, fullFeature.getGeometry().getType());
-      defaultStyle.setFill(new Fill({ color: [255, 0, 0, 0] }));
+      let defaultStyle = myMapsHelpers.getDefaultDrawStyle([102, 255, 102, 0.3], false, 6, fullFeature.getGeometry().getType());
+      defaultStyle.setFill(new Fill({ color: [102, 255, 102, 0.3] }));
       fullFeature.setStyle(defaultStyle);
     }
   }
@@ -323,11 +338,7 @@ class Search extends Component {
       return;
     }
 
-    if (item.type === "Theme") {
-      window.emitter.emit("activateTab", "themes");
-      window.emitter.emit("activateSidebarItem", item.name, "themes");
-      return;
-    }
+   
 
     // CLEAR PREVIOUS SOURCE
     searchGeoLayer.getSource().clear();
@@ -353,8 +364,8 @@ class Search extends Component {
       // SET SOURCE
       searchIconLayer.getSource().addFeature(feature);
 
-      searchGeoLayer.setZIndex(100);
-      searchIconLayer.setZIndex(100);
+    // searchGeoLayer.setZIndex(100);
+    // searchIconLayer.setZIndex(100);
 
       // SET STYLE AND ZOOM
       searchGeoLayer.setStyle(styles["point"]);
@@ -417,9 +428,9 @@ class Search extends Component {
       Object.entries(window.allLayers).map(row => {
         const layerItems = row[1];
         layerItems.forEach(layer => {
-          if (layer.tocDisplayName.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
+          if (layer.displayName.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
             //console.log(layer);
-            layers.push({ fullName: layer.name, name: layer.tocDisplayName, type: "Map Layer", layerGroupName: layer.groupName, layerGroup: layer.group, imageName: "layers.png", index: layer.index });
+            layers.push({ fullName:layer.name, name:layer.displayName,isVisible: layer.layer.getVisible(), type: "Map Layer", layerGroupName:layer.groupName , layerGroup: layer.group, imageName: "layers.png", index: layer.index });
           }
         });
       });
@@ -438,27 +449,10 @@ class Search extends Component {
       newResults = tools.concat(newResults);
     }
 
-    // THEMES
-    if (selectedType === "All" || selectedType === "Theme") {
-      let themes = [];
-      mainConfig.sidebarThemeComponents.forEach(theme => {
-        if (theme.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
-          themes.push({ name: helpers.replaceAllInString(theme.name, "_", " "), type: "Theme", imageName: "themes.png" });
-        }
-      });
-      newResults = themes.concat(newResults);
-    }
-
     this.setState({ searchResults: newResults });
   };
 
-  disableKeyboardEvents = disable => {
-    window.map.getInteractions().forEach(function(interaction) {
-      if (interaction instanceof KeyboardPan || interaction instanceof KeyboardZoom) {
-        interaction.setActive(!disable);
-      }
-    });
-  };
+  
 
   render() {
     // INIT LAYER
@@ -517,10 +511,10 @@ class Search extends Component {
             placeholder: "Search...",
             name: "sc-search-textbox",
             onFocus: result => {
-              this.disableKeyboardEvents(true);
+              helpers.disableKeyboardEvents(true);
             },
             onBlur: result => {
-              this.disableKeyboardEvents(false);
+              helpers.disableKeyboardEvents(false);
             }
           }}
           className="sc-search-textbox"
@@ -563,7 +557,7 @@ class Search extends Component {
           renderItem={(item, isHighlighted) => {
             let type = "Unknown";
             if (item.type === "Map Layer") type = item.layerGroupName;
-            else if (item.type === "Tool" || item.type === "Theme") type = "";
+            else if (item.type === "Tool" ) type = "";
             else type = item.municipality;
             return (
               <div className={isHighlighted ? "sc-search-item-highlighted" : "sc-search-item"} key={helpers.getUID()}>
@@ -572,7 +566,7 @@ class Search extends Component {
                 </div>
                 <div className="sc-search-item-content">
                   <Highlighter highlightClassName="sc-search-highlight-words" searchWords={[this.state.value]} textToHighlight={item.name} />
-                  <div className="sc-search-item-sub-content">{type === "" ? item.type : " - " + type + " (" + item.type + ")"}</div>
+                  <div className="sc-search-item-sub-content">{type === "" ? item.type : " - " + type + " (" + item.type + (item.type === "Map Layer" && item.isVisible ? " - Currently Visible" : "") + ")"}</div>
                 </div>
               </div>
             );

@@ -5,6 +5,7 @@ import Feature from "ol/Feature";
 import VectorLayer from "ol/layer/Vector";
 import { Vector as VectorSource } from "ol/source.js";
 import { Stroke, Style, Fill, Circle as CircleStyle } from "ol/style";
+import * as helpers from "../../../helpers/helpers";
 
 class MyMapsItem extends Component {
   constructor(props) {
@@ -112,7 +113,13 @@ class MyMapsItem extends Component {
             </button>
           </div>
           <div className={this.state.checked ? "" : "sc-disabled"}>
-            <input className="sc-mymaps-item-container-item-text-input" value={this.state.label} onChange={this.onLabelTextChange} title={this.state.label} />
+            <input 
+                className="sc-mymaps-item-container-item-text-input" 
+                value={this.state.label} 
+                onChange={this.onLabelTextChange} 
+                onFocus={evt => {helpers.disableKeyboardEvents(true);}}
+                onBlur={evt => {helpers.disableKeyboardEvents(false);}}
+                title={this.state.label} />
           </div>
           <div className={this.state.checked ? "right" : "right sc-disabled"}>
             <button className="sc-button" style={{ marginLeft: "15px" }} onClick={this.onSymbolizerClick}>

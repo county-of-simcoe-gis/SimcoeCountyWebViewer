@@ -6,9 +6,7 @@
   font-family: Verdana, Arial, sans-serif !important;
   font-size: 9pt;
 }
-.sc-toc-item-container.on {
-  font-weight: bold;
-}
+
 
 .sc-toc-item-layer-label {
   display: inline-table;

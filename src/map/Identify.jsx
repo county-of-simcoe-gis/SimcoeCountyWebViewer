@@ -7,7 +7,7 @@ import { GeoJSON } from "ol/format.js";
 import InfoRow from "../helpers/InfoRow.jsx";
 import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
-import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style.js";
+import { Circle as CircleStyle, Icon, Fill, Stroke, Style } from "ol/style.js";
 import { Image as ImageLayer } from "ol/layer.js";
 import Feature from "ol/Feature";
 import { AutoSizer } from "react-virtualized";
@@ -34,6 +34,11 @@ class Identify extends Component {
 
   componentWillUnmount() {
     window.map.removeLayer(this.vectorLayerShadow);
+    window.map.removeLayer(this.vectorLayerShadowSecondary);
+  }
+
+  clearIdentify = () => {
+    window.emitter.emit("clearIdentify");
   }
 
   refreshLayers = props => {
@@ -49,31 +54,11 @@ class Identify extends Component {
       if (layer.getVisible() && layer instanceof ImageLayer) {
         const name = layer.get("name");
         let displayName = ""; // layer.get("displayName");
-        let html_url = mainConfig.htmlIdentify ? layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "text/html" }) + "&feature_count=1000000" : "" ;
-        let type = layer.get("identifyDisplayName");
-        //let type = layer.get("displayName")
-        let wfsUrl = layer.get("wfsUrl");
-        if (geometry.getType() !== "Point") {
-          const feature = new Feature(geometry);
-          const wktString = helpers.getWKTStringFromFeature(feature);
-          wfsUrl += "INTERSECTS(geom," + wktString + ")";
-          // QUERY USING WFS
-          // eslint-disable-next-line
-          helpers.getJSON(wfsUrl, result => {
-            const featureList = new GeoJSON().readFeatures(result);
-            if (featureList.length > 0) {
-              if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
-              let features = [];
-              featureList.forEach(feature => {
-                features.push(feature);
-              });
-              if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, html_url: html_url });
-              this.setState({ layers: layerList });
-            }
-          });
-        } else {
+        let type = layer.get("displayName")
           // QUERY USING WMS
           var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "application/json" });
+        
+        let html_url = mainConfig.htmlIdentify ? layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "text/html" }) + "&feature_count=1000000" : "" ;
           url += "&feature_count=1000000";
           if (url) {
             helpers.getJSON(url, result => {
@@ -89,25 +74,33 @@ class Identify extends Component {
                 featureList.forEach(feature => {
                   features.push(feature);
                 });
-                if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type });
+                if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, html_url: html_url });
                 this.setState({ layers: layerList });
               }
             });
           }
         }
       }
-    }
+  
 
     this.setState({ isLoading: false });
   };
 
   onMouseEnter = feature => {
     this.vectorLayerShadow.getSource().clear();
+    this.vectorLayerShadowSecondary.getSource().clear();
+
+    if (feature.values_.extent_geom !== undefined && feature.values_.extent_geom !== null){
+      var extentFeature = helpers.getFeatureFromGeoJSON(feature.values_.extent_geom);
+      this.vectorLayerShadowSecondary.getSource().addFeature(extentFeature);
+    }
     this.vectorLayerShadow.getSource().addFeature(feature);
+
   };
 
   onMouseLeave = () => {
     this.vectorLayerShadow.getSource().clear();
+    this.vectorLayerShadowSecondary.getSource().clear();
   };
 
   createShadowLayer = () => {
@@ -131,6 +124,25 @@ class Identify extends Component {
       })
     });
 
+    const shadowStyleSecondary = new Style({
+      stroke: new Stroke({
+        color: [0,255 , 68, 0.4],
+        width: 4
+      }),
+      fill: new Fill({
+        color: [255,0 , 0, 0]
+      }),
+      image: new CircleStyle({
+        radius: 10,
+        stroke: new Stroke({
+          color: [0,255 , 68, 0.4],
+          width: 4
+        }),
+        fill: new Fill({
+          color: [255,0 , 0, 0]
+        })
+      })
+    });
     this.vectorLayerShadow = new VectorLayer({
       source: new VectorSource({
         features: []
@@ -138,7 +150,15 @@ class Identify extends Component {
       zIndex: 100000,
       style: shadowStyle
     });
+    this.vectorLayerShadowSecondary = new VectorLayer({
+      source: new VectorSource({
+        features: []
+      }),
+      zIndex: 100000,
+      style: shadowStyleSecondary
+    });
     window.map.addLayer(this.vectorLayerShadow);
+    window.map.addLayer(this.vectorLayerShadowSecondary);
   };
 
   getDisplayNameFromFeature = feature => {
@@ -178,9 +198,12 @@ class Identify extends Component {
     helpers.zoomToFeature(feature);
   };
 
+  
+
   render() {
     return (
       <div>
+        <button className="sc-button sc-identify-clear-button" onClick={this.clearIdentify}>Clear Results</button>
         <div className={this.state.layers.length === 0 && !this.state.isLoading ? "sc-identify-loading" : "sc-hidden"}>
           No Features were selected. Please try again.
           {/* <img src={images["loading.gif"]}></img> */}
@@ -193,6 +216,7 @@ class Identify extends Component {
             <Layer key={helpers.getUID()} layer={layer} onZoomClick={this.onZoomClick} onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave}></Layer>
           ))}
         </div>
+          
       </div>
     );
   }
@@ -215,7 +239,7 @@ function _getLayerObj(layerName, callback) {
 }
 
 const Layer = props => {
-  const [open] = useState(true);
+  const [open, setOpen] = useState(true);
 
   const { layer } = props;
 
@@ -268,7 +292,12 @@ const FeatureItem = props => {
   const [open, setOpen] = useState(false);
   let { feature, displayName, html_url,identifyTitleColumn,identifyIdColumn } = props;
   if (identifyTitleColumn!==undefined && identifyTitleColumn !== "") displayName = identifyTitleColumn;
+  //console.log(feature);
 
+  var extentFeature = undefined;
+  if (feature.values_.extent_geom !== undefined && feature.values_.extent_geom !== null){
+    extentFeature = helpers.getFeatureFromGeoJSON(feature.values_.extent_geom);
+  }
 
   const featureProps = feature.getProperties();
   const keys = Object.keys(featureProps);
@@ -285,8 +314,10 @@ const FeatureItem = props => {
     if (keys.length === 1) displayName = "No attributes found";
     featureName = "";
   }
-  if (featureName === "") featureName = "N/A";
+  if (featureName === null || featureName === undefined || featureName === "" ) featureName = "N/A";
   let cql_filter = "";
+ 
+  const excludedKeys = ["id", "geometry","geom","extent_geom","gid", "globalid", "objectid", "bplan_gid"];
 
   let isSameOrigin = true;
   if (html_url !== undefined) isSameOrigin = html_url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !== -1;
@@ -295,21 +326,16 @@ const FeatureItem = props => {
     const val = featureProps[keyName];
     if (identifyIdColumn !==undefined && identifyIdColumn !== "" ){
       if (cql_filter === "" && (keyName.toLowerCase().indexOf(identifyIdColumn.toLowerCase()) !== -1 && val !== null) && mainConfig.htmlIdentify && isSameOrigin) cql_filter += keyName + "=" + val;
-    }else{
-      if (cql_filter === "" && (keyName.toLowerCase().indexOf("id") !== -1 && val !== null) && mainConfig.htmlIdentify && isSameOrigin) cql_filter += keyName + "=" + val;
     }
   })
   return (
     <div>
       <div className="sc-identify-feature-header" onMouseEnter={() => props.onMouseEnter(feature)} onMouseLeave={props.onMouseLeave}>
-        <div style={{ width: "290px" }} onClick={() => setOpen(!open)}>
-          <div className="sc-fakeLink sc-identify-feature-header-label">
+        <div className="sc-fakeLink sc-identify-feature-header-label" onClick={() => setOpen(!open)}>
             {mainConfig.excludeIdentifyTitleName ? featureName : displayName + ": " + featureName}
           </div>
-          <div className="sc-identify-layer-name">{"- " + layerName}</div>
-        </div>
-
         <img className="sc-identify-feature-header-img" src={images["zoom-in.png"]} onClick={() => props.onZoomClick(feature)} alt="Zoom In"></img>
+        {extentFeature !== undefined ? <img className="sc-identify-feature-header-img" src={images["extent-zoom-in.png"]} onClick={() => props.onZoomClick(extentFeature)} alt="Zoom In To Extent"></img> : ""}
       </div>
   
         
@@ -320,7 +346,7 @@ const FeatureItem = props => {
         
           {keys.map((keyName, i) => {
             const val = featureProps[keyName];
-            if (cql_filter==="" && keyName !== "geometry" && keyName !== "geom" && typeof val !== "object") return <InfoRow key={helpers.getUID()} label={keyName} value={val}></InfoRow>;
+            if (cql_filter==="" &&  typeof val !== "object" && !excludedKeys.includes(keyName.toLowerCase())) return <InfoRow key={helpers.getUID()} label={helpers.toTitleCase(keyName.split("_").join(" "))} value={val}></InfoRow>;
             // <div key={helpers.getUID()}>TEST</div>
           })}
         </div>

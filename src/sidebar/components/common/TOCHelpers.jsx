@@ -268,7 +268,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
     let newLayer = helpers.getImageWMSLayer(serverUrl + "/wms", layer.Name[0]);
     newLayer.setVisible( layerVisible);
     newLayer.setOpacity(opacity);
-    newLayer.setProperties({ name: layerNameOnly, displayName: tocDisplayName, disableParcelClick: liveLayer });
+    newLayer.setProperties({ name: layerNameOnly, displayName: displayName, disableParcelClick: liveLayer });
     newLayer.setZIndex(layerIndex);
     window.map.addLayer(newLayer);
 
@@ -295,8 +295,6 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
       groupName: group.label,
       canDownload: canDownload, // INDICATES WETHER LAYER CAN BE DOWNLOADED
       displayName: displayName, // DISPLAY NAME USED BY IDENTIFY
-      group: group.value,
-      groupName: group.label,
       identifyTitleColumn: identifyTitleColumn,
       identifyIdColumn: identifyIdColumn
     };
@@ -423,7 +421,8 @@ export function getLayerListByGroupCustomRest(group, callback) {
 
         // IDENTIFY DISPLAY NAME
         let identifyDisplayName = _getDisplayName(keywords);
-
+		let displayName = _getDisplayName(keywords);
+		if (displayName==="") displayName =layerTitle;
         // TOC DISPLAY NAME
         const tocDisplayName = layerTitle;
 
@@ -443,7 +442,8 @@ export function getLayerListByGroupCustomRest(group, callback) {
         let layer = helpers.getImageWMSLayer(serverUrl + "/wms", layerInfo.name);
         layer.setVisible(layerVisible);
         layer.setOpacity(opacity);
-        layer.setProperties({ name: layerNameOnly, displayName: tocDisplayName, disableParcelClick: liveLayer });
+        //layer.setProperties({ name: layerNameOnly, displayName: tocDisplayName, disableParcelClick: liveLayer });
+        layer.setProperties({ name: layerNameOnly, displayName: displayName });
         layer.setZIndex(layerIndex);
         window.map.addLayer(layer);
 
@@ -465,6 +465,7 @@ export function getLayerListByGroupCustomRest(group, callback) {
           minScale: undefined, //placeholder MinScaleDenominator
           maxScale: undefined, //placeholder MaxScaleDenominator
           wfsUrl: wfsUrl,
+          displayName: displayName, // DISPLAY NAME USED BY IDENTIFY
           identifyDisplayName: identifyDisplayName, // DISPLAY NAME USED BY IDENTIFY
           tocDisplayName: tocDisplayName, // DISPLAY NAME USED FOR TOC LAYER NAME
           group: group.value,
@@ -505,7 +506,8 @@ function _getGroupPrefix(keywords) {
 function _getDisplayName(keywords) {
   if (keywords === undefined) return "";
   const displayNameKeyword = keywords.find(function(item) {
-    return item.indexOf("IDENTIFY_DISPLAY_NAME") !== -1;
+  	return item.indexOf("DISPLAY_NAME") !== -1;
+    //return item.indexOf("IDENTIFY_DISPLAY_NAME") !== -1;
   });
   if (displayNameKeyword !== undefined) {
     const val = displayNameKeyword.split("=")[1];
