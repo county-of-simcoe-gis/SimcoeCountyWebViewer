@@ -32,7 +32,9 @@ import Overlay from "ol/Overlay.js";
 import * as shpWrite from "shp-write";
 
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale, myMapsId, featureId) =>
-  `${mainConfig.feedbackUrl}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True&MY_MAPS_ID=${myMapsId}&MY_MAPS_FEATURE_ID=${featureId}`;
+  `${
+    mainConfig.feedbackUrl
+  }/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True&MY_MAPS_ID=${myMapsId}&MY_MAPS_FEATURE_ID=${featureId}`;
 
 class MyMaps extends Component {
   constructor(props) {
@@ -57,11 +59,11 @@ class MyMaps extends Component {
       items: [],
       isEditing: false,
       toolTipClass: "sc-hidden",
-      toolTipId: helpers.getUID()
+      toolTipId: helpers.getUID(),
     };
 
     // LISTEN FOR MAP TO MOUNT
-    window.emitter.addListener("mapLoaded", () => this.onMapLoad());
+    window.emitter.addListener("mapParametersComplete", () => this.onMapLoad());
 
     // LISTEN FOR OTHER COMPONENTS ADDING A FEATURE
     window.emitter.addListener("addMyMapsFeature", (feature, labelText) => this.addNewItem(feature, labelText, true));
@@ -75,7 +77,7 @@ class MyMaps extends Component {
     this.vectorLayer = new VectorLayer({
       source: this.vectorSource,
       zIndex: 1000,
-      style: this.drawStyle
+      style: this.drawStyle,
     });
 
     // PROPERTY CLICK WILL IGNORE THIS LAYER
@@ -83,7 +85,7 @@ class MyMaps extends Component {
 
     window.map.addLayer(this.vectorLayer);
 
-    window.map.on("singleclick", evt => {
+    window.map.on("singleclick", (evt) => {
       if (this.draw !== null || this.state.isEditing) return;
 
       window.map.forEachFeatureAtPixel(evt.pixel, (feature, layer) => {
@@ -111,7 +113,7 @@ class MyMaps extends Component {
     // URL PARAMETER
     const myMapsId = helpers.getURLParameter("MY_MAPS_ID");
     if (myMapsId !== null) {
-      myMapsHelpers.importMyMaps(myMapsId, result => {
+      myMapsHelpers.importMyMaps(myMapsId, (result) => {
         if (result.error !== undefined) helpers.showMessage("MyMaps Import", "That MyMaps ID was NOT found!", "red");
         else {
           helpers.showMessage("MyMaps Import", "Success!  MyMaps imported.");
@@ -119,7 +121,7 @@ class MyMaps extends Component {
 
           const featureId = helpers.getURLParameter("MY_MAPS_FEATURE_ID");
           if (featureId !== null) {
-            const item = this.state.items.filter(item => {
+            const item = this.state.items.filter((item) => {
               return item.id === featureId;
             })[0];
 
@@ -132,7 +134,12 @@ class MyMaps extends Component {
   };
 
   // BUTTON BAR CLICK
-  onButtonBarClick = type => {
+  onButtonBarClick = (type) => {
+    if (window.isMeasuring !== undefined && window.isMeasuring) {
+      helpers.showMessage("Measure", "Active measure in progress.  Close the measure tool or cancel your measure to continue.", undefined, 3000);
+      return;
+    }
+
     if (this.draw !== null) {
       window.map.removeInteraction(this.draw);
 
@@ -148,7 +155,7 @@ class MyMaps extends Component {
   };
 
   // COLORBAR CLICK
-  onColorBarClick = color => {
+  onColorBarClick = (color) => {
     this.setState({ drawColor: color }, () => {
       this.updateStyle();
     });
@@ -170,7 +177,7 @@ class MyMaps extends Component {
     if (this.state.drawType === "Bearing") {
       this.sketch = evt.feature;
       var tooltipCoord = evt.coordinate;
-      this.listener = this.sketch.getGeometry().on("change", evt => {
+      this.listener = this.sketch.getGeometry().on("change", (evt) => {
         var geom = evt.target;
         this.bearing = myMapsHelpers.getBearing(geom.getFirstCoordinate(), geom.getLastCoordinate());
         tooltipCoord = geom.getLastCoordinate();
@@ -182,7 +189,7 @@ class MyMaps extends Component {
   };
 
   // DRAW END
-  onDrawEnd = evt => {
+  onDrawEnd = (evt) => {
     console.log("ending");
     this.setState({ tooltipClass: "sc-hidden" });
     if (this.state.drawType === "Bearing") {
@@ -199,11 +206,16 @@ class MyMaps extends Component {
       myMapsHelpers.controlDoubleClickZoom(true);
 
       // RE-ENABLE PARCEL CLICK
-      window.disableParcelClick = false;
-      // DISABLE IDENTIFY CLICK
-      window.disableIdentifyClick = false;
+      let cancelParcelClick = false;
+      if ((window.isMeasuring !== undefined && window.isMeasuring) || (window.isCoordinateToolOpen !== undefined && window.isCoordinateToolOpen)) {
+        cancelParcelClick = true;
+      }
+      window.disableParcelClick = cancelParcelClick;
+
       // RE-ENABLE POPUPS
       window.isDrawingOrEditing = false;
+      // DISABLE IDENTIFY CLICK
+      window.disableIdentifyClick = false;
     }, 1000);
 
     // ADD NEW ITEM
@@ -268,14 +280,14 @@ class MyMaps extends Component {
       style: customStyle === null ? this.state.drawStyle : customStyle,
       visible: true,
       drawType: this.state.drawType,
-      geometryType: feature.getGeometry().getType()
+      geometryType: feature.getGeometry().getType(),
     };
 
     // ADD NEW FEATURE TO STATE
     this.setState(
-      prevState => ({
+      (prevState) => ({
         items: [itemInfo, ...prevState.items],
-        drawType: "Cancel"
+        drawType: "Cancel",
       }),
       () => {
         // UPDATE STORAGE
@@ -308,13 +320,13 @@ class MyMaps extends Component {
   updateFeatureGeoJSON = (feature, callback) => {
     const featureGeoJSON = new GeoJSON({ dataProjection: "EPSG:3857", featureProjection: "EPSG:3857" }).writeFeature(feature, {
       dataProjection: "EPSG:3857",
-      featureProjection: "EPSG:3857"
+      featureProjection: "EPSG:3857",
     });
 
     this.setState(
       {
         // UPDATE LABEL
-        items: this.state.items.map(item => (item.id === feature.get("id") ? Object.assign({}, item, { featureGeoJSON: featureGeoJSON }) : item))
+        items: this.state.items.map((item) => (item.id === feature.get("id") ? Object.assign({}, item, { featureGeoJSON: featureGeoJSON }) : item)),
       },
       () => {
         callback();
@@ -324,7 +336,7 @@ class MyMaps extends Component {
   // LABEL TEXTBOX
   onLabelChange = (itemId, label) => {
     console.log(itemId);
-    const itemInfo = this.state.items.filter(item => {
+    const itemInfo = this.state.items.filter((item) => {
       return item.id === itemId;
     })[0];
 
@@ -337,7 +349,7 @@ class MyMaps extends Component {
     this.setState(
       {
         // UPDATE LABEL
-        items: this.state.items.map(item => (item.id === itemInfo.id ? Object.assign({}, item, { label }) : item))
+        items: this.state.items.map((item) => (item.id === itemInfo.id ? Object.assign({}, item, { label }) : item)),
       },
       () => {
         // UPDATE FEATURE ATTRIBUTE
@@ -359,10 +371,10 @@ class MyMaps extends Component {
   onLabelRotationChange = (itemInfo, rotation) => {
     this.setState(
       {
-        items: this.state.items.map(item => (item.id === itemInfo.id ? Object.assign({}, item, { labelRotation: rotation }) : item))
+        items: this.state.items.map((item) => (item.id === itemInfo.id ? Object.assign({}, item, { labelRotation: rotation }) : item)),
       },
       () => {
-        const item = this.state.items.filter(item => {
+        const item = this.state.items.filter((item) => {
           return item.id === itemInfo.id;
         })[0];
 
@@ -373,12 +385,12 @@ class MyMaps extends Component {
   };
 
   // DELETE CLICK
-  onItemDelete = id => {
+  onItemDelete = (id) => {
     this.setState(
       {
         items: this.state.items.filter(function(item) {
           return item.id !== id;
-        })
+        }),
       },
       () => {
         // UPDATE STORAGE
@@ -394,7 +406,7 @@ class MyMaps extends Component {
   onItemCheckboxChange = (itemInfo, visible) => {
     this.setState(
       {
-        items: this.state.items.map(item => (item.id === itemInfo.id ? Object.assign({}, item, { visible: visible }) : item))
+        items: this.state.items.map((item) => (item.id === itemInfo.id ? Object.assign({}, item, { visible: visible }) : item)),
       },
       () => {
         this.saveStateToStorage();
@@ -406,7 +418,7 @@ class MyMaps extends Component {
   // LABEL VISIBILITY CHECKBOX FROM POPUP
   onLabelVisibilityChange = (itemId, visible) => {
     if (this.popupRef !== undefined) {
-      const item = this.state.items.filter(item => {
+      const item = this.state.items.filter((item) => {
         return item.id === itemId;
       })[0];
       this.popupRef.parentLabelVisibleChanged(item, visible);
@@ -414,10 +426,10 @@ class MyMaps extends Component {
 
     this.setState(
       {
-        items: this.state.items.map(item => (item.id === itemId ? Object.assign({}, item, { labelVisible: visible }) : item))
+        items: this.state.items.map((item) => (item.id === itemId ? Object.assign({}, item, { labelVisible: visible }) : item)),
       },
       () => {
-        const item = this.state.items.filter(item => {
+        const item = this.state.items.filter((item) => {
           return item.id === itemId;
         })[0];
 
@@ -431,7 +443,7 @@ class MyMaps extends Component {
   // IMPORT SAVED ITEMS FROM STORAGE
   importGeometries = () => {
     this.vectorLayer.getSource().clear();
-    this.state.items.forEach(item => {
+    this.state.items.forEach((item) => {
       const style = myMapsHelpers.getStyleFromJSON(item.style, item.pointType);
       let feature = helpers.getFeatureFromGeoJSON(item.featureGeoJSON);
 
@@ -458,7 +470,7 @@ class MyMaps extends Component {
   };
 
   setStyleById = (itemId, style, pointType, strokeType) => {
-    this.vectorSource.getFeatures().forEach(feature => {
+    this.vectorSource.getFeatures().forEach((feature) => {
       const id = feature.getProperties().id;
       if (id === itemId) {
         feature.setStyle(style);
@@ -471,13 +483,13 @@ class MyMaps extends Component {
         this.setState(
           {
             // UPDATE LABEL
-            items: this.state.items.map(item => (item.id === itemId ? Object.assign({}, item, itemUpdate) : item))
+            items: this.state.items.map((item) => (item.id === itemId ? Object.assign({}, item, itemUpdate) : item)),
           },
           () => {
             // SAVE STATE TO STORAGE
             this.saveStateToStorage();
 
-            const item = this.state.items.filter(item => {
+            const item = this.state.items.filter((item) => {
               return item.id === itemId;
             })[0];
 
@@ -529,7 +541,7 @@ class MyMaps extends Component {
   showDrawingOptionsPopup = (feature, evt = null, activeTool = "none") => {
     // GET FEATURE AND CENTER
     var featureId = feature.getProperties().id;
-    var item = this.state.items.filter(item => {
+    var item = this.state.items.filter((item) => {
       return item.id === featureId;
     })[0];
 
@@ -542,7 +554,7 @@ class MyMaps extends Component {
           <MyMapsPopup
             key={helpers.getUID()}
             activeTool={activeTool}
-            onRef={ref => (this.popupRef = ref)}
+            onRef={(ref) => (this.popupRef = ref)}
             item={item}
             onLabelChange={this.onLabelChange}
             onLabelVisibilityChange={this.onLabelVisibilityChange}
@@ -575,7 +587,7 @@ class MyMaps extends Component {
         <MyMapsPopup
           key={helpers.getUID()}
           activeTool={activeTool}
-          onRef={ref => (this.popupRef = ref)}
+          onRef={(ref) => (this.popupRef = ref)}
           item={item}
           onLabelChange={this.onLabelChange}
           onLabelVisibilityChange={this.onLabelVisibilityChange}
@@ -660,7 +672,7 @@ class MyMaps extends Component {
   onExportToShapeFile = () => {
     const geoJson = new GeoJSON({ dataProjection: "EPSG:3857", featureProjection: "EPSG:3857" }).writeFeatures(this.vectorSource.getFeatures(), {
       dataProjection: "EPSG:3857",
-      featureProjection: "EPSG:3857"
+      featureProjection: "EPSG:3857",
     });
     // (optional) set names for feature types and zipped folder
     var options = {
@@ -668,10 +680,10 @@ class MyMaps extends Component {
       types: {
         point: "mypoints",
         polygon: "mypolygons",
-        line: "mylines"
+        line: "mylines",
       },
       prj:
-        'PROJCS["WGS_1984_Web_Mercator_Auxiliary_Sphere",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Mercator_Auxiliary_Sphere"],PARAMETER["False_Easting",0.0],PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",0.0],PARAMETER["Standard_Parallel_1",0.0],PARAMETER["Auxiliary_Sphere_Type",0.0],UNIT["Meter",1.0]]'
+        'PROJCS["WGS_1984_Web_Mercator_Auxiliary_Sphere",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Mercator_Auxiliary_Sphere"],PARAMETER["False_Easting",0.0],PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",0.0],PARAMETER["Standard_Parallel_1",0.0],PARAMETER["Auxiliary_Sphere_Type",0.0],UNIT["Meter",1.0]]',
     };
     // a GeoJSON bridge for features
     shpWrite.download(JSON.parse(geoJson), options);
@@ -679,13 +691,13 @@ class MyMaps extends Component {
     console.log(JSON.parse(geoJson));
   };
 
-  onIdentify = id => {
+  onIdentify = (id) => {
     const feature = myMapsHelpers.getFeatureById(id);
-    window.emitter.emit("loadReport", <Identify geometry={feature.getGeometry()}></Identify>);
+    window.emitter.emit("loadReport", <Identify geometry={feature.getGeometry()} />);
   };
 
-  onReportProblem = id => {
-    myMapsHelpers.exportMyMaps(result => {
+  onReportProblem = (id) => {
+    myMapsHelpers.exportMyMaps((result) => {
       // APP STATS
       helpers.addAppStat("Report Problem", "My Maps Toolbox");
 
@@ -712,7 +724,7 @@ class MyMaps extends Component {
           key={helpers.getUID()}
           buttonEvent={evtClone}
           classNamesToIgnore={["sc-mymaps-popup-footer-button", "sc-mymaps-footer-buttons-img"]}
-          onMenuItemClick={action => {
+          onMenuItemClick={(action) => {
             this.onMenuItemClick(action, item);
           }}
         >
@@ -741,8 +753,8 @@ class MyMaps extends Component {
     ReactDOM.render(menu, document.getElementById("portal-root"));
   };
 
-  deleteSelected = selected => {
-    this.state.items.forEach(item => {
+  deleteSelected = (selected) => {
+    this.state.items.forEach((item) => {
       setTimeout(() => {
         if (selected && item.visible) this.onItemDelete(item.id);
         else if (!selected && !item.visible) this.onItemDelete(item.id);
@@ -750,15 +762,15 @@ class MyMaps extends Component {
     });
   };
 
-  toggleAllVisibility = visible => {
+  toggleAllVisibility = (visible) => {
     this.setState(
       {
-        items: this.state.items.map(item => Object.assign({}, item, { visible: visible }))
+        items: this.state.items.map((item) => Object.assign({}, item, { visible: visible })),
       },
       () => {
         this.saveStateToStorage();
-        this.vectorSource.getFeatures().forEach(feature => {
-          const item = this.state.items.filter(item => {
+        this.vectorSource.getFeatures().forEach((feature) => {
+          const item = this.state.items.filter((item) => {
             return item.id === feature.get("id");
           })[0];
 
@@ -806,16 +818,16 @@ class MyMaps extends Component {
       type: drawType,
       geometryFunction: this.state.drawType === "Rectangle" ? createBox() : undefined,
       style: this.state.drawStyle,
-      maxPoints: this.state.drawType === "Bearing" ? 2 : undefined
+      maxPoints: this.state.drawType === "Bearing" ? 2 : undefined,
     });
 
     // END DRAWING
-    this.draw.on("drawend", event => {
+    this.draw.on("drawend", (event) => {
       this.onDrawEnd(event);
     });
 
     // START DRAWING
-    this.draw.on("drawstart", event => {
+    this.draw.on("drawstart", (event) => {
       this.onDrawStart(event);
     });
 
@@ -828,7 +840,7 @@ class MyMaps extends Component {
     this.tooltip = new Overlay({
       element: this.tooltipElement,
       offset: [0, -15],
-      positioning: "bottom-center"
+      positioning: "bottom-center",
     });
     window.map.addOverlay(this.tooltip);
 
@@ -838,7 +850,7 @@ class MyMaps extends Component {
   };
 
   // POINTER MOVE HANDLER
-  pointerMoveHandler = evt => {
+  pointerMoveHandler = (evt) => {
     if (!window.isDrawingOrEditing) {
       this.setState({ tooltipClass: "sc-hidden" });
       this.tooltipElement.innerHTML = "";
@@ -852,8 +864,8 @@ class MyMaps extends Component {
   onMouseOutEvent = () => {
     this.setState({ toolTipClass: "sc-hidden" });
   };
-  removeItemFromVectorSource = idParam => {
-    this.vectorSource.getFeatures().forEach(feature => {
+  removeItemFromVectorSource = (idParam) => {
+    this.vectorSource.getFeatures().forEach((feature) => {
       const id = feature.getProperties().id;
       if (id === idParam) this.vectorSource.removeFeature(feature);
       return;
@@ -861,7 +873,7 @@ class MyMaps extends Component {
   };
 
   updateItemVisibility = (itemInfo, visible) => {
-    this.vectorSource.getFeatures().forEach(feature => {
+    this.vectorSource.getFeatures().forEach((feature) => {
       const id = feature.getProperties().id;
       if (id === itemInfo.id) {
         if (visible) {
@@ -875,7 +887,7 @@ class MyMaps extends Component {
   };
 
   updateLabelVisibility = (itemInfo, visible) => {
-    this.vectorSource.getFeatures().forEach(feature => {
+    this.vectorSource.getFeatures().forEach((feature) => {
       const id = feature.getProperties().id;
       if (id === itemInfo.id) {
         if (visible) feature.setStyle(myMapsHelpers.getStyleFromJSON(itemInfo.style, itemInfo.pointType));
@@ -916,22 +928,22 @@ class MyMaps extends Component {
     if (this.modify === null) {
       // VERTEX
       this.modify = new Modify({ source: this.vectorSource });
-      this.modify.on("modifyend", e => {
+      this.modify.on("modifyend", (e) => {
         this.updateFeatureGeometries(e.features.getArray());
       });
       window.map.addInteraction(this.modify);
 
       // MOVE
       this.translate = new Translate({ source: this.vectorSource });
-      this.translate.on("translateend", e => {
+      this.translate.on("translateend", (e) => {
         this.updateFeatureGeometries(e.features.getArray());
       });
       window.map.addInteraction(this.translate);
     }
   };
 
-  updateFeatureGeometries = features => {
-    features.forEach(feature => {
+  updateFeatureGeometries = (features) => {
+    features.forEach((feature) => {
       this.updateFeatureGeoJSON(feature, () => {
         // SAVE TO STORAGE
         this.saveStateToStorage();
@@ -939,12 +951,12 @@ class MyMaps extends Component {
     });
   };
 
-  onMyMapsImport = savedState => {
+  onMyMapsImport = (savedState) => {
     const items = JSON.parse(savedState.json).items;
 
     let itemsToAdd = [];
-    items.forEach(item => {
-      const searchItem = this.state.items.filter(stateItem => {
+    items.forEach((item) => {
+      const searchItem = this.state.items.filter((stateItem) => {
         return stateItem.id === item.id;
       })[0];
 
@@ -956,9 +968,9 @@ class MyMaps extends Component {
     if (itemsToAdd.length > 0) {
       // ADD NEW FEATURE TO STATE
       this.setState(
-        prevState => ({
+        (prevState) => ({
           items: [...items, ...prevState.items],
-          drawType: "Cancel"
+          drawType: "Cancel",
         }),
         () => {
           // UPDATE STORAGE
@@ -976,7 +988,7 @@ class MyMaps extends Component {
         <ColorBar onClick={this.onColorBarClick} activeColor={this.state.drawColor} isEditing={this.state.isEditing} />
         <MyMapsItems isEditing={this.state.isEditing}>
           <TransitionGroup>
-            {this.state.items.map(myMapsItem => (
+            {this.state.items.map((myMapsItem) => (
               <CSSTransition key={myMapsItem.id} timeout={500} classNames="sc-mymaps-item">
                 <MyMapsItem
                   key={myMapsItem.id}
@@ -995,7 +1007,7 @@ class MyMaps extends Component {
           </TransitionGroup>
         </MyMapsItems>
         <MyMapsAdvanced onEditFeatures={this.onEditFeatures} onMenuItemClick={this.onMenuItemClick} onDeleteAllClick={this.onDeleteAllClick} onMyMapsImport={this.onMyMapsImport} />
-        <div id={this.state.toolTipId} className={window.isDrawingOrEditing && this.state.drawType === "Bearing" ? this.state.toolTipClass : "sc-hidden"}></div>
+        <div id={this.state.toolTipId} className={window.isDrawingOrEditing && this.state.drawType === "Bearing" ? this.state.toolTipClass : "sc-hidden"} />
       </div>
     );
   }

@@ -19,7 +19,7 @@ class ToolComponent extends Component {
       lotNumber: "",
       concessionNumber: "",
       selectedMuni: munis[0],
-      features: []
+      features: [],
     };
     this.layer = null;
     this.layerName = "simcoe:Lot_And_Concession_Tool";
@@ -30,20 +30,20 @@ class ToolComponent extends Component {
     const shadowStyle = new Style({
       stroke: new Stroke({
         color: [0, 255, 255, 0.3],
-        width: 6
+        width: 6,
       }),
       fill: new Fill({
-        color: [0, 255, 255, 0.3]
+        color: [0, 255, 255, 0.3],
       }),
-      zIndex: 100000
+      zIndex: 100000,
     });
 
     this.vectorLayerShadow = new VectorLayer({
       source: new VectorSource({
-        features: []
+        features: [],
       }),
       zIndex: 100000,
-      style: shadowStyle
+      style: shadowStyle,
     });
     window.map.addLayer(this.vectorLayerShadow);
   };
@@ -78,14 +78,15 @@ class ToolComponent extends Component {
     // " this.layer = helpers.getImageWMSLayer(serverUrl, this.layerName, null, null, 50);
     // else this.layer = helpers.getImageWMSLayer(serverUrl, this.layerName, null, sql, 50);
 
-    this.layer = helpers.getImageWMSLayer(serverUrl, this.layerName, null, sql, 50);
+    this.layer = helpers.getImageWMSLayer(serverUrl, this.layerName, "geoserver", sql, 50);
     this.layer.setVisible(true);
+    this.layer.setZIndex(100);
     window.map.addLayer(this.layer);
 
     helpers.getWFSGeoJSON(
       mainConfig.geoserverUrl,
       this.layerName,
-      result => {
+      (result) => {
         this.updateFeatures(result);
       },
       "_lot,_con",
@@ -95,68 +96,70 @@ class ToolComponent extends Component {
     );
   };
 
-  updateFeatures = features => {
+  updateFeatures = (features) => {
     this.setState({ features });
 
     let extent = features[0]
       .getGeometry()
       .getExtent()
       .slice(0);
-    features.forEach(feature => {
+    features.forEach((feature) => {
       extend(extent, feature.getGeometry().getExtent());
     });
     window.map.getView().fit(extent, window.map.getSize(), { duration: 500 });
+    window.map.getView().setZoom(window.map.getView().getZoom() + 1);
+    window.map.getView().setZoom(window.map.getView().getZoom() - 1);
   };
 
-  onMouseEnter = feature => {
+  onMouseEnter = (feature) => {
     this.vectorLayerShadow.getSource().clear();
     this.vectorLayerShadow.getSource().addFeature(feature);
   };
 
-  onMouseLeave = feature => {
+  onMouseLeave = (feature) => {
     this.vectorLayerShadow.getSource().clear();
   };
 
-  onFeatureClick = feature => {
+  onFeatureClick = (feature) => {
     window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize(), { duration: 500 });
   };
 
   onClearClick = () => {
-    this.setState({ features: [] });
+    this.setState({ features: [], concessionNumber: "", lotNumber: "", selectedMuni: munis[0] });
     window.map.removeLayer(this.layer);
     window.map.removeLayer(this.vectorLayerShadow);
   };
 
-  onLotNumberChange = evt => {
+  onLotNumberChange = (evt) => {
     this.setState({ lotNumber: evt.target.value });
   };
 
-  onConcessionNumberChange = evt => {
+  onConcessionNumberChange = (evt) => {
     this.setState({ concessionNumber: evt.target.value });
   };
 
-  onMuniChange = selectedOption => {
+  onMuniChange = (selectedOption) => {
     this.setState({ selectedMuni: selectedOption });
   };
 
   render() {
     const muniSelectStyle = {
-      control: provided => ({
+      control: (provided) => ({
         ...provided,
-        minHeight: "30px"
+        minHeight: "30px",
       }),
-      indicatorsContainer: provided => ({
+      indicatorsContainer: (provided) => ({
         ...provided,
-        height: "30px"
+        height: "30px",
       }),
-      clearIndicator: provided => ({
+      clearIndicator: (provided) => ({
         ...provided,
-        padding: "5px"
+        padding: "5px",
       }),
-      dropdownIndicator: provided => ({
+      dropdownIndicator: (provided) => ({
         ...provided,
-        padding: "5px"
-      })
+        padding: "5px",
+      }),
     };
 
     return (
@@ -167,13 +170,13 @@ class ToolComponent extends Component {
             <div className="sc-tool-lot-and-concession-control-row">
               <label className="sc-tool-lot-and-concession-control label">Lot Number:</label>
               <div className="sc-tool-lot-and-concession-control input">
-                <input className="sc-tool-lot-and-concession-number" type="text" placeholder="Enter Lot Number" onChange={this.onLotNumberChange} />
+                <input className="sc-tool-lot-and-concession-number" type="text" placeholder="Enter Lot Number" onChange={this.onLotNumberChange} value={this.state.lotNumber} />
               </div>
             </div>
             <div className="sc-tool-lot-and-concession-control-row">
               <label className="sc-tool-lot-and-concession-control label">Concession Number:</label>
               <div className="sc-tool-lot-and-concession-control input">
-                <input className="sc-tool-lot-and-concession-number" type="text" placeholder="Concession Number" onChange={this.onConcessionNumberChange} />
+                <input className="sc-tool-lot-and-concession-number" type="text" placeholder="Concession Number" onChange={this.onConcessionNumberChange} value={this.state.concessionNumber} />
               </div>
             </div>
             <div className="sc-tool-lot-and-concession-control-row">
@@ -195,7 +198,7 @@ class ToolComponent extends Component {
             Please enter a LOT and/or CONCESSION in the textboxes above then click SEARCH button.
           </div>
           <div className="sc-tool-lot-and-concession-results">
-            {this.state.features.map(feature => {
+            {this.state.features.map((feature) => {
               return <Results key={helpers.getUID()} feature={feature} onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave} onFeatureClick={this.onFeatureClick} />;
             })}
           </div>
@@ -207,7 +210,7 @@ class ToolComponent extends Component {
 
 export default ToolComponent;
 
-const Results = props => {
+const Results = (props) => {
   const lot = props.feature.get("_lot");
   const con = props.feature.get("_con");
   const muni = props.feature.get("_geog_twp");
@@ -225,7 +228,7 @@ const Results = props => {
     >
       <div className="sc-tool-lot-and-concession-item-right">
         <label>{"Lot: " + lot}</label>
-        <br></br>
+        <br />
         <label>{"Concession: " + con}</label>
         <label style={{ display: "block", fontSize: "12px" }}>{"Township: " + muni}</label>
       </div>
@@ -236,82 +239,78 @@ const Results = props => {
 const munis = [
   {
     value: "SEARCH ALL",
-    label: "SEARCH ALL"
+    label: "SEARCH ALL",
   },
   {
     value: "ADJALA",
-    label: "ADJALA"
+    label: "ADJALA",
   },
   {
     value: "ESSA",
-    label: "ESSA"
+    label: "ESSA",
   },
   {
     value: "FLOS",
-    label: "FLOS"
+    label: "FLOS",
   },
   {
     value: "INNISFIL",
-    label: "INNISFIL"
+    label: "INNISFIL",
   },
   {
     value: "MARA",
-    label: "MARA"
+    label: "MARA",
   },
   {
     value: "MATCHEDASH",
-    label: "MATCHEDASH"
+    label: "MATCHEDASH",
   },
   {
     value: "MEDONTE",
-    label: "MEDONTE"
-  },
-  {
-    value: "MORRISON",
-    label: "MORRISON"
+    label: "MEDONTE",
   },
   {
     value: "NOTTAWASAGA",
-    label: "NOTTAWASAGA"
+    label: "NOTTAWASAGA",
   },
   {
     value: "ORILLIA",
-    label: "ORILLIA"
+    label: "ORILLIA",
   },
   {
     value: "ORO",
-    label: "ORO"
+    label: "ORO",
   },
   {
-    value: "MARA",
-    label: "MARA"
+    value: "RAMA",
+    label: "RAMA",
   },
   {
     value: "SUNNIDALE",
-    label: "SUNNIDALE"
+    label: "SUNNIDALE",
   },
   {
     value: "TAY",
-    label: "TAY"
+    label: "TAY",
   },
   {
     value: "TECUMSETH",
-    label: "TECUMSETH"
+    label: "TECUMSETH",
   },
   {
     value: "TINY",
-    label: "TINY"
+    label: "TINY",
   },
   {
     value: "TOSORONTIO",
-    label: "TOSORONTIO"
+    label: "TOSORONTIO",
   },
   {
     value: "VESPRA",
-    label: "VESPRA"
+    label: "VESPRA",
   },
   {
     value: "WEST GWILLIMBURY",
-    label: "WEST GWILLIMBURY"
-  }
+    label: "WEST GWILLIMBURY",
+  },
 ];

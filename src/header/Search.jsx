@@ -17,12 +17,11 @@ import Select from "react-select";
 
 // URLS
 const apiUrl = mainConfig.apiUrl;
-const googleDirectionsURL = (lat, long) => `https://www.google.com/maps?saddr=My+Location&daddr=${lat},${long}`;
+const googleDirectionsURL = (lat, long) => `https://www.google.com/maps?saddr=Current+Location&daddr=${lat},${long}`;
 const searchURL = (apiUrl, searchText, type, muni, limit) => `${apiUrl}async/search/?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
 const searchInfoURL = (apiUrl, locationID) => `${apiUrl}searchById/${locationID}`;
 const searchTypesURL = apiUrl => `${apiUrl}getSearchTypes`;
 
-console.log(searchTypesURL(apiUrl));
 // DEFAULT SEARCH LIMIT
 const defaultSearchLimit = 10;
 
@@ -89,7 +88,7 @@ class Search extends Component {
     this.storageKey = "searchHistory";
 
     // LISTEN FOR MAP TO MOUNT
-    window.emitter.addListener("mapLoaded", () => this.onMapLoad());
+    window.emitter.addListener("mapParametersComplete", () => this.onMapLoad());
 
     this.state = {
       value: "",
@@ -109,9 +108,7 @@ class Search extends Component {
     // HANDLE URL PARAMETER
     if (locationId !== null) {
       // CALL API TO GET LOCATION DETAILS
-      setTimeout(() => {
-        helpers.getJSON(searchInfoURL(apiUrl, locationId), result => this.jsonCallback(result));
-      }, 500);
+      helpers.getJSON(searchInfoURL(apiUrl, locationId), result => this.jsonCallback(result));
     }
   };
 
@@ -531,6 +528,11 @@ class Search extends Component {
             this.onItemSelect(value, item);
           }}
           onChange={async (event, value) => {
+            // CHECK FOR ILLEGAL CHARS
+            if (value.indexOf("\\") !== -1) {
+              return;
+            }
+
             this.setState({ value });
             if (value !== "") {
               this.setState({ iconInitialClass: "sc-search-icon-initial-hidden" });
@@ -597,8 +599,16 @@ class PopupContent extends Component {
     var url = window.location.href;
 
     //ADD LOCATIONID
-    if (url.indexOf("?") > 0) url = url + "&LOCATIONID=" + this.props.shareLocationId;
-    else url = url + "?LOCATIONID=" + this.props.shareLocationId;
+    if (url.indexOf("?") > 0) {
+      let newUrl = helpers.removeURLParameter(url, "LOCATIONID");
+      if (newUrl.indexOf("?") > 0) {
+        url = newUrl + "&LOCATIONID=" + this.props.shareLocationId;
+      } else {
+        url = newUrl + "?LOCATIONID=" + this.props.shareLocationId;
+      }
+    } else {
+      url = url + "?LOCATIONID=" + this.props.shareLocationId;
+    }
 
     return url;
   };

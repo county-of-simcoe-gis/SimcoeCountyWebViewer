@@ -1,0 +1,16 @@
+{
+  "layers": [
+    {
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:New_To_Canada_Information",
+      "displayName": "New to Canada Information",
+      "description": "Settlement Services help newcomers get settled into Simcoe County. Many offer English language training. They can provide you with community information and guidance on starting work in Canada."
+    },
+    {
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:Housing",
+      "displayName": "Housing",
+      "description": "Housing Support Agencies help people who are looking for affordable rental housing or at risk of losing their current housing. Housing Support Agencies can help you learn what is available in the County to help you obtain and retain housing."
+    }
+  ]
+}

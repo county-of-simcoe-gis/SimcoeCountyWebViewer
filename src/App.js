@@ -6,13 +6,14 @@ import SCMap from "./map/SCMap";
 import "./helpers/SC.css";
 import mainConfig from "./config.json";
 import ReactGA from "react-ga";
+// import AttributeTable from "./helpers/AttributeTable.jsx";
 ReactGA.initialize("UA-3104541-53");
 ReactGA.pageview(window.location.pathname + window.location.search);
 
 class App extends Component {
   componentWillMount() {
     document.title = mainConfig.title;
-  };
+  }
   render() {
     return (
       <div>
@@ -20,6 +21,7 @@ class App extends Component {
         <Header />
         <Sidebar />
         <SCMap />
+        {/* <AttributeTable></AttributeTable> */}
       </div>
     );
   }

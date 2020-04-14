@@ -30,7 +30,7 @@ class PropertyReportClick extends Component {
   constructor(props) {
     super(props);
     // LISTEN FOR MAP TO MOUNT
-    window.emitter.addListener("mapLoaded", () => this.onMapLoad());
+    window.emitter.addListener("mapParametersComplete", () => this.onMapLoad());
 
     this.onMapLoad = this.onMapLoad.bind(this);
 
@@ -124,8 +124,14 @@ class PropertyReportClick extends Component {
     //ADD LOCATIONID
     if (url.indexOf("?") > 0) {
       let newUrl = helpers.removeURLParameter(url, "ARN");
-      url = newUrl + "&ARN=" + arn;
-    } else url = url + "?ARN=" + arn;
+      if (newUrl.indexOf("?") > 0) {
+        url = newUrl + "&ARN=" + arn;
+      } else {
+        url = newUrl + "?ARN=" + arn;
+      }
+    } else {
+      url = url + "?ARN=" + arn;
+    }
 
     return url;
   };
@@ -193,7 +199,7 @@ class PropertyReportClick extends Component {
           </span>
         </CopyToClipboard>
         &nbsp;
-        <span className="sc-fakeLink" onClick={() => helpers.showURLWindow(mainConfig.termsUrl, false, "full")}>
+        <span className="sc-fakeLink" onClick={() => helpers.showURLWindow(mainConfig.termsUrl, false, "full", true, true)}>
           [Terms]
         </span>
       </InfoRow>
