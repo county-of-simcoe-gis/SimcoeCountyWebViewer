@@ -9,7 +9,7 @@ import Select from "react-select";
 import { register } from "ol/proj/proj4";
 import Projection from "ol/proj/Projection.js";
 import { Vector as VectorLayer } from "ol/layer";
-import { Fill, Style, Circle as CircleStyle } from "ol/style.js";
+import { Fill, Style, Circle as CircleStyle, Icon } from "ol/style.js";
 import { Vector as VectorSource } from "ol/source.js";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
@@ -50,16 +50,29 @@ class Coordinates extends Component {
     this.currentProjection =  "EPSG:4326";
     this.vectorLayer = new VectorLayer({
       source: new VectorSource({
-        features: []
+        features: [],
       }),
       style: new Style({
-        image: new CircleStyle({
-          opacity: 0.5,
-          radius: 5,
-          fill: new Fill({ color: "#EE2E2E" })
-        })
-      })
+        image: new Icon({
+          // anchor: [0.5, 0.5],
+          // anchorXUnits: "fraction",
+          // anchorYUnits: "pixels",
+          src: images["cross-hair.png"],
+        }),
+      }),
     });
+    // this.vectorLayer = new VectorLayer({
+    //   source: new VectorSource({
+    //     features: []
+    //   }),
+    //   style: new Style({
+    //     image: new CircleStyle({
+    //       opacity: 0.5,
+    //       radius: 5,
+    //       fill: new Fill({ color: "#EE2E2E" })
+    //     })
+    //   })
+    // });
     this.vectorLayer.setZIndex(500);
     window.map.addLayer(this.vectorLayer);
   }
@@ -85,6 +98,8 @@ class Coordinates extends Component {
     
     // INITIAL EXTENT
     this.updateExtent();
+
+    window.isCoordinateToolOpen = true;
   }
 
   _getSelectProjections = () => {
@@ -192,11 +207,11 @@ class Coordinates extends Component {
     window.emitter.emit("addMyMapsFeature", this.vectorLayer.getSource().getFeatures()[0], "X:" +webMercatorCoords[0] + ", Y:" + webMercatorCoords[1]);
   };
 
-  onMapMoveEnd = evt => {
+  onMapMoveEnd = (evt) => {
     this.updateExtent();
   };
 
-  onMapClick = evt => {
+  onMapClick = (evt) => {
     const webMercatorCoords = evt.coordinate;
     const latLongCoords = transform(webMercatorCoords, "EPSG:3857", "EPSG:4326");
     const selectedCoords = transform(webMercatorCoords, "EPSG:3857", this.currentProjection);
@@ -223,7 +238,7 @@ class Coordinates extends Component {
     // CREATE POINT
     this.vectorLayer.getSource().clear();
     const pointFeature = new Feature({
-      geometry: new Point(webMercatorCoords)
+      geometry: new Point(webMercatorCoords),
     });
     this.vectorLayer.getSource().addFeature(pointFeature);
 
@@ -237,7 +252,7 @@ class Coordinates extends Component {
   }
 
   // POINTER MOVE HANDLER
-  onPointerMoveHandler = evt => {
+  onPointerMoveHandler = (evt) => {
     const webMercatorCoords = evt.coordinate;
     const latLongCoords = transform(webMercatorCoords, "EPSG:3857", "EPSG:4326");
     this._calculateZone(latLongCoords[0],latLongCoords[1]);
@@ -249,7 +264,7 @@ class Coordinates extends Component {
       selectProjectionZoneOption: this.calculatedZone,
       liveCoords: liveCoords,
       liveWebMercatorCoords: webMercatorCoords,
-      liveLatLongCoords: latLongCoords
+      liveLatLongCoords: latLongCoords,
     });
   };
 
@@ -260,6 +275,8 @@ class Coordinates extends Component {
 
     // REMOVE THE LAYER
     window.map.removeLayer(this.vectorLayer);
+
+    window.isCoordinateToolOpen = false;
   }
 
   onClose() {
@@ -400,3 +417,11 @@ class Coordinates extends Component {
 }
 
 export default Coordinates;
+
+// IMPORT ALL IMAGES
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
+function importAllImages(r) {
+  let images = {};
+  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
+  return images;
+}

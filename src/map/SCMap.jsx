@@ -27,6 +27,7 @@ import Portal from "../helpers/Portal.jsx";
 import * as helpers from "../helpers/helpers";
 import mainConfig from "../config.json";
 import Identify from "./Identify";
+import AttributeTable from "../helpers/AttributeTable.jsx";
 
 const scaleLineControl = new ScaleLine();
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
@@ -42,10 +43,17 @@ class SCMap extends Component {
       mapClassName: "sc-map",
       shareURL: null,
       parcelClickText: "Disable Property Click",
-      isIE: false
+      isIE: false,
+      mapBottom: 0,
     };
     // LISTEN FOR MAP CURSOR TO CHANGE
     window.emitter.addListener("changeCursor", cursorStyle => this.changeCursor(cursorStyle));
+
+    // LISTEN FOR TOC TO LOAD
+    window.emitter.addListener("tocLoaded", () => this.handleUrlParameters());
+
+    // LISTEN FOR ATTRIBUTE TABLE SIZE
+    window.emitter.addListener("attributeTableResize", (height) => this.onAttributeTableResize(height));
   }
 
   componentDidMount() {
@@ -82,16 +90,16 @@ class SCMap extends Component {
       view: new View({
         center: centerCoords,
         zoom: defaultZoom,
-        maxZoom: mainConfig.maxZoom
+        maxZoom: mainConfig.maxZoom,
         //resolutions: resolutions
       }),
       interactions: defaultInteractions({ keyboard: true, altShiftDragRotate: false, pinchRotate: false, mouseWheelZoom: false }).extend([
         new MouseWheelZoom({
           duration: 0,
-          constrainResolution: true
-        })
+          constrainResolution: true,
+        }),
       ]),
-      keyboardEventTarget: document
+      keyboardEventTarget: document,
     });
     if (storage !== null) {
       const extent = JSON.parse(storage);
@@ -142,39 +150,6 @@ class SCMap extends Component {
       ReactDOM.render(menu, document.getElementById("portal-root"));
     });
 
-    // *******************************************
-    // THIS SECTION HANDLES ZOOMING URL PARAMETERS
-    // *******************************************
-
-    // GET URL PARAMETERS (ZOOM TO XY)
-    const x = helpers.getURLParameter("X");
-    const y = helpers.getURLParameter("Y");
-    const sr = helpers.getURLParameter("SR") === null ? "WEB" : helpers.getURLParameter("SR");
-
-    // GET URL PARAMETERS (ZOOM TO EXTENT)
-    const xmin = helpers.getURLParameter("XMIN");
-    const ymin = helpers.getURLParameter("YMIN");
-    const xmax = helpers.getURLParameter("XMAX");
-    const ymax = helpers.getURLParameter("YMAX");
-
-    setTimeout(() => {
-      if (x !== null && y !== null) {
-        // URL PARAMETERS (ZOOM TO XY)
-        let coords = [x, y];
-        if (sr === "WGS84") coords = fromLonLat([Math.round(x * 100000) / 100000, Math.round(y * 100000) / 100000]);
-
-        helpers.flashPoint(coords);
-      } else if (xmin !== null && ymin !== null && xmax !== null && ymax !== null) {
-        //URL PARAMETERS (ZOOM TO EXTENT)
-        const extent = [xmin, xmax, ymin, ymax];
-        window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
-      } else if (storage !== null) {
-        // ZOOM TO SAVED EXTENT
-        const extent = JSON.parse(storage);
-        map.getView().fit(extent, map.getSize(), { duration: 1000 });
-      }
-    }, 2000);
-
     // APP STAT
     helpers.addAppStat("STARTUP", "MAP_LOAD");
 
@@ -197,13 +172,32 @@ class SCMap extends Component {
 
     // MAP LOADED
     this.initialLoad = false;
-    //window.emitter.emit("mapLoaded");
-    window.map.once("rendercomplete", event => {
+    window.map.once("rendercomplete", (event) => {
       if (!this.initialLoad) {
         window.emitter.emit("mapLoaded");
         this.initialLoad = true;
       }
     });
+
+    window.map.on("change:size", () => {
+      if (!window.isAttributeTableResizing) {
+        window.emitter.emit("mapResize");
+      }
+    });
+
+    // ATTRIBUTE TABLE TESTING
+    // helpers.getWFSGeoJSON(
+    //   "https://opengis.simcoe.ca/geoserver/",
+    //   "simcoe:Airport",
+    //   (result) => {
+    //     if (result.length === 0) return;
+
+    //     window.emitter.emit("openAttributeTable", { name: "Airport", geoJson: result });
+    //   },
+    //   null,
+    //   null,
+    //   null
+    // );
   }
   changeCursor = (cursorStyle) =>
   {
@@ -218,7 +212,53 @@ class SCMap extends Component {
       this.setState({mapClassName:classes.join(" ")});
     }
   }
-  onMenuItemClick = key => {
+
+  onAttributeTableResize = (height) => {
+    console.log(height);
+    console.log("att resize event in map");
+    this.setState({ mapBottom: Math.abs(height) }, () => {
+      //this.forceUpdate();
+      window.map.updateSize();
+      // setTimeout(function() {
+      //   window.map.updateSize();
+      // }, 300);
+    });
+  };
+
+  handleUrlParameters = () => {
+    const storage = localStorage.getItem(this.storageExtentKey);
+
+    // GET URL PARAMETERS (ZOOM TO XY)
+    const x = helpers.getURLParameter("X");
+    const y = helpers.getURLParameter("Y");
+    const sr = helpers.getURLParameter("SR") === null ? "WEB" : helpers.getURLParameter("SR");
+
+    // GET URL PARAMETERS (ZOOM TO EXTENT)
+    const xmin = helpers.getURLParameter("XMIN");
+    const ymin = helpers.getURLParameter("YMIN");
+    const xmax = helpers.getURLParameter("XMAX");
+    const ymax = helpers.getURLParameter("YMAX");
+
+    if (x !== null && y !== null) {
+      // URL PARAMETERS (ZOOM TO XY)
+      let coords = [x, y];
+      if (sr === "WGS84") coords = fromLonLat([Math.round(x * 100000) / 100000, Math.round(y * 100000) / 100000]);
+
+      helpers.flashPoint(coords);
+    } else if (xmin !== null && ymin !== null && xmax !== null && ymax !== null) {
+      //URL PARAMETERS (ZOOM TO EXTENT)
+      const extent = [parseFloat(xmin), parseFloat(ymin), parseFloat(xmax), parseFloat(ymax)];
+      window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
+    } else if (storage !== null) {
+      // ZOOM TO SAVED EXTENT
+      const extent = JSON.parse(storage);
+      window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
+    }
+
+    window.emitter.emit("mapParametersComplete");
+  };
+
+  onMenuItemClick = (key) => {
     if (key === "sc-floating-menu-zoomin") window.map.getView().setZoom(window.map.getView().getZoom() + 1);
     else if (key === "sc-floating-menu-zoomout") window.map.getView().setZoom(window.map.getView().getZoom() - 1);
     else if (key === "sc-floating-menu-property-click") window.emitter.emit("showPropertyReport", this.contextCoords);
@@ -245,7 +285,7 @@ class SCMap extends Component {
 
   identify = () => {
     const point = new Point(this.contextCoords);
-    window.emitter.emit("loadReport", <Identify geometry={point}></Identify>);
+    window.emitter.emit("loadReport", <Identify geometry={point} />);
   };
 
   reportProblem = () => {
@@ -309,18 +349,29 @@ class SCMap extends Component {
   }
 
   render() {
-    window.emitter.addListener("sidebarChanged", isSidebarOpen => this.sidebarChanged(isSidebarOpen));
+    window.emitter.addListener("sidebarChanged", (isSidebarOpen) => this.sidebarChanged(isSidebarOpen));
 
     return (
       <div>
         <div id="map-modal-window" />
-        <div id="map" 
-          className={this.state.mapClassName} tabIndex="0"
-          />
+        <div id="map" className={this.state.mapClassName} tabIndex="0" style={{ bottom: this.state.mapBottom }} />
         <Navigation />
         <FooterTools />
         <BasemapSwitcher />
-        
+        <PropertyReportClick />
+        {/* <Screenshot></Screenshot> */}
+        {/* https://buttons.github.io/ */}
+        <div
+          className={window.sidebarOpen ? "sc-map-github-button slideout" : "sc-map-github-button slidein"}
+          onClick={() => {
+            helpers.addAppStat("GitHub", "Button");
+          }}
+        >
+          <GitHubButton href="https://github.com/county-of-simcoe-gis" data-size="large" aria-label="Follow @simcoecountygis on GitHub">
+            Follow @simcoecountygis
+          </GitHubButton>
+        </div>
+        <AttributeTable />
       </div>
     );
   }

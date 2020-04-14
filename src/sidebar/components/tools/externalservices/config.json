@@ -33,12 +33,12 @@
       "links": [
         {
           "name": "Bing Maps",
-          "url": "http://bing.com/maps/default.aspx?cp=${y}~${x}",
+          "url": "http://bing.com/maps/default.aspx?cp=${y}~${x}&lvl=17",
           "requiresPropertyInfo": false
         },
         {
-          "name": "Bing Birds Eye",
-          "url": "http://bing.com/maps/default.aspx?cp=${y}~${x}&style=o",
+          "name": "Bing Aerial",
+          "url": "http://bing.com/maps/default.aspx?cp=${y}~${x}&style=h&lvl=17",
           "requiresPropertyInfo": false
         },
         {
@@ -67,32 +67,9 @@
           "name": "Map Quest Search",
           "url": "https://www.mapquest.ca/search/results?zoom=12&center=${y},${x}&query=${address} Ontario Canada",
           "requiresPropertyInfo": true
-        },
-        {
-          "name": "Map Quest Driving Directions",
-          "url": "https://www.mapquest.ca/directions?q1=&q2=${x},${y}&center=${y},${x}&zoom=12&maptype=map",
-          "requiresPropertyInfo": false
         }
       ]
     },
-
-    {
-      "groupName": "Yahoo",
-      "icon": "yahoo.png",
-      "links": [
-        {
-          "name": "Yahoo Maps",
-          "url": "https://maps.yahoo.com/search/?p=${y},${x}",
-          "requiresPropertyInfo": false
-        },
-        {
-          "name": "Yahoo Search",
-          "url": "https://maps.yahoo.com/place/?q=${address} Ontario Canada",
-          "requiresPropertyInfo": true
-        }
-      ]
-    },
-
     {
       "groupName": "Open Street Map",
       "icon": "osm.png",

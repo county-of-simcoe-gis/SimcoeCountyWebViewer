@@ -2,7 +2,7 @@ import React from "react";
 import * as helpers from "../../../../helpers/helpers";
 
 const inputMsg = "(listening for input)";
-export const LiveCoordinates = props => {
+export const LiveCoordinates = (props) => {
   return (
     <div>
       <div className="sc-title">Live Coordinates</div>
@@ -73,7 +73,7 @@ export const ProjectedCoordinates = props => {
   );
 };
 
-export const MapExtent = props => {
+export const MapExtent = (props) => {
   return (
     <div className="sc-container">
       <div className="sc-coordinates-row sc-arrow">
@@ -99,7 +99,7 @@ export const MapExtent = props => {
   );
 };
 
-export const CustomCoordinates = props => {
+export const CustomCoordinates = (props) => {
   return (
     <div>
       <div className="sc-coordinates-heading">{props.title}</div>
@@ -110,7 +110,7 @@ export const CustomCoordinates = props => {
   );
 };
 
-export const CoordinateActions = props => {
+export const CoordinateActions = (props) => {
   return (
     <div className="sc-coordinates-row sc-float-right">
       [&nbsp;<span className="sc-fakeLink" onClick={props.onZoomClick}>zoom</span>&nbsp;]
@@ -119,7 +119,7 @@ export const CoordinateActions = props => {
   );
 };
 
-export const CoordinateRow = props => {
+export const CoordinateRow = (props) => {
   return (
     <div className="sc-coordinates-row sc-arrow">
       <label>{props.label}:</label>
@@ -131,7 +131,7 @@ export const CoordinateRow = props => {
           type="text"
           placeholder={inputMsg}
           onChange={props.onChange}
-          onKeyDown={evt => {
+          onKeyDown={(evt) => {
             if (evt.key === "Enter") props.onEnterKey();
           }}
           onFocus={evt => {helpers.disableKeyboardEvents(true);}}

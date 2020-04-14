@@ -28,22 +28,31 @@ class TOC extends Component {
       searchText: "",
       sortAlpha: this.getInitialSort(),
       defaultGroup: undefined,
-      layerCount: 0
+      layerCount: 0,
     };
 
+    // LISTEN FOR MAP TO MOUNT
+    window.emitter.addListener("mapLoaded", () => this.onMapLoad());
+
+    // LISTEN FOR MAP LEGEND
+    window.emitter.addListener("openLegend", () => this.openLegend());
+
     // LISTEN FOR LAYERS TO LOAD
-    window.emitter.addListener("layersLoaded", numLayers => this.onLayersLoad(numLayers));
+    window.emitter.addListener("layersLoaded", (numLayers) => this.onLayersLoad(numLayers));
 
     // LISTEN FOR SEARCH RESULT
     window.emitter.addListener("activeTocLayerGroup", (groupName, callback) => this.onActivateLayer(groupName, callback));
   }
 
+  onMapLoad = () => {
+    this.refreshTOC(false);
+  };
   onActivateLayer = (groupName, callback) => {
     //const remove_underscore = name => {return helpers.replaceAllInString(name, "_", " ");}
     window.emitter.emit("setSidebarVisiblity", "OPEN");
     window.emitter.emit("activateTab", "layers");
 
-    this.state.layerGroups.forEach(layerGroup => {
+    this.state.layerGroups.forEach((layerGroup) => {
       if (layerGroup.value === groupName) {
         this.setState({ selectedGroup: layerGroup }, () => callback());
         return;
@@ -51,7 +60,7 @@ class TOC extends Component {
     });
   };
 
-  onLayersLoad = numLayers => {
+  onLayersLoad = (numLayers) => {
     if (this.state.layerCount !== numLayers) this.setState({ layerCount: numLayers });
   };
 
@@ -60,11 +69,7 @@ class TOC extends Component {
     else return false;
   };
 
-  componentDidMount() {
-    this.refreshTOC();
-  }
-
-  refreshTOC = callback => {
+  refreshTOC = (isReset, callback) => {
     sessionStorage.removeItem(this.storageMapDefaultsKey);
     let geoserverUrl = helpers.getURLParameter("GEO_URL");
     let geoserverUrlType = helpers.getURLParameter("GEO_TYPE");
@@ -75,13 +80,13 @@ class TOC extends Component {
     }
     if (geoserverUrlType === null) geoserverUrlType = TOCConfig.geoserverLayerGroupsUrlType;
     if (geoserverUrl !== undefined && geoserverUrl !== null) {
-      TOCHelpers.getGroupsGC(geoserverUrl, geoserverUrlType, result => {
+      TOCHelpers.getGroupsGC(geoserverUrl, geoserverUrlType, isReset, (result) => {
         const groupInfo = result;
         this.setState(
           {
             layerGroups: groupInfo[0],
             selectedGroup: groupInfo[1],
-            defaultGroup: groupInfo[1]
+            defaultGroup: groupInfo[1],
           },
           () => {
             if (callback !== undefined) callback();
@@ -94,7 +99,7 @@ class TOC extends Component {
         {
           layerGroups: groupInfo[0],
           selectedGroup: groupInfo[1],
-          defaultGroup: groupInfo[1]
+          defaultGroup: groupInfo[1],
         },
         () => {
           if (callback !== undefined) callback();
@@ -103,16 +108,26 @@ class TOC extends Component {
     }
   };
 
-  onGroupDropDownChange = selectedGroup => {
-    this.setState({ selectedGroup: selectedGroup });
+  onGroupDropDownChange = (selectedGroup) => {
+    this.setState({ selectedGroup: selectedGroup }, () => {
+      const iFrame = document.getElementById("sc-url-window-iframe");
+      const urlWindow = document.getElementById("sc-url-window-container");
+      if (iFrame !== null && urlWindow !== null) {
+        const classes = urlWindow.className;
+        if (classes.indexOf("sc-hidden") === -1) {
+          const legend = document.getElementById("sc-url-window-iframe").contentWindow.document.getElementById("sc-legend-app-main-container");
+          if (legend !== null) this.openLegend();
+        }
+      }
+    });
   };
 
-  onSearchLayersChange = evt => {
+  onSearchLayersChange = (evt) => {
     const searchText = evt.target.value;
     this.setState({ searchText: searchText });
   };
 
-  onSortSwitchChange = sortAlpha => {
+  onSortSwitchChange = (sortAlpha) => {
     this.setState({ sortAlpha: sortAlpha });
 
     if (sortAlpha) {
@@ -125,7 +140,7 @@ class TOC extends Component {
   reset = () => {
     const defaultGroup = this.state.defaultGroup;
     this.setState({ sortAlpha: false, selectedGroup: defaultGroup, searchText: "" }, () => {
-      this.refreshTOC(() => {
+      this.refreshTOC(true, () => {
         setTimeout(() => {
           this.layerRef.resetLayers();
         }, 100);
@@ -135,11 +150,11 @@ class TOC extends Component {
     helpers.addAppStat("TOC Reset", "Button");
   };
 
-  onToolsClick = evt => {
+  onToolsClick = (evt) => {
     var evtClone = Object.assign({}, evt);
     const menu = (
       <Portal>
-        <FloatingMenu key={helpers.getUID()} buttonEvent={evtClone} item={this.props.info} onMenuItemClick={action => this.onMenuItemClick(action)} styleMode="right" yOffset={90}>
+        <FloatingMenu key={helpers.getUID()} buttonEvent={evtClone} item={this.props.info} onMenuItemClick={(action) => this.onMenuItemClick(action)} styleMode="right" yOffset={90}>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-expand">
             <FloatingMenuItem imageName={"plus16.png"} label="Expand Layers" />
           </MenuItem>
@@ -159,18 +174,39 @@ class TOC extends Component {
     ReactDOM.render(menu, document.getElementById("portal-root"));
   };
 
-  onMenuItemClick = action => {
+  onMenuItemClick = (action) => {
     if (action === "sc-floating-menu-expand") {
       this.layerRef.toggleAllLegends("OPEN");
     } else if (action === "sc-floating-menu-collapse") {
       this.layerRef.toggleAllLegends("CLOSE");
     } else if (action === "sc-floating-menu-legend") {
-      helpers.showMessage("Legend", "Coming Soon");
+      this.openLegend();
     } else if (action === "sc-floating-menu-visility") {
       this.layerRef.turnOffLayers();
     }
 
     helpers.addAppStat("TOC Tools", action);
+  };
+
+  openLegend = () => {
+    console.log(this.state.layerGroups);
+    let params = "";
+    this.state.layerGroups.forEach((group) => {
+      let name = "";
+      if (group.value.indexOf(":") !== -1) {
+        name = group.value.split(":")[1];
+      } else name = group.value;
+
+      if (params === "") {
+        if (this.state.selectedGroup.value === group.value) params += "?" + name + "=1";
+        else params += "?" + name + "=0";
+      } else {
+        if (this.state.selectedGroup.value === group.value) params += "&" + name + "=1";
+        else params += "&" + name + "=0";
+      }
+    });
+
+    helpers.showURLWindow("https://opengis.simcoe.ca/legend/" + params, false, "normal", true, true);
   };
 
   onSaveClick = () => {
@@ -179,22 +215,22 @@ class TOC extends Component {
 
   render() {
     const groupsDropDownStyles = {
-      control: provided => ({
+      control: (provided) => ({
         ...provided,
-        minHeight: "30px"
+        minHeight: "30px",
       }),
-      indicatorsContainer: provided => ({
+      indicatorsContainer: (provided) => ({
         ...provided,
-        height: "30px"
+        height: "30px",
       }),
-      clearIndicator: provided => ({
+      clearIndicator: (provided) => ({
         ...provided,
-        padding: "5px"
+        padding: "5px",
       }),
-      dropdownIndicator: provided => ({
+      dropdownIndicator: (provided) => ({
         ...provided,
-        padding: "5px"
-      })
+        padding: "5px",
+      }),
     };
 
     return (
@@ -231,7 +267,7 @@ class TOC extends Component {
           </div>
           <div>
             <Layers
-              ref={ref => {
+              ref={(ref) => {
                 this.layerRef = ref;
               }}
               group={this.state.selectedGroup}
