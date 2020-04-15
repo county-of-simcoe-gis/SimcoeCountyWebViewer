@@ -30,3 +30,7 @@
   left: 0;
   pointer-events: none;
 }
+
+.sc-attribute-table-container .react-tabs__tab-list {
+  border-top: 3px solid #aaa !important;
+}

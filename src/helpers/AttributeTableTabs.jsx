@@ -1,9 +1,8 @@
-import React, { Component } from "react";
+import React, { Component, useState, useEffect, useCallback, useRef } from "react";
 import styled from "styled-components";
 import * as helpers from "./helpers";
 import "./AttributeTableTabs.css";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
-// import { useTable, useBlockLayout, useResizeColumns, useAbsoluteLayout } from "react-table";
 import { useTable, useBlockLayout, useResizeColumns } from "react-table";
 import { useSticky } from "react-table-sticky";
 
@@ -21,7 +20,7 @@ class AttributeTableTabs extends Component {
             {this.props.items.map((item) => {
               return (
                 <Tab id={item.name} key={helpers.getUID()} className="sc-attribute-table-tab sc-noselect">
-                  <AttributeTableTabButton key={helpers.getUID()} name={item.name} />
+                  <AttributeTableTabButton key={helpers.getUID()} name={item.name} onTabClose={this.props.onTabClose} />
                 </Tab>
               );
             })}
@@ -29,7 +28,19 @@ class AttributeTableTabs extends Component {
           {this.props.items.map((item) => {
             return (
               <TabPanel id={item.name + "_content"} key={helpers.getUID()}>
-                <AttributeTableContent data={item.geoJson} key={helpers.getUID()} height={this.props.height} width={this.props.width} />
+                <AttributeTableContent
+                  item={item}
+                  data={item.geoJson}
+                  key={helpers.getUID()}
+                  height={this.props.height}
+                  width={this.props.width}
+                  onHeaderClick={this.props.onHeaderClick}
+                  onRowClick={this.props.onRowClick}
+                  onLoadMoreClick={this.props.onLoadMoreClick}
+                  onLoadAllClick={this.props.onLoadAllClick}
+                  name={item.name}
+                  isLoading={this.props.isLoading}
+                />
               </TabPanel>
             );
           })}
@@ -46,8 +57,7 @@ const AttributeTableTabButton = (props) => {
   return (
     <div>
       {props.name}
-      {/* <img className="sc-attribute-tab-close-img" src={images["close-tab.png"]} alt="close tab" /> */}
-      <div className="sc-attribute-table-close-button-container">
+      <div className="sc-attribute-table-close-button-container" onClick={() => props.onTabClose(props.name)}>
         <div className="sc-attribute-table-close-button-mid">
           <div className="sc-attribute-table-close-button-mid2" />
         </div>
@@ -60,18 +70,17 @@ const AttributeTableTabButton = (props) => {
 const AttributeTableContent = (props) => {
   if (props.data.length === 0) return <div>No Data</div>;
 
-  // console.log(props.data);
   // CREATE COLUMNS
   let columnArray = [];
   columnArray.push({ Header: "*", accessor: "*", width: 20, style: { backgroundColor: "#ddd" } });
   Object.keys(props.data[0].getProperties()).forEach((key) => {
     if (key === "geometry") return;
-    columnArray.push({ Header: key, accessor: key });
+    columnArray.push({ Header: key, accessor: key, visible: false });
   });
   const columns = React.useMemo(() => columnArray, []);
 
   let rowArray = [];
-  props.data.forEach((feature) => {
+  props.item.geoJson.forEach((feature) => {
     const featureProps = feature.getProperties();
     let row = {};
     row["*"] = "";
@@ -86,28 +95,36 @@ const AttributeTableContent = (props) => {
 
   const data = React.useMemo(() => rowArray, []);
 
-  //   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = useTable({ columns, data }, useAbsoluteLayout);
-
   return (
     <div className="sc-attribute-table">
-      <CustomTable columns={columns} data={data} width={props.width} height={props.height} />;
+      <CustomTable
+        columns={columns}
+        data={data}
+        width={props.width}
+        height={props.height}
+        onHeaderClick={props.onHeaderClick}
+        onRowClick={props.onRowClick}
+        item={props.item}
+        onLoadMoreClick={props.onLoadMoreClick}
+        onLoadAllClick={props.onLoadAllClick}
+        isLoading={props.isLoading}
+      />
+      ;
     </div>
   );
-
-  // return (
-  //   <div className="sc-attribute-table">
-  //     <ReactTableFixedColumns
-  //       data={data}
-  //       columns={columns}
-  //       // defaultPageSize={50}
-  //       style={{ height: props.height }}
-  //       className="-striped"
-  //     />
-  //   </div>
-  // );
 };
 
-const CustomTable = ({ columns, data, width, height }) => {
+const CustomTable = ({ columns, data, width, height, onHeaderClick, item, onLoadMoreClick, onLoadAllClick, isLoading, onRowClick }) => {
+  const id = "sc-attribute-table-tab-" + item.name;
+  const [loaded, setLoaded] = useState(0);
+
+  useEffect(() => {
+    setLoaded(true);
+    if (parseInt(data.length) === parseInt(item.maxRecords) || parseInt(data.length) === parseInt(item.total)) {
+      document.getElementById(id).scrollTop = item.scrollTop;
+    }
+  }, []);
+
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = useTable(
     {
       columns,
@@ -118,35 +135,61 @@ const CustomTable = ({ columns, data, width, height }) => {
     useResizeColumns
   );
 
-  // Workaround as react-table footerGroups doesn't provide the same internal data than headerGroups
-  // const footerGroups = headerGroups.slice().reverse();
-
   return (
     <Styles>
-      <div {...getTableProps()} className="table sticky" style={{ width: width - 4, height: height - 32 }}>
+      <div
+        {...getTableProps()}
+        className="table sticky sc-attribute-table-header-content"
+        id={id}
+        style={{ width: width - 4, height: height - 32, backgroundColor: "aliceblue" }}
+        onScroll={(evt) => {
+          if (loaded) {
+            const el = evt.target;
+            const triggerHeight = el.scrollHeight - el.offsetHeight;
+            item.scrollTop = el.scrollTop;
+            if (el.scrollTop > triggerHeight && item.maxRecords <= item.total) {
+              onLoadMoreClick(item);
+            }
+          }
+        }}
+      >
         <div className="header">
-          {headerGroups.map((headerGroup) => (
-            <div {...headerGroup.getHeaderGroupProps()} className="tr">
-              {headerGroup.headers.map((column) => (
-                <div {...column.getHeaderProps()} className="th sc-attribute-table-header">
-                  {column.render("Header")}
-                  {/* Use column.getResizerProps to hook up the events correctly */}
-                  <div {...column.getResizerProps()} className={`resizer ${column.isResizing ? "isResizing" : ""}`} />
-                </div>
-              ))}
-            </div>
-          ))}
+          {headerGroups.map((headerGroup) => {
+            item.headerWidth = headerGroup.getHeaderGroupProps().style.width;
+            return (
+              <div {...headerGroup.getHeaderGroupProps()} className="tr">
+                {headerGroup.headers.map((column) => (
+                  <div
+                    {...column.getHeaderProps()}
+                    className="th sc-attribute-table-header"
+                    onClick={(evt) => {
+                      onHeaderClick(evt, item.name, column);
+                    }}
+                  >
+                    {column.render("Header")}
+                    {/* Use column.getResizerProps to hook up the events correctly */}
+                    <div {...column.getResizerProps()} className={`resizer ${column.isResizing ? "isResizing" : ""}`} />
+                  </div>
+                ))}
+              </div>
+            );
+          })}
         </div>
-        <div {...getTableBodyProps()} className="body">
+        <div {...getTableBodyProps()} className="body sc-attribute-table-row-content">
           {rows.map((row) => {
             prepareRow(row);
-
             return (
               <div {...row.getRowProps()} className="tr">
                 {row.cells.map((cell) => {
-                  console.log(cell.column.Header);
+                  // console.log(cell.column.Header);
                   return (
-                    <div {...cell.getCellProps()} className={cell.column.Header === "*" ? "sc-attribute-table-cell-button td" : "td"}>
+                    <div
+                      {...cell.getCellProps()}
+                      className={cell.column.Header === "*" ? "sc-attribute-table-cell-button td" : "td"}
+                      onClick={(evt) => {
+                        onRowClick(evt, item, row.index);
+                      }}
+                    >
                       {cell.render("Cell")}
                     </div>
                   );
@@ -155,75 +198,37 @@ const CustomTable = ({ columns, data, width, height }) => {
             );
           })}
         </div>
-        {/* <div className="footer">
-          {footerGroups.map((footerGroup) => (
-            <div {...footerGroup.getHeaderGroupProps()} className="tr">
-              {footerGroup.headers.map((column) => (
-                <div {...column.getHeaderProps()} className="td">
-                  {column.render("Footer")}
-                </div>
-              ))}
-            </div>
-          ))}
-        </div> */}
+        <div className="footer" style={{ width: item.headerWidth.replace("px", "") - 20, fontSize: "9pt" }}>
+          {"Showing records: " + item.geoJson.length + " of " + item.total}{" "}
+          <button
+            className="sc-button sc-attribute-table-footer-button"
+            onClick={() => {
+              onLoadMoreClick(item);
+            }}
+          >
+            Load More
+          </button>
+          <button
+            className="sc-button sc-attribute-table-footer-button"
+            onClick={() => {
+              onLoadAllClick(item);
+            }}
+          >
+            Load All
+          </button>
+          <div className={isLoading ? "sc-attribute-table-loading" : "sc-hidden"}>
+            <span>Loading...</span>
+            <img src={images["loading20.gif"]} alt="loading" style={{ position: "relative", top: "3px", marginLeft: "3px" }} />
+          </div>
+        </div>
       </div>
     </Styles>
   );
 };
-// const CustomTable = ({ columns, data }) => {
-//   // Use the state and functions returned from useTable to build your UI
-
-//   const defaultColumn = React.useMemo(
-//     () => ({
-//       width: 150,
-//     }),
-//     []
-//   );
-
-//   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = useTable(
-//     {
-//       columns,
-//       data,
-//       defaultColumn,
-//     },
-//     useAbsoluteLayout
-//   );
-
-//   // Render the UI for your table
-//   return (
-//     <div {...getTableProps()} className="sc-attribute-table">
-//       <div>
-//         {headerGroups.map((headerGroup) => (
-//           <div {...headerGroup.getHeaderGroupProps()} className="sc-attribute-table-row header-group">
-//             {headerGroup.headers.map((column) => (
-//               <div {...column.getHeaderProps()} className="sc-attribute-table-cell header">
-//                 {column.render("Header")}
-//               </div>
-//             ))}
-//           </div>
-//         ))}
-//       </div>
-
-//       <div className="sc-attribute-table-rows" {...getTableBodyProps()}>
-//         {rows.map((row, i) => {
-//           prepareRow(row);
-//           return (
-//             <div {...row.getRowProps()} className="sc-attribute-table-row body">
-//               {row.cells.map((cell, index) => (
-//                 <div {...cell.getCellProps()} key={index} className="sc-attribute-table-cell">
-//                   {cell.render("Cell")}
-//                 </div>
-//               ))}
-//             </div>
-//           );
-//         })}
-//       </div>
-//     </div>
-//   );
-// };
-
+//style={{ width: document.getElementById(id) === null ? 400 : (parseInt(document.getElementById(id).offsetWidth) - 20) } }
+//className="sc-attribute-table-footer"
 // IMPORT ALL IMAGES
-const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
   let images = {};
   r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

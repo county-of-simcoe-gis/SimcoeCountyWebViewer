@@ -43,7 +43,7 @@ register(proj4);
 // UTM NAD 83
 const _nad83Proj = new Projection({
   code: "EPSG:26917",
-  extent: [194772.8107, 2657478.7094, 805227.1893, 9217519.4415]
+  extent: [194772.8107, 2657478.7094, 805227.1893, 9217519.4415],
 });
 
 // APP STAT
@@ -51,8 +51,8 @@ export function addAppStat(type, description) {
   if (mainConfig.includeAppStats === false) return;
 
   // IGNORE LOCAL HOST DEV
-  if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") return;
-
+  // if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") return;
+  // const appStatsTemplate = (type, description) => `http://localhost:8085/appStats/opengis/${type}/${description}`;
   const appStatsTemplate = (type, description) => `${mainConfig.appStatsUrl}opengis/${type}/${description}`;
 
   httpGetText(appStatsTemplate(type, description));
@@ -89,9 +89,9 @@ export function getArcGISTiledLayer(url) {
   return new TileLayer({
     source: new TileArcGISRest({
       url: url,
-      crossOrigin: "anonymous"
+      crossOrigin: "anonymous",
     }),
-    crossOrigin: "anonymous"
+    crossOrigin: "anonymous",
   });
 }
 
@@ -100,8 +100,8 @@ export function getESRITileXYZLayer(url) {
     source: new XYZ({
       attributions: 'Tiles © <a href="https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer">ArcGIS</a>',
       url: url + "/tile/{z}/{y}/{x}",
-      crossOrigin: "anonymous"
-    }) //,
+      crossOrigin: "anonymous",
+    }), //,
     //crossOrigin: "anonymous"
   });
 }
@@ -109,7 +109,7 @@ export function getESRITileXYZLayer(url) {
 export function getOSMTileXYZLayer(url) {
   return new TileLayer({
     source: new OSM({ url: url + "/{z}/{x}/{y}.png" }),
-    crossOrigin: "anonymous"
+    crossOrigin: "anonymous",
   });
 }
 
@@ -126,7 +126,7 @@ export function getSimcoeTileXYZLayer(url) {
     1.1943285668550503,
     0.5971642835598172,
     0.29858214164761665,
-    0.1492252984505969
+    0.1492252984505969,
   ];
   const projExtent = window.map
     .getView()
@@ -135,7 +135,7 @@ export function getSimcoeTileXYZLayer(url) {
   var tileGrid = new TileGrid({
     resolutions: resolutions,
     tileSize: [256, 256],
-    origin: getTopLeft(projExtent)
+    origin: getTopLeft(projExtent),
     //origin: [-20037500.342787,20037378.342787 ]
     // origin: [-20037508.342787,20037508.342787 ]
   });
@@ -153,7 +153,7 @@ export function getSimcoeTileXYZLayer(url) {
       return url + "/tile/" + z + "/" + y + "/" + x;
     },
     tileGrid: tileGrid,
-    crossOrigin: "anonymous"
+    crossOrigin: "anonymous",
   });
   source.on("tileloaderror", function(event) {
     // BROWSER STILL KICKS OUT 404 ERRORS.  ANYBODY KNOW A WAY TO PREVENT THE ERRORS IN THE BROWSER?
@@ -174,7 +174,7 @@ export function getSimcoeTileXYZLayer(url) {
     //matrixSet: 'EPSG:3857',
     source: source,
     maxResolution: 400,
-    useInterimTiles: true
+    useInterimTiles: true,
   });
 }
 
@@ -182,7 +182,7 @@ export function getSimcoeTileXYZLayer(url) {
 export function getOSMLayer() {
   return new TileLayer({
     source: new OSM(),
-    crossOrigin: "anonymous"
+    crossOrigin: "anonymous",
   });
 }
 
@@ -196,8 +196,8 @@ export function getImageWMSLayer(serverURL, layers, serverType = "geoserver", cq
       params: { LAYERS: layers, cql_filter: cqlFilter },
       ratio: 1,
       serverType: serverType,
-      crossOrigin: "anonymous"
-    })
+      crossOrigin: "anonymous",
+    }),
   });
 
   const wfsUrlTemplate = (serverUrl, layer) => `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layer}&outputFormat=application/json&cql_filter=`;
@@ -261,12 +261,12 @@ export function getURLParameter(parameterName, decoded = true) {
 // HTTP GET (NO WAITING)
 export function httpGetText(url, callback) {
   return fetch(url)
-    .then(response => response.text())
-    .then(responseText => {
+    .then((response) => response.text())
+    .then((responseText) => {
       // CALLBACK WITH RESULT
       if (callback !== undefined) callback(responseText);
     })
-    .catch(error => {
+    .catch((error) => {
       httpGetText(url.replace("opengis.simcoe.ca", "opengis2.simcoe.ca"), callback);
       console.error(error);
     });
@@ -275,12 +275,12 @@ export function httpGetText(url, callback) {
 // HTTP GET WAIT
 export async function httpGetTextWait(url, callback) {
   let data = await fetch(url)
-    .then(response => {
+    .then((response) => {
       const resp = response.text();
       //console.log(resp);
       return resp;
     })
-    .catch(err => {
+    .catch((err) => {
       console.log("Error: ", err);
     });
   if (callback !== undefined) {
@@ -293,12 +293,12 @@ export async function httpGetTextWait(url, callback) {
 // GET JSON (NO WAITING)
 export function getJSON(url, callback) {
   return fetch(url)
-    .then(response => response.json())
-    .then(responseJson => {
+    .then((response) => response.json())
+    .then((responseJson) => {
       // CALLBACK WITH RESULT
       if (callback !== undefined) callback(responseJson);
     })
-    .catch(error => {
+    .catch((error) => {
       console.error(error);
     });
 }
@@ -306,12 +306,12 @@ export function getJSON(url, callback) {
 // GET JSON WAIT
 export async function getJSONWait(url, callback) {
   let data = await await fetch(url)
-    .then(res => {
+    .then((res) => {
       const resp = res.json();
       //console.log(resp);
       return resp;
     })
-    .catch(err => {
+    .catch((err) => {
       console.log("Error: ", err);
     });
   if (callback !== undefined) {
@@ -324,8 +324,8 @@ export async function getJSONWait(url, callback) {
 
 export function getObjectFromXMLUrl(url, callback) {
   return fetch(url)
-    .then(response => response.text())
-    .then(responseText => {
+    .then((response) => response.text())
+    .then((responseText) => {
       // CALLBACK WITH RESULT
       if (callback !== undefined) {
         parseString(responseText, function(err, result) {
@@ -333,7 +333,7 @@ export function getObjectFromXMLUrl(url, callback) {
         });
       }
     })
-    .catch(error => {
+    .catch((error) => {
       console.error(error);
     });
 }
@@ -349,7 +349,7 @@ export function isParcelClickEnabled() {
 export function getWFSVectorSource(serverUrl, layerName, callback, sortField = "") {
   const wfsUrlTemplate = (serverURL, layerName, sortField) => `${serverURL}wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&sortBy=${sortField}`;
   const wfsUrl = wfsUrlTemplate(serverUrl, layerName, sortField);
-  getJSON(wfsUrl, result => {
+  getJSON(wfsUrl, (result) => {
     const geoJSON = new GeoJSON().readFeatures(result);
     var vectorSource = new VectorSource({ features: geoJSON });
     callback(vectorSource);
@@ -377,7 +377,7 @@ export function getWFSGeoJSON(serverUrl, layerName, callback, sortField = null, 
   // USE TEMPLATE FOR READABILITY
   const wfsUrlTemplate = (serverURL, layerName) => `${serverURL}wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json`;
   const wfsUrl = wfsUrlTemplate(serverUrl, layerName) + additionalParams;
-  getJSON(wfsUrl, result => {
+  getJSON(wfsUrl, (result) => {
     const geoJSON = new GeoJSON().readFeatures(result);
     callback(geoJSON);
   });
@@ -387,7 +387,7 @@ export function getWFSLayerRecordCount(serverUrl, layerName, callback) {
   const recordCountUrlTemplate = (serverURL, layerName) => `${serverURL}wfs?REQUEST=GetFeature&VERSION=1.1&typeName=${layerName}&RESULTTYPE=hits`;
   const recordCountUrl = recordCountUrlTemplate(serverUrl, layerName);
 
-  getObjectFromXMLUrl(recordCountUrl, result => {
+  getObjectFromXMLUrl(recordCountUrl, (result) => {
     callback(result["wfs:FeatureCollection"]["$"].numberOfFeatures);
   });
 }
@@ -407,7 +407,7 @@ export function zoomToFeature(feature, animate = true) {
 // THIS RETURNS THE ACTUAL REACT ELEMENT USING DOM ID
 export function findReact(domId) {
   var dom = document.getElementById(domId);
-  let key = Object.keys(dom).find(key => key.startsWith("__reactInternalInstance$"));
+  let key = Object.keys(dom).find((key) => key.startsWith("__reactInternalInstance$"));
   let internalInstance = dom[key];
   if (internalInstance == null) return null;
 
@@ -430,22 +430,22 @@ export function flashPoint(coords, zoom = 15, duration = 5000) {
   var vectorLayer = new VectorLayer({
     zIndex: 1000,
     source: new Vector({
-      features: [marker]
-    })
+      features: [marker],
+    }),
   });
   window.map.addLayer(vectorLayer);
   var mstyle = new Style({
     image: new CircleStyle({
       radius: 5,
       fill: new Fill({
-        color: "#fff"
+        color: "#fff",
       }),
       stroke: new Stroke({
         color: "blue",
-        width: 2
-      })
+        width: 2,
+      }),
     }),
-    zIndex: 100
+    zIndex: 100,
   });
   marker.setStyle(mstyle);
 
@@ -475,13 +475,13 @@ function pulsate(vectorLayer, color, feature, duration, mstyle, callback) {
           radius: radius,
           snapToPixel: false,
           fill: new Fill({
-            color: "rgba(119, 170, 203, " + fillOpacity + ")"
+            color: "rgba(119, 170, 203, " + fillOpacity + ")",
           }),
           stroke: new Stroke({
             color: "rgba(119, 170, 203, " + opacity + ")",
-            width: 2 + opacity
-          })
-        })
+            width: 2 + opacity,
+          }),
+        }),
       })
     );
 
@@ -558,7 +558,7 @@ export function centerMap(coords, zoom) {
     new ol.View({
       center: newCoords,
       //extent: newExtent,
-      zoom: 13
+      zoom: 13,
     })
   );
 }
@@ -625,7 +625,7 @@ export function createTextStyle(
     placement: placement,
     maxAngle: maxAngleDegrees,
     overflow: overflow,
-    rotation: rotation
+    rotation: rotation,
   });
 
   //console.log(texts)
@@ -684,17 +684,17 @@ export function postJSON(url, data = {}, callback) {
     cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
     credentials: "same-origin", // include, *same-origin, omit
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
       //'Content-Type': 'application/x-www-form-urlencoded',
     },
     redirect: "follow", // manual, *follow, error
     referrer: "no-referrer", // no-referrer, *client
-    body: JSON.stringify(data) // body data type must match "Content-Type" header
+    body: JSON.stringify(data), // body data type must match "Content-Type" header
   })
-    .then(res => {
+    .then((res) => {
       return res.json();
     })
-    .then(json => {
+    .then((json) => {
       callback(json);
     });
 }
@@ -702,7 +702,7 @@ export function postJSON(url, data = {}, callback) {
 export function featureToGeoJson(feature) {
   return new GeoJSON({ dataProjection: "EPSG:3857", featureProjection: "EPSG:3857" }).writeFeature(feature, {
     dataProjection: "EPSG:3857",
-    featureProjection: "EPSG:3857"
+    featureProjection: "EPSG:3857",
   });
 }
 
@@ -713,7 +713,7 @@ export function getWKTFeature(wktString) {
   var wkt = new WKT();
   var feature = wkt.readFeature(wktString, {
     dataProjection: "EPSG:3857",
-    featureProjection: "EPSG:3857"
+    featureProjection: "EPSG:3857",
   });
   return feature;
 }
@@ -741,7 +741,7 @@ export function formatReplace(fmt, ...args) {
   }
   return fmt.replace(/((?:[^{}]|(?:\{\{)|(?:\}\}))+)|(?:\{([0-9]+)\})/g, (m, str, index) => {
     if (str) {
-      return str.replace(/(?:{{)|(?:}})/g, m => m[0]);
+      return str.replace(/(?:{{)|(?:}})/g, (m) => m[0]);
     } else {
       if (index >= args.length) {
         throw new Error("argument index is out of range in format");
@@ -778,7 +778,7 @@ export function bufferGeometry(geometry, distanceMeters, callback) {
   const geoJSON = getGeoJSONFromGeometry(utmNad83Geometry);
   const obj = { geoJSON: geoJSON, distance: distanceMeters, srid: "26917" };
 
-  postJSON(url, obj, result => {
+  postJSON(url, obj, (result) => {
     // REPROJECT BACK TO WEB MERCATOR
     const olGeoBuffer = getGeometryFromGeoJSON(result.geojson);
     const utmNad83GeometryBuffer = olGeoBuffer.transform("EPSG:26917", "EPSG:3857");
@@ -792,7 +792,7 @@ export function getGeometryCenter(geometry, callback) {
   const geoJSON = getGeoJSONFromGeometry(geometry);
   const obj = { geoJSON: geoJSON, srid: "3857" };
 
-  postJSON(url, obj, result => {
+  postJSON(url, obj, (result) => {
     const olGeo = getGeometryFromGeoJSON(result.geojson);
     callback(olGeo);
   });
@@ -812,7 +812,7 @@ function _escapeRegExp(str) {
 }
 
 export function showFeaturePopup(coord, feature) {
-  window.popup.show(coord, <FeaturePopupContent feature={feature}></FeaturePopupContent>);
+  window.popup.show(coord, <FeaturePopupContent feature={feature} />);
 }
 
 export function removeURLParameter(url, parameter) {
@@ -837,7 +837,7 @@ export function removeURLParameter(url, parameter) {
 function FeaturePopupContent(props) {
   return (
     <div className="sc-live-layer-popup-content">
-      {Object.entries(props.feature.getProperties()).map(row => {
+      {Object.entries(props.feature.getProperties()).map((row) => {
         if (row[0] !== "geometry" && row[0].substring(0, 1) !== "_") {
           return <InfoRow key={getUID()} value={row[1]} label={row[0]} />;
         } else return null;
