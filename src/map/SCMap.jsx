@@ -174,29 +174,12 @@ class SCMap extends Component {
     });
 
     // ATTRIBUTE TABLE TESTING
-    // helpers.getWFSGeoJSON(
-    //   "https://opengis.simcoe.ca/geoserver/",
-    //   "simcoe:Airport",
-    //   (result) => {
-    //     if (result.length === 0) return;
-
-    //     window.emitter.emit("openAttributeTable", { name: "Airport", geoJson: result });
-    //   },
-    //   null,
-    //   null,
-    //   null
-    // );
+    // window.emitter.emit("openAttributeTable", "https://opengis.simcoe.ca/geoserver/", "simcoe:Airport");
   }
 
   onAttributeTableResize = (height) => {
-    console.log(height);
-    console.log("att resize event in map");
     this.setState({ mapBottom: Math.abs(height) }, () => {
-      //this.forceUpdate();
       window.map.updateSize();
-      // setTimeout(function() {
-      //   window.map.updateSize();
-      // }, 300);
     });
   };
 

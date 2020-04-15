@@ -28,12 +28,40 @@
 .sc-attribute-table-header {
   background-color: #ddd !important;
   border-right: 1px solid rgb(168, 167, 167) !important;
+  height: 20px;
+  font-size: 10pt;
+  bottom: 2px;
 }
 
 .sc-attribute-table .header {
-  height: 28px;
+  height: 20px !important;
+  max-height: 20px !important;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: none !important;
 }
 
+.sc-attribute-table .footer {
+  background-color: #dddddd;
+  padding-left: 20px;
+  min-width: 460px;
+  /* padding-right: 5px; */
+  /* width: fit-content !important; */
+}
+
+.sc-attribute-table-footer {
+}
+
+.sc-attribute-table-footer-button {
+  max-height: 25px !important;
+  min-height: 25px !important;
+  margin-left: 5px;
+  width: 80px;
+}
+.sc-attribute-table-loading {
+  display: inline;
+  margin-left: 5px;
+}
 .sc-attribute-table .resizer {
   /* width: 10px !important;
   right: -2px !important; */
@@ -78,4 +106,19 @@
 .sc-attribute-table-cell-button {
   background-color: #ddd !important;
   border: 1px solid black !important;
+}
+
+.sc-attribute-table-closer {
+  position: absolute;
+  right: 5px;
+  top: 3px;
+  cursor: pointer;
+}
+
+.sc-attribute-table-header-content {
+  /* font-size: 10pt; */
+}
+
+.sc-attribute-table-row-content {
+  font-size: 10pt;
 }
