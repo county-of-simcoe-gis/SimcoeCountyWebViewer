@@ -24,6 +24,7 @@ import MenuButton from "./MenuButton.jsx";
 
 const SidebarSlim = props => {
   return (
+    <div>
     <div className={window.sidebarOpen ? "sc-hidden" : "sc-sidebar-slim-container"}>
       <div className="sc-sidebar-slim-button-container" onClick={() => props.onClick("layers")}>
         <button className="sc-sidebar-slim-button">
@@ -33,7 +34,7 @@ const SidebarSlim = props => {
         </button>
       </div>
       <div className="sc-sidebar-slim-button-container" onClick={() => props.onClick("tools")}>
-        
+          <span className={props.toolActive ? "sc-tab-button-dot-tools" : "sc-hidden"} />
         <button className="sc-sidebar-slim-button">
           <img src={images["tools-32x32.png"]} alt="Tools" />
           <br />
@@ -41,14 +42,21 @@ const SidebarSlim = props => {
         </button>
       </div>
       <div className="sc-sidebar-slim-button-container" onClick={() => props.onClick("mymaps")}>
-        
+          <span className={props.isMyMapsEditing ? "sc-tab-button-dot-themes" : "sc-hidden"} />
         <button className="sc-sidebar-slim-button">
-          <img src={images["map-32x32.png"]} alt="Draw" />
+            <img src={images["map-32x32.png"]} alt="My Maps" />
           <br />
-          <span>Draw</span>
+            <span>My Maps</span>
         </button>
       </div>
-      
+        <div className="sc-sidebar-slim-button-container" onClick={() => props.onClick("themes")}>
+          <span className={props.themeActive ? "sc-tab-button-dot-themes" : "sc-hidden"} />
+          <button className="sc-sidebar-slim-button">
+            <img src={images["theme-32x32.png"]} alt="Themes" />
+            <br />
+            <span>Themes</span>
+          </button>
+        </div>
       <div className="sc-sidebar-slim-button-container" onClick={() => props.onClick("reports")}>
         <button className="sc-sidebar-slim-button">
           <img src={images["report-32x32.png"]} alt="Reports" />
@@ -57,9 +65,9 @@ const SidebarSlim = props => {
         </button>
       </div>
       <div className="sc-sidebar-slim-footer-container">
-        
-        <MenuButton />
       </div>
+     </div>
+     <MenuButton />
     </div>
   );
 };

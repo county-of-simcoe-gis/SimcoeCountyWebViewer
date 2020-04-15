@@ -1,9 +1,9 @@
 {
-  "headerLogoImageName": "logo-iMap.png",
-  "title": "i-Map - OpenLayers",
-  "originUrl": "https://intra.dev.regionalgis.mto.gov.on.ca/",
-  "feedbackUrl": "https://github.com/reed-tom/SimcoeCountyWebViewer/labels/feedback",
-  "geoserverUrl": "https://intra.dev.regionalgis.mto.gov.on.ca/geoserver/",
+  "headerLogoImageName": "logo.png",
+  "title": "County of Simcoe GIS - OpenLayers and React",
+  "originUrl": "https://opengis.simcoe.ca",
+  "feedbackUrl": "https://opengis.simcoe.ca/feedback",
+  "geoserverUrl": "https://opengis.simcoe.ca/geoserver/",
   "includeAppStats": true,
   "htmlIdentify":false,
   "leftClickIdentify":false,
@@ -48,19 +48,39 @@
       "imageName": "print.png"
     },
     {
+      "id": 4,
+      "name": "Search Addresses",
+      "componentName": "SearchAddresses",
+      "description": "This tool allows you to search Addresses.",
+      "imageName": "searchAddresses.png"
+    },
+    {
       "id": 5,
       "name": "Search History",
       "componentName": "SearchHistory",
       "description": "This tool provides users with a list of their 25 most recent searches.",
       "imageName": "searchHistory.png"
     },
-    
+    {
+      "id": 6,
+      "name": "Lot And Concession",
+      "componentName": "LotAndConcession",
+      "description": "This tool allows you to search Lot and Concessions.",
+      "imageName": "lotAndConcession.png"
+    },
     {
       "id": 7,
       "name": "External Services (Street View)",
       "componentName": "ExternalServices",
       "description": "This tool links a map location to many other External Map Services.",
       "imageName": "externalServices.png"
+    },
+    {
+      "id": 8,
+      "name": "Weather",
+      "componentName": "Weather",
+      "description": "Radar and Weather forecast from Environment Canada.",
+      "imageName": "weather.png"
     }
   ],
 

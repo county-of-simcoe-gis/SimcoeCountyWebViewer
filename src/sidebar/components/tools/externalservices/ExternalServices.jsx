@@ -82,6 +82,23 @@ class ExternalServices extends Component {
     const feature = new Feature(new Point(coords));
     this.vectorLayer.getSource().clear();
     this.vectorLayer.getSource().addFeature(feature);
+
+    const parcelURL = parcelURLTemplate(mainConfig.parcelLayer.url, coords[0], coords[1]);
+    helpers.getJSON(parcelURL, result => {
+      if (result.features.length === 0) return;
+
+      const geoJSON = new GeoJSON().readFeatures(result);
+      const feature = geoJSON[0];
+
+      if (feature !== undefined) {
+        const arn = feature.get("arn");
+        const infoURL = mainConfig.propertyReportUrl + "?arn=" + arn;
+        helpers.getJSON(infoURL, result => {
+          const address = result.Address;
+          this.setState({ address });
+        });
+      } else this.setState({ address: null });
+    });
   };
 
   onClose = () => {

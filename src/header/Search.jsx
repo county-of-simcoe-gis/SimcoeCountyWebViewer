@@ -123,7 +123,7 @@ class Search extends Component {
       items.push({ label: "Open Street Map", value: "Open Street Map" });
       items.push({ label: "Map Layer", value: "Map Layer" });
       items.push({ label: "Tool", value: "Tool" });
-     
+      items.push({ label: "Theme", value: "Theme" });
       this.setState({ searchTypes: items, selectedType: items[0] });
     });
 
@@ -335,7 +335,11 @@ class Search extends Component {
       return;
     }
 
-   
+    if (item.type === "Theme") {
+      window.emitter.emit("activateTab", "themes");
+      window.emitter.emit("activateSidebarItem", item.name, "themes");
+      return;
+    }
 
     // CLEAR PREVIOUS SOURCE
     searchGeoLayer.getSource().clear();
@@ -444,6 +448,17 @@ class Search extends Component {
         }
       });
       newResults = tools.concat(newResults);
+    }
+
+    // THEMES
+    if (selectedType === "All" || selectedType === "Theme") {
+      let themes = [];
+      mainConfig.sidebarThemeComponents.forEach(theme => {
+        if (theme.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
+          themes.push({ name: helpers.replaceAllInString(theme.name, "_", " "), type: "Theme", imageName: "themes.png" });
+        }
+      });
+      newResults = themes.concat(newResults);
     }
 
     this.setState({ searchResults: newResults });
@@ -559,7 +574,7 @@ class Search extends Component {
           renderItem={(item, isHighlighted) => {
             let type = "Unknown";
             if (item.type === "Map Layer") type = item.layerGroupName;
-            else if (item.type === "Tool" ) type = "";
+            else if (item.type === "Tool" || item.type === "Theme") type = "";
             else type = item.municipality;
             return (
               <div className={isHighlighted ? "sc-search-item-highlighted" : "sc-search-item"} key={helpers.getUID()}>

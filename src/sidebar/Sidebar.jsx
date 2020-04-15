@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import "./Sidebar.css";
 import * as helpers from "../helpers/helpers";
 
-import TOC from "./components/accordion-toc/TOC";
+import TOC from "./components/toc/TOC";
 
 //import TOCv1 from './components/toc/TOCV1.jsx'
 //import TOCv2 from './components/toc/TOCv2.jsx'
@@ -32,7 +32,7 @@ class Sidebar extends Component {
       // CLASSES
       tabClassName: "sidebar-advanced-tab",
       sidebarOpen: false,
-      defaultSidebarOpen: true,
+      defaultSidebarOpen: false,
       // SELECTED TAB
       tabIndex: 0,
 
@@ -220,6 +220,25 @@ class Sidebar extends Component {
         // ACTIVATE THE NEW ITEM
         this.activateSidebarItem(name, type);
       });
+    } else if (type === "themes") {
+      // SAME THEME WAS SELECTED
+      if (active.themes.loadedComponent != null && type === "themes" && active.themes.loadedComponent.props.name === name) {
+        this.activateTab("themes");
+        return;
+      }
+
+      this.setState({ tabIndex: 3 }, () => {
+        //CLEAR LOADED THEME
+        let activeTabComponents = this.state.activeTabComponents;
+        activeTabComponents.themes.loadedComponent = null;
+        this.setState({ activeTabComponents: activeTabComponents });
+
+        // ASK THEMES TO CLOSE
+        window.emitter.emit("closeToolsOrThemes", type);
+
+        // ACTIVATE THE NEW ITEM
+        this.activateSidebarItem(name, type);
+      });
     } else if (type === "mymaps") {
       this.activateTab("mymaps");
     } else if (type === "reports") {
@@ -244,9 +263,13 @@ class Sidebar extends Component {
       this.onMyMapsEditing(true);
       this.setState({ tabIndex: 2 });
     }
+    else if (tabName === "themes") {
+      this.onMyMapsEditing(true);
+      this.setState({ tabIndex: 3 });
+    }
     else if (tabName === "reports"){ 
       this.onMyMapsEditing(false);
-      this.setState({ tabIndex: 3 });
+      this.setState({ tabIndex: 4 });
     }
     else console.log("NO VALID TAB FOUND");
   }
@@ -296,7 +319,26 @@ class Sidebar extends Component {
       }
 
       helpers.addAppStat("Tool", name);
-    } 
+    }  else {
+      var loadedTheme = this.state.activeTabComponents.themes.loadedComponent;
+      if (loadedTheme != null) this.setState({ activeComponent: loadedTheme });
+      else {
+        this.state.toolComponents.map(Component => {
+          if (Component.props.name === name) {
+            // CREATE THEME COMPONENT
+            var comp = (
+              <Component key={helpers.getUID()} name={Component.props.name} onClose={this.onPanelComponentClose} onSidebarVisibility={this.togglePanelVisibility} config={Component.props.config} />
+            );
+            let activeTabComponents = this.state.activeTabComponents;
+            activeTabComponents.themes.loadedComponent = comp;
+            this.setState({ activeTabComponents: activeTabComponents });
+            //helpers.showMessage("Property Report", "Property Report Click is disabled while theme is active.", "green" , 5000);
+            return comp;
+          } else return null;
+        });
+      }
+      helpers.addAppStat("Theme", name);
+    }
   }
 
   onPanelComponentClose(evt) {
@@ -305,6 +347,11 @@ class Sidebar extends Component {
       // SET TOOLS
       let activeTabComponents = this.state.activeTabComponents;
       activeTabComponents.tools.loadedComponent = null;
+      this.setState({ activeTabComponents: activeTabComponents });
+    } else if (this.state.tabIndex === 3) {
+      // SET THEMES
+      let activeTabComponents = this.state.activeTabComponents;
+      activeTabComponents.themes.loadedComponent = null;
       this.setState({ activeTabComponents: activeTabComponents });
     }
   }
@@ -330,8 +377,11 @@ class Sidebar extends Component {
     else if (tabIndex === 2) { 
       this.onMyMapsEditing(true);
       helpers.addAppStat("Tab", "MyMaps");
+    }else if (tabIndex === 3) {
+      this.onMyMapsEditing(false);
+      helpers.addAppStat("Tab", "Themes");
     }
-    else if (tabIndex === 3) {
+    else if (tabIndex === 4) {
       this.onMyMapsEditing(false);
       helpers.addAppStat("Tab", "Reports");
     }
@@ -358,8 +408,11 @@ class Sidebar extends Component {
                 <Tab id="tab-tools">
                   <TabButton imageURL={images["tools-32x32.png"]} name="Tools" active={this.state.activeTabComponents.tools.loadedComponent} />
                 </Tab>
-                <Tab id="tab-mymaps">
-                  <TabButton imageURL={images["map-32x32.png"]} name="Draw" active={this.state.isMyMapsEditing} />
+				<Tab id="tab-mymaps">
+                  <TabButton imageURL={images["map-32x32.png"]} name="My Maps" active={this.state.isMyMapsEditing} />
+                </Tab>
+                <Tab id="tab-themes">
+                  <TabButton imageURL={images["theme-32x32.png"]} name="Themes" active={this.state.activeTabComponents.themes.loadedComponent} />
                 </Tab>
                 <Tab id="tab-reports">
                   <TabButton imageURL={images["report-32x32.png"]} name="Reports" />
@@ -371,6 +424,9 @@ class Sidebar extends Component {
                 {this.state.activeTabComponents.tools.loadedComponent ? this.state.activeTabComponents.tools.loadedComponent : this.state.activeTabComponents.tools.default}
               </TabPanel>
               <TabPanel id="tab-mymaps-content">{this.state.activeTabComponents.mymaps}</TabPanel>
+              <TabPanel id="tab-themes-content">
+                {this.state.activeTabComponents.themes.loadedComponent ? this.state.activeTabComponents.themes.loadedComponent : this.state.activeTabComponents.themes.default}
+              </TabPanel>
               <TabPanel id="tab-reports-content">
                 {this.state.activeTabComponents.reports.loadedComponent ? this.state.activeTabComponents.reports.loadedComponent : this.state.activeTabComponents.reports.default}
               </TabPanel>
@@ -381,6 +437,7 @@ class Sidebar extends Component {
             </div>
             <SidebarSlim
               onClick={this.slimSidebarButtonClick}
+              themeActive={this.state.activeTabComponents.themes.loadedComponent}
               toolActive={this.state.activeTabComponents.tools.loadedComponent}
               isMyMapsEditing={this.state.isMyMapsEditing}
             />
@@ -402,7 +459,7 @@ export default Sidebar;
 const TabButton = props => {
   return (
     <div>
-      
+      <span className={props.active ? "sc-tab-button-dot" : "sc-hidden"} />
       <img src={props.imageURL} alt={props.name} />
       <br />
       <span>{props.name}</span>

@@ -12,8 +12,8 @@ import Navigation from "./Navigation";
 import { defaults as defaultInteractions } from "ol/interaction.js";
 import Popup from "../helpers/Popup.jsx";
 import FooterTools from "./FooterTools.jsx";
-import { defaults as defaultControls, ScaleLine } from "ol/control.js";
-import BasemapSwitcher from "./BasicBasemapSwitcher";
+import { defaults as defaultControls, ScaleLine, FullScreen } from "ol/control.js";
+import BasemapSwitcher from "./BasemapSwitcher";
 import PropertyReportClick from "./PropertyReportClick.jsx";
 import "ol-contextmenu/dist/ol-contextmenu.css";
 import { fromLonLat } from "ol/proj";
@@ -84,7 +84,7 @@ class SCMap extends Component {
     //   0.1492252984505969
     // ];
     var map = new Map({
-      controls: defaultControls().extend([scaleLineControl]),
+      controls: defaultControls().extend([scaleLineControl, new FullScreen()]),
       layers: [],
       target: "map",
       view: new View({
@@ -122,7 +122,9 @@ class SCMap extends Component {
             <MenuItem className={helpers.isMobile() ? "sc-hidden" : "sc-floating-menu-toolbox-menu-item"} key="sc-floating-menu-basic-mode">
               <FloatingMenuItem imageName={"collased.png"} label="Switch To Basic" />
             </MenuItem>
-            
+            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-property-click">
+              <FloatingMenuItem imageName={"report.png"} label="Property Report" />
+            </MenuItem>
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-add-mymaps">
               <FloatingMenuItem imageName={"point.png"} label="Add Marker Point" />
             </MenuItem>
