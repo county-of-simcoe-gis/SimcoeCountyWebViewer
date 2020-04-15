@@ -190,28 +190,22 @@ p {
 }
 
 .sc-info-window-label {
-  display: table-cell;
   font-weight: bold;
   color: #333333;
-  font-size: 12px;
-  padding: 3px;
-  word-wrap: break-word;
-  border-color:#f1efeffa!important;
-  border: solid;
-  border-width: 1px;
-  width:25%;
+  font-size: 11px;
 }
 
 .sc-info-window-value {
-  display: table-cell;
   color: #484848;
-  font-size: 12px;
+  border-bottom: 1px solid #eeeeee;
+  padding-bottom: 3px;
+  padding-left: 20px;
+  background-image: url("./images/arrow_curve.gif");
+  background-repeat: no-repeat;
+  background-position: left;
+  font-size: 11px;
   word-wrap: break-word;
-  padding: 3px;
-  width:75%;
-  border: solid;
-  border-width: 1px;
-  border-color:#f1efeffa;
+  min-height: 10px;
 }
 
 .sc-no-select {

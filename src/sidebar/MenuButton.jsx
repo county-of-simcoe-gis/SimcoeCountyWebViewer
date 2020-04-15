@@ -64,7 +64,7 @@ class MenuButton extends Component {
   };
 
   getMyMaps = () => {
-    return <MenuItem onClick={() => this.itemClick("mymaps", "mymaps")} key={helpers.getUID()} name={"Draw"} iconClass={"sc-menu-mymaps-icon"} />;
+    return <MenuItem onClick={() => this.itemClick("mymaps", "mymaps")} key={helpers.getUID()} name={"My Maps"} iconClass={"sc-menu-mymaps-icon"} />;
   };
 
   itemClick = (name, type) => {
@@ -130,7 +130,15 @@ class MenuButton extends Component {
         </div>
 
       
+          <button id="sc-menu-button" className="sc-button-blue">
+            <span className="sc-menu-button-icon">More...</span>
+          </button>
+       
         <div id="sc-menu-button-list-container" className={menuListClassName}>
+          <div className="sc-menu-list-item-heading" style={{ paddingTop: "0px" }}>
+            MAP THEMES
+          </div>
+          {this.getThemes()}
           <div className="sc-menu-list-item-heading">MAP TOOLS</div>
           {this.getTools()}
           <div className="sc-menu-list-item-heading">OTHER</div>

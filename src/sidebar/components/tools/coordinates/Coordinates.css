@@ -10,7 +10,7 @@
 }
 
 .sc-coordinates-title {
-  margin-top: 18px;
+  margin-top: 15px;
   margin-bottom: 0px !important;
 }
 
@@ -76,7 +76,7 @@
 .sc-coordinates-input {
   color: #8e8e8e;
   padding: 3px;
-  font-size: 16px;
+  font-size: 12px;
   width: 170px;
   border: 1px solid #ccc;
   padding-left: 5px;

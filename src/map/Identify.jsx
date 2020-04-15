@@ -55,6 +55,25 @@ class Identify extends Component {
         const name = layer.get("name");
         let displayName = ""; // layer.get("displayName");
         let type = layer.get("displayName")
+        let wfsUrl = layer.get("wfsUrl");
+        if (geometry.getType() !== "Point") {
+          const feature = new Feature(geometry);
+          const wktString = helpers.getWKTStringFromFeature(feature);
+          wfsUrl += "INTERSECTS(geom," + wktString + ")";
+          // QUERY USING WFS
+          // eslint-disable-next-line
+          helpers.getJSON(wfsUrl, result => {
+            const featureList = new GeoJSON().readFeatures(result);
+            if (featureList.length > 0) {
+              if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
+              let features = [];
+              featureList.forEach(feature => {
+                features.push(feature);
+              });
+              if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type });
+              this.setState({ layers: layerList });
+            }
+          });
           // QUERY USING WMS
           var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "application/json" });
         
@@ -85,6 +104,7 @@ class Identify extends Component {
 
     this.setState({ isLoading: false });
   };
+}
 
   onMouseEnter = feature => {
     this.vectorLayerShadow.getSource().clear();
@@ -216,11 +236,11 @@ class Identify extends Component {
             <Layer key={helpers.getUID()} layer={layer} onZoomClick={this.onZoomClick} onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave}></Layer>
           ))}
         </div>
-          
       </div>
     );
   }
 }
+
 export default Identify;
 
 function _getLayerObj(layerName, callback) {
@@ -345,10 +365,13 @@ const FeatureItem = props => {
         
         
           {keys.map((keyName, i) => {
+          // UNDERSCORES IN FRONT OF FIELD NAME INDICATES ITS FOR INTERNAL USE ONLY
+          if (keyName.substring(0, 1) !== "_") {
             const val = featureProps[keyName];
             if (cql_filter==="" &&  typeof val !== "object" && !excludedKeys.includes(keyName.toLowerCase())) return <InfoRow key={helpers.getUID()} label={helpers.toTitleCase(keyName.split("_").join(" "))} value={val}></InfoRow>;
             // <div key={helpers.getUID()}>TEST</div>
-          })}
+          }
+        })}
         </div>
   
       </div>

@@ -77,7 +77,7 @@ export async function getGroupsGC(url, urlType, isReset, callback) {
               prefix:groupPrefix,
               defaultGroup: isDefault,
               visibleLayers: visibleLayers,
-              wmsGroupUrl: fullGroupUrl,
+              wmsGroupUrl: fullGroupUrl
             };
 
             const buildLayers = (layers) => {
@@ -141,7 +141,7 @@ export function getGroups() {
       defaultGroup: isDefault,
       visibleLayers: group.visibleLayers,
       wmsGroupUrl: wmsGroupUrl,
-      customRestUrl: customGroupUrl,
+      customRestUrl: customGroupUrl
     };
     groups.push(groupObj);
 
