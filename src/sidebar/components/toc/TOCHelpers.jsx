@@ -281,6 +281,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
       group: group.value,
       groupName: group.label,
       canDownload: canDownload, // INDICATES WETHER LAYER CAN BE DOWNLOADED
+      serverUrl: serverUrl + "/", // BASE URL FOR GEOSERVER
     };
     callback(returnLayer);
   }
