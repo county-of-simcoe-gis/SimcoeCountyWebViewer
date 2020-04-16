@@ -40,7 +40,6 @@ We want your <b>feedback</b>! Click on the star in upper right corner and provid
 ## Basemap Switcher - Imagery / Topo
 
 - More Topo map options
-- Ability to turn off Overlay layers for Topo
 
 ![imagery panel](imagery.gif "Imagery/ Topo Basemap")
 <a name="mymaps"></a>
