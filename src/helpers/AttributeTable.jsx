@@ -12,7 +12,7 @@ class AttrbuteTable extends Component {
   constructor(props) {
     super(props);
 
-    this.numRecordsToPull = 20;
+    this.numRecordsToPull = 200;
     this.state = { visible: false, items: [], mapWidth: 100, height: 0, isLoading: false };
 
     // LISTEN

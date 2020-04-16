@@ -5,6 +5,7 @@ import "./AttributeTableTabs.css";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import { useTable, useBlockLayout, useResizeColumns } from "react-table";
 import { useSticky } from "react-table-sticky";
+import { FixedSizeList } from "react-window";
 
 class AttributeTableTabs extends Component {
   constructor(props) {
@@ -116,14 +117,15 @@ const AttributeTableContent = (props) => {
 
 const CustomTable = ({ columns, data, width, height, onHeaderClick, item, onLoadMoreClick, onLoadAllClick, isLoading, onRowClick }) => {
   const id = "sc-attribute-table-tab-" + item.name;
-  const [loaded, setLoaded] = useState(0);
+  // const [loaded, setLoaded] = useState(0);
 
-  useEffect(() => {
-    setLoaded(true);
-    if (parseInt(data.length) === parseInt(item.maxRecords) || parseInt(data.length) === parseInt(item.total)) {
-      document.getElementById(id).scrollTop = item.scrollTop;
-    }
-  }, []);
+  // useEffect(() => {
+  //   console.log("use Effect");
+  //   setLoaded(true);
+  //   if (parseInt(data.length) === parseInt(item.maxRecords) || parseInt(data.length) === parseInt(item.total)) {
+  //     document.getElementById(id).scrollTop = item.scrollTop;
+  //   }
+  // }, []);
 
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = useTable(
     {
@@ -143,14 +145,14 @@ const CustomTable = ({ columns, data, width, height, onHeaderClick, item, onLoad
         id={id}
         style={{ width: width - 4, height: height - 32, backgroundColor: "aliceblue" }}
         onScroll={(evt) => {
-          if (loaded) {
-            const el = evt.target;
-            const triggerHeight = el.scrollHeight - el.offsetHeight;
-            item.scrollTop = el.scrollTop;
-            if (el.scrollTop > triggerHeight && item.maxRecords <= item.total) {
-              onLoadMoreClick(item);
-            }
+          // if (loaded) {
+          const el = evt.target;
+          const triggerHeight = el.scrollHeight - el.offsetHeight;
+          item.scrollTop = el.scrollTop;
+          if (el.scrollTop > triggerHeight && item.maxRecords <= item.total) {
+            onLoadMoreClick(item);
           }
+          // }
         }}
       >
         <div className="header">
