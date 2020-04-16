@@ -393,9 +393,9 @@ class Layers extends Component {
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-metadata">
             <FloatingMenuItem imageName={"metadata.png"} label="Metadata" />
           </MenuItem>
-          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-attribute-table">
+          {/* <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-attribute-table">
             <FloatingMenuItem imageName={"metadata.png"} label="Open Attribute Table" />
-          </MenuItem>
+          </MenuItem> */}
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoom-to-layer">
             <FloatingMenuItem imageName={"zoom-in.png"} label="Zoom to Layer" />
           </MenuItem>
@@ -431,34 +431,21 @@ class Layers extends Component {
         window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
       });
     } else if (action === "sc-floating-menu-attribute-table") {
-      console.log(layerInfo);
-
-      window.emitter.emit("openAttributeTable", layerInfo.serverUrl, layerInfo.name);
-      // helpers.getWFSGeoJSON(
-      //   "https://opengis.simcoe.ca/geoserver/",
-      //   layerInfo.name,
-      //   (result) => {
-      //     if (result.length === 0) return;
-
-      //     window.emitter.emit("openAttributeTable", { name: layerInfo.tocDisplayName, geoJson: result });
-      //   },
-      //   null,
-      //   null,
-      //   null
-      // );
+      if (layerInfo.noAttributeTable) helpers.showMessage("Table", "Attribute table disabled for this layer.");
+      else window.emitter.emit("openAttributeTable", layerInfo.serverUrl, layerInfo.name);
     } else if (action === "sc-floating-menu-zoom-to-layer-visible") {
       this.zoomToVisibleScale(layerInfo);
     } else if (action === "sc-floating-menu-download") {
-      helpers.showMessage("Download", "Coming Soon!");
-      // TOCHelpers.getLayerInfo(layerInfo, result => {
-      //   if (result.featureType.name === "Assessment Parcel") helpers.showMessage("Download", "Parcels are not available for download");
-      //   else {
-      //     if (helpers.isMobile()) {
-      //       window.emitter.emit("setSidebarVisiblity", "CLOSE");
-      //       helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl, false, "full");
-      //     } else helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl);
-      //   }
-      // });
+      // helpers.showMessage("Download", "Coming Soon!");
+      TOCHelpers.getLayerInfo(layerInfo, (result) => {
+        if (result.featureType.name === "Assessment Parcel") helpers.showMessage("Download", "Parcels are not available for download");
+        else {
+          if (helpers.isMobile()) {
+            window.emitter.emit("setSidebarVisiblity", "CLOSE");
+            helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl, false, "full");
+          } else helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl);
+        }
+      });
     }
 
     helpers.addAppStat("Layer Options", action);
