@@ -237,6 +237,9 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
     // IDENTIFY DISPLAY NAME
     let identifyDisplayName = _getDisplayName(keywords);
 
+    // ATTRIBUTE TABLE
+    let noAttributeTable = _getNoAttributeTable(keywords);
+
     // TOC DISPLAY NAME
     const tocDisplayName = layerTitle;
 
@@ -282,6 +285,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
       groupName: group.label,
       canDownload: canDownload, // INDICATES WETHER LAYER CAN BE DOWNLOADED
       serverUrl: serverUrl + "/", // BASE URL FOR GEOSERVER
+      noAttributeTable: noAttributeTable, // IF TRUE, DISABLE ATTRIBUTE TABLE
     };
     callback(returnLayer);
   }
@@ -531,6 +535,15 @@ function _getCanDownload(keywords) {
     return item.indexOf("DOWNLOAD") !== -1;
   });
   if (downloadLayerKeyword !== undefined) return true;
+  else return false;
+}
+
+function _getNoAttributeTable(keywords) {
+  if (keywords === undefined) return false;
+  const keyword = keywords.find(function(item) {
+    return item.indexOf("NO_ATTRIBUTE_TABLE") !== -1;
+  });
+  if (keyword !== undefined) return true;
   else return false;
 }
 
