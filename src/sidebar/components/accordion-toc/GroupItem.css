@@ -27,6 +27,14 @@
   cursor: pointer;
 }
 
+.sc-toc-group-toolbox {
+  position: absolute;
+ 
+  right: 8px;
+  margin-top: -18px;
+  cursor: pointer;
+}
+
 .sc-toc-item-toolbox {
   position: absolute;
   right: 8px;

@@ -193,8 +193,8 @@ class SCMap extends Component {
       // SHOW TERMS
       if (helpers.isMobile()) {
         window.emitter.emit("setSidebarVisiblity", "CLOSE");
-        helpers.showURLWindow(mainConfig.termsUrl, false, "full");
-      } else helpers.showURLWindow(mainConfig.termsUrl);
+        //helpers.showURLWindow(mainConfig.termsUrl, false, "full");
+      }// else helpers.showURLWindow(mainConfig.termsUrl);
     }
 
     // MAP LOADED

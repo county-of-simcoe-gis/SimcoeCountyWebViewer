@@ -4,6 +4,7 @@ import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
 import { CustomCoordinates, MapExtent, ProjectedCoordinates,LatLong, CopyCoordinates } from "./CoordinatesSubComponents.jsx";
 import { transform } from "ol/proj.js";
+import { Translate } from "ol/interaction.js";
 import proj4 from "proj4";
 import Select from "react-select";
 import { register } from "ol/proj/proj4";
@@ -85,7 +86,13 @@ class Coordinates extends Component {
       proj4.defs(proj4defs);
       register(proj4);
     }
+    // MOVE
+    let translate = new Translate({ source: this.vectorSource });
+    translate.on("translateend", e => {
+      this.updateCoordinates(e.coordinate);
+    });
     
+    window.map.addInteraction(translate);
     // INITIAL EXTENT
     this.updateExtent();
   }
@@ -206,8 +213,7 @@ class Coordinates extends Component {
     this.updateExtent();
   };
 
-  onMapClick = evt => {
-    const webMercatorCoords = evt.coordinate;
+  updateCoordinates = webMercatorCoords => {
     const latLongCoords = transform(webMercatorCoords, "EPSG:3857", "EPSG:4326");
     const selectedCoords = transform(webMercatorCoords, "EPSG:3857", this.currentProjection);
     const inputTitle = (this.state.selectProjectionOption === undefined ? "" : this.state.selectProjectionOption.label + (this.state.selectProjectionZoneOption === undefined || this.state.selectProjectionZoneOption.label.trim() === "" ? "" : " - " +this.state.selectProjectionZoneOption.label) );
@@ -225,7 +231,11 @@ class Coordinates extends Component {
     });
 
     this.glowContainers();
+  }
 
+  onMapClick = evt => {
+    const webMercatorCoords = evt.coordinate
+    this.updateCoordinates(webMercatorCoords);
     this.createPoint(webMercatorCoords, false);
   };
 

@@ -231,7 +231,6 @@ class TOC extends Component {
       helpers.showMessage("Local Data Cleared", "Your local data has been cleared");
     } else if (action === "sc-floating-menu-visility") {
        window.emitter.emit("turnOffLayers", null);
-       window.emitter.emit("updateActiveTocLayers", null);
     }
 
     helpers.addAppStat("TOC Tools", action);
@@ -276,6 +275,9 @@ class TOC extends Component {
 
     helpers.showMessage("Save", "Layer Visibility has been saved.");
   };
+
+ 
+
 
   render() {
     const groupsDropDownStyles = {
@@ -326,7 +328,6 @@ class TOC extends Component {
                 sortAlpha={this.state.sortAlpha}
                 allGroups={this.state.layerGroups}
                 panelOpen={false}
-                
                 saveLayerOptions={this.state.saveLayerOptions[group.value]}
 
               />
