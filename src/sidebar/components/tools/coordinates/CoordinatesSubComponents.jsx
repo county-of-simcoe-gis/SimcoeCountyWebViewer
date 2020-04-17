@@ -1,5 +1,7 @@
 import React from "react";
 import * as helpers from "../../../../helpers/helpers";
+import { format } from "ol/coordinate";
+import Select from "react-select";
 
 const inputMsg = "(listening for input)";
 export const LiveCoordinates = props => {
@@ -72,6 +74,48 @@ export const ProjectedCoordinates = props => {
     </div>
   );
 };
+
+
+
+export const CopyCoordinates = props => {
+  const formatText = (coord, x, y, template) =>
+    {
+      if (x === null) return "(listening for input)";
+      let returnText = template;
+      returnText = returnText.split('[x]').join(x);
+      returnText = returnText.split('[y]').join(y);
+      returnText = returnText.split('[coord]').join(coord);
+      return returnText;
+    }
+    let output = "";
+    if (props.copyFormat !== undefined) output = formatText(props.title, props.valueX,props.valueY,props.copyFormat.value);
+  return (
+    <div>
+      <div className="sc-container">
+        <div className="sc-coordinates-row sc-arrow">
+          <label>Copy Format:</label>
+          <span> 
+              <Select id="sc-copy-format-select" onChange={props.onFormatChange} options={props.copyFormats} value={props.copyFormat} />
+          </span>
+        </div>
+        <div className="sc-coordinates-divider"></div>
+        <div className="sc-coordinates-copy sc-arrow">
+          <span>
+              <input  
+                id={props.inputId}
+                value={props.value === null ? "" : props.value}
+                className="sc-coordinates-input"
+                type="text"
+                value={output}
+                readOnly
+              /> 
+              <img src={require("./images/copy16.png")} alt="Copy Coordinates" onClick={props.onCopy} title="Copy Coordinates to Clip Board" />
+            </span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export const MapExtent = props => {
   return (

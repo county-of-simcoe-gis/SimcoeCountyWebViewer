@@ -29,6 +29,7 @@ import GeoJSON from "ol/format/GeoJSON.js";
 import { fromCircle } from "ol/geom/Polygon.js";
 import MyMapsAdvanced from "./MyMapsAdvanced";
 import Overlay from "ol/Overlay.js";
+import { getLength } from "ol/sphere.js";
 import * as shpWrite from "shp-write";
 
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale, myMapsId, featureId) =>
@@ -49,6 +50,7 @@ class MyMaps extends Component {
     this.tooltipElement = null;
     this.tooltip = null;
     this.bearing = null;
+    this.length = null;
     this.currentDrawFeature = null;
     this.state = {
       drawType: "Cancel",
@@ -131,6 +133,18 @@ class MyMaps extends Component {
     }
   };
 
+  // Format length output.
+  formatLength = line => {
+    var length = getLength(line);
+    var output;
+    if (length > 1000) {
+      output = Math.round((length / 1000) * 100) / 100 + " km";
+    } else {
+      output = Math.round((length * 100) / 100) + " m";
+    }
+    return output;
+  };
+
   // BUTTON BAR CLICK
   onButtonBarClick = type => {
     if (this.draw !== null) {
@@ -178,6 +192,18 @@ class MyMaps extends Component {
         this.tooltip.setPosition(tooltipCoord);
         this.setState({ toolTipClass: "sc-mymaps-tooltip" });
       });
+    }else if (this.state.drawType === "Measure"){
+      this.sketch = evt.feature;
+      var tooltipCoord = evt.coordinate;
+      this.listener = this.sketch.getGeometry().on("change", evt => {
+        var geom = evt.target;
+        this.length = this.formatLength(geom);
+        this.bearing = myMapsHelpers.getBearing(geom.getFirstCoordinate(), geom.getLastCoordinate());
+        tooltipCoord = geom.getLastCoordinate();
+        this.tooltipElement.innerHTML = this.length;
+        this.tooltip.setPosition(tooltipCoord);
+        this.setState({ toolTipClass: "sc-mymaps-tooltip" });
+      });
     }
   };
 
@@ -185,7 +211,7 @@ class MyMaps extends Component {
   onDrawEnd = evt => {
     console.log("ending");
     this.setState({ tooltipClass: "sc-hidden" });
-    if (this.state.drawType === "Bearing") {
+    if (this.state.drawType === "Bearing" || this.state.drawType === "Measure") {
       this.tooltipElement.innerHTML = "";
     }
 
@@ -198,10 +224,6 @@ class MyMaps extends Component {
     setTimeout(() => {
       myMapsHelpers.controlDoubleClickZoom(true);
 
-      // RE-ENABLE PARCEL CLICK
-      window.disableParcelClick = false;
-      // DISABLE IDENTIFY CLICK
-      window.disableIdentifyClick = false;
       // RE-ENABLE POPUPS
       window.isDrawingOrEditing = false;
     }, 1000);
@@ -220,10 +242,10 @@ class MyMaps extends Component {
     const featureId = helpers.getUID();
 
     // NEW NAME OF FEATURE
-    if (labelText === null && this.state.drawType !== "Bearing") labelText = "Drawing " + (this.state.items.length + 1);
+    if (labelText === null && this.state.drawType !== "Bearing" && this.state.drawType !== "Measure") labelText = "Drawing " + (this.state.items.length + 1);
 
     if (this.state.drawType === "Bearing") labelText = "Bearing: " + this.bearing;
-
+    if (this.state.drawType === "Measure") labelText = this.length;
     // GIVE TEXT A CUSTOM MESSAGE
     if (this.state.drawType === "Text") labelText = "Enter Custom Text";
 
@@ -261,9 +283,9 @@ class MyMaps extends Component {
     const itemInfo = {
       id: featureId,
       label: labelText,
-      labelVisible: this.state.drawType === "Text" || this.state.drawType === "Bearing" ? true : false,
+      labelVisible: this.state.drawType === "Text" || this.state.drawType === "Bearing" || this.state.drawType === "Measure" ? true : false,
       labelStyle: null,
-      labelRotation: 0,
+      labelRotation: this.state.drawType === "Bearing" || this.state.drawType === "Measure" ? (this.bearing>180? this.bearing+90 : this.bearing-90): 0,
       featureGeoJSON: helpers.featureToGeoJson(feature),
       style: customStyle === null ? this.state.drawStyle : customStyle,
       visible: true,
@@ -794,11 +816,11 @@ class MyMaps extends Component {
     if (drawType === "Eraser") return;
 
     if (drawType === "Rectangle") drawType = "Circle";
-    else if (drawType === "Arrow" || drawType === "Bearing") drawType = "LineString";
+    else if (drawType === "Arrow" || drawType === "Bearing"|| drawType === "Measure") drawType = "LineString";
     else if (drawType === "Text") drawType = "Point";
 
     // ACTIVE TOOLTIP
-    if (this.state.drawType === "Bearing") this.activateToolTip();
+    if (this.state.drawType === "Bearing" || this.state.drawType === "Measure") this.activateToolTip();
 
     // CREATE A NEW DRAW
     this.draw = new Draw({
@@ -806,7 +828,7 @@ class MyMaps extends Component {
       type: drawType,
       geometryFunction: this.state.drawType === "Rectangle" ? createBox() : undefined,
       style: this.state.drawStyle,
-      maxPoints: this.state.drawType === "Bearing" ? 2 : undefined
+      maxPoints: this.state.drawType === "Bearing" ||this.state.drawType === "Measure" ? 2 : undefined
     });
 
     // END DRAWING
@@ -995,7 +1017,7 @@ class MyMaps extends Component {
           </TransitionGroup>
         </MyMapsItems>
         <MyMapsAdvanced onEditFeatures={this.onEditFeatures} onMenuItemClick={this.onMenuItemClick} onDeleteAllClick={this.onDeleteAllClick} onMyMapsImport={this.onMyMapsImport} />
-        <div id={this.state.toolTipId} className={window.isDrawingOrEditing && this.state.drawType === "Bearing" ? this.state.toolTipClass : "sc-hidden"}></div>
+        <div id={this.state.toolTipId} className={window.isDrawingOrEditing && this.state.drawType === "Bearing" || this.state.drawType === "Measure" ? this.state.toolTipClass : "sc-hidden"}></div>
       </div>
     );
   }

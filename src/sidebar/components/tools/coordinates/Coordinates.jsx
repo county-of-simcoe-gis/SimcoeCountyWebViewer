@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import "./Coordinates.css";
 import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
-import { CustomCoordinates, MapExtent, ProjectedCoordinates,LatLong } from "./CoordinatesSubComponents.jsx";
+import { CustomCoordinates, MapExtent, ProjectedCoordinates,LatLong, CopyCoordinates } from "./CoordinatesSubComponents.jsx";
 import { transform } from "ol/proj.js";
 import proj4 from "proj4";
 import Select from "react-select";
@@ -42,7 +42,9 @@ class Coordinates extends Component {
       selectProjectionOption: undefined,
       selectProjectionZoneOptions: [],
       selectProjectionZoneOption: undefined,
-      hideZone:false
+      hideZone:false,
+      selectCopyOptions: [],
+      selectCopyOption: undefined,
       
     };
     this.currentPrecision = 2;
@@ -76,6 +78,7 @@ class Coordinates extends Component {
     this.onMapClickEvent = window.map.on("click", this.onMapClick);
     this.onMapMoveEvent = window.map.on("moveend", this.onMapMoveEnd);
     this._getSelectProjections();
+    this._getSelectCopyFormats();
     // REGISTER CUSTOM PROJECTIONS
     const proj4defs = this._getProj4Defs();
     if (proj4defs !== undefined && proj4defs.length > 0){
@@ -85,6 +88,13 @@ class Coordinates extends Component {
     
     // INITIAL EXTENT
     this.updateExtent();
+  }
+  _getSelectCopyFormats = () => {
+    let defs = [];
+    coordinateConfig.copyFormat.forEach(item => {
+      defs.push({ label: item.title, value: item.template });
+    })
+    this.setState({selectCopyOptions:defs,selectCopyOption:defs[0]});
   }
 
   _getSelectProjections = () => {
@@ -317,6 +327,8 @@ class Coordinates extends Component {
 
     this.createPoint(webMercatorCoords, false);
   };
+
+  
   onZoomClick = (proj, x, y) => {
     x = parseFloat(x);
     y = parseFloat(y);
@@ -388,6 +400,23 @@ class Coordinates extends Component {
               onEnterKey={() => {
                 this.onZoomClick(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
               }}
+            />
+            <div className="sc-coordinates-divider"></div>
+            <CopyCoordinates
+              inputId="sc-coordinate-copy"
+              copyFormats= {this.state.selectCopyOptions}
+              copyFormat={this.state.selectCopyOption}
+              onFormatChange={selection => {this.setState({ selectCopyOption: selection });}}
+              title={this.state.inputProjectionTitle}
+              valueX={this.state.inputXValue}
+              valueY={this.state.inputYValue}
+              onCopy = {() => {
+                  var copyText = document.getElementById("sc-coordinate-copy");
+                  copyText.select();
+                  copyText.setSelectionRange(0, 99999);
+                  document.execCommand("copy");
+                }
+              }
             />
           </div>
           <div className="sc-description">
