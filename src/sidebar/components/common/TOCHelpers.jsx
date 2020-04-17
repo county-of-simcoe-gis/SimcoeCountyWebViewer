@@ -601,6 +601,18 @@ export function disableLayersVisiblity(layers, callback) {
   }
 }
 
+export function turnOnLayers(layers, callback) {
+  var newLayers = [];
+  for (let index = 0; index < layers.length; index++) {
+    const layer = layers[index];
+    layer.layer.setVisible(true);
+    layer.visible = true;
+    let newLayer = Object.assign({}, layer);
+    newLayers.push(newLayer);
+    if (index === layers.length - 1) callback(newLayers);
+  }
+}
+
 export function turnOffLayers(layers, callback) {
   var newLayers = [];
   for (let index = 0; index < layers.length; index++) {

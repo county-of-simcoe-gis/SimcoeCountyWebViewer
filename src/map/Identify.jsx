@@ -345,8 +345,15 @@ const FeatureItem = props => {
         
         
           {keys.map((keyName, i) => {
-            const val = featureProps[keyName];
-            if (cql_filter==="" &&  typeof val !== "object" && !excludedKeys.includes(keyName.toLowerCase())) return <InfoRow key={helpers.getUID()} label={helpers.toTitleCase(keyName.split("_").join(" "))} value={val}></InfoRow>;
+            let val = featureProps[keyName];
+            if (val === null) val = "";
+            if (cql_filter==="" 
+                &&  typeof val !== "object" 
+                && !excludedKeys.includes(keyName.toLowerCase())
+                ) 
+                {
+                  return <InfoRow key={helpers.getUID()} label={helpers.toTitleCase(keyName.split("_").join(" "))} value={val}></InfoRow>;
+                }
             // <div key={helpers.getUID()}>TEST</div>
           })}
         </div>

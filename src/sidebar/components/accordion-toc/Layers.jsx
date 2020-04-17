@@ -21,6 +21,7 @@ import Portal from "../../../helpers/Portal.jsx";
 const SortableVirtualList = sortableContainer(VirtualLayers, { withRef: true });
 
 class Layers extends Component {
+  _isMounted = false;
   constructor(props) {
     super(props);
 
@@ -33,13 +34,15 @@ class Layers extends Component {
     };
     
      // LISTEN FOR RESET LAYERS
-     window.emitter.addListener("resetLayers", (group) => {if (group === this.props.group.value || group === null) this.resetLayers()});
+    window.emitter.addListener("resetLayers", (group) => {if (group === this.props.group.value || group === null) this.resetLayers()});
      //window.emitter.addListener("resetLayers", (group) => {if (group === this.props.group.value)window.location.reload(false)});
     // LISTEN FOR TURN OFF LAYERS
     window.emitter.addListener("turnOffLayers", (group) => {if (group === this.props.group.value || group === null) this.turnOffLayers()});
+
+    // LISTEN FOR TURN ON LAYERS
+    window.emitter.addListener("turnOnLayers", (group) => {if (group === this.props.group.value || group === null) this.turnOnLayers()});
     // LISTEN FOR TOGGLE ALL LEGEND
     window.emitter.addListener("toggleAllLegend", (type) => this.toggleAllLegends(type));
-    
 
     // LISTEN FOR SEARCH RESULT
     window.emitter.addListener("activeTocLayer", layerItem => {if (layerItem.layerGroup === this.props.group.value) this.onActivateLayer(layerItem)});
@@ -50,10 +53,14 @@ class Layers extends Component {
   }
 
   componentDidMount() {
-    
+    this._isMounted = true;
     if ( this.state.layers.length === 0){
     this.setState({ layers: this.props.group.layers }, () => {});
     }
+    if (this._isMounted) this.forceUpdate();
+  }
+  componentWillUnmount() {
+    this._isMounted = false;
   }
   onActivateLayer = layerItem => {
     let layersCopy = Object.assign([], this.state.layers);
@@ -361,11 +368,19 @@ class Layers extends Component {
     }
   };
 
+  turnOnLayers = () => {
+    TOCHelpers.turnOnLayers(this.state.layers, newLayers => {
+      this.setState({ layers: newLayers}, () => {
+        window.emitter.emit("updateActiveTocLayers", this.props.group.value);
+      });
+    });
+  };
 
   turnOffLayers = () => {
     TOCHelpers.turnOffLayers(this.state.layers, newLayers => {
-     
-      this.setState({ layers: newLayers}, () => {});
+      this.setState({ layers: newLayers}, () => {
+        window.emitter.emit("updateActiveTocLayers", this.props.group.value);
+      });
     });
   };
 
