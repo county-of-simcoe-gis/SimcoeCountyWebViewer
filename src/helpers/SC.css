@@ -200,6 +200,7 @@ p {
   border: solid;
   border-width: 1px;
   width:25%;
+  text-transform: uppercase;
 }
 
 .sc-info-window-value {

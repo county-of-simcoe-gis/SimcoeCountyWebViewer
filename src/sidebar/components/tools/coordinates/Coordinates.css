@@ -82,9 +82,32 @@
   padding-left: 5px;
 }
 
-  .sc-coordinates-input:focus {
-      border-color: #4A8EC7;
-  }
-  .sc-float-right{
-    text-align: right;
-  }
+.sc-coordinates-input:focus {
+    border-color: #4A8EC7;
+}
+.sc-float-right{
+  text-align: right;
+}
+
+.sc-coordinates-copy {
+    width:97%;
+}
+
+.sc-coordinates-copy span {
+  padding-left: 20px;
+  width: 320px;
+  display: inline-flex;
+}
+.sc-coordinates-copy input {
+  width: 275px;
+}
+.sc-coordinates-copy img {
+  padding:10px;
+}
+.sc-coordinates-copy img:hover {
+  cursor: pointer;
+}
+#sc-copy-format-select {
+  display:inline-block;
+  width:190px;
+}

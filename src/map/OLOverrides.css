@@ -2,8 +2,24 @@
   display: none;
 }
 
+
 .ol-scale-line {
   right: 5px;
+  left: auto !important;
+  bottom: 5px;
+  background:rgba(191, 214, 228, 0.66);
+}
+
+.ol-scale-line-inner {
+  font-size: 12px;
+  font-weight: bold;
+  border: 2px solid #000;
+  border-top: none;
+  color: #000;
+  transition: ease;
+}
+.ol-scale-bar {
+  right: 20px;
   left: auto !important;
   bottom: 5px;
 }

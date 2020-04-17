@@ -28,7 +28,8 @@ class FooterTools extends Component {
   onMapLoad() {
     window.map.on("moveend", () => {
       const scale = helpers.getMapScale();
-      this.setState({ scale: scale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") });
+     
+      this.setState({ scale: scale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")});
     });
   }
 
@@ -69,16 +70,20 @@ class FooterTools extends Component {
   };
 
   render() {
-    const col = document.getElementsByClassName("ol-scale-line-inner");
-    if (col.length > 0) {
-      const olScaleBar = col[0];
-      let scScaleBar = document.getElementById("sc-scale-bar-text");
-      scScaleBar.setAttribute("style", "width: " + olScaleBar.style.width);
-    }
+    
+    setTimeout(function(){
+      const col = document.getElementsByClassName("ol-scale-line-inner");
+      if (col.length > 0) {
+        const olScaleBar = col[0];
+        let scScaleBar = document.getElementById("sc-scale-bar-text") ;
+        scScaleBar.setAttribute("style", "width: " + olScaleBar.style.width);
+      }
+    }, 10);
+    
 
     return (
-      <div id="sc-scale-bar-text" className={this.state.basemapType === "IMAGERY" ? "sc-map-footer-scale-only imagery" : "sc-map-footer-scale-only topo"}>
-        {"Scale: 1:" + this.state.scale}
+      <div className={"sc-map-footer-scale-only ol-scale-line ol-unselectable" }>
+        <div id="sc-scale-bar-text" className="ol-scale-line-inner">{"Scale: 1:" + this.state.scale}</div>
       </div>
       //   <div className="sc-map-footer-tools-button-bar sc-no-select ">
       //     <div id="sc-map-footer-tools-title-label" className="sc-map-footer-tools-button-bar-title"></div>
