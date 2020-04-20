@@ -32,34 +32,41 @@ class Layers extends Component {
       layers: [],
       forceAllLegend: undefined
     };
-    
-     // LISTEN FOR RESET LAYERS
-    window.emitter.addListener("resetLayers", (group) => {if (group === this.props.group.value || group === null) this.resetLayers()});
-     //window.emitter.addListener("resetLayers", (group) => {if (group === this.props.group.value)window.location.reload(false)});
-    // LISTEN FOR TURN OFF LAYERS
-    window.emitter.addListener("turnOffLayers", (group) => {if (group === this.props.group.value || group === null) this.turnOffLayers()});
 
-    // LISTEN FOR TURN ON LAYERS
-    window.emitter.addListener("turnOnLayers", (group) => {if (group === this.props.group.value || group === null) this.turnOnLayers()});
-    // LISTEN FOR TOGGLE ALL LEGEND
-    window.emitter.addListener("toggleAllLegend", (type) => this.toggleAllLegends(type));
-
-    // LISTEN FOR SEARCH RESULT
-    window.emitter.addListener("activeTocLayer", layerItem => {if (layerItem.layerGroup === this.props.group.value) this.onActivateLayer(layerItem)});
   }
 
+  resetLayersListener(group) {if (group === this.props.group.value || group === null) this.resetLayers();}
+  turnOffLayersListener(group) {if (group === this.props.group.value || group === null) this.turnOffLayers(); }
+  turnOnLayersListener(group) {if (group === this.props.group.value || group === null) this.turnOnLayers(); }
+  activeTocLayerListener(layerItem) {if (layerItem.layerGroup === this.props.group.value) this.onActivateLayer(layerItem); }
+  
   getVirtualId()  {
     return "sc-toc-virtual-layers" + this.props.group.value;
   }
 
   componentDidMount() {
     this._isMounted = true;
-    if ( this.state.layers.length === 0){
-    this.setState({ layers: this.props.group.layers }, () => {});
+
+    window.emitter.addListener("resetLayers",group => this.resetLayersListener(group));
+    // LISTEN FOR TURN OFF LAYERS
+    window.emitter.addListener("turnOffLayers", group =>this.turnOffLayersListener(group));
+    // LISTEN FOR TURN ON LAYERS
+    window.emitter.addListener("turnOnLayers",group =>this.turnOnLayersListener(group) );
+    // LISTEN FOR TOGGLE ALL LEGEND
+    window.emitter.addListener("toggleAllLegend",type => this.toggleAllLegend(type));
+    // LISTEN FOR SEARCH RESULT
+    window.emitter.addListener("activeTocLayer", layerItem => this.activeTocLayerListener(layerItem));
+    
+    
+    if (this._isMounted) {
+      if ( this.state.layers.length === 0){
+        this.setState({ layers: this.props.group.layers }, () => {});
+      }
+      this.forceUpdate();
     }
-    if (this._isMounted) this.forceUpdate();
   }
   componentWillUnmount() {
+
     this._isMounted = false;
   }
   onActivateLayer = layerItem => {
@@ -97,25 +104,26 @@ class Layers extends Component {
   resetLayers = () => {
     // SHUT OFF VISIBILITY
     for (var key in this.state.layers) {
-      if (!this.state.layers.hasOwnProperty(key)) continue;
-
-      var obj = this.state.layers[key];
-      obj.layer.setVisible(false);
+      if (this.state.layers.hasOwnProperty(key)){
+        var obj = this.state.layers[key];
+        obj.layer.setVisible(false);
+      }
     }
 
-    this.setState({ layers: this.props.group.layers }, () => {
+    if(this._isMounted) this.setState({ layers: this.props.group.layers }, () => {
       this.sortLayers(this.state.layers,  this.props.sortAlpha);
     });
    
   };
 
   refreshLayers = (group, sortAlpha) => {
+    if(!this._isMounted) return;
     let layers = [];
     layers = this.state.layers;
 
     if (layers === undefined) {
       layers = group.layers;
-        this.setState({ layers: layers }, () => {
+      this.setState({ layers: layers }, () => {
           this.sortLayers(this.state.layers, sortAlpha);
         });
         return;
@@ -168,7 +176,7 @@ class Layers extends Component {
 
   // REFRESH IF PROPS FROM PARENT HAVE CHANGED - GROUPS DROP DOWN CHANGE.
   componentWillReceiveProps(nextProps) {
-    
+    if(!this._isMounted) return;
     const nextLayers = nextProps.group.layers;
     if (nextProps.sortAlpha !== this.props.sortAlpha) {
       this.sortLayers(this.state.layers, nextProps.sortAlpha);
@@ -181,7 +189,7 @@ class Layers extends Component {
         TOCHelpers.disableLayersVisiblity(layers, newLayers => {
             if (nextLayers !== undefined) {
               TOCHelpers.enableLayersVisiblity(nextLayers, newLayers => {
-                this.setState({ layers: newLayers }, () => {
+                 this.setState({ layers: newLayers }, () => {
                   this.refreshLayers(nextProps.group, nextProps.sortAlpha);
                 });
               });
@@ -276,7 +284,8 @@ class Layers extends Component {
   onCheckboxChange = layerInfo => {
     const visible = !layerInfo.visible;
     layerInfo.layer.setVisible(visible);
-    window.emitter.emit("updateActiveTocLayers",  this.props.group.value);
+    this.props.onLayerChange();
+    //window.emitter.emit("updateActiveTocLayers",  this.props.group.value);
     layerInfo.visible = visible;
     this.setState(
       {
@@ -354,7 +363,7 @@ class Layers extends Component {
     helpers.addAppStat("Layer Options", action);
   };
 
-  toggleAllLegends = type => {
+  toggleAllLegends (type ) {
     let showLegend = true;
     if (type === "CLOSE") showLegend = false;
 
@@ -369,17 +378,19 @@ class Layers extends Component {
   };
 
   turnOnLayers = () => {
+    if(!this._isMounted) return;
     TOCHelpers.turnOnLayers(this.state.layers, newLayers => {
       this.setState({ layers: newLayers}, () => {
-        window.emitter.emit("updateActiveTocLayers", this.props.group.value);
+        this.props.onLayerChange();
       });
     });
   };
 
   turnOffLayers = () => {
+    if(!this._isMounted) return;
     TOCHelpers.turnOffLayers(this.state.layers, newLayers => {
-      this.setState({ layers: newLayers}, () => {
-        window.emitter.emit("updateActiveTocLayers", this.props.group.value);
+       this.setState({ layers: newLayers}, () => {
+        this.props.onLayerChange();
       });
     });
   };

@@ -24,15 +24,14 @@ class GroupItem extends Component {
   }
 
   setActiveLayerCount = () => {
-    this.setState({activeLayerCount: this.activeCount()})
+    let activeCount = this.props.group.layers.filter(layer => {
+                  if (layer.layer.getVisible()){
+                    return layer;
+                  } 
+                }).length;
+    this.setState({activeLayerCount: activeCount})
   }
-  activeCount = () => {
-    return this.props.group.layers.filter(layer => {
-      if (layer.layer.getVisible()){
-        return layer;
-      } 
-    }).length;
-  }
+  
   onActivateLayer = (callback) => {
     let panelOpen = this.state.panelOpen;
     this.setActiveLayerCount();
@@ -168,6 +167,7 @@ class GroupItem extends Component {
                     group={this.props.group}
                     searchText={this.props.searchText}
                     sortAlpha={this.props.sortAlpha}
+                    onLayerChange={() => this.setActiveLayerCount()}
                   />
             
                 </div>

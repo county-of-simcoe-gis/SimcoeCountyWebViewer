@@ -71,7 +71,7 @@ class FooterTools extends Component {
 
   render() {
     
-    /*setTimeout(function(){
+    setTimeout(function(){
       const col = document.getElementsByClassName("ol-scale-line-inner");
       if (col.length > 0) {
         const olScaleBar = col[0];
@@ -79,13 +79,13 @@ class FooterTools extends Component {
         scScaleBar.setAttribute("style", "width: " + olScaleBar.style.width);
       }
     }, 10);
-    */
+    
 
     return (
-      <div></div>
-      // <div className={"sc-map-footer-scale-only ol-scale-line ol-unselectable" }>
-      //   <div id="sc-scale-bar-text" className="ol-scale-line-inner">{"Scale: 1:" + this.state.scale}</div>
-      //</div>
+     
+       <div className={"sc-map-footer-scale-only ol-scale-line ol-unselectable" }>
+         <div id="sc-scale-bar-text" className="ol-scale-line-inner">{"Scale: 1:" + this.state.scale}</div>
+      </div>
       //   <div className="sc-map-footer-tools-button-bar sc-no-select ">
       //     <div id="sc-map-footer-tools-title-label" className="sc-map-footer-tools-button-bar-title"></div>
       //       <div className="sc-map-footer-tools-button-bar-icons">

@@ -189,9 +189,8 @@ class TOC extends Component {
     
     const defaultGroup = this.state.defaultGroup;
     this.setState({ sortAlpha: false, selectedGroup: defaultGroup }, () => {
-      this.refreshTOC(() => {
-            window.emitter.emit("resetLayers", null);
-      });
+      window.emitter.emit("resetLayers", null);
+      this.refreshTOC(() => {});
     });
 
     helpers.addAppStat("TOC Reset", "Button");
