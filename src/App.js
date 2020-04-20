@@ -6,7 +6,6 @@ import SCMap from "./map/SCMap";
 import "./helpers/SC.css";
 import mainConfig from "./config.json";
 import ReactGA from "react-ga";
-// import AttributeTable from "./helpers/AttributeTable.jsx";
 
 if (mainConfig.googleAnalyticsID !== undefined && mainConfig.googleAnalyticsID !== "") {
   ReactGA.initialize(mainConfig.googleAnalyticsID);
