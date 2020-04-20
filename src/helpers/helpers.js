@@ -63,7 +63,7 @@ export function addAppStat(type, description) {
 export function glowContainer(id, color = "blue") {
   const elem = document.getElementById(id);
   if (elem === undefined) return;
-
+  if (elem.classList ===null) elem.classList =[];
   const className = "sc-glow-container-" + color;
   elem.classList.add(className);
   setTimeout(function() {

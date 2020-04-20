@@ -63,20 +63,7 @@ class SCMap extends Component {
       if (detaults.zoom !== undefined) defaultZoom = detaults.zoom;
       if (detaults.center !== undefined) centerCoords = detaults.center;
     }
-    // const resolutions = [
-    //   305.74811314055756,
-    //   152.87405657041106,
-    //   76.43702828507324,
-    //   38.21851414253662,
-    //   19.10925707126831,
-    //   9.554628535634155,
-    //   4.77731426794937,
-    //   2.388657133974685,
-    //   1.1943285668550503,
-    //   0.5971642835598172,
-    //   0.29858214164761665,
-    //   0.1492252984505969
-    // ];
+    
     var map = new Map({
       controls: defaultControls().extend([scaleLineControl]),
       layers: [],
@@ -106,6 +93,7 @@ class SCMap extends Component {
 
     // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
     window.emitter.emit("mapLoaded");
+
     window.map.getViewport().addEventListener("contextmenu", evt => {
       evt.preventDefault();
       this.contextCoords = window.map.getEventCoordinate(evt);
@@ -175,6 +163,7 @@ class SCMap extends Component {
         const extent = JSON.parse(storage);
         map.getView().fit(extent, map.getSize(), { duration: 1000 });
       }
+      
     }, 2000);
 
     // APP STAT
@@ -304,10 +293,11 @@ class SCMap extends Component {
     } else {
       this.setState({ mapClassName: "sc-map sc-map-closed sc-map-slidein" });
     }
-    this.forceUpdate();
-    setTimeout(function() {
+    
+    setTimeout(() => {
       window.map.updateSize();
     }, 300);
+    this.forceUpdate();
   }
 
   render() {

@@ -126,17 +126,13 @@ class Sidebar extends Component {
     const viewerMode = url.searchParams.get("MODE");
     window.sidebarOpen = false;
     if ((viewerMode !== null && viewerMode === "ADVANCED") || this.state.defaultSidebarOpen) {
-      this.togglePanelVisibility();
-      window.sidebarOpen = true;
-      this.setState({ sidebarOpen: true });
+      setTimeout(() => {this.sidebarVisiblityEventHandler("OPEN");},250);
     }
 
     // TAB PARAMETER
     const tabNameParameter = helpers.getURLParameter("TAB");
     if (tabNameParameter != null) {
-      this.togglePanelVisibility();
-      window.sidebarOpen = true;
-      this.setState({ sidebarOpen: true });
+      if(!window.sidebarOpen) this.togglePanelVisibility();
       this.activateTab(tabNameParameter.toLowerCase());
     }
 
@@ -171,16 +167,12 @@ class Sidebar extends Component {
             var toolParam = helpers.getURLParameter("TOOL");
             var themeParam = helpers.getURLParameter("THEME");
             if (toolParam != null) {
-              window.sidebarOpen = true;
-              this.setState({ sidebarOpen: true });
-              this.togglePanelVisibility();
+              if(!window.sidebarOpen) this.togglePanelVisibility();
 
               // TRIED TO USE PROMISES...
               this.activateItemFromEmmiter(toolParam, "tools");
             } else if (themeParam != null) {
-              window.sidebarOpen = true;
-              this.setState({ sidebarOpen: true });
-              this.togglePanelVisibility();
+              if(!window.sidebarOpen) this.togglePanelVisibility();
 
               // TRIED TO USE PROMISES...
               this.activateItemFromEmmiter(themeParam, "themes");
@@ -310,9 +302,7 @@ class Sidebar extends Component {
   }
 
   slimSidebarButtonClick = name => {
-    this.togglePanelVisibility();
-    window.sidebarOpen = true;
-    this.setState({ sidebarOpen: true });
+    if(!window.sidebarOpen) this.togglePanelVisibility();
     this.activateTab(name);
     helpers.addAppStat("Sidebar Slim", name);
   };
