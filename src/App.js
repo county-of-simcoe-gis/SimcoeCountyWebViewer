@@ -7,8 +7,11 @@ import "./helpers/SC.css";
 import mainConfig from "./config.json";
 import ReactGA from "react-ga";
 // import AttributeTable from "./helpers/AttributeTable.jsx";
-ReactGA.initialize("UA-3104541-53");
-ReactGA.pageview(window.location.pathname + window.location.search);
+
+if (mainConfig.googleAnalyticsID !== undefined && mainConfig.googleAnalyticsID !== "") {
+  ReactGA.initialize(mainConfig.googleAnalyticsID);
+  ReactGA.pageview(window.location.pathname + window.location.search);
+}
 
 class App extends Component {
   componentWillMount() {
