@@ -16,7 +16,7 @@ class ThemeLayerToggler extends Component {
       visible: props.layerConfig.visible,
       layer: this.initLayer(),
       styleUrl: null,
-      recordCount: null
+      recordCount: null,
     };
   }
 
@@ -30,7 +30,7 @@ class ThemeLayerToggler extends Component {
     helpers.getWFSGeoJSON(
       this.props.layerConfig.serverUrl,
       this.props.layerConfig.layerName,
-      result => {
+      (result) => {
         if (result.length === 0) return;
 
         const feature = result[0];
@@ -68,17 +68,17 @@ class ThemeLayerToggler extends Component {
     this.setState({ styleUrl: styleUrl });
 
     // GET RECORD COUNT
-    helpers.getWFSLayerRecordCount(this.props.layerConfig.serverUrl, this.props.layerConfig.layerName, count => {
+    helpers.getWFSLayerRecordCount(this.props.layerConfig.serverUrl, this.props.layerConfig.layerName, (count) => {
       this.setState({ recordCount: count });
     });
 
-    this.mapClickEvent = window.map.on("click", evt => {
-      if (window.isDrawingOrEditing) return;
+    this.mapClickEvent = window.map.on("click", (evt) => {
+      if (window.isDrawingOrEditing || !this.state.visible) return;
 
       var viewResolution = window.map.getView().getResolution();
       var url = this.state.layer.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
       if (url) {
-        helpers.getJSON(url, result => {
+        helpers.getJSON(url, (result) => {
           const features = result.features;
           if (features.length === 0) {
             return;
@@ -101,7 +101,7 @@ class ThemeLayerToggler extends Component {
     this.handleUrlParameter();
   }
 
-  onCheckboxChange = evt => {
+  onCheckboxChange = (evt) => {
     this.setState({ visible: evt.target.checked });
     this.state.layer.setVisible(evt.target.checked);
     this.props.onLayerVisiblityChange(this.state.layer);

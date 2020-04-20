@@ -16,23 +16,24 @@ class ThemeBaseLayers extends Component {
       sliderValue: this.props.config.baseLayers.opacity,
       sliderMin: 0,
       sliderMax: 1,
-      legendImageName: this.props.config.baseLayers.legendImageName
+      legendImageName: this.props.config.baseLayers.legendImageName,
     };
   }
 
   componentDidMount() {
     this.getLayers();
 
-    this.mapClickEvent = window.map.on("click", evt => {
-      if (window.isDrawingOrEditing) return;
+    this.mapClickEvent = window.map.on("click", (evt) => {
+      console.log(this.state.visible);
+      if (window.isDrawingOrEditing || !this.state.visible) return;
 
       var viewResolution = window.map.getView().getResolution();
-      this.state.layers.forEach(layer => {
+      this.state.layers.forEach((layer) => {
         if (!layer.getProperties().clickable) return;
 
         var url = layer.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
         if (url) {
-          helpers.getJSON(url, result => {
+          helpers.getJSON(url, (result) => {
             const features = result.features;
             if (features.length === 0) {
               return;
@@ -44,6 +45,7 @@ class ThemeBaseLayers extends Component {
             const entries = Object.entries(feature.getProperties());
             const layerName = layer.getProperties().name;
             const layerConfig = this.getLayerConfigByName(layerName);
+            console.log("showing");
             window.popup.show(
               evt.coordinate,
               <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={layerConfig} />,
@@ -55,9 +57,9 @@ class ThemeBaseLayers extends Component {
     });
   }
 
-  getLayerConfigByName = name => {
+  getLayerConfigByName = (name) => {
     let config = {};
-    this.props.config.baseLayers.layers.forEach(layerConfig => {
+    this.props.config.baseLayers.layers.forEach((layerConfig) => {
       //console.log(name);
       //console.log(layerConfig.displayName);
       if (layerConfig.displayName === name) {
@@ -70,7 +72,7 @@ class ThemeBaseLayers extends Component {
 
   getLayers = () => {
     let layers = [];
-    this.props.config.baseLayers.layers.forEach(layerObj => {
+    this.props.config.baseLayers.layers.forEach((layerObj) => {
       const layer = helpers.getImageWMSLayer(url.resolve(layerObj.serverUrl, "wms"), layerObj.layerName, "geoserver", null, 50);
       layer.setVisible(this.state.visible);
       layer.setOpacity(this.state.sliderValue);
@@ -83,17 +85,17 @@ class ThemeBaseLayers extends Component {
     this.setState({ layers: layers });
   };
 
-  onCheckboxChange = evt => {
+  onCheckboxChange = (evt) => {
     this.setState({ visible: evt.target.checked });
 
-    this.state.layers.forEach(layer => {
+    this.state.layers.forEach((layer) => {
       layer.setVisible(evt.target.checked);
     });
   };
 
   // SLIDER CHANGE EVENT
-  onSliderChange = value => {
-    this.state.layers.forEach(layer => {
+  onSliderChange = (value) => {
+    this.state.layers.forEach((layer) => {
       layer.setOpacity(value);
     });
 
@@ -102,7 +104,7 @@ class ThemeBaseLayers extends Component {
 
   componentWillUnmount() {
     // REMOVE THE LAYERS
-    this.state.layers.forEach(layer => {
+    this.state.layers.forEach((layer) => {
       window.map.removeLayer(layer);
     });
 
@@ -115,16 +117,16 @@ class ThemeBaseLayers extends Component {
     const marks = {
       "0": {
         style: {
-          fontSize: "7pt"
+          fontSize: "7pt",
         },
-        label: <div>0</div>
+        label: <div>0</div>,
       },
       1: {
         style: {
-          fontSize: "7pt"
+          fontSize: "7pt",
         },
-        label: <div>100</div>
-      }
+        label: <div>100</div>,
+      },
     };
 
     //
