@@ -402,7 +402,7 @@ class Layers extends Component {
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoom-to-layer-visible">
             <FloatingMenuItem imageName={"zoom-in.png"} label="Zoom to Visible Scale" />
           </MenuItem>
-          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-download">
+          <MenuItem className={layerInfo.canDownload ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-download">
             <FloatingMenuItem imageName={"download.png"} label="Download" />
           </MenuItem>
           <MenuItem className="sc-layers-slider" key="sc-floating-menu-opacity">
@@ -436,7 +436,6 @@ class Layers extends Component {
     } else if (action === "sc-floating-menu-zoom-to-layer-visible") {
       this.zoomToVisibleScale(layerInfo);
     } else if (action === "sc-floating-menu-download") {
-      // helpers.showMessage("Download", "Coming Soon!");
       TOCHelpers.getLayerInfo(layerInfo, (result) => {
         if (result.featureType.name === "Assessment Parcel") helpers.showMessage("Download", "Parcels are not available for download");
         else {
