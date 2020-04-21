@@ -97,6 +97,7 @@
   user-select: none;
   opacity: 0.9;
   font-size: 9pt;
+  z-index: 2;
 }
 
 .sc-basemap-topo-item-container {
