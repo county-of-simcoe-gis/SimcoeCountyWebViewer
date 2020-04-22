@@ -229,7 +229,9 @@ class SCMap extends Component {
       let coords = [x, y];
       if (sr === "WGS84") coords = fromLonLat([Math.round(x * 100000) / 100000, Math.round(y * 100000) / 100000]);
 
-      helpers.flashPoint(coords);
+      setTimeout(() => {
+        helpers.flashPoint(coords);
+      }, 1000);
     } else if (xmin !== null && ymin !== null && xmax !== null && ymax !== null) {
       //URL PARAMETERS (ZOOM TO EXTENT)
       const extent = [parseFloat(xmin), parseFloat(ymin), parseFloat(xmax), parseFloat(ymax)];
