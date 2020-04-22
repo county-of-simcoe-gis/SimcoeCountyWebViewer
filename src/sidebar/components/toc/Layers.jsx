@@ -439,6 +439,7 @@ class Layers extends Component {
       TOCHelpers.getLayerInfo(layerInfo, (result) => {
         if (result.featureType.name === "Assessment Parcel") helpers.showMessage("Download", "Parcels are not available for download");
         else {
+          helpers.addAppStat("Download", layerInfo.name);
           if (helpers.isMobile()) {
             window.emitter.emit("setSidebarVisiblity", "CLOSE");
             helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl, false, "full");
