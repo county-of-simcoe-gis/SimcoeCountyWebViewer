@@ -2,6 +2,8 @@
 
 ## Live beta site can be found [here](https://opengis.simcoe.ca/public)
 
+This site has officially went live as a beta on Apr 23rd, 2020.
+
 The goal of this project is to replace [this viewer](https://maps.simcoe.ca/public) using an open source environment. The existing viewer is built using the ESRI 3.x JS api/DOJO with the Web App Builder and ArcGIS Server.
 
 This app is built using React, OpenLayers and GeoServer. Many components are configurable to point to your own WMS/WFS, XYZ services. Some components use a custom rest api, such as the search and property report.
@@ -12,19 +14,16 @@ It's built using a framework to easily create your own tools and themes (instruc
 
 The Table of Contents (layers tab) utilizes groups in GeoServer.
 
-Heads up. This project is <b>not</b> complete and missing many components but the "core" framework and design is in place. New functionality will be posted to the beta site above.
-
 Contributions are welcome. Even if you only clone it and add tools to your own project, please share them back and I'll integrate them if useful.
 
-This app works in conjunction with these supporting projects.
-
-1. [WebApi](https://github.com/county-of-simcoe-gis/SimcoeCountyWebApi)
-2. [Feedback](https://github.com/county-of-simcoe-gis/SimcoeCountyFeedback)
-3. [GeoServerLayerInfo](https://github.com/county-of-simcoe-gis/SimcoeCountyGeoServerLayerInfo)
+For a list of projects that support this site please visit our main page.
+[SimcoeCountyGIS](https://github.com/county-of-simcoe-gis)
 
 ![](demo.gif)
 
 ## Getting Started
+
+We've built a deployment doc to help setup our solution. [Deployment Doc here](https://github.com/county-of-simcoe-gis/SimcoeCountyDeploymentGuide)
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
@@ -70,6 +69,12 @@ In the project diretory, type `npm run build` in the terminal. Details can be fo
 ## Authors
 
 - **Al Proulx** - _Initial work_ - [Al Proulx](https://github.com/iquitwow)
+
+## Contributors
+
+- MTO - Various Enhancements - [Tom Reed](https://github.com/reed-tom) and [Nedim Oren](https://github.com/oren-ned)
+- Spatial DNA - Print Tool - [Spatial DNA](https://github.com/SpatialDNA)
+- Kristie Hu - Immigration Services Theme - [Kristie Hu](https://github.com/Kristiehu)
 
 ## License
 
