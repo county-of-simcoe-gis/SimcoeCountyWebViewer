@@ -16,12 +16,11 @@ class FooterTools extends Component {
     this.onMapLoad = this.onMapLoad.bind(this);
     this.state = {
       scale: "",
-      basemapType: "IMAGERY"
+      basemapType: "IMAGERY",
     };
 
     // LISTEN FOR MAP TO MOUNT
-    window.emitter.addListener("basemapChanged", type => {
-      console.log(type);
+    window.emitter.addListener("basemapChanged", (type) => {
       this.setState({ basemapType: type });
     });
   }
