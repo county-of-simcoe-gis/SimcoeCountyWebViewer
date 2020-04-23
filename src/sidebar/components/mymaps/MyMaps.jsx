@@ -152,6 +152,9 @@ class MyMaps extends Component {
     this.setState({ drawType: type }, () => {
       this.setDrawControl();
     });
+
+    // APP STATS
+    helpers.addAppStat("MyMaps Button", type);
   };
 
   // COLORBAR CLICK
@@ -159,6 +162,8 @@ class MyMaps extends Component {
     this.setState({ drawColor: color }, () => {
       this.updateStyle();
     });
+    // APP STATS
+    helpers.addAppStat("MyMaps Color", "click");
   };
 
   // DRAW START
@@ -662,6 +667,8 @@ class MyMaps extends Component {
     // } else if (action === "sc-floating-menu-export-to-shapefile") {
     //   this.onExportToShapeFile();
     // }
+    // APP STATS
+    helpers.addAppStat("MyMaps Menu", action);
   };
 
   // TODO:  CHANGE PROJECTION TO WEB MERCATOR IN OUTPUT.
@@ -900,6 +907,8 @@ class MyMaps extends Component {
       this.saveStateToStorage();
     });
     this.vectorLayer.getSource().clear();
+    // APP STATS
+    helpers.addAppStat("MyMaps", "Delete All");
   };
 
   onEditFeatures = (editOn, option) => {
@@ -976,6 +985,9 @@ class MyMaps extends Component {
         }
       );
     }
+
+    // APP STATS
+    helpers.addAppStat("MyMaps", "Import");
   };
 
   render() {

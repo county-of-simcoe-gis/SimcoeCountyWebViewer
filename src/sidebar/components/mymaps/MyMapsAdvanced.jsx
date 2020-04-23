@@ -16,17 +16,17 @@ class MyMapsAdvanced extends Component {
       open: false,
       editOn: false,
       editOption: "vertices",
-      inputText: ""
+      inputText: "",
     };
   }
 
-  onSwitchChange = editOn => {
+  onSwitchChange = (editOn) => {
     this.setState({ editOn });
-    helpers.addAppStat("Edit Features Switch", editOn);
+    helpers.addAppStat("Edit Features Switch", "Click");
     this.props.onEditFeatures(editOn, this.state.editOption);
   };
 
-  onEditOption = evt => {
+  onEditOption = (evt) => {
     this.setState({ editOption: evt.currentTarget.value });
     this.props.onEditFeatures(this.state.editOn, evt.currentTarget.value);
   };
@@ -38,7 +38,7 @@ class MyMapsAdvanced extends Component {
       return;
     }
 
-    myMapsHelpers.importMyMaps(this.state.inputText, result => {
+    myMapsHelpers.importMyMaps(this.state.inputText, (result) => {
       if (result.error !== undefined) helpers.showMessage("MyMaps Import", "That MyMaps ID was NOT found!", "red");
       else {
         helpers.showMessage("MyMaps Import", "Success!  MyMaps imported.");
@@ -49,15 +49,18 @@ class MyMapsAdvanced extends Component {
 
   onSave = () => {
     this.setState({ copied: true });
-    myMapsHelpers.exportMyMaps(result => {
+    myMapsHelpers.exportMyMaps((result) => {
       helpers.showMessage("MyMaps Save", "MyMaps have been saved!  Your ID has been saved to clipboard.", undefined, 5000);
       helpers.glowContainer(this.inputId);
       this.setState({ inputText: result.id });
       copy(result.id);
     });
+
+    // APP STATS
+    helpers.addAppStat("MyMaps", "Save");
   };
 
-  onInputChange = evt => {
+  onInputChange = (evt) => {
     this.setState({ inputText: evt.target.value });
   };
 
@@ -107,32 +110,8 @@ class MyMapsAdvanced extends Component {
           </div>
         </Collapsible>
       </div>
-
-      // <div className="sc-mymaps-advanced">
-      //   <div>Advanced</div>
-      //   <MyMapsFooter onMenuItemClick={this.props.onMenuItemClick} onDeleteAllClick={this.props.onDeleteAllClick} />
-      // </div>
     );
   }
 }
 
 export default MyMapsAdvanced;
-
-// const selectStyles = {
-//   control: provided => ({
-//     ...provided,
-//     minHeight: "30px"
-//   }),
-//   indicatorsContainer: provided => ({
-//     ...provided,
-//     height: "30px"
-//   }),
-//   clearIndicator: provided => ({
-//     ...provided,
-//     padding: "5px"
-//   }),
-//   dropdownIndicator: provided => ({
-//     ...provided,
-//     padding: "5px"
-//   })
-// };

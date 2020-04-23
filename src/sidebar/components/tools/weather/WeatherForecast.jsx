@@ -3,42 +3,28 @@ import "./WeatherForecast.css";
 import * as helpers from "../../../../helpers/helpers";
 import mainConfig from "../../../../config.json";
 import config from "./config.json";
-const urlTemplate = cityCode => `${mainConfig.apiUrl}getCityWeather/${cityCode}`;
+const urlTemplate = (cityCode) => `${mainConfig.apiUrl}getCityWeather/${cityCode}`;
 
 class WeatherForecast extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      cityInfo: []
+      cityInfo: [],
     };
   }
 
   componentDidMount() {
     this.refreshWeather();
-
-    fetch("https://opengis2.simcoe.ca/appstats", {
-      method: "GET",
-      mode: "no-cors",
-      credentials: "include"
-    })
-      .then(response => response.text())
-      .then(responseJson => {
-        // CALLBACK WITH RESULT
-        console.log(responseJson);
-      })
-      .catch(error => {
-        console.error(error);
-      });
   }
 
   refreshWeather = () => {
     this.setState({ cityInfo: [] }, () => {
       const cities = config.cities;
-      cities.forEach(cityInfo => {
-        helpers.getJSON(urlTemplate(cityInfo.code), result => {
+      cities.forEach((cityInfo) => {
+        helpers.getJSON(urlTemplate(cityInfo.code), (result) => {
           result.forecastUrl = cityInfo.forecastUrl;
-          this.setState(prevState => {
+          this.setState((prevState) => {
             let prevCities = prevState.cityInfo;
             prevCities.push(result);
             return { cityInfo: prevCities };
@@ -58,8 +44,8 @@ class WeatherForecast extends Component {
   render() {
     return (
       <div className="sc-tool-weather-forecast-container">
-        {this.state.cityInfo.map(city => (
-          <Forecast key={helpers.getUID()} info={city}></Forecast>
+        {this.state.cityInfo.map((city) => (
+          <Forecast key={helpers.getUID()} info={city} />
         ))}
       </div>
     );
@@ -68,19 +54,19 @@ class WeatherForecast extends Component {
 
 export default WeatherForecast;
 
-const Forecast = props => {
+const Forecast = (props) => {
   const { siteData, forecastUrl } = props.info;
   const forecast1 = siteData.forecastGroup[0].forecast[0];
   const forecast2 = siteData.forecastGroup[0].forecast[1];
   const forecast3 = siteData.forecastGroup[0].forecast[2];
-  const iconUrl = code => `https://weather.gc.ca/weathericons/small/${code}.png`;
+  const iconUrl = (code) => `https://weather.gc.ca/weathericons/small/${code}.png`;
 
   const warnings = siteData.warnings[0];
   let warningEvents = [];
   let warningUrl = "";
   if (warnings !== "") {
     warningUrl = warnings.$.url;
-    warnings.event.forEach(event => {
+    warnings.event.forEach((event) => {
       warningEvents.push(event);
     });
   }
@@ -92,15 +78,15 @@ const Forecast = props => {
         <fieldset className="sc-fieldset" style={{ marginTop: "0px" }}>
           <legend className="sc-tool-weather-forecast-legend">{siteData.location[0].name[0]._}</legend>
           <div className={warningEvents.length === 0 ? "sc-hidden" : "sc-tool-weather-forecast-warnings-container"}>
-            {warningEvents.map(event => (
-              <Warning key={helpers.getUID()} info={event} url={warningUrl}></Warning>
+            {warningEvents.map((event) => (
+              <Warning key={helpers.getUID()} info={event} url={warningUrl} />
             ))}
           </div>
           <div className={warningEvents.length === 2 ? "sc-tool-weather-forecast-days-container two-warnings" : "sc-tool-weather-forecast-days-container"}>
             <div className="sc-tool-weather-forecast-day-container" title={forecast1.textSummary[0]}>
               <div className="sc-tool-weather-forecast-day-details">
                 <label>{forecast1.period[0].$.textForecastName}</label>
-                <img className="sc-tool-weather-forecast-details-img" src={iconUrl(forecast1.abbreviatedForecast[0].iconCode[0]._)} alt="icon"></img>
+                <img className="sc-tool-weather-forecast-details-img" src={iconUrl(forecast1.abbreviatedForecast[0].iconCode[0]._)} alt="icon" />
                 <label>{forecast1.temperatures[0].temperature[0]._}</label>
                 <label className="sc-tool-weather-tool-forecast-summary">{forecast1.abbreviatedForecast[0].textSummary[0]}</label>
               </div>
@@ -108,7 +94,7 @@ const Forecast = props => {
             <div className="sc-tool-weather-forecast-day-container" title={forecast2.textSummary[0]}>
               <div className="sc-tool-weather-forecast-day-details">
                 <label>{forecast2.period[0].$.textForecastName}</label>
-                <img className="sc-tool-weather-forecast-details-img" src={iconUrl(forecast2.abbreviatedForecast[0].iconCode[0]._)} alt="icon"></img>
+                <img className="sc-tool-weather-forecast-details-img" src={iconUrl(forecast2.abbreviatedForecast[0].iconCode[0]._)} alt="icon" />
                 <label>{forecast2.temperatures[0].temperature[0]._}</label>
                 <label>{forecast2.abbreviatedForecast[0].textSummary[0]}</label>
               </div>
@@ -116,7 +102,7 @@ const Forecast = props => {
             <div className="sc-tool-weather-forecast-day-container" title={forecast3.textSummary[0]}>
               <div className="sc-tool-weather-forecast-day-details">
                 <label>{forecast3.period[0].$.textForecastName}</label>
-                <img className="sc-tool-weather-forecast-details-img" src={iconUrl(forecast3.abbreviatedForecast[0].iconCode[0]._)} alt="icon"></img>
+                <img className="sc-tool-weather-forecast-details-img" src={iconUrl(forecast3.abbreviatedForecast[0].iconCode[0]._)} alt="icon" />
                 <label>{forecast3.temperatures[0].temperature[0]._}</label>
                 <label>{forecast3.abbreviatedForecast[0].textSummary[0]}</label>
               </div>
@@ -133,7 +119,7 @@ const Forecast = props => {
   );
 };
 
-const Warning = props => {
+const Warning = (props) => {
   const { info } = props;
   const url = props.url;
   const type = info.$.type.toUpperCase();

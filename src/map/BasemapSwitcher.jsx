@@ -364,10 +364,11 @@ class BasemapSwitcher extends Component {
   };
 
   // CLICK ON TOPO THUMBNAILS
-  onTopoItemClick = (activeIndex) => {
+  onTopoItemClick = (activeIndex, name) => {
     this.setState({ topoActiveIndex: activeIndex });
     this.setTopoLayerVisiblity(activeIndex);
     this.setState({ topoPanelOpen: false });
+    helpers.addAppStat("Basemap", name);
   };
 
   // ADJUST VISIBILITY
@@ -458,7 +459,7 @@ class BasemapItem extends Component {
       <div
         className={this.props.topoActiveIndex === this.props.index ? "sc-basemap-topo-item-container active" : "sc-basemap-topo-item-container"}
         onClick={() => {
-          this.props.onTopoItemClick(this.props.index);
+          this.props.onTopoItemClick(this.props.index, this.props.service.name);
         }}
       >
         {this.props.service.name}
