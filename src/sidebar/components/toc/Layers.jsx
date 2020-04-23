@@ -365,7 +365,11 @@ class Layers extends Component {
   // OPACITY SLIDER FOR EACH LAYER
   onSliderChange = (opacity, layerInfo) => {
     layerInfo.layer.setOpacity(opacity);
+    this.currentScroll = document.getElementById(this.virtualId).scrollTop;
+  };
 
+  // OPACITY SLIDER AFTER COMPLETE
+  onSliderAfterChange = (opacity, layerInfo) => {
     this.setState(
       {
         // UPDATE LEGEND
@@ -374,6 +378,7 @@ class Layers extends Component {
       () => {
         let allLayers = this.state.allLayers;
         allLayers[this.props.group.value] = this.state.layers;
+        document.getElementById(this.virtualId).scrollTop = this.currentScroll;
       }
     );
   };
@@ -408,7 +413,15 @@ class Layers extends Component {
           </MenuItem>
           <MenuItem className="sc-layers-slider" key="sc-floating-menu-opacity">
             Adjust Transparency
-            <SliderWithTooltip tipFormatter={this.sliderTipFormatter} max={1} min={0} step={0.05} defaultValue={layerInfo.opacity} onChange={(evt) => this.onSliderChange(evt, layerInfo)} />
+            <SliderWithTooltip
+              tipFormatter={this.sliderTipFormatter}
+              max={1}
+              min={0}
+              step={0.05}
+              defaultValue={layerInfo.opacity}
+              onChange={(evt) => this.onSliderChange(evt, layerInfo)}
+              onAfterChange={(evt) => this.onSliderAfterChange(evt, layerInfo)}
+            />
           </MenuItem>
         </FloatingMenu>
       </Portal>
