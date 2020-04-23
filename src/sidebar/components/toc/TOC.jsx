@@ -120,6 +120,7 @@ class TOC extends Component {
         }
       }
     });
+    helpers.addAppStat("TOC Group", selectedGroup.label);
   };
 
   onSearchLayersChange = (evt) => {
@@ -134,7 +135,7 @@ class TOC extends Component {
       helpers.showMessage("Sorting", "Layer re-ordering disabled.", "yellow");
     }
 
-    helpers.addAppStat("TOC Sort", sortAlpha);
+    helpers.addAppStat("TOC Sort", "click");
   };
 
   reset = () => {
@@ -211,6 +212,7 @@ class TOC extends Component {
 
   onSaveClick = () => {
     this.layerRef.saveLayerOptions();
+    helpers.addAppStat("TOC Save", "Click");
   };
 
   render() {

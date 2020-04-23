@@ -359,6 +359,7 @@ class Layers extends Component {
         allLayers[this.props.group.value] = this.state.layers;
       }
     );
+    helpers.addAppStat("TOC Layer Visibility", layerInfo.name);
   };
 
   // OPACITY SLIDER FOR EACH LAYER
@@ -424,6 +425,7 @@ class Layers extends Component {
           helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl, false, "full");
         } else helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl);
       });
+      helpers.addAppStat("Metadata", layerInfo.name);
     } else if (action === "sc-floating-menu-zoom-to-layer") {
       TOCHelpers.getLayerInfo(layerInfo, (result) => {
         const boundingBox = result.featureType.nativeBoundingBox;

@@ -8,7 +8,7 @@ import proj4 from "proj4";
 import { register } from "ol/proj/proj4";
 import Projection from "ol/proj/Projection.js";
 import { Vector as VectorLayer } from "ol/layer";
-import { Fill, Style, Circle as CircleStyle, Icon } from "ol/style.js";
+import { Style, Icon } from "ol/style.js";
 import { Vector as VectorSource } from "ol/source.js";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
@@ -175,6 +175,7 @@ class Coordinates extends Component {
     // UNREGISTER EVENTS
     unByKey(this.onPointerMoveEvent);
     unByKey(this.onMapClickEvent);
+    unByKey(this.onMapMoveEvent);
 
     // ENABLE PROPERTY CLICK
     window.disableParcelClick = false;
