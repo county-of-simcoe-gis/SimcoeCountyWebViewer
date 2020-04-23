@@ -121,14 +121,6 @@
       "description": "Provide users with a list of Child care facilities as well as additional information about each facility.",
       "imageName": "childCareFacilities.png",
       "secure": false
-    },
-    {
-      "id": 6,
-      "name": "Immigration Services",
-      "componentName": "ImmigrationServices",
-      "description": "Explore resources to help newcomers to the County.",
-      "imageName": "immigrationServices.png",
-      "secure": false
     }
   ]
 }

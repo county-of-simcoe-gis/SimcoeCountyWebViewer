@@ -22,16 +22,16 @@ class LocalRealEstateRecents extends Component {
         <div className={this.props.viewedItems.length !== 0 ? "sc-hidden" : "sc-container"}>There are currently no recently viewed items.</div>
         <div className="sc-theme-real-estate-recent-container">
           <TransitionGroup>
-            {this.props.viewedItems.map(geoJson => {
+            {this.props.viewedItems.map((geoJson) => {
               const feature = helpers.getFeatureFromGeoJSON(geoJson);
               return (
-                <CSSTransition key={feature.get("mlsno")} classNames="sc-theme-real-estate-recent-item-container" timeout={200}>
+                <CSSTransition key={feature.get("_mlsno")} classNames="sc-theme-real-estate-recent-item-container" timeout={200}>
                   <div className="sc-container sc-theme-real-estate-recent-item-container">
                     <div>
                       <img
                         className="sc-theme-real-estate-recent-image"
-                        src={feature.get("thumb_url")}
-                        onError={e => {
+                        src={feature.get("_thumburl")}
+                        onError={(e) => {
                           e.target.onerror = null;
                           e.target.src = images["noPhoto.png"];
                         }}
