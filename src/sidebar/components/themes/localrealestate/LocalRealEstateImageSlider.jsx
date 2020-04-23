@@ -21,11 +21,11 @@ class LocalRealEstateImageSlider extends Component {
     this.vectorLayer = null;
     this.mouseIn = false;
     this.state = {
-      images: []
+      images: [],
     };
 
     // LISTEN FOR SIDEPANEL CHANGES
-    window.emitter.addListener("sidebarChanged", isSidebarOpen => this.onSidebarChange());
+    window.emitter.addListener("sidebarChanged", (isSidebarOpen) => this.onSidebarChange());
 
     this.createLineLayer();
   }
@@ -35,14 +35,14 @@ class LocalRealEstateImageSlider extends Component {
     const layer = new VectorLayer({
       zIndex: 1000,
       source: new VectorSource({
-        features: []
+        features: [],
       }),
       style: new Style({
         stroke: new Stroke({
           color: "#E78080",
-          width: 3
-        })
-      })
+          width: 3,
+        }),
+      }),
     });
     window.map.addLayer(layer);
     this.vectorLayer = layer;
@@ -65,11 +65,11 @@ class LocalRealEstateImageSlider extends Component {
     this.updateFeatures(nextProps);
   }
 
-  onMapMoveEnd = evt => {
+  onMapMoveEnd = (evt) => {
     this.updateFeatures();
   };
 
-  updateFeatures = props => {
+  updateFeatures = (props) => {
     if (props === undefined) props = this.props;
 
     if (this.vectorSource === null || props.visibleLayers === null) return;
@@ -77,11 +77,11 @@ class LocalRealEstateImageSlider extends Component {
     const extent = window.map.getView().calculateExtent(window.map.getSize());
     let images = [];
     let index = 0;
-    this.vectorSource.forEachFeatureIntersectingExtent(extent, result => {
+    this.vectorSource.forEachFeatureIntersectingExtent(extent, (result) => {
       if (index === this.maxFeatures) return;
 
-      if (props.visibleLayers.includes(result.get("prop_type"))) {
-        images.push({ url: result.get("thumb_url"), address: result.get("Address"), mlsno: result.get("mlsno"), feature: result });
+      if (props.visibleLayers.includes(result.get("_prop_type"))) {
+        images.push({ url: result.get("_thumburl"), address: result.get("Address"), mlsno: result.get("_mlsno"), feature: result });
         index++;
       }
     });
@@ -95,16 +95,16 @@ class LocalRealEstateImageSlider extends Component {
   };
 
   initLayer = () => {
-    this.props.config.layers.forEach(layer => {
+    this.props.config.layers.forEach((layer) => {
       if (layer.displayName === "All") {
         helpers.getWFSGeoJSON(
           layer.serverUrl,
           layer.layerName,
-          result => {
+          (result) => {
             if (result.length === 0) return;
 
             this.vectorSource = new VectorSource({
-              features: result
+              features: result,
             });
             this.updateFeatures();
           },
@@ -153,7 +153,7 @@ class LocalRealEstateImageSlider extends Component {
     const startCoords = window.map.getCoordinateFromPixel(screenCoords);
     var line = new LineString([startCoords, feature.getGeometry().getCoordinates()]);
     for (let index = 0.1; index < 1; index += 0.1) {
-      (index => {
+      ((index) => {
         setTimeout(() => {
           if (!this.mouseIn) {
             this.vectorLayer.getSource().clear();
@@ -188,23 +188,23 @@ class LocalRealEstateImageSlider extends Component {
       speed: 500,
       slidesToShow: this.getNumSlidesToShow(),
       slidesToScroll: 3,
-      arrows: true
+      arrows: true,
     };
 
     return (
       <div>
         <Slider {...imageSliderSettings}>
-          {this.state.images.map(image => {
+          {this.state.images.map((image) => {
             return (
               <div key={helpers.getUID()} className="sc-theme-real-estate-photo-slider-item">
                 <label className="sc-theme-real-estate-photo-slider-label">{image.address}</label>
                 <img
-                  onMouseOver={evt => this.onImageMouseOver(evt, image.feature)}
-                  onMouseOut={evt => this.onImageMouseOut(evt, image.feature)}
-                  onClick={evt => this.props.onImageSliderClick(image.feature)}
+                  onMouseOver={(evt) => this.onImageMouseOver(evt, image.feature)}
+                  onMouseOut={(evt) => this.onImageMouseOut(evt, image.feature)}
+                  onClick={(evt) => this.props.onImageSliderClick(image.feature)}
                   className="sc-theme-real-estate-photo-slider-image"
                   src={image.url}
-                  onError={e => {
+                  onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = images["noPhoto.png"];
                   }}
