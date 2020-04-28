@@ -37,6 +37,14 @@ class URLWindow extends Component {
     this.sidebarEmitter = window.emitter.addListener("sidebarChanged", (isSidebarOpen) => this.sidebarChanged(isSidebarOpen));
   }
 
+  isDontShow = () => {
+    if (this.props.honorDontShow) {
+      const saved = this.getStorage();
+      if (saved.includes(this.props.url)) return true;
+      else return false;
+    }
+  };
+
   sidebarChanged = (isSidebarOpen) => {
     this.forceUpdate();
   };
@@ -71,6 +79,9 @@ class URLWindow extends Component {
   }
 
   render() {
+    // DONT RENDER IF WERE NOT SHOWING, OTHERWISE ALL DATA/IMAGES FROM URL LINK WILL DOWNLOAD
+    if (this.isDontShow()) return <div />;
+
     let className = "";
     if (this.state.hide) className = "sc-hidden";
     else if (this.props.mode === "full") className = "full";
