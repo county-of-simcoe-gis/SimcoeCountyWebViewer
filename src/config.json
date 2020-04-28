@@ -112,7 +112,8 @@
       "name": "Road Construction",
       "componentName": "RoadConstruction",
       "description": "View this year's road and bridge construction locations.",
-      "imageName": "roadsConstruction.png"
+      "imageName": "roadsConstruction.png",
+      "disable": true
     },
     {
       "id": 5,

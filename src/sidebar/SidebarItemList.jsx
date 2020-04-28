@@ -11,7 +11,7 @@ class SidebarItemList extends Component {
     this.buttonClick = this.buttonClick.bind(this);
 
     this.state = {
-      components: []
+      components: [],
     };
   }
 
@@ -29,22 +29,26 @@ class SidebarItemList extends Component {
       listItems = ComponentsConfig.sidebarThemeComponents;
     }
 
-    if (listItems === undefined) return <div></div>;
+    if (listItems === undefined) return <div />;
 
     return (
       <div className="simcoe-sidebarlist-container">
         {// CREATE ITEMS FROM CONFIG
-        listItems.map(listItem => (
-          <ToolItem
-            componentname={listItem.componentName}
-            onClick={() => this.props.onClick(listItem.name, this.props.listtype)}
-            key={helpers.getUID()}
-            id={listItem.id}
-            name={listItem.name}
-            imageName={listItem.imageName}
-            description={listItem.description}
-          />
-        ))}
+        listItems.map((listItem) => {
+          // SKIP IF ITS DISABLED
+          if (listItem.disable !== undefined && listItem.disable) return null;
+          return (
+            <ToolItem
+              componentname={listItem.componentName}
+              onClick={() => this.props.onClick(listItem.name, this.props.listtype)}
+              key={helpers.getUID()}
+              id={listItem.id}
+              name={listItem.name}
+              imageName={listItem.imageName}
+              description={listItem.description}
+            />
+          );
+        })}
       </div>
     );
   }
@@ -60,7 +64,7 @@ class ToolItem extends Component {
     return (
       <div className="simcoe-sidebarlist-item" onClick={this.props.onClick}>
         <div className="simcoe-sidebarlist-item-iconbackground">
-          <div className="simcoe-sidebarlist-item-icon"></div>
+          <div className="simcoe-sidebarlist-item-icon" />
           <img src={images[this.props.imageName]} alt="Tool Item" />
 
           {/* THIS WORKS IN DEV BUT PRODUCTION (NPM RUN BUILD) WEBPACK DOES NOT LIKE IT!!!!  
