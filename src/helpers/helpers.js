@@ -62,8 +62,7 @@ export function addAppStat(type, description) {
 // GLOW CONTAINER
 export function glowContainer(id, color = "blue") {
   const elem = document.getElementById(id);
-  if (elem === undefined) return;
-  if (elem.classList ===null) elem.classList =[];
+  if (elem === undefined || elem === null) return;
   const className = "sc-glow-container-" + color;
   elem.classList.add(className);
   setTimeout(function() {
@@ -398,12 +397,15 @@ export function getWFSLayerRecordCount(serverUrl, layerName, callback) {
 export function zoomToFeature(feature, animate = true) {
   if (animate) {
     if (feature.getGeometry().getType() === "Point") {
-      window.map.getView().fit(feature.getGeometry().getExtent(), { duration: 1000, minResolution: 1 });
+      window.map.getView().fit(feature.getGeometry(),window.map.getSize(), { duration: 1000, minResolution: 1});
+      window.map.getView().setZoom(window.map.getView().getZoom() - 1);
     } else {
-      window.map.getView().fit(feature.getGeometry().getExtent(), { duration: 1000 });
+      window.map.getView().fit(feature.getGeometry(),window.map.getSize(), { duration: 1000 });
+      window.map.getView().setZoom(window.map.getView().getZoom() - 1);
     }
   } else {
-    window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
+    window.map.getView().fit(feature.getGeometry(), window.map.getSize(), { duration: 1000 });
+    window.map.getView().setZoom(window.map.getView().getZoom() - 1);
   }
 }
 

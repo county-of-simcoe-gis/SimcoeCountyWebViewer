@@ -8,7 +8,7 @@ import Portal from "../../../helpers/Portal.jsx";
 import Layers from "./Layers.jsx";
 import "./GroupItem.css";
 class GroupItem extends Component {
-  _isMounted = false;
+ 
   constructor(props) {
     super(props);
 
@@ -19,6 +19,7 @@ class GroupItem extends Component {
       userPanelOpen: false,
       activeLayerCount: 0
     };
+    this._isMounted = false;
     window.emitter.addListener("activeTocLayerGroup", (groupName, callback) => {if (groupName === this.props.group.value) this.onActivateLayer(callback)});
     window.emitter.addListener("updateActiveTocLayers",(groupName) => {if (groupName === this.props.group.value || groupName === null) this.setActiveLayerCount()});
   }
@@ -155,7 +156,7 @@ class GroupItem extends Component {
               
             </div>
             <div className="sc-toc-group-toolbox" title="Group Options" onClick={evt => this.onGroupOptionsClick(evt, this.props.group.value)}>
-                <img src={images["more-options.png"]} />
+                <img src={images["group-more-options.png"]} />
               </div>
                 <div className={this.state.panelOpen ? "sc-toc-group-list-item-container" : "sc-hidden"} key={helpers.getUID()}>
                 

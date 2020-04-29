@@ -18,7 +18,7 @@ import Select from "react-select";
 // URLS
 const apiUrl = mainConfig.apiUrl;
 const googleDirectionsURL = (lat, long) => `https://www.google.com/maps?saddr=My+Location&daddr=${lat},${long}`;
-const searchURL = (apiUrl, searchText, type, muni, limit) => `${apiUrl}async/search/?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
+const searchURL = (apiUrl, searchText, type, limit) => `${apiUrl}async/search/?q=${searchText}&type=${type}&limit=${limit}`;
 const searchInfoURL = (apiUrl, locationID) => `${apiUrl}searchById/${locationID}`;
 const searchTypesURL = apiUrl => `${apiUrl}getSearchTypes`;
 
@@ -152,7 +152,7 @@ class Search extends Component {
     this.setState({ selectedType: selectedType }, async () => {
       let limit = defaultSearchLimit;
       if (this.state.showMore) limit = 50;
-      await helpers.getJSONWait(searchURL(apiUrl, this.state.value, this.state.selectedType.value, undefined, limit), responseJson => {
+      await helpers.getJSONWait(searchURL(apiUrl, this.state.value, this.state.selectedType.value, limit), responseJson => {
         if (responseJson !== undefined) this.setState({ searchResults: responseJson });
         else this.setState({ searchResults: [] });
       });
@@ -396,7 +396,7 @@ class Search extends Component {
       async () => {
         let limit = defaultSearchLimit;
         if (this.state.showMore) limit = 50;
-        await helpers.getJSONWait(searchURL(apiUrl, this.state.value, this.state.selectedType.value, undefined, limit), responseJson => {
+        await helpers.getJSONWait(searchURL(apiUrl, this.state.value, this.state.selectedType.value, limit), responseJson => {
           if (responseJson !== undefined) this.searchResultsHandler(responseJson, limit);
           else this.searchResultsHandler(responseJson, limit);
         });
@@ -538,7 +538,7 @@ class Search extends Component {
 
               let limit = defaultSearchLimit;
               if (this.state.showMore) limit = 50;
-              await helpers.getJSONWait(searchURL(apiUrl, value, this.state.selectedType.value, undefined, limit), responseJson => {
+              await helpers.getJSONWait(searchURL(apiUrl, value, this.state.selectedType.value, limit), responseJson => {
                 if (responseJson !== undefined) this.searchResultsHandler(responseJson, defaultSearchLimit);
               });
             } else {

@@ -21,13 +21,13 @@ import Portal from "../../../helpers/Portal.jsx";
 const SortableVirtualList = sortableContainer(VirtualLayers, { withRef: true });
 
 class Layers extends Component {
-  _isMounted = false;
+  
   constructor(props) {
     super(props);
 
     this.storageKey = "layers";
     this.lastPosition = null;
-    
+    this._isMounted = false;
     this.state = {
       layers: [],
       forceAllLegend: undefined
