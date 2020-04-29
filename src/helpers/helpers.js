@@ -104,8 +104,8 @@ export function getESRITileXYZLayer(url) {
       attributions: 'Tiles © <a href="https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer">ArcGIS</a>',
       url: url + "/tile/{z}/{y}/{x}",
       crossOrigin: "anonymous"
-    }) //,
-    //crossOrigin: "anonymous"
+    }) ,
+    crossOrigin: "anonymous"
   });
 }
 

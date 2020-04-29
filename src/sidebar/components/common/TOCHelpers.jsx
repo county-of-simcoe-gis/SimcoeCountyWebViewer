@@ -699,7 +699,9 @@ export function getStyles(groups) {
         } else {
           // GET DEFAULT STYLE
           styleURL = styleURLTemplate(layer.serverURL, subLayerInfo.layer.name, subLayerInfo.layer.styles.style[0].name);
+          
         }
+        
         layer.styleURL = styleURL;
       });
     });

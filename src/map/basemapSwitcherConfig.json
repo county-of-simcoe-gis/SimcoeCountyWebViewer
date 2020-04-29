@@ -20,8 +20,8 @@
       "index": 1,
       "layers": [
         {
-          "url": "https://intra.ws.giscache.lrc.gov.on.ca/arcgis/rest/services/LIO_Imagery/Ontario_Imagery_Service/MapServer",
-          "type": "ESRI_TILED"
+          "url":"https://intra.ws.lioservices.lrc.gov.on.ca/arcgis1071a/rest/services/LIO_Imagery/Ontario_Imagery_Web_Map_Service/MapServer",
+          "type": "ARC_REST"
         }
       ]
       
