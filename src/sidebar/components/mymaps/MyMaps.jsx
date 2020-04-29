@@ -557,7 +557,9 @@ class MyMaps extends Component {
 
     let center = null;
     if (evt === null) {
-      helpers.getGeometryCenter(feature.getGeometry(), featureCenter => {
+      let geom = feature.getGeometry();
+      if (geom === undefined) return;
+      helpers.getGeometryCenter(geom, featureCenter => {
         // SHOW POPUP
         window.popup.show(
           featureCenter.flatCoordinates ,

@@ -65,6 +65,7 @@ class Coordinates extends Component {
     });
     this.vectorLayer.setZIndex(500);
     window.map.addLayer(this.vectorLayer);
+    this.translate = new Translate({ source: this.vectorLayer });
   }
 
   componentDidMount() {
@@ -87,12 +88,11 @@ class Coordinates extends Component {
       register(proj4);
     }
     // MOVE
-    let translate = new Translate({ source: this.vectorSource });
-    translate.on("translateend", e => {
+    this.translate.on("translateend", e => {
       this.updateCoordinates(e.coordinate);
     });
     
-    window.map.addInteraction(translate);
+    window.map.addInteraction(this.translate);
     // INITIAL EXTENT
     this.updateExtent();
   }
@@ -277,7 +277,7 @@ class Coordinates extends Component {
     // UNREGISTER EVENTS
     unByKey(this.onPointerMoveEvent);
     unByKey(this.onMapClickEvent);
-
+    window.map.removeInteraction(this.translate);
     // REMOVE THE LAYER
     window.map.removeLayer(this.vectorLayer);
   }

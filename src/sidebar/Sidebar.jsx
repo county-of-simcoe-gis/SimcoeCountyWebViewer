@@ -224,6 +224,7 @@ class Sidebar extends Component {
 
   activateTab(tabName) {
     // SET SELECTED TAB
+    if (this.state.tabIndex===1 && tabName !== "tools") window.emitter.emit("closeToolsOrThemes", "tools");
     if (tabName === "layers") {
       this.onMyMapsEditing(false);
       this.setState({ tabIndex: 0 });
@@ -308,6 +309,7 @@ class Sidebar extends Component {
   };
 
   onTabSelect = tabIndex => {
+    if (this.state.tabIndex===1 && tabIndex !==1) window.emitter.emit("closeToolsOrThemes", "tools");
     this.setState({ tabIndex });
     if (tabIndex === 0) {
       this.onMyMapsEditing(false);

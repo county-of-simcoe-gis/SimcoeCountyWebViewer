@@ -56,6 +56,13 @@
       "componentName": "ExternalServices",
       "description": "This tool links a map location to many other External Map Services.",
       "imageName": "externalServices.png"
+    },
+    {
+      "id": 8,
+      "name": "LHRS",
+      "componentName": "LHRS",
+      "description": "Get LHRS values.",
+      "imageName": "lhrs.png"
     }
   ],
 

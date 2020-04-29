@@ -5,7 +5,7 @@ import Highlighter from "react-highlight-words";
 import { AutoSizer } from "react-virtualized";
 import "./LayerItem.css";
 class LayerItem extends Component {
-  _isMounted = false;
+  
   constructor(props) {
     super(props);
 
@@ -13,6 +13,7 @@ class LayerItem extends Component {
       layer:undefined
     };
     this.isVisibleAtScale = true;
+    this._isMounted = false;
   }
 
 
