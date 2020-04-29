@@ -53,7 +53,7 @@ class Layers extends Component {
     // LISTEN FOR TURN ON LAYERS
     window.emitter.addListener("turnOnLayers",group =>this.turnOnLayersListener(group) );
     // LISTEN FOR TOGGLE ALL LEGEND
-    window.emitter.addListener("toggleAllLegend",type => this.toggleAllLegend(type));
+    window.emitter.addListener("toggleAllLegend",type => this.toggleAllLegends(type));
     // LISTEN FOR SEARCH RESULT
     window.emitter.addListener("activeTocLayer", layerItem => this.activeTocLayerListener(layerItem));
     
@@ -249,6 +249,7 @@ class Layers extends Component {
     }
 
     if (layerInfo.legendImage === null) {
+      //const legendOptionsTemplate = (scale) => {"&SCALE=$(scale)&LEGEND_OPTIONS=forceLabels:on;hideEmptyRules:true;"};
       TOCHelpers.getBase64FromImageUrl(layerInfo.styleUrl, (height, imgData) => {
         const rowHeight = showLegend ? (height += 36) : 30;
         this.setState(

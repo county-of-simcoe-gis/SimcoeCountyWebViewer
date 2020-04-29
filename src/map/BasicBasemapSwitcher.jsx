@@ -51,6 +51,8 @@ class BasemapSwitcher extends Component {
           layer = helpers.getOSMTileXYZLayer("http://a.tile.openstreetmap.org");
         } else if (service.type === "ESRI_TILED") {
           layer = helpers.getArcGISTiledLayer(service.url);
+        } else if (service.type === "ARC_REST"){
+          layer = helpers.getESRITileXYZLayer(service.url);
         }
 
         // LAYER PROPS
