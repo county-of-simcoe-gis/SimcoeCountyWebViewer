@@ -63,13 +63,12 @@ class GroupItem extends Component {
           onMenuItemClick={action => this.onMenuItemClick(action, group)}
           styleMode={helpers.isMobile() ? "left" : "right"}
         >
-          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-disable-layers">
-            <FloatingMenuItem label="Disable Layers" />
-          </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-enable-layers">
-            <FloatingMenuItem label="Enable Layers" />
+            <FloatingMenuItem label="Turn On All Layers" />
           </MenuItem>
-          
+          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-disable-layers">
+            <FloatingMenuItem label="Turn Off All Layers" />
+          </MenuItem>
         </FloatingMenu>
       </Portal>
     );
