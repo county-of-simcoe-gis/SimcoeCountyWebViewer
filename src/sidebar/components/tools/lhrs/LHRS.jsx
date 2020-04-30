@@ -2,24 +2,19 @@ import React, { Component } from "react";
 import "./LHRS.css";
 import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
-import { LHRSPoint,LHRSInputRow  } from "./LHRSSubComponents.jsx";
+import { LHRSPoint,LHRSInputRow,LHRSRow  } from "./LHRSSubComponents.jsx";
 import { transform } from "ol/proj.js";
-import { Translate } from "ol/interaction.js";
-import proj4 from "proj4";
 import Select from "react-select";
 import Switch from "react-switch";
-import { register } from "ol/proj/proj4";
-import Projection from "ol/proj/Projection.js";
 import { Vector as VectorLayer } from "ol/layer";
-import { Fill, Icon,Style, Stroke, Circle as CircleStyle } from "ol/style.js";
+import { Icon,Style, Stroke} from "ol/style.js";
 import { Vector as VectorSource } from "ol/source.js";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import { unByKey } from "ol/Observable.js";
-import * as lhrsConfig from "./config.json"
 import mainConfig from "../../../../config.json";
 import { set } from "ol/transform";
-import { DEFAULT_SCROLLING_RESET_TIME_INTERVAL } from "react-virtualized/dist/es/Masonry";
+
 
 class LHRS extends Component {
  
@@ -72,6 +67,7 @@ class LHRS extends Component {
       b_offset: null,
       b_snapped_distance: null,
 
+      linearFeatureLength: null,
       allowMapActions: true
     };
     
@@ -105,24 +101,11 @@ class LHRS extends Component {
       }),
       style:new Style({
         stroke: new Stroke({
-          color: [0, 255, 255, 0.3],
+          color: [0, 255, 255, 0.8],
           width: 6
-        }),
-        fill: new Fill({
-          color: [0, 255, 255, 0.3]
-        }),
-        image: new CircleStyle({
-          radius: 10,
-          stroke: new Stroke({
-            color: [0, 255, 255, 0.3],
-            width: 6
-          }),
-          fill: new Fill({
-            color: [0, 255, 255, 0.3]
-          })
         })
       }),
-      zIndex: 100000
+      zIndex: 499
     });
    
     window.map.addLayer(this.vectorLayerA);
@@ -550,7 +533,16 @@ class LHRS extends Component {
           var result = retResult.result;
           if (result.geom !== undefined && result.geom !== null){
             var feature = helpers.getFeatureFromGeoJSON(result.geom);
+            let labelText = result.section_length + " km";
+            feature.setProperties({featureId:helpers.getUID(), label: labelText, labelVisible: true });
             this.vectorLayerLinear.getSource().addFeature(feature);
+            let style = this.vectorLayerLinear.getStyle();
+            const textStyle = helpers.createTextStyle(feature,"label", undefined,undefined,undefined,"16px");
+            
+            style.setText(textStyle);
+            this.vectorLayerLinear.setStyle(style);
+            
+            this.setState({linearFeatureLength:result.section_length})
           }
       }
     });
@@ -765,8 +757,19 @@ class LHRS extends Component {
                       readOnly={this.state.inputBReadOnly}
                       placeholer={this.state.inputBPlaceholer} />
               </div>
-            <div >
+              <div >
               <div className="sc-title sc-lhrs-title">Captured / Selected Coordinates</div>
+                <div className={((this.state.a_valid && this.state.b_valid && this.state.linearFeatureLength !==null) ? "" : " sc-hidden")}>
+                  <div className="sc-title sc-lhrs-title">Section</div>
+                  <LHRSRow label="Length (km)" 
+                  value={this.state.linearFeatureLength} 
+                  onChange={() => {}}
+                  inputId="sc-lhrs-section-length" 
+                  readOnly={true}
+                  placeholer="" />
+                </div>
+              
+             
               <div className="sc-title sc-lhrs-title">Point A</div>
               <LHRSPoint 
                   lat={this.state.a_lat}
