@@ -50,7 +50,7 @@ export const LHRSPoint = props => {
     </div>);
 };
 
-const LHRSRow = props => {
+export const LHRSRow = props => {
     return (
         <div className="sc-lhrs-row sc-arrow">
         <label>{props.label}:</label>
