@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import "./LHRS.css";
 import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
-import { LHRSPoint,LHRSInputRow,LHRSRow  } from "./LHRSSubComponents.jsx";
+import { LHRSPoint,LHRSInputRow,LHRSRow } from "./LHRSSubComponents.jsx";
 import { transform } from "ol/proj.js";
 import Select from "react-select";
 import Switch from "react-switch";
@@ -72,6 +72,7 @@ class LHRS extends Component {
     };
     
     this.vectorLayerA = new VectorLayer({
+      name: "sc-lhrs-marker-a",
       source: new VectorSource({
         features: []
       }),
@@ -84,6 +85,7 @@ class LHRS extends Component {
       zIndex: 500
     });
     this.vectorLayerB = new VectorLayer({
+      name: "sc-lhrs-marker-b",
       source: new VectorSource({
         features: []
       }),
@@ -96,6 +98,7 @@ class LHRS extends Component {
       zIndex: 500
     });
     this.vectorLayerLinear = new VectorLayer({
+      name: "sc-lhrs-section",
       source: new VectorSource({
         features: []
       }),
@@ -190,8 +193,14 @@ class LHRS extends Component {
     return pointObj;
   }
   _setPoint = (pointObj) => {  
-    if (pointObj.valid){
+    if (pointObj.valid || (pointObj.lat!==null && pointObj.long!==null)){
       this.updatePoint(pointObj.point,pointObj.lat,pointObj.long);
+    }else{
+      if (pointObj.point==="pointA"){
+        this.vectorLayerA.getSource().clear();
+      }else{
+        this.vectorLayerB.getSource().clear();
+      }
     }
     this.updateLHRSActions(pointObj);
     switch(pointObj.point){
@@ -291,8 +300,8 @@ class LHRS extends Component {
             this.calcByBasepoint(this.state.inputAValue,this.state.inputBValue,this.state.selectedPoint);
             break;
           case "enterDistanceFromA":
-              this.calcByHwy(this.state.a_hwy,parseFloat(this.state.a_m_distance) + parseFloat(this.state.inputAValue),"pointB");
-              break;
+            this.calcByHwy(this.state.a_hwy,parseFloat(this.state.a_m_distance) + parseFloat(this.state.inputAValue),"pointB");
+            break;
         }
       }else{
         this.glowContainers();
@@ -386,8 +395,10 @@ class LHRS extends Component {
           inputBHidden = false;
           break;
         case "enterDistanceFromA":
+          let defaultDistance = null;
+          if (this.state.b_m_distance !== null) defaultDistance = this.state.b_m_distance-this.state.a_m_distance;
           inputALabel = "Distance From A";
-          inputAValue = 0;
+          inputAValue = defaultDistance;
           inputAType = "m_distance";
           inputAReadOnly = false;
           inputAPlaceholer = "(Enter Distance from A)";
@@ -450,6 +461,7 @@ class LHRS extends Component {
         pointObj.offset=offset;
         pointObj.snapped_distance=null;
         pointObj.valid = false;
+        helpers.showMessage("Not Found", "No LHRS Data Found.", "green", 1500);
       }
       this._setPoint(pointObj);
     });
@@ -482,6 +494,7 @@ class LHRS extends Component {
         pointObj.offset=null;
         pointObj.snapped_distance=null;
         pointObj.valid = false;
+        helpers.showMessage("Not Found", "No LHRS Data Found.", "green", 1500);
       }
       this._setPoint(pointObj);
     });
@@ -515,6 +528,7 @@ class LHRS extends Component {
               pointObj.offset=null;
               pointObj.snapped_distance=null;
               pointObj.valid = false;
+              helpers.showMessage("Not Found", "No LHRS Data Found.", "green", 1500);
           }
           this._setPoint(pointObj);
         });
@@ -531,18 +545,20 @@ class LHRS extends Component {
     helpers.postJSON(mainConfig.apiUrl + "postGetLHRSLinearByMDistance/", data, retResult => {
       if (retResult.result !== undefined) {
           var result = retResult.result;
-          if (result.geom !== undefined && result.geom !== null){
+          if (result.geom !== undefined && result.geom !== null && result.section_length > 0){
             var feature = helpers.getFeatureFromGeoJSON(result.geom);
             let labelText = result.section_length + " km";
-            feature.setProperties({featureId:helpers.getUID(), label: labelText, labelVisible: true });
+            feature.setProperties({featureId:helpers.getUID(), label: labelText, clickable: true, labelVisible: true });
             this.vectorLayerLinear.getSource().addFeature(feature);
             let style = this.vectorLayerLinear.getStyle();
             const textStyle = helpers.createTextStyle(feature,"label", undefined,undefined,undefined,"16px");
-            
             style.setText(textStyle);
             this.vectorLayerLinear.setStyle(style);
             
-            this.setState({linearFeatureLength:result.section_length})
+            this.setState({linearFeatureLength:result.section_length},() => {
+              window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
+              window.map.getView().setZoom(window.map.getView().getZoom() - 1);
+            });
           }
       }
     });
@@ -570,14 +586,14 @@ class LHRS extends Component {
     //this.glowContainers();
   }
   onMapClick = evt => {
-    const webMercatorCoords = evt.coordinate;
-    this.updateCoordinates(webMercatorCoords);
-    this.createPoint(webMercatorCoords, false);
+      const webMercatorCoords = evt.coordinate;
+      this.updateCoordinates(webMercatorCoords);
+      this.createPoint(webMercatorCoords, false);
   }
 
   updatePoint = (pointName, lat, long) => {
     const webMercatorCoords =transform([long,lat],  "EPSG:4326","EPSG:3857");
-    this.createPoint(webMercatorCoords, false, pointName);
+    this.createPoint(webMercatorCoords, true, pointName);
   }
   createPoint = (webMercatorCoords, zoom = false, pointName = null) => {
     // CREATE POINT
@@ -585,6 +601,7 @@ class LHRS extends Component {
     const pointFeature = new Feature({
       geometry: new Point(webMercatorCoords)
     });
+    pointFeature.setProperties({featureId:helpers.getUID(),  clickable: true });
     if (pointName==="pointA"){
       this.vectorLayerA.getSource().clear();
       this.vectorLayerA.getSource().addFeature(pointFeature);
@@ -595,7 +612,7 @@ class LHRS extends Component {
     
 
     // ZOOM TO IT
-    if (zoom) window.map.getView().animate({ center: webMercatorCoords, zoom: 18 });
+    if (zoom) window.map.getView().animate({ center: webMercatorCoords},{duration:100});
   }
   glowContainers() {
     helpers.glowContainer("sc-lhrs-input-a", "green");
@@ -629,43 +646,6 @@ class LHRS extends Component {
     this.props.onClose();
   }
 
-  onPointUpdate = (proj, x, y)  => {
-    
-    x = parseFloat(x);
-    y = parseFloat(y);
-
-    if (isNaN(x) || isNaN(y)) return;
-
-    let webMercatorCoords = null;
-    if (proj === "webmercator") {
-      webMercatorCoords = [x, y];
-    } else if (proj === "latlong") {
-      webMercatorCoords = transform([x, y], "EPSG:4326", "EPSG:3857");
-    } else {
-      webMercatorCoords = transform([x, y], proj, "EPSG:3857");
-    } 
-
-    this.createPoint(webMercatorCoords, false);
-  }
-  
-  onZoomClick = (proj, x, y) => {
-    x = parseFloat(x);
-    y = parseFloat(y);
-
-    if (isNaN(x) || isNaN(y)) return;
-
-    let webMercatorCoords = null;
-    if (proj === "webmercator") {
-      webMercatorCoords = [x, y];
-    } else if (proj === "latlong") {
-      webMercatorCoords = transform([x, y], "EPSG:4326", "EPSG:3857");
-    } else {
-      webMercatorCoords = transform([x, y], proj, "EPSG:3857");
-    } 
-
-    this.createPoint(webMercatorCoords, true);
-  }
-
   onVersionChange = selection => {
     this.setState({ selectLHRSVersion: selection}, () => {
       if (this.state.a_valid){
@@ -689,7 +669,7 @@ class LHRS extends Component {
     const inputMsg = "(listening for input)";
    
     return (
-      <PanelComponent onClose={this.props.onClose} name={this.props.name} type="tools">
+      <PanelComponent onClose={this.props.onClose} name={this.props.name} allowClick={true} type="tools">
         <div className="sc-lhrs-container">
           <div className="sc-container">
         
@@ -810,3 +790,4 @@ function importAllImages(r) {
   r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
   return images;
 }
+
