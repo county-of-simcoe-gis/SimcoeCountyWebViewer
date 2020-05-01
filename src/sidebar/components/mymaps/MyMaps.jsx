@@ -180,10 +180,9 @@ class MyMaps extends Component {
     // ADD DRAWN FEATURE TO MAIN SOURCE
     this.currentDrawFeature = evt.feature;
     this.vectorSource.addFeature(evt.feature);
-
+    var tooltipCoord = evt.coordinate;
     if (this.state.drawType === "Bearing") {
       this.sketch = evt.feature;
-      var tooltipCoord = evt.coordinate;
       this.listener = this.sketch.getGeometry().on("change", evt => {
         var geom = evt.target;
         this.bearing = myMapsHelpers.getBearing(geom.getFirstCoordinate(), geom.getLastCoordinate());
@@ -194,7 +193,6 @@ class MyMaps extends Component {
       });
     }else if (this.state.drawType === "Measure"){
       this.sketch = evt.feature;
-      var tooltipCoord = evt.coordinate;
       this.listener = this.sketch.getGeometry().on("change", evt => {
         var geom = evt.target;
         this.length = this.formatLength(geom);
@@ -1019,7 +1017,7 @@ class MyMaps extends Component {
           </TransitionGroup>
         </MyMapsItems>
         <MyMapsAdvanced onEditFeatures={this.onEditFeatures} onMenuItemClick={this.onMenuItemClick} onDeleteAllClick={this.onDeleteAllClick} onMyMapsImport={this.onMyMapsImport} />
-        <div id={this.state.toolTipId} className={window.isDrawingOrEditing && this.state.drawType === "Bearing" || this.state.drawType === "Measure" ? this.state.toolTipClass : "sc-hidden"}></div>
+        <div id={this.state.toolTipId} className={window.isDrawingOrEditing && (this.state.drawType === "Bearing" || this.state.drawType === "Measure") ? this.state.toolTipClass : "sc-hidden"}></div>
       </div>
     );
   }
