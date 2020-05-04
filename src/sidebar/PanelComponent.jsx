@@ -54,8 +54,16 @@ class PanelComponent extends Component {
     if (label === undefined ) label = "added from " + this.props.name;
     // ADD MYMAPS
     window.emitter.emit("addMyMapsFeature", feature, label);
+    this.cleanup();
   };
 
+  cleanup() {
+
+    // HIDE POPUP
+    window.popup.hide();
+
+    this.setState({ selectedFeature: undefined });
+  }
   onSidebarVisibility = () => {
 
     // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
