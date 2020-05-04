@@ -598,8 +598,10 @@ class LHRS extends Component {
   }
 
   zoomToPoint = (lat, long) =>{
-    const webMercatorCoords =transform([long,lat],  "EPSG:4326","EPSG:3857");
-    window.map.getView().animate({ center: webMercatorCoords},{duration:100});
+    if (lat !== null && long !== null){
+      const webMercatorCoords = transform([long,lat],  "EPSG:4326","EPSG:3857");
+      window.map.getView().animate({ center: webMercatorCoords},{duration:100});
+    }
   }
 
   updatePoint = (pointName, lat, long) => {
