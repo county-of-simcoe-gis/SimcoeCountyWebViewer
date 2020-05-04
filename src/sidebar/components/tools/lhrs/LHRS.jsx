@@ -212,13 +212,16 @@ class LHRS extends Component {
                       a_basepoint: pointObj.basepoint, 
                       a_offset: pointObj.offset,
                       a_snapped_distance: pointObj.snapped_distance,
-                      a_valid: pointObj.valid
+                      a_valid: pointObj.valid,
+                      inputLatLongXCoordsA: pointObj.lat, 
+                      inputLatLongYCoordsA: pointObj.long
                     },()=>{
                      
                       if ((this.state.b_valid && this.state.a_valid) && (this.state.a_hwy === this.state.b_hwy)) {
                         this.calcLinearFeature(this.state.a_hwy, this.state.a_m_distance,this.state.b_m_distance);
                       }else{
                         this.vectorLayerLinear.getSource().clear();
+                        this.zoomToPoint(pointObj.lat, pointObj.long);
                       }
                     });
         break;
@@ -230,12 +233,15 @@ class LHRS extends Component {
                       b_basepoint: pointObj.basepoint, 
                       b_offset: pointObj.offset,
                       b_snapped_distance: pointObj.snapped_distance,
-                      b_valid: pointObj.valid
+                      b_valid: pointObj.valid,
+                      inputLatLongXCoordsB: pointObj.lat, 
+                      inputLatLongYCoordsB: pointObj.long
                     }, ()=>{
                         if ((this.state.b_valid && this.state.a_valid) && (this.state.a_hwy === this.state.b_hwy)) {
                           this.calcLinearFeature(this.state.a_hwy, this.state.a_m_distance,this.state.b_m_distance);
                         }else{
                           this.vectorLayerLinear.getSource().clear();
+                          this.zoomToPoint(pointObj.lat, pointObj.long);
                         }
                       });
         break;
@@ -342,7 +348,7 @@ class LHRS extends Component {
           inputAPlaceholer = "(listening for input)";
           inputAHidden = false;
           inputBLabel = "Long";
-          inputBValue = selectedPoint==="pointA"?this.state.inputLatLongYCoordsA:this.state.inputLatLongYCoordsB;
+          inputBValue = selectedPoint==="pointA"? this.state.inputLatLongYCoordsA : this.state.inputLatLongYCoordsB;
           inputBType = "long";
           inputBReadOnly = true;
           inputBPlaceholer = "(listening for input)";
@@ -591,9 +597,14 @@ class LHRS extends Component {
       this.createPoint(webMercatorCoords, false);
   }
 
+  zoomToPoint = (lat, long) =>{
+    const webMercatorCoords =transform([long,lat],  "EPSG:4326","EPSG:3857");
+    window.map.getView().animate({ center: webMercatorCoords},{duration:100});
+  }
+
   updatePoint = (pointName, lat, long) => {
     const webMercatorCoords =transform([long,lat],  "EPSG:4326","EPSG:3857");
-    this.createPoint(webMercatorCoords, true, pointName);
+    this.createPoint(webMercatorCoords, false, pointName);
   }
   createPoint = (webMercatorCoords, zoom = false, pointName = null) => {
     // CREATE POINT
