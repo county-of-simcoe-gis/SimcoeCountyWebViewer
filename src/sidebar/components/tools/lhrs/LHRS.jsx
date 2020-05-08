@@ -13,7 +13,6 @@ import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import { unByKey } from "ol/Observable.js";
 import mainConfig from "../../../../config.json";
-import { set } from "ol/transform";
 
 
 class LHRS extends Component {
@@ -189,6 +188,8 @@ class LHRS extends Component {
           valid:this.state.b_valid
         };
         break;
+      default:
+        break;
     }
     return pointObj;
   }
@@ -245,6 +246,8 @@ class LHRS extends Component {
                         }
                       });
         break;
+      default:
+        break;
     }
   }
   updateLHRSActions = (pointObj) => {
@@ -294,19 +297,41 @@ class LHRS extends Component {
         let action = this.state.selectLHRSAction.value;
         switch (action){
           case "selectPoint":
-            this.calcByLatLong(this.state.inputAValue,this.state.inputBValue, this.state.selectedPoint);
+            if (!isNaN(parseFloat(this.state.inputAValue)) && !isNaN(parseFloat(this.state.inputBValue))){
+              this.calcByLatLong(this.state.inputAValue,this.state.inputBValue, this.state.selectedPoint);
+            }else{
+              helpers.showMessage("Error", "Invalid Lat/Long.", "red", 2000);
+            }
             break;
           case "enterLatLong":
-            this.calcByLatLong(this.state.inputAValue,this.state.inputBValue,this.state.selectedPoint);
+            if (!isNaN(parseFloat(this.state.inputAValue)) && !isNaN(parseFloat(this.state.inputBValue))){
+              this.calcByLatLong(this.state.inputAValue,this.state.inputBValue,this.state.selectedPoint);
+            }else{
+              helpers.showMessage("Error", "Invalid Lat/Long.", "red", 2000);
+            }
             break;
           case "enterHwy":
-            this.calcByHwy(this.state.inputAValue,this.state.inputBValue,this.state.selectedPoint);
+            if (!isNaN(parseFloat(this.state.inputBValue))){
+              this.calcByHwy(this.state.inputAValue,this.state.inputBValue,this.state.selectedPoint);
+            }else{
+              helpers.showMessage("Error", "Invalid Distance.", "red", 2000);
+            }
             break;
           case "enterBasepoint":
-            this.calcByBasepoint(this.state.inputAValue,this.state.inputBValue,this.state.selectedPoint);
+            if (!isNaN(parseFloat(this.state.inputAValue)) && !isNaN(parseFloat(this.state.inputBValue))){
+              this.calcByBasepoint(this.state.inputAValue,this.state.inputBValue,this.state.selectedPoint);
+            }else{
+              helpers.showMessage("Error", "Invalid Basepoint/Offset.", "red", 2000);
+            }
             break;
           case "enterDistanceFromA":
-            this.calcByHwy(this.state.a_hwy,parseFloat(this.state.a_m_distance) + parseFloat(this.state.inputAValue),"pointB");
+            if (!isNaN(parseFloat(this.state.inputAValue))){
+              this.calcByHwy(this.state.a_hwy,parseFloat(this.state.a_m_distance) + parseFloat(this.state.inputAValue),"pointB");
+            }else{
+              helpers.showMessage("Error", "Invalid Distance.", "red", 2000);
+            }
+            break;
+          default:
             break;
         }
       }else{
@@ -417,6 +442,8 @@ class LHRS extends Component {
           inputBHidden = true;
           allowMapActions =false;
           selectedPoint = "pointB";
+          break;
+        default:
           break;
       }
       this.setState({
@@ -679,8 +706,6 @@ class LHRS extends Component {
   }
 
   render() {
-    const inputMsg = "(listening for input)";
-   
     return (
       <PanelComponent onClose={this.props.onClose} name={this.props.name} allowClick={true} type="tools">
         <div className="sc-lhrs-container">

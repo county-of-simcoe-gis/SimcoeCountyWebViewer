@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
-import { AutoSizer } from "react-virtualized";
 import * as helpers from "../../../helpers/helpers";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
@@ -25,13 +24,10 @@ class GroupItem extends Component {
   }
 
   setActiveLayerCount = () => {
-    let activeCount = this.props.group.layers.filter(layer => {
-                  if (layer.layer.getVisible()){
-                    return layer;
-                  } 
-                }).length;
-    this.setState({activeLayerCount: activeCount})
-  }
+    let activeCount = (this.props.group.layers.filter(layer => layer.layer.getVisible())).length;
+    this.setState({activeLayerCount: activeCount});
+    return;
+  };
   
   onActivateLayer = (callback) => {
     let panelOpen = this.state.panelOpen;
@@ -100,12 +96,8 @@ class GroupItem extends Component {
 
   containsLayers = () =>{
     return this.props.group.layers.filter(layer => {
-      if (this.props.searchText === "") return layer;
-  
-      if (layer.displayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1){
-        
-        return layer;
-      } 
+      if (this.props.searchText === "") return true;
+      return layer.displayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1; 
     });
     
   }
@@ -155,7 +147,7 @@ class GroupItem extends Component {
               
             </div>
             <div className="sc-toc-group-toolbox" title="Group Options" onClick={evt => this.onGroupOptionsClick(evt, this.props.group.value)}>
-                <img src={images["group-more-options.png"]} />
+                <img src={images["group-more-options.png"]} alt="More Group Options" />
               </div>
                 <div className={this.state.panelOpen ? "sc-toc-group-list-item-container" : "sc-hidden"} key={helpers.getUID()}>
                 

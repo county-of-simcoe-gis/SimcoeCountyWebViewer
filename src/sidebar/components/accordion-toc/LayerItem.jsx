@@ -1,8 +1,8 @@
 import React, { Component } from "react";
 import * as helpers from "../../../helpers/helpers";
-import * as TOCHelpers from "../common/TOCHelpers.jsx";
+//import * as TOCHelpers from "../common/TOCHelpers.jsx";
 import Highlighter from "react-highlight-words";
-import { AutoSizer } from "react-virtualized";
+
 import "./LayerItem.css";
 class LayerItem extends Component {
   
@@ -93,7 +93,7 @@ class LayerItem extends Component {
         
       </div>
       <div className="sc-toc-item-toolbox" title="Layer Options" onClick={evt => this.props.onLayerOptionsClick(evt,this.state.layer)}>
-        <img src={images["more-options.png"]} />
+        <img src={images["more-options.png"]} alt="More Options" />
       </div>
       <div className={this.state.layer.showLegend ? "sc-toc-layer-info-container" : "sc-hidden"}>
       <div className="sc-toc-item-layer-info-container-open-vertical-lines" />

@@ -223,10 +223,10 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
     const keywords = layer.KeywordList[0].Keyword;
     const styleUrl = layer.Style !== undefined ? layer.Style[0].LegendURL[0].OnlineResource[0].$["xlink:href"].replace("http", "https") : "";
     const serverUrl = group.wmsGroupUrl.split("/geoserver/")[0] + "/geoserver";
-    const wfsUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&cql_filter=`;
+    const wfsUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName.split(" ").join("%20")}&outputFormat=application/json&cql_filter=`;
     const wfsUrl = wfsUrlTemplate(serverUrl, layer.Name[0]);
 
-    const metadataUrlTemplate = (serverUrl, layerName) => `${serverUrl}/rest/layers/${layerName}.json`;
+    const metadataUrlTemplate = (serverUrl, layerName) => `${serverUrl}/rest/layers/${layerName.split(" ").join("%20")}.json`;
     const metadataUrl = metadataUrlTemplate(serverUrl, layer.Name[0]);
 
     // LIVE LAYER
@@ -406,11 +406,11 @@ export function getLayerListByGroupCustomRest(group, callback) {
         if (layerTitle === undefined) layerTitle = layerNameOnly;
         const keywords = layerInfo.layerDetails.featureType.keywords[0].string;
         const serverUrl = layerInfo.href.split("/rest/")[0];
-        const styleUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=${layerName}`;
+        const styleUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=${layerName.split(" ").join("%20")}`;
         const styleUrl = styleUrlTemplate(serverUrl, layerInfo.name);
-        const wfsUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&cql_filter=`;
+        const wfsUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName.split(" ").join("%20")}&outputFormat=application/json&cql_filter=`;
         const wfsUrl = wfsUrlTemplate(serverUrl, layerInfo.name);
-        const metadataUrlTemplate = (serverUrl, layerName) => `${serverUrl}/rest/layers/${layerName}.json`;
+        const metadataUrlTemplate = (serverUrl, layerName) => `${serverUrl}/rest/layers/${layerName.split(" ").join("%20")}.json`;
         const metadataUrl = metadataUrlTemplate(serverUrl, layerInfo.name);
 
         // LIVE LAYER
@@ -669,7 +669,7 @@ export function updateLayerIndex(layers, callback) {
 
 export function getLayerInfo(layerInfo, callback) {
   helpers.getJSON(layerInfo.metadataUrl.replace("http:", "https:"), result => {
-    const fullInfoUrl = result.layer.resource.href.replace("http:", "https:");
+    const fullInfoUrl = result.layer.resource.href.replace("http:", "https:").split("+").join("%20");
     helpers.getJSON(fullInfoUrl, result => {
       result.featureType.fullUrl = fullInfoUrl.replace("http:", "https:");
       callback(result);

@@ -7,10 +7,9 @@ import { GeoJSON } from "ol/format.js";
 import InfoRow from "../helpers/InfoRow.jsx";
 import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
-import { Circle as CircleStyle, Icon, Fill, Stroke, Style } from "ol/style.js";
+import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style.js";
 import { Image as ImageLayer } from "ol/layer.js";
-import Feature from "ol/Feature";
-import { AutoSizer } from "react-virtualized";
+
 import useIframeContentHeight from "react-use-iframe-content-height";
 
 class Identify extends Component {
@@ -239,7 +238,7 @@ function _getLayerObj(layerName, callback) {
 }
 
 const Layer = props => {
-  const [open, setOpen] = useState(true);
+  const [open] = useState(true);
 
   const { layer } = props;
 
@@ -283,7 +282,7 @@ const IFrame = props => {
 
   return (
       <div className="sc-identiy-feature-iframe">
-        <iframe key={helpers.getUID()} ref={iframeRef} height={iframeHeight} src={src}  />
+        <iframe key={helpers.getUID()} title={helpers.getUID()} ref={iframeRef} height={iframeHeight} src={src}  />
       </div>
     );
 }
@@ -322,12 +321,14 @@ const FeatureItem = props => {
   let isSameOrigin = true;
   if (html_url !== undefined) isSameOrigin = html_url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !== -1;
 
-  keys.map((keyName) => {
-    const val = featureProps[keyName];
-    if (identifyIdColumn !==undefined && identifyIdColumn !== "" ){
-      if (cql_filter === "" && (keyName.toLowerCase().indexOf(identifyIdColumn.toLowerCase()) !== -1 && val !== null) && mainConfig.htmlIdentify && isSameOrigin) cql_filter += keyName + "=" + val;
-    }
-  })
+  keys.filter(keyName => {
+      const val = featureProps[keyName];
+      if (identifyIdColumn !==undefined && identifyIdColumn !== "" ){
+        if (cql_filter === "" && (keyName.toLowerCase().indexOf(identifyIdColumn.toLowerCase()) !== -1 && val !== null) && mainConfig.htmlIdentify && isSameOrigin) return true;
+        else return false;
+      }
+      else return false;
+    }).map(keyName => cql_filter += keyName + "=" + featureProps[keyName]);
   return (
     <div>
       <div className="sc-identify-feature-header" onMouseEnter={() => props.onMouseEnter(feature)} onMouseLeave={props.onMouseLeave}>
@@ -344,18 +345,22 @@ const FeatureItem = props => {
         <IFrame key={helpers.getUID()} src={html_url} filter={cql_filter} />
         
         
-          {keys.map((keyName, i) => {
-            let val = featureProps[keyName];
-            if (val === null) val = "";
-            if (cql_filter==="" 
-                &&  typeof val !== "object" 
-                && !excludedKeys.includes(keyName.toLowerCase())
-                ) 
-                {
-                  return <InfoRow key={helpers.getUID()} label={helpers.toTitleCase(keyName.split("_").join(" "))} value={val}></InfoRow>;
-                }
-            // <div key={helpers.getUID()}>TEST</div>
-          })}
+          {keys.filter((keyName, i) => {
+              let val = featureProps[keyName];
+              if (val === null) val = "";
+              if (cql_filter==="" 
+                  &&  typeof val !== "object" 
+                  && !excludedKeys.includes(keyName.toLowerCase())
+                  ) 
+                  {
+                    return true;
+                  }
+              return false;
+            }).map((keyName, i) => {
+              let val = featureProps[keyName];
+              return <InfoRow key={helpers.getUID()} label={helpers.toTitleCase(keyName.split("_").join(" "))} value={val}></InfoRow>;
+            })
+          }
         </div>
   
       </div>

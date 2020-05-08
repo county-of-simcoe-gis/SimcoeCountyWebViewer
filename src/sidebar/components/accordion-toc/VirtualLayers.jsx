@@ -54,11 +54,11 @@ class VirtualLayers extends Component {
   };
 
   render() {
-    const { items, getRef,width, height } = this.props;
+    const { items, getRef } = this.props;
     let virtualId = this.props.virtual_key !== undefined? this.props.virtual_key : "sc-toc-virtual-layers";
     // MOBILE TWEEK
-    let mobileAdjustment = -1;
-    if (window.innerWidth <= 400) mobileAdjustment = 400 - window.innerWidth;
+    //let mobileAdjustment = -1;
+    //if (window.innerWidth <= 400) mobileAdjustment = 400 - window.innerWidth;
     return (
       <List
         id={virtualId}

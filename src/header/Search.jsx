@@ -64,21 +64,6 @@ const styles = {
   })
 };
 
-const defaultStyle = new Style({
-  stroke: new Stroke({
-    width: 4,
-    color: [255, 0, 0, 0.8]
-  }),
-  fill: new Fill({
-    color: [255, 0, 0, 0] // USE OPACITY
-  }),
-  image: new CircleStyle({
-    opacity: 0.5,
-    radius: 7,
-    fill: new Fill({ color: [236, 156, 155, 0.7] })
-  })
-});
-
 class Search extends Component {
   constructor(props) {
     super(props);
