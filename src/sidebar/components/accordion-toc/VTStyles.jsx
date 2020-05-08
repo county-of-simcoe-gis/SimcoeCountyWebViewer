@@ -1,7 +1,7 @@
 // THIS FILE CONTAINS STYLE FOR VECTOR TILES
 
 //import {Fill, Stroke, Style} from 'ol/style.js';
-import {Fill, Stroke, Style, Text as TextStyle} from 'ol/style.js';
+import {Stroke, Style} from 'ol/style.js';
 import * as helpers from "../../../helpers/helpers";
 
 const vtLayers = [

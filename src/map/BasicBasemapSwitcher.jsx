@@ -210,15 +210,6 @@ class BasemapSwitcher extends Component {
   }
 
   render() {
-    // STYLE USED BY SLIDER
-    const sliderWrapperStyle = {
-      width: 60,
-      marginLeft: 13,
-      height: 225,
-      marginTop: 8,
-      marginBottom: 15
-    };
-
     return (
       <div>
         <div id="sc-basemap-main-container">

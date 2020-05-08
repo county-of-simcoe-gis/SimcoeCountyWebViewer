@@ -1,6 +1,5 @@
 import React from "react";
 import * as helpers from "../../../../helpers/helpers";
-import { format } from "ol/coordinate";
 import Select from "react-select";
 
 const inputMsg = "(listening for input)";
@@ -103,7 +102,6 @@ export const CopyCoordinates = props => {
           <span>
               <input  
                 id={props.inputId}
-                value={props.value === null ? "" : props.value}
                 className="sc-coordinates-input"
                 type="text"
                 value={output}

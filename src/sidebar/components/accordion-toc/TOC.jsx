@@ -12,6 +12,7 @@ import * as helpers from "../../../helpers/helpers";
 import mainConfig from "../../../config.json";
 import * as TOCHelpers from "../common/TOCHelpers.jsx";
 import TOCConfig from "../common/TOCConfig.json";
+import AddLayer from "../common/AddLayer/AddLayer.jsx";
 import GroupItem from "./GroupItem.jsx";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
@@ -111,9 +112,7 @@ class TOC extends Component {
   onLayersLoad = () => {
     if (window.allLayers !== undefined){
         let layerCount = 0;
-        window.allLayers.map(group => {
-          layerCount += group.length;
-          });
+        window.allLayers.map(group => layerCount += group.length);
       if (this.state.layerCount !== layerCount) this.setState({ layerCount: layerCount });
     }
   };
@@ -213,6 +212,9 @@ class TOC extends Component {
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-clear-local">
             <FloatingMenuItem imageName={"eraser.png"} label="Clear My Saved Data" />
           </MenuItem>
+          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-add-data">
+            <FloatingMenuItem imageName={"download.png"} label="Import Data" />
+          </MenuItem>
         </FloatingMenu>
       </Portal>
     );
@@ -230,6 +232,9 @@ class TOC extends Component {
       helpers.showMessage("Local Data Cleared", "Your local data has been cleared");
     } else if (action === "sc-floating-menu-visility") {
        window.emitter.emit("turnOffLayers", null);
+    } else if (action === "sc-floating-menu-add-data") {
+      //window.emitter.emit("turnOffLayers", null);
+      helpers.showMessage("Add Data", "Coming soon. I'm working on it...");
     }
 
     helpers.addAppStat("TOC Tools", action);
@@ -275,28 +280,7 @@ class TOC extends Component {
     helpers.showMessage("Save", "Layer Visibility has been saved.");
   };
 
- 
-
-
   render() {
-    const groupsDropDownStyles = {
-      control: provided => ({
-        ...provided,
-        minHeight: "30px"
-      }),
-      indicatorsContainer: provided => ({
-        ...provided,
-        height: "30px"
-      }),
-      clearIndicator: provided => ({
-        ...provided,
-        padding: "5px"
-      }),
-      dropdownIndicator: provided => ({
-        ...provided,
-        padding: "5px"
-      })
-    };
     return (
       <div>
         <div className={this.state.isLoading ? "sc-toc-main-container-loading" : "sc-toc-main-container-loading sc-hidden"}>
@@ -333,7 +317,7 @@ class TOC extends Component {
               
           ))}
           </div>
-
+         
           <div className="sc-toc-footer-container">
             <label className={this.state.sortAlpha ? "sc-toc-sort-switch-label on" : "sc-toc-sort-switch-label"}>
               Sort A-Z

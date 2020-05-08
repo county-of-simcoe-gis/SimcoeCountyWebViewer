@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
-import GitHubButton from "react-github-btn";
+//import GitHubButton from "react-github-btn";
 import "ol/ol.css";
 import Map from "ol/Map";
 import View from "ol/View";
@@ -14,7 +14,7 @@ import Popup from "../helpers/Popup.jsx";
 import FooterTools from "./FooterTools.jsx";
 import { defaults as defaultControls, ScaleLine } from "ol/control.js";
 import BasemapSwitcher from "./BasicBasemapSwitcher";
-import PropertyReportClick from "./PropertyReportClick.jsx";
+//import PropertyReportClick from "./PropertyReportClick.jsx";
 import "ol-contextmenu/dist/ol-contextmenu.css";
 import { fromLonLat } from "ol/proj";
 import Feature from "ol/Feature";

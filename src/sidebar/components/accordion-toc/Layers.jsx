@@ -2,11 +2,9 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import Slider, { createSliderWithTooltip } from "rc-slider";
-import { sortableContainer, sortableElement } from "react-sortable-hoc";
-import { AutoSizer } from "react-virtualized";
+import { sortableContainer } from "react-sortable-hoc";
 import VirtualLayers from "./VirtualLayers.jsx";
 import arrayMove from "array-move";
-import GeoJSON from "ol/format/GeoJSON.js";
 
 // CUSTOM
 import "./Layers.css";
@@ -81,7 +79,7 @@ class Layers extends Component {
 
         var i = 0;
         var elemFound = false;
-        for (var i = 1; i <= 100; i++) {
+        for (i = 1; i <= 100; i++) {
           if (elemFound) return;
           // eslint-disable-next-line
           (index => {
@@ -401,12 +399,8 @@ class Layers extends Component {
     
     // FILTER LAYERS FROM SEARCH INPUT
     const layers = this.state.layers.filter(layer => {
-      if (this.props.searchText === "") return layer;
-
-      if (layer.displayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1){
-        
-        return layer;
-      } 
+      if (this.props.searchText === "") return true;
+      return layer.displayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1;
     });
 
     return (

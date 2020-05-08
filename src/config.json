@@ -18,7 +18,7 @@
   "imageViewerUrl": "https://intra.dev.regionalgis.mto.gov.on.ca/geomatics/image_viewer/?path=", 
   "centerCoords": [-9135500, 6020500],
   "defaultZoom": 7,
-  "maxZoom": 20,
+  "maxZoom": 23,
  
   "sidebarToolComponents": [
     {
