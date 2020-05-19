@@ -239,7 +239,7 @@ class Layers extends Component {
   // TOGGLE LEGEND
   legendVisiblity = (layerInfo, forceAll) => {
     this.lastPosition = document.getElementById(this.getVirtualId()).scrollTop;
-
+    if (layerInfo.styleUrl === "") return;
     let showLegend = !layerInfo.showLegend;
     if (forceAll !== undefined) {
       if (forceAll === "OPEN") showLegend = true;
@@ -248,6 +248,7 @@ class Layers extends Component {
 
     if (layerInfo.legendImage === null) {
       //const legendOptionsTemplate = (scale) => {"&SCALE=$(scale)&LEGEND_OPTIONS=forceLabels:on;hideEmptyRules:true;"};
+      
       TOCHelpers.getBase64FromImageUrl(layerInfo.styleUrl, (height, imgData) => {
         const rowHeight = showLegend ? (height += 36) : 30;
         this.setState(

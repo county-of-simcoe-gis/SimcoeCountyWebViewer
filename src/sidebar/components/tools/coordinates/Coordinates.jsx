@@ -4,7 +4,6 @@ import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
 import { CustomCoordinates, ProjectedCoordinates, CopyCoordinates } from "./CoordinatesSubComponents.jsx";
 import { transform } from "ol/proj.js";
-import { Translate } from "ol/interaction.js";
 import proj4 from "proj4";
 import Select from "react-select";
 import { register } from "ol/proj/proj4";
@@ -64,7 +63,6 @@ class Coordinates extends Component {
     });
     this.vectorLayer.setZIndex(500);
     window.map.addLayer(this.vectorLayer);
-    this.translate = new Translate({ source: this.vectorLayer });
   }
 
   componentDidMount() {
@@ -86,12 +84,7 @@ class Coordinates extends Component {
       proj4.defs(proj4defs);
       register(proj4);
     }
-    // MOVE
-    this.translate.on("translateend", e => {
-      this.updateCoordinates(e.coordinate);
-    });
     
-    window.map.addInteraction(this.translate);
     // INITIAL EXTENT
     this.updateExtent();
   }
@@ -276,7 +269,7 @@ class Coordinates extends Component {
     // UNREGISTER EVENTS
     unByKey(this.onPointerMoveEvent);
     unByKey(this.onMapClickEvent);
-    window.map.removeInteraction(this.translate);
+    
     // REMOVE THE LAYER
     window.map.removeLayer(this.vectorLayer);
   }
@@ -381,7 +374,7 @@ class Coordinates extends Component {
           <div className="sc-description">Live coordinates of your current pointer/mouse position.</div>
           <ProjectedCoordinates key={helpers.getUID()} coords={this.state.liveCoords} precision={this.currentPrecision}  />
           
-          <div className="sc-title sc-coordinates-title">Captured / Selected Coordinates</div>
+          <div className="sc-title sc-coordinates-title">CAPTURED / SELECTED</div>
           <div className="sc-container">
             <CustomCoordinates
               title={this.state.inputProjectionTitle}

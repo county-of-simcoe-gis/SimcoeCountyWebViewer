@@ -198,7 +198,7 @@ class SCMap extends Component {
   }
   changeCursor = (cursorStyle) =>
   {
-    let cursorStyles = ["standard", "identify"];
+    let cursorStyles = ["standard", "identify", "draw"];
     cursorStyles.splice( cursorStyles.indexOf(cursorStyle), 1 );
     let classes = this.state.mapClassName.split(" ");
     if (classes.indexOf(cursorStyle) === -1){

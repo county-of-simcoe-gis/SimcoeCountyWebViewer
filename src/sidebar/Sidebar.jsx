@@ -32,7 +32,7 @@ class Sidebar extends Component {
       // CLASSES
       tabClassName: "sidebar-advanced-tab",
       sidebarOpen: false,
-      defaultSidebarOpen: true,
+      defaultSidebarOpen: false,
       // SELECTED TAB
       tabIndex: 0,
 

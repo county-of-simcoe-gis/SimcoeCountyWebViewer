@@ -9,12 +9,12 @@
   "htmlIdentify":true,
   "leftClickIdentify":true,
   "excludeIdentifyTitleName":true,
-  "appStatsUrl": "https://intra.dev.regionalgis.mto.gov.on.ca:5443/WebApi/appStats/",
-  "apiUrl": "https://intra.dev.regionalgis.mto.gov.on.ca:5443/WebApi/",
+  "appStatsUrl": "http://localhost:8085/appStats/",
+  "apiUrl": "http://localhost:8085/",
   "termsUrl": "https://intra.dev.regionalgis.mto.gov.on.ca/geomatics/splash/3/view",
   "helpUrl": "https://intra.dev.regionalgis.mto.gov.on.ca/geomatics/kb/?active=1&recent=0&me=0&area=14&type=0",
   "ieWarningUrl": "https://intra.dev.regionalgis.mto.gov.on.ca/geomatics/splash/2/view",
-  "propertyReportUrl": "https://intra.dev.regionalgis.mto.gov.on.ca:5443/WebApi/propertyreport",
+  "propertyReportUrl": "http://localhost:8085/propertyreport",
   "imageViewerUrl": "https://intra.dev.regionalgis.mto.gov.on.ca/geomatics/image_viewer/?path=", 
   "centerCoords": [-9135500, 6020500],
   "defaultZoom": 7,
@@ -35,13 +35,7 @@
       "description": "Get coordinates throughout the map in a variety of different coordinate systems.",
       "imageName": "coordinates.png"
     },
-    {
-      "id": 3,
-      "name": "Print",
-      "componentName": "Print",
-      "description": "This tool allows users to print their map view in a variety of formats such as pdf and jpeg.",
-      "imageName": "print.png"
-    },
+    
     {
       "id": 5,
       "name": "Search History",
@@ -52,7 +46,7 @@
     
     {
       "id": 7,
-      "name": "External Services (Street View)",
+      "name": "External Services",
       "componentName": "ExternalServices",
       "description": "This tool links a map location to many other External Map Services.",
       "imageName": "externalServices.png"

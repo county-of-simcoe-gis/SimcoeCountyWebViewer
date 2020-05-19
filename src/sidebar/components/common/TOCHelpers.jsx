@@ -660,8 +660,7 @@ export function updateLayerIndex(layers, callback) {
     newLayer.layer.setZIndex(layerIndex);
     newLayer.drawIndex = layerIndex;
     newLayers.push(newLayer);
-
-    if (index === layers.length - 1) callback(newLayers);
+    if (index === layers.length - 1) callback(newLayers.concat([]));
 
     layerIndex--;
   }

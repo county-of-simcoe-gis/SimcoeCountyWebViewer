@@ -18,6 +18,7 @@ import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.js
 import { Item as MenuItem } from "rc-menu";
 import Portal from "../../../helpers/Portal.jsx";
 import Identify from "../../../map/Identify";
+import MenuButton from "../../MenuButton.jsx"
 import Point from "ol/geom/Point";
 import { Vector as VectorLayer } from "ol/layer";
 import { Vector as VectorSource } from "ol/source.js";
@@ -32,7 +33,6 @@ class TOC extends Component {
     this.state = {
       layerGroups: [],
       selectedGroup: {},
-    
       saveLayerOptions:[],
       onMenuItemClick:[],
       isLoading: false,
@@ -50,8 +50,34 @@ class TOC extends Component {
 
     // CLEAR IDENTIFY MARKER AND RESULTS
     window.emitter.addListener("clearIdentify", () => this.clearIdentify());
+
+    //LISTEN FOR NEW LAYER
+    window.emitter.addListener("addCustomLayer", (layer) => this.addCustomLayer(layer));
   }
 
+  addCustomLayer = (layer) => {
+    let layerIndex = 100;
+    let layerGroups = this.state.layerGroups;
+    layerIndex += (layerGroups[0].layers.length+1);
+    if (layerGroups[0].prefix !==undefined &&  layerGroups[0].prefix !=="")layer.displayName = layerGroups[0].prefix + " - " + layer.displayName;
+    layer.index = layerIndex;
+    layer.drawIndex = layerIndex;
+    layer.group = layerGroups[0].value;
+    layer.groupName = layerGroups[0].label;
+    layer.layer.setZIndex(layerIndex);
+    
+    layerGroups[0].layers.unshift(layer);
+    layerGroups[0].layers = layerGroups[0].layers.concat([]);
+    this.setState({layerGroups:layerGroups.concat([])}, () => {
+        window.map.addLayer(layer.layer);
+        let allLayers = [];
+        this.state.layerGroups.forEach(group =>{
+          allLayers.push(group.layers);
+        });
+        window.allLayers = allLayers;
+        this.forceUpdate();
+    });
+  }
   clearIdentify = () => {
     // CLEAR PREVIOUS IDENTIFY RESULTS
     this.identifyIconLayer.getSource().clear();
@@ -212,9 +238,7 @@ class TOC extends Component {
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-clear-local">
             <FloatingMenuItem imageName={"eraser.png"} label="Clear My Saved Data" />
           </MenuItem>
-          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-add-data">
-            <FloatingMenuItem imageName={"download.png"} label="Import Data" />
-          </MenuItem>
+         
         </FloatingMenu>
       </Portal>
     );
@@ -295,8 +319,8 @@ class TOC extends Component {
               onChange={this.onSearchLayersChange}
               onFocus={evt => {helpers.disableKeyboardEvents(true);}}
               onBlur={evt => {helpers.disableKeyboardEvents(false);}}
-               />
-            <div data-tip="Save Layer Visibility" data-for="sc-toc-save-tooltip" className="sc-toc-search-save-image" onClick={this.onSaveClick}>
+               />&nbsp;
+            <div data-tip="Save Layer Visibility" data-for="sc-toc-save-tooltip" className="sc-hidden sc-toc-search-save-image" onClick={this.onSaveClick}>
               <ReactTooltip id="sc-toc-save-tooltip" className="sc-toc-save-tooltip" multiline={false} place="right" type="dark" effect="solid" />
             </div>
           </div>
@@ -319,18 +343,20 @@ class TOC extends Component {
           </div>
          
           <div className="sc-toc-footer-container">
-            <label className={this.state.sortAlpha ? "sc-toc-sort-switch-label on" : "sc-toc-sort-switch-label"}>
+          
+            <label className={"sc-hidden sc-toc-sort-switch-label" + (this.state.sortAlpha ? " on" : "")}>
               Sort A-Z
               <Switch className="sc-toc-sort-switch" onChange={this.onSortSwitchChange} checked={this.state.sortAlpha} height={20} width={48} />
             </label>
+            <button className="sc-button sc-toc-footer-button save" onClick={this.onSaveClick} title="Save layer visibility">&nbsp;</button>
+            
             &nbsp;
-            <button className="sc-button sc-toc-footer-button" onClick={this.reset}>
-              Reset
-            </button>
+            <button className="sc-button sc-toc-footer-button reset" onClick={this.reset} title="Reset to default">&nbsp;</button>
             &nbsp;
-            <button className="sc-button sc-toc-footer-button tools" onClick={this.onToolsClick}>
-              Additional Tools
-            </button>
+            <button className="sc-button sc-toc-footer-button tools" onClick={this.onToolsClick} title="Additional Tools">&nbsp;</button>
+            &nbsp;
+            <AddLayer className="sc-hidden sc-button sc-toc-footer-button" />
+            <div className="sc-button sc-toc-footer-button more"><MenuButton showLabel={false} /></div>
           </div>
         </div>
       </div>
