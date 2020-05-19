@@ -91,7 +91,7 @@ class BasemapSwitcher extends Component {
 
     // LOAD WORLD LAYER
     if (BasemapConfig.worldImageryService !== undefined) {
-      var worldImageryLayer = helpers.getESRITileXYZLayer(BasemapConfig.worldImageryService);
+      var worldImageryLayer = helpers.(BasemapConfig.worldImageryService);
       worldImageryLayer.setZIndex(0);
       //worldImageryLayer.setMinResolution(300);
       window.map.addLayer(worldImageryLayer);

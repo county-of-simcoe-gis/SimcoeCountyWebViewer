@@ -26,7 +26,6 @@ class GroupItem extends Component {
   setActiveLayerCount = () => {
     let activeCount = (this.props.group.layers.filter(layer => layer.layer.getVisible())).length;
     this.setState({activeLayerCount: activeCount});
-    return;
   };
   
   onActivateLayer = (callback) => {

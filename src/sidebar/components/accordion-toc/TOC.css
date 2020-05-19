@@ -80,7 +80,7 @@
   background-repeat: no-repeat;
   background-position: left;
   height: 28px;
-  width: 93%;
+  width: 92%;
   padding-left: 20px;
   font-size: 15px;
 }
@@ -131,6 +131,7 @@
 }
 
 .sc-toc-footer-button {
+  max-width: 29%;
   width: 29%;
   cursor: pointer;
   display: inline-table;
@@ -140,11 +141,65 @@
   background-image: url(./images/toolbox.png);
   background-repeat: no-repeat;
   background-position: center;
-  background-position-x: 6px;
-  width: 122px;
+  background-position-x: 10px;
+  width: 38px;
   text-align: right;
 }
 
+.sc-toc-footer-button.save {
+  background-color: #e5e5e5;
+  background-image: url(./images/save-disk.png);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-position-x: 8px;
+  width: 38px;
+  text-align: right;
+}
+
+.sc-toc-footer-button.reset {
+  background-color: #e5e5e5;
+  background-image: url(./images/reset.png);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-position-x: 6px;
+  width: 38px;
+  text-align: right;
+}
+
+.sc-toc-footer-button.more {
+  background-color: #e5e5e5;
+  padding:0px;
+  height: 32px;
+  width:36px;
+  position: absolute; 
+  bottom: 0;
+}
+
+.sc-toc-footer-button.more .sc-menu-button-main-container{
+  position: inherit!important;
+  bottom:inherit!important;
+  right:inherit!important;
+  background-color:inherit!important;
+}
+.sc-toc-footer-button.more .sc-menu-button-container{
+  margin-left: inherit!important;
+  background-color: #e5e5e5;
+  background-image: url(../../images/more.png);
+  background-repeat: no-repeat;
+  background-position: center;
+  height: 32px;
+  width:36px;
+}
+
+.sc-toc-footer-button.more .sc-menu-more-button{
+  display: none!important;
+}
+.sc-toc-footer-button.more .sc-menu-button-list-container.sideBarOpen{
+  bottom:35px;
+}
+.sc-toc-footer-button.more .sc-menu-button-list-container.sideBarOpen{
+  left:inherit!important;
+}
 .sc-toc-sort-switch-label {
   display: inline-table;
   width: 34%;
@@ -298,10 +353,17 @@
   .sc-toc-sort-switch-label {
     width: 42%;
   }
-  .sc-toc-footer-button.tools {
-    background-color: #e5e5e5;
-    background-image: none;
-    width: 100px;
-    text-align: center;
+
+}
+
+@media only screen and (max-width: 770px) {
+  .sc-menu-button-container {
+    display: inherit!important;
+    
+  }
+
+  #sc-menu-button-list-container {
+    bottom: 35px!important;
+    left:-55px!important;
   }
 }

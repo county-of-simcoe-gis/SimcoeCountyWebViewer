@@ -148,6 +148,7 @@ class MyMaps extends Component {
   // BUTTON BAR CLICK
   onButtonBarClick = type => {
     if (this.draw !== null) {
+      window.emitter.emit("changeCursor","standard");
       window.map.removeInteraction(this.draw);
 
       if (this.currentDrawFeature !== null) {
@@ -207,6 +208,7 @@ class MyMaps extends Component {
 
   // DRAW END
   onDrawEnd = evt => {
+    
     console.log("ending");
     this.setState({ tooltipClass: "sc-hidden" });
     if (this.state.drawType === "Bearing" || this.state.drawType === "Measure") {
@@ -214,6 +216,7 @@ class MyMaps extends Component {
     }
 
     // CANCEL DRAW
+    window.emitter.emit("changeCursor","standard");
     window.map.removeInteraction(this.draw);
 
     // BUG https://github.com/openlayers/openlayers/issues/3610
@@ -802,7 +805,11 @@ class MyMaps extends Component {
 
   setDrawControl = () => {
     // REMOVE THE LAST DRAW
-    if (this.draw !== null) window.map.removeInteraction(this.draw);
+
+    if (this.draw !== null){
+      window.emitter.emit("changeCursor","standard");
+      window.map.removeInteraction(this.draw);
+    } 
 
     // DO NOTHING IF ITS CANCEL
     if (this.state.drawType === "Cancel") {
@@ -842,6 +849,7 @@ class MyMaps extends Component {
     });
 
     //ADD DRAW INTERACTION TO MAP
+    window.emitter.emit("changeCursor","draw");
     window.map.addInteraction(this.draw);
   };
 
@@ -936,6 +944,7 @@ class MyMaps extends Component {
 
   initializeEditor = () => {
     if (this.modify === null) {
+      window.emitter.emit("changeCursor","draw");
       // VERTEX
       this.modify = new Modify({ source: this.vectorSource });
       this.modify.on("modifyend", e => {
@@ -948,6 +957,7 @@ class MyMaps extends Component {
       this.translate.on("translateend", e => {
         this.updateFeatureGeometries(e.features.getArray());
       });
+ 
       window.map.addInteraction(this.translate);
     }
   };

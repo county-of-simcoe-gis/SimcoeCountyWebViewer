@@ -93,7 +93,7 @@ const SearchItem = props => {
         <img src={images["map-marker-light-blue.png"]} alt="Map Marker"></img>
       </div>
       <div className="sc-tool-search-history-details-name">{props.item.name}</div>
-      <div className="sc-tool-search-history-details-muni">{"- " + props.item.municipality + " (" + props.item.type + ")"}</div>
+      <div className="sc-tool-search-history-details-muni">{"- (" + props.item.type + ")"}</div>
       <div className="sc-tool-search-history-details-date">{"Added: " + props.item.dateAdded}</div>
       {/* <div className="sc-tool-search-history-divider"></div> */}
       <div className="sc-tool-search-history-background"></div>

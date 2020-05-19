@@ -142,7 +142,7 @@ export function getDefaultDrawStyle(drawColor, isText = false, strokeWidth = 3, 
       width: strokeWidth
     }),
     image: new CircleStyle({
-      radius: 5,
+      radius: 1,
       stroke: new Stroke({
         color: isText ? color : [0, 0, 0, initialOpacity],
         width: strokeWidth
@@ -325,7 +325,7 @@ export function setFeatureLabel(itemInfo) {
       undefined,
       undefined,
       "#ffffff",
-      0.1
+      0.4
     );
 
     style.setText(textStyle);

@@ -19,7 +19,7 @@ import Select from "react-select";
 const apiUrl = mainConfig.apiUrl;
 const googleDirectionsURL = (lat, long) => `https://www.google.com/maps?saddr=My+Location&daddr=${lat},${long}`;
 const searchURL = (apiUrl, searchText, type, limit) => `${apiUrl}async/search/?q=${searchText}&type=${type}&limit=${limit}`;
-const searchInfoURL = (apiUrl, locationID) => `${apiUrl}searchById/${locationID}`;
+const searchInfoURL = (apiUrl, id) => `${apiUrl}searchById/${id}`;
 const searchTypesURL = apiUrl => `${apiUrl}getSearchTypes`;
 
 console.log(searchTypesURL(apiUrl));
@@ -217,7 +217,7 @@ class Search extends Component {
               feature={feature}
               removeMarkersClick={this.removeMarkersClick}
               myMapsClick={this.myMapsClick}
-              shareLocationId={this.state.searchResults[0].location_id}
+              shareLocationId={this.state.searchResults[0].id}
               directionsClick={evt => this.directionsClick(evt)}
             />,
             "Actions"
@@ -330,7 +330,7 @@ class Search extends Component {
 
     // SET STATE CURRENT ITEM
     this.setState({ value, searchResults: [item] });
-    if (item.place_id !== undefined || item.location_id == null) {
+    if (item.place_id !== undefined || item.id === null) {
       this.initsearchLayers();
 
       // SET STATE CURRENT ITEM
@@ -358,7 +358,7 @@ class Search extends Component {
       window.map.getView().setZoom(18);
     } else {
       // CALL API TO GET LOCATION DETAILS
-      helpers.getJSON(searchInfoURL(apiUrl, item.location_id), result => this.jsonCallback(result));
+      helpers.getJSON(searchInfoURL(apiUrl, item.id), result => this.jsonCallback(result));
     }
   }
 
@@ -516,10 +516,9 @@ class Search extends Component {
             this.onItemSelect(value, item);
           }}
           onChange={async (event, value) => {
-            this.setState({ value });
+
             if (value !== "") {
-              this.setState({ iconInitialClass: "sc-search-icon-initial-hidden" });
-              this.setState({ iconActiveClass: "sc-search-icon-active" });
+              this.setState({value, iconInitialClass: "sc-search-icon-initial-hidden",iconActiveClass: "sc-search-icon-active" });
 
               let limit = defaultSearchLimit;
               if (this.state.showMore) limit = 50;
@@ -527,10 +526,7 @@ class Search extends Component {
                 if (responseJson !== undefined) this.searchResultsHandler(responseJson, defaultSearchLimit);
               });
             } else {
-              this.setState({ iconInitialClass: "sc-search-icon-initial" });
-              this.setState({ iconActiveClass: "sc-search-icon-active-hidden" });
-
-              this.setState({ searchResults: [] });
+              this.setState({value, iconInitialClass: "sc-search-icon-initial",iconActiveClass: "sc-search-icon-active-hidden",searchResults: [] });
             }
           }}
           renderMenu={children => (
@@ -540,18 +536,20 @@ class Search extends Component {
             </div>
           )}
           renderItem={(item, isHighlighted) => {
-            let type = "Unknown";
-            if (item.type === "Map Layer") type = item.layerGroupName;
-            else if (item.type === "Tool" ) type = "";
-            else type = item.municipality;
+            let itemName = item.name !== undefined? item.name:"";
+            let descriptionText = (item.description !== undefined && item.description !== null && item.description !== "" )?item.description:"";
+            let typeText = "Unknown";
+            if (item.type === "Map Layer") typeText =item.type  + ' - ' + item.layerGroupName + (item.isVisible ? " - Currently Visible" : "");
+            else if (item.type === "Tool" ) typeText = item.type;
+            else typeText = " (" + item.type + ")";
             return (
               <div className={isHighlighted ? "sc-search-item-highlighted" : "sc-search-item"} key={helpers.getUID()}>
                 <div className="sc-search-item-left">
                   <img src={item.imageName === undefined ? images["map-marker-light-blue.png"] : images[item.imageName]} alt="blue pin" />
                 </div>
                 <div className="sc-search-item-content">
-                  <Highlighter highlightClassName="sc-search-highlight-words" searchWords={[this.state.value]} textToHighlight={item.name} />
-                  <div className="sc-search-item-sub-content">{type === "" ? item.type : " - " + type + " (" + item.type + (item.type === "Map Layer" && item.isVisible ? " - Currently Visible" : "") + ")"}</div>
+                  <Highlighter highlightClassName="sc-search-highlight-words" searchWords={[this.state.value]} textToHighlight={itemName} />
+                  <div className="sc-search-item-sub-content">{descriptionText  + typeText }</div>
                 </div>
               </div>
             );
