@@ -186,6 +186,10 @@ class BasemapSwitcher extends Component {
   }
 
   onToggleBasemap = (index) =>{
+    if (index === this.state.topoActiveIndex){
+      this.setState({ topoPanelOpen: false});
+      return;
+    } 
     let toggleIndex = this.state.topoActiveIndex;
     if (toggleIndex === undefined) toggleIndex = 0;
     BasemapConfig.topoServices.forEach(service => {
@@ -209,7 +213,7 @@ class BasemapSwitcher extends Component {
         </div>
         <div className={this.state.topoPanelOpen ? "sc-basemap-topo-container" : "sc-hidden"}>
           {BasemapConfig.topoServices.map((service, index) => (
-            (index !== this.state.topoActiveIndex && index !== this.state.toggleIndex ) ? <BasemapItem key={helpers.getUID()} index={index} showLabel={true} topoActiveIndex={this.state.topoActiveIndex} service={service} onTopoItemClick={this.onToggleBasemap} /> : ""
+             <BasemapItem key={helpers.getUID()} index={index} showLabel={true} topoActiveIndex={this.state.topoActiveIndex} service={service} onTopoItemClick={this.onToggleBasemap} className={index === this.state.topoActiveIndex ? "active":""} /> 
               
             ))}
         </div>
@@ -234,7 +238,7 @@ class BasemapItem extends Component {
         title={"Switch basemap to " + this.props.service.name}
       >
         {this.props.showLabel===true?this.props.service.name:""}
-        <img className="sc-basemap-topo-image" src={images[this.props.service.image]} alt={this.props.service.image}></img>
+        <img className={"sc-basemap-topo-image" } src={images[this.props.service.image]} alt={this.props.service.image}></img>
       </div>
     );
   }
