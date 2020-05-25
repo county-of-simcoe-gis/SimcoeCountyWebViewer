@@ -451,13 +451,25 @@ export function getMapScale() {
   return Math.round(pointResolution * DOTS_PER_INCH * INCHES_PER_METER);
 }
 
+
+
+// SET CURRENT MAP SCALE
+export function setMapScale(scale) {
+  const DOTS_PER_INCH = 96;
+  const INCHES_PER_METER = 39.37;
+  const pointResolution = parseFloat(scale)/(DOTS_PER_INCH * INCHES_PER_METER);
+  var projection = window.map.getView().getProjection();
+  var resolution =pointResolution/projection.getMetersPerUnit();
+  window.map.getView().setResolution(resolution);
+}
+
 // SHOW MESSAGE
-export function showMessage(title = "Info", messageText = "Message", color = "green", timeout = 2000) {
+export function showMessage(title = "Info", messageText = "Message", color = "green", timeout = 2000, hideButton = false) {
   const domId = "sc-show-message-content";
   var existingMsg = document.getElementById(domId);
   if (existingMsg !== undefined && existingMsg !== null) existingMsg.remove();
 
-  const message = ReactDOM.render(<ShowMessage id={domId} key={domId} title={title} message={messageText} color={color} />, document.getElementById("sc-sidebar-message-container"));
+  const message = ReactDOM.render(<ShowMessage id={domId} key={domId} title={title} message={messageText} color={color} hideButton={hideButton} />, document.getElementById("sc-sidebar-message-container"));
 
   setTimeout(() => {
     try {

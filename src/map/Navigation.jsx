@@ -9,13 +9,20 @@ class Navigation extends Component {
     super(props);
 
     this.state = {
-      containerClassName: "nav-container"
+      containerClassName: "nav-container",
+      showCurrentLocation:true,
+      showZoomExtent:true
     };
 
     // LISTEN FOR SIDEPANEL CHANGES
     window.emitter.addListener("sidebarChanged", isSidebarOpen => this.sidebarChanged(isSidebarOpen));
   }
 
+  componentDidMount(){
+    this.setState({showCurrentLocation:window.mapControls.currentLocation, showZoomExtent:window.mapControls.zoomExtent  });
+
+  }
+  /*
   // ZOOM IN BUTTON
   zoomIn() {
     window.map.getView().setZoom(window.map.getView().getZoom() + 1);
@@ -25,7 +32,7 @@ class Navigation extends Component {
   zoomOut() {
     window.map.getView().setZoom(window.map.getView().getZoom() - 1);
   }
-
+  */
   // ZOOM TO FULL EXTENT
   zoomFullExtent() {
     let centerCoords = mainConfig.centerCoords;
@@ -69,16 +76,16 @@ class Navigation extends Component {
   render() {
     return (
       <div className={this.state.containerClassName}>
-        <div className="zoomButton" onClick={this.zoomIn}>
+        {/*<div className="zoomButton" onClick={this.zoomIn}>
           +
         </div>
         <div className="zoomButton" onClick={this.zoomOut}>
           -
-        </div>
-        <div className="fullExtentButton" onClick={this.zoomFullExtent}>
+    </div>*/}
+        <div className={"fullExtentButton" + (!this.state.showZoomExtent? " sc-hidden":"")} onClick={this.zoomFullExtent}>
           <div className="fullExtentContent"></div>
         </div>
-        <div className="zoomToCurrentLocationButton" onClick={this.zoomToCurrentLocation}>
+        <div className={"zoomToCurrentLocationButton" + (!this.state.showCurrentLocation? " sc-hidden":"")} onClick={this.zoomToCurrentLocation}>
           <div className="zoomToCurrentLocationContent"></div>
         </div>
       </div>

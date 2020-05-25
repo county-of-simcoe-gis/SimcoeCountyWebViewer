@@ -37,6 +37,7 @@ class Layers extends Component {
   turnOffLayersListener(group) {if (group === this.props.group.value || group === null) this.turnOffLayers(); }
   turnOnLayersListener(group) {if (group === this.props.group.value || group === null) this.turnOnLayers(); }
   activeTocLayerListener(layerItem) {if (layerItem.layerGroup === this.props.group.value) this.onActivateLayer(layerItem); }
+  deactiveTocLayerListener(layerItem) {if (layerItem.layerGroup === this.props.group.value) this.onDeactivateLayer(layerItem); }
   
   getVirtualId()  {
     return "sc-toc-virtual-layers" + this.props.group.value;
@@ -54,6 +55,8 @@ class Layers extends Component {
     window.emitter.addListener("toggleAllLegend",type => this.toggleAllLegends(type));
     // LISTEN FOR SEARCH RESULT
     window.emitter.addListener("activeTocLayer", layerItem => this.activeTocLayerListener(layerItem));
+     // LISTEN FOR SEARCH RESULT
+     window.emitter.addListener("deactiveTocLayer", layerItem => this.deactiveTocLayerListener(layerItem));
     
     
     if (this._isMounted) {
@@ -95,6 +98,17 @@ class Layers extends Component {
             }, i * 100);
           })(i);
         }
+      }
+    });
+  };
+
+  onDeactivateLayer = layerItem => {
+    let layersCopy = Object.assign([], this.state.layers);
+
+    layersCopy.forEach(layer => {
+      if (layer.name === layerItem.fullName || layer.name === layerItem.name) {
+        layer.visible = false;
+        layer.layer.setVisible(false);
       }
     });
   };
@@ -401,7 +415,7 @@ class Layers extends Component {
     // FILTER LAYERS FROM SEARCH INPUT
     const layers = this.state.layers.filter(layer => {
       if (this.props.searchText === "") return true;
-      return layer.displayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1;
+      return ([layer.displayName.toUpperCase(),layer.groupName.toUpperCase()].join(" ").indexOf(this.props.searchText.toUpperCase()) !== -1 ); 
     });
 
     return (

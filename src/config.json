@@ -19,6 +19,16 @@
   "centerCoords": [-9135500, 6020500],
   "defaultZoom": 7,
   "maxZoom": 23,
+  "controls": {
+    "rotate":true,
+    "fullScreen":true,
+    "zoomInOut":true,
+    "currentLocation":true,
+    "zoomExtent":true,
+    "scale":true,
+    "scaleLine":true,
+    "basemap":true
+  },
  
   "sidebarToolComponents": [
     {

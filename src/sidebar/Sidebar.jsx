@@ -242,6 +242,9 @@ class Sidebar extends Component {
       this.setState({ tabIndex: 3 });
     }
     else console.log("NO VALID TAB FOUND");
+
+    // OPEN PANEL
+    this.sidebarVisiblityEventHandler("OPEN");
   }
 
   sidebarVisiblityEventHandler(openOrClose) {
@@ -256,14 +259,14 @@ class Sidebar extends Component {
     //  PANEL IN AND OUT CLASSES
     if (window.sidebarOpen) {
       window.sidebarOpen = false;
-      this.setState({ sidebarOpen: false });
     } else {
       window.sidebarOpen = true;
-      this.setState({ sidebarOpen: true });
     }
-
-    // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
-    window.emitter.emit("sidebarChanged", window.sidebarOpen);
+    this.setState({ sidebarOpen: window.sidebarOpen }, () => {
+      // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
+      window.emitter.emit("sidebarChanged", window.sidebarOpen);
+    });
+   
   }
 
   // TOOL AND THEME ITEMS CLICK
@@ -303,7 +306,7 @@ class Sidebar extends Component {
   }
 
   slimSidebarButtonClick = name => {
-    if(!window.sidebarOpen) this.togglePanelVisibility();
+   
     this.activateTab(name);
     helpers.addAppStat("Sidebar Slim", name);
   };
@@ -345,16 +348,23 @@ class Sidebar extends Component {
             <Tabs forceRenderTabPanel={true} selectedIndex={this.state.tabIndex} onSelect={this.onTabSelect}>
               <TabList>
                 <Tab id="tab-layers">
-                  <TabButton imageURL={images["legend-32x32.png"]} name="Layers" />
+                  <TabButton imageURL={images["legend-32x32.png"]} name="Layers" active={this.state.tabIndex===0} 
+                            onClick={() => {if(this.state.tabIndex===0)  {
+                              window.emitter.emit("setSidebarVisiblity", "CLOSE");
+                            }
+                              }} />
                 </Tab>
                 <Tab id="tab-tools">
-                  <TabButton imageURL={images["tools-32x32.png"]} name="Tools" active={this.state.activeTabComponents.tools.loadedComponent} />
+                  <TabButton imageURL={images["tools-32x32.png"]} name="Tools" active={this.state.tabIndex===1} 
+                              onClick={() => {if(this.state.tabIndex===1) window.emitter.emit("setSidebarVisiblity", "CLOSE");}} />
                 </Tab>
                 <Tab id="tab-mymaps">
-                  <TabButton imageURL={images["map-32x32.png"]} name="Draw" active={this.state.isMyMapsEditing} />
+                  <TabButton imageURL={images["map-32x32.png"]} name="Draw" active={this.state.tabIndex===2} 
+                              onClick={() => {if(this.state.tabIndex===2)  window.emitter.emit("setSidebarVisiblity", "CLOSE");}} />
                 </Tab>
                 <Tab id="tab-reports">
-                  <TabButton imageURL={images["report-32x32.png"]} name="Reports" />
+                  <TabButton imageURL={images["report-32x32.png"]} name="Reports" active={this.state.tabIndex===3} 
+                              onClick={() => {if(this.state.tabIndex===3)  window.emitter.emit("setSidebarVisiblity", "CLOSE");}} />
                 </Tab>
               </TabList>
 
@@ -372,9 +382,7 @@ class Sidebar extends Component {
               <img src={require("./images/close-tab.png")} alt="Close Tab" />
             </div>
             <SidebarSlim
-              onClick={this.slimSidebarButtonClick}
-              toolActive={this.state.activeTabComponents.tools.loadedComponent}
-              isMyMapsEditing={this.state.isMyMapsEditing}
+              tabIndex={this.state.tabIndex}
             />
             <div id="sc-sidebar-message-container" />
             {/* <MenuButton /> */}
@@ -393,11 +401,10 @@ export default Sidebar;
 // TAB BUTTON
 const TabButton = props => {
   return (
-    <div>
-      
+    <div onClick={props.onClick}>
       <img src={props.imageURL} alt={props.name} />
       <br />
-      <span>{props.name}</span>
+      <span >{props.name}</span>
     </div>
   );
 };

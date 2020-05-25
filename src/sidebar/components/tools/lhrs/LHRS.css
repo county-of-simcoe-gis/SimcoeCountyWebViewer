@@ -76,14 +76,39 @@
 	padding: 3px 10px;
 }
 .sc-lhrs-input {
-  color: #8E8E8E;
+  color: #606060;
   padding: 3px;
   font-size: 16px;
   width: 160px;
-  border: 1px solid #CCC;
+  border: 1px solid #606060;
   padding-left: 5px;
 }
 
+.sc-lhrs-input:read-only{
+  color: #8E8E8E;
+  border: 1px solid #CCC;
+}
+
+.sc-lhrs-point-switch span{
+  color:#FFF;
+  text-align: center;
+  display: inherit;
+  padding-left: inherit;
+  width:160px;
+}
+.sc-lhrs-point-switch span.off{
+  margin-left: -130px;
+  left:auto;
+  right:auto;
+  top:auto;
+  bottom:auto;
+}
+.sc-lhrs-point-switch span.on{
+  left:auto;
+  right:auto;
+  top:auto;
+  bottom:auto;
+}
 .sc-lhrs-input-sm {
   width: 50px;
 }
