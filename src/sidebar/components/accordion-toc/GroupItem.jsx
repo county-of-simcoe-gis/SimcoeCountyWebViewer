@@ -96,7 +96,7 @@ class GroupItem extends Component {
   containsLayers = () =>{
     return this.props.group.layers.filter(layer => {
       if (this.props.searchText === "") return true;
-      return layer.displayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1; 
+      return ([layer.displayName.toUpperCase(),layer.groupName.toUpperCase()].join(" ").indexOf(this.props.searchText.toUpperCase()) !== -1 ); 
     });
     
   }

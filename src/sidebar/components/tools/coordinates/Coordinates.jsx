@@ -8,7 +8,7 @@ import proj4 from "proj4";
 import Select from "react-select";
 import { register } from "ol/proj/proj4";
 import { Vector as VectorLayer } from "ol/layer";
-import { Fill, Style, Circle as CircleStyle } from "ol/style.js";
+import { Fill, Style, Circle as CircleStyle, Icon } from "ol/style.js";
 import { Vector as VectorSource } from "ol/source.js";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
@@ -54,11 +54,11 @@ class Coordinates extends Component {
         features: []
       }),
       style: new Style({
-        image: new CircleStyle({
-          opacity: 0.5,
-          radius: 5,
-          fill: new Fill({ color: "#EE2E2E" })
+        image: new Icon({
+          anchor: [0.5, 1],
+          src: images["map-marker.png"]
         })
+       
       })
     });
     this.vectorLayer.setZIndex(500);
@@ -87,7 +87,13 @@ class Coordinates extends Component {
     
     // INITIAL EXTENT
     this.updateExtent();
+
+    //CREATE INITIAL POINT
+    const webMercatorCoords = window.map.getView().getCenter();
+    this.updateCoordinates(webMercatorCoords);
+    this.createPoint(webMercatorCoords, false);
   }
+  
   _getSelectCopyFormats = () => {
     let defs = [];
     coordinateConfig.copyFormat.forEach(item => {
@@ -210,14 +216,15 @@ class Coordinates extends Component {
     const selectedCoords = transform(webMercatorCoords, "EPSG:3857", this.currentProjection);
     const inputTitle = (this.state.selectProjectionOption === undefined ? "" : this.state.selectProjectionOption.label + (this.state.selectProjectionZoneOption === undefined || this.state.selectProjectionZoneOption.label.trim() === "" ? "" : " - " +this.state.selectProjectionZoneOption.label) );
     const inputProjection = this.currentProjection;
+    const precision = this.state.selectProjectionOption !== undefined? this._getPrecision(this.state.selectProjectionOption):7;
     this.setState({
       inputWebMercatorXValue: webMercatorCoords[0],
       inputWebMercatorYValue: webMercatorCoords[1],
       inputLatLongXValue: latLongCoords[0],
       inputLatLongYValue: latLongCoords[1],
       inputLatLongCoords: latLongCoords,
-      inputXValue: selectedCoords[0].toFixed(this._getPrecision(this.state.selectProjectionOption)),
-      inputYValue: selectedCoords[1].toFixed(this._getPrecision(this.state.selectProjectionOption)),
+      inputXValue: selectedCoords[0].toFixed(precision),
+      inputYValue: selectedCoords[1].toFixed(precision),
       inputProjectionTitle: inputTitle,
       inputProjection: inputProjection
     });
@@ -244,13 +251,12 @@ class Coordinates extends Component {
   };
 
   glowContainers() {
-    helpers.glowContainer("sc-coordinate-x", "green");
-    helpers.glowContainer("sc-coordinate-y", "green");
+    helpers.glowContainer("sc-coordinate-x");
+    helpers.glowContainer("sc-coordinate-y");
   }
 
-  // POINTER MOVE HANDLER
-  onPointerMoveHandler = evt => {
-    const webMercatorCoords = evt.coordinate;
+  recalcLiveCoordinates = (webMercatorCoords = undefined) => {
+    if (webMercatorCoords===undefined) webMercatorCoords = this.state.liveWebMercatorCoords
     const latLongCoords = transform(webMercatorCoords, "EPSG:3857", "EPSG:4326");
     this._calculateZone(latLongCoords[0],latLongCoords[1]);
     this.currentProjection = this.calculatedZone !== undefined ? this.calculatedZone.value : "EPSG:4326";
@@ -263,6 +269,11 @@ class Coordinates extends Component {
       liveWebMercatorCoords: webMercatorCoords,
       liveLatLongCoords: latLongCoords
     });
+  }
+  // POINTER MOVE HANDLER
+  onPointerMoveHandler = evt => {
+    const webMercatorCoords = evt.coordinate;
+    this.recalcLiveCoordinates(webMercatorCoords);
   };
 
   componentWillUnmount() {
@@ -295,6 +306,7 @@ class Coordinates extends Component {
     }, () => {
       this.vectorLayer.getSource().clear();
       this._getSelectProjectionZones(selection);
+      this.recalcLiveCoordinates();
     });
     
   }
@@ -305,9 +317,10 @@ class Coordinates extends Component {
       const inputTitle = (this.state.selectProjectionOption === undefined ? "" : this.state.selectProjectionOption.label + (selection === undefined || selection.label.trim() === "" ? "" : " - " +selection.label));
       this.setState({ selectProjectionZoneOption:selection,inputProjection: this.currentProjection,inputProjectionTitle: inputTitle },() => {
         this.onPointUpdate(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
+        this.recalcLiveCoordinates();
       });
     }else{
-      this.setState({ selectProjectionZoneOption:selection});
+      this.setState({ selectProjectionZoneOption:selection}, ()=>{this.recalcLiveCoordinates();});
     }
     
   }
@@ -353,57 +366,70 @@ class Coordinates extends Component {
     return (
       <PanelComponent onClose={this.props.onClose} name={this.props.name} type="tools">
         <div className="sc-coordinates-container">
-          <div className="sc-coordinates-table">
-              <div className="sc-coordinates-row sc-coordinates-heading ">
-                <div className="sc-coordinates-cell" width="70%">
-                  Projection
-                </div> 
-                <div className="sc-coordinates-cell">
-                 <span className={this.state.hideZone ? "sc-hidden" : ""} >Zone</span> 
-                </div>  
-              </div>
-              <div className="sc-coordinates-row">
-                <div className="sc-coordinates-cell">
-                <Select id="sc-coordinate-select" onChange={this.onChangeProjectionSelect} options={this.state.selectProjectionOptions} value={this.state.selectProjectionOption} />
-                </div> 
-                <div className="sc-coordinates-cell">
-                <Select id="sc-zone-select" onChange={this.onChangeProjectionZoneSelect} className={this.state.hideZone ? "sc-hidden" : ""} options={this.state.selectProjectionZoneOptions} value={this.state.selectProjectionZoneOption} />
-                </div>  
-              </div>
-          </div>         
-          <div className="sc-description">Live coordinates of your current pointer/mouse position.</div>
-          <ProjectedCoordinates key={helpers.getUID()} coords={this.state.liveCoords} precision={this.currentPrecision}  />
-          
-          <div className="sc-title sc-coordinates-title">CAPTURED / SELECTED</div>
           <div className="sc-container">
-            <CustomCoordinates
-              title={this.state.inputProjectionTitle}
-              valueX={this.state.inputXValue}
-              valueY={this.state.inputYValue}
-              precision={this.state.inputPrecision}
-              onChangeX={evt => {
-                this.setState({ inputXValue: evt.target.value },() => {
-                  this.onPointUpdate(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
-                });
-              }}
-              onChangeY={evt => {
-                this.setState({ inputYValue: evt.target.value },() => {
-                  this.onPointUpdate(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
-                });
-              }}
-              onZoomClick={() => {
-                this.onZoomClick(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
-              }}
-              onMyMapsClick={() => {
-                this.onMyMapsClick(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
-              }}
-              inputIdX="sc-coordinate-x"
-              inputIdY="sc-coordinate-y"
-              onEnterKey={() => {
-                this.onZoomClick(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
-              }}
-            />
-            <div className="sc-coordinates-divider"></div>
+            <div className="sc-description">
+              Capture points in a variety of different coordinate systems or enter your own locations and zoom to its location. 
+              <ul>
+                  <li>Click on the map to capture locations</li>
+                  <li>--------- or ---------</li>
+                  <li>Enter known coordinates below to see them on the map</li>
+              </ul>
+            </div>
+            <div className="sc-coordinates-table">
+                <div className="sc-coordinates-row sc-coordinates-heading ">
+                  <div className="sc-coordinates-cell" width="70%">
+                    <span>Coordinate System</span> 
+                  </div> 
+                  <div className="sc-coordinates-cell">
+                  <span className={this.state.hideZone ? "sc-hidden" : ""} >Zone</span> 
+                  </div>  
+                </div>
+                <div className="sc-coordinates-row">
+                  <div className="sc-coordinates-cell">
+                  <Select id="sc-coordinate-select" onChange={this.onChangeProjectionSelect} options={this.state.selectProjectionOptions} value={this.state.selectProjectionOption} />
+                  </div> 
+                  <div className="sc-coordinates-cell">
+                  <Select id="sc-zone-select" onChange={this.onChangeProjectionZoneSelect} className={this.state.hideZone ? "sc-hidden" : ""} options={this.state.selectProjectionZoneOptions} value={this.state.selectProjectionZoneOption} />
+                  </div>  
+                </div>
+            </div>    
+            <div className="sc-coordinates-divider"></div>           
+            <div className="sc-title sc-coordinates-title">CAPTURED / SELECTED</div>
+            <div className="sc-container">
+              <CustomCoordinates
+                title={this.state.inputProjectionTitle}
+                valueX={this.state.inputXValue}
+                valueY={this.state.inputYValue}
+                precision={this.state.inputPrecision}
+                onChangeX={evt => {
+                  this.setState({ inputXValue: evt.target.value },() => {
+                    this.onPointUpdate(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
+                  });
+                }}
+                onChangeY={evt => {
+                  this.setState({ inputYValue: evt.target.value },() => {
+                    this.onPointUpdate(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
+                  });
+                }}
+                onZoomClick={() => {
+                  this.onZoomClick(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
+                }}
+                onMyMapsClick={() => {
+                  this.onMyMapsClick(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
+                }}
+                inputIdX="sc-coordinate-x"
+                inputIdY="sc-coordinate-y"
+                onEnterKey={() => {
+                  this.onZoomClick(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
+                }}
+              />
+              </div>
+            </div>
+          
+          
+
+            <div className="sc-container sc-coordinates-floatbottom">
+            <div className="sc-title sc-coordinates-title">COPY COORDINATES</div>
             <CopyCoordinates
               inputId="sc-coordinate-copy"
               copyFormats= {this.state.selectCopyOptions}
@@ -420,10 +446,11 @@ class Coordinates extends Component {
                 }
               }
             />
+            <div className="sc-coordinates-divider"></div>
+            <ProjectedCoordinates key={helpers.getUID()} coords={this.state.liveCoords} precision={this.currentPrecision} projection={this.state.selectProjectionOption} zone={this.state.selectProjectionZoneOption} />
+
           </div>
-          <div className="sc-description">
-            Capture points in a variety of different coordinate systems or enter your own locations and zoom to its location. Simply click on the map to capture locations.
-          </div>
+          
         </div>
       </PanelComponent>
     );
@@ -431,3 +458,10 @@ class Coordinates extends Component {
 }
 
 export default Coordinates;
+// IMPORT ALL IMAGES
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
+function importAllImages(r) {
+  let images = {};
+  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
+  return images;
+}

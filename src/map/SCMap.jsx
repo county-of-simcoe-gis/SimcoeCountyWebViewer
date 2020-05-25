@@ -12,7 +12,7 @@ import Navigation from "./Navigation";
 import { defaults as defaultInteractions } from "ol/interaction.js";
 import Popup from "../helpers/Popup.jsx";
 import FooterTools from "./FooterTools.jsx";
-import { defaults as defaultControls, ScaleLine } from "ol/control.js";
+import { defaults as defaultControls, ScaleLine, FullScreen, Rotate, Zoom} from "ol/control.js";
 import BasemapSwitcher from "./BasicBasemapSwitcher";
 //import PropertyReportClick from "./PropertyReportClick.jsx";
 import "ol-contextmenu/dist/ol-contextmenu.css";
@@ -49,8 +49,11 @@ class SCMap extends Component {
     // LISTEN FOR MAP CURSOR TO CHANGE
     window.emitter.addListener("changeCursor", cursorStyle => this.changeCursor(cursorStyle));
   }
-
+  componentWillMount(){
+    this.setControlPreferences();
+  }
   componentDidMount() {
+    
     if (mainConfig.leftClickIdentify) {
       this.setState({mapClassName:"sc-map identify"});
     }
@@ -64,8 +67,13 @@ class SCMap extends Component {
       if (detaults.center !== undefined) centerCoords = detaults.center;
     }
     
+    var controls = [];
+    if (window.mapControls.scaleLine) controls.push(scaleLineControl)
+    if (window.mapControls.fullScreen) controls.push(new FullScreen())
+    if (window.mapControls.rotate) controls.push(new Rotate())
+
     var map = new Map({
-      controls: defaultControls().extend([scaleLineControl]),
+      controls: defaultControls().extend(controls.concat([])),
       layers: [],
       target: "map",
       view: new View({
@@ -74,7 +82,7 @@ class SCMap extends Component {
         maxZoom: mainConfig.maxZoom
         //resolutions: resolutions
       }),
-      interactions: defaultInteractions({ keyboard: true, altShiftDragRotate: false, pinchRotate: false, mouseWheelZoom: false }).extend([
+      interactions: defaultInteractions({ keyboard: true, altShiftDragRotate: window.mapControls.rotate, pinchRotate: window.mapControls.rotate, mouseWheelZoom: false }).extend([
         new MouseWheelZoom({
           duration: 0,
           constrainResolution: true
@@ -82,6 +90,10 @@ class SCMap extends Component {
       ]),
       keyboardEventTarget: document
     });
+    if (!window.mapControls.zoomInOut) this.removeMapControl(map,"zoom");
+    if (!window.mapControls.rotate) this.removeMapControl(map,"rotate");
+
+   
     if (storage !== null) {
       const extent = JSON.parse(storage);
       map.getView().fit(extent, map.getSize(), { duration: 1000 });
@@ -108,12 +120,7 @@ class SCMap extends Component {
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-add-mymaps">
               <FloatingMenuItem imageName={"point.png"} label="Add Marker Point" />
             </MenuItem>
-            {/* <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoomin">
-              <FloatingMenuItem imageName={"zoom-in.png"} label="Zoom In" />
-            </MenuItem>
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoomout">
-              <FloatingMenuItem imageName={"zoom-out.png"} label="Zoom Out" />
-            </MenuItem> */}
+           
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-save-map-extent">
               <FloatingMenuItem imageName={"globe-icon.png"} label="Save as Default Extent" />
             </MenuItem>
@@ -287,17 +294,36 @@ class SCMap extends Component {
   };
 
   sidebarChanged(isSidebarOpen) {
+    let mapClassName = "sc-map";
     //  SIDEBAR IN AND OUT
     if (isSidebarOpen) {
-      this.setState({ mapClassName: "sc-map sc-map-slideout" });
+      mapClassName = "sc-map sc-map-slideout";
     } else {
-      this.setState({ mapClassName: "sc-map sc-map-closed sc-map-slidein" });
+      mapClassName = "sc-map sc-map-closed sc-map-slidein";
     }
-    
-    setTimeout(() => {
+    this.setState({ mapClassName: mapClassName },() =>{
       window.map.updateSize();
-    }, 300);
-    this.forceUpdate();
+    
+      this.forceUpdate();
+    });
+    
+    
+    
+  }
+
+  setControlPreferences(){
+    window.mapControls = mainConfig.controls;
+  }
+  removeMapControl(map,controlType) {
+    const remove = (control) => {map.removeControl(control);}
+    map.getControls().forEach(function(control) {
+      if (controlType === "zoom" && control instanceof Zoom) {
+        remove(control);
+      }
+      if (controlType === "rotate" && control instanceof Rotate) {
+        remove(control);
+      }
+    }, this);
   }
 
   render() {

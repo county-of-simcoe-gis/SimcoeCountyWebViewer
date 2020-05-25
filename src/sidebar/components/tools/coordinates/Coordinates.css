@@ -74,12 +74,26 @@
 	padding: 3px 10px;
 }
 .sc-coordinates-input {
-  color: #8E8E8E;
+  color: #606060;
   padding: 3px;
   font-size: 16px;
   width: 170px;
-  border: 1px solid #CCC;
+  border: 1px solid #606060;
   padding-left: 5px;
+  margin-bottom: 5px;
+}
+.sc-coordinates-floatbottom{
+  bottom:5px;
+  top:auto;
+  position: absolute;
+}
+.sc-coordinates-live{
+  font-size:10px;
+}
+.sc-description ul  {
+  list-style: none;
+  text-align: center;
+  padding-inline-start: unset;
 }
 
 .sc-coordinates-input:focus {

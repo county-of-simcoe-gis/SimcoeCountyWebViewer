@@ -238,6 +238,24 @@ class Search extends Component {
     // SET STATE CURRENT ITEM
     this.setState({ searchResults: [result] });
 
+    //CHECK FOR ASSOCIATED LAYERS
+    if (result.layers !== undefined && result.layers !== null){
+      let assocLayers = result.layers.toLowerCase().split(",");
+      if (assocLayers.length>0){
+        Object.entries(window.allLayers).forEach(row => {
+          const layerItems = row[1];
+          const currentLayers = layerItems.filter(layer => {return assocLayers.includes(layer.name.toLowerCase())});
+          if(currentLayers !== undefined && currentLayers.length > 0) {
+            window.emitter.emit("activeTocLayerGroup", currentLayers[0].group, () => {
+              currentLayers.forEach(layer =>{
+                  window.emitter.emit("activeTocLayer", { fullName:layer.name, name:layer.displayName,isVisible: layer.layer.getVisible(),layerGroupName:layer.groupName , layerGroup: layer.group, index: layer.index });
+              });
+            });
+          }
+        });
+      }
+    }
+
     // GET GEOJSON VALUES
     const fullFeature = helpers.getFeatureFromGeoJSON(result.geojson);
     let pointFeature = helpers.getFeatureFromGeoJSON(result.geojson_point);
@@ -311,11 +329,26 @@ class Search extends Component {
   // WHEN USER SELECTS ITEM
   onItemSelect(value, item) {
     if (item.type === "Map Layer") {
-      window.emitter.emit("activeTocLayerGroup", item.layerGroup, () => {
-        window.emitter.emit("activeTocLayer", item);
-      });
+      if(item.isVisible){
+        item.isVisible = !item.isVisible;
+        item.imageName =  "layers.png";
+        item.title = "Click to Activate";
+        item.className = undefined;
+        window.emitter.emit("deactiveTocLayer", item);
+        setTimeout(() => {window.emitter.emit("updateActiveTocLayers", item.layerGroup);},300);
+      }else{
+        item.isVisible = !item.isVisible;
+        item.imageName =  "layers-visible.png"
+        item.title = "Click to Deactivate";
+        item.className = 'sc-search-layer-deactivate';
+        window.emitter.emit("activeTocLayerGroup", item.layerGroup, () => {
+          window.emitter.emit("activeTocLayer", item);
+        });
+      }
+      
       return;
     }
+    
 
     if (item.type === "Tool") {
       window.emitter.emit("activateTab", "tools");
@@ -413,9 +446,15 @@ class Search extends Component {
       Object.entries(window.allLayers).map(row => {
         const layerItems = row[1];
         layerItems.forEach(layer => {
-          if (layer.displayName.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
+          if (layer.displayName.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0 || layer.groupName.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
             //console.log(layer);
-            layers.push({ fullName:layer.name, name:layer.displayName,isVisible: layer.layer.getVisible(), type: "Map Layer", layerGroupName:layer.groupName , layerGroup: layer.group, imageName: "layers.png", index: layer.index });
+            let currentLayer = { fullName:layer.name, name:layer.displayName,title: "Click to Activate",isVisible: layer.layer.getVisible(), type: "Map Layer", layerGroupName:layer.groupName , layerGroup: layer.group, imageName: "layers.png", index: layer.index };
+            if (currentLayer.isVisible) {
+              currentLayer.imageName =  "layers-visible.png"
+              currentLayer.title = "Click to Deactivate";
+            }
+          
+            layers.push(currentLayer);
           }
         });
       });
@@ -539,11 +578,14 @@ class Search extends Component {
             let itemName = item.name !== undefined? item.name:"";
             let descriptionText = (item.description !== undefined && item.description !== null && item.description !== "" )?item.description:"";
             let typeText = "Unknown";
-            if (item.type === "Map Layer") typeText =item.type  + ' - ' + item.layerGroupName + (item.isVisible ? " - Currently Visible" : "");
+            if (item.type === "Map Layer"){
+              typeText = item.type  + ' - ' + item.layerGroupName ;
+              if (item.isVisible) item.className = 'sc-search-layer-deactivate';
+            } 
             else if (item.type === "Tool" ) typeText = item.type;
             else typeText = " (" + item.type + ")";
             return (
-              <div className={isHighlighted ? "sc-search-item-highlighted" : "sc-search-item"} key={helpers.getUID()}>
+              <div className={(isHighlighted ? "sc-search-item-highlighted" : "sc-search-item") + (item.className !== undefined?" " + item.className:"")} key={helpers.getUID()} title={item.title}>
                 <div className="sc-search-item-left">
                   <img src={item.imageName === undefined ? images["map-marker-light-blue.png"] : images[item.imageName]} alt="blue pin" />
                 </div>

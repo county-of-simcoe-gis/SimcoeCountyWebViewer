@@ -33,7 +33,7 @@ class ShowMessage extends Component {
         <div ref={this.myRef} id="sc-show-message-container" className={style}>
             <div className="sc-show-message-title">{this.props.title}</div>
             <div className="sc-show-message-content">{this.props.message}</div>
-            <button className="sc-button sc-show-message-close-button" onClick={this.onCloseClick}>Close Message</button>
+            <button className={this.props.hideButton? "sc-hidden":"sc-button sc-show-message-close-button"} onClick={this.onCloseClick}>Close Message</button>
         </div> );
     }
 }

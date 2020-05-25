@@ -2,7 +2,7 @@ import React from "react";
 import * as helpers from "../../../../helpers/helpers";
 
 export const LHRSPoint = props => {
-    const inputMsg = "(listening for input)";
+    const inputMsg = "";
     return (
         <div className="sc-container">
     
@@ -54,19 +54,7 @@ export const LHRSRow = props => {
     return (
         <div className="sc-lhrs-row sc-arrow">
         <label>{props.label}:</label>
-        <span>
-            <input
-            id={props.inputId}
-            value={props.value === null ? "" : props.value}
-            className="sc-lhrs-input"
-            type="text"
-            placeholder={props.placeholer}
-            onChange={props.onChange}
-            readOnly={props.readOnly}
-            onFocus={evt => {helpers.disableKeyboardEvents(true);}}
-            onBlur={evt => {helpers.disableKeyboardEvents(false);}}
-            />
-        </span>
+        <span>{props.value === null ? "" : props.value}</span>
         </div>
     );
 };

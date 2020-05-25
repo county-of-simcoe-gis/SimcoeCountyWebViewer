@@ -494,7 +494,7 @@ class LHRS extends Component {
         pointObj.offset=offset;
         pointObj.snapped_distance=null;
         pointObj.valid = false;
-        helpers.showMessage("Not Found", "No LHRS Data Found.", "green", 1500);
+        helpers.showMessage("Not Found", "No LHRS Data Found.", "green", 1500, true);
       }
       this._setPoint(pointObj);
     });
@@ -527,7 +527,7 @@ class LHRS extends Component {
         pointObj.offset=null;
         pointObj.snapped_distance=null;
         pointObj.valid = false;
-        helpers.showMessage("Not Found", "No LHRS Data Found.", "green", 1500);
+        helpers.showMessage("Not Found", "No LHRS Data Found.", "green", 1500, true);
       }
       this._setPoint(pointObj);
     });
@@ -561,7 +561,7 @@ class LHRS extends Component {
               pointObj.offset=null;
               pointObj.snapped_distance=null;
               pointObj.valid = false;
-              helpers.showMessage("Not Found", "No LHRS Data Found.", "green", 1500);
+              helpers.showMessage("Not Found", "No LHRS Data Found.", "green", 1500,true);
           }
           this._setPoint(pointObj);
         });
@@ -742,17 +742,21 @@ class LHRS extends Component {
                   </span>
                 </div>
                 <div className={"sc-lhrs-row sc-arrow" + (this.state.a_valid ? "" : " sc-hidden")} title="Select a second point to create a linear feature">
-                  <label>{this.state.selectedPointLabel}:</label>
-                  <span> 
+                <label>Point:</label>
+                  <span>
                       <Switch className="sc-lhrs-point-switch" 
                               onChange={this.onPointSwitchChange} 
                               checked={this.state.selectedPoint==="pointA"?false:true} 
                               height={20} 
-                              width={48} 
-                              uncheckedIcon={false}
-                              checkedIcon={false}
+                              width={160} 
+                              uncheckedIcon={<span className="off">Point A</span>}
+                              checkedIcon={<span className="on">Point B</span>}
+                              offColor={"#12128F"}
+                              onColor={"#5E1010"}
                                />
+                    
                   </span>
+                  
                 </div>
                 <LHRSInputRow label={this.state.inputALabel} 
                       value={this.state.inputAValue} 

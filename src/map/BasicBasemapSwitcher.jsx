@@ -17,14 +17,16 @@ class BasemapSwitcher extends Component {
       activeButton: "topo",
       toggleService:undefined,
       toggleIndex:1, 
-      previousIndex: undefined
+      previousIndex: undefined,
+      showBaseMapSwitcher:true,
     };
 
     // LISTEN FOR MAP TO MOUNT
     window.emitter.addListener("mapLoaded", () => this.onMapLoad());
   }
   componentDidMount(){
-    this.setState({toggleService:BasemapConfig.topoServices[1]});
+    this.setState({showBaseMapSwitcher:window.mapControls.basemap,toggleService:BasemapConfig.topoServices[1]});
+   
   }
   onMapLoad() {
     let index = 0;
@@ -203,7 +205,7 @@ class BasemapSwitcher extends Component {
   }
   render() {
     return (
-      <div>
+      <div className={(!this.state.showBaseMapSwitcher? " sc-hidden":"")}>
         <div id="sc-basemap-main-container">
           
           <div className={"sc-basemap-topo"}>

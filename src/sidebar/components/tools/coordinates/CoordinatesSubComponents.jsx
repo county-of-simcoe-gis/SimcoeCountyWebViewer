@@ -2,7 +2,7 @@ import React from "react";
 import * as helpers from "../../../../helpers/helpers";
 import Select from "react-select";
 
-const inputMsg = "(listening for input)";
+const inputMsg = "waiting for input ...";
 export const LiveCoordinates = props => {
   return (
     <div>
@@ -56,20 +56,10 @@ export const LatLong = props => {
 };
 
 export const ProjectedCoordinates = props => {
+  if (props.zone === undefined || props.zone.value === "auto") return (<div></div>);
   return (
-    <div>
-      
-      <div className="sc-container">
-        <div className="sc-coordinates-row sc-arrow">
-          <label>X / Long:</label>
-          <span>{props.coords === null ? inputMsg : props.coords[0].toFixed(props.precision)}</span>
-        </div>
-
-        <div className="sc-coordinates-row sc-arrow">
-          <label>Y / Lat:</label>
-          <span>{props.coords === null ? inputMsg : props.coords[1].toFixed(props.precision)}</span>
-        </div>
-      </div>
+    <div className="sc-coordinates-live">
+        <span>{props.coords !== null ?  props.zone.value + " : " + props.coords[0].toFixed(props.precision) + " / " + props.coords[1].toFixed(props.precision) : ""}</span>
     </div>
   );
 };
@@ -77,9 +67,10 @@ export const ProjectedCoordinates = props => {
 
 
 export const CopyCoordinates = props => {
+  const placeholderText = "waiting for coordinates ...";
   const formatText = (coord, x, y, template) =>
     {
-      if (x === null) return "(listening for input)";
+      if (x === null) return "";
       let returnText = template;
       returnText = returnText.split('[x]').join(x);
       returnText = returnText.split('[y]').join(y);
@@ -105,6 +96,7 @@ export const CopyCoordinates = props => {
                 className="sc-coordinates-input"
                 type="text"
                 value={output}
+                placeholder={placeholderText}
                 readOnly
               /> 
               <img src={require("./images/copy16.png")} alt="Copy Coordinates" onClick={props.onCopy} title="Copy Coordinates to Clip Board" />
@@ -144,7 +136,7 @@ export const MapExtent = props => {
 export const CustomCoordinates = props => {
   return (
     <div>
-      <div className="sc-coordinates-heading">{props.title}</div>
+      <div className="sc-coordinates-heading"><span>{props.title}</span></div>
       <CoordinateRow label="X / Long" value={props.valueX} onChange={props.onChangeX} inputId={props.inputIdX} onEnterKey={props.onZoomClick} />
       <CoordinateRow label="Y / Lat" value={props.valueY} onChange={props.onChangeY} inputId={props.inputIdY} onEnterKey={props.onZoomClick} />
       <CoordinateActions onZoomClick={props.onZoomClick} onMyMapsClick={() => props.onMyMapsClick(props.valueX, props.valueY)} />

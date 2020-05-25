@@ -275,9 +275,11 @@ p {
   margin-left: 0px;
 }
 
+/*
 .sc-draw-button-bar button:last-child {
-  /*border-right: none;*/
+  
 }
+*/
 
 .sc-draw-button-bar button:hover {
   background-color: #ededed;
