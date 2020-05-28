@@ -918,7 +918,7 @@ export function saveToStorage(storageKey, item) {
 };
 
 export function appendToStorage(storageKey, item, limit = undefined) {
-  let items = this.getItemsFromStorage(storageKey);
+  let items = getItemsFromStorage(storageKey);
   if (items === undefined) items=[];
   item.dateAdded = new Date().toLocaleString();
   items.unshift(item);
