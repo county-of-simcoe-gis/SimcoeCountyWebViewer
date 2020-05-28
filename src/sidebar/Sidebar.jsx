@@ -14,6 +14,7 @@ import "react-tabs/style/react-tabs.css";
 import SidebarComponent from "react-sidebar";
 import ComponentsConfig from "../config.json";
 import SidebarSlim from "./SidebarSlim.jsx";
+import MenuButton from "./MenuButton.jsx";
 
 class Sidebar extends Component {
   constructor(props) {
@@ -26,6 +27,7 @@ class Sidebar extends Component {
     this.onSetSidebarOpen = this.onSetSidebarOpen.bind(this);
 
     this.state = {
+      showFullscreen: true,
       // TOOLS AND THEMES ARE IN HERE
       toolComponents: [],
 
@@ -57,8 +59,18 @@ class Sidebar extends Component {
         }
       }
     };
+    // LISTEN FOR CONTROL VISIBILITY CHANGES
+    window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control,visible));
   }
-
+  controlStateChange(control, state) {
+    switch (control){
+      case "fullscreen":
+        this.setState({showFullscreen:state});
+        break;
+      default:
+        break;
+    }
+  }
   onMyMapsEditing = isMyMapsEditing => {
     // DISABLE PARCEL CLICK
     window.disableParcelClick = isMyMapsEditing;
@@ -74,7 +86,7 @@ class Sidebar extends Component {
       }
     }
     this.setState({ isMyMapsEditing:isMyMapsEditing });
-  };
+  }
 
   onSetSidebarOpen(open) {
     this.setState({ sidebarOpen: open });
@@ -110,7 +122,8 @@ class Sidebar extends Component {
     return "Done";
   };
 
-  async componentDidMount() {
+  componentDidMount() {
+    if(window.mapControls !== undefined) this.setState({showFullscreen:window.mapControls.fullScreen});
     // IMPORT TOOLS FROM CONFIG
     const tools = ComponentsConfig.sidebarToolComponents;
     tools.map(async component => await this.addComponent(component, "tools"));
@@ -385,7 +398,7 @@ class Sidebar extends Component {
               tabIndex={this.state.tabIndex}
             />
             <div id="sc-sidebar-message-container" />
-            {/* <MenuButton /> */}
+            <MenuButton showLabel={false} hidden={!this.state.sidebarOpen} className={"map-float" + (!this.state.showFullscreen ? " no-fullscreen": "")} />
           </React.Fragment>
         }
         open={this.state.sidebarOpen}

@@ -47,8 +47,8 @@ export async function getGroupsGC(url, urlType, callback) {
       if (mapCenter.length > 0 && mapZoom > 0) {
         sessionStorage.removeItem(storageMapDefaultsKey);
         sessionStorage.setItem(storageMapDefaultsKey, JSON.stringify({ center: mapCenter, zoom: mapZoom }));
-        const storage = localStorage.getItem(storageExtentKey);
-        if (storage === null) {
+        const storage = helpers.getItemsFromStorage(storageExtentKey);
+        if (storage === undefined) {
           window.map.getView().animate({ center: mapCenter, zoom: mapZoom });
         }
       }
@@ -211,7 +211,8 @@ export function isDuplicate(layerList, newLayerName) {
 
 export async function buildLayerByGroup(group, layer, layerIndex, callback) {
   // SAVED DATA
-  const savedData = helpers.getItemsFromStorage(storageKey);
+  let savedData = helpers.getItemsFromStorage(storageKey);
+  if (savedData === undefined) savedData = [];
   const savedLayers = savedData[group.value];
 
   if (layer.Layer === undefined) {
@@ -378,7 +379,8 @@ function _getDefaultGroup(keywords) {
 
 export function getLayerListByGroupCustomRest(group, callback) {
   // SAVED DATA
-  const savedData = helpers.getItemsFromStorage(storageKey);
+  let savedData = helpers.getItemsFromStorage(storageKey);
+  if (savedData === undefined) savedData = [];
   const savedLayers = savedData[group.value];
 
   //console.log(group);

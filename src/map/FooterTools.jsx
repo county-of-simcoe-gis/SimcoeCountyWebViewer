@@ -21,11 +21,12 @@ class FooterTools extends Component {
       currentScale:0
     };
     this.mapScales = [
-                {label:"1:100", value:100},
+                
                 {label:"1:250", value:250},
                 {label:"1:500", value:500},
                 {label:"1:1,000", value:1000},
-                {label:"1:2,500", value:2500},
+                {label:"1:2,000", value:2000},
+                {label:"1:5,000", value:5000},
                 {label:"1:10,000", value:10000},
                 {label:"1:25,000", value:25000},
                 {label:"1:50,000", value:50000}
@@ -34,6 +35,8 @@ class FooterTools extends Component {
     window.emitter.addListener("basemapChanged", type => {
       this.setState({ basemapType: type });
     });
+    // LISTEN FOR CONTROL VISIBILITY CHANGES
+    window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control,visible));
   }
 
   componentDidMount(){
@@ -88,6 +91,15 @@ class FooterTools extends Component {
     helpers.setMapScale(value);
   }
 
+  controlStateChange(control, state) {
+    switch (control){
+      case "scale":
+        this.setState({showScale:state});
+        break;
+      default:
+        break;
+    }
+  }
   render() {
     
     setTimeout(function(){

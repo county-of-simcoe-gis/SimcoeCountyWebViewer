@@ -8,7 +8,7 @@ import proj4 from "proj4";
 import Select from "react-select";
 import { register } from "ol/proj/proj4";
 import { Vector as VectorLayer } from "ol/layer";
-import { Fill, Style, Circle as CircleStyle, Icon } from "ol/style.js";
+import { Style, Icon } from "ol/style.js";
 import { Vector as VectorSource } from "ol/source.js";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
@@ -257,6 +257,7 @@ class Coordinates extends Component {
 
   recalcLiveCoordinates = (webMercatorCoords = undefined) => {
     if (webMercatorCoords===undefined) webMercatorCoords = this.state.liveWebMercatorCoords
+    if (webMercatorCoords===null) return;
     const latLongCoords = transform(webMercatorCoords, "EPSG:3857", "EPSG:4326");
     this._calculateZone(latLongCoords[0],latLongCoords[1]);
     this.currentProjection = this.calculatedZone !== undefined ? this.calculatedZone.value : "EPSG:4326";
@@ -380,22 +381,25 @@ class Coordinates extends Component {
                   <div className="sc-coordinates-cell" width="70%">
                     <span>Coordinate System</span> 
                   </div> 
-                  <div className="sc-coordinates-cell">
-                  <span className={this.state.hideZone ? "sc-hidden" : ""} >Zone</span> 
-                  </div>  
+                  
                 </div>
                 <div className="sc-coordinates-row">
                   <div className="sc-coordinates-cell">
                   <Select id="sc-coordinate-select" onChange={this.onChangeProjectionSelect} options={this.state.selectProjectionOptions} value={this.state.selectProjectionOption} />
                   </div> 
-                  <div className="sc-coordinates-cell">
-                  <Select id="sc-zone-select" onChange={this.onChangeProjectionZoneSelect} className={this.state.hideZone ? "sc-hidden" : ""} options={this.state.selectProjectionZoneOptions} value={this.state.selectProjectionZoneOption} />
-                  </div>  
+                   
                 </div>
             </div>    
             <div className="sc-coordinates-divider"></div>           
             <div className="sc-title sc-coordinates-title">CAPTURED / SELECTED</div>
+            
             <div className="sc-container">
+            <div className={this.state.hideZone ? "sc-hidden" : "sc-coordinates-row sc-arrow"}>
+              <label>Zone:</label>
+              <span>
+                <Select id="sc-zone-select" onChange={this.onChangeProjectionZoneSelect} className={this.state.hideZone ? "sc-hidden" : ""} options={this.state.selectProjectionZoneOptions} value={this.state.selectProjectionZoneOption} />
+              </span>
+            </div>
               <CustomCoordinates
                 title={this.state.inputProjectionTitle}
                 valueX={this.state.inputXValue}

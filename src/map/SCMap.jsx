@@ -12,7 +12,7 @@ import Navigation from "./Navigation";
 import { defaults as defaultInteractions } from "ol/interaction.js";
 import Popup from "../helpers/Popup.jsx";
 import FooterTools from "./FooterTools.jsx";
-import { defaults as defaultControls, ScaleLine, FullScreen, Rotate, Zoom} from "ol/control.js";
+import { defaults as defaultControls, ScaleLine, FullScreen, Rotate} from "ol/control.js";
 import BasemapSwitcher from "./BasicBasemapSwitcher";
 //import PropertyReportClick from "./PropertyReportClick.jsx";
 import "ol-contextmenu/dist/ol-contextmenu.css";
@@ -49,9 +49,7 @@ class SCMap extends Component {
     // LISTEN FOR MAP CURSOR TO CHANGE
     window.emitter.addListener("changeCursor", cursorStyle => this.changeCursor(cursorStyle));
   }
-  componentWillMount(){
-    this.setControlPreferences();
-  }
+  
   componentDidMount() {
     
     if (mainConfig.leftClickIdentify) {
@@ -60,8 +58,9 @@ class SCMap extends Component {
     let centerCoords = mainConfig.centerCoords;
     let defaultZoom = mainConfig.defaultZoom;
     const defaultsStorage = sessionStorage.getItem(this.storageMapDefaultsKey);
-    const storage = localStorage.getItem(this.storageExtentKey);
-    if (defaultsStorage !== null && storage === null) {
+    const extent = helpers.getItemsFromStorage(this.storageExtentKey);
+    
+    if (defaultsStorage !== null && extent === undefined) {
       const detaults = JSON.parse(defaultsStorage);
       if (detaults.zoom !== undefined) defaultZoom = detaults.zoom;
       if (detaults.center !== undefined) centerCoords = detaults.center;
@@ -90,12 +89,11 @@ class SCMap extends Component {
       ]),
       keyboardEventTarget: document
     });
-    if (!window.mapControls.zoomInOut) this.removeMapControl(map,"zoom");
-    if (!window.mapControls.rotate) this.removeMapControl(map,"rotate");
+    if (!window.mapControls.zoomInOut) helpers.removeMapControl(map,"zoom");
+    if (!window.mapControls.rotate) helpers.removeMapControl(map,"rotate");
 
    
-    if (storage !== null) {
-      const extent = JSON.parse(storage);
+    if (extent !== undefined) {
       map.getView().fit(extent, map.getSize(), { duration: 1000 });
     }
 
@@ -165,9 +163,8 @@ class SCMap extends Component {
         //URL PARAMETERS (ZOOM TO EXTENT)
         const extent = [xmin, xmax, ymin, ymax];
         window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
-      } else if (storage !== null) {
+      } else if (extent !== undefined) {
         // ZOOM TO SAVED EXTENT
-        const extent = JSON.parse(storage);
         map.getView().fit(extent, map.getSize(), { duration: 1000 });
       }
       
@@ -265,7 +262,7 @@ class SCMap extends Component {
 
   saveMapExtent = () => {
     const extent = window.map.getView().calculateExtent(window.map.getSize());
-    localStorage.setItem(this.storageExtentKey, JSON.stringify(extent));
+    helpers.saveToStorage(this.storageExtentKey, extent);
     helpers.showMessage("Map Extent", "Your map extent has been saved.");
   };
 
@@ -311,20 +308,8 @@ class SCMap extends Component {
     
   }
 
-  setControlPreferences(){
-    window.mapControls = mainConfig.controls;
-  }
-  removeMapControl(map,controlType) {
-    const remove = (control) => {map.removeControl(control);}
-    map.getControls().forEach(function(control) {
-      if (controlType === "zoom" && control instanceof Zoom) {
-        remove(control);
-      }
-      if (controlType === "rotate" && control instanceof Rotate) {
-        remove(control);
-      }
-    }, this);
-  }
+  
+  
 
   render() {
     window.emitter.addListener("sidebarChanged", isSidebarOpen => this.sidebarChanged(isSidebarOpen));

@@ -9,11 +9,11 @@ import * as helpers from "../../../helpers/helpers";
 import "./VirtualLayers.css";
 
 // LIST ITEM SORTABLE
-const SortableItem = sortableElement(({ value, style, item, onLegendToggle, onCheckboxChange, searchText, onLayerOptionsClick }) => {
+const SortableItem = sortableElement(({ value, style, item, searchText,virtualId,onLayerChange }) => {
   item.elementId = item.name + helpers.getUID();
   return (
     <li style={style} className="sc-toc-layer-list-item sc-noselect" id={item.elementId}>
-      <LayerItem key={helpers.getUID()} layerInfo={item} onLegendToggle={onLegendToggle} onCheckboxChange={onCheckboxChange} searchText={searchText} onLayerOptionsClick={onLayerOptionsClick} />
+      <LayerItem key={helpers.getUID()} layerInfo={item} virtualId={virtualId} onLayerChange={onLayerChange} searchText={searchText}/>
     </li>
   );
 });
@@ -38,8 +38,8 @@ class VirtualLayers extends Component {
         style={style}
         value={value}
         item={items[index]}
-        onLegendToggle={this.props.onLegendToggle}
-        onCheckboxChange={this.props.onCheckboxChange}
+        onLayerChange={this.props.onLayerChange}
+        virtualId={this.props.virtual_key}
         searchText={this.props.searchText}
         disabled={this.props.searchText !== "" || this.props.sortAlpha ? true : false}
         onLayerOptionsClick={this.props.onLayerOptionsClick}

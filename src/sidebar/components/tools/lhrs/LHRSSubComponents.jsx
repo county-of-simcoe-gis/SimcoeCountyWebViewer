@@ -1,5 +1,4 @@
 import React from "react";
-import * as helpers from "../../../../helpers/helpers";
 
 export const LHRSPoint = props => {
     const inputMsg = "";
@@ -23,7 +22,7 @@ export const LHRSPoint = props => {
                 inputId="sc-lhrs-hwy" 
                 readOnly={true}
                 placeholer={inputMsg} />
-        <LHRSRow label="Distance" 
+        <LHRSRow label="M Distance (km)" 
                 value={props.m_distance} 
                 onChange={() => {}}
                 inputId="sc-lhrs-distance" 
@@ -35,13 +34,13 @@ export const LHRSPoint = props => {
                 inputId="sc-lhrs-basepoint" 
                 readOnly={true}
                 placeholer={inputMsg} />
-        <LHRSRow label="Offset" 
+        <LHRSRow label="Offset (km)" 
                 value={props.offset} 
                 onChange={() => {}}
                 inputId="sc-lhrs-offset" 
                 readOnly={true}
                 placeholer={inputMsg} />
-        <LHRSRow label="Meters to Hwy" 
+        <LHRSRow label="CL Offset (m)" 
                 value={props.snapped_distance} 
                 onChange={() => {}}
                 inputId="sc-lhrs-snapped" 

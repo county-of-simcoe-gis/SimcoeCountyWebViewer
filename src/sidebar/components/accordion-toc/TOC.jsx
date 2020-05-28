@@ -18,12 +18,12 @@ import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.js
 import { Item as MenuItem } from "rc-menu";
 import Portal from "../../../helpers/Portal.jsx";
 import Identify from "../../../map/Identify";
-import MenuButton from "../../MenuButton.jsx"
 import Point from "ol/geom/Point";
 import { Vector as VectorLayer } from "ol/layer";
 import { Vector as VectorSource } from "ol/source.js";
 import Feature from "ol/Feature";
 import { Icon, Style} from "ol/style.js";
+
 class TOC extends Component {
   constructor(props) {
     super(props);
@@ -221,24 +221,23 @@ class TOC extends Component {
     helpers.addAppStat("TOC Reset", "Button");
   };
 
-  onToolsClick = evt => {
+  onSettingsClick = evt => {
     var evtClone = Object.assign({}, evt);
     const menu = (
       <Portal>
-        <FloatingMenu key={helpers.getUID()} buttonEvent={evtClone} item={this.props.info} onMenuItemClick={action => this.onMenuItemClick(action)} styleMode="right" yOffset={120}>
-          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-expand">
-            <FloatingMenuItem imageName={"plus16.png"} label="Show Legend" />
+        <FloatingMenu key={helpers.getUID()} buttonEvent={evtClone} item={this.props.info} onMenuItemClick={action => this.onMenuItemClick(action)} styleMode="right" yOffset={0}>
+          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-save">
+            <FloatingMenuItem imageName={"save-disk.png"} label="Save Layer Visibility" />
           </MenuItem>
-          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-collapse">
-            <FloatingMenuItem imageName={"minus16.png"} label="Hide Legend" />
+          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-reset">
+            <FloatingMenuItem imageName={"reset.png"} label="Reset to Default" />
+          </MenuItem>
+          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-sort">
+            Sort A-Z <Switch className="sc-toc-sort-switch" onChange={this.onSortSwitchChange} checked={this.state.sortAlpha} height={20} width={48} />
           </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-visility">
             <FloatingMenuItem imageName={"layers-off.png"} label="Turn off Layers" />
           </MenuItem>
-          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-clear-local">
-            <FloatingMenuItem imageName={"eraser.png"} label="Clear My Saved Data" />
-          </MenuItem>
-         
         </FloatingMenu>
       </Portal>
     );
@@ -247,21 +246,20 @@ class TOC extends Component {
   };
 
   onMenuItemClick = action => {
-    if (action === "sc-floating-menu-expand") {
-      window.emitter.emit("toggleAllLegend", "OPEN");
-    } else if (action === "sc-floating-menu-collapse") {
-      window.emitter.emit("toggleAllLegend", "CLOSE");
-    } else if (action === "sc-floating-menu-clear-local") {
-      localStorage.clear();
-      helpers.showMessage("Local Data Cleared", "Your local data has been cleared");
-    } else if (action === "sc-floating-menu-visility") {
-       window.emitter.emit("turnOffLayers", null);
-    } else if (action === "sc-floating-menu-add-data") {
-      //window.emitter.emit("turnOffLayers", null);
-      helpers.showMessage("Add Data", "Coming soon. I'm working on it...");
+    switch(action){
+      case "sc-floating-menu-visility":
+        window.emitter.emit("turnOffLayers", null);
+        break;
+      case "sc-floating-menu-save":
+        this.onSaveClick();
+        break;
+      case "sc-floating-menu-reset":
+        this.reset();
+        break
+      default:
+        break;
     }
-
-    helpers.addAppStat("TOC Tools", action);
+    helpers.addAppStat("TOC Settings - ", action);
   };
   onSortSwitchChange = sortAlpha => {
     this.setState({ sortAlpha: sortAlpha });
@@ -298,12 +296,17 @@ class TOC extends Component {
 
       layers[groupName] = savedLayers;
     }
-
-    localStorage.setItem(this.storageKey, JSON.stringify(layers));
+    helpers.saveToStorage(this.storageKey, layers);
+    
 
     helpers.showMessage("Save", "Layer Visibility has been saved.");
   };
 
+  onGroupChange = (group) => {
+    if (group !== undefined && this.state.layerGroups!==undefined){
+      this.setState({layerGroups: this.state.layerGroups.map(item => item.value === group.value ? group : item)}, ()=>{});
+    }
+  }
   render() {
     return (
       <div>
@@ -320,9 +323,10 @@ class TOC extends Component {
               onFocus={evt => {helpers.disableKeyboardEvents(true);}}
               onBlur={evt => {helpers.disableKeyboardEvents(false);}}
                />&nbsp;
-            <div data-tip="Save Layer Visibility" data-for="sc-toc-save-tooltip" className="sc-hidden sc-toc-search-save-image" onClick={this.onSaveClick}>
-              <ReactTooltip id="sc-toc-save-tooltip" className="sc-toc-save-tooltip" multiline={false} place="right" type="dark" effect="solid" />
+            <div data-tip="TOC Settings" data-for="sc-toc-settings-tooltip" className="sc-toc-settings-image" onClick={this.onSettingsClick}>
+              <ReactTooltip id="sc-toc-settings-tooltip" className="sc-toc-settings-tooltip" multiline={false} place="right" type="dark" effect="solid" />
             </div>
+            
           </div>
         
           <div className="toc-group-list">
@@ -336,6 +340,7 @@ class TOC extends Component {
                 allGroups={this.state.layerGroups}
                 panelOpen={false}
                 saveLayerOptions={this.state.saveLayerOptions[group.value]}
+                onGroupChange={this.onGroupChange}
 
               />
               
@@ -343,20 +348,8 @@ class TOC extends Component {
           </div>
          
           <div className="sc-toc-footer-container">
-          
-            <label className={"sc-hidden sc-toc-sort-switch-label" + (this.state.sortAlpha ? " on" : "")}>
-              Sort A-Z
-              <Switch className="sc-toc-sort-switch" onChange={this.onSortSwitchChange} checked={this.state.sortAlpha} height={20} width={48} />
-            </label>
-            <button className="sc-button sc-toc-footer-button save" onClick={this.onSaveClick} title="Save layer visibility">&nbsp;</button>
-            
-            &nbsp;
-            <button className="sc-button sc-toc-footer-button reset" onClick={this.reset} title="Reset to default">&nbsp;</button>
-            &nbsp;
-            <button className="sc-button sc-toc-footer-button tools" onClick={this.onToolsClick} title="Additional Tools">&nbsp;</button>
-            &nbsp;
             <AddLayer className="sc-hidden sc-button sc-toc-footer-button" />
-            <div className="sc-button sc-toc-footer-button more"><MenuButton showLabel={false} /></div>
+            
           </div>
         </div>
       </div>

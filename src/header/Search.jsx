@@ -228,7 +228,8 @@ class Search extends Component {
   }
 
   jsonCallback(result) {
-    this.saveStateToStorage(result);
+    helpers.appendToStorage(this.storageKey, result, 25);
+    //this.saveStateToStorage(result);
 
     // EMTI SEARCH COMPLETE
     window.emitter.emit("searchComplete", result);
@@ -236,7 +237,7 @@ class Search extends Component {
     this.initsearchLayers();
 
     // SET STATE CURRENT ITEM
-    this.setState({ searchResults: [result] });
+    //this.setState({ searchResults: [result] });
 
     //CHECK FOR ASSOCIATED LAYERS
     if (result.layers !== undefined && result.layers !== null){
@@ -307,25 +308,6 @@ class Search extends Component {
     }
   }
 
-  saveStateToStorage = item => {
-    let savedSearches = this.getStorage();
-
-    item.dateAdded = new Date().toLocaleString();
-    savedSearches.unshift(item);
-
-    if (savedSearches.length >= 25) savedSearches.pop();
-    localStorage.setItem(this.storageKey, JSON.stringify(savedSearches));
-  };
-
-  // GET STORAGE
-  getStorage() {
-    const storage = localStorage.getItem(this.storageKey);
-    if (storage === null) return [];
-
-    const data = JSON.parse(storage);
-    return data;
-  }
-
   // WHEN USER SELECTS ITEM
   onItemSelect(value, item) {
     if (item.type === "Map Layer") {
@@ -362,12 +344,12 @@ class Search extends Component {
     searchGeoLayer.getSource().clear();
 
     // SET STATE CURRENT ITEM
-    this.setState({ value, searchResults: [item] });
+    //this.setState({ value, searchResults: [item] });
     if (item.place_id !== undefined || item.id === null) {
       this.initsearchLayers();
 
       // SET STATE CURRENT ITEM
-      this.setState({ searchResults: [item] });
+      //this.setState({ searchResults: [item] });
 
       // HANDLE OSM RESULT
       let coords = [];
@@ -403,7 +385,7 @@ class Search extends Component {
     // HIDE POPUP
     window.popup.hide();
 
-    this.setState({ value: "" });
+    this.setState({ value: "", searchResults:[] });
   }
 
   onMoreOptionsClick = evt => {

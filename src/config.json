@@ -67,6 +67,13 @@
       "componentName": "LHRS",
       "description": "Get LHRS values.",
       "imageName": "lhrs.png"
+    },
+    {
+      "id": 9,
+      "name": "Settings",
+      "componentName": "Settings",
+      "description": "Customize for your preferences",
+      "imageName": "settings.png"
     }
   ],
 

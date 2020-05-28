@@ -58,8 +58,12 @@ export const LatLong = props => {
 export const ProjectedCoordinates = props => {
   if (props.zone === undefined || props.zone.value === "auto") return (<div></div>);
   return (
-    <div className="sc-coordinates-live">
-        <span>{props.coords !== null ?  props.zone.value + " : " + props.coords[0].toFixed(props.precision) + " / " + props.coords[1].toFixed(props.precision) : ""}</span>
+    <div className={props.coords !== null ?  "sc-coordinates-live" : "sc-hidden"}>
+      <div className="sc-coordinates-live-data">
+        <div className="sc-coordinates-live-title">{props.coords !== null ? props.projection.label + (props.zone.value !=="auto" && props.zone.label.trim() !== "" ? " - Zone: " + props.zone.label:"") :""}</div>
+        <div className="sc-coordinates-live-content">{props.coords !== null ? props.zone.value + " : " + props.coords[0].toFixed(props.precision) + " / " + props.coords[1].toFixed(props.precision) : ""}</div>
+      </div>
+        <div className="sc-coordinates-live-badge">LIVE</div>
     </div>
   );
 };
