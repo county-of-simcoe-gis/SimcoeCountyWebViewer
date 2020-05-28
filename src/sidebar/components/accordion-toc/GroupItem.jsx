@@ -23,9 +23,14 @@ class GroupItem extends Component {
     window.emitter.addListener("updateActiveTocLayers",(groupName) => {if (groupName === this.props.group.value || groupName === null) this.setActiveLayerCount()});
   }
 
-  setActiveLayerCount = () => {
-    let activeCount = (this.props.group.layers.filter(layer => layer.layer.getVisible())).length;
-    this.setState({activeLayerCount: activeCount});
+  setActiveLayerCount = (group) => {
+    let activeCount = 0;
+    if (group !== undefined){
+      activeCount = (group.layers.filter(layer => layer.layer.getVisible())).length;
+    }else{
+      activeCount = (this.props.group.layers.filter(layer => layer.layer.getVisible())).length;
+    }
+    if (activeCount !== this.state.activeLayerCount) this.setState({activeLayerCount: activeCount});
   };
   
   onActivateLayer = (callback) => {
@@ -43,6 +48,10 @@ class GroupItem extends Component {
       window.emitter.emit("turnOffLayers", group);
     } else if (action === "sc-floating-menu-enable-layers") {
       window.emitter.emit("turnOnLayers", group);
+    } else if (action === "sc-floating-menu-expand") {
+      window.emitter.emit("toggleLegend", "OPEN", this.props.group.value);
+    } else if (action === "sc-floating-menu-collapse") {
+      window.emitter.emit("toggleLegend", "CLOSE", this.props.group.value);
     } 
     helpers.addAppStat("Group Options", action);
   };
@@ -63,6 +72,12 @@ class GroupItem extends Component {
           </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-disable-layers">
             <FloatingMenuItem label="Turn Off All Layers" />
+          </MenuItem>
+          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-expand">
+            <FloatingMenuItem imageName={"plus16.png"} label="Show Legend" />
+          </MenuItem>
+          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-collapse">
+            <FloatingMenuItem imageName={"minus16.png"} label="Hide Legend" />
           </MenuItem>
         </FloatingMenu>
       </Portal>
@@ -134,6 +149,12 @@ class GroupItem extends Component {
     }
     
   };
+  onGroupChange = (group) => {
+    //update group state if need
+    this.setActiveLayerCount(group);
+    //call onGroupChange from toc
+    this.props.onGroupChange(this.state.group)
+  }
   render() {
     
     if (this.props.group !== undefined && this.isVisible()){
@@ -158,7 +179,8 @@ class GroupItem extends Component {
                     group={this.props.group}
                     searchText={this.props.searchText}
                     sortAlpha={this.props.sortAlpha}
-                    onLayerChange={() => this.setActiveLayerCount()}
+                    onGroupChange={this.onGroupChange}
+                    
                   />
             
                 </div>

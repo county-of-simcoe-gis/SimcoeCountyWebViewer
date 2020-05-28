@@ -32,6 +32,8 @@ class BasemapSwitcher extends Component {
 
     // LISTEN FOR MAP TO MOUNT
     window.emitter.addListener("mapLoaded", () => this.onMapLoad());
+    // LISTEN FOR CONTROL VISIBILITY CHANGES
+    window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control,visible));
   }
   componentDidMount(){
     this.setState({showBaseMapSwitcher:window.mapControls.basemap});
@@ -94,7 +96,7 @@ class BasemapSwitcher extends Component {
 
     // LOAD WORLD LAYER
     if (BasemapConfig.worldImageryService !== undefined) {
-      var worldImageryLayer = helpers.(BasemapConfig.worldImageryService);
+      var worldImageryLayer = helpers.getESRITileXYZLayer(BasemapConfig.worldImageryService);
       worldImageryLayer.setZIndex(0);
       //worldImageryLayer.setMinResolution(300);
       window.map.addLayer(worldImageryLayer);
@@ -391,6 +393,15 @@ class BasemapSwitcher extends Component {
       );
     }else{
       return;
+    }
+  }
+  controlStateChange(control, state) {
+    switch (control){
+      case "basemap":
+        this.setState({showBaseMapSwitcher:state});
+        break;
+      default:
+        break;
     }
   }
   render() {

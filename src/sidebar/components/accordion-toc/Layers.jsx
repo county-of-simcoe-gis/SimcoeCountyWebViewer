@@ -1,7 +1,5 @@
 // REACT
 import React, { Component } from "react";
-import ReactDOM from "react-dom";
-import Slider, { createSliderWithTooltip } from "rc-slider";
 import { sortableContainer } from "react-sortable-hoc";
 import VirtualLayers from "./VirtualLayers.jsx";
 import arrayMove from "array-move";
@@ -10,11 +8,6 @@ import arrayMove from "array-move";
 import "./Layers.css";
 import * as helpers from "../../../helpers/helpers";
 import * as TOCHelpers from "../common/TOCHelpers.jsx";
-import TOCConfig from "../common/TOCConfig.json";
-import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
-import { Item as MenuItem } from "rc-menu";
-import Portal from "../../../helpers/Portal.jsx";
-
 
 const SortableVirtualList = sortableContainer(VirtualLayers, { withRef: true });
 
@@ -38,7 +31,8 @@ class Layers extends Component {
   turnOnLayersListener(group) {if (group === this.props.group.value || group === null) this.turnOnLayers(); }
   activeTocLayerListener(layerItem) {if (layerItem.layerGroup === this.props.group.value) this.onActivateLayer(layerItem); }
   deactiveTocLayerListener(layerItem) {if (layerItem.layerGroup === this.props.group.value) this.onDeactivateLayer(layerItem); }
-  
+  toggleAllLegendsListener(group, type) {if (group === this.props.group.value || group === null) this.toggleAllLegends(type); }
+
   getVirtualId()  {
     return "sc-toc-virtual-layers" + this.props.group.value;
   }
@@ -52,7 +46,7 @@ class Layers extends Component {
     // LISTEN FOR TURN ON LAYERS
     window.emitter.addListener("turnOnLayers",group =>this.turnOnLayersListener(group) );
     // LISTEN FOR TOGGLE ALL LEGEND
-    window.emitter.addListener("toggleAllLegend",type => this.toggleAllLegends(type));
+    window.emitter.addListener("toggleLegend",(type, group) => this.toggleAllLegendsListener(group,type));
     // LISTEN FOR SEARCH RESULT
     window.emitter.addListener("activeTocLayer", layerItem => this.activeTocLayerListener(layerItem));
      // LISTEN FOR SEARCH RESULT
@@ -168,14 +162,6 @@ class Layers extends Component {
     return 0;
   }
 
-  getItemsFromStorage() {
-    const storage = localStorage.getItem(this.storageKey);
-    if (storage === null) return [];
-
-    const data = JSON.parse(storage);
-    return data;
-  }
-
   sortLayers = (layers, sortAlpha, callback = undefined) => {
     let newLayers = Object.assign([{}], layers);
     if (sortAlpha) newLayers.sort(this.sortByAlphaCompare);
@@ -247,11 +233,23 @@ class Layers extends Component {
 
     // LEGEND FOR EACH LAYER
     onLegendToggle = layerInfo => {
-      this.legendVisiblity(layerInfo);
+      this.legendVisiblity(layerInfo, undefined,(returnedLayer) =>{
+        this.setState(
+          {
+            // UPDATE LEGEND
+            layers: this.state.layers.map(layer =>
+              layer.name === layerInfo.name ? returnedLayer : layer
+            )
+          },
+          () => {
+            document.getElementById(this.getVirtualId()).scrollTop += this.lastPosition;
+          
+          });
+      });
       
     };
   // TOGGLE LEGEND
-  legendVisiblity = (layerInfo, forceAll) => {
+  legendVisiblity = (layerInfo, forceAll, callback) => {
     this.lastPosition = document.getElementById(this.getVirtualId()).scrollTop;
     if (layerInfo.styleUrl === "") return;
     let showLegend = !layerInfo.showLegend;
@@ -261,141 +259,43 @@ class Layers extends Component {
     }
 
     if (layerInfo.legendImage === null) {
-      //const legendOptionsTemplate = (scale) => {"&SCALE=$(scale)&LEGEND_OPTIONS=forceLabels:on;hideEmptyRules:true;"};
-      
       TOCHelpers.getBase64FromImageUrl(layerInfo.styleUrl, (height, imgData) => {
         const rowHeight = showLegend ? (height += 36) : 30;
-        this.setState(
-          {
-            // UPDATE LEGEND
-            layers: this.state.layers.map(layer =>
-              layer.name === layerInfo.name ? Object.assign({}, layer, { showLegend: showLegend, height: rowHeight, legendHeight: height, legendImage: imgData }) : layer
-            )
-          },
-          () => {
-            document.getElementById(this.getVirtualId()).scrollTop += this.lastPosition;
-          
-          }
-        );
+        callback(Object.assign({}, layerInfo, { showLegend: showLegend, height: rowHeight, legendHeight: height, legendImage: imgData }));
+        
       });
     } else {
       const rowHeight = showLegend ? layerInfo.legendHeight : 30;
-      this.setState(
-        {
-          // UPDATE LEGEND
-          layers: this.state.layers.map(layer => (layer.name === layerInfo.name ? Object.assign({}, layer, { showLegend: showLegend, height: rowHeight }) : layer))
-        },
-        () => {
-          document.getElementById(this.getVirtualId()).scrollTop += this.lastPosition;
-          
-         
-        }
-      );
+      callback(Object.assign({}, layerInfo, { showLegend: showLegend, height: rowHeight }));
     }
   };
 
-  // CHECKBOX FOR EACH LAYER
-  onCheckboxChange = layerInfo => {
-    const visible = !layerInfo.visible;
-    layerInfo.layer.setVisible(visible);
-    this.props.onLayerChange();
-    //window.emitter.emit("updateActiveTocLayers",  this.props.group.value);
-    layerInfo.visible = visible;
+
+  toggleAllLegends (type) {
+    let newLayers = [];
+    this.state.layers.forEach(layer => 
+        this.legendVisiblity(layer, type, (returnedLayer)=>{newLayers.push(returnedLayer)}
+      ));
+    setTimeout(()=>{
+    newLayers = newLayers.concat([]);
     this.setState(
       {
         // UPDATE LEGEND
-        layers: this.state.layers.map(layer => (layer.name === layerInfo.name ? Object.assign({}, layer, { visible: visible }) : layer))
-      },
-      () => { 
-        
-      }
-    );
-    
-  };
-
-  // OPACITY SLIDER FOR EACH LAYER
-  onSliderChange = (opacity, layerInfo) => {
-    layerInfo.layer.setOpacity(opacity);
-
-    this.setState(
-      {
-        // UPDATE LEGEND
-        layers: this.state.layers.map(layer => (layer.name === layerInfo.name ? Object.assign({}, layer, { opacity: opacity }) : layer))
+        layers: this.state.layers.map(layer => newLayers.filter(newLayer => layer.name === newLayer.name)[0] )
       },
       () => {
-        
+        document.getElementById(this.getVirtualId()).scrollTop += this.lastPosition;
       }
-    );
-  };
-
-  // ELLIPSIS/OPTIONS BUTTON
-  onLayerOptionsClick = (evt, layerInfo) => {
-    var evtClone = Object.assign({}, evt);
-    const menu = (
-      <Portal>
-        <FloatingMenu
-          key={helpers.getUID()}
-          buttonEvent={evtClone}
-          autoY={true}
-          item={this.props.info}
-          onMenuItemClick={action => this.onMenuItemClick(action, layerInfo)}
-          styleMode={helpers.isMobile() ? "left" : "right"}
-        >
-          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-metadata">
-            <FloatingMenuItem imageName={"metadata.png"} label="Metadata" />
-          </MenuItem>
-          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoom-to-layer">
-            <FloatingMenuItem imageName={"zoom-in.png"} label="Zoom to Layer" />
-          </MenuItem>
-          <MenuItem className="sc-layers-slider" key="sc-floating-menu-opacity">
-            Adjust Transparency
-            <SliderWithTooltip tipFormatter={this.sliderTipFormatter} max={1} min={0} step={0.05} defaultValue={layerInfo.opacity} onChange={evt => this.onSliderChange(evt, layerInfo)} />
-          </MenuItem>
-        </FloatingMenu>
-      </Portal>
-    );
-
-    ReactDOM.render(menu, document.getElementById("portal-root"));
-  };
-
-  onMenuItemClick = (action, layerInfo) => {
-    if (action === "sc-floating-menu-metadata") {
-      TOCHelpers.getLayerInfo(layerInfo, result => {
-        if (helpers.isMobile()) {
-          window.emitter.emit("setSidebarVisiblity", "CLOSE");
-          helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl, false, "full");
-        } else helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl);
-      });
-    } else if (action === "sc-floating-menu-zoom-to-layer") {
-      TOCHelpers.getLayerInfo(layerInfo, result => {
-        const boundingBox = result.featureType.nativeBoundingBox;
-        const extent = [boundingBox.minx, boundingBox.miny, boundingBox.maxx, boundingBox.maxy];
-        window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
-      });
-    } 
-
-    helpers.addAppStat("Layer Options", action);
-  };
-
-  toggleAllLegends (type ) {
-    let showLegend = true;
-    if (type === "CLOSE") showLegend = false;
-
-    for (let index = 0; index < this.state.layers.length; index++) {
-      const layer = this.state.layers[index];
-      let newLayer = Object.assign({}, layer);
-      newLayer.showLegend = showLegend;
-      setTimeout(() => {
-        this.legendVisiblity(newLayer, type);
-      }, 30);
-    }
+    );},1000);
   };
 
   turnOnLayers = () => {
     if(!this._isMounted) return;
     TOCHelpers.turnOnLayers(this.state.layers, newLayers => {
       this.setState({ layers: newLayers}, () => {
-        this.props.onLayerChange();
+        let group = this.props.group;
+        group.layers = this.state.layers
+        this.props.onGroupChange(group);
       });
     });
   };
@@ -404,11 +304,21 @@ class Layers extends Component {
     if(!this._isMounted) return;
     TOCHelpers.turnOffLayers(this.state.layers, newLayers => {
        this.setState({ layers: newLayers}, () => {
-        this.props.onLayerChange();
+        let group = this.props.group;
+        group.layers = this.state.layers
+        this.props.onGroupChange(group);
       });
     });
   };
-
+  onLayerChange = (layer) =>{
+    //update layers
+    this.setState({layers: this.state.layers.map(item => item.name === layer.name ? layer : item)}, ()=>{
+      //send layers up to group item
+      let group = this.props.group;
+      group.layers = this.state.layers
+      this.props.onGroupChange(group);
+    });
+  }
   render() {
     if (this.state.layers === undefined) return <div />;
     
@@ -437,10 +347,8 @@ class Layers extends Component {
                 lockAxis={"y"}
                 onSortMove={this.onSortMove}
                 distance={5}
-                onLegendToggle={this.onLegendToggle}
-                onCheckboxChange={this.onCheckboxChange}
+                onLayerChange={this.onLayerChange}
                 searchText={this.props.searchText}
-                onLayerOptionsClick={this.onLayerOptionsClick}
                 sortAlpha={this.props.sortAlpha}
                 //scrollToIndex={50}
               />
@@ -452,5 +360,3 @@ class Layers extends Component {
 
 export default Layers;
 
-// SLIDER
-const SliderWithTooltip = createSliderWithTooltip(Slider);

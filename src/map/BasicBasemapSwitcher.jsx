@@ -23,6 +23,8 @@ class BasemapSwitcher extends Component {
 
     // LISTEN FOR MAP TO MOUNT
     window.emitter.addListener("mapLoaded", () => this.onMapLoad());
+    // LISTEN FOR CONTROL VISIBILITY CHANGES
+    window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control,visible));
   }
   componentDidMount(){
     this.setState({showBaseMapSwitcher:window.mapControls.basemap,toggleService:BasemapConfig.topoServices[1]});
@@ -202,6 +204,15 @@ class BasemapSwitcher extends Component {
       }
       
     });
+  }
+  controlStateChange(control, state) {
+    switch (control){
+      case "basemap":
+        this.setState({showBaseMapSwitcher:state});
+        break;
+      default:
+        break;
+    }
   }
   render() {
     return (

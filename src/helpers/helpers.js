@@ -17,6 +17,7 @@ import Point from "ol/geom/Point";
 import { getTopLeft } from "ol/extent.js";
 import { easeOut } from "ol/easing";
 import { Fill, Stroke, Style, Circle as CircleStyle, Text as TextStyle } from "ol/style";
+import {  ScaleLine, FullScreen, Rotate, Zoom} from "ol/control.js";
 import { unByKey } from "ol/Observable.js";
 import { transform } from "ol/proj.js";
 import Projection from "ol/proj/Projection.js";
@@ -632,18 +633,20 @@ export function getWFSLayerRecordCount(serverUrl, layerName, callback) {
 }
 
 export function zoomToFeature(feature, animate = true) {
-  if (animate) {
-    if (feature.getGeometry().getType() === "Point") {
-      window.map.getView().fit(feature.getGeometry(),window.map.getSize(), { duration: 1000, minResolution: 1});
-      window.map.getView().setZoom(window.map.getView().getZoom() - 1);
-    } else {
-      window.map.getView().fit(feature.getGeometry(),window.map.getSize(), { duration: 1000 });
-      window.map.getView().setZoom(window.map.getView().getZoom() - 1);
-    }
+  let geom = feature.getGeometry();
+  let duration = animate ? 1000 : 0;
+
+  if (geom.getType() === "Point") {
+    window.map.getView().fit(geom,window.map.getSize(), { duration: duration, minResolution: 1});
+    window.map.getView().setZoom(window.map.getView().getZoom() - 1);
+  } else if (geom.getType() === "GeometryCollection") {
+    window.map.getView().fit(geom.getGeometries()[0],window.map.getSize(), { duration: duration, minResolution: 1});
+    window.map.getView().setZoom(window.map.getView().getZoom() - 1);
   } else {
-    window.map.getView().fit(feature.getGeometry(), window.map.getSize(), { duration: 1000 });
+    window.map.getView().fit(geom,window.map.getSize(), { duration: duration });
     window.map.getView().setZoom(window.map.getView().getZoom() - 1);
   }
+  
 }
 
 // THIS RETURNS THE ACTUAL REACT ELEMENT USING DOM ID
@@ -910,9 +913,25 @@ function stringDivider(str, width, spaceReplacer) {
   return str;
 }
 
+export function saveToStorage(storageKey, item) {
+  localStorage.setItem(storageKey, JSON.stringify(item));
+};
+
+export function appendToStorage(storageKey, item, limit = undefined) {
+  let items = this.getItemsFromStorage(storageKey);
+  if (items === undefined) items=[];
+  item.dateAdded = new Date().toLocaleString();
+  items.unshift(item);
+  if (limit !== undefined){
+    if (items.length >= limit) items.pop();
+  }
+  
+  localStorage.setItem(storageKey, JSON.stringify(items));
+};
+
 export function getItemsFromStorage(key) {
   const storage = localStorage.getItem(key);
-  if (storage === null) return [];
+  if (storage === null) return undefined;
 
   const data = JSON.parse(storage);
   return data;
@@ -1096,4 +1115,64 @@ function FeaturePopupContent(props) {
       })}
     </div>
   );
+}
+
+export function removeMapControl(map,controlType) {
+  const remove = (control) => {
+    map.removeControl(control);
+  }
+  map.getControls().forEach(function(control) {
+    if (controlType === "zoom" && control instanceof Zoom) {
+      remove(control);
+    }
+    if (controlType === "rotate" && control instanceof Rotate) {
+      remove(control);
+    }
+    if (controlType === "fullscreen" && control instanceof FullScreen) {
+      remove(control);
+    }
+    if (controlType === "scaleLine" && control instanceof ScaleLine) {
+      remove(control);
+    }
+  }, this);
+}
+
+export function addMapControl(map,controlType) {
+  const add = (control) => {
+    if (!hasMapControl(map,controlType)) map.addControl(control);
+  }
+  switch (controlType){
+    case "rotate":
+      add(new Rotate());
+      break;
+    case "zoom":
+      add(new Zoom());
+      break;
+    case "fullscreen":
+      add(new FullScreen());
+      break;
+    case "scaleLine":
+      add(new ScaleLine({minWidth: 100}));
+      break;
+    default:
+      break;
+  }
+}
+function hasMapControl(map,controlType) {
+  let returnResult = false;
+  map.getControls().forEach(function(control) {
+    if (controlType === "zoom" && control instanceof Zoom) {
+      returnResult =true;
+    }
+    if (controlType === "rotate" && control instanceof Rotate) {
+      returnResult =true;
+    }
+    if (controlType === "fullscreen" && control instanceof FullScreen) {
+      returnResult =true;
+    }
+    if (controlType === "scaleLine" && control instanceof ScaleLine) {
+      returnResult =true;
+    }
+  }, this);
+  return returnResult;
 }

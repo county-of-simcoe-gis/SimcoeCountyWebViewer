@@ -205,14 +205,6 @@ class Layers extends Component {
     return 0;
   }
 
-  getItemsFromStorage() {
-    const storage = localStorage.getItem(this.storageKey);
-    if (storage === null) return [];
-
-    const data = JSON.parse(storage);
-    return data;
-  }
-
   sortLayers = (layers, sortAlpha, callback = undefined) => {
     let newLayers = Object.assign([{}], layers);
     if (sortAlpha) newLayers.sort(this.sortByAlphaCompare);
@@ -512,8 +504,7 @@ class Layers extends Component {
 
       layers[key] = savedLayers;
     }
-
-    localStorage.setItem(this.storageKey, JSON.stringify(layers));
+    helpers.saveToStorage(this.storageKey, layers);
 
     helpers.showMessage("Save", "Layer Visibility has been saved.");
   };

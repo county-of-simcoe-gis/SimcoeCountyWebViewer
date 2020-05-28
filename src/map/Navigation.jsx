@@ -16,6 +16,9 @@ class Navigation extends Component {
 
     // LISTEN FOR SIDEPANEL CHANGES
     window.emitter.addListener("sidebarChanged", isSidebarOpen => this.sidebarChanged(isSidebarOpen));
+
+    // LISTEN FOR CONTROL VISIBILITY CHANGES
+    window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control,visible));
   }
 
   componentDidMount(){
@@ -70,6 +73,18 @@ class Navigation extends Component {
       this.setState({ containerClassName: "nav-container nav-container-slideout" });
     } else {
       this.setState({ containerClassName: "nav-container nav-container-slidein" });
+    }
+  }
+  controlStateChange(control, state) {
+    switch (control){
+      case "fullExtent":
+        this.setState({showZoomExtent:state});
+        break;
+      case "zoomToCurrentLocation":
+        this.setState({showCurrentLocation:state});
+        break;
+      default:
+        break;
     }
   }
 

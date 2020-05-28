@@ -340,7 +340,7 @@ class MyMaps extends Component {
         items: this.state.items.map(item => (item.id === feature.get("id") ? Object.assign({}, item, { featureGeoJSON: featureGeoJSON }) : item))
       },
       () => {
-        callback();
+        if (callback !== undefined) callback();
       }
     );
   };
@@ -800,7 +800,7 @@ class MyMaps extends Component {
   saveStateToStorage = () => {
     const stateClone = Object.assign({}, this.state);
     delete stateClone["isEditing"];
-    localStorage.setItem(this.storageKey, JSON.stringify(stateClone));
+    helpers.saveToStorage(this.storageKey, stateClone);
   };
 
   setDrawControl = () => {

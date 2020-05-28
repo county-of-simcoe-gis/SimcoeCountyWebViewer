@@ -23,15 +23,12 @@ class ToolComponent extends Component {
 
   // GET STORAGE
   getStorage() {
-    const storage = localStorage.getItem(storageKey);
-    if (storage === null) return [];
-
-    const data = JSON.parse(storage);
+    const data = helpers.getItemsFromStorage(storageKey)
     this.setState({ items: data });
   }
 
   saveStateToStorage = item => {
-    localStorage.setItem(storageKey, JSON.stringify(this.state.items));
+    helpers.saveToStorage(storageKey, this.state.items);
   };
 
   onMoreInfoClick = item => {

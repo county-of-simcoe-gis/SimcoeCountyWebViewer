@@ -73,6 +73,24 @@
 	display: table-cell;
 	padding: 3px 10px;
 }
+.sc-coordinates-row label{
+  width: 120px;
+  display: inline-block;
+  font-weight: bold;
+  padding-left: 20px;
+  font-size: 16px;
+}
+
+.sc-coordinates-row span{
+  color: #8E8E8E;
+  font-size: 16px;
+  display: inline-block;
+  padding:1px;
+}
+#sc-zone-select {
+  width:170px;
+}
+
 .sc-coordinates-input {
   color: #606060;
   padding: 3px;
@@ -89,6 +107,30 @@
 }
 .sc-coordinates-live{
   font-size:10px;
+  display: inline-flex;
+  width: 100%;
+}
+.sc-coordinates-live-data{
+  display: table;
+  width: 80%;
+}
+.sc-coordinates-live-title{
+  display: table-row;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.sc-coordinates-live-content{
+  display: table-row;
+}
+.sc-coordinates-live-badge{
+  width: 20%;
+  float: right;
+  font-size: 16px;
+  font-weight: bold;
+  color: #FF0000;
+  vertical-align: middle;
+  text-align: center;
 }
 .sc-description ul  {
   list-style: none;

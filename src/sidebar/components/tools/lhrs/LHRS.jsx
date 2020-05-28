@@ -402,7 +402,7 @@ class LHRS extends Component {
           inputAReadOnly = false;
           inputAPlaceholer = "(Enter Hwy)";
           inputAHidden = false;
-          inputBLabel = "Distance";
+          inputBLabel = "M Distance (km)";
           inputBValue = pointObj.m_distance;
           inputBType = "m_distance";
           inputBReadOnly = false;
@@ -417,7 +417,7 @@ class LHRS extends Component {
           inputAReadOnly = false;
           inputAPlaceholer = "(Enter Basepoint)";
           inputAHidden = false;
-          inputBLabel = "Offset";
+          inputBLabel = "Offset (km)";
           inputBValue = pointObj.offset;
           inputBType = "offset";
           inputBReadOnly = false;
@@ -428,7 +428,7 @@ class LHRS extends Component {
         case "enterDistanceFromA":
           let defaultDistance = null;
           if (this.state.b_m_distance !== null) defaultDistance = this.state.b_m_distance-this.state.a_m_distance;
-          inputALabel = "Distance From A";
+          inputALabel = "M Distance From A (km)";
           inputAValue = defaultDistance;
           inputAType = "m_distance";
           inputAReadOnly = false;
@@ -721,7 +721,7 @@ class LHRS extends Component {
                   </span>
               </div>
               <div className="sc-lhrs-row sc-arrow">
-                <label>Snapping Distance:</label>
+                <label>Snapping Distance (m):</label>
                 <span> 
                   <input id="sc-lhrs-snapping-distance-select" 
                   type="text"

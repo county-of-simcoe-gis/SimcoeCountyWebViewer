@@ -85,16 +85,19 @@
   font-size: 15px;
 }
 
-.sc-toc-search-save-image {
+
+.sc-toc-settings-image {
   display: table-cell;
-  background-image: url(./images/save-disk.png);
+  background-image: url(./images/toc-settings.png);
   background-repeat: no-repeat;
   background-position: center;
   background-position-x: 6px;
+  background-position-y: 6px;
   text-align: center;
   min-width: 32px;
   width: 34px;
 }
+
 
 .sc-toc-groups-container {
   display: table;
@@ -146,25 +149,7 @@
   text-align: right;
 }
 
-.sc-toc-footer-button.save {
-  background-color: #e5e5e5;
-  background-image: url(./images/save-disk.png);
-  background-repeat: no-repeat;
-  background-position: center;
-  background-position-x: 8px;
-  width: 38px;
-  text-align: right;
-}
 
-.sc-toc-footer-button.reset {
-  background-color: #e5e5e5;
-  background-image: url(./images/reset.png);
-  background-repeat: no-repeat;
-  background-position: center;
-  background-position-x: 6px;
-  width: 38px;
-  text-align: right;
-}
 
 .sc-toc-footer-button.more {
   background-color: #e5e5e5;
