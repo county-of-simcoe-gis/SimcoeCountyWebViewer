@@ -92,11 +92,10 @@ class Search extends Component {
   requestTimer = null;
 
   onHistoryItemSelect = (item) => {
-    let searchResults = [];
-    searchResults.push(item)
-    searchResults.push(this.state.searchResults);
+    let searchResults = [item];
+    if (this.state.searchResults.length > 0) searchResults.push(this.state.searchResults);
     let value = (item.name.length > 25 ? item.name.substring(0, 25) : item.name);
-    this.setState({ value:value, searchResults: searchResults.concat([])},()=> {this.onItemSelect(item.value, item);});
+    this.setState({ value:value, searchResults: searchResults},()=> {this.onItemSelect(item.value, item);});
   }
   onMapLoad = () => {
     // HANDLE URL PARAMETER
