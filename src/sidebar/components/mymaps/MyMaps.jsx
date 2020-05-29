@@ -104,7 +104,7 @@ class MyMaps extends Component {
     });
 
     // GET ITEMS FROM STORAGE
-    const data = myMapsHelpers.getItemsFromStorage(this.storageKey);
+    const data = helpers.getItemsFromStorage(this.storageKey);
     this.setState(data, () => {
       this.updateStyle();
       this.importGeometries();

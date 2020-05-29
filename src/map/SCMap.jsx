@@ -101,9 +101,6 @@ class SCMap extends Component {
     window.popup = new Popup();
     window.map.addOverlay(window.popup);
 
-    // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
-    window.emitter.emit("mapLoaded");
-
     window.map.getViewport().addEventListener("contextmenu", evt => {
       evt.preventDefault();
       this.contextCoords = window.map.getEventCoordinate(evt);
@@ -192,7 +189,6 @@ class SCMap extends Component {
 
     // MAP LOADED
     this.initialLoad = false;
-    //window.emitter.emit("mapLoaded");
     window.map.once("rendercomplete", event => {
       if (!this.initialLoad) {
         window.emitter.emit("mapLoaded");

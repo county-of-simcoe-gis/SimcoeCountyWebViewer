@@ -280,14 +280,6 @@ export function getPolygonStyle(strokeColor = "black", strokeWidth = 2, fillColo
 //   if (style.image_.points_ !== undefined && style.image_.points_ === 4 && )
 // }
 
-// GET STORAGE AND PARSE
-export function getItemsFromStorage(storageKey) {
-  const storage = localStorage.getItem(storageKey);
-  if (storage === null) return [];
-
-  const data = JSON.parse(storage);
-  return data;
-}
 
 // BUG https://github.com/openlayers/openlayers/issues/3610
 //Control active state of double click zoom interaction
