@@ -85,7 +85,12 @@
   min-height: 89px;
   max-height: 89px;
 }
-
+.sc-basemap-topo-item-title {
+  width:90%;
+  padding-left: 5%;
+  padding-right: 5%;
+  text-align: center;
+}
 .sc-basemap-topo-toggle-item-container img{
   border: none;
 }
