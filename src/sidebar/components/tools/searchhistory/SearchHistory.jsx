@@ -5,7 +5,12 @@ import PanelComponent from "../../../PanelComponent";
 
 const storageKey = "searchHistory";
 class ToolComponent extends Component {
-  state = { items: [] };
+   
+  constructor(props) {
+    super(props);
+
+    this.state = {items: []}
+  }
 
   onClose = () => {
     // ADD CLEAN UP HERE (e.g. Map Layers, Popups, etc)
@@ -24,7 +29,7 @@ class ToolComponent extends Component {
   // GET STORAGE
   getStorage() {
     const data = helpers.getItemsFromStorage(storageKey)
-    this.setState({ items: data });
+    if (data !== undefined) this.setState({ items: data });
   }
 
   saveStateToStorage = item => {
