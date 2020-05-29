@@ -50,3 +50,12 @@
 .sc-floating-menu-toolbox-menu-icon {
   vertical-align: middle;
 }
+.sc-floating-menu-toolbox-menu-title {
+  width: 100%;
+  font-weight: bold;
+  text-align: center;
+  padding-bottom: 5px;
+  padding-top: 5px;
+  background: rgb(233, 233, 233);
+  border-bottom: solid 1px;
+}

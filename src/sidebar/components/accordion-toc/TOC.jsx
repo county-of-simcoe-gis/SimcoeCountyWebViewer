@@ -225,18 +225,18 @@ class TOC extends Component {
     var evtClone = Object.assign({}, evt);
     const menu = (
       <Portal>
-        <FloatingMenu key={helpers.getUID()} buttonEvent={evtClone} item={this.props.info} onMenuItemClick={action => this.onMenuItemClick(action)} styleMode="right" yOffset={0}>
+        <FloatingMenu key={helpers.getUID()} buttonEvent={evtClone} title="TOC Settings" item={this.props.info} onMenuItemClick={action => this.onMenuItemClick(action)} styleMode="right" width={"200px"} yOffset={0}>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-save">
-            <FloatingMenuItem imageName={"save-disk.png"} label="Save Layer Visibility" />
+            <FloatingMenuItem imageName={"save-disk.png"} label="Save TOC Layer Visibility" />
           </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-reset">
-            <FloatingMenuItem imageName={"reset.png"} label="Reset to Default" />
+            <FloatingMenuItem imageName={"reset.png"} label="Reset TOC to Default" />
           </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-sort">
-            Sort A-Z <Switch className="sc-toc-sort-switch" onChange={this.onSortSwitchChange} checked={this.state.sortAlpha} height={20} width={48} />
+            Sort Layers A-Z <Switch className="sc-toc-sort-switch" onChange={this.onSortSwitchChange} checked={this.state.sortAlpha} height={20} width={48} />
           </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-visility">
-            <FloatingMenuItem imageName={"layers-off.png"} label="Turn off Layers" />
+            <FloatingMenuItem imageName={"layers-off.png"} label="Turn off All Layers" />
           </MenuItem>
         </FloatingMenu>
       </Portal>
@@ -265,7 +265,7 @@ class TOC extends Component {
     this.setState({ sortAlpha: sortAlpha });
 
     if (sortAlpha) {
-      helpers.showMessage("Sorting", "Layer re-ordering disabled.", "yellow");
+      helpers.showMessage("Sorting", "Layer re-ordering disabled.");
     }
 
     helpers.addAppStat("TOC Sort", sortAlpha);

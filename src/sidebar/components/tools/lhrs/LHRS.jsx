@@ -402,7 +402,7 @@ class LHRS extends Component {
           inputAReadOnly = false;
           inputAPlaceholer = "(Enter Hwy)";
           inputAHidden = false;
-          inputBLabel = "M Distance (km)";
+          inputBLabel = "M Dist. (km)";
           inputBValue = pointObj.m_distance;
           inputBType = "m_distance";
           inputBReadOnly = false;
@@ -428,7 +428,7 @@ class LHRS extends Component {
         case "enterDistanceFromA":
           let defaultDistance = null;
           if (this.state.b_m_distance !== null) defaultDistance = this.state.b_m_distance-this.state.a_m_distance;
-          inputALabel = "M Distance From A (km)";
+          inputALabel = "M Dist. From A (km)";
           inputAValue = defaultDistance;
           inputAType = "m_distance";
           inputAReadOnly = false;
@@ -561,7 +561,7 @@ class LHRS extends Component {
               pointObj.offset=null;
               pointObj.snapped_distance=null;
               pointObj.valid = false;
-              helpers.showMessage("Not Found", "No LHRS Data Found.", "green", 1500,true);
+              helpers.showMessage("Not Found", "Location selected is outside the defined snapping threshold.\nPlease pick a location within the defined threshold or increase the defined threshold.", "green", 2500,true);
           }
           this._setPoint(pointObj);
         });
@@ -721,7 +721,7 @@ class LHRS extends Component {
                   </span>
               </div>
               <div className="sc-lhrs-row sc-arrow">
-                <label>Snapping Distance (m):</label>
+                <label>Snapping Dist.(m):</label>
                 <span> 
                   <input id="sc-lhrs-snapping-distance-select" 
                   type="text"
