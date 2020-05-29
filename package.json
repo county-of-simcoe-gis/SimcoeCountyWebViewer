@@ -1,7 +1,7 @@
 {
-  "name": "openlayers",
-  "homepage": "https://intra.dev.regionalgis.mto.gov.on.ca/map/",
-  "version": "0.1.0",
+  "name": "imap",
+  "homepage": "./",
+  "version": "0.1.202005291255",
   "private": true,
   "dependencies": {
     "array-move": "^2.0.0",

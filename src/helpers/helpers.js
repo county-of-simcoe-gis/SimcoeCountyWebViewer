@@ -51,13 +51,22 @@ const _nad83Proj = new Projection({
 // APP STAT
 export function addAppStat(type, description) {
   if (mainConfig.includeAppStats === false) return;
-
   // IGNORE LOCAL HOST DEV
   if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") return;
-
-  const appStatsTemplate = (type, description) => `${mainConfig.appStatsUrl}opengis/${type}/${description}`;
-
-  httpGetText(appStatsTemplate(type, description));
+  const build = (appName, version) =>  `${appName}-${version}`;
+  const appStatsTemplate = (build, type, description) => `${mainConfig.appStatsUrl}${build}/${type}/${description}`;
+  let buildname = window.location.pathname.split("/").join("");
+  if (window.version !== undefined && window.version !== null)
+  {
+    if (window.app !== undefined && window.app !== null)
+    { 
+      buildname += build(window.app,window.version)
+    }else{
+      buildname = build(buildname,window.version)
+    }
+    
+  }
+  httpGetText(appStatsTemplate(buildname, type, description));
 }
 
 // GLOW CONTAINER

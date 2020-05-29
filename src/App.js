@@ -7,12 +7,16 @@ import "./helpers/SC.css";
 import mainConfig from "./config.json";
 import * as helpers from "./helpers/helpers";
 import ReactGA from "react-ga";
+import packageJson from '../package.json';
+
 ReactGA.initialize("UA-165888448-1");
 ReactGA.pageview(window.location.pathname + window.location.search);
 
 class App extends Component {
   componentWillMount() {
     document.title = mainConfig.title;
+    window.app = packageJson.name 
+    window.version = packageJson.version
     this.setControlPreferences();
   };
   setControlPreferences(){

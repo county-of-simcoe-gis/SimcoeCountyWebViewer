@@ -4,8 +4,8 @@
   "worldImageryService": "",
   "topoServices": [
     {
-      "name": "Blank",
-      "image": "Simple_Background.png",
+      "name": "Blank Basemap",
+      "image": "blank-background.png",
       "index":0,
       "layers": [
         {
