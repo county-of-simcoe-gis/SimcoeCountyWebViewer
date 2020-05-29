@@ -250,7 +250,7 @@ class BasemapItem extends Component {
         }}
         title={"Switch basemap to " + this.props.service.name}
       >
-        {this.props.showLabel===true?this.props.service.name:""}
+        <div className="sc-basemap-topo-item-title">{this.props.showLabel===true?this.props.service.name:""}</div>
         <img className={"sc-basemap-topo-image" } src={images[this.props.service.image]} alt={this.props.service.image}></img>
       </div>
     );
