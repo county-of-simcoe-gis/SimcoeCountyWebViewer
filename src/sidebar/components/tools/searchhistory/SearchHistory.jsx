@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import "./SearchHistory.css";
 import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
-
 const storageKey = "searchHistory";
 class ToolComponent extends Component {
    
@@ -40,6 +39,10 @@ class ToolComponent extends Component {
     window.open(item.ReportURL, "_blank");
   };
 
+
+  onReplayClick = item => {
+      window.emitter.emit("searchHistorySelect", item);
+  };
   onZoomClick = item => {
     helpers.zoomToFeature(helpers.getFeatureFromGeoJSON(item.geojson));
   };
@@ -48,7 +51,7 @@ class ToolComponent extends Component {
     this.setState(
       {
         items: this.state.items.filter(function(itemInfo) {
-          return itemInfo.ID !== item.ID;
+          return itemInfo.id !== item.id;
         })
       },
       () => {
@@ -72,7 +75,7 @@ class ToolComponent extends Component {
           <div className={this.state.items.length === 0 ? "sc-tool-search-history-no-results" : "sc-hidden"}>Your search history is currently empty. Once you search an item, it will appear here.</div>
           <div className={this.state.items.length > 0 ? "sc-tool-search-history-results" : "sc-hidden"}>
             {this.state.items.map(item => {
-              return <SearchItem key={helpers.getUID()} item={item} onMoreInfoClick={this.onMoreInfoClick} onRemoveClick={this.onRemoveClick} onZoomClick={this.onZoomClick}></SearchItem>;
+              return <SearchItem key={helpers.getUID()} item={item} onMoreInfoClick={this.onMoreInfoClick} onReplayClick={this.onReplayClick} onRemoveClick={this.onRemoveClick} onZoomClick={this.onZoomClick}></SearchItem>;
             })}
           </div>
           <div className={this.state.items.length === 0 ? "sc-hidden" : "sc-tool-search-history-footer"}>
@@ -102,12 +105,16 @@ const SearchItem = props => {
       <div className={props.item.Type === "Address" || props.item.Type === "Assessment Parcel" ? "sc-fakeLink sc-tool-search-history-button-info" : "sc-hidden"} onClick={() => props.onMoreInfoClick(props.item)}>
         More Information
       </div>
+      <div className="sc-fakeLink sc-tool-search-history-button-replay" onClick={() => props.onReplayClick(props.item)}>
+        Replay Search
+      </div>
       <div className="sc-fakeLink sc-tool-search-history-button-remove" onClick={() => props.onRemoveClick(props.item)}>
         Remove
       </div>
       <div className="sc-fakeLink sc-tool-search-history-button-zoom" onClick={() => props.onZoomClick(props.item)}>
         Zoom
       </div>
+      
     </div>
   );
 };
