@@ -72,7 +72,8 @@ class Search extends Component {
     this.removeMarkersClick = this.removeMarkersClick.bind(this);
     this.cleanup = this.cleanup.bind(this);
     this.storageKey = "searchHistory";
-
+    // LISTEN FOR SEARCH FROM HISTORY
+    window.emitter.addListener("searchHistorySelect", (item) => this.onHistoryItemSelect(item));
     // LISTEN FOR MAP TO MOUNT
     window.emitter.addListener("mapLoaded", () => this.onMapLoad());
 
@@ -90,6 +91,13 @@ class Search extends Component {
 
   requestTimer = null;
 
+  onHistoryItemSelect = (item) => {
+    let searchResults = [];
+    searchResults.push(item)
+    searchResults.push(this.state.searchResults);
+    let value = (item.name.length > 25 ? item.name.substring(0, 25) : item.name);
+    this.setState({ value:value, searchResults: searchResults.concat([])},()=> {this.onItemSelect(item.value, item);});
+  }
   onMapLoad = () => {
     // HANDLE URL PARAMETER
     if (locationId !== null) {
