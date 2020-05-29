@@ -26,7 +26,9 @@
   color: #4073C1;
   font-size: 16px;
 }
-
+.sc-arrow {
+  background-position-y: 35%;
+}
 .sc-lhrs-action-bar{
   text-align:right;
   font-size:16px;
@@ -42,11 +44,11 @@
   }
 
   .sc-lhrs-row label {
-      width: 120px;
+      width: 140px;
       display: inline-block;
       font-weight: bold;
       padding-left: 20px;
-      font-size: 16px;
+      font-size: 14px;
   }
   
   .sc-lhrs-row span {

@@ -22,7 +22,7 @@ export const LHRSPoint = props => {
                 inputId="sc-lhrs-hwy" 
                 readOnly={true}
                 placeholer={inputMsg} />
-        <LHRSRow label="M Distance (km)" 
+        <LHRSRow label="M Dist. (km)" 
                 value={props.m_distance} 
                 onChange={() => {}}
                 inputId="sc-lhrs-distance" 

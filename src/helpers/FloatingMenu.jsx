@@ -95,7 +95,7 @@ class FloatingMenu extends Component {
 
       if (this.props.yOffset !== undefined) yOffset = this.props.yOffset;
       if (this.props.xOffset !== undefined) xOffset = this.props.xOffset;
-
+      let width = this.props.width !== undefined ? this.props.width : "180px";
       style = {
         position: "absolute",
         zIndex: 1000,
@@ -103,7 +103,7 @@ class FloatingMenu extends Component {
         //left: this.state.styleMode === "right" ? this.props.buttonEvent.pageX : this.props.buttonEvent.pageX - 180,
         left: xOffset,
         backgroundColor: "white",
-        width: "180px"
+        width: width
       };
 
       if (this.state.isVisible) callback(style);
@@ -126,6 +126,7 @@ class FloatingMenu extends Component {
 
     return (
       <div className="sc-floating-menu-toolbox-menu-container" style={this.state.style} ref={container => (this.container = container)}>
+        <div className="sc-floating-menu-toolbox-menu-title">{this.props.title}</div>
         <Menu onSelect={this.handleSelect} defaultActiveFirst onClick={this.handleClick} onTitleClick={this.editMove} className="sc-floating-menu-toolbox-menu">
           {this.props.children}
         </Menu>
