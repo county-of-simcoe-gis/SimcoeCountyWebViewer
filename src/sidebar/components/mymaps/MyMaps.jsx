@@ -7,11 +7,11 @@ import { Item as MenuItem } from "rc-menu";
 // CUSTOM
 import "./MyMaps.css";
 import * as helpers from "../../../helpers/helpers";
+import * as drawingHelpers from "../../../helpers/drawingHelpers";
 import ColorBar from "./ColorBar.jsx";
 import ButtonBar from "./ButtonBar.jsx";
 import MyMapsItem from "./MyMapsItem";
 import MyMapsItems from "./MyMapsItems";
-import * as myMapsHelpers from "./myMapsHelpers";
 import MyMapsPopup from "./MyMapsPopup.jsx";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import Portal from "../../../helpers/Portal.jsx";
@@ -40,6 +40,7 @@ class MyMaps extends Component {
     super(props);
 
     // PROPS
+    this.layerName = "local:myMaps";
     this.storageKey = "myMaps";
     this.vectorSource = null;
     this.vectorLayer = null;
@@ -81,7 +82,7 @@ class MyMaps extends Component {
     });
 
     // PROPERTY CLICK WILL IGNORE THIS LAYER
-    this.vectorLayer.setProperties({ disableParcelClick: true, name: "myMaps" });
+    this.vectorLayer.setProperties({ disableParcelClick: true, name:this.layerName });
 
     window.map.addLayer(this.vectorLayer);
 
@@ -91,7 +92,7 @@ class MyMaps extends Component {
       window.map.forEachFeatureAtPixel(evt.pixel, (feature, layer) => {
         if (layer === null) return;
 
-        if (layer.get("name") !== undefined && layer.get("name") === "myMaps") {
+        if (layer.get("name") !== undefined && layer.get("name") === this.layerName) {
           if (this.state.drawType === "Eraser") {
             // REMOVE ITEM FROM SOURCE
             this.onItemDelete(feature.get("id"));
@@ -113,7 +114,7 @@ class MyMaps extends Component {
     // URL PARAMETER
     const myMapsId = helpers.getURLParameter("MY_MAPS_ID");
     if (myMapsId !== null) {
-      myMapsHelpers.importMyMaps(myMapsId, result => {
+      drawingHelpers.importMyMaps(myMapsId, result => {
         if (result.error !== undefined) helpers.showMessage("MyMaps Import", "That MyMaps ID was NOT found!", "red");
         else {
           helpers.showMessage("MyMaps Import", "Success!  MyMaps imported.");
@@ -186,7 +187,7 @@ class MyMaps extends Component {
       this.sketch = evt.feature;
       this.listener = this.sketch.getGeometry().on("change", evt => {
         var geom = evt.target;
-        this.bearing = myMapsHelpers.getBearing(geom.getFirstCoordinate(), geom.getLastCoordinate());
+        this.bearing = drawingHelpers.getBearing(geom.getFirstCoordinate(), geom.getLastCoordinate());
         tooltipCoord = geom.getLastCoordinate();
         this.tooltipElement.innerHTML = this.bearing;
         this.tooltip.setPosition(tooltipCoord);
@@ -197,7 +198,7 @@ class MyMaps extends Component {
       this.listener = this.sketch.getGeometry().on("change", evt => {
         var geom = evt.target;
         this.length = this.formatLength(geom);
-        this.bearing = myMapsHelpers.getBearing(geom.getFirstCoordinate(), geom.getLastCoordinate());
+        this.bearing = drawingHelpers.getBearing(geom.getFirstCoordinate(), geom.getLastCoordinate());
         tooltipCoord = geom.getLastCoordinate();
         this.tooltipElement.innerHTML = this.length;
         this.tooltip.setPosition(tooltipCoord);
@@ -221,9 +222,9 @@ class MyMaps extends Component {
 
     // BUG https://github.com/openlayers/openlayers/issues/3610
     //Call to double click zoom control function to deactivate zoom event
-    myMapsHelpers.controlDoubleClickZoom(false);
+    drawingHelpers.controlDoubleClickZoom(false);
     setTimeout(() => {
-      myMapsHelpers.controlDoubleClickZoom(true);
+      drawingHelpers.controlDoubleClickZoom(true);
 
       // RE-ENABLE POPUPS
       window.isDrawingOrEditing = false;
@@ -254,18 +255,18 @@ class MyMaps extends Component {
     if (!fromEmmiter) {
       if (this.state.drawType === "Arrow") {
         // CONVERT LINE TO ARROW
-        const arrow = myMapsHelpers.convertLineToArrow(feature.getGeometry());
+        const arrow = drawingHelpers.convertLineToArrow(feature.getGeometry());
         feature.setGeometry(arrow);
 
         // GIVE IT A BIGGER STROKE BY DEFAULT
-        customStyle = myMapsHelpers.getDefaultDrawStyle(this.state.drawColor, false, 6, feature.getGeometry().getType());
+        customStyle = drawingHelpers.getDefaultDrawStyle(this.state.drawColor, false, 6, feature.getGeometry().getType());
         feature.setStyle(customStyle);
       } else if (this.state.drawType === "Text") {
         labelText = "Enter Custom Text";
-        customStyle = myMapsHelpers.getDefaultDrawStyle(this.state.drawColor, true, undefined, undefined, feature.getGeometry().getType());
+        customStyle = drawingHelpers.getDefaultDrawStyle(this.state.drawColor, true, undefined, undefined, feature.getGeometry().getType());
         feature.setStyle(customStyle);
       } else {
-        customStyle = myMapsHelpers.getDefaultDrawStyle(this.state.drawColor, undefined, undefined, undefined, feature.getGeometry().getType());
+        customStyle = drawingHelpers.getDefaultDrawStyle(this.state.drawColor, undefined, undefined, undefined, feature.getGeometry().getType());
         feature.setStyle(customStyle);
       }
     } else {
@@ -306,7 +307,7 @@ class MyMaps extends Component {
         this.importGeometries();
 
         // UPDATE FEATURE LABEL
-        myMapsHelpers.setFeatureLabel(itemInfo);
+        drawingHelpers.setFeatureLabel(itemInfo);
 
         // SHOW POPUP IF WE'RE ADDING TEXT
         if (itemInfo.drawType === "Text") this.showDrawingOptionsPopup(feature);
@@ -364,12 +365,12 @@ class MyMaps extends Component {
       },
       () => {
         // UPDATE FEATURE ATTRIBUTE
-        let feature = myMapsHelpers.getFeatureById(itemInfo.id);
+        let feature = drawingHelpers.getFeatureById(itemInfo.id);
         feature.set("label", label);
 
         this.updateFeatureGeoJSON(feature, () => {
           // UPDATE FEATURE LABEL
-          myMapsHelpers.setFeatureLabel(itemInfo);
+          drawingHelpers.setFeatureLabel(itemInfo);
 
           // SAVE TO STORAGE
           this.saveStateToStorage();
@@ -389,7 +390,7 @@ class MyMaps extends Component {
           return item.id === itemInfo.id;
         })[0];
 
-        myMapsHelpers.setFeatureLabel(item);
+        drawingHelpers.setFeatureLabel(item);
         this.saveStateToStorage();
       }
     );
@@ -444,7 +445,7 @@ class MyMaps extends Component {
           return item.id === itemId;
         })[0];
 
-        myMapsHelpers.setFeatureLabel(item);
+        drawingHelpers.setFeatureLabel(item);
         this.saveStateToStorage();
         this.importGeometries();
       }
@@ -455,7 +456,7 @@ class MyMaps extends Component {
   importGeometries = () => {
     this.vectorLayer.getSource().clear();
     this.state.items.forEach(item => {
-      const style = myMapsHelpers.getStyleFromJSON(item.style, item.pointType);
+      const style = drawingHelpers.getStyleFromJSON(item.style, item.pointType);
       let feature = helpers.getFeatureFromGeoJSON(item.featureGeoJSON);
 
       // VISIBILITY
@@ -465,12 +466,12 @@ class MyMaps extends Component {
       this.vectorLayer.getSource().addFeature(feature);
 
       // LABELS
-      if (item.labelVisible) myMapsHelpers.setFeatureLabel(item);
+      if (item.labelVisible) drawingHelpers.setFeatureLabel(item);
     });
   };
 
   updateStyle = () => {
-    const drawStyle = myMapsHelpers.getDefaultDrawStyle(this.state.drawColor);
+    const drawStyle = drawingHelpers.getDefaultDrawStyle(this.state.drawColor);
     this.setState({ drawStyle: drawStyle }, () => {
       // UPDATE THE DRAW TO PICK UP NEW STYLE
       this.setDrawControl();
@@ -504,7 +505,7 @@ class MyMaps extends Component {
               return item.id === itemId;
             })[0];
 
-            myMapsHelpers.setFeatureLabel(item);
+            drawingHelpers.setFeatureLabel(item);
           }
         );
 
@@ -658,13 +659,13 @@ class MyMaps extends Component {
     } else if (action === "sc-floating-menu-delete-unselected") {
       this.deleteSelected(false);
     } else if (action === "sc-floating-menu-buffer") {
-      const feature = myMapsHelpers.getFeatureById(item.id);
+      const feature = drawingHelpers.getFeatureById(item.id);
       this.showDrawingOptionsPopup(feature, null, "buffer");
     } else if (action === "sc-floating-menu-symbolizer") {
-      const feature = myMapsHelpers.getFeatureById(item.id);
+      const feature = drawingHelpers.getFeatureById(item.id);
       this.showDrawingOptionsPopup(feature, null, "symbolizer");
     } else if (action === "sc-floating-menu-zoomto") {
-      const feature = myMapsHelpers.getFeatureById(item.id);
+      const feature = drawingHelpers.getFeatureById(item.id);
       helpers.zoomToFeature(feature);
     } else if (action === "sc-floating-menu-delete") {
       this.onItemDelete(item.id);
@@ -705,12 +706,12 @@ class MyMaps extends Component {
   };
 
   onIdentify = id => {
-    const feature = myMapsHelpers.getFeatureById(id);
+    const feature = drawingHelpers.getFeatureById(id);
     window.emitter.emit("loadReport", <Identify geometry={feature.getGeometry()}></Identify>);
   };
 
   onReportProblem = id => {
-    myMapsHelpers.exportMyMaps(result => {
+    drawingHelpers.exportMyMaps(result => {
       // APP STATS
       helpers.addAppStat("Report Problem", "My Maps Toolbox");
 
@@ -787,10 +788,10 @@ class MyMaps extends Component {
             return item.id === feature.get("id");
           })[0];
 
-          if (visible) feature.setStyle(myMapsHelpers.getStyleFromJSON(item.style, item.pointType));
+          if (visible) feature.setStyle(drawingHelpers.getStyleFromJSON(item.style, item.pointType));
           else feature.setStyle(new Style({}));
 
-          myMapsHelpers.setFeatureLabel(item);
+          drawingHelpers.setFeatureLabel(item);
           this.updateItemVisibility(item, visible);
         });
       }
@@ -895,8 +896,8 @@ class MyMaps extends Component {
       const id = feature.getProperties().id;
       if (id === itemInfo.id) {
         if (visible) {
-          feature.setStyle(myMapsHelpers.getStyleFromJSON(itemInfo.style, itemInfo.pointType));
-          myMapsHelpers.setFeatureLabel(itemInfo);
+          feature.setStyle(drawingHelpers.getStyleFromJSON(itemInfo.style, itemInfo.pointType));
+          drawingHelpers.setFeatureLabel(itemInfo);
         } else feature.setStyle(new Style({}));
 
         return;
@@ -908,7 +909,7 @@ class MyMaps extends Component {
     this.vectorSource.getFeatures().forEach(feature => {
       const id = feature.getProperties().id;
       if (id === itemInfo.id) {
-        if (visible) feature.setStyle(myMapsHelpers.getStyleFromJSON(itemInfo.style, itemInfo.pointType));
+        if (visible) feature.setStyle(drawingHelpers.getStyleFromJSON(itemInfo.style, itemInfo.pointType));
         else feature.setStyle(new Style({}));
 
         return;

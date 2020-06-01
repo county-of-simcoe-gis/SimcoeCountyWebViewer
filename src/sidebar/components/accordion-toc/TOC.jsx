@@ -9,6 +9,7 @@ import { isMobile } from "react-device-detect";
 // CUSTOM
 import "./TOC.css";
 import * as helpers from "../../../helpers/helpers";
+import * as drawingHelpers from "../../../helpers/drawingHelpers";
 import mainConfig from "../../../config.json";
 import * as TOCHelpers from "../common/TOCHelpers.jsx";
 import TOCConfig from "../common/TOCConfig.json";
@@ -148,6 +149,21 @@ class TOC extends Component {
     
     this.addIdentifyLayer();
     this.refreshTOC();
+    
+  }
+
+  buildDefaultGroup = callback => {
+    const myMapLayerName = "local:myMaps";
+    let myMapLayerSource = new VectorSource();
+    let myMapLayer = new VectorLayer({
+      source: myMapLayerSource,
+      zIndex: 1000,
+      style: drawingHelpers.getDefaultDrawStyle("#e809e5")
+    });
+
+    TOCHelpers.makeLayer("My Drawing", myMapLayerName,1,true,1,myMapLayer,undefined,undefined,false, (retLayer)=>{
+      TOCHelpers.makeGroup("My Layers", true, null, null, null, null, null, retLayer);
+    });
     
   }
 

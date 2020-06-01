@@ -4,7 +4,7 @@ import MyMapsFooter from "./MyMapsFooter.jsx";
 import Collapsible from "react-collapsible";
 import Switch from "react-switch";
 import * as helpers from "../../../helpers/helpers";
-import * as myMapsHelpers from "./myMapsHelpers";
+import * as drawingHelpers from "../../../helpers/drawingHelpers";
 import copy from "copy-to-clipboard";
 
 class MyMapsAdvanced extends Component {
@@ -38,7 +38,7 @@ class MyMapsAdvanced extends Component {
       return;
     }
 
-    myMapsHelpers.importMyMaps(this.state.inputText, result => {
+    drawingHelpers.importMyMaps(this.state.inputText, result => {
       if (result.error !== undefined) helpers.showMessage("MyMaps Import", "That MyMaps ID was NOT found!", "red");
       else {
         helpers.showMessage("MyMaps Import", "Success!  MyMaps imported.");
@@ -49,7 +49,7 @@ class MyMapsAdvanced extends Component {
 
   onSave = () => {
     this.setState({ copied: true });
-    myMapsHelpers.exportMyMaps(result => {
+    drawingHelpers.exportMyMaps(result => {
       helpers.showMessage("MyMaps Save", "MyMaps have been saved!  Your ID has been saved to clipboard.", undefined, 5000);
       helpers.glowContainer(this.inputId);
       this.setState({ inputText: result.id });

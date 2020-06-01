@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import "./MyMapsItem.css";
-import * as myMapsHelpers from "./myMapsHelpers";
+import * as drawingHelpers from "../../../helpers/drawingHelpers";
 import Feature from "ol/Feature";
 import VectorLayer from "ol/layer/Vector";
 import { Vector as VectorSource } from "ol/source.js";
@@ -49,18 +49,18 @@ class MyMapsItem extends Component {
 
   onMenuItemClick = action => {
     if (action === "sc-floating-menu-buffer") {
-      const feature = myMapsHelpers.getFeatureById(this.props.info.id);
+      const feature = drawingHelpers.getFeatureById(this.props.info.id);
       this.props.showDrawingOptionsPopup(feature, null, "buffer");
     }
   };
 
   onSymbolizerClick = evt => {
-    const feature = myMapsHelpers.getFeatureById(this.props.info.id);
+    const feature = drawingHelpers.getFeatureById(this.props.info.id);
     this.props.showDrawingOptionsPopup(feature, null, "symbolizer");
   };
 
   onMouseOver = evt => {
-    if (myMapsHelpers.getFeatureById(this.props.info.id) === null) return;
+    if (drawingHelpers.getFeatureById(this.props.info.id) === null) return;
 
     // LAYER FOR HIGHLIGHTING
     if (this.vectorLayer === null) {
@@ -83,7 +83,7 @@ class MyMapsItem extends Component {
       });
 
       var feature = new Feature({
-        geometry: myMapsHelpers.getFeatureById(this.props.info.id).getGeometry()
+        geometry: drawingHelpers.getFeatureById(this.props.info.id).getGeometry()
       });
 
       this.vectorLayer = new VectorLayer({

@@ -2,14 +2,35 @@ import { Circle as CircleStyle, Fill, Stroke, Style, RegularShape } from "ol/sty
 import { asArray } from "ol/color";
 import DoubleClickZoom from "ol/interaction/DoubleClickZoom";
 import LineString from "ol/geom/LineString.js";
-import * as helpers from "../../../helpers/helpers";
-import mainConfig from "../../../config.json";
+import * as helpers from "./helpers";
+import mainConfig from "../config.json";
+
+
+// GET LAYER BY NAME FROM LAYER
+export function getFeatureByLayerNameAndId(layerName, id) {
+  let feature = null;
+  window.map.getLayers().forEach(layer => {
+    if (layer.getProperties().name === layerName) {
+      layer
+        .getSource()
+        .getFeatures()
+        .forEach(feat => {
+          if (feat.getProperties().id === id) feature = feat;
+          return;
+        });
+    }
+  });
+
+  return feature;
+}
+
 
 // GET FEATURE FROM MYMAPS LAYER
 export function getFeatureById(id) {
+  const drawingLayerName = "local:myMaps";
   let feature = null;
   window.map.getLayers().forEach(layer => {
-    if (layer.getProperties().name === "myMaps") {
+    if (layer.getProperties().name === drawingLayerName) {
       layer
         .getSource()
         .getFeatures()

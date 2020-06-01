@@ -186,10 +186,10 @@ class Layers extends Component {
 
   // isVisibleFromConfig()
   sortByAlphaCompare(a, b) {
-    if (a.tocDisplayName < b.tocDisplayName) {
+    if (a.displayName < b.displayName) {
       return -1;
     }
-    if (a.tocDisplayName > b.tocDisplayName) {
+    if (a.displayName > b.displayName) {
       return 1;
     }
     return 0;
@@ -525,7 +525,7 @@ class Layers extends Component {
     const layers = this.state.layers.filter(layer => {
       if (this.props.searchText === "") return layer;
 
-      if (layer.tocDisplayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1) return layer;
+      if (layer.displayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1) return layer;
     });
 
     return (

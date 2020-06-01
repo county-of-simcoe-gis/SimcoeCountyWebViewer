@@ -120,6 +120,9 @@ export async function getGroupsGC(url, urlType, callback) {
     if (defaultGroup === undefined || defaultGroup === null) defaultGroup = groups[0];
     callback([groups, defaultGroup]);
   });
+
+
+
 }
 
 // GET GROUPS FROM CONFIG
@@ -239,9 +242,6 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
     // IDENTIFY DISPLAY NAME
     let identifyDisplayName = _getDisplayName(keywords);
 
-    // TOC DISPLAY NAME
-    const tocDisplayName = layerTitle;
-
     //DISPLAY NAME
     let displayName = _getDisplayName(keywords);
     if (displayName==="") displayName =layerTitle;
@@ -291,7 +291,6 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
       liveLayer: liveLayer, // LIVE LAYER FLAG
       wfsUrl: wfsUrl,
       identifyDisplayName: identifyDisplayName, // DISPLAY NAME USED BY IDENTIFY
-      tocDisplayName: tocDisplayName, // DISPLAY NAME USED FOR TOC LAYER NAME
       group: group.value,
       groupName: group.label,
       canDownload: canDownload, // INDICATES WETHER LAYER CAN BE DOWNLOADED
@@ -425,10 +424,8 @@ export function getLayerListByGroupCustomRest(group, callback) {
         let identifyDisplayName = _getDisplayName(keywords);
 		let displayName = _getDisplayName(keywords);
 		if (displayName==="") displayName =layerTitle;
-        // TOC DISPLAY NAME
-        const tocDisplayName = layerTitle;
 
-        // // OPACITY
+        // OPACITY
         let opacity = _getOpacity(keywords);
         //IDENTIFY 
         let identifyTitleColumn = _getIdentifyTitle(keywords);
@@ -444,7 +441,6 @@ export function getLayerListByGroupCustomRest(group, callback) {
         let layer = helpers.getImageWMSLayer(serverUrl + "/wms", layerInfo.name);
         layer.setVisible(layerVisible);
         layer.setOpacity(opacity);
-        //layer.setProperties({ name: layerNameOnly, displayName: tocDisplayName, disableParcelClick: liveLayer });
         layer.setProperties({ name: layerNameOnly, displayName: displayName });
         layer.setZIndex(layerIndex);
         window.map.addLayer(layer);
@@ -469,7 +465,6 @@ export function getLayerListByGroupCustomRest(group, callback) {
           wfsUrl: wfsUrl,
           displayName: displayName, // DISPLAY NAME USED BY IDENTIFY
           identifyDisplayName: identifyDisplayName, // DISPLAY NAME USED BY IDENTIFY
-          tocDisplayName: tocDisplayName, // DISPLAY NAME USED FOR TOC LAYER NAME
           group: group.value,
           groupName: group.label,
           canDownload: canDownload, // INDICATES WETHER LAYER CAN BE DOWNLOADED
