@@ -141,9 +141,9 @@ export const CustomCoordinates = props => {
   return (
     <div>
       <div className="sc-coordinates-heading"><span>{props.title}</span></div>
-      <CoordinateRow label="X / Long" value={props.valueX} onChange={props.onChangeX} inputId={props.inputIdX} onEnterKey={props.onZoomClick} />
-      <CoordinateRow label="Y / Lat" value={props.valueY} onChange={props.onChangeY} inputId={props.inputIdY} onEnterKey={props.onZoomClick} />
-      <CoordinateActions onZoomClick={props.onZoomClick} onMyMapsClick={() => props.onMyMapsClick(props.valueX, props.valueY)} />
+      <CoordinateRow label="X / Long" value={props.valueX} onChange={props.onChangeX} inputId={props.inputIdX} onEnterKey={props.onEnterKey} />
+      <CoordinateRow label="Y / Lat" value={props.valueY} onChange={props.onChangeY} inputId={props.inputIdY} onEnterKey={props.onEnterKey} />
+      <CoordinateActions onZoomClick={props.onZoomClick} onPanClick={props.onPanClick} onMyMapsClick={() => props.onMyMapsClick(props.valueX, props.valueY)} />
     </div>
   );
 };
@@ -152,6 +152,7 @@ export const CoordinateActions = props => {
   return (
     <div className="sc-coordinates-row sc-float-right">
       [&nbsp;<span className="sc-fakeLink" onClick={props.onZoomClick}>zoom</span>&nbsp;]
+      [&nbsp;<span className="sc-fakeLink" onClick={props.onPanClick}>pan to</span>&nbsp;]
       [&nbsp;<span className="sc-fakeLink" onClick={props.onMyMapsClick}>add to my Maps</span>&nbsp;]
     </div>
   );
