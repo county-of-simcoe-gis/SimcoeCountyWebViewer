@@ -126,7 +126,7 @@ class FloatingMenu extends Component {
 
     return (
       <div className="sc-floating-menu-toolbox-menu-container" style={this.state.style} ref={container => (this.container = container)}>
-        <div className="sc-floating-menu-toolbox-menu-title">{this.props.title}</div>
+        <div className="sc-floating-menu-toolbox-menu-header" title={this.props.title}><div className="title">{this.props.title}</div><div className="close" onClick={this.handleSelect} alt="Close Menu">&nbsp;</div></div>
         <Menu onSelect={this.handleSelect} defaultActiveFirst onClick={this.handleClick} onTitleClick={this.editMove} className="sc-floating-menu-toolbox-menu">
           {this.props.children}
         </Menu>

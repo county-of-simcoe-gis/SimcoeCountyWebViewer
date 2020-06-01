@@ -41,6 +41,7 @@ class Coordinates extends Component {
       selectProjectionOption: undefined,
       selectProjectionZoneOptions: [],
       selectProjectionZoneOption: undefined,
+      liveProjectionZoneOption: undefined,
       hideZone:false,
       selectCopyOptions: [],
       selectCopyOption: undefined,
@@ -117,7 +118,7 @@ class Coordinates extends Component {
     return (parseInt(precision));
   }
   _getSelectProjectionZones = selected => {
-    let defs = [{ label: "Auto", value: "auto" }];
+    let defs = [{ label: " ", value: "auto" }];
     coordinateConfig.coordinate_systems.forEach(proj => {
       if (proj.projection === selected.label && proj.zones !==undefined){
           proj.zones.forEach(zone => {
@@ -133,7 +134,7 @@ class Coordinates extends Component {
     }
     const hide = defs.length <= 2 ? true : false;
     if (this.calculatedZone !== undefined ) currentZone = this.calculatedZone;
-    this.setState({selectProjectionZoneOptions:defs,selectProjectionZoneOption: currentZone, hideZone: hide});
+    this.setState({selectProjectionZoneOptions:defs,liveProjectionZoneOption:currentZone, selectProjectionZoneOption: currentZone, hideZone: hide});
   }
 
  
@@ -214,6 +215,7 @@ class Coordinates extends Component {
   updateCoordinates = webMercatorCoords => {
     const latLongCoords = transform(webMercatorCoords, "EPSG:3857", "EPSG:4326");
     const selectedCoords = transform(webMercatorCoords, "EPSG:3857", this.currentProjection);
+    this.recalcInputCoordinates(webMercatorCoords);
     const inputTitle = (this.state.selectProjectionOption === undefined ? "" : this.state.selectProjectionOption.label + (this.state.selectProjectionZoneOption === undefined || this.state.selectProjectionZoneOption.label.trim() === "" ? "" : " - " +this.state.selectProjectionZoneOption.label) );
     const inputProjection = this.currentProjection;
     const precision = this.state.selectProjectionOption !== undefined? this._getPrecision(this.state.selectProjectionOption):7;
@@ -254,18 +256,29 @@ class Coordinates extends Component {
     helpers.glowContainer("sc-coordinate-x");
     helpers.glowContainer("sc-coordinate-y");
   }
+  recalcInputCoordinates = (webMercatorCoords = undefined) => {
+    if (webMercatorCoords===undefined) webMercatorCoords = [this.state.inputWebMercatorXValue,this.state.inputWebMercatorYValue ]
+    if (webMercatorCoords===null) return;
+    const latLongCoords = transform(webMercatorCoords, "EPSG:3857", "EPSG:4326");
+    this._calculateZone(latLongCoords[0],latLongCoords[1]);
+    this.currentProjection = this.calculatedZone !== undefined ? this.calculatedZone.value : "EPSG:4326";
+    if (this.calculatedZone === undefined) this.calculatedZone = {label:" ",value:"auto"};
 
+    this.setState({
+      selectProjectionZoneOption: this.calculatedZone
+    });
+  }
   recalcLiveCoordinates = (webMercatorCoords = undefined) => {
     if (webMercatorCoords===undefined) webMercatorCoords = this.state.liveWebMercatorCoords
     if (webMercatorCoords===null) return;
     const latLongCoords = transform(webMercatorCoords, "EPSG:3857", "EPSG:4326");
     this._calculateZone(latLongCoords[0],latLongCoords[1]);
     this.currentProjection = this.calculatedZone !== undefined ? this.calculatedZone.value : "EPSG:4326";
-    if (this.calculatedZone === undefined) this.calculatedZone = {label:"Auto",value:"auto"};
+    if (this.calculatedZone === undefined) this.calculatedZone = {label:" ",value:"auto"};
 
     const liveCoords = transform(webMercatorCoords, "EPSG:3857", this.currentProjection);
     this.setState({
-      selectProjectionZoneOption: this.calculatedZone,
+      liveProjectionZoneOption: this.calculatedZone,
       liveCoords: liveCoords,
       liveWebMercatorCoords: webMercatorCoords,
       liveLatLongCoords: latLongCoords
@@ -307,7 +320,8 @@ class Coordinates extends Component {
     }, () => {
       this.vectorLayer.getSource().clear();
       this._getSelectProjectionZones(selection);
-      this.recalcLiveCoordinates();
+      this.recalcInputCoordinates();
+      
     });
     
   }
@@ -318,10 +332,10 @@ class Coordinates extends Component {
       const inputTitle = (this.state.selectProjectionOption === undefined ? "" : this.state.selectProjectionOption.label + (selection === undefined || selection.label.trim() === "" ? "" : " - " +selection.label));
       this.setState({ selectProjectionZoneOption:selection,inputProjection: this.currentProjection,inputProjectionTitle: inputTitle },() => {
         this.onPointUpdate(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
-        this.recalcLiveCoordinates();
+        //this.recalcInputCoordinates();
       });
     }else{
-      this.setState({ selectProjectionZoneOption:selection}, ()=>{this.recalcLiveCoordinates();});
+      this.setState({ selectProjectionZoneOption:selection}, ()=>{this.recalcInputCoordinates();});
     }
     
   }
@@ -401,7 +415,7 @@ class Coordinates extends Component {
               </span>
             </div>
               <CustomCoordinates
-                title={this.state.inputProjectionTitle}
+                title={""}
                 valueX={this.state.inputXValue}
                 valueY={this.state.inputYValue}
                 precision={this.state.inputPrecision}
@@ -451,7 +465,7 @@ class Coordinates extends Component {
               }
             />
             <div className="sc-coordinates-divider"></div>
-            <ProjectedCoordinates key={helpers.getUID()} coords={this.state.liveCoords} precision={this.currentPrecision} projection={this.state.selectProjectionOption} zone={this.state.selectProjectionZoneOption} />
+            <ProjectedCoordinates key={helpers.getUID()} coords={this.state.liveCoords} precision={this.currentPrecision} projection={this.state.selectProjectionOption} zone={this.state.liveProjectionZoneOption} />
 
           </div>
           

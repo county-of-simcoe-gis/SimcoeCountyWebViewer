@@ -227,7 +227,6 @@ class AddLayerForm extends Component {
             liveLayer: false, // LIVE LAYER FLAG
             wfsUrl: "",
             displayName: this.state.layer_displayName,
-            tocDisplayName: this.state.layer_displayName, // DISPLAY NAME USED FOR TOC LAYER NAME
             canDownload: false, 
             group: "",
             groupName: ""

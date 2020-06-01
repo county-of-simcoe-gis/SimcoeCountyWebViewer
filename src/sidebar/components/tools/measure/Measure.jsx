@@ -4,6 +4,7 @@ import React, { Component } from "react";
 // CUSTOM
 import "./Measure.css";
 import * as helpers from "../../../../helpers/helpers";
+import * as drawingHelpers from "../../../../helpers/drawingHelpers";
 import PanelComponent from "../../../PanelComponent.jsx";
 
 // OPEN LAYERS
@@ -16,7 +17,6 @@ import { fromCircle } from "ol/geom/Polygon.js";
 import { unByKey } from "ol/Observable.js";
 import Overlay from "ol/Overlay.js";
 import { Vector as VectorLayer } from "ol/layer.js";
-import * as myMapsHelpers from "../../mymaps/myMapsHelpers";
 
 class Measure extends Component {
   constructor(props) {
@@ -338,7 +338,7 @@ class Measure extends Component {
             tooltipCoord = geom.getInteriorPoint().getCoordinates();
           } else if (geom instanceof LineString) {
             if (this.state.geometryType === "Bearing"){
-              output = myMapsHelpers.getBearing(geom.getFirstCoordinate(), geom.getLastCoordinate());
+              output = drawingHelpers.getBearing(geom.getFirstCoordinate(), geom.getLastCoordinate());
               this.setState({ unitMeters: output });
             }else{
               output = this.formatLength(geom);

@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import * as helpers from "../helpers/helpers";
+import * as drawingHelpers from "../helpers/drawingHelpers";
 import mainConfig from "../config.json";
-import * as myMapsHelpers from "../sidebar/components/mymaps/myMapsHelpers";
 import Autocomplete from "react-autocomplete";
 import "./Search.css";
 import Highlighter from "react-highlight-words";
@@ -291,8 +291,6 @@ class Search extends Component {
       window.map.getView().setZoom(window.map.getView().getZoom() - 2);
     }
 
-    //fullFeature.setStyle(myMapsHelpers.getDefaultDrawStyle([255, 0, 0, 0.8], false, 2, fullFeature.getGeometry().getType()));
-    //fullFeature.setStyle(defaultStyle);
     if (result.geojson.indexOf("Point") !== -1) {
       const pointStyle = new Style({
         image: new CircleStyle({
@@ -309,7 +307,7 @@ class Search extends Component {
 
       fullFeature.setStyle(pointStyle);
     } else {
-      let defaultStyle = myMapsHelpers.getDefaultDrawStyle([102, 255, 102, 0.3], false, 6, fullFeature.getGeometry().getType());
+      let defaultStyle = drawingHelpers.getDefaultDrawStyle([102, 255, 102, 0.3], false, 6, fullFeature.getGeometry().getType());
       defaultStyle.setFill(new Fill({ color: [102, 255, 102, 0.3] }));
       fullFeature.setStyle(defaultStyle);
     }

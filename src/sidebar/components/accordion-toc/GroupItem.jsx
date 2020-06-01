@@ -61,6 +61,7 @@ class GroupItem extends Component {
   const menu = (
       <Portal>
         <FloatingMenu
+          title={"Options - " + this.props.group.label} 
           key={helpers.getUID()}
           buttonEvent={evtClone}
           autoY={true}
