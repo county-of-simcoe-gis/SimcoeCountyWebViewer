@@ -14,6 +14,7 @@ import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import { unByKey } from "ol/Observable.js";
 import * as coordinateConfig from "./config.json"
+import { duration } from "moment";
 
 class Coordinates extends Component {
   constructor(props) {
@@ -92,7 +93,7 @@ class Coordinates extends Component {
     //CREATE INITIAL POINT
     const webMercatorCoords = window.map.getView().getCenter();
     this.updateCoordinates(webMercatorCoords);
-    this.createPoint(webMercatorCoords, false);
+    this.createPoint(webMercatorCoords, false, true);
   }
   
   _getSelectCopyFormats = () => {
@@ -240,7 +241,7 @@ class Coordinates extends Component {
     this.createPoint(webMercatorCoords, false);
   };
 
-  createPoint = (webMercatorCoords, zoom = false) => {
+  createPoint = (webMercatorCoords, zoom = false, pan = false) => {
     // CREATE POINT
     this.vectorLayer.getSource().clear();
     const pointFeature = new Feature({
@@ -249,7 +250,9 @@ class Coordinates extends Component {
     this.vectorLayer.getSource().addFeature(pointFeature);
 
     // ZOOM TO IT
-    if (zoom) window.map.getView().animate({ center: webMercatorCoords, zoom: 18 });
+    if (zoom) window.map.getView().animate({ center: webMercatorCoords, zoom: 18 }, { duration: 750 });
+    // PAN TO IT
+    if (pan) window.map.getView().animate({ center: webMercatorCoords}, { duration: 250 });
   };
 
   glowContainers() {
@@ -355,9 +358,25 @@ class Coordinates extends Component {
       webMercatorCoords = transform([x, y], proj, "EPSG:3857");
     } 
 
-    this.createPoint(webMercatorCoords, false);
+    this.createPoint(webMercatorCoords, false, true);
   };
+  onPanClick = (proj, x, y) => {
+    x = parseFloat(x);
+    y = parseFloat(y);
 
+    if (isNaN(x) || isNaN(y)) return;
+
+    let webMercatorCoords = null;
+    if (proj === "webmercator") {
+      webMercatorCoords = [x, y];
+    } else if (proj === "latlong") {
+      webMercatorCoords = transform([x, y], "EPSG:4326", "EPSG:3857");
+    } else {
+      webMercatorCoords = transform([x, y], proj, "EPSG:3857");
+    } 
+
+    this.createPoint(webMercatorCoords, false,true);
+  };
   
   onZoomClick = (proj, x, y) => {
     x = parseFloat(x);
@@ -432,13 +451,16 @@ class Coordinates extends Component {
                 onZoomClick={() => {
                   this.onZoomClick(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
                 }}
+                onPanClick={() => {
+                  this.onPanClick(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
+                }}
                 onMyMapsClick={() => {
                   this.onMyMapsClick(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
                 }}
                 inputIdX="sc-coordinate-x"
                 inputIdY="sc-coordinate-y"
                 onEnterKey={() => {
-                  this.onZoomClick(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
+                  this.onPanClick(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
                 }}
               />
               </div>
