@@ -423,7 +423,30 @@ export function getOSMLayer() {
     crossOrigin: "anonymous"
   });
 }
+export function getViewRotation(){
+  var rotation = parseFloat(0);
+  if (window.map === undefined) return rotation;
+  rotation = window.map.getView().getProperties().rotation;
+  return (rotation * (180/Math.PI)); 
+}
 
+export function updateWMSRotation(){
+  const layers =  window.map.getLayers();
+  let currentRotation = getViewRotation();
+  console.log(getViewRotation());
+  if (layers.array_.length > 0) {
+    layers.forEach(layer => {
+      if (layer instanceof ImageLayer){
+        
+        let source = layer.getSource();
+        source.updateParams({angle:currentRotation,});
+        layer.setSource(source);
+      }
+
+    });
+    window.map.getView().setProperties({rotation:0});
+  }
+}
 // GET WMS Image Layer
 export function getImageWMSLayer(serverURL, layers, serverType = "geoserver", cqlFilter = null, zIndex = null, disableParcelClick = null) {
   let imageLayer = new ImageLayer({
