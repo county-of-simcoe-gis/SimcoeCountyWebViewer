@@ -60,7 +60,7 @@ class ToolComponent extends Component {
 
   onSearchClick = () => {
     if (this.state.lotNumber === "" && this.state.concessionNumber === "") {
-      helpers.showMessage("Lot And Con", "Please enter a LOT and/or CON.", "orange");
+      helpers.showMessage("Lot And Con", "Please enter a LOT and/or CON.", helpers.messageColors.orange);
       return;
     }
 

@@ -406,34 +406,28 @@ class Layers extends Component {
   };
 
   onMenuItemClick = (action, layerInfo) => {
-    if (action === "sc-floating-menu-metadata") {
-      TOCHelpers.getLayerInfo(layerInfo, result => {
-        if (helpers.isMobile()) {
-          window.emitter.emit("setSidebarVisiblity", "CLOSE");
-          helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl, false, "full");
-        } else helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl);
-      });
-    } else if (action === "sc-floating-menu-zoom-to-layer") {
-      TOCHelpers.getLayerInfo(layerInfo, result => {
-        const boundingBox = result.featureType.nativeBoundingBox;
-        const extent = [boundingBox.minx, boundingBox.miny, boundingBox.maxx, boundingBox.maxy];
-        window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
-      });
-    } else if (action === "sc-floating-menu-zoom-to-layer-visible") {
-      this.zoomToVisibleScale(layerInfo);
-    } else if (action === "sc-floating-menu-download") {
-      helpers.showMessage("Download", "Coming Soon!");
-      // TOCHelpers.getLayerInfo(layerInfo, result => {
-      //   if (result.featureType.name === "Assessment Parcel") helpers.showMessage("Download", "Parcels are not available for download");
-      //   else {
-      //     if (helpers.isMobile()) {
-      //       window.emitter.emit("setSidebarVisiblity", "CLOSE");
-      //       helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl, false, "full");
-      //     } else helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl);
-      //   }
-      // });
+    switch (action){
+      case "sc-floating-menu-metadata":
+        TOCHelpers.getLayerInfo(layerInfo, result => {
+          if (helpers.isMobile()) {
+            window.emitter.emit("setSidebarVisiblity", "CLOSE");
+            helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl, false, "full");
+          } else helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl);
+        });
+        break;
+      case "sc-floating-menu-zoom-to-layer":
+        TOCHelpers.getLayerInfo(layerInfo, result => {
+          const boundingBox = result.featureType.nativeBoundingBox;
+          const extent = [boundingBox.minx, boundingBox.miny, boundingBox.maxx, boundingBox.maxy];
+          window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
+        });
+        break;
+      case "sc-floating-menu-zoom-to-layer-visible":
+        this.zoomToVisibleScale(layerInfo);
+        break;
+      default:
+        break;
     }
-
     helpers.addAppStat("Layer Options", action);
   };
 

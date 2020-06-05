@@ -34,12 +34,12 @@ class MyMapsAdvanced extends Component {
   onImport = () => {
     // BASIC CHECKING
     if (this.state.inputText.length !== 36) {
-      helpers.showMessage("MyMaps Import", "Invalid ID was entered.", "red");
+      helpers.showMessage("MyMaps Import", "Invalid ID was entered.", helpers.messageColors.red);
       return;
     }
 
     drawingHelpers.importMyMaps(this.state.inputText, result => {
-      if (result.error !== undefined) helpers.showMessage("MyMaps Import", "That MyMaps ID was NOT found!", "red");
+      if (result.error !== undefined) helpers.showMessage("MyMaps Import", "That MyMaps ID was NOT found!", helpers.messageColors.red);
       else {
         helpers.showMessage("MyMaps Import", "Success!  MyMaps imported.");
         this.props.onMyMapsImport(result);
@@ -50,7 +50,7 @@ class MyMapsAdvanced extends Component {
   onSave = () => {
     this.setState({ copied: true });
     drawingHelpers.exportMyMaps(result => {
-      helpers.showMessage("MyMaps Save", "MyMaps have been saved!  Your ID has been saved to clipboard.", undefined, 5000);
+      helpers.showMessage("MyMaps Save", "MyMaps have been saved!  Your ID has been saved to clipboard.",helpers.messageColors.green, 5000);
       helpers.glowContainer(this.inputId);
       this.setState({ inputText: result.id });
       copy(result.id);

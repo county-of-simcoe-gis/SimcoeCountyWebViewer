@@ -210,15 +210,38 @@ class SCMap extends Component {
     }
   }
   onMenuItemClick = key => {
-    if (key === "sc-floating-menu-zoomin") window.map.getView().setZoom(window.map.getView().getZoom() + 1);
-    else if (key === "sc-floating-menu-zoomout") window.map.getView().setZoom(window.map.getView().getZoom() - 1);
-    else if (key === "sc-floating-menu-property-click") window.emitter.emit("showPropertyReport", this.contextCoords);
-    else if (key === "sc-floating-menu-add-mymaps") this.addMyMaps();
-    else if (key === "sc-floating-menu-save-map-extent") this.saveMapExtent();
-    else if (key === "sc-floating-menu-report-problem") this.reportProblem();
-    else if (key === "sc-floating-menu-identify") this.identify();
-    else if (key === "sc-floating-menu-more") this.moreOptions();
-    else if (key === "sc-floating-menu-basic-mode") this.basicMode();
+    switch(key){
+      case "sc-floating-menu-zoomin":
+        window.map.getView().setZoom(window.map.getView().getZoom() + 1);
+        break;
+      case "sc-floating-menu-zoomout":
+        window.map.getView().setZoom(window.map.getView().getZoom() - 1);
+        break;
+      case "sc-floating-menu-property-click":
+        window.emitter.emit("showPropertyReport", this.contextCoords);
+        break;
+      case "sc-floating-menu-add-mymaps":
+        this.addMyMaps();
+        break;
+      case "sc-floating-menu-save-map-extent":
+        this.saveMapExtent();
+        break;
+      case "sc-floating-menu-report-problem":
+        this.reportProblem();
+        break;
+      case "sc-floating-menu-identify":
+        this.identify();
+        break;
+      case "sc-floating-menu-more":
+        this.moreOptions();
+        break;
+      case "sc-floating-menu-basic-mode":
+        this.basicMode();
+        break;
+      default:
+        break;
+    }
+    
     helpers.addAppStat("Right Click", key);
   };
 

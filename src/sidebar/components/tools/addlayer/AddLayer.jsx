@@ -1,5 +1,7 @@
 import React, { Component } from "react";
 import "./AddLayer.css";
+import * as addLayerConfig from "./config.json"
+import PanelComponent from "../../../PanelComponent";
 import Switch from "react-switch";
 import * as helpers from "../../../../helpers/helpers";
 import Select from "react-select";
@@ -12,6 +14,8 @@ class AddLayerForm extends Component {
   
       this.inputId = "sc-toc-add-layer-input";
       this.state = {
+        selectFormatTypeOptions: [],
+        selectFormatTypeOption: undefined,
         selectFormatOptions: [],
         selectFormatOption: undefined,
         serverUrl:"",
@@ -19,7 +23,7 @@ class AddLayerForm extends Component {
         selectLayerOption:undefined,
         selectProjectionOptions:[],
         selectProjectionOption:undefined,
-        layer_displayName:"",
+        layer_displayName:"New Layer",
         layer_source:undefined,
         layer_format:undefined,
         layer_type:undefined,
@@ -27,153 +31,47 @@ class AddLayerForm extends Component {
         layer_name: "",
         layer_extent: undefined,
         selectedFormat:undefined,
+        isFile:false,
         errorRegister:[]
       };
-      this.layer_translation = [
-          {key:"wms", source:"WMS", method:"raster", type:"WMS", urlSuffix:"/{z}/{x}/{y}.png"},
-          {key:"wmts",source:"WMTS",method:"raster",type: "WMTS"},
-          {key:"stamen",source:"service",method:"raster",type: "Stamen"},
-          {key:"osm",source:"service",method:"raster",type: "OSM"},
-          {key:"xyz",source:"service",method:"raster",type: "XYZ", urlSuffix:"/{z}/{x}/{y}.png"},
-          {key:"static",source:"file",method:"raster",type: "static"},
-          {key:"remote_gml3",source:"remote",method:"vector",type: "GML3"},
-          {key:"remote_gml2",source:"remote",method:"vector",type: "GML2"},
-          {key:"remote_gpx",source:"remote",method:"vector",type: "GPX"},
-          {key:"remote_kml",source:"remote",method:"vector",type: "KML"},
-          {key:"remote_osmxml",source:"remote",method:"vector",type: "OSMXML"},
-          {key:"remote_esrijson",source:"remote",method:"vector",type: "EsriJSON"},
-          {key:"remote_geojson",source:"remote",method:"vector",type: "GeoJSON"},
-          {key:"remote_topojson",source:"remote",method:"vector",type: "TopoJSON"},
-          {key:"remote_igc",source:"remote",method:"vector",type: "IGC"},
-          {key:"remote_polyline",source:"remote",method:"vector",type: "Polyline"},
-          {key:"remote_wkt",source:"remote",method:"vector",type: "WKT"},
-          {key:"remote_mvt",source:"remote",method:"vector",type: "MVT"},
-          {key:"local_gml3",source:"file",method:"vector",type: "GML3"},
-          {key:"local_gml2",source:"file",method:"vector",type: "GML2"},
-          {key:"local_gpx",source:"file",method:"vector",type: "GPX"},
-          {key:"local_kml",source:"file",method:"vector",type: "KML"},
-          {key:"local_osmxml",source:"file",method:"vector",type: "OSMXML"},
-          {key:"local_esrijson",source:"file",method:"vector",type: "EsriJSON"},
-          {key:"local_geojson",source:"file",method:"vector",type: "GeoJSON"},
-          {key:"local_topojson",source:"file",method:"vector",type: "TopoJSON"},
-          {key:"local_igc",source:"file",method:"vector",type: "IGC"},
-          {key:"local_polyline",source:"file",method:"vector",type: "Polyline"},
-          {key:"local_wkt",source:"file",method:"vector",type: "WKT"},
-          {key:"local_mvt",source:"file",method:"vector",type: "MVT"},
-          {key:"wfs_gml3",source:"wfs",method:"vector",type: "GML3"},
-          {key:"wfs_gml2",source:"wfs",method:"vector",type: "GML2"},
-          {key:"wfs_gpx",source:"wfs",method:"vector",type: "GPX"},
-          {key:"wfs_kml",source:"wfs",method:"vector",type: "KML"},
-          {key:"wfs_osmxml",source:"wfs",method:"vector",type: "OSMXML"},
-          {key:"wfs_esrijson",source:"wfs",method:"vector",type: "EsriJSON"},
-          {key:"wfs_geojson",source:"wfs",method:"vector",type: "GeoJSON"},
-          {key:"wfs_topojson",source:"wfs",method:"vector",type: "TopoJSON"},
-          {key:"wfs_igc",source:"wfs",method:"vector",type: "IGC"},
-          {key:"wfs_polyline",source:"wfs",method:"vector",type: "Polyline"},
-          {key:"wfs_wkt",source:"wfs",method:"vector",type: "WKT"},
-          {key:"wfs_mvt",source:"wfs",method:"vector",type: "MVT"},
-  
-      ];
       this.defaultLayerOption = {label:"Not Found", value:""};
     }
     componentDidMount() {
-        this._setDefaultFormatOptions();
+        this._setFormatTypes();
         this._setDefaultProjectionOptions();
+        this._setLayerGroupOptions();
     }
-   componentWillReceiveProps(){
-        if (this.props.isOpen) {
-            //Get defaults when panel is opened
-            this._setDefaultFormatOptions();
-            this._setDefaultProjectionOptions();
-        }else{
-            //Reset State when panel is hidden
-            this.setState({selectFormatOptions: [],
-                selectFormatOption: undefined,
-                serverUrl:"",
-                file:undefined,
-                selectLayerOptions:[],
-                selectLayerOption:undefined,
-                selectProjectionOptions:[],
-                selectProjectionOption:undefined,
-                layer_displayName:"",
-                layer_source:undefined,
-                layer_format:undefined,
-                layer_type:undefined,
-                layer_extent:[],
-                selectedFormat:undefined,
-                errorRegister:[]});
-        }
+    _setFormatTypes = () => {
+        const items = addLayerConfig.dataTypes;
+        let options = items.map(item => {return {label: item.label, value: item.label.split(" ").join("")}});
+        const selectedFormat = this.getSelectedFormat(items[0].options[0].value);
+        this.setState({
+                selectFormatTypeOptions:options, 
+                selectFormatTypeOption:options[0],
+                selectFormatOptions:items[0].options, 
+                selectFormatOption:items[0].options[0],
+                selectedFormat:selectedFormat,
+                isFile:selectedFormat.source==="file"});
+    }
+   _setLayerGroupOptions =()=>{
+       let groups = window.allLayers;
+       let options = [];
+       groups.forEach(group =>{
+        options.push({label:group[0].groupName, value:group[0].group});
+       });
+       options = options.concat([]);
+       this.setState({selectGroupOptions:options, selectGroupOption:options[0]});
    }
-    _setDefaultFormatOptions = () => {
-        const items = [
-            {label:"Raster Layers", options:[
-                {label:"Web Map Service (WMS)", value:"wms"},
-                {label:"Web Map Tile Service (WMTS)", value:"wmts"},
-                {label:"Stamen", value:"stamen"},
-                {label:"OpenStreetMap", value:"osm"},
-                {label:"Tile with XYZ format", value:"xyz"},
-                {label:"Static Image", value:"static"}
-            ]},
-            {label:"WFS Vector Layers", options: [
-                {label:"GML3 (default for WFS)", value:"wfs_gml3"},
-                {label:"GML2", value:"wfs_gml2"},
-                {label:"GPX", value:"wfs_gpx"},
-                {label:"KML", value:"wfs_kml"},
-                {label:"OSMXML", value:"wfs_osmxml"},
-                {label:"EsriJSON", value:"wfs_esrijson"},
-                {label:"GeoJSON", value:"wfs_geojson"},
-                {label:"TopoJSON", value:"wfs_topojson"},
-                {label:"IGC", value:"wfs_igc"},
-                {label:"Polyline", value:"wfs_polyline"},
-                {label:"WKT", value:"wfs_wkt"},
-                {label:"Mapbox", value:"wfs_mvt"}
-            ]},
-            {label:"Remote Vector Layers", options: [
-                {label:"GML3 (default for WFS)", value:"remote_gml3"},
-                {label:"GML2", value:"remote_gml2"},
-                {label:"GPX", value:"remote_gpx"},
-                {label:"KML", value:"remote_kml"},
-                {label:"OSMXML", value:"remote_osmxml"},
-                {label:"EsriJSON", value:"remote_esrijson"},
-                {label:"GeoJSON", value:"remote_geojson"},
-                {label:"TopoJSON", value:"remote_topojson"},
-                {label:"IGC", value:"remote_igc"},
-                {label:"Polyline", value:"remote_polyline"},
-                {label:"WKT", value:"remote_wkt"},
-                {label:"Mapbox", value:"remote_mvt"}
-            ]},
-            {label:"Local Vector Layers", options: [
-                {label:"GML3 (default for WFS)", value:"local_gml3"},
-                {label:"GML2", value:"local_gml2"},
-                {label:"GPX", value:"local_gpx"},
-                {label:"KML", value:"local_kml"},
-                {label:"OSMXML", value:"local_osmxml"},
-                {label:"EsriJSON", value:"local_esrijson"},
-                {label:"GeoJSON", value:"local_geojson"},
-                {label:"TopoJSON", value:"local_topojson"},
-                {label:"IGC", value:"local_igc"},
-                {label:"Polyline", value:"local_polyline"},
-                {label:"WKT", value:"local_wkt"},
-                {label:"Mapbox", value:"local_mvt"}
-            ]}
-            
 
-            
-        ];
-
-        const selectedFormat = this.layer_translation.filter(item => item.key === items[0].options[0].value)[0];
-        this.setState({selectFormatOptions:items, selectFormatOption:items[0].options[0],selectedFormat:selectedFormat});
-    }
 
     _setDefaultProjectionOptions = () => {
-        const items = [
-                        {label:"WGS 84 / Pseudo-Mercator", value:"EPSG:3857"},
-                        {label:"WGS 84 (long/lat)", value:"EPSG:4326"},
-                        {label:"HD72 EOV", value:"EPSG:23700"}
-                    ];
+        const items = addLayerConfig.projections;
         this.setState({selectProjectionOptions:items, selectProjectionOption:items[0]});
     }
-
+    getSelectedFormat = (value) =>{
+        const items = addLayerConfig.translations;
+        return items.filter(item => item.key === value)[0];
+    }
     onClose = () =>{
         this.props.onClose();
     }
@@ -181,10 +79,20 @@ class AddLayerForm extends Component {
     clearLayers = () => {
         this.setState({selectLayerOptions:[], selectLayerOption:this.defaultLayerOption});
     }
-
+    onLayerFormatTypeChange = (selection) =>{
+        let items = addLayerConfig.dataTypes;
+        items = items.filter(item => item.label === selection.label)[0];
+        let options = items.options;
+        const selectedFormat = this.getSelectedFormat(options[0].value);
+        this.setState({selectFormatTypeOption:selection, selectFormatOptions: options, selectFormatOption:options[0], selectedFormat: selectedFormat,isFile:selectedFormat.source==="file"}, () => {
+            if ( this.state.selectLayerOption !== this.defaultLayerOption) this.clearLayers();
+        });
+    }
     onLayerFormatChange = (selection) =>{
-        const selectedFormat = this.layer_translation.filter(item => item.key === selection.value)[0];
-        this.setState({selectFormatOption:selection, selectedFormat: selectedFormat}, () => {if ( this.state.selectLayerOption !== this.defaultLayerOption) this.clearLayers()});
+        const selectedFormat = this.getSelectedFormat(selection.value);
+        this.setState({selectFormatOption:selection, selectedFormat: selectedFormat,isFile:selectedFormat.source==="file"}, () => {
+            if ( this.state.selectLayerOption !== this.defaultLayerOption) this.clearLayers();
+        });
     }
     onLayerSelectChange = (selection) =>{
         let displayName = this.state.layer_displayName;
@@ -220,7 +128,7 @@ class AddLayerForm extends Component {
             legendImage: null, // IMAGE DATA, STORED ONCE USER VIEWS LEGEND
             visible: true, // LAYER VISIBLE IN MAP, UPDATED BY CHECKBOX
             layer: layer, // OL LAYER OBJECT
-            metadataUrl: "", // ROOT LAYER INFO FROM GROUP END POINT
+            metadataUrl: null, // ROOT LAYER INFO FROM GROUP END POINT
             opacity: 1.0, // OPACITY OF LAYER
             minScale: undefined, //MinScaleDenominator from geoserver
             maxScale: undefined, //MaxScaleDenominator from geoserver
@@ -293,16 +201,26 @@ class AddLayerForm extends Component {
         });
         
     }
-
+    onClose() {
+        // CALL PARENT WITH CLOSE
+        this.props.onClose();
+      }
+    
     render() {
         return (
-            <div >
-                <div className="sc-toc-add-layer-header">
-                    <h4 className="sc-toc-add-layer-title">Add layer</h4>
-                    <button type="button" className="sc-toc-add-layer-close sc-button" onClick={this.onClose}>&times;</button>
-                  
-                </div>
+        <PanelComponent onClose={this.props.onClose} name={this.props.name} type="tools">
+            <div className="sc-toc-add-layer-content">
                 <div className="sc-toc-add-layer-body">
+                    <div className="sc-toc-add-layer-row">
+                        <label htmlFor="sc-input-group">Layer Group:</label>
+                        <Select 
+                            id="sc-input-group" 
+                            onChange={(selection) => {this.setState({selectGroupOption:selection});}} 
+                            options={this.state.selectGroupOptions} 
+                            value={this.state.selectGroupOption}
+                            className="sc-toc-add-layer-select" />
+
+                    </div>
                     <div className="sc-toc-add-layer-row">
                         <label htmlFor="sc-toc-add-layer-display-name">Display name:</label>
                         <input 
@@ -313,6 +231,16 @@ class AddLayerForm extends Component {
                             onFocus={evt => {helpers.disableKeyboardEvents(true);}}
                             onBlur={evt => {helpers.disableKeyboardEvents(false);}}
                             value={this.state.layer_displayName} />
+                    </div>
+                    <div className="sc-toc-add-layer-row">
+                        <label htmlFor="sc-input-source">Source Type:</label>
+                        <Select 
+                            id="sc-input-source" 
+                            onChange={this.onLayerFormatTypeChange} 
+                            options={this.state.selectFormatTypeOptions} 
+                            value={this.state.selectFormatTypeOption}
+                            className="sc-toc-add-layer-select" />
+
                     </div>
                     <div className="sc-toc-add-layer-row">
                         <label htmlFor="sc-input-format">Layer Format:</label>
@@ -333,7 +261,7 @@ class AddLayerForm extends Component {
                             value={this.state.selectProjectionOption} 
                             className="sc-toc-add-layer-select" />
                     </div> 
-                    <div className="sc-toc-add-layer-row">
+                    <div className={!this.state.isFile?"sc-toc-add-layer-row":"sc-hidden"}>
                         <label htmlFor="sc-toc-add-layer-server">Server URL:</label><br />
                         <input 
                             id="sc-toc-add-layer-server" 
@@ -351,7 +279,7 @@ class AddLayerForm extends Component {
                             onClick={this.onCheckForLayers}>Check for layers</button>
                     </div> 
                     
-                    <div className="sc-toc-add-layer-row">
+                    <div className={!this.state.isFile?"sc-toc-add-layer-row":"sc-hidden"}>
                         <label htmlFor="sc-input-layers" >Layer Name:</label>
                         <Select 
                             id="sc-input-layers" 
@@ -360,11 +288,11 @@ class AddLayerForm extends Component {
                             value={this.state.selectLayerOption} 
                             className="sc-toc-add-layer-select"/>
                     </div> 
-                    <div className="sc-hidden sc-toc-add-layer-row">
+                    <div className={this.state.isFile?"sc-toc-add-layer-row":"sc-hidden"}>
                         <label htmlFor="sc-toc-add-layer-file">File:</label>
                         <input id="sc-toc-add-layer-file" className="sc-toc-add-layer-input input"  type="file" name="file" size="60" />
                     </div> 
-                    <div className="sc-hidden sc-toc-add-layer-row">
+                    <div className={this.state.isFile?"sc-toc-add-layer-row":"sc-hidden"}>
                         <label htmlFor="sc-toc-add-layer-extent" >Extent:</label>
                         <input 
                             id="sc-toc-add-layer-extent" 
@@ -381,7 +309,8 @@ class AddLayerForm extends Component {
                   <button type="button" className="sc-button" onClick={this.onAddLayerClick}>Add layer</button>
                   <button type="button" className="sc-button" onClick={this.onClose}>Cancel</button>
                 </div>
-          </div>
+            </div>
+          </PanelComponent>
         );
     }
 }

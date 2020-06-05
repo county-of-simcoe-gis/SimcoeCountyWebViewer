@@ -398,6 +398,7 @@ class Sidebar extends Component {
               tabIndex={this.state.tabIndex}
             />
             <div id="sc-sidebar-message-container" />
+            <div id="sc-sidebar-terms-container" />
             <MenuButton showLabel={false} hidden={!this.state.sidebarOpen} className={"map-float" + (!this.state.showFullscreen ? " no-fullscreen": "")} />
           </React.Fragment>
         }

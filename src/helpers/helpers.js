@@ -31,6 +31,7 @@ import { KeyboardPan, KeyboardZoom } from "ol/interaction.js";
 import { parseString } from "xml2js";
 import shortid from "shortid";
 import ShowMessage from "./ShowMessage.jsx";
+import ShowTerms from "./ShowTerms.jsx";
 import URLWindow from "./URLWindow.jsx";
 import mainConfig from "../config.json";
 import { InfoRow } from "./InfoRow.jsx";
@@ -454,7 +455,7 @@ export function getImageWMSLayer(serverURL, layers, serverType = "geoserver", cq
     zIndex: zIndex,
     source: new ImageWMS({
       url: serverURL,
-      params: { LAYERS: layers, cql_filter: cqlFilter },
+      params: { VERSION:"1.3.0", LAYERS: layers, cql_filter: cqlFilter},
       ratio: 1,
       serverType: serverType,
       crossOrigin: "anonymous"
@@ -471,7 +472,7 @@ export function getImageWMSLayer(serverURL, layers, serverType = "geoserver", cq
 
   if (layerNameOnly === "Assessment Parcel") disableParcelClick = false;
 
-  imageLayer.setProperties({ wfsUrl: wfsUrl, name: layerNameOnly, rootInfoUrl: rootInfoUrl, disableParcelClick: disableParcelClick });
+  imageLayer.setProperties({ wfsUrl: wfsUrl, name: layerNameOnly, rootInfoUrl: rootInfoUrl,  disableParcelClick: disableParcelClick });
   return imageLayer;
 }
 // GET CURRENT MAP SCALE
@@ -496,8 +497,51 @@ export function setMapScale(scale) {
   window.map.getView().setResolution(resolution);
 }
 
+// SHOW DISCLAIMER
+export const messageColors = {
+  gray:"gray",
+  green:"green",
+  blue:"blue",
+  red:"red",
+  yellow:"yellow",
+  orange:"orange"
+}
+export function showTerms(title = "Terms and Condition", messageText = "Message",url = "", color = messageColors.green, accept, decline) {
+  const domId = "portal-root";
+  const termsDomId = "sc-show-terms-root";
+  
+  const message = ReactDOM.render(
+  <ShowTerms 
+    id={domId} 
+    key={termsDomId} 
+    title={title} 
+    message={messageText}
+    color={color} 
+    url={url} 
+    onAcceptClick={accept} 
+    onDeclineClick={decline} 
+    onClose={(ref) =>{
+      try {
+        ReactDOM.unmountComponentAtNode(ref.current.parentNode);
+      } catch (err) {
+        console.log(err);
+      }}
+    } 
+  />, document.getElementById("portal-root"));
+
+  let unmount = (ref) => {
+      
+    }
+  
+  
+}
+
+function unmountDOMComponent(item){
+  
+}
+
 // SHOW MESSAGE
-export function showMessage(title = "Info", messageText = "Message", color = "green", timeout = 2000, hideButton = false) {
+export function showMessage(title = "Info", messageText = "Message", color = messageColors.green, timeout = 2000, hideButton = false) {
   const domId = "sc-show-message-content";
   var existingMsg = document.getElementById(domId);
   if (existingMsg !== undefined && existingMsg !== null) existingMsg.remove();
@@ -571,7 +615,7 @@ export function getJSON(url, callback) {
       if (callback !== undefined) callback(responseJson);
     })
     .catch(error => {
-      console.error(error);
+      console.error("Error: ",error, "URL:", url);
     });
 }
 
@@ -584,7 +628,7 @@ export async function getJSONWait(url, callback) {
       return resp;
     })
     .catch(err => {
-      console.log("Error: ", err);
+      console.log("Error: ", err, "URL:", url);
     });
   if (callback !== undefined) {
     //console.log(data);

@@ -51,32 +51,35 @@ class Identify extends Component {
     for (let index = 0; index < layers.length; index++) {
       const layer = layers[index];
       if (layer.getVisible() && layer instanceof ImageLayer) {
-        const name = layer.get("name");
-        let displayName = ""; // layer.get("displayName");
-        let type = layer.get("displayName")
+        const queryable = layer.get("queryable");
+        if (queryable) {
+          const name = layer.get("name");
+          let displayName = ""; // layer.get("displayName");
+          let type = layer.get("displayName")
           // QUERY USING WMS
           var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "application/json" });
-        
-        let html_url = mainConfig.htmlIdentify ? layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "text/html" }) + "&feature_count=1000000" : "" ;
-          url += "&feature_count=1000000";
-          if (url) {
-            helpers.getJSON(url, result => {
-              const features = result.features;
-              if (features.length === 0) {
-                return;
-              }
+          
+          let html_url = mainConfig.htmlIdentify ? layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "text/html" }) + "&feature_count=1000000" : "" ;
+            url += "&feature_count=1000000";
+            if (url) {
+              helpers.getJSON(url, result => {
+                const features = result.features;
+                if (features.length === 0) {
+                  return;
+                }
 
-              const featureList = new GeoJSON().readFeatures(result);
-              if (featureList.length > 0) {
-                if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
-                let features = [];
-                featureList.forEach(feature => {
-                  features.push(feature);
-                });
-                if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, html_url: html_url });
-                this.setState({ layers: layerList });
-              }
-            });
+                const featureList = new GeoJSON().readFeatures(result);
+                if (featureList.length > 0) {
+                  if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
+                  let features = [];
+                  featureList.forEach(feature => {
+                    features.push(feature);
+                  });
+                  if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, html_url: html_url });
+                  this.setState({ layers: layerList });
+                }
+              });
+            }
           }
         }
       }

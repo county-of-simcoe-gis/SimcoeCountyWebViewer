@@ -300,35 +300,35 @@ class LHRS extends Component {
             if (!isNaN(parseFloat(this.state.inputAValue)) && !isNaN(parseFloat(this.state.inputBValue))){
               this.calcByLatLong(this.state.inputAValue,this.state.inputBValue, this.state.selectedPoint);
             }else{
-              helpers.showMessage("Error", "Invalid Lat/Long.", "red", 2000);
+              helpers.showMessage("Error", "Invalid Lat/Long.", helpers.messageColors.red, 2000);
             }
             break;
           case "enterLatLong":
             if (!isNaN(parseFloat(this.state.inputAValue)) && !isNaN(parseFloat(this.state.inputBValue))){
               this.calcByLatLong(this.state.inputAValue,this.state.inputBValue,this.state.selectedPoint);
             }else{
-              helpers.showMessage("Error", "Invalid Lat/Long.", "red", 2000);
+              helpers.showMessage("Error", "Invalid Lat/Long.", helpers.messageColors.red, 2000);
             }
             break;
           case "enterHwy":
             if (!isNaN(parseFloat(this.state.inputBValue))){
               this.calcByHwy(this.state.inputAValue,this.state.inputBValue,this.state.selectedPoint);
             }else{
-              helpers.showMessage("Error", "Invalid Distance.", "red", 2000);
+              helpers.showMessage("Error", "Invalid Distance.", helpers.messageColors.red, 2000);
             }
             break;
           case "enterBasepoint":
             if (!isNaN(parseFloat(this.state.inputAValue)) && !isNaN(parseFloat(this.state.inputBValue))){
               this.calcByBasepoint(this.state.inputAValue,this.state.inputBValue,this.state.selectedPoint);
             }else{
-              helpers.showMessage("Error", "Invalid Basepoint/Offset.", "red", 2000);
+              helpers.showMessage("Error", "Invalid Basepoint/Offset.", helpers.messageColors.red, 2000);
             }
             break;
           case "enterDistanceFromA":
             if (!isNaN(parseFloat(this.state.inputAValue))){
               this.calcByHwy(this.state.a_hwy,parseFloat(this.state.a_m_distance) + parseFloat(this.state.inputAValue),"pointB");
             }else{
-              helpers.showMessage("Error", "Invalid Distance.", "red", 2000);
+              helpers.showMessage("Error", "Invalid Distance.", helpers.messageColors.red, 2000);
             }
             break;
           default:
@@ -494,7 +494,7 @@ class LHRS extends Component {
         pointObj.offset=offset;
         pointObj.snapped_distance=null;
         pointObj.valid = false;
-        helpers.showMessage("Not Found", "No LHRS Data Found.", "green", 1500, true);
+        helpers.showMessage("Not Found", "No LHRS Data Found.", helpers.messageColors.green, 1500, true);
       }
       this._setPoint(pointObj);
     });
@@ -527,7 +527,7 @@ class LHRS extends Component {
         pointObj.offset=null;
         pointObj.snapped_distance=null;
         pointObj.valid = false;
-        helpers.showMessage("Not Found", "No LHRS Data Found.", "green", 1500, true);
+        helpers.showMessage("Not Found", "No LHRS Data Found.", helpers.messageColors.green, 1500, true);
       }
       this._setPoint(pointObj);
     });
@@ -561,7 +561,7 @@ class LHRS extends Component {
               pointObj.offset=null;
               pointObj.snapped_distance=null;
               pointObj.valid = false;
-              helpers.showMessage("Not Found", "Location selected is outside the defined snapping threshold.\nPlease pick a location within the defined threshold or increase the defined threshold.", "green", 2500,true);
+              helpers.showMessage("Not Found", "Location selected is outside the defined snapping threshold.\nPlease pick a location within the defined threshold or increase the defined threshold.", helpers.messageColors.green, 2500,true);
           }
           this._setPoint(pointObj);
         });

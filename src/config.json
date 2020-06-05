@@ -70,6 +70,13 @@
     },
     {
       "id": 9,
+      "name": "Add Layer",
+      "componentName": "AddLayer",
+      "description": "Add data to your map by importing layers for multiple sources.",
+      "imageName": "addlayer.png"
+    },
+    {
+      "id": 10,
       "name": "Settings",
       "componentName": "Settings",
       "description": "Customize for your preferences",

@@ -16,7 +16,7 @@ class ShowMessage extends Component {
     onCloseClick = (value => {
         this.setState({hide: true});
     });
-    
+
     getClassName = () => {
       if (this.state.hide)
         return "sc-hidden"

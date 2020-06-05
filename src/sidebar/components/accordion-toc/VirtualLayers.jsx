@@ -12,7 +12,7 @@ import "./VirtualLayers.css";
 const SortableItem = sortableElement(({ value, style, item, searchText,virtualId,onLayerChange }) => {
   item.elementId = item.name + helpers.getUID();
   return (
-    <li style={style} className="sc-toc-layer-list-item sc-noselect" id={item.elementId}>
+    <li key={helpers.getUID()} style={style} className="sc-toc-layer-list-item sc-noselect" id={item.elementId}>
       <LayerItem key={helpers.getUID()} layerInfo={item} virtualId={virtualId} onLayerChange={onLayerChange} searchText={searchText}/>
     </li>
   );
@@ -61,6 +61,7 @@ class VirtualLayers extends Component {
     //if (window.innerWidth <= 400) mobileAdjustment = 400 - window.innerWidth;
     return (
       <List
+        key={helpers.getUID()}
         id={virtualId}
         ref={getRef}
         rowHeight={this.getRowHeight}

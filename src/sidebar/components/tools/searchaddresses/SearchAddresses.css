@@ -47,9 +47,6 @@
   height: 31px;
 }
 
-.sc-tool-search-addresses-results {
-}
-
 .sc-tool-search-addresses-no-results {
   background-color: #d9edf7;
 }
@@ -61,7 +58,7 @@
 
 .sc-tool-search-addresses-street-search-menu {
   position: absolute;
-  z-index: 99999999;
+  z-index: 9999;
   display: block;
   right: auto;
   float: left;

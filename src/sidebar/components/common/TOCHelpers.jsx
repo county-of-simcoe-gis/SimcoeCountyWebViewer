@@ -1,4 +1,5 @@
 import * as helpers from "../../../helpers/helpers";
+import * as drawingHelpers from "../../../helpers/drawingHelpers";
 import TOCConfig from "../common/TOCConfig.json";
 import xml2js from "xml2js";
 
@@ -9,6 +10,58 @@ const layerIndexStart = 100;
 const storageKey = "layers";
 const storageMapDefaultsKey = "map_defaults";
 const storageExtentKey = "map_extent";
+
+export function makeGroup(groupDisplayName, isDefault,groupUrl, groupPrefix, visibleLayers,wmsGroupUrl,customGroupUrl, layers = []){
+  const groupObj = {
+    value: helpers.getUID(),
+    label: groupDisplayName,
+    defaultGroup: isDefault,
+    url: groupUrl,
+    prefix:groupPrefix,
+    visibleLayers: visibleLayers,
+    wmsGroupUrl: wmsGroupUrl,
+    customRestUrl: customGroupUrl, 
+    layers:layers
+  };
+
+  return groupObj;
+}
+
+export function makeLayer( layerName, layerId = helpers.getUID(),group ,layerIndex=0, visible=false, opacity=1,layer, minScale = 0,maxScale = 100000000000,liveLayer = false,callback){
+  let newLayer = layer;
+  let existingLayer = drawingHelpers.getLayerByName(layerId);
+  if (existingLayer !== undefined) 
+  {
+    newLayer = existingLayer
+  }else{
+    newLayer.setVisible(visible);
+    newLayer.setOpacity(opacity);
+    newLayer.setProperties({ name: layerId, displayName: layerName});
+    newLayer.setZIndex(layerIndex);
+    window.map.addLayer(newLayer);
+  }
+  
+  const returnLayer = {
+    name: layerId,
+    displayName: layerName,
+    height: 30, // HEIGHT OF DOM ROW FOR AUTOSIZER
+    drawIndex: layerIndex, // INDEX USED BY VIRTUAL LIST
+    index: layerIndex, // INDEX USED BY VIRTUAL LIST
+    showLegend: false, // SHOW LEGEND USING PLUS-MINUS IN TOC
+    legendHeight: -1, // HEIGHT OF IMAGE USED BY AUTOSIZER
+    legendImage: null, // IMAGE DATA, STORED ONCE USER VIEWS LEGEND
+    visible: visible, // LAYER VISIBLE IN MAP, UPDATED BY CHECKBOX
+    layer: newLayer, // OL LAYER OBJECT
+    metadataUrl: null, // ROOT LAYER INFO FROM GROUP END POINT
+    opacity: opacity, // OPACITY OF LAYER
+    minScale: minScale, //MinScaleDenominator from geoserver
+    maxScale: maxScale, //MaxScaleDenominator from geoserver
+    liveLayer: liveLayer, // LIVE LAYER FLAG
+    groupName:group.label,
+    group:group.value
+  };
+  callback(returnLayer);
+}
 
 // GET GROUPS FROM GET CAPABILITIES
 export async function getGroupsGC(url, urlType, callback) {
@@ -223,6 +276,8 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
 
     const layerNameOnly = layer.Name[0];
     let layerTitle = layer.Title[0];
+    let queryable = layer.$.queryable !== undefined?layer.$.queryable === "1":false;
+    let opaque = layer.$.opaque !== undefined?layer.$.opaque === "1":false;
     if (layerTitle === undefined) layerTitle = layerNameOnly;
     const keywords = layer.KeywordList[0].Keyword;
     const styleUrl = layer.Style !== undefined ? layer.Style[0].LegendURL[0].OnlineResource[0].$["xlink:href"].replace("http", "https") : "";
@@ -255,7 +310,13 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
     //IDENTIFY 
     let identifyTitleColumn = _getIdentifyTitle(keywords);
     let identifyIdColumn = _getIdentifyId(keywords);
-
+    //DISCLAIMER
+    let disclaimerTitle = _getDisclaimerTitle(keywords);
+    let disclaimerUrl = _getDisclaimerURL(keywords);
+    let disclaimer = undefined;
+    if (disclaimerUrl !== "" || disclaimerTitle !== ""){
+      disclaimer = {title:disclaimerTitle, url:disclaimerUrl};
+    }
     const minScale = layer.MinScaleDenominator;
     const maxScale = layer.MaxScaleDenominator;
     // SET VISIBILITY
@@ -266,10 +327,11 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
     } else if (visibleLayers.includes(layerNameOnly)) layerVisible = true;
 
     // LAYER PROPS
-    let newLayer = helpers.getImageWMSLayer(serverUrl + "/wms", layer.Name[0]);
+    let newLayer = helpers.getImageWMSLayer(serverUrl + "/wms/kml?layers=", layer.Name[0]);
     newLayer.setVisible(layerVisible);
     newLayer.setOpacity(opacity);
-    newLayer.setProperties({ name: layerNameOnly, displayName: displayName, disableParcelClick: liveLayer });
+    newLayer.setProperties({ name: layerNameOnly, displayName: displayName, disableParcelClick: liveLayer,queryable:queryable,opaque:opaque  });
+
     newLayer.setZIndex(layerIndex);
     window.map.addLayer(newLayer);
 
@@ -296,7 +358,8 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
       canDownload: canDownload, // INDICATES WETHER LAYER CAN BE DOWNLOADED
       displayName: displayName, // DISPLAY NAME USED BY IDENTIFY
       identifyTitleColumn: identifyTitleColumn,
-      identifyIdColumn: identifyIdColumn
+      identifyIdColumn: identifyIdColumn,
+      disclaimer: disclaimer
     };
     callback(returnLayer);
   }
@@ -430,6 +493,13 @@ export function getLayerListByGroupCustomRest(group, callback) {
         //IDENTIFY 
         let identifyTitleColumn = _getIdentifyTitle(keywords);
         let identifyIdColumn = _getIdentifyId(keywords);
+        //DISCLAIMER
+        let disclaimerTitle = _getDisclaimerTitle(keywords);
+        let disclaimerUrl = _getDisclaimerURL(keywords);
+        let disclaimer = undefined;
+        if (disclaimerUrl !== "" || disclaimerTitle !==""){
+          disclaimer = {title:disclaimerTitle, url:disclaimerUrl};
+        }
         // SET VISIBILITY
         let layerVisible = false;
         if (savedLayers !== undefined) {
@@ -469,7 +539,8 @@ export function getLayerListByGroupCustomRest(group, callback) {
           groupName: group.label,
           canDownload: canDownload, // INDICATES WETHER LAYER CAN BE DOWNLOADED
           identifyTitleColumn: identifyTitleColumn,
-          identifyIdColumn: identifyIdColumn
+          identifyIdColumn: identifyIdColumn,
+          disclaimer: disclaimer
         });
 
         layerIndex--;
@@ -520,6 +591,30 @@ function _getIdentifyTitle(keywords) {
   if (identifyTitleColumn !== undefined) {
     const val = identifyTitleColumn.split("=")[1];
     return val;
+  } else return "";
+}
+
+
+function _getDisclaimerURL(keywords) {
+  if (keywords === undefined)  return "";
+  const returnText = keywords.find(function(item) {
+    return item.indexOf("DISCLAIMER_URL") !== -1;
+  });
+  if (returnText !== undefined) {
+    const val = returnText.split("=")[1];
+    return val.split("”").join("");
+  } else return "";
+}
+
+
+function _getDisclaimerTitle(keywords) {
+  if (keywords === undefined)  return "";
+  const returnText = keywords.find(function(item) {
+    return item.indexOf("DISCLAIMER_TITLE") !== -1;
+  });
+  if (returnText !== undefined) {
+    const val = returnText.split("=")[1];
+    return val.split("”").join("");
   } else return "";
 }
 
@@ -664,6 +759,7 @@ export function updateLayerIndex(layers, callback) {
 }
 
 export function getLayerInfo(layerInfo, callback) {
+  if (layerInfo.metadataUrl !== undefined && layerInfo.metadataUrl !== null) return;
   helpers.getJSON(layerInfo.metadataUrl.replace("http:", "https:"), result => {
     const fullInfoUrl = result.layer.resource.href.replace("http:", "https:").split("+").join("%20");
     helpers.getJSON(fullInfoUrl, result => {

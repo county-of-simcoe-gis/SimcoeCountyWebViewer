@@ -76,7 +76,7 @@ class Search extends Component {
     window.emitter.addListener("searchHistorySelect", (item) => this.onHistoryItemSelect(item));
     // LISTEN FOR MAP TO MOUNT
     window.emitter.addListener("mapLoaded", () => this.onMapLoad());
-
+this._isMounted = false;
     this.state = {
       value: "",
       searchResults: [],
@@ -317,19 +317,24 @@ class Search extends Component {
   onItemSelect(value, item) {
     if (item.type === "Map Layer") {
       if(item.isVisible){
-        item.isVisible = !item.isVisible;
-        item.imageName =  "layers.png";
-        item.title = "Click to Activate";
-        item.className = undefined;
-        window.emitter.emit("deactiveTocLayer", item);
-        setTimeout(() => {window.emitter.emit("updateActiveTocLayers", item.layerGroup);},300);
+        window.emitter.emit("deactiveTocLayer", Object.assign({}, item, { isVisible:  !item.isVisible }),(isActive)=>{
+          if (isActive) return;
+          item.isVisible = isActive;
+          item.imageName =  "layers.png";
+          item.title = "Click to Activate";
+          item.className = undefined;
+          window.emitter.emit("updateActiveTocLayers", item.layerGroup);
+        });
+       
       }else{
-        item.isVisible = !item.isVisible;
-        item.imageName =  "layers-visible.png"
-        item.title = "Click to Deactivate";
-        item.className = 'sc-search-layer-deactivate';
-        window.emitter.emit("activeTocLayerGroup", item.layerGroup, () => {
-          window.emitter.emit("activeTocLayer", item);
+        window.emitter.emit("activeTocLayer",  Object.assign({}, item, { isVisible:  !item.isVisible }), (isActive)=>{
+          if (!isActive) return;
+          item.isVisible = isActive;
+          item.imageName =  "layers-visible.png";
+          item.title = "Click to Deactivate";
+          item.className = 'sc-search-layer-deactivate';
+          window.emitter.emit("updateActiveTocLayers", item.layerGroup);
+          window.emitter.emit("activeTocLayerGroup", item.layerGroup, () => {});
         });
       }
       
@@ -617,7 +622,7 @@ class PopupContent extends Component {
 
   onShareClick = event => {
     this.setState({ copied: true });
-    helpers.showMessage("Share", "Link has been copied to your clipboard.", "green", 2000);
+    helpers.showMessage("Share", "Link has been copied to your clipboard.", helpers.messageColors.green, 2000);
   };
 
   render() {

@@ -48,9 +48,12 @@ class MyMapsItem extends Component {
   }
 
   onMenuItemClick = action => {
-    if (action === "sc-floating-menu-buffer") {
-      const feature = drawingHelpers.getFeatureById(this.props.info.id);
-      this.props.showDrawingOptionsPopup(feature, null, "buffer");
+    switch (action){
+      case "sc-floating-menu-buffer":
+        this.props.showDrawingOptionsPopup(drawingHelpers.getFeatureById(this.props.info.id), null, "buffer");
+        break;
+      default:
+        break;
     }
   };
 
