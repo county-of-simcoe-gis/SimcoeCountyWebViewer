@@ -7,6 +7,21 @@ import mainConfig from "../config.json";
 
 
 // GET LAYER BY NAME FROM LAYER
+export function getLayerByName(layerName) {
+  const layers =  window.map.getLayers();
+  let returnLayer = undefined;
+  if (layers.array_.length > 0) {
+    layers.forEach(layer => {
+      if (returnLayer === undefined){
+        if (layerName === layer.getProperties().name) returnLayer = layer;
+      }
+    });
+  }
+  return returnLayer;
+}
+
+
+// GET LAYER BY NAME FROM LAYER
 export function getFeatureByLayerNameAndId(layerName, id) {
   let feature = null;
   window.map.getLayers().forEach(layer => {

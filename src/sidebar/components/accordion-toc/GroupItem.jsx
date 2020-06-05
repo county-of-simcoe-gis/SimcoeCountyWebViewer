@@ -39,22 +39,33 @@ class GroupItem extends Component {
     if (!panelOpen) {
       panelOpen= !panelOpen;
       this.setState({ panelOpen: panelOpen, userPanelOpen:panelOpen },() => {
-          callback();} );
+          if (callback !== undefined) callback();
+        } );
     }
   };
 
   onMenuItemClick = (action, group) => {
-    if (action === "sc-floating-menu-disable-layers") {
-      window.emitter.emit("turnOffLayers", group);
-    } else if (action === "sc-floating-menu-enable-layers") {
-      window.emitter.emit("turnOnLayers", group);
-    } else if (action === "sc-floating-menu-expand") {
-      window.emitter.emit("toggleLegend", "OPEN", this.props.group.value);
-    } else if (action === "sc-floating-menu-collapse") {
-      window.emitter.emit("toggleLegend", "CLOSE", this.props.group.value);
-    } 
+    switch(action){
+      case "sc-floating-menu-disable-layers":
+        window.emitter.emit("turnOffLayers", group);
+        break;
+      case "sc-floating-menu-enable-layers":
+        window.emitter.emit("turnOnLayers", group);
+        break;
+      case "sc-floating-menu-expand":
+        window.emitter.emit("toggleLegend", "OPEN", this.props.group.value);
+        break;
+      case "sc-floating-menu-collapse":
+        window.emitter.emit("toggleLegend", "CLOSE", this.props.group.value);
+        break;
+      default: 
+        break;
+    }
+
     helpers.addAppStat("Group Options", action);
   };
+
+  
  // ELLIPSIS/OPTIONS BUTTON
  onGroupOptionsClick = (evt, group) => {
   var evtClone = Object.assign({}, evt);

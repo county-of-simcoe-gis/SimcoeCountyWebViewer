@@ -13,7 +13,6 @@ import * as drawingHelpers from "../../../helpers/drawingHelpers";
 import mainConfig from "../../../config.json";
 import * as TOCHelpers from "../common/TOCHelpers.jsx";
 import TOCConfig from "../common/TOCConfig.json";
-import AddLayer from "../common/AddLayer/AddLayer.jsx";
 import GroupItem from "./GroupItem.jsx";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
@@ -54,23 +53,21 @@ class TOC extends Component {
 
     //LISTEN FOR NEW LAYER
     window.emitter.addListener("addCustomLayer", (layer) => this.addCustomLayer(layer));
+    this.myMapLayerName = "local:myMaps";
+    this.myLayersGroupName = "My Layers";
   }
-
+  
   addCustomLayer = (layer) => {
     let layerIndex = 100;
-    let layerGroups = this.state.layerGroups;
-    layerIndex += (layerGroups[0].layers.length+1);
-    if (layerGroups[0].prefix !==undefined &&  layerGroups[0].prefix !=="")layer.displayName = layerGroups[0].prefix + " - " + layer.displayName;
-    layer.index = layerIndex;
-    layer.drawIndex = layerIndex;
-    layer.group = layerGroups[0].value;
-    layer.groupName = layerGroups[0].label;
-    layer.layer.setZIndex(layerIndex);
-    
-    layerGroups[0].layers.unshift(layer);
-    layerGroups[0].layers = layerGroups[0].layers.concat([]);
-    this.setState({layerGroups:layerGroups.concat([])}, () => {
-        window.map.addLayer(layer.layer);
+    let layerGroups= this.state.layerGroups;
+    let myLayersGroup = layerGroups.filter(group => group.label === this.myLayersGroupName)[0];
+    if (myLayersGroup === undefined) myLayersGroup = layerGroups[0];
+    layerIndex += (myLayersGroup.layers.length+1);
+    TOCHelpers.makeLayer(layer.displayName, helpers.getUID(),myLayersGroup, layerIndex,true,1,layer.layer,undefined,undefined,false, (retLayer)=>{
+      let layers = myLayersGroup.layers;
+      layers.push(retLayer);
+      myLayersGroup.layers = layers
+      this.setState({layerGroups: layerGroups.map(group => myLayersGroup.value === group.value?myLayersGroup:group )}, () => {
         let allLayers = [];
         this.state.layerGroups.forEach(group =>{
           allLayers.push(group.layers);
@@ -78,6 +75,9 @@ class TOC extends Component {
         window.allLayers = allLayers;
         this.forceUpdate();
     });
+    });
+    
+    
   }
   clearIdentify = () => {
     // CLEAR PREVIOUS IDENTIFY RESULTS
@@ -104,6 +104,8 @@ class TOC extends Component {
   }
 
   onMapLoad = () => {
+    this.addIdentifyLayer();
+    this.refreshTOC();
     if (mainConfig.leftClickIdentify) {
       window.map.on("singleclick", evt => {
         // DISABLE IDENTIFY CLICK
@@ -147,22 +149,25 @@ class TOC extends Component {
 
   componentDidMount() {
     
-    this.addIdentifyLayer();
-    this.refreshTOC();
+    
     
   }
 
   buildDefaultGroup = callback => {
-    const myMapLayerName = "local:myMaps";
+    
     let myMapLayerSource = new VectorSource();
     let myMapLayer = new VectorLayer({
       source: myMapLayerSource,
       zIndex: 1000,
       style: drawingHelpers.getDefaultDrawStyle("#e809e5")
     });
-
-    TOCHelpers.makeLayer("My Drawing", myMapLayerName,1,true,1,myMapLayer,undefined,undefined,false, (retLayer)=>{
-      TOCHelpers.makeGroup("My Layers", true, null, null, null, null, null, retLayer);
+    
+    let group = TOCHelpers.makeGroup(this.myLayersGroupName, true,"","",undefined,"","");
+    TOCHelpers.makeLayer("My Drawing", this.myMapLayerName,group, 1,true,1,myMapLayer,undefined,undefined,false, (retLayer)=>{
+      let layers = group.layers;
+      layers.push(retLayer);
+      group.layers = layers
+      callback(group);
     });
     
   }
@@ -183,30 +188,33 @@ class TOC extends Component {
       if (geoserverUrl !== undefined && geoserverUrl !== null){
         TOCHelpers.getGroupsGC(geoserverUrl,geoserverUrlType ,result => {
           const groupInfo = result;
-          this.setState(
-            {
-              layerGroups: groupInfo[0]//,
-              //selectedGroup: groupInfo[1],
-              //defaultGroup: groupInfo[1]
-            },
-            () => {
-              if (callback !== undefined) callback();
-            }
-          );
-          let allLayers = [];
-          this.state.layerGroups.forEach(group =>{
-            allLayers.push(group.layers);
+          this.buildDefaultGroup(defaultGroup => {
+            let groups = [];
+            groups.push(defaultGroup);
+            groups = groups.concat(groupInfo[0]);
+            this.setState(
+              {
+                layerGroups: groups.concat([])
+              },
+              () => {
+                let allLayers = [];
+                this.state.layerGroups.forEach(group =>{
+                  allLayers.push(group.layers);
+                });
+                window.allLayers = allLayers;
+                this.onLayersLoad();
+                if (callback !== undefined) callback();
+              }
+            );
+            
           });
-          window.allLayers = allLayers;
-          this.onLayersLoad();
+          
         });
       } else {
       const groupInfo = TOCHelpers.getGroups();
         this.setState(
           {
-            layerGroups: groupInfo[0]//,
-            //selectedGroup: groupInfo[1],
-            //defaultGroup: groupInfo[1]
+            layerGroups: groupInfo[0]
           },
           () => {
             if (callback !== undefined) callback();
@@ -289,8 +297,6 @@ class TOC extends Component {
   onSaveClick = () => {
     this.saveLayerOptions();
   };
-
-
   saveLayerOptions = () => {
     // GATHER INFO TO SAVE
     let layers = {};
@@ -317,7 +323,6 @@ class TOC extends Component {
 
     helpers.showMessage("Save", "Layer Visibility has been saved.");
   };
-
   onGroupChange = (group) => {
     if (group !== undefined && this.state.layerGroups!==undefined){
       this.setState({layerGroups: this.state.layerGroups.map(item => item.value === group.value ? group : item)}, ()=>{});
@@ -342,14 +347,11 @@ class TOC extends Component {
             <div data-tip="TOC Settings" data-for="sc-toc-settings-tooltip" className="sc-toc-settings-image" onClick={this.onSettingsClick}>
               <ReactTooltip id="sc-toc-settings-tooltip" className="sc-toc-settings-tooltip" multiline={false} place="right" type="dark" effect="solid" />
             </div>
-            
           </div>
-        
           <div className="toc-group-list">
          { this.state.layerGroups.map((group) => (
               <GroupItem
                 key={"group-item" + group.value}
-                
                 group={group}
                 searchText={this.state.searchText}
                 sortAlpha={this.state.sortAlpha}
@@ -362,10 +364,8 @@ class TOC extends Component {
               
           ))}
           </div>
-         
-          <div className="sc-toc-footer-container">
-            <AddLayer className="sc-hidden sc-button sc-toc-footer-button" />
-            
+          <div className="sc-hidden sc-toc-footer-container">
+          
           </div>
         </div>
       </div>

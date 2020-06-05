@@ -20,7 +20,19 @@ class LayerItem extends Component {
     };
     this.isVisibleAtScale = true;
     this._isMounted = false;
+    // LISTEN FOR SEARCH RESULT
+    window.emitter.addListener("activeTocLayer",(layerItem, callback) => {
+        if (this.props.layerInfo.name === layerItem.fullName && this._isMounted ){
+          this.onActivateLayer(callback);
+        }
+      });
+    window.emitter.addListener("deactiveTocLayer", (layerItem, callback) => {
+        if (this.props.layerInfo.name === layerItem.fullName && this._isMounted ){
+          this.onDeactivateLayer(callback); 
+        }
+      });
   }
+  
   componentWillMount(){
     this.setVisibleScale();
     let layer = this.state.layer;
@@ -36,6 +48,7 @@ class LayerItem extends Component {
   }
   componentDidMount() {
     this._isMounted = true;
+  
     window.map.on("moveend", () => {
       this.setVisibleScale();
       if (this._isMounted) this.forceUpdate();
@@ -71,14 +84,57 @@ class LayerItem extends Component {
     this.isVisibleAtScale = isVisibleAtScale;
   };
 
-  onActivateLayer = () => {
+  acceptDisclaimer = (layer, returnToFunction) => {
+    if (window.acceptedDisclaimers === undefined || window.acceptedDisclaimers.indexOf(layer.name) === -1){
+      helpers.showTerms(layer.disclaimer.title,
+             "Please review the terms and conditions for this layer", 
+             layer.disclaimer.url, helpers.messageColors.gray,
+             () => {
+               let currentDisclaimers = window.acceptedDisclaimers;
+               if (currentDisclaimers === undefined) currentDisclaimers=[];
+               currentDisclaimers.push(layer.name);
+               window.acceptedDisclaimers = currentDisclaimers;
+               returnToFunction();
+              },
+             () => {},
+             );
+      return false;
+    }else{
+      return true;
+    }
+  }
+
+  onActivateLayer = (callback) => {
     let layer = this.state.layer;
+    if (layer.disclaimer !== undefined){
+      if (!this.acceptDisclaimer(layer,() => {this.onActivateLayer(callback);})){
+        if (callback !== undefined) callback(false);
+        return;
+      } 
+    }
     layer.visible = true;
     layer.layer.setVisible(true);
     this.setState(
       {
         layer: layer
-      }, ()=> {this.props.onLayerChange(this.state.layer);}
+      }, ()=> {
+          if (callback !== undefined) callback(true);
+          this.props.onLayerChange(this.state.layer);
+        }
+    );
+  }
+
+  onDeactivateLayer = (callback) => {
+    let layer = this.state.layer;
+    layer.visible = false;
+    layer.layer.setVisible(false);
+    this.setState(
+      {
+        layer: layer
+      }, ()=> {
+          if (callback !== undefined) callback(false);
+          this.props.onLayerChange(this.state.layer);
+        }
     );
   }
 
@@ -95,6 +151,9 @@ class LayerItem extends Component {
   onCheckboxChange = () => {
     let layer = this.state.layer
     const visible = !layer.visible;
+    if (layer.disclaimer !== undefined){
+      if (!this.acceptDisclaimer(layer, this.onCheckboxChange)) return;
+    }
     layer.layer.setVisible(visible);
     layer.visible = visible;
     this.setState(
@@ -107,20 +166,26 @@ class LayerItem extends Component {
 
   onMenuItemClick = (action) => {
     let layerInfo = this.state.layer;
-    if (action === "sc-floating-menu-metadata") {
-      TOCHelpers.getLayerInfo(layerInfo, result => {
-        if (helpers.isMobile()) {
-          window.emitter.emit("setSidebarVisiblity", "CLOSE");
-          helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl, false, "full");
-        } else helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl);
-      });
-    } else if (action === "sc-floating-menu-zoom-to-layer") {
-      TOCHelpers.getLayerInfo(layerInfo, result => {
-        const boundingBox = result.featureType.nativeBoundingBox;
-        const extent = [boundingBox.minx, boundingBox.miny, boundingBox.maxx, boundingBox.maxy];
-        window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
-      });
-    } 
+    switch (action){
+      case "sc-floating-menu-metadata":
+        TOCHelpers.getLayerInfo(layerInfo, result => {
+          if (helpers.isMobile()) {
+            window.emitter.emit("setSidebarVisiblity", "CLOSE");
+            helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl, false, "full");
+          } else helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl);
+        });
+        break;
+      case "sc-floating-menu-zoom-to-layer":
+        TOCHelpers.getLayerInfo(layerInfo, result => {
+          const boundingBox = result.featureType.nativeBoundingBox;
+          const extent = [boundingBox.minx, boundingBox.miny, boundingBox.maxx, boundingBox.maxy];
+          window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
+        });
+        break;
+      default:
+        break;
+    }
+    
 
     helpers.addAppStat("Layer Options", action);
   };
@@ -138,7 +203,7 @@ class LayerItem extends Component {
           onMenuItemClick={action => this.onMenuItemClick(action)}
           styleMode={helpers.isMobile() ? "left" : "right"}
         >
-          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-metadata">
+          <MenuItem className={(layerInfo.metadataUrl !== undefined && layerInfo.metadataUrl !== null )?"sc-floating-menu-toolbox-menu-item":"sc-hidden"} key="sc-floating-menu-metadata">
             <FloatingMenuItem imageName={"metadata.png"} label="Metadata" />
           </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoom-to-layer">

@@ -14,7 +14,6 @@ import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import { unByKey } from "ol/Observable.js";
 import * as coordinateConfig from "./config.json"
-import { duration } from "moment";
 
 class Coordinates extends Component {
   constructor(props) {
@@ -308,22 +307,17 @@ class Coordinates extends Component {
   }
 
   onChangeProjectionSelect = selection => {
+    const webMercatorCoords = [this.state.inputWebMercatorXValue,this.state.inputWebMercatorYValue];
     this.currentPrecision = this._getPrecision(selection);
     this.setState({ selectProjectionOption: selection,
-                  inputWebMercatorXValue: null,
-                  inputWebMercatorYValue: null,
-                  inputLatLongXValue: null,
-                  inputLatLongYValue: null,
-                  inputLatLongCoords: null,
-                  inputXValue: null,
-                  inputYValue: null,
-                  inputProjectionTitle: null,
                   inputPrecision: this.currentPrecision,
                   inputProjection: "EPSG:3857"
     }, () => {
-      this.vectorLayer.getSource().clear();
       this._getSelectProjectionZones(selection);
       this.recalcInputCoordinates();
+      this.recalcLiveCoordinates();
+      this.updateCoordinates(webMercatorCoords);
+      this.createPoint(webMercatorCoords, false);
       
     });
     

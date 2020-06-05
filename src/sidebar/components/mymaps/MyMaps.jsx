@@ -74,12 +74,19 @@ class MyMaps extends Component {
 
   onMapLoad = () => {
     //this.updateStyle();
-    this.vectorSource = new VectorSource();
-    this.vectorLayer = new VectorLayer({
-      source: this.vectorSource,
-      zIndex: 1000,
-      style: this.drawStyle
-    });
+    let existingLayer = drawingHelpers.getLayerByName(this.layerName);
+    if (existingLayer !== undefined) {
+      this.vectorSource = existingLayer.getSource();
+      this.vectorLayer = existingLayer;
+    }else{
+      this.vectorSource = new VectorSource();
+      this.vectorLayer = new VectorLayer({
+        source: this.vectorSource,
+        zIndex: 1000,
+        style: this.drawStyle
+      });
+    }
+    
 
     // PROPERTY CLICK WILL IGNORE THIS LAYER
     this.vectorLayer.setProperties({ disableParcelClick: true, name:this.layerName });
@@ -115,7 +122,7 @@ class MyMaps extends Component {
     const myMapsId = helpers.getURLParameter("MY_MAPS_ID");
     if (myMapsId !== null) {
       drawingHelpers.importMyMaps(myMapsId, result => {
-        if (result.error !== undefined) helpers.showMessage("MyMaps Import", "That MyMaps ID was NOT found!", "red");
+        if (result.error !== undefined) helpers.showMessage("MyMaps Import", "That MyMaps ID was NOT found!", helpers.messageColors.red);
         else {
           helpers.showMessage("MyMaps Import", "Success!  MyMaps imported.");
           this.onMyMapsImport(result);
@@ -650,35 +657,43 @@ class MyMaps extends Component {
   };
 
   onMenuItemClick = (action, item) => {
-    if (action === "sc-floating-menu-show-all") {
-      this.toggleAllVisibility(true);
-    } else if (action === "sc-floating-menu-hide-all") {
-      this.toggleAllVisibility(false);
-    } else if (action === "sc-floating-menu-delete-selected") {
-      this.deleteSelected(true);
-    } else if (action === "sc-floating-menu-delete-unselected") {
-      this.deleteSelected(false);
-    } else if (action === "sc-floating-menu-buffer") {
-      const feature = drawingHelpers.getFeatureById(item.id);
-      this.showDrawingOptionsPopup(feature, null, "buffer");
-    } else if (action === "sc-floating-menu-symbolizer") {
-      const feature = drawingHelpers.getFeatureById(item.id);
-      this.showDrawingOptionsPopup(feature, null, "symbolizer");
-    } else if (action === "sc-floating-menu-zoomto") {
-      const feature = drawingHelpers.getFeatureById(item.id);
-      helpers.zoomToFeature(feature);
-    } else if (action === "sc-floating-menu-delete") {
-      this.onItemDelete(item.id);
-    } else if (action === "sc-floating-menu-edit-vertices") {
-      this.editVertices(item.id);
-    } else if (action === "sc-floating-menu-report-problem") {
-      this.onReportProblem(item.id);
-    } else if (action === "sc-floating-menu-identify") {
-      this.onIdentify(item.id);
+    switch (action){
+      case "sc-floating-menu-show-all":
+        this.toggleAllVisibility(true);
+        break;
+      case "sc-floating-menu-hide-all":
+        this.toggleAllVisibility(false);
+        break;
+      case "sc-floating-menu-delete-selected":
+        this.deleteSelected(true);
+        break;
+      case "sc-floating-menu-delete-unselected":
+        this.deleteSelected(false);
+        break;
+      case "sc-floating-menu-buffer":
+        this.showDrawingOptionsPopup(drawingHelpers.getFeatureById(item.id), null, "buffer");
+        break;
+      case "sc-floating-menu-symbolizer":
+        this.showDrawingOptionsPopup(drawingHelpers.getFeatureById(item.id), null, "symbolizer");
+        break;
+      case "sc-floating-menu-zoomto":
+        helpers.zoomToFeature(drawingHelpers.getFeatureById(item.id));
+        break;
+      case "sc-floating-menu-delete":
+        this.onItemDelete(item.id);
+        break;
+      case "sc-floating-menu-edit-vertices":
+        this.editVertices(item.id);
+        break;
+      case "sc-floating-menu-report-problem":
+        this.onReportProblem(item.id);
+        break;
+      case "sc-floating-menu-identify":
+        this.onIdentify(item.id);
+        break;
+      default:
+        break;
     }
-    // } else if (action === "sc-floating-menu-export-to-shapefile") {
-    //   this.onExportToShapeFile();
-    // }
   };
 
   // TODO:  CHANGE PROJECTION TO WEB MERCATOR IN OUTPUT.

@@ -33,10 +33,9 @@
 
 
   #sc-toc-add-layer .Collapsible__contentOuter {
-    position: absolute;
-    margin-left: -262px;
+  
     bottom: 41px;
-    width: 370px;
+    width: 350px;
     border-style: solid;
     border-bottom: none;
     border-color: #d8dadc;
@@ -129,8 +128,6 @@
     
   }
 
- 
-
     .sc-toc-add-layer-content button.sc-addraster {
         background-image: url(./images/layer-raster-add.png);
     }
@@ -168,11 +165,16 @@
     }
 
     .sc-toc-add-layer-input {
-        color: #8E8E8E;
-        padding: 3px;
-        font-size: 16px;
-        border: 1px solid #CCC;
-        padding-left: 5px;
+      background-color: hsl(0,0%,100%);
+      border-color: hsl(0,0%,80%);
+      border-radius: 4px;
+      border-style: solid;
+      border-width: 1px;
+      cursor: text;
+      color: hsl(0,0%,20%);
+      padding: 3px;
+      font-size: 16px;
+      padding: 5px;
     }
 
   

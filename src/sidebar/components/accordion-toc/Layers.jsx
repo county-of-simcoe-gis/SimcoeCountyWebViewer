@@ -30,7 +30,6 @@ class Layers extends Component {
   turnOffLayersListener(group) {if (group === this.props.group.value || group === null) this.turnOffLayers(); }
   turnOnLayersListener(group) {if (group === this.props.group.value || group === null) this.turnOnLayers(); }
   activeTocLayerListener(layerItem) {if (layerItem.layerGroup === this.props.group.value) this.onActivateLayer(layerItem); }
-  deactiveTocLayerListener(layerItem) {if (layerItem.layerGroup === this.props.group.value) this.onDeactivateLayer(layerItem); }
   toggleAllLegendsListener(group, type) {if (group === this.props.group.value || group === null) this.toggleAllLegends(type); }
 
   getVirtualId()  {
@@ -49,8 +48,7 @@ class Layers extends Component {
     window.emitter.addListener("toggleLegend",(type, group) => this.toggleAllLegendsListener(group,type));
     // LISTEN FOR SEARCH RESULT
     window.emitter.addListener("activeTocLayer", layerItem => this.activeTocLayerListener(layerItem));
-     // LISTEN FOR SEARCH RESULT
-     window.emitter.addListener("deactiveTocLayer", layerItem => this.deactiveTocLayerListener(layerItem));
+
     
     
     if (this._isMounted) {
@@ -64,13 +62,20 @@ class Layers extends Component {
 
     this._isMounted = false;
   }
+  acceptDisclaimer = (layer) => {
+    if (window.acceptedDisclaimers === undefined || window.acceptedDisclaimers.indexOf(layer.name) === -1){
+      return false;
+    }else{
+      return true;
+    }
+  }
   onActivateLayer = layerItem => {
     let layersCopy = Object.assign([], this.state.layers);
-
     layersCopy.forEach(layer => {
       if (layer.name === layerItem.fullName || layer.name === layerItem.name) {
-        layer.visible = true;
-        layer.layer.setVisible(true);
+        if (layer.disclaimer !== undefined){
+          if (!this.acceptDisclaimer(layer)) return;
+        }
         
         document.getElementById(this.getVirtualId()).scrollTop = 0;
 
@@ -92,17 +97,6 @@ class Layers extends Component {
             }, i * 100);
           })(i);
         }
-      }
-    });
-  };
-
-  onDeactivateLayer = layerItem => {
-    let layersCopy = Object.assign([], this.state.layers);
-
-    layersCopy.forEach(layer => {
-      if (layer.name === layerItem.fullName || layer.name === layerItem.name) {
-        layer.visible = false;
-        layer.layer.setVisible(false);
       }
     });
   };
