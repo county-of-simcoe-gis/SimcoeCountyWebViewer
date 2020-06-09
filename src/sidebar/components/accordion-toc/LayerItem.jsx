@@ -20,17 +20,6 @@ class LayerItem extends Component {
     };
     this.isVisibleAtScale = true;
     this._isMounted = false;
-    // LISTEN FOR SEARCH RESULT
-    window.emitter.addListener("activeTocLayer",(layerItem, callback) => {
-        if (this.props.layerInfo.name === layerItem.fullName && this._isMounted ){
-          this.onActivateLayer(callback);
-        }
-      });
-    window.emitter.addListener("deactiveTocLayer", (layerItem, callback) => {
-        if (this.props.layerInfo.name === layerItem.fullName && this._isMounted ){
-          this.onDeactivateLayer(callback); 
-        }
-      });
   }
   
   componentWillMount(){
@@ -49,6 +38,23 @@ class LayerItem extends Component {
   componentDidMount() {
     this._isMounted = true;
   
+    // LISTEN FOR SEARCH RESULT
+    window.emitter.addListener("activeTocLayer",(layerItem, callback) => {
+      if (this.props.layerInfo.name === layerItem.fullName && this._isMounted ){
+        this.onActivateLayer(callback);
+      }
+    });
+    window.emitter.addListener("deactiveTocLayer", (layerItem, callback) => {
+        if (this.props.layerInfo.name === layerItem.fullName && this._isMounted ){
+          this.onDeactivateLayer(callback); 
+        }
+      });
+      // LISTEN FOR TOGGLE ALL LEGEND
+      window.emitter.addListener("toggleLegend",(type, layerName, callback) => {
+        if (this.props.layerInfo.name === layerName && this._isMounted ){
+          this.onLegendToggle(type, callback);
+        }
+      });
     window.map.on("moveend", () => {
       this.setVisibleScale();
       if (this._isMounted) this.forceUpdate();
@@ -83,31 +89,10 @@ class LayerItem extends Component {
     if (scale <= minScale || scale >= maxScale) isVisibleAtScale = false;
     this.isVisibleAtScale = isVisibleAtScale;
   };
-
-  acceptDisclaimer = (layer, returnToFunction) => {
-    if (window.acceptedDisclaimers === undefined || window.acceptedDisclaimers.indexOf(layer.name) === -1){
-      helpers.showTerms(layer.disclaimer.title,
-             "Please review the terms and conditions for this layer", 
-             layer.disclaimer.url, helpers.messageColors.gray,
-             () => {
-               let currentDisclaimers = window.acceptedDisclaimers;
-               if (currentDisclaimers === undefined) currentDisclaimers=[];
-               currentDisclaimers.push(layer.name);
-               window.acceptedDisclaimers = currentDisclaimers;
-               returnToFunction();
-              },
-             () => {},
-             );
-      return false;
-    }else{
-      return true;
-    }
-  }
-
   onActivateLayer = (callback) => {
     let layer = this.state.layer;
     if (layer.disclaimer !== undefined){
-      if (!this.acceptDisclaimer(layer,() => {this.onActivateLayer(callback);})){
+      if (!TOCHelpers.acceptDisclaimer(layer,() => {this.onActivateLayer(callback);})){
         if (callback !== undefined) callback(false);
         return;
       } 
@@ -152,7 +137,7 @@ class LayerItem extends Component {
     let layer = this.state.layer
     const visible = !layer.visible;
     if (layer.disclaimer !== undefined){
-      if (!this.acceptDisclaimer(layer, this.onCheckboxChange)) return;
+      if (!TOCHelpers.acceptDisclaimer(layer, this.onCheckboxChange)) return;
     }
     layer.layer.setVisible(visible);
     layer.visible = visible;
@@ -220,8 +205,7 @@ class LayerItem extends Component {
     ReactDOM.render(menu, document.getElementById("portal-root"));
   };
   
-  
-  onLegendToggle = (forceAll) => {
+  onLegendToggle = (forceAll, callback) => {
     let layerInfo = this.state.layer;
     this.lastPosition = document.getElementById(this.props.virtualId).scrollTop;
     if (layerInfo.styleUrl === "") return;
@@ -234,12 +218,21 @@ class LayerItem extends Component {
     if (layerInfo.legendImage === null) {
       TOCHelpers.getBase64FromImageUrl(layerInfo.styleUrl, (height, imgData) => {
         const rowHeight = showLegend ? (height += 36) : 30;
-        this.setState({layer: Object.assign({},layerInfo, { showLegend: showLegend, height: rowHeight, legendHeight: height, legendImage: imgData })}, ()=> {this.props.onLayerChange(this.state.layer);});
+        let updatedLayer = Object.assign({},layerInfo, { showLegend: showLegend, height: rowHeight, legendHeight: height, legendImage: imgData });
+        if (callback !== undefined) callback(updatedLayer);
+        else this.setState({layer: updatedLayer}, ()=> {
+                if (callback === undefined) this.props.onLayerChange(this.state.layer);          
+              });
         
       });
     } else {
       const rowHeight = showLegend ? layerInfo.legendHeight : 30;
-      this.setState({layer:Object.assign({}, layerInfo, { showLegend: showLegend, height: rowHeight })}, ()=> {this.props.onLayerChange(this.state.layer);});
+      let updatedLayer = Object.assign({}, layerInfo, { showLegend: showLegend, height: rowHeight });
+      if (callback !== undefined) callback(updatedLayer);
+      else this.setState({layer:updatedLayer}, ()=> {
+              if (callback === undefined) this.props.onLayerChange(this.state.layer);
+            });
+      
     }
   };
   render() {
@@ -250,8 +243,11 @@ class LayerItem extends Component {
     return (
     <div>
       <div className={containerClassName}>
-        <div className="sc-toc-item-plus-minus-container" onClick={() => this.onLegendToggle(this.state.layer)}>
-          <img src={this.state.layer.showLegend ? images["minus.png"] : images["plus.png"]} alt="minus" />
+        <div className="sc-toc-item-plus-minus-container" onClick={() => this.onLegendToggle()}>
+          <img 
+            src={this.state.layer.styleUrl===""? images["no-legend.png"] :(this.state.layer.showLegend ? images["minus.png"] : images["plus.png"])} alt="legend toggle"
+            title={this.state.layer.styleUrl===""? "No Legend Available" :(this.state.layer.showLegend ? "Hide Legend" : "Show Legend")} 
+          />
           <div className="sc-toc-item-plus-minus-sign" />
           <div className="sc-toc-item-lines-expanded" />
         </div>

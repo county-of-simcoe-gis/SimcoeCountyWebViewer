@@ -44,6 +44,7 @@ export function makeLayer( layerName, layerId = helpers.getUID(),group ,layerInd
   const returnLayer = {
     name: layerId,
     displayName: layerName,
+    styleUrl:"",
     height: 30, // HEIGHT OF DOM ROW FOR AUTOSIZER
     drawIndex: layerIndex, // INDEX USED BY VIRTUAL LIST
     index: layerIndex, // INDEX USED BY VIRTUAL LIST
@@ -693,12 +694,39 @@ export function disableLayersVisiblity(layers, callback) {
   }
 }
 
+
+export function acceptDisclaimer(layer, returnToFunction) {
+  if (layer.disclaimer!==undefined && (window.acceptedDisclaimers === undefined || window.acceptedDisclaimers.indexOf(layer.name) === -1)){
+    helpers.showTerms(layer.disclaimer.title,
+           `The layer you are about to view contains data  which is subject to a licence agreement. 
+           Before turning on this layer, you must review the agreement and click 'Accept' or 'Decline'.`, 
+           layer.disclaimer.url, helpers.messageColors.gray,
+           () => {
+             let currentDisclaimers = window.acceptedDisclaimers;
+             if (currentDisclaimers === undefined) currentDisclaimers=[];
+             currentDisclaimers.push(layer.name);
+             window.acceptedDisclaimers = currentDisclaimers;
+             returnToFunction();
+            },
+           () => {},
+           );
+    return false;
+  }else{
+    return true;
+  }
+}
+
 export function turnOnLayers(layers, callback) {
   var newLayers = [];
   for (let index = 0; index < layers.length; index++) {
     const layer = layers[index];
-    layer.layer.setVisible(true);
-    layer.visible = true;
+    if (acceptDisclaimer(layer,() => {
+          window.emitter.emit("activeTocLayer", { fullName:layer.name, name:layer.displayName,isVisible: layer.layer.getVisible(),layerGroupName:layer.groupName , layerGroup: layer.group, index: layer.index });
+        }))
+    {
+      layer.layer.setVisible(true);
+      layer.visible = true;
+    }
     let newLayer = Object.assign({}, layer);
     newLayers.push(newLayer);
     if (index === layers.length - 1) callback(newLayers);

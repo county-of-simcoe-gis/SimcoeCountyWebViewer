@@ -53,10 +53,10 @@ class GroupItem extends Component {
         window.emitter.emit("turnOnLayers", group);
         break;
       case "sc-floating-menu-expand":
-        window.emitter.emit("toggleLegend", "OPEN", this.props.group.value);
+        window.emitter.emit("toggleGroupLegend", "OPEN", this.props.group.value);
         break;
       case "sc-floating-menu-collapse":
-        window.emitter.emit("toggleLegend", "CLOSE", this.props.group.value);
+        window.emitter.emit("toggleGroupLegend", "CLOSE", this.props.group.value);
         break;
       default: 
         break;
@@ -201,7 +201,7 @@ class GroupItem extends Component {
          
      );
     }else{
-      return (<div></div>);
+      return (<div />);
     }
   }
 }
