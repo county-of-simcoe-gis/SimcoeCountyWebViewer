@@ -111,7 +111,7 @@ export function getArcGISTiledLayer(url) {
 
 export function getCapabilities(url, type, callback) {
   type = type.toLowerCase();
-  url = /\?/.test(url) ? url + '&' : url + '?';
+  url = /\?/.test(url) ? url.split('?')[0] + '?' : url + '?';
   let layers = [];
   var parser;
   var response;

@@ -328,7 +328,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
     } else if (visibleLayers.includes(layerNameOnly)) layerVisible = true;
 
     // LAYER PROPS
-    let newLayer = helpers.getImageWMSLayer(serverUrl + "/wms/kml?layers=", layer.Name[0]);
+    let newLayer = helpers.getImageWMSLayer(serverUrl + "/wms?layers=", layer.Name[0]);
     newLayer.setVisible(layerVisible);
     newLayer.setOpacity(opacity);
     newLayer.setProperties({ name: layerNameOnly, displayName: displayName, disableParcelClick: liveLayer,queryable:queryable,opaque:opaque  });

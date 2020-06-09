@@ -268,7 +268,7 @@ class AddLayerForm extends Component {
                             type="text"
                             placeholder="https://intra.dev.regionalgis.mto.gov.on.ca/geoserver/ows"
                             className="sc-toc-add-layer-input input" 
-                            onChange={evt => {this.setState({ serverUrl: evt.target.value }, () => {if ( this.state.selectLayerOption !== this.defaultLayerOption) this.clearLayers()});}} 
+                            onChange={evt => {this.setState({ serverUrl: (evt.target.value).split("?")[0] }, () => {if ( this.state.selectLayerOption !== this.defaultLayerOption) this.clearLayers()});}} 
                             onFocus={evt => {helpers.disableKeyboardEvents(true);}}
                             onBlur={evt => {helpers.disableKeyboardEvents(false);}}
                             value={this.state.serverUrl} />
