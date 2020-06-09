@@ -7,14 +7,6 @@
   font-size: 9pt;
 }
 
-
-.sc-toc-item-layer-label {
-  display: inline-table;
-  position: relative;
-  bottom: 2px;
-  max-width: 274px;
-}
-
 .sc-toc-item-layer-info-live-layer {
   display: inline-table;
   vertical-align: middle;

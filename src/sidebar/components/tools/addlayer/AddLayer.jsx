@@ -11,7 +11,7 @@ import FormatType from "ol/format/FormatType";
 class AddLayerForm extends Component {
     constructor(props) {
       super(props);
-  
+      this.defaultLayerName = "New Layer";
       this.inputId = "sc-toc-add-layer-input";
       this.state = {
         selectFormatTypeOptions: [],
@@ -23,7 +23,7 @@ class AddLayerForm extends Component {
         selectLayerOption:undefined,
         selectProjectionOptions:[],
         selectProjectionOption:undefined,
-        layer_displayName:"New Layer",
+        layer_displayName:this.defaultLayerName,
         layer_source:undefined,
         layer_format:undefined,
         layer_type:undefined,
@@ -96,7 +96,7 @@ class AddLayerForm extends Component {
     }
     onLayerSelectChange = (selection) =>{
         let displayName = this.state.layer_displayName;
-        if (displayName.length < 1) displayName = selection.label;
+        if (displayName.length < 1 || displayName === this.defaultLayerName) displayName = selection.label;
         this.setState({selectLayerOption:selection,layer_name:selection.value,layer_displayName:displayName});
     }
     onCheckForLayers = () => {
@@ -139,7 +139,7 @@ class AddLayerForm extends Component {
             group: "",
             groupName: ""
           };
-        window.emitter.emit("addCustomLayer", newLayer);
+        window.emitter.emit("addCustomLayer", newLayer, this.state.selectGroupOption.value);
     }
 
 

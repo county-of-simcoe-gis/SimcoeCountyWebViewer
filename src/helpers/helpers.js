@@ -506,11 +506,14 @@ export const messageColors = {
   yellow:"yellow",
   orange:"orange"
 }
+export function getHash(input){
+  return input.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)
+}
 export function showTerms(title = "Terms and Condition", messageText = "Message",url = "", color = messageColors.green, accept, decline) {
   const domId = "portal-root";
   const termsDomId = "sc-show-terms-root";
-  
-  const message = ReactDOM.render(
+
+ ReactDOM.render(
   <ShowTerms 
     id={domId} 
     key={termsDomId} 
@@ -528,15 +531,6 @@ export function showTerms(title = "Terms and Condition", messageText = "Message"
       }}
     } 
   />, document.getElementById("portal-root"));
-
-  let unmount = (ref) => {
-      
-    }
-  
-  
-}
-
-function unmountDOMComponent(item){
   
 }
 

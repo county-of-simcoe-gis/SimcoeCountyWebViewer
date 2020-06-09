@@ -52,28 +52,33 @@ class TOC extends Component {
     window.emitter.addListener("clearIdentify", () => this.clearIdentify());
 
     //LISTEN FOR NEW LAYER
-    window.emitter.addListener("addCustomLayer", (layer) => this.addCustomLayer(layer));
+    window.emitter.addListener("addCustomLayer", (layer, group) => this.addCustomLayer(layer, group));
     this.myMapLayerName = "local:myMaps";
     this.myLayersGroupName = "My Layers";
   }
   
-  addCustomLayer = (layer) => {
+  addCustomLayer = (layer, groupName) => {
     let layerIndex = 100;
     let layerGroups= this.state.layerGroups;
-    let myLayersGroup = layerGroups.filter(group => group.label === this.myLayersGroupName)[0];
-    if (myLayersGroup === undefined) myLayersGroup = layerGroups[0];
-    layerIndex += (myLayersGroup.layers.length+1);
-    TOCHelpers.makeLayer(layer.displayName, helpers.getUID(),myLayersGroup, layerIndex,true,1,layer.layer,undefined,undefined,false, (retLayer)=>{
-      let layers = myLayersGroup.layers;
+    let layersGroup = layerGroups.filter(group => group.value === groupName)[0];
+    if (layersGroup === undefined) layersGroup = layerGroups.filter(group => group.label === this.myLayersGroupName)[0];
+    if (layersGroup === undefined) layersGroup = layerGroups[0];
+    layerIndex += (layersGroup.layers.length+1);
+    TOCHelpers.makeLayer(layer.displayName, helpers.getUID(),layersGroup, layerIndex,true,1,layer.layer,undefined,undefined,false, (retLayer)=>{
+      let layers = layersGroup.layers;
       layers.push(retLayer);
-      myLayersGroup.layers = layers
-      this.setState({layerGroups: layerGroups.map(group => myLayersGroup.value === group.value?myLayersGroup:group )}, () => {
+      layersGroup.layers = layers
+      this.setState({layerGroups: layerGroups.map(group => layersGroup.value === group.value?layersGroup:group )}, () => {
         let allLayers = [];
         this.state.layerGroups.forEach(group =>{
           allLayers.push(group.layers);
         });
         window.allLayers = allLayers;
         this.forceUpdate();
+        helpers.showMessage("Layer Added", )
+        window.emitter.emit("activeTocLayerGroup", groupName, () => {
+              window.emitter.emit("activeTocLayer", { fullName:retLayer.name, name:retLayer.displayName,isVisible: retLayer.layer.getVisible(),layerGroupName:retLayer.groupName , layerGroup: retLayer.group, index: retLayer.index });
+        });
     });
     });
     

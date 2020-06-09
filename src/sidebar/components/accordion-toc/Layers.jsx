@@ -19,9 +19,10 @@ class Layers extends Component {
     this.storageKey = "layers";
     this.lastPosition = null;
     this._isMounted = false;
+    
     this.state = {
-      layers: [],
-      forceAllLegend: undefined
+      layers: [], 
+      list: undefined
     };
 
   }
@@ -33,7 +34,7 @@ class Layers extends Component {
   toggleAllLegendsListener(group, type) {if (group === this.props.group.value || group === null) this.toggleAllLegends(type); }
 
   getVirtualId()  {
-    return "sc-toc-virtual-layers" + this.props.group.value;
+    return "sc-toc-virtual-layers" + helpers.getHash(this.props.group.value);
   }
 
   componentDidMount() {
@@ -45,7 +46,7 @@ class Layers extends Component {
     // LISTEN FOR TURN ON LAYERS
     window.emitter.addListener("turnOnLayers",group =>this.turnOnLayersListener(group) );
     // LISTEN FOR TOGGLE ALL LEGEND
-    window.emitter.addListener("toggleLegend",(type, group) => this.toggleAllLegendsListener(group,type));
+    window.emitter.addListener("toggleGroupLegend",(type, group) => this.toggleAllLegendsListener(group,type));
     // LISTEN FOR SEARCH RESULT
     window.emitter.addListener("activeTocLayer", layerItem => this.activeTocLayerListener(layerItem));
 
@@ -225,62 +226,21 @@ class Layers extends Component {
     this.lastPosition = document.getElementById(this.getVirtualId()).scrollTop;
   };
 
-    // LEGEND FOR EACH LAYER
-    onLegendToggle = layerInfo => {
-      this.legendVisiblity(layerInfo, undefined,(returnedLayer) =>{
-        this.setState(
-          {
-            // UPDATE LEGEND
-            layers: this.state.layers.map(layer =>
-              layer.name === layerInfo.name ? returnedLayer : layer
-            )
-          },
-          () => {
-            document.getElementById(this.getVirtualId()).scrollTop += this.lastPosition;
-          
-          });
-      });
-      
-    };
-  // TOGGLE LEGEND
-  legendVisiblity = (layerInfo, forceAll, callback) => {
-    this.lastPosition = document.getElementById(this.getVirtualId()).scrollTop;
-    if (layerInfo.styleUrl === "") return;
-    let showLegend = !layerInfo.showLegend;
-    if (forceAll !== undefined) {
-      if (forceAll === "OPEN") showLegend = true;
-      else if (forceAll === "CLOSE") showLegend = false;
-    }
-
-    if (layerInfo.legendImage === null) {
-      TOCHelpers.getBase64FromImageUrl(layerInfo.styleUrl, (height, imgData) => {
-        const rowHeight = showLegend ? (height += 36) : 30;
-        callback(Object.assign({}, layerInfo, { showLegend: showLegend, height: rowHeight, legendHeight: height, legendImage: imgData }));
-        
-      });
-    } else {
-      const rowHeight = showLegend ? layerInfo.legendHeight : 30;
-      callback(Object.assign({}, layerInfo, { showLegend: showLegend, height: rowHeight }));
-    }
-  };
-
-
   toggleAllLegends (type) {
-    let newLayers = [];
-    this.state.layers.forEach(layer => 
-        this.legendVisiblity(layer, type, (returnedLayer)=>{newLayers.push(returnedLayer)}
-      ));
-    setTimeout(()=>{
-    newLayers = newLayers.concat([]);
-    this.setState(
-      {
-        // UPDATE LEGEND
-        layers: this.state.layers.map(layer => newLayers.filter(newLayer => layer.name === newLayer.name)[0] )
-      },
-      () => {
-        document.getElementById(this.getVirtualId()).scrollTop += this.lastPosition;
-      }
-    );},1000);
+    if(!this._isMounted) return;
+    let updatedLayers = this.state.layers.filter(layer => layer.styleUrl !== "" );
+    this.state.layers.filter(layer => layer.styleUrl !== "" ).forEach(layer => {
+        window.emitter.emit("toggleLegend", type, layer.name, (updateLayer)=>{
+          updatedLayers = updatedLayers.map(curLayer=> curLayer.name === updateLayer.name?updateLayer:curLayer);
+          if (updatedLayers.filter(checkLayer => type==="OPEN"?!checkLayer.showLegend:checkLayer.showLegend ).length <= 0 ) {        
+            updatedLayers = this.state.layers.map(m => {
+                  var fl = updatedLayers.filter(f => f.name === m.name)[0];
+                  return fl === undefined?m:fl;
+            });
+            this.onLayersChange(updatedLayers)
+          } 
+        });
+    });
   };
 
   turnOnLayers = () => {
@@ -304,6 +264,15 @@ class Layers extends Component {
       });
     });
   };
+  onLayersChange = (layers) =>{
+    //update layers
+    this.setState({layers: layers}, ()=>{
+      //send layers up to group item
+      let group = this.props.group;
+      group.layers = this.state.layers
+      this.props.onGroupChange(group);
+    });
+  }
   onLayerChange = (layer) =>{
     //update layers
     this.setState({layers: this.state.layers.map(item => item.name === layer.name ? layer : item)}, ()=>{
@@ -325,28 +294,25 @@ class Layers extends Component {
     return (
      
       <div className="sc-toc-layer-container" key={helpers.getUID()}>
-        <div>  
-              <SortableVirtualList
-                key={helpers.getUID()}
-                virtual_key={this.getVirtualId()}
-                getRef={this.registerListRef}
-                ref={instance => {
-                  this.SortableVirtualList = instance;
-                }}
-                items={layers}
-                onSortEnd={this.onSortEnd}
-                helperClass={"sc-layer-list-sortable-helper"}
-                rowHeight={30}
-                
-                lockAxis={"y"}
-                onSortMove={this.onSortMove}
-                distance={5}
-                onLayerChange={this.onLayerChange}
-                searchText={this.props.searchText}
-                sortAlpha={this.props.sortAlpha}
-                //scrollToIndex={50}
-              />
-        </div>
+        <SortableVirtualList
+          key={helpers.getUID()}
+          virtual_key={this.getVirtualId()}
+          getRef={this.registerListRef}
+          ref={instance => {
+            this.SortableVirtualList = instance;
+          }}
+          items={layers}
+          onSortEnd={this.onSortEnd}
+          helperClass={"sc-layer-list-sortable-helper"}
+          rowHeight={30}
+          
+          lockAxis={"y"}
+          onSortMove={this.onSortMove}
+          distance={5}
+          onLayerChange={this.onLayerChange}
+          searchText={this.props.searchText}
+          sortAlpha={this.props.sortAlpha}
+        />
       </div>
     );
   }

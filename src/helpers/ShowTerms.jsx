@@ -43,7 +43,7 @@ class ShowTerms extends Component {
           <div id="sc-show-terms-container" className={style}>
             <div className="sc-show-terms-title">{this.props.title}</div>
             <div className="sc-show-terms-content">{this.props.message}</div>
-            <div className="sc-show-terms-url"><a href={this.props.url} rel="noopener noreferrer" target="_blank">{this.props.title}</a></div>
+            <div className={this.props.url !== ""? "sc-show-terms-url" : "sc-hidden"}><a href={this.props.url} rel="noopener noreferrer" target="_blank">{this.props.title}</a></div>
             <button className="sc-button sc-show-terms-accept-button" onClick={this.onAcceptClick}>Accept</button>
             <button className="sc-button sc-show-terms-decline-button" onClick={this.onDeclineClick}>Decline</button>
           </div>
