@@ -130,6 +130,13 @@
       "description": "Explore resources to help newcomers to the County.",
       "imageName": "immigrationServices.png",
       "secure": false
+    },
+    {
+      "id": 7,
+      "name": "Commercial Real Estate",
+      "componentName": "CommercialRealEstate",
+      "description": "Search commercial real estate throughout the County of Simcoe.",
+      "imageName": "commercialRealEstate.png"
     }
   ]
 }

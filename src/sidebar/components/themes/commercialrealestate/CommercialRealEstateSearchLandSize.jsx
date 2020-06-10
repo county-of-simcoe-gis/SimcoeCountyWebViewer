@@ -1,36 +1,36 @@
 import React from "react";
 import Select from "react-select";
 
-const CommercialRealEstateSearchLandSize = props => {
+const CommercialRealEstateSearchLandSize = (props) => {
   const dropDownStyles = {
-    control: provided => ({
+    control: (provided) => ({
       ...provided,
       maxHeight: "30px",
       minHeight: "30px",
       // width: "150px"
-      width: "165px"
+      width: "165px",
       //      borderRadius: "unset",
     }),
-    indicatorsContainer: provided => ({
-      ...provided
+    indicatorsContainer: (provided) => ({
+      ...provided,
       //   height: "30px"
     }),
-    clearIndicator: provided => ({
+    clearIndicator: (provided) => ({
       ...provided,
-      padding: "5px"
+      padding: "5px",
     }),
-    dropdownIndicator: provided => ({
+    dropdownIndicator: (provided) => ({
       ...provided,
-      padding: "5px"
+      padding: "5px",
     }),
-    menu: provided => ({
-      ...provided
+    menu: (provided) => ({
+      ...provided,
       //   width: "200px"
     }),
-    container: provided => ({
+    container: (provided) => ({
       ...provided,
-      width: "100%"
-    })
+      width: "100%",
+    }),
   };
 
   return (
@@ -40,9 +40,9 @@ const CommercialRealEstateSearchLandSize = props => {
         [<label className="sc-fakeLink">Search By Building Size</label>]
       </label>
       <div style={{ display: "inline-flex", paddingTop: "5px", marginBottom: "5px" }}>
-        <Select styles={dropDownStyles} isSearchable={false} onChange={props.onLandSizeFromDropDownChange} options={props.LandSizeFromItems} value={props.selectedLandSizeFrom} />
+        <Select styles={dropDownStyles} isSearchable={false} onChange={props.onLandSizeFromDropDownChange} options={props.landSizeFromItems} value={props.selectedLandSizeFrom} />
         <label style={{ paddingLeft: "5px", paddingRight: "5px", paddingTop: "5px" }}>to</label>
-        <Select styles={dropDownStyles} isSearchable={false} onChange={props.onLandSizeToDropDownChange} options={props.LandSizeToItems} value={props.selectedLandSizeTo} />
+        <Select styles={dropDownStyles} isSearchable={false} onChange={props.onLandSizeToDropDownChange} options={props.landSizeToItems} value={props.selectedLandSizeTo} />
       </div>
     </div>
   );

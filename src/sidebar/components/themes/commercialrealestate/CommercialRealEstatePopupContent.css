@@ -1,0 +1,61 @@
+.sc-theme-commercial-real-estate-popup-button-container {
+  display: table;
+  width: 100%;
+  text-align: center;
+  margin-top: 5px;
+}
+
+.sc-theme-commercial-real-estate-popup--button {
+  display: table-cell;
+  width: 30%;
+}
+
+.sc-theme-commercial-real-estate-popup--button.padded {
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.sc-theme-commercial-real-estate-popup-image-container {
+  border-bottom: 1px dashed #ccc;
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+}
+
+.sc-theme-commercial-real-estate-popup-image-label {
+  font-size: 8pt;
+  display: block;
+  width: 200px;
+  margin: auto;
+}
+
+.sc-theme-commercial-real-estate-popup-details-container {
+}
+
+.sc-theme-commercial-real-estate-row-container {
+  border-bottom: 1px solid #ccc;
+  display: flex;
+}
+
+.sc-theme-commercial-real-estate-popup-row-label {
+  font-weight: bold;
+  color: #333;
+  font-size: 11px;
+  padding-right: 5px;
+  float: left;
+  min-width: 65px;
+}
+
+.sc-theme-commercial-real-estate-popup-row-value {
+  color: #484848;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 3px;
+  padding-left: 20px;
+  font-size: 11px;
+  word-wrap: break-word;
+}
+
+.sc-theme-commercial-real-estate-popup-button {
+  width: 80px;
+  margin-right: 4px;
+  margin-bottom: 5px;
+}

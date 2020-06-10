@@ -28,6 +28,7 @@ import * as helpers from "../helpers/helpers";
 import mainConfig from "../config.json";
 import Identify from "./Identify";
 import AttributeTable from "../helpers/AttributeTable.jsx";
+import FloatingImageSlider from "../helpers/FloatingImageSlider.jsx";
 
 const scaleLineControl = new ScaleLine();
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
@@ -174,32 +175,32 @@ class SCMap extends Component {
     });
 
     // SHOW FEEDBACK ON TIMER
-    if (mainConfig.showFeedbackMessageOnStartup !== undefined && mainConfig.showFeedbackMessageOnStartup) {
-      setTimeout(() => {
-        helpers.showMessage(
-          "Feedback",
-          <div>
-            <label>Please provide us feedback! The feedback button is the star at top right of this window.</label>
-            <span
-              className="sc-fakeLink"
-              style={{ display: "block" }}
-              onClick={() => {
-                window.emitter.emit("feedback", null);
-              }}
-            >
-              Provide Feedback now!
-            </span>
-          </div>,
-          undefined,
-          10000
-        );
-      }, 60000);
-    }
+    // if (mainConfig.showFeedbackMessageOnStartup !== undefined && mainConfig.showFeedbackMessageOnStartup) {
+    //   setTimeout(() => {
+    //     helpers.showMessage(
+    //       "Feedback",
+    //       <div>
+    //         <label>Please provide us feedback! The feedback button is the star at top right of this window.</label>
+    //         <span
+    //           className="sc-fakeLink"
+    //           style={{ display: "block" }}
+    //           onClick={() => {
+    //             window.emitter.emit("feedback", null);
+    //           }}
+    //         >
+    //           Provide Feedback now!
+    //         </span>
+    //       </div>,
+    //       undefined,
+    //       10000
+    //     );
+    //   }, 60000);
+    // }
 
     // SHOW WHATS NEW
-    if (mainConfig.showFeedbackMessageOnStartup !== undefined && mainConfig.showFeedbackMessageOnStartup) {
-      helpers.showURLWindow(mainConfig.whatsNewUrl, true, "full", true, true);
-    }
+    // if (mainConfig.showFeedbackMessageOnStartup !== undefined && mainConfig.showFeedbackMessageOnStartup) {
+    //   helpers.showURLWindow(mainConfig.whatsNewUrl, true, "full", true, true);
+    // }
     // ATTRIBUTE TABLE TESTING
     // window.emitter.emit("openAttributeTable", "https://opengis.simcoe.ca/geoserver/", "simcoe:Airport");
   }
@@ -359,6 +360,7 @@ class SCMap extends Component {
           </GitHubButton>
         </div>
         <AttributeTable />
+        <FloatingImageSlider />
       </div>
     );
   }
