@@ -10,6 +10,7 @@ import { ImageWMS, OSM, TileArcGISRest, TileWMS, TileImage, Vector,Stamen,XYZ, I
 import GML3 from "ol/format/GML3.js";
 import GML2 from "ol/format/GML2.js";
 import OSMXML from "ol/format/OSMXML.js"
+//import {file as FileLoader} from "ol/featureloader.js";
 import { GeoJSON,GPX,KML,EsriJSON,TopoJSON,IGC,Polyline,WKT,MVT,WMTSCapabilities,WMSCapabilities } from "ol/format.js"; 
 import {all as LoadingStrategyAll, tile as LoadingStrategyTile} from "ol/loadingstrategy.js"
 import TileGrid from "ol/tilegrid/TileGrid.js";
@@ -174,7 +175,18 @@ export function getRasterLayer(url, layerName,type,name="", projection="EPSG:385
   }
   
   url = /^((http)|(https))(:\/\/)/.test(url) ? url : 'http://' + url;
-  
+  const FileLoader = function (image, src){
+    try {
+        var fr = new FileReader();
+        fr.onload = function (evt) {
+            image.getImage().src = evt.target.result;
+        };
+        fr.readAsDataURL(file);
+    } catch (error) {
+        console.warn('Unexpected error: ' + error.message);
+    }
+}
+
 	var sourceFormat;
 	switch (type) {
 		case 'wms':
@@ -220,17 +232,7 @@ export function getRasterLayer(url, layerName,type,name="", projection="EPSG:385
                 url: '',
                 imageExtent: [extent[0], extent[1], extent[2], extent[3]],
                 projection: projection,
-                imageLoadFunction: function(image, src){
-                    try {
-                        var fr = new FileReader();
-                        fr.onload = function (evt) {
-                            image.getImage().src = evt.target.result;
-                        };
-                        fr.readAsDataURL(file);
-                    } catch (error) {
-                        console.warn('Unexpected error: ' + error.message);
-                    }
-                }
+                imageLoadFunction: FileLoader
             });
             if (name.length < 1) { name = file.name; }
 			break;
@@ -302,6 +304,25 @@ export function getVectorLayer(url, layerName,type,name="", projection="EPSG:385
     url = url + 'SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=' + layerName + '&SRSNAME=' + projection + '&OUTPUTFORMAT=' + type;
     if (name.length < 1) { name = layerName + ' WFS'; }
   }
+
+  const FileLoader = function(extent, resolution, proj) {
+    try {
+        const mapProjection = window.map.getView().getProjection();
+        var _this = this;
+        var fr = new FileReader();
+        fr.onload = function (evt) {
+            var vectorData = evt.target.result;
+            _this.addFeatures(sourceFormat.readFeatures(vectorData, {
+                dataProjection: sourceFormat.readProjection(vectorData) || projection,
+                featureProjection: mapProjection
+            }));
+        };
+        fr.readAsText(file);
+    } catch (error) {
+        console.log(error);
+    }
+  }
+
   if (name.length < 1 && source !== 'file') name = layerName;
   callback( new VectorLayer({
     source: new Vector({
@@ -311,23 +332,7 @@ export function getVectorLayer(url, layerName,type,name="", projection="EPSG:385
                   } : url)),
       strategy: (tiled ? LoadingStrategyTile(TileGrid.createXYZ({maxZoom: 19})) : LoadingStrategyAll),
       format: sourceFormat,
-      loader: (source !== 'file' ? undefined : (extent, resolution, proj) => {
-        try {
-            const mapProjection = window.map.getView().getProjection();
-            var _this = this;
-            var fr = new FileReader();
-            fr.onload = function (evt) {
-                var vectorData = evt.target.result;
-                _this.addFeatures(sourceFormat.readFeatures(vectorData, {
-                    dataProjection: sourceFormat.readProjection(vectorData) || projection,
-                    featureProjection: mapProjection
-                }));
-            };
-            fr.readAsText(file);
-        } catch (error) {
-            console.log(error);
-        }
-      }),
+      loader: (source !== 'file' ? undefined : FileLoader),
       crossOrigin: "anonymous"
     }),
     crossOrigin: "anonymous"
