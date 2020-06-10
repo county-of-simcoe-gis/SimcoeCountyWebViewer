@@ -139,7 +139,9 @@ export function getCapabilities(url, type, callback) {
             parser = new WMSCapabilities();
             response = parser.read(responseText);
             response.Capability.Layer.Layer.forEach(layer =>{
-              layers.push({label:layer.Name, value:layer.Name})
+              var label = layer.Title !==""?layer.Title:layer.Name;
+              var value = layer.Name;
+              if (layer.layer === undefined) layers.push({label:label, value:value})
             });
             break;
           default:
