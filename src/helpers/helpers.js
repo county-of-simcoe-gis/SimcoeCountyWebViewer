@@ -363,13 +363,19 @@ export function getWFSGeoJSON(serverUrl, layerName, callback, sortField = null, 
   if (sortField !== null) additionalParams += "&sortBy=" + sortField;
 
   // BBOX EXTENT
-  if (extent !== null) {
+  if (extent !== null && (cqlFilter === null || cqlFilter.length === 0)) {
     const extentString = extent[0] + "," + extent[1] + "," + extent[2] + "," + extent[3];
     additionalParams += "&bbox=" + extentString;
   }
 
   // ATTRIBUTE WHERECLAUSE
-  if (cqlFilter !== null && cqlFilter.length !== 0) additionalParams += "&cql_filter=" + cqlFilter;
+  if (cqlFilter !== null && cqlFilter.length !== 0) {
+    additionalParams += "&cql_filter=" + cqlFilter;
+    if (extent !== null) {
+      const extentString = extent[0] + "," + extent[1] + "," + extent[2] + "," + extent[3];
+      additionalParams += " AND BBOX(geom, " + extentString + ")";
+    }
+  }
 
   // COUNT
   if (count !== null) additionalParams += "&count=" + count;

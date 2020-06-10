@@ -1,0 +1,5 @@
+{
+  "incentiveWfsUrl": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Economic_Development_Property_Listings_Polygon_Theme&outputFormat=application/json&cql_filter=Incentive=%27Yes%27%20AND%20_imageurl%20IS%20NOT%20NULL",
+  "polygonLayerName": "simcoe:Economic_Development_Property_Listings_Polygon_Theme",
+  "pointLayerName": "simcoe:Economic_Development_Property_Listings_Theme"
+}

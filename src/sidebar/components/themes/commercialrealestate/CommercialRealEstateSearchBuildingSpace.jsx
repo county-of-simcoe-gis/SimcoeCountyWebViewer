@@ -1,36 +1,36 @@
 import React from "react";
 import Select from "react-select";
 
-const CommercialRealEstateSearchBuildingSpace = props => {
+const CommercialRealEstateSearchBuildingSpace = (props) => {
   const dropDownStyles = {
-    control: provided => ({
+    control: (provided) => ({
       ...provided,
       maxHeight: "30px",
       minHeight: "30px",
       // width: "150px"
-      width: "165px"
+      width: "165px",
       //      borderRadius: "unset",
     }),
-    indicatorsContainer: provided => ({
-      ...provided
+    indicatorsContainer: (provided) => ({
+      ...provided,
       //   height: "30px"
     }),
-    clearIndicator: provided => ({
+    clearIndicator: (provided) => ({
       ...provided,
-      padding: "5px"
+      padding: "5px",
     }),
-    dropdownIndicator: provided => ({
+    dropdownIndicator: (provided) => ({
       ...provided,
-      padding: "5px"
+      padding: "5px",
     }),
-    menu: provided => ({
-      ...provided
+    menu: (provided) => ({
+      ...provided,
       //   width: "200px"
     }),
-    container: provided => ({
+    container: (provided) => ({
       ...provided,
-      width: "100%"
-    })
+      width: "100%",
+    }),
   };
 
   return (
@@ -43,14 +43,6 @@ const CommercialRealEstateSearchBuildingSpace = props => {
         <Select styles={dropDownStyles} isSearchable={false} onChange={props.onBuildingSpaceFromDropDownChange} options={props.buildingSpaceFromItems} value={props.selectedBuildingSpaceFrom} />
         <label style={{ paddingLeft: "5px", paddingRight: "5px", paddingTop: "5px" }}>to</label>
         <Select styles={dropDownStyles} isSearchable={false} onChange={props.onBuildingSpaceToDropDownChange} options={props.buildingSpaceToItems} value={props.selectedBuildingSpaceTo} />
-      </div>
-      <div style={{ display: "table-cell", verticalAlign: "top" }}>
-        <input type="checkbox" onChange={props.onUnknownSquareFootageChange}></input>
-      </div>
-
-      <div style={{ display: "table-cell" }}>
-        <label>Only search properties with incentives </label>
-        <label style={{ display: "block", fontSize: "10pt" }}>(23 properties found with incentives)</label>
       </div>
     </div>
   );
