@@ -12,7 +12,7 @@ class AddLayerForm extends Component {
     constructor(props) {
       super(props);
       this.defaultLayerName = "New Layer";
-      this.inputId = "sc-toc-add-layer-input";
+      this.inputId = "sc-add-layer-input";
       this.state = {
         selectFormatTypeOptions: [],
         selectFormatTypeOption: undefined,
@@ -32,6 +32,7 @@ class AddLayerForm extends Component {
         layer_extent: undefined,
         selectedFormat:undefined,
         isFile:false,
+        showExtent:false,
         errorRegister:[]
       };
       this.defaultLayerOption = {label:"Not Found", value:""};
@@ -51,7 +52,8 @@ class AddLayerForm extends Component {
                 selectFormatOptions:items[0].options, 
                 selectFormatOption:items[0].options[0],
                 selectedFormat:selectedFormat,
-                isFile:selectedFormat.source==="file"});
+                isFile:selectedFormat.source==="file",
+                showExtent:selectedFormat.type==="static"});
     }
    _setLayerGroupOptions =()=>{
        let groups = window.allLayers;
@@ -84,13 +86,13 @@ class AddLayerForm extends Component {
         items = items.filter(item => item.label === selection.label)[0];
         let options = items.options;
         const selectedFormat = this.getSelectedFormat(options[0].value);
-        this.setState({selectFormatTypeOption:selection, selectFormatOptions: options, selectFormatOption:options[0], selectedFormat: selectedFormat,isFile:selectedFormat.source==="file"}, () => {
+        this.setState({selectFormatTypeOption:selection, selectFormatOptions: options, selectFormatOption:options[0], selectedFormat: selectedFormat,isFile:selectedFormat.source==="file",showExtent:selectedFormat.type==="static"}, () => {
             if ( this.state.selectLayerOption !== this.defaultLayerOption) this.clearLayers();
         });
     }
     onLayerFormatChange = (selection) =>{
         const selectedFormat = this.getSelectedFormat(selection.value);
-        this.setState({selectFormatOption:selection, selectedFormat: selectedFormat,isFile:selectedFormat.source==="file"}, () => {
+        this.setState({selectFormatOption:selection, selectedFormat: selectedFormat,isFile:selectedFormat.source==="file",showExtent:selectedFormat.type==="static"}, () => {
             if ( this.state.selectLayerOption !== this.defaultLayerOption) this.clearLayers();
         });
     }
@@ -147,11 +149,15 @@ class AddLayerForm extends Component {
         let errors = this.state.errorRegister;
         let isValid = false;
         const isNotDefault = this.state.selectLayerOption !== this.defaultLayerOption;
-        if (!isNotDefault){
+        if (!isNotDefault && !this.state.isFile){
             errors.push({message:"Invalid Layer Selected", field:"sc-input-layers"});
         }
-
-        isValid = isNotDefault;
+        if (this.state.isFile){
+            isValid = true;
+        }else{
+            isValid = isNotDefault;
+        }
+        
         if (showError && !isValid) {
             this.setState({errorRegister:errors}, () => {return isValid;});
         }else{
@@ -162,10 +168,13 @@ class AddLayerForm extends Component {
     isValid = (showErrors, callback) => {
         this.setState({errorRegister:[]}, () => {
             let validLayer = this.isValidLayer(showErrors);
-            if (showErrors && !validLayer) console.log(this.state.errorRegister);
+            if (showErrors && !validLayer) helpers.showMessage(this.state.errorRegister,"Error",helpers.messageColors.red,2500);
             callback(validLayer);
         });
     } 
+    onLayerFileChange = (file) => {
+        this.setState({layer_file:file.target.files[0]})
+    }
     onAddLayerClick = () => {
         const format = this.state.selectedFormat;
         this.isValid(true, (isValid) =>{
@@ -209,105 +218,105 @@ class AddLayerForm extends Component {
     render() {
         return (
         <PanelComponent onClose={this.props.onClose} name={this.props.name} type="tools">
-            <div className="sc-toc-add-layer-content">
-                <div className="sc-toc-add-layer-body">
-                    <div className="sc-toc-add-layer-row">
-                        <label htmlFor="sc-input-group">Layer Group:</label>
-                        <Select 
-                            id="sc-input-group" 
-                            onChange={(selection) => {this.setState({selectGroupOption:selection});}} 
-                            options={this.state.selectGroupOptions} 
-                            value={this.state.selectGroupOption}
-                            className="sc-toc-add-layer-select" />
+            <div className="sc-add-layer-content">
+                <div className="sc-add-layer-row">
+                    <label htmlFor="sc-input-group">Layer Group:</label>
+                    <Select 
+                        id="sc-input-group" 
+                        onChange={(selection) => {this.setState({selectGroupOption:selection});}} 
+                        options={this.state.selectGroupOptions} 
+                        value={this.state.selectGroupOption}
+                        className="sc-add-layer-select" />
 
-                    </div>
-                    <div className="sc-toc-add-layer-row">
-                        <label htmlFor="sc-toc-add-layer-display-name">Display name:</label>
-                        <input 
-                            id="sc-toc-add-layer-display-name" 
-                            type="text"
-                            className="sc-toc-add-layer-input input" 
-                            onChange={evt => {this.setState({ layer_displayName: evt.target.value });}} 
-                            onFocus={evt => {helpers.disableKeyboardEvents(true);}}
-                            onBlur={evt => {helpers.disableKeyboardEvents(false);}}
-                            value={this.state.layer_displayName} />
-                    </div>
-                    <div className="sc-toc-add-layer-row">
-                        <label htmlFor="sc-input-source">Source Type:</label>
-                        <Select 
-                            id="sc-input-source" 
-                            onChange={this.onLayerFormatTypeChange} 
-                            options={this.state.selectFormatTypeOptions} 
-                            value={this.state.selectFormatTypeOption}
-                            className="sc-toc-add-layer-select" />
-
-                    </div>
-                    <div className="sc-toc-add-layer-row">
-                        <label htmlFor="sc-input-format">Layer Format:</label>
-                        <Select 
-                            id="sc-input-format" 
-                            onChange={this.onLayerFormatChange} 
-                            options={this.state.selectFormatOptions} 
-                            value={this.state.selectFormatOption}
-                            className="sc-toc-add-layer-select" />
-
-                    </div>
-                    <div className="sc-toc-add-layer-row">
-                        <label htmlFor="sc-input-projection">Projection:</label>
-                        <Select 
-                            id="sc-input-projection" 
-                            onChange={(selection) => {this.setState({selectProjectionOption:selection});}} 
-                            options={this.state.selectProjectionOptions} 
-                            value={this.state.selectProjectionOption} 
-                            className="sc-toc-add-layer-select" />
-                    </div> 
-                    <div className={!this.state.isFile?"sc-toc-add-layer-row":"sc-hidden"}>
-                        <label htmlFor="sc-toc-add-layer-server">Server URL:</label><br />
-                        <input 
-                            id="sc-toc-add-layer-server" 
-                            type="text"
-                            placeholder="https://intra.dev.regionalgis.mto.gov.on.ca/geoserver/ows"
-                            className="sc-toc-add-layer-input input" 
-                            onChange={evt => {this.setState({ serverUrl: (evt.target.value).split("?")[0] }, () => {if ( this.state.selectLayerOption !== this.defaultLayerOption) this.clearLayers()});}} 
-                            onFocus={evt => {helpers.disableKeyboardEvents(true);}}
-                            onBlur={evt => {helpers.disableKeyboardEvents(false);}}
-                            value={this.state.serverUrl} />
-                        <button 
-                            type="button" 
-                            name="check" 
-                            className="sc-button"
-                            onClick={this.onCheckForLayers}>Check for layers</button>
-                    </div> 
-                    
-                    <div className={!this.state.isFile?"sc-toc-add-layer-row":"sc-hidden"}>
-                        <label htmlFor="sc-input-layers" >Layer Name:</label>
-                        <Select 
-                            id="sc-input-layers" 
-                            onChange={this.onLayerSelectChange} 
-                            options={this.state.selectLayerOptions} 
-                            value={this.state.selectLayerOption} 
-                            className="sc-toc-add-layer-select"/>
-                    </div> 
-                    <div className={this.state.isFile?"sc-toc-add-layer-row":"sc-hidden"}>
-                        <label htmlFor="sc-toc-add-layer-file">File:</label>
-                        <input id="sc-toc-add-layer-file" className="sc-toc-add-layer-input input"  type="file" name="file" size="60" />
-                    </div> 
-                    <div className={this.state.isFile?"sc-toc-add-layer-row":"sc-hidden"}>
-                        <label htmlFor="sc-toc-add-layer-extent" >Extent:</label>
-                        <input 
-                            id="sc-toc-add-layer-extent" 
-                            type="text"
-                            placeholder="TopX, TopY, BottomX, BottomY"
-                            className="sc-toc-add-layer-input input" 
-                            onChange={evt => {this.setState({ layer_extent: evt.target.value });}} 
-                            onFocus={evt => {helpers.disableKeyboardEvents(true);}}
-                            onBlur={evt => {helpers.disableKeyboardEvents(false);}}
-                            value={this.state.layer_extent} />
-                    </div>
                 </div>
-                <div className="sc-toc-add-layer-footer">
-                  <button type="button" className="sc-button" onClick={this.onAddLayerClick}>Add layer</button>
-                  <button type="button" className="sc-button" onClick={this.onClose}>Cancel</button>
+                <div className="sc-add-layer-row">
+                    <label htmlFor="sc-add-layer-display-name">Display name:</label>
+                    <input 
+                        id="sc-add-layer-display-name" 
+                        type="text"
+                        className="sc-add-layer-input input" 
+                        onChange={evt => {this.setState({ layer_displayName: evt.target.value });}} 
+                        onFocus={evt => {helpers.disableKeyboardEvents(true);}}
+                        onBlur={evt => {helpers.disableKeyboardEvents(false);}}
+                        value={this.state.layer_displayName} />
+                </div>
+                <div className="sc-add-layer-row">
+                    <label htmlFor="sc-input-source">Source Type:</label>
+                    <Select 
+                        id="sc-input-source" 
+                        onChange={this.onLayerFormatTypeChange} 
+                        options={this.state.selectFormatTypeOptions} 
+                        value={this.state.selectFormatTypeOption}
+                        className="sc-add-layer-select" />
+
+                </div>
+                <div className="sc-add-layer-row">
+                    <label htmlFor="sc-input-format">Layer Format:</label>
+                    <Select 
+                        id="sc-input-format" 
+                        onChange={this.onLayerFormatChange} 
+                        options={this.state.selectFormatOptions} 
+                        value={this.state.selectFormatOption}
+                        className="sc-add-layer-select" />
+
+                </div>
+                <div className="sc-add-layer-row">
+                    <label htmlFor="sc-input-projection">Projection:</label>
+                    <Select 
+                        id="sc-input-projection" 
+                        onChange={(selection) => {this.setState({selectProjectionOption:selection});}} 
+                        options={this.state.selectProjectionOptions} 
+                        value={this.state.selectProjectionOption} 
+                        className="sc-add-layer-select" />
+                </div> 
+                <div className={!this.state.isFile?"sc-add-layer-row":"sc-hidden"}>
+                    <label htmlFor="sc-add-layer-server">Server URL:</label><br />
+                    <input 
+                        id="sc-add-layer-server" 
+                        type="text"
+                        placeholder="https://intra.dev.regionalgis.mto.gov.on.ca/geoserver/ows"
+                        className="sc-add-layer-input input" 
+                        onChange={evt => {this.setState({ serverUrl: (evt.target.value).split("?")[0] }, () => {if ( this.state.selectLayerOption !== this.defaultLayerOption) this.clearLayers()});}} 
+                        onFocus={evt => {helpers.disableKeyboardEvents(true);}}
+                        onBlur={evt => {helpers.disableKeyboardEvents(false);}}
+                        value={this.state.serverUrl} />
+                    <button 
+                        type="button" 
+                        name="check" 
+                        className="sc-button"
+                        onClick={this.onCheckForLayers}>Check for layers</button>
+                </div> 
+                
+                <div className={!this.state.isFile?"sc-add-layer-row":"sc-hidden"}>
+                    <label htmlFor="sc-input-layers" >Layer Name:</label>
+                    <Select 
+                        id="sc-input-layers" 
+                        onChange={this.onLayerSelectChange} 
+                        options={this.state.selectLayerOptions} 
+                        value={this.state.selectLayerOption} 
+                        className="sc-add-layer-select"/>
+                </div> 
+                <div className={this.state.isFile?"sc-add-layer-row":"sc-hidden"}>
+                    <label htmlFor="sc-add-layer-file">File:</label>
+                    <input id="sc-add-layer-file" className="sc-add-layer-input input" type="file" name="file" size="60" onChange={this.onLayerFileChange} />
+                </div> 
+                <div className={this.state.showExtent ?"sc-add-layer-row":"sc-hidden"}>
+                    <label htmlFor="sc-add-layer-extent" >Extent:</label>
+                    <input 
+                        id="sc-add-layer-extent" 
+                        type="text"
+                        placeholder="TopX, TopY, BottomX, BottomY"
+                        className="sc-add-layer-input input" 
+                        onChange={evt => {this.setState({ layer_extent: evt.target.value });}} 
+                        onFocus={evt => {helpers.disableKeyboardEvents(true);}}
+                        onBlur={evt => {helpers.disableKeyboardEvents(false);}}
+                        value={this.state.layer_extent} />
+                </div>
+                <div className="sc-add-layer-row right">
+                    <div>
+                        <button type="button" className="sc-button" onClick={this.onAddLayerClick}>Add layer</button>
+                        <button type="button" className="sc-button" onClick={this.onClose}>Cancel</button>
+                    </div>
                 </div>
             </div>
           </PanelComponent>
