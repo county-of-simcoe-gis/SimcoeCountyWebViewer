@@ -58,6 +58,7 @@ class TOC extends Component {
   }
   
   addCustomLayer = (layer, groupName) => {
+    const AddedMessage = (group, layer) => `New layer "${layer}" has been added to the "${group}" group.`;
     let layerIndex = 100;
     let layerGroups= this.state.layerGroups;
     let layersGroup = layerGroups.filter(group => group.value === groupName)[0];
@@ -75,8 +76,8 @@ class TOC extends Component {
         });
         window.allLayers = allLayers;
         this.forceUpdate();
-        helpers.showMessage("Layer Added", )
-        window.emitter.emit("activeTocLayerGroup", groupName, () => {
+        helpers.showMessage("Layer Added",AddedMessage(layersGroup.label, retLayer.displayName));
+        window.emitter.emit("activeTocLayerGroup", layersGroup.value, () => {
               window.emitter.emit("activeTocLayer", { fullName:retLayer.name, name:retLayer.displayName,isVisible: retLayer.layer.getVisible(),layerGroupName:retLayer.groupName , layerGroup: retLayer.group, index: retLayer.index });
         });
     });
