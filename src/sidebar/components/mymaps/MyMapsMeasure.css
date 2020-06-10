@@ -1,0 +1,26 @@
+.sc-mymaps-measure-container {
+  font-size: 11pt;
+}
+.sc-mymaps-measure-units {
+  font-size: 11pt;
+  height: 33px;
+  width: 100%;
+  margin-bottom: 5px;
+  margin-top: 3px;
+}
+
+.sc-mymaps-measure-result {
+  height: 30px;
+  width: 97%;
+  text-align: center;
+  font-size: 14pt;
+  color: blue;
+}
+
+.sc-mymaps-measure-auto-format-label {
+  font-size: 10pt;
+  margin-left: 14px;
+  margin-bottom: 4px;
+  position: absolute;
+  top: 79px;
+}

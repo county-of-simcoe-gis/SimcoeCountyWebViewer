@@ -194,7 +194,6 @@ class MyMaps extends Component {
 
   // DRAW END
   onDrawEnd = (evt) => {
-    console.log("ending");
     this.setState({ tooltipClass: "sc-hidden" });
     if (this.state.drawType === "Bearing") {
       this.tooltipElement.innerHTML = "";
@@ -337,14 +336,12 @@ class MyMaps extends Component {
   };
   // LABEL TEXTBOX
   onLabelChange = (itemId, label) => {
-    console.log(itemId);
     const itemInfo = this.state.items.filter((item) => {
       return item.id === itemId;
     })[0];
 
     // IF WE HAVE A REF TO A POPUP, SEND THE UPDATE
     if (this.popupRef !== undefined) {
-      console.log(itemInfo);
       this.popupRef.parentLabelChanged(itemInfo, label);
     }
 
@@ -663,6 +660,9 @@ class MyMaps extends Component {
       this.onReportProblem(item.id);
     } else if (action === "sc-floating-menu-identify") {
       this.onIdentify(item.id);
+    } else if (action === "sc-floating-menu-measure") {
+      const feature = myMapsHelpers.getFeatureById(item.id);
+      this.showDrawingOptionsPopup(feature, null, "measure");
     }
     // } else if (action === "sc-floating-menu-export-to-shapefile") {
     //   this.onExportToShapeFile();
@@ -734,6 +734,9 @@ class MyMaps extends Component {
         >
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-buffer">
             <FloatingMenuItem imageName={"buffer.png"} label="Buffer" />
+          </MenuItem>
+          <MenuItem className={item.geometryType === "Point" ? "sc-hidden" : "sc-floating-menu-toolbox-menu-item"} key="sc-floating-menu-measure">
+            <FloatingMenuItem imageName={"measure.png"} label="Measure" />
           </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-symbolizer">
             <FloatingMenuItem imageName={"color-picker.png"} label="Symbolize" />
@@ -816,12 +819,17 @@ class MyMaps extends Component {
     // ACTIVE TOOLTIP
     if (this.state.drawType === "Bearing") this.activateToolTip();
 
+    // POINT STYLE FOR CURSOR
+    let pointStyle = this.state.drawStyle.clone();
+    let image = pointStyle.getImage();
+    image.setRadius(1);
+
     // CREATE A NEW DRAW
     this.draw = new Draw({
       features: new Collection([]),
       type: drawType,
       geometryFunction: this.state.drawType === "Rectangle" ? createBox() : undefined,
-      style: this.state.drawStyle,
+      style: this.state.drawType !== "Point" ? pointStyle : this.state.drawStyle,
       maxPoints: this.state.drawType === "Bearing" ? 2 : undefined,
     });
 
