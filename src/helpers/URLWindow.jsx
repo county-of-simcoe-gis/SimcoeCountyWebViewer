@@ -10,7 +10,7 @@ class URLWindow extends Component {
       hide: false
     };
 
-    this.storageKeyWhatsNew = "sc_dontshowagain";
+    this.storageKeyWhatsNew = "New Feature Notice";
   }
 
   onCloseClick = value => {

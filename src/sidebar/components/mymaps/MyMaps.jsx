@@ -41,7 +41,7 @@ class MyMaps extends Component {
 
     // PROPS
     this.layerName = "local:myMaps";
-    this.storageKey = "myMaps";
+    this.storageKey = "My Drawing";
     this.vectorSource = null;
     this.vectorLayer = null;
     this.draw = null;

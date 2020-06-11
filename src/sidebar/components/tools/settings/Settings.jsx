@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import "./Settings.css";
+import {ClearLocalStorageButton} from "./SettingsComponents.jsx";
 import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
 
@@ -16,15 +17,15 @@ class Settings extends Component {
       controlScaleLine:true,
       controlBasemap:true
     };
-    this.storageKey = "settings";
-    this.storageKeyMapControls = "mapControlSettings";
+    this.storageKey = "Settings";
+    this.storageKeyMapControls = "Map Control Settings";
     
   }
 
   componentDidMount() {
     // LISTEN FOR MAP TO MOUNT
     window.emitter.addListener("mapLoaded", () => this.onMapLoad());
-
+    
     if(window.mapControls !== undefined){
     this.setState({controlRotate:window.mapControls.rotate,
       controlFullScreen:window.mapControls.fullScreen,
@@ -99,11 +100,18 @@ class Settings extends Component {
     helpers.saveToStorage(this.storageKeyMapControls,window.mapControls)
   }
   
-  clearLocalData = () => {
-    localStorage.clear();
-    helpers.showMessage("Local Data Cleared", "Your local data has been cleared. Page will now reload.");
-    setTimeout(() => {window.location.reload();}, 2000);
+  clearLocalData = (key) => {
+    if (key === "ALL"){
+      localStorage.clear();
+      helpers.showMessage("Local Data Cleared", "Your local data has been cleared. Page will now reload.");
+      setTimeout(() => {window.location.reload();}, 2000);
+    }else{
+      localStorage.removeItem(key)
+      helpers.showMessage("Local Data Removed", "Your local data has been cleared. You may need to reload your page to see any changes.");
+    }
+    
   }
+
 
   render() {
     return (
@@ -216,11 +224,20 @@ class Settings extends Component {
                   name="clearLocalStorage" 
                   title="Clear all cached settings and reload the page." 
                   className="sc-button" 
-                  onClick={this.clearLocalData}
+                  onClick={() => this.clearLocalData("ALL")}
                 >
                   Clear All Saved Data
                 </button>
               </div>
+              <div className="sc-settings-divider"></div>
+              { Object.keys(localStorage).map((key) => (
+                  <ClearLocalStorageButton
+                    key={helpers.getUID()}
+                    storageKey={key}
+                    clearLocalData= {this.clearLocalData}
+                  />
+                  
+              ))}
             </div>
             
             <div className="sc-container sc-settings-floatbottom"></div>
@@ -232,3 +249,6 @@ class Settings extends Component {
 }
 
 export default Settings;
+
+
+
