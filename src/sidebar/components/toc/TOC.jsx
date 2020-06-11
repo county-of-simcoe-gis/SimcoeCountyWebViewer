@@ -20,7 +20,7 @@ import Portal from "../../../helpers/Portal.jsx";
 class TOC extends Component {
   constructor(props) {
     super(props);
-    this.storageMapDefaultsKey = "map_defaults";
+    this.storageMapDefaultsKey = "Map Defaults";
     this.state = {
       layerGroups: [],
       selectedGroup: {},

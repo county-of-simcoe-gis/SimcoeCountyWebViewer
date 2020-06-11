@@ -16,7 +16,7 @@ class Layers extends Component {
   constructor(props) {
     super(props);
 
-    this.storageKey = "layers";
+    this.storageKey = "Layers";
     this.lastPosition = null;
     this._isMounted = false;
     

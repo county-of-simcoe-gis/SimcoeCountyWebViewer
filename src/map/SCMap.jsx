@@ -37,9 +37,9 @@ const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
 class SCMap extends Component {
   constructor(props) {
     super(props);
-    this.storageMapDefaultsKey = "map_defaults";
+    this.storageMapDefaultsKey = "Map Defaults";
     this.contextCoords = null;
-    this.storageExtentKey = "map_extent";
+    this.storageExtentKey = "Map Extent";
     this.state = {
       mapClassName: "sc-map",
       shareURL: null,

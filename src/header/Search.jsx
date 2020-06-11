@@ -71,7 +71,7 @@ class Search extends Component {
     // BIND THIS TO THE CLICK FUNCTION
     this.removeMarkersClick = this.removeMarkersClick.bind(this);
     this.cleanup = this.cleanup.bind(this);
-    this.storageKey = "searchHistory";
+    this.storageKey = "Search History";
     // LISTEN FOR SEARCH FROM HISTORY
     window.emitter.addListener("searchHistorySelect", (item) => this.onHistoryItemSelect(item));
     // LISTEN FOR MAP TO MOUNT

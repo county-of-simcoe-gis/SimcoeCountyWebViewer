@@ -7,9 +7,9 @@ import xml2js from "xml2js";
 const layerIndexStart = 100;
 
 // LOCAL STORAGE KEY
-const storageKey = "layers";
-const storageMapDefaultsKey = "map_defaults";
-const storageExtentKey = "map_extent";
+const storageKey = "Layers";
+const storageMapDefaultsKey = "Map Defaults";
+const storageExtentKey = "Map Extent";
 
 export function makeGroup(groupDisplayName, isDefault,groupUrl, groupPrefix, visibleLayers,wmsGroupUrl,customGroupUrl, layers = []){
   const groupObj = {

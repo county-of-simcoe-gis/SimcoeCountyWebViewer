@@ -27,8 +27,8 @@ import { Icon, Style} from "ol/style.js";
 class TOC extends Component {
   constructor(props) {
     super(props);
-    this.storageMapDefaultsKey = "map_defaults";
-    this.storageKey = "layers";
+    this.storageMapDefaultsKey = "Map Defaults";
+    this.storageKey = "Layers";
     this.identifyIconLayer = undefined;
     this.state = {
       layerGroups: [],

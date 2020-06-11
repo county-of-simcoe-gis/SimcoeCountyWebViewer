@@ -399,7 +399,7 @@ export function importMyMaps(id, callback2) {
 }
 
 export function exportMyMaps(callback2, id = null) {
-  const storage = localStorage.getItem("myMaps");
+  const storage = localStorage.getItem("My Drawing");
   if (storage === null) return [];
   const data = JSON.parse(storage);
 
