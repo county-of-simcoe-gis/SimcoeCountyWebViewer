@@ -73,6 +73,7 @@ class MyMapsAdvanced extends Component {
                   className={this.inputId} 
                   id={this.inputId} type="text" 
                   placeholder="Enter ID here" 
+                  className="sc-input sc-editable"
                   onChange={this.onInputChange} 
                   onFocus={evt => {helpers.disableKeyboardEvents(true);}} 
                   onBlur={evt => {helpers.disableKeyboardEvents(false);}} 

@@ -399,6 +399,12 @@ input[type="number"]::-webkit-outer-spin-button {
   padding: 6px 10px 5px;
 }
 
+.sc-editable {
+  background-image: url(./images/edit-50.png);
+  background-repeat: no-repeat;
+  background-position: right;
+  background-origin: content-box;
+} 
 .sc-live-layer-popup-content {
   position: relative;
   top: 0;

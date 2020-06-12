@@ -68,7 +68,7 @@ export const LHRSInputRow = props => {
             <input
             id={props.inputId}
             value={props.value === null ? "" : props.value}
-            className="sc-lhrs-input"
+            className={!props.readOnly? "sc-editable sc-lhrs-input":"sc-lhrs-input"} 
             type="text"
             placeholder={props.placeholer}
             onChange={props.onChange}

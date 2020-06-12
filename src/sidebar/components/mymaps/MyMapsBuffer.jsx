@@ -173,7 +173,7 @@ class MyMapsBuffer extends Component {
         <div className="sc-mymaps-buffer-container">
           <label style={{ gridColumnStart: "1" }}>Distance:</label>
           <label style={{ gridColumnStart: "2" }}>Units:</label>
-          <input style={{ gridColumnStart: "1", gridRowStart: "2" }} type="number" value={this.state.distance} onChange={this.onDistanceChange} />
+          <input style={{ gridColumnStart: "1", gridRowStart: "2" }} type="number" className="sc-editable" value={this.state.distance} onChange={this.onDistanceChange} />
           <select style={{ gridColumnStart: "2", gridRowStart: "2" }} name="pointOutline" value={this.state.units} onChange={this.onUnitsChange}>
             <option value="meters">Meters</option>
             <option value="kilometers">Kilometers</option>
