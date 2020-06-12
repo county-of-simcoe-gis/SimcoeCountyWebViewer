@@ -90,7 +90,7 @@ class Navigation extends Component {
 
   render() {
     return (
-      <div className={this.state.containerClassName}>
+      <div id={"sc-map-nav-container"} className={this.state.containerClassName}>
         {/*<div className="zoomButton" onClick={this.zoomIn}>
           +
         </div>

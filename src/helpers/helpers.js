@@ -98,7 +98,19 @@ export function showURLWindow(url, showFooter = false, mode = "normal", honorDon
     window.open(url, "_blank");
   }
 }
+export function getKMLFromFeatures (features) {
+  var format = new KML();
+  var kml = format.writeFeatures(features,{featureProjection: 'EPSG:3857'});
+  return kml;
+  
+}
 
+export function export_file(filename, content) {
+  var pom = document.createElement('a');
+  pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
+  pom.setAttribute('download', filename);
+  pom.click();
+}
 // GET ARCGIS TILED LAYER
 export function getArcGISTiledLayer(url) {
   return new TileLayer({

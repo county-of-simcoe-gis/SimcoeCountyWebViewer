@@ -145,6 +145,10 @@
   text-align: right;
 }
 
+.sc-coordinates-copy-container {
+  overflow: hidden;
+}
+
 .sc-coordinates-copy {
     width:97%;
 }
@@ -166,4 +170,5 @@
 #sc-copy-format-select {
   display:inline-block;
   width:190px;
+
 }
