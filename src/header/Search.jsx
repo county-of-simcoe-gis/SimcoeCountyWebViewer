@@ -418,7 +418,10 @@ this._isMounted = false;
 
   searchLayers = () => {};
 
-  searchResultsHandler = (results, limit) => {
+  searchResultsHandler = (results, limit, value=undefined) => {
+    //ignore search result if they are not for the most recent search
+    if (value !== undefined && value !== this.state.value ) return;
+
     let newResults = Object.assign([], results);
     if (this.state.value.length < 2) {
       this.setState({ searchResults: [] });
@@ -553,7 +556,7 @@ this._isMounted = false;
                 let limit = defaultSearchLimit;
                 if (this.state.showMore) limit = 50;
                 await helpers.getJSONWait(searchURL(apiUrl, value, this.state.selectedType.value, limit), responseJson => {
-                  if (responseJson !== undefined) this.searchResultsHandler(responseJson, defaultSearchLimit);
+                  if (responseJson !== undefined) this.searchResultsHandler(responseJson, defaultSearchLimit, value);
                 });
               });              
             } else {
