@@ -103,7 +103,7 @@ export const CopyCoordinates = props => {
           <span>
               <input  
                 id={props.inputId}
-                className="sc-coordinates-input"
+                className="sc-input sc-coordinates-input"
                 type="text"
                 value={output}
                 placeholder={placeholderText}
@@ -172,7 +172,7 @@ export const CoordinateRow = props => {
         <input
           id={props.inputId}
           value={props.value === null ? "" : props.value}
-          className="sc-coordinates-input"
+          className="sc-coordinates-input sc-editable"
           type="text"
           placeholder={inputMsg}
           onChange={props.onChange}

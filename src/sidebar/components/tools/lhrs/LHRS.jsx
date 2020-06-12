@@ -725,7 +725,7 @@ class LHRS extends Component {
                 <span> 
                   <input id="sc-lhrs-snapping-distance-select" 
                   type="text"
-                  className="sc-lhrs-input sc-lhrs-input-sm" 
+                  className="sc-lhrs-input sc-lhrs-input-sm sc-editable" 
                   onChange={evt => {
                     this.setState({ snappingDistance: evt.target.value }, ()=> {this.executeAction();});
                   }} 

@@ -268,7 +268,7 @@ class AddLayerForm extends Component {
                                 id="sc-add-layer-server" 
                                 type="text"
                                 placeholder="https://intra.dev.regionalgis.mto.gov.on.ca/geoserver/ows"
-                                className="sc-add-layer-input input" 
+                                className="sc-add-layer-input sc-editable" 
                                 onChange={evt => {this.setState({ serverUrl: (evt.target.value).split("?")[0] }, () => {if ( this.state.selectLayerOption !== this.defaultLayerOption) this.clearLayers()});}} 
                                 onFocus={evt => {helpers.disableKeyboardEvents(true);}}
                                 onBlur={evt => {helpers.disableKeyboardEvents(false);}}
@@ -307,7 +307,7 @@ class AddLayerForm extends Component {
                         id="sc-add-layer-extent" 
                         type="text"
                         placeholder="TopX, TopY, BottomX, BottomY"
-                        className="sc-add-layer-input input" 
+                        className="sc-add-layer-input sc-editable" 
                         onChange={evt => {this.setState({ layer_extent: evt.target.value });}} 
                         onFocus={evt => {helpers.disableKeyboardEvents(true);}}
                         onBlur={evt => {helpers.disableKeyboardEvents(false);}}
@@ -346,7 +346,7 @@ class AddLayerForm extends Component {
                             <input 
                                 id="sc-add-layer-display-name" 
                                 type="text"
-                                className="sc-add-layer-input input" 
+                                className="sc-add-layer-input sc-editable" 
                                 onChange={evt => {this.setState({ layer_displayName: evt.target.value, userEdit_displayName: true });}} 
                                 onFocus={evt => {helpers.disableKeyboardEvents(true);}}
                                 onBlur={evt => {helpers.disableKeyboardEvents(false);}}

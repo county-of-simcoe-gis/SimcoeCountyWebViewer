@@ -117,7 +117,7 @@ class MyMapsItem extends Component {
           </div>
           <div className={this.state.checked ? "" : "sc-disabled"}>
             <input 
-                className="sc-mymaps-item-container-item-text-input" 
+                className="sc-mymaps-item-container-item-text-input sc-editable" 
                 value={this.state.label} 
                 onChange={this.onLabelTextChange} 
                 onFocus={evt => {helpers.disableKeyboardEvents(true);}}
