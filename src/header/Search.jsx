@@ -284,7 +284,7 @@ this._isMounted = false;
     } else if (result.geojson.indexOf("Line") !== -1) {
       searchGeoLayer.setStyle(styles["poly"]);
       window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
-      window.map.getView().setZoom(window.map.getView().getZoom() - 1);
+      window.map.getView().setZoom(window.map.getView().getZoom() - 2);
     } else {
       searchGeoLayer.setStyle(styles["poly"]);
       window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
