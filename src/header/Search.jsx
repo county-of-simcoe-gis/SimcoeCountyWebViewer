@@ -549,13 +549,13 @@ this._isMounted = false;
           onChange={async (event, value) => {
 
             if (value !== "") {
-              this.setState({value, iconInitialClass: "sc-search-icon-initial-hidden",iconActiveClass: "sc-search-icon-active" });
-
-              let limit = defaultSearchLimit;
-              if (this.state.showMore) limit = 50;
-              await helpers.getJSONWait(searchURL(apiUrl, value, this.state.selectedType.value, limit), responseJson => {
-                if (responseJson !== undefined) this.searchResultsHandler(responseJson, defaultSearchLimit);
-              });
+              this.setState({value, iconInitialClass: "sc-search-icon-initial-hidden",iconActiveClass: "sc-search-icon-active" },async ()=>{
+                let limit = defaultSearchLimit;
+                if (this.state.showMore) limit = 50;
+                await helpers.getJSONWait(searchURL(apiUrl, value, this.state.selectedType.value, limit), responseJson => {
+                  if (responseJson !== undefined) this.searchResultsHandler(responseJson, defaultSearchLimit);
+                });
+              });              
             } else {
               this.setState({value, iconInitialClass: "sc-search-icon-initial",iconActiveClass: "sc-search-icon-active-hidden",searchResults: [] });
             }
