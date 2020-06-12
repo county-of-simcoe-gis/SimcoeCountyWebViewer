@@ -16,7 +16,8 @@ import { defaults as defaultControls, ScaleLine, FullScreen, Rotate} from "ol/co
 import BasemapSwitcher from "./BasicBasemapSwitcher";
 //import PropertyReportClick from "./PropertyReportClick.jsx";
 import "ol-contextmenu/dist/ol-contextmenu.css";
-import { fromLonLat } from "ol/proj";
+import { fromLonLat,transform } from "ol/proj";
+
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import { MouseWheelZoom } from "ol/interaction";
@@ -33,7 +34,7 @@ const scaleLineControl = new ScaleLine({
                                    });
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
   `${mainConfig.feedbackUrl}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True`;
-
+const googleMapsTemplate = (pointx, pointy) => `https://www.google.com/maps?q=${pointy},${pointx}`;
 class SCMap extends Component {
   constructor(props) {
     super(props);
@@ -119,11 +120,14 @@ class SCMap extends Component {
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-save-map-extent">
               <FloatingMenuItem imageName={"globe-icon.png"} label="Save as Default Extent" />
             </MenuItem>
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-report-problem">
+            {/*<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-report-problem">
               <FloatingMenuItem imageName={"error.png"} label="Report a problem" />
-            </MenuItem>
+      </MenuItem>*/}
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-identify">
               <FloatingMenuItem imageName={"identify.png"} label="Identify" />
+            </MenuItem>
+            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-google-maps">
+              <FloatingMenuItem imageName={"google.png"} label="View in Google Maps" />
             </MenuItem>
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-more">
               <FloatingMenuItem imageName={"more-16.png"} label="More..." />
@@ -232,6 +236,9 @@ class SCMap extends Component {
       case "sc-floating-menu-identify":
         this.identify();
         break;
+      case "sc-floating-menu-google-maps":
+        this.googleLink();
+        break;
       case "sc-floating-menu-more":
         this.moreOptions();
         break;
@@ -277,6 +284,15 @@ class SCMap extends Component {
     const feedbackUrl = feedbackTemplate(xmin, xmax, ymin, ymax, center[0], center[1], scale);
 
     helpers.showURLWindow(feedbackUrl, false, "full");
+  };
+  googleLink = () => {
+    // APP STATS
+    helpers.addAppStat("Google Maps", "Right Click Map");
+
+    const latLongCoords = transform(this.contextCoords, "EPSG:3857", "EPSG:4326");
+    const googleMapsUrl = googleMapsTemplate(latLongCoords[0], latLongCoords[1]);
+
+    helpers.showURLWindow(googleMapsUrl, false, "full");
   };
 
   saveMapExtent = () => {

@@ -216,14 +216,6 @@
         {
             "title": "Y,X",
             "template": "[y],[x]"
-        },
-        {
-            "title": "Google Maps",
-            "template": "https://www.google.com/maps/search/?api=1&query=[y],[x]"
-        },
-        {
-            "title": "Google Street View",
-            "template": "http://www.google.com/maps?layer=c&cbll=[y],[x]"
         }
     ]
 }

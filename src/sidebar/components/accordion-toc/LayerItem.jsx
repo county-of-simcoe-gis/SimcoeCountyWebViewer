@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
+import { Vector as VectorLayer } from "ol/layer.js";
 import * as helpers from "../../../helpers/helpers";
 import * as TOCHelpers from "../common/TOCHelpers.jsx";
 import TOCConfig from "../common/TOCConfig.json";
@@ -8,6 +9,7 @@ import Highlighter from "react-highlight-words";
 import Portal from "../../../helpers/Portal.jsx";
 import { Item as MenuItem } from "rc-menu";
 import Slider, { createSliderWithTooltip } from "rc-slider";
+
 
 import "./LayerItem.css";
 class LayerItem extends Component {
@@ -148,7 +150,7 @@ class LayerItem extends Component {
     );
     
   };
-
+ 
   onMenuItemClick = (action) => {
     let layerInfo = this.state.layer;
     switch (action){
@@ -161,11 +163,31 @@ class LayerItem extends Component {
         });
         break;
       case "sc-floating-menu-zoom-to-layer":
-        TOCHelpers.getLayerInfo(layerInfo, result => {
-          const boundingBox = result.featureType.nativeBoundingBox;
-          const extent = [boundingBox.minx, boundingBox.miny, boundingBox.maxx, boundingBox.maxy];
-          window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
-        });
+        if (layerInfo.metadataUrl !== undefined && layerInfo.metadataUrl !== null){
+          TOCHelpers.getLayerInfo(layerInfo, result => {
+            const boundingBox = result.featureType.nativeBoundingBox;
+            const extent = [boundingBox.minx, boundingBox.miny, boundingBox.maxx, boundingBox.maxy];
+            window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
+          });
+        }else{
+          const layerExtent = layerInfo.layer.getSource().getExtent();
+          if (layerExtent !== undefined){
+            window.map.getView().fit(layerExtent, window.map.getSize(), { duration: 1000 });
+          }
+        }
+        break;
+      case "sc-floating-menu-export-layer":
+        const extent = window.map.getView().calculateExtent(window.map.getSize());
+        let visibleFeatures = [];
+        layerInfo.layer.getSource().forEachFeatureInExtent(extent, function(feature){
+          visibleFeatures.push(feature);
+        }); 
+        if (visibleFeatures.length > 0) {
+          helpers.export_file("features.kml", helpers.getKMLFromFeatures(visibleFeatures));
+        }else{
+          helpers.showMessage("No Features", "No features in view for this layer");
+        }
+        
         break;
       default:
         break;
@@ -178,6 +200,7 @@ class LayerItem extends Component {
   onLayerOptionsClick = (evt) => {
     let layerInfo = this.state.layer;
     var evtClone = Object.assign({}, evt);
+    
     const menu = (
       <Portal>
         <FloatingMenu
@@ -185,15 +208,20 @@ class LayerItem extends Component {
           buttonEvent={evtClone}
           autoY={true}
           item={this.props.info}
+          width={"200px"}
           onMenuItemClick={action => this.onMenuItemClick(action)}
           styleMode={helpers.isMobile() ? "left" : "right"}
         >
           <MenuItem className={(layerInfo.metadataUrl !== undefined && layerInfo.metadataUrl !== null )?"sc-floating-menu-toolbox-menu-item":"sc-hidden"} key="sc-floating-menu-metadata">
             <FloatingMenuItem imageName={"metadata.png"} label="Metadata" />
           </MenuItem>
-          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoom-to-layer">
+          <MenuItem className={((layerInfo.metadataUrl !== undefined && layerInfo.metadataUrl !== null) || (layerInfo.layer instanceof VectorLayer))?"sc-floating-menu-toolbox-menu-item":"sc-hidden"} key="sc-floating-menu-zoom-to-layer">
             <FloatingMenuItem imageName={"zoom-in.png"} label="Zoom to Layer" />
           </MenuItem>
+          <MenuItem className={(layerInfo.layer instanceof VectorLayer)? "sc-floating-menu-toolbox-menu-item": "sc-hidden"} key="sc-floating-menu-export-layer">
+            <FloatingMenuItem imageName={"download.png"} label="Download visible features" />
+          </MenuItem>
+          
           <MenuItem className="sc-layers-slider" key="sc-floating-menu-opacity">
             Adjust Transparency
             <SliderWithTooltip tipFormatter={this.sliderTipFormatter} max={1} min={0} step={0.05} defaultValue={layerInfo.opacity} onChange={evt => this.onSliderChange(evt)} />

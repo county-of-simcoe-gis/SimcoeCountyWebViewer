@@ -85,11 +85,17 @@ export const CopyCoordinates = props => {
     if (props.copyFormat !== undefined) output = formatText(props.title, props.valueX,props.valueY,props.copyFormat.value);
   return (
     <div>
-      <div className="sc-container">
+      <div className="sc-container sc-coordinates-copy-container">
         <div className="sc-coordinates-row sc-arrow">
           <label>Copy Format:</label>
           <span> 
-              <Select id="sc-copy-format-select" onChange={props.onFormatChange} options={props.copyFormats} value={props.copyFormat} />
+              <Select id="sc-copy-format-select" 
+                      onChange={props.onFormatChange} 
+                      options={props.copyFormats} 
+                      value={props.copyFormat} 
+                      menuPlacement="auto" 
+                      menuPosition="fixed"
+                      />
           </span>
         </div>
         <div className="sc-coordinates-divider"></div>
