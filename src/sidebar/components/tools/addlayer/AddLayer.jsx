@@ -2,9 +2,10 @@ import React, { Component } from "react";
 import "./AddLayer.css";
 import * as addLayerConfig from "./config.json"
 import PanelComponent from "../../../PanelComponent";
-import Switch from "react-switch";
+import LoadingScreen from "../../../../helpers/LoadingScreen.jsx"; 
 import * as helpers from "../../../../helpers/helpers";
 import Select from "react-select";
+import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 
 
 class AddLayerForm extends Component {
@@ -34,7 +35,9 @@ class AddLayerForm extends Component {
         discovery_message:"",
         showExtent:false,
         errorRegister:[], 
-        file_formats:[]
+        file_formats:[],
+        isRunning:false,
+        tabIndex:0
       };
       this.defaultLayerOption = {label:"Not Found", value:""};
     }
@@ -107,15 +110,16 @@ class AddLayerForm extends Component {
         this.setState({selectLayerOption:selection,layer_name:selection.value,layer_displayName:displayName});
     }
     onCheckForLayers = () => {
+
         let selectedLayer = this.defaultLayerOption;
         let selectLayers = [];
         //CLEAR LAYERS LIST AND ATTEMPT TO REPOPULATE
-        this.setState({selectLayerOptions:selectLayers, selectLayerOption:selectedLayer}, () =>{
+        this.setState({selectLayerOptions:selectLayers, selectLayerOption:selectedLayer, isRunning:true}, () =>{
             helpers.getCapabilities(this.state.serverUrl, this.state.selectedFormat.source, (layers) =>{
                 selectLayers = layers;
                 if (selectLayers !== undefined && selectLayers.length > 0) selectedLayer = selectLayers[0];
                 else selectLayers = [];
-                this.setState({selectLayerOptions:selectLayers, selectLayerOption:selectedLayer, hasLayers:selectLayers.length > 0, discovery_message:selectLayers.length > 0?"":"NO LAYERS FOUND"});
+                this.setState({isRunning:false, selectLayerOptions:selectLayers, selectLayerOption:selectedLayer, hasLayers:selectLayers.length > 0, discovery_message:selectLayers.length > 0?"":"NO LAYERS FOUND"});
             });
         });
     }
@@ -229,105 +233,116 @@ class AddLayerForm extends Component {
         // CALL PARENT WITH CLOSE
         this.props.onClose();
       }
-    
+    onTabSelect = tabIndex => {
+        this.setState({ tabIndex }, ()=> {
+            this.onLayerSourceChange(tabIndex===1);
+        });
+      };
     render() {
         return (
         <PanelComponent onClose={this.props.onClose} name={this.props.name} type="tools">
-            
             <div className="sc-add-layer-content">
+                <LoadingScreen key={helpers.getUID()} 
+                        visible={this.state.isRunning} 
+                        message="Checking..."
+                        spinnerSize={60}
+                        spinnerBackColor={"#c3c3c3"}
+                        spinnerForeColor={"#3498db"}
+                        fontSize={"26px"}
+                        messageColor={"#3498db"}
+                        backgroundColor={"#ccffff"}
+                        backgroundOpacity={0.35}
+                     />
                 <div className="sc-title">Source</div>
-                <div className="sc-container">
-                    <div className="sc-add-layer-row">
-                        <Switch id="sc-add-layer-source"
-                                        className="sc-add-layer-source" 
-                                        onChange={this.onLayerSourceChange} 
-                                        checked={!this.state.isFile?false:true} 
-                                        height={20} 
-                                        width={160} 
-                                        uncheckedIcon={<span className="off">URL</span>}
-                                        checkedIcon={<span className="on">FILE</span>}
-                                        offColor={"#12128F"}
-                                        onColor={"#5E1010"}
-                                        />
-                    </div>
-                    <div className="sc-coordinates-divider"></div>      
-                    <div className={!this.state.isFile?"":"sc-hidden"}>
-                        <div className="sc-title">URL Type</div>
-                        <div className="sc-add-layer-row">
+                <Tabs selectedIndex={this.state.tabIndex} onSelect={this.onTabSelect}>
+                    <TabList>
+                        <Tab id="tab-add-layer-url">URL</Tab>
+                        <Tab id="tab-add-layer-file">FILE</Tab>
+                        {/*<Tab id="tab-add-layer-service">SERVICE</Tab>*/}
+                    </TabList>
+                    <TabPanel id="tab-add-layer-url-content">
+                        <div className="sc-container sc-add-layer-tab-panel">
+                            <div className="sc-title">URL Type</div>
+                            <div className="sc-add-layer-row">
+                                <Select 
+                                    id="sc-input-format" 
+                                    onChange={this.onLayerFormatChange} 
+                                    options={this.state.selectFormatOptions} 
+                                    value={this.state.selectFormatOption}
+                                    className="sc-add-layer-select" />
+                            </div>
+                            <div className="sc-coordinates-divider"></div> 
+                            <div className="sc-title">URL</div>     
+                            <div className="sc-add-layer-row">
+                                <input 
+                                    id="sc-add-layer-server" 
+                                    type="text"
+                                    autoComplete="on"
+                                    placeholder="https://intra.dev.regionalgis.mto.gov.on.ca/geoserver/ows"
+                                    className="sc-add-layer-input sc-editable" 
+                                    onChange={evt => {this.setState({ serverUrl: (evt.target.value).split("?")[0] }, () => {if ( this.state.selectLayerOption !== this.defaultLayerOption) this.clearLayers()});}} 
+                                    onFocus={evt => {helpers.disableKeyboardEvents(true);}}
+                                    onBlur={evt => {helpers.disableKeyboardEvents(false);}}
+                                    value={this.state.serverUrl} />
+                            </div>
+                            <div className="sc-add-layer-row">
+                                <button 
+                                    id="sc-add-layer-discover" 
+                                    type="button" 
+                                    name="check" 
+                                    className="sc-button"
+                                    disabled={this.state.serverUrl !== ""?false:true}
+                                    onClick={this.onCheckForLayers}>Check for layers</button>
+                            </div>
+                            <div className="sc-coordinates-divider"></div> 
+                            <div className={this.state.hasLayers?"sc-title":"sc-hidden"} >Available Layers</div> 
+                            <div className={!this.state.hasLayers && this.state.serverUrl !== ""  && this.state.discovery_message !== ""?"sc-add-layer-row center":"sc-hidden"}>{this.state.discovery_message}</div>    
+                            <div className={this.state.hasLayers?"sc-add-layer-row":"sc-hidden"}>
+                                <Select 
+                                    id="sc-input-layers" 
+                                    onChange={this.onLayerSelectChange} 
+                                    options={this.state.selectLayerOptions} 
+                                    value={this.state.selectLayerOption} 
+                                    className="sc-add-layer-select"/>
+                            </div>    
+                        </div>
+                    </TabPanel>
+                    <TabPanel id="tab-add-layer-file-content">
+                        <div className="sc-container sc-add-layer-tab-panel">
+                            <div className={"sc-title"} >Supported file types</div>
+                            <div className={"sc-add-layer-row file-extensions"}>{this.state.file_formats.join(", ")}</div>
+                            <div className={"sc-add-layer-row"}>
+                                <input id="sc-add-layer-file" className="sc-add-layer-input file" type="file" name="file" size="60" onChange={this.onLayerFileChange} />
+                            </div> 
+                            <div className={this.state.showExtent ?"sc-add-layer-row":"sc-hidden"}>
+                                <label htmlFor="sc-add-layer-extent" >Extent:</label>
+                                <input 
+                                    id="sc-add-layer-extent" 
+                                    type="text"
+                                    placeholder="TopX, TopY, BottomX, BottomY"
+                                    className="sc-add-layer-input sc-editable" 
+                                    onChange={evt => {this.setState({ layer_extent: evt.target.value });}} 
+                                    onFocus={evt => {helpers.disableKeyboardEvents(true);}}
+                                    onBlur={evt => {helpers.disableKeyboardEvents(false);}}
+                                    value={this.state.layer_extent} />
+                            </div>
+                            <div className="sc-add-layer-row sc-hidden">
+                            <label htmlFor="sc-input-projection">Projection:</label>
                             <Select 
-                                id="sc-input-format" 
-                                onChange={this.onLayerFormatChange} 
-                                options={this.state.selectFormatOptions} 
-                                value={this.state.selectFormatOption}
+                                id="sc-input-projection" 
+                                onChange={(selection) => {this.setState({selectProjectionOption:selection});}} 
+                                options={this.state.selectProjectionOptions} 
+                                value={this.state.selectProjectionOption} 
                                 className="sc-add-layer-select" />
+                        </div> 
                         </div>
-                        <div className="sc-coordinates-divider"></div> 
-                        <div className="sc-title">URL</div>     
-                        <div className="sc-add-layer-row">
-                            <input 
-                                id="sc-add-layer-server" 
-                                type="text"
-                                placeholder="https://intra.dev.regionalgis.mto.gov.on.ca/geoserver/ows"
-                                className="sc-add-layer-input sc-editable" 
-                                onChange={evt => {this.setState({ serverUrl: (evt.target.value).split("?")[0] }, () => {if ( this.state.selectLayerOption !== this.defaultLayerOption) this.clearLayers()});}} 
-                                onFocus={evt => {helpers.disableKeyboardEvents(true);}}
-                                onBlur={evt => {helpers.disableKeyboardEvents(false);}}
-                                value={this.state.serverUrl} />
+                    </TabPanel>
+                    {/*<TabPanel id="tab-add-layer-service-content">
+                        <div className="sc-container sc-add-layer-tab-panel">
+                            <h2>Service</h2>
                         </div>
-                        <div className="sc-add-layer-row">
-                            <button 
-                                id="sc-add-layer-discover" 
-                                type="button" 
-                                name="check" 
-                                className="sc-button"
-                                disabled={this.state.serverUrl !== ""?false:true}
-                                onClick={this.onCheckForLayers}>Check for layers</button>
-                        </div>
-                        <div className="sc-coordinates-divider"></div> 
-                        <div className={this.state.hasLayers?"sc-title":"sc-hidden"} >Available Layers</div> 
-                        <div className={!this.state.hasLayers && this.state.serverUrl !== ""  && this.state.discovery_message !== ""?"sc-add-layer-row center":"sc-hidden"}>{this.state.discovery_message}</div>    
-                        <div className={this.state.hasLayers?"sc-add-layer-row":"sc-hidden"}>
-                            <Select 
-                                id="sc-input-layers" 
-                                onChange={this.onLayerSelectChange} 
-                                options={this.state.selectLayerOptions} 
-                                value={this.state.selectLayerOption} 
-                                className="sc-add-layer-select"/>
-                        </div>    
-                    </div>  
-                    <div className={this.state.isFile?"sc-title":"sc-hidden"} >Supported file types</div>
-                    <div className={this.state.isFile?"sc-add-layer-row file-extensions":"sc-hidden"}>{this.state.file_formats.join(", ")}</div>
-                    <div className={this.state.isFile?"sc-add-layer-row":"sc-hidden"}>
-                        <input id="sc-add-layer-file" className="sc-add-layer-input file" type="file" name="file" size="60" onChange={this.onLayerFileChange} />
-                        
-                    </div> 
-                    <div className={this.state.showExtent ?"sc-add-layer-row":"sc-hidden"}>
-                    <label htmlFor="sc-add-layer-extent" >Extent:</label>
-                    <input 
-                        id="sc-add-layer-extent" 
-                        type="text"
-                        placeholder="TopX, TopY, BottomX, BottomY"
-                        className="sc-add-layer-input sc-editable" 
-                        onChange={evt => {this.setState({ layer_extent: evt.target.value });}} 
-                        onFocus={evt => {helpers.disableKeyboardEvents(true);}}
-                        onBlur={evt => {helpers.disableKeyboardEvents(false);}}
-                        value={this.state.layer_extent} />
-                    </div>
-
-                    <div className="sc-add-layer-row sc-hidden">
-                        <label htmlFor="sc-input-projection">Projection:</label>
-                        <Select 
-                            id="sc-input-projection" 
-                            onChange={(selection) => {this.setState({selectProjectionOption:selection});}} 
-                            options={this.state.selectProjectionOptions} 
-                            value={this.state.selectProjectionOption} 
-                            className="sc-add-layer-select" />
-                    </div> 
-                </div>
-                
-               
-                    
-                
+                    </TabPanel>*/}
+                </Tabs>
                 <div className="sc-title">Table of Contents</div>
                 <div className="sc-container">
                     <div className="sc-add-layer-row">
@@ -338,9 +353,7 @@ class AddLayerForm extends Component {
                             options={this.state.selectGroupOptions} 
                             value={this.state.selectGroupOption}
                             className="sc-add-layer-select" />
-
                     </div>
-                    
                     <div className="sc-add-layer-row">
                         <label htmlFor="sc-add-layer-display-name">Layer Name:</label>
                             <input 

@@ -209,6 +209,7 @@ class TOC extends Component {
                 });
                 window.allLayers = allLayers;
                 this.onLayersLoad();
+                window.emitter.emit("tocLoaded");  
                 if (callback !== undefined) callback();
               }
             );
@@ -223,6 +224,7 @@ class TOC extends Component {
             layerGroups: groupInfo[0]
           },
           () => {
+            window.emitter.emit("tocLoaded");  
             if (callback !== undefined) callback();
           });
           window.allLayers = this.state.layerGroups;

@@ -11,7 +11,9 @@ import mainConfig from "../config.json";
 const feedbackTemplate = (url, xmin, xmax, ymin, ymax, centerx, centery, scale) => `${url}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
 class Header extends Component {
   state = {};
-
+  componentDidMount(){
+    window.emitter.emit("headerLoaded");  
+  }
   burgerButtonHandler() {
     // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
     if (window.sidebarOpen) window.emitter.emit("setSidebarVisiblity", "CLOSE");
