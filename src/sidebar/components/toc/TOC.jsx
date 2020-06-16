@@ -84,6 +84,7 @@ class TOC extends Component {
             defaultGroup: groupInfo[1]
           },
           () => {
+            window.emitter.emit("tocLoaded");  
             if (callback !== undefined) callback();
           }
         );
@@ -97,6 +98,7 @@ class TOC extends Component {
           defaultGroup: groupInfo[1]
         },
         () => {
+          window.emitter.emit("tocLoaded");  
           if (callback !== undefined) callback();
         }
       );

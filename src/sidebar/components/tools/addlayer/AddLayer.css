@@ -30,6 +30,9 @@
   width: 97%;
   color: #5b5b5b;
 }
+.sc-add-layer-tab-panel{
+  background:rgba(191, 214, 228, 0.15);
+}
 .sc-add-layer-switch {
   top: 5px;
   margin-left: 5px;

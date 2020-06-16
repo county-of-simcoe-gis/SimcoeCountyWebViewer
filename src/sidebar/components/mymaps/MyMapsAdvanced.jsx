@@ -11,7 +11,7 @@ class MyMapsAdvanced extends Component {
   constructor(props) {
     super(props);
 
-    this.inputId = "sc-mymaps-advanced-import-input";
+    this.inputId = "sc-mymaps-advanced-import-input sc-editable";
     this.state = {
       open: false,
       editOn: false,
@@ -73,7 +73,6 @@ class MyMapsAdvanced extends Component {
                   className={this.inputId} 
                   id={this.inputId} type="text" 
                   placeholder="Enter ID here" 
-                  className="sc-input sc-editable"
                   onChange={this.onInputChange} 
                   onFocus={evt => {helpers.disableKeyboardEvents(true);}} 
                   onBlur={evt => {helpers.disableKeyboardEvents(false);}} 

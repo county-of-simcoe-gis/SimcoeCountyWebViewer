@@ -282,7 +282,7 @@
  }
 
 .sc-toc-layer-container>div>div {
-  height: unset!important;
+  height: unset;
 }
 .sc-toc-layer-container>div>div>div {
   max-height: unset;

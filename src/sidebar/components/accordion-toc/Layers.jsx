@@ -7,6 +7,7 @@ import arrayMove from "array-move";
 // CUSTOM
 import "./Layers.css";
 import * as helpers from "../../../helpers/helpers";
+import LoadingScreen from "../../../helpers/LoadingScreen.jsx";
 import * as TOCHelpers from "../common/TOCHelpers.jsx";
 
 const SortableVirtualList = sortableContainer(VirtualLayers, { withRef: true });
@@ -15,14 +16,14 @@ class Layers extends Component {
   
   constructor(props) {
     super(props);
-
     this.storageKey = "Layers";
     this.lastPosition = null;
     this._isMounted = false;
     
     this.state = {
       layers: [], 
-      list: undefined
+      list: undefined,
+      isLoading:false
     };
 
   }
@@ -229,7 +230,8 @@ class Layers extends Component {
   toggleAllLegends (type) {
     if(!this._isMounted) return;
     let updatedLayers = this.state.layers.filter(layer => layer.styleUrl !== "" );
-    this.state.layers.filter(layer => layer.styleUrl !== "" ).forEach(layer => {
+    this.setState({isLoading:true},()=>{
+      this.state.layers.filter(layer => layer.styleUrl !== "" ).forEach(layer => {
         window.emitter.emit("toggleLegend", type, layer.name, (updateLayer)=>{
           updatedLayers = updatedLayers.map(curLayer=> curLayer.name === updateLayer.name?updateLayer:curLayer);
           if (updatedLayers.filter(checkLayer => type==="OPEN"?!checkLayer.showLegend:checkLayer.showLegend ).length <= 0 ) {        
@@ -240,6 +242,7 @@ class Layers extends Component {
             this.onLayersChange(updatedLayers)
           } 
         });
+      });
     });
   };
 
@@ -266,11 +269,12 @@ class Layers extends Component {
   };
   onLayersChange = (layers) =>{
     //update layers
-    this.setState({layers: layers}, ()=>{
+    this.setState({layers: layers,isLoading:false}, ()=>{
       //send layers up to group item
       let group = this.props.group;
       group.layers = this.state.layers
       this.props.onGroupChange(group);
+      
     });
   }
   onLayerChange = (layer) =>{
@@ -294,6 +298,7 @@ class Layers extends Component {
     return (
      
       <div className="sc-toc-layer-container" key={helpers.getUID()}>
+        <LoadingScreen visible={this.state.isLoading} spinnerSize={60} /> 
         <SortableVirtualList
           key={helpers.getUID()}
           virtual_key={this.getVirtualId()}

@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import "./Sidebar.css";
 import * as helpers from "../helpers/helpers";
+import LoadingScreen from "../helpers/LoadingScreen.jsx";
 
 import TOC from "./components/accordion-toc/TOC";
 
@@ -27,6 +28,7 @@ class Sidebar extends Component {
     this.onSetSidebarOpen = this.onSetSidebarOpen.bind(this);
 
     this.state = {
+      tocLoaded:false,
       showFullscreen: true,
       // TOOLS AND THEMES ARE IN HERE
       toolComponents: [],
@@ -61,6 +63,11 @@ class Sidebar extends Component {
     };
     // LISTEN FOR CONTROL VISIBILITY CHANGES
     window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control,visible));
+
+    // LISTEN FOR TOC TO LOAD
+    window.emitter.addListener("tocLoaded", () => this.setState({tocLoaded:true}));
+
+    
   }
   controlStateChange(control, state) {
     switch (control){
@@ -157,11 +164,13 @@ class Sidebar extends Component {
 
     // LISTEN FOR REPORT LOADING
     window.emitter.addListener("loadReport", content => this.loadReport(content));
+    
 
     // LISTEN FOR ITEM ACTIVATION FROM OTHER COMPONENTS
     window.emitter.addListener("activateSidebarItem", (name, type) => {
       this.activateItemFromEmmiter(name, type);
     });
+    window.emitter.emit("sidebarLoaded");  
   }
 
   initToolAndThemeUrlParameter = () => {
@@ -358,6 +367,7 @@ class Sidebar extends Component {
         children={""}
         sidebar={
           <React.Fragment>
+            <LoadingScreen visible={!this.state.tocLoaded} message={"Loading TOC"} />
             <Tabs forceRenderTabPanel={true} selectedIndex={this.state.tabIndex} onSelect={this.onTabSelect}>
               <TabList>
                 <Tab id="tab-layers">
