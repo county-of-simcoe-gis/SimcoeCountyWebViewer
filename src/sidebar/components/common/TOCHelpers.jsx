@@ -27,7 +27,7 @@ export function makeGroup(groupDisplayName, isDefault,groupUrl, groupPrefix, vis
   return groupObj;
 }
 
-export function makeLayer( layerName, layerId = helpers.getUID(),group ,layerIndex=0, visible=false, opacity=1,layer, minScale = 0,maxScale = 100000000000,liveLayer = false,callback){
+export function makeLayer( layerName, layerId = helpers.getUID(),group ,layerIndex=0, visible=false, opacity=1,layer, minScale = 0,maxScale = 100000000000,liveLayer = false,styleUrl ="",callback){
   let newLayer = layer;
   let existingLayer = drawingHelpers.getLayerByName(layerId);
   if (existingLayer !== undefined) 
@@ -44,7 +44,7 @@ export function makeLayer( layerName, layerId = helpers.getUID(),group ,layerInd
   const returnLayer = {
     name: layerId,
     displayName: layerName,
-    styleUrl:"",
+    styleUrl:styleUrl,
     height: 30, // HEIGHT OF DOM ROW FOR AUTOSIZER
     drawIndex: layerIndex, // INDEX USED BY VIRTUAL LIST
     index: layerIndex, // INDEX USED BY VIRTUAL LIST

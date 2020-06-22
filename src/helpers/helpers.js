@@ -6,13 +6,10 @@ import ReactDOM from "react-dom";
 import Feature from "ol/Feature";
 import * as ol from "ol";
 import { Image as ImageLayer,Tile as TileLayer, Vector as VectorLayer } from "ol/layer.js";
-import { ImageWMS, OSM, TileArcGISRest, TileWMS, TileImage, Vector,Stamen,XYZ, ImageStatic, WMTS} from "ol/source.js";
-import GML3 from "ol/format/GML3.js";
-import GML2 from "ol/format/GML2.js";
-import OSMXML from "ol/format/OSMXML.js"
+import { ImageWMS, OSM, TileArcGISRest,  TileImage, Vector,XYZ} from "ol/source.js";
+
 //import {file as FileLoader} from "ol/featureloader.js";
-import { GeoJSON,GPX,KML,EsriJSON,TopoJSON,IGC,Polyline,WKT,MVT,WMTSCapabilities,WMSCapabilities } from "ol/format.js"; 
-import {all as LoadingStrategyAll, tile as LoadingStrategyTile} from "ol/loadingstrategy.js"
+import { GeoJSON,WKT } from "ol/format.js"; 
 import TileGrid from "ol/tilegrid/TileGrid.js";
 import Point from "ol/geom/Point";
 import { getTopLeft } from "ol/extent.js";
@@ -98,12 +95,6 @@ export function showURLWindow(url, showFooter = false, mode = "normal", honorDon
     window.open(url, "_blank");
   }
 }
-export function getKMLFromFeatures (features) {
-  var format = new KML();
-  var kml = format.writeFeatures(features,{featureProjection: 'EPSG:3857'});
-  return kml;
-  
-}
 
 export function export_file(filename, content) {
   var pom = document.createElement('a');
@@ -120,237 +111,6 @@ export function getArcGISTiledLayer(url) {
     }),
     crossOrigin: "anonymous"
   });
-}
-
-export function getCapabilities(url, type, callback) {
-  type = type.toLowerCase();
-  url = /\?/.test(url) ? url.split('?')[0] + '?' : url + '?';
-  let layers = [];
-  var parser;
-  var response;
-  var service;
-  if (url.indexOf("GetCapabilities") === -1){
-    switch (type) {
-        case 'wmts': service = 'WMTS'; break;
-        case 'wms':  service = 'WMS';  break;
-        default:     service = 'WFS';  break;
-    }
-    url = url + 'REQUEST=GetCapabilities&SERVICE=' + service;
-  }
-  httpGetText(url, responseText => {
-      try {
-        switch (type){
-          case 'wmts':
-            parser = new WMTSCapabilities();
-            response = parser.read(responseText);
-            response.Contents.Layer.foreach(layer =>{
-              layers.push({label:layer.Identifier, value:layer.Identifier})
-            });
-            break;
-          case 'wms':
-            parser = new WMSCapabilities();
-            response = parser.read(responseText);
-            response.Capability.Layer.Layer.forEach(layer =>{
-              var label = layer.Title !==""?layer.Title:layer.Name;
-              var value = layer.Name;
-              if (layer.layer === undefined) layers.push({label:label, value:value})
-            });
-            break;
-          default:
-            parseString(responseText,function(err, result) {
-              result['wfs:WFS_Capabilities'].FeatureTypeList[0].FeatureType.forEach(layer =>{
-                var layerTitle = layer.Title[0];
-                var layerName = layer.Name[0];
-                if (layerTitle===undefined || layerTitle === "") layerTitle = layerName;
-                layers.push({label:layerTitle, value:layerName})
-              });
-
-            });
-            
-            break;
-        }
-      } catch (error) {
-          console.warn('Unexpected error: ' + error.message );
-      }
-      //fix to get react-select box to update on the fly
-      layers = layers.concat([]);
-      callback(layers);
-  });
-}
-
-export function getRasterLayer(url, layerName,type,name="", projection="EPSG:3857", file=undefined, extent=[], callback) {
-  type = type.toLowerCase();
-  if (type==="static" && file === undefined){
-    console.warn("Missing File for Raster layer.");
-    return;
-  }else if (type==="static" && !file.type.match('image.*')) {
-      console.warn('Warning! No raster file selected.');
-      return;
-  }
-  
-  url = /^((http)|(https))(:\/\/)/.test(url) ? url : 'http://' + url;
-  const FileLoader = function (image, src){
-    try {
-        var fr = new FileReader();
-        fr.onload = function (evt) {
-            image.getImage().src = evt.target.result;
-        };
-        fr.readAsDataURL(file);
-    } catch (error) {
-        console.warn('Unexpected error: ' + error.message);
-    }
-}
-
-	var sourceFormat;
-	switch (type) {
-		case 'wms':
-			sourceFormat = new TileWMS({
-                url: url,
-                projection: projection,
-                params: { layers: layerName, tiled: true },
-                crossOrigin:"anonymous"
-			      });
-			break;
-		case 'wmts':
-          url = /\?/.test(url) ? url + '&' : url + '?';
-          const wmtsCap = (url,callback) => {
-            httpGetText(url + 'REQUEST=GetCapabilities&SERVICE=WMTS', (responseText)=> {
-              try {
-                var parser = new WMTSCapabilities();
-                callback(parser.read(responseText));
-              } catch (error) {
-                console.warn('Unexpected error: ' + error.message );
-              }
-            });
-          }
-          sourceFormat = new WMTS(WMTS.optionsFromCapabilities(wmtsCap(url,(response) => response),{ layer: layerName, matrixSet: projection }));
-			break;
-		case 'stamen':
-			sourceFormat = new Stamen({layer: layerName });
-      if (name.length < 1) { name = 'Stamen ' + layerName; }
-			break;
-		case 'osm':
-			sourceFormat = new OSM();
-      if (name.length < 1) { name = 'OpenStreetMap'; }
-			break;
-		case 'xyz':
-			sourceFormat = new XYZ({urls: [url], projection: projection});
-			break;
-		case 'static':
-      const projExtent = window.map
-      .getView()
-      .getProjection()
-      .getExtent();
-      if (extent===[]) extent=projExtent;
-			sourceFormat = new ImageStatic({
-                url: '',
-                imageExtent: [extent[0], extent[1], extent[2], extent[3]],
-                projection: projection,
-                imageLoadFunction: FileLoader
-            });
-            if (name.length < 1) { name = file.name; }
-			break;
-		default:
-			return;
-	}
-	
-	if (type !== 'static') {
-		callback(new TileLayer({name: name,source: sourceFormat}));
-	} else {
-		callback(new ImageLayer({name: name,source: sourceFormat}));
-	}
-}
-
-export function getVectorLayer(url, layerName,type,name="", projection="EPSG:3857", source="wfs", file=undefined, tiled=false, callback ){
-  type = type.toLowerCase();
-  source = source.toLowerCase();
-  if (source==="file" && file === undefined){
-    console.warn("Missing File for Vector layer.");
-    return;
-  }
-
-  var sourceFormat;
-	switch (type) {
-		case 'gml3':
-      sourceFormat = new GML3({srsName: projection});
-			break;
-		case 'gml2':
-			sourceFormat = new GML2({srsName: projection});
-			break;
-		case 'gpx':
-			sourceFormat = new GPX();
-			break;
-		case 'kml':
-			sourceFormat = new KML();
-			break;
-		case 'osmxml':
-			sourceFormat = new OSMXML();
-			break;
-		case 'esrijson':
-			sourceFormat = new EsriJSON();
-			break;
-		case 'geojson':
-			sourceFormat = new GeoJSON();
-      type = 'application/json'; // mime type
-			break;
-		case 'topojson':
-      sourceFormat = new TopoJSON();
-			break;
-		case 'igc':
-			sourceFormat = new IGC();
-			break;
-		case 'polyline':
-			sourceFormat = new Polyline();
-			break;
-		case 'wkt':
-			sourceFormat = new WKT();
-			break;
-		case 'mvt':
-			sourceFormat = new MVT();
-			break;
-		default:
-      return;
-  }
-  
-  if (source === 'wfs') {
-		url = /^((http)|(https))(:\/\/)/.test(url) ? url : 'http://' + url;
-		url = /\?/.test(url) ? url + '&' : url + '?';
-    url = url + 'SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=' + layerName + '&SRSNAME=' + projection + '&OUTPUTFORMAT=' + type;
-    if (name.length < 1) { name = layerName + ' WFS'; }
-  }
-
-  const FileLoader = function(extent, resolution, proj) {
-    try {
-        const mapProjection = window.map.getView().getProjection();
-        var _this = this;
-        var fr = new FileReader();
-        fr.onload = function (evt) {
-            var vectorData = evt.target.result;
-            _this.addFeatures(sourceFormat.readFeatures(vectorData, {
-                dataProjection: sourceFormat.readProjection(vectorData) || projection,
-                featureProjection: mapProjection
-            }));
-        };
-        fr.readAsText(file);
-    } catch (error) {
-        console.log(error);
-    }
-  }
-
-  if (name.length < 1 && source !== 'file') name = layerName;
-  callback( new VectorLayer({
-    source: new Vector({
-      name: ((source === 'file' && name.length < 1) ? file.name : name ),
-      url: (source === 'file' ? undefined : (tiled ? function(extent, resolution, proj) {
-                        return url + '&bbox=' + extent.join(',') + ',' + proj.getCode();
-                  } : url)),
-      strategy: (tiled ? LoadingStrategyTile(TileGrid.createXYZ({maxZoom: 19})) : LoadingStrategyAll),
-      format: sourceFormat,
-      loader: (source !== 'file' ? undefined : FileLoader),
-      crossOrigin: "anonymous"
-    }),
-    crossOrigin: "anonymous"
-  }));
 }
 
 export function getESRITileXYZLayer(url) {
@@ -982,7 +742,7 @@ function _getText(feature, fieldName = "name", maxScale, type = "normal", placem
 }
 
 // https://stackoverflow.com/questions/14484787/wrap-text-in-javascript
-function stringDivider(str, width, spaceReplacer) {
+export function stringDivider(str, width, spaceReplacer) {
   if (str.length > width) {
     var p = width;
     while (p > 0 && str[p] !== " " && str[p] !== "-") {
