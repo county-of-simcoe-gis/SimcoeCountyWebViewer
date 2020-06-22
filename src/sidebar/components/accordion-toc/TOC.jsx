@@ -65,7 +65,7 @@ class TOC extends Component {
     if (layersGroup === undefined) layersGroup = layerGroups.filter(group => group.label === this.myLayersGroupName)[0];
     if (layersGroup === undefined) layersGroup = layerGroups[0];
     layerIndex += (layersGroup.layers.length+1);
-    TOCHelpers.makeLayer(layer.displayName, helpers.getUID(),layersGroup, layerIndex,true,1,layer.layer,undefined,undefined,false, (retLayer)=>{
+    TOCHelpers.makeLayer(layer.displayName, helpers.getUID(),layersGroup, layerIndex,true,1,layer.layer,undefined,undefined,false,layer.styleUrl, (retLayer)=>{
       let layers = layersGroup.layers;
       layers.push(retLayer);
       layersGroup.layers = layers
@@ -169,7 +169,7 @@ class TOC extends Component {
     });
     
     let group = TOCHelpers.makeGroup(this.myLayersGroupName, true,"","",undefined,"","");
-    TOCHelpers.makeLayer("My Drawing", this.myMapLayerName,group, 1,true,1,myMapLayer,undefined,undefined,false, (retLayer)=>{
+    TOCHelpers.makeLayer("My Drawing", this.myMapLayerName,group, 1,true,1,myMapLayer,undefined,undefined,false,"", (retLayer)=>{
       let layers = group.layers;
       layers.push(retLayer);
       group.layers = layers

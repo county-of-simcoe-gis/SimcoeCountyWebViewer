@@ -1,6 +1,6 @@
 {
     "translations":[
-        {"key":"wms", "source":"WMS", "method":"raster", "type":"WMS", "urlSuffix":"/{z}/{x}/{y}.png"},
+        {"key":"wms", "source":"WMS", "method":"raster", "type":"ImageWMS", "urlSuffix":"/{z}/{x}/{y}.png"},
         {"key":"wmts","source":"WMTS","method":"raster","type": "WMTS"},
         {"key":"stamen","source":"service","method":"raster","type": "Stamen"},
         {"key":"osm","source":"service","method":"raster","type": "OSM"},

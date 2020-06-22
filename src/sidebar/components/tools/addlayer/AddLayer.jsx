@@ -4,6 +4,7 @@ import * as addLayerConfig from "./config.json"
 import PanelComponent from "../../../PanelComponent";
 import LoadingScreen from "../../../../helpers/LoadingScreen.jsx"; 
 import * as helpers from "../../../../helpers/helpers";
+import {LayerHelpers, OL_DATA_TYPES} from "../../../../helpers/OLHelpers";
 import Select from "react-select";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 
@@ -115,7 +116,7 @@ class AddLayerForm extends Component {
         let selectLayers = [];
         //CLEAR LAYERS LIST AND ATTEMPT TO REPOPULATE
         this.setState({selectLayerOptions:selectLayers, selectLayerOption:selectedLayer, isRunning:true}, () =>{
-            helpers.getCapabilities(this.state.serverUrl, this.state.selectedFormat.source, (layers) =>{
+            LayerHelpers.getCapabilities(this.state.serverUrl, this.state.selectedFormat.source, (layers) =>{
                 selectLayers = layers;
                 if (selectLayers !== undefined && selectLayers.length > 0) selectedLayer = selectLayers[0];
                 else selectLayers = [];
@@ -124,7 +125,8 @@ class AddLayerForm extends Component {
         });
     }
     addLayer = (layer) => {
-        const styleUrl = layer.Style !== undefined ? layer.Style[0].LegendURL[0].OnlineResource[0].$["xlink:href"].replace("http", "https") : ""; 
+        const selectedLayer = this.state.selectLayerOptions.filter(item => item.value === this.state.selectLayerOption.value)[0];
+        const styleUrl = selectedLayer.style !== undefined ? selectedLayer.style : ""; 
         layer.setVisible(true);
         layer.setOpacity(1);
         layer.setProperties({ name: this.state.layer_name, displayName:  this.state.layer_displayName, disableParcelClick: true });
@@ -198,33 +200,24 @@ class AddLayerForm extends Component {
         const format = this.state.selectedFormat;
         this.isValid(true, (isValid) =>{
             if (isValid){
-                switch (format.method){
-                    case "raster":
-                        helpers.getRasterLayer(
-                            this.state.serverUrl,
-                            this.state.layer_name, 
-                            format.type,
-                            this.state.layer_displayName,
-                            this.state.selectProjectionOption.value,
-                            this.state.layer_file,
-                            this.state.layer_extent,
-                            this.addLayer);
-                        break;
-                    case "vector":
-                        helpers.getVectorLayer(
-                            this.state.serverUrl,
-                            this.state.layer_name,
-                            format.type,
-                            this.state.layer_displayName,
-                            this.state.selectProjectionOption.value,
-                            format.source,
-                            this.state.layer_file,
-                            false,
-                            this.addLayer);
-                        break;
-                    default:
-                        break;
+                var formatType = format.type;
+                for(var dt in OL_DATA_TYPES){
+                    if (dt.toLowerCase()=== formatType.toLowerCase()) formatType = dt;
                 }
+
+                LayerHelpers.getLayer(
+                    formatType,
+                    format.source,
+                    this.state.selectProjectionOption.value,
+                    this.state.layer_name, 
+                    this.state.serverUrl,
+                    false,
+                    this.state.layer_file,
+                    this.state.layer_extent,
+                    this.state.layer_displayName,
+                    this.addLayer
+                );
+                        
             }
         });
         

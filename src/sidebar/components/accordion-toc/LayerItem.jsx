@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import { Vector as VectorLayer } from "ol/layer.js";
 import * as helpers from "../../../helpers/helpers";
 import * as TOCHelpers from "../common/TOCHelpers.jsx";
+import {FeatureHelpers, OL_DATA_TYPES} from "../../../helpers/OLHelpers";
 import TOCConfig from "../common/TOCConfig.json";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import Highlighter from "react-highlight-words";
@@ -183,7 +184,7 @@ class LayerItem extends Component {
           visibleFeatures.push(feature);
         }); 
         if (visibleFeatures.length > 0) {
-          helpers.export_file("features.kml", helpers.getKMLFromFeatures(visibleFeatures));
+          helpers.export_file("features.kml", FeatureHelpers.setFeatures(visibleFeatures, OL_DATA_TYPES.KML));
         }else{
           helpers.showMessage("No Features", "No features in view for this layer");
         }
