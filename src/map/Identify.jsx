@@ -1,6 +1,7 @@
 import React, { Component, useState } from "react";
 import "./Identify.css";
 import * as helpers from "../helpers/helpers";
+import {LayerHelpers, OL_LAYER_TYPES} from "../helpers/OLHelpers";
 import mainConfig from "../config.json";
 import Collapsible from "react-collapsible";
 import { GeoJSON } from "ol/format.js";
@@ -8,7 +9,6 @@ import InfoRow from "../helpers/InfoRow.jsx";
 import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
 import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style.js";
-import { Image as ImageLayer } from "ol/layer.js";
 
 import useIframeContentHeight from "react-use-iframe-content-height";
 
@@ -50,7 +50,7 @@ class Identify extends Component {
 
     for (let index = 0; index < layers.length; index++) {
       const layer = layers[index];
-      if (layer.getVisible() && layer instanceof ImageLayer) {
+      if (layer.getVisible() && LayerHelpers.getLayerType(layer) !== OL_LAYER_TYPES.Vector) {
         const queryable = layer.get("queryable");
         if (queryable) {
           const name = layer.get("name");
