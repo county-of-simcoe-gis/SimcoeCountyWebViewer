@@ -91,7 +91,7 @@ class MyMaps extends Component {
     // PROPERTY CLICK WILL IGNORE THIS LAYER
     this.vectorLayer.setProperties({ disableParcelClick: true, name:this.layerName });
 
-    window.map.addLayer(this.vectorLayer);
+    if (existingLayer === undefined) window.map.addLayer(this.vectorLayer);
 
     window.map.on("singleclick", evt => {
       if (this.draw !== null || this.state.isEditing) return;

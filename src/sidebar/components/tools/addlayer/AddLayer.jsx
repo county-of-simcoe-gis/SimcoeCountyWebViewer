@@ -125,8 +125,12 @@ class AddLayerForm extends Component {
         });
     }
     addLayer = (layer) => {
-        const selectedLayer = this.state.selectLayerOptions.filter(item => item.value === this.state.selectLayerOption.value)[0];
-        const styleUrl = selectedLayer.style !== undefined ? selectedLayer.style : ""; 
+        let styleUrl = "";
+        if (this.state.selectLayerOption !== this.defaultLayerOption){
+            const selectedLayer = this.state.selectLayerOptions.filter(item => item.value === this.state.selectLayerOption.value)[0];
+            styleUrl = selectedLayer.style !== undefined ? selectedLayer.style : ""; 
+        }
+        
         layer.setVisible(true);
         layer.setOpacity(1);
         layer.setProperties({ name: this.state.layer_name, displayName:  this.state.layer_displayName, disableParcelClick: true });

@@ -19,7 +19,7 @@ import { Item as MenuItem } from "rc-menu";
 import Portal from "../../../helpers/Portal.jsx";
 import Identify from "../../../map/Identify";
 import Point from "ol/geom/Point";
-import { Vector as VectorLayer } from "ol/layer";
+import { Image as ImageLayer, Vector as VectorLayer } from "ol/layer";
 import { Vector as VectorSource } from "ol/source.js";
 import Feature from "ol/Feature";
 import { Icon, Style} from "ol/style.js";
@@ -29,6 +29,7 @@ class TOC extends Component {
     super(props);
     this.storageMapDefaultsKey = "Map Defaults";
     this.storageKey = "Layers";
+    this.storageKeyAllLayers = "Saved Layers";
     this.identifyIconLayer = undefined;
     this.state = {
       layerGroups: [],
@@ -167,8 +168,8 @@ class TOC extends Component {
       zIndex: 1000,
       style: drawingHelpers.getDefaultDrawStyle("#e809e5")
     });
-    
-    let group = TOCHelpers.makeGroup(this.myLayersGroupName, true,"","",undefined,"","");
+    let group = this.state.layerGroups.filter(item => item.label === this.myLayersGroupName)[0];
+    if (group === undefined) group = TOCHelpers.makeGroup(this.myLayersGroupName, true,"","",undefined,"","");
     TOCHelpers.makeLayer("My Drawing", this.myMapLayerName,group, 1,true,1,myMapLayer,undefined,undefined,false,"", (retLayer)=>{
       let layers = group.layers;
       layers.push(retLayer);
@@ -179,25 +180,32 @@ class TOC extends Component {
   }
 
   refreshTOC = callback => {
-      sessionStorage.removeItem(this.storageMapDefaultsKey); 
-      let geoserverUrl= helpers.getURLParameter("GEO_URL");
-      let geoserverUrlType = helpers.getURLParameter("GEO_TYPE");
-      if (geoserverUrl === null) 
-      {
-        geoserverUrl = TOCConfig.geoserverLayerGroupsUrl;
-      }
-      else
-      {
-          geoserverUrl = geoserverUrl + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
-      }
-      if (geoserverUrlType === null) geoserverUrlType = TOCConfig.geoserverLayerGroupsUrlType;
-      if (geoserverUrl !== undefined && geoserverUrl !== null){
-        TOCHelpers.getGroupsGC(geoserverUrl,geoserverUrlType ,result => {
+      sessionStorage.removeItem(this.storageMapDefaultsKey);
+      let savedLayers = helpers.getItemsFromStorage(this.storageKeyAllLayers);
+      if (savedLayers !== undefined && savedLayers !== null && savedLayers !== []){
+        
+        TOCHelpers.getGroupsFromData(savedLayers,result => {
+
           const groupInfo = result;
           this.buildDefaultGroup(defaultGroup => {
             let groups = [];
-            groups.push(defaultGroup);
-            groups = groups.concat(groupInfo[0]);
+            let existingGroup = groupInfo[0].filter(item => item.label === defaultGroup.label)[0];
+            if (existingGroup !== undefined){
+              groups = groupInfo[0].map(item => {
+                  if (item.label === defaultGroup.label){
+                    let layers = defaultGroup.layers;
+                    layers = layers.map(layer => layer.group !== item.value?Object.assign(layer, { group: item.value }):layer);
+                    item.layers=layers.concat(item.layers,[]) ;
+                    return item;
+                  }
+                  else{
+                    return item;
+                  }});
+            }else{
+              groups.push(defaultGroup);
+              groups = groups.concat(groupInfo[0]);
+            }
+            
             this.setState(
               {
                 layerGroups: groups.concat([])
@@ -215,24 +223,156 @@ class TOC extends Component {
             );
             
           });
-          
         });
-      } else {
-      const groupInfo = TOCHelpers.getGroups();
-        this.setState(
-          {
-            layerGroups: groupInfo[0]
-          },
-          () => {
-            window.emitter.emit("tocLoaded");  
-            if (callback !== undefined) callback();
+      }else{
+        let geoserverUrl= helpers.getURLParameter("GEO_URL");
+        let geoserverUrlType = helpers.getURLParameter("GEO_TYPE");
+        if (geoserverUrl === null) 
+        {
+          geoserverUrl = TOCConfig.geoserverLayerGroupsUrl;
+        }
+        else
+        {
+            geoserverUrl = geoserverUrl + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
+        }
+        if (geoserverUrlType === null) geoserverUrlType = TOCConfig.geoserverLayerGroupsUrlType;
+        if (geoserverUrl !== undefined && geoserverUrl !== null){
+          TOCHelpers.getGroupsGC(geoserverUrl,geoserverUrlType ,result => {
+            const groupInfo = result;
+            this.buildDefaultGroup(defaultGroup => {
+              let groups = [];
+              groups.push(defaultGroup);
+              groups = groups.concat(groupInfo[0]);
+              this.setState(
+                {
+                  layerGroups: groups.concat([])
+                },
+                () => {
+                  let allLayers = [];
+                  this.state.layerGroups.forEach(group =>{
+                    allLayers.push(group.layers);
+                  });
+                  window.allLayers = allLayers;
+                  this.onLayersLoad();
+                  window.emitter.emit("tocLoaded");  
+                  if (callback !== undefined) callback();
+                }
+              );
+              
+            });
+            
           });
-          window.allLayers = this.state.layerGroups;
-          this.onLayersLoad();
+        } else {
+          const groupInfo = TOCHelpers.getGroups();
+            this.setState(
+              {
+                layerGroups: groupInfo[0]
+              },
+              () => {
+                window.emitter.emit("tocLoaded");  
+                if (callback !== undefined) callback();
+              });
+              window.allLayers = this.state.layerGroups;
+              this.onLayersLoad();
+          }
       }
      
   };
+  loadLayerOptions = (data, callback) => {    
+    let groups = [];
+    let i=Object.keys(data).length;
+    for (var key in data) {
+      if (!data.hasOwnProperty(key)) continue;
 
+      var obj = data[key];
+      const loadLayers = {};
+      const loadGroup = {};
+      let groupName = obj.name;
+      let group = key;
+      let layers = obj.layers;
+      //let group = TOCHelpers.makeGroup(groupName,false,"","",undefined,"","");
+
+      for (var layerId in layers) {
+        var layer = layers[layerId];
+        const loadLayer = {};
+        for (const property in layer) {
+          if (property !== 'layerType' && property !== 'layerSource' && property !== 'layerFeatures'){
+            loadLayer[property] = layer[property];
+          }
+        }
+        let newLayer = undefined;
+        switch (layer["layerType"]){
+          case "VectorLayer":
+            newLayer = new VectorLayer();
+            const layerSource = layer["layerSource"];
+            newLayer.setSource(layerSource);
+            if (layer["layerFeatures"] !== undefined) newLayer.getSource().addFeatures(layer["layerFeatures"]);
+            break;
+          case "ImageLayer":
+            newLayer = new ImageLayer();
+            newLayer.setSource(layer["layerSource"]);
+            break;
+          default:
+            break;
+        }
+        if (newLayer !== undefined) window.map.addLayer(newLayer);
+        loadLayer["layer"] = newLayer;
+        loadLayer["group"] = group;
+        loadLayer["groupName"] = groupName;
+        loadLayers[layer.name] = loadLayer;
+      }
+      groups.push(loadGroup);
+      if (i >= groups.length){
+        groups = groups.concat([]);
+        if (callback !== undefined) callback (groups);
+        helpers.showMessage("Load", "Layer Visibility has been Loaded.");
+      }
+    }
+  }
+  saveAllLayers = () => {
+    // GATHER INFO TO SAVE
+    const layers = {};
+    const groups = {};
+    for (var key in window.allLayers) {
+      
+      if (!window.allLayers.hasOwnProperty(key)) continue;
+
+      var obj = window.allLayers[key];
+      const savedLayers = {};
+      const savedGroup = {};
+      let groupName = "";
+      let group = "";
+      obj.forEach(layer => {
+        groupName = layer.group;
+        
+        const saveLayer = {
+          name: layer.name,
+          visible: layer.visible
+        };
+        savedLayers[layer.name] = saveLayer;
+        group = layer.group;
+        groupName = layer.groupName;
+        TOCHelpers.layerToJson(layer, (returnObj) =>{
+          savedLayers[layer.name] = returnObj;
+        });
+      });
+      let currentGroup = this.state.layerGroups.filter(item => item.value === group)[0];
+      layers[groupName] = savedLayers;
+      savedGroup["name"] = groupName;
+      savedGroup["value"] = currentGroup.value;
+      savedGroup["label"] = currentGroup.label;
+      savedGroup["defaultGroup"] = currentGroup.defaultGroup;
+      savedGroup["visibleLayers"] = currentGroup.visibleLayers;
+      savedGroup["wmsGroupUrl"] = currentGroup.wmsGroupUrl;
+      savedGroup["customRestUrl"] = currentGroup.customRestUrl;
+      savedGroup["prefix"] = currentGroup.prefix;
+      savedGroup["layers"] = savedLayers;
+
+      groups[group] = savedGroup;
+    }
+    helpers.saveToStorage(this.storageKeyAllLayers, groups);
+    helpers.showMessage("Save", "Layer have been saved.");
+  }
   onGroupDropDownChange = selectedGroup => {
     this.setState({ selectedGroup: selectedGroup });
   };
@@ -261,6 +401,9 @@ class TOC extends Component {
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-save">
             <FloatingMenuItem imageName={"save-disk.png"} label="Save TOC Layer Visibility" />
           </MenuItem>
+          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-save-all">
+            <FloatingMenuItem imageName={"save-disk.png"} label="Save All Layers" />
+          </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-reset">
             <FloatingMenuItem imageName={"reset.png"} label="Reset TOC to Default" />
           </MenuItem>
@@ -284,6 +427,9 @@ class TOC extends Component {
         break;
       case "sc-floating-menu-save":
         this.onSaveClick();
+        break;
+      case "sc-floating-menu-save-all":
+        this.saveAllLayers();
         break;
       case "sc-floating-menu-reset":
         this.reset();

@@ -12,7 +12,11 @@ import TileGrid from "ol/tilegrid/TileGrid.js";
 
 //OTHER
 import { parseString } from "xml2js";
-
+export const OL_LAYER_TYPES = {
+  Image:"Image",
+  Tile:"Tile",
+  Vector:"Vector"
+}
 export const OL_DATA_TYPES = {
   GML3:"GML3",
   GML2:"GML2",
@@ -77,7 +81,7 @@ export class FeatureHelpers {
   static getFeatures(features, source_format=OL_DATA_TYPES.GeoJSON, projection="EPSG:3857"){
     const mapProjection = window.map.getView().getProjection();
     const parser = this.getVectorFormat(source_format, projection);
-    return parser.readFeature(features,{
+    return parser.readFeatures(features,{
                         dataProjection: parser.readProjection(features) || projection,
                         featureProjection: mapProjection});
   }
@@ -147,6 +151,13 @@ export class LayerHelpers {
         callback(layers);
     });
   }
+  static getLayerType(layer){
+    if (layer instanceof TileLayer) return OL_LAYER_TYPES.Tile;
+    if (layer instanceof ImageLayer) return OL_LAYER_TYPES.Image;
+    if (layer instanceof VectorLayer) return OL_LAYER_TYPES.Vector;
+    return "unknown";
+  }
+
   static getLayerSourceType(source){
     if (source instanceof GML3) return OL_DATA_TYPES.GML3;
     if (source instanceof GML2) return OL_DATA_TYPES.GML2;
@@ -180,11 +191,21 @@ export class LayerHelpers {
     return style !== undefined ? style : "";
   }
   static getLayer(sourceType, source, projection="EPSG:3857", layerName,  url, tiled=false, file,extent=[], name="", callback){
+    const rebuildParams = {sourceType:sourceType, source:source, projection:projection, layerName:layerName,  url:url, tiled:tiled, file:file !== undefined?"STORED FEATURES":undefined,extent:extent, name:name};
     let Vector_FileLoader = undefined;
     switch (source){
       case "file":
         if (file === undefined){
           console.error("Missing File for Vector layer.");
+          return;
+        }
+        //return empty vector layer if file 
+        else if (file === "STORED FEATURES"){
+          callback(new VectorLayer({
+            rebuildParams:rebuildParams,
+            source: new Vector({
+              name: name
+          })}));
           return;
         }
         else 
@@ -229,6 +250,7 @@ export class LayerHelpers {
     switch (sourceType) {
         case OL_DATA_TYPES.GML3:
           callback(new VectorLayer({
+              rebuildParams:rebuildParams,
               source: new Vector({
                 name: name,
                 url:  url,
@@ -240,6 +262,7 @@ export class LayerHelpers {
           break;
         case OL_DATA_TYPES.GML2:
             callback(new VectorLayer({
+              rebuildParams:rebuildParams,
               source:  new Vector({
                 name: name,
                 url:  url,
@@ -251,6 +274,7 @@ export class LayerHelpers {
             break;
         case OL_DATA_TYPES.GPX:
             callback(new VectorLayer({
+              rebuildParams:rebuildParams,
               source: new Vector({
                 name: name,
                 url:  url,
@@ -262,6 +286,7 @@ export class LayerHelpers {
             break;
         case OL_DATA_TYPES.KML:
           callback(new VectorLayer({
+            rebuildParams:rebuildParams,
             source: new Vector({
               name: name,
               url:  url,
@@ -273,6 +298,7 @@ export class LayerHelpers {
           break;
         case OL_DATA_TYPES.OSMXML:
           callback(new VectorLayer({
+            rebuildParams:rebuildParams,
             source: new Vector({
               name: name,
               url:  url,
@@ -284,6 +310,7 @@ export class LayerHelpers {
           break;
         case OL_DATA_TYPES.EsriJSON:
           callback(new VectorLayer({
+            rebuildParams:rebuildParams,
             source: new Vector({
               name: name,
               url:  url,
@@ -295,6 +322,7 @@ export class LayerHelpers {
           break;
         case OL_DATA_TYPES.GeoJSON:
           callback(new VectorLayer({
+            rebuildParams:rebuildParams,
             source: new Vector({
               name: name,
               url:  url,
@@ -306,6 +334,7 @@ export class LayerHelpers {
           break;    
         case OL_DATA_TYPES.TopoJSON:
           callback(new VectorLayer({
+            rebuildParams:rebuildParams,
             source: new Vector({
             name: name,
             url:  url,
@@ -317,6 +346,7 @@ export class LayerHelpers {
           break;
         case OL_DATA_TYPES.IGC:
           callback (new VectorLayer({
+            rebuildParams:rebuildParams,
             source: new Vector({
               name: name,
               url:  url,
@@ -328,6 +358,7 @@ export class LayerHelpers {
           break;
         case OL_DATA_TYPES.Polyline:
           callback (new VectorLayer({
+            rebuildParams:rebuildParams,
             source: new Vector({
               name: name,
               url:  url,
@@ -339,6 +370,7 @@ export class LayerHelpers {
           break;
         case OL_DATA_TYPES.WKT:
           callback(new VectorLayer({
+            rebuildParams:rebuildParams,
             source:  new Vector({
               name: name,
               url:  url,
@@ -350,6 +382,7 @@ export class LayerHelpers {
           break;  
         case OL_DATA_TYPES.MVT:
           callback(new VectorLayer({
+            rebuildParams:rebuildParams,
             source:  new Vector({
               name: name,
               url:  url,
@@ -360,7 +393,41 @@ export class LayerHelpers {
           })}));
           break;
         case OL_DATA_TYPES.ImageWMS:
-            callback(new TileLayer({name: name,source: new TileWMS({url: url,projection: projection, params: { layers: layerName, tiled: true },crossOrigin:"anonymous" })}));
+            callback(new ImageLayer({
+              rebuildParams:rebuildParams,
+              name: name,
+              source: new ImageWMS({
+                    url: url,
+                    params: { 
+                      VERSION:"1.3.0",
+                      LAYERS: layerName, 
+                      cql_filter: null
+                    },
+                    ratio: 1,
+                    serverType: "geoserver",
+                    crossOrigin:"anonymous" })
+                  }
+                ));
+            break;
+        case OL_DATA_TYPES.TileWMS:
+            callback(new TileLayer({
+              rebuildParams:rebuildParams,
+              name: name,
+              source: new TileWMS({
+                    url: url,
+                    projection: projection, 
+                    params: { 
+                      VERSION:"1.3.0",
+                      LAYERS: layerName, 
+                      tiled: true, 
+                      cql_filter: null
+                    },
+                    tileOptions: {crossOriginKeyword: 'anonymous'},
+                    ratio: 1,
+                    serverType: "geoserver",
+                    crossOrigin:"anonymous" })
+                  }
+                ));
             break;
         case OL_DATA_TYPES.WMTS:
             url = /\?/.test(url) ? url + '&' : url + '?';
@@ -374,18 +441,21 @@ export class LayerHelpers {
                 }
               });
             }
-            callback(new TileLayer({name: name,source: new WMTS(WMTS.optionsFromCapabilities(wmtsCap(url,(response) => response),{ layer: layerName, matrixSet: projection }))}));
+            callback(new TileLayer({
+              rebuildParams:rebuildParams,
+              name: name,
+              source: new WMTS(WMTS.optionsFromCapabilities(wmtsCap(url,(response) => response),{ layer: layerName, matrixSet: projection }))}));
             break;
         case OL_DATA_TYPES.Stamen:
             if (name.length < 1) layerName = 'Stamen ' + layerName; 
-            callback(new TileLayer({name: name,source: new Stamen({layer: layerName })}));
+            callback(new TileLayer({rebuildParams:rebuildParams,name: name,source: new Stamen({layer: layerName })}));
             break;
         case OL_DATA_TYPES.OSM:
             if (name.length < 1) { name = 'OpenStreetMap'; }
-            callback(new TileLayer({name: name,source:  new OSM()}));
+            callback(new TileLayer({rebuildParams:rebuildParams,name: name,source:  new OSM()}));
             break;
         case OL_DATA_TYPES.XYZ:
-            callback(new TileLayer({name: name,source: new XYZ({urls: [url], projection: projection})}));
+            callback(new TileLayer({rebuildParams:rebuildParams,name: name,source: new XYZ({urls: [url], projection: projection})}));
             break;
         case OL_DATA_TYPES.ImageStatic:
             if (file === undefined){
@@ -411,7 +481,7 @@ export class LayerHelpers {
             .getProjection()
             .getExtent();
             if (extent===[]) extent=projExtent;
-            callback(new ImageLayer({name: name,source: new ImageStatic({
+            callback(new ImageLayer({rebuildParams:rebuildParams,name: name,source: new ImageStatic({
                 url: '',
                 imageExtent: [extent[0], extent[1], extent[2], extent[3]],
                 projection: projection,
