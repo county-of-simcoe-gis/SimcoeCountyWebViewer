@@ -137,6 +137,13 @@
       "componentName": "CommercialRealEstate",
       "description": "Search commercial real estate throughout the County of Simcoe.",
       "imageName": "commercialRealEstate.png"
+    },
+    {
+      "id": 8,
+      "name": "211 Community Services",
+      "componentName": "TwoOneOne",
+      "description": "Explore 211 Community Services across the County of Simcoe.",
+      "imageName": "communityServices.png"
     }
   ]
 }
