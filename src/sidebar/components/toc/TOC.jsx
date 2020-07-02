@@ -20,7 +20,7 @@ import Portal from "../../../helpers/Portal.jsx";
 class TOC extends Component {
   constructor(props) {
     super(props);
-    this.storageMapDefaultsKey = "map_defaults";
+    this.storageMapDefaultsKey = "Map Defaults";
     this.state = {
       layerGroups: [],
       selectedGroup: {},
@@ -84,6 +84,7 @@ class TOC extends Component {
             defaultGroup: groupInfo[1]
           },
           () => {
+            window.emitter.emit("tocLoaded");  
             if (callback !== undefined) callback();
           }
         );
@@ -97,6 +98,7 @@ class TOC extends Component {
           defaultGroup: groupInfo[1]
         },
         () => {
+          window.emitter.emit("tocLoaded");  
           if (callback !== undefined) callback();
         }
       );
@@ -116,7 +118,7 @@ class TOC extends Component {
     this.setState({ sortAlpha: sortAlpha });
 
     if (sortAlpha) {
-      helpers.showMessage("Sorting", "Layer re-ordering disabled.", "yellow");
+      helpers.showMessage("Sorting", "Layer re-ordering disabled.", helpers.messageColors.yellow);
     }
 
     helpers.addAppStat("TOC Sort", sortAlpha);
@@ -160,15 +162,23 @@ class TOC extends Component {
   };
 
   onMenuItemClick = action => {
-    if (action === "sc-floating-menu-expand") {
-      this.layerRef.toggleAllLegends("OPEN");
-    } else if (action === "sc-floating-menu-collapse") {
-      this.layerRef.toggleAllLegends("CLOSE");
-    } else if (action === "sc-floating-menu-legend") {
-      helpers.showMessage("Legend", "Coming Soon");
-    } else if (action === "sc-floating-menu-visility") {
-      this.layerRef.turnOffLayers();
+    switch (action){
+      case "sc-floating-menu-expand":
+        this.layerRef.toggleAllLegends("OPEN");
+        break;
+      case "sc-floating-menu-collapse":
+        this.layerRef.toggleAllLegends("CLOSE");
+        break;
+      case "sc-floating-menu-legend":
+        helpers.showMessage("Legend", "Coming Soon");
+        break;
+      case "sc-floating-menu-visility":
+        this.layerRef.turnOffLayers();
+        break;
+      default:
+        break;
     }
+    
 
     helpers.addAppStat("TOC Tools", action);
   };

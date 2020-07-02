@@ -4,6 +4,7 @@ import React, { Component } from "react";
 // CUSTOM
 import "./Measure.css";
 import * as helpers from "../../../../helpers/helpers";
+import * as drawingHelpers from "../../../../helpers/drawingHelpers";
 import PanelComponent from "../../../PanelComponent.jsx";
 
 // OPEN LAYERS
@@ -128,6 +129,14 @@ class Measure extends Component {
           convertFunction: meters => {
             return Math.round(meters * 1550.003 * 100) / 100;
           }
+        },
+        {
+          name: "Degrees",
+          abbreviation: "deg",
+          type: "bearing",
+          convertFunction: meters => {
+            return meters;
+          }
         }
       ],
       unitMeters: -1,
@@ -221,6 +230,7 @@ class Measure extends Component {
     return output;
   };
 
+
   // Format area output.
   formatArea = polygon => {
     var area = getArea(polygon);
@@ -276,9 +286,16 @@ class Measure extends Component {
 
     this.mouseOutEvent = window.map.getViewport().addEventListener("mouseout", () => this.onMouseOutEvent);
 
+    // GET DRAW TYPE
+    let drawType = this.state.geometryType;
+
+    if (drawType === "Rectangle") drawType = "Circle";
+    else if (drawType === "Arrow" || drawType === "Bearing") drawType = "LineString";
+    else if (drawType === "Text") drawType = "Point";
+
     this.draw = new Draw({
       source: this.vectorSource,
-      type: this.state.geometryType === "Rectangle" ? "Circle" : this.state.geometryType,
+      type: drawType,
       geometryFunction: this.state.geometryType === "Rectangle" ? createBox() : undefined,
       style: new Style({
         fill: new Fill({
@@ -297,7 +314,8 @@ class Measure extends Component {
             color: "rgba(255, 255, 255, 0.2)"
           })
         })
-      })
+      }),
+      maxPoints: this.state.geometryType === "Bearing" ? 2 : undefined
     });
 
     // DRAW START
@@ -319,7 +337,12 @@ class Measure extends Component {
             output = this.formatArea(geom);
             tooltipCoord = geom.getInteriorPoint().getCoordinates();
           } else if (geom instanceof LineString) {
-            output = this.formatLength(geom);
+            if (this.state.geometryType === "Bearing"){
+              output = drawingHelpers.getBearing(geom.getFirstCoordinate(), geom.getLastCoordinate());
+              this.setState({ unitMeters: output });
+            }else{
+              output = this.formatLength(geom);
+            }
             tooltipCoord = geom.getLastCoordinate();
           } else if (geom instanceof Circle) {
             output = this.formatCircle(geom);
@@ -370,6 +393,8 @@ class Measure extends Component {
         helpMsg = this.continueCircleMsg;
       } else if (this.state.geometryType === "Rectangle") {
         helpMsg = this.continueRectangleMsg;
+      } else if (this.state.geometryType === "Bearing") {
+        helpMsg = this.continueLineMsg;
       }
     }
 
@@ -480,6 +505,18 @@ class Measure extends Component {
                 <img src={images["rectangle.png"]} alt="rectangle"></img>
               </button>
             </div>
+            <div className={this.state.geometryType === "Bearing" ? "sc-measure-button-container active" : "sc-measure-button-container"}>
+              <button
+                className="sc-measure-button"
+                title="Draw a Bearing Line on the map"
+                onClick={() => {
+                  this.onGeometryButtonClick("Bearing", "bearing");
+                }}
+              >
+                <img src={images["compass.png"]} alt="compass"></img>
+              </button>
+            </div>
+
             <div className={this.state.geometryType === "Clear" ? "sc-measure-button-container active" : "sc-measure-button-container"}>
               <button
                 className="sc-measure-button"

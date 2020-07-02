@@ -200,6 +200,7 @@ p {
   border: solid;
   border-width: 1px;
   width:25%;
+  text-transform: uppercase;
 }
 
 .sc-info-window-value {
@@ -274,9 +275,11 @@ p {
   margin-left: 0px;
 }
 
+/*
 .sc-draw-button-bar button:last-child {
-  /*border-right: none;*/
+  
 }
+*/
 
 .sc-draw-button-bar button:hover {
   background-color: #ededed;
@@ -396,6 +399,12 @@ input[type="number"]::-webkit-outer-spin-button {
   padding: 6px 10px 5px;
 }
 
+.sc-editable {
+  background-image: url(./images/edit-50.png);
+  background-repeat: no-repeat;
+  background-position: right;
+  background-origin: content-box;
+} 
 .sc-live-layer-popup-content {
   position: relative;
   top: 0;
