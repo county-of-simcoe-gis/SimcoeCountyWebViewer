@@ -1,0 +1,137 @@
+.sc-settings-container{
+  position: absolute;
+  margin-bottom: 0px;
+  overflow: auto;
+  padding: 5px !important;
+  bottom: 0px;
+  top: 106px;
+  width: 97%;
+  color: #5b5b5b;
+}
+
+.sc-settings-checkbox {
+  display: inline-table;
+  margin-left: 5px;
+  transform: scale(1.1, 1.1);
+}
+
+.sc-settings-title {
+  margin-top: 18px;
+  margin-bottom: 0px !important;
+}
+
+.sc-settings-divider {
+  border-bottom: 1px dashed #DDD;
+  margin: 5px;
+  color: transparent;
+  height: 1px;
+}
+
+.sc-settings-heading {
+  padding-bottom: 5px;
+  color: #4073C1;
+  font-size: 16px;
+}
+
+.sc-settings-action-bar{
+  text-align:right;
+  font-size:16px;
+}
+
+.sc-settings-row {
+  padding-bottom: 2px;
+  margin-left: 3px;
+  width:100%;
+}
+
+  .sc-settings-row:hover {
+      background-color: #EAEAEA;
+  }
+
+  .sc-settings-row label {
+      width: 160px;
+      display: table-cell;
+      font-weight: bold;
+      padding-left: 20px;
+      font-size: 16px;
+  }
+
+  .sc-settings-row span {
+    display: table-cell;
+    color: #8E8E8E;
+    font-size: 16px;
+    width:120px;
+    text-align: center;
+  }
+
+.sc-settings-table {
+  display: table;
+	width: 100%;
+}
+
+.sc-settings-row {
+  display: table-row;
+}
+.sc-settings-heading {
+  background-color: #EEE;
+  display: table-header-group;
+  font-weight: bold;
+  text-align: center;
+  font-size: 18px;
+}
+.sc-settings-cell {
+	display: table-cell;
+	padding: 3px 10px;
+}
+.sc-settings-input {
+  color: #606060;
+  padding: 3px;
+  font-size: 16px;
+  width: 170px;
+  border: 1px solid #606060;
+  padding-left: 5px;
+  margin-bottom: 5px;
+}
+.sc-settings-floatbottom{
+  bottom:5px;
+  top:auto;
+  position: absolute;
+}
+.sc-settings-live{
+  font-size:10px;
+}
+.sc-description ul  {
+  list-style: none;
+  text-align: center;
+  padding-inline-start: unset;
+}
+
+.sc-settings-input:focus {
+    border-color: #4A8EC7;
+}
+.sc-float-right{
+  text-align: right;
+}
+
+.sc-settings-copy {
+    width:97%;
+}
+
+.sc-settings-copy span {
+  padding-left: 20px;
+  width: 320px;
+  display: inline-flex;
+}
+.sc-settings-copy input {
+  width: 275px;
+}
+.sc-settings-copy img {
+  padding:10px;
+}
+.sc-settings-copy img:hover {
+  cursor: pointer;
+}
+#sc-copy-format-select {
+  display:inline-block;
+  width:190px;
+}

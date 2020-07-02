@@ -35,7 +35,7 @@
 .sc-floating-menu-toolbox-menu-container i {
   right: 5px;
 }
-.sc-floating-menu--toolbox-menu-icon {
+.sc-floating-menu-toolbox-menu-icon {
   vertical-align: bottom;
 }
 
@@ -50,3 +50,46 @@
 .sc-floating-menu-toolbox-menu-icon {
   vertical-align: middle;
 }
+.sc-floating-menu-toolbox-menu-header {
+  width: 100%;
+  height: 18px;
+  padding-bottom: 5px;
+  color:#5b5b5b;
+  padding-top: 5px;
+  background: #ececec;
+  border-bottom: solid 1px #5b5b5b;
+  vertical-align: bottom;
+}
+.sc-floating-menu-toolbox-menu-header .title {
+  width: 85%;
+  font-weight: bold;
+  text-align: center;
+  color:#5b5b5b;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  display: inline-block;
+  padding-left: 2px;
+}
+.sc-floating-menu-toolbox-menu-header .close{
+  width: 16px;
+  height: 16px;
+  font-weight: bold;
+  text-align: center;
+  padding: 4px;
+  color: #fff;
+  background: #6ea8cf;
+  border-radius: 5px;
+  cursor: pointer;
+  float: right;
+  margin-top: -3px;
+  margin-left: -4px;
+  margin-right: 2px;
+  z-index: 1001;
+  background-image: url(./images/close-x-24x24.png);
+  background-repeat: no-repeat;
+  background-position-x: center;
+  background-position-y: center;
+
+}
+

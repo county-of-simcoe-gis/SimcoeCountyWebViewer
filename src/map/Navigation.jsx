@@ -3,19 +3,29 @@ import "./Navigation.css";
 import { fromLonLat } from "ol/proj";
 import * as helpers from "../helpers/helpers";
 import mainConfig from "../config.json";
-const storageMapDefaultsKey = "map_defaults";
+const storageMapDefaultsKey = "Map Defaults";
 class Navigation extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      containerClassName: "nav-container"
+      containerClassName: "nav-container",
+      showCurrentLocation:true,
+      showZoomExtent:true
     };
 
     // LISTEN FOR SIDEPANEL CHANGES
     window.emitter.addListener("sidebarChanged", isSidebarOpen => this.sidebarChanged(isSidebarOpen));
+
+    // LISTEN FOR CONTROL VISIBILITY CHANGES
+    window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control,visible));
   }
 
+  componentDidMount(){
+    this.setState({showCurrentLocation:window.mapControls.currentLocation, showZoomExtent:window.mapControls.zoomExtent  });
+
+  }
+  /*
   // ZOOM IN BUTTON
   zoomIn() {
     window.map.getView().setZoom(window.map.getView().getZoom() + 1);
@@ -25,7 +35,7 @@ class Navigation extends Component {
   zoomOut() {
     window.map.getView().setZoom(window.map.getView().getZoom() - 1);
   }
-
+  */
   // ZOOM TO FULL EXTENT
   zoomFullExtent() {
     let centerCoords = mainConfig.centerCoords;
@@ -65,20 +75,32 @@ class Navigation extends Component {
       this.setState({ containerClassName: "nav-container nav-container-slidein" });
     }
   }
+  controlStateChange(control, state) {
+    switch (control){
+      case "fullExtent":
+        this.setState({showZoomExtent:state});
+        break;
+      case "zoomToCurrentLocation":
+        this.setState({showCurrentLocation:state});
+        break;
+      default:
+        break;
+    }
+  }
 
   render() {
     return (
-      <div className={this.state.containerClassName}>
-        <div className="zoomButton" onClick={this.zoomIn}>
+      <div id={"sc-map-nav-container"} className={this.state.containerClassName}>
+        {/*<div className="zoomButton" onClick={this.zoomIn}>
           +
         </div>
         <div className="zoomButton" onClick={this.zoomOut}>
           -
-        </div>
-        <div className="fullExtentButton" onClick={this.zoomFullExtent}>
+    </div>*/}
+        <div className={"fullExtentButton" + (!this.state.showZoomExtent? " sc-hidden":"")} onClick={this.zoomFullExtent}>
           <div className="fullExtentContent"></div>
         </div>
-        <div className="zoomToCurrentLocationButton" onClick={this.zoomToCurrentLocation}>
+        <div className={"zoomToCurrentLocationButton" + (!this.state.showCurrentLocation? " sc-hidden":"")} onClick={this.zoomToCurrentLocation}>
           <div className="zoomToCurrentLocationContent"></div>
         </div>
       </div>

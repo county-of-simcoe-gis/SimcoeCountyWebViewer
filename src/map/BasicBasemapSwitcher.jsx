@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import "./BasemapSwitcher.css";
+import "./BasicBasemapSwitcher.css";
 import * as helpers from "../helpers/helpers";
 import BasemapConfig from "./basemapSwitcherConfig.json";
 import { Group as LayerGroup } from "ol/layer.js";
@@ -10,21 +10,26 @@ class BasemapSwitcher extends Component {
     super(props);
 
     this.state = {
-      streetsLayer: null,
-      streetsCheckbox: true,
-      containerCollapsed: false,
       topoPanelOpen: false,
       topoLayers: [],
       topoActiveIndex: 0,
       topoCheckbox: true,
-      topoOverlayLayers: [],
-      activeButton: "topo"
+      activeButton: "topo",
+      toggleService:undefined,
+      toggleIndex:1, 
+      previousIndex: undefined,
+      showBaseMapSwitcher:true,
     };
 
     // LISTEN FOR MAP TO MOUNT
     window.emitter.addListener("mapLoaded", () => this.onMapLoad());
+    // LISTEN FOR CONTROL VISIBILITY CHANGES
+    window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control,visible));
   }
-
+  componentDidMount(){
+    this.setState({showBaseMapSwitcher:window.mapControls.basemap,toggleService:BasemapConfig.topoServices[1]});
+   
+  }
   onMapLoad() {
     let index = 0;
     // LOAD WORLD LAYER
@@ -51,6 +56,8 @@ class BasemapSwitcher extends Component {
           layer = helpers.getOSMTileXYZLayer("http://a.tile.openstreetmap.org");
         } else if (service.type === "ESRI_TILED") {
           layer = helpers.getArcGISTiledLayer(service.url);
+        } else if (service.type === "ARC_REST"){
+          layer = helpers.getESRITileXYZLayer(service.url);
         }
 
         // LAYER PROPS
@@ -99,8 +106,7 @@ class BasemapSwitcher extends Component {
       }
     });
 
-    this.setState({ topoLayers: basemapList });
-    this.setState({ topoActiveIndex: 0 });
+    this.setState({ topoLayers: basemapList, topoActiveIndex: 0, previousIndex:0});
     
     // NEED TO WAIT A TAD FOR LAYERS TO INIT
     setTimeout(() => {
@@ -120,37 +126,14 @@ class BasemapSwitcher extends Component {
         let layer = this.state.topoLayers[index];
         const layerName = layer.getProperties().name;
         if (layerName.toUpperCase() === name) {
-          this.setState({ topoActiveIndex: index });
+          this.setState({ topoActiveIndex: index,previousIndex:this.state.topoActiveIndex, });
           this.setTopoLayerVisiblity(index);
         }
       }
     }
   };
 
-  onStreetsCheckbox = evt => {
-    this.state.streetsLayer.setVisible(evt.target.checked);
-    this.setState({ streetsCheckbox: evt.target.checked });
-  };
-
-  onTopoCheckbox = evt => {
-    //this.state.streetsLayer.setVisible(evt.target.checked);
-    this.setState({ topoCheckbox: evt.target.checked }, () => {
-      this.enableTopo();
-    });
-  };
-
-  onCollapsedClick = evt => {
-    // HIDE OPEN PANELS
-    if (this.state.containerCollapsed === false) {
-      this.setState({ imageryPanelOpen: false });
-      this.setState({ topoPanelOpen: false });
-    }
-
-    this.setState({ containerCollapsed: !this.state.containerCollapsed });
-  };
-
   enableTopo = value => {
-    this.setState({ activeButton: "topo" });
     this.setTopoLayerVisiblity(this.state.topoActiveIndex);
 
     // EMIT A BASEMAP CHANGE
@@ -182,9 +165,8 @@ class BasemapSwitcher extends Component {
 
   // CLICK ON TOPO THUMBNAILS
   onTopoItemClick = activeIndex => {
-    this.setState({ topoActiveIndex: activeIndex });
     this.setTopoLayerVisiblity(activeIndex);
-    this.setState({ topoPanelOpen: false });
+    this.setState({ topoPanelOpen: false,topoActiveIndex: activeIndex });
   };
 
   // ADJUST VISIBILITY
@@ -207,39 +189,46 @@ class BasemapSwitcher extends Component {
     }
   }
 
+  onToggleBasemap = (index) =>{
+    if (index === this.state.topoActiveIndex){
+      this.setState({ topoPanelOpen: false});
+      return;
+    } 
+    let toggleIndex = this.state.topoActiveIndex;
+    if (toggleIndex === undefined) toggleIndex = 0;
+    BasemapConfig.topoServices.forEach(service => {
+      if (service.index === toggleIndex){
+        this.setState({toggleService:service,toggleIndex:toggleIndex},()=>{
+          this.onTopoItemClick(index);
+        })
+      }
+      
+    });
+  }
+  controlStateChange(control, state) {
+    switch (control){
+      case "basemap":
+        this.setState({showBaseMapSwitcher:state});
+        break;
+      default:
+        break;
+    }
+  }
   render() {
-    // STYLE USED BY SLIDER
-    const sliderWrapperStyle = {
-      width: 60,
-      marginLeft: 13,
-      height: 225,
-      marginTop: 8,
-      marginBottom: 15
-    };
-
     return (
-      <div>
+      <div className={(!this.state.showBaseMapSwitcher? " sc-hidden":"")}>
         <div id="sc-basemap-main-container">
-          <div id="sc-basemap-collapse-button" className={this.state.containerCollapsed ? "sc-basemap-collapse-button closed" : "sc-basemap-collapse-button"} onClick={this.onCollapsedClick} />
-          <div className={this.state.containerCollapsed ? "sc-hidden" : "sc-basemap-topo"}>
-            <button className={this.state.activeButton === "topo" ? "sc-button sc-basemap-topo-button active" : "sc-button sc-basemap-topo-button"} onClick={this.onTopoButtonClick}>
-              Basemap
-            </button>
-            <button className="sc-button sc-basemap-arrow" onClick={this.onTopoArrowClick}></button>
+          
+          <div className={"sc-basemap-topo"}>
+            <BasemapItem key={helpers.getUID()} className="sc-basemap-topo-toggle-item-container" index={this.state.toggleIndex} showLabel={true} topoActiveIndex={this.state.topoActiveIndex} service={this.state.toggleService} onTopoItemClick={this.onToggleBasemap} />
+            <button className={"sc-button sc-basemap-arrow" + (this.state.topoPanelOpen ? " open" : "")} onClick={this.onTopoArrowClick}></button>
           </div>
         </div>
-        <div id="sc-basemap-imagery-slider-container" className={this.state.imageryPanelOpen ? "sc-basemap-imagery-slider-container" : "sc-hidden"}>
-          <label className="sc-basemap-streets-label">
-            <input className="sc-basemap-streets-checkbox" id="sc-basemap-streets-checkbox" type="checkbox" onChange={this.onStreetsCheckbox} checked={this.state.streetsCheckbox}></input>&nbsp;Streets
-          </label>          
-        </div>
         <div className={this.state.topoPanelOpen ? "sc-basemap-topo-container" : "sc-hidden"}>
-          <label className="sc-basemap-topo-label">
-            <input className="sc-basemap-topo-checkbox" id="sc-basemap-topo-checkbox" type="checkbox" onChange={this.onTopoCheckbox} checked={this.state.topoCheckbox}></input>&nbsp;Overlay
-          </label>
           {BasemapConfig.topoServices.map((service, index) => (
-            <BasemapItem key={helpers.getUID()} index={index} topoActiveIndex={this.state.topoActiveIndex} service={service} onTopoItemClick={this.onTopoItemClick} />
-          ))}
+             <BasemapItem key={helpers.getUID()} index={index} showLabel={true} topoActiveIndex={this.state.topoActiveIndex} service={service} onTopoItemClick={this.onToggleBasemap} className={index === this.state.topoActiveIndex ? "active":""} /> 
+              
+            ))}
         </div>
       </div>
     );
@@ -251,15 +240,18 @@ export default BasemapSwitcher;
 class BasemapItem extends Component {
   state = {};
   render() {
+    if (this.props.service === undefined) return (<div></div>);
     return (
+
       <div
-        className={this.props.topoActiveIndex === this.props.index ? "sc-basemap-topo-item-container active" : "sc-basemap-topo-item-container"}
+        className={(this.props.className !== undefined ? this.props.className + " " : "") + "sc-basemap-topo-item-container" }
         onClick={() => {
           this.props.onTopoItemClick(this.props.index);
         }}
+        title={"Switch basemap to " + this.props.service.name}
       >
-        {this.props.service.name}
-        <img className="sc-basemap-topo-image" src={images[this.props.service.image]} alt={this.props.service.image}></img>
+        <div className="sc-basemap-topo-item-title">{this.props.showLabel===true?this.props.service.name:""}</div>
+        <img className={"sc-basemap-topo-image" } src={images[this.props.service.image]} alt={this.props.service.image}></img>
       </div>
     );
   }

@@ -18,7 +18,17 @@
   "imageViewerUrl": "https://intra.dev.regionalgis.mto.gov.on.ca/geomatics/image_viewer/?path=", 
   "centerCoords": [-9135500, 6020500],
   "defaultZoom": 7,
-  "maxZoom": 20,
+  "maxZoom": 23,
+  "controls": {
+    "rotate":true,
+    "fullScreen":true,
+    "zoomInOut":true,
+    "currentLocation":true,
+    "zoomExtent":true,
+    "scale":true,
+    "scaleLine":true,
+    "basemap":true
+  },
  
   "sidebarToolComponents": [
     {
@@ -36,11 +46,18 @@
       "imageName": "coordinates.png"
     },
     {
-      "id": 3,
-      "name": "Print",
-      "componentName": "Print",
-      "description": "This tool allows users to print their map view in a variety of formats such as pdf and jpeg.",
-      "imageName": "print.png"
+      "id": 8,
+      "name": "LHRS",
+      "componentName": "LHRS",
+      "description": "Get LHRS values.",
+      "imageName": "lhrs.png"
+    },
+    {
+      "id": 9,
+      "name": "Add Layer",
+      "componentName": "AddLayer",
+      "description": "Add data to your map by importing layers for multiple sources.",
+      "imageName": "addlayer.png"
     },
     {
       "id": 5,
@@ -49,13 +66,21 @@
       "description": "This tool provides users with a list of their 25 most recent searches.",
       "imageName": "searchHistory.png"
     },
-    
     {
       "id": 7,
-      "name": "External Services (Street View)",
+      "name": "External Services",
       "componentName": "ExternalServices",
       "description": "This tool links a map location to many other External Map Services.",
       "imageName": "externalServices.png"
+    },
+    
+    
+    {
+      "id": 10,
+      "name": "Settings",
+      "componentName": "Settings",
+      "description": "Customize for your preferences",
+      "imageName": "settings.png"
     }
   ],
 

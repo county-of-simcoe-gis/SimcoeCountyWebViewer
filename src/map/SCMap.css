@@ -81,7 +81,9 @@
     transition: transform 200ms ease-in;
     right: 304px;
   }
-
+  .draw {
+    cursor:crosshair;
+  }
   .standard {
     cursor:pointer;
   }

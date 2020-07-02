@@ -131,7 +131,7 @@ class PropertyReportClick extends Component {
   };
 
   onShareClick = evt => {
-    helpers.showMessage("Share", "Link has been copied to your clipboard.", "green", 2000);
+    helpers.showMessage("Share", "Link has been copied to your clipboard.", helpers.messageColors.green, 2000);
   };
 
   onCloseClick = () => {

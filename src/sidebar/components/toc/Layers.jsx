@@ -23,7 +23,7 @@ class Layers extends Component {
   constructor(props) {
     super(props);
 
-    this.storageKey = "layers";
+    this.storageKey = "Layers";
     this.lastPosition = null;
     this.virtualId = "sc-toc-virtual-layers";
     this.state = {
@@ -186,10 +186,10 @@ class Layers extends Component {
 
   // isVisibleFromConfig()
   sortByAlphaCompare(a, b) {
-    if (a.tocDisplayName < b.tocDisplayName) {
+    if (a.displayName < b.displayName) {
       return -1;
     }
-    if (a.tocDisplayName > b.tocDisplayName) {
+    if (a.displayName > b.displayName) {
       return 1;
     }
     return 0;
@@ -203,14 +203,6 @@ class Layers extends Component {
       return 1;
     }
     return 0;
-  }
-
-  getItemsFromStorage() {
-    const storage = localStorage.getItem(this.storageKey);
-    if (storage === null) return [];
-
-    const data = JSON.parse(storage);
-    return data;
   }
 
   sortLayers = (layers, sortAlpha, callback = undefined) => {
@@ -414,34 +406,28 @@ class Layers extends Component {
   };
 
   onMenuItemClick = (action, layerInfo) => {
-    if (action === "sc-floating-menu-metadata") {
-      TOCHelpers.getLayerInfo(layerInfo, result => {
-        if (helpers.isMobile()) {
-          window.emitter.emit("setSidebarVisiblity", "CLOSE");
-          helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl, false, "full");
-        } else helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl);
-      });
-    } else if (action === "sc-floating-menu-zoom-to-layer") {
-      TOCHelpers.getLayerInfo(layerInfo, result => {
-        const boundingBox = result.featureType.nativeBoundingBox;
-        const extent = [boundingBox.minx, boundingBox.miny, boundingBox.maxx, boundingBox.maxy];
-        window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
-      });
-    } else if (action === "sc-floating-menu-zoom-to-layer-visible") {
-      this.zoomToVisibleScale(layerInfo);
-    } else if (action === "sc-floating-menu-download") {
-      helpers.showMessage("Download", "Coming Soon!");
-      // TOCHelpers.getLayerInfo(layerInfo, result => {
-      //   if (result.featureType.name === "Assessment Parcel") helpers.showMessage("Download", "Parcels are not available for download");
-      //   else {
-      //     if (helpers.isMobile()) {
-      //       window.emitter.emit("setSidebarVisiblity", "CLOSE");
-      //       helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl, false, "full");
-      //     } else helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl);
-      //   }
-      // });
+    switch (action){
+      case "sc-floating-menu-metadata":
+        TOCHelpers.getLayerInfo(layerInfo, result => {
+          if (helpers.isMobile()) {
+            window.emitter.emit("setSidebarVisiblity", "CLOSE");
+            helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl, false, "full");
+          } else helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl);
+        });
+        break;
+      case "sc-floating-menu-zoom-to-layer":
+        TOCHelpers.getLayerInfo(layerInfo, result => {
+          const boundingBox = result.featureType.nativeBoundingBox;
+          const extent = [boundingBox.minx, boundingBox.miny, boundingBox.maxx, boundingBox.maxy];
+          window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
+        });
+        break;
+      case "sc-floating-menu-zoom-to-layer-visible":
+        this.zoomToVisibleScale(layerInfo);
+        break;
+      default:
+        break;
     }
-
     helpers.addAppStat("Layer Options", action);
   };
 
@@ -512,8 +498,7 @@ class Layers extends Component {
 
       layers[key] = savedLayers;
     }
-
-    localStorage.setItem(this.storageKey, JSON.stringify(layers));
+    helpers.saveToStorage(this.storageKey, layers);
 
     helpers.showMessage("Save", "Layer Visibility has been saved.");
   };
@@ -534,7 +519,7 @@ class Layers extends Component {
     const layers = this.state.layers.filter(layer => {
       if (this.props.searchText === "") return layer;
 
-      if (layer.tocDisplayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1) return layer;
+      if (layer.displayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1) return layer;
     });
 
     return (

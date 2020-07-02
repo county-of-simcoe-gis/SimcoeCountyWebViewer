@@ -7,14 +7,6 @@
   font-size: 9pt;
 }
 
-
-.sc-toc-item-layer-label {
-  display: inline-table;
-  position: relative;
-  bottom: 2px;
-  max-width: 274px;
-}
-
 .sc-toc-item-layer-info-live-layer {
   display: inline-table;
   vertical-align: middle;
@@ -24,6 +16,14 @@
 .sc-toc-item-plus-minus-container {
   display: inline-table;
   vertical-align: middle;
+  cursor: pointer;
+}
+
+.sc-toc-group-toolbox {
+  position: absolute;
+ 
+  right: 8px;
+  margin-top: -18px;
   cursor: pointer;
 }
 
