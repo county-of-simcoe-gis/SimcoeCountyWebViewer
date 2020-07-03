@@ -44,7 +44,16 @@ const _nad83Proj = new Projection({
   code: "EPSG:26917",
   extent: [194772.8107, 2657478.7094, 805227.1893, 9217519.4415]
 });
-
+export function tryParseJSON (jsonString){
+  try {
+      var obj = JSON.parse(jsonString);
+      if (obj && typeof obj === "object") {
+          return obj;
+      }
+  }
+  catch (e) { }
+  return false;
+}
 
 export function sortByKey(array, key) {
   return array.sort(function(a, b) {

@@ -174,7 +174,8 @@ class AddLayerForm extends Component {
                         if (foundLayers !== undefined && foundLayers.length > 0) {
                             foundLayers.forEach(layer =>
                                 {
-                                    layer["url"] = currentUrl
+                                    layer["INFO_FORMAT"] = selectedService.INFO_FORMAT;
+                                    layer["XSL_TEMPLATE"] = selectedService.XSL_TEMPLATE;
                                     serviceLayers.push(layer);
                                 });
                         }
@@ -195,14 +196,37 @@ class AddLayerForm extends Component {
     }
     addLayer = (layer) => {
         let styleUrl = "";
+        let queryable = false;
+        let opaque = false;
+        let infoFormat = "";
+        let xslTemplate ="";
         if (this.state.selectLayerOption !== this.defaultLayerOption){
             const selectedLayer = this.state.selectLayerOptions.filter(item => item.value === this.state.selectLayerOption.value)[0];
-            styleUrl = selectedLayer.style !== undefined ? selectedLayer.style : ""; 
+            if (selectedLayer.style !== undefined) styleUrl = selectedLayer.style; 
+            if (selectedLayer.queryable !== undefined) queryable = selectedLayer.queryable; 
+            if (selectedLayer.opaque !== undefined) opaque = selectedLayer.opaque; 
+            if (selectedLayer.INFO_FORMAT !== undefined) infoFormat = selectedLayer.INFO_FORMAT; 
+            if (selectedLayer.XSL_TEMPLATE !== undefined) xslTemplate = selectedLayer.XSL_TEMPLATE; 
         }
         
         layer.setVisible(true);
         layer.setOpacity(1);
-        layer.setProperties({ name: this.state.layer_name, displayName:  this.state.layer_displayName, disableParcelClick: true });
+        /*newLayer.setProperties({ name: layerNameOnly, 
+                                    displayName: displayName,
+                                    wfsUrl: wfsUrl, 
+                                    rootInfoUrl: rootInfoUrl, 
+                                    disableParcelClick: liveLayer,
+                                    queryable:queryable,
+                                    opaque:opaque  });*/
+          
+        layer.setProperties({ 
+                name: this.state.layer_name, 
+                displayName:  this.state.layer_displayName, 
+                disableParcelClick: queryable, 
+                queryable:queryable, 
+                opaque:opaque,
+                INFO_FORMAT:infoFormat,
+                XSL_TEMPLATE:xslTemplate});
         const newLayer = {
             name: this.state.layer_name, // FRIENDLY NAME
             height: 30, // HEIGHT OF DOM ROW FOR AUTOSIZER
@@ -218,12 +242,14 @@ class AddLayerForm extends Component {
             opacity: 1.0, // OPACITY OF LAYER
             minScale: undefined, //MinScaleDenominator from geoserver
             maxScale: undefined, //MaxScaleDenominator from geoserver
-            liveLayer: false, // LIVE LAYER FLAG
+            liveLayer: styleUrl === ""? false : true, // LIVE LAYER FLAG
             wfsUrl: "",
             displayName: this.state.layer_displayName,
             canDownload: false, 
             group: "",
-            groupName: ""
+            groupName: "",
+            infoFormat:infoFormat,
+            xslTemplate:xslTemplate
           };
         window.emitter.emit("addCustomLayer", newLayer, this.state.selectGroupOption.value);
     }
