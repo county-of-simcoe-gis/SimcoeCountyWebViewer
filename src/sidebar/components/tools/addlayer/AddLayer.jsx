@@ -22,6 +22,8 @@ class AddLayerForm extends Component {
         selectLayerOption:undefined,
         selectProjectionOptions:[],
         selectProjectionOption:undefined,
+        selectServiceOptions:[],
+        selectServiceOption:undefined,
         userEdit_displayName: false,
         layer_displayName:this.defaultLayerName,
         layer_source:undefined,
@@ -46,6 +48,7 @@ class AddLayerForm extends Component {
         this._setFormatTypes();
         this._setDefaultProjectionOptions();
         this._setLayerGroupOptions();
+        this._setServiceSelectOptions();
     }
     _setFormatTypes = () => {
         const items = addLayerConfig.dataTypes;
@@ -61,6 +64,15 @@ class AddLayerForm extends Component {
                 isFile:selectedFormat.source==="file",
                 showExtent:selectedFormat.type==="static",
                 file_formats: fileFormats});
+    }
+    _setServiceSelectOptions = () => {
+        const items = addLayerConfig.services;
+        let options = [];
+        items.forEach(item =>{
+            options.push({label:item.label, value:item.value});
+        });
+        options = options.concat([]);
+        this.setState({selectServiceOptions:options, selectServiceOption:options[0]});
     }
    _setLayerGroupOptions =()=>{
        let groups = window.allLayers;
@@ -78,6 +90,11 @@ class AddLayerForm extends Component {
     getSelectedFormat = (value) =>{
         const items = addLayerConfig.translations;
         return items.filter(item => item.key === value)[0];
+    }
+
+    getSelectedService = (value) =>{
+        const items = addLayerConfig.services;
+        return items.filter(item => item.value === value)[0];
     }
     getFileFormat = (value) =>{
         const items = addLayerConfig.translations.filter(item => item.extensions!==undefined);
@@ -105,10 +122,21 @@ class AddLayerForm extends Component {
             if ( this.state.selectLayerOption !== this.defaultLayerOption) this.clearLayers();
         });
     }
+
+    onServiceLayerSelectChange = (selection) =>{
+        let displayName = this.state.layer_displayName;
+        const selectedLayer = this.state.selectLayerOptions.filter(item => item.value === this.state.selectLayerOption.value)[0];
+        if (!this.state.userEdit_displayName) displayName = selection.label;
+        this.setState({selectLayerOption:selection,layer_name:selection.value,layer_displayName:displayName, serverUrl:selectedLayer.url});
+    }
+
     onLayerSelectChange = (selection) =>{
         let displayName = this.state.layer_displayName;
         if (!this.state.userEdit_displayName) displayName = selection.label;
         this.setState({selectLayerOption:selection,layer_name:selection.value,layer_displayName:displayName});
+    }
+    onServiceChange = (selection) =>{
+        this.setState({selectServiceOption:selection});
     }
     onCheckForLayers = () => {
 
@@ -116,12 +144,53 @@ class AddLayerForm extends Component {
         let selectLayers = [];
         //CLEAR LAYERS LIST AND ATTEMPT TO REPOPULATE
         this.setState({selectLayerOptions:selectLayers, selectLayerOption:selectedLayer, isRunning:true}, () =>{
+    
             LayerHelpers.getCapabilities(this.state.serverUrl, this.state.selectedFormat.source, (layers) =>{
                 selectLayers = layers;
                 if (selectLayers !== undefined && selectLayers.length > 0) selectedLayer = selectLayers[0];
                 else selectLayers = [];
                 this.setState({isRunning:false, selectLayerOptions:selectLayers, selectLayerOption:selectedLayer, hasLayers:selectLayers.length > 0, discovery_message:selectLayers.length > 0?"":"NO LAYERS FOUND"});
             });
+        });
+    }
+    onCheckServiceForLayers = () => {
+        let selectedService = this.getSelectedService(this.state.selectServiceOption.value);
+        let selectedFormat = this.getSelectedFormat(selectedService.serviceType);
+        let selectedLayer = this.defaultLayerOption;
+        
+        const serviceUrl = (url,service,suffix) => `${url}/${service}${suffix}`;
+        const discoveryUrl = (service) => `${service}?f=pjson`;
+        //CLEAR LAYERS LIST AND ATTEMPT TO REPOPULATE
+        this.setState({selectLayerOptions:[], selectLayerOption:selectedLayer, isRunning:true}, () =>{
+            let serviceLayers = [];
+            var lookupServiceUrl = discoveryUrl(serviceUrl(selectedService.discoveryUrl, selectedService.value,""));
+            helpers.getJSON(lookupServiceUrl, results => {
+                var services = results.services;
+                services.forEach(item => {
+                    var currentIndex = services.indexOf(item)+1;
+                    var currentUrl = serviceUrl(selectedService.serviceUrl, item.name,selectedService.urlSuffix);
+                    LayerHelpers.getCapabilities(currentUrl, selectedFormat.source, (layers) =>{
+                        var foundLayers = layers;
+                        if (foundLayers !== undefined && foundLayers.length > 0) {
+                            foundLayers.forEach(layer =>
+                                {
+                                    layer["url"] = currentUrl
+                                    serviceLayers.push(layer);
+                                });
+                        }
+                        if (services.length === currentIndex){
+                            if (serviceLayers !== undefined && serviceLayers.length > 0) {
+                                serviceLayers = helpers.sortByKey(serviceLayers.concat([]),"label")
+                                selectedLayer = serviceLayers[0];
+                            }
+                            else serviceLayers = [];
+                            
+                            this.setState({isRunning:false, selectLayerOptions:serviceLayers, selectLayerOption:selectedLayer, hasLayers:serviceLayers.length > 0, discovery_message:serviceLayers.length > 0?"":"NO LAYERS FOUND"});
+                        }
+                    });
+                });
+            })
+            
         });
     }
     addLayer = (layer) => {
@@ -232,7 +301,7 @@ class AddLayerForm extends Component {
       }
     onTabSelect = tabIndex => {
         this.setState({ tabIndex }, ()=> {
-            this.onLayerSourceChange(tabIndex===1);
+            this.onLayerSourceChange(tabIndex===2);
         });
       };
     render() {
@@ -253,10 +322,45 @@ class AddLayerForm extends Component {
                 <div className="sc-title">Source</div>
                 <Tabs selectedIndex={this.state.tabIndex} onSelect={this.onTabSelect}>
                     <TabList>
+                        <Tab id="tab-add-layer-services">Services</Tab>
                         <Tab id="tab-add-layer-url">URL</Tab>
                         <Tab id="tab-add-layer-file">FILE</Tab>
                         {/*<Tab id="tab-add-layer-service">SERVICE</Tab>*/}
                     </TabList>
+                    <TabPanel id="tab-add-layer-url-content">
+                        <div className="sc-container sc-add-layer-tab-panel">
+                            <div className="sc-title">Service</div>
+                            <div className="sc-add-layer-row">
+                                <Select 
+                                    id="sc-input-format" 
+                                    onChange={this.onServiceChange} 
+                                    options={this.state.selectServiceOptions} 
+                                    value={this.state.selectServiceOption}
+                                    className="sc-add-service-select" />
+                            </div>
+                            <div className="sc-coordinates-divider"></div> 
+                            
+                            <div className="sc-add-layer-row">
+                                <button 
+                                    id="sc-add-layer-_service-discover" 
+                                    type="button" 
+                                    name="check" 
+                                    className="sc-button"
+                                    onClick={this.onCheckServiceForLayers}>Find available layers</button>
+                            </div>
+                            <div className="sc-coordinates-divider"></div> 
+                            <div className={this.state.hasLayers?"sc-title":"sc-hidden"} >Available Layers</div> 
+                            <div className={!this.state.hasLayers && this.state.serverUrl !== ""  && this.state.discovery_message !== ""?"sc-add-layer-row center":"sc-hidden"}>{this.state.discovery_message}</div>    
+                            <div className={this.state.hasLayers?"sc-add-layer-row":"sc-hidden"}>
+                                <Select 
+                                    id="sc-input-service-layers" 
+                                    onChange={this.onServiceLayerSelectChange} 
+                                    options={this.state.selectLayerOptions} 
+                                    value={this.state.selectLayerOption} 
+                                    className="sc-add-layer-select"/>
+                            </div>    
+                        </div>
+                    </TabPanel>
                     <TabPanel id="tab-add-layer-url-content">
                         <div className="sc-container sc-add-layer-tab-panel">
                             <div className="sc-title">URL Type</div>

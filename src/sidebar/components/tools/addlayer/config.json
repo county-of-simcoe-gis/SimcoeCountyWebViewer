@@ -70,6 +70,8 @@
         {"label":"WGS 84 / Pseudo-Mercator", "value":"EPSG:3857"},
         {"label":"WGS 84 (long/lat)", "value":"EPSG:4326"},
         {"label":"HD72 EOV", "value":"EPSG:23700"}
+    ],
+    "services":[
+        {"label":"Provincial Open Data", "value":"LIO_OPEN_DATA", "discoveryUrl":"https://ws.lioservices.lrc.gov.on.ca/arcgis1071a/rest/services", "serviceType":"wms", "serviceUrl":"https://ws.lioservices.lrc.gov.on.ca/arcgis1071a/services","urlSuffix":"/MapServer/WMSServer"}
     ]
-
 }
