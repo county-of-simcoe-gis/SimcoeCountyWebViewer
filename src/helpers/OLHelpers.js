@@ -96,9 +96,9 @@ export class FeatureHelpers {
 }
 
 export class LayerHelpers {
-  static getCapabilities(url, type, callback) {
+  static getCapabilities(root_url, type, callback) {
     type = type.toLowerCase();
-    url = /\?/.test(url) ? url.split('?')[0] + '?' : url + '?';
+    var url = /\?/.test(root_url) ? root_url.split('?')[0] + '?' : root_url + '?';
     let layers = [];
     var parser;
     var response;
@@ -127,7 +127,9 @@ export class LayerHelpers {
               response.Capability.Layer.Layer.forEach(layer =>{
                 var label = layer.Title !==""?layer.Title:layer.Name;
                 var value = layer.Name;
-                if (layer.layer === undefined) layers.push({label:label, value:value, style: this.getSytle(layer)})
+                var queryable = layer.queryable;
+                var opaque = layer.opaque;
+                if (layer.layer === undefined) layers.push({label:label, value:value, style: this.getSytle(layer), queryable:queryable, opaque:opaque, url:root_url})
               });
               break;
             default:

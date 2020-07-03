@@ -55,21 +55,29 @@ class Identify extends Component {
         if (queryable) {
           const name = layer.get("name");
           let displayName = ""; // layer.get("displayName");
-          let type = layer.get("displayName")
+          let type = layer.get("displayName");
+          let infoFormat = layer.get("INFO_FORMAT");
+          let xslTemplate = layer.get("XSL_TEMPLATE");
           // QUERY USING WMS
-          var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "application/json" });
+          let getInfoOption = { "INFO_FORMAT": "application/json" };
+
+          if (infoFormat !== undefined && infoFormat !== "") getInfoOption["INFO_FORMAT"] = infoFormat;
+          if (xslTemplate !== undefined && xslTemplate !== "") getInfoOption["XSL_TEMPLATE"] = xslTemplate;
+
+          var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", getInfoOption);
           
           let html_url = mainConfig.htmlIdentify ? layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "text/html" }) + "&feature_count=1000000" : "" ;
             url += "&feature_count=1000000";
             if (url) {
-              helpers.getJSON(url, result => {
-                const features = result.features;
-                if (features.length === 0) {
-                  return;
-                }
-
+              //helpers.getJSON(url, result => {
+              helpers.httpGetText(url, result => {
+                let tempResult = helpers.tryParseJSON(result);
+                if (tempResult !== false) result = tempResult;
                 const featureList = new GeoJSON().readFeatures(result);
-                if (featureList.length > 0) {
+                //const featureList = new WMSGetFeatureInfo().readFeatures(result);
+                if (featureList.length === 0) {
+                  return;
+                } else if (featureList.length > 0) {
                   if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
                   let features = [];
                   featureList.forEach(feature => {
@@ -89,15 +97,16 @@ class Identify extends Component {
   };
 
   onMouseEnter = feature => {
-    this.vectorLayerShadow.getSource().clear();
-    this.vectorLayerShadowSecondary.getSource().clear();
+    if (feature.values_.geometry !== undefined && feature.values_.geometry !== null){
+      this.vectorLayerShadow.getSource().clear();
+      this.vectorLayerShadowSecondary.getSource().clear();
 
-    if (feature.values_.extent_geom !== undefined && feature.values_.extent_geom !== null){
-      var extentFeature = helpers.getFeatureFromGeoJSON(feature.values_.extent_geom);
-      this.vectorLayerShadowSecondary.getSource().addFeature(extentFeature);
-    }
-    this.vectorLayerShadow.getSource().addFeature(feature);
-
+      if (feature.values_.extent_geom !== undefined && feature.values_.extent_geom !== null){
+        var extentFeature = helpers.getFeatureFromGeoJSON(feature.values_.extent_geom);
+        this.vectorLayerShadowSecondary.getSource().addFeature(extentFeature);
+      }
+      this.vectorLayerShadow.getSource().addFeature(feature);
+   }
   };
 
   onMouseLeave = () => {
@@ -295,7 +304,7 @@ const FeatureItem = props => {
   let { feature, displayName, html_url,identifyTitleColumn,identifyIdColumn } = props;
   if (identifyTitleColumn!==undefined && identifyTitleColumn !== "") displayName = identifyTitleColumn;
   //console.log(feature);
-
+  var hasGeom = (feature.values_.geometry !== undefined && feature.values_.geometry !== null);
   var extentFeature = undefined;
   if (feature.values_.extent_geom !== undefined && feature.values_.extent_geom !== null){
     extentFeature = helpers.getFeatureFromGeoJSON(feature.values_.extent_geom);
@@ -338,7 +347,7 @@ const FeatureItem = props => {
         <div className="sc-fakeLink sc-identify-feature-header-label" onClick={() => setOpen(!open)}>
             {mainConfig.excludeIdentifyTitleName ? featureName : displayName + ": " + featureName}
           </div>
-        <img className="sc-identify-feature-header-img" src={images["zoom-in.png"]} onClick={() => props.onZoomClick(feature)} title="Zoom In" alt="Zoom In"></img>
+        {hasGeom?<img className="sc-identify-feature-header-img" src={images["zoom-in.png"]} onClick={() => props.onZoomClick(feature)} title="Zoom In" alt="Zoom In"></img> :""}
         {extentFeature !== undefined ? <img className="sc-identify-feature-header-img" src={images["extent-zoom-in.png"]} onClick={() => props.onZoomClick(extentFeature)} title="Zoom In To Extent" alt="Zoom In To Extent"></img> : ""}
       </div>
   

@@ -1,6 +1,6 @@
 {
     "translations":[
-        {"key":"wms", "source":"WMS", "method":"raster", "type":"TileWMS", "urlSuffix":"/{z}/{x}/{y}.png"},
+        {"key":"wms", "source":"WMS", "method":"raster", "type":"ImageWMS", "urlSuffix":"/{z}/{x}/{y}.png"},
         {"key":"wmts","source":"WMTS","method":"raster","type": "WMTS"},
         {"key":"stamen","source":"service","method":"raster","type": "Stamen"},
         {"key":"osm","source":"service","method":"raster","type": "OSM"},
@@ -72,6 +72,15 @@
         {"label":"HD72 EOV", "value":"EPSG:23700"}
     ],
     "services":[
-        {"label":"Provincial Open Data", "value":"LIO_OPEN_DATA", "discoveryUrl":"https://ws.lioservices.lrc.gov.on.ca/arcgis1071a/rest/services", "serviceType":"wms", "serviceUrl":"https://ws.lioservices.lrc.gov.on.ca/arcgis1071a/services","urlSuffix":"/MapServer/WMSServer"}
+        {
+            "label":"Provincial Open Data", 
+            "value":"LIO_OPEN_DATA", 
+            "discoveryUrl":"https://ws.lioservices.lrc.gov.on.ca/arcgis1071a/rest/services", 
+            "serviceType":"wms", 
+            "serviceUrl":"https://ws.lioservices.lrc.gov.on.ca/arcgis1071a/services",
+            "urlSuffix":"/MapServer/WMSServer",
+            "INFO_FORMAT":"text/plain",
+            "XSL_TEMPLATE":"https://intra.dev.regionalgis.mto.gov.on.ca/esri_transform.xsl"
+        }
     ]
 }
