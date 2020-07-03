@@ -1,7 +1,7 @@
 {
   "name": "imap",
   "homepage": "./",
-  "version": "0.1.202006151300",
+  "version": "0.1.202007021040",
   "private": true,
   "dependencies": {
     "array-move": "^2.0.0",
