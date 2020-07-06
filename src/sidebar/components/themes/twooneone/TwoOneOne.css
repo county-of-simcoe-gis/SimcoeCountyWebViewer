@@ -1,7 +1,7 @@
 .sc-theme-211-main-conainer {
   padding: 5px;
   position: absolute;
-  top: 109px;
+  top: 118px;
   bottom: 0px;
   right: 0px;
   left: 0px;
@@ -49,4 +49,16 @@
   text-align: center;
   margin-top: 10px;
   font-weight: bold;
+}
+
+.sc-211-theme-lang-switch-label {
+  position: absolute;
+  right: 13px;
+  display: inline-table;
+  z-index: 1;
+}
+
+.sc-theme-211-lang-switch {
+  top: 5px;
+  margin-left: 5px;
 }
