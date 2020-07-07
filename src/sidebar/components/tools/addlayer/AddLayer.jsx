@@ -181,7 +181,7 @@ class AddLayerForm extends Component {
                             foundLayers.forEach(layer =>
                                 {
                                     layer["INFO_FORMAT"] = selectedService.INFO_FORMAT;
-                                    layer["XSL_TEMPLATE"] = selectedService.XSL_TEMPLATE;
+                                    layer["XSL_TEMPLATE"] = helpers.getConfigValue("originUrl") + selectedService.XSL_TEMPLATE;
                                     serviceLayers.push(layer);
                                 });
                         }
