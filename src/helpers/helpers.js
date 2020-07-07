@@ -35,6 +35,11 @@ import mainConfig from "../config.json";
 import { InfoRow } from "./InfoRow.jsx";
 import blankImage from "./images/blank.png";
 
+
+export function getConfigValue(key){
+  const config = mainConfig;
+  return config[key];
+}
 // REGISTER CUSTOM PROJECTIONS
 proj4.defs([["EPSG:26917", "+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs "]]);
 register(proj4);
