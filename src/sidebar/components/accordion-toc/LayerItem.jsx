@@ -184,7 +184,8 @@ class LayerItem extends Component {
           visibleFeatures.push(feature);
         }); 
         if (visibleFeatures.length > 0) {
-          helpers.export_file("features.kml", FeatureHelpers.setFeatures(visibleFeatures, OL_DATA_TYPES.KML));
+          let features =  FeatureHelpers.setFeatures(visibleFeatures.concat([]), OL_DATA_TYPES.KML);
+          if (features !== undefined) helpers.export_file("features.kml", features);
         }else{
           helpers.showMessage("No Features", "No features in view for this layer");
         }
