@@ -53,12 +53,12 @@ class TOC extends Component {
     window.emitter.addListener("clearIdentify", () => this.clearIdentify());
 
     //LISTEN FOR NEW LAYER
-    window.emitter.addListener("addCustomLayer", (layer, group) => this.addCustomLayer(layer, group));
+    window.emitter.addListener("addCustomLayer", (layer, group, selected) => this.addCustomLayer(layer, group, selected));
     this.myMapLayerName = "local:myMaps";
     this.myLayersGroupName = "My Layers";
   }
   
-  addCustomLayer = (layer, groupName) => {
+  addCustomLayer = (layer, groupName, selected = false) => {
     const AddedMessage = (group, layer) => `New layer "${layer}" has been added to the "${group}" group.`;
     let layerIndex = 100;
     let layerGroups= this.state.layerGroups;
@@ -78,9 +78,12 @@ class TOC extends Component {
         window.allLayers = allLayers;
         this.forceUpdate();
         helpers.showMessage("Layer Added",AddedMessage(layersGroup.label, retLayer.displayName));
-        window.emitter.emit("activeTocLayerGroup", layersGroup.value, () => {
-              window.emitter.emit("activeTocLayer", { fullName:retLayer.name, name:retLayer.displayName,isVisible: retLayer.layer.getVisible(),layerGroupName:retLayer.groupName , layerGroup: retLayer.group, index: retLayer.index });
-        });
+        if (selected){
+          window.emitter.emit("activeTocLayerGroup", layersGroup.value, () => {
+            window.emitter.emit("activeTocLayer", { fullName:retLayer.name, name:retLayer.displayName,isVisible: retLayer.layer.getVisible(),layerGroupName:retLayer.groupName , layerGroup: retLayer.group, index: retLayer.index });
+          });
+        }
+       
     });
     });
     
