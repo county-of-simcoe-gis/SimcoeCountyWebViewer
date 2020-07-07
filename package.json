@@ -1,7 +1,7 @@
 {
   "name": "openlayers",
   "homepage": "./",
-  "version": "0.1.0",
+  "version": "0.1.202007071200",
   "private": true,
   "dependencies": {
     "array-move": "^2.0.0",

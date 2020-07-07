@@ -54,7 +54,7 @@
     },
     {
       "id": 9,
-      "name": "Add Layer",
+      "name": "Add Data",
       "componentName": "AddLayer",
       "description": "Add data to your map by importing layers for multiple sources.",
       "imageName": "addlayer.png"

@@ -73,32 +73,61 @@ export class FeatureHelpers {
         return;
     }
   }
+
   static setFeatures(features, target_format=OL_DATA_TYPES.GeoJSON){
     const mapProjection = window.map.getView().getProjection();
     const parser = this.getVectorFormat(target_format);
-    return parser.writeFeatures(features,{featureProjection: mapProjection});
+    let output = undefined;
+    try {
+      output = parser.writeFeatures(features,{dataProjection: parser.readProjection(features), featureProjection: mapProjection});
+    } catch (err) {
+      helpers.showMessage("Error","Unsupported Feature.",helpers.messageColors.red);
+      console.log(err);
+    }
+    return output;
   }
   static getFeatures(features, source_format=OL_DATA_TYPES.GeoJSON, projection="EPSG:3857"){
     const mapProjection = window.map.getView().getProjection();
     const parser = this.getVectorFormat(source_format, projection);
-    return parser.readFeatures(features,{
-                        dataProjection: parser.readProjection(features) || projection,
-                        featureProjection: mapProjection});
+    let output = undefined;
+    try {
+      output = parser.readFeatures(features,{
+        dataProjection: parser.readProjection(features) || projection,
+        featureProjection: mapProjection});
+    } catch (err) {
+      helpers.showMessage("Error","Unsupported Feature.",helpers.messageColors.red);
+      console.log(err);
+    }
+    return output;
   }
   static setGeometry(source_geometry, target_format = OL_DATA_TYPES.GeoJSON){
     const parser = this.getVectorFormat(target_format);
-    return parser.writeGeometry(source_geometry);
+    let output = undefined;
+    try {
+      output = parser.writeGeometry(source_geometry);
+    } catch (err) {
+      helpers.showMessage("Error","Unsupported Geometry.",helpers.messageColors.red);
+      console.log(err);
+    }
+    return output;
   }
   static getGeometry(geometry, source_format = OL_DATA_TYPES.GeoJSON){
-    const parser = this.getVectorFormat(source_format);
-    return parser.readGeometry(geometry);
+    const parser = this.getVectorFormat(source_format); 
+    let output = undefined;
+    try {
+      output = parser.readGeometry(geometry);
+    } catch (err) {
+      helpers.showMessage("Error","Unsupported Geometry.",helpers.messageColors.red);
+      console.log(err);
+    }
+    return output;
   }
 }
 
 export class LayerHelpers {
-  static getCapabilities(url, type, callback) {
+  static getCapabilities(root_url, type, callback) {
     type = type.toLowerCase();
-    url = /\?/.test(url) ? url.split('?')[0] + '?' : url + '?';
+    var url = /\?/.test(root_url) ? root_url.split('?')[0] + '?' : root_url + '?';
     let layers = [];
     var parser;
     var response;
@@ -118,7 +147,7 @@ export class LayerHelpers {
               parser = new WMTSCapabilities();
               response = parser.read(responseText);
               response.Contents.Layer.foreach(layer =>{
-                layers.push({label:layer.Identifier, value:layer.Identifier, style: this.getSytle(layer)})
+                layers.push({label:layer.Identifier, value:helpers.getUID(), style: this.getSytle(layer),layer_name:layer.Identifier})
               });
               break;
             case 'wms':
@@ -127,7 +156,9 @@ export class LayerHelpers {
               response.Capability.Layer.Layer.forEach(layer =>{
                 var label = layer.Title !==""?layer.Title:layer.Name;
                 var value = layer.Name;
-                if (layer.layer === undefined) layers.push({label:label, value:value, style: this.getSytle(layer)})
+                var queryable = layer.queryable;
+                var opaque = layer.opaque;
+                if (layer.layer === undefined) layers.push({label:label, value:helpers.getUID(),layer_name: value, style: this.getSytle(layer), queryable:queryable, opaque:opaque, url:root_url})
               });
               break;
             default:
@@ -136,7 +167,7 @@ export class LayerHelpers {
                   var layerTitle = layer.Title[0];
                   var layerName = layer.Name[0];
                   if (layerTitle===undefined || layerTitle === "") layerTitle = layerName;
-                  layers.push({label:layerTitle, value:layerName})
+                  layers.push({label:layerTitle, value:helpers.getUID(),layer_name:layerName})
                 });
   
               });

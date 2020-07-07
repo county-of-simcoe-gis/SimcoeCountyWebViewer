@@ -35,6 +35,11 @@ import mainConfig from "../config.json";
 import { InfoRow } from "./InfoRow.jsx";
 import blankImage from "./images/blank.png";
 
+
+export function getConfigValue(key){
+  const config = mainConfig;
+  return config[key];
+}
 // REGISTER CUSTOM PROJECTIONS
 proj4.defs([["EPSG:26917", "+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs "]]);
 register(proj4);
@@ -44,9 +49,23 @@ const _nad83Proj = new Projection({
   code: "EPSG:26917",
   extent: [194772.8107, 2657478.7094, 805227.1893, 9217519.4415]
 });
+export function tryParseJSON (jsonString){
+  try {
+      var obj = JSON.parse(jsonString);
+      if (obj && typeof obj === "object") {
+          return obj;
+      }
+  }
+  catch (e) { }
+  return false;
+}
 
-
-
+export function sortByKey(array, key) {
+  return array.sort(function(a, b) {
+      var x = a[key]; var y = b[key];
+      return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+  });
+}
 // APP STAT
 export function addAppStat(type, description) {
   if (mainConfig.includeAppStats === false) return;

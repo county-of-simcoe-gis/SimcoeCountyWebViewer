@@ -465,7 +465,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
     } else if (visibleLayers.includes(layerNameOnly)) layerVisible = true;
 
     // LAYER PROPS
-    LayerHelpers.getLayer(OL_DATA_TYPES.TileWMS,
+    LayerHelpers.getLayer(OL_DATA_TYPES.ImageWMS,
                           "WMS",
                           undefined, 
                           layer.Name[0],
