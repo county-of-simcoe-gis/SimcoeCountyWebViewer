@@ -49,6 +49,7 @@ class AddLayerForm extends Component {
         this._setDefaultProjectionOptions();
         this._setLayerGroupOptions();
         this._setServiceSelectOptions();
+       
     }
     _setFormatTypes = () => {
         const items = addLayerConfig.dataTypes;
@@ -72,7 +73,9 @@ class AddLayerForm extends Component {
             options.push({label:item.label, value:item.value});
         });
         options = options.concat([]);
-        this.setState({selectServiceOptions:options, selectServiceOption:options[0]});
+        this.setState({selectServiceOptions:options, selectServiceOption:options[0]}, ()=>{
+            if (this.state.tabIndex===0) this.onCheckServiceForLayers();
+        });
     }
    _setLayerGroupOptions =()=>{
        let groups = window.allLayers;
@@ -104,7 +107,9 @@ class AddLayerForm extends Component {
         this.props.onClose();
     }
     clearLayers = () => {
-        this.setState({selectLayerOptions:[], selectLayerOption:this.defaultLayerOption, hasLayers:false,discovery_message:""});
+        this.setState({selectLayerOptions:[], selectLayerOption:this.defaultLayerOption, hasLayers:false,discovery_message:"", layer_displayName:this.defaultLayerName},()=>{
+            if (this.state.tabIndex===0) this.onCheckServiceForLayers();
+        });
     }
     onLayerSourceChange = (isFile) =>{
         let items = addLayerConfig.dataTypes;
@@ -125,18 +130,19 @@ class AddLayerForm extends Component {
 
     onServiceLayerSelectChange = (selection) =>{
         let displayName = this.state.layer_displayName;
-        const selectedLayer = this.state.selectLayerOptions.filter(item => item.value === this.state.selectLayerOption.value)[0];
+        const selectedLayer = this.state.selectLayerOptions.filter(item => item.value === selection.value)[0];
         if (!this.state.userEdit_displayName) displayName = selection.label;
-        this.setState({selectLayerOption:selection,layer_name:selection.value,layer_displayName:displayName, serverUrl:selectedLayer.url});
+        this.setState({selectLayerOption:selection,layer_name:selectedLayer.layer_name,layer_displayName:displayName, serverUrl:selectedLayer.url});
     }
 
     onLayerSelectChange = (selection) =>{
         let displayName = this.state.layer_displayName;
-        if (!this.state.userEdit_displayName) displayName = selection.label;
-        this.setState({selectLayerOption:selection,layer_name:selection.value,layer_displayName:displayName});
+        const selectedLayer = this.state.selectLayerOptions.filter(item => item.value === selection.value)[0];
+        if (!this.state.userEdit_displayName) displayName = selectedLayer.label;
+        this.setState({selectLayerOption:selection,layer_name:selectedLayer.layer_name,layer_displayName:displayName});
     }
     onServiceChange = (selection) =>{
-        this.setState({selectServiceOption:selection});
+        this.setState({selectServiceOption:selection},()=>{this.onCheckServiceForLayers();});
     }
     onCheckForLayers = () => {
 
@@ -195,6 +201,7 @@ class AddLayerForm extends Component {
         });
     }
     addLayer = (layer) => {
+        let showLayer = this.state.tabIndex !== 0;
         let styleUrl = "";
         let queryable = false;
         let opaque = false;
@@ -251,7 +258,8 @@ class AddLayerForm extends Component {
             infoFormat:infoFormat,
             xslTemplate:xslTemplate
           };
-        window.emitter.emit("addCustomLayer", newLayer, this.state.selectGroupOption.value);
+        window.emitter.emit("addCustomLayer", newLayer, this.state.selectGroupOption.value, showLayer);
+        setTimeout(()=>{this.clearLayers();}, 500);
     }
     isValidLayer = (showError) => {
         let errors = this.state.errorRegister;
@@ -328,6 +336,7 @@ class AddLayerForm extends Component {
     onTabSelect = tabIndex => {
         this.setState({ tabIndex }, ()=> {
             this.onLayerSourceChange(tabIndex===2);
+            if (this.state.tabIndex===0) this.onCheckServiceForLayers();
         });
       };
     render() {
@@ -345,6 +354,29 @@ class AddLayerForm extends Component {
                         backgroundColor={"#ccffff"}
                         backgroundOpacity={0.35}
                      />
+                                     <div className="sc-title">Table of Contents</div>
+                <div className="sc-container">
+                    <div className="sc-add-layer-row">
+                        <label htmlFor="sc-input-group">Add to Group:</label>
+                        <Select 
+                            id="sc-input-group" 
+                            onChange={(selection) => {this.setState({selectGroupOption:selection});}} 
+                            options={this.state.selectGroupOptions} 
+                            value={this.state.selectGroupOption}
+                            className="sc-add-layer-select" />
+                    </div>
+                    <div className="sc-add-layer-row">
+                        <label htmlFor="sc-add-layer-display-name">Layer Name:</label>
+                            <input 
+                                id="sc-add-layer-display-name" 
+                                type="text"
+                                className="sc-add-layer-input sc-editable" 
+                                onChange={evt => {this.setState({ layer_displayName: evt.target.value, userEdit_displayName: true });}} 
+                                onFocus={evt => {helpers.disableKeyboardEvents(true);}}
+                                onBlur={evt => {helpers.disableKeyboardEvents(false);}}
+                                value={this.state.layer_displayName} />
+                    </div>
+                </div>
                 <div className="sc-title">Source</div>
                 <Tabs selectedIndex={this.state.tabIndex} onSelect={this.onTabSelect}>
                     <TabList>
@@ -363,16 +395,6 @@ class AddLayerForm extends Component {
                                     options={this.state.selectServiceOptions} 
                                     value={this.state.selectServiceOption}
                                     className="sc-add-service-select" />
-                            </div>
-                            <div className="sc-coordinates-divider"></div> 
-                            
-                            <div className="sc-add-layer-row">
-                                <button 
-                                    id="sc-add-layer-_service-discover" 
-                                    type="button" 
-                                    name="check" 
-                                    className="sc-button"
-                                    onClick={this.onCheckServiceForLayers}>Find available layers</button>
                             </div>
                             <div className="sc-coordinates-divider"></div> 
                             <div className={this.state.hasLayers?"sc-title":"sc-hidden"} >Available Layers</div> 
@@ -470,29 +492,7 @@ class AddLayerForm extends Component {
                         </div>
                     </TabPanel>*/}
                 </Tabs>
-                <div className="sc-title">Table of Contents</div>
-                <div className="sc-container">
-                    <div className="sc-add-layer-row">
-                        <label htmlFor="sc-input-group">Add to Group:</label>
-                        <Select 
-                            id="sc-input-group" 
-                            onChange={(selection) => {this.setState({selectGroupOption:selection});}} 
-                            options={this.state.selectGroupOptions} 
-                            value={this.state.selectGroupOption}
-                            className="sc-add-layer-select" />
-                    </div>
-                    <div className="sc-add-layer-row">
-                        <label htmlFor="sc-add-layer-display-name">Layer Name:</label>
-                            <input 
-                                id="sc-add-layer-display-name" 
-                                type="text"
-                                className="sc-add-layer-input sc-editable" 
-                                onChange={evt => {this.setState({ layer_displayName: evt.target.value, userEdit_displayName: true });}} 
-                                onFocus={evt => {helpers.disableKeyboardEvents(true);}}
-                                onBlur={evt => {helpers.disableKeyboardEvents(false);}}
-                                value={this.state.layer_displayName} />
-                    </div>
-                </div>
+
                 <div className="sc-add-layer-row right">
                     <div>
                         <button type="button" className="sc-button" disabled={this.state.selectedFormat===undefined} onClick={this.onAddLayerClick}>Add layer</button>
