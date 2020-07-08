@@ -17,13 +17,33 @@ class CommercialRealEstateSearch extends Component {
         <div className="sc-theme-commercial-real-estate-prop-type-title">Property Type</div>
         <div className="sc-theme-commercial-real-estate-prop-type-table">
           <div className="sc-theme-commercial-real-estate-prop-type-table-row">
-            <PropType name="Commercial" colorClassName="sc-theme-commercial-real-estate-prop-type-commercial"></PropType>
-            <PropType name="Vacant Land" colorClassName="sc-theme-commercial-real-estate-prop-type-vacant-land"></PropType>
-            <PropType name="Farm" colorClassName="sc-theme-commercial-real-estate-prop-type-farm"></PropType>
+            <PropType
+              name="Commercial"
+              colorClassName="sc-theme-commercial-real-estate-prop-type-commercial"
+              onLayerCheckboxClick={this.props.onLayerCheckboxClick}
+              layer={this.props.layers.Commercial}
+            />
+            <PropType
+              name="Vacant Land"
+              colorClassName="sc-theme-commercial-real-estate-prop-type-vacant-land"
+              onLayerCheckboxClick={this.props.onLayerCheckboxClick}
+              layer={this.props.layers["Vacant Land"]}
+            />
+            <PropType name="Farm" colorClassName="sc-theme-commercial-real-estate-prop-type-farm" onLayerCheckboxClick={this.props.onLayerCheckboxClick} layer={this.props.layers.Farm} />
           </div>
           <div className="sc-theme-commercial-real-estate-prop-type-table-row">
-            <PropType name="Industrial" colorClassName="sc-theme-commercial-real-estate-prop-type-industrial"></PropType>
-            <PropType name="Institutional" colorClassName="sc-theme-commercial-real-estate-prop-type-institutional"></PropType>
+            <PropType
+              name="Industrial"
+              colorClassName="sc-theme-commercial-real-estate-prop-type-industrial"
+              onLayerCheckboxClick={this.props.onLayerCheckboxClick}
+              layer={this.props.layers.Industrial}
+            />
+            <PropType
+              name="Institutional"
+              colorClassName="sc-theme-commercial-real-estate-prop-type-institutional"
+              onLayerCheckboxClick={this.props.onLayerCheckboxClick}
+              layer={this.props.layers.Institutional}
+            />
           </div>
         </div>
       </div>
@@ -33,10 +53,11 @@ class CommercialRealEstateSearch extends Component {
 
 export default CommercialRealEstateSearch;
 
-const PropType = props => {
+const PropType = (props) => {
+  if (props.layer === undefined) return <div />;
   return (
     <label>
-      <input type="checkbox"></input>
+      <input type="checkbox" onChange={(evt) => props.onLayerCheckboxClick(evt, props.name)} defaultChecked={true} />
       <span className={props.colorClassName}>{props.name}</span>
     </label>
   );

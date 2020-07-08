@@ -1,4 +1,4 @@
-# What's new - [opengis.simcoe.ca](https://opengis.simcoe.ca) [May 1st, 2020]
+# What's new - [opengis.simcoe.ca](https://opengis.simcoe.ca) [April 23rd, 2020]
 
 This mapping application will be replacing our [existing site](https://maps.simcoe.ca/public).
 
@@ -40,7 +40,6 @@ We want your <b>feedback</b>! Click on the star in upper right corner and provid
 ## Basemap Switcher - Imagery / Topo
 
 - More Topo map options
-- Ability to turn off Overlay layers for Topo
 
 ![imagery panel](imagery.gif "Imagery/ Topo Basemap")
 <a name="mymaps"></a>

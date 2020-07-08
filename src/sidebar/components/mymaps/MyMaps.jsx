@@ -175,6 +175,9 @@ class MyMaps extends Component {
     this.setState({ drawType: type }, () => {
       this.setDrawControl();
     });
+
+    // APP STATS
+    helpers.addAppStat("MyMaps Button", type);
   };
 
   // COLORBAR CLICK
@@ -182,6 +185,8 @@ class MyMaps extends Component {
     this.setState({ drawColor: color }, () => {
       this.updateStyle();
     });
+    // APP STATS
+    helpers.addAppStat("MyMaps Color", "click");
   };
 
   // DRAW START
@@ -223,7 +228,6 @@ class MyMaps extends Component {
 
   // DRAW END
   onDrawEnd = (evt) => {
-    console.log("ending");
     this.setState({ tooltipClass: "sc-hidden" });
     if (this.state.drawType === "Bearing" || this.state.drawType === "Measure") {
       this.tooltipElement.innerHTML = "";
@@ -369,14 +373,12 @@ class MyMaps extends Component {
   };
   // LABEL TEXTBOX
   onLabelChange = (itemId, label) => {
-    console.log(itemId);
     const itemInfo = this.state.items.filter((item) => {
       return item.id === itemId;
     })[0];
 
     // IF WE HAVE A REF TO A POPUP, SEND THE UPDATE
     if (this.popupRef !== undefined) {
-      console.log(itemInfo);
       this.popupRef.parentLabelChanged(itemInfo, label);
     }
 
@@ -706,9 +708,15 @@ class MyMaps extends Component {
       case "sc-floating-menu-identify":
         this.onIdentify(item.id);
         break;
+      case "sc-floating-menu-measure":
+        const feature = myMapsHelpers.getFeatureById(item.id);
+        this.showDrawingOptionsPopup(feature, null, "measure");
+        break;
       default:
         break;
     }
+    // APP STATS
+    helpers.addAppStat("MyMaps Menu", action);
   };
 
   // TODO:  CHANGE PROJECTION TO WEB MERCATOR IN OUTPUT.
@@ -774,6 +782,9 @@ class MyMaps extends Component {
         >
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-buffer">
             <FloatingMenuItem imageName={"buffer.png"} label="Buffer" />
+          </MenuItem>
+          <MenuItem className={item.geometryType === "Point" ? "sc-hidden" : "sc-floating-menu-toolbox-menu-item"} key="sc-floating-menu-measure">
+            <FloatingMenuItem imageName={"measure.png"} label="Measure" />
           </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-symbolizer">
             <FloatingMenuItem imageName={"color-picker.png"} label="Symbolize" />
@@ -859,6 +870,11 @@ class MyMaps extends Component {
 
     // ACTIVE TOOLTIP
     if (this.state.drawType === "Bearing" || this.state.drawType === "Measure") this.activateToolTip();
+
+    // POINT STYLE FOR CURSOR
+    let pointStyle = this.state.drawStyle.clone();
+    let image = pointStyle.getImage();
+    image.setRadius(1);
 
     // CREATE A NEW DRAW
     this.draw = new Draw({
@@ -952,6 +968,8 @@ class MyMaps extends Component {
       this.saveStateToStorage();
     });
     this.vectorLayer.getSource().clear();
+    // APP STATS
+    helpers.addAppStat("MyMaps", "Delete All");
   };
 
   onEditFeatures = (editOn, option) => {
@@ -1030,6 +1048,9 @@ class MyMaps extends Component {
         }
       );
     }
+
+    // APP STATS
+    helpers.addAppStat("MyMaps", "Import");
   };
 
   render() {

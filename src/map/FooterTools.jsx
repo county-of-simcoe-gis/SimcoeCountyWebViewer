@@ -16,7 +16,7 @@ class FooterTools extends Component {
     this.onMapLoad = this.onMapLoad.bind(this);
     this.state = {
       scale: "",
-      basemapType: "IMAGERY"
+      basemapType: "IMAGERY",
     };
     this.mapScales = [
                 
@@ -30,7 +30,7 @@ class FooterTools extends Component {
                 {label:"1:50,000", value:50000}
               ];
     // LISTEN FOR MAP TO MOUNT
-    window.emitter.addListener("basemapChanged", type => {
+    window.emitter.addListener("basemapChanged", (type) => {
       this.setState({ basemapType: type });
     });
     // LISTEN FOR CONTROL VISIBILITY CHANGES

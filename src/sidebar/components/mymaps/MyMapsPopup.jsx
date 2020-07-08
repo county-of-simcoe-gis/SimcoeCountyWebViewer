@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import MyMapsSymbolizer from "./MyMapsSymbolizer.jsx";
 import MyMapsBuffer from "./MyMapsBuffer";
+import MyMapsMeasure from "./MyMapsMeasure";
 import MyMapsPopupLabel from "./MyMapsPopupLabel";
 import "./MyMapsPopup.css";
 import * as helpers from "../../../helpers/helpers";
@@ -31,7 +32,7 @@ class MyMapsPopup extends Component {
     return (
       <div className="sc-mymaps-popup-container">
         <MyMapsPopupLabel
-          onRef={ref => (this.popupLabelRef = ref)}
+          onRef={(ref) => (this.popupLabelRef = ref)}
           item={this.props.item}
           onLabelChange={this.props.onLabelChange}
           onLabelVisibilityChange={this.props.onLabelVisibilityChange}
@@ -52,8 +53,9 @@ class MyMapsPopup extends Component {
           onStrokeTypeDropDown={this.props.onStrokeTypeDropDown}
         />
         <MyMapsBuffer visible={this.props.activeTool === "buffer"} item={this.props.item} />
+        <MyMapsMeasure visible={this.props.activeTool === "measure"} item={this.props.item} />
         <FooterButtons
-          onMyMapItemToolsButtonClick={evt => this.props.onMyMapItemToolsButtonClick(evt, this.props.item)}
+          onMyMapItemToolsButtonClick={(evt) => this.props.onMyMapItemToolsButtonClick(evt, this.props.item)}
           onDeleteButtonClick={() => {
             this.props.onDeleteButtonClick(this.props.item.id);
             window.popup.hide();
@@ -69,7 +71,7 @@ export default MyMapsPopup;
 function FooterButtons(props) {
   return (
     <div className="sc-mymaps-footer-buttons-container">
-      <button className="sc-button sc-mymaps-popup-footer-button" key={helpers.getUID()} id={helpers.getUID()} onClick={evt => props.onMyMapItemToolsButtonClick(evt)}>
+      <button className="sc-button sc-mymaps-popup-footer-button" key={helpers.getUID()} id={helpers.getUID()} onClick={(evt) => props.onMyMapItemToolsButtonClick(evt)}>
         <img src={images["toolbox.png"]} className={"sc-mymaps-footer-buttons-img"} alt="Tools" />
         Tools
       </button>

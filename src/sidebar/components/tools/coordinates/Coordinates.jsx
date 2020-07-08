@@ -310,7 +310,11 @@ class Coordinates extends Component {
     // UNREGISTER EVENTS
     unByKey(this.onPointerMoveEvent);
     unByKey(this.onMapClickEvent);
-    
+    unByKey(this.onMapMoveEvent);
+
+    // ENABLE PROPERTY CLICK
+    window.disableParcelClick = false;
+
     // REMOVE THE LAYER
     window.map.removeLayer(this.vectorLayer);
 

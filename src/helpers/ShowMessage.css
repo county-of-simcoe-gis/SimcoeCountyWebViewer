@@ -48,9 +48,9 @@
   color: #fff;
 }
 .sc-show-message-container.yellow {
-  border-color: rgb(216, 253, 9);
-  background-color: #f3f8c2b8;
-  color: #fff;
+  border-color: rgb(74, 78, 52);
+  background-color: #ffffcc;
+  color: #0a0a0a;
 }
 .sc-show-message-container.orange {
   border-color: rgb(253, 168, 9);

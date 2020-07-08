@@ -1,6 +1,6 @@
 {
   "name": "openlayers",
-  "homepage": "https://opengis2.simcoe.ca/gis/",
+  "homepage": "https://opengis.simcoe.ca/public/",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -53,6 +53,7 @@
     "react-transition-group": "^4.0.1",
     "react-use-iframe-content-height": "^1.0.2",
     "react-virtualized": "^9.21.0",
+    "react-window": "^1.8.5",
     "serialize-javascript": "^2.1.2",
     "shortid": "^2.2.14",
     "shp-write": "^0.3.2",

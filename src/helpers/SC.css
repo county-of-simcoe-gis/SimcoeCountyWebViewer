@@ -406,3 +406,41 @@ input[type="number"]::-webkit-outer-spin-button {
   overflow-y: auto;
   max-height: 240px;
 }
+
+.sc-list-item {
+  background-color: #ececec;
+  border: 1px solid #d9d9d9;
+  padding: 4px;
+  font-size: 11px;
+  text-align: left;
+  margin-bottom: 5px;
+  border-radius: 3px;
+}
+
+.sc-list-item-container {
+  background-color: #fff;
+  padding: 7px;
+  border: 1px solid #d6d6d6;
+  border-radius: 3px;
+}
+
+.sc-list-item-action-bar {
+  padding: 3px;
+  text-align: right;
+  cursor: pointer;
+  border-radius: 2px;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  background: #fff;
+  background: -moz-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, rgba(255, 255, 255, 1)), color-stop(100%, rgba(229, 229, 229, 1)));
+  background: -webkit-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+  background: -o-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff',endColorstr='#e5e5e5',GradientType=0);
+  border: 1px solid #ddd;
+  margin-top: 2px;
+}
