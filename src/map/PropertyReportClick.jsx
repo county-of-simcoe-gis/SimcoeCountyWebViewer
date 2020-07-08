@@ -30,8 +30,9 @@ class PropertyReportClick extends Component {
   constructor(props) {
     super(props);
     // LISTEN FOR MAP TO MOUNT
-    window.emitter.addListener("mapParametersComplete", () => this.onMapLoad());
-
+    //window.emitter.addListener("mapParametersComplete", () => this.onMapLoad());
+    // LISTEN FOR MAP TO MOUNT
+    window.emitter.addListener("mapLoaded", () => this.onMapLoad());
     this.onMapLoad = this.onMapLoad.bind(this);
 
     this.state = {

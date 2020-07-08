@@ -6,6 +6,7 @@ import mainConfig from "../config.json";
 import Collapsible from "react-collapsible";
 import { GeoJSON } from "ol/format.js";
 import InfoRow from "../helpers/InfoRow.jsx";
+import Feature from "ol/Feature";
 import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
 import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style.js";

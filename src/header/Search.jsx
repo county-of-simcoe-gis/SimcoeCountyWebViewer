@@ -600,7 +600,7 @@ this._isMounted = false;
             } else {
               this.setState({value, iconInitialClass: "sc-search-icon-initial",iconActiveClass: "sc-search-icon-active-hidden",searchResults: [] });
             }
-          }}
+          }}}
           renderMenu={children => (
             <div>
               <div className={this.state.showMore && this.state.searchResults.length > 9 ? "sc-search-menu sc-search-menu-scrollable" : "sc-search-menu"}>{children}</div>

@@ -2,9 +2,9 @@ import React, { Component } from "react";
 import "./ExternalServices.css";
 import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
-//import mainConfig from "../../../../config.json";
+import mainConfig from "../../../../config.json";
 import * as config from "./config.json";
-//import GeoJSON from "ol/format/GeoJSON.js";
+import GeoJSON from "ol/format/GeoJSON.js";
 import { Vector as VectorLayer } from "ol/layer.js";
 import { Vector as VectorSource } from "ol/source.js";
 import { Icon, Style } from "ol/style.js";
@@ -12,7 +12,7 @@ import Point from "ol/geom/Point";
 import Feature from "ol/Feature";
 import { unByKey } from "ol/Observable.js";
 
-//const parcelURLTemplate = (mainURL, x, y) => `${mainURL}&cql_filter=INTERSECTS(geom,%20POINT%20(${x}%20${y}))`;
+const parcelURLTemplate = (mainURL, x, y) => `${mainURL}&cql_filter=INTERSECTS(geom,%20POINT%20(${x}%20${y}))`;
 
 class ExternalServices extends Component {
   constructor(props) {
@@ -29,24 +29,6 @@ class ExternalServices extends Component {
     this.mapClickListener = this.onMapClickEvent = window.map.on("click", this.onMapClick);
     this.createPointLayer();
     window.disableParcelClick = true;
-
-    // config.items.forEach(item => {
-    //   const links = item.links;
-    //   links.forEach(link => {
-    //     //console.log(link.url);
-    //     const template = (x, y, address) => eval("`" + link.url + "`");
-    //     console.log(template(123, 456, "test address"));
-    //   });
-    // });
-    // const url = "`http://maps.google.com?q=${X},${Y}`";
-    // const urlT = `url`;
-    // console.log(urlT);
-    // //const appStatsTemplate = (X, Y) => `${mainConfig.appStatsUrl}opengis/${type}/${description}`;
-    // const appStatsTemplate = (X, Y) => eval(url);
-    // console.log(appStatsTemplate(123, 456));
-    //httpGetText(appStatsTemplate(type, description));
-    //print("Hello, {0}! The answer is {1}.", "World", 42);
-    //console.log(helpers.formatReplace(url, "123", "456"));
   }
 
   // POINT LAYER TO STORE SEARCH RESULTS
