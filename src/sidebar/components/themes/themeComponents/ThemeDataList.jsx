@@ -13,7 +13,7 @@ class ThemeDataList extends Component {
       features: [],
       styleUrl: null,
       visible: props.layerConfig.visible,
-      onlyFeaturesWithinMap: props.onlyFeaturesWithinMap
+      onlyFeaturesWithinMap: props.onlyFeaturesWithinMap,
     };
 
     this._isMounted = false;
@@ -31,7 +31,7 @@ class ThemeDataList extends Component {
     const styleUrl = styleUrlTemplate(this.props.layerConfig.serverUrl, this.props.layerConfig.layerName, this.props.layerConfig.legendStyleName);
     this.setState({ styleUrl: styleUrl });
 
-    window.map.on("moveend", evt => {
+    window.map.on("moveend", (evt) => {
       // GET FEATURES
       this.fetchFeatures();
     });
@@ -49,7 +49,7 @@ class ThemeDataList extends Component {
       helpers.getWFSGeoJSON(
         this.props.layerConfig.serverUrl,
         this.props.layerConfig.layerName,
-        result => {
+        (result) => {
           this.setState({ features: result });
         },
         this.props.layerConfig.displayFieldName,
@@ -59,7 +59,7 @@ class ThemeDataList extends Component {
       helpers.getWFSGeoJSON(
         this.props.layerConfig.serverUrl,
         this.props.layerConfig.layerName,
-        result => {
+        (result) => {
           this.setState({ features: result });
         },
         this.props.layerConfig.displayFieldName
@@ -71,8 +71,8 @@ class ThemeDataList extends Component {
     this.setState({ panelOpen: !this.state.panelOpen });
   };
 
-  itemClick = feature => {
-    helpers.getGeometryCenter(feature.getGeometry(), center => {
+  itemClick = (feature) => {
+    helpers.getGeometryCenter(feature.getGeometry(), (center) => {
       // SHOW POPUP
       const entries = Object.entries(feature.getProperties());
       window.popup.show(center.flatCoordinates, <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={this.props.layerConfig} />);
@@ -82,7 +82,7 @@ class ThemeDataList extends Component {
   };
 
   // HANDLES TOGGLE LAYER CHANGES
-  onLayerVisibilityChange = layer => {
+  onLayerVisibilityChange = (layer) => {
     if (layer.getProperties().name === this.props.layerConfig.layerName) this.setState({ visible: layer.getVisible() });
   };
 
@@ -99,7 +99,7 @@ class ThemeDataList extends Component {
           <div style={{ paddingTop: "12px", width: "90%" }}>{this.props.layerConfig.displayName}</div>
         </div>
         <div className={this.state.panelOpen ? "sc-theme-data-list-item-container" : "sc-hidden"}>
-          {this.state.features.map(feature => (
+          {this.state.features.map((feature) => (
             <InfoRowValue
               className="sc-theme-data-list-item"
               key={helpers.getUID()}

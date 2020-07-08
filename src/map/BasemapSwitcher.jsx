@@ -26,8 +26,8 @@ class BasemapSwitcher extends Component {
       topoActiveIndex: 0,
       topoCheckbox: true,
       topoOverlayLayers: [],
-      activeButton: "imagery",
       showBaseMapSwitcher:true,
+      activeButton: BasemapConfig.defaultButton,
     };
 
     // LISTEN FOR MAP TO MOUNT
@@ -54,7 +54,7 @@ class BasemapSwitcher extends Component {
     // LOAD IMAGERY LAYERS
     let layerList = [];
     let index = 0;
-    BasemapConfig.imageryServices.forEach(service => {
+    BasemapConfig.imageryServices.forEach((service) => {
       //var layer = helpers.getArcGISTiledLayer(service.url);
       var layer = helpers.getSimcoeTileXYZLayer(service.url);
 
@@ -106,10 +106,10 @@ class BasemapSwitcher extends Component {
     // LOAD BASEMAP LAYERS
     let basemapList = [];
     //let basemapIndex = 0;
-    BasemapConfig.topoServices.forEach(serviceGroup => {
+    BasemapConfig.topoServices.forEach((serviceGroup) => {
       index = 0;
       let serviceLayers = [];
-      serviceGroup.layers.forEach(service => {
+      serviceGroup.layers.forEach((service) => {
         // CREATE THE LAYER
         let layer = null;
         if (service.type === "SIMCOE_TILED") {
@@ -130,7 +130,7 @@ class BasemapSwitcher extends Component {
       const groupUrl = serviceGroup.groupUrl;
       if (groupUrl !== undefined) {
         // GET XML
-        helpers.httpGetText(groupUrl, result => {
+        helpers.httpGetText(groupUrl, (result) => {
           var parser = new xml2js.Parser();
 
           // PARSE TO JSON
@@ -141,7 +141,7 @@ class BasemapSwitcher extends Component {
             let overlayIndex = index;
             //index++;
 
-            groupLayerList.forEach(layerInfo => {
+            groupLayerList.forEach((layerInfo) => {
               const keywords = layerInfo.KeywordList[0].Keyword;
               const opacity = this.getOpacity(keywords);
               const layerNameOnly = layerInfo.Name[0].split(":")[1];
@@ -176,6 +176,11 @@ class BasemapSwitcher extends Component {
     this.setState({ topoLayers: basemapList });
     this.setState({ topoActiveIndex: 0 });
 
+    if (this.state.activeButton === "topo") {
+      this.enableTopo();
+    } else {
+      this.enableImagery();
+    }
     // NEED TO WAIT A TAD FOR LAYERS TO INIT
     setTimeout(() => {
       this.handleURLParameters();
@@ -194,7 +199,7 @@ class BasemapSwitcher extends Component {
   }
 
   // HANDLE URL PARAMETERS
-  handleURLParameters = value => {
+  handleURLParameters = (value) => {
     const basemap = helpers.getURLParameter("BASEMAP") !== null ? helpers.getURLParameter("BASEMAP").toUpperCase() : null;
     const name = helpers.getURLParameter("NAME") !== null ? helpers.getURLParameter("NAME").toUpperCase() : null;
     const imagerySliderOpen = helpers.getURLParameter("SLIDER_OPEN") !== null ? helpers.getURLParameter("SLIDER_OPEN").toUpperCase() : null;
@@ -253,13 +258,13 @@ class BasemapSwitcher extends Component {
   }
 
   // SLIDER CHANGE EVENT
-  onSliderChange = value => {
+  onSliderChange = (value) => {
     this.updateImageryLayers(value);
     this.setState({ imagerySliderValue: value });
   };
 
   // PANEL DROP DOWN BUTTON
-  onImageryArrowClick = value => {
+  onImageryArrowClick = (value) => {
     // DISABLE TOPO
     this.disableTopo();
 
@@ -273,7 +278,7 @@ class BasemapSwitcher extends Component {
     helpers.addAppStat("Imagery", "Arrow");
   };
 
-  onImageryButtonClick = value => {
+  onImageryButtonClick = (value) => {
     // DISABLE TOPO
     this.disableTopo();
 
@@ -286,7 +291,7 @@ class BasemapSwitcher extends Component {
     helpers.addAppStat("Imagery", "Button");
   };
 
-  enableImagery = value => {
+  enableImagery = (value) => {
     // ENABLE IMAGERY
     this.updateImageryLayers(this.state.imagerySliderValue);
 
@@ -299,7 +304,7 @@ class BasemapSwitcher extends Component {
     window.emitter.emit("basemapChanged", "IMAGERY");
   };
 
-  disableImagery = value => {
+  disableImagery = (value) => {
     // DISABLE IMAGERY
     this.state.streetsLayer.setVisible(false);
     this.state.worldImageryLayer.setVisible(false);
@@ -307,19 +312,19 @@ class BasemapSwitcher extends Component {
     this.updateImageryLayers(-1);
   };
 
-  onStreetsCheckbox = evt => {
+  onStreetsCheckbox = (evt) => {
     this.state.streetsLayer.setVisible(evt.target.checked);
     this.setState({ streetsCheckbox: evt.target.checked });
   };
 
-  onTopoCheckbox = evt => {
+  onTopoCheckbox = (evt) => {
     //this.state.streetsLayer.setVisible(evt.target.checked);
     this.setState({ topoCheckbox: evt.target.checked }, () => {
       this.enableTopo();
     });
   };
 
-  onCollapsedClick = evt => {
+  onCollapsedClick = (evt) => {
     // HIDE OPEN PANELS
     if (this.state.containerCollapsed === false) {
       this.setState({ imageryPanelOpen: false });
@@ -329,7 +334,7 @@ class BasemapSwitcher extends Component {
     this.setState({ containerCollapsed: !this.state.containerCollapsed });
   };
 
-  enableTopo = value => {
+  enableTopo = (value) => {
     // DISABLE IMAGERY
     this.disableImagery();
 
@@ -340,12 +345,12 @@ class BasemapSwitcher extends Component {
     window.emitter.emit("basemapChanged", "TOPO");
   };
 
-  disableTopo = value => {
+  disableTopo = (value) => {
     this.setTopoLayerVisiblity(-1);
   };
 
   // TOPO BUTTON
-  onTopoButtonClick = evt => {
+  onTopoButtonClick = (evt) => {
     // CLOSE PANEL ONLY IF ALREADY OPEN
     if (this.state.topoPanelOpen) this.setState({ topoPanelOpen: !this.state.topoPanelOpen });
 
@@ -356,7 +361,7 @@ class BasemapSwitcher extends Component {
   };
 
   // PANEL DROP DOWN BUTTON
-  onTopoArrowClick = evt => {
+  onTopoArrowClick = (evt) => {
     this.enableTopo();
     this.setState({ topoPanelOpen: !this.state.topoPanelOpen });
     // APP STATS
@@ -364,10 +369,11 @@ class BasemapSwitcher extends Component {
   };
 
   // CLICK ON TOPO THUMBNAILS
-  onTopoItemClick = activeIndex => {
+  onTopoItemClick = (activeIndex, name) => {
     this.setState({ topoActiveIndex: activeIndex });
     this.setTopoLayerVisiblity(activeIndex);
     this.setState({ topoPanelOpen: false });
+    helpers.addAppStat("Basemap", name);
   };
 
   // ADJUST VISIBILITY
@@ -378,7 +384,7 @@ class BasemapSwitcher extends Component {
       if (layerIndex === activeIndex) {
         //let layers = layer.getLayers();
 
-        layer.getLayers().forEach(layer => {
+        layer.getLayers().forEach((layer) => {
           if (layer.get("isOverlay") && this.state.topoCheckbox) layer.setVisible(true);
           else if (layer.get("isOverlay") && !this.state.topoCheckbox) layer.setVisible(false);
         });
@@ -398,7 +404,7 @@ class BasemapSwitcher extends Component {
       marginLeft: 13,
       height: 225,
       marginTop: 8,
-      marginBottom: 15
+      marginBottom: 15,
     };
 
     return (
@@ -409,18 +415,19 @@ class BasemapSwitcher extends Component {
             <button className={this.state.activeButton === "imagery" ? "sc-button sc-basemap-imagery-button active" : "sc-button sc-basemap-imagery-button"} onClick={this.onImageryButtonClick}>
               Imagery
             </button>
-            <button className="sc-button sc-basemap-arrow" onClick={this.onImageryArrowClick}></button>
+            <button className="sc-button sc-basemap-arrow" onClick={this.onImageryArrowClick} />
           </div>
           <div className={this.state.containerCollapsed ? "sc-hidden" : "sc-basemap-topo"}>
             <button className={this.state.activeButton === "topo" ? "sc-button sc-basemap-topo-button active" : "sc-button sc-basemap-topo-button"} onClick={this.onTopoButtonClick}>
               Topo
             </button>
-            <button className="sc-button sc-basemap-arrow" onClick={this.onTopoArrowClick}></button>
+            <button className="sc-button sc-basemap-arrow" onClick={this.onTopoArrowClick} />
           </div>
         </div>
         <div id="sc-basemap-imagery-slider-container" className={this.state.imageryPanelOpen ? "sc-basemap-imagery-slider-container" : "sc-hidden"}>
           <label className="sc-basemap-streets-label">
-            <input className="sc-basemap-streets-checkbox" id="sc-basemap-streets-checkbox" type="checkbox" onChange={this.onStreetsCheckbox} checked={this.state.streetsCheckbox}></input>&nbsp;Streets
+            <input className="sc-basemap-streets-checkbox" id="sc-basemap-streets-checkbox" type="checkbox" onChange={this.onStreetsCheckbox} checked={this.state.streetsCheckbox} />
+            &nbsp;Streets
           </label>
           <Slider
             included={false}
@@ -436,8 +443,9 @@ class BasemapSwitcher extends Component {
           />
         </div>
         <div className={this.state.topoPanelOpen ? "sc-basemap-topo-container" : "sc-hidden"}>
-          <label className="sc-basemap-topo-label">
-            <input className="sc-basemap-topo-checkbox" id="sc-basemap-topo-checkbox" type="checkbox" onChange={this.onTopoCheckbox} checked={this.state.topoCheckbox}></input>&nbsp;Overlay
+          <label className={this.state.topoOverlayLayers.length === 0 ? "sc-hidden" : "sc-basemap-topo-label"}>
+            <input className="sc-basemap-topo-checkbox" id="sc-basemap-topo-checkbox" type="checkbox" onChange={this.onTopoCheckbox} checked={this.state.topoCheckbox} />
+            &nbsp;Overlay
           </label>
           {BasemapConfig.topoServices.map((service, index) => (
             <BasemapItem key={helpers.getUID()} index={index} topoActiveIndex={this.state.topoActiveIndex} service={service} onTopoItemClick={this.onTopoItemClick} />
@@ -457,11 +465,11 @@ class BasemapItem extends Component {
       <div
         className={this.props.topoActiveIndex === this.props.index ? "sc-basemap-topo-item-container active" : "sc-basemap-topo-item-container"}
         onClick={() => {
-          this.props.onTopoItemClick(this.props.index);
+          this.props.onTopoItemClick(this.props.index, this.props.service.name);
         }}
       >
         {this.props.service.name}
-        <img className="sc-basemap-topo-image" src={images[this.props.service.image]} alt={this.props.service.image}></img>
+        <img className="sc-basemap-topo-image" src={images[this.props.service.image]} alt={this.props.service.image} />
       </div>
     );
   }

@@ -29,6 +29,7 @@ import * as helpers from "../helpers/helpers";
 import mainConfig from "../config.json";
 import Identify from "./Identify";
 import AttributeTable from "../helpers/AttributeTable.jsx";
+import FloatingImageSlider from "../helpers/FloatingImageSlider.jsx";
 
 const scaleLineControl = new ScaleLine({
                                   minWidth: 100
@@ -183,19 +184,35 @@ class SCMap extends Component {
       }
     });
 
-    // ATTRIBUTE TABLE TESTING
-    // helpers.getWFSGeoJSON(
-    //   "https://opengis.simcoe.ca/geoserver/",
-    //   "simcoe:Airport",
-    //   (result) => {
-    //     if (result.length === 0) return;
+    // SHOW FEEDBACK ON TIMER
+    // if (mainConfig.showFeedbackMessageOnStartup !== undefined && mainConfig.showFeedbackMessageOnStartup) {
+    //   setTimeout(() => {
+    //     helpers.showMessage(
+    //       "Feedback",
+    //       <div>
+    //         <label>Please provide us feedback! The feedback button is the star at top right of this window.</label>
+    //         <span
+    //           className="sc-fakeLink"
+    //           style={{ display: "block" }}
+    //           onClick={() => {
+    //             window.emitter.emit("feedback", null);
+    //           }}
+    //         >
+    //           Provide Feedback now!
+    //         </span>
+    //       </div>,
+    //       undefined,
+    //       10000
+    //     );
+    //   }, 60000);
+    // }
 
-    //     window.emitter.emit("openAttributeTable", { name: "Airport", geoJson: result });
-    //   },
-    //   null,
-    //   null,
-    //   null
-    // );
+    // SHOW WHATS NEW
+    // if (mainConfig.showFeedbackMessageOnStartup !== undefined && mainConfig.showFeedbackMessageOnStartup) {
+    //   helpers.showURLWindow(mainConfig.whatsNewUrl, true, "full", true, true);
+    // }
+    // ATTRIBUTE TABLE TESTING
+    // window.emitter.emit("openAttributeTable", "https://opengis.simcoe.ca/geoserver/", "simcoe:Airport");
   }
   changeCursor = (cursorStyle) =>
   {
@@ -212,14 +229,8 @@ class SCMap extends Component {
   }
 
   onAttributeTableResize = (height) => {
-    console.log(height);
-    console.log("att resize event in map");
     this.setState({ mapBottom: Math.abs(height) }, () => {
-      //this.forceUpdate();
       window.map.updateSize();
-      // setTimeout(function() {
-      //   window.map.updateSize();
-      // }, 300);
     });
   };
 
@@ -242,7 +253,9 @@ class SCMap extends Component {
       let coords = [x, y];
       if (sr === "WGS84") coords = fromLonLat([Math.round(x * 100000) / 100000, Math.round(y * 100000) / 100000]);
 
-      helpers.flashPoint(coords);
+      setTimeout(() => {
+        helpers.flashPoint(coords);
+      }, 1000);
     } else if (xmin !== null && ymin !== null && xmax !== null && ymax !== null) {
       //URL PARAMETERS (ZOOM TO EXTENT)
       const extent = [parseFloat(xmin), parseFloat(ymin), parseFloat(xmax), parseFloat(ymax)];
@@ -413,6 +426,7 @@ class SCMap extends Component {
           </GitHubButton>
         </div>
         <AttributeTable />
+        <FloatingImageSlider />
       </div>
     );
   }

@@ -7,19 +7,25 @@ class URLWindow extends Component {
     super(props);
 
     this.state = {
-      hide: false
+      hide: false,
     };
 
     this.storageKeyWhatsNew = "New Feature Notice";
   }
 
-  onCloseClick = value => {
+  onCloseClick = (value) => {
     this.setState({ hide: true });
   };
 
   onPopoutClick = () => {
     window.open(this.props.url, "_blank");
   };
+
+  componentWillUnmount() {
+    this.sidebarEmitter.remove();
+    document.removeEventListener("keydown", this.escFunction, false);
+  }
+
   componentDidMount() {
     if (this.props.honorDontShow) {
       const saved = this.getStorage();
@@ -29,14 +35,22 @@ class URLWindow extends Component {
     document.addEventListener("keydown", this.escFunction, false);
 
     // LISTEN FOR SIDEPANEL CHANGES
-    window.emitter.addListener("sidebarChanged", isSidebarOpen => this.sidebarChanged(isSidebarOpen));
+    this.sidebarEmitter = window.emitter.addListener("sidebarChanged", (isSidebarOpen) => this.sidebarChanged(isSidebarOpen));
   }
 
-  sidebarChanged = isSidebarOpen => {
+  isDontShow = () => {
+    if (this.props.honorDontShow) {
+      const saved = this.getStorage();
+      if (saved.includes(this.props.url)) return true;
+      else return false;
+    }
+  };
+
+  sidebarChanged = (isSidebarOpen) => {
     this.forceUpdate();
   };
 
-  escFunction = event => {
+  escFunction = (event) => {
     if (event.keyCode === 27) {
       this.setState({ hide: true });
     }
@@ -55,7 +69,9 @@ class URLWindow extends Component {
 
  
   render() {
-    //className={this.state.hide ? "sc-hidden" :"sc-url-window-map-container"}
+    // DONT RENDER IF WERE NOT SHOWING, OTHERWISE ALL DATA/IMAGES FROM URL LINK WILL DOWNLOAD
+    if (this.isDontShow()) return <div />;
+
     let className = "";
     if (this.state.hide) className = "sc-hidden";
     else if (this.props.mode === "full") className = "full";

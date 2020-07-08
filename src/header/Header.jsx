@@ -10,10 +10,18 @@ import mainConfig from "../config.json";
 
 const feedbackTemplate = (url, xmin, xmax, ymin, ymax, centerx, centery, scale) => `${url}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
 class Header extends Component {
-  state = {};
+  constructor(props) {
+    super(props);
+    this.state = {};
+
+    // LISTEN FOR FEEDBACK
+    window.emitter.addListener("feedback", () => this.onFeedbackClick());
+  }
+
   componentDidMount(){
     window.emitter.emit("headerLoaded");  
   }
+
   burgerButtonHandler() {
     // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
     if (window.sidebarOpen) window.emitter.emit("setSidebarVisiblity", "CLOSE");
@@ -22,7 +30,7 @@ class Header extends Component {
     helpers.addAppStat("Burger Button", "Click");
   }
 
-  onDotMenuClick = evt => {
+  onDotMenuClick = (evt) => {
     var evtClone = Object.assign({}, evt);
     const menu = (
       <Portal>
@@ -38,7 +46,7 @@ class Header extends Component {
     helpers.addAppStat("Header Dot Menu", "Click");
   };
 
-  onMenuItemClick = value => {
+  onMenuItemClick = (value) => {
     helpers.showMessage("Coming Soon", "Coming Soon...");
     helpers.addAppStat("Header Dot Menu", value);
   };
@@ -68,7 +76,7 @@ class Header extends Component {
           id="sc-header-burger-button"
           onClick={this.burgerButtonHandler}
           tabIndex="2"
-          onKeyPress={evt => {
+          onKeyPress={(evt) => {
             if (evt.key === "Enter") {
               this.burgerButtonHandler();
             }

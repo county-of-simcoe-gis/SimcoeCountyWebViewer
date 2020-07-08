@@ -351,12 +351,17 @@ class Layers extends Component {
         allLayers[this.props.group.value] = this.state.layers;
       }
     );
+    helpers.addAppStat("TOC Layer Visibility", layerInfo.name);
   };
 
   // OPACITY SLIDER FOR EACH LAYER
   onSliderChange = (opacity, layerInfo) => {
     layerInfo.layer.setOpacity(opacity);
+    this.currentScroll = document.getElementById(this.virtualId).scrollTop;
+  };
 
+  // OPACITY SLIDER AFTER COMPLETE
+  onSliderAfterChange = (opacity, layerInfo) => {
     this.setState(
       {
         // UPDATE LEGEND
@@ -365,6 +370,7 @@ class Layers extends Component {
       () => {
         let allLayers = this.state.allLayers;
         allLayers[this.props.group.value] = this.state.layers;
+        document.getElementById(this.virtualId).scrollTop = this.currentScroll;
       }
     );
   };
@@ -394,12 +400,20 @@ class Layers extends Component {
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoom-to-layer-visible">
             <FloatingMenuItem imageName={"zoom-in.png"} label="Zoom to Visible Scale" />
           </MenuItem>
-          <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-download">
+          <MenuItem className={layerInfo.canDownload ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-download">
             <FloatingMenuItem imageName={"download.png"} label="Download" />
           </MenuItem>
           <MenuItem className="sc-layers-slider" key="sc-floating-menu-opacity">
             Adjust Transparency
-            <SliderWithTooltip tipFormatter={this.sliderTipFormatter} max={1} min={0} step={0.05} defaultValue={layerInfo.opacity} onChange={(evt) => this.onSliderChange(evt, layerInfo)} />
+            <SliderWithTooltip
+              tipFormatter={this.sliderTipFormatter}
+              max={1}
+              min={0}
+              step={0.05}
+              defaultValue={layerInfo.opacity}
+              onChange={(evt) => this.onSliderChange(evt, layerInfo)}
+              onAfterChange={(evt) => this.onSliderAfterChange(evt, layerInfo)}
+            />
           </MenuItem>
         </FloatingMenu>
       </Portal>
@@ -417,6 +431,7 @@ class Layers extends Component {
             helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl, false, "full");
           } else helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl);
         });
+        helpers.addAppStat("Metadata", layerInfo.name);
         break;
       case "sc-floating-menu-zoom-to-layer":
         TOCHelpers.getLayerInfo(layerInfo, result => {
@@ -429,21 +444,20 @@ class Layers extends Component {
         this.zoomToVisibleScale(layerInfo);
         break;
       case "sc-floating-menu-attribute-table":
-        helpers.getWFSGeoJSON(
-          "https://opengis.simcoe.ca/geoserver/",
-          layerInfo.name,
-          (result) => {
-            if (result.length === 0) return;
-  
-            window.emitter.emit("openAttributeTable", { name: layerInfo.tocDisplayName, geoJson: result });
-          },
-          null,
-          null,
-          null
-        );
+        if (layerInfo.noAttributeTable) helpers.showMessage("Table", "Attribute table disabled for this layer.");
+        else window.emitter.emit("openAttributeTable", layerInfo.serverUrl, layerInfo.name);
         break;
       case "sc-floating-menu-download":
-        helpers.showMessage("Download", "Coming Soon!");
+        TOCHelpers.getLayerInfo(layerInfo, (result) => {
+          if (result.featureType.name === "Assessment Parcel") helpers.showMessage("Download", "Parcels are not available for download");
+          else {
+            helpers.addAppStat("Download", layerInfo.name);
+            if (helpers.isMobile()) {
+              window.emitter.emit("setSidebarVisiblity", "CLOSE");
+              helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl, false, "full");
+            } else helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl);
+          }
+        });
         break;
       default:
         break;

@@ -4,7 +4,6 @@ import "./PropertyReport.css";
 class PropertyReport extends React.Component {
   render() {
     const info = this.props.propInfo;
-    console.log(info);
     return (
       <div className="sc-property-report-container">
         <div className="sc-property-report-html-title">

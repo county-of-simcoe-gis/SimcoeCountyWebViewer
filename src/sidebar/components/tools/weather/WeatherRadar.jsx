@@ -31,7 +31,7 @@ class WeatherRadar extends Component {
       WBI: false,
       WSO: false,
       isPlaying: false,
-      isLoading: false
+      isLoading: false,
     };
   }
 
@@ -43,7 +43,7 @@ class WeatherRadar extends Component {
   }
 
   componentWillUnmount() {
-    this.radarImages.forEach(layer => {
+    this.radarImages.forEach((layer) => {
       window.map.removeLayer(layer);
     });
     clearInterval(this.radarInterval);
@@ -59,12 +59,12 @@ class WeatherRadar extends Component {
       this.setState({ endDate: this.roundTime(new Date()), startDate: this.roundTime(date3HoursBehind) });
     }
 
-    helpers.getJSON(radarUrlTemplate(this.getDateString(this.state.startDate), this.getDateString(this.state.endDate)), result => {
-      this.radarImages.forEach(layer => {
+    helpers.getJSON(radarUrlTemplate(this.getDateString(this.state.startDate), this.getDateString(this.state.endDate)), (result) => {
+      this.radarImages.forEach((layer) => {
         window.map.removeLayer(layer);
       });
       this.radarImages = [];
-      result.forEach(imageObj => {
+      result.forEach((imageObj) => {
         const jsImage = JSON.parse(imageObj.JS_MAPIMAGE);
         const jsExtent = jsImage.extent;
         const extent = [jsExtent.xmin, jsExtent.ymin, jsExtent.xmax, jsExtent.ymax];
@@ -72,11 +72,11 @@ class WeatherRadar extends Component {
           source: new Static({
             url: jsImage.href,
             projection: "EPSG:3857",
-            imageExtent: extent
+            imageExtent: extent,
           }),
           zIndex: 10000,
           visible: true,
-          opacity: this.state.radarOpacitySliderValue
+          opacity: this.state.radarOpacitySliderValue,
         });
 
         imageLayer.setProperties({ radarCode: imageObj.RADAR_CODE, radarDate: new Date(imageObj.RADAR_DATE), timeId: imageObj.TIME_ID });
@@ -98,7 +98,7 @@ class WeatherRadar extends Component {
     this.setState({ startDate: startDate, endDate: endDate, radarDateSliderValue: endDate }, () => {
       window.map.once(
         "postrender",
-        event => {
+        (event) => {
           this.updateRadarVisibility();
           this.setState({ isLoading: false });
         },
@@ -114,7 +114,7 @@ class WeatherRadar extends Component {
   };
 
   updateRadarVisibility = () => {
-    window.map.getLayers().forEach(layer => {
+    window.map.getLayers().forEach((layer) => {
       const radarDate = layer.get("radarDate");
       const radarCode = layer.get("radarCode");
 
@@ -138,25 +138,25 @@ class WeatherRadar extends Component {
   };
 
   // SLIDER CHANGE EVENT
-  onRadarDateSliderChange = value => {
+  onRadarDateSliderChange = (value) => {
     console.log(value);
-    this.setState(prevState => ({ radarDateSliderValue: value }));
+    this.setState((prevState) => ({ radarDateSliderValue: value }));
     this.updateRadarVisibility();
   };
 
   // SLIDER CHANGE EVENT
-  onRadarOpacitySliderChange = value => {
+  onRadarOpacitySliderChange = (value) => {
     this.setState({ radarOpacitySliderValue: value });
 
-    this.radarImages.forEach(layer => {
+    this.radarImages.forEach((layer) => {
       layer.setOpacity(value);
     });
   };
 
-  onStartDateChange = date => {
+  onStartDateChange = (date) => {
     this.setState(
       {
-        startDate: date
+        startDate: date,
       },
       () => {
         //this.fetchRadarImages();
@@ -164,10 +164,10 @@ class WeatherRadar extends Component {
     );
   };
 
-  onEndDateChange = date => {
+  onEndDateChange = (date) => {
     this.setState(
       {
-        endDate: date
+        endDate: date,
       },
       () => {
         //this.fetchRadarImages();
@@ -175,7 +175,7 @@ class WeatherRadar extends Component {
     );
   };
 
-  onAutoRefreshChange = evt => {
+  onAutoRefreshChange = (evt) => {
     this.setState({ autoRefresh: evt.target.checked });
     if (evt.target.checked) {
       this.radarInterval = window.setInterval(() => {
@@ -186,7 +186,7 @@ class WeatherRadar extends Component {
     }
   };
 
-  onTimeSettingsChange = evt => {
+  onTimeSettingsChange = (evt) => {
     this.setState({ timeSettingValue: evt.target.value }, () => {
       if (this.state.timeSettingValue === "last3hours") {
         date3HoursBehind = new Date(new Date().setHours(new Date().getHours() - 3));
@@ -197,19 +197,19 @@ class WeatherRadar extends Component {
     });
   };
 
-  onWKRChange = evt => {
+  onWKRChange = (evt) => {
     this.setState({ WKR: evt.target.checked }, () => {
       this.updateRadarVisibility();
     });
   };
 
-  onWBIChange = evt => {
+  onWBIChange = (evt) => {
     this.setState({ WBI: evt.target.checked }, () => {
       this.updateRadarVisibility();
     });
   };
 
-  onWSOChange = evt => {
+  onWSOChange = (evt) => {
     this.setState({ WSO: evt.target.checked }, () => {
       this.updateRadarVisibility();
     });
@@ -217,7 +217,7 @@ class WeatherRadar extends Component {
 
   onPlayButtonClick = () => {
     this.setState(
-      prevState => ({ isPlaying: !prevState.isPlaying }),
+      (prevState) => ({ isPlaying: !prevState.isPlaying }),
       () => {
         if (this.state.isPlaying) {
           this.playRadar();
@@ -242,6 +242,9 @@ class WeatherRadar extends Component {
       return;
     }
     this.fetchRadarImages();
+
+    // APP STATS
+    helpers.addAppStat("Weather Radar", "Custom Date");
   };
 
   playRadar = async () => {
@@ -264,23 +267,23 @@ class WeatherRadar extends Component {
   };
 
   sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  roundTime = date => {
+  roundTime = (date) => {
     var coeff = 1000 * 60 * 10;
     var rounded = new Date(Math.round(date.getTime() / coeff) * coeff);
     //console.log(rounded);
     return rounded;
   };
 
-  getDateString = dt => {
+  getDateString = (dt) => {
     var dtstring =
       dt.getFullYear() + "-" + this.pad2(dt.getMonth() + 1) + "-" + this.pad2(dt.getDate()) + " " + this.pad2(dt.getHours()) + ":" + this.pad2(dt.getMinutes()) + ":" + this.pad2(dt.getSeconds());
     return dtstring;
   };
 
-  pad2 = number => {
+  pad2 = (number) => {
     var str = "" + number;
     while (str.length < 2) {
       str = "0" + str;
@@ -292,25 +295,25 @@ class WeatherRadar extends Component {
   render() {
     // STYLE USED BY SLIDER
     const sliderWrapperStyle = {
-      height: 25
+      height: 25,
     };
 
     return (
       <div className="sc-tool-weather-radar-container">
         <div className="sc-tool-weather-radar-refresh-container">
-          <img src={images["refresh.png"]} alt="refreshtimer" style={{ verticalAlign: "bottom" }}></img>
-          <input type="checkbox" checked={this.state.autoRefresh} onChange={this.onAutoRefreshChange}></input>
+          <img src={images["refresh.png"]} alt="refreshtimer" style={{ verticalAlign: "bottom" }} />
+          <input type="checkbox" checked={this.state.autoRefresh} onChange={this.onAutoRefreshChange} />
           <span>Automatically refresh every minute.</span>
         </div>
-        <div className="sc-border-bottom"></div>
+        <div className="sc-border-bottom" />
         <div className="sc-tool-weather-slider-container">
-          <img className="sc-tool-weather-radar-button" src={this.state.isPlaying ? images["pause.png"] : images["play.png"]} alt="play" onClick={this.onPlayButtonClick}></img>
+          <img className="sc-tool-weather-radar-button" src={this.state.isPlaying ? images["pause.png"] : images["play.png"]} alt="play" onClick={this.onPlayButtonClick} />
           <div className="sc-tool-weather-slider">
             <DateSlider value={this.state.radarDateSliderValue} onChange={this.onRadarDateSliderChange} max={this.state.endDate} min={this.state.startDate} />
           </div>
           <label className="sc-tool-weather-radar-label">{"Radar Date: " + this.getDateString(this.state.radarDateSliderValue)}</label>
         </div>
-        <img src={images["loading20.gif"]} alt="loading" className={this.state.isLoading ? "sc-tool-weather-radar-loading" : "sc-hidden"}></img>
+        <img src={images["loading20.gif"]} alt="loading" className={this.state.isLoading ? "sc-tool-weather-radar-loading" : "sc-hidden"} />
         {/* <img src={images["loading20.gif"]} alt="loading" className={"sc-tool-weather-radar-loading"}></img> */}
         <div className="sc-container sc-tool-weather-time-container">
           <div style={{ display: "table" }}>
@@ -319,10 +322,10 @@ class WeatherRadar extends Component {
             </div>
             <div style={{ display: "grid" }} onChange={this.onTimeSettingsChange}>
               <label>
-                <input type="radio" name="timesetting" value="last3hours" defaultChecked></input>Last 3 Hours
+                <input type="radio" name="timesetting" value="last3hours" defaultChecked />Last 3 Hours
               </label>
               <label>
-                <input type="radio" name="timesetting" value="custom"></input>Custom
+                <input type="radio" name="timesetting" value="custom" />Custom
               </label>
             </div>
           </div>
@@ -337,14 +340,14 @@ class WeatherRadar extends Component {
                   preventOverflow
                   popperModifiers={{
                     flip: {
-                      behavior: ["bottom"] // don't allow it to flip to be above
+                      behavior: ["bottom"], // don't allow it to flip to be above
                     },
                     preventOverflow: {
-                      enabled: false // tell it not to try to stay within the view (this prevents the popper from covering the element you clicked)
+                      enabled: false, // tell it not to try to stay within the view (this prevents the popper from covering the element you clicked)
                     },
                     hide: {
-                      enabled: false // turn off since needs preventOverflow to be enabled
-                    }
+                      enabled: false, // turn off since needs preventOverflow to be enabled
+                    },
                   }}
                   selected={this.state.startDate}
                   onChange={this.onStartDateChange}
@@ -365,14 +368,14 @@ class WeatherRadar extends Component {
                   preventOverflow
                   popperModifiers={{
                     flip: {
-                      behavior: ["bottom"] // don't allow it to flip to be above
+                      behavior: ["bottom"], // don't allow it to flip to be above
                     },
                     preventOverflow: {
-                      enabled: false // tell it not to try to stay within the view (this prevents the popper from covering the element you clicked)
+                      enabled: false, // tell it not to try to stay within the view (this prevents the popper from covering the element you clicked)
                     },
                     hide: {
-                      enabled: false // turn off since needs preventOverflow to be enabled
-                    }
+                      enabled: false, // turn off since needs preventOverflow to be enabled
+                    },
                   }}
                 />
               </div>
@@ -382,13 +385,13 @@ class WeatherRadar extends Component {
             </div>
             <div style={{ fontSize: "10pt", marginLeft: "18px" }}>
               <label>
-                <input type="checkbox" checked={this.state.WKR} onChange={this.onWKRChange}></input>WKR (King City)
+                <input type="checkbox" checked={this.state.WKR} onChange={this.onWKRChange} />WKR (King City)
               </label>
               <label>
-                <input type="checkbox" checked={this.state.WBI} onChange={this.onWBIChange}></input>WBI (Britt)
+                <input type="checkbox" checked={this.state.WBI} onChange={this.onWBIChange} />WBI (Britt)
               </label>
               <label>
-                <input type="checkbox" checked={this.state.WSO} onChange={this.onWSOChange}></input>WSO (Exeter)
+                <input type="checkbox" checked={this.state.WSO} onChange={this.onWSOChange} />WSO (Exeter)
               </label>
             </div>
           </div>
@@ -400,18 +403,18 @@ class WeatherRadar extends Component {
         <div className="sc-tool-weather-radar-footer">
           <div className="sc-tool-weather-radar-rain">
             <label>Rain (Summer)</label>
-            <img src={images["radarlegendrain.png"]} alt="summer radar"></img>
+            <img src={images["radarlegendrain.png"]} alt="summer radar" />
           </div>
           <div className="sc-tool-weather-radar-snow">
             <label>Snow (Winter)</label>
-            <img src={images["radarlegendsnow.png"]} alt="snow radar"></img>
+            <img src={images["radarlegendsnow.png"]} alt="snow radar" />
           </div>
         </div>
-        <div className="sc-border-bottom"></div>
+        <div className="sc-border-bottom" />
         <div className="sc-tool-weather-radar-credits">
           Weather Data Provided by Environment Canada
           <a href="http://weather.gc.ca/">
-            <img src="http://weather.gc.ca/images/ecfip_e.gif" alt="Environment Canada" style={{ marginTop: "5px" }}></img>
+            <img src="http://weather.gc.ca/images/ecfip_e.gif" alt="Environment Canada" style={{ marginTop: "5px" }} />
           </a>
         </div>
       </div>
@@ -446,13 +449,13 @@ class DateSlider extends React.Component {
     var nextCurrentDate = this.dateSteps[value];
     onChange(nextCurrentDate);
 
-    this.setState(prevState => ({ currentDate: nextCurrentDate }));
+    this.setState((prevState) => ({ currentDate: nextCurrentDate }));
   }
 
   render() {
     // STYLE USED BY SLIDER
     const sliderWrapperStyle = {
-      height: 25
+      height: 25,
     };
 
     const { currentDate } = this.state;

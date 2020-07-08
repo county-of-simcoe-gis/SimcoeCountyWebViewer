@@ -444,6 +444,12 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
     if (group.prefix !== undefined) {
       displayName = group.prefix !== "" ? group.prefix + ' - ' + displayName : displayName;
     }
+    // ATTRIBUTE TABLE
+    let noAttributeTable = _getNoAttributeTable(keywords);
+
+    // TOC DISPLAY NAME
+    const tocDisplayName = layerTitle;
+
     // OPACITY
     let opacity = _getOpacity(keywords);
 
@@ -515,7 +521,11 @@ export async function buildLayerByGroup(group, layer, layerIndex, callback) {
         displayName: displayName, // DISPLAY NAME USED BY IDENTIFY
         identifyTitleColumn: identifyTitleColumn,
         identifyIdColumn: identifyIdColumn,
-        disclaimer: disclaimer
+        disclaimer: disclaimer,
+        wfsUrl: wfsUrl,
+        tocDisplayName: tocDisplayName, // DISPLAY NAME USED FOR TOC LAYER NAME
+        serverUrl: serverUrl + "/", // BASE URL FOR GEOSERVER
+        noAttributeTable: noAttributeTable, // IF TRUE, DISABLE ATTRIBUTE TABLE
       };
       callback(returnLayer);
     });
@@ -836,6 +846,15 @@ function _getCanDownload(keywords) {
     return item.indexOf("DOWNLOAD") !== -1;
   });
   if (downloadLayerKeyword !== undefined) return true;
+  else return false;
+}
+
+function _getNoAttributeTable(keywords) {
+  if (keywords === undefined) return false;
+  const keyword = keywords.find(function(item) {
+    return item.indexOf("NO_ATTRIBUTE_TABLE") !== -1;
+  });
+  if (keyword !== undefined) return true;
   else return false;
 }
 

@@ -8,10 +8,11 @@ import mainConfig from "./config.json";
 import * as helpers from "./helpers/helpers";
 import LoadingScreen from "./helpers/LoadingScreen.jsx";
 import ReactGA from "react-ga";
-import packageJson from '../package.json';
-// import AttributeTable from "./helpers/AttributeTable.jsx";
-ReactGA.initialize("UA-3104541-53");
-ReactGA.pageview(window.location.pathname + window.location.search);
+
+if (mainConfig.googleAnalyticsID !== undefined && mainConfig.googleAnalyticsID !== "") {
+  ReactGA.initialize(mainConfig.googleAnalyticsID);
+  ReactGA.pageview(window.location.pathname + window.location.search);
+}
 
 class App extends Component {
   constructor(props) {

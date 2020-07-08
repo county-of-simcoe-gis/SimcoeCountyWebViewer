@@ -8,6 +8,9 @@
   "htmlIdentify":false,
   "leftClickIdentify":false,
   "excludeIdentifyTitleName":false,
+  "showFeedbackMessageOnStartup": true,
+  "showWhatsNewOnStartup": true,
+  "googleAnalyticsID": "UA-3104541-53",
   "appStatsUrl": "https://opengis.simcoe.ca/api/appStats/",
   "apiUrl": "https://opengis.simcoe.ca/api/",
   "apiUrlDev": "http://localhost:8085/",
@@ -125,7 +128,8 @@
       "name": "Road Construction",
       "componentName": "RoadConstruction",
       "description": "View this year's road and bridge construction locations.",
-      "imageName": "roadsConstruction.png"
+      "imageName": "roadsConstruction.png",
+      "disable": true
     },
     {
       "id": 5,
@@ -142,6 +146,20 @@
       "description": "Explore resources to help newcomers to the County.",
       "imageName": "immigrationServices.png",
       "secure": false
+    },
+    {
+      "id": 7,
+      "name": "Commercial Real Estate",
+      "componentName": "CommercialRealEstate",
+      "description": "Search commercial real estate throughout the County of Simcoe.",
+      "imageName": "commercialRealEstate.png"
+    },
+    {
+      "id": 8,
+      "name": "211 Community Services",
+      "componentName": "TwoOneOne",
+      "description": "Explore 211 Community Services across the County of Simcoe.",
+      "imageName": "communityServices.png"
     }
   ]
 }
