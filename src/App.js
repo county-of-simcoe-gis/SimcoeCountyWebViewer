@@ -8,6 +8,7 @@ import mainConfig from "./config.json";
 import * as helpers from "./helpers/helpers";
 import LoadingScreen from "./helpers/LoadingScreen.jsx";
 import ReactGA from "react-ga";
+import packageJson from '../package.json';
 
 if (mainConfig.googleAnalyticsID !== undefined && mainConfig.googleAnalyticsID !== "") {
   ReactGA.initialize(mainConfig.googleAnalyticsID);
