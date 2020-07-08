@@ -1,18 +1,71 @@
 import React, { Component } from "react";
 import "./PanelComponent.css";
+import { unByKey } from "ol/Observable.js";
+import * as helpers from "../helpers/helpers";
 
 class PanelComponent extends Component {
-  state = {};
+  constructor(props) {
+    super(props);
+    this.state = {
+      selectedFeature:undefined
+    };
+  }
 
   componentDidMount() {
+    if(this.props.allowClick){
+      this.onMapClickEvent = window.map.on("click", this.onMapClick);
+    }
     // LISTEN FOR CLOSE FROM OTHER COMPONENTS (e.g. MENU BUTTON)
     window.emitter.addListener("closeToolsOrThemes", type => {
       if (type === this.props.type) this.props.onClose();
     });
   }
+  componentWillUnmount() {
+    // UNREGISTER EVENTS
+    if (this.props.allowClick){
+      unByKey(this.onMapClickEvent);
+    }
+  }
+  onMapClick = evt => {
+    var feature = window.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
+      if (feature === null) return;
+      var isSelectable = feature.get("clickable");
+      if (isSelectable !== undefined && isSelectable) return feature;
+    });
+    if (feature !== undefined) {
+      this.setState({selectedFeature: feature},() =>{
+        window.popup.show(
+          evt.coordinate,
+          <PopupContent
+            key={helpers.getUID()}
+            feature={feature}
+            myMapsClick={() => {this.onMyMapsClick();}}
+          />,
+          "Actions"
+        );
+      });
+      
+    }
+  }
 
+  onMyMapsClick = () => {
+    let feature = this.state.selectedFeature;
+    let label = feature.get("label");
+    if (label === undefined ) label = "added from " + this.props.name;
+    // ADD MYMAPS
+    window.emitter.emit("addMyMapsFeature", feature, label);
+    this.cleanup();
+  };
+
+  cleanup() {
+
+    // HIDE POPUP
+    window.popup.hide();
+
+    this.setState({ selectedFeature: undefined });
+  }
   onSidebarVisibility = () => {
-    console.log("click");
+
     // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
     window.emitter.emit("setSidebarVisiblity", "CLOSE");
 
@@ -46,6 +99,24 @@ class PanelComponent extends Component {
 
 export default PanelComponent;
 
+
+class PopupContent extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+    };
+  }
+  
+  render() {
+    return (
+      <div>
+        <button className="sc-button sc-panel-component-tool-content-button" onClick={this.props.myMapsClick}>
+          Add to My Drawing
+        </button>
+      </div>
+    );
+  }
+}
 // IMPORT ALL IMAGES
 const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
 function importAllImages(r) {

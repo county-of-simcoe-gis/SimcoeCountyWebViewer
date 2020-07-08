@@ -26,13 +26,18 @@ class BasemapSwitcher extends Component {
       topoActiveIndex: 0,
       topoCheckbox: true,
       topoOverlayLayers: [],
-      activeButton: "imagery"
+      activeButton: "imagery",
+      showBaseMapSwitcher:true,
     };
 
     // LISTEN FOR MAP TO MOUNT
     window.emitter.addListener("mapLoaded", () => this.onMapLoad());
+    // LISTEN FOR CONTROL VISIBILITY CHANGES
+    window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control,visible));
   }
-
+  componentDidMount(){
+    this.setState({showBaseMapSwitcher:window.mapControls.basemap});
+  }
   // CREATE YEAR MARKS ON THE SLIDER
   getImagerySliderMarks() {
     const numServices = BasemapConfig.imageryServices.length;
@@ -397,7 +402,7 @@ class BasemapSwitcher extends Component {
     };
 
     return (
-      <div>
+      <div className={(!this.state.showBaseMapSwitcher? " sc-hidden":"")}>
         <div id="sc-basemap-main-container">
           <div id="sc-basemap-collapse-button" className={this.state.containerCollapsed ? "sc-basemap-collapse-button closed" : "sc-basemap-collapse-button"} onClick={this.onCollapsedClick} />
           <div className={this.state.containerCollapsed ? "sc-hidden" : "sc-basemap-imagery"}>

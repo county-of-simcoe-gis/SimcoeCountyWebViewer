@@ -2,9 +2,9 @@ import React, { Component } from "react";
 import "./ExternalServices.css";
 import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
-import mainConfig from "../../../../config.json";
+//import mainConfig from "../../../../config.json";
 import * as config from "./config.json";
-import GeoJSON from "ol/format/GeoJSON.js";
+//import GeoJSON from "ol/format/GeoJSON.js";
 import { Vector as VectorLayer } from "ol/layer.js";
 import { Vector as VectorSource } from "ol/source.js";
 import { Icon, Style } from "ol/style.js";
@@ -12,7 +12,7 @@ import Point from "ol/geom/Point";
 import Feature from "ol/Feature";
 import { unByKey } from "ol/Observable.js";
 
-const parcelURLTemplate = (mainURL, x, y) => `${mainURL}&cql_filter=INTERSECTS(geom,%20POINT%20(${x}%20${y}))`;
+//const parcelURLTemplate = (mainURL, x, y) => `${mainURL}&cql_filter=INTERSECTS(geom,%20POINT%20(${x}%20${y}))`;
 
 class ExternalServices extends Component {
   constructor(props) {

@@ -153,7 +153,7 @@ class Print extends Component {
           //console.log(data);
           if (data.done === true && data.status === "finished") {
             interval = 0;
-            helpers.showMessage("Print", "Your print has been downloaded", "green", 10000);
+            helpers.showMessage("Print", "Your print has been downloaded", helpers.messageColors.green, 10000);
             window.open(`${origin}${data.downloadURL}`);
             this.setState({ isPrinting: false }); // THIS WILL RE-ENABLE BUTTON AND HIDE LOADING MSG
           } else if (data.done === false && data.status === "running") {
@@ -167,7 +167,7 @@ class Print extends Component {
               }
             }, interval);
           } else if (data.done === true && data.status === "error") {
-            helpers.showMessage("Print Failed", "please report issue to site admin", "red", 15000);
+            helpers.showMessage("Print Failed", "please report issue to site admin", helpers.messageColors.red, 15000);
             this.setState({ isPrinting: false });
           }
         });
@@ -185,7 +185,7 @@ class Print extends Component {
         this.setState({ isPrinting: true });
         checkStatus(response);
       })
-      .catch(error => helpers.showMessage("Print Failed", `There has been a problem with your fetch operation: ${error.message}`, "red", 15000));
+      .catch(error => helpers.showMessage("Print Failed", `There has been a problem with your fetch operation: ${error.message}`, helpers.messageColors.red, 15000));
   };
 
   getPrintLayers = () => {

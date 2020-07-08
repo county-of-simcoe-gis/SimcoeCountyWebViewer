@@ -24,6 +24,17 @@
   "centerCoords": [-8878504.68, 5543492.45],
   "defaultZoom": 10,
   "maxZoom": 20,
+  "imageViewerUrl": "", 
+  "controls": {
+    "rotate":true,
+    "fullScreen":true,
+    "zoomInOut":true,
+    "currentLocation":true,
+    "zoomExtent":true,
+    "scale":true,
+    "scaleLine":true,
+    "basemap":true
+  },
  
   "sidebarToolComponents": [
     {
@@ -40,12 +51,13 @@
       "description": "Get coordinates throughout the map in a variety of different coordinate systems.",
       "imageName": "coordinates.png"
     },
+    
     {
-      "id": 3,
-      "name": "Print",
-      "componentName": "Print",
-      "description": "This tool allows users to print their map view in a variety of formats such as pdf and jpeg.",
-      "imageName": "print.png"
+      "id": 9,
+      "name": "Add Data",
+      "componentName": "AddLayer",
+      "description": "Add data to your map by importing layers for multiple sources.",
+      "imageName": "addlayer.png"
     },
     {
       "id": 4,
@@ -70,7 +82,7 @@
     },
     {
       "id": 7,
-      "name": "External Services (Street View)",
+      "name": "External Services",
       "componentName": "ExternalServices",
       "description": "This tool links a map location to many other External Map Services.",
       "imageName": "externalServices.png"

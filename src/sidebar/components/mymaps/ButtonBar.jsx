@@ -63,6 +63,7 @@ const ButtonBar = props => {
         }}
         isActive={props.activeButton === "Text" ? true : false}
       />
+      {/*
       <DrawButton
         disabled={false}
         title="Add Bearing Line"
@@ -71,6 +72,15 @@ const ButtonBar = props => {
           props.onClick("Bearing");
         }}
         isActive={props.activeButton === "Bearing" ? true : false}
+      />*/}
+      <DrawButton
+        disabled={false}
+        title="Add Measure Line"
+        imageName="measure-tool.png"
+        onClick={() => {
+          props.onClick("Measure");
+        }}
+        isActive={props.activeButton === "Measure" ? true : false}
       />
       <DrawButton
         disabled={false}
