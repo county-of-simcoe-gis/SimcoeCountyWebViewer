@@ -126,12 +126,6 @@ class MenuButton extends Component {
             {(this.props.showLabel!==undefined&&!this.props.showLabel)?<span style={{ display: "none" }}>&nbsp;</span> : <span style={{ pointerEvents: "none" }}>More</span>}
           </button>
         </div>
-
-      
-          <button id="sc-menu-button" className="sc-button-blue">
-            <span className="sc-menu-button-icon">More...</span>
-          </button>
-       
         <div id="sc-menu-button-list-container" className={menuListClassName}>
           <div className="sc-menu-list-item-heading" style={{ paddingTop: "0px" }}>
             MAP THEMES

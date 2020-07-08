@@ -111,7 +111,7 @@ class SCMap extends Component {
     window.popup = new Popup();
     window.map.addOverlay(window.popup);
 
-    window.map.getViewport().addEventListener("contextmenu", evt => {
+    window.map.getViewport().addEventListener("contextmenu", (evt) => {
       evt.preventDefault();
       this.contextCoords = window.map.getEventCoordinate(evt);
 

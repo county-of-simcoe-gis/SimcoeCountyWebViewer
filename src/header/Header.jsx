@@ -72,7 +72,7 @@ class Header extends Component {
     const imageName = mainConfig.headerLogoImageName;
     return (
       <div className="header">
-        {/*<div
+        <div
           id="sc-header-burger-button"
           onClick={this.burgerButtonHandler}
           tabIndex="2"
@@ -84,7 +84,7 @@ class Header extends Component {
         >
           <img src={require("./images/burger-button.png")} alt="Header Logo" />
         </div>
-        */}
+        
         <div id="sc-header-bar-button">
           <img src={require("./images/bar-button.png")} alt="Header Logo" />
         </div>

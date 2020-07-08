@@ -54,7 +54,13 @@
       "description": "Get coordinates throughout the map in a variety of different coordinate systems.",
       "imageName": "coordinates.png"
     },
-    
+    {
+      "id": 3,
+      "name": "Print",
+      "componentName": "Print",
+      "description": "This tool allows users to print their map view in a variety of formats such as pdf and jpeg.",
+      "imageName": "print.png"
+    },
     {
       "id": 9,
       "name": "Add Data",
@@ -85,7 +91,7 @@
     },
     {
       "id": 7,
-      "name": "External Services",
+      "name": "External Services (Street View)",
       "componentName": "ExternalServices",
       "description": "This tool links a map location to many other External Map Services.",
       "imageName": "externalServices.png"
@@ -96,6 +102,13 @@
       "componentName": "Weather",
       "description": "Radar and Weather forecast from Environment Canada.",
       "imageName": "weather.png"
+    },
+    {
+      "id": 10,
+      "name": "Settings",
+      "componentName": "Settings",
+      "description": "Customize for your preferences",
+      "imageName": "settings.png"
     }
   ],
 

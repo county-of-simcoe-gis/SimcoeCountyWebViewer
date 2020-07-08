@@ -191,6 +191,22 @@
 .ol-layer > canvas {
   background-color: #fff;
 }
+
+.ol-full-screen {
+  bottom: 5px;
+  left: 4px;
+  position: absolute;
+  text-align: center;
+  cursor: pointer;
+  padding: 3px !important;
+  padding-left: 5px !important;
+  padding-right: 5px !important;
+  background-color: rgba(255, 255, 255, 0.5);
+  border: 1px solid #949494;
+  border-radius: 3px;
+  box-shadow: 0 0 10px 0px;
+  z-index: 100 !important;
+}
 .ol-attribution {
   display: none;
 }

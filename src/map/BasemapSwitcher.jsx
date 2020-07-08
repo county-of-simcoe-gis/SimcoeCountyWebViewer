@@ -395,7 +395,15 @@ class BasemapSwitcher extends Component {
       }
     }
   }
-    
+  controlStateChange(control, state) {
+    switch (control){
+      case "basemap":
+        this.setState({showBaseMapSwitcher:state});
+        break;
+      default:
+        break;
+    }
+  }
   render() {
     
     // STYLE USED BY SLIDER
