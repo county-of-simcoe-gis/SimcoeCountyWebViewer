@@ -709,7 +709,7 @@ class MyMaps extends Component {
         this.onIdentify(item.id);
         break;
       case "sc-floating-menu-measure":
-        const feature = myMapsHelpers.getFeatureById(item.id);
+        const feature = drawingHelpers.getFeatureById(item.id);
         this.showDrawingOptionsPopup(feature, null, "measure");
         break;
       default:
