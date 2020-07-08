@@ -10,9 +10,19 @@
           "requiresPropertyInfo": false
         },
         {
+          "name": "Google Street View",
+          "url": "http://maps.google.com/maps?q=&layer=c&cbll=${y},${x}",
+          "requiresPropertyInfo": false
+        },
+        {
           "name": "Google Search",
           "url": "https://www.google.ca/search?q=${address} Ontario Canada",
           "requiresPropertyInfo": true
+        },
+        {
+          "name": "Google Driving Directions",
+          "url": "https://www.google.com/maps?daddr=${y},${x}",
+          "requiresPropertyInfo": false
         }
       ]
     },
