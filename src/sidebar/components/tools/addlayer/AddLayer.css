@@ -1,0 +1,196 @@
+#sc-add-layer-server {
+  width:335px;
+}
+
+#sc-input-service-layers {
+  width:345px;
+}
+
+#sc-add-layer-discover{
+  width: 345px;
+}
+#sc-input-layers{
+  width:345px;
+}
+#sc-input-format{
+  width:345px;
+}
+.sc-add-layer-close {
+  font-size: 20px!important;
+  font-weight: bold!important;
+}
+.sc-add-layer-title {
+  text-align: center;
+  font-size: 16px;
+  display: inline-block;
+  width:87%;
+}
+.sc-add-layer-content {
+  position: absolute;
+  margin-bottom: 0px;
+  overflow: auto;
+  padding: 5px !important;
+  bottom: 0px;
+  top: 106px;
+  width: 97%;
+  color: #5b5b5b;
+}
+.sc-add-layer-tab-panel{
+  background:rgba(191, 214, 228, 0.15);
+}
+.sc-add-layer-switch {
+  top: 5px;
+  margin-left: 5px;
+}
+
+.sc-add-layer-main-label {
+  display: block;
+  font-weight: bold;
+}
+
+.sc-add-layer-switch-label {
+  display: inline-table;
+  width: 175px;
+}
+.sc-add-layer-switch-label.on {
+  font-weight: bold;
+}
+
+.sc-add-layer-edit-radio {
+  position: relative;
+  top: 2px;
+}
+
+.sc-add-layer-import-input {
+  height: 25px;
+  width: 200px;
+  font-size: 8pt;
+}
+
+.sc-add-layer-import-button {
+  width: 60px;
+  margin-left: 5px;
+}
+
+.sc-add-layer-import-container {
+  border: 0 none #ccc;
+  border-bottom: 1px solid #d8dadc;
+  border-radius: 0;
+  padding-bottom: 10px;
+}
+
+.sc-add-layer-edit-container {
+  padding-top: 5px;
+}
+
+
+.sc-add-layer-content button {
+  min-width: 32px;
+  min-height: 32px;
+  margin: 4px 4px;
+}
+.sc-add-layer-row{
+  height: 35px;
+  margin-top: 10px;
+}
+.sc-add-layer-row.right{
+  float: right;
+}
+.sc-add-layer-row.center{
+  text-align: center;
+}
+
+.sc-add-layer-row label{    
+  display: inline-block;
+  width:120px;
+  font-weight: bold;
+  padding-left: 10px;
+  font-size: 16px;
+}
+.sc-add-layer-row.file-extensions{
+  height:unset;
+}
+.sc-add-layer-row .sc-add-layer-select{    
+  display: inline-block;
+  width:205px;
+  font-size: 16px;
+}
+.sc-add-layer-row .input {
+  display: inline-block;
+}
+.sc-add-layer-row button {
+  display: inline-block;
+}
+
+.sc-add-layer-input.file::-webkit-file-upload-button{
+  visibility: hidden;
+}
+.sc-add-layer-input.file::before {
+  content: 'Select File';
+  display: inline-block;
+  background: linear-gradient(to top, #f9f9f9, #e3e3e3);
+  border: 1px solid #999;
+  border-radius: 3px;
+  padding: 5px 8px;
+  outline: none;
+  white-space: nowrap;
+  -webkit-user-select: none;
+  cursor: pointer;
+  text-shadow: 1px 1px #fff;
+  font-weight: 700;
+  font-size: 10pt;
+}
+.sc-add-layer-input.file:hover::before {
+  border-color: black;
+}
+.sc-add-layer-input.file:active::before {
+  background: -webkit-linear-gradient(to top, #e3e3e3, #f9f9f9);
+}
+.sc-add-layer-input.file{
+  width: 335px;
+}
+
+.sc-add-layer-input {
+  background-color: hsl(0,0%,100%);
+  border-color: hsl(0,0%,80%);
+  border-radius: 4px;
+  border-style: solid;
+  border-width: 1px;
+  cursor: text;
+  color: hsl(0,0%,20%);
+  font-size: 16px;
+  padding: 5px;
+}
+
+.sc-add-layer-source span{
+  color:#FFF;
+  text-align: center;
+  display: inherit;
+  padding-left: inherit;
+  width:160px;
+  font-weight: bold;
+  padding: 2px;
+}
+.sc-add-layer-source span.off{
+  margin-left: -130px;
+  left:auto;
+  right:auto;
+  top:auto;
+  bottom:auto;
+}
+.sc-add-layer-source span.on{
+  left:auto;
+  right:auto;
+  top:auto;
+  bottom:auto;
+}
+/* Safari 10.1+ */
+/* Safari 10.1+ (alternate method) */
+@media not all and (min-resolution: 0.001dpcm) {
+  @supports (-webkit-appearance: none) {
+    .sc-add-layer-edit-radio {
+      top: -1px;
+    }
+    
+  }
+}

@@ -1,16 +1,15 @@
 import React, { Component, useState } from "react";
 import "./Identify.css";
 import * as helpers from "../helpers/helpers";
+import {LayerHelpers, OL_LAYER_TYPES} from "../helpers/OLHelpers";
 import mainConfig from "../config.json";
 import Collapsible from "react-collapsible";
 import { GeoJSON } from "ol/format.js";
 import InfoRow from "../helpers/InfoRow.jsx";
 import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
-import { Circle as CircleStyle, Icon, Fill, Stroke, Style } from "ol/style.js";
-import { Image as ImageLayer } from "ol/layer.js";
-import Feature from "ol/Feature";
-import { AutoSizer } from "react-virtualized";
+import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style.js";
+
 import useIframeContentHeight from "react-use-iframe-content-height";
 
 class Identify extends Component {
@@ -50,42 +49,22 @@ class Identify extends Component {
     let layerList = [];
 
     for (let index = 0; index < layers.length; index++) {
-      const layer = layers[index];
-      if (layer.getVisible() && layer instanceof ImageLayer) {
-        const name = layer.get("name");
-        let displayName = ""; // layer.get("displayName");
-        let type = layer.get("displayName")
-        let wfsUrl = layer.get("wfsUrl");
-        if (geometry.getType() !== "Point") {
-          const feature = new Feature(geometry);
-          const wktString = helpers.getWKTStringFromFeature(feature);
-          wfsUrl += "INTERSECTS(geom," + wktString + ")";
-          // QUERY USING WFS
-          // eslint-disable-next-line
-          helpers.getJSON(wfsUrl, result => {
-            const featureList = new GeoJSON().readFeatures(result);
-            if (featureList.length > 0) {
-              if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
-              let features = [];
-              featureList.forEach(feature => {
-                features.push(feature);
-              });
-              if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type });
-              this.setState({ layers: layerList });
-            }
-          });
-          // QUERY USING WMS
-          var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "application/json" });
-        
-        let html_url = mainConfig.htmlIdentify ? layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "text/html" }) + "&feature_count=1000000" : "" ;
-          url += "&feature_count=1000000";
-          if (url) {
-            helpers.getJSON(url, result => {
-              const features = result.features;
-              if (features.length === 0) {
-                return;
-              }
+      const layer = layers[index];    
+      if (layer.getVisible() && LayerHelpers.getLayerType(layer) !== OL_LAYER_TYPES.Vector) {
+        const queryable = layer.get("queryable");
+        if (queryable) {
+          const name = layer.get("name");
+          let displayName = ""; // layer.get("displayName");
+          let type = layer.get("displayName");
+          let wfsUrl = layer.get("wfsUrl");
 
+          if (wfsUrl !== undefined && geometry.getType() !== "Point") {
+            const feature = new Feature(geometry);
+            const wktString = helpers.getWKTStringFromFeature(feature);
+            wfsUrl += "INTERSECTS(geom," + wktString + ")";
+            // QUERY USING WFS
+            // eslint-disable-next-line
+            helpers.getJSON(wfsUrl, result => {
               const featureList = new GeoJSON().readFeatures(result);
               if (featureList.length > 0) {
                 if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
@@ -93,29 +72,59 @@ class Identify extends Component {
                 featureList.forEach(feature => {
                   features.push(feature);
                 });
-                if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, html_url: html_url });
+                if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type });
                 this.setState({ layers: layerList });
               }
             });
+          }else{
+            let infoFormat = layer.get("INFO_FORMAT");
+            let xslTemplate = layer.get("XSL_TEMPLATE");
+            // QUERY USING WMS
+            let getInfoOption = { "INFO_FORMAT": "application/json" };
+            if (infoFormat !== undefined && infoFormat !== "") getInfoOption["INFO_FORMAT"] = infoFormat;
+            if (xslTemplate !== undefined && xslTemplate !== "") getInfoOption["XSL_TEMPLATE"] = xslTemplate;
+            var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", getInfoOption);
+            let html_url = mainConfig.htmlIdentify ? layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "text/html" }) + "&feature_count=1000000" : "" ;
+            if (url) {
+                url += "&feature_count=1000000";                
+                helpers.httpGetText(url, result => {
+                  let tempResult = helpers.tryParseJSON(result);
+                  if (tempResult !== false) result = tempResult;
+                  const featureList = new GeoJSON().readFeatures(result);
+                  if (featureList.length === 0) {
+                    return;
+                  } else if (featureList.length > 0) {
+                    if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
+                    let features = [];
+                    featureList.forEach(feature => {
+                      features.push(feature);
+                    });
+                    if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, html_url: html_url });
+                    this.setState({ layers: layerList });
+                  }
+                });
+              }
+            }
           }
         }
       }
   
 
     this.setState({ isLoading: false });
-  };
-}
+};
+
 
   onMouseEnter = feature => {
-    this.vectorLayerShadow.getSource().clear();
-    this.vectorLayerShadowSecondary.getSource().clear();
+    if (feature.values_.geometry !== undefined && feature.values_.geometry !== null){
+      this.vectorLayerShadow.getSource().clear();
+      this.vectorLayerShadowSecondary.getSource().clear();
 
-    if (feature.values_.extent_geom !== undefined && feature.values_.extent_geom !== null){
-      var extentFeature = helpers.getFeatureFromGeoJSON(feature.values_.extent_geom);
-      this.vectorLayerShadowSecondary.getSource().addFeature(extentFeature);
-    }
-    this.vectorLayerShadow.getSource().addFeature(feature);
-
+      if (feature.values_.extent_geom !== undefined && feature.values_.extent_geom !== null){
+        var extentFeature = helpers.getFeatureFromGeoJSON(feature.values_.extent_geom);
+        this.vectorLayerShadowSecondary.getSource().addFeature(extentFeature);
+      }
+      this.vectorLayerShadow.getSource().addFeature(feature);
+   }
   };
 
   onMouseLeave = () => {
@@ -218,8 +227,6 @@ class Identify extends Component {
     helpers.zoomToFeature(feature);
   };
 
-  
-
   render() {
     return (
       <div>
@@ -238,7 +245,7 @@ class Identify extends Component {
         </div>
       </div>
     );
-  }
+  };
 }
 
 export default Identify;
@@ -303,7 +310,7 @@ const IFrame = props => {
 
   return (
       <div className="sc-identiy-feature-iframe">
-        <iframe key={helpers.getUID()} ref={iframeRef} height={iframeHeight} src={src}  />
+        <iframe key={helpers.getUID()} title={helpers.getUID()} ref={iframeRef} height={iframeHeight} src={src}  />
       </div>
     );
 }
@@ -313,7 +320,7 @@ const FeatureItem = props => {
   let { feature, displayName, html_url,identifyTitleColumn,identifyIdColumn } = props;
   if (identifyTitleColumn!==undefined && identifyTitleColumn !== "") displayName = identifyTitleColumn;
   //console.log(feature);
-
+  var hasGeom = (feature.values_.geometry !== undefined && feature.values_.geometry !== null);
   var extentFeature = undefined;
   if (feature.values_.extent_geom !== undefined && feature.values_.extent_geom !== null){
     extentFeature = helpers.getFeatureFromGeoJSON(feature.values_.extent_geom);
@@ -342,20 +349,22 @@ const FeatureItem = props => {
   let isSameOrigin = true;
   if (html_url !== undefined) isSameOrigin = html_url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !== -1;
 
-  keys.map((keyName) => {
-    const val = featureProps[keyName];
-    if (identifyIdColumn !==undefined && identifyIdColumn !== "" ){
-      if (cql_filter === "" && (keyName.toLowerCase().indexOf(identifyIdColumn.toLowerCase()) !== -1 && val !== null) && mainConfig.htmlIdentify && isSameOrigin) cql_filter += keyName + "=" + val;
-    }
-  })
+  keys.filter(keyName => {
+      const val = featureProps[keyName];
+      if (identifyIdColumn !==undefined && identifyIdColumn !== "" ){
+        if (cql_filter === "" && (keyName.toLowerCase().indexOf(identifyIdColumn.toLowerCase()) !== -1 && val !== null) && mainConfig.htmlIdentify && isSameOrigin) return true;
+        else return false;
+      }
+      else return false;
+    }).map(keyName => cql_filter += keyName + "=" + featureProps[keyName]);
   return (
     <div>
       <div className="sc-identify-feature-header" onMouseEnter={() => props.onMouseEnter(feature)} onMouseLeave={props.onMouseLeave}>
         <div className="sc-fakeLink sc-identify-feature-header-label" onClick={() => setOpen(!open)}>
             {mainConfig.excludeIdentifyTitleName ? featureName : displayName + ": " + featureName}
           </div>
-        <img className="sc-identify-feature-header-img" src={images["zoom-in.png"]} onClick={() => props.onZoomClick(feature)} alt="Zoom In"></img>
-        {extentFeature !== undefined ? <img className="sc-identify-feature-header-img" src={images["extent-zoom-in.png"]} onClick={() => props.onZoomClick(extentFeature)} alt="Zoom In To Extent"></img> : ""}
+        {hasGeom?<img className="sc-identify-feature-header-img" src={images["zoom-in.png"]} onClick={() => props.onZoomClick(feature)} title="Zoom In" alt="Zoom In"></img> :""}
+        {extentFeature !== undefined ? <img className="sc-identify-feature-header-img" src={images["extent-zoom-in.png"]} onClick={() => props.onZoomClick(extentFeature)} title="Zoom In To Extent" alt="Zoom In To Extent"></img> : ""}
       </div>
   
         
@@ -364,14 +373,22 @@ const FeatureItem = props => {
         <IFrame key={helpers.getUID()} src={html_url} filter={cql_filter} />
         
         
-          {keys.map((keyName, i) => {
-          // UNDERSCORES IN FRONT OF FIELD NAME INDICATES ITS FOR INTERNAL USE ONLY
-          if (keyName.substring(0, 1) !== "_") {
-            const val = featureProps[keyName];
-            if (cql_filter==="" &&  typeof val !== "object" && !excludedKeys.includes(keyName.toLowerCase())) return <InfoRow key={helpers.getUID()} label={helpers.toTitleCase(keyName.split("_").join(" "))} value={val}></InfoRow>;
-            // <div key={helpers.getUID()}>TEST</div>
+          {keys.filter((keyName, i) => {
+              let val = featureProps[keyName];
+              if (val === null) val = "";
+              if (cql_filter==="" 
+                  &&  typeof val !== "object" 
+                  && !excludedKeys.includes(keyName.toLowerCase())
+                  ) 
+                  {
+                    return true;
+                  }
+              return false;
+            }).map((keyName, i) => {
+              let val = featureProps[keyName];
+              return <InfoRow key={helpers.getUID()} label={helpers.toTitleCase(keyName.split("_").join(" "))} value={val}></InfoRow>;
+            })
           }
-        })}
         </div>
   
       </div>

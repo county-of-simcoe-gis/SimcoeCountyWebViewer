@@ -32,6 +32,7 @@ class MenuButton extends Component {
   // LOAD TOOLS FROM CONFIG
   getTools = () => {
     let itemList = [];
+    itemList.push(<MenuItem onClick={this.onScreenshotClick} key={helpers.getUID()} name={"Take a Screenshot"} iconClass={"sc-menu-screenshot-icon"} />);
     mainConfig.sidebarToolComponents.forEach(tool => {
       itemList.push(<MenuItem onClick={() => this.itemClick(tool.name, "tools")} key={helpers.getUID()} name={tool.name} iconClass={"sc-menu-tools-icon"} />);
     });
@@ -57,9 +58,7 @@ class MenuButton extends Component {
     itemList.push(<MenuItem onClick={this.onScreenshotClick} key={helpers.getUID()} name={"Take a Screenshot"} iconClass={"sc-menu-screenshot-icon"} />);
     itemList.push(<MenuItem key={helpers.getUID()} name={"Map Legend"} iconClass={"sc-menu-legend-icon"} onClick={() => window.emitter.emit("openLegend", null)} />);
     itemList.push(<MenuItem onClick={() => helpers.showURLWindow(mainConfig.helpUrl, false, "full", false, true)} key={helpers.getUID()} name={"Help"} iconClass={"sc-menu-help-icon"} />);
-    itemList.push(
-      <MenuItem onClick={() => helpers.showURLWindow(mainConfig.termsUrl, false, "full", false, true)} key={helpers.getUID()} name={"Terms and Conditions"} iconClass={"sc-menu-terms-icon"} />
-    );
+    itemList.push(<MenuItem onClick={() => helpers.showURLWindow(mainConfig.termsUrl, false, "full", false, true)} key={helpers.getUID()} name={"Terms and Conditions"} iconClass={"sc-menu-terms-icon"} />);
     return itemList;
   };
 
@@ -120,12 +119,11 @@ class MenuButton extends Component {
   render() {
     const menuListClassName = this.getMenuClassName();
     return (
-      <div className={window.sidebarOpen ? "sc-hidden" : "sc-menu-button-main-container"}>
+      <div className={"sc-menu-button-main-container" + (this.props.hidden? " sc-hidden" : "") + ((this.props.className !== undefined && this.props.className!== "")? " " +this.props.className:""  ) } alt="More Options" title="More Options">
         <div className="sc-menu-button-container" style={{ cursor: "pointer" }} onClick={this.onMenuButtonClick}>
           <button className="sc-menu-more-button">
-            <img src={images["more.png"]} style={{ pointerEvents: "none" }} alt="More" />
-            <br />
-            <span style={{ pointerEvents: "none" }}>More</span>
+            <img src={images["more.png"]} style={{ pointerEvents: "none" }} alt="More Options" title="More Options" />
+            {(this.props.showLabel!==undefined&&!this.props.showLabel)?<span style={{ display: "none" }}>&nbsp;</span> : <span style={{ pointerEvents: "none" }}>More</span>}
           </button>
         </div>
 

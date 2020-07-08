@@ -1,9 +1,88 @@
 .ol-zoom {
-  display: none;
+  left: 5px;
+  bottom: auto;
+  right: auto;
+  top: 38px;
+  height:auto;
+  width:28px;
+  background: transparent;
+  padding:0px;
+  
+}
+.ol-zoom:hover {
+  background: transparent;
+}
+.ol-zoom button{
+  border-radius: 4px!important;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+  box-shadow: 0px 0px 5px 0px rgba(80, 80, 80, 0.69);
+  color: #606060;
+  height:28px;
+  width:28px;
+  margin:0px;
+}
+.ol-zoom .ol-zoom-in {
+  margin-bottom: 5px;
+}
+
+.ol-rotate {
+  left: 5px;
+  bottom: auto;
+  right: auto;
+  top: 5px;
+  padding:0px;
+  height:28px;
+  width:28px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+  box-shadow: 0px 0px 5px 0px rgba(80, 80, 80, 0.69);
+  
+}
+
+.ol-rotate.ol-hidden{
+  opacity: unset;
+  visibility: unset;
+  transition: unset;
+  -webkit-transition: unset;
+}
+.ol-rotate button{
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+
+  padding:0px;
+  height:28px;
+  width:28px;
+  
+}
+.ol-compass{
+  height:28px;
+  width:28px;
+  background-image: url(./images/compass.png);
+  background-position: center center;
+  background-repeat: no-repeat;
+  color: #999;
+  background-size: 100%;
+
+  text-indent: 100%;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .ol-scale-line {
   right: 5px;
+  left: auto !important;
+  bottom: 5px;
+  background:rgba(191, 214, 228, 0.66);
+}
+
+.ol-scale-line-inner {
+  font-size: 12px;
+  font-weight: bold;
+  border: 2px solid #000;
+  border-top: none;
+  color: #000;
+  transition: ease;
+}
+.ol-scale-bar {
+  right: 20px;
   left: auto !important;
   bottom: 5px;
 }
@@ -13,6 +92,19 @@
   bottom: 5px;
   right: auto;
   top: auto;
+  
+  height:30px;
+  width:30px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+  box-shadow: 0px 0px 5px 0px rgba(80, 80, 80, 0.69);
+}
+.ol-full-screen button{
+  background-color: #C8C8C8 ;
+  height:28px;
+  width:28px;
+}
+.ol-full-screen button:hover{
+  background-color: #5d5d5d ;
 }
 
 .ol-popup {
@@ -95,22 +187,10 @@
   margin-bottom: 30px;
 }
 
-.ol-full-screen {
-  bottom: 5px;
-  left: 4px;
-  position: absolute;
-  text-align: center;
-  cursor: pointer;
-  padding: 3px !important;
-  padding-left: 5px !important;
-  padding-right: 5px !important;
-  background-color: rgba(255, 255, 255, 0.5);
-  border: 1px solid #949494;
-  border-radius: 3px;
-  box-shadow: 0 0 10px 0px;
-  z-index: 100 !important;
-}
 
+.ol-layer > canvas {
+  background-color: #fff;
+}
 .ol-attribution {
   display: none;
 }

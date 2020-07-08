@@ -93,7 +93,7 @@ class MyMapsPopupLabel extends Component {
         </div>
         <div>
           <input 
-            className="sc-mymaps-popup-label-input" 
+            className="sc-mymaps-popup-label-input sc-editable" 
             type="text" 
             value={this.state.label} 
             onChange={this.onLabelChange}
