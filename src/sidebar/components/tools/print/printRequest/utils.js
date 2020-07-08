@@ -31,7 +31,7 @@ let stringToColour = function(str) {
 };
 
 // Changes XML to JSON
-let xmlToJson = xml => {
+let xmlToJson = (xml) => {
   let obj = {};
 
   if (xml.nodeType === 1) {
@@ -70,7 +70,7 @@ let xmlToJson = xml => {
 };
 
 //remove null and undefined values from object
-let removeNull = obj => {
+let removeNull = (obj) => {
   let propNames = Object.getOwnPropertyNames(obj);
   for (let i = 0; i < propNames.length; i++) {
     let propName = propNames[i];
@@ -81,9 +81,9 @@ let removeNull = obj => {
   return obj;
 };
 
-let extractServiceName = url => {
+let extractServiceName = (url) => {
   let serviceUrl = url.split("/services/")[1].split("/");
-  let filtered = serviceUrl.filter(e => (e === "MapServer" || e === "Public" ? false : true));
+  let filtered = serviceUrl.filter((e) => (e === "MapServer" || e === "Public" ? false : true));
   let serviceName = "";
 
   if (filtered.length === 1) {

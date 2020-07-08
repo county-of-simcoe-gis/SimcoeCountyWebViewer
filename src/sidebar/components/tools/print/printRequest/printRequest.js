@@ -13,13 +13,13 @@ export async function loadTileMatrix(url) {
   let xml = new window.DOMParser().parseFromString(data, "text/xml");
   let json = utils.xmlToJson(xml);
   let flatTileMatrix = json.Capabilities.Contents.TileMatrixSet[0].TileMatrix;
-  let tileMatrix = flatTileMatrix.map(m => {
+  let tileMatrix = flatTileMatrix.map((m) => {
     return {
       identifier: m["ows:Identifier"]["#text"],
       scaleDenominator: Number(m["ScaleDenominator"]["#text"]),
       topLeftCorner: [Number(m["TopLeftCorner"]["#text"].split(" ")[0]), Number(m["TopLeftCorner"]["#text"].split(" ")[1])],
       tileSize: [256, 256],
-      matrixSize: [Number(m["MatrixWidth"]["#text"]), Number(m["MatrixHeight"]["#text"])]
+      matrixSize: [Number(m["MatrixWidth"]["#text"]), Number(m["MatrixHeight"]["#text"])],
     };
   });
   return tileMatrix;
@@ -38,7 +38,7 @@ export async function loadWMTSConfig(url, opacity) {
   wmtsCongif.dimensionParams = {};
   wmtsCongif.requestEncoding = "REST";
   wmtsCongif.customParams = {
-    TRANSPARENT: "true"
+    TRANSPARENT: "true",
   };
   wmtsCongif.matrixSet = "EPSG:3857";
   wmtsCongif.baseURL = url + "/tile/{TileMatrix}/{TileRow}/{TileCol}";
@@ -84,12 +84,12 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     "Ortho_1989_Cache",
     "Ortho_1954_Cache",
     "Bathymetry_Cache",
-    "World_Imagery"
+    "World_Imagery",
   ];
   const mapfishOutputFormats = {
     JPG: "jpeg",
     PNG: "png",
-    PDF: "pdf"
+    PDF: "pdf",
   };
   // template dimensions to be used for preserve map extensions
   const templateDimensions = {};
@@ -114,10 +114,10 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
       map: {},
       overviewMap: {},
       scaleBar: {
-        geodetic: currentMapScale
+        geodetic: currentMapScale,
       },
-      scale: ""
-    }
+      scale: "",
+    },
   };
 
   let mainMap = [];
@@ -125,7 +125,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
   let sortedMainMap = [];
   let sortedOverviewMap = [];
 
-  let configureVectorMyMapsLayer = l => {
+  let configureVectorMyMapsLayer = (l) => {
     if (typeof l.values_.source.uidIndex_ !== "undefined") {
       let myMapsData = JSON.parse(localStorage.getItem("myMaps")).items.reverse();
 
@@ -139,7 +139,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
         Arrow: "Line",
         Text: "Point",
         Cancel: "Polygon",
-        Bearing: "Line"
+        Bearing: "Line",
       };
 
       for (const key in myMapsData) {
@@ -160,7 +160,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
           labelAlign: "cm",
           labelRotation: 0,
           labelXOffset: 0,
-          labelYOffset: 0
+          labelYOffset: 0,
         };
         let f = myMapsData[key];
         if (f.visible === true) {
@@ -238,32 +238,32 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
                   type: "Feature",
                   geometry: {
                     type: f.geometryType,
-                    coordinates: grouped_coords
+                    coordinates: grouped_coords,
                   },
                   properties: {
                     id: f.id,
                     label: f.label ? f.label : false,
                     labelVisible: f.labelVisible ? f.labelVisible : false,
                     drawType: f.geometryType,
-                    isParcel: f.isParcel ? f.isParcel : false
-                  }
-                }
-              ]
+                    isParcel: f.isParcel ? f.isParcel : false,
+                  },
+                },
+              ],
             },
             name: f.label,
             style: {
               version: "2",
               "*": {
-                symbolizers: [styles, labels]
-              }
-            }
+                symbolizers: [styles, labels],
+              },
+            },
           });
         }
       }
     }
   };
 
-  let configureTileLayer = async l => {
+  let configureTileLayer = async (l) => {
     let tileUrl = null;
 
     if (l.values_.source.key_ === "https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}") {
@@ -277,7 +277,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     overviewMap.push(await loadWMTSConfig(tileUrl, l.values_.opacity));
   };
 
-  let configureLayerGroup = async l => {
+  let configureLayerGroup = async (l) => {
     for (const key in l.values_.layers.array_) {
       let layers = l.values_.layers.array_[key];
 
@@ -285,20 +285,21 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
         mainMap.push({
           baseURL: osmBaseUrl,
           type: "OSM",
-          imageExtension: "png"
+          imageExtension: "png",
         });
         overviewMap.push({
           baseURL: osmBaseUrl,
           type: "OSM",
-          imageExtension: "png"
+          imageExtension: "png",
         });
       } else if (layers.values_.source.key_ === "") {
         let tileUrl = null;
 
         if (typeof layers.values_.source.urls !== "undefined" && layers.values_.source.urls !== null) {
-          if (layers.values_.source.urls[0] === "https://ws.giscache.lrc.gov.on.ca/arcgis/rest/services/LIO_Cartographic/LIO_Topographic/MapServer") {
-            tileUrl = "https://ws.giscache.lrc.gov.on.ca/arcgis/rest/services/LIO_Cartographic/LIO_Topographic/MapServer";
-          }
+          tileUrl = layers.values_.source.urls[0];
+          // if (layers.values_.source.urls[0] === "https://ws.giscache.lrc.gov.on.ca/arcgis/rest/services/LIO_Cartographic/LIO_Topographic/MapServer") {
+          //   tileUrl = "https://ws.giscache.lrc.gov.on.ca/arcgis/rest/services/LIO_Cartographic/LIO_Topographic/MapServer";
+          // }
         } else {
           let entries = layers.values_.source.tileCache.entries_;
           tileUrl = entries[Object.keys(entries)[0]].value_.src_.split("/tile")[0];
@@ -309,7 +310,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     }
   };
 
-  let configureImageLayer = l => {
+  let configureImageLayer = (l) => {
     mainMap.push({
       type: "wms",
       baseURL: mainConfig.geoserverUrl + "wms",
@@ -318,13 +319,13 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
       layers: [l.values_.source.params_.LAYERS],
       imageFormat: "image/png",
       customParams: {
-        TRANSPARENT: "true"
+        TRANSPARENT: "true",
       },
-      version: "1.3.0"
+      version: "1.3.0",
     });
   };
 
-  let getLayerByType = async l => {
+  let getLayerByType = async (l) => {
     if (l.values_.name === "myMaps") {
       configureVectorMyMapsLayer(l);
     }
@@ -344,16 +345,16 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
     }
   };
   //iterate through each map layer passed in the window.map
-  let mapLayerList = mapLayers.map(l => getLayerByType(l));
+  let mapLayerList = mapLayers.map((l) => getLayerByType(l));
 
   //wait for list of layer promises to be resolved
   await Promise.all(mapLayerList);
 
   let sortLayers = async (layers, sorted) => {
-    mapLayerSorter.forEach(key => {
+    mapLayerSorter.forEach((key) => {
       let found = false;
       // eslint-disable-next-line
-      layers = layers.filter(l => {
+      layers = layers.filter((l) => {
         if (l.type === "geojson") {
           sorted.push(l);
         }
