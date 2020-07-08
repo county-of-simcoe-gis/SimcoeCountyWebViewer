@@ -35,42 +35,42 @@ class Print extends Component {
     printSizes: [
       {
         value: "8X11 Portrait",
-        label: "8X11 Portrait (Letter)"
+        label: "8X11 Portrait (Letter)",
       },
       {
         value: "11X8 Landscape",
-        label: "11X8 Landscape (Letter)"
+        label: "11X8 Landscape (Letter)",
       },
       {
         value: "8X11 Portrait Overview",
-        label: "8X11 Portrait with Overview"
+        label: "8X11 Portrait with Overview",
       },
       {
         value: "Map Only",
-        label: "Map Only"
+        label: "Map Only",
       },
       {
         value: "Map Only Portrait",
-        label: "Map Only Portrait"
+        label: "Map Only Portrait",
       },
       {
         value: "Map Only Landscape",
-        label: "Map Only Landscape"
-      }
+        label: "Map Only Landscape",
+      },
     ],
     printFormats: [
       {
         value: "PDF",
-        label: "PDF"
+        label: "PDF",
       },
       {
         value: "PNG",
-        label: "PNG"
+        label: "PNG",
       },
       {
         value: "JPG",
-        label: "JPG"
-      }
+        label: "JPG",
+      },
     ],
     mapTitle: "County of Simcoe - Web Map",
     printSizeSelectedOption: null,
@@ -79,7 +79,7 @@ class Print extends Component {
     mapScaleOption: "forceScale",
     mapOnlyHeight: document.getElementById("map").offsetHeight,
     mapOnlyWidth: document.getElementById("map").offsetWidth,
-    isPrinting: false
+    isPrinting: false,
   };
 
   componentDidMount() {
@@ -87,31 +87,31 @@ class Print extends Component {
     this.setState({ printFormatSelectedOption: this.state.printFormats[0] });
   }
 
-  onChangePaperSize = selectedOption => {
+  onChangePaperSize = (selectedOption) => {
     this.setState({ printSizeSelectedOption: selectedOption });
   };
 
-  onChangeFormat = selectedOption => {
+  onChangeFormat = (selectedOption) => {
     this.setState({ printFormatSelectedOption: selectedOption });
   };
 
-  onMapTitleChange = evt => {
+  onMapTitleChange = (evt) => {
     this.setState({ mapTitle: evt.target.value });
   };
 
-  onForceScaleChange = evt => {
+  onForceScaleChange = (evt) => {
     this.setState({ forceScale: evt.target.value });
   };
 
-  onMapScaleOptions = evt => {
+  onMapScaleOptions = (evt) => {
     this.setState({ mapScaleOption: evt.target.value });
   };
 
-  onMapOnlyWidth = evt => {
+  onMapOnlyWidth = (evt) => {
     this.setState({ mapOnlyWidth: evt.target.value });
   };
 
-  onMapOnlyHeight = evt => {
+  onMapOnlyHeight = (evt) => {
     this.setState({ mapOnlyHeight: evt.target.value });
   };
 
@@ -122,7 +122,7 @@ class Print extends Component {
     this.props.onClose();
   }
 
-  onDownloadButtonClick = async evt => {
+  onDownloadButtonClick = async (evt) => {
     //this.setState({isPrinting: true});
     //const {printSelectedOption} = this.state;
     //console.log(this.state);
@@ -146,10 +146,10 @@ class Print extends Component {
     let url = `${origin}/print/print/${printAppId}/report.${outputFormat}`;
 
     //check print Status and retreive print
-    let checkStatus = response => {
+    let checkStatus = (response) => {
       fetch(`${origin}${response.statusURL}`)
-        .then(data => data.json())
-        .then(data => {
+        .then((data) => data.json())
+        .then((data) => {
           //console.log(data);
           if (data.done === true && data.status === "finished") {
             interval = 0;
@@ -176,16 +176,18 @@ class Print extends Component {
     fetch(url, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: encodedPrintRequest
+      body: encodedPrintRequest,
     })
-      .then(response => response.json())
-      .then(response => {
+      .then((response) => response.json())
+      .then((response) => {
         this.setState({ isPrinting: true });
         checkStatus(response);
       })
-      .catch(error => helpers.showMessage("Print Failed", `There has been a problem with your fetch operation: ${error.message}`, "red", 15000));
+      .catch((error) => helpers.showMessage("Print Failed", `There has been a problem with your fetch operation: ${error.message}`, "red", 15000));
+
+    helpers.addAppStat("Print Button", "Click");
   };
 
   getPrintLayers = () => {
@@ -200,23 +202,23 @@ class Print extends Component {
 
   render() {
     const dropdownStyles = {
-      control: provided => ({
+      control: (provided) => ({
         ...provided,
         minHeight: "30px",
-        marginBottom: "5px"
+        marginBottom: "5px",
       }),
-      indicatorsContainer: provided => ({
+      indicatorsContainer: (provided) => ({
         ...provided,
-        height: "30px"
+        height: "30px",
       }),
-      clearIndicator: provided => ({
+      clearIndicator: (provided) => ({
         ...provided,
-        padding: "5px"
+        padding: "5px",
       }),
-      dropdownIndicator: provided => ({
+      dropdownIndicator: (provided) => ({
         ...provided,
-        padding: "5px"
-      })
+        padding: "5px",
+      }),
     };
 
     return (
@@ -224,7 +226,7 @@ class Print extends Component {
         <div className="sc-print-container">
           {/* MAP TITLE */}
           <label style={{ fontWeight: "bold" }}>Map Title:</label>
-          <input className="sc-print-map-title-input" onChange={this.onMapTitleChange} value={this.state.mapTitle}></input>
+          <input className="sc-print-map-title-input" onChange={this.onMapTitleChange} value={this.state.mapTitle} />
 
           {/* PRINT SIZE */}
           <label style={{ fontWeight: "bold" }}>Select Paper Size:</label>
@@ -240,7 +242,7 @@ class Print extends Component {
           </button>
           <div className={this.state.isPrinting ? "sc-print-loading" : "sc-hidden"}>
             Printing...&nbsp;
-            <img src={images["loading20.gif"]} alt="loading"></img>
+            <img src={images["loading20.gif"]} alt="loading" />
           </div>
 
           {/* ADVANCED OPTIONS */}
@@ -253,23 +255,23 @@ class Print extends Component {
           >
             <label style={{ fontSize: "10pt", fontWeight: "bold" }}>Map Scale/Extent:</label>
             <div style={{ fontSize: "10pt" }} onChange={this.onMapScaleOptions}>
-              <input type="radio" name="mapscale" value="preserveMapScale"></input>
+              <input type="radio" name="mapscale" value="preserveMapScale" />
               <label>Preserve Map Scale</label>
-              <br></br>
-              <input type="radio" name="mapscale" value="preserveMapExtent"></input>
+              <br />
+              <input type="radio" name="mapscale" value="preserveMapExtent" />
               <label>Preserve Map Extent</label>
-              <br></br>
-              <input type="radio" name="mapscale" value="forceScale" defaultChecked></input>
+              <br />
+              <input type="radio" name="mapscale" value="forceScale" defaultChecked />
               <label>Force Scale:</label>
-              <input className="sc-print-advanced-options-force-scale-input" onChange={this.onForceScaleChange} value={this.state.forceScale}></input>
+              <input className="sc-print-advanced-options-force-scale-input" onChange={this.onForceScaleChange} value={this.state.forceScale} />
             </div>
             <label style={{ fontSize: "10pt", fontWeight: "bold" }}>Map Only - Image Size:</label>
-            <br></br>
+            <br />
             <label>Width (px):</label>
-            <input className="sc-print-advanced-options-force-scale-input" onChange={this.onMapOnlyWidth} value={this.state.mapOnlyWidth}></input>
-            <br></br>
+            <input className="sc-print-advanced-options-force-scale-input" onChange={this.onMapOnlyWidth} value={this.state.mapOnlyWidth} />
+            <br />
             <label>Height (px):</label>
-            <input className="sc-print-advanced-options-force-scale-input" onChange={this.onMapOnlyHeight} value={this.state.mapOnlyHeight}></input>
+            <input className="sc-print-advanced-options-force-scale-input" onChange={this.onMapOnlyHeight} value={this.state.mapOnlyHeight} />
           </Collapsible>
         </div>
       </PanelComponent>
