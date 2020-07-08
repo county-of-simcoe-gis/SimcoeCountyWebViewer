@@ -432,14 +432,16 @@ class Sidebar extends Component {
                               onClick={() => {if(this.state.tabIndex===1) window.emitter.emit("setSidebarVisiblity", "CLOSE");}} />
                 </Tab>
 				<Tab id="tab-mymaps">
-                  <TabButton imageURL={images["map-32x32.png"]} name="My Maps" active={this.state.isMyMapsEditing} />
+                  <TabButton imageURL={images["map-32x32.png"]} name="My Maps" active={this.state.tabIndex===2} 
+                              onClick={() => {if(this.state.tabIndex===2)  window.emitter.emit("setSidebarVisiblity", "CLOSE");}} />
                 </Tab>
                 <Tab id="tab-themes">
-                  <TabButton imageURL={images["theme-32x32.png"]} name="Themes" active={this.state.activeTabComponents.themes.loadedComponent} />
+                  <TabButton imageURL={images["theme-32x32.png"]} name="Themes" active={this.state.tabIndex===3} 
+                              onClick={() => {if(this.state.tabIndex===3)  window.emitter.emit("setSidebarVisiblity", "CLOSE");}} />
                 </Tab>
                 <Tab id="tab-reports">
-                  <TabButton imageURL={images["report-32x32.png"]} name="Reports" active={this.state.tabIndex===3} 
-                              onClick={() => {if(this.state.tabIndex===3)  window.emitter.emit("setSidebarVisiblity", "CLOSE");}} />
+                  <TabButton imageURL={images["report-32x32.png"]} name="Reports" active={this.state.tabIndex===4} 
+                              onClick={() => {if(this.state.tabIndex===4)  window.emitter.emit("setSidebarVisiblity", "CLOSE");}} />
                 </Tab>
               </TabList>
 
@@ -460,13 +462,10 @@ class Sidebar extends Component {
               <img src={require("./images/close-tab.png")} alt="Close Tab" />
             </div>
             <SidebarSlim
-              onClick={this.slimSidebarButtonClick}
-              themeActive={this.state.activeTabComponents.themes.loadedComponent}
-              toolActive={this.state.activeTabComponents.tools.loadedComponent}
-              isMyMapsEditing={this.state.isMyMapsEditing}
+              tabIndex={this.state.tabIndex}
             />
             <div id="sc-sidebar-message-container" />
-            <div id="sc-sidebar-terms-container" />
+
             <MenuButton showLabel={false} hidden={!this.state.sidebarOpen} className={"map-float" + (!this.state.showFullscreen ? " no-fullscreen": "")} />
           </React.Fragment>
         }
