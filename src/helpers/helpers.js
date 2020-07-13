@@ -5,37 +5,41 @@ import ReactDOM from "react-dom";
 // OPEN LAYERS
 import Feature from "ol/Feature";
 import * as ol from "ol";
-import { Image as ImageLayer } from "ol/layer.js";
-import ImageWMS from "ol/source/ImageWMS.js";
-import { GeoJSON } from "ol/format.js";
-import { OSM, TileArcGISRest, TileImage, Vector as VectorSource } from "ol/source.js";
-import TileLayer from "ol/layer/Tile.js";
+import { Image as ImageLayer,Tile as TileLayer, Vector as VectorLayer } from "ol/layer.js";
+import { ImageWMS, OSM, TileArcGISRest,  TileImage, Vector,XYZ} from "ol/source.js";
+
+//import {file as FileLoader} from "ol/featureloader.js";
+import { GeoJSON,WKT } from "ol/format.js"; 
 import TileGrid from "ol/tilegrid/TileGrid.js";
 import Point from "ol/geom/Point";
-import VectorLayer from "ol/layer/Vector";
-import Vector from "ol/source/Vector";
 import { getTopLeft } from "ol/extent.js";
 import { easeOut } from "ol/easing";
 import { Fill, Stroke, Style, Circle as CircleStyle, Text as TextStyle } from "ol/style";
-import XYZ from "ol/source/XYZ.js";
+import {  ScaleLine, FullScreen, Rotate, Zoom} from "ol/control.js";
 import { unByKey } from "ol/Observable.js";
-import WKT from "ol/format/WKT.js";
 import { transform } from "ol/proj.js";
 import Projection from "ol/proj/Projection.js";
 import proj4 from "proj4";
 import { register } from "ol/proj/proj4";
 import { fromLonLat } from "ol/proj";
 import { getVectorContext } from "ol/render";
+import { KeyboardPan, KeyboardZoom } from "ol/interaction.js";
 
 //OTHER
 import { parseString } from "xml2js";
 import shortid from "shortid";
 import ShowMessage from "./ShowMessage.jsx";
+import ShowTerms from "./ShowTerms.jsx";
 import URLWindow from "./URLWindow.jsx";
 import mainConfig from "../config.json";
 import { InfoRow } from "./InfoRow.jsx";
 import blankImage from "./images/blank.png";
 
+
+export function getConfigValue(key){
+  const config = mainConfig;
+  return config[key];
+}
 // REGISTER CUSTOM PROJECTIONS
 proj4.defs([["EPSG:26917", "+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs "]]);
 register(proj4);
@@ -45,24 +49,48 @@ const _nad83Proj = new Projection({
   code: "EPSG:26917",
   extent: [194772.8107, 2657478.7094, 805227.1893, 9217519.4415],
 });
+export function tryParseJSON (jsonString){
+  try {
+      var obj = JSON.parse(jsonString);
+      if (obj && typeof obj === "object") {
+          return obj;
+      }
+  }
+  catch (e) { }
+  return false;
+}
 
+export function sortByKey(array, key) {
+  return array.sort(function(a, b) {
+      var x = a[key]; var y = b[key];
+      return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+  });
+}
 // APP STAT
 export function addAppStat(type, description) {
   if (mainConfig.includeAppStats === false) return;
-
   // IGNORE LOCAL HOST DEV
-  // if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") return;
-  // const appStatsTemplate = (type, description) => `http://localhost:8085/appStats/opengis/${type}/${description}`;
-  const appStatsTemplate = (type, description) => `${mainConfig.appStatsUrl}opengis/${type}/${description}`;
-
-  httpGetText(appStatsTemplate(type, description));
+  if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") return;
+  const build = (appName, version) =>  `${appName}-${version}`;
+  const appStatsTemplate = (build, type, description) => `${mainConfig.appStatsUrl}${build}/${type}/${description}`;
+  let buildname = window.location.pathname.split("/").join("");
+  if (window.version !== undefined && window.version !== null)
+  {
+    if (window.app !== undefined && window.app !== null)
+    { 
+      buildname += build(window.app,window.version)
+    }else{
+      buildname = build(buildname,window.version)
+    }
+    
+  }
+  httpGetText(appStatsTemplate(buildname, type, description));
 }
 
 // GLOW CONTAINER
 export function glowContainer(id, color = "blue") {
   const elem = document.getElementById(id);
-  if (elem === undefined) return;
-
+  if (elem === undefined || elem === null) return;
   const className = "sc-glow-container-" + color;
   elem.classList.add(className);
   setTimeout(function() {
@@ -77,13 +105,22 @@ export function isMobile() {
 }
 
 // SHOW URL WINDOW
-export function showURLWindow(url, showFooter = false, mode = "normal", honorDontShow = false, hideScroll = false) {
-  ReactDOM.render(
-    <URLWindow key={shortid.generate()} mode={mode} showFooter={showFooter} url={url} honorDontShow={honorDontShow} hideScroll={hideScroll} />,
-    document.getElementById("map-modal-window")
-  );
+export function showURLWindow(url, showFooter = false, mode = "normal", honorDontShow = false) {
+  let isSameOrigin = true;
+  if (url !== undefined) isSameOrigin = url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !== -1;
+  if (isSameOrigin) {
+    ReactDOM.render(<URLWindow key={shortid.generate()} mode={mode} showFooter={showFooter} url={url} honorDontShow={honorDontShow} />, document.getElementById("map-modal-window"));
+  }else{
+    window.open(url, "_blank");
+  }
 }
 
+export function export_file(filename, content) {
+  var pom = document.createElement('a');
+  pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
+  pom.setAttribute('download', filename);
+  pom.click();
+}
 // GET ARCGIS TILED LAYER
 export function getArcGISTiledLayer(url) {
   return new TileLayer({
@@ -101,8 +138,7 @@ export function getESRITileXYZLayer(url) {
       attributions: 'Tiles © <a href="https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer">ArcGIS</a>',
       url: url + "/tile/{z}/{y}/{x}",
       crossOrigin: "anonymous",
-    }), //,
-    //crossOrigin: "anonymous"
+    })
   });
 }
 
@@ -185,7 +221,30 @@ export function getOSMLayer() {
     crossOrigin: "anonymous",
   });
 }
+export function getViewRotation(){
+  var rotation = parseFloat(0);
+  if (window.map === undefined) return rotation;
+  rotation = window.map.getView().getProperties().rotation;
+  return (rotation * (180/Math.PI)); 
+}
 
+export function updateWMSRotation(){
+  const layers =  window.map.getLayers();
+  let currentRotation = getViewRotation();
+  console.log(getViewRotation());
+  if (layers.array_.length > 0) {
+    layers.forEach(layer => {
+      if (layer instanceof ImageLayer){
+        
+        let source = layer.getSource();
+        source.updateParams({angle:currentRotation,});
+        layer.setSource(source);
+      }
+
+    });
+    window.map.getView().setProperties({rotation:0});
+  }
+}
 // GET WMS Image Layer
 export function getImageWMSLayer(serverURL, layers, serverType = "geoserver", cqlFilter = null, zIndex = null, disableParcelClick = null) {
   let imageLayer = new ImageLayer({
@@ -193,7 +252,7 @@ export function getImageWMSLayer(serverURL, layers, serverType = "geoserver", cq
     zIndex: zIndex,
     source: new ImageWMS({
       url: serverURL,
-      params: { LAYERS: layers, cql_filter: cqlFilter },
+      params: { VERSION:"1.3.0", LAYERS: layers, cql_filter: cqlFilter},
       ratio: 1,
       serverType: serverType,
       crossOrigin: "anonymous",
@@ -210,7 +269,7 @@ export function getImageWMSLayer(serverURL, layers, serverType = "geoserver", cq
 
   if (layerNameOnly === "Assessment Parcel") disableParcelClick = false;
 
-  imageLayer.setProperties({ wfsUrl: wfsUrl, name: layerNameOnly, rootInfoUrl: rootInfoUrl, disableParcelClick: disableParcelClick });
+  imageLayer.setProperties({ wfsUrl: wfsUrl, name: layerNameOnly, rootInfoUrl: rootInfoUrl,  disableParcelClick: disableParcelClick });
   return imageLayer;
 }
 // GET CURRENT MAP SCALE
@@ -223,13 +282,62 @@ export function getMapScale() {
   return Math.round(pointResolution * DOTS_PER_INCH * INCHES_PER_METER);
 }
 
+
+
+// SET CURRENT MAP SCALE
+export function setMapScale(scale) {
+  const DOTS_PER_INCH = 96;
+  const INCHES_PER_METER = 39.37;
+  const pointResolution = parseFloat(scale)/(DOTS_PER_INCH * INCHES_PER_METER);
+  var projection = window.map.getView().getProjection();
+  var resolution =pointResolution/projection.getMetersPerUnit();
+  window.map.getView().setResolution(resolution);
+}
+
+// SHOW DISCLAIMER
+export const messageColors = {
+  gray:"gray",
+  green:"green",
+  blue:"blue",
+  red:"red",
+  yellow:"yellow",
+  orange:"orange"
+}
+export function getHash(input){
+  return input.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)
+}
+export function showTerms(title = "Terms and Condition", messageText = "Message",url = "", color = messageColors.green, accept, decline) {
+  const domId = "portal-root";
+  const termsDomId = "sc-show-terms-root";
+
+ ReactDOM.render(
+  <ShowTerms 
+    id={domId} 
+    key={termsDomId} 
+    title={title} 
+    message={messageText}
+    color={color} 
+    url={url} 
+    onAcceptClick={accept} 
+    onDeclineClick={decline} 
+    onClose={(ref) =>{
+      try {
+        ReactDOM.unmountComponentAtNode(ref.current.parentNode);
+      } catch (err) {
+        console.log(err);
+      }}
+    } 
+  />, document.getElementById("portal-root"));
+  
+}
+
 // SHOW MESSAGE
-export function showMessage(title = "Info", messageText = "Message", color = "green", timeout = 2000) {
+export function showMessage(title = "Info", messageText = "Message", color = messageColors.green, timeout = 2000, hideButton = false) {
   const domId = "sc-show-message-content";
   var existingMsg = document.getElementById(domId);
   if (existingMsg !== undefined && existingMsg !== null) existingMsg.remove();
 
-  const message = ReactDOM.render(<ShowMessage id={domId} key={domId} title={title} message={messageText} color={color} />, document.getElementById("sc-sidebar-message-container"));
+  const message = ReactDOM.render(<ShowMessage id={domId} key={domId} title={title} message={messageText} color={color} hideButton={hideButton} />, document.getElementById("sc-sidebar-message-container"));
 
   setTimeout(() => {
     try {
@@ -298,8 +406,8 @@ export function getJSON(url, callback) {
       // CALLBACK WITH RESULT
       if (callback !== undefined) callback(responseJson);
     })
-    .catch((error) => {
-      console.error(error);
+    .catch(error => {
+      console.error("Error: ",error, "URL:", url);
     });
 }
 
@@ -311,8 +419,8 @@ export async function getJSONWait(url, callback) {
       //console.log(resp);
       return resp;
     })
-    .catch((err) => {
-      console.log("Error: ", err);
+    .catch(err => {
+      console.log("Error: ", err, "URL:", url);
     });
   if (callback !== undefined) {
     //console.log(data);
@@ -351,7 +459,7 @@ export function getWFSVectorSource(serverUrl, layerName, callback, sortField = "
   const wfsUrl = wfsUrlTemplate(serverUrl, layerName, sortField);
   getJSON(wfsUrl, (result) => {
     const geoJSON = new GeoJSON().readFeatures(result);
-    var vectorSource = new VectorSource({ features: geoJSON });
+    var vectorSource = new Vector({ features: geoJSON });
     callback(vectorSource);
   });
 }
@@ -399,15 +507,20 @@ export function getWFSLayerRecordCount(serverUrl, layerName, callback) {
 }
 
 export function zoomToFeature(feature, animate = true) {
-  if (animate) {
-    if (feature.getGeometry().getType() === "Point") {
-      window.map.getView().fit(feature.getGeometry().getExtent(), { duration: 1000, minResolution: 1 });
-    } else {
-      window.map.getView().fit(feature.getGeometry().getExtent(), { duration: 1000 });
-    }
+  let geom = feature.getGeometry();
+  let duration = animate ? 1000 : 0;
+
+  if (geom.getType() === "Point") {
+    window.map.getView().fit(geom,window.map.getSize(), { duration: duration, minResolution: 1});
+    window.map.getView().setZoom(window.map.getView().getZoom() - 1);
+  } else if (geom.getType() === "GeometryCollection") {
+    window.map.getView().fit(geom.getGeometries()[0],window.map.getSize(), { duration: duration, minResolution: 1});
+    window.map.getView().setZoom(window.map.getView().getZoom() - 1);
   } else {
-    window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
+    window.map.getView().fit(geom,window.map.getSize(), { duration: duration });
+    window.map.getView().setZoom(window.map.getView().getZoom() - 1);
   }
+  
 }
 
 // THIS RETURNS THE ACTUAL REACT ELEMENT USING DOM ID
@@ -654,7 +767,7 @@ function _getText(feature, fieldName = "name", maxScale, type = "normal", placem
 }
 
 // https://stackoverflow.com/questions/14484787/wrap-text-in-javascript
-function stringDivider(str, width, spaceReplacer) {
+export function stringDivider(str, width, spaceReplacer) {
   if (str.length > width) {
     var p = width;
     while (p > 0 && str[p] !== " " && str[p] !== "-") {
@@ -674,9 +787,25 @@ function stringDivider(str, width, spaceReplacer) {
   return str;
 }
 
+export function saveToStorage(storageKey, item) {
+  localStorage.setItem(storageKey, JSON.stringify(item));
+};
+
+export function appendToStorage(storageKey, item, limit = undefined) {
+  let items = getItemsFromStorage(storageKey);
+  if (items === undefined) items=[];
+  item.dateAdded = new Date().toLocaleString();
+  items.unshift(item);
+  if (limit !== undefined){
+    if (items.length >= limit) items.pop();
+  }
+  
+  localStorage.setItem(storageKey, JSON.stringify(items));
+};
+
 export function getItemsFromStorage(key) {
   const storage = localStorage.getItem(key);
-  if (storage === null) return [];
+  if (storage === null) return undefined;
 
   const data = JSON.parse(storage);
   return data;
@@ -793,6 +922,16 @@ export function bufferGeometry(geometry, distanceMeters, callback) {
   });
 }
 
+export function disableKeyboardEvents(disable) {
+  if (window.map !== undefined && window.map !== null){
+    window.map.getInteractions().forEach(function(interaction) {
+      if (interaction instanceof KeyboardPan || interaction instanceof KeyboardZoom) {
+        interaction.setActive(!disable);
+      }
+    });
+  }
+}
+
 export function getGeometryCenter(geometry, callback) {
   const url = mainConfig.apiUrl + "postGetGeometryCenter/";
   const geoJSON = getGeoJSONFromGeometry(geometry);
@@ -850,4 +989,64 @@ function FeaturePopupContent(props) {
       })}
     </div>
   );
+}
+
+export function removeMapControl(map,controlType) {
+  const remove = (control) => {
+    map.removeControl(control);
+  }
+  map.getControls().forEach(function(control) {
+    if (controlType === "zoom" && control instanceof Zoom) {
+      remove(control);
+    }
+    if (controlType === "rotate" && control instanceof Rotate) {
+      remove(control);
+    }
+    if (controlType === "fullscreen" && control instanceof FullScreen) {
+      remove(control);
+    }
+    if (controlType === "scaleLine" && control instanceof ScaleLine) {
+      remove(control);
+    }
+  }, this);
+}
+
+export function addMapControl(map,controlType) {
+  const add = (control) => {
+    if (!hasMapControl(map,controlType)) map.addControl(control);
+  }
+  switch (controlType){
+    case "rotate":
+      add(new Rotate());
+      break;
+    case "zoom":
+      add(new Zoom());
+      break;
+    case "fullscreen":
+      add(new FullScreen());
+      break;
+    case "scaleLine":
+      add(new ScaleLine({minWidth: 100}));
+      break;
+    default:
+      break;
+  }
+}
+function hasMapControl(map,controlType) {
+  let returnResult = false;
+  map.getControls().forEach(function(control) {
+    if (controlType === "zoom" && control instanceof Zoom) {
+      returnResult =true;
+    }
+    if (controlType === "rotate" && control instanceof Rotate) {
+      returnResult =true;
+    }
+    if (controlType === "fullscreen" && control instanceof FullScreen) {
+      returnResult =true;
+    }
+    if (controlType === "scaleLine" && control instanceof ScaleLine) {
+      returnResult =true;
+    }
+  }, this);
+  return returnResult;
 }

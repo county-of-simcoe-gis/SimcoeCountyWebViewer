@@ -10,8 +10,8 @@ import { isMobile } from "react-device-detect";
 // CUSTOM
 import "./TOC.css";
 import * as helpers from "../../../helpers/helpers";
-import * as TOCHelpers from "./TOCHelpers.jsx";
-import TOCConfig from "./TOCConfig.json";
+import * as TOCHelpers from "../common/TOCHelpers.jsx";
+import TOCConfig from "../common/TOCConfig.json";
 import Layers from "./Layers.jsx";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
@@ -20,7 +20,7 @@ import Portal from "../../../helpers/Portal.jsx";
 class TOC extends Component {
   constructor(props) {
     super(props);
-    this.storageMapDefaultsKey = "map_defaults";
+    this.storageMapDefaultsKey = "Map Defaults";
     this.state = {
       layerGroups: [],
       selectedGroup: {},
@@ -89,6 +89,7 @@ class TOC extends Component {
             defaultGroup: groupInfo[1],
           },
           () => {
+            window.emitter.emit("tocLoaded");  
             if (callback !== undefined) callback();
           }
         );
@@ -102,6 +103,7 @@ class TOC extends Component {
           defaultGroup: groupInfo[1],
         },
         () => {
+          window.emitter.emit("tocLoaded");  
           if (callback !== undefined) callback();
         }
       );
@@ -132,7 +134,7 @@ class TOC extends Component {
     this.setState({ sortAlpha: sortAlpha });
 
     if (sortAlpha) {
-      helpers.showMessage("Sorting", "Layer re-ordering disabled.", "yellow");
+      helpers.showMessage("Sorting", "Layer re-ordering disabled.", helpers.messageColors.yellow);
     }
 
     helpers.addAppStat("TOC Sort", "click");
@@ -176,15 +178,23 @@ class TOC extends Component {
   };
 
   onMenuItemClick = (action) => {
-    if (action === "sc-floating-menu-expand") {
-      this.layerRef.toggleAllLegends("OPEN");
-    } else if (action === "sc-floating-menu-collapse") {
-      this.layerRef.toggleAllLegends("CLOSE");
-    } else if (action === "sc-floating-menu-legend") {
-      this.openLegend();
-    } else if (action === "sc-floating-menu-visility") {
-      this.layerRef.turnOffLayers();
+    switch (action){
+      case "sc-floating-menu-expand":
+        this.layerRef.toggleAllLegends("OPEN");
+        break;
+      case "sc-floating-menu-collapse":
+        this.layerRef.toggleAllLegends("CLOSE");
+        break;
+      case "sc-floating-menu-legend":
+        this.openLegend();
+        break;
+      case "sc-floating-menu-visility":
+        this.layerRef.turnOffLayers();
+        break;
+      default:
+        break;
     }
+    
 
     helpers.addAppStat("TOC Tools", action);
   };
@@ -248,6 +258,8 @@ class TOC extends Component {
               placeholder={"Filter (" + this.state.layerCount + " layers)..."}
               onChange={this.onSearchLayersChange}
               value={this.state.searchText}
+              onFocus={evt => {helpers.disableKeyboardEvents(true);}}
+              onBlur={evt => {helpers.disableKeyboardEvents(false);}}
             />
             <div data-tip="Save Layer Visibility" data-for="sc-toc-save-tooltip" className="sc-toc-search-save-image" onClick={this.onSaveClick}>
               <ReactTooltip id="sc-toc-save-tooltip" className="sc-toc-save-tooltip" multiline={false} place="right" type="dark" effect="solid" />

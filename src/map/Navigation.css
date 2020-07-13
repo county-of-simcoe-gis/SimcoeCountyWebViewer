@@ -1,7 +1,7 @@
 .nav-container {
-  top: 61px;
+  top: 158px;
   /* left: 10px; */
-  left: 73px;
+  left: 69px;
   height: 37px;
   width: 37px;
   position: absolute;
@@ -11,19 +11,19 @@
   /* transform: translateX(-375px);
         transition: transform 400ms ease-in; */
   transform: translateX(0px);
-  transition: transform 300ms ease-in;
+  transition: transform 200ms ease-in;
 }
 .nav-container-slideout {
   /* transform: translateX(0px);
         transition: transform 400ms ease-in; */
-  transform: translateX(304px);
-  transition: transform 300ms ease-in;
+  transform: translateX(305px);
+  transition: transform 200ms ease-in;
 }
 
 .zoomButton {
-  width: 37px !important;
-  height: 37px !important;
-  line-height: 34px !important;
+  width: 30px !important;
+  height: 30px !important;
+  line-height: 25px !important;
   border-radius: 4px !important;
   color: #5d5d5d !important;
   background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
@@ -34,11 +34,12 @@
   text-align: center;
   font-family: verdana, helvetica;
   margin-bottom: 5px;
+  display:none;
 }
 
 .fullExtentButton {
-  width: 38px;
-  height: 38px;
+  width: 30px;
+  height: 30px;
   background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
   border-radius: 100px;
   box-shadow: 0px 0px 5px 0px rgba(80, 80, 80, 0.69);
@@ -46,8 +47,8 @@
 }
 
 .fullExtentContent {
-  width: 38px;
-  height: 38px;
+  width: 30px;
+  height: 30px;
   background-image: url(./images/globe-icon.png);
   background-color: transparent !important;
   background-repeat: no-repeat;
@@ -58,18 +59,18 @@
 }
 
 .zoomToCurrentLocationButton {
-  margin-top: 5px;
-  width: 38px;
-  height: 38px;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
-  border-radius: 100px;
-  box-shadow: 0px 0px 5px 0px rgba(80, 80, 80, 0.69);
-  background-position: center center;
+    margin-top: 5px;
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(to bottom, rgba(255,255,255,1) 0%,rgba(229,229,229,1) 100%);
+    border-radius: 100px;
+    box-shadow: 0px 0px 5px 0px rgba(80, 80, 80, 0.69);
+    background-position: center center;
 }
 
 .zoomToCurrentLocationContent {
-  width: 38px;
-  height: 38px;
+  width: 30px;
+  height: 30px;
   background-image: url(./images/target.png);
   background-color: transparent !important;
   background-repeat: no-repeat;

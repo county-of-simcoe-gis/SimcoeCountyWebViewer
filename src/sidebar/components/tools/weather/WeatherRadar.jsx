@@ -228,7 +228,7 @@ class WeatherRadar extends Component {
 
   onUpdateButtonClick = () => {
     if (this.state.endDate < this.state.startDate) {
-      helpers.showMessage("Radar", "Start Date needs to be before End Date", "red");
+      helpers.showMessage("Radar", "Start Date needs to be before End Date", helpers.messageColors.red);
       return;
     }
 
@@ -238,7 +238,7 @@ class WeatherRadar extends Component {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays > 5) {
-      helpers.showMessage("Radar", "Cannot display more than 5 days of radar.", "red");
+      helpers.showMessage("Radar", "Cannot display more than 5 days of radar.", helpers.messageColors.red);
       return;
     }
     this.fetchRadarImages();

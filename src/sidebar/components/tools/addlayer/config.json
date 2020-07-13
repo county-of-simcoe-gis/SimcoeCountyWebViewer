@@ -1,0 +1,86 @@
+{
+    "translations":[
+        {"key":"wms", "source":"WMS", "method":"raster", "type":"ImageWMS", "urlSuffix":"/{z}/{x}/{y}.png"},
+        {"key":"wmts","source":"WMTS","method":"raster","type": "WMTS"},
+        {"key":"stamen","source":"service","method":"raster","type": "Stamen"},
+        {"key":"osm","source":"service","method":"raster","type": "OSM"},
+        {"key":"xyz","source":"service","method":"raster","type": "XYZ", "urlSuffix":"/{z}/{x}/{y}.png"},
+        {"key":"static","source":"file","method":"raster","type": "static"},
+        {"key":"remote_gml3","source":"remote","method":"vector","type": "GML3"},
+        {"key":"remote_gml2","source":"remote","method":"vector","type": "GML2"},
+        {"key":"remote_gpx","source":"remote","method":"vector","type": "GPX"},
+        {"key":"remote_kml","source":"remote","method":"vector","type": "KML"},
+        {"key":"remote_osmxml","source":"remote","method":"vector","type": "OSMXML"},
+        {"key":"remote_esrijson","source":"remote","method":"vector","type": "EsriJSON"},
+        {"key":"remote_geojson","source":"remote","method":"vector","type": "GeoJSON"},
+        {"key":"remote_topojson","source":"remote","method":"vector","type": "TopoJSON"},
+        {"key":"remote_igc","source":"remote","method":"vector","type": "IGC"},
+        {"key":"remote_polyline","source":"remote","method":"vector","type": "Polyline"},
+        {"key":"remote_wkt","source":"remote","method":"vector","type": "WKT"},
+        {"key":"remote_mvt","source":"remote","method":"vector","type": "MVT"},
+        {"key":"local_gml3","source":"file","method":"vector","type": "GML3"},
+        {"key":"local_gml2","source":"file","method":"vector","type": "GML2"},
+        {"key":"local_gpx","source":"file","method":"vector","type": "GPX", "extensions":"gpx"},
+        {"key":"local_kml","source":"file","method":"vector","type": "KML", "extensions":"kml"},
+        {"key":"local_osmxml","source":"file","method":"vector","type": "OSMXML"},
+        {"key":"local_esrijson","source":"file","method":"vector","type": "EsriJSON"},
+        {"key":"local_geojson","source":"file","method":"vector","type": "GeoJSON", "extensions":"geojson"},
+        {"key":"local_topojson","source":"file","method":"vector","type": "TopoJSON"},
+        {"key":"local_igc","source":"file","method":"vector","type": "IGC"},
+        {"key":"local_polyline","source":"file","method":"vector","type": "Polyline"},
+        {"key":"local_wkt","source":"file","method":"vector","type": "WKT"},
+        {"key":"local_mvt","source":"file","method":"vector","type": "MVT"},
+        {"key":"wfs_gml3","source":"wfs","method":"vector","type": "GML3"},
+        {"key":"wfs_gml2","source":"wfs","method":"vector","type": "GML2"},
+        {"key":"wfs_gpx","source":"wfs","method":"vector","type": "GPX"},
+        {"key":"wfs_kml","source":"wfs","method":"vector","type": "KML"},
+        {"key":"wfs_osmxml","source":"wfs","method":"vector","type": "OSMXML"},
+        {"key":"wfs_esrijson","source":"wfs","method":"vector","type": "EsriJSON"},
+        {"key":"wfs_geojson","source":"wfs","method":"vector","type": "GeoJSON"},
+        {"key":"wfs_topojson","source":"wfs","method":"vector","type": "TopoJSON"},
+        {"key":"wfs_igc","source":"wfs","method":"vector","type": "IGC"},
+        {"key":"wfs_polyline","source":"wfs","method":"vector","type": "Polyline"},
+        {"key":"wfs_wkt","source":"wfs","method":"vector","type": "WKT"},
+        {"key":"wfs_mvt","source":"wfs","method":"vector","type": "MVT"}
+    ],
+    "dataTypes": [
+        {"label":"URL", "options":[
+            {"label":"Web Map Service (WMS)", "value":"wms"},
+            {"label":"Web Map Tile Service (WMTS)", "value":"wmts"},
+            {"label":"Web Feature Service (WFS)", "value":"wfs_kml"},
+            {"label":"Tile with XYZ format", "value":"xyz"}
+        ]},
+        {"label":"File", "options": [
+            {"label":"GML3", "value":"local_gml3"},
+            {"label":"GML2", "value":"local_gml2"},
+            {"label":"GPX", "value":"local_gpx"},
+            {"label":"KML", "value":"local_kml"},
+            {"label":"OSMXML", "value":"local_osmxml"},
+            {"label":"EsriJSON", "value":"local_esrijson"},
+            {"label":"GeoJSON", "value":"local_geojson"},
+            {"label":"TopoJSON", "value":"local_topojson"},
+            {"label":"IGC", "value":"local_igc"},
+            {"label":"Polyline", "value":"local_polyline"},
+            {"label":"WKT", "value":"local_wkt"},
+            {"label":"Mapbox", "value":"local_mvt"},
+            {"label":"Static Image", "value":"static"}
+        ]} 
+    ],
+    "projections":[
+        {"label":"WGS 84 / Pseudo-Mercator", "value":"EPSG:3857"},
+        {"label":"WGS 84 (long/lat)", "value":"EPSG:4326"},
+        {"label":"HD72 EOV", "value":"EPSG:23700"}
+    ],
+    "services":[
+        {
+            "label":"Provincial Open Data", 
+            "value":"LIO_OPEN_DATA", 
+            "discoveryUrl":"https://ws.lioservices.lrc.gov.on.ca/arcgis1071a/rest/services", 
+            "serviceType":"wms", 
+            "serviceUrl":"https://ws.lioservices.lrc.gov.on.ca/arcgis1071a/services",
+            "urlSuffix":"/MapServer/WMSServer",
+            "INFO_FORMAT":"text/plain",
+            "XSL_TEMPLATE":"map/xsl/esri_transform.xsl"
+        }
+    ]
+}

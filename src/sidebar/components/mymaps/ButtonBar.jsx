@@ -74,6 +74,15 @@ const ButtonBar = props => {
       />
       <DrawButton
         disabled={false}
+        title="Add Measure Line"
+        imageName="measure-tool.png"
+        onClick={() => {
+          props.onClick("Measure");
+        }}
+        isActive={props.activeButton === "Measure" ? true : false}
+      />
+      <DrawButton
+        disabled={false}
         title="Erase items on the map"
         imageName="eraser.png"
         onClick={() => {

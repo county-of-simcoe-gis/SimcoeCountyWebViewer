@@ -88,5 +88,5 @@
 }
 
 .react-datepicker-popper {
-  z-index: 10000000000000000000000000000000 !important;
+  z-index: 9999 !important;
 }

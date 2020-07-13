@@ -9,13 +9,32 @@
 }
 
 .sc-map-footer-scale-only {
-  font-size: 8pt;
-  text-align: center;
-  right: 6px;
-  bottom: 25px;
-  position: absolute;
-  width: 100px;
-  min-width: 100px !important;
+  bottom: 28px;
+}
+
+.sc-map-footer-scale-only>div{
+  border: 0px!important;
+  padding:2px;
+}
+
+.sc-map-footer-scale-only select{
+  border-radius: 4px;
+  color:inherit;
+  padding:2px;
+  border:transparent;
+  background:transparent;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  text-indent: 1px;
+  text-overflow: '';
+  font:inherit;
+}
+.sc-map-footer-scale-only select:focus {
+  outline: unset;
+  outline-offset: unset;
+}
+.sc-map-footer-scale-only select:hover{
+  cursor: pointer;
 }
 
 .sc-map-footer-scale-only.topo {
@@ -110,4 +129,5 @@
     bottom: 7px;
     right: 0px;
   }
+  
 }

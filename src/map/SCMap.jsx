@@ -12,11 +12,12 @@ import Navigation from "./Navigation";
 import { defaults as defaultInteractions } from "ol/interaction.js";
 import Popup from "../helpers/Popup.jsx";
 import FooterTools from "./FooterTools.jsx";
-import { defaults as defaultControls, ScaleLine, FullScreen } from "ol/control.js";
+import { defaults as defaultControls, ScaleLine, FullScreen,Rotate } from "ol/control.js";
 import BasemapSwitcher from "./BasemapSwitcher";
 import PropertyReportClick from "./PropertyReportClick.jsx";
 import "ol-contextmenu/dist/ol-contextmenu.css";
-import { fromLonLat } from "ol/proj";
+import { fromLonLat,transform } from "ol/proj";
+
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import { MouseWheelZoom } from "ol/interaction";
@@ -30,16 +31,18 @@ import Identify from "./Identify";
 import AttributeTable from "../helpers/AttributeTable.jsx";
 import FloatingImageSlider from "../helpers/FloatingImageSlider.jsx";
 
-const scaleLineControl = new ScaleLine();
+const scaleLineControl = new ScaleLine({
+                                  minWidth: 100
+                                   });
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
   `${mainConfig.feedbackUrl}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True`;
-
+const googleMapsTemplate = (pointx, pointy) => `https://www.google.com/maps?q=${pointy},${pointx}`;
 class SCMap extends Component {
   constructor(props) {
     super(props);
-    this.storageMapDefaultsKey = "map_defaults";
+    this.storageMapDefaultsKey = "Map Defaults";
     this.contextCoords = null;
-    this.storageExtentKey = "map_extent";
+    this.storageExtentKey = "Map Extent";
     this.state = {
       mapClassName: "sc-map",
       shareURL: null,
@@ -47,6 +50,8 @@ class SCMap extends Component {
       isIE: false,
       mapBottom: 0,
     };
+    // LISTEN FOR MAP CURSOR TO CHANGE
+    window.emitter.addListener("changeCursor", cursorStyle => this.changeCursor(cursorStyle));
 
     // LISTEN FOR TOC TO LOAD
     window.emitter.addListener("tocLoaded", () => this.handleUrlParameters());
@@ -54,33 +59,30 @@ class SCMap extends Component {
     // LISTEN FOR ATTRIBUTE TABLE SIZE
     window.emitter.addListener("attributeTableResize", (height) => this.onAttributeTableResize(height));
   }
-
+  
   componentDidMount() {
+    
+    if (mainConfig.leftClickIdentify) {
+      this.setState({mapClassName:"sc-map identify"});
+    }
     let centerCoords = mainConfig.centerCoords;
     let defaultZoom = mainConfig.defaultZoom;
     const defaultsStorage = sessionStorage.getItem(this.storageMapDefaultsKey);
-    const storage = localStorage.getItem(this.storageExtentKey);
-    if (defaultsStorage !== null && storage === null) {
+    const extent = helpers.getItemsFromStorage(this.storageExtentKey);
+    
+    if (defaultsStorage !== null && extent === undefined) {
       const detaults = JSON.parse(defaultsStorage);
       if (detaults.zoom !== undefined) defaultZoom = detaults.zoom;
       if (detaults.center !== undefined) centerCoords = detaults.center;
     }
-    // const resolutions = [
-    //   305.74811314055756,
-    //   152.87405657041106,
-    //   76.43702828507324,
-    //   38.21851414253662,
-    //   19.10925707126831,
-    //   9.554628535634155,
-    //   4.77731426794937,
-    //   2.388657133974685,
-    //   1.1943285668550503,
-    //   0.5971642835598172,
-    //   0.29858214164761665,
-    //   0.1492252984505969
-    // ];
+    
+    var controls = [];
+    if (window.mapControls.scaleLine) controls.push(scaleLineControl)
+    if (window.mapControls.fullScreen) controls.push(new FullScreen())
+    if (window.mapControls.rotate) controls.push(new Rotate())
+
     var map = new Map({
-      controls: defaultControls().extend([scaleLineControl, new FullScreen()]),
+      controls: defaultControls().extend(controls.concat([])),
       layers: [],
       target: "map",
       view: new View({
@@ -89,7 +91,7 @@ class SCMap extends Component {
         maxZoom: mainConfig.maxZoom,
         //resolutions: resolutions
       }),
-      interactions: defaultInteractions({ keyboard: true, altShiftDragRotate: false, pinchRotate: false, mouseWheelZoom: false }).extend([
+      interactions: defaultInteractions({ keyboard: true, altShiftDragRotate: window.mapControls.rotate, pinchRotate: window.mapControls.rotate, mouseWheelZoom: false }).extend([
         new MouseWheelZoom({
           duration: 0,
           constrainResolution: true,
@@ -97,6 +99,13 @@ class SCMap extends Component {
       ]),
       keyboardEventTarget: document,
     });
+    if (!window.mapControls.zoomInOut) helpers.removeMapControl(map,"zoom");
+    if (!window.mapControls.rotate) helpers.removeMapControl(map,"rotate");
+
+   
+    if (extent !== undefined) {
+      map.getView().fit(extent, map.getSize(), { duration: 1000 });
+    }
 
     window.map = map;
     window.popup = new Popup();
@@ -118,20 +127,18 @@ class SCMap extends Component {
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-add-mymaps">
               <FloatingMenuItem imageName={"point.png"} label="Add Marker Point" />
             </MenuItem>
-            {/* <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoomin">
-              <FloatingMenuItem imageName={"zoom-in.png"} label="Zoom In" />
-            </MenuItem>
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoomout">
-              <FloatingMenuItem imageName={"zoom-out.png"} label="Zoom Out" />
-            </MenuItem> */}
+           
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-save-map-extent">
               <FloatingMenuItem imageName={"globe-icon.png"} label="Save as Default Extent" />
             </MenuItem>
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-report-problem">
+            {/*<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-report-problem">
               <FloatingMenuItem imageName={"error.png"} label="Report a problem" />
-            </MenuItem>
+      </MenuItem>*/}
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-identify">
               <FloatingMenuItem imageName={"identify.png"} label="Identify" />
+            </MenuItem>
+            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-google-maps">
+              <FloatingMenuItem imageName={"google.png"} label="View in Google Maps" />
             </MenuItem>
             <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-more">
               <FloatingMenuItem imageName={"more-16.png"} label="More..." />
@@ -156,7 +163,10 @@ class SCMap extends Component {
       helpers.showURLWindow(mainConfig.ieWarningUrl);
     } else {
       // SHOW TERMS
-      //helpers.showURLWindow("https://maps.simcoe.ca/terms.html", true, "full", true);
+      if (helpers.isMobile()) {
+        window.emitter.emit("setSidebarVisiblity", "CLOSE");
+        //helpers.showURLWindow(mainConfig.termsUrl, false, "full");
+      }// else helpers.showURLWindow(mainConfig.termsUrl);
     }
 
     // MAP LOADED
@@ -204,6 +214,19 @@ class SCMap extends Component {
     // ATTRIBUTE TABLE TESTING
     // window.emitter.emit("openAttributeTable", "https://opengis.simcoe.ca/geoserver/", "simcoe:Airport");
   }
+  changeCursor = (cursorStyle) =>
+  {
+    let cursorStyles = ["standard", "identify", "draw"];
+    cursorStyles.splice( cursorStyles.indexOf(cursorStyle), 1 );
+    let classes = this.state.mapClassName.split(" ");
+    if (classes.indexOf(cursorStyle) === -1){
+      cursorStyles.forEach(styleName => {
+        if (classes.indexOf(styleName) !== -1) classes.splice(classes.indexOf(styleName), 1 );
+      });
+      classes.push(cursorStyle);
+      this.setState({mapClassName:classes.join(" ")});
+    }
+  }
 
   onAttributeTableResize = (height) => {
     this.setState({ mapBottom: Math.abs(height) }, () => {
@@ -246,16 +269,42 @@ class SCMap extends Component {
     window.emitter.emit("mapParametersComplete");
   };
 
-  onMenuItemClick = (key) => {
-    if (key === "sc-floating-menu-zoomin") window.map.getView().setZoom(window.map.getView().getZoom() + 1);
-    else if (key === "sc-floating-menu-zoomout") window.map.getView().setZoom(window.map.getView().getZoom() - 1);
-    else if (key === "sc-floating-menu-property-click") window.emitter.emit("showPropertyReport", this.contextCoords);
-    else if (key === "sc-floating-menu-add-mymaps") this.addMyMaps();
-    else if (key === "sc-floating-menu-save-map-extent") this.saveMapExtent();
-    else if (key === "sc-floating-menu-report-problem") this.reportProblem();
-    else if (key === "sc-floating-menu-identify") this.identify();
-    else if (key === "sc-floating-menu-more") this.moreOptions();
-    else if (key === "sc-floating-menu-basic-mode") this.basicMode();
+  onMenuItemClick = key => {
+    switch(key){
+      case "sc-floating-menu-zoomin":
+        window.map.getView().setZoom(window.map.getView().getZoom() + 1);
+        break;
+      case "sc-floating-menu-zoomout":
+        window.map.getView().setZoom(window.map.getView().getZoom() - 1);
+        break;
+      case "sc-floating-menu-property-click":
+        window.emitter.emit("showPropertyReport", this.contextCoords);
+        break;
+      case "sc-floating-menu-add-mymaps":
+        this.addMyMaps();
+        break;
+      case "sc-floating-menu-save-map-extent":
+        this.saveMapExtent();
+        break;
+      case "sc-floating-menu-report-problem":
+        this.reportProblem();
+        break;
+      case "sc-floating-menu-identify":
+        this.identify();
+        break;
+      case "sc-floating-menu-google-maps":
+        this.googleLink();
+        break;
+      case "sc-floating-menu-more":
+        this.moreOptions();
+        break;
+      case "sc-floating-menu-basic-mode":
+        this.basicMode();
+        break;
+      default:
+        break;
+    }
+    
     helpers.addAppStat("Right Click", key);
   };
 
@@ -292,10 +341,19 @@ class SCMap extends Component {
 
     helpers.showURLWindow(feedbackUrl, false, "full");
   };
+  googleLink = () => {
+    // APP STATS
+    helpers.addAppStat("Google Maps", "Right Click Map");
+
+    const latLongCoords = transform(this.contextCoords, "EPSG:3857", "EPSG:4326");
+    const googleMapsUrl = googleMapsTemplate(latLongCoords[0], latLongCoords[1]);
+
+    helpers.showURLWindow(googleMapsUrl, false, "full");
+  };
 
   saveMapExtent = () => {
     const extent = window.map.getView().calculateExtent(window.map.getSize());
-    localStorage.setItem(this.storageExtentKey, JSON.stringify(extent));
+    helpers.saveToStorage(this.storageExtentKey, extent);
     helpers.showMessage("Map Extent", "Your map extent has been saved.");
   };
 
@@ -324,17 +382,25 @@ class SCMap extends Component {
   };
 
   sidebarChanged(isSidebarOpen) {
+    let mapClassName = "sc-map";
     //  SIDEBAR IN AND OUT
     if (isSidebarOpen) {
-      this.setState({ mapClassName: "sc-map sc-map-slideout" });
+      mapClassName = "sc-map sc-map-slideout";
     } else {
-      this.setState({ mapClassName: "sc-map sc-map-closed sc-map-slidein" });
+      mapClassName = "sc-map sc-map-closed sc-map-slidein";
     }
-    this.forceUpdate();
-    setTimeout(function() {
+    this.setState({ mapClassName: mapClassName },() =>{
       window.map.updateSize();
-    }, 300);
+    
+      this.forceUpdate();
+    });
+    
+    
+    
   }
+
+  
+  
 
   render() {
     window.emitter.addListener("sidebarChanged", (isSidebarOpen) => this.sidebarChanged(isSidebarOpen));

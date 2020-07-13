@@ -81,6 +81,15 @@
     transition: transform 200ms ease-in;
     right: 304px;
   }
+  .draw {
+    cursor:crosshair;
+  }
+  .standard {
+    cursor:pointer;
+  }
+  .identify {
+    cursor:help;
+  }
 
 @media only screen and (max-width: 770px) {
    .sc-map{
