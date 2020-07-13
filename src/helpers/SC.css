@@ -184,6 +184,11 @@ p {
   user-select: none;
 }
 
+.sc-info-window-row {
+  display: table-row;
+  width:100%;
+}
+
 .sc-info-window-label {
   font-weight: bold;
   color: #333333;
@@ -263,9 +268,11 @@ p {
   margin-left: 0px;
 }
 
+/*
 .sc-draw-button-bar button:last-child {
-  /*border-right: none;*/
+  
 }
+*/
 
 .sc-draw-button-bar button:hover {
   background-color: #ededed;
@@ -385,6 +392,12 @@ input[type="number"]::-webkit-outer-spin-button {
   padding: 6px 10px 5px;
 }
 
+.sc-editable {
+  background-image: url(./images/edit-50.png);
+  background-repeat: no-repeat;
+  background-position: right;
+  background-origin: content-box;
+} 
 .sc-live-layer-popup-content {
   position: relative;
   top: 0;

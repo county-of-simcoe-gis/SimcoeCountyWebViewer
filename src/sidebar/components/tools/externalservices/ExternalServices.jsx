@@ -29,24 +29,6 @@ class ExternalServices extends Component {
     this.mapClickListener = this.onMapClickEvent = window.map.on("click", this.onMapClick);
     this.createPointLayer();
     window.disableParcelClick = true;
-
-    // config.items.forEach(item => {
-    //   const links = item.links;
-    //   links.forEach(link => {
-    //     //console.log(link.url);
-    //     const template = (x, y, address) => eval("`" + link.url + "`");
-    //     console.log(template(123, 456, "test address"));
-    //   });
-    // });
-    // const url = "`http://maps.google.com?q=${X},${Y}`";
-    // const urlT = `url`;
-    // console.log(urlT);
-    // //const appStatsTemplate = (X, Y) => `${mainConfig.appStatsUrl}opengis/${type}/${description}`;
-    // const appStatsTemplate = (X, Y) => eval(url);
-    // console.log(appStatsTemplate(123, 456));
-    //httpGetText(appStatsTemplate(type, description));
-    //print("Hello, {0}! The answer is {1}.", "World", 42);
-    //console.log(helpers.formatReplace(url, "123", "456"));
   }
 
   // POINT LAYER TO STORE SEARCH RESULTS

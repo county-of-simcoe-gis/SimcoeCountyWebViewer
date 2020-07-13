@@ -4,14 +4,14 @@ import MyMapsFooter from "./MyMapsFooter.jsx";
 import Collapsible from "react-collapsible";
 import Switch from "react-switch";
 import * as helpers from "../../../helpers/helpers";
-import * as myMapsHelpers from "./myMapsHelpers";
+import * as drawingHelpers from "../../../helpers/drawingHelpers";
 import copy from "copy-to-clipboard";
 
 class MyMapsAdvanced extends Component {
   constructor(props) {
     super(props);
 
-    this.inputId = "sc-mymaps-advanced-import-input";
+    this.inputId = "sc-mymaps-advanced-import-input sc-editable";
     this.state = {
       open: false,
       editOn: false,
@@ -34,12 +34,12 @@ class MyMapsAdvanced extends Component {
   onImport = () => {
     // BASIC CHECKING
     if (this.state.inputText.length !== 36) {
-      helpers.showMessage("MyMaps Import", "Invalid ID was entered.", "red");
+      helpers.showMessage("MyMaps Import", "Invalid ID was entered.", helpers.messageColors.red);
       return;
     }
 
-    myMapsHelpers.importMyMaps(this.state.inputText, (result) => {
-      if (result.error !== undefined) helpers.showMessage("MyMaps Import", "That MyMaps ID was NOT found!", "red");
+    drawingHelpers.importMyMaps(this.state.inputText, result => {
+      if (result.error !== undefined) helpers.showMessage("MyMaps Import", "That MyMaps ID was NOT found!", helpers.messageColors.red);
       else {
         helpers.showMessage("MyMaps Import", "Success!  MyMaps imported.");
         this.props.onMyMapsImport(result);
@@ -49,8 +49,8 @@ class MyMapsAdvanced extends Component {
 
   onSave = () => {
     this.setState({ copied: true });
-    myMapsHelpers.exportMyMaps((result) => {
-      helpers.showMessage("MyMaps Save", "MyMaps have been saved!  Your ID has been saved to clipboard.", undefined, 5000);
+    drawingHelpers.exportMyMaps(result => {
+      helpers.showMessage("MyMaps Save", "MyMaps have been saved!  Your ID has been saved to clipboard.",helpers.messageColors.green, 5000);
       helpers.glowContainer(this.inputId);
       this.setState({ inputText: result.id });
       copy(result.id);
@@ -72,7 +72,14 @@ class MyMapsAdvanced extends Component {
             <div className="sc-mymaps-advanced-import-container">
               <label className="sc-mymaps-advanced-main-label">Import/Save</label>
               <div>
-                <input className={this.inputId} id={this.inputId} type="text" placeholder="Enter ID here" onChange={this.onInputChange} value={this.state.inputText} />
+                <input 
+                  className={this.inputId} 
+                  id={this.inputId} type="text" 
+                  placeholder="Enter ID here" 
+                  onChange={this.onInputChange} 
+                  onFocus={evt => {helpers.disableKeyboardEvents(true);}} 
+                  onBlur={evt => {helpers.disableKeyboardEvents(false);}} 
+                  value={this.state.inputText} />
                 {/* <Select
                   styles={selectStyles}
                   // isSearchable={false}

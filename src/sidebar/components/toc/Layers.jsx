@@ -11,11 +11,11 @@ import GeoJSON from "ol/format/GeoJSON.js";
 // CUSTOM
 import "./Layers.css";
 import * as helpers from "../../../helpers/helpers";
-import * as TOCHelpers from "./TOCHelpers.jsx";
+import * as TOCHelpers from "../common/TOCHelpers.jsx";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
 import Portal from "../../../helpers/Portal.jsx";
-import TOCConfig from "./TOCConfig.json";
+import TOCConfig from "../common/TOCConfig.json";
 
 const SortableVirtualList = sortableContainer(VirtualLayers, { withRef: true });
 
@@ -23,7 +23,7 @@ class Layers extends Component {
   constructor(props) {
     super(props);
 
-    this.storageKey = "layers";
+    this.storageKey = "Layers";
     this.lastPosition = null;
     this.virtualId = "sc-toc-virtual-layers";
     this.state = {
@@ -186,10 +186,10 @@ class Layers extends Component {
 
   // isVisibleFromConfig()
   sortByAlphaCompare(a, b) {
-    if (a.tocDisplayName < b.tocDisplayName) {
+    if (a.displayName < b.displayName) {
       return -1;
     }
-    if (a.tocDisplayName > b.tocDisplayName) {
+    if (a.displayName > b.displayName) {
       return 1;
     }
     return 0;
@@ -205,14 +205,6 @@ class Layers extends Component {
     return 0;
   }
 
-  getItemsFromStorage() {
-    const storage = localStorage.getItem(this.storageKey);
-    if (storage === null) return [];
-
-    const data = JSON.parse(storage);
-    return data;
-  }
-
   sortLayers = (layers, sortAlpha, callback = undefined) => {
     let newLayers = Object.assign([{}], layers);
     if (sortAlpha) newLayers.sort(this.sortByAlphaCompare);
@@ -222,7 +214,7 @@ class Layers extends Component {
     allLayers[this.props.group.value] = newLayers;
 
     this.setState({ layers: newLayers, allLayers: allLayers }, () => {
-      window.allLayers = this.state.allLayers;
+      window.allLayers = Object.values(this.state.allLayers);
       if (callback !== undefined) callback();
     });
   };
@@ -431,38 +423,45 @@ class Layers extends Component {
   };
 
   onMenuItemClick = (action, layerInfo) => {
-    if (action === "sc-floating-menu-metadata") {
-      TOCHelpers.getLayerInfo(layerInfo, (result) => {
-        if (helpers.isMobile()) {
-          window.emitter.emit("setSidebarVisiblity", "CLOSE");
-          helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl, false, "full");
-        } else helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl);
-      });
-      helpers.addAppStat("Metadata", layerInfo.name);
-    } else if (action === "sc-floating-menu-zoom-to-layer") {
-      TOCHelpers.getLayerInfo(layerInfo, (result) => {
-        const boundingBox = result.featureType.nativeBoundingBox;
-        const extent = [boundingBox.minx, boundingBox.miny, boundingBox.maxx, boundingBox.maxy];
-        window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
-      });
-    } else if (action === "sc-floating-menu-attribute-table") {
-      if (layerInfo.noAttributeTable) helpers.showMessage("Table", "Attribute table disabled for this layer.");
-      else window.emitter.emit("openAttributeTable", layerInfo.serverUrl, layerInfo.name);
-    } else if (action === "sc-floating-menu-zoom-to-layer-visible") {
-      this.zoomToVisibleScale(layerInfo);
-    } else if (action === "sc-floating-menu-download") {
-      TOCHelpers.getLayerInfo(layerInfo, (result) => {
-        if (result.featureType.name === "Assessment Parcel") helpers.showMessage("Download", "Parcels are not available for download");
-        else {
-          helpers.addAppStat("Download", layerInfo.name);
+    switch (action){
+      case "sc-floating-menu-metadata":
+        TOCHelpers.getLayerInfo(layerInfo, result => {
           if (helpers.isMobile()) {
             window.emitter.emit("setSidebarVisiblity", "CLOSE");
-            helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl, false, "full");
-          } else helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl);
-        }
-      });
+            helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl, false, "full");
+          } else helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl);
+        });
+        helpers.addAppStat("Metadata", layerInfo.name);
+        break;
+      case "sc-floating-menu-zoom-to-layer":
+        TOCHelpers.getLayerInfo(layerInfo, result => {
+          const boundingBox = result.featureType.nativeBoundingBox;
+          const extent = [boundingBox.minx, boundingBox.miny, boundingBox.maxx, boundingBox.maxy];
+          window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
+        });
+        break;
+      case "sc-floating-menu-zoom-to-layer-visible":
+        this.zoomToVisibleScale(layerInfo);
+        break;
+      case "sc-floating-menu-attribute-table":
+        if (layerInfo.noAttributeTable) helpers.showMessage("Table", "Attribute table disabled for this layer.");
+        else window.emitter.emit("openAttributeTable", layerInfo.serverUrl, layerInfo.name);
+        break;
+      case "sc-floating-menu-download":
+        TOCHelpers.getLayerInfo(layerInfo, (result) => {
+          if (result.featureType.name === "Assessment Parcel") helpers.showMessage("Download", "Parcels are not available for download");
+          else {
+            helpers.addAppStat("Download", layerInfo.name);
+            if (helpers.isMobile()) {
+              window.emitter.emit("setSidebarVisiblity", "CLOSE");
+              helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl, false, "full");
+            } else helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl);
+          }
+        });
+        break;
+      default:
+        break;
     }
-
     helpers.addAppStat("Layer Options", action);
   };
 
@@ -533,8 +532,7 @@ class Layers extends Component {
 
       layers[key] = savedLayers;
     }
-
-    localStorage.setItem(this.storageKey, JSON.stringify(layers));
+    helpers.saveToStorage(this.storageKey, layers);
 
     helpers.showMessage("Save", "Layer Visibility has been saved.");
   };
@@ -555,7 +553,7 @@ class Layers extends Component {
     const layers = this.state.layers.filter((layer) => {
       if (this.props.searchText === "") return layer;
 
-      if (layer.tocDisplayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1) return layer;
+      if (layer.displayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1) return layer;
     });
 
     return (

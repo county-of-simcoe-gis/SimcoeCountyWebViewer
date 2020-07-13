@@ -18,6 +18,10 @@ class Header extends Component {
     window.emitter.addListener("feedback", () => this.onFeedbackClick());
   }
 
+  componentDidMount(){
+    window.emitter.emit("headerLoaded");  
+  }
+
   burgerButtonHandler() {
     // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
     if (window.sidebarOpen) window.emitter.emit("setSidebarVisiblity", "CLOSE");
@@ -80,6 +84,7 @@ class Header extends Component {
         >
           <img src={require("./images/burger-button.png")} alt="Header Logo" />
         </div>
+        
         <div id="sc-header-bar-button">
           <img src={require("./images/bar-button.png")} alt="Header Logo" />
         </div>
@@ -90,7 +95,7 @@ class Header extends Component {
           <Search />
         </div>
         <div className="sc-header-feedback-container" title="Feedback" onClick={this.onFeedbackClick}>
-          <img style={{ marginTop: "5px" }} src={images["feedback.png"]} alt="feedback" />
+          <img style={{ marginTop: "5px" }} src={require("./images/feedback.png")} alt="feedback" />
         </div>
         {/* <div className="sc-header-dot-menu-container" onClick={this.onDotMenuClick}><img className="sc-header-dot-menu-img" src={images['vertical-dot-menu.png']} alt="dots"></img></div> */}
       </div>
@@ -100,10 +105,4 @@ class Header extends Component {
 //
 export default Header;
 
-// IMPORT ALL IMAGES
-const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
-function importAllImages(r) {
-  let images = {};
-  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
-  return images;
-}
+

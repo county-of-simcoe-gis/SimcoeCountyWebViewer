@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import "./UrlWindow.css";
+import * as helpers from "./helpers";
 
 class URLWindow extends Component {
   constructor(props) {
@@ -9,7 +10,7 @@ class URLWindow extends Component {
       hide: false,
     };
 
-    this.storageKeyWhatsNew = "sc_dontshowagain";
+    this.storageKeyWhatsNew = "New Feature Notice";
   }
 
   onCloseClick = (value) => {
@@ -59,25 +60,14 @@ class URLWindow extends Component {
     this.saveToStorage();
   };
 
-  saveToStorage = () => {
-    let saved = this.getStorage();
 
-    if (!saved.includes(this.props.url)) {
-      saved.push(this.props.url);
-      localStorage.setItem(this.storageKeyWhatsNew, JSON.stringify(saved));
-    }
+  saveToStorage = () => {
+    helpers.appendToStorage(this.storageKeyWhatsNew,this.props.url);
     this.setState({ hide: true });
+    
   };
 
-  // GET STORAGE
-  getStorage() {
-    const storage = localStorage.getItem(this.storageKeyWhatsNew);
-    if (storage === null) return [];
-
-    const data = JSON.parse(storage);
-    return data;
-  }
-
+ 
   render() {
     // DONT RENDER IF WERE NOT SHOWING, OTHERWISE ALL DATA/IMAGES FROM URL LINK WILL DOWNLOAD
     if (this.isDontShow()) return <div />;

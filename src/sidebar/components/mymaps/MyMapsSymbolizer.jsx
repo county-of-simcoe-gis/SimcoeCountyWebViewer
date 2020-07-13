@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { CompactPicker } from "react-color";
 import * as helpers from "../../../helpers/helpers";
-import * as myMapsHelpers from "./myMapsHelpers";
+import * as drawingHelpers from "../../../helpers/drawingHelpers";
 import "./MyMapsSymbolizer.css";
 import ColorPicker from "./ColorPicker";
 import { PointType, StyleSize, FillColor, StrokeType, StrokeColor, StrokeWidth, Rotation } from "./MyMapsSymbolizerComponents";
@@ -78,7 +78,7 @@ class MyMapsSymbolizer extends Component {
   onPointStyleDropDown = evt => {
     this.setState({ selectedPointStyleDropDown: evt.target.value });
 
-    const style = myMapsHelpers.getPointStyle(
+    const style = drawingHelpers.getPointStyle(
       evt.target.value,
       this.state.radius,
       [this.state.strokeColor.r, this.state.strokeColor.g, this.state.strokeColor.b, this.state.strokeAlpha],
@@ -98,7 +98,7 @@ class MyMapsSymbolizer extends Component {
 
     let style = null;
     if (this.props.item.geometryType === "Point" || this.props.item.geometryType === "MultiPoint") {
-      style = myMapsHelpers.getPointStyle(
+      style = drawingHelpers.getPointStyle(
         this.state.selectedPointStyleDropDown,
         this.state.radius,
         [this.state.strokeColor.r, this.state.strokeColor.g, this.state.strokeColor.b, this.state.strokeAlpha],
@@ -108,9 +108,9 @@ class MyMapsSymbolizer extends Component {
         evt.target.value
       );
     } else if (this.props.item.geometryType === "LineString" || this.props.item.geometryType === "MultiLineString") {
-      style = myMapsHelpers.getLineStringStyle([this.state.strokeColor.r, this.state.strokeColor.g, this.state.strokeColor.b, this.state.strokeAlpha], this.state.strokeWidth, evt.target.value);
+      style = drawingHelpers.getLineStringStyle([this.state.strokeColor.r, this.state.strokeColor.g, this.state.strokeColor.b, this.state.strokeAlpha], this.state.strokeWidth, evt.target.value);
     } else if (this.props.item.geometryType === "Polygon" || this.props.item.geometryType === "MultiPolygon") {
-      style = myMapsHelpers.getPolygonStyle(
+      style = drawingHelpers.getPolygonStyle(
         [this.state.strokeColor.r, this.state.strokeColor.g, this.state.strokeColor.b, this.state.strokeAlpha],
         this.state.strokeWidth,
         [this.state.fillColor.r, this.state.fillColor.g, this.state.fillColor.b, this.state.fillAlpha],
@@ -125,7 +125,7 @@ class MyMapsSymbolizer extends Component {
   // RADIUS/SIZE SLIDER
   onRadiusSliderChange = evt => {
     this.setState({ radius: evt.target.value });
-    const style = myMapsHelpers.getPointStyle(
+    const style = drawingHelpers.getPointStyle(
       this.state.selectedPointStyleDropDown,
       evt.target.value,
       [this.state.strokeColor.r, this.state.strokeColor.g, this.state.strokeColor.b, this.state.strokeAlpha],
@@ -143,7 +143,7 @@ class MyMapsSymbolizer extends Component {
     let style = null;
 
     if (this.props.item.geometryType === "Point" || this.props.item.geometryType === "MultiPoint") {
-      style = myMapsHelpers.getPointStyle(
+      style = drawingHelpers.getPointStyle(
         this.state.selectedPointStyleDropDown,
         this.state.radius,
         [this.state.strokeColor.r, this.state.strokeColor.g, this.state.strokeColor.b, this.state.strokeAlpha],
@@ -153,13 +153,13 @@ class MyMapsSymbolizer extends Component {
         this.state.selectedStrokeTypeDropDown
       );
     } else if (this.props.item.geometryType === "LineString" || this.props.item.geometryType === "MultiLineString") {
-      style = myMapsHelpers.getLineStringStyle(
+      style = drawingHelpers.getLineStringStyle(
         [this.state.strokeColor.r, this.state.strokeColor.g, this.state.strokeColor.b, this.state.strokeAlpha],
         evt.target.value,
         this.state.selectedStrokeTypeDropDown
       );
     } else if (this.props.item.geometryType === "Polygon" || this.props.item.geometryType === "MultiPolygon") {
-      style = myMapsHelpers.getPolygonStyle(
+      style = drawingHelpers.getPolygonStyle(
         [this.state.strokeColor.r, this.state.strokeColor.g, this.state.strokeColor.b, this.state.strokeAlpha],
         evt.target.value,
         [this.state.fillColor.r, this.state.fillColor.g, this.state.fillColor.b, this.state.fillAlpha],
@@ -176,7 +176,7 @@ class MyMapsSymbolizer extends Component {
     let style = null;
 
     if (this.props.item.geometryType === "Point" || this.props.item.geometryType === "MultiPoint") {
-      style = myMapsHelpers.getPointStyle(
+      style = drawingHelpers.getPointStyle(
         this.state.selectedPointStyleDropDown,
         this.state.radius,
         [this.state.strokeColor.r, this.state.strokeColor.g, this.state.strokeColor.b, this.state.strokeAlpha],
@@ -186,7 +186,7 @@ class MyMapsSymbolizer extends Component {
         this.state.selectedStrokeTypeDropDown
       );
     } else if (this.props.item.geometryType === "Polygon" || this.props.item.geometryType === "MultiPolygon") {
-      style = myMapsHelpers.getPolygonStyle(
+      style = drawingHelpers.getPolygonStyle(
         [this.state.strokeColor.r, this.state.strokeColor.g, this.state.strokeColor.b, this.state.strokeAlpha],
         this.state.strokeWidth,
         [this.state.fillColor.r, this.state.fillColor.g, this.state.fillColor.b, evt.target.value],
@@ -203,7 +203,7 @@ class MyMapsSymbolizer extends Component {
     let style = null;
 
     if (this.props.item.geometryType === "Point" || this.props.item.geometryType === "MultiPoint") {
-      style = myMapsHelpers.getPointStyle(
+      style = drawingHelpers.getPointStyle(
         this.state.selectedPointStyleDropDown,
         this.state.radius,
         [this.state.strokeColor.r, this.state.strokeColor.g, this.state.strokeColor.b, evt.target.value],
@@ -213,13 +213,13 @@ class MyMapsSymbolizer extends Component {
         this.state.selectedStrokeTypeDropDown
       );
     } else if (this.props.item.geometryType === "LineString" || this.props.item.geometryType === "MultiLineString") {
-      style = myMapsHelpers.getLineStringStyle(
+      style = drawingHelpers.getLineStringStyle(
         [this.state.strokeColor.r, this.state.strokeColor.g, this.state.strokeColor.b, evt.target.value],
         this.state.strokeWidth,
         this.state.selectedStrokeTypeDropDown
       );
     } else if (this.props.item.geometryType === "Polygon" || this.props.item.geometryType === "MultiPolygon") {
-      style = myMapsHelpers.getPolygonStyle(
+      style = drawingHelpers.getPolygonStyle(
         [this.state.strokeColor.r, this.state.strokeColor.g, this.state.strokeColor.b, evt.target.value],
         this.state.strokeWidth,
         [this.state.fillColor.r, this.state.fillColor.g, this.state.fillColor.b, this.state.fillAlpha],
@@ -233,7 +233,7 @@ class MyMapsSymbolizer extends Component {
   // ROTATION SLIDER
   onRotationSliderChange = evt => {
     this.setState({ rotation: evt.target.value });
-    const style = myMapsHelpers.getPointStyle(
+    const style = drawingHelpers.getPointStyle(
       this.state.selectedPointStyleDropDown,
       this.state.radius,
       [this.state.strokeColor.r, this.state.strokeColor.g, this.state.strokeColor.b, this.state.strokeAlpha],
@@ -250,7 +250,7 @@ class MyMapsSymbolizer extends Component {
     this.setState({ fillColor: color.rgb });
     let style = null;
     if (this.props.item.geometryType === "Point" || this.props.item.geometryType === "MultiPoint") {
-      style = myMapsHelpers.getPointStyle(
+      style = drawingHelpers.getPointStyle(
         this.state.selectedPointStyleDropDown,
         this.state.radius,
         [this.state.strokeColor.r, this.state.strokeColor.g, this.state.strokeColor.b, this.state.strokeAlpha],
@@ -260,7 +260,7 @@ class MyMapsSymbolizer extends Component {
         this.state.selectedStrokeTypeDropDown
       );
     } else if (this.props.item.geometryType === "Polygon" || this.props.item.geometryType === "MultiPolygon") {
-      style = myMapsHelpers.getPolygonStyle(
+      style = drawingHelpers.getPolygonStyle(
         [this.state.strokeColor.r, this.state.strokeColor.g, this.state.strokeColor.b, this.state.strokeAlpha],
         this.state.strokeWidth,
         [color.rgb.r, color.rgb.g, color.rgb.b, this.state.fillAlpha],
@@ -277,7 +277,7 @@ class MyMapsSymbolizer extends Component {
 
     let style = null;
     if (this.props.item.geometryType === "Point" || this.props.item.geometryType === "MultiPoint") {
-      style = myMapsHelpers.getPointStyle(
+      style = drawingHelpers.getPointStyle(
         this.state.selectedPointStyleDropDown,
         this.state.radius,
         [color.rgb.r, color.rgb.g, color.rgb.b, this.state.strokeAlpha],
@@ -287,9 +287,9 @@ class MyMapsSymbolizer extends Component {
         this.state.selectedStrokeTypeDropDown
       );
     } else if (this.props.item.geometryType === "LineString" || this.props.item.geometryType === "MultiLineString") {
-      style = myMapsHelpers.getLineStringStyle([color.rgb.r, color.rgb.g, color.rgb.b, this.state.strokeAlpha], this.state.strokeWidth, this.state.selectedStrokeTypeDropDown);
+      style = drawingHelpers.getLineStringStyle([color.rgb.r, color.rgb.g, color.rgb.b, this.state.strokeAlpha], this.state.strokeWidth, this.state.selectedStrokeTypeDropDown);
     } else if (this.props.item.geometryType === "Polygon" || this.props.item.geometryType === "MultiPolygon") {
-      style = myMapsHelpers.getPolygonStyle(
+      style = drawingHelpers.getPolygonStyle(
         [color.rgb.r, color.rgb.g, color.rgb.b, this.state.strokeAlpha],
         this.state.strokeWidth,
         [this.state.fillColor.r, this.state.fillColor.g, this.state.fillColor.b, this.state.fillAlpha],

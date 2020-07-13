@@ -18,17 +18,34 @@ class FooterTools extends Component {
       scale: "",
       basemapType: "IMAGERY",
     };
-
+    this.mapScales = [
+                
+                {label:"1:250", value:250},
+                {label:"1:500", value:500},
+                {label:"1:1,000", value:1000},
+                {label:"1:2,000", value:2000},
+                {label:"1:5,000", value:5000},
+                {label:"1:10,000", value:10000},
+                {label:"1:25,000", value:25000},
+                {label:"1:50,000", value:50000}
+              ];
     // LISTEN FOR MAP TO MOUNT
     window.emitter.addListener("basemapChanged", (type) => {
       this.setState({ basemapType: type });
     });
+    // LISTEN FOR CONTROL VISIBILITY CHANGES
+    window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control,visible));
+  }
+
+  componentDidMount(){
+    this.setState({showScale:window.mapControls.scale});
   }
 
   onMapLoad() {
     window.map.on("moveend", () => {
       const scale = helpers.getMapScale();
-      this.setState({ scale: scale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") });
+     
+      this.setState({ scale: scale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),currentScale:scale});
     });
   }
 
@@ -68,17 +85,44 @@ class FooterTools extends Component {
     helpers.addAppStat("Terms", "Click (Footer)");
   };
 
-  render() {
-    const col = document.getElementsByClassName("ol-scale-line-inner");
-    if (col.length > 0) {
-      const olScaleBar = col[0];
-      let scScaleBar = document.getElementById("sc-scale-bar-text");
-      scScaleBar.setAttribute("style", "width: " + olScaleBar.style.width);
+  onScaleClick = (value) => {
+    helpers.setMapScale(value);
+  }
+
+  controlStateChange(control, state) {
+    switch (control){
+      case "scale":
+        this.setState({showScale:state});
+        break;
+      default:
+        break;
     }
+  }
+  render() {
+    
+    setTimeout(function(){
+      const col = document.getElementsByClassName("ol-scale-line-inner");
+      if (col.length > 0) {
+        const olScaleBar = col[0];
+        let scScaleBar = document.getElementById("sc-scale-bar-text") ;
+        scScaleBar.setAttribute("style", "width: " + olScaleBar.style.width);
+      }
+    }, 10);
+    
 
     return (
-      <div id="sc-scale-bar-text" className={this.state.basemapType === "IMAGERY" ? "sc-map-footer-scale-only imagery" : "sc-map-footer-scale-only topo"}>
-        {"Scale: 1:" + this.state.scale}
+     
+      <div className={"sc-map-footer-scale-only ol-scale-line ol-unselectable" + (!this.state.showScale? " sc-hidden":"")} >
+         <div id="sc-scale-bar-text" className="ol-scale-line-inner">Scale:&nbsp;
+            <select id="sc-scale-bar-select" onChange={(evt) => {this.onScaleClick(evt.target.value);}} value={this.state.currentScale}>
+              <option key={helpers.getUID()} value={this.state.currentScale}>{"1:" + this.state.scale}</option>
+              {
+                  this.mapScales.map(item => {
+                    return <option key={helpers.getUID()} value={item.value}>{item.label}</option>;
+                  })
+              }
+            </select>
+          </div>
       </div>
       //   <div className="sc-map-footer-tools-button-bar sc-no-select ">
       //     <div id="sc-map-footer-tools-title-label" className="sc-map-footer-tools-button-bar-title"></div>
@@ -102,6 +146,7 @@ class FooterTools extends Component {
       //       </div>
       //     <div className="sc-map-footer-scale">{"Scale: 1:" + this.state.scale}</div>
       // </div>
+      
     );
   }
 }

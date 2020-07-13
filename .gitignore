@@ -27,3 +27,4 @@ config_dev.json
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+deploy/*

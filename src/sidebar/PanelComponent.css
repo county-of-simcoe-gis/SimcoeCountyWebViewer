@@ -37,7 +37,10 @@
 .sc-panel-component-tool-text.small {
   font-size: 13pt;
 }
-
+.sc-panel-component-tool-content-button {
+  width: 100%;
+  margin-bottom: 5px;
+}
 #sc-panel-component-tool-controls {
   float: right;
   cursor: pointer;

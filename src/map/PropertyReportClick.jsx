@@ -30,8 +30,9 @@ class PropertyReportClick extends Component {
   constructor(props) {
     super(props);
     // LISTEN FOR MAP TO MOUNT
-    window.emitter.addListener("mapParametersComplete", () => this.onMapLoad());
-
+    //window.emitter.addListener("mapParametersComplete", () => this.onMapLoad());
+    // LISTEN FOR MAP TO MOUNT
+    window.emitter.addListener("mapLoaded", () => this.onMapLoad());
     this.onMapLoad = this.onMapLoad.bind(this);
 
     this.state = {
@@ -137,7 +138,7 @@ class PropertyReportClick extends Component {
   };
 
   onShareClick = (evt) => {
-    helpers.showMessage("Share", "Link has been copied to your clipboard.", "green", 2000);
+    helpers.showMessage("Share", "Link has been copied to your clipboard.", helpers.messageColors.green, 2000);
     helpers.addAppStat("Property Click Share", "click");
   };
 
