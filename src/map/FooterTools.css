@@ -1,4 +1,4 @@
-.sc-map-footer-scale {
+#map-theme-mto .sc-map-footer-scale {
   /* color: #808080; */
   color: black;
   text-shadow: white 0.1em 0.1em 0.2em;
@@ -8,46 +8,47 @@
   text-align: center;
 }
 
-.sc-map-footer-scale-only {
+#map-theme-mto .sc-map-footer-scale-only {
   bottom: 28px;
 }
 
-.sc-map-footer-scale-only>div{
-  border: 0px!important;
-  padding:2px;
+#map-theme-mto .sc-map-footer-scale-only > div {
+  border: 0px !important;
+  padding: 2px;
 }
 
-.sc-map-footer-scale-only select{
+#map-theme-mto .sc-map-footer-scale-only select {
   border-radius: 4px;
-  color:inherit;
-  padding:2px;
-  border:transparent;
-  background:transparent;
+  color: inherit;
+  padding: 2px;
+  border: transparent;
+  background: transparent;
   -webkit-appearance: none;
   -moz-appearance: none;
   text-indent: 1px;
-  text-overflow: '';
-  font:inherit;
+  text-overflow: "";
+  font: inherit;
 }
-.sc-map-footer-scale-only select:focus {
+#map-theme-mto .sc-map-footer-scale-only select:focus {
   outline: unset;
   outline-offset: unset;
 }
-.sc-map-footer-scale-only select:hover{
+
+#map-theme-mto .sc-map-footer-scale-only select:hover {
   cursor: pointer;
 }
 
-.sc-map-footer-scale-only.topo {
+#map-theme-mto .sc-map-footer-scale-only.topo {
   color: black;
   text-shadow: white 0.1em 0.1em 0.4em;
 }
 
-.sc-map-footer-scale-only.imagery {
+#map-theme-mto .sc-map-footer-scale-only.imagery {
   color: white;
   text-shadow: black 0.1em 0.1em 0.4em;
 }
 
-.sc-map-footer-tools-button-bar {
+#map-theme-mto .sc-map-footer-tools-button-bar {
   right: 5px;
   bottom: 40px;
   height: 37px;
@@ -58,7 +59,7 @@
   padding: 4px;
 }
 
-.sc-map-footer-tools-button-bar a {
+#map-theme-mto .sc-map-footer-tools-button-bar a {
   color: #fff;
   padding: 4px 5px;
   display: inline-block;
@@ -68,11 +69,11 @@
   text-decoration: none;
 }
 
-.sc-map-footer-tools-button-bar a:hover {
+#map-theme-mto .sc-map-footer-tools-button-bar a:hover {
   background-color: #4974a9;
 }
 
-.sc-map-footer-tools-button-bar-icons {
+#map-theme-mto .sc-map-footer-tools-button-bar-icons {
   background-color: rgba(0, 0, 0, 0.25);
   border-radius: 5px;
   color: #fff;
@@ -81,22 +82,109 @@
   cursor: pointer;
 }
 
-.sc-map-footer-tools-button-bar-icons:hover {
+#map-theme-mto .sc-map-footer-tools-button-bar-icons:hover {
   background-color: rgba(0, 0, 0, 0.5);
 }
 
-.sc-map-footer-tools-button-bar-title {
+#map-theme-mto .sc-map-footer-tools-button-bar-title {
   font-size: 12px;
   color: #808080;
 }
 
-.sc-map-footer-tools-button-bar-scale {
+#map-theme-mto .sc-map-footer-tools-button-bar-scale {
   color: #808080;
   padding-top: 3px;
   margin-top: 2px;
 }
 
-.sc-map-footer-tools-white-label {
+#map-theme-mto .sc-map-footer-tools-white-label {
+  color: #fff !important;
+}
+
+#map-theme-mto #sc-map-footer-tools-help-link {
+  display: none;
+}
+
+#map-theme-simcoe-county .sc-map-footer-scale {
+  /* color: #808080; */
+  color: black;
+  text-shadow: white 0.1em 0.1em 0.2em;
+  padding-top: 3px;
+  margin-top: 0px;
+  font-size: 8pt;
+  text-align: center;
+}
+
+#map-theme-simcoe-county .sc-map-footer-scale-only {
+  font-size: 8pt;
+  text-align: center;
+  right: 6px;
+  bottom: 25px;
+  position: absolute;
+  width: 100px;
+  min-width: 100px !important;
+}
+
+#map-theme-simcoe-county .sc-map-footer-scale-only.topo {
+  color: black;
+  text-shadow: white 0.1em 0.1em 0.4em;
+}
+
+#map-theme-simcoe-county .sc-map-footer-scale-only.imagery {
+  color: white;
+  text-shadow: black 0.1em 0.1em 0.4em;
+}
+
+#map-theme-simcoe-county .sc-map-footer-tools-button-bar {
+  right: 5px;
+  bottom: 40px;
+  height: 37px;
+  width: 190px;
+  position: absolute;
+  font-size: 10px;
+  text-align: center;
+  padding: 4px;
+}
+
+#map-theme-simcoe-county .sc-map-footer-tools-button-bar a {
+  color: #fff;
+  padding: 4px 5px;
+  display: inline-block;
+  padding-right: 7px;
+  padding-left: 7px;
+  border-radius: 5px;
+  text-decoration: none;
+}
+
+#map-theme-simcoe-county .sc-map-footer-tools-button-bar a:hover {
+  background-color: #4974a9;
+}
+
+#map-theme-simcoe-county .sc-map-footer-tools-button-bar-icons {
+  background-color: rgba(0, 0, 0, 0.25);
+  border-radius: 5px;
+  color: #fff;
+  height: 45px;
+  display: inline-block;
+  cursor: pointer;
+}
+
+#map-theme-simcoe-county .sc-map-footer-tools-button-bar-icons:hover {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+#map-theme-simcoe-county .sc-map-footer-tools-button-bar-title {
+  font-size: 12px;
+  color: #808080;
+}
+
+#map-theme-simcoe-county .sc-map-footer-tools-button-bar-scale {
+  color: #808080;
+  padding-top: 3px;
+  margin-top: 2px;
+}
+
+#map-theme-simcoe-county .sc-map-footer-tools-white-label {
   color: #fff !important;
 }
 
@@ -129,5 +217,31 @@
     bottom: 7px;
     right: 0px;
   }
-  
+}
+
+@media only screen and (max-width: 770px) {
+  #sc-map-footer-tools-help-link {
+    display: inline-block;
+  }
+
+  .sc-map-footer-tools-button-bar-title {
+    display: none;
+  }
+
+  .sc-map-footer-tools-button-bar-scale {
+    display: none;
+  }
+
+  .sc-map-footer-tools-button-bar-icons {
+    height: 31px;
+  }
+
+  .sc-map-footer-tools-link-text {
+    display: none;
+  }
+
+  .sc-map-footer-tools-button-bar {
+    bottom: 7px;
+    right: 0px;
+  }
 }

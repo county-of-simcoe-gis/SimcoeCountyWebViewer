@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import "./Header.css";
 import Search from "./Search.jsx";
+import SearchMTO from "./SearchMTO.jsx";
 import * as helpers from "../helpers/helpers";
 import FloatingMenu, { FloatingMenuItem } from "../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
@@ -18,8 +19,8 @@ class Header extends Component {
     window.emitter.addListener("feedback", () => this.onFeedbackClick());
   }
 
-  componentDidMount(){
-    window.emitter.emit("headerLoaded");  
+  componentDidMount() {
+    window.emitter.emit("headerLoaded");
   }
 
   burgerButtonHandler() {
@@ -84,16 +85,14 @@ class Header extends Component {
         >
           <img src={require("./images/burger-button.png")} alt="Header Logo" />
         </div>
-        
+
         <div id="sc-header-bar-button">
           <img src={require("./images/bar-button.png")} alt="Header Logo" />
         </div>
         <div id="sc-header-bar-logo">
           <img src={require("./images/" + imageName)} alt="Header Logo" />
         </div>
-        <div id="sc-header-search-container">
-          <Search />
-        </div>
+        <div id="sc-header-search-container">{mainConfig.mapTheme === "MTO" ? <SearchMTO /> : <Search />}</div>
         <div className="sc-header-feedback-container" title="Feedback" onClick={this.onFeedbackClick}>
           <img style={{ marginTop: "5px" }} src={require("./images/feedback.png")} alt="feedback" />
         </div>
@@ -104,5 +103,3 @@ class Header extends Component {
 }
 //
 export default Header;
-
-

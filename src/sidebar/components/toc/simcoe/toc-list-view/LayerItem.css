@@ -1,0 +1,129 @@
+.sc-toc-item-container {
+  display: table;
+  user-select: none;
+  margin-right: 2px;
+  margin-left: 2px;
+  font-family: Verdana, Arial, sans-serif !important;
+  font-size: 9pt;
+}
+.sc-toc-item-container.on {
+  font-weight: bold;
+}
+
+.sc-toc-item-container.not-in-scale {
+  font-weight: bold;
+  color: dimgrey;
+}
+
+.sc-toc-item-layer-label {
+  display: inline-table;
+  position: relative;
+  bottom: 2px;
+  max-width: 274px;
+}
+
+.sc-toc-item-layer-info-live-layer {
+  display: inline-table;
+  vertical-align: middle;
+  margin-left: 5px;
+}
+
+.sc-toc-item-layer-info-download {
+  display: inline-table;
+  vertical-align: middle;
+  margin-left: 5px;
+  margin-bottom: 2px;
+}
+
+.sc-toc-item-plus-minus-container {
+  display: inline-table;
+  vertical-align: middle;
+  cursor: pointer;
+  margin-right: 3px;
+}
+
+.sc-toc-item-toolbox {
+  position: absolute;
+  right: 8px;
+  top: 4px;
+  cursor: pointer;
+}
+
+.sc-toc-item-plus-minus-sign {
+  height: 5px;
+  width: 10px;
+  position: relative;
+  top: -11px;
+  right: -8px;
+  background: url(../images/horizontal_dots.png) 0px no-repeat;
+}
+
+.sc-toc-item-layer-name {
+  display: inline-table;
+  margin-left: 5px;
+  width: 290px;
+  height: 20px;
+  cursor: default;
+  height: 100%;
+  word-break: break-all;
+  vertical-align: text-top;
+}
+
+.sc-toc-item-layer-info-container-open-vertical-lines {
+  height: 22px;
+  width: 11px;
+  position: relative;
+  top: -11px;
+  right: -6px;
+  display: table-cell;
+
+  background: url(../images/verticle_dots.png) 0px repeat-y;
+}
+.sc-toc-item-layer-info-container-open-horizontal-lines {
+  height: 5px;
+  width: 11px;
+  position: relative;
+  top: 15px;
+  right: 2px;
+  background: url(../images/horizontal_dots.png) 0px no-repeat;
+}
+.sc-toc-item-layer-info-container-open {
+  display: table;
+  height: auto;
+}
+.sc-toc-item-layer-info-container-closed {
+  display: none;
+}
+
+.sc-toc-item-layer-info-legend {
+  padding-left: 16px;
+}
+
+.sc-toc-item-checkbox {
+  display: inline-table;
+  margin-left: 5px;
+  transform: scale(1.1, 1.1);
+}
+
+.sc-toc-layer-info-container {
+  display: table;
+}
+
+/* Safari 10.1+ */
+/* Safari 10.1+ (alternate method) */
+@media not all and (min-resolution: 0.001dpcm) {
+  @supports (-webkit-appearance: none) {
+    .sc-toc-item-checkbox {
+      transform: scale(1, 1);
+    }
+
+    .sc-toc-item-layer-label {
+      bottom: 0px;
+    }
+
+    .sc-toc-item-plus-minus-container {
+      margin-top: 3px;
+      margin-right: 4px;
+    }
+  }
+}

@@ -19,33 +19,32 @@ class FooterTools extends Component {
       basemapType: "IMAGERY",
     };
     this.mapScales = [
-                
-                {label:"1:250", value:250},
-                {label:"1:500", value:500},
-                {label:"1:1,000", value:1000},
-                {label:"1:2,000", value:2000},
-                {label:"1:5,000", value:5000},
-                {label:"1:10,000", value:10000},
-                {label:"1:25,000", value:25000},
-                {label:"1:50,000", value:50000}
-              ];
+      { label: "1:250", value: 250 },
+      { label: "1:500", value: 500 },
+      { label: "1:1,000", value: 1000 },
+      { label: "1:2,000", value: 2000 },
+      { label: "1:5,000", value: 5000 },
+      { label: "1:10,000", value: 10000 },
+      { label: "1:25,000", value: 25000 },
+      { label: "1:50,000", value: 50000 },
+    ];
     // LISTEN FOR MAP TO MOUNT
     window.emitter.addListener("basemapChanged", (type) => {
       this.setState({ basemapType: type });
     });
     // LISTEN FOR CONTROL VISIBILITY CHANGES
-    window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control,visible));
+    window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control, visible));
   }
 
-  componentDidMount(){
-    this.setState({showScale:window.mapControls.scale});
+  componentDidMount() {
+    this.setState({ showScale: window.mapControls.scale });
   }
 
   onMapLoad() {
     window.map.on("moveend", () => {
       const scale = helpers.getMapScale();
-     
-      this.setState({ scale: scale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),currentScale:scale});
+
+      this.setState({ scale: scale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","), currentScale: scale });
     });
   }
 
@@ -87,67 +86,63 @@ class FooterTools extends Component {
 
   onScaleClick = (value) => {
     helpers.setMapScale(value);
-  }
+  };
 
   controlStateChange(control, state) {
-    switch (control){
+    switch (control) {
       case "scale":
-        this.setState({showScale:state});
+        this.setState({ showScale: state });
         break;
       default:
         break;
     }
   }
   render() {
-    
-    setTimeout(function(){
+    setTimeout(function() {
       const col = document.getElementsByClassName("ol-scale-line-inner");
       if (col.length > 0) {
         const olScaleBar = col[0];
-        let scScaleBar = document.getElementById("sc-scale-bar-text") ;
+        let scScaleBar = document.getElementById("sc-scale-bar-text");
         scScaleBar.setAttribute("style", "width: " + olScaleBar.style.width);
       }
     }, 10);
-    
 
-    return (
-     
-      <div className={"sc-map-footer-scale-only ol-scale-line ol-unselectable" + (!this.state.showScale? " sc-hidden":"")} >
-         <div id="sc-scale-bar-text" className="ol-scale-line-inner">Scale:&nbsp;
-            <select id="sc-scale-bar-select" onChange={(evt) => {this.onScaleClick(evt.target.value);}} value={this.state.currentScale}>
-              <option key={helpers.getUID()} value={this.state.currentScale}>{"1:" + this.state.scale}</option>
-              {
-                  this.mapScales.map(item => {
-                    return <option key={helpers.getUID()} value={item.value}>{item.label}</option>;
-                  })
-              }
-            </select>
+    if (mainConfig.mapTheme === "MTO")
+      return (
+        <div id="map-theme-mto">
+          <div className={"sc-map-footer-scale-only ol-scale-line ol-unselectable" + (!this.state.showScale ? " sc-hidden" : "")}>
+            <div id="sc-scale-bar-text" className="ol-scale-line-inner">
+              Scale:&nbsp;
+              <select
+                id="sc-scale-bar-select"
+                onChange={(evt) => {
+                  this.onScaleClick(evt.target.value);
+                }}
+                value={this.state.currentScale}
+              >
+                <option key={helpers.getUID()} value={this.state.currentScale}>
+                  {"1:" + this.state.scale}
+                </option>
+                {this.mapScales.map((item) => {
+                  return (
+                    <option key={helpers.getUID()} value={item.value}>
+                      {item.label}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
           </div>
-      </div>
-      //   <div className="sc-map-footer-tools-button-bar sc-no-select ">
-      //     <div id="sc-map-footer-tools-title-label" className="sc-map-footer-tools-button-bar-title"></div>
-      //       <div className="sc-map-footer-tools-button-bar-icons">
-      //           <a id="sc-map-footer-tools-print-link" title="Print this map" onClick={this.onPrintClick} >
-      //               <div><img src={images["print.png"]} alt="print" /></div>
-      //               <div className="sc-map-footer-tools-link-text">Print</div>
-      //           </a>
-      //           <a id="sc-map-footer-tools-legend-link" title="View Map Legend"  onClick={this.onLegendClick}>
-      //               <div><img src={images["legend-footer.png"]} alt="legend" /></div>
-      //               <div className="sc-map-footer-tools-link-text">Legend</div>
-      //           </a>
-      //           <a id="sc-map-footer-tools-feedback-link" title="Send us your feedback"  onClick={this.onFeedbackClick}>
-      //               <div><img src={images["feedback-footer.png"]} alt="feedback" /></div>
-      //               <div className="sc-map-footer-tools-link-text">Feedback</div>
-      //           </a>
-      //           <a id="sc-map-footer-tools-terms-link" title="View Terms and Conditions"  onClick={this.onTermsClick} >
-      //               <div><img src={images["terms-footer.png"]} alt="terms"/></div>
-      //               <div className="sc-map-footer-tools-link-text">Terms</div>
-      //           </a>
-      //       </div>
-      //     <div className="sc-map-footer-scale">{"Scale: 1:" + this.state.scale}</div>
-      // </div>
-      
-    );
+        </div>
+      );
+    else if (mainConfig.mapTheme === "SIMCOE_COUNTY")
+      return (
+        <div id="map-theme-simcoe-county">
+          <div id="sc-scale-bar-text" className={this.state.basemapType === "IMAGERY" ? "sc-map-footer-scale-only imagery" : "sc-map-footer-scale-only topo"}>
+            {"Scale: 1:" + this.state.scale}
+          </div>
+        </div>
+      );
   }
 }
 

@@ -1,4 +1,4 @@
-.nav-container {
+#map-theme-mto .nav-container {
   top: 158px;
   /* left: 10px; */
   left: 69px;
@@ -7,20 +7,22 @@
   position: absolute;
   z-index: 2;
 }
-.nav-container-slidein {
+
+#map-theme-mto .nav-container-slidein {
   /* transform: translateX(-375px);
         transition: transform 400ms ease-in; */
   transform: translateX(0px);
   transition: transform 200ms ease-in;
 }
-.nav-container-slideout {
+
+#map-theme-mto .nav-container-slideout {
   /* transform: translateX(0px);
         transition: transform 400ms ease-in; */
   transform: translateX(305px);
   transition: transform 200ms ease-in;
 }
 
-.zoomButton {
+#map-theme-mto .zoomButton {
   width: 30px !important;
   height: 30px !important;
   line-height: 25px !important;
@@ -34,10 +36,10 @@
   text-align: center;
   font-family: verdana, helvetica;
   margin-bottom: 5px;
-  display:none;
+  display: none;
 }
 
-.fullExtentButton {
+#map-theme-mto .fullExtentButton {
   width: 30px;
   height: 30px;
   background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
@@ -46,7 +48,7 @@
   background-position: center center;
 }
 
-.fullExtentContent {
+#map-theme-mto .fullExtentContent {
   width: 30px;
   height: 30px;
   background-image: url(./images/globe-icon.png);
@@ -58,17 +60,17 @@
   background-position: center center;
 }
 
-.zoomToCurrentLocationButton {
-    margin-top: 5px;
-    width: 30px;
-    height: 30px;
-    background: linear-gradient(to bottom, rgba(255,255,255,1) 0%,rgba(229,229,229,1) 100%);
-    border-radius: 100px;
-    box-shadow: 0px 0px 5px 0px rgba(80, 80, 80, 0.69);
-    background-position: center center;
+#map-theme-mto .zoomToCurrentLocationButton {
+  margin-top: 5px;
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+  border-radius: 100px;
+  box-shadow: 0px 0px 5px 0px rgba(80, 80, 80, 0.69);
+  background-position: center center;
 }
 
-.zoomToCurrentLocationContent {
+#map-theme-mto .zoomToCurrentLocationContent {
   width: 30px;
   height: 30px;
   background-image: url(./images/target.png);
@@ -81,7 +83,7 @@
 }
 
 @media only screen and (max-width: 770px) {
-  .nav-container {
+  #map-theme-mto .nav-container {
     top: 61px;
     left: 10px;
     height: 37px;
@@ -89,7 +91,7 @@
     position: absolute;
   }
 
-  .nav-container-slideout {
+  #map-theme-mto .nav-container-slideout {
     -webkit-transition: none !important;
     -moz-transition: none !important;
     -o-transition: none !important;
@@ -97,7 +99,114 @@
     transform: none !important;
   }
 
-  .nav-container-slidein {
+  #map-theme-mto .nav-container-slidein {
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+#map-theme-simcoe-county .nav-container {
+  top: 61px;
+  /* left: 10px; */
+  left: 73px;
+  height: 37px;
+  width: 37px;
+  position: absolute;
+  z-index: 2;
+}
+#map-theme-simcoe-county .nav-container-slidein {
+  /* transform: translateX(-375px);
+        transition: transform 400ms ease-in; */
+  transform: translateX(0px);
+  transition: transform 300ms ease-in;
+}
+#map-theme-simcoe-county .nav-container-slideout {
+  /* transform: translateX(0px);
+        transition: transform 400ms ease-in; */
+  transform: translateX(304px);
+  transition: transform 300ms ease-in;
+}
+
+#map-theme-simcoe-county .zoomButton {
+  width: 37px !important;
+  height: 37px !important;
+  line-height: 34px !important;
+  border-radius: 4px !important;
+  color: #5d5d5d !important;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+  box-shadow: 0px 0px 5px 0px rgba(80, 80, 80, 0.69);
+  cursor: pointer;
+  font-size: 24px;
+  user-select: none;
+  text-align: center;
+  font-family: verdana, helvetica;
+  margin-bottom: 5px;
+}
+
+#map-theme-simcoe-county .fullExtentButton {
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+  border-radius: 100px;
+  box-shadow: 0px 0px 5px 0px rgba(80, 80, 80, 0.69);
+  background-position: center center;
+}
+
+#map-theme-simcoe-county .fullExtentContent {
+  width: 38px;
+  height: 38px;
+  background-image: url(./images/globe-icon.png);
+  background-color: transparent !important;
+  background-repeat: no-repeat;
+  background-repeat: no-repeat;
+  border-radius: 100px;
+  box-shadow: 0px 0px 5px 0px rgba(80, 80, 80, 0.69);
+  background-position: center center;
+}
+
+#map-theme-simcoe-county .zoomToCurrentLocationButton {
+  margin-top: 5px;
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+  border-radius: 100px;
+  box-shadow: 0px 0px 5px 0px rgba(80, 80, 80, 0.69);
+  background-position: center center;
+}
+
+#map-theme-simcoe-county .zoomToCurrentLocationContent {
+  width: 38px;
+  height: 38px;
+  background-image: url(./images/target.png);
+  background-color: transparent !important;
+  background-repeat: no-repeat;
+  background-repeat: no-repeat;
+  border-radius: 100px;
+  box-shadow: 0px 0px 5px 0px rgba(80, 80, 80, 0.69);
+  background-position: center center;
+}
+
+@media only screen and (max-width: 770px) {
+  #map-theme-simcoe-county .nav-container {
+    top: 61px;
+    left: 10px;
+    height: 37px;
+    width: 37px;
+    position: absolute;
+  }
+
+  #map-theme-simcoe-county .nav-container-slideout {
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+
+  #map-theme-simcoe-county .nav-container-slidein {
     -webkit-transition: none !important;
     -moz-transition: none !important;
     -o-transition: none !important;

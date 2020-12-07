@@ -1,0 +1,106 @@
+.sc-toc-item-container-folder-view {
+  display: table;
+  user-select: none;
+  margin-right: 2px;
+  margin-left: 2px;
+  font-family: Verdana, Arial, sans-serif !important;
+  font-size: 9pt;
+  width: 315px;
+}
+
+.sc-toc-item-layer-info-live-layer-folder-view {
+  display: inline-table;
+  vertical-align: middle;
+  margin-left: 5px;
+}
+
+.sc-toc-item-plus-minus-container-folder-view {
+  display: inline-table;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.sc-toc-group-toolbox-folder-view {
+  position: absolute;
+
+  right: 8px;
+  margin-top: -18px;
+  cursor: pointer;
+}
+
+.sc-toc-item-toolbox-folder-view {
+  cursor: pointer;
+  display: table-cell;
+  float: right;
+  padding-right: 5px;
+}
+
+.sc-toc-item-plus-minus-sign-folder-view {
+  height: 5px;
+  width: 10px;
+  position: relative;
+  top: -11px;
+  right: -8px;
+  background: url(../images/horizontal_dots.png) 0px no-repeat;
+}
+
+.sc-toc-item-layer-name-folder-view {
+  display: inline-table;
+  margin-left: 5px;
+  width: 290px;
+  height: 20px;
+  cursor: default;
+  height: 100%;
+  word-break: break-all;
+  vertical-align: text-top;
+}
+
+.sc-toc-item-layer-info-container-open-vertical-lines-folder-view {
+  height: 22px;
+  width: 11px;
+  position: relative;
+  top: -11px;
+  right: -6px;
+  display: table-cell;
+
+  background: url(../images/verticle_dots.png) 0px repeat-y;
+}
+.sc-toc-item-layer-info-container-open-horizontal-lines-folder-view {
+  height: 5px;
+  width: 11px;
+  position: relative;
+  top: 15px;
+  right: 2px;
+  background: url(../images/horizontal_dots.png) 0px no-repeat;
+}
+.sc-toc-item-layer-info-container-open-folder-view {
+  display: table;
+  height: auto;
+}
+.sc-toc-item-layer-info-container-closed-folder-view {
+  display: none;
+}
+
+.sc-toc-item-layer-info-legend-folder-view {
+  padding-left: 16px;
+}
+
+.sc-toc-item-checkbox-folder-view {
+  display: inline-table;
+  margin-left: 5px;
+  transform: scale(1.1, 1.1);
+}
+
+.sc-toc-layer-info-container-folder-view {
+  display: table;
+}
+
+/* Safari 10.1+ */
+/* Safari 10.1+ (alternate method) */
+@media not all and (min-resolution: 0.001dpcm) {
+  @supports (-webkit-appearance: none) {
+    .sc-toc-item-checkbox-folder-view {
+      transform: scale(1, 1);
+    }
+  }
+}

@@ -77,8 +77,8 @@ class Print extends Component {
     printFormatSelectedOption: null,
     forceScale: helpers.getMapScale(),
     mapScaleOption: "forceScale",
-    mapOnlyHeight: document.getElementById("map").offsetHeight,
-    mapOnlyWidth: document.getElementById("map").offsetWidth,
+    mapOnlyHeight: document.getElementById(mainConfig.mapTheme === "MTO" ? "map-mto" : "map-simcoe-county").offsetHeight,
+    mapOnlyWidth: document.getElementById(mainConfig.mapTheme === "MTO" ? "map-mto" : "map-simcoe-county").offsetWidth,
     isPrinting: false,
   };
 
@@ -185,7 +185,7 @@ class Print extends Component {
         this.setState({ isPrinting: true });
         checkStatus(response);
       })
-      .catch(error => helpers.showMessage("Print Failed", `There has been a problem with your fetch operation: ${error.message}`, helpers.messageColors.red, 15000));
+      .catch((error) => helpers.showMessage("Print Failed", `There has been a problem with your fetch operation: ${error.message}`, helpers.messageColors.red, 15000));
     helpers.addAppStat("Print Button", "Click");
   };
 
@@ -225,13 +225,17 @@ class Print extends Component {
         <div className="sc-print-container">
           {/* MAP TITLE */}
           <label style={{ fontWeight: "bold" }}>Map Title:</label>
-          <input 
-            className="sc-print-map-title-input" 
-            onChange={this.onMapTitleChange} 
+          <input
+            className="sc-print-map-title-input"
+            onChange={this.onMapTitleChange}
             value={this.state.mapTitle}
-            onFocus={evt => {helpers.disableKeyboardEvents(true);}}
-            onBlur={evt => {helpers.disableKeyboardEvents(false);}}
-            ></input>
+            onFocus={(evt) => {
+              helpers.disableKeyboardEvents(true);
+            }}
+            onBlur={(evt) => {
+              helpers.disableKeyboardEvents(false);
+            }}
+          />
 
           {/* PRINT SIZE */}
           <label style={{ fontWeight: "bold" }}>Select Paper Size:</label>

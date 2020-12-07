@@ -10,6 +10,7 @@ import * as CommercialRealEstateSearchObjects from "./CommercialRealEstateObject
 import { unByKey } from "ol/Observable.js";
 import { GeoJSON } from "ol/format.js";
 import CommercialRealEstatePopupContent from "./CommercialRealEstatePopupContent.jsx";
+import CommercialRealEstateLayers from "./CommercialRealEstateLayers";
 const propTypes = ["Vacant Land", "Commercial", "Farm", "Industrial", "Institutional"];
 const serverUrl = mainConfig.geoserverUrl + "wms/";
 const polygonLayerName = config.polygonLayerName;
@@ -307,35 +308,38 @@ class CommercialRealEstate extends Component {
   render() {
     return (
       <PanelComponent onClose={this.props.onClose} name={this.props.name} type="themes">
-        <CommercialRealEstateSearch
-          activeTab={this.state.activeTab}
-          onTabSelect={this.onTabSelect}
-          onLayerCheckboxClick={this.onLayerCheckboxClick}
-          layers={this.state.layers}
-          onTypeDropDownChange={this.onTypeDropDownChange}
-          selectedType={this.state.selectedType}
-          onIncentiveChange={this.onIncentiveChange}
-          incentiveChecked={this.state.incentiveChecked}
-          onOnlyInMapChange={this.onOnlyInMapChange}
-          onlyInMapChecked={this.state.onlyInMapChecked}
-          onBuildingSpaceFromDropDownChange={this.onBuildingSpaceFromDropDownChange}
-          onBuildingSpaceToDropDownChange={this.onBuildingSpaceToDropDownChange}
-          selectedBuildingSpaceFrom={this.state.selectedBuildingSpaceFrom}
-          selectedBuildingSpaceTo={this.state.selectedBuildingSpaceTo}
-          searchType={this.state.searchType}
-          onLandSizeFromDropDownChange={this.onLandSizeFromDropDownChange}
-          onLandSizeToDropDownChange={this.onLandSizeToDropDownChange}
-          selectedLandSizeFrom={this.state.selectedLandSizeFrom}
-          selectedLandSizeTo={this.state.selectedLandSizeTo}
-          onSwitchSearchType={this.onSwitchSearchType}
-          onPriceFromDropDownChange={this.onPriceFromDropDownChange}
-          onPriceToDropDownChange={this.onPriceToDropDownChange}
-          selectedPriceFrom={this.state.selectedPriceFrom}
-          selectedPriceTo={this.state.selectedPriceTo}
-          numRecords={this.state.numRecords}
-          onViewPropertiesClick={this.onViewPropertiesClick}
-          results={this.state.allResults}
-        />
+        <div className="sc-theme-commercial-real-estate-main-container">
+          <CommercialRealEstateSearch
+            activeTab={this.state.activeTab}
+            onTabSelect={this.onTabSelect}
+            onLayerCheckboxClick={this.onLayerCheckboxClick}
+            layers={this.state.layers}
+            onTypeDropDownChange={this.onTypeDropDownChange}
+            selectedType={this.state.selectedType}
+            onIncentiveChange={this.onIncentiveChange}
+            incentiveChecked={this.state.incentiveChecked}
+            onOnlyInMapChange={this.onOnlyInMapChange}
+            onlyInMapChecked={this.state.onlyInMapChecked}
+            onBuildingSpaceFromDropDownChange={this.onBuildingSpaceFromDropDownChange}
+            onBuildingSpaceToDropDownChange={this.onBuildingSpaceToDropDownChange}
+            selectedBuildingSpaceFrom={this.state.selectedBuildingSpaceFrom}
+            selectedBuildingSpaceTo={this.state.selectedBuildingSpaceTo}
+            searchType={this.state.searchType}
+            onLandSizeFromDropDownChange={this.onLandSizeFromDropDownChange}
+            onLandSizeToDropDownChange={this.onLandSizeToDropDownChange}
+            selectedLandSizeFrom={this.state.selectedLandSizeFrom}
+            selectedLandSizeTo={this.state.selectedLandSizeTo}
+            onSwitchSearchType={this.onSwitchSearchType}
+            onPriceFromDropDownChange={this.onPriceFromDropDownChange}
+            onPriceToDropDownChange={this.onPriceToDropDownChange}
+            selectedPriceFrom={this.state.selectedPriceFrom}
+            selectedPriceTo={this.state.selectedPriceTo}
+            numRecords={this.state.numRecords}
+            onViewPropertiesClick={this.onViewPropertiesClick}
+            results={this.state.allResults}
+          />
+          <CommercialRealEstateLayers layers={config.toggleLayers} />
+        </div>
       </PanelComponent>
 
       // <PanelComponent onClose={this.onClose} name={this.props.name} type="themes">

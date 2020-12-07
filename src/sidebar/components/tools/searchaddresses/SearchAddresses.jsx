@@ -10,7 +10,7 @@ import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
 import { Circle as CircleStyle, Icon, Fill, Stroke, Style } from "ol/style.js";
 
-const searchStreetsURL = searchText => `${mainConfig.apiUrl}getStreetNames/${searchText}`;
+const searchStreetsURL = (searchText) => `${mainConfig.apiUrl}getStreetNames/${searchText}`;
 
 class SearchAddresses extends Component {
   constructor(props) {
@@ -21,7 +21,7 @@ class SearchAddresses extends Component {
       streetValue: "",
       addressNumber: "",
       streetItems: [],
-      features: []
+      features: [],
     };
 
     this.createPointLayer();
@@ -34,27 +34,27 @@ class SearchAddresses extends Component {
         radius: 10,
         stroke: new Stroke({
           color: [0, 255, 255, 0.3],
-          width: 6
+          width: 6,
         }),
         fill: new Fill({
-          color: [0, 255, 255, 0.3]
-        })
+          color: [0, 255, 255, 0.3],
+        }),
       }),
-      zIndex: 100000
+      zIndex: 100000,
     });
 
     var iconStyle = new Style({
       image: new Icon({
-        src: images["map-marker-icon.png"]
-      })
+        src: images["map-marker-icon.png"],
+      }),
     });
 
     const layer = new VectorLayer({
       zIndex: 10000,
       source: new VectorSource({
-        features: []
+        features: [],
       }),
-      style: iconStyle
+      style: iconStyle,
     });
 
     window.map.addLayer(layer);
@@ -62,10 +62,10 @@ class SearchAddresses extends Component {
 
     this.vectorLayerShadow = new VectorLayer({
       source: new VectorSource({
-        features: []
+        features: [],
       }),
       zIndex: 100000,
-      style: shadowStyle
+      style: shadowStyle,
     });
     window.map.addLayer(this.vectorLayerShadow);
   };
@@ -79,7 +79,7 @@ class SearchAddresses extends Component {
     this.props.onClose();
   };
 
-  onMuniChange = selectedOption => {
+  onMuniChange = (selectedOption) => {
     this.setState({ selectedMuni: selectedOption });
   };
 
@@ -106,7 +106,7 @@ class SearchAddresses extends Component {
     helpers.getWFSGeoJSON(
       mainConfig.geoserverUrl,
       "simcoe:Address_Number",
-      result => {
+      (result) => {
         this.updateFeatures(result);
       },
       "stnum,fullname",
@@ -116,8 +116,7 @@ class SearchAddresses extends Component {
     );
   };
 
-  updateFeatures = features => {
-    console.log(features);
+  updateFeatures = (features) => {
     this.setState({ features });
     this.vectorLayer.getSource().clear();
 
@@ -128,24 +127,24 @@ class SearchAddresses extends Component {
     window.map.getView().fit(extent, window.map.getSize(), { duration: 500 });
   };
 
-  onAddressNumberClick = evt => {
+  onAddressNumberClick = (evt) => {
     this.setState({ addressNumber: evt.target.value });
   };
 
-  onAddressNumberChange = evt => {
+  onAddressNumberChange = (evt) => {
     this.setState({ addressNumber: evt.target.value });
   };
 
-  onMouseEnter = feature => {
+  onMouseEnter = (feature) => {
     this.vectorLayerShadow.getSource().clear();
     this.vectorLayerShadow.getSource().addFeature(feature);
   };
 
-  onMouseLeave = feature => {
+  onMouseLeave = (feature) => {
     this.vectorLayerShadow.getSource().clear();
   };
 
-  onFeatureClick = feature => {
+  onFeatureClick = (feature) => {
     window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize(), { duration: 500 });
   };
 
@@ -156,22 +155,22 @@ class SearchAddresses extends Component {
 
   render() {
     const muniSelectStyle = {
-      control: provided => ({
+      control: (provided) => ({
         ...provided,
-        minHeight: "30px"
+        minHeight: "30px",
       }),
-      indicatorsContainer: provided => ({
+      indicatorsContainer: (provided) => ({
         ...provided,
-        height: "30px"
+        height: "30px",
       }),
-      clearIndicator: provided => ({
+      clearIndicator: (provided) => ({
         ...provided,
-        padding: "5px"
+        padding: "5px",
       }),
-      dropdownIndicator: provided => ({
+      dropdownIndicator: (provided) => ({
         ...provided,
-        padding: "5px"
-      })
+        padding: "5px",
+      }),
     };
 
     return (
@@ -201,11 +200,11 @@ class SearchAddresses extends Component {
                   wrapperStyle={{
                     position: "relative",
                     display: "inline-block",
-                    width: "100%"
+                    width: "100%",
                   }}
                   value={this.state.streetValue}
                   items={this.state.streetItems}
-                  getItemValue={item => item.streetname}
+                  getItemValue={(item) => item.streetname}
                   onSelect={(value, item) => {
                     this.onStreetItemSelect(value, item);
                   }}
@@ -215,7 +214,7 @@ class SearchAddresses extends Component {
                       this.setState({ iconInitialClass: "sc-search-icon-initial-hidden" });
                       this.setState({ iconActiveClass: "sc-search-icon-active" });
 
-                      helpers.getJSON(searchStreetsURL(value), responseJson => {
+                      helpers.getJSON(searchStreetsURL(value), (responseJson) => {
                         if (responseJson.error === undefined) this.setState({ streetItems: responseJson });
                       });
                     } else {
@@ -225,7 +224,7 @@ class SearchAddresses extends Component {
                       this.setState({ searchResults: [] });
                     }
                   }}
-                  renderMenu={children => <div className="sc-tool-search-addresses-street-search-menu">{children}</div>}
+                  renderMenu={(children) => <div className="sc-tool-search-addresses-street-search-menu">{children}</div>}
                   renderItem={(item, isHighlighted) => (
                     <div className={isHighlighted ? "sc-tool-search-addresses-street-search-highlighted" : "sc-tool-search-addresses-street-search-item"} key={helpers.getUID()}>
                       <div className="sc-search-item-left">
@@ -254,7 +253,7 @@ class SearchAddresses extends Component {
             Please enter an Address in the textboxes above then click SEARCH button.
           </div>
           <div className="sc-tool-search-addresses-results">
-            {this.state.features.map(feature => {
+            {this.state.features.map((feature) => {
               return <Results key={helpers.getUID()} feature={feature} onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave} onFeatureClick={this.onFeatureClick} />;
             })}
           </div>
@@ -266,7 +265,7 @@ class SearchAddresses extends Component {
 
 export default SearchAddresses;
 
-const Results = props => {
+const Results = (props) => {
   const fullAddress = props.feature.get("full_address");
   const muni = props.feature.get("muni");
   return (
@@ -293,72 +292,72 @@ const Results = props => {
 const munis = [
   {
     value: "SEARCH ALL",
-    label: "SEARCH ALL"
+    label: "SEARCH ALL",
   },
   {
     value: "ADJALA-TOSORONTIO",
-    label: "ADJALA-TOSORONTIO"
+    label: "ADJALA-TOSORONTIO",
   },
   {
     value: "BRADFORD WEST GWILLIMBURY",
-    label: "BRADFORD WEST GWILLIMBURY"
+    label: "BRADFORD WEST GWILLIMBURY",
   },
   {
     value: "CLEARVIEW",
-    label: "CLEARVIEW"
+    label: "CLEARVIEW",
   },
   {
     value: "COLLINGWOOD",
-    label: "COLLINGWOOD"
+    label: "COLLINGWOOD",
   },
   {
     value: "ESSA",
-    label: "ESSA"
+    label: "ESSA",
   },
   {
     value: "INNISFIL",
-    label: "INNISFIL"
+    label: "INNISFIL",
   },
   {
     value: "MIDLAND",
-    label: "MIDLAND"
+    label: "MIDLAND",
   },
   {
     value: "NEW TECUMSETH",
-    label: "NEW TECUMSETH"
+    label: "NEW TECUMSETH",
   },
   {
     value: "ORO-MEDONTE",
-    label: "ORO-MEDONTE"
+    label: "ORO-MEDONTE",
   },
   {
     value: "PENETANGUISHENE",
-    label: "PENETANGUISHENE"
+    label: "PENETANGUISHENE",
   },
   {
     value: "RAMARA",
-    label: "RAMARA"
+    label: "RAMARA",
   },
   {
     value: "SEVERN",
-    label: "SEVERN"
+    label: "SEVERN",
   },
   {
     value: "SPRINGWATER",
-    label: "SPRINGWATER"
+    label: "SPRINGWATER",
   },
   {
     value: "TAY",
-    label: "TAY"
+    label: "TAY",
   },
   {
     value: "TINY",
-    label: "TINY"
+    label: "TINY",
   },
   {
     value: "WASAGA BEACH",
-    label: "WASAGA BEACH"
-  }
+    label: "WASAGA BEACH",
+  },
 ];
 
 // IMPORT ALL IMAGES

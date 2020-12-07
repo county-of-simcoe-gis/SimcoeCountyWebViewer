@@ -1,9 +1,10 @@
 import React from "react";
 import "./ButtonBar.css";
 import DrawButton from "./DrawButton.jsx";
+import myMapsConfig from "./myMapsConfig.json";
 
 //className={props.isEditing ? "sc-mymaps-button-bar sc-disabled" : "sc-mymaps-button-bar"}
-const ButtonBar = props => {
+const ButtonBar = (props) => {
   return (
     <div className={props.isEditing ? "sc-mymaps-button-bar sc-disabled" : "sc-mymaps-button-bar"}>
       <DrawButton
@@ -71,6 +72,7 @@ const ButtonBar = props => {
           props.onClick("Bearing");
         }}
         isActive={props.activeButton === "Bearing" ? true : false}
+        visible={myMapsConfig.showBearingButton}
       />
       <DrawButton
         disabled={false}
@@ -80,6 +82,7 @@ const ButtonBar = props => {
           props.onClick("Measure");
         }}
         isActive={props.activeButton === "Measure" ? true : false}
+        visible={myMapsConfig.showMeasureButton}
       />
       <DrawButton
         disabled={false}

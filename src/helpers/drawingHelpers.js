@@ -5,14 +5,13 @@ import LineString from "ol/geom/LineString.js";
 import * as helpers from "./helpers";
 import mainConfig from "../config.json";
 
-
 // GET LAYER BY NAME FROM LAYER
 export function getLayerByName(layerName) {
-  const layers =  window.map.getLayers();
+  const layers = window.map.getLayers();
   let returnLayer = undefined;
   if (layers.array_.length > 0) {
-    layers.forEach(layer => {
-      if (returnLayer === undefined){
+    layers.forEach((layer) => {
+      if (returnLayer === undefined) {
         if (layerName === layer.getProperties().name) returnLayer = layer;
       }
     });
@@ -20,16 +19,15 @@ export function getLayerByName(layerName) {
   return returnLayer;
 }
 
-
 // GET LAYER BY NAME FROM LAYER
 export function getFeatureByLayerNameAndId(layerName, id) {
   let feature = null;
-  window.map.getLayers().forEach(layer => {
+  window.map.getLayers().forEach((layer) => {
     if (layer.getProperties().name === layerName) {
       layer
         .getSource()
         .getFeatures()
-        .forEach(feat => {
+        .forEach((feat) => {
           if (feat.getProperties().id === id) feature = feat;
           return;
         });
@@ -39,12 +37,11 @@ export function getFeatureByLayerNameAndId(layerName, id) {
   return feature;
 }
 
-
 // GET FEATURE FROM MYMAPS LAYER
 export function getFeatureById(id) {
   const drawingLayerName = "local:myMaps";
   let feature = null;
-  window.map.getLayers().forEach(layer => {
+  window.map.getLayers().forEach((layer) => {
     if (layer.getProperties().name === drawingLayerName) {
       layer
         .getSource()
@@ -321,7 +318,6 @@ export function getPolygonStyle(strokeColor = "black", strokeWidth = 2, fillColo
 //   if (style.image_.points_ !== undefined && style.image_.points_ === 4 && )
 // }
 
-
 // BUG https://github.com/openlayers/openlayers/issues/3610
 //Control active state of double click zoom interaction
 export function controlDoubleClickZoom(active) {
@@ -404,7 +400,7 @@ export function importMyMaps(id, callback2) {
 }
 
 export function exportMyMaps(callback2, id = null) {
-  const storage = localStorage.getItem("My Drawing");
+  const storage = localStorage.getItem(mainConfig.storageKeys.Draw);
   if (storage === null) return [];
   const data = JSON.parse(storage);
 

@@ -1,32 +1,32 @@
 import * as helpers from "./helpers";
 // OPEN LAYERS
-import { Image as ImageLayer,Tile as TileLayer, Vector as VectorLayer } from "ol/layer.js";
-import { ImageWMS, OSM, TileArcGISRest, TileWMS, TileImage, Vector,Stamen,XYZ, ImageStatic, WMTS} from "ol/source.js";
+import { Image as ImageLayer, Tile as TileLayer, Vector as VectorLayer } from "ol/layer.js";
+import { ImageWMS, OSM, TileArcGISRest, TileWMS, TileImage, Vector, Stamen, XYZ, ImageStatic, WMTS } from "ol/source.js";
 import GML3 from "ol/format/GML3.js";
 import GML2 from "ol/format/GML2.js";
-import OSMXML from "ol/format/OSMXML.js"
+import OSMXML from "ol/format/OSMXML.js";
 //import {file as FileLoader} from "ol/featureloader.js";
-import { GeoJSON,GPX,KML,EsriJSON,TopoJSON,IGC,Polyline,WKT,MVT,WMTSCapabilities,WMSCapabilities } from "ol/format.js"; 
-import {all as LoadingStrategyAll, tile as LoadingStrategyTile} from "ol/loadingstrategy.js"
+import { GeoJSON, GPX, KML, EsriJSON, TopoJSON, IGC, Polyline, WKT, MVT, WMTSCapabilities, WMSCapabilities } from "ol/format.js";
+import { all as LoadingStrategyAll, tile as LoadingStrategyTile } from "ol/loadingstrategy.js";
 import TileGrid from "ol/tilegrid/TileGrid.js";
 
 //OTHER
 import { parseString } from "xml2js";
 export const OL_LAYER_TYPES = {
-  Image:"Image",
-  Tile:"Tile",
-  Vector:"Vector"
-}
+  Image: "Image",
+  Tile: "Tile",
+  Vector: "Vector",
+};
 export const OL_DATA_TYPES = {
-  GML3:"GML3",
-  GML2:"GML2",
-  GPX:"GPX",
+  GML3: "GML3",
+  GML2: "GML2",
+  GPX: "GPX",
   KML: "KML",
   OSMXML: "OSMXML",
   EsriJSON: "EsriJSON",
-  GeoJSON:"GeoJSON",
-  TopoJSON:"TopoJSON",
-  IGC:"IGC",
+  GeoJSON: "GeoJSON",
+  TopoJSON: "TopoJSON",
+  IGC: "IGC",
   Polyline: "Polyline",
   WKT: "WKT",
   MVT: "MVT",
@@ -37,18 +37,18 @@ export const OL_DATA_TYPES = {
   TileArcGISRest: "TileArcGISRest",
   TileImage: "TileImage",
   Stamen: "Stamen",
-  ImageStatic:"ImageStatic",
+  ImageStatic: "ImageStatic",
   WMTS: "WMTS",
-  TileWMS: "TileWMS"
-}
+  TileWMS: "TileWMS",
+};
 
 export class FeatureHelpers {
-  static getVectorFormat(format, projection="EPSG:3857" ){
-    switch(format){
+  static getVectorFormat(format, projection = "EPSG:3857") {
+    switch (format) {
       case OL_DATA_TYPES.GML3:
-        return new GML3({srsName: projection});
+        return new GML3({ srsName: projection });
       case OL_DATA_TYPES.GML2:
-        return new GML2({srsName: projection});
+        return new GML2({ srsName: projection });
       case OL_DATA_TYPES.GPX:
         return new GPX();
       case OL_DATA_TYPES.KML:
@@ -74,50 +74,51 @@ export class FeatureHelpers {
     }
   }
 
-  static setFeatures(features, target_format=OL_DATA_TYPES.GeoJSON){
+  static setFeatures(features, target_format = OL_DATA_TYPES.GeoJSON) {
     const mapProjection = window.map.getView().getProjection();
     const parser = this.getVectorFormat(target_format);
     let output = undefined;
     try {
-      output = parser.writeFeatures(features,{dataProjection: parser.readProjection(features), featureProjection: mapProjection});
+      output = parser.writeFeatures(features, { dataProjection: parser.readProjection(features), featureProjection: mapProjection });
     } catch (err) {
-      helpers.showMessage("Error","Unsupported Feature.",helpers.messageColors.red);
+      helpers.showMessage("Error", "Unsupported Feature.", helpers.messageColors.red);
       console.log(err);
     }
     return output;
   }
-  static getFeatures(features, source_format=OL_DATA_TYPES.GeoJSON, projection="EPSG:3857"){
+  static getFeatures(features, source_format = OL_DATA_TYPES.GeoJSON, projection = "EPSG:3857") {
     const mapProjection = window.map.getView().getProjection();
     const parser = this.getVectorFormat(source_format, projection);
     let output = undefined;
     try {
-      output = parser.readFeatures(features,{
+      output = parser.readFeatures(features, {
         dataProjection: parser.readProjection(features) || projection,
-        featureProjection: mapProjection});
+        featureProjection: mapProjection,
+      });
     } catch (err) {
-      helpers.showMessage("Error","Unsupported Feature.",helpers.messageColors.red);
+      helpers.showMessage("Error", "Unsupported Feature.", helpers.messageColors.red);
       console.log(err);
     }
     return output;
   }
-  static setGeometry(source_geometry, target_format = OL_DATA_TYPES.GeoJSON){
+  static setGeometry(source_geometry, target_format = OL_DATA_TYPES.GeoJSON) {
     const parser = this.getVectorFormat(target_format);
     let output = undefined;
     try {
       output = parser.writeGeometry(source_geometry);
     } catch (err) {
-      helpers.showMessage("Error","Unsupported Geometry.",helpers.messageColors.red);
+      helpers.showMessage("Error", "Unsupported Geometry.", helpers.messageColors.red);
       console.log(err);
     }
     return output;
   }
-  static getGeometry(geometry, source_format = OL_DATA_TYPES.GeoJSON){
-    const parser = this.getVectorFormat(source_format); 
+  static getGeometry(geometry, source_format = OL_DATA_TYPES.GeoJSON) {
+    const parser = this.getVectorFormat(source_format);
     let output = undefined;
     try {
       output = parser.readGeometry(geometry);
     } catch (err) {
-      helpers.showMessage("Error","Unsupported Geometry.",helpers.messageColors.red);
+      helpers.showMessage("Error", "Unsupported Geometry.", helpers.messageColors.red);
       console.log(err);
     }
     return output;
@@ -127,69 +128,75 @@ export class FeatureHelpers {
 export class LayerHelpers {
   static getCapabilities(root_url, type, callback) {
     type = type.toLowerCase();
-    var url = /\?/.test(root_url) ? root_url.split('?')[0] + '?' : root_url + '?';
+    var url = /\?/.test(root_url) ? root_url.split("?")[0] + "?" : root_url + "?";
     let layers = [];
     var parser;
     var response;
     var service;
-    if (url.indexOf("GetCapabilities") === -1){
+    if (url.indexOf("GetCapabilities") === -1) {
       switch (type) {
-          case 'wmts': service = 'WMTS'; break;
-          case 'wms':  service = 'WMS';  break;
-          default:     service = 'WFS';  break;
+        case "wmts":
+          service = "WMTS";
+          break;
+        case "wms":
+          service = "WMS";
+          break;
+        default:
+          service = "WFS";
+          break;
       }
-      url = url + 'REQUEST=GetCapabilities&SERVICE=' + service;
+      url = url + "REQUEST=GetCapabilities&SERVICE=" + service;
     }
-    helpers.httpGetText(url, responseText => {
-        try {
-          switch (type){
-            case 'wmts':
-              parser = new WMTSCapabilities();
-              response = parser.read(responseText);
-              response.Contents.Layer.foreach(layer =>{
-                layers.push({label:layer.Identifier, value:helpers.getUID(), style: this.getSytle(layer),layer_name:layer.Identifier})
+    helpers.httpGetText(url, (responseText) => {
+      try {
+        switch (type) {
+          case "wmts":
+            parser = new WMTSCapabilities();
+            response = parser.read(responseText);
+            response.Contents.Layer.foreach((layer) => {
+              layers.push({ label: layer.Identifier, value: helpers.getUID(), style: this.getSytle(layer), layer_name: layer.Identifier });
+            });
+            break;
+          case "wms":
+            parser = new WMSCapabilities();
+            response = parser.read(responseText);
+            response.Capability.Layer.Layer.forEach((layer) => {
+              var label = layer.Title !== "" ? layer.Title : layer.Name;
+              var value = layer.Name;
+              var queryable = layer.queryable;
+              var opaque = layer.opaque;
+              if (layer.layer === undefined)
+                layers.push({ label: label, value: helpers.getUID(), layer_name: value, style: this.getSytle(layer), queryable: queryable, opaque: opaque, url: root_url });
+            });
+            break;
+          default:
+            parseString(responseText, function(err, result) {
+              result["wfs:WFS_Capabilities"].FeatureTypeList[0].FeatureType.forEach((layer) => {
+                var layerTitle = layer.Title[0];
+                var layerName = layer.Name[0];
+                if (layerTitle === undefined || layerTitle === "") layerTitle = layerName;
+                layers.push({ label: layerTitle, value: helpers.getUID(), layer_name: layerName });
               });
-              break;
-            case 'wms':
-              parser = new WMSCapabilities();
-              response = parser.read(responseText);
-              response.Capability.Layer.Layer.forEach(layer =>{
-                var label = layer.Title !==""?layer.Title:layer.Name;
-                var value = layer.Name;
-                var queryable = layer.queryable;
-                var opaque = layer.opaque;
-                if (layer.layer === undefined) layers.push({label:label, value:helpers.getUID(),layer_name: value, style: this.getSytle(layer), queryable:queryable, opaque:opaque, url:root_url})
-              });
-              break;
-            default:
-              parseString(responseText,function(err, result) {
-                result['wfs:WFS_Capabilities'].FeatureTypeList[0].FeatureType.forEach(layer =>{
-                  var layerTitle = layer.Title[0];
-                  var layerName = layer.Name[0];
-                  if (layerTitle===undefined || layerTitle === "") layerTitle = layerName;
-                  layers.push({label:layerTitle, value:helpers.getUID(),layer_name:layerName})
-                });
-  
-              });
-              
-              break;
-          }
-        } catch (error) {
-            console.warn('Unexpected error: ' + error.message );
+            });
+
+            break;
         }
-        //fix to get react-select box to update on the fly
-        layers = layers.concat([]);
-        callback(layers);
+      } catch (error) {
+        console.warn("Unexpected error: " + error.message);
+      }
+      //fix to get react-select box to update on the fly
+      layers = layers.concat([]);
+      callback(layers);
     });
   }
-  static getLayerType(layer){
+  static getLayerType(layer) {
     if (layer instanceof TileLayer) return OL_LAYER_TYPES.Tile;
     if (layer instanceof ImageLayer) return OL_LAYER_TYPES.Image;
     if (layer instanceof VectorLayer) return OL_LAYER_TYPES.Vector;
     return "unknown";
   }
 
-  static getLayerSourceType(source){
+  static getLayerSourceType(source) {
     if (source instanceof GML3) return OL_DATA_TYPES.GML3;
     if (source instanceof GML2) return OL_DATA_TYPES.GML2;
     if (source instanceof GPX) return OL_DATA_TYPES.GPX;
@@ -211,67 +218,84 @@ export class LayerHelpers {
     if (source instanceof Stamen) return OL_DATA_TYPES.Stamen;
     if (source instanceof ImageStatic) return OL_DATA_TYPES.ImageStatic;
     if (source instanceof WMTS) return OL_DATA_TYPES.WMTS;
-    if (source instanceof TileWMS) return OL_DATA_TYPES.TileWMS; 
+    if (source instanceof TileWMS) return OL_DATA_TYPES.TileWMS;
     return "unknown";
   }
-  static getSytle (layer){
+  static getSytle(layer) {
     let style = "";
     try {
       style = layer.Style[0].LegendURL[0].OnlineResource;
-    }catch{}
+    } catch {}
     return style !== undefined ? style : "";
   }
-  static getLayer(sourceType, source, projection="EPSG:3857", layerName,  url, tiled=false, file,extent=[], name="", callback){
-    const rebuildParams = {sourceType:sourceType, source:source, projection:projection, layerName:layerName,  url:url, tiled:tiled, file:file !== undefined?"STORED FEATURES":undefined,extent:extent, name:name};
+  static getLayer(sourceType, source, projection = "EPSG:3857", layerName, url, tiled = false, file, extent = [], name = "", callback) {
+    const rebuildParams = {
+      sourceType: sourceType,
+      source: source,
+      projection: projection,
+      layerName: layerName,
+      url: url,
+      tiled: tiled,
+      file: file !== undefined ? "STORED FEATURES" : undefined,
+      extent: extent,
+      name: name,
+    };
     let Vector_FileLoader = undefined;
-    switch (source){
+    // console.log(url);
+    switch (source) {
       case "file":
-        if (file === undefined){
+        if (file === undefined) {
           console.error("Missing File for Vector layer.");
           return;
         }
-        //return empty vector layer if file 
-        else if (file === "STORED FEATURES"){
-          callback(new VectorLayer({
-            rebuildParams:rebuildParams,
-            source: new Vector({
-              name: name
-          })}));
+        //return empty vector layer if file
+        else if (file === "STORED FEATURES") {
+          callback(
+            new VectorLayer({
+              rebuildParams: rebuildParams,
+              source: new Vector({
+                name: name,
+              }),
+            })
+          );
           return;
-        }
-        else 
-        {
+        } else {
           if (name.length < 1) name = file.name;
           url = undefined;
-          const featureParser = FeatureHelpers.getVectorFormat(sourceType,projection);
+          const featureParser = FeatureHelpers.getVectorFormat(sourceType, projection);
           Vector_FileLoader = function(extent, resolution, proj) {
             try {
-                const mapProjection = window.map.getView().getProjection();
-                var _this = this;
-                var fr = new FileReader();
-                fr.onload = function (evt) {
-                    var vectorData = evt.target.result;
-                    _this.addFeatures(featureParser.readFeatures(vectorData, {
-                      dataProjection: featureParser.readProjection(vectorData) || projection,
-                      featureProjection: mapProjection
-                  }));
-                };
-                fr.readAsText(file);
+              const mapProjection = window.map.getView().getProjection();
+              var _this = this;
+              var fr = new FileReader();
+              fr.onload = function(evt) {
+                var vectorData = evt.target.result;
+                _this.addFeatures(
+                  featureParser.readFeatures(vectorData, {
+                    dataProjection: featureParser.readProjection(vectorData) || projection,
+                    featureProjection: mapProjection,
+                  })
+                );
+              };
+              fr.readAsText(file);
             } catch (error) {
-                console.log(error);
+              console.log(error);
             }
-          }
+          };
         }
         break;
       case "wfs":
-        const type = sourceType === OL_DATA_TYPES.GeoJSON ? "application/json" :sourceType;
-        url = /^((http)|(https))(:\/\/)/.test(url) ? url : 'http://' + url;
-        url = /\?/.test(url) ? url + '&' : url + '?';
-        url = url + 'SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=' + layerName + '&SRSNAME=' + projection + '&OUTPUTFORMAT=' + type;
-        if (tiled) url = function(extent, resolution, proj) {
-                                    return url + '&bbox=' + extent.join(',') + ',' + proj.getCode();
-                                  };
-        if (name.length < 1) { name = layerName + ' WFS'; }
+        const type = sourceType === OL_DATA_TYPES.GeoJSON ? "application/json" : sourceType;
+        url = /^((http)|(https))(:\/\/)/.test(url) ? url : "http://" + url;
+        url = /\?/.test(url) ? url + "&" : url + "?";
+        url = url + "SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=" + layerName + "&SRSNAME=" + projection + "&OUTPUTFORMAT=" + type;
+        if (tiled)
+          url = function(extent, resolution, proj) {
+            return url + "&bbox=" + extent.join(",") + "," + proj.getCode();
+          };
+        if (name.length < 1) {
+          name = layerName + " WFS";
+        }
         break;
       default:
         if (name.length < 1) name = layerName;
@@ -279,259 +303,299 @@ export class LayerHelpers {
     }
 
     switch (sourceType) {
-        case OL_DATA_TYPES.GML3:
-          callback(new VectorLayer({
-              rebuildParams:rebuildParams,
-              source: new Vector({
-                name: name,
-                url:  url,
-                strategy: (tiled ? LoadingStrategyTile(TileGrid.createXYZ({maxZoom: 19})) : LoadingStrategyAll),
-                format: new GML3({srsName: projection}),
-                loader: Vector_FileLoader,
-                crossOrigin: "anonymous"
-            })}));
-          break;
-        case OL_DATA_TYPES.GML2:
-            callback(new VectorLayer({
-              rebuildParams:rebuildParams,
-              source:  new Vector({
-                name: name,
-                url:  url,
-                strategy: (tiled ? LoadingStrategyTile(TileGrid.createXYZ({maxZoom: 19})) : LoadingStrategyAll),
-                format: new GML2({srsName: projection}),
-                loader: Vector_FileLoader,
-                crossOrigin: "anonymous"
-            })}));
-            break;
-        case OL_DATA_TYPES.GPX:
-            callback(new VectorLayer({
-              rebuildParams:rebuildParams,
-              source: new Vector({
-                name: name,
-                url:  url,
-                strategy: (tiled ? LoadingStrategyTile(TileGrid.createXYZ({maxZoom: 19})) : LoadingStrategyAll),
-                format:  new GPX(),
-                loader: Vector_FileLoader,
-                crossOrigin: "anonymous"
-            })}));
-            break;
-        case OL_DATA_TYPES.KML:
-          callback(new VectorLayer({
-            rebuildParams:rebuildParams,
+      case OL_DATA_TYPES.GML3:
+        callback(
+          new VectorLayer({
+            rebuildParams: rebuildParams,
             source: new Vector({
               name: name,
-              url:  url,
-              strategy: (tiled ? LoadingStrategyTile(TileGrid.createXYZ({maxZoom: 19})) : LoadingStrategyAll),
-              format:  new KML(),
+              url: url,
+              strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
+              format: new GML3({ srsName: projection }),
               loader: Vector_FileLoader,
-              crossOrigin: "anonymous"
-          })}));
-          break;
-        case OL_DATA_TYPES.OSMXML:
-          callback(new VectorLayer({
-            rebuildParams:rebuildParams,
+              crossOrigin: "anonymous",
+            }),
+          })
+        );
+        break;
+      case OL_DATA_TYPES.GML2:
+        callback(
+          new VectorLayer({
+            rebuildParams: rebuildParams,
             source: new Vector({
               name: name,
-              url:  url,
-              strategy: (tiled ? LoadingStrategyTile(TileGrid.createXYZ({maxZoom: 19})) : LoadingStrategyAll),
-              format:  new OSMXML(),
+              url: url,
+              strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
+              format: new GML2({ srsName: projection }),
               loader: Vector_FileLoader,
-              crossOrigin: "anonymous"
-          })}));
-          break;
-        case OL_DATA_TYPES.EsriJSON:
-          callback(new VectorLayer({
-            rebuildParams:rebuildParams,
+              crossOrigin: "anonymous",
+            }),
+          })
+        );
+        break;
+      case OL_DATA_TYPES.GPX:
+        callback(
+          new VectorLayer({
+            rebuildParams: rebuildParams,
             source: new Vector({
               name: name,
-              url:  url,
-              strategy: (tiled ? LoadingStrategyTile(TileGrid.createXYZ({maxZoom: 19})) : LoadingStrategyAll),
-              format:  new EsriJSON(),
+              url: url,
+              strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
+              format: new GPX(),
               loader: Vector_FileLoader,
-              crossOrigin: "anonymous"
-          })}));
-          break;
-        case OL_DATA_TYPES.GeoJSON:
-          callback(new VectorLayer({
-            rebuildParams:rebuildParams,
+              crossOrigin: "anonymous",
+            }),
+          })
+        );
+        break;
+      case OL_DATA_TYPES.KML:
+        callback(
+          new VectorLayer({
+            rebuildParams: rebuildParams,
             source: new Vector({
               name: name,
-              url:  url,
-              strategy: (tiled ? LoadingStrategyTile(TileGrid.createXYZ({maxZoom: 19})) : LoadingStrategyAll),
-              format:  new GeoJSON(),
+              url: url,
+              strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
+              format: new KML(),
               loader: Vector_FileLoader,
-              crossOrigin: "anonymous"
-          })}));
-          break;    
-        case OL_DATA_TYPES.TopoJSON:
-          callback(new VectorLayer({
-            rebuildParams:rebuildParams,
+              crossOrigin: "anonymous",
+            }),
+          })
+        );
+        break;
+      case OL_DATA_TYPES.OSMXML:
+        callback(
+          new VectorLayer({
+            rebuildParams: rebuildParams,
             source: new Vector({
+              name: name,
+              url: url,
+              strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
+              format: new OSMXML(),
+              loader: Vector_FileLoader,
+              crossOrigin: "anonymous",
+            }),
+          })
+        );
+        break;
+      case OL_DATA_TYPES.EsriJSON:
+        callback(
+          new VectorLayer({
+            rebuildParams: rebuildParams,
+            source: new Vector({
+              name: name,
+              url: url,
+              strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
+              format: new EsriJSON(),
+              loader: Vector_FileLoader,
+              crossOrigin: "anonymous",
+            }),
+          })
+        );
+        break;
+      case OL_DATA_TYPES.GeoJSON:
+        callback(
+          new VectorLayer({
+            rebuildParams: rebuildParams,
+            source: new Vector({
+              name: name,
+              url: url,
+              strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
+              format: new GeoJSON(),
+              loader: Vector_FileLoader,
+              crossOrigin: "anonymous",
+            }),
+          })
+        );
+        break;
+      case OL_DATA_TYPES.TopoJSON:
+        callback(
+          new VectorLayer({
+            rebuildParams: rebuildParams,
+            source: new Vector({
+              name: name,
+              url: url,
+              strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
+              format: new TopoJSON(),
+              loader: Vector_FileLoader,
+              crossOrigin: "anonymous",
+            }),
+          })
+        );
+        break;
+      case OL_DATA_TYPES.IGC:
+        callback(
+          new VectorLayer({
+            rebuildParams: rebuildParams,
+            source: new Vector({
+              name: name,
+              url: url,
+              strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
+              format: new IGC(),
+              loader: Vector_FileLoader,
+              crossOrigin: "anonymous",
+            }),
+          })
+        );
+        break;
+      case OL_DATA_TYPES.Polyline:
+        callback(
+          new VectorLayer({
+            rebuildParams: rebuildParams,
+            source: new Vector({
+              name: name,
+              url: url,
+              strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
+              format: new Polyline(),
+              loader: Vector_FileLoader,
+              crossOrigin: "anonymous",
+            }),
+          })
+        );
+        break;
+      case OL_DATA_TYPES.WKT:
+        callback(
+          new VectorLayer({
+            rebuildParams: rebuildParams,
+            source: new Vector({
+              name: name,
+              url: url,
+              strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
+              format: new WKT(),
+              loader: Vector_FileLoader,
+              crossOrigin: "anonymous",
+            }),
+          })
+        );
+        break;
+      case OL_DATA_TYPES.MVT:
+        callback(
+          new VectorLayer({
+            rebuildParams: rebuildParams,
+            source: new Vector({
+              name: name,
+              url: url,
+              strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
+              format: new MVT(),
+              loader: Vector_FileLoader,
+              crossOrigin: "anonymous",
+            }),
+          })
+        );
+        break;
+      case OL_DATA_TYPES.ImageWMS:
+        callback(
+          new ImageLayer({
+            rebuildParams: rebuildParams,
             name: name,
-            url:  url,
-            strategy: (tiled ? LoadingStrategyTile(TileGrid.createXYZ({maxZoom: 19})) : LoadingStrategyAll),
-            format:  new TopoJSON(),
-            loader: Vector_FileLoader,
-            crossOrigin: "anonymous"
-          })}));
-          break;
-        case OL_DATA_TYPES.IGC:
-          callback (new VectorLayer({
-            rebuildParams:rebuildParams,
-            source: new Vector({
-              name: name,
-              url:  url,
-              strategy: (tiled ? LoadingStrategyTile(TileGrid.createXYZ({maxZoom: 19})) : LoadingStrategyAll),
-              format:  new IGC(),
-              loader: Vector_FileLoader,
-              crossOrigin: "anonymous"
-          })}));
-          break;
-        case OL_DATA_TYPES.Polyline:
-          callback (new VectorLayer({
-            rebuildParams:rebuildParams,
-            source: new Vector({
-              name: name,
-              url:  url,
-              strategy: (tiled ? LoadingStrategyTile(TileGrid.createXYZ({maxZoom: 19})) : LoadingStrategyAll),
-              format:  new Polyline(),
-              loader: Vector_FileLoader,
-              crossOrigin: "anonymous"
-          })}));
-          break;
-        case OL_DATA_TYPES.WKT:
-          callback(new VectorLayer({
-            rebuildParams:rebuildParams,
-            source:  new Vector({
-              name: name,
-              url:  url,
-              strategy: (tiled ? LoadingStrategyTile(TileGrid.createXYZ({maxZoom: 19})) : LoadingStrategyAll),
-              format:  new WKT(),
-              loader: Vector_FileLoader,
-              crossOrigin: "anonymous"
-          })}));
-          break;  
-        case OL_DATA_TYPES.MVT:
-          callback(new VectorLayer({
-            rebuildParams:rebuildParams,
-            source:  new Vector({
-              name: name,
-              url:  url,
-              strategy: (tiled ? LoadingStrategyTile(TileGrid.createXYZ({maxZoom: 19})) : LoadingStrategyAll),
-              format:  new MVT(),
-              loader: Vector_FileLoader,
-              crossOrigin: "anonymous"
-          })}));
-          break;
-        case OL_DATA_TYPES.ImageWMS:
-            callback(new ImageLayer({
-              rebuildParams:rebuildParams,
-              name: name,
-              source: new ImageWMS({
-                    url: url,
-                    params: { 
-                      VERSION:"1.3.0",
-                      LAYERS: layerName, 
-                      cql_filter: null
-                    },
-                    ratio: 1,
-                    serverType: "geoserver",
-                    crossOrigin:"anonymous" })
-                  }
-                ));
-            break;
-        case OL_DATA_TYPES.TileWMS:
-            callback(new TileLayer({
-              rebuildParams:rebuildParams,
-              name: name,
-              source: new TileWMS({
-                    url: url,
-                    projection: projection, 
-                    params: { 
-                      VERSION:"1.3.0",
-                      LAYERS: layerName, 
-                      tiled: true, 
-                      cql_filter: null
-                    },
-                    tileOptions: {crossOriginKeyword: 'anonymous'},
-                    ratio: 1,
-                    serverType: "geoserver",
-                    crossOrigin:"anonymous" })
-                  }
-                ));
-            break;
-        case OL_DATA_TYPES.WMTS:
-            url = /\?/.test(url) ? url + '&' : url + '?';
-            const wmtsCap = (url,callback) => {
-              helpers.httpGetText(url + 'REQUEST=GetCapabilities&SERVICE=WMTS', (responseText)=> {
-                try {
-                  var parser = new WMTSCapabilities();
-                  callback(parser.read(responseText));
-                } catch (error) {
-                  console.warn('Unexpected error: ' + error.message );
-                }
-              });
+            source: new ImageWMS({
+              url: url,
+              params: {
+                VERSION: "1.3.0",
+                LAYERS: layerName,
+                cql_filter: null,
+              },
+              ratio: 1,
+              serverType: "geoserver",
+              crossOrigin: "anonymous",
+            }),
+          })
+        );
+        break;
+      case OL_DATA_TYPES.TileWMS:
+        callback(
+          new TileLayer({
+            rebuildParams: rebuildParams,
+            name: name,
+            source: new TileWMS({
+              url: url,
+              projection: projection,
+              params: {
+                VERSION: "1.3.0",
+                LAYERS: layerName,
+                tiled: true,
+                cql_filter: null,
+              },
+              tileOptions: { crossOriginKeyword: "anonymous" },
+              ratio: 1,
+              serverType: "geoserver",
+              crossOrigin: "anonymous",
+            }),
+          })
+        );
+        break;
+      case OL_DATA_TYPES.WMTS:
+        url = /\?/.test(url) ? url + "&" : url + "?";
+        const wmtsCap = (url, callback) => {
+          helpers.httpGetText(url + "REQUEST=GetCapabilities&SERVICE=WMTS", (responseText) => {
+            try {
+              var parser = new WMTSCapabilities();
+              callback(parser.read(responseText));
+            } catch (error) {
+              console.warn("Unexpected error: " + error.message);
             }
-            callback(new TileLayer({
-              rebuildParams:rebuildParams,
-              name: name,
-              source: new WMTS(WMTS.optionsFromCapabilities(wmtsCap(url,(response) => response),{ layer: layerName, matrixSet: projection }))}));
-            break;
-        case OL_DATA_TYPES.Stamen:
-            if (name.length < 1) layerName = 'Stamen ' + layerName; 
-            callback(new TileLayer({rebuildParams:rebuildParams,name: name,source: new Stamen({layer: layerName })}));
-            break;
-        case OL_DATA_TYPES.OSM:
-            if (name.length < 1) { name = 'OpenStreetMap'; }
-            callback(new TileLayer({rebuildParams:rebuildParams,name: name,source:  new OSM()}));
-            break;
-        case OL_DATA_TYPES.XYZ:
-            callback(new TileLayer({rebuildParams:rebuildParams,name: name,source: new XYZ({urls: [url], projection: projection})}));
-            break;
-        case OL_DATA_TYPES.ImageStatic:
-            if (file === undefined){
-              console.error("Missing File for Raster layer.");
-              return;
-            }else if (!file.type.match('image.*')) {
-                console.error('Warning! No raster file selected.');
-                return;
-            }
-            const StaticImage_FileLoader = function (image, src){
-              try {
-                  var fr = new FileReader();
-                  fr.onload = function (evt) {
-                      image.getImage().src = evt.target.result;
-                  };
-                  fr.readAsDataURL(file);
-              } catch (error) {
-                  console.warn('Unexpected error: ' + error.message);
-              }
-            }
-            const projExtent = window.map
-            .getView()
-            .getProjection()
-            .getExtent();
-            if (extent===[]) extent=projExtent;
-            callback(new ImageLayer({rebuildParams:rebuildParams,name: name,source: new ImageStatic({
-                url: '',
-                imageExtent: [extent[0], extent[1], extent[2], extent[3]],
-                projection: projection,
-                imageLoadFunction: StaticImage_FileLoader
-            })}));
-            break;
+          });
+        };
+        callback(
+          new TileLayer({
+            rebuildParams: rebuildParams,
+            name: name,
+            source: new WMTS(WMTS.optionsFromCapabilities(wmtsCap(url, (response) => response), { layer: layerName, matrixSet: projection })),
+          })
+        );
+        break;
+      case OL_DATA_TYPES.Stamen:
+        if (name.length < 1) layerName = "Stamen " + layerName;
+        callback(new TileLayer({ rebuildParams: rebuildParams, name: name, source: new Stamen({ layer: layerName }) }));
+        break;
+      case OL_DATA_TYPES.OSM:
+        if (name.length < 1) {
+          name = "OpenStreetMap";
+        }
+        callback(new TileLayer({ rebuildParams: rebuildParams, name: name, source: new OSM() }));
+        break;
+      case OL_DATA_TYPES.XYZ:
+        callback(new TileLayer({ rebuildParams: rebuildParams, name: name, source: new XYZ({ urls: [url], projection: projection }) }));
+        break;
+      case OL_DATA_TYPES.ImageStatic:
+        if (file === undefined) {
+          console.error("Missing File for Raster layer.");
+          return;
+        } else if (!file.type.match("image.*")) {
+          console.error("Warning! No raster file selected.");
+          return;
+        }
+        const StaticImage_FileLoader = function(image, src) {
+          try {
+            var fr = new FileReader();
+            fr.onload = function(evt) {
+              image.getImage().src = evt.target.result;
+            };
+            fr.readAsDataURL(file);
+          } catch (error) {
+            console.warn("Unexpected error: " + error.message);
+          }
+        };
+        const projExtent = window.map
+          .getView()
+          .getProjection()
+          .getExtent();
+        if (extent === []) extent = projExtent;
+        callback(
+          new ImageLayer({
+            rebuildParams: rebuildParams,
+            name: name,
+            source: new ImageStatic({
+              url: "",
+              imageExtent: [extent[0], extent[1], extent[2], extent[3]],
+              projection: projection,
+              imageLoadFunction: StaticImage_FileLoader,
+            }),
+          })
+        );
+        break;
       default:
         return;
     }
-    
   }
 }
-
-
-
-  
-  
-
-  
-
-  
-  

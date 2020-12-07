@@ -127,7 +127,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
 
   let configureVectorMyMapsLayer = (l) => {
     if (typeof l.values_.source.uidIndex_ !== "undefined") {
-      let myMapsData = JSON.parse(localStorage.getItem("My Drawing")).items.reverse();
+      let myMapsData = JSON.parse(localStorage.getItem(mainConfig.storageKeys.Draw)).items.reverse();
 
       // geometry type config
       let drawTypeOption = {

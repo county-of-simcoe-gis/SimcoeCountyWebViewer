@@ -5,9 +5,9 @@
   "feedbackUrl": "https://opengis.simcoe.ca/feedback",
   "geoserverUrl": "https://opengis.simcoe.ca/geoserver/",
   "includeAppStats": true,
-  "htmlIdentify":false,
-  "leftClickIdentify":false,
-  "excludeIdentifyTitleName":false,
+  "htmlIdentify": false,
+  "leftClickIdentify": false,
+  "excludeIdentifyTitleName": false,
   "showFeedbackMessageOnStartup": true,
   "showWhatsNewOnStartup": true,
   "googleAnalyticsID": "UA-3104541-53",
@@ -27,18 +27,39 @@
   "centerCoords": [-8878504.68, 5543492.45],
   "defaultZoom": 10,
   "maxZoom": 20,
-  "imageViewerUrl": "", 
+  "imageViewerUrl": "",
   "controls": {
-    "rotate":true,
-    "fullScreen":true,
-    "zoomInOut":true,
-    "currentLocation":true,
-    "zoomExtent":true,
-    "scale":true,
-    "scaleLine":true,
-    "basemap":true
+    "rotate": true,
+    "fullScreen": true,
+    "zoomInOut": true,
+    "currentLocation": true,
+    "zoomExtent": true,
+    "scale": true,
+    "scaleLine": true,
+    "basemap": true
   },
- 
+  "mapTheme": "SIMCOE_COUNTY",
+  "showFloatingMenuHeader": false,
+  "showLoadingScreens": false,
+  "storageKeys": {
+    "SearchHistory": "searchHistory",
+    "Draw": "myMaps",
+    "URLDontShowAgain": "sc_dontshowagain"
+  },
+  "onlyStandardCursor": true,
+  "restrictOriginForUrlWindow": false,
+  "rightClickMenuVisibility": {
+    "sc-floating-menu-basic-mode": true,
+    "sc-floating-menu-property-click": true,
+    "sc-floating-menu-add-mymaps": true,
+    "sc-floating-menu-save-map-extent": true,
+    "sc-floating-menu-report-problem": true,
+    "sc-floating-menu-identify": true,
+    "sc-floating-menu-google-maps": false,
+    "sc-floating-menu-more": true
+  },
+  "tocType": "LIST",
+  "wmsGeoJsonTemplate": "https://maps.simcoe.ca/ESRIWMSTemplates/featureinfo_application_geojson.xsl",
   "sidebarToolComponents": [
     {
       "id": 1,
