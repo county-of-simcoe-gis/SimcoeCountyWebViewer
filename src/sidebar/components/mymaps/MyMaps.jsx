@@ -17,6 +17,7 @@ import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.js
 import Portal from "../../../helpers/Portal.jsx";
 import Identify from "../../../map/Identify.jsx";
 import mainConfig from "../../../config.json";
+import myMapsConfig from "./myMapsConfig.json";
 
 // OPEN LAYERS
 import Draw, { createBox } from "ol/interaction/Draw.js";
@@ -43,7 +44,7 @@ class MyMaps extends Component {
 
     // PROPS
     this.layerName = "local:myMaps";
-    this.storageKey = "My Drawing";
+    this.storageKey = mainConfig.storageKeys.Draw;
     this.vectorSource = null;
     this.vectorLayer = null;
     this.draw = null;
@@ -80,18 +81,17 @@ class MyMaps extends Component {
     if (existingLayer !== undefined) {
       this.vectorSource = existingLayer.getSource();
       this.vectorLayer = existingLayer;
-    }else{
+    } else {
       this.vectorSource = new VectorSource();
       this.vectorLayer = new VectorLayer({
         source: this.vectorSource,
         zIndex: 1000,
-        style: this.drawStyle
+        style: this.drawStyle,
       });
     }
-    
 
     // PROPERTY CLICK WILL IGNORE THIS LAYER
-    this.vectorLayer.setProperties({ disableParcelClick: true, name:this.layerName });
+    this.vectorLayer.setProperties({ disableParcelClick: true, name: this.layerName });
 
     if (existingLayer === undefined) window.map.addLayer(this.vectorLayer);
 
@@ -123,7 +123,7 @@ class MyMaps extends Component {
     // URL PARAMETER
     const myMapsId = helpers.getURLParameter("MY_MAPS_ID");
     if (myMapsId !== null) {
-      drawingHelpers.importMyMaps(myMapsId, result => {
+      drawingHelpers.importMyMaps(myMapsId, (result) => {
         if (result.error !== undefined) helpers.showMessage("MyMaps Import", "That MyMaps ID was NOT found!", helpers.messageColors.red);
         else {
           helpers.showMessage("MyMaps Import", "Success!  MyMaps imported.");
@@ -144,7 +144,7 @@ class MyMaps extends Component {
   };
 
   // Format length output.
-  formatLength = line => {
+  formatLength = (line) => {
     var length = getLength(line);
     var output;
     if (length > 1000) {
@@ -163,7 +163,7 @@ class MyMaps extends Component {
     }
 
     if (this.draw !== null) {
-      window.emitter.emit("changeCursor","standard");
+      window.emitter.emit("changeCursor", "standard");
       window.map.removeInteraction(this.draw);
 
       if (this.currentDrawFeature !== null) {
@@ -190,7 +190,7 @@ class MyMaps extends Component {
   };
 
   // DRAW START
-  onDrawStart = evt => {
+  onDrawStart = (evt) => {
     // DISABLE PARCEL CLICK
     window.disableParcelClick = true;
     // DISABLE IDENTIFY CLICK
@@ -212,9 +212,9 @@ class MyMaps extends Component {
         this.tooltip.setPosition(tooltipCoord);
         this.setState({ toolTipClass: "sc-mymaps-tooltip" });
       });
-    }else if (this.state.drawType === "Measure"){
+    } else if (this.state.drawType === "Measure") {
       this.sketch = evt.feature;
-      this.listener = this.sketch.getGeometry().on("change", evt => {
+      this.listener = this.sketch.getGeometry().on("change", (evt) => {
         var geom = evt.target;
         this.length = this.formatLength(geom);
         this.bearing = drawingHelpers.getBearing(geom.getFirstCoordinate(), geom.getLastCoordinate());
@@ -234,7 +234,7 @@ class MyMaps extends Component {
     }
 
     // CANCEL DRAW
-    window.emitter.emit("changeCursor","standard");
+    window.emitter.emit("changeCursor", "standard");
     window.map.removeInteraction(this.draw);
 
     // BUG https://github.com/openlayers/openlayers/issues/3610
@@ -313,7 +313,7 @@ class MyMaps extends Component {
       label: labelText,
       labelVisible: this.state.drawType === "Text" || this.state.drawType === "Bearing" || this.state.drawType === "Measure" ? true : false,
       labelStyle: null,
-      labelRotation: this.state.drawType === "Bearing" || this.state.drawType === "Measure" ? (this.bearing>180? this.bearing+90 : this.bearing-90): 0,
+      labelRotation: this.state.drawType === "Bearing" || this.state.drawType === "Measure" ? (this.bearing > 180 ? this.bearing + 90 : this.bearing - 90) : 0,
       featureGeoJSON: helpers.featureToGeoJson(feature),
       style: customStyle === null ? this.state.drawStyle : customStyle,
       visible: true,
@@ -585,10 +585,10 @@ class MyMaps extends Component {
     if (evt === null) {
       let geom = feature.getGeometry();
       if (geom === undefined) return;
-      helpers.getGeometryCenter(geom, featureCenter => {
+      helpers.getGeometryCenter(geom, (featureCenter) => {
         // SHOW POPUP
         window.popup.show(
-          featureCenter.flatCoordinates ,
+          featureCenter.flatCoordinates,
           <MyMapsPopup
             key={helpers.getUID()}
             activeTool={activeTool}
@@ -674,7 +674,7 @@ class MyMaps extends Component {
   };
 
   onMenuItemClick = (action, item) => {
-    switch (action){
+    switch (action) {
       case "sc-floating-menu-show-all":
         this.toggleAllVisibility(true);
         break;
@@ -848,10 +848,10 @@ class MyMaps extends Component {
   setDrawControl = () => {
     // REMOVE THE LAST DRAW
 
-    if (this.draw !== null){
-      window.emitter.emit("changeCursor","standard");
+    if (this.draw !== null) {
+      window.emitter.emit("changeCursor", "standard");
       window.map.removeInteraction(this.draw);
-    } 
+    }
 
     // DO NOTHING IF ITS CANCEL
     if (this.state.drawType === "Cancel") {
@@ -865,7 +865,7 @@ class MyMaps extends Component {
     if (drawType === "Eraser") return;
 
     if (drawType === "Rectangle") drawType = "Circle";
-    else if (drawType === "Arrow" || drawType === "Bearing"|| drawType === "Measure") drawType = "LineString";
+    else if (drawType === "Arrow" || drawType === "Bearing" || drawType === "Measure") drawType = "LineString";
     else if (drawType === "Text") drawType = "Point";
 
     // ACTIVE TOOLTIP
@@ -874,15 +874,15 @@ class MyMaps extends Component {
     // POINT STYLE FOR CURSOR
     let pointStyle = this.state.drawStyle.clone();
     let image = pointStyle.getImage();
-    image.setRadius(1);
+    image.setRadius(myMapsConfig.nonPointCursorSize);
 
     // CREATE A NEW DRAW
     this.draw = new Draw({
       features: new Collection([]),
       type: drawType,
       geometryFunction: this.state.drawType === "Rectangle" ? createBox() : undefined,
-      style: this.state.drawStyle,
-      maxPoints: this.state.drawType === "Bearing" ||this.state.drawType === "Measure" ? 2 : undefined
+      style: this.state.drawType !== "Point" ? pointStyle : this.state.drawStyle,
+      maxPoints: this.state.drawType === "Bearing" || this.state.drawType === "Measure" ? 2 : undefined,
     });
 
     // END DRAWING
@@ -896,7 +896,7 @@ class MyMaps extends Component {
     });
 
     //ADD DRAW INTERACTION TO MAP
-    window.emitter.emit("changeCursor","draw");
+    window.emitter.emit("changeCursor", "draw");
     window.map.addInteraction(this.draw);
   };
 
@@ -993,7 +993,7 @@ class MyMaps extends Component {
 
   initializeEditor = () => {
     if (this.modify === null) {
-      window.emitter.emit("changeCursor","draw");
+      window.emitter.emit("changeCursor", "draw");
       // VERTEX
       this.modify = new Modify({ source: this.vectorSource });
       this.modify.on("modifyend", (e) => {
@@ -1006,7 +1006,7 @@ class MyMaps extends Component {
       this.translate.on("translateend", (e) => {
         this.updateFeatureGeometries(e.features.getArray());
       });
- 
+
       window.map.addInteraction(this.translate);
     }
   };
@@ -1079,7 +1079,7 @@ class MyMaps extends Component {
           </TransitionGroup>
         </MyMapsItems>
         <MyMapsAdvanced onEditFeatures={this.onEditFeatures} onMenuItemClick={this.onMenuItemClick} onDeleteAllClick={this.onDeleteAllClick} onMyMapsImport={this.onMyMapsImport} />
-        <div id={this.state.toolTipId} className={window.isDrawingOrEditing && (this.state.drawType === "Bearing" || this.state.drawType === "Measure") ? this.state.toolTipClass : "sc-hidden"}></div>
+        <div id={this.state.toolTipId} className={window.isDrawingOrEditing && (this.state.drawType === "Bearing" || this.state.drawType === "Measure") ? this.state.toolTipClass : "sc-hidden"} />
       </div>
     );
   }

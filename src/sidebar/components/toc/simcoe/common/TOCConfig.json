@@ -1,0 +1,40 @@
+{
+  "geoserverLayerGroupsUrl": "https://opengis.simcoe.ca/geoserver/simcoe/Config_Public_Default/ows?service=wms&version=1.3.0&request=GetCapabilities",
+  "geoserverLayerGroupsUrlType": "group",
+  "layerInfoURL": "https://opengis.simcoe.ca/layerInfo/?URL=",
+  "layerDownloadURL": "https://opengis.simcoe.ca/layerInfo/?SHOW_DOWNLOAD=1&URL=",
+  "useCustomRestUrl": false,
+  "layerGroups": [
+    {
+      "name": "Popular",
+      "displayName": "Popular",
+      "defaultGroup": false,
+      "visibleLayers": ["Assessment Parcel"],
+      "wmsUrl": "https://opengis.simcoe.ca/geoserver/simcoe/Popular/ows?service=wms&version=1.3.0&request=GetCapabilities",
+      "customRestUrl": "https://opengis.simcoe.ca/geoserverRestApi/getLayerGroup/Popular"
+    },
+    {
+      "name": "Historical",
+      "displayName": "Historical",
+      "defaultGroup": false,
+      "wmsUrl": "https://opengis.simcoe.ca/geoserver/simcoe/Historical/ows?service=wms&version=1.3.0&request=GetCapabilities",
+      "customRestUrl": "https://opengis.simcoe.ca/geoserverRestApi/getLayerGroup/Historical"
+    },
+    {
+      "name": "All_Layers",
+      "displayName": "All Layers",
+      "defaultGroup": true,
+      "visibleLayers": ["Assessment Parcel"],
+      "wmsUrl": "https://opengis.simcoe.ca/geoserver/simcoe/All_Layers/ows?service=wms&version=1.3.0&request=GetCapabilities",
+      "customRestUrl": "https://opengis.simcoe.ca/geoserverRestApi/getLayerGroup/All_Layers"
+    },
+    {
+      "name": "Topo_Overlay",
+      "displayName": "Topo Overlay",
+      "defaultGroup": false,
+      "visibleLayers": [],
+      "wmsUrl": "https://opengis.simcoe.ca/geoserver/simcoe/Topo_Overlay/ows?service=wms&version=1.3.0&request=GetCapabilities",
+      "customRestUrl": "https://opengis.simcoe.ca/geoserverRestApi/getLayerGroup/Topo_Overlay"
+    }
+  ]
+}

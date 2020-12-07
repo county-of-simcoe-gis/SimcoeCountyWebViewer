@@ -1,113 +1,24 @@
-.ol-zoom {
-  left: 5px;
-  bottom: auto;
-  right: auto;
-  top: 38px;
-  height:auto;
-  width:28px;
-  background: transparent;
-  padding:0px;
-  
-}
-.ol-zoom:hover {
-  background: transparent;
-}
-.ol-zoom button{
-  border-radius: 4px!important;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
-  box-shadow: 0px 0px 5px 0px rgba(80, 80, 80, 0.69);
-  color: #606060;
-  height:28px;
-  width:28px;
-  margin:0px;
-}
-.ol-zoom .ol-zoom-in {
-  margin-bottom: 5px;
+/* ------------------------- */
+/* SIMCOE COUNTY THEME OVERRIDES */
+/* ------------------------- */
+#map-theme-simcoe-county .ol-zoom {
+  display: none;
 }
 
-.ol-rotate {
-  left: 5px;
-  bottom: auto;
-  right: auto;
-  top: 5px;
-  padding:0px;
-  height:28px;
-  width:28px;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
-  box-shadow: 0px 0px 5px 0px rgba(80, 80, 80, 0.69);
-  
-}
-
-.ol-rotate.ol-hidden{
-  opacity: unset;
-  visibility: unset;
-  transition: unset;
-  -webkit-transition: unset;
-}
-.ol-rotate button{
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
-
-  padding:0px;
-  height:28px;
-  width:28px;
-  
-}
-.ol-compass{
-  height:28px;
-  width:28px;
-  background-image: url(./images/compass.png);
-  background-position: center center;
-  background-repeat: no-repeat;
-  color: #999;
-  background-size: 100%;
-
-  text-indent: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.ol-scale-line {
+#map-theme-simcoe-county .ol-scale-line {
   right: 5px;
   left: auto !important;
   bottom: 5px;
-  background:rgba(191, 214, 228, 0.66);
 }
 
-.ol-scale-line-inner {
-  font-size: 12px;
-  font-weight: bold;
-  border: 2px solid #000;
-  border-top: none;
-  color: #000;
-  transition: ease;
-}
-.ol-scale-bar {
-  right: 20px;
-  left: auto !important;
-  bottom: 5px;
-}
-
-.ol-full-screen {
+#map-theme-simcoe-county .ol-full-screen {
   left: 5px;
   bottom: 5px;
   right: auto;
   top: auto;
-  
-  height:30px;
-  width:30px;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
-  box-shadow: 0px 0px 5px 0px rgba(80, 80, 80, 0.69);
-}
-.ol-full-screen button{
-  background-color: #C8C8C8 ;
-  height:28px;
-  width:28px;
-}
-.ol-full-screen button:hover{
-  background-color: #5d5d5d ;
 }
 
-.ol-popup {
+#map-theme-simcoe-county .ol-popup {
   display: none;
   position: absolute;
   background-color: white;
@@ -119,8 +30,8 @@
   border-radius: 3px !important;
 }
 
-.ol-popup:after,
-.ol-popup:before {
+#map-theme-simcoe-county .ol-popup:after,
+#map-theme-simcoe-county .ol-popup:before {
   top: 100%;
   border: solid transparent;
   content: " ";
@@ -130,33 +41,33 @@
   pointer-events: none;
 }
 
-.ol-popup:after {
+#map-theme-simcoe-county .ol-popup:after {
   border-top-color: white;
   border-width: 10px;
   left: 48px;
   margin-left: -10px;
 }
 
-.ol-popup:before {
+#map-theme-simcoe-county .ol-popup:before {
   border-top-color: #cccccc;
   border-width: 11px;
   left: 48px;
   margin-left: -11px;
 }
 
-.ol-popup-content {
+#map-theme-simcoe-county .ol-popup-content {
   position: relative;
   width: 258px;
   max-width: 258px !important;
   z-index: 1;
   padding: 6px !important;
   background-color: #fff !important;
-  max-height: 240px !important;
+  max-height: 275px !important;
   min-height: 50px !important;
   overflow: hidden;
 }
 
-.ol-popup-closer {
+#map-theme-simcoe-county .ol-popup-closer {
   position: absolute;
   top: 6px;
   right: 2px;
@@ -166,33 +77,28 @@
   text-decoration: none;
 }
 
-.ol-popup-closer:after {
+#map-theme-simcoe-county .ol-popup-closer:after {
   content: "\2716";
 }
 
-.ol-popup div.infoResult {
+#map-theme-simcoe-county .ol-popup div.infoResult {
   min-width: 130px;
 }
 
-.ol-popup div.infoResult p {
+#map-theme-simcoe-county .ol-popup div.infoResult p {
   padding: 0.1em;
   margin: 0;
 }
 
-.ol-popup-content h3 {
+#map-theme-simcoe-county .ol-popup-content h3 {
   margin: 0.25em 0;
 }
 
-.ol-popup.marker {
+#map-theme-simcoe-county .ol-popup.marker {
   margin-bottom: 30px;
 }
 
-
-.ol-layer > canvas {
-  background-color: #fff;
-}
-
-.ol-full-screen {
+#map-theme-simcoe-county .ol-full-screen {
   bottom: 5px;
   left: 4px;
   position: absolute;
@@ -207,17 +113,258 @@
   box-shadow: 0 0 10px 0px;
   z-index: 100 !important;
 }
-.ol-attribution {
+
+#map-theme-simcoe-county .ol-attribution {
   display: none;
 }
 @media only screen and (max-width: 770px) {
-  .ol-full-screen {
+  #map-theme-simcoe-county .ol-full-screen {
     display: none !important;
   }
-  .ol-scale-line {
+  #map-theme-simcoe-county .ol-scale-line {
     left: 5px;
   }
-  .ol-overlaycontainer-stopevent {
+  #map-theme-simcoe-county .ol-overlaycontainer-stopevent {
+    z-index: 1 !important;
+  }
+}
+
+@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+  #map-theme-simcoe-county .ol-full-screen {
+    display: none !important;
+  }
+  #map-theme-simcoe-county .ol-scale-line {
+    left: 5px;
+  }
+}
+
+/* ------------------------- */
+/* MTO THEME OVERRIDES */
+/* ------------------------- */
+#map-theme-mto .ol-zoom {
+  left: 5px;
+  bottom: auto;
+  right: auto;
+  top: 38px;
+  height: auto;
+  width: 28px;
+  background: transparent;
+  padding: 0px;
+}
+
+#map-theme-mto .ol-zoom:hover {
+  background: transparent;
+}
+
+#map-theme-mto .ol-zoom button {
+  border-radius: 4px !important;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+  box-shadow: 0px 0px 5px 0px rgba(80, 80, 80, 0.69);
+  color: #606060;
+  height: 28px;
+  width: 28px;
+  margin: 0px;
+}
+
+#map-theme-mto .ol-zoom .ol-zoom-in {
+  margin-bottom: 5px;
+}
+
+#map-theme-mto .ol-rotate {
+  left: 5px;
+  bottom: auto;
+  right: auto;
+  top: 5px;
+  padding: 0px;
+  height: 28px;
+  width: 28px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+  box-shadow: 0px 0px 5px 0px rgba(80, 80, 80, 0.69);
+}
+
+#map-theme-mto .ol-rotate.ol-hidden {
+  opacity: unset;
+  visibility: unset;
+  transition: unset;
+  -webkit-transition: unset;
+}
+
+#map-theme-mto .ol-rotate button {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+  padding: 0px;
+  height: 28px;
+  width: 28px;
+}
+
+#map-theme-mto .ol-compass {
+  height: 28px;
+  width: 28px;
+  background-image: url(./images/compass.png);
+  background-position: center center;
+  background-repeat: no-repeat;
+  color: #999;
+  background-size: 100%;
+  text-indent: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+#map-theme-mto .ol-scale-line {
+  right: 5px;
+  left: auto !important;
+  bottom: 5px;
+  background: rgba(191, 214, 228, 0.66);
+}
+
+#map-theme-mto .ol-scale-line-inner {
+  font-size: 12px;
+  font-weight: bold;
+  border: 2px solid #000;
+  border-top: none;
+  color: #000;
+  transition: ease;
+}
+#map-theme-mto .ol-scale-bar {
+  right: 20px;
+  left: auto !important;
+  bottom: 5px;
+}
+
+#map-theme-mto .ol-full-screen {
+  left: 5px;
+  bottom: 5px;
+  right: auto;
+  top: auto;
+  height: 30px;
+  width: 30px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+  box-shadow: 0px 0px 5px 0px rgba(80, 80, 80, 0.69);
+}
+
+#map-theme-mto .ol-full-screen button {
+  background-color: #c8c8c8;
+  height: 28px;
+  width: 28px;
+}
+
+#map-theme-mto .ol-full-screen button:hover {
+  background-color: #5d5d5d;
+}
+
+#map-theme-mto .ol-popup {
+  display: none;
+  position: absolute;
+  background-color: white;
+  /* padding: 15px 25px 15px 15px; */
+  border: 1px solid #cccccc;
+  bottom: 12px;
+  left: -50px;
+  max-width: 270px !important;
+  border-radius: 3px !important;
+}
+
+#map-theme-mto .ol-popup:after,
+#map-theme-mto .ol-popup:before {
+  top: 100%;
+  border: solid transparent;
+  content: " ";
+  height: 0;
+  width: 0;
+  position: absolute;
+  pointer-events: none;
+}
+
+#map-theme-mto .ol-popup:after {
+  border-top-color: white;
+  border-width: 10px;
+  left: 48px;
+  margin-left: -10px;
+}
+
+#map-theme-mto .ol-popup:before {
+  border-top-color: #cccccc;
+  border-width: 11px;
+  left: 48px;
+  margin-left: -11px;
+}
+
+#map-theme-mto .ol-popup-content {
+  position: relative;
+  width: 258px;
+  max-width: 258px !important;
+  z-index: 1;
+  padding: 6px !important;
+  background-color: #fff !important;
+  max-height: 240px !important;
+  min-height: 50px !important;
+  overflow: hidden;
+}
+
+#map-theme-mto .ol-popup-closer {
+  position: absolute;
+  top: 6px;
+  right: 2px;
+  font-size: 15pt;
+  padding: 0 4px;
+  color: white;
+  text-decoration: none;
+}
+
+#map-theme-mto .ol-popup-closer:after {
+  content: "\2716";
+}
+
+#map-theme-mto .ol-popup div.infoResult {
+  min-width: 130px;
+}
+
+#map-theme-mto .ol-popup div.infoResult p {
+  padding: 0.1em;
+  margin: 0;
+}
+
+#map-theme-mto .ol-popup-content h3 {
+  margin: 0.25em 0;
+}
+
+#map-theme-mto .ol-popup.marker {
+  margin-bottom: 30px;
+}
+
+#map-theme-mto .ol-layer > canvas {
+  background-color: #fff;
+}
+
+#map-theme-mto .ol-full-screen {
+  bottom: 5px;
+  left: 4px;
+  position: absolute;
+  text-align: center;
+  cursor: pointer;
+  padding: 3px !important;
+  padding-left: 5px !important;
+  padding-right: 5px !important;
+  background-color: rgba(255, 255, 255, 0.5);
+  border: 1px solid #949494;
+  border-radius: 3px;
+  box-shadow: 0 0 10px 0px;
+  z-index: 100 !important;
+}
+
+#map-theme-mto .ol-attribution {
+  display: none;
+}
+
+@media only screen and (max-width: 770px) {
+  #map-theme-mto .ol-full-screen {
+    display: none !important;
+  }
+
+  #map-theme-mto .ol-scale-line {
+    left: 5px;
+  }
+
+  #map-theme-mto .ol-overlaycontainer-stopevent {
     z-index: 1 !important;
   }
 }

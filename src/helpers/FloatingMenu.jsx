@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import Menu from "rc-menu";
 import "rc-menu/assets/index.css";
 import "./FloatingMenu.css";
+import * as mainConfig from "../config.json";
 
 // PROPER USE OF THIS COMPONENT IS TO USE A PORTAL.  HAVE A LOOK AT MyMapsItem FOR AN EXAMPLE.
 class FloatingMenu extends Component {
@@ -16,25 +17,25 @@ class FloatingMenu extends Component {
         top: this.props.buttonEvent.pageY,
         left: this.props.buttonEvent.pageX,
         backgroundColor: "white",
-        width: "180px"
-      }
+        width: "180px",
+      },
     };
   }
 
   componentDidMount() {
-    this.getStyle(style => {
+    this.getStyle((style) => {
       this.setState({ style: style });
     });
 
     // CLICK ANYWHERE ELSE WILL CLOSE MENU
     this.clickEvent = document.body.addEventListener(
       "click",
-      evt => {
+      (evt) => {
         if (typeof evt.target.className === "string") {
           // IGNORE CLASSNAMES
           let found = false;
           if (this.props.classNamesToIgnore !== undefined) {
-            evt.target.className.split(" ").forEach(className => {
+            evt.target.className.split(" ").forEach((className) => {
               if (this.props.classNamesToIgnore.includes(className)) {
                 found = true;
                 return;
@@ -63,7 +64,7 @@ class FloatingMenu extends Component {
     );
   }
 
-  getStyle = callback => {
+  getStyle = (callback) => {
     if (this.state === undefined || !this.state.isVisible) callback({ display: "none" });
 
     let yOffset = 0;
@@ -103,7 +104,7 @@ class FloatingMenu extends Component {
         //left: this.state.styleMode === "right" ? this.props.buttonEvent.pageX : this.props.buttonEvent.pageX - 180,
         left: xOffset,
         backgroundColor: "white",
-        width: width
+        width: width,
       };
 
       if (this.state.isVisible) callback(style);
@@ -114,7 +115,7 @@ class FloatingMenu extends Component {
     this.setState({ isVisible: false });
   };
 
-  handleClick = info => {
+  handleClick = (info) => {
     this.props.onMenuItemClick(info.key);
     this.setState({ isVisible: false });
   };
@@ -125,8 +126,13 @@ class FloatingMenu extends Component {
     }
 
     return (
-      <div className="sc-floating-menu-toolbox-menu-container" style={this.state.style} ref={container => (this.container = container)}>
-        <div className="sc-floating-menu-toolbox-menu-header" title={this.props.title}><div className="title">{this.props.title}</div><div className="close" onClick={this.handleSelect} alt="Close Menu">&nbsp;</div></div>
+      <div className="sc-floating-menu-toolbox-menu-container" style={this.state.style} ref={(container) => (this.container = container)}>
+        <div className={mainConfig.showFloatingMenuHeader ? "sc-floating-menu-toolbox-menu-header" : "sc-hidden"} title={this.props.title}>
+          <div className="title">{this.props.title}</div>
+          <div className="close" onClick={this.handleSelect} alt="Close Menu">
+            &nbsp;
+          </div>
+        </div>
         <Menu onSelect={this.handleSelect} defaultActiveFirst onClick={this.handleClick} onTitleClick={this.editMove} className="sc-floating-menu-toolbox-menu">
           {this.props.children}
         </Menu>

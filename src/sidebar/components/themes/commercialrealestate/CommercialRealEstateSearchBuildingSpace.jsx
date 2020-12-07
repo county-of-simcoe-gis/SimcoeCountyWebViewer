@@ -8,7 +8,7 @@ const CommercialRealEstateSearchBuildingSpace = (props) => {
       maxHeight: "30px",
       minHeight: "30px",
       // width: "150px"
-      width: "165px",
+      width: "160px",
       //      borderRadius: "unset",
     }),
     indicatorsContainer: (provided) => ({

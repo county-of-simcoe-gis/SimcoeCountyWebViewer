@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import * as helpers from "../helpers/helpers";
-import * as drawingHelpers from "../helpers/drawingHelpers";
 import mainConfig from "../config.json";
+import * as drawingHelpers from "../helpers/drawingHelpers";
 import Autocomplete from "react-autocomplete";
 import "./Search.css";
 import Highlighter from "react-highlight-words";
@@ -13,14 +13,14 @@ import { CopyToClipboard } from "react-copy-to-clipboard";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import Select from "react-select";
-
+import { KeyboardPan, KeyboardZoom } from "ol/interaction.js";
 
 // URLS
 const apiUrl = mainConfig.apiUrl;
 const googleDirectionsURL = (lat, long) => `https://www.google.com/maps?saddr=Current+Location&daddr=${lat},${long}`;
 const searchURL = (apiUrl, searchText, type, muni, limit) => `${apiUrl}async/search/?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
 const searchInfoURL = (apiUrl, locationID) => `${apiUrl}searchById/${locationID}`;
-const searchTypesURL = apiUrl => `${apiUrl}getSearchTypes`;
+const searchTypesURL = (apiUrl) => `${apiUrl}getSearchTypes`;
 
 // DEFAULT SEARCH LIMIT
 const defaultSearchLimit = 10;
@@ -45,38 +45,23 @@ const styles = {
   poly: new Style({
     stroke: new Stroke({
       width: 4,
-      color: [255, 0, 0, 0.8]
-    })
+      color: [255, 0, 0, 0.8],
+    }),
   }),
   point: new Style({
     image: new Icon({
       anchor: [0.5, 1],
-      src: images["map-marker.png"]
-    })
+      src: images["map-marker.png"],
+    }),
   }),
   geocode: new Style({
     image: new CircleStyle({
       opacity: 0.5,
       radius: 7,
-      fill: new Fill({ color: [236, 156, 155, 0.7] })
-    })
-  })
+      fill: new Fill({ color: [236, 156, 155, 0.7] }),
+    }),
+  }),
 };
-
-const defaultStyle = new Style({
-  stroke: new Stroke({
-    width: 4,
-    color: [255, 0, 0, 0.8]
-  }),
-  fill: new Fill({
-    color: [255, 0, 0, 0] // USE OPACITY
-  }),
-  image: new CircleStyle({
-    opacity: 0.5,
-    radius: 7,
-    fill: new Fill({ color: [236, 156, 155, 0.7] })
-  })
-});
 
 class Search extends Component {
   constructor(props) {
@@ -85,14 +70,14 @@ class Search extends Component {
     // BIND THIS TO THE CLICK FUNCTION
     this.removeMarkersClick = this.removeMarkersClick.bind(this);
     this.cleanup = this.cleanup.bind(this);
-    this.storageKey = "Search History";
-    // LISTEN FOR SEARCH FROM HISTORY
-    window.emitter.addListener("searchHistorySelect", (item) => this.onHistoryItemSelect(item));
+    this.storageKey = mainConfig.storageKeys.SearchHistory;
+
     // LISTEN FOR MAP TO MOUNT
     window.emitter.addListener("mapParametersComplete", () => this.onMapLoad());
 
-    //window.emitter.addListener("mapLoaded", () => this.onMapLoad());
-this._isMounted = false;
+    // LISTEN FOR SEARCH FROM HISTORY
+    window.emitter.addListener("searchHistorySelect", (item) => this.onHistoryItemSelect(item));
+
     this.state = {
       value: "",
       searchResults: [],
@@ -101,31 +86,25 @@ this._isMounted = false;
       iconActiveClass: "sc-search-icon-active-hidden",
       showMore: false,
       searchTypes: [],
-      selectedType: ""
+      selectedType: "",
     };
   }
 
   requestTimer = null;
 
-  onHistoryItemSelect = (item) => {
-    let searchResults = [item];
-    if (this.state.searchResults.length > 0) searchResults.push(this.state.searchResults);
-    let value = (item.name.length > 25 ? item.name.substring(0, 25) : item.name);
-    this.setState({ value:value, searchResults: searchResults},()=> {this.onItemSelect(item.value, item);});
-  }
   onMapLoad = () => {
     // HANDLE URL PARAMETER
     if (locationId !== null) {
       // CALL API TO GET LOCATION DETAILS
-      helpers.getJSON(searchInfoURL(apiUrl, locationId), result => this.jsonCallback(result));
+      helpers.getJSON(searchInfoURL(apiUrl, locationId), (result) => this.jsonCallback(result));
     }
   };
 
   componentDidMount() {
-    helpers.getJSON(searchTypesURL(apiUrl), result => {
+    helpers.getJSON(searchTypesURL(apiUrl), (result) => {
       let items = [];
       items.push({ label: "All", value: "All" });
-      result.forEach(type => {
+      result.forEach((type) => {
         const obj = { label: type, value: type };
         items.push(obj);
       });
@@ -139,13 +118,13 @@ this._isMounted = false;
     // PATCH TO CLOSE MENU WHEN MAP IS CLICKED
     this.clickEvent = document.body.addEventListener(
       "click",
-      evt => {
+      (evt) => {
         if (document.activeElement.id !== "sc-search-textbox") return;
 
         if (typeof evt.target.className === "string") {
-          evt.target.className.split(" ").forEach(className => {
+          evt.target.className.split(" ").forEach((className) => {
             if (className === "ol-overlaycontainer-stopevent") {
-              document.getElementById("map").focus();
+              document.getElementById(mainConfig.mapTheme === "MTO" ? "map-mto" : "map-simcoe-county").focus();
             }
           });
         }
@@ -154,11 +133,20 @@ this._isMounted = false;
     );
   }
 
-  onTypeDropDownChange = selectedType => {
+  onHistoryItemSelect = (item) => {
+    let searchResults = [item];
+    if (this.state.searchResults.length > 0) searchResults.push(this.state.searchResults);
+    let value = item.name.length > 25 ? item.name.substring(0, 25) : item.name;
+    this.setState({ value: value, searchResults: searchResults }, () => {
+      this.onItemSelect(value, item);
+    });
+  };
+
+  onTypeDropDownChange = (selectedType) => {
     this.setState({ selectedType: selectedType }, async () => {
       let limit = defaultSearchLimit;
       if (this.state.showMore) limit = 50;
-      await helpers.getJSONWait(searchURL(apiUrl, this.state.value, this.state.selectedType.value, limit), responseJson => {
+      await helpers.getJSONWait(searchURL(apiUrl, this.state.value, this.state.selectedType.value, undefined, limit), (responseJson) => {
         if (responseJson !== undefined) this.setState({ searchResults: responseJson });
         else this.setState({ searchResults: [] });
       });
@@ -171,7 +159,7 @@ this._isMounted = false;
     this.cleanup();
   }
 
-  myMapsClick = evt => {
+  myMapsClick = (evt) => {
     const result = this.state.searchResults[0];
     if (searchIconLayer.getSource().getFeatures()[0] === undefined) return;
     // ADD MYMAPS
@@ -204,9 +192,9 @@ this._isMounted = false;
       // HOLDS LINES AND POLYS
       searchGeoLayer = new VectorLayer({
         source: new VectorSource({
-          features: []
+          features: [],
         }),
-        zIndex: 100000
+        zIndex: 1000,
       });
       searchGeoLayer.set("name", "sc-search-geo");
       window.map.addLayer(searchGeoLayer);
@@ -214,16 +202,16 @@ this._isMounted = false;
       // HOLDS CENTROID (CLICKABLE)
       searchIconLayer = new VectorLayer({
         source: new VectorSource({
-          features: []
+          features: [],
         }),
-        zIndex: 100000
+        zIndex: 1000,
       });
       searchIconLayer.setStyle(styles["point"]);
       searchIconLayer.set("name", "sc-search-icon");
       searchIconLayer.set("disableParcelClick", true);
       window.map.addLayer(searchIconLayer);
 
-      window.map.on("singleclick", evt => {
+      window.map.on("singleclick", (evt) => {
         var feature = window.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
           if (layer === null) return;
 
@@ -238,8 +226,8 @@ this._isMounted = false;
               feature={feature}
               removeMarkersClick={this.removeMarkersClick}
               myMapsClick={this.myMapsClick}
-              shareLocationId={this.state.searchResults[0].id}
-              directionsClick={evt => this.directionsClick(evt)}
+              shareLocationId={this.state.searchResults[0].location_id}
+              directionsClick={(evt) => this.directionsClick(evt)}
             />,
             "Actions"
           );
@@ -249,8 +237,7 @@ this._isMounted = false;
   }
 
   jsonCallback(result) {
-    helpers.appendToStorage(this.storageKey, result, 25);
-    //this.saveStateToStorage(result);
+    this.saveStateToStorage(result);
 
     // EMTI SEARCH COMPLETE
     window.emitter.emit("searchComplete", result);
@@ -258,25 +245,7 @@ this._isMounted = false;
     this.initsearchLayers();
 
     // SET STATE CURRENT ITEM
-    //this.setState({ searchResults: [result] });
-
-    //CHECK FOR ASSOCIATED LAYERS
-    if (result.layers !== undefined && result.layers !== null){
-      let assocLayers = result.layers.toLowerCase().split(",");
-      if (assocLayers.length>0){
-        Object.entries(window.allLayers).forEach(row => {
-          const layerItems = row[1];
-          const currentLayers = layerItems.filter(layer => {return assocLayers.includes(layer.name.toLowerCase())});
-          if(currentLayers !== undefined && currentLayers.length > 0) {
-            window.emitter.emit("activeTocLayerGroup", currentLayers[0].group, () => {
-              currentLayers.forEach(layer =>{
-                  window.emitter.emit("activeTocLayer", { fullName:layer.name, name:layer.displayName,isVisible: layer.layer.getVisible(),layerGroupName:layer.groupName , layerGroup: layer.group, index: layer.index });
-              });
-            });
-          }
-        });
-      }
-    }
+    this.setState({ searchResults: [result] });
 
     // GET GEOJSON VALUES
     const fullFeature = helpers.getFeatureFromGeoJSON(result.geojson);
@@ -287,8 +256,8 @@ this._isMounted = false;
     searchGeoLayer.getSource().addFeature(fullFeature);
     searchIconLayer.getSource().addFeature(pointFeature);
 
-    //searchGeoLayer.setZIndex(100);
-    //searchIconLayer.setZIndex(100);
+    searchGeoLayer.setZIndex(300);
+    searchIconLayer.setZIndex(300);
 
     // SET STYLE AND ZOOM
     if (result.geojson.indexOf("Point") !== -1) {
@@ -298,63 +267,66 @@ this._isMounted = false;
     } else if (result.geojson.indexOf("Line") !== -1) {
       searchGeoLayer.setStyle(styles["poly"]);
       window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
-      window.map.getView().setZoom(window.map.getView().getZoom() - 2);
+      window.map.getView().setZoom(window.map.getView().getZoom() - 1);
     } else {
       searchGeoLayer.setStyle(styles["poly"]);
       window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
       window.map.getView().setZoom(window.map.getView().getZoom() - 2);
     }
 
+    //fullFeature.setStyle(myMapsHelpers.getDefaultDrawStyle([255, 0, 0, 0.8], false, 2, fullFeature.getGeometry().getType()));
+    //fullFeature.setStyle(defaultStyle);
     if (result.geojson.indexOf("Point") !== -1) {
       const pointStyle = new Style({
         image: new CircleStyle({
           radius: 5,
           stroke: new Stroke({
             color: [0, 0, 0, 1],
-            width: 2
+            width: 2,
           }),
           fill: new Fill({
-            color: [250, 40, 255, 1]
-          })
-        })
+            color: [250, 40, 255, 1],
+          }),
+        }),
       });
 
       fullFeature.setStyle(pointStyle);
     } else {
-      let defaultStyle = drawingHelpers.getDefaultDrawStyle([102, 255, 102, 0.3], false, 6, fullFeature.getGeometry().getType());
-      defaultStyle.setFill(new Fill({ color: [102, 255, 102, 0.3] }));
+      let defaultStyle = drawingHelpers.getDefaultDrawStyle([255, 0, 0, 0.8], false, 2, fullFeature.getGeometry().getType());
+      defaultStyle.setFill(new Fill({ color: [255, 0, 0, 0] }));
       fullFeature.setStyle(defaultStyle);
     }
+  }
+
+  saveStateToStorage = (item) => {
+    let savedSearches = this.getStorage();
+
+    item.dateAdded = new Date().toLocaleString();
+    savedSearches.unshift(item);
+
+    if (savedSearches.length >= 25) savedSearches.pop();
+    localStorage.setItem(this.storageKey, JSON.stringify(savedSearches));
+  };
+
+  // GET STORAGE
+  getStorage() {
+    const storage = localStorage.getItem(this.storageKey);
+    if (storage === null) return [];
+
+    const data = JSON.parse(storage);
+    return data;
   }
 
   // WHEN USER SELECTS ITEM
   onItemSelect(value, item) {
     if (item.type === "Map Layer") {
-      if(item.isVisible){
-        window.emitter.emit("deactiveTocLayer", Object.assign({}, item, { isVisible:  !item.isVisible }),(isActive)=>{
-          if (isActive) return;
-          item.isVisible = isActive;
-          item.imageName =  "layers.png";
-          item.title = "Click to Activate";
-          item.className = undefined;
-          window.emitter.emit("updateActiveTocLayers", item.layerGroup);
-        });
-       
-      }else{
-        window.emitter.emit("activeTocLayer",  Object.assign({}, item, { isVisible:  !item.isVisible }), (isActive)=>{
-          if (!isActive) return;
-          item.isVisible = isActive;
-          item.imageName =  "layers-visible.png";
-          item.title = "Click to Deactivate";
-          item.className = 'sc-search-layer-deactivate';
-          window.emitter.emit("updateActiveTocLayers", item.layerGroup);
-          window.emitter.emit("activeTocLayerGroup", item.layerGroup, () => {});
-        });
-      }
-      
+      let emmiting = false;
+      window.emitter.emit("activeTocLayerGroup", item.layerGroup, () => {
+        if (!emmiting) window.emitter.emit("activeTocLayer", item);
+        emmiting = true;
+      });
       return;
     }
-    
 
     if (item.type === "Tool") {
       window.emitter.emit("activateTab", "tools");
@@ -372,12 +344,12 @@ this._isMounted = false;
     searchGeoLayer.getSource().clear();
 
     // SET STATE CURRENT ITEM
-    //this.setState({ value, searchResults: [item] });
-    if (item.place_id !== undefined || item.id === null) {
+    this.setState({ value, searchResults: [item] });
+    if (item.place_id !== undefined || item.location_id == null) {
       this.initsearchLayers();
 
       // SET STATE CURRENT ITEM
-      //this.setState({ searchResults: [item] });
+      this.setState({ searchResults: [item] });
 
       // HANDLE OSM RESULT
       let coords = [];
@@ -392,16 +364,17 @@ this._isMounted = false;
       // SET SOURCE
       searchIconLayer.getSource().addFeature(feature);
 
-    // searchGeoLayer.setZIndex(100);
-    // searchIconLayer.setZIndex(100);
+      searchGeoLayer.setZIndex(100);
+      searchIconLayer.setZIndex(100);
 
       // SET STYLE AND ZOOM
       searchGeoLayer.setStyle(styles["point"]);
       window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
       window.map.getView().setZoom(18);
     } else {
+      console.log(value);
       // CALL API TO GET LOCATION DETAILS
-      helpers.getJSON(searchInfoURL(apiUrl, item.id), result => this.jsonCallback(result));
+      helpers.getJSON(searchInfoURL(apiUrl, item.location_id), (result) => this.jsonCallback(result));
     }
   }
 
@@ -413,18 +386,18 @@ this._isMounted = false;
     // HIDE POPUP
     window.popup.hide();
 
-    this.setState({ value: "", searchResults:[] });
+    this.setState({ value: "" });
   }
 
-  onMoreOptionsClick = evt => {
+  onMoreOptionsClick = (evt) => {
     this.setState(
-      prevState => ({
-        showMore: !prevState.showMore
+      (prevState) => ({
+        showMore: !prevState.showMore,
       }),
       async () => {
         let limit = defaultSearchLimit;
         if (this.state.showMore) limit = 50;
-        await helpers.getJSONWait(searchURL(apiUrl, this.state.value, this.state.selectedType.value, limit), responseJson => {
+        await helpers.getJSONWait(searchURL(apiUrl, this.state.value, this.state.selectedType.value, undefined, limit), (responseJson) => {
           if (responseJson !== undefined) this.searchResultsHandler(responseJson, limit);
           else this.searchResultsHandler(responseJson, limit);
         });
@@ -436,10 +409,7 @@ this._isMounted = false;
 
   searchLayers = () => {};
 
-  searchResultsHandler = (results, limit, value=undefined) => {
-    //ignore search result if they are not for the most recent search
-    if (value !== undefined && value !== this.state.value ) return;
-
+  searchResultsHandler = (results, limit) => {
     let newResults = Object.assign([], results);
     if (this.state.value.length < 2) {
       this.setState({ searchResults: [] });
@@ -448,7 +418,7 @@ this._isMounted = false;
     const selectedType = this.state.selectedType.value;
 
     // SET IMAGE NAME
-    newResults.forEach(layer => {
+    newResults.forEach((layer) => {
       layer.imageName = "map-marker-light-blue.png";
     });
 
@@ -456,18 +426,22 @@ this._isMounted = false;
     if (selectedType === "All" || selectedType === "Map Layer") {
       let layers = [];
       // eslint-disable-next-line
-      Object.entries(window.allLayers).map(row => {
+      Object.entries(window.allLayers).map((row) => {
         const layerItems = row[1];
-        layerItems.forEach(layer => {
-          if (layer.displayName.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0 || layer.groupName.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
-            //console.log(layer);
-            let currentLayer = { fullName:layer.name, name:layer.displayName,title: "Click to Activate",isVisible: layer.layer.getVisible(), type: "Map Layer", layerGroupName:layer.groupName , layerGroup: layer.group, imageName: "layers.png", index: layer.index };
-            if (currentLayer.isVisible) {
-              currentLayer.imageName =  "layers-visible.png"
-              currentLayer.title = "Click to Deactivate";
+        layerItems.forEach((layer) => {
+          if (layer.tocDisplayName !== undefined) {
+            if (layer.tocDisplayName.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
+              //console.log(layer);
+              layers.push({
+                fullName: layer.name,
+                name: layer.tocDisplayName,
+                type: "Map Layer",
+                layerGroupName: layer.groupName,
+                layerGroup: layer.group,
+                imageName: "layers.png",
+                index: layer.index,
+              });
             }
-          
-            layers.push(currentLayer);
           }
         });
       });
@@ -478,7 +452,7 @@ this._isMounted = false;
     if (selectedType === "All" || selectedType === "Tool") {
       let tools = [];
       // eslint-disable-next-line
-      mainConfig.sidebarToolComponents.forEach(tool => {
+      mainConfig.sidebarToolComponents.forEach((tool) => {
         if (tool.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
           tools.push({ name: helpers.replaceAllInString(tool.name, "_", " "), type: "Tool", imageName: "tools.png" });
         }
@@ -489,7 +463,7 @@ this._isMounted = false;
     // THEMES
     if (selectedType === "All" || selectedType === "Theme") {
       let themes = [];
-      mainConfig.sidebarThemeComponents.forEach(theme => {
+      mainConfig.sidebarThemeComponents.forEach((theme) => {
         if (theme.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
           themes.push({ name: helpers.replaceAllInString(theme.name, "_", " "), type: "Theme", imageName: "themes.png" });
         }
@@ -500,7 +474,13 @@ this._isMounted = false;
     this.setState({ searchResults: newResults });
   };
 
-  
+  disableKeyboardEvents = (disable) => {
+    window.map.getInteractions().forEach(function(interaction) {
+      if (interaction instanceof KeyboardPan || interaction instanceof KeyboardZoom) {
+        interaction.setActive(!disable);
+      }
+    });
+  };
 
   render() {
     // INIT LAYER
@@ -515,34 +495,34 @@ this._isMounted = false;
     }
 
     const groupsDropDownStyles = {
-      control: provided => ({
+      control: (provided) => ({
         ...provided,
         minHeight: "38px",
         // width: "150px"
         width: dropDownWidth + "px",
         borderRadius: "unset",
-        borderBottom: "none"
+        borderBottom: "none",
       }),
-      indicatorsContainer: provided => ({
+      indicatorsContainer: (provided) => ({
         ...provided,
-        height: "38px"
+        height: "38px",
       }),
-      clearIndicator: provided => ({
+      clearIndicator: (provided) => ({
         ...provided,
-        padding: "5px"
+        padding: "5px",
       }),
-      dropdownIndicator: provided => ({
+      dropdownIndicator: (provided) => ({
         ...provided,
-        padding: "5px"
+        padding: "5px",
       }),
-      menu: provided => ({
+      menu: (provided) => ({
         ...provided,
-        width: "200px"
+        width: "200px",
       }),
-      container: provided => ({
+      container: (provided) => ({
         ...provided,
-        width: "100%"
-      })
+        width: "100%",
+      }),
     };
 
     return (
@@ -552,29 +532,29 @@ this._isMounted = false;
         </div>
 
         <Autocomplete
-          ref={el => (this.autoCompleteRef = el)}
+          ref={(el) => (this.autoCompleteRef = el)}
           inputProps={{
             id: "sc-search-textbox",
             tabIndex: "1",
             placeholder: "Search...",
             name: "sc-search-textbox",
-            onFocus: result => {
-              helpers.disableKeyboardEvents(true);
+            onFocus: (result) => {
+              this.disableKeyboardEvents(true);
             },
-            onBlur: result => {
-              helpers.disableKeyboardEvents(false);
-            }
+            onBlur: (result) => {
+              this.disableKeyboardEvents(false);
+            },
           }}
           className="sc-search-textbox"
           wrapperStyle={{
             position: "relative",
             display: "inline-block",
             width: "100%",
-            zIndex: "100000"
+            zIndex: "100000",
           }}
           value={this.state.value}
           items={this.state.searchResults}
-          getItemValue={item => item.name}
+          getItemValue={(item) => item.name}
           onSelect={(value, item) => {
             this.onItemSelect(value, item);
           }}
@@ -589,42 +569,37 @@ this._isMounted = false;
               this.setState({ iconInitialClass: "sc-search-icon-initial-hidden" });
               this.setState({ iconActiveClass: "sc-search-icon-active" });
 
-            if (value !== "") {
-              this.setState({value, iconInitialClass: "sc-search-icon-initial-hidden",iconActiveClass: "sc-search-icon-active" },async ()=>{
-                let limit = defaultSearchLimit;
-                if (this.state.showMore) limit = 50;
-                await helpers.getJSONWait(searchURL(apiUrl, value, this.state.selectedType.value, limit), responseJson => {
-                  if (responseJson !== undefined) this.searchResultsHandler(responseJson, defaultSearchLimit, value);
-                });
-              });              
+              let limit = defaultSearchLimit;
+              if (this.state.showMore) limit = 50;
+              await helpers.getJSONWait(searchURL(apiUrl, value, this.state.selectedType.value, undefined, limit), (responseJson) => {
+                if (responseJson !== undefined) this.searchResultsHandler(responseJson, defaultSearchLimit);
+              });
             } else {
-              this.setState({value, iconInitialClass: "sc-search-icon-initial",iconActiveClass: "sc-search-icon-active-hidden",searchResults: [] });
+              this.setState({ iconInitialClass: "sc-search-icon-initial" });
+              this.setState({ iconActiveClass: "sc-search-icon-active-hidden" });
+
+              this.setState({ searchResults: [] });
             }
-          }}}
-          renderMenu={children => (
+          }}
+          renderMenu={(children) => (
             <div>
               <div className={this.state.showMore && this.state.searchResults.length > 9 ? "sc-search-menu sc-search-menu-scrollable" : "sc-search-menu"}>{children}</div>
-              <MoreOptions numResults={this.state.searchResults.length} onMoreOptionsClick={this.onMoreOptionsClick} showMore={this.state.showMore}></MoreOptions>
+              <MoreOptions numResults={this.state.searchResults.length} onMoreOptionsClick={this.onMoreOptionsClick} showMore={this.state.showMore} />
             </div>
           )}
           renderItem={(item, isHighlighted) => {
-            let itemName = item.name !== undefined? item.name:"";
-            let descriptionText = (item.description !== undefined && item.description !== null && item.description !== "" )?item.description:"";
-            let typeText = "Unknown";
-            if (item.type === "Map Layer"){
-              typeText = item.type  + ' - ' + item.layerGroupName ;
-              if (item.isVisible) item.className = 'sc-search-layer-deactivate';
-            } 
-            else if (item.type === "Tool" ) typeText = item.type;
-            else typeText = " (" + item.type + ")";
+            let type = "Unknown";
+            if (item.type === "Map Layer") type = item.layerGroupName;
+            else if (item.type === "Tool" || item.type === "Theme") type = "";
+            else type = item.municipality;
             return (
-              <div className={(isHighlighted ? "sc-search-item-highlighted" : "sc-search-item") + (item.className !== undefined?" " + item.className:"")} key={helpers.getUID()} title={item.title}>
+              <div className={isHighlighted ? "sc-search-item-highlighted" : "sc-search-item"} key={helpers.getUID()}>
                 <div className="sc-search-item-left">
                   <img src={item.imageName === undefined ? images["map-marker-light-blue.png"] : images[item.imageName]} alt="blue pin" />
                 </div>
                 <div className="sc-search-item-content">
-                  <Highlighter highlightClassName="sc-search-highlight-words" searchWords={[this.state.value]} textToHighlight={itemName} />
-                  <div className="sc-search-item-sub-content">{descriptionText  + typeText }</div>
+                  <Highlighter highlightClassName="sc-search-highlight-words" searchWords={[this.state.value]} textToHighlight={item.name} />
+                  <div className="sc-search-item-sub-content">{type === "" ? item.type : " - " + type + " (" + item.type + ")"}</div>
                 </div>
               </div>
             );
@@ -644,13 +619,13 @@ class PopupContent extends Component {
     super(props);
     this.state = {
       copied: false,
-      shareURL: this.getShareURL()
+      shareURL: this.getShareURL(),
     };
 
     this.isPlaceOrGeocode = this.props.feature.get("isPlaceOrGeocode");
   }
 
-  getShareURL = value => {
+  getShareURL = (value) => {
     //GET URL
     var url = window.location.href;
 
@@ -669,9 +644,9 @@ class PopupContent extends Component {
     return url;
   };
 
-  onShareClick = event => {
+  onShareClick = (event) => {
     this.setState({ copied: true });
-    helpers.showMessage("Share", "Link has been copied to your clipboard.", helpers.messageColors.green, 2000);
+    helpers.showMessage("Share", "Link has been copied to your clipboard.", "green", 2000);
   };
 
   render() {
@@ -696,7 +671,7 @@ class PopupContent extends Component {
   }
 }
 
-const MoreOptions = props => {
+const MoreOptions = (props) => {
   return (
     <div className={props.numResults > 9 ? "sc-search-menu-options" : "sc-hidden"}>
       <button className="sc-button sc-search-more-options-button" onClick={props.onMoreOptionsClick}>

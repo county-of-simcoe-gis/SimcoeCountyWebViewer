@@ -23,6 +23,7 @@ class Measure extends Component {
     super(props);
 
     this.state = {
+      hideTooltips: false,
       geometryType: "",
       unitType: "distance",
       unitList: [
@@ -128,16 +129,16 @@ class Measure extends Component {
           type: "area",
           convertFunction: (meters) => {
             return Math.round(meters * 1550.003 * 100) / 100;
-          }
+          },
         },
         {
           name: "Degrees",
           abbreviation: "deg",
           type: "bearing",
-          convertFunction: meters => {
+          convertFunction: (meters) => {
             return meters;
-          }
-        }
+          },
+        },
       ],
       unitMeters: -1,
       measureToolTipClass: "sc-hidden",
@@ -230,7 +231,6 @@ class Measure extends Component {
     return output;
   };
 
-
   // Format area output.
   formatArea = (polygon) => {
     var area = getArea(polygon);
@@ -316,11 +316,11 @@ class Measure extends Component {
             color: "rgba(0, 0, 0, 0.7)",
           }),
           fill: new Fill({
-            color: "rgba(255, 255, 255, 0.2)"
-          })
-        })
+            color: "rgba(255, 255, 255, 0.2)",
+          }),
+        }),
       }),
-      maxPoints: this.state.geometryType === "Bearing" ? 2 : undefined
+      maxPoints: this.state.geometryType === "Bearing" ? 2 : undefined,
     });
 
     // DRAW START
@@ -343,10 +343,10 @@ class Measure extends Component {
             output = this.formatArea(geom);
             tooltipCoord = geom.getInteriorPoint().getCoordinates();
           } else if (geom instanceof LineString) {
-            if (this.state.geometryType === "Bearing"){
+            if (this.state.geometryType === "Bearing") {
               output = drawingHelpers.getBearing(geom.getFirstCoordinate(), geom.getLastCoordinate());
               this.setState({ unitMeters: output });
-            }else{
+            } else {
               output = this.formatLength(geom);
             }
             tooltipCoord = geom.getLastCoordinate();
@@ -356,7 +356,8 @@ class Measure extends Component {
           }
           this.measureTooltipElement.innerHTML = output;
           this.measureTooltip.setPosition(tooltipCoord);
-          this.setState({ measureToolTipClass: "sc-measure-tooltip" });
+          if (!this.state.hideTooltips) this.setState({ measureToolTipClass: "sc-measure-tooltip" });
+          else this.setState({ measureToolTipClass: "sc-hidden" });
         });
       },
       this
@@ -407,7 +408,9 @@ class Measure extends Component {
 
     this.helpTooltipElement.innerHTML = helpMsg;
     this.helpTooltip.setPosition(evt.coordinate);
-    this.setState({ helpToolTipClass: "sc-measure-tooltip-help", measureToolTipClass: "sc-measure-tooltip" });
+
+    if (!this.state.hideTooltips) this.setState({ helpToolTipClass: "sc-measure-tooltip-help", measureToolTipClass: "sc-measure-tooltip" });
+    else this.setState({ helpToolTipClass: "sc-hidden", measureToolTipClass: "sc-hidden" });
   };
 
   componentWillUnmount() {
@@ -461,6 +464,10 @@ class Measure extends Component {
     }
   };
 
+  onTooltipCheckboxChange = (evt) => {
+    this.setState({ hideTooltips: evt.target.checked });
+  };
+
   render() {
     return (
       <PanelComponent onClose={this.onClose} name={this.props.name} type="tools">
@@ -471,6 +478,11 @@ class Measure extends Component {
 
           {/* BUTTON BAR */}
           <div className="sc-measure-title">Measure Tools</div>
+          <div className="sc-measure-tooltip-message-container">
+            {"Hide Tooltips"}
+            <input style={{ position: "relative", top: "2px" }} type="checkbox" onChange={this.onTooltipCheckboxChange} value={this.state.hideTooltips} />
+          </div>
+
           <div key={helpers.getUID()} className="sc-measure-button-bar">
             <div className={this.state.geometryType === "LineString" ? "sc-measure-button-container active" : "sc-measure-button-container"}>
               <button
@@ -524,7 +536,7 @@ class Measure extends Component {
                   this.onGeometryButtonClick("Bearing", "bearing");
                 }}
               >
-                <img src={images["compass.png"]} alt="compass"></img>
+                <img src={images["compass.png"]} alt="compass" />
               </button>
             </div>
 

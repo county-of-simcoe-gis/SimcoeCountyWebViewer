@@ -26,17 +26,17 @@ class BasemapSwitcher extends Component {
       topoActiveIndex: 0,
       topoCheckbox: true,
       topoOverlayLayers: [],
-      showBaseMapSwitcher:true,
+      showBaseMapSwitcher: true,
       activeButton: BasemapConfig.defaultButton,
     };
 
     // LISTEN FOR MAP TO MOUNT
     window.emitter.addListener("mapLoaded", () => this.onMapLoad());
     // LISTEN FOR CONTROL VISIBILITY CHANGES
-    window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control,visible));
+    window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control, visible));
   }
-  componentDidMount(){
-    this.setState({showBaseMapSwitcher:window.mapControls.basemap});
+  componentDidMount() {
+    this.setState({ showBaseMapSwitcher: window.mapControls.basemap });
   }
   // CREATE YEAR MARKS ON THE SLIDER
   getImagerySliderMarks() {
@@ -118,7 +118,8 @@ class BasemapSwitcher extends Component {
           //layer = helpers.getOSMLayer();
           layer = helpers.getOSMTileXYZLayer("http://a.tile.openstreetmap.org");
         } else if (service.type === "ESRI_TILED") {
-          layer = helpers.getArcGISTiledLayer(service.url);
+          // layer = helpers.getArcGISTiledLayer(service.url);
+          layer = helpers.getESRITileXYZLayer(service.url);
         }
 
         // LAYER PROPS
@@ -396,16 +397,15 @@ class BasemapSwitcher extends Component {
     }
   }
   controlStateChange(control, state) {
-    switch (control){
+    switch (control) {
       case "basemap":
-        this.setState({showBaseMapSwitcher:state});
+        this.setState({ showBaseMapSwitcher: state });
         break;
       default:
         break;
     }
   }
   render() {
-    
     // STYLE USED BY SLIDER
     const sliderWrapperStyle = {
       width: 60,
@@ -416,7 +416,7 @@ class BasemapSwitcher extends Component {
     };
 
     return (
-      <div className={(!this.state.showBaseMapSwitcher? " sc-hidden":"")}>
+      <div className={!this.state.showBaseMapSwitcher ? " sc-hidden" : ""}>
         <div id="sc-basemap-main-container">
           <div id="sc-basemap-collapse-button" className={this.state.containerCollapsed ? "sc-basemap-collapse-button closed" : "sc-basemap-collapse-button"} onClick={this.onCollapsedClick} />
           <div className={this.state.containerCollapsed ? "sc-hidden" : "sc-basemap-imagery"}>

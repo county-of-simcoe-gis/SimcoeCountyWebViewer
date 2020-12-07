@@ -1,21 +1,18 @@
 import React, { Component } from "react";
 import "./Sidebar.css";
 import * as helpers from "../helpers/helpers";
-import LoadingScreen from "../helpers/LoadingScreen.jsx";
 
-import TOC from "./components/toc/TOC";
+import TOC from "./components/toc/simcoe/TOC.jsx";
+import { default as TOCMTO } from "./components/toc/mto/accordion-toc/TOC.jsx";
 
-//import TOCv1 from './components/toc/TOCV1.jsx'
-//import TOCv2 from './components/toc/TOCv2.jsx'
 import SidebarItemList from "./SidebarItemList";
 import Reports from "./components/reports/Reports";
 import MyMaps from "./components/mymaps/MyMaps";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 import SidebarComponent from "react-sidebar";
-import ComponentsConfig from "../config.json";
+import mainConfig from "../config.json";
 import SidebarSlim from "./SidebarSlim.jsx";
-import MenuButton from "./MenuButton.jsx";
 
 class Sidebar extends Component {
   constructor(props) {
@@ -28,15 +25,13 @@ class Sidebar extends Component {
     this.onSetSidebarOpen = this.onSetSidebarOpen.bind(this);
 
     this.state = {
-      tocLoaded:false,
-      showFullscreen: true,
       // TOOLS AND THEMES ARE IN HERE
       toolComponents: [],
 
       // CLASSES
       tabClassName: "sidebar-advanced-tab",
       sidebarOpen: false,
-      defaultSidebarOpen: false,
+
       // SELECTED TAB
       tabIndex: 0,
 
@@ -44,56 +39,33 @@ class Sidebar extends Component {
 
       // COMPONENTS
       activeTabComponents: {
-        layers: <TOC key={helpers.getUID()} />,
-        // layers: <TOCv2 key={helpers.getUID()}></TOCv2>,
+        layers: mainConfig.tocType !== "MTO" ? <TOC key={helpers.getUID()} onTocTypeChange={this.onTocTypeChange} type={mainConfig.tocType} /> : <TOCMTO key={helpers.getUID()} />,
         mymaps: <MyMaps key={helpers.getUID()} onMyMapsEditing={this.onMyMapsEditing} />,
         reports: {
           default: <Reports key={helpers.getUID()} />,
-          loadedComponent: null
+          loadedComponent: null,
         },
         tools: {
           default: <SidebarItemList key={helpers.getUID()} listtype="tools" onClick={this.activateSidebarItem} />,
-          loadedComponent: null
+          loadedComponent: null,
         },
         themes: {
           default: <SidebarItemList key={helpers.getUID()} listtype="themes" onClick={this.activateSidebarItem} />,
-          loadedComponent: null
-        }
-      }
+          loadedComponent: null,
+        },
+      },
     };
-    // LISTEN FOR CONTROL VISIBILITY CHANGES
-    window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control,visible));
-
-    // LISTEN FOR TOC TO LOAD
-    window.emitter.addListener("tocLoaded", () => this.setState({tocLoaded:true}));
-
-    
   }
-  controlStateChange(control, state) {
-    switch (control){
-      case "fullscreen":
-        this.setState({showFullscreen:state});
-        break;
-      default:
-        break;
-    }
-  }
-  onMyMapsEditing = isMyMapsEditing => {
+
+  onMyMapsEditing = (isMyMapsEditing) => {
     // DISABLE PARCEL CLICK
     window.disableParcelClick = isMyMapsEditing;
-    // DISABLE IDENTIFY CLICK
-    window.disableIdentifyClick = isMyMapsEditing;
+
     // DISABLE POPUPS
     window.isDrawingOrEditing = isMyMapsEditing;
-    if(ComponentsConfig.leftClickIdentify){
-      if (isMyMapsEditing){
-        window.emitter.emit("changeCursor","standard");
-      }else{
-        window.emitter.emit("changeCursor","identify");
-      }
-    }
-    this.setState({ isMyMapsEditing:isMyMapsEditing });
-  }
+
+    this.setState({ isMyMapsEditing });
+  };
 
   onSetSidebarOpen(open) {
     this.setState({ sidebarOpen: open });
@@ -105,7 +77,7 @@ class Sidebar extends Component {
     const typeLowerCase = `${componentConfig.componentName}`.toLowerCase().replace(/\s/g, "");
     const path = `./components/${typeFolder}/${typeLowerCase}/${componentConfig.componentName}.jsx`;
     import(`${path}`)
-      .then(component => {
+      .then((component) => {
         // SET PROPS FROM CONFIG
         let comp = component.default;
         comp.props = [];
@@ -118,10 +90,10 @@ class Sidebar extends Component {
 
         // ADD COMPONENT TO LIST
         this.setState({
-          toolComponents: this.state.toolComponents.concat(comp)
+          toolComponents: this.state.toolComponents.concat(comp),
         });
       })
-      .catch(error => {
+      .catch((error) => {
         console.log(error);
         console.error(`"${componentConfig.name}" not yet supported`);
       });
@@ -129,15 +101,14 @@ class Sidebar extends Component {
     return "Done";
   };
 
-  componentDidMount() {
-    if(window.mapControls !== undefined) this.setState({showFullscreen:window.mapControls.fullScreen});
+  async componentDidMount() {
     // IMPORT TOOLS FROM CONFIG
-    const tools = ComponentsConfig.sidebarToolComponents;
-    tools.map(async component => await this.addComponent(component, "tools"));
+    const tools = mainConfig.sidebarToolComponents;
+    tools.map(async (component) => await this.addComponent(component, "tools"));
 
     // IMPORT THEMES FROM CONFIG
-    const themes = ComponentsConfig.sidebarThemeComponents;
-    themes.map(async component => await this.addComponent(component, "themes"));
+    const themes = mainConfig.sidebarThemeComponents;
+    themes.map(async (component) => await this.addComponent(component, "themes"));
 
     this.initToolAndThemeUrlParameter();
 
@@ -145,32 +116,34 @@ class Sidebar extends Component {
     const url = new URL(window.location.href.toUpperCase());
     const viewerMode = url.searchParams.get("MODE");
     window.sidebarOpen = false;
-    if ((viewerMode !== null && viewerMode === "ADVANCED") || this.state.defaultSidebarOpen) {
-      setTimeout(() => {this.sidebarVisiblityEventHandler("OPEN");},250);
+    if (viewerMode !== null && viewerMode === "ADVANCED") {
+      this.togglePanelVisibility();
+      window.sidebarOpen = true;
+      this.setState({ sidebarOpen: true });
     }
 
     // TAB PARAMETER
     const tabNameParameter = helpers.getURLParameter("TAB");
     if (tabNameParameter != null) {
-      if(!window.sidebarOpen) this.togglePanelVisibility();
+      this.togglePanelVisibility();
+      window.sidebarOpen = true;
+      this.setState({ sidebarOpen: true });
       this.activateTab(tabNameParameter.toLowerCase());
     }
 
     // LISTEN FOR OPEN OR CLOSE FROM OTHER COMPONENTS (CLOSE OR OPEN)
-    window.emitter.addListener("setSidebarVisiblity", openOrClose => this.sidebarVisiblityEventHandler(openOrClose));
+    window.emitter.addListener("setSidebarVisiblity", (openOrClose) => this.sidebarVisiblityEventHandler(openOrClose));
 
     // LISTEN FOR TAB ACTIVATION FROM OTHER COMPONENTS
-    window.emitter.addListener("activateTab", tabName => this.activateTab(tabName));
+    window.emitter.addListener("activateTab", (tabName) => this.activateTab(tabName));
 
     // LISTEN FOR REPORT LOADING
-    window.emitter.addListener("loadReport", content => this.loadReport(content));
-    
+    window.emitter.addListener("loadReport", (content) => this.loadReport(content));
 
     // LISTEN FOR ITEM ACTIVATION FROM OTHER COMPONENTS
     window.emitter.addListener("activateSidebarItem", (name, type) => {
       this.activateItemFromEmmiter(name, type);
     });
-    window.emitter.emit("sidebarLoaded");  
   }
 
   initToolAndThemeUrlParameter = () => {
@@ -179,22 +152,26 @@ class Sidebar extends Component {
     for (i = 1; i <= 100; i++) {
       if (isLoading) return;
       // eslint-disable-next-line
-      (index => {
+      ((index) => {
         setTimeout(() => {
           if (isLoading) return;
 
-          if (ComponentsConfig.sidebarToolComponents.length + ComponentsConfig.sidebarThemeComponents.length === this.state.toolComponents.length) {
+          if (mainConfig.sidebarToolComponents.length + mainConfig.sidebarThemeComponents.length === this.state.toolComponents.length) {
             isLoading = true;
             // HANDLE ADVANCED MODE PARAMETER
             var toolParam = helpers.getURLParameter("TOOL");
             var themeParam = helpers.getURLParameter("THEME");
             if (toolParam != null) {
-              if(!window.sidebarOpen) this.togglePanelVisibility();
+              window.sidebarOpen = true;
+              this.setState({ sidebarOpen: true });
+              this.togglePanelVisibility();
 
               // TRIED TO USE PROMISES...
               this.activateItemFromEmmiter(toolParam, "tools");
             } else if (themeParam != null) {
-              if(!window.sidebarOpen) this.togglePanelVisibility();
+              window.sidebarOpen = true;
+              this.setState({ sidebarOpen: true });
+              this.togglePanelVisibility();
 
               // TRIED TO USE PROMISES...
               this.activateItemFromEmmiter(themeParam, "themes");
@@ -205,7 +182,7 @@ class Sidebar extends Component {
     }
   };
 
-  loadReport = content => {
+  loadReport = (content) => {
     let activeTabComponents = this.state.activeTabComponents;
     activeTabComponents.reports.loadedComponent = <Reports>{content}</Reports>;
     this.setState({ activeTabComponents: activeTabComponents });
@@ -264,32 +241,16 @@ class Sidebar extends Component {
   }
 
   activateTab(tabName) {
-    // SET SELECTED TAB
-    if (this.state.tabIndex===1 && tabName !== "tools") window.emitter.emit("closeToolsOrThemes", "tools");
-    if (tabName === "layers") {
-      this.onMyMapsEditing(false);
-      this.setState({ tabIndex: 0 });
-    }
-    else if (tabName === "tools"){
-      this.onMyMapsEditing(true);
-      this.setState({ tabIndex: 1 });
-    }
-    else if (tabName === "mymaps") {
-      this.onMyMapsEditing(true);
-      this.setState({ tabIndex: 2 });
-    }
-    else if (tabName === "themes") {
-      this.onMyMapsEditing(true);
-      this.setState({ tabIndex: 3 });
-    }
-    else if (tabName === "reports"){ 
-      this.onMyMapsEditing(false);
-      this.setState({ tabIndex: 4 });
-    }
-    else console.log("NO VALID TAB FOUND");
-
     // OPEN PANEL
     this.sidebarVisiblityEventHandler("OPEN");
+
+    // SET SELECTED TAB
+    if (tabName === "layers") this.setState({ tabIndex: 0 });
+    else if (tabName === "tools") this.setState({ tabIndex: 1 });
+    else if (tabName === "mymaps") this.setState({ tabIndex: 2 });
+    else if (tabName === "themes") this.setState({ tabIndex: 3 });
+    else if (tabName === "reports") this.setState({ tabIndex: 4 });
+    else console.log("NO VALID TAB FOUND");
   }
 
   sidebarVisiblityEventHandler(openOrClose) {
@@ -304,14 +265,14 @@ class Sidebar extends Component {
     //  PANEL IN AND OUT CLASSES
     if (window.sidebarOpen) {
       window.sidebarOpen = false;
+      this.setState({ sidebarOpen: false });
     } else {
       window.sidebarOpen = true;
+      this.setState({ sidebarOpen: true });
     }
-    this.setState({ sidebarOpen: window.sidebarOpen }, () => {
-      // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
-      window.emitter.emit("sidebarChanged", window.sidebarOpen);
-    });
-   
+
+    // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
+    window.emitter.emit("sidebarChanged", window.sidebarOpen);
   }
 
   // TOOL AND THEME ITEMS CLICK
@@ -322,7 +283,7 @@ class Sidebar extends Component {
       if (loadedTool != null) {
         this.setState({ activeComponent: loadedTool });
       } else {
-        this.state.toolComponents.map(Component => {
+        this.state.toolComponents.map((Component) => {
           if (Component.props.name === name) {
             // CREATE TOOL COMPONENT
             var comp = (
@@ -337,11 +298,11 @@ class Sidebar extends Component {
       }
 
       helpers.addAppStat("Tool", name);
-    }  else {
+    } else {
       var loadedTheme = this.state.activeTabComponents.themes.loadedComponent;
       if (loadedTheme != null) this.setState({ activeComponent: loadedTheme });
       else {
-        this.state.toolComponents.map(Component => {
+        this.state.toolComponents.map((Component) => {
           if (Component.props.name === name) {
             // CREATE THEME COMPONENT
             var comp = (
@@ -374,34 +335,21 @@ class Sidebar extends Component {
     }
   }
 
-  slimSidebarButtonClick = name => {
-   
+  slimSidebarButtonClick = (name) => {
+    this.togglePanelVisibility();
+    window.sidebarOpen = true;
+    this.setState({ sidebarOpen: true });
     this.activateTab(name);
     helpers.addAppStat("Sidebar Slim", name);
   };
 
-  onTabSelect = tabIndex => {
-    if (this.state.tabIndex===1 && tabIndex !==1) window.emitter.emit("closeToolsOrThemes", "tools");
+  onTabSelect = (tabIndex) => {
     this.setState({ tabIndex });
-    if (tabIndex === 0) {
-      this.onMyMapsEditing(false);
-      helpers.addAppStat("Tab", "Layers");
-    }
-    else if (tabIndex === 1) {
-      this.onMyMapsEditing(true);
-      helpers.addAppStat("Tab", "Tools");
-    }
-    else if (tabIndex === 2) { 
-      this.onMyMapsEditing(true);
-      helpers.addAppStat("Tab", "MyMaps");
-    }else if (tabIndex === 3) {
-      this.onMyMapsEditing(false);
-      helpers.addAppStat("Tab", "Themes");
-    }
-    else if (tabIndex === 4) {
-      this.onMyMapsEditing(false);
-      helpers.addAppStat("Tab", "Reports");
-    }
+    if (tabIndex === 0) helpers.addAppStat("Tab", "Layers");
+    else if (tabIndex === 1) helpers.addAppStat("Tab", "Tools");
+    else if (tabIndex === 2) helpers.addAppStat("Tab", "MyMaps");
+    else if (tabIndex === 3) helpers.addAppStat("Tab", "Themes");
+    else if (tabIndex === 4) helpers.addAppStat("Tab", "Reports");
   };
 
   //<Tabs forceRenderTabPanel={true} onSelect={tabIndex => this.setState({ tabIndex })} selectedIndex={this.state.tabIndex}>
@@ -417,31 +365,22 @@ class Sidebar extends Component {
         children={""}
         sidebar={
           <React.Fragment>
-            <LoadingScreen visible={!this.state.tocLoaded} message={"Loading TOC"} />
             <Tabs forceRenderTabPanel={true} selectedIndex={this.state.tabIndex} onSelect={this.onTabSelect}>
               <TabList>
                 <Tab id="tab-layers">
-                  <TabButton imageURL={images["legend-32x32.png"]} name="Layers" active={this.state.tabIndex===0} 
-                            onClick={() => {if(this.state.tabIndex===0)  {
-                              window.emitter.emit("setSidebarVisiblity", "CLOSE");
-                            }
-                              }} />
+                  <TabButton imageURL={images["legend-32x32.png"]} name="Layers" />
                 </Tab>
                 <Tab id="tab-tools">
-                  <TabButton imageURL={images["tools-32x32.png"]} name="Tools" active={this.state.tabIndex===1} 
-                              onClick={() => {if(this.state.tabIndex===1) window.emitter.emit("setSidebarVisiblity", "CLOSE");}} />
+                  <TabButton imageURL={images["tools-32x32.png"]} name="Tools" active={this.state.activeTabComponents.tools.loadedComponent} />
                 </Tab>
-				<Tab id="tab-mymaps">
-                  <TabButton imageURL={images["map-32x32.png"]} name="My Maps" active={this.state.tabIndex===2} 
-                              onClick={() => {if(this.state.tabIndex===2)  window.emitter.emit("setSidebarVisiblity", "CLOSE");}} />
+                <Tab id="tab-mymaps">
+                  <TabButton imageURL={images["map-32x32.png"]} name="My Maps" active={this.state.isMyMapsEditing} />
                 </Tab>
                 <Tab id="tab-themes">
-                  <TabButton imageURL={images["theme-32x32.png"]} name="Themes" active={this.state.tabIndex===3} 
-                              onClick={() => {if(this.state.tabIndex===3)  window.emitter.emit("setSidebarVisiblity", "CLOSE");}} />
+                  <TabButton imageURL={images["theme-32x32.png"]} name="Themes" active={this.state.activeTabComponents.themes.loadedComponent} />
                 </Tab>
                 <Tab id="tab-reports">
-                  <TabButton imageURL={images["report-32x32.png"]} name="Reports" active={this.state.tabIndex===4} 
-                              onClick={() => {if(this.state.tabIndex===4)  window.emitter.emit("setSidebarVisiblity", "CLOSE");}} />
+                  <TabButton imageURL={images["report-32x32.png"]} name="Reports" />
                 </Tab>
               </TabList>
 
@@ -462,11 +401,13 @@ class Sidebar extends Component {
               <img src={require("./images/close-tab.png")} alt="Close Tab" />
             </div>
             <SidebarSlim
-              tabIndex={this.state.tabIndex}
+              onClick={this.slimSidebarButtonClick}
+              themeActive={this.state.activeTabComponents.themes.loadedComponent}
+              toolActive={this.state.activeTabComponents.tools.loadedComponent}
+              isMyMapsEditing={this.state.isMyMapsEditing}
             />
             <div id="sc-sidebar-message-container" />
-
-            <MenuButton showLabel={false} hidden={!this.state.sidebarOpen} className={"map-float" + (!this.state.showFullscreen ? " no-fullscreen": "")} />
+            {/* <MenuButton /> */}
           </React.Fragment>
         }
         open={this.state.sidebarOpen}
@@ -480,12 +421,13 @@ class Sidebar extends Component {
 export default Sidebar;
 
 // TAB BUTTON
-const TabButton = props => {
+const TabButton = (props) => {
   return (
-    <div onClick={props.onClick}>
+    <div>
+      <span className={props.active ? "sc-tab-button-dot" : "sc-hidden"} />
       <img src={props.imageURL} alt={props.name} />
       <br />
-      <span >{props.name}</span>
+      <span>{props.name}</span>
     </div>
   );
 };

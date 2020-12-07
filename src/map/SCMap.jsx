@@ -12,11 +12,11 @@ import Navigation from "./Navigation";
 import { defaults as defaultInteractions } from "ol/interaction.js";
 import Popup from "../helpers/Popup.jsx";
 import FooterTools from "./FooterTools.jsx";
-import { defaults as defaultControls, ScaleLine, FullScreen,Rotate } from "ol/control.js";
+import { defaults as defaultControls, ScaleLine, FullScreen, Rotate } from "ol/control.js";
 import BasemapSwitcher from "./BasemapSwitcher";
 import PropertyReportClick from "./PropertyReportClick.jsx";
 import "ol-contextmenu/dist/ol-contextmenu.css";
-import { fromLonLat,transform } from "ol/proj";
+import { fromLonLat, transform } from "ol/proj";
 
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
@@ -32,8 +32,8 @@ import AttributeTable from "../helpers/AttributeTable.jsx";
 import FloatingImageSlider from "../helpers/FloatingImageSlider.jsx";
 
 const scaleLineControl = new ScaleLine({
-                                  minWidth: 100
-                                   });
+  minWidth: mainConfig.mapTheme === "MTO" ? 100 : 80,
+});
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
   `${mainConfig.feedbackUrl}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True`;
 const googleMapsTemplate = (pointx, pointy) => `https://www.google.com/maps?q=${pointy},${pointx}`;
@@ -51,7 +51,7 @@ class SCMap extends Component {
       mapBottom: 0,
     };
     // LISTEN FOR MAP CURSOR TO CHANGE
-    window.emitter.addListener("changeCursor", cursorStyle => this.changeCursor(cursorStyle));
+    if (!mainConfig.onlyStandardCursor) window.emitter.addListener("changeCursor", (cursorStyle) => this.changeCursor(cursorStyle));
 
     // LISTEN FOR TOC TO LOAD
     window.emitter.addListener("tocLoaded", () => this.handleUrlParameters());
@@ -59,32 +59,31 @@ class SCMap extends Component {
     // LISTEN FOR ATTRIBUTE TABLE SIZE
     window.emitter.addListener("attributeTableResize", (height) => this.onAttributeTableResize(height));
   }
-  
+
   componentDidMount() {
-    
     if (mainConfig.leftClickIdentify) {
-      this.setState({mapClassName:"sc-map identify"});
+      this.setState({ mapClassName: "sc-map identify" });
     }
     let centerCoords = mainConfig.centerCoords;
     let defaultZoom = mainConfig.defaultZoom;
     const defaultsStorage = sessionStorage.getItem(this.storageMapDefaultsKey);
     const extent = helpers.getItemsFromStorage(this.storageExtentKey);
-    
+
     if (defaultsStorage !== null && extent === undefined) {
       const detaults = JSON.parse(defaultsStorage);
       if (detaults.zoom !== undefined) defaultZoom = detaults.zoom;
       if (detaults.center !== undefined) centerCoords = detaults.center;
     }
-    
+
     var controls = [];
-    if (window.mapControls.scaleLine) controls.push(scaleLineControl)
-    if (window.mapControls.fullScreen) controls.push(new FullScreen())
-    if (window.mapControls.rotate) controls.push(new Rotate())
+    if (window.mapControls.scaleLine) controls.push(scaleLineControl);
+    if (window.mapControls.fullScreen) controls.push(new FullScreen());
+    if (window.mapControls.rotate) controls.push(new Rotate());
 
     var map = new Map({
       controls: defaultControls().extend(controls.concat([])),
       layers: [],
-      target: "map",
+      target: mainConfig.mapTheme === "MTO" ? "map-mto" : "map-simcoe-county",
       view: new View({
         center: centerCoords,
         zoom: defaultZoom,
@@ -99,10 +98,9 @@ class SCMap extends Component {
       ]),
       keyboardEventTarget: document,
     });
-    if (!window.mapControls.zoomInOut) helpers.removeMapControl(map,"zoom");
-    if (!window.mapControls.rotate) helpers.removeMapControl(map,"rotate");
+    if (!window.mapControls.zoomInOut) helpers.removeMapControl(map, "zoom");
+    if (!window.mapControls.rotate) helpers.removeMapControl(map, "rotate");
 
-   
     if (extent !== undefined) {
       map.getView().fit(extent, map.getSize(), { duration: 1000 });
     }
@@ -118,29 +116,32 @@ class SCMap extends Component {
       const menu = (
         <Portal>
           <FloatingMenu key={helpers.getUID()} buttonEvent={evt} onMenuItemClick={this.onMenuItemClick} autoY={true} autoX={true}>
-            <MenuItem className={helpers.isMobile() ? "sc-hidden" : "sc-floating-menu-toolbox-menu-item"} key="sc-floating-menu-basic-mode">
+            <MenuItem
+              className={helpers.isMobile() || !mainConfig.rightClickMenuVisibility["sc-floating-menu-basic-mode"] ? "sc-hidden" : "sc-floating-menu-toolbox-menu-item"}
+              key="sc-floating-menu-basic-mode"
+            >
               <FloatingMenuItem imageName={"collased.png"} label="Switch To Basic" />
             </MenuItem>
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-property-click">
+            <MenuItem className={mainConfig.rightClickMenuVisibility["sc-floating-menu-property-click"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-property-click">
               <FloatingMenuItem imageName={"report.png"} label="Property Report" />
             </MenuItem>
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-add-mymaps">
+            <MenuItem className={mainConfig.rightClickMenuVisibility["sc-floating-menu-add-mymaps"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-add-mymaps">
               <FloatingMenuItem imageName={"point.png"} label="Add Marker Point" />
             </MenuItem>
-           
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-save-map-extent">
+
+            <MenuItem className={mainConfig.rightClickMenuVisibility["sc-floating-menu-save-map-extent"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-save-map-extent">
               <FloatingMenuItem imageName={"globe-icon.png"} label="Save as Default Extent" />
             </MenuItem>
-            {/*<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-report-problem">
+            <MenuItem className={mainConfig.rightClickMenuVisibility["sc-floating-menu-report-problem"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-report-problem">
               <FloatingMenuItem imageName={"error.png"} label="Report a problem" />
-      </MenuItem>*/}
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-identify">
+            </MenuItem>
+            <MenuItem className={mainConfig.rightClickMenuVisibility["sc-floating-menu-identify"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-identify">
               <FloatingMenuItem imageName={"identify.png"} label="Identify" />
             </MenuItem>
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-google-maps">
+            <MenuItem className={mainConfig.rightClickMenuVisibility["sc-floating-menu-google-maps"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-google-maps">
               <FloatingMenuItem imageName={"google.png"} label="View in Google Maps" />
             </MenuItem>
-            <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-more">
+            <MenuItem className={mainConfig.rightClickMenuVisibility["sc-floating-menu-more"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-more">
               <FloatingMenuItem imageName={"more-16.png"} label="More..." />
             </MenuItem>
           </FloatingMenu>
@@ -166,7 +167,7 @@ class SCMap extends Component {
       if (helpers.isMobile()) {
         window.emitter.emit("setSidebarVisiblity", "CLOSE");
         //helpers.showURLWindow(mainConfig.termsUrl, false, "full");
-      }// else helpers.showURLWindow(mainConfig.termsUrl);
+      } // else helpers.showURLWindow(mainConfig.termsUrl);
     }
 
     // MAP LOADED
@@ -214,19 +215,18 @@ class SCMap extends Component {
     // ATTRIBUTE TABLE TESTING
     // window.emitter.emit("openAttributeTable", "https://opengis.simcoe.ca/geoserver/", "simcoe:Airport");
   }
-  changeCursor = (cursorStyle) =>
-  {
+  changeCursor = (cursorStyle) => {
     let cursorStyles = ["standard", "identify", "draw"];
-    cursorStyles.splice( cursorStyles.indexOf(cursorStyle), 1 );
+    cursorStyles.splice(cursorStyles.indexOf(cursorStyle), 1);
     let classes = this.state.mapClassName.split(" ");
-    if (classes.indexOf(cursorStyle) === -1){
-      cursorStyles.forEach(styleName => {
-        if (classes.indexOf(styleName) !== -1) classes.splice(classes.indexOf(styleName), 1 );
+    if (classes.indexOf(cursorStyle) === -1) {
+      cursorStyles.forEach((styleName) => {
+        if (classes.indexOf(styleName) !== -1) classes.splice(classes.indexOf(styleName), 1);
       });
       classes.push(cursorStyle);
-      this.setState({mapClassName:classes.join(" ")});
+      this.setState({ mapClassName: classes.join(" ") });
     }
-  }
+  };
 
   onAttributeTableResize = (height) => {
     this.setState({ mapBottom: Math.abs(height) }, () => {
@@ -269,8 +269,8 @@ class SCMap extends Component {
     window.emitter.emit("mapParametersComplete");
   };
 
-  onMenuItemClick = key => {
-    switch(key){
+  onMenuItemClick = (key) => {
+    switch (key) {
       case "sc-floating-menu-zoomin":
         window.map.getView().setZoom(window.map.getView().getZoom() + 1);
         break;
@@ -304,7 +304,7 @@ class SCMap extends Component {
       default:
         break;
     }
-    
+
     helpers.addAppStat("Right Click", key);
   };
 
@@ -389,44 +389,57 @@ class SCMap extends Component {
     } else {
       mapClassName = "sc-map sc-map-closed sc-map-slidein";
     }
-    this.setState({ mapClassName: mapClassName },() =>{
+    this.setState({ mapClassName: mapClassName }, () => {
       window.map.updateSize();
-    
+
       this.forceUpdate();
     });
-    
-    
-    
   }
-
-  
-  
 
   render() {
     window.emitter.addListener("sidebarChanged", (isSidebarOpen) => this.sidebarChanged(isSidebarOpen));
 
     return (
       <div>
-        <div id="map-modal-window" />
-        <div id="map" className={this.state.mapClassName} tabIndex="0" style={{ bottom: this.state.mapBottom }} />
-        <Navigation />
-        <FooterTools />
-        <BasemapSwitcher />
-        <PropertyReportClick />
-        {/* <Screenshot></Screenshot> */}
-        {/* https://buttons.github.io/ */}
-        <div
-          className={window.sidebarOpen ? "sc-map-github-button slideout" : "sc-map-github-button slidein"}
-          onClick={() => {
-            helpers.addAppStat("GitHub", "Button");
-          }}
-        >
-          <GitHubButton href="https://github.com/county-of-simcoe-gis" data-size="large" aria-label="Follow @simcoecountygis on GitHub">
-            Follow @simcoecountygis
-          </GitHubButton>
+        <div id="map-theme-mto" className={mainConfig.mapTheme === "MTO" ? "" : "sc-hidden"}>
+          <div id={mainConfig.mapTheme === "MTO" ? "map-modal-window-mto" : ""} />
+          <div id="map-mto" className={this.state.mapClassName} tabIndex="0" style={{ bottom: this.state.mapBottom }} />
+          <Navigation />
+          <FooterTools />
+          <BasemapSwitcher />
+          <div
+            className={window.sidebarOpen ? "sc-map-github-button slideout" : "sc-map-github-button slidein"}
+            onClick={() => {
+              helpers.addAppStat("GitHub", "Button");
+            }}
+          >
+            <GitHubButton href="https://github.com/county-of-simcoe-gis" data-size="large" aria-label="Follow @simcoecountygis on GitHub">
+              Follow @simcoecountygis
+            </GitHubButton>
+          </div>
+          <AttributeTable />
+          <FloatingImageSlider />
         </div>
-        <AttributeTable />
-        <FloatingImageSlider />
+        <div id="map-theme-simcoe-county" className={mainConfig.mapTheme === "SIMCOE_COUNTY" ? "" : "sc-hidden"}>
+          <div id={mainConfig.mapTheme === "SIMCOE_COUNTY" ? "map-modal-window-simcoe-county" : ""} />
+          <div id="map-simcoe-county" className={this.state.mapClassName} tabIndex="0" style={{ bottom: this.state.mapBottom }} />
+          <Navigation />
+          <FooterTools />
+          <BasemapSwitcher />
+          <PropertyReportClick />
+          <div
+            className={window.sidebarOpen ? "sc-map-github-button slideout" : "sc-map-github-button slidein"}
+            onClick={() => {
+              helpers.addAppStat("GitHub", "Button");
+            }}
+          >
+            <GitHubButton href="https://github.com/county-of-simcoe-gis" data-size="large" aria-label="Follow @simcoecountygis on GitHub">
+              Follow @simcoecountygis
+            </GitHubButton>
+          </div>
+          <AttributeTable />
+          <FloatingImageSlider />
+        </div>
       </div>
     );
   }

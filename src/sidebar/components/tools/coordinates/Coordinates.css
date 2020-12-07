@@ -54,121 +54,19 @@
   font-size: 11px;
 }
 
-.sc-coordinates-table {
-  display: table;
-	width: 100%;
-}
-
-.sc-coordinates-row {
-  display: table-row;
-}
-.sc-coordinates-heading {
-  background-color: #EEE;
-  display: table-header-group;
-  font-weight: bold;
-  text-align: center;
-  font-size: 18px;
-}
-.sc-coordinates-cell {
-	display: table-cell;
-	padding: 3px 10px;
-}
-.sc-coordinates-row label{
-  width: 120px;
-  display: inline-block;
-  font-weight: bold;
-  padding-left: 20px;
-  font-size: 16px;
-}
-
-.sc-coordinates-row span{
-  color: #8E8E8E;
-  font-size: 16px;
-  display: inline-block;
-  padding:1px;
-}
-#sc-zone-select {
-  width:170px;
-}
-
 .sc-coordinates-input {
-  color: #606060;
+  color: #8e8e8e;
   padding: 3px;
   font-size: 12px;
   width: 170px;
-  border: 1px solid #606060;
+  border: 1px solid #ccc;
   padding-left: 5px;
-  margin-bottom: 5px;
-}
-.sc-coordinates-floatbottom{
-  bottom:5px;
-  top:auto;
-  position: absolute;
-}
-.sc-coordinates-live{
-  font-size:10px;
-  display: inline-flex;
-  width: 100%;
-}
-.sc-coordinates-live-data{
-  display: table;
-  width: 80%;
-}
-.sc-coordinates-live-title{
-  display: table-row;
-  font-size: 12px;
-  font-weight: bold;
-  text-transform: uppercase;
-}
-.sc-coordinates-live-content{
-  display: table-row;
-}
-.sc-coordinates-live-badge{
-  width: 20%;
-  float: right;
-  font-size: 16px;
-  font-weight: bold;
-  color: #FF0000;
-  vertical-align: middle;
-  text-align: center;
-}
-.sc-description ul  {
-  list-style: none;
-  text-align: center;
-  padding-inline-start: unset;
 }
 
 .sc-coordinates-input:focus {
-    border-color: #4A8EC7;
-}
-.sc-float-right{
-  text-align: right;
+  border-color: #4a8ec7;
 }
 
-.sc-coordinates-copy-container {
-  overflow: hidden;
-}
-
-.sc-coordinates-copy {
-    width:97%;
-}
-
-.sc-coordinates-copy span {
-  padding-left: 20px;
-  width: 320px;
-  display: inline-flex;
-}
-.sc-coordinates-copy input {
-  width: 275px;
-}
-.sc-coordinates-copy img {
-  padding:10px;
-}
-.sc-coordinates-copy img:hover {
-  cursor: pointer;
-}
-#sc-copy-format-select {
-  display:inline-block;
-  width:190px;
-
+.sc-coordinates-live-label {
+  margin-right: 5px;
 }
