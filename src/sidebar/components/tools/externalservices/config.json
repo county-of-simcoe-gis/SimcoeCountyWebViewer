@@ -6,12 +6,12 @@
       "links": [
         {
           "name": "Google Maps",
-          "url": "http://maps.google.com?q=${y},${x}",
+          "url": "https://maps.google.com?q=${y},${x}",
           "requiresPropertyInfo": false
         },
         {
           "name": "Google Street View",
-          "url": "http://maps.google.com/maps?q=&layer=c&cbll=${y},${x}",
+          "url": "https://maps.google.com/maps?q=&layer=c&cbll=${y},${x}",
           "requiresPropertyInfo": false
         },
         {
@@ -33,22 +33,22 @@
       "links": [
         {
           "name": "Bing Maps",
-          "url": "http://bing.com/maps/default.aspx?cp=${y}~${x}&lvl=17",
+          "url": "https://bing.com/maps/default.aspx?cp=${y}~${x}&lvl=17",
           "requiresPropertyInfo": false
         },
         {
           "name": "Bing Aerial",
-          "url": "http://bing.com/maps/default.aspx?cp=${y}~${x}&style=h&lvl=17",
+          "url": "https://bing.com/maps/default.aspx?cp=${y}~${x}&style=h&lvl=17",
           "requiresPropertyInfo": false
         },
         {
           "name": "Bing Search",
-          "url": "http://bing.com/maps/default.aspx?where1=${address} Ontario Canada",
+          "url": "https://bing.com/maps/default.aspx?where1=${address} Ontario Canada",
           "requiresPropertyInfo": true
         },
         {
           "name": "Bing Driving Directions",
-          "url": "http://bing.com/maps/default.aspx?rtp=~pos.${y}_${x}",
+          "url": "https://bing.com/maps/default.aspx?rtp=~pos.${y}_${x}",
           "requiresPropertyInfo": false
         }
       ]
@@ -76,17 +76,17 @@
       "links": [
         {
           "name": "Open Street Map",
-          "url": "http://www.openstreetmap.org/?&mlat=${y}&mlon=${x}",
+          "url": "https://www.openstreetmap.org/?&mlat=${y}&mlon=${x}",
           "requiresPropertyInfo": false
         },
         {
           "name": "Open Street Map Search",
-          "url": "http://www.openstreetmap.org/search?query=${address} Ontario Canada",
+          "url": "https://www.openstreetmap.org/search?query=${address} Ontario Canada",
           "requiresPropertyInfo": true
         },
         {
           "name": "Open Street Map Directions",
-          "url": "http://www.openstreetmap.org/directions?engine=osrm_car&route=;${y},${x}#map=10/${y}/${x}",
+          "url": "https://www.openstreetmap.org/directions?engine=osrm_car&route=;${y},${x}#map=10/${y}/${x}",
           "requiresPropertyInfo": false
         }
       ]

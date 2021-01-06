@@ -222,7 +222,7 @@
     },
     {
       "title": "Google Street View",
-      "template": "http://www.google.com/maps?layer=c&cbll=[y],[x]"
+      "template": "https://www.google.com/maps?layer=c&cbll=[y],[x]"
     }
   ]
 }
