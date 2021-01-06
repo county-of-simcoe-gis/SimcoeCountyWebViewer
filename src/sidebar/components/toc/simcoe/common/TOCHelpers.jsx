@@ -182,13 +182,15 @@ export async function getGroupsGC(url, urlType, isReset, tocType, callback) {
           window.map.getView().animate({ center: mapCenter, zoom: mapZoom });
         }
       }
+      const geoserverPath = helpers.getConfigValue("geoserverPath");
+
       groupLayerList.forEach((layerInfo) => {
         if (layerInfo.Layer !== undefined) {
           const groupName = layerInfo.Name[0];
           if (groupName.toUpperCase() === defaultGroupName.toUpperCase()) isDefault = true;
           const groupDisplayName = layerInfo.Title[0];
-          const groupUrl = url.split("/geoserver/")[0] + "/geoserver/" + helpers.replaceAllInString(groupName, ":", "/") + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
-          const fullGroupUrl = url.split("/geoserver/")[0] + "/geoserver/" + helpers.replaceAllInString(groupName, ":", "/") + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
+          const groupUrl = url.split(`/${geoserverPath}/`)[0] + `/${geoserverPath}/` + helpers.replaceAllInString(groupName, ":", "/") + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
+          const fullGroupUrl = url.split(`/${geoserverPath}/`)[0] + `/${geoserverPath}/` + helpers.replaceAllInString(groupName, ":", "/") + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
           let keywords = [];
           if (layerInfo.KeywordList[0] !== undefined) keywords = layerInfo.KeywordList[0].Keyword;
           let visibleLayers = [];
@@ -424,6 +426,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType, callb
 
   if (layer.Layer === undefined) {
     const visibleLayers = group.visibleLayers === undefined ? [] : group.visibleLayers;
+    const geoserverPath = helpers.getConfigValue("geoserverPath");
 
     const layerNameOnly = layer.Name[0];
     let layerTitle = layer.Title[0];
@@ -432,7 +435,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType, callb
     if (layerTitle === undefined) layerTitle = layerNameOnly;
     const keywords = layer.KeywordList[0].Keyword;
     const styleUrl = layer.Style !== undefined ? layer.Style[0].LegendURL[0].OnlineResource[0].$["xlink:href"].replace("http", "https") : "";
-    const serverUrl = group.wmsGroupUrl.split("/geoserver/")[0] + "/geoserver";
+    const serverUrl = group.wmsGroupUrl.split(`/${geoserverPath}/`)[0] + `/${geoserverPath}`;
     // const wfsUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName.split(" ").join("%20")}&outputFormat=application/json&cql_filter=`;
     // const wfsUrl = wfsUrlTemplate(serverUrl, layer.Name[0]);
 
