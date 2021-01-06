@@ -79,7 +79,7 @@ class Identify extends Component {
             });
           } else {
             let infoFormat = layer.get("INFO_FORMAT");
-            console.log(infoFormat);
+            //console.log(infoFormat);
             // let infoFormat = "text/plain";
             // let xslTemplate = layer.get("XSL_TEMPLATE");
             let xslTemplate = mainConfig.wmsGeoJsonTemplate;
@@ -87,23 +87,23 @@ class Identify extends Component {
             let getInfoOption = { INFO_FORMAT: "application/json" };
             if (infoFormat !== undefined && infoFormat !== "") getInfoOption["INFO_FORMAT"] = infoFormat;
             if (xslTemplate !== undefined && xslTemplate !== "") getInfoOption["XSL_TEMPLATE"] = xslTemplate;
-            console.log(xslTemplate);
+            //console.log(xslTemplate);
             var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", getInfoOption);
             let html_url = mainConfig.htmlIdentify
               ? layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "text/html" }) + "&feature_count=1000000"
               : "";
             if (url) {
               url += "&feature_count=1000000";
-              console.log(url);
+              //console.log(url);
               helpers.httpGetText(url, (result) => {
                 let tempResult = helpers.tryParseJSON(result);
-                console.log(tempResult);
+                //console.log(tempResult);
                 if (tempResult !== false) {
                   result = tempResult;
                 } else {
                   return;
                 }
-                console.log(result);
+                //console.log(result);
                 const featureList = new GeoJSON().readFeatures(result);
                 if (featureList.length === 0) {
                   return;
