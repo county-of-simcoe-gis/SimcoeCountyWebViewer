@@ -1,6 +1,6 @@
 {
   "name": "openlayers",
-  "homepage": "https://opengis.simcoe.ca/dev/",
+  "homepage": "https://opengis.simcoe.ca/",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
