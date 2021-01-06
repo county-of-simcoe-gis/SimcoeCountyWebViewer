@@ -4,6 +4,8 @@
   "originUrl": "https://opengis.simcoe.ca",
   "feedbackUrl": "https://opengis.simcoe.ca/feedback",
   "geoserverUrl": "https://opengis.simcoe.ca/geoserver/",
+  "geoserverPath": "geoserver",
+  "printUrl": "https://opengis.simcoe.ca/print/",
   "includeAppStats": true,
   "htmlIdentify": false,
   "leftClickIdentify": false,

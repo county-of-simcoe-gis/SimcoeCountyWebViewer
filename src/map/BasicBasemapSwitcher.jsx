@@ -65,7 +65,7 @@ class BasemapSwitcher extends Component {
         serviceLayers.push(layer);
         index++;
       });
-
+      const geoserverPath = helpers.getConfigValue("geoserverPath");
       const groupUrl = serviceGroup.groupUrl;
       if (groupUrl !== undefined) {
         // GET XML
@@ -78,7 +78,7 @@ class BasemapSwitcher extends Component {
             index++;
             groupLayerList.forEach(layerInfo => {
               const layerNameOnly = layerInfo.Name[0].split(":")[1];
-              const serverUrl = groupUrl.split("/geoserver/")[0] + "/geoserver";
+              const serverUrl = groupUrl.split(`/${geoserverPath}/`)[0] + `/${geoserverPath}`;
 
               let groupLayer = helpers.getImageWMSLayer(serverUrl + "/wms", layerInfo.Name[0]);
               groupLayer.setVisible(true);
