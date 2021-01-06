@@ -55,7 +55,7 @@
 //     //LISTEN FOR NEW LAYER
 //     window.emitter.addListener("addCustomLayer", (layer, group, selected) => this.addCustomLayer(layer, group, selected));
 //     this.myMapLayerName = "local:myMaps";
-//     this.myLayersGroupName = "My Layers";
+//     this.myLayersGroupName = "";
 //   }
 
 //   addCustomLayer = (layer, groupName, selected = false) => {
