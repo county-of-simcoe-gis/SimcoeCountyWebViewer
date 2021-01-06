@@ -371,7 +371,7 @@ export function showMessage(title = "Info", messageText = "Message", color = mes
     document.getElementById("sc-sidebar-message-container")
   );
 
-  console.log(message);
+  //console.log(message);
   setTimeout(() => {
     try {
       ReactDOM.unmountComponentAtNode(message.myRef.current.parentNode);
@@ -408,8 +408,8 @@ export function httpGetText(url, callback) {
       if (callback !== undefined) callback(responseText);
     })
     .catch((error) => {
-      httpGetText(url.replace("opengis.simcoe.ca", "opengis2.simcoe.ca"), callback);
-      console.error(error);
+      //httpGetText(url.replace("opengis.simcoe.ca", "opengis2.simcoe.ca"), callback);
+      console.error(url,error);
     });
 }
 
