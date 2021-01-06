@@ -134,7 +134,7 @@ class GroupItem extends Component {
     });
   };
   isVisible = () => {
-    if (this.containsLayers().length > 0 || this.props.group.label === "My Layers") {
+    if (this.containsLayers().length > 0 ) {
       return true;
     } else {
       return false;

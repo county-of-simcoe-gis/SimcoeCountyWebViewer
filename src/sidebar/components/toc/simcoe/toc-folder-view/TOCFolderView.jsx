@@ -9,7 +9,7 @@ import { isMobile } from "react-device-detect";
 // CUSTOM
 import "./TOCFolderView.css";
 import * as helpers from "../../../../../helpers/helpers";
-import * as drawingHelpers from "../../../../../helpers/drawingHelpers";
+//import * as drawingHelpers from "../../../../../helpers/drawingHelpers";
 import mainConfig from "../../../../../config.json";
 import * as TOCHelpers from "../common/TOCHelpers.jsx";
 import TOCConfig from "../common/TOCConfig.json";
@@ -55,8 +55,7 @@ class TOCFolderView extends Component {
 
     //LISTEN FOR NEW LAYER
     window.emitter.addListener("addCustomLayer", (layer, group, selected) => this.addCustomLayer(layer, group, selected));
-    this.myMapLayerName = "local:myMaps";
-    this.myLayersGroupName = "My Layers";
+    
   }
 
   componentWillReceiveProps(nextProps) {
@@ -84,7 +83,7 @@ class TOCFolderView extends Component {
     let layerIndex = 100;
     let layerGroups = this.state.layerGroups;
     let layersGroup = layerGroups.filter((group) => group.value === groupName)[0];
-    if (layersGroup === undefined) layersGroup = layerGroups.filter((group) => group.label === this.myLayersGroupName)[0];
+    //if (layersGroup === undefined) layersGroup = layerGroups.filter((group) => group.label === this.myLayersGroupName)[0];
     if (layersGroup === undefined) layersGroup = layerGroups[0];
     layerIndex += layersGroup.layers.length + 1;
     TOCHelpers.makeLayer(layer.displayName, helpers.getUID(), layersGroup, layerIndex, true, 1, layer.layer, undefined, undefined, false, layer.styleUrl, (retLayer) => {
@@ -147,8 +146,8 @@ class TOCFolderView extends Component {
     this.addIdentifyLayer();
     this.refreshTOC(() => {
       if (!this.props.visible) {
-        console.log("shutting off");
-        console.log(this.state.layerGroups);
+        //console.log("shutting off");
+        //console.log(this.state.layerGroups);
         this.state.layerGroups.forEach((group) => {
           group.layers.forEach((layer) => {
             layer.layer.setVisible(false);
@@ -199,23 +198,6 @@ class TOCFolderView extends Component {
     }
   };
 
-  buildDefaultGroup = (callback) => {
-    // let myMapLayerSource = new VectorSource();
-    // let myMapLayer = new VectorLayer({
-    //   source: myMapLayerSource,
-    //   zIndex: 1000,
-    //   style: drawingHelpers.getDefaultDrawStyle("#e809e5"),
-    // });
-    let group = this.state.layerGroups.filter((item) => item.label === this.myLayersGroupName)[0];
-    if (group === undefined) group = TOCHelpers.makeGroup(this.myLayersGroupName, true, "", "", undefined, "", "");
-    callback(group);
-    // TOCHelpers.makeLayer("My Drawing", this.myMapLayerName, group, 1, true, 1, myMapLayer, undefined, undefined, false, "", (retLayer) => {
-    //   let layers = group.layers;
-    //   layers.push(retLayer);
-    //   group.layers = layers;
-    //   callback(group);
-    // });
-  };
 
   refreshTOC = (callback) => {
     sessionStorage.removeItem(this.storageMapDefaultsKey);
@@ -223,42 +205,21 @@ class TOCFolderView extends Component {
     if (savedLayers !== undefined && savedLayers !== null && savedLayers !== []) {
       TOCHelpers.getGroupsFromData(savedLayers, (result) => {
         const groupInfo = result;
-        this.buildDefaultGroup((defaultGroup) => {
-          let groups = [];
-          let existingGroup = groupInfo[0].filter((item) => item.label === defaultGroup.label)[0];
-          if (existingGroup !== undefined) {
-            groups = groupInfo[0].map((item) => {
-              if (item.label === defaultGroup.label) {
-                let layers = defaultGroup.layers;
-                layers = layers.map((layer) => (layer.group !== item.value ? Object.assign(layer, { group: item.value }) : layer));
-                item.layers = layers.concat(item.layers, []);
-                return item;
-              } else {
-                return item;
-              }
-            });
-          } else {
-            groups.push(defaultGroup);
-            groups = groups.concat(groupInfo[0]);
+        let groups = [];    
+        groups = groups.concat(groupInfo[0]);
+        
+        this.setState(
+          {
+            layerGroups: groups.concat([]),
+          },
+          () => {
+            this.saveGlobalLayers();
+            this.onLayersLoad();
+            window.emitter.emit("tocLoaded");
+            if (callback !== undefined) callback();
           }
-
-          this.setState(
-            {
-              layerGroups: groups.concat([]),
-            },
-            () => {
-              // let allLayers = [];
-              // this.state.layerGroups.forEach((group) => {
-              //   allLayers.push(this.sortLayers(group.layers));
-              // });
-              // window.allLayers = allLayers;
-              this.saveGlobalLayers();
-              this.onLayersLoad();
-              window.emitter.emit("tocLoaded");
-              if (callback !== undefined) callback();
-            }
-          );
-        });
+        );
+     
       });
     } else {
       let geoserverUrl = helpers.getURLParameter("GEO_URL");
@@ -272,28 +233,19 @@ class TOCFolderView extends Component {
       if (geoserverUrl !== undefined && geoserverUrl !== null) {
         TOCHelpers.getGroupsGC(geoserverUrl, geoserverUrlType, false, "FOLDER", (result) => {
           const groupInfo = result;
-          this.buildDefaultGroup((defaultGroup) => {
             let groups = [];
-            groups.push(defaultGroup);
-            // console.log(groupInfo[0]);
             groups = groups.concat(groupInfo[0]);
             this.setState(
               {
                 layerGroups: groups.concat([]),
               },
               () => {
-                // let allLayers = [];
-                // this.state.layerGroups.forEach((group) => {
-                //   allLayers.push(this.sortLayers(group.layers));
-                // });
-                // window.allLayers = allLayers;
                 this.saveGlobalLayers();
                 this.onLayersLoad();
                 window.emitter.emit("tocLoaded");
                 if (callback !== undefined) callback();
               }
             );
-          });
         });
       } else {
         const groupInfo = TOCHelpers.getGroups();
