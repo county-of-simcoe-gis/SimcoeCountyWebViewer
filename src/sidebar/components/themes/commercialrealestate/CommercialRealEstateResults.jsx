@@ -18,7 +18,7 @@ const CommercialRealEstateResults = (props) => {
       </div>
       <div className="sc-theme-commercial-real-estate-results-footer">
         Didn't find what you're looking for? Contact our{" "}
-        <a href="http://edo.simcoe.ca/contact" target="_blank" rel="noopener noreferrer">
+        <a href="https://edo.simcoe.ca/contact" target="_blank" rel="noopener noreferrer">
           economic development department
         </a>{" "}
         for a custom search.

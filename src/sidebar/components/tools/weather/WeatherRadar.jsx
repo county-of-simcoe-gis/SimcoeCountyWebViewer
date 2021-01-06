@@ -413,8 +413,8 @@ class WeatherRadar extends Component {
         <div className="sc-border-bottom" />
         <div className="sc-tool-weather-radar-credits">
           Weather Data Provided by Environment Canada
-          <a href="http://weather.gc.ca/">
-            <img src="http://weather.gc.ca/images/ecfip_e.gif" alt="Environment Canada" style={{ marginTop: "5px" }} />
+          <a href="https://weather.gc.ca/">
+            <img src="https://weather.gc.ca/images/ecfip_e.gif" alt="Environment Canada" style={{ marginTop: "5px" }} />
           </a>
         </div>
       </div>

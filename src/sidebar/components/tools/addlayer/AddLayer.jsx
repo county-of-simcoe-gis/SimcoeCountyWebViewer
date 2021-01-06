@@ -447,7 +447,7 @@ class AddLayerForm extends Component {
                     id="sc-add-layer-server"
                     type="text"
                     autoComplete="on"
-                    placeholder="https://intra.dev.regionalgis.mto.gov.on.ca/geoserver/ows"
+                    placeholder="https://opengis.simcoe.ca/geoserver/ows"
                     className="sc-add-layer-input sc-editable"
                     onChange={(evt) => {
                       this.setState({ serverUrl: evt.target.value.split("?")[0] }, () => {
