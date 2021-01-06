@@ -23,13 +23,15 @@
 
 .sc-theme-commercial-real-estate-results-container {
   position: absolute;
-  top: 175px;
+  top: 60px;
   bottom: 50px;
   margin-left: 5px;
   margin-right: 5px;
   overflow-x: hidden;
   overflow-y: auto;
+  z-index:1;
   border-top: 1px solid #ddd;
+  background:#fff;
 }
 
 .sc-theme-commercial-realestate-search-back-to-search-icon {
