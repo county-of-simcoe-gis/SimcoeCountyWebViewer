@@ -120,7 +120,7 @@ class TwoOneOne extends Component {
 
     this.layer = new VectorLayer({
       source: this.vectorSource,
-      zIndex: 999,
+      zIndex: 1000,
       name: "sc-211",
       style: new Style({
         image: new Icon({
@@ -154,7 +154,7 @@ class TwoOneOne extends Component {
     helpers.getJSON(subCategoriesUrl, (result) => {
       subCategories.push({
         value: "All",
-        label: "All",
+        label: this.state.isFrench ? "Tout" : "All",
       });
       result.forEach((subCategory) => {
         subCategories.push({ value: subCategory, label: subCategory });
@@ -241,7 +241,7 @@ class TwoOneOne extends Component {
   };
 
   onLangChange = (isFrench) => {
-    this.setState({ isFrench, ageCategorySelectedOption: ageCategoriesFrench[0] }, () => {
+    this.setState({ isFrench, ageCategorySelectedOption: isFrench ? ageCategoriesFrench[0] : ageCategoriesEnglish[0] }, () => {
       this.getCategories();
     });
     helpers.addAppStat("211 Lang Switch", "Click");
