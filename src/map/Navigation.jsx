@@ -31,9 +31,9 @@ class Navigation extends Component {
     let defaultZoom = mainConfig.defaultZoom;
     const defaultStorage = sessionStorage.getItem(storageMapDefaultsKey);
     if (defaultStorage !== null) {
-      const detaults = JSON.parse(defaultStorage);
-      if (detaults.zoom !== undefined) defaultZoom = detaults.zoom;
-      if (detaults.center !== undefined) centerCoords = detaults.center;
+      const defaults = JSON.parse(defaultStorage);
+      if (defaults.zoom !== undefined) defaultZoom = defaults.zoom;
+      if (defaults.center !== undefined) centerCoords = defaults.center;
     }
     window.map.getView().animate({ center: centerCoords, zoom: defaultZoom });
   }
