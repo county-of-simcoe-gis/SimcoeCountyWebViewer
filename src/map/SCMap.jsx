@@ -70,9 +70,9 @@ class SCMap extends Component {
     const extent = helpers.getItemsFromStorage(this.storageExtentKey);
 
     if (defaultsStorage !== null && extent === undefined) {
-      const detaults = JSON.parse(defaultsStorage);
-      if (detaults.zoom !== undefined) defaultZoom = detaults.zoom;
-      if (detaults.center !== undefined) centerCoords = detaults.center;
+      const defaults = JSON.parse(defaultsStorage);
+      if (defaults.zoom !== undefined) defaultZoom = defaults.zoom;
+      if (defaults.center !== undefined) centerCoords = defaults.center;
     }
 
     var controls = [];
