@@ -128,7 +128,12 @@ export class FeatureHelpers {
 export class LayerHelpers {
   static getCapabilities(root_url, type, callback) {
     type = type.toLowerCase();
-    var url = /\?/.test(root_url) ? root_url.split("?")[0] + "?" : root_url + "?";
+    var url = "";
+    if (root_url.indexOf("GetCapabilities") === -1){
+      url = /\?/.test(root_url) ? root_url.split("?")[0] + "?" : root_url + "?";
+    } else{
+      url = root_url;
+    }
     let layers = [];
     var parser;
     var response;
@@ -144,6 +149,7 @@ export class LayerHelpers {
         default:
           service = "WFS";
           break;
+        
       }
       url = url + "REQUEST=GetCapabilities&SERVICE=" + service;
     }
@@ -161,12 +167,9 @@ export class LayerHelpers {
             parser = new WMSCapabilities();
             response = parser.read(responseText);
             response.Capability.Layer.Layer.forEach((layer) => {
-              var label = layer.Title !== "" ? layer.Title : layer.Name;
-              var value = layer.Name;
-              var queryable = layer.queryable;
-              var opaque = layer.opaque;
-              if (layer.layer === undefined)
-                layers.push({ label: label, value: helpers.getUID(), layer_name: value, style: this.getSytle(layer), queryable: queryable, opaque: opaque, url: root_url });
+              this.getWMSLayers(layer, item => {
+                if (item !== undefined) layers.push(item);
+              });
             });
             break;
           default:
@@ -189,6 +192,42 @@ export class LayerHelpers {
       callback(layers);
     });
   }
+
+  static getWMSLayers(layer,callback){
+    var label = layer.Title !== "" ? layer.Title : layer.Name;
+    var value = layer.Name;
+    var queryable = layer.queryable;
+    var opaque = layer.opaque;
+    var keywords = layer.KeywordList;
+    if (layer.Layer === undefined){
+      callback({ label: label, value: helpers.getUID(), layer_name: value, style: this.getSytle(layer), queryable: queryable, opaque: opaque, keywords: keywords});
+    }
+    else{
+      callback();
+    }
+
+  }
+  static getAllWMSLayers(layer,callback){
+    let layers = [];
+    var label = layer.Title !== "" ? layer.Title : layer.Name;
+    var value = layer.Name;
+    var queryable = layer.queryable;
+    var opaque = layer.opaque;
+    var keywords = layer.KeywordList;
+    if (layer.Layer === undefined){
+      layers.push({ label: label, value: helpers.getUID(), layer_name: value, style: this.getSytle(layer), queryable: queryable, opaque: opaque, keywords: keywords});
+    }
+    else {
+      layer.Layer.forEach(item =>{
+        this.getAllWMSLayers(item, result => {
+          layers = layers.concat(result);
+        })
+      });
+    }
+    layers = layers.concat([]);
+    callback(layers);
+  }
+
   static getLayerType(layer) {
     if (layer instanceof TileLayer) return OL_LAYER_TYPES.Tile;
     if (layer instanceof ImageLayer) return OL_LAYER_TYPES.Image;

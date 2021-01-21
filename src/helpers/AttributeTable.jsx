@@ -38,7 +38,7 @@ class AttrbuteTable extends Component {
   };
 
   resizeFromMap = () => {
-    const mapWidth = document.getElementById(mainConfig.mapTheme === "MTO" ? "map-mto" : "map-simcoe-county").offsetWidth;
+    const mapWidth = document.getElementById("map").offsetWidth;
     this.resizable.updateSize({ width: mapWidth, height: this.resizable.resizable.offsetHeight });
     this.setState({ mapWidth: mapWidth, height: this.resizable.resizable.offsetHeight });
   };
@@ -107,7 +107,7 @@ class AttrbuteTable extends Component {
   };
 
   updateSize = () => {
-    const mapWidth = document.getElementById(mainConfig.mapTheme === "MTO" ? "map-mto" : "map-simcoe-county").offsetWidth;
+    const mapWidth = document.getElementById("map").offsetWidth;
     this.resizable.updateSize({ width: mapWidth, height: 200 });
     this.setState({ mapWidth: mapWidth, height: 200 });
     window.emitter.emit("attributeTableResize", 200);

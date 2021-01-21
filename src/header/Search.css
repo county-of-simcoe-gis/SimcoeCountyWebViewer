@@ -105,7 +105,8 @@
 .sc-search-types-container {
   max-width: 600px;
   position: absolute;
-  top: 6px;
+  top: 7px;
+  margin-left: 1px;
   z-index: 1000000;
 }
 

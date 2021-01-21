@@ -77,8 +77,8 @@ class Print extends Component {
     printFormatSelectedOption: null,
     forceScale: helpers.getMapScale(),
     mapScaleOption: "forceScale",
-    mapOnlyHeight: document.getElementById(mainConfig.mapTheme === "MTO" ? "map-mto" : "map-simcoe-county").offsetHeight,
-    mapOnlyWidth: document.getElementById(mainConfig.mapTheme === "MTO" ? "map-mto" : "map-simcoe-county").offsetWidth,
+    mapOnlyHeight: document.getElementById("map").offsetHeight,
+    mapOnlyWidth: document.getElementById("map").offsetWidth,
     isPrinting: false,
   };
 

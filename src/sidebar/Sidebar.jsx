@@ -2,8 +2,7 @@ import React, { Component } from "react";
 import "./Sidebar.css";
 import * as helpers from "../helpers/helpers";
 
-import TOC from "./components/toc/simcoe/TOC.jsx";
-import { default as TOCMTO } from "./components/toc/mto/accordion-toc/TOC.jsx";
+import TOC from "./components/toc/TOC.jsx";
 
 import SidebarItemList from "./SidebarItemList";
 import Reports from "./components/reports/Reports";
@@ -31,15 +30,14 @@ class Sidebar extends Component {
       // CLASSES
       tabClassName: "sidebar-advanced-tab",
       sidebarOpen: false,
-
+      tocLoaded:false,
       // SELECTED TAB
       tabIndex: 0,
-
       isMyMapsEditing: false,
 
       // COMPONENTS
       activeTabComponents: {
-        layers: mainConfig.tocType !== "MTO" ? <TOC key={helpers.getUID()} onTocTypeChange={this.onTocTypeChange} type={mainConfig.tocType} /> : <TOCMTO key={helpers.getUID()} />,
+        layers: <TOC key={helpers.getUID()} type="LIST" /> ,
         mymaps: <MyMaps key={helpers.getUID()} onMyMapsEditing={this.onMyMapsEditing} />,
         reports: {
           default: <Reports key={helpers.getUID()} />,
@@ -55,6 +53,8 @@ class Sidebar extends Component {
         },
       },
     };
+        // LISTEN FOR TOC TO LOAD
+        window.emitter.addListener("tocLoaded", () => this.setState({ tocLoaded: true }));
   }
 
   onMyMapsEditing = (isMyMapsEditing) => {
@@ -144,6 +144,7 @@ class Sidebar extends Component {
     window.emitter.addListener("activateSidebarItem", (name, type) => {
       this.activateItemFromEmmiter(name, type);
     });
+    window.emitter.emit("sidebarLoaded");
   }
 
   initToolAndThemeUrlParameter = () => {

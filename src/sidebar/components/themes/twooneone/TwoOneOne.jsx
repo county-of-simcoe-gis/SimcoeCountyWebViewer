@@ -319,9 +319,9 @@ class TwoOneOne extends Component {
 
       this.results = this.results.filter((item) => {
         const featuresFound = features.filter((itemFeature) => {
-          if (item["record_#"] === itemFeature.get("record_#")) return itemFeature;
+          return item["record_#"] === itemFeature.get("record_#") ? true : false;
         });
-        if (featuresFound.length > 0) return item;
+        return featuresFound.length > 0 ? true : false;
       });
     }
 

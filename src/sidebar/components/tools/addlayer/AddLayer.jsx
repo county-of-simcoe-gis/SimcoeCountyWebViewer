@@ -77,13 +77,15 @@ class AddLayerForm extends Component {
     });
   };
   _setLayerGroupOptions = () => {
-    let groups = window.allLayers;
-    let options = [];
-    groups.forEach((group) => {
-      options.push({ label: group[0].groupName, value: group[0].group });
+    window.emitter.emit("getLayerList", (groups) => 
+    {
+      let options = [];
+      groups.forEach((group) => {
+        options.push({ label: group[0].groupName, value: group[0].group });
+      });
+      options = options.concat([]);
+      this.setState({ selectGroupOptions: options, selectGroupOption: options[0] });
     });
-    options = options.concat([]);
-    this.setState({ selectGroupOptions: options, selectGroupOption: options[0] });
   };
   _setDefaultProjectionOptions = () => {
     const items = addLayerConfig.projections;

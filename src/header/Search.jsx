@@ -124,7 +124,7 @@ class Search extends Component {
         if (typeof evt.target.className === "string") {
           evt.target.className.split(" ").forEach((className) => {
             if (className === "ol-overlaycontainer-stopevent") {
-              document.getElementById(mainConfig.mapTheme === "MTO" ? "map-mto" : "map-simcoe-county").focus();
+              document.getElementById("map").focus();
             }
           });
         }
@@ -426,23 +426,26 @@ class Search extends Component {
     if (selectedType === "All" || selectedType === "Map Layer") {
       let layers = [];
       // eslint-disable-next-line
-      Object.entries(window.allLayers).map((row) => {
-        const layerItems = row[1];
-        layerItems.forEach((layer) => {
-          if (layer.tocDisplayName !== undefined) {
-            if (layer.tocDisplayName.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
-              //console.log(layer);
-              layers.push({
-                fullName: layer.name,
-                name: layer.tocDisplayName,
-                type: "Map Layer",
-                layerGroupName: layer.groupName,
-                layerGroup: layer.group,
-                imageName: "layers.png",
-                index: layer.index,
-              });
+      window.emitter.emit("getLayerList", (groups) => 
+      {
+        Object.entries(groups).forEach((row) => {
+          const layerItems = row[1];
+          layerItems.forEach((layer) => {
+            if (layer.tocDisplayName !== undefined) {
+              if (layer.tocDisplayName.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
+                //console.log(layer);
+                layers.push({
+                  fullName: layer.name,
+                  name: layer.tocDisplayName,
+                  type: "Map Layer",
+                  layerGroupName: layer.groupName,
+                  layerGroup: layer.group,
+                  imageName: "layers.png",
+                  index: layer.index,
+                });
+              }
             }
-          }
+          });
         });
       });
       newResults = layers.concat(newResults);

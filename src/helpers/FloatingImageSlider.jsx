@@ -5,7 +5,7 @@ import { Resizable } from "re-resizable";
 import InfoRow from "../helpers/InfoRow.jsx";
 import { GeoJSON } from "ol/format.js";
 import Feature from "ol/Feature";
-import Polygon, { fromExtent } from "ol/geom/Polygon";
+import { fromExtent } from "ol/geom/Polygon";
 import { buffer } from "ol/extent";
 
 class FloatingImageSlider extends Component {

@@ -111,7 +111,7 @@ export function showURLWindow(url, showFooter = false, mode = "normal", honorDon
   if (isSameOrigin) {
     ReactDOM.render(
       <URLWindow key={shortid.generate()} mode={mode} showFooter={showFooter} url={url} honorDontShow={honorDontShow} />,
-      document.getElementById(mainConfig.mapTheme === "MTO" ? "map-modal-window-mto" : "map-modal-window-simcoe-county")
+      document.getElementById("map-modal-window")
     );
   } else {
     window.open(url, "_blank");
@@ -222,12 +222,12 @@ export function getSimcoeTileXYZLayer(url) {
   });
   source.on("tileloaderror", function(event) {
     // BROWSER STILL KICKS OUT 404 ERRORS.  ANYBODY KNOW A WAY TO PREVENT THE ERRORS IN THE BROWSER?
-    //console.log("erro");
     event.tile.getImage().src = blankImage;
+    
     // var tileLoadFunction = function(imageTile, src) {
     //   imageTile.getImage().src = blankImage;
     // };
-    // if (event.tile.tileLoadFunction_ !== tileLoadFunction) {
+    //  if (event.tile.tileLoadFunction_ !== tileLoadFunction) {
     //   event.tile.tileLoadFunction_ = tileLoadFunction;
     //   event.tile.load();
     // }
