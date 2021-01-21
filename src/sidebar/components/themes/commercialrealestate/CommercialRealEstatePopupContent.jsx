@@ -1,5 +1,4 @@
 import React from "react";
-import { InfoRow } from "../../../../helpers/InfoRow.jsx";
 import * as helpers from "../../../../helpers/helpers";
 import "./CommercialRealEstatePopupContent.css";
 
@@ -66,11 +65,6 @@ const CommercialRealEstatePopupContent = (props) => {
             </a>
           </label>
         </div>
-
-        {/* <InfoRow key={helpers.getUID()} label={"Price"} value={feature.get("_listprice")} />
-        <InfoRow key={helpers.getUID()} label={"Sale Type"} value={feature.get("_saletype")} />
-        <InfoRow key={helpers.getUID()} label={"Size"} value={feature.get("_squarefeet")} />
-        <InfoRow key={helpers.getUID()} label={"Brochure"} value={feature.get("_brochureurl")} /> */}
       </div>
 
       <div className="sc-theme-popup-content-button-container">

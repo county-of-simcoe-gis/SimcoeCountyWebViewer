@@ -80,25 +80,8 @@ class Navigation extends Component {
   render() {
     return (
       <div>
-        <div id="map-theme-mto">
-          <div id={"sc-map-nav-container"} className={mainConfig.mapTheme === "MTO" ? this.state.containerClassName : "sc-hidden"}>
-            {/*<div className="zoomButton" onClick={this.zoomIn}>
-          +
-        </div>
-        <div className="zoomButton" onClick={this.zoomOut}>
-          -
-    </div>*/}
-            <div className={"fullExtentButton" + (!this.state.showZoomExtent ? " sc-hidden" : "")} onClick={this.zoomFullExtent}>
-              <div className="fullExtentContent" />
-            </div>
-            <div className={"zoomToCurrentLocationButton" + (!this.state.showCurrentLocation ? " sc-hidden" : "")} onClick={this.zoomToCurrentLocation}>
-              <div className="zoomToCurrentLocationContent" />
-            </div>
-          </div>
-        </div>
-
-        <div id="map-theme-simcoe-county">
-          <div className={mainConfig.mapTheme === "SIMCOE_COUNTY" ? this.state.containerClassName : "sc-hidden"}>
+        <div id="map-theme">
+          <div className={this.state.containerClassName}>
             <div
               className="zoomButton"
               onClick={() => {

@@ -266,7 +266,8 @@ export default Identify;
 
 function _getLayerObj(layerName, callback) {
   let data = {};
-  window.allLayers.forEach((group) => {
+  window.emitter.emit("getLayerList", (group) => {
+  //window.allLayers.forEach((group) => {
     group.forEach((layer) => {
       if (layer.name !== undefined && layer.name.toLowerCase() === layerName.toLowerCase()) data = layer;
     });

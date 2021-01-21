@@ -57,7 +57,9 @@ class BasemapSwitcher extends Component {
     BasemapConfig.imageryServices.forEach((service) => {
       //var layer = helpers.getArcGISTiledLayer(service.url);
       var layer = helpers.getSimcoeTileXYZLayer(service.url);
-
+      if (service.fullExtent){
+        layer.setExtent(layer.fullExtent);
+      } 
       // LAYER PROPS
       layer.setProperties({ index: index, name: service.name });
       layer.setZIndex(index + 1);
@@ -78,18 +80,24 @@ class BasemapSwitcher extends Component {
     this.setState({ imageryLayers: layerList });
 
     // LOAD IMAGERY STREETS LAYER
-    if (BasemapConfig.streetService !== undefined) {
-      //var streetsLayer = helpers.getArcGISTiledLayer(BasemapConfig.streetService);
+    if (BasemapConfig.streetService.url !== undefined) {
       var streetsLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.streetService);
       streetsLayer.setZIndex(BasemapConfig.imageryServices.length);
+      if (BasemapConfig.streetService.fullExtent){
+        streetsLayer.setExtent(BasemapConfig.streetService.fullExtent);
+      } 
       window.map.addLayer(streetsLayer);
       this.setState({ streetsLayer: streetsLayer });
     }
 
     // LOAD BATHYMETRY LAYER
-    if (BasemapConfig.bathymetryService !== undefined) {
-      var bathymetryLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.bathymetryService);
+    if (BasemapConfig.bathymetryService.url !== undefined) {
+      var bathymetryLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.bathymetryService.url);
       bathymetryLayer.setZIndex(0);
+      if (BasemapConfig.bathymetryService.fullExtent){
+        bathymetryLayer.setExtent(BasemapConfig.bathymetryService.fullExtent);
+      } 
+     
       window.map.addLayer(bathymetryLayer);
       this.setState({ bathymetryLayer: bathymetryLayer });
     }
@@ -114,6 +122,9 @@ class BasemapSwitcher extends Component {
         let layer = null;
         if (service.type === "SIMCOE_TILED") {
           layer = helpers.getSimcoeTileXYZLayer(service.url);
+          if (service.fullExtent){
+            layer.setExtent(service.fullExtent);
+          }
         } else if (service.type === "OSM") {
           //layer = helpers.getOSMLayer();
           layer = helpers.getOSMTileXYZLayer("http://a.tile.openstreetmap.org");

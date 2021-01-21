@@ -32,7 +32,7 @@ import AttributeTable from "../helpers/AttributeTable.jsx";
 import FloatingImageSlider from "../helpers/FloatingImageSlider.jsx";
 
 const scaleLineControl = new ScaleLine({
-  minWidth: mainConfig.mapTheme === "MTO" ? 100 : 80,
+  minWidth: 80,
 });
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
   `${mainConfig.feedbackUrl}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True`;
@@ -79,11 +79,11 @@ class SCMap extends Component {
     if (window.mapControls.scaleLine) controls.push(scaleLineControl);
     if (window.mapControls.fullScreen) controls.push(new FullScreen());
     if (window.mapControls.rotate) controls.push(new Rotate());
-
+    
     var map = new Map({
       controls: defaultControls().extend(controls.concat([])),
       layers: [],
-      target: mainConfig.mapTheme === "MTO" ? "map-mto" : "map-simcoe-county",
+      target: "map",
       view: new View({
         center: centerCoords,
         zoom: defaultZoom,
@@ -401,28 +401,9 @@ class SCMap extends Component {
 
     return (
       <div>
-        <div id="map-theme-mto" className={mainConfig.mapTheme === "MTO" ? "" : "sc-hidden"}>
-          <div id={mainConfig.mapTheme === "MTO" ? "map-modal-window-mto" : ""} />
-          <div id="map-mto" className={this.state.mapClassName} tabIndex="0" style={{ bottom: this.state.mapBottom }} />
-          <Navigation />
-          <FooterTools />
-          <BasemapSwitcher />
-          <div
-            className={window.sidebarOpen ? "sc-map-github-button slideout" : "sc-map-github-button slidein"}
-            onClick={() => {
-              helpers.addAppStat("GitHub", "Button");
-            }}
-          >
-            <GitHubButton href="https://github.com/county-of-simcoe-gis" data-size="large" aria-label="Follow @simcoecountygis on GitHub">
-              Follow @simcoecountygis
-            </GitHubButton>
-          </div>
-          <AttributeTable />
-          <FloatingImageSlider />
-        </div>
-        <div id="map-theme-simcoe-county" className={mainConfig.mapTheme === "SIMCOE_COUNTY" ? "" : "sc-hidden"}>
-          <div id={mainConfig.mapTheme === "SIMCOE_COUNTY" ? "map-modal-window-simcoe-county" : ""} />
-          <div id="map-simcoe-county" className={this.state.mapClassName} tabIndex="0" style={{ bottom: this.state.mapBottom }} />
+        <div id="map-theme" >
+          <div id={"map-modal-window"} />
+          <div id="map" className={this.state.mapClassName} tabIndex="0" style={{ bottom: this.state.mapBottom }} />
           <Navigation />
           <FooterTools />
           <BasemapSwitcher />

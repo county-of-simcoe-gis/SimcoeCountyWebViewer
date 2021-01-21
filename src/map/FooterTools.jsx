@@ -107,37 +107,9 @@ class FooterTools extends Component {
       }
     }, 10);
 
-    if (mainConfig.mapTheme === "MTO")
+   
       return (
-        <div id="map-theme-mto">
-          <div className={"sc-map-footer-scale-only ol-scale-line ol-unselectable" + (!this.state.showScale ? " sc-hidden" : "")}>
-            <div id="sc-scale-bar-text" className="ol-scale-line-inner">
-              Scale:&nbsp;
-              <select
-                id="sc-scale-bar-select"
-                onChange={(evt) => {
-                  this.onScaleClick(evt.target.value);
-                }}
-                value={this.state.currentScale}
-              >
-                <option key={helpers.getUID()} value={this.state.currentScale}>
-                  {"1:" + this.state.scale}
-                </option>
-                {this.mapScales.map((item) => {
-                  return (
-                    <option key={helpers.getUID()} value={item.value}>
-                      {item.label}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-          </div>
-        </div>
-      );
-    else if (mainConfig.mapTheme === "SIMCOE_COUNTY")
-      return (
-        <div id="map-theme-simcoe-county">
+        <div id="map-theme">
           <div id="sc-scale-bar-text" className={this.state.basemapType === "IMAGERY" ? "sc-map-footer-scale-only imagery" : "sc-map-footer-scale-only topo"}>
             {"Scale: 1:" + this.state.scale}
           </div>
