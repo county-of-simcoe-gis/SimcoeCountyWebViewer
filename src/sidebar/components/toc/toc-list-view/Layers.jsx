@@ -6,8 +6,6 @@ import VirtualLayers from "./VirtualLayers.jsx";
 
 // CUSTOM
 import "./Layers.css";
-import * as helpers from "../../../../helpers/helpers";
-
 
 const SortableVirtualList = sortableContainer(VirtualLayers, { withRef: true});
 
@@ -16,7 +14,10 @@ class Layers extends Component {
     super(props);
     this.storageKey = "Layers";
     this.lastPosition = null;
-    this.virtualId = "sc-toc-virtual-layers";
+    this.virtualId = "sc-toc-list-layers-sortablevirtuallist-virtual-layers";
+    
+    //this.virtualId = "sc-toc-list-layers-virtual-layers";
+
     this.state = {
       //allLayers: {},
       //layers: [],
@@ -62,11 +63,7 @@ class Layers extends Component {
         }
       }
     });
-  };
-
-  registerListRef = (listInstance) => {
-    this.List = listInstance;
-  };
+  }; 
 
   render() {
     if (this.props.group.layers === undefined) return <div />;
@@ -76,17 +73,20 @@ class Layers extends Component {
     const layers = this.props.group.layers.filter((layer) => {
       if (this.props.searchText === "") return layer;
 
-      if (layer.displayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1) return layer;
+      if (layer.tocDisplayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1) return layer;
     });
 
     return (
       <div className="sc-toc-layer-container">
-        <AutoSizer disableWidth>
+        <AutoSizer disableWidth 
+                key={this.props.id + "-autosizer"}
+                id={this.props.id + "-autosizer"}>
           {({ height }) => {
             return (
               <SortableVirtualList
-                key={helpers.getUID()}
-                getRef={this.registerListRef}
+                //key={helpers.getUID()}
+                key={this.props.id + "-sortablevirtuallist"}
+                id={this.props.id + "-sortablevirtuallist"}
                 ref={(instance) => {
                   this.SortableVirtualList = instance;
                 }}
@@ -97,6 +97,7 @@ class Layers extends Component {
                 helperClass={"sc-layer-list-sortable-helper"}
                 rowHeight={height}
                 height={height}
+                autoHeight
                 lockAxis={"y"}
                 distance={5}
                 group={this.props.group}
@@ -105,7 +106,7 @@ class Layers extends Component {
                 searchText={this.props.searchText}
                 onLayerOptionsClick={this.props.onLayerOptionsClick}
                 onLayerChange={this.props.onLayerChange}
-                
+                scrollTop={this.props.id + "-sortablevirtuallist"}
                 //scrollToIndex={50}
               />
             );

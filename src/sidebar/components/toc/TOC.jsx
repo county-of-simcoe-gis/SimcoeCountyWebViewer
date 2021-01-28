@@ -26,13 +26,16 @@ class TOC extends Component {
   constructor(props) {
     super(props);
     this.storageMapDefaultsKey = "Map Defaults";
-    this.storageKeyAllLayers = "Layers_Folder_View";
-    this.virtualId = "sc-toc-virtual-layers";
-    this.lastPosition = null;
+    this.storageKeyAllLayers = "Saved Layers";
+    this.storageKey = "Layers";
+    this.storageKeyFolder = "Layers_Folder_View";
+    this.storageKeyTOCType = "TOC_Type";
+
 
     this.state = {
       layerListGroups: [],
       layerFolderGroups: [],
+      unusedPlaceholder: [],
       allLayers:[],
       saveLayerOptions:[],
       onMenuItemClick: [],
@@ -40,7 +43,9 @@ class TOC extends Component {
       defaultGroup: undefined,
       selectedGroup: {},
       layerCount: 0,
-      sortAlpha: this.getInitialSort(),
+      sortFolderAlpha: this.getInitialSort(),
+      sortListAlpha: this.getInitialSort(),
+
       searchText:"",
       isLoading:false,
     };
@@ -59,25 +64,25 @@ class TOC extends Component {
     // LISTEN FOR SEARCH RESULT
     window.emitter.addListener("activeTocLayerGroup", (groupName, callback) => this.onActivateLayerGroup(groupName, callback));
     window.emitter.addListener("activeTocLayer", (layerItem) => this.onActivateLayer(layerItem));
-    // CLEAR IDENTIFY MARKER AND RESULTS
-    window.emitter.addListener("clearIdentify", () => this.clearIdentify());
+
     // RETURN FULL LAYER LIST (replaces window.allLayers)
     window.emitter.addListener("getLayerList", (callback) => this.getLayerList(callback));
 //#endregion
   }
  //#region REACT FUNCTIONS
   componentWillMount() {
-    const tocParam = helpers.getURLParameter("TOCTYPE");
-    if (tocParam !== null) this.setState({ type: tocParam });
+    let tocType = helpers.getURLParameter("TOCTYPE");
+    if (!tocType) tocType = helpers.getItemsFromStorage(this.storageKeyTOCType);
+    if (tocType !== null && tocType !== undefined) {
+      this.setState({ type: tocType });
+    }
   }
 //#endregion
 //#region LOAD LAYERS
 //HANDLE LAYER LOADING
 onMapLoad = () => {
   this.refreshTOC(false, ()=> {
-    if (helpers.getConfigValue("leftClickIdentify")) {
-      this.addIdentifyLayer();
-    }else{
+    if (!helpers.getConfigValue("leftClickIdentify")) {
       this.addPropertyReportClick();
     }
   });
@@ -90,7 +95,9 @@ refreshTOC = (isReset, callback) => {
   //Get toc config geoserver layers
   //combine and sort
   sessionStorage.removeItem(this.storageMapDefaultsKey);
-  //let savedLayers = [];
+  
+  //TODO: Load layers that have been saved
+  //let savedLayers = helpers.getItemsFromStorage(this.storageKeyAllLayers);
   //this.getSavedLayers((results)=>{savedLayers=results;});
   let geoserverUrl = helpers.getURLParameter("GEO_URL");
   let geoserverUrlType = helpers.getURLParameter("GEO_TYPE");
@@ -104,7 +111,7 @@ refreshTOC = (isReset, callback) => {
   if (geoserverUrlType === null) geoserverUrlType = TOCConfig.geoserverLayerGroupsUrlType;
   if (geoserverUrl !== undefined && geoserverUrl !== null) {
     if(TOCConfig.useMapConfigApi){
-      TOCHelpers.getMap(mapId, geoserverUrlType, isReset, "LIST", (result)=>{
+      TOCHelpers.getMap(mapId, geoserverUrlType, isReset, this.state.type, (result)=>{
         const groupInfo = result;
         this.setState(
           {
@@ -114,6 +121,7 @@ refreshTOC = (isReset, callback) => {
             defaultGroup: groupInfo[1],
           },
           () => {
+            this.applySavedLayerOptions(this.state.type === "LIST"? "FOLDER" : "LIST"); //apply saved data for the opposite toc
             this.updateLayerCount(groupInfo[1].layers.length);
             this.updateLayerVisibility();
             window.emitter.emit("tocLoaded");
@@ -122,7 +130,7 @@ refreshTOC = (isReset, callback) => {
         );
       });
     }else{
-      TOCHelpers.getGroupsGC(geoserverUrl, geoserverUrlType, isReset, "LIST", false, true, (result) => {
+      TOCHelpers.getGroupsGC(geoserverUrl, geoserverUrlType, isReset, this.state.type, false, true, (result) => {
         const groupInfo = result;
         this.setState(
           {
@@ -132,6 +140,7 @@ refreshTOC = (isReset, callback) => {
             defaultGroup: groupInfo[1],
           },
           () => {
+            this.applySavedLayerOptions(this.state.type === "LIST"? "FOLDER" : "LIST"); //apply saved data for the opposite toc
             this.updateLayerCount(groupInfo[1].layers.length);
             this.updateLayerVisibility();
             window.emitter.emit("tocLoaded");
@@ -150,6 +159,7 @@ refreshTOC = (isReset, callback) => {
         defaultGroup: groupInfo[1],
       },
       () => {
+        this.applySavedLayerOptions(this.state.type === "LIST"? "FOLDER" : "LIST"); //apply saved data for the opposite toc
         this.updateLayerCount(groupInfo[1].layers.length);
         this.updateLayerVisibility();
         window.emitter.emit("tocLoaded");
@@ -158,6 +168,40 @@ refreshTOC = (isReset, callback) => {
     );
   }
 };
+
+applySavedLayerOptions = (type) => {
+  let savedData = helpers.getItemsFromStorage(type === "LIST" ? this.storageKey : this.storageKeyFolder);
+  if (savedData === undefined) return;
+
+  let layerGroups = Object.assign([],  type ==="LIST" ? this.state.layerListGroups : this.state.layerFolderGroups);
+  layerGroups = layerGroups.map((group)=>{
+    const savedGroup = savedData[group.value];
+    let savedLayers = [];
+    try{
+      if (savedGroup !== undefined && savedGroup.layers !== undefined) {
+        savedLayers = savedGroup.layers;
+      }else if (savedGroup !== undefined){
+        savedLayers = savedGroup; //Added to support legacy saves 
+      }
+    } catch (e){
+      console.warn(e);
+    }
+    if (savedGroup.panelOpen !== undefined) group.panelOpen = savedGroup.panelOpen;
+    group.layers = group.layers.map((layer)=>{
+      const savedLayer = savedLayers[layer.name];
+      if (savedLayer !== undefined) layer.visible = savedLayer.visible;
+      if (savedLayer !== undefined) layer.opacity = savedLayer.opacity;
+      return layer;
+    });
+    return group;
+  });
+  if (type === "LIST"){
+    this.setState({layerListGroups: layerGroups});
+  }else{
+    this.setState({layerFolderGroups: layerGroups});
+  }
+}
+
 getSavedLayers = (callback) => {
   let savedLayers = helpers.getItemsFromStorage(this.storageKeyAllLayers);
   if (savedLayers !== undefined && savedLayers !== null && savedLayers !== []) {
@@ -183,11 +227,10 @@ addCustomLayer = (layer, groupName, selected = false) => {
   layerIndex += layersGroup.layers.length + 1;
   TOCHelpers.makeLayer(layer.displayName, helpers.getUID(), layersGroup, layerIndex, true, 1, layer.layer, undefined, undefined, false, layer.styleUrl, (retLayer) => {
     let layers = layersGroup.layers;
-    layers.push(retLayer);
+    layers.unshift(retLayer);
 
     layersGroup.layers = layers;
     this.setLayerGroups(this.state.type,layerGroups.map((group) => (layersGroup.value === group.value ? layersGroup : group)), ()=>{
-      this.saveGlobalLayers();
       this.forceUpdate();
       helpers.showMessage("Layer Added", AddedMessage(layersGroup.label, retLayer.displayName));
       if (selected) {
@@ -231,50 +274,7 @@ addPropertyReportClick = () => {
   });
 };
 //#endregion
-//#region HANDLE LEFT CLICK IDENTIFY
-clearIdentify = () => {
-  // CLEAR PREVIOUS IDENTIFY RESULTS
-  this.identifyIconLayer.getSource().clear();
-  window.map.removeLayer(this.identifyIconLayer);
-  window.emitter.emit("loadReport", <div />);
-};
-addIdentifyLayer = () => {
-  this.identifyIconLayer = new VectorLayer({
-    name: "sc-identify",
-    source: new VectorSource({
-      features: [],
-    }),
-    zIndex: 100000,
-  });
-  this.identifyIconLayer.setStyle(
-    new Style({
-      image: new Icon({
-        anchor: [0.5, 1],
-        src: images["identify-marker.png"],
-      }),
-    })
-  );
-  this.identifyIconLayer.set("name", "sc-identify-icon");
-  window.map.on("singleclick", (evt) => {
-    // DISABLE IDENTIFY CLICK
-    let disable = window.disableIdentifyClick;
-    if (disable) return;
-    // DISABLE POPUPS
-    disable = window.isDrawingOrEditing;
-    if (disable) return;
 
-    // CLEAR PREVIOUS SOURCE
-    this.identifyIconLayer.getSource().clear();
-    window.map.removeLayer(this.identifyIconLayer);
-
-    const point = new Point(evt.coordinate);
-    const feature = new Feature(point);
-    this.identifyIconLayer.getSource().addFeature(feature);
-    window.map.addLayer(this.identifyIconLayer);
-    window.emitter.emit("loadReport", <Identify geometry={point} />);
-  });
-};
-//#endregion
 //#region HANDLE LAYER STATES
 acceptDisclaimer = (layer) => {
   if (window.acceptedDisclaimers === undefined || window.acceptedDisclaimers.indexOf(layer.name) === -1) {
@@ -292,15 +292,6 @@ getLayerList = (callback) => {
   });
   callback(allLayers);
 }
-saveGlobalLayers = () => {
-  let allLayers = [];
-  const layerList = Object.assign([], this.getActiveLayerGroups());
-  layerList.forEach((group) => {
-    allLayers.push(this.sortLayers(group.layers));
-  });
-  this.setState({allLayers:allLayers});
-  window.allLayers = allLayers;
-};
 //HANDLE LIST VIEW ONLY FUNCTIONS
 //HANDLE SHARED FUNCTIONS
 getActiveLayerGroups = () => {
@@ -324,13 +315,14 @@ setSelectedGroup = (selectedGroup, callback) => {
 setLayerGroups = (updateType,layerGroups, callback) =>{
   switch(updateType){
     case "LIST":
-      this.setState({layerListGroups: layerGroups}, ()=>{if (callback !== undefined) callback();});
+      this.setState({layerListGroups: layerGroups}, ()=>{
+        if (callback !== undefined) callback();});
       break;
     case "FOLDER":
-      this.setState({layerFolderGroups: layerGroups }, ()=>{if (callback !== undefined) callback();});
+      this.setState({layerFolderGroups: layerGroups }, ()=>{
+        if (callback !== undefined) callback();});
       break;
     default:
-      //this.setState({layerListGroups: layerGroups,layerFolderGroups: layerGroups }, ()=>{if (callback !== undefined) callback();});
       break;
   }
 };
@@ -390,14 +382,14 @@ updateLayerCount = (numLayers) => {
     group.layers = arrayMove(group.layers, oldIndex, newIndex);
     this.setLayerGroups(this.state.type, this.state.layerListGroups.map((item)=> group.value === item.value? group:item),()=>
     {
-      this.setState({ selectedGroup: group});
+      this.setState({ selectedGroup: group},       () => {
+        TOCHelpers.updateLayerIndex(group.layers, (result) => {});
+      });
     });
-    document.getElementById(this.virtualId).scrollTop += this.lastPosition;
   };
 
   // TRACK CURSOR SO I CAN RETURN IT TO SAME LOCATION AFTER ACTIONS
   onSortMove = (e) => {
-    this.lastPosition = document.getElementById(this.virtualId).scrollTop;
   };
 getInitialSort = () => {
   if (isMobile) return true;
@@ -406,8 +398,9 @@ getInitialSort = () => {
 sortLayers = (layers) => {
   // console.log("sort");
   let newLayers = Object.assign([{}], layers);
-  if (this.state.sortAlpha) newLayers.sort(TOCHelpers.sortByAlphaCompare);
+  if (this.state.sortListAlpha) newLayers.sort(TOCHelpers.sortByAlphaCompare);
   else newLayers.sort(TOCHelpers.sortByIndexCompare);
+  TOCHelpers.updateLayerIndex(newLayers, (result) => {});
 
   // console.log(newLayers);
   return newLayers;
@@ -438,9 +431,8 @@ onLegendToggleGroup = (group, showLegend) => {
   });
 };
 // TOGGLE LEGEND
-onLegendToggle = (layerInfo, group) => {
+onLegendToggle = (layerInfo, group, callback=undefined) => {
   let showLegend = !layerInfo.showLegend;
-  this.lastPosition = document.getElementById(this.virtualId).scrollTop;
 
   if (layerInfo.legendImage === null) {
     TOCHelpers.getBase64FromImageUrl(layerInfo.styleUrl, (height, imgData) => {
@@ -455,9 +447,7 @@ onLegendToggle = (layerInfo, group) => {
       newLayers = newLayers.map((layer2) => (layer2.name === layerInfo.name ? layerInfo : layer2 ));
       newGroup.layers = newLayers;
       this.setLayerGroups(this.state.type, this.getActiveLayerGroups().map((item) => (item.value === newGroup.value ? newGroup : item)), () => {
-       // if (this.state.type==="LIST") this.setSelectedGroup(newGroup, ()=>{});
-       document.getElementById(this.virtualId).scrollTop += this.lastPosition;
-
+       if (callback !== undefined) callback();
       });
     });
   } else {
@@ -471,34 +461,31 @@ onLegendToggle = (layerInfo, group) => {
     newLayers = newLayers.map((layer2) => (layer2.name === layerInfo.name ? layerInfo : layer2));
     newGroup.layers = newLayers;
     this.setLayerGroups(this.state.type, this.getActiveLayerGroups().map((item) => (item.value === newGroup.value ? newGroup : item)), () => {
-     // if (this.state.type==="LIST") this.setSelectedGroup(newGroup, ()=>{});
-     document.getElementById(this.virtualId).scrollTop += this.lastPosition;
+
+     this.forceUpdate();
     });
   }
 };
-onLayerChange = (layer, group) => {
-  var t0 = performance.now()
-  if (this.state.type ==="LIST") this.lastPosition = document.getElementById(this.virtualId).scrollTop;
-  let layerGroups = Object.assign([], this.getActiveLayerGroups());
-
-  this.setLayerGroups(this.state.type,
-    layerGroups.map((groupItem) => {
-        if (groupItem.value === group.value || groupItem.value === group) {
-          let newGroup = Object.assign({}, groupItem);
-          let newLayers = Object.assign([], groupItem.layers);
-          newLayers = newLayers.map((layer2) => (layer2.value === layer.value ? layer2 : layer));
-          newGroup.layers = newLayers;
-          return newGroup;
-        }else{
-          return groupItem;
-        }
-      }),
-    () => {
-    if (this.state.type ==="LIST") document.getElementById(this.virtualId).scrollTop += this.lastPosition;
-    console.log('update took ' + (performance.now()-t0) + 'ms');
-  }
-   );
+onLayerChange = (layer, group, callback) => {
+  this.setLayerGroups(this.state.type, this.getActiveLayerGroups().map((groupItem) => {
+    //if not matched return existing group
+    if (groupItem.value !== group.value && groupItem.value !== group) return groupItem;
+    //replace matched layer
+    groupItem.layers = groupItem.layers.map((layer2) => (layer2.name !== layer.name ? layer2 : layer));
+    return groupItem;}) , ()=>{
+      if (callback !== undefined) callback();});
+  
 };
+
+onGroupFolderToggle = (groupName, panelOpen) => {
+  this.setState({layerFolderGroups: this.state.layerFolderGroups.map((groupItem) => {
+    //if not matched return existing group
+    if ( groupItem.value !== groupName) return groupItem;
+    groupItem.panelOpen = panelOpen;
+    return groupItem;})
+  });
+  
+}
 //#endregion
 //#region HANDLE ACTIVATE LAYER/GROUP
 onActivateLayerGroup = (groupName, callback) => {
@@ -509,9 +496,17 @@ onActivateLayerGroup = (groupName, callback) => {
       this.state.layerListGroups.forEach((layerGroup) => {
         if (layerGroup.value === groupName) {
           this.setSelectedGroup(layerGroup,()=> callback());
-          //this.setState({selectedGroup:layerGroup}, ()=> callback());
         }
       });
+      break;
+    case "FOLDER":
+      this.setLayerGroups(this.state.type, this.getActiveLayerGroups().map((groupItem) => {
+        //if not matched return existing group
+        if (groupItem.value !== groupName) return groupItem;
+        groupItem.panelOpen = true;
+        return groupItem;}) , ()=>{
+          if (callback !== undefined) callback();});
+      
       break;
     default:
       callback();
@@ -522,6 +517,7 @@ onActivateLayer = (layerItem) => {
   let layerGroups = this.getActiveLayerGroups();
 
   let currentGroup = layerGroups.filter((item) => item.value === layerItem.layerGroup)[0];
+  currentGroup.panelOpen = true;
   currentGroup = currentGroup.layers.map((layer)=>{
     if (layer.name === layerItem.fullName && layer.group === layerItem.layerGroup) {
       layer.layer.setVisible(true);
@@ -554,6 +550,7 @@ onLayerOptionsClick = (evt, layerInfo) =>{
   };
   onTypeChange = () => {
     this.setState({ type: this.state.type ==="LIST"?"FOLDER":"LIST"  },()=>{
+      helpers.saveToStorage(this.storageKeyTOCType, this.state.type);
       this.updateLayerCount();
       this.updateLayerVisibility();
     });
@@ -561,10 +558,26 @@ onLayerOptionsClick = (evt, layerInfo) =>{
   onSortSwitchChange = (sortAlpha) => {
     switch (this.state.type){
       case "LIST":
-        this.setState({ sortAlpha: sortAlpha });
-        if (sortAlpha) {
-          helpers.showMessage("Sorting", "Layer re-ordering disabled.", helpers.messageColors.yellow);
-        }
+        let currentGroup = Object.assign({},this.state.selectedGroup);
+        let newLayers = Object.assign([], currentGroup.layers);
+        if (sortAlpha) newLayers.sort(TOCHelpers.sortByAlphaCompare);
+        else newLayers.sort(TOCHelpers.sortByIndexCompare);
+  
+        currentGroup.layers = newLayers;
+        let newLayerListGroups = this.state.layerListGroups.map((groupItem) => {
+          if (groupItem.value === currentGroup.value){
+            return currentGroup;
+          }else{
+            return groupItem;
+          }
+        });
+        this.setState({layerListGroups: newLayerListGroups, selectedGroup:currentGroup, sortListAlpha: sortAlpha }, ()=>{
+          TOCHelpers.updateLayerIndex(currentGroup.layers, (result) => {});
+          if (sortAlpha) {
+            helpers.showMessage("Sorting", "Layer re-ordering disabled.", helpers.messageColors.yellow);
+          }
+        });
+        
         break;
       case "FOLDER":
         let newLayerGroups = [];
@@ -577,7 +590,7 @@ onLayerOptionsClick = (evt, layerInfo) =>{
           newGroup.layers = newLayers;
           newLayerGroups.push(newGroup);
         });
-        this.setState( {layerFolderGroups: newLayerGroups,sortAlpha: sortAlpha});
+        this.setState( {layerFolderGroups: newLayerGroups,sortFolderAlpha: sortAlpha}, ()=>{this.forceUpdate();});
         break;
       default:
       
@@ -586,7 +599,7 @@ onLayerOptionsClick = (evt, layerInfo) =>{
     helpers.addAppStat("TOC Sort", sortAlpha);
   };
   onResetToDefault = () => {
-    this.setState({ sortAlpha: false, searchText: "" }, () => {
+    this.setState({ sortListAlpha: false,sortFolderAlpha: false, searchText: "" }, () => {
       this.refreshTOC(true);
     });
     helpers.addAppStat("TOC Reset", "Button");
@@ -628,46 +641,55 @@ onLayerOptionsClick = (evt, layerInfo) =>{
   };
   onSaveAllLayers = () => {
     // GATHER INFO TO SAVE
-    const layers = {};
-    const groups = {};
-    for (var key in this.state.allLayers) {
-      if (!this.state.allLayers.hasOwnProperty(key)) continue;
-  
-      var obj = this.state.allLayers[key];
-      const savedLayers = {};
-      const savedGroup = {};
-      let groupName = "";
-      let group = "";
-      obj.forEach((layer) => {
-        groupName = layer.group;
-  
-        const saveLayer = {
-          name: layer.name,
-          visible: layer.visible,
-        };
-        savedLayers[layer.name] = saveLayer;
-        group = layer.group;
-        groupName = layer.groupName;
-        TOCHelpers.layerToJson(layer, (returnObj) => {
-          savedLayers[layer.name] = returnObj;
+    this.getLayerList((allLayers)=>{
+      const currentGroupList = this.getActiveLayerGroups();
+      //const layers = {};
+      const groups = {};
+      for (var key in allLayers) {
+        if (!allLayers.hasOwnProperty(key)) continue;
+    
+        var obj = allLayers[key];
+        const savedLayers = {};
+        const savedGroup = {};
+        let groupName = "";
+        let group = "";
+        obj.forEach((layer) => {
+          group = layer.group;
+          groupName = layer.groupName;
+          /*
+          //TODO: Save full layer if it was manually added, otherwise only save visibility
+          TOCHelpers.layerToJson(layer, (returnObj) => {
+            savedLayers[layer.name] = returnObj;
+          });
+          */
+          const saveLayer = {
+            name: layer.name,
+            visible: layer.visible,
+            opacity: layer.opacity,
+            index: layer.index,
+          };
+          savedLayers[layer.name] = saveLayer;
         });
-      });
-      let currentGroup = this.state.layerFolderGroups.filter((item) => item.value === group)[0];
-      layers[groupName] = savedLayers;
-      savedGroup["name"] = groupName;
-      savedGroup["value"] = currentGroup.value;
-      savedGroup["label"] = currentGroup.label;
-      savedGroup["defaultGroup"] = currentGroup.defaultGroup;
-      savedGroup["visibleLayers"] = currentGroup.visibleLayers;
-      savedGroup["wmsGroupUrl"] = currentGroup.wmsGroupUrl;
-      savedGroup["customRestUrl"] = currentGroup.customRestUrl;
-      savedGroup["prefix"] = currentGroup.prefix;
-      savedGroup["layers"] = savedLayers;
-  
-      groups[group] = savedGroup;
-    }
-    helpers.saveToStorage(this.storageKeyAllLayers, groups);
-    helpers.showMessage("Save", "Layer have been saved.");
+        let currentGroup = currentGroupList.filter((item) => item.value === group)[0];
+
+        //layers[group] = savedLayers;
+        savedGroup["name"] = groupName;
+        savedGroup["value"] = currentGroup.value;
+        savedGroup["label"] = currentGroup.label;
+        savedGroup["defaultGroup"] = currentGroup.defaultGroup;
+        savedGroup["visibleLayers"] = currentGroup.visibleLayers;
+        savedGroup["panelOpen"] = currentGroup.panelOpen;
+        savedGroup["wmsGroupUrl"] = currentGroup.wmsGroupUrl;
+        savedGroup["customRestUrl"] = currentGroup.customRestUrl;
+        savedGroup["prefix"] = currentGroup.prefix;
+        savedGroup["layers"] = savedLayers;
+    
+        groups[group] = savedGroup;
+      }
+      helpers.saveToStorage(this.state.type === "LIST" ? this.storageKey : this.storageKeyFolder, groups);
+      helpers.showMessage("Save", "Layer have been saved.");
+    });
+    
   };
  //#endregion
   render() {
@@ -675,8 +697,9 @@ onLayerOptionsClick = (evt, layerInfo) =>{
       <div>
         <TOCHeader 
           key="sc-toc-header"
+          id="sc-toc-header"
           layerCount={this.state.layerCount}
-          sortAlpha={this.state.sortAlpha}
+          sortAlpha={this.state.type === "FOLDER" ? this.state.sortFolderAlpha : this.state.sortListAlpha}
           searchText={this.state.searchText}
           tocType={this.state.type}
           isLoading={this.state.isLoading}
@@ -690,11 +713,13 @@ onLayerOptionsClick = (evt, layerInfo) =>{
         />
         <TOCFolderView 
           key="sc-toc-folder" 
+          id="sc-toc-folder" 
           visible={this.state.type === "FOLDER"} 
           layerGroups={this.state.layerFolderGroups} 
-          sortAlpha={this.state.sortAlpha}
+          sortAlpha={this.state.sortFolderAlpha}
           searchText={this.state.searchText}
           saveLayerOptions={this.state.saveLayerOptions}
+          onGroupFolderToggle={this.onGroupFolderToggle}
           onLayerOptionsClick={this.onLayerOptionsClick}
           onLayerChange={this.onLayerChange}
           onLegendToggle={this.onLegendToggle}
@@ -703,12 +728,13 @@ onLayerOptionsClick = (evt, layerInfo) =>{
         />
         <TOCListView 
           key="sc-toc-list" 
+          id="sc-toc-list" 
           visible={this.state.type === "LIST"} 
           layerCount={this.state.layerCount}
           layerGroups={this.state.layerListGroups} 
           selectedGroup={this.state.selectedGroup}
           searchText={this.state.searchText}
-          allLayers={this.state.allLayers}
+          sortAlpha={this.state.sortListAlpha}
           onGroupDropDownChange={this.setSelectedGroup}
           onLegendToggle={this.onLegendToggle}
           onLayerOptionsClick={this.onLayerOptionsClick}
@@ -725,10 +751,3 @@ onLayerOptionsClick = (evt, layerInfo) =>{
 
 export default TOC;
 
-// IMPORT ALL IMAGES
- const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
- function importAllImages(r) {
-     let images = {};
-   r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
-   return images;
- }

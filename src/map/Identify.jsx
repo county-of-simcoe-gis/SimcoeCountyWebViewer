@@ -55,8 +55,8 @@ class Identify extends Component {
         const queryable = layer.get("queryable");
         if (queryable) {
           const name = layer.get("name");
-          let displayName = ""; // layer.get("displayName");
-          let type = layer.get("displayName");
+          let displayName = "";
+          let type = layer.get("tocDisplayName");
           let wfsUrl = layer.get("wfsUrl");
 
           if (wfsUrl !== undefined && geometry.getType() !== "Point") {

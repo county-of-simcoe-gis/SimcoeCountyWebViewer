@@ -1,9 +1,17 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import GitHubButton from "react-github-btn";
+//OPENLAYERS
 import "ol/ol.css";
 import Map from "ol/Map";
 import View from "ol/View";
+import { Icon, Style } from "ol/style.js";
+import { Vector as VectorSource } from "ol/source.js";
+import Point from "ol/geom/Point";
+import { Vector as VectorLayer } from "ol/layer";
+import Feature from "ol/Feature";
+import { MouseWheelZoom } from "ol/interaction";
+import { fromLonLat, transform } from "ol/proj";
 
 import "./SCMap.css";
 import "./OLOverrides.css";
@@ -16,11 +24,6 @@ import { defaults as defaultControls, ScaleLine, FullScreen, Rotate } from "ol/c
 import BasemapSwitcher from "./BasemapSwitcher";
 import PropertyReportClick from "./PropertyReportClick.jsx";
 import "ol-contextmenu/dist/ol-contextmenu.css";
-import { fromLonLat, transform } from "ol/proj";
-
-import Feature from "ol/Feature";
-import Point from "ol/geom/Point";
-import { MouseWheelZoom } from "ol/interaction";
 
 import FloatingMenu, { FloatingMenuItem } from "../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
@@ -58,6 +61,9 @@ class SCMap extends Component {
 
     // LISTEN FOR ATTRIBUTE TABLE SIZE
     window.emitter.addListener("attributeTableResize", (height) => this.onAttributeTableResize(height));
+
+    // CLEAR IDENTIFY MARKER AND RESULTS
+    window.emitter.addListener("clearIdentify", () => this.clearIdentify());
   }
 
   componentDidMount() {
@@ -108,7 +114,7 @@ class SCMap extends Component {
     window.map = map;
     window.popup = new Popup();
     window.map.addOverlay(window.popup);
-
+  
     window.map.getViewport().addEventListener("contextmenu", (evt) => {
       evt.preventDefault();
       this.contextCoords = window.map.getEventCoordinate(evt);
@@ -184,7 +190,7 @@ class SCMap extends Component {
         window.emitter.emit("mapResize");
       }
     });
-
+    this.addIdentifyLayer();
     // SHOW FEEDBACK ON TIMER
     // if (mainConfig.showFeedbackMessageOnStartup !== undefined && mainConfig.showFeedbackMessageOnStartup) {
     //   setTimeout(() => {
@@ -319,9 +325,52 @@ class SCMap extends Component {
     // OPEN MORE MENU
     window.emitter.emit("openMoreMenu");
   };
+  clearIdentify = () => {
+    // CLEAR PREVIOUS IDENTIFY RESULTS
+    this.identifyIconLayer.getSource().clear();
+    window.map.removeLayer(this.identifyIconLayer);
+    window.emitter.emit("loadReport", <div />);
+  };
+  
+  addIdentifyLayer = () => {
+    this.identifyIconLayer = new VectorLayer({
+      name: "sc-identify",
+      source: new VectorSource({
+        features: [],
+      }),
+      zIndex: 100000,
+    });
+    this.identifyIconLayer.setStyle(
+      new Style({
+        image: new Icon({
+          anchor: [0.5, 1],
+          src: images["identify-marker.png"],
+        }),
+      })
+    );
+    this.identifyIconLayer.set("name", "sc-identify-icon");
+    if (helpers.getConfigValue("leftClickIdentify")) {
+      window.map.on("singleclick", (evt) => {
+        // DISABLE IDENTIFY CLICK
+        let disable = window.disableIdentifyClick;
+        if (disable) return;
+        // DISABLE POPUPS
+        disable = window.isDrawingOrEditing;
+        if (disable) return;
 
+        this.contextCoords = evt.coordinate;
+        this.identify();
+      });
+    }
+  };
   identify = () => {
+    this.identifyIconLayer.getSource().clear();
+    window.map.removeLayer(this.identifyIconLayer);
+
     const point = new Point(this.contextCoords);
+    const feature = new Feature(point);
+    this.identifyIconLayer.getSource().addFeature(feature);
+    window.map.addLayer(this.identifyIconLayer);
     window.emitter.emit("loadReport", <Identify geometry={point} />);
   };
 
@@ -427,3 +476,10 @@ class SCMap extends Component {
 }
 
 export default SCMap;
+// IMPORT ALL IMAGES
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
+function importAllImages(r) {
+    let images = {};
+  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
+  return images;
+}

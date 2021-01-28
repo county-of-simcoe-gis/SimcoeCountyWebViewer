@@ -56,7 +56,7 @@ class LayerItem extends Component {
     if (this.props.layer.visible) containerClassName += " on";
 
     return (
-      <div id={this.props.layer.name + "_" + this.props.layer.group + "_folderview"}>
+      <div id={this.props.id + "_folderview"}>
         <div className={containerClassName}>
           <div className="sc-toc-item-plus-minus-container-folder-view" onClick={() => this.props.onLegendToggle(this.props.layer, this.props.group)}>
             <img
@@ -68,14 +68,14 @@ class LayerItem extends Component {
             <div className="sc-toc-item-lines-expanded-folder-view" />
           </div>
           <div className="sc-toc-item-checkbox-folder-view">
-            <input id="sc-toc-item-checkbox-folder-view" key={helpers.getUID()} type="checkbox" onChange={() => this.onCheckboxChange()} checked={this.props.layer.visible} />
+            <input id={this.props.id + "-checkbox-folder-view"} key={this.props.id + "-checkbox-folder-view"} type="checkbox" onChange={() => this.onCheckboxChange()} checked={this.props.layer.visible} />
           </div>
           <div className="sc-toc-item-layer-label-folder-view">
             <Highlighter
               // className="sc-toc-item-layer-label-folder-view"
               highlightClassName="sc-search-toc-highlight-words-folder-view"
               searchWords={[this.props.searchText]}
-              textToHighlight={this.props.layer.displayName}
+              textToHighlight={this.props.layer.tocDisplayName}
               onClick={() => this.onCheckboxChange(this.state.layer)}
             />
           </div>

@@ -5,15 +5,18 @@ import { List } from "react-virtualized";
 
 // CUSTOM
 import LayerItem from "./LayerItem.jsx";
-import * as helpers from "../../../../helpers/helpers";
 import "./VirtualLayers.css";
 
 // LIST ITEM SORTABLE
-const SortableItem = sortableElement(({ value, style, item,group, onLegendToggle, onCheckboxChange, onLayerChange, searchText, onLayerOptionsClick }) => {
-  item.elementId = item.name + helpers.getUID();
+const SortableItem = sortableElement(({ value,id, style, item, group, onLegendToggle, onCheckboxChange, onLayerChange, searchText, onLayerOptionsClick }) => {
+  item.elementId = id + "-element";
+  
+  //console.log("Virtual Layer Item Render");
   return (
     <li style={style} className="sc-toc-layer-list-item sc-noselect" id={item.elementId}>
-      <LayerItem key={helpers.getUID()} 
+      <LayerItem 
+          key={id+"-layer-item"}
+          id={id+"-layer-item"}
           layerInfo={item} 
           onLegendToggle={onLegendToggle}
           group={group}
@@ -26,6 +29,7 @@ const SortableItem = sortableElement(({ value, style, item,group, onLegendToggle
 });
 
 class VirtualLayers extends Component {
+  _isMounted = false;
   constructor(props) {
     super(props);
 
@@ -34,17 +38,30 @@ class VirtualLayers extends Component {
     };
   }
 
+  componentDidMount() {
+    this._isMounted = true;
+  }
+  componentWillUnmount() {
+    this._isMounted = false;
+  }
+  componentDidUpdate(){
+    if (this._isMounted) {
+      this.list.recomputeRowHeights();
+    }
+  }
   renderRow = ({ index, key, style }) => {
     const { items } = this.props;
-    const { value } = items[index];
+    const item = items[index];
 
     return (
       <SortableItem
-        key={index}
+        key={this.props.id + "-sortable-item-" + index}
+        id={this.props.id + "-sortable-item-" + index}
+        //key={index}
         index={index}
         style={style}
-        value={value}
-        item={items[index]}
+        value={item.name}
+        item={item}
         group={this.props.group}
         onLegendToggle={this.props.onLegendToggle}
         onCheckboxChange={this.props.onCheckboxChange}
@@ -56,28 +73,25 @@ class VirtualLayers extends Component {
     );
   };
 
-  getRowHeight = ({ index }) => {
-    const { items } = this.props;
-    return items[index].height;
-  };
-
   render() {
-    const { items, getRef, height } = this.props;
-
+    const { items, height, id } = this.props;
+    const listId  = id + "-virtual-layers" ;
     // MOBILE TWEEK
     let mobileAdjustment = -1;
     if (window.innerWidth <= 400) mobileAdjustment = 400 - window.innerWidth;
     return (
       <List
-        id="sc-toc-virtual-layers"
-        ref={getRef}
-        rowHeight={this.getRowHeight}
+        key={listId}
+        id={listId}
+        //key="sc-toc-virtual-layers-list"
+        //id="sc-toc-virtual-layers"
+        ref={(ref) => this.list = ref}
+        rowHeight={({ index }) => items[index].height}
         rowRenderer={this.renderRow}
         rowCount={items.length}
         width={mobileAdjustment !== -1 ? 360 - mobileAdjustment : 360}
         height={height}
         style={{ outline: "none" }}
-        //scrollToIndex={50}
       />
     );
   }

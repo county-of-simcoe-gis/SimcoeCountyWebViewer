@@ -50,6 +50,7 @@ class LayerItem extends Component {
   };
 
   render() {
+    //console.log("List View Layer Item Render");
     const { layerInfo } = this.props;
     let containerClassName = "sc-toc-item-container";
     if (!this.isVisibleAtScale) containerClassName = "sc-toc-item-container not-in-scale";
@@ -65,7 +66,7 @@ class LayerItem extends Component {
           </div>
           <label>
             <input id="sc-toc-item-checkbox" key={helpers.getUID()} type="checkbox" onChange={() => this.onCheckboxChange(this.props.layerInfo)} checked={layerInfo.visible} />
-            <Highlighter className="sc-toc-item-layer-label" highlightClassName="sc-search-toc-highlight-words" searchWords={[this.props.searchText]} textToHighlight={layerInfo.displayName} />
+            <Highlighter className="sc-toc-item-layer-label" highlightClassName="sc-search-toc-highlight-words" searchWords={[this.props.searchText]} textToHighlight={layerInfo.tocDisplayName} />
           </label>
 
           <div

@@ -72,6 +72,7 @@ onSliderAfterChange = (opacity, layerInfo) => {
 onMenuItemClick = (action, layerInfo) => {
   switch (action) {
     case "sc-floating-menu-metadata":
+      if (layerInfo.metadataUrl === undefined || layerInfo.metadataUrl === null) return;
       TOCHelpers.getLayerInfo(layerInfo, (result) => {
         if (helpers.isMobile()) {
           window.emitter.emit("setSidebarVisiblity", "CLOSE");
@@ -131,7 +132,9 @@ render(){
         onMenuItemClick={(action) => this.onMenuItemClick(action, this.props.layerInfo)}
         styleMode={helpers.isMobile() ? "left" : "right"}
       >
-        <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-metadata">
+        <MenuItem 
+          className={(this.props.layerInfo.metadataUrl !== undefined && this.props.layerInfo.metadataUrl !== null) || this.props.layerInfo.layer instanceof VectorLayer ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"}
+          key="sc-floating-menu-metadata">
           <FloatingMenuItem imageName={"metadata.png"} label="Metadata" />
         </MenuItem>
         {/* <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-attribute-table">
