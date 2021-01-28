@@ -24,6 +24,7 @@ class GroupItem extends Component {
     window.emitter.addListener("updateActiveTocLayers", (groupName) => {
       if ((groupName === this.props.group.value || groupName === null) && this.props.visible) this.setActiveLayerCount();
     });
+
   }
 
   setActiveLayerCount = (group) => {
@@ -131,7 +132,7 @@ class GroupItem extends Component {
   containsLayers = () => {
     return this.props.group.layers.filter((layer) => {
       if (this.props.searchText === "") return true;
-      return [layer.displayName.toUpperCase(), layer.groupName.toUpperCase()].join(" ").indexOf(this.props.searchText.toUpperCase()) !== -1;
+      return [layer.tocDisplayName.toUpperCase(), layer.groupName.toUpperCase()].join(" ").indexOf(this.props.searchText.toUpperCase()) !== -1;
     });
   };
   isVisible = () => {
@@ -143,14 +144,10 @@ class GroupItem extends Component {
   };
 
   setOpenState = (state) => {
-    if (!this.state.newProps) {
+    if (!this.state.newProps || (this.state.newProps && state)) {
       this.setState({ panelOpen: state });
     } else {
-      if (this.isVisible() && this.props.searchText !== "") {
-        this.setState({ panelOpen: true });
-      } else {
-        this.setState({ panelOpen: this.state.userPanelOpen });
-      }
+      this.setState({ panelOpen: this.state.userPanelOpen });
     }
   };
 
@@ -162,14 +159,16 @@ class GroupItem extends Component {
     if (this.props.searchText !== "") {
       this.setState({ panelOpen: panelOpen, newProps: false });
     } else {
-      this.setState({ panelOpen: panelOpen, userPanelOpen: userPanelOpen, newProps: false });
+      this.setState({ panelOpen: panelOpen, userPanelOpen: userPanelOpen, newProps: false }, ()=>{
+        this.props.onGroupFolderToggle(this.props.group.value, panelOpen);
+      });
     }
   };
 
   render() {
     if (this.props.group !== undefined && this.isVisible()) {
       return (
-        <div className={"sc-toc-group-list-container"} key={"sc-toc-group-list-container" + this.props.group.value}>
+        <div className={"sc-toc-group-list-container"} key={this.props.id + "-sc-toc-group-list-container"}>
           <div className={(this.state.panelOpen ? "sc-toc-group-list-header open" : "sc-toc-group-list-header") + (this.state.activeLayerCount > 0 ? " active" : "")} onClick={this.onHeaderClick}>
             <div className={"sc-toc-group-list-header-label"}>
               &nbsp;&nbsp;{this.props.group.label}{" "}
@@ -181,12 +180,14 @@ class GroupItem extends Component {
           <div className="sc-toc-group-toolbox-folder-view" title="Group Options" onClick={(evt) => this.onGroupOptionsClick(evt, this.props.group.value)}>
             <img src={images["group-more-options.png"]} alt="More Group Options" />
           </div>
-          <div className={this.state.panelOpen ? "sc-toc-group-list-item-container" : "sc-hidden"} key={helpers.getUID()}>
+          <div className={this.state.panelOpen || (this.isVisible() && this.props.searchText !== "") ? "sc-toc-group-list-item-container" : "sc-hidden"} key={this.props.id + "-sc-toc-group-list-item-container"}>
             <Layers
               ref={(ref) => {
                 this.layerRef = ref;
               }}
-              key={"layer-list" + this.props.group.value}
+              key={this.props.id + "-layers"}
+              id={this.props.id + "-layers"}
+              //key={"layer-list" + this.props.group.value}
               group={this.props.group}
               searchText={this.props.searchText}
               sortAlpha={this.props.sortAlpha}

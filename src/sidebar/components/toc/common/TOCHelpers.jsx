@@ -90,7 +90,7 @@ export function makeLayer(
   } else {
     newLayer.setVisible(visible);
     newLayer.setOpacity(opacity);
-    newLayer.setProperties({ name: layerId, displayName: layerName });
+    newLayer.setProperties({ name: layerId, tocDisplayName:layerName, displayName: layerName });
     newLayer.setZIndex(layerIndex);
     window.map.addLayer(newLayer);
   }
@@ -98,6 +98,7 @@ export function makeLayer(
   const returnLayer = {
     name: layerId,
     displayName: layerName,
+    tocDisplayName:layerName,
     styleUrl: styleUrl,
     height: 30, // HEIGHT OF DOM ROW FOR AUTOSIZER
     drawIndex: layerIndex, // INDEX USED BY VIRTUAL LIST
@@ -250,6 +251,10 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured=false,
   let defaultGroup = null;
   let isDefault = false;
   let groups = [];
+  let savedData = helpers.getItemsFromStorage(tocType === "LIST" ? storageKey : storageKeyFolder);
+  if (savedData === undefined) savedData = [];
+  
+
   const remove_underscore = (name) => {
     return helpers.replaceAllInString(name, "_", " ");
   };
@@ -334,7 +339,11 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured=false,
           };
           buildLayers(layerInfo.Layer);
         }
-
+        let panelOpen = false;
+        const savedGroup = savedData[groupName];
+        if (savedGroup !== undefined) {
+          panelOpen = savedGroup.panelOpen;
+        }else if (isDefault) panelOpen = true;
         const groupObj = {
           value: groupName,
           label: remove_underscore(groupDisplayName),
@@ -346,6 +355,7 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured=false,
           primary:primary,
           wmsGroupUrl: fullGroupUrl,
           layers: layerList,
+          panelOpen: panelOpen
         };
         if (groupObj.layers.length >= 1) {
           groups.push(groupObj);
@@ -529,6 +539,7 @@ export function copyTOCLayerGroups (layerGroups){
   return layerGroups.map((group) => 
                                 {
                                   let newGroup = Object.assign({},group);
+                                  //newGroup.panelOpen = false;
                                   newGroup.layers = group.layers.map((layer) => 
                                       {
                                         let newLayer = Object.assign({},layer);
@@ -567,7 +578,17 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType,secure
   // SAVED DATA
   let savedData = helpers.getItemsFromStorage(tocType === "LIST" ? storageKey : storageKeyFolder);
   if (savedData === undefined) savedData = [];
-  const savedLayers = savedData[group.value];
+  const savedGroup = savedData[group.value];
+  let savedLayers = []
+  try{
+    if (savedGroup !== undefined && savedGroup.layers !== undefined) {
+      savedLayers = savedGroup.layers;
+    }else if (savedGroup !== undefined){
+      savedLayers = savedGroup; //Added to support legacy saves 
+    }
+  } catch (e){
+    console.warn(e);
+  }
 
   if (layer.Layer === undefined) {
     const visibleLayers = group.visibleLayers === undefined ? [] : group.visibleLayers;
@@ -626,9 +647,10 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType,secure
     const maxScale = layer.MaxScaleDenominator;
     // SET VISIBILITY
     let layerVisible = false;
-    if (savedLayers !== undefined) {
+    if (savedLayers !== undefined && savedLayers.length > 0) {
       const savedLayer = savedLayers[layerNameOnly];
       if (savedLayer !== undefined && savedLayer.visible) layerVisible = true;
+      if (savedLayer !== undefined && savedLayer.opacity && savedLayer.opacity !== opacity) opacity = savedLayer.opacity;
     } else if (visibleLayers.includes(layerNameOnly)) layerVisible = true;
 
     // LAYER PROPS
@@ -642,7 +664,15 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType,secure
 
       newLayer.setVisible(layerVisible);
       newLayer.setOpacity(opacity);
-      newLayer.setProperties({ name: layerNameOnly, displayName: displayName, wfsUrl: wfsUrl, rootInfoUrl: rootInfoUrl, disableParcelClick: liveLayer, queryable: queryable, opaque: opaque });
+      newLayer.setProperties({ 
+          name: layerNameOnly, 
+          displayName: displayName, 
+          tocDisplayName: tocDisplayName,
+          wfsUrl: wfsUrl, 
+          rootInfoUrl: rootInfoUrl, 
+          disableParcelClick: liveLayer, 
+          queryable: queryable, 
+          opaque: opaque });
 
       newLayer.setZIndex(layerIndex);
       window.map.addLayer(newLayer);
@@ -1015,10 +1045,10 @@ export function getLayerInfo(layerInfo, callback) {
   });
 }
 export function sortByAlphaCompare(a, b) {
-  if (a.displayName < b.displayName) {
+  if (a.tocDisplayName < b.tocDisplayName) {
     return -1;
   }
-  if (a.displayName > b.displayName) {
+  if (a.tocDisplayName > b.tocDisplayName) {
     return 1;
   }
   return 0;

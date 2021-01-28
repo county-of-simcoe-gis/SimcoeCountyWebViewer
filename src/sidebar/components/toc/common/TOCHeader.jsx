@@ -20,6 +20,7 @@ class TOCHeader extends Component {
 
  onSettingsClick = (evt) =>{
     var evtClone = Object.assign({}, evt);
+    var switchMenuLabel = `Switch to ${this.props.tocType==="LIST"?"Folder":"List"} View`;
     const menu = (
       <Portal>
         <FloatingMenu
@@ -33,7 +34,7 @@ class TOCHeader extends Component {
           yOffset={0}
         >
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-switch">
-            <FloatingMenuItem imageName={"edit-rotate24.png"} label="Switch to Folder View" />
+            <FloatingMenuItem imageName={"edit-rotate24.png"} label={switchMenuLabel} />
           </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-save">
             <FloatingMenuItem imageName={"save-disk.png"} label="Save Layer Visibility" />

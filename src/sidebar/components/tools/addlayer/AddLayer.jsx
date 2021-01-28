@@ -13,6 +13,7 @@ class AddLayerForm extends Component {
     super(props);
     this.defaultLayerName = "New Layer";
     this.inputId = "sc-add-layer-input";
+    this.loadingMessage = "Discovering Layers...";
     this.state = {
       selectFormatOptions: [],
       selectFormatOption: undefined,
@@ -175,22 +176,34 @@ class AddLayerForm extends Component {
     let selectedLayer = this.defaultLayerOption;
 
     const serviceUrl = (url, service, suffix) => `${url}/${service}${suffix}`;
-    const discoveryUrl = (service) => `${service}?f=pjson`;
+    const discoveryUrl = (url, service, suffix) => `${url}/${service}${suffix}`;
     //CLEAR LAYERS LIST AND ATTEMPT TO REPOPULATE
     this.setState({ selectLayerOptions: [], selectLayerOption: selectedLayer, isRunning: true }, () => {
       let serviceLayers = [];
-      var lookupServiceUrl = discoveryUrl(serviceUrl(selectedService.discoveryUrl, selectedService.value, ""));
+      var lookupServiceUrl = discoveryUrl(selectedService.discoveryUrl, selectedService.value, selectedService.discoverySuffix);
       helpers.getJSON(lookupServiceUrl, (results) => {
-        var services = results.services;
+        var services = [];
+        switch (selectedService.server_type){
+          case "esri":
+            services = results.services;
+            break;
+          case "geoserver":
+            services = results.layerGroup.publishables.published;
+            break;
+          default:
+            services = results.services;
+            break;
+        }
         services.forEach((item) => {
           var currentIndex = services.indexOf(item) + 1;
-          var currentUrl = serviceUrl(selectedService.serviceUrl, item.name, selectedService.urlSuffix);
+          var currentUrl = serviceUrl(selectedService.serviceUrl, item.name.replace(":", "/"), selectedService.urlSuffix);
           LayerHelpers.getCapabilities(currentUrl, selectedFormat.source, (layers) => {
             var foundLayers = layers;
+            if (foundLayers.length > 1 && selectedService.server_type ==="geoserver") return;
             if (foundLayers !== undefined && foundLayers.length > 0) {
               foundLayers.forEach((layer) => {
-                layer["INFO_FORMAT"] = selectedService.INFO_FORMAT;
-                layer["XSL_TEMPLATE"] = helpers.getConfigValue("originUrl") + selectedService.XSL_TEMPLATE;
+                if (selectedService.INFO_FORMAT) layer["INFO_FORMAT"] = selectedService.INFO_FORMAT;
+                if (selectedService.XSL_TEMPLATE) layer["XSL_TEMPLATE"] = helpers.getConfigValue("originUrl") + selectedService.XSL_TEMPLATE;
                 serviceLayers.push(layer);
               });
             }
@@ -214,7 +227,7 @@ class AddLayerForm extends Component {
     });
   };
   addLayer = (layer) => {
-    let showLayer = this.state.tabIndex !== 0;
+    let showLayer = true; // this.state.tabIndex !== 0;
     let styleUrl = "";
     let queryable = false;
     let opaque = false;
@@ -466,8 +479,8 @@ class AddLayerForm extends Component {
                   />
                 </div>
                 <div className="sc-add-layer-row">
-                  <button id="sc-add-layer-discover" type="button" name="check" className="sc-button" disabled={this.state.serverUrl !== "" ? false : true} onClick={this.onCheckForLayers}>
-                    Check for layers
+                  <button id="sc-add-layer-discover" type="button" name="check" className="sc-button" disabled={this.state.serverUrl !== "" || this.state.isRunning? false : true} onClick={this.onCheckForLayers}>
+                    {this.state.isRunning ? this.loadingMessage : "Check for layers"}
                   </button>
                 </div>
                 <div className="sc-coordinates-divider" />

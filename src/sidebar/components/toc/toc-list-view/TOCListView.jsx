@@ -16,7 +16,9 @@ class TOCListView extends Component {
     };
   } 
 
-
+  shouldComponentUpdate(nextProps, nextState) {
+    return nextProps.visible || this.props.visible;
+  }
   onGroupDropDownChange = (selectedGroup) => {
     this.props.onGroupDropDownChange(selectedGroup, ()=>{ 
       const iFrame = document.getElementById("sc-url-window-iframe");
@@ -53,10 +55,12 @@ class TOCListView extends Component {
     };
 
     return (
-      <div id="sc-toc-simcoe-list-view-container-main" className={this.props.visible ? "" : "sc-hidden"}>
+      <div id={this.props.id + "-container-main"} className={this.props.visible ? "" : "sc-hidden"}>
         <div className="sc-toc-groups-container">
-          <div id="sc-toc-groups-dropdown" title="Click here for more layers">
+          <div id={this.props.id + "-groups-dropdown"} title="Click here for more layers">
             <Select
+              key={this.props.id + "-select"}
+              id={this.props.id + "-select"}
               styles={groupsDropDownStyles}
               isSearchable={false}
               onChange={this.onGroupDropDownChange}
@@ -68,15 +72,15 @@ class TOCListView extends Component {
         </div>
         <div>
           <Layers
+            key={this.props.id + "-layers"}
+            id={this.props.id + "-layers"}
             ref={(ref) => {
               this.layerRef = ref;
             }}
             group={this.props.selectedGroup}
             searchText={this.props.searchText}
             sortAlpha={this.props.sortAlpha}
-            allGroups={this.props.layerGroups}
             visible={this.props.visible}
-            allLayers={this.props.allLayers}
             onLayerOptionsClick={this.props.onLayerOptionsClick}
             onLegendToggle={this.props.onLegendToggle}
             onLayerChange={this.props.onLayerChange}
