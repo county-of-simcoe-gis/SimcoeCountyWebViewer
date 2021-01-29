@@ -101,7 +101,7 @@ export function isMobile() {
 }
 
 // SHOW URL WINDOW
-export function showURLWindow(url, showFooter = false, mode = "normal", honorDontShow = false) {
+export function showURLWindow(url, showFooter = false, mode = "normal", honorDontShow = false, hideScroll=false) {
   console.log(url);
   let isSameOrigin = true;
   if (mainConfig.restrictOriginForUrlWindow) {
@@ -110,7 +110,7 @@ export function showURLWindow(url, showFooter = false, mode = "normal", honorDon
 
   if (isSameOrigin) {
     ReactDOM.render(
-      <URLWindow key={shortid.generate()} mode={mode} showFooter={showFooter} url={url} honorDontShow={honorDontShow} />,
+      <URLWindow key={shortid.generate()} mode={mode} showFooter={showFooter} url={url} honorDontShow={honorDontShow} hideScroll={hideScroll} />,
       document.getElementById("map-modal-window")
     );
   } else {

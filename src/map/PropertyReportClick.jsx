@@ -206,7 +206,7 @@ class PropertyReportClick extends Component {
         <span
           className="sc-fakeLink"
           onClick={() => {
-            helpers.showURLWindow(mainConfig.termsUrl, false, "full", true, true);
+            helpers.showURLWindow(mainConfig.termsUrl, true, "full", true, true, true);
             helpers.addAppStat("Property Click Terms", "click");
           }}
         >
