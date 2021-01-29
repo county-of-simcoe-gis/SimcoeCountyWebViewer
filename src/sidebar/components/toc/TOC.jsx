@@ -81,7 +81,7 @@ onMapLoad = () => {
     }
   });
 };
-refreshTOC = (isReset, callback) => {
+refreshTOC = (isReset, callback=undefined) => {
 
   //Get saved layers
   //Get map config layers
@@ -107,6 +107,7 @@ refreshTOC = (isReset, callback) => {
     if(TOCConfig.useMapConfigApi){
       TOCHelpers.getMap(mapId, geoserverUrlType, isReset, this.state.type, (result)=>{
         const groupInfo = result;
+        if (isReset) this.updateLayerVisibility("CLEAR");
         this.setState(
           {
             layerListGroups:  groupInfo[0],
@@ -126,6 +127,8 @@ refreshTOC = (isReset, callback) => {
     }else{
       TOCHelpers.getGroupsGC(geoserverUrl, geoserverUrlType, isReset, this.state.type, false, true, (result) => {
         const groupInfo = result;
+        if (isReset) this.updateLayerVisibility("CLEAR");
+
         this.setState(
           {
             layerListGroups:  groupInfo[0],
@@ -145,6 +148,8 @@ refreshTOC = (isReset, callback) => {
     }
   } else {
     const groupInfo = TOCHelpers.getGroups();
+    if (isReset) this.updateLayerVisibility("CLEAR");
+
     this.setState(
       {
         layerListGroups: groupInfo[0],
@@ -320,10 +325,11 @@ setLayerGroups = (updateType,layerGroups, callback) =>{
       break;
   }
 };
-updateLayerVisibility = () => {
+updateLayerVisibility = (type=undefined) => {
+  if (type===undefined) type = this.state.type
   const layerFolderGroups = Object.assign([], this.state.layerFolderGroups);
   const selectedGroup = Object.assign({}, this.state.selectedGroup);
-  switch(this.state.type){
+  switch(type){
     case "LIST":
       layerFolderGroups.forEach((group) => {
         group.layers.forEach((layer) => {
@@ -344,6 +350,16 @@ updateLayerVisibility = () => {
         });
       });
       break;
+    case "CLEAR":
+        selectedGroup.layers.forEach((layer) => {
+          layer.layer.setVisible(false);
+        }); 
+        layerFolderGroups.forEach((group) => {
+          group.layers.forEach((layer) => {
+            if (layer.visible) layer.layer.setVisible(false);
+          });
+        });
+        break;
     default:
       break;
   }
@@ -593,6 +609,7 @@ onLayerOptionsClick = (evt, layerInfo) =>{
     helpers.addAppStat("TOC Sort", sortAlpha);
   };
   onResetToDefault = () => {
+
     this.setState({ sortListAlpha: false,sortFolderAlpha: false, searchText: "" }, () => {
       this.refreshTOC(true);
     });
