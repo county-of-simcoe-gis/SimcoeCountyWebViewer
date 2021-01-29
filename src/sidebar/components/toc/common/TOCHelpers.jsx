@@ -131,7 +131,7 @@ export async function getMap (mapId=null,urlType, isReset, tocType, callback){
       const mapSettings = JSON.parse(result.json);
       //console.log(mapSettings);
       mapSettings.sources.forEach(source => {
-        this.getGroupsGC(source.layerUrl, urlType, isReset, tocType, source.secure,source.primary, (layerGroupConfig) => {
+        getGroupsGC(source.layerUrl, urlType, isReset, tocType, source.secure,source.primary, (layerGroupConfig) => {
           if (source.primary) defaultGroup=layerGroupConfig[1];
           if (layerGroups === undefined){
             layerGroups = layerGroupConfig[0];
@@ -650,7 +650,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType,secure
     const maxScale = layer.MaxScaleDenominator;
     // SET VISIBILITY
     let layerVisible = false;
-    if (savedLayers !== undefined && savedLayers.length > 0) {
+    if (savedLayers !== undefined) {
       const savedLayer = savedLayers[layerNameOnly];
       if (savedLayer !== undefined && savedLayer.visible) layerVisible = true;
       if (savedLayer !== undefined && savedLayer.opacity && savedLayer.opacity !== opacity) opacity = savedLayer.opacity;
