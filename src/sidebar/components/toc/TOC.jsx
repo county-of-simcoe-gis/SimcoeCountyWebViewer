@@ -5,11 +5,6 @@ import { isMobile } from "react-device-detect";
 import arrayMove from "array-move";
 
 //OPEN LAYERS
-import { Icon, Style } from "ol/style.js";
-import { Vector as VectorSource } from "ol/source.js";
-import Point from "ol/geom/Point";
-import { Vector as VectorLayer } from "ol/layer";
-import Feature from "ol/Feature";
 import GeoJSON from "ol/format/GeoJSON.js";
 
 //CUSTOM
@@ -19,7 +14,6 @@ import TOCHeader from "./common/TOCHeader.jsx";
 import LayerOptionsMenu from "./common/LayerOptionsMenu.jsx";
 import TOCListView from "./toc-list-view/TOCListView.jsx";
 import TOCFolderView from "./toc-folder-view/TOCFolderView.jsx";
-import Identify from "../../../map/Identify.jsx";
 import * as helpers from "../../../helpers/helpers";
 
 class TOC extends Component {
