@@ -121,7 +121,7 @@ export function makeLayer(
 
 export async function getMap (mapId=null,urlType, isReset, tocType, callback){
   const apiUrl = helpers.getConfigValue('apiUrl');
-  let mapSettingURL = mapId===null ? `${apiUrl}settings/getDefaultMap` : `${apiUrl}settings/getMap/${mapId}`;
+  let mapSettingURL = mapId===null || mapId==="" ? `${apiUrl}settings/getDefaultMap` : `${apiUrl}settings/getMap/${mapId}`;
   let defaultGroup = undefined;
   let layerGroups = undefined;
   
@@ -141,6 +141,9 @@ export async function getMap (mapId=null,urlType, isReset, tocType, callback){
           sourcesProcessed ++;
           if (sourcesProcessed === mapSettings.sources.length){
             if (defaultGroup === undefined || defaultGroup === null) defaultGroup = layerGroups[0];
+            if ( mapSettings.default_group !== undefined && mapSettings.default_group !== defaultGroup.value ) {
+              defaultGroup = layerGroups.filter((group)=> {return group.value===mapSettings.default_group})[0];
+            }
             callback([layerGroups,defaultGroup]);
           }
         });
