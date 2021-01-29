@@ -616,18 +616,22 @@ onLayerOptionsClick = (evt, layerInfo) =>{
   };
   onOpenLegend = () => {
     let params = "";
-    this.getActiveLayerGroups().forEach((group) => {
+    let activeGroups = [];
+    if (this.state.type === "LIST") {
+      activeGroups.push(this.state.selectedGroup);
+    }else{
+      activeGroups = this.state.layerFolderGroups.filter((group)=> {return group.panelOpen});
+    }
+    activeGroups.forEach((group) => {
       let name = "";
       if (group.value.indexOf(":") !== -1) {
         name = group.value.split(":")[1];
       } else name = group.value;
-  
+      
       if (params === "") {
-        if (this.state.selectedGroup.value === group.value) params += "?" + name + "=1";
-        else params += "?" + name + "=1";
+        params += "?" + name + "=1";
       } else {
-        if (this.state.selectedGroup.value === group.value) params += "&" + name + "=1";
-        else params += "&" + name + "=1";
+        params += "&" + name + "=1";
       }
     });
   
