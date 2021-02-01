@@ -306,8 +306,10 @@ getActiveLayerGroups = () => {
 setSelectedGroup = (selectedGroup, callback) => {
   this.setState({selectedGroup: selectedGroup }, 
      ()=>{
+      
        this.updateLayerCount();
        this.updateLayerVisibility();
+       this.updateOpenPopup();
        if (callback !== undefined) callback();
     });
 }
@@ -493,11 +495,29 @@ onGroupFolderToggle = (groupName, panelOpen) => {
     if ( groupItem.value !== groupName) return groupItem;
     groupItem.panelOpen = panelOpen;
     return groupItem;})
-  });
+  }, () => { this.updateOpenPopup()});
   
 }
 //#endregion
 //#region HANDLE ACTIVATE LAYER/GROUP
+updateOpenPopup = () => {
+  const iFrame = document.getElementById("sc-url-window-iframe");
+  const urlWindow = document.getElementById("sc-url-window-container");
+  if (iFrame !== null && urlWindow !== null) {
+    const classes = urlWindow.className;
+    if (classes.indexOf("sc-hidden") === -1) {
+      let legend = null;
+      try{
+        legend = iFrame.contentWindow.document.getElementById("sc-legend-app-main-container");
+      }
+      catch(e){
+        console.log(e.message);
+      }
+      if (legend !== null) this.onOpenLegend();
+    }
+  }
+}
+
 onActivateLayerGroup = (groupName, callback) => {
   window.emitter.emit("setSidebarVisiblity", "OPEN");
   window.emitter.emit("activateTab", "layers");

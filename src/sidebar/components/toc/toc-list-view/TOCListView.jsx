@@ -21,15 +21,7 @@ class TOCListView extends Component {
   }
   onGroupDropDownChange = (selectedGroup) => {
     this.props.onGroupDropDownChange(selectedGroup, ()=>{ 
-      const iFrame = document.getElementById("sc-url-window-iframe");
-      const urlWindow = document.getElementById("sc-url-window-container");
-      if (iFrame !== null && urlWindow !== null) {
-        const classes = urlWindow.className;
-        if (classes.indexOf("sc-hidden") === -1) {
-          const legend = document.getElementById("sc-url-window-iframe").contentWindow.document.getElementById("sc-legend-app-main-container");
-          if (legend !== null) this.openLegend();
-        }
-      }
+      
     });
     helpers.addAppStat("TOC Group", selectedGroup.label);
   };
