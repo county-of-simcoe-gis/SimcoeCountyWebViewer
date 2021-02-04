@@ -12,11 +12,17 @@
   font-size: 9pt;
   width: 315px;
 }
-
+.sc-toc-item-container-folder-view.on {
+  font-weight: bold;
+}
 .sc-toc-item-container-folder-view.not-in-scale {
-  color: lightgray;
   font-style: italic;
 }
+
+.sc-toc-item-container-folder-view.not-in-scale.on {
+  color: lightgray;
+}
+
 .sc-toc-item-layer-label {
   display: inline-table;
   position: relative;

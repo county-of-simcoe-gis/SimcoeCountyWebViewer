@@ -32,7 +32,6 @@ class TOCFolderView extends Component {
               saveLayerOptions={this.props.saveLayerOptions[group.value]}
               onLayerChange={this.props.onLayerChange}
               onLegendToggle={this.props.onLegendToggle}
-              onLegendToggleGroup={this.props.onLegendToggleGroup}
               onLayerVisibilityGroup={this.props.onLayerVisibilityGroup}
               onGroupFolderToggle={this.props.onGroupFolderToggle}
               onSliderChange={this.props.onSliderChange}

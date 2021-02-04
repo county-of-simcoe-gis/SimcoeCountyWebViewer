@@ -15,7 +15,7 @@ const storageExtentKey = "Map Extent";
 
 const myMapLayerName = "local:myMaps";
 const excludedProps = ["_layerProperties", "rebuildParams", "_layerVisible", "_layerOpacity", "_layerType", "layerFeatures"];
-const includedLayerProps = ["name", "rebuildParams", "displayName", "disableParcelClick", "wfsUrl", "rootInfoUrl", "liveLayer", "queryable", "opaque"];
+const includedLayerProps = ["name", "rebuildParams", "displayName", "disableParcelClick", "wfsUrl", "rootInfoUrl", "liveLayer", "queryable", "opaque", "userLayer"];
 
 /*
 map config example object
@@ -187,7 +187,7 @@ export function mergeGroups(originalGroups, newGroups){
       } else if (a.value > b.value) {
         return 1;
       }else{
-        return;
+        return 0;
       }
     });
 }
@@ -516,6 +516,7 @@ export function layerToJson(layer, callback) {
   returnObject["_layerSourceType"] = LayerHelpers.getLayerSourceType(layerSource);
   returnObject["_layerVisible"] = olLayer.getVisible();
   returnObject["_layerOpacity"] = olLayer.getOpacity();
+
   //returnObject["_layerProperties"] = olLayer.getProperties();
   const olLayerProperties = olLayer.getProperties();
   const returnLayerProperties = {};
@@ -603,7 +604,15 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType,secure
     let opaque = layer.opaque !== undefined ? layer.opaque : false;
     if (layerTitle === undefined) layerTitle = layerNameOnly;
     const keywords = layer.KeywordList;
-    const styleUrl = layer.Style !== undefined ? layer.Style[0].LegendURL[0].OnlineResource.replace("http:", "https:") : "";
+
+    let styleUrl = layer.Style !== undefined ? layer.Style[0].LegendURL[0].OnlineResource.replace("http:", "https:") : "";
+    // STATIC IMAGE LEGEND
+    let legendSizeOverride = _getStaticImageLegend(keywords);
+
+    if (legendSizeOverride && styleUrl !== "" ) {
+      const legendSize = layer.Style !== undefined ? layer.Style[0].LegendURL[0].size : [20,20];
+      styleUrl = styleUrl.replace("width=20", `width=${legendSize[0]}`).replace("height=20", `height=${legendSize[1]}`);
+    }
     const serverUrl = group.wmsGroupUrl.split(`/${geoserverPath}/`)[0] + `/${geoserverPath}`;
     // const wfsUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName.split(" ").join("%20")}&outputFormat=application/json&cql_filter=`;
     // const wfsUrl = wfsUrlTemplate(serverUrl, layer.Name[0]);
@@ -630,6 +639,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType,secure
     // ATTRIBUTE TABLE
     let noAttributeTable = _getNoAttributeTable(keywords);
 
+    
     // TOC DISPLAY NAME
     const tocDisplayName = layerTitle;
 
@@ -652,8 +662,12 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType,secure
     let layerVisible = false;
     if (savedLayers !== undefined) {
       const savedLayer = savedLayers[layerNameOnly];
-      if (savedLayer !== undefined && savedLayer.visible) layerVisible = true;
-      if (savedLayer !== undefined && savedLayer.opacity && savedLayer.opacity !== opacity) opacity = savedLayer.opacity;
+      if (savedLayer !== undefined){
+        if (savedLayer.visible) layerVisible = true;
+        if (savedLayer.opacity) opacity = savedLayer.opacity;
+        if (savedLayer.index) layerIndex = savedLayer.index;
+  
+      } 
     } else if (visibleLayers.includes(layerNameOnly)) layerVisible = true;
 
     // LAYER PROPS
@@ -923,6 +937,15 @@ function _getNoAttributeTable(keywords) {
   else return false;
 }
 
+function _getStaticImageLegend(keywords) {
+  if (keywords === undefined) return false;
+  const keyword = keywords.find(function(item) {
+    return item.indexOf("STATIC_IMAGE_LEGEND") !== -1;
+  });
+  if (keyword !== undefined) return true;
+  else return false;
+}
+
 export function disableLayersVisiblity(layers, callback) {
   var newLayers = [];
   for (let index = 0; index < layers.length; index++) {
@@ -1019,7 +1042,7 @@ export function resetLayerDefaults(layers, callback) {
   }
 }
 
-export function updateLayerIndex(layers, callback) {
+export function updateLayerIndex(layers, callback=undefined) {
   var newLayers = [];
   let layerIndex = layers.length + layerIndexStart;
   for (let index = 0; index < layers.length; index++) {
@@ -1028,9 +1051,13 @@ export function updateLayerIndex(layers, callback) {
     let newLayer = Object.assign({}, layer);
     newLayer.layer.setZIndex(layerIndex);
     newLayer.drawIndex = layerIndex;
-    newLayers.push(newLayer);
-    if (index === layers.length - 1) callback(newLayers.concat([]));
+    newLayer.index = layerIndex;
 
+    newLayers.push(newLayer);
+    if (index === layers.length - 1) {
+      if (callback!==undefined) callback(newLayers.concat([]));
+      else return newLayers.concat([]);
+    }
     layerIndex--;
   }
 }

@@ -98,6 +98,9 @@ onMenuItemClick = (action, layerInfo) => {
     case "sc-floating-menu-zoom-to-layer-visible":
       this.zoomToVisibleScale(layerInfo);
       break;
+    case "sc-floating-menu-remove-layer":
+      this.props.onRemoveLayer(layerInfo.name, layerInfo.group, ()=>{});
+      break;
     case "sc-floating-menu-attribute-table":
       if (layerInfo.noAttributeTable) helpers.showMessage("Table", "Attribute table disabled for this layer.");
       else window.emitter.emit("openAttributeTable", layerInfo.serverUrl, layerInfo.name);
@@ -159,6 +162,9 @@ render(){
         </MenuItem>
         <MenuItem className={this.props.layerInfo.canDownload ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-download">
           <FloatingMenuItem imageName={"download.png"} label="Download" />
+        </MenuItem>
+        <MenuItem className={this.props.layerInfo.layer.get("userLayer") ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-remove-layer">
+          <FloatingMenuItem imageName={"eraser.png"} label="Remove Layer" />
         </MenuItem>
         <MenuItem className="sc-layers-slider" key="sc-floating-menu-opacity">
           Adjust Transparency

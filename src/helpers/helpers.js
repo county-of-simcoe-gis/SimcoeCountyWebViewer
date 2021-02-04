@@ -368,17 +368,29 @@ export function showMessage(title = "Info", messageText = "Message", color = mes
 
   const message = ReactDOM.render(
     <ShowMessage id={domId} key={domId} title={title} message={messageText} color={color} hideButton={hideButton} />,
-    document.getElementById("sc-sidebar-message-container")
+    document.getElementById("sc-sidebar-message-container"),
+    ()=>{
+      setTimeout(() => {
+        try {
+          ReactDOM.unmountComponentAtNode(document.getElementById("sc-sidebar-message-container"));
+        } catch (err) {
+          console.log(err);
+        }
+      }, timeout);
+    }
   );
 
   //console.log(message);
-  setTimeout(() => {
-    try {
-      ReactDOM.unmountComponentAtNode(message.myRef.current.parentNode);
-    } catch (err) {
-      console.log(err);
-    }
-  }, timeout);
+  // setTimeout(() => {
+  //   try {
+  //     ReactDOM.unmountComponentAtNode(message.myRef.current.parentNode);
+  //   } catch (err) {
+  //     const domId = "sc-show-message-content";
+  //     var existingMsg = document.getElementById(domId);
+  //     if (existingMsg !== undefined && existingMsg !== null) existingMsg.remove();
+  //     console.log(err);
+  //   }
+  // }, timeout);
 }
 
 export function searchArrayByKey(nameKey, myArray) {

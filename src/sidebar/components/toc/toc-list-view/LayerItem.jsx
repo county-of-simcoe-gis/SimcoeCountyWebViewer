@@ -53,8 +53,8 @@ class LayerItem extends Component {
     //console.log("List View Layer Item Render");
     const { layerInfo } = this.props;
     let containerClassName = "sc-toc-item-container";
-    if (!this.isVisibleAtScale) containerClassName = "sc-toc-item-container not-in-scale";
-    else if (layerInfo.visible && this.isVisibleAtScale) containerClassName = "sc-toc-item-container on";
+    if (!this.isVisibleAtScale) containerClassName += " not-in-scale";
+    if (layerInfo.visible) containerClassName += " on";
 
     return (
       <div id={layerInfo.name + "_" + layerInfo.group + "_listview"}>

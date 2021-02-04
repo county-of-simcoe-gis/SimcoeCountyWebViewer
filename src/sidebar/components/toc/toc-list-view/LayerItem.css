@@ -11,8 +11,11 @@
 }
 
 .sc-toc-item-container.not-in-scale {
-  font-weight: bold;
-  color: dimgrey;
+  font-style: italic;
+}
+
+.sc-toc-item-container.not-in-scale.on {
+  color: lightgray;
 }
 
 .sc-toc-item-layer-label {

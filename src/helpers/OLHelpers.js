@@ -168,10 +168,15 @@ export class LayerHelpers {
             response = parser.read(responseText);
             response.Capability.Layer.Layer.forEach((layer) => {
               this.getWMSLayers(layer, item => {
-                if (item !== undefined) layers.push(item);
+                
+                if (item !== undefined){
+                  item["url"]=root_url;
+                  layers.push(item);
+                } 
               });
             });
             break;
+            
           default:
             parseString(responseText, function(err, result) {
               result["wfs:WFS_Capabilities"].FeatureTypeList[0].FeatureType.forEach((layer) => {
