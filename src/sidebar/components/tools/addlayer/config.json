@@ -45,10 +45,10 @@
     ],
     "dataTypes": [
         {"label":"URL", "options":[
-            {"label":"Web Map Service (WMS)", "value":"wms"},
-            {"label":"Web Map Tile Service (WMTS)", "value":"wmts"},
-            {"label":"Web Feature Service (WFS)", "value":"wfs_kml"},
-            {"label":"Tile with XYZ format", "value":"xyz"}
+            {"label":"Web Map Service (WMS)", "value":"wms", "default":"https://opengis.simcoe.ca/geoserver/ows"},
+            {"label":"Web Map Tile Service (WMTS)", "value":"wmts", "default":"https://opengis.simcoe.ca/geoserver/ows"},
+            {"label":"Web Feature Service (WFS)", "value":"wfs_kml", "default":"https://opengis.simcoe.ca/geoserver/ows"},
+            {"label":"Tile with XYZ format", "value":"xyz", "default":"https://opengis.simcoe.ca/geoserver/ows"}
         ]},
         {"label":"File", "options": [
             {"label":"GML3", "value":"local_gml3"},

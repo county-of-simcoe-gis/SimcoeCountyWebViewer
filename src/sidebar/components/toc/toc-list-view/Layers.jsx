@@ -107,6 +107,7 @@ class Layers extends Component {
                 onLayerOptionsClick={this.props.onLayerOptionsClick}
                 onLayerChange={this.props.onLayerChange}
                 scrollTop={this.props.id + "-sortablevirtuallist"}
+
                 //scrollToIndex={50}
               />
             );

@@ -40,7 +40,8 @@ class AddLayerForm extends Component {
       errorRegister: [],
       file_formats: [],
       isRunning: false,
-      tabIndex: 0,
+      tabIndex: 2,
+      saveLayer: false,
     };
     this.defaultLayerOption = { label: "Not Found", value: "" };
   }
@@ -103,7 +104,8 @@ class AddLayerForm extends Component {
   };
   getFileFormat = (value) => {
     const items = addLayerConfig.translations.filter((item) => item.extensions !== undefined);
-    return items.filter((item) => item.extensions.indexOf(value) !== -1)[0];
+    const returnItem = items.filter((item) => item.extensions === value)[0]
+    return returnItem;
   };
   onClose = () => {
     this.props.onClose();
@@ -119,8 +121,12 @@ class AddLayerForm extends Component {
     items = items.filter((item) => item.label === filterLabel)[0];
     let options = items.options;
     const selectedFormat = this.getSelectedFormat(options[0].value);
+    let serverUrl = this.state.serverUrl;
+    if (serverUrl === "") {
+      if ( options[0] !== undefined && options[0].default !== undefined &&  options[0].default !== null ) serverUrl= options[0].default;
+    }
     this.setState(
-      { selectFormatOptions: options, selectFormatOption: options[0], selectedFormat: selectedFormat, isFile: selectedFormat.source === "file", showExtent: selectedFormat.type === "static" },
+      { serverUrl:serverUrl, selectFormatOptions: options, selectFormatOption: options[0], selectedFormat: selectedFormat, isFile: selectedFormat.source === "file", showExtent: selectedFormat.type === "static" },
       () => {
         if (this.state.selectLayerOption !== this.defaultLayerOption) this.clearLayers();
       }
@@ -128,7 +134,12 @@ class AddLayerForm extends Component {
   };
   onLayerFormatChange = (selection) => {
     const selectedFormat = this.getSelectedFormat(selection.value);
-    this.setState({ selectFormatOption: selection, selectedFormat: selectedFormat }, () => {
+    let serverUrl = this.state.serverUrl;
+    if (serverUrl === "") {
+      const currentFormatOption =this.state.selectFormatOptions.filter((item)=>{ return item.value === selection.value})[0];
+      if (currentFormatOption.default !== undefined && currentFormatOption.default !== null ) serverUrl=currentFormatOption.default;
+    }
+    this.setState({ selectFormatOption: selection, selectedFormat: selectedFormat, serverUrl: serverUrl }, () => {
       if (this.state.selectLayerOption !== this.defaultLayerOption) this.clearLayers();
     });
   };
@@ -166,6 +177,8 @@ class AddLayerForm extends Component {
           selectLayerOption: selectedLayer,
           hasLayers: selectLayers.length > 0,
           discovery_message: selectLayers.length > 0 ? "" : "NO LAYERS FOUND",
+        },()=>{
+          if (this.state.hasLayers) this.onLayerSelectChange(selectedLayer);
         });
       });
     });
@@ -219,6 +232,9 @@ class AddLayerForm extends Component {
                 selectLayerOption: selectedLayer,
                 hasLayers: serviceLayers.length > 0,
                 discovery_message: serviceLayers.length > 0 ? "" : "NO LAYERS FOUND",
+              }, ()=>{
+                  if (this.state.hasLayers) this.onServiceLayerSelectChange(this.state.selectLayerOption);
+              
               });
             }
           });
@@ -255,7 +271,9 @@ class AddLayerForm extends Component {
     layer.setProperties({
       name: this.state.layer_name,
       displayName: this.state.layer_displayName,
+      tocDisplayName: this.state.layer_displayName,
       disableParcelClick: queryable,
+      userLayer:true,
       queryable: queryable,
       opaque: opaque,
       INFO_FORMAT: infoFormat,
@@ -263,6 +281,7 @@ class AddLayerForm extends Component {
     });
     const newLayer = {
       name: this.state.layer_name, // FRIENDLY NAME
+      tocDisplayName: this.state.layer_displayName,
       height: 30, // HEIGHT OF DOM ROW FOR AUTOSIZER
       drawIndex: undefined, // INDEX USED BY VIRTUAL LIST
       index: undefined, // INDEX USED BY VIRTUAL LIST
@@ -278,6 +297,7 @@ class AddLayerForm extends Component {
       maxScale: undefined, //MaxScaleDenominator from geoserver
       liveLayer: styleUrl === "" ? false : true, // LIVE LAYER FLAG
       wfsUrl: "",
+      userLayer:true,
       displayName: this.state.layer_displayName,
       canDownload: false,
       group: "",
@@ -285,7 +305,7 @@ class AddLayerForm extends Component {
       infoFormat: infoFormat,
       xslTemplate: xslTemplate,
     };
-    window.emitter.emit("addCustomLayer", newLayer, this.state.selectGroupOption.value, showLayer);
+    window.emitter.emit("addCustomLayer", newLayer, this.state.selectGroupOption.value, showLayer, this.state.saveLayer);
     setTimeout(() => {
       this.clearLayers();
     }, 500);
@@ -321,6 +341,7 @@ class AddLayerForm extends Component {
   onLayerFileChange = (file) => {
     let selectedFile = file.target.files[0];
     let displayName = this.state.layer_displayName;
+    if (selectedFile === undefined) return;
     let file_extension = selectedFile.name.split(".").pop();
     const selectedFormat = this.getFileFormat(file_extension.toLowerCase());
     if (!this.state.userEdit_displayName)
@@ -336,6 +357,8 @@ class AddLayerForm extends Component {
       this.setState({ layer_file: selectedFile, layer_displayName: displayName, selectedFormat: selectedFormat });
     }
   };
+
+
   onAddLayerClick = () => {
     const format = this.state.selectedFormat;
     this.isValid(true, (isValid) => {
@@ -365,7 +388,7 @@ class AddLayerForm extends Component {
     this.props.onClose();
   }
   onTabSelect = (tabIndex) => {
-    this.setState({ tabIndex }, () => {
+    this.setState({ tabIndex, serverUrl:"" }, () => {
       this.onLayerSourceChange(tabIndex === 2);
       if (this.state.tabIndex === 0) this.onCheckServiceForLayers();
     });
@@ -417,6 +440,15 @@ class AddLayerForm extends Component {
                 }}
                 value={this.state.layer_displayName}
               />
+            </div>
+            <div className="sc-add-layer-row">
+            <label htmlFor="sc-add-layer-save">Save layer:</label>
+            <input 
+              id="sc-add-layer-save" 
+              type="checkbox"
+              checked={this.state.saveLayer}
+              onChange={(evt)=>{this.setState({saveLayer:evt.target.checked})}}
+            />
             </div>
           </div>
           <div className="sc-title">Source</div>
@@ -471,6 +503,7 @@ class AddLayerForm extends Component {
                     }}
                     onFocus={(evt) => {
                       helpers.disableKeyboardEvents(true);
+                      evt.target.select();
                     }}
                     onBlur={(evt) => {
                       helpers.disableKeyboardEvents(false);
@@ -479,7 +512,7 @@ class AddLayerForm extends Component {
                   />
                 </div>
                 <div className="sc-add-layer-row">
-                  <button id="sc-add-layer-discover" type="button" name="check" className="sc-button" disabled={this.state.serverUrl !== "" || this.state.isRunning? false : true} onClick={this.onCheckForLayers}>
+                  <button id="sc-add-layer-discover" type="button" name="check" className="sc-button" disabled={this.state.serverUrl === "" || this.state.isRunning} onClick={this.onCheckForLayers}>
                     {this.state.isRunning ? this.loadingMessage : "Check for layers"}
                   </button>
                 </div>
@@ -498,7 +531,16 @@ class AddLayerForm extends Component {
                 <div className={"sc-title"}>Supported file types</div>
                 <div className={"sc-add-layer-row file-extensions"}>{this.state.file_formats.join(", ")}</div>
                 <div className={"sc-add-layer-row"}>
-                  <input id="sc-add-layer-file" className="sc-add-layer-input file" type="file" name="file" size="60" onChange={this.onLayerFileChange} />
+                  <input 
+                      id="sc-add-layer-file" 
+                      className="sc-add-layer-input file" 
+                      type="file" 
+                      name="file" 
+                      size="60" 
+                      accept={`.${this.state.file_formats.join(", .")}`} 
+                      onChange={this.onLayerFileChange}
+
+                    />
                 </div>
                 <div className={this.state.showExtent ? "sc-add-layer-row" : "sc-hidden"}>
                   <label htmlFor="sc-add-layer-extent">Extent:</label>

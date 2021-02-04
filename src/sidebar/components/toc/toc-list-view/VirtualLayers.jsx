@@ -55,8 +55,8 @@ class VirtualLayers extends Component {
 
     return (
       <SortableItem
-        key={this.props.id + "-sortable-item-" + index}
-        id={this.props.id + "-sortable-item-" + index}
+        key={this.props.id + "-sortable-item-" + item.name}
+        id={this.props.id + "-sortable-item-" + item.name}
         //key={index}
         index={index}
         style={style}
