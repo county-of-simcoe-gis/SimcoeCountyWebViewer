@@ -137,22 +137,22 @@ refreshTOC = (isReset, callback=undefined) => {
         this.getSavedCustomLayers("LIST", (savedGroups)=>{
           if (savedGroups !== undefined) {
             listLayerGroups = TOCHelpers.mergeGroups(listLayerGroups, savedGroups[0]);
-            listLayerGroups = listLayerGroups.map(group=>{
-              group.layers = this.sortLayers(group.layers);
-              return group;
-             });
+            
           }
         });
         this.getSavedCustomLayers("FOLDER", (savedGroups)=>{
           if (savedGroups !== undefined){
             folderLayerGroups = TOCHelpers.mergeGroups(folderLayerGroups, savedGroups[0]);
-            folderLayerGroups = folderLayerGroups.map(group=>{
-              group.layers = this.sortLayers(group.layers);
-              return group;
-             });
           } 
         });
-
+        listLayerGroups = listLayerGroups.map(group=>{
+          group.layers = this.sortLayers(group.layers);
+          return group;
+         });
+        folderLayerGroups = folderLayerGroups.map(group=>{
+          group.layers = this.sortLayers(group.layers);
+          return group;
+         });
         if (isReset) this.updateLayerVisibility("CLEAR");
         
         this.setState(
@@ -179,21 +179,23 @@ refreshTOC = (isReset, callback=undefined) => {
         this.getSavedCustomLayers("LIST", (savedGroups)=>{
           if (savedGroups !== undefined) {
             listLayerGroups = TOCHelpers.mergeGroups(listLayerGroups, savedGroups[0]);
-            listLayerGroups = listLayerGroups.map(group=>{
-              group.layers = this.sortLayers(group.layers);
-              return group;
-             });
+            
           }
         });
         this.getSavedCustomLayers("FOLDER", (savedGroups)=>{
           if (savedGroups !== undefined){
             folderLayerGroups = TOCHelpers.mergeGroups(folderLayerGroups, savedGroups[0]);
-            folderLayerGroups = folderLayerGroups.map(group=>{
-              group.layers = this.sortLayers(group.layers);
-              return group;
-             });
+            
           } 
         });
+        listLayerGroups = listLayerGroups.map(group=>{
+          group.layers = this.sortLayers(group.layers);
+          return group;
+         });
+        folderLayerGroups = folderLayerGroups.map(group=>{
+          group.layers = this.sortLayers(group.layers);
+          return group;
+         });
         if (isReset) this.updateLayerVisibility("CLEAR");
 
         this.setState(
@@ -220,20 +222,22 @@ refreshTOC = (isReset, callback=undefined) => {
         this.getSavedCustomLayers("LIST", (savedGroups)=>{
           if (savedGroups !== undefined) {
             listLayerGroups = TOCHelpers.mergeGroups(listLayerGroups, savedGroups[0]);
-            listLayerGroups = listLayerGroups.map(group=>{
-              group.layers = this.sortLayers(group.layers);
-              return group;
-             });
+            
           }
         });
         this.getSavedCustomLayers("FOLDER", (savedGroups)=>{
           if (savedGroups !== undefined){
             folderLayerGroups = TOCHelpers.mergeGroups(folderLayerGroups, savedGroups[0]);
-            folderLayerGroups = folderLayerGroups.map(group=>{
-              group.layers = this.sortLayers(group.layers);
-              return group;
-             });
+            
           } 
+        });
+      listLayerGroups = listLayerGroups.map(group=>{
+        group.layers = this.sortLayers(group.layers);
+        return group;
+        });
+      folderLayerGroups = folderLayerGroups.map(group=>{
+        group.layers = this.sortLayers(group.layers);
+        return group;
         });
     if (isReset) this.updateLayerVisibility("CLEAR");
 

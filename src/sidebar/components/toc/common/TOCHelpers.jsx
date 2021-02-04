@@ -1051,8 +1051,7 @@ export function updateLayerIndex(layers, callback=undefined) {
     let newLayer = Object.assign({}, layer);
     newLayer.layer.setZIndex(layerIndex);
     newLayer.drawIndex = layerIndex;
-    newLayer.index = layerIndex;
-
+    
     newLayers.push(newLayer);
     if (index === layers.length - 1) {
       if (callback!==undefined) callback(newLayers.concat([]));
