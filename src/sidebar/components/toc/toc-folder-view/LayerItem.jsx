@@ -89,6 +89,9 @@ class LayerItem extends Component {
           <div className={this.props.layer.secured === null || !this.props.layer.secured ? "sc-hidden" : "sc-toc-item-layer-info-secured"} title="This layer is secured.">
             <img src={images["lock.png"]} alt="secure" />
           </div>
+          <div className={this.props.layer.userLayer === null || !this.props.layer.userLayer ? "sc-hidden" : "sc-toc-item-layer-info-secured"} title="This layer was user added.">
+            <img src={images["user-icon.png"]} alt="user added layer" />
+          </div>
           <div className="sc-toc-item-toolbox-folder-view" title="Layer Options" onClick={(evt) => this.props.onLayerOptionsClick(evt, this.props.layer)}>
             <img src={images["more-options.png"]} alt="More Options" />
           </div>

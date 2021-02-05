@@ -37,7 +37,7 @@ class TOCHeader extends Component {
             <FloatingMenuItem imageName={"edit-rotate24.png"} label={switchMenuLabel} />
           </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-save">
-            <FloatingMenuItem imageName={"save-disk.png"} label="Save Layer Visibility" />
+            <FloatingMenuItem imageName={"save-disk.png"} label="Save Layer Changes" />
           </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-reset">
             <FloatingMenuItem imageName={"reset.png"} label="Reset Layers to Default" />

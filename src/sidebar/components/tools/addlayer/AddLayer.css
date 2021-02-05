@@ -28,7 +28,7 @@
 .sc-add-layer-content {
   position: absolute;
   margin-bottom: 0px;
-  overflow: auto;
+  overflow: overlay;
   padding: 5px !important;
   bottom: 0px;
   top: 106px;
