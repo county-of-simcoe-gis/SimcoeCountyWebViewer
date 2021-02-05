@@ -95,6 +95,8 @@ export function makeLayer(
     window.map.addLayer(newLayer);
   }
 
+  let userLayer = newLayer.get("userLayer");
+  if (userLayer === undefined) userLayer=false;
   const returnLayer = {
     name: layerId,
     displayName: layerName,
@@ -115,6 +117,7 @@ export function makeLayer(
     liveLayer: liveLayer, // LIVE LAYER FLAG
     groupName: group.label,
     group: group.value,
+    userLayer: userLayer,
   };
   callback(returnLayer);
 }
