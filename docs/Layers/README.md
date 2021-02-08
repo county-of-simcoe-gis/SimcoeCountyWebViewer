@@ -58,11 +58,32 @@ To access layer specific options click the ellipsis to the right of the layer na
 <br />![layer options](images/layer-options.gif "Open layer options")
 
 ### Metadata
-### Zoom to Layer
-### Zoom to Visible Scale
-### Download
-### Adjust Transparency
-### Remove Layer
-## List View
-## Folder View
+View Layer Metadata
+<br />![layer metadata](images/layer-metadata.gif "View Layer Metadata")
 
+### Zoom to Layer
+Zooms map to the layer extent
+<br />![layer extent](images/layer-zoom-extent.gif "Zoom layer extent")
+
+### Zoom to Visible Scale
+Zooms map to the visible scale of a layer.
+<br />![layer scale](images/layer-zoom-scale.gif "Zoom layer scale")
+
+### Download
+Download the selected layer.
+<br />![layer download](images/layer-download.gif "Download Layer")
+
+### Adjust Transparency
+Adjust the opacity/transparency of a layer.
+<br />![layer opacity](images/layer-opacity.gif "Adjust Layer Opacity")
+### Remove Layer
+For layers that have been added using the [[Add Data Tool]] there is an option to remove the layer
+<br />![remove user layer](images/layer-remove-user-layer.png "Remove user layer")
+
+## List View
+List View allows you to switch between groups of layers using a drop down selection.  In this view you can also reorder layers.
+<br />![layer list view](images/layer-list-view.gif "Layer list view")
+
+## Folder View
+Folder View allows you to see all available layers and groups in a single view. In this view layers cannot be reordered.
+<br />![layer folder view](images/layer-folder-view.gif "Layer folder view")
