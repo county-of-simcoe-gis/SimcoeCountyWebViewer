@@ -60,7 +60,11 @@ class LayerItem extends Component {
       <div id={layerInfo.name + "_" + layerInfo.group + "_listview"}>
         <div className={containerClassName}>
           <div className="sc-toc-item-plus-minus-container" onClick={() => this.props.onLegendToggle(layerInfo, this.props.group)}>
-            <img src={layerInfo.showLegend ? images["minus.png"] : images["plus.png"]} alt={layerInfo.showLegend ? "minus" : "plus"} />
+            <img
+              src={this.props.layerInfo.styleUrl === "" ? images["no-legend.png"] : this.props.layerInfo.showLegend ? images["minus.png"] : images["plus.png"]}
+              alt="legend toggle"
+              title={this.props.layerInfo.styleUrl === "" ? "No Legend Available" : this.props.layerInfo.showLegend ? "Hide Legend" : "Show Legend"}
+            />
             <div className="sc-toc-item-plus-minus-sign" />
             <div className="sc-toc-item-lines-expanded" />
           </div>
