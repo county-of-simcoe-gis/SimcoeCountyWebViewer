@@ -28,12 +28,12 @@ Including:
         - Visibility
         - Opacity
     Save Layers/Table of Contents style
-    Save any layers added throught the [Add Data Tool](../Tools/Add Data)
+    Save any layers added throught the [[Add Data Tool]]
     ![save layer changes](images/save-layer-changes.gif "Save Layer Changes")
 
 ### Reset Layers to Default
 Reloads Layers, this will also reload any saved layers.
-![reset layer](images/reset-layers.gif "Reset Layers to Default")
+![reset layer](images/reset-layers.png "Reset Layers to Default")
 
 ### Turn off All Layers
 Turns off all currently visible layers
@@ -48,10 +48,10 @@ In list view layers can be moved up and down by clicking an dragging them.  Alte
 ![sort layers](images/sort-layers.gif "Sort Layers")
 
 ## Layer Icons
-![layer interactable](images/layer-icon-identify.png "This layer is Interactable in the map.")
-![layer downloadable](images/layer-icon-download.png "This layer can be downloaded")
-![layer user added](images/layer-icon-user-added.png "This layer was added by a user")
-![layer legend](images/layer-icon-legend.png "Legend not available, show layer legend, and hide layer legend.")
+This layer is Interactable in the map. ![layer interactable](images/layer-icon-identify.png "This layer is Interactable in the map.")
+This layer can be downloaded ![layer downloadable](images/layer-icon-download.png "This layer can be downloaded")
+This layer was added by a user ![layer user added](images/layer-icon-user-added.png "This layer was added by a user")
+Legend not available, show layer legend, and hide layer legend. ![layer legend](images/layer-icon-legend.png "Legend not available, show layer legend, and hide layer legend.")
 
 ## Layer Options
 To access layer specific options click the ellipsis to the right of the layer name.
