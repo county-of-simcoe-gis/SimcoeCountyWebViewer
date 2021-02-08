@@ -136,7 +136,7 @@ render(){
         styleMode={helpers.isMobile() ? "left" : "right"}
       >
         <MenuItem 
-          className={(this.props.layerInfo.metadataUrl !== undefined && this.props.layerInfo.metadataUrl !== null) || this.props.layerInfo.layer instanceof VectorLayer ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"}
+          className={(this.props.layerInfo.metadataUrl !== undefined && this.props.layerInfo.metadataUrl !== null) ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"}
           key="sc-floating-menu-metadata">
           <FloatingMenuItem imageName={"metadata.png"} label="Metadata" />
         </MenuItem>

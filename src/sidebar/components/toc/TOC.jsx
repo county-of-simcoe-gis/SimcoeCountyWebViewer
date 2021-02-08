@@ -346,8 +346,20 @@ saveCustomLayer = (layer, callback=undefined) => {
   });
 }
 removeCustomLayer = (layerName, groupName, callback=undefined) => {
+  let savedGroups = helpers.getItemsFromStorage(this.state.type === "LIST" ? this.storageKeyCustomLayersList : this.storageKeyCustomLayersFolder);
+  
   let layerGroups = this.getActiveLayerGroups();
   let layersGroup = layerGroups.filter((group) => group.value === groupName)[0];
+
+  //removed saved layer
+  if (savedGroups!==undefined && savedGroups[layersGroup.value]!==undefined){
+    let savedLayers = savedGroups[layersGroup.value].layers;
+    delete savedLayers[layerName];
+    if (Object.keys(savedLayers).length === 0) delete savedGroups[layersGroup.value];
+    else savedGroups[layersGroup.value].layers = savedLayers;
+    helpers.saveToStorage(this.state.type === "LIST" ? this.storageKeyCustomLayersList : this.storageKeyCustomLayersFolder, savedGroups);
+  }
+  
   layersGroup.layers = layersGroup.layers.filter((item) => {
             if (item.name!==layerName) {
               return true; 
