@@ -251,11 +251,13 @@ class AddLayerForm extends Component {
     let xslTemplate = "";
     if (this.state.selectLayerOption !== this.defaultLayerOption) {
       const selectedLayer = this.state.selectLayerOptions.filter((item) => item.value === this.state.selectLayerOption.value)[0];
-      if (selectedLayer.style !== undefined) styleUrl = selectedLayer.style;
-      if (selectedLayer.queryable !== undefined) queryable = selectedLayer.queryable;
-      if (selectedLayer.opaque !== undefined) opaque = selectedLayer.opaque;
-      if (selectedLayer.INFO_FORMAT !== undefined) infoFormat = selectedLayer.INFO_FORMAT;
-      if (selectedLayer.XSL_TEMPLATE !== undefined) xslTemplate = selectedLayer.XSL_TEMPLATE;
+      if(selectedLayer !== undefined){
+        if (selectedLayer.style !== undefined) styleUrl = selectedLayer.style;
+        if (selectedLayer.queryable !== undefined) queryable = selectedLayer.queryable;
+        if (selectedLayer.opaque !== undefined) opaque = selectedLayer.opaque;
+        if (selectedLayer.INFO_FORMAT !== undefined) infoFormat = selectedLayer.INFO_FORMAT;
+        if (selectedLayer.XSL_TEMPLATE !== undefined) xslTemplate = selectedLayer.XSL_TEMPLATE;
+      }
     }
 
     layer.setVisible(true);
