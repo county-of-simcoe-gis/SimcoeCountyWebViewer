@@ -168,9 +168,18 @@ class AddLayerForm extends Component {
     //CLEAR LAYERS LIST AND ATTEMPT TO REPOPULATE
     this.setState({ selectLayerOptions: selectLayers, selectLayerOption: selectedLayer, isRunning: true }, () => {
       LayerHelpers.getCapabilities(this.state.serverUrl, this.state.selectedFormat.source, (layers) => {
-        selectLayers = layers;
+        selectLayers = [];
+        layers.forEach((layer) => {
+          if (this.state.serverUrl.toLowerCase().indexOf("wmsserver") !== -1){
+            layer["INFO_FORMAT"] = addLayerConfig.argis.INFO_FORMAT;
+            layer["XSL_TEMPLATE"] = helpers.getConfigValue("originUrl") + addLayerConfig.argis.XSL_TEMPLATE;
+          }
+          selectLayers.push(layer);
+        });
         if (selectLayers !== undefined && selectLayers.length > 0) selectedLayer = selectLayers[0];
         else selectLayers = [];
+
+   
         this.setState({
           isRunning: false,
           selectLayerOptions: selectLayers,
