@@ -3,6 +3,8 @@ import React, { Component } from "react";
 import { sortableContainer } from "react-sortable-hoc";
 import { AutoSizer } from "react-virtualized";
 import VirtualLayers from "./VirtualLayers.jsx";
+import * as helpers from "../../../../helpers/helpers";
+
 
 // CUSTOM
 import "./Layers.css";
@@ -21,6 +23,7 @@ class Layers extends Component {
     this.state = {
       //allLayers: {},
       //layers: [],
+      recalcId:"",
     };
 
     // LISTEN FOR MAP TO MOUNT
@@ -28,6 +31,18 @@ class Layers extends Component {
 
     // LISTEN FOR SEARCH RESULT
     window.emitter.addListener("activeTocLayer", (layerItem) => {if (this.props.visible) this.onActivateLayer(layerItem);});
+
+    window.addEventListener("resize", this.updateRecalcId);
+
+  }
+
+  updateRecalcId = () => {
+    this.lastPosition = document.getElementById(this.virtualId).scrollTop;
+    this.setState({recalcId:helpers.getUID()}, () => {
+      setTimeout(()=>{
+        document.getElementById(this.virtualId).scrollTop += this.lastPosition;
+      },10);
+    });
   }
 
   onActivateLayer = (layerItem) => {
@@ -79,8 +94,9 @@ class Layers extends Component {
     return (
       <div className="sc-toc-layer-container">
         <AutoSizer disableWidth 
-                key={this.props.id + "-autosizer"}
-                id={this.props.id + "-autosizer"}>
+                key={this.props.id + "-autosizer-" + this.state.recalcId}
+                id={this.props.id + "-autosizer"}
+               >
           {({ height }) => {
             return (
               <SortableVirtualList
@@ -97,7 +113,7 @@ class Layers extends Component {
                 helperClass={"sc-layer-list-sortable-helper"}
                 rowHeight={height}
                 height={height}
-                autoHeight
+                
                 lockAxis={"y"}
                 distance={5}
                 group={this.props.group}
