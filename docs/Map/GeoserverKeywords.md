@@ -1,4 +1,10 @@
 # GEOSERVER KEYWORDS
+
+## Geoserver Layer Group Keywords
+
+This controls which layers are visible by default.  This can be overriden by saving layer changes in the Layers tab.
+#### VISIBLE_LAYERS=layer1,layer2
+
 ## Geoserver Layer Group Config (Group Loader) Keywords
 
 Map Zoom level
