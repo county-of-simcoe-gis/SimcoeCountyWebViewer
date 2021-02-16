@@ -370,7 +370,11 @@ class SCMap extends Component {
     const point = new Point(this.contextCoords);
     const feature = new Feature(point);
     this.identifyIconLayer.getSource().addFeature(feature);
+    
     window.map.addLayer(this.identifyIconLayer);
+    setTimeout(()=>{
+      window.map.removeLayer(this.identifyIconLayer);
+    },3000)
     window.emitter.emit("loadReport", <Identify geometry={point} />);
   };
 

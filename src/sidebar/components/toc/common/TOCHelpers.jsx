@@ -143,10 +143,12 @@ export async function getMap (mapId=null,urlType, isReset, tocType, callback){
           }
           sourcesProcessed ++;
           if (sourcesProcessed === mapSettings.sources.length){
-            if (defaultGroup === undefined || defaultGroup === null) defaultGroup = layerGroups[0];
-            if ( mapSettings.default_group !== undefined && mapSettings.default_group !== defaultGroup.value ) {
-              defaultGroup = layerGroups.filter((group)=> {return group.value===mapSettings.default_group})[0];
+            if ( mapSettings.default_group !== undefined) {
+              const mapDefaultGroup = layerGroups.filter((group)=> {return group.value===mapSettings.default_group})[0];
+              if (mapDefaultGroup !== undefined) defaultGroup = mapDefaultGroup;
+              else helpers.showMessage(`Configuration Error!`, `Default group ${mapSettings.default_group} could not be loaded.`, helpers.messageColors.red,3000);
             }
+            if (defaultGroup === undefined || defaultGroup === null) defaultGroup = layerGroups[0];
             callback([layerGroups,defaultGroup]);
           }
         });
@@ -663,7 +665,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType,secure
     const maxScale = layer.MaxScaleDenominator;
     // SET VISIBILITY
     let layerVisible = false;
-    if (savedLayers !== undefined) {
+    if (savedLayers !== undefined && savedLayers.length > 0) {
       const savedLayer = savedLayers[layerNameOnly];
       if (savedLayer !== undefined){
         if (savedLayer.visible) layerVisible = true;
