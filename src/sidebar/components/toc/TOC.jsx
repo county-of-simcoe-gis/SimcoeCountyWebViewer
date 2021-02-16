@@ -276,7 +276,7 @@ applySavedLayerOptions = (type) => {
     } catch (e){
       console.warn(e);
     }
-    if (savedGroup.panelOpen !== undefined) group.panelOpen = savedGroup.panelOpen;
+    if (savedGroup !== undefined && savedGroup.panelOpen !== undefined) group.panelOpen = savedGroup.panelOpen;
     group.layers = group.layers.map((layer)=>{
       const savedLayer = savedLayers[layer.name];
       
