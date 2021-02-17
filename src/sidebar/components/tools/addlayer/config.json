@@ -43,6 +43,10 @@
         {"key":"wfs_wkt","source":"wfs","method":"vector","type": "WKT"},
         {"key":"wfs_mvt","source":"wfs","method":"vector","type": "MVT"}
     ],
+    "arcgis":{
+        "INFO_FORMAT":"text/plain",
+        "XSL_TEMPLATE":"/public/xsl/esri_transform.xsl"
+    },
     "dataTypes": [
         {"label":"URL", "options":[
             {"label":"Web Map Service (WMS)", "value":"wms", "default":"https://opengis.simcoe.ca/geoserver/ows"},
