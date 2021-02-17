@@ -72,7 +72,8 @@ Tools specific to a graphic can be accessed from the tools dropdown menu. The dr
 The draw order of graphics is reflected in the table of contents. Items listed at the top will be drawn above graphics which are shown below.
 
 # Delete All:
-1. Delete All at the bottom of the my maps tab allows you to delete all of your graphics at once
+1. Open 'Advanced Options', Delete All at the bottom of the my maps tab allows you to delete all of your graphics at once
+<br />![navigate to add data](./images/mymaps17.gif "Navigate to Add Data Tool")
 
 **Additional Tools:**
 
