@@ -171,8 +171,8 @@ class AddLayerForm extends Component {
         selectLayers = [];
         layers.forEach((layer) => {
           if (this.state.serverUrl.toLowerCase().indexOf("wmsserver") !== -1){
-            layer["INFO_FORMAT"] = addLayerConfig.argis.INFO_FORMAT;
-            layer["XSL_TEMPLATE"] = helpers.getConfigValue("originUrl") + addLayerConfig.argis.XSL_TEMPLATE;
+            layer["INFO_FORMAT"] = addLayerConfig.arcgis.INFO_FORMAT;
+            layer["XSL_TEMPLATE"] = helpers.getConfigValue("originUrl") + addLayerConfig.arcgis.XSL_TEMPLATE;
           }
           selectLayers.push(layer);
         });
