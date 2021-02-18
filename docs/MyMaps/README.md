@@ -1,7 +1,7 @@
 # My Maps
 My maps is the toolset that is part of the advanced tab, my maps enables you to create graphics on the map with the ability to style and edit the graphics.
 
-<br />![navigate to add data](./images/mymaps1.gif "Navigate to Add Data Tool")
+<br />![navigate to My Maps](./images/mymaps1.gif "Navigate to My Maps") 
 
 The my maps tab provides temporary storage of graphics and is not meant to be permanent graphics. If the browser's website storage is deleted, any saved graphics will be lost. Available graphic types are point, line, polyline, polygon, circle, rectangle, arrow, text, and bearing line. Graphics can be added, edited, and deleted from within the my map area of the interactive map window.
 
@@ -71,11 +71,14 @@ Tools specific to a graphic can be accessed from the tools dropdown menu. The dr
 
 The draw order of graphics is reflected in the table of contents. Items listed at the top will be drawn above graphics which are shown below.
 
-# Delete All:
+# To create a bearing line:
+
+
+# To delete all:
 1. Open 'Advanced Options', Delete All at the bottom of the my maps tab allows you to delete all of your graphics at once
 <br />![navigate to add data](./images/mymaps17.gif "Navigate to Add Data Tool")
 
-**Additional Tools:**
+# Additional Tools:
 
 Some additional tools are available at the bottom of the my maps tab:
 
@@ -83,7 +86,3 @@ Some additional tools are available at the bottom of the my maps tab:
 - Delete selected (checked graphics), delete unselected (unchecked graphics), or delete all allows you delete multiple graphics at a time.
 - Show points only, show lines only, or show polygons only allows you to only show graphics of that specific desired type.
 - Zoom to selected (checked graphics) allows you to zoom to graphics that you have checked off in your my items.
-# Adjust My Map Settings 
-- The 'Lock Drawing Tool' allows you to create drawing after drawing without having to reselect the graphic you are wanting to draw.
-- The 'Use Freehand Drawing Tool (Line & Polygon)' allows you to hold down the left mouse button when creating a line or polygon and drag the mouse to create a drawing that represents where the mouse was dragged from start to finish.
- [this viewer](https://maps.simcoe.ca/public)   
