@@ -46,17 +46,6 @@ Each graphic appears as an item in your my items table of contents and provides 
 4. Click and hold to edit the vertices of the shape or move the whole shape
 <br />![navigate to add data](./images/mymaps11.gif "Navigate to Add Data Tool")
 
-# To add a vertex to a graphic:
-1. Click the vertices only edit tool
-2. Click and drag the white point of a graphic
-
-# To delete a graphic's vertex:
-1. Click the vertices only edit tool
-2. Right click on the vertex to be deleted
-3. Select delete vertex
-
-Tools specific to a graphic can be accessed from the tools dropdown menu. The drawing options and delete tools can also be accessed from this menu.
-
 # To create a buffer around a graphic: 
 1. Select the ‘Buffer Area’ tool from the toolbox dropdown menu of the graphic
 <br />![navigate to add data](./images/mymaps12.gif "Navigate to Add Data Tool")
@@ -69,10 +58,12 @@ Tools specific to a graphic can be accessed from the tools dropdown menu. The dr
 6. Once all options are set click the ‘Add this buffer to My Maps Items’ link below the preview buffer to permanently add the buffer as a new graphic in the map
 <br />![navigate to add data](./images/mymaps16.gif "Navigate to Add Data Tool")
 
-The draw order of graphics is reflected in the table of contents. Items listed at the top will be drawn above graphics which are shown below.
-
 # To create a bearing line:
-
+1. Select bearing line and choose a colour
+2. Click once to start the line in the desired location
+3. Move your cursor to the desired location and angle, 
+4. Click again to finish the line 
+<br />![navigate to my maps](./images/mymaps20.gif "Navigate to My Maps")
 
 # To delete all:
 1. Open 'Advanced Options', Delete All at the bottom of the my maps tab allows you to delete all of your graphics at once
