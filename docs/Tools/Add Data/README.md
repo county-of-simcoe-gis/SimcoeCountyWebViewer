@@ -31,5 +31,5 @@ The Add Data Tool allows you to import data into the Layers/Table of Contents pa
 1. Under Source select Services
 2. From the Provincial Open Data select an available layer from the drop down menu 
 ### Provincial Open Data
-<br />![add url](../images/adddataservices.gif "Add Url Service")
 Lists all layers found in Open LIO Data - https://ws.lioservices.lrc.gov.on.ca/arcgis1071a/rest/services/LIO_OPEN_DATA
+<br />![add url](../images/adddataservices.gif "Add Url Service")
