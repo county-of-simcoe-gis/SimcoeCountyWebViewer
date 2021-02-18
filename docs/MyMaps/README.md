@@ -1,7 +1,7 @@
 # My Maps
 My maps is the toolset that is part of the advanced tab, my maps enables you to create graphics on the map with the ability to style and edit the graphics.
 
-<br />![navigate to My Maps](./images/mymaps1.gif "Navigate to My Maps") 
+<br />![navigate to My Maps](./images/mymapsfirst.gif "Navigate to My Maps") 
 
 The my maps tab provides temporary storage of graphics and is not meant to be permanent graphics. If the browser's website storage is deleted, any saved graphics will be lost. Available graphic types are point, line, polyline, polygon, circle, rectangle, arrow, text, and bearing line. Graphics can be added, edited, and deleted from within the my map area of the interactive map window.
 
