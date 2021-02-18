@@ -1,5 +1,5 @@
 # My Maps
-My maps is the toolset that is part of the advanced tab, my maps enables you to create graphics on the map with the ability to style and edit the graphics.
+My maps is the toolset that enables you to create graphics on the map with the ability to style and edit the graphics.
 
 <br />![navigate to My Maps](./images/titlepicmymaps.gif "Navigate to My Maps") 
 
