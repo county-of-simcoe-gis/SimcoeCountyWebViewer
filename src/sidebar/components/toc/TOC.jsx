@@ -172,7 +172,7 @@ refreshTOC = (isReset, callback=undefined) => {
         );
       });
     }else{
-      TOCHelpers.getGroupsGC(geoserverUrl, geoserverUrlType, isReset, this.state.type, false, true, (result) => {
+      TOCHelpers.getGroupsGC(geoserverUrl, geoserverUrlType, isReset, this.state.type, false, true,undefined,  (result) => {
         const groupInfo = result;
         let listLayerGroups = groupInfo[0];
         let folderLayerGroups = TOCHelpers.copyTOCLayerGroups(groupInfo[0])
@@ -620,7 +620,12 @@ onLegendToggle = (layerInfo, group, callback=undefined) => {
   let showLegend = !layerInfo.showLegend;
 
   if (layerInfo.legendImage === null) {
-    TOCHelpers.getBase64FromImageUrl(layerInfo.styleUrl, (height, imgData) => {
+    const params = {};
+    const secureKey = layerInfo.layer.get("secureKey");
+    if (secureKey !== undefined) {
+      params[secureKey]="GIS";
+    }
+    TOCHelpers.getBase64FromImageUrlWithParams(layerInfo.styleUrl,params, (height, imgData) => {
       const rowHeight = showLegend ? (height += 36) : 30;
       let newGroup = Object.assign({}, group);
       let newLayers = Object.assign([], group.layers);
