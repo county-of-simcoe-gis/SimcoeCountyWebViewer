@@ -58,7 +58,15 @@ class Identify extends Component {
           let displayName = "";
           let type = layer.get("tocDisplayName");
           let wfsUrl = layer.get("wfsUrl");
-
+          const secureKey = layer.get("secureKey");
+          const params = {};
+          if (secureKey !== undefined){
+            const headers = {};
+            headers[secureKey]="GIS";
+            headers["Content-Type"]="application/text";
+            params["mode"]= "cors";
+            params["headers"]=headers;
+          }
           if (wfsUrl !== undefined && geometry.getType() !== "Point") {
             const feature = new Feature(geometry);
             const wktString = helpers.getWKTStringFromFeature(feature);
@@ -95,7 +103,7 @@ class Identify extends Component {
             if (url) {
               url += "&feature_count=1000000";
               //console.log(url);
-              helpers.httpGetText(url, (result) => {
+              helpers.httpGetTextWithParams(url, params, (result) => {
                 let tempResult = helpers.tryParseJSON(result);
                 //console.log(tempResult);
                 if (tempResult !== false) {
