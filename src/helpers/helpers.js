@@ -421,7 +421,21 @@ export function httpGetText(url, callback) {
     })
     .catch((error) => {
       //httpGetText(url.replace("opengis.simcoe.ca", "opengis2.simcoe.ca"), callback);
-      console.error(url,error);
+      console.error(url, error);
+    });
+}
+
+// HTTP GET (NO WAITING)
+export function httpGetTextWithParams(url,params=undefined, callback) {
+  return fetch(url, params)
+    .then((response) => response.text())
+    .then((responseText) => {
+      // CALLBACK WITH RESULT
+      if (callback !== undefined) callback(responseText);
+    })
+    .catch((error) => {
+      //httpGetText(url.replace("opengis.simcoe.ca", "opengis2.simcoe.ca"), callback);
+      console.error(url, error);
     });
 }
 
