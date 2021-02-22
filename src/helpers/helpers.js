@@ -161,12 +161,7 @@ export function getArcGISTiledLayer(url) {
 }
 
 export function getESRITileXYZLayer(url) {
-  const rebuildParams = {
-    sourceType: "ESRITileXYZ",
-    url: url,
-  };
   return new TileLayer({
-    rebuildParams: rebuildParams,
     source: new XYZ({
       attributions: 'Tiles © <a href="https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer">ArcGIS</a>',
       url: url + "/tile/{z}/{y}/{x}",
@@ -176,19 +171,13 @@ export function getESRITileXYZLayer(url) {
 }
 
 export function getOSMTileXYZLayer(url) {
-  const rebuildParams = {
-    sourceType: "OSMTileXYZ",
-    url: url,
-  };
   return new TileLayer({
-    rebuildParams: rebuildParams,
     source: new OSM({ url: url + "/{z}/{x}/{y}.png" }),
     crossOrigin: "anonymous",
   });
 }
 
 export function getSimcoeTileXYZLayer(url) {
-  
   // console.log(url);
   const resolutions = [
     305.74811314055756,
@@ -216,10 +205,6 @@ export function getSimcoeTileXYZLayer(url) {
     // origin: [-20037508.342787,20037508.342787 ]
   });
 
-  const rebuildParams = {
-    sourceType: "SimcoeTileXYZ",
-    url: url,
-  };
   var source = new TileImage({
     tileUrlFunction: function(tileCoord, pixelRatio, projection) {
       if (tileCoord === null) return undefined;
@@ -249,7 +234,6 @@ export function getSimcoeTileXYZLayer(url) {
   });
 
   return new TileLayer({
-    rebuildParams: rebuildParams,
     projection: "EPSG:4326",
     //projection: 'EPSG:3857',
     //matrixSet: 'EPSG:3857',
@@ -261,11 +245,7 @@ export function getSimcoeTileXYZLayer(url) {
 
 // GET OPEN STREET MAP LAYER
 export function getOSMLayer() {
-  const rebuildParams = {
-    sourceType: "OSM",
-  };
   return new TileLayer({
-    rebuildParams:rebuildParams,
     source: new OSM(),
     crossOrigin: "anonymous",
   });
@@ -294,17 +274,7 @@ export function updateWMSRotation() {
 }
 // GET WMS Image Layer
 export function getImageWMSLayer(serverURL, layers, serverType = "geoserver", cqlFilter = null, zIndex = null, disableParcelClick = null) {
-  const rebuildParams = {
-    sourceType: "ImageWMS",
-    url: serverURL,
-    layers:layers,
-    serverType: serverType,
-    cqlFilter: cqlFilter,
-    zIndex: zIndex,
-    disableParcelClick: disableParcelClick,
-  };
   let imageLayer = new ImageLayer({
-    rebuildParams: rebuildParams,
     visible: false,
     zIndex: zIndex,
     source: new ImageWMS({
