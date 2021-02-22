@@ -142,7 +142,7 @@
 
 @media only screen and (max-width: 770px) {
   .sc-sidebar {
-    width: 90%;
+    /*width: 90%;*/
     top: 0px !important;
   }
 
