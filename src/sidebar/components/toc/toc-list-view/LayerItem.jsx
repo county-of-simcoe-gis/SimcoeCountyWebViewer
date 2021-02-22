@@ -70,7 +70,14 @@ class LayerItem extends Component {
           </div>
           <label>
             <input id="sc-toc-item-checkbox" key={helpers.getUID()} type="checkbox" onChange={() => this.onCheckboxChange(this.props.layerInfo)} checked={layerInfo.visible} />
-            <Highlighter className="sc-toc-item-layer-label" highlightClassName="sc-search-toc-highlight-words" searchWords={[this.props.searchText]} textToHighlight={layerInfo.tocDisplayName} />
+            <Highlighter 
+              className="sc-toc-item-layer-label" 
+              highlightClassName="sc-search-toc-highlight-words" 
+              searchWords={[this.props.searchText]} 
+              textToHighlight={layerInfo.tocDisplayName.length < 60 ? layerInfo.tocDisplayName : `${layerInfo.tocDisplayName.slice(0,57)}...`}
+              title={layerInfo.tocDisplayName}
+
+              />
           </label>
 
           <div

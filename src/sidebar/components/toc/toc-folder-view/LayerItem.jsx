@@ -75,8 +75,9 @@ class LayerItem extends Component {
               // className="sc-toc-item-layer-label-folder-view"
               highlightClassName="sc-search-toc-highlight-words-folder-view"
               searchWords={[this.props.searchText]}
-              textToHighlight={this.props.layer.tocDisplayName}
+              textToHighlight={this.props.layer.tocDisplayName.length < 60 ? this.props.layer.tocDisplayName : `${this.props.layer.tocDisplayName.slice(0,57)}...`}
               onClick={() => this.onCheckboxChange(this.state.layer)}
+              title={this.props.layer.tocDisplayName}
             />
           </div>
 
