@@ -1,8 +1,6 @@
 import React, { Component } from "react";
 import "./BasemapSwitcher.css";
 import * as helpers from "../helpers/helpers";
-import { LayerHelpers, OL_DATA_TYPES } from "../helpers/OLHelpers";
-
 import BasemapConfig from "./basemapSwitcherConfig.json";
 import Slider from "rc-slider";
 import { Group as LayerGroup } from "ol/layer.js";
@@ -56,62 +54,27 @@ class BasemapSwitcher extends Component {
     // LOAD IMAGERY LAYERS
     let layerList = [];
     let index = 0;
-    
     BasemapConfig.imageryServices.forEach((service) => {
-      // LayerHelpers.getCapabilities(service.url, "wmts", (layers) => {
-      //   console.log(layers);
-      // });
-      LayerHelpers.getLayer( 
-        OL_DATA_TYPES.TileImage, 
-        "WMS", 
-        undefined,
-        service.name,
-        service.url, 
-        true, 
-        undefined, 
-        undefined, 
-        service.name, 
-        undefined,
-      (newLayer) => {
+      //var layer = helpers.getArcGISTiledLayer(service.url);
+      var layer = helpers.getSimcoeTileXYZLayer(service.url);
+      if (service.fullExtent){
+        layer.setExtent(layer.fullExtent);
+      } 
+      // LAYER PROPS
+      layer.setProperties({ index: index, name: service.name });
+      layer.setZIndex(index + 1);
+      layer.setVisible(false);
 
-        if (service.fullExtent){
-          newLayer.setExtent(newLayer.fullExtent);
-        } 
-        // LAYER PROPS
-        newLayer.setProperties({ index: index, name: service.name });
-        newLayer.setZIndex(index + 1);
-        newLayer.setVisible(false);
-  
-        // SET MAIN LAYER VISIBLE
-        if (BasemapConfig.imageryServices.length - 1 === index) {
-          newLayer.setVisible(true);
-          this.setState({ imagerySliderValue: index });
-        }
-  
-        // ADD THE LAYER
-        window.map.addLayer(newLayer);
-        layerList.push(newLayer);
-        index++;
-      });
-      // var layer = helpers.getSimcoeTileXYZLayer(service.url);
-      // if (service.fullExtent){
-      //   layer.setExtent(layer.fullExtent);
-      // } 
-      // // LAYER PROPS
-      // layer.setProperties({ index: index, name: service.name });
-      // layer.setZIndex(index + 1);
-      // layer.setVisible(false);
+      // SET MAIN LAYER VISIBLE
+      if (BasemapConfig.imageryServices.length - 1 === index) {
+        layer.setVisible(true);
+        this.setState({ imagerySliderValue: index });
+      }
 
-      // // SET MAIN LAYER VISIBLE
-      // if (BasemapConfig.imageryServices.length - 1 === index) {
-      //   layer.setVisible(true);
-      //   this.setState({ imagerySliderValue: index });
-      // }
-
-      // // ADD THE LAYER
-      // window.map.addLayer(layer);
-      // layerList.push(layer);
-      // index++;
+      // ADD THE LAYER
+      window.map.addLayer(layer);
+      layerList.push(layer);
+      index++;
     });
 
     this.setState({ imageryLayers: layerList });
