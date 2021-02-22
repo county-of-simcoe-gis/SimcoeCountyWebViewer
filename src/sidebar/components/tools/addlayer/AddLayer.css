@@ -1,19 +1,19 @@
 #sc-add-layer-server {
-  width:335px;
+  width:325px;
 }
 
 #sc-input-service-layers {
-  width:345px;
+  width:335px;
 }
 
 #sc-add-layer-discover{
-  width: 345px;
+  width: 335px;
 }
 #sc-input-layers{
-  width:345px;
+  width:335px;
 }
 #sc-input-format{
-  width:345px;
+  width:335px;
 }
 .sc-add-layer-close {
   font-size: 20px!important;
@@ -90,11 +90,12 @@
   margin: 4px 4px;
 }
 .sc-add-layer-row{
-  height: 35px;
+  /*height: 35px;*/
   margin-top: 10px;
 }
 .sc-add-layer-row.right{
   float: right;
+  margin-right:10px;
 }
 .sc-add-layer-row.center{
   text-align: center;
@@ -122,11 +123,25 @@
   display: inline-block;
 }
 
+.sc-add-layer-input.label {
+  border: transparent;
+  display: inline-block;
+  text-align: center;
+  position: absolute;
+  left: 10px;
+  width: 315px;
+  height: 55px;
+  padding-top:30px;
+  z-index: -1;
+  background:#fff;
+  text-shadow: 1px 1px #fff;
+}
+
 .sc-add-layer-input.file::-webkit-file-upload-button{
   visibility: hidden;
 }
 .sc-add-layer-input.file::before {
-  content: 'Select File';
+  content: none;
   display: inline-block;
   background: linear-gradient(to top, #f9f9f9, #e3e3e3);
   border: 1px solid #999;
@@ -139,16 +154,34 @@
   text-shadow: 1px 1px #fff;
   font-weight: 700;
   font-size: 10pt;
+  
+}
+
+.sc-add-layer-input.file::after {
+
 }
 .sc-add-layer-input.file:hover::before {
   border-color: black;
+
 }
 .sc-add-layer-input.file:active::before {
   background: -webkit-linear-gradient(to top, #e3e3e3, #f9f9f9);
 }
 .sc-add-layer-input.file{
-  width: 335px;
+  background: transparent;
+  left: 10px;
+  width: 305px;
+  height: 75px;
+  border: 1px solid #ccc;
+  display: inline-block;
+  padding: 6px 12px;
+  cursor: pointer;
+  
+  font-size: 16px;
+  font-weight: bold;
 }
+
+
 
 .sc-add-layer-input {
   background-color: hsl(0,0%,100%);
