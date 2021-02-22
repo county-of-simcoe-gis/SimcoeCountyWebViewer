@@ -7,6 +7,7 @@ import * as helpers from "../../../../helpers/helpers";
 import { LayerHelpers, OL_DATA_TYPES } from "../../../../helpers/OLHelpers";
 import Select from "react-select";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
+import {FaUpload} from "react-icons/fa";
 
 class AddLayerForm extends Component {
   constructor(props) {
@@ -389,6 +390,7 @@ class AddLayerForm extends Component {
           this.state.layer_file,
           this.state.layer_extent,
           this.state.layer_displayName,
+          undefined,
           this.addLayer
         );
       }
@@ -539,18 +541,22 @@ class AddLayerForm extends Component {
             </TabPanel>
             <TabPanel id="tab-add-layer-file-content">
               <div className="sc-container sc-add-layer-tab-panel">
-                <div className={"sc-title"}>Supported file types</div>
+              <div className={"sc-title"}>Supported file types</div>
                 <div className={"sc-add-layer-row file-extensions"}>{this.state.file_formats.join(", ")}</div>
-                <div className={"sc-add-layer-row"}>
+                <div className={"sc-add-layer-row sc-add-layer-file-container"}>
+                  <label htmlFor="sc-add-layer-file" className="sc-add-layer-input label">
+                    Drag and Drop or Click to Select File<br />
+                    <FaUpload size={35} />
+                  </label>
                   <input 
                       id="sc-add-layer-file" 
                       className="sc-add-layer-input file" 
                       type="file" 
                       name="file" 
+                      title="Drag and Drop or Select File"
                       size="60" 
                       accept={`.${this.state.file_formats.join(", .")}`} 
                       onChange={this.onLayerFileChange}
-
                     />
                 </div>
                 <div className={this.state.showExtent ? "sc-add-layer-row" : "sc-hidden"}>
