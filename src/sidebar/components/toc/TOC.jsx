@@ -620,12 +620,7 @@ onLegendToggle = (layerInfo, group, callback=undefined) => {
   let showLegend = !layerInfo.showLegend;
 
   if (layerInfo.legendImage === null) {
-    const params = {};
-    const secureKey = layerInfo.layer.get("secureKey");
-    if (secureKey !== undefined) {
-      params[secureKey]="GIS";
-    }
-    TOCHelpers.getBase64FromImageUrlWithParams(layerInfo.styleUrl,params, (height, imgData) => {
+    TOCHelpers.getBase64FromImageUrl(layerInfo.styleUrl, (height, imgData) => {
       const rowHeight = showLegend ? (height += 36) : 30;
       let newGroup = Object.assign({}, group);
       let newLayers = Object.assign([], group.layers);
