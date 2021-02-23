@@ -491,13 +491,17 @@ updateLayerVisibility = (type=undefined) => {
   const layerFolderGroups = Object.assign([], this.state.layerFolderGroups);
   const layerListGroups = Object.assign([], this.state.layerListGroups);
   const selectedGroup = Object.assign({}, this.state.selectedGroup);
+  if (layerFolderGroups.length === 0 || layerListGroups.length===0) return;
+  
   switch(type){
     case "LIST":
+      if (layerFolderGroups.length === 0) return;
       layerFolderGroups.forEach((group) => {
         group.layers.forEach((layer) => {
           layer.layer.setVisible(false);
         });
       });
+      
       layerListGroups.forEach((group) => {
         group.layers.forEach((layer) => {
           layer.layer.setVisible(false);;
@@ -542,6 +546,7 @@ updateLayerVisibility = (type=undefined) => {
   }
 };
 updateLayerCount = (numLayers) => {
+  if (this.state.layerFolderGroups.length === 0 || this.state.selectedGroup==={}) return;
   switch(this.state.type){
     case "LIST":
       if (numLayers === undefined) numLayers = this.state.selectedGroup.layers.length;
