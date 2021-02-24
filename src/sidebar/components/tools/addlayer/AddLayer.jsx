@@ -298,7 +298,7 @@ class AddLayerForm extends Component {
       name: this.state.layer_name,
       displayName: this.state.layer_displayName,
       tocDisplayName: this.state.layer_displayName,
-      disableParcelClick: queryable,
+      //disableParcelClick: queryable,
       userLayer:true,
       queryable: queryable,
       opaque: opaque,
