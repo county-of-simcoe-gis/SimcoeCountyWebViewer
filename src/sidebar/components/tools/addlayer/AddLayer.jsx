@@ -124,8 +124,9 @@ class AddLayerForm extends Component {
       userEdit_displayName: false,
 
      }, () => {
+      this.onTabSelect(this.state.tabIndex);
       var fileInput = document.getElementById("sc-add-layer-file");
-      fileInput.value = "";
+      if (fileInput !== null) fileInput.value = "";
       if (this.state.tabIndex === 0) this.onCheckServiceForLayers();
     });
   };
@@ -343,7 +344,9 @@ class AddLayerForm extends Component {
       errors.push({ message: "Invalid Layer Selected", field: "sc-input-layers" });
     }
     if (this.state.isFile) {
-      isValid = true;
+      var fileInput = document.getElementById("sc-add-layer-file");
+     
+      isValid = fileInput.files.length > 0;
     } else {
       isValid = isNotDefault;
     }

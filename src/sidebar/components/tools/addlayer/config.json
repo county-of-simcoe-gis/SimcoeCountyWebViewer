@@ -48,12 +48,6 @@
         "XSL_TEMPLATE":"/public/xsl/esri_transform.xsl"
     },
     "dataTypes": [
-        {"label":"URL", "options":[
-            {"label":"Web Map Service (WMS)", "value":"wms", "default":"https://opengis.simcoe.ca/geoserver/ows"},
-            {"label":"Web Map Tile Service (WMTS)", "value":"wmts", "default":"https://opengis.simcoe.ca/geoserver/ows"},
-            {"label":"Web Feature Service (WFS)", "value":"wfs_kml", "default":"https://opengis.simcoe.ca/geoserver/ows"},
-            {"label":"Tile with XYZ format", "value":"xyz", "default":"https://opengis.simcoe.ca/geoserver/ows"}
-        ]},
         {"label":"File", "options": [
             {"label":"GML3", "value":"local_gml3"},
             {"label":"GML2", "value":"local_gml2"},
@@ -68,7 +62,14 @@
             {"label":"WKT", "value":"local_wkt"},
             {"label":"Mapbox", "value":"local_mvt"},
             {"label":"Static Image", "value":"static"}
-        ]} 
+        ]} ,
+        {"label":"URL", "options":[
+            {"label":"Web Map Service (WMS)", "value":"wms", "default":"https://opengis.simcoe.ca/geoserver/ows"},
+            {"label":"Web Map Tile Service (WMTS)", "value":"wmts", "default":"https://opengis.simcoe.ca/geoserver/ows"},
+            {"label":"Web Feature Service (WFS)", "value":"wfs_kml", "default":"https://opengis.simcoe.ca/geoserver/ows"},
+            {"label":"Tile with XYZ format", "value":"xyz", "default":"https://opengis.simcoe.ca/geoserver/ows"}
+        ]}
+       
     ],
     "projections":[
         {"label":"WGS 84 / Pseudo-Mercator", "value":"EPSG:3857"},
