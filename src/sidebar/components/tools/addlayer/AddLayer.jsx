@@ -52,6 +52,7 @@ class AddLayerForm extends Component {
     this._setLayerGroupOptions();
     this._setServiceSelectOptions();
   }
+
   _setFormatTypes = () => {
     const items = addLayerConfig.dataTypes;
     const selectedFormat = this.getSelectedFormat(items[0].options[0].value);
@@ -112,7 +113,19 @@ class AddLayerForm extends Component {
     this.props.onClose();
   };
   clearLayers = () => {
-    this.setState({ selectLayerOptions: [], selectLayerOption: this.defaultLayerOption, hasLayers: false, discovery_message: "", layer_displayName: this.defaultLayerName }, () => {
+    this.setState({ 
+      selectLayerOptions: [], 
+      selectLayerOption: this.defaultLayerOption, 
+      hasLayers: false, 
+      discovery_message: "", 
+      layer_displayName: this.defaultLayerName,
+      layer_file:undefined,
+      selectedFormat: undefined,
+      userEdit_displayName: false,
+
+     }, () => {
+      var fileInput = document.getElementById("sc-add-layer-file");
+      fileInput.value = "";
       if (this.state.tabIndex === 0) this.onCheckServiceForLayers();
     });
   };
