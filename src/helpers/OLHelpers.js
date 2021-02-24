@@ -617,7 +617,16 @@ export class LayerHelpers {
         callback(new TileLayer({ rebuildParams: rebuildParams, name: name, source: new OSM() }));
         break;
       case OL_DATA_TYPES.XYZ:
-        callback(new TileLayer({ rebuildParams: rebuildParams, name: name, source: new XYZ({ urls: [url],projection: projection , crossOrigin: "anonymous"})}));
+        callback(new TileLayer({ 
+          rebuildParams: rebuildParams, 
+          name: name, 
+          source: new XYZ({ 
+            url: url, 
+            projection: projection , 
+            crossOrigin: "anonymous",
+            
+          }),
+        }));
         break;
       case OL_DATA_TYPES.TileImage:
         const resolutions = [
@@ -634,7 +643,7 @@ export class LayerHelpers {
           0.29858214164761665,
           0.1492252984505969,
         ];
-        const projExtent_ti = window.map
+      const projExtent_ti = window.map
         .getView()
         .getProjection()
         .getExtent();
@@ -643,14 +652,19 @@ export class LayerHelpers {
         tileSize: [256, 256],
         origin: getTopLeft(projExtent_ti),
       });
+      let source =  new TileImage({ 
+        url: url,
+        tileGrid: tileGrid,
+        crossOrigin: "anonymous",
+      })
+      // source.on("tileloaderror", function(event) {
+      //   event.tile.getImage().src = "";
+      // });
           callback(new TileLayer({ 
               rebuildParams: rebuildParams, 
               name: name, 
-              source: new TileImage({ 
-                url: url,
-                tileGrid: tileGrid,
-                crossOrigin: "anonymous",
-              })
+              projection: projection,
+              source: source
             }));
           break;
           

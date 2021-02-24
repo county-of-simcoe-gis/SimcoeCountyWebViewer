@@ -1,14 +1,14 @@
 {
   "defaultButton": "topo",
   "streetService": {
-      "url":"https://maps.simcoe.ca/arcgis/rest/services/Public/Streets_Cache/MapServer",
+      "url":"https://maps.simcoe.ca/arcgis/rest/services/Public/Streets_Cache/MapServer/tile/{z}/{y}/{x}",
       "fullExtent": [-8938992.401246801,5456230.285257593,-8801900.781241283,5610242.681997935]
     },
   "bathymetryService": {
-      "url":"https://maps.simcoe.ca/arcgis/rest/services/Public/Bathymetry_Cache/MapServer",
+      "url":"https://maps.simcoe.ca/arcgis/rest/services/Public/Bathymetry_Cache/MapServer/tile/{z}/{y}/{x}",
       "fullExtent": [-9118041.67548189,5494116.533098262,-8805900.95513073,5785509.4618044235]
     },
-  "worldImageryService": "https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer",
+  "worldImageryService": "https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
   "topoServices": [
     {
       "name": "Topographic",
@@ -16,11 +16,11 @@
       "index":0,
       "layers": [
         {
-          "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer",
+          "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
           "type": "ESRI_TILED"
         },
         {
-          "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Topo_Cache/MapServer",
+          "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Topo_Cache/MapServer/tile/{z}/{y}/{x}",
           "type": "SIMCOE_TILED",
           "fullExtent": [-9127039.9939,5219474.5973000005,-8607132.7041,5807644.523699999]
         }
@@ -33,7 +33,7 @@
       "index": 1,
       "layers": [
         {
-          "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Streets_Black_And_White_Cache/MapServer",
+          "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Streets_Black_And_White_Cache/MapServer/tile/{z}/{y}/{x}",
           "type": "SIMCOE_TILED",
           "fullExtent": [-9127039.9939,5219474.5973000005,-8607132.7041,5807644.523699999]
         }
@@ -47,17 +47,6 @@
         {
           "url": "",
           "type": "OSM"
-        }
-      ]
-    },
-    {
-      "name": "LIO Topo",
-      "image": "lio-topo.png",
-      "index": 3,
-      "layers": [
-        {
-          "url": "https://ws.giscache.lrc.gov.on.ca/arcgis/rest/services/LIO_Cartographic/LIO_Topographic/MapServer",
-          "type": "ESRI_TILED"
         }
       ]
     }

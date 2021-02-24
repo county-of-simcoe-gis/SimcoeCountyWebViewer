@@ -64,19 +64,17 @@ class BasemapSwitcher extends Component {
       LayerHelpers.getLayer( 
         OL_DATA_TYPES.TileImage, 
         "WMS", 
-        undefined,
+        "EPSG:4326",
         service.name,
         service.url, 
         true, 
-        undefined, 
+        service.fullExtent, 
         undefined, 
         service.name, 
         undefined,
       (newLayer) => {
 
-        if (service.fullExtent){
-          newLayer.setExtent(newLayer.fullExtent);
-        } 
+        
         // LAYER PROPS
         newLayer.setProperties({ index: index, name: service.name });
         newLayer.setZIndex(index + 1);
@@ -118,34 +116,75 @@ class BasemapSwitcher extends Component {
 
     // LOAD IMAGERY STREETS LAYER
     if (BasemapConfig.streetService.url !== undefined) {
-      var streetsLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.streetService);
-      streetsLayer.setZIndex(BasemapConfig.imageryServices.length);
-      if (BasemapConfig.streetService.fullExtent){
-        streetsLayer.setExtent(BasemapConfig.streetService.fullExtent);
-      } 
-      window.map.addLayer(streetsLayer);
-      this.setState({ streetsLayer: streetsLayer });
+      LayerHelpers.getLayer( 
+        OL_DATA_TYPES.TileImage, 
+        "WMS", 
+        undefined,
+        "streetServiceBasemap",
+        BasemapConfig.streetService.url, 
+        true, 
+        undefined, 
+        undefined, 
+        "streetServiceBasemap", 
+        undefined,
+      (newLayer) => {
+        //var streetsLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.streetService);
+        newLayer.setZIndex(BasemapConfig.imageryServices.length);
+        if (BasemapConfig.streetService.fullExtent){
+          newLayer.setExtent(BasemapConfig.streetService.fullExtent);
+        } 
+        window.map.addLayer(newLayer);
+        this.setState({ streetsLayer: newLayer });
+      });
+
     }
 
     // LOAD BATHYMETRY LAYER
     if (BasemapConfig.bathymetryService.url !== undefined) {
-      var bathymetryLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.bathymetryService.url);
-      bathymetryLayer.setZIndex(0);
-      if (BasemapConfig.bathymetryService.fullExtent){
-        bathymetryLayer.setExtent(BasemapConfig.bathymetryService.fullExtent);
-      } 
-     
-      window.map.addLayer(bathymetryLayer);
-      this.setState({ bathymetryLayer: bathymetryLayer });
+      LayerHelpers.getLayer( 
+        OL_DATA_TYPES.TileImage, 
+        "WMS", 
+        undefined,
+        "bathymetryServiceBasemap",
+        BasemapConfig.bathymetryService.url, 
+        true, 
+        undefined, 
+        undefined, 
+        "bathymetryServiceBasemap", 
+        undefined,
+      (newLayer) => {
+        //var bathymetryLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.bathymetryService.url);
+        newLayer.setZIndex(0);
+        if (BasemapConfig.bathymetryService.fullExtent){
+          newLayer.setExtent(BasemapConfig.bathymetryService.fullExtent);
+        } 
+       
+        window.map.addLayer(newLayer);
+        this.setState({ bathymetryLayer: newLayer });
+      });
+      
     }
 
     // LOAD WORLD LAYER
     if (BasemapConfig.worldImageryService !== undefined) {
-      var worldImageryLayer = helpers.getESRITileXYZLayer(BasemapConfig.worldImageryService);
-      worldImageryLayer.setZIndex(0);
-      //worldImageryLayer.setMinResolution(300);
-      window.map.addLayer(worldImageryLayer);
-      this.setState({ worldImageryLayer: worldImageryLayer });
+      LayerHelpers.getLayer( 
+        OL_DATA_TYPES.XYZ, 
+        "WMS", 
+        undefined,
+        "worldImageryServiceBasemap",
+        BasemapConfig.worldImageryService, 
+        true, 
+        undefined, 
+        undefined, 
+        "worldImageryServiceBasemap", 
+        undefined,
+      (newLayer) => {
+        //var worldImageryLayer = helpers.getESRITileXYZLayer(BasemapConfig.worldImageryService);
+        newLayer.setZIndex(0);
+        //worldImageryLayer.setMinResolution(300);
+        window.map.addLayer(newLayer);
+        this.setState({ worldImageryLayer: newLayer });
+      });
     }
 
     // LOAD BASEMAP LAYERS
@@ -156,24 +195,74 @@ class BasemapSwitcher extends Component {
       let serviceLayers = [];
       serviceGroup.layers.forEach((service) => {
         // CREATE THE LAYER
-        let layer = null;
+        //let layer = null;
+        let layerName = service.name;
+        if (layerName === undefined) layerName = helpers.getUID();
         if (service.type === "SIMCOE_TILED") {
-          layer = helpers.getSimcoeTileXYZLayer(service.url);
-          if (service.fullExtent){
-            layer.setExtent(service.fullExtent);
-          }
+          LayerHelpers.getLayer( 
+            OL_DATA_TYPES.TileImage, 
+            "WMS", 
+            undefined,
+            layerName,
+            service.url, 
+            true, 
+            service.fullExtent, 
+            undefined, 
+            layerName, 
+            undefined,
+          (newLayer) => {
+            //layer = helpers.getSimcoeTileXYZLayer(service.url);
+        
+            newLayer.setProperties({ index: index, name: layerName, isOverlay: false });
+            serviceLayers.push(newLayer);
+            index++;
+          });
+          
         } else if (service.type === "OSM") {
-          //layer = helpers.getOSMLayer();
-          layer = helpers.getOSMTileXYZLayer("http://a.tile.openstreetmap.org");
+          LayerHelpers.getLayer( 
+            OL_DATA_TYPES.OSM, 
+            "WMS", 
+            undefined,
+            layerName,
+            undefined, 
+            true, 
+            undefined, 
+            undefined, 
+            layerName, 
+            undefined,
+          (newLayer) => {
+            //layer = helpers.getOSMLayer();
+            //layer = helpers.getOSMTileXYZLayer("http://a.tile.openstreetmap.org");
+            // LAYER PROPS
+            newLayer.setProperties({ index: index, name: layerName, isOverlay: false });
+            serviceLayers.push(newLayer);
+            index++;
+          });
+         
         } else if (service.type === "ESRI_TILED") {
-          // layer = helpers.getArcGISTiledLayer(service.url);
-          layer = helpers.getESRITileXYZLayer(service.url);
+          LayerHelpers.getLayer( 
+            OL_DATA_TYPES.XYZ, 
+            "WMS", 
+            undefined,
+            layerName,
+            service.url, 
+            true, 
+            undefined, 
+            undefined, 
+            layerName, 
+            undefined,
+          (newLayer) => {
+            // layer = helpers.getArcGISTiledLayer(service.url);
+            //layer = helpers.getESRITileXYZLayer(service.url);
+            // LAYER PROPS
+            newLayer.setProperties({ index: index, name: layerName, isOverlay: false });
+            serviceLayers.push(newLayer);
+            index++;
+          });
+          
         }
 
-        // LAYER PROPS
-        layer.setProperties({ index: index, name: service.name, isOverlay: false });
-        serviceLayers.push(layer);
-        index++;
+       
       });
       const geoserverPath = helpers.getConfigValue("geoserverPath");
       const groupUrl = serviceGroup.groupUrl;
