@@ -62,7 +62,7 @@ Each graphic appears as an item in your my items table of contents and provides 
 # To create a bearing line:
 1. Select bearing line and choose a colour
 2. Click once to start the line in the desired location
-3. Move your cursor to the desired location and angle, 
+3. Move your cursor to the desired location and angle 
 4. Click again to finish the line 
 <br />![navigate to my maps](./images/bearingline.gif "Navigate to My Maps")
 
