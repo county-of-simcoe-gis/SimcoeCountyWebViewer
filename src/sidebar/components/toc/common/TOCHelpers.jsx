@@ -134,7 +134,7 @@ export async function getMap (mapId=null,urlType, isReset, tocType, callback){
       const mapSettings = JSON.parse(result.json);
       //console.log(mapSettings);
       mapSettings.sources.forEach(source => {
-        getGroupsGC(source.layerUrl, urlType, isReset, tocType, source.secure,source.primary, (layerGroupConfig) => {
+        getGroupsGC(source.layerUrl, urlType, isReset, tocType, source.secure,source.primary, source.secureKey, (layerGroupConfig) => {
           if (source.primary) defaultGroup=layerGroupConfig[1];
           if (layerGroups === undefined){
             layerGroups = layerGroupConfig[0];
@@ -255,7 +255,7 @@ export function getGroupsFromData(data, callback) {
 }
 
 // GET GROUPS FROM GET CAPABILITIES
-export async function getGroupsGC(url, urlType, isReset, tocType, secured=false,primary=true, callback) {
+export async function getGroupsGC(url, urlType, isReset, tocType, secured=false,primary=true,secureKey=undefined, callback) {
   let defaultGroup = null;
   let isDefault = false;
   let groups = [];
@@ -266,8 +266,18 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured=false,
   const remove_underscore = (name) => {
     return helpers.replaceAllInString(name, "_", " ");
   };
+  const params = {};
+  if (secured){
+    const headers = {};
+    if (secureKey !== undefined){
+      headers[secureKey]="GIS";
+      headers["Content-Type"]="application/text";
+    }
+    params["mode"]= "cors";
+    params["headers"]=headers;
+  }
 
-  helpers.httpGetText(url, (result) => {
+  helpers.httpGetTextWithParams(url,params, (result) => {
     var parser = new WMSCapabilities();
     const resultObj = parser.read(result);
     let groupLayerList =
@@ -333,7 +343,7 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured=false,
           const buildLayers = (layers) => {
             layers.forEach((currentLayer) => {
               if (!isDuplicate(layerList, currentLayer.Name)) {
-                buildLayerByGroup(tmpGroupObj, currentLayer, layerIndex, tocType,secured, (result) => {
+                buildLayerByGroup(tmpGroupObj, currentLayer, layerIndex, tocType,secured, secureKey, (result) => {
                   layerList.push(result);
                 });
                 layerIndex--;
@@ -432,6 +442,46 @@ export function getFullInfoLayers(layers, callback) {
   }
 }
 
+export function getBase64FromImageUrlWithParams(url, params=undefined, callback) {
+
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", url);
+  if (params !== undefined){
+    for (const [key, value] of Object.entries(params)) {
+      xhr.setRequestHeader(key, value);
+    }
+  }
+  
+  xhr.onload = function(){
+    var response = xhr.responseText;
+    var binary = ""
+    
+    for(var i=0; i<response.length; i++){
+      binary += String.fromCharCode(response.charCodeAt(i) & 0xff);
+    }
+    var img = new Image();
+
+    img.setAttribute("crossOrigin", "anonymous");
+  
+    img.onload = function() {
+      var canvas = document.createElement("canvas");
+      canvas.width = this.width;
+      canvas.height = this.height;
+  
+      var ctx = canvas.getContext("2d");
+      ctx.drawImage(this, 0, 0);
+  
+      var dataURL = canvas.toDataURL("image/png");
+  
+      callback(this.height, dataURL);
+    };
+
+    img.src = 'data:image/png;base64,' + btoa(binary);
+  }
+  xhr.overrideMimeType('text/plain; charset=x-user-defined');
+  xhr.send();
+}
+
 export function getBase64FromImageUrl(url, callback) {
   var img = new Image();
 
@@ -490,6 +540,7 @@ export function jsonToLayer(json, callback) {
     rebuildParams.file,
     rebuildParams.extent,
     rebuildParams.name,
+    undefined,
     (newLayer) => {
       newLayer.setVisible(visible);
       newLayer.setOpacity(opacity);
@@ -583,7 +634,7 @@ export function copyTOCLayer(layer){
     newLayer.layer = layer.layer; 
     return newLayer; 
 }
-export async function buildLayerByGroup(group, layer, layerIndex, tocType,secured, callback) {
+export async function buildLayerByGroup(group, layer, layerIndex, tocType,secured, secureKey=undefined, callback) {
   // SAVED DATA
   let savedData = helpers.getItemsFromStorage(tocType === "LIST" ? storageKey : storageKeyFolder);
   if (savedData === undefined) savedData = [];
@@ -676,7 +727,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType,secure
     } else if (visibleLayers.includes(layerNameOnly)) layerVisible = true;
 
     // LAYER PROPS
-    LayerHelpers.getLayer(OL_DATA_TYPES.ImageWMS, "WMS", undefined, layer.Name, serverUrl + "/wms?layers=" + layer.Name, false, undefined, undefined, displayName, (newLayer) => {
+    LayerHelpers.getLayer(OL_DATA_TYPES.ImageWMS, "WMS", undefined, layer.Name, serverUrl + "/wms?layers=" + layer.Name, false, undefined, undefined, displayName,secureKey, (newLayer) => {
       const wfsUrlTemplate = (rootUrl, layer) => `${rootUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layer}&outputFormat=application/json&cql_filter=`;
       const wfsUrl = wfsUrlTemplate(serverUrl.replace("/wms", ""), layer.Name);
 
@@ -695,7 +746,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType,secure
           disableParcelClick: liveLayer, 
           queryable: queryable, 
           opaque: opaque });
-
+      if (secureKey !== undefined) newLayer.setProperties({secureKey: secureKey});
       newLayer.setZIndex(layerIndex);
       window.map.addLayer(newLayer);
 
@@ -751,7 +802,7 @@ export function getLayerListByGroupWMS(group, tocType, callback) {
     groupLayerList.forEach((layerInfo) => {
       if (!isDuplicate(layerList, layerInfo.Name)) {
         if (layerInfo.Layer === undefined) {
-          buildLayerByGroup(group, layerInfo, layerIndex, tocType,false, (result) => {
+          buildLayerByGroup(group, layerInfo, layerIndex, tocType,false, undefined, (result) => {
             layerList.push(result);
           });
           layerIndex--;
@@ -780,7 +831,7 @@ export function getLayerListByGroup(group, callback) {
     groupLayerList.forEach((layerInfo) => {
       if (!isDuplicate(layerList, layerInfo.Name[0])) {
         if (layerInfo.Layer === undefined) {
-          buildLayerByGroup(group, layerInfo, layerIndex,false, (result) => {
+          buildLayerByGroup(group, layerInfo, layerIndex,false, undefined, (result) => {
             layerList.push(result);
           });
           layerIndex--;

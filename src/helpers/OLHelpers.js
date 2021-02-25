@@ -9,6 +9,8 @@ import OSMXML from "ol/format/OSMXML.js";
 import { GeoJSON, GPX, KML, EsriJSON, TopoJSON, IGC, Polyline, WKT, MVT, WMTSCapabilities, WMSCapabilities } from "ol/format.js";
 import { all as LoadingStrategyAll, tile as LoadingStrategyTile } from "ol/loadingstrategy.js";
 import TileGrid from "ol/tilegrid/TileGrid.js";
+import { getTopLeft } from "ol/extent.js";
+
 
 //OTHER
 import { parseString } from "xml2js";
@@ -272,7 +274,7 @@ export class LayerHelpers {
     } catch {}
     return style !== undefined ? style : "";
   }
-  static getLayer(sourceType, source, projection = "EPSG:3857", layerName, url, tiled = false, file, extent = [], name = "", callback) {
+  static getLayer(sourceType, source, projection = "EPSG:3857", layerName, url, tiled = false, file, extent = [], name = "", secureKey=undefined, callback) {
     const rebuildParams = {
       sourceType: sourceType,
       source: source,
@@ -528,6 +530,20 @@ export class LayerHelpers {
         );
         break;
       case OL_DATA_TYPES.ImageWMS:
+        const securedImageWMS = function (image, src) {
+                                      var xhr = new XMLHttpRequest();
+                                      xhr.open("GET", src);
+                                      xhr.responseType = "arraybuffer";
+                                      if (secureKey !== undefined) xhr.setRequestHeader(secureKey, "GIS");
+                                      xhr.onload = function () {
+                                        var arrayBufferView = new Uint8Array(this.response);
+                                        var blob = new Blob([arrayBufferView], { type: "image/png" });
+                                        var urlCreator = window.URL || window.webkitURL;
+                                        var imageUrl = urlCreator.createObjectURL(blob);
+                                        image.getImage().src = imageUrl;
+                                      };
+                                      xhr.send();
+                                    };
         callback(
           new ImageLayer({
             rebuildParams: rebuildParams,
@@ -542,6 +558,8 @@ export class LayerHelpers {
               ratio: 1,
               serverType: "geoserver",
               crossOrigin: "anonymous",
+              imageLoadFunction: securedImageWMS
+              
             }),
           })
         );
@@ -599,8 +617,57 @@ export class LayerHelpers {
         callback(new TileLayer({ rebuildParams: rebuildParams, name: name, source: new OSM() }));
         break;
       case OL_DATA_TYPES.XYZ:
-        callback(new TileLayer({ rebuildParams: rebuildParams, name: name, source: new XYZ({ urls: [url], projection: projection }) }));
+        callback(new TileLayer({ 
+          rebuildParams: rebuildParams, 
+          name: name, 
+          source: new XYZ({ 
+            url: url, 
+            projection: projection , 
+            crossOrigin: "anonymous",
+            
+          }),
+        }));
         break;
+      case OL_DATA_TYPES.TileImage:
+        const resolutions = [
+          305.74811314055756,
+          152.87405657041106,
+          76.43702828507324,
+          38.21851414253662,
+          19.10925707126831,
+          9.554628535634155,
+          4.77731426794937,
+          2.388657133974685,
+          1.1943285668550503,
+          0.5971642835598172,
+          0.29858214164761665,
+          0.1492252984505969,
+        ];
+      const projExtent_ti = window.map
+        .getView()
+        .getProjection()
+        .getExtent();
+      var tileGrid = new TileGrid({
+        resolutions: resolutions,
+        tileSize: [256, 256],
+        origin: getTopLeft(projExtent_ti),
+      });
+      let source =  new TileImage({ 
+        url: url,
+        tileGrid: tileGrid,
+        crossOrigin: "anonymous",
+      })
+      // source.on("tileloaderror", function(event) {
+      //   event.tile.getImage().src = "";
+      // });
+          callback(new TileLayer({ 
+              rebuildParams: rebuildParams, 
+              name: name, 
+              projection: projection,
+              source: source
+            }));
+          break;
+          
       case OL_DATA_TYPES.ImageStatic:
         if (file === undefined) {
           console.error("Missing File for Raster layer.");
