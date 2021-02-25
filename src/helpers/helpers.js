@@ -329,6 +329,15 @@ export function getImageWMSLayer(serverURL, layers, serverType = "geoserver", cq
   imageLayer.setProperties({ wfsUrl: wfsUrl, name: layerNameOnly, rootInfoUrl: rootInfoUrl, disableParcelClick: disableParcelClick });
   return imageLayer;
 }
+
+export function scaleToResolution(scale){
+  const DOTS_PER_INCH = 96;
+  const INCHES_PER_METER = 39.37;
+  const pointResolution = parseFloat(scale) / (DOTS_PER_INCH * INCHES_PER_METER);
+  var projection = window.map.getView().getProjection();
+  return pointResolution / projection.getMetersPerUnit();
+}
+
 // GET CURRENT MAP SCALE
 export function getMapScale() {
   const DOTS_PER_INCH = 96;
