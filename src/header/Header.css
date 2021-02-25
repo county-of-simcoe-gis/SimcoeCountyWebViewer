@@ -103,6 +103,9 @@
   vertical-align: middle;
   display: table-cell;
   cursor: pointer;
+  padding:0px 5px 0px 5px;
+  font-size: 12px;
+  color:#5b5b5b;
 }
 
 #sc-header-bar-logo {

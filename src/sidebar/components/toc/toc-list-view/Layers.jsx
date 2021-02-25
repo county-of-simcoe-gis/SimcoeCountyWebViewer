@@ -37,7 +37,12 @@ class Layers extends Component {
   }
 
   updateRecalcId = () => {
-    this.lastPosition = document.getElementById(this.virtualId).scrollTop;
+    if (!this.props.visible) return;
+    try{
+      this.lastPosition = document.getElementById(this.virtualId).scrollTop;
+    }catch (e){
+      return;
+    }
     this.setState({recalcId:helpers.getUID()}, () => {
       setTimeout(()=>{
         document.getElementById(this.virtualId).scrollTop += this.lastPosition;

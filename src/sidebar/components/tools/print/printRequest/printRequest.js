@@ -326,7 +326,7 @@ export async function printRequest(mapLayers, description, printSelectedOption) 
   };
 
   let getLayerByType = async (l) => {
-    if (l.values_.name === "myMaps") {
+    if (l.values_.name === "local:myMaps") {
       configureVectorMyMapsLayer(l);
     }
 
