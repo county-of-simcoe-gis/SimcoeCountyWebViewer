@@ -386,11 +386,9 @@ addCustomLayer = (layer, groupName, selected = false, save = false) => {
 
     layersGroup.layers = layers;
     this.setLayerGroups(this.state.type,layerGroups.map((group) => (layersGroup.value === group.value ? layersGroup : group)), ()=>{
-      this.forceUpdate();
+      //this.forceUpdate();
       helpers.showMessage("Layer Added", AddedMessage(layersGroup.label, retLayer.displayName));
-      if (save){
-        this.saveCustomLayer(retLayer);
-      }
+     
       if (selected) {
         window.emitter.emit("activeTocLayerGroup", layersGroup.value, () => {
           window.emitter.emit("activeTocLayer", {
@@ -403,6 +401,15 @@ addCustomLayer = (layer, groupName, selected = false, save = false) => {
           });
           this.forceUpdate();
         });
+      }
+      if (save){
+        const isVisible = retLayer.layer.getVisible();
+        retLayer.layer.setVisible(true);
+        setTimeout(()=>{
+            this.saveCustomLayer(retLayer, ()=>{
+              retLayer.layer.setVisible(isVisible);
+            });
+          }, 250);
       }
     });
   });
