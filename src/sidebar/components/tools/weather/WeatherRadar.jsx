@@ -70,7 +70,7 @@ class WeatherRadar extends Component {
         const extent = [jsExtent.xmin, jsExtent.ymin, jsExtent.xmax, jsExtent.ymax];
         const imageLayer = new ImageLayer({
           source: new Static({
-            url: jsImage.href,
+            url: helpers.replaceAllInString(jsImage.href, "http:", "https:"),
             projection: "EPSG:3857",
             imageExtent: extent,
           }),
@@ -322,10 +322,12 @@ class WeatherRadar extends Component {
             </div>
             <div style={{ display: "grid" }} onChange={this.onTimeSettingsChange}>
               <label>
-                <input type="radio" name="timesetting" value="last3hours" defaultChecked />Last 3 Hours
+                <input type="radio" name="timesetting" value="last3hours" defaultChecked />
+                Last 3 Hours
               </label>
               <label>
-                <input type="radio" name="timesetting" value="custom" />Custom
+                <input type="radio" name="timesetting" value="custom" />
+                Custom
               </label>
             </div>
           </div>
@@ -385,13 +387,16 @@ class WeatherRadar extends Component {
             </div>
             <div style={{ fontSize: "10pt", marginLeft: "18px" }}>
               <label>
-                <input type="checkbox" checked={this.state.WKR} onChange={this.onWKRChange} />WKR (King City)
+                <input type="checkbox" checked={this.state.WKR} onChange={this.onWKRChange} />
+                WKR (King City)
               </label>
               <label>
-                <input type="checkbox" checked={this.state.WBI} onChange={this.onWBIChange} />WBI (Britt)
+                <input type="checkbox" checked={this.state.WBI} onChange={this.onWBIChange} />
+                WBI (Britt)
               </label>
               <label>
-                <input type="checkbox" checked={this.state.WSO} onChange={this.onWSOChange} />WSO (Exeter)
+                <input type="checkbox" checked={this.state.WSO} onChange={this.onWSOChange} />
+                WSO (Exeter)
               </label>
             </div>
           </div>
