@@ -483,10 +483,16 @@ setLayerGroups = (updateType,layerGroups, callback) =>{
   switch(updateType){
     case "LIST":
       this.setState({layerListGroups: layerGroups}, ()=>{
+        this.updateLayerCount();
+        this.updateLayerVisibility();
+        this.updateOpenPopup();
         if (callback !== undefined) callback();});
       break;
     case "FOLDER":
       this.setState({layerFolderGroups: layerGroups }, ()=>{
+        this.updateLayerCount();
+        this.updateLayerVisibility();
+        this.updateOpenPopup();
         if (callback !== undefined) callback();});
       break;
     default:
