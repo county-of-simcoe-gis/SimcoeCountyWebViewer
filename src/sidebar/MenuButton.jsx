@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import "./MenuButton.css";
 import * as helpers from "../helpers/helpers";
 import mainConfig from "../config.json";
-import htmlToImage from "html-to-image";
+import * as htmlToImage from "html-to-image";
 import { saveAs } from "file-saver";
 
 const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
