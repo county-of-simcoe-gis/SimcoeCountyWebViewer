@@ -523,10 +523,10 @@ class AddLayerForm extends Component {
                     id="sc-add-layer-server"
                     type="text"
                     autoComplete="on"
-                    placeholder="https://opengis.simcoe.ca/geoserver/ows"
+                    placeholder="https://opengis.simcoe.ca/geoserver/simcoe/All_Layers/ows"
                     className="sc-add-layer-input sc-editable"
                     onChange={(evt) => {
-                      this.setState({ serverUrl: evt.target.value.split("?")[0] }, () => {
+                      this.setState({ serverUrl: evt.target.value }, () => {
                         if (this.state.selectLayerOption !== this.defaultLayerOption) this.clearLayers();
                       });
                     }}
