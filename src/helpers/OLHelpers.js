@@ -168,7 +168,10 @@ export class LayerHelpers {
           case "wms":
             parser = new WMSCapabilities();
             response = parser.read(responseText);
-            response.Capability.Layer.Layer.forEach((layer) => {
+            let layerGroup = response.Capability.Layer.Layer;
+            if (layerGroup[0].Layer !== undefined) layerGroup = layerGroup[0].Layer;
+            layerGroup.forEach((layer) => {
+              
               this.getWMSLayers(layer, item => {
                 
                 if (item !== undefined){
@@ -191,12 +194,13 @@ export class LayerHelpers {
 
             break;
         }
+        //fix to get react-select box to update on the fly
+        layers = layers.concat([]);
+        callback(layers);
       } catch (error) {
         console.warn("Unexpected error: " + error.message);
       }
-      //fix to get react-select box to update on the fly
-      layers = layers.concat([]);
-      callback(layers);
+     
     });
   }
 
