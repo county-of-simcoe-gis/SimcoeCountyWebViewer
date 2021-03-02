@@ -90,7 +90,7 @@ export function makeLayer(
   } else {
     newLayer.setVisible(visible);
     newLayer.setOpacity(opacity);
-    newLayer.setProperties({ name: layerId, tocDisplayName:layerName, displayName: layerName });
+    newLayer.setProperties({ name: layerId, tocDisplayName:layerName, displayName: layerName, minScale:minScale, maxScale: maxScale, });
     newLayer.setZIndex(layerIndex);
     window.map.addLayer(newLayer);
   }
@@ -745,7 +745,9 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType,secure
           rootInfoUrl: rootInfoUrl, 
           disableParcelClick: liveLayer, 
           queryable: queryable, 
-          opaque: opaque });
+          opaque: opaque, 
+          minScale: minScale,
+          maxScale: maxScale,});
       if (secureKey !== undefined) newLayer.setProperties({secureKey: secureKey});
       newLayer.setZIndex(layerIndex);
       window.map.addLayer(newLayer);

@@ -607,16 +607,14 @@ export function getWFSLayerRecordCount(serverUrl, layerName, callback) {
 export function zoomToFeature(feature, animate = true) {
   let geom = feature.getGeometry();
   let duration = animate ? 1000 : 0;
-
+  let minResolution = this.scaleToResolution(feature.minScale);
+  minResolution = minResolution>1 ? Math.ceil(minResolution) : 1;
   if (geom.getType() === "Point") {
-    window.map.getView().fit(geom, window.map.getSize(), { duration: duration, minResolution: 1 });
-    window.map.getView().setZoom(window.map.getView().getZoom() - 1);
+    window.map.getView().fit(geom, { duration: duration, minResolution: minResolution});
   } else if (geom.getType() === "GeometryCollection") {
-    window.map.getView().fit(geom.getGeometries()[0], window.map.getSize(), { duration: duration, minResolution: 1 });
-    window.map.getView().setZoom(window.map.getView().getZoom() - 1);
+    window.map.getView().fit(geom.getGeometries()[0],  { duration: duration, minResolution: minResolution});
   } else {
-    window.map.getView().fit(geom, window.map.getSize(), { duration: duration });
-    window.map.getView().setZoom(window.map.getView().getZoom() - 1);
+    window.map.getView().fit(geom, { duration: duration, minResolution: minResolution});
   }
 }
 
