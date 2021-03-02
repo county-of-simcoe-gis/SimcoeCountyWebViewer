@@ -607,7 +607,7 @@ export function getWFSLayerRecordCount(serverUrl, layerName, callback) {
 export function zoomToFeature(feature, animate = true) {
   let geom = feature.getGeometry();
   let duration = animate ? 1000 : 0;
-  let minResolution = this.scaleToResolution(feature.minScale);
+  let minResolution = scaleToResolution(feature.minScale);
   minResolution = minResolution>1 ? Math.ceil(minResolution) : 1;
   if (geom.getType() === "Point") {
     window.map.getView().fit(geom, { duration: duration, minResolution: minResolution});
