@@ -61,8 +61,9 @@ class BasemapSwitcher extends Component {
       // LayerHelpers.getCapabilities(service.url, "wmts", (layers) => {
       //   console.log(layers);
       // });
+      const serviceLayerType = service.type !== undefined ? service.type : OL_DATA_TYPES.TileImage;
       LayerHelpers.getLayer( 
-        OL_DATA_TYPES.TileImage, 
+        serviceLayerType, 
         "WMS", 
         "EPSG:4326",
         service.name,
