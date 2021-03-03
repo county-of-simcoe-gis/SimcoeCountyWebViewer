@@ -626,9 +626,8 @@ export class LayerHelpers {
           name: name, 
           source: new XYZ({ 
             url: url, 
-            projection: projection , 
-            crossOrigin: "anonymous",
-            
+            //projection: projection , 
+            //crossOrigin: "anonymous",
           }),
         }));
         break;
