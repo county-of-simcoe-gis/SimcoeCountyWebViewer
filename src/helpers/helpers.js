@@ -80,6 +80,7 @@ export function addAppStat(type, description) {
       buildname = build(buildname, window.version);
     }
   }
+  if (buildname === "") buildname = "Unknown";
   httpGetText(appStatsTemplate(buildname, type, description));
 }
 

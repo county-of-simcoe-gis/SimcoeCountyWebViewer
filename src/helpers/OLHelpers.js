@@ -76,12 +76,15 @@ export class FeatureHelpers {
     }
   }
 
-  static setFeatures(features, target_format = OL_DATA_TYPES.GeoJSON) {
-    const mapProjection = window.map.getView().getProjection();
+  static setFeatures(features, target_format = OL_DATA_TYPES.GeoJSON, dataProjection = null, featureProjection = null) {
+    if (features.length === 0) return;
+    const mapProjection = featureProjection || window.map.getView().getProjection();
     const parser = this.getVectorFormat(target_format);
     let output = undefined;
     try {
-      output = parser.writeFeatures(features, { dataProjection: parser.readProjection(features), featureProjection: mapProjection });
+      output = parser.writeFeatures(features, { 
+          dataProjection: dataProjection || parser.readProjection(features), 
+          featureProjection: mapProjection });
     } catch (err) {
       helpers.showMessage("Error", "Unsupported Feature.", helpers.messageColors.red);
       console.log(err);
@@ -89,9 +92,11 @@ export class FeatureHelpers {
     return output;
   }
   static getFeatures(features, source_format = OL_DATA_TYPES.GeoJSON, projection = "EPSG:3857") {
+    if (features.length === 0) return;
     const mapProjection = window.map.getView().getProjection();
     const parser = this.getVectorFormat(source_format, projection);
     let output = undefined;
+    
     try {
       output = parser.readFeatures(features, {
         dataProjection: parser.readProjection(features) || projection,
