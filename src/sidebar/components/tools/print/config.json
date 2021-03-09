@@ -1,0 +1,92 @@
+{
+  "printSizes": [
+      {
+        "value": "8X11 Portrait",
+        "label": "8X11 Portrait (Letter)",
+        "size":  [570, 639],
+        "layout": "letter portrait",
+        "overview": false
+      },
+      {
+        "value": "11X8 Landscape",
+        "label": "11X8 Landscape (Letter)",
+        "size": [750, 450],
+        "layout": "letter landscape",
+        "overview": false
+      },
+      {
+          "value": "8X11 Portrait Overview",
+          "label": "8X11 Portrait with Overview",
+          "size":[570, 450],
+          "layout": "letter portrait overview",
+          "overview": true
+      },
+      {
+          "value": "Map Only",
+          "label": "Map Only",
+          "size": [],
+          "layout": "map only",
+          "overview": false
+      },
+      {
+          "value": "Map Only Portrait",
+          "label": "Map Only Portrait",
+          "size": [570, 752],
+          "layout": "map only portrait",
+          "overview": false
+      },
+      {
+          "value": "Map Only Landscape",
+          "label": "Map Only Landscape",
+          "size": [750, 572],
+          "layout": "map only landscape",
+          "overview": false
+      }
+    ],
+    "printFormats": [
+      {
+          "value": "pdf",
+          "label": "PDF"
+      },
+      {
+          "value": "png",
+          "label": "PNG"
+      },
+      {
+          "value": "jpeg",
+          "label": "JPG"
+      }
+    ],
+    "drawTypes":{
+      "Point": "Point",
+      "LineString": "Line",
+      "Polygon": "Polygon",
+      "Circle": "Polygon",
+      "Rectangle": "Polygon",
+      "Arrow": "Line",
+      "Text": "Point",
+      "Cancel": "Polygon",
+      "Bearing": "Line"
+    },
+  "overviewMapLayers":[
+      "LIO_Cartographic_LIO_Topographic",
+      "Streets_Black_And_White_Cache",
+      "World_Topo_Map",
+      "Topo_Cache",
+      "Streets_Cache",
+      "Ortho_2018_Cache",
+      "Ortho_2016_Cache",
+      "Ortho_2013_Cache",
+      "Ortho_2012_Cache",
+      "Ortho_2008_Cache",
+      "Ortho_2002_Cache",
+      "Ortho_1997_Cache",
+      "Ortho_1989_Cache",
+      "Ortho_1954_Cache",
+      "Bathymetry_Cache",
+      "World_Imagery"
+    ],
+    "basemapLayerNames": ["Topographic", "Streets", "Open Street Map", "LIO Topo"],
+    "mapTitle": "County of Simcoe - Web Map",
+    "termsOfUse": "This map, either in whole or in part, may not be reproduced without the written authority from© The Corporation of the County of Simcoe.  This map is intended for personal use, has been produced using data from a variety of sources and may not be current or accurate.  Produced (in part) under license from: © Her Majesty the Queen in Right of Canada, Department of Natural Resources: © Queens Printer, Ontario Ministry of Natural Resources: © Teranet Enterprises Inc. and its suppliers: © Members of the Ontario Geospatial Data Exchange.  All rights reserved. THIS IS NOT A PLAN OF SURVEY."
+}
