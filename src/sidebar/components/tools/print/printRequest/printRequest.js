@@ -302,7 +302,8 @@ export async function printRequest(mapLayers, printSelectedOption) {
   let printRequest = {
     layout: "",
     outputFormat: "",
-    dpi: 300,
+    dpi: printSelectedOption.mapResolutionOption,
+    compressed: true,
   };
   printRequest.outputFormat = printSelectedOption.printFormatSelectedOption.value;
 
