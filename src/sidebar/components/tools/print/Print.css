@@ -1,9 +1,16 @@
 .sc-print-container{
-  padding: 10px;
+  position: absolute;
+  margin-bottom: 0px;
+  overflow-y: auto;
+  padding: 5px !important;
+  bottom: 0px;
+  top: 106px;
+  width: 97%;
+  color: #5b5b5b;
 }
 
 .sc-print-map-title-input{
-  width: 100%;
+  width: 97%;
   height: 30px;
   margin-bottom: 5px;
 }
@@ -47,5 +54,5 @@
   display: inline-flex;
   position: absolute;
   left: 264px;
-  top: 332px;
+  top: 220px;
 }

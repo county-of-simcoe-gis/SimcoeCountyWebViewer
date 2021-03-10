@@ -32,7 +32,7 @@ class Print extends Component {
     mapOnlyWidth: document.getElementById("map").offsetWidth,
     isPrinting: false,
     termsOfUse: config.termsOfUse,
-    mapResolutionOption: 120,
+    mapResolutionOption: "120",
   };
 
   componentDidMount() {
