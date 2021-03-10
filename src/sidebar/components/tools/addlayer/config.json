@@ -64,10 +64,10 @@
             {"label":"Static Image", "value":"static"}
         ]} ,
         {"label":"URL", "options":[
-            {"label":"Web Map Service (WMS)", "value":"wms", "default":"https://opengis.simcoe.ca/geoserver/ows"},
-            {"label":"Web Map Tile Service (WMTS)", "value":"wmts", "default":"https://opengis.simcoe.ca/geoserver/ows"},
-            {"label":"Web Feature Service (WFS)", "value":"wfs_kml", "default":"https://opengis.simcoe.ca/geoserver/ows"},
-            {"label":"Tile with XYZ format", "value":"xyz", "default":"https://opengis.simcoe.ca/geoserver/ows"}
+            {"label":"Web Map Service (WMS)", "value":"wms", "default":"https://opengis.simcoe.ca/geoserver/simcoe/All_Layers/ows"},
+            {"label":"Web Map Tile Service (WMTS)", "value":"wmts", "default":"https://opengis.simcoe.ca/geoserver/simcoe/All_Layers/ows"},
+            {"label":"Web Feature Service (WFS)", "value":"wfs_kml", "default":"https://opengis.simcoe.ca/geoserver/simcoe/All_Layers/ows"},
+            {"label":"Tile with XYZ format", "value":"xyz", "default":"https://opengis.simcoe.ca/geoserver/simcoe/All_Layers/ows"}
         ]}
        
     ],

@@ -5,19 +5,8 @@ import PanelComponent from "../../../PanelComponent";
 import * as helpers from "../../../../helpers/helpers";
 import mainConfig from "../../../../config.json";
 import * as printRequest from "./printRequest/printRequest";
+import config from "./config.json";
 import "./Print.css";
-
-const termsOfUse =
-  "This map, either in whole or in part, may not be reproduced without the written authority from" +
-  "© The Corporation of the County of Simcoe." +
-  "This map is intended for personal use, has been produced using data from a variety of sources" +
-  "and may not be current or accurate." +
-  "Produced (in part) under license from:" +
-  "© Her Majesty the Queen in Right of Canada, Department of Natural Resources:" +
-  "© Queens Printer, Ontario Ministry of Natural Resources:" +
-  "© Teranet Enterprises Inc. and its suppliers:" +
-  "© Members of the Ontario Geospatial Data Exchange." +
-  "All rights reserved. THIS IS NOT A PLAN OF SURVEY.";
 
 // IMPORT ALL IMAGES
 const images = importAllImages(require.context("./images", false, /\.(gif|png|jpe?g|svg)$/));
@@ -32,54 +21,18 @@ function importAllImages(r) {
 
 class Print extends Component {
   state = {
-    printSizes: [
-      {
-        value: "8X11 Portrait",
-        label: "8X11 Portrait (Letter)",
-      },
-      {
-        value: "11X8 Landscape",
-        label: "11X8 Landscape (Letter)",
-      },
-      {
-        value: "8X11 Portrait Overview",
-        label: "8X11 Portrait with Overview",
-      },
-      {
-        value: "Map Only",
-        label: "Map Only",
-      },
-      {
-        value: "Map Only Portrait",
-        label: "Map Only Portrait",
-      },
-      {
-        value: "Map Only Landscape",
-        label: "Map Only Landscape",
-      },
-    ],
-    printFormats: [
-      {
-        value: "PDF",
-        label: "PDF",
-      },
-      {
-        value: "PNG",
-        label: "PNG",
-      },
-      {
-        value: "JPG",
-        label: "JPG",
-      },
-    ],
-    mapTitle: "County of Simcoe - Web Map",
+    printSizes: config.printSizes,
+    printFormats: config.printFormats,
+    mapTitle: config.mapTitle,
     printSizeSelectedOption: null,
     printFormatSelectedOption: null,
     forceScale: helpers.getMapScale(),
-    mapScaleOption: "forceScale",
+    mapScaleOption: "preserveMapExtent",
     mapOnlyHeight: document.getElementById("map").offsetHeight,
     mapOnlyWidth: document.getElementById("map").offsetWidth,
     isPrinting: false,
+    termsOfUse: config.termsOfUse,
+    mapResolutionOption: 120,
   };
 
   componentDidMount() {
@@ -102,7 +55,9 @@ class Print extends Component {
   onForceScaleChange = (evt) => {
     this.setState({ forceScale: evt.target.value });
   };
-
+  onMapResolutionOptions = (evt) => {
+    this.setState({ mapResolutionOption: evt.target.value });
+  };
   onMapScaleOptions = (evt) => {
     this.setState({ mapScaleOption: evt.target.value });
   };
@@ -127,18 +82,16 @@ class Print extends Component {
     //const {printSelectedOption} = this.state;
     //console.log(this.state);
 
-    // helpers.showMessage("Print", "Coming soon!");
-
     // GET VISIBLE LAYERS
     const printLayers = this.getPrintLayers();
 
     // =======================
     // SEND PRINT SERVER REQUEST HERE
     // =======================
-    const printData = await printRequest.printRequest(printLayers, termsOfUse, this.state);
+    const printData = await printRequest.printRequest(printLayers, this.state);
     const printAppId = printData.layout.replace(/ /g, "_");
     const outputFormat = printData.outputFormat;
-     console.log(JSON.stringify(printData));
+    // console.log(JSON.stringify(printData));
     let interval = 5000;
     let origin = mainConfig.originUrl;
     let printUrl = mainConfig.printUrl;
@@ -156,7 +109,16 @@ class Print extends Component {
           if (data.done === true && data.status === "finished") {
             interval = 0;
             helpers.showMessage("Print", "Your print has been downloaded", helpers.messageColors.green, 10000);
-            window.open(`${origin}${data.downloadURL}`);
+            
+            //try creating an auto click link, fall back to window.open
+            try{
+              var link = document.createElement('a');
+              link.href = `${origin}${data.downloadURL}`;
+              link.download = 'file.pdf';
+              link.dispatchEvent(new MouseEvent('click'));
+            }catch (e){
+              window.open(`${origin}${data.downloadURL}`, `_blank` );
+            }
             this.setState({ isPrinting: false }); // THIS WILL RE-ENABLE BUTTON AND HIDE LOADING MSG
           } else if (data.done === false && data.status === "running") {
             setTimeout(() => {
@@ -176,7 +138,6 @@ class Print extends Component {
         });
     };
     //post request to server and check status
-    console.log(url,encodedPrintRequest);
     fetch(url, {
       method: "POST",
       headers: {
@@ -268,14 +229,14 @@ class Print extends Component {
           >
             <label style={{ fontSize: "10pt", fontWeight: "bold" }}>Map Scale/Extent:</label>
             <div style={{ fontSize: "10pt" }} onChange={this.onMapScaleOptions}>
-              <input type="radio" name="mapscale" value="preserveMapScale" />
-              <label>Preserve Map Scale</label>
+              <input type="radio" name="mapscale" id="mapscale-preserveMapScale" value="preserveMapScale" />
+              <label htmlFor="mapscale-preserveMapScale">Preserve Map Scale</label>
               <br />
-              <input type="radio" name="mapscale" value="preserveMapExtent" />
-              <label>Preserve Map Extent</label>
+              <input type="radio" name="mapscale" id="mapscale-preserveMapExtent" value="preserveMapExtent" defaultChecked />
+              <label htmlFor="mapscale-preserveMapExtent">Preserve Map Extent</label>
               <br />
-              <input type="radio" name="mapscale" value="forceScale" defaultChecked />
-              <label>Force Scale:</label>
+              <input type="radio" name="mapscale" id="mapscale-forceScale" value="forceScale"  />
+              <label htmlFor="mapscale-forceScale">Force Scale:</label>
               <input className="sc-print-advanced-options-force-scale-input" onChange={this.onForceScaleChange} value={this.state.forceScale} />
             </div>
             <label style={{ fontSize: "10pt", fontWeight: "bold" }}>Map Only - Image Size:</label>
@@ -285,6 +246,24 @@ class Print extends Component {
             <br />
             <label>Height (px):</label>
             <input className="sc-print-advanced-options-force-scale-input" onChange={this.onMapOnlyHeight} value={this.state.mapOnlyHeight} />
+            <br/>
+            <label style={{ fontSize: "10pt", fontWeight: "bold" }}>Map Output Resolution:</label>
+            <div style={{ fontSize: "10pt" }} onChange={this.onMapResolutionOptions}>
+              <input type="radio" name="mapresolution" id="mapresolution-veryhigh" value="300" />
+              <label htmlFor="mapresolution-veryhigh">Very High - 300 dpi</label>
+              <br />
+              <input type="radio" name="mapresolution" id="mapresolution-high" value="180" />
+              <label htmlFor="mapresolution-high">High - 180 dpi</label>
+              <br />
+              <input type="radio" name="mapresolution" id="mapresolution-medium" value="120" defaultChecked />
+              <label htmlFor="mapresolution-medium">Medium - 120 dpi</label>
+              <br />
+              <input type="radio" name="mapresolution" id="mapresolution-low" value="90"  />
+              <label htmlFor="mapresolution-low">Low - 90 dpi</label>
+              <br />
+              <input type="radio" name="mapresolution" id="mapresolution-verylow" value="60" />
+              <label htmlFor="mapresolution-verylow">Very Low - 60 dpi</label>
+            </div>
           </Collapsible>
         </div>
       </PanelComponent>

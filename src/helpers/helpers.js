@@ -80,6 +80,7 @@ export function addAppStat(type, description) {
       buildname = build(buildname, window.version);
     }
   }
+  if (buildname === "") buildname = "Unknown";
   httpGetText(appStatsTemplate(buildname, type, description));
 }
 
@@ -329,6 +330,15 @@ export function getImageWMSLayer(serverURL, layers, serverType = "geoserver", cq
   imageLayer.setProperties({ wfsUrl: wfsUrl, name: layerNameOnly, rootInfoUrl: rootInfoUrl, disableParcelClick: disableParcelClick });
   return imageLayer;
 }
+
+export function scaleToResolution(scale){
+  const DOTS_PER_INCH = 96;
+  const INCHES_PER_METER = 39.37;
+  const pointResolution = parseFloat(scale) / (DOTS_PER_INCH * INCHES_PER_METER);
+  var projection = window.map.getView().getProjection();
+  return pointResolution / projection.getMetersPerUnit();
+}
+
 // GET CURRENT MAP SCALE
 export function getMapScale() {
   const DOTS_PER_INCH = 96;
@@ -598,16 +608,14 @@ export function getWFSLayerRecordCount(serverUrl, layerName, callback) {
 export function zoomToFeature(feature, animate = true) {
   let geom = feature.getGeometry();
   let duration = animate ? 1000 : 0;
-
+  let minResolution = scaleToResolution(feature.minScale);
+  minResolution = minResolution>1 ? Math.ceil(minResolution) : 1;
   if (geom.getType() === "Point") {
-    window.map.getView().fit(geom, window.map.getSize(), { duration: duration, minResolution: 1 });
-    window.map.getView().setZoom(window.map.getView().getZoom() - 1);
+    window.map.getView().fit(geom, { duration: duration, minResolution: minResolution});
   } else if (geom.getType() === "GeometryCollection") {
-    window.map.getView().fit(geom.getGeometries()[0], window.map.getSize(), { duration: duration, minResolution: 1 });
-    window.map.getView().setZoom(window.map.getView().getZoom() - 1);
+    window.map.getView().fit(geom.getGeometries()[0],  { duration: duration, minResolution: minResolution});
   } else {
-    window.map.getView().fit(geom, window.map.getSize(), { duration: duration });
-    window.map.getView().setZoom(window.map.getView().getZoom() - 1);
+    window.map.getView().fit(geom, { duration: duration, minResolution: minResolution});
   }
 }
 

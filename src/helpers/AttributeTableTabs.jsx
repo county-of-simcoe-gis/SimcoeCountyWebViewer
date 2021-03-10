@@ -69,8 +69,9 @@ const AttributeTableTabButton = (props) => {
 
 // TAB BUTTON
 const AttributeTableContent = (props) => {
+  
   if (props.data.length === 0) return <div>No Data</div>;
-
+  const tmpData = {};
   // CREATE COLUMNS
   let columnArray = [];
   columnArray.push({ Header: "*", accessor: "*", width: 20, style: { backgroundColor: "#ddd" } });
@@ -78,8 +79,8 @@ const AttributeTableContent = (props) => {
     if (key === "geometry") return;
     columnArray.push({ Header: key, accessor: key, visible: false });
   });
-  const columns = React.useMemo(() => columnArray, []);
-
+  //const columns = React.useMemo(() => columnArray, []);
+  tmpData["columns"] = columnArray;
   let rowArray = [];
   props.item.geoJson.forEach((feature) => {
     const featureProps = feature.getProperties();
@@ -93,14 +94,14 @@ const AttributeTableContent = (props) => {
     });
     rowArray.push(row);
   });
+  tmpData["rows"] = rowArray;
 
-  const data = React.useMemo(() => rowArray, []);
 
   return (
     <div className="sc-attribute-table">
       <CustomTable
-        columns={columns}
-        data={data}
+        columns={tmpData.columns}
+        data={tmpData.rows}
         width={props.width}
         height={props.height}
         onHeaderClick={props.onHeaderClick}
