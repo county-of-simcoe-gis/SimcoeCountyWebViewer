@@ -59,6 +59,7 @@ class Identify extends Component {
           let type = layer.get("tocDisplayName");
           let wfsUrl = layer.get("wfsUrl");
           const secureKey = layer.get("secureKey");
+          const minScale = layer.get("minScale");
           const params = {};
           if (secureKey !== undefined){
             const headers = {};
@@ -81,7 +82,7 @@ class Identify extends Component {
                 featureList.forEach((feature) => {
                   features.push(feature);
                 });
-                if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type });
+                if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, minScale:minScale });
                 this.setState({ layers: layerList });
               }
             });
@@ -121,7 +122,7 @@ class Identify extends Component {
                   featureList.forEach((feature) => {
                     features.push(feature);
                   });
-                  if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, html_url: html_url });
+                  if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, html_url: html_url, minScale:minScale  });
                   this.setState({ layers: layerList });
                 }
               });
@@ -272,20 +273,23 @@ class Identify extends Component {
 
 export default Identify;
 
-function _getLayerObj(layerName, callback) {
+function _getLayerObj(layerName, callback=undefined) {
   let data = {};
-  window.emitter.emit("getLayerList", (group) => {
-  //window.allLayers.forEach((group) => {
-    group.forEach((layer) => {
-      if (layer.name !== undefined && layer.name.toLowerCase() === layerName.toLowerCase()) data = layer;
+  window.emitter.emit("getLayerList", (groups) => {
+    Object.entries(groups).forEach((row) => {
+      const layerItems = row[1];
+      layerItems.forEach((layer) => {
+        if (layer.name !== undefined && layer.name.toLowerCase() === layerName.toLowerCase()) data = layer;
+      });
+    
     });
-  });
 
-  if (callback !== undefined) {
-    //console.log(data);
-    callback(data);
-  }
-  return data;
+    if (callback !== undefined) {
+      callback(data);
+    }else{
+      return data;
+    }
+  });
 }
 
 const Layer = (props) => {
@@ -295,30 +299,34 @@ const Layer = (props) => {
 
   //console.log(layer);
   let layerObj = {};
-  _getLayerObj(layer.name, (returnResult) => (layerObj = returnResult));
-
-  return (
-    <div id="sc-identify-layer-container">
-      <Collapsible trigger={layer.type} open={open}>
-        <div className="sc-identify-layer-content-container">
-          {props.layer.features.map((feature) => (
-            <FeatureItem
-              key={helpers.getUID()}
-              displayName={props.layer.displayName}
-              identifyTitleColumn={layerObj !== undefined ? layerObj.identifyTitleColumn : ""}
-              identifyIdColumn={layerObj !== undefined ? layerObj.identifyIdColumn : ""}
-              feature={feature}
-              html_url={layer.html_url}
-              onZoomClick={props.onZoomClick}
-              onMouseEnter={props.onMouseEnter}
-              onMouseLeave={props.onMouseLeave}
-              layerName={props.layer.name}
-            />
-          ))}
-        </div>
-      </Collapsible>
-    </div>
-  );
+  layerObj =  _getLayerObj(layer.name)
+  // _getLayerObj(layer.name, (returnData)=>{
+  //   layerObj=returnData;
+  // });
+    return (
+      <div id="sc-identify-layer-container">
+        <Collapsible trigger={layer.type} open={open}>
+          <div className="sc-identify-layer-content-container">
+            {props.layer.features.map((feature) => (
+              <FeatureItem
+                key={helpers.getUID()}
+                displayName={layer.displayName}
+                identifyTitleColumn={layerObj !== undefined ? layerObj.identifyTitleColumn : ""}
+                identifyIdColumn={layerObj !== undefined ? layerObj.identifyIdColumn : ""}
+                feature={feature}
+                html_url={layer.html_url}
+                onZoomClick={props.onZoomClick}
+                onMouseEnter={props.onMouseEnter}
+                onMouseLeave={props.onMouseLeave}
+                minScale={layer.minScale !== undefined ? layer.minScale:0}
+                layerName={props.layer.name}
+              />
+            ))}
+          </div>
+        </Collapsible>
+      </div>
+    );
+  
 };
 
 const IFrame = (props) => {
@@ -347,7 +355,7 @@ const FeatureItem = (props) => {
   if (feature.values_.extent_geom !== undefined && feature.values_.extent_geom !== null) {
     extentFeature = helpers.getFeatureFromGeoJSON(feature.values_.extent_geom);
   }
-
+  feature["minScale"] = props.minScale;
   const featureProps = feature.getProperties();
   const keys = Object.keys(featureProps);
   let featureName = feature.get(displayName);

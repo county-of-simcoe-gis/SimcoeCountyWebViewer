@@ -421,10 +421,10 @@ export function exportMyMaps(callback2, id = null) {
   });
 }
 
-function _radians(n) {
+export function _radians(n) {
   return n * (Math.PI / 180);
 }
-function _degrees(n) {
+export function _degrees(n) {
   return n * (180 / Math.PI);
 }
 

@@ -29,14 +29,15 @@ class LayerItem extends Component {
 
     //if (!layerInfo.visible) return;
 
-    const scale = helpers.getMapScale();
-    let isVisibleAtScale = true;
+    const mapResolution = window.map.getView().getResolution();
+    //let isVisibleAtScale = true;
     let minScale = 0;
     let maxScale = 100000000000;
     if (layerInfo.minScale !== undefined) minScale = layerInfo.minScale;
     if (layerInfo.maxScale !== undefined) maxScale = layerInfo.maxScale;
-    if (scale <= minScale || scale >= maxScale) isVisibleAtScale = false;
-    this.isVisibleAtScale = isVisibleAtScale;
+    let minResolution = helpers.scaleToResolution(minScale);
+    let maxResolution = helpers.scaleToResolution(maxScale);
+    this.isVisibleAtScale = (mapResolution >= minResolution && mapResolution <= maxResolution);
   };
 
   componentWillUnmount() {
