@@ -27,7 +27,7 @@ class Print extends Component {
     printSizeSelectedOption: null,
     printFormatSelectedOption: null,
     forceScale: helpers.getMapScale(),
-    mapScaleOption: "forceScale",
+    mapScaleOption: "preserveMapExtent",
     mapOnlyHeight: document.getElementById("map").offsetHeight,
     mapOnlyWidth: document.getElementById("map").offsetWidth,
     isPrinting: false,
