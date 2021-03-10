@@ -32,6 +32,7 @@ class Print extends Component {
     mapOnlyWidth: document.getElementById("map").offsetWidth,
     isPrinting: false,
     termsOfUse: config.termsOfUse,
+    mapResolutionOption: 120,
   };
 
   componentDidMount() {
@@ -54,7 +55,9 @@ class Print extends Component {
   onForceScaleChange = (evt) => {
     this.setState({ forceScale: evt.target.value });
   };
-
+  onMapResolutionOptions = (evt) => {
+    this.setState({ mapResolutionOption: evt.target.value });
+  };
   onMapScaleOptions = (evt) => {
     this.setState({ mapScaleOption: evt.target.value });
   };
@@ -243,6 +246,24 @@ class Print extends Component {
             <br />
             <label>Height (px):</label>
             <input className="sc-print-advanced-options-force-scale-input" onChange={this.onMapOnlyHeight} value={this.state.mapOnlyHeight} />
+            <br/>
+            <label style={{ fontSize: "10pt", fontWeight: "bold" }}>Map Output Resolution:</label>
+            <div style={{ fontSize: "10pt" }} onChange={this.onMapResolutionOptions}>
+              <input type="radio" name="mapresolution" id="mapresolution-veryhigh" value="300" />
+              <label htmlFor="mapresolution-veryhigh">Very High - 300 dpi</label>
+              <br />
+              <input type="radio" name="mapresolution" id="mapresolution-high" value="180" />
+              <label htmlFor="mapresolution-high">High - 180 dpi</label>
+              <br />
+              <input type="radio" name="mapresolution" id="mapresolution-medium" value="120" defaultChecked />
+              <label htmlFor="mapresolution-medium">Medium - 120 dpi</label>
+              <br />
+              <input type="radio" name="mapresolution" id="mapresolution-low" value="90"  />
+              <label htmlFor="mapresolution-low">Low - 90 dpi</label>
+              <br />
+              <input type="radio" name="mapresolution" id="mapresolution-verylow" value="60" />
+              <label htmlFor="mapresolution-verylow">Very Low - 60 dpi</label>
+            </div>
           </Collapsible>
         </div>
       </PanelComponent>
