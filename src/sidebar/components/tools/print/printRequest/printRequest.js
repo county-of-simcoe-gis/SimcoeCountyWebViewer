@@ -239,7 +239,7 @@ const switchTemplates = (options, callback=undefined) => {
   const currentMapScale = helpers.getMapScale();
   const mapScale = 2990000;
   const rotation = 0;
-  const dpi = 300;
+  const dpi = options.mapResolutionOption;
   const printSize = options.printSizeSelectedOption.size === []? window.map.getSize() : options.printSizeSelectedOption.size
 
   const attributes = {
