@@ -27,7 +27,7 @@ class Print extends Component {
     printSizeSelectedOption: null,
     printFormatSelectedOption: null,
     forceScale: helpers.getMapScale(),
-    mapScaleOption: "preserveMapExtent",
+    mapScaleOption: "preserveMapScale",
     mapOnlyHeight: document.getElementById("map").offsetHeight,
     mapOnlyWidth: document.getElementById("map").offsetWidth,
     isPrinting: false,
@@ -36,8 +36,21 @@ class Print extends Component {
   };
 
   componentDidMount() {
-    this.setState({ printSizeSelectedOption: this.state.printSizes[0] });
-    this.setState({ printFormatSelectedOption: this.state.printFormats[0] });
+    this.setState({ 
+      printSizes: config.printSizes,
+      printFormats: config.printFormats,
+      printSizeSelectedOption: config.printSizes[0],
+      printFormatSelectedOption: config.printFormats[0],
+      mapTitle: config.mapTitle,
+      forceScale: helpers.getMapScale(),
+      mapScaleOption: "preserveMapScale",
+      mapOnlyHeight: document.getElementById("map").offsetHeight,
+      mapOnlyWidth: document.getElementById("map").offsetWidth,
+      isPrinting: false,
+      termsOfUse: config.termsOfUse,
+      mapResolutionOption: "120",
+    });
+  
   }
 
   onChangePaperSize = (selectedOption) => {
@@ -229,10 +242,10 @@ class Print extends Component {
           >
             <label style={{ fontSize: "10pt", fontWeight: "bold" }}>Map Scale/Extent:</label>
             <div style={{ fontSize: "10pt" }} onChange={this.onMapScaleOptions}>
-              <input type="radio" name="mapscale" id="mapscale-preserveMapScale" value="preserveMapScale" />
+              <input type="radio" name="mapscale" id="mapscale-preserveMapScale" value="preserveMapScale" defaultChecked />
               <label htmlFor="mapscale-preserveMapScale">Preserve Map Scale</label>
               <br />
-              <input type="radio" name="mapscale" id="mapscale-preserveMapExtent" value="preserveMapExtent" defaultChecked />
+              <input type="radio" name="mapscale" id="mapscale-preserveMapExtent" value="preserveMapExtent" />
               <label htmlFor="mapscale-preserveMapExtent">Preserve Map Extent</label>
               <br />
               <input type="radio" name="mapscale" id="mapscale-forceScale" value="forceScale"  />
