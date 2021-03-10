@@ -147,6 +147,7 @@ let configureTileLayer = async (l) => {
   // }
   let retLayer = await loadWMTSConfig(tileUrl, l.values_.opacity);
   retLayer.customParams.zIndex = l.getZIndex();
+  retLayer.customParams.zIndex = l.getZIndex() + l.get("printIndex");
   return retLayer;
 };
 
@@ -160,7 +161,7 @@ const configureImageLayer = (l) => {
     imageFormat: "image/png",
     customParams: {
       TRANSPARENT: "true",
-      zIndex: l.getZIndex(),
+      zIndex: l.getZIndex() + l.get("printIndex"),
     },
     version: "1.3.0",
   });
@@ -312,21 +313,27 @@ export async function printRequest(mapLayers, printSelectedOption) {
   let sortedOverviewMap = [];
   
   //iterate through each map layer passed in the window.map
+  let layerOrder = 0;
+  mapLayers.forEach((layer) => {
+    layerOrder++;
+    layer.setProperties({printIndex: layerOrder});
+  });
   let mapLayerPromises = mapLayers.map((layer) => getLayerByType(layer, (retLayers)=>{ 
-      if (retLayers !== undefined ){
-        if (Array.isArray(retLayers)) mainMap = mainMap.concat(retLayers);
-        else mainMap.push(retLayers);
-        if (Array.isArray(retLayers)){
-          retLayers.forEach(item=>{
-              if (isOverviewLayer(item.layer)) overviewMap.push(item);
-            } 
-          );
-        }else{
-          if (isOverviewLayer(retLayers.layer)) overviewMap.push(retLayers);
+        if (retLayers !== undefined ){
+          if (Array.isArray(retLayers)) mainMap = mainMap.concat(retLayers);
+          else mainMap.push(retLayers);
+          if (Array.isArray(retLayers)){
+            retLayers.forEach(item=>{
+                if (isOverviewLayer(item.layer)) overviewMap.push(item);
+              } 
+            );
+          }else{
+            if (isOverviewLayer(retLayers.layer)) overviewMap.push(retLayers);
+          }
         }
-      }
-
-    }));
+      
+    })
+  );
 
   //wait for list of layer promises to be resolved
   await Promise.all(mapLayerPromises);
