@@ -146,7 +146,6 @@ let configureTileLayer = async (l) => {
   //   tileUrl = entries[Object.keys(entries)[0]].value_.src_.split("/tile")[0];
   // }
   let retLayer = await loadWMTSConfig(tileUrl, l.values_.opacity);
-  retLayer.customParams.zIndex = l.getZIndex();
   retLayer.customParams.zIndex = l.getZIndex() + l.get("printIndex");
   return retLayer;
 };
