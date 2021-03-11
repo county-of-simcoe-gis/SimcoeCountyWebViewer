@@ -47,6 +47,19 @@ class MyMapsAdvanced extends Component {
     });
   };
 
+  onShare = () => {
+    if (this.state.inputText.length !== 36) {
+      helpers.showMessage("MyMaps Share", "Invalid ID was entered.", helpers.messageColors.red);
+      return;
+    }
+    let currentUrl = `${window.location.href.split("?")[0]}?MY_MAPS_ID=${this.state.inputText}`;
+    copy(currentUrl);
+    helpers.showMessage("MyMaps Share", "MyMaps link has been saved to clipboard.",helpers.messageColors.green, 5000);
+
+    // APP STATS
+    helpers.addAppStat("MyMaps", "Share");
+  };
+
   onSave = () => {
     this.setState({ copied: true });
     drawingHelpers.exportMyMaps(result => {
@@ -88,12 +101,16 @@ class MyMapsAdvanced extends Component {
                   // value={this.state.selectedGroup}
                   placeholder="6a8cf8c6-b3a0-11e9-9d64-005056b2f523"
                 /> */}
+                <br />
                 <button className="sc-button sc-mymaps-advanced-import-button" onClick={this.onImport}>
                   Import
                 </button>
 
                 <button className="sc-button sc-mymaps-advanced-import-button" onClick={this.onSave}>
                   Save
+                </button>
+                <button className="sc-button sc-mymaps-advanced-import-button" onClick={this.onShare}>
+                  Share
                 </button>
               </div>
             </div>
