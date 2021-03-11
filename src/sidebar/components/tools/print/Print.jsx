@@ -102,9 +102,11 @@ class Print extends Component {
     // SEND PRINT SERVER REQUEST HERE
     // =======================
     const printData = await printRequest.printRequest(printLayers, this.state);
+    //console.log(printData);
+
     const printAppId = printData.layout.replace(/ /g, "_");
     const outputFormat = printData.outputFormat;
-    // console.log(JSON.stringify(printData));
+    
     let interval = 5000;
     let origin = mainConfig.originUrl;
     let printUrl = mainConfig.printUrl;
@@ -145,6 +147,7 @@ class Print extends Component {
             }, interval);
           } else if (data.done === true && data.status === "error") {
             console.log(data);
+            console.log(JSON.stringify(printData));
             helpers.showMessage("Print Failed", "please report issue to site admin", helpers.messageColors.red, 15000);
             this.setState({ isPrinting: false });
           }
