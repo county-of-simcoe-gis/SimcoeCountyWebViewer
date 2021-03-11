@@ -122,7 +122,8 @@ const buildVectorLayer = (layer, callback = undefined)=> {
         "labelAlign": `${olText.textAlign_.substring(0,1)}${olText.textBaseline_.substring(0,1)}`,
         "labelRotation": drawingHelpers._degrees(olText.rotation_),
         "labelXOffset": olText.offsetX_ * -1,
-        "labelYOffset": olText.offsetY_ * -1
+        "labelYOffset": olText.offsetY_ * -1,
+        "goodnessOfFit": 0
       }
       itemSymbolizers.push(itemText);
     }
