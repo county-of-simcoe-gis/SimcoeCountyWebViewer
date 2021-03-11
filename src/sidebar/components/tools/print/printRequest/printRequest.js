@@ -55,7 +55,11 @@ export async function loadWMTSConfig(url, opacity) {
 //build vector layer 
 const buildVectorLayer = (layer, callback = undefined)=> {
   let returnLayers = [];
-  let olFeatures = layer.getSource().getFeatures();
+  let olFeatures = [];
+  var extent = window.map.getView().calculateExtent(window.map.getSize());
+  layer.getSource().forEachFeatureInExtent(extent, function(feature){
+    olFeatures.push(feature);
+  }); 
   olFeatures.forEach((item)=>{
     let styles = {version: "2",};
     let itemSymbolizers = [];
@@ -92,12 +96,21 @@ const buildVectorLayer = (layer, callback = undefined)=> {
       itemStrokeFill.strokeWidth =olStroke.width_;
     }
     itemSymbolizers.push(itemStrokeFill);
-    
+    const lookupFont = (font) => {
+      const foundFont = config.fonts.find(item=> font.toLowerCase() === item.toLowerCase());
+      if (foundFont){
+        return foundFont;
+      }else{
+        return config.fonts[0];
+      }
+    };
+
     if (olText !== null){
       const font = olText.font_.split(" ");
+
       let itemText = {
         "type": "text",
-        "fontFamily": font[2],
+        "fontFamily": lookupFont(font[2]),
         "fontSize": font[1],
         "fontStyle": "normal",
         "fontWeight": font[0],
@@ -122,6 +135,7 @@ const buildVectorLayer = (layer, callback = undefined)=> {
       name: `${layer.get("name")}-${item.ol_uid}`,
       style: styles,
     };
+
     let feature = FeatureHelpers.setFeatures([item], OL_DATA_TYPES.GeoJSON, "EPSG:4326", "EPSG:4326");
     if (feature !== undefined){
       feature = JSON.parse(feature);
@@ -239,14 +253,13 @@ const switchTemplates = (options, callback=undefined) => {
   const currentMapScale = helpers.getMapScale();
   const mapScale = 2990000;
   const rotation = 0;
-  const dpi = options.mapResolutionOption;
+  const dpi = parseInt(options.mapResolutionOption);
   const printSize = options.printSizeSelectedOption.size === []? window.map.getSize() : options.printSizeSelectedOption.size
 
   const attributes = {
     title: options.mapTitle,
     description: options.termsOfUse,
     map: {},
-    overviewMap: {},
     scaleBar: {
       geodetic: currentMapScale,
     },
@@ -286,7 +299,7 @@ const switchTemplates = (options, callback=undefined) => {
       rotation: rotation,
       dpi: dpi,
     };
-    attributes.overviewMap = overviewMap;
+    attributes["overviewMap"] = overviewMap;
   }
   if (callback !== undefined) callback(attributes);
   else return attributes;
@@ -302,7 +315,7 @@ export async function printRequest(mapLayers, printSelectedOption) {
   let printRequest = {
     layout: "",
     outputFormat: "",
-    dpi: printSelectedOption.mapResolutionOption,
+    dpi: parseInt(printSelectedOption.mapResolutionOption),
     compressed: true,
   };
   printRequest.outputFormat = printSelectedOption.printFormatSelectedOption.value;
