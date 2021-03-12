@@ -1,5 +1,4 @@
 #### [Home](../)
-<a name="top"></a>
 # What's new - [opengis.simcoe.ca](https://opengis.simcoe.ca) [April 23rd, 2020]
 
 This mapping application will be replacing our [existing site](https://maps.simcoe.ca/public).
@@ -69,4 +68,4 @@ Identify visible features in the map
 
 ![Identify](./images/identify.gif "Identify")
 
-#### [Top](#top)
+#### [Top](#home)
