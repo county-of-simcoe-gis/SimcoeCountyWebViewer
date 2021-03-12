@@ -23,16 +23,41 @@
 #sc-panel-component-title-container {
   width: 100%;
   overflow: hidden;
+  max-height: 29px;
+  text-overflow: ellipsis;
 }
 
 #sc-panel-component-tool-icon {
   width: 36px;
   float: left;
 }
+.sc-panel-component-help {
+  background-color: #6ea8cf;
+  border: 1px solid rgba(202, 202, 202, 0.69);
+  padding: 1px;
+  border-radius: 2px;
+  height: 24px;
+  width: 24px;
+  margin-left: 5px;
+  float: left;
+}
+.sc-panel-component-help svg {
+  color: #fff;
+  height: 18px;
+  width: 18px;
+  padding: 3px;
+}
 
 .sc-panel-component-tool-text {
   float: left;
   padding-top: 3px;
+  max-width: 295px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sc-panel-component-tool-text.short {
+  max-width: 225px;
 }
 .sc-panel-component-tool-text.small {
   font-size: 13pt;
@@ -45,7 +70,7 @@
   float: right;
   cursor: pointer;
   height: 29px;
-  width: 65px;
+  
   text-align: center;
 }
 
@@ -53,6 +78,7 @@
   border: 1px solid rgba(202, 202, 202, 0.69);
   padding: 1px;
   border-radius: 2px;
+  margin-left: 5px;
 }
 
 #sc-panel-component-tool-close {

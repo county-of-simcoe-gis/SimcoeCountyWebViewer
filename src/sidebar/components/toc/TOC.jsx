@@ -937,6 +937,7 @@ onLayerOptionsClick = (evt, layerInfo) =>{
           onTurnOffLayers={this.onTurnOffLayers}
           onOpenLegend={this.onOpenLegend}
           onSaveAllLayers={this.onSaveAllLayers}
+          helpLink={TOCConfig.helpLink}
         />
         <TOCFolderView 
           key="sc-toc-folder" 

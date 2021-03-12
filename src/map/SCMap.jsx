@@ -192,32 +192,53 @@ class SCMap extends Component {
     });
     this.addIdentifyLayer();
     // SHOW FEEDBACK ON TIMER
-    // if (mainConfig.showFeedbackMessageOnStartup !== undefined && mainConfig.showFeedbackMessageOnStartup) {
-    //   setTimeout(() => {
-    //     helpers.showMessage(
-    //       "Feedback",
-    //       <div>
-    //         <label>Please provide us feedback! The feedback button is the star at top right of this window.</label>
-    //         <span
-    //           className="sc-fakeLink"
-    //           style={{ display: "block" }}
-    //           onClick={() => {
-    //             window.emitter.emit("feedback", null);
-    //           }}
-    //         >
-    //           Provide Feedback now!
-    //         </span>
-    //       </div>,
-    //       undefined,
-    //       10000
-    //     );
-    //   }, 60000);
-    // }
+    if (mainConfig.showFeedbackMessageOnStartup !== undefined && mainConfig.showFeedbackMessageOnStartup) {
+      setTimeout(() => {
+        helpers.showMessage(
+          "Feedback",
+          <div>
+            <label>Please provide us feedback! The feedback button is at top right of this window.</label>
+            <span
+              className="sc-fakeLink"
+              style={{ display: "block" }}
+              onClick={() => {
+                window.emitter.emit("feedback", null);
+              }}
+            >
+              Provide Feedback now!
+            </span>
+          </div>,
+          undefined,
+          10000
+        );
+      }, 60000);
+    }
 
     // SHOW WHATS NEW
-    // if (mainConfig.showFeedbackMessageOnStartup !== undefined && mainConfig.showFeedbackMessageOnStartup) {
-    //   helpers.showURLWindow(mainConfig.whatsNewUrl, true, "full", true, true);
-    // }
+    if (mainConfig.showWhatsNewOnStartup !== undefined && mainConfig.showWhatsNewOnStartup && mainConfig.whatsNewUrl) {
+      helpers.showURLWindow(mainConfig.whatsNewUrl, true, "full", true, true);
+    }
+    // SHOW WHATS NEW NOTICE
+    if (mainConfig.showWhatsNewPopupOnStartup !== undefined && mainConfig.showWhatsNewPopupOnStartup && mainConfig.whatsNewUrl) {
+     
+        helpers.showMessage(
+          "What's New!",
+          <div>
+            <span
+              className="sc-fakeLink"
+              style={{ display: "block" }}
+              onClick={() => {
+                helpers.showURLWindow(mainConfig.whatsNewUrl, true, "normal", true, true);
+              }}
+            >
+              Click here to see what's changed
+            </span>
+          </div>,
+          undefined,
+          10000
+        );
+  
+    }
     // ATTRIBUTE TABLE TESTING
     // window.emitter.emit("openAttributeTable", "https://opengis.simcoe.ca/geoserver/", "simcoe:Airport");
   }

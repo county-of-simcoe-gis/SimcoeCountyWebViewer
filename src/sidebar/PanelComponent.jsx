@@ -2,7 +2,8 @@ import React, { Component } from "react";
 import "./PanelComponent.css";
 import { unByKey } from "ol/Observable.js";
 import * as helpers from "../helpers/helpers";
-
+import {FaQuestion} from "react-icons/fa";
+ 
 class PanelComponent extends Component {
   constructor(props) {
     super(props);
@@ -81,12 +82,16 @@ class PanelComponent extends Component {
               <div id="sc-panel-component-tool-icon">
                 <img src={images["tools-icon.png"]} alt="Theme"></img>
               </div>
-              <div id="sc-panel-component-tool-text" className={this.props.name.length < 25 ? "sc-panel-component-tool-text" : "sc-panel-component-tool-text small"}>
-                {this.props.name}
+              <div id="sc-panel-component-tool-text" className={`sc-panel-component-tool-text${this.props.name.length < 25 ? "" : " small"}${this.props.helpLink ? " short" : ""}`} title={this.props.name} alt={this.props.name}>
+                {this.props.name} 
               </div>
+         
               <div id="sc-panel-component-tool-controls">
-                <img id="sc-panel-component-tool-img" src={images["tab-close-24x24.png"]} alt="Close Tab" onClick={this.onSidebarVisibility}></img>
-                <img id="sc-panel-component-tool-close" src={images["close-x-24x24.png"]} alt="Close Tool" onClick={this.props.onClose}></img>
+                <div id="sc-panel-component-help" className={this.props.helpLink ? "sc-panel-component-help" : "sc-hidden"} alt={`View Help for ${this.props.name}`} title={`View Help for ${this.props.name}`} onClick={() => helpers.showURLWindow(this.props.helpLink, false)} > 
+                  <FaQuestion />
+                </div>
+                <img id="sc-panel-component-tool-img" src={images["tab-close-24x24.png"]} alt="Minimize Panel" title="Minimize Panel" onClick={this.onSidebarVisibility}></img>
+                <img id="sc-panel-component-tool-close" src={images["close-x-24x24.png"]} alt={`Close ${this.props.name}`} title={`Close ${this.props.name}`} onClick={this.props.onClose}></img>
               </div>
             </div>
           </div>

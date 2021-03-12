@@ -163,7 +163,7 @@ class ToolComponent extends Component {
     };
 
     return (
-      <PanelComponent onClose={this.onClose} name={this.props.name} type="tools">
+      <PanelComponent onClose={this.onClose} name={this.props.name} helpLink={this.props.helpLink} type="tools">
         <div className="sc-tool-lot-and-concession-container">
           <div className="sc-tool-lot-and-concession-header">Locate civic addresses within the County using the form below.</div>
           <div className="sc-container sc-tool-lot-and-concession-controls">

@@ -86,6 +86,7 @@ class Sidebar extends Component {
         comp.props.description = componentConfig.description;
         comp.props.name = componentConfig.name;
         comp.props.componentName = componentConfig.componentName;
+        comp.props.helpLink = componentConfig.helpLink;
         comp.props.config = componentConfig.config;
 
         // ADD COMPONENT TO LIST
@@ -288,7 +289,7 @@ class Sidebar extends Component {
           if (Component.props.name === name) {
             // CREATE TOOL COMPONENT
             var comp = (
-              <Component key={helpers.getUID()} name={Component.props.name} onClose={this.onPanelComponentClose} onSidebarVisibility={this.togglePanelVisibility} config={Component.props.config} />
+              <Component key={helpers.getUID()} name={Component.props.name} helpLink={Component.props.helpLink} onClose={this.onPanelComponentClose} onSidebarVisibility={this.togglePanelVisibility} config={Component.props.config} />
             );
             let activeTabComponents = this.state.activeTabComponents;
             activeTabComponents.tools.loadedComponent = comp;
@@ -307,7 +308,7 @@ class Sidebar extends Component {
           if (Component.props.name === name) {
             // CREATE THEME COMPONENT
             var comp = (
-              <Component key={helpers.getUID()} name={Component.props.name} onClose={this.onPanelComponentClose} onSidebarVisibility={this.togglePanelVisibility} config={Component.props.config} />
+              <Component key={helpers.getUID()} name={Component.props.name} helpLink={Component.props.helpLink} onClose={this.onPanelComponentClose} onSidebarVisibility={this.togglePanelVisibility} config={Component.props.config} />
             );
             let activeTabComponents = this.state.activeTabComponents;
             activeTabComponents.themes.loadedComponent = comp;

@@ -424,7 +424,7 @@ class AddLayerForm extends Component {
   };
   render() {
     return (
-      <PanelComponent onClose={this.props.onClose} name={this.props.name} type="tools">
+      <PanelComponent onClose={this.props.onClose} name={this.props.name} helpLink={this.props.helpLink} type="tools">
         <div className="sc-add-layer-content">
           <LoadingScreen
             key={helpers.getUID()}

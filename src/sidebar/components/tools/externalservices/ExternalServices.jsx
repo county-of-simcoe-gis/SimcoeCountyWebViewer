@@ -95,7 +95,7 @@ class ExternalServices extends Component {
 
   render() {
     return (
-      <PanelComponent onClose={this.onClose} name={this.props.name} type="tools">
+      <PanelComponent onClose={this.onClose} name={this.props.name} helpLink={this.props.helpLink} type="tools">
         <div className="sc-tool-external-services-container" style={{ fontSize: "11pt" }}>
           Explore a selected location using a variety of external service providers (i.e. Google Maps, Yahoo and Bing). Simply click on a location and select the desired link that appears.
           <div>

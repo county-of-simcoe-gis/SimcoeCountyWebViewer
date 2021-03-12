@@ -326,7 +326,7 @@ class TwoOneOne extends Component {
     }
 
     return (
-      <PanelComponent onClose={this.onClose} name={this.props.name} type="themes">
+      <PanelComponent onClose={this.onClose} name={this.props.name} helpLink={this.props.helpLink} type="themes">
         <div>
           <label className={"sc-211-theme-lang-switch-label"}>
             {this.state.isFrench ? "Back to English" : "Voir en Français?"}

@@ -470,7 +470,7 @@ class Measure extends Component {
 
   render() {
     return (
-      <PanelComponent onClose={this.onClose} name={this.props.name} type="tools">
+      <PanelComponent onClose={this.onClose} name={this.props.name} helpLink={this.props.helpLink} type="tools">
         <div className="simcoe-measure-container">
           <div style={{ padding: "10px", fontSize: "11pt" }}>
             Please select the type of measurements you wish to perform from the toolbar below. Use the line tools for distances and polygon tools for area.

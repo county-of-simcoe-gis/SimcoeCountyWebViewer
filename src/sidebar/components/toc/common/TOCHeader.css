@@ -1,0 +1,231 @@
+.AutoSizerWrapper {
+flex: 1 1 auto;
+}
+
+.List {
+border: 1px solid #e0e0e0;
+}
+.sc-toc-main-container {
+display: block;
+}
+
+.sc-toc-main-container-loading {
+display: block;
+position: relative;
+top: 105px;
+background-image: url(../images/loading.gif);
+}
+
+.sc-toc-loading {
+position: absolute;
+top: 50%;
+left: 50%;
+
+transform: translate(-50%, -50%);
+}
+
+.sc-toc-item-ul-container {
+list-style-type: none;
+margin: 0;
+padding: 0px 0px 0px 5px;
+}
+
+.sc-toc-sortable-helper {
+z-index: 1000;
+}
+
+.sc-toc-item-info {
+padding-left: 3px;
+}
+.sc-toc-item-live-layer {
+padding-left: 5px;
+}
+
+.sc-toc-search-container {
+height: 29px;
+/* border-bottom: 1px solid #ddd; */
+padding-left: 3px;
+margin-top: 2px;
+/* padding-bottom: 7px; */
+display: table;
+padding-top: 5px;
+width: 100%;
+}
+
+.sc-toc-search-textbox {
+display: table-cell;
+background-image: url(../images/funnel.png);
+background-repeat: no-repeat;
+background-position: left;
+height: 28px;
+width: 93%;
+padding-left: 20px;
+font-size: 15px;
+}
+.sc-toc-search-textbox.short {
+    width: 275px;
+}
+
+.sc-toc-header-help {
+    background-color: #6ea8cf;
+    border: 1px solid rgba(202, 202, 202, 0.69);
+    padding: 1px;
+    border-radius: 20px;
+    height: 20px;
+    width: 20px;
+    margin-left: 5px;
+    float: right;
+    text-align: center;
+    margin-top: 5px;
+  }
+  .sc-toc-header-help svg {
+    color: #fff;
+    height: 14px;
+    width: 14px;
+    padding: 3px;
+  }
+.sc-toc-settings-image {
+display: table-cell;
+background-image: url(../images/toc-settings.png);
+background-repeat: no-repeat;
+background-position: center;
+background-position-x: 6px;
+background-position-y: 6px;
+text-align: center;
+min-width: 32px;
+width: 34px;
+}
+
+.sc-toc-groups-container {
+display: table;
+padding-top: 3px;
+margin-left: 5px;
+margin-bottom: 7px;
+width: 98%;
+/* border-bottom: 1px solid #ddd; */
+}
+
+.sc-toc-groups-dropdown {
+width: 358px;
+height: 30px;
+}
+
+.sc-search-toc-highlight-words {
+font-weight: bold !important;
+background: none !important;
+}
+
+.sc-toc-footer-container {
+height: 33px;
+bottom: 0px;
+position: absolute;
+width: 97%;
+padding-top: 6px;
+border-top: 1px solid #bbb;
+text-align: center;
+background-color: white;
+bottom: 5px;
+padding-left: 5px;
+padding-right: 5px;
+display: table;
+}
+
+.sc-toc-footer-button {
+max-width: 29%;
+width: 29%;
+cursor: pointer;
+display: inline-table;
+}
+.sc-toc-footer-button.tools {
+background-color: #e5e5e5;
+background-image: url(../images/toolbox.png);
+background-repeat: no-repeat;
+background-position: center;
+background-position-x: 10px;
+width: 38px;
+text-align: right;
+}
+
+.sc-toc-sort-switch-label {
+display: inline-table;
+width: 34%;
+}
+.sc-toc-sort-switch-label.on {
+font-weight: bold;
+}
+
+.sc-toc-footer-slider {
+padding-bottom: 5px;
+}
+
+.rc-tooltip {
+z-index: 1500;
+}
+.rc-slider-tooltip {
+z-index: 1500;
+}
+
+.sc-toc-save-tooltip {
+width: 145px !important;
+padding-left: 6px !important;
+padding-right: 2px !important;
+}
+
+.sc-toc-layer-info-tooltip {
+width: 125px !important;
+padding-left: 8px !important;
+padding-right: 2px !important;
+}
+
+.sc-toc-sort-switch {
+top: 5px;
+margin-left: 5px;
+}
+
+/* .sc-toc-sortable-helper {
+z-index: 1000;
+} */
+
+.sc-layer-list-sortable-helper {
+z-index: 9999;
+}
+@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+/* IE10+ CSS styles go here */
+.sc-toc-layer-info-tooltip {
+    position: fixed !important;
+    z-index: 1000000 !important;
+    margin-top: 50px !important;
+}
+.sc-toc-save-tooltip {
+    position: fixed !important;
+    z-index: 1000000 !important;
+    margin-top: 50px !important;
+}
+}
+
+@media only screen and (max-width: 400px) {
+.sc-toc-footer-button {
+    width: 17%;
+}
+.sc-toc-sort-switch-label {
+    width: 42%;
+}
+.sc-toc-footer-button.tools {
+    background-color: #e5e5e5;
+    background-image: none;
+    width: 100px;
+    text-align: center;
+    }
+}
+
+
+@media only screen and (max-width: 770px) {
+.sc-menu-button-container {
+    display: inherit !important;
+}
+
+#sc-menu-button-list-container {
+    bottom: 35px !important;
+    left: -55px !important;
+}
+}

@@ -202,7 +202,7 @@ class Print extends Component {
     };
 
     return (
-      <PanelComponent onClose={this.props.onClose} name={this.props.name} type="tools">
+      <PanelComponent onClose={this.props.onClose} name={this.props.name} helpLink={this.props.helpLink} type="tools">
         <div className="sc-print-container">
           {/* MAP TITLE */}
           <label style={{ fontWeight: "bold" }}>Map Title:</label>

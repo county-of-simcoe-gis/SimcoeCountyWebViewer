@@ -174,7 +174,7 @@ class SearchAddresses extends Component {
     };
 
     return (
-      <PanelComponent onClose={this.onClose} name={this.props.name} type="tools">
+      <PanelComponent onClose={this.onClose} name={this.props.name} helpLink={this.props.helpLink} type="tools">
         <div className="sc-tool-search-addresses-container">
           <div className="sc-tool-search-addresses-header">Locate civic addresses within the County using the form below.</div>
           <div className="sc-container sc-theme-search-addresses-controls">
