@@ -1,5 +1,6 @@
 # What's New
-*  ## [April 23rd, 2020](WhatsNew/2020-04-23)
+*  #### [April 23rd, 2020](WhatsNew/2020-04-23)
+
 # Map Settings
 *  ## [Geoserver Layer Keywords](Map/GeoserverKeywords)
 *  ## [URL Parameters](Map/URLParameters)
