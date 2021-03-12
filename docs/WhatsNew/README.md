@@ -1,4 +1,4 @@
-#### [Home](/)
+#### [Home](./)
 # What's new - [opengis.simcoe.ca](https://opengis.simcoe.ca) [April 23rd, 2020]
 
 This mapping application will be replacing our [existing site](https://maps.simcoe.ca/public).
