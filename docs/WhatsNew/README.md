@@ -1,4 +1,4 @@
-#### [Home](./)
+#### [Home](../)
 <a name="top"></a>
 # What's new - [opengis.simcoe.ca](https://opengis.simcoe.ca) [April 23rd, 2020]
 
