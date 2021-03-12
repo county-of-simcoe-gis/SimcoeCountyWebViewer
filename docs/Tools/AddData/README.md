@@ -1,3 +1,5 @@
+#### [Home](../../)
+
 # Add Data Tool
 The Add Data Tool allows you to import data into the Layers/Table of Contents panel. The three sources of data that can be added are file, URL, and services. 
 
@@ -36,3 +38,5 @@ The Add Data Tool allows you to import data into the Layers/Table of Contents pa
 Lists all layers found in Open LIO Data - https://ws.lioservices.lrc.gov.on.ca/arcgis1071a/rest/services/LIO_OPEN_DATA
 
 <br />![add url](../images/servicesbuiltuparea.gif "Add Url Service")
+
+#### [Top](#home)

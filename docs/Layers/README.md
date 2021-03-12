@@ -1,4 +1,4 @@
-
+#### [Home](../)
 ## Layers / Table of Contents
 
 - Downloadable Layers
@@ -87,3 +87,5 @@ List View allows you to switch between groups of layers using a drop down select
 ## Folder View
 Folder View allows you to see all available layers and groups in a single view. In this view layers cannot be reordered.
 <br />![layer folder view](images/layer-folder-view.gif "Layer folder view")
+
+#### [Top](#home)
