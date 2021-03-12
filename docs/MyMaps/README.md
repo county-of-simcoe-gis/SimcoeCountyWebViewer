@@ -1,3 +1,4 @@
+#### [Home](../)
 # My Maps
 My maps is the toolset that enables you to create graphics on the map with the ability to style and edit the graphics.
 
@@ -89,3 +90,5 @@ Some additional tools are available at the bottom of the my maps tab:
 - Delete selected (checked graphics), delete unselected (unchecked graphics), or delete all allows you delete multiple graphics at a time.
 - Show points only, show lines only, or show polygons only allows you to only show graphics of that specific desired type.
 - Zoom to selected (checked graphics) allows you to zoom to graphics that you have checked off in your my items.
+
+#### [Top](#home)
