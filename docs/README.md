@@ -2,8 +2,8 @@
 > * #### [April 23rd, 2020](WhatsNew/2020-04-23)
 
 # Map Settings
-> * ## [Geoserver Layer Keywords](Map/GeoserverKeywords)
 > * ## [URL Parameters](Map/URLParameters)
+> * ## [Geoserver Layer Keywords](Map/GeoserverKeywords)
 
 # Layers
 > * ## [Layers / Table of contents](Layers#layers--table-of-contents)
@@ -27,7 +27,7 @@
 > * ## [Folder View](Layers#folder-view)
 
 # Tools
-> * ## [Add Data](Tools/AddData#to-add-data)
+> * ## [Add Data](Tools/AddData)
 > > * ### [File](Tools/AddData#to-add-file-data)
 > > * ### [URL](Tools/AddData#to-add-url-data)
 > > * ### [Services](Tools/AddData#to-add-services-data)
