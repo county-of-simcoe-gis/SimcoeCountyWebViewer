@@ -4,12 +4,13 @@ import ReactDOM from "react-dom";
 import Switch from "react-switch";
 import { Item as MenuItem } from "rc-menu";
 import ReactTooltip from "react-tooltip";
+import {FaQuestion} from "react-icons/fa";
 
 //CUSTOM
 import * as helpers from "../../../../helpers/helpers";
 import FloatingMenu, { FloatingMenuItem } from "../../../../helpers/FloatingMenu.jsx";
 import Portal from "../../../../helpers/Portal.jsx";
-
+import "./TOCHeader.css";
 class TOCHeader extends Component {
   constructor(props) {
     super(props);
@@ -107,7 +108,7 @@ class TOCHeader extends Component {
           <div className="sc-toc-search-container">
             <input
               id="sc-toc-search-textbox"
-              className="sc-toc-search-textbox"
+              className={`sc-toc-search-textbox${this.props.helpLink ? " short" : ""}`}
               placeholder={"Filter (" + this.props.layerCount + " layers)..."}
               type="text"
               onChange={this.onSearchChange}
@@ -119,7 +120,9 @@ class TOCHeader extends Component {
               }}
               value={this.state.searchText}
             />
-            &nbsp;
+            <div id="sc-toc-header-help" className={this.props.helpLink ? "sc-toc-header-help" : "sc-hidden"} alt={`View Layers Help`} title={`View Layers Help`} onClick={() => helpers.showURLWindow(this.props.helpLink, false)} > 
+              <FaQuestion />
+            </div>
             <div data-tip="Layer Settings" data-for="sc-toc-settings-tooltip" className="sc-toc-settings-image" onClick={this.onSettingsClick}>
               <ReactTooltip id="sc-toc-settings-tooltip" className="sc-toc-settings-tooltip" multiline={false} place="right" type="dark" effect="solid" />
             </div>

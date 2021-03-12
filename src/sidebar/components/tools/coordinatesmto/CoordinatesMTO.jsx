@@ -409,7 +409,7 @@ class CoordinatesMTO extends Component {
 
   render() {
     return (
-      <PanelComponent onClose={this.props.onClose} name={this.props.name} type="tools">
+      <PanelComponent onClose={this.props.onClose} name={this.props.name} helpLink={this.props.helpLink} type="tools">
         <div className="sc-coordinates-container">
           <div className="sc-container">
             <div className="sc-description">

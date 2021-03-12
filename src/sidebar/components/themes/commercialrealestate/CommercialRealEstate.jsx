@@ -307,7 +307,7 @@ class CommercialRealEstate extends Component {
 
   render() {
     return (
-      <PanelComponent onClose={this.props.onClose} name={this.props.name} type="themes">
+      <PanelComponent onClose={this.props.onClose} name={this.props.name} helpLink={this.props.helpLink} type="themes">
         <div className="sc-theme-commercial-real-estate-main-container">
           <CommercialRealEstateSearch
             activeTab={this.state.activeTab}

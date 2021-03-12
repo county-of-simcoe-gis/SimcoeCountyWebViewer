@@ -116,7 +116,7 @@ class Settings extends Component {
 
   render() {
     return (
-      <PanelComponent onClose={this.props.onClose} name={this.props.name} type="tools">
+      <PanelComponent onClose={this.props.onClose} name={this.props.name} helpLink={this.props.helpLink} type="tools">
         <div className="sc-settings-container">
           <div className="sc-container">
             <div className="sc-description">Set your personal preferences.</div>

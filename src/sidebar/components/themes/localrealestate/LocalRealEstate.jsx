@@ -151,7 +151,7 @@ class LocalRealEstate extends Component {
 
   render() {
     return (
-      <PanelComponent onClose={this.props.onClose} name={this.props.name} type="themes">
+      <PanelComponent onClose={this.props.onClose} name={this.props.name} helpLink={this.props.helpLink} type="themes">
         <div className="sc-theme-real-estate-main-container">
           <div className="sc-title sc-underline">THEME LAYERS</div>
           <div className="sc-container" style={{ marginBottom: "5px" }}>

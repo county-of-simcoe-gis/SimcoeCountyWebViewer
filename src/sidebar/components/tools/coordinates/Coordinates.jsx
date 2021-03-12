@@ -213,7 +213,7 @@ class Coordinates extends Component {
 
   render() {
     return (
-      <PanelComponent onClose={this.props.onClose} name={this.props.name} type="tools">
+      <PanelComponent onClose={this.props.onClose} name={this.props.name} helpLink={this.props.helpLink} type="tools">
         <div className="sc-coordinates-container">
           <LiveCoordinates key={helpers.getUID()} liveWebMercatorCoords={this.state.liveWebMercatorCoords} liveLatLongCoords={this.state.liveLatLongCoords} />
 

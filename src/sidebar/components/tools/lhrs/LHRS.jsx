@@ -707,7 +707,7 @@ class LHRS extends Component {
 
   render() {
     return (
-      <PanelComponent onClose={this.props.onClose} name={this.props.name} allowClick={true} type="tools">
+      <PanelComponent onClose={this.props.onClose} name={this.props.name} helpLink={this.props.helpLink} allowClick={true} type="tools">
         <div className="sc-lhrs-container">
           <div className="sc-container">
         

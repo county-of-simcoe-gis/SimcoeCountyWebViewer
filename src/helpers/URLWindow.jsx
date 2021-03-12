@@ -30,7 +30,7 @@ class URLWindow extends Component {
   componentDidMount() {
     if (this.props.honorDontShow) {
       const saved = this.getStorage();
-      if (saved.includes(this.props.url)) this.setState({ hide: true });
+      if (saved.find((item) => item.url.toLowerCase() === this.props.url.toLowerCase())) this.setState({ hide: true });
     }
 
     document.addEventListener("keydown", this.escFunction, false);
@@ -62,7 +62,8 @@ class URLWindow extends Component {
   };
 
   saveToStorage = () => {
-    helpers.appendToStorage(this.storageKey, this.props.url);
+    let item = {url:this.props.url, dateAdded: new Date().toLocaleString()};
+    helpers.appendToStorage(this.storageKey, item);
     this.setState({ hide: true });
   };
 

@@ -69,7 +69,7 @@ class ToolComponent extends Component {
 
   render() {
     return (
-      <PanelComponent onClose={this.onClose} name={this.props.name} type="tools">
+      <PanelComponent onClose={this.onClose} name={this.props.name} helpLink={this.props.helpLink} type="tools">
         <div className="sc-tool-search-history-main-container">
           <div style={{ fontSize: "9pt" }}>Below is a list of your most recent searched items. These items will be added automatically after each search you do for future reference.</div>
           <div className={this.state.items.length === 0 ? "sc-tool-search-history-no-results" : "sc-hidden"}>Your search history is currently empty. Once you search an item, it will appear here.</div>
