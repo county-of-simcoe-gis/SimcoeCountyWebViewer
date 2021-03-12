@@ -1,7 +1,7 @@
 # [What's New](WhatsNew)
 # Map Settings
 *  ## [Geoserver Layer Keywords](Map/GeoserverKeywords)
-*  ## [URL Parameters](URLParameters)
+*  ## [URL Parameters](Map/URLParameters)
 
 # Layers
 * ## [Layers / Table of contents](Layers#layers--table-of-contents)
