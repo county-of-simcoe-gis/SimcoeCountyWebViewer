@@ -1,68 +1,33 @@
-# What's new - [opengis.simcoe.ca](https://opengis.simcoe.ca) [April 23rd, 2020]
+# [What's New](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/WhatsNew)
+# Map Settings
+*  ## [Geoserver Layer Keywords](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Map/GeoserverKeywords)
+*  ## [URL Parameters](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Map/URLParameters)
 
-This mapping application will be replacing our [existing site](https://maps.simcoe.ca/public).
+# Layers
+* ## [Layers / Table of contents](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers#layers--table-of-contents)
+* ## [Filter](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers#filter)
+* ## [Layers Settings](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers#layers---settings)
+> * ### [Switch Layer Style](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers#switch-layer-style)
+> * ### [Save Layer Changes](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers#save-layer-changes)
+> * ### [Reset Layers to Default](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers#reset-layers-to-default)
+> * ### [Turn off All Layers](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers#turn-off-all-layers)
+> * ### [Show Legend](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers#show-legend)
+> * ### [Sort Layers](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers#sort-layers)
+* ## [Layer Icons](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers#layer-icons)
+* ## [Layer Options](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers#layer-options)
+> * ### [Metadata](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers#metadata)
+> * ### [Zoom to Layer](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers#zoom-to-layer)
+> * ### [Zoom to visible scale](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers#zoom-to-visible-scale)
+> * ### [Download](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers#download)
+> * ### [Adjust Transparency](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers#adjust-transparency)
+> * ### [Remove layer](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers#remove-layer)
+* ## [List View](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers#list-view)
+* ## [Folder View](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers#folder-view)
 
-We want your <b>feedback</b>! Click on the star in upper right corner and provide your comments please.
-![](feedback.png)
-
-## Here's some of the new Features we've added.
-
-- [Layers/Table of Contents](#toc)
-- [Search Improvements](#search)
-- [Basemap switcher - Imagery / Topo](#basemaps)
-- [Right Click Menu](#right-click)
-- [Import/Export MyMaps](#mymaps)
-- [Identify](#identify)
-
-<a name="toc"></a>
-
-## Layers / Table of Contents
-
-- Downloadable Layers
-- Re-order layers in the map
-- Sorting A-Z
-- Each layer has options for - Metadata, Transparency, Zoom, etc
-- Choose what group of layers to view
-
-![layers panel](layers.gif "Layers")
-
-<a name="search"></a><br/>
-
-## Search Bar
-
-- Search by Types for more refined results
-- Show More Button allows you to view more results
-- Layers, Tools and Themes are now searchable
-
-![search panel](search.gif "Search Bar")
-<a name="basemaps"></a>
-
-## Basemap Switcher - Imagery / Topo
-
-- More Topo map options
-
-![imagery panel](imagery.gif "Imagery/ Topo Basemap")
-<a name="mymaps"></a>
-
-## Import Export MyMaps
-
-- Share your MyMaps markup
-- Import into a different computer or browser
-
-![maps panel](maps.gif "My Maps")
-
-<a name="right-click"></a>
-
-## Right-Click Menu
-
-Right Click the map window for more options (e.g. Switch To Basic)
-
-![Right Click](right-click.gif "Right Click")
-
-<a name="identify"></a>
-
-## Identify
-
-Identify visible features in the map
-
-![Identify](identify.gif "Identify")
+# Tools
+* ## [Add Data](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Tools/Add%20Data#add-data-tool)
+> * ### [File](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Tools/Add%20Data#file)
+> > * #### [Supported Formats](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Tools/Add%20Data#supported-formats)
+> * ### [URL](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Tools/Add%20Data#url)
+> > * #### [URL Types](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Tools/Add%20Data#url-types)
+> * ### [Services](https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Tools/Add%20Data#services)
