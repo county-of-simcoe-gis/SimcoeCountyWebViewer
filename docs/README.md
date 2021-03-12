@@ -25,9 +25,7 @@
 * ## [Folder View](Layers#folder-view)
 
 # Tools
-* ## [Add Data](Tools/AddData#add-data-tool)
-> * ### [File](Tools/AddData#file)
-> > * #### [Supported Formats](Tools/AddData#supported-formats)
-> * ### [URL](Tools/AddData#url)
-> > * #### [URL Types](Tools/AddData#url-types)
-> * ### [Services](Tools/AddData#services)
+* ## [Add Data](Tools/AddData#to-add-data)
+> * ### [File](Tools/AddData#to-add-file-data)
+> * ### [URL](Tools/AddData#to-add-url-data)
+> * ### [Services](Tools/AddData#to-add-services-data)
