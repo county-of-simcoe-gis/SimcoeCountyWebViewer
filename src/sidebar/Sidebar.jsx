@@ -160,9 +160,11 @@ class Sidebar extends Component {
 
           if (mainConfig.sidebarToolComponents.length + mainConfig.sidebarThemeComponents.length === this.state.toolComponents.length) {
             isLoading = true;
+            
             // HANDLE ADVANCED MODE PARAMETER
             var toolParam = helpers.getURLParameter("TOOL");
             var themeParam = helpers.getURLParameter("THEME");
+            
             if (toolParam != null) {
               window.sidebarOpen = true;
               this.setState({ sidebarOpen: true });
@@ -177,6 +179,24 @@ class Sidebar extends Component {
 
               // TRIED TO USE PROMISES...
               this.activateItemFromEmmiter(themeParam, "themes");
+            }else{
+              if (mainConfig.sidebarShortcutParams){
+                mainConfig.sidebarShortcutParams.forEach((item)=> {
+                  var shortcutParam = helpers.getURLParameter(item.url_param);
+                  if (shortcutParam !== null){
+                    if (item.type === "search"){
+                      window.emitter.emit("searchItem", item.component, shortcutParam);
+                    }else{
+                      window.sidebarOpen = true;
+                      this.setState({ sidebarOpen: true });
+                      this.togglePanelVisibility();
+
+                      // TRIED TO USE PROMISES...
+                      this.activateItemFromEmmiter(item.component, item.type);
+                    }
+                  }
+                });
+              }
             }
           }
         }, i * 100);
