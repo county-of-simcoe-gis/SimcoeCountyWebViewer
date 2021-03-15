@@ -282,10 +282,10 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured=false,
     const resultObj = parser.read(result);
     let groupLayerList =
       urlType === "root"
-        ? resultObj.Capability.Layer.Layer[0]
+        ? [resultObj.Capability.Layer.Layer[0]]
         : urlType === "group"
         ? resultObj.Capability.Layer.Layer[0].Layer
-        : resultObj.Capability.Layer.Layer[0];
+        : [resultObj.Capability.Layer.Layer[0]];
     let parentGroup =
         urlType === "root"
           ? resultObj.Capability.Layer.Layer[0]
