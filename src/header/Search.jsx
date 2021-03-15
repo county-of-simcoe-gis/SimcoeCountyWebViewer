@@ -77,6 +77,12 @@ class Search extends Component {
 
     // LISTEN FOR SEARCH FROM HISTORY
     window.emitter.addListener("searchHistorySelect", (item) => this.onHistoryItemSelect(item));
+    
+    // LISTEN FOR INITIAL SEARCH
+    window.emitter.addListener("tocLoaded", () => this.onInitialSearch()); 
+
+    // LISTEN FOR EXTERNAL COMPONENT SEARCH
+    window.emitter.addListener("searchItem", (searchType,searchText) => this.onSearch(searchType, searchText)); 
 
     this.state = {
       value: "",
@@ -141,6 +147,34 @@ class Search extends Component {
       this.onItemSelect(value, item);
     });
   };
+
+  onInitialSearch = (search_type=undefined, search=undefined) => {
+    // GET SEARCH URL PARAMETERS
+    if(!search) search = helpers.getURLParameter("q");
+    if(!search_type) search_type = helpers.getURLParameter("qt");
+    if (!search && search===null) return;
+    if (!search_type && search_type === null){
+      search_type = "All";
+    }
+    this.onSearch(search_type,search)
+  }
+
+  onSearch = (search_type=undefined, search=undefined) => {
+    if (!search && search===null) return;
+    if (!search_type && search_type === null){
+      search_type = "All";
+    }
+    this.setState({value:search, selectedType: { label: search_type, value: search_type } });
+    helpers.getJSON(encodeURI(searchURL(apiUrl, search, search_type,undefined, 1)), responseJson => { 
+      if(responseJson[0] !== undefined 
+          && responseJson[0].location_id !== null 
+          && responseJson[0].location_id !== undefined) {
+        helpers.getJSON(searchInfoURL(apiUrl, responseJson[0].location_id), result => this.jsonCallback(result));
+        
+      }
+    });
+  }
+
 
   onTypeDropDownChange = (selectedType) => {
     this.setState({ selectedType: selectedType }, async () => {

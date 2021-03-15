@@ -63,6 +63,7 @@
   },
   "tocType": "LIST",
   "wmsGeoJsonTemplate": "https://maps.simcoe.ca/ESRIWMSTemplates/featureinfo_application_geojson.xsl",
+  
   "sidebarToolComponents": [
     {
       "id": 1,
@@ -200,5 +201,22 @@
       "description": "Explore 211 Community Services across the County of Simcoe.",
       "imageName": "communityServices.png"
     }
-  ]
+  ],
+  "sidebarShortcutParams": [
+    {
+        "url_param":"BAGTAG",
+        "type":"themes",
+        "component": "Solid Waste Facilities"
+     },
+     {
+        "url_param":"LANDFILL",
+        "type":"themes",
+        "component": "Solid Waste Facilities"
+     },
+     {
+        "url_param":"MUNI",
+        "type":"search",
+        "component": "Municipality"
+     }
+    ]
 }

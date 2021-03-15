@@ -26,8 +26,7 @@ class TOC extends Component {
     this.storageKey = "Layers";
     this.storageKeyFolder = "Layers_Folder_View";
     this.storageKeyTOCType = "TOC_Type";
-
-
+    this.tocTypes=["LIST","FOLDER"];
     this.state = {
       layerListGroups: [],
       layerFolderGroups: [],
@@ -68,6 +67,11 @@ class TOC extends Component {
  //#region REACT FUNCTIONS
   componentWillMount() {
     let tocType = helpers.getURLParameter("TOCTYPE");
+    if (tocType !== null && tocType !== undefined) {
+      if (this.tocTypes.includes(tocType.toUpperCase())) tocType = tocType.toUpperCase();
+      else tocType=undefined;
+    }
+
     if (!tocType) tocType = helpers.getItemsFromStorage(this.storageKeyTOCType);
     if (tocType !== null && tocType !== undefined) {
       this.setState({ type: tocType });
@@ -120,8 +124,10 @@ refreshTOC = (isReset, callback=undefined) => {
   //this.getSavedLayers((results)=>{savedLayers=results;});
   let geoserverUrl = helpers.getURLParameter("GEO_URL");
   let geoserverUrlType = helpers.getURLParameter("GEO_TYPE");
-  let mapId = helpers.getURLParameter("MAP_ID");
-  if (mapId === null) mapId = TOCConfig.mapId;
+
+  //allow GEO_URL url parameter to override MAP_ID
+  let mapId = geoserverUrl === null ? helpers.getURLParameter("MAP_ID") : null;
+  if (mapId === null && geoserverUrl === null) mapId = TOCConfig.mapId;
   if (geoserverUrl === null) {
     geoserverUrl = TOCConfig.geoserverLayerGroupsUrl;
   } else {
@@ -179,7 +185,6 @@ refreshTOC = (isReset, callback=undefined) => {
         this.getSavedCustomLayers("LIST", (savedGroups)=>{
           if (savedGroups !== undefined) {
             listLayerGroups = TOCHelpers.mergeGroups(listLayerGroups, savedGroups[0]);
-            
           }
         });
         this.getSavedCustomLayers("FOLDER", (savedGroups)=>{
