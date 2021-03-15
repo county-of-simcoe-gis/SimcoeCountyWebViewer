@@ -41,7 +41,7 @@
       "displayFieldName": "Name",
       "UrlParameter": {
         "parameterName": "BAGTAG",
-        "fieldName": "ARN"
+        "fieldName": "arn"
       }
     }
   ]

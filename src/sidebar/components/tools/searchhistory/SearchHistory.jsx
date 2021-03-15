@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import "./SearchHistory.css";
 import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
-const storageKey = "Search History";
+const storageKey = "searchHistory";
 class ToolComponent extends Component {
    
   constructor(props) {
