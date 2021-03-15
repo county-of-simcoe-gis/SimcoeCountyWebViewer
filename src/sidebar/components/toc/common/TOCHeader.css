@@ -77,6 +77,7 @@ font-size: 15px;
     float: right;
     text-align: center;
     margin-top: 5px;
+    cursor: pointer;
   }
   .sc-toc-header-help svg {
     color: #fff;
@@ -94,6 +95,7 @@ background-position-y: 6px;
 text-align: center;
 min-width: 32px;
 width: 34px;
+cursor: pointer;
 }
 
 .sc-toc-groups-container {

@@ -199,13 +199,6 @@
       "componentName": "TwoOneOne",
       "description": "Explore 211 Community Services across the County of Simcoe.",
       "imageName": "communityServices.png"
-    },
-    {
-      "id": 9,
-      "name": "511 Live Feeds",
-      "componentName": "511LiveFeeds",
-      "description": "View Live Feeds from the MTO and Waze.",
-      "imageName": "511.png"
     }
   ]
 }
