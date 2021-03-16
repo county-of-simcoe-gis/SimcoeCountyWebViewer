@@ -204,19 +204,68 @@
   ],
   "sidebarShortcutParams": [
     {
-        "url_param":"BAGTAG",
-        "type":"themes",
-        "component": "Solid Waste Facilities"
-     },
-     {
-        "url_param":"LANDFILL",
-        "type":"themes",
-        "component": "Solid Waste Facilities"
-     },
-     {
-        "url_param":"MUNI",
-        "type":"search",
-        "component": "Municipality"
-     }
-    ]
+      "url_param":"BAGTAG",
+      "type":"themes",
+      "component": "Solid Waste Facilities"
+    },
+    {
+      "url_param":"LANDFILL",
+      "type":"themes",
+      "component": "Solid Waste Facilities"
+    },
+    {
+      "url_param":"MUNI",
+      "type":"search",
+      "component": "Municipality"
+    },
+    {
+      "url_param":"THEME",
+      "matchValue":"Solid Waste Management",
+      "type":"themes",
+      "component": "Solid Waste Facilities"
+    },
+    {
+      "url_param":"THEME",
+      "matchValue":"solidwaste",
+      "type":"themes",
+      "component": "Solid Waste Facilities"
+    },
+    {
+      "url_param":"THEME",
+      "matchValue":"Economic Development",
+      "type":"themes",
+      "component": "Commercial Real Estate"
+    },
+    {
+      "url_param":"THEME",
+      "matchValue":"Commercial Real Estate Search",
+      "type":"themes",
+      "component": "Commercial Real Estate"
+    },
+    {
+      "url_param":"THEME",
+      "matchValue":"Community Services",
+      "type":"themes",
+      "component": "211 Community Services"
+    },
+    {
+      "url_param":"THEME",
+      "matchValue":"BESTSTART",
+      "type":"themes",
+      "component": "211 Community Services"
+    },
+    {
+      "url_param":"THEME",
+      "matchValue":"REALESTATE",
+      "type":"themes",
+      "component": "Local Real Estate"
+    },
+    {
+      "url_param":"THEME",
+      "matchValue":"Immigration Support Services",
+      "type":"themes",
+      "component": "Immigration Services"
+    }
+    
+  ]
 }
