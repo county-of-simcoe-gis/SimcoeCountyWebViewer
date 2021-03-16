@@ -537,8 +537,10 @@ class Search extends Component {
         minHeight: "38px",
         // width: "150px"
         width: dropDownWidth + "px",
-        borderRadius: "unset",
-        borderBottom: "none",
+        border:"none",
+        boxShadow:"none",
+        background:"transparent",
+        backgroundColor:"unset",
       }),
       indicatorsContainer: (provided) => ({
         ...provided,
