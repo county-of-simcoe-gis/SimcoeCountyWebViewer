@@ -410,9 +410,9 @@ class AddLayerForm extends Component {
           this.addLayer
         );
         if (this.state.layer_file !== undefined){
-          helpers.addAppStat("Add Data", `Tab:${this.state.tabIndex} - ${format.source} - ${formatType} - Group:${this.state.selectGroupOption.label}- FileName:${this.state.layer_file.name} - size:${this.state.layer_file.size}`);
+          helpers.addAppStat("Add Data", `${this.state.tabIndex}-${format.source}-${formatType}`);
         }else{
-          helpers.addAppStat("Add Data", `Tab:${this.state.tabIndex} - ${format.source} - ${formatType} - Group:${this.state.selectGroupOption.label}- LayerName:${this.state.layer_name} - url:${this.state.serverUrl}`);
+          helpers.addAppStat("Add Data", `${this.state.tabIndex}-${format.source}-${formatType}`);
         }
       }
     });
