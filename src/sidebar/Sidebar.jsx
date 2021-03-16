@@ -110,9 +110,11 @@ class Sidebar extends Component {
     // IMPORT THEMES FROM CONFIG
     const themes = mainConfig.sidebarThemeComponents;
     themes.map(async (component) => await this.addComponent(component, "themes"));
-
-    this.initToolAndThemeUrlParameter();
-
+    if (!this.props.mapLoading && !this.props.headerLoading) {
+      this.initToolAndThemeUrlParameter();
+    }else{
+      setTimeout(()=>this.initToolAndThemeUrlParameter(), 1500);
+    }
     // HANDLE ADVANCED MODE PARAMETER
     const url = new URL(window.location.href.toUpperCase());
     const viewerMode = url.searchParams.get("MODE");
@@ -165,14 +167,14 @@ class Sidebar extends Component {
             var toolParam = helpers.getURLParameter("TOOL");
             var themeParam = helpers.getURLParameter("THEME");
             
-            if (toolParam != null) {
+            if (toolParam != null && mainConfig.sidebarToolComponents.find(item => item.name.toLowerCase() === toolParam.toLowerCase())) {
               window.sidebarOpen = true;
               this.setState({ sidebarOpen: true });
               this.togglePanelVisibility();
 
               // TRIED TO USE PROMISES...
               this.activateItemFromEmmiter(toolParam, "tools");
-            } else if (themeParam != null) {
+            } else if (themeParam != null && mainConfig.sidebarThemeComponents.find(item => item.name.toLowerCase() === themeParam.toLowerCase())) {
               window.sidebarOpen = true;
               this.setState({ sidebarOpen: true });
               this.togglePanelVisibility();
@@ -180,19 +182,23 @@ class Sidebar extends Component {
               // TRIED TO USE PROMISES...
               this.activateItemFromEmmiter(themeParam, "themes");
             }else{
-              if (mainConfig.sidebarShortcutParams){
+              const queryString = window.location.search;
+              if (mainConfig.sidebarShortcutParams && queryString.length > 0){
+                const urlParams = new URLSearchParams(queryString);
                 mainConfig.sidebarShortcutParams.forEach((item)=> {
-                  var shortcutParam = helpers.getURLParameter(item.url_param);
+                  var shortcutParam = urlParams.get(item.url_param);
                   if (shortcutParam !== null){
                     if (item.type === "search"){
                       window.emitter.emit("searchItem", item.component, shortcutParam);
                     }else{
-                      window.sidebarOpen = true;
-                      this.setState({ sidebarOpen: true });
-                      this.togglePanelVisibility();
+                      if (item.matchValue === undefined || item.matchValue.toLowerCase() === shortcutParam.toLowerCase()){
+                        window.sidebarOpen = true;
+                        this.setState({ sidebarOpen: true });
+                        this.togglePanelVisibility();
 
-                      // TRIED TO USE PROMISES...
-                      this.activateItemFromEmmiter(item.component, item.type);
+                        // TRIED TO USE PROMISES...
+                        this.activateItemFromEmmiter(item.component, item.type);
+                      }
                     }
                   }
                 });
@@ -306,7 +312,7 @@ class Sidebar extends Component {
         this.setState({ activeComponent: loadedTool });
       } else {
         this.state.toolComponents.map((Component) => {
-          if (Component.props.name === name) {
+          if (Component.props.name.toLowerCase() === name.toLowerCase()) {
             // CREATE TOOL COMPONENT
             var comp = (
               <Component key={helpers.getUID()} name={Component.props.name} helpLink={Component.props.helpLink} onClose={this.onPanelComponentClose} onSidebarVisibility={this.togglePanelVisibility} config={Component.props.config} />
@@ -325,7 +331,7 @@ class Sidebar extends Component {
       if (loadedTheme != null) this.setState({ activeComponent: loadedTheme });
       else {
         this.state.toolComponents.map((Component) => {
-          if (Component.props.name === name) {
+          if (Component.props.name.toLowerCase() === name.toLowerCase()) {
             // CREATE THEME COMPONENT
             var comp = (
               <Component key={helpers.getUID()} name={Component.props.name} helpLink={Component.props.helpLink} onClose={this.onPanelComponentClose} onSidebarVisibility={this.togglePanelVisibility} config={Component.props.config} />
