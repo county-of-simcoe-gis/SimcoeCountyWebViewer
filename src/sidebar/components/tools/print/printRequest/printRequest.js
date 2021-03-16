@@ -65,7 +65,7 @@ const buildVectorLayer = (layer, callback = undefined)=> {
     let itemSymbolizers = [];
     const itemFilter = `*`;
     let olStyle = item.getStyle();
-    if (olStyle.fill_ === undefined || olStyle.stroke_ === undefined || olStyle.text_ === undefined){
+    if (olStyle === null || olStyle.fill_ === undefined || olStyle.stroke_ === undefined || olStyle.text_ === undefined){
       olStyle = drawingHelpers.getDefaultDrawStyle("#e809e5");
     }
     let olFill = olStyle.fill_ !== null && olStyle.fill_ !== undefined ? olStyle.getFill() : null;
@@ -83,9 +83,11 @@ const buildVectorLayer = (layer, callback = undefined)=> {
     }
     let itemStrokeFill = {};
     itemStrokeFill.type = config.drawTypes[item.get("drawType")];
-    if (itemStrokeFill.type === undefined){
-      itemStrokeFill.type = item.getGeometry().getType();
-    }
+    //if drawType is undefined try setting based on geometry type
+    if (itemStrokeFill.type === undefined) itemStrokeFill.type = config.drawTypes[item.getGeometry().getType()];
+    //if unsupported geometry type, default to Polygon
+    if (itemStrokeFill.type === undefined) itemStrokeFill.type = "Polygon";
+
     if (olFill !== null) {
       itemStrokeFill.fillColor = utils.rgbToHex(...olFill.color_);
       itemStrokeFill.fillOpacity = olFill.color_[3];
@@ -140,7 +142,11 @@ const buildVectorLayer = (layer, callback = undefined)=> {
     let feature = FeatureHelpers.setFeatures([item], OL_DATA_TYPES.GeoJSON, "EPSG:4326", "EPSG:4326");
     if (feature !== undefined){
       feature = JSON.parse(feature);
-      itemLayer.geoJson=feature;
+      
+      itemLayer.geoJson=feature.features.map(item =>{
+                          if (item.properties === null) item.properties = {};
+                          return item;
+                        });
       returnLayers.push(itemLayer)
     } 
   });
