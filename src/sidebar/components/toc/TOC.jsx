@@ -135,7 +135,7 @@ refreshTOC = (isReset, callback=undefined) => {
   }
   if (geoserverUrlType === null) geoserverUrlType = TOCConfig.geoserverLayerGroupsUrlType;
   if (geoserverUrl !== undefined && geoserverUrl !== null) {
-    if(TOCConfig.useMapConfigApi){
+    if(TOCConfig.useMapConfigApi || mapId !== null){
       TOCHelpers.getMap(mapId, geoserverUrlType, isReset, this.state.type, (result)=>{
         let groupInfo = result;
         let listLayerGroups = groupInfo[0];
