@@ -9,16 +9,20 @@ class ShowMessage extends Component {
     this.state = {
       hide: false,
       color: this.props.color ? this.props.color : "green",
+      sidebarOpen: window.sidebarOpen
     };
+    window.emitter.addListener("sidebarChanged", (isSidebarOpen) => this.setState({sidebarOpen:isSidebarOpen}));
+
   }
 
+  
   onCloseClick = (value) => {
     this.setState({ hide: true });
   };
 
   getClassName = () => {
     if (this.state.hide) return "sc-hidden";
-    else if (window.sidebarOpen) return "sc-show-message-container " + this.state.color;
+    else if (this.state.sidebarOpen) return "sc-show-message-container " + this.state.color;
     else return "sc-show-message-container closed " + this.state.color;
   };
 
