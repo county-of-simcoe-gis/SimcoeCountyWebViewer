@@ -632,7 +632,7 @@ export class LayerHelpers {
           source: new XYZ({ 
             url: url, 
             //projection: projection , 
-            //crossOrigin: "anonymous",
+            crossOrigin: "anonymous",
           }),
         }));
         break;
