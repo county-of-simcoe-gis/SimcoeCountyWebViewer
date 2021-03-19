@@ -239,11 +239,17 @@ class SCMap extends Component {
         );
       }
       const saved = helpers.getItemsFromStorage(mainConfig.storageKeys.URLDontShowAgain);
-   
-      if (!(saved && saved.find((item) => item.url.toLowerCase() === mainConfig.whatsNewUrl.toLowerCase()))) 
-      {
+      if(saved !==null && saved !== undefined ){
+        if ((saved.find((item) => item.url.toLowerCase() === mainConfig.whatsNewUrl.toLowerCase()))) 
+        {
+          showWhatsNewMessage();
+        }
+      }else{
         showWhatsNewMessage();
       }
+     
+        
+     
     }
     // ATTRIBUTE TABLE TESTING
     // window.emitter.emit("openAttributeTable", "https://opengis.simcoe.ca/geoserver/", "simcoe:Airport");
