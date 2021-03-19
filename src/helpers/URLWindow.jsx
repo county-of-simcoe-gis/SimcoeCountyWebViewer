@@ -28,9 +28,15 @@ class URLWindow extends Component {
   }
 
   componentDidMount() {
-    if (this.props.honorDontShow) {
-      const saved = this.getStorage();
-      if (saved.find((item) => item.url.toLowerCase() === this.props.url.toLowerCase())) this.setState({ hide: true });
+    try{
+      if (this.props.honorDontShow) {
+        const saved = this.getStorage();
+        if(saved !==null && saved !== undefined ){
+          if (saved.find((item) => item.url !== undefined ? item.url.toLowerCase() === this.props.url.toLowerCase() : false)) this.setState({ hide: true });
+        }
+      }
+    }catch(e){
+      console.log(e);
     }
 
     document.addEventListener("keydown", this.escFunction, false);
@@ -40,6 +46,21 @@ class URLWindow extends Component {
   }
 
   isDontShow = () => {
+    try{
+      if (this.props.honorDontShow) {
+        const saved = this.getStorage();
+        if(saved !==null && saved !== undefined ){
+          return saved.find((item) => item.url !== undefined ? item.url.toLowerCase() === this.props.url.toLowerCase() : false)
+        }else{
+          return false;
+        }
+      }else{
+        return false;
+      }
+    }catch(e){
+      return false;
+    }
+
     if (this.props.honorDontShow) {
       const saved = this.getStorage();
       if (saved.includes(this.props.url)) return true;
