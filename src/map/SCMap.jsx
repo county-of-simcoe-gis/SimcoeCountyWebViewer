@@ -238,17 +238,22 @@ class SCMap extends Component {
           10000
         );
       }
-      const saved = helpers.getItemsFromStorage(mainConfig.storageKeys.URLDontShowAgain);
-      if(saved !==null && saved !== undefined ){
-        if ((saved.find((item) => item.url.toLowerCase() === mainConfig.whatsNewUrl.toLowerCase()))) 
-        {
+      try{
+        const saved = helpers.getItemsFromStorage(mainConfig.storageKeys.URLDontShowAgain);
+        if(saved !==null && saved !== undefined ){
+          if (!(saved.find((item) => item.url !== undefined ? item.url.toLowerCase() === mainConfig.whatsNewUrl.toLowerCase() : false))) 
+          {
+            showWhatsNewMessage();
+          }
+        }else{
           showWhatsNewMessage();
         }
-      }else{
-        showWhatsNewMessage();
+      } 
+      catch(e){
+        helpers.saveToStorage(mainConfig.storageKeys.URLDontShowAgain, []);
+        console.log(e);
       }
-     
-        
+
      
     }
     // ATTRIBUTE TABLE TESTING
