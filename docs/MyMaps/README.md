@@ -9,12 +9,12 @@ The my maps tab provides temporary storage of graphics and is not meant to be pe
 ## To save graphics:
 1. Once all graphics are drawn, click advanced options
 2. Click the save button
-<br />![navigate to add data](./images/saveandimportone.gif "Navigate to Add Data Tool")
+<br />![navigate to add data](./images/saveone.gif "Navigate to Add Data Tool")
 3. The ID will be generated, copy the ID to your clipboard
-<br />![navigate to add data](./images/saveandimporttwo.gif "Navigate to Add Data Tool")
+<br />![navigate to add data](./images/savetwo.gif "Navigate to Add Data Tool")
 4. To bring back the graphics to the map paste the ID into the text box 
 5. Click the import button and your graphics will populate into the map 
-<br />![navigate to add data](./images/saveandimportthree.gif "Navigate to Add Data Tool")
+<br />![navigate to add data](./images/savethree.gif "Navigate to Add Data Tool")
 
 
 ## To share graphics:
