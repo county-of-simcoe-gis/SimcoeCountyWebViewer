@@ -1,14 +1,10 @@
 # Simcoe County OpenLayers Map Viewer
 
-## Live beta site can be found [here](https://opengis.simcoe.ca/public)
+## Live site can be found [here](https://opengis.simcoe.ca/public)
 
-This site has officially went live as a beta on Apr 23rd, 2020.
-
-The goal of this project is to replace [this viewer](https://maps.simcoe.ca/public) using an open source environment. The existing viewer is built using the ESRI 3.x JS api/DOJO with the Web App Builder and ArcGIS Server.
+This site has officially went live as a production release on Mar 22nd, 2021.
 
 This app is built using React, OpenLayers and GeoServer. Many components are configurable to point to your own WMS/WFS, XYZ services. Some components use a custom rest api, such as the search and property report.
-
-**GeoServer Server Rest API end points need to be enabled for this app to work!**
 
 It's built using a framework to easily create your own tools and themes (instructions below) using the provided templates. Control what layers, tools and themes are loaded using the config at the root of the src folder.
 
@@ -69,10 +65,11 @@ In the project diretory, type `npm run build` in the terminal. Details can be fo
 ## Authors
 
 - **Al Proulx** - _Initial work_ - [Al Proulx](https://github.com/iquitwow)
+- **Tom Reed** - Joined the team in 2021 - [Tom Reed](https://github.com/reed-tom)
 
 ## Contributors
 
-- MTO - Various Enhancements - [Tom Reed](https://github.com/reed-tom) and [Nedim Oren](https://github.com/oren-ned)
+- MTO - Various Enhancements - [Nedim Oren](https://github.com/oren-ned)
 - Spatial DNA - Print Tool - [Spatial DNA](https://github.com/SpatialDNA)
 - Kristie Hu - Immigration Services Theme - [Kristie Hu](https://github.com/Kristiehu)
 
