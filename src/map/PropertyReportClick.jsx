@@ -32,16 +32,28 @@ class PropertyReportClick extends Component {
     // LISTEN FOR MAP TO MOUNT
     //window.emitter.addListener("mapParametersComplete", () => this.onMapLoad());
     // LISTEN FOR MAP TO MOUNT
-    window.emitter.addListener("mapLoaded", () => this.onMapLoad());
+    window.emitter.addListener("mapLoaded",() => this.onMapLoad());
+    window.emitter.addListener("tocLoaded", () => this.setState({ tocLoaded: true }));
+
     this.onMapLoad = this.onMapLoad.bind(this);
 
     this.state = {
       propInfo: null,
       feature: null,
+      tocLoaded:false
     };
   }
 
   onMapLoad() {
+    //wait for toc to finish loading
+    if (!this.state.tocLoaded){
+      setTimeout(() => {
+        this.onMapLoad();
+      }, 100);
+      return;
+    }
+
+
     window.map.addLayer(parcelLayer);
 
     // HANDLE URL PARAMETERS

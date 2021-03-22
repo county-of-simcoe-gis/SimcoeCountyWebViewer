@@ -59,6 +59,12 @@
       "type": "TileImage"
     },
     {
+      "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_1978_Cache/MapServer/tile/{z}/{y}/{x}",
+      "name": "1978",
+      "fullExtent": [-8939198.774465304, 5454802.850841734, -8801041.351645766, 5612747.926099348],
+      "type": "TileImage"
+    },
+    {
       "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_1989_Cache/MapServer/tile/{z}/{y}/{x}",
       "name": "1989",
       "fullExtent": [-8939198.774465304, 5454802.850841734, -8801041.351645766, 5612747.926099348],
