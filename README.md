@@ -2,6 +2,8 @@
 
 ## Live site can be found [here](https://opengis.simcoe.ca/public)
 
+Please visit our release page for stable downloads. [Releases](https://github.com/county-of-simcoe-gis/SimcoeCountyWebViewer/releases)
+
 This site has officially went live as a production release on Mar 22nd, 2021.
 
 This app is built using React, OpenLayers and GeoServer. Many components are configurable to point to your own WMS/WFS, XYZ services. Some components use a custom rest api, such as the search and property report.
