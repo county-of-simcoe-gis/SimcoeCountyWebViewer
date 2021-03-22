@@ -1,5 +1,5 @@
 # What's New
-> * #### [April 23rd, 2020](WhatsNew/2020-04-23)
+> * #### [March 22nd, 2021](WhatsNew/2021-03-22)
 
 # Map Settings
 > * ## [URL Parameters](Map/URLParameters)
