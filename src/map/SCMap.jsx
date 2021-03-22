@@ -220,7 +220,7 @@ class SCMap extends Component {
     }
     // SHOW WHATS NEW NOTICE
     if (mainConfig.showWhatsNewPopupOnStartup !== undefined && mainConfig.showWhatsNewPopupOnStartup && mainConfig.whatsNewUrl) {
-     
+      const showWhatsNewMessage = () => {
         helpers.showMessage(
           "What's New!",
           <div>
@@ -237,7 +237,24 @@ class SCMap extends Component {
           undefined,
           10000
         );
-  
+      }
+      try{
+        const saved = helpers.getItemsFromStorage(mainConfig.storageKeys.URLDontShowAgain);
+        if(saved !==null && saved !== undefined ){
+          if (!(saved.find((item) => item.url !== undefined ? item.url.toLowerCase() === mainConfig.whatsNewUrl.toLowerCase() : false))) 
+          {
+            showWhatsNewMessage();
+          }
+        }else{
+          showWhatsNewMessage();
+        }
+      } 
+      catch(e){
+        helpers.saveToStorage(mainConfig.storageKeys.URLDontShowAgain, []);
+        console.log(e);
+      }
+
+     
     }
     // ATTRIBUTE TABLE TESTING
     // window.emitter.emit("openAttributeTable", "https://opengis.simcoe.ca/geoserver/", "simcoe:Airport");

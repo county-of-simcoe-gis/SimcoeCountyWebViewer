@@ -409,6 +409,11 @@ class AddLayerForm extends Component {
           undefined,
           this.addLayer
         );
+        if (this.state.layer_file !== undefined){
+          helpers.addAppStat("Add Data", `${this.state.tabIndex}-${format.source}-${formatType}`);
+        }else{
+          helpers.addAppStat("Add Data", `${this.state.tabIndex}-${format.source}-${formatType}`);
+        }
       }
     });
   };

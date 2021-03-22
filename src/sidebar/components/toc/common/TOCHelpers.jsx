@@ -716,7 +716,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType,secure
     const maxScale = layer.MaxScaleDenominator;
     // SET VISIBILITY
     let layerVisible = false;
-    if (savedLayers !== undefined && savedLayers.length > 0) {
+    if (savedLayers !== undefined) {
       const savedLayer = savedLayers[layerNameOnly];
       if (savedLayer !== undefined){
         if (savedLayer.visible) layerVisible = true;
