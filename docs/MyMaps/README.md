@@ -8,14 +8,22 @@ The my maps tab provides temporary storage of graphics and is not meant to be pe
 
 ## To save graphics:
 1. Once all graphics are drawn, click advanced options
+2. Click the save button
 <br />![navigate to add data](./images/saveandimportone.gif "Navigate to Add Data Tool")
-2. Click the save button and the ID link will appear in the text box
+3. The ID will be generated, copy the ID to your clipboard
 <br />![navigate to add data](./images/saveandimporttwo.gif "Navigate to Add Data Tool")
-3. Copy and keep that ID
-<br />![navigate to add data](./images/saveandimportthree.gif "Navigate to Add Data Tool")
-4. To bring back those graphics paste the ID link back into the text box 
+4. To bring back the graphics to the map paste the ID into the text box 
 5. Click the import button and your graphics will populate into the map 
-<br />![navigate to add data](./images/saveandimportfour.gif "Navigate to Add Data Tool")
+<br />![navigate to add data](./images/saveandimportthree.gif "Navigate to Add Data Tool")
+
+
+## To share graphics:
+1. Once all graphics are drawn, click advanced options
+2. Click the save button and the ID link will appear in the text box
+3. Click the share button, and the web link for your map graphics will copy to your clipboard
+<br />![navigate to add data](./images/shareone.gif "Navigate to Add Data Tool")
+4. This link can be shared with anyone and when pasted into a browsers address bar it will bring you to opengis.simcoe.ca with the saved graphics 
+<br />![navigate to add data](./images/sharetwo.gif "Navigate to Add Data Tool")
 
 ## To add a graphic to the map:
 1. Click the button of the type of graphic you would like
@@ -30,7 +38,6 @@ The my maps tab provides temporary storage of graphics and is not meant to be pe
 <br />![navigate to add data](./images/addproperty.gif "Navigate to Add Data Tool")
 
 Each graphic appears as an item in your my items table of contents and provides access to a variety of editing tools for each specific item. Operations which can be completed are visibility, deletion, label editing/visibility, geometry editing tools, and buffers.
-
 
 ## To Turn on and off the visibility of a graphic:
 1. Click the check box beside the graphic
