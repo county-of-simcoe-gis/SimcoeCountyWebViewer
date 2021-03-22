@@ -18,7 +18,7 @@
   "apiUrl": "https://opengis.simcoe.ca/api/",
   "apiUrlDev": "http://localhost:8085/",
   "termsUrl": "https://maps.simcoe.ca/terms.html",
-  "whatsNewUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/WhatsNew/2020-04-23",
+  "whatsNewUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/WhatsNew/2021-03-22",
   "helpUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer",
   "ieWarningUrl": "https://opengis.simcoe.ca/public/ieWarning.html",
   "propertyReportUrl": "https://maps.simcoe.ca/giswebapi/api/propertyreport",
