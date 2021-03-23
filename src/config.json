@@ -209,6 +209,11 @@
       "component": "Solid Waste Facilities"
     },
     {
+      "url_param":"MLS",
+      "type":"themes",
+      "component": "Local Real Estate"
+    },
+    {
       "url_param":"LANDFILL",
       "type":"themes",
       "component": "Solid Waste Facilities"
