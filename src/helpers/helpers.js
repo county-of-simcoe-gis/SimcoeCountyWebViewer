@@ -443,8 +443,10 @@ export function searchArrayByKey(nameKey, myArray) {
 
 // GET URL PARAMETER
 export function getURLParameter(parameterName, decoded = true) {
-  const url = new URL(window.location.href);
-  const param = url.searchParams.get(parameterName);
+  const queryString = window.location.search;
+  if (queryString.length < 1) return null;
+  const urlParams = new URLSearchParams(queryString.toLowerCase());
+  const param = urlParams.get(parameterName.toLowerCase());
   if (param === null) return null;
 
   if (decoded) return param;
