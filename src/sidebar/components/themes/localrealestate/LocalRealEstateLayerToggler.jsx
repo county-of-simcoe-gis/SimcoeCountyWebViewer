@@ -22,10 +22,14 @@ class LocalRealEstateLayerToggler extends Component {
   handleUrlParameter = () => {
     if (this.props.layerConfig.UrlParameter === undefined) return;
 
-    const urlParam = helpers.getURLParameter(this.props.layerConfig.UrlParameter.parameterName);
+    let urlParam = null;
+    let query = null;
+    this.props.layerConfig.UrlParameter.forEach((item) => {
+      if (urlParam === null) urlParam = helpers.getURLParameter(item.parameterName);
+      if (urlParam !== null) query = item.fieldName + "=" + urlParam;
+    });
+    
     if (urlParam === null) return;
-
-    const query = this.props.layerConfig.UrlParameter.fieldName + "=" + urlParam;
     helpers.getWFSGeoJSON(
       this.props.layerConfig.serverUrl,
       this.props.layerConfig.layerName,

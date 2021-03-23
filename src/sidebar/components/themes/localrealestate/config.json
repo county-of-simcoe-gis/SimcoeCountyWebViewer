@@ -9,10 +9,13 @@
       "visible": true,
       "zIndex": 200,
       "boxStyle": true,
-      "UrlParameter": {
-        "parameterName": "MLSNO",
-        "fieldName": "_mlsno"
-      }
+      "UrlParameter": [{
+          "parameterName": "MLSNO",
+          "fieldName": "_mlsno"
+        },{
+          "parameterName": "MLS",
+          "fieldName": "_mlsno"
+        }]
     },
     {
       "displayName": "Commercial",
@@ -21,10 +24,13 @@
       "visible": false,
       "zIndex": 201,
       "boxStyle": true,
-      "UrlParameter": {
-        "parameterName": "MLSNO",
-        "fieldName": "_mlsno"
-      }
+      "UrlParameter": [{
+          "parameterName": "MLSNO",
+          "fieldName": "_mlsno"
+        },{
+          "parameterName": "MLS",
+          "fieldName": "_mlsno"
+        }]
     },
     {
       "displayName": "Farm",
@@ -33,10 +39,13 @@
       "visible": false,
       "zIndex": 202,
       "boxStyle": true,
-      "UrlParameter": {
-        "parameterName": "MLSNO",
-        "fieldName": "_mlsno"
-      }
+      "UrlParameter":  [{
+          "parameterName": "MLSNO",
+          "fieldName": "_mlsno"
+        },{
+          "parameterName": "MLS",
+          "fieldName": "_mlsno"
+        }]
     },
     {
       "displayName": "Vacant Land",
@@ -45,10 +54,13 @@
       "visible": false,
       "zIndex": 203,
       "boxStyle": true,
-      "UrlParameter": {
-        "parameterName": "MLSNO",
-        "fieldName": "_mlsno"
-      }
+      "UrlParameter":  [{
+          "parameterName": "MLSNO",
+          "fieldName": "_mlsno"
+        },{
+          "parameterName": "MLS",
+          "fieldName": "_mlsno"
+        }]
     },
     {
       "displayName": "All",
@@ -57,10 +69,13 @@
       "visible": false,
       "zIndex": 203,
       "boxStyle": true,
-      "UrlParameter": {
-        "parameterName": "MLSNO",
-        "fieldName": "_mlsno"
-      }
+      "UrlParameter":  [{
+          "parameterName": "MLSNO",
+          "fieldName": "_mlsno"
+        },{
+          "parameterName": "MLS",
+          "fieldName": "_mlsno"
+        }]
     }
   ]
 }
