@@ -184,22 +184,22 @@ class Sidebar extends Component {
             }else{
               const queryString = window.location.search;
               if (mainConfig.sidebarShortcutParams && queryString.length > 0){
-                const urlParams = new URLSearchParams(queryString);
+                const urlParams = new URLSearchParams(queryString.toLowerCase());
                 mainConfig.sidebarShortcutParams.forEach((item)=> {
-                  var shortcutParam = urlParams.get(item.url_param);
+                  var shortcutParam = urlParams.get(item.url_param.toLowerCase());
                   if (shortcutParam !== null){
                     if (item.type === "search"){
                       window.emitter.emit("searchItem", item.component, shortcutParam);
-                    }else{
-                      if (item.matchValue === undefined || item.matchValue.toLowerCase() === shortcutParam.toLowerCase()){
-                        window.sidebarOpen = true;
-                        this.setState({ sidebarOpen: true });
-                        this.togglePanelVisibility();
-
-                        // TRIED TO USE PROMISES...
-                        this.activateItemFromEmmiter(item.component, item.type);
-                      }
                     }
+                    if (item.matchValue === undefined || item.matchValue.toLowerCase() === shortcutParam.toLowerCase()){
+                      window.sidebarOpen = true;
+                      this.setState({ sidebarOpen: true });
+                      this.togglePanelVisibility();
+
+                      // TRIED TO USE PROMISES...
+                      this.activateItemFromEmmiter(item.component, item.type);
+                    }
+                    
                   }
                 });
               }
