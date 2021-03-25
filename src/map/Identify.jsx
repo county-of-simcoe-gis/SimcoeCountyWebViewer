@@ -382,7 +382,7 @@ const FeatureItem = (props) => {
   keys
     .filter((keyName) => {
       const val = featureProps[keyName];
-      if (identifyIdColumn !== undefined && identifyIdColumn !== "") {
+      if (identifyIdColumn !== undefined && identifyIdColumn !== "" && keyName.substring(0, 1) !== "_" ) {
         if (cql_filter === "" && (keyName.toLowerCase().indexOf(identifyIdColumn.toLowerCase()) !== -1 && val !== null) && mainConfig.htmlIdentify && isSameOrigin) return true;
         else return false;
       } else return false;
@@ -409,7 +409,7 @@ const FeatureItem = (props) => {
           .filter((keyName, i) => {
             let val = featureProps[keyName];
             if (val === null) val = "";
-            if (cql_filter === "" && typeof val !== "object" && !excludedKeys.includes(keyName.toLowerCase())) {
+            if (cql_filter === "" && typeof val !== "object" && !excludedKeys.includes(keyName.toLowerCase()) && keyName.substring(0, 1) !== "_") {
               return true;
             }
             return false;
