@@ -40,7 +40,7 @@ class ThemeLayerToggler extends Component {
         const entries = Object.entries(feature.getProperties());
         window.popup.show(
           center,
-          <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.mainConfig.popupLogoImage} layerConfig={this.props.layerConfig} />,
+          <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={this.props.layerConfig} />,
           this.props.layerConfig.displayName
         );
       },

@@ -3,7 +3,7 @@ import "./ThemeDataList.css";
 import * as helpers from "../../../../helpers/helpers";
 import { InfoRowValue } from "../../../../helpers/InfoRow.jsx";
 import ThemePopupContent from "./ThemePopupContent.jsx";
-
+import { getCenter } from "ol/extent";
 class ThemeDataList extends Component {
   constructor(props) {
     super(props);
@@ -72,13 +72,16 @@ class ThemeDataList extends Component {
   };
 
   itemClick = (feature) => {
-    helpers.getGeometryCenter(feature.getGeometry(), (center) => {
-      // SHOW POPUP
-      const entries = Object.entries(feature.getProperties());
-      window.popup.show(center.flatCoordinates, <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={this.props.layerConfig} />);
-      helpers.zoomToFeature(feature, false);
-      window.map.getView().setZoom(15);
-    });
+
+    const extent = feature.getGeometry().getExtent();
+    const center = getCenter(extent);
+    const entries = Object.entries(feature.getProperties());
+    window.popup.show(center, <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={this.props.layerConfig} />);
+    helpers.zoomToFeature(feature);
+    window.map.getView().setCenter(center);
+    window.map.getView().setZoom(15);
+
+
   };
 
   // HANDLES TOGGLE LAYER CHANGES
