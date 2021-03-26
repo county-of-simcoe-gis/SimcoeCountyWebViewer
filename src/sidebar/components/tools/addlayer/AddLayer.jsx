@@ -231,6 +231,9 @@ class AddLayerForm extends Component {
             services = results.services;
             break;
         }
+        if (selectedService.filterServices !== undefined){
+          services = services.filter(item => selectedService.filterServices.includes(item.name));
+        }
         services.forEach((item) => {
           var currentIndex = services.indexOf(item) + 1;
           var currentUrl = serviceUrl(selectedService.serviceUrl, item.name.replace(":", "/"), selectedService.urlSuffix);

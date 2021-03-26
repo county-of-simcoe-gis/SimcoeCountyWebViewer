@@ -161,6 +161,10 @@ export class LayerHelpers {
       url = url + "REQUEST=GetCapabilities&SERVICE=" + service;
     }
     helpers.httpGetText(url, (responseText) => {
+      if (responseText === null) {
+        callback([]);
+        return;
+      }
       try {
         switch (type) {
           case "wmts":
@@ -204,6 +208,7 @@ export class LayerHelpers {
         callback(layers);
       } catch (error) {
         console.warn("Unexpected error: " + error.message);
+        callback(layers);
       }
      
     });
