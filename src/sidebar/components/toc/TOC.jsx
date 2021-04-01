@@ -83,6 +83,8 @@ class TOC extends Component {
 onMapLoad = () => {
   this.refreshTOC(false, ()=> {
     window.map.on("singleclick", (evt) => {
+      if (window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring ) return;
+
       this.getLayerList((groups)=>{
         const viewResolution = window.map.getView().getResolution();
         groups.forEach((layers) => {
@@ -424,6 +426,8 @@ addCustomLayer = (layer, groupName, selected = false, save = false) => {
 //#region HANDLE PROPERTY REPORT CLICK
 addPropertyReportClick = () => {
   window.map.on("singleclick", (evt) => {
+    if (window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring ) return;
+
     const viewResolution = window.map.getView().getResolution();
     const allLayers = Object.assign([], this.state.allLayers);
     allLayers.forEach((layer) => {

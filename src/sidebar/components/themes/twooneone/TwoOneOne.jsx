@@ -133,7 +133,7 @@ class TwoOneOne extends Component {
 
     this.mapClickEvent = window.map.on("click", (evt) => {
       // DISABLE POPUPS
-      if (window.isDrawingOrEditing) return;
+      if (window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring ) return;
 
       const feature = window.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
         if (layer === null) return;

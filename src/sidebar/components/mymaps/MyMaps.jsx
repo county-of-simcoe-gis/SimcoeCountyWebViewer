@@ -96,7 +96,7 @@ class MyMaps extends Component {
     if (existingLayer === undefined) window.map.addLayer(this.vectorLayer);
 
     window.map.on("singleclick", (evt) => {
-      if (this.draw !== null || this.state.isEditing) return;
+      if (this.draw !== null || this.state.isEditing || window.isCoordinateToolOpen || window.isMeasuring) return;
 
       window.map.forEachFeatureAtPixel(evt.pixel, (feature, layer) => {
         if (layer === null) return;
@@ -106,8 +106,11 @@ class MyMaps extends Component {
             // REMOVE ITEM FROM SOURCE
             this.onItemDelete(feature.get("id"));
             return;
-          } else this.showDrawingOptionsPopup(feature, evt);
+          } else{
+           
 
+            this.showDrawingOptionsPopup(feature, evt);
+          } 
           return;
         }
       });
@@ -161,13 +164,18 @@ class MyMaps extends Component {
       helpers.showMessage("Measure", "Active measure in progress.  Close the measure tool or cancel your measure to continue.", undefined, 3000);
       return;
     }
+    if (window.isCoordinateToolOpen !== undefined && window.isCoordinateToolOpen) {
+      helpers.showMessage("Coordinates", "Active coordinate tool in progress.  Close the coordinate tool to continue.", undefined, 3000);
+      return;
+    }
 
     if (this.draw !== null) {
       window.emitter.emit("changeCursor", "standard");
       window.map.removeInteraction(this.draw);
 
-      if (this.currentDrawFeature !== null) {
-        this.vectorSource.removeFeature(this.currentDrawFeature);
+      if (this.currentDrawFeature !== null && this.currentDrawFeature !== undefined) {
+        //let thisext = this.currentDrawFeature.getGeometry().getExtent()
+        //if (thisext !== undefined) this.vectorSource.removeFeature(this.currentDrawFeature);
         this.currentDrawFeature = null;
       }
     }
@@ -179,6 +187,62 @@ class MyMaps extends Component {
     // APP STATS
     helpers.addAppStat("MyMaps Button", type);
   };
+
+    setDrawControl = () => {
+    // REMOVE THE LAST DRAW
+
+    if (this.draw !== null) {
+      window.emitter.emit("changeCursor", "standard");
+      window.map.removeInteraction(this.draw);
+    }
+
+    // DO NOTHING IF ITS CANCEL
+    if (this.state.drawType === "Cancel") {
+      return;
+    }
+
+    // GET DRAW TYPE
+    let drawType = this.state.drawType;
+
+    // DELETE/REMOVE TOOL
+    if (drawType === "Eraser") return;
+
+    if (drawType === "Rectangle") drawType = "Circle";
+    else if (drawType === "Arrow" || drawType === "Bearing" || drawType === "Measure") drawType = "LineString";
+    else if (drawType === "Text") drawType = "Point";
+
+    // ACTIVE TOOLTIP
+    if (this.state.drawType === "Bearing" || this.state.drawType === "Measure") this.activateToolTip();
+
+    // POINT STYLE FOR CURSOR
+    let pointStyle = this.state.drawStyle.clone();
+    let image = pointStyle.getImage();
+    image.setRadius(myMapsConfig.nonPointCursorSize);
+
+    // CREATE A NEW DRAW
+    this.draw = new Draw({
+      features: new Collection([]),
+      type: drawType,
+      geometryFunction: this.state.drawType === "Rectangle" ? createBox() : undefined,
+      style: this.state.drawType !== "Point" ? pointStyle : this.state.drawStyle,
+      maxPoints: this.state.drawType === "Bearing" || this.state.drawType === "Measure" ? 2 : undefined,
+    });
+
+    // END DRAWING
+    this.draw.on("drawend", (event) => {
+      this.onDrawEnd(event);
+    });
+
+    // START DRAWING
+    this.draw.on("drawstart", (event) => {
+      this.onDrawStart(event);
+    });
+
+    //ADD DRAW INTERACTION TO MAP
+    window.emitter.emit("changeCursor", "draw");
+    window.map.addInteraction(this.draw);
+  };
+
 
   // COLORBAR CLICK
   onColorBarClick = (color) => {
@@ -845,60 +909,6 @@ class MyMaps extends Component {
     helpers.saveToStorage(this.storageKey, stateClone);
   };
 
-  setDrawControl = () => {
-    // REMOVE THE LAST DRAW
-
-    if (this.draw !== null) {
-      window.emitter.emit("changeCursor", "standard");
-      window.map.removeInteraction(this.draw);
-    }
-
-    // DO NOTHING IF ITS CANCEL
-    if (this.state.drawType === "Cancel") {
-      return;
-    }
-
-    // GET DRAW TYPE
-    let drawType = this.state.drawType;
-
-    // DELETE/REMOVE TOOL
-    if (drawType === "Eraser") return;
-
-    if (drawType === "Rectangle") drawType = "Circle";
-    else if (drawType === "Arrow" || drawType === "Bearing" || drawType === "Measure") drawType = "LineString";
-    else if (drawType === "Text") drawType = "Point";
-
-    // ACTIVE TOOLTIP
-    if (this.state.drawType === "Bearing" || this.state.drawType === "Measure") this.activateToolTip();
-
-    // POINT STYLE FOR CURSOR
-    let pointStyle = this.state.drawStyle.clone();
-    let image = pointStyle.getImage();
-    image.setRadius(myMapsConfig.nonPointCursorSize);
-
-    // CREATE A NEW DRAW
-    this.draw = new Draw({
-      features: new Collection([]),
-      type: drawType,
-      geometryFunction: this.state.drawType === "Rectangle" ? createBox() : undefined,
-      style: this.state.drawType !== "Point" ? pointStyle : this.state.drawStyle,
-      maxPoints: this.state.drawType === "Bearing" || this.state.drawType === "Measure" ? 2 : undefined,
-    });
-
-    // END DRAWING
-    this.draw.on("drawend", (event) => {
-      this.onDrawEnd(event);
-    });
-
-    // START DRAWING
-    this.draw.on("drawstart", (event) => {
-      this.onDrawStart(event);
-    });
-
-    //ADD DRAW INTERACTION TO MAP
-    window.emitter.emit("changeCursor", "draw");
-    window.map.addInteraction(this.draw);
-  };
 
   activateToolTip = () => {
     this.tooltipElement = document.getElementById(this.state.toolTipId);
