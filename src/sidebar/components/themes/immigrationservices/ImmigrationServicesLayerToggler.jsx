@@ -32,7 +32,7 @@ class ImmigrationServicesLayerToggler extends Component {
 
     // MAP CLICK FOR POPUP INFO
     this.mapClickEvent = window.map.on("click", (evt) => {
-      if (window.isDrawingOrEditing) return;
+      if (window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring ) return;
 
       var viewResolution = window.map.getView().getResolution();
       var url = this.state.layer.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", {

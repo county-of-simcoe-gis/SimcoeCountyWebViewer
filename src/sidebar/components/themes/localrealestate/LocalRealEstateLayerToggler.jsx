@@ -76,7 +76,7 @@ class LocalRealEstateLayerToggler extends Component {
 
     this.mapClickEvent = window.map.on("click", evt => {
       // DISABLE POPUPS
-      if (window.isDrawingOrEditing) return;
+      if (window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring ) return;
 
       if (!this.state.visible) return;
 

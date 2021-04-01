@@ -367,7 +367,7 @@ class Measure extends Component {
     this.draw.on(
       "drawend",
       () => {
-        window.isMeasuring = false;
+        setTimeout(()=> {window.isMeasuring = false;},50);//add a slight delay to stop measure to prevent click on underlying layer
         //RESET TOOLTIP
         this.measureTooltipElement.innerHTML = "";
         this.measureTooltip.setPosition([0, 0]);
@@ -453,6 +453,7 @@ class Measure extends Component {
 
   onGeometryButtonClick = (type, unitType) => {
     if (type === "Clear") {
+      
       this.reset();
       this.setState({ geometryType: type, unitType: unitType });
       window.isMeasuring = false;

@@ -14,7 +14,8 @@ window.emitter = new EventEmitter(); // USE THIS TO LISTEN/BROADCAST EVENTS (e.g
 window.popup = null; // ONE POPUP FOR ALL
 window.disableParcelClick = false; // PROPERTY PARCEL CLICK.  USE THIS TO DISABLE
 window.isDrawingOrEditing = false;
-
+window.isCoordinateToolOpen = false;
+window.isMeasuring = false;
 ReactDOM.render(<App />, document.getElementById("root"));
 
 // If you want your app to work offline and load faster, you can change

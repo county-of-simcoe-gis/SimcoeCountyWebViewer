@@ -30,7 +30,7 @@
 
 .sc-mymaps-button {
   height: 38px;
-  width: 34px;
+  max-width: 34px;
   border: none;
   /* border-right: 1px solid #E8E8E8; */
   background-color: transparent;

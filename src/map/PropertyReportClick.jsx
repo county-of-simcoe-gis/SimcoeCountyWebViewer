@@ -69,12 +69,8 @@ class PropertyReportClick extends Component {
       // SCALE
       if (helpers.getMapScale() > 20000) return;
 
-      //GLOBAL DISABLE
-      let disable = window.disableParcelClick;
-      if (disable) return;
-
       // DISABLE POPUPS
-      disable = window.isDrawingOrEditing;
+      let disable = window.disableParcelClick || window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring ;
       if (disable) return;
 
       // VECTOR LAYERS

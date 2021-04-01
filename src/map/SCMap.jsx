@@ -389,11 +389,8 @@ class SCMap extends Component {
     this.identifyIconLayer.set("name", "sc-identify-icon");
     if (helpers.getConfigValue("leftClickIdentify")) {
       window.map.on("singleclick", (evt) => {
-        // DISABLE IDENTIFY CLICK
-        let disable = window.disableIdentifyClick;
-        if (disable) return;
         // DISABLE POPUPS
-        disable = window.isDrawingOrEditing;
+        let disable = window.disableIdentifyClick || window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring ;
         if (disable) return;
 
         this.contextCoords = evt.coordinate;

@@ -25,7 +25,7 @@ class ThemeBaseLayers extends Component {
 
     this.mapClickEvent = window.map.on("click", (evt) => {
       console.log(this.state.visible);
-      if (window.isDrawingOrEditing || !this.state.visible) return;
+      if (window.isDrawingOrEditing || !this.state.visible || window.isCoordinateToolOpen || window.isMeasuring ) return;
 
       var viewResolution = window.map.getView().getResolution();
       this.state.layers.forEach((layer) => {
