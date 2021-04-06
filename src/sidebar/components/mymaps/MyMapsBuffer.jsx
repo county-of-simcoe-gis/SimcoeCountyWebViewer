@@ -90,7 +90,7 @@ class MyMapsBuffer extends Component {
   onColorPickerChange = color => {
     this.setState({ color: color.rgb }, () => {
       this.vectorLayer.setStyle(this.getStyle());
-      this.onPreviewBufferClick();
+      if(!isNaN(this.state.distance)) this.onPreviewBufferClick();
     });
   };
 
@@ -102,9 +102,10 @@ class MyMapsBuffer extends Component {
       this.bufferFeature = new Feature({
         geometry: bufferGeometry
       });
-
       this.bufferFeature.setStyle(this.getStyle());
       this.vectorLayer.getSource().clear();
+      if ((distanceMeters) > 0) this.vectorLayer.setZIndex(999);
+      else this.vectorLayer.setZIndex(9999);
       this.vectorLayer.getSource().addFeature(this.bufferFeature);
 
       this.setState({ addMessageVisible: true });
@@ -133,26 +134,26 @@ class MyMapsBuffer extends Component {
   };
 
   convertToMeters = () => {
-    if (this.state.units === "meters") return this.state.distance;
-    else if (this.state.units === "kilometers") return this.state.distance * 1000;
-    else if (this.state.units === "miles") return this.state.distance * 1609.34;
-    else if (this.state.units === "feet") return this.state.distance / 3.281;
-    else if (this.state.units === "yards") return this.state.distance * 0.9144;
+    var value = parseFloat(this.state.distance);
+    if (isNaN(value)) return 0;
+    if (this.state.units === "meters") return value;
+    else if (this.state.units === "kilometers") return value * 1000;
+    else if (this.state.units === "miles") return value * 1609.34;
+    else if (this.state.units === "feet") return value / 3.281;
+    else if (this.state.units === "yards") return value * 0.9144;
     else if (this.state.units === "nauticalMiles") {
-      return this.state.distance * 1852;
+      return value * 1852;
     }
   };
   onDistanceChange = evt => {
-    var value = parseFloat(evt.target.value);
-    if(isNaN(value)) value = 0;
-    this.setState({ distance: value }, () => {
-      this.onPreviewBufferClick(evt);
+    this.setState({ distance: evt.target.value }, () => {
+      if(!isNaN(this.state.distance)) this.onPreviewBufferClick(evt);
     });
   };
 
   onUnitsChange = evt => {
     this.setState({ units: evt.target.value }, () => {
-      this.onPreviewBufferClick(evt);
+      if(!isNaN(this.state.distance)) this.onPreviewBufferClick(evt);
     });
   };
 
