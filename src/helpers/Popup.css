@@ -48,9 +48,10 @@
   }
 
   #map-theme .ol-selectable {
+    transform:unset!important;
     position: absolute;
     left: 50px !important;
-    top: 238px !important;
+    /*top: 238px !important;*/
     right: 0px !important;
     bottom: 0px;
     width: 100%;
