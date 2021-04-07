@@ -235,6 +235,7 @@ class MyMaps extends Component {
 
     // START DRAWING
     this.draw.on("drawstart", (event) => {
+      window.popup.hide();
       this.onDrawStart(event);
     });
 

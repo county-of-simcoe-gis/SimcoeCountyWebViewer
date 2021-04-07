@@ -327,6 +327,7 @@ class Measure extends Component {
     this.draw.on(
       "drawstart",
       (evt) => {
+        window.popup.hide();
         window.isMeasuring = true;
         this.vectorSource.clear();
 
@@ -452,8 +453,8 @@ class Measure extends Component {
   };
 
   onGeometryButtonClick = (type, unitType) => {
+    
     if (type === "Clear") {
-      
       this.reset();
       this.setState({ geometryType: type, unitType: unitType });
       window.isMeasuring = false;
