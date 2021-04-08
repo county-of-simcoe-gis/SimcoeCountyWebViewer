@@ -56,3 +56,34 @@
   left: 264px;
   top: 220px;
 }
+.sc-print-screenshot-container {
+  height: 50px;
+  vertical-align: middle;
+  border-bottom-width: 1px;
+  border-bottom-style: dashed;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.sc-print-screenshot-container label {
+  margin-top: 10px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.sc-print-screenshot-icon{
+  background-image: url(./images/screenshot.png);
+  background-repeat: no-repeat;
+  height: 100%;
+  width: 100%;
+  background-position: center;
+}
+
+.sc-print-screenshot-button{
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  font-size: 12pt;
+  margin-bottom: 15px;
+  margin: 0px 0px 10px 10px;
+}

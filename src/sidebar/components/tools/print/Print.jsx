@@ -204,7 +204,21 @@ class Print extends Component {
     return (
       <PanelComponent onClose={this.props.onClose} name={this.props.name} helpLink={this.props.helpLink} type="tools">
         <div className="sc-print-container">
+          {/* TAKE SNAPSHOT */}
+          <div className="sc-print-screenshot-container">
+            <label style={{ fontWeight: "bold" }}>Save a Screenshot:</label>
+            <div className="sc-button sc-print-screenshot-button" onClick={() => window.emitter.emit("takeScreenshot")} title="Save a Screenshot" alt="Save a Screenshot">
+              <div className="sc-print-screenshot-icon">&nbsp;</div> 
+            </div>
+          </div>
+          <div className="sc-print-screenshot-container">
+          <label style={{ fontWeight: "bold" }}>OR</label><br /><br />
+          <label style={{ fontWeight: "bold", textAlign: "center" }}>CREATE A PRINT</label>
+
+          </div>
+          
           {/* MAP TITLE */}
+         
           <label style={{ fontWeight: "bold" }}>Map Title:</label>
           <input
             className="sc-print-map-title-input"
