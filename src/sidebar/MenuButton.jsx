@@ -27,6 +27,9 @@ class MenuButton extends Component {
 
     // LISTEN FOR MORE BUTTON
     window.emitter.addListener("openMoreMenu", () => this.setState({ isOpen: true }));
+
+    //LISTEN FOR SCREENSHOT EVENT
+    window.emitter.addListener('takeScreenshot', () => this.onScreenshotClick());
   }
 
   // LOAD TOOLS FROM CONFIG
