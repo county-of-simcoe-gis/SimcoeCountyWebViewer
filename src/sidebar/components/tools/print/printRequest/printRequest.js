@@ -292,9 +292,9 @@ const switchTemplates = (options, callback=undefined) => {
       break;
   }
 
-  if (options.printSizeSelectedOption.size === []){
-    if (options.printSelectedOption.mapOnlyHeight) attributes.map.height  = options.printSelectedOption.mapOnlyHeight;
-    if (options.printSelectedOption.mapOnlyWidth) attributes.map.width  = options.printSelectedOption.mapOnlyWidth;
+  if (options.printSizeSelectedOption.size.length === 0){
+    if (options.mapOnlyHeight) attributes.map.height  = options.mapOnlyHeight;
+    if (options.mapOnlyWidth) attributes.map.width  = options.mapOnlyWidth;
   }
 
   if (options.printSizeSelectedOption.overview){

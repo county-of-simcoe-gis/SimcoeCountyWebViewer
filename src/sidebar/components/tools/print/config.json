@@ -5,42 +5,48 @@
         "label": "8X11 Portrait (Letter)",
         "size":  [570, 639],
         "layout": "letter portrait",
-        "overview": false
+        "overview": false,
+        "type":"report"
       },
       {
         "value": "11X8 Landscape",
         "label": "11X8 Landscape (Letter)",
         "size": [750, 450],
         "layout": "letter landscape",
-        "overview": false
+        "overview": false,
+        "type":"report"
       },
       {
           "value": "8X11 Portrait Overview",
           "label": "8X11 Portrait with Overview",
           "size":[570, 450],
           "layout": "letter portrait overview",
-          "overview": true
+          "overview": true,
+          "type":"report"
       },
       {
           "value": "Map Only",
           "label": "Map Only",
           "size": [],
           "layout": "map only",
-          "overview": false
+          "overview": false,
+          "type":"map"
       },
       {
           "value": "Map Only Portrait",
           "label": "Map Only Portrait",
           "size": [570, 752],
           "layout": "map only portrait",
-          "overview": false
+          "overview": false,
+          "type":"report"
       },
       {
           "value": "Map Only Landscape",
           "label": "Map Only Landscape",
           "size": [750, 572],
           "layout": "map only landscape",
-          "overview": false
+          "overview": false,
+          "type":"report"
       }
     ],
     "printFormats": [
@@ -53,8 +59,8 @@
           "label": "PNG"
       },
       {
-          "value": "jpeg",
-          "label": "JPG"
+        "value": "tif",
+        "label": "TIF"
       }
     ],
     "drawTypes":{
