@@ -205,7 +205,7 @@ class Print extends Component {
       <PanelComponent onClose={this.props.onClose} name={this.props.name} helpLink={this.props.helpLink} type="tools">
         <div className="sc-print-container">
   {/* TAKE SNAPSHOT */}
-  <div className="sc-print-screenshot-container">
+  <div className="sc-print-screenshot-container sc-border-bottom">
             <div className="sc-button sc-print-screenshot-button" onClick={() => window.emitter.emit("takeScreenshot")} title="Save a Screenshot" alt="Save a Screenshot">
               <div className="sc-print-screenshot-icon">&nbsp;</div> 
             </div>
