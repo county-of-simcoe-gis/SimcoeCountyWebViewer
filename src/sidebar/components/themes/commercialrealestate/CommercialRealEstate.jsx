@@ -123,7 +123,7 @@ class CommercialRealEstate extends Component {
       wmsPolygonLayer.setZIndex(200);
       wmsPolygonLayer.setProperties({
         name: propType,
-        disableParcelClick: true,
+        disableParcelClick: false,
       });
       window.map.addLayer(wmsPolygonLayer);
 

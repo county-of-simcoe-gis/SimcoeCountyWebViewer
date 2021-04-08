@@ -79,7 +79,7 @@ class CommercialRealEstateLayerToggler extends Component {
     layer.setZIndex(this.props.layer.zIndex);
     layer.setProperties({
       name: this.props.layer.layerName,
-      disableParcelClick: true,
+      disableParcelClick: false,
     });
     window.map.addLayer(layer);
     this.setState({ layer: layer }, (layer) => {
