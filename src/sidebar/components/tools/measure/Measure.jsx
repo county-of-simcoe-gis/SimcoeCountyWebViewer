@@ -26,6 +26,7 @@ class Measure extends Component {
       hideTooltips: false,
       geometryType: "",
       unitType: "distance",
+      feature: null,
       unitList: [
         {
           name: "Kilometer",
@@ -330,7 +331,7 @@ class Measure extends Component {
         window.popup.hide();
         window.isMeasuring = true;
         this.vectorSource.clear();
-
+        this.setState({ feature: evt.feature});
         // set sketch
         this.sketch = evt.feature;
 
@@ -368,14 +369,14 @@ class Measure extends Component {
     this.draw.on(
       "drawend",
       () => {
-        setTimeout(()=> {window.isMeasuring = false;},50);//add a slight delay to stop measure to prevent click on underlying layer
+        setTimeout(()=> {window.isMeasuring = false;}, 100);//add a slight delay to stop measure to prevent click on underlying layer
         //RESET TOOLTIP
         this.measureTooltipElement.innerHTML = "";
         this.measureTooltip.setPosition([0, 0]);
-        this.setState({ measureToolTipClass: "sc-hidden" });
-
-        // unset sketch
-        this.sketch = null;
+        this.setState({ measureToolTipClass: "sc-hidden", feature: this.sketch },()=>{
+          // unset sketch
+          this.sketch = null;
+        });
         unByKey(this.listener);
       },
       this
@@ -446,7 +447,7 @@ class Measure extends Component {
     this.vectorLayer.getSource().clear();
     unByKey(this.listener);
 
-    this.setState({ measureToolTipClass: "sc-hidden", helpToolTipClass: "sc-hidden", activeTool: false });
+    this.setState({ measureToolTipClass: "sc-hidden", helpToolTipClass: "sc-hidden", activeTool: false, feature: null });
 
     window.disableParcelClick = false;
     window.isMeasuring = false;
@@ -468,6 +469,13 @@ class Measure extends Component {
 
   onTooltipCheckboxChange = (evt) => {
     this.setState({ hideTooltips: evt.target.checked });
+  };
+
+  addToMyMaps = (feature, label) => {
+    // ADD MYMAPS
+    window.emitter.emit("addMyMapsFeature", feature, label);
+    //Reset interaction if user is still measuring to prevent error after click
+    if(window.isMeasuring) this.addInteraction();
   };
 
   render() {
@@ -565,7 +573,7 @@ class Measure extends Component {
           {/* RESULTS */}
           <div className={this.state.geometryType === "" || this.state.geometryType === "Clear" ? "sc-hidden" : "sc-measure-results-container"}>
             {this.state.unitList.map((unit) => {
-              return <MeasureResult key={helpers.getUID()} unitDetails={unit} unitType={this.state.unitType} unitMeters={this.state.unitMeters} />;
+              return <MeasureResult key={helpers.getUID()} unitDetails={unit} unitType={this.state.unitType} unitMeters={this.state.unitMeters} feature={this.state.feature} addToMyMaps={this.addToMyMaps} />;
             })}
           </div>
 
@@ -606,6 +614,9 @@ class MeasureResult extends Component {
           </div>
           <div className="sc-measure-result-abbreviation">{this.props.unitDetails.abbreviation}</div>
         </div>
+        <span className={`sc-fakeLink ${this.props.feature === null || window.isMeasuring ? ' sc-hidden' : ''}`}  onClick={() => {this.props.addToMyMaps(this.props.feature, `${this.props.unitMeters === -1 ? "" : this.props.unitDetails.convertFunction(this.props.unitMeters)} ${this.props.unitDetails.abbreviation}`)}}>
+          [Add to My Maps]
+        </span>
       </div>
     );
   }
