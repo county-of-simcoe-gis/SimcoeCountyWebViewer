@@ -321,8 +321,14 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured=false,
         if (layerInfo.KeywordList !== undefined) keywords = layerInfo.KeywordList;
         let visibleLayers = [];
         let groupPrefix = "";
-        if (keywords !== undefined) visibleLayers = _getVisibleLayers(keywords);
+        let allLayersVisible = false;
+        if (keywords !== undefined) allLayersVisible = _getAllLayersVisible(keywords);
         if (keywords !== undefined) groupPrefix = _getGroupPrefix(keywords);
+        if (allLayersVisible){
+          visibleLayers = layerInfo.Layer.map((item)=>item.Name);
+        }else{
+          if (keywords !== undefined) visibleLayers = _getVisibleLayers(keywords);
+        }
         let layerList = [];
         if (layerInfo.Layer !== undefined) {
           const groupLayerList = layerInfo.Layer;
@@ -716,7 +722,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType,secure
     const maxScale = layer.MaxScaleDenominator;
     // SET VISIBILITY
     let layerVisible = false;
-    if (savedLayers !== undefined) {
+    if (savedLayers !== undefined && savedLayers !== null && savedLayers.length !== 0) {
       const savedLayer = savedLayers[layerNameOnly];
       if (savedLayer !== undefined){
         if (savedLayer.visible) layerVisible = true;
@@ -724,8 +730,12 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType,secure
         if (savedLayer.index) layerIndex = savedLayer.index;
   
       } 
-    } else if (visibleLayers.includes(layerNameOnly)) layerVisible = true;
-
+    } 
+    else if (visibleLayers.includes(layerNameOnly)) 
+    { 
+      layerVisible = true;
+    }
+    //console.log(group.value, layerNameOnly, visibleLayers.includes(layerNameOnly));
     // LAYER PROPS
     LayerHelpers.getLayer(OL_DATA_TYPES.ImageWMS, "WMS", undefined, layer.Name, serverUrl + "/wms?layers=" + layer.Name, false, undefined, undefined, displayName,secureKey, (newLayer) => {
       const wfsUrlTemplate = (rootUrl, layer) => `${rootUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layer}&outputFormat=application/json&cql_filter=`;
@@ -942,6 +952,18 @@ function _getVisibleLayers(keywords) {
     const val = visibleLayersKeyword.split("=")[1];
     return val.split(",");
   } else return [];
+}
+
+function _getAllLayersVisible(keywords) {
+  if (keywords === undefined) return "";
+  const allLayersVisible = keywords.find(function(item) {
+    return item.indexOf("VISIBLE_LAYERS") !== -1;
+  });
+  if (allLayersVisible !== undefined) {
+    const val = allLayersVisible.split("=")[1];
+    if (val === "ALL") return true;
+  }
+  return false;
 }
 
 function _getCenterCoordinates(keywords) {

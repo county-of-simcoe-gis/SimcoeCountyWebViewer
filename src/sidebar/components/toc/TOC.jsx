@@ -526,7 +526,7 @@ updateLayerVisibility = (type=undefined) => {
       
       layerListGroups.forEach((group) => {
         group.layers.forEach((layer) => {
-          layer.layer.setVisible(false);;
+          layer.layer.setVisible(false);
         });
       });
       selectedGroup.layers.forEach((layer) => {
