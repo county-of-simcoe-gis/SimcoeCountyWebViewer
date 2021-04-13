@@ -261,7 +261,7 @@ const switchTemplates = (options, callback=undefined) => {
   const mapScale = 2990000;
   const rotation = 0;
   const dpi = parseInt(options.mapResolutionOption);
-  const printSize = options.printSizeSelectedOption.size === []? window.map.getSize() : options.printSizeSelectedOption.size
+  let printSize = options.printSizeSelectedOption.size === []? window.map.getSize() : options.printSizeSelectedOption.size
 
   const attributes = {
     title: options.mapTitle,
@@ -276,6 +276,11 @@ const switchTemplates = (options, callback=undefined) => {
   attributes.map.longitudeFirst = longitudeFirst;
   attributes.map.rotation = rotation;
   attributes.map.dpi = dpi;
+  if (options.printSizeSelectedOption.size.length === 0){
+    if (options.mapOnlyHeight) attributes.map.height  = options.mapOnlyHeight;
+    if (options.mapOnlyWidth) attributes.map.width  = options.mapOnlyWidth;
+    printSize = [options.mapOnlyWidth,options.mapOnlyHeight];
+  }
   switch (options.mapScaleOption) {
     case "forceScale":
       attributes.map.scale = options.forceScale;
@@ -290,11 +295,6 @@ const switchTemplates = (options, callback=undefined) => {
       attributes.map.scale = currentMapScale;
       attributes.map.center = currentMapViewCenter;
       break;
-  }
-
-  if (options.printSizeSelectedOption.size.length === 0){
-    if (options.mapOnlyHeight) attributes.map.height  = options.mapOnlyHeight;
-    if (options.mapOnlyWidth) attributes.map.width  = options.mapOnlyWidth;
   }
 
   if (options.printSizeSelectedOption.overview){
