@@ -199,3 +199,7 @@
   right: 6px;
   font-size: 10pt;
 }
+
+.sc-measure-result .sc-fakeLink {
+  font-size: 10px;
+}
