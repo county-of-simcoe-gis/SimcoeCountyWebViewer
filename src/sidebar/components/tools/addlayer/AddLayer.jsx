@@ -150,8 +150,9 @@ class AddLayerForm extends Component {
   onLayerFormatChange = (selection) => {
     const selectedFormat = this.getSelectedFormat(selection.value);
     let serverUrl = this.state.serverUrl;
-    if (serverUrl === "") {
-      const currentFormatOption =this.state.selectFormatOptions.filter((item)=>{ return item.value === selection.value})[0];
+
+    if (serverUrl === "" || this.state.selectFormatOptions.some(item => item.default === serverUrl)) {
+      const currentFormatOption = this.state.selectFormatOptions.filter((item)=>{ return item.value === selection.value})[0];
       if (currentFormatOption.default !== undefined && currentFormatOption.default !== null ) serverUrl=currentFormatOption.default;
     }
     this.setState({ selectFormatOption: selection, selectedFormat: selectedFormat, serverUrl: serverUrl }, () => {
