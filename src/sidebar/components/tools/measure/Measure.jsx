@@ -201,6 +201,7 @@ class Measure extends Component {
       element: this.helpTooltipElement,
       offset: [15, 0],
       positioning: "center-left",
+      stopEvent: false,
     });
     window.map.addOverlay(this.helpTooltip);
   };
@@ -212,6 +213,8 @@ class Measure extends Component {
       element: this.measureTooltipElement,
       offset: [0, -15],
       positioning: "bottom-center",
+      stopEvent: false,
+
     });
     window.map.addOverlay(this.measureTooltip);
   };
