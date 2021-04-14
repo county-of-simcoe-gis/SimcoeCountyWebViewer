@@ -23,7 +23,6 @@ window.popupActive = false;
 export default class Popup extends Overlay {
   constructor(opt_options) {
     var options = opt_options || {};
-
     if (options.title === undefined) {
       options.title = "Info";
     }
@@ -41,13 +40,11 @@ export default class Popup extends Overlay {
     //options.stopEvent = false;
 
     var element = document.createElement("div");
-
     options.element = element;
     super(options);
-
     this.container = element;
     this.container.className = "ol-popup";
-
+    this.container.id = "sc-window-popup";
     this.headerContainer = document.createElement("div");
     this.headerContainer.id = "sc-popup-header";
     this.headerContainer.className = "sc-popup-header sc-no-select";
@@ -122,9 +119,9 @@ export default class Popup extends Overlay {
     // WEIRD MOBILE STUFF PATCH WHERE CONTAINER STAYS OVER MAP
     // var x = document.getElementsByClassName("ol-selectable")[0];
     // x.classList.remove("sc-hidden");
-    const containers = document.getElementsByClassName("ol-selectable");
+    const containers = document.getElementsByClassName("ol-overlay-container ol-selectable");
     Array.prototype.forEach.call(containers, el => {
-      el.classList.remove("sc-hidden");
+      if (el.childNodes[0].id === "sc-window-popup") el.classList.remove("sc-hidden");
     });
 
     // SET TITLE
@@ -247,9 +244,9 @@ export default class Popup extends Overlay {
    * @returns {Popup} The Popup instance
    */
   hide() {
-    const containers = document.getElementsByClassName("ol-selectable");
+    const containers = document.getElementsByClassName("ol-overlay-container ol-selectable");
     Array.prototype.forEach.call(containers, el => {
-      el.classList.add("sc-hidden");
+      if (el.childNodes[0].id === "sc-window-popup") el.classList.add("sc-hidden");
     });
 
     isMoving = false;
