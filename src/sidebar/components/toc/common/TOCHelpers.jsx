@@ -132,6 +132,16 @@ export async function getMap (mapId=null,urlType, isReset, tocType, callback){
     {
       var sourcesProcessed = 0;
       const mapSettings = JSON.parse(result.json);
+
+      const defaultTheme = mapSettings.default_theme;
+      const defaultTool = mapSettings.default_tool;
+      if (defaultTheme !== undefined) {
+        window.emitter.emit("activateTab", "themes");
+        window.emitter.emit("activateSidebarItem", defaultTheme, "themes");
+      } else if (defaultTool !== undefined) {
+        window.emitter.emit("activateTab", "tool");
+        window.emitter.emit("activateSidebarItem", defaultTool, "tools");
+      }
       //console.log(mapSettings);
       mapSettings.sources.forEach(source => {
         getGroupsGC(source.layerUrl, urlType, isReset, tocType, source.secure,source.primary, source.secureKey, (layerGroupConfig) => {
