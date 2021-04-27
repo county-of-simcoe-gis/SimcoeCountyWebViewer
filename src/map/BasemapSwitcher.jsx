@@ -62,17 +62,17 @@ class BasemapSwitcher extends Component {
       //   console.log(layers);
       // });
       const serviceLayerType = service.type !== undefined ? service.type : OL_DATA_TYPES.TileImage;
-      LayerHelpers.getLayer( 
-        serviceLayerType, 
-        "WMS", 
-        "EPSG:4326",
-        service.name,
-        service.url, 
-        true, 
-        service.fullExtent, 
-        undefined, 
-        service.name, 
-        undefined,
+      
+      LayerHelpers.getLayer({ 
+        sourceType:serviceLayerType, 
+        source:"WMS", 
+        projection:"EPSG:4326",
+        layerName:service.name,
+        url:service.url, 
+        tiled:true, 
+        extent:service.fullExtent, 
+        name:service.name, 
+        },
       (newLayer) => {
 
         
@@ -117,17 +117,14 @@ class BasemapSwitcher extends Component {
 
     // LOAD IMAGERY STREETS LAYER
     if (BasemapConfig.streetService.url !== undefined) {
-      LayerHelpers.getLayer( 
-        OL_DATA_TYPES.TileImage, 
-        "WMS", 
-        undefined,
-        "streetServiceBasemap",
-        BasemapConfig.streetService.url, 
-        true, 
-        undefined, 
-        undefined, 
-        "streetServiceBasemap", 
-        undefined,
+      LayerHelpers.getLayer({
+        sourceType:OL_DATA_TYPES.TileImage, 
+        source:"WMS", 
+        layerName:"streetServiceBasemap",
+        url:BasemapConfig.streetService.url, 
+        tiled:true, 
+        name:"streetServiceBasemap", 
+        },
       (newLayer) => {
         //var streetsLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.streetService);
         newLayer.setZIndex(BasemapConfig.imageryServices.length);
@@ -139,20 +136,17 @@ class BasemapSwitcher extends Component {
       });
 
     }
-
+    
     // LOAD BATHYMETRY LAYER
     if (BasemapConfig.bathymetryService.url !== undefined) {
-      LayerHelpers.getLayer( 
-        OL_DATA_TYPES.TileImage, 
-        "WMS", 
-        undefined,
-        "bathymetryServiceBasemap",
-        BasemapConfig.bathymetryService.url, 
-        true, 
-        undefined, 
-        undefined, 
-        "bathymetryServiceBasemap", 
-        undefined,
+      LayerHelpers.getLayer({
+        sourceType:OL_DATA_TYPES.TileImage, 
+        source:"WMS", 
+        layerName:"bathymetryServiceBasemap",
+        url:BasemapConfig.bathymetryService.url, 
+        tiled:true, 
+        name:"bathymetryServiceBasemap",
+      },
       (newLayer) => {
         //var bathymetryLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.bathymetryService.url);
         newLayer.setZIndex(0);
@@ -168,17 +162,14 @@ class BasemapSwitcher extends Component {
 
     // LOAD WORLD LAYER
     if (BasemapConfig.worldImageryService !== undefined) {
-      LayerHelpers.getLayer( 
-        OL_DATA_TYPES.XYZ, 
-        "WMS", 
-        undefined,
-        "worldImageryServiceBasemap",
-        BasemapConfig.worldImageryService, 
-        true, 
-        undefined, 
-        undefined, 
-        "worldImageryServiceBasemap", 
-        undefined,
+      LayerHelpers.getLayer( {
+        sourceType:OL_DATA_TYPES.XYZ, 
+        source:"WMS", 
+        layerName:"worldImageryServiceBasemap",
+        url:BasemapConfig.worldImageryService.url, 
+        tiled:true, 
+        name:"worldImageryServiceBasemap",
+      },
       (newLayer) => {
         //var worldImageryLayer = helpers.getESRITileXYZLayer(BasemapConfig.worldImageryService);
         newLayer.setZIndex(0);
@@ -200,17 +191,15 @@ class BasemapSwitcher extends Component {
         let layerName = service.name;
         if (layerName === undefined) layerName = helpers.getUID();
         if (service.type === "SIMCOE_TILED") {
-          LayerHelpers.getLayer( 
-            OL_DATA_TYPES.TileImage, 
-            "WMS", 
-            undefined,
-            layerName,
-            service.url, 
-            true, 
-            service.fullExtent, 
-            undefined, 
-            layerName, 
-            undefined,
+          LayerHelpers.getLayer( {
+            sourceType:OL_DATA_TYPES.TileImage, 
+            source:"WMS", 
+            layerName:layerName,
+            url:service.url, 
+            extent:service.fullExtent,
+            tiled:true, 
+            name:layerName,
+          },
           (newLayer) => {
             //layer = helpers.getSimcoeTileXYZLayer(service.url);
         
@@ -220,17 +209,13 @@ class BasemapSwitcher extends Component {
           });
           
         } else if (service.type === "OSM") {
-          LayerHelpers.getLayer( 
-            OL_DATA_TYPES.OSM, 
-            "WMS", 
-            undefined,
-            layerName,
-            undefined, 
-            true, 
-            undefined, 
-            undefined, 
-            layerName, 
-            undefined,
+          LayerHelpers.getLayer( {
+            sourceType:OL_DATA_TYPES.OSM, 
+            source:"WMS", 
+            layerName:layerName,
+            tiled:true, 
+            name:layerName,
+          },
           (newLayer) => {
             //layer = helpers.getOSMLayer();
             //layer = helpers.getOSMTileXYZLayer("http://a.tile.openstreetmap.org");
@@ -241,17 +226,14 @@ class BasemapSwitcher extends Component {
           });
          
         } else if (service.type === "ESRI_TILED") {
-          LayerHelpers.getLayer( 
-            OL_DATA_TYPES.XYZ, 
-            "WMS", 
-            undefined,
-            layerName,
-            service.url, 
-            true, 
-            undefined, 
-            undefined, 
-            layerName, 
-            undefined,
+          LayerHelpers.getLayer( {
+            sourceType:OL_DATA_TYPES.XYZ, 
+            source:"WMS", 
+            layerName:layerName,
+            url:service.url, 
+            tiled:true, 
+            name:layerName,
+          },
           (newLayer) => {
             // layer = helpers.getArcGISTiledLayer(service.url);
             //layer = helpers.getESRITileXYZLayer(service.url);

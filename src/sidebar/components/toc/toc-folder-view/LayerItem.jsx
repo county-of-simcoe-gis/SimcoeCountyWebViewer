@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import * as helpers from "../../../../helpers/helpers";
 import Highlighter from "react-highlight-words";
-
+import LayerLegend from "../common/LayerLegend";
 import "./LayerItem.css";
 class LayerItem extends Component {
   constructor(props) {
@@ -60,9 +60,9 @@ class LayerItem extends Component {
         <div className={containerClassName}>
           <div className="sc-toc-item-plus-minus-container-folder-view" onClick={() => this.props.onLegendToggle(this.props.layer, this.props.group)}>
             <img
-              src={this.props.layer.styleUrl === "" ? images["no-legend.png"] : this.props.layer.showLegend ? images["minus.png"] : images["plus.png"]}
+              src={this.props.layer.styleUrl === "" && (this.props.layer.legendObj === undefined || this.props.layer.legendObj === null) ? images["no-legend.png"] : this.props.layer.showLegend ? images["minus.png"] : images["plus.png"]}
               alt="legend toggle"
-              title={this.props.layer.styleUrl === "" ? "No Legend Available" : this.props.layer.showLegend ? "Hide Legend" : "Show Legend"}
+              title={this.props.layer.styleUrl === "" && (this.props.layer.legendObj === undefined || this.props.layer.legendObj === null) ? "No Legend Available" : this.props.layer.showLegend ? "Hide Legend" : "Show Legend"}
             />
             <div className="sc-toc-item-plus-minus-sign-folder-view" />
             <div className="sc-toc-item-lines-expanded-folder-view" />
@@ -101,10 +101,7 @@ class LayerItem extends Component {
         <div className={this.props.layer.showLegend ? "sc-toc-layer-info-container-folder-view" : "sc-hidden"}>
           <div className="sc-toc-item-layer-info-container-open-vertical-lines-folder-view" />
           <div className="sc-toc-item-layer-info-container-open-horizontal-lines-folder-view" />
-          <div className="sc-toc-item-layer-info-legend-folder-view">
-            <div className="sc-toc-item-layer-info-border-folder-view" />
-            <img src={this.props.layer.legendImage} alt="style" />
-          </div>
+          <LayerLegend legend={this.props.layer.legendObj} image={this.props.layer.legendImage} key={helpers.getUID()} />
         </div>
       </div>
     );

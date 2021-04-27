@@ -161,6 +161,7 @@ class AddLayerForm extends Component {
   };
 
   onServiceLayerSelectChange = (selection) => {
+
     let displayName = this.state.layer_displayName;
     const selectedLayer = this.state.selectLayerOptions.filter((item) => item.value === selection.value)[0];
     if (!this.state.userEdit_displayName) displayName = selection.label;
@@ -216,7 +217,7 @@ class AddLayerForm extends Component {
     const serviceUrl = (url, service, suffix) => `${url}/${service}${suffix}`;
     const discoveryUrl = (url, service, suffix) => `${url}/${service}${suffix}`;
     //CLEAR LAYERS LIST AND ATTEMPT TO REPOPULATE
-    this.setState({ selectLayerOptions: [], selectLayerOption: selectedLayer, isRunning: true }, () => {
+    this.setState({ selectLayerOptions: [], selectLayerOption: selectedLayer,selectedFormat: selectedFormat, isRunning: true }, () => {
       let serviceLayers = [];
       var lookupServiceUrl = discoveryUrl(selectedService.discoveryUrl, selectedService.value, selectedService.discoverySuffix);
       helpers.getJSON(lookupServiceUrl, (results) => {
@@ -399,18 +400,21 @@ class AddLayerForm extends Component {
         for (var dt in OL_DATA_TYPES) {
           if (dt.toLowerCase() === formatType.toLowerCase()) formatType = dt;
         }
-
+        const selectedLayer = this.state.selectLayerOptions.filter((item) => item.value === this.state.selectLayerOption.value)[0];
+        
         LayerHelpers.getLayer(
-          formatType,
-          format.source,
-          this.state.selectProjectionOption.value,
-          this.state.layer_name,
-          this.state.serverUrl,
-          false,
-          this.state.layer_file,
-          this.state.layer_extent,
-          this.state.layer_displayName,
-          undefined,
+          {
+            sourceType:formatType,
+            source:format.source, 
+            projection: this.state.selectProjectionOption.value,
+            layerName:this.state.layer_name, 
+            url:this.state.serverUrl, 
+            tiled:false, 
+            file:this.state.layer_file, 
+            extent:this.state.layer_extent, 
+            name:this.state.layer_displayName, 
+            style: selectedLayer,
+          },
           this.addLayer
         );
         if (this.state.layer_file !== undefined){

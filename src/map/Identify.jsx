@@ -51,81 +51,105 @@ class Identify extends Component {
 
     for (let index = 0; index < layers.length; index++) {
       const layer = layers[index];
-      if (layer.getVisible() && LayerHelpers.getLayerType(layer) !== OL_LAYER_TYPES.Vector) {
+      if (layer.getVisible()) {
+
         const queryable = layer.get("queryable");
         if (queryable) {
-          const name = layer.get("name");
-          let displayName = "";
-          let type = layer.get("tocDisplayName");
-          let wfsUrl = layer.get("wfsUrl");
-          const secureKey = layer.get("secureKey");
-          const minScale = layer.get("minScale");
-          const params = {};
-          if (secureKey !== undefined){
-            const headers = {};
-            headers[secureKey]="GIS";
-            headers["Content-Type"]="application/text";
-            params["mode"]= "cors";
-            params["headers"]=headers;
-          }
-          if (wfsUrl !== undefined && geometry.getType() !== "Point") {
-            const feature = new Feature(geometry);
-            const wktString = helpers.getWKTStringFromFeature(feature);
-            wfsUrl += "INTERSECTS(geom," + wktString + ")";
-            // QUERY USING WFS
-            // eslint-disable-next-line
-            helpers.getJSON(wfsUrl, (result) => {
-              const featureList = new GeoJSON().readFeatures(result);
-              if (featureList.length > 0) {
-                if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
-                let features = [];
-                featureList.forEach((feature) => {
-                  features.push(feature);
-                });
-                if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, minScale:minScale });
-                this.setState({ layers: layerList });
-              }
-            });
-          } else {
-            let infoFormat = layer.get("INFO_FORMAT");
-            //console.log(infoFormat);
-            // let infoFormat = "text/plain";
-            // let xslTemplate = layer.get("XSL_TEMPLATE");
-            let xslTemplate = mainConfig.wmsGeoJsonTemplate;
-            // QUERY USING WMS
-            let getInfoOption = { INFO_FORMAT: "application/json" };
-            if (infoFormat !== undefined && infoFormat !== "") getInfoOption["INFO_FORMAT"] = infoFormat;
-            if (xslTemplate !== undefined && xslTemplate !== "") getInfoOption["XSL_TEMPLATE"] = xslTemplate;
-            //console.log(xslTemplate);
-            var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", getInfoOption);
-            let html_url = mainConfig.htmlIdentify
-              ? layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "text/html" }) + "&feature_count=1000000"
-              : "";
-            if (url) {
-              url += "&feature_count=1000000";
-              //console.log(url);
-              helpers.httpGetTextWithParams(url, params, (result) => {
-                let tempResult = helpers.tryParseJSON(result);
-                //console.log(tempResult);
-                if (tempResult !== false) {
-                  result = tempResult;
-                } else {
-                  return;
-                }
-                //console.log(result);
+          if (LayerHelpers.getLayerType(layer) !== OL_LAYER_TYPES.Vector){
+            const name = layer.get("name");
+            let displayName = "";
+            let type = layer.get("tocDisplayName");
+            let wfsUrl = layer.get("wfsUrl");
+            const secureKey = layer.get("secureKey");
+            const minScale = layer.get("minScale");
+            const params = {};
+            if (secureKey !== undefined){
+              const headers = {};
+              headers[secureKey]="GIS";
+              headers["Content-Type"]="application/text";
+              params["mode"]= "cors";
+              params["headers"]=headers;
+            }
+            if (wfsUrl !== undefined && geometry.getType() !== "Point") {
+              const feature = new Feature(geometry);
+              const wktString = helpers.getWKTStringFromFeature(feature);
+              wfsUrl += "INTERSECTS(geom," + wktString + ")";
+              // QUERY USING WFS
+              // eslint-disable-next-line
+              helpers.getJSON(wfsUrl, (result) => {
                 const featureList = new GeoJSON().readFeatures(result);
-                if (featureList.length === 0) {
-                  return;
-                } else if (featureList.length > 0) {
+                if (featureList.length > 0) {
                   if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
                   let features = [];
                   featureList.forEach((feature) => {
                     features.push(feature);
                   });
-                  if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, html_url: html_url, minScale:minScale  });
+                  if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, minScale:minScale });
                   this.setState({ layers: layerList });
                 }
               });
+            } else {
+              let infoFormat = layer.get("INFO_FORMAT");
+              //console.log(infoFormat);
+              // let infoFormat = "text/plain";
+              // let xslTemplate = layer.get("XSL_TEMPLATE");
+              let xslTemplate = mainConfig.wmsGeoJsonTemplate;
+              // QUERY USING WMS
+              let getInfoOption = { INFO_FORMAT: "application/json" };
+              if (infoFormat !== undefined && infoFormat !== "") getInfoOption["INFO_FORMAT"] = infoFormat;
+              if (xslTemplate !== undefined && xslTemplate !== "") getInfoOption["XSL_TEMPLATE"] = xslTemplate;
+              //console.log(xslTemplate);
+              var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", getInfoOption);
+              let html_url = mainConfig.htmlIdentify
+                ? layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "text/html" }) + "&feature_count=1000000"
+                : "";
+              if (url) {
+                url += "&feature_count=1000000";
+                //console.log(url);
+                helpers.httpGetTextWithParams(url, params, (result) => {
+                  let tempResult = helpers.tryParseJSON(result);
+                  //console.log(tempResult);
+                  if (tempResult !== false) {
+                    result = tempResult;
+                  } else {
+                    return;
+                  }
+                  //console.log(result);
+                  const featureList = new GeoJSON().readFeatures(result);
+                  if (featureList.length === 0) {
+                    return;
+                  } else if (featureList.length > 0) {
+                    if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
+                    let features = [];
+                    featureList.forEach((feature) => {
+                      features.push(feature);
+                    });
+                    if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, html_url: html_url, minScale:minScale  });
+                    this.setState({ layers: layerList });
+                  }
+                });
+              }
+            }
+          } else {
+            const name = layer.get("name");
+            let displayName = "";
+            let type = layer.get("tocDisplayName");
+            const minScale = layer.get("minScale");
+            const params = {};
+            let featureList = [];
+            let pixel = window.map.getPixelFromCoordinate(geometry.flatCoordinates);
+            window.map.forEachFeatureAtPixel(pixel, (feature,layer) => {
+              if (layer.get("name") !== undefined && layer.get("name") === name) featureList.push(feature);
+            });
+           
+            if (featureList.length > 0) {
+              if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
+              let features = [];
+              featureList.forEach((feature) => {
+                features.push(feature);
+              });
+              if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, minScale:minScale });
+              this.setState({ layers: layerList });
             }
           }
         }
