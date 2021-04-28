@@ -743,7 +743,6 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType,secure
     { 
       layerVisible = true;
     }
-    //console.log(group.value, layerNameOnly, visibleLayers.includes(layerNameOnly));
     // LAYER PROPS
     LayerHelpers.getLayer(OL_DATA_TYPES.ImageWMS, "WMS", undefined, layer.Name, serverUrl + "/wms?layers=" + layer.Name, false, undefined, undefined, displayName,secureKey, (newLayer) => {
       const wfsUrlTemplate = (rootUrl, layer) => `${rootUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layer}&outputFormat=application/json&cql_filter=`;
