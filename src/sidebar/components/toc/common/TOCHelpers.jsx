@@ -716,7 +716,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType,secure
     const maxScale = layer.MaxScaleDenominator;
     // SET VISIBILITY
     let layerVisible = false;
-    if (savedLayers !== undefined) {
+    if (savedLayers !== undefined && savedLayers !== null && savedLayers.length !== 0) {
       const savedLayer = savedLayers[layerNameOnly];
       if (savedLayer !== undefined){
         if (savedLayer.visible) layerVisible = true;
@@ -724,7 +724,11 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType,secure
         if (savedLayer.index) layerIndex = savedLayer.index;
   
       } 
-    } else if (visibleLayers.includes(layerNameOnly)) layerVisible = true;
+    } 
+    else if (visibleLayers.includes(layerNameOnly)) 
+    { 
+      layerVisible = true;
+    }
 
     // LAYER PROPS
     LayerHelpers.getLayer(OL_DATA_TYPES.ImageWMS, "WMS", undefined, layer.Name, serverUrl + "/wms?layers=" + layer.Name, false, undefined, undefined, displayName,secureKey, (newLayer) => {
