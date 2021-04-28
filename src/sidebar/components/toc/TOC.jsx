@@ -40,7 +40,7 @@ class TOC extends Component {
       layerCount: 0,
       sortFolderAlpha: this.getInitialSort(),
       sortListAlpha: this.getInitialSort(),
-
+      globalOpacity: 1,
       searchText:"",
       isLoading:false,
     };
@@ -526,7 +526,7 @@ updateLayerVisibility = (type=undefined) => {
       
       layerListGroups.forEach((group) => {
         group.layers.forEach((layer) => {
-          layer.layer.setVisible(false);;
+          layer.layer.setVisible(false);
         });
       });
       selectedGroup.layers.forEach((layer) => {
@@ -927,6 +927,24 @@ onLayerOptionsClick = (evt, layerInfo) =>{
     });
     
   };
+  onGlobalOpacityChange = (opacity) => {
+    this.setState({globalOpacity: opacity}, ()=>{
+      const layerList = Object.assign([], this.getActiveLayerGroups());
+      let newLayerGroups = layerList.map(group => {
+                                          group.layers = group.layers.map(layer=>{
+                                                              layer.layer.setOpacity(opacity);
+                                                              layer.opacity = opacity;
+                                                              return layer;
+                                                          });
+                                          return group;
+                                        });
+      this.setLayerGroups(this.state.type, newLayerGroups, ()=>{});
+      helpers.addAppStat("TOC set global opacity", "");
+    });
+    
+  }
+
+ 
  //#endregion
   render() {
     return (
@@ -946,6 +964,8 @@ onLayerOptionsClick = (evt, layerInfo) =>{
           onTurnOffLayers={this.onTurnOffLayers}
           onOpenLegend={this.onOpenLegend}
           onSaveAllLayers={this.onSaveAllLayers}
+          onGlobalOpacityChange={this.onGlobalOpacityChange}
+          globalOpacity={this.state.globalOpacity}
           helpLink={TOCConfig.helpLink}
         />
         <TOCFolderView 

@@ -5,6 +5,7 @@ import Switch from "react-switch";
 import { Item as MenuItem } from "rc-menu";
 import ReactTooltip from "react-tooltip";
 import {FaQuestion} from "react-icons/fa";
+import Slider, { createSliderWithTooltip } from "rc-slider";
 
 //CUSTOM
 import * as helpers from "../../../../helpers/helpers";
@@ -49,6 +50,17 @@ class TOCHeader extends Component {
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-legend">
             <FloatingMenuItem imageName={"legend24.png"} label="Show Legend" />
           </MenuItem>
+          <MenuItem className="sc-layers-slider" key="sc-floating-menu-opacity">
+            Adjust Transparency
+            <SliderWithTooltip
+              tipFormatter={this.sliderTipFormatter}
+              max={1}
+              min={0}
+              step={0.05}
+              defaultValue={this.props.globalOpacity}
+              onChange={(evt) => this.props.onGlobalOpacityChange(evt)}
+            />
+          </MenuItem>
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-sort">
             Sort Layers A-Z <Switch className="sc-toc-sort-switch" onChange={this.props.onSortChange} checked={this.props.sortAlpha} height={20} width={48} />
           </MenuItem>
@@ -58,6 +70,8 @@ class TOCHeader extends Component {
   
     ReactDOM.render(menu, document.getElementById("portal-root"));
   };
+
+
   onSettingsMenuItemClick = (action) => {
     switch (action) {
       case "sc-floating-menu-visility":
@@ -79,6 +93,7 @@ class TOCHeader extends Component {
       case "sc-floating-menu-switch":
         this.props.onTOCTypeChange();
         break;
+     
       default:
         break;
     }
@@ -134,7 +149,8 @@ class TOCHeader extends Component {
 }
 
 export default TOCHeader;
-
+// SLIDER
+const SliderWithTooltip = createSliderWithTooltip(Slider);
 // IMPORT ALL IMAGES
  const images = importAllImages(require.context("../images", false, /\.(png|jpe?g|svg|gif)$/));
  function importAllImages(r) {

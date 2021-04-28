@@ -132,6 +132,14 @@ export async function getMap (mapId=null,urlType, isReset, tocType, callback){
     {
       var sourcesProcessed = 0;
       const mapSettings = JSON.parse(result.json);
+
+      const defaultTheme = mapSettings.default_theme;
+      const defaultTool = mapSettings.default_tool;
+      if (defaultTheme !== undefined) {
+        window.emitter.emit("activateSidebarItem", defaultTheme, "themes");
+      } else if (defaultTool !== undefined) {
+        window.emitter.emit("activateSidebarItem", defaultTool, "tools");
+      }
       //console.log(mapSettings);
       mapSettings.sources.forEach(source => {
         getGroupsGC(source.layerUrl, urlType, isReset, tocType, source.secure,source.primary, source.secureKey, (layerGroupConfig) => {
@@ -321,8 +329,14 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured=false,
         if (layerInfo.KeywordList !== undefined) keywords = layerInfo.KeywordList;
         let visibleLayers = [];
         let groupPrefix = "";
-        if (keywords !== undefined) visibleLayers = _getVisibleLayers(keywords);
+        let allLayersVisible = false;
+        if (keywords !== undefined) allLayersVisible = _getAllLayersVisible(keywords);
         if (keywords !== undefined) groupPrefix = _getGroupPrefix(keywords);
+        if (allLayersVisible){
+          visibleLayers = layerInfo.Layer.map((item)=>item.Name);
+        }else{
+          if (keywords !== undefined) visibleLayers = _getVisibleLayers(keywords);
+        }
         let layerList = [];
         if (layerInfo.Layer !== undefined) {
           const groupLayerList = layerInfo.Layer;
@@ -729,7 +743,6 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType,secure
     { 
       layerVisible = true;
     }
-
     // LAYER PROPS
     LayerHelpers.getLayer(OL_DATA_TYPES.ImageWMS, "WMS", undefined, layer.Name, serverUrl + "/wms?layers=" + layer.Name, false, undefined, undefined, displayName,secureKey, (newLayer) => {
       const wfsUrlTemplate = (rootUrl, layer) => `${rootUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layer}&outputFormat=application/json&cql_filter=`;
@@ -946,6 +959,18 @@ function _getVisibleLayers(keywords) {
     const val = visibleLayersKeyword.split("=")[1];
     return val.split(",");
   } else return [];
+}
+
+function _getAllLayersVisible(keywords) {
+  if (keywords === undefined) return "";
+  const allLayersVisible = keywords.find(function(item) {
+    return item.indexOf("VISIBLE_LAYERS") !== -1;
+  });
+  if (allLayersVisible !== undefined) {
+    const val = allLayersVisible.split("=")[1];
+    if (val === "ALL") return true;
+  }
+  return false;
 }
 
 function _getCenterCoordinates(keywords) {
