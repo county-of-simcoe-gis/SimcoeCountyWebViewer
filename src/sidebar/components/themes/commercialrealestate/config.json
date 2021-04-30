@@ -5,17 +5,6 @@
   "toggleLayers": [
     {
       "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-      "layerName": "simcoe:Vacant_Commercial_and_Industrial_Land",
-      "displayName": "Vacant Commercial and Industrial Land",
-      "clickable": true,
-      "legendStyleName": "",
-      "visible": true,
-      "zIndex": 200,
-      "expanded": false,
-      "description": "Displays Vacant Commercial and Industrial Land."
-    },
-    {
-      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
       "layerName": "simcoe:Economic_Development_Business_Improvement_Area",
       "displayName": "Business Improvement Area",
       "clickable": true,
