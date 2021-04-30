@@ -442,11 +442,11 @@ export function searchArrayByKey(nameKey, myArray) {
 }
 
 // GET URL PARAMETER
-export function getURLParameter(parameterName, decoded = true) {
+export function getURLParameter(parameterName, decoded = true, caseSensitive=false) {
   const queryString = window.location.search;
   if (queryString.length < 1) return null;
-  const urlParams = new URLSearchParams(queryString.toLowerCase());
-  const param = urlParams.get(parameterName.toLowerCase());
+  const urlParams = new URLSearchParams(caseSensitive ? queryString : queryString.toLowerCase());
+  const param = urlParams.get(caseSensitive ? parameterName : parameterName.toLowerCase());
   if (param === null) return null;
 
   if (decoded) return param;

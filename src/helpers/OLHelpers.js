@@ -159,7 +159,7 @@ export class LayerHelpers {
           break;
         case "rest":
           service = "json";
-          url = url + "f=json";
+          url = root_url + "/layers?f=json";
           break
         default:
           service = "WFS";
@@ -206,10 +206,14 @@ export class LayerHelpers {
             break;
           case "rest":
             response = JSON.parse(responseText);
-            this.getESRILegend(`${root_url.replace("/layers","/legend?f=json")}`, legends =>{
+            this.getESRILegend(`${root_url}/legend?f=json`, legends =>{
               response.layers.forEach(item => {
                 if (item !== undefined){
                   item["layer_name"] = item.name;
+                  item["originalMinScale"] = item.minScale;
+                  item["originalMaxScale"] = item.maxScale;
+                  item.minScale = item.originalMaxScale;
+                  item.maxScale = item.originalMinScale;
                   if (item.minScale === item.maxScale){
                     item.minScale=undefined;
                     item.maxScale=undefined;
@@ -219,7 +223,7 @@ export class LayerHelpers {
                   item["queryable"] = true;
                   item["legend"] = legends.filter(legend=> {return legend.layerId === item.id})[0];
                   if (item.drawingInfo.renderer.symbol !== undefined && item.legend === undefined) item["style"] = `data:${item.drawingInfo.renderer.symbol.contentType};base64,${item.drawingInfo.renderer.symbol.imageData}`;
-                  item["url"]=`${root_url.replace("/layers","")}/${item.id}`;
+                  item["url"]=`${root_url}/${item.id}`;
                   layers.push(item);
                 } 
               });

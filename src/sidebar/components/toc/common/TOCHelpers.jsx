@@ -120,24 +120,57 @@ export async function getMap (mapId=null,urlType, isReset, tocType, callback){
       const mapSettings = JSON.parse(result.json);
       //console.log(mapSettings);
       mapSettings.sources.forEach(source => {
-        getGroupsGC(source.layerUrl, urlType, isReset, tocType, source.secure,source.primary, source.secureKey, (layerGroupConfig) => {
-          if (source.primary) defaultGroup=layerGroupConfig[1];
-          if (layerGroups === undefined){
-            layerGroups = layerGroupConfig[0];
-          }else{
-            layerGroups = mergeGroups(layerGroups,layerGroupConfig[0]);
-          }
-          sourcesProcessed ++;
-          if (sourcesProcessed === mapSettings.sources.length){
-            if ( mapSettings.default_group !== undefined) {
-              const mapDefaultGroup = layerGroups.filter((group)=> {return group.value===mapSettings.default_group})[0];
-              if (mapDefaultGroup !== undefined) defaultGroup = mapDefaultGroup;
-              else helpers.showMessage(`Configuration Error!`, `Default group ${mapSettings.default_group} could not be loaded.`, helpers.messageColors.red,3000);
-            }
-            if (defaultGroup === undefined || defaultGroup === null) defaultGroup = layerGroups[0];
-            callback([layerGroups,defaultGroup]);
-          }
-        });
+        if (source.type === undefined || source.type === null || source.type === "") source["type"] = "geoserver"; //default to geoserver
+        switch(source.type.toLowerCase()){
+          case "geoserver":
+            getGroupsGC(source.layerUrl, urlType, isReset, tocType, source.secure,source.primary, source.secureKey, (layerGroupConfig) => {
+              if (source.primary) defaultGroup=layerGroupConfig[1];
+              if (layerGroups === undefined){
+                layerGroups = layerGroupConfig[0];
+              }else{
+                layerGroups = mergeGroups(layerGroups,layerGroupConfig[0]);
+              }
+              sourcesProcessed ++;
+              if (sourcesProcessed === mapSettings.sources.length){
+                if ( mapSettings.default_group !== undefined) {
+                  const mapDefaultGroup = layerGroups.filter((group)=> {return group.value===mapSettings.default_group})[0];
+                  if (mapDefaultGroup !== undefined) defaultGroup = mapDefaultGroup;
+                  else helpers.showMessage(`Configuration Error!`, `Default group ${mapSettings.default_group} could not be loaded.`, helpers.messageColors.red,3000);
+                }
+                if (defaultGroup === undefined || defaultGroup === null) defaultGroup = layerGroups[0];
+                callback([layerGroups,defaultGroup]);
+              }
+            });
+            break;
+          case "arcgis":
+            getGroupsESRI(
+              {
+                url: source.layerUrl,
+                tocType:tocType,
+                isReset:isReset
+              }, (layerGroupConfig) => {
+                if (source.primary) defaultGroup=layerGroupConfig[1];
+                if (layerGroups === undefined){
+                  layerGroups = layerGroupConfig[0];
+                }else{
+                  layerGroups = mergeGroups(layerGroups,layerGroupConfig[0]);
+                }
+                sourcesProcessed ++;
+                if (sourcesProcessed === mapSettings.sources.length){
+                  if ( mapSettings.default_group !== undefined) {
+                    const mapDefaultGroup = layerGroups.filter((group)=> {return group.value===mapSettings.default_group})[0];
+                    if (mapDefaultGroup !== undefined) defaultGroup = mapDefaultGroup;
+                    else helpers.showMessage(`Configuration Error!`, `Default group ${mapSettings.default_group} could not be loaded.`, helpers.messageColors.red,3000);
+                  }
+                  if (defaultGroup === undefined || defaultGroup === null) defaultGroup = layerGroups[0];
+                  callback([layerGroups,defaultGroup]);
+                }
+          });
+            break;
+          default:
+            break;
+        }
+        
       });
       
     });
@@ -257,7 +290,7 @@ export function getGroupsESRI(options, callback) {
       layerOptions["maxScale"] = layer.maxScale;
       layerOptions["defaultVisibility"] = layer.defaultVisibility;
       layerOptions["identifyTitleColumn"] = layer.displayField
-      layerOptions["opacity"] = 1 - (layer.transparency === undefined ? 0 : layer.transparency);
+      layerOptions["opacity"] = 1 - (layer.drawingInfo.transparency === undefined ? 0 : layer.drawingInfo.transparency/100);
       layerOptions["liveLayer"] = layerOptions.isLiveLayer;
       layer["options"] = layerOptions;
       layerOptions.categories.forEach(category=>{

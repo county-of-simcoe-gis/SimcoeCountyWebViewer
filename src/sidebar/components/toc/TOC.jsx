@@ -126,10 +126,10 @@ refreshTOC = (isReset, callback=undefined) => {
   //this.getSavedLayers((results)=>{savedLayers=results;});
   let geoserverUrl = helpers.getURLParameter("GEO_URL");
   let geoserverUrlType = helpers.getURLParameter("GEO_TYPE");
-  let esriServiceUrl = helpers.getURLParameter("ARCGIS_SERVICE");
+  let esriServiceUrl = helpers.getURLParameter("ARCGIS_SERVICE",true, true);
   //allow GEO_URL url parameter to override MAP_ID
-  let mapId = geoserverUrl === null ? helpers.getURLParameter("MAP_ID") : null;
-  if (mapId === null && geoserverUrl === null) mapId = TOCConfig.mapId;
+  let mapId = geoserverUrl === null && esriServiceUrl === null ? helpers.getURLParameter("MAP_ID") : null;
+  if (mapId === null && geoserverUrl === null && esriServiceUrl === null) mapId = TOCConfig.mapId;
   if (geoserverUrl === null) {
     geoserverUrl = TOCConfig.geoserverLayerGroupsUrl;
   } else {
