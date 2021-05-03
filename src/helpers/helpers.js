@@ -954,7 +954,7 @@ export function getWKTFeature(wktString) {
 export function getWKTStringFromFeature(feature) {
   var wkt = new WKT();
   const wktString = wkt.writeFeature(feature);
-  console.log(wktString);
+  //console.log(wktString);
   return wktString;
 
   // if (wktString === undefined) return;

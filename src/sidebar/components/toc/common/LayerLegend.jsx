@@ -15,10 +15,10 @@ class LayerLegend extends Component {
 
     render() {
         return (
-        <div className="sc-toc-item-layer-info-legend">
-            <div className="sc-toc-item-layer-info-border" />
-            <Legend legendObj={this.props.legend} legendImage={this.props.image} />
-          </div>
+            <div className="sc-toc-item-layer-info-legend">
+                <div className="sc-toc-item-layer-info-border" />
+                <Legend legendObj={this.props.legend} legendImage={this.props.image} />
+            </div>
         );
     }
 }
@@ -33,7 +33,7 @@ const Legend = ({legendImage, legendObj}) =>{
             <ul className="sc-toc-item-layer-info-legend-list">
                 {
                 legendObj.legend.map(item =>{
-                     return <LegendItem legend={item} />
+                     return <LegendItem key={helpers.getUID()} legend={item} />
                     })
                 }
             </ul>
@@ -44,7 +44,7 @@ const Legend = ({legendImage, legendObj}) =>{
 }
 const LegendItem = ({legend}) => {
     return  <li className="sc-toc-item-layer-info-legend-list-item sc-noselect" id={helpers.getUID()} style={{height:`${legend.height}px`}} title={legend.label}>
-                <img style={{height:`${legend.height}px`, width:`${legend.width}px`}} src={`data:${legend.contentType};base64,${legend.imageData}`} alt="style" /><div class="sc-legend-label" style={{height:`${legend.height}px`, width:`${220-legend.width}px`}}>{legend.label.trim()}</div>
+                <img style={{height:`${legend.height}px`, width:`${legend.width}px`}} src={`data:${legend.contentType};base64,${legend.imageData}`} alt="style" /><div className="sc-legend-label" style={{height:`${legend.height}px`, width:`${220-legend.width}px`}}>{legend.label.trim()}</div>
             </li>;
 }; 
 

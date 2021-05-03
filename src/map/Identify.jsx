@@ -1,10 +1,10 @@
 import React, { Component, useState } from "react";
 import "./Identify.css";
 import * as helpers from "../helpers/helpers";
-import { LayerHelpers, OL_LAYER_TYPES } from "../helpers/OLHelpers";
+import { LayerHelpers, OL_LAYER_TYPES,OL_DATA_TYPES } from "../helpers/OLHelpers";
 import mainConfig from "../config.json";
 import Collapsible from "react-collapsible";
-import { GeoJSON } from "ol/format.js";
+import { GeoJSON, EsriJSON } from "ol/format.js";
 import InfoRow from "../helpers/InfoRow.jsx";
 import Feature from "ol/Feature";
 import { Vector as VectorSource } from "ol/source.js";
@@ -12,6 +12,7 @@ import VectorLayer from "ol/layer/Vector";
 import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style.js";
 
 import useIframeContentHeight from "react-use-iframe-content-height";
+import Geometry from "ol/geom/Geometry";
 
 class Identify extends Component {
   constructor(props) {
@@ -40,7 +41,25 @@ class Identify extends Component {
   clearIdentify = () => {
     window.emitter.emit("clearIdentify");
   };
-
+  parseESRIIdentify= (data) =>{
+    let features = [];
+    if (data.results !== undefined){
+      data.results.forEach(item =>{
+        item["dataProjection"] = item.geometry.spatialReference.latestWkid;
+        delete item.geometry.spatialReference;
+        delete item.geometryType;
+        let keys = Object.keys(item.attributes);
+        keys.forEach(key => {
+          if (item.attributes[key] === "Null" || item.attributes[key] === "") delete item.attributes[key];
+        });
+       
+        let tempFeature = new EsriJSON().readFeature(item);
+        tempFeature.setProperties({"displayFieldName":item.displayFieldName });
+        features.push(tempFeature);
+      });
+    }
+    return (features)
+  }
   refreshLayers = (props) => {
     this.setState({ layers: [], isLoading: true });
 
@@ -70,14 +89,23 @@ class Identify extends Component {
               params["mode"]= "cors";
               params["headers"]=headers;
             }
-            if (wfsUrl !== undefined && geometry.getType() !== "Point") {
+            const isArcGISLayer = LayerHelpers.getLayerSourceType(layer.getSource())=== OL_DATA_TYPES.ImageArcGISRest;
+            if (wfsUrl !== undefined && (geometry.getType() !== "Point" || isArcGISLayer)) {
               const feature = new Feature(geometry);
               const wktString = helpers.getWKTStringFromFeature(feature);
-              wfsUrl += "INTERSECTS(geom," + wktString + ")";
+              if (isArcGISLayer) {
+                const arcgisResolution = `${window.map.getSize()[0]},${window.map.getSize()[1]},96`;
+                const extent = window.map.getView().calculateExtent();
+                wfsUrl = wfsUrl.replace('#GEOMETRY#',geometry.flatCoordinates ).replace('#TOLERANCE#', 3 ).replace('#EXTENT#',extent.join(',') ).replace('#RESOLUTION#', arcgisResolution );
+
+              }else{
+                wfsUrl += "INTERSECTS(geom," + wktString + ")";
+              }
               // QUERY USING WFS
               // eslint-disable-next-line
               helpers.getJSON(wfsUrl, (result) => {
-                const featureList = new GeoJSON().readFeatures(result);
+
+                const featureList = isArcGISLayer ? this.parseESRIIdentify(result) : new GeoJSON().readFeatures(result);
                 if (featureList.length > 0) {
                   if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
                   let features = [];
@@ -239,6 +267,8 @@ class Identify extends Component {
     // LOOK FOR EXISTING FIELDS
     const nameFields = ["name", "display_name", "Name", "Display Name"];
     let displayName = "";
+    const displayFieldName = feature.get("displayFieldName");
+    if (displayFieldName !== undefined && displayFieldName !== null) nameFields.push(displayFieldName);
     nameFields.forEach((fieldName) => {
       if (fieldName.substring(0, 1) !== "_") {
         const name = feature.get(fieldName);
@@ -383,7 +413,7 @@ const FeatureItem = (props) => {
   const featureProps = feature.getProperties();
   const keys = Object.keys(featureProps);
   let featureName = feature.get(displayName);
-
+  
   let layerName = props.layerName;
   if (layerName.split(":").length > 1) {
     layerName = layerName.split(":")[1];
@@ -398,7 +428,7 @@ const FeatureItem = (props) => {
   if (featureName === null || featureName === undefined || featureName === "") featureName = "N/A";
   let cql_filter = "";
 
-  const excludedKeys = ["id", "geometry", "geom", "extent_geom", "gid", "globalid", "objectid", "bplan_gid"];
+  const excludedKeys = ["id", "geometry", "geom", "extent_geom", "gid", "globalid", "objectid", "bplan_gid","shape.stlength()", "shape.starea()", "shape","shape leng","displayfieldname"];
 
   let isSameOrigin = true;
   if (html_url !== undefined) isSameOrigin = html_url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !== -1;
@@ -416,7 +446,7 @@ const FeatureItem = (props) => {
     <div>
       <div className="sc-identify-feature-header" onMouseEnter={() => props.onMouseEnter(feature)} onMouseLeave={props.onMouseLeave}>
         <div className="sc-fakeLink sc-identify-feature-header-label" onClick={() => setOpen(!open)}>
-          {mainConfig.excludeIdentifyTitleName ? featureName : displayName + ": " + featureName}
+          {mainConfig.excludeIdentifyTitleName ? featureName : `${helpers.toTitleCase(displayName.split("_").join(" ").split(/(?=[A-Z][^A-Z])/).join(" "))}: ${featureName}`}
         </div>
         {hasGeom ? <img className="sc-identify-feature-header-img" src={images["zoom-in.png"]} onClick={() => props.onZoomClick(feature)} title="Zoom In" alt="Zoom In" /> : ""}
         {extentFeature !== undefined ? (
@@ -440,7 +470,7 @@ const FeatureItem = (props) => {
           })
           .map((keyName, i) => {
             let val = featureProps[keyName];
-            return <InfoRow key={helpers.getUID()} label={helpers.toTitleCase(keyName.split("_").join(" "))} value={val} />;
+            return <InfoRow key={helpers.getUID()} label={helpers.toTitleCase(keyName.split("_").join(" ").split(/(?=[A-Z][^A-Z])/).join(" "))} value={val} />;
           })}
       </div>
     </div>

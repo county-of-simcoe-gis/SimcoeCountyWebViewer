@@ -210,6 +210,7 @@ export class LayerHelpers {
               response.layers.forEach(item => {
                 if (item !== undefined){
                   item["layer_name"] = item.name;
+                  item["rootUrl"] = root_url;
                   item["originalMinScale"] = item.minScale;
                   item["originalMaxScale"] = item.maxScale;
                   item.minScale = item.originalMaxScale;

@@ -1283,10 +1283,6 @@ function parseESRIDescription (description){
   return returnObj;
 }
 
-function parseESRILegend (options){
-  
-}
-
 
 
 export async function buildESRILayer(options, callback){
@@ -1318,7 +1314,7 @@ export async function buildESRILayer(options, callback){
   
       const layerNameOnly = layer.name;
       let layerTitle = layer.options.title;
-      let queryable = layer.options.queryable !== undefined ? layer.options.queryable : false;
+      let queryable = layer.queryable !== undefined ? layer.queryable : false;
       let opaque = layer.opaque !== undefined ? layer.opaque : false;
       if (layerTitle === undefined) layerTitle = layerNameOnly;
 
@@ -1397,10 +1393,13 @@ export async function buildESRILayer(options, callback){
           
         },
         (newLayer) => {
-        const wfsUrl = layer.url;
+        //const identifyUrl = (url) => `${url}/query?geometry=#GEOMETRY#&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=true&returnTrueCurves=false&returnIdsOnly=false&returnCountOnly=false&returnZ=false&returnM=false&returnDistinctValues=false&returnExtentOnly=false&quantizationParameters=&f=geojson`;
+        const identifyUrl = (options) => `${options.url}/identify?geometry=${options.point}&geometryType=esriGeometryPoint&layers=visible%3A${options.layerId}&tolerance=${options.tolerance}&mapExtent=${options.extent}&imageDisplay=${options.resolution}&returnGeometry=true&returnFieldName=true&f=json`;
+
+        const wfsUrl = identifyUrl({url:layer.rootUrl, point: '#GEOMETRY#', layerId: layer.id,tolerance: '#TOLERANCE#', extent: '#EXTENT#', resolution: '#RESOLUTION#' });
         const rootInfoUrl = layer.url;
-  
-        newLayer.setVisible(layerVisible);
+          //http://gis.simcoe.ca/arcgis/rest/services/Severn/Severn_OperationalLayers_Dynamic/MapServer/0/
+         newLayer.setVisible(layerVisible);
         newLayer.setOpacity(opacity);
         newLayer.setProperties({ 
             name: layerNameOnly, 
