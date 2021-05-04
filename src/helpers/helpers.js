@@ -780,6 +780,13 @@ export function centerMap(coords, zoom) {
   );
 }
 
+export function formatTitleCase(str) {
+  //replace title case with space
+  //replace underscore with space
+  return this.toTitleCase(str.split(/(?=[A-Z]{1}[a-z]+)|(?=[_ .])/).join(" ").replace(/[_.]/gm,"" ).toLowerCase());
+
+}
+
 export function toTitleCase(str) {
   return str.replace(/\w\S*/g, function(txt) {
     return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();

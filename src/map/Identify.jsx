@@ -446,7 +446,7 @@ const FeatureItem = (props) => {
     <div>
       <div className="sc-identify-feature-header" onMouseEnter={() => props.onMouseEnter(feature)} onMouseLeave={props.onMouseLeave}>
         <div className="sc-fakeLink sc-identify-feature-header-label" onClick={() => setOpen(!open)}>
-          {mainConfig.excludeIdentifyTitleName ? featureName : `${helpers.toTitleCase(displayName.split("_").join(" ").split(/(?=[A-Z][^A-Z])/).join(" "))}: ${featureName}`}
+          {mainConfig.excludeIdentifyTitleName ? featureName : `${helpers.formatTitleCase(displayName)}: ${featureName}`}
         </div>
         {hasGeom ? <img className="sc-identify-feature-header-img" src={images["zoom-in.png"]} onClick={() => props.onZoomClick(feature)} title="Zoom In" alt="Zoom In" /> : ""}
         {extentFeature !== undefined ? (
@@ -470,7 +470,7 @@ const FeatureItem = (props) => {
           })
           .map((keyName, i) => {
             let val = featureProps[keyName];
-            return <InfoRow key={helpers.getUID()} label={helpers.toTitleCase(keyName.split("_").join(" ").split(/(?=[A-Z][^A-Z])/).join(" "))} value={val} />;
+            return <InfoRow key={helpers.getUID()} label={helpers.formatTitleCase(keyName)} value={val} />;
           })}
       </div>
     </div>
