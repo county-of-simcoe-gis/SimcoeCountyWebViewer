@@ -173,7 +173,7 @@ class BasemapSwitcher extends Component {
       (newLayer) => {
         //var worldImageryLayer = helpers.getESRITileXYZLayer(BasemapConfig.worldImageryService);
         newLayer.setZIndex(0);
-        //worldImageryLayer.setMinResolution(300);
+        newLayer.setMinResolution(2);
         window.map.addLayer(newLayer);
         this.setState({ worldImageryLayer: newLayer });
       });
