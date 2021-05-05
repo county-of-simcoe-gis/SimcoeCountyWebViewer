@@ -11,6 +11,7 @@ import { Stroke, Style } from "ol/style.js";
 import PropertyReport from "./PropertyReport";
 import copy from "copy-to-clipboard";
 import { Image as ImageLayer } from "ol/layer.js";
+import { LayerHelpers } from "../helpers/OLHelpers";
 
 // https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json&cql_filter=INTERSECTS(geom,%20POINT%20(-8874151.72%205583068.78))
 const parcelURLTemplate = (mainURL, x, y) => `${mainURL}&cql_filter=INTERSECTS(geom,%20POINT%20(${x}%20${y}))`;
@@ -85,23 +86,18 @@ class PropertyReportClick extends Component {
 
       // IMAGE LAYERS
       // CHECK FOR ANY OTHER LAYERS THAT SHOULD DISABLE
-      var viewResolution = window.map.getView().getResolution();
       const layers = window.map.getLayers().getArray();
       for (let index = 0; index < layers.length; index++) {
         if (disable) break;
         const layer = layers[index];
         if (layer.get("disableParcelClick") && layer.getVisible() && layer instanceof ImageLayer) {
-          var url = layer.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
-          if (url) {
-            // eslint-disable-next-line
-            await helpers.getJSONWait(url, (result) => {
-              const features = result.features;
-              if (features.length > 0) {
-                disable = true;
-                return;
-              }
-            });
-          }
+          await LayerHelpers.identifyFeaturesWait(layer, evt.coordinate, (feature)=>{
+            if (feature !== undefined) {
+              disable = true;
+              return;
+            }
+          });
+          
         }
       }
 

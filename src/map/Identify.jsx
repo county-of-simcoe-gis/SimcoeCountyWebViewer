@@ -41,25 +41,7 @@ class Identify extends Component {
   clearIdentify = () => {
     window.emitter.emit("clearIdentify");
   };
-  parseESRIIdentify= (data) =>{
-    let features = [];
-    if (data.results !== undefined){
-      data.results.forEach(item =>{
-        item["dataProjection"] = item.geometry.spatialReference.latestWkid;
-        delete item.geometry.spatialReference;
-        delete item.geometryType;
-        let keys = Object.keys(item.attributes);
-        keys.forEach(key => {
-          if (item.attributes[key] === "Null" || item.attributes[key] === "") delete item.attributes[key];
-        });
-       
-        let tempFeature = new EsriJSON().readFeature(item);
-        tempFeature.setProperties({"displayFieldName":item.displayFieldName });
-        features.push(tempFeature);
-      });
-    }
-    return (features)
-  }
+ 
   refreshLayers = (props) => {
     this.setState({ layers: [], isLoading: true });
 
@@ -105,7 +87,7 @@ class Identify extends Component {
               // eslint-disable-next-line
               helpers.getJSON(wfsUrl, (result) => {
 
-                const featureList = isArcGISLayer ? this.parseESRIIdentify(result) : new GeoJSON().readFeatures(result);
+                const featureList = isArcGISLayer ? LayerHelpers.parseESRIIdentify(result) : new GeoJSON().readFeatures(result);
                 if (featureList.length > 0) {
                   if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
                   let features = [];
@@ -403,6 +385,7 @@ const FeatureItem = (props) => {
   const [open, setOpen] = useState(false);
   let { feature, displayName, html_url, identifyTitleColumn, identifyIdColumn } = props;
   if (identifyTitleColumn !== undefined && identifyTitleColumn !== "") displayName = identifyTitleColumn;
+  
   //console.log(feature);
   var hasGeom = feature.values_.geometry !== undefined && feature.values_.geometry !== null;
   var extentFeature = undefined;
@@ -419,7 +402,13 @@ const FeatureItem = (props) => {
     layerName = layerName.split(":")[1];
     layerName = helpers.replaceAllInString(layerName, "_", " ");
   }
-
+  //HANDLE ARCGIS FEATURE TITLE
+  let displayFieldName = feature.get("displayFieldName");
+  if (displayFieldName !== undefined && displayFieldName !== "" ) {
+    displayName = displayFieldName;
+    let displayFieldValue = feature.get("displayFieldValue");
+    if (displayFieldValue !== undefined && displayFieldValue !== "" ) featureName = displayFieldValue;
+  }
   // THIS IS FALLBACK IN CASE THERE ARE NO ATTRIBUTES EXCEPT GEOMETRY
   if (displayName === "geometry") {
     if (keys.length === 1) displayName = "No attributes found";
@@ -427,8 +416,6 @@ const FeatureItem = (props) => {
   }
   if (featureName === null || featureName === undefined || featureName === "") featureName = "N/A";
   let cql_filter = "";
-
-  const excludedKeys = ["id", "geometry", "geom", "extent_geom", "gid", "globalid", "objectid", "bplan_gid","shape.stlength()", "shape.starea()", "shape","shape leng","displayfieldname"];
 
   let isSameOrigin = true;
   if (html_url !== undefined) isSameOrigin = html_url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !== -1;
@@ -458,20 +445,7 @@ const FeatureItem = (props) => {
 
       <div className={open ? "sc-identify-feature-content" : "sc-hidden"}>
         <IFrame key={helpers.getUID()} src={html_url} filter={cql_filter} />
-
-        {keys
-          .filter((keyName, i) => {
-            let val = featureProps[keyName];
-            if (val === null) val = "";
-            if (cql_filter === "" && typeof val !== "object" && !excludedKeys.includes(keyName.toLowerCase()) && keyName.substring(0, 1) !== "_") {
-              return true;
-            }
-            return false;
-          })
-          .map((keyName, i) => {
-            let val = featureProps[keyName];
-            return <InfoRow key={helpers.getUID()} label={helpers.formatTitleCase(keyName)} value={val} />;
-          })}
+        {cql_filter === "" ? helpers.FeatureContent({feature:feature}) : ""}
       </div>
     </div>
   );

@@ -4,9 +4,6 @@ import ReactDOM from "react-dom";
 import { isMobile } from "react-device-detect";
 import arrayMove from "array-move";
 
-//OPEN LAYERS
-import GeoJSON from "ol/format/GeoJSON.js";
-
 //CUSTOM
 import TOCConfig from "./common/TOCConfig.json";
 import * as TOCHelpers from "./common/TOCHelpers.jsx";
@@ -15,6 +12,7 @@ import LayerOptionsMenu from "./common/LayerOptionsMenu.jsx";
 import TOCListView from "./toc-list-view/TOCListView.jsx";
 import TOCFolderView from "./toc-folder-view/TOCFolderView.jsx";
 import * as helpers from "../../../helpers/helpers";
+import { LayerHelpers } from "../../../helpers/OLHelpers";
 
 class TOC extends Component {
   constructor(props) {
@@ -84,23 +82,13 @@ onMapLoad = () => {
   this.refreshTOC(false, ()=> {
     window.map.on("singleclick", (evt) => {
       if (window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring ) return;
-
       this.getLayerList((groups)=>{
-        const viewResolution = window.map.getView().getResolution();
         groups.forEach((layers) => {
           layers.forEach((layer) => {
             if (layer.visible && layer.liveLayer) {
-              var url = layer.layer.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
-              if (url) {
-                helpers.getJSON(url, (result) => {
-                  const features = result.features;
-                  if (features.length > 0) {
-                    const geoJSON = new GeoJSON().readFeatures(result);
-                    const feature = geoJSON[0];
-                    helpers.showFeaturePopup(evt.coordinate, feature);
-                  }
-                });
-              }
+              LayerHelpers.identifyFeatures(layer.layer, evt.coordinate, (feature)=>{
+                if (feature !== undefined) helpers.showFeaturePopup(evt.coordinate, feature);
+              });
             }
           });
         });
@@ -479,22 +467,12 @@ addCustomLayer = (layer, groupName, selected = false, save = false) => {
 addPropertyReportClick = () => {
   window.map.on("singleclick", (evt) => {
     if (window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring ) return;
-
-    const viewResolution = window.map.getView().getResolution();
     const allLayers = Object.assign([], this.state.allLayers);
     allLayers.forEach((layer) => {
       if (layer.visible && layer.liveLayer) {
-        var url = layer.layer.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
-        if (url) {
-          helpers.getJSON(url, (result) => {
-            const features = result.features;
-            if (features.length > 0) {
-              const geoJSON = new GeoJSON().readFeatures(result);
-              const feature = geoJSON[0];
-              helpers.showFeaturePopup(evt.coordinate, feature);
-            }
-          });
-        }
+        LayerHelpers.identifyFeatures(layer.layer, evt.coordinate, (feature)=>{
+          if (feature !== undefined) helpers.showFeaturePopup(evt.coordinate, feature);
+        });
       }
     });
   });

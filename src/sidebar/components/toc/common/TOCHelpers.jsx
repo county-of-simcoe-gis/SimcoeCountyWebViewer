@@ -1252,19 +1252,19 @@ function parseESRIDescription (description){
             });
             break;
         case "LIVELAYER":
-            returnObj.isLiveLayer = value === "TRUE";
+            returnObj.isLiveLayer = value.trim().toUpperCase() === "TRUE";
             break;
         case "GROUPON":
-          returnObj.isGroupOn =value === "TRUE";
+          returnObj.isGroupOn =value.trim().toUpperCase() === "TRUE";
             break;
         case "VISIBLE":
-          returnObj.isVisible = value === "TRUE";
+          returnObj.isVisible = value.trim().toUpperCase() === "TRUE";
             break;
         case "OPEN":
-          returnObj.isOpen = value === "TRUE";
+          returnObj.isOpen = value.trim().toUpperCase() === "TRUE";
             break;
         case "SAR":
-          returnObj.sar = value === "TRUE";
+          returnObj.sar = value.trim().toUpperCase() === "TRUE";
             break;
         case "DESCRIPTION":
           returnObj.description = value;
@@ -1394,7 +1394,7 @@ export async function buildESRILayer(options, callback){
         },
         (newLayer) => {
         //const identifyUrl = (url) => `${url}/query?geometry=#GEOMETRY#&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=true&returnTrueCurves=false&returnIdsOnly=false&returnCountOnly=false&returnZ=false&returnM=false&returnDistinctValues=false&returnExtentOnly=false&quantizationParameters=&f=geojson`;
-        const identifyUrl = (options) => `${options.url}/identify?geometry=${options.point}&geometryType=esriGeometryPoint&layers=visible%3A${options.layerId}&tolerance=${options.tolerance}&mapExtent=${options.extent}&imageDisplay=${options.resolution}&returnGeometry=true&returnFieldName=true&f=json`;
+        const identifyUrl = (options) => `${options.url}/identify?geometry=${options.point}&geometryType=esriGeometryPoint&layers=visible%3A${options.layerId}&sr=3857&datumTransformations=3857&tolerance=${options.tolerance}&mapExtent=${options.extent}&imageDisplay=${options.resolution}&maxAllowableOffset=10&returnGeometry=true&returnFieldName=true&f=json`;
 
         const wfsUrl = identifyUrl({url:layer.rootUrl, point: '#GEOMETRY#', layerId: layer.id,tolerance: '#TOLERANCE#', extent: '#EXTENT#', resolution: '#RESOLUTION#' });
         const rootInfoUrl = layer.url;

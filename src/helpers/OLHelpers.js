@@ -135,6 +135,67 @@ export class FeatureHelpers {
 }
 
 export class LayerHelpers {
+
+  static async identifyFeaturesWait(layer, coordinate, callback = undefined) {
+    const viewResolution = window.map.getView().getResolution();
+    const isArcGISLayer = LayerHelpers.getLayerSourceType(layer.getSource())=== OL_DATA_TYPES.ImageArcGISRest;
+    var url = isArcGISLayer ? layer.get("wfsUrl") : layer.getSource().getFeatureInfoUrl(coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
+    if (isArcGISLayer) {
+      const arcgisResolution = `${window.map.getSize()[0]},${window.map.getSize()[1]},96`;
+      const extent = window.map.getView().calculateExtent();
+      const zoom = window.map.getView().getZoom();
+      const tolerance = 20-(zoom);
+      url = url.replace('#GEOMETRY#',coordinate ).replace('#TOLERANCE#', tolerance >= 10 ? tolerance : 10   ).replace('#EXTENT#',extent.join(',') ).replace('#RESOLUTION#', arcgisResolution );
+    }
+    if (url) {
+      await helpers.getJSONWait(url, (result) => {
+        let features = isArcGISLayer ? LayerHelpers.parseESRIIdentify(result) : new GeoJSON().readFeatures(result);
+        if (callback === undefined){
+          return (features.length > 0 ? features[0] : undefined);
+        } else{
+          callback(features.length > 0 ? features[0] : undefined);
+        }
+      });
+    }
+  }
+  static identifyFeatures(layer, coordinate, callback) {
+    const viewResolution = window.map.getView().getResolution();
+    const isArcGISLayer = LayerHelpers.getLayerSourceType(layer.getSource())=== OL_DATA_TYPES.ImageArcGISRest;
+    var url = isArcGISLayer ? layer.get("wfsUrl") : layer.getSource().getFeatureInfoUrl(coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
+    if (isArcGISLayer) {
+      const arcgisResolution = `${window.map.getSize()[0]},${window.map.getSize()[1]},96`;
+      const extent = window.map.getView().calculateExtent();
+      const zoom = window.map.getView().getZoom();
+      const tolerance = 20-(zoom);
+      url = url.replace('#GEOMETRY#',coordinate ).replace('#TOLERANCE#', tolerance >= 10 ? tolerance : 10 ).replace('#EXTENT#',extent.join(',') ).replace('#RESOLUTION#', arcgisResolution );
+    }
+    if (url) {
+      helpers.getJSON(url, (result) => {
+        let features = isArcGISLayer ? LayerHelpers.parseESRIIdentify(result) : new GeoJSON().readFeatures(result);
+        callback(features.length > 0 ? features[0] : undefined);
+      });
+    }
+  }
+  static parseESRIIdentify(data){
+    let features = [];
+    if (data.results !== undefined){
+      data.results.forEach(item =>{
+        item["dataProjection"] = item.geometry.spatialReference.latestWkid;
+        delete item.geometry.spatialReference;
+        delete item.geometryType;
+        let keys = Object.keys(item.attributes);
+        keys.forEach(key => {
+          if (item.attributes[key] === "Null" || item.attributes[key] === "") delete item.attributes[key];
+        });
+       
+        let tempFeature = new EsriJSON().readFeature(item);
+        tempFeature.setProperties({"displayFieldName":item.displayFieldName });
+        tempFeature.setProperties({"displayFieldValue":item.value });
+        features.push(tempFeature);
+      });
+    }
+    return (features)
+  }
   static getCapabilities(root_url, type, callback) {
     type = type.toLowerCase();
     var url = "";

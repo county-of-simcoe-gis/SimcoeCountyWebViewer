@@ -783,7 +783,7 @@ export function centerMap(coords, zoom) {
 export function formatTitleCase(str) {
   //replace title case with space
   //replace underscore with space
-  return this.toTitleCase(str.split(/(?=[A-Z]{1}[a-z]+)|(?=[_ .])/).join(" ").replace(/[_.]/gm,"" ).toLowerCase());
+  return toTitleCase(str.split(/(?=[A-Z]{1}[a-z]+)|(?=[_ .])/).join(" ").replace(/[_.]/gm,"" ).toLowerCase());
 
 }
 
@@ -1062,7 +1062,7 @@ function _escapeRegExp(str) {
 }
 
 export function showFeaturePopup(coord, feature) {
-  window.popup.show(coord, <FeaturePopupContent feature={feature} />);
+  window.popup.show(coord, <FeatureContent feature={feature} class="sc-live-layer-popup-content" />);
 }
 
 export function removeURLParameter(url, parameter) {
@@ -1084,14 +1084,53 @@ export function removeURLParameter(url, parameter) {
   }
   return url;
 }
-function FeaturePopupContent(props) {
+export function FeatureContent(props) {
+  //WILDCARD = .*
+  //LITERAL STRING = [] EG: [_][.]
+  //NOT STRING = (?!string) EG: geostasis[.](?!test).*
+  const filterKeys = [
+                        "[_].*",
+                        "id", 
+                        "geometry", 
+                        "geom", 
+                        "extent_geom", 
+                        ".*gid.*", 
+                        "globalid", 
+                        "objectid.*", 
+                        "shape.*", 
+                        "displayfieldname",
+                        "displayfieldvalue", 
+                        "geostasis[.].*",
+                        ".*fid.*"
+                      ];
+                    
+  const featureProps = props.feature.getProperties();
+  let keys = Object.keys(featureProps);
+  const filterByKeyName = (keyName) => {
+    return filterKeys.filter(filterItem => {
+      let returnValue = false;
+      //returnValue = filterItem === keyName; //check for exact match
+      //if (!returnValue){
+        var regexTest = new RegExp(`^${filterItem}$`);
+        returnValue = regexTest.test(keyName);
+      //}
+      return returnValue;
+      }).length === 0
+  }
+  keys = keys.filter((key, i) => {
+    const keyName = key.toLowerCase()
+    let val = props.feature.get(key);
+    if (val === null) val = "";
+    if (typeof val === "object") return false; //EXCLUDE ALL OBJECT FIELDS
+    return filterByKeyName(keyName);
+  })
   return (
-    <div className="sc-live-layer-popup-content">
-      {Object.entries(props.feature.getProperties()).map((row) => {
-        if (row[0] !== "geometry" && row[0].substring(0, 1) !== "_") {
-          return <InfoRow key={getUID()} value={row[1]} label={row[0]} />;
-        } else return null;
-      })}
+    <div className={props.class}>
+      {keys     
+      .map((keyName, i)  => {
+        let val = props.feature.get(keyName);
+        return <InfoRow key={getUID()} value={val} label={formatTitleCase(keyName)} />;
+        })}
     </div>
   );
 }
