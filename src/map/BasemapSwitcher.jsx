@@ -166,7 +166,7 @@ class BasemapSwitcher extends Component {
         sourceType:OL_DATA_TYPES.XYZ, 
         source:"WMS", 
         layerName:"worldImageryServiceBasemap",
-        url:BasemapConfig.worldImageryService.url, 
+        url:BasemapConfig.worldImageryService, 
         tiled:true, 
         name:"worldImageryServiceBasemap",
       },
