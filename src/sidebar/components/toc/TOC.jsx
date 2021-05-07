@@ -907,8 +907,8 @@ onLayerOptionsClick = (evt, layerInfo) =>{
         params += "&" + name + "=1";
       }
     });
-  
-    helpers.showURLWindow("https://opengis.simcoe.ca/legend/" + params, false, "normal", true, true);
+    
+    helpers.showURLWindow("/legend/" + params, false, "normal", true, true);
   };
   onSaveAllLayers = () => {
     // GATHER INFO TO SAVE

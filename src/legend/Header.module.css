@@ -1,0 +1,20 @@
+.header {
+  margin: 10px;
+  border-bottom: 1px solid #ddd;
+  /* margin-left:10px; */
+}
+.title {
+  font-size: 25px;
+  letter-spacing: 1.3px;
+  padding-top: 10px;
+  margin-left: 10px;
+  margin-top: 10px;
+  text-shadow: 1px 1px 1px rgb(199, 199, 199);
+  color: #505050;
+}
+
+@media print {
+  .headerButton {
+    display: none;
+  }
+}

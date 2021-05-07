@@ -5,14 +5,14 @@
   "toggleLayers": [
     {
       "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-      "layerName": "simcoe:Vacant_Commercial_and_Industrial_Land",
-      "displayName": "Vacant Commercial and Industrial Land",
+      "layerName": "simcoe:Economic Employment Districts",
+      "displayName": "Provincially Designated Employment Land",
       "clickable": true,
       "legendStyleName": "",
       "visible": true,
-      "zIndex": 200,
+      "zIndex": 209,
       "expanded": false,
-      "description": "Displays Vacant Commercial and Industrial Land."
+      "description": ""
     },
     {
       "serverUrl": "https://opengis.simcoe.ca/geoserver/",
