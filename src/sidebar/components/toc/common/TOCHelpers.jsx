@@ -53,7 +53,21 @@ map config example object
  *    - getLocalGroup
  **/
 
+export function makeGroup(groupDisplayName, isDefault, groupUrl, groupPrefix, visibleLayers, wmsGroupUrl, customGroupUrl, layers = []) {
+  const groupObj = {
+    value: helpers.getUID(),
+    label: groupDisplayName,
+    defaultGroup: isDefault,
+    url: groupUrl,
+    prefix: groupPrefix,
+    visibleLayers: visibleLayers,
+    wmsGroupUrl: wmsGroupUrl,
+    customRestUrl: customGroupUrl,
+    layers: layers,
+  };
 
+  return groupObj;
+}
 
 export function makeLayer(
   layerName,
