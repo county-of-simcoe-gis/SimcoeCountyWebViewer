@@ -53,20 +53,20 @@ map config example object
  *    - getLocalGroup
  **/
 
-export function makeGroup(groupDisplayName, isDefault, groupUrl, groupPrefix, visibleLayers, wmsGroupUrl, customGroupUrl, layers = []) {
+export function makeGroup(options, callback=undefined) {
   const groupObj = {
-    value: helpers.getUID(),
-    label: groupDisplayName,
-    defaultGroup: isDefault,
-    url: groupUrl,
-    prefix: groupPrefix,
-    visibleLayers: visibleLayers,
-    wmsGroupUrl: wmsGroupUrl,
-    customRestUrl: customGroupUrl,
-    layers: layers,
+    value: options.value !== undefined ? options.value : helpers.getUID(),
+    label: options.label,
+    defaultGroup: options.defaultGroup,
+    url: options.url,
+    prefix: options.prefix,
+    visibleLayers: options.visibleLayers,
+    wmsGroupUrl: options.wmsGroupUrl,
+    customRestUrl: options.customGroupUrl,
+    layers: options.layers !== undefined ? options.layers : [],
   };
-
-  return groupObj;
+  if (callback === undefined) return groupObj;
+  else callback(groupObj);
 }
 
 export function makeLayer(
@@ -163,6 +163,52 @@ export async function getMap (mapId=null,urlType, isReset, tocType, callback){
       });
       
     });
+}
+
+export function mergeGroupsTogether(group, groups){  
+  groups.forEach(currentGroup =>{
+    currentGroup.layers.forEach(currentLayer => {
+      let newLayer = Object.assign({},currentLayer);
+      newLayer.group = group.value;
+      newLayer.groupName = group.label;
+      var isDuplicateLayer = false;
+      group.layers = group.layers.map((layer) => {
+        if (newLayer.name === layer.name){
+          isDuplicateLayer = true;
+          if ((newLayer.secured || newLayer.primary) && !group.primary){
+            return newLayer;
+          }else{
+            return layer;
+          }
+        }else{
+          return layer;
+        }
+      });
+      
+      if (!isDuplicateLayer) group.layers.push(newLayer);
+    });
+  })
+
+  group.layers = group.layers.sort((a,b)=>{
+                                    if (a.displayName < b.displayName) {
+                                      return -1;
+                                    } else if (a.displayName > b.displayName) {
+                                      return 1;
+                                    }else{
+                                      return 0;
+                                    }
+                                  });
+  //update index based on newly sorted layers
+  let index = group.layers.length;
+  group.layers = group.layers.map(layer => {
+    index--;
+    layer.index = index;
+    layer.drawIndex = index;
+    layer.layer.setZIndex(index);
+    return layer;
+  });                        
+  
+  return group;
 }
 
 export function mergeGroups(originalGroups, newGroups){
