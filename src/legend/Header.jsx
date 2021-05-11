@@ -8,7 +8,7 @@ function Header(props) {
         <tbody>
           <tr>
             <td className={styles.title}>{"Legend"}</td>
-            <td style={{ width: "60px" }}>
+            <td style={{ width: "60px"  }} className={`no-print${props.hide.share?" sc-hidden":""}`}>
               <img
                 onClick={() => {
                   window.location.href = "mailto:?subject=Map Legend from opengis.simcoe.ca&body=" + encodeURIComponent(window.location.href);
@@ -20,7 +20,7 @@ function Header(props) {
               />
             </td>
 
-            <td style={{ width: "60px" }}>
+            <td style={{ width: "60px" }} className={`no-print${props.hide.print?" sc-hidden":""}`}>
               <img
                 alt="Print"
                 onClick={() => {
@@ -31,7 +31,7 @@ function Header(props) {
                 src={images["print-icon.png"]}
               />
             </td>
-            <td style={{ width: "60px" }}>
+            <td style={{ width: "60px" }} className={`no-print${props.hide.newWindow?" sc-hidden":""}` }>
               <img
                 alt="Open In New Window"
                 onClick={() => {

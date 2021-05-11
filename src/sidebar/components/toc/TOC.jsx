@@ -13,6 +13,8 @@ import TOCListView from "./toc-list-view/TOCListView.jsx";
 import TOCFolderView from "./toc-folder-view/TOCFolderView.jsx";
 import * as helpers from "../../../helpers/helpers";
 import { LayerHelpers } from "../../../helpers/OLHelpers";
+import LegendApp from "../../../legend/App";
+
 
 class TOC extends Component {
   constructor(props) {
@@ -736,19 +738,19 @@ onGroupFolderToggle = (groupName, panelOpen) => {
 //#endregion
 //#region HANDLE ACTIVATE LAYER/GROUP
 updateOpenPopup = () => {
-  const iFrame = document.getElementById("sc-url-window-iframe");
-  const urlWindow = document.getElementById("sc-url-window-container");
-  if (iFrame !== null && urlWindow !== null) {
-    const classes = urlWindow.className;
+  const windowContent = document.getElementById("sc-show-window-content");
+  const windowContainer = document.getElementById("sc-show-window-container");
+  if (windowContent !== null && windowContainer !== null) {
+    const classes = windowContainer.className;
     if (classes.indexOf("sc-hidden") === -1) {
-      let legend = null;
+      let legend = false;
       try{
-        legend = iFrame.contentWindow.document.getElementById("sc-legend-app-main-container");
+        legend = windowContent.childNodes[0].id === "sc-legend-app-main-container";
       }
       catch(e){
         console.log(e.message);
       }
-      if (legend !== null) this.onOpenLegend();
+      if (legend) this.onOpenLegend();
     }
   }
 }
@@ -908,7 +910,8 @@ onLayerOptionsClick = (evt, layerInfo) =>{
       }
     });
     
-    helpers.showURLWindow("/legend/" + params, false, "normal", true, true);
+
+    helpers.showWindow(<LegendApp groups={this.getActiveLayerGroups()} selectedGroups={activeGroups} />, false, "normal", false);
   };
   onSaveAllLayers = () => {
     // GATHER INFO TO SAVE

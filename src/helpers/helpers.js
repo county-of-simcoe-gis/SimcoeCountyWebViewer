@@ -31,6 +31,7 @@ import shortid from "shortid";
 import ShowMessage from "./ShowMessage.jsx";
 import ShowTerms from "./ShowTerms.jsx";
 import URLWindow from "./URLWindow.jsx";
+import ShowWindow from "./ShowWindow.jsx";
 import mainConfig from "../config.json";
 import { InfoRow } from "./InfoRow.jsx";
 import blankImage from "./images/blank.png";
@@ -99,6 +100,14 @@ export function glowContainer(id, color = "blue") {
 export function isMobile() {
   if (window.innerWidth < 770) return true;
   else return false;
+}
+
+// SHOW CONTENT WINDOW
+export function showWindow(contents, showFooter = false, mode = "normal", hideScroll=false) {
+  ReactDOM.render(
+    <ShowWindow key={shortid.generate()} mode={mode} showFooter={showFooter} contents={contents} hideScroll={hideScroll} />,
+    document.getElementById("map-modal-window")
+  );
 }
 
 // SHOW URL WINDOW

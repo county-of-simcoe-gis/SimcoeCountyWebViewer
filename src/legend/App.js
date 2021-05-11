@@ -4,7 +4,9 @@ import Masonry from "react-masonry-css";
 import "./Global.css";
 import styles from "./App.module.css";
 import "./App.css";
-import * as helpers from "./helpers";
+import * as legendHelpers from "./helpers";
+import * as helpers from "../helpers/helpers";
+
 import Header from "./Header";
 import GroupItem from "./GroupItem";
 import Select from "react-select";
@@ -23,7 +25,7 @@ const mainGroupUrl = mainConfig.geoserverLayerGroupsUrl;
 // THIS APP ACCEPTS LIST OF GROUPS
 //http://localhost:3001/?All_Layers=1&Popular=1
 
-const params = helpers.getParams(window.location.href);
+const params = legendHelpers.getParams(window.location.href);
 
 class LegendApp extends Component {
   constructor(props) {
@@ -33,29 +35,36 @@ class LegendApp extends Component {
       groups: [],
       selectedGroups: [],
       justifyCenter: false,
+      hideNewWindow: false,
+      hideShare: false,
+      hidePrint: false,
     };
   }
 
   componentDidMount() {
-    this.getGroups(mainGroupUrl, (result) => {
-      let selectedGroups = [];
-      const groups = result[0];
-      let groupsObj = [];
-      groups.forEach((group) => {
-        const onOrOff = params[group.value.split(":")[1]];
-        let layers = [];
-        group.layers.forEach((layer) => {
-          const layerObj = { imageUrl: layer.styleUrl, layerName: layer.name.split(":")[1],tocDisplayName: layer.tocDisplayName };
-          layers.push(layerObj);
+    if (this.props.groups !== undefined){
+      this.setState({ groups: this.props.groups, selectedGroups: this.props.selectedGroups === undefined ? [] : this.props.selectedGroups, hideNewWindow:true, hideShare:true });
+    }else{
+      this.getGroups(mainGroupUrl, (result) => {
+        let selectedGroups = [];
+        const groups = result[0];
+        let groupsObj = [];
+        groups.forEach((group) => {
+          const onOrOff = params[group.value.split(":")[1]];
+          let layers = [];
+          group.layers.forEach((layer) => {
+            const layerObj = { imageUrl: layer.styleUrl, layerName: layer.name.split(":")[1],tocDisplayName: layer.tocDisplayName };
+            layers.push(layerObj);
+          });
+          const groupObj = { label: group.label, value: group.value.split(":")[1], layers: layers };
+          if (onOrOff === "1") selectedGroups.push(groupObj);
+          groupsObj.push(groupObj);
         });
-        const groupObj = { label: group.label, value: group.value.split(":")[1], layers: layers };
-        if (onOrOff === "1") selectedGroups.push(groupObj);
-        groupsObj.push(groupObj);
+  
+        // ADD NEW FEATURE TO STATE
+        this.setState({ groups: groupsObj, selectedGroups });
       });
-
-      // ADD NEW FEATURE TO STATE
-      this.setState({ groups: groupsObj, selectedGroups });
-    });
+    }
   }
 
   handleChange = (selectedGroups) => {
@@ -231,10 +240,10 @@ class LegendApp extends Component {
 
     return (
       <div className={styles.mainContainer} id="sc-legend-app-main-container">
-        <Header onShareClick={this.onShareClick} />
+        <Header onShareClick={this.onShareClick} hide={{print:this.state.hidePrint, newWindow:this.state.hideNewWindow, share:this.state.hideShare}} />
         <div style={{ marginLeft: "5px" }}>
           <label>Groups:</label>
-          <div className={styles.selectContainer}>
+          <div className={`no-print ${styles.selectContainer}`}>
             <Select
               isMulti
               name="groups"
@@ -249,11 +258,11 @@ class LegendApp extends Component {
         </div>
 
         <div className={styles.justifyButtons}>
-          <div className={this.state.justifyCenter ? styles.justifyButtonContainer : cx(styles.justifyButtonContainer, styles.activeButton)} onClick={() => this.setState({ justifyCenter: false })}>
+          <div className={`no-print ${this.state.justifyCenter ? styles.justifyButtonContainer : cx(styles.justifyButtonContainer, styles.activeButton)}`} onClick={() => this.setState({ justifyCenter: false })}>
             <img className={styles.justifyImage} src={images["left-justify.png"]} alt="left-justify" title="Left Justify"></img>
           </div>
 
-          <div className={this.state.justifyCenter ? cx(styles.justifyButtonContainer, styles.activeButton) : styles.justifyButtonContainer} onClick={() => this.setState({ justifyCenter: true })}>
+          <div className={`no-print ${this.state.justifyCenter ? cx(styles.justifyButtonContainer, styles.activeButton) : styles.justifyButtonContainer}`} onClick={() => this.setState({ justifyCenter: true })}>
             <img className={styles.justifyImage} src={images["center-justify.png"]} alt="right-justify" title="Center Justify"></img>
           </div>
         </div>
@@ -269,7 +278,7 @@ class LegendApp extends Component {
             interactive mapping.
             <br />
           </div>
-          <div style={{ float: "right" }}>{"Generated on: " + helpers.formatDate()}</div>
+          <div style={{ float: "right" }}>{"Generated on: " + legendHelpers.formatDate()}</div>
         </div>
       </div>
     );

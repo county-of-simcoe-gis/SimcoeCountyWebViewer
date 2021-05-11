@@ -1,6 +1,6 @@
 import React from "react";
 import LegendItem from "./LegendItem";
-import * as helpers from "./helpers";
+import * as helpers from "../helpers/helpers";
 
 function GroupItem(props) {
   const { group } = props;
@@ -9,7 +9,7 @@ function GroupItem(props) {
   return (
     <div className="my-masonry-grid_column">
       <fieldset>
-        <legend>{helpers.replaceAllInString(group.value, "_", " ")}</legend>
+        <legend>{helpers.replaceAllInString(group.label, "_", " ")}</legend>
         <div className="item-content">
           {layers.map(layer => (
             <LegendItem key={helpers.getUID()} layer={layer} center={props.center}></LegendItem>

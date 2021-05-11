@@ -17,7 +17,7 @@
   /* background: grey; */
   margin-bottom: 30px;
   max-width: 400px;
-  min-width: 400px;
+  /* min-width: 400px; */
 }
 
 .layerContainer {
@@ -36,4 +36,10 @@
 
 .item-container {
   margin-bottom: 10px;
+}
+@media print {
+  .sc-show-window-content {
+    border: none;
+  }
+
 }
