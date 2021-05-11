@@ -1341,7 +1341,7 @@ export async function buildESRILayer(options, callback){
         styleUrl = styleUrl.replace("width=20", `width=${legendSize[0]}`).replace("height=20", `height=${legendSize[1]}`);
       }
       const serverUrl = group.url;
-      const metadataUrl = layer.url;
+      const metadataUrl = `${layer.url}?f=json`;
   
       // LIVE LAYER
       let liveLayer = layer.options.isLiveLayer;
