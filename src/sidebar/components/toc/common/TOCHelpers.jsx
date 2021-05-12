@@ -125,9 +125,8 @@ export function makeLayer(
 export async function getMap (mapId=null,urlType, isReset, tocType, callback){
   const apiUrl = helpers.getConfigValue('apiUrl');
   let mapSettingURL = mapId===null || mapId==="" ? `${apiUrl}settings/getDefaultMap` : `${apiUrl}settings/getMap/${mapId}`;
-  let defaultGroup = undefined;
   let layerGroups = undefined;
-  
+  let default_group = undefined;
   helpers.getJSON(mapSettingURL, (result) => 
     {
       var sourcesProcessed = 0;
@@ -141,23 +140,18 @@ export async function getMap (mapId=null,urlType, isReset, tocType, callback){
         window.emitter.emit("activateSidebarItem", defaultTool, "tools");
       }
       //console.log(mapSettings);
+      default_group = mapSettings.default_group;
       mapSettings.sources.forEach(source => {
         getGroupsGC(source.layerUrl, urlType, isReset, tocType, source.secure,source.primary, source.secureKey, (layerGroupConfig) => {
-          if (source.primary) defaultGroup=layerGroupConfig[1];
+          if (source.primary && mapSettings.default_group === undefined) default_group = layerGroupConfig.defaultLayerName;
           if (layerGroups === undefined){
-            layerGroups = layerGroupConfig[0];
+            layerGroups = layerGroupConfig.groups;
           }else{
-            layerGroups = mergeGroups(layerGroups,layerGroupConfig[0]);
+            layerGroups = mergeGroups(layerGroups,layerGroupConfig.groups);
           }
           sourcesProcessed ++;
           if (sourcesProcessed === mapSettings.sources.length){
-            if ( mapSettings.default_group !== undefined) {
-              const mapDefaultGroup = layerGroups.filter((group)=> {return group.value===mapSettings.default_group})[0];
-              if (mapDefaultGroup !== undefined) defaultGroup = mapDefaultGroup;
-              else helpers.showMessage(`Configuration Error!`, `Default group ${mapSettings.default_group} could not be loaded.`, helpers.messageColors.red,3000);
-            }
-            if (defaultGroup === undefined || defaultGroup === null) defaultGroup = layerGroups[0];
-            callback([layerGroups,defaultGroup]);
+            callback({groups: layerGroups,defaultMapName:default_group});
           }
         });
       });
@@ -305,7 +299,7 @@ export function getGroupsFromData(data, callback) {
     }
   });
   if (defaultGroup === undefined || defaultGroup === null) defaultGroup = groups[0];
-  callback([groups, defaultGroup]);
+  callback({groups:groups, defaultGroupName:defaultGroup.value});
 }
 
 // GET GROUPS FROM GET CAPABILITIES
@@ -449,7 +443,7 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured=false,
 
     if (!isReset) window.emitter.emit("tocLoaded", null);
     //console.log([groups, defaultGroup]);
-    callback([groups, defaultGroup]);
+    callback({groups:groups, defaultGroupName: defaultGroupName});
   });
 }
 
@@ -477,7 +471,7 @@ export function getGroups() {
     if (isDefault) defaultGroup = groupObj;
   }
 
-  return [groups, defaultGroup];
+  return  {groups:groups,defaultGroupName: defaultGroup.value};
 }
 
 // GET BASIC INFO - THIS IS FOR PERFORMANCE TO LOAD LAYERS IN THE TOC
