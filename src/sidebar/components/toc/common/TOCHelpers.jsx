@@ -142,6 +142,7 @@ export async function getMap (mapId=null,urlType, isReset, tocType, callback){
       //console.log(mapSettings);
       default_group = mapSettings.default_group;
       mapSettings.sources.forEach(source => {
+
         if (source.type === undefined || source.type === null || source.type === "") source["type"] = "geoserver"; //default to geoserver
         switch(source.type.toLowerCase()){
           case "geoserver":
@@ -185,6 +186,52 @@ export async function getMap (mapId=null,urlType, isReset, tocType, callback){
       
     });
 }
+export function mergeGroupsTogether(group, groups){  
+  groups.forEach(currentGroup =>{
+    currentGroup.layers.forEach(currentLayer => {
+      let newLayer = Object.assign({},currentLayer);
+      newLayer.group = group.value;
+      newLayer.groupName = group.label;
+      var isDuplicateLayer = false;
+      group.layers = group.layers.map((layer) => {
+        if (newLayer.name === layer.name){
+          isDuplicateLayer = true;
+          if ((newLayer.secured || newLayer.primary) && !group.primary){
+            return newLayer;
+          }else{
+            return layer;
+          }
+        }else{
+          return layer;
+        }
+      });
+      
+      if (!isDuplicateLayer) group.layers.push(newLayer);
+    });
+  })
+
+  group.layers = group.layers.sort((a,b)=>{
+                                    if (a.displayName < b.displayName) {
+                                      return -1;
+                                    } else if (a.displayName > b.displayName) {
+                                      return 1;
+                                    }else{
+                                      return 0;
+                                    }
+                                  });
+  //update index based on newly sorted layers
+  let index = group.layers.length;
+  group.layers = group.layers.map(layer => {
+    index--;
+    layer.index = index;
+    layer.drawIndex = index;
+    layer.layer.setZIndex(index);
+    return layer;
+  });                        
+  
+  return group;
+}
+
 export function mergeGroupsTogether(group, groups){  
   groups.forEach(currentGroup =>{
     currentGroup.layers.forEach(currentLayer => {
@@ -326,6 +373,7 @@ export function getGroupsFromData(data, callback) {
   });
   if (defaultGroup === undefined || defaultGroup === null) defaultGroup = groups[0];
   callback({groups:groups, defaultGroupName:defaultGroup.value});
+
 }
 
 // GET GROUPS FROM MAP SERVER
@@ -426,6 +474,7 @@ export function getGroupsESRI(options, callback) {
     if (!options.isReset) window.emitter.emit("tocLoaded", null);
     callback({groups:groups, defaultGroupName:defaultGroup.value});
   });
+
 }
 
 // GET GROUPS FROM GET CAPABILITIES
@@ -568,6 +617,7 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured=false,
     if (defaultGroup === undefined || defaultGroup === null) defaultGroup = groups[0];
 
     if (!isReset) window.emitter.emit("tocLoaded", null);
+
     callback({groups:groups, defaultGroupName: defaultGroupName});
   });
 }

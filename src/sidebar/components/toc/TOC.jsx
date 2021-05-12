@@ -98,12 +98,13 @@ onMapLoad = () => {
         });
       });
     });
-    
+   
     if (!helpers.getConfigValue("leftClickIdentify")) {
       this.addPropertyReportClick();
     }
   });
 };
+
 
 getDefaultGroup = (defaultGroupName,layerGroups,callback=undefined) => {
 	let defaultGroup = layerGroups.filter((item)=> item.value === defaultGroupName)[0];
@@ -144,6 +145,7 @@ addAllLayersGroup = (layerGroups, callback) => {
   else callback(layerGroups);
 };
 
+
 refreshTOC = (isReset, callback=undefined) => {
 
   //Get saved layers
@@ -168,6 +170,7 @@ refreshTOC = (isReset, callback=undefined) => {
     geoserverUrl = geoserverUrl + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
   }
   if (geoserverUrlType === null) geoserverUrlType = TOCConfig.geoserverLayerGroupsUrlType;
+
   if (esriServiceUrl === null) esriServiceUrl = TOCConfig.esriServiceUrl;
 
   if (esriServiceUrl !== undefined && esriServiceUrl !== null){
@@ -257,6 +260,7 @@ refreshTOC = (isReset, callback=undefined) => {
           const layerFolderGroups = this.populateAllLayersGroup("FOLDER",folderLayerGroups);
           const defaultGroup = this.getDefaultGroup(groupInfo.defaultGroupName, this.state.type === "LIST" ? listLayerGroups : folderLayerGroups);
           this.setState(
+
           {
             layerListGroups:  layerListGroups,
             layerFolderGroups: layerFolderGroups, 
@@ -264,6 +268,7 @@ refreshTOC = (isReset, callback=undefined) => {
             defaultGroup: defaultGroup,
           },
           () => {
+
               this.applySavedLayerOptions(this.state.type === "LIST"? "FOLDER" : "LIST"); //apply saved data for the opposite toc
               this.updateLayerCount(defaultGroup.layers.length);
               this.updateLayerVisibility();
@@ -271,6 +276,7 @@ refreshTOC = (isReset, callback=undefined) => {
               if (callback !== undefined) callback();
             }
           );
+
         });
       }else{
         TOCHelpers.getGroupsGC(geoserverUrl, geoserverUrlType, isReset, this.state.type, false, true,undefined,  (result) => {
@@ -349,6 +355,7 @@ refreshTOC = (isReset, callback=undefined) => {
         if (isReset) this.updateLayerVisibility("CLEAR");
         const layerListGroups = this.populateAllLayersGroup("LIST",listLayerGroups);
         const layerFolderGroups = this.populateAllLayersGroup("FOLDER",folderLayerGroups);
+
         const defaultGroup = this.getDefaultGroup(groupInfo.defaultGroupName, this.state.type === "LIST" ? listLayerGroups : folderLayerGroups);
         this.setState(
           {
@@ -366,9 +373,11 @@ refreshTOC = (isReset, callback=undefined) => {
           }
         );
     }
+
   }
 };
 applySavedLayerOptionsToGroup = (type, group) => {
+
   let savedData = helpers.getItemsFromStorage(type === "LIST" ? this.storageKey : this.storageKeyFolder);
   if (savedData === undefined) return group;
   const savedGroup = savedData[group.value];
@@ -396,6 +405,7 @@ applySavedLayerOptionsToGroup = (type, group) => {
   );
   return group;
 };
+
 applySavedLayerOptions = (type) => {
   let savedData = helpers.getItemsFromStorage(type === "LIST" ? this.storageKey : this.storageKeyFolder);
   if (savedData === undefined) return;
