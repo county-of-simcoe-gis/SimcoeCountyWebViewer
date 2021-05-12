@@ -115,13 +115,20 @@ onMapLoad = () => {
   });
 };
 
+getDefaultGroup = (defaultGroupName, layerGroups, callback = undefined) => {
+  let defaultGroup = layerGroups.filter((item) => {return item.value === defaultGroupName})[0];
+  if (defaultGroup === undefined) defaultGroup = layerGroups[0];
+  if (callback === undefined) return defaultGroup;
+  else callback(defaultGroup);
+}
+
 addAllLayersGroup = (type,layerGroups, callback)=> {
   let group = layerGroups.filter(item => item.label === this.allLayersGroup.label)[0];
   if (group === undefined) {
     group = TOCHelpers.makeGroup({
       label: this.allLayersGroup.label, 
       value: this.allLayersGroup.value, 
-      defaultGroup:false,
+      defaultGroup: false,
       url: "",
       prefix: "",
       wmsGroupUrl: "",
@@ -167,17 +174,17 @@ refreshTOC = (isReset, callback=undefined) => {
     if(TOCConfig.useMapConfigApi || (mapId !== null && mapId !== '')){
       TOCHelpers.getMap(mapId, geoserverUrlType, isReset, this.state.type, (result)=>{
         let groupInfo = result;
-        let listLayerGroups = groupInfo[0];
-        let folderLayerGroups = TOCHelpers.copyTOCLayerGroups(groupInfo[0])
+        let listLayerGroups = groupInfo.groups;
+        let folderLayerGroups = TOCHelpers.copyTOCLayerGroups(groupInfo.groups)
         this.getSavedCustomLayers("LIST", (savedGroups)=>{
           if (savedGroups !== undefined) {
-            listLayerGroups = TOCHelpers.mergeGroups(listLayerGroups, savedGroups[0]);
+            listLayerGroups = TOCHelpers.mergeGroups(listLayerGroups, savedGroups.groups);
             
           }
         });
         this.getSavedCustomLayers("FOLDER", (savedGroups)=>{
           if (savedGroups !== undefined){
-            folderLayerGroups = TOCHelpers.mergeGroups(folderLayerGroups, savedGroups[0]);
+            folderLayerGroups = TOCHelpers.mergeGroups(folderLayerGroups, savedGroups.groups);
           } 
         });
         listLayerGroups = listLayerGroups.map(group=>{
@@ -189,16 +196,19 @@ refreshTOC = (isReset, callback=undefined) => {
           return group;
          });
         if (isReset) this.updateLayerVisibility("CLEAR");
+        const layerListGroups = this.addAllLayersGroup("LIST",listLayerGroups);
+        const layerFolderGroups = this.addAllLayersGroup("FOLDER",folderLayerGroups)
+        const defaultGroup = this.getDefaultGroup(groupInfo.defaultGroupName, this.state.type === "LIST" ? listLayerGroups : folderLayerGroups);
         this.setState(
           {
-            layerListGroups:  this.addAllLayersGroup("LIST",listLayerGroups),
-            layerFolderGroups: this.addAllLayersGroup("FOLDER",folderLayerGroups), 
-            selectedGroup: groupInfo[1],
-            defaultGroup: groupInfo[1],
+            layerListGroups:  layerListGroups,
+            layerFolderGroups: layerFolderGroups, 
+            selectedGroup: defaultGroup,
+            defaultGroup: defaultGroup,
           },
           () => {
             this.applySavedLayerOptions(this.state.type === "LIST"? "FOLDER" : "LIST"); //apply saved data for the opposite toc
-            this.updateLayerCount(groupInfo[1].layers.length);
+            this.updateLayerCount(defaultGroup.layers.length);
             this.updateLayerVisibility();
             window.emitter.emit("tocLoaded");
             if (callback !== undefined) callback();
@@ -208,16 +218,16 @@ refreshTOC = (isReset, callback=undefined) => {
     }else{
       TOCHelpers.getGroupsGC(geoserverUrl, geoserverUrlType, isReset, this.state.type, false, true,undefined,  (result) => {
         const groupInfo = result;
-        let listLayerGroups = groupInfo[0];
-        let folderLayerGroups = TOCHelpers.copyTOCLayerGroups(groupInfo[0])
+        let listLayerGroups = groupInfo.groups;
+        let folderLayerGroups = TOCHelpers.copyTOCLayerGroups(groupInfo.groups)
         this.getSavedCustomLayers("LIST", (savedGroups)=>{
           if (savedGroups !== undefined) {
-            listLayerGroups = TOCHelpers.mergeGroups(listLayerGroups, savedGroups[0]);
+            listLayerGroups = TOCHelpers.mergeGroups(listLayerGroups, savedGroups.groups);
           }
         });
         this.getSavedCustomLayers("FOLDER", (savedGroups)=>{
           if (savedGroups !== undefined){
-            folderLayerGroups = TOCHelpers.mergeGroups(folderLayerGroups, savedGroups[0]);
+            folderLayerGroups = TOCHelpers.mergeGroups(folderLayerGroups, savedGroups.groups);
             
           } 
         });
@@ -230,17 +240,20 @@ refreshTOC = (isReset, callback=undefined) => {
           return group;
          });
         if (isReset) this.updateLayerVisibility("CLEAR");
-
+        const layerListGroups = this.addAllLayersGroup("LIST",listLayerGroups);
+        const layerFolderGroups = this.addAllLayersGroup("FOLDER",folderLayerGroups)
+        const defaultGroup = this.getDefaultGroup(groupInfo.defaultGroupName, this.state.type === "LIST" ? listLayerGroups : folderLayerGroups);
         this.setState(
           {
-            layerListGroups:  this.addAllLayersGroup("LIST",listLayerGroups),
-            layerFolderGroups: this.addAllLayersGroup("FOLDER",folderLayerGroups), 
-            selectedGroup: groupInfo[1],
-            defaultGroup: groupInfo[1],
+            layerListGroups:  layerListGroups,
+            layerFolderGroups: layerFolderGroups, 
+            selectedGroup:defaultGroup,
+            defaultGroup: defaultGroup,
+            
           },
           () => {
             this.applySavedLayerOptions(this.state.type === "LIST"? "FOLDER" : "LIST"); //apply saved data for the opposite toc
-            this.updateLayerCount(groupInfo[1].layers.length);
+            this.updateLayerCount(defaultGroup.layers.length);
             this.updateLayerVisibility();
             window.emitter.emit("tocLoaded");
             if (callback !== undefined) callback();
@@ -250,42 +263,42 @@ refreshTOC = (isReset, callback=undefined) => {
     }
   } else {
     const groupInfo = TOCHelpers.getGroups();
-    let listLayerGroups = groupInfo[0];
-        let folderLayerGroups = TOCHelpers.copyTOCLayerGroups(groupInfo[0])
-        this.getSavedCustomLayers("LIST", (savedGroups)=>{
-          if (savedGroups !== undefined) {
-            listLayerGroups = TOCHelpers.mergeGroups(listLayerGroups, savedGroups[0]);
-            
-          }
-        });
-        this.getSavedCustomLayers("FOLDER", (savedGroups)=>{
-          if (savedGroups !== undefined){
-            folderLayerGroups = TOCHelpers.mergeGroups(folderLayerGroups, savedGroups[0]);
-            
-          } 
-        });
-      listLayerGroups = listLayerGroups.map(group=>{
-        group.layers = this.sortLayers(group.layers);
-        return group;
-        });
-      folderLayerGroups = folderLayerGroups.map(group=>{
-        group.layers = this.sortLayers(group.layers);
-        return group;
-        });
-    if (isReset) this.updateLayerVisibility("CLEAR");
+    let listLayerGroups = groupInfo.groups;
+    let folderLayerGroups = TOCHelpers.copyTOCLayerGroups(groupInfo.groups)
+    this.getSavedCustomLayers("LIST", (savedGroups)=>{
+      if (savedGroups !== undefined) {
+        listLayerGroups = TOCHelpers.mergeGroups(listLayerGroups, savedGroups.groups);
         
+      }
+    });
+    this.getSavedCustomLayers("FOLDER", (savedGroups)=>{
+      if (savedGroups !== undefined){
+        folderLayerGroups = TOCHelpers.mergeGroups(folderLayerGroups, savedGroups.groups);
+        
+      } 
+    });
+    listLayerGroups = listLayerGroups.map(group=>{
+      group.layers = this.sortLayers(group.layers);
+      return group;
+      });
+    folderLayerGroups = folderLayerGroups.map(group=>{
+      group.layers = this.sortLayers(group.layers);
+      return group;
+      });
+    if (isReset) this.updateLayerVisibility("CLEAR");
+    const layerListGroups = this.addAllLayersGroup("LIST",listLayerGroups);
+    const layerFolderGroups = this.addAllLayersGroup("FOLDER",folderLayerGroups)
+    const defaultGroup = this.getDefaultGroup(groupInfo.defaultGroupName, this.state.type === "LIST" ? listLayerGroups : folderLayerGroups);      
     this.setState(
       {
-        layerListGroups:  this.addAllLayersGroup("LIST",listLayerGroups),
-        layerFolderGroups: this.addAllLayersGroup("FOLDER",folderLayerGroups), 
-        //layerListGroups: groupInfo[0],
-        //layerFolderGroups: Object.assign([], groupInfo[0]),//TOCHelpers.copyTOCLayerGroups(groupInfo[0]),
-        selectedGroup: groupInfo[1],
-        defaultGroup: groupInfo[1],
+        layerListGroups:  layerListGroups,
+        layerFolderGroups: layerFolderGroups, 
+        selectedGroup: defaultGroup,
+        defaultGroup: defaultGroup,
       },
       () => {
         this.applySavedLayerOptions(this.state.type === "LIST"? "FOLDER" : "LIST"); //apply saved data for the opposite toc
-        this.updateLayerCount(groupInfo[1].layers.length);
+        this.updateLayerCount(defaultGroup.layers.length);
         this.updateLayerVisibility();
         window.emitter.emit("tocLoaded");
         if (callback !== undefined) callback();
