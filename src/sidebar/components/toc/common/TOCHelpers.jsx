@@ -53,20 +53,20 @@ map config example object
  *    - getLocalGroup
  **/
 
-export function makeGroup(groupDisplayName, isDefault, groupUrl, groupPrefix, visibleLayers, wmsGroupUrl, customGroupUrl, layers = []) {
+export function makeGroup(options, callback=undefined) {
   const groupObj = {
-    value: helpers.getUID(),
-    label: groupDisplayName,
-    defaultGroup: isDefault,
-    url: groupUrl,
-    prefix: groupPrefix,
-    visibleLayers: visibleLayers,
-    wmsGroupUrl: wmsGroupUrl,
-    customRestUrl: customGroupUrl,
-    layers: layers,
+    value: options.value !== undefined ? options.value : helpers.getUID(),
+    label: options.label,
+    defaultGroup: options.defaultGroup,
+    url: options.url,
+    prefix: options.prefix,
+    visibleLayers: options.visibleLayers,
+    wmsGroupUrl: options.wmsGroupUrl,
+    customRestUrl: options.customGroupUrl,
+    layers: options.layers !== undefined ? options.layers : [],
   };
-
-  return groupObj;
+  if (callback === undefined) return groupObj;
+  else callback(groupObj);
 }
 
 export function makeLayer(
@@ -125,35 +125,37 @@ export function makeLayer(
 export async function getMap (mapId=null,urlType, isReset, tocType, callback){
   const apiUrl = helpers.getConfigValue('apiUrl');
   let mapSettingURL = mapId===null || mapId==="" ? `${apiUrl}settings/getDefaultMap` : `${apiUrl}settings/getMap/${mapId}`;
-  let defaultGroup = undefined;
   let layerGroups = undefined;
-  
+  let default_group = undefined;
   helpers.getJSON(mapSettingURL, (result) => 
     {
       var sourcesProcessed = 0;
       const mapSettings = JSON.parse(result.json);
+
+      const defaultTheme = mapSettings.default_theme;
+      const defaultTool = mapSettings.default_tool;
+      if (defaultTheme !== undefined) {
+        window.emitter.emit("activateSidebarItem", defaultTheme, "themes");
+      } else if (defaultTool !== undefined) {
+        window.emitter.emit("activateSidebarItem", defaultTool, "tools");
+      }
       //console.log(mapSettings);
+      default_group = mapSettings.default_group;
       mapSettings.sources.forEach(source => {
         if (source.type === undefined || source.type === null || source.type === "") source["type"] = "geoserver"; //default to geoserver
         switch(source.type.toLowerCase()){
           case "geoserver":
             getGroupsGC(source.layerUrl, urlType, isReset, tocType, source.secure,source.primary, source.secureKey, (layerGroupConfig) => {
-              if (source.primary) defaultGroup=layerGroupConfig[1];
-              if (layerGroups === undefined){
-                layerGroups = layerGroupConfig[0];
-              }else{
-                layerGroups = mergeGroups(layerGroups,layerGroupConfig[0]);
-              }
-              sourcesProcessed ++;
-              if (sourcesProcessed === mapSettings.sources.length){
-                if ( mapSettings.default_group !== undefined) {
-                  const mapDefaultGroup = layerGroups.filter((group)=> {return group.value===mapSettings.default_group})[0];
-                  if (mapDefaultGroup !== undefined) defaultGroup = mapDefaultGroup;
-                  else helpers.showMessage(`Configuration Error!`, `Default group ${mapSettings.default_group} could not be loaded.`, helpers.messageColors.red,3000);
+                if (source.primary && mapSettings.default_group === undefined) default_group = layerGroupConfig.defaultLayerName;
+                if (layerGroups === undefined){
+                  layerGroups = layerGroupConfig.groups;
+                }else{
+                  layerGroups = mergeGroups(layerGroups,layerGroupConfig.groups);
                 }
-                if (defaultGroup === undefined || defaultGroup === null) defaultGroup = layerGroups[0];
-                callback([layerGroups,defaultGroup]);
-              }
+                sourcesProcessed ++;
+                if (sourcesProcessed === mapSettings.sources.length){
+                  callback({groups: layerGroups,defaultGroupName:default_group});
+                }
             });
             break;
           case "arcgis":
@@ -163,23 +165,17 @@ export async function getMap (mapId=null,urlType, isReset, tocType, callback){
                 tocType:tocType,
                 isReset:isReset
               }, (layerGroupConfig) => {
-                if (source.primary) defaultGroup=layerGroupConfig[1];
+                if (source.primary && mapSettings.default_group === undefined) default_group = layerGroupConfig.defaultLayerName;
                 if (layerGroups === undefined){
-                  layerGroups = layerGroupConfig[0];
+                  layerGroups = layerGroupConfig.groups;
                 }else{
-                  layerGroups = mergeGroups(layerGroups,layerGroupConfig[0]);
+                  layerGroups = mergeGroups(layerGroups,layerGroupConfig.groups);
                 }
                 sourcesProcessed ++;
                 if (sourcesProcessed === mapSettings.sources.length){
-                  if ( mapSettings.default_group !== undefined) {
-                    const mapDefaultGroup = layerGroups.filter((group)=> {return group.value===mapSettings.default_group})[0];
-                    if (mapDefaultGroup !== undefined) defaultGroup = mapDefaultGroup;
-                    else helpers.showMessage(`Configuration Error!`, `Default group ${mapSettings.default_group} could not be loaded.`, helpers.messageColors.red,3000);
-                  }
-                  if (defaultGroup === undefined || defaultGroup === null) defaultGroup = layerGroups[0];
-                  callback([layerGroups,defaultGroup]);
+                  callback({groups: layerGroups,defaultGroupName:default_group});
                 }
-          });
+            });
             break;
           default:
             break;
@@ -188,6 +184,51 @@ export async function getMap (mapId=null,urlType, isReset, tocType, callback){
       });
       
     });
+}
+export function mergeGroupsTogether(group, groups){  
+  groups.forEach(currentGroup =>{
+    currentGroup.layers.forEach(currentLayer => {
+      let newLayer = Object.assign({},currentLayer);
+      newLayer.group = group.value;
+      newLayer.groupName = group.label;
+      var isDuplicateLayer = false;
+      group.layers = group.layers.map((layer) => {
+        if (newLayer.name === layer.name){
+          isDuplicateLayer = true;
+          if ((newLayer.secured || newLayer.primary) && !group.primary){
+            return newLayer;
+          }else{
+            return layer;
+          }
+        }else{
+          return layer;
+        }
+      });
+      
+      if (!isDuplicateLayer) group.layers.push(newLayer);
+    });
+  })
+
+  group.layers = group.layers.sort((a,b)=>{
+                                    if (a.displayName < b.displayName) {
+                                      return -1;
+                                    } else if (a.displayName > b.displayName) {
+                                      return 1;
+                                    }else{
+                                      return 0;
+                                    }
+                                  });
+  //update index based on newly sorted layers
+  let index = group.layers.length;
+  group.layers = group.layers.map(layer => {
+    index--;
+    layer.index = index;
+    layer.drawIndex = index;
+    layer.layer.setZIndex(index);
+    return layer;
+  });                        
+  
+  return group;
 }
 
 export function mergeGroups(originalGroups, newGroups){
@@ -284,7 +325,7 @@ export function getGroupsFromData(data, callback) {
     }
   });
   if (defaultGroup === undefined || defaultGroup === null) defaultGroup = groups[0];
-  callback([groups, defaultGroup]);
+   callback({groups:groups, defaultGroupName:defaultGroup.value});
 }
 
 // GET GROUPS FROM MAP SERVER
@@ -382,7 +423,7 @@ export function getGroupsESRI(options, callback) {
     });
     if (defaultGroup === undefined || defaultGroup === null) defaultGroup = groups[0];
     if (!options.isReset) window.emitter.emit("tocLoaded", null);
-    callback([groups, defaultGroup]);
+    callback({groups:groups, defaultGroupName:defaultGroup.value});
   });
 }
 
@@ -527,7 +568,7 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured=false,
 
     if (!isReset) window.emitter.emit("tocLoaded", null);
     //console.log([groups, defaultGroup]);
-    callback([groups, defaultGroup]);
+    callback({groups:groups, defaultGroupName: defaultGroup.value});
   });
 }
 
@@ -555,7 +596,7 @@ export function getGroups() {
     if (isDefault) defaultGroup = groupObj;
   }
 
-  return [groups, defaultGroup];
+  return  {groups:groups,defaultGroupName: defaultGroup.value};
 }
 
 export function getFullInfoLayers(layers, callback) {
@@ -1472,5 +1513,4 @@ export async function buildESRILayer(options, callback){
       });
     }
 }
-
 
