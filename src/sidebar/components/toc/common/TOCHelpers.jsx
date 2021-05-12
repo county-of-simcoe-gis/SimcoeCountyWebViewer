@@ -325,7 +325,7 @@ export function getGroupsFromData(data, callback) {
     }
   });
   if (defaultGroup === undefined || defaultGroup === null) defaultGroup = groups[0];
-   callback({groups:groups, defaultGroupName:defaultGroup.value});
+  callback({groups:groups, defaultGroupName:defaultGroup.value});
 }
 
 // GET GROUPS FROM MAP SERVER
@@ -349,8 +349,9 @@ export function getGroupsESRI(options, callback) {
       layerOptions["liveLayer"] = layerOptions.isLiveLayer;
       layer["options"] = layerOptions;
       layerOptions.categories.forEach(category=>{
+        const groupValue = category === "All Layers" ? "opengis:all_layers" : category;
         const tmpGroupObj = {
-          value: category,
+          value: groupValue,
           label: category,
           url: options.url,
           secured: false,
@@ -567,8 +568,7 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured=false,
     if (defaultGroup === undefined || defaultGroup === null) defaultGroup = groups[0];
 
     if (!isReset) window.emitter.emit("tocLoaded", null);
-    //console.log([groups, defaultGroup]);
-    callback({groups:groups, defaultGroupName: defaultGroup.value});
+    callback({groups:groups, defaultGroupName: defaultGroupName});
   });
 }
 
@@ -599,6 +599,12 @@ export function getGroups() {
   return  {groups:groups,defaultGroupName: defaultGroup.value};
 }
 
+// GET BASIC INFO - THIS IS FOR PERFORMANCE TO LOAD LAYERS IN THE TOC
+export function getBasicLayers(group, tocType, callback) {
+    this.getLayerListByGroupWMS(group, tocType, (layerList) => {
+      callback(layerList);
+    });
+}
 export function getFullInfoLayers(layers, callback) {
   var newLayers = [];
   for (let index = 0; index < layers.length; index++) {
@@ -849,7 +855,6 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType,secure
     { 
       layerVisible = true;
     }
-    //console.log(group.value, layerNameOnly, visibleLayers.includes(layerNameOnly));
     // LAYER PROPS
     LayerHelpers.getLayer(
       {

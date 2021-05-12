@@ -98,7 +98,7 @@ onMapLoad = () => {
         });
       });
     });
-      
+    
     if (!helpers.getConfigValue("leftClickIdentify")) {
       this.addPropertyReportClick();
     }
@@ -111,7 +111,20 @@ getDefaultGroup = (defaultGroupName,layerGroups,callback=undefined) => {
 	if(callback===undefined) return defaultGroup;
   else callback(defaultGroup);
 };
-addAllLayersGroup = (type,layerGroups,callback) => {
+
+populateAllLayersGroup = (type,layerGroups,callback) => {
+  let group = layerGroups.filter(item=>item.label===this.allLayersGroup.label)[0];
+  if (group === undefined) {
+    group = this.addAllLayersGroup(layerGroups).filter(item=>item.label===this.allLayersGroup.label)[0];
+  } else {
+    layerGroups = layerGroups.filter(item=> item.label !== this.allLayersGroup.label);
+  }
+  group = this.applySavedLayerOptionsToGroup(type, TOCHelpers.mergeGroupsTogether(group,layerGroups));
+  layerGroups.unshift(group);
+  if(callback===undefined) return layerGroups;
+  else callback(layerGroups);
+}
+addAllLayersGroup = (layerGroups, callback) => {
   let group = layerGroups.filter(item=>item.label===this.allLayersGroup.label)[0];
   if (group === undefined) {
     group = TOCHelpers.makeGroup({
@@ -124,11 +137,9 @@ addAllLayersGroup = (type,layerGroups,callback) => {
                               customRestUrl:"",
                               layers:[],
                             });
-  } else {
-    layerGroups = layerGroups.filter(item=> item.label !== this.allLayersGroup.label);
+    layerGroups.unshift(group);
   }
-  group = this.applySavedLayerOptionsToGroup(type, TOCHelpers.mergeGroupsTogether(group,layerGroups));
-  layerGroups.unshift(group);
+  
   if(callback===undefined) return layerGroups;
   else callback(layerGroups);
 };
@@ -170,6 +181,10 @@ refreshTOC = (isReset, callback=undefined) => {
       const groupInfo = result;
       let listLayerGroups = groupInfo.groups;
       let folderLayerGroups = TOCHelpers.copyTOCLayerGroups(groupInfo.groups);
+
+      listLayerGroups = this.addAllLayersGroup(listLayerGroups);
+      folderLayerGroups = this.addAllLayersGroup(folderLayerGroups);
+      
       this.getSavedCustomLayers("LIST", (savedGroups)=>{
         if (savedGroups !== undefined) {
           listLayerGroups = TOCHelpers.mergeGroups(listLayerGroups, savedGroups.groups);
@@ -190,8 +205,8 @@ refreshTOC = (isReset, callback=undefined) => {
         return group;
       });
       if (isReset) this.updateLayerVisibility("CLEAR");
-		  const layerListGroups = this.addAllLayersGroup("LIST",listLayerGroups);
-      const layerFolderGroups = this.addAllLayersGroup("FOLDER",folderLayerGroups)
+		  const layerListGroups = this.populateAllLayersGroup("LIST",listLayerGroups);
+      const layerFolderGroups = this.populateAllLayersGroup("FOLDER",folderLayerGroups)
       const defaultGroup = this.getDefaultGroup(groupInfo.defaultGroupName, this.state.type === "LIST" ? listLayerGroups : folderLayerGroups);	
       this.setState(
         {
@@ -216,6 +231,8 @@ refreshTOC = (isReset, callback=undefined) => {
           let groupInfo = result;
           let listLayerGroups = groupInfo.groups;
           let folderLayerGroups = TOCHelpers.copyTOCLayerGroups(groupInfo.groups);
+          listLayerGroups = this.addAllLayersGroup(listLayerGroups);
+          folderLayerGroups = this.addAllLayersGroup(folderLayerGroups);
           this.getSavedCustomLayers("LIST", (savedGroups)=>{
             if (savedGroups !== undefined) {
               listLayerGroups = TOCHelpers.mergeGroups(listLayerGroups, savedGroups.groups);
@@ -236,8 +253,8 @@ refreshTOC = (isReset, callback=undefined) => {
             return group;
           });
           if (isReset) this.updateLayerVisibility("CLEAR");
-          const layerListGroups = this.addAllLayersGroup("LIST",listLayerGroups);
-          const layerFolderGroups = this.addAllLayersGroup("FOLDER",folderLayerGroups);
+          const layerListGroups = this.populateAllLayersGroup("LIST",listLayerGroups);
+          const layerFolderGroups = this.populateAllLayersGroup("FOLDER",folderLayerGroups);
           const defaultGroup = this.getDefaultGroup(groupInfo.defaultGroupName, this.state.type === "LIST" ? listLayerGroups : folderLayerGroups);
           this.setState(
           {
@@ -260,6 +277,8 @@ refreshTOC = (isReset, callback=undefined) => {
           const groupInfo = result;
           let listLayerGroups = groupInfo.groups;
           let folderLayerGroups = TOCHelpers.copyTOCLayerGroups(groupInfo.groups);
+          listLayerGroups = this.addAllLayersGroup(listLayerGroups);
+          folderLayerGroups = this.addAllLayersGroup(folderLayerGroups);
           this.getSavedCustomLayers("LIST", (savedGroups)=>{
             if (savedGroups !== undefined) {
               listLayerGroups = TOCHelpers.mergeGroups(listLayerGroups, savedGroups.groups);
@@ -280,8 +299,8 @@ refreshTOC = (isReset, callback=undefined) => {
             return group;
           });
           if (isReset) this.updateLayerVisibility("CLEAR");
-          const layerListGroups = this.addAllLayersGroup("LIST",listLayerGroups);
-          const layerFolderGroups = this.addAllLayersGroup("FOLDER",folderLayerGroups);
+          const layerListGroups = this.populateAllLayersGroup("LIST",listLayerGroups);
+          const layerFolderGroups = this.populateAllLayersGroup("FOLDER",folderLayerGroups);
           const defaultGroup = this.getDefaultGroup(groupInfo.defaultGroupName, this.state.type === "LIST" ? listLayerGroups : folderLayerGroups);
           this.setState(
           {
@@ -305,6 +324,9 @@ refreshTOC = (isReset, callback=undefined) => {
       const groupInfo = TOCHelpers.getGroups();
       let listLayerGroups = groupInfo.groups;
       let folderLayerGroups = TOCHelpers.copyTOCLayerGroups(groupInfo.groups);
+      listLayerGroups = this.addAllLayersGroup(listLayerGroups);
+      folderLayerGroups = this.addAllLayersGroup(folderLayerGroups);
+
       this.getSavedCustomLayers("LIST", (savedGroups)=>{
       if (savedGroups !== undefined) {
         listLayerGroups = TOCHelpers.mergeGroups(listLayerGroups, savedGroups.groups);
@@ -323,26 +345,26 @@ refreshTOC = (isReset, callback=undefined) => {
         folderLayerGroups = folderLayerGroups.map(group=>{
           group.layers = this.sortLayers(group.layers);
           return group;
-          });
-      if (isReset) this.updateLayerVisibility("CLEAR");
-      const layerListGroups = this.addAllLayersGroup("LIST",listLayerGroups);
-      const layerFolderGroups = this.addAllLayersGroup("FOLDER",folderLayerGroups);
-      const defaultGroup = this.getDefaultGroup(groupInfo.defaultGroupName, this.state.type === "LIST" ? listLayerGroups : folderLayerGroups);      
-      this.setState(
-      {
-        layerListGroups:  layerListGroups,
-        layerFolderGroups: layerFolderGroups, 
-        selectedGroup: defaultGroup,
-        defaultGroup: defaultGroup,
-      },
-      () => {
-        this.applySavedLayerOptions(this.state.type === "LIST"? "FOLDER" : "LIST"); //apply saved data for the opposite toc
-        this.updateLayerCount(defaultGroup.layers.length);
-          this.updateLayerVisibility();
-          window.emitter.emit("tocLoaded");
-          if (callback !== undefined) callback();
-        }
-      );
+         });
+        if (isReset) this.updateLayerVisibility("CLEAR");
+        const layerListGroups = this.populateAllLayersGroup("LIST",listLayerGroups);
+        const layerFolderGroups = this.populateAllLayersGroup("FOLDER",folderLayerGroups);
+        const defaultGroup = this.getDefaultGroup(groupInfo.defaultGroupName, this.state.type === "LIST" ? listLayerGroups : folderLayerGroups);
+        this.setState(
+          {
+            layerListGroups:  layerListGroups,
+            layerFolderGroups: layerFolderGroups, 
+            selectedGroup: defaultGroup,
+            defaultGroup: defaultGroup,
+          },
+          () => {
+            this.applySavedLayerOptions(this.state.type === "LIST"? "FOLDER" : "LIST"); //apply saved data for the opposite toc
+            this.updateLayerCount(defaultGroup.layers.length);
+            this.updateLayerVisibility();
+            window.emitter.emit("tocLoaded");
+            if (callback !== undefined) callback();
+          }
+        );
     }
   }
 };
