@@ -124,7 +124,7 @@ export function makeLayer(
 
 export async function getMap (mapId=null,urlType, isReset, tocType, callback){
   const apiUrl = helpers.getConfigValue('apiUrl');
-  let mapSettingURL = mapId===null || mapId==="" ? `${apiUrl}settings/getDefaultMap` : `${apiUrl}settings/getMap/${mapId}`;
+  let mapSettingURL = (mapId === null || mapId === undefined || mapId.trim() === '') ? `${apiUrl}settings/getDefaultMap` : `${apiUrl}settings/getMap/${mapId}`;
   let layerGroups = undefined;
   let default_group = undefined;
   helpers.getJSON(mapSettingURL, (result) => 

@@ -197,50 +197,60 @@ loadGroups = (result, isReset, callback) => {
 }
 
 refreshTOC = (isReset, callback=undefined) => {
-
-  //Get saved layers
-  //Get map config layers
-  //Get toc config layers
-  //Get toc config geoserver layers
-  //combine and sort
   sessionStorage.removeItem(this.storageMapDefaultsKey);
   
-  //TODO: Load layers that have been saved
-  //let savedLayers = helpers.getItemsFromStorage(this.storageKeyAllLayers);
-  //this.getSavedLayers((results)=>{savedLayers=results;});
-  let geoserverUrl = helpers.getURLParameter("GEO_URL");
+  let loaderType = "DEFAULT"; //MAPID, ARCGIS, GEOSERVER
+  let geoserverUrl = helpers.getURLParameter("GEO_URL",true, true);
   let geoserverUrlType = helpers.getURLParameter("GEO_TYPE");
   let esriServiceUrl = helpers.getURLParameter("ARCGIS_SERVICE",true, true);
-  //allow GEO_URL url parameter to override MAP_ID
-  let mapId = geoserverUrl === null && esriServiceUrl === null ? helpers.getURLParameter("MAP_ID") : null;
-  if (mapId === null && geoserverUrl === null && esriServiceUrl === null) mapId = TOCConfig.mapId;
-  if (geoserverUrl === null) {
-    geoserverUrl = TOCConfig.geoserverLayerGroupsUrl;
-  } else {
-    geoserverUrl = geoserverUrl + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
-  }
+  let mapId = helpers.getURLParameter("MAP_ID");
   if (geoserverUrlType === null) geoserverUrlType = TOCConfig.geoserverLayerGroupsUrlType;
 
-  if (esriServiceUrl === null) esriServiceUrl = TOCConfig.esriServiceUrl;
+  //allow GEO_URL, then ARCGIS_SERVICE, then MAP_ID url parameters to override default loading process
+  //IF LOADER IS STILL DEFAULT LOAD GEOSERVER SETTINGS
+  if (loaderType === "DEFAULT"){
+    if (geoserverUrl !== null) {
+      geoserverUrl = `${geoserverUrl}/ows?service=wms&version=1.3.0&request=GetCapabilities`;
+      loaderType = "GEOSERVER";
+    } else geoserverUrl = TOCConfig.geoserverLayerGroupsUrl;
+  }
+  //IF LOADER IS STILL DEFAULT LOAD ARCGIS SETTINGS
+  if (loaderType === "DEFAULT"){
+    if (esriServiceUrl === null) esriServiceUrl = TOCConfig.esriServiceUrl;
+    else loaderType = "ARCGIS";
+  }
+  //IF LOADER IS STILL DEFAULT LOAD MAP API SETTINGS
+  if (loaderType === "DEFAULT"){
+    if (mapId === null) mapId = TOCConfig.mapId;
+    else loaderType = "MAPID";
+  }
 
-  if (esriServiceUrl !== undefined && esriServiceUrl !== null){
-    TOCHelpers.getGroupsESRI({url: esriServiceUrl,tocType:this.state.type,isReset:isReset}, (result) => {
-      this.loadGroups(result,isReset,callback);
-    });
-  }else{
-    if (geoserverUrl !== undefined && geoserverUrl !== null) {
-      if(TOCConfig.useMapConfigApi || (mapId !== null && mapId !== '')){
-        TOCHelpers.getMap(mapId, geoserverUrlType, isReset, this.state.type, (result)=>{
-          this.loadGroups(result,isReset,callback);
-        });
-      }else{
-        TOCHelpers.getGroupsGC(geoserverUrl, geoserverUrlType, isReset, this.state.type, false, true,undefined,  (result) => {
-          this.loadGroups(result,isReset,callback);
-        });
-      }
-    } else {
+  //IF LOADER IS STILL DEFAULT SET TO USE POPULATED VALUES ELSE WILL FALL THROUGH TO CONFIG FILE GROUPS
+  if (loaderType === "DEFAULT"){
+    if ( TOCConfig.useMapConfigApi || (mapId !== null && mapId !== undefined && mapId.trim() !== '')) loaderType = "MAPID";
+    else if (esriServiceUrl !== null && esriServiceUrl !== undefined && esriServiceUrl.trim() !== '') loaderType = "ARCGIS";
+    else if (geoserverUrl !== null && geoserverUrl !== undefined && geoserverUrl.trim() !== '') loaderType = "GEOSERVER";
+  }
+
+  switch(loaderType){
+    case "MAPID":
+      TOCHelpers.getMap(mapId, geoserverUrlType, isReset, this.state.type, (result)=>{
+        this.loadGroups(result,isReset,callback);
+      });
+      break;
+    case "ARCGIS":
+      TOCHelpers.getGroupsESRI({url: esriServiceUrl,tocType:this.state.type,isReset:isReset}, (result) => {
+        this.loadGroups(result,isReset,callback);
+      });
+      break;
+    case "GEOSERVER":
+      TOCHelpers.getGroupsGC(geoserverUrl, geoserverUrlType, isReset, this.state.type, false, true,undefined,  (result) => {
+        this.loadGroups(result,isReset,callback);
+      });
+      break;
+    default:
       this.loadGroups(TOCHelpers.getGroups(),isReset,callback);
-    }
+      break;
   }
 };
 applySavedLayerOptionsToGroup = (type, group) => {
