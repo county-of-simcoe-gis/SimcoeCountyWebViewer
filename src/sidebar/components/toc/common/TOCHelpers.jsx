@@ -1305,7 +1305,7 @@ function parseESRIDescription (description){
  
   descriptionParts.forEach(descriptionPart=>{
     let parts = descriptionPart.split("=");
-    let key = parts[0];
+    let key = parts[0].trim();
     if (key != null && key.length !== 0)
     {
       //VALUE STRING

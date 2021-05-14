@@ -767,7 +767,6 @@ export class LayerHelpers {
             crossOrigin: "anonymous",
           };
           if (extent !== undefined) sourceParams["extent"] = [extent.xmin, extent.ymin, extent.xmax, extent.ymax];
-          console.log(JSON.stringify(sourceParams));
           callback(
             new ImageLayer({
               rebuildParams: rebuildParams,

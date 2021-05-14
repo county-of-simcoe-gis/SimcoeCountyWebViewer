@@ -178,7 +178,7 @@ loadGroups = (result, isReset, callback) => {
     if (group.layers.length > 0) group.layers = this.sortLayers(group.layers);
     return group;
   });
-  const defaultGroup = this.getDefaultGroup(groupInfo.defaultGroupName, this.state.type === "LIST" ? listLayerGroups : folderLayerGroups);	
+  const defaultGroup = this.getDefaultGroup(groupInfo.defaultGroupName, listLayerGroups);	
   this.setState(
     {
       layerListGroups:  listLayerGroups,
