@@ -444,3 +444,11 @@ input[type="number"]::-webkit-outer-spin-button {
   border: 1px solid #ddd;
   margin-top: 2px;
 }
+
+@media print
+{    
+    .no-print, .no-print *
+    {
+        display: none !important;
+    }
+}

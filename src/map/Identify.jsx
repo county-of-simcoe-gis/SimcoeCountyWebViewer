@@ -1,10 +1,10 @@
 import React, { Component, useState } from "react";
 import "./Identify.css";
 import * as helpers from "../helpers/helpers";
-import { LayerHelpers, OL_LAYER_TYPES } from "../helpers/OLHelpers";
+import { LayerHelpers, OL_LAYER_TYPES,OL_DATA_TYPES } from "../helpers/OLHelpers";
 import mainConfig from "../config.json";
 import Collapsible from "react-collapsible";
-import { GeoJSON } from "ol/format.js";
+import { GeoJSON, EsriJSON } from "ol/format.js";
 import InfoRow from "../helpers/InfoRow.jsx";
 import Feature from "ol/Feature";
 import { Vector as VectorSource } from "ol/source.js";
@@ -12,6 +12,7 @@ import VectorLayer from "ol/layer/Vector";
 import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style.js";
 
 import useIframeContentHeight from "react-use-iframe-content-height";
+import Geometry from "ol/geom/Geometry";
 
 class Identify extends Component {
   constructor(props) {
@@ -40,7 +41,7 @@ class Identify extends Component {
   clearIdentify = () => {
     window.emitter.emit("clearIdentify");
   };
-
+ 
   refreshLayers = (props) => {
     this.setState({ layers: [], isLoading: true });
 
@@ -51,81 +52,114 @@ class Identify extends Component {
 
     for (let index = 0; index < layers.length; index++) {
       const layer = layers[index];
-      if (layer.getVisible() && LayerHelpers.getLayerType(layer) !== OL_LAYER_TYPES.Vector) {
+      if (layer.getVisible()) {
+
         const queryable = layer.get("queryable");
         if (queryable) {
-          const name = layer.get("name");
-          let displayName = "";
-          let type = layer.get("tocDisplayName");
-          let wfsUrl = layer.get("wfsUrl");
-          const secureKey = layer.get("secureKey");
-          const minScale = layer.get("minScale");
-          const params = {};
-          if (secureKey !== undefined){
-            const headers = {};
-            headers[secureKey]="GIS";
-            headers["Content-Type"]="application/text";
-            params["mode"]= "cors";
-            params["headers"]=headers;
-          }
-          if (wfsUrl !== undefined && geometry.getType() !== "Point") {
-            const feature = new Feature(geometry);
-            const wktString = helpers.getWKTStringFromFeature(feature);
-            wfsUrl += "INTERSECTS(geom," + wktString + ")";
-            // QUERY USING WFS
-            // eslint-disable-next-line
-            helpers.getJSON(wfsUrl, (result) => {
-              const featureList = new GeoJSON().readFeatures(result);
-              if (featureList.length > 0) {
-                if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
-                let features = [];
-                featureList.forEach((feature) => {
-                  features.push(feature);
-                });
-                if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, minScale:minScale });
-                this.setState({ layers: layerList });
+          if (LayerHelpers.getLayerType(layer) !== OL_LAYER_TYPES.Vector){
+            const name = layer.get("name");
+            let displayName = "";
+            let type = layer.get("tocDisplayName");
+            let wfsUrl = layer.get("wfsUrl");
+            const secureKey = layer.get("secureKey");
+            const minScale = layer.get("minScale");
+            const params = {};
+            if (secureKey !== undefined){
+              const headers = {};
+              headers[secureKey]="GIS";
+              headers["Content-Type"]="application/text";
+              params["mode"]= "cors";
+              params["headers"]=headers;
+            }
+            const isArcGISLayer = LayerHelpers.getLayerSourceType(layer.getSource())=== OL_DATA_TYPES.ImageArcGISRest;
+            if (wfsUrl !== undefined && (geometry.getType() !== "Point" || isArcGISLayer)) {
+              const feature = new Feature(geometry);
+              const wktString = helpers.getWKTStringFromFeature(feature);
+              if (isArcGISLayer) {
+                const arcgisResolution = `${window.map.getSize()[0]},${window.map.getSize()[1]},96`;
+                const extent = window.map.getView().calculateExtent();
+                wfsUrl = wfsUrl.replace('#GEOMETRY#',geometry.flatCoordinates ).replace('#TOLERANCE#', 3 ).replace('#EXTENT#',extent.join(',') ).replace('#RESOLUTION#', arcgisResolution );
+
+              }else{
+                wfsUrl += "INTERSECTS(geom," + wktString + ")";
               }
-            });
-          } else {
-            let infoFormat = layer.get("INFO_FORMAT");
-            //console.log(infoFormat);
-            // let infoFormat = "text/plain";
-            // let xslTemplate = layer.get("XSL_TEMPLATE");
-            let xslTemplate = mainConfig.wmsGeoJsonTemplate;
-            // QUERY USING WMS
-            let getInfoOption = { INFO_FORMAT: "application/json" };
-            if (infoFormat !== undefined && infoFormat !== "") getInfoOption["INFO_FORMAT"] = infoFormat;
-            if (xslTemplate !== undefined && xslTemplate !== "") getInfoOption["XSL_TEMPLATE"] = xslTemplate;
-            //console.log(xslTemplate);
-            var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", getInfoOption);
-            let html_url = mainConfig.htmlIdentify
-              ? layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "text/html" }) + "&feature_count=1000000"
-              : "";
-            if (url) {
-              url += "&feature_count=1000000";
-              //console.log(url);
-              helpers.httpGetTextWithParams(url, params, (result) => {
-                let tempResult = helpers.tryParseJSON(result);
-                //console.log(tempResult);
-                if (tempResult !== false) {
-                  result = tempResult;
-                } else {
-                  return;
-                }
-                //console.log(result);
-                const featureList = new GeoJSON().readFeatures(result);
-                if (featureList.length === 0) {
-                  return;
-                } else if (featureList.length > 0) {
+              // QUERY USING WFS
+              // eslint-disable-next-line
+              helpers.getJSON(wfsUrl, (result) => {
+
+                const featureList = isArcGISLayer ? LayerHelpers.parseESRIIdentify(result) : new GeoJSON().readFeatures(result);
+                if (featureList.length > 0) {
                   if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
                   let features = [];
                   featureList.forEach((feature) => {
                     features.push(feature);
                   });
-                  if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, html_url: html_url, minScale:minScale  });
+                  if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, minScale:minScale });
                   this.setState({ layers: layerList });
                 }
               });
+            } else {
+              let infoFormat = layer.get("INFO_FORMAT");
+              //console.log(infoFormat);
+              // let infoFormat = "text/plain";
+              // let xslTemplate = layer.get("XSL_TEMPLATE");
+              let xslTemplate = mainConfig.wmsGeoJsonTemplate;
+              // QUERY USING WMS
+              let getInfoOption = { INFO_FORMAT: "application/json" };
+              if (infoFormat !== undefined && infoFormat !== "") getInfoOption["INFO_FORMAT"] = infoFormat;
+              if (xslTemplate !== undefined && xslTemplate !== "") getInfoOption["XSL_TEMPLATE"] = xslTemplate;
+              //console.log(xslTemplate);
+              var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", getInfoOption);
+              let html_url = mainConfig.htmlIdentify
+                ? layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "text/html" }) + "&feature_count=1000000"
+                : "";
+              if (url) {
+                url += "&feature_count=1000000";
+                //console.log(url);
+                helpers.httpGetTextWithParams(url, params, (result) => {
+                  let tempResult = helpers.tryParseJSON(result);
+                  //console.log(tempResult);
+                  if (tempResult !== false) {
+                    result = tempResult;
+                  } else {
+                    return;
+                  }
+                  //console.log(result);
+                  const featureList = new GeoJSON().readFeatures(result);
+                  if (featureList.length === 0) {
+                    return;
+                  } else if (featureList.length > 0) {
+                    if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
+                    let features = [];
+                    featureList.forEach((feature) => {
+                      features.push(feature);
+                    });
+                    if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, html_url: html_url, minScale:minScale  });
+                    this.setState({ layers: layerList });
+                  }
+                });
+              }
+            }
+          } else {
+            const name = layer.get("name");
+            let displayName = "";
+            let type = layer.get("tocDisplayName");
+            const minScale = layer.get("minScale");
+            const params = {};
+            let featureList = [];
+            let pixel = window.map.getPixelFromCoordinate(geometry.flatCoordinates);
+            window.map.forEachFeatureAtPixel(pixel, (feature,layer) => {
+              if (layer.get("name") !== undefined && layer.get("name") === name) featureList.push(feature);
+            });
+           
+            if (featureList.length > 0) {
+              if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
+              let features = [];
+              featureList.forEach((feature) => {
+                features.push(feature);
+              });
+              if (features.length > 0) layerList.push({ name: name, features: features, displayName: displayName, type: type, minScale:minScale });
+              this.setState({ layers: layerList });
             }
           }
         }
@@ -215,6 +249,8 @@ class Identify extends Component {
     // LOOK FOR EXISTING FIELDS
     const nameFields = ["name", "display_name", "Name", "Display Name"];
     let displayName = "";
+    const displayFieldName = feature.get("displayFieldName");
+    if (displayFieldName !== undefined && displayFieldName !== null) nameFields.push(displayFieldName);
     nameFields.forEach((fieldName) => {
       if (fieldName.substring(0, 1) !== "_") {
         const name = feature.get(fieldName);
@@ -349,6 +385,7 @@ const FeatureItem = (props) => {
   const [open, setOpen] = useState(false);
   let { feature, displayName, html_url, identifyTitleColumn, identifyIdColumn } = props;
   if (identifyTitleColumn !== undefined && identifyTitleColumn !== "") displayName = identifyTitleColumn;
+  
   //console.log(feature);
   var hasGeom = feature.values_.geometry !== undefined && feature.values_.geometry !== null;
   var extentFeature = undefined;
@@ -359,13 +396,19 @@ const FeatureItem = (props) => {
   const featureProps = feature.getProperties();
   const keys = Object.keys(featureProps);
   let featureName = feature.get(displayName);
-
+  
   let layerName = props.layerName;
   if (layerName.split(":").length > 1) {
     layerName = layerName.split(":")[1];
     layerName = helpers.replaceAllInString(layerName, "_", " ");
   }
-
+  //HANDLE ARCGIS FEATURE TITLE
+  let displayFieldName = feature.get("displayFieldName");
+  if (displayFieldName !== undefined && displayFieldName !== "" ) {
+    displayName = displayFieldName;
+    let displayFieldValue = feature.get("displayFieldValue");
+    if (displayFieldValue !== undefined && displayFieldValue !== "" ) featureName = displayFieldValue;
+  }
   // THIS IS FALLBACK IN CASE THERE ARE NO ATTRIBUTES EXCEPT GEOMETRY
   if (displayName === "geometry") {
     if (keys.length === 1) displayName = "No attributes found";
@@ -373,8 +416,6 @@ const FeatureItem = (props) => {
   }
   if (featureName === null || featureName === undefined || featureName === "") featureName = "N/A";
   let cql_filter = "";
-
-  const excludedKeys = ["id", "geometry", "geom", "extent_geom", "gid", "globalid", "objectid", "bplan_gid"];
 
   let isSameOrigin = true;
   if (html_url !== undefined) isSameOrigin = html_url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !== -1;
@@ -392,7 +433,7 @@ const FeatureItem = (props) => {
     <div>
       <div className="sc-identify-feature-header" onMouseEnter={() => props.onMouseEnter(feature)} onMouseLeave={props.onMouseLeave}>
         <div className="sc-fakeLink sc-identify-feature-header-label" onClick={() => setOpen(!open)}>
-          {mainConfig.excludeIdentifyTitleName ? featureName : displayName + ": " + featureName}
+          {mainConfig.excludeIdentifyTitleName ? featureName : `${helpers.formatTitleCase(displayName)}: ${featureName}`}
         </div>
         {hasGeom ? <img className="sc-identify-feature-header-img" src={images["zoom-in.png"]} onClick={() => props.onZoomClick(feature)} title="Zoom In" alt="Zoom In" /> : ""}
         {extentFeature !== undefined ? (
@@ -404,20 +445,7 @@ const FeatureItem = (props) => {
 
       <div className={open ? "sc-identify-feature-content" : "sc-hidden"}>
         <IFrame key={helpers.getUID()} src={html_url} filter={cql_filter} />
-
-        {keys
-          .filter((keyName, i) => {
-            let val = featureProps[keyName];
-            if (val === null) val = "";
-            if (cql_filter === "" && typeof val !== "object" && !excludedKeys.includes(keyName.toLowerCase()) && keyName.substring(0, 1) !== "_") {
-              return true;
-            }
-            return false;
-          })
-          .map((keyName, i) => {
-            let val = featureProps[keyName];
-            return <InfoRow key={helpers.getUID()} label={helpers.toTitleCase(keyName.split("_").join(" "))} value={val} />;
-          })}
+        {cql_filter === "" ? helpers.FeatureContent({feature:feature}) : ""}
       </div>
     </div>
   );

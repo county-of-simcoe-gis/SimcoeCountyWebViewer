@@ -73,7 +73,8 @@ onMenuItemClick = (action, layerInfo) => {
   switch (action) {
     case "sc-floating-menu-metadata":
       if (layerInfo.metadataUrl === undefined || layerInfo.metadataUrl === null) return;
-      TOCHelpers.getLayerInfo(layerInfo, (result) => {
+      if (layerInfo.metadataUrl.endsWith('f=json')) helpers.showURLWindow(TOCConfig.layerInfoURL + layerInfo.metadataUrl); 
+      else TOCHelpers.getLayerInfo(layerInfo, (result) => {
         if (helpers.isMobile()) {
           window.emitter.emit("setSidebarVisiblity", "CLOSE");
           helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl, false, "full");

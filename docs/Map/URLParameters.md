@@ -42,8 +42,8 @@ https://opengis.simcoe.ca/?TOCTYPE=LIST
 #### Load alternate configurations
 https://opengis.simcoe.ca/public/?GEO_TYPE=root&GEO_URL=https://opengis.simcoe.ca/geoserver/simcoe/All_Layers/
 https://opengis.simcoe.ca/public/?GEO_TYPE=group&GEO_URL=https://opengis.simcoe.ca/geoserver/simcoe/Config_Public_Default/
-https://opengis.simcoe.ca/public/?MAP_ID=ea7b174a-85ca-11eb-8f46-1866da853faf
-
+https://opengis.simcoe.ca/public/?MAP_ID=public
+https://opengis.simcoe.ca/public/?ARCGIS_SERVICE=https://maps.simcoe.ca/arcgis/rest/services/Public/Operational_Layers_Dynamic/MapServer
 #### Legacy URL parameter shortcuts
 https://opengis.simcoe.ca/public/?BAGTAG=430102000309100
 https://opengis.simcoe.ca/public/?LANDFILL=11
