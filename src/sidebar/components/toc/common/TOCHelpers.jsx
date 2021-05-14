@@ -195,7 +195,7 @@ export function mergeGroupsTogether(group, groups){
       newLayer.groupName = group.label;
       var isDuplicateLayer = false;
       group.layers = group.layers.map((layer) => {
-        if (newLayer.name === layer.name){
+        if (newLayer.tocDisplayName === layer.tocDisplayName){
           isDuplicateLayer = true;
           if ((newLayer.secured || newLayer.primary) && !group.primary){
             return newLayer;
@@ -237,12 +237,12 @@ export function mergeGroups(originalGroups, newGroups){
   newGroups.forEach((newGroup) => {
     var isDuplicateGroup = false;
     originalGroups = originalGroups.map((group) => {
-      if (newGroup.value === group.value){
+      if (newGroup.label === group.label){
         isDuplicateGroup = true;
         newGroup.layers.forEach((newLayer) => {
           var isDuplicateLayer = false;
           group.layers = group.layers.map((layer) => {
-            if (newLayer.name === layer.name){
+            if (newLayer.tocDisplayName === layer.tocDisplayName){
               isDuplicateLayer = true;
               if ((newLayer.secured || newLayer.primary) && !group.primary){
                 return newLayer;
