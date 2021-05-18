@@ -276,6 +276,7 @@ const switchTemplates = (options, callback=undefined) => {
   attributes.map.longitudeFirst = longitudeFirst;
   attributes.map.rotation = rotation;
   attributes.map.dpi = dpi;
+
   if (options.printSizeSelectedOption.size.length === 0){
     if (options.mapOnlyHeight) attributes.map.height  = options.mapOnlyHeight;
     if (options.mapOnlyWidth) attributes.map.width  = options.mapOnlyWidth;
@@ -284,7 +285,9 @@ const switchTemplates = (options, callback=undefined) => {
   switch (options.mapScaleOption) {
     case "forceScale":
       attributes.map.scale = options.forceScale;
+      attributes.scale = "1 : " +  options.forceScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
       attributes.map.center = currentMapViewCenter;
+
       break;
     case "preserveMapExtent":
       attributes.map.height = utils.computeDimension(...printSize, mapExtent).newHeight;
@@ -294,6 +297,7 @@ const switchTemplates = (options, callback=undefined) => {
     default:
       attributes.map.scale = currentMapScale;
       attributes.map.center = currentMapViewCenter;
+
       break;
   }
 
