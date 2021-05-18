@@ -72,7 +72,7 @@ class Print extends Component {
     this.setState({ mapResolutionOption: evt.target.value });
   };
   onMapScaleOptions = (evt) => {
-    this.setState({ mapScaleOption: evt.target.value });
+    if ( evt.target.type === "radio") this.setState({ mapScaleOption: evt.target.value });
   };
 
   onMapOnlyWidth = (evt) => {
