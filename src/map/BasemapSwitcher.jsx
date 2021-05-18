@@ -366,7 +366,7 @@ class BasemapSwitcher extends Component {
         if (layerIndex === value) {
           layer.setOpacity(1);
           layer.setVisible(true);
-        } else if (indexRatio < 0) {
+        } else if (indexRatio <= 0) {
           layer.setOpacity(0);
           layer.setVisible(false);
         } else {
