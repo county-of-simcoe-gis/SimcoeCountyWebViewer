@@ -102,7 +102,7 @@ class Print extends Component {
     // SEND PRINT SERVER REQUEST HERE
     // =======================
     const printData = await printRequest.printRequest(printLayers, this.state);
-    //console.log(printData);
+    //console.log(JSON.stringify(printData));
 
     const printAppId = printData.layout.replace(/ /g, "_");
     const outputFormat = printData.outputFormat;
