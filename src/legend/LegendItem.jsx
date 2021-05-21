@@ -1,16 +1,27 @@
-import React from "react";
+import React, {  useState } from "react";
 import styles from "./LegendItem.module.css";
-import * as helpers from "./helpers";
+import * as helpers from "../helpers/helpers";
 import cx from "classnames";
 
 function LegendItem(props) {
   const { layer } = props;
-  // console.log(layer.imageUrl);
+  const [legendImage, setLegendImage] = useState(layer.layer === undefined ? layer.imageUrl === undefined ? layer.styleUrl : layer.imageUrl : undefined);
+  if(layer.imageUrl === undefined ? layer.styleUrl : layer.imageUrl){
+    const params = {};
+    const secureKey = layer.layer !== undefined ? layer.layer.get("secureKey") : undefined;
+    if (secureKey !== undefined) {
+      params[secureKey]="GIS";
+      helpers.getBase64FromImageUrlWithParams(layer.imageUrl === undefined ? layer.styleUrl : layer.imageUrl,params, (height, returnImage) => {
+        setLegendImage(returnImage);
+      });
+    }else{
+      if (legendImage === undefined) setLegendImage(layer.imageUrl === undefined ? layer.styleUrl : layer.imageUrl);
+    }
+  }
   return (
-    
     <div className={props.center ? cx(styles.container, styles.containerCenter) : styles.container}>
       <label className={styles.title}>{layer.tocDisplayName}</label>
-      <Legend className={props.center ? cx(styles.image, styles.imageCenter) : styles.image} center={props.center} legendObj={layer.legendObj} legendImage={layer.imageUrl === undefined ? layer.styleUrl : layer.imageUrl} />
+      <Legend className={props.center ? cx(styles.image, styles.imageCenter) : styles.image} center={props.center} legendObj={layer.legendObj} legendImage={legendImage} />
     </div>
   );
 }
