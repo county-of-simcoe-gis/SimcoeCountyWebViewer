@@ -1203,3 +1203,29 @@ function hasMapControl(map, controlType) {
   }, this);
   return returnResult;
 }
+
+
+export function TableDisplay(props){
+    const { info } = props;
+    if (info === null) return <div />;
+    return (
+      <table>
+        <tbody>
+          <tr key={getUID()}>
+            {Object.keys(info[0]).map((key) => (
+              <th key={getUID()}>{key}</th>
+            ))}
+          </tr>
+          {info.map((item) => (
+            <tr key={getUID()}>
+              {Object.values(item).map((val) => (
+                <td key={getUID()} style={{ border: "1px solid black", padding: "5px 5px" }}>
+                  {val}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+}
