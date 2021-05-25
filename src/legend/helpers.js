@@ -52,6 +52,7 @@ export function formatDate() {
   return monthNames[monthIndex] + " " + day + ", " + year;
 }
 
+
 export function replaceAllInString(str, find, replace) {
   return str.replace(new RegExp(_escapeRegExp(find), "g"), replace);
 }

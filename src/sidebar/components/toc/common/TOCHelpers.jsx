@@ -615,7 +615,7 @@ export function getFullInfoLayers(layers, callback) {
   for (let index = 0; index < layers.length; index++) {
     const layer = layers[index];
     let newLayer = Object.assign({}, layer);
-    getBase64FromImageUrl(layer.styleUrl, (height, img) => {
+    helpers.getBase64FromImageUrl(layer.styleUrl, (height, img) => {
       newLayer.legendHeight = height;
       newLayer.legendImage = img;
       newLayers.push(newLayer);
@@ -625,67 +625,7 @@ export function getFullInfoLayers(layers, callback) {
   }
 }
 
-export function getBase64FromImageUrlWithParams(url, params=undefined, callback) {
 
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", url);
-  if (params !== undefined){
-    for (const [key, value] of Object.entries(params)) {
-      xhr.setRequestHeader(key, value);
-    }
-  }
-  
-  xhr.onload = function(){
-    var response = xhr.responseText;
-    var binary = ""
-    
-    for(var i=0; i<response.length; i++){
-      binary += String.fromCharCode(response.charCodeAt(i) & 0xff);
-    }
-    var img = new Image();
-
-    img.setAttribute("crossOrigin", "anonymous");
-  
-    img.onload = function() {
-      var canvas = document.createElement("canvas");
-      canvas.width = this.width;
-      canvas.height = this.height;
-  
-      var ctx = canvas.getContext("2d");
-      ctx.drawImage(this, 0, 0);
-  
-      var dataURL = canvas.toDataURL("image/png");
-  
-      callback(this.height, dataURL);
-    };
-
-    img.src = 'data:image/png;base64,' + btoa(binary);
-  }
-  xhr.overrideMimeType('text/plain; charset=x-user-defined');
-  xhr.send();
-}
-
-export function getBase64FromImageUrl(url, callback) {
-  var img = new Image();
-
-  img.setAttribute("crossOrigin", "anonymous");
-
-  img.onload = function() {
-    var canvas = document.createElement("canvas");
-    canvas.width = this.width;
-    canvas.height = this.height;
-
-    var ctx = canvas.getContext("2d");
-    ctx.drawImage(this, 0, 0);
-
-    var dataURL = canvas.toDataURL("image/png");
-
-    //var data = dataURL.replace(/^data:image\/(png|jpg);base64,/, "");
-    callback(this.height, dataURL);
-  };
-
-  img.src = url;
-}
 
 export function isDuplicate(layerList, newLayerName) {
   let returnValue = false;
