@@ -10,7 +10,7 @@ import LoadingScreen from "./helpers/LoadingScreen.jsx";
 import ReactGA from "react-ga";
 import packageJson from '../package.json';
 
-const enableAnalytics = helpers.getURLParameter("ANALYTICS") !== "OFF";
+const enableAnalytics = helpers.getURLParameter("ANALYTICS") !== "off";
 if (mainConfig.googleAnalyticsID !== undefined && mainConfig.googleAnalyticsID !== "" && enableAnalytics)  {
   ReactGA.initialize(mainConfig.googleAnalyticsID);
   ReactGA.pageview(window.location.pathname + window.location.search);
