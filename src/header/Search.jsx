@@ -376,6 +376,7 @@ class Search extends Component {
 
     // CLEAR PREVIOUS SOURCE
     searchGeoLayer.getSource().clear();
+    searchIconLayer.getSource().clear();
 
     // SET STATE CURRENT ITEM
     this.setState({ value, searchResults: [item] });
