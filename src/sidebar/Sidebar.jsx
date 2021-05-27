@@ -454,7 +454,6 @@ const ZoningResults = (props) => {
   if (!props.returnResults) return (<div>Please search for a location to see results... </div>);
   return (
   <div>
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"></link>
     <div className="heading">
         Address Information
     </div>
@@ -570,8 +569,26 @@ const ZoningSidebar = (props) => {
   };
   return (
     <div className={props.className}>
+      <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"></link>
       <div style={headerStyle}>Zoning Results</div>
       <div style={bodyStyle}><ZoningResults returnResults={returnResults} /></div>
+      <div style={{"position": "fixed", "bottom":"10px", "display":"inline-flex"}}>
+      <div className="" style={{"padding":"5px"}}>
+          <a href="http://maps.simcoe.ca/terms.html" className="btn btn-primary" style={{"width": "100%"}} role="button" target="_blank">
+              <span className="glyphicon glyphicon-list-alt"></span>&nbsp;Terms
+          </a>
+      </div>
+      <div className="" style={{"padding":"5px"}}>
+          <a href="https://www.severn.ca/en/build-and-invest/resources/documents/Zoning-By-law.pdf" className="btn btn-primary" style={{"width": "100%"}} role="button" target="_blank">
+              <span className="glyphicon glyphicon-asterisk"></span>&nbsp;Zoning By Law
+          </a>
+      </div>
+      <div className="" style={{"padding":"5px"}}>
+          <a href="mailto:kmandeville@townshipofsevern.com" className="btn btn-info" style={{"width": "100%"}} role="button">
+              <span className="glyphicon glyphicon-envelope"></span>&nbsp;Contact Us
+          </a>
+      </div>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 {
   "name": "opengis",
-  "homepage": "https://opengis.simcoe.ca/public/",
+  "homepage": "https://opengis.simcoe.ca/dev/",
   "version": "1.0.5",
   "private": true,
   "dependencies": {
