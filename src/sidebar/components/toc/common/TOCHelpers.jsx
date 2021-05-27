@@ -346,10 +346,11 @@ export function getGroupsESRI(options, callback) {
       layerOptions["name"] = layer.name;
       layerOptions["minScale"] = layer.minScale;
       layerOptions["maxScale"] = layer.maxScale;
-      layerOptions["defaultVisibility"] = layer.defaultVisibility;
+      layerOptions["defaultVisibility"] = true;//layer.defaultVisibility;
       layerOptions["identifyTitleColumn"] = layer.displayField
       layerOptions["opacity"] = 1 - (layer.drawingInfo.transparency === undefined ? 0 : layer.drawingInfo.transparency/100);
       layerOptions["liveLayer"] = layerOptions.isLiveLayer;
+      
       layer["options"] = layerOptions;
       layerOptions.categories.forEach(category=>{
         const groupValue = category === "All Layers" ? "opengis:all_layers" : category;
@@ -1234,7 +1235,7 @@ function parseESRIDescription (description){
   let returnObj = {
     isGroupOn:"",
     isLiveLayer: false,
-    isVisible:false,
+    isVisible:true,
     isOpen: false,
     sar: false,
     description: "",
@@ -1285,6 +1286,10 @@ function parseESRIDescription (description){
        }
     }
   });
+  //if (window.zoning){
+    returnObj.isLiveLayer = true;
+    returnObj.isVisible = true;
+  //}
   return returnObj;
 }
 

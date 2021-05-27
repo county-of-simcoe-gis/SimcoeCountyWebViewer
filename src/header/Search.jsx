@@ -118,7 +118,7 @@ class Search extends Component {
       items.push({ label: "Map Layer", value: "Map Layer" });
       items.push({ label: "Tool", value: "Tool" });
       items.push({ label: "Theme", value: "Theme" });
-      this.setState({ searchTypes: items, selectedType: items[0] });
+      this.setState({ searchTypes: items, selectedType: items[window.zoning?1:0] });
     });
 
     // PATCH TO CLOSE MENU WHEN MAP IS CLICKED
@@ -406,7 +406,7 @@ class Search extends Component {
       window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
       window.map.getView().setZoom(18);
     } else {
-      console.log(value);
+      //console.log(value);
       // CALL API TO GET LOCATION DETAILS
       helpers.getJSON(searchInfoURL(apiUrl, item.location_id), (result) => this.jsonCallback(result));
     }
@@ -528,7 +528,8 @@ class Search extends Component {
 
     if (this.autoCompleteRef !== undefined) {
       const el = document.getElementById("sc-search-textbox");
-      el.setAttribute("style", "padding-left: " + (dropDownWidth + 5) + "px");
+      if (window.zoning) el.setAttribute("style", "padding-left: 5px");
+      else el.setAttribute("style", "padding-left: " + (dropDownWidth + 5) + "px");
     }
 
     const groupsDropDownStyles = {
@@ -566,7 +567,7 @@ class Search extends Component {
 
     return (
       <div>
-        <div className="sc-search-types-container" tabIndex="-1">
+        <div className={"sc-search-types-container" + (window.zoning ? " sc-hidden":"")} tabIndex="-1">
           <Select tabIndex="-1" styles={groupsDropDownStyles} isSearchable={false} onChange={this.onTypeDropDownChange} options={this.state.searchTypes} value={this.state.selectedType} />
         </div>
 
@@ -575,7 +576,7 @@ class Search extends Component {
           inputProps={{
             id: "sc-search-textbox",
             tabIndex: "1",
-            placeholder: "Search...",
+            placeholder: window.zoning ? "Search Location...":"Search...",
             name: "sc-search-textbox",
             onFocus: (result) => {
               this.disableKeyboardEvents(true);

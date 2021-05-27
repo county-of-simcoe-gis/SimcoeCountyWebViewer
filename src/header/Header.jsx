@@ -81,6 +81,7 @@ class Header extends Component {
               this.burgerButtonHandler();
             }
           }}
+          className={window.zoning ? "sc-hidden":""}
         >
           <img src={require("./images/burger-button.png")} alt="Header Logo" />
         </div>
@@ -88,7 +89,7 @@ class Header extends Component {
         <div id="sc-header-bar-button">
           <img src={require("./images/bar-button.png")} alt="Header Logo" />
         </div>
-        <div id="sc-header-bar-logo">
+        <div id="sc-header-bar-logo" className={window.zoning ? "sc-hidden":""}>
           <img src={require("./images/" + imageName)} alt="Header Logo" />
         </div>
         <div id="sc-header-search-container">

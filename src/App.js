@@ -1,4 +1,4 @@
-import React, { Component, useState } from "react";
+import React, { Component, useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Switch,
@@ -59,23 +59,53 @@ class App extends Component {
 
 
 function MapApp(){
+  window.zoning = helpers.getURLParameter("ZONING",true, true) !== null;
   const [mapLoading, setMapLoading] = useState(true);
   const [sidebarLoading, setSidebarLoading] = useState(true);
   const [headerLoading, setHeaderLoading] = useState(true);
-      // LISTEN FOR MAP TO MOUNT
-      window.emitter.addListener("mapLoaded", () => setMapLoading(false));
-      // LISTEN FOR SIDEBAR TO MOUNT
-      window.emitter.addListener("sidebarLoaded", () => setSidebarLoading(false));
-      // LISTEN FOR HEADER TO MOUNT
-      window.emitter.addListener("headerLoaded", () => setHeaderLoading(false));
-  
+  const [sidebarOpt, setSidebarOpt] = useState({});
+  const [headerOpt, setHeaderOpt] = useState({});
+  const [mapOpt, setMapOpt] = useState({});
+  const [loadingOpt, setLoadingOpt] = useState({});
+  const [appPots, setAppOpt] = useState({});
+  // LISTEN FOR MAP TO MOUNT
+  window.emitter.addListener("mapLoaded", () => setMapLoading(false));
+  // LISTEN FOR SIDEBAR TO MOUNT
+  window.emitter.addListener("sidebarLoaded", () => setSidebarLoading(false));
+  // LISTEN FOR HEADER TO MOUNT
+  window.emitter.addListener("headerLoaded", () => setHeaderLoading(false));
+  useEffect(()=>{
+    setSidebarOpt({
+                    "tocType": "LIST",
+                    "sidebarToolComponents":[],
+                    "sidebarThemeComponents": [],
+                    "sidebarShortcutParams":[],
+                  });
+    setHeaderOpt({});
+    setMapOpt({
+                "centerCoords": [-8878504.68, 5543492.45],
+                "defaultZoom": 10,
+                "maxZoom": 20,
+                "controls": {
+                            "rotate": false,
+                            "fullScreen": false,
+                            "zoomInOut": false,
+                            "currentLocation": false,
+                            "zoomExtent": false,
+                            "scale": false,
+                            "scaleLine": false,
+                            "basemap": false
+                          },
+              });
+    setAppOpt({});
+  },[]);
   return (
     <div>
       <div id="portal-root" />
-      <LoadingScreen visible={mapLoading || sidebarLoading || headerLoading} backgroundColor={"#3498db"} />
-      <Header />
-      <Sidebar mapLoading={mapLoading} headerLoading={headerLoading} />
-      <SCMap />
+      <LoadingScreen visible={mapLoading || sidebarLoading || headerLoading} backgroundColor={"#3498db"} options={loadingOpt} />
+      <Header options={headerOpt} />
+      <Sidebar mapLoading={mapLoading} headerLoading={headerLoading} options={sidebarOpt} />
+      <SCMap options={mapOpt} />
     </div>
   );
 }

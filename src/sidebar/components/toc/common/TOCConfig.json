@@ -1,6 +1,7 @@
 {
   "useMapConfigApi": false,
   "mapId":"",
+  "esriServiceUrl":"https://maps.simcoe.ca/arcgis/rest/services/Public/Zoning_Dynamic/MapServer/",
   "helpLink":"https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers",
   "geoserverLayerGroupsUrl": "https://opengis.simcoe.ca/geoserver/simcoe/Config_Public_Default/ows?service=wms&version=1.3.0&request=GetCapabilities",
   "geoserverLayerGroupsUrlType": "group",

@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, useEffect, useState } from "react";
 import "./Sidebar.css";
 import * as helpers from "../helpers/helpers";
 
@@ -12,6 +12,7 @@ import "react-tabs/style/react-tabs.css";
 import SidebarComponent from "react-sidebar";
 import mainConfig from "../config.json";
 import SidebarSlim from "./SidebarSlim.jsx";
+import { BsGeoAlt } from "react-icons/bs";
 
 class Sidebar extends Component {
   constructor(props) {
@@ -119,7 +120,7 @@ class Sidebar extends Component {
     const url = new URL(window.location.href.toUpperCase());
     const viewerMode = url.searchParams.get("MODE");
     window.sidebarOpen = false;
-    if (viewerMode !== null && viewerMode === "ADVANCED") {
+    if ((viewerMode !== null && viewerMode === "ADVANCED") || window.zoning) {
       this.togglePanelVisibility();
       window.sidebarOpen = true;
       this.setState({ sidebarOpen: true });
@@ -379,7 +380,7 @@ class Sidebar extends Component {
     else if (tabIndex === 3) helpers.addAppStat("Tab", "Themes");
     else if (tabIndex === 4) helpers.addAppStat("Tab", "Reports");
   };
-
+  
   //<Tabs forceRenderTabPanel={true} onSelect={tabIndex => this.setState({ tabIndex })} selectedIndex={this.state.tabIndex}>
   render() {
     return (
@@ -393,7 +394,9 @@ class Sidebar extends Component {
         children={""}
         sidebar={
           <React.Fragment>
-            <Tabs forceRenderTabPanel={true} selectedIndex={this.state.tabIndex} onSelect={this.onTabSelect}>
+            <ZoningSidebar className={!window.zoning?"sc-hidden":""} >
+            </ZoningSidebar>
+            <Tabs forceRenderTabPanel={true} selectedIndex={this.state.tabIndex} onSelect={this.onTabSelect} className={window.zoning?"sc-hidden":""}>
               <TabList>
                 <Tab id="tab-layers">
                   <TabButton imageURL={images["legend-32x32.png"]} name="Layers" />
@@ -447,7 +450,131 @@ class Sidebar extends Component {
 }
 
 export default Sidebar;
+const ZoningResults = (props) => {
+  if (!props.returnResults) return (<div>Please search for a location to see results... </div>);
+  return (
+  <div>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"></link>
+    <div className="heading">
+        Address Information
+    </div>
+    <div className="well">
+        <div className="row">
+            <div className="col-md-3 addressLabel">Roll Number:</div>
+            <div id="txtRollNumber" className="col-md-9">435101000303400</div>
+        </div>
 
+        <div className="row">
+            <div className="col-md-3 addressLabel">Address:</div>
+            <div className="col-md-9"><span id="txtAddress">1575 Telford Line</span> <span id="txtAddressZoom"><button id="linkAddressZoom" style={{"width":"100px"}} type="button" className="btn btn-warning btn-xs"> 
+            <BsGeoAlt /> <span className="highlight-text">Highlight</span></button></span></div>
+
+        </div>
+
+    </div>
+
+
+    <div className="heading">
+        Zoning Information
+      <span style={{"fontSize": "14px"}}>
+        <a id="bylawLink" href="https://www.severn.ca/en/build-and-invest/resources/documents/Zoning-By-law.pdf" target="_blank">[ Review By-Law ]</a>
+      </span>
+    </div>
+    <table id="tblZones" className="table table-hover table-striped table-bordered" style={{"width": "100%", "marginBottom": "2px"}}>
+        <thead>
+          <tr>
+              <th style={{"width": "100%"}}>Zone </th>
+              <th>Description</th>
+              <th style={{"width": "200px"}}>Area</th>
+              <th style={{"width": "100px"}}>&nbsp;</th>
+          </tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td>EP</td>
+          <td id="zoneName_6580">Environmental Protection</td>
+          <td className="areaText" id="txtArea-6580">2,994 m<sup>2</sup></td>
+          <td><button style={{"width": "100%"}} type="button" className="btn btn-warning btn-xs zoneHighlightButton"> <BsGeoAlt /> <span className="highlight-text">Highlight</span></button></td>
+        </tr>
+        <tr>
+          <td>EP</td>
+          <td id="zoneName_6581">Environmental Protection</td>
+          <td className="areaText" id="txtArea-6581">1,904 m<sup>2</sup></td>
+          <td><button style={{"width": "100%"}} type="button" className="btn btn-warning btn-xs zoneHighlightButton"> <BsGeoAlt /> <span className="highlight-text">Highlight</span></button></td>
+        </tr>
+        <tr>
+          <td>EP</td>
+          <td id="zoneName_6582">Environmental Protection</td>
+          <td className="areaText" id="txtArea-6582">46,643 m<sup>2</sup></td>
+          <td><button style={{"width": "100%"}} type="button" className="btn btn-warning btn-xs zoneHighlightButton"> <BsGeoAlt /> <span className="highlight-text">Highlight</span></button></td>
+        </tr>
+        <tr>
+          <td>EP</td>
+          <td id="zoneName_6583">Environmental Protection</td>
+          <td className="areaText" id="txtArea-6583">7,483 m<sup>2</sup></td>
+          <td><button style={{"width": "100%"}}  type="button" className="btn btn-warning btn-xs zoneHighlightButton"> <BsGeoAlt /> <span className="highlight-text">Highlight</span></button></td>
+        </tr>
+        <tr>
+          <td>EP</td>
+          <td id="zoneName_6584">Environmental Protection</td>
+          <td className="areaText" id="txtArea-6584">23,140 m<sup>2</sup></td>
+          <td><button style={{"width": "100%"}}  type="button" className="btn btn-warning btn-xs zoneHighlightButton"> <BsGeoAlt /> <span className="highlight-text">Highlight</span></button></td>
+        </tr>
+        <tr>
+          <td>RU</td>
+          <td id="zoneName_6585">Rural</td>
+          <td className="areaText" id="txtArea-6585">369,214 m<sup>2</sup></td>
+          <td><button style={{"width": "100%"}}  type="button" className="btn btn-warning btn-xs zoneHighlightButton"> <BsGeoAlt /> <span className="highlight-text">Highlight</span></button></td>
+        </tr>
+        <tr>
+          <td>RU</td>
+          <td id="zoneName_6586">Rural</td>
+          <td className="areaText" id="txtArea-6586">4,577 m<sup>2</sup></td>
+          <td><button style={{"width": "100%"}}  type="button" className="btn btn-warning btn-xs zoneHighlightButton"> <BsGeoAlt /> <span className="highlight-text">Highlight</span></button></td>
+        </tr>
+        <tr>
+          <td>RU</td>
+          <td id="zoneName_6587">Rural</td>
+          <td className="areaText" id="txtArea-6587">405,352 m<sup>2</sup></td>
+          <td><button style={{"width": "100%"}}  type="button" className="btn btn-warning btn-xs zoneHighlightButton"> <BsGeoAlt /> <span className="highlight-text">Highlight</span></button></td>
+        </tr>
+        <tr>
+          <td>RU</td>
+          <td id="zoneName_6588">Rural</td>
+          <td className="areaText" id="txtArea-6588">26,923 m<sup>2</sup></td>
+          <td><button style={{"width": "100%"}}  type="button" className="btn btn-warning btn-xs zoneHighlightButton"> <BsGeoAlt /> <span className="highlight-text">Highlight</span></button></td>
+        </tr>
+    </tbody>
+    </table>
+  </div>
+  );
+}
+const ZoningSidebar = (props) => {
+  const [returnResults, setReturnResults] = useState(false);
+  useEffect(()=>{
+    window.emitter.addListener("searchComplete", () => setReturnResults(true));
+    
+  },[]);
+  const headerStyle = {
+    "textAlign": "center",
+    "backgroundColor": "#d7d7d7",
+    "background": "linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%)",
+    "height": "50px",
+    "fontFamily": "Arial",
+    "color": "#5b5b5b",
+    "fontWeight":"bold",
+    "paddingTop": "25px",
+  };
+  const bodyStyle = {
+   
+  };
+  return (
+    <div className={props.className}>
+      <div style={headerStyle}>Zoning Results</div>
+      <div style={bodyStyle}><ZoningResults returnResults={returnResults} /></div>
+    </div>
+  );
+}
 // TAB BUTTON
 const TabButton = (props) => {
   return (

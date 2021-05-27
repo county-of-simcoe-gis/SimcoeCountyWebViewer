@@ -191,6 +191,11 @@ export class LayerHelpers {
         let tempFeature = new EsriJSON().readFeature(item);
         tempFeature.setProperties({"displayFieldName":item.displayFieldName });
         tempFeature.setProperties({"displayFieldValue":item.value });
+        tempFeature.setProperties({"Permitted Uses":"https://www.oro-medonte.ca/Zoning%20Bylaw/ZBL95-97_Section3_PermittedUses.htm#T_A1" });
+        tempFeature.setProperties({"Use Standards":"https://www.oro-medonte.ca/Zoning%20Bylaw/ZBL95-97_Section4_UseStandards.htm#T_B1" });
+        tempFeature.setProperties({"General Provisions":"https://www.oro-medonte.ca/Zoning%20Bylaw/ZBL95-97_Section5_GeneralProvisions.htm" });
+
+
         features.push(tempFeature);
       });
     }

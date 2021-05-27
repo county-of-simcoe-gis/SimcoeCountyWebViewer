@@ -22,7 +22,7 @@ class BasemapSwitcher extends Component {
       imageryPanelOpen: false,
       streetsLayer: null,
       streetsCheckbox: true,
-      containerCollapsed: false,
+      containerCollapsed: true,
       topoPanelOpen: false,
       topoLayers: [],
       topoActiveIndex: 0,
