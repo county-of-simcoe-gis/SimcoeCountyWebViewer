@@ -329,7 +329,7 @@ applySavedLayerOptions = (type) => {
 };
 getSavedCustomLayers = (tocType, callback=undefined) => {
   let savedLayers = helpers.getItemsFromStorage(tocType === "LIST" ? this.storageKeyCustomLayersList : this.storageKeyCustomLayersFolder);
-  if (savedLayers!==undefined){
+  if (savedLayers!==undefined && Object.keys(savedLayers).length > 0){
     TOCHelpers.getGroupsFromData(savedLayers,result => {
       if (callback !== undefined) callback(result);
       else return result;
