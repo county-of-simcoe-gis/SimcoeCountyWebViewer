@@ -329,7 +329,7 @@ applySavedLayerOptions = (type) => {
 };
 getSavedCustomLayers = (tocType, callback=undefined) => {
   let savedLayers = helpers.getItemsFromStorage(tocType === "LIST" ? this.storageKeyCustomLayersList : this.storageKeyCustomLayersFolder);
-  if (savedLayers!==undefined){
+  if (savedLayers!==undefined && Object.keys(savedLayers).length > 0){
     TOCHelpers.getGroupsFromData(savedLayers,result => {
       if (callback !== undefined) callback(result);
       else return result;
@@ -371,10 +371,10 @@ saveCustomLayer = (layer, callback=undefined) => {
 };
 removeCustomLayer = (layerName, groupName, callback=undefined) => {
   let savedGroups = helpers.getItemsFromStorage(this.state.type === "LIST" ? this.storageKeyCustomLayersList : this.storageKeyCustomLayersFolder);
-  
+
   let layerGroups = this.getActiveLayerGroups();
   let layersGroup = layerGroups.filter((group) => group.value === groupName)[0];
-
+  if (layersGroup === undefined) layersGroup = {value:"",layers:[]};
   //removed saved layer
   if (savedGroups!==undefined && savedGroups[layersGroup.value]!==undefined){
     let savedLayers = savedGroups[layersGroup.value].layers;

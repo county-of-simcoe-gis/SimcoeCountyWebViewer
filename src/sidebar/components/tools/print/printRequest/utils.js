@@ -82,17 +82,19 @@ let removeNull = (obj) => {
 };
 
 let extractServiceName = (url) => {
-  let serviceUrl = url.split("/services/")[1].split("/");
-  let filtered = serviceUrl.filter((e) => (e === "MapServer" || e === "Public" ? false : true));
   let serviceName = "";
-
-  if (filtered.length === 1) {
-    serviceName = `${filtered[0]}`;
+  try{
+    let serviceUrl = url.split("/services/")[1].split("/");
+    let filtered = serviceUrl.filter((e) => (e === "MapServer" || e === "Public" ? false : true));
+    if (filtered.length === 1) {
+      serviceName = `${filtered[0]}`;
+    }
+    if (filtered.length > 1) {
+      serviceName = `${filtered[0]}_${filtered[1]}`;
+    }
+  }catch(e){
+    serviceName = "OSM";
   }
-  if (filtered.length > 1) {
-    serviceName = `${filtered[0]}_${filtered[1]}`;
-  }
-
   return serviceName;
 };
 
