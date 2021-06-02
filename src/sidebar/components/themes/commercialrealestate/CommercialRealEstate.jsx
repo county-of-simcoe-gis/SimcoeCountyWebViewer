@@ -128,19 +128,6 @@ class CommercialRealEstate extends Component {
       window.map.addLayer(wmsPolygonLayer);
 
       layers[propType] = { propType: propType, pointLayer: wmsPointLayer, polygonLayer: wmsPolygonLayer, visible: true };
-      
-      //check for url param position of extent before changing
-      if (
-        helpers.getURLParameter("X") === null &&
-        helpers.getURLParameter("Y") === null &&
-        helpers.getURLParameter("XMIN") === null &&
-        helpers.getURLParameter("YMIN") === null &&
-        helpers.getURLParameter("XMAX") === null &&
-        helpers.getURLParameter("YMAX") === null
-      ){
-        window.map.getView().setZoom(9);
-        window.map.getView().setCenter([-8836922.93661287, 5533097.014153212]);
-      }
     });
 
     this.setNumRecords();
