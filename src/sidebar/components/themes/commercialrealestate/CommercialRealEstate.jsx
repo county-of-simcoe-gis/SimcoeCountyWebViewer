@@ -96,7 +96,9 @@ class CommercialRealEstate extends Component {
 
   componentWillUnmount() {
     unByKey(this.onMapMoveEndEvent);
+    unByKey(this.mapClickEvent);
 
+    //this.mapClickEvent = () => 
     propTypes.forEach((propType) => {
       window.map.removeLayer(this.state.layers[propType].pointLayer);
       window.map.removeLayer(this.state.layers[propType].polygonLayer);
@@ -114,8 +116,11 @@ class CommercialRealEstate extends Component {
       wmsPointLayer.setZIndex(200);
       wmsPointLayer.setProperties({
         name: propType,
+        tocDisplayName:propType, 
         disableParcelClick: true,
+        queryable:true,
       });
+      
       window.map.addLayer(wmsPointLayer);
 
       const wmsPolygonLayer = helpers.getImageWMSLayer(serverUrl, polygonLayerName, "geoserver", "_proptype = '" + propType + "'", 200, true);
@@ -123,11 +128,13 @@ class CommercialRealEstate extends Component {
       wmsPolygonLayer.setZIndex(200);
       wmsPolygonLayer.setProperties({
         name: propType,
+        tocDisplayName:propType, 
         disableParcelClick: false,
+        queryable:true,
       });
       window.map.addLayer(wmsPolygonLayer);
 
-      layers[propType] = { propType: propType, pointLayer: wmsPointLayer, polygonLayer: wmsPolygonLayer, visible: true };
+      layers[propType] = { propType: propType, pointLayer: wmsPointLayer, polygonLayer: wmsPolygonLayer, visible: true, };
     });
 
     this.setNumRecords();
