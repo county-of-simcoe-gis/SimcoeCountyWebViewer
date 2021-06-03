@@ -55,7 +55,9 @@ class ThemeLayerToggler extends Component {
     const layer = helpers.getImageWMSLayer(url.resolve(this.props.layerConfig.serverUrl, "wms"), this.props.layerConfig.layerName, "geoserver", null, 50);
     layer.setVisible(this.props.layerConfig.visible);
     layer.setZIndex(this.props.layerConfig.zIndex);
-    layer.setProperties({ name: this.props.layerConfig.layerName, disableParcelClick: true });
+    //layer.setProperties({ name: this.props.layerConfig.layerName, disableParcelClick: true });
+    layer.setProperties({ name: this.props.layerConfig.layerName, tocDisplayName: this.props.layerConfig.displayName,disableParcelClick: true, queryable:true });
+
     window.map.addLayer(layer);
     return layer;
   };
