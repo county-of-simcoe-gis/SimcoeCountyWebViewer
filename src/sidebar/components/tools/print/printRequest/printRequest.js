@@ -160,15 +160,24 @@ let configureTileLayer = async (l) => {
   const layerSource = l.getSource();
   tileUrl = layerSource.getUrls();
   tileUrl = tileUrl[0].split("/tile")[0];
-  // if (l.values_.source.key_ === "https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}") {
-  //   tileUrl = l.values_.source.key_.split("/tile")[0];
-  // } else {
-  //   let entries = l.values_.source.tileCache.entries_;
-  //   tileUrl = entries[Object.keys(entries)[0]].value_.src_.split("/tile")[0];
-  // }
-  let retLayer = await loadWMTSConfig(tileUrl, l.values_.opacity);
-  retLayer.customParams.zIndex = l.getZIndex() + l.get("printIndex");
-  return retLayer;
+  let retLayer = {};
+  if (l.values_.source.key_.includes("openstreetmap.org")) {
+    retLayer = {
+      baseURL: l.values_.source.key_.split("\n")[0],
+      type: "OSM",
+      imageExtension: "png",
+      customParams: {
+        zIndex: 1,
+      }
+    };
+    return retLayer;
+  }
+  else{
+    retLayer = await loadWMTSConfig(tileUrl, l.values_.opacity);
+    retLayer.customParams.zIndex = l.getZIndex() + l.get("printIndex");
+    return retLayer;
+
+  } 
 };
 
 const configureImageLayer = (l) => {
