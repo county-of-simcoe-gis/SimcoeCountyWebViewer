@@ -64,10 +64,9 @@ class ImmigrationServicesLayerToggler extends Component {
     const layer = helpers.getImageWMSLayer(url.resolve(this.props.layer.serverUrl, "wms"), this.props.layer.layerName, "geoserver", null, 50);
     layer.setVisible(true);
     layer.setZIndex(this.props.layer.zIndex);
-    layer.setProperties({
-      name: this.props.layer.layerName,
-      disableParcelClick: true,
-    });
+
+    layer.setProperties({ name: this.props.layer.layerName, tocDisplayName: this.props.layer.displayName,disableParcelClick: true, queryable:true });
+
     window.map.addLayer(layer);
     return layer;
   };
