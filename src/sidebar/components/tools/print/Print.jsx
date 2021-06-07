@@ -97,12 +97,23 @@ class Print extends Component {
 
     // GET VISIBLE LAYERS
     const printLayers = this.getPrintLayers();
-
+    let secureKey = undefined;
+    const params = {method: "POST"};
+    const headers =  {"Content-Type": "application/json"};
+    printLayers.forEach(layer => {
+      secureKey = layer.get("secureKey");
+      if (secureKey !== undefined){
+        headers[secureKey]="GIS";
+        
+      }
+    });
+    params["headers"]=headers;
+  
     // =======================
     // SEND PRINT SERVER REQUEST HERE
     // =======================
     const printData = await printRequest.printRequest(printLayers, this.state);
-    //console.log(JSON.stringify(printData));
+    console.log(JSON.stringify(printData));
 
     const printAppId = printData.layout.replace(/ /g, "_");
     const outputFormat = printData.outputFormat;
@@ -154,13 +165,8 @@ class Print extends Component {
         });
     };
     //post request to server and check status
-    fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: encodedPrintRequest,
-    })
+    params["body"] = encodedPrintRequest;
+    fetch(url, params)
       .then((response) => response.json())
       .then((response) => {
         this.setState({ isPrinting: true });

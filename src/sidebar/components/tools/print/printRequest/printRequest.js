@@ -1,5 +1,4 @@
 import * as helpers from "../../../../../helpers/helpers";
-import mainConfig from "../../../../../config.json";
 import config from "../config.json";
 import utils from "./utils";
 import { FeatureHelpers, OL_DATA_TYPES } from "../../../../../helpers/OLHelpers";
@@ -181,10 +180,11 @@ let configureTileLayer = async (l) => {
 };
 
 const configureImageLayer = (l) => {
+  
   return ({
     type: "wms",
-    baseURL: mainConfig.geoserverUrl + "wms",
-    serverType: "geoserver",
+    baseURL: l.values_.source.url_.split("?")[0],
+    serverType:  l.values_.source.serverType_,
     opacity: l.values_.opacity,
     layers: [l.values_.source.params_.LAYERS],
     imageFormat: "image/png",
@@ -197,6 +197,7 @@ const configureImageLayer = (l) => {
 };
 
 const getLayerByType = async (layer, callback=undefined) => {
+  
   if (layer instanceof VectorLayer) {
     //let retLayer = configureVectorMyMapsLayer(layer);
     let retLayer = buildVectorLayer(layer);

@@ -1,6 +1,6 @@
 import * as helpers from "../../../../helpers/helpers";
 import * as drawingHelpers from "../../../../helpers/drawingHelpers";
-import { LayerHelpers, FeatureHelpers, OL_DATA_TYPES } from "../../../../helpers/OLHelpers";
+import { LayerHelpers, FeatureHelpers, OL_DATA_TYPES} from "../../../../helpers/OLHelpers";
 import TOCConfig from "../common/TOCConfig.json";
 import { WMSCapabilities } from "ol/format.js";
 
@@ -53,20 +53,20 @@ map config example object
  *    - getLocalGroup
  **/
 
-export function makeGroup(groupDisplayName, isDefault, groupUrl, groupPrefix, visibleLayers, wmsGroupUrl, customGroupUrl, layers = []) {
+export function makeGroup(options, callback=undefined) {
   const groupObj = {
-    value: helpers.getUID(),
-    label: groupDisplayName,
-    defaultGroup: isDefault,
-    url: groupUrl,
-    prefix: groupPrefix,
-    visibleLayers: visibleLayers,
-    wmsGroupUrl: wmsGroupUrl,
-    customRestUrl: customGroupUrl,
-    layers: layers,
+    value: options.value !== undefined ? options.value : helpers.getUID(),
+    label: options.label,
+    defaultGroup: options.defaultGroup,
+    url: options.url,
+    prefix: options.prefix,
+    visibleLayers: options.visibleLayers,
+    wmsGroupUrl: options.wmsGroupUrl,
+    customRestUrl: options.customGroupUrl,
+    layers: options.layers !== undefined ? options.layers : [],
   };
-
-  return groupObj;
+  if (callback === undefined) return groupObj;
+  else callback(groupObj);
 }
 
 export function makeLayer(
@@ -124,49 +124,125 @@ export function makeLayer(
 
 export async function getMap (mapId=null,urlType, isReset, tocType, callback){
   const apiUrl = helpers.getConfigValue('apiUrl');
-  let mapSettingURL = mapId===null || mapId==="" ? `${apiUrl}settings/getDefaultMap` : `${apiUrl}settings/getMap/${mapId}`;
-  let defaultGroup = undefined;
+  let mapSettingURL = (mapId === null || mapId === undefined || mapId.trim() === '') ? `${apiUrl}settings/getDefaultMap` : `${apiUrl}settings/getMap/${mapId}`;
   let layerGroups = undefined;
-  
+  let default_group = undefined;
   helpers.getJSON(mapSettingURL, (result) => 
     {
       var sourcesProcessed = 0;
       const mapSettings = JSON.parse(result.json);
+
+      const defaultTheme = mapSettings.default_theme;
+      const defaultTool = mapSettings.default_tool;
+      if (defaultTheme !== undefined) {
+        window.emitter.emit("activateSidebarItem", defaultTheme, "themes");
+      } else if (defaultTool !== undefined) {
+        window.emitter.emit("activateSidebarItem", defaultTool, "tools");
+      }
       //console.log(mapSettings);
+      default_group = mapSettings.default_group;
       mapSettings.sources.forEach(source => {
-        getGroupsGC(source.layerUrl, urlType, isReset, tocType, source.secure,source.primary, source.secureKey, (layerGroupConfig) => {
-          if (source.primary) defaultGroup=layerGroupConfig[1];
-          if (layerGroups === undefined){
-            layerGroups = layerGroupConfig[0];
-          }else{
-            layerGroups = mergeGroups(layerGroups,layerGroupConfig[0]);
-          }
-          sourcesProcessed ++;
-          if (sourcesProcessed === mapSettings.sources.length){
-            if ( mapSettings.default_group !== undefined) {
-              const mapDefaultGroup = layerGroups.filter((group)=> {return group.value===mapSettings.default_group})[0];
-              if (mapDefaultGroup !== undefined) defaultGroup = mapDefaultGroup;
-              else helpers.showMessage(`Configuration Error!`, `Default group ${mapSettings.default_group} could not be loaded.`, helpers.messageColors.red,3000);
-            }
-            if (defaultGroup === undefined || defaultGroup === null) defaultGroup = layerGroups[0];
-            callback([layerGroups,defaultGroup]);
-          }
-        });
+
+        if (source.type === undefined || source.type === null || source.type === "") source["type"] = "geoserver"; //default to geoserver
+        switch(source.type.toLowerCase()){
+          case "geoserver":
+            getGroupsGC(source.layerUrl, urlType, isReset, tocType, source.secure,source.primary, source.secureKey, (layerGroupConfig) => {
+                if (source.primary && mapSettings.default_group === undefined) default_group = layerGroupConfig.defaultLayerName;
+                if (layerGroups === undefined){
+                  layerGroups = layerGroupConfig.groups;
+                }else{
+                  layerGroups = mergeGroups(layerGroups,layerGroupConfig.groups);
+                }
+                sourcesProcessed ++;
+                if (sourcesProcessed === mapSettings.sources.length){
+                  callback({groups: layerGroups,defaultGroupName:default_group});
+                }
+            });
+            break;
+          case "arcgis":
+            getGroupsESRI(
+              {
+                url: source.layerUrl,
+                tocType:tocType,
+                isReset:isReset
+              }, (layerGroupConfig) => {
+                if (source.primary && mapSettings.default_group === undefined) default_group = layerGroupConfig.defaultLayerName;
+                if (layerGroups === undefined){
+                  layerGroups = layerGroupConfig.groups;
+                }else{
+                  layerGroups = mergeGroups(layerGroups,layerGroupConfig.groups);
+                }
+                sourcesProcessed ++;
+                if (sourcesProcessed === mapSettings.sources.length){
+                  callback({groups: layerGroups,defaultGroupName:default_group});
+                }
+            });
+            break;
+          default:
+            break;
+        }
+        
       });
       
     });
+}
+
+export function mergeGroupsTogether(group, groups){  
+  groups.forEach(currentGroup =>{
+    currentGroup.layers.forEach(currentLayer => {
+      let newLayer = Object.assign({},currentLayer);
+      newLayer.group = group.value;
+      newLayer.groupName = group.label;
+      var isDuplicateLayer = false;
+      group.layers = group.layers.map((layer) => {
+        if (newLayer.tocDisplayName === layer.tocDisplayName){
+          isDuplicateLayer = true;
+          if ((newLayer.secured || newLayer.primary) && !group.primary){
+            return newLayer;
+          }else{
+            return layer;
+          }
+        }else{
+          return layer;
+        }
+      });
+      
+      if (!isDuplicateLayer) group.layers.push(newLayer);
+    });
+  })
+
+  group.layers = group.layers.sort((a,b)=>{
+                                    if (a.displayName < b.displayName) {
+                                      return -1;
+                                    } else if (a.displayName > b.displayName) {
+                                      return 1;
+                                    }else{
+                                      return 0;
+                                    }
+                                  });
+  //update index based on newly sorted layers
+  let index = group.layers.length;
+  group.layers = group.layers.map(layer => {
+    index--;
+    layer.index = index;
+    layer.drawIndex = index;
+    layer.layer.setZIndex(index);
+    return layer;
+  });                        
+  
+  return group;
 }
 
 export function mergeGroups(originalGroups, newGroups){
   newGroups.forEach((newGroup) => {
     var isDuplicateGroup = false;
     originalGroups = originalGroups.map((group) => {
-      if (newGroup.value === group.value){
+      if (newGroup.label === group.label){
         isDuplicateGroup = true;
         newGroup.layers.forEach((newLayer) => {
           var isDuplicateLayer = false;
           group.layers = group.layers.map((layer) => {
-            if (newLayer.name === layer.name){
+            if (newLayer.tocDisplayName === layer.tocDisplayName){
               isDuplicateLayer = true;
               if ((newLayer.secured || newLayer.primary) && !group.primary){
                 return newLayer;
@@ -251,7 +327,109 @@ export function getGroupsFromData(data, callback) {
     }
   });
   if (defaultGroup === undefined || defaultGroup === null) defaultGroup = groups[0];
-  callback([groups, defaultGroup]);
+  callback({groups:groups, defaultGroupName:defaultGroup.value});
+
+}
+
+// GET GROUPS FROM MAP SERVER
+export function getGroupsESRI(options, callback) {
+  let defaultGroup = null;
+  let groups = [];
+  let groupsObj = {};
+  let savedData = helpers.getItemsFromStorage(options.tocType === "LIST" ? storageKey : storageKeyFolder);
+  if (savedData === undefined) savedData = [];
+  
+  LayerHelpers.getCapabilities(options.url, "rest", (layers) => {
+    layers.forEach(layer => {
+      const layerOptions = parseESRIDescription(layer.description);
+      layerOptions["id"] = layer.id;
+      layerOptions["name"] = layer.name;
+      layerOptions["minScale"] = layer.minScale;
+      layerOptions["maxScale"] = layer.maxScale;
+      layerOptions["defaultVisibility"] = layer.defaultVisibility;
+      layerOptions["identifyTitleColumn"] = layer.displayField
+      layerOptions["opacity"] = 1 - (layer.drawingInfo.transparency === undefined ? 0 : layer.drawingInfo.transparency/100);
+      layerOptions["liveLayer"] = layerOptions.isLiveLayer;
+      layer["options"] = layerOptions;
+      layerOptions.categories.forEach(category=>{
+        const groupValue = category === "All Layers" ? "opengis:all_layers" : category;
+        const tmpGroupObj = {
+          value: groupValue,
+          label: category,
+          url: options.url,
+          secured: false,
+          primary:false,
+          prefix: "",
+          defaultGroup: false,
+          visibleLayers: "",
+          wmsGroupUrl: options.url,
+          layers: [],
+        };
+        if (groupsObj[tmpGroupObj.value] === undefined){
+          tmpGroupObj.layers.push(layer);
+          groupsObj[tmpGroupObj.value] = tmpGroupObj;
+        } else{
+          groupsObj[tmpGroupObj.value].layers.push(layer);
+        }
+      });
+    });
+    const keys = Object.keys(groupsObj);
+    keys.forEach(key => {
+      let currentGroup = groupsObj[key];
+      let layerList = [];
+      let layerIndex = currentGroup.layers.length;
+      let visibleLayers = [];
+      let isDefault = false;
+
+
+      const buildLayers = (items) => {
+        items.forEach((currentLayer) => {
+          if (!isDuplicate(layerList, currentLayer.name)) {
+            buildESRILayer({
+              group: currentGroup,
+              layer: currentLayer,
+              layerIndex: layerIndex,
+              tocType: options.tocType
+            }, (result)=>{
+              layerList.push(result);
+            });
+            layerIndex--;
+            visibleLayers.push(currentLayer.name);
+          }
+        });
+      };
+      buildLayers(currentGroup.layers);
+      let panelOpen = false;
+      const savedGroup = savedData[key];
+      if (savedGroup !== undefined) {
+        panelOpen = savedGroup.panelOpen;
+      }else if (isDefault) panelOpen = true;
+      const groupObj = {
+        value: currentGroup.value,
+        label: currentGroup.label,
+        url: currentGroup.url,
+        prefix: currentGroup.prefix,
+        defaultGroup: currentGroup.defaultGroup,
+        visibleLayers: visibleLayers,
+        secured: currentGroup.secured,
+        primary:currentGroup.primary,
+        wmsGroupUrl: currentGroup.fullGroupUrl,
+        layers: layerList,
+        panelOpen: panelOpen
+      };
+      if (groupObj.layers.length >= 1) {
+        groups.push(groupObj);
+        if (isDefault) {
+          defaultGroup = groupObj;
+          isDefault = false;
+        }
+      }
+    });
+    if (defaultGroup === undefined || defaultGroup === null) defaultGroup = groups[0];
+    if (!options.isReset) window.emitter.emit("tocLoaded", null);
+    callback({groups:groups, defaultGroupName:defaultGroup.value});
+  });
+
 }
 
 // GET GROUPS FROM GET CAPABILITIES
@@ -321,8 +499,14 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured=false,
         if (layerInfo.KeywordList !== undefined) keywords = layerInfo.KeywordList;
         let visibleLayers = [];
         let groupPrefix = "";
-        if (keywords !== undefined) visibleLayers = _getVisibleLayers(keywords);
+        let allLayersVisible = false;
+        if (keywords !== undefined) allLayersVisible = _getAllLayersVisible(keywords);
         if (keywords !== undefined) groupPrefix = _getGroupPrefix(keywords);
+        if (allLayersVisible){
+          visibleLayers = layerInfo.Layer.map((item)=>item.Name);
+        }else{
+          if (keywords !== undefined) visibleLayers = _getVisibleLayers(keywords);
+        }
         let layerList = [];
         if (layerInfo.Layer !== undefined) {
           const groupLayerList = layerInfo.Layer;
@@ -388,8 +572,8 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured=false,
     if (defaultGroup === undefined || defaultGroup === null) defaultGroup = groups[0];
 
     if (!isReset) window.emitter.emit("tocLoaded", null);
-    //console.log([groups, defaultGroup]);
-    callback([groups, defaultGroup]);
+
+    callback({groups:groups, defaultGroupName: defaultGroupName});
   });
 }
 
@@ -417,7 +601,7 @@ export function getGroups() {
     if (isDefault) defaultGroup = groupObj;
   }
 
-  return [groups, defaultGroup];
+  return  {groups:groups,defaultGroupName: defaultGroup.value};
 }
 
 // GET BASIC INFO - THIS IS FOR PERFORMANCE TO LOAD LAYERS IN THE TOC
@@ -426,13 +610,12 @@ export function getBasicLayers(group, tocType, callback) {
       callback(layerList);
     });
 }
-
 export function getFullInfoLayers(layers, callback) {
   var newLayers = [];
   for (let index = 0; index < layers.length; index++) {
     const layer = layers[index];
     let newLayer = Object.assign({}, layer);
-    getBase64FromImageUrl(layer.styleUrl, (height, img) => {
+    helpers.getBase64FromImageUrl(layer.styleUrl, (height, img) => {
       newLayer.legendHeight = height;
       newLayer.legendImage = img;
       newLayers.push(newLayer);
@@ -442,67 +625,7 @@ export function getFullInfoLayers(layers, callback) {
   }
 }
 
-export function getBase64FromImageUrlWithParams(url, params=undefined, callback) {
 
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", url);
-  if (params !== undefined){
-    for (const [key, value] of Object.entries(params)) {
-      xhr.setRequestHeader(key, value);
-    }
-  }
-  
-  xhr.onload = function(){
-    var response = xhr.responseText;
-    var binary = ""
-    
-    for(var i=0; i<response.length; i++){
-      binary += String.fromCharCode(response.charCodeAt(i) & 0xff);
-    }
-    var img = new Image();
-
-    img.setAttribute("crossOrigin", "anonymous");
-  
-    img.onload = function() {
-      var canvas = document.createElement("canvas");
-      canvas.width = this.width;
-      canvas.height = this.height;
-  
-      var ctx = canvas.getContext("2d");
-      ctx.drawImage(this, 0, 0);
-  
-      var dataURL = canvas.toDataURL("image/png");
-  
-      callback(this.height, dataURL);
-    };
-
-    img.src = 'data:image/png;base64,' + btoa(binary);
-  }
-  xhr.overrideMimeType('text/plain; charset=x-user-defined');
-  xhr.send();
-}
-
-export function getBase64FromImageUrl(url, callback) {
-  var img = new Image();
-
-  img.setAttribute("crossOrigin", "anonymous");
-
-  img.onload = function() {
-    var canvas = document.createElement("canvas");
-    canvas.width = this.width;
-    canvas.height = this.height;
-
-    var ctx = canvas.getContext("2d");
-    ctx.drawImage(this, 0, 0);
-
-    var dataURL = canvas.toDataURL("image/png");
-
-    //var data = dataURL.replace(/^data:image\/(png|jpg);base64,/, "");
-    callback(this.height, dataURL);
-  };
-
-  img.src = url;
-}
 
 export function isDuplicate(layerList, newLayerName) {
   let returnValue = false;
@@ -529,18 +652,7 @@ export function jsonToLayer(json, callback) {
     if (includedLayerProps.includes(property)) layerProps[property] = layerProperties[property];
   }
   // LAYER PROPS
-
-  LayerHelpers.getLayer(
-    rebuildParams.sourceType,
-    rebuildParams.source,
-    rebuildParams.projection,
-    rebuildParams.layerName,
-    rebuildParams.url,
-    rebuildParams.tiled,
-    rebuildParams.file,
-    rebuildParams.extent,
-    rebuildParams.name,
-    undefined,
+  LayerHelpers.getLayer(rebuildParams,
     (newLayer) => {
       newLayer.setVisible(visible);
       newLayer.setOpacity(opacity);
@@ -591,49 +703,8 @@ export function layerToJson(layer, callback) {
 }
 
 
-/**
- * Performs a selective shallow/deep copy to preserve group and layer state, but not cloning open layers layer that has been added to the map.
- * @param {*} layerGroups 
- */
-export function copyTOCLayerGroups (layerGroups){
-  return layerGroups.map((group) => 
-                                {
-                                  let newGroup = Object.assign({},group);
-                                  //newGroup.panelOpen = false;
-                                  newGroup.layers = group.layers.map((layer) => 
-                                      {
-                                        let newLayer = Object.assign({},layer);
-                                        newLayer.layer = layer.layer; 
-                                        return newLayer;
-                                      }
-                                      );
-                                  return newGroup;
-                                });
-}
-/**
- * Performs a selective shallow/deep copy to preserve group and layer state, but not cloning open layers layer that has been added to the map.
- * @param {*} layerGroup
- */
-export function copyTOCLayerGroup (layerGroup){
-    let newGroup = Object.assign({},layerGroup);
-    newGroup.layers = layerGroup.layers.map((layer) => 
-        {
-          let newLayer = Object.assign({},layer);
-          newLayer.layer = layer.layer; 
-          return newLayer;
-        }
-        );
-    return newGroup;                     
-}
-/**
- * Performs a selective shallow/deep copy to preserve layer state, but not cloning open layers layer that has been added to the map.
- * @param {*} layer
- */
-export function copyTOCLayer(layer){
-    let newLayer = Object.assign({},layer);
-    newLayer.layer = layer.layer; 
-    return newLayer; 
-}
+
+
 export async function buildLayerByGroup(group, layer, layerIndex, tocType,secured, secureKey=undefined, callback) {
   // SAVED DATA
   let savedData = helpers.getItemsFromStorage(tocType === "LIST" ? storageKey : storageKeyFolder);
@@ -729,9 +800,18 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType,secure
     { 
       layerVisible = true;
     }
-
     // LAYER PROPS
-    LayerHelpers.getLayer(OL_DATA_TYPES.ImageWMS, "WMS", undefined, layer.Name, serverUrl + "/wms?layers=" + layer.Name, false, undefined, undefined, displayName,secureKey, (newLayer) => {
+    LayerHelpers.getLayer(
+      {
+        sourceType:OL_DATA_TYPES.ImageWMS, 
+        source:"WMS", 
+        layerName:layer.Name, 
+        url:serverUrl + "/wms?layers=" + layer.Name, 
+        tiled:false, 
+        name:displayName,
+        secureKey:secureKey, 
+      },
+      (newLayer) => {
       const wfsUrlTemplate = (rootUrl, layer) => `${rootUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layer}&outputFormat=application/json&cql_filter=`;
       const wfsUrl = wfsUrlTemplate(serverUrl.replace("/wms", ""), layer.Name);
 
@@ -790,64 +870,6 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType,secure
       callback(returnLayer);
     });
   }
-}
-
-export function getLayerListByGroupWMS(group, tocType, callback) {
-  // SAVED DATA
-  //const savedData = helpers.getItemsFromStorage(storageKey);
-  //const savedLayers = savedData[group.value];
-
-  // GET XML
-  helpers.httpGetText(group.wmsGroupUrl, (result) => {
-    var parser = new WMSCapabilities();
-    const resultObj = parser.read(result);
-    const groupLayerList = resultObj.Capability.Layer.Layer[0].Layer;
-    //const visibleLayers = group.visibleLayers === undefined ? [] : group.visibleLayers;
-    let layerIndex = groupLayerList.length + layerIndexStart;
-    let layerList = [];
-    groupLayerList.forEach((layerInfo) => {
-      if (!isDuplicate(layerList, layerInfo.Name)) {
-        if (layerInfo.Layer === undefined) {
-          buildLayerByGroup(group, layerInfo, layerIndex, tocType,false, undefined, (result) => {
-            layerList.push(result);
-          });
-          layerIndex--;
-        }
-      }
-    });
-
-    callback(layerList);
-  });
-}
-
-export function getLayerListByGroup(group, callback) {
-  // GET XML
-  helpers.httpGetText(group.wmsGroupUrl, (result) => {
-    var parser = new WMSCapabilities();
-    const resultObj = parser.read(result);
-    const groupLayerList = resultObj.Capability.Layer.Layer[0].Layer;
-    //const isLayer = (layer) => {
-    //  return layer.Layer === undefined;
-    //};
-    //const allLayers = groupLayerList.find(isLayer);
-    //console.log(allLayers);
-    let layerIndex = groupLayerList.length + layerIndexStart;
-    let layerList = [];
-
-    groupLayerList.forEach((layerInfo) => {
-      if (!isDuplicate(layerList, layerInfo.Name[0])) {
-        if (layerInfo.Layer === undefined) {
-          buildLayerByGroup(group, layerInfo, layerIndex,false, undefined, (result) => {
-            layerList.push(result);
-          });
-          layerIndex--;
-        }
-      }
-    });
-
-    callback(layerList);
-   
-  });
 }
 
 function _getDefaultGroup(keywords) {
@@ -948,6 +970,18 @@ function _getVisibleLayers(keywords) {
   } else return [];
 }
 
+function _getAllLayersVisible(keywords) {
+  if (keywords === undefined) return "";
+  const allLayersVisible = keywords.find(function(item) {
+    return item.indexOf("VISIBLE_LAYERS") !== -1;
+  });
+  if (allLayersVisible !== undefined) {
+    const val = allLayersVisible.split("=")[1];
+    if (val === "ALL") return true;
+  }
+  return false;
+}
+
 function _getCenterCoordinates(keywords) {
   if (keywords === undefined) return "";
   const centerCoordinatesKeyword = keywords.find(function(item) {
@@ -1008,17 +1042,6 @@ function _getStaticImageLegend(keywords) {
   else return false;
 }
 
-export function disableLayersVisiblity(layers, callback) {
-  var newLayers = [];
-  for (let index = 0; index < layers.length; index++) {
-    const layer = layers[index];
-    layer.layer.setVisible(false);
-    let newLayer = Object.assign({}, layer);
-    newLayers.push(newLayer);
-    if (index === layers.length - 1) callback(newLayers);
-  }
-}
-
 export function acceptDisclaimer(layer, returnToFunction) {
   if (layer.disclaimer !== undefined && (window.acceptedDisclaimers === undefined || window.acceptedDisclaimers.indexOf(layer.name) === -1)) {
     helpers.showTerms(
@@ -1074,31 +1097,6 @@ export function turnOffLayers(layers, callback) {
     layer.layer.setVisible(false);
     layer.visible = false;
     let newLayer = Object.assign({}, layer);
-    newLayers.push(newLayer);
-    if (index === layers.length - 1) callback(newLayers);
-  }
-}
-
-export function enableLayersVisiblity(layers, callback) {
-  var newLayers = [];
-  for (let index = 0; index < layers.length; index++) {
-    const layer = layers[index];
-    layer.layer.setVisible(layer.visible);
-    let newLayer = Object.assign({}, layer);
-    newLayers.push(newLayer);
-    if (index === layers.length - 1) callback(newLayers);
-  }
-}
-
-export function resetLayerDefaults(layers, callback) {
-  var newLayers = [];
-  for (let index = 0; index < layers.length; index++) {
-    const layer = layers[index];
-    layer.layer.setVisible(false);
-    let newLayer = Object.assign({}, layer);
-    newLayer.height = 30; // HEIGHT OF DOM ROW FOR AUTOSIZER
-    newLayer.showLegend = false; // SHOW LEGEND USING PLUS-MINUS IN TOC
-    newLayer.visible = false; // LAYER VISIBLE IN MAP, UPDATED BY CHECKBOX
     newLayers.push(newLayer);
     if (index === layers.length - 1) callback(newLayers);
   }
@@ -1182,3 +1180,287 @@ export function getStyles(groups) {
     });
   }
 }
+/**
+ * Performs a selective shallow/deep copy to preserve group and layer state, but not cloning open layers layer that has been added to the map.
+ * @param {*} layerGroup
+ */
+ export function copyTOCLayerGroup (layerGroup){
+  let newGroup = Object.assign({},layerGroup);
+  newGroup.layers = layerGroup.layers.map((layer) => 
+      {
+        let newLayer = Object.assign({},layer);
+        newLayer.layer = layer.layer; 
+        return newLayer;
+      }
+      );
+  return newGroup;                     
+}
+/**
+* Performs a selective shallow/deep copy to preserve layer state, but not cloning open layers layer that has been added to the map.
+* @param {*} layer
+*/
+export function copyTOCLayer(layer){
+  let newLayer = Object.assign({},layer);
+  newLayer.layer = layer.layer; 
+  return newLayer; 
+}
+/**
+ * Performs a selective shallow/deep copy to preserve group and layer state, but not cloning open layers layer that has been added to the map.
+ * @param {*} layerGroups 
+ */
+ export function copyTOCLayerGroups (layerGroups){
+  return layerGroups.map((group) => 
+                                {
+                                  let newGroup = Object.assign({},group);
+                                  //newGroup.panelOpen = false;
+                                  newGroup.layers = group.layers.map((layer) => 
+                                      {
+                                        let newLayer = Object.assign({},layer);
+                                        newLayer.layer = layer.layer; 
+                                        return newLayer;
+                                      }
+                                      );
+                                  return newGroup;
+                                });
+}
+
+/***
+ * =======================================
+ * ESRI SPECIFIC FUNCTIONS
+ * =======================================
+ */
+function parseESRIDescription (description){
+  const descriptionParts = description.split("#");
+  let returnObj = {
+    isGroupOn:"",
+    isLiveLayer: false,
+    isVisible:false,
+    isOpen: false,
+    sar: false,
+    description: "",
+    refreshInterval:"",
+    modalURL:"",
+    categories :["All Layers"],
+  };
+ 
+  descriptionParts.forEach(descriptionPart=>{
+    let parts = descriptionPart.split("=");
+    let key = parts[0].trim();
+    if (key != null && key.length !== 0)
+    {
+      //VALUE STRING
+      let value = parts[1];
+      switch (key.toUpperCase()){
+        case "CATEGORY":
+            value.split(",").forEach(item=>{
+              returnObj.categories.push(item.trim());
+            });
+            break;
+        case "LIVELAYER":
+            returnObj.isLiveLayer = value.trim().toUpperCase() === "TRUE";
+            break;
+        case "GROUPON":
+          returnObj.isGroupOn =value.trim().toUpperCase() === "TRUE";
+            break;
+        case "VISIBLE":
+          returnObj.isVisible = value.trim().toUpperCase() === "TRUE";
+            break;
+        case "OPEN":
+          returnObj.isOpen = value.trim().toUpperCase() === "TRUE";
+            break;
+        case "SAR":
+          returnObj.sar = value.trim().toUpperCase() === "TRUE";
+            break;
+        case "DESCRIPTION":
+          returnObj.description = value;
+            break;
+        case "REFRESH":
+          returnObj.refreshInterval = value;
+            break;
+        case "MODALURL":
+          returnObj.modalURL = value;
+            break;
+        default:
+          break;
+       }
+    }
+  });
+  return returnObj;
+}
+
+
+
+export async function buildESRILayer(options, callback){
+    //parse required options and set defaults
+    const tocType = options.tocType !== undefined ? options.tocType : "LIST";
+    let group = options.group;
+    let layer = options.layer;
+    let layerIndex = options.layerIndex;
+    let secured = options.secured !== undefined ? options.secured : false;
+    let secureKey = options.secureKey;
+
+    // SAVED DATA
+    let savedData = helpers.getItemsFromStorage(tocType === "LIST" ? storageKey : storageKeyFolder);
+    if (savedData === undefined) savedData = [];
+    const savedGroup = savedData[group.value];
+    let savedLayers = []
+    try{
+      if (savedGroup !== undefined && savedGroup.layers !== undefined) {
+        savedLayers = savedGroup.layers;
+      }else if (savedGroup !== undefined){
+        savedLayers = savedGroup; //Added to support legacy saves 
+      }
+    } catch (e){
+      console.warn(e);
+    }
+  
+    if (layer !== undefined) {
+      const visibleLayers = group.visibleLayers === undefined ? [] : group.visibleLayers;
+  
+      const layerNameOnly = layer.name;
+      let layerTitle = layer.options.title;
+      let queryable = layer.queryable !== undefined ? layer.queryable : false;
+      let opaque = layer.opaque !== undefined ? layer.opaque : false;
+      if (layerTitle === undefined) layerTitle = layerNameOnly;
+
+      let styleUrl = "";
+      // STATIC IMAGE LEGEND
+      let legendSizeOverride = false;
+  
+      if (legendSizeOverride && styleUrl !== "" ) {
+        const legendSize = layer.Style !== undefined ? layer.Style.Legend.size : [20,20];
+        styleUrl = styleUrl.replace("width=20", `width=${legendSize[0]}`).replace("height=20", `height=${legendSize[1]}`);
+      }
+      const serverUrl = group.url;
+      const metadataUrl = `${layer.url}?f=json`;
+  
+      // LIVE LAYER
+      let liveLayer = layer.options.isLiveLayer;
+      // DOWNLOAD
+      let canDownload = layer.options.canDownload !== undefined ? layer.options.canDownload : false;
+      // IDENTIFY DISPLAY NAME
+      let identifyDisplayName = layer.options.idenfityName;
+      //DISPLAY NAME
+      let displayName = layer.options.displayName;
+      if (displayName === "" || displayName === undefined) displayName = layerTitle;
+  
+      if (group.prefix !== undefined) {
+        displayName = group.prefix !== "" ? group.prefix + " - " + displayName : displayName;
+      }
+      // ATTRIBUTE TABLE
+      let noAttributeTable = layer.options.noAttributeTable !== undefined ? layer.options.noAttributeTable :false;  
+      
+      // TOC DISPLAY NAME
+      const tocDisplayName = layerTitle;
+  
+      // OPACITY
+      let opacity = layer.options.opacity;
+  
+      //IDENTIFY
+      let identifyTitleColumn = layer.options.identifyTitleColumn;
+      let identifyIdColumn = layer.options.identifyIdColumn;
+      //DISCLAIMER
+      let disclaimerTitle = layer.options.disclaimerTitle;
+      let disclaimerUrl = layer.options.disclaimerUrl;
+      let disclaimer = undefined;
+      if (disclaimerUrl !== "" || disclaimerTitle !== "") {
+        disclaimer = { title: disclaimerTitle, url: disclaimerUrl };
+      }
+      const minScale = layer.options.minScale;
+      const maxScale = layer.options.maxScale;
+      // SET VISIBILITY
+      let layerVisible = false;
+      if (savedLayers !== undefined && savedLayers !== null && savedLayers.length !== 0) {
+        const savedLayer = savedLayers[layerNameOnly];
+        if (savedLayer !== undefined){
+          if (savedLayer.visible) layerVisible = true;
+          if (savedLayer.opacity) opacity = savedLayer.opacity;
+          if (savedLayer.index) layerIndex = savedLayer.index;
+    
+        } 
+      } 
+      else if (visibleLayers.includes(layerNameOnly)) 
+      { 
+        layerVisible = true;
+      }
+      //console.log(group.value, layerNameOnly, visibleLayers.includes(layerNameOnly));
+      // LAYER PROPS
+      LayerHelpers.getLayer(
+        {
+          sourceType:OL_DATA_TYPES.ImageArcGISRest,
+          source:"rest", 
+          projection: `EPSG:${layer.sourceSpatialReference.latestWkid}`,
+          layerName:layer.name, 
+          url:layer.url, 
+          tiled:false, 
+          extent:layer.extent, 
+          name: layer.name, 
+          
+        },
+        (newLayer) => {
+        //const identifyUrl = (url) => `${url}/query?geometry=#GEOMETRY#&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=true&returnTrueCurves=false&returnIdsOnly=false&returnCountOnly=false&returnZ=false&returnM=false&returnDistinctValues=false&returnExtentOnly=false&quantizationParameters=&f=geojson`;
+        const identifyUrl = (options) => `${options.url}/identify?geometry=${options.point}&geometryType=esriGeometryPoint&layers=visible%3A${options.layerId}&sr=3857&datumTransformations=3857&tolerance=${options.tolerance}&mapExtent=${options.extent}&imageDisplay=${options.resolution}&maxAllowableOffset=10&returnGeometry=true&returnFieldName=true&f=json`;
+
+        const wfsUrl = identifyUrl({url:layer.rootUrl, point: '#GEOMETRY#', layerId: layer.id,tolerance: '#TOLERANCE#', extent: '#EXTENT#', resolution: '#RESOLUTION#' });
+        const rootInfoUrl = layer.url;
+          //http://gis.simcoe.ca/arcgis/rest/services/Severn/Severn_OperationalLayers_Dynamic/MapServer/0/
+         newLayer.setVisible(layerVisible);
+        newLayer.setOpacity(opacity);
+        newLayer.setProperties({ 
+            name: layerNameOnly, 
+            displayName: displayName, 
+            tocDisplayName: tocDisplayName,
+            wfsUrl: wfsUrl, 
+            rootInfoUrl: rootInfoUrl, 
+            disableParcelClick: liveLayer, 
+            queryable: queryable, 
+            opaque: opaque, 
+            minScale: minScale,
+            maxScale: maxScale,});
+        if (secureKey !== undefined) newLayer.setProperties({secureKey: secureKey});
+        newLayer.setZIndex(layerIndex);
+        window.map.addLayer(newLayer);
+        let legendHeight = -1;
+        if (layer.legend !== undefined && layer.legend !== null){
+          legendHeight=36;
+          layer.legend.legend.forEach(legendItem => {
+            legendHeight += parseInt(legendItem.height);
+          });
+        }
+        const returnLayer = {
+          name: layerNameOnly, // FRIENDLY NAME
+          height: 30, // HEIGHT OF DOM ROW FOR AUTOSIZER
+          drawIndex: layerIndex, // INDEX USED BY VIRTUAL LIST
+          index: layerIndex, // INDEX USED BY VIRTUAL LIST
+          styleUrl: styleUrl, // WMS URL TO LEGEND SWATCH IMAGE
+          showLegend: false, // SHOW LEGEND USING PLUS-MINUS IN TOC
+          legendHeight: legendHeight, // HEIGHT OF IMAGE USED BY AUTOSIZER
+          legendImage: null, // IMAGE DATA, STORED ONCE USER VIEWS LEGEND
+          legendObj: layer.legend, // ESRI JSON LEGEND OBJECT
+          visible: layerVisible, // LAYER VISIBLE IN MAP, UPDATED BY CHECKBOX
+          layer: newLayer, // OL LAYER OBJECT
+          metadataUrl: metadataUrl, // ROOT LAYER INFO FROM GROUP END POINT
+          opacity: opacity, // OPACITY OF LAYER
+          minScale: minScale, //MinScaleDenominator from geoserver
+          maxScale: maxScale, //MaxScaleDenominator from geoserver
+          liveLayer: liveLayer, // LIVE LAYER FLAG
+          identifyDisplayName: identifyDisplayName, // DISPLAY NAME USED BY IDENTIFY
+          group: group.value,
+          groupName: group.label,
+          canDownload: canDownload, // INDICATES WETHER LAYER CAN BE DOWNLOADED
+          displayName: displayName, // DISPLAY NAME USED BY IDENTIFY
+          identifyTitleColumn: identifyTitleColumn,
+          identifyIdColumn: identifyIdColumn,
+          disclaimer: disclaimer,
+          wfsUrl: wfsUrl,
+          tocDisplayName: tocDisplayName, // DISPLAY NAME USED FOR TOC LAYER NAME
+          serverUrl: serverUrl + "/", // BASE URL FOR GEOSERVER
+          noAttributeTable: noAttributeTable, // IF TRUE, DISABLE ATTRIBUTE TABLE
+          secured: secured,
+          // elementId: layerNameOnly + "_" + group.value,
+        };
+        callback(returnLayer);
+      });
+    }
+}
+

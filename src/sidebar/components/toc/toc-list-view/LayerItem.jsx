@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import * as helpers from "../../../../helpers/helpers";
 import Highlighter from "react-highlight-words";
+import LayerLegend from "../common/LayerLegend";
 import "./LayerItem.css";
 class LayerItem extends Component {
   _isMounted = false;
@@ -26,11 +27,7 @@ class LayerItem extends Component {
 
   setVisibleScale = () => {
     const { layerInfo } = this.props;
-
-    //if (!layerInfo.visible) return;
-
     const mapResolution = window.map.getView().getResolution();
-    //let isVisibleAtScale = true;
     let minScale = 0;
     let maxScale = 100000000000;
     if (layerInfo.minScale !== undefined) minScale = layerInfo.minScale;
@@ -62,9 +59,9 @@ class LayerItem extends Component {
         <div className={containerClassName}>
           <div className="sc-toc-item-plus-minus-container" onClick={() => this.props.onLegendToggle(layerInfo, this.props.group)}>
             <img
-              src={this.props.layerInfo.styleUrl === "" ? images["no-legend.png"] : this.props.layerInfo.showLegend ? images["minus.png"] : images["plus.png"]}
+              src={this.props.layerInfo.styleUrl === "" && (this.props.layerInfo.legendObj === undefined || this.props.layerInfo.legendObj === null) ? images["no-legend.png"] : this.props.layerInfo.showLegend ? images["minus.png"] : images["plus.png"]}
               alt="legend toggle"
-              title={this.props.layerInfo.styleUrl === "" ? "No Legend Available" : this.props.layerInfo.showLegend ? "Hide Legend" : "Show Legend"}
+              title={this.props.layerInfo.styleUrl === "" && (this.props.layerInfo.legendObj === undefined || this.props.layerInfo.legendObj === null) ? "No Legend Available" : this.props.layerInfo.showLegend ? "Hide Legend" : "Show Legend"}
             />
             <div className="sc-toc-item-plus-minus-sign" />
             <div className="sc-toc-item-lines-expanded" />
@@ -103,10 +100,8 @@ class LayerItem extends Component {
         <div className={layerInfo.showLegend ? "sc-toc-layer-info-container" : "sc-hidden"}>
           <div className="sc-toc-item-layer-info-container-open-vertical-lines" />
           <div className="sc-toc-item-layer-info-container-open-horizontal-lines" />
-          <div className="sc-toc-item-layer-info-legend">
-            <div className="sc-toc-item-layer-info-border" />
-            <img src={layerInfo.legendImage} alt="style" />
-          </div>
+          <LayerLegend legend={layerInfo.legendObj} image={layerInfo.legendImage} key={helpers.getUID()} />
+          
         </div>
       </div>
     );
