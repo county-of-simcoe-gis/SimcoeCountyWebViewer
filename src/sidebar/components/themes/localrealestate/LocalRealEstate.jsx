@@ -108,7 +108,13 @@ class LocalRealEstate extends Component {
 
   saveStateToStorage = () => {
     const stateClone = Object.assign([], this.state.viewedItems);
-    localStorage.setItem(this.storageKey, JSON.stringify(stateClone));
+
+    try{
+      localStorage.setItem(this.storageKey, JSON.stringify(stateClone));
+    }catch(e){
+      console.log(e)
+    }
+    
   };
 
   // GET STORAGE
