@@ -886,7 +886,11 @@ export function stringDivider(str, width, spaceReplacer) {
 }
 
 export function saveToStorage(storageKey, item) {
-  localStorage.setItem(storageKey, JSON.stringify(item));
+  try{
+    localStorage.setItem(storageKey, JSON.stringify(item));
+  }catch(e){
+    console.log(e)
+  }
 }
 
 export function appendToStorage(storageKey, item, limit = undefined) {
@@ -897,8 +901,12 @@ export function appendToStorage(storageKey, item, limit = undefined) {
   if (limit !== undefined) {
     if (items.length >= limit) items.pop();
   }
-
-  localStorage.setItem(storageKey, JSON.stringify(items));
+  try{
+    localStorage.setItem(storageKey, JSON.stringify(items));
+  }
+  catch(e){
+    console.log(e)
+  }
 }
 
 export function getItemsFromStorage(key) {
