@@ -110,103 +110,83 @@ class Sidebar extends Component {
     // IMPORT THEMES FROM CONFIG
     const themes = mainConfig.sidebarThemeComponents;
     themes.map(async (component) => await this.addComponent(component, "themes"));
-    if (!this.props.mapLoading && !this.props.headerLoading) {
-      this.initToolAndThemeUrlParameter();
-    }else{
-      setTimeout(()=>this.initToolAndThemeUrlParameter(), 1500);
-    }
     // HANDLE ADVANCED MODE PARAMETER
     const url = new URL(window.location.href.toUpperCase());
     const viewerMode = url.searchParams.get("MODE");
     window.sidebarOpen = false;
     if (viewerMode !== null && viewerMode === "ADVANCED") {
-      this.togglePanelVisibility();
-      window.sidebarOpen = true;
-      this.setState({ sidebarOpen: true });
+      this.sidebarVisiblityEventHandler("OPEN");
+
     }
+    
+    this.initToolAndThemeUrlParameter(()=>{
+      // TAB PARAMETER
+      const tabNameParameter = helpers.getURLParameter("TAB");
+      if (tabNameParameter != null) {
+        this.sidebarVisiblityEventHandler("OPEN",()=>{
+          this.activateTab(tabNameParameter.toLowerCase());
+        });
+      }
+      // LISTEN FOR OPEN OR CLOSE FROM OTHER COMPONENTS (CLOSE OR OPEN)
+      window.emitter.addListener("setSidebarVisiblity", (openOrClose) => this.sidebarVisiblityEventHandler(openOrClose));
 
-    // TAB PARAMETER
-    const tabNameParameter = helpers.getURLParameter("TAB");
-    if (tabNameParameter != null) {
-      this.togglePanelVisibility();
-      window.sidebarOpen = true;
-      this.setState({ sidebarOpen: true });
-      this.activateTab(tabNameParameter.toLowerCase());
-    }
+      // LISTEN FOR TAB ACTIVATION FROM OTHER COMPONENTS
+      window.emitter.addListener("activateTab", (tabName) => this.activateTab(tabName));
 
-    // LISTEN FOR OPEN OR CLOSE FROM OTHER COMPONENTS (CLOSE OR OPEN)
-    window.emitter.addListener("setSidebarVisiblity", (openOrClose) => this.sidebarVisiblityEventHandler(openOrClose));
+      // LISTEN FOR REPORT LOADING
+      window.emitter.addListener("loadReport", (content) => this.loadReport(content));
 
-    // LISTEN FOR TAB ACTIVATION FROM OTHER COMPONENTS
-    window.emitter.addListener("activateTab", (tabName) => this.activateTab(tabName));
-
-    // LISTEN FOR REPORT LOADING
-    window.emitter.addListener("loadReport", (content) => this.loadReport(content));
-
-    // LISTEN FOR ITEM ACTIVATION FROM OTHER COMPONENTS
-    window.emitter.addListener("activateSidebarItem", (name, type) => {
-      this.activateItemFromEmmiter(name, type);
+      // LISTEN FOR ITEM ACTIVATION FROM OTHER COMPONENTS
+      window.emitter.addListener("activateSidebarItem", (name, type) => {
+        this.activateItemFromEmmiter(name, type);
+      });
+      window.emitter.emit("sidebarLoaded");
     });
-    window.emitter.emit("sidebarLoaded");
+    
+    
   }
 
-  initToolAndThemeUrlParameter = () => {
-    var i = 0;
-    var isLoading = false;
-    for (i = 1; i <= 100; i++) {
-      if (isLoading) return;
-      // eslint-disable-next-line
-      ((index) => {
-        setTimeout(() => {
-          if (isLoading) return;
-
-          if (mainConfig.sidebarToolComponents.length + mainConfig.sidebarThemeComponents.length === this.state.toolComponents.length) {
-            isLoading = true;
-            
-            // HANDLE ADVANCED MODE PARAMETER
-            var toolParam = helpers.getURLParameter("TOOL");
-            var themeParam = helpers.getURLParameter("THEME");
-            
-            if (toolParam != null && mainConfig.sidebarToolComponents.find(item => item.name.toLowerCase() === toolParam.toLowerCase())) {
-              window.sidebarOpen = true;
-              this.setState({ sidebarOpen: true });
-              this.togglePanelVisibility();
-
-              // TRIED TO USE PROMISES...
-              this.activateItemFromEmmiter(toolParam, "tools");
-            } else if (themeParam != null && mainConfig.sidebarThemeComponents.find(item => item.name.toLowerCase() === themeParam.toLowerCase())) {
-              window.sidebarOpen = true;
-              this.setState({ sidebarOpen: true });
-              this.togglePanelVisibility();
-
-              // TRIED TO USE PROMISES...
-              this.activateItemFromEmmiter(themeParam, "themes");
-            }else{
-              const queryString = window.location.search;
-              if (mainConfig.sidebarShortcutParams && queryString.length > 0){
-                const urlParams = new URLSearchParams(queryString.toLowerCase());
-                mainConfig.sidebarShortcutParams.forEach((item)=> {
-                  var shortcutParam = urlParams.get(item.url_param.toLowerCase());
-                  if (shortcutParam !== null){
-                    if (item.type === "search"){
-                      window.emitter.emit("searchItem", item.component, shortcutParam);
-                    }
-                    if (item.matchValue === undefined || item.matchValue.toLowerCase() === shortcutParam.toLowerCase()){
-                      window.sidebarOpen = true;
-                      this.setState({ sidebarOpen: true });
-                      this.togglePanelVisibility();
-
-                      // TRIED TO USE PROMISES...
-                      this.activateItemFromEmmiter(item.component, item.type);
-                    }
-                    
-                  }
+  initToolAndThemeUrlParameter = (callback) => {
+    if (mainConfig.sidebarToolComponents.length + mainConfig.sidebarThemeComponents.length === this.state.toolComponents.length && !this.props.mapLoading && !this.props.headerLoading) {      
+      // HANDLE ADVANCED MODE PARAMETER
+      callback();
+      const queryString = window.location.search; 
+      if (queryString !== ""){
+        const urlParams = new URLSearchParams(queryString.toLowerCase());
+        const item = undefined;
+        let shortcuts = [];
+        let params = [];
+        mainConfig.sidebarToolComponents.map((item) => {
+          shortcuts.push({"name": item.name.toLowerCase(), "component":item.name,"type":"tools", "url_param": "TOOL" });
+          if (!params.includes("tool")) params.push("tool");
+        });
+        mainConfig.sidebarThemeComponents.map((item) => {
+          shortcuts.push({"name": item.name.toLowerCase(), "component":item.name,"type":"themes", "url_param": "THEME" })
+          if (!params.includes("theme")) params.push("theme");
+        });
+        mainConfig.sidebarShortcutParams.map((item) => {
+          shortcuts.push({"name": item.matchValue , "component":item.component,"type":item.type.toLowerCase(), "url_param": item.url_param.toLowerCase() });
+          if (!params.includes(item.url_param.toLowerCase())) params.push(item.url_param.toLowerCase());
+        });
+        params.map(param=>{
+          var shortcutParam = urlParams.get(param);
+          if (shortcutParam !== null){
+            const shortcut = shortcuts.filter(item => (item.name === undefined && param.toLowerCase() === item.url_param.toLowerCase()) 
+                                                        || (item.name !== undefined && item.name.toLowerCase() === shortcutParam.toLowerCase()))[0];
+            if (shortcut !== undefined){
+              if (shortcut.type === "search"){
+                window.emitter.emit("searchItem", shortcut.component, shortcutParam, true);
+              }else{
+                this.sidebarVisiblityEventHandler("OPEN",()=>{
+                  this.activateItemFromEmmiter(shortcut.component, shortcut.type);
                 });
               }
             }
           }
-        }, i * 100);
-      })(i);
+        });
+      }
+    }else{
+      setTimeout(()=>{this.initToolAndThemeUrlParameter(callback);},50);
     }
   };
 
@@ -231,13 +211,13 @@ class Sidebar extends Component {
         //CLEAR LOADED TOOL
         let activeTabComponents = this.state.activeTabComponents;
         activeTabComponents.tools.loadedComponent = null;
-        this.setState({ activeTabComponents: activeTabComponents });
+        this.setState({ activeTabComponents: activeTabComponents },()=>{
+          // ASK TOOLS TO CLOSE
+          window.emitter.emit("closeToolsOrThemes", type);
 
-        // ASK TOOLS TO CLOSE
-        window.emitter.emit("closeToolsOrThemes", type);
-
-        // ACTIVATE THE NEW ITEM
-        this.activateSidebarItem(name, type);
+          // ACTIVATE THE NEW ITEM
+          this.activateSidebarItem(name, type);
+        });
       });
     } else if (type === "themes") {
       // SAME THEME WAS SELECTED
@@ -281,26 +261,37 @@ class Sidebar extends Component {
     else console.log("NO VALID TAB FOUND");
   }
 
-  sidebarVisiblityEventHandler(openOrClose) {
+  sidebarVisiblityEventHandler(openOrClose, callback = undefined) {
     // CHECK IF NEED TO DO ANYTHING
-    if ((openOrClose === "CLOSE" && window.sidebarOpen === false) || (openOrClose === "OPEN" && window.sidebarOpen === true)) return;
-
-    // TOGGLE IT
-    this.togglePanelVisibility();
+    if ((openOrClose === "CLOSE" && window.sidebarOpen === false) || (openOrClose === "OPEN" && window.sidebarOpen === true)){
+      if (callback === undefined) return;
+      else callback();
+    } else{
+      // TOGGLE IT
+      this.togglePanelVisibility(callback);
+    }
+    
   }
 
-  togglePanelVisibility() {
+  togglePanelVisibility(callback=undefined) {
     //  PANEL IN AND OUT CLASSES
     if (window.sidebarOpen) {
       window.sidebarOpen = false;
-      this.setState({ sidebarOpen: false });
+      this.setState({ sidebarOpen: false }, ()=>{
+        // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
+        window.emitter.emit("sidebarChanged", window.sidebarOpen);
+        if (callback !== undefined) callback();
+      });
     } else {
       window.sidebarOpen = true;
-      this.setState({ sidebarOpen: true });
+      this.setState({ sidebarOpen: true }, ()=>{
+        // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
+        window.emitter.emit("sidebarChanged", window.sidebarOpen);
+        if (callback !== undefined) callback();
+      });
     }
 
-    // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
-    window.emitter.emit("sidebarChanged", window.sidebarOpen);
+
   }
 
   // TOOL AND THEME ITEMS CLICK
@@ -364,11 +355,11 @@ class Sidebar extends Component {
   }
 
   slimSidebarButtonClick = (name) => {
-    this.togglePanelVisibility();
-    window.sidebarOpen = true;
-    this.setState({ sidebarOpen: true });
-    this.activateTab(name);
-    helpers.addAppStat("Sidebar Slim", name);
+    this.sidebarVisiblityEventHandler("OPEN", ()=>{
+      this.activateTab(name);
+      helpers.addAppStat("Sidebar Slim", name);
+    });
+    
   };
 
   onTabSelect = (tabIndex) => {
