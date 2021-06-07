@@ -82,7 +82,7 @@ class Search extends Component {
     window.emitter.addListener("tocLoaded", () => this.onInitialSearch()); 
 
     // LISTEN FOR EXTERNAL COMPONENT SEARCH
-    window.emitter.addListener("searchItem", (searchType,searchText) => this.onSearch(searchType, searchText)); 
+    window.emitter.addListener("searchItem", (searchType,searchText,hidden=false) => this.onSearch(searchType, searchText,hidden)); 
 
     this.state = {
       value: "",
@@ -159,17 +159,17 @@ class Search extends Component {
     this.onSearch(search_type,search)
   }
 
-  onSearch = (search_type=undefined, search=undefined) => {
+  onSearch = (search_type=undefined, search=undefined, hidden=false) => {
     if (!search && search===null) return;
     if (!search_type && search_type === null){
       search_type = "All";
     }
-    this.setState({value:search, selectedType: { label: search_type, value: search_type } });
+    if (!hidden) this.setState({value:search, selectedType: { label: search_type, value: search_type } });
     helpers.getJSON(encodeURI(searchURL(apiUrl, search, search_type,undefined, 1)), responseJson => { 
       if(responseJson[0] !== undefined 
           && responseJson[0].location_id !== null 
           && responseJson[0].location_id !== undefined) {
-        helpers.getJSON(searchInfoURL(apiUrl, responseJson[0].location_id), result => this.jsonCallback(result));
+        helpers.getJSON(searchInfoURL(apiUrl, responseJson[0].location_id), result => this.jsonCallback(result,hidden));
         
       }
     });
@@ -270,8 +270,8 @@ class Search extends Component {
     }
   }
 
-  jsonCallback(result) {
-    this.saveStateToStorage(result);
+  jsonCallback(result, hidden=false) {
+    if (!hidden) this.saveStateToStorage(result);
 
     // EMTI SEARCH COMPLETE
     window.emitter.emit("searchComplete", result);
@@ -279,20 +279,21 @@ class Search extends Component {
     this.initsearchLayers();
 
     // SET STATE CURRENT ITEM
-    this.setState({ searchResults: [result] });
+    if (!hidden) this.setState({ searchResults: [result] });
 
     // GET GEOJSON VALUES
     const fullFeature = helpers.getFeatureFromGeoJSON(result.geojson);
     let pointFeature = helpers.getFeatureFromGeoJSON(result.geojson_point);
     pointFeature.setProperties({ isPlaceOrGeocode: false });
 
-    // SET SOURCE
-    searchGeoLayer.getSource().addFeature(fullFeature);
-    searchIconLayer.getSource().addFeature(pointFeature);
+    if (!hidden){
+      // SET SOURCE
+      searchGeoLayer.getSource().addFeature(fullFeature);
+      searchIconLayer.getSource().addFeature(pointFeature);
 
-    searchGeoLayer.setZIndex(300);
-    searchIconLayer.setZIndex(300);
-
+      searchGeoLayer.setZIndex(300);
+      searchIconLayer.setZIndex(300);
+    }
     // SET STYLE AND ZOOM
     if (result.geojson.indexOf("Point") !== -1) {
       searchGeoLayer.setStyle(styles["point"]);
@@ -305,7 +306,7 @@ class Search extends Component {
     } else {
       searchGeoLayer.setStyle(styles["poly"]);
       window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
-      window.map.getView().setZoom(window.map.getView().getZoom() - 2);
+      window.map.getView().setZoom(window.map.getView().getZoom() - 1);
     }
 
     //fullFeature.setStyle(myMapsHelpers.getDefaultDrawStyle([255, 0, 0, 0.8], false, 2, fullFeature.getGeometry().getType()));
@@ -339,7 +340,11 @@ class Search extends Component {
     savedSearches.unshift(item);
 
     if (savedSearches.length >= 25) savedSearches.pop();
-    localStorage.setItem(this.storageKey, JSON.stringify(savedSearches));
+    try{
+      localStorage.setItem(this.storageKey, JSON.stringify(savedSearches));
+    }catch(e){
+      console.log(e)
+    }
   };
 
   // GET STORAGE
