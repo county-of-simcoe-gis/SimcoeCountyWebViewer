@@ -1299,3 +1299,34 @@ export function getBase64FromImageUrl(url, callback) {
 
   img.src = url;
 }
+
+export function waitForLoad (items, startTime=Date.now(), timeout = 30, callback){
+  if ((startTime+(timeout*1000)) <= Date.now()){
+    showMessage("Timeout", "Items Failed to load in a timely manner. Please reload the page", messageColors.red);
+    console.error("timeout loading",items);
+  }else{
+    if (isLoaded(items)) {
+      console.log("wait for load",items, Date.now() - startTime);
+      callback();
+    }else{
+      setTimeout(()=>waitForLoad(items, startTime, timeout, callback),50);
+    }
+  }
+}
+export function isLoaded(items){
+  if (Array.isArray(items)){
+    let returnResult = true;
+    items.forEach(item => {
+      if (returnResult) returnResult = window.loaded.includes(item.toLowerCase());
+    });
+    return returnResult;
+  }else{
+    return window.loaded.includes(items.toLowerCase());
+  }
+}
+export function addIsLoaded(item){
+  if (!window.loaded.includes(item.toLowerCase())) window.loaded.push(item.toLowerCase());
+}
+export function removeIsLoaded(item){
+  if (window.loaded.includes(item.toLowerCase())) delete window.loaded[item.toLowerCase()];
+}

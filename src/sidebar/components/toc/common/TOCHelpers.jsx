@@ -426,7 +426,10 @@ export function getGroupsESRI(options, callback) {
       }
     });
     if (defaultGroup === undefined || defaultGroup === null) defaultGroup = groups[0];
-    if (!options.isReset) window.emitter.emit("tocLoaded", null);
+    if (!options.isReset) {
+      window.emitter.emit("tocLoaded", null);
+      helpers.addIsLoaded("toc");
+    }
     callback({groups:groups, defaultGroupName:defaultGroup.value});
   });
 
@@ -571,7 +574,10 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured=false,
    
     if (defaultGroup === undefined || defaultGroup === null) defaultGroup = groups[0];
 
-    if (!isReset) window.emitter.emit("tocLoaded", null);
+    if (!isReset) {
+      window.emitter.emit("tocLoaded", null);
+      helpers.addIsLoaded("toc");
+    }
 
     callback({groups:groups, defaultGroupName: defaultGroupName});
   });

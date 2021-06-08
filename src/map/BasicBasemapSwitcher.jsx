@@ -20,15 +20,12 @@ class BasemapSwitcher extends Component {
       previousIndex: undefined,
       showBaseMapSwitcher:true,
     };
-
-    // LISTEN FOR MAP TO MOUNT
-    window.emitter.addListener("mapLoaded", () => this.onMapLoad());
     // LISTEN FOR CONTROL VISIBILITY CHANGES
     window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control,visible));
   }
   componentDidMount(){
     this.setState({showBaseMapSwitcher:window.mapControls.basemap,toggleService:BasemapConfig.topoServices[1]});
-   
+    helpers.waitForLoad("map",Date.now(),30, ()=>this.onMapLoad());
   }
   onMapLoad() {
     let index = 0;

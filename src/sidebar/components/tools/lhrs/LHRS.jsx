@@ -118,9 +118,9 @@ class LHRS extends Component {
 
   componentDidMount() {
     this._isMounted = true;
-    
-    // LISTEN FOR MAP TO MOUNT
-    window.emitter.addListener("mapLoaded", () => this.onMapLoad());
+    //wait for map to load
+    helpers.waitForLoad("map",Date.now(),30, ()=>this.onMapLoad());
+ 
 
     // DISABLE PROPERTY CLICK
     window.disableParcelClick = true;

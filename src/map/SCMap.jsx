@@ -181,6 +181,7 @@ class SCMap extends Component {
     window.map.once("rendercomplete", (event) => {
       if (!this.initialLoad) {
         window.emitter.emit("mapLoaded");
+        helpers.addIsLoaded("map");
         this.initialLoad = true;
       }
     });

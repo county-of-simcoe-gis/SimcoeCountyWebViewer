@@ -48,8 +48,6 @@ class TOC extends Component {
     // LISTEN FOR MAP LEGEND
     window.emitter.addListener("openLegend", () => this.onOpenLegend());
 
-    // LISTEN FOR MAP TO MOUNT
-    window.emitter.addListener("mapLoaded", () => this.onMapLoad());
     //LISTEN FOR NEW LAYER
     window.emitter.addListener("addCustomLayer", (layer, group, selected, save) => this.addCustomLayer(layer, group, selected, save));
 
@@ -67,6 +65,9 @@ class TOC extends Component {
 //#endregion
   }
  //#region REACT FUNCTIONS
+ componentDidMount() {
+    helpers.waitForLoad("map",Date.now(),30, ()=>this.onMapLoad());
+ }
   componentWillMount() {
     let tocType = helpers.getURLParameter("TOCTYPE");
     if (tocType !== null && tocType !== undefined) {
@@ -191,6 +192,7 @@ loadGroups = (result, isReset, callback) => {
       this.updateLayerCount(defaultGroup.layers.length);
       this.updateLayerVisibility();
       window.emitter.emit("tocLoaded");
+      helpers.addIsLoaded("toc");
       if (callback !== undefined) callback();
     }
   );

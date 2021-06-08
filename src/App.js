@@ -62,12 +62,12 @@ function MapApp(){
   const [mapLoading, setMapLoading] = useState(true);
   const [sidebarLoading, setSidebarLoading] = useState(true);
   const [headerLoading, setHeaderLoading] = useState(true);
-      // LISTEN FOR MAP TO MOUNT
-      window.emitter.addListener("mapLoaded", () => setMapLoading(false));
-      // LISTEN FOR SIDEBAR TO MOUNT
-      window.emitter.addListener("sidebarLoaded", () => setSidebarLoading(false));
-      // LISTEN FOR HEADER TO MOUNT
-      window.emitter.addListener("headerLoaded", () => setHeaderLoading(false));
+  // LISTEN FOR MAP TO MOUNT
+  window.emitter.addListener("mapLoaded", () => setMapLoading(false));
+  // LISTEN FOR SIDEBAR TO MOUNT
+  window.emitter.addListener("sidebarLoaded", () => setSidebarLoading(false));
+  // LISTEN FOR HEADER TO MOUNT
+  window.emitter.addListener("headerLoaded", () => setHeaderLoading(false));
   
   return (
     <div>

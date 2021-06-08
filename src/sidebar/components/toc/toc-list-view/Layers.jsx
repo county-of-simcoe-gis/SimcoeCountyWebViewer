@@ -26,9 +26,6 @@ class Layers extends Component {
       recalcId:"",
     };
 
-    // LISTEN FOR MAP TO MOUNT
-    //window.emitter.addListener("mapLoaded", () => {if (this.props.visible) this.onMapLoad();});
-
     // LISTEN FOR SEARCH RESULT
     window.emitter.addListener("activeTocLayer", (layerItem) => {if (this.props.visible) this.onActivateLayer(layerItem);});
 
