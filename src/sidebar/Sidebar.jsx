@@ -141,6 +141,7 @@ class Sidebar extends Component {
         this.activateItemFromEmmiter(name, type);
       });
       window.emitter.emit("sidebarLoaded");
+      helpers.addIsLoaded("sidebar");
     });
     
     

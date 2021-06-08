@@ -30,31 +30,15 @@ parcelLayer.setZIndex(500);
 class PropertyReportClick extends Component {
   constructor(props) {
     super(props);
-    // LISTEN FOR MAP TO MOUNT
-    //window.emitter.addListener("mapParametersComplete", () => this.onMapLoad());
-    // LISTEN FOR MAP TO MOUNT
-    window.emitter.addListener("mapLoaded",() => this.onMapLoad());
-    window.emitter.addListener("tocLoaded", () => this.setState({ tocLoaded: true }));
-
-    this.onMapLoad = this.onMapLoad.bind(this);
-
+    //wait for toc and map to load
+    helpers.waitForLoad(["map","toc"],Date.now(),30, ()=>this.onMapLoad());
     this.state = {
       propInfo: null,
-      feature: null,
-      tocLoaded:false
+      feature: null
     };
   }
 
   onMapLoad() {
-    //wait for toc to finish loading
-    if (!this.state.tocLoaded){
-      setTimeout(() => {
-        this.onMapLoad();
-      }, 100);
-      return;
-    }
-
-
     window.map.addLayer(parcelLayer);
 
     // HANDLE URL PARAMETERS

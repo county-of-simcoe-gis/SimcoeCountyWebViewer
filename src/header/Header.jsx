@@ -20,6 +20,7 @@ class Header extends Component {
 
   componentDidMount() {
     window.emitter.emit("headerLoaded");
+    helpers.addIsLoaded("header");
   }
 
   burgerButtonHandler() {

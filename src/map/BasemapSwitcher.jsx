@@ -32,13 +32,12 @@ class BasemapSwitcher extends Component {
       activeButton: BasemapConfig.defaultButton,
     };
 
-    // LISTEN FOR MAP TO MOUNT
-    window.emitter.addListener("mapLoaded", () => this.onMapLoad());
     // LISTEN FOR CONTROL VISIBILITY CHANGES
     window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control, visible));
   }
   componentDidMount() {
     this.setState({ showBaseMapSwitcher: window.mapControls.basemap });
+    helpers.waitForLoad("map",Date.now(),30, ()=>this.onMapLoad());
   }
   // CREATE YEAR MARKS ON THE SLIDER
   getImagerySliderMarks() {
@@ -92,25 +91,6 @@ class BasemapSwitcher extends Component {
         layerList.push(newLayer);
         index++;
       });
-      // var layer = helpers.getSimcoeTileXYZLayer(service.url);
-      // if (service.fullExtent){
-      //   layer.setExtent(layer.fullExtent);
-      // } 
-      // // LAYER PROPS
-      // layer.setProperties({ index: index, name: service.name });
-      // layer.setZIndex(index + 1);
-      // layer.setVisible(false);
-
-      // // SET MAIN LAYER VISIBLE
-      // if (BasemapConfig.imageryServices.length - 1 === index) {
-      //   layer.setVisible(true);
-      //   this.setState({ imagerySliderValue: index });
-      // }
-
-      // // ADD THE LAYER
-      // window.map.addLayer(layer);
-      // layerList.push(layer);
-      // index++;
     });
 
     this.setState({ imageryLayers: layerList });
