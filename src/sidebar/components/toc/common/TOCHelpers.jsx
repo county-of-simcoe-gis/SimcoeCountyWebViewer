@@ -1128,14 +1128,23 @@ export function updateLayerIndex(layers, callback=undefined) {
 }
 
 export function getLayerInfo(layerInfo, callback) {
-  helpers.getJSON(layerInfo.metadataUrl.replace("http:", "https:"), (result) => {
+  const params = {};
+  const secureKey = layerInfo.layer !== undefined ? layerInfo.layer.get("secureKey") : undefined;
+  if (secureKey !== undefined) {
+    const headers = {};
+    headers[secureKey]="GIS";
+    params["headers"]=headers;
+  }
+  helpers.getJSONWithParams(layerInfo.metadataUrl.replace("http:", "https:"),params, (result) => {
     const fullInfoUrl = result.layer.resource.href
       .replace("http:", "https:")
       .split("+")
       .join("%20");
-    helpers.getJSON(fullInfoUrl, (result) => {
-      result.featureType.fullUrl = fullInfoUrl.replace("http:", "https:");
-      callback(result);
+    helpers.getJSONWithParams(fullInfoUrl, params,(fullInfoResult) => {
+      if (fullInfoResult.featureType === undefined) fullInfoResult["featureType"] = {};
+      fullInfoResult.featureType.fullUrl = fullInfoUrl.replace("http:", "https:");
+      fullInfoResult["requestParams"]=params;
+      callback(fullInfoResult);
     });
   });
 }

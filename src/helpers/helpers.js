@@ -521,6 +521,19 @@ export function getJSON(url, callback) {
     });
 }
 
+// GET JSON (NO WAITING)
+export function getJSONWithParams(url, params=undefined, callback) {
+  return fetch(url,params)
+    .then((response) => response.json())
+    .then((responseJson) => {
+      // CALLBACK WITH RESULT
+      if (callback !== undefined) callback(responseJson);
+    })
+    .catch((error) => {
+      console.error("Error: ", error, "URL:", url);
+    });
+}
+
 // GET JSON WAIT
 export async function getJSONWait(url, callback) {
   let data = await await fetch(url)

@@ -10,6 +10,7 @@ import Portal from "../../../../helpers/Portal.jsx";
 import FloatingMenu, { FloatingMenuItem } from "../../../../helpers/FloatingMenu.jsx";
 import * as TOCHelpers from "./TOCHelpers.jsx";
 import TOCConfig from "./TOCConfig.json";
+import LayerInfoApp from "../../../../layerInfo/App";
 
 
 class LayerOptionsMenu extends Component {
@@ -77,8 +78,12 @@ onMenuItemClick = (action, layerInfo) => {
       else TOCHelpers.getLayerInfo(layerInfo, (result) => {
         if (helpers.isMobile()) {
           window.emitter.emit("setSidebarVisiblity", "CLOSE");
-          helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl, false, "full");
-        } else helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl);
+          helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl}  params={result.requestParams} />, false, "normal", false);
+          //helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl, false, "full");
+        } else {
+          //helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl);
+          helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} />, false, "normal", false);
+        }
       });
       helpers.addAppStat("Metadata", layerInfo.name);
       break;
@@ -113,8 +118,10 @@ onMenuItemClick = (action, layerInfo) => {
           helpers.addAppStat("Download", layerInfo.name);
           if (helpers.isMobile()) {
             window.emitter.emit("setSidebarVisiblity", "CLOSE");
-            helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl, false, "full");
-          } else helpers.showURLWindow(TOCConfig.layerDownloadURL + result.featureType.fullUrl);
+            helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} showDownload={1} />, false, "normal", false);
+          } else {
+            helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} showDownload={1} />, false, "normal", false);
+          } 
         }
       });
       break;
