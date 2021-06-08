@@ -9,6 +9,8 @@ import Header from "./header/Header";
 import Sidebar from "./sidebar/Sidebar";
 import SCMap from "./map/SCMap";
 import LegendApp from "./legend/App";
+import LayerInfoApp from "./layerInfo/App";
+
 import "./helpers/SC.css";
 import mainConfig from "./config.json";
 import * as helpers from "./helpers/helpers";
@@ -44,7 +46,10 @@ class App extends Component {
         <Route path="/legend">
           <LegendApp />
         </Route>
-         <Route path="/public">
+        <Route path="/layerInfo">
+          <LayerInfoApp />
+        </Route>
+        <Route path="/public">
           <MapApp />
         </Route>
         <Route path="/">

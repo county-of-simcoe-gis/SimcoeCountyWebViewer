@@ -499,7 +499,7 @@ export class LayerHelpers {
         break;
       case "wfs":
         const type = sourceType === OL_DATA_TYPES.GeoJSON ? "application/json" : sourceType;
-        url = /^((http)|(https))(:\/\/)/.test(url) ? url : "http://" + url;
+        url = /^((http)|(https))(:\/\/)/.test(url) ? url : "https://" + url;
         url = /\?/.test(url) ? url + "&" : url + "?";
         url = url + "SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=" + layerName + "&SRSNAME=" + projection + "&OUTPUTFORMAT=" + type;
         if (tiled)
