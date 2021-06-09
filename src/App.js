@@ -9,6 +9,8 @@ import Header from "./header/Header";
 import Sidebar from "./sidebar/Sidebar";
 import SCMap from "./map/SCMap";
 import LegendApp from "./legend/App";
+import LayerInfoApp from "./layerInfo/App";
+
 import "./helpers/SC.css";
 import mainConfig from "./config.json";
 import * as helpers from "./helpers/helpers";
@@ -16,7 +18,7 @@ import LoadingScreen from "./helpers/LoadingScreen.jsx";
 import ReactGA from "react-ga";
 import packageJson from '../package.json';
 
-const enableAnalytics = helpers.getURLParameter("ANALYTICS") !== "OFF";
+const enableAnalytics = helpers.getURLParameter("ANALYTICS") !== "off";
 if (mainConfig.googleAnalyticsID !== undefined && mainConfig.googleAnalyticsID !== "" && enableAnalytics)  {
   ReactGA.initialize(mainConfig.googleAnalyticsID);
   ReactGA.pageview(window.location.pathname + window.location.search);
@@ -44,7 +46,10 @@ class App extends Component {
         <Route path="/legend">
           <LegendApp />
         </Route>
-         <Route path="/public">
+        <Route path="/layerInfo">
+          <LayerInfoApp />
+        </Route>
+        <Route path="/public">
           <MapApp />
         </Route>
         <Route path="/">
@@ -62,12 +67,12 @@ function MapApp(){
   const [mapLoading, setMapLoading] = useState(true);
   const [sidebarLoading, setSidebarLoading] = useState(true);
   const [headerLoading, setHeaderLoading] = useState(true);
-      // LISTEN FOR MAP TO MOUNT
-      window.emitter.addListener("mapLoaded", () => setMapLoading(false));
-      // LISTEN FOR SIDEBAR TO MOUNT
-      window.emitter.addListener("sidebarLoaded", () => setSidebarLoading(false));
-      // LISTEN FOR HEADER TO MOUNT
-      window.emitter.addListener("headerLoaded", () => setHeaderLoading(false));
+  // LISTEN FOR MAP TO MOUNT
+  window.emitter.addListener("mapLoaded", () => setMapLoading(false));
+  // LISTEN FOR SIDEBAR TO MOUNT
+  window.emitter.addListener("sidebarLoaded", () => setSidebarLoading(false));
+  // LISTEN FOR HEADER TO MOUNT
+  window.emitter.addListener("headerLoaded", () => setHeaderLoading(false));
   
   return (
     <div>

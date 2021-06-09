@@ -140,6 +140,13 @@ export class LayerHelpers {
     const viewResolution = window.map.getView().getResolution();
     const isArcGISLayer = LayerHelpers.getLayerSourceType(layer.getSource())=== OL_DATA_TYPES.ImageArcGISRest;
     var url = isArcGISLayer ? layer.get("wfsUrl") : layer.getSource().getFeatureInfoUrl(coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
+    const params = {};
+    const secureKey = layer.get("secureKey");
+    if (secureKey !== undefined) {
+      const headers = {};
+      headers[secureKey]="GIS";
+      params["headers"]=headers;
+    }
     if (isArcGISLayer) {
       const arcgisResolution = `${window.map.getSize()[0]},${window.map.getSize()[1]},96`;
       const extent = window.map.getView().calculateExtent();
@@ -148,7 +155,7 @@ export class LayerHelpers {
       url = url.replace('#GEOMETRY#',coordinate ).replace('#TOLERANCE#', tolerance >= 10 ? tolerance : 10   ).replace('#EXTENT#',extent.join(',') ).replace('#RESOLUTION#', arcgisResolution );
     }
     if (url) {
-      await helpers.getJSONWait(url, (result) => {
+      await helpers.getJSONWaitWithParams(url,params, (result) => {
         let features = isArcGISLayer ? LayerHelpers.parseESRIIdentify(result) : new GeoJSON().readFeatures(result);
         if (callback === undefined){
           return (features.length > 0 ? features[0] : undefined);
@@ -162,6 +169,13 @@ export class LayerHelpers {
     const viewResolution = window.map.getView().getResolution();
     const isArcGISLayer = LayerHelpers.getLayerSourceType(layer.getSource())=== OL_DATA_TYPES.ImageArcGISRest;
     var url = isArcGISLayer ? layer.get("wfsUrl") : layer.getSource().getFeatureInfoUrl(coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
+    const params = {};
+    const secureKey = layer.get("secureKey");
+    if (secureKey !== undefined) {
+      const headers = {};
+      headers[secureKey]="GIS";
+      params["headers"]=headers;
+    }
     if (isArcGISLayer) {
       const arcgisResolution = `${window.map.getSize()[0]},${window.map.getSize()[1]},96`;
       const extent = window.map.getView().calculateExtent();
@@ -170,7 +184,7 @@ export class LayerHelpers {
       url = url.replace('#GEOMETRY#',coordinate ).replace('#TOLERANCE#', tolerance >= 10 ? tolerance : 10 ).replace('#EXTENT#',extent.join(',') ).replace('#RESOLUTION#', arcgisResolution );
     }
     if (url) {
-      helpers.getJSON(url, (result) => {
+      helpers.getJSONWithParams(url,params, (result) => {
         let features = isArcGISLayer ? LayerHelpers.parseESRIIdentify(result) : new GeoJSON().readFeatures(result);
         callback(features.length > 0 ? features[0] : undefined);
       });
@@ -499,7 +513,7 @@ export class LayerHelpers {
         break;
       case "wfs":
         const type = sourceType === OL_DATA_TYPES.GeoJSON ? "application/json" : sourceType;
-        url = /^((http)|(https))(:\/\/)/.test(url) ? url : "http://" + url;
+        url = /^((http)|(https))(:\/\/)/.test(url) ? url : "https://" + url;
         url = /\?/.test(url) ? url + "&" : url + "?";
         url = url + "SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=" + layerName + "&SRSNAME=" + projection + "&OUTPUTFORMAT=" + type;
         if (tiled)

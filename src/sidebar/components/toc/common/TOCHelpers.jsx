@@ -426,7 +426,10 @@ export function getGroupsESRI(options, callback) {
       }
     });
     if (defaultGroup === undefined || defaultGroup === null) defaultGroup = groups[0];
-    if (!options.isReset) window.emitter.emit("tocLoaded", null);
+    if (!options.isReset) {
+      window.emitter.emit("tocLoaded", null);
+      helpers.addIsLoaded("toc");
+    }
     callback({groups:groups, defaultGroupName:defaultGroup.value});
   });
 
@@ -571,7 +574,10 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured=false,
    
     if (defaultGroup === undefined || defaultGroup === null) defaultGroup = groups[0];
 
-    if (!isReset) window.emitter.emit("tocLoaded", null);
+    if (!isReset) {
+      window.emitter.emit("tocLoaded", null);
+      helpers.addIsLoaded("toc");
+    }
 
     callback({groups:groups, defaultGroupName: defaultGroupName});
   });
@@ -615,7 +621,7 @@ export function getFullInfoLayers(layers, callback) {
   for (let index = 0; index < layers.length; index++) {
     const layer = layers[index];
     let newLayer = Object.assign({}, layer);
-    getBase64FromImageUrl(layer.styleUrl, (height, img) => {
+    helpers.getBase64FromImageUrl(layer.styleUrl, (height, img) => {
       newLayer.legendHeight = height;
       newLayer.legendImage = img;
       newLayers.push(newLayer);
@@ -625,67 +631,7 @@ export function getFullInfoLayers(layers, callback) {
   }
 }
 
-export function getBase64FromImageUrlWithParams(url, params=undefined, callback) {
 
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", url);
-  if (params !== undefined){
-    for (const [key, value] of Object.entries(params)) {
-      xhr.setRequestHeader(key, value);
-    }
-  }
-  
-  xhr.onload = function(){
-    var response = xhr.responseText;
-    var binary = ""
-    
-    for(var i=0; i<response.length; i++){
-      binary += String.fromCharCode(response.charCodeAt(i) & 0xff);
-    }
-    var img = new Image();
-
-    img.setAttribute("crossOrigin", "anonymous");
-  
-    img.onload = function() {
-      var canvas = document.createElement("canvas");
-      canvas.width = this.width;
-      canvas.height = this.height;
-  
-      var ctx = canvas.getContext("2d");
-      ctx.drawImage(this, 0, 0);
-  
-      var dataURL = canvas.toDataURL("image/png");
-  
-      callback(this.height, dataURL);
-    };
-
-    img.src = 'data:image/png;base64,' + btoa(binary);
-  }
-  xhr.overrideMimeType('text/plain; charset=x-user-defined');
-  xhr.send();
-}
-
-export function getBase64FromImageUrl(url, callback) {
-  var img = new Image();
-
-  img.setAttribute("crossOrigin", "anonymous");
-
-  img.onload = function() {
-    var canvas = document.createElement("canvas");
-    canvas.width = this.width;
-    canvas.height = this.height;
-
-    var ctx = canvas.getContext("2d");
-    ctx.drawImage(this, 0, 0);
-
-    var dataURL = canvas.toDataURL("image/png");
-
-    //var data = dataURL.replace(/^data:image\/(png|jpg);base64,/, "");
-    callback(this.height, dataURL);
-  };
-
-  img.src = url;
-}
 
 export function isDuplicate(layerList, newLayerName) {
   let returnValue = false;
@@ -1182,14 +1128,23 @@ export function updateLayerIndex(layers, callback=undefined) {
 }
 
 export function getLayerInfo(layerInfo, callback) {
-  helpers.getJSON(layerInfo.metadataUrl.replace("http:", "https:"), (result) => {
+  const params = {};
+  const secureKey = layerInfo.layer !== undefined ? layerInfo.layer.get("secureKey") : undefined;
+  if (secureKey !== undefined) {
+    const headers = {};
+    headers[secureKey]="GIS";
+    params["headers"]=headers;
+  }
+  helpers.getJSONWithParams(layerInfo.metadataUrl.replace("http:", "https:"),params, (result) => {
     const fullInfoUrl = result.layer.resource.href
       .replace("http:", "https:")
       .split("+")
       .join("%20");
-    helpers.getJSON(fullInfoUrl, (result) => {
-      result.featureType.fullUrl = fullInfoUrl.replace("http:", "https:");
-      callback(result);
+    helpers.getJSONWithParams(fullInfoUrl, params,(fullInfoResult) => {
+      if (fullInfoResult.featureType === undefined) fullInfoResult["featureType"] = {};
+      fullInfoResult.featureType.fullUrl = fullInfoUrl.replace("http:", "https:");
+      fullInfoResult["requestParams"]=params;
+      callback(fullInfoResult);
     });
   });
 }
@@ -1203,10 +1158,10 @@ export function sortByAlphaCompare(a, b) {
   return 0;
 }
 export function sortByIndexCompare(a, b) {
-  if (a.drawIndex > b.drawIndex) {
+  if (a.index > b.index) {
     return -1;
   }
-  if (a.drawIndex < b.drawIndex) {
+  if (a.index < b.index) {
     return 1;
   }
   return 0;

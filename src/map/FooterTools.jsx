@@ -10,10 +10,7 @@ const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
 class FooterTools extends Component {
   constructor(props) {
     super(props);
-    // LISTEN FOR MAP TO MOUNT
-    window.emitter.addListener("mapLoaded", () => this.onMapLoad());
 
-    this.onMapLoad = this.onMapLoad.bind(this);
     this.state = {
       scale: "",
       basemapType: "IMAGERY",
@@ -37,6 +34,8 @@ class FooterTools extends Component {
   }
 
   componentDidMount() {
+    helpers.waitForLoad("map", Date.now(), 30, () => this.onMapLoad());
+
     this.setState({ showScale: window.mapControls.scale });
   }
 

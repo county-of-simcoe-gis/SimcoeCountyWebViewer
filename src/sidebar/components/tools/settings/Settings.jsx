@@ -23,9 +23,9 @@ class Settings extends Component {
   }
 
   componentDidMount() {
-    // LISTEN FOR MAP TO MOUNT
-    window.emitter.addListener("mapLoaded", () => this.onMapLoad());
-
+    //wait for map to load
+    helpers.waitForLoad("map",Date.now(),30, ()=>this.onMapLoad());
+  
     if (window.mapControls !== undefined) {
       this.setState({
         controlRotate: window.mapControls.rotate,
@@ -58,7 +58,8 @@ class Settings extends Component {
   }
 
   componentWillUnmount() {
-    window.emitter.addListener("mapLoaded", () => this.onMapLoad());
+    //wait for map to load
+    helpers.waitForLoad("map",Date.now(),30, ()=>this.onMapLoad());
   }
 
   onClose() {

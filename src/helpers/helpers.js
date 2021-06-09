@@ -521,6 +521,36 @@ export function getJSON(url, callback) {
     });
 }
 
+// GET JSON (NO WAITING)
+export function getJSONWithParams(url, params=undefined, callback) {
+  return fetch(url,params)
+    .then((response) => response.json())
+    .then((responseJson) => {
+      // CALLBACK WITH RESULT
+      if (callback !== undefined) callback(responseJson);
+    })
+    .catch((error) => {
+      console.error("Error: ", error, "URL:", url);
+    });
+}
+// GET JSON WAIT
+export async function getJSONWaitWithParams(url,params=undefined, callback) {
+  let data = await await fetch(url, params)
+    .then((res) => {
+      const resp = res.json();
+      //console.log(resp);
+      return resp;
+    })
+    .catch((err) => {
+      console.log("Error: ", err, "URL:", url);
+    });
+  if (callback !== undefined) {
+    //console.log(data);
+    callback(data);
+  }
+
+  return await data;
+}
 // GET JSON WAIT
 export async function getJSONWait(url, callback) {
   let data = await await fetch(url)
@@ -902,7 +932,11 @@ export function stringDivider(str, width, spaceReplacer) {
 }
 
 export function saveToStorage(storageKey, item) {
-  localStorage.setItem(storageKey, JSON.stringify(item));
+  try{
+    localStorage.setItem(storageKey, JSON.stringify(item));
+  }catch(e){
+    console.log(e)
+  }
 }
 
 export function appendToStorage(storageKey, item, limit = undefined) {
@@ -913,8 +947,12 @@ export function appendToStorage(storageKey, item, limit = undefined) {
   if (limit !== undefined) {
     if (items.length >= limit) items.pop();
   }
-
-  localStorage.setItem(storageKey, JSON.stringify(items));
+  try{
+    localStorage.setItem(storageKey, JSON.stringify(items));
+  }
+  catch(e){
+    console.log(e)
+  }
 }
 
 export function getItemsFromStorage(key) {
@@ -1202,4 +1240,123 @@ function hasMapControl(map, controlType) {
     }
   }, this);
   return returnResult;
+}
+
+
+export function TableDisplay(props){
+    const { info } = props;
+    if (info === null) return <div />;
+    return (
+      <table>
+        <tbody>
+          <tr key={getUID()}>
+            {Object.keys(info[0]).map((key) => (
+              <th key={getUID()}>{key}</th>
+            ))}
+          </tr>
+          {info.map((item) => (
+            <tr key={getUID()}>
+              {Object.values(item).map((val) => (
+                <td key={getUID()} style={{ border: "1px solid black", padding: "5px 5px" }}>
+                  {val}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+}
+
+export function getBase64FromImageUrlWithParams(url, params=undefined, callback) {
+
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", url);
+  if (params !== undefined){
+    for (const [key, value] of Object.entries(params)) {
+      xhr.setRequestHeader(key, value);
+    }
+  }
+  
+  xhr.onload = function(){
+    var response = xhr.responseText;
+    var binary = ""
+    
+    for(var i=0; i<response.length; i++){
+      binary += String.fromCharCode(response.charCodeAt(i) & 0xff);
+    }
+    var img = new Image();
+
+    img.setAttribute("crossOrigin", "anonymous");
+  
+    img.onload = function() {
+      var canvas = document.createElement("canvas");
+      canvas.width = this.width;
+      canvas.height = this.height;
+  
+      var ctx = canvas.getContext("2d");
+      ctx.drawImage(this, 0, 0);
+  
+      var dataURL = canvas.toDataURL("image/png");
+  
+      callback(this.height, dataURL);
+    };
+
+    img.src = 'data:image/png;base64,' + btoa(binary);
+  }
+  xhr.overrideMimeType('text/plain; charset=x-user-defined');
+  xhr.send();
+}
+
+export function getBase64FromImageUrl(url, callback) {
+  var img = new Image();
+
+  img.setAttribute("crossOrigin", "anonymous");
+
+  img.onload = function() {
+    var canvas = document.createElement("canvas");
+    canvas.width = this.width;
+    canvas.height = this.height;
+
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(this, 0, 0);
+
+    var dataURL = canvas.toDataURL("image/png");
+
+    //var data = dataURL.replace(/^data:image\/(png|jpg);base64,/, "");
+    callback(this.height, dataURL);
+  };
+
+  img.src = url;
+}
+
+export function waitForLoad (items, startTime=Date.now(), timeout = 30, callback){
+  if ((startTime+(timeout*1000)) <= Date.now()){
+    showMessage("Timeout", "Items Failed to load in a timely manner. Please reload the page", messageColors.red);
+    console.error("timeout loading",items);
+  }else{
+    if (isLoaded(items)) {
+      console.log("wait for load",items, Date.now() - startTime);
+      callback();
+    }else{
+      setTimeout(()=>waitForLoad(items, startTime, timeout, callback),50);
+    }
+  }
+}
+export function isLoaded(items){
+  if (Array.isArray(items)){
+    let returnResult = true;
+    items.forEach(item => {
+      if (returnResult) returnResult = window.loaded.includes(item.toLowerCase());
+    });
+    return returnResult;
+  }else{
+    return window.loaded.includes(items.toLowerCase());
+  }
+}
+export function addIsLoaded(item){
+  if (!window.loaded.includes(item.toLowerCase())) window.loaded.push(item.toLowerCase());
+}
+export function removeIsLoaded(item){
+  if (window.loaded.includes(item.toLowerCase())) delete window.loaded[item.toLowerCase()];
 }
