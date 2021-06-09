@@ -603,7 +603,10 @@ updateLayerCount = (numLayers) => {
     }
     let group = Object.assign({},this.state.selectedGroup);
     TOCHelpers.updateLayerIndex(arrayMove(group.layers, oldIndex, newIndex), (result) => {
-      group.layers = result;
+      group.layers = result.map(layer=> {
+                                          layer.index = layer.drawIndex;
+                                          return layer;
+                                        });
     
       this.setLayerGroups(this.state.type, this.state.layerListGroups.map((item)=> group.value === item.value? group:item),()=>
       {

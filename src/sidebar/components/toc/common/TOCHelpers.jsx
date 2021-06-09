@@ -1158,10 +1158,10 @@ export function sortByAlphaCompare(a, b) {
   return 0;
 }
 export function sortByIndexCompare(a, b) {
-  if (a.drawIndex > b.drawIndex) {
+  if (a.index > b.index) {
     return -1;
   }
-  if (a.drawIndex < b.drawIndex) {
+  if (a.index < b.index) {
     return 1;
   }
   return 0;
