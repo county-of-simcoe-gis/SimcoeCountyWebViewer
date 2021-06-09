@@ -533,7 +533,24 @@ export function getJSONWithParams(url, params=undefined, callback) {
       console.error("Error: ", error, "URL:", url);
     });
 }
+// GET JSON WAIT
+export async function getJSONWaitWithParams(url,params=undefined, callback) {
+  let data = await await fetch(url, params)
+    .then((res) => {
+      const resp = res.json();
+      //console.log(resp);
+      return resp;
+    })
+    .catch((err) => {
+      console.log("Error: ", err, "URL:", url);
+    });
+  if (callback !== undefined) {
+    //console.log(data);
+    callback(data);
+  }
 
+  return await data;
+}
 // GET JSON WAIT
 export async function getJSONWait(url, callback) {
   let data = await await fetch(url)
