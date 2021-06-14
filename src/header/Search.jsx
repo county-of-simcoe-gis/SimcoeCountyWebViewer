@@ -16,7 +16,6 @@ import Select from "react-select";
 import { KeyboardPan, KeyboardZoom } from "ol/interaction.js";
 
 // URLS
-const apiUrl = mainConfig.apiUrl;
 const googleDirectionsURL = (lat, long) => `https://www.google.com/maps?saddr=Current+Location&daddr=${lat},${long}`;
 const searchURL = (apiUrl, searchText, type, muni, limit) => `${apiUrl}async/search/?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
 const searchInfoURL = (apiUrl, locationID) => `${apiUrl}searchById/${locationID}`;
@@ -40,32 +39,35 @@ function importAllImages(r) {
   return images;
 }
 
-// STYLES
-const styles = {
-  poly: new Style({
-    stroke: new Stroke({
-      width: 4,
-      color: [255, 0, 0, 0.8],
-    }),
-  }),
-  point: new Style({
-    image: new Icon({
-      anchor: [0.5, 1],
-      src: images["map-marker.png"],
-    }),
-  }),
-  geocode: new Style({
-    image: new CircleStyle({
-      opacity: 0.5,
-      radius: 7,
-      fill: new Fill({ color: [236, 156, 155, 0.7] }),
-    }),
-  }),
-};
+
 
 class Search extends Component {
   constructor(props) {
     super(props);
+
+    this.apiUrl = mainConfig.apiUrl;
+    // STYLES
+    this.styles = {
+      poly: new Style({
+        stroke: new Stroke({
+          width: 4,
+          color: [255, 0, 0, 0.8],
+        }),
+      }),
+      point: new Style({
+        image: new Icon({
+          anchor: [0.5, 1],
+          src: images["map-marker.png"],
+        }),
+      }),
+      geocode: new Style({
+        image: new CircleStyle({
+          opacity: 0.5,
+          radius: 7,
+          fill: new Fill({ color: [236, 156, 155, 0.7] }),
+        }),
+      }),
+    };
 
     // BIND THIS TO THE CLICK FUNCTION
     this.removeMarkersClick = this.removeMarkersClick.bind(this);
@@ -102,12 +104,12 @@ class Search extends Component {
     // HANDLE URL PARAMETER
     if (locationId !== null) {
       // CALL API TO GET LOCATION DETAILS
-      helpers.getJSON(searchInfoURL(apiUrl, locationId), (result) => this.jsonCallback(result));
+      helpers.getJSON(searchInfoURL(this.apiUrl, locationId), (result) => this.jsonCallback(result));
     }
   };
 
   componentDidMount() {
-    helpers.getJSON(searchTypesURL(apiUrl), (result) => {
+    helpers.getJSON(searchTypesURL(this.apiUrl), (result) => {
       let items = [];
       items.push({ label: "All", value: "All" });
       result.forEach((type) => {
@@ -165,11 +167,11 @@ class Search extends Component {
       search_type = "All";
     }
     if (!hidden) this.setState({value:search, selectedType: { label: search_type, value: search_type } });
-    helpers.getJSON(encodeURI(searchURL(apiUrl, search, search_type,undefined, 1)), responseJson => { 
+    helpers.getJSON(encodeURI(searchURL(this.apiUrl, search, search_type,undefined, 1)), responseJson => { 
       if(responseJson[0] !== undefined 
           && responseJson[0].location_id !== null 
           && responseJson[0].location_id !== undefined) {
-        helpers.getJSON(searchInfoURL(apiUrl, responseJson[0].location_id), result => this.jsonCallback(result,hidden));
+        helpers.getJSON(searchInfoURL(this.apiUrl, responseJson[0].location_id), result => this.jsonCallback(result,hidden));
         
       }
     });
@@ -180,7 +182,7 @@ class Search extends Component {
     this.setState({ selectedType: selectedType }, async () => {
       let limit = defaultSearchLimit;
       if (this.state.showMore) limit = 50;
-      await helpers.getJSONWait(searchURL(apiUrl, this.state.value, this.state.selectedType.value, undefined, limit), (responseJson) => {
+      await helpers.getJSONWait(searchURL(this.apiUrl, this.state.value, this.state.selectedType.value, undefined, limit), (responseJson) => {
         if (responseJson !== undefined) this.setState({ searchResults: responseJson });
         else this.setState({ searchResults: [] });
       });
@@ -240,7 +242,7 @@ class Search extends Component {
         }),
         zIndex: 1000,
       });
-      searchIconLayer.setStyle(styles["point"]);
+      searchIconLayer.setStyle(this.styles["point"]);
       searchIconLayer.set("name", "sc-search-icon");
       searchIconLayer.set("disableParcelClick", true);
       window.map.addLayer(searchIconLayer);
@@ -296,15 +298,15 @@ class Search extends Component {
     }
     // SET STYLE AND ZOOM
     if (result.geojson.indexOf("Point") !== -1) {
-      searchGeoLayer.setStyle(styles["point"]);
+      searchGeoLayer.setStyle(this.styles["point"]);
       window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
       window.map.getView().setZoom(18);
     } else if (result.geojson.indexOf("Line") !== -1) {
-      searchGeoLayer.setStyle(styles["poly"]);
+      searchGeoLayer.setStyle(this.styles["poly"]);
       window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
       window.map.getView().setZoom(window.map.getView().getZoom() - 1);
     } else {
-      searchGeoLayer.setStyle(styles["poly"]);
+      searchGeoLayer.setStyle(this.styles["poly"]);
       window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
       window.map.getView().setZoom(window.map.getView().getZoom() - 1);
     }
@@ -408,13 +410,13 @@ class Search extends Component {
       searchIconLayer.setZIndex(100);
 
       // SET STYLE AND ZOOM
-      searchGeoLayer.setStyle(styles["point"]);
+      searchGeoLayer.setStyle(this.styles["point"]);
       window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
       window.map.getView().setZoom(18);
     } else {
       console.log(value);
       // CALL API TO GET LOCATION DETAILS
-      helpers.getJSON(searchInfoURL(apiUrl, item.location_id), (result) => this.jsonCallback(result));
+      helpers.getJSON(searchInfoURL(this.apiUrl, item.location_id), (result) => this.jsonCallback(result));
     }
   }
 
@@ -437,7 +439,7 @@ class Search extends Component {
       async () => {
         let limit = defaultSearchLimit;
         if (this.state.showMore) limit = 50;
-        await helpers.getJSONWait(searchURL(apiUrl, this.state.value, this.state.selectedType.value, undefined, limit), (responseJson) => {
+        await helpers.getJSONWait(searchURL(this.apiUrl, this.state.value, this.state.selectedType.value, undefined, limit), (responseJson) => {
           if (responseJson !== undefined) this.searchResultsHandler(responseJson, limit);
           else this.searchResultsHandler(responseJson, limit);
         });
@@ -616,7 +618,7 @@ class Search extends Component {
 
               let limit = defaultSearchLimit;
               if (this.state.showMore) limit = 50;
-              await helpers.getJSONWait(searchURL(apiUrl, value, this.state.selectedType.value, undefined, limit), (responseJson) => {
+              await helpers.getJSONWait(searchURL(this.apiUrl, value, this.state.selectedType.value, undefined, limit), (responseJson) => {
                 if (responseJson !== undefined) this.searchResultsHandler(responseJson, defaultSearchLimit);
               });
             } else {
