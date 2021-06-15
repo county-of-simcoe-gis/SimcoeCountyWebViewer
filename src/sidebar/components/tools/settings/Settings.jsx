@@ -332,28 +332,6 @@ class Settings extends Component {
 						<div className="sc-container">
 							<div className="sc-settings-row sc-arrow">
 								<button
-									name="limitsLocalStorage"
-									title="check localStorage limits"
-									className="sc-button"
-									onClick={async () => await helpers.getStorageLimits()}
-								>
-									Check localStorage limits
-								</button>
-							</div>
-							<div className="sc-settings-divider" />
-							<div className="sc-settings-row sc-arrow">
-								<button
-									name="refreshLocalStorage"
-									title="Refresh the localStorage cache"
-									className="sc-button"
-									onClick={() => helpers.refreshStorage()}
-								>
-									Refresh Saved Data
-								</button>
-							</div>
-							<div className="sc-settings-divider" />
-							<div className="sc-settings-row sc-arrow">
-								<button
 									name="clearLocalStorage"
 									title="Clear all cached settings and reload the page."
 									className="sc-button"
