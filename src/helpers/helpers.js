@@ -53,10 +53,6 @@ import mainConfig from "../config.json";
 import { InfoRow } from "./InfoRow.jsx";
 import blankImage from "./images/blank.png";
 
-export function getConfigValue(key) {
-	const config = mainConfig;
-	return config[key];
-}
 // REGISTER CUSTOM PROJECTIONS
 proj4.defs([
 	[
@@ -1542,30 +1538,78 @@ export function loadConfig(callback) {
 
 	//get url parameters
 	let config = mainConfig;
+	//let localSettings = localStorage;
+	//config = mergeObj(config, localSettings);
+
 	const queryString = window.location.search;
 	let mapId = null;
+	let loaderType = "DEFAULT"; //MAPID, ARCGIS, GEOSERVER
+	let geoserverUrl = config.toc.geoserverLayerGroupsUrl;
+	let geoserverUrlType = config.toc.geoserverLayerGroupsUrlType;
+	let tocType = config.toc.tocType;
+
+	let esriServiceUrl = config.toc.esriServiceUrl;
 	if (queryString.length > 0) {
 		const urlParams = new URLSearchParams(queryString);
-		mapId = urlParams.get("MAP_ID");
-		const geoserverUrl = urlParams.get("GEO_URL");
-		const geoserverUrlType = urlParams.get("GEO_TYPE");
-		const esriServiceUrl = urlParams.get("ARCGIS_SERVICE");
-		const tocType = urlParams.get("TOCTYPE");
-		if (geoserverUrl !== null)
-			config.toc["geoserverLayerGroupsUrl"] = geoserverUrl;
-		if (geoserverUrlType !== null)
-			config.toc["geoserverLayerGroupsUrlType"] = geoserverUrlType;
-		if (esriServiceUrl !== null) config.toc["esriServiceUrl"] = esriServiceUrl;
-		if (tocType !== null) config.toc["tocType"] = tocType;
+		const url_mapId = urlParams.get("MAP_ID");
+		const url_geoserverUrlType = urlParams.get("GEO_TYPE");
+		const url_tocType = urlParams.get("TOCTYPE");
+		const url_geoserverUrl = urlParams.get("GEO_URL");
+		const url_esriServiceUrl = urlParams.get("ARCGIS_SERVICE");
 
-		//config = mergeObj(config, urlParams);
+		if (url_geoserverUrlType !== null) geoserverUrlType = url_geoserverUrlType;
+		if (url_mapId !== null) {
+			mapId = url_mapId;
+			loaderType = "MAPID";
+		}
+		if (url_geoserverUrl !== null) {
+			geoserverUrl = url_geoserverUrl;
+			loaderType = "GEOSERVER";
+		}
+		if (url_esriServiceUrl !== null) {
+			esriServiceUrl = url_esriServiceUrl;
+			loaderType = "ARCGIS";
+		}
+		if (url_tocType !== null) tocType = url_tocType;
 	}
 
+	if (tocType !== config.toc.tocType) config.toc["tocType"] = tocType;
+	if (geoserverUrl !== config.toc.geoserverLayerGroupsUrl) {
+		if (!geoserverUrl.toLowerCase().includes("request=GetCapabilities"))
+			geoserverUrl = `${geoserverUrl}/ows?service=wms&version=1.3.0&request=GetCapabilities`;
+		config.toc["geoserverLayerGroupsUrl"] = geoserverUrl;
+	}
+	if (geoserverUrlType !== config.toc.geoserverLayerGroupsUrlType)
+		config.toc["geoserverLayerGroupsUrlType"] = geoserverUrlType;
+	if (esriServiceUrl !== config.toc.esriServiceUrl)
+		config.toc["esriServiceUrl"] = esriServiceUrl;
+
+	if (loaderType === "DEFAULT") {
+		if (mapId !== null && mapId !== undefined && mapId.trim() !== "") {
+			config["mapId"] = mapId;
+			loaderType = "MAPID";
+		} else if (
+			geoserverUrl !== null &&
+			geoserverUrl !== undefined &&
+			geoserverUrl.trim() !== ""
+		) {
+			loaderType = "GEOSERVER";
+		} else if (
+			esriServiceUrl !== null &&
+			esriServiceUrl !== undefined &&
+			esriServiceUrl.trim() !== ""
+		) {
+			loaderType = "ARCGIS";
+		}
+	}
+
+	config.toc["loaderType"] = loaderType;
 	if (mapId === null) mapId = config.mapId;
 	if (
 		config.useMapConfigApi ||
 		(mapId !== null && mapId !== undefined && mapId.trim() !== "")
 	) {
+		config.toc["loaderType"] = "MAPID";
 		const mapSettingURL = (apiUrl, mapId) => {
 			if (mapId === null || mapId === undefined || mapId.trim() === "")
 				return `${apiUrl}settings/getDefaultMap`;
@@ -1574,6 +1618,18 @@ export function loadConfig(callback) {
 		getJSON(mapSettingURL(config.apiUrl, mapId), (result) => {
 			const settings = JSON.parse(result.json);
 			if (settings.name !== undefined) document.title = settings.name;
+
+			//TRANSPOSE LEGACY TOC SETTINGS
+			if (settings.toc === undefined) settings["toc"] = {};
+			if (settings.default_group !== undefined) {
+				settings.toc["default_group"] = settings.default_group;
+				delete settings.default_group;
+			}
+			if (settings.sources !== undefined) {
+				settings.toc["sources"] = settings.sources;
+				delete settings.sources;
+			}
+
 			if (settings.default_theme !== undefined)
 				window.emitter.emit(
 					"activateSidebarItem",
@@ -1587,13 +1643,12 @@ export function loadConfig(callback) {
 					"tools"
 				);
 
+			//TODO: OVERRIDE INDIVIDUAL THEME, TOOL, OR BASEMAP SETTINGS????
 			config = mergeObj(config, settings);
 			window.config = config;
 			callback();
 		});
 	} else {
-		let localSettings = localStorage;
-		config = mergeObj(config, localSettings);
 		window.config = config;
 		callback();
 	}
@@ -1619,7 +1674,14 @@ export function getConfig(component, name) {
 
 export function mergeObj(targetObj, sourceObj) {
 	Object.keys(sourceObj).forEach((key) => {
-		targetObj[key] = sourceObj[key];
+		if (
+			typeof targetObj[key] === "object" &&
+			!(targetObj[key] instanceof Array)
+		) {
+			targetObj[key] = mergeObj(targetObj[key], sourceObj[key]);
+		} else {
+			targetObj[key] = sourceObj[key];
+		}
 	});
 	return targetObj;
 }

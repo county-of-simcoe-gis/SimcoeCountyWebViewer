@@ -548,36 +548,38 @@ class SCMap extends Component {
 	};
 
 	addIdentifyLayer = () => {
-		this.identifyIconLayer = new VectorLayer({
-			name: "sc-identify",
-			source: new VectorSource({
-				features: [],
-			}),
-			zIndex: 100000,
-		});
-		this.identifyIconLayer.setStyle(
-			new Style({
-				image: new Icon({
-					anchor: [0.5, 1],
-					src: images["identify-marker.png"],
+		helpers.waitForLoad(["settings", "map"], Date.now(), 30, () => {
+			this.identifyIconLayer = new VectorLayer({
+				name: "sc-identify",
+				source: new VectorSource({
+					features: [],
 				}),
-			})
-		);
-		this.identifyIconLayer.set("name", "sc-identify-icon");
-		if (helpers.getConfigValue("leftClickIdentify")) {
-			window.map.on("singleclick", (evt) => {
-				// DISABLE POPUPS
-				let disable =
-					window.disableIdentifyClick ||
-					window.isDrawingOrEditing ||
-					window.isCoordinateToolOpen ||
-					window.isMeasuring;
-				if (disable) return;
-
-				this.contextCoords = evt.coordinate;
-				this.identify();
+				zIndex: 100000,
 			});
-		}
+			this.identifyIconLayer.setStyle(
+				new Style({
+					image: new Icon({
+						anchor: [0.5, 1],
+						src: images["identify-marker.png"],
+					}),
+				})
+			);
+			this.identifyIconLayer.set("name", "sc-identify-icon");
+			if (window.config.leftClickIdentify) {
+				window.map.on("singleclick", (evt) => {
+					// DISABLE POPUPS
+					let disable =
+						window.disableIdentifyClick ||
+						window.isDrawingOrEditing ||
+						window.isCoordinateToolOpen ||
+						window.isMeasuring;
+					if (disable) return;
+
+					this.contextCoords = evt.coordinate;
+					this.identify();
+				});
+			}
+		});
 	};
 	identify = () => {
 		this.identifyIconLayer.getSource().clear();
@@ -673,17 +675,19 @@ class SCMap extends Component {
 	};
 
 	sidebarChanged(isSidebarOpen) {
-		let mapClassName = "sc-map";
-		//  SIDEBAR IN AND OUT
-		if (isSidebarOpen) {
-			mapClassName = "sc-map sc-map-slideout";
-		} else {
-			mapClassName = "sc-map sc-map-closed sc-map-slidein";
-		}
-		this.setState({ mapClassName: mapClassName }, () => {
-			window.map.updateSize();
+		helpers.waitForLoad("map", Date.now(), 30, () => {
+			let mapClassName = "sc-map";
+			//  SIDEBAR IN AND OUT
+			if (isSidebarOpen) {
+				mapClassName = "sc-map sc-map-slideout";
+			} else {
+				mapClassName = "sc-map sc-map-closed sc-map-slidein";
+			}
+			this.setState({ mapClassName: mapClassName }, () => {
+				window.map.updateSize();
 
-			this.forceUpdate();
+				this.forceUpdate();
+			});
 		});
 	}
 

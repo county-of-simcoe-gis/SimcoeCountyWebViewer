@@ -38,11 +38,14 @@ class Header extends Component {
 	}
 
 	burgerButtonHandler() {
-		// EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
-		if (window.sidebarOpen) window.emitter.emit("setSidebarVisiblity", "CLOSE");
-		else window.emitter.emit("setSidebarVisiblity", "OPEN");
+		helpers.waitForLoad("map", Date.now(), 30, () => {
+			// EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
+			if (window.sidebarOpen)
+				window.emitter.emit("setSidebarVisiblity", "CLOSE");
+			else window.emitter.emit("setSidebarVisiblity", "OPEN");
 
-		helpers.addAppStat("Burger Button", "Click");
+			helpers.addAppStat("Burger Button", "Click");
+		});
 	}
 
 	onDotMenuClick = (evt) => {

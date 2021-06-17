@@ -78,7 +78,9 @@ class TOC extends Component {
 	}
 	//#region REACT FUNCTIONS
 	componentDidMount() {
-		helpers.waitForLoad("map", Date.now(), 30, () => this.onMapLoad());
+		helpers.waitForLoad(["settings", "map"], Date.now(), 30, () =>
+			this.onMapLoad()
+		);
 	}
 	componentWillMount() {
 		let tocType = helpers.getURLParameter("TOCTYPE");
@@ -122,14 +124,15 @@ class TOC extends Component {
 					});
 				});
 			});
-
-			if (!helpers.getConfigValue("leftClickIdentify")) {
-				this.addPropertyReportClick();
-			}
+			helpers.waitForLoad(["settings", "map"], Date.now(), 30, () => {
+				if (!window.config.leftClickIdentify) this.addPropertyReportClick();
+			});
 		});
 	};
 
 	getDefaultGroup = (defaultGroupName, layerGroups, callback = undefined) => {
+		if (window.config.toc.default_group !== undefined)
+			defaultGroupName = window.config.toc.default_group;
 		let defaultGroup = layerGroups.filter(
 			(item) => item.value === defaultGroupName
 		)[0];
@@ -247,76 +250,17 @@ class TOC extends Component {
 	};
 
 	refreshTOC = (isReset, callback = undefined) => {
-		helpers.waitForLoad("settings", Date.now(), 30, () => {
+		helpers.waitForLoad(["settings", "map"], Date.now(), 30, () => {
 			this.setState({ helpLink: window.config.toc.helpLink });
 			sessionStorage.removeItem(this.storageMapDefaultsKey);
 
-			let loaderType = "DEFAULT"; //MAPID, ARCGIS, GEOSERVER
-			let geoserverUrl = helpers.getURLParameter("GEO_URL", true, true);
-			let geoserverUrlType = helpers.getURLParameter("GEO_TYPE");
-			let esriServiceUrl = helpers.getURLParameter(
-				"ARCGIS_SERVICE",
-				true,
-				true
-			);
-			let sources = window.config.sources;
-			let mapId = helpers.getURLParameter("MAP_ID");
-			if (geoserverUrlType === null)
-				geoserverUrlType = window.config.toc.geoserverLayerGroupsUrlType;
-
-			//allow GEO_URL, then ARCGIS_SERVICE, then MAP_ID url parameters to override default loading process
-			//IF LOADER IS STILL DEFAULT LOAD GEOSERVER SETTINGS
-			if (loaderType === "DEFAULT") {
-				if (geoserverUrl !== null) {
-					geoserverUrl = `${geoserverUrl}/ows?service=wms&version=1.3.0&request=GetCapabilities`;
-					loaderType = "GEOSERVER";
-				} else geoserverUrl = window.config.toc.geoserverLayerGroupsUrl;
-			}
-			//IF LOADER IS STILL DEFAULT LOAD ARCGIS SETTINGS
-			if (loaderType === "DEFAULT") {
-				if (esriServiceUrl === null)
-					esriServiceUrl = window.config.toc.esriServiceUrl;
-				else loaderType = "ARCGIS";
-			}
-			//IF LOADER IS STILL DEFAULT LOAD MAP API SETTINGS
-			if (loaderType === "DEFAULT") {
-				if (sources !== undefined) mapId = window.config.mapId;
-				else loaderType = "MAPID";
-			}
-
-			//IF LOADER IS STILL DEFAULT SET TO USE POPULATED VALUES ELSE WILL FALL THROUGH TO CONFIG FILE GROUPS
-			if (loaderType === "DEFAULT") {
-				if (
-					window.config.useMapConfigApi ||
-					(mapId !== null && mapId !== undefined && mapId.trim() !== "")
-				)
-					loaderType = "MAPID";
-				else if (
-					esriServiceUrl !== null &&
-					esriServiceUrl !== undefined &&
-					esriServiceUrl.trim() !== ""
-				)
-					loaderType = "ARCGIS";
-				else if (
-					geoserverUrl !== null &&
-					geoserverUrl !== undefined &&
-					geoserverUrl.trim() !== ""
-				)
-					loaderType = "GEOSERVER";
-			}
+			const loaderType = window.config.toc.loaderType; //MAPID, ARCGIS, GEOSERVER
+			const geoserverUrl = window.config.toc.geoserverLayerGroupsUrl;
+			const geoserverUrlType = window.config.toc.geoserverLayerGroupsUrlType;
+			const esriServiceUrl = window.config.toc.esriServiceUrl;
+			const sources = window.config.toc.sources;
 
 			switch (loaderType) {
-				case "MAPID":
-					TOCHelpers.getMap(
-						mapId,
-						geoserverUrlType,
-						isReset,
-						this.state.type,
-						(result) => {
-							this.loadGroups(result, isReset, callback);
-						}
-					);
-					break;
 				case "ARCGIS":
 					TOCHelpers.getGroupsESRI(
 						{ url: esriServiceUrl, tocType: this.state.type, isReset: isReset },
@@ -340,7 +284,9 @@ class TOC extends Component {
 					);
 					break;
 				default:
-					this.loadGroups(TOCHelpers.getGroups(), isReset, callback);
+					TOCHelpers.getMap(sources, isReset, this.state.type, (result) => {
+						this.loadGroups(result, isReset, callback);
+					});
 					break;
 			}
 		});

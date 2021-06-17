@@ -5,7 +5,7 @@ import {
 	FeatureHelpers,
 	OL_DATA_TYPES,
 } from "../../../../helpers/OLHelpers";
-import TOCConfig from "../common/TOCConfig.json";
+//import TOCConfig from "../common/TOCConfig.json";
 import { WMSCapabilities } from "ol/format.js";
 
 // INDEX WHERE THE TOC LAYERS SHOULD START DRAWING AT
@@ -151,83 +151,83 @@ export function makeLayer(
 }
 
 export async function getMap(sources, isReset, tocType, callback) {
-	const apiUrl = helpers.getConfigValue("apiUrl");
-	const mapSettingURL = (apiUrl, mapId) =>
-		mapId === null || mapId === undefined || mapId.trim() === ""
-			? `${apiUrl}settings/getDefaultMap`
-			: `${apiUrl}settings/getMap/${mapId}`;
 	let layerGroups = undefined;
-	let default_group = undefined;
-	helpers.getJSON(mapSettingURL, (result) => {
-		var sourcesProcessed = 0;
-		const mapSettings = JSON.parse(result.json);
+	let default_group = window.config.toc.default_group;
+	const urlType = window.config.toc.geoserverLayerGroupsUrlType;
+	var sourcesProcessed = 0;
 
-		//console.log(mapSettings);
-		default_group = mapSettings.default_group;
-		mapSettings.sources.forEach((source) => {
-			if (
-				source.type === undefined ||
-				source.type === null ||
-				source.type === ""
-			)
-				source["type"] = "geoserver"; //default to geoserver
-			switch (source.type.toLowerCase()) {
-				case "geoserver":
-					getGroupsGC(
-						source.layerUrl,
-						source.type,
-						isReset,
-						tocType,
-						source.secure,
-						source.primary,
-						source.secureKey,
-						(layerGroupConfig) => {
-							if (source.primary && mapSettings.default_group === undefined)
-								default_group = layerGroupConfig.defaultLayerName;
-							if (layerGroups === undefined) {
-								layerGroups = layerGroupConfig.groups;
-							} else {
-								layerGroups = mergeGroups(layerGroups, layerGroupConfig.groups);
-							}
-							sourcesProcessed++;
-							if (sourcesProcessed === mapSettings.sources.length) {
-								callback({
-									groups: layerGroups,
-									defaultGroupName: default_group,
-								});
+	sources.forEach((source) => {
+		if (source.type === undefined || source.type === null || source.type === "")
+			source["type"] = "geoserver"; //default to geoserver
+		switch (source.type.toLowerCase()) {
+			case "geoserver":
+				getGroupsGC(
+					source.layerUrl,
+					source.urlType !== undefined ? source.urlType : urlType,
+					isReset,
+					tocType,
+					source.secure,
+					source.primary,
+					source.secureKey,
+					(layerGroupConfig) => {
+						if (source.group !== undefined) {
+							if (layerGroupConfig.groups[0] !== undefined) {
+								if (source.group.name !== undefined)
+									layerGroupConfig.groups[0]["value"] = source.group.name;
+								if (source.group.displayName !== undefined)
+									layerGroupConfig.groups[0]["label"] =
+										source.group.displayName;
+								if (source.group.visibleLayers !== undefined)
+									layerGroupConfig.groups[0]["visibleLayers"] =
+										source.group.visibleLayers;
 							}
 						}
-					);
-					break;
-				case "arcgis":
-					getGroupsESRI(
-						{
-							url: source.layerUrl,
-							tocType: tocType,
-							isReset: isReset,
-						},
-						(layerGroupConfig) => {
-							if (source.primary && mapSettings.default_group === undefined)
-								default_group = layerGroupConfig.defaultLayerName;
-							if (layerGroups === undefined) {
-								layerGroups = layerGroupConfig.groups;
-							} else {
-								layerGroups = mergeGroups(layerGroups, layerGroupConfig.groups);
-							}
-							sourcesProcessed++;
-							if (sourcesProcessed === mapSettings.sources.length) {
-								callback({
-									groups: layerGroups,
-									defaultGroupName: default_group,
-								});
-							}
+						if (source.primary && default_group === undefined)
+							default_group = layerGroupConfig.defaultLayerName;
+						if (layerGroups === undefined) {
+							layerGroups = layerGroupConfig.groups;
+						} else {
+							layerGroups = mergeGroups(layerGroups, layerGroupConfig.groups);
 						}
-					);
-					break;
-				default:
-					break;
-			}
-		});
+
+						sourcesProcessed++;
+						if (sourcesProcessed === sources.length) {
+							callback({
+								groups: layerGroups,
+								defaultGroupName: default_group,
+							});
+						}
+					}
+				);
+				break;
+			case "arcgis":
+				getGroupsESRI(
+					{
+						url: source.layerUrl,
+						tocType: tocType,
+						isReset: isReset,
+					},
+					(layerGroupConfig) => {
+						if (source.primary && default_group === undefined)
+							default_group = layerGroupConfig.defaultLayerName;
+						if (layerGroups === undefined) {
+							layerGroups = layerGroupConfig.groups;
+						} else {
+							layerGroups = mergeGroups(layerGroups, layerGroupConfig.groups);
+						}
+						sourcesProcessed++;
+						if (sourcesProcessed === sources.length) {
+							callback({
+								groups: layerGroups,
+								defaultGroupName: default_group,
+							});
+						}
+					}
+				);
+				break;
+			default:
+				break;
+		}
 	});
 }
 
@@ -568,7 +568,7 @@ export async function getGroupsGC(
 				window.map.getView().animate({ center: mapCenter, zoom: mapZoom });
 			}
 		}
-		const geoserverPath = helpers.getConfigValue("geoserverPath");
+		const geoserverPath = window.config.geoserverPath;
 		//console.log(groupLayerList);
 
 		groupLayerList.forEach((layerInfo) => {
@@ -635,7 +635,7 @@ export async function getGroupsGC(
 								);
 								layerIndex--;
 								if (currentLayer.Layer === undefined) {
-									visibleLayers.push(currentLayer.Name[0]);
+									visibleLayers.push(currentLayer.Name);
 								} else {
 									buildLayers(currentLayer.Layer);
 								}
@@ -682,54 +682,6 @@ export async function getGroupsGC(
 
 		callback({ groups: groups, defaultGroupName: defaultGroupName });
 	});
-}
-
-// GET GROUPS FROM CONFIG
-export function getGroups() {
-	let defaultGroup = null;
-	let groups = [];
-	for (var i = 0, len = TOCConfig.layerGroups.length; i < len; i++) {
-		const group = TOCConfig.layerGroups[i];
-		const wmsGroupUrl = group.wmsUrl;
-		const customGroupUrl = group.customRestUrl;
-		const isDefault = group.defaultGroup;
-		const groupName = group.name;
-		const groupDisplayName = group.displayName;
-		const groupObj = {
-			value: groupName,
-			label: groupDisplayName,
-			defaultGroup: isDefault,
-			visibleLayers: group.visibleLayers,
-			wmsGroupUrl: wmsGroupUrl,
-			customRestUrl: customGroupUrl,
-		};
-		groups.push(groupObj);
-
-		if (isDefault) defaultGroup = groupObj;
-	}
-
-	return { groups: groups, defaultGroupName: defaultGroup.value };
-}
-
-// GET BASIC INFO - THIS IS FOR PERFORMANCE TO LOAD LAYERS IN THE TOC
-export function getBasicLayers(group, tocType, callback) {
-	this.getLayerListByGroupWMS(group, tocType, (layerList) => {
-		callback(layerList);
-	});
-}
-export function getFullInfoLayers(layers, callback) {
-	var newLayers = [];
-	for (let index = 0; index < layers.length; index++) {
-		const layer = layers[index];
-		let newLayer = Object.assign({}, layer);
-		helpers.getBase64FromImageUrl(layer.styleUrl, (height, img) => {
-			newLayer.legendHeight = height;
-			newLayer.legendImage = img;
-			newLayers.push(newLayer);
-
-			if (index === layers.length - 1) callback(newLayers);
-		});
-	}
 }
 
 export function isDuplicate(layerList, newLayerName) {
@@ -843,7 +795,7 @@ export async function buildLayerByGroup(
 	if (layer.Layer === undefined) {
 		const visibleLayers =
 			group.visibleLayers === undefined ? [] : group.visibleLayers;
-		const geoserverPath = helpers.getConfigValue("geoserverPath");
+		const geoserverPath = window.config.geoserverPath;
 
 		const layerNameOnly = layer.Name;
 		let layerTitle = layer.Title;
