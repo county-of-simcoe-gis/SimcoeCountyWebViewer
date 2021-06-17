@@ -1618,16 +1618,16 @@ export function loadConfig(callback) {
 		getJSON(mapSettingURL(config.apiUrl, mapId), (result) => {
 			const settings = JSON.parse(result.json);
 			if (settings.name !== undefined) document.title = settings.name;
-			if (settings.zoom_level !== undefined)
-				delete Object.assign(settings, {
-					["defaultZoom"]: settings["zoom_level"],
-				})["zoom_level"];
-			if (settings.center !== undefined)
-				delete Object.assign(settings, {
-					["centerCoords"]: Array.isArray(settings["center"])
-						? settings["center"]
-						: settings["center"].split(","),
-				})["center"];
+			if (settings.zoom_level !== undefined) {
+				settings["defaultZoom"] = settings.zoom_level;
+				delete settings.zoom_level;
+			}
+			if (settings.center !== undefined) {
+				settings["centerCoords"] = Array.isArray(settings.center)
+					? settings.center
+					: settings.center.split(",");
+				delete settings.center;
+			}
 
 			//TRANSPOSE LEGACY TOC SETTINGS
 			if (settings.toc === undefined) settings["toc"] = {};
