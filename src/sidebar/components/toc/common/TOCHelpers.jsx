@@ -564,7 +564,10 @@ export async function getGroupsGC(
 				if (defaultStorage.zoom !== undefined) mapZoom = defaultStorage.zoom;
 			}
 			const storage = helpers.getItemsFromStorage(storageExtentKey);
-			if (storage === undefined) {
+			if (
+				storage === undefined &&
+				window.config.toc.loaderType === "GEOSERVER"
+			) {
 				window.map.getView().animate({ center: mapCenter, zoom: mapZoom });
 			}
 		}
