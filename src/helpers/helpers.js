@@ -1502,7 +1502,7 @@ export function waitForLoad(
 		console.error("timeout loading", items);
 	} else {
 		if (isLoaded(items)) {
-			console.log("wait for load", items, Date.now() - startTime);
+			//console.log("wait for load", items, Date.now() - startTime);
 			callback();
 		} else {
 			setTimeout(() => waitForLoad(items, startTime, timeout, callback), 50);
