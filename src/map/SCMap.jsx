@@ -97,9 +97,17 @@ class SCMap extends Component {
 			const defaultsStorage = sessionStorage.getItem(
 				this.storageMapDefaultsKey
 			);
-			let extent = helpers.getItemsFromStorage(this.storageExtentKey);
+			let extent =
+				window.config.mapId !== null &&
+				window.config.mapId !== undefined &&
+				window.config.mapId.trim() !== ""
+					? null
+					: helpers.getItemsFromStorage(this.storageExtentKey);
 
-			if (defaultsStorage !== null && extent === undefined) {
+			if (
+				defaultsStorage !== null &&
+				(extent === undefined || extent === null)
+			) {
 				const defaults = JSON.parse(defaultsStorage);
 				if (defaults.zoom !== undefined) defaultZoom = defaults.zoom;
 				if (defaults.center !== undefined) centerCoords = defaults.center;
@@ -136,7 +144,7 @@ class SCMap extends Component {
 			if (!window.mapControls.zoomInOut) helpers.removeMapControl(map, "zoom");
 			if (!window.mapControls.rotate) helpers.removeMapControl(map, "rotate");
 
-			if (extent !== undefined) {
+			if (extent !== undefined && extent !== null) {
 				map.getView().fit(extent, map.getSize());
 			}
 
@@ -435,59 +443,66 @@ class SCMap extends Component {
 	};
 
 	handleUrlParameters = () => {
-		const storage = localStorage.getItem(this.storageExtentKey);
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			const storage =
+				window.config.mapId !== null &&
+				window.config.mapId !== undefined &&
+				window.config.mapId.trim() !== ""
+					? undefined
+					: helpers.getItemsFromStorage(this.storageExtentKey);
 
-		// GET URL PARAMETERS (ZOOM TO XY)
-		const x = helpers.getURLParameter("X");
-		const y = helpers.getURLParameter("Y");
-		const sr =
-			helpers.getURLParameter("SR") === null
-				? "WEB"
-				: helpers.getURLParameter("SR");
+			// GET URL PARAMETERS (ZOOM TO XY)
+			const x = helpers.getURLParameter("X");
+			const y = helpers.getURLParameter("Y");
+			const sr =
+				helpers.getURLParameter("SR") === null
+					? "WEB"
+					: helpers.getURLParameter("SR");
 
-		// GET URL PARAMETERS (ZOOM TO EXTENT)
-		const xmin = helpers.getURLParameter("XMIN");
-		const ymin = helpers.getURLParameter("YMIN");
-		const xmax = helpers.getURLParameter("XMAX");
-		const ymax = helpers.getURLParameter("YMAX");
+			// GET URL PARAMETERS (ZOOM TO EXTENT)
+			const xmin = helpers.getURLParameter("XMIN");
+			const ymin = helpers.getURLParameter("YMIN");
+			const xmax = helpers.getURLParameter("XMAX");
+			const ymax = helpers.getURLParameter("YMAX");
 
-		if (x !== null && y !== null) {
-			// URL PARAMETERS (ZOOM TO XY)
-			let coords = [x, y];
-			if (sr === "WGS84")
-				coords = fromLonLat([
-					Math.round(x * 100000) / 100000,
-					Math.round(y * 100000) / 100000,
-				]);
+			if (x !== null && y !== null) {
+				// URL PARAMETERS (ZOOM TO XY)
+				let coords = [x, y];
+				if (sr === "WGS84")
+					coords = fromLonLat([
+						Math.round(x * 100000) / 100000,
+						Math.round(y * 100000) / 100000,
+					]);
 
-			setTimeout(() => {
-				helpers.flashPoint(coords);
-			}, 1000);
-		} else if (
-			xmin !== null &&
-			ymin !== null &&
-			xmax !== null &&
-			ymax !== null
-		) {
-			//URL PARAMETERS (ZOOM TO EXTENT)
-			const extent = [
-				parseFloat(xmin),
-				parseFloat(ymin),
-				parseFloat(xmax),
-				parseFloat(ymax),
-			];
-			window.map
-				.getView()
-				.fit(extent, window.map.getSize(), { duration: 1000 });
-		} else if (storage !== null) {
-			// ZOOM TO SAVED EXTENT
-			const extent = JSON.parse(storage);
-			window.map
-				.getView()
-				.fit(extent, window.map.getSize(), { duration: 1000 });
-		}
+				setTimeout(() => {
+					helpers.flashPoint(coords);
+				}, 1000);
+			} else if (
+				xmin !== null &&
+				ymin !== null &&
+				xmax !== null &&
+				ymax !== null
+			) {
+				//URL PARAMETERS (ZOOM TO EXTENT)
+				const extent = [
+					parseFloat(xmin),
+					parseFloat(ymin),
+					parseFloat(xmax),
+					parseFloat(ymax),
+				];
+				window.map
+					.getView()
+					.fit(extent, window.map.getSize(), { duration: 1000 });
+			} else if (storage !== null && storage !== undefined) {
+				// ZOOM TO SAVED EXTENT
 
-		window.emitter.emit("mapParametersComplete");
+				window.map
+					.getView()
+					.fit(storage, window.map.getSize(), { duration: 1000 });
+			}
+
+			window.emitter.emit("mapParametersComplete");
+		});
 	};
 
 	onMenuItemClick = (key) => {

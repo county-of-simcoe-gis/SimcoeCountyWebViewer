@@ -1531,6 +1531,8 @@ export function removeIsLoaded(item) {
 }
 
 export function loadConfig(callback) {
+	const storageMapDefaultsKey = "Map Defaults";
+
 	//url parameters
 	//local config
 	//settings api
@@ -1561,6 +1563,7 @@ export function loadConfig(callback) {
 		if (url_mapId !== null) {
 			mapId = url_mapId;
 			loaderType = "MAPID";
+			config["mapId"] = mapId;
 		}
 		if (url_geoserverUrl !== null) {
 			geoserverUrl = url_geoserverUrl;
@@ -1628,6 +1631,13 @@ export function loadConfig(callback) {
 					: settings.center.split(",");
 				delete settings.center;
 			}
+			sessionStorage.setItem(
+				storageMapDefaultsKey,
+				JSON.stringify({
+					center: settings.centerCoords,
+					zoom: settings.defaultZoom,
+				})
+			);
 
 			//TRANSPOSE LEGACY TOC SETTINGS
 			if (settings.toc === undefined) settings["toc"] = {};
