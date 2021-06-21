@@ -1,24 +1,24 @@
 .sc-sidebar {
-  overflow-y: visible !important;
-  width: 370px;
-  z-index: 3 !important;
+	overflow-y: visible !important;
+	width: 370px;
+	z-index: 3 !important;
 }
 
 #sc-sidebar-content {
-  display: none;
+	display: none;
 }
 
 #sc-sidebar-overlay {
-  display: none;
+	display: none;
 }
 
 .sc-sidebar-root {
-  top: 52px !important;
+	top: 52px !important;
 }
 
 #sc-sidebar-advanced-tab {
-  display: none;
-  /* width: 35px;
+	display: none;
+	/* width: 35px;
     height: 145px;
     display: block;
     position: absolute;
@@ -44,144 +44,152 @@
 
 /* SIDEBAR TRANSITIONS */
 #sc-sidebar-advanced-tab.slidein {
-  background-image: url("./images/close-arrow-right.png");
+	background-image: url("./images/close-arrow-right.png");
 }
 #sc-sidebar-advanced-tab.slideout {
-  background-image: url("./images/close-arrow-left.png");
+	background-image: url("./images/close-arrow-left.png");
 }
 
 /* REACT TABS OVERRIDES */
 .react-tabs__tab-list {
-  margin-top: 0px !important;
-  margin-right: 0px !important;
-  margin-bottom: 0px !important;
-  margin-left: 0px !important;
-  position: relative;
-  width: 100%;
-  box-sizing: border-box;
-  white-space: nowrap;
-  display: table;
-  table-layout: fixed;
-  border-bottom: 2px solid #aaa !important;
+	margin-top: 0px !important;
+	margin-right: 0px !important;
+	margin-bottom: 0px !important;
+	margin-left: 0px !important;
+	position: relative;
+	width: 100%;
+	box-sizing: border-box;
+	white-space: nowrap;
+	display: table;
+	table-layout: fixed;
+	border-bottom: 2px solid #aaa !important;
 }
 
 .react-tabs__tab {
-  box-sizing: border-box;
-  display: table-cell !important;
-  border-bottom: none;
-  bottom: -1px;
-  position: relative;
-  list-style: none;
-  padding-top: 6px !important;
-  padding-right: 8px !important;
-  padding-bottom: 6px !important;
-  padding-left: 8px !important;
-  cursor: pointer;
-  font-size: 10pt;
-  margin-left: auto;
-  margin-right: auto;
-  text-align: center;
-  background-color: #d7d7d7;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
-  user-select: none;
-  border-color: #aaa;
-  border-right: 1px solid #ddd !important;
+	box-sizing: border-box;
+	display: table-cell !important;
+	border-bottom: none;
+	bottom: -1px;
+	position: relative;
+	list-style: none;
+	padding-top: 6px !important;
+	padding-right: 8px !important;
+	padding-bottom: 6px !important;
+	padding-left: 8px !important;
+	cursor: pointer;
+	font-size: 10pt;
+	margin-left: auto;
+	margin-right: auto;
+	text-align: center;
+	background-color: #d7d7d7;
+	background: linear-gradient(
+		to bottom,
+		rgba(255, 255, 255, 1) 0%,
+		rgba(229, 229, 229, 1) 100%
+	);
+	user-select: none;
+	border-color: #aaa;
+	border-right: 1px solid #ddd !important;
 }
 
 .react-tabs__tab--selected {
-  box-shadow: 1px 1px 3px #ccc !important;
-  background-color: #ddd !important;
-  color: #000000 !important;
-  border: 1px solid #4a92d0 !important;
-  border: 1px solid #90b5d5 !important;
-  background: linear-gradient(to bottom, rgba(240, 249, 255, 1) 0%, rgb(191, 214, 228) 100%) !important;
+	box-shadow: 1px 1px 3px #ccc !important;
+	background-color: #ddd !important;
+	color: #000000 !important;
+	border: 1px solid #4a92d0 !important;
+	border: 1px solid #90b5d5 !important;
+	background: linear-gradient(
+		to bottom,
+		rgba(240, 249, 255, 1) 0%,
+		rgb(191, 214, 228) 100%
+	) !important;
 }
 
 .sc-sidebar-slim-container {
-  width: 75px;
-  height: 100%;
-  position: absolute;
-  top: 1px;
-  right: -75px;
-  text-align: center;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  background-color: #e0e0e0;
+	width: 75px;
+	height: 100%;
+	position: absolute;
+	top: 1px;
+	right: -75px;
+	text-align: center;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	background-color: #e0e0e0;
 }
 
 .sc-sidebar-slim-button-container {
-  padding-top: 10px;
+	padding-top: 10px;
 }
 .sc-sidebar-slim-button-container:hover {
-  background-color: #9e9e9e;
+	background-color: #9e9e9e;
 }
 
 .sc-sidebar-slim-button {
-  display: contents;
-  border: none;
-  padding-top: 10px;
-  padding-left: 8px;
-  font-size: 9pt;
+	display: contents;
+	border: none;
+	padding-top: 10px;
+	padding-left: 8px;
+	font-size: 9pt;
 }
 
 .sc-tab-button-dot {
-  height: 10px;
-  width: 10px;
-  background-color: rgb(120, 204, 50);
-  border-radius: 50%;
-  display: inline-block;
-  position: absolute;
-  top: 3px;
-  right: 5px;
+	height: 10px;
+	width: 10px;
+	background-color: rgb(120, 204, 50);
+	border-radius: 50%;
+	display: inline-block;
+	position: absolute;
+	top: 3px;
+	right: 5px;
 }
 
 .sc-sidebar-tabs-container {
 }
 
 @media only screen and (max-width: 770px) {
-  .sc-sidebar {
-    /*width: 90%;*/
-    top: 0px !important;
-  }
+	.sc-sidebar {
+		/*width: 90%;*/
+		top: 0px !important;
+	}
 
-  .sc-sidebar-slim-container {
-    display: none;
-  }
+	.sc-sidebar-slim-container {
+		display: none;
+	}
 
-  #sc-sidebar-advanced-tab #tab-close {
-    background-image: url("./images/tab-close.png");
-    background-repeat: no-repeat;
-    background-position: center;
-  }
+	#sc-sidebar-advanced-tab #tab-close {
+		background-image: url("./images/tab-close.png");
+		background-repeat: no-repeat;
+		background-position: center;
+	}
 
-  #sc-sidebar-advanced-tab {
-    display: block;
-    position: absolute;
-    z-index: 99;
-    background-repeat: no-repeat;
-    background-position: 8px 120px;
-    background-color: #fff;
-    border-radius: 0px 4px 4px 0px;
-    user-select: none;
-    top: 50%;
-    right: -36px;
-    margin-top: -20px;
-    margin-bottom: -20px;
-    background-position: center;
-    box-shadow: 0px 0px 0px 0px rgba(97, 97, 97, 0);
-    height: 41px;
-    width: 37px;
-    background-image: url("./images/close-arrow-left.png");
-    bottom: 10px;
-  }
+	#sc-sidebar-advanced-tab {
+		display: block;
+		position: absolute;
+		z-index: 99;
+		background-repeat: no-repeat;
+		background-position: 8px 120px;
+		background-color: #fff;
+		border-radius: 0px 4px 4px 0px;
+		user-select: none;
+		top: 50%;
+		right: -36px;
+		margin-top: -20px;
+		margin-bottom: -20px;
+		background-position: center;
+		box-shadow: 0px 0px 0px 0px rgba(97, 97, 97, 0);
+		height: 41px;
+		width: 37px;
+		background-image: url("./images/close-arrow-left.png");
+		bottom: 10px;
+	}
 
-  #sc-sidebar-advanced-tab img {
-    display: none;
-  }
+	#sc-sidebar-advanced-tab img {
+		display: none;
+	}
 
-  #simcoe-header-bar-button {
-    display: block;
-  }
+	#simcoe-header-bar-button {
+		display: block;
+	}
 }
