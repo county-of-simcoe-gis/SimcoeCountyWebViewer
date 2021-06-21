@@ -1,90 +1,90 @@
 body {
-  font-family: Arial;
-  background-color: #fff;
+	font-family: Arial;
+	background-color: #fff;
 }
 
 .mainContainer {
-  max-width: 1050px;
-  margin: auto;
-  background-color: #fff;
-  padding: 10px;
+	max-width: 1050px;
+	margin: auto;
+	background-color: #fff;
+	padding: 10px;
 }
 
 .headerTitle {
-  font-size: 25px;
-  letter-spacing: 1.3px;
-  text-shadow: 1px 1px 1px rgb(199, 199, 199);
-  color: #505050;
-  margin-bottom: 10px;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 5px;
+	font-size: 25px;
+	letter-spacing: 1.3px;
+	text-shadow: 1px 1px 1px rgb(199, 199, 199);
+	color: #505050;
+	margin-bottom: 10px;
+	border-bottom: 1px solid #ddd;
+	padding-bottom: 5px;
 }
 fieldset {
-  padding: 10px;
-  padding-top: 0px;
-  border: 1px solid #d8d8d8;
-  margin-top: 8px;
-  box-shadow: 0 0 11px #e0e0e0;
-  background-color: #fff;
-  margin: 5px;
+	padding: 10px;
+	padding-top: 0px;
+	border: 1px solid #d8d8d8;
+	margin-top: 8px;
+	box-shadow: 0 0 11px #e0e0e0;
+	background-color: #fff;
+	margin: 5px;
 }
 
 legend {
-  display: block;
-  width: auto;
-  padding: 5px;
-  margin-bottom: 2px;
-  border: none;
-  font-size: 14px;
-  color: #ffffff;
-  border: 2px solid #ffffff;
-  padding-left: 10px;
-  padding-right: 10px;
-  background-color: #1f8bbd;
-  box-shadow: 0 0 10px #929292;
-  letter-spacing: 1px;
-  max-width: 250px;
+	display: block;
+	width: auto;
+	padding: 5px;
+	margin-bottom: 2px;
+	border: none;
+	font-size: 14px;
+	color: #ffffff;
+	border: 2px solid #ffffff;
+	padding-left: 10px;
+	padding-right: 10px;
+	background-color: #1f8bbd;
+	box-shadow: 0 0 10px #929292;
+	letter-spacing: 1px;
+	max-width: 250px;
 }
 
 .footer {
-  border-top: 1px solid #ddd;
-  padding: 10px;
-  margin-top: 10px;
-  padding-bottom: 50px;
-  font-size: 12px;
+	border-top: 1px solid #ddd;
+	padding: 10px;
+	margin-top: 10px;
+	padding-bottom: 50px;
+	font-size: 12px;
 }
 
 .selectContainer {
-  display: inline-block;
-  min-width: 300px;
+	display: inline-block;
+	min-width: 300px;
 }
 
 .justifyButtons {
-  display: flex;
-  margin-top: 5px;
-  margin-bottom: 5px;
-  margin-left: 5px;
+	display: flex;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	margin-left: 5px;
 }
 .justifyButtonContainer {
-  display: block;
-  width: 35px;
-  height: 35px;
-  text-align: center;
-  margin-right: 5px;
-  border: 2px solid #dad7d7;
-  cursor: pointer;
+	display: block;
+	width: 35px;
+	height: 35px;
+	text-align: center;
+	margin-right: 5px;
+	border: 2px solid #dad7d7;
+	cursor: pointer;
 }
 
 .justifyButtonContainer:hover {
-  background-color: #d8d8d8;
+	background-color: #d8d8d8;
 }
 
 .activeButton {
-  border: 2px solid #9eb8f0;
+	border: 2px solid #9eb8f0;
 }
 .justifyImage {
-  display: block;
-  margin: auto;
-  position: relative;
-  top: 5px;
+	display: block;
+	margin: auto;
+	position: relative;
+	top: 5px;
 }

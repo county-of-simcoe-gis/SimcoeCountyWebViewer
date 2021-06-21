@@ -1,27 +1,26 @@
-
-.sc-theme-data-list-header{
-  padding-right: 10px;
-  color: #373737;
-  font-weight: bold;
-  font-size: 14px;
-  background-image: url(./images/down.png);
-  background-position: right center;
-  background-repeat: no-repeat;
-  display: table;
-  background-color: #C9E7F9;
-  width: 97%;
-  height: 40px;
-  border: 1px solid #ddd;
-  background-position-x: 96%;
-  cursor: pointer;
-  user-select: none;
+.sc-theme-data-list-header {
+	padding-right: 10px;
+	color: #373737;
+	font-weight: bold;
+	font-size: 14px;
+	background-image: url(./images/down.png);
+	background-position: right center;
+	background-repeat: no-repeat;
+	display: table;
+	background-color: #c9e7f9;
+	width: 97%;
+	height: 40px;
+	border: 1px solid #ddd;
+	background-position-x: 96%;
+	cursor: pointer;
+	user-select: none;
 }
-  .sc-theme-data-list-header.open{
-    background-image: url(./images/collapsed.png);
-  }
+.sc-theme-data-list-header.open {
+	background-image: url(./images/collapsed.png);
+}
 
-.sc-theme-data-list-container{
-  border: 1px solid #ddd;
-  border-radius: 3px;
-  margin-bottom: 5px;
+.sc-theme-data-list-container {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	margin-bottom: 5px;
 }

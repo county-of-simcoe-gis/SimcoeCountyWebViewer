@@ -39,16 +39,16 @@
 //     handleOpenModal () {
 //         this.setState({ showModal: true });
 //     }
-    
+
 //     handleCloseModal () {
 //         this.setState({ showModal: false });
 //     }
-    
+
 //     render () {
 //     return (
 //         <div>
 //         {/* <button onClick={this.handleOpenModal}>Trigger Modal</button> */}
-//         <ReactModal 
+//         <ReactModal
 //             isOpen={this.state.showModal}
 //             contentLabel="Minimal Modal Example"
 //         >
@@ -58,5 +58,5 @@
 //     );
 //     }
 // }
- 
+
 // export default ModalWindow;

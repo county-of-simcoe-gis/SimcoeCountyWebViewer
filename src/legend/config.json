@@ -1,4 +1,4 @@
 {
-  "googleAnalyticsID": "UA-3104541-53",
-  "geoserverLayerGroupsUrl": "https://opengis.simcoe.ca/geoserver/simcoe/Config_Public_Default/ows?service=wms&version=1.3.0&request=GetCapabilities"
+	"googleAnalyticsID": "UA-3104541-53",
+	"geoserverLayerGroupsUrl": "https://opengis.simcoe.ca/geoserver/simcoe/Config_Public_Default/ows?service=wms&version=1.3.0&request=GetCapabilities"
 }

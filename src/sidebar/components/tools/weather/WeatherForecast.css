@@ -1,84 +1,84 @@
 .sc-tool-weather-forecast-container {
-  position: absolute;
-  top: 141px;
-  bottom: 0px;
-  overflow-y: auto;
-  width: 365px;
-  overflow-x: hidden;
+	position: absolute;
+	top: 141px;
+	bottom: 0px;
+	overflow-y: auto;
+	width: 365px;
+	overflow-x: hidden;
 }
 
 .sc-tool-weather-forecast-dt {
-  font-size: 7pt;
-  position: relative;
-  top: 15px;
-  left: 151px;
+	font-size: 7pt;
+	position: relative;
+	top: 15px;
+	left: 151px;
 }
 
 .sc-tool-weather-forecast-day {
 }
 .sc-tool-weather-forecast-day-container {
-  display: table-cell;
+	display: table-cell;
 }
 .sc-tool-weather-forecast-days-container {
-  display: inline-table;
+	display: inline-table;
 }
 
 .sc-tool-weather-forecast-days-container.two-warnings {
-  margin-top: 30px;
+	margin-top: 30px;
 }
 .sc-tool-weather-forecast-day-details {
-  display: inline-grid;
-  text-align: center;
-  width: 97px;
-  border: 1px solid #ddd;
-  padding: 5px;
-  height: 140px;
+	display: inline-grid;
+	text-align: center;
+	width: 97px;
+	border: 1px solid #ddd;
+	padding: 5px;
+	height: 140px;
 }
 
 .sc-tool-weather-forecast-details-img {
-  display: block;
-  margin: auto;
+	display: block;
+	margin: auto;
 }
 
 .sc-tool-weather-forecast-legend {
-  top: 0px !important;
-  width: unset !important;
-  margin-bottom: 7px !important;
-  font-weight: bold;
+	top: 0px !important;
+	width: unset !important;
+	margin-bottom: 7px !important;
+	font-weight: bold;
 }
 
 .sc-tool-weather-forecast-warnings-container {
-  width: 331px;
-  height: 25px;
-  margin-bottom: 5px;
-  text-align: center;
-  text-decoration: none;
-  font-weight: bold;
-  line-height: 27px;
-  cursor: pointer;
-  font-size: 11pt;
+	width: 331px;
+	height: 25px;
+	margin-bottom: 5px;
+	text-align: center;
+	text-decoration: none;
+	font-weight: bold;
+	line-height: 27px;
+	cursor: pointer;
+	font-size: 11pt;
 }
 
 .sc-tool-weather-forecast-warnings-container a:visited {
-  color: white;
+	color: white;
 }
 
 .sc-tool-weather-forecast-warning.low {
-  background-color: #707070;
+	background-color: #707070;
 }
 .sc-tool-weather-forecast-warning.medium {
-  background-color: #ffff00;
+	background-color: #ffff00;
 }
 .sc-tool-weather-forecast-warning.high {
-  background-color: #bb0000;
+	background-color: #bb0000;
 }
 
 .sc-tool-weather-forecast-warning.ended {
-  background-color: #66cc66;
+	background-color: #66cc66;
 }
 
 .sc-tool-weather-forecast-view-forecast {
-  width: 328px;
-  text-align: center;
-  margin-top: 5px;
+	width: 328px;
+	text-align: center;
+	margin-top: 5px;
 }
