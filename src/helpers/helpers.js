@@ -1003,27 +1003,25 @@ export function saveToStorage(storageKey, item) {
 		window.localStorage.setItem(storageKey, JSON.stringify(item));
 	} catch (e) {
 		console.log(e);
-		refreshStorage();
+		cleanupStorage();
 	}
 }
-
-export function refreshStorage() {
-	const localStore = Object.assign([], window.localStorage);
-	window.localStorage.clear();
-	const keys = Object.keys(localStore);
+export function cleanupStorage() {
+	const keys = ["searchHistory"];
 	keys.forEach((key) => {
+		let localStore = JSON.parse(window.localStorage.getItem(key));
+		window.localStorage.removeItem(key);
 		if (key === "searchHistory") {
-			const searchHistory = JSON.parse(localStore[key]);
-			if (searchHistory.length > 0) {
+			if (localStore.length > 0) {
 				let cleanedSearchHistory = [];
-				searchHistory.forEach((item) => {
+				localStore.forEach((item) => {
 					delete item["geojson"];
 					cleanedSearchHistory.push(item);
 				});
-				localStore[key] = JSON.stringify(cleanedSearchHistory);
+				localStore = JSON.stringify(cleanedSearchHistory);
 			}
 		}
-		window.localStorage.setItem(key, localStore[key]);
+		window.localStorage.setItem(key, localStore);
 	});
 }
 
@@ -1039,7 +1037,7 @@ export function appendToStorage(storageKey, item, limit = undefined) {
 		window.localStorage.setItem(storageKey, JSON.stringify(items));
 	} catch (e) {
 		console.log(e);
-		refreshStorage();
+		cleanupStorage();
 	}
 }
 
