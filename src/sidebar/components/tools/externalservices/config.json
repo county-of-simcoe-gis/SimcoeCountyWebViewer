@@ -1,96 +1,95 @@
 {
-  "groups": [
-    {
-      "groupName": "Google",
-      "icon": "google.png",
-      "links": [
-        {
-          "name": "Google Maps",
-          "url": "https://maps.google.com?q=${y},${x}",
-          "requiresPropertyInfo": false
-        },
-        {
-          "name": "Google Street View",
-          "url": "https://maps.google.com/maps?q=&layer=c&cbll=${y},${x}",
-          "requiresPropertyInfo": false
-        },
-        {
-          "name": "Google Search",
-          "url": "https://www.google.ca/search?q=${address} Ontario Canada",
-          "requiresPropertyInfo": true
-        },
-        {
-          "name": "Google Driving Directions",
-          "url": "https://www.google.com/maps?daddr=${y},${x}",
-          "requiresPropertyInfo": false
-        }
-      ]
-    },
+	"groups": [
+		{
+			"groupName": "Google",
+			"icon": "google.png",
+			"links": [
+				{
+					"name": "Google Maps",
+					"url": "https://maps.google.com?q=${y},${x}",
+					"requiresPropertyInfo": false
+				},
+				{
+					"name": "Google Street View",
+					"url": "https://maps.google.com/maps?q=&layer=c&cbll=${y},${x}",
+					"requiresPropertyInfo": false
+				},
+				{
+					"name": "Google Search",
+					"url": "https://www.google.ca/search?q=${address} Ontario Canada",
+					"requiresPropertyInfo": true
+				},
+				{
+					"name": "Google Driving Directions",
+					"url": "https://www.google.com/maps?daddr=${y},${x}",
+					"requiresPropertyInfo": false
+				}
+			]
+		},
 
-    {
-      "groupName": "Bing",
-      "icon": "bing.png",
-      "links": [
-        {
-          "name": "Bing Maps",
-          "url": "https://bing.com/maps/default.aspx?cp=${y}~${x}&lvl=17",
-          "requiresPropertyInfo": false
-        },
-        {
-          "name": "Bing Aerial",
-          "url": "https://bing.com/maps/default.aspx?cp=${y}~${x}&style=h&lvl=17",
-          "requiresPropertyInfo": false
-        },
-        {
-          "name": "Bing Search",
-          "url": "https://bing.com/maps/default.aspx?where1=${address} Ontario Canada",
-          "requiresPropertyInfo": true
-        },
-        {
-          "name": "Bing Driving Directions",
-          "url": "https://bing.com/maps/default.aspx?rtp=~pos.${y}_${x}",
-          "requiresPropertyInfo": false
-        }
-      ]
-    },
+		{
+			"groupName": "Bing",
+			"icon": "bing.png",
+			"links": [
+				{
+					"name": "Bing Maps",
+					"url": "https://bing.com/maps/default.aspx?cp=${y}~${x}&lvl=17",
+					"requiresPropertyInfo": false
+				},
+				{
+					"name": "Bing Aerial",
+					"url": "https://bing.com/maps/default.aspx?cp=${y}~${x}&style=h&lvl=17",
+					"requiresPropertyInfo": false
+				},
+				{
+					"name": "Bing Search",
+					"url": "https://bing.com/maps/default.aspx?where1=${address} Ontario Canada",
+					"requiresPropertyInfo": true
+				},
+				{
+					"name": "Bing Driving Directions",
+					"url": "https://bing.com/maps/default.aspx?rtp=~pos.${y}_${x}",
+					"requiresPropertyInfo": false
+				}
+			]
+		},
 
-    {
-      "groupName": "Map Quest",
-      "icon": "mapquest.png",
-      "links": [
-        {
-          "name": "Map Quest Maps",
-          "url": "https://www.mapquest.ca/latlng/${y},${x}",
-          "requiresPropertyInfo": false
-        },
-        {
-          "name": "Map Quest Search",
-          "url": "https://www.mapquest.ca/search/results?zoom=12&center=${y},${x}&query=${address} Ontario Canada",
-          "requiresPropertyInfo": true
-        }
-      ]
-    },
-    {
-      "groupName": "Open Street Map",
-      "icon": "osm.png",
-      "links": [
-        {
-          "name": "Open Street Map",
-          "url": "https://www.openstreetmap.org/?&mlat=${y}&mlon=${x}",
-          "requiresPropertyInfo": false
-        },
-        {
-          "name": "Open Street Map Search",
-          "url": "https://www.openstreetmap.org/search?query=${address} Ontario Canada",
-          "requiresPropertyInfo": true
-        },
-        {
-          "name": "Open Street Map Directions",
-          "url": "https://www.openstreetmap.org/directions?engine=osrm_car&route=;${y},${x}#map=10/${y}/${x}",
-          "requiresPropertyInfo": false
-        }
-      ]
-    }
-
-  ]
+		{
+			"groupName": "Map Quest",
+			"icon": "mapquest.png",
+			"links": [
+				{
+					"name": "Map Quest Maps",
+					"url": "https://www.mapquest.ca/latlng/${y},${x}",
+					"requiresPropertyInfo": false
+				},
+				{
+					"name": "Map Quest Search",
+					"url": "https://www.mapquest.ca/search/results?zoom=12&center=${y},${x}&query=${address} Ontario Canada",
+					"requiresPropertyInfo": true
+				}
+			]
+		},
+		{
+			"groupName": "Open Street Map",
+			"icon": "osm.png",
+			"links": [
+				{
+					"name": "Open Street Map",
+					"url": "https://www.openstreetmap.org/?&mlat=${y}&mlon=${x}",
+					"requiresPropertyInfo": false
+				},
+				{
+					"name": "Open Street Map Search",
+					"url": "https://www.openstreetmap.org/search?query=${address} Ontario Canada",
+					"requiresPropertyInfo": true
+				},
+				{
+					"name": "Open Street Map Directions",
+					"url": "https://www.openstreetmap.org/directions?engine=osrm_car&route=;${y},${x}#map=10/${y}/${x}",
+					"requiresPropertyInfo": false
+				}
+			]
+		}
+	]
 }

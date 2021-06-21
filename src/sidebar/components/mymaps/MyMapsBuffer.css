@@ -1,17 +1,17 @@
 .sc-mymaps-buffer-container {
-  display: grid;
-  grid-template-columns: 50% 50%;
-  grid-template-rows: 11px 25px 23px auto;
-  -webkit-align-content: center;
-  align-content: center;
-  grid-row-gap: 5px;
-  grid-column-gap: 5px;
+	display: grid;
+	grid-template-columns: 50% 50%;
+	grid-template-rows: 11px 25px 23px auto;
+	-webkit-align-content: center;
+	align-content: center;
+	grid-row-gap: 5px;
+	grid-column-gap: 5px;
 }
 
 .sc-mymaps-buffer-label-distance {
-  grid-column-start: 1;
-  grid-column-end: 3;
-  align-self: center;
-  font-weight: bold;
-  font-size: 10pt;
+	grid-column-start: 1;
+	grid-column-end: 3;
+	align-self: center;
+	font-weight: bold;
+	font-size: 10pt;
 }

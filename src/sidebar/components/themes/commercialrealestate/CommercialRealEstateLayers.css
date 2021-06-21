@@ -1,65 +1,65 @@
 .sc-theme-commercial-real-estate-layers-container {
-  position: absolute;
-  top: 438px;
-  left: 5px;
-  right: 5px;
-  bottom: 5px;
+	position: absolute;
+	top: 438px;
+	left: 5px;
+	right: 5px;
+	bottom: 5px;
 }
 
 .sc-theme-commercial-real-estate-layers-layer-content {
-  border-left-color: rgba(37, 118, 239, 0.5);
-  font-style: italic;
-  color: #808080;
-  font-size: 11px;
-  padding: 5px;
-  border-left: 3px solid rgba(255, 0, 0, 0.5);
-  padding-left: 10px;
-  margin-top: 5px;
-  margin-bottom: 5px;
+	border-left-color: rgba(37, 118, 239, 0.5);
+	font-style: italic;
+	color: #808080;
+	font-size: 11px;
+	padding: 5px;
+	border-left: 3px solid rgba(255, 0, 0, 0.5);
+	padding-left: 10px;
+	margin-top: 5px;
+	margin-bottom: 5px;
 }
 
 .sc-theme-commercial-real-estate-layers-layer-header {
-  position: relative;
-  height: 35px;
-  border-top: 1px solid #ddd;
+	position: relative;
+	height: 35px;
+	border-top: 1px solid #ddd;
 }
 
 .sc-theme-commercial-real-estate-layers-center {
-  margin: 0;
-  position: absolute;
-  top: 65%;
-  -ms-transform: translateY(-50%);
-  transform: translateY(-50%);
-  width: 328px;
+	margin: 0;
+	position: absolute;
+	top: 65%;
+	-ms-transform: translateY(-50%);
+	transform: translateY(-50%);
+	width: 328px;
 }
 
 .sc-theme-commercial-real-estate-layers-checkbox {
-  position: relative;
-  bottom: 6px;
-  left: 3px;
-  cursor: pointer;
+	position: relative;
+	bottom: 6px;
+	left: 3px;
+	cursor: pointer;
 }
 
 .sc-theme-commercial-real-estate-layers-layer-label {
-  position: relative;
-  bottom: 7px;
-  left: 3px;
-  cursor: pointer;
-  font-size: 10pt;
+	position: relative;
+	bottom: 7px;
+	left: 3px;
+	cursor: pointer;
+	font-size: 10pt;
 }
 
 .sc-theme-commercial-real-estate-layers-layer-count {
-  position: relative;
-  bottom: 8px;
-  left: 8px;
-  color: #999;
-  font-size: 9pt;
+	position: relative;
+	bottom: 8px;
+	left: 8px;
+	color: #999;
+	font-size: 9pt;
 }
 
 .sc-theme-commercial-real-estate-layers-information-icon {
-  position: relative;
-  float: right;
-  top: 0px;
-  left: 10px;
-  cursor: pointer;
+	position: relative;
+	float: right;
+	top: 0px;
+	left: 10px;
+	cursor: pointer;
 }

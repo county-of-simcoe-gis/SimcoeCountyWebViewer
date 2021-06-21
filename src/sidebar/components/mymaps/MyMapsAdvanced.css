@@ -1,110 +1,109 @@
 #sc-mymaps-advanced > .Collapsible {
-  position: absolute;
-  bottom: 0px;
-  height: 30px;
-  width: 327px;
-  margin: 5px;
-  background-color: #e8e8e8;
-  border: 1px solid #ddd;
-  cursor: pointer;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  line-height: 30px;
-  padding-left: 31px;
+	position: absolute;
+	bottom: 0px;
+	height: 30px;
+	width: 327px;
+	margin: 5px;
+	background-color: #e8e8e8;
+	border: 1px solid #ddd;
+	cursor: pointer;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	line-height: 30px;
+	padding-left: 31px;
 }
 
 #sc-mymaps-advanced .Collapsible__trigger {
-  position: fixed;
-  display: inline-block;
-  width: 331px;
-  margin-left: -31px;
-  padding-left: 28px;
-  font-weight: bold;
-  padding-top: 1px;
-  background-image: url(./images/settings.png), url(./images/down.png);
-  background-position-y: center, 9px;
-  background-repeat: no-repeat, no-repeat;
-  background-position-x: 5px, 332px;
+	position: fixed;
+	display: inline-block;
+	width: 331px;
+	margin-left: -31px;
+	padding-left: 28px;
+	font-weight: bold;
+	padding-top: 1px;
+	background-image: url(./images/settings.png), url(./images/down.png);
+	background-position-y: center, 9px;
+	background-repeat: no-repeat, no-repeat;
+	background-position-x: 5px, 332px;
 }
 
 #sc-mymaps-advanced .is-closed {
-  background-image: url(./images/settings.png), url(./images/up.png);
+	background-image: url(./images/settings.png), url(./images/up.png);
 }
 
 #sc-mymaps-advanced .Collapsible__contentOuter {
-  position: absolute;
-  margin-left: -32px;
-  bottom: 31px;
-  width: 358px;
-  border-style: solid;
-  border-bottom: none;
-  border-color: #d8dadc;
-  border-width: thin;
-  border-top-left-radius: 5px;
-  border-top-right-radius: 5px;
-  border-bottom-right-radius: 0px;
-  border-bottom-left-radius: 0px;
-  background-color: white;
+	position: absolute;
+	margin-left: -32px;
+	bottom: 31px;
+	width: 358px;
+	border-style: solid;
+	border-bottom: none;
+	border-color: #d8dadc;
+	border-width: thin;
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 0px;
+	border-bottom-left-radius: 0px;
+	background-color: white;
 }
 
 .sc-mymaps-advanced-content {
-  padding: 5px;
+	padding: 5px;
 }
 
 .sc-mymaps-advanced-switch {
-  top: 5px;
-  margin-left: 5px;
+	top: 5px;
+	margin-left: 5px;
 }
 
 .sc-mymaps-advanced-main-label {
-  display: block;
-  font-weight: bold;
+	display: block;
+	font-weight: bold;
 }
 
 .sc-mymaps-advanced-switch-label {
-  display: inline-table;
-  width: 175px;
+	display: inline-table;
+	width: 175px;
 }
 .sc-mymaps-advanced-switch-label.on {
-  font-weight: bold;
+	font-weight: bold;
 }
 
 .sc-mymaps-advanced-edit-radio {
-  position: relative;
-  top: 2px;
+	position: relative;
+	top: 2px;
 }
 
 .sc-mymaps-advanced-import-input {
-  height: 25px;
-  width: 200px;
-  font-size: 8pt;
+	height: 25px;
+	width: 200px;
+	font-size: 8pt;
 }
 
 .sc-mymaps-advanced-import-button {
-  width: 60px;
-  margin: 3px;
+	width: 60px;
+	margin: 3px;
 }
 
 .sc-mymaps-advanced-import-container {
-  border: 0 none #ccc;
-  border-bottom: 1px solid #d8dadc;
-  border-radius: 0;
-  padding-bottom: 10px;
+	border: 0 none #ccc;
+	border-bottom: 1px solid #d8dadc;
+	border-radius: 0;
+	padding-bottom: 10px;
 }
 
 .sc-mymaps-advanced-edit-container {
-  padding-top: 5px;
+	padding-top: 5px;
 }
 
 /* Safari 10.1+ */
 /* Safari 10.1+ (alternate method) */
 @media not all and (min-resolution: 0.001dpcm) {
-  @supports (-webkit-appearance: none) {
-    .sc-mymaps-advanced-edit-radio {
-      top: -1px;
-    }
-    
-  }
+	@supports (-webkit-appearance: none) {
+		.sc-mymaps-advanced-edit-radio {
+			top: -1px;
+		}
+	}
 }
