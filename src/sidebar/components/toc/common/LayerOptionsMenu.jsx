@@ -10,7 +10,6 @@ import FloatingMenu, {
 	FloatingMenuItem,
 } from "../../../../helpers/FloatingMenu.jsx";
 import * as TOCHelpers from "./TOCHelpers.jsx";
-//import TOCConfig from "./TOCConfig.json";
 import LayerInfoApp from "../../../../layerInfo/App";
 
 class LayerOptionsMenu extends Component {

@@ -5,7 +5,6 @@ import { isMobile } from "react-device-detect";
 import arrayMove from "array-move";
 
 //CUSTOM
-//import TOCConfig from "./common/TOCConfig.json";
 import * as TOCHelpers from "./common/TOCHelpers.jsx";
 import TOCHeader from "./common/TOCHeader.jsx";
 import LayerOptionsMenu from "./common/LayerOptionsMenu.jsx";

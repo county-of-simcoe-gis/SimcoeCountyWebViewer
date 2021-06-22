@@ -5,7 +5,6 @@ import {
 	FeatureHelpers,
 	OL_DATA_TYPES,
 } from "../../../../helpers/OLHelpers";
-//import TOCConfig from "../common/TOCConfig.json";
 import { WMSCapabilities } from "ol/format.js";
 
 // INDEX WHERE THE TOC LAYERS SHOULD START DRAWING AT
