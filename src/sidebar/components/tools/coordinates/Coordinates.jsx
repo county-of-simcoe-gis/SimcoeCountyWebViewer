@@ -81,9 +81,6 @@ class Coordinates extends Component {
 	}
 
 	componentDidMount() {
-		//wait for map to load
-		helpers.waitForLoad("map", Date.now(), 30, () => this.onMapLoad());
-
 		// DISABLE PROPERTY CLICK
 		window.disableParcelClick = true;
 
