@@ -322,7 +322,11 @@ class Search extends Component {
 	}
 
 	jsonCallback(result, hidden = false) {
-		if (!hidden) this.saveStateToStorage(result);
+		if (!hidden) {
+			const savedResult = Object.assign({}, result);
+			delete savedResult["geojson"];
+			helpers.appendToStorage(this.storageKey, savedResult, 25);
+		}
 
 		// EMTI SEARCH COMPLETE
 		window.emitter.emit("searchComplete", result);
@@ -401,29 +405,6 @@ class Search extends Component {
 		}
 	}
 
-	saveStateToStorage = (item) => {
-		let savedSearches = this.getStorage();
-
-		item.dateAdded = new Date().toLocaleString();
-		savedSearches.unshift(item);
-
-		if (savedSearches.length >= 25) savedSearches.pop();
-		try {
-			localStorage.setItem(this.storageKey, JSON.stringify(savedSearches));
-		} catch (e) {
-			console.log(e);
-		}
-	};
-
-	// GET STORAGE
-	getStorage() {
-		const storage = localStorage.getItem(this.storageKey);
-		if (storage === null) return [];
-
-		const data = JSON.parse(storage);
-		return data;
-	}
-
 	// WHEN USER SELECTS ITEM
 	onItemSelect(value, item) {
 		if (item.type === "Map Layer") {
@@ -484,7 +465,7 @@ class Search extends Component {
 				});
 			window.map.getView().setZoom(18);
 		} else {
-			console.log(value);
+			//console.log(value);
 			// CALL API TO GET LOCATION DETAILS
 			helpers.getJSON(searchInfoURL(apiUrl, item.location_id), (result) =>
 				this.jsonCallback(result)

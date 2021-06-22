@@ -40,7 +40,9 @@ class LocalRealEstate extends Component {
 		});
 		this.setState({ visibleLayers: visibleLayers }, () => {
 			this.renderImageSlider();
-			this.getStorage();
+			let storage = helpers.getItemsFromStorage(this.storageKey);
+			if (storage === undefined) storage = [];
+			this.setState({ viewedItems: storage });
 		});
 	}
 
@@ -115,30 +117,10 @@ class LocalRealEstate extends Component {
 			}),
 			() => {
 				// UPDATE STORAGE
-				this.saveStateToStorage();
-				console.log(this.state.viewedItems);
+				helpers.saveToStorage(this.storageKey, this.state.viewedItems);
 			}
 		);
 	};
-
-	saveStateToStorage = () => {
-		const stateClone = Object.assign([], this.state.viewedItems);
-
-		try {
-			localStorage.setItem(this.storageKey, JSON.stringify(stateClone));
-		} catch (e) {
-			console.log(e);
-		}
-	};
-
-	// GET STORAGE
-	getStorage() {
-		const storage = localStorage.getItem(this.storageKey);
-		if (storage === null) return [];
-
-		const data = JSON.parse(storage);
-		this.setState({ viewedItems: data });
-	}
 
 	// REMOVE FROM RECENT LIST
 	onItemRemove = (feature) => {
@@ -152,7 +134,7 @@ class LocalRealEstate extends Component {
 			},
 			() => {
 				// UPDATE STORAGE
-				this.saveStateToStorage();
+				helpers.saveToStorage(this.storageKey, this.state.viewedItems);
 			}
 		);
 	};
@@ -164,7 +146,7 @@ class LocalRealEstate extends Component {
 			},
 			() => {
 				// UPDATE STORAGE
-				this.saveStateToStorage();
+				helpers.saveToStorage(this.storageKey, this.state.viewedItems);
 			}
 		);
 	};

@@ -64,7 +64,6 @@ proj4.defs([
 		"+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs ",
 	],
 ]);
-
 register(proj4);
 
 // UTM NAD 83
@@ -580,6 +579,7 @@ export function httpGetText(url, callback) {
 		.catch((error) => {
 			//httpGetText(url.replace("opengis.simcoe.ca", "opengis2.simcoe.ca"), callback);
 			console.error(url, error);
+			if (callback !== undefined) callback();
 		});
 }
 
@@ -594,6 +594,7 @@ export function httpGetTextWithParams(url, params = undefined, callback) {
 		.catch((error) => {
 			//httpGetText(url.replace("opengis.simcoe.ca", "opengis2.simcoe.ca"), callback);
 			console.error(url, error);
+			if (callback !== undefined) callback();
 		});
 }
 
@@ -1080,10 +1081,29 @@ export function stringDivider(str, width, spaceReplacer) {
 
 export function saveToStorage(storageKey, item) {
 	try {
-		localStorage.setItem(storageKey, JSON.stringify(item));
+		window.localStorage.setItem(storageKey, JSON.stringify(item));
 	} catch (e) {
 		console.log(e);
+		cleanupStorage();
 	}
+}
+export function cleanupStorage() {
+	const keys = ["searchHistory"];
+	keys.forEach((key) => {
+		let localStore = JSON.parse(window.localStorage.getItem(key));
+		window.localStorage.removeItem(key);
+		if (key === "searchHistory") {
+			if (localStore.length > 0) {
+				let cleanedSearchHistory = [];
+				localStore.forEach((item) => {
+					delete item["geojson"];
+					cleanedSearchHistory.push(item);
+				});
+				localStore = JSON.stringify(cleanedSearchHistory);
+			}
+		}
+		window.localStorage.setItem(key, localStore);
+	});
 }
 
 export function appendToStorage(storageKey, item, limit = undefined) {
@@ -1092,17 +1112,18 @@ export function appendToStorage(storageKey, item, limit = undefined) {
 	item.dateAdded = new Date().toLocaleString();
 	items.unshift(item);
 	if (limit !== undefined) {
-		if (items.length >= limit) items.pop();
+		if (items.length > limit) items.pop();
 	}
 	try {
-		localStorage.setItem(storageKey, JSON.stringify(items));
+		window.localStorage.setItem(storageKey, JSON.stringify(items));
 	} catch (e) {
 		console.log(e);
+		cleanupStorage();
 	}
 }
 
 export function getItemsFromStorage(key) {
-	const storage = localStorage.getItem(key);
+	const storage = window.localStorage.getItem(key);
 	if (storage === null) return undefined;
 
 	const data = JSON.parse(storage);

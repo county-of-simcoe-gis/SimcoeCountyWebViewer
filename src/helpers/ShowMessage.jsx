@@ -11,13 +11,24 @@ class ShowMessage extends Component {
 			color: this.props.color ? this.props.color : "green",
 			sidebarOpen: window.sidebarOpen,
 		};
-		window.emitter.addListener("sidebarChanged", (isSidebarOpen) =>
-			this.setState({ sidebarOpen: isSidebarOpen })
-		);
+
+		this._isMounted = false;
 	}
 
+	componentDidMount() {
+		this.sidebarEmitter = window.emitter.addListener(
+			"sidebarChanged",
+			(isSidebarOpen) => this.setState({ sidebarOpen: isSidebarOpen })
+		);
+		this._isMounted = true;
+	}
+	componentWillUnmount() {
+		this.sidebarEmitter.remove();
+
+		this._isMounted = false;
+	}
 	onCloseClick = (value) => {
-		this.setState({ hide: true });
+		if (this._isMounted) this.setState({ hide: true });
 	};
 
 	getClassName = () => {
