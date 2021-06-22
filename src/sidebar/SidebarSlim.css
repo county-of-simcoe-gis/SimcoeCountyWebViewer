@@ -9,20 +9,32 @@
 	-moz-user-select: none;
 	-ms-user-select: none;
 	user-select: none;
-	background-color: #e0e0e0;
+	/* background-color: #e0e0e0; */
 	padding-bottom: 5px;
 	padding-left: 2px;
 	padding-right: 1px;
+	background-color: #d7d7d7;
+	background: linear-gradient(
+		to bottom,
+		rgba(255, 255, 255, 1) 0%,
+		rgba(229, 229, 229, 1) 100%
+	);
 }
 
 .sc-sidebar-slim-button-container {
 	padding-top: 10px;
 }
 .sc-sidebar-slim-button-container.active {
-	background-color: #90b5d5;
+	background-color: #ddd;
+	background: linear-gradient(
+		to bottom,
+		rgba(240, 249, 255, 1) 0%,
+		rgb(191, 214, 228) 100%
+	) !important;
+	border: 1px solid #90b5d5;
 }
 .sc-sidebar-slim-button-container:hover {
-	background-color: #9e9e9e;
+	background-color: #e5e5e5;
 }
 
 .sc-sidebar-slim-button {
@@ -39,11 +51,8 @@
 	background-color: rgb(120, 204, 50);
 	border-radius: 50%;
 	display: inline-block;
-	position: relative;
-	top: -46px;
-	right: -2px;
-	bottom: auto;
-	left: auto;
+	position: absolute;
+	right: 5px;
 }
 
 .sc-tab-button-dot-tools {

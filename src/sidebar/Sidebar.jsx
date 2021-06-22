@@ -551,6 +551,7 @@ class Sidebar extends Component {
 							}
 							toolActive={this.state.activeTabComponents.tools.loadedComponent}
 							isMyMapsEditing={this.state.isMyMapsEditing}
+							tabIndex={this.state.tabIndex}
 						/>
 						<div id="sc-sidebar-message-container" />
 						{/* <MenuButton /> */}

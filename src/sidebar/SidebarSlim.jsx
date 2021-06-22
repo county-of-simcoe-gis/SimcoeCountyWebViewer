@@ -24,6 +24,7 @@ class SidebarSlim extends Component {
 						window.emitter.emit("activateTab", "layers");
 					}}
 					isSelected={this.props.tabIndex === 0}
+					isActive={false}
 				/>
 				<SlimButton
 					title="Tools"
@@ -32,6 +33,7 @@ class SidebarSlim extends Component {
 						window.emitter.emit("activateTab", "tools");
 					}}
 					isSelected={this.props.tabIndex === 1}
+					isActive={this.props.toolActive}
 				/>
 				<SlimButton
 					title="My Maps"
@@ -40,6 +42,7 @@ class SidebarSlim extends Component {
 						window.emitter.emit("activateTab", "mymaps");
 					}}
 					isSelected={this.props.tabIndex === 2}
+					isActive={this.props.isMyMapsEditing}
 				/>
 				<SlimButton
 					title="Themes"
@@ -48,6 +51,7 @@ class SidebarSlim extends Component {
 						window.emitter.emit("activateTab", "themes");
 					}}
 					isSelected={this.props.tabIndex === 3}
+					isActive={this.props.themeActive}
 				/>
 				<SlimButton
 					title="Reports"
@@ -56,6 +60,7 @@ class SidebarSlim extends Component {
 						window.emitter.emit("activateTab", "reports");
 					}}
 					isSelected={this.props.tabIndex === 4}
+					isActive={false}
 				/>
 				<div className="sc-sidebar-slim-footer-container">
 					<MenuButton />
@@ -79,6 +84,11 @@ class SlimButton extends Component {
 				}
 				onClick={this.props.onClick}
 			>
+				<span
+					className={
+						this.props.isActive ? "sc-sidebar-slim-button-dot" : "sc-hidden"
+					}
+				/>
 				<button className="sc-sidebar-slim-button">
 					<img src={images[this.props.image]} alt={this.props.title} />
 					<br />

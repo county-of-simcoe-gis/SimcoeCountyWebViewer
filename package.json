@@ -1,7 +1,7 @@
 {
 	"name": "opengis",
 	"homepage": "https://opengis.simcoe.ca/public/",
-	"version": "1.0.9",
+	"version": "1.0.10",
 	"private": true,
 	"dependencies": {
 		"array-move": "^2.2.2",
