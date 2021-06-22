@@ -349,21 +349,12 @@ class Sidebar extends Component {
 
 	togglePanelVisibility(callback = undefined) {
 		//  PANEL IN AND OUT CLASSES
-		if (window.sidebarOpen) {
-			window.sidebarOpen = false;
-			this.setState({ sidebarOpen: false }, () => {
-				// EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
-				window.emitter.emit("sidebarChanged", window.sidebarOpen);
-				if (callback !== undefined) callback();
-			});
-		} else {
-			window.sidebarOpen = true;
-			this.setState({ sidebarOpen: true }, () => {
-				// EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
-				window.emitter.emit("sidebarChanged", window.sidebarOpen);
-				if (callback !== undefined) callback();
-			});
-		}
+		window.sidebarOpen = !window.sidebarOpen;
+		this.setState({ sidebarOpen: window.sidebarOpen }, () => {
+			// EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
+			window.emitter.emit("sidebarChanged", window.sidebarOpen);
+			if (callback !== undefined && typeof callback === "function") callback();
+		});
 	}
 
 	// TOOL AND THEME ITEMS CLICK
@@ -383,7 +374,7 @@ class Sidebar extends Component {
 								name={Component.props.name}
 								helpLink={Component.props.helpLink}
 								onClose={this.onPanelComponentClose}
-								onSidebarVisibility={this.togglePanelVisibility}
+								onSidebarVisibility={() => this.togglePanelVisibility()}
 								config={Component.props.config}
 							/>
 						);
@@ -409,7 +400,7 @@ class Sidebar extends Component {
 								name={Component.props.name}
 								helpLink={Component.props.helpLink}
 								onClose={this.onPanelComponentClose}
-								onSidebarVisibility={this.togglePanelVisibility}
+								onSidebarVisibility={() => this.togglePanelVisibility()}
 								config={Component.props.config}
 							/>
 						);
@@ -540,7 +531,7 @@ class Sidebar extends Component {
 						<div
 							id="sc-sidebar-advanced-tab"
 							className={this.state.tabClassName}
-							onClick={this.togglePanelVisibility}
+							onClick={() => this.togglePanelVisibility()}
 						>
 							<img src={require("./images/close-tab.png")} alt="Close Tab" />
 						</div>
