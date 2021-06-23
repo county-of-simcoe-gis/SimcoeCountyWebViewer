@@ -34,7 +34,6 @@ import FloatingMenu, { FloatingMenuItem } from "../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
 import Portal from "../helpers/Portal.jsx";
 import * as helpers from "../helpers/helpers";
-//import mainConfig from "../config.json";
 import Identify from "./Identify";
 import AttributeTable from "../helpers/AttributeTable.jsx";
 import FloatingImageSlider from "../helpers/FloatingImageSlider.jsx";

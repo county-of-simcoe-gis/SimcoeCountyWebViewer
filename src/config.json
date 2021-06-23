@@ -32,7 +32,6 @@
 	"centerCoords": [-8878504.68, 5543492.45],
 	"defaultZoom": 10,
 	"maxZoom": 20,
-	"imageViewerUrl": "",
 	"controls": {
 		"rotate": true,
 		"fullScreen": true,
@@ -180,7 +179,8 @@
 			"componentName": "SolidWasteFacilities",
 			"description": "Provides information about waste facilities, and information as to where to purchase bag tags.",
 			"imageName": "solidWasteFacilities.png",
-			"config": "./configSolidWasteFacilities.json"
+			"config": "./configSolidWasteFacilities.json",
+			"enabled": false
 		},
 		{
 			"id": 2,
@@ -238,74 +238,87 @@
 	],
 	"sidebarShortcutParams": [
 		{
+			"id": 1,
 			"url_param": "BAGTAG",
 			"type": "themes",
 			"component": "Solid Waste Facilities"
 		},
 		{
+			"id": 2,
 			"url_param": "MLS",
 			"type": "themes",
 			"component": "Local Real Estate"
 		},
 		{
+			"id": 3,
 			"url_param": "LANDFILL",
 			"type": "themes",
 			"component": "Solid Waste Facilities"
 		},
 		{
+			"id": 4,
 			"url_param": "MUNI",
 			"type": "search",
 			"component": "Municipality"
 		},
 		{
+			"id": 5,
 			"url_param": "THEME",
 			"matchValue": "Solid Waste Management",
 			"type": "themes",
 			"component": "Solid Waste Facilities"
 		},
 		{
+			"id": 6,
 			"url_param": "THEME",
 			"matchValue": "solidwaste",
 			"type": "themes",
 			"component": "Solid Waste Facilities"
 		},
 		{
+			"id": 7,
 			"url_param": "THEME",
 			"matchValue": "Economic Development",
 			"type": "themes",
 			"component": "Commercial Real Estate"
 		},
 		{
+			"id": 8,
 			"url_param": "THEME",
 			"matchValue": "Commercial Real Estate Search",
 			"type": "themes",
 			"component": "Commercial Real Estate"
 		},
 		{
+			"id": 9,
 			"url_param": "THEME",
 			"matchValue": "Community Services",
 			"type": "themes",
 			"component": "211 Community Services"
 		},
 		{
+			"id": 10,
 			"url_param": "THEME",
 			"matchValue": "BESTSTART",
 			"type": "themes",
 			"component": "211 Community Services"
 		},
 		{
+			"id": 11,
 			"url_param": "THEME",
 			"matchValue": "REALESTATE",
 			"type": "themes",
 			"component": "Local Real Estate"
 		},
 		{
+			"id": 12,
 			"url_param": "THEME",
 			"matchValue": "Immigration Support Services",
 			"type": "themes",
 			"component": "Immigration Services"
 		},
 		{
+			"id": 13,
 			"url_param": "THEME",
 			"matchValue": "Forestry and Recreation",
 			"type": "themes",

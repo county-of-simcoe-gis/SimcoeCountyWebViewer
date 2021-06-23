@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import * as helpers from "../helpers/helpers";
-import mainConfig from "../config.json";
 import * as drawingHelpers from "../helpers/drawingHelpers";
 import Autocomplete from "react-autocomplete";
 import "./Search.css";
@@ -48,7 +47,6 @@ class Search extends Component {
 	constructor(props) {
 		super(props);
 
-		this.apiUrl = mainConfig.apiUrl;
 		// STYLES
 		this.styles = {
 			poly: new Style({
@@ -75,7 +73,6 @@ class Search extends Component {
 		// BIND THIS TO THE CLICK FUNCTION
 		this.removeMarkersClick = this.removeMarkersClick.bind(this);
 		this.cleanup = this.cleanup.bind(this);
-		this.storageKey = mainConfig.storageKeys.SearchHistory;
 
 		// LISTEN FOR MAP TO MOUNT
 		window.emitter.addListener("mapParametersComplete", () => this.onMapLoad());
@@ -110,46 +107,52 @@ class Search extends Component {
 	requestTimer = null;
 
 	onMapLoad = () => {
-		// HANDLE URL PARAMETER
-		if (locationId !== null) {
-			// CALL API TO GET LOCATION DETAILS
-			helpers.getJSON(searchInfoURL(this.apiUrl, locationId), (result) =>
-				this.jsonCallback(result)
-			);
-		}
+		helpers.waitForLoad("map", Date.now(), 30, () => {
+			// HANDLE URL PARAMETER
+			if (locationId !== null) {
+				// CALL API TO GET LOCATION DETAILS
+				helpers.getJSON(searchInfoURL(this.apiUrl, locationId), (result) =>
+					this.jsonCallback(result)
+				);
+			}
+		});
 	};
 
 	componentDidMount() {
-		helpers.getJSON(searchTypesURL(this.apiUrl), (result) => {
-			let items = [];
-			items.push({ label: "All", value: "All" });
-			result.forEach((type) => {
-				const obj = { label: type, value: type };
-				items.push(obj);
+		helpers.waitForLoad("map", Date.now(), 30, () => {
+			this.apiUrl = window.config.apiUrl;
+			this.storageKey = window.config.storageKeys.SearchHistory;
+			helpers.getJSON(searchTypesURL(this.apiUrl), (result) => {
+				let items = [];
+				items.push({ label: "All", value: "All" });
+				result.forEach((type) => {
+					const obj = { label: type, value: type };
+					items.push(obj);
+				});
+				items.push({ label: "Open Street Map", value: "Open Street Map" });
+				items.push({ label: "Map Layer", value: "Map Layer" });
+				items.push({ label: "Tool", value: "Tool" });
+				items.push({ label: "Theme", value: "Theme" });
+				this.setState({ searchTypes: items, selectedType: items[0] });
 			});
-			items.push({ label: "Open Street Map", value: "Open Street Map" });
-			items.push({ label: "Map Layer", value: "Map Layer" });
-			items.push({ label: "Tool", value: "Tool" });
-			items.push({ label: "Theme", value: "Theme" });
-			this.setState({ searchTypes: items, selectedType: items[0] });
+
+			// PATCH TO CLOSE MENU WHEN MAP IS CLICKED
+			this.clickEvent = document.body.addEventListener(
+				"click",
+				(evt) => {
+					if (document.activeElement.id !== "sc-search-textbox") return;
+
+					if (typeof evt.target.className === "string") {
+						evt.target.className.split(" ").forEach((className) => {
+							if (className === "ol-overlaycontainer-stopevent") {
+								document.getElementById("map").focus();
+							}
+						});
+					}
+				},
+				true
+			);
 		});
-
-		// PATCH TO CLOSE MENU WHEN MAP IS CLICKED
-		this.clickEvent = document.body.addEventListener(
-			"click",
-			(evt) => {
-				if (document.activeElement.id !== "sc-search-textbox") return;
-
-				if (typeof evt.target.className === "string") {
-					evt.target.className.split(" ").forEach((className) => {
-						if (className === "ol-overlaycontainer-stopevent") {
-							document.getElementById("map").focus();
-						}
-					});
-				}
-			},
-			true
-		);
 	}
 
 	onHistoryItemSelect = (item) => {
@@ -582,9 +585,11 @@ class Search extends Component {
 		if (selectedType === "All" || selectedType === "Tool") {
 			let tools = [];
 			// eslint-disable-next-line
-			mainConfig.sidebarToolComponents.forEach((tool) => {
+			window.config.sidebarToolComponents.forEach((tool) => {
 				if (
-					tool.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0
+					tool.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >=
+						0 &&
+					(tool.enabled === undefined || tool.enabled)
 				) {
 					tools.push({
 						name: helpers.replaceAllInString(tool.name, "_", " "),
@@ -599,9 +604,11 @@ class Search extends Component {
 		// THEMES
 		if (selectedType === "All" || selectedType === "Theme") {
 			let themes = [];
-			mainConfig.sidebarThemeComponents.forEach((theme) => {
+			window.config.sidebarThemeComponents.forEach((theme) => {
 				if (
-					theme.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0
+					theme.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >=
+						0 &&
+					(theme.enabled === undefined || theme.enabled)
 				) {
 					themes.push({
 						name: helpers.replaceAllInString(theme.name, "_", " "),

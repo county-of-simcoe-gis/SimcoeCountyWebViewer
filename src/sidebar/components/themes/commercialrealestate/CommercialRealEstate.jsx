@@ -5,363 +5,452 @@ import "react-tabs/style/react-tabs.css";
 import CommercialRealEstateSearch from "./CommercialRealEstateSearch.jsx";
 import * as config from "./config.json";
 import * as helpers from "../../../../helpers/helpers";
-import mainConfig from "../../../../config.json";
 import * as CommercialRealEstateSearchObjects from "./CommercialRealEstateObjects";
 import { unByKey } from "ol/Observable.js";
 import { GeoJSON } from "ol/format.js";
 import CommercialRealEstatePopupContent from "./CommercialRealEstatePopupContent.jsx";
 import CommercialRealEstateLayers from "./CommercialRealEstateLayers";
-const propTypes = ["Vacant Land", "Commercial", "Farm", "Industrial", "Institutional"];
-const serverUrl = mainConfig.geoserverUrl + "wms/";
+const propTypes = [
+	"Vacant Land",
+	"Commercial",
+	"Farm",
+	"Industrial",
+	"Institutional",
+];
 const polygonLayerName = config.polygonLayerName;
 const pointLayerName = config.pointLayerName;
 
 class CommercialRealEstate extends Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 
-    this.types = CommercialRealEstateSearchObjects.getTypes();
-    this.buildingSpaceFromItems = CommercialRealEstateSearchObjects.getBuildingSpaceFromItems();
-    this.buildingSpaceToItems = CommercialRealEstateSearchObjects.getBuildingSpaceToItems();
-    this.landSizeFromItems = CommercialRealEstateSearchObjects.getLandSizeFromItems();
-    this.landSizeToItems = CommercialRealEstateSearchObjects.getLandSizeToItems();
-    this.priceFromItems = CommercialRealEstateSearchObjects.getPriceFromItems();
-    this.priceToItems = CommercialRealEstateSearchObjects.getPriceToItems();
+		this.types = CommercialRealEstateSearchObjects.getTypes();
+		this.buildingSpaceFromItems =
+			CommercialRealEstateSearchObjects.getBuildingSpaceFromItems();
+		this.buildingSpaceToItems =
+			CommercialRealEstateSearchObjects.getBuildingSpaceToItems();
+		this.landSizeFromItems =
+			CommercialRealEstateSearchObjects.getLandSizeFromItems();
+		this.landSizeToItems =
+			CommercialRealEstateSearchObjects.getLandSizeToItems();
+		this.priceFromItems = CommercialRealEstateSearchObjects.getPriceFromItems();
+		this.priceToItems = CommercialRealEstateSearchObjects.getPriceToItems();
 
-    this.sql = "";
-    this.state = {
-      layers: [],
-      selectedType: this.types[0],
-      incentiveChecked: false,
-      onlyInMapChecked: false,
-      searchType: "BuildingSize",
-      selectedBuildingSpaceFrom: this.buildingSpaceFromItems[0],
-      selectedBuildingSpaceTo: this.buildingSpaceToItems[0],
-      selectedLandSizeFrom: this.landSizeFromItems[0],
-      selectedLandSizeTo: this.landSizeToItems[0],
-      selectedPriceFrom: this.priceFromItems[0],
-      selectedPriceTo: this.priceToItems[0],
-      numRecords: 0,
-      allResults: [],
-      activeTab: 0,
-      layerAll: null,
-    };
-  }
+		this.sql = "";
+		this.state = {
+			layers: [],
+			selectedType: this.types[0],
+			incentiveChecked: false,
+			onlyInMapChecked: false,
+			searchType: "BuildingSize",
+			selectedBuildingSpaceFrom: this.buildingSpaceFromItems[0],
+			selectedBuildingSpaceTo: this.buildingSpaceToItems[0],
+			selectedLandSizeFrom: this.landSizeFromItems[0],
+			selectedLandSizeTo: this.landSizeToItems[0],
+			selectedPriceFrom: this.priceFromItems[0],
+			selectedPriceTo: this.priceToItems[0],
+			numRecords: 0,
+			allResults: [],
+			activeTab: 0,
+			layerAll: null,
+		};
+	}
 
-  onFeatureChange = (feature) => {
-    helpers.getGeometryCenter(feature.getGeometry(), (geo) => {
-      const center = window.map.getView().getCenter();
-      const newCenter = [center[0] + 100, center[1] + 50];
-      window.map.getView().setCenter(newCenter);
-      window.popup.show(geo.flatCoordinates, <CommercialRealEstatePopupContent key={helpers.getUID()} feature={feature} />, "Real Estate");
-    });
-  };
+	onFeatureChange = (feature) => {
+		helpers.getGeometryCenter(feature.getGeometry(), (geo) => {
+			const center = window.map.getView().getCenter();
+			const newCenter = [center[0] + 100, center[1] + 50];
+			window.map.getView().setCenter(newCenter);
+			window.popup.show(
+				geo.flatCoordinates,
+				<CommercialRealEstatePopupContent
+					key={helpers.getUID()}
+					feature={feature}
+				/>,
+				"Real Estate"
+			);
+		});
+	};
 
-  componentDidMount() {
-    const obj = {
-      wfsUrl: config.incentiveWfsUrl,
-      imageUrlField: "_imageurl",
-      detailFields: ["Address", "Property Type", "Municipality"],
-    };
+	componentDidMount() {
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			const obj = {
+				wfsUrl: config.incentiveWfsUrl,
+				imageUrlField: "_imageurl",
+				detailFields: ["Address", "Property Type", "Municipality"],
+			};
 
-    window.emitter.emit("showImageSlider", obj, this.onFeatureChange);
-    this.buildLayers();
+			window.emitter.emit("showImageSlider", obj, this.onFeatureChange);
+			this.buildLayers();
 
-    this.onMapMoveEndEvent = window.map.on("moveend", () => {
-      if (this.state.onlyInMapChecked) {
-        this.updateLayerSource();
-      }
-    });
+			this.onMapMoveEndEvent = window.map.on("moveend", () => {
+				if (this.state.onlyInMapChecked) {
+					this.updateLayerSource();
+				}
+			});
 
-    this.mapClickEvent = window.map.on("click", (evt) => {
-      // DISABLE POPUPS
-      if (window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring ) return;
+			this.mapClickEvent = window.map.on("click", (evt) => {
+				// DISABLE POPUPS
+				if (
+					window.isDrawingOrEditing ||
+					window.isCoordinateToolOpen ||
+					window.isMeasuring
+				)
+					return;
 
-      var viewResolution = window.map.getView().getResolution();
-      var url = this.state.layerAll.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", { INFO_FORMAT: "application/json" });
-      if (url) {
-        helpers.getJSON(url, (result) => {
-          const features = result.features;
-          if (features.length === 0) {
-            return;
-          }
+				var viewResolution = window.map.getView().getResolution();
+				var url = this.state.layerAll
+					.getSource()
+					.getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", {
+						INFO_FORMAT: "application/json",
+					});
+				if (url) {
+					helpers.getJSON(url, (result) => {
+						const features = result.features;
+						if (features.length === 0) {
+							return;
+						}
 
-          const geoJSON = new GeoJSON().readFeatures(result);
-          const feature = geoJSON[0];
-          window.popup.show(evt.coordinate, <CommercialRealEstatePopupContent key={helpers.getUID()} feature={feature} />, "Real Estate");
-        });
-      }
-    });
-  }
+						const geoJSON = new GeoJSON().readFeatures(result);
+						const feature = geoJSON[0];
+						window.popup.show(
+							evt.coordinate,
+							<CommercialRealEstatePopupContent
+								key={helpers.getUID()}
+								feature={feature}
+							/>,
+							"Real Estate"
+						);
+					});
+				}
+			});
+		});
+	}
 
-  componentWillUnmount() {
-    unByKey(this.onMapMoveEndEvent);
-    unByKey(this.mapClickEvent);
+	componentWillUnmount() {
+		unByKey(this.onMapMoveEndEvent);
+		unByKey(this.mapClickEvent);
 
-    //this.mapClickEvent = () => 
-    propTypes.forEach((propType) => {
-      window.map.removeLayer(this.state.layers[propType].pointLayer);
-      window.map.removeLayer(this.state.layers[propType].polygonLayer);
-    });
+		//this.mapClickEvent = () =>
+		propTypes.forEach((propType) => {
+			window.map.removeLayer(this.state.layers[propType].pointLayer);
+			window.map.removeLayer(this.state.layers[propType].polygonLayer);
+		});
 
-    window.emitter.emit("hideImageSlider");
-  }
+		window.emitter.emit("hideImageSlider");
+	}
 
-  buildLayers = () => {
-    let layers = {};
-    propTypes.forEach((propType) => {
-      const wmsPointLayer = helpers.getImageWMSLayer(serverUrl, pointLayerName, "geoserver", "_proptype = '" + propType + "'", 200, true);
+	buildLayers = () => {
+		let layers = {};
+		const serverUrl = window.config.geoserverUrl + "wms/";
+		propTypes.forEach((propType) => {
+			const wmsPointLayer = helpers.getImageWMSLayer(
+				serverUrl,
+				pointLayerName,
+				"geoserver",
+				"_proptype = '" + propType + "'",
+				200,
+				true
+			);
 
-      wmsPointLayer.setVisible(true);
-      wmsPointLayer.setZIndex(200);
-      wmsPointLayer.setProperties({
-        name: propType,
-        tocDisplayName:propType, 
-        disableParcelClick: true,
-        queryable:true,
-      });
-      
-      window.map.addLayer(wmsPointLayer);
+			wmsPointLayer.setVisible(true);
+			wmsPointLayer.setZIndex(200);
+			wmsPointLayer.setProperties({
+				name: propType,
+				tocDisplayName: propType,
+				disableParcelClick: true,
+				queryable: true,
+			});
 
-      const wmsPolygonLayer = helpers.getImageWMSLayer(serverUrl, polygonLayerName, "geoserver", "_proptype = '" + propType + "'", 200, true);
-      wmsPolygonLayer.setVisible(true);
-      wmsPolygonLayer.setZIndex(200);
-      wmsPolygonLayer.setProperties({
-        name: propType,
-        tocDisplayName:propType, 
-        disableParcelClick: false,
-        queryable:true,
-      });
-      window.map.addLayer(wmsPolygonLayer);
+			window.map.addLayer(wmsPointLayer);
 
-      layers[propType] = { propType: propType, pointLayer: wmsPointLayer, polygonLayer: wmsPolygonLayer, visible: true, };
-    });
+			const wmsPolygonLayer = helpers.getImageWMSLayer(
+				serverUrl,
+				polygonLayerName,
+				"geoserver",
+				"_proptype = '" + propType + "'",
+				200,
+				true
+			);
+			wmsPolygonLayer.setVisible(true);
+			wmsPolygonLayer.setZIndex(200);
+			wmsPolygonLayer.setProperties({
+				name: propType,
+				tocDisplayName: propType,
+				disableParcelClick: false,
+				queryable: true,
+			});
+			window.map.addLayer(wmsPolygonLayer);
 
-    this.setNumRecords();
-    const layerAll = helpers.getImageWMSLayer(serverUrl, pointLayerName, "geoserver", null, 200, true);
+			layers[propType] = {
+				propType: propType,
+				pointLayer: wmsPointLayer,
+				polygonLayer: wmsPolygonLayer,
+				visible: true,
+			};
+		});
 
-    this.setState({ layers: layers, layerAll });
-  };
+		this.setNumRecords();
+		const layerAll = helpers.getImageWMSLayer(
+			serverUrl,
+			pointLayerName,
+			"geoserver",
+			null,
+			200,
+			true
+		);
 
-  onClose = () => {
-    // ADD CLEAN UP HERE (e.g. Map Layers, Popups, etc)
+		this.setState({ layers: layers, layerAll });
+	};
 
-    // CALL PARENT WITH CLOSE
-    this.props.onClose();
-  };
+	onClose = () => {
+		// ADD CLEAN UP HERE (e.g. Map Layers, Popups, etc)
 
-  onLayerCheckboxClick = (evt, layerName) => {
-    let layers = Object.assign(this.state.layers, {});
-    layers[layerName].visible = evt.target.checked;
-    layers[layerName].pointLayer.setVisible(evt.target.checked);
-    layers[layerName].polygonLayer.setVisible(evt.target.checked);
-    this.setState({ layers: layers });
-  };
+		// CALL PARENT WITH CLOSE
+		this.props.onClose();
+	};
 
-  onTypeDropDownChange = (selectedType) => {
-    this.setState({ selectedType }, () => {
-      this.updateLayerSource();
-    });
-  };
+	onLayerCheckboxClick = (evt, layerName) => {
+		let layers = Object.assign(this.state.layers, {});
+		layers[layerName].visible = evt.target.checked;
+		layers[layerName].pointLayer.setVisible(evt.target.checked);
+		layers[layerName].polygonLayer.setVisible(evt.target.checked);
+		this.setState({ layers: layers });
+	};
 
-  onIncentiveChange = (evt) => {
-    this.setState({ incentiveChecked: evt.target.checked }, () => {
-      this.updateLayerSource();
-    });
-  };
+	onTypeDropDownChange = (selectedType) => {
+		this.setState({ selectedType }, () => {
+			this.updateLayerSource();
+		});
+	};
 
-  onOnlyInMapChange = (evt) => {
-    this.setState({ onlyInMapChecked: evt.target.checked }, () => {
-      this.updateLayerSource();
-    });
-  };
+	onIncentiveChange = (evt) => {
+		this.setState({ incentiveChecked: evt.target.checked }, () => {
+			this.updateLayerSource();
+		});
+	};
 
-  onBuildingSpaceFromDropDownChange = (selectedBuildingSpaceFrom) => {
-    this.setState({ selectedBuildingSpaceFrom }, () => {
-      this.updateLayerSource();
-    });
-  };
+	onOnlyInMapChange = (evt) => {
+		this.setState({ onlyInMapChecked: evt.target.checked }, () => {
+			this.updateLayerSource();
+		});
+	};
 
-  onBuildingSpaceToDropDownChange = (selectedBuildingSpaceTo) => {
-    this.setState({ selectedBuildingSpaceTo }, () => {
-      this.updateLayerSource();
-    });
-  };
+	onBuildingSpaceFromDropDownChange = (selectedBuildingSpaceFrom) => {
+		this.setState({ selectedBuildingSpaceFrom }, () => {
+			this.updateLayerSource();
+		});
+	};
 
-  onLandSizeFromDropDownChange = (selectedLandSizeFrom) => {
-    this.setState({ selectedLandSizeFrom }, () => {
-      this.updateLayerSource();
-    });
-  };
+	onBuildingSpaceToDropDownChange = (selectedBuildingSpaceTo) => {
+		this.setState({ selectedBuildingSpaceTo }, () => {
+			this.updateLayerSource();
+		});
+	};
 
-  onLandSizeToDropDownChange = (selectedLandSizeTo) => {
-    this.setState({ selectedLandSizeTo }, () => {
-      this.updateLayerSource();
-    });
-  };
+	onLandSizeFromDropDownChange = (selectedLandSizeFrom) => {
+		this.setState({ selectedLandSizeFrom }, () => {
+			this.updateLayerSource();
+		});
+	};
 
-  onPriceFromDropDownChange = (selectedPriceFrom) => {
-    this.setState({ selectedPriceFrom }, () => {
-      this.updateLayerSource();
-    });
-  };
+	onLandSizeToDropDownChange = (selectedLandSizeTo) => {
+		this.setState({ selectedLandSizeTo }, () => {
+			this.updateLayerSource();
+		});
+	};
 
-  onPriceToDropDownChange = (selectedPriceTo) => {
-    this.setState({ selectedPriceTo }, () => {
-      this.updateLayerSource();
-    });
-  };
+	onPriceFromDropDownChange = (selectedPriceFrom) => {
+		this.setState({ selectedPriceFrom }, () => {
+			this.updateLayerSource();
+		});
+	};
 
-  onSwitchSearchType = (searchType) => {
-    this.setState({ searchType }, () => {
-      this.updateLayerSource();
-    });
-  };
+	onPriceToDropDownChange = (selectedPriceTo) => {
+		this.setState({ selectedPriceTo }, () => {
+			this.updateLayerSource();
+		});
+	};
 
-  onViewPropertiesClick = () => {
-    this.setState({ activeTab: 1 });
-  };
+	onSwitchSearchType = (searchType) => {
+		this.setState({ searchType }, () => {
+			this.updateLayerSource();
+		});
+	};
 
-  onTabSelect = (activeTab) => {
-    this.setState({ activeTab });
-  };
-  setNumRecords = () => {
-    const extent = window.map.getView().calculateExtent();
+	onViewPropertiesClick = () => {
+		this.setState({ activeTab: 1 });
+	};
 
-    this.setState({ numRecords: 0, allResults: [] }, () => {
-      propTypes.forEach((propType) => {
-        const params = this.state.layers[propType].pointLayer.getSource().getParams();
-        helpers.getWFSGeoJSON(
-          serverUrl,
-          "simcoe:Economic_Development_Property_Listings_Polygon_Theme",
-          (result) => {
-            if (result.length === 0) return;
+	onTabSelect = (activeTab) => {
+		this.setState({ activeTab });
+	};
+	setNumRecords = () => {
+		const serverUrl = window.config.geoserverUrl + "wms/";
+		const extent = window.map.getView().calculateExtent();
 
-            this.setState((prevState) => ({
-              numRecords: prevState.numRecords + result.length,
-              allResults: prevState.allResults.concat(result),
-            }));
-          },
-          "Incentive+D",
-          this.state.onlyInMapChecked ? extent : null,
-          params.cql_filter
-        );
-      });
-    });
-  };
+		this.setState({ numRecords: 0, allResults: [] }, () => {
+			propTypes.forEach((propType) => {
+				const params = this.state.layers[propType].pointLayer
+					.getSource()
+					.getParams();
+				helpers.getWFSGeoJSON(
+					serverUrl,
+					"simcoe:Economic_Development_Property_Listings_Polygon_Theme",
+					(result) => {
+						if (result.length === 0) return;
 
-  updateLayerSource = () => {
-    propTypes.forEach((propType) => {
-      // BASE SQL
-      this.sql = "[_proptype] = '" + propType + "'";
+						this.setState((prevState) => ({
+							numRecords: prevState.numRecords + result.length,
+							allResults: prevState.allResults.concat(result),
+						}));
+					},
+					"Incentive+D",
+					this.state.onlyInMapChecked ? extent : null,
+					params.cql_filter
+				);
+			});
+		});
+	};
 
-      // TYPE
-      if (this.state.selectedType.value !== "For Sale or Lease") {
-        this.sql += " AND _saletype = '" + this.state.selectedType.value + "'";
-      }
+	updateLayerSource = () => {
+		propTypes.forEach((propType) => {
+			// BASE SQL
+			this.sql = "[_proptype] = '" + propType + "'";
 
-      // INCENTIVE
-      if (this.state.incentiveChecked) {
-        this.sql += " AND Incentive = 'Yes'";
-      }
+			// TYPE
+			if (this.state.selectedType.value !== "For Sale or Lease") {
+				this.sql += " AND _saletype = '" + this.state.selectedType.value + "'";
+			}
 
-      // BUILDING SPACE
-      const fromSpace = this.state.selectedBuildingSpaceFrom.value;
-      const toSpace = this.state.selectedBuildingSpaceTo.value;
-      if (this.state.searchType === "BuildingSize") {
-        if (toSpace <= fromSpace) {
-          helpers.showMessage("Building Space", "Building Space From Size must be smaller then To Size");
-        } else if (fromSpace !== 0 || toSpace !== 99999999999) {
-          this.sql += " AND _squarefeet >= " + fromSpace + " AND _squarefeet <= " + toSpace;
-        }
-      }
+			// INCENTIVE
+			if (this.state.incentiveChecked) {
+				this.sql += " AND Incentive = 'Yes'";
+			}
 
-      // LAND SIZE
-      const fromLandSize = this.state.selectedLandSizeFrom.value;
-      const toLandSize = this.state.selectedLandSizeTo.value;
-      if (this.state.searchType !== "BuildingSize") {
-        if (toLandSize <= fromLandSize) {
-          helpers.showMessage("Land Size", "Land From Size must be smaller then To Size");
-        } else if (fromLandSize !== 0 || toLandSize !== 99999999999) {
-          this.sql += " AND Acres >= " + fromLandSize + " AND Acres <= " + toLandSize;
-        }
-      }
+			// BUILDING SPACE
+			const fromSpace = this.state.selectedBuildingSpaceFrom.value;
+			const toSpace = this.state.selectedBuildingSpaceTo.value;
+			if (this.state.searchType === "BuildingSize") {
+				if (toSpace <= fromSpace) {
+					helpers.showMessage(
+						"Building Space",
+						"Building Space From Size must be smaller then To Size"
+					);
+				} else if (fromSpace !== 0 || toSpace !== 99999999999) {
+					this.sql +=
+						" AND _squarefeet >= " +
+						fromSpace +
+						" AND _squarefeet <= " +
+						toSpace;
+				}
+			}
 
-      // PRICE
-      const fromPrice = this.state.selectedPriceFrom.value;
-      const toPrice = this.state.selectedPriceTo.value;
-      if (toPrice <= fromPrice) {
-        helpers.showMessage("Price", "Price To Size must be smaller then From Price");
-      } else if (fromPrice !== 0 || toPrice !== 99999999999) {
-        this.sql += " AND _listprice >= " + fromPrice + " AND _listprice <= " + toPrice;
-      }
+			// LAND SIZE
+			const fromLandSize = this.state.selectedLandSizeFrom.value;
+			const toLandSize = this.state.selectedLandSizeTo.value;
+			if (this.state.searchType !== "BuildingSize") {
+				if (toLandSize <= fromLandSize) {
+					helpers.showMessage(
+						"Land Size",
+						"Land From Size must be smaller then To Size"
+					);
+				} else if (fromLandSize !== 0 || toLandSize !== 99999999999) {
+					this.sql +=
+						" AND Acres >= " + fromLandSize + " AND Acres <= " + toLandSize;
+				}
+			}
 
-      // console.log(this.state.searchType);
-      // console.log(fromPrice);
-      // console.log(toPrice);
-      // console.log(this.sql);
-      let params = this.state.layers[propType].pointLayer.getSource().getParams();
-      params.cql_filter = this.sql;
+			// PRICE
+			const fromPrice = this.state.selectedPriceFrom.value;
+			const toPrice = this.state.selectedPriceTo.value;
+			if (toPrice <= fromPrice) {
+				helpers.showMessage(
+					"Price",
+					"Price To Size must be smaller then From Price"
+				);
+			} else if (fromPrice !== 0 || toPrice !== 99999999999) {
+				this.sql +=
+					" AND _listprice >= " + fromPrice + " AND _listprice <= " + toPrice;
+			}
 
-      this.state.layers[propType].pointLayer.getSource().updateParams(params);
-      this.state.layers[propType].polygonLayer.getSource().updateParams(params);
-    });
+			// console.log(this.state.searchType);
+			// console.log(fromPrice);
+			// console.log(toPrice);
+			// console.log(this.sql);
+			let params = this.state.layers[propType].pointLayer
+				.getSource()
+				.getParams();
+			params.cql_filter = this.sql;
 
-    this.setNumRecords();
-  };
+			this.state.layers[propType].pointLayer.getSource().updateParams(params);
+			this.state.layers[propType].polygonLayer.getSource().updateParams(params);
+		});
 
-  render() {
-    return (
-      <PanelComponent onClose={this.props.onClose} name={this.props.name} helpLink={this.props.helpLink} type="themes">
-        <div className="sc-theme-commercial-real-estate-main-container">
-          <CommercialRealEstateSearch
-            activeTab={this.state.activeTab}
-            onTabSelect={this.onTabSelect}
-            onLayerCheckboxClick={this.onLayerCheckboxClick}
-            layers={this.state.layers}
-            onTypeDropDownChange={this.onTypeDropDownChange}
-            selectedType={this.state.selectedType}
-            onIncentiveChange={this.onIncentiveChange}
-            incentiveChecked={this.state.incentiveChecked}
-            onOnlyInMapChange={this.onOnlyInMapChange}
-            onlyInMapChecked={this.state.onlyInMapChecked}
-            onBuildingSpaceFromDropDownChange={this.onBuildingSpaceFromDropDownChange}
-            onBuildingSpaceToDropDownChange={this.onBuildingSpaceToDropDownChange}
-            selectedBuildingSpaceFrom={this.state.selectedBuildingSpaceFrom}
-            selectedBuildingSpaceTo={this.state.selectedBuildingSpaceTo}
-            searchType={this.state.searchType}
-            onLandSizeFromDropDownChange={this.onLandSizeFromDropDownChange}
-            onLandSizeToDropDownChange={this.onLandSizeToDropDownChange}
-            selectedLandSizeFrom={this.state.selectedLandSizeFrom}
-            selectedLandSizeTo={this.state.selectedLandSizeTo}
-            onSwitchSearchType={this.onSwitchSearchType}
-            onPriceFromDropDownChange={this.onPriceFromDropDownChange}
-            onPriceToDropDownChange={this.onPriceToDropDownChange}
-            selectedPriceFrom={this.state.selectedPriceFrom}
-            selectedPriceTo={this.state.selectedPriceTo}
-            numRecords={this.state.numRecords}
-            onViewPropertiesClick={this.onViewPropertiesClick}
-            results={this.state.allResults}
-          />
-          <CommercialRealEstateLayers layers={config.toggleLayers} />
-        </div>
-      </PanelComponent>
+		this.setNumRecords();
+	};
 
-      // <PanelComponent onClose={this.onClose} name={this.props.name} type="themes">
-      //   <Tabs forceRenderTabPanel={true} selectedIndex={this.state.tabIndex} onSelect={this.onTabSelect}>
-      //     <TabList>
-      //       <Tab id="tab-search">Search</Tab>
-      //       <Tab id="tab-directory">Directory</Tab>
-      //     </TabList>
+	render() {
+		return (
+			<PanelComponent
+				onClose={this.props.onClose}
+				name={this.props.name}
+				helpLink={this.props.helpLink}
+				type="themes"
+			>
+				<div className="sc-theme-commercial-real-estate-main-container">
+					<CommercialRealEstateSearch
+						activeTab={this.state.activeTab}
+						onTabSelect={this.onTabSelect}
+						onLayerCheckboxClick={this.onLayerCheckboxClick}
+						layers={this.state.layers}
+						onTypeDropDownChange={this.onTypeDropDownChange}
+						selectedType={this.state.selectedType}
+						onIncentiveChange={this.onIncentiveChange}
+						incentiveChecked={this.state.incentiveChecked}
+						onOnlyInMapChange={this.onOnlyInMapChange}
+						onlyInMapChecked={this.state.onlyInMapChecked}
+						onBuildingSpaceFromDropDownChange={
+							this.onBuildingSpaceFromDropDownChange
+						}
+						onBuildingSpaceToDropDownChange={
+							this.onBuildingSpaceToDropDownChange
+						}
+						selectedBuildingSpaceFrom={this.state.selectedBuildingSpaceFrom}
+						selectedBuildingSpaceTo={this.state.selectedBuildingSpaceTo}
+						searchType={this.state.searchType}
+						onLandSizeFromDropDownChange={this.onLandSizeFromDropDownChange}
+						onLandSizeToDropDownChange={this.onLandSizeToDropDownChange}
+						selectedLandSizeFrom={this.state.selectedLandSizeFrom}
+						selectedLandSizeTo={this.state.selectedLandSizeTo}
+						onSwitchSearchType={this.onSwitchSearchType}
+						onPriceFromDropDownChange={this.onPriceFromDropDownChange}
+						onPriceToDropDownChange={this.onPriceToDropDownChange}
+						selectedPriceFrom={this.state.selectedPriceFrom}
+						selectedPriceTo={this.state.selectedPriceTo}
+						numRecords={this.state.numRecords}
+						onViewPropertiesClick={this.onViewPropertiesClick}
+						results={this.state.allResults}
+					/>
+					<CommercialRealEstateLayers layers={config.toggleLayers} />
+				</div>
+			</PanelComponent>
 
-      //     <TabPanel id="tab-layers-content-search">
-      //       <CommercialRealEstateSearch></CommercialRealEstateSearch>
-      //     </TabPanel>
-      //     <TabPanel id="tab-layers-content-directory">Tab 2 Content</TabPanel>
-      //   </Tabs>
-      // </PanelComponent>
-    );
-  }
+			// <PanelComponent onClose={this.onClose} name={this.props.name} type="themes">
+			//   <Tabs forceRenderTabPanel={true} selectedIndex={this.state.tabIndex} onSelect={this.onTabSelect}>
+			//     <TabList>
+			//       <Tab id="tab-search">Search</Tab>
+			//       <Tab id="tab-directory">Directory</Tab>
+			//     </TabList>
+
+			//     <TabPanel id="tab-layers-content-search">
+			//       <CommercialRealEstateSearch></CommercialRealEstateSearch>
+			//     </TabPanel>
+			//     <TabPanel id="tab-layers-content-directory">Tab 2 Content</TabPanel>
+			//   </Tabs>
+			// </PanelComponent>
+		);
+	}
 }
 
 export default CommercialRealEstate;

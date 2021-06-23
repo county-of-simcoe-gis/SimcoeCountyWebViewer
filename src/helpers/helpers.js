@@ -86,26 +86,28 @@ export function sortByKey(array, key) {
 }
 // APP STAT
 export function addAppStat(type, description) {
-	if (mainConfig.includeAppStats === false) return;
-	// IGNORE LOCAL HOST DEV
-	if (
-		window.location.hostname === "localhost" ||
-		window.location.hostname === "127.0.0.1"
-	)
-		return;
-	const build = (appName, version) => `${appName}-${version}`;
-	const appStatsTemplate = (build, type, description) =>
-		`${mainConfig.appStatsUrl}${build}/${type}/${description}`;
-	let buildname = window.location.pathname.split("/").join("");
-	if (window.version !== undefined && window.version !== null) {
-		if (window.app !== undefined && window.app !== null) {
-			buildname += build(window.app, window.version);
-		} else {
-			buildname = build(buildname, window.version);
+	waitForLoad("settings", Date.now(), 30, () => {
+		if (window.config.includeAppStats === false) return;
+		// IGNORE LOCAL HOST DEV
+		if (
+			window.location.hostname === "localhost" ||
+			window.location.hostname === "127.0.0.1"
+		)
+			return;
+		const build = (appName, version) => `${appName}-${version}`;
+		const appStatsTemplate = (build, type, description) =>
+			`${window.config.appStatsUrl}${build}/${type}/${description}`;
+		let buildname = window.location.pathname.split("/").join("");
+		if (window.version !== undefined && window.version !== null) {
+			if (window.app !== undefined && window.app !== null) {
+				buildname += build(window.app, window.version);
+			} else {
+				buildname = build(buildname, window.version);
+			}
 		}
-	}
-	if (buildname === "") buildname = "Unknown";
-	httpGetText(appStatsTemplate(buildname, type, description));
+		if (buildname === "") buildname = "Unknown";
+		httpGetText(appStatsTemplate(buildname, type, description));
+	});
 }
 
 // GLOW CONTAINER
@@ -154,27 +156,30 @@ export function showURLWindow(
 ) {
 	console.log(url);
 	let isSameOrigin = true;
-	if (mainConfig.restrictOriginForUrlWindow) {
-		if (url !== undefined)
-			isSameOrigin =
-				url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !== -1;
-	}
+	waitForLoad("settings", Date.now(), 30, () => {
+		if (window.config.restrictOriginForUrlWindow) {
+			if (url !== undefined)
+				isSameOrigin =
+					url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !==
+					-1;
+		}
 
-	if (isSameOrigin) {
-		ReactDOM.render(
-			<URLWindow
-				key={shortid.generate()}
-				mode={mode}
-				showFooter={showFooter}
-				url={url}
-				honorDontShow={honorDontShow}
-				hideScroll={hideScroll}
-			/>,
-			document.getElementById("map-modal-window")
-		);
-	} else {
-		window.open(url, "_blank");
-	}
+		if (isSameOrigin) {
+			ReactDOM.render(
+				<URLWindow
+					key={shortid.generate()}
+					mode={mode}
+					showFooter={showFooter}
+					url={url}
+					honorDontShow={honorDontShow}
+					hideScroll={hideScroll}
+				/>,
+				document.getElementById("map-modal-window")
+			);
+		} else {
+			window.open(url, "_blank");
+		}
+	});
 }
 
 export function export_file(filename, content) {
@@ -1194,22 +1199,24 @@ export function getGeometryFromGeoJSON(geometry) {
 }
 
 export function bufferGeometry(geometry, distanceMeters, callback) {
-	const url = mainConfig.apiUrl + "postBufferGeometry/";
+	waitForLoad("settings", Date.now(), 30, () => {
+		const url = window.config.apiUrl + "postBufferGeometry/";
 
-	// PROJECT TO UTM FOR ACCURACY
-	const utmNad83Geometry = geometry.transform("EPSG:3857", _nad83Proj);
-	const geoJSON = getGeoJSONFromGeometry(utmNad83Geometry);
-	const obj = { geoJSON: geoJSON, distance: distanceMeters, srid: "26917" };
+		// PROJECT TO UTM FOR ACCURACY
+		const utmNad83Geometry = geometry.transform("EPSG:3857", _nad83Proj);
+		const geoJSON = getGeoJSONFromGeometry(utmNad83Geometry);
+		const obj = { geoJSON: geoJSON, distance: distanceMeters, srid: "26917" };
 
-	postJSON(url, obj, (result) => {
-		// REPROJECT BACK TO WEB MERCATOR
-		const olGeoBuffer = getGeometryFromGeoJSON(result.geojson);
-		const utmNad83GeometryBuffer = olGeoBuffer.transform(
-			"EPSG:26917",
-			"EPSG:3857"
-		);
+		postJSON(url, obj, (result) => {
+			// REPROJECT BACK TO WEB MERCATOR
+			const olGeoBuffer = getGeometryFromGeoJSON(result.geojson);
+			const utmNad83GeometryBuffer = olGeoBuffer.transform(
+				"EPSG:26917",
+				"EPSG:3857"
+			);
 
-		callback(utmNad83GeometryBuffer);
+			callback(utmNad83GeometryBuffer);
+		});
 	});
 }
 
@@ -1227,13 +1234,15 @@ export function disableKeyboardEvents(disable) {
 }
 
 export function getGeometryCenter(geometry, callback) {
-	const url = mainConfig.apiUrl + "postGetGeometryCenter/";
-	const geoJSON = getGeoJSONFromGeometry(geometry);
-	const obj = { geoJSON: geoJSON, srid: "3857" };
+	waitForLoad("settings", Date.now(), 30, () => {
+		const url = window.config.apiUrl + "postGetGeometryCenter/";
+		const geoJSON = getGeoJSONFromGeometry(geometry);
+		const obj = { geoJSON: geoJSON, srid: "3857" };
 
-	postJSON(url, obj, (result) => {
-		const olGeo = getGeometryFromGeoJSON(result.geojson);
-		callback(olGeo);
+		postJSON(url, obj, (result) => {
+			const olGeo = getGeometryFromGeoJSON(result.geojson);
+			callback(olGeo);
+		});
 	});
 }
 export async function asyncForEach(array, callback) {
@@ -1638,6 +1647,21 @@ export function loadConfig(callback) {
 					zoom: settings.defaultZoom,
 				})
 			);
+			if (settings.sidebarToolComponents !== undefined)
+				settings.sidebarToolComponents = mergeObjArray(
+					config.sidebarToolComponents,
+					settings.sidebarToolComponents
+				);
+			if (settings.sidebarThemeComponents !== undefined)
+				settings.sidebarThemeComponents = mergeObjArray(
+					config.sidebarThemeComponents,
+					settings.sidebarThemeComponents
+				);
+			if (settings.sidebarShortcutParams !== undefined)
+				settings.sidebarShortcutParams = mergeObjArray(
+					config.sidebarShortcutParams,
+					settings.sidebarShortcutParams
+				);
 
 			//TRANSPOSE LEGACY TOC SETTINGS
 			if (settings.toc === undefined) settings["toc"] = {};
@@ -1692,6 +1716,19 @@ export function getConfig(component, name) {
 	)[0];
 }
 
+export function mergeObjArray(targetArray, sourceArray) {
+	let resultArray = [];
+	targetArray.forEach((targetObj) => {
+		let sourceObj = sourceArray.filter(
+			(source) => targetObj.id == source.id
+		)[0];
+		if (sourceObj !== undefined) {
+			resultArray.push(mergeObj(targetObj, sourceObj));
+			sourceArray = sourceArray.filter((source) => sourceObj.id !== source.id);
+		} else resultArray.push(targetObj);
+	});
+	return resultArray.concat(sourceArray);
+}
 export function mergeObj(targetObj, sourceObj) {
 	Object.keys(sourceObj).forEach((key) => {
 		if (

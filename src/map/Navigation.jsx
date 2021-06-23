@@ -2,8 +2,7 @@ import React, { Component } from "react";
 import "./Navigation.css";
 import { fromLonLat } from "ol/proj";
 import * as helpers from "../helpers/helpers";
-import mainConfig from "../config.json";
-const storageMapDefaultsKey = "Map Defaults";
+
 class Navigation extends Component {
 	constructor(props) {
 		super(props);

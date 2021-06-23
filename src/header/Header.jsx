@@ -6,7 +6,6 @@ import * as helpers from "../helpers/helpers";
 import FloatingMenu, { FloatingMenuItem } from "../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
 import Portal from "../helpers/Portal.jsx";
-import mainConfig from "../config.json";
 
 const feedbackTemplate = (
 	url,
@@ -80,28 +79,30 @@ class Header extends Component {
 
 	onFeedbackClick = () => {
 		// APP STATS
-		helpers.addAppStat("Feedback", "Click (Header)");
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			helpers.addAppStat("Feedback", "Click (Header)");
 
-		const scale = helpers.getMapScale();
-		const extent = window.map.getView().calculateExtent(window.map.getSize());
-		const xmin = extent[0];
-		const xmax = extent[1];
-		const ymin = extent[2];
-		const ymax = extent[3];
-		const center = window.map.getView().getCenter();
+			const scale = helpers.getMapScale();
+			const extent = window.map.getView().calculateExtent(window.map.getSize());
+			const xmin = extent[0];
+			const xmax = extent[1];
+			const ymin = extent[2];
+			const ymax = extent[3];
+			const center = window.map.getView().getCenter();
 
-		const feedbackUrl = feedbackTemplate(
-			mainConfig.feedbackUrl,
-			xmin,
-			xmax,
-			ymin,
-			ymax,
-			center[0],
-			center[1],
-			scale
-		);
+			const feedbackUrl = feedbackTemplate(
+				window.config.feedbackUrl,
+				xmin,
+				xmax,
+				ymin,
+				ymax,
+				center[0],
+				center[1],
+				scale
+			);
 
-		helpers.showURLWindow(feedbackUrl, false, "full");
+			helpers.showURLWindow(feedbackUrl, false, "full");
+		});
 	};
 
 	render() {
