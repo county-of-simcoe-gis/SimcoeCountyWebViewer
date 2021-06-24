@@ -90,7 +90,7 @@ class Header extends Component {
 			const ymax = extent[3];
 			const center = window.map.getView().getCenter();
 
-			const feedbackUrl = feedbackTemplate(
+			let feedbackUrl = feedbackTemplate(
 				window.config.feedbackUrl,
 				xmin,
 				xmax,
@@ -100,7 +100,12 @@ class Header extends Component {
 				center[1],
 				scale
 			);
-
+			if (
+				window.config.mapId !== null &&
+				window.config.mapId !== undefined &&
+				window.config.mapId.trim() !== ""
+			)
+				feedbackUrl += "&MAP_ID=" + window.config.mapId;
 			helpers.showURLWindow(feedbackUrl, false, "full");
 		});
 	};
