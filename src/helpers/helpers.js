@@ -1567,12 +1567,16 @@ export function loadConfig(callback) {
 		const url_tocType = urlParams.get("TOCTYPE");
 		const url_geoserverUrl = urlParams.get("GEO_URL");
 		const url_esriServiceUrl = urlParams.get("ARCGIS_SERVICE");
+		const viewerMode = urlParams.get("MODE");
 
 		if (url_geoserverUrlType !== null) geoserverUrlType = url_geoserverUrlType;
 		if (url_mapId !== null) {
 			mapId = url_mapId;
 			loaderType = "MAPID";
 			config["mapId"] = mapId;
+		}
+		if (viewerMode !== null) {
+			config["viewerMode"] = viewerMode;
 		}
 		if (url_geoserverUrl !== null) {
 			geoserverUrl = url_geoserverUrl;

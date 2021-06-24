@@ -145,11 +145,13 @@ class Sidebar extends Component {
 
 			const shortcuts = window.config.sidebarShortcutParams;
 			// HANDLE ADVANCED MODE PARAMETER
-			const url = new URL(window.location.href.toUpperCase());
-			const viewerMode = url.searchParams.get("MODE");
 			window.sidebarOpen = false;
-			if (viewerMode !== null && viewerMode === "ADVANCED") {
-				this.sidebarVisiblityEventHandler("OPEN");
+			if (
+				window.config.viewerMode !== undefined &&
+				window.config.viewerMode !== null
+			) {
+				if (window.config.viewerMode.toUpperCase() === "ADVANCED")
+					this.sidebarVisiblityEventHandler("OPEN");
 			}
 
 			this.initToolAndThemeUrlParameter(
