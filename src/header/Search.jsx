@@ -101,6 +101,7 @@ class Search extends Component {
 			showMore: false,
 			searchTypes: [],
 			selectedType: "",
+			municipality: undefined,
 		};
 	}
 
@@ -119,7 +120,9 @@ class Search extends Component {
 	};
 
 	componentDidMount() {
-		helpers.waitForLoad("map", Date.now(), 30, () => {
+		helpers.waitForLoad(["map", "settings"], Date.now(), 30, () => {
+			if (window.config.municipality !== undefined)
+				this.setState({ municipality: window.config.municipality });
 			this.apiUrl = window.config.apiUrl;
 			this.storageKey = window.config.storageKeys.SearchHistory;
 			helpers.getJSON(searchTypesURL(this.apiUrl), (result) => {
@@ -187,7 +190,9 @@ class Search extends Component {
 				selectedType: { label: search_type, value: search_type },
 			});
 		helpers.getJSON(
-			encodeURI(searchURL(this.apiUrl, search, search_type, undefined, 1)),
+			encodeURI(
+				searchURL(this.apiUrl, search, search_type, this.state.municipality, 1)
+			),
 			(responseJson) => {
 				if (
 					responseJson[0] !== undefined &&
@@ -212,7 +217,7 @@ class Search extends Component {
 					this.apiUrl,
 					this.state.value,
 					this.state.selectedType.value,
-					undefined,
+					this.state.municipality,
 					limit
 				),
 				(responseJson) => {
@@ -519,7 +524,7 @@ class Search extends Component {
 						this.apiUrl,
 						this.state.value,
 						this.state.selectedType.value,
-						undefined,
+						this.state.municipality,
 						limit
 					),
 					(responseJson) => {
@@ -740,7 +745,7 @@ class Search extends Component {
 									this.apiUrl,
 									value,
 									this.state.selectedType.value,
-									undefined,
+									this.state.municipality,
 									limit
 								),
 								(responseJson) => {
