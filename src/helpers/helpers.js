@@ -493,7 +493,11 @@ export function showMessage(
 	const domId = "sc-show-message-content";
 	var existingMsg = document.getElementById(domId);
 	if (existingMsg !== undefined && existingMsg !== null) existingMsg.remove();
-
+	try {
+		ReactDOM.unmountComponentAtNode(
+			document.getElementById("sc-sidebar-message-container")
+		);
+	} catch {}
 	const message = ReactDOM.render(
 		<ShowMessage
 			id={domId}
@@ -1632,6 +1636,17 @@ export function loadConfig(callback) {
 			else return `${apiUrl}settings/getMap/${mapId}`;
 		};
 		getJSON(mapSettingURL(config.apiUrl, mapId), (result) => {
+			if (result.json === undefined) {
+				setTimeout(() => {
+					showMessage(
+						"Map ID Failed",
+						"Map ID failed to load",
+						messageColors.red
+					);
+				}, 1500);
+				window.config = config;
+				callback();
+			}
 			const settings = JSON.parse(result.json);
 			if (settings.name !== undefined) document.title = settings.name;
 			if (settings.zoom_level !== undefined) {

@@ -205,6 +205,7 @@ export async function getMap(sources, isReset, tocType, callback) {
 						url: source.layerUrl,
 						tocType: tocType,
 						isReset: isReset,
+						requiresToken: source.secure,
 					},
 					(layerGroupConfig) => {
 						if (source.primary && default_group === undefined)
@@ -389,107 +390,120 @@ export function getGroupsESRI(options, callback) {
 	);
 	if (savedData === undefined) savedData = [];
 
-	LayerHelpers.getCapabilities(options.url, "rest", (layers) => {
-		layers.forEach((layer) => {
-			const layerOptions = parseESRIDescription(layer.description);
-			layerOptions["id"] = layer.id;
-			layerOptions["name"] = layer.name;
-			layerOptions["minScale"] = layer.minScale;
-			layerOptions["maxScale"] = layer.maxScale;
-			layerOptions["defaultVisibility"] = layer.defaultVisibility;
-			layerOptions["identifyTitleColumn"] = layer.displayField;
-			layerOptions["opacity"] =
-				1 -
-				(layer.drawingInfo.transparency === undefined
-					? 0
-					: layer.drawingInfo.transparency / 100);
-			layerOptions["liveLayer"] = layerOptions.isLiveLayer;
-			layer["options"] = layerOptions;
-			layerOptions.categories.forEach((category) => {
-				const groupValue =
-					category === "All Layers" ? "opengis:all_layers" : category;
-				const tmpGroupObj = {
-					value: groupValue,
-					label: category,
-					url: options.url,
-					secured: false,
-					primary: false,
-					prefix: "",
-					defaultGroup: false,
-					visibleLayers: "",
-					wmsGroupUrl: options.url,
-					layers: [],
-				};
-				if (groupsObj[tmpGroupObj.value] === undefined) {
-					tmpGroupObj.layers.push(layer);
-					groupsObj[tmpGroupObj.value] = tmpGroupObj;
-				} else {
-					groupsObj[tmpGroupObj.value].layers.push(layer);
+	LayerHelpers.getCapabilities(
+		{ root_url: options.url, type: "rest" },
+		(layers) => {
+			if (layers.length === 0) {
+				callback({ groups: groups, defaultGroupName: defaultGroup });
+			}
+			layers.forEach((layer) => {
+				if (layer.subLayerIds === undefined && layer.subLayers.length === 0) {
+					const layerOptions = parseESRIDescription(layer.description);
+					layerOptions["id"] = layer.id;
+					layerOptions["name"] = layer.name;
+					layerOptions["minScale"] = layer.minScale;
+					layerOptions["maxScale"] = layer.maxScale;
+					layerOptions["defaultVisibility"] = layer.defaultVisibility;
+					layerOptions["identifyTitleColumn"] = layer.displayField;
+					layerOptions["opacity"] =
+						1 -
+						(layer.drawingInfo === undefined ||
+						layer.drawingInfo.transparency === undefined
+							? 0
+							: layer.drawingInfo.transparency / 100);
+					layerOptions["liveLayer"] = layerOptions.isLiveLayer;
+					layer["options"] = layerOptions;
+					layerOptions.categories.forEach((category) => {
+						const groupValue =
+							category === "All Layers" ? "opengis:all_layers" : category;
+						const tmpGroupObj = {
+							value: groupValue,
+							label: category,
+							url: options.url,
+							secured: false,
+							primary: false,
+							prefix: "",
+							defaultGroup: false,
+							visibleLayers: "",
+							wmsGroupUrl: options.url,
+							layers: [],
+						};
+						if (groupsObj[tmpGroupObj.value] === undefined) {
+							tmpGroupObj.layers.push(layer);
+							groupsObj[tmpGroupObj.value] = tmpGroupObj;
+						} else {
+							groupsObj[tmpGroupObj.value].layers.push(layer);
+						}
+					});
 				}
 			});
-		});
-		const keys = Object.keys(groupsObj);
-		keys.forEach((key) => {
-			let currentGroup = groupsObj[key];
-			let layerList = [];
-			let layerIndex = currentGroup.layers.length;
-			let visibleLayers = [];
-			let isDefault = false;
+			const keys = Object.keys(groupsObj);
+			keys.forEach((key) => {
+				let currentGroup = groupsObj[key];
+				let layerList = [];
+				let layerIndex = currentGroup.layers.length;
+				let visibleLayers = [];
+				let isDefault = false;
 
-			const buildLayers = (items) => {
-				items.forEach((currentLayer) => {
-					if (!isDuplicate(layerList, currentLayer.name)) {
-						buildESRILayer(
-							{
-								group: currentGroup,
-								layer: currentLayer,
-								layerIndex: layerIndex,
-								tocType: options.tocType,
-							},
-							(result) => {
-								layerList.push(result);
-							}
-						);
-						layerIndex--;
-						visibleLayers.push(currentLayer.name);
+				const buildLayers = (items) => {
+					items.forEach((currentLayer) => {
+						if (!isDuplicate(layerList, currentLayer.name)) {
+							buildESRILayer(
+								{
+									group: currentGroup,
+									layer: currentLayer,
+									layerIndex: layerIndex,
+									tocType: options.tocType,
+								},
+								(result) => {
+									layerList.push(result);
+								}
+							);
+							layerIndex--;
+							visibleLayers.push(currentLayer.name);
+						}
+					});
+				};
+				buildLayers(currentGroup.layers);
+				let panelOpen = false;
+				const savedGroup = savedData[key];
+				if (savedGroup !== undefined) {
+					panelOpen = savedGroup.panelOpen;
+				} else if (isDefault) panelOpen = true;
+				const groupObj = {
+					value: currentGroup.value,
+					label: currentGroup.label,
+					url: currentGroup.url,
+					prefix: currentGroup.prefix,
+					defaultGroup: currentGroup.defaultGroup,
+					visibleLayers: visibleLayers,
+					secured: currentGroup.secured,
+					primary: currentGroup.primary,
+					wmsGroupUrl: currentGroup.fullGroupUrl,
+					layers: layerList,
+					panelOpen: panelOpen,
+				};
+				if (groupObj.layers.length >= 1) {
+					groups.push(groupObj);
+					if (isDefault) {
+						defaultGroup = groupObj;
+						isDefault = false;
 					}
-				});
-			};
-			buildLayers(currentGroup.layers);
-			let panelOpen = false;
-			const savedGroup = savedData[key];
-			if (savedGroup !== undefined) {
-				panelOpen = savedGroup.panelOpen;
-			} else if (isDefault) panelOpen = true;
-			const groupObj = {
-				value: currentGroup.value,
-				label: currentGroup.label,
-				url: currentGroup.url,
-				prefix: currentGroup.prefix,
-				defaultGroup: currentGroup.defaultGroup,
-				visibleLayers: visibleLayers,
-				secured: currentGroup.secured,
-				primary: currentGroup.primary,
-				wmsGroupUrl: currentGroup.fullGroupUrl,
-				layers: layerList,
-				panelOpen: panelOpen,
-			};
-			if (groupObj.layers.length >= 1) {
-				groups.push(groupObj);
-				if (isDefault) {
-					defaultGroup = groupObj;
-					isDefault = false;
 				}
+			});
+			if (defaultGroup === undefined || defaultGroup === null)
+				defaultGroup = groups[0];
+			if (!options.isReset) {
+				window.emitter.emit("tocLoaded", null);
+				helpers.addIsLoaded("toc");
 			}
-		});
-		if (defaultGroup === undefined || defaultGroup === null)
-			defaultGroup = groups[0];
-		if (!options.isReset) {
-			window.emitter.emit("tocLoaded", null);
-			helpers.addIsLoaded("toc");
+			callback({
+				groups: groups,
+				defaultGroupName:
+					defaultGroup !== undefined ? defaultGroup.value : null,
+			});
 		}
-		callback({ groups: groups, defaultGroupName: defaultGroup.value });
-	});
+	);
 }
 
 // GET GROUPS FROM GET CAPABILITIES
@@ -515,13 +529,15 @@ export async function getGroupsGC(
 		return helpers.replaceAllInString(name, "_", " ");
 	};
 	const params = {};
+	const headers = {};
+	params["mode"] = "cors";
+	headers["Content-Type"] = "application/text";
+
 	if (secured) {
 		const headers = {};
 		if (secureKey !== undefined) {
 			headers[secureKey] = "GIS";
-			headers["Content-Type"] = "application/text";
 		}
-		params["mode"] = "cors";
 		params["headers"] = headers;
 	}
 
@@ -1524,91 +1540,96 @@ export async function buildESRILayer(options, callback) {
 		}
 		//console.log(group.value, layerNameOnly, visibleLayers.includes(layerNameOnly));
 		// LAYER PROPS
-		LayerHelpers.getLayer(
-			{
-				sourceType: OL_DATA_TYPES.ImageArcGISRest,
-				source: "rest",
-				projection: `EPSG:${layer.sourceSpatialReference.latestWkid}`,
-				layerName: layer.name,
-				url: layer.url,
-				tiled: false,
-				extent: layer.extent,
-				name: layer.name,
-			},
-			(newLayer) => {
-				//const identifyUrl = (url) => `${url}/query?geometry=#GEOMETRY#&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=true&returnTrueCurves=false&returnIdsOnly=false&returnCountOnly=false&returnZ=false&returnM=false&returnDistinctValues=false&returnExtentOnly=false&quantizationParameters=&f=geojson`;
-				const identifyUrl = (options) =>
-					`${options.url}/identify?geometry=${options.point}&geometryType=esriGeometryPoint&layers=visible%3A${options.layerId}&sr=3857&datumTransformations=3857&tolerance=${options.tolerance}&mapExtent=${options.extent}&imageDisplay=${options.resolution}&maxAllowableOffset=10&returnGeometry=true&returnFieldName=true&f=json`;
+		const layerOptions = {
+			sourceType: OL_DATA_TYPES.ImageArcGISRest,
+			source: "rest",
 
-				const wfsUrl = identifyUrl({
-					url: layer.rootUrl,
-					point: "#GEOMETRY#",
-					layerId: layer.id,
-					tolerance: "#TOLERANCE#",
-					extent: "#EXTENT#",
-					resolution: "#RESOLUTION#",
+			layerName: layer.name,
+			url: layer.url,
+			tiled: false,
+			extent: layer.extent,
+			name: layer.name,
+		};
+		if (
+			layer.sourceSpatialReference !== undefined &&
+			layer.sourceSpatialReference.latestWkid !== undefined
+		)
+			layerOptions[
+				"projection"
+			] = `EPSG:${layer.sourceSpatialReference.latestWkid}`;
+		LayerHelpers.getLayer(layerOptions, (newLayer) => {
+			//const identifyUrl = (url) => `${url}/query?geometry=#GEOMETRY#&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=true&returnTrueCurves=false&returnIdsOnly=false&returnCountOnly=false&returnZ=false&returnM=false&returnDistinctValues=false&returnExtentOnly=false&quantizationParameters=&f=geojson`;
+			const identifyUrl = (options) =>
+				`${options.url}/identify?geometry=${options.point}&geometryType=esriGeometryPoint&layers=visible%3A${options.layerId}&sr=3857&datumTransformations=3857&tolerance=${options.tolerance}&mapExtent=${options.extent}&imageDisplay=${options.resolution}&maxAllowableOffset=10&returnGeometry=true&returnFieldName=true&f=json`;
+
+			const wfsUrl = identifyUrl({
+				url: layer.rootUrl,
+				point: "#GEOMETRY#",
+				layerId: layer.id,
+				tolerance: "#TOLERANCE#",
+				extent: "#EXTENT#",
+				resolution: "#RESOLUTION#",
+			});
+			const rootInfoUrl = layer.url;
+			//http://gis.simcoe.ca/arcgis/rest/services/Severn/Severn_OperationalLayers_Dynamic/MapServer/0/
+			newLayer.setVisible(layerVisible);
+			newLayer.setOpacity(opacity);
+			newLayer.setProperties({
+				name: layerNameOnly,
+				displayName: displayName,
+				tocDisplayName: tocDisplayName,
+				wfsUrl: wfsUrl,
+				rootInfoUrl: rootInfoUrl,
+				disableParcelClick: liveLayer,
+				queryable: queryable,
+				opaque: opaque,
+				minScale: minScale,
+				maxScale: maxScale,
+			});
+			if (secureKey !== undefined)
+				newLayer.setProperties({ secureKey: secureKey });
+			newLayer.setZIndex(layerIndex);
+			window.map.addLayer(newLayer);
+			let legendHeight = -1;
+			if (layer.legend !== undefined && layer.legend !== null) {
+				legendHeight = 36;
+				layer.legend.legend.forEach((legendItem) => {
+					legendHeight += parseInt(legendItem.height);
 				});
-				const rootInfoUrl = layer.url;
-				//http://gis.simcoe.ca/arcgis/rest/services/Severn/Severn_OperationalLayers_Dynamic/MapServer/0/
-				newLayer.setVisible(layerVisible);
-				newLayer.setOpacity(opacity);
-				newLayer.setProperties({
-					name: layerNameOnly,
-					displayName: displayName,
-					tocDisplayName: tocDisplayName,
-					wfsUrl: wfsUrl,
-					rootInfoUrl: rootInfoUrl,
-					disableParcelClick: liveLayer,
-					queryable: queryable,
-					opaque: opaque,
-					minScale: minScale,
-					maxScale: maxScale,
-				});
-				if (secureKey !== undefined)
-					newLayer.setProperties({ secureKey: secureKey });
-				newLayer.setZIndex(layerIndex);
-				window.map.addLayer(newLayer);
-				let legendHeight = -1;
-				if (layer.legend !== undefined && layer.legend !== null) {
-					legendHeight = 36;
-					layer.legend.legend.forEach((legendItem) => {
-						legendHeight += parseInt(legendItem.height);
-					});
-				}
-				const returnLayer = {
-					name: layerNameOnly, // FRIENDLY NAME
-					height: 30, // HEIGHT OF DOM ROW FOR AUTOSIZER
-					drawIndex: layerIndex, // INDEX USED BY VIRTUAL LIST
-					index: layerIndex, // INDEX USED BY VIRTUAL LIST
-					styleUrl: styleUrl, // WMS URL TO LEGEND SWATCH IMAGE
-					showLegend: false, // SHOW LEGEND USING PLUS-MINUS IN TOC
-					legendHeight: legendHeight, // HEIGHT OF IMAGE USED BY AUTOSIZER
-					legendImage: null, // IMAGE DATA, STORED ONCE USER VIEWS LEGEND
-					legendObj: layer.legend, // ESRI JSON LEGEND OBJECT
-					visible: layerVisible, // LAYER VISIBLE IN MAP, UPDATED BY CHECKBOX
-					layer: newLayer, // OL LAYER OBJECT
-					metadataUrl: metadataUrl, // ROOT LAYER INFO FROM GROUP END POINT
-					opacity: opacity, // OPACITY OF LAYER
-					minScale: minScale, //MinScaleDenominator from geoserver
-					maxScale: maxScale, //MaxScaleDenominator from geoserver
-					liveLayer: liveLayer, // LIVE LAYER FLAG
-					identifyDisplayName: identifyDisplayName, // DISPLAY NAME USED BY IDENTIFY
-					group: group.value,
-					groupName: group.label,
-					canDownload: canDownload, // INDICATES WETHER LAYER CAN BE DOWNLOADED
-					displayName: displayName, // DISPLAY NAME USED BY IDENTIFY
-					identifyTitleColumn: identifyTitleColumn,
-					identifyIdColumn: identifyIdColumn,
-					disclaimer: disclaimer,
-					wfsUrl: wfsUrl,
-					tocDisplayName: tocDisplayName, // DISPLAY NAME USED FOR TOC LAYER NAME
-					serverUrl: serverUrl + "/", // BASE URL FOR GEOSERVER
-					noAttributeTable: noAttributeTable, // IF TRUE, DISABLE ATTRIBUTE TABLE
-					secured: secured,
-					// elementId: layerNameOnly + "_" + group.value,
-				};
-				callback(returnLayer);
 			}
-		);
+			const returnLayer = {
+				name: layerNameOnly, // FRIENDLY NAME
+				height: 30, // HEIGHT OF DOM ROW FOR AUTOSIZER
+				drawIndex: layerIndex, // INDEX USED BY VIRTUAL LIST
+				index: layerIndex, // INDEX USED BY VIRTUAL LIST
+				styleUrl: styleUrl, // WMS URL TO LEGEND SWATCH IMAGE
+				showLegend: false, // SHOW LEGEND USING PLUS-MINUS IN TOC
+				legendHeight: legendHeight, // HEIGHT OF IMAGE USED BY AUTOSIZER
+				legendImage: null, // IMAGE DATA, STORED ONCE USER VIEWS LEGEND
+				legendObj: layer.legend, // ESRI JSON LEGEND OBJECT
+				visible: layerVisible, // LAYER VISIBLE IN MAP, UPDATED BY CHECKBOX
+				layer: newLayer, // OL LAYER OBJECT
+				metadataUrl: metadataUrl, // ROOT LAYER INFO FROM GROUP END POINT
+				opacity: opacity, // OPACITY OF LAYER
+				minScale: minScale, //MinScaleDenominator from geoserver
+				maxScale: maxScale, //MaxScaleDenominator from geoserver
+				liveLayer: liveLayer, // LIVE LAYER FLAG
+				identifyDisplayName: identifyDisplayName, // DISPLAY NAME USED BY IDENTIFY
+				group: group.value,
+				groupName: group.label,
+				canDownload: canDownload, // INDICATES WETHER LAYER CAN BE DOWNLOADED
+				displayName: displayName, // DISPLAY NAME USED BY IDENTIFY
+				identifyTitleColumn: identifyTitleColumn,
+				identifyIdColumn: identifyIdColumn,
+				disclaimer: disclaimer,
+				wfsUrl: wfsUrl,
+				tocDisplayName: tocDisplayName, // DISPLAY NAME USED FOR TOC LAYER NAME
+				serverUrl: serverUrl + "/", // BASE URL FOR GEOSERVER
+				noAttributeTable: noAttributeTable, // IF TRUE, DISABLE ATTRIBUTE TABLE
+				secured: secured,
+				// elementId: layerNameOnly + "_" + group.value,
+			};
+			callback(returnLayer);
+		});
 	}
 }

@@ -249,8 +249,10 @@ class AddLayerForm extends Component {
 				},
 				() => {
 					LayerHelpers.getCapabilities(
-						this.state.serverUrl,
-						this.state.selectedFormat.source,
+						{
+							root_url: this.state.serverUrl,
+							type: this.state.selectedFormat.source,
+						},
 						(layers) => {
 							selectLayers = [];
 							layers.forEach((layer) => {
@@ -339,8 +341,7 @@ class AddLayerForm extends Component {
 								selectedService.urlSuffix
 							);
 							LayerHelpers.getCapabilities(
-								currentUrl,
-								selectedFormat.source,
+								{ root_url: currentUrl, type: selectedFormat.source },
 								(layers) => {
 									var foundLayers = layers;
 									if (
