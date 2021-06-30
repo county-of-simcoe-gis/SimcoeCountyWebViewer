@@ -10,7 +10,6 @@ import MyMaps from "./components/mymaps/MyMaps";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 import SidebarComponent from "react-sidebar";
-import mainConfig from "../config.json";
 import SidebarSlim from "./SidebarSlim.jsx";
 
 class Sidebar extends Component {
@@ -124,59 +123,76 @@ class Sidebar extends Component {
 	};
 
 	async componentDidMount() {
-		// IMPORT TOOLS FROM CONFIG
-		const tools = mainConfig.sidebarToolComponents;
-		tools.map(async (component) => await this.addComponent(component, "tools"));
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			// IMPORT TOOLS FROM CONFIG
 
-		// IMPORT THEMES FROM CONFIG
-		const themes = mainConfig.sidebarThemeComponents;
-		themes.map(
-			async (component) => await this.addComponent(component, "themes")
-		);
-		// HANDLE ADVANCED MODE PARAMETER
-		const url = new URL(window.location.href.toUpperCase());
-		const viewerMode = url.searchParams.get("MODE");
-		window.sidebarOpen = false;
-		if (viewerMode !== null && viewerMode === "ADVANCED") {
-			this.sidebarVisiblityEventHandler("OPEN");
-		}
+			let tools = window.config.sidebarToolComponents;
+			tools = tools.filter(
+				(item) => item.enabled === undefined || item.enabled
+			);
+			tools.map(
+				async (component) => await this.addComponent(component, "tools")
+			);
 
-		this.initToolAndThemeUrlParameter(() => {
-			// TAB PARAMETER
-			const tabNameParameter = helpers.getURLParameter("TAB");
-			if (tabNameParameter != null) {
-				this.sidebarVisiblityEventHandler("OPEN", () => {
-					this.activateTab(tabNameParameter.toLowerCase());
-				});
+			// IMPORT THEMES FROM CONFIG
+			let themes = window.config.sidebarThemeComponents;
+			themes = themes.filter(
+				(item) => item.enabled === undefined || item.enabled
+			);
+			themes.map(
+				async (component) => await this.addComponent(component, "themes")
+			);
+
+			const shortcuts = window.config.sidebarShortcutParams;
+			// HANDLE ADVANCED MODE PARAMETER
+			window.sidebarOpen = false;
+			if (
+				window.config.viewerMode !== undefined &&
+				window.config.viewerMode !== null
+			) {
+				if (window.config.viewerMode.toUpperCase() === "ADVANCED")
+					this.sidebarVisiblityEventHandler("OPEN");
 			}
-			// LISTEN FOR OPEN OR CLOSE FROM OTHER COMPONENTS (CLOSE OR OPEN)
-			window.emitter.addListener("setSidebarVisiblity", (openOrClose) =>
-				this.sidebarVisiblityEventHandler(openOrClose)
-			);
 
-			// LISTEN FOR TAB ACTIVATION FROM OTHER COMPONENTS
-			window.emitter.addListener("activateTab", (tabName) =>
-				this.activateTab(tabName)
-			);
+			this.initToolAndThemeUrlParameter(
+				{ tools: tools, themes: themes, shortcuts: shortcuts },
+				() => {
+					// TAB PARAMETER
+					const tabNameParameter = helpers.getURLParameter("TAB");
+					if (tabNameParameter != null) {
+						this.sidebarVisiblityEventHandler("OPEN", () => {
+							this.activateTab(tabNameParameter.toLowerCase());
+						});
+					}
+					// LISTEN FOR OPEN OR CLOSE FROM OTHER COMPONENTS (CLOSE OR OPEN)
+					window.emitter.addListener("setSidebarVisiblity", (openOrClose) =>
+						this.sidebarVisiblityEventHandler(openOrClose)
+					);
 
-			// LISTEN FOR REPORT LOADING
-			window.emitter.addListener("loadReport", (content) =>
-				this.loadReport(content)
-			);
+					// LISTEN FOR TAB ACTIVATION FROM OTHER COMPONENTS
+					window.emitter.addListener("activateTab", (tabName) =>
+						this.activateTab(tabName)
+					);
 
-			// LISTEN FOR ITEM ACTIVATION FROM OTHER COMPONENTS
-			window.emitter.addListener("activateSidebarItem", (name, type) => {
-				this.activateItemFromEmmiter(name, type);
-			});
-			window.emitter.emit("sidebarLoaded");
-			helpers.addIsLoaded("sidebar");
+					// LISTEN FOR REPORT LOADING
+					window.emitter.addListener("loadReport", (content) =>
+						this.loadReport(content)
+					);
+
+					// LISTEN FOR ITEM ACTIVATION FROM OTHER COMPONENTS
+					window.emitter.addListener("activateSidebarItem", (name, type) => {
+						this.activateItemFromEmmiter(name, type);
+					});
+					window.emitter.emit("sidebarLoaded");
+					helpers.addIsLoaded("sidebar");
+				}
+			);
 		});
 	}
 
-	initToolAndThemeUrlParameter = (callback) => {
+	initToolAndThemeUrlParameter = (components, callback) => {
 		if (
-			mainConfig.sidebarToolComponents.length +
-				mainConfig.sidebarThemeComponents.length ===
+			components.tools.length + components.themes.length ===
 				this.state.toolComponents.length &&
 			!this.props.mapLoading &&
 			!this.props.headerLoading
@@ -189,7 +205,7 @@ class Sidebar extends Component {
 				const item = undefined;
 				let shortcuts = [];
 				let params = [];
-				mainConfig.sidebarToolComponents.map((item) => {
+				components.tools.map((item) => {
 					shortcuts.push({
 						name: item.name.toLowerCase(),
 						component: item.name,
@@ -198,7 +214,7 @@ class Sidebar extends Component {
 					});
 					if (!params.includes("tool")) params.push("tool");
 				});
-				mainConfig.sidebarThemeComponents.map((item) => {
+				components.themes.map((item) => {
 					shortcuts.push({
 						name: item.name.toLowerCase(),
 						component: item.name,
@@ -207,7 +223,7 @@ class Sidebar extends Component {
 					});
 					if (!params.includes("theme")) params.push("theme");
 				});
-				mainConfig.sidebarShortcutParams.map((item) => {
+				components.shortcuts.map((item) => {
 					shortcuts.push({
 						name: item.matchValue,
 						component: item.component,
@@ -249,7 +265,7 @@ class Sidebar extends Component {
 			}
 		} else {
 			setTimeout(() => {
-				this.initToolAndThemeUrlParameter(callback);
+				this.initToolAndThemeUrlParameter(components, callback);
 			}, 50);
 		}
 	};

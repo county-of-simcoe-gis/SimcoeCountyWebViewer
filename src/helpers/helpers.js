@@ -53,10 +53,6 @@ import mainConfig from "../config.json";
 import { InfoRow } from "./InfoRow.jsx";
 import blankImage from "./images/blank.png";
 
-export function getConfigValue(key) {
-	const config = mainConfig;
-	return config[key];
-}
 // REGISTER CUSTOM PROJECTIONS
 proj4.defs([
 	[
@@ -101,26 +97,28 @@ export function sortByKey(array, key) {
 }
 // APP STAT
 export function addAppStat(type, description) {
-	if (mainConfig.includeAppStats === false) return;
-	// IGNORE LOCAL HOST DEV
-	if (
-		window.location.hostname === "localhost" ||
-		window.location.hostname === "127.0.0.1"
-	)
-		return;
-	const build = (appName, version) => `${appName}-${version}`;
-	const appStatsTemplate = (build, type, description) =>
-		`${mainConfig.appStatsUrl}${build}/${type}/${description}`;
-	let buildname = window.location.pathname.split("/").join("");
-	if (window.version !== undefined && window.version !== null) {
-		if (window.app !== undefined && window.app !== null) {
-			buildname += build(window.app, window.version);
-		} else {
-			buildname = build(buildname, window.version);
+	waitForLoad("settings", Date.now(), 30, () => {
+		if (window.config.includeAppStats === false) return;
+		// IGNORE LOCAL HOST DEV
+		if (
+			window.location.hostname === "localhost" ||
+			window.location.hostname === "127.0.0.1"
+		)
+			return;
+		const build = (appName, version) => `${appName}-${version}`;
+		const appStatsTemplate = (build, type, description) =>
+			`${window.config.appStatsUrl}${build}/${type}/${description}`;
+		let buildname = window.location.pathname.split("/").join("");
+		if (window.version !== undefined && window.version !== null) {
+			if (window.app !== undefined && window.app !== null) {
+				buildname += build(window.app, window.version);
+			} else {
+				buildname = build(buildname, window.version);
+			}
 		}
-	}
-	if (buildname === "") buildname = "Unknown";
-	httpGetText(appStatsTemplate(buildname, type, description));
+		if (buildname === "") buildname = "Unknown";
+		httpGetText(appStatsTemplate(buildname, type, description));
+	});
 }
 
 // GLOW CONTAINER
@@ -169,27 +167,30 @@ export function showURLWindow(
 ) {
 	console.log(url);
 	let isSameOrigin = true;
-	if (mainConfig.restrictOriginForUrlWindow) {
-		if (url !== undefined)
-			isSameOrigin =
-				url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !== -1;
-	}
+	waitForLoad("settings", Date.now(), 30, () => {
+		if (window.config.restrictOriginForUrlWindow) {
+			if (url !== undefined)
+				isSameOrigin =
+					url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !==
+					-1;
+		}
 
-	if (isSameOrigin) {
-		ReactDOM.render(
-			<URLWindow
-				key={shortid.generate()}
-				mode={mode}
-				showFooter={showFooter}
-				url={url}
-				honorDontShow={honorDontShow}
-				hideScroll={hideScroll}
-			/>,
-			document.getElementById("map-modal-window")
-		);
-	} else {
-		window.open(url, "_blank");
-	}
+		if (isSameOrigin) {
+			ReactDOM.render(
+				<URLWindow
+					key={shortid.generate()}
+					mode={mode}
+					showFooter={showFooter}
+					url={url}
+					honorDontShow={honorDontShow}
+					hideScroll={hideScroll}
+				/>,
+				document.getElementById("map-modal-window")
+			);
+		} else {
+			window.open(url, "_blank");
+		}
+	});
 }
 
 export function export_file(filename, content) {
@@ -503,7 +504,11 @@ export function showMessage(
 	const domId = "sc-show-message-content";
 	var existingMsg = document.getElementById(domId);
 	if (existingMsg !== undefined && existingMsg !== null) existingMsg.remove();
-
+	try {
+		ReactDOM.unmountComponentAtNode(
+			document.getElementById("sc-sidebar-message-container")
+		);
+	} catch {}
 	const message = ReactDOM.render(
 		<ShowMessage
 			id={domId}
@@ -1231,22 +1236,24 @@ export function getGeometryFromGeoJSON(geometry) {
 }
 
 export function bufferGeometry(geometry, distanceMeters, callback) {
-	const url = mainConfig.apiUrl + "postBufferGeometry/";
+	waitForLoad("settings", Date.now(), 30, () => {
+		const url = window.config.apiUrl + "postBufferGeometry/";
 
-	// PROJECT TO UTM FOR ACCURACY
-	const utmNad83Geometry = geometry.transform("EPSG:3857", _nad83Proj);
-	const geoJSON = getGeoJSONFromGeometry(utmNad83Geometry);
-	const obj = { geoJSON: geoJSON, distance: distanceMeters, srid: "26917" };
+		// PROJECT TO UTM FOR ACCURACY
+		const utmNad83Geometry = geometry.transform("EPSG:3857", _nad83Proj);
+		const geoJSON = getGeoJSONFromGeometry(utmNad83Geometry);
+		const obj = { geoJSON: geoJSON, distance: distanceMeters, srid: "26917" };
 
-	postJSON(url, obj, (result) => {
-		// REPROJECT BACK TO WEB MERCATOR
-		const olGeoBuffer = getGeometryFromGeoJSON(result.geojson);
-		const utmNad83GeometryBuffer = olGeoBuffer.transform(
-			"EPSG:26917",
-			"EPSG:3857"
-		);
+		postJSON(url, obj, (result) => {
+			// REPROJECT BACK TO WEB MERCATOR
+			const olGeoBuffer = getGeometryFromGeoJSON(result.geojson);
+			const utmNad83GeometryBuffer = olGeoBuffer.transform(
+				"EPSG:26917",
+				"EPSG:3857"
+			);
 
-		callback(utmNad83GeometryBuffer);
+			callback(utmNad83GeometryBuffer);
+		});
 	});
 }
 
@@ -1264,13 +1271,15 @@ export function disableKeyboardEvents(disable) {
 }
 
 export function getGeometryCenter(geometry, callback) {
-	const url = mainConfig.apiUrl + "postGetGeometryCenter/";
-	const geoJSON = getGeoJSONFromGeometry(geometry);
-	const obj = { geoJSON: geoJSON, srid: "3857" };
+	waitForLoad("settings", Date.now(), 30, () => {
+		const url = window.config.apiUrl + "postGetGeometryCenter/";
+		const geoJSON = getGeoJSONFromGeometry(geometry);
+		const obj = { geoJSON: geoJSON, srid: "3857" };
 
-	postJSON(url, obj, (result) => {
-		const olGeo = getGeometryFromGeoJSON(result.geojson);
-		callback(olGeo);
+		postJSON(url, obj, (result) => {
+			const olGeo = getGeometryFromGeoJSON(result.geojson);
+			callback(olGeo);
+		});
 	});
 }
 export async function asyncForEach(array, callback) {
@@ -1539,7 +1548,7 @@ export function waitForLoad(
 		console.error("timeout loading", items);
 	} else {
 		if (isLoaded(items)) {
-			console.log("wait for load", items, Date.now() - startTime);
+			//console.log("wait for load", items, Date.now() - startTime);
 			callback();
 		} else {
 			setTimeout(() => waitForLoad(items, startTime, timeout, callback), 50);
@@ -1565,4 +1574,223 @@ export function addIsLoaded(item) {
 export function removeIsLoaded(item) {
 	if (window.loaded.includes(item.toLowerCase()))
 		delete window.loaded[item.toLowerCase()];
+}
+
+export function loadConfig(callback) {
+	const storageMapDefaultsKey = "Map Defaults";
+
+	//url parameters
+	//local config
+	//settings api
+	//local storage
+
+	//get url parameters
+	let config = mainConfig;
+	//let localSettings = localStorage;
+	//config = mergeObj(config, localSettings);
+
+	const queryString = window.location.search;
+	let mapId = null;
+	let loaderType = "DEFAULT"; //MAPID, ARCGIS, GEOSERVER
+	let geoserverUrl = config.toc.geoserverLayerGroupsUrl;
+	let geoserverUrlType = config.toc.geoserverLayerGroupsUrlType;
+	let tocType = config.toc.tocType;
+
+	let esriServiceUrl = config.toc.esriServiceUrl;
+	if (queryString.length > 0) {
+		const urlParams = new URLSearchParams(queryString);
+		const url_mapId = urlParams.get("MAP_ID");
+		const url_geoserverUrlType = urlParams.get("GEO_TYPE");
+		const url_tocType = urlParams.get("TOCTYPE");
+		const url_geoserverUrl = urlParams.get("GEO_URL");
+		const url_esriServiceUrl = urlParams.get("ARCGIS_SERVICE");
+		const viewerMode = urlParams.get("MODE");
+
+		if (url_geoserverUrlType !== null) geoserverUrlType = url_geoserverUrlType;
+		if (url_mapId !== null) {
+			mapId = url_mapId;
+			loaderType = "MAPID";
+			config["mapId"] = mapId;
+		}
+		if (viewerMode !== null) {
+			config["viewerMode"] = viewerMode;
+		}
+		if (url_geoserverUrl !== null) {
+			geoserverUrl = url_geoserverUrl;
+			loaderType = "GEOSERVER";
+		}
+		if (url_esriServiceUrl !== null) {
+			esriServiceUrl = url_esriServiceUrl;
+			loaderType = "ARCGIS";
+		}
+		if (url_tocType !== null) tocType = url_tocType;
+	}
+
+	if (tocType !== config.toc.tocType) config.toc["tocType"] = tocType;
+	if (geoserverUrl !== config.toc.geoserverLayerGroupsUrl) {
+		if (!geoserverUrl.toLowerCase().includes("request=GetCapabilities"))
+			geoserverUrl = `${geoserverUrl}/ows?service=wms&version=1.3.0&request=GetCapabilities`;
+		config.toc["geoserverLayerGroupsUrl"] = geoserverUrl;
+	}
+	if (geoserverUrlType !== config.toc.geoserverLayerGroupsUrlType)
+		config.toc["geoserverLayerGroupsUrlType"] = geoserverUrlType;
+	if (esriServiceUrl !== config.toc.esriServiceUrl)
+		config.toc["esriServiceUrl"] = esriServiceUrl;
+
+	if (loaderType === "DEFAULT") {
+		if (mapId !== null && mapId !== undefined && mapId.trim() !== "") {
+			config["mapId"] = mapId;
+			loaderType = "MAPID";
+		} else if (
+			geoserverUrl !== null &&
+			geoserverUrl !== undefined &&
+			geoserverUrl.trim() !== ""
+		) {
+			loaderType = "GEOSERVER";
+		} else if (
+			esriServiceUrl !== null &&
+			esriServiceUrl !== undefined &&
+			esriServiceUrl.trim() !== ""
+		) {
+			loaderType = "ARCGIS";
+		}
+	}
+
+	config.toc["loaderType"] = loaderType;
+	if (mapId === null) mapId = config.mapId;
+	if (
+		config.useMapConfigApi ||
+		(mapId !== null && mapId !== undefined && mapId.trim() !== "")
+	) {
+		config.toc["loaderType"] = "MAPID";
+		const mapSettingURL = (apiUrl, mapId) => {
+			if (mapId === null || mapId === undefined || mapId.trim() === "")
+				return `${apiUrl}settings/getDefaultMap`;
+			else return `${apiUrl}settings/getMap/${mapId}`;
+		};
+		getJSON(mapSettingURL(config.apiUrl, mapId), (result) => {
+			if (result.json === undefined) {
+				setTimeout(() => {
+					showMessage(
+						"Map ID Failed",
+						"Map ID failed to load",
+						messageColors.red
+					);
+				}, 1500);
+				window.config = config;
+				callback();
+			}
+			const settings = JSON.parse(result.json);
+			if (settings.name !== undefined) document.title = settings.name;
+			if (settings.zoom_level !== undefined) {
+				settings["defaultZoom"] = settings.zoom_level;
+				delete settings.zoom_level;
+			}
+			if (settings.center !== undefined) {
+				settings["centerCoords"] = Array.isArray(settings.center)
+					? settings.center
+					: settings.center.split(",");
+				delete settings.center;
+			}
+			sessionStorage.setItem(
+				storageMapDefaultsKey,
+				JSON.stringify({
+					center: settings.centerCoords,
+					zoom: settings.defaultZoom,
+				})
+			);
+			if (settings.sidebarToolComponents !== undefined)
+				settings.sidebarToolComponents = mergeObjArray(
+					config.sidebarToolComponents,
+					settings.sidebarToolComponents
+				);
+			if (settings.sidebarThemeComponents !== undefined)
+				settings.sidebarThemeComponents = mergeObjArray(
+					config.sidebarThemeComponents,
+					settings.sidebarThemeComponents
+				);
+			if (settings.sidebarShortcutParams !== undefined)
+				settings.sidebarShortcutParams = mergeObjArray(
+					config.sidebarShortcutParams,
+					settings.sidebarShortcutParams
+				);
+
+			//TRANSPOSE LEGACY TOC SETTINGS
+			if (settings.toc === undefined) settings["toc"] = {};
+			if (settings.default_group !== undefined) {
+				settings.toc["default_group"] = settings.default_group;
+				delete settings.default_group;
+			}
+			if (settings.sources !== undefined) {
+				settings.toc["sources"] = settings.sources;
+				delete settings.sources;
+			}
+
+			if (settings.default_theme !== undefined)
+				window.emitter.emit(
+					"activateSidebarItem",
+					settings.default_theme,
+					"themes"
+				);
+			if (settings.default_tool !== undefined)
+				window.emitter.emit(
+					"activateSidebarItem",
+					settings.default_tool,
+					"tools"
+				);
+
+			//TODO: OVERRIDE INDIVIDUAL THEME, TOOL, OR BASEMAP SETTINGS????
+			config = mergeObj(config, settings);
+			window.config = config;
+			callback();
+		});
+	} else {
+		window.config = config;
+		callback();
+	}
+}
+
+export function getConfig(component, name) {
+	let configArray = [];
+	switch (component.toLowerCase()) {
+		case "tools":
+			configArray = window.config["sidebarToolComponents"];
+			break;
+		case "themes":
+			configArray = window.config["sidebarThemeComponents"];
+			break;
+		default:
+			break;
+	}
+	return configArray.filter(
+		(item) =>
+			item.name !== undefined && item.name.toLowerCase() === name.toLowerCase()
+	)[0];
+}
+
+export function mergeObjArray(targetArray, sourceArray) {
+	let resultArray = [];
+	targetArray.forEach((targetObj) => {
+		let sourceObj = sourceArray.filter(
+			(source) => targetObj.id == source.id
+		)[0];
+		if (sourceObj !== undefined) {
+			resultArray.push(mergeObj(targetObj, sourceObj));
+			sourceArray = sourceArray.filter((source) => sourceObj.id !== source.id);
+		} else resultArray.push(targetObj);
+	});
+	return resultArray.concat(sourceArray);
+}
+export function mergeObj(targetObj, sourceObj) {
+	Object.keys(sourceObj).forEach((key) => {
+		if (
+			typeof targetObj[key] === "object" &&
+			!(targetObj[key] instanceof Array)
+		) {
+			targetObj[key] = mergeObj(targetObj[key], sourceObj[key]);
+		} else {
+			targetObj[key] = sourceObj[key];
+		}
+	});
+	return targetObj;
 }

@@ -9,7 +9,6 @@ import { asArray } from "ol/color";
 import DoubleClickZoom from "ol/interaction/DoubleClickZoom";
 import LineString from "ol/geom/LineString.js";
 import * as helpers from "./helpers";
-import mainConfig from "../config.json";
 
 // GET LAYER BY NAME FROM LAYER
 export function getLayerByName(layerName) {
@@ -463,32 +462,36 @@ export function convertLineToArrow(geometry) {
 }
 
 export function importMyMaps(id, callback2) {
-	helpers.getJSON(`${mainConfig.apiUrl}getMyMaps/${id}`, (result) => {
-		//helpers.getJSON(`http://localhost:8085/getMyMaps/${id}`, result => {
-		console.log(result);
-		callback2(result);
+	helpers.waitForLoad("settings", Date.now(), 30, () => {
+		helpers.getJSON(`${window.config.apiUrl}getMyMaps/${id}`, (result) => {
+			//helpers.getJSON(`http://localhost:8085/getMyMaps/${id}`, result => {
+			console.log(result);
+			callback2(result);
+		});
 	});
 }
 
 export function exportMyMaps(callback2, id = null) {
-	const storage = localStorage.getItem(mainConfig.storageKeys.Draw);
-	if (storage === null) return [];
-	const data = JSON.parse(storage);
+	helpers.waitForLoad("settings", Date.now(), 30, () => {
+		const storage = localStorage.getItem(window.config.storageKeys.Draw);
+		if (storage === null) return [];
+		const data = JSON.parse(storage);
 
-	let item = null;
-	if (id !== null) {
-		item = data.items.filter((item) => {
-			return item.id === id;
-		})[0];
+		let item = null;
+		if (id !== null) {
+			item = data.items.filter((item) => {
+				return item.id === id;
+			})[0];
 
-		item.label = "Feedback: " + item.label;
-		if (item !== null) {
-			data.items = [item];
+			item.label = "Feedback: " + item.label;
+			if (item !== null) {
+				data.items = [item];
+			}
 		}
-	}
 
-	helpers.postJSON(mainConfig.apiUrl + "postMyMaps/", data, (result) => {
-		callback2(result);
+		helpers.postJSON(window.config.apiUrl + "postMyMaps/", data, (result) => {
+			callback2(result);
+		});
 	});
 }
 

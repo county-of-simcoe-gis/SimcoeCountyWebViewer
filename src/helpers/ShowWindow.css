@@ -40,8 +40,6 @@
 .sc-show-window-header {
 	color: #4c4c4c;
 	height: 44px;
-	padding-left: 7px;
-	/* padding-right: 7px; */
 	border-bottom: 1px solid #ccc;
 	border-radius: 5px 5px 0px 0px;
 	-webkit-touch-callout: none;
@@ -72,13 +70,14 @@
 	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3980CC', endColorstr='#2865A2',GradientType=0 ); /* IE6-9 */
 	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#7abcff', endColorstr='#4096ee',GradientType=0 ); /* IE6-9 */
 	color: #fff !important;
-	width: 99%;
+	width: 100%;
 	display: table;
 }
 
 .sc-show-window-header-title {
 	padding-top: 14px;
 	font-size: 14px;
+	padding-left: 7px;
 	display: table-cell;
 }
 

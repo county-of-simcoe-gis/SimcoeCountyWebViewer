@@ -2,10 +2,18 @@
 import React, { Component } from "react";
 import "./FooterTools.css";
 import * as helpers from "../helpers/helpers";
-import mainConfig from "../config.json";
 
-const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
-	`${mainConfig.feedbackUrl}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
+const feedbackTemplate = (
+	url,
+	xmin,
+	xmax,
+	ymin,
+	ymax,
+	centerx,
+	centery,
+	scale
+) =>
+	`${url}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
 
 class FooterTools extends Component {
 	constructor(props) {
@@ -66,34 +74,45 @@ class FooterTools extends Component {
 	};
 
 	onFeedbackClick = () => {
-		// APP STATS
-		helpers.addAppStat("Feedback", "Click (Footer)");
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			// APP STATS
+			helpers.addAppStat("Feedback", "Click (Footer)");
 
-		const scale = helpers.getMapScale();
-		const extent = window.map.getView().calculateExtent(window.map.getSize());
-		const xmin = extent[0];
-		const xmax = extent[1];
-		const ymin = extent[2];
-		const ymax = extent[3];
-		const center = window.map.getView().getCenter();
+			const scale = helpers.getMapScale();
+			const extent = window.map.getView().calculateExtent(window.map.getSize());
+			const xmin = extent[0];
+			const xmax = extent[1];
+			const ymin = extent[2];
+			const ymax = extent[3];
+			const center = window.map.getView().getCenter();
 
-		const feedbackUrl = feedbackTemplate(
-			xmin,
-			xmax,
-			ymin,
-			ymax,
-			center[0],
-			center[1],
-			scale
-		);
+			let feedbackUrl = feedbackTemplate(
+				window.config.feedbackUrl,
+				xmin,
+				xmax,
+				ymin,
+				ymax,
+				center[0],
+				center[1],
+				scale
+			);
+			if (
+				window.config.mapId !== null &&
+				window.config.mapId !== undefined &&
+				window.config.mapId.trim() !== ""
+			)
+				feedbackUrl += "&MAP_ID=" + window.config.mapId;
 
-		helpers.showURLWindow(feedbackUrl, false, "full");
+			helpers.showURLWindow(feedbackUrl, false, "full");
+		});
 	};
 
 	onTermsClick = () => {
-		helpers.showURLWindow(mainConfig.termsUrl, false, "full");
-		// APP STATS
-		helpers.addAppStat("Terms", "Click (Footer)");
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			helpers.showURLWindow(window.config.termsUrl, false, "full");
+			// APP STATS
+			helpers.addAppStat("Terms", "Click (Footer)");
+		});
 	};
 
 	onScaleClick = (value) => {

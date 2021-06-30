@@ -1,7 +1,5 @@
 import React, { Component } from "react";
 import "./ShowWindow.css";
-import * as helpers from "./helpers";
-import * as mainConfig from "../config.json";
 
 class ShowWindow extends Component {
 	constructor(props) {

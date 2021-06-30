@@ -81,34 +81,37 @@ class Coordinates extends Component {
 	}
 
 	componentDidMount() {
-		// DISABLE PROPERTY CLICK
-		window.disableParcelClick = true;
+		//wait for map to load
+		helpers.waitForLoad("map", Date.now(), 30, () => {
+			// DISABLE PROPERTY CLICK
+			window.disableParcelClick = true;
 
-		// REGISTER MAP EVENTS
-		this.onPointerMoveEvent = window.map.on(
-			"pointermove",
-			this.onPointerMoveHandler
-		);
-		this.onMapClickEvent = window.map.on("click", this.onMapClick);
-		this.onMapMoveEvent = window.map.on("moveend", this.onMapMoveEnd);
+			// REGISTER MAP EVENTS
+			this.onPointerMoveEvent = window.map.on(
+				"pointermove",
+				this.onPointerMoveHandler
+			);
+			this.onMapClickEvent = window.map.on("click", this.onMapClick);
+			this.onMapMoveEvent = window.map.on("moveend", this.onMapMoveEnd);
 
-		// REGISTER CUSTOM PROJECTIONS
-		proj4.defs([
-			[
-				"EPSG:26917",
-				"+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs ",
-			],
-			[
-				"EPSG:26717",
-				"+proj=utm +zone=17 +ellps=clrk66 +datum=NAD27 +units=m +no_defs ",
-			],
-		]);
-		register(proj4);
+			// REGISTER CUSTOM PROJECTIONS
+			proj4.defs([
+				[
+					"EPSG:26917",
+					"+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs ",
+				],
+				[
+					"EPSG:26717",
+					"+proj=utm +zone=17 +ellps=clrk66 +datum=NAD27 +units=m +no_defs ",
+				],
+			]);
+			register(proj4);
 
-		// INITIAL EXTENT
-		this.updateExtent();
+			// INITIAL EXTENT
+			this.updateExtent();
 
-		window.isCoordinateToolOpen = true;
+			window.isCoordinateToolOpen = true;
+		});
 	}
 
 	// WHEN MAP EXTENT CHANGES

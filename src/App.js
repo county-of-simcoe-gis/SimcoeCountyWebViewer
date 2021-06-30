@@ -1,4 +1,4 @@
-import React, { Component, useState } from "react";
+import React, { Component, useState, useEffect } from "react";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import "./App.css";
 import Header from "./header/Header";
@@ -34,7 +34,6 @@ class App extends Component {
 		else window.mapControls = mainConfig.controls;
 	}
 	componentWillMount() {
-		document.title = mainConfig.title;
 		window.app = packageJson.name;
 		window.version = packageJson.version;
 		this.setControlPreferences();
@@ -73,6 +72,13 @@ function MapApp() {
 	// LISTEN FOR HEADER TO MOUNT
 	window.emitter.addListener("headerLoaded", () => setHeaderLoading(false));
 
+	useEffect(() => {
+		helpers.loadConfig(() => {
+			document.title = window.config.title;
+			helpers.addIsLoaded("settings");
+		});
+	}, []);
+
 	return (
 		<div>
 			<div id="portal-root" />
@@ -80,9 +86,9 @@ function MapApp() {
 				visible={mapLoading || sidebarLoading || headerLoading}
 				backgroundColor={"#3498db"}
 			/>
-			<Header />
+			<Header mapLoading={mapLoading} sidebarLoading={sidebarLoading} />
 			<Sidebar mapLoading={mapLoading} headerLoading={headerLoading} />
-			<SCMap />
+			<SCMap sidebarLoading={sidebarLoading} headerLoading={headerLoading} />
 		</div>
 	);
 }

@@ -2,14 +2,11 @@ import React, { Component } from "react";
 import Select from "react-select";
 import "./LotAndConcession.css";
 import * as helpers from "../../../../helpers/helpers";
-import mainConfig from "../../../../config.json";
 import PanelComponent from "../../../PanelComponent";
 import { extend } from "ol/extent.js";
 import { Fill, Stroke, Style } from "ol/style.js";
 import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
-
-const serverUrl = mainConfig.geoserverUrl + "wms/";
 
 class ToolComponent extends Component {
 	constructor(props) {
@@ -59,52 +56,53 @@ class ToolComponent extends Component {
 	};
 
 	onSearchClick = () => {
-		if (this.state.lotNumber === "" && this.state.concessionNumber === "") {
-			helpers.showMessage(
-				"Lot And Con",
-				"Please enter a LOT and/or CON.",
-				helpers.messageColors.orange
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			const serverUrl = window.config.geoserverUrl + "wms/";
+
+			if (this.state.lotNumber === "" && this.state.concessionNumber === "") {
+				helpers.showMessage(
+					"Lot And Con",
+					"Please enter a LOT and/or CON.",
+					helpers.messageColors.orange
+				);
+				return;
+			}
+
+			if (this.layer !== null) window.map.removeLayer(this.layer);
+			let sql = "_description <> 'Road Allowance'";
+			if (this.state.selectedMuni.value !== "SEARCH ALL")
+				sql += " AND _geog_twp = '" + this.state.selectedMuni.value + "'";
+			if (this.state.lotNumber.length !== 0) {
+				sql += " AND _lot = '" + this.state.lotNumber.toUpperCase() + "' ";
+			}
+			if (this.state.concessionNumber.length !== 0) {
+				sql +=
+					" AND _con = '" + this.state.concessionNumber.toUpperCase() + "' ";
+			}
+
+			this.layer = helpers.getImageWMSLayer(
+				serverUrl,
+				this.layerName,
+				"geoserver",
+				sql,
+				50
 			);
-			return;
-		}
+			this.layer.setVisible(true);
+			this.layer.setZIndex(100);
+			window.map.addLayer(this.layer);
 
-		if (this.layer !== null) window.map.removeLayer(this.layer);
-		let sql = "_description <> 'Road Allowance'";
-		if (this.state.selectedMuni.value !== "SEARCH ALL")
-			sql += " AND _geog_twp = '" + this.state.selectedMuni.value + "'";
-		if (this.state.lotNumber.length !== 0) {
-			sql += " AND _lot = '" + this.state.lotNumber.toUpperCase() + "' ";
-		}
-		if (this.state.concessionNumber.length !== 0) {
-			sql += " AND _con = '" + this.state.concessionNumber.toUpperCase() + "' ";
-		}
-
-		// if (sql === "") sql = "lot <> ' ' AND con <> ' '";
-		// " this.layer = helpers.getImageWMSLayer(serverUrl, this.layerName, null, null, 50);
-		// else this.layer = helpers.getImageWMSLayer(serverUrl, this.layerName, null, sql, 50);
-
-		this.layer = helpers.getImageWMSLayer(
-			serverUrl,
-			this.layerName,
-			"geoserver",
-			sql,
-			50
-		);
-		this.layer.setVisible(true);
-		this.layer.setZIndex(100);
-		window.map.addLayer(this.layer);
-
-		helpers.getWFSGeoJSON(
-			mainConfig.geoserverUrl,
-			this.layerName,
-			(result) => {
-				this.updateFeatures(result);
-			},
-			"_lot,_con",
-			null,
-			sql,
-			1000
-		);
+			helpers.getWFSGeoJSON(
+				window.config.geoserverUrl,
+				this.layerName,
+				(result) => {
+					this.updateFeatures(result);
+				},
+				"_lot,_con",
+				null,
+				sql,
+				1000
+			);
+		});
 	};
 
 	updateFeatures = (features) => {

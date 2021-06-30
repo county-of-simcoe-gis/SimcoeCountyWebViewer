@@ -1,5 +1,4 @@
 import React from "react";
-import mainConfig from "../config.json";
 import moment from "moment";
 export const InfoRow = (props) => {
 	// CONVERT URL'S TO LINKS
@@ -19,11 +18,7 @@ export const InfoRow = (props) => {
 		props.value.toString().substring(0, 2).toUpperCase() === "\\\\"
 	) {
 		value = (
-			<a
-				href={mainConfig.imageViewerUrl + props.value}
-				target="_blank"
-				rel="noopener noreferrer"
-			>
+			<a href={props.value} target="_blank" rel="noopener noreferrer">
 				Click To Open
 			</a>
 		);

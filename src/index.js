@@ -17,6 +17,7 @@ window.isDrawingOrEditing = false;
 window.isCoordinateToolOpen = false;
 window.isMeasuring = false;
 window.loaded = [];
+window.config = {};
 ReactDOM.render(<App />, document.getElementById("root"));
 
 // If you want your app to work offline and load faster, you can change

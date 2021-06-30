@@ -3,7 +3,6 @@ import "./MyMapsBuffer.css";
 import ColorPicker from "./ColorPicker";
 import { CompactPicker } from "react-color";
 import * as helpers from "../../../helpers/helpers";
-import mainConfig from "../../../config.json";
 import Feature from "ol/Feature";
 import { Stroke, Style, Fill } from "ol/style";
 import VectorLayer from "ol/layer/Vector";
@@ -33,9 +32,6 @@ class MyMapsBuffer extends Component {
 			code: "EPSG:26917",
 			extent: [194772.8107, 2657478.7094, 805227.1893, 9217519.4415],
 		});
-
-		this.webAPIUrl = mainConfig.apiUrl + "postBufferGeometry/";
-
 		this.state = {
 			color: { r: 85, g: 243, b: 30, a: 1 },
 			distance: 0,
@@ -136,27 +132,6 @@ class MyMapsBuffer extends Component {
 				this.setState({ addMessageVisible: true });
 			}
 		);
-
-		// PROJECT TO UTM FOR ACCURACY
-		// const utmNad83Geometry = feature.getGeometry().transform("EPSG:3857", this.nad83Proj);
-		// const geoJSON = helpers.getGeoJSONFromGeometry(utmNad83Geometry);
-		// const distanceMeters = this.convertToMeters();
-		// const obj = { geoJSON: geoJSON, distance: distanceMeters, srid: "26917" };
-
-		// helpers.postJSON(this.webAPIUrl, obj, result => {
-		//   // REPROJECT BACK TO WEB MERCATOR
-		//   const olGeoBuffer = helpers.getGeometryFromGeoJSON(result.geojson);
-		//   const utmNad83GeometryBuffer = olGeoBuffer.transform("EPSG:26917", "EPSG:3857");
-		//   this.bufferFeature = new Feature({
-		//     geometry: utmNad83GeometryBuffer
-		//   });
-
-		//   this.bufferFeature.setStyle(this.getStyle());
-		//   this.vectorLayer.getSource().clear();
-		//   this.vectorLayer.getSource().addFeature(this.bufferFeature);
-
-		//   this.setState({ addMessageVisible: true });
-		// });
 	};
 
 	convertToMeters = () => {

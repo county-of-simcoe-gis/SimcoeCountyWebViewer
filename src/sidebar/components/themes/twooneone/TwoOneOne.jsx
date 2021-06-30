@@ -3,7 +3,6 @@ import "./TwoOneOne.css";
 import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
 import Select from "react-select";
-import mainConfig from "../../../../config.json";
 import InfoRow from "../../../../helpers/InfoRow.jsx";
 import { AutoSizer, List, CellMeasurerCache } from "react-virtualized";
 import "react-virtualized/styles.css";
@@ -17,7 +16,6 @@ import { unByKey } from "ol/Observable.js";
 import Switch from "react-switch";
 import communityServices from "../../../images/communityServices.png";
 
-const apiUrl = mainConfig.apiUrl;
 const ageCategoriesEnglish = [
 	{
 		value: "All",
@@ -84,8 +82,12 @@ class TwoOneOne extends Component {
 	}
 
 	componentWillMount() {
-		this.createLayer();
-		this.getCategories();
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			this.apiUrl = window.config.apiUrl;
+
+			this.createLayer();
+			this.getCategories();
+		});
 	}
 
 	componentWillUnmount() {
@@ -97,7 +99,7 @@ class TwoOneOne extends Component {
 	getCategories = () => {
 		let categories = [];
 		helpers.getJSON(
-			apiUrl + "get211Categories/" + this.state.isFrench,
+			this.apiUrl + "get211Categories/" + this.state.isFrench,
 			(result) => {
 				categories.push({
 					value: "All",
@@ -168,7 +170,7 @@ class TwoOneOne extends Component {
 	updateSubCategories = () => {
 		let subCategories = [];
 		const subCategoriesUrl =
-			apiUrl +
+			this.apiUrl +
 			"get211SubCategories/" +
 			encodeURIComponent(this.state.categorySelectedOption.value) +
 			"/" +
@@ -198,7 +200,7 @@ class TwoOneOne extends Component {
 				age
 			)}/${isFrench}`;
 		const url = resultsUrlTemplate(
-			apiUrl,
+			this.apiUrl,
 			this.state.categorySelectedOption.value,
 			this.state.categorySelectedOption.value === "All"
 				? "All"

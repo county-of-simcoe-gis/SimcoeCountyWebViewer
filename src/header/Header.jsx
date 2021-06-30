@@ -6,7 +6,6 @@ import * as helpers from "../helpers/helpers";
 import FloatingMenu, { FloatingMenuItem } from "../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
 import Portal from "../helpers/Portal.jsx";
-import mainConfig from "../config.json";
 
 const feedbackTemplate = (
 	url,
@@ -22,23 +21,30 @@ const feedbackTemplate = (
 class Header extends Component {
 	constructor(props) {
 		super(props);
-		this.state = {};
+		this.state = { logoImage: "" };
 
 		// LISTEN FOR FEEDBACK
 		window.emitter.addListener("feedback", () => this.onFeedbackClick());
 	}
 
 	componentDidMount() {
-		window.emitter.emit("headerLoaded");
-		helpers.addIsLoaded("header");
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			this.setState({ logoImage: window.config.headerLogoImageName }, () => {
+				window.emitter.emit("headerLoaded");
+				helpers.addIsLoaded("header");
+			});
+		});
 	}
 
 	burgerButtonHandler() {
-		// EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
-		if (window.sidebarOpen) window.emitter.emit("setSidebarVisiblity", "CLOSE");
-		else window.emitter.emit("setSidebarVisiblity", "OPEN");
+		helpers.waitForLoad("map", Date.now(), 30, () => {
+			// EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
+			if (window.sidebarOpen)
+				window.emitter.emit("setSidebarVisiblity", "CLOSE");
+			else window.emitter.emit("setSidebarVisiblity", "OPEN");
 
-		helpers.addAppStat("Burger Button", "Click");
+			helpers.addAppStat("Burger Button", "Click");
+		});
 	}
 
 	onDotMenuClick = (evt) => {
@@ -73,32 +79,38 @@ class Header extends Component {
 
 	onFeedbackClick = () => {
 		// APP STATS
-		helpers.addAppStat("Feedback", "Click (Header)");
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			helpers.addAppStat("Feedback", "Click (Header)");
 
-		const scale = helpers.getMapScale();
-		const extent = window.map.getView().calculateExtent(window.map.getSize());
-		const xmin = extent[0];
-		const xmax = extent[1];
-		const ymin = extent[2];
-		const ymax = extent[3];
-		const center = window.map.getView().getCenter();
+			const scale = helpers.getMapScale();
+			const extent = window.map.getView().calculateExtent(window.map.getSize());
+			const xmin = extent[0];
+			const xmax = extent[1];
+			const ymin = extent[2];
+			const ymax = extent[3];
+			const center = window.map.getView().getCenter();
 
-		const feedbackUrl = feedbackTemplate(
-			mainConfig.feedbackUrl,
-			xmin,
-			xmax,
-			ymin,
-			ymax,
-			center[0],
-			center[1],
-			scale
-		);
-
-		helpers.showURLWindow(feedbackUrl, false, "full");
+			let feedbackUrl = feedbackTemplate(
+				window.config.feedbackUrl,
+				xmin,
+				xmax,
+				ymin,
+				ymax,
+				center[0],
+				center[1],
+				scale
+			);
+			if (
+				window.config.mapId !== null &&
+				window.config.mapId !== undefined &&
+				window.config.mapId.trim() !== ""
+			)
+				feedbackUrl += "&MAP_ID=" + window.config.mapId;
+			helpers.showURLWindow(feedbackUrl, false, "full");
+		});
 	};
 
 	render() {
-		const imageName = mainConfig.headerLogoImageName;
 		return (
 			<div className="header">
 				<div
@@ -118,10 +130,19 @@ class Header extends Component {
 					<img src={require("./images/bar-button.png")} alt="Header Logo" />
 				</div>
 				<div id="sc-header-bar-logo">
-					<img src={require("./images/" + imageName)} alt="Header Logo" />
+					<img
+						src={
+							this.state.logoImage === "" ||
+							this.state.logoImage.toString().substring(0, 4).toUpperCase() ===
+								"HTTP"
+								? this.state.logoImage
+								: require("./images/" + this.state.logoImage)
+						}
+						alt="Header Logo"
+					/>
 				</div>
 				<div id="sc-header-search-container">
-					<Search />
+					<Search options={this.props.options} />
 				</div>
 				<div
 					className="sc-header-feedback-container"

@@ -3,9 +3,8 @@ import Select from "react-select";
 import Collapsible from "react-collapsible";
 import PanelComponent from "../../../PanelComponent";
 import * as helpers from "../../../../helpers/helpers";
-import mainConfig from "../../../../config.json";
 import * as printRequest from "./printRequest/printRequest";
-import config from "./config.json";
+import printConfig from "./config.json";
 import "./Print.css";
 
 // IMPORT ALL IMAGES
@@ -22,35 +21,50 @@ function importAllImages(r) {
 }
 
 class Print extends Component {
-	state = {
-		printSizes: config.printSizes,
-		printFormats: config.printFormats,
-		mapTitle: config.mapTitle,
-		printSizeSelectedOption: null,
-		printFormatSelectedOption: null,
-		forceScale: helpers.getMapScale(),
-		mapScaleOption: "preserveMapScale",
-		mapOnlyHeight: document.getElementById("map").offsetHeight,
-		mapOnlyWidth: document.getElementById("map").offsetWidth,
-		isPrinting: false,
-		termsOfUse: config.termsOfUse,
-		mapResolutionOption: "120",
-	};
-
-	componentDidMount() {
-		this.setState({
-			printSizes: config.printSizes,
-			printFormats: config.printFormats,
-			printSizeSelectedOption: config.printSizes[0],
-			printFormatSelectedOption: config.printFormats[0],
-			mapTitle: config.mapTitle,
+	constructor(props) {
+		super(props);
+		this.config = printConfig;
+		this.state = {
+			printUrl: "",
+			originUrl: "",
+			printSizes: printConfig.printSizes,
+			printFormats: printConfig.printFormats,
+			mapTitle: printConfig.mapTitle,
+			printSizeSelectedOption: null,
+			printFormatSelectedOption: null,
 			forceScale: helpers.getMapScale(),
 			mapScaleOption: "preserveMapScale",
 			mapOnlyHeight: document.getElementById("map").offsetHeight,
 			mapOnlyWidth: document.getElementById("map").offsetWidth,
 			isPrinting: false,
-			termsOfUse: config.termsOfUse,
+			termsOfUse: printConfig.termsOfUse,
 			mapResolutionOption: "120",
+		};
+	}
+
+	componentDidMount() {
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			//const printConfig = printConfig;
+			const globalConfig = helpers.getConfig("TOOLS", "Print");
+			const mainConfig = window.config;
+			if (globalConfig.config !== undefined)
+				this.config = helpers.mergeObj(this.config, globalConfig.config);
+			this.setState({
+				printUrl: mainConfig.printUrl,
+				originUrl: mainConfig.originUrl,
+				printSizes: this.config.printSizes,
+				printFormats: this.config.printFormats,
+				printSizeSelectedOption: this.config.printSizes[0],
+				printFormatSelectedOption: this.config.printFormats[0],
+				mapTitle: this.config.mapTitle,
+				forceScale: helpers.getMapScale(),
+				mapScaleOption: "preserveMapScale",
+				mapOnlyHeight: document.getElementById("map").offsetHeight,
+				mapOnlyWidth: document.getElementById("map").offsetWidth,
+				isPrinting: false,
+				termsOfUse: this.config.termsOfUse,
+				mapResolutionOption: "120",
+			});
 		});
 	}
 
@@ -93,10 +107,6 @@ class Print extends Component {
 	}
 
 	onDownloadButtonClick = async (evt) => {
-		//this.setState({isPrinting: true});
-		//const {printSelectedOption} = this.state;
-		//console.log(this.state);
-
 		// GET VISIBLE LAYERS
 		const printLayers = this.getPrintLayers();
 		let secureKey = undefined;
@@ -120,8 +130,8 @@ class Print extends Component {
 		const outputFormat = printData.outputFormat;
 
 		let interval = 5000;
-		let origin = mainConfig.originUrl;
-		let printUrl = mainConfig.printUrl;
+		let origin = this.state.originUrl;
+		let printUrl = this.state.printUrl;
 
 		//let testOrigin = 'http://localhost:8080'
 		let encodedPrintRequest = encodeURIComponent(JSON.stringify(printData));

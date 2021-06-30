@@ -5,7 +5,6 @@ import "react-tabs/style/react-tabs.css";
 import CommercialRealEstateSearch from "./CommercialRealEstateSearch.jsx";
 import * as config from "./config.json";
 import * as helpers from "../../../../helpers/helpers";
-import mainConfig from "../../../../config.json";
 import * as CommercialRealEstateSearchObjects from "./CommercialRealEstateObjects";
 import { unByKey } from "ol/Observable.js";
 import { GeoJSON } from "ol/format.js";
@@ -18,7 +17,6 @@ const propTypes = [
 	"Industrial",
 	"Institutional",
 ];
-const serverUrl = mainConfig.geoserverUrl + "wms/";
 const polygonLayerName = config.polygonLayerName;
 const pointLayerName = config.pointLayerName;
 
@@ -75,55 +73,57 @@ class CommercialRealEstate extends Component {
 	};
 
 	componentDidMount() {
-		const obj = {
-			wfsUrl: config.incentiveWfsUrl,
-			imageUrlField: "_imageurl",
-			detailFields: ["Address", "Property Type", "Municipality"],
-		};
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			const obj = {
+				wfsUrl: config.incentiveWfsUrl,
+				imageUrlField: "_imageurl",
+				detailFields: ["Address", "Property Type", "Municipality"],
+			};
 
-		window.emitter.emit("showImageSlider", obj, this.onFeatureChange);
-		this.buildLayers();
+			window.emitter.emit("showImageSlider", obj, this.onFeatureChange);
+			this.buildLayers();
 
-		this.onMapMoveEndEvent = window.map.on("moveend", () => {
-			if (this.state.onlyInMapChecked) {
-				this.updateLayerSource();
-			}
-		});
+			this.onMapMoveEndEvent = window.map.on("moveend", () => {
+				if (this.state.onlyInMapChecked) {
+					this.updateLayerSource();
+				}
+			});
 
-		this.mapClickEvent = window.map.on("click", (evt) => {
-			// DISABLE POPUPS
-			if (
-				window.isDrawingOrEditing ||
-				window.isCoordinateToolOpen ||
-				window.isMeasuring
-			)
-				return;
+			this.mapClickEvent = window.map.on("click", (evt) => {
+				// DISABLE POPUPS
+				if (
+					window.isDrawingOrEditing ||
+					window.isCoordinateToolOpen ||
+					window.isMeasuring
+				)
+					return;
 
-			var viewResolution = window.map.getView().getResolution();
-			var url = this.state.layerAll
-				.getSource()
-				.getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", {
-					INFO_FORMAT: "application/json",
-				});
-			if (url) {
-				helpers.getJSON(url, (result) => {
-					const features = result.features;
-					if (features.length === 0) {
-						return;
-					}
+				var viewResolution = window.map.getView().getResolution();
+				var url = this.state.layerAll
+					.getSource()
+					.getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", {
+						INFO_FORMAT: "application/json",
+					});
+				if (url) {
+					helpers.getJSON(url, (result) => {
+						const features = result.features;
+						if (features.length === 0) {
+							return;
+						}
 
-					const geoJSON = new GeoJSON().readFeatures(result);
-					const feature = geoJSON[0];
-					window.popup.show(
-						evt.coordinate,
-						<CommercialRealEstatePopupContent
-							key={helpers.getUID()}
-							feature={feature}
-						/>,
-						"Real Estate"
-					);
-				});
-			}
+						const geoJSON = new GeoJSON().readFeatures(result);
+						const feature = geoJSON[0];
+						window.popup.show(
+							evt.coordinate,
+							<CommercialRealEstatePopupContent
+								key={helpers.getUID()}
+								feature={feature}
+							/>,
+							"Real Estate"
+						);
+					});
+				}
+			});
 		});
 	}
 
@@ -142,6 +142,7 @@ class CommercialRealEstate extends Component {
 
 	buildLayers = () => {
 		let layers = {};
+		const serverUrl = window.config.geoserverUrl + "wms/";
 		propTypes.forEach((propType) => {
 			const wmsPointLayer = helpers.getImageWMSLayer(
 				serverUrl,
@@ -285,6 +286,7 @@ class CommercialRealEstate extends Component {
 		this.setState({ activeTab });
 	};
 	setNumRecords = () => {
+		const serverUrl = window.config.geoserverUrl + "wms/";
 		const extent = window.map.getView().calculateExtent();
 
 		this.setState({ numRecords: 0, allResults: [] }, () => {

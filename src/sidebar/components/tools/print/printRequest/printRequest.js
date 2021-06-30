@@ -378,6 +378,8 @@ const switchTemplates = (options, callback = undefined) => {
 		};
 		attributes["overviewMap"] = overviewMap;
 	}
+	if (window.config.printLogo !== undefined)
+		attributes["imageName"] = window.config.printLogo;
 	if (callback !== undefined) callback(attributes);
 	else return attributes;
 };

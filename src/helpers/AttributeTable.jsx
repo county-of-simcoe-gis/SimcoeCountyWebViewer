@@ -7,7 +7,6 @@ import FloatingMenu, { FloatingMenuItem } from "../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
 import Portal from "../helpers/Portal.jsx";
 import ReactDOM from "react-dom";
-import mainConfig from "../config.json";
 
 class AttrbuteTable extends Component {
 	constructor(props) {

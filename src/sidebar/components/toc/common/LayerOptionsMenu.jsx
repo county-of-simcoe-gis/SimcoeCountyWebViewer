@@ -10,7 +10,6 @@ import FloatingMenu, {
 	FloatingMenuItem,
 } from "../../../../helpers/FloatingMenu.jsx";
 import * as TOCHelpers from "./TOCHelpers.jsx";
-import TOCConfig from "./TOCConfig.json";
 import LayerInfoApp from "../../../../layerInfo/App";
 
 class LayerOptionsMenu extends Component {
@@ -83,7 +82,9 @@ class LayerOptionsMenu extends Component {
 				)
 					return;
 				if (layerInfo.metadataUrl.endsWith("f=json"))
-					helpers.showURLWindow(TOCConfig.layerInfoURL + layerInfo.metadataUrl);
+					helpers.showURLWindow(
+						window.config.toc.layerInfoURL + layerInfo.metadataUrl
+					);
 				else
 					TOCHelpers.getLayerInfo(layerInfo, (result) => {
 						if (helpers.isMobile()) {
@@ -97,9 +98,7 @@ class LayerOptionsMenu extends Component {
 								"normal",
 								false
 							);
-							//helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl, false, "full");
 						} else {
-							//helpers.showURLWindow(TOCConfig.layerInfoURL + result.featureType.fullUrl);
 							helpers.showWindow(
 								<LayerInfoApp
 									layerURL={result.featureType.fullUrl}

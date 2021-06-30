@@ -1,17 +1,11 @@
 import React, { Component } from "react";
 import "./WeatherRadar.css";
 import * as helpers from "../../../../helpers/helpers";
-import mainConfig from "../../../../config.json";
 import Slider from "rc-slider";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import ImageLayer from "ol/layer/Image";
 import Static from "ol/source/ImageStatic";
-
-// API URL
-const radarUrlTemplate = (fromDate, toDate) =>
-	`${mainConfig.weatherRadarApiUrl}?fromDate=${fromDate}&toDate=${toDate}`;
-let date3HoursBehind = new Date(new Date().setHours(new Date().getHours() - 3));
 
 class WeatherRadar extends Component {
 	constructor(props) {
@@ -24,7 +18,9 @@ class WeatherRadar extends Component {
 			radarDateSliderDefaultValue: 0,
 			radarDateSliderValue: this.roundTime(new Date()),
 			radarOpacitySliderValue: 0.7,
-			startDate: this.roundTime(date3HoursBehind),
+			startDate: this.roundTime(
+				new Date(new Date().setHours(new Date().getHours() - 3))
+			),
 			endDate: this.roundTime(new Date()),
 			autoRefresh: true,
 			timeSettingValue: "last3hours",
@@ -37,10 +33,12 @@ class WeatherRadar extends Component {
 	}
 
 	componentDidMount() {
-		this.fetchRadarImages();
-		this.radarInterval = window.setInterval(() => {
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
 			this.fetchRadarImages();
-		}, 60000);
+			this.radarInterval = window.setInterval(() => {
+				this.fetchRadarImages();
+			}, 60000);
+		});
 	}
 
 	componentWillUnmount() {
@@ -51,6 +49,13 @@ class WeatherRadar extends Component {
 	}
 
 	fetchRadarImages = () => {
+		// API URL
+		const radarUrlTemplate = (fromDate, toDate) =>
+			`${window.config.weatherRadarApiUrl}?fromDate=${fromDate}&toDate=${toDate}`;
+		let date3HoursBehind = new Date(
+			new Date().setHours(new Date().getHours() - 3)
+		);
+
 		if (!this.state.autoRefresh) return;
 
 		this.setState({ isLoading: true });
@@ -171,7 +176,7 @@ class WeatherRadar extends Component {
 
 	// SLIDER CHANGE EVENT
 	onRadarDateSliderChange = (value) => {
-		console.log(value);
+		//console.log(value);
 		this.setState((prevState) => ({ radarDateSliderValue: value }));
 		this.updateRadarVisibility();
 	};
@@ -221,13 +226,12 @@ class WeatherRadar extends Component {
 	onTimeSettingsChange = (evt) => {
 		this.setState({ timeSettingValue: evt.target.value }, () => {
 			if (this.state.timeSettingValue === "last3hours") {
-				date3HoursBehind = new Date(
-					new Date().setHours(new Date().getHours() - 3)
-				);
 				this.setState(
 					{
 						endDate: this.roundTime(new Date()),
-						startDate: this.roundTime(date3HoursBehind),
+						startDate: this.roundTime(
+							new Date(new Date().setHours(new Date().getHours() - 3))
+						),
 					},
 					() => {
 						this.fetchRadarImages();

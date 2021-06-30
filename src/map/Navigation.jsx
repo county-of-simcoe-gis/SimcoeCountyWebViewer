@@ -2,8 +2,7 @@ import React, { Component } from "react";
 import "./Navigation.css";
 import { fromLonLat } from "ol/proj";
 import * as helpers from "../helpers/helpers";
-import mainConfig from "../config.json";
-const storageMapDefaultsKey = "Map Defaults";
+
 class Navigation extends Component {
 	constructor(props) {
 		super(props);
@@ -34,15 +33,11 @@ class Navigation extends Component {
 
 	// ZOOM TO FULL EXTENT
 	zoomFullExtent() {
-		let centerCoords = mainConfig.centerCoords;
-		let defaultZoom = mainConfig.defaultZoom;
-		const defaultStorage = sessionStorage.getItem(storageMapDefaultsKey);
-		if (defaultStorage !== null) {
-			const defaults = JSON.parse(defaultStorage);
-			if (defaults.zoom !== undefined) defaultZoom = defaults.zoom;
-			if (defaults.center !== undefined) centerCoords = defaults.center;
-		}
-		window.map.getView().animate({ center: centerCoords, zoom: defaultZoom });
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			let centerCoords = window.config.centerCoords;
+			let defaultZoom = window.config.defaultZoom;
+			window.map.getView().animate({ center: centerCoords, zoom: defaultZoom });
+		});
 	}
 
 	// ZOOM TO CURRENT LOCATION

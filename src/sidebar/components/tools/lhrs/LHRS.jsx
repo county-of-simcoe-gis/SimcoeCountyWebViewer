@@ -12,7 +12,6 @@ import { Vector as VectorSource } from "ol/source.js";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import { unByKey } from "ol/Observable.js";
-import mainConfig from "../../../../config.json";
 
 class LHRS extends Component {
 	constructor(props) {
@@ -114,28 +113,28 @@ class LHRS extends Component {
 	}
 
 	componentDidMount() {
-		this._isMounted = true;
-		//wait for map to load
-		helpers.waitForLoad("map", Date.now(), 30, () => this.onMapLoad());
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			this._isMounted = true;
 
-		// DISABLE PROPERTY CLICK
-		window.disableParcelClick = true;
+			// DISABLE PROPERTY CLICK
+			window.disableParcelClick = true;
 
-		// REGISTER MAP EVENTS
-		this.onPointerMoveEvent = window.map.on(
-			"pointermove",
-			this.onPointerMoveHandler
-		);
-		this.onMapClickEvent = window.map.on("click", this.onMapClick);
-		this.onMapMoveEvent = window.map.on("moveend", this.onMapMoveEnd);
-		this._getLHRSVersions();
-		this._getLHRSActions();
+			// REGISTER MAP EVENTS
+			this.onPointerMoveEvent = window.map.on(
+				"pointermove",
+				this.onPointerMoveHandler
+			);
+			this.onMapClickEvent = window.map.on("click", this.onMapClick);
+			this.onMapMoveEvent = window.map.on("moveend", this.onMapMoveEnd);
+			this._getLHRSVersions();
+			this._getLHRSActions();
 
-		if (this._isMounted) this.forceUpdate();
+			if (this._isMounted) this.forceUpdate();
+		});
 	}
 
 	_getLHRSVersions = () => {
-		const apiUrl = mainConfig.apiUrl + "getLHRSVersion";
+		const apiUrl = window.config.apiUrl + "getLHRSVersion";
 		helpers.getJSON(apiUrl, (result) => {
 			let items = [];
 
@@ -331,6 +330,8 @@ class LHRS extends Component {
 	};
 
 	executeAction = () => {
+		if (this.state.selectLHRSVersion === undefined) return;
+
 		if (this.state.inputAValue !== null && this.state.inputBValue !== null) {
 			let action = this.state.selectLHRSAction.value;
 			switch (action) {
@@ -581,7 +582,7 @@ class LHRS extends Component {
 			offset: offset,
 		};
 		helpers.postJSON(
-			mainConfig.apiUrl + "postGetLHRSByBPoint/",
+			window.config.apiUrl + "postGetLHRSByBPoint/",
 			data,
 			(retResult) => {
 				if (retResult.result !== undefined) {
@@ -624,7 +625,7 @@ class LHRS extends Component {
 			distance: m_distance,
 		};
 		helpers.postJSON(
-			mainConfig.apiUrl + "postGetLHRSByMDistance/",
+			window.config.apiUrl + "postGetLHRSByMDistance/",
 			data,
 			(retResult) => {
 				if (retResult.result !== undefined) {
@@ -667,7 +668,7 @@ class LHRS extends Component {
 			lat: lat,
 		};
 		helpers.postJSON(
-			mainConfig.apiUrl + "postGetLHRSByXY/",
+			window.config.apiUrl + "postGetLHRSByXY/",
 			data,
 			(retResult) => {
 				if (retResult.result !== undefined) {
@@ -711,7 +712,7 @@ class LHRS extends Component {
 		};
 		this.vectorLayerLinear.getSource().clear();
 		helpers.postJSON(
-			mainConfig.apiUrl + "postGetLHRSLinearByMDistance/",
+			window.config.apiUrl + "postGetLHRSLinearByMDistance/",
 			data,
 			(retResult) => {
 				if (retResult.result !== undefined) {

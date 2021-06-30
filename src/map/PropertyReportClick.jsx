@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import mainConfig from "../config.json";
 import * as helpers from "../helpers/helpers";
 import "./PropertyReportClick.css";
 import InfoRow from "../helpers/InfoRow.jsx";
@@ -33,6 +32,11 @@ class PropertyReportClick extends Component {
 		super(props);
 		//wait for toc and map to load
 		helpers.waitForLoad(["map", "toc"], Date.now(), 30, () => this.onMapLoad());
+		helpers.waitForLoad(["settings"], Date.now(), 30, () => {
+			this.parcelLayer = window.config.parcelLayer;
+			this.termsUrl = window.config.termsUrl;
+			this.propertyReportUrl = window.config.propertyReportUrl;
+		});
 		this.state = {
 			propInfo: null,
 			feature: null,
@@ -47,10 +51,7 @@ class PropertyReportClick extends Component {
 		if (urlARN !== null) {
 			const parcelURLARNTemplate = (mainURL, arn) =>
 				`${mainURL}&cql_filter=arn='${arn}'`;
-			const parcelARNURL = parcelURLARNTemplate(
-				mainConfig.parcelLayer.url,
-				urlARN
-			);
+			const parcelARNURL = parcelURLARNTemplate(this.parcelLayer.url, urlARN);
 			this.showPropertyWindow(parcelARNURL);
 		}
 
@@ -106,7 +107,7 @@ class PropertyReportClick extends Component {
 
 			if (disable) return;
 			const parcelURL = parcelURLTemplate(
-				mainConfig.parcelLayer.url,
+				this.parcelLayer.url,
 				evt.coordinate[0],
 				evt.coordinate[1]
 			);
@@ -123,7 +124,7 @@ class PropertyReportClick extends Component {
 
 	onPropertyEmitter = (coords) => {
 		const parcelURL = parcelURLTemplate(
-			mainConfig.parcelLayer.url,
+			this.parcelLayer.url,
 			coords[0],
 			coords[1]
 		);
@@ -257,7 +258,7 @@ class PropertyReportClick extends Component {
 					className="sc-fakeLink"
 					onClick={() => {
 						helpers.showURLWindow(
-							mainConfig.termsUrl,
+							this.termsUrl,
 							true,
 							"full",
 							true,
@@ -342,7 +343,7 @@ class PropertyReportClick extends Component {
 
 					// GET FULL INFO
 					if (feature !== undefined) {
-						const infoURL = mainConfig.propertyReportUrl + "?arn=" + arn;
+						const infoURL = this.propertyReportUrl + "?arn=" + arn;
 						helpers.getJSON(infoURL, (result) => {
 							result.pointCoordinates = latLongCoords;
 							result.shareURL = this.getShareURL(arn);
@@ -364,7 +365,7 @@ class PropertyReportClick extends Component {
 
 				// GET FULL INFO
 				if (feature !== undefined) {
-					const infoURL = mainConfig.propertyReportUrl + "?arn=" + arn;
+					const infoURL = this.propertyReportUrl + "?arn=" + arn;
 					helpers.getJSON(infoURL, (result) => {
 						result.pointCoordinates = latLongCoords;
 						result.shareURL = this.getShareURL(arn);

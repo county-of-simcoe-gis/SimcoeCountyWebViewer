@@ -1,8 +1,6 @@
 import React, { Component } from "react";
 import * as helpers from "../helpers/helpers";
 import "./SidebarItemList.css";
-import ComponentsConfig from "../config.json";
-
 class SidebarItemList extends Component {
 	constructor(props) {
 		super(props);
@@ -19,23 +17,35 @@ class SidebarItemList extends Component {
 		//PARENT HANDLES THE REST
 		this.props.onTabClick(name);
 	}
+	componentDidMount() {
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			let listItems = null;
+			if (this.props.listtype === "tools") {
+				let tools = window.config.sidebarToolComponents;
+				listItems = tools.filter(
+					(item) => item.enabled === undefined || item.enabled
+				);
+			} else {
+				// IMPORT THEMES FROM CONFIG
+				let themes = window.config.sidebarThemeComponents;
+				listItems = themes.filter(
+					(item) => item.enabled === undefined || item.enabled
+				);
+			}
+			this.setState({ components: listItems });
+		});
+	}
 
 	render() {
 		// GET LIST OF COMPONENTS FROM CONFIG
-		let listItems = null;
-		if (this.props.listtype === "tools") {
-			listItems = ComponentsConfig.sidebarToolComponents;
-		} else {
-			listItems = ComponentsConfig.sidebarThemeComponents;
-		}
 
-		if (listItems === undefined) return <div />;
+		if (this.state.components.length === 0) return <div />;
 
 		return (
 			<div className="simcoe-sidebarlist-container">
 				{
 					// CREATE ITEMS FROM CONFIG
-					listItems.map((listItem) => {
+					this.state.components.map((listItem) => {
 						// SKIP IF ITS DISABLED
 						if (listItem.disable !== undefined && listItem.disable) return null;
 						return (

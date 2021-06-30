@@ -34,7 +34,6 @@ import FloatingMenu, { FloatingMenuItem } from "../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
 import Portal from "../helpers/Portal.jsx";
 import * as helpers from "../helpers/helpers";
-import mainConfig from "../config.json";
 import Identify from "./Identify";
 import AttributeTable from "../helpers/AttributeTable.jsx";
 import FloatingImageSlider from "../helpers/FloatingImageSlider.jsx";
@@ -42,8 +41,17 @@ import FloatingImageSlider from "../helpers/FloatingImageSlider.jsx";
 const scaleLineControl = new ScaleLine({
 	minWidth: 80,
 });
-const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
-	`${mainConfig.feedbackUrl}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True`;
+const feedbackTemplate = (
+	url,
+	xmin,
+	xmax,
+	ymin,
+	ymax,
+	centerx,
+	centery,
+	scale
+) =>
+	`${url}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True`;
 const googleMapsTemplate = (pointx, pointy) =>
 	`https://www.google.com/maps?q=${pointy},${pointx}`;
 class SCMap extends Component {
@@ -60,11 +68,12 @@ class SCMap extends Component {
 			mapBottom: 0,
 		};
 		// LISTEN FOR MAP CURSOR TO CHANGE
-		if (!mainConfig.onlyStandardCursor)
-			window.emitter.addListener("changeCursor", (cursorStyle) =>
-				this.changeCursor(cursorStyle)
-			);
-
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			if (!window.config.onlyStandardCursor)
+				window.emitter.addListener("changeCursor", (cursorStyle) =>
+					this.changeCursor(cursorStyle)
+				);
+		});
 		// LISTEN FOR TOC TO LOAD
 		window.emitter.addListener("tocLoaded", () => this.handleUrlParameters());
 
@@ -78,318 +87,339 @@ class SCMap extends Component {
 	}
 
 	componentDidMount() {
-		if (mainConfig.leftClickIdentify) {
-			this.setState({ mapClassName: "sc-map identify" });
-		}
-		let centerCoords = mainConfig.centerCoords;
-		let defaultZoom = mainConfig.defaultZoom;
-		const defaultsStorage = sessionStorage.getItem(this.storageMapDefaultsKey);
-		const extent = helpers.getItemsFromStorage(this.storageExtentKey);
-
-		if (defaultsStorage !== null && extent === undefined) {
-			const defaults = JSON.parse(defaultsStorage);
-			if (defaults.zoom !== undefined) defaultZoom = defaults.zoom;
-			if (defaults.center !== undefined) centerCoords = defaults.center;
-		}
-
-		var controls = [];
-		if (window.mapControls.scaleLine) controls.push(scaleLineControl);
-		if (window.mapControls.fullScreen) controls.push(new FullScreen());
-		if (window.mapControls.rotate) controls.push(new Rotate());
-
-		var map = new Map({
-			controls: defaultControls().extend(controls.concat([])),
-			layers: [],
-			target: "map",
-			view: new View({
-				center: centerCoords,
-				zoom: defaultZoom,
-				maxZoom: mainConfig.maxZoom,
-				//resolutions: resolutions
-			}),
-			interactions: defaultInteractions({
-				keyboard: true,
-				altShiftDragRotate: window.mapControls.rotate,
-				pinchRotate: window.mapControls.rotate,
-				mouseWheelZoom: false,
-			}).extend([
-				new MouseWheelZoom({
-					duration: 0,
-					constrainResolution: true,
-				}),
-			]),
-			keyboardEventTarget: document,
-		});
-		if (!window.mapControls.zoomInOut) helpers.removeMapControl(map, "zoom");
-		if (!window.mapControls.rotate) helpers.removeMapControl(map, "rotate");
-
-		if (extent !== undefined) {
-			map.getView().fit(extent, map.getSize(), { duration: 1000 });
-		}
-
-		window.map = map;
-		window.popup = new Popup();
-		window.map.addOverlay(window.popup);
-
-		window.map.getViewport().addEventListener("contextmenu", (evt) => {
-			evt.preventDefault();
-			this.contextCoords = window.map.getEventCoordinate(evt);
-
-			const menu = (
-				<Portal>
-					<FloatingMenu
-						key={helpers.getUID()}
-						buttonEvent={evt}
-						onMenuItemClick={this.onMenuItemClick}
-						autoY={true}
-						autoX={true}
-					>
-						<MenuItem
-							className={
-								helpers.isMobile() ||
-								!mainConfig.rightClickMenuVisibility[
-									"sc-floating-menu-basic-mode"
-								]
-									? "sc-hidden"
-									: "sc-floating-menu-toolbox-menu-item"
-							}
-							key="sc-floating-menu-basic-mode"
-						>
-							<FloatingMenuItem
-								imageName={"collased.png"}
-								label="Switch To Basic"
-							/>
-						</MenuItem>
-						<MenuItem
-							className={
-								mainConfig.rightClickMenuVisibility[
-									"sc-floating-menu-property-click"
-								]
-									? "sc-floating-menu-toolbox-menu-item"
-									: "sc-hidden"
-							}
-							key="sc-floating-menu-property-click"
-						>
-							<FloatingMenuItem
-								imageName={"report.png"}
-								label="Property Report"
-							/>
-						</MenuItem>
-						<MenuItem
-							className={
-								mainConfig.rightClickMenuVisibility[
-									"sc-floating-menu-add-mymaps"
-								]
-									? "sc-floating-menu-toolbox-menu-item"
-									: "sc-hidden"
-							}
-							key="sc-floating-menu-add-mymaps"
-						>
-							<FloatingMenuItem
-								imageName={"point.png"}
-								label="Add Marker Point"
-							/>
-						</MenuItem>
-
-						<MenuItem
-							className={
-								mainConfig.rightClickMenuVisibility[
-									"sc-floating-menu-save-map-extent"
-								]
-									? "sc-floating-menu-toolbox-menu-item"
-									: "sc-hidden"
-							}
-							key="sc-floating-menu-save-map-extent"
-						>
-							<FloatingMenuItem
-								imageName={"globe-icon.png"}
-								label="Save as Default Extent"
-							/>
-						</MenuItem>
-						<MenuItem
-							className={
-								mainConfig.rightClickMenuVisibility[
-									"sc-floating-menu-report-problem"
-								]
-									? "sc-floating-menu-toolbox-menu-item"
-									: "sc-hidden"
-							}
-							key="sc-floating-menu-report-problem"
-						>
-							<FloatingMenuItem
-								imageName={"error.png"}
-								label="Report a problem"
-							/>
-						</MenuItem>
-						<MenuItem
-							className={
-								mainConfig.rightClickMenuVisibility["sc-floating-menu-identify"]
-									? "sc-floating-menu-toolbox-menu-item"
-									: "sc-hidden"
-							}
-							key="sc-floating-menu-identify"
-						>
-							<FloatingMenuItem imageName={"identify.png"} label="Identify" />
-						</MenuItem>
-						<MenuItem
-							className={
-								mainConfig.rightClickMenuVisibility[
-									"sc-floating-menu-google-maps"
-								]
-									? "sc-floating-menu-toolbox-menu-item"
-									: "sc-hidden"
-							}
-							key="sc-floating-menu-google-maps"
-						>
-							<FloatingMenuItem
-								imageName={"google.png"}
-								label="View in Google Maps"
-							/>
-						</MenuItem>
-						<MenuItem
-							className={
-								mainConfig.rightClickMenuVisibility["sc-floating-menu-more"]
-									? "sc-floating-menu-toolbox-menu-item"
-									: "sc-hidden"
-							}
-							key="sc-floating-menu-more"
-						>
-							<FloatingMenuItem imageName={"more-16.png"} label="More..." />
-						</MenuItem>
-					</FloatingMenu>
-				</Portal>
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			if (window.config.leftClickIdentify) {
+				this.setState({ mapClassName: "sc-map identify" });
+			}
+			let centerCoords = window.config.centerCoords;
+			let defaultZoom = window.config.defaultZoom;
+			const defaultsStorage = sessionStorage.getItem(
+				this.storageMapDefaultsKey
 			);
-			ReactDOM.render(menu, document.getElementById("portal-root"));
-		});
+			let extent =
+				window.config.mapId !== null &&
+				window.config.mapId !== undefined &&
+				window.config.mapId.trim() !== ""
+					? null
+					: helpers.getItemsFromStorage(this.storageExtentKey);
 
-		// APP STAT
-		helpers.addAppStat("STARTUP", "MAP_LOAD");
-
-		// WARNING FOR IE
-		var ua = window.navigator.userAgent;
-		var msie = ua.indexOf("MSIE ");
-
-		// eslint-disable-next-line
-		if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
-			// If Internet Explorer, return version number
-			this.setState({ isIE: true });
-			helpers.showURLWindow(mainConfig.ieWarningUrl);
-		} else {
-			// SHOW TERMS
-			if (helpers.isMobile()) {
-				window.emitter.emit("setSidebarVisiblity", "CLOSE");
-				//helpers.showURLWindow(mainConfig.termsUrl, false, "full");
-			} // else helpers.showURLWindow(mainConfig.termsUrl);
-		}
-
-		// MAP LOADED
-		this.initialLoad = false;
-		window.map.once("rendercomplete", (event) => {
-			if (!this.initialLoad) {
-				window.emitter.emit("mapLoaded");
-				helpers.addIsLoaded("map");
-				this.initialLoad = true;
+			if (
+				defaultsStorage !== null &&
+				(extent === undefined || extent === null)
+			) {
+				const defaults = JSON.parse(defaultsStorage);
+				if (defaults.zoom !== undefined) defaultZoom = defaults.zoom;
+				if (defaults.center !== undefined) centerCoords = defaults.center;
 			}
-		});
 
-		window.map.on("change:size", () => {
-			if (!window.isAttributeTableResizing) {
-				window.emitter.emit("mapResize");
+			var controls = [];
+			if (window.mapControls.scaleLine) controls.push(scaleLineControl);
+			if (window.mapControls.fullScreen) controls.push(new FullScreen());
+			if (window.mapControls.rotate) controls.push(new Rotate());
+
+			var map = new Map({
+				controls: defaultControls().extend(controls.concat([])),
+				layers: [],
+				target: "map",
+				view: new View({
+					center: centerCoords,
+					zoom: defaultZoom,
+					maxZoom: window.config.maxZoom,
+					//resolutions: resolutions
+				}),
+				interactions: defaultInteractions({
+					keyboard: true,
+					altShiftDragRotate: window.mapControls.rotate,
+					pinchRotate: window.mapControls.rotate,
+					mouseWheelZoom: false,
+				}).extend([
+					new MouseWheelZoom({
+						duration: 0,
+						constrainResolution: true,
+					}),
+				]),
+				keyboardEventTarget: document,
+			});
+			if (!window.mapControls.zoomInOut) helpers.removeMapControl(map, "zoom");
+			if (!window.mapControls.rotate) helpers.removeMapControl(map, "rotate");
+
+			if (extent !== undefined && extent !== null) {
+				map.getView().fit(extent, map.getSize());
 			}
-		});
-		this.addIdentifyLayer();
-		// SHOW FEEDBACK ON TIMER
-		if (
-			mainConfig.showFeedbackMessageOnStartup !== undefined &&
-			mainConfig.showFeedbackMessageOnStartup
-		) {
-			setTimeout(() => {
-				helpers.showMessage(
-					"Feedback",
-					<div>
-						<label>
-							Please provide us feedback! The feedback button is at top right of
-							this window.
-						</label>
-						<span
-							className="sc-fakeLink"
-							style={{ display: "block" }}
-							onClick={() => {
-								window.emitter.emit("feedback", null);
-							}}
-						>
-							Provide Feedback now!
-						</span>
-					</div>,
-					undefined,
-					10000
-				);
-			}, 60000);
-		}
 
-		// SHOW WHATS NEW
-		if (
-			mainConfig.showWhatsNewOnStartup !== undefined &&
-			mainConfig.showWhatsNewOnStartup &&
-			mainConfig.whatsNewUrl
-		) {
-			helpers.showURLWindow(mainConfig.whatsNewUrl, true, "full", true, true);
-		}
-		// SHOW WHATS NEW NOTICE
-		if (
-			mainConfig.showWhatsNewPopupOnStartup !== undefined &&
-			mainConfig.showWhatsNewPopupOnStartup &&
-			mainConfig.whatsNewUrl
-		) {
-			const showWhatsNewMessage = () => {
-				helpers.showMessage(
-					"What's New!",
-					<div>
-						<span
-							className="sc-fakeLink"
-							style={{ display: "block" }}
-							onClick={() => {
-								helpers.showURLWindow(
-									mainConfig.whatsNewUrl,
-									true,
-									"normal",
-									true,
-									true
-								);
-							}}
+			window.map = map;
+			window.popup = new Popup();
+			window.map.addOverlay(window.popup);
+
+			window.map.getViewport().addEventListener("contextmenu", (evt) => {
+				evt.preventDefault();
+				this.contextCoords = window.map.getEventCoordinate(evt);
+
+				const menu = (
+					<Portal>
+						<FloatingMenu
+							key={helpers.getUID()}
+							buttonEvent={evt}
+							onMenuItemClick={this.onMenuItemClick}
+							autoY={true}
+							autoX={true}
 						>
-							Click here to see what's changed
-						</span>
-					</div>,
-					undefined,
-					10000
+							<MenuItem
+								className={
+									helpers.isMobile() ||
+									!window.config.rightClickMenuVisibility[
+										"sc-floating-menu-basic-mode"
+									]
+										? "sc-hidden"
+										: "sc-floating-menu-toolbox-menu-item"
+								}
+								key="sc-floating-menu-basic-mode"
+							>
+								<FloatingMenuItem
+									imageName={"collased.png"}
+									label="Switch To Basic"
+								/>
+							</MenuItem>
+							<MenuItem
+								className={
+									window.config.rightClickMenuVisibility[
+										"sc-floating-menu-property-click"
+									]
+										? "sc-floating-menu-toolbox-menu-item"
+										: "sc-hidden"
+								}
+								key="sc-floating-menu-property-click"
+							>
+								<FloatingMenuItem
+									imageName={"report.png"}
+									label="Property Report"
+								/>
+							</MenuItem>
+							<MenuItem
+								className={
+									window.config.rightClickMenuVisibility[
+										"sc-floating-menu-add-mymaps"
+									]
+										? "sc-floating-menu-toolbox-menu-item"
+										: "sc-hidden"
+								}
+								key="sc-floating-menu-add-mymaps"
+							>
+								<FloatingMenuItem
+									imageName={"point.png"}
+									label="Add Marker Point"
+								/>
+							</MenuItem>
+
+							<MenuItem
+								className={
+									window.config.rightClickMenuVisibility[
+										"sc-floating-menu-save-map-extent"
+									]
+										? "sc-floating-menu-toolbox-menu-item"
+										: "sc-hidden"
+								}
+								key="sc-floating-menu-save-map-extent"
+							>
+								<FloatingMenuItem
+									imageName={"globe-icon.png"}
+									label="Save as Default Extent"
+								/>
+							</MenuItem>
+							<MenuItem
+								className={
+									window.config.rightClickMenuVisibility[
+										"sc-floating-menu-report-problem"
+									]
+										? "sc-floating-menu-toolbox-menu-item"
+										: "sc-hidden"
+								}
+								key="sc-floating-menu-report-problem"
+							>
+								<FloatingMenuItem
+									imageName={"error.png"}
+									label="Report a problem"
+								/>
+							</MenuItem>
+							<MenuItem
+								className={
+									window.config.rightClickMenuVisibility[
+										"sc-floating-menu-identify"
+									]
+										? "sc-floating-menu-toolbox-menu-item"
+										: "sc-hidden"
+								}
+								key="sc-floating-menu-identify"
+							>
+								<FloatingMenuItem imageName={"identify.png"} label="Identify" />
+							</MenuItem>
+							<MenuItem
+								className={
+									window.config.rightClickMenuVisibility[
+										"sc-floating-menu-google-maps"
+									]
+										? "sc-floating-menu-toolbox-menu-item"
+										: "sc-hidden"
+								}
+								key="sc-floating-menu-google-maps"
+							>
+								<FloatingMenuItem
+									imageName={"google.png"}
+									label="View in Google Maps"
+								/>
+							</MenuItem>
+							<MenuItem
+								className={
+									window.config.rightClickMenuVisibility[
+										"sc-floating-menu-more"
+									]
+										? "sc-floating-menu-toolbox-menu-item"
+										: "sc-hidden"
+								}
+								key="sc-floating-menu-more"
+							>
+								<FloatingMenuItem imageName={"more-16.png"} label="More..." />
+							</MenuItem>
+						</FloatingMenu>
+					</Portal>
 				);
-			};
-			try {
-				const saved = helpers.getItemsFromStorage(
-					mainConfig.storageKeys.URLDontShowAgain
+				ReactDOM.render(menu, document.getElementById("portal-root"));
+			});
+
+			// APP STAT
+			helpers.addAppStat("STARTUP", "MAP_LOAD");
+
+			// WARNING FOR IE
+			var ua = window.navigator.userAgent;
+			var msie = ua.indexOf("MSIE ");
+
+			// eslint-disable-next-line
+			if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
+				// If Internet Explorer, return version number
+				this.setState({ isIE: true });
+				helpers.showURLWindow(window.config.ieWarningUrl);
+			} else {
+				// SHOW TERMS
+				if (helpers.isMobile()) {
+					window.emitter.emit("setSidebarVisiblity", "CLOSE");
+				}
+			}
+
+			// MAP LOADED
+			this.initialLoad = false;
+			window.map.once("rendercomplete", (event) => {
+				if (!this.initialLoad) {
+					window.emitter.emit("mapLoaded");
+					helpers.addIsLoaded("map");
+					this.initialLoad = true;
+				}
+			});
+
+			window.map.on("change:size", () => {
+				if (!window.isAttributeTableResizing) {
+					window.emitter.emit("mapResize");
+				}
+			});
+			this.addIdentifyLayer();
+			// SHOW FEEDBACK ON TIMER
+			if (
+				window.config.showFeedbackMessageOnStartup !== undefined &&
+				window.config.showFeedbackMessageOnStartup
+			) {
+				setTimeout(() => {
+					helpers.showMessage(
+						"Feedback",
+						<div>
+							<label>
+								Please provide us feedback! The feedback button is at top right
+								of this window.
+							</label>
+							<span
+								className="sc-fakeLink"
+								style={{ display: "block" }}
+								onClick={() => {
+									window.emitter.emit("feedback", null);
+								}}
+							>
+								Provide Feedback now!
+							</span>
+						</div>,
+						undefined,
+						10000
+					);
+				}, 60000);
+			}
+
+			// SHOW WHATS NEW
+			if (
+				window.config.showWhatsNewOnStartup !== undefined &&
+				window.config.showWhatsNewOnStartup &&
+				window.config.whatsNewUrl
+			) {
+				helpers.showURLWindow(
+					window.config.whatsNewUrl,
+					true,
+					"full",
+					true,
+					true
 				);
-				if (saved !== null && saved !== undefined) {
-					if (
-						!saved.find((item) =>
-							item.url !== undefined
-								? item.url.toLowerCase() ===
-								  mainConfig.whatsNewUrl.toLowerCase()
-								: false
-						)
-					) {
+			}
+			// SHOW WHATS NEW NOTICE
+			if (
+				window.config.showWhatsNewPopupOnStartup !== undefined &&
+				window.config.showWhatsNewPopupOnStartup &&
+				window.config.whatsNewUrl
+			) {
+				const showWhatsNewMessage = () => {
+					helpers.showMessage(
+						"What's New!",
+						<div>
+							<span
+								className="sc-fakeLink"
+								style={{ display: "block" }}
+								onClick={() => {
+									helpers.showURLWindow(
+										window.config.whatsNewUrl,
+										true,
+										"normal",
+										true,
+										true
+									);
+								}}
+							>
+								Click here to see what's changed
+							</span>
+						</div>,
+						undefined,
+						10000
+					);
+				};
+				try {
+					const saved = helpers.getItemsFromStorage(
+						window.config.storageKeys.URLDontShowAgain
+					);
+					if (saved !== null && saved !== undefined) {
+						if (
+							!saved.find((item) =>
+								item.url !== undefined
+									? item.url.toLowerCase() ===
+									  window.config.whatsNewUrl.toLowerCase()
+									: false
+							)
+						) {
+							showWhatsNewMessage();
+						}
+					} else {
 						showWhatsNewMessage();
 					}
-				} else {
-					showWhatsNewMessage();
+				} catch (e) {
+					helpers.saveToStorage(window.config.storageKeys.URLDontShowAgain, []);
+					console.log(e);
 				}
-			} catch (e) {
-				helpers.saveToStorage(mainConfig.storageKeys.URLDontShowAgain, []);
-				console.log(e);
 			}
-		}
-		// ATTRIBUTE TABLE TESTING
-		// window.emitter.emit("openAttributeTable", "https://opengis.simcoe.ca/geoserver/", "simcoe:Airport");
+			// ATTRIBUTE TABLE TESTING
+			// window.emitter.emit("openAttributeTable", "https://opengis.simcoe.ca/geoserver/", "simcoe:Airport");
+		});
 	}
 	changeCursor = (cursorStyle) => {
 		let cursorStyles = ["standard", "identify", "draw"];
@@ -412,59 +442,66 @@ class SCMap extends Component {
 	};
 
 	handleUrlParameters = () => {
-		const storage = localStorage.getItem(this.storageExtentKey);
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			const storage =
+				window.config.mapId !== null &&
+				window.config.mapId !== undefined &&
+				window.config.mapId.trim() !== ""
+					? undefined
+					: helpers.getItemsFromStorage(this.storageExtentKey);
 
-		// GET URL PARAMETERS (ZOOM TO XY)
-		const x = helpers.getURLParameter("X");
-		const y = helpers.getURLParameter("Y");
-		const sr =
-			helpers.getURLParameter("SR") === null
-				? "WEB"
-				: helpers.getURLParameter("SR");
+			// GET URL PARAMETERS (ZOOM TO XY)
+			const x = helpers.getURLParameter("X");
+			const y = helpers.getURLParameter("Y");
+			const sr =
+				helpers.getURLParameter("SR") === null
+					? "WEB"
+					: helpers.getURLParameter("SR");
 
-		// GET URL PARAMETERS (ZOOM TO EXTENT)
-		const xmin = helpers.getURLParameter("XMIN");
-		const ymin = helpers.getURLParameter("YMIN");
-		const xmax = helpers.getURLParameter("XMAX");
-		const ymax = helpers.getURLParameter("YMAX");
+			// GET URL PARAMETERS (ZOOM TO EXTENT)
+			const xmin = helpers.getURLParameter("XMIN");
+			const ymin = helpers.getURLParameter("YMIN");
+			const xmax = helpers.getURLParameter("XMAX");
+			const ymax = helpers.getURLParameter("YMAX");
 
-		if (x !== null && y !== null) {
-			// URL PARAMETERS (ZOOM TO XY)
-			let coords = [x, y];
-			if (sr === "WGS84")
-				coords = fromLonLat([
-					Math.round(x * 100000) / 100000,
-					Math.round(y * 100000) / 100000,
-				]);
+			if (x !== null && y !== null) {
+				// URL PARAMETERS (ZOOM TO XY)
+				let coords = [x, y];
+				if (sr === "WGS84")
+					coords = fromLonLat([
+						Math.round(x * 100000) / 100000,
+						Math.round(y * 100000) / 100000,
+					]);
 
-			setTimeout(() => {
-				helpers.flashPoint(coords);
-			}, 1000);
-		} else if (
-			xmin !== null &&
-			ymin !== null &&
-			xmax !== null &&
-			ymax !== null
-		) {
-			//URL PARAMETERS (ZOOM TO EXTENT)
-			const extent = [
-				parseFloat(xmin),
-				parseFloat(ymin),
-				parseFloat(xmax),
-				parseFloat(ymax),
-			];
-			window.map
-				.getView()
-				.fit(extent, window.map.getSize(), { duration: 1000 });
-		} else if (storage !== null) {
-			// ZOOM TO SAVED EXTENT
-			const extent = JSON.parse(storage);
-			window.map
-				.getView()
-				.fit(extent, window.map.getSize(), { duration: 1000 });
-		}
+				setTimeout(() => {
+					helpers.flashPoint(coords);
+				}, 1000);
+			} else if (
+				xmin !== null &&
+				ymin !== null &&
+				xmax !== null &&
+				ymax !== null
+			) {
+				//URL PARAMETERS (ZOOM TO EXTENT)
+				const extent = [
+					parseFloat(xmin),
+					parseFloat(ymin),
+					parseFloat(xmax),
+					parseFloat(ymax),
+				];
+				window.map
+					.getView()
+					.fit(extent, window.map.getSize(), { duration: 1000 });
+			} else if (storage !== null && storage !== undefined) {
+				// ZOOM TO SAVED EXTENT
 
-		window.emitter.emit("mapParametersComplete");
+				window.map
+					.getView()
+					.fit(storage, window.map.getSize(), { duration: 1000 });
+			}
+
+			window.emitter.emit("mapParametersComplete");
+		});
 	};
 
 	onMenuItemClick = (key) => {
@@ -525,36 +562,38 @@ class SCMap extends Component {
 	};
 
 	addIdentifyLayer = () => {
-		this.identifyIconLayer = new VectorLayer({
-			name: "sc-identify",
-			source: new VectorSource({
-				features: [],
-			}),
-			zIndex: 100000,
-		});
-		this.identifyIconLayer.setStyle(
-			new Style({
-				image: new Icon({
-					anchor: [0.5, 1],
-					src: images["identify-marker.png"],
+		helpers.waitForLoad(["settings", "map"], Date.now(), 30, () => {
+			this.identifyIconLayer = new VectorLayer({
+				name: "sc-identify",
+				source: new VectorSource({
+					features: [],
 				}),
-			})
-		);
-		this.identifyIconLayer.set("name", "sc-identify-icon");
-		if (helpers.getConfigValue("leftClickIdentify")) {
-			window.map.on("singleclick", (evt) => {
-				// DISABLE POPUPS
-				let disable =
-					window.disableIdentifyClick ||
-					window.isDrawingOrEditing ||
-					window.isCoordinateToolOpen ||
-					window.isMeasuring;
-				if (disable) return;
-
-				this.contextCoords = evt.coordinate;
-				this.identify();
+				zIndex: 100000,
 			});
-		}
+			this.identifyIconLayer.setStyle(
+				new Style({
+					image: new Icon({
+						anchor: [0.5, 1],
+						src: images["identify-marker.png"],
+					}),
+				})
+			);
+			this.identifyIconLayer.set("name", "sc-identify-icon");
+			if (window.config.leftClickIdentify) {
+				window.map.on("singleclick", (evt) => {
+					// DISABLE POPUPS
+					let disable =
+						window.disableIdentifyClick ||
+						window.isDrawingOrEditing ||
+						window.isCoordinateToolOpen ||
+						window.isMeasuring;
+					if (disable) return;
+
+					this.contextCoords = evt.coordinate;
+					this.identify();
+				});
+			}
+		});
 	};
 	identify = () => {
 		this.identifyIconLayer.getSource().clear();
@@ -582,18 +621,26 @@ class SCMap extends Component {
 		const ymin = extent[2];
 		const ymax = extent[3];
 		const center = window.map.getView().getCenter();
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			let feedbackUrl = feedbackTemplate(
+				window.config.feedbackUrl,
+				xmin,
+				xmax,
+				ymin,
+				ymax,
+				center[0],
+				center[1],
+				scale
+			);
+			if (
+				window.config.mapId !== null &&
+				window.config.mapId !== undefined &&
+				window.config.mapId.trim() !== ""
+			)
+				feedbackUrl += "&MAP_ID=" + window.config.mapId;
 
-		const feedbackUrl = feedbackTemplate(
-			xmin,
-			xmax,
-			ymin,
-			ymax,
-			center[0],
-			center[1],
-			scale
-		);
-
-		helpers.showURLWindow(feedbackUrl, false, "full");
+			helpers.showURLWindow(feedbackUrl, false, "full");
+		});
 	};
 	googleLink = () => {
 		// APP STATS
@@ -647,17 +694,19 @@ class SCMap extends Component {
 	};
 
 	sidebarChanged(isSidebarOpen) {
-		let mapClassName = "sc-map";
-		//  SIDEBAR IN AND OUT
-		if (isSidebarOpen) {
-			mapClassName = "sc-map sc-map-slideout";
-		} else {
-			mapClassName = "sc-map sc-map-closed sc-map-slidein";
-		}
-		this.setState({ mapClassName: mapClassName }, () => {
-			window.map.updateSize();
+		helpers.waitForLoad("map", Date.now(), 30, () => {
+			let mapClassName = "sc-map";
+			//  SIDEBAR IN AND OUT
+			if (isSidebarOpen) {
+				mapClassName = "sc-map sc-map-slideout";
+			} else {
+				mapClassName = "sc-map sc-map-closed sc-map-slidein";
+			}
+			this.setState({ mapClassName: mapClassName }, () => {
+				window.map.updateSize();
 
-			this.forceUpdate();
+				this.forceUpdate();
+			});
 		});
 	}
 
@@ -676,9 +725,9 @@ class SCMap extends Component {
 						tabIndex="0"
 						style={{ bottom: this.state.mapBottom }}
 					/>
-					<Navigation />
-					<FooterTools />
-					<BasemapSwitcher />
+					<Navigation options={this.props.options} />
+					<FooterTools options={this.props.options} />
+					<BasemapSwitcher options={this.props.options} />
 					<PropertyReportClick />
 					<div
 						className={

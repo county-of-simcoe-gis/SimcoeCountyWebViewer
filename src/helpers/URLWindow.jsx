@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import "./UrlWindow.css";
 import * as helpers from "./helpers";
-import * as mainConfig from "../config.json";
 
 class URLWindow extends Component {
 	constructor(props) {
@@ -10,8 +9,6 @@ class URLWindow extends Component {
 		this.state = {
 			hide: false,
 		};
-
-		this.storageKey = mainConfig.storageKeys.URLDontShowAgain;
 	}
 
 	onCloseClick = (value) => {
@@ -28,31 +25,35 @@ class URLWindow extends Component {
 	}
 
 	componentDidMount() {
-		try {
-			if (this.props.honorDontShow) {
-				const saved = this.getStorage();
-				if (saved !== null && saved !== undefined) {
-					if (
-						saved.find((item) =>
-							item.url !== undefined
-								? item.url.toLowerCase() === this.props.url.toLowerCase()
-								: false
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			this.storageKey = window.config.storageKeys.URLDontShowAgain;
+
+			try {
+				if (this.props.honorDontShow) {
+					const saved = this.getStorage();
+					if (saved !== null && saved !== undefined) {
+						if (
+							saved.find((item) =>
+								item.url !== undefined
+									? item.url.toLowerCase() === this.props.url.toLowerCase()
+									: false
+							)
 						)
-					)
-						this.setState({ hide: true });
+							this.setState({ hide: true });
+					}
 				}
+			} catch (e) {
+				console.log(e);
 			}
-		} catch (e) {
-			console.log(e);
-		}
 
-		document.addEventListener("keydown", this.escFunction, false);
+			document.addEventListener("keydown", this.escFunction, false);
 
-		// LISTEN FOR SIDEPANEL CHANGES
-		this.sidebarEmitter = window.emitter.addListener(
-			"sidebarChanged",
-			(isSidebarOpen) => this.sidebarChanged(isSidebarOpen)
-		);
+			// LISTEN FOR SIDEPANEL CHANGES
+			this.sidebarEmitter = window.emitter.addListener(
+				"sidebarChanged",
+				(isSidebarOpen) => this.sidebarChanged(isSidebarOpen)
+			);
+		});
 	}
 
 	isDontShow = () => {

@@ -2,16 +2,12 @@ import React, { Component } from "react";
 import Select from "react-select";
 import "./SearchAddresses.css";
 import * as helpers from "../../../../helpers/helpers";
-import mainConfig from "../../../../config.json";
 import PanelComponent from "../../../PanelComponent";
 import Autocomplete from "react-autocomplete";
 import Highlighter from "react-highlight-words";
 import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
 import { Circle as CircleStyle, Icon, Fill, Stroke, Style } from "ol/style.js";
-
-const searchStreetsURL = (searchText) =>
-	`${mainConfig.apiUrl}getStreetNames/${searchText}`;
 
 class SearchAddresses extends Component {
 	constructor(props) {
@@ -24,6 +20,10 @@ class SearchAddresses extends Component {
 			streetItems: [],
 			features: [],
 		};
+
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			this.apiUrl = window.config.apiUrl;
+		});
 
 		this.createPointLayer();
 	}
@@ -90,34 +90,36 @@ class SearchAddresses extends Component {
 	};
 
 	onSearchClick = () => {
-		let sql = "";
-		if (this.state.selectedMuni.value !== "SEARCH ALL")
-			sql += "muni = '" + this.state.selectedMuni.value + "'";
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			let sql = "";
+			if (this.state.selectedMuni.value !== "SEARCH ALL")
+				sql += "muni = '" + this.state.selectedMuni.value + "'";
 
-		if (this.state.addressNumber.length !== 0) {
-			if (sql === "") sql += "stnum = " + this.state.addressNumber;
-			else sql += " AND stnum = " + this.state.addressNumber + " ";
-		}
+			if (this.state.addressNumber.length !== 0) {
+				if (sql === "") sql += "stnum = " + this.state.addressNumber;
+				else sql += " AND stnum = " + this.state.addressNumber + " ";
+			}
 
-		const streetValue = document.getElementById(
-			"sc-tool-search-addresses-street-search"
-		).value;
-		if (streetValue !== "") {
-			if (sql === "") sql += "fullname ILIKE '%25" + streetValue + "%25'";
-			else sql += " AND fullname ILIKE '%25" + streetValue + "%25'";
-		}
+			const streetValue = document.getElementById(
+				"sc-tool-search-addresses-street-search"
+			).value;
+			if (streetValue !== "") {
+				if (sql === "") sql += "fullname ILIKE '%25" + streetValue + "%25'";
+				else sql += " AND fullname ILIKE '%25" + streetValue + "%25'";
+			}
 
-		helpers.getWFSGeoJSON(
-			mainConfig.geoserverUrl,
-			"simcoe:Address_Number",
-			(result) => {
-				this.updateFeatures(result);
-			},
-			"stnum,fullname",
-			null,
-			sql,
-			1000
-		);
+			helpers.getWFSGeoJSON(
+				window.config.geoserverUrl,
+				"simcoe:Address_Number",
+				(result) => {
+					this.updateFeatures(result);
+				},
+				"stnum,fullname",
+				null,
+				sql,
+				1000
+			);
+		});
 	};
 
 	updateFeatures = (features) => {
@@ -180,6 +182,8 @@ class SearchAddresses extends Component {
 				padding: "5px",
 			}),
 		};
+		const searchStreetsURL = (apiUrl, searchText) =>
+			`${apiUrl}getStreetNames/${searchText}`;
 
 		return (
 			<PanelComponent
@@ -256,7 +260,7 @@ class SearchAddresses extends Component {
 											});
 
 											helpers.getJSON(
-												searchStreetsURL(value),
+												searchStreetsURL(this.apiUrl, value),
 												(responseJson) => {
 													if (responseJson.error === undefined)
 														this.setState({ streetItems: responseJson });

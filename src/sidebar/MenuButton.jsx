@@ -1,12 +1,21 @@
 import React, { Component } from "react";
 import "./MenuButton.css";
 import * as helpers from "../helpers/helpers";
-import mainConfig from "../config.json";
 import * as htmlToImage from "html-to-image";
 import { saveAs } from "file-saver";
+import { transformWithProjections } from "ol/proj";
 
-const feedbackTemplate = (xmin, xmax, ymin, ymax, centerx, centery, scale) =>
-	`${mainConfig.feedbackUrl}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
+const feedbackTemplate = (
+	url,
+	xmin,
+	xmax,
+	ymin,
+	ymax,
+	centerx,
+	centery,
+	scale
+) =>
+	`${url}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
 
 class MenuButton extends Component {
 	state = {
@@ -38,6 +47,11 @@ class MenuButton extends Component {
 		window.emitter.addListener("takeScreenshot", () =>
 			this.onScreenshotClick()
 		);
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			this.themes = this.getThemes();
+			this.others = this.getOthers();
+			this.tools = this.getTools();
+		});
 	}
 
 	// LOAD TOOLS FROM CONFIG
@@ -51,15 +65,16 @@ class MenuButton extends Component {
 				iconClass={"sc-menu-screenshot-icon"}
 			/>
 		);
-		mainConfig.sidebarToolComponents.forEach((tool) => {
-			itemList.push(
-				<MenuItem
-					onClick={() => this.itemClick(tool.name, "tools")}
-					key={helpers.getUID()}
-					name={tool.name}
-					iconClass={"sc-menu-tools-icon"}
-				/>
-			);
+		window.config.sidebarToolComponents.forEach((tool) => {
+			if (tool.enabled === undefined || tool.enabled)
+				itemList.push(
+					<MenuItem
+						onClick={() => this.itemClick(tool.name, "tools")}
+						key={helpers.getUID()}
+						name={tool.name}
+						iconClass={"sc-menu-tools-icon"}
+					/>
+				);
 		});
 
 		return itemList;
@@ -68,15 +83,16 @@ class MenuButton extends Component {
 	// LOAD THEMES FROM CONFIG
 	getThemes = () => {
 		let itemList = [];
-		mainConfig.sidebarThemeComponents.forEach((tool) => {
-			itemList.push(
-				<MenuItem
-					onClick={() => this.itemClick(tool.name, "themes")}
-					key={helpers.getUID()}
-					name={tool.name}
-					iconClass={"sc-menu-theme-icon"}
-				/>
-			);
+		window.config.sidebarThemeComponents.forEach((theme) => {
+			if (theme.enabled === undefined || theme.enabled)
+				itemList.push(
+					<MenuItem
+						onClick={() => this.itemClick(theme.name, "themes")}
+						key={helpers.getUID()}
+						name={theme.name}
+						iconClass={"sc-menu-theme-icon"}
+					/>
+				);
 		});
 
 		return itemList;
@@ -89,7 +105,7 @@ class MenuButton extends Component {
 			<MenuItem
 				onClick={() =>
 					helpers.showURLWindow(
-						mainConfig.whatsNewUrl,
+						window.config.whatsNewUrl,
 						true,
 						"full",
 						false,
@@ -128,7 +144,13 @@ class MenuButton extends Component {
 		itemList.push(
 			<MenuItem
 				onClick={() =>
-					helpers.showURLWindow(mainConfig.helpUrl, false, "full", false, true)
+					helpers.showURLWindow(
+						window.config.helpUrl,
+						false,
+						"full",
+						false,
+						true
+					)
 				}
 				key={helpers.getUID()}
 				name={"Help"}
@@ -138,7 +160,13 @@ class MenuButton extends Component {
 		itemList.push(
 			<MenuItem
 				onClick={() =>
-					helpers.showURLWindow(mainConfig.termsUrl, false, "full", false, true)
+					helpers.showURLWindow(
+						window.config.termsUrl,
+						false,
+						"full",
+						false,
+						true
+					)
 				}
 				key={helpers.getUID()}
 				name={"Terms and Conditions"}
@@ -194,27 +222,36 @@ class MenuButton extends Component {
 
 	onFeedbackClick = () => {
 		// APP STATS
-		helpers.addAppStat("Feedback", "Click (Footer)");
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			helpers.addAppStat("Feedback", "Click (Footer)");
 
-		const scale = helpers.getMapScale();
-		const extent = window.map.getView().calculateExtent(window.map.getSize());
-		const xmin = extent[0];
-		const xmax = extent[1];
-		const ymin = extent[2];
-		const ymax = extent[3];
-		const center = window.map.getView().getCenter();
+			const scale = helpers.getMapScale();
+			const extent = window.map.getView().calculateExtent(window.map.getSize());
+			const xmin = extent[0];
+			const xmax = extent[1];
+			const ymin = extent[2];
+			const ymax = extent[3];
+			const center = window.map.getView().getCenter();
 
-		const feedbackUrl = feedbackTemplate(
-			xmin,
-			xmax,
-			ymin,
-			ymax,
-			center[0],
-			center[1],
-			scale
-		);
+			let feedbackUrl = feedbackTemplate(
+				window.config.feedbackUrl,
+				xmin,
+				xmax,
+				ymin,
+				ymax,
+				center[0],
+				center[1],
+				scale
+			);
+			if (
+				window.config.mapId !== null &&
+				window.config.mapId !== undefined &&
+				window.config.mapId.trim() !== ""
+			)
+				feedbackUrl += "&MAP_ID=" + window.config.mapId;
 
-		helpers.showURLWindow(feedbackUrl, false, "full");
+			helpers.showURLWindow(feedbackUrl, false, "full");
+		});
 	};
 
 	render() {
@@ -257,11 +294,11 @@ class MenuButton extends Component {
 					>
 						MAP THEMES
 					</div>
-					{this.getThemes()}
+					{this.themes}
 					<div className="sc-menu-list-item-heading">MAP TOOLS</div>
-					{this.getTools()}
+					{this.tools}
 					<div className="sc-menu-list-item-heading">OTHER</div>
-					{this.getOthers()}
+					{this.others}
 				</div>
 			</div>
 		);

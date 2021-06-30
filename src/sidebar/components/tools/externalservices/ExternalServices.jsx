@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import "./ExternalServices.css";
 import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
-import mainConfig from "../../../../config.json";
 import * as config from "./config.json";
 import GeoJSON from "ol/format/GeoJSON.js";
 import { Vector as VectorLayer } from "ol/layer.js";
@@ -27,12 +26,14 @@ class ExternalServices extends Component {
 	}
 
 	componentDidMount() {
-		this.mapClickListener = this.onMapClickEvent = window.map.on(
-			"click",
-			this.onMapClick
-		);
-		this.createPointLayer();
-		window.disableParcelClick = true;
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			this.mapClickListener = this.onMapClickEvent = window.map.on(
+				"click",
+				this.onMapClick
+			);
+			this.createPointLayer();
+			window.disableParcelClick = true;
+		});
 	}
 
 	// POINT LAYER TO STORE SEARCH RESULTS
@@ -70,7 +71,7 @@ class ExternalServices extends Component {
 		this.vectorLayer.getSource().addFeature(feature);
 
 		const parcelURL = parcelURLTemplate(
-			mainConfig.parcelLayer.url,
+			window.config.parcelLayer.url,
 			coords[0],
 			coords[1]
 		);
@@ -82,7 +83,7 @@ class ExternalServices extends Component {
 
 			if (feature !== undefined) {
 				const arn = feature.get("arn");
-				const infoURL = mainConfig.propertyReportUrl + "?arn=" + arn;
+				const infoURL = window.config.propertyReportUrl + "?arn=" + arn;
 				helpers.getJSON(infoURL, (result) => {
 					const address = result.Address;
 					this.setState({ address });

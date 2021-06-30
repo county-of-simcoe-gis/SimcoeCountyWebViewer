@@ -1,10 +1,7 @@
 import React, { Component } from "react";
 import "./WeatherForecast.css";
 import * as helpers from "../../../../helpers/helpers";
-import mainConfig from "../../../../config.json";
 import config from "./config.json";
-const urlTemplate = (cityCode) =>
-	`${mainConfig.apiUrl}getCityWeather/${cityCode}`;
 
 class WeatherForecast extends Component {
 	constructor(props) {
@@ -16,10 +13,15 @@ class WeatherForecast extends Component {
 	}
 
 	componentDidMount() {
-		this.refreshWeather();
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			this.refreshWeather();
+		});
 	}
 
 	refreshWeather = () => {
+		const urlTemplate = (cityCode) =>
+			`${window.config.apiUrl}getCityWeather/${cityCode}`;
+
 		this.setState({ cityInfo: [] }, () => {
 			const cities = config.cities;
 			cities.forEach((cityInfo) => {

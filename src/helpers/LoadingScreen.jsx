@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import "./LoadingScreen.css";
-import * as mainConfig from "../config.json";
-
+import * as helpers from "./helpers";
 class LoadingScreen extends Component {
 	constructor(props) {
 		super(props);
@@ -23,12 +22,14 @@ class LoadingScreen extends Component {
 		};
 	}
 	componentDidMount() {
-		this.setState({ isVisible: this.props.visible }, () => {
-			this.getStyles((styles) => {
-				this.setState({
-					spinnerStyle: styles.spinnerStyle,
-					messageStyle: styles.messageStyle,
-					containerStyle: styles.containerStyle,
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			this.setState({ isVisible: this.props.visible }, () => {
+				this.getStyles((styles) => {
+					this.setState({
+						spinnerStyle: styles.spinnerStyle,
+						messageStyle: styles.messageStyle,
+						containerStyle: styles.containerStyle,
+					});
 				});
 			});
 		});
@@ -102,7 +103,7 @@ class LoadingScreen extends Component {
 		if (this.state.isVisible) callback(styles);
 	};
 	render() {
-		if (!mainConfig.showLoadingScreens) return <div />;
+		if (!window.config.showLoadingScreens) return <div />;
 
 		return (
 			<div

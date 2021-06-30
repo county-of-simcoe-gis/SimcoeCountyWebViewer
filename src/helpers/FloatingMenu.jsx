@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import Menu from "rc-menu";
 import "rc-menu/assets/index.css";
 import "./FloatingMenu.css";
-import * as mainConfig from "../config.json";
+import * as helpers from "./helpers";
 
 // PROPER USE OF THIS COMPONENT IS TO USE A PORTAL.  HAVE A LOOK AT MyMapsItem FOR AN EXAMPLE.
 class FloatingMenu extends Component {
@@ -23,40 +23,42 @@ class FloatingMenu extends Component {
 	}
 
 	componentDidMount() {
-		this.getStyle((style) => {
-			this.setState({ style: style });
-		});
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			this.getStyle((style) => {
+				this.setState({ style: style });
+			});
 
-		// CLICK ANYWHERE ELSE WILL CLOSE MENU
-		this.clickEvent = document.body.addEventListener(
-			"click",
-			(evt) => {
-				if (typeof evt.target.className === "string") {
-					// IGNORE CLASSNAMES
-					let found = false;
-					if (this.props.classNamesToIgnore !== undefined) {
-						evt.target.className.split(" ").forEach((className) => {
-							if (this.props.classNamesToIgnore.includes(className)) {
-								found = true;
-								return;
-							}
-						});
+			// CLICK ANYWHERE ELSE WILL CLOSE MENU
+			this.clickEvent = document.body.addEventListener(
+				"click",
+				(evt) => {
+					if (typeof evt.target.className === "string") {
+						// IGNORE CLASSNAMES
+						let found = false;
+						if (this.props.classNamesToIgnore !== undefined) {
+							evt.target.className.split(" ").forEach((className) => {
+								if (this.props.classNamesToIgnore.includes(className)) {
+									found = true;
+									return;
+								}
+							});
+						}
+
+						if (
+							evt.target.className.indexOf("rc-menu") > -1 ||
+							evt.target.className.indexOf("sc-floating-menu-") > -1 ||
+							found
+						)
+							return;
 					}
 
-					if (
-						evt.target.className.indexOf("rc-menu") > -1 ||
-						evt.target.className.indexOf("sc-floating-menu-") > -1 ||
-						found
-					)
-						return;
-				}
-
-				if (this.container !== null && !this.container.contains(evt.target)) {
-					this.setState({ isVisible: false });
-				}
-			},
-			true
-		);
+					if (this.container !== null && !this.container.contains(evt.target)) {
+						this.setState({ isVisible: false });
+					}
+				},
+				true
+			);
+		});
 	}
 
 	isElementInViewport(el) {
@@ -143,7 +145,7 @@ class FloatingMenu extends Component {
 			>
 				<div
 					className={
-						mainConfig.showFloatingMenuHeader
+						window.config.showFloatingMenuHeader
 							? "sc-floating-menu-toolbox-menu-header"
 							: "sc-hidden"
 					}

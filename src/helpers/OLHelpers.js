@@ -305,10 +305,12 @@ export class LayerHelpers {
 		}
 		return features;
 	}
-	static getCapabilities(root_url, type, callback) {
+	static getCapabilities(options, callback) {
+		let { root_url, type } = options;
+
 		type = type.toLowerCase();
 		var url = "";
-		if (root_url.indexOf("Capabilities") === -1) {
+		if (root_url.indexOf("GetCapabilities") === -1) {
 			url = /\?/.test(root_url) ? root_url.split("?")[0] + "?" : root_url + "?";
 		} else {
 			url = root_url;
@@ -337,7 +339,13 @@ export class LayerHelpers {
 					break;
 			}
 		}
-		helpers.httpGetText(url, (responseText) => {
+		const params = {};
+		if (options.requireToken) {
+			const headers = {};
+			//headers["token"] = "GIS";
+			params["headers"] = headers;
+		}
+		helpers.httpGetTextWithParams(url, params, (responseText) => {
 			if (responseText === null) {
 				callback([]);
 				return;
@@ -379,40 +387,47 @@ export class LayerHelpers {
 						break;
 					case "rest":
 						response = JSON.parse(responseText);
-						this.getESRILegend(`${root_url}/legend?f=json`, (legends) => {
-							response.layers.forEach((item) => {
-								if (item !== undefined) {
-									item["layer_name"] = item.name;
-									item["rootUrl"] = root_url;
-									item["originalMinScale"] = item.minScale;
-									item["originalMaxScale"] = item.maxScale;
-									item.minScale = item.originalMaxScale;
-									item.maxScale = item.originalMinScale;
-									if (item.minScale === item.maxScale) {
-										item.minScale = undefined;
-										item.maxScale = undefined;
+						if (response.layers !== undefined) {
+							this.getESRILegend(`${root_url}/legend?f=json`, (legends) => {
+								response.layers.forEach((item) => {
+									if (item !== undefined) {
+										item["layer_name"] = item.name;
+										item["rootUrl"] = root_url;
+										item["originalMinScale"] = item.minScale;
+										item["originalMaxScale"] = item.maxScale;
+										item.minScale = item.originalMaxScale;
+										item.maxScale = item.originalMinScale;
+										if (item.minScale === item.maxScale) {
+											item.minScale = undefined;
+											item.maxScale = undefined;
+										}
+										item["value"] = helpers.getUID();
+										item["label"] = item.name;
+										item["queryable"] = true;
+										item["legend"] = legends.filter((legend) => {
+											return legend.layerId === item.id;
+										})[0];
+										if (
+											item.drawingInfo !== undefined &&
+											item.drawingInfo.renderer !== undefined &&
+											item.drawingInfo.renderer.symbol !== undefined &&
+											item.legend === undefined
+										)
+											item[
+												"style"
+											] = `data:${item.drawingInfo.renderer.symbol.contentType};base64,${item.drawingInfo.renderer.symbol.imageData}`;
+										item["url"] = `${root_url}/${item.id}`;
+										layers.push(item);
 									}
-									item["value"] = helpers.getUID();
-									item["label"] = item.name;
-									item["queryable"] = true;
-									item["legend"] = legends.filter((legend) => {
-										return legend.layerId === item.id;
-									})[0];
-									if (
-										item.drawingInfo.renderer.symbol !== undefined &&
-										item.legend === undefined
-									)
-										item[
-											"style"
-										] = `data:${item.drawingInfo.renderer.symbol.contentType};base64,${item.drawingInfo.renderer.symbol.imageData}`;
-									item["url"] = `${root_url}/${item.id}`;
-									layers.push(item);
-								}
+								});
+								//fix to get react-select box to update on the fly
+								layers = layers.concat([]);
+								callback(layers);
 							});
-							//fix to get react-select box to update on the fly
-							layers = layers.concat([]);
-							callback(layers);
-						});
+						} else {
+							callback([]);
+							return;
+						}
 						break;
 					default:
 						parseString(responseText, function (err, result) {

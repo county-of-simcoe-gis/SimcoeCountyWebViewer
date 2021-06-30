@@ -246,7 +246,7 @@ class BasemapSwitcher extends Component {
 					);
 				}
 			});
-			const geoserverPath = helpers.getConfigValue("geoserverPath");
+			const geoserverPath = window.config.geoserverPath;
 			const groupUrl = serviceGroup.groupUrl;
 			if (groupUrl !== undefined) {
 				// GET XML
