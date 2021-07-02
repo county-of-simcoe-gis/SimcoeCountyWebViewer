@@ -33,7 +33,12 @@ class Sidebar extends Component {
 			// SELECTED TAB
 			tabIndex: 0,
 			isMyMapsEditing: false,
-
+			//hide components
+			hideTools: false,
+			hideThemes: false,
+			hideLayers: false,
+			hideMyMaps: false,
+			hideReports: false,
 			// COMPONENTS
 			activeTabComponents: {
 				layers: <TOC key={helpers.getUID()} type="LIST" />,
@@ -133,7 +138,7 @@ class Sidebar extends Component {
 			tools.map(
 				async (component) => await this.addComponent(component, "tools")
 			);
-
+			if (tools.length === 0) this.setState({ hideTools: true });
 			// IMPORT THEMES FROM CONFIG
 			let themes = window.config.sidebarThemeComponents;
 			themes = themes.filter(
@@ -142,6 +147,7 @@ class Sidebar extends Component {
 			themes.map(
 				async (component) => await this.addComponent(component, "themes")
 			);
+			if (themes.length === 0) this.setState({ hideThemes: true });
 
 			const shortcuts = window.config.sidebarShortcutParams;
 			// HANDLE ADVANCED MODE PARAMETER
@@ -482,13 +488,23 @@ class Sidebar extends Component {
 							onSelect={this.onTabSelect}
 						>
 							<TabList>
-								<Tab id="tab-layers">
+								<Tab
+									id="tab-layers"
+									className={
+										this.state.hideLayers ? "d-none" : "react-tabs__tab"
+									}
+								>
 									<TabButton
 										imageURL={images["legend-32x32.png"]}
 										name="Layers"
 									/>
 								</Tab>
-								<Tab id="tab-tools">
+								<Tab
+									id="tab-tools"
+									className={
+										this.state.hideTools ? "d-none" : "react-tabs__tab"
+									}
+								>
 									<TabButton
 										imageURL={images["tools-32x32.png"]}
 										name="Tools"
@@ -497,14 +513,24 @@ class Sidebar extends Component {
 										}
 									/>
 								</Tab>
-								<Tab id="tab-mymaps">
+								<Tab
+									id="tab-mymaps"
+									className={
+										this.state.hideMyMaps ? "d-none" : "react-tabs__tab"
+									}
+								>
 									<TabButton
 										imageURL={images["map-32x32.png"]}
 										name="My Maps"
 										active={this.state.isMyMapsEditing}
 									/>
 								</Tab>
-								<Tab id="tab-themes">
+								<Tab
+									id="tab-themes"
+									className={
+										this.state.hideThemes ? "d-none" : "react-tabs__tab"
+									}
+								>
 									<TabButton
 										imageURL={images["theme-32x32.png"]}
 										name="Themes"
@@ -513,7 +539,12 @@ class Sidebar extends Component {
 										}
 									/>
 								</Tab>
-								<Tab id="tab-reports">
+								<Tab
+									id="tab-reports"
+									className={
+										this.state.hideReports ? "d-none" : "react-tabs__tab"
+									}
+								>
 									<TabButton
 										imageURL={images["report-32x32.png"]}
 										name="Reports"
@@ -559,6 +590,11 @@ class Sidebar extends Component {
 							toolActive={this.state.activeTabComponents.tools.loadedComponent}
 							isMyMapsEditing={this.state.isMyMapsEditing}
 							tabIndex={this.state.tabIndex}
+							hideLayers={this.state.hideLayers}
+							hideMyMaps={this.state.hideMyMaps}
+							hideTools={this.state.hideTools}
+							hideThemes={this.state.hideThemes}
+							hideReports={this.state.hideReports}
 						/>
 						<div id="sc-sidebar-message-container" />
 						{/* <MenuButton /> */}

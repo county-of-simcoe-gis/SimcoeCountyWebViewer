@@ -65,6 +65,10 @@
 	border-bottom: 2px solid #aaa !important;
 }
 
+.react-tabs .d-none {
+	display: none;
+}
+
 .react-tabs__tab {
 	box-sizing: border-box;
 	display: table-cell !important;
