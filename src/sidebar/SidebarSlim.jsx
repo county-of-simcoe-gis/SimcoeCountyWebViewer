@@ -25,6 +25,7 @@ class SidebarSlim extends Component {
 					}}
 					isSelected={this.props.tabIndex === 0}
 					isActive={false}
+					hidden={this.props.hideLayers}
 				/>
 				<SlimButton
 					title="Tools"
@@ -34,6 +35,7 @@ class SidebarSlim extends Component {
 					}}
 					isSelected={this.props.tabIndex === 1}
 					isActive={this.props.toolActive}
+					hidden={this.props.hideTools}
 				/>
 				<SlimButton
 					title="My Maps"
@@ -43,6 +45,7 @@ class SidebarSlim extends Component {
 					}}
 					isSelected={this.props.tabIndex === 2}
 					isActive={this.props.isMyMapsEditing}
+					hidden={this.props.hideMyMaps}
 				/>
 				<SlimButton
 					title="Themes"
@@ -52,6 +55,7 @@ class SidebarSlim extends Component {
 					}}
 					isSelected={this.props.tabIndex === 3}
 					isActive={this.props.themeActive}
+					hidden={this.props.hideThemes}
 				/>
 				<SlimButton
 					title="Reports"
@@ -61,6 +65,7 @@ class SidebarSlim extends Component {
 					}}
 					isSelected={this.props.tabIndex === 4}
 					isActive={false}
+					hidden={this.props.hideReports}
 				/>
 				<div className="sc-sidebar-slim-footer-container">
 					<MenuButton />
@@ -80,7 +85,8 @@ class SlimButton extends Component {
 				key={helpers.getUID()}
 				className={
 					"sc-sidebar-slim-button-container" +
-					(this.props.isSelected ? " active" : "")
+					(this.props.isSelected ? " active" : "") +
+					(this.props.hidden ? " sc-hidden" : "")
 				}
 				onClick={this.props.onClick}
 			>
