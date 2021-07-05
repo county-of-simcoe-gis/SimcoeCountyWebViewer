@@ -170,8 +170,8 @@ class Search extends Component {
 
 	onInitialSearch = (search_type = undefined, search = undefined) => {
 		// GET SEARCH URL PARAMETERS
-		if (!search) search = helpers.getURLParameter("q");
-		if (!search_type) search_type = helpers.getURLParameter("qt");
+		if (!search) search = helpers.getURLParameter("q", true, true);
+		if (!search_type) search_type = helpers.getURLParameter("qt", true, true);
 		if (!search && search === null) return;
 		if (!search_type && search_type === null) {
 			search_type = "All";
