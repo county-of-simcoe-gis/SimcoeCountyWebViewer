@@ -93,7 +93,7 @@ class CommercialRealEstateLayerToggler extends Component {
 			50
 		);
 
-		layer.setVisible(true);
+		layer.setVisible(this.props.layer.visible);
 		layer.setZIndex(this.props.layer.zIndex);
 		layer.setProperties({
 			name: this.props.layer.layerName,
@@ -102,9 +102,12 @@ class CommercialRealEstateLayerToggler extends Component {
 			disableParcelClick: false,
 		});
 		window.map.addLayer(layer);
-		this.setState({ layer: layer }, (layer) => {
-			callback();
-		});
+		this.setState(
+			{ layer: layer, layerVisible: this.props.layer.visible },
+			(layer) => {
+				callback();
+			}
+		);
 	};
 
 	onCheckboxClick = () => {

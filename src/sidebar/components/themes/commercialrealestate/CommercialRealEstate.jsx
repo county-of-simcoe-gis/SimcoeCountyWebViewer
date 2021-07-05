@@ -3,7 +3,7 @@ import "./CommercialRealEstate.css";
 import PanelComponent from "../../../PanelComponent";
 import "react-tabs/style/react-tabs.css";
 import CommercialRealEstateSearch from "./CommercialRealEstateSearch.jsx";
-import * as config from "./config.json";
+import * as localConfig from "./config.json";
 import * as helpers from "../../../../helpers/helpers";
 import * as CommercialRealEstateSearchObjects from "./CommercialRealEstateObjects";
 import { unByKey } from "ol/Observable.js";
@@ -17,9 +17,8 @@ const propTypes = [
 	"Industrial",
 	"Institutional",
 ];
-const polygonLayerName = config.polygonLayerName;
-const pointLayerName = config.pointLayerName;
-
+const polygonLayerName = localConfig.polygonLayerName;
+const pointLayerName = localConfig.pointLayerName;
 class CommercialRealEstate extends Component {
 	constructor(props) {
 		super(props);
@@ -53,6 +52,7 @@ class CommercialRealEstate extends Component {
 			allResults: [],
 			activeTab: 0,
 			layerAll: null,
+			toggleLayers: localConfig.toggleLayers,
 		};
 	}
 
@@ -74,12 +74,23 @@ class CommercialRealEstate extends Component {
 
 	componentDidMount() {
 		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			let themeConfig = localConfig.default;
+			const globalConfig = helpers.getConfig(
+				"THEMES",
+				"Commercial Real Estate"
+			);
+			if (globalConfig.config !== undefined) {
+				themeConfig = helpers.mergeObj(themeConfig, globalConfig.config);
+				this.setState({ toggleLayers: themeConfig.toggleLayers });
+			}
+
 			const obj = {
-				wfsUrl: config.incentiveWfsUrl,
+				wfsUrl: themeConfig.incentiveWfsUrl,
 				imageUrlField: "_imageurl",
 				detailFields: ["Address", "Property Type", "Municipality"],
 			};
-
+			if (themeConfig.featurePropertyPanelOpen !== undefined)
+				obj["panelOpen"] = themeConfig.featurePropertyPanelOpen;
 			window.emitter.emit("showImageSlider", obj, this.onFeatureChange);
 			this.buildLayers();
 
@@ -432,23 +443,9 @@ class CommercialRealEstate extends Component {
 						onViewPropertiesClick={this.onViewPropertiesClick}
 						results={this.state.allResults}
 					/>
-					<CommercialRealEstateLayers layers={config.toggleLayers} />
+					<CommercialRealEstateLayers layers={this.state.toggleLayers} />
 				</div>
 			</PanelComponent>
-
-			// <PanelComponent onClose={this.onClose} name={this.props.name} type="themes">
-			//   <Tabs forceRenderTabPanel={true} selectedIndex={this.state.tabIndex} onSelect={this.onTabSelect}>
-			//     <TabList>
-			//       <Tab id="tab-search">Search</Tab>
-			//       <Tab id="tab-directory">Directory</Tab>
-			//     </TabList>
-
-			//     <TabPanel id="tab-layers-content-search">
-			//       <CommercialRealEstateSearch></CommercialRealEstateSearch>
-			//     </TabPanel>
-			//     <TabPanel id="tab-layers-content-directory">Tab 2 Content</TabPanel>
-			//   </Tabs>
-			// </PanelComponent>
 		);
 	}
 }
