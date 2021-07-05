@@ -47,13 +47,12 @@ class URLWindow extends Component {
 			}
 
 			document.addEventListener("keydown", this.escFunction, false);
-
-			// LISTEN FOR SIDEPANEL CHANGES
-			this.sidebarEmitter = window.emitter.addListener(
-				"sidebarChanged",
-				(isSidebarOpen) => this.sidebarChanged(isSidebarOpen)
-			);
 		});
+		// LISTEN FOR SIDEPANEL CHANGES
+		this.sidebarEmitter = window.emitter.addListener(
+			"sidebarChanged",
+			(isSidebarOpen) => this.sidebarChanged(isSidebarOpen)
+		);
 	}
 
 	isDontShow = () => {

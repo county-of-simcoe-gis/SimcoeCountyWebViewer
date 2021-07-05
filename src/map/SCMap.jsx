@@ -84,6 +84,9 @@ class SCMap extends Component {
 
 		// CLEAR IDENTIFY MARKER AND RESULTS
 		window.emitter.addListener("clearIdentify", () => this.clearIdentify());
+		window.emitter.addListener("sidebarChanged", (isSidebarOpen) =>
+			this.sidebarChanged(isSidebarOpen)
+		);
 	}
 
 	componentDidMount() {
@@ -711,10 +714,6 @@ class SCMap extends Component {
 	}
 
 	render() {
-		window.emitter.addListener("sidebarChanged", (isSidebarOpen) =>
-			this.sidebarChanged(isSidebarOpen)
-		);
-
 		return (
 			<div>
 				<div id="map-theme">

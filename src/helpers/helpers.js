@@ -1689,7 +1689,7 @@ export function loadConfig(callback) {
 			if (settings.center !== undefined) {
 				settings["centerCoords"] = Array.isArray(settings.center)
 					? settings.center
-					: settings.center.split(",");
+					: settings.center.replace(" ", "").split(",");
 				delete settings.center;
 			}
 			sessionStorage.setItem(
@@ -1717,6 +1717,11 @@ export function loadConfig(callback) {
 
 			//TRANSPOSE LEGACY TOC SETTINGS
 			if (settings.toc === undefined) settings["toc"] = {};
+			if (settings.default_toc_style !== undefined) {
+				settings.toc["tocType"] = settings.default_toc_style;
+				delete settings.default_toc_style;
+			}
+
 			if (settings.default_group !== undefined) {
 				settings.toc["default_group"] = settings.default_group;
 				delete settings.default_group;
@@ -1725,19 +1730,6 @@ export function loadConfig(callback) {
 				settings.toc["sources"] = settings.sources;
 				delete settings.sources;
 			}
-
-			if (settings.default_theme !== undefined)
-				window.emitter.emit(
-					"activateSidebarItem",
-					settings.default_theme,
-					"themes"
-				);
-			if (settings.default_tool !== undefined)
-				window.emitter.emit(
-					"activateSidebarItem",
-					settings.default_tool,
-					"tools"
-				);
 
 			//TODO: OVERRIDE INDIVIDUAL THEME, TOOL, OR BASEMAP SETTINGS????
 			config = mergeObj(config, settings);

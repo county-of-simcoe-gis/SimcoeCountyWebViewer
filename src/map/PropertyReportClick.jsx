@@ -32,10 +32,17 @@ class PropertyReportClick extends Component {
 		super(props);
 		//wait for toc and map to load
 		helpers.waitForLoad(["map", "toc"], Date.now(), 30, () => this.onMapLoad());
+
 		helpers.waitForLoad(["settings"], Date.now(), 30, () => {
 			this.parcelLayer = window.config.parcelLayer;
 			this.termsUrl = window.config.termsUrl;
 			this.propertyReportUrl = window.config.propertyReportUrl;
+		});
+		// LISTEN FOR CALLS
+		window.emitter.addListener("showPropertyReport", (coords) => {
+			helpers.waitForLoad(["map", "toc"], Date.now(), 30, () => {
+				this.onPropertyEmitter(coords);
+			});
 		});
 		this.state = {
 			propInfo: null,
@@ -115,11 +122,6 @@ class PropertyReportClick extends Component {
 
 			helpers.addAppStat("Property Click", "Click");
 		});
-
-		// LISTEN FOR CALLS
-		window.emitter.addListener("showPropertyReport", (coords) =>
-			this.onPropertyEmitter(coords)
-		);
 	}
 
 	onPropertyEmitter = (coords) => {
