@@ -57,12 +57,15 @@ class FloatingImageSlider extends Component {
 			// });
 			// console.log(geoJSONValid);
 			//   console.log(geoJSON[0].get(obj.imageUrlField));
+			let panelOpen = true;
+			if (obj.panelOpen !== undefined) panelOpen = obj.panelOpen;
 			this.setState({
 				visible: true,
 				features: geoJSON,
 				featureIndex: 0,
 				currentFeature: geoJSON[0],
 				callerObj: obj,
+				panelOpen: panelOpen,
 			});
 		});
 		this.onFeatureChange = onFeatureChange;

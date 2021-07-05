@@ -76,6 +76,18 @@ function MapApp() {
 		helpers.loadConfig(() => {
 			document.title = window.config.title;
 			helpers.addIsLoaded("settings");
+			if (window.config.default_theme !== undefined)
+				window.emitter.emit(
+					"activateSidebarItem",
+					window.config.default_theme,
+					"themes"
+				);
+			if (window.config.default_tool !== undefined)
+				window.emitter.emit(
+					"activateSidebarItem",
+					window.config.default_tool,
+					"tools"
+				);
 		});
 	}, []);
 

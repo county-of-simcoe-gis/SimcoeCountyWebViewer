@@ -601,10 +601,6 @@ const PopupContent = (props) => {
 		website = "https://" + website;
 	return (
 		<div>
-			<div style={{ textAlign: "center" }}>
-				<img src={communityServices} alt="211logo" />
-			</div>
-
 			<InfoRow
 				key={helpers.getUID()}
 				label={props.isFrench ? "Nom" : "Name"}
@@ -629,11 +625,10 @@ const PopupContent = (props) => {
 				}
 				value={
 					props.isFrench
-						? "https://centraleastontario.cioc.ca/record/" +
+						? "https://simcoecounty.cioc.ca/record/" +
 						  feature.get("record_#") +
 						  "?Ln=fr-CA"
-						: "https://centraleastontario.cioc.ca/record/" +
-						  feature.get("record_#")
+						: "https://simcoecounty.cioc.ca/record/" + feature.get("record_#")
 				}
 			/>
 		</div>

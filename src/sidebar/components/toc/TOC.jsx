@@ -82,17 +82,25 @@ class TOC extends Component {
 		);
 	}
 	componentWillMount() {
-		let tocType = helpers.getURLParameter("TOCTYPE");
-		if (tocType !== null && tocType !== undefined) {
-			if (this.tocTypes.includes(tocType.toUpperCase()))
-				tocType = tocType.toUpperCase();
-			else tocType = undefined;
-		}
+		helpers.waitForLoad(["settings"], Date.now(), 30, () => {
+			let tocType = helpers.getURLParameter("TOCTYPE");
+			if (tocType !== null && tocType !== undefined) {
+				if (this.tocTypes.includes(tocType.toUpperCase()))
+					tocType = tocType.toUpperCase();
+				else tocType = undefined;
+			}
+			if (!tocType)
+				tocType = helpers.getItemsFromStorage(this.storageKeyTOCType);
 
-		if (!tocType) tocType = helpers.getItemsFromStorage(this.storageKeyTOCType);
-		if (tocType !== null && tocType !== undefined) {
-			this.setState({ type: tocType });
-		}
+			if (tocType !== null && tocType !== undefined) {
+				this.setState({ type: tocType });
+			} else {
+				if (window.config.toc.tocType) {
+					tocType = window.config.toc.tocType;
+					this.setState({ type: tocType });
+				}
+			}
+		});
 	}
 	//#endregion
 	//#region LOAD LAYERS

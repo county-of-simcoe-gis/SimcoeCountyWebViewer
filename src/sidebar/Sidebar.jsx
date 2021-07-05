@@ -128,6 +128,32 @@ class Sidebar extends Component {
 	};
 
 	async componentDidMount() {
+		// LISTEN FOR ITEM ACTIVATION FROM OTHER COMPONENTS
+		window.emitter.addListener("activateSidebarItem", (name, type) => {
+			helpers.waitForLoad("sidebar", Date.now(), 30, () => {
+				this.activateItemFromEmmiter(name, type);
+			});
+		});
+		// LISTEN FOR OPEN OR CLOSE FROM OTHER COMPONENTS (CLOSE OR OPEN)
+		window.emitter.addListener("setSidebarVisiblity", (openOrClose) => {
+			helpers.waitForLoad("sidebar", Date.now(), 30, () => {
+				this.sidebarVisiblityEventHandler(openOrClose);
+			});
+		});
+
+		// LISTEN FOR TAB ACTIVATION FROM OTHER COMPONENTS
+		window.emitter.addListener("activateTab", (tabName) => {
+			helpers.waitForLoad("sidebar", Date.now(), 30, () => {
+				this.activateTab(tabName);
+			});
+		});
+
+		// LISTEN FOR REPORT LOADING
+		window.emitter.addListener("loadReport", (content) => {
+			helpers.waitForLoad("sidebar", Date.now(), 30, () => {
+				this.loadReport(content);
+			});
+		});
 		helpers.waitForLoad("settings", Date.now(), 30, () => {
 			// IMPORT TOOLS FROM CONFIG
 
@@ -170,25 +196,7 @@ class Sidebar extends Component {
 							this.activateTab(tabNameParameter.toLowerCase());
 						});
 					}
-					// LISTEN FOR OPEN OR CLOSE FROM OTHER COMPONENTS (CLOSE OR OPEN)
-					window.emitter.addListener("setSidebarVisiblity", (openOrClose) =>
-						this.sidebarVisiblityEventHandler(openOrClose)
-					);
 
-					// LISTEN FOR TAB ACTIVATION FROM OTHER COMPONENTS
-					window.emitter.addListener("activateTab", (tabName) =>
-						this.activateTab(tabName)
-					);
-
-					// LISTEN FOR REPORT LOADING
-					window.emitter.addListener("loadReport", (content) =>
-						this.loadReport(content)
-					);
-
-					// LISTEN FOR ITEM ACTIVATION FROM OTHER COMPONENTS
-					window.emitter.addListener("activateSidebarItem", (name, type) => {
-						this.activateItemFromEmmiter(name, type);
-					});
 					window.emitter.emit("sidebarLoaded");
 					helpers.addIsLoaded("sidebar");
 				}
