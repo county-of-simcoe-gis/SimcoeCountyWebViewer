@@ -4,28 +4,19 @@ export const InfoRow = (props) => {
 	// CONVERT URL'S TO LINKS
 	let value = props.value;
 	var formats = [moment.ISO_8601, "YYYY-MM-DDZ"];
-	if (
-		props.value != null &&
-		props.value.toString().substring(0, 4).toUpperCase() === "HTTP"
-	) {
+	if (props.value != null && props.value.toString().substring(0, 4).toUpperCase() === "HTTP") {
 		value = (
 			<a href={props.value} target="_blank" rel="noopener noreferrer">
 				Click To Open
 			</a>
 		);
-	} else if (
-		props.value != null &&
-		props.value.toString().substring(0, 2).toUpperCase() === "\\\\"
-	) {
+	} else if (props.value != null && props.value.toString().substring(0, 2).toUpperCase() === "\\\\") {
 		value = (
 			<a href={props.value} target="_blank" rel="noopener noreferrer">
 				Click To Open
 			</a>
 		);
-	} else if (
-		props.value != null &&
-		moment(props.value, formats, true).isValid()
-	) {
+	} else if (props.value != null && props.value.length >= 8 && moment(props.value, formats, true).isValid()) {
 		value = moment(props.value).format("YYYY-MM-DD");
 	}
 

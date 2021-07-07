@@ -14,7 +14,6 @@ import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import { unByKey } from "ol/Observable.js";
 import Switch from "react-switch";
-import communityServices from "../../../images/communityServices.png";
 
 const ageCategoriesEnglish = [
 	{
@@ -98,24 +97,21 @@ class TwoOneOne extends Component {
 
 	getCategories = () => {
 		let categories = [];
-		helpers.getJSON(
-			this.apiUrl + "get211Categories/" + this.state.isFrench,
-			(result) => {
-				categories.push({
-					value: "All",
-					label: this.state.isFrench ? "Tout" : "All",
-				});
-				result.forEach((category) => {
-					categories.push({ value: category, label: category });
-				});
+		helpers.getJSON(this.apiUrl + "get211Categories/" + this.state.isFrench, (result) => {
+			categories.push({
+				value: "All",
+				label: this.state.isFrench ? "Tout" : "All",
+			});
+			result.forEach((category) => {
+				categories.push({ value: category, label: category });
+			});
 
-				this.setState({ categories }, () => {
-					this.setState({ categorySelectedOption: categories[0] }, () => {
-						this.updateSubCategories();
-					});
+			this.setState({ categories }, () => {
+				this.setState({ categorySelectedOption: categories[0] }, () => {
+					this.updateSubCategories();
 				});
-			}
-		);
+			});
+		});
 	};
 
 	createLayer = () => {
@@ -138,28 +134,14 @@ class TwoOneOne extends Component {
 
 		this.mapClickEvent = window.map.on("click", (evt) => {
 			// DISABLE POPUPS
-			if (
-				window.isDrawingOrEditing ||
-				window.isCoordinateToolOpen ||
-				window.isMeasuring
-			)
-				return;
+			if (window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring) return;
 
-			const feature = window.map.forEachFeatureAtPixel(
-				evt.pixel,
-				function (feature, layer) {
-					if (layer === null) return;
+			const feature = window.map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
+				if (layer === null) return;
 
-					if (layer.get("name") !== undefined && layer.get("name") === "sc-211")
-						return feature;
-				}
-			);
-			if (feature !== undefined)
-				window.popup.show(
-					feature.getGeometry().flatCoordinates,
-					<PopupContent feature={feature} isFrench={this.state.isFrench} />,
-					"Information"
-				);
+				if (layer.get("name") !== undefined && layer.get("name") === "sc-211") return feature;
+			});
+			if (feature !== undefined) window.popup.show(feature.getGeometry().flatCoordinates, <PopupContent feature={feature} isFrench={this.state.isFrench} />, "Information");
 		});
 
 		this.mapMoveEvent = window.map.on("moveend", () => {
@@ -169,12 +151,7 @@ class TwoOneOne extends Component {
 
 	updateSubCategories = () => {
 		let subCategories = [];
-		const subCategoriesUrl =
-			this.apiUrl +
-			"get211SubCategories/" +
-			encodeURIComponent(this.state.categorySelectedOption.value) +
-			"/" +
-			this.state.isFrench;
+		const subCategoriesUrl = this.apiUrl + "get211SubCategories/" + encodeURIComponent(this.state.categorySelectedOption.value) + "/" + this.state.isFrench;
 		helpers.getJSON(subCategoriesUrl, (result) => {
 			subCategories.push({
 				value: "All",
@@ -194,17 +171,11 @@ class TwoOneOne extends Component {
 
 	updateResults = () => {
 		const resultsUrlTemplate = (apiUrl, category, subCategory, age, isFrench) =>
-			`${apiUrl}get211Results/${encodeURIComponent(
-				category
-			)}/${encodeURIComponent(subCategory)}/${encodeURIComponent(
-				age
-			)}/${isFrench}`;
+			`${apiUrl}get211Results/${encodeURIComponent(category)}/${encodeURIComponent(subCategory)}/${encodeURIComponent(age)}/${isFrench}`;
 		const url = resultsUrlTemplate(
 			this.apiUrl,
 			this.state.categorySelectedOption.value,
-			this.state.categorySelectedOption.value === "All"
-				? "All"
-				: this.state.subCategorySelectedOption.value,
+			this.state.categorySelectedOption.value === "All" ? "All" : this.state.subCategorySelectedOption.value,
 			this.state.ageCategorySelectedOption.value,
 			this.state.isFrench
 		);
@@ -219,10 +190,7 @@ class TwoOneOne extends Component {
 
 			this.vectorSource.clear();
 			results.forEach((item) => {
-				const coords = helpers.toWebMercatorFromLatLong([
-					item.longitude.replace(",", "."),
-					Math.abs(item.latitude.replace(",", ".")),
-				]);
+				const coords = helpers.toWebMercatorFromLatLong([item.longitude.replace(",", "."), Math.abs(item.latitude.replace(",", "."))]);
 				let feature = new Feature(new Point(coords));
 				feature.setProperties(item);
 				this.vectorSource.addFeature(feature);
@@ -266,27 +234,18 @@ class TwoOneOne extends Component {
 	};
 
 	onZoomClick = (item) => {
-		const coords = helpers.toWebMercatorFromLatLong([
-			item.longitude,
-			Math.abs(item.latitude),
-		]);
+		const coords = helpers.toWebMercatorFromLatLong([item.longitude, Math.abs(item.latitude)]);
 		let feature = new Feature(new Point(coords));
 		feature.setProperties(item);
 		helpers.zoomToFeature(feature);
-		window.popup.show(
-			feature.getGeometry().flatCoordinates,
-			<PopupContent feature={feature} />,
-			"Information"
-		);
+		window.popup.show(feature.getGeometry().flatCoordinates, <PopupContent feature={feature} />, "Information");
 	};
 
 	onLangChange = (isFrench) => {
 		this.setState(
 			{
 				isFrench,
-				ageCategorySelectedOption: isFrench
-					? ageCategoriesFrench[0]
-					: ageCategoriesEnglish[0],
+				ageCategorySelectedOption: isFrench ? ageCategoriesFrench[0] : ageCategoriesEnglish[0],
 			},
 			() => {
 				this.getCategories();
@@ -303,11 +262,7 @@ class TwoOneOne extends Component {
 		const row = this.results[index];
 		return (
 			<div key={key} style={style}>
-				<Result
-					result={row}
-					onZoomClick={this.onZoomClick}
-					isFrench={this.state.isFrench}
-				/>
+				<Result result={row} onZoomClick={this.onZoomClick} isFrench={this.state.isFrench} />
 			</div>
 		);
 	};
@@ -317,35 +272,17 @@ class TwoOneOne extends Component {
 
 		if (row.organization_program_name.length <= 35) {
 			return 72;
-		} else if (
-			row.organization_program_name.length > 35 &&
-			row.organization_program_name.length <= 70
-		) {
+		} else if (row.organization_program_name.length > 35 && row.organization_program_name.length <= 70) {
 			return 82;
-		} else if (
-			row.organization_program_name.length > 70 &&
-			row.organization_program_name.length <= 105
-		) {
+		} else if (row.organization_program_name.length > 70 && row.organization_program_name.length <= 105) {
 			return 88;
-		} else if (
-			row.organization_program_name.length > 105 &&
-			row.organization_program_name.length <= 140
-		) {
+		} else if (row.organization_program_name.length > 105 && row.organization_program_name.length <= 140) {
 			return 94;
-		} else if (
-			row.organization_program_name.length > 140 &&
-			row.organization_program_name.length <= 175
-		) {
+		} else if (row.organization_program_name.length > 140 && row.organization_program_name.length <= 175) {
 			return 100;
-		} else if (
-			row.organization_program_name.length > 175 &&
-			row.organization_program_name.length <= 210
-		) {
+		} else if (row.organization_program_name.length > 175 && row.organization_program_name.length <= 210) {
 			return 106;
-		} else if (
-			row.organization_program_name.length > 210 &&
-			row.organization_program_name.length <= 245
-		) {
+		} else if (row.organization_program_name.length > 210 && row.organization_program_name.length <= 245) {
 			return 112;
 		} else {
 			return 120;
@@ -379,12 +316,7 @@ class TwoOneOne extends Component {
 		this.results = this.state.results.filter((item) => {
 			if (this.state.searchText === "") return item;
 
-			if (
-				item.organization_program_name
-					.toUpperCase()
-					.indexOf(this.state.searchText.toUpperCase()) !== -1
-			)
-				return item;
+			if (item.organization_program_name.toUpperCase().indexOf(this.state.searchText.toUpperCase()) !== -1) return item;
 		});
 
 		// ONLY IN MAP
@@ -394,83 +326,39 @@ class TwoOneOne extends Component {
 
 			this.results = this.results.filter((item) => {
 				const featuresFound = features.filter((itemFeature) => {
-					return item["record_#"] === itemFeature.get("record_#")
-						? true
-						: false;
+					return item["record_#"] === itemFeature.get("record_#") ? true : false;
 				});
 				return featuresFound.length > 0 ? true : false;
 			});
 		}
 
 		return (
-			<PanelComponent
-				onClose={this.onClose}
-				name={this.props.name}
-				helpLink={this.props.helpLink}
-				type="themes"
-			>
+			<PanelComponent onClose={this.onClose} name={this.props.name} helpLink={this.props.helpLink} type="themes">
 				<div>
 					<label className={"sc-211-theme-lang-switch-label"}>
 						{this.state.isFrench ? "Back to English" : "Voir en Français?"}
-						<Switch
-							className="sc-theme-211-lang-switch"
-							onChange={this.onLangChange}
-							checked={this.state.isFrench}
-							height={20}
-							width={48}
-						/>
+						<Switch className="sc-theme-211-lang-switch" onChange={this.onLangChange} checked={this.state.isFrench} height={20} width={48} />
 					</label>
 					<div className="sc-theme-211-main-conainer">
-						<label style={{ fontWeight: "bold" }}>
-							{this.state.isFrench ? "Catégorie" : "Category"}
-						</label>
-						<Select
-							styles={dropdownStyles}
-							isSearchable={false}
-							options={this.state.categories}
-							value={this.state.categorySelectedOption}
-							onChange={this.onChangeCategory}
-						/>
-						<label
-							style={{ fontWeight: "bold" }}
-							className={
-								this.state.categorySelectedOption.value === "All"
-									? "sc-disabled"
-									: ""
-							}
-						>
+						<label style={{ fontWeight: "bold" }}>{this.state.isFrench ? "Catégorie" : "Category"}</label>
+						<Select styles={dropdownStyles} isSearchable={false} options={this.state.categories} value={this.state.categorySelectedOption} onChange={this.onChangeCategory} />
+						<label style={{ fontWeight: "bold" }} className={this.state.categorySelectedOption.value === "All" ? "sc-disabled" : ""}>
 							{this.state.isFrench ? "Sous Catégorie" : "Sub Category"}
 						</label>
 						<Select
-							className={
-								this.state.categorySelectedOption.value === "All"
-									? "sc-disabled"
-									: ""
-							}
+							className={this.state.categorySelectedOption.value === "All" ? "sc-disabled" : ""}
 							styles={dropdownStyles}
 							isSearchable={true}
 							options={this.state.subCategories}
-							value={
-								this.state.categorySelectedOption.value === "All"
-									? ""
-									: this.state.subCategorySelectedOption
-							}
+							value={this.state.categorySelectedOption.value === "All" ? "" : this.state.subCategorySelectedOption}
 							onChange={this.onChangeSubCategory}
-							placeholder={
-								this.state.isFrench
-									? "En attente de sélection de catégorie"
-									: "Waiting for Category Selection"
-							}
+							placeholder={this.state.isFrench ? "En attente de sélection de catégorie" : "Waiting for Category Selection"}
 						/>
-						<label style={{ fontWeight: "bold" }}>
-							{this.state.isFrench ? "Catégorie d'âge" : "Age Category"}
-						</label>
+						<label style={{ fontWeight: "bold" }}>{this.state.isFrench ? "Catégorie d'âge" : "Age Category"}</label>
 						<Select
 							styles={dropdownStyles}
 							isSearchable={false}
-							options={
-								this.state.isFrench ? ageCategoriesFrench : ageCategoriesEnglish
-							}
+							options={this.state.isFrench ? ageCategoriesFrench : ageCategoriesEnglish}
 							value={this.state.ageCategorySelectedOption}
 							onChange={this.onChangeAgeCategory}
 						/>
@@ -478,28 +366,15 @@ class TwoOneOne extends Component {
 							type="text"
 							style={{ paddingLeft: "5px" }}
 							className="sc-theme-211-search-textbox"
-							placeholder={
-								this.state.isFrench
-									? "Rechercher les noms par mot-clé"
-									: "Search Names by Keyword"
-							}
+							placeholder={this.state.isFrench ? "Rechercher les noms par mot-clé" : "Search Names by Keyword"}
 							onChange={this.onChangeSearchTextbox}
 						/>
 						<label className="sc-no-select">
-							<input
-								type="checkbox"
-								value={this.state.onlyFeaturesInMap}
-								onChange={this.onOnlyFeatureInMap}
-							/>
-							{this.state.isFrench
-								? "Rechercher propriétés visibles sur la map"
-								: "Only search properties visible in the map."}
+							<input type="checkbox" value={this.state.onlyFeaturesInMap} onChange={this.onOnlyFeatureInMap} />
+							{this.state.isFrench ? "Rechercher propriétés visibles sur la map" : "Only search properties visible in the map."}
 						</label>
 						<div style={{ borderBottom: "1px solid #ddd" }} />
-						<div
-							id="sc-theme-211-resulst-container"
-							className="sc-theme-211-resulst-container"
-						>
+						<div id="sc-theme-211-resulst-container" className="sc-theme-211-resulst-container">
 							<AutoSizer>
 								{({ width, height }) => {
 									return (
@@ -518,15 +393,7 @@ class TwoOneOne extends Component {
 									);
 								}}
 							</AutoSizer>
-							<div
-								className={
-									this.results.length === 0
-										? "sc-theme-211-no-results"
-										: "sc-hidden"
-								}
-							>
-								No Results Found
-							</div>
+							<div className={this.results.length === 0 ? "sc-theme-211-no-results" : "sc-hidden"}>No Results Found</div>
 						</div>
 					</div>
 				</div>
@@ -541,40 +408,24 @@ const Result = (props) => {
 	const { result } = props;
 	let style = props.style;
 	let website = result.website;
-	if (website !== undefined && website.indexOf("http", 1) === -1)
-		website = "https://" + website;
+	if (website !== undefined && website.indexOf("http", 1) === -1) website = "https://" + website;
 	return (
 		<div className="sc-theme-211-result" style={style}>
 			<div>
 				<div>
-					<InfoRow
-						key={helpers.getUID()}
-						label={props.isFrench ? "Nom" : "Name"}
-						value={result.organization_program_name}
-					/>
+					<InfoRow key={helpers.getUID()} label={props.isFrench ? "Nom" : "Name"} value={result.organization_program_name} />
 				</div>
 
 				{/* <InfoRow key={helpers.getUID()} label="Address" value={result.address} /> */}
 				{/* <InfoRow key={helpers.getUID()} label="Phone" value={result.tty_phone} /> */}
 				{/* <InfoRow key={helpers.getUID()} label="Website" value={website} /> */}
-				<div
-					className="sc-list-item-action-bar"
-					style={{ marginTop: "5px", fontSize: "9pt" }}
-				>
+				<div className="sc-list-item-action-bar" style={{ marginTop: "5px", fontSize: "9pt" }}>
 					<label
 						className="sc-fakeLink"
 						onClick={() => {
 							props.isFrench
-								? window.open(
-										"https://simcoecounty.cioc.ca/record/" +
-											result["record_#"] +
-											"?Ln=fr-CA",
-										"_blank"
-								  )
-								: window.open(
-										"https://simcoecounty.cioc.ca/record/" + result["record_#"],
-										"_blank"
-								  );
+								? window.open("https://simcoecounty.cioc.ca/record/" + result["record_#"] + "?Ln=fr-CA", "_blank")
+								: window.open("https://simcoecounty.cioc.ca/record/" + result["record_#"], "_blank");
 						}}
 					>
 						{props.isFrench ? "Voir les détails" : "View details"}
@@ -597,39 +448,16 @@ const Result = (props) => {
 const PopupContent = (props) => {
 	const { feature } = props;
 	let website = feature.get("website");
-	if (website !== undefined && website.indexOf("http", 1) === -1)
-		website = "https://" + website;
+	if (website !== undefined && website.indexOf("http", 1) === -1) website = "https://" + website;
 	return (
 		<div>
+			<InfoRow key={helpers.getUID()} label={props.isFrench ? "Nom" : "Name"} value={feature.get("organization_program_name")} />
+			<InfoRow key={helpers.getUID()} label={props.isFrench ? "Description" : "Description"} value={feature.get("description_brief")} />
+			<InfoRow key={helpers.getUID()} label={props.isFrench ? "Site Web" : "Website"} value={website} />
 			<InfoRow
 				key={helpers.getUID()}
-				label={props.isFrench ? "Nom" : "Name"}
-				value={feature.get("organization_program_name")}
-			/>
-			<InfoRow
-				key={helpers.getUID()}
-				label={props.isFrench ? "Description" : "Description"}
-				value={feature.get("description_brief")}
-			/>
-			<InfoRow
-				key={helpers.getUID()}
-				label={props.isFrench ? "Site Web" : "Website"}
-				value={website}
-			/>
-			<InfoRow
-				key={helpers.getUID()}
-				label={
-					props.isFrench
-						? "Voir les details sur 211 Community Connections"
-						: "View details on 211 Community Connections"
-				}
-				value={
-					props.isFrench
-						? "https://simcoecounty.cioc.ca/record/" +
-						  feature.get("record_#") +
-						  "?Ln=fr-CA"
-						: "https://simcoecounty.cioc.ca/record/" + feature.get("record_#")
-				}
+				label={props.isFrench ? "Voir les details sur 211 Community Connections" : "View details on 211 Community Connections"}
+				value={props.isFrench ? "https://simcoecounty.cioc.ca/record/" + feature.get("record_#") + "?Ln=fr-CA" : "https://simcoecounty.cioc.ca/record/" + feature.get("record_#")}
 			/>
 		</div>
 	);

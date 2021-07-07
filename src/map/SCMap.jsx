@@ -20,12 +20,7 @@ import Navigation from "./Navigation";
 import { defaults as defaultInteractions } from "ol/interaction.js";
 import Popup from "../helpers/Popup.jsx";
 import FooterTools from "./FooterTools.jsx";
-import {
-	defaults as defaultControls,
-	ScaleLine,
-	FullScreen,
-	Rotate,
-} from "ol/control.js";
+import { defaults as defaultControls, ScaleLine, FullScreen, Rotate } from "ol/control.js";
 import BasemapSwitcher from "./BasemapSwitcher";
 import PropertyReportClick from "./PropertyReportClick.jsx";
 import "ol-contextmenu/dist/ol-contextmenu.css";
@@ -41,19 +36,9 @@ import FloatingImageSlider from "../helpers/FloatingImageSlider.jsx";
 const scaleLineControl = new ScaleLine({
 	minWidth: 80,
 });
-const feedbackTemplate = (
-	url,
-	xmin,
-	xmax,
-	ymin,
-	ymax,
-	centerx,
-	centery,
-	scale
-) =>
+const feedbackTemplate = (url, xmin, xmax, ymin, ymax, centerx, centery, scale) =>
 	`${url}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True`;
-const googleMapsTemplate = (pointx, pointy) =>
-	`https://www.google.com/maps?q=${pointy},${pointx}`;
+const googleMapsTemplate = (pointx, pointy) => `https://www.google.com/maps?q=${pointy},${pointx}`;
 class SCMap extends Component {
 	constructor(props) {
 		super(props);
@@ -69,24 +54,17 @@ class SCMap extends Component {
 		};
 		// LISTEN FOR MAP CURSOR TO CHANGE
 		helpers.waitForLoad("settings", Date.now(), 30, () => {
-			if (!window.config.onlyStandardCursor)
-				window.emitter.addListener("changeCursor", (cursorStyle) =>
-					this.changeCursor(cursorStyle)
-				);
+			if (!window.config.onlyStandardCursor) window.emitter.addListener("changeCursor", (cursorStyle) => this.changeCursor(cursorStyle));
 		});
 		// LISTEN FOR TOC TO LOAD
 		window.emitter.addListener("tocLoaded", () => this.handleUrlParameters());
 
 		// LISTEN FOR ATTRIBUTE TABLE SIZE
-		window.emitter.addListener("attributeTableResize", (height) =>
-			this.onAttributeTableResize(height)
-		);
+		window.emitter.addListener("attributeTableResize", (height) => this.onAttributeTableResize(height));
 
 		// CLEAR IDENTIFY MARKER AND RESULTS
 		window.emitter.addListener("clearIdentify", () => this.clearIdentify());
-		window.emitter.addListener("sidebarChanged", (isSidebarOpen) =>
-			this.sidebarChanged(isSidebarOpen)
-		);
+		window.emitter.addListener("sidebarChanged", (isSidebarOpen) => this.sidebarChanged(isSidebarOpen));
 	}
 
 	componentDidMount() {
@@ -96,20 +74,10 @@ class SCMap extends Component {
 			}
 			let centerCoords = window.config.centerCoords;
 			let defaultZoom = window.config.defaultZoom;
-			const defaultsStorage = sessionStorage.getItem(
-				this.storageMapDefaultsKey
-			);
-			let extent =
-				window.config.mapId !== null &&
-				window.config.mapId !== undefined &&
-				window.config.mapId.trim() !== ""
-					? null
-					: helpers.getItemsFromStorage(this.storageExtentKey);
+			const defaultsStorage = sessionStorage.getItem(this.storageMapDefaultsKey);
+			let extent = window.config.mapId !== null && window.config.mapId !== undefined && window.config.mapId.trim() !== "" ? null : helpers.getItemsFromStorage(this.storageExtentKey);
 
-			if (
-				defaultsStorage !== null &&
-				(extent === undefined || extent === null)
-			) {
+			if (defaultsStorage !== null && (extent === undefined || extent === null)) {
 				const defaults = JSON.parse(defaultsStorage);
 				if (defaults.zoom !== undefined) defaultZoom = defaults.zoom;
 				if (defaults.center !== undefined) centerCoords = defaults.center;
@@ -160,127 +128,42 @@ class SCMap extends Component {
 
 				const menu = (
 					<Portal>
-						<FloatingMenu
-							key={helpers.getUID()}
-							buttonEvent={evt}
-							onMenuItemClick={this.onMenuItemClick}
-							autoY={true}
-							autoX={true}
-						>
+						<FloatingMenu key={helpers.getUID()} buttonEvent={evt} onMenuItemClick={this.onMenuItemClick} autoY={true} autoX={true}>
 							<MenuItem
-								className={
-									helpers.isMobile() ||
-									!window.config.rightClickMenuVisibility[
-										"sc-floating-menu-basic-mode"
-									]
-										? "sc-hidden"
-										: "sc-floating-menu-toolbox-menu-item"
-								}
+								className={helpers.isMobile() || !window.config.rightClickMenuVisibility["sc-floating-menu-basic-mode"] ? "sc-hidden" : "sc-floating-menu-toolbox-menu-item"}
 								key="sc-floating-menu-basic-mode"
 							>
-								<FloatingMenuItem
-									imageName={"collased.png"}
-									label="Switch To Basic"
-								/>
+								<FloatingMenuItem imageName={"collased.png"} label="Switch To Basic" />
 							</MenuItem>
 							<MenuItem
-								className={
-									window.config.rightClickMenuVisibility[
-										"sc-floating-menu-property-click"
-									]
-										? "sc-floating-menu-toolbox-menu-item"
-										: "sc-hidden"
-								}
+								className={window.config.rightClickMenuVisibility["sc-floating-menu-property-click"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"}
 								key="sc-floating-menu-property-click"
 							>
-								<FloatingMenuItem
-									imageName={"report.png"}
-									label="Property Report"
-								/>
+								<FloatingMenuItem imageName={"report.png"} label="Property Report" />
 							</MenuItem>
-							<MenuItem
-								className={
-									window.config.rightClickMenuVisibility[
-										"sc-floating-menu-add-mymaps"
-									]
-										? "sc-floating-menu-toolbox-menu-item"
-										: "sc-hidden"
-								}
-								key="sc-floating-menu-add-mymaps"
-							>
-								<FloatingMenuItem
-									imageName={"point.png"}
-									label="Add Marker Point"
-								/>
+							<MenuItem className={window.config.rightClickMenuVisibility["sc-floating-menu-add-mymaps"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-add-mymaps">
+								<FloatingMenuItem imageName={"point.png"} label="Add Marker Point" />
 							</MenuItem>
 
 							<MenuItem
-								className={
-									window.config.rightClickMenuVisibility[
-										"sc-floating-menu-save-map-extent"
-									]
-										? "sc-floating-menu-toolbox-menu-item"
-										: "sc-hidden"
-								}
+								className={window.config.rightClickMenuVisibility["sc-floating-menu-save-map-extent"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"}
 								key="sc-floating-menu-save-map-extent"
 							>
-								<FloatingMenuItem
-									imageName={"globe-icon.png"}
-									label="Save as Default Extent"
-								/>
+								<FloatingMenuItem imageName={"globe-icon.png"} label="Save as Default Extent" />
 							</MenuItem>
 							<MenuItem
-								className={
-									window.config.rightClickMenuVisibility[
-										"sc-floating-menu-report-problem"
-									]
-										? "sc-floating-menu-toolbox-menu-item"
-										: "sc-hidden"
-								}
+								className={window.config.rightClickMenuVisibility["sc-floating-menu-report-problem"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"}
 								key="sc-floating-menu-report-problem"
 							>
-								<FloatingMenuItem
-									imageName={"error.png"}
-									label="Report a problem"
-								/>
+								<FloatingMenuItem imageName={"error.png"} label="Report a problem" />
 							</MenuItem>
-							<MenuItem
-								className={
-									window.config.rightClickMenuVisibility[
-										"sc-floating-menu-identify"
-									]
-										? "sc-floating-menu-toolbox-menu-item"
-										: "sc-hidden"
-								}
-								key="sc-floating-menu-identify"
-							>
+							<MenuItem className={window.config.rightClickMenuVisibility["sc-floating-menu-identify"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-identify">
 								<FloatingMenuItem imageName={"identify.png"} label="Identify" />
 							</MenuItem>
-							<MenuItem
-								className={
-									window.config.rightClickMenuVisibility[
-										"sc-floating-menu-google-maps"
-									]
-										? "sc-floating-menu-toolbox-menu-item"
-										: "sc-hidden"
-								}
-								key="sc-floating-menu-google-maps"
-							>
-								<FloatingMenuItem
-									imageName={"google.png"}
-									label="View in Google Maps"
-								/>
+							<MenuItem className={window.config.rightClickMenuVisibility["sc-floating-menu-google-maps"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-google-maps">
+								<FloatingMenuItem imageName={"google.png"} label="View in Google Maps" />
 							</MenuItem>
-							<MenuItem
-								className={
-									window.config.rightClickMenuVisibility[
-										"sc-floating-menu-more"
-									]
-										? "sc-floating-menu-toolbox-menu-item"
-										: "sc-hidden"
-								}
-								key="sc-floating-menu-more"
-							>
+							<MenuItem className={window.config.rightClickMenuVisibility["sc-floating-menu-more"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-more">
 								<FloatingMenuItem imageName={"more-16.png"} label="More..." />
 							</MenuItem>
 						</FloatingMenu>
@@ -302,7 +185,6 @@ class SCMap extends Component {
 				this.setState({ isIE: true });
 				helpers.showURLWindow(window.config.ieWarningUrl);
 			} else {
-				// SHOW TERMS
 				if (helpers.isMobile()) {
 					window.emitter.emit("setSidebarVisiblity", "CLOSE");
 				}
@@ -325,18 +207,12 @@ class SCMap extends Component {
 			});
 			this.addIdentifyLayer();
 			// SHOW FEEDBACK ON TIMER
-			if (
-				window.config.showFeedbackMessageOnStartup !== undefined &&
-				window.config.showFeedbackMessageOnStartup
-			) {
+			if (window.config.showFeedbackMessageOnStartup !== undefined && window.config.showFeedbackMessageOnStartup) {
 				setTimeout(() => {
 					helpers.showMessage(
 						"Feedback",
 						<div>
-							<label>
-								Please provide us feedback! The feedback button is at top right
-								of this window.
-							</label>
+							<label>Please provide us feedback! The feedback button is at top right of this window.</label>
 							<span
 								className="sc-fakeLink"
 								style={{ display: "block" }}
@@ -352,27 +228,16 @@ class SCMap extends Component {
 					);
 				}, 60000);
 			}
-
+			// SHOW TERMS
+			if (window.config.termsUrl !== undefined && window.config.showTermsOnStartup) {
+				helpers.showURLWindow(window.config.termsUrl, true, "full", true, true);
+			}
 			// SHOW WHATS NEW
-			if (
-				window.config.showWhatsNewOnStartup !== undefined &&
-				window.config.showWhatsNewOnStartup &&
-				window.config.whatsNewUrl
-			) {
-				helpers.showURLWindow(
-					window.config.whatsNewUrl,
-					true,
-					"full",
-					true,
-					true
-				);
+			if (window.config.showWhatsNewOnStartup !== undefined && window.config.showWhatsNewOnStartup && window.config.whatsNewUrl) {
+				helpers.showURLWindow(window.config.whatsNewUrl, true, "full", true, true);
 			}
 			// SHOW WHATS NEW NOTICE
-			if (
-				window.config.showWhatsNewPopupOnStartup !== undefined &&
-				window.config.showWhatsNewPopupOnStartup &&
-				window.config.whatsNewUrl
-			) {
+			if (window.config.showWhatsNewPopupOnStartup !== undefined && window.config.showWhatsNewPopupOnStartup && window.config.whatsNewUrl) {
 				const showWhatsNewMessage = () => {
 					helpers.showMessage(
 						"What's New!",
@@ -381,13 +246,7 @@ class SCMap extends Component {
 								className="sc-fakeLink"
 								style={{ display: "block" }}
 								onClick={() => {
-									helpers.showURLWindow(
-										window.config.whatsNewUrl,
-										true,
-										"normal",
-										true,
-										true
-									);
+									helpers.showURLWindow(window.config.whatsNewUrl, true, "normal", true, true);
 								}}
 							>
 								Click here to see what's changed
@@ -398,18 +257,9 @@ class SCMap extends Component {
 					);
 				};
 				try {
-					const saved = helpers.getItemsFromStorage(
-						window.config.storageKeys.URLDontShowAgain
-					);
+					const saved = helpers.getItemsFromStorage(window.config.storageKeys.URLDontShowAgain);
 					if (saved !== null && saved !== undefined) {
-						if (
-							!saved.find((item) =>
-								item.url !== undefined
-									? item.url.toLowerCase() ===
-									  window.config.whatsNewUrl.toLowerCase()
-									: false
-							)
-						) {
+						if (!saved.find((item) => (item.url !== undefined ? item.url.toLowerCase() === window.config.whatsNewUrl.toLowerCase() : false))) {
 							showWhatsNewMessage();
 						}
 					} else {
@@ -430,8 +280,7 @@ class SCMap extends Component {
 		let classes = this.state.mapClassName.split(" ");
 		if (classes.indexOf(cursorStyle) === -1) {
 			cursorStyles.forEach((styleName) => {
-				if (classes.indexOf(styleName) !== -1)
-					classes.splice(classes.indexOf(styleName), 1);
+				if (classes.indexOf(styleName) !== -1) classes.splice(classes.indexOf(styleName), 1);
 			});
 			classes.push(cursorStyle);
 			this.setState({ mapClassName: classes.join(" ") });
@@ -446,20 +295,12 @@ class SCMap extends Component {
 
 	handleUrlParameters = () => {
 		helpers.waitForLoad("settings", Date.now(), 30, () => {
-			const storage =
-				window.config.mapId !== null &&
-				window.config.mapId !== undefined &&
-				window.config.mapId.trim() !== ""
-					? undefined
-					: helpers.getItemsFromStorage(this.storageExtentKey);
+			const storage = window.config.mapId !== null && window.config.mapId !== undefined && window.config.mapId.trim() !== "" ? undefined : helpers.getItemsFromStorage(this.storageExtentKey);
 
 			// GET URL PARAMETERS (ZOOM TO XY)
 			const x = helpers.getURLParameter("X");
 			const y = helpers.getURLParameter("Y");
-			const sr =
-				helpers.getURLParameter("SR") === null
-					? "WEB"
-					: helpers.getURLParameter("SR");
+			const sr = helpers.getURLParameter("SR") === null ? "WEB" : helpers.getURLParameter("SR");
 
 			// GET URL PARAMETERS (ZOOM TO EXTENT)
 			const xmin = helpers.getURLParameter("XMIN");
@@ -470,37 +311,19 @@ class SCMap extends Component {
 			if (x !== null && y !== null) {
 				// URL PARAMETERS (ZOOM TO XY)
 				let coords = [x, y];
-				if (sr === "WGS84")
-					coords = fromLonLat([
-						Math.round(x * 100000) / 100000,
-						Math.round(y * 100000) / 100000,
-					]);
+				if (sr === "WGS84") coords = fromLonLat([Math.round(x * 100000) / 100000, Math.round(y * 100000) / 100000]);
 
 				setTimeout(() => {
 					helpers.flashPoint(coords);
 				}, 1000);
-			} else if (
-				xmin !== null &&
-				ymin !== null &&
-				xmax !== null &&
-				ymax !== null
-			) {
+			} else if (xmin !== null && ymin !== null && xmax !== null && ymax !== null) {
 				//URL PARAMETERS (ZOOM TO EXTENT)
-				const extent = [
-					parseFloat(xmin),
-					parseFloat(ymin),
-					parseFloat(xmax),
-					parseFloat(ymax),
-				];
-				window.map
-					.getView()
-					.fit(extent, window.map.getSize(), { duration: 1000 });
+				const extent = [parseFloat(xmin), parseFloat(ymin), parseFloat(xmax), parseFloat(ymax)];
+				window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
 			} else if (storage !== null && storage !== undefined) {
 				// ZOOM TO SAVED EXTENT
 
-				window.map
-					.getView()
-					.fit(storage, window.map.getSize(), { duration: 1000 });
+				window.map.getView().fit(storage, window.map.getSize(), { duration: 1000 });
 			}
 
 			window.emitter.emit("mapParametersComplete");
@@ -585,11 +408,7 @@ class SCMap extends Component {
 			if (window.config.leftClickIdentify) {
 				window.map.on("singleclick", (evt) => {
 					// DISABLE POPUPS
-					let disable =
-						window.disableIdentifyClick ||
-						window.isDrawingOrEditing ||
-						window.isCoordinateToolOpen ||
-						window.isMeasuring;
+					let disable = window.disableIdentifyClick || window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring;
 					if (disable) return;
 
 					this.contextCoords = evt.coordinate;
@@ -625,22 +444,8 @@ class SCMap extends Component {
 		const ymax = extent[3];
 		const center = window.map.getView().getCenter();
 		helpers.waitForLoad("settings", Date.now(), 30, () => {
-			let feedbackUrl = feedbackTemplate(
-				window.config.feedbackUrl,
-				xmin,
-				xmax,
-				ymin,
-				ymax,
-				center[0],
-				center[1],
-				scale
-			);
-			if (
-				window.config.mapId !== null &&
-				window.config.mapId !== undefined &&
-				window.config.mapId.trim() !== ""
-			)
-				feedbackUrl += "&MAP_ID=" + window.config.mapId;
+			let feedbackUrl = feedbackTemplate(window.config.feedbackUrl, xmin, xmax, ymin, ymax, center[0], center[1], scale);
+			if (window.config.mapId !== null && window.config.mapId !== undefined && window.config.mapId.trim() !== "") feedbackUrl += "&MAP_ID=" + window.config.mapId;
 
 			helpers.showURLWindow(feedbackUrl, false, "full");
 		});
@@ -649,15 +454,8 @@ class SCMap extends Component {
 		// APP STATS
 		helpers.addAppStat("Google Maps", "Right Click Map");
 
-		const latLongCoords = transform(
-			this.contextCoords,
-			"EPSG:3857",
-			"EPSG:4326"
-		);
-		const googleMapsUrl = googleMapsTemplate(
-			latLongCoords[0],
-			latLongCoords[1]
-		);
+		const latLongCoords = transform(this.contextCoords, "EPSG:3857", "EPSG:4326");
+		const googleMapsUrl = googleMapsTemplate(latLongCoords[0], latLongCoords[1]);
 
 		helpers.showURLWindow(googleMapsUrl, false, "full");
 	};
@@ -670,11 +468,7 @@ class SCMap extends Component {
 
 	addMyMaps = () => {
 		var marker = new Feature(new Point(this.contextCoords));
-		window.emitter.emit(
-			"addMyMapsFeature",
-			marker,
-			this.contextCoords[0] + "," + this.contextCoords[1]
-		);
+		window.emitter.emit("addMyMapsFeature", marker, this.contextCoords[0] + "," + this.contextCoords[1]);
 	};
 
 	onContextDisableParcelClick = () => {
@@ -718,31 +512,18 @@ class SCMap extends Component {
 			<div>
 				<div id="map-theme">
 					<div id={"map-modal-window"} />
-					<div
-						id="map"
-						className={this.state.mapClassName}
-						tabIndex="0"
-						style={{ bottom: this.state.mapBottom }}
-					/>
+					<div id="map" className={this.state.mapClassName} tabIndex="0" style={{ bottom: this.state.mapBottom }} />
 					<Navigation options={this.props.options} />
 					<FooterTools options={this.props.options} />
 					<BasemapSwitcher options={this.props.options} />
 					<PropertyReportClick />
 					<div
-						className={
-							window.sidebarOpen
-								? "sc-map-github-button slideout"
-								: "sc-map-github-button slidein"
-						}
+						className={window.sidebarOpen ? "sc-map-github-button slideout" : "sc-map-github-button slidein"}
 						onClick={() => {
 							helpers.addAppStat("GitHub", "Button");
 						}}
 					>
-						<GitHubButton
-							href="https://github.com/county-of-simcoe-gis"
-							data-size="large"
-							aria-label="Follow @simcoecountygis on GitHub"
-						>
+						<GitHubButton href="https://github.com/county-of-simcoe-gis" data-size="large" aria-label="Follow @simcoecountygis on GitHub">
 							Follow @simcoecountygis
 						</GitHubButton>
 					</div>
@@ -756,9 +537,7 @@ class SCMap extends Component {
 
 export default SCMap;
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

@@ -238,12 +238,12 @@
 				{
 					"label": "Web Feature Service (WFS)",
 					"value": "wfs_kml",
-					"default": "https://opengis.simcoe.ca/geoserver/simcoe/All_Layers/ows"
+					"default": "https://opengis.simcoe.ca/geoserver/ows"
 				},
 				{
 					"label": "Tile with XYZ format",
 					"value": "xyz",
-					"default": "https://opengis.simcoe.ca/geoserver/simcoe/All_Layers/ows"
+					"default": "https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
 				}
 			]
 		}
