@@ -1,18 +1,10 @@
 import * as helpers from "../../../../../helpers/helpers";
 import config from "../config.json";
 import utils from "./utils";
-import {
-	FeatureHelpers,
-	OL_DATA_TYPES,
-} from "../../../../../helpers/OLHelpers";
+import { FeatureHelpers, OL_DATA_TYPES } from "../../../../../helpers/OLHelpers";
 import * as drawingHelpers from "../../../../../helpers/drawingHelpers";
 
-import {
-	Vector as VectorLayer,
-	Tile as TileLayer,
-	Image as ImageLayer,
-	Group as LayerGroup,
-} from "ol/layer.js";
+import { Vector as VectorLayer, Tile as TileLayer, Image as ImageLayer, Group as LayerGroup } from "ol/layer.js";
 
 // ..........................................................................
 // Load Tile matrix and build out WMTS Object
@@ -29,15 +21,9 @@ export async function loadTileMatrix(url) {
 		return {
 			identifier: m["ows:Identifier"]["#text"],
 			scaleDenominator: Number(m["ScaleDenominator"]["#text"]),
-			topLeftCorner: [
-				Number(m["TopLeftCorner"]["#text"].split(" ")[0]),
-				Number(m["TopLeftCorner"]["#text"].split(" ")[1]),
-			],
+			topLeftCorner: [Number(m["TopLeftCorner"]["#text"].split(" ")[0]), Number(m["TopLeftCorner"]["#text"].split(" ")[1])],
 			tileSize: [256, 256],
-			matrixSize: [
-				Number(m["MatrixWidth"]["#text"]),
-				Number(m["MatrixHeight"]["#text"]),
-			],
+			matrixSize: [Number(m["MatrixWidth"]["#text"]), Number(m["MatrixHeight"]["#text"])],
 		};
 	});
 	return tileMatrix;
@@ -61,9 +47,7 @@ export async function loadWMTSConfig(url, opacity) {
 	wmtsCongif.matrixSet = "EPSG:3857";
 	wmtsCongif.baseURL = url + "/tile/{TileMatrix}/{TileRow}/{TileCol}";
 	wmtsCongif.layer = utils.extractServiceName(url);
-	wmtsCongif.matrices = await loadTileMatrix(
-		url + "/WMTS/1.0.0/WMTSCapabilities.xml"
-	);
+	wmtsCongif.matrices = await loadTileMatrix(url + "/WMTS/1.0.0/WMTSCapabilities.xml");
 
 	return wmtsCongif;
 }
@@ -80,30 +64,13 @@ const buildVectorLayer = (layer, callback = undefined) => {
 		let itemSymbolizers = [];
 		const itemFilter = `*`;
 		let olStyle = item.getStyle();
-		if (
-			olStyle === null ||
-			olStyle.fill_ === undefined ||
-			olStyle.stroke_ === undefined ||
-			olStyle.text_ === undefined
-		) {
+		if (olStyle === null || olStyle.fill_ === undefined || olStyle.stroke_ === undefined || olStyle.text_ === undefined) {
 			olStyle = drawingHelpers.getDefaultDrawStyle("#e809e5");
 		}
-		let olFill =
-			olStyle.fill_ !== null && olStyle.fill_ !== undefined
-				? olStyle.getFill()
-				: null;
-		let olStroke =
-			olStyle.stroke_ !== null && olStyle.stroke_ !== undefined
-				? olStyle.getStroke()
-				: null;
-		let olText =
-			olStyle.text_ !== null && olStyle.text_ !== undefined
-				? olStyle.getText()
-				: null;
-		const olImage =
-			olStyle.image_ !== null && olStyle.image_ !== undefined
-				? olStyle.getImage()
-				: null;
+		let olFill = olStyle.fill_ !== null && olStyle.fill_ !== undefined ? olStyle.getFill() : null;
+		let olStroke = olStyle.stroke_ !== null && olStyle.stroke_ !== undefined ? olStyle.getStroke() : null;
+		let olText = olStyle.text_ !== null && olStyle.text_ !== undefined ? olStyle.getText() : null;
+		const olImage = olStyle.image_ !== null && olStyle.image_ !== undefined ? olStyle.getImage() : null;
 		if (olFill === null && olImage !== null) {
 			olFill = olImage.fill_;
 		}
@@ -116,8 +83,7 @@ const buildVectorLayer = (layer, callback = undefined) => {
 		let itemStrokeFill = {};
 		itemStrokeFill.type = config.drawTypes[item.get("drawType")];
 		//if drawType is undefined try setting based on geometry type
-		if (itemStrokeFill.type === undefined)
-			itemStrokeFill.type = config.drawTypes[item.getGeometry().getType()];
+		if (itemStrokeFill.type === undefined) itemStrokeFill.type = config.drawTypes[item.getGeometry().getType()];
 		//if unsupported geometry type, default to Polygon
 		if (itemStrokeFill.type === undefined) itemStrokeFill.type = "Polygon";
 
@@ -129,12 +95,15 @@ const buildVectorLayer = (layer, callback = undefined) => {
 			itemStrokeFill.strokeColor = utils.rgbToHex(...olStroke.color_);
 			itemStrokeFill.strokeOpacity = olStroke.color_[3];
 			itemStrokeFill.strokeWidth = olStroke.width_;
+			if (olStroke.lineDash_ !== undefined && olStroke.lineDash_ !== null) {
+				itemStrokeFill.strokeDashstyle = olStroke.lineDash_[0] === 1 ? "dot" : "dash";
+				itemStrokeFill.strokeLinejoin = "round";
+				itemStrokeFill.strokeLinecap = "round";
+			}
 		}
 		itemSymbolizers.push(itemStrokeFill);
 		const lookupFont = (font) => {
-			const foundFont = config.fonts.find(
-				(item) => font.toLowerCase() === item.toLowerCase()
-			);
+			const foundFont = config.fonts.find((item) => font.toLowerCase() === item.toLowerCase());
 			if (foundFont) {
 				return foundFont;
 			} else {
@@ -156,10 +125,7 @@ const buildVectorLayer = (layer, callback = undefined) => {
 				haloRadius: Number(olText.stroke_.width_) + 1,
 				label: olText.text_,
 				fillColor: olText.fill_.color_,
-				labelAlign: `${olText.textAlign_.substring(
-					0,
-					1
-				)}${olText.textBaseline_.substring(0, 1)}`,
+				labelAlign: `${olText.textAlign_.substring(0, 1)}${olText.textBaseline_.substring(0, 1)}`,
 				labelRotation: drawingHelpers._degrees(olText.rotation_),
 				labelXOffset: olText.offsetX_ * -1,
 				labelYOffset: olText.offsetY_ * -1,
@@ -177,12 +143,7 @@ const buildVectorLayer = (layer, callback = undefined) => {
 			style: styles,
 		};
 
-		let feature = FeatureHelpers.setFeatures(
-			[item],
-			OL_DATA_TYPES.GeoJSON,
-			"EPSG:4326",
-			"EPSG:4326"
-		);
+		let feature = FeatureHelpers.setFeatures([item], OL_DATA_TYPES.GeoJSON, "EPSG:4326", "EPSG:4326");
 		if (feature !== undefined) {
 			feature = JSON.parse(feature);
 
@@ -280,10 +241,8 @@ const getLayerByType = async (layer, callback = undefined) => {
 };
 const sortLayers = (layers, callback = undefined) => {
 	let sorted = layers.sort((a, b) => {
-		let indexA =
-			a.customParams === undefined ? 99999999 : a.customParams.zIndex;
-		let indexB =
-			b.customParams === undefined ? 99999999 : b.customParams.zIndex;
+		let indexA = a.customParams === undefined ? 99999999 : a.customParams.zIndex;
+		let indexB = b.customParams === undefined ? 99999999 : b.customParams.zIndex;
 
 		if (indexA > indexB) {
 			return -1;
@@ -314,10 +273,7 @@ const switchTemplates = (options, callback = undefined) => {
 	const mapScale = 2990000;
 	const rotation = 0;
 	const dpi = parseInt(options.mapResolutionOption);
-	let printSize =
-		options.printSizeSelectedOption.size === []
-			? window.map.getSize()
-			: options.printSizeSelectedOption.size;
+	let printSize = options.printSizeSelectedOption.size === [] ? window.map.getSize() : options.printSizeSelectedOption.size;
 
 	const attributes = {
 		title: options.mapTitle,
@@ -326,8 +282,7 @@ const switchTemplates = (options, callback = undefined) => {
 		scaleBar: {
 			geodetic: currentMapScale,
 		},
-		scale:
-			"1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+		scale: "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
 	};
 	attributes.map.projection = mapProjection;
 	attributes.map.longitudeFirst = longitudeFirst;
@@ -343,21 +298,13 @@ const switchTemplates = (options, callback = undefined) => {
 		case "forceScale":
 			attributes.scaleBar.geodetic = parseInt(options.forceScale);
 			attributes.map.scale = parseInt(options.forceScale);
-			attributes.scale =
-				"1 : " +
-				options.forceScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+			attributes.scale = "1 : " + options.forceScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 			attributes.map.center = currentMapViewCenter;
 
 			break;
 		case "preserveMapExtent":
-			attributes.map.height = utils.computeDimension(
-				...printSize,
-				mapExtent
-			).newHeight;
-			attributes.map.width = utils.computeDimension(
-				...printSize,
-				mapExtent
-			).newWidth;
+			attributes.map.height = utils.computeDimension(...printSize, mapExtent).newHeight;
+			attributes.map.width = utils.computeDimension(...printSize, mapExtent).newWidth;
 			attributes.map.bbox = mapExtent;
 			break;
 		default:
@@ -378,8 +325,7 @@ const switchTemplates = (options, callback = undefined) => {
 		};
 		attributes["overviewMap"] = overviewMap;
 	}
-	if (window.config.printLogo !== undefined)
-		attributes["imageName"] = window.config.printLogo;
+	if (window.config.printLogo !== undefined) attributes["imageName"] = window.config.printLogo;
 	if (callback !== undefined) callback(attributes);
 	else return attributes;
 };
@@ -397,8 +343,7 @@ export async function printRequest(mapLayers, printSelectedOption) {
 		dpi: parseInt(printSelectedOption.mapResolutionOption),
 		compressed: true,
 	};
-	printRequest.outputFormat =
-		printSelectedOption.printFormatSelectedOption.value;
+	printRequest.outputFormat = printSelectedOption.printFormatSelectedOption.value;
 
 	let mainMap = [];
 	let overviewMap = [];
