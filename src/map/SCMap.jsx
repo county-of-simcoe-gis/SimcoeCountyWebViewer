@@ -230,7 +230,7 @@ class SCMap extends Component {
 			}
 			// SHOW TERMS
 			if (window.config.termsUrl !== undefined && window.config.showTermsOnStartup) {
-				helpers.showURLWindow(window.config.termsUrl, false, "full", false, true);
+				helpers.showURLWindow(window.config.termsUrl, true, "full", true, true);
 			}
 			// SHOW WHATS NEW
 			if (window.config.showWhatsNewOnStartup !== undefined && window.config.showWhatsNewOnStartup && window.config.whatsNewUrl) {
