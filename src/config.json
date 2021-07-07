@@ -69,7 +69,7 @@
 		"geoserverLayerGroupsUrl": "",
 		"geoserverLayerGroupsUrlType": "group",
 		"esriServiceUrl": "",
-		"default_group": "Popular",
+		"default_group": "All_Layers_Public",
 		"sources": [
 			{
 				"group": {
