@@ -1,81 +1,96 @@
 {
-  "photosUrl": "https://opengis.simcoe.ca/featurereports?",
-  "apiUrl": "https://opengis.simcoe.ca/api/getRealEstateInfo/",
-  "layers": [
-    {
-      "displayName": "Residential",
-      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-      "layerName": "simcoe:Local Real Estate - Residential",
-      "visible": true,
-      "zIndex": 200,
-      "boxStyle": true,
-      "UrlParameter": [{
-          "parameterName": "MLSNO",
-          "fieldName": "_mlsno"
-        },{
-          "parameterName": "MLS",
-          "fieldName": "_mlsno"
-        }]
-    },
-    {
-      "displayName": "Commercial",
-      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-      "layerName": "simcoe:Local Real Estate - Commercial",
-      "visible": false,
-      "zIndex": 201,
-      "boxStyle": true,
-      "UrlParameter": [{
-          "parameterName": "MLSNO",
-          "fieldName": "_mlsno"
-        },{
-          "parameterName": "MLS",
-          "fieldName": "_mlsno"
-        }]
-    },
-    {
-      "displayName": "Farm",
-      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-      "layerName": "simcoe:Local Real Estate - Farm",
-      "visible": false,
-      "zIndex": 202,
-      "boxStyle": true,
-      "UrlParameter":  [{
-          "parameterName": "MLSNO",
-          "fieldName": "_mlsno"
-        },{
-          "parameterName": "MLS",
-          "fieldName": "_mlsno"
-        }]
-    },
-    {
-      "displayName": "Vacant Land",
-      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-      "layerName": "simcoe:Local Real Estate - Vacant Land",
-      "visible": false,
-      "zIndex": 203,
-      "boxStyle": true,
-      "UrlParameter":  [{
-          "parameterName": "MLSNO",
-          "fieldName": "_mlsno"
-        },{
-          "parameterName": "MLS",
-          "fieldName": "_mlsno"
-        }]
-    },
-    {
-      "displayName": "All",
-      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-      "layerName": "simcoe:Local Real Estate - All",
-      "visible": false,
-      "zIndex": 203,
-      "boxStyle": true,
-      "UrlParameter":  [{
-          "parameterName": "MLSNO",
-          "fieldName": "_mlsno"
-        },{
-          "parameterName": "MLS",
-          "fieldName": "_mlsno"
-        }]
-    }
-  ]
+	"photosUrl": "https://opengis.simcoe.ca/featurereports?",
+	"apiUrl": "https://opengis.simcoe.ca/api/getRealEstateInfo/",
+	"layers": [
+		{
+			"displayName": "Residential",
+			"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+			"layerName": "simcoe:Local Real Estate - Residential",
+			"visible": true,
+			"zIndex": 200,
+			"boxStyle": true,
+			"UrlParameter": [
+				{
+					"parameterName": "MLSNO",
+					"fieldName": "_mlsno"
+				},
+				{
+					"parameterName": "MLS",
+					"fieldName": "_mlsno"
+				}
+			]
+		},
+		{
+			"displayName": "Commercial",
+			"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+			"layerName": "simcoe:Local Real Estate - Commercial",
+			"visible": false,
+			"zIndex": 201,
+			"boxStyle": true,
+			"UrlParameter": [
+				{
+					"parameterName": "MLSNO",
+					"fieldName": "_mlsno"
+				},
+				{
+					"parameterName": "MLS",
+					"fieldName": "_mlsno"
+				}
+			]
+		},
+		{
+			"displayName": "Farm",
+			"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+			"layerName": "simcoe:Local Real Estate - Farm",
+			"visible": false,
+			"zIndex": 202,
+			"boxStyle": true,
+			"UrlParameter": [
+				{
+					"parameterName": "MLSNO",
+					"fieldName": "_mlsno"
+				},
+				{
+					"parameterName": "MLS",
+					"fieldName": "_mlsno"
+				}
+			]
+		},
+		{
+			"displayName": "Vacant Land",
+			"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+			"layerName": "simcoe:Local Real Estate - Vacant Land",
+			"visible": false,
+			"zIndex": 203,
+			"boxStyle": true,
+			"UrlParameter": [
+				{
+					"parameterName": "MLSNO",
+					"fieldName": "_mlsno"
+				},
+				{
+					"parameterName": "MLS",
+					"fieldName": "_mlsno"
+				}
+			]
+		},
+		{
+			"displayName": "All",
+			"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+			"layerName": "simcoe:Local Real Estate - All",
+			"visible": false,
+			"zIndex": 203,
+			"boxStyle": true,
+			"UrlParameter": [
+				{
+					"parameterName": "MLSNO",
+					"fieldName": "_mlsno"
+				},
+				{
+					"parameterName": "MLS",
+					"fieldName": "_mlsno"
+				}
+			]
+		}
+	]
 }

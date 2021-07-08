@@ -1,5 +1,5 @@
 {
-  "showBearingButton": true,
-  "showMeasureButton": false,
-  "nonPointCursorSize": 1
+	"showBearingButton": true,
+	"showMeasureButton": false,
+	"nonPointCursorSize": 1
 }

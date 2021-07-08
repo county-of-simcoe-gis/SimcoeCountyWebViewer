@@ -10,7 +10,6 @@ import MyMaps from "./components/mymaps/MyMaps";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 import SidebarComponent from "react-sidebar";
-import mainConfig from "../config.json";
 import SidebarSlim from "./SidebarSlim.jsx";
 
 class Sidebar extends Component {
@@ -34,7 +33,12 @@ class Sidebar extends Component {
 			// SELECTED TAB
 			tabIndex: 0,
 			isMyMapsEditing: false,
-
+			//hide components
+			hideTools: false,
+			hideThemes: false,
+			hideLayers: false,
+			hideMyMaps: false,
+			hideReports: false,
 			// COMPONENTS
 			activeTabComponents: {
 				layers: <TOC key={helpers.getUID()} type="LIST" />,
@@ -124,58 +128,85 @@ class Sidebar extends Component {
 	};
 
 	async componentDidMount() {
-		// IMPORT TOOLS FROM CONFIG
-		const tools = mainConfig.sidebarToolComponents;
-		tools.map(async (component) => await this.addComponent(component, "tools"));
-
-		// IMPORT THEMES FROM CONFIG
-		const themes = mainConfig.sidebarThemeComponents;
-		themes.map(
-			async (component) => await this.addComponent(component, "themes")
-		);
-		// HANDLE ADVANCED MODE PARAMETER
-		const url = new URL(window.location.href.toUpperCase());
-		const viewerMode = url.searchParams.get("MODE");
-		window.sidebarOpen = false;
-		if (viewerMode !== null && viewerMode === "ADVANCED") {
-			this.sidebarVisiblityEventHandler("OPEN");
-		}
-
-		this.initToolAndThemeUrlParameter(() => {
-			// TAB PARAMETER
-			const tabNameParameter = helpers.getURLParameter("TAB");
-			if (tabNameParameter != null) {
-				this.sidebarVisiblityEventHandler("OPEN", () => {
-					this.activateTab(tabNameParameter.toLowerCase());
-				});
-			}
-			// LISTEN FOR OPEN OR CLOSE FROM OTHER COMPONENTS (CLOSE OR OPEN)
-			window.emitter.addListener("setSidebarVisiblity", (openOrClose) =>
-				this.sidebarVisiblityEventHandler(openOrClose)
-			);
-
-			// LISTEN FOR TAB ACTIVATION FROM OTHER COMPONENTS
-			window.emitter.addListener("activateTab", (tabName) =>
-				this.activateTab(tabName)
-			);
-
-			// LISTEN FOR REPORT LOADING
-			window.emitter.addListener("loadReport", (content) =>
-				this.loadReport(content)
-			);
-
-			// LISTEN FOR ITEM ACTIVATION FROM OTHER COMPONENTS
-			window.emitter.addListener("activateSidebarItem", (name, type) => {
+		// LISTEN FOR ITEM ACTIVATION FROM OTHER COMPONENTS
+		window.emitter.addListener("activateSidebarItem", (name, type) => {
+			helpers.waitForLoad("sidebar", Date.now(), 30, () => {
 				this.activateItemFromEmmiter(name, type);
 			});
-			window.emitter.emit("sidebarLoaded");
+		});
+		// LISTEN FOR OPEN OR CLOSE FROM OTHER COMPONENTS (CLOSE OR OPEN)
+		window.emitter.addListener("setSidebarVisiblity", (openOrClose) => {
+			helpers.waitForLoad("sidebar", Date.now(), 30, () => {
+				this.sidebarVisiblityEventHandler(openOrClose);
+			});
+		});
+
+		// LISTEN FOR TAB ACTIVATION FROM OTHER COMPONENTS
+		window.emitter.addListener("activateTab", (tabName) => {
+			helpers.waitForLoad("sidebar", Date.now(), 30, () => {
+				this.activateTab(tabName);
+			});
+		});
+
+		// LISTEN FOR REPORT LOADING
+		window.emitter.addListener("loadReport", (content) => {
+			helpers.waitForLoad("sidebar", Date.now(), 30, () => {
+				this.loadReport(content);
+			});
+		});
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			// IMPORT TOOLS FROM CONFIG
+
+			let tools = window.config.sidebarToolComponents;
+			tools = tools.filter(
+				(item) => item.enabled === undefined || item.enabled
+			);
+			tools.map(
+				async (component) => await this.addComponent(component, "tools")
+			);
+			if (tools.length === 0) this.setState({ hideTools: true });
+			// IMPORT THEMES FROM CONFIG
+			let themes = window.config.sidebarThemeComponents;
+			themes = themes.filter(
+				(item) => item.enabled === undefined || item.enabled
+			);
+			themes.map(
+				async (component) => await this.addComponent(component, "themes")
+			);
+			if (themes.length === 0) this.setState({ hideThemes: true });
+
+			const shortcuts = window.config.sidebarShortcutParams;
+			// HANDLE ADVANCED MODE PARAMETER
+			window.sidebarOpen = false;
+			if (
+				window.config.viewerMode !== undefined &&
+				window.config.viewerMode !== null
+			) {
+				if (window.config.viewerMode.toUpperCase() === "ADVANCED")
+					this.sidebarVisiblityEventHandler("OPEN");
+			}
+
+			this.initToolAndThemeUrlParameter(
+				{ tools: tools, themes: themes, shortcuts: shortcuts },
+				() => {
+					// TAB PARAMETER
+					const tabNameParameter = helpers.getURLParameter("TAB");
+					if (tabNameParameter != null) {
+						this.sidebarVisiblityEventHandler("OPEN", () => {
+							this.activateTab(tabNameParameter.toLowerCase());
+						});
+					}
+
+					window.emitter.emit("sidebarLoaded");
+					helpers.addIsLoaded("sidebar");
+				}
+			);
 		});
 	}
 
-	initToolAndThemeUrlParameter = (callback) => {
+	initToolAndThemeUrlParameter = (components, callback) => {
 		if (
-			mainConfig.sidebarToolComponents.length +
-				mainConfig.sidebarThemeComponents.length ===
+			components.tools.length + components.themes.length ===
 				this.state.toolComponents.length &&
 			!this.props.mapLoading &&
 			!this.props.headerLoading
@@ -188,7 +219,7 @@ class Sidebar extends Component {
 				const item = undefined;
 				let shortcuts = [];
 				let params = [];
-				mainConfig.sidebarToolComponents.map((item) => {
+				components.tools.map((item) => {
 					shortcuts.push({
 						name: item.name.toLowerCase(),
 						component: item.name,
@@ -197,7 +228,7 @@ class Sidebar extends Component {
 					});
 					if (!params.includes("tool")) params.push("tool");
 				});
-				mainConfig.sidebarThemeComponents.map((item) => {
+				components.themes.map((item) => {
 					shortcuts.push({
 						name: item.name.toLowerCase(),
 						component: item.name,
@@ -206,7 +237,7 @@ class Sidebar extends Component {
 					});
 					if (!params.includes("theme")) params.push("theme");
 				});
-				mainConfig.sidebarShortcutParams.map((item) => {
+				components.shortcuts.map((item) => {
 					shortcuts.push({
 						name: item.matchValue,
 						component: item.component,
@@ -248,7 +279,7 @@ class Sidebar extends Component {
 			}
 		} else {
 			setTimeout(() => {
-				this.initToolAndThemeUrlParameter(callback);
+				this.initToolAndThemeUrlParameter(components, callback);
 			}, 50);
 		}
 	};
@@ -465,13 +496,23 @@ class Sidebar extends Component {
 							onSelect={this.onTabSelect}
 						>
 							<TabList>
-								<Tab id="tab-layers">
+								<Tab
+									id="tab-layers"
+									className={
+										this.state.hideLayers ? "d-none" : "react-tabs__tab"
+									}
+								>
 									<TabButton
 										imageURL={images["legend-32x32.png"]}
 										name="Layers"
 									/>
 								</Tab>
-								<Tab id="tab-tools">
+								<Tab
+									id="tab-tools"
+									className={
+										this.state.hideTools ? "d-none" : "react-tabs__tab"
+									}
+								>
 									<TabButton
 										imageURL={images["tools-32x32.png"]}
 										name="Tools"
@@ -480,14 +521,24 @@ class Sidebar extends Component {
 										}
 									/>
 								</Tab>
-								<Tab id="tab-mymaps">
+								<Tab
+									id="tab-mymaps"
+									className={
+										this.state.hideMyMaps ? "d-none" : "react-tabs__tab"
+									}
+								>
 									<TabButton
 										imageURL={images["map-32x32.png"]}
 										name="My Maps"
 										active={this.state.isMyMapsEditing}
 									/>
 								</Tab>
-								<Tab id="tab-themes">
+								<Tab
+									id="tab-themes"
+									className={
+										this.state.hideThemes ? "d-none" : "react-tabs__tab"
+									}
+								>
 									<TabButton
 										imageURL={images["theme-32x32.png"]}
 										name="Themes"
@@ -496,7 +547,12 @@ class Sidebar extends Component {
 										}
 									/>
 								</Tab>
-								<Tab id="tab-reports">
+								<Tab
+									id="tab-reports"
+									className={
+										this.state.hideReports ? "d-none" : "react-tabs__tab"
+									}
+								>
 									<TabButton
 										imageURL={images["report-32x32.png"]}
 										name="Reports"
@@ -542,6 +598,11 @@ class Sidebar extends Component {
 							toolActive={this.state.activeTabComponents.tools.loadedComponent}
 							isMyMapsEditing={this.state.isMyMapsEditing}
 							tabIndex={this.state.tabIndex}
+							hideLayers={this.state.hideLayers}
+							hideMyMaps={this.state.hideMyMaps}
+							hideTools={this.state.hideTools}
+							hideThemes={this.state.hideThemes}
+							hideReports={this.state.hideReports}
 						/>
 						<div id="sc-sidebar-message-container" />
 						{/* <MenuButton /> */}

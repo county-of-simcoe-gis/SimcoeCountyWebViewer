@@ -9,14 +9,16 @@ import {
 	ImageWMS,
 	OSM,
 	TileArcGISRest,
+	ImageArcGISRest,
 	TileWMS,
 	TileImage,
 	Vector,
 	Stamen,
 	XYZ,
 	ImageStatic,
-	WMTS,
 } from "ol/source.js";
+import WMTS, { optionsFromCapabilities } from "ol/source/WMTS";
+
 import GML3 from "ol/format/GML3.js";
 import GML2 from "ol/format/GML2.js";
 import OSMXML from "ol/format/OSMXML.js";
@@ -38,11 +40,17 @@ import {
 	all as LoadingStrategyAll,
 	tile as LoadingStrategyTile,
 } from "ol/loadingstrategy.js";
+
+import { getTopLeft } from "ol/extent";
+import { transform } from "ol/proj.js";
+
 import TileGrid from "ol/tilegrid/TileGrid.js";
-import { getTopLeft } from "ol/extent.js";
+
+//import { Circle, Fill, Stroke, Style,Icon,Text } from "ol/style.js";
 
 //OTHER
 import { parseString } from "xml2js";
+
 export const OL_LAYER_TYPES = {
 	Image: "Image",
 	Tile: "Tile",
@@ -71,6 +79,7 @@ export const OL_DATA_TYPES = {
 	ImageStatic: "ImageStatic",
 	WMTS: "WMTS",
 	TileWMS: "TileWMS",
+	ImageArcGISRest: "ImageArcGISRest",
 };
 
 export class FeatureHelpers {
@@ -189,7 +198,116 @@ export class FeatureHelpers {
 }
 
 export class LayerHelpers {
-	static getCapabilities(root_url, type, callback) {
+	static async identifyFeaturesWait(layer, coordinate, callback = undefined) {
+		const viewResolution = window.map.getView().getResolution();
+		const isArcGISLayer =
+			LayerHelpers.getLayerSourceType(layer.getSource()) ===
+			OL_DATA_TYPES.ImageArcGISRest;
+		var url = isArcGISLayer
+			? layer.get("wfsUrl")
+			: layer
+					.getSource()
+					.getFeatureInfoUrl(coordinate, viewResolution, "EPSG:3857", {
+						INFO_FORMAT: "application/json",
+					});
+		const params = {};
+		const secureKey = layer.get("secureKey");
+		if (secureKey !== undefined) {
+			const headers = {};
+			headers[secureKey] = "GIS";
+			params["headers"] = headers;
+		}
+		if (isArcGISLayer) {
+			const arcgisResolution = `${window.map.getSize()[0]},${
+				window.map.getSize()[1]
+			},96`;
+			const extent = window.map.getView().calculateExtent();
+			const zoom = window.map.getView().getZoom();
+			const tolerance = 20 - zoom;
+			url = url
+				.replace("#GEOMETRY#", coordinate)
+				.replace("#TOLERANCE#", tolerance >= 10 ? tolerance : 10)
+				.replace("#EXTENT#", extent.join(","))
+				.replace("#RESOLUTION#", arcgisResolution);
+		}
+		if (url) {
+			await helpers.getJSONWaitWithParams(url, params, (result) => {
+				let features = isArcGISLayer
+					? LayerHelpers.parseESRIIdentify(result)
+					: new GeoJSON().readFeatures(result);
+				if (callback === undefined) {
+					return features.length > 0 ? features[0] : undefined;
+				} else {
+					callback(features.length > 0 ? features[0] : undefined);
+				}
+			});
+		}
+	}
+	static identifyFeatures(layer, coordinate, callback) {
+		const viewResolution = window.map.getView().getResolution();
+		const isArcGISLayer =
+			LayerHelpers.getLayerSourceType(layer.getSource()) ===
+			OL_DATA_TYPES.ImageArcGISRest;
+		var url = isArcGISLayer
+			? layer.get("wfsUrl")
+			: layer
+					.getSource()
+					.getFeatureInfoUrl(coordinate, viewResolution, "EPSG:3857", {
+						INFO_FORMAT: "application/json",
+					});
+		const params = {};
+		const secureKey = layer.get("secureKey");
+		if (secureKey !== undefined) {
+			const headers = {};
+			headers[secureKey] = "GIS";
+			params["headers"] = headers;
+		}
+		if (isArcGISLayer) {
+			const arcgisResolution = `${window.map.getSize()[0]},${
+				window.map.getSize()[1]
+			},96`;
+			const extent = window.map.getView().calculateExtent();
+			const zoom = window.map.getView().getZoom();
+			const tolerance = 20 - zoom;
+			url = url
+				.replace("#GEOMETRY#", coordinate)
+				.replace("#TOLERANCE#", tolerance >= 10 ? tolerance : 10)
+				.replace("#EXTENT#", extent.join(","))
+				.replace("#RESOLUTION#", arcgisResolution);
+		}
+		if (url) {
+			helpers.getJSONWithParams(url, params, (result) => {
+				let features = isArcGISLayer
+					? LayerHelpers.parseESRIIdentify(result)
+					: new GeoJSON().readFeatures(result);
+				callback(features.length > 0 ? features[0] : undefined);
+			});
+		}
+	}
+	static parseESRIIdentify(data) {
+		let features = [];
+		if (data.results !== undefined) {
+			data.results.forEach((item) => {
+				item["dataProjection"] = item.geometry.spatialReference.latestWkid;
+				delete item.geometry.spatialReference;
+				delete item.geometryType;
+				let keys = Object.keys(item.attributes);
+				keys.forEach((key) => {
+					if (item.attributes[key] === "Null" || item.attributes[key] === "")
+						delete item.attributes[key];
+				});
+
+				let tempFeature = new EsriJSON().readFeature(item);
+				tempFeature.setProperties({ displayFieldName: item.displayFieldName });
+				tempFeature.setProperties({ displayFieldValue: item.value });
+				features.push(tempFeature);
+			});
+		}
+		return features;
+	}
+	static getCapabilities(options, callback) {
+		let { root_url, type } = options;
+
 		type = type.toLowerCase();
 		var url = "";
 		if (root_url.indexOf("GetCapabilities") === -1) {
@@ -201,21 +319,33 @@ export class LayerHelpers {
 		var parser;
 		var response;
 		var service;
-		if (url.indexOf("GetCapabilities") === -1) {
+		if (url.indexOf("Capabilities") === -1) {
 			switch (type) {
 				case "wmts":
 					service = "WMTS";
+					url = url + "REQUEST=GetCapabilities&SERVICE=" + service;
 					break;
 				case "wms":
 					service = "WMS";
+					url = url + "REQUEST=GetCapabilities&SERVICE=" + service;
+					break;
+				case "rest":
+					service = "json";
+					url = root_url + "/layers?f=json";
 					break;
 				default:
 					service = "WFS";
+					url = url + "REQUEST=GetCapabilities&SERVICE=" + service;
 					break;
 			}
-			url = url + "REQUEST=GetCapabilities&SERVICE=" + service;
 		}
-		helpers.httpGetText(url, (responseText) => {
+		const params = {};
+		if (options.requireToken) {
+			const headers = {};
+			//headers["token"] = "GIS";
+			params["headers"] = headers;
+		}
+		helpers.httpGetTextWithParams(url, params, (responseText) => {
 			if (responseText === null) {
 				callback([]);
 				return;
@@ -225,14 +355,17 @@ export class LayerHelpers {
 					case "wmts":
 						parser = new WMTSCapabilities();
 						response = parser.read(responseText);
-						response.Contents.Layer.foreach((layer) => {
+						response.Contents.Layer.forEach((layer) => {
 							layers.push({
-								label: layer.Identifier,
+								label: layer.Title,
 								value: helpers.getUID(),
 								style: this.getSytle(layer),
 								layer_name: layer.Identifier,
 							});
 						});
+						//fix to get react-select box to update on the fly
+						layers = layers.concat([]);
+						callback(layers);
 						break;
 					case "wms":
 						parser = new WMSCapabilities();
@@ -248,8 +381,54 @@ export class LayerHelpers {
 								}
 							});
 						});
+						//fix to get react-select box to update on the fly
+						layers = layers.concat([]);
+						callback(layers);
 						break;
-
+					case "rest":
+						response = JSON.parse(responseText);
+						if (response.layers !== undefined) {
+							this.getESRILegend(`${root_url}/legend?f=json`, (legends) => {
+								response.layers.forEach((item) => {
+									if (item !== undefined) {
+										item["layer_name"] = item.name;
+										item["rootUrl"] = root_url;
+										item["originalMinScale"] = item.minScale;
+										item["originalMaxScale"] = item.maxScale;
+										item.minScale = item.originalMaxScale;
+										item.maxScale = item.originalMinScale;
+										if (item.minScale === item.maxScale) {
+											item.minScale = undefined;
+											item.maxScale = undefined;
+										}
+										item["value"] = helpers.getUID();
+										item["label"] = item.name;
+										item["queryable"] = true;
+										item["legend"] = legends.filter((legend) => {
+											return legend.layerId === item.id;
+										})[0];
+										if (
+											item.drawingInfo !== undefined &&
+											item.drawingInfo.renderer !== undefined &&
+											item.drawingInfo.renderer.symbol !== undefined &&
+											item.legend === undefined
+										)
+											item[
+												"style"
+											] = `data:${item.drawingInfo.renderer.symbol.contentType};base64,${item.drawingInfo.renderer.symbol.imageData}`;
+										item["url"] = `${root_url}/${item.id}`;
+										layers.push(item);
+									}
+								});
+								//fix to get react-select box to update on the fly
+								layers = layers.concat([]);
+								callback(layers);
+							});
+						} else {
+							callback([]);
+							return;
+						}
+						break;
 					default:
 						parseString(responseText, function (err, result) {
 							result[
@@ -266,19 +445,24 @@ export class LayerHelpers {
 								});
 							});
 						});
-
+						//fix to get react-select box to update on the fly
+						layers = layers.concat([]);
+						callback(layers);
 						break;
 				}
-				//fix to get react-select box to update on the fly
-				layers = layers.concat([]);
-				callback(layers);
 			} catch (error) {
 				console.warn("Unexpected error: " + error.message);
 				callback(layers);
 			}
 		});
 	}
-
+	static getESRILegend(url, callback) {
+		helpers.httpGetText(url, (responseText) => {
+			var response = JSON.parse(responseText);
+			if (response.layers === undefined) callback();
+			else callback(response.layers);
+		});
+	}
 	static getWMSLayers(layer, callback) {
 		var label = layer.Title !== "" ? layer.Title : layer.Name;
 		var value = layer.Name;
@@ -352,6 +536,7 @@ export class LayerHelpers {
 		if (source instanceof Vector) return OL_DATA_TYPES.Vector;
 		if (source instanceof ImageWMS) return OL_DATA_TYPES.ImageWMS;
 		if (source instanceof TileArcGISRest) return OL_DATA_TYPES.TileArcGISRest;
+		if (source instanceof ImageArcGISRest) return OL_DATA_TYPES.ImageArcGISRest;
 		if (source instanceof TileImage) return OL_DATA_TYPES.TileImage;
 		if (source instanceof Stamen) return OL_DATA_TYPES.Stamen;
 		if (source instanceof ImageStatic) return OL_DATA_TYPES.ImageStatic;
@@ -366,19 +551,20 @@ export class LayerHelpers {
 		} catch {}
 		return style !== undefined ? style : "";
 	}
-	static getLayer(
-		sourceType,
-		source,
-		projection = "EPSG:3857",
-		layerName,
-		url,
-		tiled = false,
-		file,
-		extent = [],
-		name = "",
-		secureKey = undefined,
-		callback
-	) {
+
+	static getLayer(options, callback) {
+		let sourceType = options.sourceType;
+		let source = options.source;
+		let projection =
+			options.projection !== undefined ? options.projection : "EPSG:3857";
+		let layerName = options.layerName;
+		let url = options.url;
+		let tiled = options.tiled !== undefined ? options.tiled : false;
+		let file = options.file;
+		let extent = options.extent !== undefined ? options.extent : [];
+		let name = options.name !== undefined ? options.name : "";
+		let secureKey = options.secureKey;
+
 		const rebuildParams = {
 			sourceType: sourceType,
 			source: source,
@@ -391,8 +577,45 @@ export class LayerHelpers {
 			name: name,
 		};
 		let Vector_FileLoader = undefined;
+		let style = undefined;
+
 		// console.log(url);
 		switch (source) {
+			case "remote":
+				const featureParser = FeatureHelpers.getVectorFormat(
+					sourceType,
+					projection
+				);
+				Vector_FileLoader = function (extent, resolution, proj) {
+					try {
+						console.log(extent, resolution, proj);
+						const mapProjection = window.map.getView().getProjection();
+						var _this = this;
+						var remoteUrl = `${url}/query?f=json`;
+						remoteUrl += `&returnGeometry=true`;
+						remoteUrl += `&geometryType=esriGeometryEnvelope`;
+						remoteUrl += `&spatialRel=esriSpatialRelIntersects`;
+						remoteUrl += `&geometry=`;
+						remoteUrl += encodeURIComponent(
+							`{"xmin":${proj.extent_[0]},"ymin":${proj.extent_[1]},"xmax":${proj.extent_[2]},"ymax":${proj.extent_[3]},"spatialReference":{"wkid":102100}}`
+						);
+						remoteUrl += `&inSR=3857`;
+						remoteUrl += `&outFields=*`;
+						remoteUrl += `&outSR=3857`;
+						helpers.getJSON(remoteUrl, (response) => {
+							_this.addFeatures(
+								featureParser.readFeatures(response, {
+									dataProjection:
+										featureParser.readProjection(response) || projection,
+									featureProjection: mapProjection,
+								})
+							);
+						});
+					} catch (error) {
+						console.log(error);
+					}
+				};
+				break;
 			case "file":
 				if (file === undefined) {
 					console.error("Missing File for Vector layer.");
@@ -443,7 +666,7 @@ export class LayerHelpers {
 					sourceType === OL_DATA_TYPES.GeoJSON
 						? "application/json"
 						: sourceType;
-				url = /^((http)|(https))(:\/\/)/.test(url) ? url : "http://" + url;
+				url = /^((http)|(https))(:\/\/)/.test(url) ? url : "https://" + url;
 				url = /\?/.test(url) ? url + "&" : url + "?";
 				url =
 					url +
@@ -560,12 +783,15 @@ export class LayerHelpers {
 							name: name,
 							url: url,
 							strategy: tiled
-								? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 }))
+								? LoadingStrategyTile(
+										TileGrid.createXYZ({ tileSize: 512, maxZoom: 19 })
+								  )
 								: LoadingStrategyAll,
 							format: new EsriJSON(),
 							loader: Vector_FileLoader,
 							crossOrigin: "anonymous",
 						}),
+						style: style,
 					})
 				);
 				break;
@@ -727,11 +953,48 @@ export class LayerHelpers {
 					})
 				);
 				break;
+			case OL_DATA_TYPES.ImageArcGISRest:
+				let urlArray = url.split("/");
+				let url_layer = urlArray[urlArray.length - 1];
+				urlArray.pop();
+				url = urlArray.join("/");
+				const sourceParams = {
+					url: url,
+					params: { LAYERS: `SHOW:${url_layer}` },
+					ratio: 1,
+					projection: projection,
+					crossOrigin: "anonymous",
+				};
+				if (extent !== undefined)
+					sourceParams["extent"] = [
+						extent.xmin,
+						extent.ymin,
+						extent.xmax,
+						extent.ymax,
+					];
+				callback(
+					new ImageLayer({
+						rebuildParams: rebuildParams,
+						name: name,
+						source: new ImageArcGISRest(sourceParams),
+					})
+				);
+				break;
 			case OL_DATA_TYPES.WMTS:
-				url = /\?/.test(url) ? url + "&" : url + "?";
+				const rootUrl = url.replace("1.0.0/WMTSCapabilities.xml", "");
+				const convertExtent = (extent, sourceCoord, targetCoord) => {
+					return transform(
+						[extent[0], extent[1]],
+						sourceCoord,
+						targetCoord
+					).concat(transform([extent[2], extent[3]], sourceCoord, targetCoord));
+				};
 				const wmtsCap = (url, callback) => {
 					helpers.httpGetText(
-						url + "REQUEST=GetCapabilities&SERVICE=WMTS",
+						url.indexOf("Capabilities") === -1
+							? (/\?/.test(url) ? url + "&" : url + "?") +
+									"REQUEST=GetCapabilities&SERVICE=WMTS"
+							: url,
 						(responseText) => {
 							try {
 								var parser = new WMTSCapabilities();
@@ -742,18 +1005,26 @@ export class LayerHelpers {
 						}
 					);
 				};
-				callback(
-					new TileLayer({
-						rebuildParams: rebuildParams,
-						name: name,
-						source: new WMTS(
-							WMTS.optionsFromCapabilities(
-								wmtsCap(url, (response) => response),
-								{ layer: layerName, matrixSet: projection }
-							)
-						),
-					})
-				);
+
+				wmtsCap(url, (capabilities) => {
+					var tileMatrixSet = capabilities.Contents.TileMatrixSet[0];
+					helpers.registerCustomProjection(
+						tileMatrixSet.SupportedCRS.split(":")[1],
+						() => {
+							var wmtsOptions = optionsFromCapabilities(capabilities, {
+								layer: layerName,
+								requestEncoding: "REST",
+							});
+							callback(
+								new TileLayer({
+									rebuildParams: rebuildParams,
+									name: name,
+									source: new WMTS(wmtsOptions),
+								})
+							);
+						}
+					);
+				});
 				break;
 			case OL_DATA_TYPES.Stamen:
 				if (name.length < 1) layerName = "Stamen " + layerName;

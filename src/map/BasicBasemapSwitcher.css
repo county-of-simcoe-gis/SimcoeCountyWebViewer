@@ -1,160 +1,167 @@
 #sc-basemap-main-container {
-  left: auto;
-  top: 56px;
-  right: 7px;
-  height: 33px;
-  position: absolute;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  opacity: 0.6;
-  border-radius: 4px;
-  display: table;
-  z-index: 2;
-  width:92px;
-  -webkit-transition: opacity 0.2s ease-in-out;
-  -moz-transition: opacity 0.2s ease-in-out;
-  -ms-transition: opacity 0.2s ease-in-out;
-  -o-transition: opacity 0.2s ease-in-out;
-  transition: opacity 0.2s ease-in-out;
+	left: auto;
+	top: 56px;
+	right: 7px;
+	height: 33px;
+	position: absolute;
+	background-color: #fff;
+	border: 1px solid #ccc;
+	opacity: 0.6;
+	border-radius: 4px;
+	display: table;
+	z-index: 2;
+	width: 92px;
+	-webkit-transition: opacity 0.2s ease-in-out;
+	-moz-transition: opacity 0.2s ease-in-out;
+	-ms-transition: opacity 0.2s ease-in-out;
+	-o-transition: opacity 0.2s ease-in-out;
+	transition: opacity 0.2s ease-in-out;
 }
 #sc-basemap-main-container:hover {
-  opacity: 1;
+	opacity: 1;
 }
 
 .sc-basemap-collapse-button {
-  display: table-cell;
-  background-image: url(./images/tab-close.png);
-  background-position: center center;
-  background-repeat: no-repeat;
-  color: #999;
-  min-width: 20px !important;
-  cursor: pointer;
-  border-right: 1px solid #ccc;
+	display: table-cell;
+	background-image: url(./images/tab-close.png);
+	background-position: center center;
+	background-repeat: no-repeat;
+	color: #999;
+	min-width: 20px !important;
+	cursor: pointer;
+	border-right: 1px solid #ccc;
 }
 .sc-basemap-collapse-button.closed {
-  background-image: url(./images/tab-open.png);
+	background-image: url(./images/tab-open.png);
 }
 
-
 .sc-basemap-arrow {
-  width: 100%;
-  min-height: unset!important;
-  background-image: url(./images/arrow-down.png) !important;
-  background-position: center center !important;
-  background-repeat: no-repeat !important;
-  position: absolute;
-  bottom: 0;
+	width: 100%;
+	min-height: unset !important;
+	background-image: url(./images/arrow-down.png) !important;
+	background-position: center center !important;
+	background-repeat: no-repeat !important;
+	position: absolute;
+	bottom: 0;
 }
 
 .sc-basemap-arrow.open {
-  -webkit-transform: scaleY(-1);
-  transform: scaleY(-1);
+	-webkit-transform: scaleY(-1);
+	transform: scaleY(-1);
 }
 
 .sc-basemap-topo {
-  height: 103px;
+	height: 103px;
 }
 .sc-basemap-topo-container {
-  right: 8px;
-  width: 92px;
-  /* height: 280px; */
-  top: 160px;
-  background-color: #fff;
-  border-radius: 4px;
-  position: absolute;
-  user-select: none;
-  opacity: 0.9;
-  font-size: 9pt;
-  z-index:1;
-  border: 1px solid #ccc;
+	right: 8px;
+	width: 92px;
+	/* height: 280px; */
+	top: 160px;
+	background-color: #fff;
+	border-radius: 4px;
+	position: absolute;
+	user-select: none;
+	opacity: 0.9;
+	font-size: 9pt;
+	z-index: 1;
+	border: 1px solid #ccc;
 }
 
 .sc-basemap-topo-item-container {
-  text-align: center;
-  border-bottom: 1px solid #ccc;
-  padding-bottom: 5px;
-  user-select: none;
-  font-weight: bold;
+	text-align: center;
+	border-bottom: 1px solid #ccc;
+	padding-bottom: 5px;
+	user-select: none;
+	font-weight: bold;
 }
-.sc-basemap-topo-toggle-item-container{
-  text-align: center;
-  border-bottom: none;
-  padding-bottom: 0px;
-  user-select: none;
-  font-size: 12px;
-  min-height: 89px;
-  max-height: 89px;
+.sc-basemap-topo-toggle-item-container {
+	text-align: center;
+	border-bottom: none;
+	padding-bottom: 0px;
+	user-select: none;
+	font-size: 12px;
+	min-height: 89px;
+	max-height: 89px;
 }
 .sc-basemap-topo-item-title {
-  width:90%;
-  padding-left: 5%;
-  padding-right: 5%;
-  text-align: center;
+	width: 90%;
+	padding-left: 5%;
+	padding-right: 5%;
+	text-align: center;
 }
-.sc-basemap-topo-toggle-item-container img{
-  border: none;
+.sc-basemap-topo-toggle-item-container img {
+	border: none;
 }
 .sc-basemap-topo-item-container:hover {
-  background: linear-gradient(to bottom, rgba(240, 249, 255, 1) 0%, rgb(191, 214, 228) 100%);
-  border: 1px solid #90b5d5;
+	background: linear-gradient(
+		to bottom,
+		rgba(240, 249, 255, 1) 0%,
+		rgb(191, 214, 228) 100%
+	);
+	border: 1px solid #90b5d5;
 }
 
 .sc-basemap-topo-item-container.active {
-  background: linear-gradient(to bottom, rgba(240, 249, 255, 1) 0%, rgb(191, 214, 228) 100%);
-  border: 1px solid #90b5d5;
+	background: linear-gradient(
+		to bottom,
+		rgba(240, 249, 255, 1) 0%,
+		rgb(191, 214, 228) 100%
+	);
+	border: 1px solid #90b5d5;
 }
 
 .sc-basemap-topo-image {
-  width: 70px;
-  border: 1px solid #ccc;
-  /* margin-left: 4px; */
+	width: 70px;
+	border: 1px solid #ccc;
+	/* margin-left: 4px; */
 }
 
 .sc-basemap-streets-label {
-  display: block;
-  font-size: 10pt;
-  margin-left: 11px;
-  padding-bottom: 5px;
-  padding-top: 7px;
+	display: block;
+	font-size: 10pt;
+	margin-left: 11px;
+	padding-bottom: 5px;
+	padding-top: 7px;
 }
 
 .sc-basemap-streets-checkbox {
-  width: 13px;
-  height: 13px;
-  padding: 0;
-  margin: 0;
-  vertical-align: middle;
-  position: relative;
-  top: -1px;
-  *overflow: hidden;
-  transform: scale(1.1, 1.1);
+	width: 13px;
+	height: 13px;
+	padding: 0;
+	margin: 0;
+	vertical-align: middle;
+	position: relative;
+	top: -1px;
+	*overflow: hidden;
+	transform: scale(1.1, 1.1);
 }
 
 .sc-basemap-topo-label {
-  display: block;
-  font-size: 10pt;
-  margin-left: 14px;
-  padding-bottom: 5px;
-  padding-top: 7px;
+	display: block;
+	font-size: 10pt;
+	margin-left: 14px;
+	padding-bottom: 5px;
+	padding-top: 7px;
 }
 
 .sc-basemap-topo-checkbox {
-  width: 13px;
-  height: 13px;
-  padding: 0;
-  margin: 0;
-  vertical-align: middle;
-  position: relative;
-  top: -1px;
-  *overflow: hidden;
-  transform: scale(1.1, 1.1);
+	width: 13px;
+	height: 13px;
+	padding: 0;
+	margin: 0;
+	vertical-align: middle;
+	position: relative;
+	top: -1px;
+	*overflow: hidden;
+	transform: scale(1.1, 1.1);
 }
 
 @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
-  .sc-basemap-main-container {
-    /* right: 20px; */
-  }
-  .sc-basemap-imagery-slider-container {
-    right: 75px;
-  }
+	.sc-basemap-main-container {
+		/* right: 20px; */
+	}
+	.sc-basemap-imagery-slider-container {
+		right: 75px;
+	}
 }

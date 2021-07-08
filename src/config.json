@@ -1,282 +1,354 @@
 {
-  "headerLogoImageName": "logo.png",
-  "title": "Interactive Map - County of Simcoe (GIS)",
-  "originUrl": "https://opengis.simcoe.ca",
-  "feedbackUrl": "https://opengis.simcoe.ca/feedback",
-  "geoserverUrl": "https://opengis.simcoe.ca/geoserver/",
-  "geoserverPath": "geoserver",
-  "printUrl": "https://opengis.simcoe.ca/print/",
-  "includeAppStats": true,
-  "htmlIdentify": false,
-  "leftClickIdentify": false,
-  "excludeIdentifyTitleName": false,
-  "showFeedbackMessageOnStartup": false,
-  "showWhatsNewOnStartup": false,
-  "showWhatsNewPopupOnStartup": true,
-  "googleAnalyticsID": "UA-3104541-53",
-  "appStatsUrl": "https://opengis.simcoe.ca/api/appStats/",
-  "apiUrl": "https://opengis.simcoe.ca/api/",
-  "apiUrlDev": "http://localhost:8085/",
-  "termsUrl": "https://maps.simcoe.ca/terms.html",
-  "whatsNewUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/WhatsNew/2021-03-22",
-  "helpUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer",
-  "ieWarningUrl": "https://opengis.simcoe.ca/public/ieWarning.html",
-  "propertyReportUrl": "https://maps.simcoe.ca/giswebapi/api/propertyreport",
-  "weatherRadarApiUrl": "https://maps.simcoe.ca/giswebapi/api/Weather/getRadarImages/",
-  "parcelLayer": {
-    "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
-    "rollNumberFieldName": "ARN"
-  },
-  "centerCoords": [-8878504.68, 5543492.45],
-  "defaultZoom": 10,
-  "maxZoom": 20,
-  "imageViewerUrl": "",
-  "controls": {
-    "rotate": true,
-    "fullScreen": true,
-    "zoomInOut": true,
-    "currentLocation": true,
-    "zoomExtent": true,
-    "scale": true,
-    "scaleLine": true,
-    "basemap": true
-  },
-  "mapTheme": "SIMCOE_COUNTY",
-  "showFloatingMenuHeader": false,
-  "showLoadingScreens": false,
-  "storageKeys": {
-    "SearchHistory": "searchHistory",
-    "Draw": "myMaps",
-    "URLDontShowAgain": "sc_dontshowagain"
-  },
-  "onlyStandardCursor": true,
-  "restrictOriginForUrlWindow": false,
-  "rightClickMenuVisibility": {
-    "sc-floating-menu-basic-mode": true,
-    "sc-floating-menu-property-click": true,
-    "sc-floating-menu-add-mymaps": true,
-    "sc-floating-menu-save-map-extent": true,
-    "sc-floating-menu-report-problem": true,
-    "sc-floating-menu-identify": true,
-    "sc-floating-menu-google-maps": false,
-    "sc-floating-menu-more": true
-  },
-  "tocType": "LIST",
-  "wmsGeoJsonTemplate": "https://maps.simcoe.ca/ESRIWMSTemplates/featureinfo_application_geojson.xsl",
-  
-  "sidebarToolComponents": [
-    {
-      "id": 1,
-      "name": "Measure",
-      "componentName": "Measure",
-      "description": "This tool will allow for the measurement of distance and areas in various units.",
-      "imageName": "measure.png"
-    },
-    {
-      "id": 2,
-      "name": "Coordinates",
-      "componentName": "Coordinates",
-      "description": "Get coordinates throughout the map in a variety of different coordinate systems.",
-      "imageName": "coordinates.png"
-    },
-    {
-      "id": 3,
-      "name": "Print",
-      "componentName": "Print",
-      "description": "This tool allows users to print their map view in a variety of formats such as pdf and jpeg.",
-      "imageName": "print.png"
-    },
-    {
-      "id": 9,
-      "name": "Add Data",
-      "componentName": "AddLayer",
-      "description": "Add data to your map by importing layers for multiple sources.",
-      "imageName": "addlayer.png",
-      "helpLink":"https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Tools/AddData/"
-    },
-    {
-      "id": 4,
-      "name": "Search Addresses",
-      "componentName": "SearchAddresses",
-      "description": "This tool allows you to search Addresses.",
-      "imageName": "searchAddresses.png"
-    },
-    {
-      "id": 5,
-      "name": "Search History",
-      "componentName": "SearchHistory",
-      "description": "This tool provides users with a list of their 25 most recent searches.",
-      "imageName": "searchHistory.png"
-    },
-    {
-      "id": 6,
-      "name": "Lot And Concession",
-      "componentName": "LotAndConcession",
-      "description": "This tool allows you to search Lot and Concessions.",
-      "imageName": "lotAndConcession.png"
-    },
-    {
-      "id": 7,
-      "name": "External Services (Street View)",
-      "componentName": "ExternalServices",
-      "description": "This tool links a map location to many other External Map Services.",
-      "imageName": "externalServices.png"
+	"useMapConfigApi": true,
+	"mapId": "",
+	"headerLogoImageName": "logo.png",
+	"title": "Interactive Map - County of Simcoe (GIS)",
+	"originUrl": "https://opengis.simcoe.ca",
+	"feedbackUrl": "https://opengis.simcoe.ca/feedback",
+	"geoserverUrl": "https://opengis.simcoe.ca/geoserver/",
+	"geoserverPath": "geoserver",
+	"printUrl": "https://opengis.simcoe.ca/print/",
+	"includeAppStats": true,
+	"htmlIdentify": false,
+	"leftClickIdentify": false,
+	"excludeIdentifyTitleName": false,
+	"showFeedbackMessageOnStartup": false,
+	"showWhatsNewOnStartup": false,
+	"showWhatsNewPopupOnStartup": true,
+	"showTermsOnStartup": true,
+	"googleAnalyticsID": "UA-3104541-53",
+	"appStatsUrl": "https://opengis.simcoe.ca/api/appStats/",
+	"apiUrl": "https://opengis.simcoe.ca/api/",
+	"apiUrlDev": "http://localhost:8085/",
+	"termsUrl": "https://maps.simcoe.ca/terms.html",
+	"whatsNewUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/WhatsNew/2021-03-22",
+	"helpUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer",
+	"ieWarningUrl": "https://opengis.simcoe.ca/public/ieWarning.html",
+	"propertyReportUrl": "https://maps.simcoe.ca/giswebapi/api/propertyreport",
+	"weatherRadarApiUrl": "https://maps.simcoe.ca/giswebapi/api/Weather/getRadarImages/",
+	"parcelLayer": {
+		"url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
+		"rollNumberFieldName": "ARN"
+	},
+	"centerCoords": [-8878504.68, 5543492.45],
+	"defaultZoom": 10,
+	"maxZoom": 20,
+	"controls": {
+		"rotate": true,
+		"fullScreen": true,
+		"zoomInOut": true,
+		"currentLocation": true,
+		"zoomExtent": true,
+		"scale": true,
+		"scaleLine": true,
+		"basemap": true
+	},
+	"mapTheme": "SIMCOE_COUNTY",
+	"showFloatingMenuHeader": false,
+	"showLoadingScreens": false,
+	"storageKeys": {
+		"SearchHistory": "searchHistory",
+		"Draw": "myMaps",
+		"URLDontShowAgain": "sc_dontshowagain"
+	},
+	"onlyStandardCursor": true,
+	"restrictOriginForUrlWindow": false,
+	"rightClickMenuVisibility": {
+		"sc-floating-menu-basic-mode": true,
+		"sc-floating-menu-property-click": true,
+		"sc-floating-menu-add-mymaps": true,
+		"sc-floating-menu-save-map-extent": true,
+		"sc-floating-menu-report-problem": true,
+		"sc-floating-menu-identify": true,
+		"sc-floating-menu-google-maps": false,
+		"sc-floating-menu-more": true
+	},
 
-    },
-    {
-      "id": 8,
-      "name": "Weather",
-      "componentName": "Weather",
-      "description": "Radar and Weather forecast from Environment Canada.",
-      "imageName": "weather.png"
-    },
-    {
-      "id": 10,
-      "name": "Settings",
-      "componentName": "Settings",
-      "description": "Customize for your preferences",
-      "imageName": "settings.png"
-    }
-  ],
+	"toc": {
+		"tocType": "LIST",
+		"geoserverLayerGroupsUrl": "",
+		"geoserverLayerGroupsUrlType": "group",
+		"esriServiceUrl": "",
+		"default_group": "All_Layers_Public",
+		"sources": [
+			{
+				"group": {
+					"name": "Popular",
+					"displayName": "Popular",
+					"visibleLayers": ["simcoe:Assessment Parcel"]
+				},
+				"layerUrl": "https://opengis.simcoe.ca/geoserver/simcoe/Popular/ows?service=wms&version=1.3.0&request=GetCapabilities",
+				"secure": false,
+				"primary": false,
+				"urlType": "root",
+				"type": "geoserver"
+			},
+			{
+				"group": {
+					"name": "Historical",
+					"displayName": "Historical",
+					"visibleLayers": []
+				},
+				"layerUrl": "https://opengis.simcoe.ca/geoserver/simcoe/Historical/ows?service=wms&version=1.3.0&request=GetCapabilities",
+				"secure": false,
+				"primary": false,
+				"urlType": "root",
+				"type": "geoserver"
+			},
+			{
+				"group": {
+					"name": "All_Layers_Public",
+					"displayName": "All Layers Public",
+					"visibleLayers": ["simcoe:Assessment Parcel"]
+				},
+				"layerUrl": "https://opengis.simcoe.ca/geoserver/simcoe/All_Layers_Public/ows?service=wms&version=1.3.0&request=GetCapabilities",
+				"secure": false,
+				"primary": true,
+				"urlType": "root",
+				"type": "geoserver"
+			},
+			{
+				"group": {
+					"name": "Topo_Overlay",
+					"displayName": "Topo Overlay",
+					"visibleLayers": []
+				},
+				"layerUrl": "https://opengis.simcoe.ca/geoserver/simcoe/Topo_Overlay/ows?service=wms&version=1.3.0&request=GetCapabilities",
+				"secure": false,
+				"primary": false,
+				"urlType": "root",
+				"type": "geoserver"
+			}
+		],
+		"helpLink": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers",
+		"layerInfoURL": "https://opengis.simcoe.ca/layerInfo/?URL="
+	},
+	"wmsGeoJsonTemplate": "https://maps.simcoe.ca/ESRIWMSTemplates/featureinfo_application_geojson.xsl",
 
-  "sidebarThemeComponents": [
-    {
-      "id": 1,
-      "name": "Solid Waste Facilities",
-      "componentName": "SolidWasteFacilities",
-      "description": "Provides information about waste facilities, and information as to where to purchase bag tags.",
-      "imageName": "solidWasteFacilities.png",
-      "config": "./configSolidWasteFacilities.json"
-    },
-    {
-      "id": 2,
-      "name": "Forestry",
-      "componentName": "Forestry",
-      "description": "View County Forests and Recreation features, conservation, provincial and municipal parks.",
-      "imageName": "forestry.png",
-      "config": "./configForestry.json"
-    },
-    {
-      "id": 3,
-      "name": "Local Real Estate",
-      "componentName": "LocalRealEstate",
-      "description": "View listings by categories and view photos for the listing with the option to link to the Realtor.ca listing",
-      "imageName": "localrealestate.png"
-    },
-    {
-      "id": 4,
-      "name": "Road Construction",
-      "componentName": "RoadConstruction",
-      "description": "View this year's road and bridge construction locations.",
-      "imageName": "roadsConstruction.png",
-      "disable": true
-    },
-    {
-      "id": 5,
-      "name": "Child Care Facilities",
-      "componentName": "ChildCareFacilities",
-      "description": "Provide users with a list of Child care facilities as well as additional information about each facility.",
-      "imageName": "childCareFacilities.png",
-      "secure": false
-    },
-    {
-      "id": 6,
-      "name": "Immigration Services",
-      "componentName": "ImmigrationServices",
-      "description": "Explore resources to help newcomers to the County.",
-      "imageName": "immigrationServices.png",
-      "secure": false
-    },
-    {
-      "id": 7,
-      "name": "Commercial Real Estate",
-      "componentName": "CommercialRealEstate",
-      "description": "Search commercial real estate throughout the County of Simcoe.",
-      "imageName": "commercialRealEstate.png"
-    },
-    {
-      "id": 8,
-      "name": "211 Community Services",
-      "componentName": "TwoOneOne",
-      "description": "Explore 211 Community Services across the County of Simcoe.",
-      "imageName": "communityServices.png"
-    }
-  ],
-  "sidebarShortcutParams": [
-    {
-      "url_param":"BAGTAG",
-      "type":"themes",
-      "component": "Solid Waste Facilities"
-    },
-    {
-      "url_param":"MLS",
-      "type":"themes",
-      "component": "Local Real Estate"
-    },
-    {
-      "url_param":"LANDFILL",
-      "type":"themes",
-      "component": "Solid Waste Facilities"
-    },
-    {
-      "url_param":"MUNI",
-      "type":"search",
-      "component": "Municipality"
-    },
-    {
-      "url_param":"THEME",
-      "matchValue":"Solid Waste Management",
-      "type":"themes",
-      "component": "Solid Waste Facilities"
-    },
-    {
-      "url_param":"THEME",
-      "matchValue":"solidwaste",
-      "type":"themes",
-      "component": "Solid Waste Facilities"
-    },
-    {
-      "url_param":"THEME",
-      "matchValue":"Economic Development",
-      "type":"themes",
-      "component": "Commercial Real Estate"
-    },
-    {
-      "url_param":"THEME",
-      "matchValue":"Commercial Real Estate Search",
-      "type":"themes",
-      "component": "Commercial Real Estate"
-    },
-    {
-      "url_param":"THEME",
-      "matchValue":"Community Services",
-      "type":"themes",
-      "component": "211 Community Services"
-    },
-    {
-      "url_param":"THEME",
-      "matchValue":"BESTSTART",
-      "type":"themes",
-      "component": "211 Community Services"
-    },
-    {
-      "url_param":"THEME",
-      "matchValue":"REALESTATE",
-      "type":"themes",
-      "component": "Local Real Estate"
-    },
-    {
-      "url_param":"THEME",
-      "matchValue":"Immigration Support Services",
-      "type":"themes",
-      "component": "Immigration Services"
-    },
-    {
-      "url_param":"THEME",
-      "matchValue":"Forestry and Recreation",
-      "type":"themes",
-      "component": "Forestry"
-    }
-    
-  ]
+	"sidebarToolComponents": [
+		{
+			"id": 1,
+			"name": "Measure",
+			"componentName": "Measure",
+			"description": "This tool will allow for the measurement of distance and areas in various units.",
+			"imageName": "measure.png"
+		},
+		{
+			"id": 2,
+			"name": "Coordinates",
+			"componentName": "Coordinates",
+			"description": "Get coordinates throughout the map in a variety of different coordinate systems.",
+			"imageName": "coordinates.png"
+		},
+		{
+			"id": 3,
+			"name": "Print",
+			"componentName": "Print",
+			"description": "This tool allows users to print their map view in a variety of formats such as pdf and jpeg.",
+			"imageName": "print.png"
+		},
+		{
+			"id": 9,
+			"name": "Add Data",
+			"componentName": "AddLayer",
+			"description": "Add data to your map by importing layers for multiple sources.",
+			"imageName": "addlayer.png",
+			"helpLink": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Tools/AddData/"
+		},
+		{
+			"id": 4,
+			"name": "Search Addresses",
+			"componentName": "SearchAddresses",
+			"description": "This tool allows you to search Addresses.",
+			"imageName": "searchAddresses.png"
+		},
+		{
+			"id": 5,
+			"name": "Search History",
+			"componentName": "SearchHistory",
+			"description": "This tool provides users with a list of their 25 most recent searches.",
+			"imageName": "searchHistory.png"
+		},
+		{
+			"id": 6,
+			"name": "Lot And Concession",
+			"componentName": "LotAndConcession",
+			"description": "This tool allows you to search Lot and Concessions.",
+			"imageName": "lotAndConcession.png"
+		},
+		{
+			"id": 7,
+			"name": "External Services (Street View)",
+			"componentName": "ExternalServices",
+			"description": "This tool links a map location to many other External Map Services.",
+			"imageName": "externalServices.png"
+		},
+		{
+			"id": 8,
+			"name": "Weather",
+			"componentName": "Weather",
+			"description": "Radar and Weather forecast from Environment Canada.",
+			"imageName": "weather.png"
+		},
+		{
+			"id": 10,
+			"name": "Settings",
+			"componentName": "Settings",
+			"description": "Customize for your preferences",
+			"imageName": "settings.png"
+		}
+	],
+
+	"sidebarThemeComponents": [
+		{
+			"id": 1,
+			"name": "Solid Waste Facilities",
+			"componentName": "SolidWasteFacilities",
+			"description": "Provides information about waste facilities, and information as to where to purchase bag tags.",
+			"imageName": "solidWasteFacilities.png",
+			"config": "./configSolidWasteFacilities.json"
+		},
+		{
+			"id": 2,
+			"name": "Forestry",
+			"componentName": "Forestry",
+			"description": "View County Forests and Recreation features, conservation, provincial and municipal parks.",
+			"imageName": "forestry.png",
+			"config": "./configForestry.json"
+		},
+		{
+			"id": 3,
+			"name": "Local Real Estate",
+			"componentName": "LocalRealEstate",
+			"description": "View listings by categories and view photos for the listing with the option to link to the Realtor.ca listing",
+			"imageName": "localrealestate.png"
+		},
+		{
+			"id": 4,
+			"name": "Road Construction",
+			"componentName": "RoadConstruction",
+			"description": "View this year's road and bridge construction locations.",
+			"imageName": "roadsConstruction.png",
+			"disable": true
+		},
+		{
+			"id": 5,
+			"name": "Child Care Facilities",
+			"componentName": "ChildCareFacilities",
+			"description": "Provide users with a list of Child care facilities as well as additional information about each facility.",
+			"imageName": "childCareFacilities.png",
+			"secure": false
+		},
+		{
+			"id": 6,
+			"name": "Immigration Services",
+			"componentName": "ImmigrationServices",
+			"description": "Explore resources to help newcomers to the County.",
+			"imageName": "immigrationServices.png",
+			"secure": false
+		},
+		{
+			"id": 7,
+			"name": "Commercial Real Estate",
+			"componentName": "CommercialRealEstate",
+			"description": "Search commercial real estate throughout the County of Simcoe.",
+			"imageName": "commercialRealEstate.png"
+		},
+		{
+			"id": 8,
+			"name": "211 Community Services",
+			"componentName": "TwoOneOne",
+			"description": "Explore 211 Community Services across the County of Simcoe.",
+			"imageName": "communityServices.png"
+		}
+	],
+	"sidebarShortcutParams": [
+		{
+			"id": 1,
+			"url_param": "BAGTAG",
+			"type": "themes",
+			"component": "Solid Waste Facilities"
+		},
+		{
+			"id": 2,
+			"url_param": "MLS",
+			"type": "themes",
+			"component": "Local Real Estate"
+		},
+		{
+			"id": 3,
+			"url_param": "LANDFILL",
+			"type": "themes",
+			"component": "Solid Waste Facilities"
+		},
+		{
+			"id": 4,
+			"url_param": "MUNI",
+			"type": "search",
+			"component": "Municipality"
+		},
+		{
+			"id": 5,
+			"url_param": "THEME",
+			"matchValue": "Solid Waste Management",
+			"type": "themes",
+			"component": "Solid Waste Facilities"
+		},
+		{
+			"id": 6,
+			"url_param": "THEME",
+			"matchValue": "solidwaste",
+			"type": "themes",
+			"component": "Solid Waste Facilities"
+		},
+		{
+			"id": 7,
+			"url_param": "THEME",
+			"matchValue": "Economic Development",
+			"type": "themes",
+			"component": "Commercial Real Estate"
+		},
+		{
+			"id": 8,
+			"url_param": "THEME",
+			"matchValue": "Commercial Real Estate Search",
+			"type": "themes",
+			"component": "Commercial Real Estate"
+		},
+		{
+			"id": 9,
+			"url_param": "THEME",
+			"matchValue": "Community Services",
+			"type": "themes",
+			"component": "211 Community Services"
+		},
+		{
+			"id": 10,
+			"url_param": "THEME",
+			"matchValue": "BESTSTART",
+			"type": "themes",
+			"component": "211 Community Services"
+		},
+		{
+			"id": 11,
+			"url_param": "THEME",
+			"matchValue": "REALESTATE",
+			"type": "themes",
+			"component": "Local Real Estate"
+		},
+		{
+			"id": 12,
+			"url_param": "THEME",
+			"matchValue": "Immigration Support Services",
+			"type": "themes",
+			"component": "Immigration Services"
+		},
+		{
+			"id": 13,
+			"url_param": "THEME",
+			"matchValue": "Forestry and Recreation",
+			"type": "themes",
+			"component": "Forestry"
+		}
+	]
 }

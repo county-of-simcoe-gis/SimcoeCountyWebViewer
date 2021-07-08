@@ -18,7 +18,6 @@ import FloatingMenu, {
 } from "../../../helpers/FloatingMenu.jsx";
 import Portal from "../../../helpers/Portal.jsx";
 import Identify from "../../../map/Identify.jsx";
-import mainConfig from "../../../config.json";
 import myMapsConfig from "./myMapsConfig.json";
 
 // OPEN LAYERS
@@ -36,6 +35,7 @@ import { getLength } from "ol/sphere.js";
 import * as shpWrite from "shp-write";
 
 const feedbackTemplate = (
+	feedbackUrl,
 	xmin,
 	xmax,
 	ymin,
@@ -46,15 +46,16 @@ const feedbackTemplate = (
 	myMapsId,
 	featureId
 ) =>
-	`${mainConfig.feedbackUrl}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True&MY_MAPS_ID=${myMapsId}&MY_MAPS_FEATURE_ID=${featureId}`;
+	`${feedbackUrl}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True&MY_MAPS_ID=${myMapsId}&MY_MAPS_FEATURE_ID=${featureId}`;
 
 class MyMaps extends Component {
 	constructor(props) {
 		super(props);
-
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			this.storageKey = window.config.storageKeys.Draw;
+		});
 		// PROPS
 		this.layerName = "local:myMaps";
-		this.storageKey = mainConfig.storageKeys.Draw;
 		this.vectorSource = null;
 		this.vectorLayer = null;
 		this.draw = null;
@@ -968,30 +969,40 @@ class MyMaps extends Component {
 	onReportProblem = (id) => {
 		drawingHelpers.exportMyMaps((result) => {
 			// APP STATS
-			helpers.addAppStat("Report Problem", "My Maps Toolbox");
+			helpers.waitForLoad("settings", Date.now(), 30, () => {
+				helpers.addAppStat("Report Problem", "My Maps Toolbox");
 
-			const scale = helpers.getMapScale();
-			const extent = window.map.getView().calculateExtent(window.map.getSize());
-			const xmin = extent[0];
-			const xmax = extent[1];
-			const ymin = extent[2];
-			const ymax = extent[3];
-			const center = window.map.getView().getCenter();
+				const scale = helpers.getMapScale();
+				const extent = window.map
+					.getView()
+					.calculateExtent(window.map.getSize());
+				const xmin = extent[0];
+				const xmax = extent[1];
+				const ymin = extent[2];
+				const ymax = extent[3];
+				const center = window.map.getView().getCenter();
 
-			const feedbackUrl = feedbackTemplate(
-				xmin,
-				xmax,
-				ymin,
-				ymax,
-				center[0],
-				center[1],
-				scale,
-				result.id,
-				id
-			);
+				let feedbackUrl = feedbackTemplate(
+					window.config.feedbackUrl,
+					xmin,
+					xmax,
+					ymin,
+					ymax,
+					center[0],
+					center[1],
+					scale,
+					result.id,
+					id
+				);
+				if (
+					window.config.mapId !== null &&
+					window.config.mapId !== undefined &&
+					window.config.mapId.trim() !== ""
+				)
+					feedbackUrl += "&MAP_ID=" + window.config.mapId;
 
-			console.log(feedbackUrl);
-			helpers.showURLWindow(feedbackUrl, false, "full");
+				helpers.showURLWindow(feedbackUrl, false, "full");
+			});
 		}, id);
 	};
 

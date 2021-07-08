@@ -1,29 +1,29 @@
 .sc-mymaps-item-container {
-  /* margin-left: 5px; */
-  margin-right: 5px;
-  padding: 0px !important;
+	/* margin-left: 5px; */
+	margin-right: 5px;
+	padding: 0px !important;
 }
 
 .sc-mymaps-items-container-list {
-  position: absolute;
-  top: 135px;
-  bottom: 45px;
-  overflow: auto;
-  width: 99%;
+	position: absolute;
+	top: 135px;
+	bottom: 45px;
+	overflow: auto;
+	width: 99%;
 }
 
 .sc-mymaps-items-container-header-editing {
-  position: absolute;
-  right: 16px;
-  top: 112px;
-  font-weight: bold;
-  color: forestgreen;
+	position: absolute;
+	right: 16px;
+	top: 112px;
+	font-weight: bold;
+	color: forestgreen;
 }
 @media only screen and (max-width: 770px) {
-  /* .sc-mymaps-items-container-list {
+	/* .sc-mymaps-items-container-list {
     width: 100%;
   } */
-  /* .sc-mymaps-item-container-item-text-input {
+	/* .sc-mymaps-item-container-item-text-input {
     margin-left: 0px;
   } */
 }

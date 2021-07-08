@@ -1,32 +1,36 @@
 .sc-tool-external-services-container {
-  padding: 5px;
-  position: absolute;
-  top: 107px;
-  bottom: 0px;
-  overflow-y: auto;
+	padding: 5px;
+	position: absolute;
+	top: 107px;
+	bottom: 0px;
+	overflow-y: auto;
 }
 
 .sc-tool-external-services-item-header {
-  vertical-align: middle;
-  font-size: 18px;
-  padding: 5px;
-  /* border-bottom: 1px solid #ddd; */
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+	vertical-align: middle;
+	font-size: 18px;
+	padding: 5px;
+	/* border-bottom: 1px solid #ddd; */
+	background: linear-gradient(
+		to bottom,
+		rgba(255, 255, 255, 1) 0%,
+		rgba(229, 229, 229, 1) 100%
+	);
 }
 
 .sc-tool-external-services-item-image {
-  vertical-align: middle;
-  padding-right: 5px;
+	vertical-align: middle;
+	padding-right: 5px;
 }
 
 .sc-tool-external-services-item-link {
-  padding: 5px;
-  padding-left: 32px;
-  background-image: url(./images/arrow_curve.gif);
-  background-repeat: no-repeat;
-  background-position: 10px center;
+	padding: 5px;
+	padding-left: 32px;
+	background-image: url(./images/arrow_curve.gif);
+	background-repeat: no-repeat;
+	background-position: 10px center;
 }
 
 .sc-tool-external-services-item-group {
-  margin-top: 10px;
+	margin-top: 10px;
 }

@@ -1,128 +1,132 @@
 .sc-floating-image-slider-container {
-  background-color: white;
-  position: absolute;
-  top: 103px;
-  right: 10px;
-  /* width: 200px;
+	background-color: white;
+	position: absolute;
+	top: 103px;
+	right: 10px;
+	/* width: 200px;
   height: 200px; */
-  border-radius: 4px;
-  border: rgba(229, 229, 229, 1);
-  border-width: 1px;
-  border-style: solid;
+	border-radius: 4px;
+	border: rgba(229, 229, 229, 1);
+	border-width: 1px;
+	border-style: solid;
 }
 
 .sc-floating-image-slider-header {
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
-  text-align: center;
-  border: rgba(229, 229, 229, 1);
-  border-width: 1px;
-  border-style: solid;
-  font-weight: bold;
-  color: dimgrey;
-  padding: 3px;
+	background: linear-gradient(
+		to bottom,
+		rgba(255, 255, 255, 1) 0%,
+		rgba(229, 229, 229, 1) 100%
+	);
+	text-align: center;
+	border: rgba(229, 229, 229, 1);
+	border-width: 1px;
+	border-style: solid;
+	font-weight: bold;
+	color: dimgrey;
+	padding: 3px;
 }
 
 .sc-floating-image-slider-image-container {
-  margin-top: 2px;
-  text-align: center;
-  position: absolute;
-  left: 0px;
-  right: 0px;
-  top: 0px;
-  /* height: 50%; */
+	margin-top: 2px;
+	text-align: center;
+	position: absolute;
+	left: 0px;
+	right: 0px;
+	top: 0px;
+	/* height: 50%; */
 }
 
 .sc-floating-image-slider-details {
-  margin-top: 2px;
-  position: absolute;
-  left: 7px;
-  right: 0px;
-  /* top: 54%; */
-  text-align: left;
-  text-align: initial;
-  bottom: 10px;
-  /* height: 37%; */
+	margin-top: 2px;
+	position: absolute;
+	left: 7px;
+	right: 0px;
+	/* top: 54%; */
+	text-align: left;
+	text-align: initial;
+	bottom: 10px;
+	/* height: 37%; */
 }
 
 .sc-floating-image-slider-image-left-arrow {
-  width: 40px;
-  position: absolute;
-  top: 37%;
-  left: 3%;
-  cursor: pointer;
+	width: 40px;
+	position: absolute;
+	top: 37%;
+	left: 3%;
+	cursor: pointer;
 }
 .sc-floating-image-slider-image-right-arrow {
-  width: 40px;
-  position: absolute;
-  top: 37%;
-  right: 3%;
-  cursor: pointer;
+	width: 40px;
+	position: absolute;
+	top: 37%;
+	right: 3%;
+	cursor: pointer;
 }
 .sc-floating-image-slider-image {
-  margin: auto;
-  width: 93%;
-  /* max-height: 70%; */
-  min-height: 115px;
-  height: 100%;
+	margin: auto;
+	width: 93%;
+	/* max-height: 70%; */
+	min-height: 115px;
+	height: 100%;
 }
 .sc-floating-image-slider-star {
-  position: relative;
-  right: 12px;
-  top: 2px;
+	position: relative;
+	right: 12px;
+	top: 2px;
 }
 
 .sc-floating-image-slider-address {
-  font-family: Arial, Helvetica, sans-serif;
+	font-family: Arial, Helvetica, sans-serif;
 }
 .sc-floating-image-slider-closer {
-  position: relative;
-  right: 35px;
-  background-color: white;
-  padding-left: 5px;
-  padding-right: 5px;
-  padding-bottom: 2px;
-  padding-top: 5px;
-  cursor: pointer;
-  border-radius: 4px;
-  width: 26px;
-  bottom: 91px;
+	position: relative;
+	right: 35px;
+	background-color: white;
+	padding-left: 5px;
+	padding-right: 5px;
+	padding-bottom: 2px;
+	padding-top: 5px;
+	cursor: pointer;
+	border-radius: 4px;
+	width: 26px;
+	bottom: 91px;
 }
 .sc-floating-image-slider-closer.closed {
-  top: 103px;
-  right: 7px;
+	top: 103px;
+	right: 7px;
 }
 
 .sc-floating-image-slider-arrow-left {
-  padding-bottom: 8px;
-  padding-right: 5px;
+	padding-bottom: 8px;
+	padding-right: 5px;
 }
 
 .sc-floating-image-slider-opener {
-  position: absolute;
-  top: 105px;
-  right: 11px;
-  background-color: white;
-  border-radius: 4px;
-  border: rgba(229, 229, 229, 1);
-  border-width: 1px;
-  border-style: solid;
-  cursor: pointer;
-  height: 36px;
+	position: absolute;
+	top: 105px;
+	right: 11px;
+	background-color: white;
+	border-radius: 4px;
+	border: rgba(229, 229, 229, 1);
+	border-width: 1px;
+	border-style: solid;
+	cursor: pointer;
+	height: 36px;
 }
 
 .sc-floating-image-slider-image-and-details-container {
-  height: 93%;
-  position: absolute;
-  top: 27px;
-  bottom: 0px;
-  width: 100%;
-  text-align: center;
-  display: grid;
+	height: 93%;
+	position: absolute;
+	top: 27px;
+	bottom: 0px;
+	width: 100%;
+	text-align: center;
+	display: grid;
 }
 
 .sc-floating-image-slider-close-icon {
-  position: absolute;
-  top: 5px;
-  right: 7px;
-  cursor: pointer;
+	position: absolute;
+	top: 5px;
+	right: 7px;
+	cursor: pointer;
 }

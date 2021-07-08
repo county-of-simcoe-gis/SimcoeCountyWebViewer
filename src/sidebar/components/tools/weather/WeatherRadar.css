@@ -1,92 +1,92 @@
 .sc-tool-weather-radar-container {
-  position: absolute;
-  top: 141px;
-  bottom: 0px;
-  overflow-y: auto;
-  width: 365px;
-  overflow-x: hidden;
+	position: absolute;
+	top: 141px;
+	bottom: 0px;
+	overflow-y: auto;
+	width: 365px;
+	overflow-x: hidden;
 }
 .sc-tool-weather-slider-container {
-  display: inline-table;
+	display: inline-table;
 }
 
 .sc-tool-weather-radar-button {
-  display: table-cell;
-  margin-right: 7px;
+	display: table-cell;
+	margin-right: 7px;
 }
 .sc-tool-weather-slider {
-  display: table-cell;
-  width: 300px;
+	display: table-cell;
+	width: 300px;
 }
 
 .sc-tool-weather-radar-label {
-  position: absolute;
-  left: 92px;
-  top: 51px;
-  font-size: 10pt;
+	position: absolute;
+	left: 92px;
+	top: 51px;
+	font-size: 10pt;
 }
 
 .sc-tool-weather-opacity {
-  position: absolute;
-  top: 334px;
-  left: 157px;
-  font-size: 10pt;
-  color: darkgrey;
+	position: absolute;
+	top: 334px;
+	left: 157px;
+	font-size: 10pt;
+	color: darkgrey;
 }
 
 .sc-tool-weather-time-container {
-  margin-top: 10px;
-  margin-bottom: 5px;
+	margin-top: 10px;
+	margin-bottom: 5px;
 }
 
 .sc-tool-weather-radar-footer {
-  margin-top: 10px;
-  display: inline-table;
-  text-align: center;
+	margin-top: 10px;
+	display: inline-table;
+	text-align: center;
 }
 
 .sc-tool-weather-radar-rain {
-  display: table-cell;
+	display: table-cell;
 }
 .sc-tool-weather-radar-winter {
-  display: table-cell;
+	display: table-cell;
 }
 
 .sc-tool-weather-radar-credits {
-  margin-top: 8px;
-  text-align: center;
+	margin-top: 8px;
+	text-align: center;
 }
 
 .sc-tool-weather-date-container {
-  display: inline-table;
+	display: inline-table;
 }
 
 .sc-tool-weather-date-container[type="checkbox"] {
-  width: 200px;
+	width: 200px;
 }
 
 .sc-tool-weather-date-input {
-  width: 200px;
+	width: 200px;
 }
 
 .sc-tool-weather-radar-refresh-container {
-  font-size: 11pt;
-  margin-bottom: 5px;
-  margin-top: 5px;
+	font-size: 11pt;
+	margin-bottom: 5px;
+	margin-top: 5px;
 }
 
 .sc-tool-weather-radar-update-button {
-  position: absolute;
-  top: 143px;
-  right: 6px;
+	position: absolute;
+	top: 143px;
+	right: 6px;
 }
 
 .sc-tool-weather-radar-loading {
-  position: relative;
-  top: 49px;
-  right: 25px;
+	position: relative;
+	top: 49px;
+	right: 25px;
 }
 
 .react-datepicker-popper {
-  z-index: 9999 !important;
+	z-index: 9999 !important;
 }

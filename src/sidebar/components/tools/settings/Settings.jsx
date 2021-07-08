@@ -23,8 +23,8 @@ class Settings extends Component {
 	}
 
 	componentDidMount() {
-		// LISTEN FOR MAP TO MOUNT
-		window.emitter.addListener("mapLoaded", () => this.onMapLoad());
+		//wait for map to load
+		helpers.waitForLoad("map", Date.now(), 30, () => this.onMapLoad());
 
 		if (window.mapControls !== undefined) {
 			this.setState({
@@ -55,10 +55,6 @@ class Settings extends Component {
 
 	glowContainers(container) {
 		helpers.glowContainer(container);
-	}
-
-	componentWillUnmount() {
-		window.emitter.addListener("mapLoaded", () => this.onMapLoad());
 	}
 
 	onClose() {
