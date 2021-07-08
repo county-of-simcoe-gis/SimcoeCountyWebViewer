@@ -10,10 +10,7 @@ export default class ColorPicker {
 
 		this.documentClick = (evt) => {
 			const e = document.elementFromPoint(evt.pageX, evt.pageY);
-			if (
-				evt.target.id !== this.callerId &&
-				e.getAttribute("spellcheck") === null
-			) {
+			if (evt.target.id !== this.callerId && e.getAttribute("spellcheck") === null) {
 				this.hide();
 			}
 		};
@@ -25,10 +22,7 @@ export default class ColorPicker {
 	}
 
 	show() {
-		if (document.getElementById("sc-color-picker-container") !== null)
-			document
-				.getElementById("sc-color-picker-container")
-				.classList.remove("sc-hidden");
+		if (document.getElementById("sc-color-picker-container") !== null) document.getElementById("sc-color-picker-container").classList.remove("sc-hidden");
 
 		const portalStyle = {
 			position: "absolute",
@@ -49,10 +43,7 @@ export default class ColorPicker {
 	}
 
 	hide() {
-		if (document.getElementById("sc-color-picker-container") !== null)
-			document
-				.getElementById("sc-color-picker-container")
-				.classList.add("sc-hidden");
+		if (document.getElementById("sc-color-picker-container") !== null) document.getElementById("sc-color-picker-container").classList.add("sc-hidden");
 
 		document.body.removeEventListener("click", this.clickHandler);
 	}

@@ -6,9 +6,7 @@ import "rc-slider/assets/index.css";
 
 import * as helpers from "../../../../helpers/helpers";
 import Portal from "../../../../helpers/Portal.jsx";
-import FloatingMenu, {
-	FloatingMenuItem,
-} from "../../../../helpers/FloatingMenu.jsx";
+import FloatingMenu, { FloatingMenuItem } from "../../../../helpers/FloatingMenu.jsx";
 import * as TOCHelpers from "./TOCHelpers.jsx";
 import LayerInfoApp from "../../../../layerInfo/App";
 
@@ -32,10 +30,7 @@ class LayerOptionsMenu extends Component {
 	};
 
 	zoomToVisibleScale = (layerInfo) => {
-		const scales = [
-			1155581, 577791, 288895, 144448, 72224, 36112, 18056, 9028, 4514, 2257,
-			1128, 564,
-		];
+		const scales = [1155581, 577791, 288895, 144448, 72224, 36112, 18056, 9028, 4514, 2257, 1128, 564];
 
 		const scale = helpers.getMapScale();
 		let minScale = 0;
@@ -44,10 +39,7 @@ class LayerOptionsMenu extends Component {
 		if (layerInfo.maxScale !== undefined) maxScale = layerInfo.maxScale;
 
 		if (scale >= minScale && scale <= maxScale) {
-			helpers.showMessage(
-				"Zoom to Visible Scale",
-				"Layer is already visible at this scale."
-			);
+			helpers.showMessage("Zoom to Visible Scale", "Layer is already visible at this scale.");
 			return;
 		}
 
@@ -76,65 +68,30 @@ class LayerOptionsMenu extends Component {
 	onMenuItemClick = (action, layerInfo) => {
 		switch (action) {
 			case "sc-floating-menu-metadata":
-				if (
-					layerInfo.metadataUrl === undefined ||
-					layerInfo.metadataUrl === null
-				)
-					return;
-				if (layerInfo.metadataUrl.endsWith("f=json"))
-					helpers.showURLWindow(
-						window.config.toc.layerInfoURL + layerInfo.metadataUrl
-					);
+				if (layerInfo.metadataUrl === undefined || layerInfo.metadataUrl === null) return;
+				if (layerInfo.metadataUrl.endsWith("f=json")) helpers.showURLWindow(window.config.toc.layerInfoURL + layerInfo.metadataUrl);
 				else
 					TOCHelpers.getLayerInfo(layerInfo, (result) => {
 						if (helpers.isMobile()) {
 							window.emitter.emit("setSidebarVisiblity", "CLOSE");
-							helpers.showWindow(
-								<LayerInfoApp
-									layerURL={result.featureType.fullUrl}
-									params={result.requestParams}
-								/>,
-								false,
-								"normal",
-								false
-							);
+							helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} />, false, "normal", false);
 						} else {
-							helpers.showWindow(
-								<LayerInfoApp
-									layerURL={result.featureType.fullUrl}
-									params={result.requestParams}
-								/>,
-								false,
-								"normal",
-								false
-							);
+							helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} />, false, "normal", false);
 						}
 					});
 				helpers.addAppStat("Metadata", layerInfo.name);
 				break;
 			case "sc-floating-menu-zoom-to-layer":
-				if (
-					layerInfo.metadataUrl !== undefined &&
-					layerInfo.metadataUrl !== null
-				) {
+				if (layerInfo.metadataUrl !== undefined && layerInfo.metadataUrl !== null) {
 					TOCHelpers.getLayerInfo(layerInfo, (result) => {
 						const boundingBox = result.featureType.nativeBoundingBox;
-						const extent = [
-							boundingBox.minx,
-							boundingBox.miny,
-							boundingBox.maxx,
-							boundingBox.maxy,
-						];
-						window.map
-							.getView()
-							.fit(extent, window.map.getSize(), { duration: 1000 });
+						const extent = [boundingBox.minx, boundingBox.miny, boundingBox.maxx, boundingBox.maxy];
+						window.map.getView().fit(extent, window.map.getSize(), { duration: 1000 });
 					});
 				} else {
 					const layerExtent = layerInfo.layer.getSource().getExtent();
 					if (layerExtent !== undefined) {
-						window.map
-							.getView()
-							.fit(layerExtent, window.map.getSize(), { duration: 1000 });
+						window.map.getView().fit(layerExtent, window.map.getSize(), { duration: 1000 });
 					}
 				}
 				break;
@@ -145,50 +102,19 @@ class LayerOptionsMenu extends Component {
 				this.props.onRemoveLayer(layerInfo.name, layerInfo.group, () => {});
 				break;
 			case "sc-floating-menu-attribute-table":
-				if (layerInfo.noAttributeTable)
-					helpers.showMessage(
-						"Table",
-						"Attribute table disabled for this layer."
-					);
-				else
-					window.emitter.emit(
-						"openAttributeTable",
-						layerInfo.serverUrl,
-						layerInfo.name
-					);
+				if (layerInfo.noAttributeTable) helpers.showMessage("Table", "Attribute table disabled for this layer.");
+				else window.emitter.emit("openAttributeTable", layerInfo.serverUrl, layerInfo.name);
 				break;
 			case "sc-floating-menu-download":
 				TOCHelpers.getLayerInfo(layerInfo, (result) => {
-					if (result.featureType.name === "Assessment Parcel")
-						helpers.showMessage(
-							"Download",
-							"Parcels are not available for download"
-						);
+					if (result.featureType.name === "Assessment Parcel") helpers.showMessage("Download", "Parcels are not available for download");
 					else {
 						helpers.addAppStat("Download", layerInfo.name);
 						if (helpers.isMobile()) {
 							window.emitter.emit("setSidebarVisiblity", "CLOSE");
-							helpers.showWindow(
-								<LayerInfoApp
-									layerURL={result.featureType.fullUrl}
-									params={result.requestParams}
-									showDownload={1}
-								/>,
-								false,
-								"normal",
-								false
-							);
+							helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} showDownload={1} />, false, "normal", false);
 						} else {
-							helpers.showWindow(
-								<LayerInfoApp
-									layerURL={result.featureType.fullUrl}
-									params={result.requestParams}
-									showDownload={1}
-								/>,
-								false,
-								"normal",
-								false
-							);
+							helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} showDownload={1} />, false, "normal", false);
 						}
 					}
 				});
@@ -208,18 +134,11 @@ class LayerOptionsMenu extends Component {
 					buttonEvent={evtClone}
 					autoY={true}
 					//item={this.props.info}
-					onMenuItemClick={(action) =>
-						this.onMenuItemClick(action, this.props.layerInfo)
-					}
+					onMenuItemClick={(action) => this.onMenuItemClick(action, this.props.layerInfo)}
 					styleMode={helpers.isMobile() ? "left" : "right"}
 				>
 					<MenuItem
-						className={
-							this.props.layerInfo.metadataUrl !== undefined &&
-							this.props.layerInfo.metadataUrl !== null
-								? "sc-floating-menu-toolbox-menu-item"
-								: "sc-hidden"
-						}
+						className={this.props.layerInfo.metadataUrl !== undefined && this.props.layerInfo.metadataUrl !== null ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"}
 						key="sc-floating-menu-metadata"
 					>
 						<FloatingMenuItem imageName={"metadata.png"} label="Metadata" />
@@ -236,9 +155,7 @@ class LayerOptionsMenu extends Component {
 					}
 					<MenuItem
 						className={
-							(this.props.layerInfo.metadataUrl !== undefined &&
-								this.props.layerInfo.metadataUrl !== null) ||
-							this.props.layerInfo.layer instanceof VectorLayer
+							(this.props.layerInfo.metadataUrl !== undefined && this.props.layerInfo.metadataUrl !== null) || this.props.layerInfo.layer instanceof VectorLayer
 								? "sc-floating-menu-toolbox-menu-item"
 								: "sc-hidden"
 						}
@@ -247,33 +164,13 @@ class LayerOptionsMenu extends Component {
 						<FloatingMenuItem imageName={"zoom-in.png"} label="Zoom to Layer" />
 					</MenuItem>
 
-					<MenuItem
-						className="sc-floating-menu-toolbox-menu-item"
-						key="sc-floating-menu-zoom-to-layer-visible"
-					>
-						<FloatingMenuItem
-							imageName={"zoom-in.png"}
-							label="Zoom to Visible Scale"
-						/>
+					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoom-to-layer-visible">
+						<FloatingMenuItem imageName={"zoom-in.png"} label="Zoom to Visible Scale" />
 					</MenuItem>
-					<MenuItem
-						className={
-							this.props.layerInfo.canDownload
-								? "sc-floating-menu-toolbox-menu-item"
-								: "sc-hidden"
-						}
-						key="sc-floating-menu-download"
-					>
+					<MenuItem className={this.props.layerInfo.canDownload ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-download">
 						<FloatingMenuItem imageName={"download.png"} label="Download" />
 					</MenuItem>
-					<MenuItem
-						className={
-							this.props.layerInfo.layer.get("userLayer")
-								? "sc-floating-menu-toolbox-menu-item"
-								: "sc-hidden"
-						}
-						key="sc-floating-menu-remove-layer"
-					>
+					<MenuItem className={this.props.layerInfo.layer.get("userLayer") ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-remove-layer">
 						<FloatingMenuItem imageName={"eraser.png"} label="Remove Layer" />
 					</MenuItem>
 					<MenuItem className="sc-layers-slider" key="sc-floating-menu-opacity">
@@ -285,9 +182,7 @@ class LayerOptionsMenu extends Component {
 							step={0.05}
 							defaultValue={this.props.layerInfo.opacity}
 							onChange={(evt) => this.onSliderChange(evt, this.props.layerInfo)}
-							onAfterChange={(evt) =>
-								this.onSliderAfterChange(evt, this.props.layerInfo)
-							}
+							onAfterChange={(evt) => this.onSliderAfterChange(evt, this.props.layerInfo)}
 						/>
 					</MenuItem>
 				</FloatingMenu>

@@ -21,14 +21,10 @@ class CommercialRealEstateSearch extends Component {
 		};
 
 		this.types = CommercialRealEstateSearchObjects.getTypes();
-		this.buildingSpaceFromItems =
-			CommercialRealEstateSearchObjects.getBuildingSpaceFromItems();
-		this.buildingSpaceToItems =
-			CommercialRealEstateSearchObjects.getBuildingSpaceToItems();
-		this.landSizeFromItems =
-			CommercialRealEstateSearchObjects.getLandSizeFromItems();
-		this.landSizeToItems =
-			CommercialRealEstateSearchObjects.getLandSizeToItems();
+		this.buildingSpaceFromItems = CommercialRealEstateSearchObjects.getBuildingSpaceFromItems();
+		this.buildingSpaceToItems = CommercialRealEstateSearchObjects.getBuildingSpaceToItems();
+		this.landSizeFromItems = CommercialRealEstateSearchObjects.getLandSizeFromItems();
+		this.landSizeToItems = CommercialRealEstateSearchObjects.getLandSizeToItems();
 		this.priceFromItems = CommercialRealEstateSearchObjects.getPriceFromItems();
 		this.priceToItems = CommercialRealEstateSearchObjects.getPriceToItems();
 	}
@@ -58,56 +54,33 @@ class CommercialRealEstateSearch extends Component {
 
 	render() {
 		return (
-			<Tabs
-				forceRenderTabPanel={true}
-				selectedIndex={this.props.activeTab}
-				onSelect={this.props.onTabSelect}
-			>
+			<Tabs forceRenderTabPanel={true} selectedIndex={this.props.activeTab} onSelect={this.props.onTabSelect}>
 				<TabList>
 					<Tab id="tab-search-search">
-						<CommercialRealEstateSearchTab
-							imageName="search-10x10.png"
-							name="Search"
-						/>
+						<CommercialRealEstateSearchTab imageName="search-10x10.png" name="Search" />
 					</Tab>
 					<Tab id="tab-search-myresults">
-						<CommercialRealEstateSearchTab
-							imageName="results-10x10.gif"
-							name="My Results"
-						/>
+						<CommercialRealEstateSearchTab imageName="results-10x10.gif" name="My Results" />
 					</Tab>
 				</TabList>
 
 				<TabPanel id="tab-layers-content-search-search">
 					<div className="sc-theme-commercial-realestate-search-container">
-						<CommercialRealEstateSearchPropTypes
-							onLayerCheckboxClick={this.props.onLayerCheckboxClick}
-							layers={this.props.layers}
-						/>
-						<CommercialRealEstateSearchType
-							onTypeDropDownChange={this.props.onTypeDropDownChange}
-							types={this.types}
-							selectedType={this.props.selectedType}
-						/>
+						<CommercialRealEstateSearchPropTypes onLayerCheckboxClick={this.props.onLayerCheckboxClick} layers={this.props.layers} />
+						<CommercialRealEstateSearchType onTypeDropDownChange={this.props.onTypeDropDownChange} types={this.types} selectedType={this.props.selectedType} />
 						<CommercialRealEstateSearchBuildingSpace
 							visible={this.props.searchType === "BuildingSize" ? true : false}
-							onBuildingSpaceFromDropDownChange={
-								this.props.onBuildingSpaceFromDropDownChange
-							}
+							onBuildingSpaceFromDropDownChange={this.props.onBuildingSpaceFromDropDownChange}
 							selectedBuildingSpaceFrom={this.props.selectedBuildingSpaceFrom}
 							buildingSpaceFromItems={this.buildingSpaceFromItems}
-							onBuildingSpaceToDropDownChange={
-								this.props.onBuildingSpaceToDropDownChange
-							}
+							onBuildingSpaceToDropDownChange={this.props.onBuildingSpaceToDropDownChange}
 							buildingSpaceToItems={this.buildingSpaceToItems}
 							selectedBuildingSpaceTo={this.props.selectedBuildingSpaceTo}
 							onSwitchSearchType={this.props.onSwitchSearchType}
 						/>
 						<CommercialRealEstateSearchLandSize
 							visible={this.props.searchType === "LandSize" ? true : false}
-							onLandSizeFromDropDownChange={
-								this.props.onLandSizeFromDropDownChange
-							}
+							onLandSizeFromDropDownChange={this.props.onLandSizeFromDropDownChange}
 							selectedLandSizeFrom={this.props.selectedLandSizeFrom}
 							landSizeFromItems={this.landSizeFromItems}
 							onLandSizeToDropDownChange={this.props.onLandSizeToDropDownChange}
@@ -125,33 +98,20 @@ class CommercialRealEstateSearch extends Component {
 						/>
 						<div className="sc-border-bottom" style={{ height: "43px" }}>
 							<label>
-								<input
-									type="checkbox"
-									onChange={this.props.onIncentiveChange}
-									readOnly
-								/>
+								<input type="checkbox" onChange={this.props.onIncentiveChange} readOnly />
 								Only search properties with incentives
 							</label>
 							<label style={{ float: "left" }}>
-								<input
-									type="checkbox"
-									onChange={this.props.onOnlyInMapChange}
-									readOnly
-								/>
+								<input type="checkbox" onChange={this.props.onOnlyInMapChange} readOnly />
 								Only search properties visible in map
 							</label>
 						</div>
 
 						<div className="sc-theme-commercial-real-estate-footer">
-							<button
-								className="sc-button sc-button-highlight sc-theme-commercial-real-estate-view-properties-button"
-								onClick={this.props.onViewPropertiesClick}
-							>
+							<button className="sc-button sc-button-highlight sc-theme-commercial-real-estate-view-properties-button" onClick={this.props.onViewPropertiesClick}>
 								View Properties
 							</button>
-							<label className="sc-theme-commercial-real-estate-result-label">
-								{this.props.numRecords + " results"}
-							</label>
+							<label className="sc-theme-commercial-real-estate-result-label">{this.props.numRecords + " results"}</label>
 						</div>
 						{/* <div style={{ display: "table-cell", verticalAlign: "top" }} />
 
@@ -162,11 +122,7 @@ class CommercialRealEstateSearch extends Component {
 					</div>
 				</TabPanel>
 				<TabPanel id="tab-layers-content-search-myresults">
-					<CommercialRealEstateResults
-						key={helpers.getUID()}
-						results={this.props.results}
-						onTabSelect={this.props.onTabSelect}
-					/>
+					<CommercialRealEstateResults key={helpers.getUID()} results={this.props.results} onTabSelect={this.props.onTabSelect} />
 				</TabPanel>
 			</Tabs>
 
@@ -238,9 +194,7 @@ const CommercialRealEstateSearchTab = (props) => {
 };
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

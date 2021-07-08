@@ -28,8 +28,7 @@ class ShowTerms extends Component {
 
 	getClassName = () => {
 		if (this.state.hide) return "sc-hidden";
-		else if (window.sidebarOpen)
-			return "sc-show-terms-container " + this.state.color;
+		else if (window.sidebarOpen) return "sc-show-terms-container " + this.state.color;
 		else return "sc-show-terms-container closed " + this.state.color;
 	};
 
@@ -40,25 +39,15 @@ class ShowTerms extends Component {
 				<div id="sc-show-terms-container" className={style}>
 					<div className="sc-show-terms-title">{this.props.title}</div>
 					<div className="sc-show-terms-content">{this.props.message}</div>
-					<div
-						className={
-							this.props.url !== "" ? "sc-show-terms-url" : "sc-hidden"
-						}
-					>
+					<div className={this.props.url !== "" ? "sc-show-terms-url" : "sc-hidden"}>
 						<a href={this.props.url} rel="noopener noreferrer" target="_blank">
 							{this.props.title}
 						</a>
 					</div>
-					<button
-						className="sc-button sc-show-terms-accept-button"
-						onClick={this.onAcceptClick}
-					>
+					<button className="sc-button sc-show-terms-accept-button" onClick={this.onAcceptClick}>
 						Accept
 					</button>
-					<button
-						className="sc-button sc-show-terms-decline-button"
-						onClick={this.onDeclineClick}
-					>
+					<button className="sc-button sc-show-terms-decline-button" onClick={this.onDeclineClick}>
 						Decline
 					</button>
 				</div>

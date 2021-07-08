@@ -86,67 +86,38 @@ class Settings extends Component {
 		}
 
 		//EMIT CHANGE NOTICE FOR ITEMS IN THE NAVIGATION PANEL
-		window.emitter.emit(
-			"mapControlsChanged",
-			"fullExtent",
-			this.state.controlZoomExtent
-		);
-		window.emitter.emit(
-			"mapControlsChanged",
-			"zoomToCurrentLocation",
-			this.state.controlCurrentLocation
-		);
+		window.emitter.emit("mapControlsChanged", "fullExtent", this.state.controlZoomExtent);
+		window.emitter.emit("mapControlsChanged", "zoomToCurrentLocation", this.state.controlCurrentLocation);
 		//EMIT CHANGE NOTICE FOR ITEMS IN THE FOOTER PANEL
 		window.emitter.emit("mapControlsChanged", "scale", this.state.controlScale);
 		//EMIT CHANGE NOTICE FOR BASEMAP SWITCHER
-		window.emitter.emit(
-			"mapControlsChanged",
-			"basemap",
-			this.state.controlBasemap
-		);
+		window.emitter.emit("mapControlsChanged", "basemap", this.state.controlBasemap);
 		//EMIT CHANGE NOTICE FOR ADDITIONAL ITEMS
-		window.emitter.emit(
-			"mapControlsChanged",
-			"fullscreen",
-			this.state.controlFullScreen
-		);
+		window.emitter.emit("mapControlsChanged", "fullscreen", this.state.controlFullScreen);
 		helpers.saveToStorage(this.storageKeyMapControls, window.mapControls);
 	};
 
 	clearLocalData = (key) => {
 		if (key === "ALL") {
 			localStorage.clear();
-			helpers.showMessage(
-				"Local Data Cleared",
-				"Your local data has been cleared. Page will now reload."
-			);
+			helpers.showMessage("Local Data Cleared", "Your local data has been cleared. Page will now reload.");
 			setTimeout(() => {
 				window.location.reload();
 			}, 2000);
 		} else {
 			localStorage.removeItem(key);
-			helpers.showMessage(
-				"Local Data Removed",
-				"Your local data has been cleared. You may need to reload your page to see any changes."
-			);
+			helpers.showMessage("Local Data Removed", "Your local data has been cleared. You may need to reload your page to see any changes.");
 		}
 	};
 
 	render() {
 		return (
-			<PanelComponent
-				onClose={this.props.onClose}
-				name={this.props.name}
-				helpLink={this.props.helpLink}
-				type="tools"
-			>
+			<PanelComponent onClose={this.props.onClose} name={this.props.name} helpLink={this.props.helpLink} type="tools">
 				<div className="sc-settings-container">
 					<div className="sc-container">
 						<div className="sc-description">Set your personal preferences.</div>
 						<div className="sc-settings-divider" />
-						<div
-							className={settingsConfig.showControlSettings ? "" : "sc-hidden"}
-						>
+						<div className={settingsConfig.showControlSettings ? "" : "sc-hidden"}>
 							<div className="sc-title sc-settings-title">VISIBLE CONTROLS</div>
 							<div className="sc-container">
 								<div className="sc-settings-row sc-arrow">
@@ -158,13 +129,9 @@ class Settings extends Component {
 											className="sc-settings-checkbox"
 											checked={this.state.controlRotate}
 											onChange={() => {
-												this.setState(
-													{ controlRotate: !this.state.controlRotate },
-													() => {
-														window.mapControls.rotate =
-															this.state.controlRotate;
-													}
-												);
+												this.setState({ controlRotate: !this.state.controlRotate }, () => {
+													window.mapControls.rotate = this.state.controlRotate;
+												});
 											}}
 										/>
 									</span>
@@ -178,13 +145,9 @@ class Settings extends Component {
 											className="sc-settings-checkbox"
 											checked={this.state.controlFullScreen}
 											onChange={() => {
-												this.setState(
-													{ controlFullScreen: !this.state.controlFullScreen },
-													() => {
-														window.mapControls.fullScreen =
-															this.state.controlFullScreen;
-													}
-												);
+												this.setState({ controlFullScreen: !this.state.controlFullScreen }, () => {
+													window.mapControls.fullScreen = this.state.controlFullScreen;
+												});
 											}}
 										/>
 									</span>
@@ -198,13 +161,9 @@ class Settings extends Component {
 											className="sc-settings-checkbox"
 											checked={this.state.controlZoomInOut}
 											onChange={() => {
-												this.setState(
-													{ controlZoomInOut: !this.state.controlZoomInOut },
-													() => {
-														window.mapControls.zoomInOut =
-															this.state.controlZoomInOut;
-													}
-												);
+												this.setState({ controlZoomInOut: !this.state.controlZoomInOut }, () => {
+													window.mapControls.zoomInOut = this.state.controlZoomInOut;
+												});
 											}}
 										/>
 									</span>
@@ -220,12 +179,10 @@ class Settings extends Component {
 											onChange={() => {
 												this.setState(
 													{
-														controlCurrentLocation:
-															!this.state.controlCurrentLocation,
+														controlCurrentLocation: !this.state.controlCurrentLocation,
 													},
 													() => {
-														window.mapControls.currentLocation =
-															this.state.controlCurrentLocation;
+														window.mapControls.currentLocation = this.state.controlCurrentLocation;
 													}
 												);
 											}}
@@ -241,13 +198,9 @@ class Settings extends Component {
 											className="sc-settings-checkbox"
 											checked={this.state.controlZoomExtent}
 											onChange={() => {
-												this.setState(
-													{ controlZoomExtent: !this.state.controlZoomExtent },
-													() => {
-														window.mapControls.zoomExtent =
-															this.state.controlZoomExtent;
-													}
-												);
+												this.setState({ controlZoomExtent: !this.state.controlZoomExtent }, () => {
+													window.mapControls.zoomExtent = this.state.controlZoomExtent;
+												});
 											}}
 										/>
 									</span>
@@ -261,12 +214,9 @@ class Settings extends Component {
 											className="sc-settings-checkbox"
 											checked={this.state.controlScale}
 											onChange={() => {
-												this.setState(
-													{ controlScale: !this.state.controlScale },
-													() => {
-														window.mapControls.scale = this.state.controlScale;
-													}
-												);
+												this.setState({ controlScale: !this.state.controlScale }, () => {
+													window.mapControls.scale = this.state.controlScale;
+												});
 											}}
 										/>
 									</span>
@@ -280,13 +230,9 @@ class Settings extends Component {
 											className="sc-settings-checkbox"
 											checked={this.state.controlScaleLine}
 											onChange={() => {
-												this.setState(
-													{ controlScaleLine: !this.state.controlScaleLine },
-													() => {
-														window.mapControls.scaleLine =
-															this.state.controlScaleLine;
-													}
-												);
+												this.setState({ controlScaleLine: !this.state.controlScaleLine }, () => {
+													window.mapControls.scaleLine = this.state.controlScaleLine;
+												});
 											}}
 										/>
 									</span>
@@ -300,23 +246,15 @@ class Settings extends Component {
 											className="sc-settings-checkbox"
 											checked={this.state.controlBasemap}
 											onChange={() => {
-												this.setState(
-													{ controlBasemap: !this.state.controlBasemap },
-													() => {
-														window.mapControls.basemap =
-															this.state.controlBasemap;
-													}
-												);
+												this.setState({ controlBasemap: !this.state.controlBasemap }, () => {
+													window.mapControls.basemap = this.state.controlBasemap;
+												});
 											}}
 										/>
 									</span>
 								</div>
 								<div className="sc-float-right">
-									<button
-										name="applyControlSettings"
-										className="sc-button"
-										onClick={this.applyControlSettings}
-									>
+									<button name="applyControlSettings" className="sc-button" onClick={this.applyControlSettings}>
 										Save/Apply
 									</button>
 								</div>
@@ -327,22 +265,13 @@ class Settings extends Component {
 						<div className="sc-title sc-settings-title">LOCAL STORAGE</div>
 						<div className="sc-container">
 							<div className="sc-settings-row sc-arrow">
-								<button
-									name="clearLocalStorage"
-									title="Clear all cached settings and reload the page."
-									className="sc-button"
-									onClick={() => this.clearLocalData("ALL")}
-								>
+								<button name="clearLocalStorage" title="Clear all cached settings and reload the page." className="sc-button" onClick={() => this.clearLocalData("ALL")}>
 									Clear All Saved Data
 								</button>
 							</div>
 							<div className="sc-settings-divider" />
 							{Object.keys(localStorage).map((key) => (
-								<ClearLocalStorageButton
-									key={helpers.getUID()}
-									storageKey={key}
-									clearLocalData={this.clearLocalData}
-								/>
+								<ClearLocalStorageButton key={helpers.getUID()} storageKey={key} clearLocalData={this.clearLocalData} />
 							))}
 						</div>
 

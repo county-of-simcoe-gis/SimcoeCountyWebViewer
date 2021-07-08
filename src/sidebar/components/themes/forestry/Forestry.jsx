@@ -16,12 +16,7 @@ class Forestry extends Component {
 
 	render() {
 		return (
-			<PanelComponent
-				onClose={this.props.onClose}
-				name={this.props.name}
-				helpLink={this.props.helpLink}
-				type="themes"
-			>
+			<PanelComponent onClose={this.props.onClose} name={this.props.name} helpLink={this.props.helpLink} type="themes">
 				<ThemeContainer config={config.default}></ThemeContainer>
 			</PanelComponent>
 		);

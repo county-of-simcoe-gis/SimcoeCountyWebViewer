@@ -67,33 +67,11 @@
 
 .sc-measure-button-bar {
 	background: rgb(255, 255, 255);
-	background: -moz-linear-gradient(
-		top,
-		rgba(255, 255, 255, 1) 0%,
-		rgba(229, 229, 229, 1) 100%
-	);
-	background: -webkit-gradient(
-		linear,
-		left top,
-		left bottom,
-		color-stop(0%, rgba(255, 255, 255, 1)),
-		color-stop(100%, rgba(229, 229, 229, 1))
-	);
-	background: -webkit-linear-gradient(
-		top,
-		rgba(255, 255, 255, 1) 0%,
-		rgba(229, 229, 229, 1) 100%
-	);
-	background: -o-linear-gradient(
-		top,
-		rgba(255, 255, 255, 1) 0%,
-		rgba(229, 229, 229, 1) 100%
-	);
-	background: linear-gradient(
-		to bottom,
-		rgba(255, 255, 255, 1) 0%,
-		rgba(229, 229, 229, 1) 100%
-	);
+	background: -moz-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, rgba(255, 255, 255, 1)), color-stop(100%, rgba(229, 229, 229, 1)));
+	background: -webkit-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+	background: -o-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+	background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
 	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#e5e5e5',GradientType=0 );
 	padding: 4px;
 	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.2);
@@ -119,12 +97,7 @@
 }
 .sc-measure-button-container.active {
 	background: rgb(242, 245, 246); /* Old browsers */
-	background: -moz-linear-gradient(
-		top,
-		rgba(242, 245, 246, 1) 0%,
-		rgba(227, 234, 237, 1) 37%,
-		rgba(200, 215, 220, 1) 100%
-	); /* FF3.6+ */
+	background: -moz-linear-gradient(top, rgba(242, 245, 246, 1) 0%, rgba(227, 234, 237, 1) 37%, rgba(200, 215, 220, 1) 100%); /* FF3.6+ */
 	background: -webkit-gradient(
 		linear,
 		left top,
@@ -133,30 +106,10 @@
 		color-stop(37%, rgba(227, 234, 237, 1)),
 		color-stop(100%, rgba(200, 215, 220, 1))
 	); /* Chrome,Safari4+ */
-	background: -webkit-linear-gradient(
-		top,
-		rgba(242, 245, 246, 1) 0%,
-		rgba(227, 234, 237, 1) 37%,
-		rgba(200, 215, 220, 1) 100%
-	); /* Chrome10+,Safari5.1+ */
-	background: -o-linear-gradient(
-		top,
-		rgba(242, 245, 246, 1) 0%,
-		rgba(227, 234, 237, 1) 37%,
-		rgba(200, 215, 220, 1) 100%
-	); /* Opera 11.10+ */
-	background: -ms-linear-gradient(
-		top,
-		rgba(242, 245, 246, 1) 0%,
-		rgba(227, 234, 237, 1) 37%,
-		rgba(200, 215, 220, 1) 100%
-	); /* IE10+ */
-	background: linear-gradient(
-		to bottom,
-		rgba(242, 245, 246, 1) 0%,
-		rgba(227, 234, 237, 1) 37%,
-		rgba(200, 215, 220, 1) 100%
-	); /* W3C */
+	background: -webkit-linear-gradient(top, rgba(242, 245, 246, 1) 0%, rgba(227, 234, 237, 1) 37%, rgba(200, 215, 220, 1) 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top, rgba(242, 245, 246, 1) 0%, rgba(227, 234, 237, 1) 37%, rgba(200, 215, 220, 1) 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top, rgba(242, 245, 246, 1) 0%, rgba(227, 234, 237, 1) 37%, rgba(200, 215, 220, 1) 100%); /* IE10+ */
+	background: linear-gradient(to bottom, rgba(242, 245, 246, 1) 0%, rgba(227, 234, 237, 1) 37%, rgba(200, 215, 220, 1) 100%); /* W3C */
 	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f2f5f6', endColorstr='#c8d7dc',GradientType=0 ); /* IE6-9 */
 	border: 1px solid rgb(144, 181, 213);
 	border: 1px solid rgb(151, 195, 232);

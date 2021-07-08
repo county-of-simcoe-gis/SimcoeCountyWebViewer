@@ -1,10 +1,4 @@
-import React, {
-	Component,
-	useState,
-	useEffect,
-	useCallback,
-	useRef,
-} from "react";
+import React, { Component, useState, useEffect, useCallback, useRef } from "react";
 import styled from "styled-components";
 import * as helpers from "./helpers";
 import "./AttributeTableTabs.css";
@@ -22,24 +16,12 @@ class AttributeTableTabs extends Component {
 		if (this.props.items.length === 0) return <div>No items to display.</div>;
 		return (
 			<div>
-				<Tabs
-					forceRenderTabPanel={true}
-					selectedIndex={this.state.tabIndex}
-					onSelect={this.onTabSelect}
-				>
+				<Tabs forceRenderTabPanel={true} selectedIndex={this.state.tabIndex} onSelect={this.onTabSelect}>
 					<TabList>
 						{this.props.items.map((item) => {
 							return (
-								<Tab
-									id={item.name}
-									key={helpers.getUID()}
-									className="sc-attribute-table-tab sc-noselect"
-								>
-									<AttributeTableTabButton
-										key={helpers.getUID()}
-										name={item.name}
-										onTabClose={this.props.onTabClose}
-									/>
+								<Tab id={item.name} key={helpers.getUID()} className="sc-attribute-table-tab sc-noselect">
+									<AttributeTableTabButton key={helpers.getUID()} name={item.name} onTabClose={this.props.onTabClose} />
 								</Tab>
 							);
 						})}
@@ -76,10 +58,7 @@ const AttributeTableTabButton = (props) => {
 	return (
 		<div>
 			{props.name}
-			<div
-				className="sc-attribute-table-close-button-container"
-				onClick={() => props.onTabClose(props.name)}
-			>
+			<div className="sc-attribute-table-close-button-container" onClick={() => props.onTabClose(props.name)}>
 				<div className="sc-attribute-table-close-button-mid">
 					<div className="sc-attribute-table-close-button-mid2" />
 				</div>
@@ -140,18 +119,7 @@ const AttributeTableContent = (props) => {
 	);
 };
 
-const CustomTable = ({
-	columns,
-	data,
-	width,
-	height,
-	onHeaderClick,
-	item,
-	onLoadMoreClick,
-	onLoadAllClick,
-	isLoading,
-	onRowClick,
-}) => {
+const CustomTable = ({ columns, data, width, height, onHeaderClick, item, onLoadMoreClick, onLoadAllClick, isLoading, onRowClick }) => {
 	const id = "sc-attribute-table-tab-" + item.name;
 	// const [loaded, setLoaded] = useState(0);
 
@@ -163,16 +131,15 @@ const CustomTable = ({
 	//   }
 	// }, []);
 
-	const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
-		useTable(
-			{
-				columns,
-				data,
-			},
-			useBlockLayout,
-			useSticky,
-			useResizeColumns
-		);
+	const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = useTable(
+		{
+			columns,
+			data,
+		},
+		useBlockLayout,
+		useSticky,
+		useResizeColumns
+	);
 
 	return (
 		<Styles>
@@ -211,22 +178,14 @@ const CustomTable = ({
 									>
 										{column.render("Header")}
 										{/* Use column.getResizerProps to hook up the events correctly */}
-										<div
-											{...column.getResizerProps()}
-											className={`resizer ${
-												column.isResizing ? "isResizing" : ""
-											}`}
-										/>
+										<div {...column.getResizerProps()} className={`resizer ${column.isResizing ? "isResizing" : ""}`} />
 									</div>
 								))}
 							</div>
 						);
 					})}
 				</div>
-				<div
-					{...getTableBodyProps()}
-					className="body sc-attribute-table-row-content"
-				>
+				<div {...getTableBodyProps()} className="body sc-attribute-table-row-content">
 					{rows.map((row) => {
 						prepareRow(row);
 						return (
@@ -236,11 +195,7 @@ const CustomTable = ({
 									return (
 										<div
 											{...cell.getCellProps()}
-											className={
-												cell.column.Header === "*"
-													? "sc-attribute-table-cell-button td"
-													: "td"
-											}
+											className={cell.column.Header === "*" ? "sc-attribute-table-cell-button td" : "td"}
 											onClick={(evt) => {
 												onRowClick(evt, item, row.index);
 											}}
@@ -277,15 +232,9 @@ const CustomTable = ({
 					>
 						Load All
 					</button>
-					<div
-						className={isLoading ? "sc-attribute-table-loading" : "sc-hidden"}
-					>
+					<div className={isLoading ? "sc-attribute-table-loading" : "sc-hidden"}>
 						<span>Loading...</span>
-						<img
-							src={images["loading20.gif"]}
-							alt="loading"
-							style={{ position: "relative", top: "3px", marginLeft: "3px" }}
-						/>
+						<img src={images["loading20.gif"]} alt="loading" style={{ position: "relative", top: "3px", marginLeft: "3px" }} />
 					</div>
 				</div>
 			</div>
@@ -295,9 +244,7 @@ const CustomTable = ({
 //style={{ width: document.getElementById(id) === null ? 400 : (parseInt(document.getElementById(id).offsetWidth) - 20) } }
 //className="sc-attribute-table-footer"
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

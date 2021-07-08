@@ -43,20 +43,14 @@ class MyMapsItem extends Component {
 
 	// THIS IS REQUIRED WHEN CHANGING LABEL FROM POPUP OR SHOW/HIDE ALL FROM PARENT
 	componentWillReceiveProps(nextProps) {
-		if (nextProps.info.label !== this.state.label)
-			this.setState({ label: nextProps.info.label });
-		if (nextProps.info.visible !== this.state.checked)
-			this.setState({ checked: nextProps.info.visible });
+		if (nextProps.info.label !== this.state.label) this.setState({ label: nextProps.info.label });
+		if (nextProps.info.visible !== this.state.checked) this.setState({ checked: nextProps.info.visible });
 	}
 
 	onMenuItemClick = (action) => {
 		switch (action) {
 			case "sc-floating-menu-buffer":
-				this.props.showDrawingOptionsPopup(
-					drawingHelpers.getFeatureById(this.props.info.id),
-					null,
-					"buffer"
-				);
+				this.props.showDrawingOptionsPopup(drawingHelpers.getFeatureById(this.props.info.id), null, "buffer");
 				break;
 			default:
 				break;
@@ -92,9 +86,7 @@ class MyMapsItem extends Component {
 			});
 
 			var feature = new Feature({
-				geometry: drawingHelpers
-					.getFeatureById(this.props.info.id)
-					.getGeometry(),
+				geometry: drawingHelpers.getFeatureById(this.props.info.id).getGeometry(),
 			});
 
 			this.vectorLayer = new VectorLayer({
@@ -115,19 +107,10 @@ class MyMapsItem extends Component {
 
 	render() {
 		return (
-			<div
-				className="sc-mymaps-item-container"
-				onMouseOver={this.onMouseOver}
-				onMouseOut={this.onMouseOut}
-			>
+			<div className="sc-mymaps-item-container" onMouseOver={this.onMouseOver} onMouseOut={this.onMouseOut}>
 				<div className="sc-mymaps-item-container-item">
 					<div>
-						<input
-							type="checkbox"
-							style={{ verticalAlign: "middle" }}
-							checked={this.state.checked}
-							onChange={this.onItemCheckbox}
-						/>
+						<input type="checkbox" style={{ verticalAlign: "middle" }} checked={this.state.checked} onChange={this.onItemCheckbox} />
 						<button className="sc-button" onClick={this.onItemDelete}>
 							<img src={images["eraser.png"]} alt="eraser" />
 						</button>
@@ -147,20 +130,10 @@ class MyMapsItem extends Component {
 						/>
 					</div>
 					<div className={this.state.checked ? "right" : "right sc-disabled"}>
-						<button
-							className="sc-button"
-							style={{ marginLeft: "15px" }}
-							onClick={this.onSymbolizerClick}
-						>
+						<button className="sc-button" style={{ marginLeft: "15px" }} onClick={this.onSymbolizerClick}>
 							<img src={images["color-picker.png"]} alt="colorpicker" />
 						</button>
-						<button
-							className="sc-button"
-							style={{ marginLeft: "5px" }}
-							onClick={(evt) =>
-								this.props.onMyMapItemToolsButtonClick(evt, this.props.info)
-							}
-						>
+						<button className="sc-button" style={{ marginLeft: "5px" }} onClick={(evt) => this.props.onMyMapItemToolsButtonClick(evt, this.props.info)}>
 							<img src={images["toolbox.png"]} alt="toolbox" />
 						</button>
 					</div>
@@ -173,9 +146,7 @@ class MyMapsItem extends Component {
 export default MyMapsItem;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

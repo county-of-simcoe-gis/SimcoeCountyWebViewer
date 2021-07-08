@@ -39,17 +39,8 @@ const Legend = ({ legendImage, legendObj }) => {
 };
 const LegendItem = ({ legend }) => {
 	return (
-		<li
-			className="sc-toc-item-layer-info-legend-list-item sc-noselect"
-			id={helpers.getUID()}
-			style={{ height: `${legend.height}px` }}
-			title={legend.label}
-		>
-			<img
-				style={{ height: `${legend.height}px`, width: `${legend.width}px` }}
-				src={`data:${legend.contentType};base64,${legend.imageData}`}
-				alt="style"
-			/>
+		<li className="sc-toc-item-layer-info-legend-list-item sc-noselect" id={helpers.getUID()} style={{ height: `${legend.height}px` }} title={legend.label}>
+			<img style={{ height: `${legend.height}px`, width: `${legend.width}px` }} src={`data:${legend.contentType};base64,${legend.imageData}`} alt="style" />
 			<div
 				className="sc-legend-label"
 				style={{

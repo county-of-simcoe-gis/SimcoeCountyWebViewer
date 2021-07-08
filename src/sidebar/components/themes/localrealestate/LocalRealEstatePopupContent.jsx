@@ -19,13 +19,11 @@ const LocalRealEstatePopupContent = (props) => {
 
 	let photosUrl = "";
 	entries.forEach((row) => {
-		if (row[0] === "_mlsno")
-			photosUrl = `${props.photosUrl}TYPE=REALESTATE&ID=${row[1]}`;
+		if (row[0] === "_mlsno") photosUrl = `${props.photosUrl}TYPE=REALESTATE&ID=${row[1]}`;
 	});
 
 	const onPhotosClick = () => {
-		if (window.outerWidth < 1000)
-			helpers.showURLWindow(photosUrl, false, "full");
+		if (window.outerWidth < 1000) helpers.showURLWindow(photosUrl, false, "full");
 		else helpers.showURLWindow(photosUrl, false);
 
 		props.onViewed(feature);
@@ -52,22 +50,14 @@ const LocalRealEstatePopupContent = (props) => {
 			{entries.map((row) => {
 				if (row[0] !== "Address" && row[0] !== "Municipality") return null;
 				if (row[0] !== "geometry" && row[0].substring(0, 1) !== "_") {
-					return (
-						<InfoRow key={helpers.getUID()} value={row[1]} label={row[0]} />
-					);
+					return <InfoRow key={helpers.getUID()} value={row[1]} label={row[0]} />;
 				} else return null;
 			})}
 			<div className="sc-theme-popup-content-button-container">
-				<button
-					className="sc-button sc-theme-popup-content-button"
-					onClick={onPhotosClick}
-				>
+				<button className="sc-button sc-theme-popup-content-button" onClick={onPhotosClick}>
 					Photos
 				</button>
-				<button
-					className="sc-button sc-theme-popup-content-button padded"
-					onClick={onListingClick}
-				>
+				<button className="sc-button sc-theme-popup-content-button padded" onClick={onListingClick}>
 					Listing
 				</button>
 				<button
@@ -86,9 +76,7 @@ const LocalRealEstatePopupContent = (props) => {
 export default LocalRealEstatePopupContent;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

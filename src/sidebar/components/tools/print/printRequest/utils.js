@@ -85,9 +85,7 @@ let extractServiceName = (url) => {
 	let serviceName = "";
 	try {
 		let serviceUrl = url.split("/services/")[1].split("/");
-		let filtered = serviceUrl.filter((e) =>
-			e === "MapServer" || e === "Public" ? false : true
-		);
+		let filtered = serviceUrl.filter((e) => (e === "MapServer" || e === "Public" ? false : true));
 		if (filtered.length === 1) {
 			serviceName = `${filtered[0]}`;
 		}

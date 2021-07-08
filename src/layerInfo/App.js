@@ -6,10 +6,7 @@ import * as helpers from "../helpers/helpers";
 import mainConfig from "./config.json";
 import ReactGA from "react-ga";
 
-if (
-	mainConfig.googleAnalyticsID !== undefined &&
-	mainConfig.googleAnalyticsID !== ""
-) {
+if (mainConfig.googleAnalyticsID !== undefined && mainConfig.googleAnalyticsID !== "") {
 	ReactGA.initialize(mainConfig.googleAnalyticsID);
 	ReactGA.pageview(window.location.pathname + window.location.search);
 }
@@ -18,8 +15,7 @@ if (
 // E.G.  https://opengis.simcoe.ca/geoserver/rest/workspaces/simcoe/datastores/paradise/featuretypes/Railway.json
 
 const url = new URL(window.location.href);
-const downloadTemplate = (serverUrl, workspace, layerName) =>
-	`${serverUrl}wfs?service=wfs&version=1.1.0&request=GetFeature&typeNames=${workspace}:${layerName}&outputFormat=SHAPE-ZIP`;
+const downloadTemplate = (serverUrl, workspace, layerName) => `${serverUrl}wfs?service=wfs&version=1.1.0&request=GetFeature&typeNames=${workspace}:${layerName}&outputFormat=SHAPE-ZIP`;
 const serverUrl = (layerURL) => layerURL.split("rest/")[0];
 
 class LayerInfoApp extends Component {
@@ -43,8 +39,7 @@ class LayerInfoApp extends Component {
 			let layerURL = this.props.layerURL;
 			let showDownload = this.state.showDownload;
 			let params = {};
-			if (this.props.showDownload !== undefined)
-				showDownload = this.props.showDownload;
+			if (this.props.showDownload !== undefined) showDownload = this.props.showDownload;
 			if (this.props.params !== undefined) params = this.props.params;
 			this.setState(
 				{
@@ -67,22 +62,15 @@ class LayerInfoApp extends Component {
 	async getInfo() {
 		if (this.state.layerURL == null) return;
 
-		helpers.getJSONWithParams(
-			this.state.layerURL,
-			this.state.params,
-			(response) => {
-				if (response.featureType === undefined) {
-					response["featureType"] = this.parseArcGisFeature(
-						response,
-						(result) => {
-							this.setState({ layerInfo: result });
-						}
-					);
-				} else {
-					this.setState({ layerInfo: response.featureType });
-				}
+		helpers.getJSONWithParams(this.state.layerURL, this.state.params, (response) => {
+			if (response.featureType === undefined) {
+				response["featureType"] = this.parseArcGisFeature(response, (result) => {
+					this.setState({ layerInfo: result });
+				});
+			} else {
+				this.setState({ layerInfo: response.featureType });
 			}
-		);
+		});
 	}
 
 	parseArcGisFeature = (featureInfo, callback) => {
@@ -90,12 +78,9 @@ class LayerInfoApp extends Component {
 		featureType["nativeCRS"] = {};
 		featureType.nativeCRS["@class"] = "Projected";
 		if (featureInfo.sourceSpatialReference.wkt === undefined) {
-			featureType.nativeCRS[
-				"$"
-			] = ` "EPSG:${featureInfo.sourceSpatialReference.latestWkid}`;
+			featureType.nativeCRS["$"] = ` "EPSG:${featureInfo.sourceSpatialReference.latestWkid}`;
 		} else {
-			if (featureInfo.sourceSpatialReference.wkt.indexOf("GEOGCS") !== -1)
-				featureType.nativeCRS["@class"] = "Geographic";
+			if (featureInfo.sourceSpatialReference.wkt.indexOf("GEOGCS") !== -1) featureType.nativeCRS["@class"] = "Geographic";
 			featureType.nativeCRS["$"] = featureInfo.sourceSpatialReference.wkt;
 		}
 
@@ -108,13 +93,9 @@ class LayerInfoApp extends Component {
 		featureType.nativeBoundingBox["maxy"] = featureInfo.extent.ymax;
 		let nativeBoundingBoxCrs = {};
 		nativeBoundingBoxCrs["@class"] = "projected";
-		nativeBoundingBoxCrs[
-			"$"
-		] = `EPSG:${featureInfo.extent.spatialReference.latestWkid}`;
+		nativeBoundingBoxCrs["$"] = `EPSG:${featureInfo.extent.spatialReference.latestWkid}`;
 		featureType.nativeBoundingBox["crs"] = nativeBoundingBoxCrs;
-		const descriptionObj = layerInfoHelpers.parseESRIDescription(
-			featureInfo.description
-		);
+		const descriptionObj = layerInfoHelpers.parseESRIDescription(featureInfo.description);
 		featureType["abstract"] = descriptionObj.description;
 		featureType["attributes"] = {};
 		featureType.attributes["attribute"] = featureInfo.fields.map((item) => {
@@ -124,23 +105,18 @@ class LayerInfoApp extends Component {
 			};
 		});
 		const epsgUrl = (wkt) => `https://epsg.io/${wkt}.wkt`;
-		if (featureInfo.sourceSpatialReference.latestWkid === undefined)
-			callback(featureType);
+		if (featureInfo.sourceSpatialReference.latestWkid === undefined) callback(featureType);
 		else
-			helpers.httpGetText(
-				epsgUrl(featureInfo.sourceSpatialReference.latestWkid),
-				(projection) => {
-					if (projection !== "ERROR") featureType.nativeCRS["$"] = projection;
-					callback(featureType);
-				}
-			);
+			helpers.httpGetText(epsgUrl(featureInfo.sourceSpatialReference.latestWkid), (projection) => {
+				if (projection !== "ERROR") featureType.nativeCRS["$"] = projection;
+				callback(featureType);
+			});
 	};
 	// CLEAN UP THE PROJECTION STRING
 	getFormattedProjection = () => {
 		let projClass = "";
 		if (this.state.layerInfo.nativeCRS["@class"] === undefined) {
-			if (this.state.layerInfo.nativeCRS.indexOf("GEOGCS") !== -1)
-				projClass = "Geographic";
+			if (this.state.layerInfo.nativeCRS.indexOf("GEOGCS") !== -1) projClass = "Geographic";
 			else projClass = "Projected";
 		} else {
 			projClass = this.state.layerInfo.nativeCRS["@class"];
@@ -161,20 +137,7 @@ class LayerInfoApp extends Component {
 
 	// FORMAT DATE FOR FOOTER
 	formatDate() {
-		var monthNames = [
-			"January",
-			"February",
-			"March",
-			"April",
-			"May",
-			"June",
-			"July",
-			"August",
-			"September",
-			"October",
-			"November",
-			"December",
-		];
+		var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 		var date = new Date();
 		var day = date.getDate();
@@ -198,27 +161,11 @@ class LayerInfoApp extends Component {
 	onDownloadClick = (evt) => {
 		const workspace = this.state.layerInfo.namespace.name;
 		const layerName = this.state.layerInfo.name;
-		window.open(
-			downloadTemplate(serverUrl(this.state.layerURL), workspace, layerName),
-			"_blank"
-		);
+		window.open(downloadTemplate(serverUrl(this.state.layerURL), workspace, layerName), "_blank");
 	};
 	render() {
-		if (
-			this.state.layerInfo === undefined ||
-			this.state.layerInfo.nativeCRS === undefined
-		)
-			return (
-				<h3
-					className={
-						this.state.layerURL == null
-							? "gli-main-error"
-							: "gli-main-error hidden"
-					}
-				>
-					Error: Layer Not Found or no URL Parameter provided.
-				</h3>
-			);
+		if (this.state.layerInfo === undefined || this.state.layerInfo.nativeCRS === undefined)
+			return <h3 className={this.state.layerURL == null ? "gli-main-error" : "gli-main-error hidden"}>Error: Layer Not Found or no URL Parameter provided.</h3>;
 
 		const proj = this.getFormattedProjection();
 		let fields = this.state.layerInfo.attributes.attribute;
@@ -230,30 +177,14 @@ class LayerInfoApp extends Component {
 		//console.log(showDownload);
 		return (
 			<div className="sc-layerInfo-main-container">
-				<h1
-					className={
-						this.state.layerURL == null
-							? "sc-layerInfo-gli-main-error"
-							: "sc-layerInfo-gli-main-error hidden"
-					}
-				>
-					Error: Layer Not Found
-				</h1>
+				<h1 className={this.state.layerURL == null ? "sc-layerInfo-gli-main-error" : "sc-layerInfo-gli-main-error hidden"}>Error: Layer Not Found</h1>
 				<div className="sc-layerInfo-header">
 					<table style={{ width: "100%" }}>
 						<tbody>
 							<tr>
-								<td className="sc-layerInfo-title">
-									{this.state.layerInfo.title}
-								</td>
+								<td className="sc-layerInfo-title">{this.state.layerInfo.title}</td>
 								<td style={{ width: "60px" }}>
-									<img
-										onClick={this.onShareClick}
-										title="Share this page through E-Mail"
-										className="sc-layerInfo-headerButton"
-										src={images["share-icon.png"]}
-										alt="Share"
-									/>
+									<img onClick={this.onShareClick} title="Share this page through E-Mail" className="sc-layerInfo-headerButton" src={images["share-icon.png"]} alt="Share" />
 								</td>
 
 								<td style={{ width: "60px" }}>
@@ -283,35 +214,20 @@ class LayerInfoApp extends Component {
 					</table>
 				</div>
 
-				<div
-					className={
-						this.state.showDownload == 1 &&
-						this.state.layerInfo.name !== "Assessment Parcel"
-							? "sc-layerInfo-item-container"
-							: "hidden"
-					}
-				>
+				<div className={this.state.showDownload == 1 && this.state.layerInfo.name !== "Assessment Parcel" ? "sc-layerInfo-item-container" : "hidden"}>
 					<fieldset>
 						<legend>Download</legend>
 						<div className="sc-layerInfo-item-content">
-							<button
-								className={this.state.termsAccepted ? "" : "disabled"}
-								onClick={this.onDownloadClick}
-							>
+							<button className={this.state.termsAccepted ? "" : "disabled"} onClick={this.onDownloadClick}>
 								Download
 							</button>
 							<div className="sc-layerInfo-download-container">
 								<label>
 									<input type="checkbox" onChange={this.onTermsChange}></input>
-									By dowloading this information you accept the terms of the
-									Open Government License - Simcoe County.
+									By dowloading this information you accept the terms of the Open Government License - Simcoe County.
 								</label>
 								&nbsp;
-								<a
-									href="http://maps.simcoe.ca/openlicense.html"
-									target="_blank"
-									rel="noopener noreferrer"
-								>
+								<a href="http://maps.simcoe.ca/openlicense.html" target="_blank" rel="noopener noreferrer">
 									View License
 								</a>
 							</div>
@@ -322,9 +238,7 @@ class LayerInfoApp extends Component {
 				<div className="sc-layerInfo-item-container">
 					<fieldset>
 						<legend>Abstract</legend>
-						<div className="sc-layerInfo-item-content">
-							{this.state.layerInfo.abstract}
-						</div>
+						<div className="sc-layerInfo-item-content">{this.state.layerInfo.abstract}</div>
 					</fieldset>
 				</div>
 
@@ -349,31 +263,21 @@ class LayerInfoApp extends Component {
 				<div className="sc-layerInfo-footer">
 					<div style={{ float: "left" }}>
 						<div>
-							<a
-								href="http://maps.simcoe.ca/openlicense.html"
-								target="_blank"
-								rel="noopener noreferrer"
-							>
+							<a href="http://maps.simcoe.ca/openlicense.html" target="_blank" rel="noopener noreferrer">
 								View Terms of Use
 							</a>
 						</div>
 						<br />
 						<div>
 							Layer info page generated using{" "}
-							<a
-								href="https://opengis.simcoe.ca"
-								target="_blank"
-								rel="noopener noreferrer"
-							>
+							<a href="https://opengis.simcoe.ca" target="_blank" rel="noopener noreferrer">
 								opengis.simcoe.ca
 							</a>{" "}
 							interactive mapping.
 							<br />
 						</div>
 					</div>
-					<div style={{ float: "right" }}>
-						{"Generated on: " + this.formatDate()}
-					</div>
+					<div style={{ float: "right" }}>{"Generated on: " + this.formatDate()}</div>
 				</div>
 			</div>
 		);
@@ -383,9 +287,7 @@ class LayerInfoApp extends Component {
 export default LayerInfoApp;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => {

@@ -21,9 +21,7 @@ class BasemapSwitcher extends Component {
 			showBaseMapSwitcher: true,
 		};
 		// LISTEN FOR CONTROL VISIBILITY CHANGES
-		window.emitter.addListener("mapControlsChanged", (control, visible) =>
-			this.controlStateChange(control, visible)
-		);
+		window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control, visible));
 	}
 	componentDidMount() {
 		this.setState({
@@ -35,13 +33,8 @@ class BasemapSwitcher extends Component {
 	onMapLoad() {
 		let index = 0;
 		// LOAD WORLD LAYER
-		if (
-			BasemapConfig.worldImageryService !== undefined ||
-			BasemapConfig.worldImageryService !== ""
-		) {
-			var worldImageryLayer = helpers.getESRITileXYZLayer(
-				BasemapConfig.worldImageryService
-			);
+		if (BasemapConfig.worldImageryService !== undefined || BasemapConfig.worldImageryService !== "") {
+			var worldImageryLayer = helpers.getESRITileXYZLayer(BasemapConfig.worldImageryService);
 			worldImageryLayer.setZIndex(0);
 			//worldImageryLayer.setMinResolution(300);
 			window.map.addLayer(worldImageryLayer);
@@ -85,18 +78,13 @@ class BasemapSwitcher extends Component {
 
 					// PARSE TO JSON
 					parser.parseString(result, function (err, result) {
-						const groupLayerList =
-							result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer;
+						const groupLayerList = result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer;
 						index++;
 						groupLayerList.forEach((layerInfo) => {
 							const layerNameOnly = layerInfo.Name[0].split(":")[1];
-							const serverUrl =
-								groupUrl.split(`/${geoserverPath}/`)[0] + `/${geoserverPath}`;
+							const serverUrl = groupUrl.split(`/${geoserverPath}/`)[0] + `/${geoserverPath}`;
 
-							let groupLayer = helpers.getImageWMSLayer(
-								serverUrl + "/wms",
-								layerInfo.Name[0]
-							);
+							let groupLayer = helpers.getImageWMSLayer(serverUrl + "/wms", layerInfo.Name[0]);
 							groupLayer.setVisible(true);
 							groupLayer.setProperties({
 								index: index,
@@ -152,14 +140,8 @@ class BasemapSwitcher extends Component {
 
 	// HANDLE URL PARAMETERS
 	handleURLParameters = (value) => {
-		const basemap =
-			helpers.getURLParameter("BASEMAP") !== null
-				? helpers.getURLParameter("BASEMAP").toUpperCase()
-				: null;
-		const name =
-			helpers.getURLParameter("NAME") !== null
-				? helpers.getURLParameter("NAME").toUpperCase()
-				: null;
+		const basemap = helpers.getURLParameter("BASEMAP") !== null ? helpers.getURLParameter("BASEMAP").toUpperCase() : null;
+		const name = helpers.getURLParameter("NAME") !== null ? helpers.getURLParameter("NAME").toUpperCase() : null;
 
 		if (basemap === "TOPO") {
 			this.enableTopo();
@@ -192,8 +174,7 @@ class BasemapSwitcher extends Component {
 	// TOPO BUTTON
 	onTopoButtonClick = (evt) => {
 		// CLOSE PANEL ONLY IF ALREADY OPEN
-		if (this.state.topoPanelOpen)
-			this.setState({ topoPanelOpen: !this.state.topoPanelOpen });
+		if (this.state.topoPanelOpen) this.setState({ topoPanelOpen: !this.state.topoPanelOpen });
 
 		this.enableTopo();
 
@@ -224,10 +205,8 @@ class BasemapSwitcher extends Component {
 				//let layers = layer.getLayers();
 
 				layer.getLayers().forEach((layer) => {
-					if (layer.get("isOverlay") && this.state.topoCheckbox)
-						layer.setVisible(true);
-					else if (layer.get("isOverlay") && !this.state.topoCheckbox)
-						layer.setVisible(false);
+					if (layer.get("isOverlay") && this.state.topoCheckbox) layer.setVisible(true);
+					else if (layer.get("isOverlay") && !this.state.topoCheckbox) layer.setVisible(false);
 				});
 
 				layer.setVisible(true);
@@ -246,12 +225,9 @@ class BasemapSwitcher extends Component {
 		if (toggleIndex === undefined) toggleIndex = 0;
 		BasemapConfig.topoServices.forEach((service) => {
 			if (service.index === toggleIndex) {
-				this.setState(
-					{ toggleService: service, toggleIndex: toggleIndex },
-					() => {
-						this.onTopoItemClick(index);
-					}
-				);
+				this.setState({ toggleService: service, toggleIndex: toggleIndex }, () => {
+					this.onTopoItemClick(index);
+				});
 			}
 		});
 	};
@@ -278,20 +254,10 @@ class BasemapSwitcher extends Component {
 							service={this.state.toggleService}
 							onTopoItemClick={this.onToggleBasemap}
 						/>
-						<button
-							className={
-								"sc-button sc-basemap-arrow" +
-								(this.state.topoPanelOpen ? " open" : "")
-							}
-							onClick={this.onTopoArrowClick}
-						></button>
+						<button className={"sc-button sc-basemap-arrow" + (this.state.topoPanelOpen ? " open" : "")} onClick={this.onTopoArrowClick}></button>
 					</div>
 				</div>
-				<div
-					className={
-						this.state.topoPanelOpen ? "sc-basemap-topo-container" : "sc-hidden"
-					}
-				>
+				<div className={this.state.topoPanelOpen ? "sc-basemap-topo-container" : "sc-hidden"}>
 					{BasemapConfig.topoServices.map((service, index) => (
 						<BasemapItem
 							key={helpers.getUID()}
@@ -317,33 +283,21 @@ class BasemapItem extends Component {
 		if (this.props.service === undefined) return <div></div>;
 		return (
 			<div
-				className={
-					(this.props.className !== undefined
-						? this.props.className + " "
-						: "") + "sc-basemap-topo-item-container"
-				}
+				className={(this.props.className !== undefined ? this.props.className + " " : "") + "sc-basemap-topo-item-container"}
 				onClick={() => {
 					this.props.onTopoItemClick(this.props.index);
 				}}
 				title={"Switch basemap to " + this.props.service.name}
 			>
-				<div className="sc-basemap-topo-item-title">
-					{this.props.showLabel === true ? this.props.service.name : ""}
-				</div>
-				<img
-					className={"sc-basemap-topo-image"}
-					src={images[this.props.service.image]}
-					alt={this.props.service.image}
-				></img>
+				<div className="sc-basemap-topo-item-title">{this.props.showLabel === true ? this.props.service.name : ""}</div>
+				<img className={"sc-basemap-topo-image"} src={images[this.props.service.image]} alt={this.props.service.image}></img>
 			</div>
 		);
 	}
 }
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

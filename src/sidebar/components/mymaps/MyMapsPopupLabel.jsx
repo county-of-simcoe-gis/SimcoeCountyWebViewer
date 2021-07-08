@@ -11,10 +11,8 @@ class MyMapsPopupLabel extends Component {
 
 		this.state = {
 			label: props.item !== undefined ? props.item.label : "",
-			labelRotation:
-				props.item !== undefined ? this.props.item.labelRotation : 0,
-			showLabel:
-				props.item !== undefined ? this.props.item.labelVisible : false,
+			labelRotation: props.item !== undefined ? this.props.item.labelRotation : 0,
+			showLabel: props.item !== undefined ? this.props.item.labelVisible : false,
 		};
 	}
 
@@ -47,18 +45,14 @@ class MyMapsPopupLabel extends Component {
 	};
 
 	onLabelVisibilityChange = (event) => {
-		this.props.onLabelVisibilityChange(
-			this.props.item.id,
-			event.target.checked
-		);
+		this.props.onLabelVisibilityChange(this.props.item.id, event.target.checked);
 		this.setState({ showLabel: event.target.checked });
 	};
 
 	// THIS IS REQUIRED WHEN CHANGING LABEL FROM POPUP
 	componentWillReceiveProps(nextProps) {
 		console.log(nextProps);
-		if (nextProps.item.label !== this.state.label)
-			this.setState({ label: nextProps.item.label });
+		if (nextProps.item.label !== this.state.label) this.setState({ label: nextProps.item.label });
 
 		if (nextProps.item.labelVisible !== this.state.labelVisible) {
 			console.log("updating visible");
@@ -82,13 +76,7 @@ class MyMapsPopupLabel extends Component {
 		return (
 			<div>
 				<div className="sc-mymaps-popup-label-toggler">
-					<div
-						className={
-							this.props.item.drawType === "Text"
-								? "sc-mymaps-popup-checkbox disabled"
-								: "sc-mymaps-popup-checkbox"
-						}
-					>
+					<div className={this.props.item.drawType === "Text" ? "sc-mymaps-popup-checkbox disabled" : "sc-mymaps-popup-checkbox"}>
 						<label
 							style={{
 								WebkitTouchCallout: "none",
@@ -100,28 +88,13 @@ class MyMapsPopupLabel extends Component {
 							}}
 							onClick={this.onLabelVisibilityChange}
 						>
-							<input
-								style={
-									isSafari
-										? { position: "relative" }
-										: { position: "relative", top: "1.5px" }
-								}
-								type="checkbox"
-								defaultChecked={this.state.showLabel}
-							/>
+							<input style={isSafari ? { position: "relative" } : { position: "relative", top: "1.5px" }} type="checkbox" defaultChecked={this.state.showLabel} />
 							Show Label
 						</label>
 					</div>
 
 					<div className="sc-mymaps-popup-slider">
-						<input
-							type="range"
-							min={this.sliderMin}
-							max={this.sliderMax}
-							value={this.state.labelRotation}
-							step="1"
-							onChange={this.onSliderChange}
-						/>
+						<input type="range" min={this.sliderMin} max={this.sliderMax} value={this.state.labelRotation} step="1" onChange={this.onSliderChange} />
 						<label className="sc-mymaps-popup-slider-label">Rotate Label</label>
 					</div>
 				</div>

@@ -10,13 +10,7 @@ import { unByKey } from "ol/Observable.js";
 import { GeoJSON } from "ol/format.js";
 import CommercialRealEstatePopupContent from "./CommercialRealEstatePopupContent.jsx";
 import CommercialRealEstateLayers from "./CommercialRealEstateLayers";
-const propTypes = [
-	"Vacant Land",
-	"Commercial",
-	"Farm",
-	"Industrial",
-	"Institutional",
-];
+const propTypes = ["Vacant Land", "Commercial", "Farm", "Industrial", "Institutional"];
 const polygonLayerName = localConfig.polygonLayerName;
 const pointLayerName = localConfig.pointLayerName;
 class CommercialRealEstate extends Component {
@@ -24,14 +18,10 @@ class CommercialRealEstate extends Component {
 		super(props);
 
 		this.types = CommercialRealEstateSearchObjects.getTypes();
-		this.buildingSpaceFromItems =
-			CommercialRealEstateSearchObjects.getBuildingSpaceFromItems();
-		this.buildingSpaceToItems =
-			CommercialRealEstateSearchObjects.getBuildingSpaceToItems();
-		this.landSizeFromItems =
-			CommercialRealEstateSearchObjects.getLandSizeFromItems();
-		this.landSizeToItems =
-			CommercialRealEstateSearchObjects.getLandSizeToItems();
+		this.buildingSpaceFromItems = CommercialRealEstateSearchObjects.getBuildingSpaceFromItems();
+		this.buildingSpaceToItems = CommercialRealEstateSearchObjects.getBuildingSpaceToItems();
+		this.landSizeFromItems = CommercialRealEstateSearchObjects.getLandSizeFromItems();
+		this.landSizeToItems = CommercialRealEstateSearchObjects.getLandSizeToItems();
 		this.priceFromItems = CommercialRealEstateSearchObjects.getPriceFromItems();
 		this.priceToItems = CommercialRealEstateSearchObjects.getPriceToItems();
 
@@ -61,24 +51,14 @@ class CommercialRealEstate extends Component {
 			const center = window.map.getView().getCenter();
 			const newCenter = [center[0] + 100, center[1] + 50];
 			window.map.getView().setCenter(newCenter);
-			window.popup.show(
-				geo.flatCoordinates,
-				<CommercialRealEstatePopupContent
-					key={helpers.getUID()}
-					feature={feature}
-				/>,
-				"Real Estate"
-			);
+			window.popup.show(geo.flatCoordinates, <CommercialRealEstatePopupContent key={helpers.getUID()} feature={feature} />, "Real Estate");
 		});
 	};
 
 	componentDidMount() {
 		helpers.waitForLoad("settings", Date.now(), 30, () => {
 			let themeConfig = localConfig.default;
-			const globalConfig = helpers.getConfig(
-				"THEMES",
-				"Commercial Real Estate"
-			);
+			const globalConfig = helpers.getConfig("THEMES", "Commercial Real Estate");
 			if (globalConfig.config !== undefined) {
 				themeConfig = helpers.mergeObj(themeConfig, globalConfig.config);
 				this.setState({ toggleLayers: themeConfig.toggleLayers });
@@ -89,8 +69,7 @@ class CommercialRealEstate extends Component {
 				imageUrlField: "_imageurl",
 				detailFields: ["Address", "Property Type", "Municipality"],
 			};
-			if (themeConfig.featurePropertyPanelOpen !== undefined)
-				obj["panelOpen"] = themeConfig.featurePropertyPanelOpen;
+			if (themeConfig.featurePropertyPanelOpen !== undefined) obj["panelOpen"] = themeConfig.featurePropertyPanelOpen;
 			window.emitter.emit("showImageSlider", obj, this.onFeatureChange);
 			this.buildLayers();
 
@@ -102,19 +81,12 @@ class CommercialRealEstate extends Component {
 
 			this.mapClickEvent = window.map.on("click", (evt) => {
 				// DISABLE POPUPS
-				if (
-					window.isDrawingOrEditing ||
-					window.isCoordinateToolOpen ||
-					window.isMeasuring
-				)
-					return;
+				if (window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring) return;
 
 				var viewResolution = window.map.getView().getResolution();
-				var url = this.state.layerAll
-					.getSource()
-					.getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", {
-						INFO_FORMAT: "application/json",
-					});
+				var url = this.state.layerAll.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", {
+					INFO_FORMAT: "application/json",
+				});
 				if (url) {
 					helpers.getJSON(url, (result) => {
 						const features = result.features;
@@ -124,14 +96,7 @@ class CommercialRealEstate extends Component {
 
 						const geoJSON = new GeoJSON().readFeatures(result);
 						const feature = geoJSON[0];
-						window.popup.show(
-							evt.coordinate,
-							<CommercialRealEstatePopupContent
-								key={helpers.getUID()}
-								feature={feature}
-							/>,
-							"Real Estate"
-						);
+						window.popup.show(evt.coordinate, <CommercialRealEstatePopupContent key={helpers.getUID()} feature={feature} />, "Real Estate");
 					});
 				}
 			});
@@ -155,14 +120,7 @@ class CommercialRealEstate extends Component {
 		let layers = {};
 		const serverUrl = window.config.geoserverUrl + "wms/";
 		propTypes.forEach((propType) => {
-			const wmsPointLayer = helpers.getImageWMSLayer(
-				serverUrl,
-				pointLayerName,
-				"geoserver",
-				"_proptype = '" + propType + "'",
-				200,
-				true
-			);
+			const wmsPointLayer = helpers.getImageWMSLayer(serverUrl, pointLayerName, "geoserver", "_proptype = '" + propType + "'", 200, true);
 
 			wmsPointLayer.setVisible(true);
 			wmsPointLayer.setZIndex(200);
@@ -175,14 +133,7 @@ class CommercialRealEstate extends Component {
 
 			window.map.addLayer(wmsPointLayer);
 
-			const wmsPolygonLayer = helpers.getImageWMSLayer(
-				serverUrl,
-				polygonLayerName,
-				"geoserver",
-				"_proptype = '" + propType + "'",
-				200,
-				true
-			);
+			const wmsPolygonLayer = helpers.getImageWMSLayer(serverUrl, polygonLayerName, "geoserver", "_proptype = '" + propType + "'", 200, true);
 			wmsPolygonLayer.setVisible(true);
 			wmsPolygonLayer.setZIndex(200);
 			wmsPolygonLayer.setProperties({
@@ -202,14 +153,7 @@ class CommercialRealEstate extends Component {
 		});
 
 		this.setNumRecords();
-		const layerAll = helpers.getImageWMSLayer(
-			serverUrl,
-			pointLayerName,
-			"geoserver",
-			null,
-			200,
-			true
-		);
+		const layerAll = helpers.getImageWMSLayer(serverUrl, pointLayerName, "geoserver", null, 200, true);
 
 		this.setState({ layers: layers, layerAll });
 	};
@@ -302,9 +246,7 @@ class CommercialRealEstate extends Component {
 
 		this.setState({ numRecords: 0, allResults: [] }, () => {
 			propTypes.forEach((propType) => {
-				const params = this.state.layers[propType].pointLayer
-					.getSource()
-					.getParams();
+				const params = this.state.layers[propType].pointLayer.getSource().getParams();
 				helpers.getWFSGeoJSON(
 					serverUrl,
 					"simcoe:Economic_Development_Property_Listings_Polygon_Theme",
@@ -344,16 +286,9 @@ class CommercialRealEstate extends Component {
 			const toSpace = this.state.selectedBuildingSpaceTo.value;
 			if (this.state.searchType === "BuildingSize") {
 				if (toSpace <= fromSpace) {
-					helpers.showMessage(
-						"Building Space",
-						"Building Space From Size must be smaller then To Size"
-					);
+					helpers.showMessage("Building Space", "Building Space From Size must be smaller then To Size");
 				} else if (fromSpace !== 0 || toSpace !== 99999999999) {
-					this.sql +=
-						" AND _squarefeet >= " +
-						fromSpace +
-						" AND _squarefeet <= " +
-						toSpace;
+					this.sql += " AND _squarefeet >= " + fromSpace + " AND _squarefeet <= " + toSpace;
 				}
 			}
 
@@ -362,13 +297,9 @@ class CommercialRealEstate extends Component {
 			const toLandSize = this.state.selectedLandSizeTo.value;
 			if (this.state.searchType !== "BuildingSize") {
 				if (toLandSize <= fromLandSize) {
-					helpers.showMessage(
-						"Land Size",
-						"Land From Size must be smaller then To Size"
-					);
+					helpers.showMessage("Land Size", "Land From Size must be smaller then To Size");
 				} else if (fromLandSize !== 0 || toLandSize !== 99999999999) {
-					this.sql +=
-						" AND Acres >= " + fromLandSize + " AND Acres <= " + toLandSize;
+					this.sql += " AND Acres >= " + fromLandSize + " AND Acres <= " + toLandSize;
 				}
 			}
 
@@ -376,22 +307,16 @@ class CommercialRealEstate extends Component {
 			const fromPrice = this.state.selectedPriceFrom.value;
 			const toPrice = this.state.selectedPriceTo.value;
 			if (toPrice <= fromPrice) {
-				helpers.showMessage(
-					"Price",
-					"Price To Size must be smaller then From Price"
-				);
+				helpers.showMessage("Price", "Price To Size must be smaller then From Price");
 			} else if (fromPrice !== 0 || toPrice !== 99999999999) {
-				this.sql +=
-					" AND _listprice >= " + fromPrice + " AND _listprice <= " + toPrice;
+				this.sql += " AND _listprice >= " + fromPrice + " AND _listprice <= " + toPrice;
 			}
 
 			// console.log(this.state.searchType);
 			// console.log(fromPrice);
 			// console.log(toPrice);
 			// console.log(this.sql);
-			let params = this.state.layers[propType].pointLayer
-				.getSource()
-				.getParams();
+			let params = this.state.layers[propType].pointLayer.getSource().getParams();
 			params.cql_filter = this.sql;
 
 			this.state.layers[propType].pointLayer.getSource().updateParams(params);
@@ -403,12 +328,7 @@ class CommercialRealEstate extends Component {
 
 	render() {
 		return (
-			<PanelComponent
-				onClose={this.props.onClose}
-				name={this.props.name}
-				helpLink={this.props.helpLink}
-				type="themes"
-			>
+			<PanelComponent onClose={this.props.onClose} name={this.props.name} helpLink={this.props.helpLink} type="themes">
 				<div className="sc-theme-commercial-real-estate-main-container">
 					<CommercialRealEstateSearch
 						activeTab={this.state.activeTab}
@@ -421,12 +341,8 @@ class CommercialRealEstate extends Component {
 						incentiveChecked={this.state.incentiveChecked}
 						onOnlyInMapChange={this.onOnlyInMapChange}
 						onlyInMapChecked={this.state.onlyInMapChecked}
-						onBuildingSpaceFromDropDownChange={
-							this.onBuildingSpaceFromDropDownChange
-						}
-						onBuildingSpaceToDropDownChange={
-							this.onBuildingSpaceToDropDownChange
-						}
+						onBuildingSpaceFromDropDownChange={this.onBuildingSpaceFromDropDownChange}
+						onBuildingSpaceToDropDownChange={this.onBuildingSpaceToDropDownChange}
 						selectedBuildingSpaceFrom={this.state.selectedBuildingSpaceFrom}
 						selectedBuildingSpaceTo={this.state.selectedBuildingSpaceTo}
 						searchType={this.state.searchType}

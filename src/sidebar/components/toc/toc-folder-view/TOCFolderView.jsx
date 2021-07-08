@@ -18,10 +18,7 @@ class TOCFolderView extends Component {
 
 	render() {
 		return (
-			<div
-				className={this.props.visible ? "" : "sc-hidden"}
-				id="sc-toc-simcoe-folder-view-container-main"
-			>
+			<div className={this.props.visible ? "" : "sc-hidden"} id="sc-toc-simcoe-folder-view-container-main">
 				<div className="toc-group-list">
 					{this.props.layerGroups.map((group) => (
 						<GroupItem

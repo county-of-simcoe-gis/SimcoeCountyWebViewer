@@ -33,9 +33,7 @@ class BasemapSwitcher extends Component {
 		};
 
 		// LISTEN FOR CONTROL VISIBILITY CHANGES
-		window.emitter.addListener("mapControlsChanged", (control, visible) =>
-			this.controlStateChange(control, visible)
-		);
+		window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control, visible));
 	}
 	componentDidMount() {
 		this.setState({ showBaseMapSwitcher: window.mapControls.basemap });
@@ -62,8 +60,7 @@ class BasemapSwitcher extends Component {
 			// LayerHelpers.getCapabilities(service.url, "wmts", (layers) => {
 			//   console.log(layers);
 			// });
-			const serviceLayerType =
-				service.type !== undefined ? service.type : OL_DATA_TYPES.TileImage;
+			const serviceLayerType = service.type !== undefined ? service.type : OL_DATA_TYPES.TileImage;
 
 			LayerHelpers.getLayer(
 				{
@@ -255,8 +252,7 @@ class BasemapSwitcher extends Component {
 
 					// PARSE TO JSON
 					parser.parseString(result, (err, result) => {
-						const groupLayerList =
-							result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer;
+						const groupLayerList = result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer;
 
 						index = groupLayerList.length + index;
 						let overlayIndex = index;
@@ -266,13 +262,9 @@ class BasemapSwitcher extends Component {
 							const keywords = layerInfo.KeywordList[0].Keyword;
 							const opacity = this.getOpacity(keywords);
 							const layerNameOnly = layerInfo.Name[0].split(":")[1];
-							const serverUrl =
-								groupUrl.split(`/${geoserverPath}/`)[0] + `/${geoserverPath}`;
+							const serverUrl = groupUrl.split(`/${geoserverPath}/`)[0] + `/${geoserverPath}`;
 
-							let groupLayer = helpers.getImageWMSLayer(
-								serverUrl + "/wms",
-								layerInfo.Name[0]
-							);
+							let groupLayer = helpers.getImageWMSLayer(serverUrl + "/wms", layerInfo.Name[0]);
 							groupLayer.setVisible(true);
 							groupLayer.setOpacity(opacity);
 							groupLayer.setZIndex(overlayIndex);
@@ -341,24 +333,14 @@ class BasemapSwitcher extends Component {
 
 	// HANDLE URL PARAMETERS
 	handleURLParameters = (value) => {
-		const basemap =
-			helpers.getURLParameter("BASEMAP") !== null
-				? helpers.getURLParameter("BASEMAP").toUpperCase()
-				: null;
-		const name =
-			helpers.getURLParameter("NAME") !== null
-				? helpers.getURLParameter("NAME").toUpperCase()
-				: null;
-		const imagerySliderOpen =
-			helpers.getURLParameter("SLIDER_OPEN") !== null
-				? helpers.getURLParameter("SLIDER_OPEN").toUpperCase()
-				: null;
+		const basemap = helpers.getURLParameter("BASEMAP") !== null ? helpers.getURLParameter("BASEMAP").toUpperCase() : null;
+		const name = helpers.getURLParameter("NAME") !== null ? helpers.getURLParameter("NAME").toUpperCase() : null;
+		const imagerySliderOpen = helpers.getURLParameter("SLIDER_OPEN") !== null ? helpers.getURLParameter("SLIDER_OPEN").toUpperCase() : null;
 
 		if (basemap === "IMAGERY") {
 			this.enableImagery();
 
-			if (imagerySliderOpen === "TRUE")
-				this.setState({ imageryPanelOpen: true });
+			if (imagerySliderOpen === "TRUE") this.setState({ imageryPanelOpen: true });
 
 			if (name !== undefined) {
 				for (let index = 0; index < this.state.imageryLayers.length; index++) {
@@ -441,8 +423,7 @@ class BasemapSwitcher extends Component {
 		this.disableTopo();
 
 		// CLOSE PANEL, ONLY IF ALREADY OPEN
-		if (this.state.imageryPanelOpen)
-			this.setState({ imageryPanelOpen: !this.state.imageryPanelOpen });
+		if (this.state.imageryPanelOpen) this.setState({ imageryPanelOpen: !this.state.imageryPanelOpen });
 
 		this.enableImagery();
 
@@ -511,8 +492,7 @@ class BasemapSwitcher extends Component {
 	// TOPO BUTTON
 	onTopoButtonClick = (evt) => {
 		// CLOSE PANEL ONLY IF ALREADY OPEN
-		if (this.state.topoPanelOpen)
-			this.setState({ topoPanelOpen: !this.state.topoPanelOpen });
+		if (this.state.topoPanelOpen) this.setState({ topoPanelOpen: !this.state.topoPanelOpen });
 
 		this.enableTopo();
 
@@ -545,10 +525,8 @@ class BasemapSwitcher extends Component {
 				//let layers = layer.getLayers();
 
 				layer.getLayers().forEach((layer) => {
-					if (layer.get("isOverlay") && this.state.topoCheckbox)
-						layer.setVisible(true);
-					else if (layer.get("isOverlay") && !this.state.topoCheckbox)
-						layer.setVisible(false);
+					if (layer.get("isOverlay") && this.state.topoCheckbox) layer.setVisible(true);
+					else if (layer.get("isOverlay") && !this.state.topoCheckbox) layer.setVisible(false);
 				});
 
 				layer.setVisible(true);
@@ -579,72 +557,23 @@ class BasemapSwitcher extends Component {
 		return (
 			<div className={!this.state.showBaseMapSwitcher ? " sc-hidden" : ""}>
 				<div id="sc-basemap-main-container">
-					<div
-						id="sc-basemap-collapse-button"
-						className={
-							this.state.containerCollapsed
-								? "sc-basemap-collapse-button closed"
-								: "sc-basemap-collapse-button"
-						}
-						onClick={this.onCollapsedClick}
-					/>
-					<div
-						className={
-							this.state.containerCollapsed ? "sc-hidden" : "sc-basemap-imagery"
-						}
-					>
-						<button
-							className={
-								this.state.activeButton === "imagery"
-									? "sc-button sc-basemap-imagery-button active"
-									: "sc-button sc-basemap-imagery-button"
-							}
-							onClick={this.onImageryButtonClick}
-						>
+					<div id="sc-basemap-collapse-button" className={this.state.containerCollapsed ? "sc-basemap-collapse-button closed" : "sc-basemap-collapse-button"} onClick={this.onCollapsedClick} />
+					<div className={this.state.containerCollapsed ? "sc-hidden" : "sc-basemap-imagery"}>
+						<button className={this.state.activeButton === "imagery" ? "sc-button sc-basemap-imagery-button active" : "sc-button sc-basemap-imagery-button"} onClick={this.onImageryButtonClick}>
 							Imagery
 						</button>
-						<button
-							className="sc-button sc-basemap-arrow"
-							onClick={this.onImageryArrowClick}
-						/>
+						<button className="sc-button sc-basemap-arrow" onClick={this.onImageryArrowClick} />
 					</div>
-					<div
-						className={
-							this.state.containerCollapsed ? "sc-hidden" : "sc-basemap-topo"
-						}
-					>
-						<button
-							className={
-								this.state.activeButton === "topo"
-									? "sc-button sc-basemap-topo-button active"
-									: "sc-button sc-basemap-topo-button"
-							}
-							onClick={this.onTopoButtonClick}
-						>
+					<div className={this.state.containerCollapsed ? "sc-hidden" : "sc-basemap-topo"}>
+						<button className={this.state.activeButton === "topo" ? "sc-button sc-basemap-topo-button active" : "sc-button sc-basemap-topo-button"} onClick={this.onTopoButtonClick}>
 							Topo
 						</button>
-						<button
-							className="sc-button sc-basemap-arrow"
-							onClick={this.onTopoArrowClick}
-						/>
+						<button className="sc-button sc-basemap-arrow" onClick={this.onTopoArrowClick} />
 					</div>
 				</div>
-				<div
-					id="sc-basemap-imagery-slider-container"
-					className={
-						this.state.imageryPanelOpen
-							? "sc-basemap-imagery-slider-container"
-							: "sc-hidden"
-					}
-				>
+				<div id="sc-basemap-imagery-slider-container" className={this.state.imageryPanelOpen ? "sc-basemap-imagery-slider-container" : "sc-hidden"}>
 					<label className="sc-basemap-streets-label">
-						<input
-							className="sc-basemap-streets-checkbox"
-							id="sc-basemap-streets-checkbox"
-							type="checkbox"
-							onChange={this.onStreetsCheckbox}
-							checked={this.state.streetsCheckbox}
-						/>
+						<input className="sc-basemap-streets-checkbox" id="sc-basemap-streets-checkbox" type="checkbox" onChange={this.onStreetsCheckbox} checked={this.state.streetsCheckbox} />
 						&nbsp;Streets
 					</label>
 					<Slider
@@ -660,35 +589,13 @@ class BasemapSwitcher extends Component {
 						value={this.state.imagerySliderValue}
 					/>
 				</div>
-				<div
-					className={
-						this.state.topoPanelOpen ? "sc-basemap-topo-container" : "sc-hidden"
-					}
-				>
-					<label
-						className={
-							this.state.topoOverlayLayers.length === 0
-								? "sc-hidden"
-								: "sc-basemap-topo-label"
-						}
-					>
-						<input
-							className="sc-basemap-topo-checkbox"
-							id="sc-basemap-topo-checkbox"
-							type="checkbox"
-							onChange={this.onTopoCheckbox}
-							checked={this.state.topoCheckbox}
-						/>
+				<div className={this.state.topoPanelOpen ? "sc-basemap-topo-container" : "sc-hidden"}>
+					<label className={this.state.topoOverlayLayers.length === 0 ? "sc-hidden" : "sc-basemap-topo-label"}>
+						<input className="sc-basemap-topo-checkbox" id="sc-basemap-topo-checkbox" type="checkbox" onChange={this.onTopoCheckbox} checked={this.state.topoCheckbox} />
 						&nbsp;Overlay
 					</label>
 					{BasemapConfig.topoServices.map((service, index) => (
-						<BasemapItem
-							key={helpers.getUID()}
-							index={index}
-							topoActiveIndex={this.state.topoActiveIndex}
-							service={service}
-							onTopoItemClick={this.onTopoItemClick}
-						/>
+						<BasemapItem key={helpers.getUID()} index={index} topoActiveIndex={this.state.topoActiveIndex} service={service} onTopoItemClick={this.onTopoItemClick} />
 					))}
 				</div>
 			</div>
@@ -703,30 +610,20 @@ class BasemapItem extends Component {
 	render() {
 		return (
 			<div
-				className={
-					this.props.topoActiveIndex === this.props.index
-						? "sc-basemap-topo-item-container active"
-						: "sc-basemap-topo-item-container"
-				}
+				className={this.props.topoActiveIndex === this.props.index ? "sc-basemap-topo-item-container active" : "sc-basemap-topo-item-container"}
 				onClick={() => {
 					this.props.onTopoItemClick(this.props.index, this.props.service.name);
 				}}
 			>
 				{this.props.service.name}
-				<img
-					className="sc-basemap-topo-image"
-					src={images[this.props.service.image]}
-					alt={this.props.service.image}
-				/>
+				<img className="sc-basemap-topo-image" src={images[this.props.service.image]} alt={this.props.service.image} />
 			</div>
 		);
 	}
 }
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

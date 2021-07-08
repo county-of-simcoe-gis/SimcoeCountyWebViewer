@@ -43,15 +43,9 @@ class TOCListView extends Component {
 		};
 
 		return (
-			<div
-				id={this.props.id + "-container-main"}
-				className={this.props.visible ? "" : "sc-hidden"}
-			>
+			<div id={this.props.id + "-container-main"} className={this.props.visible ? "" : "sc-hidden"}>
 				<div className="sc-toc-groups-container">
-					<div
-						id={this.props.id + "-groups-dropdown"}
-						title="Click here for more layers"
-					>
+					<div id={this.props.id + "-groups-dropdown"} title="Click here for more layers">
 						<Select
 							key={this.props.id + "-select"}
 							id={this.props.id + "-select"}

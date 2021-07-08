@@ -143,8 +143,7 @@
 		width: 100%;
 		padding-left: 7px;
 		box-shadow: none;
-		background: url(./images/magnify.png) 100% 50% / auto no-repeat scroll
-			padding-box border-box rgb(255, 255, 255);
+		background: url(./images/magnify.png) 100% 50% / auto no-repeat scroll padding-box border-box rgb(255, 255, 255);
 	}
 
 	.sc-search-icon-initial {

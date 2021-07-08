@@ -28,10 +28,7 @@ class ShowWindow extends Component {
 		document.addEventListener("keydown", this.escFunction, false);
 
 		// LISTEN FOR SIDEPANEL CHANGES
-		this.sidebarEmitter = window.emitter.addListener(
-			"sidebarChanged",
-			(isSidebarOpen) => this.sidebarChanged(isSidebarOpen)
-		);
+		this.sidebarEmitter = window.emitter.addListener("sidebarChanged", (isSidebarOpen) => this.sidebarChanged(isSidebarOpen));
 	}
 
 	sidebarChanged = (isSidebarOpen) => {
@@ -61,52 +58,27 @@ class ShowWindow extends Component {
 		else if (!window.sidebarOpen) className = "full";
 
 		let hideScrollClassName = "";
-		if (this.props.hideScroll && !this.state.fullScreen)
-			hideScrollClassName = "sc-show-window-content-no-scroll";
+		if (this.props.hideScroll && !this.state.fullScreen) hideScrollClassName = "sc-show-window-content-no-scroll";
 
 		return (
 			<div id="sc-show-window-container" className={className}>
 				<div className="sc-show-window-header no-print">
 					<div className="sc-show-window-header-title">Information</div>
-					<div
-						className="sc-show-window-header-popout-button"
-						title={this.state.fullScreen ? "Restore Down" : "Full Screen"}
-					>
-						<button
-							className="sc-button sc-button-blue sc-show-window-header-button"
-							onClick={this.onPopoutClick}
-						>
+					<div className="sc-show-window-header-popout-button" title={this.state.fullScreen ? "Restore Down" : "Full Screen"}>
+						<button className="sc-button sc-button-blue sc-show-window-header-button" onClick={this.onPopoutClick}>
 							<img src={images["new-window.png"]} alt="new window" />
 						</button>
 					</div>
-					<div
-						className="sc-show-window-header-close-button"
-						title="Close Window"
-					>
-						<button
-							style={{ fontWeight: "bolder" }}
-							className="sc-button sc-button-blue sc-show-window-header-button"
-							onClick={this.onCloseClick}
-						>
+					<div className="sc-show-window-header-close-button" title="Close Window">
+						<button style={{ fontWeight: "bolder" }} className="sc-button sc-button-blue sc-show-window-header-button" onClick={this.onCloseClick}>
 							X
 						</button>
 					</div>
 				</div>
-				<div
-					id="sc-show-window-content"
-					className={
-						this.props.showFooter
-							? "sc-show-window-content with-footer " + hideScrollClassName
-							: "sc-show-window-content " + hideScrollClassName
-					}
-				>
+				<div id="sc-show-window-content" className={this.props.showFooter ? "sc-show-window-content with-footer " + hideScrollClassName : "sc-show-window-content " + hideScrollClassName}>
 					{this.props.contents}
 				</div>
-				<div
-					className={
-						this.props.showFooter ? "sc-show-window-footer" : "sc-hidden"
-					}
-				>
+				<div className={this.props.showFooter ? "sc-show-window-footer" : "sc-hidden"}>
 					<button className="sc-button" onClick={this.onCloseClick}>
 						Close Window
 					</button>
@@ -119,9 +91,7 @@ class ShowWindow extends Component {
 export default ShowWindow;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

@@ -28,11 +28,7 @@ class ThemeDataList extends Component {
 		// GET LEGEND
 		const styleUrlTemplate = (serverURL, layerName, styleName) =>
 			`${serverURL}/wms?REQUEST=GetLegendGraphic&VERSION=1.1&FORMAT=image/png&WIDTH=30&HEIGHT=30&LAYER=${layerName}&STYLE=${styleName}&transparent=true`;
-		const styleUrl = styleUrlTemplate(
-			this.props.layerConfig.serverUrl,
-			this.props.layerConfig.layerName,
-			this.props.layerConfig.legendStyleName
-		);
+		const styleUrl = styleUrlTemplate(this.props.layerConfig.serverUrl, this.props.layerConfig.layerName, this.props.layerConfig.legendStyleName);
 		this.setState({ styleUrl: styleUrl });
 
 		window.map.on("moveend", (evt) => {
@@ -79,15 +75,7 @@ class ThemeDataList extends Component {
 		const extent = feature.getGeometry().getExtent();
 		const center = getCenter(extent);
 		const entries = Object.entries(feature.getProperties());
-		window.popup.show(
-			center,
-			<ThemePopupContent
-				key={helpers.getUID()}
-				values={entries}
-				popupLogoImage={this.props.config.popupLogoImage}
-				layerConfig={this.props.layerConfig}
-			/>
-		);
+		window.popup.show(center, <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={this.props.layerConfig} />);
 		helpers.zoomToFeature(feature);
 		window.map.getView().setCenter(center);
 		window.map.getView().setZoom(15);
@@ -95,49 +83,27 @@ class ThemeDataList extends Component {
 
 	// HANDLES TOGGLE LAYER CHANGES
 	onLayerVisibilityChange = (layer) => {
-		if (layer.getProperties().name === this.props.layerConfig.layerName)
-			this.setState({ visible: layer.getVisible() });
+		if (layer.getProperties().name === this.props.layerConfig.layerName) this.setState({ visible: layer.getVisible() });
 	};
 
 	render() {
 		return (
-			<div
-				className={
-					this.state.visible ? "sc-theme-data-list-container" : "sc-hidden"
-				}
-			>
-				<div
-					className={
-						this.state.panelOpen
-							? "sc-theme-data-list-header open"
-							: "sc-theme-data-list-header"
-					}
-					onClick={this.onHeaderClick}
-				>
+			<div className={this.state.visible ? "sc-theme-data-list-container" : "sc-hidden"}>
+				<div className={this.state.panelOpen ? "sc-theme-data-list-header open" : "sc-theme-data-list-header"} onClick={this.onHeaderClick}>
 					<div className="sc-theme-data-list-header-table-icon">
 						<img src={images["table-icon.png"]} alt="tableicon" />
 					</div>
 					<div className="sc-theme-data-list-header-symbol">
 						<img src={this.state.styleUrl} alt="style" />
 					</div>
-					<div style={{ paddingTop: "12px", width: "90%" }}>
-						{this.props.layerConfig.displayName}
-					</div>
+					<div style={{ paddingTop: "12px", width: "90%" }}>{this.props.layerConfig.displayName}</div>
 				</div>
-				<div
-					className={
-						this.state.panelOpen
-							? "sc-theme-data-list-item-container"
-							: "sc-hidden"
-					}
-				>
+				<div className={this.state.panelOpen ? "sc-theme-data-list-item-container" : "sc-hidden"}>
 					{this.state.features.map((feature) => (
 						<InfoRowValue
 							className="sc-theme-data-list-item"
 							key={helpers.getUID()}
-							value={
-								feature.getProperties()[this.props.layerConfig.displayFieldName]
-							}
+							value={feature.getProperties()[this.props.layerConfig.displayFieldName]}
 							onClick={this.itemClick}
 							feature={feature}
 						/>
@@ -151,9 +117,7 @@ class ThemeDataList extends Component {
 export default ThemeDataList;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

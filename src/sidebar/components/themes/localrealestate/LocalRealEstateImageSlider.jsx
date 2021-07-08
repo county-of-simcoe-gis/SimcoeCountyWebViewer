@@ -25,9 +25,7 @@ class LocalRealEstateImageSlider extends Component {
 		};
 
 		// LISTEN FOR SIDEPANEL CHANGES
-		window.emitter.addListener("sidebarChanged", (isSidebarOpen) =>
-			this.onSidebarChange()
-		);
+		window.emitter.addListener("sidebarChanged", (isSidebarOpen) => this.onSidebarChange());
 
 		this.createLineLayer();
 	}
@@ -52,8 +50,7 @@ class LocalRealEstateImageSlider extends Component {
 
 	onSidebarChange = () => {
 		if (document.getElementById(this.imageSliderId) !== null) {
-			if (window.sidebarOpen)
-				document.getElementById(this.imageSliderId).classList.remove("in");
+			if (window.sidebarOpen) document.getElementById(this.imageSliderId).classList.remove("in");
 			else document.getElementById(this.imageSliderId).classList.add("in");
 		}
 	};
@@ -97,12 +94,8 @@ class LocalRealEstateImageSlider extends Component {
 		this.setState({ images });
 
 		if (document.getElementById(this.imageSliderId) !== null) {
-			if (images.length > 0)
-				document
-					.getElementById(this.imageSliderId)
-					.classList.remove("sc-hidden");
-			else
-				document.getElementById(this.imageSliderId).classList.add("sc-hidden");
+			if (images.length > 0) document.getElementById(this.imageSliderId).classList.remove("sc-hidden");
+			else document.getElementById(this.imageSliderId).classList.add("sc-hidden");
 		}
 	};
 
@@ -163,10 +156,7 @@ class LocalRealEstateImageSlider extends Component {
 		this.mouseIn = true;
 		var screenCoords = this.getPos(evt.target);
 		const startCoords = window.map.getCoordinateFromPixel(screenCoords);
-		var line = new LineString([
-			startCoords,
-			feature.getGeometry().getCoordinates(),
-		]);
+		var line = new LineString([startCoords, feature.getGeometry().getCoordinates()]);
 		for (let index = 0.1; index < 1; index += 0.1) {
 			((index) => {
 				setTimeout(() => {
@@ -211,21 +201,12 @@ class LocalRealEstateImageSlider extends Component {
 				<Slider {...imageSliderSettings}>
 					{this.state.images.map((image) => {
 						return (
-							<div
-								key={helpers.getUID()}
-								className="sc-theme-real-estate-photo-slider-item"
-							>
-								<label className="sc-theme-real-estate-photo-slider-label">
-									{image.address}
-								</label>
+							<div key={helpers.getUID()} className="sc-theme-real-estate-photo-slider-item">
+								<label className="sc-theme-real-estate-photo-slider-label">{image.address}</label>
 								<img
-									onMouseOver={(evt) =>
-										this.onImageMouseOver(evt, image.feature)
-									}
+									onMouseOver={(evt) => this.onImageMouseOver(evt, image.feature)}
 									onMouseOut={(evt) => this.onImageMouseOut(evt, image.feature)}
-									onClick={(evt) =>
-										this.props.onImageSliderClick(image.feature)
-									}
+									onClick={(evt) => this.props.onImageSliderClick(image.feature)}
 									className="sc-theme-real-estate-photo-slider-image"
 									src={image.url}
 									onError={(e) => {
@@ -246,9 +227,7 @@ class LocalRealEstateImageSlider extends Component {
 export default LocalRealEstateImageSlider;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

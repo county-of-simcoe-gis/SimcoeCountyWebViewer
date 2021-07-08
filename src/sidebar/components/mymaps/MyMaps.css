@@ -80,11 +80,7 @@
 
 .sc-mymaps-items-container-header {
 	height: 33px;
-	background: linear-gradient(
-		to bottom,
-		rgb(255, 255, 255) 0%,
-		rgba(204, 204, 204, 0.51) 100%
-	);
+	background: linear-gradient(to bottom, rgb(255, 255, 255) 0%, rgba(204, 204, 204, 0.51) 100%);
 	border-bottom: 1px solid #ddd;
 }
 
@@ -302,8 +298,7 @@
 	outline: none;
 }
 
-.sc-mymaps-popup-slider
-	input[type="range"]:focus::-webkit-slider-runnable-track {
+.sc-mymaps-popup-slider input[type="range"]:focus::-webkit-slider-runnable-track {
 	background: #ccc;
 }
 

@@ -2,9 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import "./MyMapsFooter.css";
 import * as helpers from "../../../helpers/helpers";
-import FloatingMenu, {
-	FloatingMenuItem,
-} from "../../../helpers/FloatingMenu.jsx";
+import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import Portal from "../../../helpers/Portal.jsx";
 import { Item as MenuItem, Divider } from "rc-menu";
 
@@ -24,41 +22,20 @@ const MyMapsFooter = (props) => {
 					key={helpers.getUID()}
 					buttonEvent={evtClone}
 					onMenuItemClick={props.onMenuItemClick}
-					classNamesToIgnore={[
-						"sc-mymaps-footer-button",
-						"sc-mymaps-footer-buttons-img",
-					]}
+					classNamesToIgnore={["sc-mymaps-footer-button", "sc-mymaps-footer-buttons-img"]}
 				>
-					<MenuItem
-						className="sc-floating-menu-toolbox-menu-item"
-						key="sc-floating-menu-show-all"
-					>
+					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-show-all">
 						<FloatingMenuItem imageName={"checkbox_on.png"} label="Show All" />
 					</MenuItem>
-					<MenuItem
-						className="sc-floating-menu-toolbox-menu-item"
-						key="sc-floating-menu-hide-all"
-					>
+					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-hide-all">
 						<FloatingMenuItem imageName={"checkbox_off.png"} label="Hide All" />
 					</MenuItem>
 					<Divider />
-					<MenuItem
-						className="sc-floating-menu-toolbox-menu-item"
-						key="sc-floating-menu-delete-selected"
-					>
-						<FloatingMenuItem
-							imageName={"eraser.png"}
-							label="Delete Selected"
-						/>
+					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-delete-selected">
+						<FloatingMenuItem imageName={"eraser.png"} label="Delete Selected" />
 					</MenuItem>
-					<MenuItem
-						className="sc-floating-menu-toolbox-menu-item"
-						key="sc-floating-menu-delete-unselected"
-					>
-						<FloatingMenuItem
-							imageName={"eraser.png"}
-							label="Delete UnSelected"
-						/>
+					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-delete-unselected">
+						<FloatingMenuItem imageName={"eraser.png"} label="Delete UnSelected" />
 					</MenuItem>
 					{/* <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-export-to-shapefile">
             <FloatingMenuItem imageName={"export-to-shapefile.png"} label="Export to Shapefile" />
@@ -72,16 +49,10 @@ const MyMapsFooter = (props) => {
 
 	return (
 		<div className="sc-mymaps-footer-buttons">
-			<button
-				className="sc-button sc-mymaps-footer-button delete"
-				onClick={props.onDeleteAllClick}
-			>
+			<button className="sc-button sc-mymaps-footer-button delete" onClick={props.onDeleteAllClick}>
 				Delete All
 			</button>
-			<button
-				className="sc-button sc-mymaps-footer-button tools"
-				onClick={onToolsClick}
-			>
+			<button className="sc-button sc-mymaps-footer-button tools" onClick={onToolsClick}>
 				Additional Tools
 			</button>
 		</div>

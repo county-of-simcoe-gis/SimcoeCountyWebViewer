@@ -103,8 +103,7 @@ export default class Popup extends Overlay {
 		};
 		this.container.onmouseout = () => {
 			window.map.getInteractions().forEach((interaction) => {
-				if (this.activeIds.includes(interaction.ol_uid))
-					interaction.setActive(true);
+				if (this.activeIds.includes(interaction.ol_uid)) interaction.setActive(true);
 			});
 			window.popupActive = false;
 		};
@@ -120,12 +119,9 @@ export default class Popup extends Overlay {
 		// WEIRD MOBILE STUFF PATCH WHERE CONTAINER STAYS OVER MAP
 		// var x = document.getElementsByClassName("ol-selectable")[0];
 		// x.classList.remove("sc-hidden");
-		const containers = document.getElementsByClassName(
-			"ol-overlay-container ol-selectable"
-		);
+		const containers = document.getElementsByClassName("ol-overlay-container ol-selectable");
 		Array.prototype.forEach.call(containers, (el) => {
-			if (el.childNodes[0].id === "sc-window-popup")
-				el.classList.remove("sc-hidden");
+			if (el.childNodes[0].id === "sc-window-popup") el.classList.remove("sc-hidden");
 		});
 
 		// SET TITLE
@@ -165,9 +161,7 @@ export default class Popup extends Overlay {
 			function move(evt) {
 				var coord = window.map.getEventCoordinate(evt);
 				var pixel = window.map.getPixelFromCoordinate(coord);
-				var width =
-					getWidth(window.map.getView().getProjection().getExtent()) /
-					window.map.getView().getResolution();
+				var width = getWidth(window.map.getView().getProjection().getExtent()) / window.map.getView().getResolution();
 				var pixelX = ((pixel[0] % width) + width) % width;
 				var pixelY = pixel[1];
 				var popupElem = document.getElementsByClassName("ol-popup")[0];
@@ -244,12 +238,9 @@ export default class Popup extends Overlay {
 	 * @returns {Popup} The Popup instance
 	 */
 	hide() {
-		const containers = document.getElementsByClassName(
-			"ol-overlay-container ol-selectable"
-		);
+		const containers = document.getElementsByClassName("ol-overlay-container ol-selectable");
 		Array.prototype.forEach.call(containers, (el) => {
-			if (el.childNodes[0].id === "sc-window-popup")
-				el.classList.add("sc-hidden");
+			if (el.childNodes[0].id === "sc-window-popup") el.classList.add("sc-hidden");
 		});
 
 		isMoving = false;
@@ -263,8 +254,7 @@ export default class Popup extends Overlay {
 		// PATCH FOR MOBILE TO RE-ENABLE MAP INTERACTIONS
 		if (helpers.isMobile()) {
 			window.map.getInteractions().forEach((interaction) => {
-				if (this.activeIds.includes(interaction.ol_uid))
-					interaction.setActive(true);
+				if (this.activeIds.includes(interaction.ol_uid)) interaction.setActive(true);
 			});
 		}
 

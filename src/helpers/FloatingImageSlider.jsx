@@ -24,9 +24,7 @@ class FloatingImageSlider extends Component {
 		};
 
 		// LISTEN FOR OPEN
-		window.emitter.addListener("showImageSlider", (obj, onFeatureChange) =>
-			this.onLoad(obj, onFeatureChange)
-		);
+		window.emitter.addListener("showImageSlider", (obj, onFeatureChange) => this.onLoad(obj, onFeatureChange));
 		window.emitter.addListener("hideImageSlider", () => {
 			this.setState({ visible: false });
 		});
@@ -89,9 +87,7 @@ class FloatingImageSlider extends Component {
 			},
 			() => {
 				var feature = new Feature({
-					geometry: fromExtent(
-						buffer(this.state.currentFeature.getGeometry().getExtent(), 100)
-					),
+					geometry: fromExtent(buffer(this.state.currentFeature.getGeometry().getExtent(), 100)),
 				});
 				if (zoom) helpers.zoomToFeature(feature, false);
 
@@ -112,9 +108,7 @@ class FloatingImageSlider extends Component {
 			},
 			() => {
 				var feature = new Feature({
-					geometry: fromExtent(
-						buffer(this.state.currentFeature.getGeometry().getExtent(), 100)
-					),
+					geometry: fromExtent(buffer(this.state.currentFeature.getGeometry().getExtent(), 100)),
 				});
 				helpers.zoomToFeature(feature, false);
 				this.onFeatureChange(currentFeature);
@@ -141,26 +135,14 @@ class FloatingImageSlider extends Component {
 	onViewDetailsClick = () => {
 		//https://maps.simcoe.ca/EconomicDevelopmentReport/?header=false&MLSNUMBER=SC436401001658800
 		const mlsNumber = this.state.currentFeature.get("MLS Number");
-		const url =
-			"https://maps.simcoe.ca/EconomicDevelopmentReport/?header=false&MLSNUMBER=" +
-			mlsNumber;
+		const url = "https://maps.simcoe.ca/EconomicDevelopmentReport/?header=false&MLSNUMBER=" + mlsNumber;
 		helpers.showURLWindow(url, false, undefined, undefined, false);
 	};
 	render() {
-		if (
-			this.state.currentFeature === null ||
-			this.state.currentFeature === undefined
-		)
-			return <div />;
+		if (this.state.currentFeature === null || this.state.currentFeature === undefined) return <div />;
 		return (
 			<div className={this.state.visible ? "" : "sc-hidden"}>
-				<div
-					className={
-						this.state.panelOpen
-							? "sc-floating-image-slider-container"
-							: "sc-hidden"
-					}
-				>
+				<div className={this.state.panelOpen ? "sc-floating-image-slider-container" : "sc-hidden"}>
 					<Resizable
 						defaultSize={{
 							width: this.state.width,
@@ -174,32 +156,14 @@ class FloatingImageSlider extends Component {
 						<div>
 							<div className="sc-floating-image-slider-header">
 								{/* <img className="sc-floating-image-slider-star" src={images["yellow-star.png"]} alt="featured" /> */}
-								<label style={{ paddingRight: "10px" }}>
-									Featured Properties
-								</label>
-								<img
-									className="sc-floating-image-slider-close-icon"
-									src={images["close-tab.png"]}
-									alt="featured"
-									onClick={this.onCloseClick}
-								/>
+								<label style={{ paddingRight: "10px" }}>Featured Properties</label>
+								<img className="sc-floating-image-slider-close-icon" src={images["close-tab.png"]} alt="featured" onClick={this.onCloseClick} />
 							</div>
 
 							<div className="sc-floating-image-slider-image-and-details-container">
-								<div
-									className="sc-floating-image-slider-image-container"
-									style={{ height: this.state.imageHeight }}
-								>
-									<div
-										className="sc-floating-image-slider-image-left-arrow"
-										onClick={this.onPreviousFeature}
-									>
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											width="30"
-											height="50"
-											viewBox="0 0 512 512"
-										>
+								<div className="sc-floating-image-slider-image-container" style={{ height: this.state.imageHeight }}>
+									<div className="sc-floating-image-slider-image-left-arrow" onClick={this.onPreviousFeature}>
+										<svg xmlns="http://www.w3.org/2000/svg" width="30" height="50" viewBox="0 0 512 512">
 											<title>Next Image</title>
 											<polyline
 												points="328 112 184 256 328 400"
@@ -223,16 +187,8 @@ class FloatingImageSlider extends Component {
 											/>
 										</svg>
 									</div>
-									<div
-										className="sc-floating-image-slider-image-right-arrow"
-										onClick={this.onNextFeature}
-									>
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											width="30"
-											height="50"
-											viewBox="0 0 512 512"
-										>
+									<div className="sc-floating-image-slider-image-right-arrow" onClick={this.onNextFeature}>
+										<svg xmlns="http://www.w3.org/2000/svg" width="30" height="50" viewBox="0 0 512 512">
 											<title>Next Image</title>
 											<polyline
 												points="184 112 328 256 184 400"
@@ -259,9 +215,7 @@ class FloatingImageSlider extends Component {
 									<img
 										id="sc-floating-image-slider-image"
 										className="sc-floating-image-slider-image"
-										src={this.state.currentFeature.get(
-											this.state.callerObj.imageUrlField
-										)}
+										src={this.state.currentFeature.get(this.state.callerObj.imageUrlField)}
 										alt="property"
 										onError={(e) => {
 											console.log("auto next");
@@ -274,26 +228,13 @@ class FloatingImageSlider extends Component {
 
 								<div className="sc-floating-image-slider-details">
 									{this.state.callerObj.detailFields.map((fieldName) => {
-										return (
-											<InfoRow
-												key={helpers.getUID()}
-												label={fieldName}
-												value={this.state.currentFeature.get(fieldName)}
-											/>
-										);
+										return <InfoRow key={helpers.getUID()} label={fieldName} value={this.state.currentFeature.get(fieldName)} />;
 									})}
 									<div style={{ fontSize: "10pt" }}>
-										<span
-											className="sc-fakeLink"
-											onClick={this.onViewDetailsClick}
-										>
+										<span className="sc-fakeLink" onClick={this.onViewDetailsClick}>
 											View Details
 										</span>
-										<span
-											className="sc-fakeLink"
-											style={{ paddingLeft: "5px" }}
-											onClick={this.onZoomClick}
-										>
+										<span className="sc-fakeLink" style={{ paddingLeft: "5px" }} onClick={this.onZoomClick}>
 											Zoom
 										</span>
 									</div>
@@ -305,25 +246,9 @@ class FloatingImageSlider extends Component {
 						</div>
 					</Resizable>
 				</div>
-				<div
-					className="sc-floating-image-slider-opener"
-					title="Show Image"
-					onClick={this.onCloseClick}
-				>
-					<img
-						src={images["close-arrow-left.png"]}
-						alt="Close"
-						className={
-							this.state.panelOpen
-								? "sc-hidden"
-								: "sc-floating-image-slider-arrow-left"
-						}
-					/>
-					<img
-						src={images["star-symbol.png"]}
-						alt="Close"
-						className={this.state.panelOpen ? "sc-hidden" : ""}
-					/>
+				<div className="sc-floating-image-slider-opener" title="Show Image" onClick={this.onCloseClick}>
+					<img src={images["close-arrow-left.png"]} alt="Close" className={this.state.panelOpen ? "sc-hidden" : "sc-floating-image-slider-arrow-left"} />
+					<img src={images["star-symbol.png"]} alt="Close" className={this.state.panelOpen ? "sc-hidden" : ""} />
 				</div>
 			</div>
 		);
@@ -333,9 +258,7 @@ class FloatingImageSlider extends Component {
 export default FloatingImageSlider;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

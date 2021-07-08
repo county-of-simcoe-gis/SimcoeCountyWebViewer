@@ -1,45 +1,15 @@
 import * as helpers from "./helpers";
 // OPEN LAYERS
-import {
-	Image as ImageLayer,
-	Tile as TileLayer,
-	Vector as VectorLayer,
-} from "ol/layer.js";
-import {
-	ImageWMS,
-	OSM,
-	TileArcGISRest,
-	ImageArcGISRest,
-	TileWMS,
-	TileImage,
-	Vector,
-	Stamen,
-	XYZ,
-	ImageStatic,
-} from "ol/source.js";
+import { Image as ImageLayer, Tile as TileLayer, Vector as VectorLayer } from "ol/layer.js";
+import { ImageWMS, OSM, TileArcGISRest, ImageArcGISRest, TileWMS, TileImage, Vector, Stamen, XYZ, ImageStatic } from "ol/source.js";
 import WMTS, { optionsFromCapabilities } from "ol/source/WMTS";
 
 import GML3 from "ol/format/GML3.js";
 import GML2 from "ol/format/GML2.js";
 import OSMXML from "ol/format/OSMXML.js";
 //import {file as FileLoader} from "ol/featureloader.js";
-import {
-	GeoJSON,
-	GPX,
-	KML,
-	EsriJSON,
-	TopoJSON,
-	IGC,
-	Polyline,
-	WKT,
-	MVT,
-	WMTSCapabilities,
-	WMSCapabilities,
-} from "ol/format.js";
-import {
-	all as LoadingStrategyAll,
-	tile as LoadingStrategyTile,
-} from "ol/loadingstrategy.js";
+import { GeoJSON, GPX, KML, EsriJSON, TopoJSON, IGC, Polyline, WKT, MVT, WMTSCapabilities, WMSCapabilities } from "ol/format.js";
+import { all as LoadingStrategyAll, tile as LoadingStrategyTile } from "ol/loadingstrategy.js";
 
 import { getTopLeft } from "ol/extent";
 import { transform } from "ol/proj.js";
@@ -114,15 +84,9 @@ export class FeatureHelpers {
 		}
 	}
 
-	static setFeatures(
-		features,
-		target_format = OL_DATA_TYPES.GeoJSON,
-		dataProjection = null,
-		featureProjection = null
-	) {
+	static setFeatures(features, target_format = OL_DATA_TYPES.GeoJSON, dataProjection = null, featureProjection = null) {
 		if (features.length === 0) return;
-		const mapProjection =
-			featureProjection || window.map.getView().getProjection();
+		const mapProjection = featureProjection || window.map.getView().getProjection();
 		const parser = this.getVectorFormat(target_format);
 		let output = undefined;
 		try {
@@ -131,20 +95,12 @@ export class FeatureHelpers {
 				featureProjection: mapProjection,
 			});
 		} catch (err) {
-			helpers.showMessage(
-				"Error",
-				"Unsupported Feature.",
-				helpers.messageColors.red
-			);
+			helpers.showMessage("Error", "Unsupported Feature.", helpers.messageColors.red);
 			console.log(err);
 		}
 		return output;
 	}
-	static getFeatures(
-		features,
-		source_format = OL_DATA_TYPES.GeoJSON,
-		projection = "EPSG:3857"
-	) {
+	static getFeatures(features, source_format = OL_DATA_TYPES.GeoJSON, projection = "EPSG:3857") {
 		if (features.length === 0) return;
 		const mapProjection = window.map.getView().getProjection();
 		const parser = this.getVectorFormat(source_format, projection);
@@ -156,11 +112,7 @@ export class FeatureHelpers {
 				featureProjection: mapProjection,
 			});
 		} catch (err) {
-			helpers.showMessage(
-				"Error",
-				"Unsupported Feature.",
-				helpers.messageColors.red
-			);
+			helpers.showMessage("Error", "Unsupported Feature.", helpers.messageColors.red);
 			console.log(err);
 		}
 		return output;
@@ -171,11 +123,7 @@ export class FeatureHelpers {
 		try {
 			output = parser.writeGeometry(source_geometry);
 		} catch (err) {
-			helpers.showMessage(
-				"Error",
-				"Unsupported Geometry.",
-				helpers.messageColors.red
-			);
+			helpers.showMessage("Error", "Unsupported Geometry.", helpers.messageColors.red);
 			console.log(err);
 		}
 		return output;
@@ -186,11 +134,7 @@ export class FeatureHelpers {
 		try {
 			output = parser.readGeometry(geometry);
 		} catch (err) {
-			helpers.showMessage(
-				"Error",
-				"Unsupported Geometry.",
-				helpers.messageColors.red
-			);
+			helpers.showMessage("Error", "Unsupported Geometry.", helpers.messageColors.red);
 			console.log(err);
 		}
 		return output;
@@ -200,16 +144,12 @@ export class FeatureHelpers {
 export class LayerHelpers {
 	static async identifyFeaturesWait(layer, coordinate, callback = undefined) {
 		const viewResolution = window.map.getView().getResolution();
-		const isArcGISLayer =
-			LayerHelpers.getLayerSourceType(layer.getSource()) ===
-			OL_DATA_TYPES.ImageArcGISRest;
+		const isArcGISLayer = LayerHelpers.getLayerSourceType(layer.getSource()) === OL_DATA_TYPES.ImageArcGISRest;
 		var url = isArcGISLayer
 			? layer.get("wfsUrl")
-			: layer
-					.getSource()
-					.getFeatureInfoUrl(coordinate, viewResolution, "EPSG:3857", {
-						INFO_FORMAT: "application/json",
-					});
+			: layer.getSource().getFeatureInfoUrl(coordinate, viewResolution, "EPSG:3857", {
+					INFO_FORMAT: "application/json",
+			  });
 		const params = {};
 		const secureKey = layer.get("secureKey");
 		if (secureKey !== undefined) {
@@ -218,9 +158,7 @@ export class LayerHelpers {
 			params["headers"] = headers;
 		}
 		if (isArcGISLayer) {
-			const arcgisResolution = `${window.map.getSize()[0]},${
-				window.map.getSize()[1]
-			},96`;
+			const arcgisResolution = `${window.map.getSize()[0]},${window.map.getSize()[1]},96`;
 			const extent = window.map.getView().calculateExtent();
 			const zoom = window.map.getView().getZoom();
 			const tolerance = 20 - zoom;
@@ -232,9 +170,7 @@ export class LayerHelpers {
 		}
 		if (url) {
 			await helpers.getJSONWaitWithParams(url, params, (result) => {
-				let features = isArcGISLayer
-					? LayerHelpers.parseESRIIdentify(result)
-					: new GeoJSON().readFeatures(result);
+				let features = isArcGISLayer ? LayerHelpers.parseESRIIdentify(result) : new GeoJSON().readFeatures(result);
 				if (callback === undefined) {
 					return features.length > 0 ? features[0] : undefined;
 				} else {
@@ -245,16 +181,12 @@ export class LayerHelpers {
 	}
 	static identifyFeatures(layer, coordinate, callback) {
 		const viewResolution = window.map.getView().getResolution();
-		const isArcGISLayer =
-			LayerHelpers.getLayerSourceType(layer.getSource()) ===
-			OL_DATA_TYPES.ImageArcGISRest;
+		const isArcGISLayer = LayerHelpers.getLayerSourceType(layer.getSource()) === OL_DATA_TYPES.ImageArcGISRest;
 		var url = isArcGISLayer
 			? layer.get("wfsUrl")
-			: layer
-					.getSource()
-					.getFeatureInfoUrl(coordinate, viewResolution, "EPSG:3857", {
-						INFO_FORMAT: "application/json",
-					});
+			: layer.getSource().getFeatureInfoUrl(coordinate, viewResolution, "EPSG:3857", {
+					INFO_FORMAT: "application/json",
+			  });
 		const params = {};
 		const secureKey = layer.get("secureKey");
 		if (secureKey !== undefined) {
@@ -263,9 +195,7 @@ export class LayerHelpers {
 			params["headers"] = headers;
 		}
 		if (isArcGISLayer) {
-			const arcgisResolution = `${window.map.getSize()[0]},${
-				window.map.getSize()[1]
-			},96`;
+			const arcgisResolution = `${window.map.getSize()[0]},${window.map.getSize()[1]},96`;
 			const extent = window.map.getView().calculateExtent();
 			const zoom = window.map.getView().getZoom();
 			const tolerance = 20 - zoom;
@@ -277,9 +207,7 @@ export class LayerHelpers {
 		}
 		if (url) {
 			helpers.getJSONWithParams(url, params, (result) => {
-				let features = isArcGISLayer
-					? LayerHelpers.parseESRIIdentify(result)
-					: new GeoJSON().readFeatures(result);
+				let features = isArcGISLayer ? LayerHelpers.parseESRIIdentify(result) : new GeoJSON().readFeatures(result);
 				callback(features.length > 0 ? features[0] : undefined);
 			});
 		}
@@ -293,8 +221,7 @@ export class LayerHelpers {
 				delete item.geometryType;
 				let keys = Object.keys(item.attributes);
 				keys.forEach((key) => {
-					if (item.attributes[key] === "Null" || item.attributes[key] === "")
-						delete item.attributes[key];
+					if (item.attributes[key] === "Null" || item.attributes[key] === "") delete item.attributes[key];
 				});
 
 				let tempFeature = new EsriJSON().readFeature(item);
@@ -371,8 +298,7 @@ export class LayerHelpers {
 						parser = new WMSCapabilities();
 						response = parser.read(responseText);
 						let layerGroup = response.Capability.Layer.Layer;
-						if (layerGroup[0].Layer !== undefined)
-							layerGroup = layerGroup[0].Layer;
+						if (layerGroup[0].Layer !== undefined) layerGroup = layerGroup[0].Layer;
 						layerGroup.forEach((layer) => {
 							this.getWMSLayers(layer, (item) => {
 								if (item !== undefined) {
@@ -407,15 +333,8 @@ export class LayerHelpers {
 										item["legend"] = legends.filter((legend) => {
 											return legend.layerId === item.id;
 										})[0];
-										if (
-											item.drawingInfo !== undefined &&
-											item.drawingInfo.renderer !== undefined &&
-											item.drawingInfo.renderer.symbol !== undefined &&
-											item.legend === undefined
-										)
-											item[
-												"style"
-											] = `data:${item.drawingInfo.renderer.symbol.contentType};base64,${item.drawingInfo.renderer.symbol.imageData}`;
+										if (item.drawingInfo !== undefined && item.drawingInfo.renderer !== undefined && item.drawingInfo.renderer.symbol !== undefined && item.legend === undefined)
+											item["style"] = `data:${item.drawingInfo.renderer.symbol.contentType};base64,${item.drawingInfo.renderer.symbol.imageData}`;
 										item["url"] = `${root_url}/${item.id}`;
 										layers.push(item);
 									}
@@ -431,13 +350,10 @@ export class LayerHelpers {
 						break;
 					default:
 						parseString(responseText, function (err, result) {
-							result[
-								"wfs:WFS_Capabilities"
-							].FeatureTypeList[0].FeatureType.forEach((layer) => {
+							result["wfs:WFS_Capabilities"].FeatureTypeList[0].FeatureType.forEach((layer) => {
 								var layerTitle = layer.Title[0];
 								var layerName = layer.Name[0];
-								if (layerTitle === undefined || layerTitle === "")
-									layerTitle = layerName;
+								if (layerTitle === undefined || layerTitle === "") layerTitle = layerName;
 								layers.push({
 									label: layerTitle,
 									value: helpers.getUID(),
@@ -555,8 +471,7 @@ export class LayerHelpers {
 	static getLayer(options, callback) {
 		let sourceType = options.sourceType;
 		let source = options.source;
-		let projection =
-			options.projection !== undefined ? options.projection : "EPSG:3857";
+		let projection = options.projection !== undefined ? options.projection : "EPSG:3857";
 		let layerName = options.layerName;
 		let url = options.url;
 		let tiled = options.tiled !== undefined ? options.tiled : false;
@@ -582,10 +497,7 @@ export class LayerHelpers {
 		// console.log(url);
 		switch (source) {
 			case "remote":
-				const featureParser = FeatureHelpers.getVectorFormat(
-					sourceType,
-					projection
-				);
+				const featureParser = FeatureHelpers.getVectorFormat(sourceType, projection);
 				Vector_FileLoader = function (extent, resolution, proj) {
 					try {
 						console.log(extent, resolution, proj);
@@ -596,17 +508,14 @@ export class LayerHelpers {
 						remoteUrl += `&geometryType=esriGeometryEnvelope`;
 						remoteUrl += `&spatialRel=esriSpatialRelIntersects`;
 						remoteUrl += `&geometry=`;
-						remoteUrl += encodeURIComponent(
-							`{"xmin":${proj.extent_[0]},"ymin":${proj.extent_[1]},"xmax":${proj.extent_[2]},"ymax":${proj.extent_[3]},"spatialReference":{"wkid":102100}}`
-						);
+						remoteUrl += encodeURIComponent(`{"xmin":${proj.extent_[0]},"ymin":${proj.extent_[1]},"xmax":${proj.extent_[2]},"ymax":${proj.extent_[3]},"spatialReference":{"wkid":102100}}`);
 						remoteUrl += `&inSR=3857`;
 						remoteUrl += `&outFields=*`;
 						remoteUrl += `&outSR=3857`;
 						helpers.getJSON(remoteUrl, (response) => {
 							_this.addFeatures(
 								featureParser.readFeatures(response, {
-									dataProjection:
-										featureParser.readProjection(response) || projection,
+									dataProjection: featureParser.readProjection(response) || projection,
 									featureProjection: mapProjection,
 								})
 							);
@@ -635,10 +544,7 @@ export class LayerHelpers {
 				} else {
 					if (name.length < 1) name = file.name;
 					url = undefined;
-					const featureParser = FeatureHelpers.getVectorFormat(
-						sourceType,
-						projection
-					);
+					const featureParser = FeatureHelpers.getVectorFormat(sourceType, projection);
 					Vector_FileLoader = function (extent, resolution, proj) {
 						try {
 							const mapProjection = window.map.getView().getProjection();
@@ -648,8 +554,7 @@ export class LayerHelpers {
 								var vectorData = evt.target.result;
 								_this.addFeatures(
 									featureParser.readFeatures(vectorData, {
-										dataProjection:
-											featureParser.readProjection(vectorData) || projection,
+										dataProjection: featureParser.readProjection(vectorData) || projection,
 										featureProjection: mapProjection,
 									})
 								);
@@ -662,20 +567,10 @@ export class LayerHelpers {
 				}
 				break;
 			case "wfs":
-				const type =
-					sourceType === OL_DATA_TYPES.GeoJSON
-						? "application/json"
-						: sourceType;
+				const type = sourceType === OL_DATA_TYPES.GeoJSON ? "application/json" : sourceType;
 				url = /^((http)|(https))(:\/\/)/.test(url) ? url : "https://" + url;
 				url = /\?/.test(url) ? url + "&" : url + "?";
-				url =
-					url +
-					"SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=" +
-					layerName +
-					"&SRSNAME=" +
-					projection +
-					"&OUTPUTFORMAT=" +
-					type;
+				url = url + "SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=" + layerName + "&SRSNAME=" + projection + "&OUTPUTFORMAT=" + type;
 				if (tiled)
 					url = function (extent, resolution, proj) {
 						return url + "&bbox=" + extent.join(",") + "," + proj.getCode();
@@ -697,9 +592,7 @@ export class LayerHelpers {
 						source: new Vector({
 							name: name,
 							url: url,
-							strategy: tiled
-								? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 }))
-								: LoadingStrategyAll,
+							strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
 							format: new GML3({ srsName: projection }),
 							loader: Vector_FileLoader,
 							crossOrigin: "anonymous",
@@ -714,9 +607,7 @@ export class LayerHelpers {
 						source: new Vector({
 							name: name,
 							url: url,
-							strategy: tiled
-								? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 }))
-								: LoadingStrategyAll,
+							strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
 							format: new GML2({ srsName: projection }),
 							loader: Vector_FileLoader,
 							crossOrigin: "anonymous",
@@ -731,9 +622,7 @@ export class LayerHelpers {
 						source: new Vector({
 							name: name,
 							url: url,
-							strategy: tiled
-								? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 }))
-								: LoadingStrategyAll,
+							strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
 							format: new GPX(),
 							loader: Vector_FileLoader,
 							crossOrigin: "anonymous",
@@ -748,9 +637,7 @@ export class LayerHelpers {
 						source: new Vector({
 							name: name,
 							url: url,
-							strategy: tiled
-								? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 }))
-								: LoadingStrategyAll,
+							strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
 							format: new KML(),
 							loader: Vector_FileLoader,
 							crossOrigin: "anonymous",
@@ -765,9 +652,7 @@ export class LayerHelpers {
 						source: new Vector({
 							name: name,
 							url: url,
-							strategy: tiled
-								? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 }))
-								: LoadingStrategyAll,
+							strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
 							format: new OSMXML(),
 							loader: Vector_FileLoader,
 							crossOrigin: "anonymous",
@@ -782,11 +667,7 @@ export class LayerHelpers {
 						source: new Vector({
 							name: name,
 							url: url,
-							strategy: tiled
-								? LoadingStrategyTile(
-										TileGrid.createXYZ({ tileSize: 512, maxZoom: 19 })
-								  )
-								: LoadingStrategyAll,
+							strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ tileSize: 512, maxZoom: 19 })) : LoadingStrategyAll,
 							format: new EsriJSON(),
 							loader: Vector_FileLoader,
 							crossOrigin: "anonymous",
@@ -802,9 +683,7 @@ export class LayerHelpers {
 						source: new Vector({
 							name: name,
 							url: url,
-							strategy: tiled
-								? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 }))
-								: LoadingStrategyAll,
+							strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
 							format: new GeoJSON(),
 							loader: Vector_FileLoader,
 							crossOrigin: "anonymous",
@@ -819,9 +698,7 @@ export class LayerHelpers {
 						source: new Vector({
 							name: name,
 							url: url,
-							strategy: tiled
-								? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 }))
-								: LoadingStrategyAll,
+							strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
 							format: new TopoJSON(),
 							loader: Vector_FileLoader,
 							crossOrigin: "anonymous",
@@ -836,9 +713,7 @@ export class LayerHelpers {
 						source: new Vector({
 							name: name,
 							url: url,
-							strategy: tiled
-								? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 }))
-								: LoadingStrategyAll,
+							strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
 							format: new IGC(),
 							loader: Vector_FileLoader,
 							crossOrigin: "anonymous",
@@ -853,9 +728,7 @@ export class LayerHelpers {
 						source: new Vector({
 							name: name,
 							url: url,
-							strategy: tiled
-								? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 }))
-								: LoadingStrategyAll,
+							strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
 							format: new Polyline(),
 							loader: Vector_FileLoader,
 							crossOrigin: "anonymous",
@@ -870,9 +743,7 @@ export class LayerHelpers {
 						source: new Vector({
 							name: name,
 							url: url,
-							strategy: tiled
-								? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 }))
-								: LoadingStrategyAll,
+							strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
 							format: new WKT(),
 							loader: Vector_FileLoader,
 							crossOrigin: "anonymous",
@@ -887,9 +758,7 @@ export class LayerHelpers {
 						source: new Vector({
 							name: name,
 							url: url,
-							strategy: tiled
-								? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 }))
-								: LoadingStrategyAll,
+							strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
 							format: new MVT(),
 							loader: Vector_FileLoader,
 							crossOrigin: "anonymous",
@@ -965,13 +834,7 @@ export class LayerHelpers {
 					projection: projection,
 					crossOrigin: "anonymous",
 				};
-				if (extent !== undefined)
-					sourceParams["extent"] = [
-						extent.xmin,
-						extent.ymin,
-						extent.xmax,
-						extent.ymax,
-					];
+				if (extent !== undefined) sourceParams["extent"] = [extent.xmin, extent.ymin, extent.xmax, extent.ymax];
 				callback(
 					new ImageLayer({
 						rebuildParams: rebuildParams,
@@ -983,47 +846,34 @@ export class LayerHelpers {
 			case OL_DATA_TYPES.WMTS:
 				const rootUrl = url.replace("1.0.0/WMTSCapabilities.xml", "");
 				const convertExtent = (extent, sourceCoord, targetCoord) => {
-					return transform(
-						[extent[0], extent[1]],
-						sourceCoord,
-						targetCoord
-					).concat(transform([extent[2], extent[3]], sourceCoord, targetCoord));
+					return transform([extent[0], extent[1]], sourceCoord, targetCoord).concat(transform([extent[2], extent[3]], sourceCoord, targetCoord));
 				};
 				const wmtsCap = (url, callback) => {
-					helpers.httpGetText(
-						url.indexOf("Capabilities") === -1
-							? (/\?/.test(url) ? url + "&" : url + "?") +
-									"REQUEST=GetCapabilities&SERVICE=WMTS"
-							: url,
-						(responseText) => {
-							try {
-								var parser = new WMTSCapabilities();
-								callback(parser.read(responseText));
-							} catch (error) {
-								console.warn("Unexpected error: " + error.message);
-							}
+					helpers.httpGetText(url.indexOf("Capabilities") === -1 ? (/\?/.test(url) ? url + "&" : url + "?") + "REQUEST=GetCapabilities&SERVICE=WMTS" : url, (responseText) => {
+						try {
+							var parser = new WMTSCapabilities();
+							callback(parser.read(responseText));
+						} catch (error) {
+							console.warn("Unexpected error: " + error.message);
 						}
-					);
+					});
 				};
 
 				wmtsCap(url, (capabilities) => {
 					var tileMatrixSet = capabilities.Contents.TileMatrixSet[0];
-					helpers.registerCustomProjection(
-						tileMatrixSet.SupportedCRS.split(":")[1],
-						() => {
-							var wmtsOptions = optionsFromCapabilities(capabilities, {
-								layer: layerName,
-								requestEncoding: "REST",
-							});
-							callback(
-								new TileLayer({
-									rebuildParams: rebuildParams,
-									name: name,
-									source: new WMTS(wmtsOptions),
-								})
-							);
-						}
-					);
+					helpers.registerCustomProjection(tileMatrixSet.SupportedCRS.split(":")[1], () => {
+						var wmtsOptions = optionsFromCapabilities(capabilities, {
+							layer: layerName,
+							requestEncoding: "REST",
+						});
+						callback(
+							new TileLayer({
+								rebuildParams: rebuildParams,
+								name: name,
+								source: new WMTS(wmtsOptions),
+							})
+						);
+					});
 				});
 				break;
 			case OL_DATA_TYPES.Stamen:
@@ -1063,9 +913,7 @@ export class LayerHelpers {
 				break;
 			case OL_DATA_TYPES.TileImage:
 				const resolutions = [
-					305.74811314055756, 152.87405657041106, 76.43702828507324,
-					38.21851414253662, 19.10925707126831, 9.554628535634155,
-					4.77731426794937, 2.388657133974685, 1.1943285668550503,
+					305.74811314055756, 152.87405657041106, 76.43702828507324, 38.21851414253662, 19.10925707126831, 9.554628535634155, 4.77731426794937, 2.388657133974685, 1.1943285668550503,
 					0.5971642835598172, 0.29858214164761665, 0.1492252984505969,
 				];
 				const projExtent_ti = window.map.getView().getProjection().getExtent();

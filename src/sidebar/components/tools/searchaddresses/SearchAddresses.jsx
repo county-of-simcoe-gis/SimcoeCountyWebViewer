@@ -92,17 +92,14 @@ class SearchAddresses extends Component {
 	onSearchClick = () => {
 		helpers.waitForLoad("settings", Date.now(), 30, () => {
 			let sql = "";
-			if (this.state.selectedMuni.value !== "SEARCH ALL")
-				sql += "muni = '" + this.state.selectedMuni.value + "'";
+			if (this.state.selectedMuni.value !== "SEARCH ALL") sql += "muni = '" + this.state.selectedMuni.value + "'";
 
 			if (this.state.addressNumber.length !== 0) {
 				if (sql === "") sql += "stnum = " + this.state.addressNumber;
 				else sql += " AND stnum = " + this.state.addressNumber + " ";
 			}
 
-			const streetValue = document.getElementById(
-				"sc-tool-search-addresses-street-search"
-			).value;
+			const streetValue = document.getElementById("sc-tool-search-addresses-street-search").value;
 			if (streetValue !== "") {
 				if (sql === "") sql += "fullname ILIKE '%25" + streetValue + "%25'";
 				else sql += " AND fullname ILIKE '%25" + streetValue + "%25'";
@@ -151,11 +148,9 @@ class SearchAddresses extends Component {
 	};
 
 	onFeatureClick = (feature) => {
-		window.map
-			.getView()
-			.fit(feature.getGeometry().getExtent(), window.map.getSize(), {
-				duration: 500,
-			});
+		window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize(), {
+			duration: 500,
+		});
 	};
 
 	onClearClick = () => {
@@ -182,53 +177,27 @@ class SearchAddresses extends Component {
 				padding: "5px",
 			}),
 		};
-		const searchStreetsURL = (apiUrl, searchText) =>
-			`${apiUrl}getStreetNames/${searchText}`;
+		const searchStreetsURL = (apiUrl, searchText) => `${apiUrl}getStreetNames/${searchText}`;
 
 		return (
-			<PanelComponent
-				onClose={this.onClose}
-				name={this.props.name}
-				helpLink={this.props.helpLink}
-				type="tools"
-			>
+			<PanelComponent onClose={this.onClose} name={this.props.name} helpLink={this.props.helpLink} type="tools">
 				<div className="sc-tool-search-addresses-container">
-					<div className="sc-tool-search-addresses-header">
-						Locate civic addresses within the County using the form below.
-					</div>
+					<div className="sc-tool-search-addresses-header">Locate civic addresses within the County using the form below.</div>
 					<div className="sc-container sc-theme-search-addresses-controls">
 						<div className="sc-theme-search-addresses-control-row">
-							<label className="sc-theme-search-addresses-control label">
-								Municipality:
-							</label>
+							<label className="sc-theme-search-addresses-control label">Municipality:</label>
 							<div className="sc-theme-search-addresses-control input">
-								<Select
-									styles={muniSelectStyle}
-									isSearchable={false}
-									onChange={this.onMuniChange}
-									options={munis}
-									value={this.state.selectedMuni}
-								/>
+								<Select styles={muniSelectStyle} isSearchable={false} onChange={this.onMuniChange} options={munis} value={this.state.selectedMuni} />
 							</div>
 						</div>
 						<div className="sc-theme-search-addresses-control-row">
-							<label className="sc-theme-search-addresses-control label">
-								Address Number:
-							</label>
+							<label className="sc-theme-search-addresses-control label">Address Number:</label>
 							<div className="sc-theme-search-addresses-control input">
-								<input
-									className="sc-theme-search-addresses-number"
-									type="text"
-									placeholder="Enter Address Number"
-									onClick={this.onAddressNumberClick}
-									onChange={this.onAddressNumberChange}
-								/>
+								<input className="sc-theme-search-addresses-number" type="text" placeholder="Enter Address Number" onClick={this.onAddressNumberClick} onChange={this.onAddressNumberChange} />
 							</div>
 						</div>
 						<div className="sc-theme-search-addresses-control-row">
-							<label className="sc-theme-search-addresses-control label">
-								Street Name:
-							</label>
+							<label className="sc-theme-search-addresses-control label">Street Name:</label>
 							<div className="sc-theme-search-addresses-control input">
 								<Autocomplete
 									tabIndex="1"
@@ -259,13 +228,9 @@ class SearchAddresses extends Component {
 												iconActiveClass: "sc-search-icon-active",
 											});
 
-											helpers.getJSON(
-												searchStreetsURL(this.apiUrl, value),
-												(responseJson) => {
-													if (responseJson.error === undefined)
-														this.setState({ streetItems: responseJson });
-												}
-											);
+											helpers.getJSON(searchStreetsURL(this.apiUrl, value), (responseJson) => {
+												if (responseJson.error === undefined) this.setState({ streetItems: responseJson });
+											});
 										} else {
 											this.setState({
 												iconInitialClass: "sc-search-icon-initial",
@@ -277,36 +242,16 @@ class SearchAddresses extends Component {
 											this.setState({ searchResults: [] });
 										}
 									}}
-									renderMenu={(children) => (
-										<div className="sc-tool-search-addresses-street-search-menu">
-											{children}
-										</div>
-									)}
+									renderMenu={(children) => <div className="sc-tool-search-addresses-street-search-menu">{children}</div>}
 									renderItem={(item, isHighlighted) => (
-										<div
-											className={
-												isHighlighted
-													? "sc-tool-search-addresses-street-search-highlighted"
-													: "sc-tool-search-addresses-street-search-item"
-											}
-											key={helpers.getUID()}
-										>
+										<div className={isHighlighted ? "sc-tool-search-addresses-street-search-highlighted" : "sc-tool-search-addresses-street-search-item"} key={helpers.getUID()}>
 											<div className="sc-search-item-left">
-												<img
-													src={require("./images/map-marker-light-blue.png")}
-													alt="blue pin"
-												/>
+												<img src={require("./images/map-marker-light-blue.png")} alt="blue pin" />
 											</div>
 											<div className="sc-search-item-content">
-												<Highlighter
-													highlightClassName="sc-search-highlight-words"
-													searchWords={[this.state.streetValue]}
-													textToHighlight={item.streetname}
-												/>
+												<Highlighter highlightClassName="sc-search-highlight-words" searchWords={[this.state.streetValue]} textToHighlight={item.streetname} />
 
-												<div className="sc-search-item-sub-content">
-													{" - " + item.muni}
-												</div>
+												<div className="sc-search-item-sub-content">{" - " + item.muni}</div>
 											</div>
 										</div>
 									)}
@@ -314,42 +259,20 @@ class SearchAddresses extends Component {
 							</div>
 						</div>
 						<div className="sc-theme-search-addresses-control-row sc-theme-search-addresses-button-container">
-							<button
-								className="sc-button sc-theme-search-addresses-button"
-								onClick={this.onSearchClick}
-							>
+							<button className="sc-button sc-theme-search-addresses-button" onClick={this.onSearchClick}>
 								Search
 							</button>
-							<button
-								className="sc-button sc-theme-search-addresses-button"
-								style={{ marginLeft: "5px" }}
-								onClick={this.onClearClick}
-							>
+							<button className="sc-button sc-theme-search-addresses-button" style={{ marginLeft: "5px" }} onClick={this.onClearClick}>
 								Clear
 							</button>
 						</div>
 					</div>
-					<div
-						className={
-							this.state.features.length === 0
-								? "sc-container sc-tool-search-addresses-no-results"
-								: "sc-hidden"
-						}
-					>
-						Please enter an Address in the textboxes above then click SEARCH
-						button.
+					<div className={this.state.features.length === 0 ? "sc-container sc-tool-search-addresses-no-results" : "sc-hidden"}>
+						Please enter an Address in the textboxes above then click SEARCH button.
 					</div>
 					<div className="sc-tool-search-addresses-results">
 						{this.state.features.map((feature) => {
-							return (
-								<Results
-									key={helpers.getUID()}
-									feature={feature}
-									onMouseEnter={this.onMouseEnter}
-									onMouseLeave={this.onMouseLeave}
-									onFeatureClick={this.onFeatureClick}
-								/>
-							);
+							return <Results key={helpers.getUID()} feature={feature} onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave} onFeatureClick={this.onFeatureClick} />;
 						})}
 					</div>
 				</div>
@@ -375,11 +298,7 @@ const Results = (props) => {
 			}}
 			onClick={() => props.onFeatureClick(props.feature)}
 		>
-			<img
-				src={images["map-marker-icon.png"]}
-				style={{ marginBottom: "8px" }}
-				alt="marker icon"
-			/>
+			<img src={images["map-marker-icon.png"]} style={{ marginBottom: "8px" }} alt="marker icon" />
 			<div className="sc-tool-search-addresses-item-right">
 				<label>{fullAddress}</label>
 				<label style={{ display: "block", fontSize: "12px" }}>{muni}</label>
@@ -460,9 +379,7 @@ const munis = [
 ];
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

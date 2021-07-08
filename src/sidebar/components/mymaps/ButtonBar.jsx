@@ -6,13 +6,7 @@ import myMapsConfig from "./myMapsConfig.json";
 //className={props.isEditing ? "sc-mymaps-button-bar sc-disabled" : "sc-mymaps-button-bar"}
 const ButtonBar = (props) => {
 	return (
-		<div
-			className={
-				props.isEditing
-					? "sc-mymaps-button-bar sc-disabled"
-					: "sc-mymaps-button-bar"
-			}
-		>
+		<div className={props.isEditing ? "sc-mymaps-button-bar sc-disabled" : "sc-mymaps-button-bar"}>
 			<DrawButton
 				title="Draw a point on the map"
 				imageName="point.png"

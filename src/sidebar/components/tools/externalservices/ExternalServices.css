@@ -11,11 +11,7 @@
 	font-size: 18px;
 	padding: 5px;
 	/* border-bottom: 1px solid #ddd; */
-	background: linear-gradient(
-		to bottom,
-		rgba(255, 255, 255, 1) 0%,
-		rgba(229, 229, 229, 1) 100%
-	);
+	background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
 }
 
 .sc-tool-external-services-item-image {

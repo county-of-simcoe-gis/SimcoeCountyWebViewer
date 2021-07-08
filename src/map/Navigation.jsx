@@ -14,14 +14,10 @@ class Navigation extends Component {
 		};
 
 		// LISTEN FOR SIDEPANEL CHANGES
-		window.emitter.addListener("sidebarChanged", (isSidebarOpen) =>
-			this.sidebarChanged(isSidebarOpen)
-		);
+		window.emitter.addListener("sidebarChanged", (isSidebarOpen) => this.sidebarChanged(isSidebarOpen));
 
 		// LISTEN FOR CONTROL VISIBILITY CHANGES
-		window.emitter.addListener("mapControlsChanged", (control, visible) =>
-			this.controlStateChange(control, visible)
-		);
+		window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control, visible));
 	}
 
 	componentDidMount() {
@@ -49,10 +45,7 @@ class Navigation extends Component {
 				helpers.flashPoint(coords);
 			},
 			(err) => {
-				helpers.showMessage(
-					"Location",
-					"Getting your location failed: " + err.message
-				);
+				helpers.showMessage("Location", "Getting your location failed: " + err.message);
 			},
 			options
 		);
@@ -94,9 +87,7 @@ class Navigation extends Component {
 						<div
 							className="zoomButton"
 							onClick={() => {
-								window.map
-									.getView()
-									.setZoom(window.map.getView().getZoom() + 1);
+								window.map.getView().setZoom(window.map.getView().getZoom() + 1);
 							}}
 						>
 							+
@@ -104,9 +95,7 @@ class Navigation extends Component {
 						<div
 							className="zoomButton"
 							onClick={() => {
-								window.map
-									.getView()
-									.setZoom(window.map.getView().getZoom() - 1);
+								window.map.getView().setZoom(window.map.getView().getZoom() - 1);
 							}}
 						>
 							-
@@ -114,10 +103,7 @@ class Navigation extends Component {
 						<div className="fullExtentButton" onClick={this.zoomFullExtent}>
 							<div className="fullExtentContent" />
 						</div>
-						<div
-							className="zoomToCurrentLocationButton"
-							onClick={this.zoomToCurrentLocation}
-						>
+						<div className="zoomToCurrentLocationButton" onClick={this.zoomToCurrentLocation}>
 							<div className="zoomToCurrentLocationContent" />
 						</div>
 					</div>

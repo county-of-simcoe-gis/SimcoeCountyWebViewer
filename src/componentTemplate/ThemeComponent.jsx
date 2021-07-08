@@ -15,12 +15,7 @@ class ThemeComponent extends Component {
 
 	render() {
 		return (
-			<PanelComponent
-				onClose={this.onClose}
-				name={this.props.name}
-				helpLink={this.props.helpLink}
-				type="themes"
-			>
+			<PanelComponent onClose={this.onClose} name={this.props.name} helpLink={this.props.helpLink} type="themes">
 				<div>Put your components in here.</div>
 			</PanelComponent>
 		);

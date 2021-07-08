@@ -9,12 +9,7 @@ const ThemeLayers = (props) => {
 			<div className="sc-title sc-underline">THEME LAYERS</div>
 			<div className="sc-container">
 				{props.config.toggleLayers.map((layerConfig) => (
-					<ThemeLayerToggler
-						key={helpers.getUID()}
-						layerConfig={layerConfig}
-						config={props.config}
-						onLayerVisiblityChange={props.onLayerVisiblityChange}
-					/>
+					<ThemeLayerToggler key={helpers.getUID()} layerConfig={layerConfig} config={props.config} onLayerVisiblityChange={props.onLayerVisiblityChange} />
 				))}
 			</div>
 		</div>

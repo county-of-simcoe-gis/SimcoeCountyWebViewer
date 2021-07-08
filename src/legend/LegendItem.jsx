@@ -5,62 +5,29 @@ import cx from "classnames";
 
 function LegendItem(props) {
 	const { layer } = props;
-	const [legendImage, setLegendImage] = useState(
-		layer.layer === undefined
-			? layer.imageUrl === undefined
-				? layer.styleUrl
-				: layer.imageUrl
-			: undefined
-	);
+	const [legendImage, setLegendImage] = useState(layer.layer === undefined ? (layer.imageUrl === undefined ? layer.styleUrl : layer.imageUrl) : undefined);
 	if (layer.imageUrl === undefined ? layer.styleUrl : layer.imageUrl) {
 		const params = {};
-		const secureKey =
-			layer.layer !== undefined ? layer.layer.get("secureKey") : undefined;
+		const secureKey = layer.layer !== undefined ? layer.layer.get("secureKey") : undefined;
 		if (secureKey !== undefined) {
 			params[secureKey] = "GIS";
-			helpers.getBase64FromImageUrlWithParams(
-				layer.imageUrl === undefined ? layer.styleUrl : layer.imageUrl,
-				params,
-				(height, returnImage) => {
-					setLegendImage(returnImage);
-				}
-			);
+			helpers.getBase64FromImageUrlWithParams(layer.imageUrl === undefined ? layer.styleUrl : layer.imageUrl, params, (height, returnImage) => {
+				setLegendImage(returnImage);
+			});
 		} else {
-			if (legendImage === undefined)
-				setLegendImage(
-					layer.imageUrl === undefined ? layer.styleUrl : layer.imageUrl
-				);
+			if (legendImage === undefined) setLegendImage(layer.imageUrl === undefined ? layer.styleUrl : layer.imageUrl);
 		}
 	}
 	return (
-		<div
-			className={
-				props.center
-					? cx(styles.container, styles.containerCenter)
-					: styles.container
-			}
-		>
+		<div className={props.center ? cx(styles.container, styles.containerCenter) : styles.container}>
 			<label className={styles.title}>{layer.tocDisplayName}</label>
-			<Legend
-				className={
-					props.center ? cx(styles.image, styles.imageCenter) : styles.image
-				}
-				center={props.center}
-				legendObj={layer.legendObj}
-				legendImage={legendImage}
-			/>
+			<Legend className={props.center ? cx(styles.image, styles.imageCenter) : styles.image} center={props.center} legendObj={layer.legendObj} legendImage={legendImage} />
 		</div>
 	);
 }
 const Legend = ({ legendImage, legendObj, center }) => {
 	if (legendImage !== undefined && legendImage !== null && legendImage !== "") {
-		return (
-			<img
-				className={center ? cx(styles.image, styles.imageCenter) : styles.image}
-				src={legendImage}
-				alt="style"
-			/>
-		);
+		return <img className={center ? cx(styles.image, styles.imageCenter) : styles.image} src={legendImage} alt="style" />;
 	} else if (legendObj !== undefined) {
 		if (legendObj.legend === undefined) return <div></div>;
 		return (
@@ -76,17 +43,8 @@ const Legend = ({ legendImage, legendObj, center }) => {
 };
 const LegendRow = ({ legend }) => {
 	return (
-		<li
-			className={cx(styles.listItem, "sc-noselect")}
-			id={helpers.getUID()}
-			style={{ height: `${legend.height}px` }}
-			title={legend.label}
-		>
-			<img
-				style={{ height: `${legend.height}px`, width: `${legend.width}px` }}
-				src={`data:${legend.contentType};base64,${legend.imageData}`}
-				alt="style"
-			/>
+		<li className={cx(styles.listItem, "sc-noselect")} id={helpers.getUID()} style={{ height: `${legend.height}px` }} title={legend.label}>
+			<img style={{ height: `${legend.height}px`, width: `${legend.width}px` }} src={`data:${legend.contentType};base64,${legend.imageData}`} alt="style" />
 			<div
 				className={styles.legendLabel}
 				style={{

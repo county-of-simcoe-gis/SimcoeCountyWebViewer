@@ -5,19 +5,8 @@ import ReactDOM from "react-dom";
 // OPEN LAYERS
 import Feature from "ol/Feature";
 import * as ol from "ol";
-import {
-	Image as ImageLayer,
-	Tile as TileLayer,
-	Vector as VectorLayer,
-} from "ol/layer.js";
-import {
-	ImageWMS,
-	OSM,
-	TileArcGISRest,
-	TileImage,
-	Vector,
-	XYZ,
-} from "ol/source.js";
+import { Image as ImageLayer, Tile as TileLayer, Vector as VectorLayer } from "ol/layer.js";
+import { ImageWMS, OSM, TileArcGISRest, TileImage, Vector, XYZ } from "ol/source.js";
 
 //import {file as FileLoader} from "ol/featureloader.js";
 import { GeoJSON, WKT } from "ol/format.js";
@@ -25,13 +14,7 @@ import TileGrid from "ol/tilegrid/TileGrid.js";
 import Point from "ol/geom/Point";
 import { getTopLeft } from "ol/extent.js";
 import { easeOut } from "ol/easing";
-import {
-	Fill,
-	Stroke,
-	Style,
-	Circle as CircleStyle,
-	Text as TextStyle,
-} from "ol/style";
+import { Fill, Stroke, Style, Circle as CircleStyle, Text as TextStyle } from "ol/style";
 import { ScaleLine, FullScreen, Rotate, Zoom } from "ol/control.js";
 import { unByKey } from "ol/Observable.js";
 import { transform } from "ol/proj.js";
@@ -54,12 +37,7 @@ import { InfoRow } from "./InfoRow.jsx";
 import blankImage from "./images/blank.png";
 
 // REGISTER CUSTOM PROJECTIONS
-proj4.defs([
-	[
-		"EPSG:26917",
-		"+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs ",
-	],
-]);
+proj4.defs([["EPSG:26917", "+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs "]]);
 register(proj4);
 
 // UTM NAD 83
@@ -100,14 +78,9 @@ export function addAppStat(type, description) {
 	waitForLoad("settings", Date.now(), 30, () => {
 		if (window.config.includeAppStats === false) return;
 		// IGNORE LOCAL HOST DEV
-		if (
-			window.location.hostname === "localhost" ||
-			window.location.hostname === "127.0.0.1"
-		)
-			return;
+		if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") return;
 		const build = (appName, version) => `${appName}-${version}`;
-		const appStatsTemplate = (build, type, description) =>
-			`${window.config.appStatsUrl}${build}/${type}/${description}`;
+		const appStatsTemplate = (build, type, description) => `${window.config.appStatsUrl}${build}/${type}/${description}`;
 		let buildname = window.location.pathname.split("/").join("");
 		if (window.version !== undefined && window.version !== null) {
 			if (window.app !== undefined && window.app !== null) {
@@ -139,52 +112,22 @@ export function isMobile() {
 }
 
 // SHOW CONTENT WINDOW
-export function showWindow(
-	contents,
-	showFooter = false,
-	mode = "normal",
-	hideScroll = false
-) {
-	ReactDOM.render(
-		<ShowWindow
-			key={shortid.generate()}
-			mode={mode}
-			showFooter={showFooter}
-			contents={contents}
-			hideScroll={hideScroll}
-		/>,
-		document.getElementById("map-modal-window")
-	);
+export function showWindow(contents, showFooter = false, mode = "normal", hideScroll = false) {
+	ReactDOM.render(<ShowWindow key={shortid.generate()} mode={mode} showFooter={showFooter} contents={contents} hideScroll={hideScroll} />, document.getElementById("map-modal-window"));
 }
 
 // SHOW URL WINDOW
-export function showURLWindow(
-	url,
-	showFooter = false,
-	mode = "normal",
-	honorDontShow = false,
-	hideScroll = false
-) {
+export function showURLWindow(url, showFooter = false, mode = "normal", honorDontShow = false, hideScroll = false) {
 	console.log(url);
 	let isSameOrigin = true;
 	waitForLoad("settings", Date.now(), 30, () => {
 		if (window.config.restrictOriginForUrlWindow) {
-			if (url !== undefined)
-				isSameOrigin =
-					url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !==
-					-1;
+			if (url !== undefined) isSameOrigin = url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !== -1;
 		}
 
 		if (isSameOrigin) {
 			ReactDOM.render(
-				<URLWindow
-					key={shortid.generate()}
-					mode={mode}
-					showFooter={showFooter}
-					url={url}
-					honorDontShow={honorDontShow}
-					hideScroll={hideScroll}
-				/>,
+				<URLWindow key={shortid.generate()} mode={mode} showFooter={showFooter} url={url} honorDontShow={honorDontShow} hideScroll={hideScroll} />,
 				document.getElementById("map-modal-window")
 			);
 		} else {
@@ -195,10 +138,7 @@ export function showURLWindow(
 
 export function export_file(filename, content) {
 	var pom = document.createElement("a");
-	pom.setAttribute(
-		"href",
-		"data:text/plain;charset=utf-8," + encodeURIComponent(content)
-	);
+	pom.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(content));
 	pom.setAttribute("download", filename);
 	pom.click();
 }
@@ -246,8 +186,7 @@ export function getESRITileXYZLayer(url) {
 	return new TileLayer({
 		rebuildParams: rebuildParams,
 		source: new XYZ({
-			attributions:
-				'Tiles © <a href="https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer">ArcGIS</a>',
+			attributions: 'Tiles © <a href="https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer">ArcGIS</a>',
 			url: url + "/tile/{z}/{y}/{x}",
 			crossOrigin: "anonymous",
 		}),
@@ -269,9 +208,7 @@ export function getOSMTileXYZLayer(url) {
 export function getSimcoeTileXYZLayer(url) {
 	// console.log(url);
 	const resolutions = [
-		305.74811314055756, 152.87405657041106, 76.43702828507324,
-		38.21851414253662, 19.10925707126831, 9.554628535634155, 4.77731426794937,
-		2.388657133974685, 1.1943285668550503, 0.5971642835598172,
+		305.74811314055756, 152.87405657041106, 76.43702828507324, 38.21851414253662, 19.10925707126831, 9.554628535634155, 4.77731426794937, 2.388657133974685, 1.1943285668550503, 0.5971642835598172,
 		0.29858214164761665, 0.1492252984505969,
 	];
 	const projExtent = window.map.getView().getProjection().getExtent();
@@ -360,14 +297,7 @@ export function updateWMSRotation() {
 	}
 }
 // GET WMS Image Layer
-export function getImageWMSLayer(
-	serverURL,
-	layers,
-	serverType = "geoserver",
-	cqlFilter = null,
-	zIndex = null,
-	disableParcelClick = null
-) {
+export function getImageWMSLayer(serverURL, layers, serverType = "geoserver", cqlFilter = null, zIndex = null, disableParcelClick = null) {
 	const rebuildParams = {
 		sourceType: "ImageWMS",
 		url: serverURL,
@@ -390,19 +320,13 @@ export function getImageWMSLayer(
 		}),
 	});
 
-	const wfsUrlTemplate = (serverUrl, layer) =>
-		`${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layer}&outputFormat=application/json&cql_filter=`;
+	const wfsUrlTemplate = (serverUrl, layer) => `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layer}&outputFormat=application/json&cql_filter=`;
 	const wfsUrl = wfsUrlTemplate(serverURL.replace("/wms", ""), layers);
 
 	const workspace = layers.split(":")[0];
 	const layerNameOnly = layers.split(":")[1];
-	const rootInfoTemplate = (serverUrl, workspace, layerNameOnly) =>
-		`${serverUrl}/rest/workspaces/${workspace}/layers/${layerNameOnly}.json`;
-	const rootInfoUrl = rootInfoTemplate(
-		serverURL.replace("/wms", ""),
-		workspace,
-		layerNameOnly
-	);
+	const rootInfoTemplate = (serverUrl, workspace, layerNameOnly) => `${serverUrl}/rest/workspaces/${workspace}/layers/${layerNameOnly}.json`;
+	const rootInfoUrl = rootInfoTemplate(serverURL.replace("/wms", ""), workspace, layerNameOnly);
 
 	if (layerNameOnly === "Assessment Parcel") disableParcelClick = false;
 
@@ -418,8 +342,7 @@ export function getImageWMSLayer(
 export function scaleToResolution(scale) {
 	const DOTS_PER_INCH = 96;
 	const INCHES_PER_METER = 39.37;
-	const pointResolution =
-		parseFloat(scale) / (DOTS_PER_INCH * INCHES_PER_METER);
+	const pointResolution = parseFloat(scale) / (DOTS_PER_INCH * INCHES_PER_METER);
 	var projection = window.map.getView().getProjection();
 	return pointResolution / projection.getMetersPerUnit();
 }
@@ -438,8 +361,7 @@ export function getMapScale() {
 export function setMapScale(scale) {
 	const DOTS_PER_INCH = 96;
 	const INCHES_PER_METER = 39.37;
-	const pointResolution =
-		parseFloat(scale) / (DOTS_PER_INCH * INCHES_PER_METER);
+	const pointResolution = parseFloat(scale) / (DOTS_PER_INCH * INCHES_PER_METER);
 	var projection = window.map.getView().getProjection();
 	var resolution = pointResolution / projection.getMetersPerUnit();
 	window.map.getView().setResolution(resolution);
@@ -460,14 +382,7 @@ export function getHash(input) {
 		return a & a;
 	}, 0);
 }
-export function showTerms(
-	title = "Terms and Condition",
-	messageText = "Message",
-	url = "",
-	color = messageColors.green,
-	accept,
-	decline
-) {
+export function showTerms(title = "Terms and Condition", messageText = "Message", url = "", color = messageColors.green, accept, decline) {
 	const domId = "portal-root";
 	const termsDomId = "sc-show-terms-root";
 
@@ -494,37 +409,20 @@ export function showTerms(
 }
 
 // SHOW MESSAGE
-export function showMessage(
-	title = "Info",
-	messageText = "Message",
-	color = messageColors.green,
-	timeout = 2000,
-	hideButton = false
-) {
+export function showMessage(title = "Info", messageText = "Message", color = messageColors.green, timeout = 2000, hideButton = false) {
 	const domId = "sc-show-message-content";
 	var existingMsg = document.getElementById(domId);
 	if (existingMsg !== undefined && existingMsg !== null) existingMsg.remove();
 	try {
-		ReactDOM.unmountComponentAtNode(
-			document.getElementById("sc-sidebar-message-container")
-		);
+		ReactDOM.unmountComponentAtNode(document.getElementById("sc-sidebar-message-container"));
 	} catch {}
 	const message = ReactDOM.render(
-		<ShowMessage
-			id={domId}
-			key={domId}
-			title={title}
-			message={messageText}
-			color={color}
-			hideButton={hideButton}
-		/>,
+		<ShowMessage id={domId} key={domId} title={title} message={messageText} color={color} hideButton={hideButton} />,
 		document.getElementById("sc-sidebar-message-container"),
 		() => {
 			setTimeout(() => {
 				try {
-					ReactDOM.unmountComponentAtNode(
-						document.getElementById("sc-sidebar-message-container")
-					);
+					ReactDOM.unmountComponentAtNode(document.getElementById("sc-sidebar-message-container"));
 				} catch (err) {
 					console.log(err);
 				}
@@ -554,19 +452,11 @@ export function searchArrayByKey(nameKey, myArray) {
 }
 
 // GET URL PARAMETER
-export function getURLParameter(
-	parameterName,
-	decoded = true,
-	caseSensitive = false
-) {
+export function getURLParameter(parameterName, decoded = true, caseSensitive = false) {
 	const queryString = window.location.search;
 	if (queryString.length < 1) return null;
-	const urlParams = new URLSearchParams(
-		caseSensitive ? queryString : queryString.toLowerCase()
-	);
-	const param = urlParams.get(
-		caseSensitive ? parameterName : parameterName.toLowerCase()
-	);
+	const urlParams = new URLSearchParams(caseSensitive ? queryString : queryString.toLowerCase());
+	const param = urlParams.get(caseSensitive ? parameterName : parameterName.toLowerCase());
 	if (param === null) return null;
 
 	if (decoded) return param;
@@ -707,14 +597,8 @@ export function isParcelClickEnabled() {
 }
 
 //https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Bag%20Tag%20Locations&outputFormat=application/json
-export function getWFSVectorSource(
-	serverUrl,
-	layerName,
-	callback,
-	sortField = ""
-) {
-	const wfsUrlTemplate = (serverURL, layerName, sortField) =>
-		`${serverURL}wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&sortBy=${sortField}`;
+export function getWFSVectorSource(serverUrl, layerName, callback, sortField = "") {
+	const wfsUrlTemplate = (serverURL, layerName, sortField) => `${serverURL}wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&sortBy=${sortField}`;
 	const wfsUrl = wfsUrlTemplate(serverUrl, layerName, sortField);
 	getJSON(wfsUrl, (result) => {
 		const geoJSON = new GeoJSON().readFeatures(result);
@@ -724,23 +608,14 @@ export function getWFSVectorSource(
 }
 
 //https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Bag%20Tag%20Locations&outputFormat=application/json
-export function getWFSGeoJSON(
-	serverUrl,
-	layerName,
-	callback,
-	sortField = null,
-	extent = null,
-	cqlFilter = null,
-	count = null
-) {
+export function getWFSGeoJSON(serverUrl, layerName, callback, sortField = null, extent = null, cqlFilter = null, count = null) {
 	// SORTING
 	let additionalParams = "";
 	if (sortField !== null) additionalParams += "&sortBy=" + sortField;
 
 	// BBOX EXTENT
 	if (extent !== null && (cqlFilter === null || cqlFilter.length === 0)) {
-		const extentString =
-			extent[0] + "," + extent[1] + "," + extent[2] + "," + extent[3];
+		const extentString = extent[0] + "," + extent[1] + "," + extent[2] + "," + extent[3];
 		additionalParams += "&bbox=" + extentString;
 	}
 
@@ -748,8 +623,7 @@ export function getWFSGeoJSON(
 	if (cqlFilter !== null && cqlFilter.length !== 0) {
 		additionalParams += "&cql_filter=" + cqlFilter;
 		if (extent !== null) {
-			const extentString =
-				extent[0] + "," + extent[1] + "," + extent[2] + "," + extent[3];
+			const extentString = extent[0] + "," + extent[1] + "," + extent[2] + "," + extent[3];
 			additionalParams += " AND BBOX(geom, " + extentString + ")";
 		}
 	}
@@ -758,8 +632,7 @@ export function getWFSGeoJSON(
 	if (count !== null) additionalParams += "&count=" + count;
 
 	// USE TEMPLATE FOR READABILITY
-	const wfsUrlTemplate = (serverURL, layerName) =>
-		`${serverURL}wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json`;
+	const wfsUrlTemplate = (serverURL, layerName) => `${serverURL}wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json`;
 	const wfsUrl = wfsUrlTemplate(serverUrl, layerName) + additionalParams;
 	getJSON(wfsUrl, (result) => {
 		const geoJSON = new GeoJSON().readFeatures(result);
@@ -768,8 +641,7 @@ export function getWFSGeoJSON(
 }
 
 export function getWFSLayerRecordCount(serverUrl, layerName, callback) {
-	const recordCountUrlTemplate = (serverURL, layerName) =>
-		`${serverURL}wfs?REQUEST=GetFeature&VERSION=1.1&typeName=${layerName}&RESULTTYPE=hits`;
+	const recordCountUrlTemplate = (serverURL, layerName) => `${serverURL}wfs?REQUEST=GetFeature&VERSION=1.1&typeName=${layerName}&RESULTTYPE=hits`;
 	const recordCountUrl = recordCountUrlTemplate(serverUrl, layerName);
 
 	getObjectFromXMLUrl(recordCountUrl, (result) => {
@@ -783,35 +655,27 @@ export function zoomToFeature(feature, animate = true) {
 	let minResolution = scaleToResolution(feature.minScale);
 	minResolution = minResolution > 1 ? Math.ceil(minResolution) : 1;
 	if (geom.getType() === "Point") {
-		window.map
-			.getView()
-			.fit(geom, { duration: duration, minResolution: minResolution });
+		window.map.getView().fit(geom, { duration: duration, minResolution: minResolution });
 	} else if (geom.getType() === "GeometryCollection") {
 		window.map.getView().fit(geom.getGeometries()[0], {
 			duration: duration,
 			minResolution: minResolution,
 		});
 	} else {
-		window.map
-			.getView()
-			.fit(geom, { duration: duration, minResolution: minResolution });
+		window.map.getView().fit(geom, { duration: duration, minResolution: minResolution });
 	}
 }
 
 // THIS RETURNS THE ACTUAL REACT ELEMENT USING DOM ID
 export function findReact(domId) {
 	var dom = document.getElementById(domId);
-	let key = Object.keys(dom).find((key) =>
-		key.startsWith("__reactInternalInstance$")
-	);
+	let key = Object.keys(dom).find((key) => key.startsWith("__reactInternalInstance$"));
 	let internalInstance = dom[key];
 	if (internalInstance == null) return null;
 
 	if (internalInstance.return) {
 		// react 16+
-		return internalInstance._debugOwner
-			? internalInstance._debugOwner.stateNode
-			: internalInstance.return.stateNode;
+		return internalInstance._debugOwner ? internalInstance._debugOwner.stateNode : internalInstance.return.stateNode;
 	} else {
 		// react <16
 		return internalInstance._currentElement._owner._instance;
@@ -1042,13 +906,7 @@ export function createTextStyle(
 	return texts;
 }
 
-function _getText(
-	feature,
-	fieldName = "name",
-	maxScale,
-	type = "normal",
-	placement = "point"
-) {
+function _getText(feature, fieldName = "name", maxScale, type = "normal", placement = "point") {
 	var text = feature.get(fieldName);
 	if (getMapScale() > maxScale) {
 		text = "";
@@ -1201,19 +1059,16 @@ export function formatReplace(fmt, ...args) {
 	if (!fmt.match(/^(?:(?:(?:[^{}]|(?:\{\{)|(?:\}\}))+)|(?:\{[0-9]+\}))+$/)) {
 		throw new Error("invalid format string.");
 	}
-	return fmt.replace(
-		/((?:[^{}]|(?:\{\{)|(?:\}\}))+)|(?:\{([0-9]+)\})/g,
-		(m, str, index) => {
-			if (str) {
-				return str.replace(/(?:{{)|(?:}})/g, (m) => m[0]);
-			} else {
-				if (index >= args.length) {
-					throw new Error("argument index is out of range in format");
-				}
-				return args[index];
+	return fmt.replace(/((?:[^{}]|(?:\{\{)|(?:\}\}))+)|(?:\{([0-9]+)\})/g, (m, str, index) => {
+		if (str) {
+			return str.replace(/(?:{{)|(?:}})/g, (m) => m[0]);
+		} else {
+			if (index >= args.length) {
+				throw new Error("argument index is out of range in format");
 			}
+			return args[index];
 		}
-	);
+	});
 }
 
 export function toLatLongFromWebMercator(coords) {
@@ -1247,10 +1102,7 @@ export function bufferGeometry(geometry, distanceMeters, callback) {
 		postJSON(url, obj, (result) => {
 			// REPROJECT BACK TO WEB MERCATOR
 			const olGeoBuffer = getGeometryFromGeoJSON(result.geojson);
-			const utmNad83GeometryBuffer = olGeoBuffer.transform(
-				"EPSG:26917",
-				"EPSG:3857"
-			);
+			const utmNad83GeometryBuffer = olGeoBuffer.transform("EPSG:26917", "EPSG:3857");
 
 			callback(utmNad83GeometryBuffer);
 		});
@@ -1260,10 +1112,7 @@ export function bufferGeometry(geometry, distanceMeters, callback) {
 export function disableKeyboardEvents(disable) {
 	if (window.map !== undefined && window.map !== null) {
 		window.map.getInteractions().forEach(function (interaction) {
-			if (
-				interaction instanceof KeyboardPan ||
-				interaction instanceof KeyboardZoom
-			) {
+			if (interaction instanceof KeyboardPan || interaction instanceof KeyboardZoom) {
 				interaction.setActive(!disable);
 			}
 		});
@@ -1297,10 +1146,7 @@ function _escapeRegExp(str) {
 }
 
 export function showFeaturePopup(coord, feature) {
-	window.popup.show(
-		coord,
-		<FeatureContent feature={feature} class="sc-live-layer-popup-content" />
-	);
+	window.popup.show(coord, <FeatureContent feature={feature} class="sc-live-layer-popup-content" />);
 }
 
 export function removeURLParameter(url, parameter) {
@@ -1326,21 +1172,7 @@ export function FeatureContent(props) {
 	//WILDCARD = .*
 	//LITERAL STRING = [] EG: [_][.]
 	//NOT STRING = (?!string) EG: geostasis[.](?!test).*
-	const filterKeys = [
-		"[_].*",
-		"id",
-		"geometry",
-		"geom",
-		"extent_geom",
-		".*gid.*",
-		"globalid",
-		"objectid.*",
-		"shape.*",
-		"displayfieldname",
-		"displayfieldvalue",
-		"geostasis[.].*",
-		".*fid.*",
-	];
+	const filterKeys = ["[_].*", "id", "geometry", "geom", "extent_geom", ".*gid.*", "globalid", "objectid.*", "shape.*", "displayfieldname", "displayfieldvalue", "geostasis[.].*", ".*fid.*"];
 
 	const featureProps = props.feature.getProperties();
 	let keys = Object.keys(featureProps);
@@ -1368,13 +1200,7 @@ export function FeatureContent(props) {
 		<div className={props.class}>
 			{keys.map((keyName, i) => {
 				let val = props.feature.get(keyName);
-				return (
-					<InfoRow
-						key={getUID()}
-						value={val}
-						label={formatTitleCase(keyName)}
-					/>
-				);
+				return <InfoRow key={getUID()} value={val} label={formatTitleCase(keyName)} />;
 			})}
 		</div>
 	);
@@ -1454,10 +1280,7 @@ export function TableDisplay(props) {
 				{info.map((item) => (
 					<tr key={getUID()}>
 						{Object.values(item).map((val) => (
-							<td
-								key={getUID()}
-								style={{ border: "1px solid black", padding: "5px 5px" }}
-							>
+							<td key={getUID()} style={{ border: "1px solid black", padding: "5px 5px" }}>
 								{val}
 							</td>
 						))}
@@ -1468,11 +1291,7 @@ export function TableDisplay(props) {
 	);
 }
 
-export function getBase64FromImageUrlWithParams(
-	url,
-	params = undefined,
-	callback
-) {
+export function getBase64FromImageUrlWithParams(url, params = undefined, callback) {
 	var xhr = new XMLHttpRequest();
 	xhr.open("GET", url);
 	if (params !== undefined) {
@@ -1533,18 +1352,9 @@ export function getBase64FromImageUrl(url, callback) {
 	img.src = url;
 }
 
-export function waitForLoad(
-	items,
-	startTime = Date.now(),
-	timeout = 30,
-	callback
-) {
+export function waitForLoad(items, startTime = Date.now(), timeout = 30, callback) {
 	if (startTime + timeout * 1000 <= Date.now()) {
-		showMessage(
-			"Timeout",
-			"Items Failed to load in a timely manner. Please reload the page",
-			messageColors.red
-		);
+		showMessage("Timeout", "Items Failed to load in a timely manner. Please reload the page", messageColors.red);
 		console.error("timeout loading", items);
 	} else {
 		if (isLoaded(items)) {
@@ -1559,8 +1369,7 @@ export function isLoaded(items) {
 	if (Array.isArray(items)) {
 		let returnResult = true;
 		items.forEach((item) => {
-			if (returnResult)
-				returnResult = window.loaded.includes(item.toLowerCase());
+			if (returnResult) returnResult = window.loaded.includes(item.toLowerCase());
 		});
 		return returnResult;
 	} else {
@@ -1568,12 +1377,10 @@ export function isLoaded(items) {
 	}
 }
 export function addIsLoaded(item) {
-	if (!window.loaded.includes(item.toLowerCase()))
-		window.loaded.push(item.toLowerCase());
+	if (!window.loaded.includes(item.toLowerCase())) window.loaded.push(item.toLowerCase());
 }
 export function removeIsLoaded(item) {
-	if (window.loaded.includes(item.toLowerCase()))
-		delete window.loaded[item.toLowerCase()];
+	if (window.loaded.includes(item.toLowerCase())) delete window.loaded[item.toLowerCase()];
 }
 
 export function loadConfig(callback) {
@@ -1628,54 +1435,35 @@ export function loadConfig(callback) {
 
 	if (tocType !== config.toc.tocType) config.toc["tocType"] = tocType;
 	if (geoserverUrl !== config.toc.geoserverLayerGroupsUrl) {
-		if (!geoserverUrl.toLowerCase().includes("request=GetCapabilities"))
-			geoserverUrl = `${geoserverUrl}/ows?service=wms&version=1.3.0&request=GetCapabilities`;
+		if (!geoserverUrl.toLowerCase().includes("request=GetCapabilities")) geoserverUrl = `${geoserverUrl}/ows?service=wms&version=1.3.0&request=GetCapabilities`;
 		config.toc["geoserverLayerGroupsUrl"] = geoserverUrl;
 	}
-	if (geoserverUrlType !== config.toc.geoserverLayerGroupsUrlType)
-		config.toc["geoserverLayerGroupsUrlType"] = geoserverUrlType;
-	if (esriServiceUrl !== config.toc.esriServiceUrl)
-		config.toc["esriServiceUrl"] = esriServiceUrl;
+	if (geoserverUrlType !== config.toc.geoserverLayerGroupsUrlType) config.toc["geoserverLayerGroupsUrlType"] = geoserverUrlType;
+	if (esriServiceUrl !== config.toc.esriServiceUrl) config.toc["esriServiceUrl"] = esriServiceUrl;
 
 	if (loaderType === "DEFAULT") {
 		if (mapId !== null && mapId !== undefined && mapId.trim() !== "") {
 			config["mapId"] = mapId;
 			loaderType = "MAPID";
-		} else if (
-			geoserverUrl !== null &&
-			geoserverUrl !== undefined &&
-			geoserverUrl.trim() !== ""
-		) {
+		} else if (geoserverUrl !== null && geoserverUrl !== undefined && geoserverUrl.trim() !== "") {
 			loaderType = "GEOSERVER";
-		} else if (
-			esriServiceUrl !== null &&
-			esriServiceUrl !== undefined &&
-			esriServiceUrl.trim() !== ""
-		) {
+		} else if (esriServiceUrl !== null && esriServiceUrl !== undefined && esriServiceUrl.trim() !== "") {
 			loaderType = "ARCGIS";
 		}
 	}
 
 	config.toc["loaderType"] = loaderType;
 	if (mapId === null) mapId = config.mapId;
-	if (
-		config.useMapConfigApi ||
-		(mapId !== null && mapId !== undefined && mapId.trim() !== "")
-	) {
+	if (config.useMapConfigApi || (mapId !== null && mapId !== undefined && mapId.trim() !== "")) {
 		config.toc["loaderType"] = "MAPID";
 		const mapSettingURL = (apiUrl, mapId) => {
-			if (mapId === null || mapId === undefined || mapId.trim() === "")
-				return `${apiUrl}settings/getDefaultMap`;
+			if (mapId === null || mapId === undefined || mapId.trim() === "") return `${apiUrl}settings/getDefaultMap`;
 			else return `${apiUrl}settings/getMap/${mapId}`;
 		};
 		getJSON(mapSettingURL(config.apiUrl, mapId), (result) => {
 			if (result.json === undefined) {
 				setTimeout(() => {
-					showMessage(
-						"Map ID Failed",
-						"Map ID failed to load",
-						messageColors.red
-					);
+					showMessage("Map ID Failed", "Map ID failed to load", messageColors.red);
 				}, 1500);
 				window.config = config;
 				callback();
@@ -1687,9 +1475,7 @@ export function loadConfig(callback) {
 				delete settings.zoom_level;
 			}
 			if (settings.center !== undefined) {
-				settings["centerCoords"] = Array.isArray(settings.center)
-					? settings.center
-					: settings.center.replace(" ", "").split(",");
+				settings["centerCoords"] = Array.isArray(settings.center) ? settings.center : settings.center.replace(" ", "").split(",");
 				delete settings.center;
 			}
 			sessionStorage.setItem(
@@ -1699,21 +1485,9 @@ export function loadConfig(callback) {
 					zoom: settings.defaultZoom,
 				})
 			);
-			if (settings.sidebarToolComponents !== undefined)
-				settings.sidebarToolComponents = mergeObjArray(
-					config.sidebarToolComponents,
-					settings.sidebarToolComponents
-				);
-			if (settings.sidebarThemeComponents !== undefined)
-				settings.sidebarThemeComponents = mergeObjArray(
-					config.sidebarThemeComponents,
-					settings.sidebarThemeComponents
-				);
-			if (settings.sidebarShortcutParams !== undefined)
-				settings.sidebarShortcutParams = mergeObjArray(
-					config.sidebarShortcutParams,
-					settings.sidebarShortcutParams
-				);
+			if (settings.sidebarToolComponents !== undefined) settings.sidebarToolComponents = mergeObjArray(config.sidebarToolComponents, settings.sidebarToolComponents);
+			if (settings.sidebarThemeComponents !== undefined) settings.sidebarThemeComponents = mergeObjArray(config.sidebarThemeComponents, settings.sidebarThemeComponents);
+			if (settings.sidebarShortcutParams !== undefined) settings.sidebarShortcutParams = mergeObjArray(config.sidebarShortcutParams, settings.sidebarShortcutParams);
 
 			//TRANSPOSE LEGACY TOC SETTINGS
 			if (settings.toc === undefined) settings["toc"] = {};
@@ -1754,18 +1528,13 @@ export function getConfig(component, name) {
 		default:
 			break;
 	}
-	return configArray.filter(
-		(item) =>
-			item.name !== undefined && item.name.toLowerCase() === name.toLowerCase()
-	)[0];
+	return configArray.filter((item) => item.name !== undefined && item.name.toLowerCase() === name.toLowerCase())[0];
 }
 
 export function mergeObjArray(targetArray, sourceArray) {
 	let resultArray = [];
 	targetArray.forEach((targetObj) => {
-		let sourceObj = sourceArray.filter(
-			(source) => targetObj.id == source.id
-		)[0];
+		let sourceObj = sourceArray.filter((source) => targetObj.id == source.id)[0];
 		if (sourceObj !== undefined) {
 			resultArray.push(mergeObj(targetObj, sourceObj));
 			sourceArray = sourceArray.filter((source) => sourceObj.id !== source.id);
@@ -1775,10 +1544,7 @@ export function mergeObjArray(targetArray, sourceArray) {
 }
 export function mergeObj(targetObj, sourceObj) {
 	Object.keys(sourceObj).forEach((key) => {
-		if (
-			typeof targetObj[key] === "object" &&
-			!(targetObj[key] instanceof Array)
-		) {
+		if (typeof targetObj[key] === "object" && !(targetObj[key] instanceof Array)) {
 			targetObj[key] = mergeObj(targetObj[key], sourceObj[key]);
 		} else {
 			targetObj[key] = sourceObj[key];

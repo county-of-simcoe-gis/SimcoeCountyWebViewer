@@ -208,9 +208,7 @@ class Measure extends Component {
 
 	// Creates a new measure tooltip
 	createMeasureTooltip = () => {
-		this.measureTooltipElement = document.getElementById(
-			this.state.measureToolTipId
-		);
+		this.measureTooltipElement = document.getElementById(this.state.measureToolTipId);
 		this.measureTooltip = new Overlay({
 			element: this.measureTooltipElement,
 			offset: [0, -15],
@@ -283,12 +281,7 @@ class Measure extends Component {
 		//   return;
 
 		if (window.isDrawingOrEditing) {
-			helpers.showMessage(
-				"Measure",
-				"Active MyMaps drawing in progress.  Please finish your MyMaps and try again.",
-				undefined,
-				3000
-			);
+			helpers.showMessage("Measure", "Active MyMaps drawing in progress.  Please finish your MyMaps and try again.", undefined, 3000);
 			this.setState({ geometryType: "clear" });
 			return;
 		}
@@ -300,28 +293,21 @@ class Measure extends Component {
 			activeTool: true,
 		});
 
-		this.pointerMoveEvent = window.map.on(
-			"pointermove",
-			this.pointerMoveHandler
-		);
+		this.pointerMoveEvent = window.map.on("pointermove", this.pointerMoveHandler);
 
-		this.mouseOutEvent = window.map
-			.getViewport()
-			.addEventListener("mouseout", () => this.onMouseOutEvent);
+		this.mouseOutEvent = window.map.getViewport().addEventListener("mouseout", () => this.onMouseOutEvent);
 
 		// GET DRAW TYPE
 		let drawType = this.state.geometryType;
 
 		if (drawType === "Rectangle") drawType = "Circle";
-		else if (drawType === "Arrow" || drawType === "Bearing")
-			drawType = "LineString";
+		else if (drawType === "Arrow" || drawType === "Bearing") drawType = "LineString";
 		else if (drawType === "Text") drawType = "Point";
 
 		this.draw = new Draw({
 			source: this.vectorSource,
 			type: drawType,
-			geometryFunction:
-				this.state.geometryType === "Rectangle" ? createBox() : undefined,
+			geometryFunction: this.state.geometryType === "Rectangle" ? createBox() : undefined,
 			style: new Style({
 				fill: new Fill({
 					color: "rgba(255, 255, 255, 0.2)",
@@ -365,10 +351,7 @@ class Measure extends Component {
 						tooltipCoord = geom.getInteriorPoint().getCoordinates();
 					} else if (geom instanceof LineString) {
 						if (this.state.geometryType === "Bearing") {
-							output = drawingHelpers.getBearing(
-								geom.getFirstCoordinate(),
-								geom.getLastCoordinate()
-							);
+							output = drawingHelpers.getBearing(geom.getFirstCoordinate(), geom.getLastCoordinate());
 							this.setState({ unitMeters: output });
 						} else {
 							output = this.formatLength(geom);
@@ -380,8 +363,7 @@ class Measure extends Component {
 					}
 					this.measureTooltipElement.innerHTML = output;
 					this.measureTooltip.setPosition(tooltipCoord);
-					if (!this.state.hideTooltips)
-						this.setState({ measureToolTipClass: "sc-measure-tooltip" });
+					if (!this.state.hideTooltips) this.setState({ measureToolTipClass: "sc-measure-tooltip" });
 					else this.setState({ measureToolTipClass: "sc-hidden" });
 				});
 			},
@@ -398,13 +380,10 @@ class Measure extends Component {
 				//RESET TOOLTIP
 				this.measureTooltipElement.innerHTML = "";
 				this.measureTooltip.setPosition([0, 0]);
-				this.setState(
-					{ measureToolTipClass: "sc-hidden", feature: this.sketch },
-					() => {
-						// unset sketch
-						this.sketch = null;
-					}
-				);
+				this.setState({ measureToolTipClass: "sc-hidden", feature: this.sketch }, () => {
+					// unset sketch
+					this.sketch = null;
+				});
 				unByKey(this.listener);
 			},
 			this
@@ -523,39 +502,21 @@ class Measure extends Component {
 
 	render() {
 		return (
-			<PanelComponent
-				onClose={this.onClose}
-				name={this.props.name}
-				helpLink={this.props.helpLink}
-				type="tools"
-			>
+			<PanelComponent onClose={this.onClose} name={this.props.name} helpLink={this.props.helpLink} type="tools">
 				<div className="simcoe-measure-container">
 					<div style={{ padding: "10px", fontSize: "11pt" }}>
-						Please select the type of measurements you wish to perform from the
-						toolbar below. Use the line tools for distances and polygon tools
-						for area.
+						Please select the type of measurements you wish to perform from the toolbar below. Use the line tools for distances and polygon tools for area.
 					</div>
 
 					{/* BUTTON BAR */}
 					<div className="sc-measure-title">Measure Tools</div>
 					<div className="sc-measure-tooltip-message-container">
 						{"Hide Tooltips"}
-						<input
-							style={{ position: "relative", top: "2px" }}
-							type="checkbox"
-							onChange={this.onTooltipCheckboxChange}
-							value={this.state.hideTooltips}
-						/>
+						<input style={{ position: "relative", top: "2px" }} type="checkbox" onChange={this.onTooltipCheckboxChange} value={this.state.hideTooltips} />
 					</div>
 
 					<div key={helpers.getUID()} className="sc-measure-button-bar">
-						<div
-							className={
-								this.state.geometryType === "LineString"
-									? "sc-measure-button-container active"
-									: "sc-measure-button-container"
-							}
-						>
+						<div className={this.state.geometryType === "LineString" ? "sc-measure-button-container active" : "sc-measure-button-container"}>
 							<button
 								className="sc-measure-button"
 								title="Draw a single line on the map"
@@ -566,13 +527,7 @@ class Measure extends Component {
 								<img src={images["polyline.png"]} alt="line" />
 							</button>
 						</div>
-						<div
-							className={
-								this.state.geometryType === "Polygon"
-									? "sc-measure-button-container active"
-									: "sc-measure-button-container"
-							}
-						>
+						<div className={this.state.geometryType === "Polygon" ? "sc-measure-button-container active" : "sc-measure-button-container"}>
 							<button
 								className="sc-measure-button"
 								title="Draw a polygon on the map"
@@ -583,13 +538,7 @@ class Measure extends Component {
 								<img src={images["polygon.png"]} alt="polygon" />
 							</button>
 						</div>
-						<div
-							className={
-								this.state.geometryType === "Circle"
-									? "sc-measure-button-container active"
-									: "sc-measure-button-container"
-							}
-						>
+						<div className={this.state.geometryType === "Circle" ? "sc-measure-button-container active" : "sc-measure-button-container"}>
 							<button
 								className="sc-measure-button"
 								title="Draw a circle on the map"
@@ -600,13 +549,7 @@ class Measure extends Component {
 								<img src={images["circle.png"]} alt="circle" />
 							</button>
 						</div>
-						<div
-							className={
-								this.state.geometryType === "Rectangle"
-									? "sc-measure-button-container active"
-									: "sc-measure-button-container"
-							}
-						>
+						<div className={this.state.geometryType === "Rectangle" ? "sc-measure-button-container active" : "sc-measure-button-container"}>
 							<button
 								className="sc-measure-button"
 								title="Draw a rectangle on the map"
@@ -617,13 +560,7 @@ class Measure extends Component {
 								<img src={images["rectangle.png"]} alt="rectangle" />
 							</button>
 						</div>
-						<div
-							className={
-								this.state.geometryType === "Bearing"
-									? "sc-measure-button-container active"
-									: "sc-measure-button-container"
-							}
-						>
+						<div className={this.state.geometryType === "Bearing" ? "sc-measure-button-container active" : "sc-measure-button-container"}>
 							<button
 								className="sc-measure-button"
 								title="Draw a Bearing Line on the map"
@@ -635,13 +572,7 @@ class Measure extends Component {
 							</button>
 						</div>
 
-						<div
-							className={
-								this.state.geometryType === "Clear"
-									? "sc-measure-button-container active"
-									: "sc-measure-button-container"
-							}
-						>
+						<div className={this.state.geometryType === "Clear" ? "sc-measure-button-container active" : "sc-measure-button-container"}>
 							<button
 								className="sc-measure-button"
 								title="Clear Drawing"
@@ -657,28 +588,12 @@ class Measure extends Component {
 					<div className="sc-measure-title">Measure Results</div>
 
 					{/* INTRO MESSAGE */}
-					<div
-						style={
-							this.state.geometryType === "" ||
-							this.state.geometryType === "Clear"
-								? { padding: "10px", fontSize: "11pt" }
-								: { display: "none" }
-						}
-					>
-						There are currently no measurements to display. Please select a tool
-						from above to start your measurements. Results will display in this
-						area.
+					<div style={this.state.geometryType === "" || this.state.geometryType === "Clear" ? { padding: "10px", fontSize: "11pt" } : { display: "none" }}>
+						There are currently no measurements to display. Please select a tool from above to start your measurements. Results will display in this area.
 					</div>
 
 					{/* RESULTS */}
-					<div
-						className={
-							this.state.geometryType === "" ||
-							this.state.geometryType === "Clear"
-								? "sc-hidden"
-								: "sc-measure-results-container"
-						}
-					>
+					<div className={this.state.geometryType === "" || this.state.geometryType === "Clear" ? "sc-hidden" : "sc-measure-results-container"}>
 						{this.state.unitList.map((unit) => {
 							return (
 								<MeasureResult
@@ -693,14 +608,8 @@ class Measure extends Component {
 						})}
 					</div>
 
-					<div
-						id={this.state.helpToolTipId}
-						className={this.state.helpToolTipClass}
-					/>
-					<div
-						id={this.state.measureToolTipId}
-						className={this.state.measureToolTipClass}
-					/>
+					<div id={this.state.helpToolTipId} className={this.state.helpToolTipClass} />
+					<div id={this.state.measureToolTipId} className={this.state.measureToolTipClass} />
 				</div>
 			</PanelComponent>
 		);
@@ -731,36 +640,15 @@ class MeasureResult extends Component {
 							className="sc-measure-result-input"
 							placeholder="Waiting..."
 							type="text"
-							value={
-								this.props.unitMeters === -1
-									? ""
-									: this.props.unitDetails.convertFunction(
-											this.props.unitMeters
-									  )
-							}
+							value={this.props.unitMeters === -1 ? "" : this.props.unitDetails.convertFunction(this.props.unitMeters)}
 						/>
 					</div>
-					<div className="sc-measure-result-abbreviation">
-						{this.props.unitDetails.abbreviation}
-					</div>
+					<div className="sc-measure-result-abbreviation">{this.props.unitDetails.abbreviation}</div>
 				</div>
 				<span
-					className={`sc-fakeLink ${
-						this.props.feature === null || window.isMeasuring
-							? " sc-hidden"
-							: ""
-					}`}
+					className={`sc-fakeLink ${this.props.feature === null || window.isMeasuring ? " sc-hidden" : ""}`}
 					onClick={() => {
-						this.props.addToMyMaps(
-							this.props.feature,
-							`${
-								this.props.unitMeters === -1
-									? ""
-									: this.props.unitDetails.convertFunction(
-											this.props.unitMeters
-									  )
-							} ${this.props.unitDetails.abbreviation}`
-						);
+						this.props.addToMyMaps(this.props.feature, `${this.props.unitMeters === -1 ? "" : this.props.unitDetails.convertFunction(this.props.unitMeters)} ${this.props.unitDetails.abbreviation}`);
 					}}
 				>
 					[Add to My Maps]
@@ -771,9 +659,7 @@ class MeasureResult extends Component {
 }
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

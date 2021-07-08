@@ -8,15 +8,10 @@ function Header(props) {
 				<tbody>
 					<tr>
 						<td className={styles.title}>{"Legend"}</td>
-						<td
-							style={{ width: "60px" }}
-							className={`no-print${props.hide.share ? " sc-hidden" : ""}`}
-						>
+						<td style={{ width: "60px" }} className={`no-print${props.hide.share ? " sc-hidden" : ""}`}>
 							<img
 								onClick={() => {
-									window.location.href =
-										"mailto:?subject=Map Legend from opengis.simcoe.ca&body=" +
-										encodeURIComponent(window.location.href);
+									window.location.href = "mailto:?subject=Map Legend from opengis.simcoe.ca&body=" + encodeURIComponent(window.location.href);
 								}}
 								title="Share this page through E-Mail"
 								className="headerButton"
@@ -25,10 +20,7 @@ function Header(props) {
 							/>
 						</td>
 
-						<td
-							style={{ width: "60px" }}
-							className={`no-print${props.hide.print ? " sc-hidden" : ""}`}
-						>
+						<td style={{ width: "60px" }} className={`no-print${props.hide.print ? " sc-hidden" : ""}`}>
 							<img
 								alt="Print"
 								onClick={() => {
@@ -39,10 +31,7 @@ function Header(props) {
 								src={images["print-icon.png"]}
 							/>
 						</td>
-						<td
-							style={{ width: "60px" }}
-							className={`no-print${props.hide.newWindow ? " sc-hidden" : ""}`}
-						>
+						<td style={{ width: "60px" }} className={`no-print${props.hide.newWindow ? " sc-hidden" : ""}`}>
 							<img
 								alt="Open In New Window"
 								onClick={() => {
@@ -63,9 +52,7 @@ function Header(props) {
 export default Header;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	// eslint-disable-next-line

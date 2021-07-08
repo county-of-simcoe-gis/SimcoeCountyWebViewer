@@ -28,14 +28,11 @@ class PanelComponent extends Component {
 		}
 	}
 	onMapClick = (evt) => {
-		var feature = window.map.forEachFeatureAtPixel(
-			evt.pixel,
-			function (feature, layer) {
-				if (feature === null) return;
-				var isSelectable = feature.get("clickable");
-				if (isSelectable !== undefined && isSelectable) return feature;
-			}
-		);
+		var feature = window.map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
+			if (feature === null) return;
+			var isSelectable = feature.get("clickable");
+			if (isSelectable !== undefined && isSelectable) return feature;
+		});
 		if (feature !== undefined) {
 			this.setState({ selectedFeature: feature }, () => {
 				window.popup.show(
@@ -72,8 +69,7 @@ class PanelComponent extends Component {
 		// EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
 		window.emitter.emit("setSidebarVisiblity", "CLOSE");
 
-		if (this.props.onSidebarVisibility !== undefined)
-			this.props.onSidebarVisibility();
+		if (this.props.onSidebarVisibility !== undefined) this.props.onSidebarVisibility();
 	};
 
 	render() {
@@ -87,9 +83,7 @@ class PanelComponent extends Component {
 							</div>
 							<div
 								id="sc-panel-component-tool-text"
-								className={`sc-panel-component-tool-text${
-									this.props.name.length < 25 ? "" : " small"
-								}${this.props.helpLink ? " short" : ""}`}
+								className={`sc-panel-component-tool-text${this.props.name.length < 25 ? "" : " small"}${this.props.helpLink ? " short" : ""}`}
 								title={this.props.name}
 								alt={this.props.name}
 							>
@@ -99,33 +93,15 @@ class PanelComponent extends Component {
 							<div id="sc-panel-component-tool-controls">
 								<div
 									id="sc-panel-component-help"
-									className={
-										this.props.helpLink
-											? "sc-panel-component-help"
-											: "sc-hidden"
-									}
+									className={this.props.helpLink ? "sc-panel-component-help" : "sc-hidden"}
 									alt={`View Help for ${this.props.name}`}
 									title={`View Help for ${this.props.name}`}
-									onClick={() =>
-										helpers.showURLWindow(this.props.helpLink, false)
-									}
+									onClick={() => helpers.showURLWindow(this.props.helpLink, false)}
 								>
 									<FaQuestion />
 								</div>
-								<img
-									id="sc-panel-component-tool-img"
-									src={images["tab-close-24x24.png"]}
-									alt="Minimize Panel"
-									title="Minimize Panel"
-									onClick={this.onSidebarVisibility}
-								></img>
-								<img
-									id="sc-panel-component-tool-close"
-									src={images["close-x-24x24.png"]}
-									alt={`Close ${this.props.name}`}
-									title={`Close ${this.props.name}`}
-									onClick={this.props.onClose}
-								></img>
+								<img id="sc-panel-component-tool-img" src={images["tab-close-24x24.png"]} alt="Minimize Panel" title="Minimize Panel" onClick={this.onSidebarVisibility}></img>
+								<img id="sc-panel-component-tool-close" src={images["close-x-24x24.png"]} alt={`Close ${this.props.name}`} title={`Close ${this.props.name}`} onClick={this.props.onClose}></img>
 							</div>
 						</div>
 					</div>
@@ -147,10 +123,7 @@ class PopupContent extends Component {
 	render() {
 		return (
 			<div>
-				<button
-					className="sc-button sc-panel-component-tool-content-button"
-					onClick={this.props.myMapsClick}
-				>
+				<button className="sc-button sc-panel-component-tool-content-button" onClick={this.props.myMapsClick}>
 					Add to My Drawing
 				</button>
 			</div>
@@ -158,9 +131,7 @@ class PopupContent extends Component {
 	}
 }
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

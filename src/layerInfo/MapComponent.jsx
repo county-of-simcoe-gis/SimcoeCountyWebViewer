@@ -3,11 +3,7 @@ import "ol/ol.css";
 import Map from "ol/Map";
 import View from "ol/View";
 import "./mapComponent.css";
-import {
-	defaults as defaultControls,
-	ScaleLine,
-	FullScreen,
-} from "ol/control.js";
+import { defaults as defaultControls, ScaleLine, FullScreen } from "ol/control.js";
 import { OSM, TileArcGISRest } from "ol/source.js";
 import TileLayer from "ol/layer/Tile.js";
 import { Fill, Icon, Stroke, Style, Circle as CircleStyle } from "ol/style.js";

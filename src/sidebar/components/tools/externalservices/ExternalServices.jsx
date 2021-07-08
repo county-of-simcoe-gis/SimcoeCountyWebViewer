@@ -11,8 +11,7 @@ import Point from "ol/geom/Point";
 import Feature from "ol/Feature";
 import { unByKey } from "ol/Observable.js";
 
-const parcelURLTemplate = (mainURL, x, y) =>
-	`${mainURL}&cql_filter=INTERSECTS(geom,%20POINT%20(${x}%20${y}))`;
+const parcelURLTemplate = (mainURL, x, y) => `${mainURL}&cql_filter=INTERSECTS(geom,%20POINT%20(${x}%20${y}))`;
 
 class ExternalServices extends Component {
 	constructor(props) {
@@ -27,10 +26,7 @@ class ExternalServices extends Component {
 
 	componentDidMount() {
 		helpers.waitForLoad("settings", Date.now(), 30, () => {
-			this.mapClickListener = this.onMapClickEvent = window.map.on(
-				"click",
-				this.onMapClick
-			);
+			this.mapClickListener = this.onMapClickEvent = window.map.on("click", this.onMapClick);
 			this.createPointLayer();
 			window.disableParcelClick = true;
 		});
@@ -70,11 +66,7 @@ class ExternalServices extends Component {
 		this.vectorLayer.getSource().clear();
 		this.vectorLayer.getSource().addFeature(feature);
 
-		const parcelURL = parcelURLTemplate(
-			window.config.parcelLayer.url,
-			coords[0],
-			coords[1]
-		);
+		const parcelURL = parcelURLTemplate(window.config.parcelLayer.url, coords[0], coords[1]);
 		helpers.getJSON(parcelURL, (result) => {
 			if (result.features.length === 0) return;
 
@@ -104,27 +96,12 @@ class ExternalServices extends Component {
 
 	render() {
 		return (
-			<PanelComponent
-				onClose={this.onClose}
-				name={this.props.name}
-				helpLink={this.props.helpLink}
-				type="tools"
-			>
-				<div
-					className="sc-tool-external-services-container"
-					style={{ fontSize: "11pt" }}
-				>
-					Explore a selected location using a variety of external service
-					providers (i.e. Google Maps, Yahoo and Bing). Simply click on a
-					location and select the desired link that appears.
+			<PanelComponent onClose={this.onClose} name={this.props.name} helpLink={this.props.helpLink} type="tools">
+				<div className="sc-tool-external-services-container" style={{ fontSize: "11pt" }}>
+					Explore a selected location using a variety of external service providers (i.e. Google Maps, Yahoo and Bing). Simply click on a location and select the desired link that appears.
 					<div>
 						{this.state.groups.map((group) => (
-							<ExternalServicesGroup
-								key={helpers.getUID()}
-								group={group}
-								coords={this.state.coords}
-								address={this.state.address}
-							></ExternalServicesGroup>
+							<ExternalServicesGroup key={helpers.getUID()} group={group} coords={this.state.coords} address={this.state.address}></ExternalServicesGroup>
 						))}
 					</div>
 				</div>
@@ -142,22 +119,13 @@ const ExternalServicesGroup = (props) => {
 		<div className="sc-tool-external-services-item-group">
 			<div className="sc-container sc-tool-external-services-item-header">
 				<div className="sc-tool-external-services-item-header">
-					<img
-						className="sc-tool-external-services-item-image"
-						src={images[group.icon]}
-						alt={group.groupName}
-					></img>
+					<img className="sc-tool-external-services-item-image" src={images[group.icon]} alt={group.groupName}></img>
 					<span className="">{group.groupName}</span>
 				</div>
 			</div>
 			<div className="sc-tool-external-services-item-links">
 				{links.map((link) => (
-					<ExternalServicesLink
-						key={helpers.getUID()}
-						link={link}
-						coords={coords}
-						address={address}
-					></ExternalServicesLink>
+					<ExternalServicesLink key={helpers.getUID()} link={link} coords={coords} address={address}></ExternalServicesLink>
 				))}
 			</div>
 		</div>
@@ -171,11 +139,7 @@ const ExternalServicesLink = (props) => {
 	const template = (x, y, address) => eval("`" + link.url + "`");
 	return (
 		<div className="sc-tool-external-services-item-link">
-			<a
-				href={template(coords[0], coords[1], address)}
-				target="_blank"
-				rel="noopener noreferrer"
-			>
+			<a href={template(coords[0], coords[1], address)} target="_blank" rel="noopener noreferrer">
 				{link.name}
 			</a>
 		</div>
@@ -183,9 +147,7 @@ const ExternalServicesLink = (props) => {
 };
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

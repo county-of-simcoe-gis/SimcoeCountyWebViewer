@@ -44,12 +44,7 @@ class FloatingMenu extends Component {
 							});
 						}
 
-						if (
-							evt.target.className.indexOf("rc-menu") > -1 ||
-							evt.target.className.indexOf("sc-floating-menu-") > -1 ||
-							found
-						)
-							return;
+						if (evt.target.className.indexOf("rc-menu") > -1 || evt.target.className.indexOf("sc-floating-menu-") > -1 || found) return;
 					}
 
 					if (this.container !== null && !this.container.contains(evt.target)) {
@@ -66,18 +61,13 @@ class FloatingMenu extends Component {
 		return (
 			rect.top >= 0 &&
 			rect.left >= 0 &&
-			rect.bottom <=
-				(window.innerHeight ||
-					document.documentElement.clientHeight) /*or $(window).height() */ &&
-			rect.right <=
-				(window.innerWidth ||
-					document.documentElement.clientWidth) /*or $(window).width() */
+			rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) /*or $(window).height() */ &&
+			rect.right <= (window.innerWidth || document.documentElement.clientWidth) /*or $(window).width() */
 		);
 	}
 
 	getStyle = (callback) => {
-		if (this.state === undefined || !this.state.isVisible)
-			callback({ display: "none" });
+		if (this.state === undefined || !this.state.isVisible) callback({ display: "none" });
 
 		let yOffset = 0;
 		let xOffset = 0;
@@ -138,31 +128,14 @@ class FloatingMenu extends Component {
 		}
 
 		return (
-			<div
-				className="sc-floating-menu-toolbox-menu-container"
-				style={this.state.style}
-				ref={(container) => (this.container = container)}
-			>
-				<div
-					className={
-						window.config.showFloatingMenuHeader
-							? "sc-floating-menu-toolbox-menu-header"
-							: "sc-hidden"
-					}
-					title={this.props.title}
-				>
+			<div className="sc-floating-menu-toolbox-menu-container" style={this.state.style} ref={(container) => (this.container = container)}>
+				<div className={window.config.showFloatingMenuHeader ? "sc-floating-menu-toolbox-menu-header" : "sc-hidden"} title={this.props.title}>
 					<div className="title">{this.props.title}</div>
 					<div className="close" onClick={this.handleSelect} alt="Close Menu">
 						&nbsp;
 					</div>
 				</div>
-				<Menu
-					onSelect={this.handleSelect}
-					defaultActiveFirst
-					onClick={this.handleClick}
-					onTitleClick={this.editMove}
-					className="sc-floating-menu-toolbox-menu"
-				>
+				<Menu onSelect={this.handleSelect} defaultActiveFirst onClick={this.handleClick} onTitleClick={this.editMove} className="sc-floating-menu-toolbox-menu">
 					{this.props.children}
 				</Menu>
 			</div>
@@ -173,9 +146,7 @@ class FloatingMenu extends Component {
 export default FloatingMenu;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
@@ -185,14 +156,8 @@ function importAllImages(r) {
 export function FloatingMenuItem(props) {
 	return (
 		<div className="sc-floating-menu-toolbox-menu-icon-label-container">
-			<img
-				className="sc-floating-menu-toolbox-menu-icon"
-				src={images[props.imageName]}
-				alt={props.imageName}
-			/>
-			<label className="sc-floating-menu-toolbox-menu-label">
-				{props.label}
-			</label>
+			<img className="sc-floating-menu-toolbox-menu-icon" src={images[props.imageName]} alt={props.imageName} />
+			<label className="sc-floating-menu-toolbox-menu-label">{props.label}</label>
 		</div>
 	);
 }

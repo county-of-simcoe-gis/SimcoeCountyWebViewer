@@ -15,20 +15,14 @@ import ReactGA from "react-ga";
 import packageJson from "../package.json";
 
 const enableAnalytics = helpers.getURLParameter("ANALYTICS") !== "off";
-if (
-	mainConfig.googleAnalyticsID !== undefined &&
-	mainConfig.googleAnalyticsID !== "" &&
-	enableAnalytics
-) {
+if (mainConfig.googleAnalyticsID !== undefined && mainConfig.googleAnalyticsID !== "" && enableAnalytics) {
 	ReactGA.initialize(mainConfig.googleAnalyticsID);
 	ReactGA.pageview(window.location.pathname + window.location.search);
 }
 
 class App extends Component {
 	setControlPreferences() {
-		const localMapControls = helpers.getItemsFromStorage(
-			"Map Control Settings"
-		);
+		const localMapControls = helpers.getItemsFromStorage("Map Control Settings");
 
 		if (localMapControls !== undefined) window.mapControls = localMapControls;
 		else window.mapControls = mainConfig.controls;
@@ -76,28 +70,15 @@ function MapApp() {
 		helpers.loadConfig(() => {
 			document.title = window.config.title;
 			helpers.addIsLoaded("settings");
-			if (window.config.default_theme !== undefined)
-				window.emitter.emit(
-					"activateSidebarItem",
-					window.config.default_theme,
-					"themes"
-				);
-			if (window.config.default_tool !== undefined)
-				window.emitter.emit(
-					"activateSidebarItem",
-					window.config.default_tool,
-					"tools"
-				);
+			if (window.config.default_theme !== undefined) window.emitter.emit("activateSidebarItem", window.config.default_theme, "themes");
+			if (window.config.default_tool !== undefined) window.emitter.emit("activateSidebarItem", window.config.default_tool, "tools");
 		});
 	}, []);
 
 	return (
 		<div>
 			<div id="portal-root" />
-			<LoadingScreen
-				visible={mapLoading || sidebarLoading || headerLoading}
-				backgroundColor={"#3498db"}
-			/>
+			<LoadingScreen visible={mapLoading || sidebarLoading || headerLoading} backgroundColor={"#3498db"} />
 			<Header mapLoading={mapLoading} sidebarLoading={sidebarLoading} />
 			<Sidebar mapLoading={mapLoading} headerLoading={headerLoading} />
 			<SCMap sidebarLoading={sidebarLoading} headerLoading={headerLoading} />
