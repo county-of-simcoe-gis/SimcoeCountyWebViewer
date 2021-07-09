@@ -4,7 +4,7 @@ import "./MyMapsFooter.css";
 import * as helpers from "../../../helpers/helpers";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import Portal from "../../../helpers/Portal.jsx";
-import { Item as MenuItem, Divider } from "rc-menu";
+import { SubMenu, Item as MenuItem, Divider } from "rc-menu";
 
 const MyMapsFooter = (props) => {
 	// USE HOOKS
@@ -37,9 +37,17 @@ const MyMapsFooter = (props) => {
 					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-delete-unselected">
 						<FloatingMenuItem imageName={"eraser.png"} label="Delete UnSelected" />
 					</MenuItem>
-					{/* <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-export-to-shapefile">
-            <FloatingMenuItem imageName={"export-to-shapefile.png"} label="Export to Shapefile" />
-    </MenuItem> */}
+					<SubMenu title="Export to ...">
+						<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-export-all-to-kml">
+							<FloatingMenuItem label="KML" />
+						</MenuItem>
+						<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-export-all-to-esrijson">
+							<FloatingMenuItem label="EsriJSON" />
+						</MenuItem>
+						<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-export-all-to-geojson">
+							<FloatingMenuItem label="GeoJSON" />
+						</MenuItem>
+					</SubMenu>
 				</FloatingMenu>
 			</Portal>
 		);
