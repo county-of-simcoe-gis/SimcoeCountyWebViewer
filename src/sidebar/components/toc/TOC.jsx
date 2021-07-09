@@ -116,7 +116,7 @@ class TOC extends Component {
 		let urlDefaultGroupName = helpers.getURLParameter("GROUP", true, true);
 		if (urlDefaultGroupName !== null) defaultGroupName = urlDefaultGroupName;
 
-		let defaultGroup = layerGroups.filter((item) => item.value === defaultGroupName)[0];
+		let defaultGroup = layerGroups.filter((item) => item.label === defaultGroupName)[0];
 		if (defaultGroup === undefined) defaultGroup = layerGroups[0];
 		if (callback === undefined) return defaultGroup;
 		else callback(defaultGroup);
