@@ -324,13 +324,13 @@ class Search extends Component {
 			window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), {
 				duration: 1000,
 			});
-			window.map.getView().setZoom(window.map.getView().getZoom() - 1);
+			window.map.getView().setZoom(window.map.getView().getZoom() - 1 / window.map.getView().getZoom());
 		} else {
 			searchGeoLayer.setStyle(this.styles["poly"]);
 			window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), {
 				duration: 1000,
 			});
-			window.map.getView().setZoom(window.map.getView().getZoom() - 1);
+			window.map.getView().setZoom(window.map.getView().getZoom() - 1 / window.map.getView().getZoom());
 		}
 
 		//fullFeature.setStyle(myMapsHelpers.getDefaultDrawStyle([255, 0, 0, 0.8], false, 2, fullFeature.getGeometry().getType()));

@@ -2,7 +2,7 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
-import { Item as MenuItem } from "rc-menu";
+import { SubMenu, Item as MenuItem } from "rc-menu";
 
 // CUSTOM
 import "./MyMaps.css";
@@ -784,11 +784,31 @@ class MyMaps extends Component {
 				break;
 			case "sc-floating-menu-geometry":
 				this.onShowCoordinates(item);
-
+				break;
+			case "sc-floating-menu-export-to-geojson":
+				this.onDownloadFeatures(OL_DATA_TYPES.GeoJSON, [item]);
+				break;
+			case "sc-floating-menu-export-to-kml":
+				this.onDownloadFeatures(OL_DATA_TYPES.KML, [item]);
+				break;
+			case "sc-floating-menu-export-to-esrijson":
+				this.onDownloadFeatures(OL_DATA_TYPES.EsriJSON, [item]);
 				break;
 			case "sc-floating-menu-measure":
 				const feature = drawingHelpers.getFeatureById(item.id);
 				this.showDrawingOptionsPopup(feature, null, "measure");
+				break;
+			case "sc-floating-menu-export-all-to-geojson":
+				this.onDownloadFeatures(OL_DATA_TYPES.GeoJSON, this.state.items);
+				break;
+			case "sc-floating-menu-export-all-to-kml":
+				this.onDownloadFeatures(OL_DATA_TYPES.KML, this.state.items);
+				break;
+			case "sc-floating-menu-export-all-to-esrijson":
+				this.onDownloadFeatures(OL_DATA_TYPES.EsriJSON, this.state.items);
+				break;
+			case "sc-floating-menu-export-to-shapefile":
+				this.onDownloadFeatures(OL_DATA_TYPES.KML, this.state.items);
 				break;
 			default:
 				break;
@@ -814,24 +834,27 @@ class MyMaps extends Component {
 			});
 	};
 
-	onDownloadFeatures = () => {
-		const extent = window.map.getView().calculateExtent(window.map.getSize());
+	onDownloadFeatures = (dataType = OL_DATA_TYPES.KML, items = []) => {
 		let visibleFeatures = [];
-		this.vectorSource.forEachFeatureInExtent(extent, function (feature) {
-			const showCoordinates = feature.get("is_open_data");
-			if (showCoordinates || showCoordinates === undefined) {
-				if (feature.style_.fill_ !== null || feature.style_.stroke_ !== null || feature.style_.text_ !== null) {
+		let allFeatures = this.vectorSource.getFeatures();
+		items.forEach((item) => {
+			const originFeature = allFeatures.filter((featureItem) => featureItem.get("id") === item.id)[0];
+			if (originFeature) {
+				const feature = originFeature.clone();
+				const showCoordinates = feature.get("is_open_data");
+				if (showCoordinates || showCoordinates === undefined) {
 					const keys = feature.getKeys();
 					keys.forEach((key) => {
-						if (key !== "name" && key !== "label" && key !== "geometry") feature.unset(key);
+						if (key.toLowerCase() !== "name" && key.toLowerCase() !== "label" && key.toLowerCase() !== "geometry") feature.unset(key);
 					});
 					visibleFeatures.push(feature);
 				}
 			}
 		});
+
 		if (visibleFeatures.length > 0) {
-			let features = FeatureHelpers.setFeatures(visibleFeatures.concat([]), OL_DATA_TYPES.KML);
-			if (features !== undefined) helpers.export_file("features.kml", features);
+			let features = FeatureHelpers.setFeatures(visibleFeatures.concat([]), dataType);
+			if (features !== undefined) helpers.export_file(`features.${dataType.toLowerCase()}`, features);
 		} else {
 			helpers.showMessage("No Features", "No features in view for this layer");
 		}
@@ -921,6 +944,17 @@ class MyMaps extends Component {
 					<MenuItem className={showCoordinates || showCoordinates === undefined ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-geometry">
 						<FloatingMenuItem imageName={"json.png"} label="Show Geometry" />
 					</MenuItem>
+					<SubMenu title="Export to ...">
+						<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-export-to-kml">
+							<FloatingMenuItem label="KML" />
+						</MenuItem>
+						<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-export-to-esrijson">
+							<FloatingMenuItem label="EsriJSON" />
+						</MenuItem>
+						<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-export-to-geojson">
+							<FloatingMenuItem label="GeoJSON" />
+						</MenuItem>
+					</SubMenu>
 					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-report-problem">
 						<FloatingMenuItem imageName={"error.png"} label="Report a Problem" />
 					</MenuItem>
@@ -1149,13 +1183,7 @@ class MyMaps extends Component {
 						))}
 					</TransitionGroup>
 				</MyMapsItems>
-				<MyMapsAdvanced
-					onEditFeatures={this.onEditFeatures}
-					onMenuItemClick={this.onMenuItemClick}
-					onDeleteAllClick={this.onDeleteAllClick}
-					onMyMapsImport={this.onMyMapsImport}
-					onDownloadFeatures={this.onDownloadFeatures}
-				/>
+				<MyMapsAdvanced onEditFeatures={this.onEditFeatures} onMenuItemClick={this.onMenuItemClick} onDeleteAllClick={this.onDeleteAllClick} onMyMapsImport={this.onMyMapsImport} />
 				<div id={this.state.toolTipId} className={window.isDrawingOrEditing && (this.state.drawType === "Bearing" || this.state.drawType === "Measure") ? this.state.toolTipClass : "sc-hidden"} />
 			</div>
 		);
