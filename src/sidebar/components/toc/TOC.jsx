@@ -919,7 +919,7 @@ class TOC extends Component {
 			}
 		});
 
-		helpers.showWindow(<LegendApp groups={this.getActiveLayerGroups()} selectedGroups={activeGroups} />, false, "normal", false);
+		helpers.showWindow(<LegendApp groups={this.getActiveLayerGroups()} selectedGroups={activeGroups} />);
 	};
 	onSaveAllLayers = () => {
 		// GATHER INFO TO SAVE

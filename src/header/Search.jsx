@@ -203,8 +203,8 @@ class Search extends Component {
 			const result = this.state.searchResults[0];
 			if (searchIconLayer.getSource().getFeatures()[0] === undefined) return;
 			// ADD MYMAPS
-			if (searchGeoLayer.getSource().getFeatures().length === 0) window.emitter.emit("addMyMapsFeature", searchIconLayer.getSource().getFeatures()[0], result.Name);
-			else window.emitter.emit("addMyMapsFeature", searchGeoLayer.getSource().getFeatures()[0], result.Name);
+			if (searchGeoLayer.getSource().getFeatures().length === 0) window.emitter.emit("addMyMapsFeature", searchIconLayer.getSource().getFeatures()[0], result.name);
+			else window.emitter.emit("addMyMapsFeature", searchGeoLayer.getSource().getFeatures()[0], result.name);
 
 			// CLEAN UP
 			this.cleanup();
@@ -295,6 +295,17 @@ class Search extends Component {
 
 		if (!hidden) {
 			// SET SOURCE
+			fullFeature.setProperties({
+				label: result.alias ? result.alias : result.name,
+				name: result.name,
+				is_open_data: result.is_open_data !== undefined && result.is_open_data !== null ? result.is_open_data : true,
+			});
+			pointFeature.setProperties({
+				label: result.alias ? result.alias : result.name,
+				name: result.name,
+				is_open_data: result.is_open_data !== undefined && result.is_open_data !== null ? result.is_open_data : true,
+			});
+
 			searchGeoLayer.getSource().addFeature(fullFeature);
 			searchIconLayer.getSource().addFeature(pointFeature);
 

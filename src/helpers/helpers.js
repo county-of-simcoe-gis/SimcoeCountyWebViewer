@@ -112,8 +112,11 @@ export function isMobile() {
 }
 
 // SHOW CONTENT WINDOW
-export function showWindow(contents, showFooter = false, mode = "normal", hideScroll = false) {
-	ReactDOM.render(<ShowWindow key={shortid.generate()} mode={mode} showFooter={showFooter} contents={contents} hideScroll={hideScroll} />, document.getElementById("map-modal-window"));
+export function showWindow(contents, options = { title: "Information", showFooter: false, mode: "normal", hideScroll: false }) {
+	ReactDOM.render(
+		<ShowWindow key={shortid.generate()} title={options.title} mode={options.mode} showFooter={options.showFooter} contents={contents} hideScroll={options.hideScroll} style={options.style} />,
+		document.getElementById("map-modal-window")
+	);
 }
 
 // SHOW URL WINDOW
@@ -1415,7 +1418,7 @@ export function loadConfig(callback) {
 
 		if (url_geoserverUrlType !== null) geoserverUrlType = url_geoserverUrlType;
 		if (url_mapId !== null) {
-			mapId = url_mapId;
+			mapId = url_mapId.toLowerCase();
 			loaderType = "MAPID";
 			config["mapId"] = mapId;
 		}

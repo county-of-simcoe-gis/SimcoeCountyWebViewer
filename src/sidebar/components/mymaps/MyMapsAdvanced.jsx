@@ -118,6 +118,9 @@ class MyMapsAdvanced extends Component {
 								<button className="sc-button sc-mymaps-advanced-import-button" onClick={this.onShare}>
 									Share
 								</button>
+								<button className="sc-button sc-mymaps-advanced-import-button" onClick={this.props.onDownloadFeatures}>
+									Download (KML)
+								</button>
 							</div>
 						</div>
 						<div className="sc-mymaps-advanced-edit-container">

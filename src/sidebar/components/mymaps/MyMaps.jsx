@@ -8,6 +8,8 @@ import { Item as MenuItem } from "rc-menu";
 import "./MyMaps.css";
 import * as helpers from "../../../helpers/helpers";
 import * as drawingHelpers from "../../../helpers/drawingHelpers";
+import { FeatureHelpers, OL_DATA_TYPES } from "../../../helpers/OLHelpers";
+
 import ColorBar from "./ColorBar.jsx";
 import ButtonBar from "./ButtonBar.jsx";
 import MyMapsItem from "./MyMapsItem";
@@ -780,6 +782,10 @@ class MyMaps extends Component {
 			case "sc-floating-menu-identify":
 				this.onIdentify(item.id);
 				break;
+			case "sc-floating-menu-geometry":
+				this.onShowCoordinates(item);
+
+				break;
 			case "sc-floating-menu-measure":
 				const feature = drawingHelpers.getFeatureById(item.id);
 				this.showDrawingOptionsPopup(feature, null, "measure");
@@ -790,7 +796,46 @@ class MyMaps extends Component {
 		// APP STATS
 		helpers.addAppStat("MyMaps Menu", action);
 	};
+	onShowCoordinates = (item) => {
+		const feature = helpers.getFeatureFromGeoJSON(item.featureGeoJSON);
+		const showCoordinates = feature.get("is_open_data");
+		const keys = feature.getKeys();
+		keys.forEach((key) => {
+			if (key !== "name" && key !== "label" && key !== "geometry") feature.unset(key);
+		});
+		const content = helpers.featureToGeoJson(feature);
+		if (showCoordinates || showCoordinates === undefined)
+			helpers.showWindow(<ShowGeometryContent title="Below is a JSON representation of the geometry selected." content={content} />, {
+				title: "Geometry (JSON)",
+				showFooter: true,
+				mode: "normal",
+				hideScroll: true,
+				style: { width: "350px", height: "250px", margin: "auto" },
+			});
+	};
 
+	onDownloadFeatures = () => {
+		const extent = window.map.getView().calculateExtent(window.map.getSize());
+		let visibleFeatures = [];
+		this.vectorSource.forEachFeatureInExtent(extent, function (feature) {
+			const showCoordinates = feature.get("is_open_data");
+			if (showCoordinates || showCoordinates === undefined) {
+				if (feature.style_.fill_ !== null || feature.style_.stroke_ !== null || feature.style_.text_ !== null) {
+					const keys = feature.getKeys();
+					keys.forEach((key) => {
+						if (key !== "name" && key !== "label" && key !== "geometry") feature.unset(key);
+					});
+					visibleFeatures.push(feature);
+				}
+			}
+		});
+		if (visibleFeatures.length > 0) {
+			let features = FeatureHelpers.setFeatures(visibleFeatures.concat([]), OL_DATA_TYPES.KML);
+			if (features !== undefined) helpers.export_file("features.kml", features);
+		} else {
+			helpers.showMessage("No Features", "No features in view for this layer");
+		}
+	};
 	// TODO:  CHANGE PROJECTION TO WEB MERCATOR IN OUTPUT.
 	//https://github.com/mapbox/shp-write/pull/54
 	onExportToShapeFile = () => {
@@ -846,6 +891,8 @@ class MyMaps extends Component {
 
 	onMyMapItemToolsButtonClick = (evt, item) => {
 		var evtClone = Object.assign({}, evt);
+		const feature = helpers.getFeatureFromGeoJSON(item.featureGeoJSON);
+		const showCoordinates = feature.get("is_open_data");
 		const menu = (
 			<Portal>
 				<FloatingMenu
@@ -870,6 +917,9 @@ class MyMaps extends Component {
 					</MenuItem>
 					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-delete">
 						<FloatingMenuItem imageName={"eraser.png"} label="Delete" />
+					</MenuItem>
+					<MenuItem className={showCoordinates || showCoordinates === undefined ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-geometry">
+						<FloatingMenuItem imageName={"json.png"} label="Show Geometry" />
 					</MenuItem>
 					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-report-problem">
 						<FloatingMenuItem imageName={"error.png"} label="Report a Problem" />
@@ -1099,7 +1149,13 @@ class MyMaps extends Component {
 						))}
 					</TransitionGroup>
 				</MyMapsItems>
-				<MyMapsAdvanced onEditFeatures={this.onEditFeatures} onMenuItemClick={this.onMenuItemClick} onDeleteAllClick={this.onDeleteAllClick} onMyMapsImport={this.onMyMapsImport} />
+				<MyMapsAdvanced
+					onEditFeatures={this.onEditFeatures}
+					onMenuItemClick={this.onMenuItemClick}
+					onDeleteAllClick={this.onDeleteAllClick}
+					onMyMapsImport={this.onMyMapsImport}
+					onDownloadFeatures={this.onDownloadFeatures}
+				/>
 				<div id={this.state.toolTipId} className={window.isDrawingOrEditing && (this.state.drawType === "Bearing" || this.state.drawType === "Measure") ? this.state.toolTipClass : "sc-hidden"} />
 			</div>
 		);
@@ -1107,3 +1163,13 @@ class MyMaps extends Component {
 }
 
 export default MyMaps;
+
+const ShowGeometryContent = (props) => {
+	return (
+		<div>
+			<span>{props.title}</span>
+			<br />
+			<textarea style={{ width: "100%", height: "90px", resize: "none" }} defaultValue={props.content}></textarea>
+		</div>
+	);
+};
