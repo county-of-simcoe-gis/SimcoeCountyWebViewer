@@ -74,9 +74,9 @@ class LayerOptionsMenu extends Component {
 					TOCHelpers.getLayerInfo(layerInfo, (result) => {
 						if (helpers.isMobile()) {
 							window.emitter.emit("setSidebarVisiblity", "CLOSE");
-							helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} />, false, "normal", false);
+							helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} />);
 						} else {
-							helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} />, false, "normal", false);
+							helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} />);
 						}
 					});
 				helpers.addAppStat("Metadata", layerInfo.name);
@@ -112,9 +112,9 @@ class LayerOptionsMenu extends Component {
 						helpers.addAppStat("Download", layerInfo.name);
 						if (helpers.isMobile()) {
 							window.emitter.emit("setSidebarVisiblity", "CLOSE");
-							helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} showDownload={1} />, false, "normal", false);
+							helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} showDownload={1} />);
 						} else {
-							helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} showDownload={1} />, false, "normal", false);
+							helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} showDownload={1} />);
 						}
 					}
 				});

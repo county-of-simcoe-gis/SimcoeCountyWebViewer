@@ -8,6 +8,7 @@ class ShowWindow extends Component {
 		this.state = {
 			hide: false,
 			fullScreen: false,
+			style: {},
 		};
 	}
 
@@ -16,7 +17,8 @@ class ShowWindow extends Component {
 	};
 
 	onPopoutClick = () => {
-		this.setState({ fullScreen: !this.state.fullScreen });
+		const fullscreen = !this.state.fullScreen;
+		this.setState({ fullScreen: fullscreen, style: !fullscreen && this.state.style ? this.props.style : {} });
 	};
 
 	componentWillUnmount() {
@@ -26,7 +28,7 @@ class ShowWindow extends Component {
 
 	componentDidMount() {
 		document.addEventListener("keydown", this.escFunction, false);
-
+		if (!this.state.fullScreen && this.props.style) this.setState({ style: this.props.style });
 		// LISTEN FOR SIDEPANEL CHANGES
 		this.sidebarEmitter = window.emitter.addListener("sidebarChanged", (isSidebarOpen) => this.sidebarChanged(isSidebarOpen));
 	}
@@ -61,9 +63,9 @@ class ShowWindow extends Component {
 		if (this.props.hideScroll && !this.state.fullScreen) hideScrollClassName = "sc-show-window-content-no-scroll";
 
 		return (
-			<div id="sc-show-window-container" className={className}>
+			<div id="sc-show-window-container" className={className} style={this.state.style}>
 				<div className="sc-show-window-header no-print">
-					<div className="sc-show-window-header-title">Information</div>
+					<div className="sc-show-window-header-title">{this.props.title}</div>
 					<div className="sc-show-window-header-popout-button" title={this.state.fullScreen ? "Restore Down" : "Full Screen"}>
 						<button className="sc-button sc-button-blue sc-show-window-header-button" onClick={this.onPopoutClick}>
 							<img src={images["new-window.png"]} alt="new window" />
