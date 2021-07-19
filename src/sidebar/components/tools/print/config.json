@@ -71,7 +71,6 @@
 		"Rectangle": "Polygon",
 		"Arrow": "Line",
 		"Text": "Point",
-		"Cancel": "Point",
 		"Bearing": "Line",
 		"MultiPolygon": "Polygon"
 	},
