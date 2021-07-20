@@ -7,7 +7,7 @@
 	top: 0;
 	background-color: rgba(0, 0, 0);
 	background-color: rgba(0, 0, 0, 0.8);
-	z-index: 999999;
+	z-index: 9999999;
 }
 
 .sc-show-terms-container {

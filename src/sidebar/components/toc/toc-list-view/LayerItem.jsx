@@ -2,6 +2,8 @@ import React, { Component } from "react";
 import * as helpers from "../../../../helpers/helpers";
 import Highlighter from "react-highlight-words";
 import LayerLegend from "../common/LayerLegend";
+import { acceptDisclaimer } from "../common/TOCHelpers.jsx";
+
 import "./LayerItem.css";
 class LayerItem extends Component {
 	_isMounted = false;
@@ -42,6 +44,15 @@ class LayerItem extends Component {
 	}
 
 	onCheckboxChange = (layer) => {
+		if (layer.disclaimer !== undefined) {
+			if (
+				!acceptDisclaimer(layer, () => {
+					this.onCheckboxChange(layer);
+				})
+			) {
+				return;
+			}
+		}
 		layer.layer.setVisible(!layer.visible);
 		layer.visible = !layer.visible;
 		this.props.onLayerChange(layer, layer.group);

@@ -61,14 +61,16 @@ class MyMapsAdvanced extends Component {
 	};
 
 	onSave = () => {
-		this.setState({ copied: true });
-		drawingHelpers.exportMyMaps((result) => {
-			helpers.showMessage("MyMaps Save", "MyMaps have been saved!  Your ID has been saved to clipboard.", helpers.messageColors.green, 5000);
-			helpers.glowContainer(this.inputId);
-			this.setState({ inputText: result.id });
-			copy(result.id);
-		});
-
+		if (!this.props.hasItems) helpers.showMessage("MyMaps Save", "Cannot save MyMaps! No Items Found! ", helpers.messageColors.yellow, 5000);
+		else {
+			this.setState({ copied: true });
+			drawingHelpers.exportMyMaps((result) => {
+				helpers.showMessage("MyMaps Save", "MyMaps have been saved!  Your ID has been saved to clipboard.", helpers.messageColors.green, 5000);
+				helpers.glowContainer(this.inputId);
+				this.setState({ inputText: result.id });
+				copy(result.id);
+			});
+		}
 		// APP STATS
 		helpers.addAppStat("MyMaps", "Save");
 	};
@@ -112,7 +114,7 @@ class MyMapsAdvanced extends Component {
 									Import
 								</button>
 
-								<button className="sc-button sc-mymaps-advanced-import-button" onClick={this.onSave}>
+								<button className="sc-button sc-mymaps-advanced-import-button" onClick={this.onSave} disabled={!this.props.hasItems}>
 									Save
 								</button>
 								<button className="sc-button sc-mymaps-advanced-import-button" onClick={this.onShare}>

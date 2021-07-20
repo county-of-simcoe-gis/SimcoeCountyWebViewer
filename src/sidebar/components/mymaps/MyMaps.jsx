@@ -1183,7 +1183,13 @@ class MyMaps extends Component {
 						))}
 					</TransitionGroup>
 				</MyMapsItems>
-				<MyMapsAdvanced onEditFeatures={this.onEditFeatures} onMenuItemClick={this.onMenuItemClick} onDeleteAllClick={this.onDeleteAllClick} onMyMapsImport={this.onMyMapsImport} />
+				<MyMapsAdvanced
+					onEditFeatures={this.onEditFeatures}
+					onMenuItemClick={this.onMenuItemClick}
+					onDeleteAllClick={this.onDeleteAllClick}
+					onMyMapsImport={this.onMyMapsImport}
+					hasItems={this.state.items && this.state.items.length > 0}
+				/>
 				<div id={this.state.toolTipId} className={window.isDrawingOrEditing && (this.state.drawType === "Bearing" || this.state.drawType === "Measure") ? this.state.toolTipClass : "sc-hidden"} />
 			</div>
 		);

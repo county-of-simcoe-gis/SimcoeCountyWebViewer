@@ -702,10 +702,13 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType, secur
 		//DISCLAIMER
 		let disclaimerTitle = _getDisclaimerTitle(keywords);
 		let disclaimerUrl = _getDisclaimerURL(keywords);
+		let warningMsg = _getWarningMessage(keywords);
+
 		let disclaimer = undefined;
-		if (disclaimerUrl !== "" || disclaimerTitle !== "") {
-			disclaimer = { title: disclaimerTitle, url: disclaimerUrl };
+		if (disclaimerUrl !== "" || disclaimerTitle !== "" || warningMsg !== "") {
+			disclaimer = { title: disclaimerTitle, url: disclaimerUrl, warning: warningMsg };
 		}
+
 		const minScale = layer.MinScaleDenominator;
 		const maxScale = layer.MaxScaleDenominator;
 		// SET VISIBILITY
@@ -848,6 +851,17 @@ function _getIdentifyTitle(keywords) {
 	} else return "";
 }
 
+function _getWarningMessage(keywords) {
+	if (keywords === undefined) return "";
+	const returnText = keywords.find(function (item) {
+		return item.indexOf("WARNING") !== -1;
+	});
+	if (returnText !== undefined) {
+		const val = returnText.split("=")[1];
+		return val.split("”").join("");
+	} else return "";
+}
+
 function _getDisclaimerURL(keywords) {
 	if (keywords === undefined) return "";
 	const returnText = keywords.find(function (item) {
@@ -965,7 +979,31 @@ function _getStaticImageLegend(keywords) {
 }
 
 export function acceptDisclaimer(layer, returnToFunction) {
-	if (layer.disclaimer !== undefined && (window.acceptedDisclaimers === undefined || window.acceptedDisclaimers.indexOf(layer.name) === -1)) {
+	if (layer.disclaimer && layer.disclaimer.warning) {
+		let currentDisclaimers = window.acceptedDisclaimers;
+		if (currentDisclaimers === undefined) currentDisclaimers = [];
+		if (layer.visible) {
+			currentDisclaimers.splice(currentDisclaimers.indexOf(layer.name), 1);
+			window.acceptedDisclaimers = currentDisclaimers;
+			return true;
+		}
+		if (!currentDisclaimers || currentDisclaimers.indexOf(layer.name) === -1) {
+			helpers.showTerms(
+				layer.disclaimer.title,
+				layer.disclaimer.warning,
+				layer.disclaimer.url,
+				helpers.messageColors.orange,
+				() => {
+					currentDisclaimers.push(layer.name);
+					window.acceptedDisclaimers = currentDisclaimers;
+					returnToFunction();
+				},
+				() => {},
+				{ accept: { show: true, label: "OK" }, decline: { show: false } }
+			);
+			return false;
+		} else return true;
+	} else if (layer.disclaimer && (!window.acceptedDisclaimers || window.acceptedDisclaimers.indexOf(layer.name) === -1)) {
 		helpers.showTerms(
 			layer.disclaimer.title,
 			`The layer you are about to view contains data  which is subject to a licence agreement. 

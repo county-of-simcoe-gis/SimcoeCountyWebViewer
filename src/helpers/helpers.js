@@ -385,7 +385,7 @@ export function getHash(input) {
 		return a & a;
 	}, 0);
 }
-export function showTerms(title = "Terms and Condition", messageText = "Message", url = "", color = messageColors.green, accept, decline) {
+export function showTerms(title = "Terms and Condition", messageText = "Message", url = "", color = messageColors.green, accept, decline, options=undefined) {
 	const domId = "portal-root";
 	const termsDomId = "sc-show-terms-root";
 
@@ -399,6 +399,7 @@ export function showTerms(title = "Terms and Condition", messageText = "Message"
 			url={url}
 			onAcceptClick={accept}
 			onDeclineClick={decline}
+			options={options}
 			onClose={(ref) => {
 				try {
 					ReactDOM.unmountComponentAtNode(ref.current.parentNode);
