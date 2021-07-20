@@ -787,12 +787,22 @@ class TOC extends Component {
 		}
 	};
 	onActivateLayer = (layerItem) => {
+		let allowSave = true;
 		let layerGroups = this.getActiveLayerGroups();
-
 		let currentGroup = layerGroups.filter((item) => item.value === layerItem.layerGroup)[0];
 		currentGroup.panelOpen = true;
 		currentGroup = currentGroup.layers.map((layer) => {
 			if (layer.name === layerItem.fullName && layer.group === layerItem.layerGroup) {
+				if (layer.disclaimer !== undefined) {
+					if (
+						!TOCHelpers.acceptDisclaimer(layer, () => {
+							this.onActivateLayer(layerItem);
+						})
+					) {
+						allowSave = false;
+						return layer;
+					}
+				}
 				layer.layer.setVisible(true);
 				layer.visible = true;
 				return layer;
@@ -800,10 +810,11 @@ class TOC extends Component {
 				return layer;
 			}
 		});
-		this.setLayerGroups(
-			this.state.type,
-			layerGroups.map((item) => (item.value === currentGroup.value ? currentGroup : item))
-		);
+		if (allowSave)
+			this.setLayerGroups(
+				this.state.type,
+				layerGroups.map((item) => (item.value === currentGroup.value ? currentGroup : item))
+			);
 	};
 	//#endregion
 	//#region HANDLE LAYER OPTIONS MENU CALLBACKS

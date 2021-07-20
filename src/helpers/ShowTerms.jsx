@@ -9,9 +9,15 @@ class ShowTerms extends Component {
 		this.state = {
 			hide: false,
 			color: this.props.color ? this.props.color : "green",
+			acceptLabel: "Accept",
+			showAccept: true,
+			declineLabel: "Decline",
+			showDecline: true,
 		};
 	}
-
+	componentDidMount = () => {
+		this.getOptions();
+	};
 	onAcceptClick = () => {
 		this.setState({ hide: true }, () => {
 			if (this.props.onAcceptClick !== undefined) this.props.onAcceptClick();
@@ -32,6 +38,22 @@ class ShowTerms extends Component {
 		else return "sc-show-terms-container closed " + this.state.color;
 	};
 
+	getOptions = () => {
+		let stateOptions = {};
+		let { options } = this.props;
+		if (options) {
+			if (options.accept) {
+				if (options.accept.label) stateOptions["acceptLabel"] = options.accept.label;
+				if (options.accept.show !== undefined) stateOptions["showAccept"] = options.accept.show;
+			}
+			if (options.decline) {
+				if (options.decline.label) stateOptions["declineLabel"] = options.decline.label;
+				if (options.decline.show !== undefined) stateOptions["showDecline"] = options.decline.show;
+			}
+		}
+		if (stateOptions) this.setState(stateOptions);
+	};
+
 	render() {
 		const style = this.getClassName();
 		return (
@@ -44,11 +66,11 @@ class ShowTerms extends Component {
 							{this.props.title}
 						</a>
 					</div>
-					<button className="sc-button sc-show-terms-accept-button" onClick={this.onAcceptClick}>
-						Accept
+					<button className={this.state.showAccept ? "sc-button sc-show-terms-accept-button" : "sc-hidden"} onClick={this.onAcceptClick}>
+						{this.state.acceptLabel}
 					</button>
-					<button className="sc-button sc-show-terms-decline-button" onClick={this.onDeclineClick}>
-						Decline
+					<button className={this.state.showDecline ? "sc-button sc-show-terms-decline-button" : "sc-hidden"} onClick={this.onDeclineClick}>
+						{this.state.declineLabel}
 					</button>
 				</div>
 			</div>
