@@ -944,7 +944,7 @@ class MyMaps extends Component {
 					<MenuItem className={showCoordinates || showCoordinates === undefined ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-geometry">
 						<FloatingMenuItem imageName={"json.png"} label="Show Geometry" />
 					</MenuItem>
-					<SubMenu title="Export to ...">
+					<SubMenu title="Export to ..." className={showCoordinates || showCoordinates === undefined ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"}>
 						<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-export-to-kml">
 							<FloatingMenuItem label="KML" />
 						</MenuItem>
