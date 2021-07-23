@@ -63,24 +63,15 @@ class LoadingScreen extends Component {
 		let backgroundColor = "#ffffff";
 		let backgroundOpacity = 0.35;
 
-		if (this.props.spinnerSize !== undefined)
-			spinnerSize = this.props.spinnerSize;
-		if (this.props.spinnerBackColor !== undefined)
-			spinnerBackColor = this.props.spinnerBackColor;
-		if (this.props.spinnerForeColor !== undefined)
-			spinnerForeColor = this.props.spinnerForeColor;
+		if (this.props.spinnerSize !== undefined) spinnerSize = this.props.spinnerSize;
+		if (this.props.spinnerBackColor !== undefined) spinnerBackColor = this.props.spinnerBackColor;
+		if (this.props.spinnerForeColor !== undefined) spinnerForeColor = this.props.spinnerForeColor;
 		if (this.props.fontSize !== undefined) fontSize = this.props.fontSize;
-		if (this.props.messageColor !== undefined)
-			messageColor = this.props.messageColor;
-		if (this.props.backgroundColor !== undefined)
-			backgroundColor = this.props.backgroundColor;
-		if (this.props.backgroundOpacity !== undefined)
-			backgroundOpacity = this.props.backgroundOpacity;
+		if (this.props.messageColor !== undefined) messageColor = this.props.messageColor;
+		if (this.props.backgroundColor !== undefined) backgroundColor = this.props.backgroundColor;
+		if (this.props.backgroundOpacity !== undefined) backgroundOpacity = this.props.backgroundOpacity;
 
-		let containerBackground = this.hexToRgba(
-			backgroundColor,
-			backgroundOpacity
-		);
+		let containerBackground = this.hexToRgba(backgroundColor, backgroundOpacity);
 		const styles = {
 			containerStyle: {
 				background: containerBackground,
@@ -106,10 +97,7 @@ class LoadingScreen extends Component {
 		if (!window.config.showLoadingScreens) return <div />;
 
 		return (
-			<div
-				className={this.props.visible ? "sc-loading-screen" : "sc-hidden"}
-				style={this.state.containerStyle}
-			>
+			<div className={this.props.visible ? "sc-loading-screen" : "sc-hidden"} style={this.state.containerStyle}>
 				<div className="spinner" style={this.state.spinnerStyle} />
 				<div className="message" style={this.state.messageStyle}>
 					{this.props.message}

@@ -2,11 +2,7 @@ import React, { Component } from "react";
 import "./Coordinates.css";
 import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
-import {
-	CustomCoordinates,
-	MapExtent,
-	LiveCoordinates,
-} from "./CoordinatesSubComponents.jsx";
+import { CustomCoordinates, MapExtent, LiveCoordinates } from "./CoordinatesSubComponents.jsx";
 import { transform } from "ol/proj.js";
 import proj4 from "proj4";
 import { register } from "ol/proj/proj4";
@@ -87,23 +83,14 @@ class Coordinates extends Component {
 			window.disableParcelClick = true;
 
 			// REGISTER MAP EVENTS
-			this.onPointerMoveEvent = window.map.on(
-				"pointermove",
-				this.onPointerMoveHandler
-			);
+			this.onPointerMoveEvent = window.map.on("pointermove", this.onPointerMoveHandler);
 			this.onMapClickEvent = window.map.on("click", this.onMapClick);
 			this.onMapMoveEvent = window.map.on("moveend", this.onMapMoveEnd);
 
 			// REGISTER CUSTOM PROJECTIONS
 			proj4.defs([
-				[
-					"EPSG:26917",
-					"+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs ",
-				],
-				[
-					"EPSG:26717",
-					"+proj=utm +zone=17 +ellps=clrk66 +datum=NAD27 +units=m +no_defs ",
-				],
+				["EPSG:26917", "+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs "],
+				["EPSG:26717", "+proj=utm +zone=17 +ellps=clrk66 +datum=NAD27 +units=m +no_defs "],
 			]);
 			register(proj4);
 
@@ -130,11 +117,7 @@ class Coordinates extends Component {
 		if (x === null) return;
 
 		// ADD MYMAPS
-		window.emitter.emit(
-			"addMyMapsFeature",
-			this.vectorLayer.getSource().getFeatures()[0],
-			"X:" + x + ", Y:" + y
-		);
+		window.emitter.emit("addMyMapsFeature", this.vectorLayer.getSource().getFeatures()[0], "X:" + x + ", Y:" + y);
 	};
 
 	onMapMoveEnd = (evt) => {
@@ -143,21 +126,9 @@ class Coordinates extends Component {
 
 	onMapClick = (evt) => {
 		const webMercatorCoords = evt.coordinate;
-		const latLongCoords = transform(
-			webMercatorCoords,
-			"EPSG:3857",
-			"EPSG:4326"
-		);
-		const utmNad83Coords = transform(
-			webMercatorCoords,
-			"EPSG:3857",
-			this.nad83Proj
-		);
-		const utmNad27Coords = transform(
-			webMercatorCoords,
-			"EPSG:3857",
-			this.nad27Proj
-		);
+		const latLongCoords = transform(webMercatorCoords, "EPSG:3857", "EPSG:4326");
+		const utmNad83Coords = transform(webMercatorCoords, "EPSG:3857", this.nad83Proj);
+		const utmNad27Coords = transform(webMercatorCoords, "EPSG:3857", this.nad27Proj);
 
 		this.setState({
 			inputWebMercatorXValue: webMercatorCoords[0],
@@ -184,8 +155,7 @@ class Coordinates extends Component {
 		this.vectorLayer.getSource().addFeature(pointFeature);
 
 		// ZOOM TO IT
-		if (zoom)
-			window.map.getView().animate({ center: webMercatorCoords, zoom: 18 });
+		if (zoom) window.map.getView().animate({ center: webMercatorCoords, zoom: 18 });
 	};
 
 	glowContainers() {
@@ -202,11 +172,7 @@ class Coordinates extends Component {
 	// POINTER MOVE HANDLER
 	onPointerMoveHandler = (evt) => {
 		const webMercatorCoords = evt.coordinate;
-		const latLongCoords = transform(
-			webMercatorCoords,
-			"EPSG:3857",
-			"EPSG:4326"
-		);
+		const latLongCoords = transform(webMercatorCoords, "EPSG:3857", "EPSG:4326");
 
 		this.setState({
 			liveWebMercatorCoords: webMercatorCoords,
@@ -256,27 +222,14 @@ class Coordinates extends Component {
 
 	render() {
 		return (
-			<PanelComponent
-				onClose={this.props.onClose}
-				name={this.props.name}
-				helpLink={this.props.helpLink}
-				type="tools"
-			>
+			<PanelComponent onClose={this.props.onClose} name={this.props.name} helpLink={this.props.helpLink} type="tools">
 				<div className="sc-coordinates-container">
-					<LiveCoordinates
-						key={helpers.getUID()}
-						liveWebMercatorCoords={this.state.liveWebMercatorCoords}
-						liveLatLongCoords={this.state.liveLatLongCoords}
-					/>
+					<LiveCoordinates key={helpers.getUID()} liveWebMercatorCoords={this.state.liveWebMercatorCoords} liveLatLongCoords={this.state.liveLatLongCoords} />
 
-					<div className="sc-title sc-coordinates-title">
-						Selected/Custom Coordinates
-					</div>
+					<div className="sc-title sc-coordinates-title">Selected/Custom Coordinates</div>
 
 					<div className="sc-description">
-						Capture points in a variety of different coordinate systems or enter
-						your own locations and zoom to its location. Simply click on the map
-						to capture locations.
+						Capture points in a variety of different coordinate systems or enter your own locations and zoom to its location. Simply click on the map to capture locations.
 					</div>
 
 					<div className="sc-container">
@@ -291,26 +244,15 @@ class Coordinates extends Component {
 								this.setState({ inputWebMercatorYValue: evt.target.value });
 							}}
 							onZoomClick={() => {
-								this.onZoomClick(
-									"webmercator",
-									this.state.inputWebMercatorXValue,
-									this.state.inputWebMercatorYValue
-								);
+								this.onZoomClick("webmercator", this.state.inputWebMercatorXValue, this.state.inputWebMercatorYValue);
 							}}
 							onMyMapsClick={() => {
-								this.onMyMapsClick(
-									this.state.inputWebMercatorXValue,
-									this.state.inputWebMercatorYValue
-								);
+								this.onMyMapsClick(this.state.inputWebMercatorXValue, this.state.inputWebMercatorYValue);
 							}}
 							inputIdX="sc-coordinate-webmercator-x"
 							inputIdY="sc-coordinate-webmercator-y"
 							onEnterKey={() => {
-								this.onZoomClick(
-									"webmercator",
-									this.state.inputWebMercatorXValue,
-									this.state.inputWebMercatorYValue
-								);
+								this.onZoomClick("webmercator", this.state.inputWebMercatorXValue, this.state.inputWebMercatorYValue);
 							}}
 						/>
 
@@ -327,26 +269,15 @@ class Coordinates extends Component {
 								this.setState({ inputLatLongYValue: evt.target.value });
 							}}
 							onZoomClick={() => {
-								this.onZoomClick(
-									"latlong",
-									this.state.inputLatLongXValue,
-									this.state.inputLatLongYValue
-								);
+								this.onZoomClick("latlong", this.state.inputLatLongXValue, this.state.inputLatLongYValue);
 							}}
 							onMyMapsClick={() => {
-								this.onMyMapsClick(
-									this.state.inputLatLongXValue,
-									this.state.inputLatLongYValue
-								);
+								this.onMyMapsClick(this.state.inputLatLongXValue, this.state.inputLatLongYValue);
 							}}
 							inputIdX="sc-coordinate-latlong-x"
 							inputIdY="sc-coordinate-latlong-y"
 							onEnterKey={() => {
-								this.onZoomClick(
-									"latlong",
-									this.state.inputLatLongXValue,
-									this.state.inputLatLongYValue
-								);
+								this.onZoomClick("latlong", this.state.inputLatLongXValue, this.state.inputLatLongYValue);
 							}}
 						/>
 
@@ -363,26 +294,15 @@ class Coordinates extends Component {
 								this.setState({ inputNad83YValue: evt.target.value });
 							}}
 							onZoomClick={() => {
-								this.onZoomClick(
-									"nad83",
-									this.state.inputNad83XValue,
-									this.state.inputNad83YValue
-								);
+								this.onZoomClick("nad83", this.state.inputNad83XValue, this.state.inputNad83YValue);
 							}}
 							onMyMapsClick={() => {
-								this.onMyMapsClick(
-									this.state.inputNad83XValue,
-									this.state.inputNad83YValue
-								);
+								this.onMyMapsClick(this.state.inputNad83XValue, this.state.inputNad83YValue);
 							}}
 							inputIdX="sc-coordinate-nad83-x"
 							inputIdY="sc-coordinate-nad83-y"
 							onEnterKey={() => {
-								this.onZoomClick(
-									"nad83",
-									this.state.inputNad83XValue,
-									this.state.inputNad83YValue
-								);
+								this.onZoomClick("nad83", this.state.inputNad83XValue, this.state.inputNad83YValue);
 							}}
 						/>
 
@@ -399,39 +319,22 @@ class Coordinates extends Component {
 								this.setState({ inputNad27YValue: evt.target.value });
 							}}
 							onZoomClick={() => {
-								this.onZoomClick(
-									"nad27",
-									this.state.inputNad27XValue,
-									this.state.inputNad27YValue
-								);
+								this.onZoomClick("nad27", this.state.inputNad27XValue, this.state.inputNad27YValue);
 							}}
 							onMyMapsClick={() => {
-								this.onMyMapsClick(
-									this.state.inputNad27XValue,
-									this.state.inputNad27YValue
-								);
+								this.onMyMapsClick(this.state.inputNad27XValue, this.state.inputNad27YValue);
 							}}
 							inputIdX="sc-coordinate-nad27-x"
 							inputIdY="sc-coordinate-nad27-y"
 							onEnterKey={() => {
-								this.onZoomClick(
-									"nad27",
-									this.state.inputNad27XValue,
-									this.state.inputNad27YValue
-								);
+								this.onZoomClick("nad27", this.state.inputNad27XValue, this.state.inputNad27YValue);
 							}}
 						/>
 					</div>
 
 					<div className="sc-title sc-coordinates-title">Map Extent</div>
 
-					<MapExtent
-						key={helpers.getUID()}
-						extentMinX={this.state.extentMinX}
-						extentMinY={this.state.extentMinY}
-						extentMaxX={this.state.extentMaxX}
-						extentMaxY={this.state.extentMaxY}
-					/>
+					<MapExtent key={helpers.getUID()} extentMinX={this.state.extentMinX} extentMinY={this.state.extentMinY} extentMaxX={this.state.extentMaxX} extentMaxY={this.state.extentMaxY} />
 
 					<div className="sc-title sc-coordinates-title">Map Scale</div>
 					<div className="sc-container">
@@ -449,9 +352,7 @@ class Coordinates extends Component {
 export default Coordinates;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

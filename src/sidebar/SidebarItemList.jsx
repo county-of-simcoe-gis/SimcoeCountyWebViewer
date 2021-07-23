@@ -22,15 +22,11 @@ class SidebarItemList extends Component {
 			let listItems = null;
 			if (this.props.listtype === "tools") {
 				let tools = window.config.sidebarToolComponents;
-				listItems = tools.filter(
-					(item) => item.enabled === undefined || item.enabled
-				);
+				listItems = tools.filter((item) => item.enabled === undefined || item.enabled);
 			} else {
 				// IMPORT THEMES FROM CONFIG
 				let themes = window.config.sidebarThemeComponents;
-				listItems = themes.filter(
-					(item) => item.enabled === undefined || item.enabled
-				);
+				listItems = themes.filter((item) => item.enabled === undefined || item.enabled);
 			}
 			this.setState({ components: listItems });
 		});
@@ -51,9 +47,7 @@ class SidebarItemList extends Component {
 						return (
 							<ToolItem
 								componentname={listItem.componentName}
-								onClick={() =>
-									this.props.onClick(listItem.name, this.props.listtype)
-								}
+								onClick={() => this.props.onClick(listItem.name, this.props.listtype)}
 								key={helpers.getUID()}
 								id={listItem.id}
 								name={listItem.name}
@@ -86,12 +80,8 @@ class ToolItem extends Component {
 					{/* <img src={require(`${this.props.imageURL}`)} ></img> */}
 				</div>
 				<div className="simcoe-sidebarlist-item-text-container">
-					<div className="simcoe-sidebarlist-item-text-title">
-						{this.props.name}
-					</div>
-					<div className="simcoe-sidebarlist-item-text-description">
-						{this.props.description}
-					</div>
+					<div className="simcoe-sidebarlist-item-text-title">{this.props.name}</div>
+					<div className="simcoe-sidebarlist-item-text-description">{this.props.description}</div>
 				</div>
 			</div>
 		);
@@ -99,9 +89,7 @@ class ToolItem extends Component {
 }
 
 //IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

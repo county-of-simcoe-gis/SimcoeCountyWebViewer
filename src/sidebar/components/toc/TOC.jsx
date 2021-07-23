@@ -116,7 +116,7 @@ class TOC extends Component {
 		let urlDefaultGroupName = helpers.getURLParameter("GROUP", true, true);
 		if (urlDefaultGroupName !== null) defaultGroupName = urlDefaultGroupName;
 
-		let defaultGroup = layerGroups.filter((item) => item.value === defaultGroupName)[0];
+		let defaultGroup = layerGroups.filter((item) => item.label === defaultGroupName)[0];
 		if (defaultGroup === undefined) defaultGroup = layerGroups[0];
 		if (callback === undefined) return defaultGroup;
 		else callback(defaultGroup);
@@ -787,12 +787,22 @@ class TOC extends Component {
 		}
 	};
 	onActivateLayer = (layerItem) => {
+		let allowSave = true;
 		let layerGroups = this.getActiveLayerGroups();
-
 		let currentGroup = layerGroups.filter((item) => item.value === layerItem.layerGroup)[0];
 		currentGroup.panelOpen = true;
 		currentGroup = currentGroup.layers.map((layer) => {
 			if (layer.name === layerItem.fullName && layer.group === layerItem.layerGroup) {
+				if (layer.disclaimer !== undefined) {
+					if (
+						!TOCHelpers.acceptDisclaimer(layer, () => {
+							this.onActivateLayer(layerItem);
+						})
+					) {
+						allowSave = false;
+						return layer;
+					}
+				}
 				layer.layer.setVisible(true);
 				layer.visible = true;
 				return layer;
@@ -800,10 +810,11 @@ class TOC extends Component {
 				return layer;
 			}
 		});
-		this.setLayerGroups(
-			this.state.type,
-			layerGroups.map((item) => (item.value === currentGroup.value ? currentGroup : item))
-		);
+		if (allowSave)
+			this.setLayerGroups(
+				this.state.type,
+				layerGroups.map((item) => (item.value === currentGroup.value ? currentGroup : item))
+			);
 	};
 	//#endregion
 	//#region HANDLE LAYER OPTIONS MENU CALLBACKS
@@ -919,7 +930,7 @@ class TOC extends Component {
 			}
 		});
 
-		helpers.showWindow(<LegendApp groups={this.getActiveLayerGroups()} selectedGroups={activeGroups} />, false, "normal", false);
+		helpers.showWindow(<LegendApp groups={this.getActiveLayerGroups()} selectedGroups={activeGroups} />);
 	};
 	onSaveAllLayers = () => {
 		// GATHER INFO TO SAVE

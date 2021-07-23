@@ -1,11 +1,7 @@
 import React, { Component, useState } from "react";
 import "./Identify.css";
 import * as helpers from "../helpers/helpers";
-import {
-	LayerHelpers,
-	OL_LAYER_TYPES,
-	OL_DATA_TYPES,
-} from "../helpers/OLHelpers";
+import { LayerHelpers, OL_LAYER_TYPES, OL_DATA_TYPES } from "../helpers/OLHelpers";
 import Collapsible from "react-collapsible";
 import { GeoJSON, EsriJSON } from "ol/format.js";
 import InfoRow from "../helpers/InfoRow.jsx";
@@ -34,12 +30,9 @@ class Identify extends Component {
 		helpers.waitForLoad("settings", Date.now(), 30, () => {
 			this.wmsGeoJsonTemplate = window.config.wmsGeoJsonTemplate;
 			this.htmlIdentify = window.config.htmlIdentify;
-			this.setState(
-				{ excludeIdentifyTitleName: window.config.excludeIdentifyTitleName },
-				() => {
-					this.refreshLayers(this.props);
-				}
-			);
+			this.setState({ excludeIdentifyTitleName: window.config.excludeIdentifyTitleName }, () => {
+				this.refreshLayers(this.props);
+			});
 		});
 	}
 
@@ -84,39 +77,23 @@ class Identify extends Component {
 							params["mode"] = "cors";
 							params["headers"] = headers;
 						}
-						const isArcGISLayer =
-							LayerHelpers.getLayerSourceType(layer.getSource()) ===
-							OL_DATA_TYPES.ImageArcGISRest;
-						if (
-							wfsUrl !== undefined &&
-							(geometry.getType() !== "Point" || isArcGISLayer)
-						) {
+						const isArcGISLayer = LayerHelpers.getLayerSourceType(layer.getSource()) === OL_DATA_TYPES.ImageArcGISRest;
+						if (wfsUrl !== undefined && (geometry.getType() !== "Point" || isArcGISLayer)) {
 							const feature = new Feature(geometry);
 							const wktString = helpers.getWKTStringFromFeature(feature);
 							if (isArcGISLayer) {
-								const arcgisResolution = `${window.map.getSize()[0]},${
-									window.map.getSize()[1]
-								},96`;
+								const arcgisResolution = `${window.map.getSize()[0]},${window.map.getSize()[1]},96`;
 								const extent = window.map.getView().calculateExtent();
-								wfsUrl = wfsUrl
-									.replace("#GEOMETRY#", geometry.flatCoordinates)
-									.replace("#TOLERANCE#", 3)
-									.replace("#EXTENT#", extent.join(","))
-									.replace("#RESOLUTION#", arcgisResolution);
+								wfsUrl = wfsUrl.replace("#GEOMETRY#", geometry.flatCoordinates).replace("#TOLERANCE#", 3).replace("#EXTENT#", extent.join(",")).replace("#RESOLUTION#", arcgisResolution);
 							} else {
 								wfsUrl += "INTERSECTS(geom," + wktString + ")";
 							}
 							// QUERY USING WFS
 							// eslint-disable-next-line
 							helpers.getJSON(wfsUrl, (result) => {
-								const featureList = isArcGISLayer
-									? LayerHelpers.parseESRIIdentify(result)
-									: new GeoJSON().readFeatures(result);
+								const featureList = isArcGISLayer ? LayerHelpers.parseESRIIdentify(result) : new GeoJSON().readFeatures(result);
 								if (featureList.length > 0) {
-									if (displayName === "" || displayName === undefined)
-										displayName = this.getDisplayNameFromFeature(
-											featureList[0]
-										);
+									if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
 									let features = [];
 									featureList.forEach((feature) => {
 										features.push(feature);
@@ -140,28 +117,12 @@ class Identify extends Component {
 							let xslTemplate = this.wmsGeoJsonTemplate;
 							// QUERY USING WMS
 							let getInfoOption = { INFO_FORMAT: "application/json" };
-							if (infoFormat !== undefined && infoFormat !== "")
-								getInfoOption["INFO_FORMAT"] = infoFormat;
-							if (xslTemplate !== undefined && xslTemplate !== "")
-								getInfoOption["XSL_TEMPLATE"] = xslTemplate;
+							if (infoFormat !== undefined && infoFormat !== "") getInfoOption["INFO_FORMAT"] = infoFormat;
+							if (xslTemplate !== undefined && xslTemplate !== "") getInfoOption["XSL_TEMPLATE"] = xslTemplate;
 							//console.log(xslTemplate);
-							var url = layer
-								.getSource()
-								.getFeatureInfoUrl(
-									geometry.flatCoordinates,
-									window.map.getView().getResolution(),
-									"EPSG:3857",
-									getInfoOption
-								);
+							var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", getInfoOption);
 							let html_url = this.htmlIdentify
-								? layer
-										.getSource()
-										.getFeatureInfoUrl(
-											geometry.flatCoordinates,
-											window.map.getView().getResolution(),
-											"EPSG:3857",
-											{ INFO_FORMAT: "text/html" }
-										) + "&feature_count=1000000"
+								? layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "text/html" }) + "&feature_count=1000000"
 								: "";
 							if (url) {
 								url += "&feature_count=1000000";
@@ -179,10 +140,7 @@ class Identify extends Component {
 									if (featureList.length === 0) {
 										return;
 									} else if (featureList.length > 0) {
-										if (displayName === "" || displayName === undefined)
-											displayName = this.getDisplayNameFromFeature(
-												featureList[0]
-											);
+										if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
 										let features = [];
 										featureList.forEach((feature) => {
 											features.push(feature);
@@ -208,17 +166,13 @@ class Identify extends Component {
 						const minScale = layer.get("minScale");
 						const params = {};
 						let featureList = [];
-						let pixel = window.map.getPixelFromCoordinate(
-							geometry.flatCoordinates
-						);
+						let pixel = window.map.getPixelFromCoordinate(geometry.flatCoordinates);
 						window.map.forEachFeatureAtPixel(pixel, (feature, layer) => {
-							if (layer.get("name") !== undefined && layer.get("name") === name)
-								featureList.push(feature);
+							if (layer.get("name") !== undefined && layer.get("name") === name) featureList.push(feature);
 						});
 
 						if (featureList.length > 0) {
-							if (displayName === "" || displayName === undefined)
-								displayName = this.getDisplayNameFromFeature(featureList[0]);
+							if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
 							let features = [];
 							featureList.forEach((feature) => {
 								features.push(feature);
@@ -242,20 +196,12 @@ class Identify extends Component {
 	};
 
 	onMouseEnter = (feature) => {
-		if (
-			feature.values_.geometry !== undefined &&
-			feature.values_.geometry !== null
-		) {
+		if (feature.values_.geometry !== undefined && feature.values_.geometry !== null) {
 			this.vectorLayerShadow.getSource().clear();
 			this.vectorLayerShadowSecondary.getSource().clear();
 
-			if (
-				feature.values_.extent_geom !== undefined &&
-				feature.values_.extent_geom !== null
-			) {
-				var extentFeature = helpers.getFeatureFromGeoJSON(
-					feature.values_.extent_geom
-				);
+			if (feature.values_.extent_geom !== undefined && feature.values_.extent_geom !== null) {
+				var extentFeature = helpers.getFeatureFromGeoJSON(feature.values_.extent_geom);
 				this.vectorLayerShadowSecondary.getSource().addFeature(extentFeature);
 			}
 			this.vectorLayerShadow.getSource().addFeature(feature);
@@ -330,8 +276,7 @@ class Identify extends Component {
 		const nameFields = ["name", "display_name", "Name", "Display Name"];
 		let displayName = "";
 		const displayFieldName = feature.get("displayFieldName");
-		if (displayFieldName !== undefined && displayFieldName !== null)
-			nameFields.push(displayFieldName);
+		if (displayFieldName !== undefined && displayFieldName !== null) nameFields.push(displayFieldName);
 		nameFields.forEach((fieldName) => {
 			if (fieldName.substring(0, 1) !== "_") {
 				const name = feature.get(fieldName);
@@ -368,42 +313,19 @@ class Identify extends Component {
 	render() {
 		return (
 			<div>
-				<button
-					className="sc-button sc-identify-clear-button"
-					onClick={this.clearIdentify}
-				>
+				<button className="sc-button sc-identify-clear-button" onClick={this.clearIdentify}>
 					Clear Results
 				</button>
-				<div
-					className={
-						this.state.layers.length === 0 && !this.state.isLoading
-							? "sc-identify-loading"
-							: "sc-hidden"
-					}
-				>
+				<div className={this.state.layers.length === 0 && !this.state.isLoading ? "sc-identify-loading" : "sc-hidden"}>
 					No Features were selected. Please try again.
 					{/* <img src={images["loading.gif"]}></img> */}
 				</div>
-				<div
-					className={this.state.isLoading ? "sc-identify-loading" : "sc-hidden"}
-				>
+				<div className={this.state.isLoading ? "sc-identify-loading" : "sc-hidden"}>
 					<img src={images["loading.gif"]} alt="Loading" />
 				</div>
-				<div
-					className={
-						this.state.layers.length === 0
-							? "sc-hidden"
-							: "sc-identify-container"
-					}
-				>
+				<div className={this.state.layers.length === 0 ? "sc-hidden" : "sc-identify-container"}>
 					{this.state.layers.map((layer) => (
-						<Layer
-							key={helpers.getUID()}
-							layer={layer}
-							onZoomClick={this.onZoomClick}
-							onMouseEnter={this.onMouseEnter}
-							onMouseLeave={this.onMouseLeave}
-						/>
+						<Layer key={helpers.getUID()} layer={layer} onZoomClick={this.onZoomClick} onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave} />
 					))}
 				</div>
 			</div>
@@ -419,11 +341,7 @@ function _getLayerObj(layerName, callback = undefined) {
 		Object.entries(groups).forEach((row) => {
 			const layerItems = row[1];
 			layerItems.forEach((layer) => {
-				if (
-					layer.name !== undefined &&
-					layer.name.toLowerCase() === layerName.toLowerCase()
-				)
-					data = layer;
+				if (layer.name !== undefined && layer.name.toLowerCase() === layerName.toLowerCase()) data = layer;
 			});
 		});
 
@@ -454,12 +372,8 @@ const Layer = (props) => {
 						<FeatureItem
 							key={helpers.getUID()}
 							displayName={layer.displayName}
-							identifyTitleColumn={
-								layerObj !== undefined ? layerObj.identifyTitleColumn : ""
-							}
-							identifyIdColumn={
-								layerObj !== undefined ? layerObj.identifyIdColumn : ""
-							}
+							identifyTitleColumn={layerObj !== undefined ? layerObj.identifyTitleColumn : ""}
+							identifyIdColumn={layerObj !== undefined ? layerObj.identifyIdColumn : ""}
 							feature={feature}
 							html_url={layer.html_url}
 							onZoomClick={props.onZoomClick}
@@ -486,45 +400,25 @@ const IFrame = (props) => {
 
 	return (
 		<div className="sc-identiy-feature-iframe">
-			<iframe
-				key={helpers.getUID()}
-				title={helpers.getUID()}
-				ref={iframeRef}
-				height={iframeHeight}
-				src={src}
-			/>
+			<iframe key={helpers.getUID()} title={helpers.getUID()} ref={iframeRef} height={iframeHeight} src={src} />
 		</div>
 	);
 };
 
 const FeatureItem = (props) => {
 	const [open, setOpen] = useState(false);
-	const [excludeIdentifyTitleName, setExcludeIdentifyTitleName] =
-		useState(false);
-	let {
-		feature,
-		displayName,
-		html_url,
-		identifyTitleColumn,
-		identifyIdColumn,
-	} = props;
+	const [excludeIdentifyTitleName, setExcludeIdentifyTitleName] = useState(false);
+	let { feature, displayName, html_url, identifyTitleColumn, identifyIdColumn } = props;
 	useEffect(() => {
-		helpers.waitForLoad("settings", Date.now(), 30, () =>
-			setExcludeIdentifyTitleName(window.config.excludeIdentifyTitleName)
-		);
+		helpers.waitForLoad("settings", Date.now(), 30, () => setExcludeIdentifyTitleName(window.config.excludeIdentifyTitleName));
 	}, []);
 
-	if (identifyTitleColumn !== undefined && identifyTitleColumn !== "")
-		displayName = identifyTitleColumn;
+	if (identifyTitleColumn !== undefined && identifyTitleColumn !== "") displayName = identifyTitleColumn;
 
 	//console.log(feature);
-	var hasGeom =
-		feature.values_.geometry !== undefined && feature.values_.geometry !== null;
+	var hasGeom = feature.values_.geometry !== undefined && feature.values_.geometry !== null;
 	var extentFeature = undefined;
-	if (
-		feature.values_.extent_geom !== undefined &&
-		feature.values_.extent_geom !== null
-	) {
+	if (feature.values_.extent_geom !== undefined && feature.values_.extent_geom !== null) {
 		extentFeature = helpers.getFeatureFromGeoJSON(feature.values_.extent_geom);
 	}
 	feature["minScale"] = props.minScale;
@@ -542,79 +436,37 @@ const FeatureItem = (props) => {
 	if (displayFieldName !== undefined && displayFieldName !== "") {
 		displayName = displayFieldName;
 		let displayFieldValue = feature.get("displayFieldValue");
-		if (displayFieldValue !== undefined && displayFieldValue !== "")
-			featureName = displayFieldValue;
+		if (displayFieldValue !== undefined && displayFieldValue !== "") featureName = displayFieldValue;
 	}
 	// THIS IS FALLBACK IN CASE THERE ARE NO ATTRIBUTES EXCEPT GEOMETRY
 	if (displayName === "geometry") {
 		if (keys.length === 1) displayName = "No attributes found";
 		featureName = "";
 	}
-	if (featureName === null || featureName === undefined || featureName === "")
-		featureName = "N/A";
+	if (featureName === null || featureName === undefined || featureName === "") featureName = "N/A";
 	let cql_filter = "";
 
 	let isSameOrigin = true;
-	if (html_url !== undefined)
-		isSameOrigin =
-			html_url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !==
-			-1;
+	if (html_url !== undefined) isSameOrigin = html_url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !== -1;
 
 	keys
 		.filter((keyName) => {
 			const val = featureProps[keyName];
-			if (
-				identifyIdColumn !== undefined &&
-				identifyIdColumn !== "" &&
-				keyName.substring(0, 1) !== "_"
-			) {
-				if (
-					cql_filter === "" &&
-					keyName.toLowerCase().indexOf(identifyIdColumn.toLowerCase()) !==
-						-1 &&
-					val !== null &&
-					this.htmlIdentify &&
-					isSameOrigin
-				)
-					return true;
+			if (identifyIdColumn !== undefined && identifyIdColumn !== "" && keyName.substring(0, 1) !== "_") {
+				if (cql_filter === "" && keyName.toLowerCase().indexOf(identifyIdColumn.toLowerCase()) !== -1 && val !== null && this.htmlIdentify && isSameOrigin) return true;
 				else return false;
 			} else return false;
 		})
 		.map((keyName) => (cql_filter += keyName + "=" + featureProps[keyName]));
 	return (
 		<div>
-			<div
-				className="sc-identify-feature-header"
-				onMouseEnter={() => props.onMouseEnter(feature)}
-				onMouseLeave={props.onMouseLeave}
-			>
-				<div
-					className="sc-fakeLink sc-identify-feature-header-label"
-					onClick={() => setOpen(!open)}
-				>
-					{excludeIdentifyTitleName
-						? featureName
-						: `${helpers.formatTitleCase(displayName)}: ${featureName}`}
+			<div className="sc-identify-feature-header" onMouseEnter={() => props.onMouseEnter(feature)} onMouseLeave={props.onMouseLeave}>
+				<div className="sc-fakeLink sc-identify-feature-header-label" onClick={() => setOpen(!open)}>
+					{excludeIdentifyTitleName ? featureName : `${helpers.formatTitleCase(displayName)}: ${featureName}`}
 				</div>
-				{hasGeom ? (
-					<img
-						className="sc-identify-feature-header-img"
-						src={images["zoom-in.png"]}
-						onClick={() => props.onZoomClick(feature)}
-						title="Zoom In"
-						alt="Zoom In"
-					/>
-				) : (
-					""
-				)}
+				{hasGeom ? <img className="sc-identify-feature-header-img" src={images["zoom-in.png"]} onClick={() => props.onZoomClick(feature)} title="Zoom In" alt="Zoom In" /> : ""}
 				{extentFeature !== undefined ? (
-					<img
-						className="sc-identify-feature-header-img"
-						src={images["extent-zoom-in.png"]}
-						onClick={() => props.onZoomClick(extentFeature)}
-						title="Zoom In To Extent"
-						alt="Zoom In To Extent"
-					/>
+					<img className="sc-identify-feature-header-img" src={images["extent-zoom-in.png"]} onClick={() => props.onZoomClick(extentFeature)} title="Zoom In To Extent" alt="Zoom In To Extent" />
 				) : (
 					""
 				)}
@@ -629,9 +481,7 @@ const FeatureItem = (props) => {
 };
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

@@ -22,9 +22,7 @@ class Layers extends Component {
 
 	componentDidMount() {
 		this._isMounted = true;
-		window.emitter.addListener("activeTocLayer", (layerItem) =>
-			this.onActivateLayer(layerItem)
-		);
+		window.emitter.addListener("activeTocLayer", (layerItem) => this.onActivateLayer(layerItem));
 	}
 	componentWillUnmount() {
 		this._isMounted = false;
@@ -33,15 +31,10 @@ class Layers extends Component {
 	onActivateLayer = (layerItem) => {
 		if (!this.props.tocVisible) return;
 		const foundLayer = this.props.group.layers.filter((layer) => {
-			return (
-				layer.name === layerItem.fullName &&
-				layer.group === layerItem.layerGroup
-			);
+			return layer.name === layerItem.fullName && layer.group === layerItem.layerGroup;
 		});
 		if (foundLayer.length > 0) {
-			const elementId = `${this.props.id}-${helpers.getHash(
-				layerItem.fullName
-			)}_folderview`;
+			const elementId = `${this.props.id}-${helpers.getHash(layerItem.fullName)}_folderview`;
 
 			setTimeout(() => {
 				const elem = document.getElementById(elementId);
@@ -59,18 +52,11 @@ class Layers extends Component {
 		// FILTER LAYERS FROM SEARCH INPUT
 		const layers = this.props.group.layers.filter((layer) => {
 			if (this.props.searchText === "") return true;
-			return (
-				[layer.tocDisplayName.toUpperCase(), layer.groupName.toUpperCase()]
-					.join(" ")
-					.indexOf(this.props.searchText.toUpperCase()) !== -1
-			);
+			return [layer.tocDisplayName.toUpperCase(), layer.groupName.toUpperCase()].join(" ").indexOf(this.props.searchText.toUpperCase()) !== -1;
 		});
 
 		return (
-			<div
-				className="sc-toc-layer-container"
-				key={this.props.id + "-sc-toc-layer-container"}
-			>
+			<div className="sc-toc-layer-container" key={this.props.id + "-sc-toc-layer-container"}>
 				<div id={this.props.id + "-container"}>
 					{layers.map((layer) => (
 						<LayerItem

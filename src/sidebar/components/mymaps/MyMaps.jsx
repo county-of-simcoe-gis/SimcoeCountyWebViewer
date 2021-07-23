@@ -2,20 +2,20 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
-import { Item as MenuItem } from "rc-menu";
+import { SubMenu, Item as MenuItem } from "rc-menu";
 
 // CUSTOM
 import "./MyMaps.css";
 import * as helpers from "../../../helpers/helpers";
 import * as drawingHelpers from "../../../helpers/drawingHelpers";
+import { FeatureHelpers, OL_DATA_TYPES } from "../../../helpers/OLHelpers";
+
 import ColorBar from "./ColorBar.jsx";
 import ButtonBar from "./ButtonBar.jsx";
 import MyMapsItem from "./MyMapsItem";
 import MyMapsItems from "./MyMapsItems";
 import MyMapsPopup from "./MyMapsPopup.jsx";
-import FloatingMenu, {
-	FloatingMenuItem,
-} from "../../../helpers/FloatingMenu.jsx";
+import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import Portal from "../../../helpers/Portal.jsx";
 import Identify from "../../../map/Identify.jsx";
 import myMapsConfig from "./myMapsConfig.json";
@@ -34,18 +34,7 @@ import Overlay from "ol/Overlay.js";
 import { getLength } from "ol/sphere.js";
 import * as shpWrite from "shp-write";
 
-const feedbackTemplate = (
-	feedbackUrl,
-	xmin,
-	xmax,
-	ymin,
-	ymax,
-	centerx,
-	centery,
-	scale,
-	myMapsId,
-	featureId
-) =>
+const feedbackTemplate = (feedbackUrl, xmin, xmax, ymin, ymax, centerx, centery, scale, myMapsId, featureId) =>
 	`${feedbackUrl}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True&MY_MAPS_ID=${myMapsId}&MY_MAPS_FEATURE_ID=${featureId}`;
 
 class MyMaps extends Component {
@@ -81,9 +70,7 @@ class MyMaps extends Component {
 		window.emitter.addListener("mapParametersComplete", () => this.onMapLoad());
 
 		// LISTEN FOR OTHER COMPONENTS ADDING A FEATURE
-		window.emitter.addListener("addMyMapsFeature", (feature, labelText) =>
-			this.addNewItem(feature, labelText, true)
-		);
+		window.emitter.addListener("addMyMapsFeature", (feature, labelText) => this.addNewItem(feature, labelText, true));
 	}
 
 	componentDidMount() {}
@@ -112,21 +99,12 @@ class MyMaps extends Component {
 		if (existingLayer === undefined) window.map.addLayer(this.vectorLayer);
 
 		window.map.on("singleclick", (evt) => {
-			if (
-				this.draw !== null ||
-				this.state.isEditing ||
-				window.isCoordinateToolOpen ||
-				window.isMeasuring
-			)
-				return;
+			if (this.draw !== null || this.state.isEditing || window.isCoordinateToolOpen || window.isMeasuring) return;
 
 			window.map.forEachFeatureAtPixel(evt.pixel, (feature, layer) => {
 				if (layer === null) return;
 
-				if (
-					layer.get("name") !== undefined &&
-					layer.get("name") === this.layerName
-				) {
+				if (layer.get("name") !== undefined && layer.get("name") === this.layerName) {
 					if (this.state.drawType === "Eraser") {
 						// REMOVE ITEM FROM SOURCE
 						this.onItemDelete(feature.get("id"));
@@ -150,12 +128,7 @@ class MyMaps extends Component {
 		const myMapsId = helpers.getURLParameter("MY_MAPS_ID");
 		if (myMapsId !== null) {
 			drawingHelpers.importMyMaps(myMapsId, (result) => {
-				if (result.error !== undefined)
-					helpers.showMessage(
-						"MyMaps Import",
-						"That MyMaps ID was NOT found!",
-						helpers.messageColors.red
-					);
+				if (result.error !== undefined) helpers.showMessage("MyMaps Import", "That MyMaps ID was NOT found!", helpers.messageColors.red);
 				else {
 					helpers.showMessage("MyMaps Import", "Success!  MyMaps imported.");
 					this.onMyMapsImport(result);
@@ -189,24 +162,11 @@ class MyMaps extends Component {
 	// BUTTON BAR CLICK
 	onButtonBarClick = (type) => {
 		if (window.isMeasuring !== undefined && window.isMeasuring) {
-			helpers.showMessage(
-				"Measure",
-				"Active measure in progress.  Close the measure tool or cancel your measure to continue.",
-				undefined,
-				3000
-			);
+			helpers.showMessage("Measure", "Active measure in progress.  Close the measure tool or cancel your measure to continue.", undefined, 3000);
 			return;
 		}
-		if (
-			window.isCoordinateToolOpen !== undefined &&
-			window.isCoordinateToolOpen
-		) {
-			helpers.showMessage(
-				"Coordinates",
-				"Active coordinate tool in progress.  Close the coordinate tool to continue.",
-				undefined,
-				3000
-			);
+		if (window.isCoordinateToolOpen !== undefined && window.isCoordinateToolOpen) {
+			helpers.showMessage("Coordinates", "Active coordinate tool in progress.  Close the coordinate tool to continue.", undefined, 3000);
 			return;
 		}
 
@@ -214,10 +174,7 @@ class MyMaps extends Component {
 			window.emitter.emit("changeCursor", "standard");
 			window.map.removeInteraction(this.draw);
 
-			if (
-				this.currentDrawFeature !== null &&
-				this.currentDrawFeature !== undefined
-			) {
+			if (this.currentDrawFeature !== null && this.currentDrawFeature !== undefined) {
 				//let thisext = this.currentDrawFeature.getGeometry().getExtent()
 				//if (thisext !== undefined) this.vectorSource.removeFeature(this.currentDrawFeature);
 				this.currentDrawFeature = null;
@@ -252,17 +209,11 @@ class MyMaps extends Component {
 		if (drawType === "Eraser") return;
 
 		if (drawType === "Rectangle") drawType = "Circle";
-		else if (
-			drawType === "Arrow" ||
-			drawType === "Bearing" ||
-			drawType === "Measure"
-		)
-			drawType = "LineString";
+		else if (drawType === "Arrow" || drawType === "Bearing" || drawType === "Measure") drawType = "LineString";
 		else if (drawType === "Text") drawType = "Point";
 
 		// ACTIVE TOOLTIP
-		if (this.state.drawType === "Bearing" || this.state.drawType === "Measure")
-			this.activateToolTip();
+		if (this.state.drawType === "Bearing" || this.state.drawType === "Measure") this.activateToolTip();
 
 		// POINT STYLE FOR CURSOR
 		let pointStyle = this.state.drawStyle.clone();
@@ -273,14 +224,9 @@ class MyMaps extends Component {
 		this.draw = new Draw({
 			features: new Collection([]),
 			type: drawType,
-			geometryFunction:
-				this.state.drawType === "Rectangle" ? createBox() : undefined,
-			style:
-				this.state.drawType !== "Point" ? pointStyle : this.state.drawStyle,
-			maxPoints:
-				this.state.drawType === "Bearing" || this.state.drawType === "Measure"
-					? 2
-					: undefined,
+			geometryFunction: this.state.drawType === "Rectangle" ? createBox() : undefined,
+			style: this.state.drawType !== "Point" ? pointStyle : this.state.drawStyle,
+			maxPoints: this.state.drawType === "Bearing" || this.state.drawType === "Measure" ? 2 : undefined,
 		});
 
 		// END DRAWING
@@ -325,10 +271,7 @@ class MyMaps extends Component {
 			this.sketch = evt.feature;
 			this.listener = this.sketch.getGeometry().on("change", (evt) => {
 				var geom = evt.target;
-				this.bearing = drawingHelpers.getBearing(
-					geom.getFirstCoordinate(),
-					geom.getLastCoordinate()
-				);
+				this.bearing = drawingHelpers.getBearing(geom.getFirstCoordinate(), geom.getLastCoordinate());
 				tooltipCoord = geom.getLastCoordinate();
 				this.tooltipElement.innerHTML = this.bearing;
 				this.tooltip.setPosition(tooltipCoord);
@@ -339,10 +282,7 @@ class MyMaps extends Component {
 			this.listener = this.sketch.getGeometry().on("change", (evt) => {
 				var geom = evt.target;
 				this.length = this.formatLength(geom);
-				this.bearing = drawingHelpers.getBearing(
-					geom.getFirstCoordinate(),
-					geom.getLastCoordinate()
-				);
+				this.bearing = drawingHelpers.getBearing(geom.getFirstCoordinate(), geom.getLastCoordinate());
 				tooltipCoord = geom.getLastCoordinate();
 				this.tooltipElement.innerHTML = this.length;
 				this.tooltip.setPosition(tooltipCoord);
@@ -354,10 +294,7 @@ class MyMaps extends Component {
 	// DRAW END
 	onDrawEnd = (evt) => {
 		this.setState({ tooltipClass: "sc-hidden" });
-		if (
-			this.state.drawType === "Bearing" ||
-			this.state.drawType === "Measure"
-		) {
+		if (this.state.drawType === "Bearing" || this.state.drawType === "Measure") {
 			this.tooltipElement.innerHTML = "";
 		}
 
@@ -373,11 +310,7 @@ class MyMaps extends Component {
 
 			// RE-ENABLE PARCEL CLICK
 			let cancelParcelClick = false;
-			if (
-				(window.isMeasuring !== undefined && window.isMeasuring) ||
-				(window.isCoordinateToolOpen !== undefined &&
-					window.isCoordinateToolOpen)
-			) {
+			if ((window.isMeasuring !== undefined && window.isMeasuring) || (window.isCoordinateToolOpen !== undefined && window.isCoordinateToolOpen)) {
 				cancelParcelClick = true;
 			}
 			window.disableParcelClick = cancelParcelClick;
@@ -402,15 +335,9 @@ class MyMaps extends Component {
 		const featureId = helpers.getUID();
 
 		// NEW NAME OF FEATURE
-		if (
-			labelText === null &&
-			this.state.drawType !== "Bearing" &&
-			this.state.drawType !== "Measure"
-		)
-			labelText = "Drawing " + (this.state.items.length + 1);
+		if (labelText === null && this.state.drawType !== "Bearing" && this.state.drawType !== "Measure") labelText = "Drawing " + (this.state.items.length + 1);
 
-		if (this.state.drawType === "Bearing")
-			labelText = "Bearing: " + this.bearing;
+		if (this.state.drawType === "Bearing") labelText = "Bearing: " + this.bearing;
 		if (this.state.drawType === "Measure") labelText = this.length;
 		// GIVE TEXT A CUSTOM MESSAGE
 		if (this.state.drawType === "Text") labelText = "Enter Custom Text";
@@ -423,31 +350,14 @@ class MyMaps extends Component {
 				feature.setGeometry(arrow);
 
 				// GIVE IT A BIGGER STROKE BY DEFAULT
-				customStyle = drawingHelpers.getDefaultDrawStyle(
-					this.state.drawColor,
-					false,
-					6,
-					feature.getGeometry().getType()
-				);
+				customStyle = drawingHelpers.getDefaultDrawStyle(this.state.drawColor, false, 6, feature.getGeometry().getType());
 				feature.setStyle(customStyle);
 			} else if (this.state.drawType === "Text") {
 				labelText = "Enter Custom Text";
-				customStyle = drawingHelpers.getDefaultDrawStyle(
-					this.state.drawColor,
-					true,
-					undefined,
-					undefined,
-					feature.getGeometry().getType()
-				);
+				customStyle = drawingHelpers.getDefaultDrawStyle(this.state.drawColor, true, undefined, undefined, feature.getGeometry().getType());
 				feature.setStyle(customStyle);
 			} else {
-				customStyle = drawingHelpers.getDefaultDrawStyle(
-					this.state.drawColor,
-					undefined,
-					undefined,
-					undefined,
-					feature.getGeometry().getType()
-				);
+				customStyle = drawingHelpers.getDefaultDrawStyle(this.state.drawColor, undefined, undefined, undefined, feature.getGeometry().getType());
 				feature.setStyle(customStyle);
 			}
 		} else {
@@ -463,10 +373,7 @@ class MyMaps extends Component {
 		});
 
 		// CONVERT CIRCLE TO POLYGON (GEOJSON DOESNT SUPPORT CIRCLES)
-		if (
-			feature.getGeometry() !== undefined &&
-			feature.getGeometry().getType() === "Circle"
-		) {
+		if (feature.getGeometry() !== undefined && feature.getGeometry().getType() === "Circle") {
 			var polygon = fromCircle(feature.getGeometry());
 			feature.setGeometry(polygon);
 		}
@@ -475,19 +382,9 @@ class MyMaps extends Component {
 		const itemInfo = {
 			id: featureId,
 			label: labelText,
-			labelVisible:
-				this.state.drawType === "Text" ||
-				this.state.drawType === "Bearing" ||
-				this.state.drawType === "Measure"
-					? true
-					: false,
+			labelVisible: this.state.drawType === "Text" || this.state.drawType === "Bearing" || this.state.drawType === "Measure" ? true : false,
 			labelStyle: null,
-			labelRotation:
-				this.state.drawType === "Bearing" || this.state.drawType === "Measure"
-					? this.bearing > 180
-						? this.bearing + 90
-						: this.bearing - 90
-					: 0,
+			labelRotation: this.state.drawType === "Bearing" || this.state.drawType === "Measure" ? (this.bearing > 180 ? this.bearing + 90 : this.bearing - 90) : 0,
 			featureGeoJSON: helpers.featureToGeoJson(feature),
 			style: customStyle === null ? this.state.drawStyle : customStyle,
 			visible: true,
@@ -541,11 +438,7 @@ class MyMaps extends Component {
 		this.setState(
 			{
 				// UPDATE LABEL
-				items: this.state.items.map((item) =>
-					item.id === feature.get("id")
-						? Object.assign({}, item, { featureGeoJSON: featureGeoJSON })
-						: item
-				),
+				items: this.state.items.map((item) => (item.id === feature.get("id") ? Object.assign({}, item, { featureGeoJSON: featureGeoJSON }) : item)),
 			},
 			() => {
 				if (callback !== undefined) callback();
@@ -566,9 +459,7 @@ class MyMaps extends Component {
 		this.setState(
 			{
 				// UPDATE LABEL
-				items: this.state.items.map((item) =>
-					item.id === itemInfo.id ? Object.assign({}, item, { label }) : item
-				),
+				items: this.state.items.map((item) => (item.id === itemInfo.id ? Object.assign({}, item, { label }) : item)),
 			},
 			() => {
 				// UPDATE FEATURE ATTRIBUTE
@@ -590,11 +481,7 @@ class MyMaps extends Component {
 	onLabelRotationChange = (itemInfo, rotation) => {
 		this.setState(
 			{
-				items: this.state.items.map((item) =>
-					item.id === itemInfo.id
-						? Object.assign({}, item, { labelRotation: rotation })
-						: item
-				),
+				items: this.state.items.map((item) => (item.id === itemInfo.id ? Object.assign({}, item, { labelRotation: rotation }) : item)),
 			},
 			() => {
 				const item = this.state.items.filter((item) => {
@@ -629,11 +516,7 @@ class MyMaps extends Component {
 	onItemCheckboxChange = (itemInfo, visible) => {
 		this.setState(
 			{
-				items: this.state.items.map((item) =>
-					item.id === itemInfo.id
-						? Object.assign({}, item, { visible: visible })
-						: item
-				),
+				items: this.state.items.map((item) => (item.id === itemInfo.id ? Object.assign({}, item, { visible: visible }) : item)),
 			},
 			() => {
 				this.saveStateToStorage();
@@ -653,11 +536,7 @@ class MyMaps extends Component {
 
 		this.setState(
 			{
-				items: this.state.items.map((item) =>
-					item.id === itemId
-						? Object.assign({}, item, { labelVisible: visible })
-						: item
-				),
+				items: this.state.items.map((item) => (item.id === itemId ? Object.assign({}, item, { labelVisible: visible }) : item)),
 			},
 			() => {
 				const item = this.state.items.filter((item) => {
@@ -707,18 +586,14 @@ class MyMaps extends Component {
 				feature.setStyle(style);
 
 				let itemUpdate = null;
-				if (pointType !== undefined)
-					itemUpdate = { style: style, pointType: pointType };
-				else if (strokeType !== undefined)
-					itemUpdate = { style: style, strokeType: strokeType };
+				if (pointType !== undefined) itemUpdate = { style: style, pointType: pointType };
+				else if (strokeType !== undefined) itemUpdate = { style: style, strokeType: strokeType };
 				else itemUpdate = { style: style };
 
 				this.setState(
 					{
 						// UPDATE LABEL
-						items: this.state.items.map((item) =>
-							item.id === itemId ? Object.assign({}, item, itemUpdate) : item
-						),
+						items: this.state.items.map((item) => (item.id === itemId ? Object.assign({}, item, itemUpdate) : item)),
 					},
 					() => {
 						// SAVE STATE TO STORAGE
@@ -860,15 +735,9 @@ class MyMaps extends Component {
 					buttonEvent={evtClone}
 					item={this.props.info}
 					onMenuItemClick={this.onMenuItemClick}
-					classNamesToIgnore={[
-						"sc-mymaps-popup-footer-button",
-						"sc-mymaps-footer-buttons-img",
-					]}
+					classNamesToIgnore={["sc-mymaps-popup-footer-button", "sc-mymaps-footer-buttons-img"]}
 				>
-					<MenuItem
-						className="sc-floating-menu-toolbox-menu-item"
-						key="sc-floating-menu-buffer"
-					>
+					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-buffer">
 						<FloatingMenuItem imageName={"buffer.png"} label="Buffer" />
 					</MenuItem>
 				</FloatingMenu>
@@ -893,18 +762,10 @@ class MyMaps extends Component {
 				this.deleteSelected(false);
 				break;
 			case "sc-floating-menu-buffer":
-				this.showDrawingOptionsPopup(
-					drawingHelpers.getFeatureById(item.id),
-					null,
-					"buffer"
-				);
+				this.showDrawingOptionsPopup(drawingHelpers.getFeatureById(item.id), null, "buffer");
 				break;
 			case "sc-floating-menu-symbolizer":
-				this.showDrawingOptionsPopup(
-					drawingHelpers.getFeatureById(item.id),
-					null,
-					"symbolizer"
-				);
+				this.showDrawingOptionsPopup(drawingHelpers.getFeatureById(item.id), null, "symbolizer");
 				break;
 			case "sc-floating-menu-zoomto":
 				helpers.zoomToFeature(drawingHelpers.getFeatureById(item.id));
@@ -921,9 +782,33 @@ class MyMaps extends Component {
 			case "sc-floating-menu-identify":
 				this.onIdentify(item.id);
 				break;
+			case "sc-floating-menu-geometry":
+				this.onShowCoordinates(item);
+				break;
+			case "sc-floating-menu-export-to-geojson":
+				this.onDownloadFeatures(OL_DATA_TYPES.GeoJSON, [item]);
+				break;
+			case "sc-floating-menu-export-to-kml":
+				this.onDownloadFeatures(OL_DATA_TYPES.KML, [item]);
+				break;
+			case "sc-floating-menu-export-to-esrijson":
+				this.onDownloadFeatures(OL_DATA_TYPES.EsriJSON, [item]);
+				break;
 			case "sc-floating-menu-measure":
 				const feature = drawingHelpers.getFeatureById(item.id);
 				this.showDrawingOptionsPopup(feature, null, "measure");
+				break;
+			case "sc-floating-menu-export-all-to-geojson":
+				this.onDownloadFeatures(OL_DATA_TYPES.GeoJSON, this.state.items);
+				break;
+			case "sc-floating-menu-export-all-to-kml":
+				this.onDownloadFeatures(OL_DATA_TYPES.KML, this.state.items);
+				break;
+			case "sc-floating-menu-export-all-to-esrijson":
+				this.onDownloadFeatures(OL_DATA_TYPES.EsriJSON, this.state.items);
+				break;
+			case "sc-floating-menu-export-to-shapefile":
+				this.onDownloadFeatures(OL_DATA_TYPES.KML, this.state.items);
 				break;
 			default:
 				break;
@@ -931,7 +816,49 @@ class MyMaps extends Component {
 		// APP STATS
 		helpers.addAppStat("MyMaps Menu", action);
 	};
+	onShowCoordinates = (item) => {
+		const feature = helpers.getFeatureFromGeoJSON(item.featureGeoJSON);
+		const showCoordinates = feature.get("is_open_data");
+		const keys = feature.getKeys();
+		keys.forEach((key) => {
+			if (key !== "name" && key !== "label" && key !== "geometry") feature.unset(key);
+		});
+		const content = helpers.featureToGeoJson(feature);
+		if (showCoordinates || showCoordinates === undefined)
+			helpers.showWindow(<ShowGeometryContent title="Below is a JSON representation of the geometry selected." content={content} />, {
+				title: "Geometry (JSON)",
+				showFooter: true,
+				mode: "normal",
+				hideScroll: true,
+				style: { width: "350px", height: "250px", margin: "auto" },
+			});
+	};
 
+	onDownloadFeatures = (dataType = OL_DATA_TYPES.KML, items = []) => {
+		let visibleFeatures = [];
+		let allFeatures = this.vectorSource.getFeatures();
+		items.forEach((item) => {
+			const originFeature = allFeatures.filter((featureItem) => featureItem.get("id") === item.id)[0];
+			if (originFeature) {
+				const feature = originFeature.clone();
+				const showCoordinates = feature.get("is_open_data");
+				if (showCoordinates || showCoordinates === undefined) {
+					const keys = feature.getKeys();
+					keys.forEach((key) => {
+						if (key.toLowerCase() !== "name" && key.toLowerCase() !== "label" && key.toLowerCase() !== "geometry") feature.unset(key);
+					});
+					visibleFeatures.push(feature);
+				}
+			}
+		});
+
+		if (visibleFeatures.length > 0) {
+			let features = FeatureHelpers.setFeatures(visibleFeatures.concat([]), dataType);
+			if (features !== undefined) helpers.export_file(`features.${dataType.toLowerCase()}`, features);
+		} else {
+			helpers.showMessage("No Features", "No features in view for this layer");
+		}
+	};
 	// TODO:  CHANGE PROJECTION TO WEB MERCATOR IN OUTPUT.
 	//https://github.com/mapbox/shp-write/pull/54
 	onExportToShapeFile = () => {
@@ -960,10 +887,7 @@ class MyMaps extends Component {
 
 	onIdentify = (id) => {
 		const feature = drawingHelpers.getFeatureById(id);
-		window.emitter.emit(
-			"loadReport",
-			<Identify geometry={feature.getGeometry()} />
-		);
+		window.emitter.emit("loadReport", <Identify geometry={feature.getGeometry()} />);
 	};
 
 	onReportProblem = (id) => {
@@ -973,33 +897,15 @@ class MyMaps extends Component {
 				helpers.addAppStat("Report Problem", "My Maps Toolbox");
 
 				const scale = helpers.getMapScale();
-				const extent = window.map
-					.getView()
-					.calculateExtent(window.map.getSize());
+				const extent = window.map.getView().calculateExtent(window.map.getSize());
 				const xmin = extent[0];
 				const xmax = extent[1];
 				const ymin = extent[2];
 				const ymax = extent[3];
 				const center = window.map.getView().getCenter();
 
-				let feedbackUrl = feedbackTemplate(
-					window.config.feedbackUrl,
-					xmin,
-					xmax,
-					ymin,
-					ymax,
-					center[0],
-					center[1],
-					scale,
-					result.id,
-					id
-				);
-				if (
-					window.config.mapId !== null &&
-					window.config.mapId !== undefined &&
-					window.config.mapId.trim() !== ""
-				)
-					feedbackUrl += "&MAP_ID=" + window.config.mapId;
+				let feedbackUrl = feedbackTemplate(window.config.feedbackUrl, xmin, xmax, ymin, ymax, center[0], center[1], scale, result.id, id);
+				if (window.config.mapId !== null && window.config.mapId !== undefined && window.config.mapId.trim() !== "") feedbackUrl += "&MAP_ID=" + window.config.mapId;
 
 				helpers.showURLWindow(feedbackUrl, false, "full");
 			});
@@ -1008,69 +914,51 @@ class MyMaps extends Component {
 
 	onMyMapItemToolsButtonClick = (evt, item) => {
 		var evtClone = Object.assign({}, evt);
+		const feature = helpers.getFeatureFromGeoJSON(item.featureGeoJSON);
+		const showCoordinates = feature.get("is_open_data");
 		const menu = (
 			<Portal>
 				<FloatingMenu
 					key={helpers.getUID()}
 					buttonEvent={evtClone}
-					classNamesToIgnore={[
-						"sc-mymaps-popup-footer-button",
-						"sc-mymaps-footer-buttons-img",
-					]}
+					classNamesToIgnore={["sc-mymaps-popup-footer-button", "sc-mymaps-footer-buttons-img"]}
 					onMenuItemClick={(action) => {
 						this.onMenuItemClick(action, item);
 					}}
 				>
-					<MenuItem
-						className="sc-floating-menu-toolbox-menu-item"
-						key="sc-floating-menu-buffer"
-					>
+					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-buffer">
 						<FloatingMenuItem imageName={"buffer.png"} label="Buffer" />
 					</MenuItem>
-					<MenuItem
-						className={
-							item.geometryType === "Point"
-								? "sc-hidden"
-								: "sc-floating-menu-toolbox-menu-item"
-						}
-						key="sc-floating-menu-measure"
-					>
+					<MenuItem className={item.geometryType === "Point" ? "sc-hidden" : "sc-floating-menu-toolbox-menu-item"} key="sc-floating-menu-measure">
 						<FloatingMenuItem imageName={"measure.png"} label="Measure" />
 					</MenuItem>
-					<MenuItem
-						className="sc-floating-menu-toolbox-menu-item"
-						key="sc-floating-menu-symbolizer"
-					>
-						<FloatingMenuItem
-							imageName={"color-picker.png"}
-							label="Symbolize"
-						/>
+					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-symbolizer">
+						<FloatingMenuItem imageName={"color-picker.png"} label="Symbolize" />
 					</MenuItem>
-					<MenuItem
-						className="sc-floating-menu-toolbox-menu-item"
-						key="sc-floating-menu-zoomto"
-					>
+					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoomto">
 						<FloatingMenuItem imageName={"zoom.png"} label="Zoom To" />
 					</MenuItem>
-					<MenuItem
-						className="sc-floating-menu-toolbox-menu-item"
-						key="sc-floating-menu-delete"
-					>
+					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-delete">
 						<FloatingMenuItem imageName={"eraser.png"} label="Delete" />
 					</MenuItem>
-					<MenuItem
-						className="sc-floating-menu-toolbox-menu-item"
-						key="sc-floating-menu-report-problem"
-					>
-						<FloatingMenuItem
-							imageName={"error.png"}
-							label="Report a Problem"
-						/>
+					<MenuItem className={showCoordinates || showCoordinates === undefined ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-geometry">
+						<FloatingMenuItem imageName={"json.png"} label="Show Geometry" />
 					</MenuItem>
-					<MenuItem
-						className="sc-floating-menu-toolbox-menu-item"
-						key="sc-floating-menu-identify"
-					>
+					<SubMenu title="Export to ..." className={showCoordinates || showCoordinates === undefined ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"}>
+						<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-export-to-kml">
+							<FloatingMenuItem label="KML" />
+						</MenuItem>
+						<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-export-to-esrijson">
+							<FloatingMenuItem label="EsriJSON" />
+						</MenuItem>
+						<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-export-to-geojson">
+							<FloatingMenuItem label="GeoJSON" />
+						</MenuItem>
+					</SubMenu>
+					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-report-problem">
+						<FloatingMenuItem imageName={"error.png"} label="Report a Problem" />
+					</MenuItem>
+					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-identify">
 						<FloatingMenuItem imageName={"identify.png"} label="Identify" />
 					</MenuItem>
 				</FloatingMenu>
@@ -1092,9 +980,7 @@ class MyMaps extends Component {
 	toggleAllVisibility = (visible) => {
 		this.setState(
 			{
-				items: this.state.items.map((item) =>
-					Object.assign({}, item, { visible: visible })
-				),
+				items: this.state.items.map((item) => Object.assign({}, item, { visible: visible })),
 			},
 			() => {
 				this.saveStateToStorage();
@@ -1103,10 +989,7 @@ class MyMaps extends Component {
 						return item.id === feature.get("id");
 					})[0];
 
-					if (visible)
-						feature.setStyle(
-							drawingHelpers.getStyleFromJSON(item.style, item.pointType)
-						);
+					if (visible) feature.setStyle(drawingHelpers.getStyleFromJSON(item.style, item.pointType));
 					else feature.setStyle(new Style({}));
 
 					drawingHelpers.setFeatureLabel(item);
@@ -1132,13 +1015,8 @@ class MyMaps extends Component {
 		window.map.addOverlay(this.tooltip);
 
 		this.setState({ toolTipClass: "sc-mymaps-tooltip" });
-		this.pointerMoveEvent = window.map.on(
-			"pointermove",
-			this.pointerMoveHandler
-		);
-		this.mouseOutEvent = window.map
-			.getViewport()
-			.addEventListener("mouseout", () => this.onMouseOutEvent);
+		this.pointerMoveEvent = window.map.on("pointermove", this.pointerMoveHandler);
+		this.mouseOutEvent = window.map.getViewport().addEventListener("mouseout", () => this.onMouseOutEvent);
 	};
 
 	// POINTER MOVE HANDLER
@@ -1169,9 +1047,7 @@ class MyMaps extends Component {
 			const id = feature.getProperties().id;
 			if (id === itemInfo.id) {
 				if (visible) {
-					feature.setStyle(
-						drawingHelpers.getStyleFromJSON(itemInfo.style, itemInfo.pointType)
-					);
+					feature.setStyle(drawingHelpers.getStyleFromJSON(itemInfo.style, itemInfo.pointType));
 					drawingHelpers.setFeatureLabel(itemInfo);
 				} else feature.setStyle(new Style({}));
 
@@ -1184,10 +1060,7 @@ class MyMaps extends Component {
 		this.vectorSource.getFeatures().forEach((feature) => {
 			const id = feature.getProperties().id;
 			if (id === itemInfo.id) {
-				if (visible)
-					feature.setStyle(
-						drawingHelpers.getStyleFromJSON(itemInfo.style, itemInfo.pointType)
-					);
+				if (visible) feature.setStyle(drawingHelpers.getStyleFromJSON(itemInfo.style, itemInfo.pointType));
 				else feature.setStyle(new Style({}));
 
 				return;
@@ -1288,24 +1161,12 @@ class MyMaps extends Component {
 	render() {
 		return (
 			<div id={"sc-mymaps-container"} className="sc-mymaps-container">
-				<ButtonBar
-					onClick={this.onButtonBarClick}
-					activeButton={this.state.drawType}
-					isEditing={this.state.isEditing}
-				/>
-				<ColorBar
-					onClick={this.onColorBarClick}
-					activeColor={this.state.drawColor}
-					isEditing={this.state.isEditing}
-				/>
+				<ButtonBar onClick={this.onButtonBarClick} activeButton={this.state.drawType} isEditing={this.state.isEditing} />
+				<ColorBar onClick={this.onColorBarClick} activeColor={this.state.drawColor} isEditing={this.state.isEditing} />
 				<MyMapsItems isEditing={this.state.isEditing}>
 					<TransitionGroup>
 						{this.state.items.map((myMapsItem) => (
-							<CSSTransition
-								key={myMapsItem.id}
-								timeout={500}
-								classNames="sc-mymaps-item"
-							>
+							<CSSTransition key={myMapsItem.id} timeout={500} classNames="sc-mymaps-item">
 								<MyMapsItem
 									key={myMapsItem.id}
 									info={myMapsItem}
@@ -1327,20 +1188,22 @@ class MyMaps extends Component {
 					onMenuItemClick={this.onMenuItemClick}
 					onDeleteAllClick={this.onDeleteAllClick}
 					onMyMapsImport={this.onMyMapsImport}
+					hasItems={this.state.items && this.state.items.length > 0}
 				/>
-				<div
-					id={this.state.toolTipId}
-					className={
-						window.isDrawingOrEditing &&
-						(this.state.drawType === "Bearing" ||
-							this.state.drawType === "Measure")
-							? this.state.toolTipClass
-							: "sc-hidden"
-					}
-				/>
+				<div id={this.state.toolTipId} className={window.isDrawingOrEditing && (this.state.drawType === "Bearing" || this.state.drawType === "Measure") ? this.state.toolTipClass : "sc-hidden"} />
 			</div>
 		);
 	}
 }
 
 export default MyMaps;
+
+const ShowGeometryContent = (props) => {
+	return (
+		<div>
+			<span>{props.title}</span>
+			<br />
+			<textarea style={{ width: "100%", height: "90px", resize: "none" }} defaultValue={props.content}></textarea>
+		</div>
+	);
+};

@@ -25,23 +25,15 @@ class ThemeBaseLayers extends Component {
 
 		this.mapClickEvent = window.map.on("click", (evt) => {
 			console.log(this.state.visible);
-			if (
-				window.isDrawingOrEditing ||
-				!this.state.visible ||
-				window.isCoordinateToolOpen ||
-				window.isMeasuring
-			)
-				return;
+			if (window.isDrawingOrEditing || !this.state.visible || window.isCoordinateToolOpen || window.isMeasuring) return;
 
 			var viewResolution = window.map.getView().getResolution();
 			this.state.layers.forEach((layer) => {
 				if (!layer.getProperties().clickable) return;
 
-				var url = layer
-					.getSource()
-					.getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", {
-						INFO_FORMAT: "application/json",
-					});
+				var url = layer.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", {
+					INFO_FORMAT: "application/json",
+				});
 				if (url) {
 					helpers.getJSON(url, (result) => {
 						const features = result.features;
@@ -58,12 +50,7 @@ class ThemeBaseLayers extends Component {
 						console.log("showing");
 						window.popup.show(
 							evt.coordinate,
-							<ThemePopupContent
-								key={helpers.getUID()}
-								values={entries}
-								popupLogoImage={this.props.config.popupLogoImage}
-								layerConfig={layerConfig}
-							/>,
+							<ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={layerConfig} />,
 							layer.getProperties().name
 						);
 					});
@@ -88,13 +75,7 @@ class ThemeBaseLayers extends Component {
 	getLayers = () => {
 		let layers = [];
 		this.props.config.baseLayers.layers.forEach((layerObj) => {
-			const layer = helpers.getImageWMSLayer(
-				url.resolve(layerObj.serverUrl, "wms"),
-				layerObj.layerName,
-				"geoserver",
-				null,
-				50
-			);
+			const layer = helpers.getImageWMSLayer(url.resolve(layerObj.serverUrl, "wms"), layerObj.layerName, "geoserver", null, 50);
 			layer.setVisible(this.state.visible);
 			layer.setOpacity(this.state.sliderValue);
 			layer.setZIndex(this.props.config.baseLayers.zIndex);
@@ -159,24 +140,13 @@ class ThemeBaseLayers extends Component {
 		//
 
 		return (
-			<div
-				className={
-					this.props.config.baseLayers.layers.length > 0
-						? "sc-base-layers-container"
-						: "sc-hidden"
-				}
-			>
+			<div className={this.props.config.baseLayers.layers.length > 0 ? "sc-base-layers-container" : "sc-hidden"}>
 				<div className="sc-title sc-underline" style={{ marginLeft: "7px" }}>
 					BASE DATA
 				</div>
 				<div className="sc-base-layers-controls">
 					<label className="sc-base-layers-label">
-						<input
-							type="checkbox"
-							checked={this.state.visible}
-							style={{ verticalAlign: "middle" }}
-							onChange={this.onCheckboxChange}
-						/>
+						<input type="checkbox" checked={this.state.visible} style={{ verticalAlign: "middle" }} onChange={this.onCheckboxChange} />
 						Turn on/off theme base data
 					</label>
 					<div className="sc-base-layers-slider-container">
@@ -195,18 +165,8 @@ class ThemeBaseLayers extends Component {
 						<span className="sc-base-layers-transparency">Transparency</span>
 					</div>
 				</div>
-				<div
-					className={
-						this.state.legendImageName === undefined
-							? "sc-hidden"
-							: "sc-base-layers-legend sc-container"
-					}
-				>
-					<img
-						className="sc-base-layers-legend-img"
-						src={images[this.state.legendImageName]}
-						alt="legend"
-					/>
+				<div className={this.state.legendImageName === undefined ? "sc-hidden" : "sc-base-layers-legend sc-container"}>
+					<img className="sc-base-layers-legend-img" src={images[this.state.legendImageName]} alt="legend" />
 				</div>
 			</div>
 		);
@@ -216,9 +176,7 @@ class ThemeBaseLayers extends Component {
 export default ThemeBaseLayers;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

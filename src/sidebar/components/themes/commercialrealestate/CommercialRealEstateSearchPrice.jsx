@@ -34,10 +34,7 @@ const CommercialRealEstateSearchPrice = (props) => {
 	};
 
 	return (
-		<div
-			className="sc-border-bottom"
-			style={{ marginTop: "10px", paddingBottom: "5px" }}
-		>
+		<div className="sc-border-bottom" style={{ marginTop: "10px", paddingBottom: "5px" }}>
 			<label style={{ fontWeight: "bold" }}>Price</label>
 			<div
 				style={{
@@ -46,25 +43,9 @@ const CommercialRealEstateSearchPrice = (props) => {
 					marginBottom: "5px",
 				}}
 			>
-				<Select
-					styles={dropDownStyles}
-					isSearchable={false}
-					onChange={props.onPriceFromDropDownChange}
-					options={props.priceFromItems}
-					value={props.selectedPriceFrom}
-				/>
-				<label
-					style={{ paddingLeft: "5px", paddingRight: "5px", paddingTop: "5px" }}
-				>
-					to
-				</label>
-				<Select
-					styles={dropDownStyles}
-					isSearchable={false}
-					onChange={props.onPriceToDropDownChange}
-					options={props.priceToItems}
-					value={props.selectedPriceTo}
-				/>
+				<Select styles={dropDownStyles} isSearchable={false} onChange={props.onPriceFromDropDownChange} options={props.priceFromItems} value={props.selectedPriceFrom} />
+				<label style={{ paddingLeft: "5px", paddingRight: "5px", paddingTop: "5px" }}>to</label>
+				<Select styles={dropDownStyles} isSearchable={false} onChange={props.onPriceToDropDownChange} options={props.priceToItems} value={props.selectedPriceTo} />
 			</div>
 		</div>
 	);

@@ -12,11 +12,7 @@ function GroupItem(props) {
 				<legend>{helpers.replaceAllInString(group.label, "_", " ")}</legend>
 				<div className="item-content">
 					{layers.map((layer) => (
-						<LegendItem
-							key={helpers.getUID()}
-							layer={layer}
-							center={props.center}
-						></LegendItem>
+						<LegendItem key={helpers.getUID()} layer={layer} center={props.center}></LegendItem>
 					))}
 				</div>
 			</fieldset>

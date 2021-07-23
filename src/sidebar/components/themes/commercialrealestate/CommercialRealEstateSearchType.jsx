@@ -33,18 +33,9 @@ const CommercialRealEstateSearchType = (props) => {
 	};
 
 	return (
-		<div
-			className="sc-border-bottom"
-			style={{ marginTop: "10px", paddingBottom: "5px" }}
-		>
+		<div className="sc-border-bottom" style={{ marginTop: "10px", paddingBottom: "5px" }}>
 			<label style={{ fontWeight: "bold" }}>Real Estate Type</label>
-			<Select
-				styles={dropDownStyles}
-				isSearchable={false}
-				onChange={props.onTypeDropDownChange}
-				options={props.types}
-				value={props.selectedType}
-			/>
+			<Select styles={dropDownStyles} isSearchable={false} onChange={props.onTypeDropDownChange} options={props.types} value={props.selectedType} />
 		</div>
 	);
 };

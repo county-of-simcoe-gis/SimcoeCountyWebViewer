@@ -1,10 +1,4 @@
-import {
-	Circle as CircleStyle,
-	Fill,
-	Stroke,
-	Style,
-	RegularShape,
-} from "ol/style.js";
+import { Circle as CircleStyle, Fill, Stroke, Style, RegularShape } from "ol/style.js";
 import { asArray } from "ol/color";
 import DoubleClickZoom from "ol/interaction/DoubleClickZoom";
 import LineString from "ol/geom/LineString.js";
@@ -62,8 +56,7 @@ export function getFeatureById(id) {
 }
 
 export function getStyleFromJSON(styleJSON, pointType) {
-	if (styleJSON === undefined || styleJSON === null)
-		return getDefaultDrawStyle("#e809e5");
+	if (styleJSON === undefined || styleJSON === null) return getDefaultDrawStyle("#e809e5");
 
 	// FILL
 	let fill = null;
@@ -87,24 +80,12 @@ export function getStyleFromJSON(styleJSON, pointType) {
 	let image = null;
 	if (styleJSON.image_ !== null) {
 		const imageFill = new Fill({
-			color:
-				styleJSON.image_.fill_ === undefined
-					? [255, 0, 0, 1]
-					: styleJSON.image_.fill_.color_,
+			color: styleJSON.image_.fill_ === undefined ? [255, 0, 0, 1] : styleJSON.image_.fill_.color_,
 		});
 		const imageStroke = new Stroke({
-			color:
-				styleJSON.image_.stroke_ === undefined
-					? [255, 0, 0, 0.7]
-					: styleJSON.image_.stroke_.color_,
-			width:
-				styleJSON.image_.stroke_ === undefined
-					? 1
-					: styleJSON.image_.stroke_.width_,
-			lineDash:
-				styleJSON.image_.stroke_ === undefined
-					? null
-					: styleJSON.image_.stroke_.lineDash_,
+			color: styleJSON.image_.stroke_ === undefined ? [255, 0, 0, 0.7] : styleJSON.image_.stroke_.color_,
+			width: styleJSON.image_.stroke_ === undefined ? 1 : styleJSON.image_.stroke_.width_,
+			lineDash: styleJSON.image_.stroke_ === undefined ? null : styleJSON.image_.stroke_.lineDash_,
 		});
 
 		if (pointType === undefined || pointType === "circle") {
@@ -175,13 +156,7 @@ export function getStyleFromJSON(styleJSON, pointType) {
 	return style;
 }
 
-export function getDefaultDrawStyle(
-	drawColor,
-	isText = false,
-	strokeWidth = 3,
-	pointType = "circle",
-	geometryType
-) {
+export function getDefaultDrawStyle(drawColor, isText = false, strokeWidth = 3, pointType = "circle", geometryType) {
 	if (isText === undefined) isText = false;
 	if (strokeWidth === undefined) strokeWidth = 3;
 
@@ -197,10 +172,7 @@ export function getDefaultDrawStyle(
 			color: color, // USE OPACITY
 		}),
 		stroke: new Stroke({
-			color:
-				geometryType === "Polygon" || geometryType === "Circle"
-					? [0, 0, 0, 0.8]
-					: color,
+			color: geometryType === "Polygon" || geometryType === "Circle" ? [0, 0, 0, 0.8] : color,
 			width: strokeWidth,
 		}),
 		image: new CircleStyle({
@@ -218,15 +190,7 @@ export function getDefaultDrawStyle(
 	return drawStyle;
 }
 
-export function getPointStyle(
-	pointType = "circle",
-	radius = 5,
-	strokeColor = "black",
-	strokeWidth = 2,
-	fillColor = "red",
-	rotation = 0,
-	strokeType = "normal"
-) {
+export function getPointStyle(pointType = "circle", radius = 5, strokeColor = "black", strokeWidth = 2, fillColor = "red", rotation = 0, strokeType = "normal") {
 	const fill = new Fill({ color: fillColor });
 
 	let stroke = new Stroke({ color: strokeColor, width: strokeWidth });
@@ -325,11 +289,7 @@ export function getPointStyle(
 	return style;
 }
 
-export function getLineStringStyle(
-	strokeColor = "black",
-	strokeWidth = 2,
-	strokeType = "normal"
-) {
+export function getLineStringStyle(strokeColor = "black", strokeWidth = 2, strokeType = "normal") {
 	let stroke = new Stroke({ color: strokeColor, width: strokeWidth });
 	if (strokeType === "dash") {
 		stroke = new Stroke({
@@ -352,12 +312,7 @@ export function getLineStringStyle(
 	return style;
 }
 
-export function getPolygonStyle(
-	strokeColor = "black",
-	strokeWidth = 2,
-	fillColor = "red",
-	strokeType = "normal"
-) {
+export function getPolygonStyle(strokeColor = "black", strokeWidth = 2, fillColor = "red", strokeType = "normal") {
 	const fill = new Fill({ color: fillColor });
 
 	let stroke = new Stroke({ color: strokeColor, width: strokeWidth });
@@ -513,10 +468,7 @@ export function getBearing(fromPoint, toPoint) {
 
 	var dLong = endLong - startLong;
 
-	var dPhi = Math.log(
-		Math.tan(endLat / 2.0 + Math.PI / 4.0) /
-			Math.tan(startLat / 2.0 + Math.PI / 4.0)
-	);
+	var dPhi = Math.log(Math.tan(endLat / 2.0 + Math.PI / 4.0) / Math.tan(startLat / 2.0 + Math.PI / 4.0));
 	if (Math.abs(dLong) > Math.PI) {
 		if (dLong > 0.0) dLong = -(2.0 * Math.PI - dLong);
 		else dLong = 2.0 * Math.PI + dLong;

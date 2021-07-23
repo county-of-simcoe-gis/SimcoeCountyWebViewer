@@ -49,8 +49,7 @@ class Layers extends Component {
 
 	onActivateLayer = (layerItem) => {
 		if (!this.props.visible) return;
-		const elementId =
-			layerItem.fullName + "_" + layerItem.layerGroup + "_listview";
+		const elementId = layerItem.fullName + "_" + layerItem.layerGroup + "_listview";
 
 		this.props.group.layers.forEach((layer) => {
 			if (layer.name === layerItem.fullName) {
@@ -91,21 +90,12 @@ class Layers extends Component {
 		const layers = this.props.group.layers.filter((layer) => {
 			if (this.props.searchText === "") return layer;
 
-			if (
-				layer.tocDisplayName
-					.toUpperCase()
-					.indexOf(this.props.searchText.toUpperCase()) !== -1
-			)
-				return layer;
+			if (layer.tocDisplayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1) return layer;
 		});
 
 		return (
 			<div className="sc-toc-layer-container">
-				<AutoSizer
-					disableWidth
-					key={this.props.id + "-autosizer-" + this.state.recalcId}
-					id={this.props.id + "-autosizer"}
-				>
+				<AutoSizer disableWidth key={this.props.id + "-autosizer-" + this.state.recalcId} id={this.props.id + "-autosizer"}>
 					{({ height }) => {
 						return (
 							<SortableVirtualList

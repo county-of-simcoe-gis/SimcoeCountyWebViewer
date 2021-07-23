@@ -34,15 +34,9 @@ const CommercialRealEstateSearchLandSize = (props) => {
 	};
 
 	return (
-		<div
-			className={props.visible ? "sc-border-bottom" : "sc-hidden"}
-			style={{ marginTop: "10px", paddingBottom: "5px" }}
-		>
+		<div className={props.visible ? "sc-border-bottom" : "sc-hidden"} style={{ marginTop: "10px", paddingBottom: "5px" }}>
 			<label style={{ fontWeight: "bold" }}>Land Size (acres)</label>
-			<label
-				style={{ float: "right", fontSize: "9pt" }}
-				onClick={() => props.onSwitchSearchType("BuildingSize")}
-			>
+			<label style={{ float: "right", fontSize: "9pt" }} onClick={() => props.onSwitchSearchType("BuildingSize")}>
 				[<label className="sc-fakeLink">Search By Building Size</label>]
 			</label>
 			<div
@@ -52,25 +46,9 @@ const CommercialRealEstateSearchLandSize = (props) => {
 					marginBottom: "5px",
 				}}
 			>
-				<Select
-					styles={dropDownStyles}
-					isSearchable={false}
-					onChange={props.onLandSizeFromDropDownChange}
-					options={props.landSizeFromItems}
-					value={props.selectedLandSizeFrom}
-				/>
-				<label
-					style={{ paddingLeft: "5px", paddingRight: "5px", paddingTop: "5px" }}
-				>
-					to
-				</label>
-				<Select
-					styles={dropDownStyles}
-					isSearchable={false}
-					onChange={props.onLandSizeToDropDownChange}
-					options={props.landSizeToItems}
-					value={props.selectedLandSizeTo}
-				/>
+				<Select styles={dropDownStyles} isSearchable={false} onChange={props.onLandSizeFromDropDownChange} options={props.landSizeFromItems} value={props.selectedLandSizeFrom} />
+				<label style={{ paddingLeft: "5px", paddingRight: "5px", paddingTop: "5px" }}>to</label>
+				<Select styles={dropDownStyles} isSearchable={false} onChange={props.onLandSizeToDropDownChange} options={props.landSizeToItems} value={props.selectedLandSizeTo} />
 			</div>
 		</div>
 	);

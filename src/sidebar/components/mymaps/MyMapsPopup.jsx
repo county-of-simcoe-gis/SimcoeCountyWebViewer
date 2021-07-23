@@ -52,18 +52,10 @@ class MyMapsPopup extends Component {
 					onStrokeWidthSliderChange={this.props.onStrokeWidthSliderChange}
 					onStrokeTypeDropDown={this.props.onStrokeTypeDropDown}
 				/>
-				<MyMapsBuffer
-					visible={this.props.activeTool === "buffer"}
-					item={this.props.item}
-				/>
-				<MyMapsMeasure
-					visible={this.props.activeTool === "measure"}
-					item={this.props.item}
-				/>
+				<MyMapsBuffer visible={this.props.activeTool === "buffer"} item={this.props.item} />
+				<MyMapsMeasure visible={this.props.activeTool === "measure"} item={this.props.item} />
 				<FooterButtons
-					onMyMapItemToolsButtonClick={(evt) =>
-						this.props.onMyMapItemToolsButtonClick(evt, this.props.item)
-					}
+					onMyMapItemToolsButtonClick={(evt) => this.props.onMyMapItemToolsButtonClick(evt, this.props.item)}
 					onDeleteButtonClick={() => {
 						this.props.onDeleteButtonClick(this.props.item.id);
 						window.popup.hide();
@@ -79,30 +71,12 @@ export default MyMapsPopup;
 function FooterButtons(props) {
 	return (
 		<div className="sc-mymaps-footer-buttons-container">
-			<button
-				className="sc-button sc-mymaps-popup-footer-button"
-				key={helpers.getUID()}
-				id={helpers.getUID()}
-				onClick={(evt) => props.onMyMapItemToolsButtonClick(evt)}
-			>
-				<img
-					src={images["toolbox.png"]}
-					className={"sc-mymaps-footer-buttons-img"}
-					alt="Tools"
-				/>
+			<button className="sc-button sc-mymaps-popup-footer-button" key={helpers.getUID()} id={helpers.getUID()} onClick={(evt) => props.onMyMapItemToolsButtonClick(evt)}>
+				<img src={images["toolbox.png"]} className={"sc-mymaps-footer-buttons-img"} alt="Tools" />
 				Tools
 			</button>
-			<button
-				className="sc-button sc-mymaps-popup-footer-button"
-				key={helpers.getUID()}
-				id={helpers.getUID()}
-				onClick={props.onDeleteButtonClick}
-			>
-				<img
-					src={images["eraser.png"]}
-					className={"sc-mymaps-footer-buttons-img"}
-					alt="Delete"
-				/>
+			<button className="sc-button sc-mymaps-popup-footer-button" key={helpers.getUID()} id={helpers.getUID()} onClick={props.onDeleteButtonClick}>
+				<img src={images["eraser.png"]} className={"sc-mymaps-footer-buttons-img"} alt="Delete" />
 				Delete
 			</button>
 			<button
@@ -113,11 +87,7 @@ function FooterButtons(props) {
 					window.popup.hide();
 				}}
 			>
-				<img
-					src={images["closeX.gif"]}
-					className={"sc-mymaps-footer-buttons-img"}
-					alt="Close"
-				/>
+				<img src={images["closeX.gif"]} className={"sc-mymaps-footer-buttons-img"} alt="Close" />
 				Close
 			</button>
 		</div>
@@ -125,9 +95,7 @@ function FooterButtons(props) {
 }
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

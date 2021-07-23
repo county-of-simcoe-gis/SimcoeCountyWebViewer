@@ -16,30 +16,15 @@ const ThemePopupContent = (props) => {
 	return (
 		<div>
 			<div style={{ textAlign: "center" }}>
-				<img
-					className={props.popupLogoImage === undefined ? "sc-hidden" : ""}
-					src={images[props.popupLogoImage]}
-					alt="logo"
-				/>
+				<img className={props.popupLogoImage === undefined ? "sc-hidden" : ""} src={images[props.popupLogoImage]} alt="logo" />
 			</div>
 			{props.values.map((row) => {
 				if (row[0] !== "geometry" && row[0].substring(0, 1) !== "_") {
-					return (
-						<InfoRow key={helpers.getUID()} value={row[1]} label={row[0]} />
-					);
+					return <InfoRow key={helpers.getUID()} value={row[1]} label={row[0]} />;
 				} else return null;
 			})}
-			<div
-				className={
-					props.layerConfig.moreInfoUrlFieldName === undefined
-						? "sc-hidden"
-						: ""
-				}
-			>
-				<button
-					className="sc-button sc-theme-popup-content-more-info"
-					onClick={() => helpers.showURLWindow(urlField, false)}
-				>
+			<div className={props.layerConfig.moreInfoUrlFieldName === undefined ? "sc-hidden" : ""}>
+				<button className="sc-button sc-theme-popup-content-more-info" onClick={() => helpers.showURLWindow(urlField, false)}>
 					More Information
 				</button>
 				<button
@@ -58,9 +43,7 @@ const ThemePopupContent = (props) => {
 export default ThemePopupContent;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

@@ -120,10 +120,7 @@ class LHRS extends Component {
 			window.disableParcelClick = true;
 
 			// REGISTER MAP EVENTS
-			this.onPointerMoveEvent = window.map.on(
-				"pointermove",
-				this.onPointerMoveHandler
-			);
+			this.onPointerMoveEvent = window.map.on("pointermove", this.onPointerMoveHandler);
 			this.onMapClickEvent = window.map.on("click", this.onMapClick);
 			this.onMapMoveEvent = window.map.on("moveend", this.onMapMoveEnd);
 			this._getLHRSVersions();
@@ -220,16 +217,8 @@ class LHRS extends Component {
 						inputLatLongYCoordsA: pointObj.long,
 					},
 					() => {
-						if (
-							this.state.b_valid &&
-							this.state.a_valid &&
-							this.state.a_hwy === this.state.b_hwy
-						) {
-							this.calcLinearFeature(
-								this.state.a_hwy,
-								this.state.a_m_distance,
-								this.state.b_m_distance
-							);
+						if (this.state.b_valid && this.state.a_valid && this.state.a_hwy === this.state.b_hwy) {
+							this.calcLinearFeature(this.state.a_hwy, this.state.a_m_distance, this.state.b_m_distance);
 						} else {
 							this.vectorLayerLinear.getSource().clear();
 							this.zoomToPoint(pointObj.lat, pointObj.long);
@@ -252,16 +241,8 @@ class LHRS extends Component {
 						inputLatLongYCoordsB: pointObj.long,
 					},
 					() => {
-						if (
-							this.state.b_valid &&
-							this.state.a_valid &&
-							this.state.a_hwy === this.state.b_hwy
-						) {
-							this.calcLinearFeature(
-								this.state.a_hwy,
-								this.state.a_m_distance,
-								this.state.b_m_distance
-							);
+						if (this.state.b_valid && this.state.a_valid && this.state.a_hwy === this.state.b_hwy) {
+							this.calcLinearFeature(this.state.a_hwy, this.state.a_m_distance, this.state.b_m_distance);
 						} else {
 							this.vectorLayerLinear.getSource().clear();
 							this.zoomToPoint(pointObj.lat, pointObj.long);
@@ -285,9 +266,7 @@ class LHRS extends Component {
 			let items = this.state.selectLHRSActions;
 
 			if (pointObj.valid) {
-				if (
-					items.filter((item) => isOptionalItem(item)).length === items.length
-				) {
+				if (items.filter((item) => isOptionalItem(item)).length === items.length) {
 					items.push(optionalItem);
 
 					//fix to get select box to update on the fly
@@ -296,9 +275,7 @@ class LHRS extends Component {
 					this.setState({ selectLHRSActions: items });
 				}
 			} else {
-				if (
-					items.filter((item) => isOptionalItem(item)).length !== items.length
-				) {
+				if (items.filter((item) => isOptionalItem(item)).length !== items.length) {
 					items = items.filter((item) => isOptionalItem(item));
 
 					//fix to get select box to update on the fly
@@ -316,12 +293,9 @@ class LHRS extends Component {
 			{ label: "Enter Hwy/Distance", value: "enterHwy" },
 			{ label: "Enter Basepoint/Offset", value: "enterBasepoint" },
 		];
-		this.setState(
-			{ selectLHRSActions: items, selectLHRSAction: items[0] },
-			() => {
-				this.updateActionValues();
-			}
-		);
+		this.setState({ selectLHRSActions: items, selectLHRSAction: items[0] }, () => {
+			this.updateActionValues();
+		});
 	};
 	onActionChange = (selection) => {
 		this.setState({ selectLHRSAction: selection }, () => {
@@ -336,93 +310,38 @@ class LHRS extends Component {
 			let action = this.state.selectLHRSAction.value;
 			switch (action) {
 				case "selectPoint":
-					if (
-						!isNaN(parseFloat(this.state.inputAValue)) &&
-						!isNaN(parseFloat(this.state.inputBValue))
-					) {
-						this.calcByLatLong(
-							this.state.inputAValue,
-							this.state.inputBValue,
-							this.state.selectedPoint
-						);
+					if (!isNaN(parseFloat(this.state.inputAValue)) && !isNaN(parseFloat(this.state.inputBValue))) {
+						this.calcByLatLong(this.state.inputAValue, this.state.inputBValue, this.state.selectedPoint);
 					} else {
-						helpers.showMessage(
-							"Error",
-							"Invalid Lat/Long.",
-							helpers.messageColors.red,
-							2000
-						);
+						helpers.showMessage("Error", "Invalid Lat/Long.", helpers.messageColors.red, 2000);
 					}
 					break;
 				case "enterLatLong":
-					if (
-						!isNaN(parseFloat(this.state.inputAValue)) &&
-						!isNaN(parseFloat(this.state.inputBValue))
-					) {
-						this.calcByLatLong(
-							this.state.inputAValue,
-							this.state.inputBValue,
-							this.state.selectedPoint
-						);
+					if (!isNaN(parseFloat(this.state.inputAValue)) && !isNaN(parseFloat(this.state.inputBValue))) {
+						this.calcByLatLong(this.state.inputAValue, this.state.inputBValue, this.state.selectedPoint);
 					} else {
-						helpers.showMessage(
-							"Error",
-							"Invalid Lat/Long.",
-							helpers.messageColors.red,
-							2000
-						);
+						helpers.showMessage("Error", "Invalid Lat/Long.", helpers.messageColors.red, 2000);
 					}
 					break;
 				case "enterHwy":
 					if (!isNaN(parseFloat(this.state.inputBValue))) {
-						this.calcByHwy(
-							this.state.inputAValue,
-							this.state.inputBValue,
-							this.state.selectedPoint
-						);
+						this.calcByHwy(this.state.inputAValue, this.state.inputBValue, this.state.selectedPoint);
 					} else {
-						helpers.showMessage(
-							"Error",
-							"Invalid Distance.",
-							helpers.messageColors.red,
-							2000
-						);
+						helpers.showMessage("Error", "Invalid Distance.", helpers.messageColors.red, 2000);
 					}
 					break;
 				case "enterBasepoint":
-					if (
-						!isNaN(parseFloat(this.state.inputAValue)) &&
-						!isNaN(parseFloat(this.state.inputBValue))
-					) {
-						this.calcByBasepoint(
-							this.state.inputAValue,
-							this.state.inputBValue,
-							this.state.selectedPoint
-						);
+					if (!isNaN(parseFloat(this.state.inputAValue)) && !isNaN(parseFloat(this.state.inputBValue))) {
+						this.calcByBasepoint(this.state.inputAValue, this.state.inputBValue, this.state.selectedPoint);
 					} else {
-						helpers.showMessage(
-							"Error",
-							"Invalid Basepoint/Offset.",
-							helpers.messageColors.red,
-							2000
-						);
+						helpers.showMessage("Error", "Invalid Basepoint/Offset.", helpers.messageColors.red, 2000);
 					}
 					break;
 				case "enterDistanceFromA":
 					if (!isNaN(parseFloat(this.state.inputAValue))) {
-						this.calcByHwy(
-							this.state.a_hwy,
-							parseFloat(this.state.a_m_distance) +
-								parseFloat(this.state.inputAValue),
-							"pointB"
-						);
+						this.calcByHwy(this.state.a_hwy, parseFloat(this.state.a_m_distance) + parseFloat(this.state.inputAValue), "pointB");
 					} else {
-						helpers.showMessage(
-							"Error",
-							"Invalid Distance.",
-							helpers.messageColors.red,
-							2000
-						);
+						helpers.showMessage("Error", "Invalid Distance.", helpers.messageColors.red, 2000);
 					}
 					break;
 				default:
@@ -434,10 +353,7 @@ class LHRS extends Component {
 	};
 	allowMapActions = () => {
 		if (this.state.allowMapActions) {
-			this.onPointerMoveEvent = window.map.on(
-				"pointermove",
-				this.onPointerMoveHandler
-			);
+			this.onPointerMoveEvent = window.map.on("pointermove", this.onPointerMoveHandler);
 			this.onMapClickEvent = window.map.on("click", this.onMapClick);
 		} else {
 			unByKey(this.onPointerMoveEvent);
@@ -464,19 +380,13 @@ class LHRS extends Component {
 		switch (action) {
 			case "selectPoint":
 				inputALabel = "Lat";
-				inputAValue =
-					selectedPoint === "pointA"
-						? this.state.inputLatLongXCoordsA
-						: this.state.inputLatLongXCoordsB;
+				inputAValue = selectedPoint === "pointA" ? this.state.inputLatLongXCoordsA : this.state.inputLatLongXCoordsB;
 				inputAType = "lat";
 				inputAReadOnly = true;
 				inputAPlaceholer = "(listening for input)";
 				inputAHidden = false;
 				inputBLabel = "Long";
-				inputBValue =
-					selectedPoint === "pointA"
-						? this.state.inputLatLongYCoordsA
-						: this.state.inputLatLongYCoordsB;
+				inputBValue = selectedPoint === "pointA" ? this.state.inputLatLongYCoordsA : this.state.inputLatLongYCoordsB;
 				inputBType = "long";
 				inputBReadOnly = true;
 				inputBPlaceholer = "(listening for input)";
@@ -530,8 +440,7 @@ class LHRS extends Component {
 				break;
 			case "enterDistanceFromA":
 				let defaultDistance = null;
-				if (this.state.b_m_distance !== null)
-					defaultDistance = this.state.b_m_distance - this.state.a_m_distance;
+				if (this.state.b_m_distance !== null) defaultDistance = this.state.b_m_distance - this.state.a_m_distance;
 				inputALabel = "M Dist. From A (km)";
 				inputAValue = defaultDistance;
 				inputAType = "m_distance";
@@ -581,40 +490,30 @@ class LHRS extends Component {
 			basepoint: basepoint,
 			offset: offset,
 		};
-		helpers.postJSON(
-			window.config.apiUrl + "postGetLHRSByBPoint/",
-			data,
-			(retResult) => {
-				if (retResult.result !== undefined) {
-					var result = retResult.result;
-					pointObj.lat = parseFloat(result.latitude_in).toFixed(7);
-					pointObj.long = parseFloat(result.longitude_in).toFixed(7);
-					pointObj.hwy = result.hwy;
-					pointObj.m_distance = result.m_distance;
-					pointObj.basepoint = result.basepoint;
-					pointObj.offset = result.lhrs_offset;
-					pointObj.snapped_distance = result.snapping_distance;
-					pointObj.valid = true;
-				} else {
-					pointObj.lat = null;
-					pointObj.long = null;
-					pointObj.m_distance = null;
-					pointObj.hwy = null;
-					pointObj.basepoint = basepoint;
-					pointObj.offset = offset;
-					pointObj.snapped_distance = null;
-					pointObj.valid = false;
-					helpers.showMessage(
-						"Not Found",
-						"No LHRS Data Found.",
-						helpers.messageColors.green,
-						1500,
-						true
-					);
-				}
-				this._setPoint(pointObj);
+		helpers.postJSON(window.config.apiUrl + "postGetLHRSByBPoint/", data, (retResult) => {
+			if (retResult.result !== undefined) {
+				var result = retResult.result;
+				pointObj.lat = parseFloat(result.latitude_in).toFixed(7);
+				pointObj.long = parseFloat(result.longitude_in).toFixed(7);
+				pointObj.hwy = result.hwy;
+				pointObj.m_distance = result.m_distance;
+				pointObj.basepoint = result.basepoint;
+				pointObj.offset = result.lhrs_offset;
+				pointObj.snapped_distance = result.snapping_distance;
+				pointObj.valid = true;
+			} else {
+				pointObj.lat = null;
+				pointObj.long = null;
+				pointObj.m_distance = null;
+				pointObj.hwy = null;
+				pointObj.basepoint = basepoint;
+				pointObj.offset = offset;
+				pointObj.snapped_distance = null;
+				pointObj.valid = false;
+				helpers.showMessage("Not Found", "No LHRS Data Found.", helpers.messageColors.green, 1500, true);
 			}
-		);
+			this._setPoint(pointObj);
+		});
 	};
 	calcByHwy = (hwy, m_distance, pointName) => {
 		let pointObj = this._getPoint(pointName);
@@ -624,40 +523,30 @@ class LHRS extends Component {
 			hwy: hwy,
 			distance: m_distance,
 		};
-		helpers.postJSON(
-			window.config.apiUrl + "postGetLHRSByMDistance/",
-			data,
-			(retResult) => {
-				if (retResult.result !== undefined) {
-					var result = retResult.result;
-					pointObj.lat = parseFloat(result.latitude_in).toFixed(7);
-					pointObj.long = parseFloat(result.longitude_in).toFixed(7);
-					pointObj.hwy = result.hwy;
-					pointObj.m_distance = result.m_distance;
-					pointObj.basepoint = result.basepoint;
-					pointObj.offset = result.lhrs_offset;
-					pointObj.snapped_distance = result.snapping_distance;
-					pointObj.valid = true;
-				} else {
-					pointObj.lat = null;
-					pointObj.long = null;
-					pointObj.m_distance = m_distance;
-					pointObj.hwy = hwy;
-					pointObj.basepoint = null;
-					pointObj.offset = null;
-					pointObj.snapped_distance = null;
-					pointObj.valid = false;
-					helpers.showMessage(
-						"Not Found",
-						"No LHRS Data Found.",
-						helpers.messageColors.green,
-						1500,
-						true
-					);
-				}
-				this._setPoint(pointObj);
+		helpers.postJSON(window.config.apiUrl + "postGetLHRSByMDistance/", data, (retResult) => {
+			if (retResult.result !== undefined) {
+				var result = retResult.result;
+				pointObj.lat = parseFloat(result.latitude_in).toFixed(7);
+				pointObj.long = parseFloat(result.longitude_in).toFixed(7);
+				pointObj.hwy = result.hwy;
+				pointObj.m_distance = result.m_distance;
+				pointObj.basepoint = result.basepoint;
+				pointObj.offset = result.lhrs_offset;
+				pointObj.snapped_distance = result.snapping_distance;
+				pointObj.valid = true;
+			} else {
+				pointObj.lat = null;
+				pointObj.long = null;
+				pointObj.m_distance = m_distance;
+				pointObj.hwy = hwy;
+				pointObj.basepoint = null;
+				pointObj.offset = null;
+				pointObj.snapped_distance = null;
+				pointObj.valid = false;
+				helpers.showMessage("Not Found", "No LHRS Data Found.", helpers.messageColors.green, 1500, true);
 			}
-		);
+			this._setPoint(pointObj);
+		});
 	};
 	calcByLatLong = (lat, long, pointName) => {
 		let pointObj = this._getPoint(pointName);
@@ -667,40 +556,36 @@ class LHRS extends Component {
 			long: long,
 			lat: lat,
 		};
-		helpers.postJSON(
-			window.config.apiUrl + "postGetLHRSByXY/",
-			data,
-			(retResult) => {
-				if (retResult.result !== undefined) {
-					var result = retResult.result;
-					pointObj.lat = parseFloat(result.latitude_in).toFixed(7);
-					pointObj.long = parseFloat(result.longitude_in).toFixed(7);
-					pointObj.hwy = result.hwy;
-					pointObj.m_distance = result.m_distance;
-					pointObj.basepoint = result.basepoint;
-					pointObj.offset = result.lhrs_offset;
-					pointObj.snapped_distance = result.snapping_distance;
-					pointObj.valid = true;
-				} else {
-					pointObj.lat = lat;
-					pointObj.long = long;
-					pointObj.hwy = null;
-					pointObj.m_distance = null;
-					pointObj.basepoint = null;
-					pointObj.offset = null;
-					pointObj.snapped_distance = null;
-					pointObj.valid = false;
-					helpers.showMessage(
-						"Not Found",
-						"Location selected is outside the defined snapping threshold.\nPlease pick a location within the defined threshold or increase the defined threshold.",
-						helpers.messageColors.green,
-						2500,
-						true
-					);
-				}
-				this._setPoint(pointObj);
+		helpers.postJSON(window.config.apiUrl + "postGetLHRSByXY/", data, (retResult) => {
+			if (retResult.result !== undefined) {
+				var result = retResult.result;
+				pointObj.lat = parseFloat(result.latitude_in).toFixed(7);
+				pointObj.long = parseFloat(result.longitude_in).toFixed(7);
+				pointObj.hwy = result.hwy;
+				pointObj.m_distance = result.m_distance;
+				pointObj.basepoint = result.basepoint;
+				pointObj.offset = result.lhrs_offset;
+				pointObj.snapped_distance = result.snapping_distance;
+				pointObj.valid = true;
+			} else {
+				pointObj.lat = lat;
+				pointObj.long = long;
+				pointObj.hwy = null;
+				pointObj.m_distance = null;
+				pointObj.basepoint = null;
+				pointObj.offset = null;
+				pointObj.snapped_distance = null;
+				pointObj.valid = false;
+				helpers.showMessage(
+					"Not Found",
+					"Location selected is outside the defined snapping threshold.\nPlease pick a location within the defined threshold or increase the defined threshold.",
+					helpers.messageColors.green,
+					2500,
+					true
+				);
 			}
-		);
+			this._setPoint(pointObj);
+		});
 	};
 	calcLinearFeature = async (hwy, fromDistance, toDistance) => {
 		let data = {
@@ -711,67 +596,37 @@ class LHRS extends Component {
 			toDistance: toDistance,
 		};
 		this.vectorLayerLinear.getSource().clear();
-		helpers.postJSON(
-			window.config.apiUrl + "postGetLHRSLinearByMDistance/",
-			data,
-			(retResult) => {
-				if (retResult.result !== undefined) {
-					var result = retResult.result;
-					if (
-						result.geom !== undefined &&
-						result.geom !== null &&
-						result.section_length > 0
-					) {
-						var feature = helpers.getFeatureFromGeoJSON(result.geom);
-						let labelText = result.section_length + " km";
-						feature.setProperties({
-							featureId: helpers.getUID(),
-							label: labelText,
-							clickable: true,
-							labelVisible: true,
-						});
-						this.vectorLayerLinear.getSource().addFeature(feature);
-						let style = this.vectorLayerLinear.getStyle();
-						const textStyle = helpers.createTextStyle(
-							feature,
-							"label",
-							undefined,
-							undefined,
-							undefined,
-							"16px"
-						);
-						style.setText(textStyle);
-						this.vectorLayerLinear.setStyle(style);
+		helpers.postJSON(window.config.apiUrl + "postGetLHRSLinearByMDistance/", data, (retResult) => {
+			if (retResult.result !== undefined) {
+				var result = retResult.result;
+				if (result.geom !== undefined && result.geom !== null && result.section_length > 0) {
+					var feature = helpers.getFeatureFromGeoJSON(result.geom);
+					let labelText = result.section_length + " km";
+					feature.setProperties({
+						featureId: helpers.getUID(),
+						label: labelText,
+						clickable: true,
+						labelVisible: true,
+					});
+					this.vectorLayerLinear.getSource().addFeature(feature);
+					let style = this.vectorLayerLinear.getStyle();
+					const textStyle = helpers.createTextStyle(feature, "label", undefined, undefined, undefined, "16px");
+					style.setText(textStyle);
+					this.vectorLayerLinear.setStyle(style);
 
-						this.setState(
-							{ linearFeatureLength: result.section_length },
-							() => {
-								window.map
-									.getView()
-									.fit(
-										feature.getGeometry().getExtent(),
-										window.map.getSize(),
-										{ duration: 1000 }
-									);
-								window.map
-									.getView()
-									.setZoom(window.map.getView().getZoom() - 1);
-							}
-						);
-					}
+					this.setState({ linearFeatureLength: result.section_length }, () => {
+						window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize(), { duration: 1000 });
+						window.map.getView().setZoom(window.map.getView().getZoom() - 1);
+					});
 				}
 			}
-		);
+		});
 	};
 	onMapMoveEnd = (evt) => {
 		return;
 	};
 	updateCoordinates = (webMercatorCoords) => {
-		const latLongCoords = transform(
-			webMercatorCoords,
-			"EPSG:3857",
-			"EPSG:4326"
-		);
+		const latLongCoords = transform(webMercatorCoords, "EPSG:3857", "EPSG:4326");
 		if (this.state.selectedPoint === "pointA") {
 			this.setState(
 				{
@@ -803,14 +658,8 @@ class LHRS extends Component {
 
 	zoomToPoint = (lat, long) => {
 		if (lat !== null && long !== null) {
-			const webMercatorCoords = transform(
-				[long, lat],
-				"EPSG:4326",
-				"EPSG:3857"
-			);
-			window.map
-				.getView()
-				.animate({ center: webMercatorCoords }, { duration: 100 });
+			const webMercatorCoords = transform([long, lat], "EPSG:4326", "EPSG:3857");
+			window.map.getView().animate({ center: webMercatorCoords }, { duration: 100 });
 		}
 	};
 
@@ -837,10 +686,7 @@ class LHRS extends Component {
 		}
 
 		// ZOOM TO IT
-		if (zoom)
-			window.map
-				.getView()
-				.animate({ center: webMercatorCoords }, { duration: 100 });
+		if (zoom) window.map.getView().animate({ center: webMercatorCoords }, { duration: 100 });
 	};
 	glowContainers() {
 		helpers.glowContainer("sc-lhrs-input-a", "green");
@@ -849,11 +695,7 @@ class LHRS extends Component {
 	// POINTER MOVE HANDLER
 	onPointerMoveHandler = (evt) => {
 		const webMercatorCoords = evt.coordinate;
-		const latLongCoords = transform(
-			webMercatorCoords,
-			"EPSG:3857",
-			"EPSG:4326"
-		);
+		const latLongCoords = transform(webMercatorCoords, "EPSG:3857", "EPSG:4326");
 
 		this.setState({
 			liveWebMercatorCoords: webMercatorCoords,
@@ -891,42 +733,25 @@ class LHRS extends Component {
 
 	onPointSwitchChange = () => {
 		if (this.state.selectedPoint === "pointA") {
-			this.setState(
-				{ selectedPoint: "pointB", selectedPointLabel: "Point B" },
-				() => {
-					this.updateActionValues();
-				}
-			);
+			this.setState({ selectedPoint: "pointB", selectedPointLabel: "Point B" }, () => {
+				this.updateActionValues();
+			});
 		} else {
-			this.setState(
-				{ selectedPoint: "pointA", selectedPointLabel: "Point A" },
-				() => {
-					this.updateActionValues();
-				}
-			);
+			this.setState({ selectedPoint: "pointA", selectedPointLabel: "Point A" }, () => {
+				this.updateActionValues();
+			});
 		}
 	};
 
 	render() {
 		return (
-			<PanelComponent
-				onClose={this.props.onClose}
-				name={this.props.name}
-				helpLink={this.props.helpLink}
-				allowClick={true}
-				type="tools"
-			>
+			<PanelComponent onClose={this.props.onClose} name={this.props.name} helpLink={this.props.helpLink} allowClick={true} type="tools">
 				<div className="sc-lhrs-container">
 					<div className="sc-container">
 						<div className="sc-lhrs-row sc-arrow">
 							<label>LHRS Version:</label>
 							<span>
-								<Select
-									id="sc-lhrs-version-select"
-									onChange={this.onVersionChange}
-									options={this.state.selectLHRSVersions}
-									value={this.state.selectLHRSVersion}
-								/>
+								<Select id="sc-lhrs-version-select" onChange={this.onVersionChange} options={this.state.selectLHRSVersions} value={this.state.selectLHRSVersion} />
 							</span>
 						</div>
 						<div className="sc-lhrs-row sc-arrow">
@@ -937,12 +762,9 @@ class LHRS extends Component {
 									type="text"
 									className="sc-lhrs-input sc-lhrs-input-sm sc-editable"
 									onChange={(evt) => {
-										this.setState(
-											{ snappingDistance: evt.target.value },
-											() => {
-												this.executeAction();
-											}
-										);
+										this.setState({ snappingDistance: evt.target.value }, () => {
+											this.executeAction();
+										});
 									}}
 									value={this.state.snappingDistance}
 								/>
@@ -953,29 +775,16 @@ class LHRS extends Component {
 							<div className="sc-lhrs-row sc-arrow">
 								<label>LHRS Entry:</label>
 								<span>
-									<Select
-										id="sc-lhrs-action-select"
-										onChange={this.onActionChange}
-										options={this.state.selectLHRSActions}
-										value={this.state.selectLHRSAction}
-									/>
+									<Select id="sc-lhrs-action-select" onChange={this.onActionChange} options={this.state.selectLHRSActions} value={this.state.selectLHRSAction} />
 								</span>
 							</div>
-							<div
-								className={
-									"sc-lhrs-row sc-arrow" +
-									(this.state.a_valid ? "" : " sc-hidden")
-								}
-								title="Select a second point to create a linear feature"
-							>
+							<div className={"sc-lhrs-row sc-arrow" + (this.state.a_valid ? "" : " sc-hidden")} title="Select a second point to create a linear feature">
 								<label>Point:</label>
 								<span>
 									<Switch
 										className="sc-lhrs-point-switch"
 										onChange={this.onPointSwitchChange}
-										checked={
-											this.state.selectedPoint === "pointA" ? false : true
-										}
+										checked={this.state.selectedPoint === "pointA" ? false : true}
 										height={20}
 										width={160}
 										uncheckedIcon={<span className="off">Point A</span>}
@@ -1029,27 +838,10 @@ class LHRS extends Component {
 							/>
 						</div>
 						<div>
-							<div className="sc-title sc-lhrs-title">
-								Captured / Selected Coordinates
-							</div>
-							<div
-								className={
-									this.state.a_valid &&
-									this.state.b_valid &&
-									this.state.linearFeatureLength !== null
-										? ""
-										: " sc-hidden"
-								}
-							>
+							<div className="sc-title sc-lhrs-title">Captured / Selected Coordinates</div>
+							<div className={this.state.a_valid && this.state.b_valid && this.state.linearFeatureLength !== null ? "" : " sc-hidden"}>
 								<div className="sc-title sc-lhrs-title">Section</div>
-								<LHRSRow
-									label="Length (km)"
-									value={this.state.linearFeatureLength}
-									onChange={() => {}}
-									inputId="sc-lhrs-section-length"
-									readOnly={true}
-									placeholer=""
-								/>
+								<LHRSRow label="Length (km)" value={this.state.linearFeatureLength} onChange={() => {}} inputId="sc-lhrs-section-length" readOnly={true} placeholer="" />
 							</div>
 
 							<div className="sc-title sc-lhrs-title">Point A</div>
@@ -1084,9 +876,7 @@ class LHRS extends Component {
 
 export default LHRS;
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

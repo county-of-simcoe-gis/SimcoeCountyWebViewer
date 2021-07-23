@@ -23,32 +23,20 @@ class CommercialRealEstateLayerToggler extends Component {
 	componentDidMount() {
 		this.initLayer(() => {
 			// LEGEND
-			const styleUrlTemplate = (serverURL, layerName, styleName) =>
-				`${serverURL}wms?REQUEST=GetLegendGraphic&VERSION=1.1&FORMAT=image/png&WIDTH=30&HEIGHT=30&TRANSPARENT=true&LAYER=${layerName}`;
-			const styleUrl = styleUrlTemplate(
-				this.props.layer.serverUrl,
-				this.props.layer.layerName
-			);
+			const styleUrlTemplate = (serverURL, layerName, styleName) => `${serverURL}wms?REQUEST=GetLegendGraphic&VERSION=1.1&FORMAT=image/png&WIDTH=30&HEIGHT=30&TRANSPARENT=true&LAYER=${layerName}`;
+			const styleUrl = styleUrlTemplate(this.props.layer.serverUrl, this.props.layer.layerName);
 
 			// RECORD COUNT
-			helpers.getWFSLayerRecordCount(
-				this.props.layer.serverUrl,
-				this.props.layer.layerName,
-				(count) => {
-					this.setState({ recordCount: count, styleUrl: styleUrl });
-					// this.setState({ styleUrl: styleUrl });
-				}
-			);
+			helpers.getWFSLayerRecordCount(this.props.layer.serverUrl, this.props.layer.layerName, (count) => {
+				this.setState({ recordCount: count, styleUrl: styleUrl });
+				// this.setState({ styleUrl: styleUrl });
+			});
 
 			const rootInfoUrl = this.state.layer.get("rootInfoUrl");
 			helpers.getJSON(rootInfoUrl, (rootResult) => {
 				helpers.getJSON(rootResult.layer.resource.href, (result) => {
 					const abstract = result.featureType.abstract;
-					if (
-						abstract !== undefined &&
-						this.state.metadata === "Retreiving info...."
-					)
-						this.setState({ metadata: abstract });
+					if (abstract !== undefined && this.state.metadata === "Retreiving info....") this.setState({ metadata: abstract });
 				});
 			});
 
@@ -85,13 +73,7 @@ class CommercialRealEstateLayerToggler extends Component {
 	initLayer = (callback) => {
 		if (this.state.layer !== null) return;
 
-		const layer = helpers.getImageWMSLayer(
-			url.resolve(this.props.layer.serverUrl, "wms"),
-			this.props.layer.layerName,
-			"geoserver",
-			null,
-			50
-		);
+		const layer = helpers.getImageWMSLayer(url.resolve(this.props.layer.serverUrl, "wms"), this.props.layer.layerName, "geoserver", null, 50);
 
 		layer.setVisible(this.props.layer.visible);
 		layer.setZIndex(this.props.layer.zIndex);
@@ -102,12 +84,9 @@ class CommercialRealEstateLayerToggler extends Component {
 			disableParcelClick: false,
 		});
 		window.map.addLayer(layer);
-		this.setState(
-			{ layer: layer, layerVisible: this.props.layer.visible },
-			(layer) => {
-				callback();
-			}
-		);
+		this.setState({ layer: layer, layerVisible: this.props.layer.visible }, (layer) => {
+			callback();
+		});
 	};
 
 	onCheckboxClick = () => {
@@ -131,20 +110,11 @@ class CommercialRealEstateLayerToggler extends Component {
 		return (
 			<div>
 				<Collapsible
-					trigger={Header(
-						this.props.layer,
-						this.onCheckboxClick,
-						this.onPanelTrigger,
-						this.state.layerVisible,
-						this.state.styleUrl,
-						this.state.recordCount
-					)}
+					trigger={Header(this.props.layer, this.onCheckboxClick, this.onPanelTrigger, this.state.layerVisible, this.state.styleUrl, this.state.recordCount)}
 					open={this.state.panelOpen}
 					triggerDisabled={true}
 				>
-					<div className="sc-theme-commercial-real-estate-layers-layer-content">
-						{this.state.metadata}
-					</div>
+					<div className="sc-theme-commercial-real-estate-layers-layer-content">{this.state.metadata}</div>
 				</Collapsible>
 			</div>
 		);
@@ -154,41 +124,17 @@ class CommercialRealEstateLayerToggler extends Component {
 export default CommercialRealEstateLayerToggler;
 
 // HEADER TRIGGER
-const Header = (
-	layer,
-	onCheckboxClick,
-	onPanelTrigger,
-	layerVisible,
-	styleUrl,
-	recordCount
-) => {
+const Header = (layer, onCheckboxClick, onPanelTrigger, layerVisible, styleUrl, recordCount) => {
 	return (
 		<div className="sc-theme-commercial-real-estate-layers-layer-header">
 			<div className="sc-theme-commercial-real-estate-layers-center">
 				<img style={{ width: "20px" }} src={styleUrl} alt="legend" />
-				<input
-					className="sc-theme-commercial-real-estate-layers-checkbox"
-					type="checkbox"
-					onClick={onCheckboxClick}
-					checked={layerVisible}
-					readOnly
-				/>
-				<label
-					className="sc-theme-commercial-real-estate-layers-layer-label"
-					onClick={onCheckboxClick}
-				>
+				<input className="sc-theme-commercial-real-estate-layers-checkbox" type="checkbox" onClick={onCheckboxClick} checked={layerVisible} readOnly />
+				<label className="sc-theme-commercial-real-estate-layers-layer-label" onClick={onCheckboxClick}>
 					{layer.displayName}
 				</label>
-				<label className="sc-theme-commercial-real-estate-layers-layer-count">
-					{"(" + recordCount + ")"}
-				</label>
-				<img
-					className="sc-theme-commercial-real-estate-layers-information-icon"
-					src={information}
-					alt="show info"
-					onClick={onPanelTrigger}
-					title="Show Details"
-				/>
+				<label className="sc-theme-commercial-real-estate-layers-layer-count">{"(" + recordCount + ")"}</label>
+				<img className="sc-theme-commercial-real-estate-layers-information-icon" src={information} alt="show info" onClick={onPanelTrigger} title="Show Details" />
 			</div>
 		</div>
 	);

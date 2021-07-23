@@ -13,13 +13,7 @@ const ColorBar = (props) => {
 	});
 
 	return (
-		<div
-			className={
-				props.isEditing
-					? "sc-mymaps-colorbar-container sc-disabled"
-					: "sc-mymaps-colorbar-container"
-			}
-		>
+		<div className={props.isEditing ? "sc-mymaps-colorbar-container sc-disabled" : "sc-mymaps-colorbar-container"}>
 			<div className="sc-mymaps-colorbar" color="#000000">
 				<button
 					className={activeColor === "#000000" ? "active" : ""}

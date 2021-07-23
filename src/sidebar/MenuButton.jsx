@@ -5,17 +5,7 @@ import * as htmlToImage from "html-to-image";
 import { saveAs } from "file-saver";
 import { transformWithProjections } from "ol/proj";
 
-const feedbackTemplate = (
-	url,
-	xmin,
-	xmax,
-	ymin,
-	ymax,
-	centerx,
-	centery,
-	scale
-) =>
-	`${url}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
+const feedbackTemplate = (url, xmin, xmax, ymin, ymax, centerx, centery, scale) => `${url}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
 
 class MenuButton extends Component {
 	state = {
@@ -27,11 +17,7 @@ class MenuButton extends Component {
 		document.body.addEventListener(
 			"click",
 			(evt) => {
-				if (
-					typeof evt.target.className === "string" &&
-					evt.target.className.indexOf("sc-menu-") > -1
-				)
-					return;
+				if (typeof evt.target.className === "string" && evt.target.className.indexOf("sc-menu-") > -1) return;
 
 				if (this.state.isOpen) this.setState({ isOpen: !this.state.isOpen });
 			},
@@ -39,14 +25,10 @@ class MenuButton extends Component {
 		);
 
 		// LISTEN FOR MORE BUTTON
-		window.emitter.addListener("openMoreMenu", () =>
-			this.setState({ isOpen: true })
-		);
+		window.emitter.addListener("openMoreMenu", () => this.setState({ isOpen: true }));
 
 		//LISTEN FOR SCREENSHOT EVENT
-		window.emitter.addListener("takeScreenshot", () =>
-			this.onScreenshotClick()
-		);
+		window.emitter.addListener("takeScreenshot", () => this.onScreenshotClick());
 		helpers.waitForLoad("settings", Date.now(), 30, () => {
 			this.themes = this.getThemes();
 			this.others = this.getOthers();
@@ -57,24 +39,10 @@ class MenuButton extends Component {
 	// LOAD TOOLS FROM CONFIG
 	getTools = () => {
 		let itemList = [];
-		itemList.push(
-			<MenuItem
-				onClick={this.onScreenshotClick}
-				key={helpers.getUID()}
-				name={"Take a Screenshot"}
-				iconClass={"sc-menu-screenshot-icon"}
-			/>
-		);
+		itemList.push(<MenuItem onClick={this.onScreenshotClick} key={helpers.getUID()} name={"Take a Screenshot"} iconClass={"sc-menu-screenshot-icon"} />);
 		window.config.sidebarToolComponents.forEach((tool) => {
 			if (tool.enabled === undefined || tool.enabled)
-				itemList.push(
-					<MenuItem
-						onClick={() => this.itemClick(tool.name, "tools")}
-						key={helpers.getUID()}
-						name={tool.name}
-						iconClass={"sc-menu-tools-icon"}
-					/>
-				);
+				itemList.push(<MenuItem onClick={() => this.itemClick(tool.name, "tools")} key={helpers.getUID()} name={tool.name} iconClass={"sc-menu-tools-icon"} />);
 		});
 
 		return itemList;
@@ -85,14 +53,7 @@ class MenuButton extends Component {
 		let itemList = [];
 		window.config.sidebarThemeComponents.forEach((theme) => {
 			if (theme.enabled === undefined || theme.enabled)
-				itemList.push(
-					<MenuItem
-						onClick={() => this.itemClick(theme.name, "themes")}
-						key={helpers.getUID()}
-						name={theme.name}
-						iconClass={"sc-menu-theme-icon"}
-					/>
-				);
+				itemList.push(<MenuItem onClick={() => this.itemClick(theme.name, "themes")} key={helpers.getUID()} name={theme.name} iconClass={"sc-menu-theme-icon"} />);
 		});
 
 		return itemList;
@@ -101,90 +62,19 @@ class MenuButton extends Component {
 	// CUSTOM ENTRIES, COMMENT OUT IF YOU DON"T WANT IT
 	getOthers = () => {
 		let itemList = [];
+		itemList.push(<MenuItem onClick={() => helpers.showURLWindow(window.config.whatsNewUrl, true, "full", false, true)} key={helpers.getUID()} name={"What's New"} iconClass={"sc-menu-terms-icon"} />);
+		itemList.push(<MenuItem key={helpers.getUID()} name={"Feedback"} iconClass={"sc-menu-feedback-icon"} onClick={this.onFeedbackClick} />);
+		itemList.push(<MenuItem onClick={this.onScreenshotClick} key={helpers.getUID()} name={"Take a Screenshot"} iconClass={"sc-menu-screenshot-icon"} />);
+		itemList.push(<MenuItem key={helpers.getUID()} name={"Map Legend"} iconClass={"sc-menu-legend-icon"} onClick={() => window.emitter.emit("openLegend", null)} />);
+		itemList.push(<MenuItem onClick={() => helpers.showURLWindow(window.config.helpUrl, false, "full", false, true)} key={helpers.getUID()} name={"Help"} iconClass={"sc-menu-help-icon"} />);
 		itemList.push(
-			<MenuItem
-				onClick={() =>
-					helpers.showURLWindow(
-						window.config.whatsNewUrl,
-						true,
-						"full",
-						false,
-						true
-					)
-				}
-				key={helpers.getUID()}
-				name={"What's New"}
-				iconClass={"sc-menu-terms-icon"}
-			/>
-		);
-		itemList.push(
-			<MenuItem
-				key={helpers.getUID()}
-				name={"Feedback"}
-				iconClass={"sc-menu-feedback-icon"}
-				onClick={this.onFeedbackClick}
-			/>
-		);
-		itemList.push(
-			<MenuItem
-				onClick={this.onScreenshotClick}
-				key={helpers.getUID()}
-				name={"Take a Screenshot"}
-				iconClass={"sc-menu-screenshot-icon"}
-			/>
-		);
-		itemList.push(
-			<MenuItem
-				key={helpers.getUID()}
-				name={"Map Legend"}
-				iconClass={"sc-menu-legend-icon"}
-				onClick={() => window.emitter.emit("openLegend", null)}
-			/>
-		);
-		itemList.push(
-			<MenuItem
-				onClick={() =>
-					helpers.showURLWindow(
-						window.config.helpUrl,
-						false,
-						"full",
-						false,
-						true
-					)
-				}
-				key={helpers.getUID()}
-				name={"Help"}
-				iconClass={"sc-menu-help-icon"}
-			/>
-		);
-		itemList.push(
-			<MenuItem
-				onClick={() =>
-					helpers.showURLWindow(
-						window.config.termsUrl,
-						false,
-						"full",
-						false,
-						true
-					)
-				}
-				key={helpers.getUID()}
-				name={"Terms and Conditions"}
-				iconClass={"sc-menu-terms-icon"}
-			/>
+			<MenuItem onClick={() => helpers.showURLWindow(window.config.termsUrl, false, "full", false, true)} key={helpers.getUID()} name={"Terms and Conditions"} iconClass={"sc-menu-terms-icon"} />
 		);
 		return itemList;
 	};
 
 	getMyMaps = () => {
-		return (
-			<MenuItem
-				onClick={() => this.itemClick("mymaps", "mymaps")}
-				key={helpers.getUID()}
-				name={"My Maps"}
-				iconClass={"sc-menu-mymaps-icon"}
-			/>
-		);
+		return <MenuItem onClick={() => this.itemClick("mymaps", "mymaps")} key={helpers.getUID()} name={"My Maps"} iconClass={"sc-menu-mymaps-icon"} />;
 	};
 
 	itemClick = (name, type) => {
@@ -200,8 +90,7 @@ class MenuButton extends Component {
 
 	getMenuClassName = () => {
 		if (!this.state.isOpen) return "sc-hidden";
-		else if (window.sidebarOpen)
-			return "sc-menu-button-list-container sideBarOpen";
+		else if (window.sidebarOpen) return "sc-menu-button-list-container sideBarOpen";
 		else return "sc-menu-button-list-container";
 	};
 
@@ -233,22 +122,8 @@ class MenuButton extends Component {
 			const ymax = extent[3];
 			const center = window.map.getView().getCenter();
 
-			let feedbackUrl = feedbackTemplate(
-				window.config.feedbackUrl,
-				xmin,
-				xmax,
-				ymin,
-				ymax,
-				center[0],
-				center[1],
-				scale
-			);
-			if (
-				window.config.mapId !== null &&
-				window.config.mapId !== undefined &&
-				window.config.mapId.trim() !== ""
-			)
-				feedbackUrl += "&MAP_ID=" + window.config.mapId;
+			let feedbackUrl = feedbackTemplate(window.config.feedbackUrl, xmin, xmax, ymin, ymax, center[0], center[1], scale);
+			if (window.config.mapId !== null && window.config.mapId !== undefined && window.config.mapId.trim() !== "") feedbackUrl += "&MAP_ID=" + window.config.mapId;
 
 			helpers.showURLWindow(feedbackUrl, false, "full");
 		});
@@ -258,40 +133,18 @@ class MenuButton extends Component {
 		const menuListClassName = this.getMenuClassName();
 		return (
 			<div
-				className={
-					"sc-menu-button-main-container" +
-					(this.props.hidden ? " sc-hidden" : "") +
-					(this.props.className !== undefined && this.props.className !== ""
-						? " " + this.props.className
-						: "")
-				}
+				className={"sc-menu-button-main-container" + (this.props.hidden ? " sc-hidden" : "") + (this.props.className !== undefined && this.props.className !== "" ? " " + this.props.className : "")}
 				alt="More Options"
 				title="More Options"
 			>
-				<div
-					className="sc-menu-button-container"
-					style={{ cursor: "pointer" }}
-					onClick={this.onMenuButtonClick}
-				>
+				<div className="sc-menu-button-container" style={{ cursor: "pointer" }} onClick={this.onMenuButtonClick}>
 					<button className="sc-menu-more-button">
-						<img
-							src={images["more.png"]}
-							style={{ pointerEvents: "none" }}
-							alt="More Options"
-							title="More Options"
-						/>
-						{this.props.showLabel !== undefined && !this.props.showLabel ? (
-							<span style={{ display: "none" }}>&nbsp;</span>
-						) : (
-							<span style={{ pointerEvents: "none" }}>More</span>
-						)}
+						<img src={images["more.png"]} style={{ pointerEvents: "none" }} alt="More Options" title="More Options" />
+						{this.props.showLabel !== undefined && !this.props.showLabel ? <span style={{ display: "none" }}>&nbsp;</span> : <span style={{ pointerEvents: "none" }}>More</span>}
 					</button>
 				</div>
 				<div id="sc-menu-button-list-container" className={menuListClassName}>
-					<div
-						className="sc-menu-list-item-heading"
-						style={{ paddingTop: "0px" }}
-					>
+					<div className="sc-menu-list-item-heading" style={{ paddingTop: "0px" }}>
 						MAP THEMES
 					</div>
 					{this.themes}
@@ -312,18 +165,14 @@ class MenuItem extends Component {
 	render() {
 		return (
 			<div className="sc-menu-list-item" onClick={this.props.onClick}>
-				<div className={"sc-menu-list-item-label " + this.props.iconClass}>
-					{this.props.name}
-				</div>
+				<div className={"sc-menu-list-item-label " + this.props.iconClass}>{this.props.name}</div>
 			</div>
 		);
 	}
 }
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

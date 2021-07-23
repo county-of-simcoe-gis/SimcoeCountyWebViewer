@@ -32,10 +32,7 @@ const CommercialRealEstatePopupContent = (props) => {
 
 	return (
 		<div>
-			<div
-				className="sc-theme-commercial-real-estate-popup-image-container"
-				style={{ textAlign: "center" }}
-			>
+			<div className="sc-theme-commercial-real-estate-popup-image-container" style={{ textAlign: "center" }}>
 				<img
 					style={{ width: "130px", maxHeight: "120px" }}
 					src={urlThumb === null ? images["noPhoto.png"] : urlThumb}
@@ -45,47 +42,25 @@ const CommercialRealEstatePopupContent = (props) => {
 						e.target.src = images["noPhoto.png"];
 					}}
 				/>
-				<label className="sc-theme-commercial-real-estate-popup-image-label">
-					{feature.get("Address") + ", " + feature.get("Municipality")}
-				</label>
+				<label className="sc-theme-commercial-real-estate-popup-image-label">{feature.get("Address") + ", " + feature.get("Municipality")}</label>
 			</div>
 			<div className="sc-theme-commercial-real-estate-popup-details-container">
 				<div className="sc-theme-commercial-real-estate-row-container">
-					<label className="sc-theme-commercial-real-estate-popup-row-label">
-						Price:
-					</label>
-					<label className="sc-theme-commercial-real-estate-popup-row-value">
-						{"$" + numberWithCommas(feature.get("_listprice"))}
-					</label>
+					<label className="sc-theme-commercial-real-estate-popup-row-label">Price:</label>
+					<label className="sc-theme-commercial-real-estate-popup-row-value">{"$" + numberWithCommas(feature.get("_listprice"))}</label>
 				</div>
 				<div className="sc-theme-commercial-real-estate-row-container">
-					<label className="sc-theme-commercial-real-estate-popup-row-label">
-						Sale Type:
-					</label>
-					<label className="sc-theme-commercial-real-estate-popup-row-value">
-						{feature.get("_saletype")}
-					</label>
+					<label className="sc-theme-commercial-real-estate-popup-row-label">Sale Type:</label>
+					<label className="sc-theme-commercial-real-estate-popup-row-value">{feature.get("_saletype")}</label>
 				</div>
 				<div className="sc-theme-commercial-real-estate-row-container">
-					<label className="sc-theme-commercial-real-estate-popup-row-label">
-						Size:
-					</label>
-					<label className="sc-theme-commercial-real-estate-popup-row-value">
-						{feature.get("_squarefeet") === 0
-							? "Not Available"
-							: feature.get("_squarefeet")}
-					</label>
+					<label className="sc-theme-commercial-real-estate-popup-row-label">Size:</label>
+					<label className="sc-theme-commercial-real-estate-popup-row-value">{feature.get("_squarefeet") === 0 ? "Not Available" : feature.get("_squarefeet")}</label>
 				</div>
 				<div className="sc-theme-commercial-real-estate-row-container">
-					<label className="sc-theme-commercial-real-estate-popup-row-label">
-						Brochure:
-					</label>
+					<label className="sc-theme-commercial-real-estate-popup-row-label">Brochure:</label>
 					<label className="sc-theme-commercial-real-estate-popup-row-value">
-						<a
-							href={feature.get("_brochureurl")}
-							target="_blank"
-							rel="noopener noreferrer"
-						>
+						<a href={feature.get("_brochureurl")} target="_blank" rel="noopener noreferrer">
 							View PDF
 						</a>
 					</label>
@@ -97,9 +72,7 @@ const CommercialRealEstatePopupContent = (props) => {
 					className="sc-button sc-theme-commercial-real-estate-popup-button"
 					onClick={() => {
 						const mlsNumber = feature.get("MLS Number");
-						const url =
-							"https://maps.simcoe.ca/EconomicDevelopmentReport/?header=false&MLSNUMBER=" +
-							mlsNumber;
+						const url = "https://maps.simcoe.ca/EconomicDevelopmentReport/?header=false&MLSNUMBER=" + mlsNumber;
 						helpers.showURLWindow(url, false, undefined, undefined, false);
 					}}
 				>
@@ -109,12 +82,7 @@ const CommercialRealEstatePopupContent = (props) => {
 					className="sc-button sc-theme-commercial-real-estate-popup-button"
 					onClick={() => {
 						const url = feature.get("Website");
-						if (url === null)
-							helpers.showMessage(
-								"Listing",
-								"Listing website not available",
-								"yellow"
-							);
+						if (url === null) helpers.showMessage("Listing", "Listing website not available", "yellow");
 						else window.open(url, "_blank");
 					}}
 				>
@@ -136,9 +104,7 @@ const CommercialRealEstatePopupContent = (props) => {
 export default CommercialRealEstatePopupContent;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

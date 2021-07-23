@@ -12,11 +12,7 @@ class SidebarSlim extends Component {
 
 	render() {
 		return (
-			<div
-				className={
-					window.sidebarOpen ? "sc-hidden" : "sc-sidebar-slim-container"
-				}
-			>
+			<div className={window.sidebarOpen ? "sc-hidden" : "sc-sidebar-slim-container"}>
 				<SlimButton
 					title="Layers"
 					image="legend-32x32.png"
@@ -81,20 +77,8 @@ class SlimButton extends Component {
 
 	render() {
 		return (
-			<div
-				key={helpers.getUID()}
-				className={
-					"sc-sidebar-slim-button-container" +
-					(this.props.isSelected ? " active" : "") +
-					(this.props.hidden ? " sc-hidden" : "")
-				}
-				onClick={this.props.onClick}
-			>
-				<span
-					className={
-						this.props.isActive ? "sc-sidebar-slim-button-dot" : "sc-hidden"
-					}
-				/>
+			<div key={helpers.getUID()} className={"sc-sidebar-slim-button-container" + (this.props.isSelected ? " active" : "") + (this.props.hidden ? " sc-hidden" : "")} onClick={this.props.onClick}>
+				<span className={this.props.isActive ? "sc-sidebar-slim-button-dot" : "sc-hidden"} />
 				<button className="sc-sidebar-slim-button">
 					<img src={images[this.props.image]} alt={this.props.title} />
 					<br />
@@ -106,9 +90,7 @@ class SlimButton extends Component {
 }
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

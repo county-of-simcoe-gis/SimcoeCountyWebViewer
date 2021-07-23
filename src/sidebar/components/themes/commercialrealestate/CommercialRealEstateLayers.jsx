@@ -8,12 +8,7 @@ const CommercialRealEstateLayers = React.memo((props) => {
 			<div className="sc-title">Layers</div>
 			<div className="sc-border-top" style={{ paddingBottom: "5px" }}>
 				{props.layers.map((layer) => {
-					return (
-						<CommercialRealEstateLayerToggler
-							key={helpers.getUID()}
-							layer={layer}
-						/>
-					);
+					return <CommercialRealEstateLayerToggler key={helpers.getUID()} layer={layer} />;
 				})}
 			</div>
 		</div>

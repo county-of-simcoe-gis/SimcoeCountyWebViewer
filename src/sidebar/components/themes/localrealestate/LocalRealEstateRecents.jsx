@@ -15,30 +15,17 @@ class LocalRealEstateRecents extends Component {
 			<div>
 				<div className="sc-title">
 					MY RECENTLY VIEWED ITEMS
-					<label
-						className="sc-fakeLink sc-theme-real-estate-remove-all"
-						onClick={this.props.onRemoveAll}
-					>
+					<label className="sc-fakeLink sc-theme-real-estate-remove-all" onClick={this.props.onRemoveAll}>
 						remove all
 					</label>
 				</div>
-				<div
-					className={
-						this.props.viewedItems.length !== 0 ? "sc-hidden" : "sc-container"
-					}
-				>
-					There are currently no recently viewed items.
-				</div>
+				<div className={this.props.viewedItems.length !== 0 ? "sc-hidden" : "sc-container"}>There are currently no recently viewed items.</div>
 				<div className="sc-theme-real-estate-recent-container">
 					<TransitionGroup>
 						{this.props.viewedItems.map((geoJson) => {
 							const feature = helpers.getFeatureFromGeoJSON(geoJson);
 							return (
-								<CSSTransition
-									key={feature.get("_mlsno")}
-									classNames="sc-theme-real-estate-recent-item-container"
-									timeout={200}
-								>
+								<CSSTransition key={feature.get("_mlsno")} classNames="sc-theme-real-estate-recent-item-container" timeout={200}>
 									<div className="sc-container sc-theme-real-estate-recent-item-container">
 										<div>
 											<img
@@ -52,16 +39,8 @@ class LocalRealEstateRecents extends Component {
 											/>
 										</div>
 										<div className="sc-theme-real-estate-recent-info">
-											<InfoRow
-												key={helpers.getUID()}
-												label={"Address"}
-												value={feature.get("Address")}
-											/>
-											<InfoRow
-												key={helpers.getUID()}
-												label={"Municipality"}
-												value={feature.get("Municipality")}
-											/>
+											<InfoRow key={helpers.getUID()} label={"Address"} value={feature.get("Address")} />
+											<InfoRow key={helpers.getUID()} label={"Municipality"} value={feature.get("Municipality")} />
 											<div className="sc-theme-real-estate-button-container">
 												<button
 													className="sc-button sc-theme-real-estate-recent-button"
@@ -96,9 +75,7 @@ class LocalRealEstateRecents extends Component {
 export default LocalRealEstateRecents;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

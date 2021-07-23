@@ -15,10 +15,7 @@ import mainConfig from "./config.json";
 import ReactGA from "react-ga";
 import xml2js from "xml2js";
 
-if (
-	mainConfig.googleAnalyticsID !== undefined &&
-	mainConfig.googleAnalyticsID !== ""
-) {
+if (mainConfig.googleAnalyticsID !== undefined && mainConfig.googleAnalyticsID !== "") {
 	ReactGA.initialize(mainConfig.googleAnalyticsID);
 	ReactGA.pageview(window.location.pathname + window.location.search);
 }
@@ -48,10 +45,7 @@ class LegendApp extends Component {
 		if (this.props.groups !== undefined) {
 			this.setState({
 				groups: this.props.groups,
-				selectedGroups:
-					this.props.selectedGroups === undefined
-						? []
-						: this.props.selectedGroups,
+				selectedGroups: this.props.selectedGroups === undefined ? [] : this.props.selectedGroups,
 				hideNewWindow: true,
 				hideShare: true,
 			});
@@ -124,16 +118,8 @@ class LegendApp extends Component {
 					if (layerInfo.Layer !== undefined) {
 						const groupName = layerInfo.Name[0];
 						const groupDisplayName = layerInfo.Title[0];
-						const groupUrl =
-							url.split("/geoserver/")[0] +
-							"/geoserver/" +
-							helpers.replaceAllInString(groupName, ":", "/") +
-							"/ows?service=wms&version=1.3.0&request=GetCapabilities";
-						const fullGroupUrl =
-							url.split("/geoserver/")[0] +
-							"/geoserver/" +
-							helpers.replaceAllInString(groupName, ":", "/") +
-							"/ows?service=wms&version=1.3.0&request=GetCapabilities";
+						const groupUrl = url.split("/geoserver/")[0] + "/geoserver/" + helpers.replaceAllInString(groupName, ":", "/") + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
+						const fullGroupUrl = url.split("/geoserver/")[0] + "/geoserver/" + helpers.replaceAllInString(groupName, ":", "/") + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
 
 						let layerList = [];
 						if (layerInfo.Layer !== undefined) {
@@ -151,14 +137,9 @@ class LegendApp extends Component {
 								if (layers === undefined) return;
 								layers.forEach((currentLayer) => {
 									if (!this.isDuplicate(layerList, currentLayer.Name[0])) {
-										this.buildLayerByGroup(
-											tmpGroupObj,
-											currentLayer,
-											layerIndex,
-											(result) => {
-												layerList.push(result);
-											}
-										);
+										this.buildLayerByGroup(tmpGroupObj, currentLayer, layerIndex, (result) => {
+											layerList.push(result);
+										});
 										layerIndex--;
 
 										buildLayers(currentLayer.Layer);
@@ -187,8 +168,7 @@ class LegendApp extends Component {
 					}
 				});
 			});
-			if (defaultGroup === undefined || defaultGroup === null)
-				defaultGroup = groups[0];
+			if (defaultGroup === undefined || defaultGroup === null) defaultGroup = groups[0];
 
 			callback([groups, defaultGroup]);
 		});
@@ -209,29 +189,20 @@ class LegendApp extends Component {
 			let layerTitle = layer.Title[0];
 			if (layerTitle === undefined) layerTitle = layerNameOnly;
 			let keywords = [];
-			if (layer.KeywordList !== undefined && layer.KeywordList.length > 0)
-				keywords = layer.KeywordList[0].Keyword;
+			if (layer.KeywordList !== undefined && layer.KeywordList.length > 0) keywords = layer.KeywordList[0].Keyword;
 
-			let styleUrl = layer.Style[0].LegendURL[0].OnlineResource[0].$[
-				"xlink:href"
-			].replace("http", "https");
+			let styleUrl = layer.Style[0].LegendURL[0].OnlineResource[0].$["xlink:href"].replace("http", "https");
 			let legendSizeOverride = this._getStaticImageLegend(keywords);
 
 			if (legendSizeOverride && styleUrl !== "") {
-				const legendSize =
-					layer.Style !== undefined ? layer.Style[0].LegendURL[0].$ : [20, 20];
-				styleUrl = styleUrl
-					.replace("width=20", `width=${legendSize.width}`)
-					.replace("height=20", `height=${legendSize.height}`);
+				const legendSize = layer.Style !== undefined ? layer.Style[0].LegendURL[0].$ : [20, 20];
+				styleUrl = styleUrl.replace("width=20", `width=${legendSize.width}`).replace("height=20", `height=${legendSize.height}`);
 			}
-			const serverUrl =
-				group.wmsGroupUrl.split("/geoserver/")[0] + "/geoserver";
-			const wfsUrlTemplate = (serverUrl, layerName) =>
-				`${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&cql_filter=`;
+			const serverUrl = group.wmsGroupUrl.split("/geoserver/")[0] + "/geoserver";
+			const wfsUrlTemplate = (serverUrl, layerName) => `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json&cql_filter=`;
 			const wfsUrl = wfsUrlTemplate(serverUrl, layer.Name[0]);
 
-			const metadataUrlTemplate = (serverUrl, layerName) =>
-				`${serverUrl}/rest/layers/${layerName}.json`;
+			const metadataUrlTemplate = (serverUrl, layerName) => `${serverUrl}/rest/layers/${layerName}.json`;
 			const metadataUrl = metadataUrlTemplate(serverUrl, layer.Name[0]);
 
 			// TOC DISPLAY NAME
@@ -269,13 +240,7 @@ class LegendApp extends Component {
 
 	render() {
 		const childElements = this.state.selectedGroups.map((group) => {
-			return (
-				<GroupItem
-					key={helpers.getUID()}
-					group={group}
-					center={this.state.justifyCenter}
-				/>
-			);
+			return <GroupItem key={helpers.getUID()} group={group} center={this.state.justifyCenter} />;
 		});
 
 		const breakpointColumnsObj = {
@@ -313,60 +278,32 @@ class LegendApp extends Component {
 
 				<div className={styles.justifyButtons}>
 					<div
-						className={`no-print ${
-							this.state.justifyCenter
-								? styles.justifyButtonContainer
-								: cx(styles.justifyButtonContainer, styles.activeButton)
-						}`}
+						className={`no-print ${this.state.justifyCenter ? styles.justifyButtonContainer : cx(styles.justifyButtonContainer, styles.activeButton)}`}
 						onClick={() => this.setState({ justifyCenter: false })}
 					>
-						<img
-							className={styles.justifyImage}
-							src={images["left-justify.png"]}
-							alt="left-justify"
-							title="Left Justify"
-						></img>
+						<img className={styles.justifyImage} src={images["left-justify.png"]} alt="left-justify" title="Left Justify"></img>
 					</div>
 
 					<div
-						className={`no-print ${
-							this.state.justifyCenter
-								? cx(styles.justifyButtonContainer, styles.activeButton)
-								: styles.justifyButtonContainer
-						}`}
+						className={`no-print ${this.state.justifyCenter ? cx(styles.justifyButtonContainer, styles.activeButton) : styles.justifyButtonContainer}`}
 						onClick={() => this.setState({ justifyCenter: true })}
 					>
-						<img
-							className={styles.justifyImage}
-							src={images["center-justify.png"]}
-							alt="right-justify"
-							title="Center Justify"
-						></img>
+						<img className={styles.justifyImage} src={images["center-justify.png"]} alt="right-justify" title="Center Justify"></img>
 					</div>
 				</div>
-				<Masonry
-					breakpointCols={breakpointColumnsObj}
-					className="my-masonry-grid"
-					columnClassName="my-masonry-grid_column"
-				>
+				<Masonry breakpointCols={breakpointColumnsObj} className="my-masonry-grid" columnClassName="my-masonry-grid_column">
 					{childElements}
 				</Masonry>
 				<div className="footer">
 					<div style={{ float: "left" }}>
 						Layer info page generated using{" "}
-						<a
-							href="https://opengis.simcoe.ca"
-							target="_blank"
-							rel="noopener noreferrer"
-						>
+						<a href="https://opengis.simcoe.ca" target="_blank" rel="noopener noreferrer">
 							opengis.simcoe.ca
 						</a>{" "}
 						interactive mapping.
 						<br />
 					</div>
-					<div style={{ float: "right" }}>
-						{"Generated on: " + legendHelpers.formatDate()}
-					</div>
+					<div style={{ float: "right" }}>{"Generated on: " + legendHelpers.formatDate()}</div>
 				</div>
 			</div>
 		);
@@ -376,9 +313,7 @@ class LegendApp extends Component {
 export default LegendApp;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	// eslint-disable-next-line

@@ -15,12 +15,7 @@ class ToolComponent extends Component {
 
 	render() {
 		return (
-			<PanelComponent
-				onClose={this.onClose}
-				name={this.props.name}
-				helpLink={this.props.helpLink}
-				type="tools"
-			>
+			<PanelComponent onClose={this.onClose} name={this.props.name} helpLink={this.props.helpLink} type="tools">
 				<div>Put your components in here.</div>
 			</PanelComponent>
 		);

@@ -8,9 +8,7 @@ import printConfig from "./config.json";
 import "./Print.css";
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(gif|png|jpe?g|svg)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(gif|png|jpe?g|svg)$/));
 function importAllImages(r) {
 	let images = {};
 	// eslint-disable-next-line
@@ -47,8 +45,7 @@ class Print extends Component {
 			//const printConfig = printConfig;
 			const globalConfig = helpers.getConfig("TOOLS", "Print");
 			const mainConfig = window.config;
-			if (globalConfig.config !== undefined)
-				this.config = helpers.mergeObj(this.config, globalConfig.config);
+			if (globalConfig.config !== undefined) this.config = helpers.mergeObj(this.config, globalConfig.config);
 			this.setState({
 				printUrl: mainConfig.printUrl,
 				originUrl: mainConfig.originUrl,
@@ -87,8 +84,7 @@ class Print extends Component {
 		this.setState({ mapResolutionOption: evt.target.value });
 	};
 	onMapScaleOptions = (evt) => {
-		if (evt.target.type === "radio")
-			this.setState({ mapScaleOption: evt.target.value });
+		if (evt.target.type === "radio") this.setState({ mapScaleOption: evt.target.value });
 	};
 
 	onMapOnlyWidth = (evt) => {
@@ -145,12 +141,7 @@ class Print extends Component {
 					//console.log(data);
 					if (data.done === true && data.status === "finished") {
 						interval = 0;
-						helpers.showMessage(
-							"Print",
-							"Your print has been downloaded",
-							helpers.messageColors.green,
-							10000
-						);
+						helpers.showMessage("Print", "Your print has been downloaded", helpers.messageColors.green, 10000);
 
 						//try creating an auto click link, fall back to window.open
 						try {
@@ -175,12 +166,7 @@ class Print extends Component {
 					} else if (data.done === true && data.status === "error") {
 						console.log(data);
 						console.log(JSON.stringify(printData));
-						helpers.showMessage(
-							"Print Failed",
-							"If this error persists, please use the Feedback button to notify the site admin",
-							helpers.messageColors.red,
-							15000
-						);
+						helpers.showMessage("Print Failed", "If this error persists, please use the Feedback button to notify the site admin", helpers.messageColors.red, 15000);
 						this.setState({ isPrinting: false });
 					}
 				});
@@ -193,14 +179,7 @@ class Print extends Component {
 				this.setState({ isPrinting: true });
 				checkStatus(response);
 			})
-			.catch((error) =>
-				helpers.showMessage(
-					"Print Failed",
-					`There has been a problem with your fetch operation: ${error.message}`,
-					helpers.messageColors.red,
-					15000
-				)
-			);
+			.catch((error) => helpers.showMessage("Print Failed", `There has been a problem with your fetch operation: ${error.message}`, helpers.messageColors.red, 15000));
 		helpers.addAppStat("Print Button", "Click");
 	};
 
@@ -236,25 +215,14 @@ class Print extends Component {
 		};
 
 		return (
-			<PanelComponent
-				onClose={this.props.onClose}
-				name={this.props.name}
-				helpLink={this.props.helpLink}
-				type="tools"
-			>
+			<PanelComponent onClose={this.props.onClose} name={this.props.name} helpLink={this.props.helpLink} type="tools">
 				<div className="sc-print-container">
 					{/* TAKE SNAPSHOT */}
 					<div className="sc-print-screenshot-container sc-border-bottom">
-						<div
-							className="sc-button sc-print-screenshot-button"
-							onClick={() => window.emitter.emit("takeScreenshot")}
-							title="Save a Screenshot"
-							alt="Save a Screenshot"
-						>
+						<div className="sc-button sc-print-screenshot-button" onClick={() => window.emitter.emit("takeScreenshot")} title="Save a Screenshot" alt="Save a Screenshot">
 							<div className="sc-print-screenshot-icon">&nbsp;</div>
 						</div>
-						Is your Print too grainy or low quality? <br /> Click here for a
-						high resolution screenshot
+						Is your Print too grainy or low quality? <br /> Click here for a high resolution screenshot
 					</div>
 
 					{/* MAP TITLE */}
@@ -274,35 +242,17 @@ class Print extends Component {
 
 					{/* PRINT SIZE */}
 					<label style={{ fontWeight: "bold" }}>Select Paper Size:</label>
-					<Select
-						styles={dropdownStyles}
-						isSearchable={false}
-						options={this.state.printSizes}
-						value={this.state.printSizeSelectedOption}
-						onChange={this.onChangePaperSize}
-					/>
+					<Select styles={dropdownStyles} isSearchable={false} options={this.state.printSizes} value={this.state.printSizeSelectedOption} onChange={this.onChangePaperSize} />
 
 					{/* FORMAT */}
 					<label style={{ fontWeight: "bold" }}>Select Output Format:</label>
-					<Select
-						styles={dropdownStyles}
-						isSearchable={false}
-						options={this.state.printFormats}
-						value={this.state.printFormatSelectedOption}
-						onChange={this.onChangeFormat}
-					/>
+					<Select styles={dropdownStyles} isSearchable={false} options={this.state.printFormats} value={this.state.printFormatSelectedOption} onChange={this.onChangeFormat} />
 
 					{/* PRINT BUTTON */}
-					<button
-						className="sc-button sc-print-button"
-						onClick={this.onDownloadButtonClick}
-						disabled={this.state.isPrinting}
-					>
+					<button className="sc-button sc-print-button" onClick={this.onDownloadButtonClick} disabled={this.state.isPrinting}>
 						Print
 					</button>
-					<div
-						className={this.state.isPrinting ? "sc-print-loading" : "sc-hidden"}
-					>
+					<div className={this.state.isPrinting ? "sc-print-loading" : "sc-hidden"}>
 						Printing...&nbsp;
 						<img src={images["loading20.gif"]} alt="loading" />
 					</div>
@@ -315,110 +265,41 @@ class Print extends Component {
 						contentOuterClassName="sc-print-advanced-options-content-outer"
 						trigger={optionsHeader}
 					>
-						<label style={{ fontSize: "10pt", fontWeight: "bold" }}>
-							Map Scale/Extent:
-						</label>
+						<label style={{ fontSize: "10pt", fontWeight: "bold" }}>Map Scale/Extent:</label>
 						<div style={{ fontSize: "10pt" }} onChange={this.onMapScaleOptions}>
-							<input
-								type="radio"
-								name="mapscale"
-								id="mapscale-preserveMapScale"
-								value="preserveMapScale"
-								defaultChecked
-							/>
-							<label htmlFor="mapscale-preserveMapScale">
-								Preserve Map Scale
-							</label>
+							<input type="radio" name="mapscale" id="mapscale-preserveMapScale" value="preserveMapScale" defaultChecked />
+							<label htmlFor="mapscale-preserveMapScale">Preserve Map Scale</label>
 							<br />
-							<input
-								type="radio"
-								name="mapscale"
-								id="mapscale-preserveMapExtent"
-								value="preserveMapExtent"
-							/>
-							<label htmlFor="mapscale-preserveMapExtent">
-								Preserve Map Extent
-							</label>
+							<input type="radio" name="mapscale" id="mapscale-preserveMapExtent" value="preserveMapExtent" />
+							<label htmlFor="mapscale-preserveMapExtent">Preserve Map Extent</label>
 							<br />
-							<input
-								type="radio"
-								name="mapscale"
-								id="mapscale-forceScale"
-								value="forceScale"
-							/>
+							<input type="radio" name="mapscale" id="mapscale-forceScale" value="forceScale" />
 							<label htmlFor="mapscale-forceScale">Force Scale:</label>
-							<input
-								className="sc-print-advanced-options-force-scale-input"
-								onChange={this.onForceScaleChange}
-								value={this.state.forceScale}
-							/>
+							<input className="sc-print-advanced-options-force-scale-input" onChange={this.onForceScaleChange} value={this.state.forceScale} />
 						</div>
-						<label style={{ fontSize: "10pt", fontWeight: "bold" }}>
-							Map Only - Image Size:
-						</label>
+						<label style={{ fontSize: "10pt", fontWeight: "bold" }}>Map Only - Image Size:</label>
 						<br />
 						<label>Width (px):</label>
-						<input
-							className="sc-print-advanced-options-force-scale-input"
-							onChange={this.onMapOnlyWidth}
-							value={this.state.mapOnlyWidth}
-						/>
+						<input className="sc-print-advanced-options-force-scale-input" onChange={this.onMapOnlyWidth} value={this.state.mapOnlyWidth} />
 						<br />
 						<label>Height (px):</label>
-						<input
-							className="sc-print-advanced-options-force-scale-input"
-							onChange={this.onMapOnlyHeight}
-							value={this.state.mapOnlyHeight}
-						/>
+						<input className="sc-print-advanced-options-force-scale-input" onChange={this.onMapOnlyHeight} value={this.state.mapOnlyHeight} />
 						<br />
-						<label style={{ fontSize: "10pt", fontWeight: "bold" }}>
-							Map Output Resolution:
-						</label>
-						<div
-							style={{ fontSize: "10pt" }}
-							onChange={this.onMapResolutionOptions}
-						>
-							<input
-								type="radio"
-								name="mapresolution"
-								id="mapresolution-veryhigh"
-								value="300"
-							/>
-							<label htmlFor="mapresolution-veryhigh">
-								Very High - 300 dpi
-							</label>
+						<label style={{ fontSize: "10pt", fontWeight: "bold" }}>Map Output Resolution:</label>
+						<div style={{ fontSize: "10pt" }} onChange={this.onMapResolutionOptions}>
+							<input type="radio" name="mapresolution" id="mapresolution-veryhigh" value="300" />
+							<label htmlFor="mapresolution-veryhigh">Very High - 300 dpi</label>
 							<br />
-							<input
-								type="radio"
-								name="mapresolution"
-								id="mapresolution-high"
-								value="180"
-							/>
+							<input type="radio" name="mapresolution" id="mapresolution-high" value="180" />
 							<label htmlFor="mapresolution-high">High - 180 dpi</label>
 							<br />
-							<input
-								type="radio"
-								name="mapresolution"
-								id="mapresolution-medium"
-								value="120"
-								defaultChecked
-							/>
+							<input type="radio" name="mapresolution" id="mapresolution-medium" value="120" defaultChecked />
 							<label htmlFor="mapresolution-medium">Medium - 120 dpi</label>
 							<br />
-							<input
-								type="radio"
-								name="mapresolution"
-								id="mapresolution-low"
-								value="90"
-							/>
+							<input type="radio" name="mapresolution" id="mapresolution-low" value="90" />
 							<label htmlFor="mapresolution-low">Low - 90 dpi</label>
 							<br />
-							<input
-								type="radio"
-								name="mapresolution"
-								id="mapresolution-verylow"
-								value="60"
-							/>
+							<input type="radio" name="mapresolution" id="mapresolution-verylow" value="60" />
 							<label htmlFor="mapresolution-verylow">Very Low - 60 dpi</label>
 						</div>
 					</Collapsible>

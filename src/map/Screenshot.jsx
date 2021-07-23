@@ -13,9 +13,7 @@ class Screenshot extends Component {
 		};
 
 		// LISTEN FOR SIDEPANEL CHANGES
-		window.emitter.addListener("sidebarChanged", (isSidebarOpen) =>
-			this.sidebarChanged(isSidebarOpen)
-		);
+		window.emitter.addListener("sidebarChanged", (isSidebarOpen) => this.sidebarChanged(isSidebarOpen));
 	}
 
 	onScreenshotClick = () => {
@@ -47,26 +45,9 @@ class Screenshot extends Component {
 
 	render() {
 		return (
-			<div
-				className={this.state.containerClassName}
-				data-tip="Take Screenshot"
-				data-for="sc-screenshot-tooltip"
-				onClick={this.onScreenshotClick}
-			>
-				<ReactTooltip
-					id="sc-screenshot-tooltip"
-					className="sc-screenshot-tooltip"
-					multiline={false}
-					place="right"
-					type="dark"
-					effect="solid"
-					style={{ width: "1000px" }}
-				/>
-				<img
-					src={images["capture.png"]}
-					style={{ width: "26px" }}
-					alt="Take Screenshot"
-				></img>
+			<div className={this.state.containerClassName} data-tip="Take Screenshot" data-for="sc-screenshot-tooltip" onClick={this.onScreenshotClick}>
+				<ReactTooltip id="sc-screenshot-tooltip" className="sc-screenshot-tooltip" multiline={false} place="right" type="dark" effect="solid" style={{ width: "1000px" }} />
+				<img src={images["capture.png"]} style={{ width: "26px" }} alt="Take Screenshot"></img>
 			</div>
 		);
 	}
@@ -75,9 +56,7 @@ class Screenshot extends Component {
 export default Screenshot;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

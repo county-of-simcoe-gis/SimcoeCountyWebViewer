@@ -19,12 +19,7 @@ class MyMapsBuffer extends Component {
 		this.bufferFeature = null;
 
 		// REGISTER CUSTOM PROJECTIONS
-		proj4.defs([
-			[
-				"EPSG:26917",
-				"+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs ",
-			],
-		]);
+		proj4.defs([["EPSG:26917", "+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs "]]);
 		register(proj4);
 
 		// UTM NAD 83
@@ -63,12 +58,7 @@ class MyMapsBuffer extends Component {
 				width: 3,
 			}),
 			fill: new Fill({
-				color: [
-					this.state.color.r,
-					this.state.color.g,
-					this.state.color.b,
-					0.7,
-				],
+				color: [this.state.color.r, this.state.color.g, this.state.color.b, 0.7],
 			}),
 		});
 	};
@@ -85,21 +75,11 @@ class MyMapsBuffer extends Component {
 	};
 
 	onColorPickerButton = (evt) => {
-		if (this.state.colorPickerVisible)
-			this.setState({ colorPickerVisible: false });
+		if (this.state.colorPickerVisible) this.setState({ colorPickerVisible: false });
 		else this.setState({ colorPickerVisible: true });
 
-		const compactPicker = (
-			<CompactPicker
-				color={this.state.color}
-				onChangeComplete={this.onColorPickerChange}
-			/>
-		);
-		const colorPicker = new ColorPicker(
-			evt,
-			compactPicker,
-			this.colorPickerButtonId
-		);
+		const compactPicker = <CompactPicker color={this.state.color} onChangeComplete={this.onColorPickerChange} />;
+		const colorPicker = new ColorPicker(evt, compactPicker, this.colorPickerButtonId);
 		colorPicker.show();
 	};
 
@@ -112,26 +92,20 @@ class MyMapsBuffer extends Component {
 
 	onPreviewBufferClick = (evt) => {
 		// GET FEATURE
-		const feature = helpers.getFeatureFromGeoJSON(
-			this.props.item.featureGeoJSON
-		);
+		const feature = helpers.getFeatureFromGeoJSON(this.props.item.featureGeoJSON);
 		const distanceMeters = this.convertToMeters();
-		helpers.bufferGeometry(
-			feature.getGeometry(),
-			distanceMeters,
-			(bufferGeometry) => {
-				this.bufferFeature = new Feature({
-					geometry: bufferGeometry,
-				});
-				this.bufferFeature.setStyle(this.getStyle());
-				this.vectorLayer.getSource().clear();
-				if (distanceMeters > 0) this.vectorLayer.setZIndex(999);
-				else this.vectorLayer.setZIndex(9999);
-				this.vectorLayer.getSource().addFeature(this.bufferFeature);
+		helpers.bufferGeometry(feature.getGeometry(), distanceMeters, (bufferGeometry) => {
+			this.bufferFeature = new Feature({
+				geometry: bufferGeometry,
+			});
+			this.bufferFeature.setStyle(this.getStyle());
+			this.vectorLayer.getSource().clear();
+			if (distanceMeters > 0) this.vectorLayer.setZIndex(999);
+			else this.vectorLayer.setZIndex(9999);
+			this.vectorLayer.getSource().addFeature(this.bufferFeature);
 
-				this.setState({ addMessageVisible: true });
-			}
-		);
+			this.setState({ addMessageVisible: true });
+		});
 	};
 
 	convertToMeters = () => {
@@ -160,22 +134,11 @@ class MyMapsBuffer extends Component {
 
 	onAddBufferToMyMaps = () => {
 		// ADD MYMAPS
-		window.emitter.emit(
-			"addMyMapsFeature",
-			this.bufferFeature,
-			"Buffer - " + this.state.distance + " " + this.state.units
-		);
+		window.emitter.emit("addMyMapsFeature", this.bufferFeature, "Buffer - " + this.state.distance + " " + this.state.units);
 	};
 
 	render() {
-		const rgbColor =
-			"rgb(" +
-			this.state.color.r +
-			"," +
-			this.state.color.g +
-			"," +
-			this.state.color.b +
-			")";
+		const rgbColor = "rgb(" + this.state.color.r + "," + this.state.color.g + "," + this.state.color.b + ")";
 
 		return (
 			<div className={this.props.visible ? "sc-fieldset" : "sc-hidden"}>
@@ -186,19 +149,8 @@ class MyMapsBuffer extends Component {
 				<div className="sc-mymaps-buffer-container">
 					<label style={{ gridColumnStart: "1" }}>Distance:</label>
 					<label style={{ gridColumnStart: "2" }}>Units:</label>
-					<input
-						style={{ gridColumnStart: "1", gridRowStart: "2" }}
-						type="number"
-						className="sc-editable"
-						value={this.state.distance}
-						onChange={this.onDistanceChange}
-					/>
-					<select
-						style={{ gridColumnStart: "2", gridRowStart: "2" }}
-						name="pointOutline"
-						value={this.state.units}
-						onChange={this.onUnitsChange}
-					>
+					<input style={{ gridColumnStart: "1", gridRowStart: "2" }} type="number" className="sc-editable" value={this.state.distance} onChange={this.onDistanceChange} />
+					<select style={{ gridColumnStart: "2", gridRowStart: "2" }} name="pointOutline" value={this.state.units} onChange={this.onUnitsChange}>
 						<option value="meters">Meters</option>
 						<option value="kilometers">Kilometers</option>
 						<option value="feet">Feet</option>
@@ -220,9 +172,7 @@ class MyMapsBuffer extends Component {
 					/>
 
 					<label
-						className={
-							this.state.addMessageVisible ? "sc-fakeLink" : "sc-hidden"
-						}
+						className={this.state.addMessageVisible ? "sc-fakeLink" : "sc-hidden"}
 						style={{
 							gridColumnStart: "1",
 							gridColumnEnd: "3",
@@ -243,9 +193,7 @@ class MyMapsBuffer extends Component {
 export default MyMapsBuffer;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

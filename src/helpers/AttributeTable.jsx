@@ -22,9 +22,7 @@ class AttrbuteTable extends Component {
 		};
 
 		// LISTEN
-		window.emitter.addListener("openAttributeTable", (serverUrl, layerName) =>
-			this.onEmitter(serverUrl, layerName)
-		);
+		window.emitter.addListener("openAttributeTable", (serverUrl, layerName) => this.onEmitter(serverUrl, layerName));
 
 		// LISTEN FOR MAP TO MOUNT
 		window.emitter.addListener("mapParametersComplete", () => this.onMapLoad());
@@ -86,46 +84,38 @@ class AttrbuteTable extends Component {
 					item.geoJson = result;
 
 					// GET TOTAL NUM RECORDS
-					helpers.getWFSLayerRecordCount(
-						item.serverUrl,
-						item.layerName,
-						(count) => {
-							item.total = count;
-							let itemFound = this.getItemByname(item.name);
-							const isVisible = this.state.visible;
-							if (itemFound === undefined) {
-								this.setState(
-									(prevState) => ({
-										visible: true,
-										items: [item, ...prevState.items],
-										isLoading: false,
-									}),
-									() => {
-										if (!isVisible) {
-											this.updateSize();
-										}
+					helpers.getWFSLayerRecordCount(item.serverUrl, item.layerName, (count) => {
+						item.total = count;
+						let itemFound = this.getItemByname(item.name);
+						const isVisible = this.state.visible;
+						if (itemFound === undefined) {
+							this.setState(
+								(prevState) => ({
+									visible: true,
+									items: [item, ...prevState.items],
+									isLoading: false,
+								}),
+								() => {
+									if (!isVisible) {
+										this.updateSize();
 									}
-								);
-							} else {
-								this.setState(
-									{
-										// UPDATE ITEMS
-										items: this.state.items.map((stateItem) =>
-											stateItem.name === item.name
-												? Object.assign({}, stateItem, { geoJson: result })
-												: stateItem
-										),
-										isLoading: false,
-									},
-									() => {
-										if (!isVisible) {
-											this.updateSize();
-										}
+								}
+							);
+						} else {
+							this.setState(
+								{
+									// UPDATE ITEMS
+									items: this.state.items.map((stateItem) => (stateItem.name === item.name ? Object.assign({}, stateItem, { geoJson: result }) : stateItem)),
+									isLoading: false,
+								},
+								() => {
+									if (!isVisible) {
+										this.updateSize();
 									}
-								);
-							}
+								}
+							);
 						}
-					);
+					});
 				},
 				item.sortFields,
 				null,
@@ -196,23 +186,11 @@ class AttrbuteTable extends Component {
 					autoY={true}
 					autoX={true}
 				>
-					<MenuItem
-						className="sc-floating-menu-toolbox-menu-item"
-						key="sc-floating-menu-asc"
-					>
-						<FloatingMenuItem
-							imageName={"sort_asc_az.png"}
-							label="Sort Ascending"
-						/>
+					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-asc">
+						<FloatingMenuItem imageName={"sort_asc_az.png"} label="Sort Ascending" />
 					</MenuItem>
-					<MenuItem
-						className="sc-floating-menu-toolbox-menu-item"
-						key="sc-floating-menu-desc"
-					>
-						<FloatingMenuItem
-							imageName={"sort_desc_az.png"}
-							label="Sort Descending"
-						/>
+					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-desc">
+						<FloatingMenuItem imageName={"sort_desc_az.png"} label="Sort Descending" />
 					</MenuItem>
 				</FloatingMenu>
 			</Portal>
@@ -233,10 +211,7 @@ class AttrbuteTable extends Component {
 					autoY={true}
 					autoX={true}
 				>
-					<MenuItem
-						className="sc-floating-menu-toolbox-menu-item"
-						key="sc-floating-menu-zoom"
-					>
+					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoom">
 						<FloatingMenuItem imageName={"zoom.png"} label="Zoom to Feature" />
 					</MenuItem>
 				</FloatingMenu>
@@ -283,14 +258,7 @@ class AttrbuteTable extends Component {
 	};
 	render() {
 		return (
-			<div
-				className={
-					this.state.visible
-						? "sc-attribute-table-container sc-noselect"
-						: "sc-hidden"
-				}
-				style={{ maxWidth: this.state.mapWidth }}
-			>
+			<div className={this.state.visible ? "sc-attribute-table-container sc-noselect" : "sc-hidden"} style={{ maxWidth: this.state.mapWidth }}>
 				<Resizable
 					handleClasses={{
 						right: "sc-hidden",
@@ -326,11 +294,7 @@ class AttrbuteTable extends Component {
 						onLoadAllClick={this.onLoadAllClick}
 						isLoading={this.state.isLoading}
 					/>
-					<div
-						className="sc-attribute-table-closer"
-						title="Close Attribute Table"
-						onClick={this.onClose}
-					>
+					<div className="sc-attribute-table-closer" title="Close Attribute Table" onClick={this.onClose}>
 						<img src={images["close.png"]} alt="close table" />
 					</div>
 				</Resizable>
@@ -342,9 +306,7 @@ class AttrbuteTable extends Component {
 export default AttrbuteTable;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

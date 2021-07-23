@@ -13,8 +13,7 @@ import { Image as ImageLayer } from "ol/layer.js";
 import { LayerHelpers } from "../helpers/OLHelpers";
 
 // https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json&cql_filter=INTERSECTS(geom,%20POINT%20(-8874151.72%205583068.78))
-const parcelURLTemplate = (mainURL, x, y) =>
-	`${mainURL}&cql_filter=INTERSECTS(geom,%20POINT%20(${x}%20${y}))`;
+const parcelURLTemplate = (mainURL, x, y) => `${mainURL}&cql_filter=INTERSECTS(geom,%20POINT%20(${x}%20${y}))`;
 
 let parcelLayer = new VectorLayer({
 	style: new Style({
@@ -56,8 +55,7 @@ class PropertyReportClick extends Component {
 		// HANDLE URL PARAMETERS
 		const urlARN = helpers.getURLParameter("ARN");
 		if (urlARN !== null) {
-			const parcelURLARNTemplate = (mainURL, arn) =>
-				`${mainURL}&cql_filter=arn='${arn}'`;
+			const parcelURLARNTemplate = (mainURL, arn) => `${mainURL}&cql_filter=arn='${arn}'`;
 			const parcelARNURL = parcelURLARNTemplate(this.parcelLayer.url, urlARN);
 			this.showPropertyWindow(parcelARNURL);
 		}
@@ -68,21 +66,14 @@ class PropertyReportClick extends Component {
 			if (helpers.getMapScale() > 20000) return;
 
 			// DISABLE POPUPS
-			let disable =
-				window.disableParcelClick ||
-				window.isDrawingOrEditing ||
-				window.isCoordinateToolOpen ||
-				window.isMeasuring;
+			let disable = window.disableParcelClick || window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring;
 			if (disable) return;
 
 			// VECTOR LAYERS
 			// CHECK FOR ANY OTHER LAYERS THAT SHOULD DISABLE
 			window.map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
 				if (layer === null) return;
-				if (
-					layer.get("disableParcelClick") !== undefined &&
-					layer.get("disableParcelClick") === true
-				) {
+				if (layer.get("disableParcelClick") !== undefined && layer.get("disableParcelClick") === true) {
 					disable = true;
 					return;
 				}
@@ -94,30 +85,18 @@ class PropertyReportClick extends Component {
 			for (let index = 0; index < layers.length; index++) {
 				if (disable) break;
 				const layer = layers[index];
-				if (
-					layer.get("disableParcelClick") &&
-					layer.getVisible() &&
-					layer instanceof ImageLayer
-				) {
-					await LayerHelpers.identifyFeaturesWait(
-						layer,
-						evt.coordinate,
-						(feature) => {
-							if (feature !== undefined) {
-								disable = true;
-								return;
-							}
+				if (layer.get("disableParcelClick") && layer.getVisible() && layer instanceof ImageLayer) {
+					await LayerHelpers.identifyFeaturesWait(layer, evt.coordinate, (feature) => {
+						if (feature !== undefined) {
+							disable = true;
+							return;
 						}
-					);
+					});
 				}
 			}
 
 			if (disable) return;
-			const parcelURL = parcelURLTemplate(
-				this.parcelLayer.url,
-				evt.coordinate[0],
-				evt.coordinate[1]
-			);
+			const parcelURL = parcelURLTemplate(this.parcelLayer.url, evt.coordinate[0], evt.coordinate[1]);
 			this.showPropertyWindow(parcelURL, evt);
 
 			helpers.addAppStat("Property Click", "Click");
@@ -125,21 +104,13 @@ class PropertyReportClick extends Component {
 	}
 
 	onPropertyEmitter = (coords) => {
-		const parcelURL = parcelURLTemplate(
-			this.parcelLayer.url,
-			coords[0],
-			coords[1]
-		);
+		const parcelURL = parcelURLTemplate(this.parcelLayer.url, coords[0], coords[1]);
 		this.showPropertyWindow(parcelURL);
 	};
 
 	addToMyMaps = (value) => {
 		// ADD MYMAPS
-		window.emitter.emit(
-			"addMyMapsFeature",
-			this.state.feature,
-			this.state.feature.get("arn")
-		);
+		window.emitter.emit("addMyMapsFeature", this.state.feature, this.state.feature.get("arn"));
 	};
 
 	getShareURL = (arn) => {
@@ -162,12 +133,7 @@ class PropertyReportClick extends Component {
 	};
 
 	onShareClick = (evt) => {
-		helpers.showMessage(
-			"Share",
-			"Link has been copied to your clipboard.",
-			helpers.messageColors.green,
-			2000
-		);
+		helpers.showMessage("Share", "Link has been copied to your clipboard.", helpers.messageColors.green, 2000);
 		helpers.addAppStat("Property Click Share", "click");
 	};
 
@@ -177,19 +143,11 @@ class PropertyReportClick extends Component {
 	};
 
 	onZoomClick = () => {
-		window.map
-			.getView()
-			.fit(this.state.feature.getGeometry().getExtent(), window.map.getSize());
+		window.map.getView().fit(this.state.feature.getGeometry().getExtent(), window.map.getSize());
 	};
 
 	onMoreInfoClick = () => {
-		window.emitter.emit(
-			"loadReport",
-			<PropertyReport
-				propInfo={this.state.propInfo}
-				onZoomClick={this.onZoomClick}
-			/>
-		);
+		window.emitter.emit("loadReport", <PropertyReport propInfo={this.state.propInfo} onZoomClick={this.onZoomClick} />);
 		helpers.addAppStat("Property Click More Info", "click");
 	};
 
@@ -203,9 +161,7 @@ class PropertyReportClick extends Component {
 		const coords = propInfo.pointCoordinates;
 
 		let rows = [];
-		rows.push(
-			<InfoRow key={helpers.getUID()} label={"Address"} value={address} />
-		);
+		rows.push(<InfoRow key={helpers.getUID()} label={"Address"} value={address} />);
 		rows.push(
 			<InfoRow key={helpers.getUID()} label={"Roll Number"} value={arn}>
 				<img
@@ -237,13 +193,7 @@ class PropertyReportClick extends Component {
 			</InfoRow>
 		);
 
-		rows.push(
-			<InfoRow
-				key={helpers.getUID()}
-				label={"Waste Collection Day"}
-				value={garbageDay}
-			/>
-		);
+		rows.push(<InfoRow key={helpers.getUID()} label={"Waste Collection Day"} value={garbageDay} />);
 
 		rows.push(
 			<InfoRow className="sc-no-select" key={helpers.getUID()} label={"Tools"}>
@@ -259,14 +209,7 @@ class PropertyReportClick extends Component {
 				<span
 					className="sc-fakeLink"
 					onClick={() => {
-						helpers.showURLWindow(
-							this.termsUrl,
-							true,
-							"full",
-							true,
-							true,
-							true
-						);
+						helpers.showURLWindow(this.termsUrl, true, "full", true, true, true);
 						helpers.addAppStat("Property Click Terms", "click");
 					}}
 				>
@@ -275,39 +218,18 @@ class PropertyReportClick extends Component {
 			</InfoRow>
 		);
 
-		rows.push(
-			<InfoRow
-				key={helpers.getUID()}
-				label={"Pointer Coordinates"}
-				value={
-					"Lat: " +
-					Math.round(coords[1] * 10000) / 10000 +
-					"  Long: " +
-					Math.round(coords[0] * 10000) / 10000
-				}
-			/>
-		);
+		rows.push(<InfoRow key={helpers.getUID()} label={"Pointer Coordinates"} value={"Lat: " + Math.round(coords[1] * 10000) / 10000 + "  Long: " + Math.round(coords[0] * 10000) / 10000} />);
 
 		const PropertyReportContent = (props) => {
 			return (
 				<div>
 					<div className="sc-property-report-top-container">{rows}</div>
 
-					<button
-						key={helpers.getUID()}
-						id={helpers.getUID()}
-						className="sc-button sc-property-report-click-more-info"
-						onClick={this.onMoreInfoClick}
-					>
+					<button key={helpers.getUID()} id={helpers.getUID()} className="sc-button sc-property-report-click-more-info" onClick={this.onMoreInfoClick}>
 						More Information
 					</button>
 
-					<button
-						key={helpers.getUID()}
-						id={helpers.getUID()}
-						className="sc-button sc-property-report-click-close"
-						onClick={this.onCloseClick}
-					>
+					<button key={helpers.getUID()} id={helpers.getUID()} className="sc-button sc-property-report-click-close" onClick={this.onCloseClick}>
 						Close
 					</button>
 				</div>
@@ -339,9 +261,7 @@ class PropertyReportClick extends Component {
 					pointerPoint = center.flatCoordinates;
 					latLongCoords = helpers.toLatLongFromWebMercator(pointerPoint);
 					console.log(latLongCoords);
-					window.map
-						.getView()
-						.fit(feature.getGeometry().getExtent(), window.map.getSize());
+					window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize());
 
 					// GET FULL INFO
 					if (feature !== undefined) {
@@ -350,14 +270,9 @@ class PropertyReportClick extends Component {
 							result.pointCoordinates = latLongCoords;
 							result.shareURL = this.getShareURL(arn);
 							this.setState({ propInfo: result });
-							window.popup.show(
-								pointerPoint,
-								this.getPopupContent(result),
-								"Property Information",
-								() => {
-									parcelLayer.getSource().clear();
-								}
-							);
+							window.popup.show(pointerPoint, this.getPopupContent(result), "Property Information", () => {
+								parcelLayer.getSource().clear();
+							});
 						});
 					}
 				});
@@ -372,14 +287,9 @@ class PropertyReportClick extends Component {
 						result.pointCoordinates = latLongCoords;
 						result.shareURL = this.getShareURL(arn);
 						this.setState({ propInfo: result });
-						window.popup.show(
-							pointerPoint,
-							this.getPopupContent(result),
-							"Property Information",
-							() => {
-								parcelLayer.getSource().clear();
-							}
-						);
+						window.popup.show(pointerPoint, this.getPopupContent(result), "Property Information", () => {
+							parcelLayer.getSource().clear();
+						});
 					});
 				}
 			}
@@ -394,9 +304,7 @@ class PropertyReportClick extends Component {
 export default PropertyReportClick;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

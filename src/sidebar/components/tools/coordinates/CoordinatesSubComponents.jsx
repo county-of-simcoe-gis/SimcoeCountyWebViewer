@@ -6,55 +6,29 @@ export const LiveCoordinates = (props) => {
 		<div>
 			<div className="sc-title">Live Coordinates</div>
 
-			<div className="sc-description">
-				Live coordinates of your current pointer/mouse position.
-			</div>
+			<div className="sc-description">Live coordinates of your current pointer/mouse position.</div>
 
 			<div className="sc-container">
 				<div className="sc-coordinates-row sc-arrow">
-					<label className="sc-coordinates-live-label">
-						X Coordinate (meters):
-					</label>
-					<span>
-						{props.liveWebMercatorCoords === null
-							? inputMsg
-							: props.liveWebMercatorCoords[0]}
-					</span>
+					<label className="sc-coordinates-live-label">X Coordinate (meters):</label>
+					<span>{props.liveWebMercatorCoords === null ? inputMsg : props.liveWebMercatorCoords[0]}</span>
 				</div>
 
 				<div className="sc-coordinates-row sc-arrow">
-					<label className="sc-coordinates-live-label">
-						Y Coordinate (meters):
-					</label>
-					<span>
-						{props.liveWebMercatorCoords === null
-							? inputMsg
-							: props.liveWebMercatorCoords[1]}
-					</span>
+					<label className="sc-coordinates-live-label">Y Coordinate (meters):</label>
+					<span>{props.liveWebMercatorCoords === null ? inputMsg : props.liveWebMercatorCoords[1]}</span>
 				</div>
 
 				<div className="sc-coordinates-divider">&nbsp;</div>
 
 				<div className="sc-coordinates-row sc-arrow">
-					<label className="sc-coordinates-live-label">
-						Latitude (degrees):
-					</label>
-					<span>
-						{props.liveLatLongCoords === null
-							? inputMsg
-							: props.liveLatLongCoords[1]}
-					</span>
+					<label className="sc-coordinates-live-label">Latitude (degrees):</label>
+					<span>{props.liveLatLongCoords === null ? inputMsg : props.liveLatLongCoords[1]}</span>
 				</div>
 
 				<div className="sc-coordinates-row sc-arrow">
-					<label className="sc-coordinates-live-label">
-						Longitude (degrees):
-					</label>
-					<span>
-						{props.liveLatLongCoords === null
-							? inputMsg
-							: props.liveLatLongCoords[0]}
-					</span>
+					<label className="sc-coordinates-live-label">Longitude (degrees):</label>
+					<span>{props.liveLatLongCoords === null ? inputMsg : props.liveLatLongCoords[0]}</span>
 				</div>
 			</div>
 		</div>
@@ -91,24 +65,9 @@ export const CustomCoordinates = (props) => {
 	return (
 		<div>
 			<div className="sc-coordinates-heading">{props.title}</div>
-			<CoordinateRow
-				label="X Coordinate"
-				value={props.valueX}
-				onChange={props.onChangeX}
-				inputId={props.inputIdX}
-				onEnterKey={props.onZoomClick}
-			/>
-			<CoordinateRow
-				label="Y Coordinate"
-				value={props.valueY}
-				onChange={props.onChangeY}
-				inputId={props.inputIdY}
-				onEnterKey={props.onZoomClick}
-			/>
-			<CoordinateActions
-				onZoomClick={props.onZoomClick}
-				onMyMapsClick={() => props.onMyMapsClick(props.valueX, props.valueY)}
-			/>
+			<CoordinateRow label="X Coordinate" value={props.valueX} onChange={props.onChangeX} inputId={props.inputIdX} onEnterKey={props.onZoomClick} />
+			<CoordinateRow label="Y Coordinate" value={props.valueY} onChange={props.onChangeY} inputId={props.inputIdY} onEnterKey={props.onZoomClick} />
+			<CoordinateActions onZoomClick={props.onZoomClick} onMyMapsClick={() => props.onMyMapsClick(props.valueX, props.valueY)} />
 		</div>
 	);
 };

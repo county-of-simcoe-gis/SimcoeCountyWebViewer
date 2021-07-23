@@ -23,13 +23,10 @@ class ThemeLayerToggler extends Component {
 	handleUrlParameter = () => {
 		if (this.props.layerConfig.UrlParameter === undefined) return;
 
-		const urlParam = helpers.getURLParameter(
-			this.props.layerConfig.UrlParameter.parameterName
-		);
+		const urlParam = helpers.getURLParameter(this.props.layerConfig.UrlParameter.parameterName);
 		if (urlParam === null) return;
 
-		const query =
-			this.props.layerConfig.UrlParameter.fieldName + "=" + urlParam;
+		const query = this.props.layerConfig.UrlParameter.fieldName + "=" + urlParam;
 		helpers.getWFSGeoJSON(
 			this.props.layerConfig.serverUrl,
 			this.props.layerConfig.layerName,
@@ -43,12 +40,7 @@ class ThemeLayerToggler extends Component {
 				const entries = Object.entries(feature.getProperties());
 				window.popup.show(
 					center,
-					<ThemePopupContent
-						key={helpers.getUID()}
-						values={entries}
-						popupLogoImage={this.props.config.popupLogoImage}
-						layerConfig={this.props.layerConfig}
-					/>,
+					<ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={this.props.layerConfig} />,
 					this.props.layerConfig.displayName
 				);
 			},
@@ -60,13 +52,7 @@ class ThemeLayerToggler extends Component {
 
 	initLayer = () => {
 		// GET LAYER
-		const layer = helpers.getImageWMSLayer(
-			url.resolve(this.props.layerConfig.serverUrl, "wms"),
-			this.props.layerConfig.layerName,
-			"geoserver",
-			null,
-			50
-		);
+		const layer = helpers.getImageWMSLayer(url.resolve(this.props.layerConfig.serverUrl, "wms"), this.props.layerConfig.layerName, "geoserver", null, 50);
 		layer.setVisible(this.props.layerConfig.visible);
 		layer.setZIndex(this.props.layerConfig.zIndex);
 		//layer.setProperties({ name: this.props.layerConfig.layerName, disableParcelClick: true });
@@ -84,40 +70,22 @@ class ThemeLayerToggler extends Component {
 	componentDidMount() {
 		// GET LEGEND
 		const styleUrlTemplate = (serverURL, layerName, styleName) =>
-			`${serverURL}/wms?REQUEST=GetLegendGraphic&VERSION=1.1&FORMAT=image/png&WIDTH=20&HEIGHT=20&TRANSPARENT=true&LAYER=${layerName}&STYLE=${
-				styleName === undefined ? "" : styleName
-			}`;
-		const styleUrl = styleUrlTemplate(
-			this.props.layerConfig.serverUrl,
-			this.props.layerConfig.layerName,
-			this.props.layerConfig.legendStyleName
-		);
+			`${serverURL}/wms?REQUEST=GetLegendGraphic&VERSION=1.1&FORMAT=image/png&WIDTH=20&HEIGHT=20&TRANSPARENT=true&LAYER=${layerName}&STYLE=${styleName === undefined ? "" : styleName}`;
+		const styleUrl = styleUrlTemplate(this.props.layerConfig.serverUrl, this.props.layerConfig.layerName, this.props.layerConfig.legendStyleName);
 		this.setState({ styleUrl: styleUrl });
 
 		// GET RECORD COUNT
-		helpers.getWFSLayerRecordCount(
-			this.props.layerConfig.serverUrl,
-			this.props.layerConfig.layerName,
-			(count) => {
-				this.setState({ recordCount: count });
-			}
-		);
+		helpers.getWFSLayerRecordCount(this.props.layerConfig.serverUrl, this.props.layerConfig.layerName, (count) => {
+			this.setState({ recordCount: count });
+		});
 
 		this.mapClickEvent = window.map.on("click", (evt) => {
-			if (
-				window.isDrawingOrEditing ||
-				!this.state.visible ||
-				window.isCoordinateToolOpen ||
-				window.isMeasuring
-			)
-				return;
+			if (window.isDrawingOrEditing || !this.state.visible || window.isCoordinateToolOpen || window.isMeasuring) return;
 
 			var viewResolution = window.map.getView().getResolution();
-			var url = this.state.layer
-				.getSource()
-				.getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", {
-					INFO_FORMAT: "application/json",
-				});
+			var url = this.state.layer.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", {
+				INFO_FORMAT: "application/json",
+			});
 			if (url) {
 				helpers.getJSON(url, (result) => {
 					const features = result.features;
@@ -131,12 +99,7 @@ class ThemeLayerToggler extends Component {
 					const entries = Object.entries(feature.getProperties());
 					window.popup.show(
 						evt.coordinate,
-						<ThemePopupContent
-							key={helpers.getUID()}
-							values={entries}
-							popupLogoImage={this.props.config.popupLogoImage}
-							layerConfig={this.props.layerConfig}
-						/>,
+						<ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={this.props.layerConfig} />,
 						this.props.layerConfig.displayName
 					);
 				});
@@ -162,48 +125,15 @@ class ThemeLayerToggler extends Component {
 	render() {
 		return (
 			<div className="sc-theme-layer-container">
-				<div
-					className={
-						this.props.layerConfig.boxStyle === undefined ||
-						!this.props.layerConfig.boxStyle
-							? "sc-theme-layer-toggler-symbol"
-							: "sc-theme-layer-toggler-symbol-with-box"
-					}
-				>
+				<div className={this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle ? "sc-theme-layer-toggler-symbol" : "sc-theme-layer-toggler-symbol-with-box"}>
 					<img src={this.state.styleUrl} alt="style" />
 				</div>
-				<div
-					className={
-						this.props.layerConfig.boxStyle === undefined ||
-						!this.props.layerConfig.boxStyle
-							? ""
-							: "sc-theme-layer-toggler-label-with-box-container"
-					}
-				>
-					<label
-						className={
-							this.props.layerConfig.boxStyle === undefined ||
-							!this.props.layerConfig.boxStyle
-								? "sc-theme-layer-toggler-label"
-								: "sc-theme-layer-toggler-label-with-box"
-						}
-					>
-						<input
-							type="checkbox"
-							checked={this.state.visible}
-							style={{ verticalAlign: "middle" }}
-							onChange={this.onCheckboxChange}
-						/>
+				<div className={this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle ? "" : "sc-theme-layer-toggler-label-with-box-container"}>
+					<label className={this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle ? "sc-theme-layer-toggler-label" : "sc-theme-layer-toggler-label-with-box"}>
+						<input type="checkbox" checked={this.state.visible} style={{ verticalAlign: "middle" }} onChange={this.onCheckboxChange} />
 						{this.props.layerConfig.displayName}
 					</label>
-					<label
-						className={
-							this.props.layerConfig.boxStyle === undefined ||
-							!this.props.layerConfig.boxStyle
-								? "sc-theme-layer-toggler-count"
-								: "sc-theme-layer-toggler-count-with-box"
-						}
-					>
+					<label className={this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle ? "sc-theme-layer-toggler-count" : "sc-theme-layer-toggler-count-with-box"}>
 						{" (" + this.state.recordCount + ")"}
 					</label>
 				</div>

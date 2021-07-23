@@ -15,27 +15,16 @@ class ImmigrationServices extends Component {
 
 	render() {
 		return (
-			<PanelComponent
-				onClose={this.onClose}
-				name={this.props.name}
-				helpLink={this.props.helpLink}
-				type="themes"
-			>
+			<PanelComponent onClose={this.onClose} name={this.props.name} helpLink={this.props.helpLink} type="themes">
 				<div className="sc-immigration-main-container">
 					<div className="sc-immigration-header-text">
-						Explore resources to help newcomers: housing support services,
-						settlement services, Employment Ontario services, libraries, an
-						Ontario Early Years centres, Service Ontario and Service Canada.
+						Explore resources to help newcomers: housing support services, settlement services, Employment Ontario services, libraries, an Ontario Early Years centres, Service Ontario and Service
+						Canada.
 					</div>
 					<h2 className="sc-immigration-services-title">Support Services</h2>
 					<div className="sc-immigration-layers-container">
 						{config.default.toggleLayers.map((layer) => {
-							return (
-								<ImmigrationServicesLayerToggler
-									key={helpers.getUID()}
-									layer={layer}
-								/>
-							);
+							return <ImmigrationServicesLayerToggler key={helpers.getUID()} layer={layer} />;
 						})}
 					</div>
 				</div>

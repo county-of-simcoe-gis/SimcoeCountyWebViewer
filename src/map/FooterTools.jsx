@@ -3,17 +3,7 @@ import React, { Component } from "react";
 import "./FooterTools.css";
 import * as helpers from "../helpers/helpers";
 
-const feedbackTemplate = (
-	url,
-	xmin,
-	xmax,
-	ymin,
-	ymax,
-	centerx,
-	centery,
-	scale
-) =>
-	`${url}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
+const feedbackTemplate = (url, xmin, xmax, ymin, ymax, centerx, centery, scale) => `${url}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
 
 class FooterTools extends Component {
 	constructor(props) {
@@ -38,9 +28,7 @@ class FooterTools extends Component {
 			this.setState({ basemapType: type });
 		});
 		// LISTEN FOR CONTROL VISIBILITY CHANGES
-		window.emitter.addListener("mapControlsChanged", (control, visible) =>
-			this.controlStateChange(control, visible)
-		);
+		window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control, visible));
 	}
 
 	componentDidMount() {
@@ -86,22 +74,8 @@ class FooterTools extends Component {
 			const ymax = extent[3];
 			const center = window.map.getView().getCenter();
 
-			let feedbackUrl = feedbackTemplate(
-				window.config.feedbackUrl,
-				xmin,
-				xmax,
-				ymin,
-				ymax,
-				center[0],
-				center[1],
-				scale
-			);
-			if (
-				window.config.mapId !== null &&
-				window.config.mapId !== undefined &&
-				window.config.mapId.trim() !== ""
-			)
-				feedbackUrl += "&MAP_ID=" + window.config.mapId;
+			let feedbackUrl = feedbackTemplate(window.config.feedbackUrl, xmin, xmax, ymin, ymax, center[0], center[1], scale);
+			if (window.config.mapId !== null && window.config.mapId !== undefined && window.config.mapId.trim() !== "") feedbackUrl += "&MAP_ID=" + window.config.mapId;
 
 			helpers.showURLWindow(feedbackUrl, false, "full");
 		});
@@ -140,14 +114,7 @@ class FooterTools extends Component {
 
 		return (
 			<div id="map-theme">
-				<div
-					id="sc-scale-bar-text"
-					className={
-						this.state.basemapType === "IMAGERY"
-							? "sc-map-footer-scale-only imagery"
-							: "sc-map-footer-scale-only topo"
-					}
-				>
+				<div id="sc-scale-bar-text" className={this.state.basemapType === "IMAGERY" ? "sc-map-footer-scale-only imagery" : "sc-map-footer-scale-only topo"}>
 					{"Scale: 1:" + this.state.scale}
 				</div>
 			</div>

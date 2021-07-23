@@ -311,7 +311,7 @@ class SCMap extends Component {
 			if (x !== null && y !== null) {
 				// URL PARAMETERS (ZOOM TO XY)
 				let coords = [x, y];
-				if (sr === "WGS84") coords = fromLonLat([Math.round(x * 100000) / 100000, Math.round(y * 100000) / 100000]);
+				if (sr && sr.toUpperCase() === "WGS84") coords = fromLonLat([Math.round(x * 100000) / 100000, Math.round(y * 100000) / 100000]);
 
 				setTimeout(() => {
 					helpers.flashPoint(coords);

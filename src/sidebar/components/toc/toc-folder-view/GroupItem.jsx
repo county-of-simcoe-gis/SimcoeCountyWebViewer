@@ -1,9 +1,7 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import * as helpers from "../../../../helpers/helpers";
-import FloatingMenu, {
-	FloatingMenuItem,
-} from "../../../../helpers/FloatingMenu.jsx";
+import FloatingMenu, { FloatingMenuItem } from "../../../../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
 import Portal from "../../../../helpers/Portal.jsx";
 import Layers from "./Layers.jsx";
@@ -21,15 +19,10 @@ class GroupItem extends Component {
 		};
 		this._isMounted = false;
 		window.emitter.addListener("activeTocLayerGroup", (groupName, callback) => {
-			if (groupName === this.props.group.value && this.props.visible)
-				this.onActivateLayer(callback);
+			if (groupName === this.props.group.value && this.props.visible) this.onActivateLayer(callback);
 		});
 		window.emitter.addListener("updateActiveTocLayers", (groupName) => {
-			if (
-				(groupName === this.props.group.value || groupName === null) &&
-				this.props.visible
-			)
-				this.setActiveLayerCount();
+			if ((groupName === this.props.group.value || groupName === null) && this.props.visible) this.setActiveLayerCount();
 		});
 	}
 
@@ -38,18 +31,13 @@ class GroupItem extends Component {
 		if (group !== undefined) {
 			activeCount = group.layers.filter((layer) => layer.visible).length;
 		} else {
-			activeCount = this.props.group.layers.filter(
-				(layer) => layer.visible
-			).length;
+			activeCount = this.props.group.layers.filter((layer) => layer.visible).length;
 		}
-		if (activeCount !== this.state.activeLayerCount)
-			this.setState({ activeLayerCount: activeCount });
+		if (activeCount !== this.state.activeLayerCount) this.setState({ activeLayerCount: activeCount });
 	};
 
 	onActivateLayer = (callback) => {
-		const tocFolder = document.getElementById(
-			"sc-toc-simcoe-folder-view-container-main"
-		);
+		const tocFolder = document.getElementById("sc-toc-simcoe-folder-view-container-main");
 		if (tocFolder.classList.contains("sc-hidden")) return;
 
 		let panelOpen = this.state.panelOpen;
@@ -100,16 +88,10 @@ class GroupItem extends Component {
 					onMenuItemClick={(action) => this.onMenuItemClick(action, group)}
 					styleMode={helpers.isMobile() ? "left" : "right"}
 				>
-					<MenuItem
-						className="sc-floating-menu-toolbox-menu-item"
-						key="sc-floating-menu-enable-layers"
-					>
+					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-enable-layers">
 						<FloatingMenuItem label="Turn On All Layers" />
 					</MenuItem>
-					<MenuItem
-						className="sc-floating-menu-toolbox-menu-item"
-						key="sc-floating-menu-disable-layers"
-					>
+					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-disable-layers">
 						<FloatingMenuItem label="Turn Off All Layers" />
 					</MenuItem>
 					{/* <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-expand">
@@ -126,12 +108,9 @@ class GroupItem extends Component {
 	};
 	componentDidMount() {
 		this._isMounted = true;
-		this.setState(
-			{ panelOpen: this.props.panelOpen, userPanelOpen: this.props.panelOpen },
-			() => {
-				this.setActiveLayerCount();
-			}
-		);
+		this.setState({ panelOpen: this.props.panelOpen, userPanelOpen: this.props.panelOpen }, () => {
+			this.setActiveLayerCount();
+		});
 		if (this._isMounted) this.forceUpdate();
 	}
 	componentWillUnmount() {
@@ -151,11 +130,7 @@ class GroupItem extends Component {
 	containsLayers = () => {
 		return this.props.group.layers.filter((layer) => {
 			if (this.props.searchText === "") return true;
-			return (
-				[layer.tocDisplayName.toUpperCase(), layer.groupName.toUpperCase()]
-					.join(" ")
-					.indexOf(this.props.searchText.toUpperCase()) !== -1
-			);
+			return [layer.tocDisplayName.toUpperCase(), layer.groupName.toUpperCase()].join(" ").indexOf(this.props.searchText.toUpperCase()) !== -1;
 		});
 	};
 	isVisible = () => {
@@ -182,58 +157,29 @@ class GroupItem extends Component {
 		if (this.props.searchText !== "") {
 			this.setState({ panelOpen: panelOpen, newProps: false });
 		} else {
-			this.setState(
-				{ panelOpen: panelOpen, userPanelOpen: userPanelOpen, newProps: false },
-				() => {
-					this.props.onGroupFolderToggle(this.props.group.value, panelOpen);
-				}
-			);
+			this.setState({ panelOpen: panelOpen, userPanelOpen: userPanelOpen, newProps: false }, () => {
+				this.props.onGroupFolderToggle(this.props.group.value, panelOpen);
+			});
 		}
 	};
 
 	render() {
 		if (this.props.group !== undefined && this.isVisible()) {
 			return (
-				<div
-					className={"sc-toc-group-list-container"}
-					key={this.props.id + "-sc-toc-group-list-container"}
-				>
-					<div
-						className={
-							(this.state.panelOpen
-								? "sc-toc-group-list-header open"
-								: "sc-toc-group-list-header") +
-							(this.state.activeLayerCount > 0 ? " active" : "")
-						}
-						onClick={this.onHeaderClick}
-					>
+				<div className={"sc-toc-group-list-container"} key={this.props.id + "-sc-toc-group-list-container"}>
+					<div className={(this.state.panelOpen ? "sc-toc-group-list-header open" : "sc-toc-group-list-header") + (this.state.activeLayerCount > 0 ? " active" : "")} onClick={this.onHeaderClick}>
 						<div className={"sc-toc-group-list-header-label"}>
 							&nbsp;&nbsp;{this.props.group.label}{" "}
 							<span>
-								- ({this.state.activeLayerCount}/
-								{this.props.group.layers.length})
+								- ({this.state.activeLayerCount}/{this.props.group.layers.length})
 							</span>
 						</div>
 					</div>
-					<div
-						className="sc-toc-group-toolbox-folder-view"
-						title="Group Options"
-						onClick={(evt) =>
-							this.onGroupOptionsClick(evt, this.props.group.value)
-						}
-					>
-						<img
-							src={images["group-more-options.png"]}
-							alt="More Group Options"
-						/>
+					<div className="sc-toc-group-toolbox-folder-view" title="Group Options" onClick={(evt) => this.onGroupOptionsClick(evt, this.props.group.value)}>
+						<img src={images["group-more-options.png"]} alt="More Group Options" />
 					</div>
 					<div
-						className={
-							this.state.panelOpen ||
-							(this.isVisible() && this.props.searchText !== "")
-								? "sc-toc-group-list-item-container"
-								: "sc-hidden"
-						}
+						className={this.state.panelOpen || (this.isVisible() && this.props.searchText !== "") ? "sc-toc-group-list-item-container" : "sc-hidden"}
 						key={this.props.id + "-sc-toc-group-list-item-container"}
 					>
 						<Layers
@@ -264,9 +210,7 @@ class GroupItem extends Component {
 export default GroupItem;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("../images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("../images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

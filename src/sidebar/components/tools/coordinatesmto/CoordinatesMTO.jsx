@@ -2,11 +2,7 @@ import React, { Component } from "react";
 import "./CoordinatesMTO.css";
 import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
-import {
-	CustomCoordinates,
-	ProjectedCoordinates,
-	CopyCoordinates,
-} from "./CoordinatesSubComponentsMTO.jsx";
+import { CustomCoordinates, ProjectedCoordinates, CopyCoordinates } from "./CoordinatesSubComponentsMTO.jsx";
 import { transform } from "ol/proj.js";
 import proj4 from "proj4";
 import Select from "react-select";
@@ -90,10 +86,7 @@ class CoordinatesMTO extends Component {
 		window.disableParcelClick = true;
 
 		// REGISTER MAP EVENTS
-		this.onPointerMoveEvent = window.map.on(
-			"pointermove",
-			this.onPointerMoveHandler
-		);
+		this.onPointerMoveEvent = window.map.on("pointermove", this.onPointerMoveHandler);
 		this.onMapClickEvent = window.map.on("click", this.onMapClick);
 		this.onMapMoveEvent = window.map.on("moveend", this.onMapMoveEnd);
 		this._getSelectProjections();
@@ -126,23 +119,16 @@ class CoordinatesMTO extends Component {
 	_getSelectProjections = () => {
 		let defs = [];
 		coordinateConfig.coordinate_systems.forEach((proj) => {
-			if (
-				proj.projection !== undefined &&
-				proj.projection !== null &&
-				proj.projection !== ""
-			)
+			if (proj.projection !== undefined && proj.projection !== null && proj.projection !== "")
 				defs.push({
 					label: proj.projection,
 					value: proj.projection + proj.precision,
 				});
 		});
 		this.currentPrecision = this._getPrecision(defs[0]);
-		this.setState(
-			{ selectProjectionOptions: defs, selectProjectionOption: defs[0] },
-			() => {
-				this._getSelectProjectionZones(defs[0]);
-			}
-		);
+		this.setState({ selectProjectionOptions: defs, selectProjectionOption: defs[0] }, () => {
+			this._getSelectProjectionZones(defs[0]);
+		});
 	};
 	_getPrecision = (item) => {
 		let precision = item.value.replace(item.label, "");
@@ -158,14 +144,8 @@ class CoordinatesMTO extends Component {
 			}
 		});
 		let currentZone = defs[0];
-		if (
-			this.state.inputLatLongXValue !== null &&
-			this.state.inputLatLongYValue != null
-		) {
-			this._calculateZone(
-				this.state.inputLatLongXValue,
-				this.state.inputLatLongYValue
-			);
+		if (this.state.inputLatLongXValue !== null && this.state.inputLatLongYValue != null) {
+			this._calculateZone(this.state.inputLatLongXValue, this.state.inputLatLongYValue);
 		} else {
 			this.calculatedZone = undefined;
 		}
@@ -203,30 +183,16 @@ class CoordinatesMTO extends Component {
 		coordinateConfig.coordinate_systems.forEach((proj) => {
 			if (currentProj.label === proj.projection) {
 				proj.zones.forEach((zone) => {
-					if (
-						zone.boundary !== undefined &&
-						zone.boundary !== null &&
-						zone.boundary !== ""
-					) {
+					if (zone.boundary !== undefined && zone.boundary !== null && zone.boundary !== "") {
 						if (Array.isArray(zone.boundary[0])) {
 							zone.boundary.forEach((bound) => {
-								if (
-									bound[0] > x &&
-									bound[2] < x &&
-									bound[1] < y &&
-									bound[3] > y
-								) {
+								if (bound[0] > x && bound[2] < x && bound[1] < y && bound[3] > y) {
 									this.currentProjection = zone.code;
 									this.calculatedZone = { label: zone.zone, value: zone.code };
 								}
 							});
 						} else {
-							if (
-								zone.boundary[0] > x &&
-								zone.boundary[2] < x &&
-								zone.boundary[1] < y &&
-								zone.boundary[3] > y
-							) {
+							if (zone.boundary[0] > x && zone.boundary[2] < x && zone.boundary[1] < y && zone.boundary[3] > y) {
 								this.currentProjection = zone.code;
 								this.calculatedZone = { label: zone.zone, value: zone.code };
 							}
@@ -264,11 +230,7 @@ class CoordinatesMTO extends Component {
 		}
 
 		// ADD MYMAPS
-		window.emitter.emit(
-			"addMyMapsFeature",
-			this.vectorLayer.getSource().getFeatures()[0],
-			"X:" + webMercatorCoords[0] + ", Y:" + webMercatorCoords[1]
-		);
+		window.emitter.emit("addMyMapsFeature", this.vectorLayer.getSource().getFeatures()[0], "X:" + webMercatorCoords[0] + ", Y:" + webMercatorCoords[1]);
 	};
 
 	onMapMoveEnd = (evt) => {
@@ -276,30 +238,16 @@ class CoordinatesMTO extends Component {
 	};
 
 	updateCoordinates = (webMercatorCoords) => {
-		const latLongCoords = transform(
-			webMercatorCoords,
-			"EPSG:3857",
-			"EPSG:4326"
-		);
-		const selectedCoords = transform(
-			webMercatorCoords,
-			"EPSG:3857",
-			this.currentProjection
-		);
+		const latLongCoords = transform(webMercatorCoords, "EPSG:3857", "EPSG:4326");
+		const selectedCoords = transform(webMercatorCoords, "EPSG:3857", this.currentProjection);
 		this.recalcInputCoordinates(webMercatorCoords);
 		const inputTitle =
 			this.state.selectProjectionOption === undefined
 				? ""
 				: this.state.selectProjectionOption.label +
-				  (this.state.selectProjectionZoneOption === undefined ||
-				  this.state.selectProjectionZoneOption.label.trim() === ""
-						? ""
-						: " - " + this.state.selectProjectionZoneOption.label);
+				  (this.state.selectProjectionZoneOption === undefined || this.state.selectProjectionZoneOption.label.trim() === "" ? "" : " - " + this.state.selectProjectionZoneOption.label);
 		const inputProjection = this.currentProjection;
-		const precision =
-			this.state.selectProjectionOption !== undefined
-				? this._getPrecision(this.state.selectProjectionOption)
-				: 7;
+		const precision = this.state.selectProjectionOption !== undefined ? this._getPrecision(this.state.selectProjectionOption) : 7;
 		this.setState({
 			inputWebMercatorXValue: webMercatorCoords[0],
 			inputWebMercatorYValue: webMercatorCoords[1],
@@ -330,15 +278,9 @@ class CoordinatesMTO extends Component {
 		this.vectorLayer.getSource().addFeature(pointFeature);
 
 		// ZOOM TO IT
-		if (zoom)
-			window.map
-				.getView()
-				.animate({ center: webMercatorCoords, zoom: 18 }, { duration: 750 });
+		if (zoom) window.map.getView().animate({ center: webMercatorCoords, zoom: 18 }, { duration: 750 });
 		// PAN TO IT
-		if (pan)
-			window.map
-				.getView()
-				.animate({ center: webMercatorCoords }, { duration: 250 });
+		if (pan) window.map.getView().animate({ center: webMercatorCoords }, { duration: 250 });
 	};
 
 	glowContainers() {
@@ -346,51 +288,26 @@ class CoordinatesMTO extends Component {
 		helpers.glowContainer("sc-coordinate-y");
 	}
 	recalcInputCoordinates = (webMercatorCoords = undefined) => {
-		if (webMercatorCoords === undefined)
-			webMercatorCoords = [
-				this.state.inputWebMercatorXValue,
-				this.state.inputWebMercatorYValue,
-			];
+		if (webMercatorCoords === undefined) webMercatorCoords = [this.state.inputWebMercatorXValue, this.state.inputWebMercatorYValue];
 		if (webMercatorCoords === null) return;
-		const latLongCoords = transform(
-			webMercatorCoords,
-			"EPSG:3857",
-			"EPSG:4326"
-		);
+		const latLongCoords = transform(webMercatorCoords, "EPSG:3857", "EPSG:4326");
 		this._calculateZone(latLongCoords[0], latLongCoords[1]);
-		this.currentProjection =
-			this.calculatedZone !== undefined
-				? this.calculatedZone.value
-				: "EPSG:4326";
-		if (this.calculatedZone === undefined)
-			this.calculatedZone = { label: " ", value: "auto" };
+		this.currentProjection = this.calculatedZone !== undefined ? this.calculatedZone.value : "EPSG:4326";
+		if (this.calculatedZone === undefined) this.calculatedZone = { label: " ", value: "auto" };
 
 		this.setState({
 			selectProjectionZoneOption: this.calculatedZone,
 		});
 	};
 	recalcLiveCoordinates = (webMercatorCoords = undefined) => {
-		if (webMercatorCoords === undefined)
-			webMercatorCoords = this.state.liveWebMercatorCoords;
+		if (webMercatorCoords === undefined) webMercatorCoords = this.state.liveWebMercatorCoords;
 		if (webMercatorCoords === null) return;
-		const latLongCoords = transform(
-			webMercatorCoords,
-			"EPSG:3857",
-			"EPSG:4326"
-		);
+		const latLongCoords = transform(webMercatorCoords, "EPSG:3857", "EPSG:4326");
 		this._calculateZone(latLongCoords[0], latLongCoords[1]);
-		this.currentProjection =
-			this.calculatedZone !== undefined
-				? this.calculatedZone.value
-				: "EPSG:4326";
-		if (this.calculatedZone === undefined)
-			this.calculatedZone = { label: " ", value: "auto" };
+		this.currentProjection = this.calculatedZone !== undefined ? this.calculatedZone.value : "EPSG:4326";
+		if (this.calculatedZone === undefined) this.calculatedZone = { label: " ", value: "auto" };
 
-		const liveCoords = transform(
-			webMercatorCoords,
-			"EPSG:3857",
-			this.currentProjection
-		);
+		const liveCoords = transform(webMercatorCoords, "EPSG:3857", this.currentProjection);
 		this.setState({
 			liveProjectionZoneOption: this.calculatedZone,
 			liveCoords: liveCoords,
@@ -425,10 +342,7 @@ class CoordinatesMTO extends Component {
 	}
 
 	onChangeProjectionSelect = (selection) => {
-		const webMercatorCoords = [
-			this.state.inputWebMercatorXValue,
-			this.state.inputWebMercatorYValue,
-		];
+		const webMercatorCoords = [this.state.inputWebMercatorXValue, this.state.inputWebMercatorYValue];
 		this.currentPrecision = this._getPrecision(selection);
 		this.setState(
 			{
@@ -450,12 +364,7 @@ class CoordinatesMTO extends Component {
 		if (selection.value !== "auto") {
 			this.currentProjection = selection.value;
 			const inputTitle =
-				this.state.selectProjectionOption === undefined
-					? ""
-					: this.state.selectProjectionOption.label +
-					  (selection === undefined || selection.label.trim() === ""
-							? ""
-							: " - " + selection.label);
+				this.state.selectProjectionOption === undefined ? "" : this.state.selectProjectionOption.label + (selection === undefined || selection.label.trim() === "" ? "" : " - " + selection.label);
 			this.setState(
 				{
 					selectProjectionZoneOption: selection,
@@ -463,11 +372,7 @@ class CoordinatesMTO extends Component {
 					inputProjectionTitle: inputTitle,
 				},
 				() => {
-					this.onPointUpdate(
-						this.state.inputProjection,
-						this.state.inputXValue,
-						this.state.inputYValue
-					);
+					this.onPointUpdate(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
 					//this.recalcInputCoordinates();
 				}
 			);
@@ -533,17 +438,11 @@ class CoordinatesMTO extends Component {
 
 	render() {
 		return (
-			<PanelComponent
-				onClose={this.props.onClose}
-				name={this.props.name}
-				helpLink={this.props.helpLink}
-				type="tools"
-			>
+			<PanelComponent onClose={this.props.onClose} name={this.props.name} helpLink={this.props.helpLink} type="tools">
 				<div className="sc-coordinates-container">
 					<div className="sc-container">
 						<div className="sc-description">
-							Capture points in a variety of different coordinate systems or
-							enter your own locations and zoom to its location.
+							Capture points in a variety of different coordinate systems or enter your own locations and zoom to its location.
 							<ul>
 								<li>Click on the map to capture locations</li>
 								<li>--------- or ---------</li>
@@ -558,28 +457,15 @@ class CoordinatesMTO extends Component {
 							</div>
 							<div className="sc-coordinates-row">
 								<div className="sc-coordinates-cell">
-									<Select
-										id="sc-coordinate-select"
-										onChange={this.onChangeProjectionSelect}
-										options={this.state.selectProjectionOptions}
-										value={this.state.selectProjectionOption}
-									/>
+									<Select id="sc-coordinate-select" onChange={this.onChangeProjectionSelect} options={this.state.selectProjectionOptions} value={this.state.selectProjectionOption} />
 								</div>
 							</div>
 						</div>
 						<div className="sc-coordinates-divider" />
-						<div className="sc-title sc-coordinates-title">
-							CAPTURED / SELECTED
-						</div>
+						<div className="sc-title sc-coordinates-title">CAPTURED / SELECTED</div>
 
 						<div className="sc-container">
-							<div
-								className={
-									this.state.hideZone
-										? "sc-hidden"
-										: "sc-coordinates-row sc-arrow"
-								}
-							>
+							<div className={this.state.hideZone ? "sc-hidden" : "sc-coordinates-row sc-arrow"}>
 								<label>Zone:</label>
 								<span>
 									<Select
@@ -598,60 +484,34 @@ class CoordinatesMTO extends Component {
 								precision={this.state.inputPrecision}
 								onChangeX={(evt) => {
 									this.setState({ inputXValue: evt.target.value }, () => {
-										this.onPointUpdate(
-											this.state.inputProjection,
-											this.state.inputXValue,
-											this.state.inputYValue
-										);
+										this.onPointUpdate(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
 									});
 								}}
 								onChangeY={(evt) => {
 									this.setState({ inputYValue: evt.target.value }, () => {
-										this.onPointUpdate(
-											this.state.inputProjection,
-											this.state.inputXValue,
-											this.state.inputYValue
-										);
+										this.onPointUpdate(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
 									});
 								}}
 								onZoomClick={() => {
-									this.onZoomClick(
-										this.state.inputProjection,
-										this.state.inputXValue,
-										this.state.inputYValue
-									);
+									this.onZoomClick(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
 								}}
 								onPanClick={() => {
-									this.onPanClick(
-										this.state.inputProjection,
-										this.state.inputXValue,
-										this.state.inputYValue
-									);
+									this.onPanClick(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
 								}}
 								onMyMapsClick={() => {
-									this.onMyMapsClick(
-										this.state.inputProjection,
-										this.state.inputXValue,
-										this.state.inputYValue
-									);
+									this.onMyMapsClick(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
 								}}
 								inputIdX="sc-coordinate-x"
 								inputIdY="sc-coordinate-y"
 								onEnterKey={() => {
-									this.onPanClick(
-										this.state.inputProjection,
-										this.state.inputXValue,
-										this.state.inputYValue
-									);
+									this.onPanClick(this.state.inputProjection, this.state.inputXValue, this.state.inputYValue);
 								}}
 							/>
 						</div>
 					</div>
 
 					<div className="sc-container sc-coordinates-floatbottom">
-						<div className="sc-title sc-coordinates-title">
-							COPY COORDINATES
-						</div>
+						<div className="sc-title sc-coordinates-title">COPY COORDINATES</div>
 						<CopyCoordinates
 							inputId="sc-coordinate-copy"
 							copyFormats={this.state.selectCopyOptions}
@@ -686,9 +546,7 @@ class CoordinatesMTO extends Component {
 
 export default CoordinatesMTO;
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

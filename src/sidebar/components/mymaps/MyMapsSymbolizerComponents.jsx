@@ -4,15 +4,8 @@ import "./MyMapsSymbolizer.css";
 export const PointType = (props) => {
 	return (
 		<React.Fragment>
-			<label className={props.visible ? "sc-mymaps-style-label" : "sc-hidden"}>
-				Style:
-			</label>
-			<select
-				className={props.visible ? "sc-mymaps-style-dropdown" : "sc-hidden"}
-				name="pointSymbols"
-				value={props.selectedPointStyleDropDown}
-				onChange={props.onPointStyleDropDown}
-			>
+			<label className={props.visible ? "sc-mymaps-style-label" : "sc-hidden"}>Style:</label>
+			<select className={props.visible ? "sc-mymaps-style-dropdown" : "sc-hidden"} name="pointSymbols" value={props.selectedPointStyleDropDown} onChange={props.onPointStyleDropDown}>
 				<option value="circle">Circle</option>
 				<option value="cross">Cross</option>
 				<option value="square">Square</option>
@@ -27,15 +20,8 @@ export const PointType = (props) => {
 export const PolygonType = (props) => {
 	return (
 		<React.Fragment>
-			<label className={props.visible ? "sc-mymaps-style-label" : "sc-hidden"}>
-				Style:
-			</label>
-			<select
-				className={props.visible ? "sc-mymaps-style-dropdown" : "sc-hidden"}
-				name="polygonSymbols"
-				value={props.selectedPolygonStyleDropDown}
-				onChange={props.onPolygonStyleDropDown}
-			>
+			<label className={props.visible ? "sc-mymaps-style-label" : "sc-hidden"}>Style:</label>
+			<select className={props.visible ? "sc-mymaps-style-dropdown" : "sc-hidden"} name="polygonSymbols" value={props.selectedPolygonStyleDropDown} onChange={props.onPolygonStyleDropDown}>
 				<option value="none">None</option>
 				<option value="solid">Solid</option>
 				<option value="horizontal">Horizontal</option>
@@ -49,23 +35,9 @@ export const PolygonType = (props) => {
 export const StyleSize = (props) => {
 	return (
 		<React.Fragment>
-			<label className={props.visible ? "sc-mymaps-sub-label" : "sc-hidden"}>
-				Size:
-			</label>
-			<div
-				className={
-					props.visible ? "sc-mymaps-symbolizer-slider size" : "sc-hidden"
-				}
-			>
-				<input
-					type="range"
-					style={{ width: "169px" }}
-					min={props.sliderRadiusMin}
-					max={props.sliderRadiusMax}
-					value={props.radius}
-					step="1"
-					onChange={props.onRadiusSliderChange}
-				/>
+			<label className={props.visible ? "sc-mymaps-sub-label" : "sc-hidden"}>Size:</label>
+			<div className={props.visible ? "sc-mymaps-symbolizer-slider size" : "sc-hidden"}>
+				<input type="range" style={{ width: "169px" }} min={props.sliderRadiusMin} max={props.sliderRadiusMax} value={props.radius} step="1" onChange={props.onRadiusSliderChange} />
 			</div>
 		</React.Fragment>
 	);
@@ -74,20 +46,8 @@ export const StyleSize = (props) => {
 export const FillColor = (props) => {
 	return (
 		<React.Fragment>
-			<label
-				className={
-					!props.visible
-						? "sc-hidden"
-						: props.isPolygon
-						? "sc-mymaps-style-label"
-						: "sc-mymaps-sub-label"
-				}
-			>
-				Color:
-			</label>
-			<div
-				className={props.visible ? "sc-mymaps-fill-color-button" : "sc-hidden"}
-			>
+			<label className={!props.visible ? "sc-hidden" : props.isPolygon ? "sc-mymaps-style-label" : "sc-mymaps-sub-label"}>Color:</label>
+			<div className={props.visible ? "sc-mymaps-fill-color-button" : "sc-hidden"}>
 				<button
 					id={props.colorPickerButtonId}
 					style={{
@@ -119,12 +79,7 @@ export const StrokeType = (props) => {
 	return (
 		<React.Fragment>
 			<label className="sc-mymaps-style-label">Outline:</label>
-			<select
-				className="sc-mymaps-style-dropdown"
-				name="pointOutline"
-				value={props.selectedStrokeTypeDropDown}
-				onChange={props.onStrokeTypeDropDown}
-			>
+			<select className="sc-mymaps-style-dropdown" name="pointOutline" value={props.selectedStrokeTypeDropDown} onChange={props.onStrokeTypeDropDown}>
 				<option value="normal">Normal</option>
 				<option value="dash">Dash</option>
 				<option value="dot">Dot</option>
@@ -187,19 +142,10 @@ export const StrokeWidth = (props) => {
 export const Rotation = (props) => {
 	return (
 		<React.Fragment>
-			<label className={props.visible ? "sc-mymaps-style-label" : "sc-hidden"}>
-				Angle:
-			</label>
+			<label className={props.visible ? "sc-mymaps-style-label" : "sc-hidden"}>Angle:</label>
 			<div className={props.visible ? "sc-mymaps-angle-slider" : "sc-hidden"}>
 				<div className="sc-mymaps-symbolizer-slider angle">
-					<input
-						type="range"
-						min={props.sliderRotationMin}
-						max={props.sliderRotationMax}
-						value={props.rotation}
-						step="0.1"
-						onChange={props.onRotationSliderChange}
-					/>
+					<input type="range" min={props.sliderRotationMin} max={props.sliderRotationMax} value={props.rotation} step="0.1" onChange={props.onRotationSliderChange} />
 				</div>
 			</div>
 		</React.Fragment>

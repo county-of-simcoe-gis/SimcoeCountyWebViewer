@@ -14,9 +14,7 @@ class CommercialRealEstateSearch extends Component {
 	render() {
 		return (
 			<div className="sc-border-bottom" style={{ paddingBottom: "5px" }}>
-				<div className="sc-theme-commercial-real-estate-prop-type-title">
-					Property Type
-				</div>
+				<div className="sc-theme-commercial-real-estate-prop-type-title">Property Type</div>
 				<div className="sc-theme-commercial-real-estate-prop-type-table">
 					<div className="sc-theme-commercial-real-estate-prop-type-table-row">
 						<PropType
@@ -31,12 +29,7 @@ class CommercialRealEstateSearch extends Component {
 							onLayerCheckboxClick={this.props.onLayerCheckboxClick}
 							layer={this.props.layers["Vacant Land"]}
 						/>
-						<PropType
-							name="Farm"
-							colorClassName="sc-theme-commercial-real-estate-prop-type-farm"
-							onLayerCheckboxClick={this.props.onLayerCheckboxClick}
-							layer={this.props.layers.Farm}
-						/>
+						<PropType name="Farm" colorClassName="sc-theme-commercial-real-estate-prop-type-farm" onLayerCheckboxClick={this.props.onLayerCheckboxClick} layer={this.props.layers.Farm} />
 					</div>
 					<div className="sc-theme-commercial-real-estate-prop-type-table-row">
 						<PropType
@@ -64,11 +57,7 @@ const PropType = (props) => {
 	if (props.layer === undefined) return <div />;
 	return (
 		<label>
-			<input
-				type="checkbox"
-				onChange={(evt) => props.onLayerCheckboxClick(evt, props.name)}
-				defaultChecked={true}
-			/>
+			<input type="checkbox" onChange={(evt) => props.onLayerCheckboxClick(evt, props.name)} defaultChecked={true} />
 			<span className={props.colorClassName}>{props.name}</span>
 		</label>
 	);

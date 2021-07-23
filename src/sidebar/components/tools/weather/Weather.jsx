@@ -29,18 +29,9 @@ class Weather extends Component {
 	};
 	render() {
 		return (
-			<PanelComponent
-				onClose={this.onClose}
-				name={this.props.name}
-				helpLink={this.props.helpLink}
-				type="tools"
-			>
+			<PanelComponent onClose={this.onClose} name={this.props.name} helpLink={this.props.helpLink} type="tools">
 				<div className="sc-tool-weather-container">
-					<Tabs
-						forceRenderTabPanel={true}
-						selectedIndex={this.state.tabIndex}
-						onSelect={this.onTabSelect}
-					>
+					<Tabs forceRenderTabPanel={true} selectedIndex={this.state.tabIndex} onSelect={this.onTabSelect}>
 						<TabList>
 							<Tab id="tab-weather-radar">Radar</Tab>
 							<Tab id="tab-weather-forecast">Forecast</Tab>

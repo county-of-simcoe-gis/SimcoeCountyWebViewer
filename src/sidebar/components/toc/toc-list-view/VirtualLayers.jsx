@@ -8,43 +8,26 @@ import LayerItem from "./LayerItem.jsx";
 import "./VirtualLayers.css";
 
 // LIST ITEM SORTABLE
-const SortableItem = sortableElement(
-	({
-		value,
-		id,
-		style,
-		item,
-		group,
-		onLegendToggle,
-		onCheckboxChange,
-		onLayerChange,
-		searchText,
-		onLayerOptionsClick,
-	}) => {
-		item.elementId = id + "-element";
+const SortableItem = sortableElement(({ value, id, style, item, group, onLegendToggle, onCheckboxChange, onLayerChange, searchText, onLayerOptionsClick }) => {
+	item.elementId = id + "-element";
 
-		//console.log("Virtual Layer Item Render");
-		return (
-			<li
-				style={style}
-				className="sc-toc-layer-list-item sc-noselect"
-				id={item.elementId}
-			>
-				<LayerItem
-					key={id + "-layer-item"}
-					id={id + "-layer-item"}
-					layerInfo={item}
-					onLegendToggle={onLegendToggle}
-					group={group}
-					onLayerChange={onLayerChange}
-					onCheckboxChange={onCheckboxChange}
-					searchText={searchText}
-					onLayerOptionsClick={onLayerOptionsClick}
-				/>
-			</li>
-		);
-	}
-);
+	//console.log("Virtual Layer Item Render");
+	return (
+		<li style={style} className="sc-toc-layer-list-item sc-noselect" id={item.elementId}>
+			<LayerItem
+				key={id + "-layer-item"}
+				id={id + "-layer-item"}
+				layerInfo={item}
+				onLegendToggle={onLegendToggle}
+				group={group}
+				onLayerChange={onLayerChange}
+				onCheckboxChange={onCheckboxChange}
+				searchText={searchText}
+				onLayerOptionsClick={onLayerOptionsClick}
+			/>
+		</li>
+	);
+});
 
 class VirtualLayers extends Component {
 	_isMounted = false;
@@ -85,9 +68,7 @@ class VirtualLayers extends Component {
 				onCheckboxChange={this.props.onCheckboxChange}
 				onLayerChange={this.props.onLayerChange}
 				searchText={this.props.searchText}
-				disabled={
-					this.props.searchText !== "" || this.props.sortAlpha ? true : false
-				}
+				disabled={this.props.searchText !== "" || this.props.sortAlpha ? true : false}
 				onLayerOptionsClick={this.props.onLayerOptionsClick}
 			/>
 		);

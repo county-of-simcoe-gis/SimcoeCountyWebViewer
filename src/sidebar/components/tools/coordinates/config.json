@@ -22,10 +22,7 @@
 					"code": "EPSG:2950",
 					"extent": [186520.9794, 4984429.4038, 423079.0206, 6939545.2562],
 					"boundary": [-72.0, 44.9, -75.0, 45.7],
-					"def": [
-						"EPSG:2950",
-						"+proj=tmerc +lat_0=0 +lon_0=-73.5 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-					]
+					"def": ["EPSG:2950", "+proj=tmerc +lat_0=0 +lon_0=-73.5 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
 				},
 				{
 					"name": "MTMZone9",
@@ -33,10 +30,7 @@
 					"code": "EPSG:2951",
 					"extent": [187119.0831, 5016655.1259, 422480.9169, 6939545.2562],
 					"boundary": [-75.0, 43.6, -78.0, 46.3],
-					"def": [
-						"EPSG:2951",
-						"+proj=tmerc +lat_0=0 +lon_0=-76.5 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-					]
+					"def": ["EPSG:2951", "+proj=tmerc +lat_0=0 +lon_0=-76.5 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
 				},
 				{
 					"name": "MTMZone10",
@@ -48,10 +42,7 @@
 						[-79.5, 42, -80.25, 47],
 						[-78.0, 42, -79.5, 47.325]
 					],
-					"def": [
-						"EPSG:2952",
-						"+proj=tmerc +lat_0=0 +lon_0=-79.5 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-					]
+					"def": ["EPSG:2952", "+proj=tmerc +lat_0=0 +lon_0=-79.5 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
 				},
 				{
 					"name": "MTMZone11",
@@ -59,10 +50,7 @@
 					"code": "EPSG:26891",
 					"extent": [214050.0658, 4616206.8633, 429686.0222, 5096670.4351],
 					"boundary": [-81, 41.5, -83, 46],
-					"def": [
-						"EPSG:26891",
-						"+proj=tmerc +lat_0=0 +lon_0=-82.5 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-					]
+					"def": ["EPSG:26891", "+proj=tmerc +lat_0=0 +lon_0=-82.5 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
 				},
 				{
 					"name": "MTMZone12",
@@ -73,10 +61,7 @@
 						[-80.25, 46, -82.5, 55.2],
 						[-79.5, 47, -80.25, 51.7]
 					],
-					"def": [
-						"EPSG:26892",
-						"+proj=tmerc +lat_0=0 +lon_0=-81 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-					]
+					"def": ["EPSG:26892", "+proj=tmerc +lat_0=0 +lon_0=-81 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
 				},
 				{
 					"name": "MTMZone13",
@@ -84,10 +69,7 @@
 					"code": "EPSG:26893",
 					"extent": [188617.1146, 5096670.4351, 420982.8854, 6156640.899],
 					"boundary": [-82.5, 46, -85.5, 55.5],
-					"def": [
-						"EPSG:26893",
-						"+proj=tmerc +lat_0=0 +lon_0=-84 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-					]
+					"def": ["EPSG:26893", "+proj=tmerc +lat_0=0 +lon_0=-84 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
 				},
 				{
 					"name": "MTMZone14",
@@ -95,10 +77,7 @@
 					"code": "EPSG:26894",
 					"extent": [191154.7596, 5230050.2455, 418445.2404, 6286883.3724],
 					"boundary": [-85.5, 47.15, -88.5, 55.5],
-					"def": [
-						"EPSG:26894",
-						"+proj=tmerc +lat_0=0 +lon_0=-87 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-					]
+					"def": ["EPSG:26894", "+proj=tmerc +lat_0=0 +lon_0=-87 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
 				},
 				{
 					"name": "MTMZone15",
@@ -106,10 +85,7 @@
 					"code": "EPSG:26895",
 					"extent": [192442.4789, 5296749.9632, 417157.5211, 6304696.1015],
 					"boundary": [-88.5, 47.95, -91.5, 56.95],
-					"def": [
-						"EPSG:26895",
-						"+proj=tmerc +lat_0=0 +lon_0=-90 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-					]
+					"def": ["EPSG:26895", "+proj=tmerc +lat_0=0 +lon_0=-90 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
 				},
 				{
 					"name": "MTMZone16",
@@ -117,10 +93,7 @@
 					"code": "EPSG:26896",
 					"extent": [192874.484, 5318984.6537, 416725.516, 6131040.4099],
 					"boundary": [-91.5, 48, -94.5, 55.3],
-					"def": [
-						"EPSG:26896",
-						"+proj=tmerc +lat_0=0 +lon_0=-93 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-					]
+					"def": ["EPSG:26896", "+proj=tmerc +lat_0=0 +lon_0=-93 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
 				}
 			]
 		},
@@ -134,10 +107,7 @@
 					"code": "EPSG:3159",
 					"extent": [276224.0846, 5320655.7891, 723775.9154, 9106037.169],
 					"boundary": [-90, 0, -96, 80],
-					"def": [
-						"EPSG:3159",
-						"+proj=utm +zone=15 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-					]
+					"def": ["EPSG:3159", "+proj=utm +zone=15 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
 				},
 
 				{
@@ -146,10 +116,7 @@
 					"code": "EPSG:3160",
 					"extent": [268545.7504, 5120644.6982, 731454.2496, 9217519.4415],
 					"boundary": [-84, 0, -90, 80],
-					"def": [
-						"EPSG:3160",
-						"+proj=utm +zone=16 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-					]
+					"def": ["EPSG:3160", "+proj=utm +zone=16 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
 				},
 
 				{
@@ -158,10 +125,7 @@
 					"code": "EPSG:2958",
 					"extent": [250370.2709, 4620818.0318, 749629.7291, 9329005.1824],
 					"boundary": [-78, 0, -84, 80],
-					"def": [
-						"EPSG:2958",
-						"+proj=utm +zone=17 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-					]
+					"def": ["EPSG:2958", "+proj=utm +zone=17 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
 				},
 
 				{
@@ -170,10 +134,7 @@
 					"code": "EPSG:2959",
 					"extent": [257862.1002, 4831820.9485, 742137.8998, 9329005.1824],
 					"boundary": [-72, 0, -78, 80],
-					"def": [
-						"EPSG:2959",
-						"+proj=utm +zone=18 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-					]
+					"def": ["EPSG:2959", "+proj=utm +zone=18 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
 				}
 			]
 		},
@@ -187,10 +148,7 @@
 					"code": "EPSG:2027",
 					"extent": [276217.0412, 5320437.0456, 723782.9588, 6243300.5986],
 					"boundary": [-90, 0, -96, 80],
-					"def": [
-						"EPSG:2027",
-						"+proj=utm +zone=15 +ellps=clrk66 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-					]
+					"def": ["EPSG:2027", "+proj=utm +zone=15 +ellps=clrk66 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
 				},
 				{
 					"name": "UTMZone16N",
@@ -198,10 +156,7 @@
 					"code": "EPSG:2028",
 					"extent": [267699.6323, 5098206.2404, 732300.3677, 6305600.2275],
 					"boundary": [-84, 0, -90, 80],
-					"def": [
-						"EPSG:2028",
-						"+proj=utm +zone=16 +ellps=clrk66 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-					]
+					"def": ["EPSG:2028", "+proj=utm +zone=16 +ellps=clrk66 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
 				},
 
 				{
@@ -210,10 +165,7 @@
 					"code": "EPSG:2029",
 					"extent": [250286.0281, 4618384.2954, 749713.9719, 6143184.9867],
 					"boundary": [-78, 0, -84, 80],
-					"def": [
-						"EPSG:2029",
-						"+proj=utm +zone=17 +ellps=clrk66 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-					]
+					"def": ["EPSG:2029", "+proj=utm +zone=17 +ellps=clrk66 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
 				},
 
 				{
@@ -222,10 +174,7 @@
 					"code": "EPSG:2030",
 					"extent": [257855.1727, 4827456.1599, 554884.9642, 5142647.7951],
 					"boundary": [-72, 0, -78, 80],
-					"def": [
-						"EPSG:2030",
-						"+proj=utm +zone=18 +ellps=clrk66 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-					]
+					"def": ["EPSG:2030", "+proj=utm +zone=18 +ellps=clrk66 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
 				}
 			]
 		},
@@ -239,10 +188,7 @@
 					"code": "EPSG:3162",
 					"boundary": [180, -90, -180, 90],
 					"extent": [276224.0846, 5320655.7891, 723775.9154, 9106037.169],
-					"def": [
-						"EPSG:3162",
-						"+proj=lcc +lat_1=44.5 +lat_2=53.5 +lat_0=0 +lon_0=-85 +x_0=930000 +y_0=6430000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-					]
+					"def": ["EPSG:3162", "+proj=lcc +lat_1=44.5 +lat_2=53.5 +lat_0=0 +lon_0=-85 +x_0=930000 +y_0=6430000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"]
 				}
 			]
 		},

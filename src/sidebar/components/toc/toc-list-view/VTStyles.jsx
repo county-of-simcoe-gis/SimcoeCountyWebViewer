@@ -54,10 +54,7 @@ function getTeranetDapfLabels(feature) {
 	);
 	//let textStyle = createTextStyle(feature, 'arn', 18000,undefined,undefined);
 	let text = feature.get("arn");
-	text =
-		text.substring(text.length - 8, text.length - 5) +
-		"-" +
-		text.substring(text.length - 5, text.length);
+	text = text.substring(text.length - 8, text.length - 5) + "-" + text.substring(text.length - 5, text.length);
 	textStyle.setText(text);
 	return new Style({
 		text: textStyle,

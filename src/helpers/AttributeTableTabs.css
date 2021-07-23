@@ -56,11 +56,7 @@
 }
 
 .sc-attribute-table-container .react-tabs__tab--selected {
-	background: linear-gradient(
-		to bottom,
-		rgba(240, 249, 255, 1) 0%,
-		rgb(99, 100, 101) 100%
-	) !important;
+	background: linear-gradient(to bottom, rgba(240, 249, 255, 1) 0%, rgb(99, 100, 101) 100%) !important;
 }
 
 .sc-attribute-table-footer {

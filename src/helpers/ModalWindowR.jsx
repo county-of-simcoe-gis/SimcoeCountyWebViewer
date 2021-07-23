@@ -18,12 +18,7 @@ export default class ModalWindowR extends React.Component {
 	render() {
 		const { open } = this.state;
 		return (
-			<Modal
-				open={open}
-				onClose={this.onCloseModal}
-				center
-				container={this.props.container}
-			>
+			<Modal open={open} onClose={this.onCloseModal} center container={this.props.container}>
 				<h2>Simple centered modal</h2>
 			</Modal>
 		);

@@ -31,12 +31,7 @@ class ThemeData extends Component {
 				<div className="sc-title sc-underline">THEME DATA</div>
 				<div className="sc-theme-data-filter-label">
 					<label>
-						<input
-							type="checkbox"
-							checked={this.state.visible}
-							style={{ verticalAlign: "middle" }}
-							onChange={this.onCheckboxChange}
-						/>
+						<input type="checkbox" checked={this.state.visible} style={{ verticalAlign: "middle" }} onChange={this.onCheckboxChange} />
 						Only show data visible in the map
 					</label>
 				</div>
