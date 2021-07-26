@@ -109,6 +109,10 @@ export async function getMap(sources, isReset, tocType, callback) {
 							if (source.group.visibleLayers !== undefined) layerGroupConfig.groups[0]["visibleLayers"] = source.group.visibleLayers;
 						}
 					}
+					if (!layerGroupConfig.groups) {
+						sourcesProcessed++;
+						return;
+					}
 					if (source.primary && default_group === undefined) default_group = layerGroupConfig.defaultLayerName;
 					if (layerGroups === undefined) {
 						layerGroups = layerGroupConfig.groups;
@@ -117,7 +121,7 @@ export async function getMap(sources, isReset, tocType, callback) {
 					}
 
 					sourcesProcessed++;
-					if (sourcesProcessed === sources.length) {
+					if (sourcesProcessed >= sources.length) {
 						callback({
 							groups: layerGroups,
 							defaultGroupName: default_group,
@@ -134,6 +138,10 @@ export async function getMap(sources, isReset, tocType, callback) {
 						requiresToken: source.secure,
 					},
 					(layerGroupConfig) => {
+						if (!layerGroupConfig.groups) {
+							sourcesProcessed++;
+							return;
+						}
 						if (source.primary && default_group === undefined) default_group = layerGroupConfig.defaultLayerName;
 						if (layerGroups === undefined) {
 							layerGroups = layerGroupConfig.groups;
@@ -141,7 +149,7 @@ export async function getMap(sources, isReset, tocType, callback) {
 							layerGroups = mergeGroups(layerGroups, layerGroupConfig.groups);
 						}
 						sourcesProcessed++;
-						if (sourcesProcessed === sources.length) {
+						if (sourcesProcessed >= sources.length) {
 							callback({
 								groups: layerGroups,
 								defaultGroupName: default_group,
@@ -979,7 +987,8 @@ function _getStaticImageLegend(keywords) {
 }
 
 export function acceptDisclaimer(layer, returnToFunction) {
-	if (layer.disclaimer && layer.disclaimer.warning) {
+	if (!layer.disclaimer) return true;
+	if (layer.disclaimer.warning) {
 		let currentDisclaimers = window.acceptedDisclaimers;
 		if (currentDisclaimers === undefined) currentDisclaimers = [];
 		if (layer.visible) {
@@ -1003,7 +1012,7 @@ export function acceptDisclaimer(layer, returnToFunction) {
 			);
 			return false;
 		} else return true;
-	} else if (layer.disclaimer && (!window.acceptedDisclaimers || window.acceptedDisclaimers.indexOf(layer.name) === -1)) {
+	} else if (layer.disclaimer.url && (!window.acceptedDisclaimers || window.acceptedDisclaimers.indexOf(layer.name) === -1)) {
 		helpers.showTerms(
 			layer.disclaimer.title,
 			`The layer you are about to view contains data  which is subject to a licence agreement. 
