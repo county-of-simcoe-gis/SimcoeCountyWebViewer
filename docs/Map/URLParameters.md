@@ -8,7 +8,7 @@ https://opengis.simcoe.ca/?MODE=ADVANCED
 
 #### OPEN LAYER GROUP
 
-https://opengis.simcoe.ca?GROUP=simcoe:Historical
+https://opengis.simcoe.ca/?GROUP=Historical
 
 #### ZOOM TO ROLL NUMBER
 
