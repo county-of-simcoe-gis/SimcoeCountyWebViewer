@@ -1,124 +1,124 @@
 .sc-tool-search-history-main-container {
-  margin-left: 5px;
-  margin-right: 5px;
+	margin-left: 5px;
+	margin-right: 5px;
 }
 
 .sc-tool-search-history-results {
-  position: absolute;
-  top: 158px;
-  bottom: 42px;
-  left: 5px;
-  right: 5px;
-  overflow-y: auto;
-  overflow-x: hidden;
+	position: absolute;
+	top: 158px;
+	bottom: 42px;
+	left: 5px;
+	right: 5px;
+	overflow-y: auto;
+	overflow-x: hidden;
 }
 
 .sc-tool-search-history-footer {
-  position: absolute;
-  bottom: 0px;
-  background-color: white;
-  text-align: center;
-  height: 41px;
-  border-top: 1px solid #e3e3e3;
-  left: 0px;
-  right: 0px;
+	position: absolute;
+	bottom: 0px;
+	background-color: white;
+	text-align: center;
+	height: 41px;
+	border-top: 1px solid #e3e3e3;
+	left: 0px;
+	right: 0px;
 }
 
 .sc-tool-search-history-no-results {
-  background-color: #c3e8ff;
-  padding: 7px;
-  text-align: center;
-  margin-top: 10px;
+	background-color: #c3e8ff;
+	padding: 7px;
+	text-align: center;
+	margin-top: 10px;
 }
 
 .sc-tool-search-history-item-container {
-  display: grid;
-  width: 95%;
-  margin-bottom: 10px;
-  grid-template-columns: 10% 30% 31% 15% 13%;
-  grid-template-rows: auto auto 18px 5px 12px;
+	display: grid;
+	width: 95%;
+	margin-bottom: 10px;
+	grid-template-columns: 10% 30% 31% 15% 13%;
+	grid-template-rows: auto auto 18px 5px 12px;
 }
 
 .sc-tool-search-history-image {
-  grid-column-start: 1;
-  grid-column-end: 1;
-  grid-row-start: 1;
-  grid-row-end: 4;
+	grid-column-start: 1;
+	grid-column-end: 1;
+	grid-row-start: 1;
+	grid-row-end: 4;
 }
 
 .sc-tool-search-history-details-date {
-  grid-column-start: 3;
-  grid-column-end: 6;
-  grid-row-start: 3;
-  grid-row-end: 3;
-  font-size: 8pt;
-  text-align: right;
-  font-style: italic;
+	grid-column-start: 3;
+	grid-column-end: 6;
+	grid-row-start: 3;
+	grid-row-end: 3;
+	font-size: 8pt;
+	text-align: right;
+	font-style: italic;
 }
 
 .sc-tool-search-history-details-name {
-  grid-column-start: 2;
-  grid-column-end: 6;
-  grid-row-start: 1;
-  grid-row-end: 1;
+	grid-column-start: 2;
+	grid-column-end: 6;
+	grid-row-start: 1;
+	grid-row-end: 1;
 }
 
 .sc-tool-search-history-details-muni {
-  grid-column-start: 2;
-  grid-column-end: 6;
-  grid-row-start: 2;
-  grid-row-end: 2;
-  font-size: 9pt;
+	grid-column-start: 2;
+	grid-column-end: 6;
+	grid-row-start: 2;
+	grid-row-end: 2;
+	font-size: 9pt;
 }
 
 .sc-tool-search-history-button-info {
-  grid-column-start: 2;
-  grid-column-end: 2;
-  grid-row-start: 5;
-  grid-row-end: 5;
-  font-size: 9pt;
-  text-align: center;
+	grid-column-start: 2;
+	grid-column-end: 2;
+	grid-row-start: 5;
+	grid-row-end: 5;
+	font-size: 9pt;
+	text-align: center;
 }
 
 .sc-tool-search-history-button-remove {
-  grid-column-start: 4;
-  grid-column-end: 4;
-  grid-row-start: 5;
-  grid-row-end: 5;
-  font-size: 9pt;
-  text-align: center;
+	grid-column-start: 4;
+	grid-column-end: 4;
+	grid-row-start: 5;
+	grid-row-end: 5;
+	font-size: 9pt;
+	text-align: center;
 }
 
 .sc-tool-search-history-button-zoom {
-  grid-column-start: 5;
-  grid-column-end: 5;
-  grid-row-start: 5;
-  grid-row-end: 5;
-  font-size: 9pt;
-  text-align: center;
+	grid-column-start: 5;
+	grid-column-end: 5;
+	grid-row-start: 5;
+	grid-row-end: 5;
+	font-size: 9pt;
+	text-align: center;
 }
 .sc-tool-search-history-button-replay {
-  grid-column-start: 3;
-  grid-column-end: 3;
-  grid-row-start: 5;
-  grid-row-end: 5;
-  font-size: 9pt;
-  text-align: center;
+	grid-column-start: 3;
+	grid-column-end: 3;
+	grid-row-start: 5;
+	grid-row-end: 5;
+	font-size: 9pt;
+	text-align: center;
 }
 .sc-tool-search-history-divider {
-  grid-column-start: 1;
-  grid-column-end: 6;
-  grid-row-start: 4;
-  grid-row-end: 4;
-  border-top: 1px solid #e3e3e3;
+	grid-column-start: 1;
+	grid-column-end: 6;
+	grid-row-start: 4;
+	grid-row-end: 4;
+	border-top: 1px solid #e3e3e3;
 }
 
 .sc-tool-search-history-background {
-  grid-column-start: 1;
-  grid-column-end: 6;
-  grid-row-start: 5;
-  grid-row-end: 5;
-  background-color: #f3f3f3;
-  margin: -4px;
-  margin-right: -8px;
+	grid-column-start: 1;
+	grid-column-end: 6;
+	grid-row-start: 5;
+	grid-row-end: 5;
+	background-color: #f3f3f3;
+	margin: -4px;
+	margin-right: -8px;
 }

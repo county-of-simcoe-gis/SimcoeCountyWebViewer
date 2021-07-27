@@ -2,147 +2,147 @@
 /* SIMCOE COUNTY THEME OVERRIDES */
 /* ------------------------- */
 #map-theme .ol-zoom {
-  display: none;
+	display: none;
 }
 
 #map-theme .ol-scale-line {
-  right: 5px;
-  left: auto !important;
-  bottom: 5px;
+	right: 5px;
+	left: auto !important;
+	bottom: 5px;
 }
 
 #map-theme .ol-full-screen {
-  left: 5px;
-  bottom: 5px;
-  right: auto;
-  top: auto;
+	left: 5px;
+	bottom: 5px;
+	right: auto;
+	top: auto;
 }
 
 #map-theme .ol-popup {
-  display: none;
-  position: absolute;
-  background-color: white;
-  /* padding: 15px 25px 15px 15px; */
-  border: 1px solid #cccccc;
-  bottom: 12px;
-  left: -50px;
-  max-width: 270px !important;
-  border-radius: 3px !important;
+	display: none;
+	position: absolute;
+	background-color: white;
+	/* padding: 15px 25px 15px 15px; */
+	border: 1px solid #cccccc;
+	bottom: 12px;
+	left: -50px;
+	max-width: 270px !important;
+	border-radius: 3px !important;
 }
 
 #map-theme .ol-popup:after,
 #map-theme .ol-popup:before {
-  top: 100%;
-  border: solid transparent;
-  content: " ";
-  height: 0;
-  width: 0;
-  position: absolute;
-  pointer-events: none;
+	top: 100%;
+	border: solid transparent;
+	content: " ";
+	height: 0;
+	width: 0;
+	position: absolute;
+	pointer-events: none;
 }
 
 #map-theme .ol-popup:after {
-  border-top-color: white;
-  border-width: 10px;
-  left: 48px;
-  margin-left: -10px;
+	border-top-color: white;
+	border-width: 10px;
+	left: 48px;
+	margin-left: -10px;
 }
 
 #map-theme .ol-popup:before {
-  border-top-color: #cccccc;
-  border-width: 11px;
-  left: 48px;
-  margin-left: -11px;
+	border-top-color: #cccccc;
+	border-width: 11px;
+	left: 48px;
+	margin-left: -11px;
 }
 
 #map-theme .ol-popup-content {
-  position: relative;
-  width: 258px;
-  max-width: 258px !important;
-  z-index: 1;
-  padding: 6px !important;
-  background-color: #fff !important;
-  max-height: 275px !important;
-  min-height: 50px !important;
-  overflow: hidden;
+	position: relative;
+	width: 258px;
+	max-width: 258px !important;
+	z-index: 1;
+	padding: 6px !important;
+	background-color: #fff !important;
+	max-height: 275px !important;
+	min-height: 50px !important;
+	overflow: hidden;
 }
 
 #map-theme .ol-popup-closer {
-  position: absolute;
-  top: 6px;
-  right: 2px;
-  font-size: 15pt;
-  padding: 0 4px;
-  color: white;
-  text-decoration: none;
+	position: absolute;
+	top: 6px;
+	right: 2px;
+	font-size: 15pt;
+	padding: 0 4px;
+	color: white;
+	text-decoration: none;
 }
 
 #map-theme .ol-popup-closer:after {
-  content: "\2716";
+	content: "\2716";
 }
 
 #map-theme .ol-popup div.infoResult {
-  min-width: 130px;
+	min-width: 130px;
 }
 
 #map-theme .ol-popup div.infoResult p {
-  padding: 0.1em;
-  margin: 0;
+	padding: 0.1em;
+	margin: 0;
 }
 
 #map-theme .ol-popup-content h3 {
-  margin: 0.25em 0;
+	margin: 0.25em 0;
 }
 
 #map-theme .ol-popup.marker {
-  margin-bottom: 30px;
+	margin-bottom: 30px;
 }
 
 #map-theme .ol-full-screen {
-  bottom: 5px;
-  left: 4px;
-  position: absolute;
-  text-align: center;
-  cursor: pointer;
-  padding: 3px !important;
-  padding-left: 5px !important;
-  padding-right: 5px !important;
-  background-color: rgba(255, 255, 255, 0.5);
-  border: 1px solid #949494;
-  border-radius: 3px;
-  box-shadow: 0 0 10px 0px;
-  z-index: 100 !important;
+	bottom: 5px;
+	left: 4px;
+	position: absolute;
+	text-align: center;
+	cursor: pointer;
+	padding: 3px !important;
+	padding-left: 5px !important;
+	padding-right: 5px !important;
+	background-color: rgba(255, 255, 255, 0.5);
+	border: 1px solid #949494;
+	border-radius: 3px;
+	box-shadow: 0 0 10px 0px;
+	z-index: 100 !important;
 }
 
 #map-theme .ol-attribution {
-  display: none;
+	display: none;
 }
 @media only screen and (max-width: 770px) {
-  #map-theme .ol-full-screen {
-    display: none !important;
-  }
-  #map-theme .ol-scale-line {
-    left: 5px;
-  }
-  #map-theme .ol-overlaycontainer-stopevent {
-    z-index: 1 !important;
-  }
+	#map-theme .ol-full-screen {
+		display: none !important;
+	}
+	#map-theme .ol-scale-line {
+		left: 5px;
+	}
+	#map-theme .ol-overlaycontainer-stopevent {
+		z-index: 1 !important;
+	}
 }
 
 @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
-  #map-theme .ol-full-screen {
-    display: none !important;
-  }
-  #map-theme .ol-scale-line {
-    left: 5px;
-  }
+	#map-theme .ol-full-screen {
+		display: none !important;
+	}
+	#map-theme .ol-scale-line {
+		left: 5px;
+	}
 }
 
 @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
-  .ol-full-screen {
-    display: none !important;
-  }
-  .ol-scale-line {
-    left: 5px;
-  }
+	.ol-full-screen {
+		display: none !important;
+	}
+	.ol-scale-line {
+		left: 5px;
+	}
 }

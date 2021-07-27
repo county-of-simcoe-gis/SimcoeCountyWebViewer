@@ -35,8 +35,7 @@ class LocalRealEstate extends Component {
 
 		let visibleLayers = [];
 		config.layers.forEach((layer) => {
-			if (layer.visible && layer.displayName !== "All")
-				visibleLayers.push(layer.displayName);
+			if (layer.visible && layer.displayName !== "All") visibleLayers.push(layer.displayName);
 		});
 		this.setState({ visibleLayers: visibleLayers }, () => {
 			this.renderImageSlider();
@@ -48,12 +47,7 @@ class LocalRealEstate extends Component {
 
 	renderImageSlider = () => {
 		ReactDOM.render(
-			<LocalRealEstateImageSlider
-				config={config}
-				visibleLayers={this.state.visibleLayers}
-				onImageSliderClick={this.onImageSliderClick}
-				onViewed={this.onViewed}
-			/>,
+			<LocalRealEstateImageSlider config={config} visibleLayers={this.state.visibleLayers} onImageSliderClick={this.onImageSliderClick} onViewed={this.onViewed} />,
 			document.getElementById(this.imageSlider.id)
 		);
 	};
@@ -66,16 +60,7 @@ class LocalRealEstate extends Component {
 	onImageSliderClick = (feature) => {
 		const extent = feature.getGeometry().getExtent();
 		const center = getCenter(extent);
-		window.popup.show(
-			center,
-			<LocalRealEstatePopupContent
-				key={helpers.getUID()}
-				feature={feature}
-				photosUrl={config.photosUrl}
-				onViewed={this.onViewed}
-			/>,
-			"Real Estate"
-		);
+		window.popup.show(center, <LocalRealEstatePopupContent key={helpers.getUID()} feature={feature} photosUrl={config.photosUrl} onViewed={this.onViewed} />, "Real Estate");
 
 		this.onViewed(feature);
 	};
@@ -153,12 +138,7 @@ class LocalRealEstate extends Component {
 
 	render() {
 		return (
-			<PanelComponent
-				onClose={this.props.onClose}
-				name={this.props.name}
-				helpLink={this.props.helpLink}
-				type="themes"
-			>
+			<PanelComponent onClose={this.props.onClose} name={this.props.name} helpLink={this.props.helpLink} type="themes">
 				<div className="sc-theme-real-estate-main-container">
 					<div className="sc-title sc-underline">THEME LAYERS</div>
 					<div className="sc-container" style={{ marginBottom: "5px" }}>
@@ -178,11 +158,7 @@ class LocalRealEstate extends Component {
 							})
 						}
 					</div>
-					<LocalRealEstateRecents
-						viewedItems={this.state.viewedItems}
-						onItemRemove={this.onItemRemove}
-						onRemoveAll={this.onRemoveAll}
-					/>
+					<LocalRealEstateRecents viewedItems={this.state.viewedItems} onItemRemove={this.onItemRemove} onRemoveAll={this.onRemoveAll} />
 				</div>
 			</PanelComponent>
 		);

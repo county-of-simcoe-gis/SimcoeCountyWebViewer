@@ -1,90 +1,90 @@
 #sc-panel-component-header {
-  width: 100%;
-  /* position: relative; */
-  top: 0px;
-  left: 0px;
-  right: 0px;
-  bottom: 0px;
-  height: 43px;
-  overflow: auto;
+	width: 100%;
+	/* position: relative; */
+	top: 0px;
+	left: 0px;
+	right: 0px;
+	bottom: 0px;
+	height: 43px;
+	overflow: auto;
 }
 
 #sc-panel-component-title {
-  padding: 5px;
-  text-shadow: 0.5px 0.5px #fff;
-  padding-top: 6px;
-  font-size: 18px;
-  font-weight: bold;
-  color: #5b5b5b;
-  background-color: #ececec;
-  overflow: hidden;
+	padding: 5px;
+	text-shadow: 0.5px 0.5px #fff;
+	padding-top: 6px;
+	font-size: 18px;
+	font-weight: bold;
+	color: #5b5b5b;
+	background-color: #ececec;
+	overflow: hidden;
 }
 
 #sc-panel-component-title-container {
-  width: 100%;
-  overflow: hidden;
-  max-height: 29px;
-  text-overflow: ellipsis;
+	width: 100%;
+	overflow: hidden;
+	max-height: 29px;
+	text-overflow: ellipsis;
 }
 
 #sc-panel-component-tool-icon {
-  width: 36px;
-  float: left;
+	width: 36px;
+	float: left;
 }
 .sc-panel-component-help {
-  background-color: #6ea8cf;
-  border: 1px solid rgba(202, 202, 202, 0.69);
-  padding: 1px;
-  border-radius: 2px;
-  height: 24px;
-  width: 24px;
-  margin-left: 5px;
-  float: left;
+	background-color: #6ea8cf;
+	border: 1px solid rgba(202, 202, 202, 0.69);
+	padding: 1px;
+	border-radius: 2px;
+	height: 24px;
+	width: 24px;
+	margin-left: 5px;
+	float: left;
 }
 .sc-panel-component-help svg {
-  color: #fff;
-  height: 18px;
-  width: 18px;
-  padding: 3px;
+	color: #fff;
+	height: 18px;
+	width: 18px;
+	padding: 3px;
 }
 
 .sc-panel-component-tool-text {
-  float: left;
-  padding-top: 3px;
-  max-width: 295px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+	float: left;
+	padding-top: 3px;
+	max-width: 295px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 .sc-panel-component-tool-text.short {
-  max-width: 225px;
+	max-width: 225px;
 }
 .sc-panel-component-tool-text.small {
-  font-size: 13pt;
+	font-size: 13pt;
 }
 .sc-panel-component-tool-content-button {
-  width: 100%;
-  margin-bottom: 5px;
+	width: 100%;
+	margin-bottom: 5px;
 }
 #sc-panel-component-tool-controls {
-  float: right;
-  cursor: pointer;
-  height: 29px;
-  
-  text-align: center;
+	float: right;
+	cursor: pointer;
+	height: 29px;
+
+	text-align: center;
 }
 
 #sc-panel-component-tool-img {
-  border: 1px solid rgba(202, 202, 202, 0.69);
-  padding: 1px;
-  border-radius: 2px;
-  margin-left: 5px;
+	border: 1px solid rgba(202, 202, 202, 0.69);
+	padding: 1px;
+	border-radius: 2px;
+	margin-left: 5px;
 }
 
 #sc-panel-component-tool-close {
-  background-color: #6ea8cf;
-  border: 1px solid #6ea8cf;
-  padding: 1px;
-  border-radius: 2px;
-  margin-left: 5px;
+	background-color: #6ea8cf;
+	border: 1px solid #6ea8cf;
+	padding: 1px;
+	border-radius: 2px;
+	margin-left: 5px;
 }

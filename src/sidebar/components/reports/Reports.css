@@ -1,15 +1,15 @@
 .sc-reports-tab-init {
-  text-align: center;
-  padding: 10px;
+	text-align: center;
+	padding: 10px;
 }
 
 .sc-reports-tab-content {
-  position: absolute;
-  margin-bottom: 0px;
-  padding: 0px !important;
-  bottom: 0px;
-  top: 67px;
-  width: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
+	position: absolute;
+	margin-bottom: 0px;
+	padding: 0px !important;
+	bottom: 0px;
+	top: 67px;
+	width: 100%;
+	overflow-x: hidden;
+	overflow-y: auto;
 }

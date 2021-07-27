@@ -1,41 +1,41 @@
 {
-  "themeColor": "#C9E7F9",
-  "expandInitialList": false,
-  "disableParcelClick": true,
-  "baseLayers": {
-    "defaultVisibility": true,
-    "opacity": 0.7,
-    "zIndex": 50,
-    "layers": []
-  },
-  "toggleLayers": [
-    {
-      "displayName": "Bridge Projects",
-      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-      "layerName": "simcoe:Road Construction - Bridges",
-      "visible": true,
-      "expanded": true,
-      "zIndex": 202,
-      "legendStyleName": "",
-      "displayFieldName": "Name",
-      "UrlParameter": {
-        "parameterName": "Name",
-        "fieldName": "Name"
-      }
-    },
-    {
-      "displayName": "Roads Projects",
-      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-      "layerName": "simcoe:Road Construction - Roads",
-      "legendStyleName": "",
-      "visible": true,
-      "expanded": false,
-      "zIndex": 201,
-      "displayFieldName": "_Road_Name",
-      "UrlParameter": {
-        "parameterName": "Name",
-        "fieldName": "_Road_Name"
-      }
-    }
-  ]
+	"themeColor": "#C9E7F9",
+	"expandInitialList": false,
+	"disableParcelClick": true,
+	"baseLayers": {
+		"defaultVisibility": true,
+		"opacity": 0.7,
+		"zIndex": 50,
+		"layers": []
+	},
+	"toggleLayers": [
+		{
+			"displayName": "Bridge Projects",
+			"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+			"layerName": "simcoe:Road Construction - Bridges",
+			"visible": true,
+			"expanded": true,
+			"zIndex": 202,
+			"legendStyleName": "",
+			"displayFieldName": "Name",
+			"UrlParameter": {
+				"parameterName": "Name",
+				"fieldName": "Name"
+			}
+		},
+		{
+			"displayName": "Roads Projects",
+			"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+			"layerName": "simcoe:Road Construction - Roads",
+			"legendStyleName": "",
+			"visible": true,
+			"expanded": false,
+			"zIndex": 201,
+			"displayFieldName": "_Road_Name",
+			"UrlParameter": {
+				"parameterName": "Name",
+				"fieldName": "_Road_Name"
+			}
+		}
+	]
 }

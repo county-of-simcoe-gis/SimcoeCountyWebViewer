@@ -1,23 +1,23 @@
 .sc-theme-real-estate-main-container {
-  padding: 5px;
-  position: absolute;
-  top: 103px;
-  width: 360px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  bottom: 0px;
+	padding: 5px;
+	position: absolute;
+	top: 103px;
+	width: 360px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	bottom: 0px;
 }
 
 .sc-theme-layer-toggler-symbol.sc-theme-real-estate-layer-icon {
-  background: rgba(0, 0, 0, 0) linear-gradient(to bottom, rgba(242, 245, 246, 1) 0%, rgba(230, 230, 230, 1) 100%) repeat scroll 0 0;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  margin-bottom: 2px;
-  margin-top: 2px;
-  padding-top: 3px;
-  padding-bottom: 5px;
-  text-align: center;
-  width: 30px;
-  height: 30px;
-  float: left;
+	background: rgba(0, 0, 0, 0) linear-gradient(to bottom, rgba(242, 245, 246, 1) 0%, rgba(230, 230, 230, 1) 100%) repeat scroll 0 0;
+	border: 1px solid #ccc;
+	border-radius: 3px;
+	margin-bottom: 2px;
+	margin-top: 2px;
+	padding-top: 3px;
+	padding-bottom: 5px;
+	text-align: center;
+	width: 30px;
+	height: 30px;
+	float: left;
 }

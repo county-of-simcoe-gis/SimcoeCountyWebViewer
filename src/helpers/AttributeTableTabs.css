@@ -1,134 +1,134 @@
 .sc-attribute-table-tab {
-  display: inline-block;
-  padding-left: 5px;
-  padding-right: 5px;
-  padding-top: 3px;
-  padding-bottom: 6px;
-  background-color: #ddd;
-  /* margin-right: 2px; */
-  border-right: 1px solid #c1c0c0;
+	display: inline-block;
+	padding-left: 5px;
+	padding-right: 5px;
+	padding-top: 3px;
+	padding-bottom: 6px;
+	background-color: #ddd;
+	/* margin-right: 2px; */
+	border-right: 1px solid #c1c0c0;
 }
 
 .sc-attribute-tab-close-img {
-  padding-left: 7px;
-  padding-bottom: 2px;
-  margin-top: -3px;
-  margin-right: -5px;
+	padding-left: 7px;
+	padding-bottom: 2px;
+	margin-top: -3px;
+	margin-right: -5px;
 }
 
 .sc-attribute-table {
-  border: 1px solid #000;
-  position: absolute;
-  top: 24px;
-  bottom: 0px;
-  left: 0px;
-  right: 0px;
-  /* overflow: auto; */
+	border: 1px solid #000;
+	position: absolute;
+	top: 24px;
+	bottom: 0px;
+	left: 0px;
+	right: 0px;
+	/* overflow: auto; */
 }
 .sc-attribute-table-header {
-  background-color: #ddd !important;
-  border-right: 1px solid rgb(168, 167, 167) !important;
-  height: 20px;
-  font-size: 10pt;
-  bottom: 2px;
+	background-color: #ddd !important;
+	border-right: 1px solid rgb(168, 167, 167) !important;
+	height: 20px;
+	font-size: 10pt;
+	bottom: 2px;
 }
 
 .sc-attribute-table .header {
-  height: 20px !important;
-  max-height: 20px !important;
-  cursor: pointer;
-  font-weight: bold;
-  box-shadow: none !important;
+	height: 20px !important;
+	max-height: 20px !important;
+	cursor: pointer;
+	font-weight: bold;
+	box-shadow: none !important;
 }
 
 .sc-attribute-table .footer {
-  background-color: #dddddd;
-  padding-left: 20px;
-  min-width: 460px;
-  /* padding-right: 5px; */
-  /* width: fit-content !important; */
+	background-color: #dddddd;
+	padding-left: 20px;
+	min-width: 460px;
+	/* padding-right: 5px; */
+	/* width: fit-content !important; */
 }
 
 .sc-attribute-table .table.sticky {
-  /* overflow: hidden; */
-  overflow-x: auto !important;
-  overflow-y: hidden !important;
+	/* overflow: hidden; */
+	overflow-x: auto !important;
+	overflow-y: hidden !important;
 }
 
 .sc-attribute-table-container .react-tabs__tab--selected {
-  background: linear-gradient(to bottom, rgba(240, 249, 255, 1) 0%, rgb(99, 100, 101) 100%) !important;
+	background: linear-gradient(to bottom, rgba(240, 249, 255, 1) 0%, rgb(99, 100, 101) 100%) !important;
 }
 
 .sc-attribute-table-footer {
 }
 
 .sc-attribute-table-footer-button {
-  max-height: 25px !important;
-  min-height: 25px !important;
-  margin-left: 5px;
-  width: 80px;
+	max-height: 25px !important;
+	min-height: 25px !important;
+	margin-left: 5px;
+	width: 80px;
 }
 .sc-attribute-table-loading {
-  display: inline;
-  margin-left: 5px;
+	display: inline;
+	margin-left: 5px;
 }
 .sc-attribute-table .resizer {
-  /* width: 10px !important;
+	/* width: 10px !important;
   right: -2px !important; */
 }
 
 .sc-attribute-table-close-button-container {
-  width: 10px;
-  height: 10px;
-  background-color: #949697;
-  border: 1px solid black;
-  position: relative;
-  right: -3px;
-  bottom: 1px;
-  float: right;
-  margin-right: 3px;
-  margin-left: 3px;
-  cursor: pointer;
+	width: 10px;
+	height: 10px;
+	background-color: #949697;
+	border: 1px solid black;
+	position: relative;
+	right: -3px;
+	bottom: 1px;
+	float: right;
+	margin-right: 3px;
+	margin-left: 3px;
+	cursor: pointer;
 }
 
 .sc-attribute-table-close-button-mid {
-  height: 10px;
-  width: 2px;
-  margin-left: 4px;
-  background-color: black;
-  -webkit-transform: rotate(45deg);
-  transform: rotate(45deg);
-  z-index: 1;
+	height: 10px;
+	width: 2px;
+	margin-left: 4px;
+	background-color: black;
+	-webkit-transform: rotate(45deg);
+	transform: rotate(45deg);
+	z-index: 1;
 }
 
 .sc-attribute-table-close-button-mid2 {
-  height: 10px;
-  width: 2px;
-  background-color: black;
-  -webkit-transform: rotate(90deg);
-  transform: rotate(90deg);
-  z-index: 2;
+	height: 10px;
+	width: 2px;
+	background-color: black;
+	-webkit-transform: rotate(90deg);
+	transform: rotate(90deg);
+	z-index: 2;
 }
 
 .sc-attribute-table-container {
 }
 
 .sc-attribute-table-cell-button {
-  background-color: #ddd !important;
-  border: 1px solid black !important;
+	background-color: #ddd !important;
+	border: 1px solid black !important;
 }
 
 .sc-attribute-table-closer {
-  position: absolute;
-  right: 5px;
-  top: 3px;
-  cursor: pointer;
+	position: absolute;
+	right: 5px;
+	top: 3px;
+	cursor: pointer;
 }
 
 .sc-attribute-table-header-content {
-  /* font-size: 10pt; */
+	/* font-size: 10pt; */
 }
 
 .sc-attribute-table-row-content {
-  font-size: 10pt;
+	font-size: 10pt;
 }

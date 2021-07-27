@@ -1,36 +1,36 @@
 .sc-attribute-table-container {
-  z-index: 4;
-  background-color: aliceblue;
-  position: absolute !important;
-  bottom: 0px;
-  right: 0;
-  overflow-x: hidden;
-  overflow-y: hidden;
+	z-index: 4;
+	background-color: aliceblue;
+	position: absolute !important;
+	bottom: 0px;
+	right: 0;
+	overflow-x: hidden;
+	overflow-y: hidden;
 }
 
 .sc-attribute-handle {
-  background-image: url("./images/resize.png");
-  background-repeat: no-repeat;
-  text-align: center;
-  background-position-x: center;
-  background-position-y: 0px;
+	background-image: url("./images/resize.png");
+	background-repeat: no-repeat;
+	text-align: center;
+	background-position-x: center;
+	background-position-y: 0px;
 }
 
 .sc-attribute-table-container-parent {
-  display: -webkit-flex;
-  display: flex;
-  height: 100%;
-  z-index: 4;
-  /* vertical-align: bottom; */
-  position: absolute;
-  /* background-color: aliceblue; */
-  top: 0;
-  bottom: 0;
-  right: 0;
-  left: 0;
-  pointer-events: none;
+	display: -webkit-flex;
+	display: flex;
+	height: 100%;
+	z-index: 4;
+	/* vertical-align: bottom; */
+	position: absolute;
+	/* background-color: aliceblue; */
+	top: 0;
+	bottom: 0;
+	right: 0;
+	left: 0;
+	pointer-events: none;
 }
 
 .sc-attribute-table-container .react-tabs__tab-list {
-  border-top: 3px solid #aaa !important;
+	border-top: 3px solid #aaa !important;
 }

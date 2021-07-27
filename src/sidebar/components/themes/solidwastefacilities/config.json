@@ -1,48 +1,48 @@
 {
-  "themeColor": "#C9E7F9",
-  "expandInitialList": false,
-  "disableParcelClick": true,
-  "baseLayers": {
-    "defaultVisibility": true,
-    "opacity": 0.7,
-    "zIndex": 201,
-    "layers": [
-      {
-        "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-        "layerName": "simcoe:Curbside_Waste_Collection_Day",
-        "displayName": "Solid Waste Collection Days",
-        "clickable": false
-      }
-    ]
-  },
-  "toggleLayers": [
-    {
-      "displayName": "Solid Waste Management Facilities",
-      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-      "layerName": "simcoe:Public Landfills Theme",
-      "visible": true,
-      "expanded": true,
-      "zIndex": 202,
-      "legendStyleName": "",
-      "displayFieldName": "Name",
-      "UrlParameter": {
-        "parameterName": "LANDFILL",
-        "fieldName": "_siteNumber"
-      }
-    },
-    {
-      "displayName": "Bag Tag Locations",
-      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-      "layerName": "simcoe:Bag Tag Locations Theme",
-      "legendStyleName": "",
-      "visible": true,
-      "expanded": false,
-      "zIndex": 203,
-      "displayFieldName": "Name",
-      "UrlParameter": {
-        "parameterName": "BAGTAG",
-        "fieldName": "arn"
-      }
-    }
-  ]
+	"themeColor": "#C9E7F9",
+	"expandInitialList": false,
+	"disableParcelClick": true,
+	"baseLayers": {
+		"defaultVisibility": true,
+		"opacity": 0.7,
+		"zIndex": 201,
+		"layers": [
+			{
+				"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+				"layerName": "simcoe:Curbside_Waste_Collection_Day",
+				"displayName": "Solid Waste Collection Days",
+				"clickable": false
+			}
+		]
+	},
+	"toggleLayers": [
+		{
+			"displayName": "Solid Waste Management Facilities",
+			"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+			"layerName": "simcoe:Public Landfills Theme",
+			"visible": true,
+			"expanded": true,
+			"zIndex": 202,
+			"legendStyleName": "",
+			"displayFieldName": "Name",
+			"UrlParameter": {
+				"parameterName": "LANDFILL",
+				"fieldName": "_siteNumber"
+			}
+		},
+		{
+			"displayName": "Bag Tag Locations",
+			"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+			"layerName": "simcoe:Bag Tag Locations Theme",
+			"legendStyleName": "",
+			"visible": true,
+			"expanded": false,
+			"zIndex": 203,
+			"displayFieldName": "Name",
+			"UrlParameter": {
+				"parameterName": "BAGTAG",
+				"fieldName": "arn"
+			}
+		}
+	]
 }

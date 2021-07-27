@@ -67,35 +67,11 @@ class ToolComponent extends Component {
 
 	render() {
 		return (
-			<PanelComponent
-				onClose={this.onClose}
-				name={this.props.name}
-				helpLink={this.props.helpLink}
-				type="tools"
-			>
+			<PanelComponent onClose={this.onClose} name={this.props.name} helpLink={this.props.helpLink} type="tools">
 				<div className="sc-tool-search-history-main-container">
-					<div style={{ fontSize: "9pt" }}>
-						Below is a list of your most recent searched items. These items will
-						be added automatically after each search you do for future
-						reference.
-					</div>
-					<div
-						className={
-							this.state.items.length === 0
-								? "sc-tool-search-history-no-results"
-								: "sc-hidden"
-						}
-					>
-						Your search history is currently empty. Once you search an item, it
-						will appear here.
-					</div>
-					<div
-						className={
-							this.state.items.length > 0
-								? "sc-tool-search-history-results"
-								: "sc-hidden"
-						}
-					>
+					<div style={{ fontSize: "9pt" }}>Below is a list of your most recent searched items. These items will be added automatically after each search you do for future reference.</div>
+					<div className={this.state.items.length === 0 ? "sc-tool-search-history-no-results" : "sc-hidden"}>Your search history is currently empty. Once you search an item, it will appear here.</div>
+					<div className={this.state.items.length > 0 ? "sc-tool-search-history-results" : "sc-hidden"}>
 						{this.state.items.map((item) => {
 							return (
 								<SearchItem
@@ -109,18 +85,8 @@ class ToolComponent extends Component {
 							);
 						})}
 					</div>
-					<div
-						className={
-							this.state.items.length === 0
-								? "sc-hidden"
-								: "sc-tool-search-history-footer"
-						}
-					>
-						<button
-							className="sc-button"
-							style={{ width: "200px", marginTop: "4px" }}
-							onClick={this.onDeleteAll}
-						>
+					<div className={this.state.items.length === 0 ? "sc-hidden" : "sc-tool-search-history-footer"}>
+						<button className="sc-button" style={{ width: "200px", marginTop: "4px" }} onClick={this.onDeleteAll}>
 							{"Clear History - (" + this.state.items.length + " of 25)"}
 						</button>
 					</div>
@@ -138,44 +104,24 @@ const SearchItem = (props) => {
 			<div className="sc-tool-search-history-image">
 				<img src={images["map-marker-light-blue.png"]} alt="Map Marker" />
 			</div>
-			<div className="sc-tool-search-history-details-name">
-				{props.item.name}
-			</div>
-			<div className="sc-tool-search-history-details-muni">
-				{"- (" + props.item.type + ")"}
-			</div>
-			<div className="sc-tool-search-history-details-date">
-				{"Added: " + props.item.dateAdded}
-			</div>
+			<div className="sc-tool-search-history-details-name">{props.item.name}</div>
+			<div className="sc-tool-search-history-details-muni">{"- (" + props.item.type + ")"}</div>
+			<div className="sc-tool-search-history-details-date">{"Added: " + props.item.dateAdded}</div>
 			{/* <div className="sc-tool-search-history-divider"></div> */}
 			<div className="sc-tool-search-history-background" />
 			<div
-				className={
-					props.item.Type === "Address" ||
-					props.item.Type === "Assessment Parcel"
-						? "sc-fakeLink sc-tool-search-history-button-info"
-						: "sc-hidden"
-				}
+				className={props.item.Type === "Address" || props.item.Type === "Assessment Parcel" ? "sc-fakeLink sc-tool-search-history-button-info" : "sc-hidden"}
 				onClick={() => props.onMoreInfoClick(props.item)}
 			>
 				More Information
 			</div>
-			<div
-				className="sc-fakeLink sc-tool-search-history-button-replay"
-				onClick={() => props.onReplayClick(props.item)}
-			>
+			<div className="sc-fakeLink sc-tool-search-history-button-replay" onClick={() => props.onReplayClick(props.item)}>
 				Replay Search
 			</div>
-			<div
-				className="sc-fakeLink sc-tool-search-history-button-remove"
-				onClick={() => props.onRemoveClick(props.item)}
-			>
+			<div className="sc-fakeLink sc-tool-search-history-button-remove" onClick={() => props.onRemoveClick(props.item)}>
 				Remove
 			</div>
-			<div
-				className="sc-fakeLink sc-tool-search-history-button-zoom"
-				onClick={() => props.onZoomClick(props.item)}
-			>
+			<div className="sc-fakeLink sc-tool-search-history-button-zoom" onClick={() => props.onZoomClick(props.item)}>
 				Zoom
 			</div>
 		</div>
@@ -183,9 +129,7 @@ const SearchItem = (props) => {
 };
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg|gif)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

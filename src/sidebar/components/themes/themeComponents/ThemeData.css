@@ -1,38 +1,36 @@
-
-
-.sc-theme-data-container{
-  padding: 5px;
+.sc-theme-data-container {
+	padding: 5px;
 }
 
-.sc-theme-data-list-item-container{
-  display: list-item;
-  vertical-align: middle;
+.sc-theme-data-list-item-container {
+	display: list-item;
+	vertical-align: middle;
 }
 
-.sc-theme-data-list-header-table-icon{
-  display: table-cell;
-  vertical-align: middle;
-  width: 11%;
-  padding-left: 5px;
+.sc-theme-data-list-header-table-icon {
+	display: table-cell;
+	vertical-align: middle;
+	width: 11%;
+	padding-left: 5px;
 }
 
-.sc-theme-data-list-header-symbol{
-  vertical-align: middle;
-  display: table-cell;
-  width: 11%;
+.sc-theme-data-list-header-symbol {
+	vertical-align: middle;
+	display: table-cell;
+	width: 11%;
 }
 
-.sc-theme-data-list-item{
-  padding-top: 7px;
-  font-size: 11pt;
-  cursor: pointer;
+.sc-theme-data-list-item {
+	padding-top: 7px;
+	font-size: 11pt;
+	cursor: pointer;
 }
 
-  .sc-theme-data-list-item:hover{
-    background-color: #d3faff;
-  }
+.sc-theme-data-list-item:hover {
+	background-color: #d3faff;
+}
 
-.sc-theme-data-filter-label{
-  font-size: 12px;
-  padding-bottom: 5px;
+.sc-theme-data-filter-label {
+	font-size: 12px;
+	padding-bottom: 5px;
 }

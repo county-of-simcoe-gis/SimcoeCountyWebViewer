@@ -1,36 +1,36 @@
-.sc-map{
-    position: absolute;
-    background-color: rgb(238, 238, 238);
-    overflow: hidden;
-    min-width: 1px;
-    min-height: 1px;
-    /* left: 0px; */
-    left: 65px;
-    top: 52px;
-    right: 0px;
-    bottom: 0px;
-    /* width: auto; */
-    height: auto;
-    padding: 0px;
-    z-index: auto;
-    border-top: 1px solid #bbbbbb;
-    border-left:  none !important;
-    border-right:  none;
-    border-bottom:  none;
-    outline: none;
+.sc-map {
+	position: absolute;
+	background-color: rgb(238, 238, 238);
+	overflow: hidden;
+	min-width: 1px;
+	min-height: 1px;
+	/* left: 0px; */
+	left: 65px;
+	top: 52px;
+	right: 0px;
+	bottom: 0px;
+	/* width: auto; */
+	height: auto;
+	padding: 0px;
+	z-index: auto;
+	border-top: 1px solid #bbbbbb;
+	border-left: none !important;
+	border-right: none;
+	border-bottom: none;
+	outline: none;
 }
 
-    .sc-map-slidein {
-        transform: translateX(0px);
-        transition: transform 200ms ease-in;
-        right: 0px;
-    }
-    .sc-map-slideout {
-        transform: translateX(305px);
-        transition: transform 200ms ease-in;
-        right: 305px;
-    }
-    /* .sc-map-slidein {
+.sc-map-slidein {
+	transform: translateX(0px);
+	transition: transform 200ms ease-in;
+	right: 0px;
+}
+.sc-map-slideout {
+	transform: translateX(305px);
+	transition: transform 200ms ease-in;
+	right: 305px;
+}
+/* .sc-map-slidein {
       transform: translateX(0px);
       transition: transform 300ms ease-in;
       right: 0px;
@@ -40,21 +40,21 @@
       transition: transform 300ms ease-in;
       right: 371px;
   } */
-    .sc-map-closed{
-        position: absolute;
-        background-color: rgb(238, 238, 238);
-        overflow: hidden;
-        min-width: 1px;
-        min-height: 1px;
-        left: 65px;
-        top: 52px;
-        bottom: 0px;
-        width: auto;
-        height: auto;
-        padding: 0px;
-        z-index: auto;
-        right: 0px;
-    }
+.sc-map-closed {
+	position: absolute;
+	background-color: rgb(238, 238, 238);
+	overflow: hidden;
+	min-width: 1px;
+	min-height: 1px;
+	left: 65px;
+	top: 52px;
+	bottom: 0px;
+	width: auto;
+	height: auto;
+	padding: 0px;
+	z-index: auto;
+	right: 0px;
+}
 
 /* .sc-map-context-menu-container{
   width: 100%;
@@ -64,76 +64,75 @@
   width: 200px !important;
 } */
 
-.sc-map-github-button{
-  position: absolute;
-  top: 61px;
-  left: 115px;
-  width: 250px;
+.sc-map-github-button {
+	position: absolute;
+	top: 61px;
+	left: 115px;
+	width: 250px;
 }
 
-  .sc-map-github-button.slidein {
-    transform: translateX(0px);
-    transition: transform 200ms ease-in;
-    right: 0px;
-  }
-  .sc-map-github-button.slideout {
-    transform: translateX(304px);
-    transition: transform 200ms ease-in;
-    right: 304px;
-  }
-  .draw {
-    cursor:crosshair;
-  }
-  .standard {
-    cursor:pointer;
-  }
-  .identify {
-    cursor:help;
-  }
+.sc-map-github-button.slidein {
+	transform: translateX(0px);
+	transition: transform 200ms ease-in;
+	right: 0px;
+}
+.sc-map-github-button.slideout {
+	transform: translateX(304px);
+	transition: transform 200ms ease-in;
+	right: 304px;
+}
+.draw {
+	cursor: crosshair;
+}
+.standard {
+	cursor: pointer;
+}
+.identify {
+	cursor: help;
+}
 
 @media only screen and (max-width: 770px) {
-   .sc-map{
-    position: absolute;
-    background-color: rgb(238, 238, 238);
-    overflow: hidden;
-    min-width: 1px;
-    min-height: 1px;
-    left: 0px;
-    top: 52px;
-    right: 0px;
-    bottom: 0px;
-    /* width: auto; */
-    height: auto;
-    padding: 0px;
-    z-index: auto;
-    border-top: 1px solid #bbbbbb;
-}
+	.sc-map {
+		position: absolute;
+		background-color: rgb(238, 238, 238);
+		overflow: hidden;
+		min-width: 1px;
+		min-height: 1px;
+		left: 0px;
+		top: 52px;
+		right: 0px;
+		bottom: 0px;
+		/* width: auto; */
+		height: auto;
+		padding: 0px;
+		z-index: auto;
+		border-top: 1px solid #bbbbbb;
+	}
 
-.sc-map-github-button{
-  display: none;
-}
+	.sc-map-github-button {
+		display: none;
+	}
 
-    .sc-map-slidein {
-        -webkit-transition: none !important;
-  -moz-transition: none !important;
-  -o-transition: none !important;
-  transition: none !important;
-  transform: none !important;
-        right: 0px;
-        left: 0px;
-        /* transform: translateX(0px);
+	.sc-map-slidein {
+		-webkit-transition: none !important;
+		-moz-transition: none !important;
+		-o-transition: none !important;
+		transition: none !important;
+		transform: none !important;
+		right: 0px;
+		left: 0px;
+		/* transform: translateX(0px);
         transition: transform 400ms ease-in; */
-    }
-    .sc-map-slideout {
-        -webkit-transition: none !important;
-  -moz-transition: none !important;
-  -o-transition: none !important;
-  transition: none !important;
-  transform: none !important;
-        right: 0px;
-        left: 0px;
-        /* transform: translateX(-375px);
+	}
+	.sc-map-slideout {
+		-webkit-transition: none !important;
+		-moz-transition: none !important;
+		-o-transition: none !important;
+		transition: none !important;
+		transform: none !important;
+		right: 0px;
+		left: 0px;
+		/* transform: translateX(-375px);
         transition: transform 400ms ease-in; */
-    }
- 
+	}
 }

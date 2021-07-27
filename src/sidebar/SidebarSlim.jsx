@@ -12,11 +12,7 @@ class SidebarSlim extends Component {
 
 	render() {
 		return (
-			<div
-				className={
-					window.sidebarOpen ? "sc-hidden" : "sc-sidebar-slim-container"
-				}
-			>
+			<div className={window.sidebarOpen ? "sc-hidden" : "sc-sidebar-slim-container"}>
 				<SlimButton
 					title="Layers"
 					image="legend-32x32.png"
@@ -25,6 +21,7 @@ class SidebarSlim extends Component {
 					}}
 					isSelected={this.props.tabIndex === 0}
 					isActive={false}
+					hidden={this.props.hideLayers}
 				/>
 				<SlimButton
 					title="Tools"
@@ -34,6 +31,7 @@ class SidebarSlim extends Component {
 					}}
 					isSelected={this.props.tabIndex === 1}
 					isActive={this.props.toolActive}
+					hidden={this.props.hideTools}
 				/>
 				<SlimButton
 					title="My Maps"
@@ -43,6 +41,7 @@ class SidebarSlim extends Component {
 					}}
 					isSelected={this.props.tabIndex === 2}
 					isActive={this.props.isMyMapsEditing}
+					hidden={this.props.hideMyMaps}
 				/>
 				<SlimButton
 					title="Themes"
@@ -52,6 +51,7 @@ class SidebarSlim extends Component {
 					}}
 					isSelected={this.props.tabIndex === 3}
 					isActive={this.props.themeActive}
+					hidden={this.props.hideThemes}
 				/>
 				<SlimButton
 					title="Reports"
@@ -61,6 +61,7 @@ class SidebarSlim extends Component {
 					}}
 					isSelected={this.props.tabIndex === 4}
 					isActive={false}
+					hidden={this.props.hideReports}
 				/>
 				<div className="sc-sidebar-slim-footer-container">
 					<MenuButton />
@@ -76,19 +77,8 @@ class SlimButton extends Component {
 
 	render() {
 		return (
-			<div
-				key={helpers.getUID()}
-				className={
-					"sc-sidebar-slim-button-container" +
-					(this.props.isSelected ? " active" : "")
-				}
-				onClick={this.props.onClick}
-			>
-				<span
-					className={
-						this.props.isActive ? "sc-sidebar-slim-button-dot" : "sc-hidden"
-					}
-				/>
+			<div key={helpers.getUID()} className={"sc-sidebar-slim-button-container" + (this.props.isSelected ? " active" : "") + (this.props.hidden ? " sc-hidden" : "")} onClick={this.props.onClick}>
+				<span className={this.props.isActive ? "sc-sidebar-slim-button-dot" : "sc-hidden"} />
 				<button className="sc-sidebar-slim-button">
 					<img src={images[this.props.image]} alt={this.props.title} />
 					<br />
@@ -100,9 +90,7 @@ class SlimButton extends Component {
 }
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));

@@ -1,131 +1,131 @@
 {
-  "themeColor": "#C9E7F9",
-  "expandInitialList": false,
-  "disableParcelClick": true,
-  "popupLogoImage": "forestry-logo.png",
-  "baseLayers": {
-    "defaultVisibility": true,
-    "opacity": 0.7,
-    "zIndex": 201,
-    "legendImageName": "forestry-legend.png",
-    "layers": [
-      {
-        "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-        "layerName": "simcoe:County_Forest_Access_Road_Theme",
-        "displayName": "County Forest Access Road",
-        "clickable": true,
-        "moreInfoUrlFieldName": "_url"
-      },
-      {
-        "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-        "layerName": "simcoe:Forest_Exclusive_Trail_OFSCTrail_Theme",
-        "displayName": "OFSC Trail",
-        "clickable": true
-      },
-      {
-        "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-        "layerName": "simcoe:Forestry_ActiveOperations_Theme",
-        "displayName": "Forestry Active Operations",
-        "clickable": true
-      },
-      {
-        "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-        "layerName": "simcoe:Tree_Cut_Permit_Polygon_Theme",
-        "displayName": "Tree Cut Permit",
-        "clickable": true
-      },
-      {
-        "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-        "layerName": "simcoe:Forest_Tract_Polygons_Theme",
-        "displayName": "Forest Tracts",
-        "clickable": true,
-        "moreInfoUrlFieldName": "_url"
-      },
-      {
-        "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-        "layerName": "simcoe:Muncipal_Park_Polygons_Theme",
-        "displayName": "Municipal Park",
-        "clickable": true
-      },
-      {
-        "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-        "layerName": "simcoe:Provincial_Park_Polygons_Theme",
-        "displayName": "Provincial Park",
-        "clickable": true
-      },
-      {
-        "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-        "layerName": "simcoe:Crown_Land_Polygons_Theme",
-        "displayName": "Crown Land",
-        "clickable": true
-      },
-      {
-        "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-        "layerName": "simcoe:Conservation_Area_Polygons_Theme",
-        "displayName": "Conservation Areas",
-        "clickable": true
-      }
-    ]
-  },
-  "toggleLayers": [
-    {
-      "displayName": "County Forest Tracts",
-      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-      "layerName": "simcoe:Forest_Tract_Points_Theme",
-      "visible": true,
-      "expanded": true,
-      "zIndex": 202,
-      "legendStyleName": "",
-      "displayFieldName": "_tractName",
-      "moreInfoUrlFieldName": "_url",
-      "UrlParameter": {
-        "parameterName": "TRACT",
-        "fieldName": "_tractName"
-      }
-    },
-    {
-      "displayName": "NVCA Conservation Areas",
-      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-      "layerName": "simcoe:NVCA_Conservation_Area_Point_Theme",
-      "legendStyleName": "",
-      "visible": false,
-      "expanded": false,
-      "zIndex": 203,
-      "displayFieldName": "Name",
-      "UrlParameter": {
-        "parameterName": "NVCACONSERVATIONAREA",
-        "fieldName": "Name"
-      }
-    },
-    {
-      "displayName": "LSRCA Conservation Areas",
-      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-      "layerName": "simcoe:LSRCA_Conservation_Points_Theme",
-      "legendStyleName": "",
-      "visible": false,
-      "expanded": false,
-      "zIndex": 204,
-      "displayFieldName": "Name"
-    },
-    {
-      "displayName": "Provincial Parks",
-      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-      "layerName": "simcoe:Provincial_Park_Points_Theme",
-      "legendStyleName": "",
-      "visible": false,
-      "expanded": false,
-      "zIndex": 205,
-      "displayFieldName": "_parkname"
-    },
-    {
-      "displayName": "Municipal Parks",
-      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
-      "layerName": "simcoe:Municipal_Park_Points_Theme",
-      "legendStyleName": "",
-      "visible": false,
-      "expanded": false,
-      "zIndex": 206,
-      "displayFieldName": "_parkname"
-    }
-  ]
+	"themeColor": "#C9E7F9",
+	"expandInitialList": false,
+	"disableParcelClick": true,
+	"popupLogoImage": "forestry-logo.png",
+	"baseLayers": {
+		"defaultVisibility": true,
+		"opacity": 0.7,
+		"zIndex": 201,
+		"legendImageName": "forestry-legend.png",
+		"layers": [
+			{
+				"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+				"layerName": "simcoe:County_Forest_Access_Road_Theme",
+				"displayName": "County Forest Access Road",
+				"clickable": true,
+				"moreInfoUrlFieldName": "_url"
+			},
+			{
+				"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+				"layerName": "simcoe:Forest_Exclusive_Trail_OFSCTrail_Theme",
+				"displayName": "OFSC Trail",
+				"clickable": true
+			},
+			{
+				"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+				"layerName": "simcoe:Forestry_ActiveOperations_Theme",
+				"displayName": "Forestry Active Operations",
+				"clickable": true
+			},
+			{
+				"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+				"layerName": "simcoe:Tree_Cut_Permit_Polygon_Theme",
+				"displayName": "Tree Cut Permit",
+				"clickable": true
+			},
+			{
+				"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+				"layerName": "simcoe:Forest_Tract_Polygons_Theme",
+				"displayName": "Forest Tracts",
+				"clickable": true,
+				"moreInfoUrlFieldName": "_url"
+			},
+			{
+				"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+				"layerName": "simcoe:Muncipal_Park_Polygons_Theme",
+				"displayName": "Municipal Park",
+				"clickable": true
+			},
+			{
+				"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+				"layerName": "simcoe:Provincial_Park_Polygons_Theme",
+				"displayName": "Provincial Park",
+				"clickable": true
+			},
+			{
+				"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+				"layerName": "simcoe:Crown_Land_Polygons_Theme",
+				"displayName": "Crown Land",
+				"clickable": true
+			},
+			{
+				"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+				"layerName": "simcoe:Conservation_Area_Polygons_Theme",
+				"displayName": "Conservation Areas",
+				"clickable": true
+			}
+		]
+	},
+	"toggleLayers": [
+		{
+			"displayName": "County Forest Tracts",
+			"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+			"layerName": "simcoe:Forest_Tract_Points_Theme",
+			"visible": true,
+			"expanded": true,
+			"zIndex": 202,
+			"legendStyleName": "",
+			"displayFieldName": "_tractName",
+			"moreInfoUrlFieldName": "_url",
+			"UrlParameter": {
+				"parameterName": "TRACT",
+				"fieldName": "_tractName"
+			}
+		},
+		{
+			"displayName": "NVCA Conservation Areas",
+			"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+			"layerName": "simcoe:NVCA_Conservation_Area_Point_Theme",
+			"legendStyleName": "",
+			"visible": false,
+			"expanded": false,
+			"zIndex": 203,
+			"displayFieldName": "Name",
+			"UrlParameter": {
+				"parameterName": "NVCACONSERVATIONAREA",
+				"fieldName": "Name"
+			}
+		},
+		{
+			"displayName": "LSRCA Conservation Areas",
+			"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+			"layerName": "simcoe:LSRCA_Conservation_Points_Theme",
+			"legendStyleName": "",
+			"visible": false,
+			"expanded": false,
+			"zIndex": 204,
+			"displayFieldName": "Name"
+		},
+		{
+			"displayName": "Provincial Parks",
+			"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+			"layerName": "simcoe:Provincial_Park_Points_Theme",
+			"legendStyleName": "",
+			"visible": false,
+			"expanded": false,
+			"zIndex": 205,
+			"displayFieldName": "_parkname"
+		},
+		{
+			"displayName": "Municipal Parks",
+			"serverUrl": "https://opengis.simcoe.ca/geoserver/",
+			"layerName": "simcoe:Municipal_Park_Points_Theme",
+			"legendStyleName": "",
+			"visible": false,
+			"expanded": false,
+			"zIndex": 206,
+			"displayFieldName": "_parkname"
+		}
+	]
 }

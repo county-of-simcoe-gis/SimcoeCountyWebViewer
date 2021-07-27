@@ -1,38 +1,37 @@
-.sc-mymaps-colorbar-container{
-  display:table; 
-  width:100%;
-  margin-bottom: 15px;
+.sc-mymaps-colorbar-container {
+	display: table;
+	width: 100%;
+	margin-bottom: 15px;
 }
-
 
 .sc-mymaps-colorbar {
-  text-align: center;
-  display: table-cell;
-  vertical-align: bottom;
-  height: 23px;
+	text-align: center;
+	display: table-cell;
+	vertical-align: bottom;
+	height: 23px;
 }
 
-  .sc-mymaps-colorbar button {
-      min-height: 15px;
-      height: 15px;
-      width: 15px;
-      padding: 2px;
-      border: 1px solid transparent;
-      opacity: 0.60;
-      border-radius: 2px;
-      cursor: pointer;
-      vertical-align: bottom;
-      transition: height 0.3s ease;
-      margin-left: 6px;
-  }
+.sc-mymaps-colorbar button {
+	min-height: 15px;
+	height: 15px;
+	width: 15px;
+	padding: 2px;
+	border: 1px solid transparent;
+	opacity: 0.6;
+	border-radius: 2px;
+	cursor: pointer;
+	vertical-align: bottom;
+	transition: height 0.3s ease;
+	margin-left: 6px;
+}
 
-      .sc-mymaps-colorbar button.active {
-          opacity: 1;
-          height: 23px;
-      }
+.sc-mymaps-colorbar button.active {
+	opacity: 1;
+	height: 23px;
+}
 
-      .sc-mymaps-colorbar button:hover {
-          opacity: 1;
-          height: 23px;
-          transition: height 0.3s ease;
-      }
+.sc-mymaps-colorbar button:hover {
+	opacity: 1;
+	height: 23px;
+	transition: height 0.3s ease;
+}
