@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import * as helpers from "../helpers/helpers";
-import mainConfig from "../config.json";
 import * as drawingHelpers from "../helpers/drawingHelpers";
 import Autocomplete from "react-autocomplete";
 import "./Search.css";
@@ -16,13 +15,9 @@ import Select from "react-select";
 import { KeyboardPan, KeyboardZoom } from "ol/interaction.js";
 
 // URLS
-const apiUrl = mainConfig.apiUrl;
-const googleDirectionsURL = (lat, long) =>
-	`https://www.google.com/maps?saddr=Current+Location&daddr=${lat},${long}`;
-const searchURL = (apiUrl, searchText, type, muni, limit) =>
-	`${apiUrl}async/search/?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
-const searchInfoURL = (apiUrl, locationID) =>
-	`${apiUrl}searchById/${locationID}`;
+const googleDirectionsURL = (lat, long) => `https://www.google.com/maps?saddr=Current+Location&daddr=${lat},${long}`;
+const searchURL = (apiUrl, searchText, type, muni, limit) => `${apiUrl}async/search/?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
+const searchInfoURL = (apiUrl, locationID) => `${apiUrl}searchById/${locationID}`;
 const searchTypesURL = (apiUrl) => `${apiUrl}getSearchTypes`;
 
 // DEFAULT SEARCH LIMIT
@@ -36,64 +31,55 @@ let searchIconLayer = null;
 const locationId = helpers.getURLParameter("LOCATIONID", false);
 
 // IMPORT ALL IMAGES
-const images = importAllImages(
-	require.context("./images", false, /\.(png|jpe?g|svg)$/)
-);
+const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
 function importAllImages(r) {
 	let images = {};
 	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
 	return images;
 }
 
-// STYLES
-const styles = {
-	poly: new Style({
-		stroke: new Stroke({
-			width: 4,
-			color: [255, 0, 0, 0.8],
-		}),
-	}),
-	point: new Style({
-		image: new Icon({
-			anchor: [0.5, 1],
-			src: images["map-marker.png"],
-		}),
-	}),
-	geocode: new Style({
-		image: new CircleStyle({
-			opacity: 0.5,
-			radius: 7,
-			fill: new Fill({ color: [236, 156, 155, 0.7] }),
-		}),
-	}),
-};
-
 class Search extends Component {
 	constructor(props) {
 		super(props);
 
+		// STYLES
+		this.styles = {
+			poly: new Style({
+				stroke: new Stroke({
+					width: 4,
+					color: [255, 0, 0, 0.8],
+				}),
+			}),
+			point: new Style({
+				image: new Icon({
+					anchor: [0.5, 1],
+					src: images["map-marker.png"],
+				}),
+			}),
+			geocode: new Style({
+				image: new CircleStyle({
+					opacity: 0.5,
+					radius: 7,
+					fill: new Fill({ color: [236, 156, 155, 0.7] }),
+				}),
+			}),
+		};
+
 		// BIND THIS TO THE CLICK FUNCTION
 		this.removeMarkersClick = this.removeMarkersClick.bind(this);
 		this.cleanup = this.cleanup.bind(this);
-		this.storageKey = mainConfig.storageKeys.SearchHistory;
 
 		// LISTEN FOR MAP TO MOUNT
 		window.emitter.addListener("mapParametersComplete", () => this.onMapLoad());
 
 		// LISTEN FOR SEARCH FROM HISTORY
-		window.emitter.addListener("searchHistorySelect", (item) =>
-			this.onHistoryItemSelect(item)
-		);
+		window.emitter.addListener("searchHistorySelect", (item) => this.onHistoryItemSelect(item));
 
 		// LISTEN FOR INITIAL SEARCH
 		window.emitter.addListener("tocLoaded", () => this.onInitialSearch());
 
 		// LISTEN FOR EXTERNAL COMPONENT SEARCH
-		window.emitter.addListener(
-			"searchItem",
-			(searchType, searchText, hidden = false) =>
-				this.onSearch(searchType, searchText, hidden)
-		);
+		window.emitter.addListener("searchItem", (searchType, searchText, hidden = false) => this.onSearch(searchType, searchText, hidden));
 
 		this.state = {
 			value: "",
@@ -104,58 +90,63 @@ class Search extends Component {
 			showMore: false,
 			searchTypes: [],
 			selectedType: "",
+			municipality: undefined,
 		};
 	}
 
 	requestTimer = null;
 
 	onMapLoad = () => {
-		// HANDLE URL PARAMETER
-		if (locationId !== null) {
-			// CALL API TO GET LOCATION DETAILS
-			helpers.getJSON(searchInfoURL(apiUrl, locationId), (result) =>
-				this.jsonCallback(result)
-			);
-		}
+		helpers.waitForLoad("map", Date.now(), 30, () => {
+			// HANDLE URL PARAMETER
+			if (locationId !== null) {
+				// CALL API TO GET LOCATION DETAILS
+				helpers.getJSON(searchInfoURL(this.apiUrl, locationId), (result) => this.jsonCallback(result));
+			}
+		});
 	};
 
 	componentDidMount() {
-		helpers.getJSON(searchTypesURL(apiUrl), (result) => {
-			let items = [];
-			items.push({ label: "All", value: "All" });
-			result.forEach((type) => {
-				const obj = { label: type, value: type };
-				items.push(obj);
+		helpers.waitForLoad(["map", "settings"], Date.now(), 30, () => {
+			if (window.config.municipality !== undefined) this.setState({ municipality: window.config.municipality });
+			this.apiUrl = window.config.apiUrl;
+			this.storageKey = window.config.storageKeys.SearchHistory;
+			helpers.getJSON(searchTypesURL(this.apiUrl), (result) => {
+				let items = [];
+				items.push({ label: "All", value: "All" });
+				result.forEach((type) => {
+					const obj = { label: type, value: type };
+					items.push(obj);
+				});
+				items.push({ label: "Open Street Map", value: "Open Street Map" });
+				items.push({ label: "Map Layer", value: "Map Layer" });
+				items.push({ label: "Tool", value: "Tool" });
+				items.push({ label: "Theme", value: "Theme" });
+				this.setState({ searchTypes: items, selectedType: items[0] });
 			});
-			items.push({ label: "Open Street Map", value: "Open Street Map" });
-			items.push({ label: "Map Layer", value: "Map Layer" });
-			items.push({ label: "Tool", value: "Tool" });
-			items.push({ label: "Theme", value: "Theme" });
-			this.setState({ searchTypes: items, selectedType: items[0] });
+
+			// PATCH TO CLOSE MENU WHEN MAP IS CLICKED
+			this.clickEvent = document.body.addEventListener(
+				"click",
+				(evt) => {
+					if (document.activeElement.id !== "sc-search-textbox") return;
+
+					if (typeof evt.target.className === "string") {
+						evt.target.className.split(" ").forEach((className) => {
+							if (className === "ol-overlaycontainer-stopevent") {
+								document.getElementById("map").focus();
+							}
+						});
+					}
+				},
+				true
+			);
 		});
-
-		// PATCH TO CLOSE MENU WHEN MAP IS CLICKED
-		this.clickEvent = document.body.addEventListener(
-			"click",
-			(evt) => {
-				if (document.activeElement.id !== "sc-search-textbox") return;
-
-				if (typeof evt.target.className === "string") {
-					evt.target.className.split(" ").forEach((className) => {
-						if (className === "ol-overlaycontainer-stopevent") {
-							document.getElementById("map").focus();
-						}
-					});
-				}
-			},
-			true
-		);
 	}
 
 	onHistoryItemSelect = (item) => {
 		let searchResults = [item];
-		if (this.state.searchResults.length > 0)
-			searchResults.push(this.state.searchResults);
+		if (this.state.searchResults.length > 0) searchResults.push(this.state.searchResults);
 		let value = item.name.length > 25 ? item.name.substring(0, 25) : item.name;
 		this.setState({ value: value, searchResults: searchResults }, () => {
 			this.onItemSelect(value, item);
@@ -164,8 +155,8 @@ class Search extends Component {
 
 	onInitialSearch = (search_type = undefined, search = undefined) => {
 		// GET SEARCH URL PARAMETERS
-		if (!search) search = helpers.getURLParameter("q");
-		if (!search_type) search_type = helpers.getURLParameter("qt");
+		if (!search) search = helpers.getURLParameter("q", true, true);
+		if (!search_type) search_type = helpers.getURLParameter("qt", true, true);
 		if (!search && search === null) return;
 		if (!search_type && search_type === null) {
 			search_type = "All";
@@ -183,41 +174,21 @@ class Search extends Component {
 				value: search,
 				selectedType: { label: search_type, value: search_type },
 			});
-		helpers.getJSON(
-			encodeURI(searchURL(apiUrl, search, search_type, undefined, 1)),
-			(responseJson) => {
-				if (
-					responseJson[0] !== undefined &&
-					responseJson[0].location_id !== null &&
-					responseJson[0].location_id !== undefined
-				) {
-					helpers.getJSON(
-						searchInfoURL(apiUrl, responseJson[0].location_id),
-						(result) => this.jsonCallback(result, hidden)
-					);
-				}
+		helpers.getJSON(encodeURI(searchURL(this.apiUrl, search, search_type, this.state.municipality, 1)), (responseJson) => {
+			if (responseJson[0] !== undefined && responseJson[0].location_id !== null && responseJson[0].location_id !== undefined) {
+				helpers.getJSON(searchInfoURL(this.apiUrl, responseJson[0].location_id), (result) => this.jsonCallback(result, hidden));
 			}
-		);
+		});
 	};
 
 	onTypeDropDownChange = (selectedType) => {
 		this.setState({ selectedType: selectedType }, async () => {
 			let limit = defaultSearchLimit;
 			if (this.state.showMore) limit = 50;
-			await helpers.getJSONWait(
-				searchURL(
-					apiUrl,
-					this.state.value,
-					this.state.selectedType.value,
-					undefined,
-					limit
-				),
-				(responseJson) => {
-					if (responseJson !== undefined)
-						this.setState({ searchResults: responseJson });
-					else this.setState({ searchResults: [] });
-				}
-			);
+			await helpers.getJSONWait(searchURL(this.apiUrl, this.state.value, this.state.selectedType.value, this.state.municipality, limit), (responseJson) => {
+				if (responseJson !== undefined) this.setState({ searchResults: responseJson });
+				else this.setState({ searchResults: [] });
+			});
 		});
 
 		helpers.addAppStat("Search Type DropDown", selectedType.value);
@@ -228,33 +199,21 @@ class Search extends Component {
 	}
 
 	myMapsClick = (evt) => {
-		const result = this.state.searchResults[0];
-		if (searchIconLayer.getSource().getFeatures()[0] === undefined) return;
-		// ADD MYMAPS
-		if (searchGeoLayer.getSource().getFeatures().length === 0)
-			window.emitter.emit(
-				"addMyMapsFeature",
-				searchIconLayer.getSource().getFeatures()[0],
-				result.Name
-			);
-		else
-			window.emitter.emit(
-				"addMyMapsFeature",
-				searchGeoLayer.getSource().getFeatures()[0],
-				result.Name
-			);
+		helpers.waitForLoad("map", Date.now(), 30, () => {
+			const result = this.state.searchResults[0];
+			if (searchIconLayer.getSource().getFeatures()[0] === undefined) return;
+			// ADD MYMAPS
+			if (searchGeoLayer.getSource().getFeatures().length === 0) window.emitter.emit("addMyMapsFeature", searchIconLayer.getSource().getFeatures()[0], result.name);
+			else window.emitter.emit("addMyMapsFeature", searchGeoLayer.getSource().getFeatures()[0], result.name);
 
-		// CLEAN UP
-		this.cleanup();
+			// CLEAN UP
+			this.cleanup();
+		});
 	};
 
 	directionsClick(evt) {
 		// GET CURRENT FEATURE
-		var coords = searchIconLayer
-			.getSource()
-			.getFeatures()[0]
-			.getGeometry()
-			.getCoordinates();
+		var coords = searchIconLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
 
 		// CONVER TO LAT LONG
 		var latLongCoords = transform(coords, "EPSG:3857", "EPSG:4326");
@@ -284,24 +243,17 @@ class Search extends Component {
 				}),
 				zIndex: 1000,
 			});
-			searchIconLayer.setStyle(styles["point"]);
+			searchIconLayer.setStyle(this.styles["point"]);
 			searchIconLayer.set("name", "sc-search-icon");
 			searchIconLayer.set("disableParcelClick", true);
 			window.map.addLayer(searchIconLayer);
 
 			window.map.on("singleclick", (evt) => {
-				var feature = window.map.forEachFeatureAtPixel(
-					evt.pixel,
-					function (feature, layer) {
-						if (layer === null) return;
+				var feature = window.map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
+					if (layer === null) return;
 
-						if (
-							layer.get("name") !== undefined &&
-							layer.get("name") === "sc-search-icon"
-						)
-							return feature;
-					}
-				);
+					if (layer.get("name") !== undefined && layer.get("name") === "sc-search-icon") return feature;
+				});
 
 				if (feature !== undefined) {
 					window.popup.show(
@@ -343,6 +295,17 @@ class Search extends Component {
 
 		if (!hidden) {
 			// SET SOURCE
+			fullFeature.setProperties({
+				label: result.alias ? result.alias : result.name,
+				name: result.name,
+				is_open_data: result.is_open_data !== undefined && result.is_open_data !== null ? result.is_open_data : true,
+			});
+			pointFeature.setProperties({
+				label: result.alias ? result.alias : result.name,
+				name: result.name,
+				is_open_data: result.is_open_data !== undefined && result.is_open_data !== null ? result.is_open_data : true,
+			});
+
 			searchGeoLayer.getSource().addFeature(fullFeature);
 			searchIconLayer.getSource().addFeature(pointFeature);
 
@@ -351,29 +314,23 @@ class Search extends Component {
 		}
 		// SET STYLE AND ZOOM
 		if (result.geojson.indexOf("Point") !== -1) {
-			searchGeoLayer.setStyle(styles["point"]);
-			window.map
-				.getView()
-				.fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), {
-					duration: 1000,
-				});
+			searchGeoLayer.setStyle(this.styles["point"]);
+			window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), {
+				duration: 1000,
+			});
 			window.map.getView().setZoom(18);
 		} else if (result.geojson.indexOf("Line") !== -1) {
-			searchGeoLayer.setStyle(styles["poly"]);
-			window.map
-				.getView()
-				.fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), {
-					duration: 1000,
-				});
-			window.map.getView().setZoom(window.map.getView().getZoom() - 1);
+			searchGeoLayer.setStyle(this.styles["poly"]);
+			window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), {
+				duration: 1000,
+			});
+			window.map.getView().setZoom(window.map.getView().getZoom() - 1 / window.map.getView().getZoom());
 		} else {
-			searchGeoLayer.setStyle(styles["poly"]);
-			window.map
-				.getView()
-				.fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), {
-					duration: 1000,
-				});
-			window.map.getView().setZoom(window.map.getView().getZoom() - 1);
+			searchGeoLayer.setStyle(this.styles["poly"]);
+			window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), {
+				duration: 1000,
+			});
+			window.map.getView().setZoom(window.map.getView().getZoom() - 1 / window.map.getView().getZoom());
 		}
 
 		//fullFeature.setStyle(myMapsHelpers.getDefaultDrawStyle([255, 0, 0, 0.8], false, 2, fullFeature.getGeometry().getType()));
@@ -394,12 +351,7 @@ class Search extends Component {
 
 			fullFeature.setStyle(pointStyle);
 		} else {
-			let defaultStyle = drawingHelpers.getDefaultDrawStyle(
-				[255, 0, 0, 0.8],
-				false,
-				2,
-				fullFeature.getGeometry().getType()
-			);
+			let defaultStyle = drawingHelpers.getDefaultDrawStyle([255, 0, 0, 0.8], false, 2, fullFeature.getGeometry().getType());
 			defaultStyle.setFill(new Fill({ color: [255, 0, 0, 0] }));
 			fullFeature.setStyle(defaultStyle);
 		}
@@ -457,19 +409,14 @@ class Search extends Component {
 			searchIconLayer.setZIndex(100);
 
 			// SET STYLE AND ZOOM
-			searchGeoLayer.setStyle(styles["point"]);
-			window.map
-				.getView()
-				.fit(feature.getGeometry().getExtent(), window.map.getSize(), {
-					duration: 1000,
-				});
+			searchGeoLayer.setStyle(this.styles["point"]);
+			window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize(), {
+				duration: 1000,
+			});
 			window.map.getView().setZoom(18);
 		} else {
-			//console.log(value);
 			// CALL API TO GET LOCATION DETAILS
-			helpers.getJSON(searchInfoURL(apiUrl, item.location_id), (result) =>
-				this.jsonCallback(result)
-			);
+			helpers.getJSON(searchInfoURL(this.apiUrl, item.location_id), (result) => this.jsonCallback(result));
 		}
 	}
 
@@ -492,20 +439,10 @@ class Search extends Component {
 			async () => {
 				let limit = defaultSearchLimit;
 				if (this.state.showMore) limit = 50;
-				await helpers.getJSONWait(
-					searchURL(
-						apiUrl,
-						this.state.value,
-						this.state.selectedType.value,
-						undefined,
-						limit
-					),
-					(responseJson) => {
-						if (responseJson !== undefined)
-							this.searchResultsHandler(responseJson, limit);
-						else this.searchResultsHandler(responseJson, limit);
-					}
-				);
+				await helpers.getJSONWait(searchURL(this.apiUrl, this.state.value, this.state.selectedType.value, this.state.municipality, limit), (responseJson) => {
+					if (responseJson !== undefined) this.searchResultsHandler(responseJson, limit);
+					else this.searchResultsHandler(responseJson, limit);
+				});
 			}
 		);
 
@@ -536,11 +473,7 @@ class Search extends Component {
 					const layerItems = row[1];
 					layerItems.forEach((layer) => {
 						if (layer.tocDisplayName !== undefined) {
-							if (
-								layer.tocDisplayName
-									.toUpperCase()
-									.indexOf(this.state.value.toUpperCase()) >= 0
-							) {
+							if (layer.tocDisplayName.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0) {
 								//console.log(layer);
 								layers.push({
 									fullName: layer.name,
@@ -563,10 +496,8 @@ class Search extends Component {
 		if (selectedType === "All" || selectedType === "Tool") {
 			let tools = [];
 			// eslint-disable-next-line
-			mainConfig.sidebarToolComponents.forEach((tool) => {
-				if (
-					tool.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0
-				) {
+			window.config.sidebarToolComponents.forEach((tool) => {
+				if (tool.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0 && (tool.enabled === undefined || tool.enabled)) {
 					tools.push({
 						name: helpers.replaceAllInString(tool.name, "_", " "),
 						type: "Tool",
@@ -580,10 +511,8 @@ class Search extends Component {
 		// THEMES
 		if (selectedType === "All" || selectedType === "Theme") {
 			let themes = [];
-			mainConfig.sidebarThemeComponents.forEach((theme) => {
-				if (
-					theme.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0
-				) {
+			window.config.sidebarThemeComponents.forEach((theme) => {
+				if (theme.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0 && (theme.enabled === undefined || theme.enabled)) {
 					themes.push({
 						name: helpers.replaceAllInString(theme.name, "_", " "),
 						type: "Theme",
@@ -599,10 +528,7 @@ class Search extends Component {
 
 	disableKeyboardEvents = (disable) => {
 		window.map.getInteractions().forEach(function (interaction) {
-			if (
-				interaction instanceof KeyboardPan ||
-				interaction instanceof KeyboardZoom
-			) {
+			if (interaction instanceof KeyboardPan || interaction instanceof KeyboardZoom) {
 				interaction.setActive(!disable);
 			}
 		});
@@ -613,8 +539,7 @@ class Search extends Component {
 		this.initsearchLayers();
 
 		let dropDownWidth = 50;
-		if (this.state.selectedType !== "")
-			dropDownWidth = dropDownWidth + this.state.selectedType.label.length * 9;
+		if (this.state.selectedType !== "") dropDownWidth = dropDownWidth + this.state.selectedType.label.length * 9;
 
 		if (this.autoCompleteRef !== undefined) {
 			const el = document.getElementById("sc-search-textbox");
@@ -657,14 +582,7 @@ class Search extends Component {
 		return (
 			<div>
 				<div className="sc-search-types-container" tabIndex="-1">
-					<Select
-						tabIndex="-1"
-						styles={groupsDropDownStyles}
-						isSearchable={false}
-						onChange={this.onTypeDropDownChange}
-						options={this.state.searchTypes}
-						value={this.state.selectedType}
-					/>
+					<Select tabIndex="-1" styles={groupsDropDownStyles} isSearchable={false} onChange={this.onTypeDropDownChange} options={this.state.searchTypes} value={this.state.selectedType} />
 				</div>
 
 				<Autocomplete
@@ -709,19 +627,9 @@ class Search extends Component {
 
 							let limit = defaultSearchLimit;
 							if (this.state.showMore) limit = 50;
-							await helpers.getJSONWait(
-								searchURL(
-									apiUrl,
-									value,
-									this.state.selectedType.value,
-									undefined,
-									limit
-								),
-								(responseJson) => {
-									if (responseJson !== undefined)
-										this.searchResultsHandler(responseJson, defaultSearchLimit);
-								}
-							);
+							await helpers.getJSONWait(searchURL(this.apiUrl, value, this.state.selectedType.value, this.state.municipality, limit), (responseJson) => {
+								if (responseJson !== undefined) this.searchResultsHandler(responseJson, defaultSearchLimit);
+							});
 						} else {
 							this.setState({ iconInitialClass: "sc-search-icon-initial" });
 							this.setState({
@@ -733,20 +641,8 @@ class Search extends Component {
 					}}
 					renderMenu={(children) => (
 						<div>
-							<div
-								className={
-									this.state.showMore && this.state.searchResults.length > 9
-										? "sc-search-menu sc-search-menu-scrollable"
-										: "sc-search-menu"
-								}
-							>
-								{children}
-							</div>
-							<MoreOptions
-								numResults={this.state.searchResults.length}
-								onMoreOptionsClick={this.onMoreOptionsClick}
-								showMore={this.state.showMore}
-							/>
+							<div className={this.state.showMore && this.state.searchResults.length > 9 ? "sc-search-menu sc-search-menu-scrollable" : "sc-search-menu"}>{children}</div>
+							<MoreOptions numResults={this.state.searchResults.length} onMoreOptionsClick={this.onMoreOptionsClick} showMore={this.state.showMore} />
 						</div>
 					)}
 					renderItem={(item, isHighlighted) => {
@@ -755,51 +651,20 @@ class Search extends Component {
 						else if (item.type === "Tool" || item.type === "Theme") type = "";
 						else type = item.municipality;
 						return (
-							<div
-								className={
-									isHighlighted
-										? "sc-search-item-highlighted"
-										: "sc-search-item"
-								}
-								key={helpers.getUID()}
-							>
+							<div className={isHighlighted ? "sc-search-item-highlighted" : "sc-search-item"} key={helpers.getUID()}>
 								<div className="sc-search-item-left">
-									<img
-										src={
-											item.imageName === undefined
-												? images["map-marker-light-blue.png"]
-												: images[item.imageName]
-										}
-										alt="blue pin"
-									/>
+									<img src={item.imageName === undefined ? images["map-marker-light-blue.png"] : images[item.imageName]} alt="blue pin" />
 								</div>
 								<div className="sc-search-item-content">
-									<Highlighter
-										highlightClassName="sc-search-highlight-words"
-										searchWords={[this.state.value]}
-										textToHighlight={item.name}
-									/>
-									<div className="sc-search-item-sub-content">
-										{type === ""
-											? item.type
-											: " - " + type + " (" + item.type + ")"}
-									</div>
+									<Highlighter highlightClassName="sc-search-highlight-words" searchWords={[this.state.value]} textToHighlight={item.name} />
+									<div className="sc-search-item-sub-content">{type === "" ? item.type : " - " + type + " (" + item.type + ")"}</div>
 								</div>
 							</div>
 						);
 					}}
 				/>
-				<img
-					className={this.state.iconInitialClass}
-					src={images["magnify.png"]}
-					alt="search"
-				/>
-				<img
-					className={this.state.iconActiveClass}
-					src={images["clear.png"]}
-					alt="clear"
-					onClick={this.cleanup}
-				/>
+				<img className={this.state.iconInitialClass} src={images["magnify.png"]} alt="search" />
+				<img className={this.state.iconActiveClass} src={images["clear.png"]} alt="clear" onClick={this.cleanup} />
 			</div>
 		);
 	}
@@ -839,45 +704,24 @@ class PopupContent extends Component {
 
 	onShareClick = (event) => {
 		this.setState({ copied: true });
-		helpers.showMessage(
-			"Share",
-			"Link has been copied to your clipboard.",
-			"green",
-			2000
-		);
+		helpers.showMessage("Share", "Link has been copied to your clipboard.", "green", 2000);
 	};
 
 	render() {
 		return (
 			<div>
-				<button
-					className="sc-button sc-search-popup-content-button"
-					onClick={this.props.removeMarkersClick}
-				>
+				<button className="sc-button sc-search-popup-content-button" onClick={this.props.removeMarkersClick}>
 					Remove Markers
 				</button>
-				<button
-					className="sc-button sc-search-popup-content-button"
-					onClick={this.props.myMapsClick}
-				>
+				<button className="sc-button sc-search-popup-content-button" onClick={this.props.myMapsClick}>
 					Add to My Maps
 				</button>
 				<CopyToClipboard text={this.state.shareURL}>
-					<button
-						className={
-							this.isPlaceOrGeocode
-								? "sc-hidden"
-								: "sc-button sc-search-popup-content-button"
-						}
-						onClick={this.onShareClick}
-					>
+					<button className={this.isPlaceOrGeocode ? "sc-hidden" : "sc-button sc-search-popup-content-button"} onClick={this.onShareClick}>
 						Share this Location
 					</button>
 				</CopyToClipboard>
-				<button
-					className="sc-button sc-search-popup-content-button"
-					onClick={this.props.directionsClick}
-				>
+				<button className="sc-button sc-search-popup-content-button" onClick={this.props.directionsClick}>
 					Directions to Here
 				</button>
 			</div>
@@ -887,13 +731,8 @@ class PopupContent extends Component {
 
 const MoreOptions = (props) => {
 	return (
-		<div
-			className={props.numResults > 9 ? "sc-search-menu-options" : "sc-hidden"}
-		>
-			<button
-				className="sc-button sc-search-more-options-button"
-				onClick={props.onMoreOptionsClick}
-			>
+		<div className={props.numResults > 9 ? "sc-search-menu-options" : "sc-hidden"}>
+			<button className="sc-button sc-search-more-options-button" onClick={props.onMoreOptionsClick}>
 				{props.showMore ? "Show Less" : "Show More"}
 			</button>
 		</div>

@@ -1,11 +1,39 @@
 {
-  "cities": [
-    { "name": "Parry Sound", "code": "s0000451", "forecastUrl": "https://weather.gc.ca/city/pages/on-103_metric_e.html" },
-    { "name": "Barrie", "code": "s0000415", "forecastUrl": "https://weather.gc.ca/city/pages/on-151_metric_e.html" },
-    { "name": "Midland", "code": "s0000281", "forecastUrl": "https://weather.gc.ca/city/pages/on-169_metric_e.html" },
-    { "name": "Orillia", "code": "s0000414", "forecastUrl": "https://weather.gc.ca/city/pages/on-13_metric_e.html" },
-    { "name": "Collingwood", "code": "s0000108", "forecastUrl": "https://weather.gc.ca/city/pages/on-150_metric_e.html" },
-    { "name": "Alliston", "code": "s0000489", "forecastUrl": "https://weather.gc.ca/city/pages/on-114_metric_e.html" },
-    { "name": "New Tecumseth", "code": "s0000429", "forecastUrl": "https://weather.gc.ca/city/pages/on-49_metric_e.html" }
-  ]
+	"cities": [
+		{
+			"name": "Parry Sound",
+			"code": "s0000451",
+			"forecastUrl": "https://weather.gc.ca/city/pages/on-103_metric_e.html"
+		},
+		{
+			"name": "Barrie",
+			"code": "s0000415",
+			"forecastUrl": "https://weather.gc.ca/city/pages/on-151_metric_e.html"
+		},
+		{
+			"name": "Midland",
+			"code": "s0000281",
+			"forecastUrl": "https://weather.gc.ca/city/pages/on-169_metric_e.html"
+		},
+		{
+			"name": "Orillia",
+			"code": "s0000414",
+			"forecastUrl": "https://weather.gc.ca/city/pages/on-13_metric_e.html"
+		},
+		{
+			"name": "Collingwood",
+			"code": "s0000108",
+			"forecastUrl": "https://weather.gc.ca/city/pages/on-150_metric_e.html"
+		},
+		{
+			"name": "Alliston",
+			"code": "s0000489",
+			"forecastUrl": "https://weather.gc.ca/city/pages/on-114_metric_e.html"
+		},
+		{
+			"name": "New Tecumseth",
+			"code": "s0000429",
+			"forecastUrl": "https://weather.gc.ca/city/pages/on-49_metric_e.html"
+		}
+	]
 }

@@ -1,450 +1,450 @@
 .sc-mymaps-container {
-  position: absolute;
-  margin-bottom: 0px;
-  /* overflow: auto; */
-  padding: 0px !important;
-  bottom: 0px;
-  top: 66px;
-  width: 100%;
-  color: #5b5b5b;
+	position: absolute;
+	margin-bottom: 0px;
+	/* overflow: auto; */
+	padding: 0px !important;
+	bottom: 0px;
+	top: 66px;
+	width: 100%;
+	color: #5b5b5b;
 }
 
 .sc-mymaps {
-  text-align: left;
-  position: absolute;
-  bottom: 0px;
-  top: 0px;
-  left: 0px;
-  right: 0px;
-  overflow: hidden;
+	text-align: left;
+	position: absolute;
+	bottom: 0px;
+	top: 0px;
+	left: 0px;
+	right: 0px;
+	overflow: hidden;
 }
 
 .esriSymbolEditor {
-  display: none !important;
+	display: none !important;
 }
 
 .sc-mymaps-settings-container {
-  background-color: #fff;
-  border: 1px solid #bdbdbd;
-  height: auto;
-  position: absolute;
-  padding: 8px;
-  box-shadow: 0px 6px 16px #868686;
-  border-radius: 3px;
-  z-index: 999;
-  padding: 15px;
-  padding-top: 10px;
+	background-color: #fff;
+	border: 1px solid #bdbdbd;
+	height: auto;
+	position: absolute;
+	padding: 8px;
+	box-shadow: 0px 6px 16px #868686;
+	border-radius: 3px;
+	z-index: 999;
+	padding: 15px;
+	padding-top: 10px;
 }
 
 .sc-mymaps-settings-title {
-  font-size: 14px;
-  margin-bottom: -5px;
-  background-image: url("./images/settings.png");
-  background-position: center left;
-  background-repeat: no-repeat;
-  padding-left: 22px;
+	font-size: 14px;
+	margin-bottom: -5px;
+	background-image: url("./images/settings.png");
+	background-position: center left;
+	background-repeat: no-repeat;
+	padding-left: 22px;
 }
 
 .sc-mymaps-settings-items {
-  margin-left: 5px;
-  margin-top: 10px;
-  border-bottom: 1px solid #ddd;
-  border-top: 1px solid #ddd;
-  padding-top: 6px;
+	margin-left: 5px;
+	margin-top: 10px;
+	border-bottom: 1px solid #ddd;
+	border-top: 1px solid #ddd;
+	padding-top: 6px;
 }
 
 .sc-mymaps-settings-items > div {
-  margin-bottom: 10px;
+	margin-bottom: 10px;
 }
 
 .sc-mymaps-items-wrapper {
-  position: absolute;
-  bottom: 0px;
-  top: 96px;
-  left: 0px;
-  right: 0px;
-  padding: 0px !important;
-  margin: 5px;
+	position: absolute;
+	bottom: 0px;
+	top: 96px;
+	left: 0px;
+	right: 0px;
+	padding: 0px !important;
+	margin: 5px;
 }
 
 .sc-mymaps-items-container {
-  /* height: 100%; */
-  overflow: auto;
-  position: absolute;
-  top: 33px;
-  left: 0;
-  right: 0;
-  bottom: 43px;
-  overflow-x: hidden;
+	/* height: 100%; */
+	overflow: auto;
+	position: absolute;
+	top: 33px;
+	left: 0;
+	right: 0;
+	bottom: 43px;
+	overflow-x: hidden;
 }
 
 .sc-mymaps-items-container-header {
-  height: 33px;
-  background: linear-gradient(to bottom, rgb(255, 255, 255) 0%, rgba(204, 204, 204, 0.51) 100%);
-  border-bottom: 1px solid #ddd;
+	height: 33px;
+	background: linear-gradient(to bottom, rgb(255, 255, 255) 0%, rgba(204, 204, 204, 0.51) 100%);
+	border-bottom: 1px solid #ddd;
 }
 
 .sc-mymaps-items-container-item {
-  height: 45px;
-  padding: 7px;
-  border-bottom: 1px solid #ddd;
-  display: table;
-  width: 98%;
-  margin: 5px;
+	height: 45px;
+	padding: 7px;
+	border-bottom: 1px solid #ddd;
+	display: table;
+	width: 98%;
+	margin: 5px;
 }
 
 .sc-mymaps-items-container-item:first-child {
-  margin-top: 3px;
+	margin-top: 3px;
 }
 
 .sc-mymaps-items-container-item > div {
-  display: table-cell;
-  vertical-align: middle;
-  min-width: 48px;
+	display: table-cell;
+	vertical-align: middle;
+	min-width: 48px;
 }
 
 .sc-mymaps-items-container-item > .right {
-  width: 77px;
-  padding-left: 5px;
-  text-align: center;
+	width: 77px;
+	padding-left: 5px;
+	text-align: center;
 }
 
 .sc-mymaps-items-container-item.remove {
-  background-color: #ddd;
-  color: #fff;
+	background-color: #ddd;
+	color: #fff;
 }
 
 .sc-mymaps-items-container-item-text-input {
-  width: 100%;
-  padding: 4px;
-  font-size: 16px;
-  color: #367cc5;
-  border-radius: 3px;
-  outline: none;
-  border: 1px solid #cecece;
+	width: 100%;
+	padding: 4px;
+	font-size: 16px;
+	color: #367cc5;
+	border-radius: 3px;
+	outline: none;
+	border: 1px solid #cecece;
 }
 
 .sc-mymaps-items-container-item-text-input:focus {
-  box-shadow: 0px 0px 5px 2px rgba(152, 228, 255, 0.8);
+	box-shadow: 0px 0px 5px 2px rgba(152, 228, 255, 0.8);
 }
 
 .sc-mymaps-items-container-item button {
-  min-height: 20px !important;
+	min-height: 20px !important;
 }
 
 .sc-mymaps-footer {
-  position: absolute;
-  position: absolute;
-  /* top: 0; */
-  left: 0;
-  right: 0;
-  bottom: 2px;
-  text-align: center;
+	position: absolute;
+	position: absolute;
+	/* top: 0; */
+	left: 0;
+	right: 0;
+	bottom: 2px;
+	text-align: center;
 }
 
 .sc-mymaps-footer button {
-  font-size: 11px;
-  width: 48%;
+	font-size: 11px;
+	width: 48%;
 }
 
 .sc-mymaps-popup-label-toggler {
-  display: table;
+	display: table;
 }
 
 .sc-mymaps-popup-label-input {
-  width: 100%;
-  padding: 4px;
-  font-size: 16px;
-  color: #367cc5;
+	width: 100%;
+	padding: 4px;
+	font-size: 16px;
+	color: #367cc5;
 }
 
 .sc-mymaps-popup-label {
-  font-weight: bold;
-  color: #404040;
-  padding: 3px;
+	font-weight: bold;
+	color: #404040;
+	padding: 3px;
 }
 
 .sc-mymaps-menu-icon {
-  width: 16px;
-  height: 16px;
-  background-repeat: no-repeat;
+	width: 16px;
+	height: 16px;
+	background-repeat: no-repeat;
 }
 
 .sc-mymaps-menu-icon-default {
-  background-image: url(./images/default.png);
+	background-image: url(./images/default.png);
 }
 
 .sc-mymaps-menu-icon-json {
-  background-image: url(./images/json.png);
+	background-image: url(./images/json.png);
 }
 
 .sc-mymaps-menu-icon-arrow {
-  background-image: url(./images/arrow.png);
+	background-image: url(./images/arrow.png);
 }
 
 .sc-mymaps-menu-icon-edit {
-  background-image: url(./images/edit.png);
+	background-image: url(./images/edit.png);
 }
 
 .sc-mymaps-menu-icon-edit-all {
-  background-image: url(./images/edit-all.png);
+	background-image: url(./images/edit-all.png);
 }
 
 .sc-mymaps-menu-icon-edit-vertices {
-  background-image: url(./images/edit-vertices.png);
+	background-image: url(./images/edit-vertices.png);
 }
 
 .sc-mymaps-menu-icon-edit-move {
-  background-image: url(./images/edit-move.png);
+	background-image: url(./images/edit-move.png);
 }
 
 .sc-mymaps-menu-icon-edit-rotate {
-  background-image: url(./images/edit-rotate.png);
+	background-image: url(./images/edit-rotate.png);
 }
 
 .sc-mymaps-menu-icon-edit-scale {
-  background-image: url(./images/edit-scale.png);
+	background-image: url(./images/edit-scale.png);
 }
 
 .sc-mymaps-menu-icon-measure {
-  background-image: url(./images/measure.png);
+	background-image: url(./images/measure.png);
 }
 
 .sc-mymaps-menu-icon-buffer {
-  background-image: url(./images/buffer.png);
+	background-image: url(./images/buffer.png);
 }
 
 .sc-mymaps-menu-icon-symbolize {
-  background-image: url(./images/symbolize.png);
+	background-image: url(./images/symbolize.png);
 }
 
 .sc-mymaps-menu-icon-zoom {
-  background-image: url(./images/zoom.png);
+	background-image: url(./images/zoom.png);
 }
 
 .sc-mymaps-menu-icon-delete {
-  background-image: url(./images/eraser.png);
+	background-image: url(./images/eraser.png);
 }
 
 .sc-mymaps-menu-icon-select-all {
-  background-image: url(./images/select-all.png);
+	background-image: url(./images/select-all.png);
 }
 
 .sc-mymaps-menu-icon-select-none {
-  background-image: url(./images/select-none.png);
+	background-image: url(./images/select-none.png);
 }
 
 .sc-mymaps-menu-icon-point {
-  background-image: url(./images/point.png);
+	background-image: url(./images/point.png);
 }
 
 .sc-mymaps-menu-icon-line {
-  background-image: url(./images/line.png);
+	background-image: url(./images/line.png);
 }
 
 .sc-mymaps-menu-icon-polygon {
-  background-image: url(./images/polygon.png);
+	background-image: url(./images/polygon.png);
 }
 
 .sc-mymaps-items-no-data {
-  padding: 10px;
+	padding: 10px;
 }
 
 .sc-mymaps-popup-slider-label {
-  position: absolute;
-  right: 40px;
-  top: 11px;
+	position: absolute;
+	right: 40px;
+	top: 11px;
 }
 .sc-mymaps-popup-slider {
-  font-size: 7pt;
-  display: table-cell;
-  padding-left: 38px;
-  padding-top: -14px;
-  position: absolute;
-  top: 6px;
-  right: 15px;
+	font-size: 7pt;
+	display: table-cell;
+	padding-left: 38px;
+	padding-top: -14px;
+	position: absolute;
+	top: 6px;
+	right: 15px;
 }
 
 .sc-mymaps-popup-slider.disabled {
-  pointer-events: none;
-  opacity: 0.4;
+	pointer-events: none;
+	opacity: 0.4;
 }
 
 .sc-mymaps-popup-slider input[type="range"] {
-  -webkit-appearance: none;
+	-webkit-appearance: none;
 }
 
 /* CHROME */
 .sc-mymaps-popup-slider input[type="range"]::-webkit-slider-runnable-track {
-  width: 100px;
-  height: 5px;
-  background: #ddd;
-  border: none;
-  border-radius: 3px;
+	width: 100px;
+	height: 5px;
+	background: #ddd;
+	border: none;
+	border-radius: 3px;
 }
 
 .sc-mymaps-popup-slider input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  border: none;
-  height: 14px;
-  width: 14px;
-  border-radius: 50%;
-  background: #fff;
-  border: solid 2px #96dbfa;
-  margin-top: -4px;
+	-webkit-appearance: none;
+	border: none;
+	height: 14px;
+	width: 14px;
+	border-radius: 50%;
+	background: #fff;
+	border: solid 2px #96dbfa;
+	margin-top: -4px;
 }
 
 .sc-mymaps-popup-slider input[type="range"]:focus {
-  outline: none;
+	outline: none;
 }
 
 .sc-mymaps-popup-slider input[type="range"]:focus::-webkit-slider-runnable-track {
-  background: #ccc;
+	background: #ccc;
 }
 
 /* IE 10+ */
 .sc-mymaps-popup-slider input[type="range"]::-ms-track {
-  width: 100px;
-  height: 5px;
+	width: 100px;
+	height: 5px;
 
-  /*remove bg colour from the track, we'll use ms-fill-lower and ms-fill-upper instead */
-  background: transparent;
+	/*remove bg colour from the track, we'll use ms-fill-lower and ms-fill-upper instead */
+	background: transparent;
 
-  /*leave room for the larger thumb to overflow with a transparent border */
-  border-color: transparent;
-  border-width: 6px 0;
+	/*leave room for the larger thumb to overflow with a transparent border */
+	border-color: transparent;
+	border-width: 6px 0;
 
-  /*remove default tick marks*/
-  color: transparent;
+	/*remove default tick marks*/
+	color: transparent;
 }
 .sc-mymaps-popup-slider input[type="range"]::-ms-fill-lower {
-  background: #777;
-  border-radius: 10px;
+	background: #777;
+	border-radius: 10px;
 }
 .sc-mymaps-popup-slider input[type="range"]::-ms-fill-upper {
-  background: #ddd;
-  border-radius: 10px;
+	background: #ddd;
+	border-radius: 10px;
 }
 .sc-mymaps-popup-slider input[type="range"]::-ms-thumb {
-  border: none;
-  height: 12px;
-  width: 12px;
-  border-radius: 50%;
-  background: #fff;
-  border: solid 2px #96dbfa;
+	border: none;
+	height: 12px;
+	width: 12px;
+	border-radius: 50%;
+	background: #fff;
+	border: solid 2px #96dbfa;
 }
 .sc-mymaps-popup-slider input[type="range"]:focus::-ms-fill-lower {
-  background: #888;
+	background: #888;
 }
 .sc-mymaps-popup-slider input[type="range"]:focus::-ms-fill-upper {
-  background: #ccc;
+	background: #ccc;
 }
 input[type="range"]::-ms-tooltip {
-  display: none;
+	display: none;
 }
 
 /* FIREFOX */
 .sc-mymaps-popup-slider input[type="range"]::-moz-range-track {
-  width: 100px;
-  height: 5px;
-  background: #ddd;
-  border: none;
-  border-radius: 3px;
+	width: 100px;
+	height: 5px;
+	background: #ddd;
+	border: none;
+	border-radius: 3px;
 }
 
 .sc-mymaps-popup-slider input[type="range"]::-moz-range-thumb {
-  border: none;
-  height: 12px;
-  width: 12px;
-  border-radius: 50%;
-  background: #fff;
-  border: solid 2px #96dbfa;
+	border: none;
+	height: 12px;
+	width: 12px;
+	border-radius: 50%;
+	background: #fff;
+	border: solid 2px #96dbfa;
 }
 
 /*hide the outline behind the border*/
 .sc-mymaps-popup-slider input[type="range"]:-moz-focusring {
-  outline: 1px solid white;
-  outline-offset: -1px;
+	outline: 1px solid white;
+	outline-offset: -1px;
 }
 
 .sc-mymaps-popup-slider input[type="range"]:focus::-moz-range-track {
-  background: #ccc;
+	background: #ccc;
 }
 
 .sc-mymaps-popup-checkbox {
-  position: relative;
-  top: -2px;
+	position: relative;
+	top: -2px;
 }
 
 .sc-mymaps-popup-checkbox.disabled {
-  pointer-events: none;
-  opacity: 0.4;
+	pointer-events: none;
+	opacity: 0.4;
 }
 
 .sc-mymaps-tooltip {
-  position: relative;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 4px;
-  color: white;
-  padding: 4px 8px;
-  white-space: nowrap;
-  opacity: 1;
-  font-weight: bold;
+	position: relative;
+	background: rgba(0, 0, 0, 0.5);
+	border-radius: 4px;
+	color: white;
+	padding: 4px 8px;
+	white-space: nowrap;
+	opacity: 1;
+	font-weight: bold;
 }
 
 .sc-mymaps-tooltip:before,
 .sc-mymaps-tooltip-static:before {
-  border-top: 6px solid rgba(0, 0, 0, 0.5);
-  border-right: 6px solid transparent;
-  border-left: 6px solid transparent;
-  content: "";
-  position: absolute;
-  bottom: -6px;
-  margin-left: -7px;
-  left: 50%;
+	border-top: 6px solid rgba(0, 0, 0, 0.5);
+	border-right: 6px solid transparent;
+	border-left: 6px solid transparent;
+	content: "";
+	position: absolute;
+	bottom: -6px;
+	margin-left: -7px;
+	left: 50%;
 }
 @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
-  /* IE10+ CSS styles go here */
-  .sc-mymaps-popup-slider input[type="range"] {
-    /* fix for FF unable to apply focus style bug  */
-    border: 1px solid white;
+	/* IE10+ CSS styles go here */
+	.sc-mymaps-popup-slider input[type="range"] {
+		/* fix for FF unable to apply focus style bug  */
+		border: 1px solid white;
 
-    /*required for proper track sizing in FF*/
-    width: 100px;
-  }
+		/*required for proper track sizing in FF*/
+		width: 100px;
+	}
 
-  .sc-mymaps-popup-slider {
-    position: absolute;
-    left: 152px;
-    top: -16px;
-  }
+	.sc-mymaps-popup-slider {
+		position: absolute;
+		left: 152px;
+		top: -16px;
+	}
 
-  .sc-mymaps-popup-slider-label {
-    position: relative;
-    right: -38px;
-    top: -34px;
-  }
+	.sc-mymaps-popup-slider-label {
+		position: relative;
+		right: -38px;
+		top: -34px;
+	}
 }
 
 @-moz-document url-prefix() {
-  .sc-mymaps-popup-slider input[type="range"] {
-    /* fix for FF unable to apply focus style bug  */
-    border: 1px solid white;
+	.sc-mymaps-popup-slider input[type="range"] {
+		/* fix for FF unable to apply focus style bug  */
+		border: 1px solid white;
 
-    /*required for proper track sizing in FF*/
-    width: 100px;
-  }
+		/*required for proper track sizing in FF*/
+		width: 100px;
+	}
 
-  .sc-mymaps-popup-slider {
-    position: absolute;
-    left: 106px;
-    top: -2px;
-    width: 130px;
-  }
+	.sc-mymaps-popup-slider {
+		position: absolute;
+		left: 106px;
+		top: -2px;
+		width: 130px;
+	}
 
-  .sc-mymaps-popup-slider-label {
-    position: relative;
-    right: -31px;
-    top: -7px;
-  }
+	.sc-mymaps-popup-slider-label {
+		position: relative;
+		right: -31px;
+		top: -7px;
+	}
 }

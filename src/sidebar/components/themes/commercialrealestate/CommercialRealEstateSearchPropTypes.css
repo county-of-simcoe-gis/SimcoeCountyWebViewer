@@ -1,37 +1,37 @@
 .sc-theme-commercial-real-estate-prop-type-title {
-  padding-top: 5px;
-  padding-bottom: 5px;
-  font-weight: bold;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	font-weight: bold;
 }
 
 .sc-theme-commercial-real-estate-prop-type-commercial {
-  margin-right: 15px;
-  border-bottom: 2px solid #c500ff;
+	margin-right: 15px;
+	border-bottom: 2px solid #c500ff;
 }
 
 .sc-theme-commercial-real-estate-prop-type-vacant-land {
-  margin-right: 21px;
-  border-bottom: 2px solid #e59801;
+	margin-right: 21px;
+	border-bottom: 2px solid #e59801;
 }
 
 .sc-theme-commercial-real-estate-prop-type-farm {
-  border-bottom: 2px solid #01ff00;
+	border-bottom: 2px solid #01ff00;
 }
 
 .sc-theme-commercial-real-estate-prop-type-industrial {
-  margin-right: 35px;
-  border-bottom: 2px solid #006fff;
+	margin-right: 35px;
+	border-bottom: 2px solid #006fff;
 }
 
 .sc-theme-commercial-real-estate-prop-type-institutional {
-  margin-right: 40px;
-  border-bottom: 2px solid #333333;
+	margin-right: 40px;
+	border-bottom: 2px solid #333333;
 }
 
 .sc-theme-commercial-real-estate-prop-type-table {
-  display: table;
+	display: table;
 }
 
 .sc-theme-commercial-real-estate-prop-type-table-row {
-  display: table-row;
+	display: table-row;
 }

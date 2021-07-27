@@ -1,132 +1,132 @@
 #sc-search-textbox {
-  height: 41px;
-  width: 100%;
-  font-family: Verdana, Arial, sans-serif;
-  font-size: 22px;
-  width: 100%;
-  padding-left: 80px;
-  box-shadow: none;
-  /* background: url(./images/magnify.png) 100% 50% / auto no-repeat scroll padding-box border-box rgb(255, 255, 255); */
-  display: table-cell;
-  -moz-box-sizing: border-box;
-  -webkit-box-sizing: border-box;
-  box-sizing: border-box;
+	height: 41px;
+	width: 100%;
+	font-family: Verdana, Arial, sans-serif;
+	font-size: 22px;
+	width: 100%;
+	padding-left: 80px;
+	box-shadow: none;
+	/* background: url(./images/magnify.png) 100% 50% / auto no-repeat scroll padding-box border-box rgb(255, 255, 255); */
+	display: table-cell;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
 }
 
 #sc-search-textbox:focus {
-  border: 1px solid #f9c280 !important;
+	border: 1px solid #f9c280 !important;
 }
 
 .sc-search-icon-initial {
-  position: absolute;
-  right: 64px;
-  top: 16px;
-  z-index: 10000000;
+	position: absolute;
+	right: 64px;
+	top: 16px;
+	z-index: 10000000;
 }
 
 .sc-search-icon-initial-hidden {
-  display: none;
+	display: none;
 }
 
 .sc-search-icon-active {
-  position: absolute;
-  right: 77px;
-  top: 15px;
-  cursor: pointer;
-  z-index: 100000;
+	position: absolute;
+	right: 77px;
+	top: 15px;
+	cursor: pointer;
+	z-index: 100000;
 }
 .sc-search-icon-active-hidden {
-  display: none;
+	display: none;
 }
 
 .sc-search-highlight-words {
-  font-weight: bold !important;
-  background: none !important;
+	font-weight: bold !important;
+	background: none !important;
 }
 
 .sc-search-item {
-  font-size: 16px;
-  width: 97%;
-  padding: 6px;
-  border-bottom: 1px solid #e5e5e5;
-  min-width: 450px;
-  cursor: pointer;
-  font-family: Verdana, Arial, sans-serif;
+	font-size: 16px;
+	width: 97%;
+	padding: 6px;
+	border-bottom: 1px solid #e5e5e5;
+	min-width: 450px;
+	cursor: pointer;
+	font-family: Verdana, Arial, sans-serif;
 }
 
 .sc-search-item-highlighted {
-  font-size: 16px;
-  width: 97%;
-  padding: 6px;
-  border-bottom: 1px solid #e5e5e5;
-  min-width: 450px;
-  cursor: pointer;
-  border: 1px solid #f9c280 !important;
-  background-color: #428bca;
-  font-family: Verdana, Arial, sans-serif;
+	font-size: 16px;
+	width: 97%;
+	padding: 6px;
+	border-bottom: 1px solid #e5e5e5;
+	min-width: 450px;
+	cursor: pointer;
+	border: 1px solid #f9c280 !important;
+	background-color: #428bca;
+	font-family: Verdana, Arial, sans-serif;
 }
 .sc-search-menu {
-  position: absolute;
-  z-index: 99999999;
-  display: block;
-  right: auto;
-  float: left;
-  background-color: white;
-  cursor: pointer;
-  overflow-y: hidden;
-  overflow-x: hidden;
-  max-width: 464px;
-  max-height: 420px;
+	position: absolute;
+	z-index: 99999999;
+	display: block;
+	right: auto;
+	float: left;
+	background-color: white;
+	cursor: pointer;
+	overflow-y: hidden;
+	overflow-x: hidden;
+	max-width: 464px;
+	max-height: 420px;
 }
 
 .sc-search-menu-scrollable {
-  overflow-y: scroll;
+	overflow-y: scroll;
 }
 .sc-search-menu-options {
-  position: absolute;
-  z-index: 99999999;
-  display: block;
-  right: auto;
-  float: left;
-  background-color: white;
-  cursor: pointer;
-  height: 43px;
-  text-align: center;
-  top: 458px;
-  width: 462px;
-  border: 1px solid #e5e5e5;
+	position: absolute;
+	z-index: 99999999;
+	display: block;
+	right: auto;
+	float: left;
+	background-color: white;
+	cursor: pointer;
+	height: 43px;
+	text-align: center;
+	top: 458px;
+	width: 462px;
+	border: 1px solid #e5e5e5;
 }
 
 .sc-search-more-options-button {
-  margin-top: 5px;
-  width: 150px;
+	margin-top: 5px;
+	width: 150px;
 }
 
 .sc-search-types-container {
-  max-width: 600px;
-  position: absolute;
-  top: 7px;
-  margin-left: 1px;
-  z-index: 1000000;
+	max-width: 600px;
+	position: absolute;
+	top: 7px;
+	margin-left: 1px;
+	z-index: 1000000;
 }
 
 .sc-search-item-left {
-  width: 31px;
-  float: left;
-  margin-top: 5px;
+	width: 31px;
+	float: left;
+	margin-top: 5px;
 }
 
 .sc-search-item-content {
-  margin-left: 16px;
+	margin-left: 16px;
 }
 
 .sc-search-item-sub-content {
-  font-size: 10px;
+	font-size: 10px;
 }
 
 .sc-search-popup-content-button {
-  width: 100%;
-  margin-bottom: 5px;
+	width: 100%;
+	margin-bottom: 5px;
 }
 
 /* .sc-search-menu-options {
@@ -135,110 +135,110 @@
 } */
 /* MOBILE */
 @media only screen and (max-width: 770px) {
-  #sc-search-textbox {
-    height: 41px;
-    width: 100%;
-    font-family: Verdana, Arial, sans-serif;
-    font-size: 22px;
-    width: 100%;
-    padding-left: 7px;
-    box-shadow: none;
-    background: url(./images/magnify.png) 100% 50% / auto no-repeat scroll padding-box border-box rgb(255, 255, 255);
-  }
+	#sc-search-textbox {
+		height: 41px;
+		width: 100%;
+		font-family: Verdana, Arial, sans-serif;
+		font-size: 22px;
+		width: 100%;
+		padding-left: 7px;
+		box-shadow: none;
+		background: url(./images/magnify.png) 100% 50% / auto no-repeat scroll padding-box border-box rgb(255, 255, 255);
+	}
 
-  .sc-search-icon-initial {
-    display: none;
-  }
+	.sc-search-icon-initial {
+		display: none;
+	}
 
-  .sc-search-icon-initial-hidden {
-    display: none;
-  }
+	.sc-search-icon-initial-hidden {
+		display: none;
+	}
 
-  .sc-search-icon-active {
-    display: none;
-  }
-  .sc-search-icon-active-hidden {
-    display: none;
-  }
+	.sc-search-icon-active {
+		display: none;
+	}
+	.sc-search-icon-active-hidden {
+		display: none;
+	}
 }
 
 /* ----------- iPad 1, 2, Mini and Air ----------- */
 
 /* Portrait and Landscape */
 @media only screen and (min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 1) {
-  #sc-search-textbox {
-    height: 41px;
-  }
+	#sc-search-textbox {
+		height: 41px;
+	}
 }
 
 /* ----------- iPad 3, 4 and Pro 9.7" ----------- */
 
 /* Portrait and Landscape */
 @media only screen and (min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2) {
-  #sc-search-textbox {
-    height: 41px;
-  }
+	#sc-search-textbox {
+		height: 41px;
+	}
 }
 
 /* ----------- iPad Pro 10.5" ----------- */
 
 /* Portrait and Landscape */
 @media only screen and (min-device-width: 834px) and (max-device-width: 1112px) and (-webkit-min-device-pixel-ratio: 2) {
-  #sc-search-textbox {
-    height: 41px;
-  }
+	#sc-search-textbox {
+		height: 41px;
+	}
 }
 
 /* ----------- iPad Pro 12.9" ----------- */
 
 /* Portrait and Landscape */
 @media only screen and (min-device-width: 1024px) and (max-device-width: 1366px) and (-webkit-min-device-pixel-ratio: 2) {
-  #sc-search-textbox {
-    height: 41px;
-  }
+	#sc-search-textbox {
+		height: 41px;
+	}
 }
 
 /* ----------- iPhone 4 and 4S ----------- */
 
 /* Portrait and Landscape */
 @media only screen and (min-device-width: 320px) and (max-device-width: 480px) and (-webkit-min-device-pixel-ratio: 2) {
-  #sc-search-textbox {
-    height: 41px;
-  }
+	#sc-search-textbox {
+		height: 41px;
+	}
 }
 
 /* ----------- iPhone 5, 5S, 5C and 5SE ----------- */
 
 /* Portrait and Landscape */
 @media only screen and (min-device-width: 320px) and (max-device-width: 568px) and (-webkit-min-device-pixel-ratio: 2) {
-  #sc-search-textbox {
-    height: 41px;
-  }
+	#sc-search-textbox {
+		height: 41px;
+	}
 }
 
 /* ----------- iPhone 6, 6S, 7 and 8 ----------- */
 
 /* Portrait and Landscape */
 @media only screen and (min-device-width: 375px) and (max-device-width: 667px) and (-webkit-min-device-pixel-ratio: 2) {
-  #sc-search-textbox {
-    height: 41px;
-  }
+	#sc-search-textbox {
+		height: 41px;
+	}
 }
 
 /* ----------- iPhone 6+, 7+ and 8+ ----------- */
 
 /* Portrait and Landscape */
 @media only screen and (min-device-width: 414px) and (max-device-width: 736px) and (-webkit-min-device-pixel-ratio: 3) {
-  #sc-search-textbox {
-    height: 41px;
-  }
+	#sc-search-textbox {
+		height: 41px;
+	}
 }
 
 /* ----------- iPhone X ----------- */
 
 /* Portrait and Landscape */
 @media only screen and (min-device-width: 375px) and (max-device-width: 812px) and (-webkit-min-device-pixel-ratio: 3) {
-  #sc-search-textbox {
-    height: 41px;
-  }
+	#sc-search-textbox {
+		height: 41px;
+	}
 }

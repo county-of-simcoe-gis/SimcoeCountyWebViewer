@@ -1,7 +1,7 @@
 {
 	"name": "opengis",
 	"homepage": "https://opengis.simcoe.ca/public/",
-	"version": "1.0.11",
+	"version": "1.1.0",
 	"private": true,
 	"dependencies": {
 		"array-move": "^2.2.2",
@@ -35,6 +35,7 @@
 		"react-icons": "^4.2.0",
 		"react-loadable": "^5.5.0",
 		"react-loading": "^2.0.3",
+		"react-masonry-css": "^1.0.16",
 		"react-modal": "^3.12.1",
 		"react-responsive-modal": "^3.6.0",
 		"react-router-dom": "^4.3.1",
