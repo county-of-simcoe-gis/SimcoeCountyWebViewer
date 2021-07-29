@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import "./Settings.css";
-import { ClearLocalStorageButton } from "./SettingsComponents.jsx";
+import { ClearLocalStorageButton, ClearLocalStorageButtonGrouped } from "./SettingsComponents.jsx";
 import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
 import settingsConfig from "./config.json";
@@ -270,9 +270,22 @@ class Settings extends Component {
 								</button>
 							</div>
 							<div className="sc-settings-divider" />
-							{Object.keys(localStorage).map((key) => (
-								<ClearLocalStorageButton key={helpers.getUID()} storageKey={key} clearLocalData={this.clearLocalData} />
-							))}
+							{Object.keys(localStorage)
+								.filter((key) => {
+									return key.indexOf("login.microsoftonline.com") === -1;
+								})
+								.map((key) => (
+									<ClearLocalStorageButton key={helpers.getUID()} storageKey={key} clearLocalData={this.clearLocalData} />
+								))}
+
+							<ClearLocalStorageButtonGrouped
+								key={helpers.getUID()}
+								name={"Login Info"}
+								storageKeys={Object.keys(localStorage).filter((key) => {
+									return key.indexOf("login.microsoftonline.com") !== -1;
+								})}
+								clearLocalData={this.clearLocalData}
+							/>
 						</div>
 
 						<div className="sc-container sc-settings-floatbottom" />
