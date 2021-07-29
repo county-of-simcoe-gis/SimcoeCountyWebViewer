@@ -77,11 +77,11 @@ export const CoordinateActions = (props) => {
 		<div className="sc-coordinates-row">
 			<label>&nbsp;</label>[{" "}
 			<span className="sc-fakeLink" onClick={props.onZoomClick}>
-				zoom
+				Zoom
 			</span>{" "}
 			] [{" "}
 			<span className="sc-fakeLink" onClick={props.onMyMapsClick}>
-				add to my Maps
+				Add to My Maps
 			</span>{" "}
 			]
 		</div>

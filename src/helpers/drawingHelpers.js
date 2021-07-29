@@ -46,7 +46,7 @@ export function getFeatureById(id) {
 				.getSource()
 				.getFeatures()
 				.forEach((feat) => {
-					if (feat.getProperties().id === id) feature = feat;
+					if (feat.get("id") === id) feature = feat;
 					return;
 				});
 		}

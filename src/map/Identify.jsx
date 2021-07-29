@@ -13,6 +13,7 @@ import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style.js";
 import useIframeContentHeight from "react-use-iframe-content-height";
 import Geometry from "ol/geom/Geometry";
 import { useEffect } from "react";
+import GeometryType from "ol/geom/GeometryType";
 
 class Identify extends Component {
 	constructor(props) {
@@ -86,29 +87,43 @@ class Identify extends Component {
 								const extent = window.map.getView().calculateExtent();
 								wfsUrl = wfsUrl.replace("#GEOMETRY#", geometry.flatCoordinates).replace("#TOLERANCE#", 3).replace("#EXTENT#", extent.join(",")).replace("#RESOLUTION#", arcgisResolution);
 							} else {
-								wfsUrl += "INTERSECTS(geom," + wktString + ")";
+								if (geometry.getType() === "MultiPolygon") {
+									let intersectQuery = [];
+									geometry.getPolygons().forEach((poly) => {
+										const tmpFeature = new Feature(poly);
+										const tmpWKTString = helpers.getWKTStringFromFeature(tmpFeature);
+										intersectQuery.push("INTERSECTS(geom," + tmpWKTString + ")");
+									});
+									wfsUrl += intersectQuery.join(" OR ");
+								} else {
+									wfsUrl += "INTERSECTS(geom," + wktString + ")";
+								}
 							}
 							// QUERY USING WFS
 							// eslint-disable-next-line
-							helpers.getJSON(wfsUrl, (result) => {
-								const featureList = isArcGISLayer ? LayerHelpers.parseESRIIdentify(result) : new GeoJSON().readFeatures(result);
-								if (featureList.length > 0) {
-									if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
-									let features = [];
-									featureList.forEach((feature) => {
-										features.push(feature);
-									});
-									if (features.length > 0)
-										layerList.push({
-											name: name,
-											features: features,
-											displayName: displayName,
-											type: type,
-											minScale: minScale,
+							if (wfsUrl.length > 8000) {
+								helpers.showMessage("Geometry too complex", "The geometry you are trying to use is too complex to identify.", helpers.messageColors.red);
+							} else {
+								helpers.getJSON(wfsUrl, (result) => {
+									const featureList = isArcGISLayer ? LayerHelpers.parseESRIIdentify(result) : new GeoJSON().readFeatures(result);
+									if (featureList.length > 0) {
+										if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
+										let features = [];
+										featureList.forEach((feature) => {
+											features.push(feature);
 										});
-									this.setState({ layers: layerList });
-								}
-							});
+										if (features.length > 0)
+											layerList.push({
+												name: name,
+												features: features,
+												displayName: displayName,
+												type: type,
+												minScale: minScale,
+											});
+										this.setState({ layers: layerList });
+									}
+								});
+							}
 						} else {
 							let infoFormat = layer.get("INFO_FORMAT");
 							//console.log(infoFormat);
@@ -409,6 +424,10 @@ const FeatureItem = (props) => {
 	const [open, setOpen] = useState(false);
 	const [excludeIdentifyTitleName, setExcludeIdentifyTitleName] = useState(false);
 	let { feature, displayName, html_url, identifyTitleColumn, identifyIdColumn } = props;
+
+	const onMyMapsClick = (feature, featureName) => {
+		window.emitter.emit("addMyMapsFeature", feature, featureName);
+	};
 	useEffect(() => {
 		helpers.waitForLoad("settings", Date.now(), 30, () => setExcludeIdentifyTitleName(window.config.excludeIdentifyTitleName));
 	}, []);
@@ -470,8 +489,14 @@ const FeatureItem = (props) => {
 				) : (
 					""
 				)}
+				<div className={"sc-identify-add-my-map"}>
+					[&nbsp;
+					<span className="sc-fakeLink " onClick={() => onMyMapsClick(feature, featureName)}>
+						Add to My Maps
+					</span>
+					&nbsp;]
+				</div>
 			</div>
-
 			<div className={open ? "sc-identify-feature-content" : "sc-hidden"}>
 				<IFrame key={helpers.getUID()} src={html_url} filter={cql_filter} />
 				{cql_filter === "" ? helpers.FeatureContent({ feature: feature }) : ""}
