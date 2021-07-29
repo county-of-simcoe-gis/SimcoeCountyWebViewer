@@ -63,7 +63,9 @@ class LayerInfoApp extends Component {
 		if (this.state.layerURL == null) return;
 
 		helpers.getJSONWithParams(this.state.layerURL, this.state.params, (response) => {
-			if (response.featureType === undefined) {
+			if (response.coverage !== undefined) {
+				this.setState({ layerInfo: response.coverage });
+			} else if (response.featureType === undefined) {
 				response["featureType"] = this.parseArcGisFeature(response, (result) => {
 					this.setState({ layerInfo: result });
 				});
@@ -73,6 +75,13 @@ class LayerInfoApp extends Component {
 		});
 	}
 
+	parseFeatureCoverage = (featureInfo, callback) => {
+		let featureType = {};
+		featureType = featureInfo;
+		featureType["attributes"] = {};
+
+		callback(featureType);
+	};
 	parseArcGisFeature = (featureInfo, callback) => {
 		let featureType = {};
 		featureType["nativeCRS"] = {};
@@ -168,7 +177,8 @@ class LayerInfoApp extends Component {
 			return <h3 className={this.state.layerURL == null ? "gli-main-error" : "gli-main-error hidden"}>Error: Layer Not Found or no URL Parameter provided.</h3>;
 
 		const proj = this.getFormattedProjection();
-		let fields = this.state.layerInfo.attributes.attribute;
+		let fields = [];
+		if (this.state.layerInfo.attributes) fields = this.state.layerInfo.attributes.attribute;
 		if (!Array.isArray(fields)) fields = [fields];
 
 		const crs = this.state.layerInfo.nativeCRS["$"];
@@ -249,7 +259,7 @@ class LayerInfoApp extends Component {
 					</fieldset>
 				</div>
 
-				<div className="sc-layerInfo-item-container">
+				<div className={fields.length > 0 ? "sc-layerInfo-item-container" : "hidden"}>
 					<fieldset>
 						<legend>Attribute Fields</legend>
 						<div className="sc-layerInfo-item-content-fields">
