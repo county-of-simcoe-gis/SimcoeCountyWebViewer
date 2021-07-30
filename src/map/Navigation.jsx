@@ -115,6 +115,7 @@ class Navigation extends Component {
 								className={`prevExtentButton ${this.state.extentHistory[0] === 0 ? "disabled" : ""}`}
 								title="Previous Extent"
 								onClick={() => {
+									helpers.addAppStat("ExtentHistory", "Button press previous");
 									helpers.extentHistory("previous");
 								}}
 							>
@@ -124,6 +125,7 @@ class Navigation extends Component {
 								className={`nextExtentButton ${this.state.extentHistory[0] === this.state.extentHistory[1] - 1 ? "disabled" : ""}`}
 								title="Next Extent"
 								onClick={() => {
+									helpers.addAppStat("ExtentHistory", "Button press next");
 									helpers.extentHistory("next");
 								}}
 							>

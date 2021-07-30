@@ -134,8 +134,10 @@ class SCMap extends Component {
 			document.addEventListener("keydown", function (e) {
 				if (e.srcElement.type !== "text" && e.srcElement.type !== "textarea")
 					if (e.shiftKey && e.code === "ArrowLeft") {
+						helpers.addAppStat("ExtentHistory", "Keyboard Shortcut Previous");
 						helpers.extentHistory("previous");
 					} else if (e.srcElement.type !== "text" && e.shiftKey && e.code === "ArrowRight") {
+						helpers.addAppStat("ExtentHistory", "Keyboard Shortcut Next");
 						helpers.extentHistory("next");
 					}
 			});
