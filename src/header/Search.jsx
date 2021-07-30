@@ -526,14 +526,6 @@ class Search extends Component {
 		this.setState({ searchResults: newResults });
 	};
 
-	disableKeyboardEvents = (disable) => {
-		window.map.getInteractions().forEach(function (interaction) {
-			if (interaction instanceof KeyboardPan || interaction instanceof KeyboardZoom) {
-				interaction.setActive(!disable);
-			}
-		});
-	};
-
 	render() {
 		// INIT LAYER
 		this.initsearchLayers();
@@ -593,10 +585,10 @@ class Search extends Component {
 						placeholder: "Search...",
 						name: "sc-search-textbox",
 						onFocus: (result) => {
-							this.disableKeyboardEvents(true);
+							helpers.disableKeyboardEvents(true);
 						},
 						onBlur: (result) => {
-							this.disableKeyboardEvents(false);
+							helpers.disableKeyboardEvents(false);
 						},
 					}}
 					className="sc-search-textbox"
