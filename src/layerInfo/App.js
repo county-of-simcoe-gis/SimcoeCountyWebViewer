@@ -193,8 +193,8 @@ class LayerInfoApp extends Component {
 						<tbody>
 							<tr>
 								<td className="sc-layerInfo-title">{this.state.layerInfo.title}</td>
-								<td style={{ width: "60px" }}>
-									<img onClick={this.onShareClick} title="Share this page through E-Mail" className="sc-layerInfo-headerButton" src={images["share-icon.png"]} alt="Share" />
+								<td style={{ width: "60px" }} className={this.state.hideShare ? "hidden" : ""}>
+									<img onClick={this.onShareClick} title="Share this page through E-Mail" className={"sc-layerInfo-headerButton"} src={images["share-icon.png"]} alt="Share" />
 								</td>
 
 								<td style={{ width: "60px" }}>
@@ -208,13 +208,13 @@ class LayerInfoApp extends Component {
 										alt="Print"
 									/>
 								</td>
-								<td style={{ width: "60px" }}>
+								<td style={{ width: "60px" }} className={this.state.hideNewWindow ? "hidden" : ""}>
 									<img
 										onClick={() => {
 											window.open(window.location.href, "_blank");
 										}}
 										title="Open this page in a new window"
-										className="sc-layerInfo-headerButton"
+										className={"sc-layerInfo-headerButton"}
 										src={images["new-window-icon.png"]}
 										alt="New Window"
 									/>

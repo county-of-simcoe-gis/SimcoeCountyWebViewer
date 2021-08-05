@@ -113,7 +113,7 @@ class FooterTools extends Component {
 		}, 10);
 
 		return (
-			<div id="map-theme">
+			<div className="map-theme">
 				<div id="sc-scale-bar-text" className={this.state.basemapType === "IMAGERY" ? "sc-map-footer-scale-only imagery" : "sc-map-footer-scale-only topo"}>
 					{"Scale: 1:" + this.state.scale}
 				</div>

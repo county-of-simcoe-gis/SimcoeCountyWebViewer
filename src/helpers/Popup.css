@@ -1,4 +1,4 @@
-#map-theme .sc-popup-header {
+.map-theme .sc-popup-header {
 	height: 25px;
 	padding-top: 6px;
 	background: linear-gradient(to bottom, #3980cc 0%, #2865a2 100%);
@@ -11,7 +11,7 @@
 	border-radius: 3px !important;
 }
 
-#map-theme .sc-popup-header-close-button {
+.map-theme .sc-popup-header-close-button {
 	z-index: 500;
 	/* position: absolute;
     top: 2px;
@@ -20,14 +20,14 @@
 }
 
 @media only screen and (max-width: 770px) {
-	#map-theme .sc-property-report-click-more-info {
+	.map-theme .sc-property-report-click-more-info {
 		width: 60% !important;
 	}
 
-	#map-theme .sc-property-report-click-close {
+	.map-theme .sc-property-report-click-close {
 		width: 37% !important;
 	}
-	#map-theme .ol-popup {
+	.map-theme .ol-popup {
 		position: absolute;
 		background-color: white;
 		/* padding: 15px 25px 15px 15px; */
@@ -41,12 +41,12 @@
 		max-width: none !important;
 	}
 
-	#map-theme .ol-popup-content {
+	.map-theme .ol-popup-content {
 		max-width: none;
 		width: 100%;
 	}
 
-	#map-theme .ol-selectable {
+	.map-theme .ol-selectable {
 		transform: unset !important;
 		position: absolute;
 		left: 50px !important;
@@ -55,11 +55,11 @@
 		bottom: 0px;
 		width: 100%;
 	}
-	#map-theme .ol-selectable.hidden {
+	.map-theme .ol-selectable.hidden {
 		bottom: -1000px;
 	}
 
-	#map-theme .ol-popup-content {
+	.map-theme .ol-popup-content {
 		position: relative;
 		width: 100%;
 		max-width: none !important;

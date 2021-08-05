@@ -509,8 +509,8 @@ class SCMap extends Component {
 
 	render() {
 		return (
-			<div>
-				<div id="map-theme">
+			<div id="map-root">
+				<div className="map-theme">
 					<div id={"map-modal-window"} />
 					<div id="map" className={this.state.mapClassName} tabIndex="0" style={{ bottom: this.state.mapBottom }} />
 					<Navigation options={this.props.options} />
