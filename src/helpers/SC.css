@@ -450,4 +450,34 @@ input[type="number"]::-webkit-outer-spin-button {
 	.no-print * {
 		display: none !important;
 	}
+	.header,
+	.sc-sidebar-root,
+	body > div > .map-theme > .map-theme,
+	.sc-map-github-button,
+	.nav-container,
+	.ol-full-screen,
+	.sc-map-footer-scale-only,
+	#sc-basemap-main-container {
+		display: none !important;
+	}
+
+	html,
+	body,
+	#root,
+	#root > div,
+	#map-root,
+	#map-root > .map-theme,
+	#map,
+	#sc-show-window-container {
+		margin: 1% !important;
+
+		width: 98% !important;
+		height: 98% !important;
+		left: 0px !important;
+		right: 0px !important;
+		top: 0px !important;
+		bottom: 0px !important;
+		transform: unset !important;
+		page-break-after: none;
+	}
 }
