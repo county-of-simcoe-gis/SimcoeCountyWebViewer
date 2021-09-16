@@ -30,3 +30,4 @@ yarn-error.log*
 deploy/*
 debug.log
 /src/sidebar/components/toc/debug.log
+package-lock.json

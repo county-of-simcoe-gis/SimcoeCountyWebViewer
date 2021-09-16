@@ -90,7 +90,7 @@ class Navigation extends Component {
 	render() {
 		return (
 			<div>
-				<div id="map-theme">
+				<div className="map-theme">
 					<div className={this.state.containerClassName}>
 						<div
 							className="zoomButton"

@@ -1,4 +1,4 @@
-#map-theme .nav-container {
+.map-theme .nav-container {
 	top: 61px;
 	/* left: 10px; */
 	left: 73px;
@@ -7,20 +7,20 @@
 	position: absolute;
 	z-index: 2;
 }
-#map-theme .nav-container-slidein {
+.map-theme .nav-container-slidein {
 	/* transform: translateX(-375px);
         transition: transform 400ms ease-in; */
 	transform: translateX(0px);
 	transition: transform 300ms ease-in;
 }
-#map-theme .nav-container-slideout {
+.map-theme .nav-container-slideout {
 	/* transform: translateX(0px);
         transition: transform 400ms ease-in; */
 	transform: translateX(304px);
 	transition: transform 300ms ease-in;
 }
 
-#map-theme .zoomButton {
+.map-theme .zoomButton {
 	width: 37px !important;
 	height: 37px !important;
 	line-height: 34px !important;
@@ -36,7 +36,7 @@
 	margin-bottom: 5px;
 }
 
-#map-theme .fullExtentButton {
+.map-theme .fullExtentButton {
 	width: 38px;
 	height: 38px;
 	background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
@@ -45,7 +45,7 @@
 	background-position: center center;
 }
 
-#map-theme .fullExtentContent {
+.map-theme .fullExtentContent {
 	width: 38px;
 	height: 38px;
 	background-image: url(./images/globe-icon.png);
@@ -57,7 +57,7 @@
 	background-position: center center;
 }
 
-#map-theme .zoomToCurrentLocationButton {
+.map-theme .zoomToCurrentLocationButton {
 	margin-top: 5px;
 	width: 38px;
 	height: 38px;
@@ -67,7 +67,7 @@
 	background-position: center center;
 }
 
-#map-theme .zoomToCurrentLocationContent {
+.map-theme .zoomToCurrentLocationContent {
 	width: 38px;
 	height: 38px;
 	background-image: url(./images/target.png);
@@ -119,7 +119,7 @@
 }
 
 @media only screen and (max-width: 770px) {
-	#map-theme .nav-container {
+	.map-theme .nav-container {
 		top: 61px;
 		left: 10px;
 		height: 37px;
@@ -127,7 +127,7 @@
 		position: absolute;
 	}
 
-	#map-theme .nav-container-slideout {
+	.map-theme .nav-container-slideout {
 		-webkit-transition: none !important;
 		-moz-transition: none !important;
 		-o-transition: none !important;
@@ -135,7 +135,7 @@
 		transform: none !important;
 	}
 
-	#map-theme .nav-container-slidein {
+	.map-theme .nav-container-slidein {
 		-webkit-transition: none !important;
 		-moz-transition: none !important;
 		-o-transition: none !important;

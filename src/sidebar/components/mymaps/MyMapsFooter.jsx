@@ -37,6 +37,9 @@ const MyMapsFooter = (props) => {
 					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-delete-unselected">
 						<FloatingMenuItem imageName={"eraser.png"} label="Delete UnSelected" />
 					</MenuItem>
+					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-merge-polygons">
+						<FloatingMenuItem imageName={"merge_polygon.png"} label="Merge Polygons" />
+					</MenuItem>
 					<SubMenu title="Export to ...">
 						<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-export-all-to-kml">
 							<FloatingMenuItem label="KML" />

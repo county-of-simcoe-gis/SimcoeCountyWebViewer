@@ -810,6 +810,9 @@ class MyMaps extends Component {
 			case "sc-floating-menu-export-to-shapefile":
 				this.onDownloadFeatures(OL_DATA_TYPES.KML, this.state.items);
 				break;
+			case "sc-floating-menu-merge-polygons":
+				this.onMergeFeatures(this.state.items);
+				break;
 			default:
 				break;
 		}
@@ -834,6 +837,26 @@ class MyMaps extends Component {
 			});
 	};
 
+	onMergeFeatures = (items = []) => {
+		let allFeatures = this.vectorSource.getFeatures();
+		let wktStrings = [];
+		items.forEach((item) => {
+			const originFeature = allFeatures.filter((featureItem) => featureItem.get("id") === item.id)[0];
+			const featureStyle = originFeature.getStyle();
+			if (originFeature.getGeometry().getType() === "Polygon" && (featureStyle.getFill() || featureStyle.getStroke())) {
+				let polygonString = helpers.getWKTStringFromFeature(originFeature);
+
+				wktStrings.push(polygonString.replace("POLYGON", ""));
+			}
+		});
+		if (wktStrings.length > 0) {
+			let mergedPolygon = `MULTIPOLYGON(${wktStrings.join(",")})`;
+			const mergedFeature = helpers.getWKTFeature(mergedPolygon);
+			window.emitter.emit("addMyMapsFeature", mergedFeature, "Merged Polygon");
+		} else {
+			helpers.showMessage("No Polygons", "No polygons are visible to merge");
+		}
+	};
 	onDownloadFeatures = (dataType = OL_DATA_TYPES.KML, items = []) => {
 		let visibleFeatures = [];
 		let allFeatures = this.vectorSource.getFeatures();
