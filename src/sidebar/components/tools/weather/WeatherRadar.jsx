@@ -128,7 +128,7 @@ class WeatherRadar extends Component {
 
 			if (radarDate !== undefined) {
 				if (radarDate.getTime() === this.state.radarDateSliderValue.getTime() && radarDate.toDateString() === this.state.radarDateSliderValue.toDateString()) {
-					if ((this.state.WKR && radarCode === "WKR") || (this.state.WBI && radarCode === "WBI") || (this.state.WSO && radarCode === "WSO")) {
+					if ((this.state.WKR && radarCode === "CASKR") || (this.state.WBI && radarCode === "WBI") || (this.state.WSO && radarCode === "WSO")) {
 						layer.setVisible(true);
 					} else layer.setVisible(false);
 				} else {
@@ -401,7 +401,7 @@ class WeatherRadar extends Component {
 						<div style={{ fontSize: "10pt", marginLeft: "18px" }}>
 							<label>
 								<input type="checkbox" checked={this.state.WKR} onChange={this.onWKRChange} />
-								WKR (King City)
+								CASKR (King City)
 							</label>
 							<label>
 								<input type="checkbox" checked={this.state.WBI} onChange={this.onWBIChange} />
