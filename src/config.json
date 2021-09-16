@@ -14,7 +14,7 @@
 	"excludeIdentifyTitleName": false,
 	"showFeedbackMessageOnStartup": false,
 	"showWhatsNewOnStartup": false,
-	"showWhatsNewPopupOnStartup": true,
+	"showWhatsNewPopupOnStartup": false,
 	"showTermsOnStartup": true,
 	"googleAnalyticsID": "UA-3104541-53",
 	"appStatsUrl": "https://opengis.simcoe.ca/api/appStats/",
