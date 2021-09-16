@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import "./Navigation.css";
 import { fromLonLat } from "ol/proj";
 import * as helpers from "../helpers/helpers";
+import { FaForward, FaBackward } from "react-icons/fa";
 
 class Navigation extends Component {
 	constructor(props) {
@@ -11,10 +12,14 @@ class Navigation extends Component {
 			containerClassName: "nav-container",
 			showCurrentLocation: true,
 			showZoomExtent: true,
+			extentHistory: [0, 1],
 		};
 
 		// LISTEN FOR SIDEPANEL CHANGES
 		window.emitter.addListener("sidebarChanged", (isSidebarOpen) => this.sidebarChanged(isSidebarOpen));
+
+		// LISTEN FOR HISTORY CHANGES
+		window.emitter.addListener("extentHistoryChanged", (index, count) => this.extentHistoryChanged([index, count]));
 
 		// LISTEN FOR CONTROL VISIBILITY CHANGES
 		window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control, visible));
@@ -27,6 +32,9 @@ class Navigation extends Component {
 		});
 	}
 
+	extentHistoryChanged(extentHistory) {
+		this.setState({ extentHistory });
+	}
 	// ZOOM TO FULL EXTENT
 	zoomFullExtent() {
 		helpers.waitForLoad("settings", Date.now(), 30, () => {
@@ -86,6 +94,7 @@ class Navigation extends Component {
 					<div className={this.state.containerClassName}>
 						<div
 							className="zoomButton"
+							title="Zoom In"
 							onClick={() => {
 								window.map.getView().setZoom(window.map.getView().getZoom() + 1);
 							}}
@@ -94,12 +103,36 @@ class Navigation extends Component {
 						</div>
 						<div
 							className="zoomButton"
+							title="Zoom Out"
 							onClick={() => {
 								window.map.getView().setZoom(window.map.getView().getZoom() - 1);
 							}}
 						>
 							-
 						</div>
+						<div className="extentHistory">
+							<div
+								className={`prevExtentButton ${this.state.extentHistory[0] === 0 ? "disabled" : ""}`}
+								title="Previous Extent"
+								onClick={() => {
+									helpers.addAppStat("ExtentHistory", "Button press previous");
+									helpers.extentHistory("previous");
+								}}
+							>
+								<FaBackward size={15} />
+							</div>
+							<div
+								className={`nextExtentButton ${this.state.extentHistory[0] === this.state.extentHistory[1] - 1 ? "disabled" : ""}`}
+								title="Next Extent"
+								onClick={() => {
+									helpers.addAppStat("ExtentHistory", "Button press next");
+									helpers.extentHistory("next");
+								}}
+							>
+								<FaForward size={15} />
+							</div>
+						</div>
+
 						<div className="fullExtentButton" onClick={this.zoomFullExtent}>
 							<div className="fullExtentContent" />
 						</div>
