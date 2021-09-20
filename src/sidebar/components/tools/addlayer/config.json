@@ -268,6 +268,18 @@
 		},
 		{
 			"server_type": "esri",
+			"label": "Stats Canada",
+			"value": "StatCan",
+			"discoveryUrl": "https://webservices.maps.canada.ca/arcgis/rest/services",
+			"discoverySuffix": "/?f=json",
+			"serviceType": "wms",
+			"serviceUrl": "https://webservices.maps.canada.ca/arcgis/services",
+			"urlSuffix": "/MapServer/WMSServer",
+			"INFO_FORMAT": "text/plain",
+			"XSL_TEMPLATE": "/public/xsl/esri_transform.xsl"
+		},
+		{
+			"server_type": "esri",
 			"label": "maps.simcoe.ca",
 			"value": "Public",
 			"discoveryUrl": "https://maps.simcoe.ca/arcgis/rest/services",

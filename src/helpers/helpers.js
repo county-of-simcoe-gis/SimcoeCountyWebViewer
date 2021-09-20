@@ -1556,3 +1556,48 @@ export function mergeObj(targetObj, sourceObj) {
 	});
 	return targetObj;
 }
+
+export function extentHistory(action, center = undefined, zoom = undefined) {
+	const mapExtentHistoryKey = "mapExtentHistory";
+	const mapExtentHistoryCurrentKey = "mapExtentHistoryCurrent";
+	let index = parseInt(sessionStorage.getItem(mapExtentHistoryCurrentKey));
+	let extents = sessionStorage.getItem(mapExtentHistoryKey) === null ? [] : JSON.parse(sessionStorage.getItem(mapExtentHistoryKey));
+
+	switch (action) {
+		case "init":
+			sessionStorage.setItem(mapExtentHistoryKey, JSON.stringify([{ center: center, zoom: zoom }]));
+			sessionStorage.setItem(mapExtentHistoryCurrentKey, 0);
+			break;
+		case "save":
+			if (!zoom) zoom = window.map.getView().getZoom();
+			if (!center) center = window.map.getView().getCenter();
+			const currentExtentItem = extents[index];
+			if (currentExtentItem.zoom !== zoom || (currentExtentItem.center[0] !== center[0] && currentExtentItem.center[1] !== center[1])) {
+				index++;
+				extents.push({ center: center, zoom: zoom });
+				sessionStorage.setItem(mapExtentHistoryKey, JSON.stringify(extents));
+				sessionStorage.setItem(mapExtentHistoryCurrentKey, index);
+			}
+
+			break;
+		case "next":
+			if (index === extents.length - 1) return;
+			if (extents[index + 1] !== undefined) {
+				sessionStorage.setItem(mapExtentHistoryCurrentKey, index + 1);
+				window.map.getView().setZoom(extents[index + 1].zoom);
+				window.map.getView().setCenter(extents[index + 1].center);
+			}
+			break;
+		case "previous":
+			if (index === 0) return;
+			if (extents[index - 1] !== undefined) {
+				sessionStorage.setItem(mapExtentHistoryCurrentKey, index - 1);
+				window.map.getView().setZoom(extents[index - 1].zoom);
+				window.map.getView().setCenter(extents[index - 1].center);
+			}
+			break;
+		default:
+			break;
+	}
+	window.emitter.emit("extentHistoryChanged", index, extents.length);
+}

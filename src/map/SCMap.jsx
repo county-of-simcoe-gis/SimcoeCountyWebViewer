@@ -122,6 +122,26 @@ class SCMap extends Component {
 			window.popup = new Popup();
 			window.map.addOverlay(window.popup);
 
+			// PREVIOUS/NEXT EXTENT
+			const initialZoom = window.map.getView().getZoom();
+			const initialCenter = window.map.getView().getCenter();
+			helpers.extentHistory("init", initialCenter, initialZoom);
+
+			window.map.on("moveend", (e) => {
+				helpers.extentHistory("save");
+			});
+
+			document.addEventListener("keydown", function (e) {
+				if (e.srcElement.type !== "text" && e.srcElement.type !== "textarea")
+					if (e.shiftKey && e.code === "ArrowLeft") {
+						helpers.addAppStat("ExtentHistory", "Keyboard Shortcut Previous");
+						helpers.extentHistory("previous");
+					} else if (e.srcElement.type !== "text" && e.shiftKey && e.code === "ArrowRight") {
+						helpers.addAppStat("ExtentHistory", "Keyboard Shortcut Next");
+						helpers.extentHistory("next");
+					}
+			});
+
 			window.map.getViewport().addEventListener("contextmenu", (evt) => {
 				evt.preventDefault();
 				this.contextCoords = window.map.getEventCoordinate(evt);
