@@ -1384,7 +1384,7 @@ export function addIsLoaded(item) {
 	if (!window.loaded.includes(item.toLowerCase())) window.loaded.push(item.toLowerCase());
 }
 export function removeIsLoaded(item) {
-	if (window.loaded.includes(item.toLowerCase())) delete window.loaded[item.toLowerCase()];
+	if (window.loaded.includes(item.toLowerCase())) window.loaded.splice(window.loaded.indexOf(item.toLowerCase()), 1);
 }
 
 export function loadConfig(callback) {
