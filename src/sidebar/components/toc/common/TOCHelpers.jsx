@@ -136,6 +136,8 @@ export async function getMap(sources, isReset, tocType, callback) {
 						tocType: tocType,
 						isReset: isReset,
 						requiresToken: source.secure,
+						grouped: source.grouped,
+						grouped_name: source.name,
 					},
 					(layerGroupConfig) => {
 						if (!layerGroupConfig.groups) {
@@ -313,12 +315,14 @@ export function getGroupsESRI(options, callback) {
 	let groups = [];
 	let groupsObj = {};
 	let savedData = helpers.getItemsFromStorage(options.tocType === "LIST" ? storageKey : storageKeyFolder);
+	const isGrouped = options.grouped ? true : false;
+	let groupedLayer = { name: options.grouped_name, layers: [] };
 	if (savedData === undefined) savedData = [];
-
 	LayerHelpers.getCapabilities({ root_url: options.url, type: "rest" }, (layers) => {
 		if (layers.length === 0) {
 			callback({ groups: groups, defaultGroupName: defaultGroup });
 		}
+
 		layers.forEach((layer) => {
 			if (layer.subLayerIds === undefined && layer.subLayers.length === 0) {
 				const layerOptions = parseESRIDescription(layer.description);
@@ -331,29 +335,65 @@ export function getGroupsESRI(options, callback) {
 				layerOptions["opacity"] = 1 - (layer.drawingInfo === undefined || layer.drawingInfo.transparency === undefined ? 0 : layer.drawingInfo.transparency / 100);
 				layerOptions["liveLayer"] = layerOptions.isLiveLayer;
 				layer["options"] = layerOptions;
-				layerOptions.categories.forEach((category) => {
-					const groupValue = category === "All Layers" ? "opengis:all_layers" : category;
-					const tmpGroupObj = {
-						value: groupValue,
-						label: category,
-						url: options.url,
-						secured: false,
-						primary: false,
-						prefix: "",
-						defaultGroup: false,
-						visibleLayers: "",
-						wmsGroupUrl: options.url,
-						layers: [],
-					};
-					if (groupsObj[tmpGroupObj.value] === undefined) {
-						tmpGroupObj.layers.push(layer);
-						groupsObj[tmpGroupObj.value] = tmpGroupObj;
-					} else {
-						groupsObj[tmpGroupObj.value].layers.push(layer);
-					}
-				});
+				if (!isGrouped)
+					layerOptions.categories.forEach((category) => {
+						const groupValue = category === "All Layers" ? "opengis:all_layers" : category;
+						const tmpGroupObj = {
+							value: groupValue,
+							label: category,
+							url: options.url,
+							secured: false,
+							primary: false,
+							prefix: "",
+							defaultGroup: false,
+							visibleLayers: "",
+							wmsGroupUrl: options.url,
+							layers: [],
+						};
+						if (groupsObj[tmpGroupObj.value] === undefined) {
+							tmpGroupObj.layers.push(layer);
+							groupsObj[tmpGroupObj.value] = tmpGroupObj;
+						} else {
+							groupsObj[tmpGroupObj.value].layers.push(layer);
+						}
+					});
+				else {
+					layer["sourceType"] = OL_DATA_TYPES.ImageArcGISRest;
+					groupedLayer.layers.push(layer);
+				}
 			}
 		});
+		if (isGrouped) {
+			groupedLayer["grouped"] = true;
+			// groupedLayer["minScale"] = groupedLayer.layers[0].minScale;
+			// groupedLayer["maxScale"] = groupedLayer.layers[0].maxScale;
+			groupedLayer["defaultVisibility"] = groupedLayer.layers[0].defaultVisibility;
+			// groupedLayer["identifyTitleColumn"] = groupedLayer.layers[0].identifyTitleColumn;
+			// groupedLayer["opacity"] = groupedLayer.layers[0].opacity;
+			// groupedLayer["liveLayer"] = groupedLayer.layers[0].liveLayer;
+			groupedLayer["options"] = groupedLayer.layers[0].options;
+
+			let category = "All Layers";
+			if (options.category) category = options.category;
+			const tmpGroupedGroupObj = {
+				value: category === "All Layers" ? "opengis:all_layers" : category,
+				label: category,
+				url: options.url,
+				secured: false,
+				primary: false,
+				prefix: "",
+				defaultGroup: false,
+				visibleLayers: "",
+				wmsGroupUrl: options.url,
+				layers: [groupedLayer],
+			};
+			if (groupsObj[tmpGroupedGroupObj.value] === undefined) {
+				groupsObj[tmpGroupedGroupObj.value] = tmpGroupedGroupObj;
+			} else {
+				groupsObj[tmpGroupedGroupObj.value].layers.push(groupedLayer);
+			}
+		}
+
 		const keys = Object.keys(groupsObj);
 		keys.forEach((key) => {
 			let currentGroup = groupsObj[key];
@@ -1359,6 +1399,10 @@ export async function buildESRILayer(options, callback) {
 			extent: layer.extent,
 			name: layer.name,
 		};
+		if (layer.grouped) {
+			layerOptions["layers"] = layer.layers;
+			layerOptions.sourceType = OL_DATA_TYPES.LayerGroup;
+		}
 		if (layer.sourceSpatialReference !== undefined && layer.sourceSpatialReference.latestWkid !== undefined) layerOptions["projection"] = `EPSG:${layer.sourceSpatialReference.latestWkid}`;
 		LayerHelpers.getLayer(layerOptions, (newLayer) => {
 			//const identifyUrl = (url) => `${url}/query?geometry=#GEOMETRY#&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=true&returnTrueCurves=false&returnIdsOnly=false&returnCountOnly=false&returnZ=false&returnM=false&returnDistinctValues=false&returnExtentOnly=false&quantizationParameters=&f=geojson`;

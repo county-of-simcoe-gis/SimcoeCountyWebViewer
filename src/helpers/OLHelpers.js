@@ -1,6 +1,6 @@
 import * as helpers from "./helpers";
 // OPEN LAYERS
-import { Image as ImageLayer, Tile as TileLayer, Vector as VectorLayer } from "ol/layer.js";
+import { Image as ImageLayer, Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup } from "ol/layer.js";
 import { ImageWMS, OSM, TileArcGISRest, ImageArcGISRest, TileWMS, TileImage, Vector, Stamen, XYZ, ImageStatic } from "ol/source.js";
 import WMTS, { optionsFromCapabilities } from "ol/source/WMTS";
 
@@ -25,6 +25,7 @@ export const OL_LAYER_TYPES = {
 	Image: "Image",
 	Tile: "Tile",
 	Vector: "Vector",
+	Group: "Group",
 };
 export const OL_DATA_TYPES = {
 	GML3: "GML3",
@@ -50,6 +51,7 @@ export const OL_DATA_TYPES = {
 	WMTS: "WMTS",
 	TileWMS: "TileWMS",
 	ImageArcGISRest: "ImageArcGISRest",
+	LayerGroup: "LayerGroup",
 };
 
 export class FeatureHelpers {
@@ -79,6 +81,7 @@ export class FeatureHelpers {
 				return new WKT();
 			case OL_DATA_TYPES.MVT:
 				return new MVT();
+
 			default:
 				return;
 		}
@@ -431,6 +434,7 @@ export class LayerHelpers {
 		if (layer instanceof TileLayer) return OL_LAYER_TYPES.Tile;
 		if (layer instanceof ImageLayer) return OL_LAYER_TYPES.Image;
 		if (layer instanceof VectorLayer) return OL_LAYER_TYPES.Vector;
+		if (layer instanceof LayerGroup) return OL_LAYER_TYPES.Group;
 		return "unknown";
 	}
 
@@ -466,6 +470,40 @@ export class LayerHelpers {
 			style = layer.Style[0].LegendURL[0].OnlineResource;
 		} catch {}
 		return style !== undefined ? style : "";
+	}
+	static getGroupedLayer(options, callback) {
+		let layerOptions = options.layers;
+		let name = options.name !== undefined ? options.name : "";
+		let layers = [];
+		const rebuildParams = {
+			name: name,
+			layers: layerOptions,
+		};
+		layerOptions.forEach((layerOption) => {
+			this.getLayer(
+				{
+					sourceType: layerOption.sourceType,
+					source: "rest",
+					layerName: layerOption.name,
+					url: layerOption.url,
+					tiled: false,
+					extent: layerOption.extent,
+					name: layerOption.name,
+				},
+				(layer) => {
+					layers.push(layer);
+					if (layers.length >= layerOptions.length) {
+						callback(
+							new LayerGroup({
+								name: name,
+								rebuildParams: rebuildParams,
+								layers: layers,
+							})
+						);
+					}
+				}
+			);
+		});
 	}
 
 	static getLayer(options, callback) {
@@ -973,6 +1011,11 @@ export class LayerHelpers {
 						}),
 					})
 				);
+				break;
+			case OL_DATA_TYPES.LayerGroup:
+				this.getGroupedLayer(options, (newLayer) => {
+					callback(newLayer);
+				});
 				break;
 			default:
 				return;
