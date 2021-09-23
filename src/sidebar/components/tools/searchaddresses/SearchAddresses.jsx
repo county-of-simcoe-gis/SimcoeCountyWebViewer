@@ -8,6 +8,7 @@ import Highlighter from "react-highlight-words";
 import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
 import { Circle as CircleStyle, Icon, Fill, Stroke, Style } from "ol/style.js";
+import searchAddressConfig from "./config.json";
 
 class SearchAddresses extends Component {
 	constructor(props) {
@@ -106,8 +107,8 @@ class SearchAddresses extends Component {
 			}
 
 			helpers.getWFSGeoJSON(
-				window.config.geoserverUrl,
-				"simcoe:Address_Number",
+				searchAddressConfig.serverUrl,
+				searchAddressConfig.layerName,
 				(result) => {
 					this.updateFeatures(result);
 				},
