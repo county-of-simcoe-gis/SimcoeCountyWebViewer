@@ -160,6 +160,43 @@ export async function getMap(sources, isReset, tocType, callback) {
 					}
 				);
 				break;
+			case "layer":
+				const layerOptions = {
+					url: source.layerUrl,
+					secure: source.secure,
+					secureKey: source.secureKey,
+					type: source.type,
+					groups: source.groups,
+					layerType: source.layerType,
+					sourceType: source.sourceType,
+					source: source.source,
+					name: source.name,
+					layerName: source.layerName,
+					tiled: source.tiled,
+					visible: source.visible,
+					projection: source.projection,
+				};
+				getSingleLayer(layerOptions, (layerGroupConfig) => {
+					if (!layerGroupConfig.groups) {
+						sourcesProcessed++;
+						return;
+					}
+					if (layerGroups === undefined) {
+						layerGroups = layerGroupConfig.groups;
+					} else {
+						layerGroups = mergeGroups(layerGroups, layerGroupConfig.groups);
+					}
+					if (source.primary && default_group === undefined) default_group = layerGroupConfig.defaultLayerName;
+
+					sourcesProcessed++;
+					if (sourcesProcessed >= sources.length) {
+						callback({
+							groups: layerGroups,
+							defaultGroupName: default_group,
+						});
+					}
+				});
+				break;
 			default:
 				break;
 		}
@@ -459,7 +496,72 @@ export function getGroupsESRI(options, callback) {
 		});
 	});
 }
+//GET SINGLE LAYER
+export async function getSingleLayer(options, callback) {
+	let groupArray = [];
+	const tmpLayerName = helpers.getUID();
+	const style = { label: options.layerName, value: tmpLayerName, style: "", layer_name: options.layerName };
+	const layerOptions = {
+		sourceType: options.sourceType,
+		source: options.source,
+		layerName: options.layerName,
+		url: options.url,
+		tiled: options.tiled ? true : false,
+		name: tmpLayerName,
+		style: style,
+		//extent: [-8938992.401246801, 5456230.285257593, -8801900.781241283, 5610242.681997935],
+		projection: options.projection ? options.projection : "EPSG:4326",
+	};
+	LayerHelpers.getLayer(layerOptions, (newSingleLayer) => {
+		newSingleLayer.setProperties({
+			index: 100,
+			// name: helpers.getUID(),
+		});
+		// newSingleLayer.setVisible(true);
+		// newSingleLayer.setOpacity(1);
+		// // newSingleLayer.setProperties(layerProps);
+		// window.map.addLayer(newSingleLayer);
+		// newSingleLayer.setZIndex(100);
 
+		let groups = options.groups;
+		if (!groups) groups = ["All Layers"];
+
+		groups.forEach((groupName) => {
+			makeGroup(
+				{
+					label: groupName,
+					defaultGroup: false,
+					url: "",
+					prefix: "",
+					wmsGroupUrl: "",
+					customRestUrl: "",
+					layers: [],
+				},
+				(newGroup) => {
+					makeLayer(
+						options.name,
+						helpers.getUID(),
+						newGroup,
+						1,
+						options.visible ? true : false,
+						options.opacity ? options.opacity : 1,
+						newSingleLayer,
+						undefined,
+						undefined,
+						false,
+						undefined,
+						(retLayer) => {
+							if (options.secureKey !== undefined) retLayer.setProperties({ secureKey: options.secureKey });
+							newGroup.layers.push(retLayer);
+							groupArray.push(newGroup);
+							if (groupArray.length >= groups.length) callback({ groups: groupArray, defaultLayerName: groups[0] });
+						}
+					);
+				}
+			);
+		});
+	});
+}
 // GET GROUPS FROM GET CAPABILITIES
 export async function getGroupsGC(url, urlType, isReset, tocType, secured = false, primary = true, secureKey = undefined, callback) {
 	let defaultGroup = null;

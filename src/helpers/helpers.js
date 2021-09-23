@@ -47,14 +47,17 @@ const _nad83Proj = new Projection({
 });
 
 export function registerCustomProjection(wkt, callback) {
-	const epsgUrl = (wkt) => `https://epsg.io/${wkt}.proj4`;
-	httpGetText(epsgUrl(wkt), (projection) => {
-		if (projection !== "ERROR") {
-			proj4.defs(`EPSG:${wkt}`, projection);
-			register(proj4);
-		}
-		callback();
-	});
+	if (proj4.defs(`EPSG:${wkt}`)) callback();
+	else {
+		const epsgUrl = (wkt) => `https://epsg.io/${wkt}.proj4`;
+		httpGetText(epsgUrl(wkt), (projection) => {
+			if (projection !== "ERROR") {
+				proj4.defs(`EPSG:${wkt}`, projection);
+				register(proj4);
+			}
+			callback();
+		});
+	}
 }
 export function tryParseJSON(jsonString) {
 	try {

@@ -899,11 +899,14 @@ export class LayerHelpers {
 
 				wmtsCap(url, (capabilities) => {
 					var tileMatrixSet = capabilities.Contents.TileMatrixSet[0];
-					helpers.registerCustomProjection(tileMatrixSet.SupportedCRS.split(":")[1], () => {
+					var projection = "3857";
+					if (!tileMatrixSet.SupportedCRS.split(":").includes("3857")) projection = tileMatrixSet.SupportedCRS.split(":")[1];
+					helpers.registerCustomProjection(projection, () => {
 						var wmtsOptions = optionsFromCapabilities(capabilities, {
 							layer: layerName,
 							requestEncoding: "REST",
 						});
+						if (!wmtsOptions) wmtsOptions = { layer: layerName, requestEncoding: "REST" };
 						callback(
 							new TileLayer({
 								rebuildParams: rebuildParams,
