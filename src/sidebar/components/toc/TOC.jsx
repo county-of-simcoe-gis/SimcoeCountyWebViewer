@@ -160,7 +160,7 @@ class TOC extends Component {
 		let folderLayerGroups = TOCHelpers.copyTOCLayerGroups(groupInfo.groups);
 
 		listLayerGroups = this.addAllLayersGroup(listLayerGroups);
-		folderLayerGroups = this.addAllLayersGroup(folderLayerGroups);
+		//folderLayerGroups = this.addAllLayersGroup(folderLayerGroups);
 
 		this.getSavedCustomLayers("LIST", (savedGroups) => {
 			if (savedGroups !== undefined) {
@@ -176,7 +176,7 @@ class TOC extends Component {
 		if (isReset) this.updateLayerVisibility("CLEAR");
 
 		listLayerGroups = this.populateAllLayersGroup("LIST", listLayerGroups);
-		folderLayerGroups = this.populateAllLayersGroup("FOLDER", folderLayerGroups);
+		//folderLayerGroups = this.populateAllLayersGroup("FOLDER", folderLayerGroups);
 
 		listLayerGroups = listLayerGroups.map((group) => {
 			if (group.layers.length > 0) group.layers = this.sortLayers(group.layers);
@@ -195,6 +195,7 @@ class TOC extends Component {
 				defaultGroup: defaultGroup,
 			},
 			() => {
+				this.applySavedLayerOptions(this.state.type); //apply saved data for the active toc
 				this.applySavedLayerOptions(this.state.type === "LIST" ? "FOLDER" : "LIST"); //apply saved data for the opposite toc
 				this.updateLayerCount(defaultGroup.layers.length);
 				this.updateLayerVisibility();
@@ -238,7 +239,17 @@ class TOC extends Component {
 	applySavedLayerOptionsToGroup = (type, group) => {
 		let savedData = helpers.getItemsFromStorage(type === "LIST" ? this.storageKey : this.storageKeyFolder);
 		if (savedData === undefined) return group;
-		const savedGroup = savedData[group.value];
+		const savedDataArray = Object.entries(savedData);
+
+		let savedGroup = savedData[group.value];
+		if (!savedGroup) {
+			const savedDataArrayItem = savedDataArray.filter((groupItem) => {
+				if (groupItem[1]) {
+					return group.label === groupItem[1].label;
+				} else return false;
+			})[0];
+			if (savedDataArrayItem) savedGroup = savedData[savedDataArrayItem[0]];
+		}
 		let savedLayers = [];
 		try {
 			if (savedGroup !== undefined && savedGroup.layers !== undefined) {
@@ -268,10 +279,19 @@ class TOC extends Component {
 	applySavedLayerOptions = (type) => {
 		let savedData = helpers.getItemsFromStorage(type === "LIST" ? this.storageKey : this.storageKeyFolder);
 		if (savedData === undefined) return;
+		const savedDataArray = Object.entries(savedData);
 
 		let layerGroups = Object.assign([], type === "LIST" ? this.state.layerListGroups : this.state.layerFolderGroups);
 		layerGroups = layerGroups.map((group) => {
-			const savedGroup = savedData[group.value];
+			let savedGroup = savedData[group.value];
+			if (!savedGroup) {
+				const savedDataArrayItem = savedDataArray.filter((groupItem) => {
+					if (groupItem[1]) {
+						return group.label === groupItem[1].label;
+					} else return false;
+				})[0];
+				if (savedDataArrayItem) savedGroup = savedData[savedDataArrayItem[0]];
+			}
 			let savedLayers = [];
 			try {
 				if (savedGroup !== undefined && savedGroup.layers !== undefined) {
