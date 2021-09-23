@@ -175,6 +175,7 @@ export async function getMap(sources, isReset, tocType, callback) {
 					tiled: source.tiled,
 					visible: source.visible,
 					projection: source.projection,
+					index: source.index,
 				};
 				getSingleLayer(layerOptions, (layerGroupConfig) => {
 					if (!layerGroupConfig.groups) {
@@ -500,7 +501,8 @@ export function getGroupsESRI(options, callback) {
 export async function getSingleLayer(options, callback) {
 	let groupArray = [];
 	const tmpLayerName = helpers.getUID();
-	const style = { label: options.layerName, value: tmpLayerName, style: "", layer_name: options.layerName };
+	const index = options.index ? options.index : 0;
+	const style = { label: options.layerName, value: tmpLayerName, style: "Default", layer_name: options.layerName };
 	const layerOptions = {
 		sourceType: options.sourceType,
 		source: options.source,
@@ -514,14 +516,9 @@ export async function getSingleLayer(options, callback) {
 	};
 	LayerHelpers.getLayer(layerOptions, (newSingleLayer) => {
 		newSingleLayer.setProperties({
-			index: 100,
+			index: index,
 			// name: helpers.getUID(),
 		});
-		// newSingleLayer.setVisible(true);
-		// newSingleLayer.setOpacity(1);
-		// // newSingleLayer.setProperties(layerProps);
-		// window.map.addLayer(newSingleLayer);
-		// newSingleLayer.setZIndex(100);
 
 		let groups = options.groups;
 		if (!groups) groups = ["All Layers"];
@@ -542,7 +539,7 @@ export async function getSingleLayer(options, callback) {
 						options.name,
 						helpers.getUID(),
 						newGroup,
-						1,
+						index,
 						options.visible ? true : false,
 						options.opacity ? options.opacity : 1,
 						newSingleLayer,
