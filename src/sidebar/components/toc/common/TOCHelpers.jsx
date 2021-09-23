@@ -7,8 +7,6 @@ import { WMSCapabilities } from "ol/format.js";
 const layerIndexStart = 100;
 
 // LOCAL STORAGE KEY
-const storageKey = "Layers";
-const storageKeyFolder = "Layers_Folder_View";
 const storageMapDefaultsKey = "Map Defaults";
 const storageExtentKey = "Map Extent";
 
@@ -136,6 +134,8 @@ export async function getMap(sources, isReset, tocType, callback) {
 						tocType: tocType,
 						isReset: isReset,
 						requiresToken: source.secure,
+						grouped: source.grouped,
+						grouped_name: source.name,
 					},
 					(layerGroupConfig) => {
 						if (!layerGroupConfig.groups) {
@@ -157,6 +157,44 @@ export async function getMap(sources, isReset, tocType, callback) {
 						}
 					}
 				);
+				break;
+			case "layer":
+				const layerOptions = {
+					url: source.layerUrl,
+					secure: source.secure,
+					secureKey: source.secureKey,
+					type: source.type,
+					groups: source.groups,
+					layerType: source.layerType,
+					sourceType: source.sourceType,
+					source: source.source,
+					name: source.name,
+					layerName: source.layerName,
+					tiled: source.tiled,
+					visible: source.visible,
+					projection: source.projection,
+					index: source.index,
+				};
+				getSingleLayer(layerOptions, (layerGroupConfig) => {
+					if (!layerGroupConfig.groups) {
+						sourcesProcessed++;
+						return;
+					}
+					if (layerGroups === undefined) {
+						layerGroups = layerGroupConfig.groups;
+					} else {
+						layerGroups = mergeGroups(layerGroups, layerGroupConfig.groups);
+					}
+					if (source.primary && default_group === undefined) default_group = layerGroupConfig.defaultLayerName;
+
+					sourcesProcessed++;
+					if (sourcesProcessed >= sources.length) {
+						callback({
+							groups: layerGroups,
+							defaultGroupName: default_group,
+						});
+					}
+				});
 				break;
 			default:
 				break;
@@ -222,6 +260,8 @@ export function mergeGroups(originalGroups, newGroups) {
 						if (newLayer.tocDisplayName === layer.tocDisplayName) {
 							isDuplicateLayer = true;
 							if ((newLayer.secured || newLayer.primary) && !group.primary) {
+								newLayer.group = group.value;
+								newLayer.groupName = group.label;
 								return newLayer;
 							} else {
 								return layer;
@@ -230,8 +270,13 @@ export function mergeGroups(originalGroups, newGroups) {
 							return layer;
 						}
 					});
-					if (!isDuplicateLayer) group.layers.push(newLayer);
+					if (!isDuplicateLayer) {
+						newLayer.group = group.value;
+						newLayer.groupName = group.label;
+						group.layers.push(newLayer);
+					}
 				});
+
 				return group;
 			} else {
 				return group;
@@ -312,13 +357,13 @@ export function getGroupsESRI(options, callback) {
 	let defaultGroup = null;
 	let groups = [];
 	let groupsObj = {};
-	let savedData = helpers.getItemsFromStorage(options.tocType === "LIST" ? storageKey : storageKeyFolder);
-	if (savedData === undefined) savedData = [];
-
+	const isGrouped = options.grouped ? true : false;
+	let groupedLayer = { name: options.grouped_name, layers: [] };
 	LayerHelpers.getCapabilities({ root_url: options.url, type: "rest" }, (layers) => {
 		if (layers.length === 0) {
 			callback({ groups: groups, defaultGroupName: defaultGroup });
 		}
+
 		layers.forEach((layer) => {
 			if (layer.subLayerIds === undefined && layer.subLayers.length === 0) {
 				const layerOptions = parseESRIDescription(layer.description);
@@ -331,29 +376,60 @@ export function getGroupsESRI(options, callback) {
 				layerOptions["opacity"] = 1 - (layer.drawingInfo === undefined || layer.drawingInfo.transparency === undefined ? 0 : layer.drawingInfo.transparency / 100);
 				layerOptions["liveLayer"] = layerOptions.isLiveLayer;
 				layer["options"] = layerOptions;
-				layerOptions.categories.forEach((category) => {
-					const groupValue = category === "All Layers" ? "opengis:all_layers" : category;
-					const tmpGroupObj = {
-						value: groupValue,
-						label: category,
-						url: options.url,
-						secured: false,
-						primary: false,
-						prefix: "",
-						defaultGroup: false,
-						visibleLayers: "",
-						wmsGroupUrl: options.url,
-						layers: [],
-					};
-					if (groupsObj[tmpGroupObj.value] === undefined) {
-						tmpGroupObj.layers.push(layer);
-						groupsObj[tmpGroupObj.value] = tmpGroupObj;
-					} else {
-						groupsObj[tmpGroupObj.value].layers.push(layer);
-					}
-				});
+				if (!isGrouped)
+					layerOptions.categories.forEach((category) => {
+						const groupValue = category === "All Layers" ? "opengis:all_layers" : category;
+						const tmpGroupObj = {
+							value: groupValue,
+							label: category,
+							url: options.url,
+							secured: false,
+							primary: false,
+							prefix: "",
+							defaultGroup: false,
+							visibleLayers: "",
+							wmsGroupUrl: options.url,
+							layers: [],
+						};
+						if (groupsObj[tmpGroupObj.value] === undefined) {
+							tmpGroupObj.layers.push(layer);
+							groupsObj[tmpGroupObj.value] = tmpGroupObj;
+						} else {
+							groupsObj[tmpGroupObj.value].layers.push(layer);
+						}
+					});
+				else {
+					layer["sourceType"] = OL_DATA_TYPES.ImageArcGISRest;
+					groupedLayer.layers.push(layer);
+				}
 			}
 		});
+		if (isGrouped) {
+			groupedLayer["grouped"] = true;
+			groupedLayer["defaultVisibility"] = groupedLayer.layers[0].defaultVisibility;
+			groupedLayer["options"] = groupedLayer.layers[0].options;
+
+			let category = "All Layers";
+			if (options.category) category = options.category;
+			const tmpGroupedGroupObj = {
+				value: category === "All Layers" ? "opengis:all_layers" : category,
+				label: category,
+				url: options.url,
+				secured: false,
+				primary: false,
+				prefix: "",
+				defaultGroup: false,
+				visibleLayers: "",
+				wmsGroupUrl: options.url,
+				layers: [groupedLayer],
+			};
+			if (groupsObj[tmpGroupedGroupObj.value] === undefined) {
+				groupsObj[tmpGroupedGroupObj.value] = tmpGroupedGroupObj;
+			} else {
+				groupsObj[tmpGroupedGroupObj.value].layers.push(groupedLayer);
+			}
+		}
+
 		const keys = Object.keys(groupsObj);
 		keys.forEach((key) => {
 			let currentGroup = groupsObj[key];
@@ -383,10 +459,7 @@ export function getGroupsESRI(options, callback) {
 			};
 			buildLayers(currentGroup.layers);
 			let panelOpen = false;
-			const savedGroup = savedData[key];
-			if (savedGroup !== undefined) {
-				panelOpen = savedGroup.panelOpen;
-			} else if (isDefault) panelOpen = true;
+			if (isDefault) panelOpen = true;
 			const groupObj = {
 				value: currentGroup.value,
 				label: currentGroup.label,
@@ -419,14 +492,73 @@ export function getGroupsESRI(options, callback) {
 		});
 	});
 }
+//GET SINGLE LAYER
+export async function getSingleLayer(options, callback) {
+	let groupArray = [];
+	const index = options.index ? options.index : 0;
+	const style = { label: options.layerName, value: options.layerName, style: "Default", layer_name: options.layerName };
+	const layerOptions = {
+		sourceType: options.sourceType,
+		source: options.source,
+		layerName: options.layerName,
+		url: options.url,
+		tiled: options.tiled ? true : false,
+		name: options.layerName,
+		style: style,
+		//extent: [-8938992.401246801, 5456230.285257593, -8801900.781241283, 5610242.681997935],
+		projection: options.projection ? options.projection : "EPSG:4326",
+	};
+	LayerHelpers.getLayer(layerOptions, (newSingleLayer) => {
+		newSingleLayer.setProperties({
+			index: index,
+			// name: helpers.getUID(),
+		});
 
+		let groups = options.groups;
+		if (!groups) groups = ["All Layers"];
+
+		groups.forEach((groupName) => {
+			makeGroup(
+				{
+					label: groupName,
+					defaultGroup: false,
+					url: "",
+					prefix: "",
+					wmsGroupUrl: "",
+					customRestUrl: "",
+					layers: [],
+					value: groupName,
+				},
+				(newGroup) => {
+					makeLayer(
+						options.name,
+						options.layerName,
+						newGroup,
+						index,
+						options.visible ? true : false,
+						options.opacity ? options.opacity : 1,
+						newSingleLayer,
+						undefined,
+						undefined,
+						false,
+						undefined,
+						(retLayer) => {
+							if (options.secureKey !== undefined) retLayer.setProperties({ secureKey: options.secureKey });
+							newGroup.layers.push(retLayer);
+							groupArray.push(newGroup);
+							if (groupArray.length >= groups.length) callback({ groups: groupArray, defaultLayerName: groups[0] });
+						}
+					);
+				}
+			);
+		});
+	});
+}
 // GET GROUPS FROM GET CAPABILITIES
 export async function getGroupsGC(url, urlType, isReset, tocType, secured = false, primary = true, secureKey = undefined, callback) {
 	let defaultGroup = null;
 	let isDefault = false;
 	let groups = [];
-	let savedData = helpers.getItemsFromStorage(tocType === "LIST" ? storageKey : storageKeyFolder);
-	if (savedData === undefined) savedData = [];
 
 	const remove_underscore = (name) => {
 		return helpers.replaceAllInString(name, "_", " ");
@@ -526,10 +658,7 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured = fals
 					buildLayers(layerInfo.Layer);
 				}
 				let panelOpen = false;
-				const savedGroup = savedData[groupName];
-				if (savedGroup !== undefined) {
-					panelOpen = savedGroup.panelOpen;
-				} else if (isDefault) panelOpen = true;
+				if (isDefault) panelOpen = true;
 				const groupObj = {
 					value: groupName,
 					label: remove_underscore(groupDisplayName),
@@ -638,21 +767,6 @@ export function layerToJson(layer, callback) {
 }
 
 export async function buildLayerByGroup(group, layer, layerIndex, tocType, secured, secureKey = undefined, callback) {
-	// SAVED DATA
-	let savedData = helpers.getItemsFromStorage(tocType === "LIST" ? storageKey : storageKeyFolder);
-	if (savedData === undefined) savedData = [];
-	const savedGroup = savedData[group.value];
-	let savedLayers = [];
-	try {
-		if (savedGroup !== undefined && savedGroup.layers !== undefined) {
-			savedLayers = savedGroup.layers;
-		} else if (savedGroup !== undefined) {
-			savedLayers = savedGroup; //Added to support legacy saves
-		}
-	} catch (e) {
-		console.warn(e);
-	}
-
 	if (layer.Layer === undefined) {
 		const visibleLayers = group.visibleLayers === undefined ? [] : group.visibleLayers;
 		const geoserverPath = window.config.geoserverPath;
@@ -721,14 +835,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType, secur
 		const maxScale = layer.MaxScaleDenominator;
 		// SET VISIBILITY
 		let layerVisible = false;
-		if (savedLayers !== undefined && savedLayers !== null && savedLayers.length !== 0) {
-			const savedLayer = savedLayers[layerNameOnly];
-			if (savedLayer !== undefined) {
-				if (savedLayer.visible) layerVisible = true;
-				if (savedLayer.opacity) opacity = savedLayer.opacity;
-				if (savedLayer.index) layerIndex = savedLayer.index;
-			}
-		} else if (visibleLayers.includes(layerNameOnly)) {
+		if (visibleLayers.includes(layerNameOnly)) {
 			layerVisible = true;
 		}
 		// LAYER PROPS
@@ -1266,21 +1373,6 @@ export async function buildESRILayer(options, callback) {
 	let secured = options.secured !== undefined ? options.secured : false;
 	let secureKey = options.secureKey;
 
-	// SAVED DATA
-	let savedData = helpers.getItemsFromStorage(tocType === "LIST" ? storageKey : storageKeyFolder);
-	if (savedData === undefined) savedData = [];
-	const savedGroup = savedData[group.value];
-	let savedLayers = [];
-	try {
-		if (savedGroup !== undefined && savedGroup.layers !== undefined) {
-			savedLayers = savedGroup.layers;
-		} else if (savedGroup !== undefined) {
-			savedLayers = savedGroup; //Added to support legacy saves
-		}
-	} catch (e) {
-		console.warn(e);
-	}
-
 	if (layer !== undefined) {
 		const visibleLayers = group.visibleLayers === undefined ? [] : group.visibleLayers;
 
@@ -1337,14 +1429,7 @@ export async function buildESRILayer(options, callback) {
 		const maxScale = layer.options.maxScale;
 		// SET VISIBILITY
 		let layerVisible = false;
-		if (savedLayers !== undefined && savedLayers !== null && savedLayers.length !== 0) {
-			const savedLayer = savedLayers[layerNameOnly];
-			if (savedLayer !== undefined) {
-				if (savedLayer.visible) layerVisible = true;
-				if (savedLayer.opacity) opacity = savedLayer.opacity;
-				if (savedLayer.index) layerIndex = savedLayer.index;
-			}
-		} else if (visibleLayers.includes(layerNameOnly)) {
+		if (visibleLayers.includes(layerNameOnly)) {
 			layerVisible = true;
 		}
 		//console.log(group.value, layerNameOnly, visibleLayers.includes(layerNameOnly));
@@ -1359,6 +1444,10 @@ export async function buildESRILayer(options, callback) {
 			extent: layer.extent,
 			name: layer.name,
 		};
+		if (layer.grouped) {
+			layerOptions["layers"] = layer.layers;
+			layerOptions.sourceType = OL_DATA_TYPES.LayerGroup;
+		}
 		if (layer.sourceSpatialReference !== undefined && layer.sourceSpatialReference.latestWkid !== undefined) layerOptions["projection"] = `EPSG:${layer.sourceSpatialReference.latestWkid}`;
 		LayerHelpers.getLayer(layerOptions, (newLayer) => {
 			//const identifyUrl = (url) => `${url}/query?geometry=#GEOMETRY#&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=true&returnTrueCurves=false&returnIdsOnly=false&returnCountOnly=false&returnZ=false&returnM=false&returnDistinctValues=false&returnExtentOnly=false&quantizationParameters=&f=geojson`;

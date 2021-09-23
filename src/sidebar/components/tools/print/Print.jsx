@@ -120,7 +120,7 @@ class Print extends Component {
 		// SEND PRINT SERVER REQUEST HERE
 		// =======================
 		const printData = await printRequest.printRequest(printLayers, this.state);
-		console.log(JSON.stringify(printData));
+		// console.log(JSON.stringify(printData));
 
 		const printAppId = printData.layout.replace(/ /g, "_");
 		const outputFormat = printData.outputFormat;
@@ -132,6 +132,7 @@ class Print extends Component {
 		//let testOrigin = 'http://localhost:8080'
 		let encodedPrintRequest = encodeURIComponent(JSON.stringify(printData));
 		let url = `${printUrl}/print/${printAppId}/report.${outputFormat}`;
+		// console.log(url);
 
 		//check print Status and retreive print
 		let checkStatus = (response) => {
