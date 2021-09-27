@@ -217,7 +217,6 @@ export function getXYZLayer(url) {
 	  crossOrigin: "anonymous"
 	});
   }
-
 export function getSimcoeTileXYZLayer(url) {
 	// console.log(url);
 	const resolutions = [
@@ -1169,8 +1168,7 @@ export function generateReport(feature, report, buffer=0, callback=undefined){
 	});
 	
   }
-  
-  export function bufferGeometry(geometry, distanceMeters, callback) {
+export function bufferGeometry(geometry, distanceMeters, callback) {
 	waitForLoad("settings", Date.now(), 30, () => {
 		const url = window.config.apiUrl + "postBufferGeometry/";
 
