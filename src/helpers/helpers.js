@@ -1565,9 +1565,12 @@ export function loadConfig(callback) {
 					zoom: settings.defaultZoom,
 				})
 			);
-			if (settings.sidebarToolComponents !== undefined) settings.sidebarToolComponents = mergeObjArray(config.sidebarToolComponents, settings.sidebarToolComponents);
-			if (settings.sidebarThemeComponents !== undefined) settings.sidebarThemeComponents = mergeObjArray(config.sidebarThemeComponents, settings.sidebarThemeComponents);
-			if (settings.sidebarShortcutParams !== undefined) settings.sidebarShortcutParams = mergeObjArray(config.sidebarShortcutParams, settings.sidebarShortcutParams);
+			//if (settings.sidebarToolComponents !== undefined) settings.sidebarToolComponents = mergeObjArray(config.sidebarToolComponents, settings.sidebarToolComponents);
+			//if (settings.sidebarThemeComponents !== undefined) settings.sidebarThemeComponents = mergeObjArray(config.sidebarThemeComponents, settings.sidebarThemeComponents);
+			//if (settings.sidebarShortcutParams !== undefined) settings.sidebarShortcutParams = mergeObjArray(config.sidebarShortcutParams, settings.sidebarShortcutParams);
+			
+			if (settings.baseMapType !== undefined) settings.baseMapType = settings.baseMapType;
+			if (settings.baseMapServices !== undefined) settings.baseMapServices = settings.baseMapServices;
 
 			//TRANSPOSE LEGACY TOC SETTINGS
 			if (settings.toc === undefined) settings["toc"] = {};
