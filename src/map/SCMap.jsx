@@ -21,7 +21,9 @@ import { defaults as defaultInteractions } from "ol/interaction.js";
 import Popup from "../helpers/Popup.jsx";
 import FooterTools from "./FooterTools.jsx";
 import { defaults as defaultControls, ScaleLine, FullScreen, Rotate } from "ol/control.js";
-import BasemapSwitcher from "./BasemapSwitcher";
+//import BasemapSwitcher from "./BasemapSwitcher";
+// Bap is the new control which is rendered base on the options passed from the DB map settings
+import BMap from "./BMap";
 import PropertyReportClick from "./PropertyReportClick.jsx";
 import "ol-contextmenu/dist/ol-contextmenu.css";
 
@@ -50,8 +52,9 @@ class SCMap extends Component {
 			shareURL: null,
 			parcelClickText: "Disable Property Click",
 			isIE: false,
-			mapBottom: 0,
-		};
+			mapBottom: 0
+			};
+
 		// LISTEN FOR MAP CURSOR TO CHANGE
 		helpers.waitForLoad("settings", Date.now(), 30, () => {
 			if (!window.config.onlyStandardCursor) window.emitter.addListener("changeCursor", (cursorStyle) => this.changeCursor(cursorStyle));
@@ -535,7 +538,7 @@ class SCMap extends Component {
 					<div id="map" className={this.state.mapClassName} tabIndex="0" style={{ bottom: this.state.mapBottom }} />
 					<Navigation options={this.props.options} />
 					<FooterTools options={this.props.options} />
-					<BasemapSwitcher options={this.props.options} />
+					<BMap />
 					<PropertyReportClick />
 					<div
 						className={window.sidebarOpen ? "sc-map-github-button slideout" : "sc-map-github-button slidein"}
