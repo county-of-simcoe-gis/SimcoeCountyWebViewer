@@ -15,6 +15,8 @@ import ButtonBar from "./ButtonBar.jsx";
 import MyMapsItem from "./MyMapsItem";
 import MyMapsItems from "./MyMapsItems";
 import MyMapsPopup from "./MyMapsPopup.jsx";
+import FeatureReportPopup from "./FeatureReportPopup.jsx";
+
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
 import Portal from "../../../helpers/Portal.jsx";
 import Identify from "../../../map/Identify.jsx";
@@ -648,6 +650,54 @@ class MyMaps extends Component {
 		this.setStyleById(itemId, style, undefined, strokeType);
 	};
 
+	showReportOptionsPopup = (feature, evt = null, activeReport = "none") => {
+		// GET FEATURE AND CENTER
+		var featureId = feature.getProperties().id;
+		var item = this.state.items.filter(item => {
+		  return item.id === featureId;
+		})[0];
+		let center = null;
+		if (evt === null) {
+		  let geom = feature.getGeometry();
+		  if (geom === undefined) return;
+		  helpers.getGeometryCenter(geom, featureCenter => {
+			// SHOW POPUP
+			window.popup.show(
+			  featureCenter.flatCoordinates ,
+			  <FeatureReportPopup
+				key={helpers.getUID()}
+				activeReport={activeReport}
+				onRef={ref => (this.popupRef = ref)}
+				item={item}
+			   
+			  />,
+			  "Feature Report Options",
+			  () => {
+				//this.popupRef = undefined;
+			  }
+			);
+		  });
+		} else {
+		  center = evt.coordinate;
+		  // SHOW POPUP
+		  window.popup.show(
+			center,
+			<FeatureReportPopup
+			  key={helpers.getUID()}
+			  activeReport={activeReport}
+			  onRef={ref => (this.popupRef = ref)}
+			  item={item}
+			  onPreviewReport={this.onLabelVisibilityChange}
+			  onGenerateReport={this.onLabelRotationChange}
+			/>,
+			"Feature Report Options",
+			() => {
+			  //this.popupRef = undefined;
+			}
+		  );
+		}
+	  };
+
 	showDrawingOptionsPopup = (feature, evt = null, activeTool = "none") => {
 		// GET FEATURE AND CENTER
 		var featureId = feature.getProperties().id;
@@ -761,6 +811,9 @@ class MyMaps extends Component {
 			case "sc-floating-menu-delete-unselected":
 				this.deleteSelected(false);
 				break;
+			case "sc-floating-menu-feature-report":
+        		this.showReportOptionsPopup(drawingHelpers.getFeatureById(item.id), null);
+       			 break;
 			case "sc-floating-menu-buffer":
 				this.showDrawingOptionsPopup(drawingHelpers.getFeatureById(item.id), null, "buffer");
 				break;
@@ -949,6 +1002,9 @@ class MyMaps extends Component {
 						this.onMenuItemClick(action, item);
 					}}
 				>
+					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-feature-report">
+						<FloatingMenuItem imageName={"report-icon.png"} label="Reports" />
+			  		</MenuItem>
 					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-buffer">
 						<FloatingMenuItem imageName={"buffer.png"} label="Buffer" />
 					</MenuItem>

@@ -80,7 +80,7 @@ class CoordinatesMTO extends Component {
 
 	componentDidMount() {
 		//wait for map to load
-		helpers.waitForLoad("map", Date.now(), 30, () => this.onMapLoad());
+		helpers.waitForLoad("map", Date.now(), 30, () => {
 
 		// DISABLE PROPERTY CLICK
 		window.disableParcelClick = true;
@@ -106,7 +106,9 @@ class CoordinatesMTO extends Component {
 		const webMercatorCoords = window.map.getView().getCenter();
 		this.updateCoordinates(webMercatorCoords);
 		this.createPoint(webMercatorCoords, false, true);
-	}
+	
+	});
+}
 
 	_getSelectCopyFormats = () => {
 		let defs = [];
