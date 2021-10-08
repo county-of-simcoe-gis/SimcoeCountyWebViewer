@@ -211,6 +211,13 @@ export function getOSMTileXYZLayer(url) {
 	});
 }
 
+export function getXYZLayer(url) {
+	return new TileLayer({
+	  source: new XYZ({ url: url + "/{z}/{x}/{y}.png" }),
+	  crossOrigin: "anonymous"
+	});
+  }
+
 export function getSimcoeTileXYZLayer(url) {
 	// console.log(url);
 	const resolutions = [
@@ -1097,7 +1104,73 @@ export function getGeometryFromGeoJSON(geometry) {
 	return parser.readGeometry(geometry);
 }
 
-export function bufferGeometry(geometry, distanceMeters, callback) {
+//Generate Feature Reports for a Polygon (reproting area)
+export function generateReport(feature, report, buffer=0, callback=undefined){
+	const url = mainConfig.reportsUrl + report;
+	let geom = feature.getGeometry();
+	//const utmNad83Geometry = geom.transform("EPSG:3857", _nad83Proj);
+	const geoJSON = getGeoJSONFromGeometry(geom);
+	const obj = { geoJSON: geoJSON, srid: "3857", buffer:buffer };
+	return fetch(url, {
+	  method: "POST", // *GET, POST, PUT, DELETE, etc.
+	  mode: "cors", // no-cors, cors, *same-origin
+	  cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+	  credentials: "same-origin", // include, *same-origin, omit
+	  headers: {
+		"Content-Type": "application/json"
+		//'Content-Type': 'application/x-www-form-urlencoded',
+	  },
+	  redirect: "follow", // manual, *follow, error
+	  referrer: "no-referrer", // no-referrer, *client
+	  body: JSON.stringify(obj), // body data type must match "Content-Type" header
+	  xhrFields: {
+		responseType: 'blob'
+	  },
+	})
+	.then(response => response.blob())
+	.then(blob => {
+		var url = window.URL.createObjectURL(blob);
+		var a = document.createElement('a');
+		a.href = url;
+		var d = new Date(Date.now());
+		a.download = "Report " + d.toISOString().slice(0,10).replace(/-/g,"") + d.toTimeString().slice(0,8).replace(/:/g,"")+ ".xlsx";
+		document.body.appendChild(a); 
+		a.click();    
+		a.remove();  
+		callback(true);
+	});
+	
+  }
+  
+  export function previewReport(feature, report, buffer=0, callback){
+	const url = mainConfig.reportsUrl + report;
+	let geom = feature.getGeometry();
+	//const utmNad83Geometry = geom.transform("EPSG:3857", _nad83Proj);
+	const geoJSON = getGeoJSONFromGeometry(geom);
+	const obj = { geoJSON: geoJSON, srid: "3857", buffer:buffer };
+	return fetch(url, {
+	  method: "POST", // *GET, POST, PUT, DELETE, etc.
+	  mode: "cors", // no-cors, cors, *same-origin
+	  cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+	  credentials: "same-origin", // include, *same-origin, omit
+	  headers: {
+		"Content-Type": "application/json"
+		//'Content-Type': 'application/x-www-form-urlencoded',
+	  },
+	  redirect: "follow", // manual, *follow, error
+	  referrer: "no-referrer", // no-referrer, *client
+	  body: JSON.stringify(obj), // body data type must match "Content-Type" header
+	})
+	.then(res => {
+	  return res.json();
+	})
+	.then(json => {
+	  callback(json);
+	});
+	
+  }
+  
+  export function bufferGeometry(geometry, distanceMeters, callback) {
 	waitForLoad("settings", Date.now(), 30, () => {
 		const url = window.config.apiUrl + "postBufferGeometry/";
 
@@ -1492,9 +1565,12 @@ export function loadConfig(callback) {
 					zoom: settings.defaultZoom,
 				})
 			);
-			if (settings.sidebarToolComponents !== undefined) settings.sidebarToolComponents = mergeObjArray(config.sidebarToolComponents, settings.sidebarToolComponents);
-			if (settings.sidebarThemeComponents !== undefined) settings.sidebarThemeComponents = mergeObjArray(config.sidebarThemeComponents, settings.sidebarThemeComponents);
-			if (settings.sidebarShortcutParams !== undefined) settings.sidebarShortcutParams = mergeObjArray(config.sidebarShortcutParams, settings.sidebarShortcutParams);
+			//if (settings.sidebarToolComponents !== undefined) settings.sidebarToolComponents = mergeObjArray(config.sidebarToolComponents, settings.sidebarToolComponents);
+			//if (settings.sidebarThemeComponents !== undefined) settings.sidebarThemeComponents = mergeObjArray(config.sidebarThemeComponents, settings.sidebarThemeComponents);
+			//if (settings.sidebarShortcutParams !== undefined) settings.sidebarShortcutParams = mergeObjArray(config.sidebarShortcutParams, settings.sidebarShortcutParams);
+			
+			if (settings.baseMapType !== undefined) settings.baseMapType = settings.baseMapType;
+			if (settings.baseMapServices !== undefined) settings.baseMapServices = settings.baseMapServices;
 
 			//TRANSPOSE LEGACY TOC SETTINGS
 			if (settings.toc === undefined) settings["toc"] = {};
