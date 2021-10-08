@@ -129,7 +129,7 @@ class TOC extends Component {
 		} else {
 			layerGroups = layerGroups.filter((item) => item.label !== this.allLayersGroup.label);
 		}
-		group = this.applySavedLayerOptionsToGroup(type, TOCHelpers.mergeGroupsTogether(group, layerGroups));
+		group = this.applySavedLayerOptionsToGroup(type, TOCHelpers.mergeGroupsTogether(group, layerGroups, false));
 		layerGroups.unshift(group);
 		if (callback === undefined) return layerGroups;
 		else callback(layerGroups);
