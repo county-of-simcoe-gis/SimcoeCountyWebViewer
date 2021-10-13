@@ -586,12 +586,13 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured = fals
     let groupLayerList = urlType === "root" ? [resultObj.Capability.Layer.Layer[0]] : urlType === "group" ? resultObj.Capability.Layer.Layer[0].Layer : [resultObj.Capability.Layer.Layer[0]];
     let parentGroup = urlType === "root" ? resultObj.Capability.Layer.Layer[0] : urlType === "group" ? resultObj.Capability.Layer.Layer[0] : resultObj.Capability.Layer.Layer[0];
     let parentKeywords = parentGroup.KeywordList;
+    const allKeywords = parseGeoServerKeywords(parentKeywords);
     let mapCenter = [];
-    if (parentKeywords !== undefined && parentKeywords.length > 0) mapCenter = _getCenterCoordinates(parentKeywords);
+    if (parentKeywords !== undefined && parentKeywords.length > 0) mapCenter = allKeywords["MAP_CENTER"].value;
     let mapZoom = 0;
-    if (parentKeywords !== undefined && parentKeywords.length > 0) mapZoom = _getZoom(parentKeywords);
+    if (parentKeywords !== undefined && parentKeywords.length > 0) mapZoom = allKeywords["MAP_ZOOM"].value;
     let defaultGroupName = "";
-    if (parentKeywords !== undefined && parentKeywords.length > 0) defaultGroupName = _getDefaultGroup(parentKeywords);
+    if (parentKeywords !== undefined && parentKeywords.length > 0) defaultGroupName = allKeywords["DEFAULT_GROUP"].value;
     if (mapCenter.length > 0 && mapZoom > 0) {
       let defaultStorage = sessionStorage.getItem(storageMapDefaultsKey);
       if (defaultStorage === null) {
@@ -617,15 +618,16 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured = fals
         const fullGroupUrl = url.split(`/${geoserverPath}/`)[0] + `/${geoserverPath}/` + helpers.replaceAllInString(groupName, ":", "/") + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
         let keywords = [];
         if (layerInfo.KeywordList !== undefined) keywords = layerInfo.KeywordList;
+        const allKeywords = parseGeoServerKeywords(keywords);
         let visibleLayers = [];
         let groupPrefix = "";
         let allLayersVisible = false;
-        if (keywords !== undefined) allLayersVisible = _getAllLayersVisible(keywords);
-        if (keywords !== undefined) groupPrefix = _getGroupPrefix(keywords);
+        if (keywords !== undefined) allLayersVisible = allKeywords["All_VISIBLE_LAYERS"].value;
+        if (keywords !== undefined) groupPrefix = allKeywords["GROUP_PREFIX"].value;
         if (allLayersVisible) {
           visibleLayers = layerInfo.Layer.map((item) => item.Name);
         } else {
-          if (keywords !== undefined) visibleLayers = _getVisibleLayers(keywords);
+          if (keywords !== undefined) visibleLayers = allKeywords["VISIBLE_LAYERS"].value;
         }
         let layerList = [];
         if (layerInfo.Layer !== undefined) {
@@ -781,10 +783,10 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType, secur
     let opaque = layer.opaque !== undefined ? layer.opaque : false;
     if (layerTitle === undefined) layerTitle = layerNameOnly;
     const keywords = layer.KeywordList;
-
+    const allKeywords = parseGeoServerKeywords(keywords);
     let styleUrl = layer.Style !== undefined ? layer.Style[0].LegendURL[0].OnlineResource.replace("http:", "https:") : "";
     // STATIC IMAGE LEGEND
-    let legendSizeOverride = _getStaticImageLegend(keywords);
+    let legendSizeOverride = allKeywords["STATIC_IMAGE_LEGEND"].value;
 
     if (legendSizeOverride && styleUrl !== "") {
       const legendSize = layer.Style !== undefined ? layer.Style[0].LegendURL[0].size : [20, 20];
@@ -798,37 +800,37 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType, secur
     const metadataUrl = metadataUrlTemplate(serverUrl, layer.Name);
 
     // LIVE LAYER
-    let liveLayer = _isLiveLayer(keywords);
+    let liveLayer = allKeywords["LIVE_LAYER"].value;
 
     // DOWNLOAD
-    let canDownload = _getCanDownload(keywords);
+    let canDownload = allKeywords["DOWNLOAD"].value;
 
     // IDENTIFY DISPLAY NAME
-    let identifyDisplayName = _getDisplayName(keywords);
+    let identifyDisplayName = allKeywords["DISPLAY_NAME"].value;
 
     //DISPLAY NAME
-    let displayName = _getDisplayName(keywords);
+    let displayName = allKeywords["DISPLAY_NAME"].value;
     if (displayName === "") displayName = layerTitle;
 
     if (group.prefix !== undefined) {
       displayName = group.prefix !== "" ? group.prefix + " - " + displayName : displayName;
     }
     // ATTRIBUTE TABLE
-    let noAttributeTable = _getNoAttributeTable(keywords);
+    let noAttributeTable = allKeywords["NO_ATTRIBUTE_TABLE"].value;
 
     // TOC DISPLAY NAME
     const tocDisplayName = layerTitle;
 
     // OPACITY
-    let opacity = _getOpacity(keywords);
+    let opacity = allKeywords["OPACITY"].value;
 
     //IDENTIFY
-    let identifyTitleColumn = _getIdentifyTitle(keywords);
-    let identifyIdColumn = _getIdentifyId(keywords);
+    let identifyTitleColumn = allKeywords["IDENTIFY_TITLE_COLUMN"].value;
+    let identifyIdColumn = allKeywords["IDENTIFY_ID_COLUMN"].value;
     //DISCLAIMER
-    let disclaimerTitle = _getDisclaimerTitle(keywords);
-    let disclaimerUrl = _getDisclaimerURL(keywords);
-    let warningMsg = _getWarningMessage(keywords);
+    let disclaimerTitle = allKeywords["DISCLAIMER_TITLE"].value;
+    let disclaimerUrl = allKeywords["DISCLAIMER_URL"].value;
+    let warningMsg = allKeywords["WARNING"].value;
 
     let disclaimer = undefined;
     if (disclaimerUrl !== "" || disclaimerTitle !== "" || warningMsg !== "") {
@@ -874,6 +876,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType, secur
           opaque: opaque,
           minScale: minScale,
           maxScale: maxScale,
+          extendedProperties: { keywords: allKeywords },
         });
         if (secureKey !== undefined) newLayer.setProperties({ secureKey: secureKey });
         newLayer.setZIndex(layerIndex);
@@ -908,6 +911,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType, secur
           serverUrl: serverUrl + "/", // BASE URL FOR GEOSERVER
           noAttributeTable: noAttributeTable, // IF TRUE, DISABLE ATTRIBUTE TABLE
           secured: secured,
+          extendedProperties: { keywords: allKeywords },
           // elementId: layerNameOnly + "_" + group.value,
         };
         callback(returnLayer);
@@ -916,185 +920,49 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType, secur
   }
 }
 
-function _getDefaultGroup(keywords) {
-  if (keywords === undefined) return false;
-  const defaultKeyword = keywords.find(function (item) {
-    return item.indexOf("DEFAULT_GROUP") !== -1;
+export function parseGeoServerKeywords(keywords) {
+  const allKeywords = window.config.toc.keywords;
+  if (!keywords) return allKeywords;
+  const parseValue = (keywordObj, value) => {
+    switch (keywordObj.type) {
+      case "string":
+        if (keywordObj.splitChar) return value.split(keywordObj.splitChar).join("");
+        else return value;
+      case "bool":
+        //boolean keywords are true if present unless there is a string check value
+        if (keywordObj.checkValue) return value === keywordObj.checkValue;
+        else return true;
+      case "int":
+        return parseInt(value);
+      case "float":
+        return parseFloat(value);
+      case "array":
+        if (keywordObj.splitChar) return value.split(keywordObj.splitChar);
+        else return [value];
+      default:
+        return keywordObj.value;
+    }
+  };
+  keywords.forEach((keyword) => {
+    const splitKeyword = keyword.split("=");
+    const key = splitKeyword[0];
+    splitKeyword.shift();
+    const value = splitKeyword.length >= 1 ? splitKeyword.join("=") : undefined;
+    let selectedKeyword = allKeywords[key];
+    if (selectedKeyword) {
+      selectedKeyword.value = parseValue(selectedKeyword, value);
+      allKeywords[key] = selectedKeyword;
+      if (selectedKeyword.relatedKeys) {
+        selectedKeyword.relatedKeys.forEach((relation) => {
+          let relatedKeyword = allKeywords[relation];
+          relatedKeyword.value = parseValue(relatedKeyword, value);
+          allKeywords[relation] = relatedKeyword;
+        });
+      }
+    }
   });
-  if (defaultKeyword !== undefined) {
-    const val = defaultKeyword.split("=")[1];
-    return val;
-  } else return "";
-}
 
-function _isLiveLayer(keywords) {
-  if (keywords === undefined) return false;
-  const liveLayerKeyword = keywords.find(function (item) {
-    return item.indexOf("LIVE_LAYER") !== -1;
-  });
-  if (liveLayerKeyword !== undefined) return true;
-  else return false;
-}
-
-function _getGroupPrefix(keywords) {
-  if (keywords === undefined) return "";
-  const groupPrefixKeyword = keywords.find(function (item) {
-    return item.indexOf("GROUP_PREFIX") !== -1;
-  });
-  if (groupPrefixKeyword !== undefined) {
-    const val = groupPrefixKeyword.split("=")[1];
-    return val;
-  } else return "";
-}
-
-function _getDisplayName(keywords) {
-  if (keywords === undefined) return "";
-  const displayNameKeyword = keywords.find(function (item) {
-    return item.indexOf("DISPLAY_NAME") !== -1;
-    //return item.indexOf("IDENTIFY_DISPLAY_NAME") !== -1;
-  });
-  if (displayNameKeyword !== undefined) {
-    const val = displayNameKeyword.split("=")[1];
-    return val;
-  } else return "";
-}
-
-function _getIdentifyTitle(keywords) {
-  if (keywords === undefined) return "";
-  const identifyTitleColumn = keywords.find(function (item) {
-    return item.indexOf("IDENTIFY_TITLE_COLUMN") !== -1;
-  });
-  if (identifyTitleColumn !== undefined) {
-    const val = identifyTitleColumn.split("=")[1];
-    return val;
-  } else return "";
-}
-
-function _getWarningMessage(keywords) {
-  if (keywords === undefined) return "";
-  const returnText = keywords.find(function (item) {
-    return item.indexOf("WARNING") !== -1;
-  });
-  if (returnText !== undefined) {
-    const val = returnText.split("=")[1];
-    return val.split("”").join("");
-  } else return "";
-}
-
-function _getDisclaimerURL(keywords) {
-  if (keywords === undefined) return "";
-  const returnText = keywords.find(function (item) {
-    return item.indexOf("DISCLAIMER_URL") !== -1;
-  });
-  if (returnText !== undefined) {
-    const val = returnText.split("=")[1];
-    return val.split("”").join("");
-  } else return "";
-}
-
-function _getDisclaimerTitle(keywords) {
-  if (keywords === undefined) return "";
-  const returnText = keywords.find(function (item) {
-    return item.indexOf("DISCLAIMER_TITLE") !== -1;
-  });
-  if (returnText !== undefined) {
-    const val = returnText.split("=")[1];
-    return val.split("”").join("");
-  } else return "";
-}
-
-function _getIdentifyId(keywords) {
-  if (keywords === undefined) return "";
-  const identifyIdColumn = keywords.find(function (item) {
-    return item.indexOf("IDENTIFY_ID_COLUMN") !== -1;
-  });
-  if (identifyIdColumn !== undefined) {
-    const val = identifyIdColumn.split("=")[1];
-    return val;
-  } else return "";
-}
-
-function _getVisibleLayers(keywords) {
-  if (keywords === undefined) return "";
-  const visibleLayersKeyword = keywords.find(function (item) {
-    return item.indexOf("VISIBLE_LAYERS") !== -1;
-  });
-  if (visibleLayersKeyword !== undefined) {
-    const val = visibleLayersKeyword.split("=")[1];
-    return val.split(",");
-  } else return [];
-}
-
-function _getAllLayersVisible(keywords) {
-  if (keywords === undefined) return "";
-  const allLayersVisible = keywords.find(function (item) {
-    return item.indexOf("VISIBLE_LAYERS") !== -1;
-  });
-  if (allLayersVisible !== undefined) {
-    const val = allLayersVisible.split("=")[1];
-    if (val === "ALL") return true;
-  }
-  return false;
-}
-
-function _getCenterCoordinates(keywords) {
-  if (keywords === undefined) return "";
-  const centerCoordinatesKeyword = keywords.find(function (item) {
-    return item.indexOf("MAP_CENTER") !== -1;
-  });
-  if (centerCoordinatesKeyword !== undefined) {
-    const val = centerCoordinatesKeyword.split("=")[1];
-    return val.split(",");
-  } else return [];
-}
-
-function _getZoom(keywords) {
-  if (keywords === undefined) return 1;
-  const zoomKeyword = keywords.find(function (item) {
-    return item.indexOf("MAP_ZOOM") !== -1;
-  });
-  if (zoomKeyword !== undefined) {
-    const val = zoomKeyword.split("=")[1];
-    return parseInt(val);
-  } else return 0;
-}
-
-function _getOpacity(keywords) {
-  if (keywords === undefined) return 1;
-  const opacityKeyword = keywords.find(function (item) {
-    return item.indexOf("OPACITY") !== -1;
-  });
-  if (opacityKeyword !== undefined) {
-    const val = opacityKeyword.split("=")[1];
-    return parseFloat(val);
-  } else return 1;
-}
-
-function _getCanDownload(keywords) {
-  if (keywords === undefined) return false;
-  const downloadLayerKeyword = keywords.find(function (item) {
-    return item.indexOf("DOWNLOAD") !== -1;
-  });
-  if (downloadLayerKeyword !== undefined) return true;
-  else return false;
-}
-
-function _getNoAttributeTable(keywords) {
-  if (keywords === undefined) return false;
-  const keyword = keywords.find(function (item) {
-    return item.indexOf("NO_ATTRIBUTE_TABLE") !== -1;
-  });
-  if (keyword !== undefined) return true;
-  else return false;
-}
-
-function _getStaticImageLegend(keywords) {
-  if (keywords === undefined) return false;
-  const keyword = keywords.find(function (item) {
-    return item.indexOf("STATIC_IMAGE_LEGEND") !== -1;
-  });
-  if (keyword !== undefined) return true;
-  else return false;
+  return allKeywords;
 }
 
 export function acceptDisclaimer(layer, returnToFunction) {
@@ -1237,6 +1105,7 @@ export function sortByIndexCompare(a, b) {
   }
   return 0;
 }
+
 export function getStyles(groups) {
   // URL FOR PULLING LEGEND FROM GEOSERVER
   const styleURLTemplate = (serverURL, layerName, styleName) => `${serverURL}/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=${layerName}&STYLE=${styleName}`;
