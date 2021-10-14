@@ -128,6 +128,7 @@
       "GROUP_PREFIX": { "keyword": "GROUP_PREFIX", "type": "string", "value": "" },
       "DISPLAY_NAME": { "keyword": "DISPLAY_NAME", "type": "string", "value": "" },
       "IDENTIFY_TITLE_COLUMN": { "keyword": "IDENTIFY_TITLE_COLUMN", "type": "string", "value": "" },
+      "IDENTIFY_DISPLAY_NAME": { "keyword": "IDENTIFY_DISPLAY_NAME", "type": "string", "value": "" },
       "WARNING": { "keyword": "WARNING", "type": "string", "value": "", "splitChar": "”" },
       "DISCLAIMER_URL": { "keyword": "DISCLAIMER_URL", "type": "string", "value": "", "splitChar": "”" },
       "DISCLAIMER_TITLE": { "keyword": "DISCLAIMER_TITLE", "type": "string", "value": "", "splitChar": "”" },

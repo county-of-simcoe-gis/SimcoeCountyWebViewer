@@ -810,7 +810,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType, secur
     let canDownload = allKeywords["DOWNLOAD"];
 
     // IDENTIFY DISPLAY NAME
-    let identifyDisplayName = allKeywords["DISPLAY_NAME"];
+    let identifyDisplayName = allKeywords["IDENTIFY_DISPLAY_NAME"];
 
     //DISPLAY NAME
     let displayName = allKeywords["DISPLAY_NAME"];
