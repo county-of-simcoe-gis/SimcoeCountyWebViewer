@@ -71,11 +71,12 @@ class Identify extends Component {
             const secureKey = layer.get("secureKey");
             const minScale = layer.get("minScale");
             const params = {};
+            params["headers"] = {};
             if (secureKey !== undefined) {
               const headers = {};
               headers[secureKey] = "GIS";
               params["mode"] = "cors";
-              params["headers"] = headers;
+              params.headers = headers;
             }
             const isArcGISLayer = LayerHelpers.getLayerSourceType(layer.getSource()) === OL_DATA_TYPES.ImageArcGISRest;
             if (wfsUrl !== undefined && (geometry.getType() !== "Point" || isArcGISLayer)) {

@@ -2,6 +2,7 @@ import * as helpers from "../../../../helpers/helpers";
 import * as drawingHelpers from "../../../../helpers/drawingHelpers";
 import { LayerHelpers, FeatureHelpers, OL_DATA_TYPES } from "../../../../helpers/OLHelpers";
 import { WMSCapabilities } from "ol/format.js";
+import BaseObject from "ol/Object";
 
 // INDEX WHERE THE TOC LAYERS SHOULD START DRAWING AT
 const layerIndexStart = 100;
@@ -585,14 +586,16 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured = fals
     const resultObj = parser.read(result);
     let groupLayerList = urlType === "root" ? [resultObj.Capability.Layer.Layer[0]] : urlType === "group" ? resultObj.Capability.Layer.Layer[0].Layer : [resultObj.Capability.Layer.Layer[0]];
     let parentGroup = urlType === "root" ? resultObj.Capability.Layer.Layer[0] : urlType === "group" ? resultObj.Capability.Layer.Layer[0] : resultObj.Capability.Layer.Layer[0];
-    let parentKeywords = parentGroup.KeywordList;
-    const allKeywords = parseGeoServerKeywords(parentKeywords);
+    let parentKeywords = [];
+    if (parentGroup.KeywordList !== undefined) parentKeywords = parentGroup.KeywordList;
+
+    const allParentKeywords = parseGeoServerKeywords(parentKeywords);
     let mapCenter = [];
-    if (parentKeywords !== undefined && parentKeywords.length > 0) mapCenter = allKeywords["MAP_CENTER"].value;
+    if (parentKeywords !== undefined && parentKeywords.length > 0) mapCenter = allParentKeywords["MAP_CENTER"];
     let mapZoom = 0;
-    if (parentKeywords !== undefined && parentKeywords.length > 0) mapZoom = allKeywords["MAP_ZOOM"].value;
+    if (parentKeywords !== undefined && parentKeywords.length > 0) mapZoom = allParentKeywords["MAP_ZOOM"];
     let defaultGroupName = "";
-    if (parentKeywords !== undefined && parentKeywords.length > 0) defaultGroupName = allKeywords["DEFAULT_GROUP"].value;
+    if (parentKeywords !== undefined && parentKeywords.length > 0) defaultGroupName = allParentKeywords["DEFAULT_GROUP"];
     if (mapCenter.length > 0 && mapZoom > 0) {
       let defaultStorage = sessionStorage.getItem(storageMapDefaultsKey);
       if (defaultStorage === null) {
@@ -618,16 +621,16 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured = fals
         const fullGroupUrl = url.split(`/${geoserverPath}/`)[0] + `/${geoserverPath}/` + helpers.replaceAllInString(groupName, ":", "/") + "/ows?service=wms&version=1.3.0&request=GetCapabilities";
         let keywords = [];
         if (layerInfo.KeywordList !== undefined) keywords = layerInfo.KeywordList;
-        const allKeywords = parseGeoServerKeywords(keywords);
+        const allGroupKeywords = parseGeoServerKeywords(keywords);
         let visibleLayers = [];
         let groupPrefix = "";
         let allLayersVisible = false;
-        if (keywords !== undefined) allLayersVisible = allKeywords["All_VISIBLE_LAYERS"].value;
-        if (keywords !== undefined) groupPrefix = allKeywords["GROUP_PREFIX"].value;
+        if (keywords !== undefined && keywords.length > 0) allLayersVisible = allGroupKeywords["All_VISIBLE_LAYERS"];
+        if (keywords !== undefined && keywords.length > 0) groupPrefix = allGroupKeywords["GROUP_PREFIX"];
         if (allLayersVisible) {
           visibleLayers = layerInfo.Layer.map((item) => item.Name);
         } else {
-          if (keywords !== undefined) visibleLayers = allKeywords["VISIBLE_LAYERS"].value;
+          if (keywords !== undefined && keywords.length > 0) visibleLayers = allGroupKeywords["VISIBLE_LAYERS"];
         }
         let layerList = [];
         if (layerInfo.Layer !== undefined) {
@@ -782,11 +785,12 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType, secur
     let queryable = layer.queryable !== undefined ? layer.queryable : false;
     let opaque = layer.opaque !== undefined ? layer.opaque : false;
     if (layerTitle === undefined) layerTitle = layerNameOnly;
-    const keywords = layer.KeywordList;
-    const allKeywords = parseGeoServerKeywords(keywords);
+    let keywords = [];
+    if (layer.KeywordList !== undefined) keywords = layer.KeywordList;
+    let allKeywords = parseGeoServerKeywords(keywords);
     let styleUrl = layer.Style !== undefined ? layer.Style[0].LegendURL[0].OnlineResource.replace("http:", "https:") : "";
     // STATIC IMAGE LEGEND
-    let legendSizeOverride = allKeywords["STATIC_IMAGE_LEGEND"].value;
+    let legendSizeOverride = allKeywords["STATIC_IMAGE_LEGEND"];
 
     if (legendSizeOverride && styleUrl !== "") {
       const legendSize = layer.Style !== undefined ? layer.Style[0].LegendURL[0].size : [20, 20];
@@ -800,37 +804,37 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType, secur
     const metadataUrl = metadataUrlTemplate(serverUrl, layer.Name);
 
     // LIVE LAYER
-    let liveLayer = allKeywords["LIVE_LAYER"].value;
+    let liveLayer = allKeywords["LIVE_LAYER"];
 
     // DOWNLOAD
-    let canDownload = allKeywords["DOWNLOAD"].value;
+    let canDownload = allKeywords["DOWNLOAD"];
 
     // IDENTIFY DISPLAY NAME
-    let identifyDisplayName = allKeywords["DISPLAY_NAME"].value;
+    let identifyDisplayName = allKeywords["DISPLAY_NAME"];
 
     //DISPLAY NAME
-    let displayName = allKeywords["DISPLAY_NAME"].value;
+    let displayName = allKeywords["DISPLAY_NAME"];
     if (displayName === "") displayName = layerTitle;
 
     if (group.prefix !== undefined) {
       displayName = group.prefix !== "" ? group.prefix + " - " + displayName : displayName;
     }
     // ATTRIBUTE TABLE
-    let noAttributeTable = allKeywords["NO_ATTRIBUTE_TABLE"].value;
+    let noAttributeTable = allKeywords["NO_ATTRIBUTE_TABLE"];
 
     // TOC DISPLAY NAME
     const tocDisplayName = layerTitle;
 
     // OPACITY
-    let opacity = allKeywords["OPACITY"].value;
+    let opacity = allKeywords["OPACITY"];
 
     //IDENTIFY
-    let identifyTitleColumn = allKeywords["IDENTIFY_TITLE_COLUMN"].value;
-    let identifyIdColumn = allKeywords["IDENTIFY_ID_COLUMN"].value;
+    let identifyTitleColumn = allKeywords["IDENTIFY_TITLE_COLUMN"];
+    let identifyIdColumn = allKeywords["IDENTIFY_ID_COLUMN"];
     //DISCLAIMER
-    let disclaimerTitle = allKeywords["DISCLAIMER_TITLE"].value;
-    let disclaimerUrl = allKeywords["DISCLAIMER_URL"].value;
-    let warningMsg = allKeywords["WARNING"].value;
+    let disclaimerTitle = allKeywords["DISCLAIMER_TITLE"];
+    let disclaimerUrl = allKeywords["DISCLAIMER_URL"];
+    let warningMsg = allKeywords["WARNING"];
 
     let disclaimer = undefined;
     if (disclaimerUrl !== "" || disclaimerTitle !== "" || warningMsg !== "") {
@@ -876,7 +880,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType, secur
           opaque: opaque,
           minScale: minScale,
           maxScale: maxScale,
-          extendedProperties: { keywords: allKeywords },
+          extendedProperties: { keywords: Object.assign({}, allKeywords) },
         });
         if (secureKey !== undefined) newLayer.setProperties({ secureKey: secureKey });
         newLayer.setZIndex(layerIndex);
@@ -911,58 +915,13 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType, secur
           serverUrl: serverUrl + "/", // BASE URL FOR GEOSERVER
           noAttributeTable: noAttributeTable, // IF TRUE, DISABLE ATTRIBUTE TABLE
           secured: secured,
-          extendedProperties: { keywords: allKeywords },
+          extendedProperties: { keywords: Object.assign({}, allKeywords) },
           // elementId: layerNameOnly + "_" + group.value,
         };
         callback(returnLayer);
       }
     );
   }
-}
-
-export function parseGeoServerKeywords(keywords) {
-  const allKeywords = window.config.toc.keywords;
-  if (!keywords) return allKeywords;
-  const parseValue = (keywordObj, value) => {
-    switch (keywordObj.type) {
-      case "string":
-        if (keywordObj.splitChar) return value.split(keywordObj.splitChar).join("");
-        else return value;
-      case "bool":
-        //boolean keywords are true if present unless there is a string check value
-        if (keywordObj.checkValue) return value === keywordObj.checkValue;
-        else return true;
-      case "int":
-        return parseInt(value);
-      case "float":
-        return parseFloat(value);
-      case "array":
-        if (keywordObj.splitChar) return value.split(keywordObj.splitChar);
-        else return [value];
-      default:
-        return keywordObj.value;
-    }
-  };
-  keywords.forEach((keyword) => {
-    const splitKeyword = keyword.split("=");
-    const key = splitKeyword[0];
-    splitKeyword.shift();
-    const value = splitKeyword.length >= 1 ? splitKeyword.join("=") : undefined;
-    let selectedKeyword = allKeywords[key];
-    if (selectedKeyword) {
-      selectedKeyword.value = parseValue(selectedKeyword, value);
-      allKeywords[key] = selectedKeyword;
-      if (selectedKeyword.relatedKeys) {
-        selectedKeyword.relatedKeys.forEach((relation) => {
-          let relatedKeyword = allKeywords[relation];
-          relatedKeyword.value = parseValue(relatedKeyword, value);
-          allKeywords[relation] = relatedKeyword;
-        });
-      }
-    }
-  });
-
-  return allKeywords;
 }
 
 export function acceptDisclaimer(layer, returnToFunction) {
@@ -1172,6 +1131,49 @@ export function copyTOCLayerGroups(layerGroups) {
     });
     return newGroup;
   });
+}
+
+export function parseGeoServerKeywords(keywords) {
+  let parseKeywords = Object.assign({}, window.config.toc.keywords);
+  let returnKeywords = {};
+  const keys = Object.keys(parseKeywords);
+  keys.forEach((key) => (returnKeywords[key] = parseKeywords[key].value));
+  const parseValue = (keywordObj, value) => {
+    switch (keywordObj.type) {
+      case "string":
+        if (keywordObj.splitChar) return value.split(keywordObj.splitChar).join("");
+        else return value;
+      case "bool":
+        //boolean keywords are true if present unless there is a string check value
+        if (keywordObj.checkValue) return value === keywordObj.checkValue;
+        else return value ? value === "true" : true;
+      case "int":
+        return parseInt(value);
+      case "float":
+        return parseFloat(value);
+      case "array":
+        if (keywordObj.splitChar) return value.split(keywordObj.splitChar);
+        else return [value];
+      default:
+        return keywordObj.value;
+    }
+  };
+  keywords.forEach((keyword) => {
+    const splitKeyword = keyword.split("=");
+    const key = splitKeyword[0];
+    splitKeyword.shift();
+    const value = splitKeyword.length >= 1 ? splitKeyword.join("=") : undefined;
+    if (parseKeywords[key]) {
+      returnKeywords[key] = parseValue(parseKeywords[key], value);
+      if (parseKeywords[key].relatedKeys) {
+        parseKeywords[key].relatedKeys.forEach((relation) => {
+          returnKeywords[relation] = parseValue(parseKeywords[relation], value);
+        });
+      }
+    }
+  });
+
+  return returnKeywords;
 }
 
 /***
