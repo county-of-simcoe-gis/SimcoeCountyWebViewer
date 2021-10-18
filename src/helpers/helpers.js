@@ -1031,7 +1031,19 @@ export function postJSON(url, data = {}, callback) {
       callback(json);
     });
 }
-
+export function postUrl(url, callback) {
+  // Default options are marked with *
+  return fetch(url, {
+    method: "POST", // *GET, POST, PUT, DELETE, etc.
+    mode: "cors", // no-cors, cors, *same-origin
+    cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+    credentials: "same-origin", // include, *same-origin, omit
+    redirect: "follow", // manual, *follow, error
+    referrer: "no-referrer", // no-referrer, *client
+  }).then((res) => {
+    callback(res);
+  });
+}
 export function featureToGeoJson(feature) {
   return new GeoJSON({
     dataProjection: "EPSG:3857",
@@ -1568,9 +1580,8 @@ export function loadConfig(callback) {
       if (settings.sidebarToolComponents !== undefined) settings.sidebarToolComponents = mergeObjArray(config.sidebarToolComponents, settings.sidebarToolComponents);
       if (settings.sidebarThemeComponents !== undefined) settings.sidebarThemeComponents = mergeObjArray(config.sidebarThemeComponents, settings.sidebarThemeComponents);
       if (settings.sidebarShortcutParams !== undefined) settings.sidebarShortcutParams = mergeObjArray(config.sidebarShortcutParams, settings.sidebarShortcutParams);
-
-      if (settings.baseMapType !== undefined) settings.baseMapType = settings.baseMapType;
-      if (settings.baseMapServices !== undefined) settings.baseMapServices = settings.baseMapServices;
+      if (settings.baseMapType !== undefined) settings.baseMapType = config.baseMapType;
+      if (settings.baseMapServices !== undefined) settings.baseMapServices = mergeObjArray(config.baseMapServices, settings.baseMapServices);
 
       //TRANSPOSE LEGACY TOC SETTINGS
       if (settings.toc === undefined) settings["toc"] = {};

@@ -2,7 +2,6 @@ import * as helpers from "../../../../helpers/helpers";
 import * as drawingHelpers from "../../../../helpers/drawingHelpers";
 import { LayerHelpers, FeatureHelpers, OL_DATA_TYPES } from "../../../../helpers/OLHelpers";
 import { WMSCapabilities } from "ol/format.js";
-import BaseObject from "ol/Object";
 
 // INDEX WHERE THE TOC LAYERS SHOULD START DRAWING AT
 const layerIndexStart = 100;
