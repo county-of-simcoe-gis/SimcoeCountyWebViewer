@@ -1580,8 +1580,8 @@ export function loadConfig(callback) {
       if (settings.sidebarToolComponents !== undefined) settings.sidebarToolComponents = mergeObjArray(config.sidebarToolComponents, settings.sidebarToolComponents);
       if (settings.sidebarThemeComponents !== undefined) settings.sidebarThemeComponents = mergeObjArray(config.sidebarThemeComponents, settings.sidebarThemeComponents);
       if (settings.sidebarShortcutParams !== undefined) settings.sidebarShortcutParams = mergeObjArray(config.sidebarShortcutParams, settings.sidebarShortcutParams);
-      if (settings.baseMapType !== undefined) settings.baseMapType = config.baseMapType;
-      if (settings.baseMapServices !== undefined) settings.baseMapServices = mergeObjArray(config.baseMapServices, settings.baseMapServices);
+      // if (settings.baseMapType !== undefined) settings.baseMapType = config.baseMapType;
+      // if (settings.baseMapServices !== undefined) settings.baseMapServices = mergeObjArray(config.baseMapServices, settings.baseMapServices);
 
       //TRANSPOSE LEGACY TOC SETTINGS
       if (settings.toc === undefined) settings["toc"] = {};
