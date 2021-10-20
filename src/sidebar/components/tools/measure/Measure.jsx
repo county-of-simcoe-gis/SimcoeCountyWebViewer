@@ -255,10 +255,12 @@ class Measure extends Component {
 		var polygon = fromCircle(circle);
 		var area = getArea(polygon);
 		var output;
-		if (area > 10000) {
-			output = Math.round((area / 1000000) * 100) / 100 + " km<sup>2</sup>";
+		if (area > 15800000) {
+			output =  "r : " + Math.round((Math.sqrt(area / Math.PI) / 1000) * 100) / 100 + " km";
+			//output = Math.round((area / 1000000) * 100) / 100 + " km<sup>2</sup>";
 		} else {
-			output = Math.round(area * 100) / 100 + " m<sup>2</sup>";
+			output =  "r : " +Math.round(Math.sqrt(area / Math.PI) * 100) / 100 + " m";
+			//output = Math.round(area * 100) / 100 + " m<sup>2</sup>";
 		}
 
 		// SET TO METERS, SUB CLASS WILL CONVERT OTHER VALUES
@@ -374,9 +376,6 @@ class Measure extends Component {
 		this.draw.on(
 			"drawend",
 			() => {
-				setTimeout(() => {
-					window.isMeasuring = false;
-				}, 100); //add a slight delay to stop measure to prevent click on underlying layer
 				//RESET TOOLTIP
 				this.measureTooltipElement.innerHTML = "";
 				this.measureTooltip.setPosition([0, 0]);
