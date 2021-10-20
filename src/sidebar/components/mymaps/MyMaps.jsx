@@ -168,7 +168,7 @@ class MyMaps extends Component {
 			return;
 		}
 		if (window.isCoordinateToolOpen !== undefined && window.isCoordinateToolOpen) {
-			helpers.showMessage("Coordinates", "Active coordinate tool in progress.  Close the coordinate tool to continue.", undefined, 3000);
+			helpers.showMessage("Active Tool", "Active tool in progress.  Close the active tool to continue.", undefined, 3000);
 			return;
 		}
 
