@@ -1,9 +1,15 @@
 import React from "react";
 import moment from "moment";
+import * as helpers from "../helpers/helpers";
 export const InfoRow = (props) => {
 	// CONVERT URL'S TO LINKS
 	let value = props.value;
 	var formats = [moment.ISO_8601, "YYYY-MM-DDZ"];
+	const infoRowStyle = (window.config.infoRowStyle !== undefined)
+         ? window.config.infoRowStyle.toLowerCase()
+         : "Default";
+		 
+		 
 	if (props.value != null && props.value.toString().substring(0, 4).toUpperCase() === "HTTP") {
 		value = (
 			<a href={props.value} target="_blank" rel="noopener noreferrer">
@@ -22,8 +28,8 @@ export const InfoRow = (props) => {
 
 	return (
 		<div className="sc-info-window-row">
-			<div className="sc-info-window-label">{props.label}</div>
-			<div className={props.imageData ? "sc-hidden" : "sc-info-window-value"}>
+			<div className=	{(infoRowStyle == 'table' ) ? "sc-info-window-label-table" : "sc-info-window-label"}>{props.label}</div>
+			<div className={props.imageData ? "sc-hidden" : (infoRowStyle == 'table' ) ? "sc-info-window-value-table" : "sc-info-window-value"}>
 				{value}
 				{props.children}
 			</div>
