@@ -467,8 +467,11 @@ class Search extends Component {
 		// SEARCH LAYERS
 		if (selectedType === "All" || selectedType === "Map Layer") {
 			let layers = [];
-			// eslint-disable-next-line
-			window.emitter.emit("getLayerList", (groups) => {
+			const searchResultTOC_Actions = (window.config.searchResultTOC_Actions !== undefined) 
+    		? window.config.searchResultTOC_Actions.toLowerCase()
+    		: "Default";
+			 // eslint-disable-next-line
+			 window.emitter.emit("getLayerList", (groups) => {
 				Object.entries(groups).forEach((row) => {
 					const layerItems = row[1];
 					layerItems.forEach((layer) => {
@@ -482,7 +485,9 @@ class Search extends Component {
 									layerGroupName: layer.groupName,
 									layerGroup: layer.group,
 									imageName: "layers.png",
+									imageName: (searchResultTOC_Actions == 'advanced' && layer.visible)? "layers-visible.png" : "layers.png" ,
 									index: layer.index,
+
 								});
 							}
 						}
