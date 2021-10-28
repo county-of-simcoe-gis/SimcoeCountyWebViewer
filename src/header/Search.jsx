@@ -285,8 +285,8 @@ class Search extends Component {
 
 		this.initsearchLayers();
 
-		// SET STATE CURRENT ITEM
-		if (!hidden) this.setState({ searchResults: [result] });
+		// SET STATE CURRENT ITEM - this item is not needed for either Option for searchBarValueChangeOnClick
+		// if (!hidden) this.setState({ searchResults: [result] });
 
 		// GET GEOJSON VALUES
 		const fullFeature = helpers.getFeatureFromGeoJSON(result.geojson);
@@ -385,7 +385,12 @@ class Search extends Component {
 		searchIconLayer.getSource().clear();
 
 		// SET STATE CURRENT ITEM
-		this.setState({ value, searchResults: [item] });
+		const searchBarValueChangeOnClick = window.config.searchBarValueChangeOnClick;
+
+        if (searchBarValueChangeOnClick !== false)  { 
+		    this.setState({ value, searchResults: [item] });
+		} 
+
 		if (item.place_id !== undefined || item.location_id == null) {
 			this.initsearchLayers();
 
