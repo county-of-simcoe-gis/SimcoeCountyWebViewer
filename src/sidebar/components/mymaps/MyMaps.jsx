@@ -1002,42 +1002,43 @@ class MyMaps extends Component {
 						this.onMenuItemClick(action, item);
 					}}
 				>
-					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-feature-report">
+					<MenuItem className={window.config.drawingOptionsToolsMenuVisibility["sc-floating-menu-feature-report"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-feature-report">
 						<FloatingMenuItem imageName={"report-icon.png"} label="Reports" />
 			  		</MenuItem>
-					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-buffer">
+					<MenuItem className={window.config.drawingOptionsToolsMenuVisibility["sc-floating-menu-buffer"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-buffer">
 						<FloatingMenuItem imageName={"buffer.png"} label="Buffer" />
 					</MenuItem>
-					<MenuItem className={item.geometryType === "Point" ? "sc-hidden" : "sc-floating-menu-toolbox-menu-item"} key="sc-floating-menu-measure">
+					<MenuItem className={window.config.drawingOptionsToolsMenuVisibility["sc-floating-menu-measure"] && item.geometryType !== "Point" ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"}  key="sc-floating-menu-measure">
 						<FloatingMenuItem imageName={"measure.png"} label="Measure" />
 					</MenuItem>
-					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-symbolizer">
+
+					<MenuItem className={window.config.drawingOptionsToolsMenuVisibility["sc-floating-menu-symbolizer"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-symbolizer">
 						<FloatingMenuItem imageName={"color-picker.png"} label="Symbolize" />
 					</MenuItem>
-					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-zoomto">
+					<MenuItem className={window.config.drawingOptionsToolsMenuVisibility["sc-floating-menu-zoomto"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-zoomto">
 						<FloatingMenuItem imageName={"zoom.png"} label="Zoom To" />
 					</MenuItem>
-					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-delete">
+					<MenuItem className={window.config.drawingOptionsToolsMenuVisibility["sc-floating-menu-delete"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-delete">
 						<FloatingMenuItem imageName={"eraser.png"} label="Delete" />
 					</MenuItem>
-					<MenuItem className={showCoordinates || showCoordinates === undefined ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-geometry">
+					<MenuItem className={(showCoordinates || showCoordinates === undefined) && window.config.drawingOptionsToolsMenuVisibility["sc-floating-menu-geometry"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-geometry">
 						<FloatingMenuItem imageName={"json.png"} label="Show Geometry" />
 					</MenuItem>
-					<SubMenu title="Export to ..." className={showCoordinates || showCoordinates === undefined ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"}>
-						<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-export-to-kml">
+					<SubMenu title="Export to ..." className={showCoordinates || showCoordinates === undefined && window.config.drawingOptionsToolsMenuVisibility["sc-floating-menu-export"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-export">
+						<MenuItem className={window.config.drawingOptionsToolsMenuVisibility["sc-floating-menu-export-to-kml"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-export-to-kml">
 							<FloatingMenuItem label="KML" />
 						</MenuItem>
-						<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-export-to-esrijson">
+									<MenuItem className={window.config.drawingOptionsToolsMenuVisibility["sc-floating-menu-export-to-esrijson"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-export-to-esrijson">
 							<FloatingMenuItem label="EsriJSON" />
 						</MenuItem>
-						<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-export-to-geojson">
+						<MenuItem className={window.config.drawingOptionsToolsMenuVisibility["sc-floating-menu-export-to-geojson"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-export-to-geojson">
 							<FloatingMenuItem label="GeoJSON" />
 						</MenuItem>
 					</SubMenu>
-					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-report-problem">
+					<MenuItem className={window.config.drawingOptionsToolsMenuVisibility["sc-floating-menu-report-problem"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-report-problem">
 						<FloatingMenuItem imageName={"error.png"} label="Report a Problem" />
 					</MenuItem>
-					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-identify">
+					<MenuItem className={window.config.drawingOptionsToolsMenuVisibility["sc-floating-menu-identify"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-identify">
 						<FloatingMenuItem imageName={"identify.png"} label="Identify" />
 					</MenuItem>
 				</FloatingMenu>
