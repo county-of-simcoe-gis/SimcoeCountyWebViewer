@@ -30,6 +30,9 @@
     "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
     "rollNumberFieldName": "ARN"
   },
+  "gitHubFollowUrl": "https://github.com/county-of-simcoe-gis",
+  "gitHubFollowHandle": "Follow @simcoecountygis",
+
   "centerCoords": [-8878504.68, 5543492.45],
   "defaultZoom": 10,
   "maxZoom": 20,
@@ -41,7 +44,8 @@
     "zoomExtent": true,
     "scale": true,
     "scaleLine": true,
-    "basemap": true
+    "basemap": true,
+    "gitHubButton": true
   },
   "mapTheme": "SIMCOE_COUNTY",
   "showFloatingMenuHeader": false,

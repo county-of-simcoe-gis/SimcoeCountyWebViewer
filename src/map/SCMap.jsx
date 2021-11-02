@@ -528,9 +528,14 @@ class SCMap extends Component {
 				this.forceUpdate();
 			});
 		});
-	}
-
+	};
+      
 	render() {
+		const gitHubFollowUrl = window.config.gitHubFollowUrl;
+		const gitHubFollowHandle = window.config.gitHubFollowHandle;
+		const gitHubFollowHandleLabel = window.config.gitHubFollowHandle + " on GitHub";
+		console.log (gitHubFollowUrl)
+
 		return (
 			<div id="map-root">
 				<div className="map-theme">
@@ -540,16 +545,19 @@ class SCMap extends Component {
 					<FooterTools options={this.props.options} />
 					<BMap />
 					<PropertyReportClick />
+					{ (window.mapControls.gitHubButton)?
 					<div
 						className={window.sidebarOpen ? "sc-map-github-button slideout" : "sc-map-github-button slidein"}
 						onClick={() => {
 							helpers.addAppStat("GitHub", "Button");
 						}}
 					>
-						<GitHubButton href="https://github.com/county-of-simcoe-gis" data-size="large" aria-label="Follow @simcoecountygis on GitHub">
-							Follow @simcoecountygis
+						<GitHubButton href={gitHubFollowUrl} data-size="large" aria-label= {gitHubFollowHandleLabel}>
+						{gitHubFollowHandle}
 						</GitHubButton>
 					</div>
+					: <div/>
+	                }
 					<AttributeTable />
 					<FloatingImageSlider />
 				</div>
