@@ -288,6 +288,24 @@ class Search extends Component {
 		// SET STATE CURRENT ITEM - this item is not needed for either Option for searchBarValueChangeOnClick
 		// if (!hidden) this.setState({ searchResults: [result] });
 
+		//CHECK FOR ASSOCIATED LAYERS
+		if (result.assoc_layers !== undefined && result.assoc_layers !== null && window.config.searchResultLayerActivate === true){
+			let assocLayers = result.assoc_layers.split(",");
+			//console.log (assocLayers);	
+			if (assocLayers.length>0){
+				assocLayers.forEach((assocLayer) => {
+					if (assocLayer.split("@")[0] !== undefined && assocLayer.split("@")[0] !== null && assocLayer.split("@")[1] !== undefined && assocLayer.split("@")[1] !== null) {
+				      let item = {fullName:assocLayer.split("@")[0], layerGroup:assocLayer.split("@")[1], itemAction:"Activate"};
+					 //console.log ( assocLayer.split("@")[0])	
+					  let emmiting = false;
+					  window.emitter.emit("activeTocLayerGroup", item.layerGroup, () => {
+						if (!emmiting) window.emitter.emit("activeTocLayer", item);
+						emmiting = true;
+					});
+					}
+				});
+			}
+		  }
 		// GET GEOJSON VALUES
 		const fullFeature = helpers.getFeatureFromGeoJSON(result.geojson);
 		let pointFeature = helpers.getFeatureFromGeoJSON(result.geojson_point);

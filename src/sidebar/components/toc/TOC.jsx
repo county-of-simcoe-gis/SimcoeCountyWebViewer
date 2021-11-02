@@ -813,7 +813,6 @@ class TOC extends Component {
 		const searchResultTOC_Actions = (window.config.searchResultTOC_Actions !== undefined) 
     		? window.config.searchResultTOC_Actions.toLowerCase()
     		: "Default";
-
 		currentGroup.panelOpen = true;
 		currentGroup = currentGroup.layers.map((layer) => {
 			if (layer.name === layerItem.fullName && layer.group === layerItem.layerGroup) {
@@ -827,7 +826,6 @@ class TOC extends Component {
 						return layer;
 					}
 				}
-				
                 if (searchResultTOC_Actions != 'advanced') {				
 					layer.layer.setVisible(true);
 					layer.visible = true;
@@ -836,7 +834,7 @@ class TOC extends Component {
 					layer.layer.setVisible(true);
 					layer.visible = true;
 					layerItem.imageName = "layers-visible.png";
-			    } else if (layer.visible && searchResultTOC_Actions == 'advanced') {	
+			    } else if (layer.visible && searchResultTOC_Actions == 'advanced' && layerItem.itemAction != "Activate") {	
 					layer.layer.setVisible(false);
 					layer.visible = false;
 					layerItem.imageName =  "layers.png";

@@ -112,12 +112,29 @@ class FooterTools extends Component {
 			}
 		}, 10);
 
-		return (
-			<div className="map-theme">
+		const scale = (window.mapControls.scaleSelector)?
+		
+					<div id="sc-scale-bar-text" className="sc-map-footer-scale-only selector">
+					Scale:&nbsp;
+					<select id="sc-scale-bar-select" onChange={(evt) => {this.onScaleClick(evt.target.value);}} value={this.state.currentScale}>
+							<option key={helpers.getUID()} value={this.state.currentScale}>{"1:" + this.state.scale}</option>
+							{
+								this.mapScales.map(item => {
+								return <option key={helpers.getUID()} value={item.value}>{item.label}</option>;
+								})
+							}
+					</select>
+					</div>
+				:
 				<div id="sc-scale-bar-text" className={this.state.basemapType === "IMAGERY" ? "sc-map-footer-scale-only imagery" : "sc-map-footer-scale-only topo"}>
+					
 					{"Scale: 1:" + this.state.scale}
 				</div>
-			</div>
+
+		return (
+			<div className="map-theme">
+    			{scale}
+			</div>			
 		);
 	}
 }
