@@ -32,6 +32,7 @@ import { Item as MenuItem } from "rc-menu";
 import Portal from "../helpers/Portal.jsx";
 import * as helpers from "../helpers/helpers";
 import Identify from "./Identify";
+import alertify from 'alertifyjs';
 import AttributeTable from "../helpers/AttributeTable.jsx";
 import FloatingImageSlider from "../helpers/FloatingImageSlider.jsx";
 
@@ -295,6 +296,13 @@ class SCMap extends Component {
 			}
 			// ATTRIBUTE TABLE TESTING
 			// window.emitter.emit("openAttributeTable", "https://opengis.simcoe.ca/geoserver/", "simcoe:Airport");
+			
+			
+			// MAP NOTIFICAITONS
+			
+			if (window.config.pushMapNotifications) {
+				this.pushMapNotifications();
+			};
 		});
 	}
 	changeCursor = (cursorStyle) => {
@@ -315,6 +323,47 @@ class SCMap extends Component {
 			window.map.updateSize();
 		});
 	};
+
+	pushMapNotifications = () => {
+		const apiUrl = window.config.apiUrl + 'getMapNotifications/';
+		const pushMapNotificationIDs = (window.config.pushMapNotificationIDs !== undefined && window.config.pushMapNotificationIDs !== null)? window.config.pushMapNotificationIDs : [];
+		pushMapNotificationIDs.push(0);
+		helpers.getJSON( apiUrl, result => {
+		   	const filteredResult = result.filter(
+				function(e) {
+				return this.indexOf(e.id) >= 0;
+				},
+				pushMapNotificationIDs
+			);
+
+			filteredResult.forEach((message,i) => {
+				setTimeout(
+					function(){
+						const message_text = message.message;
+						const notify_color = message.notify_type;
+						const screen_time = message.screen_time;
+						
+						switch (notify_color){
+						case "green":
+							alertify.success(message_text, screen_time);
+							break;
+							case "red":
+							alertify.error(message_text, screen_time);
+							break;
+							case "cream":
+							alertify.warning(message_text, screen_time);
+							break;
+							case "white":
+							alertify.message(message_text, screen_time);
+							break;
+							default:
+							alertify.message(message_text, screen_time);
+						}
+					}, i * 2000
+				);
+			});
+		});
+	}
 
 	handleUrlParameters = () => {
 		helpers.waitForLoad("settings", Date.now(), 30, () => {
@@ -534,8 +583,7 @@ class SCMap extends Component {
 		const gitHubFollowUrl = window.config.gitHubFollowUrl;
 		const gitHubFollowHandle = window.config.gitHubFollowHandle;
 		const gitHubFollowHandleLabel = window.config.gitHubFollowHandle + " on GitHub";
-		console.log (gitHubFollowUrl)
-
+		
 		return (
 			<div id="map-root">
 				<div className="map-theme">
