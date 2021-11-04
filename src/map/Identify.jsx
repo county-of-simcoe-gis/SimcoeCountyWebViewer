@@ -142,8 +142,7 @@ class Identify extends Component {
               if (url) {
                 url += "&feature_count=1000000";
                 //console.log(url);
-                // params.headers["Content-Type"] = "application/text";
-                params.headers["Content-Type"] = "text/plain";
+                params.headers["Content-Type"] = "application/text";
                 helpers.httpGetTextWithParams(url, params, (result) => {
                   let tempResult = helpers.tryParseJSON(result);
                   //console.log(tempResult);
