@@ -185,27 +185,34 @@ p {
 }
 
 .sc-info-window-row {
-	display: table-row;
-	width: 100%;
+display: table-row;
+width:100%;
 }
 
 .sc-info-window-label {
-	font-weight: bold;
-	color: #333333;
-	font-size: 11px;
+display: table-cell;
+font-weight: bold;
+color: #333333;
+font-size: 11px;
+padding: 3px;
+word-wrap: break-word;
+border-color:#f1efeffa!important;
+border: solid;
+border-width: 1px;
+width:25%;
+text-transform: uppercase;
 }
 
 .sc-info-window-value {
-	color: #484848;
-	border-bottom: 1px solid #eeeeee;
-	padding-bottom: 3px;
-	padding-left: 20px;
-	background-image: url("./images/arrow_curve.gif");
-	background-repeat: no-repeat;
-	background-position: left;
-	font-size: 11px;
-	word-wrap: break-word;
-	min-height: 10px;
+display: table-cell;
+color: #484848;
+font-size: 12px;
+word-wrap: break-word;
+padding: 3px;
+width:75%;
+border: solid;
+border-width: 1px;
+border-color:#f1efeffa;
 }
 
 .sc-no-select {
