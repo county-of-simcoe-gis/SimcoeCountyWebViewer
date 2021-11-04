@@ -16,6 +16,7 @@ import { useEffect } from "react";
 import GeometryType from "ol/geom/GeometryType";
 
 class Identify extends Component {
+
   constructor(props) {
     super(props);
     this.state = {
@@ -422,6 +423,7 @@ const IFrame = (props) => {
 };
 
 const FeatureItem = (props) => {
+
   const [open, setOpen] = useState(false);
   const [excludeIdentifyTitleName, setExcludeIdentifyTitleName] = useState(false);
   let { feature, displayName, html_url, identifyTitleColumn, identifyIdColumn } = props;
