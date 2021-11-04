@@ -185,34 +185,34 @@ p {
 }
 
 .sc-info-window-row {
-	display: table-row;
-	width:100%;
+display: table-row;
+width:100%;
 }
 
 .sc-info-window-label {
-	display: table-cell;
-	font-weight: bold;
-	color: #333333;
-	font-size: 11px;
-	padding: 3px;
-	word-wrap: break-word;
-	border-color:#f1efeffa!important;
-	border: solid;
-	border-width: 1px;
-	width:25%;
-	text-transform: uppercase;
+display: table-cell;
+font-weight: bold;
+color: #333333;
+font-size: 11px;
+padding: 3px;
+word-wrap: break-word;
+border-color:#f1efeffa!important;
+border: solid;
+border-width: 1px;
+width:25%;
+text-transform: uppercase;
 }
 
 .sc-info-window-value {
-	display: table-cell;
-	color: #484848;
-	font-size: 12px;
-	word-wrap: break-word;
-	padding: 3px;
-	width:75%;
-	border: solid;
-	border-width: 1px;
-	border-color:#f1efeffa;
+display: table-cell;
+color: #484848;
+font-size: 12px;
+word-wrap: break-word;
+padding: 3px;
+width:75%;
+border: solid;
+border-width: 1px;
+border-color:#f1efeffa;
 }
 
 .sc-no-select {
