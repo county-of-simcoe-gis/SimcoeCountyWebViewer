@@ -260,6 +260,15 @@
 		}
 	],
 	"copyFormat": [
+		
+		{
+			"title": "Y,X",
+			"template": "[y],[x]"
+		},
+		{
+			"title": "X,Y",
+			"template": "[x],[y]"
+		},
 		{
 			"title": "Coordinate X,Y",
 			"template": "[coord] [x],[y]"
@@ -267,14 +276,6 @@
 		{
 			"title": "Coordinate Y,X",
 			"template": "[coord] [y],[x]"
-		},
-		{
-			"title": "X,Y",
-			"template": "[x],[y]"
-		},
-		{
-			"title": "Y,X",
-			"template": "[y],[x]"
 		}
 	]
 }
