@@ -297,8 +297,8 @@ class LegendApp extends Component {
 				<div className="footer">
 					<div style={{ float: "left" }}>
 						Layer info page generated using{" "}
-						<a href="https://opengis.simcoe.ca" target="_blank" rel="noopener noreferrer">
-							opengis.simcoe.ca
+						<a href={window.config.originUrl} target="_blank" rel="noopener noreferrer">
+							{(window.config.originUrl).split("//")[1]}
 						</a>{" "}
 						interactive mapping.
 						<br />
