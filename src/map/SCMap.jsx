@@ -184,6 +184,9 @@ class SCMap extends Component {
 							<MenuItem className={window.config.rightClickMenuVisibility["sc-floating-menu-identify"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-identify">
 								<FloatingMenuItem imageName={"identify.png"} label="Identify" />
 							</MenuItem>
+							<MenuItem className={window.config.rightClickMenuVisibility["sc-floating-menu-lhrs"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-lhrs">
+								<FloatingMenuItem imageName={"toolbox.png"} label="LHRS" />
+							</MenuItem>
 							<MenuItem className={window.config.rightClickMenuVisibility["sc-floating-menu-google-maps"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-google-maps">
 								<FloatingMenuItem imageName={"google.png"} label="View in Google Maps" />
 							</MenuItem>
@@ -425,6 +428,9 @@ class SCMap extends Component {
 			case "sc-floating-menu-identify":
 				this.identify();
 				break;
+			case "sc-floating-menu-lhrs":
+				this.lhrs();
+				break;
 			case "sc-floating-menu-google-maps":
 				this.googleLink();
 				break;
@@ -452,6 +458,11 @@ class SCMap extends Component {
 		// OPEN MORE MENU
 		window.emitter.emit("openMoreMenu");
 	};
+	lhrs = () => {
+		window.emitter.emit("activateSidebarItem", "LHRS", "tools", this.contextCoords);
+		console.log(this.contextCoords);
+	};
+
 	clearIdentify = () => {
 		// CLEAR PREVIOUS IDENTIFY RESULTS
 		this.identifyIconLayer.getSource().clear();
