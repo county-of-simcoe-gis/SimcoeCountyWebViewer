@@ -38,12 +38,18 @@ class FooterTools extends Component {
 	}
 
 	onMapLoad() {
+		const initScale = helpers.getMapScale();
+
+		this.setState({
+			scale: initScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+		});
+
 		window.map.on("moveend", () => {
 			const scale = helpers.getMapScale();
 
 			this.setState({
 				scale: scale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-				currentScale: scale,
+				// currentScale: scale,
 			});
 		});
 	}

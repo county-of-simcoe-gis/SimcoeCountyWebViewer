@@ -335,7 +335,11 @@ class AddLayerForm extends Component {
 	addLayer = (layer) => {
 		let showLayer = true; // this.state.tabIndex !== 0;
 		let styleUrl = "";
-		let queryable = false;
+		// let queryable = false;
+		// layer created from uploaded file will be loaded as VectorLayer, set it to queryable
+		// allows the condition checking (source = 'file') in LayerHelpers.getLayer() to load
+		// data from this layer such that identify tool will work
+		let queryable = LayerHelpers.getLayerSourceType(layer.getSource()) === OL_DATA_TYPES.Vector ? true : false;
 		let opaque = false;
 		let infoFormat = "";
 		let xslTemplate = "";

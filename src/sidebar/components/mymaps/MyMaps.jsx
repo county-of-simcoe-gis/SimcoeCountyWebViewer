@@ -177,8 +177,8 @@ class MyMaps extends Component {
 			window.map.removeInteraction(this.draw);
 
 			if (this.currentDrawFeature !== null && this.currentDrawFeature !== undefined) {
-				//let thisext = this.currentDrawFeature.getGeometry().getExtent()
-				//if (thisext !== undefined) this.vectorSource.removeFeature(this.currentDrawFeature);
+				let thisext = this.currentDrawFeature.getGeometry().getExtent()
+				if (thisext !== undefined) this.vectorSource.removeFeature(this.currentDrawFeature);
 				this.currentDrawFeature = null;
 			}
 		}
