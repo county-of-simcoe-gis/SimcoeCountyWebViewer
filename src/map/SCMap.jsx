@@ -32,6 +32,7 @@ import { Item as MenuItem } from "rc-menu";
 import Portal from "../helpers/Portal.jsx";
 import * as helpers from "../helpers/helpers";
 import Identify from "./Identify";
+import alertify from 'alertifyjs';
 import AttributeTable from "../helpers/AttributeTable.jsx";
 import FloatingImageSlider from "../helpers/FloatingImageSlider.jsx";
 
@@ -183,6 +184,9 @@ class SCMap extends Component {
 							<MenuItem className={window.config.rightClickMenuVisibility["sc-floating-menu-identify"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-identify">
 								<FloatingMenuItem imageName={"identify.png"} label="Identify" />
 							</MenuItem>
+							<MenuItem className={window.config.rightClickMenuVisibility["sc-floating-menu-lhrs"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-lhrs">
+								<FloatingMenuItem imageName={"toolbox.png"} label="LHRS" />
+							</MenuItem>
 							<MenuItem className={window.config.rightClickMenuVisibility["sc-floating-menu-google-maps"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-google-maps">
 								<FloatingMenuItem imageName={"google.png"} label="View in Google Maps" />
 							</MenuItem>
@@ -295,6 +299,13 @@ class SCMap extends Component {
 			}
 			// ATTRIBUTE TABLE TESTING
 			// window.emitter.emit("openAttributeTable", "https://opengis.simcoe.ca/geoserver/", "simcoe:Airport");
+			
+			
+			// MAP NOTIFICAITONS
+			
+			if (window.config.pushMapNotifications) {
+				this.pushMapNotifications();
+			};
 		});
 	}
 	changeCursor = (cursorStyle) => {
@@ -315,6 +326,47 @@ class SCMap extends Component {
 			window.map.updateSize();
 		});
 	};
+
+	pushMapNotifications = () => {
+		const apiUrl = window.config.apiUrl + 'getMapNotifications/';
+		const pushMapNotificationIDs = (window.config.pushMapNotificationIDs !== undefined && window.config.pushMapNotificationIDs !== null)? window.config.pushMapNotificationIDs : [];
+		pushMapNotificationIDs.push(0);
+		helpers.getJSON( apiUrl, result => {
+		   	const filteredResult = result.filter(
+				function(e) {
+				return this.indexOf(e.id) >= 0;
+				},
+				pushMapNotificationIDs
+			);
+
+			filteredResult.forEach((message,i) => {
+				setTimeout(
+					function(){
+						const message_text = message.message;
+						const notify_color = message.notify_type;
+						const screen_time = message.screen_time;
+						
+						switch (notify_color){
+						case "green":
+							alertify.success(message_text, screen_time);
+							break;
+							case "red":
+							alertify.error(message_text, screen_time);
+							break;
+							case "cream":
+							alertify.warning(message_text, screen_time);
+							break;
+							case "white":
+							alertify.message(message_text, screen_time);
+							break;
+							default:
+							alertify.message(message_text, screen_time);
+						}
+					}, i * 2000
+				);
+			});
+		});
+	}
 
 	handleUrlParameters = () => {
 		helpers.waitForLoad("settings", Date.now(), 30, () => {
@@ -376,6 +428,9 @@ class SCMap extends Component {
 			case "sc-floating-menu-identify":
 				this.identify();
 				break;
+			case "sc-floating-menu-lhrs":
+				this.lhrs();
+				break;
 			case "sc-floating-menu-google-maps":
 				this.googleLink();
 				break;
@@ -403,6 +458,11 @@ class SCMap extends Component {
 		// OPEN MORE MENU
 		window.emitter.emit("openMoreMenu");
 	};
+	lhrs = () => {
+		window.emitter.emit("activateSidebarItem", "LHRS", "tools", this.contextCoords);
+		console.log(this.contextCoords);
+	};
+
 	clearIdentify = () => {
 		// CLEAR PREVIOUS IDENTIFY RESULTS
 		this.identifyIconLayer.getSource().clear();
@@ -528,9 +588,13 @@ class SCMap extends Component {
 				this.forceUpdate();
 			});
 		});
-	}
-
+	};
+      
 	render() {
+		const gitHubFollowUrl = window.config.gitHubFollowUrl;
+		const gitHubFollowHandle = window.config.gitHubFollowHandle;
+		const gitHubFollowHandleLabel = window.config.gitHubFollowHandle + " on GitHub";
+		
 		return (
 			<div id="map-root">
 				<div className="map-theme">
@@ -540,16 +604,19 @@ class SCMap extends Component {
 					<FooterTools options={this.props.options} />
 					<BMap />
 					<PropertyReportClick />
+					{ (window.mapControls.gitHubButton)?
 					<div
 						className={window.sidebarOpen ? "sc-map-github-button slideout" : "sc-map-github-button slidein"}
 						onClick={() => {
 							helpers.addAppStat("GitHub", "Button");
 						}}
 					>
-						<GitHubButton href="https://github.com/county-of-simcoe-gis" data-size="large" aria-label="Follow @simcoecountygis on GitHub">
-							Follow @simcoecountygis
+						<GitHubButton href={gitHubFollowUrl} data-size="large" aria-label= {gitHubFollowHandleLabel}>
+						{gitHubFollowHandle}
 						</GitHubButton>
 					</div>
+					: <div/>
+	                }
 					<AttributeTable />
 					<FloatingImageSlider />
 				</div>

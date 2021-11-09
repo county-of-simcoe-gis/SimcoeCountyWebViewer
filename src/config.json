@@ -22,6 +22,7 @@
   "apiUrl": "https://opengis.simcoe.ca/api/",
   "apiUrlDev": "http://localhost:8085/",
   "termsUrl": "https://maps.simcoe.ca/terms.html",
+  "openLicenseUrl":" http://maps.simcoe.ca/openlicense.html",
   "whatsNewUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/WhatsNew/2021-03-22",
   "helpUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer",
   "ieWarningUrl": "https://opengis.simcoe.ca/public/ieWarning.html",
@@ -31,6 +32,12 @@
     "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
     "rollNumberFieldName": "ARN"
   },
+  "gitHubFollowUrl": "https://github.com/county-of-simcoe-gis",
+  "gitHubFollowHandle": "Follow @simcoecountygis",
+  "pushMapNotifications": false,
+  "pushMapNotificationIDs": [1,5,6],
+  "ShowHelpButtonInsteadOfFeedback" : false,
+
   "centerCoords": [-8878504.68, 5543492.45],
   "defaultZoom": 10,
   "maxZoom": 20,
@@ -42,7 +49,8 @@
     "zoomExtent": true,
     "scale": true,
     "scaleLine": true,
-    "basemap": true
+    "basemap": true,
+    "gitHubButton": true
   },
   "mapTheme": "SIMCOE_COUNTY",
   "showFloatingMenuHeader": false,
@@ -54,6 +62,7 @@
   },
   "onlyStandardCursor": true,
   "restrictOriginForUrlWindow": false,
+  
   "rightClickMenuVisibility": {
     "sc-floating-menu-basic-mode": true,
     "sc-floating-menu-property-click": true,
@@ -63,6 +72,21 @@
     "sc-floating-menu-identify": true,
     "sc-floating-menu-google-maps": false,
     "sc-floating-menu-more": true
+  },
+  "drawingOptionsToolsMenuVisibility": {
+    "sc-floating-menu-feature-report": false,
+    "sc-floating-menu-buffer": true,
+    "sc-floating-menu-measure": true,
+    "sc-floating-menu-symbolizer": true,
+    "sc-floating-menu-zoomto": true,
+	  "sc-floating-menu-delete": true,
+    "sc-floating-menu-geometry": true,
+	  "sc-floating-menu-export": true,
+		  "sc-floating-menu-export-to-kml": true,
+		  "sc-floating-menu-export-to-esrijson": true,
+		  "sc-floating-menu-export-to-geojson": true,
+		"sc-floating-menu-report-problem": true,
+    "sc-floating-menu-identify": true
   },
 
   "toc": {

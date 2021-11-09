@@ -104,10 +104,16 @@ class Header extends Component {
 				<div id="sc-header-search-container">
 					<Search options={this.props.options} />
 				</div>
-				<div className="sc-header-feedback-container" title="Feedback" onClick={this.onFeedbackClick}>
-					<img style={{ marginTop: "5px" }} src={require("./images/feedback.png")} alt="feedback" />
-					Feedback
-				</div>
+				{ (window.config.ShowHelpButtonInsteadOfFeedback)?
+					<div className="sc-header-help-container" >
+						<div className="sc-header-help-btn" onClick={() => helpers.showURLWindow(window.config.helpUrl, false, "full")}>?</div>
+					</div>
+				:
+					<div className="sc-header-feedback-container" title="Feedback" onClick={this.onFeedbackClick}>
+						<img style={{ marginTop: "5px" }} src={require("./images/feedback.png")} alt="feedback" />
+						Feedback
+					</div>
+				}
 				{/* <div className="sc-header-dot-menu-container" onClick={this.onDotMenuClick}><img className="sc-header-dot-menu-img" src={images['vertical-dot-menu.png']} alt="dots"></img></div> */}
 			</div>
 		);

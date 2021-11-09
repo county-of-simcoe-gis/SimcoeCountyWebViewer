@@ -1,10 +1,11 @@
 {
 
 	"name": "opengis",
-	"homepage": "https://opengis.simcoe.ca/public/",
+	"homepage": "./",
 	"version": "1.1.4",
 	"private": true,
 	"dependencies": {
+		"alertifyjs": "^1.13.1",
 		"array-move": "^2.2.2",
 		"create-react-class": "^15.7.0",
 		"eslint-utils": "^1.4.3",

@@ -136,6 +136,7 @@ class LHRS extends Component {
 
     // DISABLE PROPERTY CLICK
     window.disableParcelClick = true;
+    window.isCoordinateToolOpen = true;
 
     // REGISTER MAP EVENTS
     this.onPointerMoveEvent = window.map.on("pointermove", this.onPointerMoveHandler);
@@ -830,6 +831,11 @@ class LHRS extends Component {
       unByKey(this.onPointerMoveEvent);
       unByKey(this.onMapClickEvent);
     }
+
+    // ENABLE PROPERTY CLICK
+    window.disableParcelClick = false;
+    window.isCoordinateToolOpen = false;
+
     // REMOVE THE LAYER
     window.map.removeLayer(this.vectorLayerA);
     window.map.removeLayer(this.vectorLayerB);

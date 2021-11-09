@@ -273,15 +273,15 @@ class LayerInfoApp extends Component {
 				<div className="sc-layerInfo-footer">
 					<div style={{ float: "left" }}>
 						<div>
-							<a href="http://maps.simcoe.ca/openlicense.html" target="_blank" rel="noopener noreferrer">
+							<a href={window.config.openLicenseUrl} target="_blank" rel="noopener noreferrer">
 								View Terms of Use
 							</a>
 						</div>
 						<br />
 						<div>
 							Layer info page generated using{" "}
-							<a href="https://opengis.simcoe.ca" target="_blank" rel="noopener noreferrer">
-								opengis.simcoe.ca
+							<a href={window.config.originUrl} target="_blank" rel="noopener noreferrer">
+							{(window.config.originUrl).split("//")[1]}
 							</a>{" "}
 							interactive mapping.
 							<br />

@@ -285,9 +285,27 @@ class Search extends Component {
 
 		this.initsearchLayers();
 
-		// SET STATE CURRENT ITEM
-		if (!hidden) this.setState({ searchResults: [result] });
+		// SET STATE CURRENT ITEM - this item is not needed for either Option for searchBarValueChangeOnClick
+		// if (!hidden) this.setState({ searchResults: [result] });
 
+		//CHECK FOR ASSOCIATED LAYERS
+		if (result.assoc_layers !== undefined && result.assoc_layers !== null && window.config.searchResultLayerActivate === true){
+			let assocLayers = result.assoc_layers.split(",");
+			//console.log (assocLayers);	
+			if (assocLayers.length>0){
+				assocLayers.forEach((assocLayer) => {
+					if (assocLayer.split("@")[0] !== undefined && assocLayer.split("@")[0] !== null && assocLayer.split("@")[1] !== undefined && assocLayer.split("@")[1] !== null) {
+				      let item = {fullName:assocLayer.split("@")[0], layerGroup:assocLayer.split("@")[1], itemAction:"Activate"};
+					 //console.log ( assocLayer.split("@")[0])	
+					  let emmiting = false;
+					  window.emitter.emit("activeTocLayerGroup", item.layerGroup, () => {
+						if (!emmiting) window.emitter.emit("activeTocLayer", item);
+						emmiting = true;
+					});
+					}
+				});
+			}
+		  }
 		// GET GEOJSON VALUES
 		const fullFeature = helpers.getFeatureFromGeoJSON(result.geojson);
 		let pointFeature = helpers.getFeatureFromGeoJSON(result.geojson_point);
@@ -385,7 +403,12 @@ class Search extends Component {
 		searchIconLayer.getSource().clear();
 
 		// SET STATE CURRENT ITEM
-		this.setState({ value, searchResults: [item] });
+		const searchBarValueChangeOnClick = window.config.searchBarValueChangeOnClick;
+
+        if (searchBarValueChangeOnClick !== false)  { 
+		    this.setState({ value, searchResults: [item] });
+		} 
+
 		if (item.place_id !== undefined || item.location_id == null) {
 			this.initsearchLayers();
 
@@ -467,8 +490,11 @@ class Search extends Component {
 		// SEARCH LAYERS
 		if (selectedType === "All" || selectedType === "Map Layer") {
 			let layers = [];
-			// eslint-disable-next-line
-			window.emitter.emit("getLayerList", (groups) => {
+			const searchResultTOC_Actions = (window.config.searchResultTOC_Actions !== undefined) 
+    		? window.config.searchResultTOC_Actions.toLowerCase()
+    		: "Default";
+			 // eslint-disable-next-line
+			 window.emitter.emit("getLayerList", (groups) => {
 				Object.entries(groups).forEach((row) => {
 					const layerItems = row[1];
 					layerItems.forEach((layer) => {
@@ -482,7 +508,9 @@ class Search extends Component {
 									layerGroupName: layer.groupName,
 									layerGroup: layer.group,
 									imageName: "layers.png",
+									imageName: (searchResultTOC_Actions == 'advanced' && layer.visible)? "layers-visible.png" : "layers.png" ,
 									index: layer.index,
+
 								});
 							}
 						}

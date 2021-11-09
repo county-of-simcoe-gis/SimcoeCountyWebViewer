@@ -810,6 +810,9 @@ class TOC extends Component {
 		let allowSave = true;
 		let layerGroups = this.getActiveLayerGroups();
 		let currentGroup = layerGroups.filter((item) => item.value === layerItem.layerGroup)[0];
+		const searchResultTOC_Actions = (window.config.searchResultTOC_Actions !== undefined) 
+    		? window.config.searchResultTOC_Actions.toLowerCase()
+    		: "Default";
 		currentGroup.panelOpen = true;
 		currentGroup = currentGroup.layers.map((layer) => {
 			if (layer.name === layerItem.fullName && layer.group === layerItem.layerGroup) {
@@ -823,8 +826,20 @@ class TOC extends Component {
 						return layer;
 					}
 				}
-				layer.layer.setVisible(true);
-				layer.visible = true;
+                if (searchResultTOC_Actions != 'advanced') {				
+					layer.layer.setVisible(true);
+					layer.visible = true;
+					layerItem.imageName =  "layers.png";
+			    } else if (!layer.visible && searchResultTOC_Actions == 'advanced') {				
+					layer.layer.setVisible(true);
+					layer.visible = true;
+					layerItem.imageName = "layers-visible.png";
+			    } else if (layer.visible && searchResultTOC_Actions == 'advanced' && layerItem.itemAction != "Activate") {	
+					layer.layer.setVisible(false);
+					layer.visible = false;
+					layerItem.imageName =  "layers.png";
+				}
+							
 				return layer;
 			} else {
 				return layer;
