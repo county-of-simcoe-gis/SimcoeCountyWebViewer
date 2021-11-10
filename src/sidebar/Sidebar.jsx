@@ -134,17 +134,22 @@ class Sidebar extends Component {
       });
     });
     helpers.waitForLoad("settings", Date.now(), 30, () => {
-      // IMPORT TOOLS FROM CONFIG
-
+      // IMPORT TOOLS FROM CONFIG and CHECK VISIBILITY
       let tools = window.config.sidebarToolComponents;
       tools = tools.filter((item) => item.enabled === undefined || item.enabled);
       tools.map(async (component) => await this.addComponent(component, "tools"));
-      if (tools.length === 0) this.setState({ hideTools: true });
+      if (tools.length === 0 || (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideTools"])) this.setState({ hideTools: true });
       // IMPORT THEMES FROM CONFIG
       let themes = window.config.sidebarThemeComponents;
       themes = themes.filter((item) => item.enabled === undefined || item.enabled);
       themes.map(async (component) => await this.addComponent(component, "themes"));
-      if (themes.length === 0) this.setState({ hideThemes: true });
+      if (themes.length === 0 || (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideThemes"])) this.setState({ hideThemes: true });
+      // CHECK VISIBILITY OF LAYERS MENUE
+      if (themes.length === 0 || (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideLayers"])) this.setState({ hideLayers: true });
+      // CHECK VISIBILITY OF MY MAPS
+      if (themes.length === 0 || (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideMyMaps"])) this.setState({ hideMyMaps: true });
+      // CHECK VISIBILITY OF REPORTS
+      if (themes.length === 0 || (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideReports"])) this.setState({ hideReports: true });
 
       const shortcuts = window.config.sidebarShortcutParams;
       // HANDLE ADVANCED MODE PARAMETER
