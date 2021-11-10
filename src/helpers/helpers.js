@@ -84,14 +84,12 @@ export function addAppStat(type, description) {
     if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") return;
     const build = (appName, version) => `${appName}-${version}`;
     const appStatsTemplate = (build, type, description) => `${window.config.appStatsUrl}${build}/${type}/${description}`;
-    let buildname = window.location.pathname.split("/").join("");
-    if (window.version !== undefined && window.version !== null) {
-      if (window.app !== undefined && window.app !== null) {
-        buildname += build(window.app, window.version);
-      } else {
-        buildname = build(buildname, window.version);
-      }
+    let buildname = "";
+    if (window.homepage) buildname += window.homepage;
+    if (window.version) {
+      buildname = build(window.app ? window.app : window.location.pathname.split("/").join(""), window.version);
     }
+    if (window.homepage) buildname += "-" + window.homepage;
     if (buildname === "") buildname = "Unknown";
     httpGetText(appStatsTemplate(buildname, type, description));
   });
@@ -390,7 +388,6 @@ export const messageColors = {
   orange: "orange",
 };
 export function getHash(input) {
-
   return input.split("").reduce((a, b) => {
     a = (a << 5) - a + b.charCodeAt(0);
     return a & a;
@@ -1473,9 +1470,7 @@ export function addIsLoaded(item) {
   if (!window.loaded.includes(item.toLowerCase())) window.loaded.push(item.toLowerCase());
 }
 export function removeIsLoaded(item) {
-
   if (window.loaded.includes(item.toLowerCase())) window.loaded.splice(window.loaded.indexOf(item.toLowerCase()), 1);
-
 }
 
 export function loadConfig(callback) {
