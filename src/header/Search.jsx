@@ -521,7 +521,7 @@ class Search extends Component {
 		}
 
 		// TOOLS
-		if (selectedType === "All" || selectedType === "Tool") {
+		if ((selectedType === "All" || selectedType === "Tool") && (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideTools"] !== true)) {
 			let tools = [];
 			// eslint-disable-next-line
 			window.config.sidebarToolComponents.forEach((tool) => {
@@ -537,7 +537,7 @@ class Search extends Component {
 		}
 
 		// THEMES
-		if (selectedType === "All" || selectedType === "Theme") {
+		if ((selectedType === "All" || selectedType === "Theme") && (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideThemes"] !== true)) {
 			let themes = [];
 			window.config.sidebarThemeComponents.forEach((theme) => {
 				if (theme.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0 && (theme.enabled === undefined || theme.enabled)) {
