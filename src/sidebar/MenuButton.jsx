@@ -55,15 +55,19 @@ class MenuButton extends Component {
 			if (theme.enabled === undefined || theme.enabled)
 				itemList.push(<MenuItem onClick={() => this.itemClick(theme.name, "themes")} key={helpers.getUID()} name={theme.name} iconClass={"sc-menu-theme-icon"} />);
 		});
-
-		return itemList;
+		if (itemList === 0 || (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideThemes"])) {
+		return;
+	   }else{
+		 return itemList;}
 	};
 
 	// CUSTOM ENTRIES, COMMENT OUT IF YOU DON"T WANT IT
 	getOthers = () => {
 		let itemList = [];
 		itemList.push(<MenuItem onClick={() => helpers.showURLWindow(window.config.whatsNewUrl, true, "full", false, true)} key={helpers.getUID()} name={"What's New"} iconClass={"sc-menu-terms-icon"} />);
+		{ if (!window.config.ShowHelpButtonInsteadOfFeedback)
 		itemList.push(<MenuItem key={helpers.getUID()} name={"Feedback"} iconClass={"sc-menu-feedback-icon"} onClick={this.onFeedbackClick} />);
+		}
 		itemList.push(<MenuItem onClick={this.onScreenshotClick} key={helpers.getUID()} name={"Take a Screenshot"} iconClass={"sc-menu-screenshot-icon"} />);
 		itemList.push(<MenuItem key={helpers.getUID()} name={"Map Legend"} iconClass={"sc-menu-legend-icon"} onClick={() => window.emitter.emit("openLegend", null)} />);
 		itemList.push(<MenuItem onClick={() => helpers.showURLWindow(window.config.helpUrl, false, "full", false, true)} key={helpers.getUID()} name={"Help"} iconClass={"sc-menu-help-icon"} />);
@@ -144,9 +148,11 @@ class MenuButton extends Component {
 					</button>
 				</div>
 				<div id="sc-menu-button-list-container" className={menuListClassName}>
-					<div className="sc-menu-list-item-heading" style={{ paddingTop: "0px" }}>
-						MAP THEMES
-					</div>
+					{(window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideThemes"])? <div></div>:
+						<div className="sc-menu-list-item-heading" style={{ paddingTop: "0px" }}>
+							MAP THEMES
+						</div>
+					}	
 					{this.themes}
 					<div className="sc-menu-list-item-heading">MAP TOOLS</div>
 					{this.tools}
