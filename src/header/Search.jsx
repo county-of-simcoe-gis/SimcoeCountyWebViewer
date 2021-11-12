@@ -331,25 +331,25 @@ class Search extends Component {
 			searchIconLayer.setZIndex(300);
 		}
 
-		const zoomFactor = (window.config.featureHighlitStyles && window.config.featureHighlitStyles["zoomFactor"] > 1) ? window.config.featureHighlitStyles["zoomFactor"] : 1;
+		const zoomFactor = (window.config.featureHighlitStyles && window.config.featureHighlitStyles["zoomFactor"] >= 0) ? window.config.featureHighlitStyles["zoomFactor"] : 1;
 		if (result.geojson.indexOf("Point") !== - 1) {
 			searchGeoLayer.setStyle(this.styles["point"]);
 			window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), {
 				duration: 1000,
 			});
-			window.map.getView().setZoom(18);
+			window.map.getView().setZoom(19 - zoomFactor);
 		} else if (result.geojson.indexOf("Line") !== - 1) {
 			searchGeoLayer.setStyle(this.styles["poly"]);
 			window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), {
 				duration: 1000,
 			});
-			window.map.getView().setZoom(window.map.getView().getZoom() - zoomFactor / window.map.getView().getZoom());
+			window.map.getView().setZoom(window.map.getView().getZoom() - zoomFactor );
 		} else {
 			searchGeoLayer.setStyle(this.styles["poly"]);
 			window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), {
 				duration: 1000,
 			});
-			window.map.getView().setZoom(window.map.getView().getZoom() - zoomFactor / window.map.getView().getZoom());
+			window.map.getView().setZoom(window.map.getView().getZoom() - zoomFactor );
 		}
 
 		//fullFeature.setStyle(myMapsHelpers.getDefaultDrawStyle([255, 0, 0, 0.8], false, 2, fullFeature.getGeometry().getType()));
