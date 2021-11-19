@@ -1,0 +1,14 @@
+{
+  "themeColor": "#C9E7F9",
+  "termsUrl": "http://maps.simcoe.ca/terms.html",
+  "byLawUrl": "https://www.severn.ca/en/build-and-invest/resources/documents/Zoning-By-law.pdf",
+  "contactUsEmail": "kmandeville@townshipofsevern.com",
+  "queryLayers": [
+    {
+      "title": "Zoning",
+      "featureTitleColumn": "zonename",
+      "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:zoning&outputFormat=application/json",
+      "geom": "geom"
+    }
+  ]
+}

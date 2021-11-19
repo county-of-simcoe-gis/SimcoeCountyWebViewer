@@ -1,5 +1,4 @@
 {
-
   "useMapConfigApi": true,
   "mapId": "",
   "headerLogoImageName": "logo.png",
@@ -22,7 +21,7 @@
   "apiUrl": "https://opengis.simcoe.ca/api/",
   "apiUrlDev": "http://localhost:8085/",
   "termsUrl": "https://maps.simcoe.ca/terms.html",
-  "openLicenseUrl":" http://maps.simcoe.ca/openlicense.html",
+  "openLicenseUrl": "http://maps.simcoe.ca/openlicense.html",
   "whatsNewUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/WhatsNew/2021-03-22",
   "helpUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer",
   "ieWarningUrl": "https://opengis.simcoe.ca/public/ieWarning.html",
@@ -35,8 +34,8 @@
   "gitHubFollowUrl": "https://github.com/county-of-simcoe-gis",
   "gitHubFollowHandle": "Follow @simcoecountygis",
   "pushMapNotifications": false,
-  "pushMapNotificationIDs": [1,5,6],
-  "ShowHelpButtonInsteadOfFeedback" : false,
+  "pushMapNotificationIDs": [1, 5, 6],
+  "ShowHelpButtonInsteadOfFeedback": false,
 
   "centerCoords": [-8878504.68, 5543492.45],
   "defaultZoom": 10,
@@ -62,7 +61,7 @@
   },
   "onlyStandardCursor": true,
   "restrictOriginForUrlWindow": false,
-  
+
   "rightClickMenuVisibility": {
     "sc-floating-menu-basic-mode": true,
     "sc-floating-menu-property-click": true,
@@ -79,13 +78,13 @@
     "sc-floating-menu-measure": true,
     "sc-floating-menu-symbolizer": true,
     "sc-floating-menu-zoomto": true,
-	  "sc-floating-menu-delete": true,
+    "sc-floating-menu-delete": true,
     "sc-floating-menu-geometry": true,
-	  "sc-floating-menu-export": true,
-		  "sc-floating-menu-export-to-kml": true,
-		  "sc-floating-menu-export-to-esrijson": true,
-		  "sc-floating-menu-export-to-geojson": true,
-		"sc-floating-menu-report-problem": true,
+    "sc-floating-menu-export": true,
+    "sc-floating-menu-export-to-kml": true,
+    "sc-floating-menu-export-to-esrijson": true,
+    "sc-floating-menu-export-to-geojson": true,
+    "sc-floating-menu-report-problem": true,
     "sc-floating-menu-identify": true
   },
 
@@ -305,6 +304,13 @@
       "componentName": "TwoOneOne",
       "description": "Explore 211 Community Services across the County of Simcoe.",
       "imageName": "211communityServices.png"
+    },
+    {
+      "id": 9,
+      "name": "Zoning",
+      "componentName": "Zoning",
+      "description": "",
+      "imageName": "zoning.png"
     }
   ],
   "sidebarShortcutParams": [

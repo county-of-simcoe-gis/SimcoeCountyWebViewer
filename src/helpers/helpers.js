@@ -6,10 +6,10 @@ import ReactDOM from "react-dom";
 import Feature from "ol/Feature";
 import * as ol from "ol";
 import { Image as ImageLayer, Tile as TileLayer, Vector as VectorLayer, VectorTile as VectorTileLayer } from "ol/layer.js";
-import { ImageWMS, OSM, TileArcGISRest, TileImage, Vector, XYZ} from "ol/source.js";
-import MVT from 'ol/format/MVT';
-import VectorTileSource from 'ol/source/VectorTile';
-import stylefunction from 'ol-mapbox-style/dist/stylefunction';
+import { ImageWMS, OSM, TileArcGISRest, TileImage, Vector, XYZ } from "ol/source.js";
+import MVT from "ol/format/MVT";
+import VectorTileSource from "ol/source/VectorTile";
+import stylefunction from "ol-mapbox-style/dist/stylefunction";
 
 //import {file as FileLoader} from "ol/featureloader.js";
 import { GeoJSON, WKT } from "ol/format.js";
@@ -356,7 +356,7 @@ export function getImageWMSLayer(serverURL, layers, serverType = "geoserver", cq
 //GET VectorTie Layer
 export function getVectorTileLayer(url) {
   let layer = new VectorTileLayer({
-    renderMode: 'vector',
+    renderMode: "vector",
     reload: Infinity,
     declutter: true,
     //extent: extent,
@@ -367,7 +367,7 @@ export function getVectorTileLayer(url) {
       maxZoom: 26,
       //rootPath: url + "/resources/styles/root.json",
       //spritePath: url + "/resources/sprites/sprite.json",
-      //pngPath: url + "/resources/sprites/sprite.png",   
+      //pngPath: url + "/resources/sprites/sprite.png",
     }),
     id: "vTileLayer",
     tilePixelRatio: 8,
@@ -380,17 +380,14 @@ export function getVectorTileLayer(url) {
     response.json().then(function (glStyle) {
       fetch(spritePath).then(function (response) {
         response.json().then(function (spriteData) {
-  
           stylefunction(layer, glStyle, "esri", undefined, spriteData, pngPath);
-          
-           });
         });
+      });
     });
   });
-  
-  return layer //StyledLayer is returned;
-};
 
+  return layer; //StyledLayer is returned;
+}
 
 export function scaleToResolution(scale) {
   const DOTS_PER_INCH = 96;
@@ -1747,5 +1744,19 @@ export function getARNListFromGeom(geom, callback) {
     });
 
     callback(tmpArnArray);
+  });
+}
+export function getFeaturesFromGeom(wfsUrl, geomFieldName, geom, callback) {
+  const urlTemplate = (mainURL, geomField, wkt) => `${mainURL}&cql_filter=INTERSECTS(${geomField},${wkt})`;
+
+  const feature = new Feature(geom);
+  const wktString = getWKTStringFromFeature(feature);
+  const queryUrl = urlTemplate(wfsUrl, geomFieldName, wktString);
+  getJSON(queryUrl, (result) => {
+    if (result.features.length === 0) callback([]);
+    else {
+      const features = new GeoJSON().readFeatures(result);
+      callback(features);
+    }
   });
 }
