@@ -65,7 +65,7 @@ class MenuButton extends Component {
 	getOthers = () => {
 		let itemList = [];
 		itemList.push(<MenuItem onClick={() => helpers.showURLWindow(window.config.whatsNewUrl, true, "full", false, true)} key={helpers.getUID()} name={"What's New"} iconClass={"sc-menu-terms-icon"} />);
-		{ if (!window.config.ShowHelpButtonInsteadOfFeedback)
+		{ if (!window.config.showHelpButtonInsteadOfFeedback)
 		itemList.push(<MenuItem key={helpers.getUID()} name={"Feedback"} iconClass={"sc-menu-feedback-icon"} onClick={this.onFeedbackClick} />);
 		}
 		itemList.push(<MenuItem onClick={this.onScreenshotClick} key={helpers.getUID()} name={"Take a Screenshot"} iconClass={"sc-menu-screenshot-icon"} />);

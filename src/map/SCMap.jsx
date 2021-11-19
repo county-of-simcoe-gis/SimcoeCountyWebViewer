@@ -376,6 +376,7 @@ class SCMap extends Component {
 			const x = helpers.getURLParameter("X");
 			const y = helpers.getURLParameter("Y");
 			const sr = helpers.getURLParameter("SR") === null ? "WEB" : helpers.getURLParameter("SR");
+			const id = helpers.getURLParameter("ID");
 
 			// GET URL PARAMETERS (ZOOM TO EXTENT)
 			const xmin = helpers.getURLParameter("XMIN");
@@ -387,6 +388,25 @@ class SCMap extends Component {
 				// URL PARAMETERS (ZOOM TO XY)
 				let coords = [x, y];
 				if (sr && sr.toUpperCase() === "WGS84") coords = fromLonLat([Math.round(x * 100000) / 100000, Math.round(y * 100000) / 100000]);
+                
+				if (id === "true" || (window.config.onCoordinateZoomID !== undefined && window.config.onCoordinateZoomID !== null && window.config.onCoordinateZoomID)) {
+                	const iconFeature = new Feature({
+					geometry: new Point(coords),
+				  });
+				  
+				  const iconStyle = new Style({
+					image: new Icon({
+						anchor: [0.5, 1],
+						src: images["identify-marker.png"],
+					}),
+				  });
+
+				  iconFeature.setStyle(iconStyle);
+				  this.identifyIconLayer.getSource().clear();
+				  window.map.removeLayer(this.identifyIconLayer);
+				  this.identifyIconLayer.getSource().addFeature(iconFeature);
+				  window.map.addLayer(this.identifyIconLayer);
+				}; 
 
 				setTimeout(() => {
 					helpers.flashPoint(coords);
