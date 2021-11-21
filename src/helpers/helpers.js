@@ -1159,12 +1159,13 @@ export function getGeometryFromGeoJSON(geometry) {
 }
 
 //Generate Feature Reports for a Polygon (reproting area)
-export function generateReport(feature, report, buffer = 0, callback = undefined) {
-  const url = mainConfig.reportsUrl + report;
+export function generateReport(feature, reportObj, buffer = 0, callback = undefined) {
+  const report = reportObj.report;
+  const url = mainConfig.reportsUrl + 'Report/' +  report;
   let geom = feature.getGeometry();
   //const utmNad83Geometry = geom.transform("EPSG:3857", _nad83Proj);
   const geoJSON = getGeoJSONFromGeometry(geom);
-  const obj = { geoJSON: geoJSON, srid: "3857", buffer: buffer };
+  const obj = { geoJSON: geoJSON, srid: "3857", buffer: buffer, reportObj:reportObj};
   return fetch(url, {
     method: "POST", // *GET, POST, PUT, DELETE, etc.
     mode: "cors", // no-cors, cors, *same-origin
@@ -1195,12 +1196,13 @@ export function generateReport(feature, report, buffer = 0, callback = undefined
     });
 }
 
-export function previewReport(feature, report, buffer = 0, callback) {
-  const url = mainConfig.reportsUrl + report;
+export function previewReport(feature, reportObj, buffer = 0, callback) {
+  const report = reportObj.report;
+  const url = mainConfig.reportsUrl + 'ReportPreview/' + report;
   let geom = feature.getGeometry();
   //const utmNad83Geometry = geom.transform("EPSG:3857", _nad83Proj);
   const geoJSON = getGeoJSONFromGeometry(geom);
-  const obj = { geoJSON: geoJSON, srid: "3857", buffer: buffer };
+  const obj = { geoJSON: geoJSON, srid: "3857", buffer: buffer, reportObj:reportObj};
   return fetch(url, {
     method: "POST", // *GET, POST, PUT, DELETE, etc.
     mode: "cors", // no-cors, cors, *same-origin
