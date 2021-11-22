@@ -100,8 +100,8 @@ const Zoning = (props) => {
           Terms
         </div>
 
-        <div className={"sc-button sc-theme-zoning-tbylawerms"} onClick={onByLawClick} title="Zoning By Law">
-          Zoning By Law
+        <div className={"sc-button sc-theme-zoning-tbylawerms"} onClick={onByLawClick} title="Zoning Bylaw">
+          Zoning Bylaw
         </div>
 
         <div className={"sc-button sc-theme-zoning-contactus"} onClick={onContactClick} title="Contact Us">

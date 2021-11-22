@@ -290,7 +290,9 @@ class Search extends Component {
     window.emitter.emit("searchComplete", result);
 
     this.initsearchLayers();
-
+    // CLEAR PREVIOUS SOURCE
+    searchGeoLayer.getSource().clear();
+    searchIconLayer.getSource().clear();
     // SET STATE CURRENT ITEM - this item is not needed for either Option for searchBarValueChangeOnClick
     // if (!hidden) this.setState({ searchResults: [result] });
 
