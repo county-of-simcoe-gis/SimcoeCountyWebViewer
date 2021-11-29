@@ -401,6 +401,11 @@
       "matchValue": "Forestry and Recreation",
       "type": "themes",
       "component": "Forestry"
+    },
+    {
+      "id": 14,
+      "url_param": "MYMAPS",
+      "type": "MYMAPS"
     }
   ]
 }

@@ -186,7 +186,9 @@ class PropertyReportClick extends Component {
             title="View Zoning"
             style={{ marginBottom: "-3px", marginLeft: "5px", cursor: "pointer" }}
             onClick={() => {
-              window.emitter.emit("searchItem", "Assessment Parcel", arn, false);
+              window.emitter.emit("activateTab", "themes");
+              window.emitter.emit("activateSidebarItem", "Zoning", "themes");
+              window.emitter.emit("searchItem", "All", arn, true);
               helpers.addAppStat("View Zoning Click", "click");
             }}
           />

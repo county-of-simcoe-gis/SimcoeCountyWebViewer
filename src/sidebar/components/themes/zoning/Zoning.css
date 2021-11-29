@@ -1,6 +1,6 @@
 .sc-theme-zoning-body {
   position: absolute;
-  top: 140px;
+  top: 100px;
   bottom: 80px;
   left: 0px;
   right: 1px;
@@ -8,6 +8,7 @@
 }
 .sc-theme-zoning-no-results {
   text-align: center;
+  margin-top: 40px;
   padding: 5px;
 }
 .sc-theme-zoning-header {
