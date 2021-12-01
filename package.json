@@ -17,7 +17,7 @@
     "ol": "6.6.x",
     "ol-contextmenu": "^3.3.2",
     "proj4": "^2.7.0",
-    "rc-menu": "^7.5.5",
+    "rc-menu": "^9.0.14",
     "rc-slider": "^8.7.1",
     "re-resizable": "^6.9.0",
     "react": "17.x",
