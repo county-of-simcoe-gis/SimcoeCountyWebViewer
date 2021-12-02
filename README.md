@@ -39,7 +39,10 @@ cd SimcoeCountyWebViewer
 npm install
 npm start
 ```
-
+*Note: if you are using NPM version 7 or higher you will need to use
+```
+npm install --legacy-peer-deps
+```
 ## Deployment
 
 In the project diretory, type `npm run build` in the terminal. Details can be found with [Create React App](https://github.com/facebook/create-react-app)
