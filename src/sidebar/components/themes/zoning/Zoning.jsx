@@ -10,6 +10,7 @@ import SectionPanel from "./ZoningResults";
 const Zoning = (props) => {
   //DEFINE STATE VARIABLES
   const [sections, setSections] = useState([]);
+  const [themeConfig, setThemeConfig] = useState(zoningConfig.default);
   const [shadowLayer] = useState(
     new VectorLayer({
       source: new VectorSource({
@@ -39,8 +40,14 @@ const Zoning = (props) => {
   );
   //DEFINE USE EFFECT FUNCTIONS
   useEffect(() => {
-    window.emitter.addListener("searchComplete", (results) => loadReport(results));
-    window.map.addLayer(shadowLayer);
+    helpers.waitForLoad("settings", Date.now(), 30, () => {
+      const globalConfig = helpers.getConfig("THEMES", "Zoning");
+      if (globalConfig.config !== undefined) {
+        setThemeConfig(helpers.mergeObj(themeConfig, globalConfig.config));
+      }
+      window.emitter.addListener("searchComplete", (results) => loadReport(results));
+      window.map.addLayer(shadowLayer);
+    });
     return () => {
       window.map.removeLayer(shadowLayer);
     };
@@ -50,10 +57,10 @@ const Zoning = (props) => {
     if (results.geojson) {
       let geom = helpers.getFeatureFromGeoJSON(results.geojson).getGeometry();
       let sectionList = [];
-      zoningConfig.queryLayers.forEach((layer) => {
+      themeConfig.queryLayers.forEach((layer) => {
         helpers.getFeaturesFromGeom(layer.url, layer.geom, geom, (zoningInfo) => {
           sectionList.push({ section: layer.title, features: zoningInfo, featureTitleColumn: layer.featureTitleColumn });
-          if (sectionList.length === zoningConfig.queryLayers.length) setSections(sectionList);
+          if (sectionList.length === themeConfig.queryLayers.length) setSections(sectionList);
         });
       });
     }
@@ -75,15 +82,15 @@ const Zoning = (props) => {
   };
 
   const onContactClick = () => {
-    window.location.href = `mailto:${zoningConfig.contactUsEmail}`;
+    window.location.href = `mailto:${themeConfig.contactUsEmail}`;
   };
 
   const onTermsChange = (evt) => {
-    helpers.showURLWindow(zoningConfig.termsUrl);
+    helpers.showURLWindow(themeConfig.termsUrl);
   };
 
   const onByLawClick = (evt) => {
-    window.open(zoningConfig.byLawUrl, "_blank");
+    window.open(themeConfig.byLawUrl, "_blank");
   };
 
   return (
