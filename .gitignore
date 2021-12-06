@@ -2,6 +2,7 @@
 
 # COUNTY
 /src/sidebar/components/tools/styler
+Build.ps1
 sc_copyToServer.bat
 .vscode
 config_dev.json
