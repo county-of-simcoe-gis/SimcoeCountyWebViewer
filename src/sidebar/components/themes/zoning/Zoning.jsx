@@ -103,15 +103,15 @@ const Zoning = (props) => {
         ))}
       </div>
       <div className={"sc-theme-zoning-footer"}>
-        <div className={"sc-button sc-theme-zoning-terms"} onClick={onTermsChange} title="Terms">
+        <div className={themeConfig.termsUrl ? "sc-button sc-theme-zoning-terms" : "sc-hidden"} onClick={onTermsChange} title="Terms">
           Terms
         </div>
 
-        <div className={"sc-button sc-theme-zoning-tbylawerms"} onClick={onByLawClick} title="Zoning Bylaw">
+        <div className={themeConfig.byLawUrl ? "sc-button sc-theme-zoning-tbylawerms" : "sc-hidden"} onClick={onByLawClick} title="Zoning Bylaw">
           Zoning Bylaw
         </div>
 
-        <div className={"sc-button sc-theme-zoning-contactus"} onClick={onContactClick} title="Contact Us">
+        <div className={themeConfig.contactUsEmail ? "sc-button sc-theme-zoning-contactus" : "sc-hidden"} onClick={onContactClick} title="Contact Us">
           Contact Us
         </div>
       </div>

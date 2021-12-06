@@ -6,7 +6,7 @@
   "queryLayers": [
     {
       "title": "Zoning",
-      "featureTitleColumn": "zonename",
+      "featureTitleColumn": "label",
       "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:zoning&outputFormat=application/json",
       "geom": "geom"
     }
