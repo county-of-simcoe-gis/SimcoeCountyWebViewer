@@ -1748,15 +1748,16 @@ export function getARNListFromGeom(geom, callback) {
 }
 export function getFeaturesFromGeom(wfsUrl, geomFieldName, geom, callback) {
   const urlTemplate = (mainURL, geomField, wkt) => `${mainURL}&cql_filter=INTERSECTS(${geomField},${wkt})`;
-
-  const feature = new Feature(geom);
-  const wktString = getWKTStringFromFeature(feature);
-  const queryUrl = urlTemplate(wfsUrl, geomFieldName, wktString);
-  getJSON(queryUrl, (result) => {
-    if (result.features.length === 0) callback([]);
-    else {
-      const features = new GeoJSON().readFeatures(result);
-      callback(features);
-    }
+  bufferGeometry(geom, -1, (resultGeom) => {
+    const feature = new Feature(resultGeom);
+    const wktString = getWKTStringFromFeature(feature);
+    const queryUrl = urlTemplate(wfsUrl, geomFieldName, wktString);
+    getJSON(queryUrl, (result) => {
+      if (result.features.length === 0) callback([]);
+      else {
+        const features = new GeoJSON().readFeatures(result);
+        callback(features);
+      }
+    });
   });
 }
