@@ -330,25 +330,26 @@ class Search extends Component {
 			searchGeoLayer.setZIndex(300);
 			searchIconLayer.setZIndex(300);
 		}
-		// SET STYLE AND ZOOM
-		if (result.geojson.indexOf("Point") !== -1) {
+
+		const zoomFactor = (window.config.featureHighlitStyles && window.config.featureHighlitStyles["zoomFactor"] >= 0) ? window.config.featureHighlitStyles["zoomFactor"] : 1;
+		if (result.geojson.indexOf("Point") !== - 1) {
 			searchGeoLayer.setStyle(this.styles["point"]);
 			window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), {
 				duration: 1000,
 			});
-			window.map.getView().setZoom(18);
-		} else if (result.geojson.indexOf("Line") !== -1) {
+			window.map.getView().setZoom(19 - zoomFactor);
+		} else if (result.geojson.indexOf("Line") !== - 1) {
 			searchGeoLayer.setStyle(this.styles["poly"]);
 			window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), {
 				duration: 1000,
 			});
-			window.map.getView().setZoom(window.map.getView().getZoom() - 1 / window.map.getView().getZoom());
+			window.map.getView().setZoom(window.map.getView().getZoom() - zoomFactor );
 		} else {
 			searchGeoLayer.setStyle(this.styles["poly"]);
 			window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), {
 				duration: 1000,
 			});
-			window.map.getView().setZoom(window.map.getView().getZoom() - 1 / window.map.getView().getZoom());
+			window.map.getView().setZoom(window.map.getView().getZoom() - zoomFactor );
 		}
 
 		//fullFeature.setStyle(myMapsHelpers.getDefaultDrawStyle([255, 0, 0, 0.8], false, 2, fullFeature.getGeometry().getType()));
@@ -356,21 +357,21 @@ class Search extends Component {
 		if (result.geojson.indexOf("Point") !== -1) {
 			const pointStyle = new Style({
 				image: new CircleStyle({
-					radius: 5,
+					radius: (window.config.featureHighlitStyles && window.config.featureHighlitStyles["circleRadius"] !== null && window.config.featureHighlitStyles["circleRadius"] !== undefined) ? window.config.featureHighlitStyles["circleRadius"] : 5,
 					stroke: new Stroke({
-						color: [0, 0, 0, 1],
-						width: 2,
+						color: (window.config.featureHighlitStyles && window.config.featureHighlitStyles["circleStroke"] !== null && window.config.featureHighlitStyles["circleStroke"] !== undefined) ? window.config.featureHighlitStyles["circleStroke"] : [0, 0, 0, 1],
+						width: (window.config.featureHighlitStyles && window.config.featureHighlitStyles["circleStrokeWidth"] !== null && window.config.featureHighlitStyles["circleStrokeWidth"] !== undefined) ? window.config.featureHighlitStyles["circleStrokeWidth"] : 2,
 					}),
 					fill: new Fill({
-						color: [250, 40, 255, 1],
+						color: (window.config.featureHighlitStyles && window.config.featureHighlitStyles["circleFill"] !== null && window.config.featureHighlitStyles["circleFill"] !== undefined) ? window.config.featureHighlitStyles["circleFill"] : [250, 40, 255, 1],
 					}),
 				}),
 			});
 
 			fullFeature.setStyle(pointStyle);
 		} else {
-			let defaultStyle = drawingHelpers.getDefaultDrawStyle([255, 0, 0, 0.8], false, 2, fullFeature.getGeometry().getType());
-			defaultStyle.setFill(new Fill({ color: [255, 0, 0, 0] }));
+			let defaultStyle = drawingHelpers.getDefaultDrawStyle((window.config.featureHighlitStyles && window.config.featureHighlitStyles["stroke"] !== null && window.config.featureHighlitStyles["stroke"] !== undefined) ? window.config.featureHighlitStyles["stroke"] : [255, 0, 0, 0.8], false, (window.config.featureHighlitStyles["strokeWidth"] !== null && window.config.featureHighlitStyles["strokeWidth"] !== undefined) ? window.config.featureHighlitStyles["strokeWidth"] : 2, fullFeature.getGeometry().getType());
+			defaultStyle.setFill(new Fill({ color: (window.config.featureHighlitStyles && window.config.featureHighlitStyles["fill"] !== null && window.config.featureHighlitStyles["fill"] !== undefined) ? window.config.featureHighlitStyles["fill"] : [255, 0, 0, 0] }));
 			fullFeature.setStyle(defaultStyle);
 		}
 	}
@@ -507,8 +508,7 @@ class Search extends Component {
 									type: "Map Layer",
 									layerGroupName: layer.groupName,
 									layerGroup: layer.group,
-									imageName: "layers.png",
-									imageName: (searchResultTOC_Actions == 'advanced' && layer.visible)? "layers-visible.png" : "layers.png" ,
+									imageName: (searchResultTOC_Actions === 'advanced' && layer.visible)? "layers-visible.png" : "layers.png" ,
 									index: layer.index,
 
 								});

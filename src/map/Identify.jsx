@@ -377,10 +377,10 @@ const Layer = (props) => {
 
   //console.log(layer);
   let layerObj = {};
-  layerObj = _getLayerObj(layer.name);
-  // _getLayerObj(layer.name, (returnData)=>{
-  //   layerObj=returnData;
-  // });
+  //layerObj = _getLayerObj(layer.name);
+  _getLayerObj(layer.name, (returnData)=>{
+    layerObj=returnData;
+  });
   return (
     <div id="sc-identify-layer-container">
       <Collapsible trigger={layer.type} open={open}>

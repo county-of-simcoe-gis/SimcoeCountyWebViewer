@@ -104,7 +104,7 @@ class Header extends Component {
 				<div id="sc-header-search-container">
 					<Search options={this.props.options} />
 				</div>
-				{ (window.config.ShowHelpButtonInsteadOfFeedback)?
+				{ (window.config.showHelpButtonInsteadOfFeedback)?
 					<div className="sc-header-help-container" >
 						<div className="sc-header-help-btn" onClick={() => helpers.showURLWindow(window.config.helpUrl, false, "full")}>?</div>
 					</div>
