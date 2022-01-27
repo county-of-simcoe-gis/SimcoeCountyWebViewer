@@ -559,8 +559,7 @@ class SCMap extends Component {
 
 		const latLongCoords = transform(this.contextCoords, "EPSG:3857", "EPSG:4326");
 		const googleMapsUrl = googleMapsTemplate(latLongCoords[0], latLongCoords[1]);
-
-		helpers.showURLWindow(googleMapsUrl, false, "full");
+		window.open(googleMapsUrl, "_blank");
 	};
 
 	saveMapExtent = () => {
