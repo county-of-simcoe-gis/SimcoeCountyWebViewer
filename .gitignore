@@ -6,7 +6,6 @@ sc_copyToServer.bat
 .vscode
 config_dev.json
 Build.ps1
-
 # dependencies
 /node_modules
 /.pnp

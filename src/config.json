@@ -35,8 +35,9 @@
   "gitHubFollowUrl": "https://github.com/county-of-simcoe-gis",
   "gitHubFollowHandle": "Follow @simcoecountygis",
   "pushMapNotifications": false,
-  "pushMapNotificationIDs": [1, 5, 6],
-  "ShowHelpButtonInsteadOfFeedback": false,
+  "pushMapNotificationIDs": [1,5,6],
+  "showHelpButtonInsteadOfFeedback" : false,
+  "onCoordinateZoomID": false,
 
   "centerCoords": [-8878504.68, 5543492.45],
   "defaultZoom": 10,

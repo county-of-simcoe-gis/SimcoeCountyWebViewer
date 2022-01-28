@@ -145,59 +145,60 @@ class SCMap extends Component {
             helpers.extentHistory("next");
           }
       });
-      if (!window.config.disableRightClickMenu)
-        window.map.getViewport().addEventListener("contextmenu", (evt) => {
-          evt.preventDefault();
-          this.contextCoords = window.map.getEventCoordinate(evt);
+      window.map.getViewport().addEventListener("contextmenu", (evt) => {
+        evt.preventDefault();
+        let disable = window.disableParcelClick || window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring;
+        if (disable) return;
+        this.contextCoords = window.map.getEventCoordinate(evt);
 
-          const menu = (
-            <Portal>
-              <FloatingMenu key={helpers.getUID()} buttonEvent={evt} onMenuItemClick={this.onMenuItemClick} autoY={true} autoX={true}>
-                <MenuItem
-                  className={helpers.isMobile() || !window.config.rightClickMenuVisibility["sc-floating-menu-basic-mode"] ? "sc-hidden" : "sc-floating-menu-toolbox-menu-item"}
-                  key="sc-floating-menu-basic-mode"
-                >
-                  <FloatingMenuItem imageName={"collased.png"} label="Switch To Basic" />
-                </MenuItem>
-                <MenuItem
-                  className={window.config.rightClickMenuVisibility["sc-floating-menu-property-click"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"}
-                  key="sc-floating-menu-property-click"
-                >
-                  <FloatingMenuItem imageName={"report.png"} label="Property Report" />
-                </MenuItem>
-                <MenuItem className={window.config.rightClickMenuVisibility["sc-floating-menu-add-mymaps"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-add-mymaps">
-                  <FloatingMenuItem imageName={"point.png"} label="Add Marker Point" />
-                </MenuItem>
+        const menu = (
+          <Portal>
+            <FloatingMenu key={helpers.getUID()} buttonEvent={evt} onMenuItemClick={this.onMenuItemClick} autoY={true} autoX={true}>
+              <MenuItem
+                className={helpers.isMobile() || !window.config.rightClickMenuVisibility["sc-floating-menu-basic-mode"] ? "sc-hidden" : "sc-floating-menu-toolbox-menu-item"}
+                key="sc-floating-menu-basic-mode"
+              >
+                <FloatingMenuItem imageName={"collased.png"} label="Switch To Basic" />
+              </MenuItem>
+              <MenuItem
+                className={window.config.rightClickMenuVisibility["sc-floating-menu-property-click"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"}
+                key="sc-floating-menu-property-click"
+              >
+                <FloatingMenuItem imageName={"report.png"} label="Property Report" />
+              </MenuItem>
+              <MenuItem className={window.config.rightClickMenuVisibility["sc-floating-menu-add-mymaps"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-add-mymaps">
+                <FloatingMenuItem imageName={"point.png"} label="Add Marker Point" />
+              </MenuItem>
 
-                <MenuItem
-                  className={window.config.rightClickMenuVisibility["sc-floating-menu-save-map-extent"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"}
-                  key="sc-floating-menu-save-map-extent"
-                >
-                  <FloatingMenuItem imageName={"globe-icon.png"} label="Save as Default Extent" />
-                </MenuItem>
-                <MenuItem
-                  className={window.config.rightClickMenuVisibility["sc-floating-menu-report-problem"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"}
-                  key="sc-floating-menu-report-problem"
-                >
-                  <FloatingMenuItem imageName={"error.png"} label="Report a problem" />
-                </MenuItem>
-                <MenuItem className={window.config.rightClickMenuVisibility["sc-floating-menu-identify"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-identify">
-                  <FloatingMenuItem imageName={"identify.png"} label="Identify" />
-                </MenuItem>
-                <MenuItem className={window.config.rightClickMenuVisibility["sc-floating-menu-lhrs"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-lhrs">
-                  <FloatingMenuItem imageName={"toolbox.png"} label="LHRS" />
-                </MenuItem>
-                <MenuItem className={window.config.rightClickMenuVisibility["sc-floating-menu-google-maps"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-google-maps">
-                  <FloatingMenuItem imageName={"google.png"} label="View in Google Maps" />
-                </MenuItem>
-                <MenuItem className={window.config.rightClickMenuVisibility["sc-floating-menu-more"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-more">
-                  <FloatingMenuItem imageName={"more-16.png"} label="More..." />
-                </MenuItem>
-              </FloatingMenu>
-            </Portal>
-          );
-          ReactDOM.render(menu, document.getElementById("portal-root"));
-        });
+              <MenuItem
+                className={window.config.rightClickMenuVisibility["sc-floating-menu-save-map-extent"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"}
+                key="sc-floating-menu-save-map-extent"
+              >
+                <FloatingMenuItem imageName={"globe-icon.png"} label="Save as Default Extent" />
+              </MenuItem>
+              <MenuItem
+                className={window.config.rightClickMenuVisibility["sc-floating-menu-report-problem"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"}
+                key="sc-floating-menu-report-problem"
+              >
+                <FloatingMenuItem imageName={"error.png"} label="Report a problem" />
+              </MenuItem>
+              <MenuItem className={window.config.rightClickMenuVisibility["sc-floating-menu-identify"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-identify">
+                <FloatingMenuItem imageName={"identify.png"} label="Identify" />
+              </MenuItem>
+              <MenuItem className={window.config.rightClickMenuVisibility["sc-floating-menu-lhrs"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-lhrs">
+                <FloatingMenuItem imageName={"toolbox.png"} label="LHRS" />
+              </MenuItem>
+              <MenuItem className={window.config.rightClickMenuVisibility["sc-floating-menu-google-maps"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-google-maps">
+                <FloatingMenuItem imageName={"google.png"} label="View in Google Maps" />
+              </MenuItem>
+              <MenuItem className={window.config.rightClickMenuVisibility["sc-floating-menu-more"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-more">
+                <FloatingMenuItem imageName={"more-16.png"} label="More..." />
+              </MenuItem>
+            </FloatingMenu>
+          </Portal>
+        );
+        ReactDOM.render(menu, document.getElementById("portal-root"));
+      });
 
       // APP STAT
       helpers.addAppStat("STARTUP", "MAP_LOAD");
@@ -370,6 +371,7 @@ class SCMap extends Component {
       const x = helpers.getURLParameter("X");
       const y = helpers.getURLParameter("Y");
       const sr = helpers.getURLParameter("SR") === null ? "WEB" : helpers.getURLParameter("SR");
+      const id = helpers.getURLParameter("ID");
 
       // GET URL PARAMETERS (ZOOM TO EXTENT)
       const xmin = helpers.getURLParameter("XMIN");
@@ -381,6 +383,25 @@ class SCMap extends Component {
         // URL PARAMETERS (ZOOM TO XY)
         let coords = [x, y];
         if (sr && sr.toUpperCase() === "WGS84") coords = fromLonLat([Math.round(x * 100000) / 100000, Math.round(y * 100000) / 100000]);
+
+        if (id === "true" || (window.config.onCoordinateZoomID !== undefined && window.config.onCoordinateZoomID !== null && window.config.onCoordinateZoomID)) {
+          const iconFeature = new Feature({
+            geometry: new Point(coords),
+          });
+
+          const iconStyle = new Style({
+            image: new Icon({
+              anchor: [0.5, 1],
+              src: images["identify-marker.png"],
+            }),
+          });
+
+          iconFeature.setStyle(iconStyle);
+          this.identifyIconLayer.getSource().clear();
+          window.map.removeLayer(this.identifyIconLayer);
+          this.identifyIconLayer.getSource().addFeature(iconFeature);
+          window.map.addLayer(this.identifyIconLayer);
+        }
 
         setTimeout(() => {
           helpers.flashPoint(coords);
@@ -533,8 +554,7 @@ class SCMap extends Component {
 
     const latLongCoords = transform(this.contextCoords, "EPSG:3857", "EPSG:4326");
     const googleMapsUrl = googleMapsTemplate(latLongCoords[0], latLongCoords[1]);
-
-    helpers.showURLWindow(googleMapsUrl, false, "full");
+    window.open(googleMapsUrl, "_blank");
   };
 
   saveMapExtent = () => {
@@ -617,7 +637,6 @@ class SCMap extends Component {
         </div>
       </div>
     );
-  }
 }
 
 export default SCMap;

@@ -28,11 +28,12 @@ class FeatureReportPopup extends Component {
 
   loadReportOptions(callback=undefined) {
     this.setState({isLoading:true});
-    helpers.getJSON(mainConfig.reportsUrl,(results)=>{
-      let reportOptions = [];
+  //helpers.getJSON(mainConfig.reportsUrl,(results)=>{
+  const results = window.config.reports;
+     let reportOptions = [];
       reportOptions = results.map((item)=> {return {label:item.title, value:item.title}});
       this.setState({reports:results,reportOptions:reportOptions,reportOption:reportOptions[0], isLoading:false});
-    });
+ // });
  
   }
   getSelectedReport = (reportTitle) => {
@@ -40,7 +41,7 @@ class FeatureReportPopup extends Component {
   }
   onPreviewReport(report, buffer){
     let selectedReport = this.getSelectedReport(report);
-    helpers.previewReport(drawingHelpers.getFeatureById(this.props.item.id), selectedReport.preview, buffer, (summaryData) =>{
+    helpers.previewReport(drawingHelpers.getFeatureById(this.props.item.id), selectedReport, buffer, (summaryData) =>{
       if (summaryData === undefined || summaryData === null || summaryData.length === 0) {
         helpers.showMessage("Not Found", "There were no results for the current selection");
       }else{
@@ -53,7 +54,7 @@ class FeatureReportPopup extends Component {
   onGenerateReport(report, buffer) {
     let selectedReport = this.getSelectedReport(report);
    
-    helpers.generateReport(drawingHelpers.getFeatureById(this.props.item.id), selectedReport.report, buffer, ()=>{
+    helpers.generateReport(drawingHelpers.getFeatureById(this.props.item.id), selectedReport, buffer, ()=>{
       this.setState({isLoading:false});
     });
   
