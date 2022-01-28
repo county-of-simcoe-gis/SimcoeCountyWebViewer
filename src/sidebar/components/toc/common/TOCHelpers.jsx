@@ -952,7 +952,7 @@ export function acceptDisclaimer(layer, returnToFunction) {
   } else if (layer.disclaimer.url && (!window.acceptedDisclaimers || window.acceptedDisclaimers.indexOf(layer.name) === -1)) {
     helpers.showTerms(
       layer.disclaimer.title,
-      `The layer you are about to view contains data  which is subject to a licence agreement. 
+      `The layer (${layer.displayName}) you are about to view contains data  which is subject to a licence agreement. 
            Before turning on this layer, you must review the agreement and click 'Accept' or 'Decline'.`,
       layer.disclaimer.url,
       helpers.messageColors.gray,
