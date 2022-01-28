@@ -637,6 +637,7 @@ class SCMap extends Component {
         </div>
       </div>
     );
+  }
 }
 
 export default SCMap;
