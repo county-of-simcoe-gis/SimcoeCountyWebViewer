@@ -39,6 +39,27 @@ class Sidebar extends Component {
       hideLayers: false,
       hideMyMaps: false,
       hideReports: false,
+      //TAB CONFIG ITEMS
+      layers: {
+        title: "Layers",
+        icon: "legend-32x32.png",
+      },
+      tools: {
+        title: "Tools",
+        icon: "tools-32x32.png",
+      },
+      myMaps: {
+        title: "My Maps",
+        icon: "map-32x32.png",
+      },
+      themes: {
+        title: "Themes",
+        icon: "theme-32x32.png",
+      },
+      reports: {
+        title: "Reports",
+        icon: "report-32x32.png",
+      },
       // COMPONENTS
       activeTabComponents: {
         layers: <TOC key={helpers.getUID()} type="LIST" />,
@@ -92,6 +113,7 @@ class Sidebar extends Component {
         comp.props.componentName = componentConfig.componentName;
         comp.props.helpLink = componentConfig.helpLink;
         comp.props.config = componentConfig.config;
+        if (componentConfig.hideHeader !== undefined) comp.props.hideHeader = componentConfig.hideHeader;
 
         // ADD COMPONENT TO LIST
         this.setState({
@@ -137,19 +159,29 @@ class Sidebar extends Component {
       // IMPORT TOOLS FROM CONFIG and CHECK VISIBILITY
       let tools = window.config.sidebarToolComponents;
       tools = tools.filter((item) => item.enabled === undefined || item.enabled);
-      tools.map(async (component) => await this.addComponent(component, "tools"));
+      if (tools.length === 1) {
+        this.setState({ tools: { title: tools[0].name, icon: tools[0].imageName } });
+        tools[0]["hideHeader"] = true;
+      }
       if (tools.length === 0 || (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideTools"])) this.setState({ hideTools: true });
+      tools.map(async (component) => await this.addComponent(component, "tools"));
+
       // IMPORT THEMES FROM CONFIG
       let themes = window.config.sidebarThemeComponents;
       themes = themes.filter((item) => item.enabled === undefined || item.enabled);
-      themes.map(async (component) => await this.addComponent(component, "themes"));
+      if (themes.length === 1) {
+        this.setState({ themes: { title: themes[0].name, icon: themes[0].imageName } });
+        themes[0]["hideHeader"] = true;
+      }
       if (themes.length === 0 || (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideThemes"])) this.setState({ hideThemes: true });
+      themes.map(async (component) => await this.addComponent(component, "themes"));
+
       // CHECK VISIBILITY OF LAYERS MENUE
-      if (themes.length === 0 || (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideLayers"])) this.setState({ hideLayers: true });
+      if (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideLayers"]) this.setState({ hideLayers: true });
       // CHECK VISIBILITY OF MY MAPS
-      if (themes.length === 0 || (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideMyMaps"])) this.setState({ hideMyMaps: true });
+      if (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideMyMaps"]) this.setState({ hideMyMaps: true });
       // CHECK VISIBILITY OF REPORTS
-      if (themes.length === 0 || (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideReports"])) this.setState({ hideReports: true });
+      if (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideReports"]) this.setState({ hideReports: true });
 
       const shortcuts = window.config.sidebarShortcutParams;
       // HANDLE ADVANCED MODE PARAMETER
@@ -343,6 +375,7 @@ class Sidebar extends Component {
                 key={helpers.getUID()}
                 name={Component.props.name}
                 helpLink={Component.props.helpLink}
+                hideHeader={Component.props.hideHeader}
                 onClose={this.onPanelComponentClose}
                 onSidebarVisibility={() => this.togglePanelVisibility()}
                 config={Component.props.config}
@@ -370,6 +403,7 @@ class Sidebar extends Component {
                 key={helpers.getUID()}
                 name={Component.props.name}
                 helpLink={Component.props.helpLink}
+                hideHeader={Component.props.hideHeader}
                 onClose={this.onPanelComponentClose}
                 onSidebarVisibility={() => this.togglePanelVisibility()}
                 config={Component.props.config}
@@ -435,19 +469,19 @@ class Sidebar extends Component {
             <Tabs forceRenderTabPanel={true} selectedIndex={this.state.tabIndex} onSelect={this.onTabSelect}>
               <TabList>
                 <Tab id="tab-layers" className={this.state.hideLayers ? "d-none" : "react-tabs__tab"}>
-                  <TabButton imageURL={images["legend-32x32.png"]} name="Layers" />
+                  <TabButton imageURL={images[this.state.layers.icon]} name={this.state.layers.title} />
                 </Tab>
                 <Tab id="tab-tools" className={this.state.hideTools ? "d-none" : "react-tabs__tab"}>
-                  <TabButton imageURL={images["tools-32x32.png"]} name="Tools" active={this.state.activeTabComponents.tools.loadedComponent} />
+                  <TabButton imageURL={images[this.state.tools.icon]} name={this.state.tools.title} active={this.state.activeTabComponents.tools.loadedComponent} />
                 </Tab>
                 <Tab id="tab-mymaps" className={this.state.hideMyMaps ? "d-none" : "react-tabs__tab"}>
-                  <TabButton imageURL={images["map-32x32.png"]} name="My Maps" active={this.state.isMyMapsEditing} />
+                  <TabButton imageURL={images[this.state.myMaps.icon]} name={this.state.myMaps.title} active={this.state.isMyMapsEditing} />
                 </Tab>
                 <Tab id="tab-themes" className={this.state.hideThemes ? "d-none" : "react-tabs__tab"}>
-                  <TabButton imageURL={images["theme-32x32.png"]} name="Themes" active={this.state.activeTabComponents.themes.loadedComponent} />
+                  <TabButton imageURL={images[this.state.themes.icon]} name={this.state.themes.title} active={this.state.activeTabComponents.themes.loadedComponent} />
                 </Tab>
                 <Tab id="tab-reports" className={this.state.hideReports ? "d-none" : "react-tabs__tab"}>
-                  <TabButton imageURL={images["report-32x32.png"]} name="Reports" />
+                  <TabButton imageURL={images[this.state.reports.icon]} name={this.state.reports.title} />
                 </Tab>
               </TabList>
 
@@ -478,6 +512,11 @@ class Sidebar extends Component {
               hideTools={this.state.hideTools}
               hideThemes={this.state.hideThemes}
               hideReports={this.state.hideReports}
+              themes={this.state.themes}
+              tools={this.state.tools}
+              layers={this.state.layers}
+              myMaps={this.state.myMaps}
+              reports={this.state.reports}
             />
             <div id="sc-sidebar-message-container" />
             {/* <MenuButton /> */}
@@ -496,7 +535,7 @@ export default Sidebar;
 // TAB BUTTON
 const TabButton = (props) => {
   return (
-    <div>
+    <div className={"sc-tab-button"}>
       <span className={props.active ? "sc-tab-button-dot" : "sc-hidden"} />
       <img src={props.imageURL} alt={props.name} />
       <br />
