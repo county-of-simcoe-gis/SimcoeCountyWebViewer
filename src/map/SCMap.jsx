@@ -145,6 +145,7 @@ class SCMap extends Component {
             helpers.extentHistory("next");
           }
       });
+
       window.map.getViewport().addEventListener("contextmenu", (evt) => {
         evt.preventDefault();
         let disable = window.disableParcelClick || window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring;
