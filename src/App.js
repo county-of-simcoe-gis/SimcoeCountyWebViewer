@@ -66,10 +66,23 @@ function MapApp() {
   window.emitter.addListener("sidebarLoaded", () => setSidebarLoading(false));
   // LISTEN FOR HEADER TO MOUNT
   window.emitter.addListener("headerLoaded", () => setHeaderLoading(false));
-
+  const changeIcon = (icon) => {
+    var link = document.getElementById("favicon");
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "icon";
+      link.id = "favicon";
+      document.getElementsByTagName("head")[0].appendChild(link);
+    }
+    let urlArray = link.href.split("/");
+    urlArray.pop();
+    icon = `${urlArray.join("/")}/${icon}`;
+    link.href = icon;
+  };
   useEffect(() => {
     helpers.loadConfig(() => {
       document.title = window.config.title;
+      if (window.config.favicon) changeIcon(window.config.favicon);
       helpers.addIsLoaded("settings");
       if (window.config.default_theme !== undefined) window.emitter.emit("activateSidebarItem", window.config.default_theme, "themes");
       if (window.config.default_tool !== undefined) window.emitter.emit("activateSidebarItem", window.config.default_tool, "tools");

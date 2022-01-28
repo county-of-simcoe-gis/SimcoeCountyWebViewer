@@ -1,9 +1,9 @@
 {
-
   "useMapConfigApi": true,
   "mapId": "",
   "headerLogoImageName": "logo.png",
   "title": "Interactive Map - County of Simcoe (GIS)",
+  "favicon": "simcoe_favicon.ico",
   "originUrl": "https://opengis.simcoe.ca",
   "feedbackUrl": "https://opengis.simcoe.ca/feedback",
   "geoserverUrl": "https://opengis.simcoe.ca/geoserver/",
@@ -22,7 +22,7 @@
   "apiUrl": "https://opengis.simcoe.ca/api/",
   "apiUrlDev": "http://localhost:8085/",
   "termsUrl": "https://maps.simcoe.ca/terms.html",
-  "openLicenseUrl":" http://maps.simcoe.ca/openlicense.html",
+  "openLicenseUrl": "http://maps.simcoe.ca/openlicense.html",
   "whatsNewUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/WhatsNew/2021-03-22",
   "helpUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer",
   "ieWarningUrl": "https://opengis.simcoe.ca/public/ieWarning.html",
@@ -63,7 +63,7 @@
   },
   "onlyStandardCursor": true,
   "restrictOriginForUrlWindow": false,
-  
+
   "rightClickMenuVisibility": {
     "sc-floating-menu-basic-mode": true,
     "sc-floating-menu-property-click": true,
@@ -80,13 +80,13 @@
     "sc-floating-menu-measure": true,
     "sc-floating-menu-symbolizer": true,
     "sc-floating-menu-zoomto": true,
-	  "sc-floating-menu-delete": true,
+    "sc-floating-menu-delete": true,
     "sc-floating-menu-geometry": true,
-	  "sc-floating-menu-export": true,
-		  "sc-floating-menu-export-to-kml": true,
-		  "sc-floating-menu-export-to-esrijson": true,
-		  "sc-floating-menu-export-to-geojson": true,
-		"sc-floating-menu-report-problem": true,
+    "sc-floating-menu-export": true,
+    "sc-floating-menu-export-to-kml": true,
+    "sc-floating-menu-export-to-esrijson": true,
+    "sc-floating-menu-export-to-geojson": true,
+    "sc-floating-menu-report-problem": true,
     "sc-floating-menu-identify": true
   },
 
@@ -306,6 +306,13 @@
       "componentName": "TwoOneOne",
       "description": "Explore 211 Community Services across the County of Simcoe.",
       "imageName": "211communityServices.png"
+    },
+    {
+      "id": 9,
+      "name": "Zoning",
+      "componentName": "Zoning",
+      "description": "",
+      "imageName": "zoning.png"
     }
   ],
   "sidebarShortcutParams": [
@@ -395,6 +402,11 @@
       "matchValue": "Forestry and Recreation",
       "type": "themes",
       "component": "Forestry"
+    },
+    {
+      "id": 14,
+      "url_param": "MYMAPS",
+      "type": "MYMAPS"
     }
   ]
 }
