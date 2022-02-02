@@ -261,34 +261,22 @@ class Settings extends Component {
               </div>
             </div>
 
-
-						<div className="sc-settings-divider" />
-						<div className="sc-title sc-settings-title">LOCAL STORAGE</div>
-						<div className="sc-container">
-							<div className="sc-settings-row sc-arrow">
-								<button name="clearLocalStorage" title="Clear all cached settings and reload the page." className="sc-button" onClick={() => this.clearLocalData("ALL")}>
-									Clear All Saved Data
-								</button>
-							</div>
-							<div className="sc-settings-divider" />
-							{Object.keys(localStorage)
-								.filter((key) => {
-									return key.indexOf("login.microsoftonline.com") === -1;
-								})
-								.map((key) => (
-									<ClearLocalStorageButton key={helpers.getUID()} storageKey={key} clearLocalData={this.clearLocalData} />
-								))}
-
-							<ClearLocalStorageButtonGrouped
-								key={helpers.getUID()}
-								name={"Login Info"}
-								storageKeys={Object.keys(localStorage).filter((key) => {
-									return key.indexOf("login.microsoftonline.com") !== -1;
-								})}
-								clearLocalData={this.clearLocalData}
-							/>
-						</div>
-
+            <div className="sc-settings-divider" />
+            <div className="sc-title sc-settings-title">LOCAL STORAGE</div>
+            <div className="sc-container">
+              <div className="sc-settings-row sc-arrow">
+                <button name="clearLocalStorage" title="Clear all cached settings and reload the page." className="sc-button" onClick={() => this.clearLocalData("ALL")}>
+                  Clear All Saved Data
+                </button>
+              </div>
+              <div className="sc-settings-divider" />
+              {Object.keys(localStorage)
+                .filter((key) => {
+                  return key.indexOf("login.microsoftonline.com") === -1;
+                })
+                .map((key) => (
+                  <ClearLocalStorageButton key={helpers.getUID()} storageKey={key} clearLocalData={this.clearLocalData} />
+                ))}
 
               <ClearLocalStorageButtonGrouped
                 key={helpers.getUID()}
@@ -300,8 +288,17 @@ class Settings extends Component {
               />
             </div>
 
-            <div className="sc-container sc-settings-floatbottom" />
+            <ClearLocalStorageButtonGrouped
+              key={helpers.getUID()}
+              name={"Login Info"}
+              storageKeys={Object.keys(localStorage).filter((key) => {
+                return key.indexOf("login.microsoftonline.com") !== -1;
+              })}
+              clearLocalData={this.clearLocalData}
+            />
           </div>
+
+          <div className="sc-container sc-settings-floatbottom" />
         </div>
       </PanelComponent>
     );
