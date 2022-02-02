@@ -16,338 +16,337 @@ import { useEffect } from "react";
 import GeometryType from "ol/geom/GeometryType";
 
 class Identify extends Component {
+constructor(props) {
+		super(props);
+		this.state = {
+			layers: [],
+			isLoading: false,
+			excludeIdentifyTitleName: false,
+		};
+		this.htmlIdentify = false;
+		this.createShadowLayer();
+	}
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      layers: [],
-      isLoading: false,
-      excludeIdentifyTitleName: false,
-    };
-    this.htmlIdentify = false;
-    this.createShadowLayer();
-  }
+	componentDidMount() {
+		helpers.waitForLoad("settings", Date.now(), 30, () => {
+			this.wmsGeoJsonTemplate = window.config.wmsGeoJsonTemplate;
+			this.htmlIdentify = window.config.htmlIdentify;
+			this.setState({ excludeIdentifyTitleName: window.config.excludeIdentifyTitleName }, () => {
+				this.refreshLayers(this.props);
+			});
+		});
+	}
 
-  componentDidMount() {
-    helpers.waitForLoad("settings", Date.now(), 30, () => {
-      this.wmsGeoJsonTemplate = window.config.wmsGeoJsonTemplate;
-      this.htmlIdentify = window.config.htmlIdentify;
-      this.setState({ excludeIdentifyTitleName: window.config.excludeIdentifyTitleName }, () => {
-        this.refreshLayers(this.props);
-      });
-    });
-  }
+	componentWillReceiveProps(nextProps) {
+		this.refreshLayers(nextProps);
+	}
 
-  componentWillReceiveProps(nextProps) {
-    this.refreshLayers(nextProps);
-  }
+	componentWillUnmount() {
+		window.map.removeLayer(this.vectorLayerShadow);
+		window.map.removeLayer(this.vectorLayerShadowSecondary);
+	}
 
-  componentWillUnmount() {
-    window.map.removeLayer(this.vectorLayerShadow);
-    window.map.removeLayer(this.vectorLayerShadowSecondary);
-  }
+	clearIdentify = () => {
+		window.emitter.emit("clearIdentify");
+	};
 
-  clearIdentify = () => {
-    window.emitter.emit("clearIdentify");
-  };
+	refreshLayers = (props) => {
+		this.setState({ layers: [], isLoading: true });
 
-  refreshLayers = (props) => {
-    this.setState({ layers: [], isLoading: true });
+		const { geometry } = props;
+		const layers = window.map.getLayers().getArray();
 
-    const { geometry } = props;
-    const layers = window.map.getLayers().getArray();
+		let layerList = [];
 
-    let layerList = [];
-
-    for (let index = 0; index < layers.length; index++) {
-      const layer = layers[index];
-      if (layer.getVisible()) {
-        const queryable = layer.get("queryable");
-        if (queryable) {
-          if (LayerHelpers.getLayerType(layer) !== OL_LAYER_TYPES.Vector) {
-            const name = layer.get("name");
-            let displayName = "";
-            let type = layer.get("tocDisplayName");
-            let wfsUrl = layer.get("wfsUrl");
-            const secureKey = layer.get("secureKey");
-            const minScale = layer.get("minScale");
-            const params = {};
+		for (let index = 0; index < layers.length; index++) {
+			const layer = layers[index];
+			if (layer.getVisible()) {
+				const queryable = layer.get("queryable");
+				if (queryable) {
+					if (LayerHelpers.getLayerType(layer) !== OL_LAYER_TYPES.Vector) {
+						const name = layer.get("name");
+						let displayName = "";
+						let type = layer.get("tocDisplayName");
+						let wfsUrl = layer.get("wfsUrl");
+						const secureKey = layer.get("secureKey");
+						const minScale = layer.get("minScale");
+						const params = {};
             params["headers"] = {};
-            if (secureKey !== undefined) {
-              const headers = {};
-              headers[secureKey] = "GIS";
-              params["mode"] = "cors";
+						if (secureKey !== undefined) {
+							const headers = {};
+							headers[secureKey] = "GIS";
+							params["mode"] = "cors";
               params.headers = headers;
-            }
-            const isArcGISLayer = LayerHelpers.getLayerSourceType(layer.getSource()) === OL_DATA_TYPES.ImageArcGISRest;
-            if (wfsUrl !== undefined && (geometry.getType() !== "Point" || isArcGISLayer)) {
-              const feature = new Feature(geometry);
-              const wktString = helpers.getWKTStringFromFeature(feature);
-              if (isArcGISLayer) {
-                const arcgisResolution = `${window.map.getSize()[0]},${window.map.getSize()[1]},96`;
-                const extent = window.map.getView().calculateExtent();
-                wfsUrl = wfsUrl.replace("#GEOMETRY#", geometry.flatCoordinates).replace("#TOLERANCE#", 3).replace("#EXTENT#", extent.join(",")).replace("#RESOLUTION#", arcgisResolution);
-              } else {
-                if (geometry.getType() === "MultiPolygon") {
-                  let intersectQuery = [];
-                  geometry.getPolygons().forEach((poly) => {
-                    const tmpFeature = new Feature(poly);
-                    const tmpWKTString = helpers.getWKTStringFromFeature(tmpFeature);
-                    intersectQuery.push("INTERSECTS(geom," + tmpWKTString + ")");
-                  });
-                  wfsUrl += intersectQuery.join(" OR ");
-                } else {
-                  wfsUrl += "INTERSECTS(geom," + wktString + ")";
-                }
-              }
-              // QUERY USING WFS
-              // eslint-disable-next-line
-              if (wfsUrl.length > 8000) {
-                helpers.showMessage("Geometry too complex", "The geometry you are trying to use is too complex to identify.", helpers.messageColors.red);
-              } else {
+						}
+						const isArcGISLayer = LayerHelpers.getLayerSourceType(layer.getSource()) === OL_DATA_TYPES.ImageArcGISRest;
+						if (wfsUrl !== undefined && (geometry.getType() !== "Point" || isArcGISLayer)) {
+							const feature = new Feature(geometry);
+							const wktString = helpers.getWKTStringFromFeature(feature);
+							if (isArcGISLayer) {
+								const arcgisResolution = `${window.map.getSize()[0]},${window.map.getSize()[1]},96`;
+								const extent = window.map.getView().calculateExtent();
+								wfsUrl = wfsUrl.replace("#GEOMETRY#", geometry.flatCoordinates).replace("#TOLERANCE#", 3).replace("#EXTENT#", extent.join(",")).replace("#RESOLUTION#", arcgisResolution);
+							} else {
+								if (geometry.getType() === "MultiPolygon") {
+									let intersectQuery = [];
+									geometry.getPolygons().forEach((poly) => {
+										const tmpFeature = new Feature(poly);
+										const tmpWKTString = helpers.getWKTStringFromFeature(tmpFeature);
+										intersectQuery.push("INTERSECTS(geom," + tmpWKTString + ")");
+									});
+									wfsUrl += intersectQuery.join(" OR ");
+								} else {
+									wfsUrl += "INTERSECTS(geom," + wktString + ")";
+								}
+							}
+							// QUERY USING WFS
+							// eslint-disable-next-line
+							if (wfsUrl.length > 8000) {
+								helpers.showMessage("Geometry too complex", "The geometry you are trying to use is too complex to identify.", helpers.messageColors.red);
+							} else {
                 helpers.getJSONWithParams(wfsUrl, params, (result) => {
-                  const featureList = isArcGISLayer ? LayerHelpers.parseESRIIdentify(result) : new GeoJSON().readFeatures(result);
-                  if (featureList.length > 0) {
-                    if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
-                    let features = [];
-                    featureList.forEach((feature) => {
-                      features.push(feature);
-                    });
-                    if (features.length > 0)
-                      layerList.push({
-                        name: name,
-                        features: features,
-                        displayName: displayName,
-                        type: type,
-                        minScale: minScale,
-                      });
-                    this.setState({ layers: layerList });
-                  }
-                });
-              }
-            } else {
-              let infoFormat = layer.get("INFO_FORMAT");
-              //console.log(infoFormat);
-              // let infoFormat = "text/plain";
-              // let xslTemplate = layer.get("XSL_TEMPLATE");
-              let xslTemplate = this.wmsGeoJsonTemplate;
-              // QUERY USING WMS
-              let getInfoOption = { INFO_FORMAT: "application/json" };
-              if (infoFormat !== undefined && infoFormat !== "") getInfoOption["INFO_FORMAT"] = infoFormat;
-              if (xslTemplate !== undefined && xslTemplate !== "") getInfoOption["XSL_TEMPLATE"] = xslTemplate;
-              //console.log(xslTemplate);
-              var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", getInfoOption);
-              let html_url = this.htmlIdentify
-                ? layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "text/html" }) + "&feature_count=1000000"
-                : "";
-              if (url) {
-                url += "&feature_count=1000000";
-                //console.log(url);
+									const featureList = isArcGISLayer ? LayerHelpers.parseESRIIdentify(result) : new GeoJSON().readFeatures(result);
+									if (featureList.length > 0) {
+										if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
+										let features = [];
+										featureList.forEach((feature) => {
+											features.push(feature);
+										});
+										if (features.length > 0)
+											layerList.push({
+												name: name,
+												features: features,
+												displayName: displayName,
+												type: type,
+												minScale: minScale,
+											});
+										this.setState({ layers: layerList });
+									}
+								});
+							}
+						} else {
+							let infoFormat = layer.get("INFO_FORMAT");
+							//console.log(infoFormat);
+							// let infoFormat = "text/plain";
+							// let xslTemplate = layer.get("XSL_TEMPLATE");
+							let xslTemplate = this.wmsGeoJsonTemplate;
+							// QUERY USING WMS
+							let getInfoOption = { INFO_FORMAT: "application/json" };
+							if (infoFormat !== undefined && infoFormat !== "") getInfoOption["INFO_FORMAT"] = infoFormat;
+							if (xslTemplate !== undefined && xslTemplate !== "") getInfoOption["XSL_TEMPLATE"] = xslTemplate;
+							//console.log(xslTemplate);
+							var url = layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", getInfoOption);
+							let html_url = this.htmlIdentify
+								? layer.getSource().getFeatureInfoUrl(geometry.flatCoordinates, window.map.getView().getResolution(), "EPSG:3857", { INFO_FORMAT: "text/html" }) + "&feature_count=1000000"
+								: "";
+							if (url) {
+								url += "&feature_count=1000000";
+								//console.log(url);
                 params.headers["Content-Type"] = "application/text";
-                helpers.httpGetTextWithParams(url, params, (result) => {
-                  let tempResult = helpers.tryParseJSON(result);
-                  //console.log(tempResult);
-                  if (tempResult !== false) {
-                    result = tempResult;
-                  } else {
-                    return;
-                  }
-                  //console.log(result);
-                  const featureList = new GeoJSON().readFeatures(result);
-                  if (featureList.length === 0) {
-                    return;
-                  } else if (featureList.length > 0) {
-                    if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
-                    let features = [];
-                    featureList.forEach((feature) => {
-                      features.push(feature);
-                    });
-                    if (features.length > 0)
-                      layerList.push({
-                        name: name,
-                        features: features,
-                        displayName: displayName,
-                        type: type,
-                        html_url: html_url,
-                        minScale: minScale,
-                      });
-                    this.setState({ layers: layerList });
-                  }
-                });
-              }
-            }
-          } else {
-            const name = layer.get("name");
-            let displayName = "";
-            let type = layer.get("tocDisplayName");
-            const minScale = layer.get("minScale");
-            const params = {};
-            let featureList = [];
-            let pixel = window.map.getPixelFromCoordinate(geometry.flatCoordinates);
-            window.map.forEachFeatureAtPixel(pixel, (feature, layer) => {
-              if (layer.get("name") !== undefined && layer.get("name") === name) featureList.push(feature);
-            });
+								helpers.httpGetTextWithParams(url, params, (result) => {
+									let tempResult = helpers.tryParseJSON(result);
+									//console.log(tempResult);
+									if (tempResult !== false) {
+										result = tempResult;
+									} else {
+										return;
+									}
+									//console.log(result);
+									const featureList = new GeoJSON().readFeatures(result);
+									if (featureList.length === 0) {
+										return;
+									} else if (featureList.length > 0) {
+										if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
+										let features = [];
+										featureList.forEach((feature) => {
+											features.push(feature);
+										});
+										if (features.length > 0)
+											layerList.push({
+												name: name,
+												features: features,
+												displayName: displayName,
+												type: type,
+												html_url: html_url,
+												minScale: minScale,
+											});
+										this.setState({ layers: layerList });
+									}
+								});
+							}
+						}
+					} else {
+						const name = layer.get("name");
+						let displayName = "";
+						let type = layer.get("tocDisplayName");
+						const minScale = layer.get("minScale");
+						const params = {};
+						let featureList = [];
+						let pixel = window.map.getPixelFromCoordinate(geometry.flatCoordinates);
+						window.map.forEachFeatureAtPixel(pixel, (feature, layer) => {
+							if (layer.get("name") !== undefined && layer.get("name") === name) featureList.push(feature);
+						});
 
-            if (featureList.length > 0) {
-              if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
-              let features = [];
-              featureList.forEach((feature) => {
-                features.push(feature);
-              });
-              if (features.length > 0)
-                layerList.push({
-                  name: name,
-                  features: features,
-                  displayName: displayName,
-                  type: type,
-                  minScale: minScale,
-                });
-              this.setState({ layers: layerList });
-            }
-          }
-        }
-      }
-    }
+						if (featureList.length > 0) {
+							if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
+							let features = [];
+							featureList.forEach((feature) => {
+								features.push(feature);
+							});
+							if (features.length > 0)
+								layerList.push({
+									name: name,
+									features: features,
+									displayName: displayName,
+									type: type,
+									minScale: minScale,
+								});
+							this.setState({ layers: layerList });
+						}
+					}
+				}
+			}
+		}
 
-    this.setState({ isLoading: false });
-  };
+		this.setState({ isLoading: false });
+	};
 
-  onMouseEnter = (feature) => {
-    if (feature.values_.geometry !== undefined && feature.values_.geometry !== null) {
-      this.vectorLayerShadow.getSource().clear();
-      this.vectorLayerShadowSecondary.getSource().clear();
+	onMouseEnter = (feature) => {
+		if (feature.values_.geometry !== undefined && feature.values_.geometry !== null) {
+			this.vectorLayerShadow.getSource().clear();
+			this.vectorLayerShadowSecondary.getSource().clear();
 
-      if (feature.values_.extent_geom !== undefined && feature.values_.extent_geom !== null) {
-        var extentFeature = helpers.getFeatureFromGeoJSON(feature.values_.extent_geom);
-        this.vectorLayerShadowSecondary.getSource().addFeature(extentFeature);
-      }
-      this.vectorLayerShadow.getSource().addFeature(feature);
-    }
-  };
+			if (feature.values_.extent_geom !== undefined && feature.values_.extent_geom !== null) {
+				var extentFeature = helpers.getFeatureFromGeoJSON(feature.values_.extent_geom);
+				this.vectorLayerShadowSecondary.getSource().addFeature(extentFeature);
+			}
+			this.vectorLayerShadow.getSource().addFeature(feature);
+		}
+	};
 
-  onMouseLeave = () => {
-    this.vectorLayerShadow.getSource().clear();
-    this.vectorLayerShadowSecondary.getSource().clear();
-  };
+	onMouseLeave = () => {
+		this.vectorLayerShadow.getSource().clear();
+		this.vectorLayerShadowSecondary.getSource().clear();
+	};
 
-  createShadowLayer = () => {
-    const shadowStyle = new Style({
-      stroke: new Stroke({
-        color: [0, 255, 255, 0.3],
-        width: 6,
-      }),
-      fill: new Fill({
-        color: [0, 255, 255, 0.3],
-      }),
-      image: new CircleStyle({
-        radius: 10,
-        stroke: new Stroke({
-          color: [0, 255, 255, 0.3],
-          width: 6,
-        }),
-        fill: new Fill({
-          color: [0, 255, 255, 0.3],
-        }),
-      }),
-    });
+	createShadowLayer = () => {
+		const shadowStyle = new Style({
+			stroke: new Stroke({
+				color: [0, 255, 255, 0.3],
+				width: 6,
+			}),
+			fill: new Fill({
+				color: [0, 255, 255, 0.3],
+			}),
+			image: new CircleStyle({
+				radius: 10,
+				stroke: new Stroke({
+					color: [0, 255, 255, 0.3],
+					width: 6,
+				}),
+				fill: new Fill({
+					color: [0, 255, 255, 0.3],
+				}),
+			}),
+		});
 
-    const shadowStyleSecondary = new Style({
-      stroke: new Stroke({
-        color: [0, 255, 68, 0.4],
-        width: 4,
-      }),
-      fill: new Fill({
-        color: [255, 0, 0, 0],
-      }),
-      image: new CircleStyle({
-        radius: 10,
-        stroke: new Stroke({
-          color: [0, 255, 68, 0.4],
-          width: 4,
-        }),
-        fill: new Fill({
-          color: [255, 0, 0, 0],
-        }),
-      }),
-    });
-    this.vectorLayerShadow = new VectorLayer({
-      source: new VectorSource({
-        features: [],
-      }),
-      zIndex: 100000,
-      style: shadowStyle,
-    });
-    this.vectorLayerShadowSecondary = new VectorLayer({
-      source: new VectorSource({
-        features: [],
-      }),
-      zIndex: 100000,
-      style: shadowStyleSecondary,
-    });
-    window.map.addLayer(this.vectorLayerShadow);
-    window.map.addLayer(this.vectorLayerShadowSecondary);
-  };
+		const shadowStyleSecondary = new Style({
+			stroke: new Stroke({
+				color: [0, 255, 68, 0.4],
+				width: 4,
+			}),
+			fill: new Fill({
+				color: [255, 0, 0, 0],
+			}),
+			image: new CircleStyle({
+				radius: 10,
+				stroke: new Stroke({
+					color: [0, 255, 68, 0.4],
+					width: 4,
+				}),
+				fill: new Fill({
+					color: [255, 0, 0, 0],
+				}),
+			}),
+		});
+		this.vectorLayerShadow = new VectorLayer({
+			source: new VectorSource({
+				features: [],
+			}),
+			zIndex: 100000,
+			style: shadowStyle,
+		});
+		this.vectorLayerShadowSecondary = new VectorLayer({
+			source: new VectorSource({
+				features: [],
+			}),
+			zIndex: 100000,
+			style: shadowStyleSecondary,
+		});
+		window.map.addLayer(this.vectorLayerShadow);
+		window.map.addLayer(this.vectorLayerShadowSecondary);
+	};
 
-  getDisplayNameFromFeature = (feature) => {
-    // LOOK FOR EXISTING FIELDS
-    const nameFields = ["name", "display_name", "Name", "Display Name"];
-    let displayName = "";
-    const displayFieldName = feature.get("displayFieldName");
-    if (displayFieldName !== undefined && displayFieldName !== null) nameFields.push(displayFieldName);
-    nameFields.forEach((fieldName) => {
-      if (fieldName.substring(0, 1) !== "_") {
-        const name = feature.get(fieldName);
-        if (name !== undefined) {
-          displayName = fieldName;
-          return displayName;
-        }
-      }
-    });
+	getDisplayNameFromFeature = (feature) => {
+		// LOOK FOR EXISTING FIELDS
+		const nameFields = ["name", "display_name", "Name", "Display Name"];
+		let displayName = "";
+		const displayFieldName = feature.get("displayFieldName");
+		if (displayFieldName !== undefined && displayFieldName !== null) nameFields.push(displayFieldName);
+		nameFields.forEach((fieldName) => {
+			if (fieldName.substring(0, 1) !== "_") {
+				const name = feature.get(fieldName);
+				if (name !== undefined) {
+					displayName = fieldName;
+					return displayName;
+				}
+			}
+		});
 
-    // FIND FIRST STRING FIELD
-    if (displayName === "") {
-      for (const [fieldName, value] of Object.entries(feature.values_)) {
-        if (fieldName.substring(0, 1) !== "_") {
-          if (typeof value === "string" || value instanceof String) {
-            displayName = fieldName;
-            return displayName;
-          }
-        }
-      }
-    }
+		// FIND FIRST STRING FIELD
+		if (displayName === "") {
+			for (const [fieldName, value] of Object.entries(feature.values_)) {
+				if (fieldName.substring(0, 1) !== "_") {
+					if (typeof value === "string" || value instanceof String) {
+						displayName = fieldName;
+						return displayName;
+					}
+				}
+			}
+		}
 
-    //console.log(displayName);
-    // STILL NOTHING, SO TAKE FIRST FIELD
-    if (displayName === "") displayName = Object.keys(feature.values_)[0];
+		//console.log(displayName);
+		// STILL NOTHING, SO TAKE FIRST FIELD
+		if (displayName === "") displayName = Object.keys(feature.values_)[0];
 
-    return displayName;
-  };
+		return displayName;
+	};
 
-  onZoomClick = (feature) => {
-    helpers.zoomToFeature(feature);
-  };
+	onZoomClick = (feature) => {
+		helpers.zoomToFeature(feature);
+	};
 
-  render() {
-    return (
-      <div>
-        <button className="sc-button sc-identify-clear-button" onClick={this.clearIdentify}>
-          Clear Results
-        </button>
-        <div className={this.state.layers.length === 0 && !this.state.isLoading ? "sc-identify-loading" : "sc-hidden"}>
-          No Features were selected. Please try again.
-          {/* <img src={images["loading.gif"]}></img> */}
-        </div>
-        <div className={this.state.isLoading ? "sc-identify-loading" : "sc-hidden"}>
-          <img src={images["loading.gif"]} alt="Loading" />
-        </div>
-        <div className={this.state.layers.length === 0 ? "sc-hidden" : "sc-identify-container"}>
-          {this.state.layers.map((layer) => (
-            <Layer key={helpers.getUID()} layer={layer} onZoomClick={this.onZoomClick} onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave} />
-          ))}
-        </div>
-      </div>
-    );
-  }
+	render() {
+		return (
+			<div>
+				<button className="sc-button sc-identify-clear-button" onClick={this.clearIdentify}>
+					Clear Results
+				</button>
+				<div className={this.state.layers.length === 0 && !this.state.isLoading ? "sc-identify-loading" : "sc-hidden"}>
+					No Features were selected. Please try again.
+					{/* <img src={images["loading.gif"]}></img> */}
+				</div>
+				<div className={this.state.isLoading ? "sc-identify-loading" : "sc-hidden"}>
+					<img src={images["loading.gif"]} alt="Loading" />
+				</div>
+				<div className={this.state.layers.length === 0 ? "sc-hidden" : "sc-identify-container"}>
+					{this.state.layers.map((layer) => (
+						<Layer key={helpers.getUID()} layer={layer} onZoomClick={this.onZoomClick} onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave} />
+					))}
+				</div>
+			</div>
+		);
+	}
 }
 
 export default Identify;
@@ -506,6 +505,7 @@ const FeatureItem = (props) => {
       </div>
     </div>
   );
+
 };
 
 // IMPORT ALL IMAGES

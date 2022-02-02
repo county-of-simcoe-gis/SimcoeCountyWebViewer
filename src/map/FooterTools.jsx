@@ -118,8 +118,8 @@ class FooterTools extends Component {
 			}
 		}, 10);
 
+
 		const scale = (window.mapControls.scaleSelector)?
-		
 					<div id="sc-scale-bar-text" className="sc-map-footer-scale-only selector">
 					Scale:&nbsp;
 					<select id="sc-scale-bar-select" onChange={(evt) => {this.onScaleClick(evt.target.value);}} value={this.state.currentScale}>
@@ -133,7 +133,6 @@ class FooterTools extends Component {
 					</div>
 				:
 				<div id="sc-scale-bar-text" className={this.state.basemapType === "IMAGERY" ? "sc-map-footer-scale-only imagery" : "sc-map-footer-scale-only topo"}>
-					
 					{"Scale: 1:" + this.state.scale}
 				</div>
 
