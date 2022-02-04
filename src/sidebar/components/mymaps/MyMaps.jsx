@@ -75,7 +75,11 @@ class MyMaps extends Component {
     window.emitter.addListener("addMyMapsFeature", (feature, labelText) => this.addNewItem(feature, labelText, true));
   }
 
-  componentDidMount() {}
+  componentDidMount() {
+    helpers.waitForLoad(["settings", "map"], Date.now(), 30, () => {
+      helpers.addIsLoaded("mymap");
+    });
+  }
 
   onMapLoad = () => {
     //this.updateStyle();

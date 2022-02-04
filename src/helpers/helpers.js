@@ -144,10 +144,7 @@ export function showURLWindow(url, showFooter = false, mode = "normal", honorDon
 }
 
 export function export_file(filename, content) {
-  var pom = document.createElement("a");
-  pom.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(content));
-  pom.setAttribute("download", filename);
-  pom.click();
+  download("data:text/plain;charset=utf-8," + encodeURIComponent(content), filename);
 }
 // GET ARCGIS TILED LAYER
 export function getArcGISTiledLayer(url) {
@@ -288,6 +285,10 @@ export function getOSMLayer() {
     crossOrigin: "anonymous",
   });
 }
+export function shouldCancelPopup(coord, startTime) {
+  //HAS THE USER CLICKED ON SOMETHING ELSE?
+  return window.activeClick && window.activeClick.time > startTime && (window.activeClick.coordinates[0] !== coord[0] || window.activeClick.coordinates[1] !== coord[1]);
+}
 export function getViewRotation() {
   var rotation = parseFloat(0);
   if (window.map === undefined) return rotation;
@@ -349,6 +350,8 @@ export function getImageWMSLayer(serverURL, layers, serverType = "geoserver", cq
     name: layerNameOnly,
     rootInfoUrl: rootInfoUrl,
     disableParcelClick: disableParcelClick,
+    tocDisplayName: layerNameOnly,
+    queryable: true,
   });
   return imageLayer;
 }
@@ -1156,13 +1159,12 @@ export function getGeometryFromGeoJSON(geometry) {
 }
 
 //Generate Feature Reports for a Polygon (reproting area)
-export function generateReport(feature, reportObj, buffer = 0, callback = undefined) {
-  const report = reportObj.report;
-  const url = mainConfig.reportsUrl + 'Report/' +  report;
+export function generateReport(feature, report, buffer = 0, callback = undefined) {
+  const url = mainConfig.reportsUrl + report;
   let geom = feature.getGeometry();
   //const utmNad83Geometry = geom.transform("EPSG:3857", _nad83Proj);
   const geoJSON = getGeoJSONFromGeometry(geom);
-  const obj = { geoJSON: geoJSON, srid: "3857", buffer: buffer, reportObj:reportObj};
+  const obj = { geoJSON: geoJSON, srid: "3857", buffer: buffer };
   return fetch(url, {
     method: "POST", // *GET, POST, PUT, DELETE, etc.
     mode: "cors", // no-cors, cors, *same-origin
@@ -1181,25 +1183,37 @@ export function generateReport(feature, reportObj, buffer = 0, callback = undefi
   })
     .then((response) => response.blob())
     .then((blob) => {
-      var url = window.URL.createObjectURL(blob);
-      var a = document.createElement("a");
-      a.href = url;
       var d = new Date(Date.now());
-      a.download = "Report " + d.toISOString().slice(0, 10).replace(/-/g, "") + d.toTimeString().slice(0, 8).replace(/:/g, "") + ".xlsx";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      download(blob, "Report " + d.toISOString().slice(0, 10).replace(/-/g, "") + d.toTimeString().slice(0, 8).replace(/:/g, "") + ".xlsx", { isBlob: true });
       callback(true);
     });
 }
 
-export function previewReport(feature, reportObj, buffer = 0, callback) {
-  const report = reportObj.report;
-  const url = mainConfig.reportsUrl + 'ReportPreview/' + report;
+export function download(url, filename = undefined, options = undefined) {
+  if (!options) options = {};
+  try {
+    if (options.isBlob) {
+      url = window.URL.createObjectURL(url);
+    }
+    var link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("target", "_blank");
+    link.setAttribute("rel", "noopener noreferrer");
+    if (!isLoaded("apptrack-theme")) link.setAttribute("download", filename);
+    document.body.appendChild(link); // Required for FF
+    link.click();
+    document.body.removeChild(link); //afterwards we remove the element again
+  } catch (e) {
+    window.open(url, `_blank`);
+  }
+}
+
+export function previewReport(feature, report, buffer = 0, callback) {
+  const url = mainConfig.reportsUrl + report;
   let geom = feature.getGeometry();
   //const utmNad83Geometry = geom.transform("EPSG:3857", _nad83Proj);
   const geoJSON = getGeoJSONFromGeometry(geom);
-  const obj = { geoJSON: geoJSON, srid: "3857", buffer: buffer, reportObj:reportObj};
+  const obj = { geoJSON: geoJSON, srid: "3857", buffer: buffer };
   return fetch(url, {
     method: "POST", // *GET, POST, PUT, DELETE, etc.
     mode: "cors", // no-cors, cors, *same-origin

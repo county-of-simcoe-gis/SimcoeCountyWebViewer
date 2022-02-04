@@ -597,7 +597,7 @@ class SCMap extends Component {
           <div id="map" className={this.state.mapClassName} tabIndex="0" style={{ bottom: this.state.mapBottom }} />
           <Navigation options={this.props.options} />
           <FooterTools options={this.props.options} />
-          <BMap />
+          <BMap options={this.props.options} />
           <PropertyReportClick />
           {window.mapControls.gitHubButton ? (
             <div

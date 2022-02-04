@@ -7,6 +7,7 @@ import { extend } from "ol/extent.js";
 import { Fill, Stroke, Style } from "ol/style.js";
 import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
+import toolConfig from "./config.json";
 
 class ToolComponent extends Component {
   constructor(props) {
@@ -19,7 +20,7 @@ class ToolComponent extends Component {
       features: [],
     };
     this.layer = null;
-    this.layerName = "simcoe:Lot_And_Concession_Tool";
+    this.layerName = toolConfig.layerName;
     this.createShadowLayer();
   }
 
@@ -57,7 +58,7 @@ class ToolComponent extends Component {
 
   onSearchClick = () => {
     helpers.waitForLoad("settings", Date.now(), 30, () => {
-      const serverUrl = window.config.geoserverUrl + "wms/";
+      const serverUrl = toolConfig.serverUrl + "wms/";
 
       if (this.state.lotNumber === "" && this.state.concessionNumber === "") {
         helpers.showMessage("Lot And Con", "Please enter a LOT and/or CON.", helpers.messageColors.orange);
@@ -80,7 +81,7 @@ class ToolComponent extends Component {
       window.map.addLayer(this.layer);
 
       helpers.getWFSGeoJSON(
-        window.config.geoserverUrl,
+        toolConfig.serverUrl,
         this.layerName,
         (result) => {
           this.updateFeatures(result);

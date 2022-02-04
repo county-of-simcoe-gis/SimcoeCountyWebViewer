@@ -1,4 +1,4 @@
-import React, { Component} from "react";
+import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import Slider from "rc-slider";
 import "./BasicBasemapSwitcher.css";
@@ -8,7 +8,7 @@ import { Group as LayerGroup } from "ol/layer.js";
 import xml2js from "xml2js";
 import { Vector as VectorSource } from "ol/source.js";
 import { Vector as VectorLayer } from "ol/layer.js";
-import FloatingMenu, { FloatingMenuItem }from "../helpers/FloatingMenu.jsx";
+import FloatingMenu, { FloatingMenuItem } from "../helpers/FloatingMenu.jsx";
 import Portal from "../helpers/Portal.jsx";
 import { Item as MenuItem } from "rc-menu";
 
@@ -21,41 +21,38 @@ class BasicBasemapSwitcher extends Component {
       topoLayers: [],
       topoActiveIndex: 0,
       topoCheckbox: true,
-      basemapOpacity:1,
+      basemapOpacity: 1,
       activeButton: "topo",
-      toggleService:undefined,
-      toggleIndex:1, 
+      toggleService: undefined,
+      toggleIndex: 1,
       previousIndex: undefined,
-      showBaseMapSwitcher:true,
+      showBaseMapSwitcher: true,
     };
 
     // LISTEN FOR MAP TO MOUNT
     window.emitter.addListener("mapLoaded", () => this.onMapLoad());
     // LISTEN FOR CONTROL VISIBILITY CHANGES
-    window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control,visible));
+    window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control, visible));
   }
 
-  componentDidMount(){
-
-   this.setState({showBaseMapSwitcher:window.mapControls.basemap});
-}
+  componentDidMount() {
+    this.setState({ showBaseMapSwitcher: window.mapControls.basemap });
+  }
   onMapLoad() {
     let index = 0;
     // LOAD BASEMAP LAYERS
-     let basemapList = [];
+    let basemapList = [];
     //CHECK IF SETTINGS INCLUDES A BASEMAP LAYERS CONFIGURATION
-     const baseMapServicesOptions = (window.config.baseMapServices !== undefined)
-		? window.config.baseMapServices
-		: BasemapConfig.topoServices;
-   
-	//SET toggleService STATE BASED ON BASED LAYER OPTINS
-	this.setState({toggleService:baseMapServicesOptions[1]});
+    const baseMapServicesOptions = window.config.baseMapServices !== undefined ? window.config.baseMapServices : BasemapConfig.topoServices;
+
+    //SET toggleService STATE BASED ON BASED LAYER OPTINS
+    this.setState({ toggleService: baseMapServicesOptions[1] });
     //let basemapIndex = 0;
-    
-	baseMapServicesOptions.forEach(serviceGroup => {
+
+    baseMapServicesOptions.forEach((serviceGroup) => {
       index = 0;
       let serviceLayers = [];
-      serviceGroup.layers.forEach(service => {
+      serviceGroup.layers.forEach((service) => {
         // CREATE THE LAYER
         let layer = null;
         if (service.type === "SIMCOE_TILED") {
@@ -65,14 +62,14 @@ class BasicBasemapSwitcher extends Component {
           layer = helpers.getOSMTileXYZLayer("http://a.tile.openstreetmap.org");
         } else if (service.type === "ESRI_TILED") {
           layer = helpers.getArcGISTiledLayer(service.url);
-        } else if (service.type === "ARC_REST"){
+        } else if (service.type === "ARC_REST") {
           layer = helpers.getESRITileXYZLayer(service.url);
-        }else if (service.type === "XYZ") {
+        } else if (service.type === "XYZ") {
           layer = helpers.getXYZLayer(service.url);
-        }else if (service.type === "ESRI_VECTOR_TILED") {
+        } else if (service.type === "ESRI_VECTOR_TILED") {
           layer = helpers.getVectorTileLayer(service.url);
-        }else{
-          layer = new VectorLayer({source: new VectorSource()});
+        } else {
+          layer = new VectorLayer({ source: new VectorSource() });
         }
 
         // LAYER PROPS
@@ -84,30 +81,30 @@ class BasicBasemapSwitcher extends Component {
       const groupUrl = serviceGroup.groupUrl;
       if (groupUrl !== undefined) {
         // GET XML
-        helpers.httpGetText(groupUrl, result => {
+        helpers.httpGetText(groupUrl, (result) => {
           var parser = new xml2js.Parser();
 
           // PARSE TO JSON
-          parser.parseString(result, function(err, result) {
+          parser.parseString(result, function (err, result) {
             const groupLayerList = result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer;
             index++;
-            groupLayerList.forEach(layerInfo => {
+            groupLayerList.forEach((layerInfo) => {
               const layerNameOnly = layerInfo.Name[0].split(":")[1];
               const serverUrl = groupUrl.split("/geoserver/")[0] + "/geoserver";
 
               let groupLayer = helpers.getImageWMSLayer(serverUrl + "/wms", layerInfo.Name[0]);
               groupLayer.setVisible(true);
               groupLayer.setProperties({ index: index, name: layerNameOnly, isOverlay: true });
-              
+
               serviceLayers.push(groupLayer);
               index++;
             });
-			
+
             // USING LAYER GROUPS FOR TOPO
             let layerGroup = new LayerGroup({ layers: serviceLayers, visible: false });
             layerGroup.setProperties({ index: serviceGroup.index, name: serviceGroup.name });
             window.map.addLayer(layerGroup);
-            
+
             basemapList.push(layerGroup);
           });
         });
@@ -117,24 +114,26 @@ class BasicBasemapSwitcher extends Component {
         layerGroup.setProperties({ index: serviceGroup.index, name: serviceGroup.name });
         window.map.addLayer(layerGroup);
         basemapList.push(layerGroup);
-		//basemapIndex++;
+        //basemapIndex++;
       }
     });
-	this.setState({ topoLayers: basemapList, topoActiveIndex: 0, previousIndex:0},()=>{
+    this.setState({ topoLayers: basemapList, topoActiveIndex: 0, previousIndex: 0 }, () => {
       let savedOptions = helpers.getItemsFromStorage(this.storageKeyBasemap);
-      if (savedOptions !== undefined){
-          this.setState({
+      if (savedOptions !== undefined) {
+        this.setState(
+          {
             topoActiveIndex: savedOptions.toggleIndex,
-            basemapOpacity:savedOptions.basemapOpacity,
-            toggleIndex:savedOptions.topoActiveIndex, 
-            previousIndex:savedOptions.previousIndex,
-        },()=>{
-          this.onToggleBasemap(this.state.toggleIndex);
-        });
+            basemapOpacity: savedOptions.basemapOpacity,
+            toggleIndex: savedOptions.topoActiveIndex,
+            previousIndex: savedOptions.previousIndex,
+          },
+          () => {
+            this.onToggleBasemap(this.state.toggleIndex);
+          }
+        );
       }
     });
-      
-    
+
     // NEED TO WAIT A TAD FOR LAYERS TO INIT
     setTimeout(() => {
       this.handleURLParameters();
@@ -142,7 +141,7 @@ class BasicBasemapSwitcher extends Component {
   }
 
   // HANDLE URL PARAMETERS
-  handleURLParameters = value => {
+  handleURLParameters = (value) => {
     const basemap = helpers.getURLParameter("BASEMAP") !== null ? helpers.getURLParameter("BASEMAP").toUpperCase() : null;
     const name = helpers.getURLParameter("NAME") !== null ? helpers.getURLParameter("NAME").toUpperCase() : null;
 
@@ -153,26 +152,26 @@ class BasicBasemapSwitcher extends Component {
         let layer = this.state.topoLayers[index];
         const layerName = layer.getProperties().name;
         if (layerName.toUpperCase() === name) {
-          this.setState({ topoActiveIndex: index,previousIndex:this.state.topoActiveIndex, });
+          this.setState({ topoActiveIndex: index, previousIndex: this.state.topoActiveIndex });
           this.setTopoLayerVisiblity(index);
         }
       }
     }
   };
 
-  enableTopo = value => {
+  enableTopo = (value) => {
     this.setTopoLayerVisiblity(this.state.topoActiveIndex);
 
     // EMIT A BASEMAP CHANGE
     window.emitter.emit("basemapChanged", "TOPO");
   };
 
-  disableTopo = value => {
+  disableTopo = (value) => {
     this.setTopoLayerVisiblity(-1);
   };
 
   // TOPO BUTTON
-  onTopoButtonClick = evt => {
+  onTopoButtonClick = (evt) => {
     // CLOSE PANEL ONLY IF ALREADY OPEN
     if (this.state.topoPanelOpen) this.setState({ topoPanelOpen: !this.state.topoPanelOpen });
 
@@ -183,7 +182,7 @@ class BasicBasemapSwitcher extends Component {
   };
 
   // PANEL DROP DOWN BUTTON
-  onTopoArrowClick = evt => {
+  onTopoArrowClick = (evt) => {
     this.enableTopo();
     this.setState({ topoPanelOpen: !this.state.topoPanelOpen });
     // APP STATS
@@ -191,9 +190,9 @@ class BasicBasemapSwitcher extends Component {
   };
 
   // CLICK ON TOPO THUMBNAILS
-  onTopoItemClick = activeIndex => {
+  onTopoItemClick = (activeIndex) => {
     this.setTopoLayerVisiblity(activeIndex);
-    this.setState({ topoPanelOpen: false,topoActiveIndex: activeIndex });
+    this.setState({ topoPanelOpen: false, topoActiveIndex: activeIndex });
   };
 
   // ADJUST VISIBILITY
@@ -204,7 +203,7 @@ class BasicBasemapSwitcher extends Component {
       if (layerIndex === activeIndex) {
         //let layers = layer.getLayers();
 
-        layer.getLayers().forEach(layer => {
+        layer.getLayers().forEach((layer) => {
           if (layer.get("isOverlay") && this.state.topoCheckbox) layer.setVisible(true);
           else if (layer.get("isOverlay") && !this.state.topoCheckbox) layer.setVisible(false);
         });
@@ -218,45 +217,42 @@ class BasicBasemapSwitcher extends Component {
   }
   // OPACITY SLIDER FOR EACH LAYER
   onSliderChange = (opacity) => {
-    this.setState({basemapOpacity: opacity}, () =>{
+    this.setState({ basemapOpacity: opacity }, () => {
       this.setTopoLayerVisiblity(this.state.topoActiveIndex);
     });
   };
 
-  onToggleBasemap = (index) =>{
-	const baseMapServicesOptions = (window.config.baseMapServices !== undefined)
-		? window.config.baseMapServices
-		: BasemapConfig.topoServices;
+  onToggleBasemap = (index) => {
+    const baseMapServicesOptions = window.config.baseMapServices !== undefined ? window.config.baseMapServices : BasemapConfig.topoServices;
 
-    if (index === this.state.topoActiveIndex){
-      this.setState({ topoPanelOpen: false});
+    if (index === this.state.topoActiveIndex) {
+      this.setState({ topoPanelOpen: false });
       return;
-    } 
+    }
     let toggleIndex = this.state.topoActiveIndex;
     if (toggleIndex === undefined) toggleIndex = 0;
-	baseMapServicesOptions &&
-    baseMapServicesOptions.forEach(service => {
-      if (service.index === toggleIndex){
-        this.setState({toggleService:service,toggleIndex:toggleIndex},()=>{
-          this.onTopoItemClick(index);
-        })
-      }
-      
-    });
-  }
-  saveBasemap(){
+    baseMapServicesOptions &&
+      baseMapServicesOptions.forEach((service) => {
+        if (service.index === toggleIndex) {
+          this.setState({ toggleService: service, toggleIndex: toggleIndex }, () => {
+            this.onTopoItemClick(index);
+          });
+        }
+      });
+  };
+  saveBasemap() {
     let basemapOptions = {
       topoActiveIndex: this.state.topoActiveIndex,
-      basemapOpacity:this.state.basemapOpacity,
-      toggleService:this.state.toggleService,
-      toggleIndex:this.state.toggleIndex, 
+      basemapOpacity: this.state.basemapOpacity,
+      toggleService: this.state.toggleService,
+      toggleIndex: this.state.toggleIndex,
       previousIndex: this.state.previousIndex,
-    }
+    };
     helpers.saveToStorage(this.storageKeyBasemap, basemapOptions);
     helpers.showMessage("Save", "Basemap options saved.");
   }
-  onMenuItemClick = action => {
-    switch(action){
+  onMenuItemClick = (action) => {
+    switch (action) {
       case "sc-floating-menu-save-basemap":
         this.saveBasemap();
         break;
@@ -265,67 +261,80 @@ class BasicBasemapSwitcher extends Component {
     }
     helpers.addAppStat("Basemap Settings - ", action);
   };
-    // ELLIPSIS/OPTIONS BUTTON
-    onBasemapOptionsClick = (evt) => {
-      var evtClone = Object.assign({}, evt);
-      const menu = (
-        <Portal>
-          <FloatingMenu
-            key={helpers.getUID()}
-            buttonEvent={evtClone}
-            autoY={false}
-            title="Basemap Options"
-            item={this.props.info}
-            onMenuItemClick={action => this.onMenuItemClick(action)}
-            styleMode={"left"}
-          >
+  // ELLIPSIS/OPTIONS BUTTON
+  onBasemapOptionsClick = (evt) => {
+    var evtClone = Object.assign({}, evt);
+    const menu = (
+      <Portal>
+        <FloatingMenu
+          key={helpers.getUID()}
+          buttonEvent={evtClone}
+          autoY={false}
+          title="Basemap Options"
+          item={this.props.info}
+          onMenuItemClick={(action) => this.onMenuItemClick(action)}
+          styleMode={"left"}
+        >
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-save-basemap">
             <FloatingMenuItem imageName={"save-disk.png"} label="Save Default Basemap" />
           </MenuItem>
-            <MenuItem className="sc-layers-slider" key="sc-floating-menu-opacity">
-              Adjust Transparency
-              <Slider max={1} min={0} step={0.05} defaultValue={this.state.basemapOpacity} onChange={evt => this.onSliderChange(evt)} />
-            </MenuItem>
-          </FloatingMenu>
-        </Portal>
-      );
-  
-      ReactDOM.render(menu, document.getElementById("portal-root"));
-    };
+          <MenuItem className="sc-layers-slider" key="sc-floating-menu-opacity">
+            Adjust Transparency
+            <Slider max={1} min={0} step={0.05} defaultValue={this.state.basemapOpacity} onChange={(evt) => this.onSliderChange(evt)} />
+          </MenuItem>
+        </FloatingMenu>
+      </Portal>
+    );
+
+    ReactDOM.render(menu, document.getElementById("portal-root"));
+  };
 
   controlStateChange(control, state) {
-    switch (control){
+    switch (control) {
       case "basemap":
-        this.setState({showBaseMapSwitcher:state});
+        this.setState({ showBaseMapSwitcher: state });
         break;
       default:
         break;
     }
   }
   render() {
-	const baseMapServicesOptions = (window.config.baseMapServices !== undefined)
-		? window.config.baseMapServices
-		: BasemapConfig.topoServices;
-		  	  
+    const baseMapServicesOptions = window.config.baseMapServices !== undefined ? window.config.baseMapServices : BasemapConfig.topoServices;
+
     return (
-      <div className={(!this.state.showBaseMapSwitcher? " sc-hidden":"")}>
+      <div className={!this.state.showBaseMapSwitcher ? " sc-hidden" : ""}>
         <div id="sc-basic-basemap-main-container">
           <div id="sc-basic-basemap-options" onClick={this.onBasemapOptionsClick} title="Basemap Options" alt="Basemap Options"></div>
           <div className={"sc-basic-basemap-topo"}>
-            <BasicBasemapItem key={helpers.getUID()} className="sc-basic-basemap-topo-toggle-item-container" index={this.state.toggleIndex} showLabel={true} topoActiveIndex={this.state.topoActiveIndex} service={this.state.toggleService} onTopoItemClick={this.onToggleBasemap} />
+            <BasicBasemapItem
+              key={helpers.getUID()}
+              className="sc-basic-basemap-topo-toggle-item-container"
+              index={this.state.toggleIndex}
+              showLabel={true}
+              topoActiveIndex={this.state.topoActiveIndex}
+              service={this.state.toggleService}
+              onTopoItemClick={this.onToggleBasemap}
+            />
             <button className={"sc-button sc-basic-basemap-arrow" + (this.state.topoPanelOpen ? " open" : "")} onClick={this.onTopoArrowClick}></button>
           </div>
         </div>
         <div className={this.state.topoPanelOpen ? "sc-basic-basemap-topo-container" : "sc-hidden"}>
-          {baseMapServicesOptions && baseMapServicesOptions.map((service, index) => (
-             <BasicBasemapItem key={helpers.getUID()} index={index} showLabel={true} topoActiveIndex={this.state.topoActiveIndex} service={service} onTopoItemClick={this.onToggleBasemap} className={index === this.state.topoActiveIndex ? "active":""} /> 
-              
+          {baseMapServicesOptions &&
+            baseMapServicesOptions.map((service, index) => (
+              <BasicBasemapItem
+                key={helpers.getUID()}
+                index={index}
+                showLabel={true}
+                topoActiveIndex={this.state.topoActiveIndex}
+                service={service}
+                onTopoItemClick={this.onToggleBasemap}
+                className={index === this.state.topoActiveIndex ? "active" : ""}
+              />
             ))}
         </div>
       </div>
     );
   }
-  
 }
 
 export default BasicBasemapSwitcher;
@@ -333,18 +342,17 @@ export default BasicBasemapSwitcher;
 class BasicBasemapItem extends Component {
   state = {};
   render() {
-    if (this.props.service === undefined) return (<div></div>);
+    if (this.props.service === undefined) return <div></div>;
     return (
-
       <div
-        className={(this.props.className !== undefined ? this.props.className + " " : "") + "sc-basic-basemap-topo-item-container" }
+        className={(this.props.className !== undefined ? this.props.className + " " : "") + "sc-basic-basemap-topo-item-container"}
         onClick={() => {
           this.props.onTopoItemClick(this.props.index);
         }}
         title={"Switch basemap to " + this.props.service.name}
       >
-        <div className="sc-basic-basemap-topo-item-title">{this.props.showLabel===true?this.props.service.name:""}</div>
-        <img className={"sc-basic-basemap-topo-image" } src={images[this.props.service.image]} alt={this.props.service.image}></img>
+        <div className="sc-basic-basemap-topo-item-title">{this.props.showLabel === true ? this.props.service.name : ""}</div>
+        <img className={"sc-basic-basemap-topo-image"} src={images[this.props.service.image]} alt={this.props.service.image}></img>
       </div>
     );
   }

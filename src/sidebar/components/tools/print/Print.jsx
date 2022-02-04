@@ -145,14 +145,8 @@ class Print extends Component {
             helpers.showMessage("Print", "Your print has been downloaded", helpers.messageColors.green, 10000);
 
             //try creating an auto click link, fall back to window.open
-            try {
-              var link = document.createElement("a");
-              link.href = `${origin}${data.downloadURL}`;
-              link.download = "file.pdf";
-              link.dispatchEvent(new MouseEvent("click"));
-            } catch (e) {
-              window.open(`${origin}${data.downloadURL}`, `_blank`);
-            }
+            helpers.download(`${origin}${data.downloadURL}`, "file.pdf");
+
             this.setState({ isPrinting: false }); // THIS WILL RE-ENABLE BUTTON AND HIDE LOADING MSG
           } else if (data.done === false && data.status === "running") {
             setTimeout(() => {
