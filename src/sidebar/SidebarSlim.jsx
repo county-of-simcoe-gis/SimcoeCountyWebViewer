@@ -4,95 +4,95 @@ import MenuButton from "./MenuButton.jsx";
 import * as helpers from "../helpers/helpers";
 
 class SidebarSlim extends Component {
-	state = {};
+  state = {};
 
-	onButtonClick = (button) => {
-		this.props.onClick(button);
-	};
+  onButtonClick = (button) => {
+    this.props.onClick(button);
+  };
 
-	render() {
-		return (
-			<div className={window.sidebarOpen ? "sc-hidden" : "sc-sidebar-slim-container"}>
-				<SlimButton
-					title="Layers"
-					image="legend-32x32.png"
-					onClick={() => {
-						window.emitter.emit("activateTab", "layers");
-					}}
-					isSelected={this.props.tabIndex === 0}
-					isActive={false}
-					hidden={this.props.hideLayers}
-				/>
-				<SlimButton
-					title="Tools"
-					image="tools-32x32.png"
-					onClick={() => {
-						window.emitter.emit("activateTab", "tools");
-					}}
-					isSelected={this.props.tabIndex === 1}
-					isActive={this.props.toolActive}
-					hidden={this.props.hideTools}
-				/>
-				<SlimButton
-					title="My Maps"
-					image="map-32x32.png"
-					onClick={() => {
-						window.emitter.emit("activateTab", "mymaps");
-					}}
-					isSelected={this.props.tabIndex === 2}
-					isActive={this.props.isMyMapsEditing}
-					hidden={this.props.hideMyMaps}
-				/>
-				<SlimButton
-					title="Themes"
-					image="theme-32x32.png"
-					onClick={() => {
-						window.emitter.emit("activateTab", "themes");
-					}}
-					isSelected={this.props.tabIndex === 3}
-					isActive={this.props.themeActive}
-					hidden={this.props.hideThemes}
-				/>
-				<SlimButton
-					title="Reports"
-					image="report-32x32.png"
-					onClick={() => {
-						window.emitter.emit("activateTab", "reports");
-					}}
-					isSelected={this.props.tabIndex === 4}
-					isActive={false}
-					hidden={this.props.hideReports}
-				/>
-				<div className="sc-sidebar-slim-footer-container">
-					<MenuButton />
-				</div>
-			</div>
-		);
-	}
+  render() {
+    return (
+      <div className={window.sidebarOpen ? "sc-hidden" : "sc-sidebar-slim-container"}>
+        <SlimButton
+          title={this.props.layers.title}
+          image={this.props.layers.icon}
+          onClick={() => {
+            window.emitter.emit("activateTab", "layers");
+          }}
+          isSelected={this.props.tabIndex === 0}
+          isActive={false}
+          hidden={this.props.hideLayers}
+        />
+        <SlimButton
+          title={this.props.tools.title}
+          image={this.props.tools.icon}
+          onClick={() => {
+            window.emitter.emit("activateTab", "tools");
+          }}
+          isSelected={this.props.tabIndex === 1}
+          isActive={this.props.toolActive}
+          hidden={this.props.hideTools}
+        />
+        <SlimButton
+          title={this.props.myMaps.title}
+          image={this.props.myMaps.icon}
+          onClick={() => {
+            window.emitter.emit("activateTab", "mymaps");
+          }}
+          isSelected={this.props.tabIndex === 2}
+          isActive={this.props.isMyMapsEditing}
+          hidden={this.props.hideMyMaps}
+        />
+        <SlimButton
+          title={this.props.themes.title}
+          image={this.props.themes.icon}
+          onClick={() => {
+            window.emitter.emit("activateTab", "themes");
+          }}
+          isSelected={this.props.tabIndex === 3}
+          isActive={this.props.themeActive}
+          hidden={this.props.hideThemes}
+        />
+        <SlimButton
+          title={this.props.reports.title}
+          image={this.props.reports.icon}
+          onClick={() => {
+            window.emitter.emit("activateTab", "reports");
+          }}
+          isSelected={this.props.tabIndex === 4}
+          isActive={false}
+          hidden={this.props.hideReports}
+        />
+        <div className="sc-sidebar-slim-footer-container">
+          <MenuButton />
+        </div>
+      </div>
+    );
+  }
 }
 export default SidebarSlim;
 
 class SlimButton extends Component {
-	state = {};
+  state = {};
 
-	render() {
-		return (
-			<div key={helpers.getUID()} className={"sc-sidebar-slim-button-container" + (this.props.isSelected ? " active" : "") + (this.props.hidden ? " sc-hidden" : "")} onClick={this.props.onClick}>
-				<span className={this.props.isActive ? "sc-sidebar-slim-button-dot" : "sc-hidden"} />
-				<button className="sc-sidebar-slim-button">
-					<img src={images[this.props.image]} alt={this.props.title} />
-					<br />
-					<span>{this.props.title}</span>
-				</button>
-			</div>
-		);
-	}
+  render() {
+    return (
+      <div key={helpers.getUID()} className={"sc-sidebar-slim-button-container" + (this.props.isSelected ? " active" : "") + (this.props.hidden ? " sc-hidden" : "")} onClick={this.props.onClick}>
+        <span className={this.props.isActive ? "sc-sidebar-slim-button-dot" : "sc-hidden"} />
+        <button className="sc-sidebar-slim-button">
+          <img src={images[this.props.image]} alt={this.props.title} />
+          <br />
+          <span>{this.props.title}</span>
+        </button>
+      </div>
+    );
+  }
 }
 
 // IMPORT ALL IMAGES
 const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
 function importAllImages(r) {
-	let images = {};
-	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
-	return images;
+  let images = {};
+  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
+  return images;
 }
