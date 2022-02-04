@@ -2,11 +2,8 @@
 
 # COUNTY
 /src/sidebar/components/tools/styler
-Build.ps1
-sc_copyToServer.bat
 .vscode
 config_dev.json
-
 # dependencies
 /node_modules
 /.pnp
@@ -31,4 +28,7 @@ yarn-error.log*
 deploy/*
 debug.log
 /src/sidebar/components/toc/debug.log
+*.zip
 package-lock.json
+sc_copyToServer.bat
+Build.ps1

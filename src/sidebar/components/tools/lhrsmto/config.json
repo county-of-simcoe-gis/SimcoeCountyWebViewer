@@ -1,0 +1,13 @@
+{
+    "smartcl":{
+        "report_url":"https://intra.dev.regionalgis.mto.gov.on.ca/geomatics/smartcl/segments",
+        "params":{
+            "startX": "x1",
+            "startY": "y1",
+            "endX": "x2",
+            "endY": "y2",
+            "hwy": "hwy"
+        }
+        
+    }
+}

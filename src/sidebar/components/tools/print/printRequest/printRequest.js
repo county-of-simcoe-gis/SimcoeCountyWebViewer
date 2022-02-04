@@ -43,6 +43,7 @@ export async function loadWMTSConfig(url, opacity) {
 	wmtsCongif.requestEncoding = "REST";
 	wmtsCongif.customParams = {
 		TRANSPARENT: "true",
+		zIndex: null,
 	};
 	wmtsCongif.matrixSet = "EPSG:3857";
 	wmtsCongif.baseURL = url + "/tile/{TileMatrix}/{TileRow}/{TileCol}";
@@ -163,7 +164,7 @@ let configureTileLayer = async (l) => {
 	let tileUrl = null;
 	const layerSource = l.getSource();
 	tileUrl = layerSource.getUrls();
-	tileUrl = tileUrl[0].split("/tile")[0];
+	tileUrl = tileUrl[0].indexOf("/MapServer/WMTS/") !== -1 ? tileUrl[0].split("/WMTS")[0] : tileUrl[0].split("/tile")[0];
 	let retLayer = {};
 	if (l.values_.source.key_.includes("openstreetmap.org")) {
 		retLayer = {
@@ -177,7 +178,9 @@ let configureTileLayer = async (l) => {
 		return retLayer;
 	} else {
 		retLayer = await loadWMTSConfig(tileUrl, l.values_.opacity);
-		retLayer.customParams.zIndex = l.getZIndex() + l.get("printIndex");
+		const layerIndex = l.getZIndex();
+		const printIndex = l.get("printIndex");
+		retLayer.customParams.zIndex = layerIndex ? layerIndex : 0 + printIndex ? printIndex : 0;
 		return retLayer;
 	}
 };
@@ -353,8 +356,15 @@ export async function printRequest(mapLayers, printSelectedOption) {
 	//iterate through each map layer passed in the window.map
 	let layerOrder = 0;
 	mapLayers.forEach((layer) => {
-		layerOrder++;
-		layer.setProperties({ printIndex: layerOrder });
+		if (layer instanceof LayerGroup) {
+			layer.getLayers().forEach((item) => {
+				layerOrder++;
+				item.setProperties({ printIndex: layerOrder });
+			});
+		} else {
+			layerOrder++;
+			layer.setProperties({ printIndex: layerOrder });
+		}
 	});
 	let mapLayerPromises = mapLayers.map((layer) =>
 		getLayerByType(layer, (retLayers) => {

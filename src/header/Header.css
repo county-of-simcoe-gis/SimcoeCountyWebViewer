@@ -1,87 +1,87 @@
 .header {
-	border-bottom: 1px solid #bbbbbb;
-	left: 0px;
-	top: 0px;
-	right: 0px;
-	bottom: auto;
-	width: 100%;
-	height: 52px;
-	max-height: 52px;
-	padding: 0px;
-	z-index: auto;
-	position: absolute;
-	background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
-	display: table;
+  border-bottom: 1px solid #bbbbbb;
+  left: 0px;
+  top: 0px;
+  right: 0px;
+  bottom: auto;
+  width: 100%;
+  height: 52px;
+  max-height: 52px;
+  padding: 0px;
+  z-index: auto;
+  position: absolute;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+  display: table;
 }
 
 #sc-header-left {
-	min-width: 110px;
+  min-width: 110px;
 }
 
 #sc-header-center {
-	width: 100%;
+  width: 100%;
 }
 
 #sc-header-right {
-	width: 300px;
-	text-align: right;
-	display: table-cell;
-	padding-right: 15px;
-	min-width: 237px;
-	padding-top: 5px;
+  width: 300px;
+  text-align: right;
+  display: table-cell;
+  padding-right: 15px;
+  min-width: 237px;
+  padding-top: 5px;
 }
 
 .sc-header-right-buttons {
-	background-color: transparent;
-	border: none;
-	cursor: pointer;
-	width: 84px;
-	height: 37px;
-	border: 1px solid transparent;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  width: 84px;
+  height: 37px;
+  border: 1px solid transparent;
 }
 
 .sc-header-right-buttons:hover {
-	border: 1px solid #2074b7;
-	box-shadow: 0px 0px 5px #80b9ff;
+  border: 1px solid #2074b7;
+  box-shadow: 0px 0px 5px #80b9ff;
 }
 
 #sc-header-help-button:focus {
-	outline: 0;
+  outline: 0;
 }
 
 #sc-header-advanced-button {
-	width: 80px;
-	margin-left: 5px;
+  width: 80px;
+  margin-left: 5px;
 }
 
 #sc-header-burger-button {
-	display: table-cell;
-	cursor: pointer;
-	margin-left: 12px;
-	width: 65px;
-	height: 44px;
-	vertical-align: middle;
-	text-align: center;
-	padding-top: 2px;
-	outline: none;
+  display: table-cell;
+  cursor: pointer;
+  margin-left: 12px;
+  width: 65px;
+  height: 44px;
+  vertical-align: middle;
+  text-align: center;
+  padding-top: 2px;
+  outline: none;
 }
 
 .sc-header-dot-menu-container {
-	display: table-cell;
-	padding-right: 11px;
-	width: 20px;
+  display: table-cell;
+  padding-right: 11px;
+  width: 20px;
 }
 
 .sc-header-dot-menu-img {
-	text-align: center;
-	vertical-align: middle;
+  text-align: center;
+  vertical-align: middle;
 
-	border-radius: 100%;
-	padding: 7px;
-	margin-bottom: 8px;
+  border-radius: 100%;
+  padding: 7px;
+  margin-bottom: 8px;
 }
 .sc-header-dot-menu-img:hover {
-	background-color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(255, 255, 255, 0.5);
 }
 /* .sc-header-dot-menu-container{
   width: 39px;
@@ -98,70 +98,112 @@
   } */
 
 .sc-header-feedback-container {
-	width: 40px;
-	text-align: center;
-	vertical-align: middle;
-	display: table-cell;
-	cursor: pointer;
-	padding: 0px 5px 0px 5px;
-	font-size: 12px;
-	color: #5b5b5b;
+  width: 40px;
+  text-align: center;
+  vertical-align: middle;
+  display: table-cell;
+  cursor: pointer;
+  padding: 0px 5px 0px 5px;
+  font-size: 12px;
+  color: #5b5b5b;
+}
+
+.sc-header-help-container {
+  display: table-cell;
+  padding-right: 11px;
+  padding-left: 11px;
+  width: 40px;
+}
+
+.sc-header-help-btn {
+  width: 30px;
+  height: 16px;
+  text-align: center;
+  vertical-align: middle;
+  padding-top: 5px;
+  padding-bottom: 9px;
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 18px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #ffffff;
+  border-radius: 100%;
+  background: rgb(36, 72, 178); /* Old browsers */
+  background: -moz-linear-gradient(top, rgba(36, 72, 178, 0.5) 0%, rgba(36, 72, 178, 1) 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, rgba(36, 72, 178, 0.5)), color-stop(100%, rgba(36, 72, 178, 1))); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top, rgba(36, 72, 178, 0.5) 0%, rgba(36, 72, 178, 1) 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top, rgba(36, 72, 178, 0.5) 0%, rgba(36, 72, 178, 1) 100%); /* Opera 11.10+ */
+  background: linear-gradient(to bottom, rgba(36, 72, 178, 0.5) 0%, rgba(36, 72, 178, 1) 100%); /* W3C */
+  cursor: pointer;
+}
+
+.sc-header-help-btn:hover {
+  background: rgb(36, 72, 178); /* Old browsers */
+  background: -moz-linear-gradient(top, rgba(36, 72, 178, 0.8) 0%, rgba(36, 72, 178, 1) 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, rgba(36, 72, 178, 0.8)), color-stop(100%, rgba(36, 72, 178, 1))); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top, rgba(36, 72, 178, 0.8) 0%, rgba(36, 72, 178, 1) 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top, rgba(36, 72, 178, 0.8) 0%, rgba(36, 72, 178, 1) 100%); /* Opera 11.10+ */
+  background: linear-gradient(to bottom, rgba(36, 72, 178, 0.8) 0%, rgba(36, 72, 178, 1) 100%); /* W3C */
+  font-weight: bolder;
+  border-style: double;
 }
 
 #sc-header-bar-logo {
-	display: table-cell;
-	vertical-align: bottom;
-	padding-left: 9px;
-	width: 111px;
+  display: table-cell;
+  vertical-align: bottom;
+  padding-left: 9px;
+  width: 111px;
 }
+
 #sc-header-bar-button {
-	display: none;
+  display: none;
 }
 
 #sc-header-search-container {
-	display: table-cell;
-	padding-top: 6px;
-	/* padding-right: 12px; */
+  display: table-cell;
+  padding-top: 6px;
+  /* padding-right: 12px; */
 }
 
 /* MOBILE */
 @media only screen and (max-width: 770px) {
-	#sc-header-burger-button {
-		display: table-cell;
-		cursor: pointer;
-		margin-left: 12px;
-		width: 46px;
-		height: 44px;
-		vertical-align: middle;
-		text-align: center;
-		padding-left: 0px;
-		padding-top: 2px;
-	}
+  #sc-header-burger-button {
+    display: table-cell;
+    cursor: pointer;
+    margin-left: 12px;
+    width: 46px;
+    height: 44px;
+    vertical-align: middle;
+    text-align: center;
+    padding-left: 0px;
+    padding-top: 2px;
+  }
 
-	#sc-header-bar-button {
-		display: none;
-		/* display: block;
+  #sc-header-bar-button {
+    display: none;
+    /* display: block;
         cursor: pointer;
         margin-left: 0px;
         width: 46px;
         height: 44px;
         background-image: url(./images/bar-button.png); */
-	}
+  }
 
-	#sc-header-bar-logo {
-		display: none;
-	}
+  #sc-header-bar-logo {
+    display: none;
+  }
 
-	#sc-header-right {
-		display: none;
-	}
+  #sc-header-right {
+    display: none;
+  }
 
-	#sc-header-left {
-		min-width: 47px;
-	}
+  #sc-header-left {
+    min-width: 47px;
+  }
 
-	#sc-header-center {
-		width: 100%;
-		padding-right: 13px;
-	}
+  #sc-header-center {
+    width: 100%;
+    padding-right: 13px;
+  }
 }

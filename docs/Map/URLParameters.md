@@ -20,8 +20,8 @@ https://opengis.simcoe.ca/?TAB=MyMaps
 
 #### COORDINATES
 
-https://opengis.simcoe.ca/?X=-8877179.097241182&Y=5534758.639315502  
-https://opengis.simcoe.ca/?X=-79.74503517150879&Y=44.44612812682391&SR=WGS84
+https://opengis.simcoe.ca/?X=-8877179.097241182&Y=5534758.639315502[&ID=TRUE]
+https://opengis.simcoe.ca/?X=-79.74503517150879&Y=44.44612812682391&SR=WGS84[&ID=TRUE]
 
 #### EXTENT
 

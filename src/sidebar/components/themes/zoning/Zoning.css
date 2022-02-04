@@ -1,0 +1,58 @@
+.sc-theme-zoning-body {
+  position: absolute;
+  top: 100px;
+  bottom: 80px;
+  left: 0px;
+  right: 1px;
+  overflow-y: auto;
+}
+.sc-theme-zoning-no-results {
+  text-align: center;
+  margin-top: 40px;
+  padding: 5px;
+}
+.sc-theme-zoning-header {
+  text-align: center;
+  padding: 5px;
+  height: 24px;
+  border: 1px solid #ddd;
+  background-color: #e8e8e8;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.sc-theme-zoning-footer {
+  text-align: center;
+  display: inline-flex;
+  position: absolute;
+  width: 100%;
+  bottom: 0px;
+  border: 1px solid #ddd;
+  background-color: #e8e8e8;
+}
+.sc-theme-zoning-footer .sc-button {
+  padding: 5px;
+  margin: 5px;
+  cursor: pointer;
+  border-radius: 5px;
+  text-align: center;
+  vertical-align: middle;
+  width: 95px;
+  padding-top: 20px;
+  font-size: 14px;
+  font-weight: bold;
+}
+.sc-theme-zoning-footer .sc-button:hover {
+  box-shadow: 0 0px 10px #007cff;
+}
+
+.sc-theme-zoning-terms {
+  padding: 5px;
+}
+
+.sc-theme-zoning-bylaw {
+  padding: 5px;
+}
+.sc-theme-zoning-contactus {
+  padding: 5px;
+}
