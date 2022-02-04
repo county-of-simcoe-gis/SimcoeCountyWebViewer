@@ -7,15 +7,18 @@ import * as drawingHelpers from "../../../helpers/drawingHelpers";
 import InfoRow from "../../../helpers/InfoRow.jsx";
 import Select from "react-select";
 
-
 class FeatureReportPopup extends Component {
   state = {
-    reportOption:undefined,
-    reportOptions:undefined,
+    reportOption: undefined,
+    reportOptions: undefined,
     reports: undefined,
-    isLoading:false,
-    bufferOption: {label:"None", value:0},
-    bufferOptions: [{label:"None", value:0},{label:"50 Meters", value:50},{label:"100 Meters", value:100}]
+    isLoading: false,
+    bufferOption: { label: "None", value: 0 },
+    bufferOptions: [
+      { label: "None", value: 0 },
+      { label: "50 Meters", value: 50 },
+      { label: "100 Meters", value: 100 },
+    ],
   };
 
   componentDidMount() {
@@ -26,38 +29,37 @@ class FeatureReportPopup extends Component {
     this.props.onRef(undefined);
   }
 
-  loadReportOptions(callback=undefined) {
-    this.setState({isLoading:true});
-  //helpers.getJSON(mainConfig.reportsUrl,(results)=>{
-  const results = window.config.reports;
-     let reportOptions = [];
-      reportOptions = results.map((item)=> {return {label:item.title, value:item.title}});
-      this.setState({reports:results,reportOptions:reportOptions,reportOption:reportOptions[0], isLoading:false});
- // });
- 
+  loadReportOptions(callback = undefined) {
+    this.setState({ isLoading: true });
+    const results = window.config.reports;
+    let reportOptions = [];
+    reportOptions = results.map((item) => {
+      return { label: item.title, value: item.title };
+    });
+    this.setState({ reports: results, reportOptions: reportOptions, reportOption: reportOptions[0], isLoading: false });
   }
   getSelectedReport = (reportTitle) => {
-    return this.state.reports.filter(item => {return item.title === reportTitle})[0];
-  }
-  onPreviewReport(report, buffer){
+    return this.state.reports.filter((item) => {
+      return item.title === reportTitle;
+    })[0];
+  };
+  onPreviewReport(report, buffer) {
     let selectedReport = this.getSelectedReport(report);
-    helpers.previewReport(drawingHelpers.getFeatureById(this.props.item.id), selectedReport, buffer, (summaryData) =>{
+    helpers.previewReport(drawingHelpers.getFeatureById(this.props.item.id), selectedReport, buffer, (summaryData) => {
       if (summaryData === undefined || summaryData === null || summaryData.length === 0) {
         helpers.showMessage("Not Found", "There were no results for the current selection");
-      }else{
+      } else {
         window.emitter.emit("loadReport", <SummaryReport summary={summaryData} />);
       }
-      this.setState({isLoading:false});
+      this.setState({ isLoading: false });
     });
- 
-  } 
+  }
   onGenerateReport(report, buffer) {
     let selectedReport = this.getSelectedReport(report);
-   
-    helpers.generateReport(drawingHelpers.getFeatureById(this.props.item.id), selectedReport, buffer, ()=>{
-      this.setState({isLoading:false});
+
+    helpers.generateReport(drawingHelpers.getFeatureById(this.props.item.id), selectedReport, buffer, () => {
+      this.setState({ isLoading: false });
     });
-  
   }
   componentWillReceiveProps(nextProps) {
     // this.popupLabelRef.forceUpdate();
@@ -66,22 +68,38 @@ class FeatureReportPopup extends Component {
   render() {
     return (
       <div className="sc-mymaps-popup-container">
-        <LoadingScreen key={helpers.getUID()} visible={this.state.isLoading} spinnerSize={60} /> 
+        <LoadingScreen key={helpers.getUID()} visible={this.state.isLoading} spinnerSize={60} />
         Report:
-        <Select key={helpers.getUID()} name="availableReports"  options={this.state.reportOptions} value={this.state.reportOption} onChange={(selection) => {this.setState({reportOption:selection});} } />
-         <br />
+        <Select
+          key={helpers.getUID()}
+          name="availableReports"
+          options={this.state.reportOptions}
+          value={this.state.reportOption}
+          onChange={(selection) => {
+            this.setState({ reportOption: selection });
+          }}
+        />
+        <br />
         Buffer:
-        <Select key={helpers.getUID()} name="featureBuffer" options={this.state.bufferOptions} value={this.state.bufferOption} onChange={(selection) => {this.setState({bufferOption:selection});} } />
+        <Select
+          key={helpers.getUID()}
+          name="featureBuffer"
+          options={this.state.bufferOptions}
+          value={this.state.bufferOption}
+          onChange={(selection) => {
+            this.setState({ bufferOption: selection });
+          }}
+        />
         <br />
         <FooterButtons
           onPreviewReport={() => {
-                                  this.setState({isLoading:true});
-                                  this.onPreviewReport(this.state.reportOption.value, this.state.bufferOption.value);
-                                }}
+            this.setState({ isLoading: true });
+            this.onPreviewReport(this.state.reportOption.value, this.state.bufferOption.value);
+          }}
           onGenerateReport={() => {
-                                this.setState({isLoading:true});
-                                this.onGenerateReport(this.state.reportOption.value, this.state.bufferOption.value);
-                              }}
+            this.setState({ isLoading: true });
+            this.onGenerateReport(this.state.reportOption.value, this.state.bufferOption.value);
+          }}
         />
       </div>
     );
@@ -90,12 +108,12 @@ class FeatureReportPopup extends Component {
 
 export default FeatureReportPopup;
 
-function SummaryReport(props){
+function SummaryReport(props) {
   return (
     <div>
-        {props.summary.map(item => (
-          <InfoRow key={helpers.getUID()} label={item.section} value={item.record_count}></InfoRow>
-        ))}
+      {props.summary.map((item) => (
+        <InfoRow key={helpers.getUID()} label={item.section} value={item.record_count}></InfoRow>
+      ))}
     </div>
   );
 }

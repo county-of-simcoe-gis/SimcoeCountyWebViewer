@@ -12,7 +12,6 @@ import { CopyToClipboard } from "react-copy-to-clipboard";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import Select from "react-select";
-import { KeyboardPan, KeyboardZoom } from "ol/interaction.js";
 
 // URLS
 const googleDirectionsURL = (lat, long) => `https://www.google.com/maps?saddr=Current+Location&daddr=${lat},${long}`;
@@ -39,7 +38,7 @@ function importAllImages(r) {
 }
 
 class Search extends Component {
-   constructor(props) {
+  constructor(props) {
     super(props);
 
     // STYLES

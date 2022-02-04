@@ -56,6 +56,7 @@ class TOC extends Component {
     // LISTEN FOR SEARCH RESULT
     window.emitter.addListener("activeTocLayerGroup", (groupName, callback) => this.onActivateLayerGroup(groupName, callback));
     window.emitter.addListener("activeTocLayer", (layerItem) => this.onActivateLayer(layerItem));
+    window.emitter.addListener("deactiveTocLayer", (layerItem) => this.onActivateLayer(layerItem, false));
 
     // RETURN FULL LAYER LIST (replaces window.allLayers)
     window.emitter.addListener("getLayerList", (callback) => this.getLayerList(callback));
@@ -129,7 +130,7 @@ class TOC extends Component {
     } else {
       layerGroups = layerGroups.filter((item) => item.label !== this.allLayersGroup.label);
     }
-    group = this.applySavedLayerOptionsToGroup(type, TOCHelpers.mergeGroupsTogether(group, layerGroups));
+    group = this.applySavedLayerOptionsToGroup(type, TOCHelpers.mergeGroupsTogether(group, layerGroups, false));
     layerGroups.unshift(group);
     if (callback === undefined) return layerGroups;
     else callback(layerGroups);
@@ -160,7 +161,7 @@ class TOC extends Component {
     let folderLayerGroups = TOCHelpers.copyTOCLayerGroups(groupInfo.groups);
 
     listLayerGroups = this.addAllLayersGroup(listLayerGroups);
-    folderLayerGroups = this.addAllLayersGroup(folderLayerGroups);
+    //folderLayerGroups = this.addAllLayersGroup(folderLayerGroups);
 
     this.getSavedCustomLayers("LIST", (savedGroups) => {
       if (savedGroups !== undefined) {
@@ -176,7 +177,8 @@ class TOC extends Component {
     if (isReset) this.updateLayerVisibility("CLEAR");
 
     listLayerGroups = this.populateAllLayersGroup("LIST", listLayerGroups);
-    folderLayerGroups = this.populateAllLayersGroup("FOLDER", folderLayerGroups);
+    //folderLayerGroups = this.populateAllLayersGroup("FOLDER", folderLayerGroups);
+    const defaultGroup = this.getDefaultGroup(groupInfo.defaultGroupName, listLayerGroups);
 
     listLayerGroups = listLayerGroups.map((group) => {
       if (group.layers.length > 0) group.layers = this.sortLayers(group.layers);
@@ -184,9 +186,9 @@ class TOC extends Component {
     });
     folderLayerGroups = folderLayerGroups.map((group) => {
       if (group.layers.length > 0) group.layers = this.sortLayers(group.layers);
+      if (defaultGroup.value === group.value) group.panelOpen = true;
       return group;
     });
-    const defaultGroup = this.getDefaultGroup(groupInfo.defaultGroupName, listLayerGroups);
     this.setState(
       {
         layerListGroups: listLayerGroups,
@@ -195,6 +197,7 @@ class TOC extends Component {
         defaultGroup: defaultGroup,
       },
       () => {
+        this.applySavedLayerOptions(this.state.type); //apply saved data for the active toc
         this.applySavedLayerOptions(this.state.type === "LIST" ? "FOLDER" : "LIST"); //apply saved data for the opposite toc
         this.updateLayerCount(defaultGroup.layers.length);
         this.updateLayerVisibility();
@@ -238,7 +241,17 @@ class TOC extends Component {
   applySavedLayerOptionsToGroup = (type, group) => {
     let savedData = helpers.getItemsFromStorage(type === "LIST" ? this.storageKey : this.storageKeyFolder);
     if (savedData === undefined) return group;
-    const savedGroup = savedData[group.value];
+    const savedDataArray = Object.entries(savedData);
+
+    let savedGroup = savedData[group.value];
+    if (!savedGroup) {
+      const savedDataArrayItem = savedDataArray.filter((groupItem) => {
+        if (groupItem[1]) {
+          return group.label === groupItem[1].label;
+        } else return false;
+      })[0];
+      if (savedDataArrayItem) savedGroup = savedData[savedDataArrayItem[0]];
+    }
     let savedLayers = [];
     try {
       if (savedGroup !== undefined && savedGroup.layers !== undefined) {
@@ -268,10 +281,19 @@ class TOC extends Component {
   applySavedLayerOptions = (type) => {
     let savedData = helpers.getItemsFromStorage(type === "LIST" ? this.storageKey : this.storageKeyFolder);
     if (savedData === undefined) return;
+    const savedDataArray = Object.entries(savedData);
 
     let layerGroups = Object.assign([], type === "LIST" ? this.state.layerListGroups : this.state.layerFolderGroups);
     layerGroups = layerGroups.map((group) => {
-      const savedGroup = savedData[group.value];
+      let savedGroup = savedData[group.value];
+      if (!savedGroup) {
+        const savedDataArrayItem = savedDataArray.filter((groupItem) => {
+          if (groupItem[1]) {
+            return group.label === groupItem[1].label;
+          } else return false;
+        })[0];
+        if (savedDataArrayItem) savedGroup = savedData[savedDataArrayItem[0]];
+      }
       let savedLayers = [];
       try {
         if (savedGroup !== undefined && savedGroup.layers !== undefined) {
@@ -457,6 +479,13 @@ class TOC extends Component {
   //#endregion
 
   //#region HANDLE LAYER STATES
+  acceptDisclaimer = (layer) => {
+    if (window.acceptedDisclaimers === undefined || window.acceptedDisclaimers.indexOf(layer.name) === -1) {
+      return false;
+    } else {
+      return true;
+    }
+  };
 
   getLayerList = (callback) => {
     let allLayers = [];
@@ -791,9 +820,19 @@ class TOC extends Component {
         break;
     }
   };
-  onActivateLayer = (layerItem) => {
+  onActivateLayer = (layerItem, visible = true) => {
     let allowSave = true;
     let layerGroups = this.getActiveLayerGroups();
+    if (!layerItem.layerGroup) {
+      const guessLayerGroupName = (layerName) => {
+        let likelyLayerGroup = layerGroups.filter((item) => {
+          return item.layers.filter((itemLayer) => itemLayer.name === layerName)[0] !== undefined && (item.panelOpen || this.state.selectedGroup.value === item.value);
+        })[0];
+        return likelyLayerGroup ? likelyLayerGroup.value : this.state.selectedGroup.value;
+      };
+      layerItem.layerGroup = guessLayerGroupName(layerItem.fullName);
+      if (!layerItem.layerGroup) return;
+    }
     let currentGroup = layerGroups.filter((item) => item.value === layerItem.layerGroup)[0];
     currentGroup.panelOpen = true;
     currentGroup = currentGroup.layers.map((layer) => {
@@ -801,15 +840,15 @@ class TOC extends Component {
         if (layer.disclaimer !== undefined) {
           if (
             !TOCHelpers.acceptDisclaimer(layer, () => {
-              this.onActivateLayer(layerItem);
+              this.onActivateLayer(layerItem, visible);
             })
           ) {
             allowSave = false;
             return layer;
           }
         }
-        layer.layer.setVisible(true);
-        layer.visible = true;
+        layer.layer.setVisible(visible);
+        layer.visible = visible;
         return layer;
       } else {
         return layer;

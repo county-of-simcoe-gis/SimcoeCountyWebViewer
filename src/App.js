@@ -80,6 +80,9 @@ function MapApp() {
     link.href = icon;
   };
   useEffect(() => {
+    window.app = packageJson.name;
+    window.homepage = packageJson.homepage;
+    window.version = packageJson.version;
     helpers.loadConfig(() => {
       document.title = window.config.title;
       if (window.config.favicon) changeIcon(window.config.favicon);
