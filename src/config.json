@@ -345,7 +345,8 @@
       "name": "Zoning",
       "componentName": "Zoning",
       "description": "",
-      "imageName": "zoning.png"
+      "imageName": "zoning.png",
+      "disable": true
     }
   ],
   "sidebarShortcutParams": [
