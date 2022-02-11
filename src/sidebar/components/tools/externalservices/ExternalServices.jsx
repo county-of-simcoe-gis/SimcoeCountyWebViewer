@@ -75,7 +75,7 @@ class ExternalServices extends Component {
 
       if (feature !== undefined) {
         const arn = feature.get("arn");
-        const infoURL = window.config.propertyReportUrl + "?arn=" + arn;
+        const infoURL = window.config.propertyReportUrl + arn;
         helpers.getJSON(infoURL, (result) => {
           const address = result.Address;
           this.setState({ address });

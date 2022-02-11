@@ -200,7 +200,7 @@ class PropertyReportClick extends Component {
 
     rows.push(
       <InfoRow key={helpers.getUID()} label={"Assessed Value"}>
-        <img src={"data:image/png;base64," + assessedValue} alt="assessment" />
+        <img src={assessedValue} alt="assessment" />
         <div
           style={{
             fontSize: "9px",
@@ -285,7 +285,7 @@ class PropertyReportClick extends Component {
 
           // GET FULL INFO
           if (feature !== undefined) {
-            const infoURL = this.propertyReportUrl + "?arn=" + arn;
+            const infoURL = this.propertyReportUrl + arn;
             helpers.getJSON(infoURL, (result) => {
               result.pointCoordinates = latLongCoords;
               result.shareURL = this.getShareURL(arn);
@@ -302,7 +302,7 @@ class PropertyReportClick extends Component {
 
         // GET FULL INFO
         if (feature !== undefined) {
-          const infoURL = this.propertyReportUrl + "?arn=" + arn;
+          const infoURL = this.propertyReportUrl + arn;
           helpers.getJSON(infoURL, (result) => {
             result.pointCoordinates = latLongCoords;
             result.shareURL = this.getShareURL(arn);
