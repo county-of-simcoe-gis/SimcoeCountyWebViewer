@@ -1768,7 +1768,6 @@ export function getFeaturesFromGeom(wfsUrl, geomFieldName, queryGeom, callback) 
     const feature = new Feature(resultGeom);
     const wktString = getWKTStringFromFeature(feature);
     const queryUrl = urlTemplate(wfsUrl, geomFieldName, wktString);
-    console.log(queryUrl);
     getJSON(queryUrl, (result) => {
       if (result.features.length === 0) callback([]);
       else {
