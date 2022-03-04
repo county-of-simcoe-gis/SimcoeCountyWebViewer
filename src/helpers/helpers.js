@@ -1762,12 +1762,13 @@ export function getARNListFromGeom(geom, callback) {
     callback(tmpArnArray);
   });
 }
-export function getFeaturesFromGeom(wfsUrl, geomFieldName, geom, callback) {
+export function getFeaturesFromGeom(wfsUrl, geomFieldName, queryGeom, callback) {
   const urlTemplate = (mainURL, geomField, wkt) => `${mainURL}&cql_filter=INTERSECTS(${geomField},${wkt})`;
-  bufferGeometry(geom, -1, (resultGeom) => {
+  bufferGeometry(queryGeom, -1, (resultGeom) => {
     const feature = new Feature(resultGeom);
     const wktString = getWKTStringFromFeature(feature);
     const queryUrl = urlTemplate(wfsUrl, geomFieldName, wktString);
+    console.log(queryUrl);
     getJSON(queryUrl, (result) => {
       if (result.features.length === 0) callback([]);
       else {

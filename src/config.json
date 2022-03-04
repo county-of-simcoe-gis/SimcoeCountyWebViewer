@@ -347,6 +347,14 @@
       "description": "",
       "imageName": "zoning.png",
       "disable": true
+    },
+    {
+      "id": 10,
+      "name": "Broadband",
+      "componentName": "Broadband",
+      "description": "",
+      "imageName": "broadband_icon.png",
+      "disable": false
     }
   ],
   "sidebarShortcutParams": [
