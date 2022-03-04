@@ -354,7 +354,7 @@
       "componentName": "Broadband",
       "description": "",
       "imageName": "broadband_icon.png",
-      "disable": false
+      "disable": true
     }
   ],
   "sidebarShortcutParams": [
