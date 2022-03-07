@@ -11,7 +11,9 @@ const Broadband = (props) => {
   //DEFINE STATE VARIABLES
   const [sections, setSections] = useState([]);
   const [themeConfig, setThemeConfig] = useState(broadbandConfig.default);
-
+  const [aboutUrl, setAboutUrl] = useState(null);
+  const [contactUsEmail, setContactUsEmail] = useState(null);
+  const [termsUrl, setTermsUrl] = useState(null);
   const [shadowLayer] = useState(
     new VectorLayer({
       source: new VectorSource({
@@ -46,7 +48,9 @@ const Broadband = (props) => {
       if (globalConfig.config !== undefined) {
         setThemeConfig(helpers.mergeObj(themeConfig, globalConfig.config));
       }
-
+      setAboutUrl(themeConfig.aboutUrl);
+      setContactUsEmail(themeConfig.contactUsEmail);
+      setTermsUrl(themeConfig.termsUrl);
       window.emitter.addListener("searchComplete", (results) => loadReport(results));
       window.map.addLayer(shadowLayer);
     });
@@ -82,7 +86,17 @@ const Broadband = (props) => {
     // CALL PARENT WITH CLOSE
     props.onClose();
   };
+  const onContactClick = () => {
+    window.location.href = `mailto:${contactUsEmail}`;
+  };
 
+  const onTermsChange = (evt) => {
+    helpers.showURLWindow(termsUrl);
+  };
+
+  const onAboutClick = (evt) => {
+    window.open(aboutUrl, "_blank");
+  };
   return (
     <PanelComponent onClose={props.onClose} name={props.name} helpLink={props.helpLink} hideHeader={props.hideHeader} type="themes">
       <div className={"sc-theme-broadband-header"}>Broadband Results</div>
@@ -91,6 +105,19 @@ const Broadband = (props) => {
         {sections.map((section) => (
           <SectionPanel key={helpers.getUID()} section={section} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} />
         ))}
+      </div>
+      <div className={"sc-theme-broadband-footer"}>
+        <div className={termsUrl ? "sc-button sc-theme-broadband-terms" : "sc-hidden"} onClick={onTermsChange} title="Terms">
+          Terms
+        </div>
+
+        <div className={aboutUrl ? "sc-button sc-theme-broadband-about" : "sc-hidden"} onClick={onAboutClick} title="About the Data">
+          About the Data
+        </div>
+
+        <div className={contactUsEmail ? "sc-button sc-theme-broadband-contactus" : "sc-hidden"} onClick={onContactClick} title="Contact Us">
+          Contact Us
+        </div>
       </div>
     </PanelComponent>
   );

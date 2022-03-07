@@ -32,16 +32,19 @@
 }
 .sc-theme-broadband-footer .sc-button {
   padding: 5px;
-  margin: 5px;
+  margin: auto;
   cursor: pointer;
   border-radius: 5px;
   text-align: center;
   vertical-align: middle;
   width: 95px;
-  padding-top: 20px;
   font-size: 14px;
+  line-height: 14px;
   font-weight: bold;
+  padding-top: 15px;
+  padding-bottom: 15px;
 }
+
 .sc-theme-broadband-footer .sc-button:hover {
   box-shadow: 0 0px 10px #007cff;
 }
