@@ -27,6 +27,8 @@ import { register } from "ol/proj/proj4";
 import { fromLonLat } from "ol/proj";
 import { getVectorContext } from "ol/render";
 import { KeyboardPan, KeyboardZoom } from "ol/interaction.js";
+import { Polygon } from "ol/geom.js";
+import { fromExtent } from "ol/geom/Polygon";
 
 //OTHER
 import { parseString } from "xml2js";
@@ -1762,9 +1764,15 @@ export function getARNListFromGeom(geom, callback) {
     callback(tmpArnArray);
   });
 }
-export function getFeaturesFromGeom(wfsUrl, geomFieldName, geom, callback) {
+export function getFeaturesFromGeom(wfsUrl, geomFieldName, queryGeom, callback) {
   const urlTemplate = (mainURL, geomField, wkt) => `${mainURL}&cql_filter=INTERSECTS(${geomField},${wkt})`;
-  bufferGeometry(geom, -1, (resultGeom) => {
+  let bufferDistance = -1;
+  if (!(queryGeom instanceof Polygon)) {
+    let geomExtent = queryGeom.getExtent();
+    queryGeom = fromExtent(geomExtent);
+    bufferDistance = 1;
+  }
+  bufferGeometry(queryGeom, bufferDistance, (resultGeom) => {
     const feature = new Feature(resultGeom);
     const wktString = getWKTStringFromFeature(feature);
     const queryUrl = urlTemplate(wfsUrl, geomFieldName, wktString);

@@ -18,7 +18,7 @@ class SidebarItemList extends Component {
     this.props.onTabClick(name);
   }
   componentDidMount() {
-    helpers.waitForLoad("settings", Date.now(), 30, () => {
+    helpers.waitForLoad(["settings", "sidebar"], Date.now(), 30, () => {
       let listItems = null;
       if (this.props.listtype === "tools") {
         let tools = window.config.sidebarToolComponents;

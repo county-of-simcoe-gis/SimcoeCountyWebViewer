@@ -96,11 +96,12 @@ class Sidebar extends Component {
     this.setState({ sidebarOpen: open });
   }
 
-  addComponent = async (componentConfig, typeFolder) => {
+  addComponent = async (componentConfig, typeFolder, callback = undefined) => {
     // THIS IMPORTS THE COMPONENTS
     //console.log(`Loading ${componentConfig.name} component...`);
     const typeLowerCase = `${componentConfig.componentName}`.toLowerCase().replace(/\s/g, "");
     const path = `./components/${typeFolder}/${typeLowerCase}/${componentConfig.componentName}.jsx`;
+
     import(`${path}`)
       .then((component) => {
         // SET PROPS FROM CONFIG
@@ -116,16 +117,21 @@ class Sidebar extends Component {
         if (componentConfig.hideHeader !== undefined) comp.props.hideHeader = componentConfig.hideHeader;
 
         // ADD COMPONENT TO LIST
-        this.setState({
-          toolComponents: this.state.toolComponents.concat(comp),
-        });
+        this.setState(
+          {
+            toolComponents: this.state.toolComponents.concat(comp),
+          },
+          callback("success")
+        );
       })
       .catch((error) => {
         console.log(error);
         console.error(`"${componentConfig.name}" not yet supported`);
+        callback("failure");
+      })
+      .finally(() => {
+        if (callback === undefined) return "Done";
       });
-
-    return "Done";
   };
 
   async componentDidMount() {
@@ -164,7 +170,19 @@ class Sidebar extends Component {
         tools[0]["hideHeader"] = true;
       }
       if (tools.length === 0 || (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideTools"])) this.setState({ hideTools: true });
-      tools.map(async (component) => await this.addComponent(component, "tools"));
+      let loadedTools = [];
+      tools.forEach(
+        async (component) =>
+          await this.addComponent(component, "tools", (result) => {
+            if (result === "success") loadedTools.push(component);
+            else {
+              window.config.sidebarToolComponents = window.config.sidebarToolComponents.map((item) => {
+                if (component.name === item.name) item["enabled"] = false;
+                return item;
+              });
+            }
+          })
+      );
 
       // IMPORT THEMES FROM CONFIG
       let themes = window.config.sidebarThemeComponents;
@@ -174,8 +192,19 @@ class Sidebar extends Component {
         themes[0]["hideHeader"] = true;
       }
       if (themes.length === 0 || (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideThemes"])) this.setState({ hideThemes: true });
-      themes.map(async (component) => await this.addComponent(component, "themes"));
-
+      let loadedThemes = [];
+      themes.forEach(
+        async (component) =>
+          await this.addComponent(component, "themes", (result) => {
+            if (result === "success") loadedThemes.push(component);
+            else {
+              window.config.sidebarThemeComponents = window.config.sidebarThemeComponents.map((item) => {
+                if (component.name === item.name) item["enabled"] = false;
+                return item;
+              });
+            }
+          })
+      );
       // CHECK VISIBILITY OF LAYERS MENUE
       if (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideLayers"]) this.setState({ hideLayers: true });
       // CHECK VISIBILITY OF MY MAPS
@@ -190,7 +219,7 @@ class Sidebar extends Component {
         if (window.config.viewerMode.toUpperCase() === "ADVANCED") this.sidebarVisiblityEventHandler("OPEN");
       }
 
-      this.initToolAndThemeUrlParameter({ tools: tools, themes: themes, shortcuts: shortcuts }, () => {
+      this.initToolAndThemeUrlParameter({ tools: loadedTools, themes: loadedThemes, shortcuts: shortcuts }, () => {
         // TAB PARAMETER
         const tabNameParameter = helpers.getURLParameter("TAB");
         if (tabNameParameter != null) {
