@@ -1,6 +1,8 @@
 import * as helpers from "../../../../../helpers/helpers";
 import printConfig from "../config.json";
 import utils from "./utils";
+import { asArray } from "ol/color";
+
 import { FeatureHelpers, OL_DATA_TYPES } from "../../../../../helpers/OLHelpers";
 import * as drawingHelpers from "../../../../../helpers/drawingHelpers";
 
@@ -95,12 +97,12 @@ const buildVectorLayer = (layer, callback = undefined) => {
     if (itemStrokeFill.type === undefined) itemStrokeFill.type = "Polygon";
 
     if (olFill !== null) {
-      itemStrokeFill.fillColor = utils.rgbToHex(...olFill.color_);
-      itemStrokeFill.fillOpacity = olFill.color_[3];
+      itemStrokeFill.fillColor = Array.isArray(olFill.color_) ? utils.rgbToHex(...olFill.color_) : olFill.color_;
+      itemStrokeFill.fillOpacity = Array.isArray(olFill.color_) ? olFill.color_[3] : asArray(olFill.color_)[3];
     }
     if (olStroke !== null) {
-      itemStrokeFill.strokeColor = utils.rgbToHex(...olStroke.color_);
-      itemStrokeFill.strokeOpacity = olStroke.color_[3];
+      itemStrokeFill.strokeColor = Array.isArray(olStroke.color_) ? utils.rgbToHex(...olStroke.color_) : olStroke.color_;
+      itemStrokeFill.strokeOpacity = Array.isArray(olStroke.color_) ? olStroke.color_[3] : asArray(olStroke.color_)[3];
       itemStrokeFill.strokeWidth = olStroke.width_;
       if (olStroke.lineDash_ !== undefined && olStroke.lineDash_ !== null) {
         itemStrokeFill.strokeDashstyle = olStroke.lineDash_[0] === 1 ? "dot" : "dash";
