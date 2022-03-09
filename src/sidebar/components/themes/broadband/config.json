@@ -5,21 +5,15 @@
   "contactUsEmail": "sim-gis@simcoe.ca",
   "queryLayers": [
     {
-      "title": "Broadband - ISP Coverage",
-      "featureTitleColumn": "isp_name",
+      "title": "Potential Providers",
+      "featureTitleColumn": "technology",
       "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:broadband_isp_coverage&outputFormat=application/json",
       "geom": "geom"
     },
     {
-      "title": "Broadband - ISP Parcels",
-      "featureTitleColumn": "coverage",
+      "title": "Potential Speeds",
+      "featureTitleColumn": "address",
       "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:broadband_isp_parcels&outputFormat=application/json",
-      "geom": "geom"
-    },
-    {
-      "title": "Broadband - ISP Parcels - Roads",
-      "featureTitleColumn": "coverage",
-      "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:broadband_isp_roads&outputFormat=application/json",
       "geom": "geom"
     }
   ]
