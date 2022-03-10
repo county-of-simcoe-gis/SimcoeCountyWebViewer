@@ -100,6 +100,11 @@ const Broadband = (props) => {
   return (
     <PanelComponent onClose={props.onClose} name={props.name} helpLink={props.helpLink} hideHeader={props.hideHeader} type="themes">
       <div className={"sc-theme-broadband-header"}>Broadband Results</div>
+      <div className={"sc-theme-broadband-sub-header"}>
+        Broadband information on this Web page has been provided by external sources. The County of Simcoe is not responsible for the accuracy, reliability or currency of the information supplied by
+        external sources. Users wishing to rely upon this information should consult directly with the source of the information. Content provided by external sources is not subject to official
+        languages, privacy and accessibility requirements. For further information please refer to the about the data section.
+      </div>
       <div className={"sc-theme-broadband-body"}>
         {sections.length === 0 ? <div className="sc-theme-broadband-no-results">No Results</div> : ``}
         {sections.map((section) => (

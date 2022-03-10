@@ -1,6 +1,6 @@
 .sc-theme-broadband-body {
   position: absolute;
-  top: 100px;
+  top: 190px;
   bottom: 80px;
   left: 0px;
   right: 1px;
@@ -19,6 +19,15 @@
   background-color: #e8e8e8;
   font-size: 14px;
   font-weight: bold;
+}
+
+.sc-theme-broadband-sub-header {
+  text-align: center;
+  padding: 5px;
+  height: 75px;
+  border: 1px solid #ddd;
+  background-color: #e8e8e8;
+  font-size: 10px;
 }
 
 .sc-theme-broadband-footer {

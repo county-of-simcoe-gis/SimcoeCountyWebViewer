@@ -12,21 +12,21 @@ const SectionPanel = (props) => {
   };
   return (
     <div id="sc-identify-layer-container">
-      <Collapsible trigger={section.section} open={open}>
-        <div className="sc-identify-layer-content-container">
-          {section.features.length === 0 ? <div className="sc-theme-broadband-no-results">No Results</div> : ``}
-          {section.features.map((feature) => (
-            <FeatureItem
-              key={helpers.getUID()}
-              feature={feature}
-              featureTitleColumn={section.featureTitleColumn}
-              onZoomClick={onZoomClick}
-              onMouseEnter={props.onMouseEnter}
-              onMouseLeave={props.onMouseLeave}
-            />
-          ))}
-        </div>
-      </Collapsible>
+      {/* <Collapsible trigger={section.section} open={open}> */}
+      {/* <div className="sc-identify-layer-content-container"> */}
+      {section.features.length === 0 ? <div className="sc-theme-broadband-no-results">No Results</div> : ``}
+      {section.features.map((feature) => (
+        <FeatureItem
+          key={helpers.getUID()}
+          feature={feature}
+          featureTitleColumn={section.featureTitleColumn}
+          onZoomClick={onZoomClick}
+          onMouseEnter={props.onMouseEnter}
+          onMouseLeave={props.onMouseLeave}
+        />
+      ))}
+      {/* </div> */}
+      {/* </Collapsible> */}
     </div>
   );
 };

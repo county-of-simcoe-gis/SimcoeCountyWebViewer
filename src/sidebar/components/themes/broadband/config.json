@@ -5,15 +5,9 @@
   "contactUsEmail": "sim-gis@simcoe.ca",
   "queryLayers": [
     {
-      "title": "Potential Providers",
-      "featureTitleColumn": "technology",
-      "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:broadband_isp_coverage&outputFormat=application/json",
-      "geom": "geom"
-    },
-    {
       "title": "Potential Speeds",
       "featureTitleColumn": "address",
-      "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:broadband_isp_parcels&outputFormat=application/json",
+      "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:broadband_isp_combined_parcels&outputFormat=application/json",
       "geom": "geom"
     }
   ]
