@@ -10,6 +10,10 @@ https://opengis.simcoe.ca/?MODE=ADVANCED
 
 https://opengis.simcoe.ca/?GROUP=Historical
 
+#### TURN ON LAYER VISIBLILITY
+
+https://opengis.simcoe.ca/?LAYERS=Assessment Parcel,Ownership Parcel
+
 #### ZOOM TO ROLL NUMBER
 
 https://opengis.simcoe.ca/?MODE=ADVANCED&ARN=434601000208400
