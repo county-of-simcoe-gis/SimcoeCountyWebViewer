@@ -96,7 +96,7 @@ class Sidebar extends Component {
     this.setState({ sidebarOpen: open });
   }
 
-  addComponent = async (componentConfig, typeFolder, callback = undefined) => {
+  addComponent = (componentConfig, typeFolder, callback = undefined) => {
     // THIS IMPORTS THE COMPONENTS
     //console.log(`Loading ${componentConfig.name} component...`);
     const typeLowerCase = `${componentConfig.componentName}`.toLowerCase().replace(/\s/g, "");
@@ -134,7 +134,7 @@ class Sidebar extends Component {
       });
   };
 
-  async componentDidMount() {
+  componentDidMount() {
     // LISTEN FOR ITEM ACTIVATION FROM OTHER COMPONENTS
     window.emitter.addListener("activateSidebarItem", (name, type, options = undefined) => {
       helpers.waitForLoad("sidebar", Date.now(), 30, () => {
@@ -171,17 +171,21 @@ class Sidebar extends Component {
       }
       if (tools.length === 0 || (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideTools"])) this.setState({ hideTools: true });
       let loadedTools = [];
-      tools.forEach(
-        async (component) =>
-          await this.addComponent(component, "tools", (result) => {
-            if (result === "success") loadedTools.push(component);
-            else {
-              window.config.sidebarToolComponents = window.config.sidebarToolComponents.map((item) => {
-                if (component.name === item.name) item["enabled"] = false;
-                return item;
-              });
-            }
-          })
+      let toolsProcessed = 0;
+      tools.map((component) =>
+        this.addComponent(component, "tools", (result) => {
+          if (result === "success") loadedTools.push(component);
+          else {
+            window.config.sidebarToolComponents = window.config.sidebarToolComponents.map((item) => {
+              if (component.name === item.name) item["enabled"] = false;
+              return item;
+            });
+          }
+          toolsProcessed++;
+          if (toolsProcessed >= tools.length) {
+            helpers.addIsLoaded("tools");
+          }
+        })
       );
 
       // IMPORT THEMES FROM CONFIG
@@ -193,17 +197,21 @@ class Sidebar extends Component {
       }
       if (themes.length === 0 || (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideThemes"])) this.setState({ hideThemes: true });
       let loadedThemes = [];
-      themes.forEach(
-        async (component) =>
-          await this.addComponent(component, "themes", (result) => {
-            if (result === "success") loadedThemes.push(component);
-            else {
-              window.config.sidebarThemeComponents = window.config.sidebarThemeComponents.map((item) => {
-                if (component.name === item.name) item["enabled"] = false;
-                return item;
-              });
-            }
-          })
+      let themesProcessed = 0;
+      themes.map((component) =>
+        this.addComponent(component, "themes", (result) => {
+          if (result === "success") loadedThemes.push(component);
+          else {
+            window.config.sidebarThemeComponents = window.config.sidebarThemeComponents.map((item) => {
+              if (component.name === item.name) item["enabled"] = false;
+              return item;
+            });
+          }
+          themesProcessed++;
+          if (themesProcessed >= themes.length) {
+            helpers.addIsLoaded("themes");
+          }
+        })
       );
       // CHECK VISIBILITY OF LAYERS MENUE
       if (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideLayers"]) this.setState({ hideLayers: true });
@@ -218,18 +226,19 @@ class Sidebar extends Component {
       if (window.config.viewerMode !== undefined && window.config.viewerMode !== null) {
         if (window.config.viewerMode.toUpperCase() === "ADVANCED") this.sidebarVisiblityEventHandler("OPEN");
       }
+      helpers.waitForLoad(["tools", "themes"], Date.now(), 30, () => {
+        this.initToolAndThemeUrlParameter({ tools: loadedTools, themes: loadedThemes, shortcuts: shortcuts }, () => {
+          // TAB PARAMETER
+          const tabNameParameter = helpers.getURLParameter("TAB");
+          if (tabNameParameter != null) {
+            this.sidebarVisiblityEventHandler("OPEN", () => {
+              this.activateTab(tabNameParameter.toLowerCase());
+            });
+          }
 
-      this.initToolAndThemeUrlParameter({ tools: loadedTools, themes: loadedThemes, shortcuts: shortcuts }, () => {
-        // TAB PARAMETER
-        const tabNameParameter = helpers.getURLParameter("TAB");
-        if (tabNameParameter != null) {
-          this.sidebarVisiblityEventHandler("OPEN", () => {
-            this.activateTab(tabNameParameter.toLowerCase());
-          });
-        }
-
-        window.emitter.emit("sidebarLoaded");
-        helpers.addIsLoaded("sidebar");
+          window.emitter.emit("sidebarLoaded");
+          helpers.addIsLoaded("sidebar");
+        });
       });
     });
   }
@@ -271,6 +280,7 @@ class Sidebar extends Component {
           });
           if (!params.includes(item.url_param.toLowerCase())) params.push(item.url_param.toLowerCase());
         });
+
         params.map((param) => {
           var shortcutParam = urlParams.get(param);
           if (shortcutParam !== null) {
