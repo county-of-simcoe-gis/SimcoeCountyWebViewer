@@ -290,7 +290,7 @@ const switchTemplates = (options, callback = undefined) => {
     title: options.mapTitle,
     description: options.termsOfUse,
     map: {},
-    scaleBar: {
+    scalebar: {
       geodetic: currentMapScale,
     },
     scale: "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
@@ -307,7 +307,7 @@ const switchTemplates = (options, callback = undefined) => {
   }
   switch (options.mapScaleOption) {
     case "forceScale":
-      attributes.scaleBar.geodetic = parseInt(options.forceScale);
+      attributes.scalebar.geodetic = parseInt(options.forceScale);
       attributes.map.scale = parseInt(options.forceScale);
       attributes.scale = "1 : " + options.forceScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
       attributes.map.center = currentMapViewCenter;
