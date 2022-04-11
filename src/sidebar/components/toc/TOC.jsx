@@ -171,6 +171,7 @@ class TOC extends Component {
     const groupInfo = result;
     let listLayerGroups = groupInfo.groups;
     let folderLayerGroups = TOCHelpers.copyTOCLayerGroups(groupInfo.groups);
+    let urlExpandLegend = helpers.getURLParameter("EXPAND_LEGEND", true, true);
 
     listLayerGroups = this.addAllLayersGroup(listLayerGroups);
     //folderLayerGroups = this.addAllLayersGroup(folderLayerGroups);
@@ -224,6 +225,7 @@ class TOC extends Component {
         this.applySavedLayerOptions(this.state.type === "LIST" ? "FOLDER" : "LIST"); //apply saved data for the opposite toc
         this.updateLayerCount(defaultGroup.layers.length);
         this.updateLayerVisibility();
+        if (urlExpandLegend && urlExpandLegend.toUpperCase() === "TRUE") this.onLegendToggleGroup(defaultGroup, true);
         window.emitter.emit("tocLoaded");
         helpers.addIsLoaded("toc");
         if (callback !== undefined) callback();
@@ -710,7 +712,6 @@ class TOC extends Component {
   // TOGGLE LEGEND FOR GROUP
   onLegendToggleGroup = (group, showLegend) => {
     group.layers.forEach((layer) => {
-      layer.showLegend = showLegend;
       this.onLegendToggle(layer, group);
     });
   };
