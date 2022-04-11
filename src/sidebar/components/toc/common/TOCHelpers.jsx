@@ -380,6 +380,7 @@ export function getGroupsESRI(options, callback) {
         layerOptions["opacity"] = 1 - (layer.drawingInfo === undefined || layer.drawingInfo.transparency === undefined ? 0 : layer.drawingInfo.transparency / 100);
         layerOptions["liveLayer"] = layerOptions.isLiveLayer;
         layer["options"] = layerOptions;
+        layer["visible"] = layer.defaultVisibility;
         if (!isGrouped)
           layerOptions.categories.forEach((category) => {
             const groupValue = category === "All Layers" ? "opengis:all_layers" : category;
@@ -1302,10 +1303,8 @@ export async function buildESRILayer(options, callback) {
     const minScale = layer.options.minScale;
     const maxScale = layer.options.maxScale;
     // SET VISIBILITY
-    let layerVisible = false;
-    if (visibleLayers.includes(layerNameOnly)) {
-      layerVisible = true;
-    }
+    let layerVisible = layer.visible || visibleLayers.includes(layerNameOnly);
+
     //console.log(group.value, layerNameOnly, visibleLayers.includes(layerNameOnly));
     // LAYER PROPS
     const layerOptions = {
