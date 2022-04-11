@@ -30,6 +30,7 @@ import { KeyboardPan, KeyboardZoom } from "ol/interaction.js";
 import { Polygon } from "ol/geom.js";
 import { fromExtent } from "ol/geom/Polygon";
 
+
 //OTHER
 import { parseString } from "xml2js";
 import shortid from "shortid";
@@ -1767,6 +1768,7 @@ export function getARNListFromGeom(geom, callback) {
 export function getFeaturesFromGeom(wfsUrl, geomFieldName, queryGeom, callback) {
   const urlTemplate = (mainURL, geomField, wkt) => `${mainURL}&cql_filter=INTERSECTS(${geomField},${wkt})`;
   let bufferDistance = -1;
+
   if (!(queryGeom instanceof Polygon)) {
     let geomExtent = queryGeom.getExtent();
     queryGeom = fromExtent(geomExtent);

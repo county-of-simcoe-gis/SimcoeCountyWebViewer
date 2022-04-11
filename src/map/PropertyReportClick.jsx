@@ -158,6 +158,7 @@ class PropertyReportClick extends Component {
     const address = propInfo.Address;
     const assessedValue = propInfo.AssessedValue;
     const garbageDay = propInfo.WasteCollection.GarbageDay;
+    const broadbandSpeeds = propInfo.Other.BroadbandSpeed;
     const coords = propInfo.pointCoordinates;
     const hasZoning = propInfo.HasZoning;
     let rows = [];
@@ -214,6 +215,7 @@ class PropertyReportClick extends Component {
     );
 
     rows.push(<InfoRow key={helpers.getUID()} label={"Waste Collection Day"} value={garbageDay} />);
+    rows.push(<InfoRow key={helpers.getUID()} label={"Potential Broadband Coverage"} value={broadbandSpeeds} />);
 
     rows.push(
       <InfoRow className="sc-no-select" key={helpers.getUID()} label={"Tools"}>
