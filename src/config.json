@@ -8,7 +8,7 @@
   "feedbackUrl": "https://opengis.simcoe.ca/feedback",
   "geoserverUrl": "https://opengis.simcoe.ca/geoserver/",
   "geoserverPath": "geoserver",
-  "printUrl": "https://opengis.simcoe.ca/print/",
+  "printUrl": "https://opengis.simcoe.ca/print",
   "includeAppStats": true,
   "htmlIdentify": false,
   "leftClickIdentify": false,
@@ -27,7 +27,7 @@
   "helpUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer",
   "ieWarningUrl": "https://opengis.simcoe.ca/public/ieWarning.html",
   "propertyReportUrl": "https://opengis.simcoe.ca/api/getPropertyReportInfo/",
-  "weatherRadarApiUrl": "https://maps.simcoe.ca/giswebapi/api/Weather/getRadarImages/",
+  "weatherRadarApiUrl": "https://opengis.simcoe.ca/api/getRadarImages/",
   "parcelLayer": {
     "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
     "rollNumberFieldName": "ARN"
