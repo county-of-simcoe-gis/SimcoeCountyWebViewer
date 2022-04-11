@@ -154,6 +154,10 @@ class PropertyReport extends React.Component {
                 <div className="sc-property-report-html-label">Closest Hospital: </div>
                 <div className="sc-property-report-html-value">{info.Other.ClosestHospital}</div>
               </div>
+              <div>
+                <div className="sc-property-report-html-label">Potential Broadband Coverage: </div>
+                <div className="sc-property-report-html-value">{info.Other.BroadbandSpeed}</div>
+              </div>
             </div>
           </div>
         </div>

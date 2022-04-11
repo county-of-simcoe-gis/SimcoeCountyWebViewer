@@ -1,0 +1,14 @@
+{
+  "themeColor": "#C9E7F9",
+  "termsUrl": "https://maps.simcoe.ca/terms.html",
+  "aboutUrl": "https://open.canada.ca/data/en/dataset/00a331db-121b-445d-b119-35dbbe3eedd9",
+  "contactUsEmail": "sim-gis@simcoe.ca",
+  "queryLayers": [
+    {
+      "title": "Potential Speeds",
+      "featureTitleColumn": "address",
+      "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:broadband_isp_combined_parcels&outputFormat=application/json",
+      "geom": "geom"
+    }
+  ]
+}
