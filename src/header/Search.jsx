@@ -395,6 +395,7 @@ class Search extends Component {
           : [255, 0, 0, 0.8],
         false,
         window.config.featureHighlitStyles && window.config.featureHighlitStyles["strokeWidth"] ? window.config.featureHighlitStyles["strokeWidth"] : 2,
+
         fullFeature.getGeometry().getType()
       );
       defaultStyle.setFill(
