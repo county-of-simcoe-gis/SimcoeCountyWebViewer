@@ -84,7 +84,8 @@
     "scale": true,
     "scaleLine": true,
     "basemap": true,
-    "gitHubButton": true
+    "gitHubButton": true,
+    "scaleSelector": false
   },
   "mapTheme": "SIMCOE_COUNTY",
   "showFloatingMenuHeader": false,
