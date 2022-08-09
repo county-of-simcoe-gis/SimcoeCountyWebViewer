@@ -1,0 +1,96 @@
+{
+  "wazeToggleLayers": [
+    {
+      "apiUrl": "https://opengis.simcoe.ca/api/getWazeAlertLayer/alerts/ACCIDENT",
+      "layerName": "511-waze-accident",
+      "displayName": "Accidents",
+      "imageName": "waze_accident.png",
+      "clickable": true,
+      "visible": true,
+      "zIndex": 209
+    },
+    {
+      "apiUrl": "https://opengis.simcoe.ca/api/getWazeAlertLayer/alerts/HAZARD",
+      "layerName": "511-waze-hazard",
+      "displayName": "Hazards",
+      "imageName": "waze_hazard.png",
+      "clickable": true,
+      "visible": true,
+      "zIndex": 210
+    },
+    {
+      "apiUrl": "https://opengis.simcoe.ca/api/getWazeAlertLayer/alerts/CONSTRUCTION",
+      "layerName": "511-waze-construction",
+      "displayName": "Construction",
+      "imageName": "waze_construction.png",
+      "clickable": true,
+      "visible": true,
+      "zIndex": 211
+    },
+    {
+      "apiUrl": "https://opengis.simcoe.ca/api/getWazeAlertLayer/alerts/ROAD_CLOSED",
+      "layerName": "511-waze-road-closed",
+      "displayName": "Road Closed",
+      "imageName": "waze_road_closed.png",
+      "clickable": true,
+      "visible": true,
+      "zIndex": 212
+    },
+    {
+      "apiUrl": "https://opengis.simcoe.ca/api/getWazeAlertLayer/alerts/JAM",
+      "layerName": "511-waze-jam",
+      "displayName": "Traffic Jam",
+      "imageName": "waze_traffic_jam.png",
+      "clickable": true,
+      "visible": true,
+      "zIndex": 213
+    },
+    {
+      "apiUrl": "https://opengis.simcoe.ca/api/getWazeJamLayer/",
+      "layerName": "511-waze-jam-lines",
+      "displayName": "Traffic Jam (Lines)",
+      "imageName": "waze_traffic_jam_line.png",
+      "clickable": true,
+      "visible": true,
+      "zIndex": 214
+    },
+    {
+      "apiUrl": "https://opengis.simcoe.ca/api/getWazeIrregularLayer/",
+      "layerName": "511-waze-irregularity-lines",
+      "displayName": "Irregularities (Lines)",
+      "imageName": "waze_irregularity_line.png",
+      "clickable": true,
+      "visible": true,
+      "zIndex": 215
+    }
+  ],
+  "mtoToggleLayers": [
+    {
+      "apiUrl": "https://opengis.simcoe.ca/api/getMTO511Layer/CAMERAS",
+      "layerName": "511-mto-cameras",
+      "displayName": "Cameras",
+      "imageName": "mto_camera.png",
+      "clickable": true,
+      "visible": true,
+      "zIndex": 216
+    },
+    {
+      "apiUrl": "https://opengis.simcoe.ca/api/getMTO511Layer/EVENTS",
+      "layerName": "511-mto-traffic-event",
+      "displayName": "Traffic Event",
+      "imageName": "mto_traffic_event.png",
+      "clickable": true,
+      "visible": true,
+      "zIndex": 217
+    },
+    {
+      "apiUrl": "https://opengis.simcoe.ca/api/getMTO511Layer/CONSTRUCTION",
+      "layerName": "511-mto-construction",
+      "displayName": "Contruction",
+      "imageName": "mto_construction.png",
+      "clickable": true,
+      "visible": true,
+      "zIndex": 218
+    }
+  ]
+}

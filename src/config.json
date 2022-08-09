@@ -347,6 +347,14 @@
       "description": "",
       "imageName": "zoning.png",
       "disable": true
+    },
+    {
+      "id": 10,
+      "name": "511 Live Feeds",
+      "componentName": "Five11LiveFeeds",
+      "description": "View Live Feeds from the MTO and Waze.",
+      "imageName": "511.png",
+      "disable": false
     }
   ],
   "sidebarShortcutParams": [
