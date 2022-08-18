@@ -1,0 +1,104 @@
+.sc-511-main-container {
+	padding: 10px;
+	position: absolute;
+	top: 100px;
+	bottom: 0px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	padding-bottom: 0px;
+}
+.sc-511-header-text {
+	font-family: Verdana, Arial, sans-serif;
+	font-size: 13px;
+	padding: 5px;
+	color: grey;
+	border-bottom: 1px solid #ddd;
+}
+
+.sc-511-services-title {
+	margin-top: 10px;
+	margin-bottom: 2px;
+	/* border-bottom: 1px solid #ddd; */
+	padding-bottom: 10px;
+	padding-left: 10px;
+	font-size: 13pt;
+	color: #666;
+}
+
+.sc-511-layers-container {
+}
+
+.sc-511-layer-header {
+	position: relative;
+	height: 40px;
+	border-top: 1px solid #ddd;
+	min-width: 328px;
+}
+
+.sc-511-center {
+	margin: 0;
+	position: absolute;
+	top: 50%;
+	-ms-transform: translateY(-50%);
+	transform: translateY(-50%);
+	width: 328px;
+}
+
+.sc-511-center-waze-lines {
+	margin: 0;
+	position: absolute;
+	top: 50%;
+	-ms-transform: translateY(-50%);
+	transform: translateY(-50%);
+	width: 328px;
+	padding-left: 9px;
+}
+
+.sc-511-checkbox {
+	position: relative;
+	bottom: 6px;
+	left: 3px;
+	cursor: pointer;
+}
+
+.sc-511-checkbox-waze-lines {
+	position: relative;
+	bottom: 6px;
+	left: 3px;
+	cursor: pointer;
+	margin-left: 14px;
+}
+
+.sc-511-layer-label {
+	position: relative;
+	bottom: 7px;
+	left: 3px;
+	cursor: pointer;
+}
+
+.sc-511-layer-count {
+	position: relative;
+	bottom: 8px;
+	left: 8px;
+	color: #999;
+	font-size: 9pt;
+}
+
+.sc-511-information-icon {
+	position: relative;
+	float: right;
+	top: 9px;
+	cursor: pointer;
+}
+
+.sc-511-layer-content {
+	border-left-color: rgba(37, 118, 239, 0.5);
+	font-style: italic;
+	color: #808080;
+	font-size: 12px;
+	padding: 5px;
+	border-left: 3px solid rgba(255, 0, 0, 0.5);
+	padding-left: 10px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
