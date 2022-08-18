@@ -669,6 +669,20 @@ class TOC extends Component {
     if (isMobile) return true;
     else return false;
   };
+  sortGroups = (groups) => {
+    let primaryGroups = Object.assign(
+      [],
+      groups.filter((item) => item.primary)
+    );
+    let nonPrimaryGroups = Object.assign(
+      [],
+      groups.filter((item) => !item.primary)
+    );
+    primaryGroups.sort(TOCHelpers.sortGroupAlphaCompare);
+    nonPrimaryGroups.sort(TOCHelpers.sortGroupAlphaCompare);
+
+    return [...primaryGroups, ...nonPrimaryGroups];
+  };
   sortLayers = (layers) => {
     let newLayers = Object.assign([{}], layers);
     if (this.state.sortListAlpha) newLayers.sort(TOCHelpers.sortByAlphaCompare);
@@ -712,6 +726,7 @@ class TOC extends Component {
   // TOGGLE LEGEND FOR GROUP
   onLegendToggleGroup = (group, showLegend) => {
     group.layers.forEach((layer) => {
+      layer.showLegend = showLegend;
       this.onLegendToggle(layer, group);
     });
   };
@@ -850,7 +865,7 @@ class TOC extends Component {
     if (!layerItem.layerGroup) {
       const guessLayerGroupName = (layerName) => {
         let likelyLayerGroup = layerGroups.filter((item) => {
-          return item.layers.filter((itemLayer) => itemLayer.name === layerName)[0] !== undefined && (item.panelOpen || this.state.selectedGroup.value === item.value);
+          return item.layers.filter((itemLayer) => itemLayer.name === layerName)[0] !== undefined && (layerItem.ignoreFolderState || item.panelOpen || this.state.selectedGroup.value === item.value);
         })[0];
         return likelyLayerGroup ? likelyLayerGroup.value : this.state.selectedGroup.value;
       };
@@ -858,6 +873,7 @@ class TOC extends Component {
       if (!layerItem.layerGroup) return;
     }
     let currentGroup = layerGroups.filter((item) => item.value === layerItem.layerGroup)[0];
+    if (!currentGroup) return;
     currentGroup.panelOpen = true;
     currentGroup = currentGroup.layers.map((layer) => {
       if (layer.name === layerItem.fullName && layer.group === layerItem.layerGroup) {
@@ -1088,7 +1104,7 @@ class TOC extends Component {
           key="sc-toc-folder"
           id="sc-toc-folder"
           visible={this.state.type === "FOLDER"}
-          layerGroups={this.state.layerFolderGroups}
+          layerGroups={this.sortGroups(this.state.layerFolderGroups)}
           sortAlpha={this.state.sortFolderAlpha}
           searchText={this.state.searchText}
           saveLayerOptions={this.state.saveLayerOptions}

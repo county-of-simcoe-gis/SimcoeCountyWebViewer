@@ -541,12 +541,12 @@ export function httpGetTextWithParams(url, params = undefined, callback) {
     .then((response) => response.text())
     .then((responseText) => {
       // CALLBACK WITH RESULT
-      if (callback !== undefined) callback(responseText);
+      if (callback) callback(responseText);
     })
     .catch((error) => {
       //httpGetText(url.replace("opengis.simcoe.ca", "opengis2.simcoe.ca"), callback);
       console.error(url, error);
-      if (callback !== undefined) callback();
+      if (callback) callback();
     });
 }
 
@@ -1786,4 +1786,10 @@ export function getFeaturesFromGeom(wfsUrl, geomFieldName, queryGeom, callback) 
       }
     });
   });
+}
+
+export function getBaseUrl(url) {
+  let splitUrl = url.split("/");
+  splitUrl.slice(0, 3);
+  return splitUrl.slice(0, 3).join("/");
 }

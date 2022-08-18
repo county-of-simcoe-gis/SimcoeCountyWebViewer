@@ -280,7 +280,6 @@ class Sidebar extends Component {
           });
           if (!params.includes(item.url_param.toLowerCase())) params.push(item.url_param.toLowerCase());
         });
-
         params.map((param) => {
           var shortcutParam = urlParams.get(param);
           if (shortcutParam !== null) {

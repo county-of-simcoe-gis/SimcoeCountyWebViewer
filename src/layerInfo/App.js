@@ -28,7 +28,7 @@ class LayerInfoApp extends Component {
       hideNewWindow: false,
       hideShare: false,
       hidePrint: false,
-      layerURL: url.searchParams.get("URL"),
+      layerURL: decodeURIComponent(url.searchParams.get("URL")),
       showDownload: url.searchParams.get("SHOW_DOWNLOAD"),
       requestHeader: undefined,
       params: {},
