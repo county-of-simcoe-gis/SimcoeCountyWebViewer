@@ -2,10 +2,8 @@ import * as helpers from "../../../../../helpers/helpers";
 import printConfig from "../config.json";
 import utils from "./utils";
 import { asArray } from "ol/color";
-
-import { FeatureHelpers, OL_DATA_TYPES } from "../../../../../helpers/OLHelpers";
+import { FeatureHelpers, LayerHelpers, OL_DATA_TYPES } from "../../../../../helpers/OLHelpers";
 import * as drawingHelpers from "../../../../../helpers/drawingHelpers";
-
 import { Vector as VectorLayer, Tile as TileLayer, Image as ImageLayer, Group as LayerGroup } from "ol/layer.js";
 
 // ..........................................................................
@@ -193,7 +191,42 @@ let configureTileLayer = async (l) => {
   }
 };
 
-const configureImageLayer = (l) => {
+const configureImageLayer = (l, options) => {
+  var url = new URL(l.values_.source.image_.src_);
+  //  console.log("original:", url.href);
+  let urlParams = new URLSearchParams(url.searchParams);
+  let urlDPI = parseInt(urlParams.get("DPI"));
+  let urlSIZE = urlParams.get("SIZE").split(",");
+  let urlBBOX = urlParams.get("BBOX").split(",");
+  let printSize = !options.map.height ? window.map.getSize() : [parseInt(options.map.height), parseInt(options.map.width)];
+  var extent = options.map.bbox ? options.map.bbox : utils.computeExtent(...printSize, 72, options.map.scale, options.map.center);
+  let outputDPI = options.map.dpi;
+  let outputSize = [
+    parseInt((parseInt(urlSIZE[0]) / ((parseFloat(urlBBOX[0]) - parseFloat(urlBBOX[2])) / (parseFloat(extent[0]) - parseFloat(extent[2])))) * (outputDPI / urlDPI)),
+    parseInt((parseInt(urlSIZE[1]) / ((parseFloat(urlBBOX[1]) - parseFloat(urlBBOX[3])) / (parseFloat(extent[1]) - parseFloat(extent[3])))) * (outputDPI / urlDPI)),
+  ];
+  if (outputSize[0] > 4096 || outputSize[1] > 4096) {
+    let outputScaler = 4096 / (outputSize[0] >= outputSize[1] ? outputSize[0] : outputSize[1]);
+    outputDPI = parseInt(outputDPI * outputScaler);
+    outputSize = [parseInt(outputSize[0] * outputScaler), parseInt(outputSize[1] * outputScaler)];
+  }
+  url.searchParams.set("SIZE", outputSize.join(","));
+  url.searchParams.set("DPI", outputDPI);
+  url.searchParams.set("BBOX", extent.join(","));
+  url.searchParams.set("BBOXSR", "3857");
+  url.searchParams.set("IMAGESR", "3857");
+  // console.log("calculated:", url.href);
+  return {
+    type: "image",
+    baseURL: url,
+    opacity: l.values_.opacity,
+    imageFormat: "image/png",
+    extent: extent,
+    name: "image",
+  };
+};
+
+const configureWMSImageLayer = (l) => {
   return {
     type: "wms",
     baseURL: l.values_.source.url_.split("?")[0],
@@ -209,7 +242,7 @@ const configureImageLayer = (l) => {
   };
 };
 
-const getLayerByType = async (layer, callback = undefined) => {
+const getLayerByType = async (layer, printoptions, callback = undefined) => {
   if (layer instanceof VectorLayer) {
     //let retLayer = configureVectorMyMapsLayer(layer);
     let retLayer = buildVectorLayer(layer);
@@ -217,7 +250,12 @@ const getLayerByType = async (layer, callback = undefined) => {
     if (callback !== undefined) callback(retLayer);
     else return retLayer;
   } else if (layer instanceof ImageLayer) {
-    let retLayer = configureImageLayer(layer);
+    let retLayer = undefined;
+    if (LayerHelpers.getLayerSourceType(layer.getSource()) === OL_DATA_TYPES.ImageArcGISRest) {
+      retLayer = configureImageLayer(layer, printoptions);
+    } else {
+      retLayer = configureWMSImageLayer(layer);
+    }
     if (callback !== undefined) callback(retLayer);
     else return retLayer;
   } else if (layer instanceof TileLayer) {
@@ -230,7 +268,7 @@ const getLayerByType = async (layer, callback = undefined) => {
     let groupLayers = layer.getLayers().getArray();
     if (groupLayers !== undefined) {
       let layersPromise = groupLayers.map((item) =>
-        getLayerByType(item, (retLayers) => {
+        getLayerByType(item, printoptions, (retLayers) => {
           if (retLayers !== undefined) {
             if (Array.isArray(retLayers)) layers = layers.concat(retLayers);
             else layers.push(retLayers);
@@ -355,6 +393,9 @@ export async function printRequest(mapLayers, printSelectedOption) {
     compressed: true,
   };
   printRequest.outputFormat = printSelectedOption.printFormatSelectedOption.value;
+  //ensures that template configuration is executed before print request object is sent
+  printRequest.attributes = switchTemplates(printSelectedOption);
+  printRequest.layout = printSelectedOption.printSizeSelectedOption.layout;
 
   let mainMap = [];
   let overviewMap = [];
@@ -375,7 +416,7 @@ export async function printRequest(mapLayers, printSelectedOption) {
     }
   });
   let mapLayerPromises = mapLayers.map((layer) =>
-    getLayerByType(layer, (retLayers) => {
+    getLayerByType(layer, printRequest.attributes, (retLayers) => {
       if (retLayers !== undefined) {
         if (Array.isArray(retLayers)) mainMap = mainMap.concat(retLayers);
         else mainMap.push(retLayers);
@@ -395,11 +436,6 @@ export async function printRequest(mapLayers, printSelectedOption) {
 
   //ensures that the sorted layers executes after the intitial mapLayerList is resolved
   sortedMainMap = sortLayers(mainMap);
-
-  //ensures that template configuration is executed before print request object is sent
-  printRequest.attributes = switchTemplates(printSelectedOption);
-  printRequest.layout = printSelectedOption.printSizeSelectedOption.layout;
-
   printRequest.attributes.map["layers"] = sortedMainMap;
   if (printRequest.attributes.overviewMap !== undefined) {
     sortedOverviewMap = sortLayers(overviewMap);
