@@ -356,6 +356,14 @@
       "description": "",
       "imageName": "broadband_icon.png",
       "disable": true
+    },
+    {
+      "id": 11,
+      "name": "511 Live Feeds",
+      "componentName": "Five11LiveFeeds",
+      "description": "View Live Feeds from the MTO and Waze.",
+      "imageName": "511.png",
+      "disable": true
     }
   ],
   "sidebarShortcutParams": [
