@@ -571,7 +571,7 @@ class Search extends Component {
     if ((selectedType === "All" || selectedType === "Theme") && window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideThemes"] !== true) {
       let themes = [];
       window.config.sidebarThemeComponents.forEach((theme) => {
-        if (theme.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0 && (theme.enabled === undefined || theme.enabled)) {
+        if (theme.name && theme.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0 && (theme.enabled === undefined || theme.enabled)) {
           themes.push({
             name: helpers.replaceAllInString(theme.name, "_", " "),
             type: "Theme",
