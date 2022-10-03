@@ -1,4 +1,5 @@
 import * as helpers from "./helpers";
+import * as esriHelpers from "./esriHelpers";
 // OPEN LAYERS
 import { Image as ImageLayer, Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup, VectorTile as VectorTileLayer } from "ol/layer.js";
 import { ImageWMS, OSM, TileArcGISRest, ImageArcGISRest, TileWMS, TileImage, Vector, Stamen, XYZ, ImageStatic } from "ol/source.js";
@@ -157,6 +158,8 @@ export class LayerHelpers {
       : layer.getSource().getFeatureInfoUrl(coordinate, viewResolution, "EPSG:3857", {
           INFO_FORMAT: "application/json",
         });
+    let attachmentUrl = layer.get("attachmentUrl");
+    const hasAttachments = layer.get("hasAttachments");
     const params = {};
     const secureKey = layer.get("secureKey");
     if (secureKey !== undefined) {
@@ -171,6 +174,7 @@ export class LayerHelpers {
       const tolerance = 20 - zoom;
       url = url
         .replace("#GEOMETRY#", coordinate)
+        .replace("#GEOMETRYTYPE#", "esriGeometryPoint")
         .replace("#TOLERANCE#", tolerance >= 10 ? tolerance : 10)
         .replace("#EXTENT#", extent.join(","))
         .replace("#RESOLUTION#", arcgisResolution);
@@ -178,6 +182,13 @@ export class LayerHelpers {
     if (url) {
       await helpers.getJSONWaitWithParams(url, params, (result) => {
         let features = isArcGISLayer ? LayerHelpers.parseESRIIdentify(result) : new GeoJSON().readFeatures(result);
+        if (hasAttachments) {
+          features = features.map((feature) => {
+            feature.values_["attachmentUrl"] = attachmentUrl.replace("#GLOBALID#", feature.get("GlobalID"));
+            return feature;
+          });
+        }
+
         if (callback === undefined) {
           return features.length > 0 ? features[0] : undefined;
         } else {
@@ -194,6 +205,9 @@ export class LayerHelpers {
       : layer.getSource().getFeatureInfoUrl(coordinate, viewResolution, "EPSG:3857", {
           INFO_FORMAT: "application/json",
         });
+    let attachmentUrl = layer.get("attachmentUrl");
+    const hasAttachments = layer.get("hasAttachments");
+
     const params = {};
     const secureKey = layer.get("secureKey");
     if (secureKey !== undefined) {
@@ -208,6 +222,7 @@ export class LayerHelpers {
       const tolerance = 20 - zoom;
       url = url
         .replace("#GEOMETRY#", coordinate)
+        .replace("#GEOMETRYTYPE#", "esriGeometryPoint")
         .replace("#TOLERANCE#", tolerance >= 10 ? tolerance : 10)
         .replace("#EXTENT#", extent.join(","))
         .replace("#RESOLUTION#", arcgisResolution);
@@ -215,6 +230,12 @@ export class LayerHelpers {
     if (url) {
       helpers.getJSONWithParams(url, params, (result) => {
         let features = isArcGISLayer ? LayerHelpers.parseESRIIdentify(result) : new GeoJSON().readFeatures(result);
+        if (hasAttachments) {
+          features = features.map((feature) => {
+            feature.values_["attachmentUrl"] = attachmentUrl.replace("#GLOBALID#", feature.get("GlobalID"));
+            return feature;
+          });
+        }
         callback(features.length > 0 ? features[0] : undefined);
       });
     }
@@ -228,7 +249,7 @@ export class LayerHelpers {
         delete item.geometryType;
         let keys = Object.keys(item.attributes);
         keys.forEach((key) => {
-          if (item.attributes[key] === "Null" || item.attributes[key] === "") delete item.attributes[key];
+          if (item.attributes[key] === "Null" || item.attributes[key] === "") item.attributes[key] = ""; //delete item.attributes[key];
         });
 
         let tempFeature = new EsriJSON().readFeature(item);
@@ -279,7 +300,7 @@ export class LayerHelpers {
       //headers["token"] = "GIS";
       params["headers"] = headers;
     }
-    helpers.httpGetTextWithParams(url, params, (responseText) => {
+    const parseResponseText = (responseText, token = undefined) => {
       if (responseText === null) {
         callback([]);
         return;
@@ -321,7 +342,7 @@ export class LayerHelpers {
           case "rest":
             response = JSON.parse(responseText);
             if (response.layers !== undefined) {
-              this.getESRILegend(`${root_url}/legend?f=json`, (legends) => {
+              this.getESRILegend(token ? `${root_url}/legend?f=json&token=${token}` : `${root_url}/legend?f=json`, (legends) => {
                 response.layers.forEach((item) => {
                   if (item !== undefined) {
                     item["layer_name"] = item.name;
@@ -342,7 +363,7 @@ export class LayerHelpers {
                     })[0];
                     if (item.drawingInfo !== undefined && item.drawingInfo.renderer !== undefined && item.drawingInfo.renderer.symbol !== undefined && item.legend === undefined)
                       item["style"] = `data:${item.drawingInfo.renderer.symbol.contentType};base64,${item.drawingInfo.renderer.symbol.imageData}`;
-                    item["url"] = `${root_url}/${item.id}`;
+                    item["url"] = token ? `${root_url}/${item.id}?token=${token}` : `${root_url}/${item.id}`;
                     layers.push(item);
                   }
                 });
@@ -377,7 +398,19 @@ export class LayerHelpers {
         console.warn("Unexpected error: " + error.message);
         callback(layers);
       }
-    });
+    };
+    if (options.secured) {
+      esriHelpers.getAccessToken((token) => {
+        url = `${url}&token=${token}`;
+        helpers.httpGetTextWithParams(url, params, (responseText) => {
+          parseResponseText(responseText, token);
+        });
+      });
+    } else {
+      helpers.httpGetTextWithParams(url, params, (responseText) => {
+        parseResponseText(responseText);
+      });
+    }
   }
   static getESRILegend(url, callback) {
     helpers.httpGetText(url, (responseText) => {
@@ -897,10 +930,17 @@ export class LayerHelpers {
         );
         break;
       case OL_DATA_TYPES.ImageArcGISRest:
-        let urlArray = url.split("/");
+        let token = undefined;
+        let urlParam = url.split("?");
+        let urlArray = urlParam[0].split("/");
+        urlParam.shift();
         let url_layer = urlArray[urlArray.length - 1];
         urlArray.pop();
         url = urlArray.join("/");
+        if (urlParam[0]) {
+          let tokenArray = urlParam[0].split("=");
+          token = tokenArray[1];
+        }
         const sourceParams = {
           url: url,
           params: { LAYERS: `SHOW:${url_layer}` },
@@ -908,6 +948,9 @@ export class LayerHelpers {
           projection: projection,
           crossOrigin: "anonymous",
         };
+        if (token) {
+          sourceParams.params["TOKEN"] = token;
+        }
         if (extent !== undefined) sourceParams["extent"] = [extent.xmin, extent.ymin, extent.xmax, extent.ymax];
         callback(
           new ImageLayer({

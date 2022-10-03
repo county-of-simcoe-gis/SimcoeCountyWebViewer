@@ -140,6 +140,7 @@ export async function getMap(sources, isReset, tocType, callback) {
             open: source.open || false,
             useRedFolder: source.useRedFolder || false,
             primary: source.primary || false,
+            visibleLayers: source.visibleLayers,
           },
           (layerGroupConfig) => {
             if (!layerGroupConfig.groups) {
@@ -268,8 +269,10 @@ export function mergeGroups(originalGroups, newGroups, alphaSort = true) {
               if ((newLayer.secured || newLayer.primary) && !group.primary) {
                 newLayer.group = group.value;
                 newLayer.groupName = group.label;
+                window.map.removeLayer(layer.layer);
                 return newLayer;
               } else {
+                window.map.removeLayer(newLayer.layer);
                 return layer;
               }
             } else {
@@ -376,17 +379,20 @@ export function getGroupsESRI(options, callback) {
     layers.forEach((layer) => {
       if (layer.subLayerIds === undefined && layer.subLayers.length === 0) {
         const layerOptions = parseESRIDescription(layer.description);
+        let visible = options.visibleLayers ? (options.visibleLayers.indexOf(layer.name) === -1 ? false : true) : layer.defaultVisibility;
         layerOptions["id"] = layer.id;
         layerOptions["name"] = layer.name;
         layerOptions["minScale"] = layer.minScale;
         layerOptions["maxScale"] = layer.maxScale;
-        layerOptions["defaultVisibility"] = layer.defaultVisibility;
+        layerOptions["defaultVisibility"] = visible;
         layerOptions["identifyTitleColumn"] = layer.displayField;
         layerOptions["opacity"] = 1 - (layer.drawingInfo === undefined || layer.drawingInfo.transparency === undefined ? 0 : layer.drawingInfo.transparency / 100);
         layerOptions["liveLayer"] = layerOptions.isLiveLayer;
         layerOptions["secured"] = options.secured;
+        layerOptions["hasAttachments"] = layer.hasAttachments;
+
         layer["options"] = layerOptions;
-        layer["visible"] = layer.defaultVisibility;
+        layer["visible"] = visible;
         if (!isGrouped)
           layerOptions.categories.forEach((category) => {
             category = category.replaceAll("_", " ");
@@ -1199,8 +1205,9 @@ export function parseGeoServerKeywords(keywords) {
  * ESRI SPECIFIC FUNCTIONS
  * =======================================
  */
+
 function parseESRIDescription(description) {
-  const descriptionParts = description.split("#");
+  const descriptionParts = description.replace(/(<([^>]+)>)/gi, "").split("#");
   let returnObj = {
     isGroupOn: "",
     isLiveLayer: false,
@@ -1305,7 +1312,8 @@ export async function buildESRILayer(options, callback) {
 
     // TOC DISPLAY NAME
     const tocDisplayName = layerTitle;
-
+    //HAS ATTACHMENTS
+    const hasAttachments = layer.hasAttachments;
     // OPACITY
     let opacity = layer.options.opacity;
 
@@ -1328,7 +1336,7 @@ export async function buildESRILayer(options, callback) {
     const layerOptions = {
       sourceType: OL_DATA_TYPES.ImageArcGISRest,
       source: "rest",
-      projection: layer.sourceSpatialReference && layer.sourceSpatialReference.latestWkid ? `EPSG:${layer.sourceSpatialReference.latestWkid}` : "EPSG:3857",
+      projection: layer.sourceSpatialReference && layer.sourceSpatialReference.latestWkid ? `${layer.sourceSpatialReference.latestWkid}` : "3857",
       layerName: layer.name,
       url: layer.url,
       tiled: false,
@@ -1342,9 +1350,16 @@ export async function buildESRILayer(options, callback) {
     LayerHelpers.getLayer(layerOptions, (newLayer) => {
       //const identifyUrl = (url) => `${url}/query?geometry=#GEOMETRY#&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=true&returnTrueCurves=false&returnIdsOnly=false&returnCountOnly=false&returnZ=false&returnM=false&returnDistinctValues=false&returnExtentOnly=false&quantizationParameters=&f=geojson`;
       const identifyUrl = (options) =>
-        `${options.url}/identify?geometry=${options.point}&geometryType=esriGeometryPoint&layers=visible%3A${options.layerId}&sr=3857&datumTransformations=3857&tolerance=${options.tolerance}&mapExtent=${options.extent}&imageDisplay=${options.resolution}&maxAllowableOffset=10&returnGeometry=true&returnFieldName=false&f=json`;
+        `${options.url}/identify?geometry=${options.point}&geometryType=${options.geometryType}&layers=visible%3A${options.layerId}&sr=3857&datumTransformations=3857&tolerance=${options.tolerance}&mapExtent=${options.extent}&imageDisplay=${options.resolution}&maxAllowableOffset=10&returnGeometry=true&returnFieldName=false&f=json`;
+      const getAttachmentUrl = (options) => `${options.url}/${options.layerId}/queryAttachments?globalIds=${options.globalId}&returnUrl=true&f=json`;
 
       const rootInfoUrl = layer.url;
+
+      let attachmentUrl = getAttachmentUrl({
+        url: layer.rootUrl,
+        layerId: layer.id,
+        globalId: "#GLOBALID#",
+      });
 
       let wfsUrl = identifyUrl({
         url: layer.rootUrl,
@@ -1353,12 +1368,14 @@ export async function buildESRILayer(options, callback) {
         tolerance: "#TOLERANCE#",
         extent: "#EXTENT#",
         resolution: "#RESOLUTION#",
+        geometryType: "#GEOMETRYTYPE#",
       });
       var url = new URL(rootInfoUrl);
       const urlParams = new URLSearchParams(url.searchParams);
       const url_token = urlParams.get("token");
       if (url_token) wfsUrl = `${wfsUrl}&token=${url_token}`;
-      //http://gis.simcoe.ca/arcgis/rest/services/Severn/Severn_OperationalLayers_Dynamic/MapServer/0/
+      if (url_token && hasAttachments) attachmentUrl = `${attachmentUrl}&token=${url_token}`;
+
       newLayer.setVisible(layerVisible);
       newLayer.setOpacity(opacity);
       newLayer.setProperties({
@@ -1372,6 +1389,8 @@ export async function buildESRILayer(options, callback) {
         opaque: opaque,
         minScale: minScale,
         maxScale: maxScale,
+        attachmentUrl: hasAttachments ? attachmentUrl : null,
+        hasAttachments: hasAttachments,
       });
       if (secureKey !== undefined) newLayer.setProperties({ secureKey: secureKey });
       newLayer.setZIndex(layerIndex);
@@ -1413,6 +1432,7 @@ export async function buildESRILayer(options, callback) {
         serverUrl: serverUrl + "/", // BASE URL FOR GEOSERVER
         noAttributeTable: noAttributeTable, // IF TRUE, DISABLE ATTRIBUTE TABLE
         secured: secured,
+        hasAttachments: hasAttachments,
         // elementId: layerNameOnly + "_" + group.value,
       };
       callback(returnLayer);

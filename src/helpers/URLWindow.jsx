@@ -124,7 +124,7 @@ class URLWindow extends Component {
 					</div>
 				</div>
 				<div id="sc-url-window-content" className={this.props.showFooter ? "sc-url-window-content with-footer " + hideScrollClassName : "sc-url-window-content " + hideScrollClassName}>
-					<iframe id="sc-url-window-iframe" className="sc-url-window-iframe" src={this.props.url} frameBorder="0" title="Information" />
+          <iframe id="sc-url-window-iframe" className="sc-url-window-iframe" src={this.props.url} frameBorder="0" title="Information" referrerPolicy="same-origin" />
 				</div>
 				<div className={this.props.showFooter ? "sc-url-window-footer" : "sc-hidden"}>
 					<button className="sc-button" onClick={this.onCloseClick}>

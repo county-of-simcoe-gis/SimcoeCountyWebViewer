@@ -78,7 +78,7 @@ class Search extends Component {
     window.emitter.addListener("tocLoaded", () => this.onInitialSearch());
 
     // LISTEN FOR EXTERNAL COMPONENT SEARCH
-    window.emitter.addListener("searchItem", (searchType, searchText, hidden = false) => this.onSearch(searchType, searchText, hidden));
+    window.emitter.addListener("searchItem", (searchType, searchText, hidden = false, timeout = undefined) => this.onSearch(searchType, searchText, hidden, timeout));
 
     this.state = {
       value: "",
@@ -109,7 +109,13 @@ class Search extends Component {
 
   componentDidMount() {
     helpers.waitForLoad(["map", "settings"], Date.now(), 30, () => {
-      if (window.config.municipality !== undefined) this.setState({ municipality: window.config.municipality });
+      let muni = window.config.municipality;
+      if (!muni) {
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        muni = urlParams.get("MUNI");
+      }
+      if (muni) this.setState({ municipality: muni });
       this.apiUrl = window.config.apiUrl;
       this.storageKey = window.config.storageKeys.SearchHistory;
       if (window.config.search) {
@@ -169,7 +175,7 @@ class Search extends Component {
     this.onSearch(search_type, search);
   };
 
-  onSearch = (search_type = undefined, search = undefined, hidden = false) => {
+  onSearch = (search_type = undefined, search = undefined, hidden = false, timeout = undefined) => {
     if (!search && search === null) return;
     if (!search_type && search_type === null) {
       search_type = "All";
@@ -181,7 +187,7 @@ class Search extends Component {
       });
     helpers.getJSON(encodeURI(searchURL(this.apiUrl, search, search_type, this.state.municipality, 1)), (responseJson) => {
       if (responseJson[0] !== undefined && responseJson[0].location_id !== null && responseJson[0].location_id !== undefined) {
-        helpers.getJSON(searchInfoURL(this.apiUrl, responseJson[0].location_id), (result) => this.jsonCallback(result, hidden));
+        helpers.getJSON(searchInfoURL(this.apiUrl, responseJson[0].location_id), (result) => this.jsonCallback(result, hidden, timeout));
       }
     });
   };
@@ -278,7 +284,7 @@ class Search extends Component {
     }
   }
 
-  jsonCallback(result, hidden = false) {
+  jsonCallback(result, hidden = false, timeout = undefined) {
     if (!hidden) {
       const savedResult = Object.assign({}, result);
       delete savedResult["geojson"];
@@ -336,6 +342,18 @@ class Search extends Component {
 
       searchGeoLayer.setZIndex(300);
       searchIconLayer.setZIndex(300);
+    } else if (hidden && timeout) {
+      // SET SOURCE
+      fullFeature.setProperties({
+        label: result.alias ? result.alias : result.name,
+        name: result.name,
+        is_open_data: result.is_open_data !== undefined && result.is_open_data !== null ? result.is_open_data : true,
+      });
+      searchGeoLayer.getSource().addFeature(fullFeature);
+      searchGeoLayer.setZIndex(300);
+      setTimeout(() => {
+        searchGeoLayer.getSource().clear();
+      }, timeout);
     }
 
     const zoomFactor = window.config.featureHighlitStyles && window.config.featureHighlitStyles["zoomFactor"] >= 0 ? window.config.featureHighlitStyles["zoomFactor"] : 1;
@@ -571,7 +589,7 @@ class Search extends Component {
     if ((selectedType === "All" || selectedType === "Theme") && window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideThemes"] !== true) {
       let themes = [];
       window.config.sidebarThemeComponents.forEach((theme) => {
-        if (theme.name && theme.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0 && (theme.enabled === undefined || theme.enabled)) {
+        if (theme.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0 && (theme.enabled === undefined || theme.enabled)) {
           themes.push({
             name: helpers.replaceAllInString(theme.name, "_", " "),
             type: "Theme",

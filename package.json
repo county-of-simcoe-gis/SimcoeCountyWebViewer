@@ -4,6 +4,7 @@
   "version": "1.2.0",
   "private": true,
   "dependencies": {
+    "@arcgis/core": "4.23.7",
     "alertifyjs": "^1.13.1",
     "array-move": "^2.2.2",
     "create-react-class": "^15.7.0",

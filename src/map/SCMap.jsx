@@ -599,7 +599,7 @@ class SCMap extends Component {
           <FooterTools options={this.props.options} />
           <BMap options={this.props.options} />
           <PropertyReportClick />
-          {window.mapControls.gitHubButton ? (
+          {window.mapControls.gitHubButton && window.mapControls.gitHubButton ? (
             <div
               className={window.sidebarOpen ? "sc-map-github-button slideout" : "sc-map-github-button slidein"}
               onClick={() => {

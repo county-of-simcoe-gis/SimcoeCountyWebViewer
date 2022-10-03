@@ -13,6 +13,7 @@
   "htmlIdentify": false,
   "leftClickIdentify": false,
   "excludeIdentifyTitleName": false,
+  "allowIdentifyExport": false,
   "showFeedbackMessageOnStartup": false,
   "showWhatsNewOnStartup": false,
   "showWhatsNewPopupOnStartup": false,
@@ -31,6 +32,11 @@
   "parcelLayer": {
     "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
     "rollNumberFieldName": "ARN"
+  },
+  "arcGISServer": {
+    "appId": "APPID",
+    "portalUrl": "https://maps.simcoe.ca/arcgis",
+    "maxActiveTime": 43200000
   },
   "gitHubFollowUrl": "https://github.com/county-of-simcoe-gis",
   "gitHubFollowHandle": "Follow @simcoecountygis",

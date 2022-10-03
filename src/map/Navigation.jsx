@@ -27,8 +27,8 @@ class Navigation extends Component {
 
 	componentDidMount() {
 		this.setState({
-			showCurrentLocation: window.mapControls.currentLocation,
-			showZoomExtent: window.mapControls.zoomExtent,
+      showCurrentLocation: window.mapControls && window.mapControls.currentLocation,
+      showZoomExtent: window.mapControls && window.mapControls.zoomExtent,
 		});
 	}
 

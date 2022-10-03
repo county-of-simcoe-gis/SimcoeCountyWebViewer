@@ -138,3 +138,34 @@
 	color: dimgray;
 	padding-left: 65%;
 }
+
+.sc-identify-export-csv {
+  font-size: 9pt;
+  color: dimgray;
+  padding-left: 75%;
+  height: 20px;
+  /* margin-top: 0px; */
+  line-height: 10px;
+}
+
+.sc-identify-content-count {
+  font-size: 8pt;
+  color: #ffffff;
+  margin-bottom: 0;
+  margin-top: -15px;
+  position: relative;
+  top: 20px;
+  left: 0;
+  width: 20px;
+  max-width: 35px;
+  vertical-align: middle;
+  border-radius: 10px;
+  background: #8c8c8c;
+  text-align: center;
+}
+
+.sc-identify-add-my-map {
+  font-size: 9pt;
+  color: dimgray;
+  padding-left: 65%;
+}

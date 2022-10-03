@@ -30,7 +30,6 @@ import { KeyboardPan, KeyboardZoom } from "ol/interaction.js";
 import { Polygon } from "ol/geom.js";
 import { fromExtent } from "ol/geom/Polygon";
 
-
 //OTHER
 import { parseString } from "xml2js";
 import shortid from "shortid";
@@ -1316,34 +1315,36 @@ export function removeURLParameter(url, parameter) {
   }
   return url;
 }
-export function FeatureContent(props) {
+
+export function FilterKeys(feature) {
   //WILDCARD = .*
   //LITERAL STRING = [] EG: [_][.]
   //NOT STRING = (?!string) EG: geostasis[.](?!test).*
   const filterKeys = ["[_].*", "id", "geometry", "geom", "extent_geom", ".*gid.*", "globalid", "objectid.*", "shape.*", "displayfieldname", "displayfieldvalue", "geostasis[.].*", ".*fid.*"];
+  const featureProps = feature.getProperties();
 
-  const featureProps = props.feature.getProperties();
   let keys = Object.keys(featureProps);
   const filterByKeyName = (keyName) => {
     return (
       filterKeys.filter((filterItem) => {
         let returnValue = false;
-        //returnValue = filterItem === keyName; //check for exact match
-        //if (!returnValue){
         var regexTest = new RegExp(`^${filterItem}$`);
         returnValue = regexTest.test(keyName);
-        //}
         return returnValue;
       }).length === 0
     );
   };
   keys = keys.filter((key, i) => {
     const keyName = key.toLowerCase();
-    let val = props.feature.get(key);
+    let val = feature.get(key);
     if (val === null) val = "";
     if (typeof val === "object") return false; //EXCLUDE ALL OBJECT FIELDS
     return filterByKeyName(keyName);
   });
+  return keys;
+}
+export function FeatureContent(props) {
+  let keys = FilterKeys(props.feature);
   return (
     <div className={props.class}>
       {keys.map((keyName, i) => {

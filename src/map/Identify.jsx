@@ -1,19 +1,14 @@
-import React, { Component, useState } from "react";
+import React, { Component, useState, useEffect } from "react";
 import "./Identify.css";
 import * as helpers from "../helpers/helpers";
 import { LayerHelpers, OL_LAYER_TYPES, OL_DATA_TYPES } from "../helpers/OLHelpers";
 import Collapsible from "react-collapsible";
 import { GeoJSON, EsriJSON } from "ol/format.js";
-import InfoRow from "../helpers/InfoRow.jsx";
 import Feature from "ol/Feature";
 import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
 import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style.js";
-
 import useIframeContentHeight from "react-use-iframe-content-height";
-import Geometry from "ol/geom/Geometry";
-import { useEffect } from "react";
-import GeometryType from "ol/geom/GeometryType";
 
 class Identify extends Component {
   constructor(props) {
@@ -53,14 +48,14 @@ class Identify extends Component {
   refreshLayers = (props) => {
     this.setState({ layers: [], isLoading: true });
 
-    const { geometry } = props;
-    const layers = window.map.getLayers().getArray();
-
+    const { geometry, layerFilter } = props;
+    let layers = window.map.getLayers().getArray();
+    if (layerFilter) layers = layers.filter((item) => item.get("displayName") === layerFilter);
     let layerList = [];
 
     for (let index = 0; index < layers.length; index++) {
       const layer = layers[index];
-      if (layer.getVisible()) {
+      if (layer.getVisible() || layerFilter) {
         const queryable = layer.get("queryable");
         if (queryable) {
           if (LayerHelpers.getLayerType(layer) !== OL_LAYER_TYPES.Vector) {
@@ -68,8 +63,11 @@ class Identify extends Component {
             let displayName = "";
             let type = layer.get("tocDisplayName");
             let wfsUrl = layer.get("wfsUrl");
+            let attachmentUrl = layer.get("attachmentUrl");
             const secureKey = layer.get("secureKey");
             const minScale = layer.get("minScale");
+            const hasAttachments = layer.get("hasAttachments");
+
             const params = {};
             params["headers"] = {};
             if (secureKey !== undefined) {
@@ -83,9 +81,16 @@ class Identify extends Component {
               const feature = new Feature(geometry);
               const wktString = helpers.getWKTStringFromFeature(feature);
               if (isArcGISLayer) {
+                var esri = new EsriJSON();
+                const esriFeature = esri.writeGeometry(geometry);
                 const arcgisResolution = `${window.map.getSize()[0]},${window.map.getSize()[1]},96`;
                 const extent = window.map.getView().calculateExtent();
-                wfsUrl = wfsUrl.replace("#GEOMETRY#", geometry.flatCoordinates).replace("#TOLERANCE#", 3).replace("#EXTENT#", extent.join(",")).replace("#RESOLUTION#", arcgisResolution);
+                wfsUrl = wfsUrl
+                  .replace("#GEOMETRY#", encodeURIComponent(esriFeature))
+                  .replace("#GEOMETRYTYPE#", geometry.getType() !== "Point" ? "esriGeometryPolygon" : "esriGeometryPoint")
+                  .replace("#TOLERANCE#", 3)
+                  .replace("#EXTENT#", extent.join(","))
+                  .replace("#RESOLUTION#", arcgisResolution);
               } else {
                 if (geometry.getType() === "MultiPolygon") {
                   let intersectQuery = [];
@@ -110,6 +115,7 @@ class Identify extends Component {
                     if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
                     let features = [];
                     featureList.forEach((feature) => {
+                      if (hasAttachments) feature.values_["attachmentUrl"] = attachmentUrl.replace("#GLOBALID#", feature.get("GlobalID"));
                       features.push(feature);
                     });
                     if (features.length > 0)
@@ -341,7 +347,7 @@ class Identify extends Component {
         </div>
         <div className={this.state.layers.length === 0 ? "sc-hidden" : "sc-identify-container"}>
           {this.state.layers.map((layer) => (
-            <Layer key={helpers.getUID()} layer={layer} onZoomClick={this.onZoomClick} onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave} />
+            <Layer key={helpers.getUID()} layer={layer} expanded={this.state.layers.length <= 5} onZoomClick={this.onZoomClick} onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave} />
           ))}
         </div>
       </div>
@@ -369,8 +375,26 @@ function _getLayerObj(layerName, callback = undefined) {
   });
 }
 
+const onExportClick = (title, data) => {
+  var fields = helpers.FilterKeys(data[0]);
+  var headers = fields.map((field) => `"${field}"`).join(",");
+  var csv = data.map(function (row) {
+    return fields
+      .map(function (fieldName) {
+        return row.values_[fieldName] === null ? "" : `"${row.values_[fieldName]}"`;
+      })
+      .join(",");
+  });
+  csv.unshift(headers); // add header column
+  csv = csv.join("\r\n");
+  csv = csv.replaceAll("#", "Number");
+  let csvContent = "data:text/csv;charset=utf-8," + csv;
+  var encodedUri = encodeURI(csvContent);
+  helpers.download(encodedUri, `${title} export.csv`);
+};
+
 const Layer = (props) => {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(props.expanded !== undefined ? props.expanded : true);
 
   const { layer } = props;
 
@@ -382,7 +406,15 @@ const Layer = (props) => {
   });
   return (
     <div id="sc-identify-layer-container">
+      <div className={"sc-identify-content-count"}>{props.layer.features.length}</div>
       <Collapsible trigger={layer.type} open={open}>
+        <div className={props.layer.features.length > 1 && window.config.allowIdentifyExport ? "sc-identify-export-csv" : "sc-hidden"}>
+          [&nbsp;
+          <span className="sc-fakeLink " onClick={() => onExportClick(layer.type, props.layer.features)}>
+            Export to csv
+          </span>
+          &nbsp;]
+        </div>
         <div className="sc-identify-layer-content-container">
           {props.layer.features.map((feature) => (
             <FeatureItem

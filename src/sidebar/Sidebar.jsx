@@ -277,6 +277,8 @@ class Sidebar extends Component {
             component: item.component,
             type: item.type.toLowerCase(),
             url_param: item.url_param.toLowerCase(),
+            hidden: item.hidden,
+            timeout: item.timeout,
           });
           if (!params.includes(item.url_param.toLowerCase())) params.push(item.url_param.toLowerCase());
         });
@@ -288,7 +290,7 @@ class Sidebar extends Component {
             )[0];
             if (shortcut !== undefined) {
               if (shortcut.type === "search") {
-                window.emitter.emit("searchItem", shortcut.component, shortcutParam, true);
+                window.emitter.emit("searchItem", shortcut.component, shortcutParam, shortcut.hidden, shortcut.timeout);
               } else {
                 this.sidebarVisiblityEventHandler("OPEN", () => {
                   this.activateItemFromEmmiter(shortcut.component, shortcut.type);

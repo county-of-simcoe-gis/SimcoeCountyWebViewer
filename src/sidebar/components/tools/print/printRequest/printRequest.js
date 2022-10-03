@@ -259,7 +259,6 @@ const getLayerByType = async (layer, printoptions, callback = undefined) => {
     if (callback !== undefined) callback(retLayer);
     else return retLayer;
   } else if (layer instanceof TileLayer) {
-    //console.log(layer);
     let retLayer = await configureTileLayer(layer);
     if (callback !== undefined) callback(retLayer);
     else return retLayer;
@@ -290,13 +289,13 @@ const getLayerByType = async (layer, printoptions, callback = undefined) => {
 };
 const sortLayers = (layers, callback = undefined) => {
   let sorted = layers.sort((a, b) => {
-    let indexA = a.customParams === undefined ? 99999999 : a.customParams.zIndex;
-    let indexB = b.customParams === undefined ? 99999999 : b.customParams.zIndex;
+    let indexA = a.printIndex === undefined ? 99999999 : a.printIndex;
+    let indexB = a.printIndex === undefined ? 99999999 : a.printIndex;
 
-    if (indexA > indexB) {
+    if (indexA < indexB) {
       return -1;
     }
-    if (indexA < indexB) {
+    if (indexA > indexB) {
       return 1;
     }
     return 0;
@@ -374,7 +373,7 @@ const switchTemplates = (options, callback = undefined) => {
     };
     attributes["overviewMap"] = overviewMap;
   }
-  if (window.config.printLogo !== undefined) attributes["imageName"] = window.config.printLogo;
+  if (window.config.printLogo !== undefined) attributes["imageName"] = options.printSizeSelectedOption.imageName || window.config.printLogo;
   if (callback !== undefined) callback(attributes);
   else return attributes;
 };

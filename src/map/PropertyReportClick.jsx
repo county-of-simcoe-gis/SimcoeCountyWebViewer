@@ -11,6 +11,7 @@ import PropertyReport from "./PropertyReport";
 import copy from "copy-to-clipboard";
 import { Image as ImageLayer } from "ol/layer.js";
 import { LayerHelpers } from "../helpers/OLHelpers";
+import { getArea } from "ol/sphere.js";
 
 // https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json&cql_filter=INTERSECTS(geom,%20POINT%20(-8874151.72%205583068.78))
 const parcelURLTemplate = (mainURL, x, y) => `${mainURL}&cql_filter=INTERSECTS(geom,%20POINT%20(${x}%20${y}))`;
@@ -161,6 +162,7 @@ class PropertyReportClick extends Component {
     const broadbandSpeeds = propInfo.Other.BroadbandSpeed;
     const coords = propInfo.pointCoordinates;
     const hasZoning = propInfo.HasZoning;
+    const measurement = parseFloat(propInfo.area / 10000).toFixed(3);
     let rows = [];
     rows.push(<InfoRow key={helpers.getUID()} label={"Address"} value={address} />);
     rows.push(
@@ -241,6 +243,7 @@ class PropertyReportClick extends Component {
     );
 
     rows.push(<InfoRow key={helpers.getUID()} label={"Pointer Coordinates"} value={"Lat: " + Math.round(coords[1] * 10000) / 10000 + "  Long: " + Math.round(coords[0] * 10000) / 10000} />);
+    if (!isNaN(measurement)) rows.push(<InfoRow key={helpers.getUID()} label={"Parcel Area"} value={`${measurement} hectares`} />);
 
     const PropertyReportContent = (props) => {
       return (
@@ -291,6 +294,7 @@ class PropertyReportClick extends Component {
             helpers.getJSON(infoURL, (result) => {
               result.pointCoordinates = latLongCoords;
               result.shareURL = this.getShareURL(arn);
+              result.area = getArea(feature.getGeometry());
               this.setState({ propInfo: result });
               window.popup.show(pointerPoint, this.getPopupContent(result), "Property Information", () => {
                 parcelLayer.getSource().clear();
@@ -308,6 +312,8 @@ class PropertyReportClick extends Component {
           helpers.getJSON(infoURL, (result) => {
             result.pointCoordinates = latLongCoords;
             result.shareURL = this.getShareURL(arn);
+            result.area = getArea(feature.getGeometry());
+
             this.setState({ propInfo: result });
             window.popup.show(pointerPoint, this.getPopupContent(result), "Property Information", () => {
               parcelLayer.getSource().clear();

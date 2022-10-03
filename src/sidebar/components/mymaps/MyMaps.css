@@ -302,6 +302,10 @@
 	background: #ccc;
 }
 
+/*Override for rc-menu SubMenu z-index*/
+.rc-menu-submenu-popup {
+  z-index: 1000;
+}
 /* IE 10+ */
 .sc-mymaps-popup-slider input[type="range"]::-ms-track {
 	width: 100px;
