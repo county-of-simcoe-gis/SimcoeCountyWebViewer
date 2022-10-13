@@ -109,7 +109,13 @@
     {
       "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2018_Cache/MapServer/tile/{z}/{y}/{x}",
       "name": "2018",
-      "fullExtent": [-8939184.811223287, 5455923.230242465, -8801043.336866248, 5612747.0814112425],
+      "fullExtent": [-8940584.631934738, 5455923.230242465, -8801043.336866248, 5612747.0814112425],
+      "type": "TileImage"
+    },
+    {
+      "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2022_Cache/MapServer/tile/{z}/{y}/{x}",
+      "name": "2022",
+      "fullExtent": [-8939184.811223287, 5454803.475123089, -8801041.532479914, 5612759.410739516],
       "type": "TileImage"
     }
   ]
