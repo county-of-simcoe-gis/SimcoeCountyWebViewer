@@ -11,13 +11,13 @@ import "./helpers/SC.css";
 import mainConfig from "./config.json";
 import * as helpers from "./helpers/helpers";
 import LoadingScreen from "./helpers/LoadingScreen.jsx";
-import ReactGA from "react-ga";
+import ReactGA from "react-ga4";
 import packageJson from "../package.json";
 
 const enableAnalytics = helpers.getURLParameter("ANALYTICS") !== "off";
 if (mainConfig.googleAnalyticsID !== undefined && mainConfig.googleAnalyticsID !== "" && enableAnalytics) {
   ReactGA.initialize(mainConfig.googleAnalyticsID);
-  ReactGA.pageview(window.location.pathname + window.location.search);
+  ReactGA.send({ hitType: "pageview", page: window.location.pathname + window.location.search });
 }
 
 class App extends Component {

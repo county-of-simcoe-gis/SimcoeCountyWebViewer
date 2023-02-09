@@ -17,7 +17,9 @@
   "showWhatsNewOnStartup": false,
   "showWhatsNewPopupOnStartup": false,
   "showTermsOnStartup": true,
-  "googleAnalyticsID": "UA-3104541-53",
+  "googleAnalyticsID": "G-GC5RRXFML6",
+  "googleAnalyticsID_Old": "UA-3104541-53",
+
   "appStatsUrl": "https://opengis.simcoe.ca/api/appStats/",
   "apiUrl": "https://opengis.simcoe.ca/api/",
   "apiUrlDev": "http://localhost:8085/",
