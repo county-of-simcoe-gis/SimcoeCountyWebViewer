@@ -63,12 +63,16 @@ const buildVectorLayer = (layer, callback = undefined) => {
   let olLayerStyle = layer.getStyle();
 
   olFeatures.forEach((item) => {
+    let isHidden = false;
     let styles = { version: "2" };
     let itemSymbolizers = [];
     const itemFilter = `*`;
+    console.log(item);
     let olStyle = item.getStyle();
-    if (olStyle === null || olStyle.fill_ === undefined || olStyle.stroke_ === undefined || olStyle.text_ === undefined) {
-      olStyle = drawingHelpers.getDrawStyle({ drawColor: "#000000", opacity: 0 });
+    if (olStyle === null || (olStyle.fill_ === null && olStyle.stroke_ === null && olStyle.text_ === null && olStyle.image_ === null)) {
+      isHidden = true;
+    } else if (olStyle.fill_ === undefined || olStyle.stroke_ === undefined || olStyle.text_ === undefined) {
+      olStyle = drawingHelpers.getDrawStyle({ drawColor: "#000000", opacity: 1 });
       if (olLayerStyle.fill_ !== null && olLayerStyle.fill_ !== undefined) olStyle.setFill(olLayerStyle.getFill());
       if (olLayerStyle.stroke_ !== null && olLayerStyle.stroke_ !== undefined) olStyle.setStroke(olLayerStyle.getStroke());
       if (olLayerStyle.text_ !== null && olLayerStyle.text_ !== undefined) olStyle.setText(olLayerStyle.getText());
@@ -151,7 +155,7 @@ const buildVectorLayer = (layer, callback = undefined) => {
     };
 
     let feature = FeatureHelpers.setFeatures([item], OL_DATA_TYPES.GeoJSON, "EPSG:4326", "EPSG:4326");
-    if (feature !== undefined) {
+    if (feature !== undefined && !isHidden) {
       feature = JSON.parse(feature);
 
       itemLayer.geoJson = feature.features.map((item) => {
