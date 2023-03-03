@@ -38,9 +38,7 @@ class PropertyReport extends React.Component {
               </div>
               <div>
                 <div className="sc-property-report-html-label">Assessed Value: </div>
-                <div className="sc-property-report-html-value">
-                  <img src={info.AssessedValue} alt="assessed" />
-                </div>
+                <div className="sc-property-report-html-value">{info.AssessedValue ? <img src={info.AssessedValue} alt="assessed" /> : ""}</div>
                 <div className="sc-property-report-html-market">(may not reflect current market value)</div>
               </div>
             </div>
@@ -52,11 +50,11 @@ class PropertyReport extends React.Component {
             <div>
               <div>
                 <div className="sc-property-report-html-label">Police Station: </div>
-                <div className="sc-property-report-html-value">{info.EmergencyService.PoliceStation}</div>
+                <div className="sc-property-report-html-value">{info.EmergencyService && info.EmergencyService.PoliceStation ? info.EmergencyService.PoliceStation : ""}</div>
               </div>
               <div>
                 <div className="sc-property-report-html-label">Closest Firehall: </div>
-                <div className="sc-property-report-html-value">{info.EmergencyService.FireStation}</div>
+                <div className="sc-property-report-html-value">{info.EmergencyService && info.EmergencyService.FireStation ? info.EmergencyService.FireStation : ""}</div>
               </div>
             </div>
           </div>
@@ -67,20 +65,22 @@ class PropertyReport extends React.Component {
             <div>
               <div>
                 <div className="sc-property-report-html-label">Garbage/Recycling Collection Day: </div>
-                <div className="sc-property-report-html-value">{info.WasteCollection.GarbageDay}</div>
+                <div className="sc-property-report-html-value">{info.WasteCollection && info.WasteCollection.GarbageDay ? info.WasteCollection.GarbageDay : ""}</div>
               </div>
               <div>
                 <div className="sc-property-report-html-label">Bag Tag Locations: </div>
-                <div className="sc-property-report-html-value">{info.WasteCollection.BagTagleLocation1}</div>
-                <div className="sc-property-report-html-value">{info.WasteCollection.BagTagleLocation2}</div>
-                <div className="sc-property-report-html-value">{info.WasteCollection.BagTagleLocation3}</div>
+                <div className="sc-property-report-html-value">{info.WasteCollection && info.WasteCollection.BagTagleLocation1 ? info.WasteCollection.BagTagleLocation1 : ""}</div>
+                <div className="sc-property-report-html-value">{info.WasteCollection && info.WasteCollection.BagTagleLocation2 ? info.WasteCollection.BagTagleLocation2 : ""}</div>
+                <div className="sc-property-report-html-value">{info.WasteCollection && info.WasteCollection.BagTagleLocation3 ? info.WasteCollection.BagTagleLocation3 : ""}</div>
               </div>
               <div>
                 <div className="sc-property-report-html-label">Waste Management Facility: </div>
                 <div className="sc-property-report-html-value">General Waste</div>
-                <div className="sc-property-report-html-value sub">{info.WasteCollection.LandfillLocation_General}</div>
+                <div className="sc-property-report-html-value sub">{info.WasteCollection && info.WasteCollection.LandfillLocation_General ? info.WasteCollection.LandfillLocation_General : ""}</div>
                 <div className="sc-property-report-html-value">Hazardous Waste</div>
-                <div className="sc-property-report-html-value sub">{info.WasteCollection.LandfillLocation_Hazardous}</div>
+                <div className="sc-property-report-html-value sub">
+                  {info.WasteCollection && info.WasteCollection.LandfillLocation_Hazardous ? info.WasteCollection.LandfillLocation_Hazardous : ""}
+                </div>
               </div>
             </div>
           </div>
@@ -91,21 +91,21 @@ class PropertyReport extends React.Component {
             <div>
               <div>
                 <div className="sc-property-report-html-label">Catholic Elementary: </div>
-                <div className="sc-property-report-html-value">{info.Schools.CatholicElementry}</div>
+                <div className="sc-property-report-html-value">{info.Schools && info.Schools.CatholicElementry ? info.Schools.CatholicElementry : ""}</div>
               </div>
             </div>
             <div>
               <div>
                 <div className="sc-property-report-html-label">Catholic Secondary: </div>
-                <div className="sc-property-report-html-value">{info.Schools.CatholicSecondary}</div>
+                <div className="sc-property-report-html-value">{info.Schools && info.Schools.CatholicSecondary ? info.Schools.CatholicSecondary : ""}</div>
               </div>
             </div>
             <div>
               <div>
                 <div className="sc-property-report-html-label">Catholic School Board Website: </div>
                 <div className="sc-property-report-html-value">
-                  <a rel="noopener noreferrer" href={info.Schools.CatholicBoardWebsiteURL} target="_blank">
-                    {info.Schools.CatholicBoardWebsiteURL}
+                  <a rel="noopener noreferrer" href={info.Schools && info.Schools.CatholicBoardWebsiteURL ? info.Schools.CatholicBoardWebsiteURL : ""} target="_blank">
+                    {info.Schools && info.Schools.CatholicBoardWebsiteURL ? info.Schools.CatholicBoardWebsiteURL : ""}
                   </a>
                 </div>
               </div>
@@ -113,21 +113,21 @@ class PropertyReport extends React.Component {
             <div>
               <div>
                 <div className="sc-property-report-html-label">Public Elementary: </div>
-                <div className="sc-property-report-html-value">{info.Schools.PublicElementry}</div>
+                <div className="sc-property-report-html-value">{info.Schools && info.Schools.PublicElementry ? info.Schools.PublicElementry : ""}</div>
               </div>
             </div>
             <div>
               <div>
                 <div className="sc-property-report-html-label">Public Secondary: </div>
-                <div className="sc-property-report-html-value">{info.Schools.PublicSecondary}</div>
+                <div className="sc-property-report-html-value">{info.Schools && info.Schools.PublicSecondary ? info.Schools.PublicSecondary : ""}</div>
               </div>
             </div>
             <div>
               <div>
                 <div className="sc-property-report-html-label">Public School Board Website: </div>
                 <div className="sc-property-report-html-value">
-                  <a rel="noopener noreferrer" href={info.Schools.PublicBoardWebsiteURL} target="_blank">
-                    {info.Schools.PublicBoardWebsiteURL}
+                  <a rel="noopener noreferrer" href={info.Schools && info.Schools.PublicBoardWebsiteURL ? info.Schools.PublicBoardWebsiteURL : ""} target="_blank">
+                    {info.Schools && info.Schools.PublicBoardWebsiteURL ? info.Schools.PublicBoardWebsiteURL : ""}
                   </a>
                 </div>
               </div>
@@ -140,23 +140,23 @@ class PropertyReport extends React.Component {
             <div>
               <div>
                 <div className="sc-property-report-html-label">Library: </div>
-                <div className="sc-property-report-html-value">{info.Other.Library}</div>
+                <div className="sc-property-report-html-value">{info.Other && info.Other.Library ? info.Other.Library : ""}</div>
               </div>
               <div>
                 <div className="sc-property-report-html-label">Closest Fire Hydrant: </div>
-                <div className="sc-property-report-html-value">{info.Other.ClosestFireHydrant}</div>
+                <div className="sc-property-report-html-value">{info.Other && info.Other.ClosestFireHydrant ? info.Other.ClosestFireHydrant : ""}</div>
               </div>
               <div>
                 <div className="sc-property-report-html-label">Municipal Admin Centre: </div>
-                <div className="sc-property-report-html-value">{info.Other.MunicipalAdminCentre}</div>
+                <div className="sc-property-report-html-value">{info.Other && info.Other.MunicipalAdminCentre ? info.Other.MunicipalAdminCentre : ""}</div>
               </div>
               <div>
                 <div className="sc-property-report-html-label">Closest Hospital: </div>
-                <div className="sc-property-report-html-value">{info.Other.ClosestHospital}</div>
+                <div className="sc-property-report-html-value">{info.Other && info.Other.ClosestHospital ? info.Other.ClosestHospital : ""}</div>
               </div>
               <div>
                 <div className="sc-property-report-html-label">Potential Broadband Coverage: </div>
-                <div className="sc-property-report-html-value">{info.Other.BroadbandSpeed}</div>
+                <div className="sc-property-report-html-value">{info.Other && info.Other.BroadbandSpeed ? info.Other.BroadbandSpeed : ""}</div>
               </div>
             </div>
           </div>
