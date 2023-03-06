@@ -27,7 +27,7 @@ let searchGeoLayer = null;
 let searchIconLayer = null;
 
 // LOCATION ID (FROM SEARCH)
-const locationId = helpers.getURLParameter("LOCATIONID", false);
+const locationId = helpers.getURLParameter("LOCATIONID", false, true);
 
 // IMPORT ALL IMAGES
 const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
