@@ -298,13 +298,13 @@ const getLayerByType = async (layer, printoptions, callback = undefined) => {
 };
 const sortLayers = (layers, callback = undefined) => {
   let sorted = layers.sort((a, b) => {
-    let indexA = a.printIndex === undefined ? 99999999 : a.printIndex;
-    let indexB = a.printIndex === undefined ? 99999999 : a.printIndex;
+    let indexA = a.customParams === undefined ? 99999999 : a.customParams.zIndex;
+    let indexB = b.customParams === undefined ? 99999999 : b.customParams.zIndex;
 
-    if (indexA < indexB) {
+    if (indexA > indexB) {
       return -1;
     }
-    if (indexA > indexB) {
+    if (indexA < indexB) {
       return 1;
     }
     return 0;
