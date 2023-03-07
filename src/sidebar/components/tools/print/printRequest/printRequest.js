@@ -195,7 +195,7 @@ let configureTileLayer = async (l) => {
     retLayer = await loadWMTSConfig(tileUrl, l.values_.opacity);
     const layerIndex = l.getZIndex();
     const printIndex = l.get("printIndex");
-    retLayer.customParams.zIndex = layerIndex ? layerIndex : 0 + printIndex ? printIndex : 0;
+    retLayer.customParams.zIndex = layerIndex ? layerIndex + printIndex : 0 + printIndex ? printIndex : 0;
     return retLayer;
   }
 };
