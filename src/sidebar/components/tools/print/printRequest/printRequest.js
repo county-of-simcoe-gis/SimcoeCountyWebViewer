@@ -67,21 +67,20 @@ const buildVectorLayer = (layer, callback = undefined) => {
     let styles = { version: "2" };
     let itemSymbolizers = [];
     const itemFilter = `*`;
-    console.log(item);
     let olStyle = item.getStyle();
     if (olStyle === null || (olStyle.fill_ === null && olStyle.stroke_ === null && olStyle.text_ === null && olStyle.image_ === null)) {
       isHidden = true;
     } else if (olStyle.fill_ === undefined || olStyle.stroke_ === undefined || olStyle.text_ === undefined) {
-      olStyle = drawingHelpers.getDrawStyle({ drawColor: "#000000", opacity: 1 });
+      olStyle = drawingHelpers.getDrawStyle({ drawColor: "#000000", opacity: 0 });
       if (olLayerStyle.fill_ !== null && olLayerStyle.fill_ !== undefined) olStyle.setFill(olLayerStyle.getFill());
       if (olLayerStyle.stroke_ !== null && olLayerStyle.stroke_ !== undefined) olStyle.setStroke(olLayerStyle.getStroke());
       if (olLayerStyle.text_ !== null && olLayerStyle.text_ !== undefined) olStyle.setText(olLayerStyle.getText());
       if (olLayerStyle.image_ !== null && olLayerStyle.image_ !== undefined) olStyle.setImage(olLayerStyle.getImage());
     }
-    let olFill = olStyle.fill_ !== null && olStyle.fill_ !== undefined ? olStyle.getFill() : null;
-    let olStroke = olStyle.stroke_ !== null && olStyle.stroke_ !== undefined ? olStyle.getStroke() : null;
-    let olText = olStyle.text_ !== null && olStyle.text_ !== undefined ? olStyle.getText() : null;
-    const olImage = olStyle.image_ !== null && olStyle.image_ !== undefined ? olStyle.getImage() : null;
+    let olFill = olStyle && olStyle.fill_ !== null && olStyle.fill_ !== undefined ? olStyle.getFill() : null;
+    let olStroke = olStyle && olStyle.stroke_ !== null && olStyle.stroke_ !== undefined ? olStyle.getStroke() : null;
+    let olText = olStyle && olStyle.text_ !== null && olStyle.text_ !== undefined ? olStyle.getText() : null;
+    const olImage = olStyle && olStyle.image_ !== null && olStyle.image_ !== undefined ? olStyle.getImage() : null;
     if (olFill === null && olImage !== null) {
       olFill = olImage.fill_;
     }
@@ -98,19 +97,25 @@ const buildVectorLayer = (layer, callback = undefined) => {
     //if unsupported geometry type, default to Polygon
     if (itemStrokeFill.type === undefined) itemStrokeFill.type = "Polygon";
 
-    if (olFill !== null) {
+    if (olFill) {
       itemStrokeFill.fillColor = Array.isArray(olFill.color_) ? utils.rgbToHex(...olFill.color_) : olFill.color_;
       itemStrokeFill.fillOpacity = Array.isArray(olFill.color_) ? olFill.color_[3] : asArray(olFill.color_)[3];
     }
-    if (olStroke !== null) {
-      itemStrokeFill.strokeColor = Array.isArray(olStroke.color_) ? utils.rgbToHex(...olStroke.color_) : olStroke.color_;
-      itemStrokeFill.strokeOpacity = Array.isArray(olStroke.color_) ? olStroke.color_[3] : asArray(olStroke.color_)[3];
+    if (olStroke) {
+      itemStrokeFill.strokeColor = olStroke.color_ && Array.isArray(olStroke.color_) ? utils.rgbToHex(...olStroke.color_) : olStroke.color_;
+      itemStrokeFill.strokeOpacity = olStroke.color_ && Array.isArray(olStroke.color_) ? olStroke.color_[3] : asArray(olStroke.color_)[3];
       itemStrokeFill.strokeWidth = olStroke.width_;
       if (olStroke.lineDash_ !== undefined && olStroke.lineDash_ !== null) {
         itemStrokeFill.strokeDashstyle = olStroke.lineDash_[0] === 1 ? "dot" : "dash";
         itemStrokeFill.strokeLinejoin = "round";
         itemStrokeFill.strokeLinecap = "round";
       }
+    }
+    if (olImage && olImage.iconImage_) {
+      itemStrokeFill.rotation = parseFloat(olImage.rotation_) * (180 / Math.PI);
+      itemStrokeFill.externalGraphic = olImage.iconImage_.src_;
+      itemStrokeFill.graphicName = "icon";
+      itemStrokeFill.graphicOpacity = olImage.opacity_;
     }
     itemSymbolizers.push(itemStrokeFill);
     const lookupFont = (font) => {
@@ -263,7 +268,6 @@ const getLayerByType = async (layer, printoptions, callback = undefined) => {
     if (callback !== undefined) callback(retLayer);
     else return retLayer;
   } else if (layer instanceof TileLayer) {
-    //console.log(layer);
     let retLayer = await configureTileLayer(layer);
     if (callback !== undefined) callback(retLayer);
     else return retLayer;
@@ -294,13 +298,13 @@ const getLayerByType = async (layer, printoptions, callback = undefined) => {
 };
 const sortLayers = (layers, callback = undefined) => {
   let sorted = layers.sort((a, b) => {
-    let indexA = a.customParams === undefined ? 99999999 : a.customParams.zIndex;
-    let indexB = b.customParams === undefined ? 99999999 : b.customParams.zIndex;
+    let indexA = a.printIndex === undefined ? 99999999 : a.printIndex;
+    let indexB = a.printIndex === undefined ? 99999999 : a.printIndex;
 
-    if (indexA > indexB) {
+    if (indexA < indexB) {
       return -1;
     }
-    if (indexA < indexB) {
+    if (indexA > indexB) {
       return 1;
     }
     return 0;
@@ -378,7 +382,7 @@ const switchTemplates = (options, callback = undefined) => {
     };
     attributes["overviewMap"] = overviewMap;
   }
-  if (window.config.printLogo !== undefined) attributes["imageName"] = window.config.printLogo;
+  if (window.config.printLogo !== undefined) attributes["imageName"] = options.printSizeSelectedOption.imageName || window.config.printLogo;
   if (callback !== undefined) callback(attributes);
   else return attributes;
 };
