@@ -30,7 +30,6 @@ import { KeyboardPan, KeyboardZoom } from "ol/interaction.js";
 import { Polygon } from "ol/geom.js";
 import { fromExtent } from "ol/geom/Polygon";
 
-
 //OTHER
 import { parseString } from "xml2js";
 import shortid from "shortid";
@@ -1240,7 +1239,7 @@ export function previewReport(feature, report, buffer = 0, callback) {
 
 export function bufferGeometry(geometry, distanceMeters, callback) {
   waitForLoad("settings", Date.now(), 30, () => {
-    const url = window.config.apiUrl + "postBufferGeometry/";
+    const url = window.config.apiUrl + "public/map/geometry/buffer/";
 
     // PROJECT TO UTM FOR ACCURACY
     const utmNad83Geometry = geometry.transform("EPSG:3857", _nad83Proj);
@@ -1269,7 +1268,7 @@ export function disableKeyboardEvents(disable) {
 
 export function getGeometryCenter(geometry, callback) {
   waitForLoad("settings", Date.now(), 30, () => {
-    const url = window.config.apiUrl + "postGetGeometryCenter/";
+    const url = window.config.apiUrl + "public/map/geometry/center/";
     const geoJSON = getGeoJSONFromGeometry(geometry);
     const obj = { geoJSON: geoJSON, srid: "3857" };
 
@@ -1605,8 +1604,8 @@ export function loadConfig(callback) {
   if (config.useMapConfigApi || (mapId !== null && mapId !== undefined && mapId.trim() !== "")) {
     config.toc["loaderType"] = "MAPID";
     const mapSettingURL = (apiUrl, mapId) => {
-      if (mapId === null || mapId === undefined || mapId.trim() === "") return `${apiUrl}settings/getDefaultMap`;
-      else return `${apiUrl}settings/getMap/${mapId}`;
+      if (mapId === null || mapId === undefined || mapId.trim() === "") return `${apiUrl}public/map/default`;
+      else return `${apiUrl}public/map/${mapId}`;
     };
     getJSON(mapSettingURL(config.apiUrl, mapId), (result) => {
       if (result.json === undefined) {

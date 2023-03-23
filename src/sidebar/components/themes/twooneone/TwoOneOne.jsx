@@ -97,7 +97,7 @@ class TwoOneOne extends Component {
 
   getCategories = () => {
     let categories = [];
-    helpers.getJSON(this.apiUrl + "get211Categories/" + this.state.isFrench, (result) => {
+    helpers.getJSON(this.apiUrl + "public/map/theme/211/categories/" + this.state.isFrench, (result) => {
       categories.push({
         value: "All",
         label: this.state.isFrench ? "Tout" : "All",
@@ -151,7 +151,7 @@ class TwoOneOne extends Component {
 
   updateSubCategories = () => {
     let subCategories = [];
-    const subCategoriesUrl = this.apiUrl + "get211SubCategories/" + encodeURIComponent(this.state.categorySelectedOption.value) + "/" + this.state.isFrench;
+    const subCategoriesUrl = this.apiUrl + "public/map/theme/211/SubCategories/" + encodeURIComponent(this.state.categorySelectedOption.value) + "/" + this.state.isFrench;
     helpers.getJSON(subCategoriesUrl, (result) => {
       subCategories.push({
         value: "All",
@@ -171,7 +171,7 @@ class TwoOneOne extends Component {
 
   updateResults = () => {
     const resultsUrlTemplate = (apiUrl, category, subCategory, age, isFrench) =>
-      `${apiUrl}get211Results/${encodeURIComponent(category)}/${encodeURIComponent(subCategory)}/${encodeURIComponent(age)}/${isFrench}`;
+      `${apiUrl}public/map/theme/211/Results/${encodeURIComponent(category)}/${encodeURIComponent(subCategory)}/${encodeURIComponent(age)}/${isFrench}`;
     const url = resultsUrlTemplate(
       this.apiUrl,
       this.state.categorySelectedOption.value,
