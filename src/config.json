@@ -28,7 +28,7 @@
   "helpUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer",
   "ieWarningUrl": "https://opengis.simcoe.ca/public/ieWarning.html",
   "propertyReportUrl": "https://opengis.simcoe.ca/api_v2/public/reports/property/",
-  "weatherRadarApiUrl": "https://opengis.simcoe.ca/api_v2/public/weather/RadarImages/",
+  "weatherRadarApiUrl": "https://opengis.simcoe.ca/api_v2/public/map/tool/weather/RadarImages/",
   "parcelLayer": {
     "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
     "rollNumberFieldName": "ARN"

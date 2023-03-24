@@ -97,7 +97,7 @@ class TwoOneOne extends Component {
 
   getCategories = () => {
     let categories = [];
-    helpers.getJSON(this.apiUrl + "public/map/theme/211/categories/" + this.state.isFrench, (result) => {
+    helpers.getJSON(this.apiUrl + "public/map/theme/211/Categories/" + this.state.isFrench, (result) => {
       categories.push({
         value: "All",
         label: this.state.isFrench ? "Tout" : "All",
