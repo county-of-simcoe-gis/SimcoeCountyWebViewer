@@ -19,7 +19,7 @@
   "showTermsOnStartup": true,
   "googleAnalyticsID": "G-GC5RRXFML6",
 
-  "appStatsUrl": "https://opengis.simcoe.ca/api_v2/stats/write/",
+  "appStatsUrl": "https://opengis.simcoe.ca/api_v2/public/stats/write/",
   "apiUrl": "https://opengis.simcoe.ca/api_v2/",
   "apiUrlDev": "http://localhost:8085/",
   "termsUrl": "https://maps.simcoe.ca/terms.html",
