@@ -34,7 +34,7 @@ class CommercialRealEstateLayerToggler extends Component {
 
       const rootInfoUrl = this.state.layer.get("rootInfoUrl");
       helpers.getJSON(rootInfoUrl, (rootResult) => {
-        helpers.getJSON(rootResult.layer.resource.href.replace("http", "https"), (result) => {
+        helpers.getJSON(rootResult.layer.resource.href.replace("http:", "https:"), (result) => {
           const abstract = result.featureType.abstract;
           if (abstract !== undefined && this.state.metadata === "Retreiving info....") this.setState({ metadata: abstract });
         });
