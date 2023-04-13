@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import "./ExternalServices.css";
 import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
-import * as config from "./config.json";
+import { default as config } from "./config.json";
 import GeoJSON from "ol/format/GeoJSON.js";
 import { Vector as VectorLayer } from "ol/layer.js";
 import { Vector as VectorSource } from "ol/source.js";

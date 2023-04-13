@@ -116,7 +116,7 @@ class GroupItem extends Component {
   componentWillUnmount() {
     this._isMounted = false;
   }
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     this.setState({ newProps: true }, () => {
       this.setOpenState(nextProps.panelOpen);
       this.setActiveLayerCount();

@@ -37,7 +37,7 @@ class Identify extends Component {
     });
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     this.refreshLayers(nextProps);
   }
 

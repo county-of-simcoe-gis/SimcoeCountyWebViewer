@@ -61,7 +61,7 @@ class FeatureReportPopup extends Component {
       this.setState({ isLoading: false });
     });
   }
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     // this.popupLabelRef.forceUpdate();
   }
 

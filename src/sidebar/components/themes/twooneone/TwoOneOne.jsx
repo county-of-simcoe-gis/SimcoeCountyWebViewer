@@ -80,7 +80,7 @@ class TwoOneOne extends Component {
     };
   }
 
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     helpers.waitForLoad("settings", Date.now(), 30, () => {
       this.apiUrl = window.config.apiUrl;
 

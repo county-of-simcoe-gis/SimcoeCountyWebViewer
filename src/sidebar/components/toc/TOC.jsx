@@ -68,7 +68,7 @@ class TOC extends Component {
   componentDidMount() {
     helpers.waitForLoad(["settings", "map"], Date.now(), 30, () => this.onMapLoad());
   }
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     helpers.waitForLoad(["settings"], Date.now(), 30, () => {
       let tocType = helpers.getURLParameter("TOCTYPE");
       if (tocType !== null && tocType !== undefined) {
