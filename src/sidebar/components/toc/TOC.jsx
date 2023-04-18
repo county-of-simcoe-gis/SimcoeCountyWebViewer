@@ -68,7 +68,7 @@ class TOC extends Component {
   componentDidMount() {
     helpers.waitForLoad(["settings", "map"], Date.now(), 30, () => this.onMapLoad());
   }
-  UNSAFE_componentWillMount() {
+  componentWillMount() {
     helpers.waitForLoad(["settings"], Date.now(), 30, () => {
       let tocType = helpers.getURLParameter("TOCTYPE");
       if (tocType !== null && tocType !== undefined) {
@@ -774,6 +774,7 @@ class TOC extends Component {
         this.getActiveLayerGroups().map((item) => (item.value === newGroup.value ? newGroup : item)),
         () => {
           this.forceUpdate();
+          if (callback !== undefined) callback();
         }
       );
     }

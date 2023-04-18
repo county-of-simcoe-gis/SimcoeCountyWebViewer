@@ -16,7 +16,7 @@ class MyMapsPopup extends Component {
     this.props.onRef(undefined);
   }
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps(nextProps) {
     // this.popupLabelRef.forceUpdate();
   }
 

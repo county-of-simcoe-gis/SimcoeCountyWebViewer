@@ -12,7 +12,7 @@
     "moment": "^2.29.4",
     "ol": "6.12.0",
     "ol-contextmenu": "^3.3.2",
-    "ol-mapbox-style": "^6.8.3",
+    "ol-mapbox-style": "^7.1.1",
     "proj4": "^2.7.0",
     "rc-menu": "^9.8.4",
     "rc-slider": "^8.7.1",
@@ -36,7 +36,7 @@
     "react-select": "^2.4.4",
     "react-sidebar": "^3.0.2",
     "react-slick": "^0.25.2",
-    "react-sortable-hoc": "^1.11.0",
+    "react-sortable-hoc": "^2.0.0",
     "react-sortable-hoc-ie-optimization": "^0.8.5",
     "react-switch": "^5.0.1",
     "react-table": "^7.8.0",
@@ -45,7 +45,7 @@
     "react-tooltip": "^3.11.6",
     "react-transition-group": "^4.4.5",
     "react-use-iframe-content-height": "^1.0.2",
-    "react-virtualized": "^9.22.3",
+    "react-virtualized": "^9.22.5",
     "react-window": "^1.8.8",
     "shortid": "^2.2.16",
     "shp-write": "^0.3.2",
@@ -73,17 +73,7 @@
     "jsx-a11y/anchor-is-valid": true
   },
   "devDependencies": {
-    "assert": "^2.0.0",
-    "buffer": "^6.0.3",
-    "crypto-browserify": "^3.12.0",
-    "https-browserify": "^1.0.0",
-    "os-browserify": "^0.3.0",
-    "process": "^0.11.10",
-    "react-app-rewired": "^2.2.1",
-    "stream-browserify": "^3.0.0",
-    "stream-http": "^3.2.0",
-    "timers-browserify": "^2.0.12",
-    "url": "^0.11.0",
-    "webpack": "^5.79.0"
+    "node-polyfill-webpack-plugin": "^2.0.1",
+    "react-app-rewired": "^2.2.1"
   }
 }

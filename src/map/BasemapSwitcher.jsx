@@ -250,6 +250,10 @@ class BasemapSwitcher extends Component {
               url: service.url,
               tiled: true,
               name: layerName,
+              background: service.background,
+              rootPath: service.rootPath,
+              spritePath: service.spritePath,
+              pngPath: service.pngPath,
             },
             (newLayer) => {
               // LAYER PROPS

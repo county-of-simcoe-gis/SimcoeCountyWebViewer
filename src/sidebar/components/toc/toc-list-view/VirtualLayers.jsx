@@ -1,6 +1,6 @@
 // REACT
 import React, { Component } from "react";
-import { sortableElement } from "react-sortable-hoc";
+import { SortableElement } from "react-sortable-hoc";
 import { List } from "react-virtualized";
 
 // CUSTOM
@@ -8,7 +8,7 @@ import LayerItem from "./LayerItem.jsx";
 import "./VirtualLayers.css";
 
 // LIST ITEM SORTABLE
-const SortableItem = sortableElement(({ value, id, style, item, group, onLegendToggle, onCheckboxChange, onLayerChange, searchText, onLayerOptionsClick }) => {
+const SortableItem = SortableElement(({ value, id, style, item, group, onLegendToggle, onCheckboxChange, onLayerChange, searchText, onLayerOptionsClick }) => {
   item.elementId = id + "-element";
 
   //console.log("Virtual Layer Item Render");
@@ -45,7 +45,7 @@ class VirtualLayers extends Component {
   componentWillUnmount() {
     this._isMounted = false;
   }
-  UNSAFE_componentDidUpdate() {
+  componentDidUpdate() {
     if (this._isMounted) {
       this.list.recomputeRowHeights();
     }

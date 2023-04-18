@@ -61,7 +61,7 @@ class LocalRealEstateImageSlider extends Component {
     this.onMapMoveEvent = window.map.on("moveend", this.onMapMoveEnd);
   }
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps(nextProps) {
     this.updateFeatures(nextProps);
   }
 

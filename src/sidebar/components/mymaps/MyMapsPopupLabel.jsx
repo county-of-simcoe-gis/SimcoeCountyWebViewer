@@ -50,7 +50,7 @@ class MyMapsPopupLabel extends Component {
   };
 
   // THIS IS REQUIRED WHEN CHANGING LABEL FROM POPUP
-  UNSAFE_componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps(nextProps) {
     console.log(nextProps);
     if (nextProps.item.label !== this.state.label) this.setState({ label: nextProps.item.label });
 

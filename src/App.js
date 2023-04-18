@@ -27,7 +27,7 @@ class App extends Component {
     if (localMapControls !== undefined) window.mapControls = localMapControls;
     else window.mapControls = mainConfig.controls;
   }
-  UNSAFE_componentWillMount() {
+  componentWillMount() {
     window.app = packageJson.name;
     window.homepage = packageJson.homepage;
     window.version = packageJson.version;

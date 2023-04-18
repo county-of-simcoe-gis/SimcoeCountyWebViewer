@@ -458,7 +458,7 @@ class DateSlider extends React.Component {
     this.state = { currentDate: props.value || props.min };
   }
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps(nextProps) {
     this.setState({ currentDate: nextProps.value });
   }
 

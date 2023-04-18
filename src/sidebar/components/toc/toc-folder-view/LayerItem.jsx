@@ -16,7 +16,7 @@ class LayerItem extends Component {
     this._isMounted = false;
   }
 
-  UNSAFE_componentWillMount() {
+  componentWillMount() {
     this.setVisibleScale();
   }
   componentDidMount() {

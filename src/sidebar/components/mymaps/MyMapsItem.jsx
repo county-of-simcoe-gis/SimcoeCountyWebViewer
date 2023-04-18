@@ -42,7 +42,7 @@ class MyMapsItem extends Component {
   };
 
   // THIS IS REQUIRED WHEN CHANGING LABEL FROM POPUP OR SHOW/HIDE ALL FROM PARENT
-  UNSAFE_componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps(nextProps) {
     if (nextProps.info.label !== this.state.label) this.setState({ label: nextProps.info.label });
     if (nextProps.info.visible !== this.state.checked) this.setState({ checked: nextProps.info.visible });
   }

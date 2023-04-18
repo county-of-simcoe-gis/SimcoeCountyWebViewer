@@ -62,7 +62,7 @@ class CommercialRealEstateLayerToggler extends Component {
       // });
     });
   }
-  UNSAFE_componentDidUpdate(prevProps, prevState, snapshot) {
+  componentDidUpdate(prevProps, prevState, snapshot) {
     if (this.props.layer.visible !== prevProps.layer.visible) {
       this.setState({ layerVisible: this.props.layer.visible }, () => {
         this.state.layer.setVisible(this.state.layerVisible);

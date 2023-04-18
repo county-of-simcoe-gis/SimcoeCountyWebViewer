@@ -98,7 +98,7 @@ class TOCHeader extends Component {
       this.props.onSearchChange(searchText);
     });
   };
-  UNSAFE_componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps(nextProps) {
     if (nextProps.searchText === "" && this.state.searchText !== "") {
       this.setState({ searchText: nextProps.searchText });
     }
