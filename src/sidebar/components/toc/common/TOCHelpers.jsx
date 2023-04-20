@@ -1094,7 +1094,7 @@ export function getStyles(groups) {
     //let layerIndex = 0;
     layerList.forEach((layer) => {
       //console.log(layer);
-      helpers.getJSON(layer.subLayerInfoURL.replace("http", "https"), (subLayerInfo) => {
+      helpers.getJSON(layer.subLayerInfoURL.replace("http:", "https:"), (subLayerInfo) => {
         //console.log(subLayerInfo);
         //layerIndex++;
         let styleURL = "";

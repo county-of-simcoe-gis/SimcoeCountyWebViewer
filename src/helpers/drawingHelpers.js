@@ -454,8 +454,7 @@ export function convertLineToArrow(geometry) {
 
 export function importMyMaps(id, callback2) {
   helpers.waitForLoad("settings", Date.now(), 30, () => {
-    helpers.getJSON(`${window.config.apiUrl}getMyMaps/${id}`, (result) => {
-      //helpers.getJSON(`http://localhost:8085/getMyMaps/${id}`, result => {
+    helpers.getJSON(`${window.config.apiUrl}public/map/mymaps/${id}`, (result) => {
       console.log(result);
       callback2(result);
     });
@@ -480,7 +479,7 @@ export function exportMyMaps(callback2, id = null) {
       }
     }
 
-    helpers.postJSON(window.config.apiUrl + "postMyMaps/", data, (result) => {
+    helpers.postJSON(window.config.apiUrl + "public/map/mymaps", data, (result) => {
       callback2(result);
     });
   });

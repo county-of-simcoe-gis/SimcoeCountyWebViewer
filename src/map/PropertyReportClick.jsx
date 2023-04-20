@@ -201,7 +201,7 @@ class PropertyReportClick extends Component {
         </InfoRow>
       );
 
-    if (assessedValue)
+    if (assessedValue && arn.substring(0, 4) !== "4342")
       rows.push(
         <InfoRow key={helpers.getUID()} label={"Assessed Value"}>
           <img src={assessedValue} alt="assessment" />

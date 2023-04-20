@@ -523,6 +523,10 @@ export class LayerHelpers {
     let extent = options.extent !== undefined ? options.extent : [];
     let name = options.name !== undefined ? options.name : "";
     let secureKey = options.secureKey;
+    let background = options.background !== undefined ? options.background : null;
+    let rootPath = options.rootPath !== undefined ? options.rootPath : null;
+    let spritePath = options.spritePath !== undefined ? options.spritePath : null;
+    let pngPath = options.pngPath !== undefined ? options.pngPath : null;
 
     const rebuildParams = {
       sourceType: sourceType,
@@ -534,6 +538,7 @@ export class LayerHelpers {
       file: file !== undefined ? "STORED FEATURES" : undefined,
       extent: extent,
       name: name,
+      background: background,
     };
     let Vector_FileLoader = undefined;
     let style = undefined;
@@ -813,10 +818,11 @@ export class LayerHelpers {
       case OL_DATA_TYPES.VectorTile:
         let layer = new VectorTileLayer({
           rebuildParams: rebuildParams,
-          renderMode: "vector",
+          renderMode: "hybrid",
           reload: Infinity,
           declutter: true,
           tilePixelRatio: 8,
+          background: background,
           source: new VectorTileSource({
             name: name,
             format: new MVT(),
@@ -824,9 +830,10 @@ export class LayerHelpers {
             crossOrigin: "anonymous",
           }),
         });
-        let rootPath = url + "/resources/styles/root.json";
-        let spritePath = url + "/resources/sprites/sprite.json";
-        let pngPath = url + "/resources/sprites/sprite.png";
+        rootPath = rootPath || url + "/resources/styles/root.json";
+        spritePath = spritePath || url + "/resources/sprites/sprite.json";
+        pngPath = pngPath || url + "/resources/sprites/sprite.png";
+        console.log(rootPath, spritePath, pngPath);
         fetch(rootPath).then(function (response) {
           response.json().then(function (glStyle) {
             fetch(spritePath).then(function (response) {

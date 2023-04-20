@@ -15,9 +15,9 @@ import Select from "react-select";
 
 // URLS
 const googleDirectionsURL = (lat, long) => `https://www.google.com/maps?saddr=Current+Location&daddr=${lat},${long}`;
-const searchURL = (apiUrl, searchText, type, muni, limit) => `${apiUrl}async/search/?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
-const searchInfoURL = (apiUrl, locationID) => `${apiUrl}searchById/${locationID}`;
-const searchTypesURL = (apiUrl) => `${apiUrl}getSearchTypes`;
+const searchURL = (apiUrl, searchText, type, muni, limit) => `${apiUrl}public/search/?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
+const searchInfoURL = (apiUrl, locationID) => `${apiUrl}public/search/${locationID}`;
+const searchTypesURL = (apiUrl) => `${apiUrl}public/search/types`;
 
 // DEFAULT SEARCH LIMIT
 const defaultSearchLimit = 10;

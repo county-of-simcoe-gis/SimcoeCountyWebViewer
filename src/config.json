@@ -19,16 +19,16 @@
   "showTermsOnStartup": true,
   "googleAnalyticsID": "G-GC5RRXFML6",
 
-  "appStatsUrl": "https://opengis.simcoe.ca/api/appStats/",
-  "apiUrl": "https://opengis.simcoe.ca/api/",
+  "appStatsUrl": "https://opengis.simcoe.ca/api_v2/public/stats/write/",
+  "apiUrl": "https://opengis.simcoe.ca/api_v2/",
   "apiUrlDev": "http://localhost:8085/",
   "termsUrl": "https://maps.simcoe.ca/terms.html",
   "openLicenseUrl": "http://maps.simcoe.ca/openlicense.html",
   "whatsNewUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/WhatsNew/2021-03-22",
   "helpUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer",
   "ieWarningUrl": "https://opengis.simcoe.ca/public/ieWarning.html",
-  "propertyReportUrl": "https://opengis.simcoe.ca/api/getPropertyReportInfo/",
-  "weatherRadarApiUrl": "https://opengis.simcoe.ca/api/getRadarImages/",
+  "propertyReportUrl": "https://opengis.simcoe.ca/api_v2/public/reports/property/",
+  "weatherRadarApiUrl": "https://opengis.simcoe.ca/api_v2/public/map/tool/weather/RadarImages/",
   "parcelLayer": {
     "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
     "rollNumberFieldName": "ARN"

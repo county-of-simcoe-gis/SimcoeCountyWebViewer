@@ -191,7 +191,7 @@ class LegendApp extends Component {
       let keywords = [];
       if (layer.KeywordList !== undefined && layer.KeywordList.length > 0) keywords = layer.KeywordList[0].Keyword;
 
-      let styleUrl = layer.Style[0].LegendURL[0].OnlineResource[0].$["xlink:href"].replace("http", "https");
+      let styleUrl = layer.Style[0].LegendURL[0].OnlineResource[0].$["xlink:href"].replace("http:", "https:");
       let legendSizeOverride = this._getStaticImageLegend(keywords);
 
       if (legendSizeOverride && styleUrl !== "") {

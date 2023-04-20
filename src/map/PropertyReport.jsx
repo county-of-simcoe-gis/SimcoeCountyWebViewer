@@ -28,7 +28,7 @@ class PropertyReport extends React.Component {
                 <div className="sc-property-report-html-label">Roll Number: </div>
                 <div className="sc-property-report-html-value">{info.ARN}</div>
               </div>
-              <div>
+              <div className={info.ARN.substring(0, 4) === "4342" ? "sc-hidden" : ""}>
                 <div className="sc-property-report-html-label">Property Type: </div>
                 <div className="sc-property-report-html-value">{info.PropertyType}</div>
               </div>
@@ -36,7 +36,7 @@ class PropertyReport extends React.Component {
                 <div className="sc-property-report-html-label">Address: </div>
                 <div className="sc-property-report-html-value">{info.Address}</div>
               </div>
-              <div>
+              <div className={info.ARN.substring(0, 4) === "4342" ? "sc-hidden" : ""}>
                 <div className="sc-property-report-html-label">Assessed Value: </div>
                 <div className="sc-property-report-html-value">{info.AssessedValue ? <img src={info.AssessedValue} alt="assessed" /> : ""}</div>
                 <div className="sc-property-report-html-market">(may not reflect current market value)</div>

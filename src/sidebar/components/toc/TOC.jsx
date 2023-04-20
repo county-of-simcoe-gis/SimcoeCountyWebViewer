@@ -774,6 +774,7 @@ class TOC extends Component {
         this.getActiveLayerGroups().map((item) => (item.value === newGroup.value ? newGroup : item)),
         () => {
           this.forceUpdate();
+          if (callback !== undefined) callback();
         }
       );
     }

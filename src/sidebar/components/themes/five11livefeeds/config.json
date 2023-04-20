@@ -1,7 +1,7 @@
 {
   "wazeToggleLayers": [
     {
-      "apiUrl": "https://opengis.simcoe.ca/api/getWazeAlertLayer/alerts/ACCIDENT",
+      "apiUrl": "https://opengis.simcoe.ca/api_v2/public/map/theme/511/AlertLayer/alerts/ACCIDENT",
       "layerName": "511-waze-accident",
       "displayName": "Accidents",
       "imageName": "waze_accident.png",
@@ -10,7 +10,7 @@
       "zIndex": 209
     },
     {
-      "apiUrl": "https://opengis.simcoe.ca/api/getWazeAlertLayer/alerts/HAZARD",
+      "apiUrl": "https://opengis.simcoe.ca/api_v2/public/map/theme/511/AlertLayer/alerts/HAZARD",
       "layerName": "511-waze-hazard",
       "displayName": "Hazards",
       "imageName": "waze_hazard.png",
@@ -19,7 +19,7 @@
       "zIndex": 210
     },
     {
-      "apiUrl": "https://opengis.simcoe.ca/api/getWazeAlertLayer/alerts/CONSTRUCTION",
+      "apiUrl": "https://opengis.simcoe.ca/api_v2/public/map/theme/511/AlertLayer/alerts/CONSTRUCTION",
       "layerName": "511-waze-construction",
       "displayName": "Construction",
       "imageName": "waze_construction.png",
@@ -28,7 +28,7 @@
       "zIndex": 211
     },
     {
-      "apiUrl": "https://opengis.simcoe.ca/api/getWazeAlertLayer/alerts/ROAD_CLOSED",
+      "apiUrl": "https://opengis.simcoe.ca/api_v2/public/map/theme/511/AlertLayer/alerts/ROAD_CLOSED",
       "layerName": "511-waze-road-closed",
       "displayName": "Road Closed",
       "imageName": "waze_road_closed.png",
@@ -37,7 +37,7 @@
       "zIndex": 212
     },
     {
-      "apiUrl": "https://opengis.simcoe.ca/api/getWazeAlertLayer/alerts/JAM",
+      "apiUrl": "https://opengis.simcoe.ca/api_v2/public/map/theme/511/AlertLayer/alerts/JAM",
       "layerName": "511-waze-jam",
       "displayName": "Traffic Jam",
       "imageName": "waze_traffic_jam.png",
@@ -46,7 +46,7 @@
       "zIndex": 213
     },
     {
-      "apiUrl": "https://opengis.simcoe.ca/api/getWazeJamLayer/",
+      "apiUrl": "https://opengis.simcoe.ca/api_v2/public/map/theme/511/JamLayer/",
       "layerName": "511-waze-jam-lines",
       "displayName": "Traffic Jam (Lines)",
       "imageName": "waze_traffic_jam_line.png",
@@ -55,7 +55,7 @@
       "zIndex": 214
     },
     {
-      "apiUrl": "https://opengis.simcoe.ca/api/getWazeIrregularLayer/",
+      "apiUrl": "https://opengis.simcoe.ca/api_v2/public/map/theme/511/IrregularLayer/",
       "layerName": "511-waze-irregularity-lines",
       "displayName": "Irregularities (Lines)",
       "imageName": "waze_irregularity_line.png",
@@ -66,7 +66,7 @@
   ],
   "mtoToggleLayers": [
     {
-      "apiUrl": "https://opengis.simcoe.ca/api/getMTO511Layer/CAMERAS",
+      "apiUrl": "https://opengis.simcoe.ca/api_v2/public/map/theme/511/MTOLayer/CAMERAS",
       "layerName": "511-mto-cameras",
       "displayName": "Cameras",
       "imageName": "mto_camera.png",
@@ -75,7 +75,7 @@
       "zIndex": 216
     },
     {
-      "apiUrl": "https://opengis.simcoe.ca/api/getMTO511Layer/EVENTS",
+      "apiUrl": "https://opengis.simcoe.ca/api_v2/public/map/theme/511/MTOLayer/EVENTS",
       "layerName": "511-mto-traffic-event",
       "displayName": "Traffic Event",
       "imageName": "mto_traffic_event.png",
@@ -84,7 +84,7 @@
       "zIndex": 217
     },
     {
-      "apiUrl": "https://opengis.simcoe.ca/api/getMTO511Layer/CONSTRUCTION",
+      "apiUrl": "https://opengis.simcoe.ca/api_v2/public/map/theme/511/MTOLayer/CONSTRUCTION",
       "layerName": "511-mto-construction",
       "displayName": "Contruction",
       "imageName": "mto_construction.png",

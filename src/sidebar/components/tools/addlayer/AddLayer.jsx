@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import "./AddLayer.css";
-import * as addLayerConfig from "./config.json";
+import { default as addLayerConfig } from "./config.json";
 import PanelComponent from "../../../PanelComponent";
 import LoadingScreen from "../../../../helpers/LoadingScreen.jsx";
 import * as helpers from "../../../../helpers/helpers";
