@@ -49,6 +49,97 @@
           "type": "OSM"
         }
       ]
+    },
+    {
+      "name": "Canadian Topo",
+      "image": "esri_topo.jpg",
+      "index": 3,
+      "layers": [
+        {
+          "url": "https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}",
+          "type": "ESRI_TILED",
+          "isOverlay": true
+        },
+        {
+          "url": "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
+          "type": "ESRI_VECTOR_TILED",
+          "isOverlay": true,
+          "rootPath": "https://opengis.simcoe.ca/public/basemap/ESRI_WorldTopoCanadianStyle.json"
+        },
+        {
+          "url": "https://tiles.arcgis.com/tiles/B6yKvIZqzuOr0jBR/arcgis/rest/services/Canada_Hillshade/MapServer/tile/{z}/{y}/{x}",
+          "type": "ESRI_TILED",
+          "isOverlay": true
+        },
+        {
+          "url": "https://tiles.arcgis.com/tiles/B6yKvIZqzuOr0jBR/arcgis/rest/services/Canada_Topographic/VectorTileServer",
+          "type": "ESRI_VECTOR_TILED",
+          "isOverlay": true,
+          "rootPath": "https://opengis.simcoe.ca/public/basemap/ESRI_Canada_Topographic.json",
+          "maxZoom": 23
+        }
+      ]
+    },
+    {
+      "name": "Light Grey Basemap",
+      "image": "esri_light_grey.jpg",
+      "index": 4,
+      "layers": [
+        {
+          "url": "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
+          "type": "ESRI_VECTOR_TILED",
+          "isOverlay": true,
+          "rootPath": "https://opengis.simcoe.ca/public/basemap/ESRI_LightGreyBackground.json"
+        },
+        {
+          "url": "https://tiles.arcgis.com/tiles/B6yKvIZqzuOr0jBR/arcgis/rest/services/Canada_Topographic/VectorTileServer",
+          "type": "ESRI_VECTOR_TILED",
+          "isOverlay": true,
+          "rootPath": "https://opengis.simcoe.ca/public/basemap/ESRI_LightGrey.json"
+        }
+      ]
+    },
+    {
+      "name": "Streets",
+      "image": "esri_streets.jpg",
+      "index": 5,
+      "layers": [
+        {
+          "url": "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
+          "type": "ESRI_VECTOR_TILED",
+          "isOverlay": true,
+          "rootPath": "https://opengis.simcoe.ca/public/basemap/ESRI_Streets_Background.json"
+        },
+        {
+          "url": "https://tiles.arcgis.com/tiles/B6yKvIZqzuOr0jBR/arcgis/rest/services/Canada_Topographic/VectorTileServer",
+          "type": "ESRI_VECTOR_TILED",
+          "isOverlay": true,
+          "rootPath": "https://opengis.simcoe.ca/public/basemap/ESRI_Streets.json",
+          "minZoom": 0,
+          "maxZoom": 23
+        }
+      ]
+    },
+    {
+      "name": "Streets (Night)",
+      "image": "esri_streets_night.jpg",
+      "index": 6,
+      "layers": [
+        {
+          "url": "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
+          "type": "ESRI_VECTOR_TILED",
+          "isOverlay": true,
+          "rootPath": "https://opengis.simcoe.ca/public/basemap/ESRI_Streets_Night_Background.json"
+        },
+        {
+          "url": "https://tiles.arcgis.com/tiles/B6yKvIZqzuOr0jBR/arcgis/rest/services/Canada_Topographic/VectorTileServer",
+          "type": "ESRI_VECTOR_TILED",
+          "isOverlay": true,
+          "rootPath": "https://opengis.simcoe.ca/public/basemap/ESRI_Streets_Night.json",
+          "minZoom": 0,
+          "maxZoom": 23
+        }
+      ]
     }
   ],
   "imageryServices": [
