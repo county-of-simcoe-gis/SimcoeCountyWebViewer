@@ -828,9 +828,7 @@ export class LayerHelpers {
 
           source: new VectorTileSource({
             name: name,
-            format: new MVT({
-              idProperty: "iso_a3",
-            }),
+            format: new MVT(),
             url: url + "/tile/{z}/{y}/{x}.pbf",
             minZoom: minZoom || undefined,
             maxZoom: maxZoom || undefined,
@@ -839,7 +837,6 @@ export class LayerHelpers {
         });
         rootPath = rootPath || url + "/resources/styles/root.json";
 
-        console.log(rootPath, spritePath, pngPath);
         fetch(rootPath).then(function (response) {
           response.json().then(function (glStyle) {
             fetch(spritePath || `${glStyle.sprite}.json`).then(function (response) {

@@ -3,7 +3,3 @@
     height: 100%;
     position: absolute; */
 }
-
-#webpack-dev-server-client-overlay {
-  display: none;
-}

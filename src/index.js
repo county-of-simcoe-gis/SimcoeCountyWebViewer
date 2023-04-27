@@ -20,28 +20,6 @@ window.isCoordinateToolOpen = false;
 window.isMeasuring = false;
 window.loaded = [];
 window.config = {};
-
-window.addEventListener("error", function (e) {
-  const { error } = e;
-  if (!error.captured) {
-    error.captured = true;
-    //IGNORE ZOOM ERROR PRODUCED BY STREETS ESRI COMMUNITY BASEMAP
-    if (error.message === "Cannot read properties of null (reading 'zoom')") {
-      error.shouldIgnore = true;
-    }
-    e.stopImmediatePropagation();
-    e.preventDefault();
-    // Revisit this error after the error boundary element processed it
-    setTimeout(() => {
-      // can be set by the error boundary error handler
-      if (!error.shouldIgnore) {
-        // but if it wasn't caught by a boundary, release it back to the wild
-        throw error;
-      }
-    });
-  }
-});
-
 ReactDOM.render(<App />, document.getElementById("root"));
 
 // If you want your app to work offline and load faster, you can change
