@@ -9,7 +9,8 @@ import { Image as ImageLayer, Tile as TileLayer, Vector as VectorLayer, VectorTi
 import { ImageWMS, OSM, TileArcGISRest, TileImage, Vector, XYZ } from "ol/source.js";
 import MVT from "ol/format/MVT";
 import VectorTileSource from "ol/source/VectorTile";
-import stylefunction from "ol-mapbox-style/dist/stylefunction";
+// import stylefunction from "ol-mapbox-style/dist/stylefunction";
+import { stylefunction } from "ol-mapbox-style";
 
 //import {file as FileLoader} from "ol/featureloader.js";
 import { GeoJSON, WKT } from "ol/format.js";

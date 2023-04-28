@@ -4,8 +4,8 @@ import ReactDOM from "react-dom";
 import "./index.css";
 import * as serviceWorker from "./serviceWorker";
 import App from "./App";
-import 'alertifyjs/build/css/alertify.css';
-import 'alertifyjs/build/css/themes/default.min.css';
+import "alertifyjs/build/css/alertify.css";
+import "alertifyjs/build/css/themes/default.min.css";
 
 const { EventEmitter } = require("fbemitter");
 
