@@ -4,8 +4,8 @@ import { Image as ImageLayer, Tile as TileLayer, Vector as VectorLayer, Group as
 import { ImageWMS, OSM, TileArcGISRest, ImageArcGISRest, TileWMS, TileImage, Vector, Stamen, XYZ, ImageStatic } from "ol/source.js";
 import WMTS, { optionsFromCapabilities } from "ol/source/WMTS";
 import VectorTileSource from "ol/source/VectorTile";
-import stylefunction from "ol-mapbox-style/dist/stylefunction";
-
+// import stylefunction from "ol-mapbox-style/dist/stylefunction";
+import { stylefunction } from "ol-mapbox-style";
 import GML3 from "ol/format/GML3.js";
 import GML2 from "ol/format/GML2.js";
 import OSMXML from "ol/format/OSMXML.js";
@@ -523,6 +523,12 @@ export class LayerHelpers {
     let extent = options.extent !== undefined ? options.extent : [];
     let name = options.name !== undefined ? options.name : "";
     let secureKey = options.secureKey;
+    let background = options.background !== undefined ? options.background : null;
+    let rootPath = options.rootPath !== undefined ? options.rootPath : null;
+    let spritePath = options.spritePath !== undefined ? options.spritePath : null;
+    let pngPath = options.pngPath !== undefined ? options.pngPath : null;
+    let minZoom = options.minZoom !== undefined ? options.minZoom : null;
+    let maxZoom = options.maxZoom !== undefined ? options.maxZoom : null;
 
     const rebuildParams = {
       sourceType: sourceType,
@@ -534,6 +540,7 @@ export class LayerHelpers {
       file: file !== undefined ? "STORED FEATURES" : undefined,
       extent: extent,
       name: name,
+      background: background,
     };
     let Vector_FileLoader = undefined;
     let style = undefined;
@@ -813,25 +820,28 @@ export class LayerHelpers {
       case OL_DATA_TYPES.VectorTile:
         let layer = new VectorTileLayer({
           rebuildParams: rebuildParams,
-          renderMode: "vector",
+          renderMode: "hybrid",
           reload: Infinity,
           declutter: true,
           tilePixelRatio: 8,
+          background: background,
+
           source: new VectorTileSource({
             name: name,
             format: new MVT(),
             url: url + "/tile/{z}/{y}/{x}.pbf",
+            minZoom: minZoom || undefined,
+            maxZoom: maxZoom || undefined,
             crossOrigin: "anonymous",
           }),
         });
-        let rootPath = url + "/resources/styles/root.json";
-        let spritePath = url + "/resources/sprites/sprite.json";
-        let pngPath = url + "/resources/sprites/sprite.png";
+        rootPath = rootPath || url + "/resources/styles/root.json";
+
         fetch(rootPath).then(function (response) {
           response.json().then(function (glStyle) {
-            fetch(spritePath).then(function (response) {
+            fetch(spritePath || `${glStyle.sprite}.json`).then(function (response) {
               response.json().then(function (spriteData) {
-                stylefunction(layer, glStyle, "esri", undefined, spriteData, pngPath);
+                stylefunction(layer, glStyle, "esri", undefined, spriteData, pngPath || `${glStyle.sprite}.png`);
               });
             });
           });
@@ -865,6 +875,7 @@ export class LayerHelpers {
                 cql_filter: null,
               },
               ratio: 1,
+              hidpi: false,
               serverType: "geoserver",
               crossOrigin: "anonymous",
               imageLoadFunction: securedImageWMS,
@@ -888,6 +899,7 @@ export class LayerHelpers {
               },
               tileOptions: { crossOriginKeyword: "anonymous" },
               ratio: 1,
+              hidpi: false,
               serverType: "geoserver",
               crossOrigin: "anonymous",
             }),

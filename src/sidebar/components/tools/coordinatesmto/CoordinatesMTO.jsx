@@ -13,7 +13,7 @@ import { Vector as VectorSource } from "ol/source.js";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import { unByKey } from "ol/Observable.js";
-import * as coordinateConfig from "./config.json";
+import { default as coordinateConfig } from "./config.json";
 
 class CoordinatesMTO extends Component {
   constructor(props) {

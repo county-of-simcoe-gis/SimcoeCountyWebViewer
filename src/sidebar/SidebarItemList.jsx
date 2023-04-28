@@ -18,7 +18,7 @@ class SidebarItemList extends Component {
     this.props.onTabClick(name);
   }
   componentDidMount() {
-    helpers.waitForLoad("settings", Date.now(), 30, () => {
+    helpers.waitForLoad(["settings", "sidebar"], Date.now(), 30, () => {
       let listItems = null;
       if (this.props.listtype === "tools") {
         let tools = window.config.sidebarToolComponents;
@@ -28,15 +28,14 @@ class SidebarItemList extends Component {
         let themes = window.config.sidebarThemeComponents;
         listItems = themes.filter((item) => item.enabled === undefined || item.enabled);
       }
-      this.setState({ components: listItems });
+      this.setState({ components: listItems }, () => {
+        helpers.addIsLoaded("toolsAndThemes");
+      });
     });
   }
 
   render() {
     // GET LIST OF COMPONENTS FROM CONFIG
-
-    if (this.state.components.length === 0) return <div />;
-
     return (
       <div className="simcoe-sidebarlist-container">
         {

@@ -108,6 +108,7 @@ class BasemapSwitcher extends Component {
         },
         (newLayer) => {
           //var streetsLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.streetService);
+          newLayer.setOpacity(0.75);
           newLayer.setZIndex(BasemapConfig.imageryServices.length);
           if (BasemapConfig.streetService.fullExtent) {
             newLayer.setExtent(BasemapConfig.streetService.fullExtent);
@@ -190,7 +191,7 @@ class BasemapSwitcher extends Component {
               newLayer.setProperties({
                 index: index,
                 name: layerName,
-                isOverlay: false,
+                isOverlay: service.isOverlay || false,
               });
               serviceLayers.push(newLayer);
               index++;
@@ -212,7 +213,7 @@ class BasemapSwitcher extends Component {
               newLayer.setProperties({
                 index: index,
                 name: layerName,
-                isOverlay: false,
+                isOverlay: service.isOverlay || false,
               });
               serviceLayers.push(newLayer);
               index++;
@@ -235,7 +236,7 @@ class BasemapSwitcher extends Component {
               newLayer.setProperties({
                 index: index,
                 name: layerName,
-                isOverlay: false,
+                isOverlay: service.isOverlay || false,
               });
               serviceLayers.push(newLayer);
               index++;
@@ -250,13 +251,19 @@ class BasemapSwitcher extends Component {
               url: service.url,
               tiled: true,
               name: layerName,
+              background: service.background,
+              rootPath: service.rootPath,
+              spritePath: service.spritePath,
+              pngPath: service.pngPath,
+              minZoom: service.minZoom,
+              maxZoom: service.maxZoom,
             },
             (newLayer) => {
               // LAYER PROPS
               newLayer.setProperties({
                 index: index,
                 name: layerName,
-                isOverlay: false,
+                isOverlay: service.isOverlay || false,
               });
               serviceLayers.push(newLayer);
               index++;

@@ -11,6 +11,10 @@ const Zoning = (props) => {
   //DEFINE STATE VARIABLES
   const [sections, setSections] = useState([]);
   const [themeConfig, setThemeConfig] = useState(zoningConfig.default);
+  const [byLawUrl, setByLawUrl] = useState(null);
+  const [contactUsEmail, setContactUsEmail] = useState(null);
+  const [termsUrl, setTermsUrl] = useState(null);
+
   const [shadowLayer] = useState(
     new VectorLayer({
       source: new VectorSource({
@@ -45,6 +49,9 @@ const Zoning = (props) => {
       if (globalConfig.config !== undefined) {
         setThemeConfig(helpers.mergeObj(themeConfig, globalConfig.config));
       }
+      setByLawUrl(themeConfig.byLawUrl);
+      setContactUsEmail(themeConfig.contactUsEmail);
+      setTermsUrl(themeConfig.termsUrl);
       window.emitter.addListener("searchComplete", (results) => loadReport(results));
       window.map.addLayer(shadowLayer);
     });
@@ -82,15 +89,15 @@ const Zoning = (props) => {
   };
 
   const onContactClick = () => {
-    window.location.href = `mailto:${themeConfig.contactUsEmail}`;
+    window.location.href = `mailto:${contactUsEmail}`;
   };
 
   const onTermsChange = (evt) => {
-    helpers.showURLWindow(themeConfig.termsUrl);
+    helpers.showURLWindow(termsUrl);
   };
 
   const onByLawClick = (evt) => {
-    window.open(themeConfig.byLawUrl, "_blank");
+    window.open(byLawUrl, "_blank");
   };
 
   return (
@@ -103,15 +110,15 @@ const Zoning = (props) => {
         ))}
       </div>
       <div className={"sc-theme-zoning-footer"}>
-        <div className={themeConfig.termsUrl ? "sc-button sc-theme-zoning-terms" : "sc-hidden"} onClick={onTermsChange} title="Terms">
+        <div className={termsUrl ? "sc-button sc-theme-zoning-terms" : "sc-hidden"} onClick={onTermsChange} title="Terms">
           Terms
         </div>
 
-        <div className={themeConfig.byLawUrl ? "sc-button sc-theme-zoning-tbylawerms" : "sc-hidden"} onClick={onByLawClick} title="Zoning Bylaw">
+        <div className={byLawUrl ? "sc-button sc-theme-zoning-tbylawerms" : "sc-hidden"} onClick={onByLawClick} title="Zoning Bylaw">
           Zoning Bylaw
         </div>
 
-        <div className={themeConfig.contactUsEmail ? "sc-button sc-theme-zoning-contactus" : "sc-hidden"} onClick={onContactClick} title="Contact Us">
+        <div className={contactUsEmail ? "sc-button sc-theme-zoning-contactus" : "sc-hidden"} onClick={onContactClick} title="Contact Us">
           Contact Us
         </div>
       </div>

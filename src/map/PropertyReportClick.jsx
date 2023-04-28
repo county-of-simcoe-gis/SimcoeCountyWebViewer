@@ -157,63 +157,68 @@ class PropertyReportClick extends Component {
     const arn = propInfo.ARN;
     const address = propInfo.Address;
     const assessedValue = propInfo.AssessedValue;
-    const garbageDay = propInfo.WasteCollection.GarbageDay;
+    const garbageDay = propInfo.WasteCollection && propInfo.WasteCollection.GarbageDay ? propInfo.WasteCollection.GarbageDay : undefined;
+    const broadbandSpeeds = propInfo.Other && propInfo.Other.BroadbandSpeed ? propInfo.Other.BroadbandSpeed : undefined;
     const coords = propInfo.pointCoordinates;
     const hasZoning = propInfo.HasZoning;
     let rows = [];
-    rows.push(<InfoRow key={helpers.getUID()} label={"Address"} value={address} />);
-    rows.push(
-      <InfoRow key={helpers.getUID()} label={"Roll Number"} value={arn}>
-        <img
-          src={images["copy16.png"]}
-          alt="copy"
-          title="Copy to Clipboard"
-          style={{ marginBottom: "-3px", marginLeft: "5px", cursor: "pointer" }}
-          onClick={() => {
-            copy(arn);
-            helpers.showMessage("Copy", "Roll Number copied to clipboard.");
-            helpers.addAppStat("Copy ARN", "click");
-          }}
-        />
-      </InfoRow>
-    );
-    rows.push(
-      <InfoRow key={helpers.getUID()} label={"Has Zoning"} value={hasZoning ? "Yes" : "No"}>
-        {hasZoning ? (
+    if (address) rows.push(<InfoRow key={helpers.getUID()} label={"Address"} value={address} />);
+    if (arn)
+      rows.push(
+        <InfoRow key={helpers.getUID()} label={"Roll Number"} value={arn}>
           <img
-            src={images["information.png"]}
-            alt="View Zoning"
-            title="View Zoning"
+            src={images["copy16.png"]}
+            alt="copy"
+            title="Copy to Clipboard"
             style={{ marginBottom: "-3px", marginLeft: "5px", cursor: "pointer" }}
             onClick={() => {
-              window.emitter.emit("activateTab", "themes");
-              window.emitter.emit("activateSidebarItem", "Zoning", "themes");
-              window.emitter.emit("searchItem", "All", arn, true);
-              helpers.addAppStat("View Zoning Click", "click");
+              copy(arn);
+              helpers.showMessage("Copy", "Roll Number copied to clipboard.");
+              helpers.addAppStat("Copy ARN", "click");
             }}
           />
-        ) : (
-          ""
-        )}
-      </InfoRow>
-    );
+        </InfoRow>
+      );
+    if (hasZoning !== undefined)
+      rows.push(
+        <InfoRow key={helpers.getUID()} label={"Has Zoning"} value={hasZoning ? "Yes" : "No"}>
+          {hasZoning ? (
+            <img
+              src={images["information.png"]}
+              alt="View Zoning"
+              title="View Zoning"
+              style={{ marginBottom: "-3px", marginLeft: "5px", cursor: "pointer" }}
+              onClick={() => {
+                window.emitter.emit("activateTab", "themes");
+                window.emitter.emit("activateSidebarItem", "Zoning", "themes");
+                window.emitter.emit("searchItem", "All", arn, true);
+                helpers.addAppStat("View Zoning Click", "click");
+              }}
+            />
+          ) : (
+            ""
+          )}
+        </InfoRow>
+      );
 
-    rows.push(
-      <InfoRow key={helpers.getUID()} label={"Assessed Value"}>
-        <img src={"data:image/png;base64," + assessedValue} alt="assessment" />
-        <div
-          style={{
-            fontSize: "9px",
-            color: "#555",
-            paddingBottom: "4px !important",
-          }}
-        >
-          (may not reflect current market value)
-        </div>
-      </InfoRow>
-    );
+    if (assessedValue && arn.substring(0, 4) !== "4342")
+      rows.push(
+        <InfoRow key={helpers.getUID()} label={"Assessed Value"}>
+          <img src={assessedValue} alt="assessment" />
+          <div
+            style={{
+              fontSize: "9px",
+              color: "#555",
+              paddingBottom: "4px !important",
+            }}
+          >
+            (may not reflect current market value)
+          </div>
+        </InfoRow>
+      );
 
-    rows.push(<InfoRow key={helpers.getUID()} label={"Waste Collection Day"} value={garbageDay} />);
+    if (garbageDay) rows.push(<InfoRow key={helpers.getUID()} label={"Waste Collection Day"} value={garbageDay} />);
+    if (broadbandSpeeds) rows.push(<InfoRow key={helpers.getUID()} label={"Potential Broadband Coverage"} value={broadbandSpeeds} />);
 
     rows.push(
       <InfoRow className="sc-no-select" key={helpers.getUID()} label={"Tools"}>
@@ -229,7 +234,7 @@ class PropertyReportClick extends Component {
         <span
           className="sc-fakeLink"
           onClick={() => {
-            helpers.showURLWindow(this.termsUrl, true, "full", true, true, true);
+            helpers.showURLWindow(this.termsUrl, false, "full", false, true, true);
             helpers.addAppStat("Property Click Terms", "click");
           }}
         >
@@ -285,7 +290,7 @@ class PropertyReportClick extends Component {
 
           // GET FULL INFO
           if (feature !== undefined) {
-            const infoURL = this.propertyReportUrl + "?arn=" + arn;
+            const infoURL = this.propertyReportUrl + arn;
             helpers.getJSON(infoURL, (result) => {
               result.pointCoordinates = latLongCoords;
               result.shareURL = this.getShareURL(arn);
@@ -302,7 +307,7 @@ class PropertyReportClick extends Component {
 
         // GET FULL INFO
         if (feature !== undefined) {
-          const infoURL = this.propertyReportUrl + "?arn=" + arn;
+          const infoURL = this.propertyReportUrl + arn;
           helpers.getJSON(infoURL, (result) => {
             result.pointCoordinates = latLongCoords;
             result.shareURL = this.getShareURL(arn);

@@ -15,9 +15,9 @@ import Select from "react-select";
 
 // URLS
 const googleDirectionsURL = (lat, long) => `https://www.google.com/maps?saddr=Current+Location&daddr=${lat},${long}`;
-const searchURL = (apiUrl, searchText, type, muni, limit) => `${apiUrl}async/search/?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
-const searchInfoURL = (apiUrl, locationID) => `${apiUrl}searchById/${locationID}`;
-const searchTypesURL = (apiUrl) => `${apiUrl}getSearchTypes`;
+const searchURL = (apiUrl, searchText, type, muni, limit) => `${apiUrl}public/search/?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
+const searchInfoURL = (apiUrl, locationID) => `${apiUrl}public/search/${locationID}`;
+const searchTypesURL = (apiUrl) => `${apiUrl}public/search/types`;
 
 // DEFAULT SEARCH LIMIT
 const defaultSearchLimit = 10;
@@ -27,7 +27,7 @@ let searchGeoLayer = null;
 let searchIconLayer = null;
 
 // LOCATION ID (FROM SEARCH)
-const locationId = helpers.getURLParameter("LOCATIONID", false);
+const locationId = helpers.getURLParameter("LOCATIONID", false, true);
 
 // IMPORT ALL IMAGES
 const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
@@ -394,7 +394,8 @@ class Search extends Component {
           ? window.config.featureHighlitStyles["stroke"]
           : [255, 0, 0, 0.8],
         false,
-        window.config.featureHighlitStyles["strokeWidth"] !== null && window.config.featureHighlitStyles["strokeWidth"] !== undefined ? window.config.featureHighlitStyles["strokeWidth"] : 2,
+        window.config.featureHighlitStyles && window.config.featureHighlitStyles["strokeWidth"] ? window.config.featureHighlitStyles["strokeWidth"] : 2,
+
         fullFeature.getGeometry().getType()
       );
       defaultStyle.setFill(
@@ -570,7 +571,7 @@ class Search extends Component {
     if ((selectedType === "All" || selectedType === "Theme") && window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideThemes"] !== true) {
       let themes = [];
       window.config.sidebarThemeComponents.forEach((theme) => {
-        if (theme.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0 && (theme.enabled === undefined || theme.enabled)) {
+        if (theme.name && theme.name.toUpperCase().indexOf(this.state.value.toUpperCase()) >= 0 && (theme.enabled === undefined || theme.enabled)) {
           themes.push({
             name: helpers.replaceAllInString(theme.name, "_", " "),
             type: "Theme",

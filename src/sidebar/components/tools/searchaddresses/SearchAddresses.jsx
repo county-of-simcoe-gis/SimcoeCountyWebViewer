@@ -178,7 +178,7 @@ class SearchAddresses extends Component {
         padding: "5px",
       }),
     };
-    const searchStreetsURL = (apiUrl, searchText) => `${apiUrl}getStreetNames/${searchText}`;
+    const searchStreetsURL = (apiUrl, searchText) => `${apiUrl}public/search/street/${searchText}`;
 
     return (
       <PanelComponent onClose={this.onClose} name={this.props.name} helpLink={this.props.helpLink} hideHeader={this.props.hideHeader} type="tools">

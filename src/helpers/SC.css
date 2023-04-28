@@ -397,6 +397,16 @@ p {
   pointer-events: none;
   opacity: 0.4;
 }
+.sc-loading {
+  background-image: url(./images/loading20.gif);
+  width: 20px;
+  height: 20px;
+  background-repeat: no-repeat;
+  padding: 10px;
+  margin: 10px;
+  display: initial;
+  background-position: center;
+}
 
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
@@ -468,6 +478,13 @@ input[type="number"]::-webkit-outer-spin-button {
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff',endColorstr='#e5e5e5',GradientType=0);
   border: 1px solid #ddd;
   margin-top: 2px;
+}
+.sc-login {
+  min-width: 100px;
+  text-align: center;
+  border-radius: 5px;
+  font-size: 20px;
+  padding-top: 12px;
 }
 
 @media print {
