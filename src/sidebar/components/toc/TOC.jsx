@@ -115,10 +115,22 @@ class TOC extends Component {
   getDefaultGroup = (defaultGroupName, layerGroups, callback = undefined) => {
     if (window.config.toc.default_group !== undefined) defaultGroupName = window.config.toc.default_group;
     let urlDefaultGroupName = helpers.getURLParameter("GROUP", true, true);
+    let urlGroupVisibleLayers = helpers.getURLParameter("LAYERS", true, true);
+
     if (urlDefaultGroupName !== null) defaultGroupName = urlDefaultGroupName;
 
     let defaultGroup = layerGroups.filter((item) => item.label === defaultGroupName)[0];
     if (defaultGroup === undefined) defaultGroup = layerGroups[0];
+    //apply url layer visibility
+    if (urlGroupVisibleLayers) {
+      defaultGroup["visibleLayers"] = urlGroupVisibleLayers.split(",");
+      defaultGroup.layers = defaultGroup.layers.map((layer) => {
+        if (defaultGroup.visibleLayers.includes(layer.displayName) || defaultGroup.visibleLayers.includes(layer.name)) {
+          layer.visible = true;
+        }
+        return layer;
+      });
+    }
     if (callback === undefined) return defaultGroup;
     else callback(defaultGroup);
   };
@@ -159,6 +171,7 @@ class TOC extends Component {
     const groupInfo = result;
     let listLayerGroups = groupInfo.groups;
     let folderLayerGroups = TOCHelpers.copyTOCLayerGroups(groupInfo.groups);
+    let urlExpandLegend = helpers.getURLParameter("EXPAND_LEGEND", true, true);
 
     listLayerGroups = this.addAllLayersGroup(listLayerGroups);
     //folderLayerGroups = this.addAllLayersGroup(folderLayerGroups);
@@ -186,9 +199,20 @@ class TOC extends Component {
     });
     folderLayerGroups = folderLayerGroups.map((group) => {
       if (group.layers.length > 0) group.layers = this.sortLayers(group.layers);
-      if (defaultGroup.value === group.value) group.panelOpen = true;
+      if (defaultGroup.value === group.value) {
+        group.panelOpen = true;
+        //update folder view default visibility
+        group.layers = group.layers.map((layer) => {
+          const defaultLayer = defaultGroup.layers.filter((item) => item.name === layer.name)[0];
+          if (defaultLayer) {
+            layer.visible = defaultLayer.visible;
+          }
+          return layer;
+        });
+      }
       return group;
     });
+
     this.setState(
       {
         layerListGroups: listLayerGroups,
@@ -201,6 +225,7 @@ class TOC extends Component {
         this.applySavedLayerOptions(this.state.type === "LIST" ? "FOLDER" : "LIST"); //apply saved data for the opposite toc
         this.updateLayerCount(defaultGroup.layers.length);
         this.updateLayerVisibility();
+        if (urlExpandLegend && urlExpandLegend.toUpperCase() === "TRUE") this.onLegendToggleGroup(defaultGroup, true);
         window.emitter.emit("tocLoaded");
         helpers.addIsLoaded("toc");
         if (callback !== undefined) callback();
@@ -644,6 +669,20 @@ class TOC extends Component {
     if (isMobile) return true;
     else return false;
   };
+  sortGroups = (groups) => {
+    let primaryGroups = Object.assign(
+      [],
+      groups.filter((item) => item.primary)
+    );
+    let nonPrimaryGroups = Object.assign(
+      [],
+      groups.filter((item) => !item.primary)
+    );
+    primaryGroups.sort(TOCHelpers.sortGroupAlphaCompare);
+    nonPrimaryGroups.sort(TOCHelpers.sortGroupAlphaCompare);
+
+    return [...primaryGroups, ...nonPrimaryGroups];
+  };
   sortLayers = (layers) => {
     let newLayers = Object.assign([{}], layers);
     if (this.state.sortListAlpha) newLayers.sort(TOCHelpers.sortByAlphaCompare);
@@ -735,6 +774,7 @@ class TOC extends Component {
         this.getActiveLayerGroups().map((item) => (item.value === newGroup.value ? newGroup : item)),
         () => {
           this.forceUpdate();
+          if (callback !== undefined) callback();
         }
       );
     }
@@ -829,7 +869,7 @@ class TOC extends Component {
     if (!layerItem.layerGroup) {
       const guessLayerGroupName = (layerName) => {
         let likelyLayerGroup = layerGroups.filter((item) => {
-          return item.layers.filter((itemLayer) => itemLayer.name === layerName)[0] !== undefined && (item.panelOpen || this.state.selectedGroup.value === item.value);
+          return item.layers.filter((itemLayer) => itemLayer.name === layerName)[0] !== undefined && (layerItem.ignoreFolderState || item.panelOpen || this.state.selectedGroup.value === item.value);
         })[0];
         return likelyLayerGroup ? likelyLayerGroup.value : this.state.selectedGroup.value;
       };
@@ -837,6 +877,7 @@ class TOC extends Component {
       if (!layerItem.layerGroup) return;
     }
     let currentGroup = layerGroups.filter((item) => item.value === layerItem.layerGroup)[0];
+    if (!currentGroup) return;
     currentGroup.panelOpen = true;
     currentGroup = currentGroup.layers.map((layer) => {
       if (layer.name === layerItem.fullName && layer.group === layerItem.layerGroup) {
@@ -1078,7 +1119,7 @@ class TOC extends Component {
           key="sc-toc-folder"
           id="sc-toc-folder"
           visible={this.state.type === "FOLDER"}
-          layerGroups={this.state.layerFolderGroups}
+          layerGroups={this.sortGroups(this.state.layerFolderGroups)}
           sortAlpha={this.state.sortFolderAlpha}
           searchText={this.state.searchText}
           saveLayerOptions={this.state.saveLayerOptions}

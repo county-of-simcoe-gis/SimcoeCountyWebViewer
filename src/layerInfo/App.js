@@ -4,11 +4,11 @@ import * as layerInfoHelpers from "./helpers";
 import * as helpers from "../helpers/helpers";
 
 import mainConfig from "./config.json";
-import ReactGA from "react-ga";
+import ReactGA from "react-ga4";
 
 if (mainConfig.googleAnalyticsID !== undefined && mainConfig.googleAnalyticsID !== "") {
   ReactGA.initialize(mainConfig.googleAnalyticsID);
-  ReactGA.pageview(window.location.pathname + window.location.search);
+  ReactGA.send({ hitType: "pageview", page: window.location.pathname + window.location.search });
 }
 
 // THIS APP ACCEPTS A FULL URL TO GEOSERVER LAYER
@@ -28,7 +28,7 @@ class LayerInfoApp extends Component {
       hideNewWindow: false,
       hideShare: false,
       hidePrint: false,
-      layerURL: url.searchParams.get("URL"),
+      layerURL: decodeURIComponent(url.searchParams.get("URL")),
       showDownload: url.searchParams.get("SHOW_DOWNLOAD"),
       requestHeader: undefined,
       params: {},

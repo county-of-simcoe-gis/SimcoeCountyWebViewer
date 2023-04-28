@@ -12,12 +12,12 @@ import GroupItem from "./GroupItem";
 import Select from "react-select";
 import cx from "classnames";
 import mainConfig from "./config.json";
-import ReactGA from "react-ga";
+import ReactGA from "react-ga4";
 import xml2js from "xml2js";
 
 if (mainConfig.googleAnalyticsID !== undefined && mainConfig.googleAnalyticsID !== "") {
   ReactGA.initialize(mainConfig.googleAnalyticsID);
-  ReactGA.pageview(window.location.pathname + window.location.search);
+  ReactGA.send({ hitType: "pageview", page: window.location.pathname + window.location.search });
 }
 
 const mainGroupUrl = mainConfig.geoserverLayerGroupsUrl;
@@ -191,7 +191,7 @@ class LegendApp extends Component {
       let keywords = [];
       if (layer.KeywordList !== undefined && layer.KeywordList.length > 0) keywords = layer.KeywordList[0].Keyword;
 
-      let styleUrl = layer.Style[0].LegendURL[0].OnlineResource[0].$["xlink:href"].replace("http", "https");
+      let styleUrl = layer.Style[0].LegendURL[0].OnlineResource[0].$["xlink:href"].replace("http:", "https:");
       let legendSizeOverride = this._getStaticImageLegend(keywords);
 
       if (legendSizeOverride && styleUrl !== "") {

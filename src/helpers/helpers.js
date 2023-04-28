@@ -9,7 +9,8 @@ import { Image as ImageLayer, Tile as TileLayer, Vector as VectorLayer, VectorTi
 import { ImageWMS, OSM, TileArcGISRest, TileImage, Vector, XYZ } from "ol/source.js";
 import MVT from "ol/format/MVT";
 import VectorTileSource from "ol/source/VectorTile";
-import stylefunction from "ol-mapbox-style/dist/stylefunction";
+// import stylefunction from "ol-mapbox-style/dist/stylefunction";
+import { stylefunction } from "ol-mapbox-style";
 
 //import {file as FileLoader} from "ol/featureloader.js";
 import { GeoJSON, WKT } from "ol/format.js";
@@ -27,6 +28,8 @@ import { register } from "ol/proj/proj4";
 import { fromLonLat } from "ol/proj";
 import { getVectorContext } from "ol/render";
 import { KeyboardPan, KeyboardZoom } from "ol/interaction.js";
+import { Polygon } from "ol/geom.js";
+import { fromExtent } from "ol/geom/Polygon";
 
 //OTHER
 import { parseString } from "xml2js";
@@ -538,12 +541,12 @@ export function httpGetTextWithParams(url, params = undefined, callback) {
     .then((response) => response.text())
     .then((responseText) => {
       // CALLBACK WITH RESULT
-      if (callback !== undefined) callback(responseText);
+      if (callback) callback(responseText);
     })
     .catch((error) => {
       //httpGetText(url.replace("opengis.simcoe.ca", "opengis2.simcoe.ca"), callback);
       console.error(url, error);
-      if (callback !== undefined) callback();
+      if (callback) callback();
     });
 }
 
@@ -1239,7 +1242,7 @@ export function previewReport(feature, reportObj, buffer = 0, callback) {
 
 export function bufferGeometry(geometry, distanceMeters, callback) {
   waitForLoad("settings", Date.now(), 30, () => {
-    const url = window.config.apiUrl + "postBufferGeometry/";
+    const url = window.config.apiUrl + "public/map/geometry/buffer/";
 
     // PROJECT TO UTM FOR ACCURACY
     const utmNad83Geometry = geometry.transform("EPSG:3857", _nad83Proj);
@@ -1268,7 +1271,7 @@ export function disableKeyboardEvents(disable) {
 
 export function getGeometryCenter(geometry, callback) {
   waitForLoad("settings", Date.now(), 30, () => {
-    const url = window.config.apiUrl + "postGetGeometryCenter/";
+    const url = window.config.apiUrl + "public/map/geometry/center/";
     const geoJSON = getGeoJSONFromGeometry(geometry);
     const obj = { geoJSON: geoJSON, srid: "3857" };
 
@@ -1604,8 +1607,8 @@ export function loadConfig(callback) {
   if (config.useMapConfigApi || (mapId !== null && mapId !== undefined && mapId.trim() !== "")) {
     config.toc["loaderType"] = "MAPID";
     const mapSettingURL = (apiUrl, mapId) => {
-      if (mapId === null || mapId === undefined || mapId.trim() === "") return `${apiUrl}settings/getDefaultMap`;
-      else return `${apiUrl}settings/getMap/${mapId}`;
+      if (mapId === null || mapId === undefined || mapId.trim() === "") return `${apiUrl}public/map/default`;
+      else return `${apiUrl}public/map/${mapId}`;
     };
     getJSON(mapSettingURL(config.apiUrl, mapId), (result) => {
       if (result.json === undefined) {
@@ -1764,9 +1767,16 @@ export function getARNListFromGeom(geom, callback) {
     callback(tmpArnArray);
   });
 }
-export function getFeaturesFromGeom(wfsUrl, geomFieldName, geom, callback) {
+export function getFeaturesFromGeom(wfsUrl, geomFieldName, queryGeom, callback) {
   const urlTemplate = (mainURL, geomField, wkt) => `${mainURL}&cql_filter=INTERSECTS(${geomField},${wkt})`;
-  bufferGeometry(geom, -1, (resultGeom) => {
+  let bufferDistance = -1;
+
+  if (!(queryGeom instanceof Polygon)) {
+    let geomExtent = queryGeom.getExtent();
+    queryGeom = fromExtent(geomExtent);
+    bufferDistance = 1;
+  }
+  bufferGeometry(queryGeom, bufferDistance, (resultGeom) => {
     const feature = new Feature(resultGeom);
     const wktString = getWKTStringFromFeature(feature);
     const queryUrl = urlTemplate(wfsUrl, geomFieldName, wktString);
@@ -1778,4 +1788,10 @@ export function getFeaturesFromGeom(wfsUrl, geomFieldName, geom, callback) {
       }
     });
   });
+}
+
+export function getBaseUrl(url) {
+  let splitUrl = url.split("/");
+  splitUrl.slice(0, 3);
+  return splitUrl.slice(0, 3).join("/");
 }

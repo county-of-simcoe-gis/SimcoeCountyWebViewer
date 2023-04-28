@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import "./ExternalServices.css";
 import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
-import * as config from "./config.json";
+import { default as config } from "./config.json";
 import GeoJSON from "ol/format/GeoJSON.js";
 import { Vector as VectorLayer } from "ol/layer.js";
 import { Vector as VectorSource } from "ol/source.js";
@@ -75,7 +75,7 @@ class ExternalServices extends Component {
 
       if (feature !== undefined) {
         const arn = feature.get("arn");
-        const infoURL = window.config.propertyReportUrl + "?arn=" + arn;
+        const infoURL = window.config.propertyReportUrl + arn;
         helpers.getJSON(infoURL, (result) => {
           const address = result.Address;
           this.setState({ address });

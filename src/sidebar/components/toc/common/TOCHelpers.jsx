@@ -136,6 +136,10 @@ export async function getMap(sources, isReset, tocType, callback) {
             requiresToken: source.secure,
             grouped: source.grouped,
             grouped_name: source.name,
+            secured: source.secure,
+            open: source.open || false,
+            useRedFolder: source.useRedFolder || false,
+            primary: source.primary || false,
           },
           (layerGroupConfig) => {
             if (!layerGroupConfig.groups) {
@@ -363,9 +367,10 @@ export function getGroupsESRI(options, callback) {
   let groupsObj = {};
   const isGrouped = options.grouped ? true : false;
   let groupedLayer = { name: options.grouped_name, layers: [] };
-  LayerHelpers.getCapabilities({ root_url: options.url, type: "rest" }, (layers) => {
+  LayerHelpers.getCapabilities({ root_url: options.url, type: "rest", secured: options.secured }, (layers) => {
     if (layers.length === 0) {
       callback({ groups: groups, defaultGroupName: defaultGroup });
+      return;
     }
 
     layers.forEach((layer) => {
@@ -379,16 +384,20 @@ export function getGroupsESRI(options, callback) {
         layerOptions["identifyTitleColumn"] = layer.displayField;
         layerOptions["opacity"] = 1 - (layer.drawingInfo === undefined || layer.drawingInfo.transparency === undefined ? 0 : layer.drawingInfo.transparency / 100);
         layerOptions["liveLayer"] = layerOptions.isLiveLayer;
+        layerOptions["secured"] = options.secured;
         layer["options"] = layerOptions;
+        layer["visible"] = layer.defaultVisibility;
         if (!isGrouped)
           layerOptions.categories.forEach((category) => {
+            category = category.replaceAll("_", " ");
             const groupValue = category === "All Layers" ? "opengis:all_layers" : category;
             const tmpGroupObj = {
               value: groupValue,
               label: category,
               url: options.url,
               secured: false,
-              primary: false,
+              primary: options.primary,
+              red: options.useRedFolder,
               prefix: "",
               defaultGroup: false,
               visibleLayers: "",
@@ -420,7 +429,8 @@ export function getGroupsESRI(options, callback) {
         label: category,
         url: options.url,
         secured: false,
-        primary: false,
+        primary: options.primary,
+        red: options.useRedFolder,
         prefix: "",
         defaultGroup: false,
         visibleLayers: "",
@@ -463,7 +473,7 @@ export function getGroupsESRI(options, callback) {
       };
       buildLayers(currentGroup.layers);
       let panelOpen = false;
-      if (isDefault) panelOpen = true;
+      if (isDefault || options.open) panelOpen = true;
       const groupObj = {
         value: currentGroup.value,
         label: currentGroup.label,
@@ -473,6 +483,7 @@ export function getGroupsESRI(options, callback) {
         visibleLayers: visibleLayers,
         secured: currentGroup.secured,
         primary: currentGroup.primary,
+        red: options.useRedFolder,
         wmsGroupUrl: currentGroup.fullGroupUrl,
         layers: layerList,
         panelOpen: panelOpen,
@@ -559,7 +570,7 @@ export async function getSingleLayer(options, callback) {
   });
 }
 // GET GROUPS FROM GET CAPABILITIES
-export async function getGroupsGC(url, urlType, isReset, tocType, secured = false, primary = true, secureKey = undefined, callback) {
+export async function getGroupsGC(url, urlType, isReset, tocType, secured = false, primary = false, secureKey = undefined, callback) {
   let defaultGroup = null;
   let isDefault = false;
   let groups = [];
@@ -778,7 +789,6 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType, secur
   if (layer.Layer === undefined) {
     const visibleLayers = group.visibleLayers === undefined ? [] : group.visibleLayers;
     const geoserverPath = window.config.geoserverPath;
-
     const layerNameOnly = layer.Name;
     let layerTitle = layer.Title;
     let queryable = layer.queryable !== undefined ? layer.queryable : false;
@@ -1045,6 +1055,15 @@ export function getLayerInfo(layerInfo, callback) {
     });
   });
 }
+export function sortGroupAlphaCompare(a, b) {
+  if (a.label < b.label) {
+    return -1;
+  }
+  if (a.label > b.label) {
+    return 1;
+  }
+  return 0;
+}
 export function sortByAlphaCompare(a, b) {
   if (a.tocDisplayName < b.tocDisplayName) {
     return -1;
@@ -1075,7 +1094,7 @@ export function getStyles(groups) {
     //let layerIndex = 0;
     layerList.forEach((layer) => {
       //console.log(layer);
-      helpers.getJSON(layer.subLayerInfoURL.replace("http", "https"), (subLayerInfo) => {
+      helpers.getJSON(layer.subLayerInfoURL.replace("http:", "https:"), (subLayerInfo) => {
         //console.log(subLayerInfo);
         //layerIndex++;
         let styleURL = "";
@@ -1191,7 +1210,7 @@ function parseESRIDescription(description) {
     description: "",
     refreshInterval: "",
     modalURL: "",
-    categories: ["All Layers"],
+    categories: [],
   };
 
   descriptionParts.forEach((descriptionPart) => {
@@ -1235,6 +1254,8 @@ function parseESRIDescription(description) {
       }
     }
   });
+  if (returnObj.categories.length === 0) returnObj.categories.push("Uncategorized");
+
   return returnObj;
 }
 
@@ -1246,7 +1267,6 @@ export async function buildESRILayer(options, callback) {
   let layerIndex = options.layerIndex;
   let secured = options.secured !== undefined ? options.secured : false;
   let secureKey = options.secureKey;
-
   if (layer !== undefined) {
     const visibleLayers = group.visibleLayers === undefined ? [] : group.visibleLayers;
 
@@ -1265,7 +1285,7 @@ export async function buildESRILayer(options, callback) {
       styleUrl = styleUrl.replace("width=20", `width=${legendSize[0]}`).replace("height=20", `height=${legendSize[1]}`);
     }
     const serverUrl = group.url;
-    const metadataUrl = `${layer.url}?f=json`;
+    const metadataUrl = `${layer.url}${layer.url.indexOf("?") > 0 ? "&" : "?"}f=json`;
 
     // LIVE LAYER
     let liveLayer = layer.options.isLiveLayer;
@@ -1302,16 +1322,13 @@ export async function buildESRILayer(options, callback) {
     const minScale = layer.options.minScale;
     const maxScale = layer.options.maxScale;
     // SET VISIBILITY
-    let layerVisible = false;
-    if (visibleLayers.includes(layerNameOnly)) {
-      layerVisible = true;
-    }
-    //console.log(group.value, layerNameOnly, visibleLayers.includes(layerNameOnly));
+    let layerVisible = layer.visible || visibleLayers.includes(layerNameOnly);
     // LAYER PROPS
+
     const layerOptions = {
       sourceType: OL_DATA_TYPES.ImageArcGISRest,
       source: "rest",
-
+      projection: layer.sourceSpatialReference && layer.sourceSpatialReference.latestWkid ? `EPSG:${layer.sourceSpatialReference.latestWkid}` : "EPSG:3857",
       layerName: layer.name,
       url: layer.url,
       tiled: false,
@@ -1322,13 +1339,14 @@ export async function buildESRILayer(options, callback) {
       layerOptions["layers"] = layer.layers;
       layerOptions.sourceType = OL_DATA_TYPES.LayerGroup;
     }
-    if (layer.sourceSpatialReference !== undefined && layer.sourceSpatialReference.latestWkid !== undefined) layerOptions["projection"] = `EPSG:${layer.sourceSpatialReference.latestWkid}`;
     LayerHelpers.getLayer(layerOptions, (newLayer) => {
       //const identifyUrl = (url) => `${url}/query?geometry=#GEOMETRY#&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=true&returnTrueCurves=false&returnIdsOnly=false&returnCountOnly=false&returnZ=false&returnM=false&returnDistinctValues=false&returnExtentOnly=false&quantizationParameters=&f=geojson`;
       const identifyUrl = (options) =>
-        `${options.url}/identify?geometry=${options.point}&geometryType=esriGeometryPoint&layers=visible%3A${options.layerId}&sr=3857&datumTransformations=3857&tolerance=${options.tolerance}&mapExtent=${options.extent}&imageDisplay=${options.resolution}&maxAllowableOffset=10&returnGeometry=true&returnFieldName=true&f=json`;
+        `${options.url}/identify?geometry=${options.point}&geometryType=esriGeometryPoint&layers=visible%3A${options.layerId}&sr=3857&datumTransformations=3857&tolerance=${options.tolerance}&mapExtent=${options.extent}&imageDisplay=${options.resolution}&maxAllowableOffset=10&returnGeometry=true&returnFieldName=false&f=json`;
 
-      const wfsUrl = identifyUrl({
+      const rootInfoUrl = layer.url;
+
+      let wfsUrl = identifyUrl({
         url: layer.rootUrl,
         point: "#GEOMETRY#",
         layerId: layer.id,
@@ -1336,7 +1354,10 @@ export async function buildESRILayer(options, callback) {
         extent: "#EXTENT#",
         resolution: "#RESOLUTION#",
       });
-      const rootInfoUrl = layer.url;
+      var url = new URL(rootInfoUrl);
+      const urlParams = new URLSearchParams(url.searchParams);
+      const url_token = urlParams.get("token");
+      if (url_token) wfsUrl = `${wfsUrl}&token=${url_token}`;
       //http://gis.simcoe.ca/arcgis/rest/services/Severn/Severn_OperationalLayers_Dynamic/MapServer/0/
       newLayer.setVisible(layerVisible);
       newLayer.setOpacity(opacity);

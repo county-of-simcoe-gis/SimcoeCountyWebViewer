@@ -29,6 +29,5 @@ deploy/*
 debug.log
 /src/sidebar/components/toc/debug.log
 *.zip
-package-lock.json
 sc_copyToServer.bat
 Build.ps1

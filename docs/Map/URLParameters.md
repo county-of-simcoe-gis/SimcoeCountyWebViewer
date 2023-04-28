@@ -10,6 +10,14 @@ https://opengis.simcoe.ca/?MODE=ADVANCED
 
 https://opengis.simcoe.ca/?GROUP=Historical
 
+#### TURN ON LAYER VISIBLILITY
+
+https://opengis.simcoe.ca/?LAYERS=Assessment Parcel,Ownership Parcel
+
+#### EXPAND LEGEND ON LOAD
+
+https://opengis.simcoe.ca/?EXPAND_LEGEND=TRUE
+
 #### ZOOM TO ROLL NUMBER
 
 https://opengis.simcoe.ca/?MODE=ADVANCED&ARN=434601000208400

@@ -12,37 +12,78 @@
   "topoServices": [
     {
       "name": "Topographic",
-      "image": "esri-topo.png",
+      "image": "topo.png",
       "index": 0,
       "layers": [
         {
-          "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
-          "type": "ESRI_TILED"
+          "url": "https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}",
+          "type": "ESRI_TILED",
+          "isOverlay": true
         },
         {
-          "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Topo_Cache/MapServer/tile/{z}/{y}/{x}",
-          "type": "SIMCOE_TILED",
-          "fullExtent": [-9127039.9939, 5219474.5973000005, -8607132.7041, 5807644.523699999]
+          "url": "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
+          "type": "ESRI_VECTOR_TILED",
+          "isOverlay": true,
+          "rootPath": "https://opengis.simcoe.ca/public/basemap/ESRI_WorldTopoCanadianStyle.json"
+        },
+        {
+          "url": "https://tiles.arcgis.com/tiles/B6yKvIZqzuOr0jBR/arcgis/rest/services/Canada_Hillshade/MapServer/tile/{z}/{y}/{x}",
+          "type": "ESRI_TILED",
+          "isOverlay": true
+        },
+        {
+          "url": "https://tiles.arcgis.com/tiles/B6yKvIZqzuOr0jBR/arcgis/rest/services/Canada_Topographic/VectorTileServer",
+          "type": "ESRI_VECTOR_TILED",
+          "isOverlay": true,
+          "rootPath": "https://opengis.simcoe.ca/public/basemap/ESRI_Canada_Topographic.json",
+          "maxZoom": 23
         }
-      ],
-      "groupUrlDev": "https://opengis.simcoe.ca/geoserver/simcoe/Topo_Overlay/ows?service=wms&version=1.3.0&request=GetCapabilities"
+      ]
     },
     {
-      "name": "Streets",
-      "image": "esri-streets.png",
+      "name": "Light Grey",
+      "image": "light-grey.png",
       "index": 1,
       "layers": [
         {
-          "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Streets_Black_And_White_Cache/MapServer/tile/{z}/{y}/{x}",
-          "type": "SIMCOE_TILED",
-          "fullExtent": [-9127039.9939, 5219474.5973000005, -8607132.7041, 5807644.523699999]
+          "url": "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
+          "type": "ESRI_VECTOR_TILED",
+          "isOverlay": true,
+          "rootPath": "https://opengis.simcoe.ca/public/basemap/ESRI_LightGreyBackground.json"
+        },
+        {
+          "url": "https://tiles.arcgis.com/tiles/B6yKvIZqzuOr0jBR/arcgis/rest/services/Canada_Topographic/VectorTileServer",
+          "type": "ESRI_VECTOR_TILED",
+          "isOverlay": true,
+          "rootPath": "https://opengis.simcoe.ca/public/basemap/ESRI_LightGrey.json"
+        }
+      ]
+    },
+    {
+      "name": "Streets",
+      "image": "streets.png",
+      "index": 2,
+      "layers": [
+        {
+          "url": "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
+          "type": "ESRI_VECTOR_TILED",
+          "isOverlay": true,
+          "rootPath": "https://opengis.simcoe.ca/public/basemap/ESRI_Streets_Night_Background.json"
+        },
+        {
+          "url": "https://tiles.arcgis.com/tiles/B6yKvIZqzuOr0jBR/arcgis/rest/services/Canada_Topographic/VectorTileServer",
+          "type": "ESRI_VECTOR_TILED",
+          "isOverlay": true,
+          "rootPath": "https://opengis.simcoe.ca/public/basemap/ESRI_Streets_Night.json",
+          "minZoom": 0,
+          "maxZoom": 23
         }
       ]
     },
     {
       "name": "Open Street Map",
       "image": "osm-topo.jpg",
-      "index": 2,
+      "index": 3,
       "layers": [
         {
           "url": "",
@@ -109,7 +150,13 @@
     {
       "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2018_Cache/MapServer/tile/{z}/{y}/{x}",
       "name": "2018",
-      "fullExtent": [-8939184.811223287, 5455923.230242465, -8801043.336866248, 5612747.0814112425],
+      "fullExtent": [-8940584.631934738, 5455923.230242465, -8801043.336866248, 5612747.0814112425],
+      "type": "TileImage"
+    },
+    {
+      "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2022_Cache/MapServer/tile/{z}/{y}/{x}",
+      "name": "2022",
+      "fullExtent": [-8939184.811223287, 5454803.475123089, -8801041.532479914, 5612759.410739516],
       "type": "TileImage"
     }
   ]

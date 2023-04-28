@@ -1,106 +1,115 @@
 .sc-toc-groups-active-layers-badge {
-	background: grey;
-	border-radius: 5px;
-	text-align: center;
-	padding: 2px;
-	color: white;
-	float: right;
-	margin-top: -3px;
+  background: grey;
+  border-radius: 5px;
+  text-align: center;
+  padding: 2px;
+  color: white;
+  float: right;
+  margin-top: -3px;
 }
 .sc-toc-groups-active-layers {
-	background-image: url(../images/layers.png);
-	width: 30px;
-	height: 30px;
-	background-repeat: space;
-	float: right;
+  background-image: url(../images/layers.png);
+  width: 30px;
+  height: 30px;
+  background-repeat: space;
+  float: right;
 }
 
 .sc-toc-layer-container {
-	max-width: 400px;
-	width: 100%;
+  max-width: 400px;
+  width: 100%;
 }
 
 .sc-toc-group-list-header {
-	color: #373737;
-	font-weight: bold;
-	font-size: 14px;
-	background-image: url(../images/folder.png);
-	background-position-x: 3%;
-	background-position-y: center;
-	background-repeat: no-repeat;
-	display: table;
-	background-color: #fff;
-	width: 97%;
-	border: 0px solid #ddd;
-	cursor: pointer;
-	user-select: none;
-	padding: 2px;
-	padding-left: 7%;
+  color: #373737;
+  font-weight: bold;
+  font-size: 14px;
+  background-image: url(../images/folder.png);
+  background-position-x: 3%;
+  background-position-y: center;
+  background-repeat: no-repeat;
+  display: table;
+  background-color: #fff;
+  width: 97%;
+  border: 0px solid #ddd;
+  cursor: pointer;
+  user-select: none;
+  padding: 2px;
+  padding-left: 7%;
 }
 .sc-toc-group-list-header.open {
-	background-image: url(../images/folder_open.png);
+  background-image: url(../images/folder_open.png);
+}
+.sc-toc-group-list-header.red {
+  background-image: url(../images/folder_secure.png);
+}
+
+.sc-toc-group-list-header.red.open {
+  background-image: url(../images/folder_open_secure.png);
 }
 
 .sc-toc-group-list-header.active {
-	font-style: italic;
-	color: #001b96;
+  font-style: italic;
+  color: #001b96;
 }
 
 .sc-toc-group-list-container {
-	border: 0px solid #ddd;
-	border-radius: 3px;
-	margin-bottom: 5px;
+  border: 0px solid #ddd;
+  border-radius: 3px;
+  margin-bottom: 5px;
 }
 
 .sc-toc-group-list-item-container {
-	height: 22px;
-	width: 11px;
-	position: relative;
-	top: -5px;
-	right: -16px;
-	display: table-cell;
+  height: 22px;
+  width: 11px;
+  position: relative;
+  top: -5px;
+  right: -16px;
+  display: table-cell;
 
-	background: url(../images/verticle_dots.png) 0px repeat-y;
+  background: url(../images/verticle_dots.png) 0px repeat-y;
 }
 
 .sc-toc-group-list-item-container > div {
-	position: relative;
-	top: 10px;
-	right: -6px;
-	width: 95%;
+  position: relative;
+  top: 10px;
+  right: -6px;
+  width: 95%;
 }
 
 .sc-toc-layer-container > div > div {
-	height: unset;
+  height: unset;
 }
 .sc-toc-layer-container > div > div > div {
-	max-height: unset;
+  max-height: unset;
 }
 
 .sc-toc-group-list-header-label {
-	width: 90%;
+  /*width: 90%;*/
+  width: 310px;
+  margin-left: 5px;
 }
 
 .sc-toc-group-list-header-table-icon {
-	display: table-cell;
-	vertical-align: middle;
-	width: 11%;
-	padding-left: 5px;
+  display: table-cell;
+  vertical-align: middle;
+  width: 11%;
+  padding-left: 5px;
 }
 
 .sc-toc-group-list-header-symbol {
-	vertical-align: middle;
-	display: table-cell;
-	width: 11%;
+  vertical-align: middle;
+  display: table-cell;
+  width: 11%;
 }
 
 .toc-group-list {
-	padding-inline-start: unset;
-	max-width: 370px;
-	position: absolute;
-	top: 110px;
-	bottom: 5px;
-	width: 100%;
-	overflow-y: auto;
-	overflow-x: hidden;
+  padding-inline-start: unset;
+  max-width: 370px;
+  position: absolute;
+  top: 110px;
+  bottom: 5px;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
