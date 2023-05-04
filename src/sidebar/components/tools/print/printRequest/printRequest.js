@@ -16,7 +16,7 @@ export async function loadTileMatrix(url) {
   let data = await response.text();
   let xml = new window.DOMParser().parseFromString(data, "text/xml");
   let json = utils.xmlToJson(xml);
-  let flatTileMatrix = json.Capabilities.Contents.TileMatrixSet[0].TileMatrix;
+  let flatTileMatrix = json.Capabilities.Contents.TileMatrixSet.TileMatrix || json.Capabilities.Contents.TileMatrixSet[0].TileMatrix;
   let tileMatrix = flatTileMatrix.map((m) => {
     return {
       identifier: m["ows:Identifier"]["#text"],
@@ -179,7 +179,7 @@ let configureTileLayer = async (l) => {
   let tileUrl = null;
   const layerSource = l.getSource();
   tileUrl = layerSource.getUrls();
-  tileUrl = tileUrl[0].indexOf("/MapServer/WMTS/") !== -1 ? tileUrl[0].split("/WMTS")[0] : tileUrl[0].split("/tile")[0];
+  tileUrl = tileUrl[0].indexOf("/MapServer/WMTS/") !== -1 ? `${tileUrl[0].split("/WMTS/")[0]}` : `${tileUrl[0].split("/tile/")[0]}`;
   let retLayer = {};
   if (l.values_.source.key_.includes("openstreetmap.org")) {
     retLayer = {
