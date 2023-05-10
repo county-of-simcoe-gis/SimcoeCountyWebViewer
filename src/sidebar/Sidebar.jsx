@@ -11,6 +11,7 @@ import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 import SidebarComponent from "react-sidebar";
 import SidebarSlim from "./SidebarSlim.jsx";
+import MenuButton from "./MenuButton.jsx";
 
 class Sidebar extends Component {
   constructor(props) {
@@ -539,6 +540,7 @@ class Sidebar extends Component {
             <div id="sc-sidebar-advanced-tab" className={this.state.tabClassName} onClick={() => this.togglePanelVisibility()}>
               <img src={require("./images/close-tab.png")} alt="Close Tab" />
             </div>
+
             <SidebarSlim
               onClick={this.slimSidebarButtonClick}
               themeActive={this.state.activeTabComponents.themes.loadedComponent}
@@ -557,7 +559,7 @@ class Sidebar extends Component {
               reports={this.state.reports}
             />
             <div id="sc-sidebar-message-container" />
-            {/* <MenuButton /> */}
+            {this.state.sidebarOpen ? <MenuButton showLabel={false} className="sideBarOpen" /> : ""}
           </React.Fragment>
         }
         open={this.state.sidebarOpen}
