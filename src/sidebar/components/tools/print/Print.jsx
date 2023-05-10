@@ -219,9 +219,7 @@ class Print extends Component {
             </div>
             Is your Print too grainy or low quality? <br /> Click here for a high resolution screenshot
           </div>
-
           {/* MAP TITLE */}
-
           <label style={{ fontWeight: "bold" }}>Map Title:</label>
           <input
             className="sc-print-map-title-input"
@@ -234,15 +232,13 @@ class Print extends Component {
               helpers.disableKeyboardEvents(false);
             }}
           />
-
           {/* PRINT SIZE */}
           <label style={{ fontWeight: "bold" }}>Select Paper Size:</label>
           <Select styles={dropdownStyles} isSearchable={false} options={this.state.printSizes} value={this.state.printSizeSelectedOption} onChange={this.onChangePaperSize} />
-
           {/* FORMAT */}
           <label style={{ fontWeight: "bold" }}>Select Output Format:</label>
           <Select styles={dropdownStyles} isSearchable={false} options={this.state.printFormats} value={this.state.printFormatSelectedOption} onChange={this.onChangeFormat} />
-
+          <div width="100%">** Note: Some basemap layers are currently unsupported by print</div>
           {/* PRINT BUTTON */}
           <button className="sc-button sc-print-button" onClick={this.onDownloadButtonClick} disabled={this.state.isPrinting}>
             Print
@@ -251,7 +247,6 @@ class Print extends Component {
             Printing...&nbsp;
             <img src={images["loading20.gif"]} alt="loading" />
           </div>
-
           {/* ADVANCED OPTIONS */}
           <Collapsible
             overflowWhenOpen="auto"
