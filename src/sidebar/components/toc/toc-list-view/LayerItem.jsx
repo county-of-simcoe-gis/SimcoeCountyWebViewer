@@ -3,6 +3,7 @@ import * as helpers from "../../../../helpers/helpers";
 import Highlighter from "react-highlight-words";
 import LayerLegend from "../common/LayerLegend";
 import { acceptDisclaimer } from "../common/TOCHelpers.jsx";
+import { FaPaperclip } from "react-icons/fa";
 
 import "./LayerItem.css";
 class LayerItem extends Component {
@@ -102,6 +103,9 @@ class LayerItem extends Component {
 
           <div className={layerInfo.liveLayer === null || !layerInfo.liveLayer ? "sc-hidden" : "sc-toc-item-layer-info-live-layer"} title="This layer is Interactable in the map.">
             <img src={images["callout.png"]} alt="callout" />
+          </div>
+          <div className={layerInfo.hasAttachments === null || !layerInfo.hasAttachments ? "sc-hidden" : "sc-toc-item-layer-info-attachment-layer"} title="This layer has attachments.">
+            <FaPaperclip className="sc-attachment-icon" />
           </div>
           <div className={layerInfo.canDownload === null || !layerInfo.canDownload ? "sc-hidden" : "sc-toc-item-layer-info-download"} title="This layer can be downloaded.">
             <img src={images["download.png"]} alt="can download" />

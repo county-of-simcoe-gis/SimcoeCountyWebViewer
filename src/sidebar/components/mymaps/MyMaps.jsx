@@ -61,6 +61,7 @@ class MyMaps extends Component {
     this.state = {
       drawType: "Cancel",
       drawColor: "#e809e5",
+      drawOpacity: 0.8,
       drawStyle: null,
       items: [],
       isEditing: false,
@@ -197,7 +198,6 @@ class MyMaps extends Component {
 
   setDrawControl = () => {
     // REMOVE THE LAST DRAW
-
     if (this.draw !== null) {
       window.emitter.emit("changeCursor", "standard");
       window.map.removeInteraction(this.draw);
@@ -356,14 +356,14 @@ class MyMaps extends Component {
         feature.setGeometry(arrow);
 
         // GIVE IT A BIGGER STROKE BY DEFAULT
-        customStyle = drawingHelpers.getDefaultDrawStyle(this.state.drawColor, false, 6, feature.getGeometry().getType());
+        customStyle = drawingHelpers.getDefaultDrawStyle({ drawColor: this.state.drawColor, isText: false, strokeWidth: 6, pointType: feature.getGeometry().getType() });
         feature.setStyle(customStyle);
       } else if (this.state.drawType === "Text") {
         labelText = "Enter Custom Text";
-        customStyle = drawingHelpers.getDefaultDrawStyle(this.state.drawColor, true, undefined, undefined, feature.getGeometry().getType());
+        customStyle = drawingHelpers.getDefaultDrawStyle({ drawColor: this.state.drawColor, isText: true, geometryType: feature.getGeometry().getType() });
         feature.setStyle(customStyle);
       } else {
-        customStyle = drawingHelpers.getDefaultDrawStyle(this.state.drawColor, undefined, undefined, undefined, feature.getGeometry().getType());
+        customStyle = drawingHelpers.getDefaultDrawStyle({ drawColor: this.state.drawColor, geometryType: feature.getGeometry().getType() });
         feature.setStyle(customStyle);
       }
     } else {
@@ -575,7 +575,7 @@ class MyMaps extends Component {
   };
 
   updateStyle = () => {
-    const drawStyle = drawingHelpers.getDefaultDrawStyle(this.state.drawColor);
+    const drawStyle = drawingHelpers.getDefaultDrawStyle({ drawColor: this.state.drawColor });
     this.setState({ drawStyle: drawStyle }, () => {
       // UPDATE THE DRAW TO PICK UP NEW STYLE
       this.setDrawControl();

@@ -12,6 +12,7 @@ class FooterTools extends Component {
     this.state = {
       scale: "",
       basemapType: "IMAGERY",
+      scaleSelector: false,
     };
     this.mapScales = [
       { label: "1:250", value: 250 },
@@ -33,20 +34,17 @@ class FooterTools extends Component {
 
   componentDidMount() {
     helpers.waitForLoad("map", Date.now(), 30, () => this.onMapLoad());
-
-    this.setState({ showScale: window.mapControls.scale });
+    helpers.waitForLoad("settings", Date.now(), 30, () => this.setState({ scaleSelector: window.mapControls.scaleSelector, showScale: window.mapControls.scale }));
   }
 
   onMapLoad() {
     const initScale = helpers.getMapScale();
-
     this.setState({
       scale: initScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
     });
 
     window.map.on("moveend", () => {
       const scale = helpers.getMapScale();
-
       this.setState({
         scale: scale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
         // currentScale: scale,
@@ -118,7 +116,7 @@ class FooterTools extends Component {
       }
     }, 10);
 
-    const scale = window.mapControls.scaleSelector ? (
+    const scale = this.state.scaleSelector ? (
       <div id="sc-scale-bar-text" className="sc-map-footer-scale-only selector">
         Scale:&nbsp;
         <select

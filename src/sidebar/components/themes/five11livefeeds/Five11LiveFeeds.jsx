@@ -31,7 +31,6 @@ class ThemeComponent extends Component {
         var displayName = results[2];
 
         const entries = Object.entries(feature.getProperties());
-        console.log(entries);
         let propsToShow = [];
         entries.forEach((prop) => {
           const val = prop[0];
@@ -47,7 +46,6 @@ class ThemeComponent extends Component {
         });
 
         if (layerName === "511-mto-cameras") {
-          console.log(entries);
           window.popup.show(evt.coordinate, <MtoCameraPopup key={helpers.getUID()} entries={entries} />, "MTO Camera");
         } else {
           console.log("in reg");

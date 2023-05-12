@@ -79,41 +79,43 @@ class FloatingImageSlider extends Component {
     let nextIndex = this.state.featureIndex + 1;
     if (nextIndex > this.state.features.length - 1) nextIndex = 0;
     const currentFeature = this.state.features[nextIndex];
+    const geom = currentFeature.getGeometry();
+    if (geom)
+      this.setState(
+        {
+          featureIndex: nextIndex,
+          currentFeature,
+        },
+        () => {
+          var feature = new Feature({
+            geometry: fromExtent(buffer(geom.getExtent(), 100)),
+          });
+          if (zoom) helpers.zoomToFeature(feature, false);
 
-    this.setState(
-      {
-        featureIndex: nextIndex,
-        currentFeature,
-      },
-      () => {
-        var feature = new Feature({
-          geometry: fromExtent(buffer(this.state.currentFeature.getGeometry().getExtent(), 100)),
-        });
-        if (zoom) helpers.zoomToFeature(feature, false);
-
-        this.onFeatureChange(currentFeature);
-      }
-    );
+          this.onFeatureChange(currentFeature);
+        }
+      );
   };
 
-  onPreviousFeature = (zoom) => {
+  onPreviousFeature = (zoom = false) => {
     let previousIndex = this.state.featureIndex - 1;
     if (previousIndex < 0) previousIndex = this.state.features.length - 1;
     const currentFeature = this.state.features[previousIndex];
-
-    this.setState(
-      {
-        featureIndex: previousIndex,
-        currentFeature,
-      },
-      () => {
-        var feature = new Feature({
-          geometry: fromExtent(buffer(this.state.currentFeature.getGeometry().getExtent(), 100)),
-        });
-        helpers.zoomToFeature(feature, false);
-        this.onFeatureChange(currentFeature);
-      }
-    );
+    const geom = currentFeature.getGeometry();
+    if (geom)
+      this.setState(
+        {
+          featureIndex: previousIndex,
+          currentFeature,
+        },
+        () => {
+          var feature = new Feature({
+            geometry: fromExtent(buffer(geom.getExtent(), 100)),
+          });
+          helpers.zoomToFeature(feature, false);
+          this.onFeatureChange(currentFeature);
+        }
+      );
   };
 
   onResize = (e, direction, ref, d) => {
@@ -218,8 +220,8 @@ class FloatingImageSlider extends Component {
                     src={this.state.currentFeature.get(this.state.callerObj.imageUrlField)}
                     alt="property"
                     onError={(e) => {
-                      console.log("auto next");
-                      this.onNextFeature(false);
+                      // console.log("auto next");
+                      // this.onNextFeature(false);
                       e.target.onerror = null;
                       e.target.src = images["noPhoto.png"];
                     }}

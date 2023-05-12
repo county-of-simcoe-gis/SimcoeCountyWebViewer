@@ -6,7 +6,8 @@ import * as helpers from "../helpers/helpers";
 import mainConfig from "./config.json";
 import ReactGA from "react-ga4";
 
-if (mainConfig.googleAnalyticsID !== undefined && mainConfig.googleAnalyticsID !== "") {
+const enableAnalytics = helpers.getURLParameter("ANALYTICS") !== "off";
+if (mainConfig.googleAnalyticsID !== undefined && mainConfig.googleAnalyticsID !== "" && enableAnalytics) {
   ReactGA.initialize(mainConfig.googleAnalyticsID);
   ReactGA.send({ hitType: "pageview", page: window.location.pathname + window.location.search });
 }

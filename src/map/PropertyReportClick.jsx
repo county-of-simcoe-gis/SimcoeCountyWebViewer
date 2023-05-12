@@ -281,7 +281,6 @@ class PropertyReportClick extends Component {
       var latLongCoords = null;
       var pointerPoint = null;
       if (clickEvt === null) {
-        console.log("in");
         helpers.getGeometryCenter(feature.getGeometry(), (center) => {
           pointerPoint = center.flatCoordinates;
           latLongCoords = helpers.toLatLongFromWebMercator(pointerPoint);

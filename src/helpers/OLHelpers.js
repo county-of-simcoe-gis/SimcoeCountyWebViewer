@@ -157,6 +157,8 @@ export class LayerHelpers {
       : layer.getSource().getFeatureInfoUrl(coordinate, viewResolution, "EPSG:3857", {
           INFO_FORMAT: "application/json",
         });
+    let attachmentUrl = layer.get("attachmentUrl");
+    const hasAttachments = layer.get("hasAttachments");
     const params = {};
     const secureKey = layer.get("secureKey");
     if (secureKey !== undefined) {
@@ -171,6 +173,7 @@ export class LayerHelpers {
       const tolerance = 20 - zoom;
       url = url
         .replace("#GEOMETRY#", coordinate)
+        .replace("#GEOMETRYTYPE#", "esriGeometryPoint")
         .replace("#TOLERANCE#", tolerance >= 10 ? tolerance : 10)
         .replace("#EXTENT#", extent.join(","))
         .replace("#RESOLUTION#", arcgisResolution);
@@ -178,6 +181,15 @@ export class LayerHelpers {
     if (url) {
       await helpers.getJSONWaitWithParams(url, params, (result) => {
         let features = isArcGISLayer ? LayerHelpers.parseESRIIdentify(result) : new GeoJSON().readFeatures(result);
+        if (hasAttachments) {
+          features = features.map((feature) => {
+            const keys = feature.getKeys();
+            const objectId = feature.get(keys.filter((item) => item.indexOf("OBJECTID") !== -1)[0]);
+            feature.values_["attachmentUrl"] = attachmentUrl.replace("#OBJECTID#", objectId);
+            return feature;
+          });
+        }
+
         if (callback === undefined) {
           return features.length > 0 ? features[0] : undefined;
         } else {
@@ -194,6 +206,9 @@ export class LayerHelpers {
       : layer.getSource().getFeatureInfoUrl(coordinate, viewResolution, "EPSG:3857", {
           INFO_FORMAT: "application/json",
         });
+    let attachmentUrl = layer.get("attachmentUrl");
+    const hasAttachments = layer.get("hasAttachments");
+
     const params = {};
     const secureKey = layer.get("secureKey");
     if (secureKey !== undefined) {
@@ -208,6 +223,7 @@ export class LayerHelpers {
       const tolerance = 20 - zoom;
       url = url
         .replace("#GEOMETRY#", coordinate)
+        .replace("#GEOMETRYTYPE#", "esriGeometryPoint")
         .replace("#TOLERANCE#", tolerance >= 10 ? tolerance : 10)
         .replace("#EXTENT#", extent.join(","))
         .replace("#RESOLUTION#", arcgisResolution);
@@ -215,6 +231,14 @@ export class LayerHelpers {
     if (url) {
       helpers.getJSONWithParams(url, params, (result) => {
         let features = isArcGISLayer ? LayerHelpers.parseESRIIdentify(result) : new GeoJSON().readFeatures(result);
+        if (hasAttachments) {
+          features = features.map((feature) => {
+            const keys = feature.getKeys();
+            const objectId = feature.get(keys.filter((item) => item.indexOf("OBJECTID") !== -1)[0]);
+            feature.values_["attachmentUrl"] = attachmentUrl.replace("#OBJECTID#", objectId);
+            return feature;
+          });
+        }
         callback(features.length > 0 ? features[0] : undefined);
       });
     }
@@ -228,7 +252,7 @@ export class LayerHelpers {
         delete item.geometryType;
         let keys = Object.keys(item.attributes);
         keys.forEach((key) => {
-          if (item.attributes[key] === "Null" || item.attributes[key] === "") delete item.attributes[key];
+          if (item.attributes[key] === "Null" || item.attributes[key] === "") item.attributes[key] = ""; //delete item.attributes[key];
         });
 
         let tempFeature = new EsriJSON().readFeature(item);
@@ -279,7 +303,7 @@ export class LayerHelpers {
       //headers["token"] = "GIS";
       params["headers"] = headers;
     }
-    helpers.httpGetTextWithParams(url, params, (responseText) => {
+    const parseResponseText = (responseText, token = undefined) => {
       if (responseText === null) {
         callback([]);
         return;
@@ -321,7 +345,7 @@ export class LayerHelpers {
           case "rest":
             response = JSON.parse(responseText);
             if (response.layers !== undefined) {
-              this.getESRILegend(`${root_url}/legend?f=json`, (legends) => {
+              this.getESRILegend(token ? `${root_url}/legend?f=json&token=${token}` : `${root_url}/legend?f=json`, (legends) => {
                 response.layers.forEach((item) => {
                   if (item !== undefined) {
                     item["layer_name"] = item.name;
@@ -342,7 +366,7 @@ export class LayerHelpers {
                     })[0];
                     if (item.drawingInfo !== undefined && item.drawingInfo.renderer !== undefined && item.drawingInfo.renderer.symbol !== undefined && item.legend === undefined)
                       item["style"] = `data:${item.drawingInfo.renderer.symbol.contentType};base64,${item.drawingInfo.renderer.symbol.imageData}`;
-                    item["url"] = `${root_url}/${item.id}`;
+                    item["url"] = token ? `${root_url}/${item.id}?token=${token}` : `${root_url}/${item.id}`;
                     layers.push(item);
                   }
                 });
@@ -377,8 +401,105 @@ export class LayerHelpers {
         console.warn("Unexpected error: " + error.message);
         callback(layers);
       }
+    };
+    if (options.token) {
+      url = `${url}&token=${options.token}`;
+      helpers.httpGetTextWithParams(url, params, (responseText) => {
+        parseResponseText(responseText, options.token);
+      });
+    } else {
+      helpers.httpGetTextWithParams(url, params, (responseText) => {
+        parseResponseText(responseText);
+      });
+    }
+  }
+
+  static createArcGISRestLayersFromService(capabilities, options, callback) {
+    const { returnLayers } = options;
+    let layerArray = [];
+    capabilities.forEach((layer) => {
+      if (!returnLayers || returnLayers.includes(layer.id)) {
+        const hasAttachments = layer.hasAttachments;
+        const layerOptions = {
+          sourceType: OL_DATA_TYPES.ImageArcGISRest,
+          source: "rest",
+          projection: layer.sourceSpatialReference && layer.sourceSpatialReference.latestWkid ? `${layer.sourceSpatialReference.latestWkid}` : "3857",
+          layerName: layer.name,
+          url: layer.url,
+          tiled: false,
+          extent: layer.extent,
+          name: layer.name,
+        };
+        if (layer.grouped) {
+          layerOptions["layers"] = layer.layers;
+          layerOptions.sourceType = OL_DATA_TYPES.LayerGroup;
+        }
+        LayerHelpers.getLayer(layerOptions, (newLayer) => {
+          const identifyUrl = (options) =>
+            `${options.url}/identify?geometry=${options.point}&geometryType=${options.geometryType}&layers=visible%3A${options.layerId}&sr=3857&datumTransformations=3857&tolerance=${options.tolerance}&mapExtent=${options.extent}&imageDisplay=${options.resolution}&maxAllowableOffset=10&returnGeometry=true&returnFieldName=false&f=json`;
+          const getAttachmentUrl = (options) => `${options.url}/${options.layerId}/queryAttachments?objectIds=${options.objectId}&returnUrl=true&f=json`;
+          const getRecordCountUrl = (options) => `${options.url}/${options.layerId}/query?where=0%3D0&returnCountOnly=true&f=json`;
+          const getQueryUrl = (options) => `${options.url}/${options.layerId}/query?where=#WHERE#&outFields=*&outSR=3857&returnCountOnly=false&f=geojson`;
+          const rootInfoUrl = layer.url;
+          let attachmentUrl = getAttachmentUrl({
+            url: layer.rootUrl,
+            layerId: layer.id,
+            objectId: "#OBJECTID#",
+          });
+          let wfsUrl = identifyUrl({
+            url: layer.rootUrl,
+            point: "#GEOMETRY#",
+            layerId: layer.id,
+            tolerance: "#TOLERANCE#",
+            extent: "#EXTENT#",
+            resolution: "#RESOLUTION#",
+            geometryType: "#GEOMETRYTYPE#",
+          });
+          let queryUrl = getQueryUrl({
+            url: layer.rootUrl,
+            layerId: layer.id,
+          });
+          let recordCountUrl = getRecordCountUrl({
+            url: layer.rootUrl,
+            layerId: layer.id,
+          });
+          var url = new URL(rootInfoUrl);
+          const urlParams = new URLSearchParams(url.searchParams);
+          const url_token = urlParams.get("token");
+          if (url_token) wfsUrl = `${wfsUrl}&token=${url_token}`;
+          if (url_token && hasAttachments) attachmentUrl = `${attachmentUrl}&token=${url_token}`;
+          if (url_token) recordCountUrl = `${recordCountUrl}&token=${url_token}`;
+          if (url_token) queryUrl = `${queryUrl}&token=${url_token}`;
+
+          newLayer.setVisible(layer.defaultVisibility);
+          newLayer.setOpacity(layer.options ? layer.options.opacity || 1 : 1);
+          newLayer.setProperties({
+            layerId: layer.id,
+            name: layer.name,
+            displayName: layer.name,
+            tocDisplayName: layer.name,
+            wfsUrl: wfsUrl,
+            rootInfoUrl: rootInfoUrl,
+            clickable: true,
+            disableParcelClick: false,
+            queryable: layer.queryable !== undefined ? layer.queryable : false,
+            opaque: layer.opaque !== undefined ? layer.opaque : false,
+            minScale: layer.minScale,
+            maxScale: layer.maxScale,
+            attachmentUrl: hasAttachments ? attachmentUrl : null,
+            hasAttachments: hasAttachments,
+            recordCountUrl: recordCountUrl,
+            featureQueryUrl: queryUrl,
+          });
+          newLayer["layerConfig"] = layer;
+          newLayer["key"] = helpers.getUID();
+          layerArray.push(newLayer);
     });
   }
+    });
+    callback(layerArray);
+  }
+
   static getESRILegend(url, callback) {
     helpers.httpGetText(url, (responseText) => {
       var response = JSON.parse(responseText);
@@ -518,6 +639,7 @@ export class LayerHelpers {
     let projection = options.projection !== undefined ? options.projection : "EPSG:3857";
     let layerName = options.layerName;
     let url = options.url;
+    let params = options.params;
     let tiled = options.tiled !== undefined ? options.tiled : false;
     let file = options.file;
     let extent = options.extent !== undefined ? options.extent : [];
@@ -825,7 +947,6 @@ export class LayerHelpers {
           declutter: true,
           tilePixelRatio: 8,
           background: background,
-
           source: new VectorTileSource({
             name: name,
             format: new MVT(),
@@ -907,17 +1028,27 @@ export class LayerHelpers {
         );
         break;
       case OL_DATA_TYPES.ImageArcGISRest:
-        let urlArray = url.split("/");
+        let token = undefined;
+        let urlParam = url.split("?");
+        let urlArray = urlParam[0].split("/");
+        urlParam.shift();
         let url_layer = urlArray[urlArray.length - 1];
         urlArray.pop();
         url = urlArray.join("/");
+        if (urlParam[0]) {
+          let tokenArray = urlParam[0].split("=");
+          token = tokenArray[1];
+        }
         const sourceParams = {
           url: url,
-          params: { LAYERS: `SHOW:${url_layer}` },
+          params: params || { LAYERS: `SHOW:${url_layer}` },
           ratio: 1,
           projection: projection,
           crossOrigin: "anonymous",
         };
+        if (token) {
+          sourceParams.params["TOKEN"] = token;
+        }
         if (extent !== undefined) sourceParams["extent"] = [extent.xmin, extent.ymin, extent.xmax, extent.ymax];
         callback(
           new ImageLayer({

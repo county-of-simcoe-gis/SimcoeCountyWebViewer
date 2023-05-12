@@ -56,7 +56,7 @@ export function getFeatureById(id) {
 }
 
 export function getStyleFromJSON(styleJSON, pointType) {
-  if (styleJSON === undefined || styleJSON === null) return getDefaultDrawStyle("#e809e5");
+  if (styleJSON === undefined || styleJSON === null) return getDefaultDrawStyle({ drawColor: "#e809e5" });
 
   // FILL
   let fill = null;
@@ -156,33 +156,40 @@ export function getStyleFromJSON(styleJSON, pointType) {
   return style;
 }
 
-export function getDefaultDrawStyle(drawColor, isText = false, strokeWidth = 3, pointType = "circle", geometryType) {
+export function getDefaultDrawStyle(opts) {
+  //{drawColor, isText = false, strokeWidth = 3, pointType = "circle", geometryType) {
+  let { drawColor, strokeColor, strokeOpacity, fillColor, fillOpacity, strokeWidth, pointType, geometryType, isText } = opts;
+  let hexColor = "#e809e5";
+  if (drawColor) hexColor = asArray(drawColor);
   if (isText === undefined) isText = false;
   if (strokeWidth === undefined) strokeWidth = 3;
+  if (pointType === undefined) pointType = "circle";
+  if (strokeColor === undefined) strokeColor = hexColor.slice();
+  else strokeColor = asArray(strokeColor).slice();
+  if (fillColor === undefined) fillColor = hexColor.slice();
+  else fillColor = asArray(fillColor).slice();
+  if (strokeOpacity === undefined) strokeOpacity = 0.8;
+  if (fillOpacity === undefined) fillOpacity = 0.4;
 
-  // UPDATE FILL COLOR OPACITY
-  var initialOpacity = 0.8;
-  var hexColor = drawColor;
-  var color = asArray(hexColor);
-  color = color.slice();
-  color[3] = isText ? 0 : initialOpacity; // change the alpha of the color
+  fillColor[3] = isText ? 0 : fillOpacity; // change the alpha of the color
+  strokeColor[3] = isText ? 0 : strokeOpacity; // change the alpha of the color
 
   let drawStyle = new Style({
     fill: new Fill({
-      color: color, // USE OPACITY
+      color: fillColor, // USE OPACITY
     }),
     stroke: new Stroke({
-      color: geometryType === "Polygon" || geometryType === "Circle" ? [0, 0, 0, 0.8] : color,
+      color: geometryType === "Polygon" || geometryType === "Circle" ? [0, 0, 0, 0.8] : strokeColor,
       width: strokeWidth,
     }),
     image: new CircleStyle({
       radius: 4,
       stroke: new Stroke({
-        color: isText ? color : [0, 0, 0, initialOpacity],
+        color: isText ? strokeColor : [0, 0, 0, strokeOpacity],
         width: strokeWidth,
       }),
       fill: new Fill({
-        color: color,
+        color: fillColor,
       }),
     }),
   });
@@ -455,7 +462,6 @@ export function convertLineToArrow(geometry) {
 export function importMyMaps(id, callback2) {
   helpers.waitForLoad("settings", Date.now(), 30, () => {
     helpers.getJSON(`${window.config.apiUrl}public/map/mymaps/${id}`, (result) => {
-      console.log(result);
       callback2(result);
     });
   });
@@ -479,7 +485,7 @@ export function exportMyMaps(callback2, id = null) {
       }
     }
 
-    helpers.postJSON(window.config.apiUrl + "public/map/mymaps", data, (result) => {
+    helpers.postJSON(window.config.apiUrl + "public/map/mymaps/", data, (result) => {
       callback2(result);
     });
   });

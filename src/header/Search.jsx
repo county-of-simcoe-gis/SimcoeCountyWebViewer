@@ -15,7 +15,7 @@ import Select from "react-select";
 
 // URLS
 const googleDirectionsURL = (lat, long) => `https://www.google.com/maps?saddr=Current+Location&daddr=${lat},${long}`;
-const searchURL = (apiUrl, searchText, type, muni, limit) => `${apiUrl}public/search/?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
+const searchURL = (apiUrl, searchText, type, muni, limit) => `${apiUrl}public/search?q=${searchText}&type=${type}&muni=${muni}&limit=${limit}`;
 const searchInfoURL = (apiUrl, locationID) => `${apiUrl}public/search/${locationID}`;
 const searchTypesURL = (apiUrl) => `${apiUrl}public/search/types`;
 
@@ -78,7 +78,7 @@ class Search extends Component {
     window.emitter.addListener("tocLoaded", () => this.onInitialSearch());
 
     // LISTEN FOR EXTERNAL COMPONENT SEARCH
-    window.emitter.addListener("searchItem", (searchType, searchText, hidden = false) => this.onSearch(searchType, searchText, hidden));
+    window.emitter.addListener("searchItem", (searchType, searchText, hidden = false, timeout = undefined) => this.onSearch(searchType, searchText, hidden, timeout));
 
     this.state = {
       value: "",
@@ -109,7 +109,13 @@ class Search extends Component {
 
   componentDidMount() {
     helpers.waitForLoad(["map", "settings"], Date.now(), 30, () => {
-      if (window.config.municipality !== undefined) this.setState({ municipality: window.config.municipality });
+      let muni = window.config.municipality;
+      if (!muni) {
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        muni = urlParams.get("MUNI");
+      }
+      if (muni) this.setState({ municipality: muni });
       this.apiUrl = window.config.apiUrl;
       this.storageKey = window.config.storageKeys.SearchHistory;
       if (window.config.search) {
@@ -169,7 +175,7 @@ class Search extends Component {
     this.onSearch(search_type, search);
   };
 
-  onSearch = (search_type = undefined, search = undefined, hidden = false) => {
+  onSearch = (search_type = undefined, search = undefined, hidden = false, timeout = undefined) => {
     if (!search && search === null) return;
     if (!search_type && search_type === null) {
       search_type = "All";
@@ -181,7 +187,7 @@ class Search extends Component {
       });
     helpers.getJSON(encodeURI(searchURL(this.apiUrl, search, search_type, this.state.municipality, 1)), (responseJson) => {
       if (responseJson[0] !== undefined && responseJson[0].location_id !== null && responseJson[0].location_id !== undefined) {
-        helpers.getJSON(searchInfoURL(this.apiUrl, responseJson[0].location_id), (result) => this.jsonCallback(result, hidden));
+        helpers.getJSON(searchInfoURL(this.apiUrl, responseJson[0].location_id), (result) => this.jsonCallback(result, hidden, timeout));
       }
     });
   };
@@ -278,7 +284,7 @@ class Search extends Component {
     }
   }
 
-  jsonCallback(result, hidden = false) {
+  jsonCallback(result, hidden = false, timeout = undefined) {
     if (!hidden) {
       const savedResult = Object.assign({}, result);
       delete savedResult["geojson"];
@@ -336,6 +342,18 @@ class Search extends Component {
 
       searchGeoLayer.setZIndex(300);
       searchIconLayer.setZIndex(300);
+    } else if (hidden && timeout) {
+      // SET SOURCE
+      fullFeature.setProperties({
+        label: result.alias ? result.alias : result.name,
+        name: result.name,
+        is_open_data: result.is_open_data !== undefined && result.is_open_data !== null ? result.is_open_data : true,
+      });
+      searchGeoLayer.getSource().addFeature(fullFeature);
+      searchGeoLayer.setZIndex(300);
+      setTimeout(() => {
+        searchGeoLayer.getSource().clear();
+      }, timeout);
     }
 
     const zoomFactor = window.config.featureHighlitStyles && window.config.featureHighlitStyles["zoomFactor"] >= 0 ? window.config.featureHighlitStyles["zoomFactor"] : 1;
@@ -359,8 +377,6 @@ class Search extends Component {
       window.map.getView().setZoom(window.map.getView().getZoom() - zoomFactor);
     }
 
-    //fullFeature.setStyle(myMapsHelpers.getDefaultDrawStyle([255, 0, 0, 0.8], false, 2, fullFeature.getGeometry().getType()));
-    //fullFeature.setStyle(defaultStyle);
     if (result.geojson.indexOf("Point") !== -1) {
       const pointStyle = new Style({
         image: new CircleStyle({
@@ -389,15 +405,15 @@ class Search extends Component {
 
       fullFeature.setStyle(pointStyle);
     } else {
-      let defaultStyle = drawingHelpers.getDefaultDrawStyle(
+      let defaultStyle = drawingHelpers.getDefaultDrawStyle({
+        drawColor:
         window.config.featureHighlitStyles && window.config.featureHighlitStyles["stroke"] !== null && window.config.featureHighlitStyles["stroke"] !== undefined
           ? window.config.featureHighlitStyles["stroke"]
           : [255, 0, 0, 0.8],
-        false,
-        window.config.featureHighlitStyles && window.config.featureHighlitStyles["strokeWidth"] ? window.config.featureHighlitStyles["strokeWidth"] : 2,
-
-        fullFeature.getGeometry().getType()
-      );
+        isText: false,
+        strokeWidth: window.config.featureHighlitStyles && window.config.featureHighlitStyles["strokeWidth"] ? window.config.featureHighlitStyles["strokeWidth"] : 2,
+        pointType: fullFeature.getGeometry().getType(),
+      });
       defaultStyle.setFill(
         new Fill({
           color:

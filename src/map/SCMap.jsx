@@ -386,21 +386,21 @@ class SCMap extends Component {
         if (id === "true" || (window.config.onCoordinateZoomID !== undefined && window.config.onCoordinateZoomID !== null && window.config.onCoordinateZoomID)) {
           const iconFeature = new Feature({
             geometry: new Point(coords),
-            });
-            
-            const iconStyle = new Style({
+          });
+
+          const iconStyle = new Style({
             image: new Icon({
               anchor: [0.5, 1],
               src: images["identify-marker.png"],
             }),
-            });
+          });
 
-            iconFeature.setStyle(iconStyle);
-            this.identifyIconLayer.getSource().clear();
-            window.map.removeLayer(this.identifyIconLayer);
-            this.identifyIconLayer.getSource().addFeature(iconFeature);
-            window.map.addLayer(this.identifyIconLayer);
-          }; 
+          iconFeature.setStyle(iconStyle);
+          this.identifyIconLayer.getSource().clear();
+          window.map.removeLayer(this.identifyIconLayer);
+          this.identifyIconLayer.getSource().addFeature(iconFeature);
+          window.map.addLayer(this.identifyIconLayer);
+        }
         setTimeout(() => {
           helpers.flashPoint(coords);
         }, 1000);
@@ -616,7 +616,7 @@ class SCMap extends Component {
           <FooterTools options={this.props.options} />
           <BMap options={this.props.options} />
           <PropertyReportClick />
-          {window.mapControls.gitHubButton ? (
+          {window.mapControls && window.mapControls.gitHubButton ? (
             <div
               className={window.sidebarOpen ? "sc-map-github-button slideout" : "sc-map-github-button slidein"}
               onClick={() => {
