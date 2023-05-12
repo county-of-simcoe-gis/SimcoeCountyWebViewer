@@ -27,6 +27,7 @@ class BasicBasemapSwitcher extends Component {
       toggleIndex: 1,
       previousIndex: undefined,
       showBaseMapSwitcher: true,
+      baseMapServicesOptions: BasemapConfig,
     };
 
     // LISTEN FOR MAP TO MOUNT
@@ -43,13 +44,18 @@ class BasicBasemapSwitcher extends Component {
     // LOAD BASEMAP LAYERS
     let basemapList = [];
     //CHECK IF SETTINGS INCLUDES A BASEMAP LAYERS CONFIGURATION
-    const baseMapServicesOptions = window.config.baseMapServices !== undefined ? window.config.baseMapServices : BasemapConfig.topoServices;
+    if (window.config.baseMapServices !== undefined) {
+      let basemapConfig = helpers.mergeObj(window.config.baseMapServices, BasemapConfig, true);
+      basemapConfig.topoServices = [...new Map(basemapConfig.topoServices.reverse().map((item) => [item["name"], item])).values()].reverse();
+      basemapConfig.imageryServices = [...new Map(basemapConfig.imageryServices.reverse().map((item) => [item["name"], item])).values()].reverse();
 
+      this.setState({ baseMapServicesOptions: basemapConfig });
+    }
     //SET toggleService STATE BASED ON BASED LAYER OPTINS
-    this.setState({ toggleService: baseMapServicesOptions[1] });
+    this.setState({ toggleService: this.state.baseMapServicesOptions.topoServices[1] });
     //let basemapIndex = 0;
 
-    baseMapServicesOptions.forEach((serviceGroup) => {
+    this.state.baseMapServicesOptions.topoServices.forEach((serviceGroup) => {
       index = 0;
       let serviceLayers = [];
       serviceGroup.layers.forEach((service) => {
@@ -223,16 +229,14 @@ class BasicBasemapSwitcher extends Component {
   };
 
   onToggleBasemap = (index) => {
-    const baseMapServicesOptions = window.config.baseMapServices !== undefined ? window.config.baseMapServices : BasemapConfig.topoServices;
-
     if (index === this.state.topoActiveIndex) {
       this.setState({ topoPanelOpen: false });
       return;
     }
     let toggleIndex = this.state.topoActiveIndex;
     if (toggleIndex === undefined) toggleIndex = 0;
-    baseMapServicesOptions &&
-      baseMapServicesOptions.forEach((service) => {
+    this.state.baseMapServicesOptions.topoServices &&
+      this.state.baseMapServicesOptions.topoServices.forEach((service) => {
         if (service.index === toggleIndex) {
           this.setState({ toggleService: service, toggleIndex: toggleIndex }, () => {
             this.onTopoItemClick(index);
@@ -299,8 +303,6 @@ class BasicBasemapSwitcher extends Component {
     }
   }
   render() {
-    const baseMapServicesOptions = window.config.baseMapServices !== undefined ? window.config.baseMapServices : BasemapConfig.topoServices;
-
     return (
       <div className={!this.state.showBaseMapSwitcher ? " sc-hidden" : ""}>
         <div id="sc-basic-basemap-main-container">
@@ -319,8 +321,8 @@ class BasicBasemapSwitcher extends Component {
           </div>
         </div>
         <div className={this.state.topoPanelOpen ? "sc-basic-basemap-topo-container" : "sc-hidden"}>
-          {baseMapServicesOptions &&
-            baseMapServicesOptions.map((service, index) => (
+          {this.state.baseMapServicesOptions.topoServices &&
+            this.state.baseMapServicesOptions.topoServices.map((service, index) => (
               <BasicBasemapItem
                 key={helpers.getUID()}
                 index={index}

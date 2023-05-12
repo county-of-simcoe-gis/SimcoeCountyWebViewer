@@ -13,7 +13,8 @@ class BasemapSwitcher extends Component {
     super(props);
 
     this.state = {
-      imagerySliderMarks: this.getImagerySliderMarks(),
+      baseMapServicesOptions: BasemapConfig,
+      imagerySliderMarks: this.getImagerySliderMarks(BasemapConfig),
       imagerySliderMin: 0,
       imagerySliderMax: BasemapConfig.imageryServices.length - 1,
       imagerySliderDefaultValue: BasemapConfig.imageryServices.length - 1,
@@ -40,13 +41,13 @@ class BasemapSwitcher extends Component {
     helpers.waitForLoad("map", Date.now(), 30, () => this.onMapLoad());
   }
   // CREATE YEAR MARKS ON THE SLIDER
-  getImagerySliderMarks() {
-    const numServices = BasemapConfig.imageryServices.length;
+  getImagerySliderMarks(options) {
+    const numServices = options.imageryServices.length;
     if (numServices < 2) return {};
 
     let marks = {};
     for (let index = 0; index < numServices; index++) {
-      marks[index] = BasemapConfig.imageryServices[index].name;
+      marks[index] = options.imageryServices[index].name;
     }
     return marks;
   }
@@ -56,7 +57,23 @@ class BasemapSwitcher extends Component {
     let layerList = [];
     let index = 0;
 
-    BasemapConfig.imageryServices.forEach((service) => {
+    if (window.config.baseMapServices !== undefined) {
+      let basemapConfig = helpers.mergeObj(window.config.baseMapServices, BasemapConfig, true);
+      basemapConfig.topoServices = [...new Map(basemapConfig.topoServices.reverse().map((item) => [item["name"], item])).values()].reverse();
+      basemapConfig.imageryServices = [...new Map(basemapConfig.imageryServices.reverse().map((item) => [item["name"], item])).values()].reverse();
+
+      this.setState({ baseMapServicesOptions: basemapConfig }, () => {
+        this.setState({
+          imagerySliderMarks: this.getImagerySliderMarks(this.state.baseMapServicesOptions),
+          imagerySliderMax: this.state.baseMapServicesOptions.imageryServices.length - 1,
+          imagerySliderDefaultValue: this.state.baseMapServicesOptions.imageryServices.length - 1,
+          imagerySliderValue: this.state.baseMapServicesOptions.imageryServices.length - 1,
+          activeButton: this.state.baseMapServicesOptions.defaultButton,
+        });
+      });
+    }
+
+    this.state.baseMapServicesOptions.imageryServices.forEach((service) => {
       // LayerHelpers.getCapabilities(service.url, "wmts", (layers) => {
       //   console.log(layers);
       // });
@@ -80,7 +97,7 @@ class BasemapSwitcher extends Component {
           newLayer.setVisible(false);
 
           // SET MAIN LAYER VISIBLE
-          if (BasemapConfig.imageryServices.length - 1 === index) {
+          if (this.state.baseMapServicesOptions.imageryServices.length - 1 === index) {
             newLayer.setVisible(true);
             this.setState({ imagerySliderValue: index });
           }
@@ -96,22 +113,22 @@ class BasemapSwitcher extends Component {
     this.setState({ imageryLayers: layerList });
 
     // LOAD IMAGERY STREETS LAYER
-    if (BasemapConfig.streetService.url !== undefined) {
+    if (this.state.baseMapServicesOptions.streetService.url !== undefined) {
       LayerHelpers.getLayer(
         {
           sourceType: OL_DATA_TYPES.TileImage,
           source: "WMS",
           layerName: "streetServiceBasemap",
-          url: BasemapConfig.streetService.url,
+          url: this.state.baseMapServicesOptions.streetService.url,
           tiled: true,
           name: "streetServiceBasemap",
         },
         (newLayer) => {
-          //var streetsLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.streetService);
           newLayer.setOpacity(0.75);
-          newLayer.setZIndex(BasemapConfig.imageryServices.length);
-          if (BasemapConfig.streetService.fullExtent) {
-            newLayer.setExtent(BasemapConfig.streetService.fullExtent);
+          //var streetsLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.streetService);
+          newLayer.setZIndex(this.state.baseMapServicesOptions.imageryServices.length);
+          if (this.state.baseMapServicesOptions.streetService.fullExtent) {
+            newLayer.setExtent(this.state.baseMapServicesOptions.streetService.fullExtent);
           }
           window.map.addLayer(newLayer);
           this.setState({ streetsLayer: newLayer });
@@ -120,21 +137,21 @@ class BasemapSwitcher extends Component {
     }
 
     // LOAD BATHYMETRY LAYER
-    if (BasemapConfig.bathymetryService.url !== undefined) {
+    if (this.state.baseMapServicesOptions.bathymetryService.url !== undefined) {
       LayerHelpers.getLayer(
         {
           sourceType: OL_DATA_TYPES.TileImage,
           source: "WMS",
           layerName: "bathymetryServiceBasemap",
-          url: BasemapConfig.bathymetryService.url,
+          url: this.state.baseMapServicesOptions.bathymetryService.url,
           tiled: true,
           name: "bathymetryServiceBasemap",
         },
         (newLayer) => {
           //var bathymetryLayer = helpers.getSimcoeTileXYZLayer(BasemapConfig.bathymetryService.url);
           newLayer.setZIndex(0);
-          if (BasemapConfig.bathymetryService.fullExtent) {
-            newLayer.setExtent(BasemapConfig.bathymetryService.fullExtent);
+          if (this.state.baseMapServicesOptions.bathymetryService.fullExtent) {
+            newLayer.setExtent(this.state.baseMapServicesOptions.bathymetryService.fullExtent);
           }
 
           window.map.addLayer(newLayer);
@@ -144,13 +161,13 @@ class BasemapSwitcher extends Component {
     }
 
     // LOAD WORLD LAYER
-    if (BasemapConfig.worldImageryService !== undefined) {
+    if (this.state.baseMapServicesOptions.worldImageryService !== undefined) {
       LayerHelpers.getLayer(
         {
           sourceType: OL_DATA_TYPES.XYZ,
           source: "WMS",
           layerName: "worldImageryServiceBasemap",
-          url: BasemapConfig.worldImageryService,
+          url: this.state.baseMapServicesOptions.worldImageryService,
           tiled: true,
           name: "worldImageryServiceBasemap",
         },
@@ -166,7 +183,7 @@ class BasemapSwitcher extends Component {
     // LOAD BASEMAP LAYERS
     let basemapList = [];
     //let basemapIndex = 0;
-    BasemapConfig.topoServices.forEach((serviceGroup) => {
+    this.state.baseMapServicesOptions.topoServices.forEach((serviceGroup) => {
       index = 0;
       let serviceLayers = [];
       serviceGroup.layers.forEach((service) => {
@@ -191,6 +208,7 @@ class BasemapSwitcher extends Component {
               newLayer.setProperties({
                 index: index,
                 name: layerName,
+                excludePrint: service.excludePrint || false,
                 isOverlay: service.isOverlay || false,
               });
               serviceLayers.push(newLayer);
@@ -213,6 +231,8 @@ class BasemapSwitcher extends Component {
               newLayer.setProperties({
                 index: index,
                 name: layerName,
+                excludePrint: service.excludePrint || false,
+
                 isOverlay: service.isOverlay || false,
               });
               serviceLayers.push(newLayer);
@@ -236,6 +256,8 @@ class BasemapSwitcher extends Component {
               newLayer.setProperties({
                 index: index,
                 name: layerName,
+                excludePrint: service.excludePrint || false,
+
                 isOverlay: service.isOverlay || false,
               });
               serviceLayers.push(newLayer);
@@ -263,6 +285,8 @@ class BasemapSwitcher extends Component {
               newLayer.setProperties({
                 index: index,
                 name: layerName,
+                excludePrint: service.excludePrint || false,
+
                 isOverlay: service.isOverlay || false,
               });
               serviceLayers.push(newLayer);
@@ -299,6 +323,8 @@ class BasemapSwitcher extends Component {
               groupLayer.setProperties({
                 index: overlayIndex,
                 name: layerNameOnly,
+                excludePrint: false,
+
                 isOverlay: true,
               });
               serviceLayers.push(groupLayer);
@@ -622,7 +648,7 @@ class BasemapSwitcher extends Component {
             <input className="sc-basemap-topo-checkbox" id="sc-basemap-topo-checkbox" type="checkbox" onChange={this.onTopoCheckbox} checked={this.state.topoCheckbox} />
             &nbsp;Overlay
           </label>
-          {BasemapConfig.topoServices.map((service, index) => (
+          {this.state.baseMapServicesOptions.topoServices.map((service, index) => (
             <BasemapItem key={helpers.getUID()} index={index} topoActiveIndex={this.state.topoActiveIndex} service={service} onTopoItemClick={this.onTopoItemClick} />
           ))}
         </div>

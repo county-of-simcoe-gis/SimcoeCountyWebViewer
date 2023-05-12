@@ -4,7 +4,7 @@ import * as helpers from "../helpers/helpers";
 import * as htmlToImage from "html-to-image";
 import { saveAs } from "file-saver";
 import { transformWithProjections } from "ol/proj";
-
+import { ImMenu3, ImMenu4 } from "react-icons/im";
 const feedbackTemplate = (url, xmin, xmax, ymin, ymax, centerx, centery, scale) => `${url}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
 
 class MenuButton extends Component {
@@ -41,7 +41,7 @@ class MenuButton extends Component {
     let itemList = [];
     itemList.push(<MenuItem onClick={this.onScreenshotClick} key={helpers.getUID()} name={"Take a Screenshot"} iconClass={"sc-menu-screenshot-icon"} />);
     window.config.sidebarToolComponents.forEach((tool) => {
-      if (tool.enabled === undefined || tool.enabled)
+      if ((tool.enabled || tool.enabled === undefined) && (tool.disable === false || tool.disable === undefined))
         itemList.push(<MenuItem onClick={() => this.itemClick(tool.name, "tools")} key={helpers.getUID()} name={tool.name} iconClass={"sc-menu-tools-icon"} />);
     });
 
@@ -52,7 +52,7 @@ class MenuButton extends Component {
   getThemes = () => {
     let itemList = [];
     window.config.sidebarThemeComponents.forEach((theme) => {
-      if (theme.enabled === undefined || theme.enabled)
+      if ((theme.enabled || theme.enabled === undefined) && (theme.disable === false || theme.disable === undefined))
         itemList.push(<MenuItem onClick={() => this.itemClick(theme.name, "themes")} key={helpers.getUID()} name={theme.name} iconClass={"sc-menu-theme-icon"} />);
     });
     if (itemList === 0 || (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideThemes"])) {
@@ -98,6 +98,15 @@ class MenuButton extends Component {
     else if (window.sidebarOpen) return "sc-menu-button-list-container sideBarOpen";
     else return "sc-menu-button-list-container";
   };
+  getIconToggleState = () => {
+    let currentState = true;
+    if (!this.state.isOpen && window.sidebarOpen) currentState = true;
+    else if (this.state.isOpen && window.sidebarOpen) currentState = false;
+    else if (!this.state.isOpen && !window.sidebarOpen) currentState = false;
+    else if (this.state.isOpen && !window.sidebarOpen) currentState = true;
+    else currentState = true;
+    return currentState;
+  };
 
   onScreenshotClick = () => {
     window.map.once("rendercomplete", function () {
@@ -136,6 +145,7 @@ class MenuButton extends Component {
 
   render() {
     const menuListClassName = this.getMenuClassName();
+    const iconToggleState = this.getIconToggleState();
     return (
       <div
         className={"sc-menu-button-main-container" + (this.props.hidden ? " sc-hidden" : "") + (this.props.className !== undefined && this.props.className !== "" ? " " + this.props.className : "")}
@@ -143,8 +153,8 @@ class MenuButton extends Component {
         title="More Options"
       >
         <div className="sc-menu-button-container" style={{ cursor: "pointer" }} onClick={this.onMenuButtonClick}>
-          <button className="sc-menu-more-button">
-            <img src={images["more.png"]} style={{ pointerEvents: "none" }} alt="More Options" title="More Options" />
+          <button className="sc-menu-more-button" alt="More Options" title="More Options" style={{ pointerEvents: "none" }}>
+            {iconToggleState ? <ImMenu3 size={24} /> : <ImMenu4 size={24} />}
             {this.props.showLabel !== undefined && !this.props.showLabel ? <span style={{ display: "none" }}>&nbsp;</span> : <span style={{ pointerEvents: "none" }}>More</span>}
           </button>
         </div>
