@@ -36,7 +36,7 @@
           "url": "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
           "type": "ESRI_VECTOR_TILED",
           "isOverlay": true,
-          "rootPath": "https://opengis.simcoe.ca/public/basemap/ESRI_WorldTopoCanadianStyle.json",
+          "rootPath": "/public/basemap/ESRI_WorldTopoCanadianStyle.json",
           "excludePrint": true
         },
         {
@@ -49,7 +49,7 @@
           "url": "https://tiles.arcgis.com/tiles/B6yKvIZqzuOr0jBR/arcgis/rest/services/Canada_Topographic/VectorTileServer",
           "type": "ESRI_VECTOR_TILED",
           "isOverlay": true,
-          "rootPath": "https://opengis.simcoe.ca/public/basemap/ESRI_Canada_Topographic.json",
+          "rootPath": "/public/basemap/ESRI_Canada_Topographic.json",
           "maxZoom": 23,
           "excludePrint": true
         }
@@ -71,14 +71,14 @@
           "url": "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
           "type": "ESRI_VECTOR_TILED",
           "isOverlay": true,
-          "rootPath": "https://opengis.simcoe.ca/public/basemap/ESRI_LightGreyBackground.json",
+          "rootPath": "/public/basemap/ESRI_LightGreyBackground.json",
           "excludePrint": true
         },
         {
           "url": "https://tiles.arcgis.com/tiles/B6yKvIZqzuOr0jBR/arcgis/rest/services/Canada_Topographic/VectorTileServer",
           "type": "ESRI_VECTOR_TILED",
           "isOverlay": true,
-          "rootPath": "https://opengis.simcoe.ca/public/basemap/ESRI_LightGrey.json",
+          "rootPath": "/public/basemap/ESRI_LightGrey.json",
           "excludePrint": true
         }
       ]
@@ -98,14 +98,14 @@
           "url": "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
           "type": "ESRI_VECTOR_TILED",
           "isOverlay": true,
-          "rootPath": "https://opengis.simcoe.ca/public/basemap/ESRI_Streets_Night_Background.json",
+          "rootPath": "/public/basemap/ESRI_Streets_Night_Background.json",
           "excludePrint": true
         },
         {
           "url": "https://tiles.arcgis.com/tiles/B6yKvIZqzuOr0jBR/arcgis/rest/services/Canada_Topographic/VectorTileServer",
           "type": "ESRI_VECTOR_TILED",
           "isOverlay": true,
-          "rootPath": "https://opengis.simcoe.ca/public/basemap/ESRI_Streets_Night.json",
+          "rootPath": "/public/basemap/ESRI_Streets_Night.json",
           "minZoom": 0,
           "maxZoom": 23,
           "excludePrint": true
