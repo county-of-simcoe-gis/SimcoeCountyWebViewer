@@ -1,10 +1,10 @@
-import React, { Component } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./TwoOneOne.css";
 import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
 import Select from "react-select";
 import InfoRow from "../../../../helpers/InfoRow.jsx";
-import { AutoSizer, List, CellMeasurerCache } from "react-virtualized";
+import { AutoSizer, List } from "react-virtualized";
 import "react-virtualized/styles.css";
 import redDot from "./images/red-dot.png";
 import { Vector as VectorSource } from "ol/source.js";
@@ -57,70 +57,100 @@ const ageCategoriesFrench = [
   },
 ];
 
-class TwoOneOne extends Component {
-  constructor(props) {
-    super(props);
-    this.cache = new CellMeasurerCache({
-      fixedWidth: true,
-      defaultHeight: 144,
-    });
+const TwoOneOne = (props) => {
+  const vectorSource = useRef(
+    new VectorSource({
+      features: [],
+    })
+  );
+  const [categories, setCategories] = useState([]);
+  const [categorySelectedOption, setCategorySelectedOption] = useState({ value: "All", label: "All" });
+  const [subCategories, setSubCategories] = useState([]);
+  const [subCategorySelectedOption, setSubCategorySelectedOption] = useState({ value: "All", label: "All" });
+  const [results, setResults] = useState([]);
+  const [ageCategorySelectedOption, setAgeCategorySelectedOption] = useState(ageCategoriesEnglish[0]);
+  const [searchText, setSearchText] = useState("");
+  const [onlyFeaturesInMap, setOnlyFeaturesInMap] = useState(false);
+  const [isFrench, setIsFrench] = useState(false);
+  const apiUrl = useRef(null);
+  const mapMoveEvent = useRef(null);
+  const mapClickEvent = useRef(null);
+  const onlyFeaturesInMapRef = useRef(onlyFeaturesInMap);
+  const searchTextRef = useRef(searchText);
+  const ageCategorySelectedOptionRef = useRef(ageCategorySelectedOption);
+  const subCategorySelectedOptionRef = useRef(subCategorySelectedOption);
+  const categorySelectedOptionRef = useRef(categorySelectedOption);
+  const isFrenchRef = useRef(isFrench);
+  const layer = useRef(null);
 
-    this.state = {
-      categories: [],
-      categorySelectedOption: null,
-      subCategories: [],
-      subCategorySelectedOption: null,
-      results: [],
-      ageCategorySelectedOption: ageCategoriesEnglish[0],
-      backToTopVisible: false,
-      scrollTop: 0,
-      searchText: "",
-      onlyFeaturesInMap: false,
-      isFrench: false,
-    };
-  }
-
-  componentWillMount() {
+  useEffect(() => {
     helpers.waitForLoad("settings", Date.now(), 30, () => {
-      this.apiUrl = window.config.apiUrl;
+      apiUrl.current = window.config.apiUrl;
+      mapClickEvent.current = window.map.on("click", (evt) => {
+        // DISABLE POPUPS
+        if (window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring) return;
 
-      this.createLayer();
-      this.getCategories();
+        const feature = window.map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
+          if (layer === null) return;
+
+          if (layer.get("name") !== undefined && layer.get("name") === "sc-211") return feature;
+        });
+        if (feature !== undefined) window.popup.show(feature.getGeometry().flatCoordinates, <PopupContent feature={feature} isFrench={isFrench} />, "Information");
+      });
+      mapMoveEvent.current = window.map.on("moveend", () => {
+        if (onlyFeaturesInMapRef.current) updateResults();
+      });
+      createLayer();
+      getCategories();
     });
-  }
+  }, []);
 
-  componentWillUnmount() {
-    unByKey(this.mapClickEvent);
-    unByKey(this.mapMoveEvent);
-    window.map.removeLayer(this.layer);
-  }
+  useEffect(() => {
+    updateSubCategories();
+  }, [categorySelectedOption, isFrench]);
 
-  getCategories = () => {
+  useEffect(() => {
+    updateResults();
+  }, [ageCategorySelectedOption, isFrench, categorySelectedOption, subCategorySelectedOption, onlyFeaturesInMap, searchText]);
+
+  const getCategories = () => {
     let categories = [];
-    helpers.getJSON(this.apiUrl + "public/map/theme/211/Categories/" + this.state.isFrench, (result) => {
+    helpers.getJSON(apiUrl.current + "public/map/theme/211/Categories/" + isFrench, (result) => {
       categories.push({
         value: "All",
-        label: this.state.isFrench ? "Tout" : "All",
+        label: isFrench ? "Tout" : "All",
       });
       result.forEach((category) => {
         categories.push({ value: category, label: category });
       });
 
-      this.setState({ categories }, () => {
-        this.setState({ categorySelectedOption: categories[0] }, () => {
-          this.updateSubCategories();
-        });
-      });
+      setCategories(categories);
+      setCategorySelectedOption(categories[0]);
     });
   };
+  const updateSubCategories = () => {
+    let subCategories = [];
+    const subCategoriesUrl = apiUrl.current + "public/map/theme/211/SubCategories/" + encodeURIComponent(categorySelectedOption.value) + "/" + isFrench;
+    helpers.getJSON(subCategoriesUrl, (result) => {
+      subCategories.push({
+        value: "All",
+        label: isFrench ? "Tout" : "All",
+      });
+      result.forEach((subCategory) => {
+        subCategories.push({ value: subCategory, label: subCategory });
+      });
 
-  createLayer = () => {
-    this.vectorSource = new VectorSource({
+      setSubCategories(subCategories);
+      setSubCategorySelectedOption(subCategories[0]);
+    });
+  };
+  const createLayer = () => {
+    vectorSource.current = new VectorSource({
       features: [],
     });
 
-    this.layer = new VectorLayer({
-      source: this.vectorSource,
+    layer.current = new VectorLayer({
+      source: vectorSource.current,
       zIndex: 1000,
       name: "sc-211",
       style: new Style({
@@ -129,111 +159,88 @@ class TwoOneOne extends Component {
         }),
       }),
     });
-    this.layer.set("disableParcelClick", true);
-    window.map.addLayer(this.layer);
-
-    this.mapClickEvent = window.map.on("click", (evt) => {
-      // DISABLE POPUPS
-      if (window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring) return;
-
-      const feature = window.map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
-        if (layer === null) return;
-
-        if (layer.get("name") !== undefined && layer.get("name") === "sc-211") return feature;
-      });
-      if (feature !== undefined) window.popup.show(feature.getGeometry().flatCoordinates, <PopupContent feature={feature} isFrench={this.state.isFrench} />, "Information");
-    });
-
-    this.mapMoveEvent = window.map.on("moveend", () => {
-      if (this.state.onlyFeaturesInMap) this.updateResults();
-    });
+    layer.current.set("disableParcelClick", true);
+    window.map.addLayer(layer.current);
   };
 
-  updateSubCategories = () => {
-    let subCategories = [];
-    const subCategoriesUrl = this.apiUrl + "public/map/theme/211/SubCategories/" + encodeURIComponent(this.state.categorySelectedOption.value) + "/" + this.state.isFrench;
-    helpers.getJSON(subCategoriesUrl, (result) => {
-      subCategories.push({
-        value: "All",
-        label: this.state.isFrench ? "Tout" : "All",
-      });
-      result.forEach((subCategory) => {
-        subCategories.push({ value: subCategory, label: subCategory });
-      });
-
-      this.setState({ subCategories }, () => {
-        this.setState({ subCategorySelectedOption: subCategories[0] }, () => {
-          this.updateResults();
-        });
-      });
-    });
-  };
-
-  updateResults = () => {
+  const updateResults = () => {
     const resultsUrlTemplate = (apiUrl, category, subCategory, age, isFrench) =>
       `${apiUrl}public/map/theme/211/Results/${encodeURIComponent(category)}/${encodeURIComponent(subCategory)}/${encodeURIComponent(age)}/${isFrench}`;
     const url = resultsUrlTemplate(
-      this.apiUrl,
-      this.state.categorySelectedOption.value,
-      this.state.categorySelectedOption.value === "All" ? "All" : this.state.subCategorySelectedOption.value,
-      this.state.ageCategorySelectedOption.value,
-      this.state.isFrench
+      apiUrl.current,
+      categorySelectedOptionRef.current.value,
+      categorySelectedOptionRef.current.value === "All" ? "All" : subCategorySelectedOptionRef.current.value,
+      ageCategorySelectedOptionRef.current.value,
+      isFrenchRef.current
     );
 
-    helpers.getJSON(url, (results) => {
-      this.setState({ results }, () => {
-        this.List.Grid._scrollingContainer.scrollTop = 100;
-        setTimeout(() => {
-          this.List.Grid._scrollingContainer.scrollTop = 0;
-        }, 20);
+    helpers.getJSON(url, (apiResults) => {
+      // FILTER RESULTS FROM SEARCH INPUT
+      // eslint-disable-next-line
+      let filteredResults = apiResults.filter((item) => {
+        if (searchTextRef.current === "") return item;
+        else if (item.organization_program_name.toUpperCase().indexOf(searchTextRef.current.toUpperCase()) !== -1) return item;
       });
-
-      this.vectorSource.clear();
-      results.forEach((item) => {
+      vectorSource.current.clear();
+      filteredResults.map((item) => {
         const coords = helpers.toWebMercatorFromLatLong([item.longitude.replace(",", "."), Math.abs(item.latitude.replace(",", "."))]);
         let feature = new Feature(new Point(coords));
         feature.setProperties(item);
-        this.vectorSource.addFeature(feature);
+        vectorSource.current.addFeature(feature);
       });
+
+      // ONLY IN MAP
+      if (onlyFeaturesInMapRef.current) {
+        const extent = window.map.getView().calculateExtent(window.map.getSize());
+        const features = vectorSource.current.getFeaturesInExtent(extent);
+        filteredResults = apiResults.filter((item) => {
+          const featuresFound = features.filter((itemFeature) => {
+            return item["record_#"] === itemFeature.get("record_#") ? true : false;
+          });
+          return featuresFound.length > 0 ? true : false;
+        });
+      }
+
+      setResults(filteredResults);
     });
   };
 
-  onClose = () => {
+  const onClose = () => {
     // ADD CLEAN UP HERE (e.g. Map Layers, Popups, etc)
+    unByKey(mapClickEvent.current);
+    unByKey(mapMoveEvent.current);
+    window.map.removeLayer(layer.current);
 
     // CALL PARENT WITH CLOSE
-    this.props.onClose();
+    props.onClose();
   };
 
-  onChangeCategory = (selectedOption) => {
-    this.setState({ categorySelectedOption: selectedOption }, () => {
-      this.updateSubCategories();
-    });
+  const onChangeCategory = (selectedOption) => {
+    setCategorySelectedOption(selectedOption);
+    categorySelectedOptionRef.current = selectedOption;
   };
 
-  onChangeSubCategory = (selectedOption) => {
-    this.setState({ subCategorySelectedOption: selectedOption }, () => {
-      this.updateResults();
-    });
+  const onChangeSubCategory = (selectedOption) => {
+    setSubCategorySelectedOption(selectedOption);
+    subCategorySelectedOptionRef.current = selectedOption;
   };
 
-  onChangeAgeCategory = (selectedOption) => {
-    this.setState({ ageCategorySelectedOption: selectedOption }, () => {
-      this.updateResults();
-    });
+  const onChangeAgeCategory = (selectedOption) => {
+    setAgeCategorySelectedOption(selectedOption);
+    ageCategorySelectedOptionRef.current = selectedOption;
   };
 
-  onChangeSearchTextbox = (evt) => {
-    this.setState({ searchText: evt.target.value });
+  const onChangeSearchTextbox = (evt) => {
+    setSearchText(evt.target.value);
+    searchTextRef.current = evt.target.value;
   };
 
-  onOnlyFeatureInMap = (evt) => {
-    this.setState({ onlyFeaturesInMap: evt.target.checked }, () => {
-      this.updateResults();
-    });
+  const onOnlyFeatureInMap = (evt) => {
+    setOnlyFeaturesInMap(evt.target.checked);
+    onlyFeaturesInMapRef.current = evt.target.checked;
   };
 
-  onZoomClick = (item) => {
+  const onZoomClick = (item) => {
     const coords = helpers.toWebMercatorFromLatLong([item.longitude, Math.abs(item.latitude)]);
     let feature = new Feature(new Point(coords));
     feature.setProperties(item);
@@ -241,34 +248,25 @@ class TwoOneOne extends Component {
     window.popup.show(feature.getGeometry().flatCoordinates, <PopupContent feature={feature} />, "Information");
   };
 
-  onLangChange = (isFrench) => {
-    this.setState(
-      {
-        isFrench,
-        ageCategorySelectedOption: isFrench ? ageCategoriesFrench[0] : ageCategoriesEnglish[0],
-      },
-      () => {
-        this.getCategories();
-      }
-    );
+  const onLangChange = (isFrench) => {
+    setIsFrench(isFrench);
+    setAgeCategorySelectedOption(isFrench ? ageCategoriesFrench[0] : ageCategoriesEnglish[0]);
+    isFrenchRef.current = isFrench;
+    ageCategorySelectedOptionRef.current = isFrench ? ageCategoriesFrench[0] : ageCategoriesEnglish[0];
     helpers.addAppStat("211 Lang Switch", "Click");
   };
 
-  registerListRef = (listInstance) => {
-    this.List = listInstance;
-  };
-
-  _rowRenderer = ({ index, parent, key, style }) => {
-    const row = this.results[index];
+  const _rowRenderer = ({ index, parent, key, style }) => {
+    const row = results[index];
     return (
       <div key={key} style={style}>
-        <Result result={row} onZoomClick={this.onZoomClick} isFrench={this.state.isFrench} />
+        <Result result={row} onZoomClick={onZoomClick} isFrench={isFrench} />
       </div>
     );
   };
 
-  _getRowHeight = (evt) => {
-    const row = this.results[evt.index];
+  const _getRowHeight = (evt) => {
+    const row = results[evt.index];
 
     if (row.organization_program_name.length <= 35) {
       return 72;
@@ -288,119 +286,79 @@ class TwoOneOne extends Component {
       return 120;
     }
   };
+  const dropdownStyles = {
+    control: (provided) => ({
+      ...provided,
+      minHeight: "30px",
+      marginBottom: "5px",
+    }),
+    indicatorsContainer: (provided) => ({
+      ...provided,
+      height: "30px",
+    }),
+    clearIndicator: (provided) => ({
+      ...provided,
+      padding: "5px",
+    }),
+    dropdownIndicator: (provided) => ({
+      ...provided,
+      padding: "5px",
+    }),
+  };
+  useEffect(() => {
+    if (categorySelectedOption === null) return <div />;
+  });
 
-  render() {
-    const dropdownStyles = {
-      control: (provided) => ({
-        ...provided,
-        minHeight: "30px",
-        marginBottom: "5px",
-      }),
-      indicatorsContainer: (provided) => ({
-        ...provided,
-        height: "30px",
-      }),
-      clearIndicator: (provided) => ({
-        ...provided,
-        padding: "5px",
-      }),
-      dropdownIndicator: (provided) => ({
-        ...provided,
-        padding: "5px",
-      }),
-    };
-    if (this.state.categorySelectedOption === null) return <div />;
-
-    // FILTER RESULTS FROM SEARCH INPUT
-    // eslint-disable-next-line
-    this.results = this.state.results.filter((item) => {
-      if (this.state.searchText === "") return item;
-
-      if (item.organization_program_name.toUpperCase().indexOf(this.state.searchText.toUpperCase()) !== -1) return item;
-    });
-
-    // ONLY IN MAP
-    if (this.state.onlyFeaturesInMap) {
-      const extent = window.map.getView().calculateExtent(window.map.getSize());
-      const features = this.vectorSource.getFeaturesInExtent(extent);
-
-      this.results = this.results.filter((item) => {
-        const featuresFound = features.filter((itemFeature) => {
-          return item["record_#"] === itemFeature.get("record_#") ? true : false;
-        });
-        return featuresFound.length > 0 ? true : false;
-      });
-    }
-
-    return (
-      <PanelComponent onClose={this.onClose} name={this.props.name} helpLink={this.props.helpLink} hideHeader={this.props.hideHeader} type="themes">
-        <div>
-          <label className={"sc-211-theme-lang-switch-label"}>
-            {this.state.isFrench ? "Back to English" : "Voir en Français?"}
-            <Switch className="sc-theme-211-lang-switch" onChange={this.onLangChange} checked={this.state.isFrench} height={20} width={48} />
+  return (
+    <PanelComponent onClose={onClose} name={props.name} helpLink={props.helpLink} hideHeader={props.hideHeader} type="themes">
+      <div>
+        <label className={"sc-211-theme-lang-switch-label"}>
+          {isFrench ? "Back to English" : "Voir en Français?"}
+          <Switch className="sc-theme-211-lang-switch" onChange={onLangChange} checked={isFrench} height={20} width={48} />
+        </label>
+        <div className="sc-theme-211-main-conainer">
+          <label style={{ fontWeight: "bold" }}>{isFrench ? "Catégorie" : "Category"}</label>
+          <Select styles={dropdownStyles} isSearchable={false} options={categories} value={categorySelectedOption} onChange={onChangeCategory} />
+          <label style={{ fontWeight: "bold" }} className={categorySelectedOption.value === "All" ? "sc-disabled" : ""}>
+            {isFrench ? "Sous Catégorie" : "Sub Category"}
           </label>
-          <div className="sc-theme-211-main-conainer">
-            <label style={{ fontWeight: "bold" }}>{this.state.isFrench ? "Catégorie" : "Category"}</label>
-            <Select styles={dropdownStyles} isSearchable={false} options={this.state.categories} value={this.state.categorySelectedOption} onChange={this.onChangeCategory} />
-            <label style={{ fontWeight: "bold" }} className={this.state.categorySelectedOption.value === "All" ? "sc-disabled" : ""}>
-              {this.state.isFrench ? "Sous Catégorie" : "Sub Category"}
-            </label>
-            <Select
-              className={this.state.categorySelectedOption.value === "All" ? "sc-disabled" : ""}
-              styles={dropdownStyles}
-              isSearchable={true}
-              options={this.state.subCategories}
-              value={this.state.categorySelectedOption.value === "All" ? "" : this.state.subCategorySelectedOption}
-              onChange={this.onChangeSubCategory}
-              placeholder={this.state.isFrench ? "En attente de sélection de catégorie" : "Waiting for Category Selection"}
-            />
-            <label style={{ fontWeight: "bold" }}>{this.state.isFrench ? "Catégorie d'âge" : "Age Category"}</label>
-            <Select
-              styles={dropdownStyles}
-              isSearchable={false}
-              options={this.state.isFrench ? ageCategoriesFrench : ageCategoriesEnglish}
-              value={this.state.ageCategorySelectedOption}
-              onChange={this.onChangeAgeCategory}
-            />
-            <input
-              type="text"
-              style={{ paddingLeft: "5px" }}
-              className="sc-theme-211-search-textbox"
-              placeholder={this.state.isFrench ? "Rechercher les noms par mot-clé" : "Search Names by Keyword"}
-              onChange={this.onChangeSearchTextbox}
-            />
-            <label className="sc-no-select">
-              <input type="checkbox" value={this.state.onlyFeaturesInMap} onChange={this.onOnlyFeatureInMap} />
-              {this.state.isFrench ? "Rechercher propriétés visibles sur la map" : "Only search properties visible in the map."}
-            </label>
-            <div style={{ borderBottom: "1px solid #ddd" }} />
-            <div id="sc-theme-211-resulst-container" className="sc-theme-211-resulst-container">
-              <AutoSizer>
-                {({ width, height }) => {
-                  return (
-                    <List
-                      // getRef={this.registerListRef}
-                      ref={(instance) => {
-                        this.List = instance;
-                      }}
-                      className={""}
-                      height={height}
-                      rowCount={this.results.length}
-                      rowHeight={this._getRowHeight}
-                      rowRenderer={this._rowRenderer}
-                      width={width}
-                    />
-                  );
-                }}
-              </AutoSizer>
-              <div className={this.results.length === 0 ? "sc-theme-211-no-results" : "sc-hidden"}>No Results Found</div>
-            </div>
+          <Select
+            className={categorySelectedOption.value === "All" ? "sc-disabled" : ""}
+            styles={dropdownStyles}
+            isSearchable={true}
+            options={subCategories}
+            value={categorySelectedOption.value === "All" ? "" : subCategorySelectedOption}
+            onChange={onChangeSubCategory}
+            placeholder={isFrench ? "En attente de sélection de catégorie" : "Waiting for Category Selection"}
+          />
+          <label style={{ fontWeight: "bold" }}>{isFrench ? "Catégorie d'âge" : "Age Category"}</label>
+          <Select styles={dropdownStyles} isSearchable={false} options={isFrench ? ageCategoriesFrench : ageCategoriesEnglish} value={ageCategorySelectedOption} onChange={onChangeAgeCategory} />
+          <input
+            type="text"
+            style={{ paddingLeft: "5px" }}
+            className="sc-theme-211-search-textbox"
+            placeholder={isFrench ? "Rechercher les noms par mot-clé" : "Search Names by Keyword"}
+            onChange={onChangeSearchTextbox}
+            value={searchText}
+          />
+          <label className="sc-no-select">
+            <input type="checkbox" value={onlyFeaturesInMap.current} onChange={onOnlyFeatureInMap} />
+            {isFrench ? "Rechercher propriétés visibles sur la map" : "Only search properties visible in the map."}
+          </label>
+          <div style={{ borderBottom: "1px solid #ddd" }} />
+          <div id="sc-theme-211-resulst-container" className="sc-theme-211-resulst-container">
+            <AutoSizer>
+              {({ width, height }) => {
+                return <List className={""} height={height} rowCount={results.length} rowHeight={_getRowHeight} rowRenderer={_rowRenderer} width={width} />;
+              }}
+            </AutoSizer>
+            <div className={results.length === 0 ? "sc-theme-211-no-results" : "sc-hidden"}>No Results Found</div>
           </div>
         </div>
-      </PanelComponent>
-    );
-  }
-}
+      </div>
+    </PanelComponent>
+  );
+};
 
 export default TwoOneOne;
 
