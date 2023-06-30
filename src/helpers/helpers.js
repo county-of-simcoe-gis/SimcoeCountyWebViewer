@@ -1208,9 +1208,9 @@ export function download(url, filename = undefined, options = undefined) {
     link.setAttribute("rel", "noopener noreferrer");
     if (filename) {
       link.setAttribute("download", filename);
-    document.body.appendChild(link); // Required for FF
-    link.click();
-    document.body.removeChild(link); //afterwards we remove the element again
+      document.body.appendChild(link); // Required for FF
+      link.click();
+      document.body.removeChild(link); //afterwards we remove the element again
       if (options.isBlob) URL.revokeObjectURL(link.href);
     } else {
       window.open(url, `_blank`);
@@ -1824,3 +1824,9 @@ export function getCentroidCoords(geom) {
   const f = area * 6;
   return [x / f, y / f];
 }
+
+export const roundTime = (date) => {
+  var coeff = 1000 * 60 * 10;
+  var rounded = new Date(Math.round(date.getTime() / coeff) * coeff);
+  return rounded;
+};
