@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
-import GitHubButton from "react-github-btn";
+// import GitHubButton from "react-github-btn";
+import GitHubButton from "../components/sc-github-btn";
 //OPENLAYERS
 import "ol/ol.css";
 import Map from "ol/Map";
