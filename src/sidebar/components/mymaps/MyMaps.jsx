@@ -708,6 +708,7 @@ class MyMaps extends Component {
       let geom = feature.getGeometry();
       if (geom === undefined) return;
       helpers.getGeometryCenter(geom, (featureCenter) => {
+        window.popup.hide();
         // SHOW POPUP
         window.popup.show(
           featureCenter.flatCoordinates,
@@ -741,6 +742,8 @@ class MyMaps extends Component {
       });
     } else {
       center = evt.coordinate;
+      window.popup.hide();
+
       // SHOW POPUP
       window.popup.show(
         center,

@@ -28,6 +28,10 @@ function MyMapsItem(props) {
 
   const onItemDelete = (evt) => {
     props.onItemDelete && props.onItemDelete(props.info.id);
+    if (vectorLayer !== null) {
+      window.map.removeLayer(vectorLayer);
+      setVectorLayer(null);
+    }
   };
 
   const onItemCheckbox = (evt) => {

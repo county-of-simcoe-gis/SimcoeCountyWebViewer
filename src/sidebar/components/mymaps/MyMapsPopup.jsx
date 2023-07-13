@@ -8,17 +8,10 @@ import * as helpers from "../../../helpers/helpers";
 
 const MyMapsPopup = (props) => {
   const popupLabelRef = useRef(null);
-  const [activeTool, setActiveTool] = useState(props.activeTool);
   useEffect(() => {
-    props.onRef(this);
-    return () => {
-      props.onRef(undefined);
-    };
+    return () => {};
   }, []);
 
-  useEffect(() => {
-    setActiveTool(props.activeTool);
-  }, [props.activeTool]);
   return (
     <div className="sc-mymaps-popup-container">
       <MyMapsPopupLabel
@@ -29,8 +22,7 @@ const MyMapsPopup = (props) => {
         onLabelRotationChange={props.onLabelRotationChange}
       />
       <MyMapsSymbolizer
-        key={helpers.getUID()}
-        visible={activeTool === "symbolizer"}
+        visible={props.activeTool === "symbolizer"}
         item={props.item}
         onPointStyleDropDown={props.onPointStyleDropDown}
         onRadiusSliderChange={props.onRadiusSliderChange}
@@ -42,8 +34,8 @@ const MyMapsPopup = (props) => {
         onStrokeWidthSliderChange={props.onStrokeWidthSliderChange}
         onStrokeTypeDropDown={props.onStrokeTypeDropDown}
       />
-      <MyMapsBuffer visible={activeTool === "buffer"} item={props.item} />
-      <MyMapsMeasure visible={activeTool === "measure"} item={props.item} />
+      <MyMapsBuffer visible={props.activeTool === "buffer"} item={props.item} />
+      <MyMapsMeasure visible={props.activeTool === "measure"} item={props.item} />
       <FooterButtons
         onMyMapItemToolsButtonClick={(evt) => props.onMyMapItemToolsButtonClick(evt, props.item)}
         onDeleteButtonClick={() => {
