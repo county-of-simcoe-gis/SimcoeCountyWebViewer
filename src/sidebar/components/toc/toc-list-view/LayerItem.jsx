@@ -16,11 +16,9 @@ class LayerItem extends Component {
     this.isVisibleAtScale = true;
   }
 
-  componentWillMount() {
-    this.setVisibleScale();
-  }
-
   componentDidMount() {
+    this.setVisibleScale();
+
     this._isMounted = true;
     window.map.on("moveend", () => {
       this.setVisibleScale();

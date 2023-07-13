@@ -1,4 +1,4 @@
-import React, { Component, useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import "./WeatherRadar.css";
 import * as helpers from "../../../../helpers/helpers";
 import Slider from "rc-slider";
@@ -6,7 +6,6 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import ImageLayer from "ol/layer/Image";
 import Static from "ol/source/ImageStatic";
-import { set } from "ol/transform";
 
 const WeatherRadar = (props) => {
   const radarImages = useRef([]);
