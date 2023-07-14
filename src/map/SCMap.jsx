@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, useState, useRef, useEffect } from "react";
 import ReactDOM from "react-dom";
 // import GitHubButton from "react-github-btn";
 import GitHubButton from "../components/sc-github-btn";
@@ -37,49 +37,57 @@ import alertify from "alertifyjs";
 import AttributeTable from "../helpers/AttributeTable.jsx";
 import FloatingImageSlider from "../helpers/FloatingImageSlider.jsx";
 
-const scaleLineControl = new ScaleLine({
-  minWidth: 80,
-});
-const feedbackTemplate = (url, xmin, xmax, ymin, ymax, centerx, centery, scale) =>
-  `${url}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True`;
-const googleMapsTemplate = (pointx, pointy) => `https://www.google.com/maps?q=${pointy},${pointx}`;
-class SCMap extends Component {
-  constructor(props) {
-    super(props);
-    this.storageMapDefaultsKey = "Map Defaults";
-    this.contextCoords = null;
-    this.storageExtentKey = "Map Extent";
-    this.state = {
-      mapClassName: "sc-map",
-      shareURL: null,
-      parcelClickText: "Disable Property Click",
-      isIE: false,
-      mapBottom: 0,
-    };
-    // LISTEN FOR MAP CURSOR TO CHANGE
-    helpers.waitForLoad("settings", Date.now(), 30, () => {
-      if (!window.config.onlyStandardCursor) window.emitter.addListener("changeCursor", (cursorStyle) => this.changeCursor(cursorStyle));
-    });
+const SCMap = (props) => {
+  const scaleLineControl = new ScaleLine({
+    minWidth: 80,
+  });
+  const feedbackTemplate = (url, xmin, xmax, ymin, ymax, centerx, centery, scale) =>
+    `${url}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True`;
+  const googleMapsTemplate = (pointx, pointy) => `https://www.google.com/maps?q=${pointy},${pointx}`;
+
+  const [mapClassName, setMapClassName] = useState("sc-map");
+  const [mapBottom, setMapBottom] = useState(0);
+  const storageMapDefaultsKeyRef = useRef("Map Defaults");
+  const contextCoordsRef = useRef(null);
+  const storageExtentKeyRef = useRef("Map Extent");
+  const identifyIconLayerRef = useRef(null);
+  const initialLoadRef = useRef(false);
+  const [gitHubFollowHandle, setGitHubFollowHandle] = useState(null);
+  const [gitHubFollowUrl, setGitHubFollowUrl] = useState(null);
+  const [gitHubFollowHandleLabel, setGitHubFollowHandleLabel] = useState(null);
+
+  useEffect(() => {
     // LISTEN FOR TOC TO LOAD
-    window.emitter.addListener("tocLoaded", () => this.handleUrlParameters());
-
+    const tocLoadedListener = window.emitter.addListener("tocLoaded", () => handleUrlParameters());
     // LISTEN FOR ATTRIBUTE TABLE SIZE
-    window.emitter.addListener("attributeTableResize", (height) => this.onAttributeTableResize(height));
-
+    const attributeTableResizeListener = window.emitter.addListener("attributeTableResize", (height) => onAttributeTableResize(height));
     // CLEAR IDENTIFY MARKER AND RESULTS
-    window.emitter.addListener("clearIdentify", () => this.clearIdentify());
-    window.emitter.addListener("sidebarChanged", (isSidebarOpen) => this.sidebarChanged(isSidebarOpen));
-  }
-
-  componentDidMount() {
+    const clearIdentifyListener = window.emitter.addListener("clearIdentify", () => clearIdentify());
+    const sidebarChangedListner = window.emitter.addListener("sidebarChanged", (isSidebarOpen) => sidebarChanged(isSidebarOpen));
+    const keydownListener = document.addEventListener("keydown", function (e) {
+      if (e.srcElement.type !== "text" && e.srcElement.type !== "textarea")
+        if (e.shiftKey && e.code === "ArrowLeft") {
+          helpers.addAppStat("ExtentHistory", "Keyboard Shortcut Previous");
+          helpers.extentHistory("previous");
+        } else if (e.srcElement.type !== "text" && e.shiftKey && e.code === "ArrowRight") {
+          helpers.addAppStat("ExtentHistory", "Keyboard Shortcut Next");
+          helpers.extentHistory("next");
+        }
+    });
     helpers.waitForLoad("settings", Date.now(), 30, () => {
+      setGitHubFollowHandle(window.config.gitHubFollowHandle);
+      setGitHubFollowUrl(window.config.gitHubFollowUrl);
+      setGitHubFollowHandleLabel(window.config.gitHubFollowHandle + " on GitHub");
+      // LISTEN FOR MAP CURSOR TO CHANGE
+      if (!window.config.onlyStandardCursor) window.emitter.addListener("changeCursor", (cursorStyle) => changeCursor(cursorStyle));
+
       if (window.config.leftClickIdentify) {
-        this.setState({ mapClassName: "sc-map identify" });
+        setMapClassName("sc-map identify");
       }
       let centerCoords = window.config.centerCoords;
       let defaultZoom = window.config.defaultZoom;
-      const defaultsStorage = sessionStorage.getItem(this.storageMapDefaultsKey);
-      let extent = window.config.mapId !== null && window.config.mapId !== undefined && window.config.mapId.trim() !== "" ? null : helpers.getItemsFromStorage(this.storageExtentKey);
+      const defaultsStorage = sessionStorage.getItem(storageMapDefaultsKeyRef.current);
+      let extent = window.config.mapId !== null && window.config.mapId !== undefined && window.config.mapId.trim() !== "" ? null : helpers.getItemsFromStorage(storageExtentKeyRef.current);
 
       if (defaultsStorage !== null && (extent === undefined || extent === null)) {
         const defaults = JSON.parse(defaultsStorage);
@@ -125,7 +133,6 @@ class SCMap extends Component {
       window.map = map;
       window.popup = new Popup();
       window.map.addOverlay(window.popup);
-
       // PREVIOUS/NEXT EXTENT
       const initialZoom = window.map.getView().getZoom();
       const initialCenter = window.map.getView().getCenter();
@@ -135,26 +142,15 @@ class SCMap extends Component {
         helpers.extentHistory("save");
       });
 
-      document.addEventListener("keydown", function (e) {
-        if (e.srcElement.type !== "text" && e.srcElement.type !== "textarea")
-          if (e.shiftKey && e.code === "ArrowLeft") {
-            helpers.addAppStat("ExtentHistory", "Keyboard Shortcut Previous");
-            helpers.extentHistory("previous");
-          } else if (e.srcElement.type !== "text" && e.shiftKey && e.code === "ArrowRight") {
-            helpers.addAppStat("ExtentHistory", "Keyboard Shortcut Next");
-            helpers.extentHistory("next");
-          }
-      });
-
       window.map.getViewport().addEventListener("contextmenu", (evt) => {
         evt.preventDefault();
         let disable = window.disableParcelClick || window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring;
         if (disable) return;
-        this.contextCoords = window.map.getEventCoordinate(evt);
+        contextCoordsRef.current = window.map.getEventCoordinate(evt);
 
         const menu = (
           <Portal>
-            <FloatingMenu key={helpers.getUID()} buttonEvent={evt} onMenuItemClick={this.onMenuItemClick} autoY={true} autoX={true}>
+            <FloatingMenu key={helpers.getUID()} buttonEvent={evt} onMenuItemClick={onMenuItemClick} autoY={true} autoX={true}>
               <MenuItem
                 className={helpers.isMobile() || !window.config.rightClickMenuVisibility["sc-floating-menu-basic-mode"] ? "sc-hidden" : "sc-floating-menu-toolbox-menu-item"}
                 key="sc-floating-menu-basic-mode"
@@ -211,7 +207,6 @@ class SCMap extends Component {
       // eslint-disable-next-line
       if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
         // If Internet Explorer, return version number
-        this.setState({ isIE: true });
         helpers.showURLWindow(window.config.ieWarningUrl);
       } else {
         if (helpers.isMobile()) {
@@ -220,12 +215,11 @@ class SCMap extends Component {
       }
 
       // MAP LOADED
-      this.initialLoad = false;
       window.map.once("rendercomplete", (event) => {
-        if (!this.initialLoad) {
+        if (!initialLoadRef.current) {
           window.emitter.emit("mapLoaded");
           helpers.addIsLoaded("map");
-          this.initialLoad = true;
+          initialLoadRef.current = true;
         }
       });
 
@@ -234,7 +228,7 @@ class SCMap extends Component {
           window.emitter.emit("mapResize");
         }
       });
-      this.addIdentifyLayer();
+      addIdentifyLayer();
       // SHOW FEEDBACK ON TIMER
       if (window.config.showFeedbackMessageOnStartup !== undefined && window.config.showFeedbackMessageOnStartup) {
         setTimeout(() => {
@@ -305,30 +299,43 @@ class SCMap extends Component {
       // MAP NOTIFICAITONS
 
       if (window.config.pushMapNotifications) {
-        this.pushMapNotifications();
+        pushMapNotifications();
       }
     });
-  }
-  changeCursor = (cursorStyle) => {
+    return () => {
+      tocLoadedListener.remove();
+      attributeTableResizeListener.remove();
+      clearIdentifyListener.remove();
+      sidebarChangedListner.remove();
+      document.removeEventListener("keydown", keydownListener);
+    };
+  }, []);
+
+  useEffect(() => {
+    helpers.waitForLoad("map", Date.now(), 30, () => {
+      window.map.updateSize();
+    });
+  }, [mapClassName]);
+
+  const changeCursor = (cursorStyle) => {
     let cursorStyles = ["standard", "identify", "draw"];
     cursorStyles.splice(cursorStyles.indexOf(cursorStyle), 1);
-    let classes = this.state.mapClassName.split(" ");
+    let classes = mapClassName.split(" ");
     if (classes.indexOf(cursorStyle) === -1) {
       cursorStyles.forEach((styleName) => {
         if (classes.indexOf(styleName) !== -1) classes.splice(classes.indexOf(styleName), 1);
       });
       classes.push(cursorStyle);
-      this.setState({ mapClassName: classes.join(" ") });
+      setMapClassName(classes.join(" "));
     }
   };
 
-  onAttributeTableResize = (height) => {
-    this.setState({ mapBottom: Math.abs(height) }, () => {
-      window.map.updateSize();
-    });
+  const onAttributeTableResize = (height) => {
+    setMapBottom(Math.abs(height));
+    window.map.updateSize();
   };
 
-  pushMapNotifications = () => {
+  const pushMapNotifications = () => {
     const apiUrl = window.config.apiUrl + "getMapNotifications/";
     const pushMapNotificationIDs = window.config.pushMapNotificationIDs !== undefined && window.config.pushMapNotificationIDs !== null ? window.config.pushMapNotificationIDs : [];
     pushMapNotificationIDs.push(0);
@@ -364,9 +371,9 @@ class SCMap extends Component {
     });
   };
 
-  handleUrlParameters = () => {
+  const handleUrlParameters = () => {
     helpers.waitForLoad("settings", Date.now(), 30, () => {
-      const storage = window.config.mapId !== null && window.config.mapId !== undefined && window.config.mapId.trim() !== "" ? undefined : helpers.getItemsFromStorage(this.storageExtentKey);
+      const storage = window.config.mapId !== null && window.config.mapId !== undefined && window.config.mapId.trim() !== "" ? undefined : helpers.getItemsFromStorage(storageExtentKeyRef.current);
 
       // GET URL PARAMETERS (ZOOM TO XY)
       const x = helpers.getURLParameter("X");
@@ -397,10 +404,10 @@ class SCMap extends Component {
           });
 
           iconFeature.setStyle(iconStyle);
-          this.identifyIconLayer.getSource().clear();
-          window.map.removeLayer(this.identifyIconLayer);
-          this.identifyIconLayer.getSource().addFeature(iconFeature);
-          window.map.addLayer(this.identifyIconLayer);
+          identifyIconLayerRef.current.getSource().clear();
+          window.map.removeLayer(identifyIconLayerRef.current);
+          identifyIconLayerRef.current.getSource().addFeature(iconFeature);
+          window.map.addLayer(identifyIconLayerRef.current);
         }
         setTimeout(() => {
           helpers.flashPoint(coords);
@@ -419,7 +426,7 @@ class SCMap extends Component {
     });
   };
 
-  onMenuItemClick = (key) => {
+  const onMenuItemClick = (key) => {
     switch (key) {
       case "sc-floating-menu-zoomin":
         window.map.getView().setZoom(window.map.getView().getZoom() + 1);
@@ -428,31 +435,31 @@ class SCMap extends Component {
         window.map.getView().setZoom(window.map.getView().getZoom() - 1);
         break;
       case "sc-floating-menu-property-click":
-        window.emitter.emit("showPropertyReport", this.contextCoords);
+        window.emitter.emit("showPropertyReport", contextCoordsRef.current);
         break;
       case "sc-floating-menu-add-mymaps":
-        this.addMyMaps();
+        addMyMaps();
         break;
       case "sc-floating-menu-save-map-extent":
-        this.saveMapExtent();
+        saveMapExtent();
         break;
       case "sc-floating-menu-report-problem":
-        this.reportProblem();
+        reportProblem();
         break;
       case "sc-floating-menu-identify":
-        this.identify();
+        identify();
         break;
       case "sc-floating-menu-lhrs":
-        this.lhrs();
+        lhrs();
         break;
       case "sc-floating-menu-google-maps":
-        this.googleLink();
+        googleLink();
         break;
       case "sc-floating-menu-more":
-        this.moreOptions();
+        moreOptions();
         break;
       case "sc-floating-menu-basic-mode":
-        this.basicMode();
+        basicMode();
         break;
       default:
         break;
@@ -461,39 +468,39 @@ class SCMap extends Component {
     helpers.addAppStat("Right Click", key);
   };
 
-  basicMode = () => {
+  const basicMode = () => {
     window.emitter.emit("setSidebarVisiblity", "CLOSE");
   };
 
-  moreOptions = () => {
+  const moreOptions = () => {
     // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
     window.emitter.emit("setSidebarVisiblity", "CLOSE");
 
     // OPEN MORE MENU
     window.emitter.emit("openMoreMenu");
   };
-  lhrs = () => {
-    window.emitter.emit("activateSidebarItem", "LHRS", "tools", this.contextCoords);
-    console.log(this.contextCoords);
+  const lhrs = () => {
+    window.emitter.emit("activateSidebarItem", "LHRS", "tools", contextCoordsRef.current);
+    console.log(contextCoordsRef.current);
   };
 
-  clearIdentify = () => {
+  const clearIdentify = () => {
     // CLEAR PREVIOUS IDENTIFY RESULTS
-    this.identifyIconLayer.getSource().clear();
-    window.map.removeLayer(this.identifyIconLayer);
+    identifyIconLayerRef.current.getSource().clear();
+    window.map.removeLayer(identifyIconLayerRef.current);
     window.emitter.emit("loadReport", <div />);
   };
 
-  addIdentifyLayer = () => {
+  const addIdentifyLayer = () => {
     helpers.waitForLoad(["settings", "map"], Date.now(), 30, () => {
-      this.identifyIconLayer = new VectorLayer({
+      identifyIconLayerRef.current = new VectorLayer({
         name: "sc-identify",
         source: new VectorSource({
           features: [],
         }),
         zIndex: 100000,
       });
-      this.identifyIconLayer.setStyle(
+      identifyIconLayerRef.current.setStyle(
         new Style({
           image: new Icon({
             anchor: [0.5, 1],
@@ -501,35 +508,35 @@ class SCMap extends Component {
           }),
         })
       );
-      this.identifyIconLayer.set("name", "sc-identify-icon");
+      identifyIconLayerRef.current.set("name", "sc-identify-icon");
       if (window.config.leftClickIdentify) {
         window.map.on("singleclick", (evt) => {
           // DISABLE POPUPS
           let disable = window.disableIdentifyClick || window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring;
           if (disable) return;
 
-          this.contextCoords = evt.coordinate;
-          this.identify();
+          contextCoordsRef.current = evt.coordinate;
+          identify();
         });
       }
     });
   };
-  identify = () => {
-    this.identifyIconLayer.getSource().clear();
-    window.map.removeLayer(this.identifyIconLayer);
+  const identify = () => {
+    identifyIconLayerRef.current.getSource().clear();
+    window.map.removeLayer(identifyIconLayerRef.current);
 
-    const point = new Point(this.contextCoords);
+    const point = new Point(contextCoordsRef.current);
     const feature = new Feature(point);
-    this.identifyIconLayer.getSource().addFeature(feature);
+    identifyIconLayerRef.current.getSource().addFeature(feature);
 
-    window.map.addLayer(this.identifyIconLayer);
+    window.map.addLayer(identifyIconLayerRef.current);
     setTimeout(() => {
-      window.map.removeLayer(this.identifyIconLayer);
+      window.map.removeLayer(identifyIconLayerRef.current);
     }, 3000);
     window.emitter.emit("loadReport", <Identify geometry={point} />);
   };
 
-  reportProblem = () => {
+  const reportProblem = () => {
     // APP STATS
     helpers.addAppStat("Report Problem", "Right Click Map");
 
@@ -547,97 +554,66 @@ class SCMap extends Component {
       helpers.showURLWindow(feedbackUrl, false, "full");
     });
   };
-  googleLink = () => {
+  const googleLink = () => {
     // APP STATS
     helpers.addAppStat("Google Maps", "Right Click Map");
 
-    const latLongCoords = transform(this.contextCoords, "EPSG:3857", "EPSG:4326");
+    const latLongCoords = transform(contextCoordsRef.current, "EPSG:3857", "EPSG:4326");
     const googleMapsUrl = googleMapsTemplate(latLongCoords[0], latLongCoords[1]);
     window.open(googleMapsUrl, "_blank");
   };
 
-  saveMapExtent = () => {
+  const saveMapExtent = () => {
     const extent = window.map.getView().calculateExtent(window.map.getSize());
-    helpers.saveToStorage(this.storageExtentKey, extent);
+    helpers.saveToStorage(storageExtentKeyRef.current, extent);
     helpers.showMessage("Map Extent", "Your map extent has been saved.");
   };
 
-  addMyMaps = () => {
-    var marker = new Feature(new Point(this.contextCoords));
-    window.emitter.emit("addMyMapsFeature", marker, this.contextCoords[0] + "," + this.contextCoords[1]);
+  const addMyMaps = () => {
+    var marker = new Feature(new Point(contextCoordsRef.current));
+    window.emitter.emit("addMyMapsFeature", marker, contextCoordsRef.current[0] + "," + contextCoordsRef.current[1]);
   };
 
-  onContextDisableParcelClick = () => {
-    if (window.disableParcelClick) {
-      window.disableParcelClick = false;
-      this.setState({ parcelClickText: "Disable Property Click" });
-    } else {
-      window.disableParcelClick = true;
-      this.setState({ parcelClickText: "Enable Property Click" });
-    }
-    this.contextmenu.close();
-
-    // this.contextmenu.clear();
-    // this.contextmenu.extend(this.getContextMenuItems())
-  };
-
-  getPropertyClickText = () => {
-    if (window.disableParcelClick) return "Enable Property Click";
-    else return "Disable Property Click";
-  };
-
-  sidebarChanged(isSidebarOpen) {
+  const sidebarChanged = (isSidebarOpen) => {
     helpers.waitForLoad("map", Date.now(), 30, () => {
-      let mapClassName = "sc-map";
       //  SIDEBAR IN AND OUT
       if (isSidebarOpen) {
-        mapClassName = "sc-map sc-map-slideout";
+        setMapClassName("sc-map sc-map-slideout");
       } else {
-        mapClassName = "sc-map sc-map-closed sc-map-slidein";
+        setMapClassName("sc-map sc-map-closed sc-map-slidein");
       }
-      this.setState({ mapClassName: mapClassName }, () => {
-        window.map.updateSize();
-
-        this.forceUpdate();
-      });
     });
-  }
+  };
 
-  render() {
-    const gitHubFollowUrl = window.config.gitHubFollowUrl;
-    const gitHubFollowHandle = window.config.gitHubFollowHandle;
-    const gitHubFollowHandleLabel = window.config.gitHubFollowHandle + " on GitHub";
-
-    return (
-      <div id="map-root">
-        <div className="map-theme">
-          <div id={"map-modal-window"} />
-          <div id="map" className={this.state.mapClassName} tabIndex="0" style={{ bottom: this.state.mapBottom }} />
-          <Navigation options={this.props.options} />
-          <FooterTools options={this.props.options} />
-          <BMap options={this.props.options} />
-          <PropertyReportClick />
-          {window.mapControls && window.mapControls.gitHubButton ? (
-            <div
-              className={window.sidebarOpen ? "sc-map-github-button slideout" : "sc-map-github-button slidein"}
-              onClick={() => {
-                helpers.addAppStat("GitHub", "Button");
-              }}
-            >
-              <GitHubButton href={gitHubFollowUrl} data-size="large" aria-label={gitHubFollowHandleLabel}>
-                {gitHubFollowHandle}
-              </GitHubButton>
-            </div>
-          ) : (
-            <div />
-          )}
-          <AttributeTable />
-          <FloatingImageSlider />
-        </div>
+  return (
+    <div id="map-root">
+      <div className="map-theme">
+        <div id={"map-modal-window"} />
+        <div id="map" className={mapClassName} tabIndex="0" style={{ bottom: mapBottom }} />
+        <Navigation options={props.options} />
+        <FooterTools options={props.options} />
+        <BMap options={props.options} />
+        <PropertyReportClick />
+        {window.mapControls && window.mapControls.gitHubButton ? (
+          <div
+            className={window.sidebarOpen ? "sc-map-github-button slideout" : "sc-map-github-button slidein"}
+            onClick={() => {
+              helpers.addAppStat("GitHub", "Button");
+            }}
+          >
+            <GitHubButton href={gitHubFollowUrl} data-size="large" aria-label={gitHubFollowHandleLabel}>
+              {gitHubFollowHandle}
+            </GitHubButton>
+          </div>
+        ) : (
+          <div />
+        )}
+        <AttributeTable />
+        <FloatingImageSlider />
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 export default SCMap;
 // IMPORT ALL IMAGES
