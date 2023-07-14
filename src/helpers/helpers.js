@@ -374,7 +374,7 @@ export function getVectorTileLayer(url) {
       //spritePath: url + "/resources/sprites/sprite.json",
       //pngPath: url + "/resources/sprites/sprite.png",
     }),
-    id: "vTileLayer",
+    id: "TileLayer",
     tilePixelRatio: 8,
   });
   //let rootPath= url + "/tile/{z}/{y}/{x}.pbf"; // rootPath for applySytle
