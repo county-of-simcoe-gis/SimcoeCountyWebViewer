@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import "./Navigation.css";
 import { fromLonLat } from "ol/proj";
 import * as helpers from "../helpers/helpers";
@@ -6,70 +6,71 @@ import { FaForward, FaBackward } from "react-icons/fa";
 import Graticule from "ol/layer/Graticule";
 import { Stroke } from "ol/style.js";
 import { MdGridOn, MdGridOff } from "react-icons/md";
-class Navigation extends Component {
-  constructor(props) {
-    super(props);
-    this.graticule = null;
+const Navigation = (props) => {
+  const [containerClassName, setContainerClassName] = useState("nav-container");
+  const [showCurrentLocation, setShowCurrentLocation] = useState(true);
+  const [showZoomExtent, setShowZoomExtent] = useState(true);
+  const [extentHistory, setExtentHistory] = useState([0, 1]);
+  const [showGridButton, setShowGridButton] = useState(true);
+  const [showGrid, setShowGrid] = useState(false);
+  const graticuleRef = useRef(
+    new Graticule({
+      // the style to use for the lines, optional.
+      strokeStyle: new Stroke({
+        color: "rgba(255,120,0,0.9)",
+        width: 2,
+        lineDash: [0.5, 4],
+      }),
+      showLabels: true,
+      wrapX: false,
+      zIndex: 10000,
+    })
+  );
 
-    this.state = {
-      containerClassName: "nav-container",
-      showCurrentLocation: true,
-      showZoomExtent: true,
-      extentHistory: [0, 1],
-      showGridButton: true,
-      showGrid: false,
-    };
-
+  useEffect(() => {
     // LISTEN FOR SIDEPANEL CHANGES
-    window.emitter.addListener("sidebarChanged", (isSidebarOpen) => this.sidebarChanged(isSidebarOpen));
-
+    const sidebarChangedListner = window.emitter.addListener("sidebarChanged", (isSidebarOpen) => sidebarChanged(isSidebarOpen));
     // LISTEN FOR HISTORY CHANGES
-    window.emitter.addListener("extentHistoryChanged", (index, count) => this.extentHistoryChanged([index, count]));
-
+    const extentHistoryChangedListner = window.emitter.addListener("extentHistoryChanged", (index, count) => extentHistoryChanged([index, count]));
     // LISTEN FOR CONTROL VISIBILITY CHANGES
-    window.emitter.addListener("mapControlsChanged", (control, visible) => this.controlStateChange(control, visible));
-  }
+    const mapControlsChangedListener = window.emitter.addListener("mapControlsChanged", (control, visible) => controlStateChange(control, visible));
 
-  componentDidMount() {
     helpers.waitForLoad(["settings", "map"], Date.now(), 30, () => {
-      this.graticule = new Graticule({
-        // the style to use for the lines, optional.
-        strokeStyle: new Stroke({
-          color: "rgba(255,120,0,0.9)",
-          width: 2,
-          lineDash: [0.5, 4],
-        }),
-        showLabels: true,
-        wrapX: false,
-        zIndex: 10000,
-      });
+      setShowCurrentLocation(window.mapControls && window.mapControls.currentLocation);
+      setShowZoomExtent(window.mapControls && window.mapControls.zoomExtent);
+      setShowGridButton(window.mapControls && window.mapControls.showGrid);
     });
-    this.setState({
-      showCurrentLocation: window.mapControls && window.mapControls.currentLocation,
-      showZoomExtent: window.mapControls && window.mapControls.zoomExtent,
-      showGridButton: window.mapControls && window.mapControls.showGrid,
-    });
-  }
+    return () => {
+      sidebarChangedListner.remove();
+      extentHistoryChangedListner.remove();
+      mapControlsChangedListener.remove();
+    };
+  }, []);
 
-  extentHistoryChanged(extentHistory) {
-    this.setState({ extentHistory });
-  }
+  useEffect(() => {
+    helpers.waitForLoad(["settings", "map"], Date.now(), 30, () => {
+      if (showGrid) window.map.addLayer(graticuleRef.current);
+      else window.map.removeLayer(graticuleRef.current);
+    });
+  }, [showGrid]);
+
+  const extentHistoryChanged = (extentHistory) => {
+    setExtentHistory(extentHistory);
+  };
   // ZOOM TO FULL EXTENT
-  zoomFullExtent() {
+  const zoomFullExtent = () => {
     helpers.waitForLoad("settings", Date.now(), 30, () => {
       let centerCoords = window.config.centerCoords;
       let defaultZoom = window.config.defaultZoom;
       window.map.getView().animate({ center: centerCoords, zoom: defaultZoom });
     });
-  }
-  showGrid = () => {
-    this.setState({ showGrid: !this.state.showGrid }, () => {
-      if (this.state.showGrid) window.map.addLayer(this.graticule);
-      else window.map.removeLayer(this.graticule);
-    });
+  };
+
+  const onShowGridToggle = () => {
+    setShowGrid(!showGrid);
   };
   // ZOOM TO CURRENT LOCATION
-  zoomToCurrentLocation() {
+  const zoomToCurrentLocation = () => {
     var options = { timeout: 5000 };
     navigator.geolocation.getCurrentPosition(
       function (pos) {
@@ -83,99 +84,91 @@ class Navigation extends Component {
     );
 
     helpers.addAppStat("Current Location", "Click");
-  }
+  };
 
   // HANDLE SIDEBAR CHANGES
-  sidebarChanged(isSidebarOpen) {
+  const sidebarChanged = (isSidebarOpen) => {
     //  SIDEBAR IN AND OUT
     if (isSidebarOpen) {
-      this.setState({
-        containerClassName: "nav-container nav-container-slideout",
-      });
+      setContainerClassName("nav-container nav-container-slideout");
     } else {
-      this.setState({
-        containerClassName: "nav-container nav-container-slidein",
-      });
+      setContainerClassName("nav-container nav-container-slidein");
     }
-  }
-  controlStateChange(control, state) {
+  };
+  const controlStateChange = (control, state) => {
     switch (control) {
       case "fullExtent":
-        this.setState({ showZoomExtent: state });
+        setShowZoomExtent(state);
         break;
       case "zoomToCurrentLocation":
-        this.setState({ showCurrentLocation: state });
+        setShowCurrentLocation(state);
         break;
       case "showExtent":
-        this.setState({ showGridButton: state });
+        setShowGridButton(state);
         break;
       default:
         break;
     }
-  }
+  };
 
-  render() {
-    return (
-      <div>
-        <div className="map-theme">
-          <div className={this.state.containerClassName}>
+  return (
+    <div>
+      <div className="map-theme">
+        <div className={containerClassName}>
+          <div
+            className="zoomButton"
+            title="Zoom In"
+            onClick={() => {
+              window.map.getView().setZoom(window.map.getView().getZoom() + 1);
+            }}
+          >
+            +
+          </div>
+          <div
+            className="zoomButton"
+            title="Zoom Out"
+            onClick={() => {
+              window.map.getView().setZoom(window.map.getView().getZoom() - 1);
+            }}
+          >
+            -
+          </div>
+          <div className="extentHistory">
             <div
-              className="zoomButton"
-              title="Zoom In"
+              className={`prevExtentButton ${extentHistory[0] === 0 ? "disabled" : ""}`}
+              title="Previous Extent"
               onClick={() => {
-                window.map.getView().setZoom(window.map.getView().getZoom() + 1);
+                helpers.addAppStat("ExtentHistory", "Button press previous");
+                helpers.extentHistory("previous");
               }}
             >
-              +
+              <FaBackward size={15} />
             </div>
             <div
-              className="zoomButton"
-              title="Zoom Out"
+              className={`nextExtentButton ${extentHistory[0] === extentHistory[1] - 1 ? "disabled" : ""}`}
+              title="Next Extent"
               onClick={() => {
-                window.map.getView().setZoom(window.map.getView().getZoom() - 1);
+                helpers.addAppStat("ExtentHistory", "Button press next");
+                helpers.extentHistory("next");
               }}
             >
-              -
+              <FaForward size={15} />
             </div>
-            <div className="extentHistory">
-              <div
-                className={`prevExtentButton ${this.state.extentHistory[0] === 0 ? "disabled" : ""}`}
-                title="Previous Extent"
-                onClick={() => {
-                  helpers.addAppStat("ExtentHistory", "Button press previous");
-                  helpers.extentHistory("previous");
-                }}
-              >
-                <FaBackward size={15} />
-              </div>
-              <div
-                className={`nextExtentButton ${this.state.extentHistory[0] === this.state.extentHistory[1] - 1 ? "disabled" : ""}`}
-                title="Next Extent"
-                onClick={() => {
-                  helpers.addAppStat("ExtentHistory", "Button press next");
-                  helpers.extentHistory("next");
-                }}
-              >
-                <FaForward size={15} />
-              </div>
-            </div>
+          </div>
 
-            <div className="fullExtentButton" onClick={this.zoomFullExtent}>
-              <div className="fullExtentContent" />
-            </div>
-            <div className="zoomToCurrentLocationButton" onClick={this.zoomToCurrentLocation}>
-              <div className="zoomToCurrentLocationContent" />
-            </div>
-            <div className="showGridButton" onClick={this.showGrid} title={`${this.state.showGrid ? "Hide" : "Show"} map grid`}>
-              <div className={`showGridContent${this.state.showGrid ? " active" : ""}`}>
-                {this.state.showGrid ? <MdGridOff size={25} color={"#838383"} /> : <MdGridOn size={25} color={"#838383"} />}
-              </div>
-            </div>
+          <div className="fullExtentButton" onClick={zoomFullExtent}>
+            <div className="fullExtentContent" />
+          </div>
+          <div className="zoomToCurrentLocationButton" onClick={zoomToCurrentLocation}>
+            <div className="zoomToCurrentLocationContent" />
+          </div>
+          <div className="showGridButton" onClick={onShowGridToggle} title={`${showGrid ? "Hide" : "Show"} map grid`}>
+            <div className={`showGridContent${showGrid ? " active" : ""}`}>{showGrid ? <MdGridOff size={25} color={"#838383"} /> : <MdGridOn size={25} color={"#838383"} />}</div>
           </div>
         </div>
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 export default Navigation;
