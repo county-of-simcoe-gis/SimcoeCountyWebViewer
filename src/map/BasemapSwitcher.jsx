@@ -2,13 +2,10 @@ import React, { useContext, useState, useEffect, useRef } from "react";
 import "./BasemapSwitcher.css";
 
 import * as helpers from "../helpers/helpers";
-import { LayerHelpers, OL_DATA_TYPES } from "../helpers/OLHelpers";
 import BasemapSwitcherContext from "./BasemapSwitcherContext";
 import BasemapItem from "./BasemapItem.jsx";
 import BasemapConfig from "./basemapSwitcherConfig.json";
 import Slider from "rc-slider";
-import { Group as LayerGroup } from "ol/layer.js";
-import xml2js from "xml2js";
 
 const BasemapSwitcher = (props) => {
   const {
@@ -85,7 +82,6 @@ const BasemapSwitcher = (props) => {
       }, 100);
     });
     helpers.waitForLoad(["basemap"], Date.now(), 30, () => {
-      console.log("basemap loaded");
       if (activeButton === "topo") {
         enableTopo();
       } else {
@@ -165,7 +161,6 @@ const BasemapSwitcher = (props) => {
 
   // PANEL DROP DOWN BUTTON
   const onImageryArrowClick = (value) => {
-    console.log("onImageryArrowClick", isLoadedRef.current);
     if (isLoadedRef.current) {
       // DISABLE TOPO
       disableTopo();
@@ -198,7 +193,6 @@ const BasemapSwitcher = (props) => {
   };
 
   const enableImagery = (value) => {
-    console.log("enableImagery");
     if (isLoadedRef.current) {
       // ENABLE IMAGERY
       updateImageryLayers(imagerySliderValue);
@@ -214,7 +208,6 @@ const BasemapSwitcher = (props) => {
   };
 
   const disableImagery = (value) => {
-    console.log("disableImagery");
     // DISABLE IMAGERY
     if (streetsLayerRef.current) streetsLayerRef.current.setVisible(false);
     if (worldImageryLayerRef.current) worldImageryLayerRef.current.setVisible(false);
@@ -223,7 +216,6 @@ const BasemapSwitcher = (props) => {
   };
 
   const onStreetsCheckbox = (evt) => {
-    console.log("onStreetsCheckbox", evt.target.checked);
     if (isLoadedRef.current) {
       if (streetsLayerRef.current) streetsLayerRef.current.setVisible(evt.target.checked);
       setStreetsCheckbox(evt.target.checked);
@@ -240,7 +232,6 @@ const BasemapSwitcher = (props) => {
   };
 
   const enableTopo = (value) => {
-    console.log("enableTopo");
     setActiveButton("topo");
     setTopoLayerVisiblity(topoActiveIndex);
     // DISABLE IMAGERY
@@ -283,7 +274,6 @@ const BasemapSwitcher = (props) => {
 
   // ADJUST VISIBILITY
   const setTopoLayerVisiblity = (activeIndex) => {
-    console.log("setTopoLayerVisiblity", activeIndex, topoLayersRef.current.length);
     for (let index = 0; index < topoLayersRef.current.length; index++) {
       let layer = topoLayersRef.current[index];
       const layerIndex = layer.getProperties().index;
