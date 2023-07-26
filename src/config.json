@@ -26,6 +26,7 @@
   "openLicenseUrl": "http://maps.simcoe.ca/openlicense.html",
   "whatsNewUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/WhatsNew/2021-03-22",
   "helpUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer",
+  "reportUrl": "https://opengis.simcoe.ca/reports/",
   "ieWarningUrl": "https://opengis.simcoe.ca/public/ieWarning.html",
   "propertyReportUrl": "https://opengis.simcoe.ca/api_v2/public/reports/property/",
   "weatherRadarApiUrl": "https://opengis.simcoe.ca/api_v2/public/map/tool/weather/RadarImages/",
