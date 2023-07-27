@@ -688,7 +688,7 @@ export function getWFSGeoJSON(serverUrl, layerName, callback, sortField = null, 
   if (count !== null) additionalParams += "&count=" + count;
 
   // USE TEMPLATE FOR READABILITY
-  const wfsUrlTemplate = (serverURL, layerName) => `${serverURL}wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json`;
+  const wfsUrlTemplate = (serverURL, layerName) => `${serverURL}wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&maxFeatures=Y&outputFormat=application/json`;
   const wfsUrl = wfsUrlTemplate(serverUrl, layerName) + additionalParams;
   getJSON(wfsUrl, (result) => {
     const geoJSON = new GeoJSON().readFeatures(result);
@@ -1208,9 +1208,9 @@ export function download(url, filename = undefined, options = undefined) {
     link.setAttribute("rel", "noopener noreferrer");
     if (filename) {
       link.setAttribute("download", filename);
-    document.body.appendChild(link); // Required for FF
-    link.click();
-    document.body.removeChild(link); //afterwards we remove the element again
+      document.body.appendChild(link); // Required for FF
+      link.click();
+      document.body.removeChild(link); //afterwards we remove the element again
       if (options.isBlob) URL.revokeObjectURL(link.href);
     } else {
       window.open(url, `_blank`);
