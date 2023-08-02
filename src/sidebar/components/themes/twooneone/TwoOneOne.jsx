@@ -408,7 +408,7 @@ const Result = (props) => {
   const { result } = props;
   let style = props.style;
   let website = result.website;
-  if (website !== undefined && website.indexOf("http", 1) === -1) website = "https://" + website;
+  if (website && website.indexOf("http", 1) === -1) website = "https://" + website;
   return (
     <div className="sc-theme-211-result" style={style}>
       <div>
@@ -448,7 +448,7 @@ const Result = (props) => {
 const PopupContent = (props) => {
   const { feature } = props;
   let website = feature.get("website");
-  if (website !== undefined && website.indexOf("http", 1) === -1) website = "https://" + website;
+  if (website && website.indexOf("http", 1) === -1) website = "https://" + website;
   return (
     <div>
       <InfoRow key={helpers.getUID()} label={props.isFrench ? "Nom" : "Name"} value={feature.get("organization_program_name")} />
