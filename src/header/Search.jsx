@@ -407,9 +407,9 @@ class Search extends Component {
     } else {
       let defaultStyle = drawingHelpers.getDefaultDrawStyle({
         drawColor:
-        window.config.featureHighlitStyles && window.config.featureHighlitStyles["stroke"] !== null && window.config.featureHighlitStyles["stroke"] !== undefined
-          ? window.config.featureHighlitStyles["stroke"]
-          : [255, 0, 0, 0.8],
+          window.config.featureHighlitStyles && window.config.featureHighlitStyles["stroke"] !== null && window.config.featureHighlitStyles["stroke"] !== undefined
+            ? window.config.featureHighlitStyles["stroke"]
+            : [255, 0, 0, 0.8],
         isText: false,
         strokeWidth: window.config.featureHighlitStyles && window.config.featureHighlitStyles["strokeWidth"] ? window.config.featureHighlitStyles["strokeWidth"] : 2,
         pointType: fullFeature.getGeometry().getType(),

@@ -3,7 +3,7 @@ import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import Switch from "react-switch";
 import { Item as MenuItem } from "rc-menu";
-import ReactTooltip from "react-tooltip";
+import { Tooltip as ReactTooltip } from "react-tooltip";
 import { FaQuestion } from "react-icons/fa";
 import Slider, { createSliderWithTooltip } from "rc-slider";
 

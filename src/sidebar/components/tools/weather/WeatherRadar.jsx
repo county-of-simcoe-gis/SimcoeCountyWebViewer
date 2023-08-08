@@ -116,8 +116,7 @@ const WeatherRadar = (props) => {
     window.map.getLayers().forEach((layer) => {
       const radarDate = layer.get("radarDate");
       const radarCode = layer.get("radarCode");
-
-      if (radarDate !== undefined) {
+      if (radarDate) {
         if (radarDate.getTime() === radarDateSliderValue.getTime() && radarDate.toDateString() === radarDateSliderValue.toDateString()) {
           if ((CASKR && radarCode === "CASKR") || (CASBI && radarCode === "CASBI") || (WSO && radarCode === "WSO")) {
             layer.setVisible(true);
@@ -232,6 +231,7 @@ const WeatherRadar = (props) => {
   };
 
   const getDateString = (dt) => {
+    if (!dt) return "";
     var dtstring = dt.getFullYear() + "-" + pad2(dt.getMonth() + 1) + "-" + pad2(dt.getDate()) + " " + pad2(dt.getHours()) + ":" + pad2(dt.getMinutes()) + ":" + pad2(dt.getSeconds());
     return dtstring;
   };
@@ -303,7 +303,9 @@ const WeatherRadar = (props) => {
                   },
                 }}
                 selected={startDate}
-                onChange={setStartDate}
+                onChange={(value) => {
+                  value < endDate ? setStartDate(value) : helpers.showMessage("Radar", "Start Date needs to be before End Date", helpers.messageColors.red);
+                }}
                 showTimeSelect
                 dateFormat="MMMM d, yyyy h:mm aa"
               />
@@ -313,7 +315,9 @@ const WeatherRadar = (props) => {
               <DatePicker
                 className="sc-input sc-tool-weather-date-input"
                 selected={endDate}
-                onChange={setEndDate}
+                onChange={(value) => {
+                  value > startDate ? setEndDate(value) : helpers.showMessage("Radar", "End Date needs to be after Start Date", helpers.messageColors.red);
+                }}
                 showTimeSelect
                 dateFormat="MMMM d, yyyy h:mm aa"
                 timeIntervals={10}

@@ -32,7 +32,9 @@ import { fromExtent } from "ol/geom/Polygon";
 
 //OTHER
 import { parseString } from "xml2js";
-import shortid from "shortid";
+// import shortid from "shortid";
+import { v4 as uuidv4 } from "uuid";
+
 import ShowMessage from "./ShowMessage.jsx";
 import ShowTerms from "./ShowTerms.jsx";
 import URLWindow from "./URLWindow.jsx";
@@ -120,7 +122,7 @@ export function isMobile() {
 // SHOW CONTENT WINDOW
 export function showWindow(contents, options = { title: "Information", showFooter: false, mode: "normal", hideScroll: false }) {
   ReactDOM.render(
-    <ShowWindow key={shortid.generate()} title={options.title} mode={options.mode} showFooter={options.showFooter} contents={contents} hideScroll={options.hideScroll} style={options.style} />,
+    <ShowWindow key={uuidv4()} title={options.title} mode={options.mode} showFooter={options.showFooter} contents={contents} hideScroll={options.hideScroll} style={options.style} />,
     document.getElementById("map-modal-window")
   );
 }
@@ -135,10 +137,7 @@ export function showURLWindow(url, showFooter = false, mode = "normal", honorDon
     }
 
     if (isSameOrigin) {
-      ReactDOM.render(
-        <URLWindow key={shortid.generate()} mode={mode} showFooter={showFooter} url={url} honorDontShow={honorDontShow} hideScroll={hideScroll} />,
-        document.getElementById("map-modal-window")
-      );
+      ReactDOM.render(<URLWindow key={uuidv4()} mode={mode} showFooter={showFooter} url={url} honorDontShow={honorDontShow} hideScroll={hideScroll} />, document.getElementById("map-modal-window"));
     } else {
       window.open(url, "_blank");
     }
@@ -740,7 +739,7 @@ export function findReact(domId) {
 
 // URL FRIENDLY STRING ID
 export function getUID() {
-  return shortid.generate();
+  return uuidv4();
 }
 
 export function flashPoint(coords, zoom = 15, duration = 5000) {

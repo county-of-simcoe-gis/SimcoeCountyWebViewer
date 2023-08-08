@@ -2,7 +2,7 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import { isMobile } from "react-device-detect";
-import arrayMove from "array-move";
+import { arrayMoveImmutable as arrayMove } from "array-move";
 
 //CUSTOM
 import * as TOCHelpers from "./common/TOCHelpers.jsx";

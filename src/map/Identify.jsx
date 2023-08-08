@@ -8,7 +8,7 @@ import Feature from "ol/Feature";
 import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
 import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style.js";
-import useIframeContentHeight from "react-use-iframe-content-height";
+import useIframeContentHeight from "../components/react-use-iframe-content-height";
 
 class Identify extends Component {
   constructor(props) {
