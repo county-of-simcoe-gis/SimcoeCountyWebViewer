@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import * as helpers from "../helpers/helpers";
 import * as drawingHelpers from "../helpers/drawingHelpers";
-// import Autocomplete from "react-autocomplete";
 import TextField from "@mui/material/TextField";
 
 import { Autocomplete as MUIAutocomplete } from "@mui/material";
@@ -228,7 +227,6 @@ const Search = (props) => {
     helpers.waitForLoad(["map", "settings"], Date.now(), 30, () => {
       helpers.getJSON(searchURL(apiUrlRef.current, value, selectedType.value, municipality, limit), (responseJson) => {
         if (responseJson !== undefined) searchResultsHandler(responseJson, limit);
-        else searchResultsHandler(responseJson, limit);
         // if (responseJson !== undefined) setSearchResults(responseJson);
         // else setSearchResults([]);
       });
@@ -463,7 +461,7 @@ const Search = (props) => {
 
   // WHEN USER SELECTS ITEM
   const onItemSelect = (selectedValue, item) => {
-    console.log("onItemSelect", selectedValue, item);
+    // console.log("onItemSelect", selectedValue, item);
     if (item.type === "Map Layer") {
       let emmiting = false;
       window.emitter.emit("activeTocLayerGroup", item.layerGroup, () => {
@@ -548,7 +546,6 @@ const Search = (props) => {
     helpers.waitForLoad(["map", "settings"], Date.now(), 30, () => {
       helpers.getJSON(searchURL(apiUrlRef.current, value, selectedType.value, municipality, limit), (responseJson) => {
         if (responseJson !== undefined) searchResultsHandler(responseJson, limit);
-        else searchResultsHandler(responseJson, limit);
       });
     });
   }, [showMore]);
@@ -562,6 +559,8 @@ const Search = (props) => {
 
   const searchResultsHandler = (results, limit) => {
     let newResults = Object.assign([], results);
+    //get a distinct item based on location_id
+    newResults = [...new Map(newResults.map((item) => [item["location_id"], item])).values()];
     if (value.length < 2) {
       setSearchResults([]);
       return;
@@ -601,7 +600,7 @@ const Search = (props) => {
       });
       newResults = layers.concat(newResults);
     }
-    console.log("searchResultsHandler", window.config);
+    // console.log("searchResultsHandler", window.config);
 
     // TOOLS
     if (!(window.config.mainSidebarItems && window.config.mainSidebarItems["hideTools"] !== true))
@@ -635,6 +634,7 @@ const Search = (props) => {
         });
         newResults = themes.concat(newResults);
       }
+
     setSearchResults(newResults);
   };
 
@@ -683,7 +683,7 @@ const Search = (props) => {
   });
 
   const onChange = (event, value) => {
-    console.log("onChange", value);
+    // console.log("onChange", value);
     // CHECK FOR ILLEGAL CHARS
     if (value.indexOf("\\") !== -1) {
       return;
@@ -702,7 +702,7 @@ const Search = (props) => {
       helpers.waitForLoad(["map", "settings"], Date.now(), 30, () => {
         helpers.getJSON(searchURL(apiUrlRef.current, value, selectedType.value, municipality, limit), (responseJson) => {
           if (responseJson !== undefined) searchResultsHandler(responseJson, limit);
-          else searchResultsHandler(responseJson, limit);
+
           // if (responseJson !== undefined) searchResultsHandler(responseJson, defaultSearchLimit);
         });
       });
