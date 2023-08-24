@@ -1,36 +1,54 @@
-import React, { Component } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Select from "react-select";
 import "./SearchAddresses.css";
 import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
-import Autocomplete from "react-autocomplete";
 import Highlighter from "react-highlight-words";
 import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
 import { Circle as CircleStyle, Icon, Fill, Stroke, Style } from "ol/style.js";
+import TextField from "@mui/material/TextField";
+import { Autocomplete as MUIAutocomplete } from "@mui/material";
+
 import searchAddressConfig from "./config.json";
+const SearchAddresses = (props) => {
+  const [selectedMuni, setSelectedMuni] = useState(munis[0]);
+  const [streetValue, setStreetValue] = useState("");
+  const [addressNumber, setAddressNumber] = useState("");
+  const [streetItems, setStreetItems] = useState([]);
+  const [features, setFeatures] = useState([]);
 
-class SearchAddresses extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      selectedMuni: munis[0],
-      streetValue: "",
-      addressNumber: "",
-      streetItems: [],
-      features: [],
-    };
-
+  const vectorLayerRef = useRef(null);
+  const vectorLayerShadowRef = useRef(null);
+  let apiUrlRef = useRef(null);
+  const muniSelectStyle = {
+    control: (provided) => ({
+      ...provided,
+      minHeight: "30px",
+    }),
+    indicatorsContainer: (provided) => ({
+      ...provided,
+      height: "30px",
+    }),
+    clearIndicator: (provided) => ({
+      ...provided,
+      padding: "5px",
+    }),
+    dropdownIndicator: (provided) => ({
+      ...provided,
+      padding: "5px",
+    }),
+  };
+  const searchStreetsURL = (apiUrl, searchText) => `${apiUrl}public/search/street/${searchText}`;
+  useEffect(() => {
     helpers.waitForLoad("settings", Date.now(), 30, () => {
-      this.apiUrl = window.config.apiUrl;
+      apiUrlRef.current = window.config.apiUrl;
     });
-
-    this.createPointLayer();
-  }
+    createPointLayer();
+  }, []);
 
   // POINT LAYER TO STORE SEARCH RESULTS
-  createPointLayer = () => {
+  const createPointLayer = () => {
     var shadowStyle = new Style({
       image: new CircleStyle({
         radius: 10,
@@ -60,44 +78,49 @@ class SearchAddresses extends Component {
     });
 
     window.map.addLayer(layer);
-    this.vectorLayer = layer;
+    vectorLayerRef.current = layer;
 
-    this.vectorLayerShadow = new VectorLayer({
+    vectorLayerShadowRef.current = new VectorLayer({
       source: new VectorSource({
         features: [],
       }),
       zIndex: 100000,
       style: shadowStyle,
     });
-    window.map.addLayer(this.vectorLayerShadow);
+    window.map.addLayer(vectorLayerShadowRef.current);
   };
 
-  onClose = () => {
+  const onClose = () => {
     // ADD CLEAN UP HERE (e.g. Map Layers, Popups, etc)
-    window.map.removeLayer(this.vectorLayer);
-    window.map.removeLayer(this.vectorLayerShadow);
+    window.map.removeLayer(vectorLayerRef.current);
+    window.map.removeLayer(vectorLayerShadowRef.current);
 
     // CALL PARENT WITH CLOSE
-    this.props.onClose();
+    if (props.onClose) props.onClose();
   };
 
-  onMuniChange = (selectedOption) => {
-    this.setState({ selectedMuni: selectedOption });
+  const onMuniChange = (selectedOption) => {
+    setSelectedMuni(selectedOption);
   };
 
-  onStreetItemSelect = (value, item) => {
+  const onStreetItemSelect = (value, item) => {
     // SET STATE CURRENT ITEM
-    this.setState({ streetValue: value, streetItems: [item] });
+    setStreetValue(value);
+    setStreetItems([item]);
   };
 
-  onSearchClick = () => {
+  const onSearchClick = () => {
     helpers.waitForLoad("settings", Date.now(), 30, () => {
       let sql = "";
-      if (this.state.selectedMuni.value !== "SEARCH ALL") sql += "muni = '" + this.state.selectedMuni.value + "'";
-
-      if (this.state.addressNumber.length !== 0) {
-        if (sql === "") sql += "stnum = " + this.state.addressNumber;
-        else sql += " AND stnum = " + this.state.addressNumber + " ";
+      if (selectedMuni.value !== "SEARCH ALL") sql += "muni = '" + selectedMuni.value + "'";
+      else
+        sql += `muni IN (${munis
+          .filter((m) => m.value !== "SEARCH ALL")
+          .map((m) => `'${m.value}'`)
+          .join(",")})`;
+      if (addressNumber.length !== 0) {
+        if (sql === "") sql += "stnum = " + addressNumber;
+        else sql += " AND stnum = " + addressNumber + " ";
       }
 
       const streetValue = document.getElementById("sc-tool-search-addresses-street-search").value;
@@ -110,7 +133,7 @@ class SearchAddresses extends Component {
         searchAddressConfig.serverUrl,
         searchAddressConfig.layerName,
         (result) => {
-          this.updateFeatures(result);
+          updateFeatures(result);
         },
         "stnum,fullname",
         null,
@@ -120,167 +143,234 @@ class SearchAddresses extends Component {
     });
   };
 
-  updateFeatures = (features) => {
-    this.setState({ features });
-    this.vectorLayer.getSource().clear();
+  const updateFeatures = (features) => {
+    setFeatures(features);
+    vectorLayerRef.current.getSource().clear();
 
     if (features.length === 0) return;
 
-    this.vectorLayer.getSource().addFeatures(features);
-    const extent = this.vectorLayer.getSource().getExtent();
+    vectorLayerRef.current.getSource().addFeatures(features);
+    const extent = vectorLayerRef.current.getSource().getExtent();
     window.map.getView().fit(extent, window.map.getSize(), { duration: 500 });
   };
 
-  onAddressNumberClick = (evt) => {
-    this.setState({ addressNumber: evt.target.value });
+  const onAddressNumberClick = (evt) => {
+    setAddressNumber(evt.target.value);
   };
 
-  onAddressNumberChange = (evt) => {
-    this.setState({ addressNumber: evt.target.value });
+  const onAddressNumberChange = (evt) => {
+    setAddressNumber(evt.target.value);
   };
 
-  onMouseEnter = (feature) => {
-    this.vectorLayerShadow.getSource().clear();
-    this.vectorLayerShadow.getSource().addFeature(feature);
+  const onMouseEnter = (feature) => {
+    vectorLayerShadowRef.current.getSource().clear();
+    vectorLayerShadowRef.current.getSource().addFeature(feature);
   };
 
-  onMouseLeave = (feature) => {
-    this.vectorLayerShadow.getSource().clear();
+  const onMouseLeave = (feature) => {
+    vectorLayerShadowRef.current.getSource().clear();
   };
 
-  onFeatureClick = (feature) => {
+  const onFeatureClick = (feature) => {
     window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize(), {
       duration: 500,
     });
   };
 
-  onClearClick = () => {
-    this.setState({ features: [] });
-    this.vectorLayer.getSource().clear();
+  const onClearClick = () => {
+    setFeatures([]);
+    vectorLayerRef.current.getSource().clear();
+  };
+  useEffect(() => {
+    onStreetSelect(streetValue);
+  }, [streetValue]);
+
+  const onStreetSelect = (value) => {
+    setStreetValue(value);
+    if (value !== "") {
+      helpers.getJSON(searchStreetsURL(apiUrlRef.current, value), (responseJson) => {
+        if (responseJson.error === undefined) {
+          let filteredItems = responseJson.filter((item) => {
+            if (selectedMuni.value === "SEARCH ALL")
+              return munis
+                .filter((m) => m.value !== "SEARCH ALL")
+                .map((m) => m.value)
+                .includes(item.muni);
+            else return item.muni === selectedMuni.value;
+          });
+          setStreetItems(filteredItems);
+        } else {
+          setStreetItems([]);
+        }
+      });
+    }
   };
 
-  render() {
-    const muniSelectStyle = {
-      control: (provided) => ({
-        ...provided,
-        minHeight: "30px",
-      }),
-      indicatorsContainer: (provided) => ({
-        ...provided,
-        height: "30px",
-      }),
-      clearIndicator: (provided) => ({
-        ...provided,
-        padding: "5px",
-      }),
-      dropdownIndicator: (provided) => ({
-        ...provided,
-        padding: "5px",
-      }),
-    };
-    const searchStreetsURL = (apiUrl, searchText) => `${apiUrl}public/search/street/${searchText}`;
-
-    return (
-      <PanelComponent onClose={this.onClose} name={this.props.name} helpLink={this.props.helpLink} hideHeader={this.props.hideHeader} type="tools">
-        <div className="sc-tool-search-addresses-container">
-          <div className="sc-tool-search-addresses-header">Locate civic addresses within the County using the form below.</div>
-          <div className="sc-container sc-theme-search-addresses-controls">
-            <div className="sc-theme-search-addresses-control-row">
-              <label className="sc-theme-search-addresses-control label">Municipality:</label>
-              <div className="sc-theme-search-addresses-control input">
-                <Select styles={muniSelectStyle} isSearchable={false} onChange={this.onMuniChange} options={munis} value={this.state.selectedMuni} />
-              </div>
+  return (
+    <PanelComponent onClose={onClose} name={props.name} helpLink={props.helpLink} hideHeader={props.hideHeader} type="tools">
+      <div className="sc-tool-search-addresses-container">
+        <div className="sc-tool-search-addresses-header">Locate civic addresses within the County using the form below.</div>
+        <div className="sc-container sc-theme-search-addresses-controls">
+          <div className="sc-theme-search-addresses-control-row">
+            <label className="sc-theme-search-addresses-control label">Municipality:</label>
+            <div className="sc-theme-search-addresses-control input">
+              <Select id="sc-theme-search-addresses-muni" styles={muniSelectStyle} isSearchable={false} onChange={onMuniChange} options={munis} value={selectedMuni} />
             </div>
-            <div className="sc-theme-search-addresses-control-row">
-              <label className="sc-theme-search-addresses-control label">Address Number:</label>
-              <div className="sc-theme-search-addresses-control input">
-                <input className="sc-theme-search-addresses-number" type="text" placeholder="Enter Address Number" onClick={this.onAddressNumberClick} onChange={this.onAddressNumberChange} />
-              </div>
+          </div>
+          <div className="sc-theme-search-addresses-control-row">
+            <label className="sc-theme-search-addresses-control label">Address Number:</label>
+            <div className="sc-theme-search-addresses-control input">
+              <input className="sc-theme-search-addresses-number" type="text" placeholder="Enter Address Number" onClick={onAddressNumberClick} onChange={onAddressNumberChange} />
             </div>
-            <div className="sc-theme-search-addresses-control-row">
-              <label className="sc-theme-search-addresses-control label">Street Name:</label>
-              <div className="sc-theme-search-addresses-control input">
-                <Autocomplete
-                  tabIndex="1"
-                  inputProps={{
-                    id: "sc-tool-search-addresses-street-search",
-                    placeholder: "Enter Street Name",
-                    name: "sc-tool-search-addresses-street-search",
-                  }}
-                  className="sc-tool-search-addresses-street-search"
-                  wrapperStyle={{
-                    position: "relative",
-                    display: "inline-block",
-                    width: "100%",
-                  }}
-                  value={this.state.streetValue}
-                  items={this.state.streetItems}
-                  getItemValue={(item) => item.streetname}
-                  onSelect={(value, item) => {
-                    this.onStreetItemSelect(value, item);
-                  }}
-                  onChange={(event, value) => {
-                    this.setState({ streetValue: value });
-                    if (value !== "") {
-                      this.setState({
-                        iconInitialClass: "sc-search-icon-initial-hidden",
-                      });
-                      this.setState({
-                        iconActiveClass: "sc-search-icon-active",
-                      });
+          </div>
+          <div className="sc-theme-search-addresses-control-row">
+            <label className="sc-theme-search-addresses-control label">Street Name:</label>
+            <div className="sc-theme-search-addresses-control input">
+              <MUIAutocomplete
+                id="sc-tool-search-addresses-street-search"
+                freeSolo
+                fullWidth
+                options={streetItems}
+                renderInput={(params) => (
+                  <TextField
+                    classes={{ root: "sc-tool-search-addresses-street-search-input" }}
+                    hiddenLabel
+                    placeholder="Enter Street Name"
+                    {...params}
+                    InputProps={{
+                      ...params.InputProps,
+                      type: "search",
+                    }}
+                  />
+                )}
+                value={streetValue}
+                inputValue={streetValue}
+                onInputChange={(event, value) => {
+                  // console.log("onInputChange", event, value);
+                  setStreetValue(value);
+                }}
+                getOptionLabel={(item) => {
+                  return typeof item !== "object" ? item : `${item.streetname} - ${item.muni}`;
+                }}
+                onChange={(e, selectedOption, reason) => {
+                  switch (reason) {
+                    case "selectOption":
+                      // console.log("onChange", reason, e, selectedOption);
+                      onStreetItemSelect(selectedOption.streetname, selectedOption);
+                      // onStreetSelect(selectedOption);
+                      break;
+                    case "clear":
+                      console.log("onChange", reason, e, selectedOption);
+                      setStreetValue("");
+                      setStreetItems([]);
+                      break;
+                    case "removeOption":
+                      // console.log("onChange", reason, e, selectedOption);
+                      break;
+                    case "createOption":
+                      // console.log("onChange", reason, e, selectedOption);
+                      break;
+                    case "blur":
+                      // console.log("onChange", reason, e, selectedOption);
+                      break;
+                    case "input":
+                      // console.log("onChange", reason, e, selectedOption);
 
-                      helpers.getJSON(searchStreetsURL(this.apiUrl, value), (responseJson) => {
-                        if (responseJson.error === undefined) this.setState({ streetItems: responseJson });
-                      });
-                    } else {
-                      this.setState({
-                        iconInitialClass: "sc-search-icon-initial",
-                      });
-                      this.setState({
-                        iconActiveClass: "sc-search-icon-active-hidden",
-                      });
-
-                      this.setState({ searchResults: [] });
-                    }
-                  }}
-                  renderMenu={(children) => <div className="sc-tool-search-addresses-street-search-menu">{children}</div>}
-                  renderItem={(item, isHighlighted) => (
-                    <div className={isHighlighted ? "sc-tool-search-addresses-street-search-highlighted" : "sc-tool-search-addresses-street-search-item"} key={helpers.getUID()}>
+                      break;
+                    default:
+                      break;
+                  }
+                }}
+                renderOption={(props, item) => {
+                  return (
+                    <li {...props} key={helpers.getUID()} className="sc-tool-search-addresses-street-search-item">
                       <div className="sc-search-item-left">
                         <img src={require("./images/map-marker-light-blue.png")} alt="blue pin" />
                       </div>
                       <div className="sc-search-item-content">
-                        <Highlighter highlightClassName="sc-search-highlight-words" searchWords={[this.state.streetValue]} textToHighlight={item.streetname} />
-
+                        <Highlighter highlightClassName="sc-search-highlight-words" searchWords={[streetValue]} textToHighlight={item.streetname} />
                         <div className="sc-search-item-sub-content">{" - " + item.muni}</div>
                       </div>
+                    </li>
+                  );
+                }}
+              />
+
+              {/* 
+              <Autocomplete 
+              tabIndex="1"
+                inputProps={{
+                  id: "sc-tool-search-addresses-street-search",
+                  placeholder: "Enter Street Name",
+                  name: "sc-tool-search-addresses-street-search",
+                }}
+                className="sc-tool-search-addresses-street-search"
+                wrapperStyle={{
+                  position: "relative",
+                  display: "inline-block",
+                  width: "100%",
+                }}
+                value={streetValue}
+                items={streetItems}
+                getItemValue={(item) => item.streetname}
+                onSelect={(value, item) => {
+                  onStreetItemSelect(value, item);
+                }}
+                onChange={(event, value) => {
+                  setStreetValue(value);
+                  if (value !== "") {
+                    helpers.getJSON(searchStreetsURL(apiUrlRef.current, value), (responseJson) => {
+                      if (responseJson.error === undefined) {
+                        let filteredItems = responseJson.filter((item) => {
+                          if (selectedMuni.value === "SEARCH ALL")
+                            return munis
+                              .filter((m) => m.value !== "SEARCH ALL")
+                              .map((m) => m.value)
+                              .includes(item.muni);
+                          else return item.muni === selectedMuni.value;
+                        });
+                        setStreetItems(filteredItems);
+                      } else {
+                        setStreetItems([]);
+                      }
+                    });
+                  }
+                }}
+                renderMenu={(children) => <div className="sc-tool-search-addresses-street-search-menu">{children}</div>}
+                renderItem={(item, isHighlighted) => (
+                  <div className={isHighlighted ? "sc-tool-search-addresses-street-search-highlighted" : "sc-tool-search-addresses-street-search-item"} key={helpers.getUID()}>
+                    <div className="sc-search-item-left">
+                      <img src={require("./images/map-marker-light-blue.png")} alt="blue pin" />
                     </div>
-                  )}
-                />
-              </div>
-            </div>
-            <div className="sc-theme-search-addresses-control-row sc-theme-search-addresses-button-container">
-              <button className="sc-button sc-theme-search-addresses-button" onClick={this.onSearchClick}>
-                Search
-              </button>
-              <button className="sc-button sc-theme-search-addresses-button" style={{ marginLeft: "5px" }} onClick={this.onClearClick}>
-                Clear
-              </button>
+                    <div className="sc-search-item-content">
+                      <Highlighter highlightClassName="sc-search-highlight-words" searchWords={[streetValue]} textToHighlight={item.streetname} />
+
+                      <div className="sc-search-item-sub-content">{" - " + item.muni}</div>
+                    </div>
+                  </div>
+                )}
+              /> */}
             </div>
           </div>
-          <div className={this.state.features.length === 0 ? "sc-container sc-tool-search-addresses-no-results" : "sc-hidden"}>
-            Please enter an Address in the textboxes above then click SEARCH button.
-          </div>
-          <div className="sc-tool-search-addresses-results">
-            {this.state.features.map((feature) => {
-              return <Results key={helpers.getUID()} feature={feature} onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave} onFeatureClick={this.onFeatureClick} />;
-            })}
+          <div className="sc-theme-search-addresses-control-row sc-theme-search-addresses-button-container">
+            <button className="sc-button sc-theme-search-addresses-button" onClick={onSearchClick}>
+              Search
+            </button>
+            <button className="sc-button sc-theme-search-addresses-button" style={{ marginLeft: "5px" }} onClick={onClearClick}>
+              Clear
+            </button>
           </div>
         </div>
-      </PanelComponent>
-    );
-  }
-}
+        <div className={features.length === 0 ? "sc-container sc-tool-search-addresses-no-results" : "sc-hidden"}>Please enter an Address in the textboxes above then click SEARCH button.</div>
+        <div className="sc-tool-search-addresses-results">
+          {features.map((feature) => {
+            return <Results key={helpers.getUID()} feature={feature} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} onFeatureClick={onFeatureClick} />;
+          })}
+        </div>
+      </div>
+    </PanelComponent>
+  );
+};
 
 export default SearchAddresses;
 

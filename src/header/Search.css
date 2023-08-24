@@ -12,6 +12,7 @@
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
 }
+
 #sc-search-textbox-mui {
   z-index: 1;
   margin-right: 10px;

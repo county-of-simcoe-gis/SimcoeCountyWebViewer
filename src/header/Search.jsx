@@ -780,7 +780,7 @@ const Search = (props) => {
       <MUIAutocomplete
         id={"sc-search-textbox-mui"}
         filterOptions={(options) => {
-          console.log("filterOptions", options);
+          // console.log("filterOptions", options);
 
           return options;
         }}
@@ -805,25 +805,24 @@ const Search = (props) => {
         onChange={(e, selectedOption, reason) => {
           switch (reason) {
             case "selectOption":
-              console.log("onChange", reason, e, selectedOption);
-
+              // console.log("onChange", reason, e, selectedOption);
               onItemSelect(selectedOption.name, selectedOption);
               break;
             case "clear":
-              console.log("onChange", reason, e, selectedOption);
+              // console.log("onChange", reason, e, selectedOption);
               cleanup();
               break;
             case "removeOption":
-              console.log("onChange", e, selectedOption, reason);
+              // console.log("onChange", e, selectedOption, reason);
               break;
             case "createOption":
-              console.log("onChange", e, selectedOption, reason);
+              // console.log("onChange", e, selectedOption, reason);
               break;
             case "blur":
-              console.log("onChange", e, selectedOption, reason);
+              // console.log("onChange", e, selectedOption, reason);
               break;
             case "input":
-              console.log("onChange", e, selectedOption, reason);
+              // console.log("onChange", e, selectedOption, reason);
               break;
             default:
               break;
