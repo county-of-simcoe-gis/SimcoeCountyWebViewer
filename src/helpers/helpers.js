@@ -362,7 +362,7 @@ export function getVectorTileLayer(url) {
   let layer = new VectorTileLayer({
     renderMode: "vector",
     reload: Infinity,
-    declutter: true,
+    declutter: false,
     //extent: extent,
     source: new VectorTileSource({
       attributions: "LIO VectorTiles Test",
@@ -1384,22 +1384,30 @@ export function removeMapControl(map, controlType) {
   }, this);
 }
 
-export function addMapControl(map, controlType) {
+export function addMapControl(map, controlType, newControl = undefined) {
   const add = (control) => {
     if (!hasMapControl(map, controlType)) map.addControl(control);
   };
   switch (controlType) {
     case "rotate":
-      add(new Rotate());
+      if (newControl !== undefined) {
+        add(newControl);
+      } else add(new Rotate());
       break;
     case "zoom":
-      add(new Zoom());
+      if (newControl !== undefined) {
+        add(newControl);
+      } else add(new Zoom());
       break;
     case "fullscreen":
-      add(new FullScreen());
+      if (newControl !== undefined) {
+        add(newControl);
+      } else add(new FullScreen());
       break;
     case "scaleLine":
-      add(new ScaleLine({ minWidth: 100 }));
+      if (newControl !== undefined) {
+        add(newControl);
+      } else add(new ScaleLine({ minWidth: 100 }));
       break;
     default:
       break;

@@ -59,7 +59,7 @@ export function BasemapSwitcherProvider({ children }) {
           window.map.addLayer(newLayer);
           layerList.push(newLayer);
           index++;
-          console.log("Loaded Imagery Layer: ", index, service.name, newLayer.getZIndex());
+          // console.log("Loaded Imagery Layer: ", index, service.name, newLayer.getZIndex());
         }
       );
     });

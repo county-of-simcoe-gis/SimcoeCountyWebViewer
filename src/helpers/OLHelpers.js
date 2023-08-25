@@ -494,8 +494,8 @@ export class LayerHelpers {
           newLayer["layerConfig"] = layer;
           newLayer["key"] = helpers.getUID();
           layerArray.push(newLayer);
-    });
-  }
+        });
+      }
     });
     callback(layerArray);
   }
@@ -944,7 +944,7 @@ export class LayerHelpers {
           rebuildParams: rebuildParams,
           renderMode: "hybrid",
           reload: Infinity,
-          declutter: true,
+          declutter: false,
           tilePixelRatio: 8,
           background: background,
           source: new VectorTileSource({

@@ -18,7 +18,7 @@ import "./SCMap.css";
 import "./OLOverrides.css";
 import "./Navigation";
 import Navigation from "./Navigation";
-import { defaults as defaultInteractions } from "ol/interaction.js";
+import { defaults as defaultInteractions, PinchRotate, DragRotate } from "ol/interaction.js";
 import Popup from "../helpers/Popup.jsx";
 import FooterTools from "./FooterTools.jsx";
 import { defaults as defaultControls, ScaleLine, FullScreen, Rotate } from "ol/control.js";
@@ -74,7 +74,29 @@ const SCMap = (props) => {
           helpers.extentHistory("next");
         }
     });
-    helpers.waitForLoad("settings", Date.now(), 30, () => {
+    var map = new Map({
+      controls: defaultControls(),
+      layers: [],
+      target: "map",
+      view: new View({
+        center: [0, 0],
+        zoom: 2,
+      }),
+      interactions: defaultInteractions({
+        keyboard: true,
+        mouseWheelZoom: false,
+      }).extend([
+        new MouseWheelZoom({
+          duration: 0,
+          constrainResolution: true,
+        }),
+      ]),
+      keyboardEventTarget: document,
+    });
+
+    helpers.addIsLoaded("map_control");
+
+    helpers.waitForLoad(["settings", "map_control"], Date.now(), 30, () => {
       setGitHubFollowHandle(window.config.gitHubFollowHandle);
       setGitHubFollowUrl(window.config.gitHubFollowUrl);
       setGitHubFollowHandleLabel(window.config.gitHubFollowHandle + " on GitHub");
@@ -95,35 +117,33 @@ const SCMap = (props) => {
         if (defaults.center !== undefined) centerCoords = defaults.center;
       }
 
-      var controls = [];
-      if (window.mapControls.scaleLine) controls.push(scaleLineControl);
-      if (window.mapControls.fullScreen) controls.push(new FullScreen());
-      if (window.mapControls.rotate) controls.push(new Rotate());
+      //UPDATE CONTROLS
+      if (window.mapControls.scaleLine) helpers.addMapControl(map, "scaleLine", scaleLineControl); // Scale Line
+      if (window.mapControls.fullScreen) helpers.addMapControl(map, "fullscreen"); // FullScreen
+      if (window.mapControls.rotate) helpers.addMapControl(map, "rotate"); // Rotate
+      map.getView().setZoom(defaultZoom); // Set Zoom
+      map.getView().setCenter(centerCoords); // Set Center
+      map.getView().setMaxZoom(window.config.maxZoom); // Set Max Zoom
 
-      var map = new Map({
-        controls: defaultControls().extend(controls.concat([])),
-        layers: [],
-        target: "map",
-        view: new View({
-          center: centerCoords,
-          zoom: defaultZoom,
-          maxZoom: window.config.maxZoom,
-          //resolutions: resolutions
-        }),
-        interactions: defaultInteractions({
-          keyboard: true,
-          altShiftDragRotate: window.mapControls.rotate,
-          pinchRotate: window.mapControls.rotate,
-          mouseWheelZoom: false,
-        }).extend([
-          new MouseWheelZoom({
-            duration: 0,
-            constrainResolution: true,
-          }),
-        ]),
-        keyboardEventTarget: document,
-      });
+      // Disable Rotate
+      if (window.config.rotate === false) {
+        map.removeInteraction(
+          map
+            .getInteractions()
+            .getArray()
+            .filter((i) => i instanceof PinchRotate)[0]
+        );
+        map.removeInteraction(
+          map
+            .getInteractions()
+            .getArray()
+            .filter((i) => i instanceof DragRotate)[0]
+        );
+      }
+
+      // Disable Zoom Control
       if (!window.mapControls.zoomInOut) helpers.removeMapControl(map, "zoom");
+      // Disable Rotate Control
       if (!window.mapControls.rotate) helpers.removeMapControl(map, "rotate");
 
       if (extent !== undefined && extent !== null) {
