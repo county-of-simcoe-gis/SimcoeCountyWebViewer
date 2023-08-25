@@ -751,38 +751,6 @@ const Search = (props) => {
         <Select tabIndex="-1" styles={groupsDropDownStyles.current} isSearchable={false} onChange={onTypeDropDownChange} options={searchTypes} value={selectedType} />
       </div>
 
-      {/* <Autocomplete
-                ref={(el) => (autoCompleteRef.current = el)}
-                inputProps={{
-                  id: "sc-search-textbox",
-                  tabIndex: "1",
-                  placeholder: placeHolderText,
-                  name: "sc-search-textbox",
-                  onFocus: (result) => {
-                    helpers.disableKeyboardEvents(true);
-                  },
-                  onBlur: (result) => {
-                    helpers.disableKeyboardEvents(false);
-                  },
-                }}
-                className="sc-search-textbox"
-                wrapperStyle={{
-                  position: "relative",
-                  display: "inline-block",
-                  width: "100%",
-                  zIndex: "100000",
-                }}
-                value={value}
-                items={searchResults}
-                getItemValue={(item) => item.name}
-                onSelect={(value, item) => {
-                  onItemSelect(value, item);
-                }}
-                onChange={onChange}
-                renderMenu={handleRenderMenu}
-                renderItem={handleRenderItem}
-              /> */}
-
       <MUIAutocomplete
         id={"sc-search-textbox-mui"}
         filterOptions={(options) => {
@@ -790,8 +758,7 @@ const Search = (props) => {
 
           return options;
         }}
-        clearIcon={<MdCancel fontSize="small" />}
-        disableClearable={false}
+        disableClearable={true}
         classes={{ root: "sc-search-textbox-mui" }}
         noOptionsText={"No results found"}
         loading={loading}
@@ -880,7 +847,7 @@ const Search = (props) => {
           );
         }}
       />
-      {/* <img className={iconActiveClass} src={images["clear.png"]} alt="clear" onClick={cleanup} /> */}
+      <img className={iconActiveClass} src={images["clear.png"]} alt="clear" onClick={cleanup} />
       <img className={iconInitialClass} src={images["magnify.png"]} alt="search" />
     </div>
   );
