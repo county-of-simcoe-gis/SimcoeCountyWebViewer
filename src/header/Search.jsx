@@ -53,6 +53,8 @@ const Search = (props) => {
   const [municipality, setMunicipality] = useState(undefined);
   const [placeHolderText, setPlaceHolderText] = useState("Search...");
   const [hideTypeDropDown, setHideTypeDropDown] = useState(false);
+  const searchResultsRef = useRef([]);
+
   const groupsDropDownStyles = useRef({
     control: (provided) => ({
       ...provided,
@@ -108,7 +110,11 @@ const Search = (props) => {
   };
   const apiUrlRef = useRef(window.config.apiUrl);
   const [storageKey, setStorageKey] = useState("");
-
+  useEffect(() => {
+    if (searchResults.length > 0) {
+      searchResultsRef.current = searchResults;
+    }
+  }, [searchResults]);
   useEffect(() => {
     // LISTEN FOR MAP TO MOUNT
     const mapParametersCompleteListener = window.emitter.addListener("mapParametersComplete", () => onMapLoad());
@@ -244,7 +250,7 @@ const Search = (props) => {
 
   const myMapsClick = (evt) => {
     helpers.waitForLoad("map", Date.now(), 30, () => {
-      const result = searchResults[0];
+      const result = searchResultsRef.current[0];
       if (searchIconLayer.getSource().getFeatures()[0] === undefined) return;
       // ADD MYMAPS
       if (searchGeoLayer.getSource().getFeatures().length === 0) window.emitter.emit("addMyMapsFeature", searchIconLayer.getSource().getFeatures()[0], result.name);
@@ -307,7 +313,7 @@ const Search = (props) => {
               feature={feature}
               removeMarkersClick={removeMarkersClick}
               myMapsClick={myMapsClick}
-              shareLocationId={searchResults[0].location_id}
+              shareLocationId={searchResultsRef.current[0].location_id}
               directionsClick={(evt) => directionsClick(evt)}
             />,
             "Actions"
