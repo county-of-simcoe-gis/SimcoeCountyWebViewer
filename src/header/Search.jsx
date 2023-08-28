@@ -762,7 +762,9 @@ const Search = (props) => {
         filterOptions={(options) => {
           // console.log("filterOptions", options);
 
-          return options;
+          return options.filter((option) => {
+            return option.name.toLowerCase().indexOf(value.toLowerCase()) > -1;
+          });
         }}
         disableClearable={true}
         classes={{ root: "sc-search-textbox-mui" }}
