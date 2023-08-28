@@ -90,11 +90,17 @@ const TwoOneOne = (props) => {
         // DISABLE POPUPS
         if (window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring) return;
 
-        const feature = window.map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
-          if (layer === null) return;
-
-          if (layer.get("name") !== undefined && layer.get("name") === "sc-211") return feature;
-        });
+        const feature = window.map.forEachFeatureAtPixel(
+          evt.pixel,
+          function (feature, layer) {
+            return feature;
+          },
+          {
+            layerFilter: function (layer) {
+              return layer.get("name") !== undefined && layer.get("name") === "sc-211";
+            },
+          }
+        );
         if (feature !== undefined) window.popup.show(feature.getGeometry().flatCoordinates, <PopupContent feature={feature} isFrench={isFrench} />, "Information");
       });
       mapMoveEvent.current = window.map.on("moveend", () => {
@@ -366,7 +372,7 @@ const Result = (props) => {
   const { result } = props;
   let style = props.style;
   let website = result.website;
-  if (website !== undefined && website.indexOf("http", 1) === -1) website = "https://" + website;
+  if (website && website.indexOf("http", 1) === -1) website = "https://" + website;
   return (
     <div className="sc-theme-211-result" style={style}>
       <div>
@@ -406,7 +412,7 @@ const Result = (props) => {
 const PopupContent = (props) => {
   const { feature } = props;
   let website = feature.get("website");
-  if (website !== undefined && website.indexOf("http", 1) === -1) website = "https://" + website;
+  if (website && website.indexOf("http", 1) === -1) website = "https://" + website;
   return (
     <div>
       <InfoRow key={helpers.getUID()} label={props.isFrench ? "Nom" : "Name"} value={feature.get("organization_program_name")} />

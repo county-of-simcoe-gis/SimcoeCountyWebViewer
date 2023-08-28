@@ -944,7 +944,7 @@ export class LayerHelpers {
           rebuildParams: rebuildParams,
           renderMode: "hybrid",
           reload: Infinity,
-          declutter: false,
+          declutter: true,
           tilePixelRatio: 8,
           background: background,
           source: new VectorTileSource({

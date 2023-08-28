@@ -26,7 +26,6 @@ import { defaults as defaultControls, ScaleLine, FullScreen, Rotate } from "ol/c
 // Bap is the new control which is rendered base on the options passed from the DB map settings
 import BMap from "./BMap";
 import PropertyReportClick from "./PropertyReportClick.jsx";
-import "ol-contextmenu/dist/ol-contextmenu.css";
 
 import FloatingMenu, { FloatingMenuItem } from "../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";

@@ -282,7 +282,7 @@ export function BasemapSwitcherProvider({ children }) {
           name: "bathymetryServiceBasemap",
         },
         (newLayer) => {
-          newLayer.setZIndex(0);
+          newLayer.setZIndex(-1);
           if (basemapConfig.bathymetryService.fullExtent) {
             newLayer.setExtent(basemapConfig.bathymetryService.fullExtent);
           }

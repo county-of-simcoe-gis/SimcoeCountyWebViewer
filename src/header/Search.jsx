@@ -299,11 +299,17 @@ const Search = (props) => {
       window.map.addLayer(searchIconLayer);
 
       window.map.on("singleclick", (evt) => {
-        var feature = window.map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
-          if (layer === null) return;
-
-          if (layer.get("name") !== undefined && layer.get("name") === "sc-search-icon") return feature;
-        });
+        var feature = window.map.forEachFeatureAtPixel(
+          evt.pixel,
+          function (feature, layer) {
+            return feature;
+          },
+          {
+            layerFilter: function (layer) {
+              return layer.get("name") === "sc-search-icon";
+            },
+          }
+        );
 
         if (feature !== undefined) {
           window.popup.show(

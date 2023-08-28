@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import "./MenuButton.css";
 import * as helpers from "../helpers/helpers";
 import * as htmlToImage from "html-to-image";
-import { saveAs } from "file-saver";
 import { transformWithProjections } from "ol/proj";
 import { ImMenu3, ImMenu4 } from "react-icons/im";
 const feedbackTemplate = (url, xmin, xmax, ymin, ymax, centerx, centery, scale) => `${url}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
@@ -109,9 +108,19 @@ class MenuButton extends Component {
   };
 
   onScreenshotClick = () => {
+    // console.log("MenuButton - onScreenshotClick");
     window.map.once("rendercomplete", function () {
       htmlToImage.toBlob(window.map.getTargetElement()).then(function (blob) {
-        window.saveAs(blob, "map.png");
+        if (navigator.msSaveBlob) {
+          navigator.msSaveBlob(blob, "map.png");
+        } else {
+          const elem = window.document.createElement("a");
+          elem.href = window.URL.createObjectURL(blob);
+          elem.download = "map.png";
+          document.body.appendChild(elem);
+          elem.click();
+          document.body.removeChild(elem);
+        }
       });
     });
 

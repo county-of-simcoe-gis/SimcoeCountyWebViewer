@@ -107,10 +107,9 @@ class MyMaps extends Component {
     window.map.on("singleclick", (evt) => {
       if (this.draw !== null || this.state.isEditing || window.isCoordinateToolOpen || window.isMeasuring) return;
 
-      window.map.forEachFeatureAtPixel(evt.pixel, (feature, layer) => {
-        if (layer === null) return;
-
-        if (layer.get("name") !== undefined && layer.get("name") === this.layerName) {
+      window.map.forEachFeatureAtPixel(
+        evt.pixel,
+        (feature, layer) => {
           if (this.state.drawType === "Eraser") {
             // REMOVE ITEM FROM SOURCE
             this.onItemDelete(feature.get("id"));
@@ -119,8 +118,13 @@ class MyMaps extends Component {
             this.showDrawingOptionsPopup(feature, evt);
           }
           return;
+        },
+        {
+          layerFilter: (layer) => {
+            return this.layerName && layer.get("name") === this.layerName;
+          },
         }
-      });
+      );
     });
 
     // GET ITEMS FROM STORAGE

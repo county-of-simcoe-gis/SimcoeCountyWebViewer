@@ -71,13 +71,21 @@ class PropertyReportClick extends Component {
 
       // VECTOR LAYERS
       // CHECK FOR ANY OTHER LAYERS THAT SHOULD DISABLE
-      window.map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
-        if (layer === null) return;
-        if (layer.get("disableParcelClick") !== undefined && layer.get("disableParcelClick") === true) {
-          disable = true;
-          return;
+      window.map.forEachFeatureAtPixel(
+        evt.pixel,
+        function (feature, layer) {
+          if (!layer) return;
+          if (layer.get("disableParcelClick") !== undefined && layer.get("disableParcelClick") === true) {
+            disable = true;
+            return;
+          }
+        },
+        {
+          layerFilter: function (layer) {
+            return layer.get("disableParcelClick") !== true && layer.getVisible() && layer instanceof VectorLayer;
+          },
         }
-      });
+      );
 
       // IMAGE LAYERS
       // CHECK FOR ANY OTHER LAYERS THAT SHOULD DISABLE

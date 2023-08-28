@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import { Tooltip as ReactTooltip } from "react-tooltip";
-import { saveAs } from "file-saver";
 import "./Screenshot.css";
 import * as helpers from "../helpers/helpers";
 
@@ -17,14 +16,23 @@ class Screenshot extends Component {
   }
 
   onScreenshotClick = () => {
+    // console.log("Screenshot - onScreenshotClick");
     window.map.once("rendercomplete", function (event) {
       var canvas = event.context.canvas;
       if (navigator.msSaveBlob) {
         navigator.msSaveBlob(canvas.msToBlob(), "map.png");
       } else {
         canvas.toBlob(function (blob) {
-          saveAs(blob, "map.png");
+          const elem = window.document.createElement("a");
+          elem.href = window.URL.createObjectURL(blob);
+          elem.download = "map.png";
+          document.body.appendChild(elem);
+          elem.click();
+          document.body.removeChild(elem);
         });
+        // canvas.toBlob(function (blob) {
+        //   saveAs(blob, "map.png");
+        // });
       }
     });
     window.map.renderSync();
