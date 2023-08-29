@@ -222,7 +222,7 @@ export function BasemapSwitcherProvider({ children }) {
             window.map.addLayer(layerGroup);
             basemapList.push(layerGroup);
             index++;
-            console.log("Loaded Topo Layer", index, serviceGroup.name, layerGroup.getZIndex());
+            // console.log("Loaded Topo Layer", index, serviceGroup.name, layerGroup.getZIndex());
           });
         });
       } else {
@@ -239,13 +239,13 @@ export function BasemapSwitcherProvider({ children }) {
         window.map.addLayer(layerGroup);
         basemapList.push(layerGroup);
         index++;
-        console.log("Loaded Topo Layer", index, serviceGroup.name, layerGroup.getZIndex());
+        // console.log("Loaded Topo Layer", index, serviceGroup.name, layerGroup.getZIndex());
 
         //basemapIndex++;
       }
     });
 
-    console.log("basemap layers loaded");
+    // console.log("basemap layers loaded");
     topoLayersRef.current = basemapList;
   };
   const loadWorldImagery = (basemapConfig) => {
@@ -262,7 +262,7 @@ export function BasemapSwitcherProvider({ children }) {
         },
         (newLayer) => {
           newLayer.setZIndex(0);
-          console.log("Add world imagery layer", newLayer.getZIndex());
+          // console.log("Add world imagery layer", newLayer.getZIndex());
           window.map.addLayer(newLayer);
           worldImageryLayerRef.current = newLayer;
         }
@@ -286,7 +286,7 @@ export function BasemapSwitcherProvider({ children }) {
           if (basemapConfig.bathymetryService.fullExtent) {
             newLayer.setExtent(basemapConfig.bathymetryService.fullExtent);
           }
-          console.log("Add bathymetry layer", newLayer.getZIndex());
+          // console.log("Add bathymetry layer", newLayer.getZIndex());
           window.map.addLayer(newLayer);
           bathymetryLayerRef.current = newLayer;
         }
@@ -311,7 +311,7 @@ export function BasemapSwitcherProvider({ children }) {
           if (basemapConfig.streetService.fullExtent) {
             newLayer.setExtent(basemapConfig.streetService.fullExtent);
           }
-          console.log("Add streets layer", newLayer.getZIndex());
+          // console.log("Add streets layer", newLayer.getZIndex());
           window.map.addLayer(newLayer);
           streetsLayerRef.current = newLayer;
         }
