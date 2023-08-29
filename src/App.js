@@ -1,5 +1,5 @@
-import React, { Component, useState, useEffect } from "react";
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
 import Header from "./header/Header";
 import Sidebar from "./sidebar/Sidebar";
@@ -35,20 +35,12 @@ const App = () => {
 
   return (
     <Router>
-      <Switch>
-        <Route path="/legend">
-          <LegendApp />
-        </Route>
-        <Route path="/layerInfo">
-          <LayerInfoApp />
-        </Route>
-        <Route path="/public">
-          <MapApp />
-        </Route>
-        <Route path="/">
-          <MapApp />
-        </Route>
-      </Switch>
+      <Routes>
+        <Route path="/legend" element={<LegendApp />} />
+        <Route path="/layerInfo" element={<LayerInfoApp />} />
+        <Route path="/public" element={<MapApp />} />
+        <Route path="/" element={<MapApp />} />
+      </Routes>
     </Router>
   );
 };

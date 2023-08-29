@@ -299,7 +299,7 @@ class LegendApp extends Component {
           <div style={{ float: "left" }}>
             Layer info page generated using{" "}
             <a href={window.config.originUrl} target="_blank" rel="noopener noreferrer">
-              {window.config.originUrl.split("//")[1]}
+              {window.config.originUrl ? window.config.originUrl.split("//")[1] : ""}
             </a>{" "}
             interactive mapping.
             <br />

@@ -61,19 +61,18 @@ class LayerInfoApp extends Component {
   }
   // GET LAYER INFO FROM URL
   async getInfo() {
-    if (this.state.layerURL == null) return;
-
-    helpers.getJSONWithParams(this.state.layerURL, this.state.params, (response) => {
-      if (response.coverage !== undefined) {
-        this.setState({ layerInfo: response.coverage });
-      } else if (response.featureType === undefined) {
-        response["featureType"] = this.parseArcGisFeature(response, (result) => {
-          this.setState({ layerInfo: result });
-        });
-      } else {
-        this.setState({ layerInfo: response.featureType });
-      }
-    });
+    if (this.state.layerURL && this.state.layerURL != "null" && this.state.layerURL !== "")
+      helpers.getJSONWithParams(this.state.layerURL, this.state.params, (response) => {
+        if (response.coverage !== undefined) {
+          this.setState({ layerInfo: response.coverage });
+        } else if (response.featureType === undefined) {
+          response["featureType"] = this.parseArcGisFeature(response, (result) => {
+            this.setState({ layerInfo: result });
+          });
+        } else {
+          this.setState({ layerInfo: response.featureType });
+        }
+      });
   }
 
   parseFeatureCoverage = (featureInfo, callback) => {
@@ -175,7 +174,7 @@ class LayerInfoApp extends Component {
   };
   render() {
     if (this.state.layerInfo === undefined || this.state.layerInfo.nativeCRS === undefined)
-      return <h3 className={this.state.layerURL == null ? "gli-main-error" : "gli-main-error hidden"}>Error: Layer Not Found or no URL Parameter provided.</h3>;
+      return <h3 className={this.state.layerURL == "null" ? "gli-main-error" : "gli-main-error hidden"}>Error: Layer Not Found or no URL Parameter provided.</h3>;
 
     const proj = this.getFormattedProjection();
     let fields = [];
@@ -188,7 +187,7 @@ class LayerInfoApp extends Component {
     //console.log(showDownload);
     return (
       <div className="sc-layerInfo-main-container">
-        <h1 className={this.state.layerURL == null ? "sc-layerInfo-gli-main-error" : "sc-layerInfo-gli-main-error hidden"}>Error: Layer Not Found</h1>
+        <h1 className={this.state.layerURL == "null" ? "sc-layerInfo-gli-main-error" : "sc-layerInfo-gli-main-error hidden"}>Error: Layer Not Found</h1>
         <div className="sc-layerInfo-header">
           <table style={{ width: "100%" }}>
             <tbody>

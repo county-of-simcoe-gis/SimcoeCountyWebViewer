@@ -30,7 +30,7 @@
     "react-icons": "^4.8.0",
     "react-masonry-css": "^1.0.16",
     "react-responsive-modal": "^6.4.2",
-    "react-router-dom": "^4.3.1",
+    "react-router-dom": "^6.15.0",
     "react-scripts": "^5.0.1",
     "react-select": "^5.7.4",
     "react-slick": "^0.29.0",
