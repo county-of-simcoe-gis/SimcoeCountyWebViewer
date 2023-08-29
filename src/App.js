@@ -39,7 +39,8 @@ const App = () => {
         <Route path="/legend" element={<LegendApp />} />
         <Route path="/layerInfo" element={<LayerInfoApp />} />
         <Route path="/public" element={<MapApp />} />
-        <Route path="/" element={<MapApp />} />
+        <Route exact path="/" element={<MapApp />} />
+        <Route path="*" element={<MapApp />} />
       </Routes>
     </Router>
   );
