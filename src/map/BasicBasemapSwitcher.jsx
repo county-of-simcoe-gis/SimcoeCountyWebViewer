@@ -30,8 +30,11 @@ const BasicBasemapSwitcher = (props) => {
     // LISTEN FOR CONTROL VISIBILITY CHANGES
     const mapControlsChangedListener = window.emitter.addListener("mapControlsChanged", (control, visible) => controlStateChange(control, visible));
     return () => {
-      mapLoadedListener.remove();
-      mapControlsChangedListener.remove();
+      window.emitter.removeListener("mapLoaded", () => onMapLoad());
+      window.emitter.removeListener("mapControlsChanged", (control, visible) => controlStateChange(control, visible));
+
+      // mapLoadedListener.remove();
+      // mapControlsChangedListener.remove();
     };
   }, []);
   useEffect(() => {

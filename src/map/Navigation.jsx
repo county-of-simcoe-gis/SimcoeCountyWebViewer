@@ -41,9 +41,12 @@ const Navigation = (props) => {
       setShowGridButton(window.mapControls && window.mapControls.showGrid);
     });
     return () => {
-      sidebarChangedListner.remove();
-      extentHistoryChangedListner.remove();
-      mapControlsChangedListener.remove();
+      window.emitter.removeListener("sidebarChanged", (isSidebarOpen) => sidebarChanged(isSidebarOpen));
+      window.emitter.removeListener("extentHistoryChanged", (index, count) => extentHistoryChanged([index, count]));
+      window.emitter.removeListener("mapControlsChanged", (control, visible) => controlStateChange(control, visible));
+      // sidebarChangedListner.remove();
+      // extentHistoryChangedListner.remove();
+      // mapControlsChangedListener.remove();
     };
   }, []);
 

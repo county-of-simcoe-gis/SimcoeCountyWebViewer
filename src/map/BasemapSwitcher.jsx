@@ -90,7 +90,8 @@ const BasemapSwitcher = (props) => {
       }
     });
     return () => {
-      mapControlsChangedListener.remove();
+      window.emitter.removeListener("mapControlsChanged", (control, visible) => controlStateChange(control, visible));
+      // mapControlsChangedListener.remove();
     };
   }, []);
 

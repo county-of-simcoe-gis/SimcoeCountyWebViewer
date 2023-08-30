@@ -26,10 +26,6 @@ const searchTypesURL = (apiUrl) => `${apiUrl}public/search/types`;
 // DEFAULT SEARCH LIMIT
 const defaultSearchLimit = 10;
 
-// VECTOR LAYERS
-let searchGeoLayer = null;
-let searchIconLayer = null;
-
 // LOCATION ID (FROM SEARCH)
 const locationId = helpers.getURLParameter("LOCATIONID", false, true);
 
@@ -54,7 +50,9 @@ const Search = (props) => {
   const [placeHolderText, setPlaceHolderText] = useState("Search...");
   const [hideTypeDropDown, setHideTypeDropDown] = useState(false);
   const searchResultsRef = useRef([]);
-
+  // VECTOR LAYERS
+  const searchGeoLayerRef = useRef(null);
+  const searchIconLayerRef = useRef(null);
   const groupsDropDownStyles = useRef({
     control: (provided) => ({
       ...provided,
@@ -117,13 +115,17 @@ const Search = (props) => {
   }, [searchResults]);
   useEffect(() => {
     // LISTEN FOR MAP TO MOUNT
-    const mapParametersCompleteListener = window.emitter.addListener("mapParametersComplete", () => onMapLoad());
+    const mapParametersCompleteListener = () => onMapLoad();
+    window.emitter.addListener("mapParametersComplete", mapParametersCompleteListener);
     // LISTEN FOR SEARCH FROM HISTORY
-    const searchHistorySelectListener = window.emitter.addListener("searchHistorySelect", (item) => onHistoryItemSelect(item));
+    const searchHistorySelectListener = (item) => onHistoryItemSelect(item);
+    window.emitter.addListener("searchHistorySelect", searchHistorySelectListener);
     // LISTEN FOR INITIAL SEARCH
-    const tocLoadedListener = window.emitter.addListener("tocLoaded", () => onInitialSearch());
+    const tocLoadedListener = () => onInitialSearch();
+    window.emitter.addListener("tocLoaded", tocLoadedListener);
     // LISTEN FOR EXTERNAL COMPONENT SEARCH
-    const searchItemListener = window.emitter.addListener("searchItem", (searchType, searchText, hidden = false, timeout = undefined) => onSearch(searchType, searchText, hidden, timeout));
+    const searchItemListener = (searchType, searchText, hidden = false, timeout = undefined) => onSearch(searchType, searchText, hidden, timeout);
+    window.emitter.addListener("searchItem", searchItemListener);
     // PATCH TO CLOSE MENU WHEN MAP IS CLICKED
     const clickEvent = document.body.addEventListener(
       "click",
@@ -171,10 +173,15 @@ const Search = (props) => {
     });
     return () => {
       document.body.removeEventListener("click", clickEvent);
-      mapParametersCompleteListener.remove();
-      searchHistorySelectListener.remove();
-      tocLoadedListener.remove();
-      searchItemListener.remove();
+      window.emitter.removeListener("mapParametersComplete", mapParametersCompleteListener);
+      window.emitter.removeListener("searchHistorySelect", searchHistorySelectListener);
+      window.emitter.removeListener("tocLoaded", tocLoadedListener);
+      window.emitter.removeListener("searchItem", searchItemListener);
+
+      // mapParametersCompleteListener.remove();
+      // searchHistorySelectListener.remove();
+      // tocLoadedListener.remove();
+      // searchItemListener.remove();
     };
   }, []);
 
@@ -251,10 +258,10 @@ const Search = (props) => {
   const myMapsClick = (evt) => {
     helpers.waitForLoad("map", Date.now(), 30, () => {
       const result = searchResultsRef.current[0];
-      if (searchIconLayer.getSource().getFeatures()[0] === undefined) return;
+      if (searchIconLayerRef.current.getSource().getFeatures()[0] === undefined) return;
       // ADD MYMAPS
-      if (searchGeoLayer.getSource().getFeatures().length === 0) window.emitter.emit("addMyMapsFeature", searchIconLayer.getSource().getFeatures()[0], result.name);
-      else window.emitter.emit("addMyMapsFeature", searchGeoLayer.getSource().getFeatures()[0], result.name);
+      if (searchGeoLayerRef.current.getSource().getFeatures().length === 0) window.emitter.emit("addMyMapsFeature", searchIconLayerRef.current.getSource().getFeatures()[0], result.name);
+      else window.emitter.emit("addMyMapsFeature", searchGeoLayerRef.current.getSource().getFeatures()[0], result.name);
 
       // CLEAN UP
       cleanup();
@@ -263,7 +270,10 @@ const Search = (props) => {
 
   const directionsClick = (evt) => {
     // GET CURRENT FEATURE
-    var coords = searchIconLayer.getSource().getFeatures()[0].getGeometry().getCoordinates();
+    var coords = undefined;
+
+    if (searchIconLayerRef.current.getSource().getFeatures()[0] === undefined) return;
+    if (searchGeoLayerRef.current.getSource().getFeatures()[0]) coords = searchIconLayerRef.current.getSource().getFeatures()[0].getGeometry().getCoordinates();
 
     // CONVER TO LAT LONG
     var latLongCoords = transform(coords, "EPSG:3857", "EPSG:4326");
@@ -275,28 +285,28 @@ const Search = (props) => {
 
   // INIT SEARCH LAYERS
   const initsearchLayers = () => {
-    if (window.map != null && searchGeoLayer == null) {
+    if (window.map != null && searchGeoLayerRef.current == null) {
       // HOLDS LINES AND POLYS
-      searchGeoLayer = new VectorLayer({
+      searchGeoLayerRef.current = new VectorLayer({
         source: new VectorSource({
           features: [],
         }),
         zIndex: 1000,
       });
-      searchGeoLayer.set("name", "sc-search-geo");
-      window.map.addLayer(searchGeoLayer);
+      searchGeoLayerRef.current.set("name", "sc-search-geo");
+      window.map.addLayer(searchGeoLayerRef.current);
 
       // HOLDS CENTROID (CLICKABLE)
-      searchIconLayer = new VectorLayer({
+      searchIconLayerRef.current = new VectorLayer({
         source: new VectorSource({
           features: [],
         }),
         zIndex: 1000,
       });
-      searchIconLayer.setStyle(styles["point"]);
-      searchIconLayer.set("name", "sc-search-icon");
-      searchIconLayer.set("disableParcelClick", true);
-      window.map.addLayer(searchIconLayer);
+      searchIconLayerRef.current.setStyle(styles["point"]);
+      searchIconLayerRef.current.set("name", "sc-search-icon");
+      searchIconLayerRef.current.set("disableParcelClick", true);
+      window.map.addLayer(searchIconLayerRef.current);
 
       window.map.on("singleclick", (evt) => {
         var feature = window.map.forEachFeatureAtPixel(
@@ -341,8 +351,8 @@ const Search = (props) => {
 
     initsearchLayers();
     // CLEAR PREVIOUS SOURCE
-    searchGeoLayer.getSource().clear();
-    searchIconLayer.getSource().clear();
+    searchGeoLayerRef.current.getSource().clear();
+    searchIconLayerRef.current.getSource().clear();
     // SET STATE CURRENT ITEM - this item is not needed for either Option for searchBarValueChangeOnClick
     // if (!hidden) this.setState({ searchResults: [result] });
 
@@ -382,11 +392,11 @@ const Search = (props) => {
         is_open_data: result.is_open_data !== undefined && result.is_open_data !== null ? result.is_open_data : true,
       });
 
-      searchGeoLayer.getSource().addFeature(fullFeature);
-      searchIconLayer.getSource().addFeature(pointFeature);
+      searchGeoLayerRef.current.getSource().addFeature(fullFeature);
+      searchIconLayerRef.current.getSource().addFeature(pointFeature);
 
-      searchGeoLayer.setZIndex(300);
-      searchIconLayer.setZIndex(300);
+      searchGeoLayerRef.current.setZIndex(300);
+      searchIconLayerRef.current.setZIndex(300);
     } else if (hidden && timeout) {
       // SET SOURCE
       fullFeature.setProperties({
@@ -394,28 +404,28 @@ const Search = (props) => {
         name: result.name,
         is_open_data: result.is_open_data !== undefined && result.is_open_data !== null ? result.is_open_data : true,
       });
-      searchGeoLayer.getSource().addFeature(fullFeature);
-      searchGeoLayer.setZIndex(300);
+      searchGeoLayerRef.current.getSource().addFeature(fullFeature);
+      searchGeoLayerRef.current.setZIndex(300);
       setTimeout(() => {
-        searchGeoLayer.getSource().clear();
+        searchGeoLayerRef.current.getSource().clear();
       }, timeout);
     }
 
     const zoomFactor = window.config.featureHighlitStyles && window.config.featureHighlitStyles["zoomFactor"] >= 0 ? window.config.featureHighlitStyles["zoomFactor"] : 1;
     if (result.geojson.indexOf("Point") !== -1) {
-      searchGeoLayer.setStyle(styles["point"]);
+      searchGeoLayerRef.current.setStyle(styles["point"]);
       window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), {
         duration: 1000,
       });
       window.map.getView().setZoom(19 - zoomFactor);
     } else if (result.geojson.indexOf("Line") !== -1) {
-      searchGeoLayer.setStyle(styles["poly"]);
+      searchGeoLayerRef.current.setStyle(styles["poly"]);
       window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), {
         duration: 1000,
       });
       window.map.getView().setZoom(window.map.getView().getZoom() - zoomFactor);
     } else {
-      searchGeoLayer.setStyle(styles["poly"]);
+      searchGeoLayerRef.current.setStyle(styles["poly"]);
       window.map.getView().fit(fullFeature.getGeometry().getExtent(), window.map.getSize(), {
         duration: 1000,
       });
@@ -496,8 +506,8 @@ const Search = (props) => {
     }
 
     // CLEAR PREVIOUS SOURCE
-    searchGeoLayer.getSource().clear();
-    searchIconLayer.getSource().clear();
+    searchGeoLayerRef.current.getSource().clear();
+    searchIconLayerRef.current.getSource().clear();
 
     // SET STATE CURRENT ITEM
     const searchBarValueChangeOnClick = window.config.searchBarValueChangeOnClick;
@@ -524,13 +534,13 @@ const Search = (props) => {
       feature.setProperties({ isPlaceOrGeocode: true });
 
       // SET SOURCE
-      searchIconLayer.getSource().addFeature(feature);
+      searchIconLayerRef.current.getSource().addFeature(feature);
 
-      searchGeoLayer.setZIndex(100);
-      searchIconLayer.setZIndex(100);
+      searchGeoLayerRef.current.setZIndex(100);
+      searchIconLayerRef.current.setZIndex(100);
 
       // SET STYLE AND ZOOM
-      searchGeoLayer.setStyle(styles["point"]);
+      searchGeoLayerRef.current.setStyle(styles["point"]);
       window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize(), {
         duration: 1000,
       });
@@ -543,8 +553,8 @@ const Search = (props) => {
 
   const cleanup = () => {
     // REMOVE FEATURES
-    searchGeoLayer.getSource().clear();
-    searchIconLayer.getSource().clear();
+    searchGeoLayerRef.current.getSource().clear();
+    searchIconLayerRef.current.getSource().clear();
 
     // HIDE POPUP
     window.popup.hide();

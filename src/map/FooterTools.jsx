@@ -22,9 +22,7 @@ const FooterTools = (props) => {
   useEffect(() => {
     let onMapMoveEndListener = null;
     // LISTEN FOR MAP TO MOUNT
-    const basemapChangedListener = window.emitter.addListener("basemapChanged", (type) => {
-      setBasemapType(type);
-    });
+    const basemapChangedListener = window.emitter.addListener("basemapChanged", (type) => setBasemapType(type));
     // LISTEN FOR CONTROL VISIBILITY CHANGES
     const mapControlsChangedListner = window.emitter.addListener("mapControlsChanged", (control, visible) => controlStateChange(control, visible));
     helpers.waitForLoad("map", Date.now(), 30, () => {
@@ -39,8 +37,10 @@ const FooterTools = (props) => {
     });
 
     return () => {
-      basemapChangedListener.remove();
-      mapControlsChangedListner.remove();
+      window.emitter.removeListener("basemapChanged", (type) => setBasemapType(type));
+      window.emitter.removeListener("mapControlsChanged", (control, visible) => controlStateChange(control, visible));
+      // basemapChangedListener.remove();
+      // mapControlsChangedListner.remove();
       if (onMapMoveEndListener) unByKey(onMapMoveEndListener);
     };
   }, []);

@@ -322,10 +322,14 @@ const SCMap = (props) => {
       }
     });
     return () => {
-      tocLoadedListener.remove();
-      attributeTableResizeListener.remove();
-      clearIdentifyListener.remove();
-      sidebarChangedListner.remove();
+      window.emitter.removeListener("tocLoaded", () => handleUrlParameters());
+      window.emitter.removeListener("attributeTableResize", (height) => onAttributeTableResize(height));
+      window.emitter.removeListener("clearIdentify", () => clearIdentify());
+      window.emitter.removeListener("sidebarChanged", (isSidebarOpen) => sidebarChanged(isSidebarOpen));
+      // tocLoadedListener.remove();
+      // attributeTableResizeListener.remove();
+      // clearIdentifyListener.remove();
+      // sidebarChangedListner.remove();
       document.removeEventListener("keydown", keydownListener);
     };
   }, []);

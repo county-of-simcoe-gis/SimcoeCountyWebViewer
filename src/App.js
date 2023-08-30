@@ -66,11 +66,14 @@ const MapApp = (props) => {
   };
   useEffect(() => {
     // LISTEN FOR MAP TO MOUNT
-    const mapLoadedListener = window.emitter.addListener("mapLoaded", () => setMapLoading(false));
+    const mapLoadedListener = () => setMapLoading(false);
+    window.emitter.addListener("mapLoaded", mapLoadedListener);
     // LISTEN FOR SIDEBAR TO MOUNT
-    const sidebarLoadedListener = window.emitter.addListener("sidebarLoaded", () => setSidebarLoading(false));
+    const sidebarLoadedListener = () => setSidebarLoading(false);
+    window.emitter.addListener("sidebarLoaded", sidebarLoadedListener);
     // LISTEN FOR HEADER TO MOUNT
-    const headerLoadedListener = window.emitter.addListener("headerLoaded", () => setHeaderLoading(false));
+    const headerLoadedListener = () => setHeaderLoading(false);
+    window.emitter.addListener("headerLoaded", headerLoadedListener);
 
     window.app = packageJson.name;
     window.homepage = packageJson.homepage;
@@ -83,9 +86,13 @@ const MapApp = (props) => {
       if (window.config.default_tool !== undefined) window.emitter.emit("activateSidebarItem", window.config.default_tool, "tools");
     });
     return () => {
-      headerLoadedListener.remove();
-      sidebarLoadedListener.remove();
-      mapLoadedListener.remove();
+      window.emitter.removeListener("mapLoaded", mapLoadedListener);
+      window.emitter.removeListener("sidebarLoaded", sidebarLoadedListener);
+      window.emitter.removeListener("headerLoaded", headerLoadedListener);
+
+      // headerLoadedListener.remove();
+      // sidebarLoadedListener.remove();
+      // mapLoadedListener.remove();
     };
   }, []);
 
