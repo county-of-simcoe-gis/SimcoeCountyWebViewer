@@ -32,7 +32,9 @@ import { fromExtent } from "ol/geom/Polygon";
 
 //OTHER
 import { parseString } from "xml2js";
-import shortid from "shortid";
+// import shortid from "shortid";
+import { v4 as uuidv4 } from "uuid";
+
 import ShowMessage from "./ShowMessage.jsx";
 import ShowTerms from "./ShowTerms.jsx";
 import URLWindow from "./URLWindow.jsx";
@@ -120,7 +122,7 @@ export function isMobile() {
 // SHOW CONTENT WINDOW
 export function showWindow(contents, options = { title: "Information", showFooter: false, mode: "normal", hideScroll: false }) {
   ReactDOM.render(
-    <ShowWindow key={shortid.generate()} title={options.title} mode={options.mode} showFooter={options.showFooter} contents={contents} hideScroll={options.hideScroll} style={options.style} />,
+    <ShowWindow key={uuidv4()} title={options.title} mode={options.mode} showFooter={options.showFooter} contents={contents} hideScroll={options.hideScroll} style={options.style} />,
     document.getElementById("map-modal-window")
   );
 }
@@ -135,10 +137,7 @@ export function showURLWindow(url, showFooter = false, mode = "normal", honorDon
     }
 
     if (isSameOrigin) {
-      ReactDOM.render(
-        <URLWindow key={shortid.generate()} mode={mode} showFooter={showFooter} url={url} honorDontShow={honorDontShow} hideScroll={hideScroll} />,
-        document.getElementById("map-modal-window")
-      );
+      ReactDOM.render(<URLWindow key={uuidv4()} mode={mode} showFooter={showFooter} url={url} honorDontShow={honorDontShow} hideScroll={hideScroll} />, document.getElementById("map-modal-window"));
     } else {
       window.open(url, "_blank");
     }
@@ -374,7 +373,7 @@ export function getVectorTileLayer(url) {
       //spritePath: url + "/resources/sprites/sprite.json",
       //pngPath: url + "/resources/sprites/sprite.png",
     }),
-    id: "vTileLayer",
+    id: "TileLayer",
     tilePixelRatio: 8,
   });
   //let rootPath= url + "/tile/{z}/{y}/{x}.pbf"; // rootPath for applySytle
@@ -740,7 +739,7 @@ export function findReact(domId) {
 
 // URL FRIENDLY STRING ID
 export function getUID() {
-  return shortid.generate();
+  return uuidv4();
 }
 
 export function flashPoint(coords, zoom = 15, duration = 5000) {
@@ -1385,22 +1384,30 @@ export function removeMapControl(map, controlType) {
   }, this);
 }
 
-export function addMapControl(map, controlType) {
+export function addMapControl(map, controlType, newControl = undefined) {
   const add = (control) => {
     if (!hasMapControl(map, controlType)) map.addControl(control);
   };
   switch (controlType) {
     case "rotate":
-      add(new Rotate());
+      if (newControl !== undefined) {
+        add(newControl);
+      } else add(new Rotate());
       break;
     case "zoom":
-      add(new Zoom());
+      if (newControl !== undefined) {
+        add(newControl);
+      } else add(new Zoom());
       break;
     case "fullscreen":
-      add(new FullScreen());
+      if (newControl !== undefined) {
+        add(newControl);
+      } else add(new FullScreen());
       break;
     case "scaleLine":
-      add(new ScaleLine({ minWidth: 100 }));
+      if (newControl !== undefined) {
+        add(newControl);
+      } else add(new ScaleLine({ minWidth: 100 }));
       break;
     default:
       break;
@@ -1824,3 +1831,25 @@ export function getCentroidCoords(geom) {
   const f = area * 6;
   return [x / f, y / f];
 }
+
+export const roundTime = (date) => {
+  var coeff = 1000 * 60 * 10;
+  var rounded = new Date(Math.round(date.getTime() / coeff) * coeff);
+  return rounded;
+};
+
+export const arrayMoveMutable = (array, fromIndex, toIndex) => {
+  const startIndex = fromIndex < 0 ? array.length + fromIndex : fromIndex;
+
+  if (startIndex >= 0 && startIndex < array.length) {
+    const endIndex = toIndex < 0 ? array.length + toIndex : toIndex;
+
+    const [item] = array.splice(fromIndex, 1);
+    array.splice(endIndex, 0, item);
+  }
+};
+export const arrayMoveImmutable = (array, fromIndex, toIndex) => {
+  const newArray = [...array];
+  arrayMoveMutable(newArray, fromIndex, toIndex);
+  return newArray;
+};

@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { useState, useEffect } from "react";
 import "./MyMapsItem.css";
 import * as drawingHelpers from "../../../helpers/drawingHelpers";
 import Feature from "ol/Feature";
@@ -7,140 +7,133 @@ import { Vector as VectorSource } from "ol/source.js";
 import { Stroke, Style, Fill, Circle as CircleStyle } from "ol/style";
 import * as helpers from "../../../helpers/helpers";
 
-class MyMapsItem extends Component {
-  constructor(props) {
-    super(props);
+function MyMapsItem(props) {
+  const [label, setLabel] = useState(props.info.label);
+  const [checked, setChecked] = useState(props.info.visible);
+  const [vectorLayer, setVectorLayer] = useState(null);
 
-    this.vectorLayer = null;
-
-    this.state = {
-      label: props.info.label,
-      checked: props.info.visible,
+  useEffect(() => {
+    return () => {
+      if (vectorLayer !== null) {
+        window.map.removeLayer(vectorLayer);
+      }
     };
-  }
+  }, [vectorLayer]);
 
-  // LABEL INPUT
-  onLabelTextChange = (evt) => {
-    this.setState({ label: evt.target.value });
-    this.props.onLabelChange(this.props.info.id, evt.target.value);
+  const onLabelTextChange = (evt) => {
+    const newLabel = evt.target.value;
+    setLabel(newLabel);
+    props.onLabelChange && props.onLabelChange(props.info.id, newLabel);
   };
 
-  // DELETE BUTTON
-  onItemDelete = (evt) => {
-    this.props.onItemDelete(this.props.info.id);
-
-    if (this.vectorLayer !== null) {
-      window.map.removeLayer(this.vectorLayer);
-      this.vectorLayer = null;
+  const onItemDelete = (evt) => {
+    props.onItemDelete && props.onItemDelete(props.info.id);
+    if (vectorLayer !== null) {
+      window.map.removeLayer(vectorLayer);
+      setVectorLayer(null);
     }
   };
 
-  // VISIBILITY CHECKBOX
-  onItemCheckbox = (evt) => {
-    this.setState({ checked: evt.target.checked });
-    this.props.onItemCheckboxChange(this.props.info, evt.target.checked);
+  const onItemCheckbox = (evt) => {
+    const visible = evt.target.checked;
+    setChecked(visible);
+    props.onItemCheckboxChange && props.onItemCheckboxChange(props.info, visible);
   };
 
-  // THIS IS REQUIRED WHEN CHANGING LABEL FROM POPUP OR SHOW/HIDE ALL FROM PARENT
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.info.label !== this.state.label) this.setState({ label: nextProps.info.label });
-    if (nextProps.info.visible !== this.state.checked) this.setState({ checked: nextProps.info.visible });
-  }
-
-  onMenuItemClick = (action) => {
+  const onMenuItemClick = (action) => {
     switch (action) {
       case "sc-floating-menu-buffer":
-        this.props.showDrawingOptionsPopup(drawingHelpers.getFeatureById(this.props.info.id), null, "buffer");
+        props.showDrawingOptionsPopup && props.showDrawingOptionsPopup(drawingHelpers.getFeatureById(props.info.id), null, "buffer");
         break;
       default:
         break;
     }
   };
 
-  onSymbolizerClick = (evt) => {
-    const feature = drawingHelpers.getFeatureById(this.props.info.id);
-    this.props.showDrawingOptionsPopup(feature, null, "symbolizer");
+  const onSymbolizerClick = (evt) => {
+    const feature = drawingHelpers.getFeatureById(props.info.id);
+    props.showDrawingOptionsPopup && props.showDrawingOptionsPopup(feature, null, "symbolizer");
   };
 
-  onMouseOver = (evt) => {
-    if (drawingHelpers.getFeatureById(this.props.info.id) === null) return;
+  const onMouseOver = (evt) => {
+    const feature = drawingHelpers.getFeatureById(props.info.id);
+    if (feature === null) return;
 
-    // LAYER FOR HIGHLIGHTING
-    if (this.vectorLayer === null) {
-      var shadowStyle = new Style({
+    const shadowStyle = new Style({
+      stroke: new Stroke({
+        color: [0, 0, 127, 0.3],
+        width: 6,
+      }),
+      image: new CircleStyle({
+        radius: 10,
         stroke: new Stroke({
           color: [0, 0, 127, 0.3],
           width: 6,
         }),
-        image: new CircleStyle({
-          radius: 10,
-          stroke: new Stroke({
-            color: [0, 0, 127, 0.3],
-            width: 6,
-          }),
-          fill: new Fill({
-            color: [0, 0, 127, 0.3],
-          }),
+        fill: new Fill({
+          color: [0, 0, 127, 0.3],
         }),
-        zIndex: 100000,
-      });
+      }),
+      zIndex: 100000,
+    });
 
-      var feature = new Feature({
-        geometry: drawingHelpers.getFeatureById(this.props.info.id).getGeometry(),
-      });
+    const highlightFeature = new Feature({
+      geometry: feature.getGeometry(),
+    });
 
-      this.vectorLayer = new VectorLayer({
-        source: new VectorSource({
-          features: [feature],
-        }),
-        zIndex: 100000,
-        style: shadowStyle,
-      });
-      window.map.addLayer(this.vectorLayer);
+    const highlightLayer = new VectorLayer({
+      source: new VectorSource({
+        features: [highlightFeature],
+      }),
+      zIndex: 100000,
+      style: shadowStyle,
+    });
+
+    setVectorLayer(highlightLayer);
+    window.map.addLayer(highlightLayer);
+  };
+
+  const onMouseOut = (evt) => {
+    if (vectorLayer !== null) {
+      window.map.removeLayer(vectorLayer);
+      setVectorLayer(null);
     }
   };
 
-  onMouseOut = (evt) => {
-    window.map.removeLayer(this.vectorLayer);
-    this.vectorLayer = null;
-  };
-
-  render() {
-    return (
-      <div className="sc-mymaps-item-container" onMouseOver={this.onMouseOver} onMouseOut={this.onMouseOut}>
-        <div className="sc-mymaps-item-container-item">
-          <div>
-            <input type="checkbox" style={{ verticalAlign: "middle" }} checked={this.state.checked} onChange={this.onItemCheckbox} />
-            <button className="sc-button" onClick={this.onItemDelete}>
-              <img src={images["eraser.png"]} alt="eraser" />
-            </button>
-          </div>
-          <div className={this.state.checked ? "" : "sc-disabled"}>
-            <input
-              className="sc-mymaps-item-container-item-text-input sc-editable"
-              value={this.state.label}
-              onChange={this.onLabelTextChange}
-              onFocus={(evt) => {
-                helpers.disableKeyboardEvents(true);
-              }}
-              onBlur={(evt) => {
-                helpers.disableKeyboardEvents(false);
-              }}
-              title={this.state.label}
-            />
-          </div>
-          <div className={this.state.checked ? "right" : "right sc-disabled"}>
-            <button className="sc-button" style={{ marginLeft: "15px" }} onClick={this.onSymbolizerClick}>
-              <img src={images["color-picker.png"]} alt="colorpicker" />
-            </button>
-            <button className="sc-button" style={{ marginLeft: "5px" }} onClick={(evt) => this.props.onMyMapItemToolsButtonClick(evt, this.props.info)}>
-              <img src={images["toolbox.png"]} alt="toolbox" />
-            </button>
-          </div>
+  return (
+    <div className="sc-mymaps-item-container" onMouseOver={onMouseOver} onMouseOut={onMouseOut}>
+      <div className="sc-mymaps-item-container-item">
+        <div>
+          <input type="checkbox" style={{ verticalAlign: "middle" }} checked={checked} onChange={onItemCheckbox} />
+          <button className="sc-button" onClick={onItemDelete}>
+            <img src={images["eraser.png"]} alt="eraser" />
+          </button>
+        </div>
+        <div className={!checked ? "sc-disabled" : ""}>
+          <input
+            className="sc-mymaps-item-container-item-text-input sc-editable"
+            value={label}
+            onChange={onLabelTextChange}
+            onFocus={() => {
+              helpers.disableKeyboardEvents(true);
+            }}
+            onBlur={() => {
+              helpers.disableKeyboardEvents(false);
+            }}
+            title={label}
+          />
+        </div>
+        <div className={!checked ? "right sc-disabled" : "right"}>
+          <button className="sc-button" style={{ marginLeft: "15px" }} onClick={onSymbolizerClick}>
+            <img src={images["color-picker.png"]} alt="colorpicker" />
+          </button>
+          <button className="sc-button" style={{ marginLeft: "5px" }} onClick={(evt) => props.onMyMapItemToolsButtonClick(evt, props.info)}>
+            <img src={images["toolbox.png"]} alt="toolbox" />
+          </button>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 }
 
 export default MyMapsItem;

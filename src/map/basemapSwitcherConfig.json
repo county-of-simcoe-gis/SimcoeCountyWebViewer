@@ -53,8 +53,7 @@
           "maxZoom": 23,
           "excludePrint": true
         }
-      ],
-      "groupUrlDev": "https://opengis.simcoe.ca/geoserver/simcoe/Topo_Overlay/ows?service=wms&version=1.3.0&request=GetCapabilities"
+      ]
     },
     {
       "name": "Light Grey",

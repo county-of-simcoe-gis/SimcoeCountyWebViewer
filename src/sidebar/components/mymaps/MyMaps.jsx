@@ -34,7 +34,6 @@ import { fromCircle } from "ol/geom/Polygon.js";
 import MyMapsAdvanced from "./MyMapsAdvanced";
 import Overlay from "ol/Overlay.js";
 import { getLength } from "ol/sphere.js";
-import * as shpWrite from "shp-write";
 
 const feedbackTemplate = (feedbackUrl, xmin, xmax, ymin, ymax, centerx, centery, scale, myMapsId, featureId) =>
   `${feedbackUrl}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True&MY_MAPS_ID=${myMapsId}&MY_MAPS_FEATURE_ID=${featureId}`;
@@ -108,10 +107,9 @@ class MyMaps extends Component {
     window.map.on("singleclick", (evt) => {
       if (this.draw !== null || this.state.isEditing || window.isCoordinateToolOpen || window.isMeasuring) return;
 
-      window.map.forEachFeatureAtPixel(evt.pixel, (feature, layer) => {
-        if (layer === null) return;
-
-        if (layer.get("name") !== undefined && layer.get("name") === this.layerName) {
+      window.map.forEachFeatureAtPixel(
+        evt.pixel,
+        (feature, layer) => {
           if (this.state.drawType === "Eraser") {
             // REMOVE ITEM FROM SOURCE
             this.onItemDelete(feature.get("id"));
@@ -120,8 +118,13 @@ class MyMaps extends Component {
             this.showDrawingOptionsPopup(feature, evt);
           }
           return;
+        },
+        {
+          layerFilter: (layer) => {
+            return this.layerName && layer.get("name") === this.layerName;
+          },
         }
-      });
+      );
     });
 
     // GET ITEMS FROM STORAGE
@@ -708,6 +711,7 @@ class MyMaps extends Component {
       let geom = feature.getGeometry();
       if (geom === undefined) return;
       helpers.getGeometryCenter(geom, (featureCenter) => {
+        window.popup.hide();
         // SHOW POPUP
         window.popup.show(
           featureCenter.flatCoordinates,
@@ -741,6 +745,8 @@ class MyMaps extends Component {
       });
     } else {
       center = evt.coordinate;
+      window.popup.hide();
+
       // SHOW POPUP
       window.popup.show(
         center,
@@ -932,31 +938,6 @@ class MyMaps extends Component {
     } else {
       helpers.showMessage("No Features", "No features in view for this layer");
     }
-  };
-  // TODO:  CHANGE PROJECTION TO WEB MERCATOR IN OUTPUT.
-  //https://github.com/mapbox/shp-write/pull/54
-  onExportToShapeFile = () => {
-    const geoJson = new GeoJSON({
-      dataProjection: "EPSG:3857",
-      featureProjection: "EPSG:3857",
-    }).writeFeatures(this.vectorSource.getFeatures(), {
-      dataProjection: "EPSG:3857",
-      featureProjection: "EPSG:3857",
-    });
-    // (optional) set names for feature types and zipped folder
-    var options = {
-      folder: "myshapes",
-      types: {
-        point: "mypoints",
-        polygon: "mypolygons",
-        line: "mylines",
-      },
-      prj: 'PROJCS["WGS_1984_Web_Mercator_Auxiliary_Sphere",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Mercator_Auxiliary_Sphere"],PARAMETER["False_Easting",0.0],PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",0.0],PARAMETER["Standard_Parallel_1",0.0],PARAMETER["Auxiliary_Sphere_Type",0.0],UNIT["Meter",1.0]]',
-    };
-    // a GeoJSON bridge for features
-    shpWrite.download(JSON.parse(geoJson), options);
-
-    console.log(JSON.parse(geoJson));
   };
 
   onIdentify = (id) => {

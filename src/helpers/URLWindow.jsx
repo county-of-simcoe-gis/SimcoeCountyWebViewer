@@ -20,7 +20,8 @@ class URLWindow extends Component {
   };
 
   componentWillUnmount() {
-    this.sidebarEmitter.remove();
+    window.emitter.removeListener("sidebarChanged", this.sidebarEmitter);
+    // this.sidebarEmitter.remove();
     document.removeEventListener("keydown", this.escFunction, false);
   }
 
@@ -42,7 +43,8 @@ class URLWindow extends Component {
       document.addEventListener("keydown", this.escFunction, false);
     });
     // LISTEN FOR SIDEPANEL CHANGES
-    this.sidebarEmitter = window.emitter.addListener("sidebarChanged", (isSidebarOpen) => this.sidebarChanged(isSidebarOpen));
+    this.sidebarEmitter = (isSidebarOpen) => this.sidebarChanged(isSidebarOpen);
+    window.emitter.addListener("sidebarChanged", this.sidebarEmitter);
   }
 
   isDontShow = () => {

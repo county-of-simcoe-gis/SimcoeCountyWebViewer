@@ -494,8 +494,8 @@ export class LayerHelpers {
           newLayer["layerConfig"] = layer;
           newLayer["key"] = helpers.getUID();
           layerArray.push(newLayer);
-    });
-  }
+        });
+      }
     });
     callback(layerArray);
   }
