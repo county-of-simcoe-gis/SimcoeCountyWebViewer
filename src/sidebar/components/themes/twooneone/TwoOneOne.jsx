@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./TwoOneOne.css";
+import * as themeConfig from "./config.json";
+
 import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
 import Select from "react-select";
@@ -85,7 +87,7 @@ const TwoOneOne = (props) => {
 
   useEffect(() => {
     helpers.waitForLoad("settings", Date.now(), 30, () => {
-      apiUrl.current = window.config.apiUrl;
+      apiUrl.current = themeConfig.default.apiUrl;
       mapClickEvent.current = window.map.on("click", (evt) => {
         // DISABLE POPUPS
         if (window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring) return;
