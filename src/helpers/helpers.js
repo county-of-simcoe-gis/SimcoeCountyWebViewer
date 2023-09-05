@@ -31,7 +31,7 @@ import { Polygon } from "ol/geom.js";
 import { fromExtent } from "ol/geom/Polygon";
 
 //OTHER
-import { parseString } from "xml2js";
+import { XMLParser } from "fast-xml-parser";
 // import shortid from "shortid";
 import { v4 as uuidv4 } from "uuid";
 
@@ -634,9 +634,14 @@ export function getObjectFromXMLUrl(url, callback) {
     .then((responseText) => {
       // CALLBACK WITH RESULT
       if (callback !== undefined) {
-        parseString(responseText, function (err, result) {
-          callback(result);
-        });
+        const options = {
+          ignoreAttributes: false, // Ignore the XML attributes
+          attributeNamePrefix: "", // Default is an underscore. Set to null to disable it
+          attributesGroupName: "$", // XML node attributes group name prefix
+        };
+        const parser = new XMLParser(options);
+
+        callback(parser.parse(responseText));
       }
     })
     .catch((error) => {
@@ -698,8 +703,9 @@ export function getWFSGeoJSON(serverUrl, layerName, callback, sortField = null, 
 export function getWFSLayerRecordCount(serverUrl, layerName, callback) {
   const recordCountUrlTemplate = (serverURL, layerName) => `${serverURL}wfs?REQUEST=GetFeature&VERSION=1.1&typeName=${layerName}&RESULTTYPE=hits`;
   const recordCountUrl = recordCountUrlTemplate(serverUrl, layerName);
-
+  console.log("getWFSLayerRecordCount - url", recordCountUrl);
   getObjectFromXMLUrl(recordCountUrl, (result) => {
+    console.log("getWFSLayerRecordCount - result", result);
     callback(result["wfs:FeatureCollection"]["$"].numberOfFeatures);
   });
 }

@@ -1,7 +1,8 @@
 import { createContext, useState, useRef, useEffect } from "react";
 import { LayerHelpers, OL_DATA_TYPES } from "../helpers/OLHelpers";
 import { Group as LayerGroup } from "ol/layer.js";
-import xml2js from "xml2js";
+import { XMLParser } from "fast-xml-parser";
+
 import * as helpers from "../helpers/helpers";
 import BasemapConfig from "./basemapSwitcherConfig.json";
 import { set } from "date-fns";
@@ -180,10 +181,16 @@ export function BasemapSwitcherProvider({ children }) {
 
         // GET XML
         helpers.httpGetText(groupUrl, (result) => {
-          var parser = new xml2js.Parser();
+          const options = {
+            ignoreAttributes: false, // Ignore the XML attributes
+            attributeNamePrefix: "", // Default is an underscore. Set to null to disable it
+            attributesGroupName: "$", // XML node attributes group name prefix
+          };
+          const parser = new XMLParser(options);
+          result = parser.parse(result);
 
-          // PARSE TO JSON
-          parser.parseString(result, (err, result) => {
+          if (result) {
+            // PARSE TO JSON
             const groupLayerList = result.WMS_Capabilities.Capability[0].Layer[0].Layer[0].Layer;
 
             index = groupLayerList.length + index;
@@ -223,7 +230,7 @@ export function BasemapSwitcherProvider({ children }) {
             basemapList.push(layerGroup);
             index++;
             // console.log("Loaded Topo Layer", index, serviceGroup.name, layerGroup.getZIndex());
-          });
+          }
         });
       } else {
         // USING LAYER GROUPS FOR TOPO

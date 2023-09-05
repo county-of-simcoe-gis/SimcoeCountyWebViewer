@@ -3,8 +3,6 @@ import * as helpers from "../../../../helpers/helpers";
 import Collapsible from "react-collapsible";
 import information from "./images/information.png";
 import url from "url";
-import ThemePopupContent from "../themeComponents/ThemePopupContent.jsx";
-import GeoJSON from "ol/format/GeoJSON.js";
 import { unByKey } from "ol/Observable.js";
 
 class CommercialRealEstateLayerToggler extends Component {

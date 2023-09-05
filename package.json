@@ -8,6 +8,7 @@
     "@emotion/styled": "^11.11.0",
     "@mui/material": "^5.14.4",
     "alertifyjs": "^1.13.1",
+    "fast-xml-parser": "^4.2.7",
     "github-buttons": "^2.27.0",
     "html-to-image": "^1.11.11",
     "moment": "^2.29.4",
@@ -30,7 +31,7 @@
     "react-masonry-css": "^1.0.16",
     "react-responsive-modal": "^6.4.2",
     "react-router-dom": "^6.15.0",
-    "react-scripts": "^5.0.1",
+    "react-scripts": "5.0.1",
     "react-select": "^5.7.4",
     "react-slick": "^0.29.0",
     "react-sortable-hoc": "^2.0.0",
@@ -44,12 +45,12 @@
     "react-window": "^1.8.9",
     "slick-carousel": "^1.8.1",
     "styled-components": "^5.3.6",
-    "xml2js": "^0.6.2"
+    "url": "^0.11.1"
   },
   "scripts": {
-    "start": "react-app-rewired start",
-    "build": "react-app-rewired build",
-    "test": "react-app-rewired test",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -64,9 +65,5 @@
   "jshintConfig": {
     "loopfunc": true,
     "jsx-a11y/anchor-is-valid": true
-  },
-  "devDependencies": {
-    "node-polyfill-webpack-plugin": "^2.0.1",
-    "react-app-rewired": "^2.2.1"
   }
 }

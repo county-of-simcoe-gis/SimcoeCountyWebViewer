@@ -21,7 +21,7 @@ import TileGrid from "ol/tilegrid/TileGrid.js";
 //import { Circle, Fill, Stroke, Style,Icon,Text } from "ol/style.js";
 
 //OTHER
-import { parseString } from "xml2js";
+import { XMLParser } from "fast-xml-parser";
 
 export const OL_LAYER_TYPES = {
   Image: "Image",
@@ -380,16 +380,21 @@ export class LayerHelpers {
             }
             break;
           default:
-            parseString(responseText, function (err, result) {
-              result["wfs:WFS_Capabilities"].FeatureTypeList[0].FeatureType.forEach((layer) => {
-                var layerTitle = layer.Title[0];
-                var layerName = layer.Name[0];
-                if (layerTitle === undefined || layerTitle === "") layerTitle = layerName;
-                layers.push({
-                  label: layerTitle,
-                  value: helpers.getUID(),
-                  layer_name: layerName,
-                });
+            const options = {
+              ignoreAttributes: false, // Ignore the XML attributes
+              attributeNamePrefix: "", // Default is an underscore. Set to null to disable it
+              attributesGroupName: "$", // XML node attributes group name prefix
+            };
+            const parser = new XMLParser(options);
+            let result = parser.parse(responseText);
+            result["wfs:WFS_Capabilities"].FeatureTypeList[0].FeatureType.forEach((layer) => {
+              var layerTitle = layer.Title[0];
+              var layerName = layer.Name[0];
+              if (layerTitle === undefined || layerTitle === "") layerTitle = layerName;
+              layers.push({
+                label: layerTitle,
+                value: helpers.getUID(),
+                layer_name: layerName,
               });
             });
             //fix to get react-select box to update on the fly
