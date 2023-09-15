@@ -91,7 +91,12 @@ class TOCHeader extends Component {
     }
     helpers.addAppStat("TOC Settings - ", action);
   };
-
+  onSearchClear = () => {
+    this.setState({ searchText: "" }, () => {
+      this.props.onSearchChange("");
+    });
+  };
+  f;
   onSearchChange = (evt) => {
     const searchText = evt.target.value;
     this.setState({ searchText: searchText }, () => {
@@ -125,6 +130,8 @@ class TOCHeader extends Component {
               }}
               value={this.state.searchText}
             />
+            <img className={this.state.searchText !== "" ? "sc-toc-search-textbox-clear" : "sc-hidden"} src={images["clear.png"]} alt="clear" onClick={this.onSearchClear} />
+
             <div
               id="sc-toc-header-help"
               className={this.props.helpLink ? "sc-toc-header-help" : "sc-hidden"}
