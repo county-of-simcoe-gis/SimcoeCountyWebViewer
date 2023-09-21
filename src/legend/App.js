@@ -13,9 +13,10 @@ import Select from "react-select";
 import cx from "classnames";
 import mainConfig from "./config.json";
 import ReactGA from "react-ga4";
-import xml2js from "xml2js";
+import { XMLParser } from "fast-xml-parser";
 
-if (mainConfig.googleAnalyticsID !== undefined && mainConfig.googleAnalyticsID !== "") {
+const enableAnalytics = helpers.getURLParameter("ANALYTICS") !== "off";
+if (mainConfig.googleAnalyticsID !== undefined && mainConfig.googleAnalyticsID !== "" && enableAnalytics) {
   ReactGA.initialize(mainConfig.googleAnalyticsID);
   ReactGA.send({ hitType: "pageview", page: window.location.pathname + window.location.search });
 }
@@ -97,10 +98,15 @@ class LegendApp extends Component {
     };
 
     helpers.httpGetText(url, (result) => {
-      var parser = new xml2js.Parser();
-
-      // PARSE TO JSON
-      parser.parseString(result, (err, result) => {
+      const options = {
+        ignoreAttributes: false, // Ignore the XML attributes
+        attributeNamePrefix: "", // Default is an underscore. Set to null to disable it
+        attributesGroupName: "$", // XML node attributes group name prefix
+      };
+      const parser = new XMLParser(options);
+      result = parser.parse(result);
+      if (result) {
+        // PARSE TO JSON
         let groupLayerList =
           urlType === "root"
             ? result.WMS_Capabilities.Capability[0].Layer[0].Layer
@@ -167,7 +173,7 @@ class LegendApp extends Component {
             }
           }
         });
-      });
+      }
       if (defaultGroup === undefined || defaultGroup === null) defaultGroup = groups[0];
 
       callback([groups, defaultGroup]);
@@ -298,7 +304,7 @@ class LegendApp extends Component {
           <div style={{ float: "left" }}>
             Layer info page generated using{" "}
             <a href={window.config.originUrl} target="_blank" rel="noopener noreferrer">
-              {window.config.originUrl.split("//")[1]}
+              {window.config.originUrl ? window.config.originUrl.split("//")[1] : ""}
             </a>{" "}
             interactive mapping.
             <br />

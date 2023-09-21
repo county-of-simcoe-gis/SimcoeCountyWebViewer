@@ -287,15 +287,6 @@ class Settings extends Component {
                 clearLocalData={this.clearLocalData}
               />
             </div>
-
-            <ClearLocalStorageButtonGrouped
-              key={helpers.getUID()}
-              name={"Login Info"}
-              storageKeys={Object.keys(localStorage).filter((key) => {
-                return key.indexOf("login.microsoftonline.com") !== -1;
-              })}
-              clearLocalData={this.clearLocalData}
-            />
           </div>
 
           <div className="sc-container sc-settings-floatbottom" />

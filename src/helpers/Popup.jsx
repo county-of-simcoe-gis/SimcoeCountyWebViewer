@@ -127,7 +127,7 @@ export default class Popup extends Overlay {
     // x.classList.remove("sc-hidden");
     const containers = document.getElementsByClassName("ol-overlay-container ol-selectable");
     Array.prototype.forEach.call(containers, (el) => {
-      if (el.childNodes[0].id === "sc-window-popup") el.classList.remove("sc-hidden");
+      if (el && el.childNodes && el.childNodes[0].id === "sc-window-popup") el.classList.remove("sc-hidden");
     });
 
     // SET TITLE
@@ -153,46 +153,47 @@ export default class Popup extends Overlay {
     //   console.info('start dragging');
     // });
 
-    header.addEventListener("mousedown", (evt) => {
-      // IGNORE CLOSE BUTTON OR MOBILE
-      var isCloser = evt.target.classList.contains("ol-popup-closer");
-      if (isClosing || isCloser || helpers.isMobile()) {
-        isMoving = false;
-        isClosing = false;
-        return;
-      }
-
-      // THIS FOLLOWING IS TO SUPPORT MAKE POPUP MOVABLE.  NOT PERFECT YET.
-      var that = this;
-      function move(evt) {
-        var coord = window.map.getEventCoordinate(evt);
-        var pixel = window.map.getPixelFromCoordinate(coord);
-        var width = getWidth(window.map.getView().getProjection().getExtent()) / window.map.getView().getResolution();
-        var pixelX = ((pixel[0] % width) + width) % width;
-        var pixelY = pixel[1];
-        var popupElem = document.getElementsByClassName("ol-popup")[0];
-        var popupHeight = popupElem.offsetHeight;
-        var popupWidth = popupElem.offsetWidth;
-
-        // THIS SNAPS TO CENTER OF POPUP X
-        var calc = pixelX - popupWidth / 4;
-        var pixel2 = [calc, pixelY + popupHeight];
-        var point = window.map.getCoordinateFromPixel(pixel2);
-
-        if (isMoving) {
-          that.setPosition(point);
-        } else {
-          isMoving = true;
+    if (header)
+      header.addEventListener("mousedown", (evt) => {
+        // IGNORE CLOSE BUTTON OR MOBILE
+        var isCloser = evt.target.classList.contains("ol-popup-closer");
+        if (isClosing || isCloser || helpers.isMobile()) {
+          isMoving = false;
+          isClosing = false;
+          return;
         }
-      }
-      function end(evt) {
-        window.removeEventListener("mousemove", move);
-        window.removeEventListener("mouseup", end);
-        isMoving = false;
-      }
-      window.addEventListener("mousemove", move);
-      window.addEventListener("mouseup", end);
-    });
+
+        // THIS FOLLOWING IS TO SUPPORT MAKE POPUP MOVABLE.  NOT PERFECT YET.
+        var that = this;
+        function move(evt) {
+          var coord = window.map.getEventCoordinate(evt);
+          var pixel = window.map.getPixelFromCoordinate(coord);
+          var width = getWidth(window.map.getView().getProjection().getExtent()) / window.map.getView().getResolution();
+          var pixelX = ((pixel[0] % width) + width) % width;
+          var pixelY = pixel[1];
+          var popupElem = document.getElementsByClassName("ol-popup")[0];
+          var popupHeight = popupElem.offsetHeight;
+          var popupWidth = popupElem.offsetWidth;
+
+          // THIS SNAPS TO CENTER OF POPUP X
+          var calc = pixelX - popupWidth / 4;
+          var pixel2 = [calc, pixelY + popupHeight];
+          var point = window.map.getCoordinateFromPixel(pixel2);
+
+          if (isMoving) {
+            that.setPosition(point);
+          } else {
+            isMoving = true;
+          }
+        }
+        function end(evt) {
+          window.removeEventListener("mousemove", move);
+          window.removeEventListener("mouseup", end);
+          isMoving = false;
+        }
+        window.addEventListener("mousemove", move);
+        window.addEventListener("mouseup", end);
+      });
 
     if (callback !== undefined) {
       closeCallback = callback;
@@ -247,7 +248,7 @@ export default class Popup extends Overlay {
     window.activeClick = null;
     const containers = document.getElementsByClassName("ol-overlay-container ol-selectable");
     Array.prototype.forEach.call(containers, (el) => {
-      if (el.childNodes[0].id === "sc-window-popup") el.classList.add("sc-hidden");
+      if (el && el.childNodes && el.childNodes[0] && el.childNodes[0] && el.childNodes[0].id === "sc-window-popup") el.classList.add("sc-hidden");
     });
 
     isMoving = false;

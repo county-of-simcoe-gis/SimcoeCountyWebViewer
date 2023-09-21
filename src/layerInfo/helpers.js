@@ -1,4 +1,5 @@
-import shortid from "shortid";
+// import shortid from "shortid";
+import { v4 as uuidv4 } from "uuid";
 
 export async function httpGetTextWait(url, callback) {
   let data = await fetch(url)
@@ -63,7 +64,7 @@ export function toTitleCase(str) {
 
 // URL FRIENDLY STRING ID
 export function getUID() {
-  return shortid.generate();
+  return uuidv4();
 }
 
 export function parseESRIDescription(description) {

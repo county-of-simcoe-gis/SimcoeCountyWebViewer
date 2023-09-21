@@ -12,37 +12,109 @@
   "topoServices": [
     {
       "name": "Topographic",
-      "image": "esri-topo.png",
+      "image": "topo.png",
       "index": 0,
       "layers": [
         {
+          "url": "https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}",
+          "type": "ESRI_TILED",
+          "isOverlay": true,
+          "excludePrint": true
+        },
+        {
           "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
-          "type": "ESRI_TILED"
+          "type": "ESRI_TILED",
+          "isOverlay": true
         },
         {
           "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Topo_Cache/MapServer/tile/{z}/{y}/{x}",
           "type": "SIMCOE_TILED",
-          "fullExtent": [-9127039.9939, 5219474.5973000005, -8607132.7041, 5807644.523699999]
+          "fullExtent": [-9127039.9939, 5219474.5973000005, -8607132.7041, 5807644.523699999],
+          "isOverlay": true
+        },
+        {
+          "url": "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
+          "type": "ESRI_VECTOR_TILED",
+          "isOverlay": true,
+          "rootPath": "/public/basemap/ESRI_WorldTopoCanadianStyle.json",
+          "excludePrint": true
+        },
+        {
+          "url": "https://tiles.arcgis.com/tiles/B6yKvIZqzuOr0jBR/arcgis/rest/services/Canada_Hillshade/MapServer/tile/{z}/{y}/{x}",
+          "type": "ESRI_TILED",
+          "isOverlay": true,
+          "excludePrint": true
+        },
+        {
+          "url": "https://tiles.arcgis.com/tiles/B6yKvIZqzuOr0jBR/arcgis/rest/services/Canada_Topographic/VectorTileServer",
+          "type": "ESRI_VECTOR_TILED",
+          "isOverlay": true,
+          "rootPath": "/public/basemap/ESRI_Canada_Topographic.json",
+          "maxZoom": 23,
+          "excludePrint": true
         }
-      ],
-      "groupUrlDev": "https://opengis.simcoe.ca/geoserver/simcoe/Topo_Overlay/ows?service=wms&version=1.3.0&request=GetCapabilities"
+      ]
     },
     {
-      "name": "Streets",
-      "image": "esri-streets.png",
+      "name": "Light Grey",
+      "image": "light-grey.png",
       "index": 1,
       "layers": [
         {
           "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Streets_Black_And_White_Cache/MapServer/tile/{z}/{y}/{x}",
           "type": "SIMCOE_TILED",
+          "isOverlay": true,
           "fullExtent": [-9127039.9939, 5219474.5973000005, -8607132.7041, 5807644.523699999]
+        },
+        {
+          "url": "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
+          "type": "ESRI_VECTOR_TILED",
+          "isOverlay": true,
+          "rootPath": "/public/basemap/ESRI_LightGreyBackground.json",
+          "excludePrint": true
+        },
+        {
+          "url": "https://tiles.arcgis.com/tiles/B6yKvIZqzuOr0jBR/arcgis/rest/services/Canada_Topographic/VectorTileServer",
+          "type": "ESRI_VECTOR_TILED",
+          "isOverlay": true,
+          "rootPath": "/public/basemap/ESRI_LightGrey.json",
+          "excludePrint": true
+        }
+      ]
+    },
+    {
+      "name": "Streets",
+      "image": "streets.png",
+      "index": 2,
+      "layers": [
+        {
+          "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Streets_Black_And_White_Cache/MapServer/tile/{z}/{y}/{x}",
+          "type": "SIMCOE_TILED",
+          "isOverlay": true,
+          "fullExtent": [-9127039.9939, 5219474.5973000005, -8607132.7041, 5807644.523699999]
+        },
+        {
+          "url": "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
+          "type": "ESRI_VECTOR_TILED",
+          "isOverlay": true,
+          "rootPath": "/public/basemap/ESRI_Streets_Night_Background.json",
+          "excludePrint": true
+        },
+        {
+          "url": "https://tiles.arcgis.com/tiles/B6yKvIZqzuOr0jBR/arcgis/rest/services/Canada_Topographic/VectorTileServer",
+          "type": "ESRI_VECTOR_TILED",
+          "isOverlay": true,
+          "rootPath": "/public/basemap/ESRI_Streets_Night.json",
+          "minZoom": 0,
+          "maxZoom": 23,
+          "excludePrint": true
         }
       ]
     },
     {
       "name": "Open Street Map",
       "image": "osm-topo.jpg",
-      "index": 2,
+      "index": 3,
       "layers": [
         {
           "url": "",

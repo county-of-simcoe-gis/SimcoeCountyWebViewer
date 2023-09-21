@@ -9,8 +9,10 @@ import Reports from "./components/reports/Reports";
 import MyMaps from "./components/mymaps/MyMaps";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
-import SidebarComponent from "react-sidebar";
+// import SidebarComponent from "react-sidebar";
+import SidebarComponent from "../components/sc-sidebar.jsx";
 import SidebarSlim from "./SidebarSlim.jsx";
+import MenuButton from "./MenuButton.jsx";
 
 class Sidebar extends Component {
   constructor(props) {
@@ -277,6 +279,8 @@ class Sidebar extends Component {
             component: item.component,
             type: item.type.toLowerCase(),
             url_param: item.url_param.toLowerCase(),
+            hidden: item.hidden,
+            timeout: item.timeout,
           });
           if (!params.includes(item.url_param.toLowerCase())) params.push(item.url_param.toLowerCase());
         });
@@ -288,7 +292,7 @@ class Sidebar extends Component {
             )[0];
             if (shortcut !== undefined) {
               if (shortcut.type === "search") {
-                window.emitter.emit("searchItem", shortcut.component, shortcutParam, true);
+                window.emitter.emit("searchItem", shortcut.component, shortcutParam, shortcut.hidden, shortcut.timeout);
               } else {
                 this.sidebarVisiblityEventHandler("OPEN", () => {
                   this.activateItemFromEmmiter(shortcut.component, shortcut.type);
@@ -557,7 +561,7 @@ class Sidebar extends Component {
               reports={this.state.reports}
             />
             <div id="sc-sidebar-message-container" />
-            {/* <MenuButton /> */}
+            {this.state.sidebarOpen ? <MenuButton showLabel={false} className="sideBarOpen" /> : ""}
           </React.Fragment>
         }
         open={this.state.sidebarOpen}

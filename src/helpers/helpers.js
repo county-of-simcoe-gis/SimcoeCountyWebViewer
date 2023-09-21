@@ -11,7 +11,6 @@ import MVT from "ol/format/MVT";
 import VectorTileSource from "ol/source/VectorTile";
 // import stylefunction from "ol-mapbox-style/dist/stylefunction";
 import { stylefunction } from "ol-mapbox-style";
-
 //import {file as FileLoader} from "ol/featureloader.js";
 import { GeoJSON, WKT } from "ol/format.js";
 import TileGrid from "ol/tilegrid/TileGrid.js";
@@ -32,8 +31,10 @@ import { Polygon } from "ol/geom.js";
 import { fromExtent } from "ol/geom/Polygon";
 
 //OTHER
-import { parseString } from "xml2js";
-import shortid from "shortid";
+import { XMLParser } from "fast-xml-parser";
+// import shortid from "shortid";
+import { v4 as uuidv4 } from "uuid";
+
 import ShowMessage from "./ShowMessage.jsx";
 import ShowTerms from "./ShowTerms.jsx";
 import URLWindow from "./URLWindow.jsx";
@@ -121,7 +122,7 @@ export function isMobile() {
 // SHOW CONTENT WINDOW
 export function showWindow(contents, options = { title: "Information", showFooter: false, mode: "normal", hideScroll: false }) {
   ReactDOM.render(
-    <ShowWindow key={shortid.generate()} title={options.title} mode={options.mode} showFooter={options.showFooter} contents={contents} hideScroll={options.hideScroll} style={options.style} />,
+    <ShowWindow key={uuidv4()} title={options.title} mode={options.mode} showFooter={options.showFooter} contents={contents} hideScroll={options.hideScroll} style={options.style} />,
     document.getElementById("map-modal-window")
   );
 }
@@ -136,10 +137,7 @@ export function showURLWindow(url, showFooter = false, mode = "normal", honorDon
     }
 
     if (isSameOrigin) {
-      ReactDOM.render(
-        <URLWindow key={shortid.generate()} mode={mode} showFooter={showFooter} url={url} honorDontShow={honorDontShow} hideScroll={hideScroll} />,
-        document.getElementById("map-modal-window")
-      );
+      ReactDOM.render(<URLWindow key={uuidv4()} mode={mode} showFooter={showFooter} url={url} honorDontShow={honorDontShow} hideScroll={hideScroll} />, document.getElementById("map-modal-window"));
     } else {
       window.open(url, "_blank");
     }
@@ -375,7 +373,7 @@ export function getVectorTileLayer(url) {
       //spritePath: url + "/resources/sprites/sprite.json",
       //pngPath: url + "/resources/sprites/sprite.png",
     }),
-    id: "vTileLayer",
+    id: "TileLayer",
     tilePixelRatio: 8,
   });
   //let rootPath= url + "/tile/{z}/{y}/{x}.pbf"; // rootPath for applySytle
@@ -636,9 +634,14 @@ export function getObjectFromXMLUrl(url, callback) {
     .then((responseText) => {
       // CALLBACK WITH RESULT
       if (callback !== undefined) {
-        parseString(responseText, function (err, result) {
-          callback(result);
-        });
+        const options = {
+          ignoreAttributes: false, // Ignore the XML attributes
+          attributeNamePrefix: "", // Default is an underscore. Set to null to disable it
+          attributesGroupName: "$", // XML node attributes group name prefix
+        };
+        const parser = new XMLParser(options);
+
+        callback(parser.parse(responseText));
       }
     })
     .catch((error) => {
@@ -689,7 +692,7 @@ export function getWFSGeoJSON(serverUrl, layerName, callback, sortField = null, 
   if (count !== null) additionalParams += "&count=" + count;
 
   // USE TEMPLATE FOR READABILITY
-  const wfsUrlTemplate = (serverURL, layerName) => `${serverURL}wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&outputFormat=application/json`;
+  const wfsUrlTemplate = (serverURL, layerName) => `${serverURL}wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&maxFeatures=Y&outputFormat=application/json`;
   const wfsUrl = wfsUrlTemplate(serverUrl, layerName) + additionalParams;
   getJSON(wfsUrl, (result) => {
     const geoJSON = new GeoJSON().readFeatures(result);
@@ -700,8 +703,9 @@ export function getWFSGeoJSON(serverUrl, layerName, callback, sortField = null, 
 export function getWFSLayerRecordCount(serverUrl, layerName, callback) {
   const recordCountUrlTemplate = (serverURL, layerName) => `${serverURL}wfs?REQUEST=GetFeature&VERSION=1.1&typeName=${layerName}&RESULTTYPE=hits`;
   const recordCountUrl = recordCountUrlTemplate(serverUrl, layerName);
-
+  console.log("getWFSLayerRecordCount - url", recordCountUrl);
   getObjectFromXMLUrl(recordCountUrl, (result) => {
+    console.log("getWFSLayerRecordCount - result", result);
     callback(result["wfs:FeatureCollection"]["$"].numberOfFeatures);
   });
 }
@@ -741,7 +745,7 @@ export function findReact(domId) {
 
 // URL FRIENDLY STRING ID
 export function getUID() {
-  return shortid.generate();
+  return uuidv4();
 }
 
 export function flashPoint(coords, zoom = 15, duration = 5000) {
@@ -913,6 +917,10 @@ export function toTitleCase(str) {
 //   e.target.dispatchEvent(evt);
 // }
 
+// GET FEATURES FROM GEOJSON
+export function getFeaturesFromGeoJSON(geoJSON) {
+  return new GeoJSON().readFeatures(geoJSON);
+}
 // GET FEATURE FROM GEOJSON
 export function getFeatureFromGeoJSON(geoJSON) {
   return new GeoJSON().readFeature(geoJSON);
@@ -1162,13 +1170,12 @@ export function getGeometryFromGeoJSON(geometry) {
 }
 
 //Generate Feature Reports for a Polygon (reproting area)
-export function generateReport(feature, reportObj, buffer = 0, callback = undefined) {
-  const report = reportObj.report;
-  const url = mainConfig.reportsUrl + 'Report/' +  report;
+export function generateReport(feature, report, buffer = 0, callback = undefined) {
+  const url = mainConfig.reportsUrl + report;
   let geom = feature.getGeometry();
   //const utmNad83Geometry = geom.transform("EPSG:3857", _nad83Proj);
   const geoJSON = getGeoJSONFromGeometry(geom);
-  const obj = { geoJSON: geoJSON, srid: "3857", buffer: buffer, reportObj:reportObj};
+  const obj = { geoJSON: geoJSON, srid: "3857", buffer: buffer };
   return fetch(url, {
     method: "POST", // *GET, POST, PUT, DELETE, etc.
     mode: "cors", // no-cors, cors, *same-origin
@@ -1196,29 +1203,34 @@ export function generateReport(feature, reportObj, buffer = 0, callback = undefi
 export function download(url, filename = undefined, options = undefined) {
   if (!options) options = {};
   try {
+    var link = document.createElement("a");
+
     if (options.isBlob) {
       url = window.URL.createObjectURL(url);
     }
-    var link = document.createElement("a");
-    link.setAttribute("href", url);
+    link.setAttribute("href", `${url}`);
     link.setAttribute("target", "_blank");
     link.setAttribute("rel", "noopener noreferrer");
-    if (!isLoaded("apptrack-theme")) link.setAttribute("download", filename);
-    document.body.appendChild(link); // Required for FF
-    link.click();
-    document.body.removeChild(link); //afterwards we remove the element again
+    if (filename) {
+      link.setAttribute("download", filename);
+      document.body.appendChild(link); // Required for FF
+      link.click();
+      document.body.removeChild(link); //afterwards we remove the element again
+      if (options.isBlob) URL.revokeObjectURL(link.href);
+    } else {
+      window.open(url, `_blank`);
+    }
   } catch (e) {
     window.open(url, `_blank`);
   }
 }
 
-export function previewReport(feature, reportObj, buffer = 0, callback) {
-  const report = reportObj.report;
-  const url = mainConfig.reportsUrl + 'ReportPreview/' + report;
+export function previewReport(feature, report, buffer = 0, callback) {
+  const url = mainConfig.reportsUrl + report;
   let geom = feature.getGeometry();
   //const utmNad83Geometry = geom.transform("EPSG:3857", _nad83Proj);
   const geoJSON = getGeoJSONFromGeometry(geom);
-  const obj = { geoJSON: geoJSON, srid: "3857", buffer: buffer, reportObj:reportObj};
+  const obj = { geoJSON: geoJSON, srid: "3857", buffer: buffer };
   return fetch(url, {
     method: "POST", // *GET, POST, PUT, DELETE, etc.
     mode: "cors", // no-cors, cors, *same-origin
@@ -1318,34 +1330,36 @@ export function removeURLParameter(url, parameter) {
   }
   return url;
 }
-export function FeatureContent(props) {
+
+export function FilterKeys(feature) {
   //WILDCARD = .*
   //LITERAL STRING = [] EG: [_][.]
   //NOT STRING = (?!string) EG: geostasis[.](?!test).*
   const filterKeys = ["[_].*", "id", "geometry", "geom", "extent_geom", ".*gid.*", "globalid", "objectid.*", "shape.*", "displayfieldname", "displayfieldvalue", "geostasis[.].*", ".*fid.*"];
+  const featureProps = feature.getProperties();
 
-  const featureProps = props.feature.getProperties();
   let keys = Object.keys(featureProps);
   const filterByKeyName = (keyName) => {
     return (
       filterKeys.filter((filterItem) => {
         let returnValue = false;
-        //returnValue = filterItem === keyName; //check for exact match
-        //if (!returnValue){
         var regexTest = new RegExp(`^${filterItem}$`);
         returnValue = regexTest.test(keyName);
-        //}
         return returnValue;
       }).length === 0
     );
   };
   keys = keys.filter((key, i) => {
     const keyName = key.toLowerCase();
-    let val = props.feature.get(key);
+    let val = feature.get(key);
     if (val === null) val = "";
     if (typeof val === "object") return false; //EXCLUDE ALL OBJECT FIELDS
     return filterByKeyName(keyName);
   });
+  return keys;
+}
+export function FeatureContent(props) {
+  let keys = FilterKeys(props.feature);
   return (
     <div className={props.class}>
       {keys.map((keyName, i) => {
@@ -1376,22 +1390,30 @@ export function removeMapControl(map, controlType) {
   }, this);
 }
 
-export function addMapControl(map, controlType) {
+export function addMapControl(map, controlType, newControl = undefined) {
   const add = (control) => {
     if (!hasMapControl(map, controlType)) map.addControl(control);
   };
   switch (controlType) {
     case "rotate":
-      add(new Rotate());
+      if (newControl !== undefined) {
+        add(newControl);
+      } else add(new Rotate());
       break;
     case "zoom":
-      add(new Zoom());
+      if (newControl !== undefined) {
+        add(newControl);
+      } else add(new Zoom());
       break;
     case "fullscreen":
-      add(new FullScreen());
+      if (newControl !== undefined) {
+        add(newControl);
+      } else add(new FullScreen());
       break;
     case "scaleLine":
-      add(new ScaleLine({ minWidth: 100 }));
+      if (newControl !== undefined) {
+        add(newControl);
+      } else add(new ScaleLine({ minWidth: 100 }));
       break;
     default:
       break;
@@ -1694,12 +1716,14 @@ export function mergeObjArray(targetArray, sourceArray) {
   });
   return resultArray.concat(sourceArray);
 }
-export function mergeObj(targetObj, sourceObj) {
+export function mergeObj(targetObj, sourceObj, append = false) {
   Object.keys(sourceObj).forEach((key) => {
     if (typeof targetObj[key] === "object" && !(targetObj[key] instanceof Array)) {
       targetObj[key] = mergeObj(targetObj[key], sourceObj[key]);
     } else {
-      targetObj[key] = sourceObj[key];
+      if (targetObj[key] instanceof Array && append) {
+        targetObj[key] = [].concat(sourceObj[key], targetObj[key]);
+      } else targetObj[key] = sourceObj[key];
     }
   });
   return targetObj;
@@ -1795,3 +1819,43 @@ export function getBaseUrl(url) {
   splitUrl.slice(0, 3);
   return splitUrl.slice(0, 3).join("/");
 }
+
+export function getCentroidCoords(geom) {
+  const area = geom.getArea();
+  const points = geom.getCoordinates();
+  const allPoints = points.flatMap((point) => point);
+  let x = 0;
+  let y = 0;
+  for (let i = 0, j = allPoints.length - 1; i < allPoints.length; j = i, i++) {
+    const point1 = allPoints[i];
+    const point2 = allPoints[j];
+    const f = point1[0] * point2[1] - point2[0] * point1[1];
+    x += (point1[0] + point2[0]) * f;
+    y += (point1[1] + point2[1]) * f;
+  }
+
+  const f = area * 6;
+  return [x / f, y / f];
+}
+
+export const roundTime = (date) => {
+  var coeff = 1000 * 60 * 10;
+  var rounded = new Date(Math.round(date.getTime() / coeff) * coeff);
+  return rounded;
+};
+
+export const arrayMoveMutable = (array, fromIndex, toIndex) => {
+  const startIndex = fromIndex < 0 ? array.length + fromIndex : fromIndex;
+
+  if (startIndex >= 0 && startIndex < array.length) {
+    const endIndex = toIndex < 0 ? array.length + toIndex : toIndex;
+
+    const [item] = array.splice(fromIndex, 1);
+    array.splice(endIndex, 0, item);
+  }
+};
+export const arrayMoveImmutable = (array, fromIndex, toIndex) => {
+  const newArray = [...array];
+  arrayMoveMutable(newArray, fromIndex, toIndex);
+  return newArray;
+};

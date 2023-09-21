@@ -275,14 +275,16 @@ const getLayerByType = async (layer, printoptions, callback = undefined) => {
     let layers = [];
     let groupLayers = layer.getLayers().getArray();
     if (groupLayers !== undefined) {
-      let layersPromise = groupLayers.map((item) =>
-        getLayerByType(item, printoptions, (retLayers) => {
-          if (retLayers !== undefined) {
-            if (Array.isArray(retLayers)) layers = layers.concat(retLayers);
-            else layers.push(retLayers);
-          }
-        })
-      );
+      let layersPromise = groupLayers
+        .filter((item) => item.getProperties().excludePrint !== true)
+        .map((item) =>
+          getLayerByType(item, printoptions, (retLayers) => {
+            if (retLayers !== undefined) {
+              if (Array.isArray(retLayers)) layers = layers.concat(retLayers);
+              else layers.push(retLayers);
+            }
+          })
+        );
       //wait for list of layer promises to be resolved
       await Promise.all(layersPromise);
     }
@@ -423,21 +425,23 @@ export async function printRequest(mapLayers, printSelectedOption) {
       layer.setProperties({ printIndex: layerOrder });
     }
   });
-  let mapLayerPromises = mapLayers.map((layer) =>
-    getLayerByType(layer, printRequest.attributes, (retLayers) => {
-      if (retLayers !== undefined) {
-        if (Array.isArray(retLayers)) mainMap = mainMap.concat(retLayers);
-        else mainMap.push(retLayers);
-        if (Array.isArray(retLayers)) {
-          retLayers.forEach((item) => {
-            if (isOverviewLayer(item.layer)) overviewMap.push(item);
-          });
-        } else {
-          if (isOverviewLayer(retLayers.layer)) overviewMap.push(retLayers);
+  let mapLayerPromises = mapLayers
+    .filter((layer) => layer.getProperties().excludePrint !== true)
+    .map((layer) =>
+      getLayerByType(layer, printRequest.attributes, (retLayers) => {
+        if (retLayers !== undefined) {
+          if (Array.isArray(retLayers)) mainMap = mainMap.concat(retLayers);
+          else mainMap.push(retLayers);
+          if (Array.isArray(retLayers)) {
+            retLayers.forEach((item) => {
+              if (isOverviewLayer(item.layer)) overviewMap.push(item);
+            });
+          } else {
+            if (isOverviewLayer(retLayers.layer)) overviewMap.push(retLayers);
+          }
         }
-      }
-    })
-  );
+      })
+    );
 
   //wait for list of layer promises to be resolved
   await Promise.all(mapLayerPromises);

@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import "./WeatherRadar.css";
 import * as helpers from "../../../../helpers/helpers";
 import Slider from "rc-slider";
@@ -7,67 +7,62 @@ import "react-datepicker/dist/react-datepicker.css";
 import ImageLayer from "ol/layer/Image";
 import Static from "ol/source/ImageStatic";
 
-class WeatherRadar extends Component {
-  constructor(props) {
-    super(props);
+const WeatherRadar = (props) => {
+  const radarImages = useRef([]);
+  const radarInterval = useRef(null);
 
-    this.radarImages = [];
-    this.state = {
-      radarDateSliderMin: 0,
-      radarDateSliderMax: 1,
-      radarDateSliderDefaultValue: 0,
-      radarDateSliderValue: this.roundTime(new Date()),
-      radarOpacitySliderValue: 0.7,
-      startDate: this.roundTime(new Date(new Date().setHours(new Date().getHours() - 3))),
-      endDate: this.roundTime(new Date()),
-      autoRefresh: true,
-      timeSettingValue: "last3hours",
-      CASKR: true,
-      CASBI: false,
-      WSO: false,
-      isPlaying: false,
-      isLoading: false,
-    };
-  }
+  const [radarDateSliderValue, setRadarDateSliderValue] = useState(helpers.roundTime(new Date()));
+  const [radarOpacitySliderValue, setRadarOpacitySliderValue] = useState(0.7);
+  const [startDate, setStartDate] = useState(helpers.roundTime(new Date(new Date().setHours(new Date().getHours() - 3))));
+  const [endDate, setEndDate] = useState(helpers.roundTime(new Date()));
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [timeSettingValue, setTimeSettingValue] = useState("last3hours");
+  const [CASKR, setCASKR] = useState(true);
+  const [CASBI, setCASBI] = useState(false);
+  const [WSO, setWSO] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  componentDidMount() {
+  const isPlayingRef = useRef(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
     helpers.waitForLoad("settings", Date.now(), 30, () => {
-      this.fetchRadarImages();
-      this.radarInterval = window.setInterval(() => {
-        this.fetchRadarImages();
+      fetchRadarImages();
+      radarInterval.current = window.setInterval(() => {
+        fetchRadarImages();
       }, 60000);
     });
-  }
+  }, []);
 
-  componentWillUnmount() {
-    this.radarImages.forEach((layer) => {
-      window.map.removeLayer(layer);
-    });
-    clearInterval(this.radarInterval);
-  }
+  useEffect(
+    () => () => {
+      radarImages.current.forEach((layer) => {
+        window.map.removeLayer(layer);
+      });
+      clearInterval(radarInterval.current);
+    },
+    []
+  );
 
-  fetchRadarImages = () => {
+  const fetchRadarImages = () => {
     // API URL
     const radarUrlTemplate = (fromDate, toDate) => `${window.config.weatherRadarApiUrl}?fromDate=${fromDate}&toDate=${toDate}`;
     let date3HoursBehind = new Date(new Date().setHours(new Date().getHours() - 3));
 
-    if (!this.state.autoRefresh) return;
+    // if (!autoRefresh) return;
+    setIsLoading(true);
 
-    this.setState({ isLoading: true });
-
-    if (this.state.timeSettingValue === "last3hours") {
+    if (timeSettingValue === "last3hours") {
       date3HoursBehind = new Date(new Date().setHours(new Date().getHours() - 3));
-      this.setState({
-        endDate: this.roundTime(new Date()),
-        startDate: this.roundTime(date3HoursBehind),
-      });
+      setEndDate(helpers.roundTime(new Date()));
+      setStartDate(helpers.roundTime(date3HoursBehind));
     }
 
-    helpers.getJSON(radarUrlTemplate(this.getDateString(this.state.startDate), this.getDateString(this.state.endDate)), (result) => {
-      this.radarImages.forEach((layer) => {
+    helpers.getJSON(radarUrlTemplate(getDateString(startDate), getDateString(endDate)), (result) => {
+      radarImages.current.forEach((layer) => {
         window.map.removeLayer(layer);
       });
-      this.radarImages = [];
+      radarImages.current = [];
       result.forEach((imageObj) => {
         const jsImage = JSON.parse(imageObj.JS_MAPIMAGE);
         const jsExtent = jsImage.extent;
@@ -80,7 +75,7 @@ class WeatherRadar extends Component {
           }),
           zIndex: 10000,
           visible: true,
-          opacity: this.state.radarOpacitySliderValue,
+          opacity: radarOpacitySliderValue,
         });
 
         imageLayer.setProperties({
@@ -89,46 +84,41 @@ class WeatherRadar extends Component {
           timeId: imageObj.TIME_ID,
         });
 
-        this.radarImages.push(imageLayer);
+        radarImages.current.push(imageLayer);
         window.map.addLayer(imageLayer);
       });
 
       // SET START AND END DATE
-      this.setStartAndEndDateDefault();
+      setStartAndEndDateDefault();
     });
   };
 
-  setStartAndEndDateDefault = () => {
-    const firstImage = this.radarImages[0];
+  const setStartAndEndDateDefault = () => {
+    const firstImage = radarImages.current[0];
     const startDate = firstImage.get("radarDate");
-    const lastImage = this.radarImages[this.radarImages.length - 1];
+    const lastImage = radarImages.current[radarImages.current.length - 1];
     const endDate = lastImage.get("radarDate");
-    this.setState({ startDate: startDate, endDate: endDate, radarDateSliderValue: endDate }, () => {
-      window.map.once(
-        "postrender",
-        (event) => {
-          this.updateRadarVisibility();
-          this.setState({ isLoading: false });
-        },
-        () => {
-          //const steps = Math.round((this.state.endDate - this.state.startDate) / (1000 * 60) / 10);
-          //var stepValue = this.state.startDate;
-          this.setState({ radarDateSliderValue: this.state.endDate }, () => {
-            this.updateRadarVisibility();
-          });
-        }
-      );
-    });
-  };
 
-  updateRadarVisibility = () => {
+    setStartDate(startDate);
+    setEndDate(endDate);
+    setRadarDateSliderValue(endDate);
+    window.map.once(
+      "postrender",
+      (event) => {
+        setIsLoading(false);
+      },
+      () => {
+        setRadarDateSliderValue(endDate);
+      }
+    );
+  };
+  useEffect(() => {
     window.map.getLayers().forEach((layer) => {
       const radarDate = layer.get("radarDate");
       const radarCode = layer.get("radarCode");
-
-      if (radarDate !== undefined) {
-        if (radarDate.getTime() === this.state.radarDateSliderValue.getTime() && radarDate.toDateString() === this.state.radarDateSliderValue.toDateString()) {
-          if ((this.state.CASKR && radarCode === "CASKR") || (this.state.CASBI && radarCode === "CASBI") || (this.state.WSO && radarCode === "WSO")) {
+      if (radarDate) {
+        if (radarDate.getTime() === radarDateSliderValue.getTime() && radarDate.toDateString() === radarDateSliderValue.toDateString()) {
+          if ((CASKR && radarCode === "CASKR") || (CASBI && radarCode === "CASBI") || (WSO && radarCode === "WSO")) {
             layer.setVisible(true);
           } else layer.setVisible(false);
         } else {
@@ -136,167 +126,117 @@ class WeatherRadar extends Component {
         }
       }
     });
-  };
+  }, [radarDateSliderValue, CASKR, CASBI, WSO]);
 
-  onClose = () => {
+  const onClose = () => {
     // ADD CLEAN UP HERE (e.g. Map Layers, Popups, etc)
 
     // CALL PARENT WITH CLOSE
-    this.props.onClose();
+    if (props.onClose) onClose();
   };
 
   // SLIDER CHANGE EVENT
-  onRadarDateSliderChange = (value) => {
+  const onRadarDateSliderChange = (value) => {
     //console.log(value);
-    this.setState((prevState) => ({ radarDateSliderValue: value }));
-    this.updateRadarVisibility();
+    setRadarDateSliderValue(value);
   };
 
   // SLIDER CHANGE EVENT
-  onRadarOpacitySliderChange = (value) => {
-    this.setState({ radarOpacitySliderValue: value });
+  const onRadarOpacitySliderChange = (value) => {
+    setRadarOpacitySliderValue(value);
 
-    this.radarImages.forEach((layer) => {
+    radarImages.current.forEach((layer) => {
       layer.setOpacity(value);
     });
   };
 
-  onStartDateChange = (date) => {
-    this.setState(
-      {
-        startDate: date,
-      },
-      () => {
-        //this.fetchRadarImages();
-      }
-    );
-  };
-
-  onEndDateChange = (date) => {
-    this.setState(
-      {
-        endDate: date,
-      },
-      () => {
-        //this.fetchRadarImages();
-      }
-    );
-  };
-
-  onAutoRefreshChange = (evt) => {
-    this.setState({ autoRefresh: evt.target.checked });
+  const onAutoRefreshChange = (evt) => {
+    setAutoRefresh(evt.target.checked);
     if (evt.target.checked) {
-      this.radarInterval = window.setInterval(() => {
-        this.fetchRadarImages();
+      radarInterval.current = window.setInterval(() => {
+        fetchRadarImages();
       }, 5000);
     } else {
-      clearInterval(this.radarInterval);
+      clearInterval(radarInterval.current);
     }
   };
 
-  onTimeSettingsChange = (evt) => {
-    this.setState({ timeSettingValue: evt.target.value }, () => {
-      if (this.state.timeSettingValue === "last3hours") {
-        this.setState(
-          {
-            endDate: this.roundTime(new Date()),
-            startDate: this.roundTime(new Date(new Date().setHours(new Date().getHours() - 3))),
-          },
-          () => {
-            this.fetchRadarImages();
-          }
-        );
-      }
-    });
+  const onTimeSettingsChange = (evt) => {
+    const currentTimeSettingValue = evt.target.value;
+    setTimeSettingValue(currentTimeSettingValue);
+    if (currentTimeSettingValue === "last3hours") {
+      setEndDate(helpers.roundTime(new Date()));
+      setStartDate(helpers.roundTime(new Date(new Date().setHours(new Date().getHours() - 3))));
+      fetchRadarImages();
+    }
   };
 
-  onCASKRChange = (evt) => {
-    this.setState({ CASKR: evt.target.checked }, () => {
-      this.updateRadarVisibility();
-    });
+  const onCASKRChange = (evt) => {
+    setCASKR(evt.target.checked);
   };
 
-  onCASBIChange = (evt) => {
-    this.setState({ CASBI: evt.target.checked }, () => {
-      this.updateRadarVisibility();
-    });
+  const onCASBIChange = (evt) => {
+    setCASBI(evt.target.checked);
   };
 
-  onWSOChange = (evt) => {
-    this.setState({ WSO: evt.target.checked }, () => {
-      this.updateRadarVisibility();
-    });
+  const onWSOChange = (evt) => {
+    setWSO(evt.target.checked);
   };
 
-  onPlayButtonClick = () => {
-    this.setState(
-      (prevState) => ({ isPlaying: !prevState.isPlaying }),
-      () => {
-        if (this.state.isPlaying) {
-          this.playRadar();
-        }
-      }
-    );
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+    if (isPlaying) playRadar();
+  }, [isPlaying]);
+  const onPlayButtonClick = () => {
+    setIsPlaying(!isPlaying);
   };
 
-  onUpdateButtonClick = () => {
-    if (this.state.endDate < this.state.startDate) {
+  const onUpdateButtonClick = () => {
+    if (endDate < startDate) {
       helpers.showMessage("Radar", "Start Date needs to be before End Date", helpers.messageColors.red);
       return;
     }
-
-    // const date1 = new Date('7/13/2010');
-    // const date2 = new Date('12/15/2010');
-    const diffTime = Math.abs(this.state.endDate - this.state.startDate);
+    const diffTime = Math.abs(endDate - startDate);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays > 5) {
       helpers.showMessage("Radar", "Cannot display more than 5 days of radar.", helpers.messageColors.red);
       return;
     }
-    this.fetchRadarImages();
+    fetchRadarImages();
 
     // APP STATS
     helpers.addAppStat("Weather Radar", "Custom Date");
   };
 
-  playRadar = async () => {
+  const playRadar = async () => {
     do {
-      if (!this.state.isPlaying) break;
+      if (!isPlayingRef.current) break;
 
-      const steps = Math.round((this.state.endDate - this.state.startDate) / (1000 * 60) / 10);
-      var stepValue = this.state.startDate;
+      const steps = Math.round((endDate - startDate) / (1000 * 60) / 10);
+      var stepValue = startDate;
       for (let index = 0; index < steps; index++) {
-        if (!this.state.isPlaying) break;
+        if (!isPlayingRef.current) break;
+        setRadarDateSliderValue(stepValue);
 
-        this.setState({ radarDateSliderValue: stepValue }, () => {
-          this.updateRadarVisibility();
-        });
-        await this.sleep(200);
+        await sleep(200);
         var newStepValue = new Date(stepValue.getTime() + 10 * 60000);
         stepValue = newStepValue;
       }
-    } while (this.state.isPlaying);
+    } while (isPlayingRef.current);
   };
 
-  sleep(ms) {
+  const sleep = (ms) => {
     return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
-  roundTime = (date) => {
-    var coeff = 1000 * 60 * 10;
-    var rounded = new Date(Math.round(date.getTime() / coeff) * coeff);
-    //console.log(rounded);
-    return rounded;
   };
 
-  getDateString = (dt) => {
-    var dtstring =
-      dt.getFullYear() + "-" + this.pad2(dt.getMonth() + 1) + "-" + this.pad2(dt.getDate()) + " " + this.pad2(dt.getHours()) + ":" + this.pad2(dt.getMinutes()) + ":" + this.pad2(dt.getSeconds());
+  const getDateString = (dt) => {
+    if (!dt) return "";
+    var dtstring = dt.getFullYear() + "-" + pad2(dt.getMonth() + 1) + "-" + pad2(dt.getDate()) + " " + pad2(dt.getHours()) + ":" + pad2(dt.getMinutes()) + ":" + pad2(dt.getSeconds());
     return dtstring;
   };
 
-  pad2 = (number) => {
+  const pad2 = (number) => {
     var str = "" + number;
     while (str.length < 2) {
       str = "0" + str;
@@ -305,140 +245,140 @@ class WeatherRadar extends Component {
     return str;
   };
 
-  render() {
-    // STYLE USED BY SLIDER
-    const sliderWrapperStyle = {
-      height: 25,
-    };
+  // STYLE USED BY SLIDER
+  const sliderWrapperStyle = {
+    height: 25,
+  };
 
-    return (
-      <div className="sc-tool-weather-radar-container">
-        <div className="sc-tool-weather-radar-refresh-container">
-          <img src={images["refresh.png"]} alt="refreshtimer" style={{ verticalAlign: "bottom" }} />
-          <input type="checkbox" checked={this.state.autoRefresh} onChange={this.onAutoRefreshChange} />
-          <span>Automatically refresh every minute.</span>
+  return (
+    <div className="sc-tool-weather-radar-container">
+      <div className="sc-tool-weather-radar-refresh-container">
+        <img src={images["refresh.png"]} alt="refreshtimer" style={{ verticalAlign: "bottom" }} />
+        <input type="checkbox" checked={autoRefresh} onChange={onAutoRefreshChange} />
+        <span>Automatically refresh every minute.</span>
+      </div>
+      <div className="sc-border-bottom" />
+      <div className="sc-tool-weather-slider-container">
+        <img className="sc-tool-weather-radar-button" src={isPlaying ? images["pause.png"] : images["play.png"]} alt="play" onClick={onPlayButtonClick} />
+        <div className="sc-tool-weather-slider">
+          <DateSlider value={radarDateSliderValue} onChange={onRadarDateSliderChange} max={endDate} min={startDate} />
         </div>
-        <div className="sc-border-bottom" />
-        <div className="sc-tool-weather-slider-container">
-          <img className="sc-tool-weather-radar-button" src={this.state.isPlaying ? images["pause.png"] : images["play.png"]} alt="play" onClick={this.onPlayButtonClick} />
-          <div className="sc-tool-weather-slider">
-            <DateSlider value={this.state.radarDateSliderValue} onChange={this.onRadarDateSliderChange} max={this.state.endDate} min={this.state.startDate} />
+        <label className="sc-tool-weather-radar-label">{"Radar Date: " + getDateString(radarDateSliderValue)}</label>
+      </div>
+      <img src={images["loading20.gif"]} alt="loading" className={isLoading ? "sc-tool-weather-radar-loading" : "sc-hidden"} />
+      <div className="sc-container sc-tool-weather-time-container">
+        <div style={{ display: "table" }}>
+          <div style={{ display: "table-cell" }}>
+            <label>Time Settings:</label>
           </div>
-          <label className="sc-tool-weather-radar-label">{"Radar Date: " + this.getDateString(this.state.radarDateSliderValue)}</label>
+          <div style={{ display: "grid" }} onChange={onTimeSettingsChange}>
+            <label>
+              <input type="radio" name="timesetting" value="last3hours" defaultChecked />
+              Last 3 Hours
+            </label>
+            <label>
+              <input type="radio" name="timesetting" value="custom" />
+              Custom
+            </label>
+          </div>
         </div>
-        <img src={images["loading20.gif"]} alt="loading" className={this.state.isLoading ? "sc-tool-weather-radar-loading" : "sc-hidden"} />
-        {/* <img src={images["loading20.gif"]} alt="loading" className={"sc-tool-weather-radar-loading"}></img> */}
-        <div className="sc-container sc-tool-weather-time-container">
-          <div style={{ display: "table" }}>
-            <div style={{ display: "table-cell" }}>
-              <label>Time Settings:</label>
-            </div>
-            <div style={{ display: "grid" }} onChange={this.onTimeSettingsChange}>
-              <label>
-                <input type="radio" name="timesetting" value="last3hours" defaultChecked />
-                Last 3 Hours
-              </label>
-              <label>
-                <input type="radio" name="timesetting" value="custom" />
-                Custom
-              </label>
-            </div>
-          </div>
 
-          <div style={{ marginTop: "5px" }}>
-            <div className={this.state.timeSettingValue === "last3hours" ? "sc-disabled" : ""} style={{ marginBottom: "5px" }}>
-              <div className="sc-tool-weather-date-container">
-                <label>Start:</label>
-                <DatePicker
-                  className="sc-input  sc-tool-weather-date-input"
-                  popperPlacement="bottom"
-                  preventOverflow
-                  popperModifiers={{
-                    flip: {
-                      behavior: ["bottom"], // don't allow it to flip to be above
-                    },
-                    preventOverflow: {
-                      enabled: false, // tell it not to try to stay within the view (this prevents the popper from covering the element you clicked)
-                    },
-                    hide: {
-                      enabled: false, // turn off since needs preventOverflow to be enabled
-                    },
-                  }}
-                  selected={this.state.startDate}
-                  onChange={this.onStartDateChange}
-                  showTimeSelect
-                  dateFormat="MMMM d, yyyy h:mm aa"
-                />
-              </div>
-              <div className="sc-tool-weather-date-container" style={{ marginTop: "5px" }}>
-                <label style={{ marginRight: "5px" }}>End:</label>
-                <DatePicker
-                  className="sc-input sc-tool-weather-date-input"
-                  selected={this.state.endDate}
-                  onChange={this.onEndDateChange}
-                  showTimeSelect
-                  dateFormat="MMMM d, yyyy h:mm aa"
-                  timeIntervals={10}
-                  popperPlacement="bottom"
-                  preventOverflow
-                  popperModifiers={{
-                    flip: {
-                      behavior: ["bottom"], // don't allow it to flip to be above
-                    },
-                    preventOverflow: {
-                      enabled: false, // tell it not to try to stay within the view (this prevents the popper from covering the element you clicked)
-                    },
-                    hide: {
-                      enabled: false, // turn off since needs preventOverflow to be enabled
-                    },
-                  }}
-                />
-              </div>
-              <button className="sc-button sc-tool-weather-radar-update-button" style={{ width: "70px" }} onClick={this.onUpdateButtonClick}>
-                Update
-              </button>
+        <div style={{ marginTop: "5px" }}>
+          <div className={timeSettingValue === "last3hours" ? "sc-disabled" : ""} style={{ marginBottom: "5px" }}>
+            <div className="sc-tool-weather-date-container">
+              <label>Start:</label>
+              <DatePicker
+                className="sc-input  sc-tool-weather-date-input"
+                popperPlacement="bottom"
+                preventOverflow
+                popperModifiers={{
+                  flip: {
+                    behavior: ["bottom"], // don't allow it to flip to be above
+                  },
+                  preventOverflow: {
+                    enabled: false, // tell it not to try to stay within the view (this prevents the popper from covering the element you clicked)
+                  },
+                  hide: {
+                    enabled: false, // turn off since needs preventOverflow to be enabled
+                  },
+                }}
+                selected={startDate}
+                onChange={(value) => {
+                  value < endDate ? setStartDate(value) : helpers.showMessage("Radar", "Start Date needs to be before End Date", helpers.messageColors.red);
+                }}
+                showTimeSelect
+                dateFormat="MMMM d, yyyy h:mm aa"
+              />
             </div>
-            <div style={{ fontSize: "10pt" }}>
-              <label>
-                <input type="checkbox" checked={this.state.CASKR} onChange={this.onCASKRChange} />
-                CASKR (King City)
-              </label>
-              <label>
-                <input type="checkbox" checked={this.state.CASBI} onChange={this.onCASBIChange} />
-                CASBI (Britt)
-              </label>
-              <label>
-                <input type="checkbox" checked={this.state.WSO} onChange={this.onWSOChange} />
-                WSO (Exeter)
-              </label>
+            <div className="sc-tool-weather-date-container" style={{ marginTop: "5px" }}>
+              <label style={{ marginRight: "5px" }}>End:</label>
+              <DatePicker
+                className="sc-input sc-tool-weather-date-input"
+                selected={endDate}
+                onChange={(value) => {
+                  value > startDate ? setEndDate(value) : helpers.showMessage("Radar", "End Date needs to be after Start Date", helpers.messageColors.red);
+                }}
+                showTimeSelect
+                dateFormat="MMMM d, yyyy h:mm aa"
+                timeIntervals={10}
+                popperPlacement="bottom"
+                preventOverflow
+                popperModifiers={{
+                  flip: {
+                    behavior: ["bottom"], // don't allow it to flip to be above
+                  },
+                  preventOverflow: {
+                    enabled: false, // tell it not to try to stay within the view (this prevents the popper from covering the element you clicked)
+                  },
+                  hide: {
+                    enabled: false, // turn off since needs preventOverflow to be enabled
+                  },
+                }}
+              />
             </div>
+            <button className="sc-button sc-tool-weather-radar-update-button" style={{ width: "70px" }} onClick={onUpdateButtonClick}>
+              Update
+            </button>
           </div>
-        </div>
-        <div>
-          <Slider included={false} style={sliderWrapperStyle} max={1} min={0} step={0.01} defaultValue={0.7} onChange={this.onRadarOpacitySliderChange} value={this.state.radarOpacitySliderValue} />
-          {/* <label className="sc-tool-weather-opacity">Opacity</label> */}
-        </div>
-        <div className="sc-tool-weather-radar-footer">
-          <div className="sc-tool-weather-radar-rain">
-            <label>Rain (Summer)</label>
-            <img src={images["radarlegendrain.png"]} alt="summer radar" />
+          <div style={{ fontSize: "10pt" }}>
+            <label>
+              <input type="checkbox" checked={CASKR} onChange={onCASKRChange} />
+              CASKR (King City)
+            </label>
+            <label>
+              <input type="checkbox" checked={CASBI} onChange={onCASBIChange} />
+              CASBI (Britt)
+            </label>
+            <label>
+              <input type="checkbox" checked={WSO} onChange={onWSOChange} />
+              WSO (Exeter)
+            </label>
           </div>
-          <div className="sc-tool-weather-radar-snow">
-            <label>Snow (Winter)</label>
-            <img src={images["radarlegendsnow.png"]} alt="snow radar" />
-          </div>
-        </div>
-        <div className="sc-border-bottom" />
-        <div className="sc-tool-weather-radar-credits">
-          Weather Data Provided by Environment Canada
-          <a href="https://weather.gc.ca/">
-            <img src="https://weather.gc.ca/images/ecfip_e.gif" alt="Environment Canada" style={{ marginTop: "5px" }} />
-          </a>
         </div>
       </div>
-    );
-  }
-}
+      <div>
+        <Slider included={false} style={sliderWrapperStyle} max={1} min={0} step={0.01} defaultValue={0.7} onChange={onRadarOpacitySliderChange} value={radarOpacitySliderValue} />
+      </div>
+      <div className="sc-tool-weather-radar-footer">
+        <div className="sc-tool-weather-radar-rain">
+          <label>Rain (Summer)</label>
+          <img src={images["radarlegendrain.png"]} alt="summer radar" />
+        </div>
+        <div className="sc-tool-weather-radar-snow">
+          <label>Snow (Winter)</label>
+          <img src={images["radarlegendsnow.png"]} alt="snow radar" />
+        </div>
+      </div>
+      <div className="sc-border-bottom" />
+      <div className="sc-tool-weather-radar-credits">
+        Weather Data Provided by Environment Canada
+        <a href="https://weather.gc.ca/">
+          <img src="https://weather.gc.ca/images/ecfip_e.gif" alt="Environment Canada" style={{ marginTop: "5px" }} />
+        </a>
+      </div>
+    </div>
+  );
+};
 
 export default WeatherRadar;
 
@@ -450,46 +390,39 @@ function importAllImages(r) {
   return images;
 }
 
-class DateSlider extends React.Component {
-  constructor(props) {
-    super(props);
-    this.dateSteps = [];
-    this.handleChange = this.handleChange.bind(this);
-    this.state = { currentDate: props.value || props.min };
-  }
+const DateSlider = (props) => {
+  const dateSteps = useRef([]);
+  const [currentDate, setCurrentDate] = useState(props.value || props.min);
+  const [steps, setSteps] = useState(Math.round((props.max - props.min) / (1000 * 60) / 10));
+  const [value, setValue] = useState(Math.round((currentDate - props.min) / (1000 * 60) / 10));
+  // STYLE USED BY SLIDER
+  const sliderWrapperStyle = {
+    height: 25,
+  };
+  useEffect(() => {
+    setCurrentDate(props.value);
+  }, [props.value]);
 
-  componentWillReceiveProps(nextProps) {
-    this.setState({ currentDate: nextProps.value });
-  }
-
-  handleChange(value) {
-    const { onChange } = this.props;
-    var nextCurrentDate = this.dateSteps[value];
+  const handleChange = (value) => {
+    const { onChange } = props;
+    var nextCurrentDate = dateSteps.current[value];
     onChange(nextCurrentDate);
-
-    this.setState((prevState) => ({ currentDate: nextCurrentDate }));
-  }
-
-  render() {
-    // STYLE USED BY SLIDER
-    const sliderWrapperStyle = {
-      height: 25,
-    };
-
-    const { currentDate } = this.state;
-    const { min, max } = this.props;
-    const steps = Math.round((max - min) / (1000 * 60) / 10);
-    const value = Math.round((currentDate - min) / (1000 * 60) / 10);
-
+    setCurrentDate(nextCurrentDate);
+  };
+  useEffect(() => {
+    const currentSteps = Math.round((props.max - props.min) / (1000 * 60) / 10);
+    setSteps(currentSteps);
+    setValue(Math.round((currentDate - props.min) / (1000 * 60) / 10));
     // MAP OUT STEPS AND DATES FOR CLARITY
-    var stepValue = min;
-    this.dateSteps = [stepValue];
-    for (let index = 0; index < steps; index++) {
+    var stepValue = props.min;
+    dateSteps.current = [stepValue];
+    for (let index = 0; index < currentSteps; index++) {
       var newStepValue = new Date(stepValue.getTime() + 10 * 60000);
       // console.log(newStepValue);
-      this.dateSteps.push(newStepValue);
+      dateSteps.current.push(newStepValue);
       stepValue = newStepValue;
     }
-    return <Slider style={sliderWrapperStyle} max={steps} value={value} onChange={this.handleChange} />;
-  }
-}
+  }, [props.min, props.max, currentDate]);
+
+  return <Slider style={sliderWrapperStyle} max={steps} value={value} onChange={handleChange} />;
+};

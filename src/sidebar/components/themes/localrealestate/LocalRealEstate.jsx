@@ -40,8 +40,8 @@ class LocalRealEstate extends Component {
     this.setState({ visibleLayers: visibleLayers }, () => {
       this.renderImageSlider();
       let storage = helpers.getItemsFromStorage(this.storageKey);
-      if (storage === undefined) storage = [];
-      this.setState({ viewedItems: storage });
+      if (storage === undefined || storage === null) storage = [];
+      this.setState({ viewedItems: storage || [] });
     });
   }
 

@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import "./Header.css";
 import Search from "./Search.jsx";
@@ -8,25 +8,27 @@ import { Item as MenuItem } from "rc-menu";
 import Portal from "../helpers/Portal.jsx";
 
 const feedbackTemplate = (url, xmin, xmax, ymin, ymax, centerx, centery, scale) => `${url}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
-class Header extends Component {
-  constructor(props) {
-    super(props);
-    this.state = { logoImage: "" };
 
-    // LISTEN FOR FEEDBACK
-    window.emitter.addListener("feedback", () => this.onFeedbackClick());
-  }
+const Header = (props) => {
+  const [logoImage, setLogoImage] = useState("");
 
-  componentDidMount() {
+  window.emitter.addListener("feedback", () => onFeedbackClick());
+
+  // ON LOGO IMAGE CHANGE
+  useEffect(() => {
+    window.emitter.emit("headerLoaded");
+    helpers.addIsLoaded("header");
+  }, [logoImage]);
+
+  // ON LOAD
+  useEffect(() => {
     helpers.waitForLoad("settings", Date.now(), 30, () => {
-      this.setState({ logoImage: window.config.headerLogoImageName }, () => {
-        window.emitter.emit("headerLoaded");
-        helpers.addIsLoaded("header");
-      });
+      setLogoImage(window.config.headerLogoImageName);
     });
-  }
+  }, []);
 
-  burgerButtonHandler() {
+  // BURGER BUTTON HANDLER
+  const burgerButtonHandler = () => {
     helpers.waitForLoad("map", Date.now(), 30, () => {
       // EMIT A CHANGE IN THE SIDEBAR (IN OR OUT)
       if (window.sidebarOpen) window.emitter.emit("setSidebarVisiblity", "CLOSE");
@@ -34,13 +36,14 @@ class Header extends Component {
 
       helpers.addAppStat("Burger Button", "Click");
     });
-  }
+  };
 
-  onDotMenuClick = (evt) => {
+  // DOT MENU HANDLER
+  const onDotMenuClick = (evt) => {
     var evtClone = Object.assign({}, evt);
     const menu = (
       <Portal>
-        <FloatingMenu key={helpers.getUID()} buttonEvent={evtClone} item={this.props.info} onMenuItemClick={this.onMenuItemClick} styleMode="left">
+        <FloatingMenu key={helpers.getUID()} buttonEvent={evtClone} item={props.info} onMenuItemClick={onMenuItemClick} styleMode="left">
           <MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-login">
             <FloatingMenuItem imageName={"lock.png"} label="Login (Sample)" />
           </MenuItem>
@@ -52,12 +55,14 @@ class Header extends Component {
     helpers.addAppStat("Header Dot Menu", "Click");
   };
 
-  onMenuItemClick = (value) => {
+  // DOT MENU ITEM CLICK
+  const onMenuItemClick = (value) => {
     helpers.showMessage("Coming Soon", "Coming Soon...");
     helpers.addAppStat("Header Dot Menu", value);
   };
 
-  onFeedbackClick = () => {
+  // FEEDBACK CLICK
+  const onFeedbackClick = () => {
     // APP STATS
     helpers.waitForLoad("settings", Date.now(), 30, () => {
       helpers.addAppStat("Feedback", "Click (Header)");
@@ -76,50 +81,46 @@ class Header extends Component {
     });
   };
 
-  render() {
-    return (
-      <div className="header">
-        <div
-          id="sc-header-burger-button"
-          onClick={this.burgerButtonHandler}
-          tabIndex="2"
-          onKeyPress={(evt) => {
-            if (evt.key === "Enter") {
-              this.burgerButtonHandler();
-            }
-          }}
-        >
-          <img src={require("./images/burger-button.png")} alt="Header Logo" />
-        </div>
-
-        <div id="sc-header-bar-button">
-          <img src={require("./images/bar-button.png")} alt="Header Logo" />
-        </div>
-        <div id="sc-header-bar-logo">
-          <img
-            src={this.state.logoImage === "" || this.state.logoImage.toString().substring(0, 4).toUpperCase() === "HTTP" ? this.state.logoImage : require("./images/" + this.state.logoImage)}
-            alt="Header Logo"
-          />
-        </div>
-        <div id="sc-header-search-container">
-          <Search options={this.props.options} />
-        </div>
-        {window.config.showHelpButtonInsteadOfFeedback ? (
-          <div className="sc-header-help-container">
-            <div className="sc-header-help-btn" onClick={() => helpers.showURLWindow(window.config.helpUrl, false, "full")}>
-              ?
-            </div>
-          </div>
-        ) : (
-          <div className="sc-header-feedback-container" title="Feedback" onClick={this.onFeedbackClick}>
-            <img style={{ marginTop: "5px" }} src={require("./images/feedback.png")} alt="feedback" />
-            Feedback
-          </div>
-        )}
-        {/* <div className="sc-header-dot-menu-container" onClick={this.onDotMenuClick}><img className="sc-header-dot-menu-img" src={images['vertical-dot-menu.png']} alt="dots"></img></div> */}
+  // RENDER
+  return (
+    <div className="header">
+      <div
+        id="sc-header-burger-button"
+        onClick={burgerButtonHandler}
+        tabIndex="2"
+        onKeyPress={(evt) => {
+          if (evt.key === "Enter") {
+            burgerButtonHandler();
+          }
+        }}
+      >
+        <img src={require("./images/burger-button.png")} alt="Header Logo" />
       </div>
-    );
-  }
-}
-//
+
+      <div id="sc-header-bar-button">
+        <img src={require("./images/bar-button.png")} alt="Header Logo" />
+      </div>
+      <div id="sc-header-bar-logo">
+        <img src={logoImage === "" || logoImage.toString().substring(0, 4).toUpperCase() === "HTTP" ? logoImage : require("./images/" + logoImage)} alt="Header Logo" />
+      </div>
+      <div id="sc-header-search-container">
+        <Search options={props.options} />
+      </div>
+      {window.config.showHelpButtonInsteadOfFeedback ? (
+        <div className="sc-header-help-container">
+          <div className="sc-header-help-btn" onClick={() => helpers.showURLWindow(window.config.helpUrl, false, "full")}>
+            ?
+          </div>
+        </div>
+      ) : (
+        <div className="sc-header-feedback-container" title="Feedback" onClick={onFeedbackClick}>
+          <img style={{ marginTop: "5px" }} src={require("./images/feedback.png")} alt="feedback" />
+          Feedback
+        </div>
+      )}
+
+      {/* <div className="sc-header-dot-menu-container" onClick={onDotMenuClick}><img className="sc-header-dot-menu-img" src={require("./images/vertical-dot-menu.png")} alt="dots"></img></div> */}
+    </div>
+  );
+};
 export default Header;

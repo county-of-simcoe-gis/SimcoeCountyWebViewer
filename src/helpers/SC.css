@@ -486,7 +486,9 @@ input[type="number"]::-webkit-outer-spin-button {
   font-size: 20px;
   padding-top: 12px;
 }
-
+.sc-attachment-icon {
+  color: #626262;
+}
 @media print {
   .no-print,
   .no-print * {

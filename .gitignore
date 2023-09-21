@@ -31,3 +31,4 @@ debug.log
 *.zip
 sc_copyToServer.bat
 Build.ps1
+docker_build.bat

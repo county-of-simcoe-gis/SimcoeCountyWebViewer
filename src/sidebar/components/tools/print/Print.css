@@ -1,82 +1,82 @@
 .sc-print-container {
-	position: absolute;
-	margin-bottom: 0px;
-	overflow-y: auto;
-	padding: 5px !important;
-	bottom: 0px;
-	top: 106px;
-	width: 97%;
-	color: #5b5b5b;
+  position: absolute;
+  margin-bottom: 0px;
+  overflow-y: auto;
+  padding: 5px !important;
+  bottom: 0px;
+  top: 106px;
+  width: 97%;
+  color: #5b5b5b;
 }
 
 .sc-print-map-title-input {
-	width: 97%;
-	height: 30px;
-	margin-bottom: 5px;
+  width: 97%;
+  height: 30px;
+  margin-bottom: 5px;
 }
 
 .sc-print-button {
-	float: right;
-	width: 100px;
-	font-size: 12pt;
+  float: right;
+  width: 100px;
+  font-size: 12pt;
 }
 
 .sc-print-advanced-options-collapsible {
-	height: 30px;
-	width: 205px;
-	background-color: #c9e7f9;
-	border: 1px solid #ddd;
-	cursor: pointer;
-	user-select: none;
-	line-height: 30px;
-	padding-left: 36px;
-	background-image: url(./images/settings.png), url(./images/down.png);
-	background-position-y: center, center;
-	background-repeat: no-repeat, no-repeat;
-	background-position-x: 5px, 218px;
+  height: 30px;
+  width: 205px;
+  background-color: #c9e7f9;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  user-select: none;
+  line-height: 30px;
+  padding-left: 36px;
+  background-image: url(./images/settings.png), url(./images/down.png);
+  background-position-y: center, center;
+  background-repeat: no-repeat, no-repeat;
+  background-position-x: 5px, 218px;
 }
 
 .sc-print-advanced-options-collapsible.open {
-	background-image: url(./images/settings.png), url(./images/collapsed.png);
+  background-image: url(./images/settings.png), url(./images/collapsed.png);
 }
 
 .sc-print-advanced-options-content-outer {
-	margin-left: -35px;
+  margin-left: -35px;
 }
 
 .sc-print-advanced-options-force-scale-input {
-	width: 75px;
-	height: 20px;
-	margin-bottom: 5px;
+  width: 75px;
+  height: 20px;
+  margin-bottom: 5px;
 }
 
 .sc-print-loading {
-	display: inline-flex;
-	position: absolute;
-	left: 264px;
-	top: 290px;
+  display: inline-flex;
+  position: absolute;
+  left: 264px;
+  top: 320px;
 }
 .sc-print-screenshot-container {
-	position: relative;
-	height: 50px;
-	vertical-align: middle;
-	margin-bottom: 25px;
+  position: relative;
+  height: 50px;
+  vertical-align: middle;
+  margin-bottom: 25px;
 }
 
 .sc-print-screenshot-icon {
-	background-image: url(./images/screenshot.png);
-	background-repeat: no-repeat;
-	height: 100%;
-	width: 100%;
-	background-position: center;
+  background-image: url(./images/screenshot.png);
+  background-repeat: no-repeat;
+  height: 100%;
+  width: 100%;
+  background-position: center;
 }
 
 .sc-print-screenshot-button {
-	float: right;
+  float: right;
 
-	width: 30px;
-	height: 30px;
-	font-size: 12pt;
-	margin-bottom: 15px;
-	margin: 0px 0px 10px 10px;
+  width: 30px;
+  height: 30px;
+  font-size: 12pt;
+  margin-bottom: 15px;
+  margin: 0px 0px 10px 10px;
 }
