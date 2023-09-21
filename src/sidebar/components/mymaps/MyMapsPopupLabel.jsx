@@ -1,120 +1,92 @@
-import React, { Component } from "react";
+import React, { useEffect, useState } from "react";
 import "./MyMapsPopupLabel.css";
 import * as helpers from "../../../helpers/helpers";
 
-class MyMapsPopupLabel extends Component {
-  constructor(props) {
-    super(props);
+function MyMapsPopupLabel(props) {
+  const [label, setLabel] = useState(props.item?.label || "");
+  const [labelRotation, setLabelRotation] = useState(props.item?.labelRotation || 0);
+  const [showLabel, setShowLabel] = useState(props.item?.labelVisible || false);
 
-    this.sliderMin = 0;
-    this.sliderMax = 360;
-
-    this.state = {
-      label: props.item !== undefined ? props.item.label : "",
-      labelRotation: props.item !== undefined ? this.props.item.labelRotation : 0,
-      showLabel: props.item !== undefined ? this.props.item.labelVisible : false,
+  useEffect(() => {
+    props.onRef && props.onRef({ parentLabelChange, parentLabelVisibilityChange });
+    return () => {
+      props.onRef && props.onRef(undefined);
     };
-  }
+  }, []);
 
-  // USING REFS TO LISTEN TO CHANGES FROM MAIN MYMAPS COMPONENT
-  componentDidMount() {
-    this.props.onRef(this);
-  }
-  componentWillUnmount() {
-    this.props.onRef(undefined);
-  }
-
-  // HANDLE PARENT MAKING LABEL CHANGE
-  parentLabelChange = (itemInfo, newLabel) => {
-    if (itemInfo.id === this.props.item.id) {
-      this.setState({ label: newLabel });
+  const parentLabelChange = (itemInfo, newLabel) => {
+    if (itemInfo.id === props.item.id) {
+      setLabel(newLabel);
     }
   };
 
-  // HANDLE PARENT LABEL VISIBLITY CHANGE
-  parentLabelVisibilityChange = (itemInfo, visible) => {
-    if (itemInfo.id === this.props.item.id) {
-      this.setState({ showLabel: visible });
+  const parentLabelVisibilityChange = (itemInfo, visible) => {
+    if (itemInfo.id === props.item.id) {
+      setShowLabel(visible);
     }
   };
 
-  // HANDLE LABEL CHANGE IN POPUP
-  onLabelChange = (evt) => {
-    this.setState({ label: evt.target.value });
-    this.props.onLabelChange(this.props.item.id, evt.target.value);
+  const onLabelChange = (evt) => {
+    const newLabel = evt.target.value;
+    setLabel(newLabel);
+    props.onLabelChange && props.onLabelChange(props.item.id, newLabel);
   };
 
-  onLabelVisibilityChange = (event) => {
-    this.props.onLabelVisibilityChange(this.props.item.id, event.target.checked);
-    this.setState({ showLabel: event.target.checked });
+  const onLabelVisibilityChange = (event) => {
+    const visible = event.target.checked;
+    setShowLabel(visible);
+    props.onLabelVisibilityChange && props.onLabelVisibilityChange(props.item.id, visible);
   };
 
-  // THIS IS REQUIRED WHEN CHANGING LABEL FROM POPUP
-  componentWillReceiveProps(nextProps) {
-    console.log(nextProps);
-    if (nextProps.item.label !== this.state.label) this.setState({ label: nextProps.item.label });
-
-    if (nextProps.item.labelVisible !== this.state.labelVisible) {
-      console.log("updating visible");
-      this.setState({ labelVisible: nextProps.item.labelVisible });
-    }
-  }
-
-  // SLIDER CHANGE EVENT
-  onSliderChange = (evt) => {
-    this.setState({ labelRotation: evt.target.value });
-    this.props.onLabelRotationChange(this.props.item, evt.target.value);
+  const onSliderChange = (evt) => {
+    const rotation = evt.target.value;
+    setLabelRotation(rotation);
+    props.onLabelRotationChange && props.onLabelRotationChange(props.item, rotation);
   };
 
-  // onChangeTest = evt => {
-  //   this.setState({ checkedTest: evt.target.checked });
-  // };
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
-  render() {
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
-    return (
-      <div>
-        <div className="sc-mymaps-popup-label-toggler">
-          <div className={this.props.item.drawType === "Text" ? "sc-mymaps-popup-checkbox disabled" : "sc-mymaps-popup-checkbox"}>
-            <label
-              style={{
-                WebkitTouchCallout: "none",
-                WebkitUserSelect: "none",
-                KhtmlUserSelect: "none",
-                MozUserSelect: "none",
-                MsUserSelect: "none",
-                UserSelect: "none",
-              }}
-              onClick={this.onLabelVisibilityChange}
-            >
-              <input style={isSafari ? { position: "relative" } : { position: "relative", top: "1.5px" }} type="checkbox" defaultChecked={this.state.showLabel} />
-              Show Label
-            </label>
-          </div>
-
-          <div className="sc-mymaps-popup-slider">
-            <input type="range" min={this.sliderMin} max={this.sliderMax} value={this.state.labelRotation} step="1" onChange={this.onSliderChange} />
-            <label className="sc-mymaps-popup-slider-label">Rotate Label</label>
-          </div>
+  return (
+    <div>
+      <div className="sc-mymaps-popup-label-toggler">
+        <div className={props.item.drawType === "Text" ? "sc-mymaps-popup-checkbox disabled" : "sc-mymaps-popup-checkbox"}>
+          <label
+            style={{
+              WebkitTouchCallout: "none",
+              WebkitUserSelect: "none",
+              KhtmlUserSelect: "none",
+              MozUserSelect: "none",
+              MsUserSelect: "none",
+              UserSelect: "none",
+            }}
+            onClick={onLabelVisibilityChange}
+          >
+            <input style={isSafari ? { position: "relative" } : { position: "relative", top: "1.5px" }} type="checkbox" defaultChecked={showLabel} />
+            Show Label
+          </label>
         </div>
-        <div>
-          <input
-            className="sc-mymaps-popup-label-input sc-editable"
-            type="text"
-            value={this.state.label}
-            onChange={this.onLabelChange}
-            onFocus={(evt) => {
-              helpers.disableKeyboardEvents(true);
-            }}
-            onBlur={(evt) => {
-              helpers.disableKeyboardEvents(false);
-            }}
-          />
+
+        <div className="sc-mymaps-popup-slider">
+          <input type="range" min={0} max={360} value={labelRotation} step="1" onChange={onSliderChange} />
+          <label className="sc-mymaps-popup-slider-label">Rotate Label</label>
         </div>
       </div>
-    );
-  }
+      <div>
+        <input
+          className="sc-mymaps-popup-label-input sc-editable"
+          type="text"
+          value={label}
+          onChange={onLabelChange}
+          onFocus={() => {
+            helpers.disableKeyboardEvents(true);
+          }}
+          onBlur={() => {
+            helpers.disableKeyboardEvents(false);
+          }}
+        />
+      </div>
+    </div>
+  );
 }
 
 export default MyMapsPopupLabel;

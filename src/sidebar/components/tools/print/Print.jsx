@@ -45,7 +45,11 @@ class Print extends Component {
       //const printConfig = printConfig;
       const globalConfig = helpers.getConfig("TOOLS", "Print");
       const mainConfig = window.config;
-      if (globalConfig.config !== undefined) this.config = helpers.mergeObj(this.config, globalConfig.config);
+      if (globalConfig.config !== undefined) {
+        const defaultSizes = this.config.printSizes;
+        this.config = helpers.mergeObj(this.config, globalConfig.config);
+        this.config.printSizes = [...new Set([...defaultSizes, ...printConfig.printSizes])];
+      }
       this.setState({
         printUrl: mainConfig.printUrl,
         originUrl: mainConfig.originUrl,
@@ -126,7 +130,7 @@ class Print extends Component {
     const outputFormat = printData.outputFormat;
 
     let interval = 5000;
-    let origin = this.state.originUrl;
+    let origin = helpers.getBaseUrl(this.state.printUrl);
     let printUrl = this.state.printUrl;
 
     //let testOrigin = 'http://localhost:8080'
@@ -148,7 +152,7 @@ class Print extends Component {
             helpers.download(`${origin}${data.downloadURL}`, "file.pdf");
 
             this.setState({ isPrinting: false }); // THIS WILL RE-ENABLE BUTTON AND HIDE LOADING MSG
-          } else if (data.done === false && data.status === "running") {
+          } else if (data.done === false && (data.status === "running" || data.status === "waiting")) {
             setTimeout(() => {
               if (interval < 30000) {
                 interval += 2500;
@@ -219,9 +223,7 @@ class Print extends Component {
             </div>
             Is your Print too grainy or low quality? <br /> Click here for a high resolution screenshot
           </div>
-
           {/* MAP TITLE */}
-
           <label style={{ fontWeight: "bold" }}>Map Title:</label>
           <input
             className="sc-print-map-title-input"
@@ -234,24 +236,22 @@ class Print extends Component {
               helpers.disableKeyboardEvents(false);
             }}
           />
-
           {/* PRINT SIZE */}
           <label style={{ fontWeight: "bold" }}>Select Paper Size:</label>
           <Select styles={dropdownStyles} isSearchable={false} options={this.state.printSizes} value={this.state.printSizeSelectedOption} onChange={this.onChangePaperSize} />
-
           {/* FORMAT */}
           <label style={{ fontWeight: "bold" }}>Select Output Format:</label>
           <Select styles={dropdownStyles} isSearchable={false} options={this.state.printFormats} value={this.state.printFormatSelectedOption} onChange={this.onChangeFormat} />
-
+          <div width="100%">** Note: Some basemap layers are currently unsupported by print</div>
           {/* PRINT BUTTON */}
           <button className="sc-button sc-print-button" onClick={this.onDownloadButtonClick} disabled={this.state.isPrinting}>
             Print
           </button>
           <div className={this.state.isPrinting ? "sc-print-loading" : "sc-hidden"}>
+            {/* <div className={"sc-print-loading"}> */}
             Printing...&nbsp;
             <img src={images["loading20.gif"]} alt="loading" />
           </div>
-
           {/* ADVANCED OPTIONS */}
           <Collapsible
             overflowWhenOpen="auto"

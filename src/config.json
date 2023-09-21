@@ -13,12 +13,12 @@
   "htmlIdentify": false,
   "leftClickIdentify": false,
   "excludeIdentifyTitleName": false,
+  "allowIdentifyExport": false,
   "showFeedbackMessageOnStartup": false,
   "showWhatsNewOnStartup": false,
   "showWhatsNewPopupOnStartup": false,
   "showTermsOnStartup": true,
   "googleAnalyticsID": "G-GC5RRXFML6",
-
   "appStatsUrl": "https://opengis.simcoe.ca/api_v2/public/stats/write/",
   "apiUrl": "https://opengis.simcoe.ca/api_v2/",
   "apiUrlDev": "http://localhost:8085/",
@@ -26,6 +26,7 @@
   "openLicenseUrl": "http://maps.simcoe.ca/openlicense.html",
   "whatsNewUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/WhatsNew/2021-03-22",
   "helpUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer",
+  "reportUrl": "https://opengis.simcoe.ca/reports/",
   "ieWarningUrl": "https://opengis.simcoe.ca/public/ieWarning.html",
   "propertyReportUrl": "https://opengis.simcoe.ca/api_v2/public/reports/property/",
   "weatherRadarApiUrl": "https://opengis.simcoe.ca/api_v2/public/map/tool/weather/RadarImages/",
@@ -39,40 +40,6 @@
   "pushMapNotificationIDs": [1, 5, 6],
   "showHelpButtonInsteadOfFeedback": false,
   "onCoordinateZoomID": false,
-  "centerCoords": [-8878504.68, 5543492.45],
-  "defaultZoom": 10,
-  "maxZoom": 20,
-  "controls": {
-    "rotate": true,
-    "fullScreen": true,
-    "zoomInOut": true,
-    "currentLocation": true,
-    "zoomExtent": true,
-    "scale": true,
-    "scaleLine": true,
-    "basemap": true
-  },
-  "mapTheme": "SIMCOE_COUNTY",
-  "showFloatingMenuHeader": false,
-  "showLoadingScreens": false,
-  "storageKeys": {
-    "SearchHistory": "searchHistory",
-    "Draw": "myMaps",
-    "URLDontShowAgain": "sc_dontshowagain"
-  },
-  "onlyStandardCursor": true,
-  "restrictOriginForUrlWindow": false,
-  "rightClickMenuVisibility": {
-    "sc-floating-menu-basic-mode": true,
-    "sc-floating-menu-property-click": true,
-    "sc-floating-menu-add-mymaps": true,
-    "sc-floating-menu-save-map-extent": true,
-    "sc-floating-menu-report-problem": true,
-    "sc-floating-menu-identify": true,
-    "sc-floating-menu-google-maps": false,
-    "sc-floating-menu-more": true
-  },
-
   "centerCoords": [-8878504.68, 5543492.45],
   "defaultZoom": 10,
   "maxZoom": 20,
@@ -98,7 +65,6 @@
   },
   "onlyStandardCursor": true,
   "restrictOriginForUrlWindow": false,
-
   "rightClickMenuVisibility": {
     "sc-floating-menu-basic-mode": true,
     "sc-floating-menu-property-click": true,

@@ -43,9 +43,6 @@ class Layers extends Component {
     }
   };
 
-  // REFRESH IF PROPS FROM PARENT HAVE CHANGED - GROUPS DROP DOWN CHANGE.
-  componentWillReceiveProps(nextProps) {}
-
   render() {
     if (this.props.group.layers === undefined) return <div />;
 

@@ -17,21 +17,23 @@ class ThemeComponent extends Component {
     this.mapClickEvent = window.map.on("singleclick", (evt) => {
       console.log("click");
       if (window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring) return;
-      var results = window.map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
-        if (layer === null || !layer.getVisible()) return;
-
-        if (layer.get("name") !== undefined && layer.get("name").indexOf("511") !== -1) {
-          console.log(layer);
+      var results = window.map.forEachFeatureAtPixel(
+        evt.pixel,
+        function (feature, layer) {
           return [feature, layer.get("name"), layer.get("tocDisplayName")];
+        },
+        {
+          layerFilter: function (layer) {
+            return layer.getVisible() && layer.get("name") !== undefined && layer.get("name").indexOf("511") !== -1;
+          },
         }
-      });
+      );
       if (results !== undefined) {
         var feature = results[0];
         var layerName = results[1];
         var displayName = results[2];
 
         const entries = Object.entries(feature.getProperties());
-        console.log(entries);
         let propsToShow = [];
         entries.forEach((prop) => {
           const val = prop[0];
@@ -47,7 +49,6 @@ class ThemeComponent extends Component {
         });
 
         if (layerName === "511-mto-cameras") {
-          console.log(entries);
           window.popup.show(evt.coordinate, <MtoCameraPopup key={helpers.getUID()} entries={entries} />, "MTO Camera");
         } else {
           console.log("in reg");

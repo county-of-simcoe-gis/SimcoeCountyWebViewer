@@ -11,7 +11,7 @@ import { GeoJSON } from "ol/format.js";
 import CommercialRealEstatePopupContent from "./CommercialRealEstatePopupContent.jsx";
 import CommercialRealEstateLayers from "./CommercialRealEstateLayers";
 const propTypes = ["Vacant Land", "Commercial", "Farm", "Industrial", "Institutional"];
-const polygonLayerName = localConfig.polygonLayerName;
+// const polygonLayerName = localConfig.polygonLayerName;
 const pointLayerName = localConfig.pointLayerName;
 class CommercialRealEstate extends Component {
   constructor(props) {
@@ -110,7 +110,7 @@ class CommercialRealEstate extends Component {
     //this.mapClickEvent = () =>
     propTypes.forEach((propType) => {
       window.map.removeLayer(this.state.layers[propType].pointLayer);
-      window.map.removeLayer(this.state.layers[propType].polygonLayer);
+      // window.map.removeLayer(this.state.layers[propType].polygonLayer);
     });
 
     window.emitter.emit("hideImageSlider");
@@ -133,21 +133,21 @@ class CommercialRealEstate extends Component {
 
       window.map.addLayer(wmsPointLayer);
 
-      const wmsPolygonLayer = helpers.getImageWMSLayer(serverUrl, polygonLayerName, "geoserver", "_proptype = '" + propType + "'", 200, true);
-      wmsPolygonLayer.setVisible(true);
-      wmsPolygonLayer.setZIndex(200);
-      wmsPolygonLayer.setProperties({
-        name: propType,
-        tocDisplayName: propType,
-        disableParcelClick: false,
-        queryable: true,
-      });
-      window.map.addLayer(wmsPolygonLayer);
+      // const wmsPolygonLayer = helpers.getImageWMSLayer(serverUrl, polygonLayerName, "geoserver", "_proptype = '" + propType + "'", 200, true);
+      // wmsPolygonLayer.setVisible(true);
+      // wmsPolygonLayer.setZIndex(200);
+      // wmsPolygonLayer.setProperties({
+      //   name: propType,
+      //   tocDisplayName: propType,
+      //   disableParcelClick: false,
+      //   queryable: true,
+      // });
+      // window.map.addLayer(wmsPolygonLayer);
 
       layers[propType] = {
         propType: propType,
         pointLayer: wmsPointLayer,
-        polygonLayer: wmsPolygonLayer,
+        // polygonLayer: wmsPolygonLayer,
         visible: true,
       };
     });
@@ -169,7 +169,7 @@ class CommercialRealEstate extends Component {
     let layers = Object.assign(this.state.layers, {});
     layers[layerName].visible = evt.target.checked;
     layers[layerName].pointLayer.setVisible(evt.target.checked);
-    layers[layerName].polygonLayer.setVisible(evt.target.checked);
+    // layers[layerName].polygonLayer.setVisible(evt.target.checked);
     this.setState({ layers: layers });
   };
 
@@ -320,7 +320,7 @@ class CommercialRealEstate extends Component {
       params.cql_filter = this.sql;
 
       this.state.layers[propType].pointLayer.getSource().updateParams(params);
-      this.state.layers[propType].polygonLayer.getSource().updateParams(params);
+      // this.state.layers[propType].polygonLayer.getSource().updateParams(params);
     });
 
     this.setNumRecords();

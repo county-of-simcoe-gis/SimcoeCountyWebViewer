@@ -2,7 +2,6 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import { isMobile } from "react-device-detect";
-import arrayMove from "array-move";
 
 //CUSTOM
 import * as TOCHelpers from "./common/TOCHelpers.jsx";
@@ -66,10 +65,7 @@ class TOC extends Component {
   }
   //#region REACT FUNCTIONS
   componentDidMount() {
-    helpers.waitForLoad(["settings", "map"], Date.now(), 30, () => this.onMapLoad());
-  }
-  componentWillMount() {
-    helpers.waitForLoad(["settings"], Date.now(), 30, () => {
+    helpers.waitForLoad(["settings", "map"], Date.now(), 30, () => {
       let tocType = helpers.getURLParameter("TOCTYPE");
       if (tocType !== null && tocType !== undefined) {
         if (this.tocTypes.includes(tocType.toUpperCase())) tocType = tocType.toUpperCase();
@@ -85,8 +81,10 @@ class TOC extends Component {
           this.setState({ type: tocType });
         }
       }
+      this.onMapLoad();
     });
   }
+
   //#endregion
   //#region LOAD LAYERS
   //HANDLE LAYER LOADING
@@ -647,7 +645,7 @@ class TOC extends Component {
       return;
     }
     let group = Object.assign({}, this.state.selectedGroup);
-    TOCHelpers.updateLayerIndex(arrayMove(group.layers, oldIndex, newIndex), (result) => {
+    TOCHelpers.updateLayerIndex(helpers.arrayMoveImmutable(group.layers, oldIndex, newIndex), (result) => {
       group.layers = result.map((layer) => {
         layer.index = layer.drawIndex;
         return layer;
@@ -863,9 +861,7 @@ class TOC extends Component {
   onActivateLayer = (layerItem, visible = true) => {
     let allowSave = true;
     let layerGroups = this.getActiveLayerGroups();
-    const searchResultTOC_Actions = (window.config.searchResultTOC_Actions !== undefined) 
-    ? window.config.searchResultTOC_Actions.toLowerCase()
-    : "Default";
+    const searchResultTOC_Actions = window.config.searchResultTOC_Actions !== undefined ? window.config.searchResultTOC_Actions.toLowerCase() : "Default";
     if (!layerItem.layerGroup) {
       const guessLayerGroupName = (layerName) => {
         let likelyLayerGroup = layerGroups.filter((item) => {
@@ -891,19 +887,19 @@ class TOC extends Component {
             return layer;
           }
         }
-        if (searchResultTOC_Actions != 'advanced') {				
-					layer.layer.setVisible(visible);
-					layer.visible = visible;
-					layerItem.imageName =  "layers.png";
-			    } else if (!layer.visible && searchResultTOC_Actions == 'advanced') {				
-					layer.layer.setVisible(visible);
-					layer.visible = visible;
-					layerItem.imageName = "layers-visible.png";
-			    } else if (layer.visible && searchResultTOC_Actions == 'advanced' && layerItem.itemAction != "Activate") {	
-					layer.layer.setVisible(false);
-					layer.visible = false;
-					layerItem.imageName =  "layers.png";
-				}
+        if (searchResultTOC_Actions != "advanced") {
+          layer.layer.setVisible(visible);
+          layer.visible = visible;
+          layerItem.imageName = "layers.png";
+        } else if (!layer.visible && searchResultTOC_Actions == "advanced") {
+          layer.layer.setVisible(visible);
+          layer.visible = visible;
+          layerItem.imageName = "layers-visible.png";
+        } else if (layer.visible && searchResultTOC_Actions == "advanced" && layerItem.itemAction != "Activate") {
+          layer.layer.setVisible(false);
+          layer.visible = false;
+          layerItem.imageName = "layers.png";
+        }
         return layer;
       } else {
         return layer;
