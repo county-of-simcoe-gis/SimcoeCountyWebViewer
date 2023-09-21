@@ -234,7 +234,7 @@ class LayerInfoApp extends Component {
               <div className="sc-layerInfo-download-container">
                 <label>
                   <input type="checkbox" onChange={this.onTermsChange}></input>
-                  By dowloading this information you accept the terms of the Open Government License - Simcoe County.
+                  By downloading this information you accept the terms of the Open Government License - Simcoe County.
                 </label>
                 &nbsp;
                 <a href="http://maps.simcoe.ca/openlicense.html" target="_blank" rel="noopener noreferrer">
