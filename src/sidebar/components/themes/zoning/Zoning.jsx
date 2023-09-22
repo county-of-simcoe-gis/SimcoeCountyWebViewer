@@ -65,10 +65,16 @@ const Zoning = (props) => {
       let geom = helpers.getFeatureFromGeoJSON(results.geojson).getGeometry();
       let sectionList = [];
       themeConfig.queryLayers.forEach((layer) => {
-        helpers.getFeaturesFromGeom(layer.url, layer.geom, geom, (zoningInfo) => {
-          sectionList.push({ section: layer.title, features: zoningInfo, featureTitleColumn: layer.featureTitleColumn });
-          if (sectionList.length === themeConfig.queryLayers.length) setSections(sectionList);
-        });
+        if (results.type !== "Assessment Parcel")
+          helpers.getFeaturesFromGeom(layer.url, layer.geom, geom, (zoningInfo) => {
+            sectionList.push({ section: layer.title, features: zoningInfo, featureTitleColumn: layer.featureTitleColumn });
+            if (sectionList.length === themeConfig.queryLayers.length) setSections(sectionList);
+          });
+        else
+          helpers.getFeaturesFromFilter(layer.url, "arn", results.name, (zoningInfo) => {
+            sectionList.push({ section: layer.title, features: zoningInfo, featureTitleColumn: layer.featureTitleColumn });
+            if (sectionList.length === themeConfig.queryLayers.length) setSections(sectionList);
+          });
       });
     }
   };
