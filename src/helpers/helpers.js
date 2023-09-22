@@ -1791,6 +1791,18 @@ export function getARNListFromGeom(geom, callback) {
     callback(tmpArnArray);
   });
 }
+export function getFeaturesFromFilter(wfsUrl, queryFieldName, queryValue, callback) {
+  const urlTemplate = (mainURL, field, value) => `${mainURL}&cql_filter=(${field}=${value})`;
+  const queryUrl = urlTemplate(wfsUrl, queryFieldName, queryValue);
+  getJSON(queryUrl, (result) => {
+    if (result.features.length === 0) callback([]);
+    else {
+      const features = new GeoJSON().readFeatures(result);
+      callback(features);
+    }
+  });
+}
+
 export function getFeaturesFromGeom(wfsUrl, geomFieldName, queryGeom, callback) {
   const urlTemplate = (mainURL, geomField, wkt) => `${mainURL}&cql_filter=INTERSECTS(${geomField},${wkt})`;
   let bufferDistance = -1;
