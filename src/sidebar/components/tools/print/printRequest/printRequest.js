@@ -181,7 +181,8 @@ let configureTileLayer = async (l) => {
   tileUrl = layerSource.getUrls();
   tileUrl = tileUrl[0].indexOf("/MapServer/WMTS/") !== -1 ? `${tileUrl[0].split("/WMTS/")[0]}` : `${tileUrl[0].split("/tile/")[0]}`;
   let retLayer = {};
-  if (l.values_.source.key_.includes("openstreetmap.org")) {
+  const openstreetmapUrl = "openstreetmap.org";
+  if (l.values_.source.key_.includes(openstreetmapUrl)) {
     retLayer = {
       baseURL: l.values_.source.key_.split("\n")[0],
       type: "OSM",
