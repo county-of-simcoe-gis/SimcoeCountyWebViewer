@@ -4,6 +4,7 @@ import { ClearLocalStorageButton, ClearLocalStorageButtonGrouped } from "./Setti
 import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
 import settingsConfig from "./config.json";
+const microsoftLoginKey = "login.microsoftonline.com";
 
 class Settings extends Component {
   constructor(props) {
@@ -21,7 +22,6 @@ class Settings extends Component {
     this.storageKey = "Settings";
     this.storageKeyMapControls = "Map Control Settings";
   }
-
   componentDidMount() {
     //wait for map to load
     helpers.waitForLoad("map", Date.now(), 30, () => this.onMapLoad());
@@ -272,7 +272,7 @@ class Settings extends Component {
               <div className="sc-settings-divider" />
               {Object.keys(localStorage)
                 .filter((key) => {
-                  return key.indexOf("login.microsoftonline.com") === -1;
+                  return key.indexOf(microsoftLoginKey) === -1;
                 })
                 .map((key) => (
                   <ClearLocalStorageButton key={helpers.getUID()} storageKey={key} clearLocalData={this.clearLocalData} />
@@ -282,7 +282,7 @@ class Settings extends Component {
                 key={helpers.getUID()}
                 name={"Login Info"}
                 storageKeys={Object.keys(localStorage).filter((key) => {
-                  return key.indexOf("login.microsoftonline.com") !== -1;
+                  return key.indexOf(microsoftLoginKey) !== -1;
                 })}
                 clearLocalData={this.clearLocalData}
               />
