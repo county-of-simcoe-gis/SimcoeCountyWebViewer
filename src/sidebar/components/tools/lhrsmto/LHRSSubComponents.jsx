@@ -86,9 +86,7 @@ export const LHRSActions = (props) => {
 
 export const SmartCLReportLink = (props) => {
   const reportConfig = localConfig.smartcl;
-  const reportLink = (url, params, startX, startY, endX, endY, hwy) =>
-    `${url}?${params.startX}=${startX}&${params.startY}=${startY}&${params.endX}=${endX}&${params.endY}=${endY}&${params.hwy}=${hwy}`;
-  const url = reportLink(reportConfig.report_url, reportConfig.params, props.startX, props.startY, props.endX, props.endY, props.hwy);
+  const url = `${reportConfig.report_url}?${reportConfig.params.startX}=${props.startX}&${reportConfig.params.startY}=${props.startY}&${reportConfig.params.endX}=${props.endX}&${reportConfig.params.endY}=${props.endY}&${reportConfig.params.hwy}=${props.hwy}`;
 
   return (
     <div className="sc-lhrs-row sc-arrow">
