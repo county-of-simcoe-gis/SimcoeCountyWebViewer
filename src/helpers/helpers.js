@@ -1011,7 +1011,8 @@ export function stringDivider(str, width, spaceReplacer) {
 
 export function saveToStorage(storageKey, item) {
   try {
-    window.localStorage.setItem(storageKey, JSON.stringify(item));
+    if (typeof item === "object") window.localStorage.setItem(storageKey, JSON.stringify(item));
+    else window.localStorage.setItem(storageKey, JSON.stringify(item));
   } catch (e) {
     console.log(e);
     cleanupStorage();
@@ -1055,9 +1056,11 @@ export function appendToStorage(storageKey, item, limit = undefined) {
 export function getItemsFromStorage(key) {
   const storage = window.localStorage.getItem(key);
   if (storage === null) return undefined;
-
-  const data = JSON.parse(storage);
-  return data;
+  try {
+    return JSON.parse(storage);
+  } catch (e) {
+    return storage;
+  }
 }
 
 export function postJSON(url, data = {}, callback) {
