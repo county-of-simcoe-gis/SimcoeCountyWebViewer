@@ -1705,12 +1705,14 @@ export function mergeObjArray(targetArray, sourceArray) {
 }
 export function mergeObj(targetObj, sourceObj, append = false) {
   Object.keys(sourceObj).forEach((key) => {
-    if (typeof targetObj[key] === "object" && !(targetObj[key] instanceof Array)) {
-      targetObj[key] = mergeObj(targetObj[key], sourceObj[key]);
-    } else {
-      if (targetObj[key] instanceof Array && append) {
-        targetObj[key] = [].concat(sourceObj[key], targetObj[key]);
-      } else targetObj[key] = sourceObj[key];
+    if (key !== "__proto__" && key !== "constructor") {
+      if (typeof targetObj[key] === "object" && !(targetObj[key] instanceof Array)) {
+        targetObj[key] = mergeObj(targetObj[key], sourceObj[key]);
+      } else {
+        if (targetObj[key] instanceof Array && append) {
+          targetObj[key] = [].concat(sourceObj[key], targetObj[key]);
+        } else targetObj[key] = sourceObj[key];
+      }
     }
   });
   return targetObj;
