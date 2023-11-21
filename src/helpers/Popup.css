@@ -32,6 +32,7 @@
   /* text-align: center; */
   padding-left: 0px !important;
   padding-right: 0px !important;
+  z-index: 500;
 }
 .sc-popup-content-prev-button {
   position: absolute;
@@ -47,6 +48,7 @@
   /* text-align: center; */
   padding-left: 0px !important;
   padding-right: 0px !important;
+  z-index: 500;
 }
 
 @media only screen and (max-width: 770px) {

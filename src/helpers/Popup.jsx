@@ -195,8 +195,6 @@ export default class Popup extends Overlay {
       if (this.contentIndex <= 0) {
         this.contentPrevButton.style.display = "none";
       }
-      console.log(this.contentArray);
-
       if (callback) callback();
       return;
     }
