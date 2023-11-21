@@ -773,7 +773,7 @@ export class LayerHelpers {
               strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
               format: new GML3({ srsName: projection }),
               loader: Vector_FileLoader,
-              crossOrigin: "anonymous",
+              // crossOrigin: "anonymous",
             }),
           })
         );
@@ -788,7 +788,7 @@ export class LayerHelpers {
               strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
               format: new GML2({ srsName: projection }),
               loader: Vector_FileLoader,
-              crossOrigin: "anonymous",
+              // crossOrigin: "anonymous",
             }),
           })
         );
@@ -803,7 +803,7 @@ export class LayerHelpers {
               strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
               format: new GPX(),
               loader: Vector_FileLoader,
-              crossOrigin: "anonymous",
+              // crossOrigin: "anonymous",
             }),
           })
         );
@@ -818,7 +818,7 @@ export class LayerHelpers {
               strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
               format: new KML(),
               loader: Vector_FileLoader,
-              crossOrigin: "anonymous",
+              // crossOrigin: "anonymous",
             }),
           })
         );
@@ -833,7 +833,7 @@ export class LayerHelpers {
               strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
               format: new OSMXML(),
               loader: Vector_FileLoader,
-              crossOrigin: "anonymous",
+              // crossOrigin: "anonymous",
             }),
           })
         );
@@ -848,7 +848,7 @@ export class LayerHelpers {
               strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ tileSize: 512, maxZoom: 19 })) : LoadingStrategyAll,
               format: new EsriJSON(),
               loader: Vector_FileLoader,
-              crossOrigin: "anonymous",
+              // crossOrigin: "anonymous",
             }),
             style: style,
           })
@@ -864,7 +864,7 @@ export class LayerHelpers {
               strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
               format: new GeoJSON(),
               loader: Vector_FileLoader,
-              crossOrigin: "anonymous",
+              // crossOrigin: "anonymous",
             }),
           })
         );
@@ -879,7 +879,7 @@ export class LayerHelpers {
               strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
               format: new TopoJSON(),
               loader: Vector_FileLoader,
-              crossOrigin: "anonymous",
+              // crossOrigin: "anonymous",
             }),
           })
         );
@@ -894,7 +894,7 @@ export class LayerHelpers {
               strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
               format: new IGC(),
               loader: Vector_FileLoader,
-              crossOrigin: "anonymous",
+              // crossOrigin: "anonymous",
             }),
           })
         );
@@ -909,7 +909,7 @@ export class LayerHelpers {
               strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
               format: new Polyline(),
               loader: Vector_FileLoader,
-              crossOrigin: "anonymous",
+              // crossOrigin: "anonymous",
             }),
           })
         );
@@ -924,7 +924,7 @@ export class LayerHelpers {
               strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
               format: new WKT(),
               loader: Vector_FileLoader,
-              crossOrigin: "anonymous",
+              // crossOrigin: "anonymous",
             }),
           })
         );
@@ -939,7 +939,7 @@ export class LayerHelpers {
               strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
               format: new MVT(),
               loader: Vector_FileLoader,
-              crossOrigin: "anonymous",
+              // crossOrigin: "anonymous",
             }),
           })
         );
@@ -958,7 +958,7 @@ export class LayerHelpers {
             url: url + "/tile/{z}/{y}/{x}.pbf",
             minZoom: minZoom || undefined,
             maxZoom: maxZoom || undefined,
-            crossOrigin: "anonymous",
+            // crossOrigin: "anonymous",
           }),
         });
         rootPath = rootPath || url + "/resources/styles/root.json";
@@ -1003,7 +1003,7 @@ export class LayerHelpers {
               ratio: 1,
               hidpi: false,
               serverType: "geoserver",
-              crossOrigin: "anonymous",
+              // crossOrigin: "anonymous",
               imageLoadFunction: securedImageWMS,
             }),
           })
@@ -1023,11 +1023,11 @@ export class LayerHelpers {
                 tiled: true,
                 cql_filter: null,
               },
-              tileOptions: { crossOriginKeyword: "anonymous" },
+              // tileOptions: { crossOriginKeyword: "anonymous" },
               ratio: 1,
               hidpi: false,
               serverType: "geoserver",
-              crossOrigin: "anonymous",
+              // crossOrigin: "anonymous",
             }),
           })
         );
@@ -1049,7 +1049,7 @@ export class LayerHelpers {
           params: params || { LAYERS: `SHOW:${url_layer}` },
           ratio: 1,
           projection: projection,
-          crossOrigin: "anonymous",
+          // crossOrigin: "anonymous",
         };
         if (token) {
           sourceParams.params["TOKEN"] = token;
@@ -1129,7 +1129,7 @@ export class LayerHelpers {
             source: new XYZ({
               url: url,
               //projection: projection ,
-              crossOrigin: "anonymous",
+              // crossOrigin: "anonymous",
             }),
           })
         );
@@ -1148,7 +1148,7 @@ export class LayerHelpers {
         let source = new TileImage({
           url: url,
           tileGrid: tileGrid,
-          crossOrigin: "anonymous",
+          // crossOrigin: "anonymous",
         });
         // source.on("tileloaderror", function(event) {
         //   event.tile.getImage().src = "";
