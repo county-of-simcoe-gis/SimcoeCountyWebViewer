@@ -48,7 +48,67 @@ export default class Popup extends Overlay {
     this.headerContainer = document.createElement("div");
     this.headerContainer.id = "sc-popup-header";
     this.headerContainer.className = "sc-popup-header sc-no-select";
+    this.contentArray = [];
+    this.contentIndex = 0;
+    this.contentNextButton = document.createElement("div");
+    this.contentPrevButton = document.createElement("div");
+    this.contentNextButton.className = "sc-popup-content-next-button";
+    this.contentPrevButton.className = "sc-popup-content-prev-button";
+    this.contentNextButton.title = "Next";
+    this.contentPrevButton.title = "Previous";
+    this.contentNextButton.innerHTML = "&#9205;";
+    this.contentPrevButton.innerHTML = "&#9204;";
 
+    this.contentNextButton.addEventListener("click", () => {
+      this.contentIndex++;
+      if (this.contentIndex >= this.contentArray.length) {
+        this.contentIndex = this.contentArray.length - 1;
+      }
+
+      if (this.contentIndex + 1 >= this.contentArray.length) {
+        this.contentPrevButton.style.display = "block";
+        this.contentNextButton.style.display = "none";
+      } else {
+        this.contentPrevButton.style.display = "block";
+        this.contentNextButton.style.display = "block";
+      }
+
+      this.headerTitle.innerHTML = this.contentArray[this.contentIndex].title;
+      //ReactDOM.render(html, this.content);
+      if (isDOMTypeElement(this.contentArray[this.contentIndex].html)) {
+        // REGULAR HTML
+        this.content.innerHTML = "";
+        this.content.appendChild(this.contentArray[this.contentIndex].html);
+      } else {
+        // REACT COMPONENT
+        ReactDOM.render(this.contentArray[this.contentIndex].html, this.content);
+      }
+    });
+    this.contentPrevButton.addEventListener("click", () => {
+      this.contentIndex--;
+      if (this.contentIndex < 0) {
+        this.contentIndex = 0;
+        this.contentPrevButton.disabled = true;
+      }
+      if (this.contentIndex - 1 <= 0) {
+        this.contentPrevButton.style.display = "none";
+        this.contentNextButton.style.display = "block";
+      } else {
+        this.contentPrevButton.style.display = "block";
+        this.contentNextButton.style.display = "block";
+      }
+      // SET TITLE
+      this.headerTitle.innerHTML = this.contentArray[this.contentIndex].title;
+      //ReactDOM.render(html, this.content);
+      if (isDOMTypeElement(this.contentArray[this.contentIndex].html)) {
+        // REGULAR HTML
+        this.content.innerHTML = "";
+        this.content.appendChild(this.contentArray[this.contentIndex].html);
+      } else {
+        // REACT COMPONENT
+        ReactDOM.render(this.contentArray[this.contentIndex].html, this.content);
+      }
+    });
     this.headerCloseContainer = document.createElement("div");
     this.headerCloseContainer.className = "sc-popup-header-close-button";
 
@@ -65,7 +125,8 @@ export default class Popup extends Overlay {
     this.closer.href = "#";
 
     this.headerCloseContainer.appendChild(this.closer);
-
+    this.headerContainer.appendChild(this.contentNextButton);
+    this.headerContainer.appendChild(this.contentPrevButton);
     this.headerContainer.appendChild(this.headerCloseContainer);
     this.container.appendChild(this.headerContainer);
 
@@ -118,10 +179,28 @@ export default class Popup extends Overlay {
   show(coord, html, title = "Info", callback = null) {
     if (!window.activeClick || window.activeClick.coordinates[0] !== coord[0] || window.activeClick.coordinates[1] !== coord[1]) {
       window.activeClick = { coordinates: coord, time: performance.now() };
+      this.contentArray = [{ html: html, title: title }];
+      this.contentIndex = 0;
+      this.contentNextButton.style.display = "none";
+      this.contentPrevButton.style.display = "none";
     } else if (window.activeClick && window.activeClick.coordinates[0] === coord[0] && window.activeClick.coordinates[1] === coord[1]) {
+      this.contentArray.push({ html: html, title: title });
+      if (this.contentArray.length > 1) {
+        this.contentNextButton.style.display = "block";
+        this.contentPrevButton.style.display = "block";
+      } else {
+        this.contentNextButton.style.display = "none";
+        this.contentPrevButton.style.display = "none";
+      }
+      if (this.contentIndex <= 0) {
+        this.contentPrevButton.style.display = "none";
+      }
+      console.log(this.contentArray);
+
       if (callback) callback();
       return;
     }
+
     // WEIRD MOBILE STUFF PATCH WHERE CONTAINER STAYS OVER MAP
     // var x = document.getElementsByClassName("ol-selectable")[0];
     // x.classList.remove("sc-hidden");
@@ -245,6 +324,8 @@ export default class Popup extends Overlay {
    * @returns {Popup} The Popup instance
    */
   hide() {
+    this.contentArray = [];
+    this.contentIndex = 0;
     window.activeClick = null;
     const containers = document.getElementsByClassName("ol-overlay-container ol-selectable");
     Array.prototype.forEach.call(containers, (el) => {
