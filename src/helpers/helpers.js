@@ -152,7 +152,7 @@ export function getArcGISTiledLayer(url) {
   return new TileLayer({
     source: new TileArcGISRest({
       url: url,
-      crossOrigin: "anonymous",
+      // crossOrigin: "anonymous",
       // tileLoadFunction: function(tile, src) {
       //   var xhr = new XMLHttpRequest();
 
@@ -179,7 +179,7 @@ export function getArcGISTiledLayer(url) {
       //   xhr.send();
       // },
     }),
-    crossOrigin: "anonymous",
+    // crossOrigin: "anonymous",
   });
 }
 
@@ -193,7 +193,7 @@ export function getESRITileXYZLayer(url) {
     source: new XYZ({
       attributions: 'Tiles © <a href="https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer">ArcGIS</a>',
       url: url + "/tile/{z}/{y}/{x}",
-      crossOrigin: "anonymous",
+      // crossOrigin: "anonymous",
     }),
   });
 }
@@ -206,14 +206,14 @@ export function getOSMTileXYZLayer(url) {
   return new TileLayer({
     rebuildParams: rebuildParams,
     source: new OSM({ url: url + "/{z}/{x}/{y}.png" }),
-    crossOrigin: "anonymous",
+    // crossOrigin: "anonymous",
   });
 }
 
 export function getXYZLayer(url) {
   return new TileLayer({
     source: new XYZ({ url: url + "/{z}/{x}/{y}.png" }),
-    crossOrigin: "anonymous",
+    // crossOrigin: "anonymous",
   });
 }
 
@@ -249,7 +249,7 @@ export function getSimcoeTileXYZLayer(url) {
       return url + "/tile/" + z + "/" + y + "/" + x;
     },
     tileGrid: tileGrid,
-    crossOrigin: "anonymous",
+    // crossOrigin: "anonymous",
   });
   source.on("tileloaderror", function (event) {
     // BROWSER STILL KICKS OUT 404 ERRORS.  ANYBODY KNOW A WAY TO PREVENT THE ERRORS IN THE BROWSER?
@@ -283,7 +283,7 @@ export function getOSMLayer() {
   return new TileLayer({
     rebuildParams: rebuildParams,
     source: new OSM(),
-    crossOrigin: "anonymous",
+    // crossOrigin: "anonymous",
   });
 }
 export function shouldCancelPopup(coord, startTime) {
@@ -332,7 +332,7 @@ export function getImageWMSLayer(serverURL, layers, serverType = "geoserver", cq
       params: { VERSION: "1.3.0", LAYERS: layers, cql_filter: cqlFilter },
       ratio: 1,
       serverType: serverType,
-      crossOrigin: "anonymous",
+      // crossOrigin: "anonymous",
     }),
   });
 
@@ -470,7 +470,9 @@ export function showMessage(title = "Info", messageText = "Message", color = mes
   if (existingMsg !== undefined && existingMsg !== null) existingMsg.remove();
   try {
     ReactDOM.unmountComponentAtNode(document.getElementById("sc-sidebar-message-container"));
-  } catch {}
+  } catch (e) {
+    console.log("Error unmounting message", e);
+  }
   const message = ReactDOM.render(
     <ShowMessage id={domId} key={domId} title={title} message={messageText} color={color} hideButton={hideButton} />,
     document.getElementById("sc-sidebar-message-container"),
@@ -1468,7 +1470,7 @@ export function getBase64FromImageUrlWithParams(url, params = undefined, callbac
     }
     var img = new Image();
 
-    img.setAttribute("crossOrigin", "anonymous");
+    // img.setAttribute("crossOrigin", "anonymous");
 
     img.onload = function () {
       var canvas = document.createElement("canvas");
@@ -1492,7 +1494,7 @@ export function getBase64FromImageUrlWithParams(url, params = undefined, callbac
 export function getBase64FromImageUrl(url, callback) {
   var img = new Image();
 
-  img.setAttribute("crossOrigin", "anonymous");
+  // img.setAttribute("crossOrigin", "anonymous");
 
   img.onload = function () {
     var canvas = document.createElement("canvas");
