@@ -13,41 +13,11 @@
 
 .map-theme .sc-popup-header-close-button {
   z-index: 500;
-  /* position: absolute;
-    top: 2px;
-    cursor: pointer;
-    background: url(../dijit/images/popup.png) no-repeat; */
 }
 .sc-popup-content-next-button {
-  position: absolute;
-  top: 6px;
-  right: 25px;
-  /* width: 10px; */
-  font-size: 15pt;
-  padding: 0 4px;
-  color: white;
-  text-decoration: none;
-  cursor: pointer;
-  /* border: 1px solid #fff; */
-  /* text-align: center; */
-  padding-left: 0px !important;
-  padding-right: 0px !important;
   z-index: 500;
 }
 .sc-popup-content-prev-button {
-  position: absolute;
-  top: 6px;
-  right: 40px;
-  /* width: 10px; */
-  font-size: 15pt;
-  padding: 0 4px;
-  color: white;
-  text-decoration: none;
-  cursor: pointer;
-  /* border: 1px solid #fff; */
-  /* text-align: center; */
-  padding-left: 0px !important;
-  padding-right: 0px !important;
   z-index: 500;
 }
 

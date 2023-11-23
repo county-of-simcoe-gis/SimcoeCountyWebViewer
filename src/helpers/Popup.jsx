@@ -50,14 +50,23 @@ export default class Popup extends Overlay {
     this.headerContainer.className = "sc-popup-header sc-no-select";
     this.contentArray = [];
     this.contentIndex = 0;
-    this.contentNextButton = document.createElement("div");
-    this.contentPrevButton = document.createElement("div");
-    this.contentNextButton.className = "sc-popup-content-next-button";
-    this.contentPrevButton.className = "sc-popup-content-prev-button";
-    this.contentNextButton.title = "Next";
-    this.contentPrevButton.title = "Previous";
-    this.contentNextButton.innerHTML = "&#9205;";
-    this.contentPrevButton.innerHTML = "&#9204;";
+    this.contentNextButtonContainer = document.createElement("div");
+    this.contentPrevButtonContainer = document.createElement("div");
+
+    this.contentNextButtonContainer.className = "sc-popup-content-next-button";
+    this.contentPrevButtonContainer.className = "sc-popup-content-prev-button";
+    this.contentNextButtonContainer.title = "Next";
+    this.contentPrevButtonContainer.title = "Previous";
+    // this.contentNextButton.innerHTML = "&#9205;";
+    // this.contentPrevButton.innerHTML = "&#9204;";
+    this.contentPrevButton = document.createElement("a");
+    this.contentPrevButton.className = "ol-popup-previous";
+    this.contentPrevButton.href = "#";
+    this.contentNextButton = document.createElement("a");
+    this.contentNextButton.className = "ol-popup-next";
+    this.contentNextButton.href = "#";
+    this.contentNextButtonContainer.appendChild(this.contentNextButton);
+    this.contentPrevButtonContainer.appendChild(this.contentPrevButton);
 
     this.contentNextButton.addEventListener("click", () => {
       this.contentIndex++;
@@ -66,11 +75,14 @@ export default class Popup extends Overlay {
       }
 
       if (this.contentIndex + 1 >= this.contentArray.length) {
-        this.contentPrevButton.style.display = "block";
-        this.contentNextButton.style.display = "none";
+        this.contentNextButtonContainer.className = "sc-popup-content-next-button disabled";
+        this.contentPrevButtonContainer.className = "sc-popup-content-prev-button";
+      } else if (this.contentIndex - 1 < 0) {
+        this.contentNextButtonContainer.className = "sc-popup-content-next-button";
+        this.contentPrevButtonContainer.className = "sc-popup-content-prev-button disabled";
       } else {
-        this.contentPrevButton.style.display = "block";
-        this.contentNextButton.style.display = "block";
+        this.contentNextButtonContainer.className = "sc-popup-content-next-button";
+        this.contentPrevButtonContainer.className = "sc-popup-content-prev-button";
       }
 
       this.headerTitle.innerHTML = this.contentArray[this.contentIndex].title;
@@ -88,14 +100,16 @@ export default class Popup extends Overlay {
       this.contentIndex--;
       if (this.contentIndex < 0) {
         this.contentIndex = 0;
-        this.contentPrevButton.disabled = true;
       }
-      if (this.contentIndex - 1 <= 0) {
-        this.contentPrevButton.style.display = "none";
-        this.contentNextButton.style.display = "block";
+      if (this.contentIndex - 1 < 0) {
+        this.contentNextButtonContainer.className = "sc-popup-content-next-button";
+        this.contentPrevButtonContainer.className = "sc-popup-content-prev-button disabled";
+      } else if (this.contentIndex + 1 >= this.contentArray.length) {
+        this.contentNextButtonContainer.className = "sc-popup-content-next-button disabled";
+        this.contentPrevButtonContainer.className = "sc-popup-content-prev-button";
       } else {
-        this.contentPrevButton.style.display = "block";
-        this.contentNextButton.style.display = "block";
+        this.contentNextButtonContainer.className = "sc-popup-content-next-button";
+        this.contentPrevButtonContainer.className = "sc-popup-content-prev-button";
       }
       // SET TITLE
       this.headerTitle.innerHTML = this.contentArray[this.contentIndex].title;
@@ -125,8 +139,8 @@ export default class Popup extends Overlay {
     this.closer.href = "#";
 
     this.headerCloseContainer.appendChild(this.closer);
-    this.headerContainer.appendChild(this.contentNextButton);
-    this.headerContainer.appendChild(this.contentPrevButton);
+    this.headerContainer.appendChild(this.contentNextButtonContainer);
+    this.headerContainer.appendChild(this.contentPrevButtonContainer);
     this.headerContainer.appendChild(this.headerCloseContainer);
     this.container.appendChild(this.headerContainer);
 
@@ -193,7 +207,9 @@ export default class Popup extends Overlay {
         this.contentPrevButton.style.display = "none";
       }
       if (this.contentIndex <= 0) {
-        this.contentPrevButton.style.display = "none";
+        // this.contentPrevButton.style.display = "none";
+        this.contentNextButtonContainer.className = "sc-popup-content-next-button";
+        this.contentPrevButtonContainer.className = "sc-popup-content-prev-button disabled";
       }
       if (callback) callback();
       return;
