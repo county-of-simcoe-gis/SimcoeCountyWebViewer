@@ -68,9 +68,11 @@ const Forecast = (props) => {
   let warningUrl = "";
   if (warnings !== "") {
     warningUrl = warnings.$.url;
-    warnings.event.forEach((event) => {
-      warningEvents.push(event);
-    });
+    if (warnings.event.length === undefined) warningEvents.push(warnings.event);
+    else
+      warnings.event.forEach((event) => {
+        warningEvents.push(event);
+      });
   }
 
   return (
