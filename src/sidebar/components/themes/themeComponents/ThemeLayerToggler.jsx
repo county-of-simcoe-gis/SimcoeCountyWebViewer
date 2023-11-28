@@ -37,12 +37,14 @@ class ThemeLayerToggler extends Component {
         const extent = feature.getGeometry().getExtent();
         const center = getCenter(extent);
         helpers.zoomToFeature(feature);
-        const entries = Object.entries(feature.getProperties());
-        window.popup.show(
-          center,
-          <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={this.props.layerConfig} />,
-          this.props.layerConfig.displayName
-        );
+        result.forEach((currentFeature) => {
+          const entries = Object.entries(currentFeature.getProperties());
+          window.popup.show(
+            center,
+            <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={this.props.layerConfig} />,
+            this.props.layerConfig.displayName
+          );
+        });
       },
       null,
       null,
@@ -94,14 +96,15 @@ class ThemeLayerToggler extends Component {
           }
 
           const geoJSON = new GeoJSON().readFeatures(result);
-          const feature = geoJSON[0];
-
-          const entries = Object.entries(feature.getProperties());
-          window.popup.show(
-            evt.coordinate,
-            <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={this.props.layerConfig} />,
-            this.props.layerConfig.displayName
-          );
+          geoJSON.forEach((feature) => {
+            console.log("ThemeLayerToggler.jsx", feature);
+            const entries = Object.entries(feature.getProperties());
+            window.popup.show(
+              evt.coordinate,
+              <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={this.props.layerConfig} />,
+              this.props.layerConfig.displayName
+            );
+          });
         });
       }
     });
