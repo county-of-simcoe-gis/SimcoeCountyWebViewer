@@ -705,9 +705,8 @@ export function getWFSGeoJSON(serverUrl, layerName, callback, sortField = null, 
 export function getWFSLayerRecordCount(serverUrl, layerName, callback) {
   const recordCountUrlTemplate = (serverURL, layerName) => `${serverURL}wfs?REQUEST=GetFeature&VERSION=1.1&typeName=${layerName}&RESULTTYPE=hits`;
   const recordCountUrl = recordCountUrlTemplate(serverUrl, layerName);
-  console.log("getWFSLayerRecordCount - url", recordCountUrl);
+
   getObjectFromXMLUrl(recordCountUrl, (result) => {
-    console.log("getWFSLayerRecordCount - result", result);
     callback(result["wfs:FeatureCollection"]["$"].numberOfFeatures);
   });
 }
@@ -1137,6 +1136,22 @@ export function getWKTStringFromFeature(feature) {
   //   featureProjection: "EPSG:3857"
   // });
   // return feature;
+}
+
+export function formatReplace(fmt, ...args) {
+  if (!fmt.match(/^(?:(?:(?:[^{}]|(?:\{\{)|(?:\}\}))+)|(?:\{[0-9]+\}))+$/)) {
+    throw new Error("invalid format string.");
+  }
+  return fmt.replace(/((?:[^{}]|(?:\{\{)|(?:\}\}))+)|(?:\{([0-9]+)\})/g, (m, str, index) => {
+    if (str) {
+      return str.replace(/(?:{{)|(?:}})/g, (m) => m[0]);
+    } else {
+      if (index >= args.length) {
+        throw new Error("argument index is out of range in format");
+      }
+      return args[index];
+    }
+  });
 }
 
 export function toLatLongFromWebMercator(coords) {

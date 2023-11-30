@@ -75,11 +75,11 @@ export default class Popup extends Overlay {
       }
 
       if (this.contentIndex + 1 >= this.contentArray.length) {
-        this.contentNextButtonContainer.className = "sc-popup-content-next-button disabled";
+        this.contentNextButtonContainer.className = "sc-popup-content-next-button sc-disabled";
         this.contentPrevButtonContainer.className = "sc-popup-content-prev-button";
       } else if (this.contentIndex - 1 < 0) {
         this.contentNextButtonContainer.className = "sc-popup-content-next-button";
-        this.contentPrevButtonContainer.className = "sc-popup-content-prev-button disabled";
+        this.contentPrevButtonContainer.className = "sc-popup-content-prev-button sc-disabled";
       } else {
         this.contentNextButtonContainer.className = "sc-popup-content-next-button";
         this.contentPrevButtonContainer.className = "sc-popup-content-prev-button";
@@ -103,9 +103,9 @@ export default class Popup extends Overlay {
       }
       if (this.contentIndex - 1 < 0) {
         this.contentNextButtonContainer.className = "sc-popup-content-next-button";
-        this.contentPrevButtonContainer.className = "sc-popup-content-prev-button disabled";
+        this.contentPrevButtonContainer.className = "sc-popup-content-prev-button sc-disabled";
       } else if (this.contentIndex + 1 >= this.contentArray.length) {
-        this.contentNextButtonContainer.className = "sc-popup-content-next-button disabled";
+        this.contentNextButtonContainer.className = "sc-popup-content-next-button sc-disabled";
         this.contentPrevButtonContainer.className = "sc-popup-content-prev-button";
       } else {
         this.contentNextButtonContainer.className = "sc-popup-content-next-button";
@@ -209,7 +209,7 @@ export default class Popup extends Overlay {
       if (this.contentIndex <= 0) {
         // this.contentPrevButton.style.display = "none";
         this.contentNextButtonContainer.className = "sc-popup-content-next-button";
-        this.contentPrevButtonContainer.className = "sc-popup-content-prev-button disabled";
+        this.contentPrevButtonContainer.className = "sc-popup-content-prev-button sc-disabled";
       }
       if (callback) callback();
       return;
@@ -249,8 +249,10 @@ export default class Popup extends Overlay {
     if (header)
       header.addEventListener("mousedown", (evt) => {
         // IGNORE CLOSE BUTTON OR MOBILE
-        var isCloser = evt.target.classList.contains("ol-popup-closer");
-        if (isClosing || isCloser || helpers.isMobile()) {
+        console.log(evt.target.classList);
+        var isHeaderButton = evt.target.classList.contains("ol-popup-closer") || evt.target.classList.contains("ol-popup-previous") || evt.target.classList.contains("ol-popup-next");
+
+        if (isHeaderButton || isHeaderButton || helpers.isMobile()) {
           isMoving = false;
           isClosing = false;
           return;

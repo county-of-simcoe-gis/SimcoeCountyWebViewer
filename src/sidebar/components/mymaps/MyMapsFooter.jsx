@@ -40,7 +40,7 @@ const MyMapsFooter = (props) => {
 					<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-merge-polygons">
 						<FloatingMenuItem imageName={"merge_polygon.png"} label="Merge Polygons" />
 					</MenuItem>
-					<SubMenu title="Export to ...">
+          			<SubMenu title="Export to ..." key="sc-floating-menu-export">
 						<MenuItem className="sc-floating-menu-toolbox-menu-item" key="sc-floating-menu-export-all-to-kml">
 							<FloatingMenuItem label="KML" />
 						</MenuItem>
