@@ -82,7 +82,7 @@ class PropertyReportClick extends Component {
         },
         {
           layerFilter: function (layer) {
-            return layer.get("disableParcelClick") !== true && layer.getVisible() && layer instanceof VectorLayer;
+            return layer.getVisible() && layer instanceof VectorLayer;
           },
         }
       );
