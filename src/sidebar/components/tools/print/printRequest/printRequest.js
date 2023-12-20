@@ -5,7 +5,6 @@ import { asArray } from "ol/color";
 import { FeatureHelpers, LayerHelpers, OL_DATA_TYPES } from "../../../../../helpers/OLHelpers";
 import * as drawingHelpers from "../../../../../helpers/drawingHelpers";
 import { Vector as VectorLayer, Tile as TileLayer, Image as ImageLayer, Group as LayerGroup } from "ol/layer.js";
-
 // ..........................................................................
 // Load Tile matrix and build out WMTS Object
 // ..........................................................................
@@ -252,6 +251,24 @@ const configureWMSImageLayer = (l) => {
   };
 };
 
+const configureWMSTileLayer = (l) => {
+  return {
+    type: "tiledwms",
+    baseURL: l.values_.source.urls[0].split("?")[0],
+    serverType: l.values_.source.serverType_,
+    opacity: l.values_.opacity,
+    layers: [l.values_.source.params_.LAYERS],
+    tileSize: l.values_.source.tmpSize,
+    imageFormat: "image/png",
+    failOnError: true,
+    customParams: {
+      TRANSPARENT: "true",
+      zIndex: l.getZIndex() + l.get("printIndex"),
+    },
+    version: "1.3.0",
+  };
+};
+
 const getLayerByType = async (layer, printoptions, callback = undefined) => {
   if (layer instanceof VectorLayer) {
     //let retLayer = configureVectorMyMapsLayer(layer);
@@ -269,7 +286,12 @@ const getLayerByType = async (layer, printoptions, callback = undefined) => {
     if (callback !== undefined) callback(retLayer);
     else return retLayer;
   } else if (layer instanceof TileLayer) {
-    let retLayer = await configureTileLayer(layer);
+    let retLayer = undefined;
+    if (LayerHelpers.getLayerSourceType(layer.getSource()) === OL_DATA_TYPES.TileWMS) {
+      retLayer = configureWMSTileLayer(layer);
+    } else {
+      retLayer = await configureTileLayer(layer);
+    }
     if (callback !== undefined) callback(retLayer);
     else return retLayer;
   } else if (layer instanceof LayerGroup) {

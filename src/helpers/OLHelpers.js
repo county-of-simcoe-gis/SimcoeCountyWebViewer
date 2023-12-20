@@ -585,13 +585,13 @@ export class LayerHelpers {
     if (source instanceof OSM) return OL_DATA_TYPES.OSM;
     if (source instanceof Vector) return OL_DATA_TYPES.Vector;
     if (source instanceof ImageWMS) return OL_DATA_TYPES.ImageWMS;
+    if (source instanceof TileWMS) return OL_DATA_TYPES.TileWMS;
     if (source instanceof TileArcGISRest) return OL_DATA_TYPES.TileArcGISRest;
     if (source instanceof ImageArcGISRest) return OL_DATA_TYPES.ImageArcGISRest;
     if (source instanceof TileImage) return OL_DATA_TYPES.TileImage;
     if (source instanceof Stamen) return OL_DATA_TYPES.Stamen;
     if (source instanceof ImageStatic) return OL_DATA_TYPES.ImageStatic;
     if (source instanceof WMTS) return OL_DATA_TYPES.WMTS;
-    if (source instanceof TileWMS) return OL_DATA_TYPES.TileWMS;
     if (source instanceof VectorTileSource) return OL_DATA_TYPES.VectorTile;
 
     return "unknown";
@@ -1020,7 +1020,7 @@ export class LayerHelpers {
               params: {
                 VERSION: "1.3.0",
                 LAYERS: layerName,
-                tiled: true,
+                TILED: true,
                 cql_filter: null,
               },
               tileOptions: { crossOriginKeyword: "anonymous" },
