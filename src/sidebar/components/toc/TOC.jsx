@@ -114,7 +114,6 @@ class TOC extends Component {
     if (window.config.toc.default_group !== undefined) defaultGroupName = window.config.toc.default_group;
     let urlDefaultGroupName = helpers.getURLParameter("GROUP", true, true);
     let urlGroupVisibleLayers = helpers.getURLParameter("LAYERS", true, true);
-
     if (urlDefaultGroupName !== null) defaultGroupName = urlDefaultGroupName;
 
     let defaultGroup = layerGroups.filter((item) => item.label === defaultGroupName)[0];
@@ -122,12 +121,14 @@ class TOC extends Component {
     //apply url layer visibility
     if (urlGroupVisibleLayers) {
       defaultGroup["visibleLayers"] = urlGroupVisibleLayers.split(",");
-      defaultGroup.layers = defaultGroup.layers.map((layer) => {
+      let newLayers = defaultGroup.layers.map((layer) => {
         if (defaultGroup.visibleLayers.includes(layer.displayName) || defaultGroup.visibleLayers.includes(layer.name)) {
+          layer.layer.setVisible(true);
           layer.visible = true;
         }
         return layer;
       });
+      defaultGroup = { ...defaultGroup, layers: newLayers };
     }
     if (callback === undefined) return defaultGroup;
     else callback(defaultGroup);
@@ -190,7 +191,6 @@ class TOC extends Component {
     listLayerGroups = this.populateAllLayersGroup("LIST", listLayerGroups);
     //folderLayerGroups = this.populateAllLayersGroup("FOLDER", folderLayerGroups);
     const defaultGroup = this.getDefaultGroup(groupInfo.defaultGroupName, listLayerGroups);
-
     listLayerGroups = listLayerGroups.map((group) => {
       if (group.layers.length > 0) group.layers = this.sortLayers(group.layers);
       return group;
