@@ -12,6 +12,7 @@ import TOCFolderView from "./toc-folder-view/TOCFolderView.jsx";
 import * as helpers from "../../../helpers/helpers";
 import { LayerHelpers } from "../../../helpers/OLHelpers";
 import LegendApp from "../../../legend/App";
+import { get, createObjectURL } from "../../../helpers/api";
 
 class TOC extends Component {
   constructor(props) {
@@ -249,7 +250,7 @@ class TOC extends Component {
           });
           break;
         case "GEOSERVER":
-          TOCHelpers.getGroupsGC(geoserverUrl, geoserverUrlType, isReset, this.state.type, false, true, undefined, (result) => {
+          TOCHelpers.getGroupsGC(geoserverUrl, geoserverUrlType, isReset, this.state.type, false, true, (result) => {
             this.loadGroups(result, isReset, callback);
           });
           break;
@@ -734,28 +735,34 @@ class TOC extends Component {
 
     if (layerInfo.legendImage === null && (layerInfo.legendObj === undefined || layerInfo.legendObj === null)) {
       const params = {};
-      const secureKey = layerInfo.layer.get("secureKey");
-      if (secureKey !== undefined) {
-        params[secureKey] = "GIS";
+      const secured = layerInfo.layer.get("secured");
+      if (secured) {
+        params["useBearerToken"] = true;
       }
-      helpers.getBase64FromImageUrlWithParams(layerInfo.styleUrl, params, (height, imgData) => {
-        const rowHeight = showLegend ? (height += 36) : 30;
-        let newGroup = Object.assign({}, group);
-        let newLayers = Object.assign([], group.layers);
-        layerInfo.showLegend = showLegend;
-        layerInfo.height = rowHeight;
-        layerInfo.legendImage = imgData;
-        layerInfo.legendHeight = rowHeight;
 
-        newLayers = newLayers.map((layer2) => (layer2.name === layerInfo.name ? layerInfo : layer2));
-        newGroup.layers = newLayers;
-        this.setLayerGroups(
-          this.state.type,
-          this.getActiveLayerGroups().map((item) => (item.value === newGroup.value ? newGroup : item)),
-          () => {
-            if (callback !== undefined) callback();
-          }
-        );
+      get(layerInfo.styleUrl, { ...params, type: "blob" }, (results) => {
+        var imgData = createObjectURL(results);
+        const img = new Image();
+        img.onload = () => {
+          let height = img.height;
+          const rowHeight = showLegend ? (height += 36) : 30;
+          let newGroup = Object.assign({}, group);
+          let newLayers = Object.assign([], group.layers);
+          layerInfo.showLegend = showLegend;
+          layerInfo.height = rowHeight;
+          layerInfo.legendImage = imgData;
+          layerInfo.legendHeight = rowHeight;
+          newLayers = newLayers.map((layer2) => (layer2.name === layerInfo.name ? layerInfo : layer2));
+          newGroup.layers = newLayers;
+          this.setLayerGroups(
+            this.state.type,
+            this.getActiveLayerGroups().map((item) => (item.value === newGroup.value ? newGroup : item)),
+            () => {
+              if (callback !== undefined) callback();
+            }
+          );
+        };
+        img.src = imgData;
       });
     } else {
       const rowHeight = showLegend ? layerInfo.legendHeight : 30;

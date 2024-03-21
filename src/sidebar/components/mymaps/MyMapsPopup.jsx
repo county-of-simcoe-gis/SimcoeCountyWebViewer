@@ -36,6 +36,9 @@ const MyMapsPopup = (props) => {
       />
       <MyMapsBuffer visible={props.activeTool === "buffer"} item={props.item} />
       <MyMapsMeasure visible={props.activeTool === "measure"} item={props.item} />
+      {props.extensions.map((ext) => {
+        return ext.component(props);
+      })}
       <FooterButtons
         onMyMapItemToolsButtonClick={(evt) => props.onMyMapItemToolsButtonClick(evt, props.item)}
         onDeleteButtonClick={() => {

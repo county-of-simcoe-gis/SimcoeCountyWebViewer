@@ -130,15 +130,16 @@ const SearchAddresses = (props) => {
       }
 
       helpers.getWFSGeoJSON(
-        searchAddressConfig.serverUrl,
-        searchAddressConfig.layerName,
+        {
+          serverUrl: searchAddressConfig.serverUrl,
+          layerName: searchAddressConfig.layerName,
+          sortField: "stnum,fullname",
+          cqlFilter: sql,
+          count: 1000,
+        },
         (result) => {
           updateFeatures(result);
-        },
-        "stnum,fullname",
-        null,
-        sql,
-        1000
+        }
       );
     });
   };
@@ -210,22 +211,22 @@ const SearchAddresses = (props) => {
     <PanelComponent onClose={onClose} name={props.name} helpLink={props.helpLink} hideHeader={props.hideHeader} type="tools">
       <div className="sc-tool-search-addresses-container">
         <div className="sc-tool-search-addresses-header">Locate civic addresses within the County using the form below.</div>
-        <div className="sc-container sc-theme-search-addresses-controls">
-          <div className="sc-theme-search-addresses-control-row">
-            <label className="sc-theme-search-addresses-control label">Municipality:</label>
-            <div className="sc-theme-search-addresses-control input">
-              <Select id="sc-theme-search-addresses-muni" styles={muniSelectStyle} isSearchable={false} onChange={onMuniChange} options={munis} value={selectedMuni} />
+        <div className="sc-container sc-tool-search-addresses-controls">
+          <div className="sc-tool-search-addresses-control-row">
+            <label className="sc-tool-search-addresses-control label">Municipality:</label>
+            <div className="sc-tool-search-addresses-control input">
+              <Select id="sc-tool-search-addresses-muni" styles={muniSelectStyle} isSearchable={false} onChange={onMuniChange} options={munis} value={selectedMuni} />
             </div>
           </div>
-          <div className="sc-theme-search-addresses-control-row">
-            <label className="sc-theme-search-addresses-control label">Address Number:</label>
-            <div className="sc-theme-search-addresses-control input">
-              <input className="sc-theme-search-addresses-number" type="text" placeholder="Enter Address Number" onClick={onAddressNumberClick} onChange={onAddressNumberChange} />
+          <div className="sc-tool-search-addresses-control-row">
+            <label className="sc-tool-search-addresses-control label">Address Number:</label>
+            <div className="sc-tool-search-addresses-control input">
+              <input className="sc-tool-search-addresses-number" type="text" placeholder="Enter Address Number" onClick={onAddressNumberClick} onChange={onAddressNumberChange} />
             </div>
           </div>
-          <div className="sc-theme-search-addresses-control-row">
-            <label className="sc-theme-search-addresses-control label">Street Name:</label>
-            <div className="sc-theme-search-addresses-control input">
+          <div className="sc-tool-search-addresses-control-row">
+            <label className="sc-tool-search-addresses-control label">Street Name:</label>
+            <div className="sc-tool-search-addresses-control input">
               <MUIAutocomplete
                 id="sc-tool-search-addresses-street-search"
                 freeSolo
@@ -352,11 +353,11 @@ const SearchAddresses = (props) => {
               /> */}
             </div>
           </div>
-          <div className="sc-theme-search-addresses-control-row sc-theme-search-addresses-button-container">
-            <button className="sc-button sc-theme-search-addresses-button" onClick={onSearchClick}>
+          <div className="sc-tool-search-addresses-control-row sc-tool-search-addresses-button-container">
+            <button className="sc-button sc-tool-search-addresses-button" onClick={onSearchClick}>
               Search
             </button>
-            <button className="sc-button sc-theme-search-addresses-button" style={{ marginLeft: "5px" }} onClick={onClearClick}>
+            <button className="sc-button sc-tool-search-addresses-button" style={{ marginLeft: "5px" }} onClick={onClearClick}>
               Clear
             </button>
           </div>

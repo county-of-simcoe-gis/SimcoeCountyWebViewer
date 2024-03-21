@@ -1,6 +1,8 @@
 import React, { Component } from "react";
 import "./MenuButton.css";
 import * as helpers from "../helpers/helpers";
+import { createObjectURL } from "../helpers/api";
+
 import * as htmlToImage from "html-to-image";
 import { transformWithProjections } from "ol/proj";
 import { ImMenu3, ImMenu4 } from "react-icons/im";
@@ -24,11 +26,11 @@ class MenuButton extends Component {
     );
 
     // LISTEN FOR MORE BUTTON
-    window.emitter.addListener("openMoreMenu", () => this.setState({ isOpen: true }));
-
+    if (window.emitter.listeners("openMoreMenu").length === 0) window.emitter.addListener("openMoreMenu", () => this.setState({ isOpen: true }));
     //LISTEN FOR SCREENSHOT EVENT
-    window.emitter.addListener("takeScreenshot", () => this.onScreenshotClick());
-    helpers.waitForLoad("settings", Date.now(), 30, () => {
+    if (window.emitter.listeners("takeScreenshot").length === 0) window.emitter.addListener("takeScreenshot", () => this.onScreenshotClick());
+
+    helpers.waitForLoad(["settings", "security"], Date.now(), 30, () => {
       this.themes = this.getThemes();
       this.others = this.getOthers();
       this.tools = this.getTools();
@@ -40,7 +42,11 @@ class MenuButton extends Component {
     let itemList = [];
     itemList.push(<MenuItem onClick={this.onScreenshotClick} key={helpers.getUID()} name={"Take a Screenshot"} iconClass={"sc-menu-screenshot-icon"} />);
     window.config.sidebarToolComponents.forEach((tool) => {
-      if ((tool.enabled || tool.enabled === undefined) && (tool.disable === false || tool.disable === undefined))
+      if (
+        (tool.enabled || tool.enabled === undefined) &&
+        (tool.disable === false || tool.disable === undefined) &&
+        (tool.secure === undefined || tool.secure === false || (tool.secure && tool.securityKeywords && tool.securityKeywords.some((keyword) => window.security.includes(keyword))))
+      )
         itemList.push(<MenuItem onClick={() => this.itemClick(tool.name, "tools")} key={helpers.getUID()} name={tool.name} iconClass={"sc-menu-tools-icon"} />);
     });
 
@@ -51,7 +57,11 @@ class MenuButton extends Component {
   getThemes = () => {
     let itemList = [];
     window.config.sidebarThemeComponents.forEach((theme) => {
-      if ((theme.enabled || theme.enabled === undefined) && (theme.disable === false || theme.disable === undefined))
+      if (
+        (theme.enabled || theme.enabled === undefined) &&
+        (theme.disable === false || theme.disable === undefined) &&
+        (theme.secure === undefined || theme.secure === false || (theme.secure && theme.securityKeywords && theme.securityKeywords.some((keyword) => window.security.includes(keyword))))
+      )
         itemList.push(<MenuItem onClick={() => this.itemClick(theme.name, "themes")} key={helpers.getUID()} name={theme.name} iconClass={"sc-menu-theme-icon"} />);
     });
     if (itemList === 0 || (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideThemes"])) {
@@ -108,20 +118,44 @@ class MenuButton extends Component {
   };
 
   onScreenshotClick = () => {
-    // console.log("MenuButton - onScreenshotClick");
-    window.map.once("rendercomplete", function () {
-      htmlToImage.toBlob(window.map.getTargetElement()).then(function (blob) {
-        if (navigator.msSaveBlob) {
-          navigator.msSaveBlob(blob, "map.png");
-        } else {
-          const elem = window.document.createElement("a");
-          elem.href = window.URL.createObjectURL(blob);
-          elem.download = "map.png";
-          document.body.appendChild(elem);
-          elem.click();
-          document.body.removeChild(elem);
+    //https://openlayers.org/en/latest/examples/export-map.html
+    window.map.once("rendercomplete", function (event) {
+      const mapCanvas = document.createElement("canvas");
+      const size = window.map.getSize();
+      mapCanvas.width = size[0];
+      mapCanvas.height = size[1];
+      const mapContext = mapCanvas.getContext("2d");
+      Array.prototype.forEach.call(window.map.getViewport().querySelectorAll(".ol-layer canvas, canvas.ol-layer"), function (canvas) {
+        if (canvas.width > 0) {
+          const opacity = canvas.parentNode.style.opacity || canvas.style.opacity;
+          mapContext.globalAlpha = opacity === "" ? 1 : Number(opacity);
+          let matrix;
+          const transform = canvas.style.transform;
+          if (transform) {
+            // Get the transform parameters from the style's transform matrix
+            matrix = transform
+              .match(/^matrix\(([^\(]*)\)$/)[1]
+              .split(",")
+              .map(Number);
+          } else {
+            matrix = [parseFloat(canvas.style.width) / canvas.width, 0, 0, parseFloat(canvas.style.height) / canvas.height, 0, 0];
+          }
+          // Apply the transform to the export map context
+          CanvasRenderingContext2D.prototype.setTransform.apply(mapContext, matrix);
+          const backgroundColor = canvas.parentNode.style.backgroundColor;
+          if (backgroundColor) {
+            mapContext.fillStyle = backgroundColor;
+            mapContext.fillRect(0, 0, canvas.width, canvas.height);
+          }
+          mapContext.drawImage(canvas, 0, 0);
         }
       });
+      mapContext.globalAlpha = 1;
+      mapContext.setTransform(1, 0, 0, 1, 0, 0);
+      const link = document.createElement("a");
+      link.download = "map.png";
+      link.href = mapCanvas.toDataURL();
+      link.click();
     });
 
     window.map.renderSync();

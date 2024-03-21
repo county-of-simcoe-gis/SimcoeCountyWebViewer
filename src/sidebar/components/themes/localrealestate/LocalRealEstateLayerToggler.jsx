@@ -30,26 +30,19 @@ class LocalRealEstateLayerToggler extends Component {
     });
 
     if (urlParam === null) return;
-    helpers.getWFSGeoJSON(
-      this.props.layerConfig.serverUrl,
-      this.props.layerConfig.layerName,
-      (result) => {
-        if (result.length === 0) return;
+    helpers.getWFSGeoJSON({ serverUrl: this.props.layerConfig.serverUrl, layerName: this.props.layerConfig.layerName, cqlFilter: query }, (result) => {
+      if (result.length === 0) return;
 
-        const feature = result[0];
-        const extent = feature.getGeometry().getExtent();
-        const center = getCenter(extent);
-        helpers.zoomToFeature(feature);
-        window.popup.show(
-          center,
-          <LocalRealEstatePopupContent key={helpers.getUID()} feature={feature} photosUrl={this.props.photosUrl} onViewed={this.props.onViewed} />,
-          this.props.layerConfig.displayName
-        );
-      },
-      null,
-      null,
-      query
-    );
+      const feature = result[0];
+      const extent = feature.getGeometry().getExtent();
+      const center = getCenter(extent);
+      helpers.zoomToFeature(feature);
+      window.popup.show(
+        center,
+        <LocalRealEstatePopupContent key={helpers.getUID()} feature={feature} photosUrl={this.props.photosUrl} onViewed={this.props.onViewed} />,
+        this.props.layerConfig.displayName
+      );
+    });
   };
 
   initLayer = () => {
@@ -75,7 +68,7 @@ class LocalRealEstateLayerToggler extends Component {
     this.setState({ styleUrl: styleUrl });
 
     // GET RECORD COUNT
-    helpers.getWFSLayerRecordCount(this.props.layerConfig.serverUrl, this.props.layerConfig.layerName, (count) => {
+    helpers.getWFSLayerRecordCount({ serverUrl: this.props.layerConfig.serverUrl, layerName: this.props.layerConfig.layerName }, (count) => {
       this.setState({ recordCount: count });
     });
 

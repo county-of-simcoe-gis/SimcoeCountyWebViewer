@@ -3,6 +3,8 @@ import Select from "react-select";
 import Collapsible from "react-collapsible";
 import PanelComponent from "../../../PanelComponent";
 import * as helpers from "../../../../helpers/helpers";
+import { post } from "../../../../helpers/api";
+
 import * as printRequest from "./printRequest/printRequest";
 import printConfig from "./config.json";
 import "./Print.css";
@@ -109,16 +111,14 @@ class Print extends Component {
   onDownloadButtonClick = async (evt) => {
     // GET VISIBLE LAYERS
     const printLayers = this.getPrintLayers();
-    let secureKey = undefined;
-    const params = { method: "POST" };
-    const headers = { "Content-Type": "application/json" };
+    let secured = false;
+    const params = {};
     printLayers.forEach((layer) => {
-      secureKey = layer.get("secureKey");
-      if (secureKey !== undefined) {
-        headers[secureKey] = "GIS";
+      secured = layer.get("secured");
+      if (secured) {
+        params["useBearerToken"] = secured;
       }
     });
-    params["headers"] = headers;
 
     // =======================
     // SEND PRINT SERVER REQUEST HERE
@@ -172,13 +172,14 @@ class Print extends Component {
     };
     //post request to server and check status
     params["body"] = encodedPrintRequest;
-    fetch(url, params)
-      .then((response) => response.json())
-      .then((response) => {
+    post(url, params, (response) => {
+      if (typeof response === "string" && response.includes("ERROR"))
+        helpers.showMessage("Print Failed", `There has been a problem with your fetch operation: ${response}`, helpers.messageColors.red, 15000);
+      else {
         this.setState({ isPrinting: true });
         checkStatus(response);
-      })
-      .catch((error) => helpers.showMessage("Print Failed", `There has been a problem with your fetch operation: ${error.message}`, helpers.messageColors.red, 15000));
+      }
+    });
     helpers.addAppStat("Print Button", "Click");
   };
 

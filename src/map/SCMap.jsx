@@ -1,4 +1,4 @@
-import React, { Component, useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, Fragment } from "react";
 import ReactDOM from "react-dom";
 // import GitHubButton from "react-github-btn";
 import GitHubButton from "../components/sc-github-btn";
@@ -35,6 +35,7 @@ import Identify from "./Identify";
 import alertify from "alertifyjs";
 import AttributeTable from "../helpers/AttributeTable.jsx";
 import FloatingImageSlider from "../helpers/FloatingImageSlider.jsx";
+import { fetchExtensions } from "./extensions/_loader.js";
 
 const SCMap = (props) => {
   const scaleLineControl = new ScaleLine({
@@ -54,8 +55,20 @@ const SCMap = (props) => {
   const [gitHubFollowHandle, setGitHubFollowHandle] = useState(null);
   const [gitHubFollowUrl, setGitHubFollowUrl] = useState(null);
   const [gitHubFollowHandleLabel, setGitHubFollowHandleLabel] = useState(null);
+  const extensions = useRef([]);
+  const propertyClickExtensions = useRef([]);
+  const rightClickExtensions = useRef([]);
+
+  const addExtension = (fetchData, dataRows, content, arnExtension, actions, order, type) => {
+    extensions.current.push({ fetchData, dataRows, content, arnExtension, actions, order, type });
+  };
 
   useEffect(() => {
+    fetchExtensions({ addExtension: addExtension }, () => {
+      extensions.current = helpers.sortByKey(extensions.current.concat([]), "order");
+      propertyClickExtensions.current = extensions.current.filter((ext) => ext.type === "property-click");
+      rightClickExtensions.current = extensions.current.filter((ext) => ext.type === "right-click");
+    });
     // LISTEN FOR TOC TO LOAD
     const tocLoadedListener = window.emitter.addListener("tocLoaded", () => handleUrlParameters());
     // LISTEN FOR ATTRIBUTE TABLE SIZE
@@ -207,6 +220,10 @@ const SCMap = (props) => {
               <MenuItem className={window.config.rightClickMenuVisibility["sc-floating-menu-google-maps"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-google-maps">
                 <FloatingMenuItem imageName={"google.png"} label="View in Google Maps" />
               </MenuItem>
+              {rightClickExtensions.current.map((ext) => {
+                return <Fragment key={helpers.getUID()}>{ext.content()}</Fragment>;
+              })}
+
               <MenuItem className={window.config.rightClickMenuVisibility["sc-floating-menu-more"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-more">
                 <FloatingMenuItem imageName={"more-16.png"} label="More..." />
               </MenuItem>
@@ -484,9 +501,13 @@ const SCMap = (props) => {
       case "sc-floating-menu-basic-mode":
         basicMode();
         break;
+
       default:
         break;
     }
+    rightClickExtensions.current.forEach((ext) => {
+      ext.actions({ action: key, geom: new Point(contextCoordsRef.current) });
+    });
 
     helpers.addAppStat("Right Click", key);
   };
@@ -616,7 +637,7 @@ const SCMap = (props) => {
         <Navigation options={props.options} />
         <FooterTools options={props.options} />
         <BMap options={props.options} />
-        <PropertyReportClick />
+        <PropertyReportClick extensions={propertyClickExtensions.current} />
         {window.mapControls && window.mapControls.gitHubButton ? (
           <div
             className={window.sidebarOpen ? "sc-map-github-button slideout" : "sc-map-github-button slidein"}

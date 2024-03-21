@@ -96,7 +96,6 @@ class TOCHeader extends Component {
       this.props.onSearchChange("");
     });
   };
-
   onSearchChange = (evt) => {
     const searchText = evt.target.value;
     this.setState({ searchText: searchText }, () => {

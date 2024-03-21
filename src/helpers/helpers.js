@@ -42,6 +42,8 @@ import ShowWindow from "./ShowWindow.jsx";
 import mainConfig from "../config.json";
 import { InfoRow } from "./InfoRow.jsx";
 import blankImage from "./images/blank.png";
+import { getUserStorage, setUserStorage } from "./storage.js";
+import { get } from "./api";
 
 // REGISTER CUSTOM PROJECTIONS
 proj4.defs([["EPSG:26917", "+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs "]]);
@@ -129,7 +131,6 @@ export function showWindow(contents, options = { title: "Information", showFoote
 
 // SHOW URL WINDOW
 export function showURLWindow(url, showFooter = false, mode = "normal", honorDontShow = false, hideScroll = false) {
-  console.log(url);
   let isSameOrigin = true;
   waitForLoad("settings", Date.now(), 30, () => {
     if (window.config.restrictOriginForUrlWindow) {
@@ -153,31 +154,6 @@ export function getArcGISTiledLayer(url) {
     source: new TileArcGISRest({
       url: url,
       crossOrigin: "anonymous",
-      // tileLoadFunction: function(tile, src) {
-      //   var xhr = new XMLHttpRequest();
-
-      //   // var to = null;
-      //   // var handle = setTimeout(() => {
-      //   //   console.log("image took too long");
-      //   //   to = "yes";
-      //   //   return null;
-      //   // }, 1000);
-      //   // console.log(handle);
-      //   xhr.open("GET", src);
-      //   xhr.responseType = "arraybuffer";
-
-      //   xhr.onload = function() {
-      //     // console.log(handle);
-      //     // console.log(to);
-
-      //     var arrayBufferView = new Uint8Array(this.response);
-      //     var blob = new Blob([arrayBufferView], { type: "image/png" });
-      //     var urlCreator = window.URL || window.webkitURL;
-      //     var imageUrl = urlCreator.createObjectURL(blob);
-      //     tile.getImage().src = imageUrl;
-      //   };
-      //   xhr.send();
-      // },
     }),
     crossOrigin: "anonymous",
   });
@@ -218,7 +194,6 @@ export function getXYZLayer(url) {
 }
 
 export function getSimcoeTileXYZLayer(url) {
-  // console.log(url);
   const resolutions = [
     305.74811314055756, 152.87405657041106, 76.43702828507324, 38.21851414253662, 19.10925707126831, 9.554628535634155, 4.77731426794937, 2.388657133974685, 1.1943285668550503, 0.5971642835598172,
     0.29858214164761665, 0.1492252984505969,
@@ -300,7 +275,6 @@ export function getViewRotation() {
 export function updateWMSRotation() {
   const layers = window.map.getLayers();
   let currentRotation = getViewRotation();
-  console.log(getViewRotation());
   if (layers.array_.length > 0) {
     layers.forEach((layer) => {
       if (layer instanceof ImageLayer) {
@@ -484,18 +458,6 @@ export function showMessage(title = "Info", messageText = "Message", color = mes
       }, timeout);
     }
   );
-
-  //console.log(message);
-  // setTimeout(() => {
-  //   try {
-  //     ReactDOM.unmountComponentAtNode(message.myRef.current.parentNode);
-  //   } catch (err) {
-  //     const domId = "sc-show-message-content";
-  //     var existingMsg = document.getElementById(domId);
-  //     if (existingMsg !== undefined && existingMsg !== null) existingMsg.remove();
-  //     console.log(err);
-  //   }
-  // }, timeout);
 }
 
 export function searchArrayByKey(nameKey, myArray) {
@@ -553,14 +515,12 @@ export async function httpGetTextWait(url, callback) {
   let data = await fetch(url)
     .then((response) => {
       const resp = response.text();
-      //console.log(resp);
       return resp;
     })
     .catch((err) => {
       console.log("Error: ", err);
     });
   if (callback !== undefined) {
-    //console.log(data);
     callback(data);
   }
   return data;
@@ -577,55 +537,6 @@ export function getJSON(url, callback) {
     .catch((error) => {
       console.error("Error: ", error, "URL:", url);
     });
-}
-
-// GET JSON (NO WAITING)
-export function getJSONWithParams(url, params = undefined, callback) {
-  return fetch(url, params)
-    .then((response) => response.json())
-    .then((responseJson) => {
-      // CALLBACK WITH RESULT
-      if (callback !== undefined) callback(responseJson);
-    })
-    .catch((error) => {
-      console.error("Error: ", error, "URL:", url);
-    });
-}
-// GET JSON WAIT
-export async function getJSONWaitWithParams(url, params = undefined, callback) {
-  let data = await await fetch(url, params)
-    .then((res) => {
-      const resp = res.json();
-      //console.log(resp);
-      return resp;
-    })
-    .catch((err) => {
-      console.log("Error: ", err, "URL:", url);
-    });
-  if (callback !== undefined) {
-    //console.log(data);
-    callback(data);
-  }
-
-  return await data;
-}
-// GET JSON WAIT
-export async function getJSONWait(url, callback) {
-  let data = await await fetch(url)
-    .then((res) => {
-      const resp = res.json();
-      //console.log(resp);
-      return resp;
-    })
-    .catch((err) => {
-      console.log("Error: ", err, "URL:", url);
-    });
-  if (callback !== undefined) {
-    //console.log(data);
-    callback(data);
-  }
-
-  return await data;
 }
 
 export function getObjectFromXMLUrl(url, callback) {
@@ -668,7 +579,8 @@ export function getWFSVectorSource(serverUrl, layerName, callback, sortField = "
 }
 
 //https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Bag%20Tag%20Locations&outputFormat=application/json
-export function getWFSGeoJSON(serverUrl, layerName, callback, sortField = null, extent = null, cqlFilter = null, count = null) {
+export function getWFSGeoJSON(options, callback) {
+  const { serverUrl, layerName, sortField = null, extent = null, cqlFilter = null, count = null, secure = false } = options;
   // SORTING
   let additionalParams = "";
   if (sortField !== null) additionalParams += "&sortBy=" + sortField;
@@ -694,18 +606,18 @@ export function getWFSGeoJSON(serverUrl, layerName, callback, sortField = null, 
   // USE TEMPLATE FOR READABILITY
   const wfsUrlTemplate = (serverURL, layerName) => `${serverURL}wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerName}&maxFeatures=Y&outputFormat=application/json`;
   const wfsUrl = wfsUrlTemplate(serverUrl, layerName) + additionalParams;
-  getJSON(wfsUrl, (result) => {
+  get(wfsUrl, { useBearerToken: secure }, (result) => {
     const geoJSON = new GeoJSON().readFeatures(result);
     callback(geoJSON);
   });
 }
 
-export function getWFSLayerRecordCount(serverUrl, layerName, callback) {
+export function getWFSLayerRecordCount(options, callback) {
+  let { serverUrl, layerName, secured } = options;
+  if (secured === undefined) secured = false;
   const recordCountUrlTemplate = (serverURL, layerName) => `${serverURL}wfs?REQUEST=GetFeature&VERSION=1.1&typeName=${layerName}&RESULTTYPE=hits`;
   const recordCountUrl = recordCountUrlTemplate(serverUrl, layerName);
-  console.log("getWFSLayerRecordCount - url", recordCountUrl);
   getObjectFromXMLUrl(recordCountUrl, (result) => {
-    console.log("getWFSLayerRecordCount - result", result);
     callback(result["wfs:FeatureCollection"]["$"].numberOfFeatures);
   });
 }
@@ -822,55 +734,10 @@ function pulsate(vectorLayer, color, feature, duration, mstyle, callback) {
 
     window.map.render();
   });
-
-  // var key = window.map.on("postrender", function(event) {
-  //   console.log(event);
-  //   //var vectorContext = getVectorContext(event);
-  //   if (event.vectorContext === undefined) return;
-  //   var vectorContext = event.vectorContext;
-  //   var frameState = event.frameState;
-  //   var flashGeom = feature.getGeometry().clone();
-  //   var elapsed = frameState.time - start;
-  //   var elapsedRatio = elapsed / duration;
-  //   var radius = easeOut(elapsedRatio) * 35 + 5;
-  //   var opacity = easeOut(1 - elapsedRatio);
-  //   var fillOpacity = easeOut(0.5 - elapsedRatio);
-
-  //   vectorContext.setStyle(
-  //     new Style({
-  //       image: new CircleStyle({
-  //         radius: radius,
-  //         snapToPixel: false,
-  //         fill: new Fill({
-  //           color: "rgba(119, 170, 203, " + fillOpacity + ")"
-  //         }),
-  //         stroke: new Stroke({
-  //           color: "rgba(119, 170, 203, " + opacity + ")",
-  //           width: 2 + opacity
-  //         })
-  //       })
-  //     })
-  //   );
-
-  //   vectorContext.drawGeometry(flashGeom);
-
-  //   // Draw the marker (again)
-  //   vectorContext.setStyle(mstyle);
-  //   vectorContext.drawGeometry(feature.getGeometry());
-
-  //   if (elapsed > duration) {
-  //     unByKey(key);
-  //     //pulsate(color, feature, duration); // recursive function
-  //     callback();
-  //   }
-
-  //   window.map.render();
-  // });
 }
 
 export function centerMap(coords, zoom) {
   var extent = window.map.getView().calculateExtent();
-  console.log(extent);
   var xMin = extent[0];
   var xMax = extent[2];
   var total = (Math.abs(xMin) - Math.abs(xMax)) * 0.04;
@@ -946,7 +813,6 @@ export function createTextStyle(
   outlineColor = "black",
   outlineWidth = 1
 ) {
-  //console.log(align)
   offsetX = parseInt(offsetX, 10);
   offsetY = parseInt(offsetY, 10);
   maxAngleDegrees = parseFloat(maxAngleDegrees * 0.0174533);
@@ -968,8 +834,6 @@ export function createTextStyle(
     overflow: overflow,
     rotation: rotation,
   });
-
-  //console.log(texts)
   return texts;
 }
 
@@ -1017,6 +881,16 @@ export function saveToStorage(storageKey, item) {
     console.log(e);
     cleanupStorage();
   }
+  if (window.security.includes("saveToServer")) setUserStorage();
+}
+export function removeFromStorage(storageKey) {
+  try {
+    window.localStorage.removeItem(storageKey);
+  } catch (e) {
+    console.log(e);
+    cleanupStorage();
+  }
+  if (window.security.includes("saveToServer")) setUserStorage();
 }
 export function cleanupStorage() {
   const keys = ["searchHistory"];
@@ -1035,6 +909,7 @@ export function cleanupStorage() {
     }
     window.localStorage.setItem(key, localStore);
   });
+  if (window.security.includes("saveToServer")) setUserStorage();
 }
 
 export function appendToStorage(storageKey, item, limit = undefined) {
@@ -1051,15 +926,25 @@ export function appendToStorage(storageKey, item, limit = undefined) {
     console.log(e);
     cleanupStorage();
   }
+  if (window.security.includes("saveToServer")) setUserStorage();
 }
 
 export function getItemsFromStorage(key) {
-  const storage = window.localStorage.getItem(key);
-  if (storage === null) return undefined;
-  try {
-    return JSON.parse(storage);
-  } catch (e) {
-    return storage;
+  if (window.security.includes("saveToServer") && !window.isUserStoreLoaded) {
+    getUserStorage(() => {
+      const storage = window.localStorage.getItem(key);
+      if (storage === null) return undefined;
+      const data = JSON.parse(storage);
+      return data;
+    });
+  } else {
+    const storage = window.localStorage.getItem(key);
+    if (storage === null) return undefined;
+    try {
+      return JSON.parse(storage);
+    } catch (e) {
+      return storage;
+    }
   }
 }
 
@@ -1123,18 +1008,23 @@ export function getWKTFeature(wktString) {
 export function getWKTStringFromFeature(feature) {
   var wkt = new WKT();
   const wktString = wkt.writeFeature(feature);
-  //console.log(wktString);
   return wktString;
+}
 
-  // if (wktString === undefined) return;
-
-  // // READ WKT
-  // var wkt = new WKT();
-  // var feature = wkt.readFeature(wktString, {
-  //   dataProjection: "EPSG:3857",
-  //   featureProjection: "EPSG:3857"
-  // });
-  // return feature;
+export function formatReplace(fmt, ...args) {
+  if (!fmt.match(/^(?:(?:(?:[^{}]|(?:\{\{)|(?:\}\}))+)|(?:\{[0-9]+\}))+$/)) {
+    throw new Error("invalid format string.");
+  }
+  return fmt.replace(/((?:[^{}]|(?:\{\{)|(?:\}\}))+)|(?:\{([0-9]+)\})/g, (m, str, index) => {
+    if (str) {
+      return str.replace(/(?:{{)|(?:}})/g, (m) => m[0]);
+    } else {
+      if (index >= args.length) {
+        throw new Error("argument index is out of range in format");
+      }
+      return args[index];
+    }
+  });
 }
 
 export function toLatLongFromWebMercator(coords) {
@@ -1517,7 +1407,6 @@ export function waitForLoad(items, startTime = Date.now(), timeout = 30, callbac
     console.error("timeout loading", items);
   } else {
     if (isLoaded(items)) {
-      //console.log("wait for load", items, Date.now() - startTime);
       callback();
     } else {
       setTimeout(() => waitForLoad(items, startTime, timeout, callback), 50);
@@ -1542,7 +1431,7 @@ export function removeIsLoaded(item) {
   if (window.loaded.includes(item.toLowerCase())) window.loaded.splice(window.loaded.indexOf(item.toLowerCase()), 1);
 }
 
-export function loadConfig(callback) {
+export function loadConfig(configSecured = {}, callback) {
   const storageMapDefaultsKey = "Map Defaults";
 
   //url parameters
@@ -1552,6 +1441,8 @@ export function loadConfig(callback) {
 
   //get url parameters
   let config = mainConfig;
+  config["configSecured"] = configSecured;
+
   //let localSettings = localStorage;
   //config = mergeObj(config, localSettings);
 
@@ -1616,10 +1507,12 @@ export function loadConfig(callback) {
   if (config.useMapConfigApi || (mapId !== null && mapId !== undefined && mapId.trim() !== "")) {
     config.toc["loaderType"] = "MAPID";
     const mapSettingURL = (apiUrl, mapId) => {
-      if (mapId === null || mapId === undefined || mapId.trim() === "") return `${apiUrl}public/map/default`;
-      else return `${apiUrl}public/map/${mapId}`;
+      if (mapId === null || mapId === undefined || mapId.trim() === "") return `${apiUrl}/map/default`;
+      else return `${apiUrl}/map/${mapId}`;
     };
-    getJSON(mapSettingURL(config.apiUrl, mapId), (result) => {
+    const apiUrl = configSecured.apiUrlSecured ? `${configSecured.apiUrlSecured}secure` : `${config.apiUrl}public`;
+    const url = mapSettingURL(apiUrl, mapId);
+    get(url, { useBearerToken: configSecured.apiUrlSecured !== undefined ? true : false }, (result) => {
       if (result.json === undefined) {
         setTimeout(() => {
           showMessage("Map ID Failed", "Map ID failed to load", messageColors.red);
@@ -1705,14 +1598,12 @@ export function mergeObjArray(targetArray, sourceArray) {
 }
 export function mergeObj(targetObj, sourceObj, append = false) {
   Object.keys(sourceObj).forEach((key) => {
-    if (key !== "__proto__" && key !== "constructor") {
-      if (typeof targetObj[key] === "object" && !(targetObj[key] instanceof Array)) {
-        targetObj[key] = mergeObj(targetObj[key], sourceObj[key]);
-      } else {
-        if (targetObj[key] instanceof Array && append) {
-          targetObj[key] = [].concat(sourceObj[key], targetObj[key]);
-        } else targetObj[key] = sourceObj[key];
-      }
+    if (typeof targetObj[key] === "object" && !(targetObj[key] instanceof Array)) {
+      targetObj[key] = mergeObj(targetObj[key], sourceObj[key]);
+    } else {
+      if (targetObj[key] instanceof Array && append) {
+        targetObj[key] = [].concat(sourceObj[key], targetObj[key]);
+      } else targetObj[key] = sourceObj[key];
     }
   });
   return targetObj;

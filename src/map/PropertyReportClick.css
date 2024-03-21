@@ -1,17 +1,26 @@
 .sc-property-report-click-more-info {
-	width: 150px;
-	margin-right: 5px;
-	margin-top: 5px;
+  width: 150px;
+  margin-right: 5px;
+  margin-top: 5px;
 }
 .sc-property-report-click-close {
-	width: 100px;
+  width: 100px;
 }
 
 .sc-property-report-top-container {
-	position: relative;
-	top: 0px;
-	bottom: 0px;
-	overflow-x: hidden;
-	overflow-y: auto;
-	max-height: 200px;
+  position: relative;
+  top: 0px;
+  bottom: 0px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 200px;
+}
+
+.sc-property-report-click-propertylink {
+  width: 99%;
+  margin-top: 5px;
+}
+.sc-property-report-click-start-ticket {
+  width: 99%;
+  margin-top: 5px;
 }
