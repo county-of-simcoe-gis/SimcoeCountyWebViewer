@@ -47,6 +47,7 @@ const ThemeLayerToggler = (props) => {
           queryable: true,
         });
         if (config.toggleLayersKey) layer.setProperties({ themeKey: config.toggleLayersKey });
+        layer.setZIndex(layerConfig.zIndex);
         layer.setVisible(layerConfig.visible);
         window.map.addLayer(layer);
         layerRef.current = layer;
@@ -69,7 +70,7 @@ const ThemeLayerToggler = (props) => {
         if (url) {
           get(url, { useBearerToken: layerConfig.secure || false }, (result) => {
             const features = result.features;
-            if (!features) {
+            if (!features || features.length === 0) {
               return;
             }
 
