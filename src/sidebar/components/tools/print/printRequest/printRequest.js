@@ -333,6 +333,7 @@ const switchTemplates = (options, callback = undefined) => {
   const rotation = 0;
   const dpi = parseInt(options.mapResolutionOption);
   let printSize = options.printSizeSelectedOption.size === [] ? window.map.getSize() : options.printSizeSelectedOption.size;
+  const parameters = options.options.parameters || [];
 
   const attributes = {
     title: options.mapTitle,
@@ -343,6 +344,11 @@ const switchTemplates = (options, callback = undefined) => {
     },
     scale: "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
   };
+  if (parameters !== undefined) {
+    parameters.forEach((item) => {
+      attributes[item.name] = item.value;
+    });
+  }
   attributes.map.projection = mapProjection;
   attributes.map.longitudeFirst = longitudeFirst;
   attributes.map.rotation = rotation;
@@ -402,6 +408,8 @@ export async function printRequest(mapLayers, printSelectedOption) {
     dpi: parseInt(printSelectedOption.mapResolutionOption),
     compressed: true,
   };
+  printRequest["parameters"] = printSelectedOption.options.parameters || [];
+
   printRequest.outputFormat = printSelectedOption.printFormatSelectedOption.value;
   //ensures that template configuration is executed before print request object is sent
   printRequest.attributes = switchTemplates(printSelectedOption);
@@ -411,7 +419,6 @@ export async function printRequest(mapLayers, printSelectedOption) {
   let overviewMap = [];
   let sortedMainMap = [];
   let sortedOverviewMap = [];
-
   //iterate through each map layer passed in the window.map
   let layerOrder = 0;
   mapLayers.forEach((layer) => {

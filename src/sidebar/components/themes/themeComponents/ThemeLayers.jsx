@@ -5,7 +5,7 @@ import ThemeLayerToggler from "./ThemeLayerToggler.jsx";
 import ThemeServiceToggler from "./ThemeServiceToggler.jsx";
 
 const ThemeLayers = (props) => {
-  const [checked, setChecked] = useState(false);
+  const [checked, setChecked] = useState(props.config.toggleVisibleAll || false);
   const [toggleServices, setToggleServices] = useState(props.config.toggleServices || []);
   const [toggleLayers, setToggleLayers] = useState(props.config.toggleLayers || []);
 

@@ -39,6 +39,7 @@ class Print extends Component {
       isPrinting: false,
       termsOfUse: printConfig.termsOfUse,
       mapResolutionOption: "120",
+      options: this.props.options || {},
     };
   }
 
@@ -50,7 +51,11 @@ class Print extends Component {
       if (globalConfig.config !== undefined) {
         const defaultSizes = this.config.printSizes;
         this.config = helpers.mergeObj(this.config, globalConfig.config);
-        this.config.printSizes = [...new Set([...defaultSizes, ...printConfig.printSizes])];
+        if (printConfig.overwrite) this.config.printSizes = [...new Set([...printConfig.printSizes])];
+        else {
+          if (printConfig.append === undefined || printConfig.append) this.config.printSizes = [...new Set([...defaultSizes, ...printConfig.printSizes])];
+          else this.config.printSizes = [...new Set([...printConfig.printSizes, ...defaultSizes])];
+        }
       }
       this.setState({
         printUrl: mainConfig.printUrl,

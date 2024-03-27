@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
-import "./ThemeLayerToggler.css";
+import React, { useState, useEffect, useRef, Fragment } from "react";
+import "./ThemeServiceToggler.css";
 import * as helpers from "../../../../helpers/helpers";
-import { getAppAccessToken } from "../../../../helpers/esriHelpers";
+import { getAppAccessToken, getAccessToken } from "../../../../helpers/esriHelpers";
 
 import { get } from "../../../../helpers/api";
 
@@ -19,6 +19,7 @@ const ThemeServiceToggler = (props) => {
   const processLayers = (capabilities) => {
     let layerArray = [];
     let zIndex = props.serviceConfig.zIndex || 1000;
+    if (props.serviceConfig.layers) capabilities = capabilities.filter((layer) => props.serviceConfig.layers.includes(layer.id));
     capabilities.forEach((layer) => {
       const hasAttachments = layer.hasAttachments;
       const layerOptions = {
@@ -31,6 +32,7 @@ const ThemeServiceToggler = (props) => {
         extent: layer.extent,
         name: layer.name,
       };
+      if (props.config.toggleVisibleAll) layer.defaultVisibility = props.config.toggleVisibleAll;
       if (layer.grouped) {
         layerOptions["layers"] = layer.layers;
         layerOptions.sourceType = OL_DATA_TYPES.LayerGroup;
@@ -107,13 +109,26 @@ const ThemeServiceToggler = (props) => {
 
   useEffect(() => {
     if (props.serviceConfig.secure)
-      getAppAccessToken(props.serviceConfig.serviceUrl, (accessToken) => {
-        setToken(accessToken);
-        LayerHelpers.getCapabilities({ root_url: props.serviceConfig.serviceUrl, type: "rest", secured: props.serviceConfig.secured, token: accessToken.access_token }, (returnLayers) => {
-          //console.log(returnLayers);
+      if (props.serviceConfig.tokenType === "app")
+        getAppAccessToken(props.serviceConfig.serviceUrl, (accessToken) => {
+          setToken(accessToken);
+          LayerHelpers.getCapabilities({ root_url: props.serviceConfig.serviceUrl, type: "rest", secured: props.serviceConfig.secured, token: accessToken.access_token }, (returnLayers) => {
+            //console.log(returnLayers);
+            processLayers(returnLayers);
+          });
+        });
+      else if (props.serviceConfig.tokenType === "user")
+        getAccessToken((token) => {
+          setToken(token);
+          LayerHelpers.getCapabilities({ root_url: props.serviceConfig.serviceUrl, type: "rest", secured: props.serviceConfig.secured, token: token }, (returnLayers) => {
+            //console.log(returnLayers);
+            processLayers(returnLayers);
+          });
+        });
+      else
+        LayerHelpers.getCapabilities({ root_url: props.serviceConfig.serviceUrl, type: "rest" }, (returnLayers) => {
           processLayers(returnLayers);
         });
-      });
     else
       LayerHelpers.getCapabilities({ root_url: props.serviceConfig.serviceUrl, type: "rest" }, (returnLayers) => {
         processLayers(returnLayers);
@@ -138,20 +153,45 @@ const ThemeServiceToggler = (props) => {
   );
 };
 
+const ThemeServiceLegend = (props) => {
+  const legends = props.legend.filter((item) => item.imageData !== undefined);
+  if (legends.length === 1) {
+    return <img src={`data:${legends[0].contentType};base64,${legends[0].imageData}`} alt="style" />;
+  } else if (legends.length > 1) {
+    return (
+      <ul className="sc-theme-service-legend-container">
+        {legends
+          .filter((item) => item.imageData !== undefined)
+          .map((legend) => (
+            <li key={helpers.getUID()}>
+              <img src={`data:${legend.contentType};base64,${legend.imageData}`} alt="style" />
+              <label>{legend.label}</label>
+            </li>
+          ))}
+      </ul>
+    );
+  } else {
+    return null;
+  }
+};
 const ThemeServiceTogglerItem = (props) => {
   const [visible, setVisible] = useState(true);
-  const [layer, setLayer] = useState(props.layer);
+  // const [layer, setLayer] = useState(props.layer);
   const [recordCount, setRecordCount] = useState(0);
   const [styleUrl, setStyleUrl] = useState("");
+  const [legend, setLegend] = useState([{}]);
   const [mapClickEvent, setMapClickEvent] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  const [showLegend, setShowLegend] = useState(false);
+  const layerRef = useRef(props.layer);
   const init = () => {
     setVisible(props.layerConfig.defaultVisibility);
-    setStyleUrl(`data:${props.layerConfig.legend.legend[0].contentType};base64,${props.layerConfig.legend.legend[0].imageData}`);
+    if (props.layerConfig.legend) setLegend(props.layerConfig.legend.legend);
+    if (props.layerConfig.legend) setStyleUrl(`data:${props.layerConfig.legend.legend[0].contentType};base64,${props.layerConfig.legend.legend[0].imageData}`);
     getRecordCount();
     setupMapClick();
-    if (props.config.toggleLayersKey) layer.setProperties({ themeKey: props.config.toggleLayersKey });
-    window.map.addLayer(layer);
+    if (props.config.toggleLayersKey) layerRef.current.setProperties({ themeKey: props.config.toggleLayersKey });
+    window.map.addLayer(layerRef.current);
     setIsLoading(false);
   };
 
@@ -160,9 +200,10 @@ const ThemeServiceTogglerItem = (props) => {
       setMapClickEvent(window.map.on("click", props.onMapClick));
     } else {
       const clickEvent = (evt) => {
-        if (window.isDrawingOrEditing || !visible || window.isCoordinateToolOpen || window.isMeasuring) return;
+        if (window.isDrawingOrEditing || !visible || window.isCoordinateToolOpen || window.isMeasuring || !layerRef.current) return;
         var viewResolution = window.map.getView().getResolution();
-        var url = layer.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", {
+        console.log("setupMapClick", layerRef.current.getSource());
+        var url = layerRef.current.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", {
           INFO_FORMAT: "application/json",
         });
         if (url) {
@@ -188,24 +229,27 @@ const ThemeServiceTogglerItem = (props) => {
     }
   };
   const getRecordCount = () => {
-    const url = layer.get("recordCountUrl");
+    const url = layerRef.current.get("recordCountUrl");
     helpers.getJSON(url, (result) => {
       if (result.count) setRecordCount(result.count);
     });
   };
   const onCheckboxChange = (isChecked) => {
     setVisible(isChecked);
-    layer.setVisible(isChecked);
-    props.onLayerVisiblityChange(layer);
+    layerRef.current.setVisible(isChecked);
+    props.onLayerVisiblityChange(layerRef.current);
   };
   const cleanup = () => {
-    window.map.removeLayer(layer);
+    window.map.removeLayer(layerRef.current);
     unByKey(mapClickEvent);
   };
 
   useEffect(() => {
     if (!isLoading) onCheckboxChange(props.showAll);
   }, [props.showAll]);
+  useEffect(() => {
+    layerRef.current = props.layer;
+  }, [props.layer]);
 
   useEffect(() => {
     //  console.log(layer);
@@ -214,13 +258,30 @@ const ThemeServiceTogglerItem = (props) => {
       cleanup();
     };
   }, []);
+
+  const LegendToggle = (props) => {
+    const legends = props.legend.filter((item) => item.imageData !== undefined);
+    if (legends.length === 1) {
+      return <img src={`data:${legends[0].contentType};base64,${legends[0].imageData}`} alt="style" />;
+    } else if (legends.length > 1) {
+      return (
+        <div className="sc-theme-service-item-plus-minus-container" onClick={() => setShowLegend(!showLegend)}>
+          {!showLegend ? "+" : "-"}
+          <div className="sc-toc-item-plus-minus-sign" />
+          <div className="sc-toc-item-lines-expanded" />
+        </div>
+      );
+    } else {
+      return null;
+    }
+  };
   return (
-    <div className="sc-theme-layer-container">
-      <div className={"sc-theme-layer-toggler-symbol"}>
-        <img src={styleUrl} alt="style" />
+    <div className="sc-theme-service-container">
+      <div className={"sc-theme-service-toggler-symbol"}>
+        <LegendToggle legend={legend} key={helpers.getUID()} />
       </div>
       <div className={""}>
-        <label className={"sc-theme-layer-toggler-label"}>
+        <label className={"sc-theme-service-toggler-label"}>
           <input
             type="checkbox"
             checked={visible}
@@ -231,8 +292,15 @@ const ThemeServiceTogglerItem = (props) => {
           />
           {props.layerConfig.name}
         </label>
-        <label className={"sc-theme-layer-toggler-count"}>{" (" + recordCount + ")"}</label>
+        <label className={"sc-theme-service-toggler-count"}>{" (" + recordCount + ")"}</label>
       </div>
+
+      <div className={showLegend ? "sc-theme-service-info-container" : "sc-hidden"}>
+        <div className="sc-toc-item-layer-info-container-open-vertical-lines" />
+        <div className="sc-toc-item-layer-info-container-open-horizontal-lines" />
+        <ThemeServiceLegend legend={legend} key={helpers.getUID()} />
+      </div>
+      {/* <img src={styleUrl} alt="style" /> */}
 
       <div>{props.children}</div>
     </div>

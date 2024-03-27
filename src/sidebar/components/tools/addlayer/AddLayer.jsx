@@ -232,8 +232,7 @@ class AddLayerForm extends Component {
               layers.forEach((layer) => {
                 if (this.state.serverUrl.toLowerCase().indexOf("wmsserver") !== -1) {
                   layer["INFO_FORMAT"] = addLayerConfig.arcgis.INFO_FORMAT;
-                  layer["XSL_TEMPLATE"] =
-                    addLayerConfig.arcgis.XSL_TEMPLATE.indexOf("http") === -1 ? window.location.pathname + addLayerConfig.arcgis.XSL_TEMPLATE : addLayerConfig.arcgis.XSL_TEMPLATE;
+                  layer["XSL_TEMPLATE"] = addLayerConfig.arcgis.XSL_TEMPLATE.indexOf("http") === -1 ? `/${window.homepage}/${addLayerConfig.arcgis.XSL_TEMPLATE}` : addLayerConfig.arcgis.XSL_TEMPLATE;
                 }
 
                 selectLayers.push(layer);
@@ -304,7 +303,7 @@ class AddLayerForm extends Component {
                   foundLayers.forEach((layer) => {
                     if (selectedService.INFO_FORMAT) layer["INFO_FORMAT"] = selectedService.INFO_FORMAT;
                     if (selectedService.XSL_TEMPLATE)
-                      layer["XSL_TEMPLATE"] = selectedService.XSL_TEMPLATE.indexOf("http") === -1 ? window.location.pathname + selectedService.XSL_TEMPLATE : selectedService.XSL_TEMPLATE;
+                      layer["XSL_TEMPLATE"] = selectedService.XSL_TEMPLATE.indexOf("http") === -1 ? `/${window.homepage}/${selectedService.XSL_TEMPLATE}` : selectedService.XSL_TEMPLATE;
                     serviceLayers.push(layer);
                   });
                 }
