@@ -1025,7 +1025,7 @@ export class LayerHelpers {
                 tiled: true,
                 cql_filter: null,
               },
-              tileOptions: { crossOriginKeyword: "anonymous" },
+              // tileOptions: { crossOriginKeyword: "anonymous" },
               ratio: 1,
               hidpi: false,
               serverType: "geoserver",

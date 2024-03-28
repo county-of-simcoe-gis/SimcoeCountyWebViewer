@@ -248,7 +248,6 @@ class PropertyReportClick extends Component {
     const address = propInfo.Address;
     const assessedValue = propInfo.AssessedValue;
     const garbageDay = propInfo.WasteCollection && propInfo.WasteCollection.GarbageDay ? propInfo.WasteCollection.GarbageDay : undefined;
-    const garbageDayNew = propInfo.WasteCollection.GarbageDayNew ? propInfo.WasteCollection.GarbageDayNew : undefined;
 
     const broadbandSpeeds = propInfo.Other && propInfo.Other.BroadbandSpeed ? propInfo.Other.BroadbandSpeed : undefined;
     const coords = propInfo.pointCoordinates;
@@ -306,7 +305,6 @@ class PropertyReportClick extends Component {
       );
 
     if (garbageDay) rows.push(<InfoRow key={helpers.getUID()} label={"Waste Collection Day"} value={garbageDay} />);
-    if (garbageDayNew) rows.push(<InfoRow key={helpers.getUID()} label={"Waste Collection Day - Dec 2023"} value={garbageDayNew} />);
 
     if (broadbandSpeeds) rows.push(<InfoRow key={helpers.getUID()} label={"Potential Broadband Coverage"} value={broadbandSpeeds} />);
 
