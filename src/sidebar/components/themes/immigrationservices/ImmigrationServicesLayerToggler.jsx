@@ -26,7 +26,7 @@ class ImmigrationServicesLayerToggler extends Component {
     this.setState({ styleUrl: styleUrl });
 
     // RECORD COUNT
-    helpers.getWFSLayerRecordCount(this.props.layer.serverUrl, this.props.layer.layerName, (count) => {
+    helpers.getWFSLayerRecordCount({ serverUrl: this.props.layer.serverUrl, layerName: this.props.layer.layerName }, (count) => {
       this.setState({ recordCount: count });
     });
 

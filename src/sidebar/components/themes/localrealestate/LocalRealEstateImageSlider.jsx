@@ -102,21 +102,14 @@ class LocalRealEstateImageSlider extends Component {
   initLayer = () => {
     this.props.config.layers.forEach((layer) => {
       if (layer.displayName === "All") {
-        helpers.getWFSGeoJSON(
-          layer.serverUrl,
-          layer.layerName,
-          (result) => {
-            if (result.length === 0) return;
+        helpers.getWFSGeoJSON({ serverUrl: layer.serverUrl, layerName: layer.layerName }, (result) => {
+          if (result.length === 0) return;
 
-            this.vectorSource = new VectorSource({
-              features: result,
-            });
-            this.updateFeatures();
-          },
-          null,
-          null,
-          null
-        );
+          this.vectorSource = new VectorSource({
+            features: result,
+          });
+          this.updateFeatures();
+        });
       }
     });
   };

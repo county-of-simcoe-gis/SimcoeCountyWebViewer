@@ -9,7 +9,6 @@ import Reports from "./components/reports/Reports";
 import MyMaps from "./components/mymaps/MyMaps";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
-// import SidebarComponent from "react-sidebar";
 import SidebarComponent from "../components/sc-sidebar.jsx";
 import SidebarSlim from "./SidebarSlim.jsx";
 import MenuButton from "./MenuButton.jsx";

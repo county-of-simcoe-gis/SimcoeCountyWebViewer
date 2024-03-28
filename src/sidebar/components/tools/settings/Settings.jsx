@@ -4,7 +4,7 @@ import { ClearLocalStorageButton, ClearLocalStorageButtonGrouped } from "./Setti
 import * as helpers from "../../../../helpers/helpers";
 import PanelComponent from "../../../PanelComponent";
 import settingsConfig from "./config.json";
-const microsoftLoginKey = "login.microsoftonline.com";
+import { setUserStorage, clearUserStorage } from "../../../../helpers/storage.js";
 
 class Settings extends Component {
   constructor(props) {
@@ -22,6 +22,7 @@ class Settings extends Component {
     this.storageKey = "Settings";
     this.storageKeyMapControls = "Map Control Settings";
   }
+
   componentDidMount() {
     //wait for map to load
     helpers.waitForLoad("map", Date.now(), 30, () => this.onMapLoad());
@@ -97,15 +98,24 @@ class Settings extends Component {
     helpers.saveToStorage(this.storageKeyMapControls, window.mapControls);
   };
 
+  reloadPage = () => {
+    window.location.reload();
+  };
   clearLocalData = (key) => {
     if (key === "ALL") {
-      localStorage.clear();
+      if (window.security.includes("saveToServer"))
+        clearUserStorage(() => {
+          localStorage.clear();
+        });
+      else localStorage.clear();
       helpers.showMessage("Local Data Cleared", "Your local data has been cleared. Page will now reload.");
       setTimeout(() => {
-        window.location.reload();
-      }, 2000);
+        this.reloadPage();
+      }, 1500);
     } else {
-      localStorage.removeItem(key);
+      helpers.removeFromStorage(key);
+      //localStorage.removeItem(key);
+      if (window.security.includes("saveToServer")) setUserStorage();
       helpers.showMessage("Local Data Removed", "Your local data has been cleared. You may need to reload your page to see any changes.");
     }
   };
@@ -265,27 +275,33 @@ class Settings extends Component {
             <div className="sc-title sc-settings-title">LOCAL STORAGE</div>
             <div className="sc-container">
               <div className="sc-settings-row sc-arrow">
+                <button name="reloadPage" title="Reload the page." className="sc-button" onClick={() => this.reloadPage()}>
+                  Reload this Page
+                </button>
+              </div>
+              <div className="sc-settings-divider" />
+              <div className="sc-settings-row sc-arrow">
                 <button name="clearLocalStorage" title="Clear all cached settings and reload the page." className="sc-button" onClick={() => this.clearLocalData("ALL")}>
                   Clear All Saved Data
                 </button>
               </div>
               <div className="sc-settings-divider" />
-              {Object.keys(localStorage)
-                .filter((key) => {
-                  return key.indexOf(microsoftLoginKey) === -1;
-                })
-                .map((key) => (
-                  <ClearLocalStorageButton key={helpers.getUID()} storageKey={key} clearLocalData={this.clearLocalData} />
-                ))}
-
               <ClearLocalStorageButtonGrouped
                 key={helpers.getUID()}
                 name={"Login Info"}
                 storageKeys={Object.keys(localStorage).filter((key) => {
-                  return key.indexOf(microsoftLoginKey) !== -1;
+                  return key.indexOf("login.microsoftonline.com") !== -1 || key.indexOf("login.windows.net") !== -1 || key.indexOf("msal.") !== -1;
                 })}
                 clearLocalData={this.clearLocalData}
               />
+
+              {Object.keys(localStorage)
+                .filter((key) => {
+                  return key.indexOf("login.microsoftonline.com") === -1 && key.indexOf("login.windows.net") === -1 && key.indexOf("msal.") === -1;
+                })
+                .map((key) => (
+                  <ClearLocalStorageButton key={helpers.getUID()} storageKey={key} clearLocalData={this.clearLocalData} />
+                ))}
             </div>
           </div>
 

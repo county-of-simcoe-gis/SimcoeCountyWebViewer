@@ -4,6 +4,9 @@
   "version": "1.4.2",
   "private": true,
   "dependencies": {
+    "@arcgis/core": "^4.26.5",
+    "@azure/msal-browser": "^3.7.1",
+    "@azure/msal-react": "^2.0.10",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@mui/material": "^5.14.4",
@@ -65,5 +68,8 @@
   "jshintConfig": {
     "loopfunc": true,
     "jsx-a11y/anchor-is-valid": true
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.5"
   }
 }

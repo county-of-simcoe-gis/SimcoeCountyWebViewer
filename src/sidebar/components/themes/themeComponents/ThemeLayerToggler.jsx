@@ -1,150 +1,171 @@
-import React, { Component } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./ThemeLayerToggler.css";
 import * as helpers from "../../../../helpers/helpers";
+import { LayerHelpers, OL_DATA_TYPES } from "../../../../helpers/OLHelpers";
+
+import { get, createObjectURL } from "../../../../helpers/api";
 import ThemePopupContent from "./ThemePopupContent.jsx";
-import url from "url";
 import GeoJSON from "ol/format/GeoJSON.js";
 import { getCenter } from "ol/extent";
 import { unByKey } from "ol/Observable.js";
 
 // LOOK AT THEME CONFIG FOR EXAMPLE OBJECT BEING PASSED HERE
-class ThemeLayerToggler extends Component {
-  constructor(props) {
-    super(props);
+const ThemeLayerToggler = (props) => {
+  const { onMapClick, config, onLayerVisiblityChange, visibleAll, children } = props;
+  const styleUrlTemplate = (serverURL, layerName, styleName) =>
+    `${serverURL}/wms?REQUEST=GetLegendGraphic&VERSION=1.1&FORMAT=image/png&WIDTH=20&HEIGHT=20&TRANSPARENT=true&LAYER=${layerName}&STYLE=${styleName === undefined ? "" : styleName}`;
+  const [visible, setVisible] = useState(props.layerConfig.visible);
+  const [styleImageUrl, setStyleImageUrl] = useState("");
+  const [recordCount, setRecordCount] = useState(0);
+  const [layerConfig, setLayerConfig] = useState(props.layerConfig);
 
-    this.state = {
-      visible: props.layerConfig.visible,
-      layer: this.initLayer(),
-      styleUrl: null,
-      recordCount: null,
+  const layerRef = useRef(null);
+  const mapClickEventRef = useRef(null);
+
+  useEffect(() => {
+    setLayerConfig(props.layerConfig);
+  }, [props.layerConfig]);
+
+  const initComponent = () => {
+    // GET LAYER
+    LayerHelpers.getLayer(
+      {
+        sourceType: OL_DATA_TYPES.ImageWMS,
+        source: "WMS",
+        layerName: layerConfig.layerName,
+        url: `${layerConfig.serverUrl}wms?layers=${layerConfig.layerName}`,
+        tiled: false,
+        name: layerConfig.layerName,
+        secured: layerConfig.secure || false,
+      },
+      (layer) => {
+        layer.setProperties({
+          name: layerConfig.layerName,
+          tocDisplayName: layerConfig.displayName,
+          clickable: layerConfig.clickable !== undefined ? layerConfig.clickable : true,
+          disableParcelClick: layerConfig.clickable !== undefined ? layerConfig.clickable : true,
+          queryable: true,
+        });
+        if (config.toggleLayersKey) layer.setProperties({ themeKey: config.toggleLayersKey });
+        layer.setZIndex(layerConfig.zIndex);
+        layer.setVisible(layerConfig.visible);
+        window.map.addLayer(layer);
+        layerRef.current = layer;
+
+        addMapClickEvent();
+      }
+    );
+  };
+  const addMapClickEvent = () => {
+    if (onMapClick) {
+      mapClickEventRef.current = window.map.on("click", onMapClick);
+    } else {
+      mapClickEventRef.current = window.map.on("click", (evt) => {
+        if (window.isDrawingOrEditing || !visible || window.isCoordinateToolOpen || window.isMeasuring) return;
+
+        var viewResolution = window.map.getView().getResolution();
+        var url = layerRef.current.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", {
+          INFO_FORMAT: "application/json",
+        });
+        if (url) {
+          get(url, { useBearerToken: layerConfig.secure || false }, (result) => {
+            const features = result.features;
+            if (!features || features.length === 0) {
+              return;
+            }
+            const geoJSON = new GeoJSON().readFeatures(result);
+            geoJSON.forEach((currentFeature) => {
+              const entries = Object.entries(currentFeature.getProperties());
+              window.popup.show(
+                evt.coordinate,
+                <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={props.config.popupLogoImage} layerConfig={props.layerConfig} />,
+                layerConfig.displayName
+              );
+            });
+          });
+        }
+      });
+    }
+  };
+
+  useEffect(() => {
+    initComponent();
+    // GET LEGEND
+
+    const styleUrl = styleUrlTemplate(layerConfig.serverUrl, layerConfig.layerName, layerConfig.legendStyleName);
+    get(styleUrl, { useBearerToken: layerConfig.secure || false, type: "blob" }, (results) => {
+      var imgData = createObjectURL(results);
+      setStyleImageUrl(imgData);
+    });
+
+    helpers.getWFSLayerRecordCount({ serverUrl: layerConfig.serverUrl, layerName: layerConfig.layerName, secured: layerConfig.secure || false }, (currentCount) => {
+      setRecordCount(currentCount);
+    });
+    // URL PARAMETERS
+    handleUrlParameter();
+    return () => {
+      // CLEAN UP
+      setStyleImageUrl(null);
+      setRecordCount(null);
+      window.map.removeLayer(layerRef.current);
+      unByKey(mapClickEventRef.current);
     };
-  }
+  }, []);
 
-  handleUrlParameter = () => {
-    if (this.props.layerConfig.UrlParameter === undefined) return;
+  const handleUrlParameter = () => {
+    if (layerConfig.UrlParameter === undefined) return;
 
-    const urlParam = helpers.getURLParameter(this.props.layerConfig.UrlParameter.parameterName);
+    const urlParam = helpers.getURLParameter(layerConfig.UrlParameter.parameterName);
     if (urlParam === null) return;
 
-    const query = this.props.layerConfig.UrlParameter.fieldName + "=" + urlParam;
-    helpers.getWFSGeoJSON(
-      this.props.layerConfig.serverUrl,
-      this.props.layerConfig.layerName,
-      (result) => {
-        if (result.length === 0) return;
+    const query = layerConfig.UrlParameter.fieldName + "=" + urlParam;
+    helpers.getWFSGeoJSON({ serverUrl: layerConfig.serverUrl, layerName: layerConfig.layerName, cqlFilter: query, secured: layerConfig.secure }, (result) => {
+      if (result.length === 0) return;
 
-        const feature = result[0];
-        const extent = feature.getGeometry().getExtent();
-        const center = getCenter(extent);
-        helpers.zoomToFeature(feature);
-        result.forEach((currentFeature) => {
-          const entries = Object.entries(currentFeature.getProperties());
-          window.popup.show(
-            center,
-            <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={this.props.layerConfig} />,
-            this.props.layerConfig.displayName
-          );
-        });
-      },
-      null,
-      null,
-      query
-    );
-  };
-
-  initLayer = () => {
-    // GET LAYER
-    const layer = helpers.getImageWMSLayer(url.resolve(this.props.layerConfig.serverUrl, "wms"), this.props.layerConfig.layerName, "geoserver", null, 50);
-    layer.setVisible(this.props.layerConfig.visible);
-    layer.setZIndex(this.props.layerConfig.zIndex);
-    //layer.setProperties({ name: this.props.layerConfig.layerName, disableParcelClick: true });
-    layer.setProperties({
-      name: this.props.layerConfig.layerName,
-      tocDisplayName: this.props.layerConfig.displayName,
-      disableParcelClick: true,
-      queryable: true,
-    });
-
-    window.map.addLayer(layer);
-    return layer;
-  };
-
-  componentDidMount() {
-    // GET LEGEND
-    const styleUrlTemplate = (serverURL, layerName, styleName) =>
-      `${serverURL}/wms?REQUEST=GetLegendGraphic&VERSION=1.1&FORMAT=image/png&WIDTH=20&HEIGHT=20&TRANSPARENT=true&LAYER=${layerName}&STYLE=${styleName === undefined ? "" : styleName}`;
-    const styleUrl = styleUrlTemplate(this.props.layerConfig.serverUrl, this.props.layerConfig.layerName, this.props.layerConfig.legendStyleName);
-    this.setState({ styleUrl: styleUrl });
-
-    // GET RECORD COUNT
-    helpers.getWFSLayerRecordCount(this.props.layerConfig.serverUrl, this.props.layerConfig.layerName, (count) => {
-      this.setState({ recordCount: count });
-    });
-
-    this.mapClickEvent = window.map.on("click", (evt) => {
-      if (window.isDrawingOrEditing || !this.state.visible || window.isCoordinateToolOpen || window.isMeasuring) return;
-
-      var viewResolution = window.map.getView().getResolution();
-      var url = this.state.layer.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", {
-        INFO_FORMAT: "application/json",
+      const feature = result[0];
+      const extent = feature.getGeometry().getExtent();
+      const center = getCenter(extent);
+      helpers.zoomToFeature(feature);
+      result.forEach((currentFeature) => {
+        const entries = Object.entries(currentFeature.getProperties());
+        window.popup.show(
+          center,
+          <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={props.config.popupLogoImage} layerConfig={props.layerConfig} />,
+          props.layerConfig.displayName
+        );
       });
-      if (url) {
-        helpers.getJSON(url, (result) => {
-          const features = result.features;
-          if (features.length === 0) {
-            return;
-          }
-
-          const geoJSON = new GeoJSON().readFeatures(result);
-          geoJSON.forEach((feature) => {
-            console.log("ThemeLayerToggler.jsx", feature);
-            const entries = Object.entries(feature.getProperties());
-            window.popup.show(
-              evt.coordinate,
-              <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={this.props.layerConfig} />,
-              this.props.layerConfig.displayName
-            );
-          });
-        });
-      }
     });
-
-    // URL PARAMETERS
-    this.handleUrlParameter();
-  }
-
-  onCheckboxChange = (evt) => {
-    this.setState({ visible: evt.target.checked });
-    this.state.layer.setVisible(evt.target.checked);
-    this.props.onLayerVisiblityChange(this.state.layer);
   };
 
-  componentWillUnmount() {
-    // CLEAN UP
-    window.map.removeLayer(this.state.layer);
-    unByKey(this.mapClickEvent);
-  }
+  const onCheckboxChange = (checked) => {
+    setVisible(checked);
+    layerRef.current.setVisible(checked);
+    onLayerVisiblityChange(layerRef.current);
+  };
 
-  render() {
-    return (
-      <div className="sc-theme-layer-container">
-        <div className={this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle ? "sc-theme-layer-toggler-symbol" : "sc-theme-layer-toggler-symbol-with-box"}>
-          <img src={this.state.styleUrl} alt="style" />
-        </div>
-        <div className={this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle ? "" : "sc-theme-layer-toggler-label-with-box-container"}>
-          <label className={this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle ? "sc-theme-layer-toggler-label" : "sc-theme-layer-toggler-label-with-box"}>
-            <input type="checkbox" checked={this.state.visible} style={{ verticalAlign: "middle" }} onChange={this.onCheckboxChange} />
-            {this.props.layerConfig.displayName}
-          </label>
-          <label className={this.props.layerConfig.boxStyle === undefined || !this.props.layerConfig.boxStyle ? "sc-theme-layer-toggler-count" : "sc-theme-layer-toggler-count-with-box"}>
-            {" (" + this.state.recordCount + ")"}
-          </label>
-        </div>
-
-        <div>{this.props.children}</div>
+  return (
+    <div className="sc-theme-layer-container">
+      <div className={layerConfig.boxStyle === undefined || !layerConfig.boxStyle ? "sc-theme-layer-toggler-symbol" : "sc-theme-layer-toggler-symbol-with-box"}>
+        <img src={styleImageUrl} alt="style" />
       </div>
-    );
-  }
-}
+      <div className={layerConfig.boxStyle === undefined || !layerConfig.boxStyle ? "" : "sc-theme-layer-toggler-label-with-box-container"}>
+        <label className={layerConfig.boxStyle === undefined || !layerConfig.boxStyle ? "sc-theme-layer-toggler-label" : "sc-theme-layer-toggler-label-with-box"}>
+          <input
+            type={"checkbox"}
+            checked={visible}
+            style={{ verticalAlign: "middle" }}
+            onChange={(evt) => {
+              onCheckboxChange(evt.target.checked);
+            }}
+          />
+          {layerConfig.displayName}
+        </label>
+        <label className={layerConfig.boxStyle === undefined || !layerConfig.boxStyle ? "sc-theme-layer-toggler-count" : "sc-theme-layer-toggler-count-with-box"}>{` (${recordCount})`}</label>
+      </div>
+
+      <div>{children}</div>
+    </div>
+  );
+};
 
 export default ThemeLayerToggler;
