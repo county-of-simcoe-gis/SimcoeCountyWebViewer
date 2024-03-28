@@ -368,8 +368,6 @@ class PropertyReportClick extends Component {
     });
 
     const GetPropertyLink = () => {
-      //SAMPLE
-      //https://opengis2.simcoe.ca/secure/?ARN=431601002304614&PROPERTYLINK={"label":"Launch MOAR","link":"http://moar.innisfil.ca/propertyInformation/viewARN/{arn}"}
       const propertylink = helpers.getURLParameter("PROPERTYLINK", true, true);
       if (propertylink) {
         let propertylinkObj = helpers.tryParseJSON(propertylink);

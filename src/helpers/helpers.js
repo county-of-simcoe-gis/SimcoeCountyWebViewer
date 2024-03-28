@@ -489,7 +489,6 @@ export function httpGetText(url, callback) {
       if (callback !== undefined) callback(responseText);
     })
     .catch((error) => {
-      //httpGetText(url.replace("opengis.simcoe.ca", "opengis2.simcoe.ca"), callback);
       console.error(url, error);
       if (callback !== undefined) callback();
     });
@@ -504,7 +503,6 @@ export function httpGetTextWithParams(url, params = undefined, callback) {
       if (callback) callback(responseText);
     })
     .catch((error) => {
-      //httpGetText(url.replace("opengis.simcoe.ca", "opengis2.simcoe.ca"), callback);
       console.error(url, error);
       if (callback) callback();
     });
