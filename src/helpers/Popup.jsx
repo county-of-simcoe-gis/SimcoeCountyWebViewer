@@ -249,7 +249,6 @@ export default class Popup extends Overlay {
     if (header)
       header.addEventListener("mousedown", (evt) => {
         // IGNORE CLOSE BUTTON OR MOBILE
-        console.log(evt.target.classList);
         var isHeaderButton = evt.target.classList.contains("ol-popup-closer") || evt.target.classList.contains("ol-popup-previous") || evt.target.classList.contains("ol-popup-next");
 
         if (isHeaderButton || isHeaderButton || helpers.isMobile()) {
