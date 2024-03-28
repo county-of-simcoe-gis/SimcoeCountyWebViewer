@@ -1,0 +1,16 @@
+{
+  "apiUrlSecured": "",
+  "assessmentParcelLayer": {
+    "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
+    "rollNumberFieldName": "ARN"
+  },
+  "ownershipParcelLayer": {
+    "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Ownership_Parcel&outputFormat=application/json",
+    "rollNumberFieldName": "pin"
+  },
+  "securedArcGIS": {
+    "appId": "",
+    "portalUrl": "",
+    "maxActiveTime": 43200000
+  }
+}

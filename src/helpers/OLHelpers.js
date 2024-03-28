@@ -1,4 +1,6 @@
 import * as helpers from "./helpers";
+import * as esriHelpers from "./esriHelpers";
+import { get, createObjectURL } from "../helpers/api";
 // OPEN LAYERS
 import { Image as ImageLayer, Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup, VectorTile as VectorTileLayer } from "ol/layer.js";
 import { ImageWMS, OSM, TileArcGISRest, ImageArcGISRest, TileWMS, TileImage, Vector, Stamen, XYZ, ImageStatic } from "ol/source.js";
@@ -160,11 +162,10 @@ export class LayerHelpers {
     let attachmentUrl = layer.get("attachmentUrl");
     const hasAttachments = layer.get("hasAttachments");
     const params = {};
-    const secureKey = layer.get("secureKey");
-    if (secureKey !== undefined) {
-      const headers = {};
-      headers[secureKey] = "GIS";
-      params["headers"] = headers;
+    const secured = layer.get("secured");
+
+    if (secured) {
+      params["useBearerToken"] = true;
     }
     if (isArcGISLayer) {
       const arcgisResolution = `${window.map.getSize()[0]},${window.map.getSize()[1]},96`;
@@ -179,7 +180,7 @@ export class LayerHelpers {
         .replace("#RESOLUTION#", arcgisResolution);
     }
     if (url) {
-      await helpers.getJSONWaitWithParams(url, params, (result) => {
+      get(url, params, (result) => {
         let features = isArcGISLayer ? LayerHelpers.parseESRIIdentify(result) : new GeoJSON().readFeatures(result);
         if (hasAttachments) {
           features = features.map((feature) => {
@@ -210,11 +211,9 @@ export class LayerHelpers {
     const hasAttachments = layer.get("hasAttachments");
 
     const params = {};
-    const secureKey = layer.get("secureKey");
-    if (secureKey !== undefined) {
-      const headers = {};
-      headers[secureKey] = "GIS";
-      params["headers"] = headers;
+    const secured = layer.get("secured");
+    if (secured) {
+      params["useBearerToken"] = true;
     }
     if (isArcGISLayer) {
       const arcgisResolution = `${window.map.getSize()[0]},${window.map.getSize()[1]},96`;
@@ -229,7 +228,7 @@ export class LayerHelpers {
         .replace("#RESOLUTION#", arcgisResolution);
     }
     if (url) {
-      helpers.getJSONWithParams(url, params, (result) => {
+      get(url, params, (result) => {
         let features = isArcGISLayer ? LayerHelpers.parseESRIIdentify(result) : new GeoJSON().readFeatures(result);
         if (hasAttachments) {
           features = features.map((feature) => {
@@ -274,7 +273,6 @@ export class LayerHelpers {
       url = root_url;
     }
     let layers = [];
-    var parser;
     var response;
     var service;
     if (url.indexOf("Capabilities") === -1) {
@@ -311,8 +309,8 @@ export class LayerHelpers {
       try {
         switch (type) {
           case "wmts":
-            parser = new WMTSCapabilities();
-            response = parser.read(responseText);
+            const wmtsParser = new WMTSCapabilities();
+            response = wmtsParser.read(responseText);
             response.Contents.Layer.forEach((layer) => {
               layers.push({
                 label: layer.Title,
@@ -326,8 +324,8 @@ export class LayerHelpers {
             callback(layers);
             break;
           case "wms":
-            parser = new WMSCapabilities();
-            response = parser.read(responseText);
+            const wmsParser = new WMSCapabilities();
+            response = wmsParser.read(responseText);
             let layerGroup = response.Capability.Layer.Layer;
             if (layerGroup[0].Layer !== undefined) layerGroup = layerGroup[0].Layer;
             layerGroup.forEach((layer) => {
@@ -385,8 +383,8 @@ export class LayerHelpers {
               attributeNamePrefix: "", // Default is an underscore. Set to null to disable it
               attributesGroupName: "$", // XML node attributes group name prefix
             };
-            const parser = new XMLParser(options);
-            let result = parser.parse(responseText);
+            const xmlParser = new XMLParser(options);
+            let result = xmlParser.parse(responseText);
             result["wfs:WFS_Capabilities"].FeatureTypeList[0].FeatureType.forEach((layer) => {
               var layerTitle = layer.Title[0];
               var layerName = layer.Name[0];
@@ -409,11 +407,22 @@ export class LayerHelpers {
     };
     if (options.token) {
       url = `${url}&token=${options.token}`;
-      helpers.httpGetTextWithParams(url, params, (responseText) => {
+      get(url, { ...params, type: "text" }, (responseText) => {
         parseResponseText(responseText, options.token);
       });
+    } else if (options.secured) {
+      esriHelpers.getAccessToken((token) => {
+        url = `${url}&token=${token}`;
+        get(url, { ...params, type: "text" }, (responseText) => {
+          parseResponseText(responseText, token);
+        });
+      });
+    } else if (options.securedOAuth) {
+      get(url, { ...params, useBearerToken: true, type: "text" }, (responseText) => {
+        parseResponseText(responseText);
+      });
     } else {
-      helpers.httpGetTextWithParams(url, params, (responseText) => {
+      get(url, { ...params, type: "text" }, (responseText) => {
         parseResponseText(responseText);
       });
     }
@@ -506,7 +515,8 @@ export class LayerHelpers {
   }
 
   static getESRILegend(url, callback) {
-    helpers.httpGetText(url, (responseText) => {
+    get(url, { type: "text" }, (responseText) => {
+      // helpers.httpGetText(url, (responseText) => {
       var response = JSON.parse(responseText);
       if (response.layers === undefined) callback();
       else callback(response.layers);
@@ -649,7 +659,7 @@ export class LayerHelpers {
     let file = options.file;
     let extent = options.extent !== undefined ? options.extent : [];
     let name = options.name !== undefined ? options.name : "";
-    let secureKey = options.secureKey;
+    let secured = options.secured;
     let background = options.background !== undefined ? options.background : null;
     let rootPath = options.rootPath !== undefined ? options.rootPath : null;
     let spritePath = options.spritePath !== undefined ? options.spritePath : null;
@@ -976,18 +986,10 @@ export class LayerHelpers {
         break;
       case OL_DATA_TYPES.ImageWMS:
         const securedImageWMS = function (image, src) {
-          var xhr = new XMLHttpRequest();
-          xhr.open("GET", src);
-          xhr.responseType = "arraybuffer";
-          if (secureKey !== undefined) xhr.setRequestHeader(secureKey, "GIS");
-          xhr.onload = function () {
-            var arrayBufferView = new Uint8Array(this.response);
-            var blob = new Blob([arrayBufferView], { type: "image/png" });
-            var urlCreator = window.URL || window.webkitURL;
-            var imageUrl = urlCreator.createObjectURL(blob);
+          get(src, { useBearerToken: secured, type: "blob" }, (result) => {
+            var imageUrl = createObjectURL(result);
             image.getImage().src = imageUrl;
-          };
-          xhr.send();
+          });
         };
         callback(
           new ImageLayer({
@@ -1023,8 +1025,7 @@ export class LayerHelpers {
                 tiled: true,
                 cql_filter: null,
               },
-              tileOptions: { crossOriginKeyword: "anonymous" },
-
+              // tileOptions: { crossOriginKeyword: "anonymous" },
               ratio: 1,
               hidpi: false,
               serverType: "geoserver",
@@ -1070,10 +1071,12 @@ export class LayerHelpers {
           return transform([extent[0], extent[1]], sourceCoord, targetCoord).concat(transform([extent[2], extent[3]], sourceCoord, targetCoord));
         };
         const wmtsCap = (url, callback) => {
-          helpers.httpGetText(url.indexOf("Capabilities") === -1 ? (/\?/.test(url) ? url + "&" : url + "?") + "REQUEST=GetCapabilities&SERVICE=WMTS" : url, (responseText) => {
+          get(url.indexOf("Capabilities") === -1 ? (/\?/.test(url) ? url + "&" : url + "?") + "REQUEST=GetCapabilities&SERVICE=WMTS" : url, { type: "text" }, (responseText) => {
+            // helpers.httpGetText(url.indexOf("Capabilities") === -1 ? (/\?/.test(url) ? url + "&" : url + "?") + "REQUEST=GetCapabilities&SERVICE=WMTS" : url, (responseText) => {
             try {
               var parser = new WMTSCapabilities();
-              callback(parser.read(responseText));
+              const parsedText = parser.read(responseText);
+              callback(parsedText);
             } catch (error) {
               console.warn("Unexpected error: " + error.message);
             }

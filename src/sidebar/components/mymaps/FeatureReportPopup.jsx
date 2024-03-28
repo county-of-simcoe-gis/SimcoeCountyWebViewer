@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import "./FeatureReportPopup.css";
 import * as helpers from "../../../helpers/helpers";
-import mainConfig from "../../../config.json";
 import LoadingScreen from "../../../helpers/LoadingScreen.jsx";
 import * as drawingHelpers from "../../../helpers/drawingHelpers";
 import InfoRow from "../../../helpers/InfoRow.jsx";

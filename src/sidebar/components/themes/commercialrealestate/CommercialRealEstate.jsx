@@ -95,8 +95,9 @@ class CommercialRealEstate extends Component {
             }
 
             const geoJSON = new GeoJSON().readFeatures(result);
-            const feature = geoJSON[0];
-            window.popup.show(evt.coordinate, <CommercialRealEstatePopupContent key={helpers.getUID()} feature={feature} />, "Real Estate");
+            geoJSON.forEach((feature) => {
+              window.popup.show(evt.coordinate, <CommercialRealEstatePopupContent key={helpers.getUID()} feature={feature} />, "Real Estate");
+            });
           });
         }
       });
@@ -118,7 +119,7 @@ class CommercialRealEstate extends Component {
 
   buildLayers = () => {
     let layers = {};
-    const serverUrl = window.config.geoserverUrl + "wms/";
+    const serverUrl = localConfig.geoserverUrl + "wms/";
     propTypes.forEach((propType) => {
       const wmsPointLayer = helpers.getImageWMSLayer(serverUrl, pointLayerName, "geoserver", "_proptype = '" + propType + "'", 200, true);
 
@@ -241,15 +242,20 @@ class CommercialRealEstate extends Component {
     this.setState({ activeTab });
   };
   setNumRecords = () => {
-    const serverUrl = window.config.geoserverUrl + "wms/";
+    const serverUrl = localConfig.geoserverUrl + "wms/";
     const extent = window.map.getView().calculateExtent();
 
     this.setState({ numRecords: 0, allResults: [] }, () => {
       propTypes.forEach((propType) => {
         const params = this.state.layers[propType].pointLayer.getSource().getParams();
         helpers.getWFSGeoJSON(
-          serverUrl,
-          "simcoe:Economic_Development_Property_Listings_Polygon_Theme",
+          {
+            serverUrl: serverUrl,
+            layerName: "simcoe:Economic_Development_Property_Listings_Polygon_Theme",
+            sortField: "Incentive+D",
+            extent: this.state.onlyInMapChecked ? extent : null,
+            cqlFilter: params.cql_filter,
+          },
           (result) => {
             if (result.length === 0) return;
 
@@ -257,10 +263,7 @@ class CommercialRealEstate extends Component {
               numRecords: prevState.numRecords + result.length,
               allResults: prevState.allResults.concat(result),
             }));
-          },
-          "Incentive+D",
-          this.state.onlyInMapChecked ? extent : null,
-          params.cql_filter
+          }
         );
       });
     });

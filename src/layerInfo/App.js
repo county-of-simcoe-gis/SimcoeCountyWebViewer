@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import "./App.css";
 import * as layerInfoHelpers from "./helpers";
 import * as helpers from "../helpers/helpers";
-
+import { get } from "../helpers/api";
 import mainConfig from "./config.json";
 import ReactGA from "react-ga4";
 
@@ -62,7 +62,7 @@ class LayerInfoApp extends Component {
   // GET LAYER INFO FROM URL
   async getInfo() {
     if (this.state.layerURL && this.state.layerURL != "null" && this.state.layerURL !== "")
-      helpers.getJSONWithParams(this.state.layerURL, this.state.params, (response) => {
+      get(this.state.layerURL, { ...this.state.params, useBearerToken: this.props.secure || false }, (response) => {
         if (response.coverage !== undefined) {
           this.setState({ layerInfo: response.coverage });
         } else if (response.featureType === undefined) {
@@ -116,7 +116,7 @@ class LayerInfoApp extends Component {
     const epsgUrl = (wkt) => `https://epsg.io/${wkt}.wkt`;
     if (featureInfo.sourceSpatialReference.latestWkid === undefined) callback(featureType);
     else
-      helpers.httpGetText(epsgUrl(featureInfo.sourceSpatialReference.latestWkid), (projection) => {
+      get(epsgUrl(featureInfo.sourceSpatialReference.latestWkid), { type: "text" }, (projection) => {
         if (projection !== "ERROR") featureType.nativeCRS["$"] = projection;
         callback(featureType);
       });
@@ -170,7 +170,13 @@ class LayerInfoApp extends Component {
   onDownloadClick = (evt) => {
     const workspace = this.state.layerInfo.namespace.name;
     const layerName = this.state.layerInfo.name;
-    window.open(downloadTemplate(serverUrl(this.state.layerURL), workspace, layerName), "_blank");
+    if (this.state.layerURL.indexOf(mainConfig.geoserverURL) !== -1) {
+      get(downloadTemplate(serverUrl(this.state.layerURL), workspace, layerName), { useBearerToken: true, type: "blob" }, (result) => {
+        helpers.download(result, layerName, { isBlob: true });
+      });
+    } else {
+      window.open(downloadTemplate(serverUrl(this.state.layerURL), workspace, layerName), "_blank");
+    }
   };
   render() {
     if (this.state.layerInfo === undefined || this.state.layerInfo.nativeCRS === undefined)

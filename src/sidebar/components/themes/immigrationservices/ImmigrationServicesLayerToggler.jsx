@@ -26,7 +26,7 @@ class ImmigrationServicesLayerToggler extends Component {
     this.setState({ styleUrl: styleUrl });
 
     // RECORD COUNT
-    helpers.getWFSLayerRecordCount(this.props.layer.serverUrl, this.props.layer.layerName, (count) => {
+    helpers.getWFSLayerRecordCount({ serverUrl: this.props.layer.serverUrl, layerName: this.props.layer.layerName }, (count) => {
       this.setState({ recordCount: count });
     });
 
@@ -45,9 +45,10 @@ class ImmigrationServicesLayerToggler extends Component {
             return;
           }
           const geoJSON = new GeoJSON().readFeatures(result);
-          const feature = geoJSON[0];
-          const entries = Object.entries(feature.getProperties());
-          window.popup.show(evt.coordinate, <ThemePopupContent key={helpers.getUID()} values={entries} layerConfig={this.props.layer} />, this.props.layer.displayName);
+          geoJSON.forEach((feature) => {
+            const entries = Object.entries(feature.getProperties());
+            window.popup.show(evt.coordinate, <ThemePopupContent key={helpers.getUID()} values={entries} layerConfig={this.props.layer} />, this.props.layer.displayName);
+          });
         });
       }
     });

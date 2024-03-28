@@ -1,6 +1,8 @@
 import * as helpers from "../../../../helpers/helpers";
 import * as drawingHelpers from "../../../../helpers/drawingHelpers";
 import { LayerHelpers, FeatureHelpers, OL_DATA_TYPES } from "../../../../helpers/OLHelpers";
+import { get } from "../../../../helpers/api";
+import { getAppAccessToken } from "../../../../helpers/esriHelpers";
 import { WMSCapabilities } from "ol/format.js";
 
 // INDEX WHERE THE TOC LAYERS SHOULD START DRAWING AT
@@ -99,7 +101,7 @@ export async function getMap(sources, isReset, tocType, callback) {
     if (source.type === undefined || source.type === null || source.type === "") source["type"] = "geoserver"; //default to geoserver
     switch (source.type.toLowerCase()) {
       case "geoserver":
-        getGroupsGC(source.layerUrl, source.urlType !== undefined ? source.urlType : urlType, isReset, tocType, source.secure, source.primary, source.secureKey, (layerGroupConfig) => {
+        getGroupsGC(source.layerUrl, source.urlType !== undefined ? source.urlType : urlType, isReset, tocType, source.secure, source.primary, (layerGroupConfig) => {
           if (source.group !== undefined) {
             if (layerGroupConfig.groups[0] !== undefined) {
               if (source.group.name !== undefined) layerGroupConfig.groups[0]["value"] = source.group.name;
@@ -128,46 +130,85 @@ export async function getMap(sources, isReset, tocType, callback) {
         });
         break;
       case "arcgis":
-        getGroupsESRI(
-          {
-            url: source.layerUrl,
-            tocType: tocType,
-            isReset: isReset,
-            requiresToken: source.secure,
-            grouped: source.grouped,
-            grouped_name: source.name,
-            secured: source.secure,
-            open: source.open || false,
-            useRedFolder: source.useRedFolder || false,
-            primary: source.primary || false,
-            visibleLayers: source.visibleLayers,
-          },
-          (layerGroupConfig) => {
-            if (!layerGroupConfig.groups) {
+        if (source.appToken)
+          getAppAccessToken(source.layerUrl, (accessToken) => {
+            getGroupsESRI(
+              {
+                url: source.layerUrl,
+                tocType: tocType,
+                isReset: isReset,
+                requiresToken: source.secure,
+                grouped: source.grouped,
+                grouped_name: source.name,
+                secured: source.secure,
+                token: accessToken.access_token,
+                open: source.open || false,
+                useRedFolder: source.useRedFolder || false,
+                primary: source.primary || false,
+                visibleLayers: source.visibleLayers,
+              },
+              (layerGroupConfig) => {
+                if (!layerGroupConfig.groups) {
+                  sourcesProcessed++;
+                  return;
+                }
+                if (source.primary && default_group === undefined) default_group = layerGroupConfig.defaultLayerName;
+                if (layerGroups === undefined) {
+                  layerGroups = layerGroupConfig.groups;
+                } else {
+                  layerGroups = mergeGroups(layerGroups, layerGroupConfig.groups);
+                }
+                sourcesProcessed++;
+                if (sourcesProcessed >= sources.length) {
+                  callback({
+                    groups: layerGroups,
+                    defaultGroupName: default_group,
+                  });
+                }
+              }
+            );
+          });
+        else
+          getGroupsESRI(
+            {
+              url: source.layerUrl,
+              tocType: tocType,
+              isReset: isReset,
+              requiresToken: source.secure,
+              grouped: source.grouped,
+              grouped_name: source.name,
+              secured: source.secure,
+              appToken: source.appToken,
+              open: source.open || false,
+              useRedFolder: source.useRedFolder || false,
+              primary: source.primary || false,
+              visibleLayers: source.visibleLayers,
+            },
+            (layerGroupConfig) => {
+              if (!layerGroupConfig.groups) {
+                sourcesProcessed++;
+                return;
+              }
+              if (source.primary && default_group === undefined) default_group = layerGroupConfig.defaultLayerName;
+              if (layerGroups === undefined) {
+                layerGroups = layerGroupConfig.groups;
+              } else {
+                layerGroups = mergeGroups(layerGroups, layerGroupConfig.groups);
+              }
               sourcesProcessed++;
-              return;
+              if (sourcesProcessed >= sources.length) {
+                callback({
+                  groups: layerGroups,
+                  defaultGroupName: default_group,
+                });
+              }
             }
-            if (source.primary && default_group === undefined) default_group = layerGroupConfig.defaultLayerName;
-            if (layerGroups === undefined) {
-              layerGroups = layerGroupConfig.groups;
-            } else {
-              layerGroups = mergeGroups(layerGroups, layerGroupConfig.groups);
-            }
-            sourcesProcessed++;
-            if (sourcesProcessed >= sources.length) {
-              callback({
-                groups: layerGroups,
-                defaultGroupName: default_group,
-              });
-            }
-          }
-        );
+          );
         break;
       case "layer":
         const layerOptions = {
           url: source.layerUrl,
           secure: source.secure,
-          secureKey: source.secureKey,
           type: source.type,
           groups: source.groups,
           layerType: source.layerType,
@@ -180,6 +221,7 @@ export async function getMap(sources, isReset, tocType, callback) {
           projection: source.projection,
           index: source.index,
         };
+
         getSingleLayer(layerOptions, (layerGroupConfig) => {
           if (!layerGroupConfig.groups) {
             sourcesProcessed++;
@@ -370,7 +412,9 @@ export function getGroupsESRI(options, callback) {
   let groupsObj = {};
   const isGrouped = options.grouped ? true : false;
   let groupedLayer = { name: options.grouped_name, layers: [] };
-  LayerHelpers.getCapabilities({ root_url: options.url, type: "rest", secured: options.secured }, (layers) => {
+  let getCapabilitiesOptions = { root_url: options.url, type: "rest", secured: options.secured };
+  if (options.token) getCapabilitiesOptions["token"] = options.token;
+  LayerHelpers.getCapabilities(getCapabilitiesOptions, (layers) => {
     if (layers.length === 0) {
       callback({ groups: groups, defaultGroupName: defaultGroup });
       return;
@@ -564,7 +608,7 @@ export async function getSingleLayer(options, callback) {
             false,
             undefined,
             (retLayer) => {
-              if (options.secureKey !== undefined) retLayer.setProperties({ secureKey: options.secureKey });
+              if (options.secure !== undefined && retLayer.layer !== undefined) retLayer.layer.setProperties({ secured: options.secure });
               newGroup.layers.push(retLayer);
               groupArray.push(newGroup);
               if (groupArray.length >= groups.length) callback({ groups: groupArray, defaultLayerName: groups[0] });
@@ -576,7 +620,7 @@ export async function getSingleLayer(options, callback) {
   });
 }
 // GET GROUPS FROM GET CAPABILITIES
-export async function getGroupsGC(url, urlType, isReset, tocType, secured = false, primary = false, secureKey = undefined, callback) {
+export async function getGroupsGC(url, urlType, isReset, tocType, secured = false, primary = false, callback) {
   let defaultGroup = null;
   let isDefault = false;
   let groups = [];
@@ -587,17 +631,13 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured = fals
   const params = {};
   const headers = {};
   params["mode"] = "cors";
+  params["type"] = "text";
   headers["Content-Type"] = "application/text";
 
   if (secured) {
-    const headers = {};
-    if (secureKey !== undefined) {
-      headers[secureKey] = "GIS";
-    }
-    params["headers"] = headers;
+    params["useBearerToken"] = true;
   }
-
-  helpers.httpGetTextWithParams(url, params, (result) => {
+  get(url, params, (result) => {
     var parser = new WMSCapabilities();
     const resultObj = parser.read(result);
     let groupLayerList = urlType === "root" ? [resultObj.Capability.Layer.Layer[0]] : urlType === "group" ? resultObj.Capability.Layer.Layer[0].Layer : [resultObj.Capability.Layer.Layer[0]];
@@ -668,7 +708,7 @@ export async function getGroupsGC(url, urlType, isReset, tocType, secured = fals
           const buildLayers = (layers) => {
             layers.forEach((currentLayer) => {
               if (!isDuplicate(layerList, currentLayer.Name)) {
-                buildLayerByGroup(tmpGroupObj, currentLayer, layerIndex, tocType, secured, secureKey, (result) => {
+                buildLayerByGroup(tmpGroupObj, currentLayer, layerIndex, tocType, secured, (result) => {
                   layerList.push(result);
                 });
                 layerIndex--;
@@ -791,7 +831,7 @@ export function layerToJson(layer, callback) {
   if (callback !== undefined) callback(returnObject);
 }
 
-export async function buildLayerByGroup(group, layer, layerIndex, tocType, secured, secureKey = undefined, callback) {
+export async function buildLayerByGroup(group, layer, layerIndex, tocType, secured = false, callback) {
   if (layer.Layer === undefined) {
     const visibleLayers = group.visibleLayers === undefined ? [] : group.visibleLayers;
     const geoserverPath = window.config.geoserverPath;
@@ -872,7 +912,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType, secur
         url: serverUrl + "/wms?layers=" + layer.Name,
         tiled: false,
         name: displayName,
-        secureKey: secureKey,
+        secured: secured,
       },
       (newLayer) => {
         const wfsUrlTemplate = (rootUrl, layer) => `${rootUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layer}&outputFormat=application/json&cql_filter=`;
@@ -895,9 +935,10 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType, secur
           opaque: opaque,
           minScale: minScale,
           maxScale: maxScale,
+          secured: secured,
           extendedProperties: { keywords: Object.assign({}, allKeywords) },
         });
-        if (secureKey !== undefined) newLayer.setProperties({ secureKey: secureKey });
+        if (secured) newLayer.setProperties({ secured: true });
         newLayer.setZIndex(layerIndex);
         window.map.addLayer(newLayer);
 
@@ -1045,15 +1086,12 @@ export function updateLayerIndex(layers, callback = undefined) {
 
 export function getLayerInfo(layerInfo, callback) {
   const params = {};
-  const secureKey = layerInfo.layer !== undefined ? layerInfo.layer.get("secureKey") : undefined;
-  if (secureKey !== undefined) {
-    const headers = {};
-    headers[secureKey] = "GIS";
-    params["headers"] = headers;
-  }
-  helpers.getJSONWithParams(layerInfo.metadataUrl.replace("http:", "https:"), params, (result) => {
+  const secured = layerInfo.layer ? layerInfo.layer.get("secured") : undefined;
+  if (secured) params["useBearerToken"] = true;
+
+  get(layerInfo.metadataUrl.replace("http:", "https:"), params, (result) => {
     const fullInfoUrl = result.layer.resource.href.replace("http:", "https:").split("+").join("%20");
-    helpers.getJSONWithParams(fullInfoUrl, params, (fullInfoResult) => {
+    get(fullInfoUrl, params, (fullInfoResult) => {
       if (fullInfoResult.featureType === undefined) fullInfoResult["featureType"] = {};
       fullInfoResult.featureType.fullUrl = fullInfoUrl.replace("http:", "https:");
       fullInfoResult["requestParams"] = params;
@@ -1273,7 +1311,6 @@ export async function buildESRILayer(options, callback) {
   let layer = options.layer;
   let layerIndex = options.layerIndex;
   let secured = options.secured !== undefined ? options.secured : false;
-  let secureKey = options.secureKey;
   if (layer !== undefined) {
     const visibleLayers = group.visibleLayers === undefined ? [] : group.visibleLayers;
 
@@ -1392,7 +1429,6 @@ export async function buildESRILayer(options, callback) {
         attachmentUrl: hasAttachments ? attachmentUrl : null,
         hasAttachments: hasAttachments,
       });
-      if (secureKey !== undefined) newLayer.setProperties({ secureKey: secureKey });
       newLayer.setZIndex(layerIndex);
       window.map.addLayer(newLayer);
       let legendHeight = -1;

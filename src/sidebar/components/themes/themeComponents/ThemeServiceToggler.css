@@ -1,0 +1,77 @@
+.sc-theme-service-info-container {
+  display: table-row;
+}
+.sc-theme-service-item-plus-minus-container {
+  display: inline-table;
+  vertical-align: top;
+  cursor: pointer;
+}
+.sc-theme-service-legend-container {
+  list-style: none;
+  text-align: left;
+  font-size: 10pt;
+  padding-left: 30px;
+}
+.sc-theme-service-toggler-container {
+  margin-top: 5px;
+  margin-left: 5px;
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.sc-theme-service-container {
+  display: table;
+  margin-top: 5px;
+  margin-left: 5px;
+  width: 95%;
+}
+
+.sc-theme-service-toggler-label {
+  /* display: table-cell; */
+  font-size: 10pt;
+  width: 70%;
+}
+
+.sc-theme-service-toggler-label-with-box {
+  display: table-cell;
+  font-size: 10pt;
+  /* width: 70%; */
+  vertical-align: middle;
+  padding-left: 10px;
+}
+
+.sc-theme-service-toggler-symbol {
+  width: 5%;
+  display: table-cell;
+  vertical-align: bottom;
+  text-align: center;
+}
+
+.sc-theme-service-toggler-symbol-with-box {
+  background: rgba(0, 0, 0, 0) -webkit-linear-gradient(top, rgba(242, 245, 246, 1) 0%, rgba(230, 230, 230, 1) 100%) repeat scroll 0 0;
+  background: rgba(0, 0, 0, 0) linear-gradient(to bottom, rgba(242, 245, 246, 1) 0%, rgba(230, 230, 230, 1) 100%) repeat scroll 0 0;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  text-align: center;
+  vertical-align: middle;
+  width: 30px;
+  height: 30px;
+  display: table-cell;
+}
+
+.sc-theme-service-toggler-label-with-box-container {
+  display: table-cell;
+  padding-top: 7px;
+}
+.sc-theme-service-toggler-count {
+  font-size: 8pt;
+  color: #ababab;
+}
+
+.sc-theme-service-toggler-count-with-box {
+  font-size: 8pt;
+  color: #ababab;
+  display: table-cell;
+  padding-left: 8px;
+  padding-top: 2px;
+}
