@@ -37,11 +37,13 @@ class LocalRealEstateLayerToggler extends Component {
       const extent = feature.getGeometry().getExtent();
       const center = getCenter(extent);
       helpers.zoomToFeature(feature);
-      window.popup.show(
-        center,
-        <LocalRealEstatePopupContent key={helpers.getUID()} feature={feature} photosUrl={this.props.photosUrl} onViewed={this.props.onViewed} />,
-        this.props.layerConfig.displayName
-      );
+      result.forEach((currentFeature) => {
+        window.popup.show(
+          center,
+          <LocalRealEstatePopupContent key={helpers.getUID()} feature={currentFeature} photosUrl={this.props.photosUrl} onViewed={this.props.onViewed} />,
+          this.props.layerConfig.displayName
+        );
+      });
     });
   };
 
@@ -90,12 +92,13 @@ class LocalRealEstateLayerToggler extends Component {
           }
 
           const geoJSON = new GeoJSON().readFeatures(result);
-          const feature = geoJSON[0];
-          window.popup.show(
-            evt.coordinate,
-            <LocalRealEstatePopupContent key={helpers.getUID()} feature={feature} photosUrl={this.props.config.photosUrl} onViewed={this.props.onViewed} />,
-            this.props.layerConfig.displayName
-          );
+          geoJSON.forEach((feature) => {
+            window.popup.show(
+              evt.coordinate,
+              <LocalRealEstatePopupContent key={helpers.getUID()} feature={feature} photosUrl={this.props.config.photosUrl} onViewed={this.props.onViewed} />,
+              this.props.layerConfig.displayName
+            );
+          });
         });
       }
     });

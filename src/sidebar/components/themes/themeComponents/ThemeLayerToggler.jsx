@@ -73,12 +73,15 @@ const ThemeLayerToggler = (props) => {
             if (!features || features.length === 0) {
               return;
             }
-
             const geoJSON = new GeoJSON().readFeatures(result);
-            const feature = geoJSON[0];
-
-            const entries = Object.entries(feature.getProperties());
-            window.popup.show(evt.coordinate, <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={config.popupLogoImage} layerConfig={layerConfig} />, layerConfig.displayName);
+            geoJSON.forEach((currentFeature) => {
+              const entries = Object.entries(currentFeature.getProperties());
+              window.popup.show(
+                evt.coordinate,
+                <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={props.config.popupLogoImage} layerConfig={props.layerConfig} />,
+                layerConfig.displayName
+              );
+            });
           });
         }
       });
@@ -123,8 +126,14 @@ const ThemeLayerToggler = (props) => {
       const extent = feature.getGeometry().getExtent();
       const center = getCenter(extent);
       helpers.zoomToFeature(feature);
-      const entries = Object.entries(feature.getProperties());
-      window.popup.show(center, <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={config.popupLogoImage} layerConfig={layerConfig} />, layerConfig.displayName);
+      result.forEach((currentFeature) => {
+        const entries = Object.entries(currentFeature.getProperties());
+        window.popup.show(
+          center,
+          <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={props.config.popupLogoImage} layerConfig={props.layerConfig} />,
+          props.layerConfig.displayName
+        );
+      });
     });
   };
 

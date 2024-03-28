@@ -95,8 +95,9 @@ class CommercialRealEstate extends Component {
             }
 
             const geoJSON = new GeoJSON().readFeatures(result);
-            const feature = geoJSON[0];
-            window.popup.show(evt.coordinate, <CommercialRealEstatePopupContent key={helpers.getUID()} feature={feature} />, "Real Estate");
+            geoJSON.forEach((feature) => {
+              window.popup.show(evt.coordinate, <CommercialRealEstatePopupContent key={helpers.getUID()} feature={feature} />, "Real Estate");
+            });
           });
         }
       });

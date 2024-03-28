@@ -55,16 +55,17 @@ const ThemeBaseLayers = (props) => {
             }
 
             const geoJSON = new GeoJSON().readFeatures(result);
-            const feature = geoJSON[0];
-
-            const entries = Object.entries(feature.getProperties());
             const layerName = layer.getProperties().name;
             const layerConfig = getLayerConfigByName(layerName);
-            window.popup.show(
-              evt.coordinate,
-              <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={props.config.popupLogoImage} layerConfig={layerConfig} />,
-              layer.getProperties().name
-            );
+            geoJSON.forEach((feature) => {
+              const entries = Object.entries(feature.getProperties());
+
+              window.popup.show(
+                evt.coordinate,
+                <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={props.config.popupLogoImage} layerConfig={layerConfig} />,
+                layer.getProperties().name
+              );
+            });
           });
         }
       });
