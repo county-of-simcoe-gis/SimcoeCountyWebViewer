@@ -65,6 +65,9 @@ const MapApp = (props) => {
     link.href = icon;
   };
   useEffect(() => {
+    window.security = [];
+    helpers.addIsLoaded("security");
+
     // LISTEN FOR MAP TO MOUNT
     const mapLoadedListener = () => setMapLoading(false);
     window.emitter.addListener("mapLoaded", mapLoadedListener);
@@ -78,7 +81,7 @@ const MapApp = (props) => {
     window.app = packageJson.name;
     window.homepage = packageJson.homepage;
     window.version = packageJson.version;
-    helpers.loadConfig(() => {
+    helpers.loadConfig(undefined, () => {
       document.title = window.config.title;
       if (window.config.favicon) changeIcon(window.config.favicon);
       helpers.addIsLoaded("settings");

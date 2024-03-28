@@ -3,6 +3,8 @@ import * as helpers from "../../../../helpers/helpers";
 import Collapsible from "react-collapsible";
 import information from "./images/information.png";
 import url from "url";
+import ThemePopupContent from "../themeComponents/ThemePopupContent.jsx";
+import GeoJSON from "ol/format/GeoJSON.js";
 import { unByKey } from "ol/Observable.js";
 
 class CommercialRealEstateLayerToggler extends Component {
@@ -25,7 +27,7 @@ class CommercialRealEstateLayerToggler extends Component {
       const styleUrl = styleUrlTemplate(this.props.layer.serverUrl, this.props.layer.layerName);
 
       // RECORD COUNT
-      helpers.getWFSLayerRecordCount(this.props.layer.serverUrl, this.props.layer.layerName, (count) => {
+      helpers.getWFSLayerRecordCount({ serverUrl: this.props.layer.serverUrl, layerName: this.props.layer.layerName }, (count) => {
         this.setState({ recordCount: count, styleUrl: styleUrl });
         // this.setState({ styleUrl: styleUrl });
       });

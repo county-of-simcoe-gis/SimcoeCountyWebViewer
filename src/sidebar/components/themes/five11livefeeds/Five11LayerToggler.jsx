@@ -22,7 +22,7 @@ function importAllImages(r) {
 class Five11LayerToggler extends Component {
   constructor(props) {
     super(props);
-
+    this._loaded = false;
     // STYLES
     this.styles = {
       lineJamLayer: new Style({
@@ -54,7 +54,13 @@ class Five11LayerToggler extends Component {
     };
   }
 
+  componentDidMount() {
+    this._loaded = true;
+  }
+
   componentWillUnmount() {
+    this._loaded = false;
+
     // CLEAN UP
     window.map.removeLayer(this.state.layer);
     unByKey(this.mapClickEvent);
@@ -99,7 +105,7 @@ class Five11LayerToggler extends Component {
       });
       layer.getSource().addFeatures(geoJSON);
       this.setState({ recordCount: geoJSON.length });
-      window.map.addLayer(layer);
+      if (this._loaded) window.map.addLayer(layer);
     });
 
     return layer;

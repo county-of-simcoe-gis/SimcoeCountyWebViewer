@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { Tooltip as ReactTooltip } from "react-tooltip";
 import "./Screenshot.css";
 import * as helpers from "../helpers/helpers";
+import { createObjectURL } from "../helpers/api";
 
 class Screenshot extends Component {
   constructor(props) {
@@ -24,7 +25,7 @@ class Screenshot extends Component {
       } else {
         canvas.toBlob(function (blob) {
           const elem = window.document.createElement("a");
-          elem.href = window.URL.createObjectURL(blob);
+          elem.href = createObjectURL(blob);
           elem.download = "map.png";
           document.body.appendChild(elem);
           elem.click();

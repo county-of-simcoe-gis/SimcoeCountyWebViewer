@@ -5,6 +5,7 @@ import PanelComponent from "../../../PanelComponent";
 import * as config from "./config.json";
 import Five11LayerToggler from "./Five11LayerToggler.jsx";
 import { InfoRow } from "../../../../helpers/InfoRow.jsx";
+import { unByKey } from "ol/Observable.js";
 
 class ThemeComponent extends Component {
   constructor(props) {
@@ -15,7 +16,6 @@ class ThemeComponent extends Component {
   componentDidMount() {
     // MAP CLICK FOR POPUP INFO
     this.mapClickEvent = window.map.on("singleclick", (evt) => {
-      console.log("click");
       if (window.isDrawingOrEditing || window.isCoordinateToolOpen || window.isMeasuring) return;
       var results = window.map.forEachFeatureAtPixel(
         evt.pixel,
@@ -59,6 +59,7 @@ class ThemeComponent extends Component {
   }
   onClose = () => {
     // ADD CLEAN UP HERE (e.g. Map Layers, Popups, etc)
+    unByKey(this.mapClickEvent);
 
     // CALL PARENT WITH CLOSE
     this.props.onClose();

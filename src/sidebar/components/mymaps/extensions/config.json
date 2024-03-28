@@ -1,0 +1,3 @@
+{
+  "extensions": [{ "type": "menu-item", "file": "ReportProblem.extension.js" }]
+}

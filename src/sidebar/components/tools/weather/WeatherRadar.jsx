@@ -10,6 +10,7 @@ import Static from "ol/source/ImageStatic";
 const WeatherRadar = (props) => {
   const radarImages = useRef([]);
   const radarInterval = useRef(null);
+
   const [radarDateSliderValue, setRadarDateSliderValue] = useState(helpers.roundTime(new Date()));
   const [radarOpacitySliderValue, setRadarOpacitySliderValue] = useState(0.7);
   const [startDate, setStartDate] = useState(helpers.roundTime(new Date(new Date().setHours(new Date().getHours() - 3))));
@@ -93,14 +94,21 @@ const WeatherRadar = (props) => {
   };
 
   const setStartAndEndDateDefault = () => {
-    setRadarDateSliderValue(startDate);
+    const firstImage = radarImages.current[0];
+    const startDate = firstImage.get("radarDate");
+    const lastImage = radarImages.current[radarImages.current.length - 1];
+    const endDate = lastImage.get("radarDate");
+
+    setStartDate(startDate);
+    setEndDate(endDate);
+    setRadarDateSliderValue(endDate);
     window.map.once(
       "postrender",
       (event) => {
         setIsLoading(false);
       },
       () => {
-        setRadarDateSliderValue(startDate);
+        setRadarDateSliderValue(endDate);
       }
     );
   };

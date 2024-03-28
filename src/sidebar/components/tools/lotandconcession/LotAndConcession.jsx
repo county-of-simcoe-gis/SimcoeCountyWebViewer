@@ -81,15 +81,16 @@ class ToolComponent extends Component {
       window.map.addLayer(this.layer);
 
       helpers.getWFSGeoJSON(
-        toolConfig.serverUrl,
-        this.layerName,
+        {
+          serverUrl: toolConfig.serverUrl,
+          layerName: this.layerName,
+          cqlFilter: sql,
+          sortField: "_lot,_con",
+          count: 1000,
+        },
         (result) => {
           this.updateFeatures(result);
-        },
-        "_lot,_con",
-        null,
-        sql,
-        1000
+        }
       );
     });
   };

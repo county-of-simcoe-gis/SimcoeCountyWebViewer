@@ -153,7 +153,7 @@ export function BasemapSwitcherProvider({ children }) {
               tiled: true,
               name: layerName,
               background: service.background,
-              rootPath: service.rootPath,
+              rootPath: service.rootPath.indexOf("http") === -1 ? `/${window.homepage}/${service.rootPath}` : service.rootPath,
               spritePath: service.spritePath,
               pngPath: service.pngPath,
               minZoom: service.minZoom,

@@ -1,5 +1,5 @@
 // REACT
-import React, { Component } from "react";
+import React, { Component, Fragment } from "react";
 import ReactDOM from "react-dom";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
 import { SubMenu, Item as MenuItem } from "rc-menu";
@@ -34,17 +34,17 @@ import { fromCircle } from "ol/geom/Polygon.js";
 import MyMapsAdvanced from "./MyMapsAdvanced";
 import Overlay from "ol/Overlay.js";
 import { getLength } from "ol/sphere.js";
-
-const feedbackTemplate = (feedbackUrl, xmin, xmax, ymin, ymax, centerx, centery, scale, myMapsId, featureId) =>
-  `${feedbackUrl}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True&MY_MAPS_ID=${myMapsId}&MY_MAPS_FEATURE_ID=${featureId}`;
+import { fetchExtensions } from "./extensions/_loader.js";
 
 class MyMaps extends Component {
   constructor(props) {
     super(props);
+
     helpers.waitForLoad("settings", Date.now(), 30, () => {
       this.storageKey = window.config.storageKeys.Draw;
     });
     // PROPS
+    this._isMounted = false;
     this.layerName = "local:myMaps";
     this.vectorSource = null;
     this.vectorLayer = null;
@@ -57,6 +57,10 @@ class MyMaps extends Component {
     this.bearing = null;
     this.length = null;
     this.currentDrawFeature = null;
+    this.extensions = [];
+    this.popupExtensions = [];
+    this.menuExtensions = [];
+    this.advancedExtensions = [];
     this.state = {
       drawType: "Cancel",
       drawColor: "#e809e5",
@@ -74,10 +78,20 @@ class MyMaps extends Component {
     // LISTEN FOR OTHER COMPONENTS ADDING A FEATURE
     window.emitter.addListener("addMyMapsFeature", (feature, labelText) => this.addNewItem(feature, labelText, true));
   }
-
+  addExtension = (component, action, order, type) => {
+    this.extensions.push({ component, action, order, type });
+  };
   componentDidMount() {
     helpers.waitForLoad(["settings", "map"], Date.now(), 30, () => {
-      helpers.addIsLoaded("mymap");
+      if (!this._isMounted)
+        fetchExtensions({ addExtension: this.addExtension }, () => {
+          this.extensions = helpers.sortByKey(this.extensions.concat([]), "order");
+          this.popupExtensions = this.extensions.filter((ext) => ext.type === "popup");
+          this.menuExtensions = this.extensions.filter((ext) => ext.type === "menu-item");
+          this.advancedExtensions = this.extensions.filter((ext) => ext.type === "advanced");
+          this._isMounted = true;
+          helpers.addIsLoaded("mymap");
+        });
     });
   }
 
@@ -711,8 +725,7 @@ class MyMaps extends Component {
       let geom = feature.getGeometry();
       if (geom === undefined) return;
       helpers.getGeometryCenter(geom, (featureCenter) => {
-        window.popup.hide();
-        // SHOW POPUP
+        window.popup.hide(); // SHOW POPUP
         window.popup.show(
           featureCenter.flatCoordinates,
           <MyMapsPopup
@@ -736,6 +749,7 @@ class MyMaps extends Component {
             onStrokeWidthSliderChange={this.onStrokeWidthSliderChange}
             onStrokeTypeDropDown={this.onStrokeTypeDropDown}
             onMyMapItemToolsButtonClick={this.onMyMapItemToolsButtonClick}
+            extensions={this.popupExtensions}
           />,
           "Drawing Options",
           () => {
@@ -746,7 +760,6 @@ class MyMaps extends Component {
     } else {
       center = evt.coordinate;
       window.popup.hide();
-
       // SHOW POPUP
       window.popup.show(
         center,
@@ -771,6 +784,7 @@ class MyMaps extends Component {
           onStrokeWidthSliderChange={this.onStrokeWidthSliderChange}
           onStrokeTypeDropDown={this.onStrokeTypeDropDown}
           onMyMapItemToolsButtonClick={this.onMyMapItemToolsButtonClick}
+          extensions={this.popupExtensions}
         />,
         "Drawing Options",
         () => {
@@ -833,9 +847,6 @@ class MyMaps extends Component {
       case "sc-floating-menu-edit-vertices":
         this.editVertices(item.id);
         break;
-      case "sc-floating-menu-report-problem":
-        this.onReportProblem(item.id);
-        break;
       case "sc-floating-menu-identify":
         this.onIdentify(item.id);
         break;
@@ -873,6 +884,9 @@ class MyMaps extends Component {
       default:
         break;
     }
+    this.menuExtensions.forEach((ext) => {
+      ext.action({ parent: this, action, item });
+    });
     // APP STATS
     helpers.addAppStat("MyMaps Menu", action);
   };
@@ -945,32 +959,11 @@ class MyMaps extends Component {
     window.emitter.emit("loadReport", <Identify geometry={feature.getGeometry()} />);
   };
 
-  onReportProblem = (id) => {
-    drawingHelpers.exportMyMaps((result) => {
-      // APP STATS
-      helpers.waitForLoad("settings", Date.now(), 30, () => {
-        helpers.addAppStat("Report Problem", "My Maps Toolbox");
-
-        const scale = helpers.getMapScale();
-        const extent = window.map.getView().calculateExtent(window.map.getSize());
-        const xmin = extent[0];
-        const xmax = extent[1];
-        const ymin = extent[2];
-        const ymax = extent[3];
-        const center = window.map.getView().getCenter();
-
-        let feedbackUrl = feedbackTemplate(window.config.feedbackUrl, xmin, xmax, ymin, ymax, center[0], center[1], scale, result.id, id);
-        if (window.config.mapId !== null && window.config.mapId !== undefined && window.config.mapId.trim() !== "") feedbackUrl += "&MAP_ID=" + window.config.mapId;
-
-        helpers.showURLWindow(feedbackUrl, false, "full");
-      });
-    }, id);
-  };
-
   onMyMapItemToolsButtonClick = (evt, item) => {
     var evtClone = Object.assign({}, evt);
     const feature = helpers.getFeatureFromGeoJSON(item.featureGeoJSON);
     const showCoordinates = feature.get("is_open_data");
+
     const menu = (
       <Portal>
         <FloatingMenu
@@ -1040,15 +1033,12 @@ class MyMaps extends Component {
               <FloatingMenuItem label="GeoJSON" />
             </MenuItem>
           </SubMenu>
-          <MenuItem
-            className={window.config.drawingOptionsToolsMenuVisibility["sc-floating-menu-report-problem"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"}
-            key="sc-floating-menu-report-problem"
-          >
-            <FloatingMenuItem imageName={"error.png"} label="Report a Problem" />
-          </MenuItem>
           <MenuItem className={window.config.drawingOptionsToolsMenuVisibility["sc-floating-menu-identify"] ? "sc-floating-menu-toolbox-menu-item" : "sc-hidden"} key="sc-floating-menu-identify">
             <FloatingMenuItem imageName={"identify.png"} label="Identify" />
           </MenuItem>
+          {this.menuExtensions.map((extension) => {
+            return <Fragment key={`${extension.type}-${extension.order}-${helpers.getUID()}`}>{extension.component()}</Fragment>;
+          })}
         </FloatingMenu>
       </Portal>
     );
@@ -1250,6 +1240,7 @@ class MyMaps extends Component {
     return (
       <div id={"sc-mymaps-container"} className="sc-mymaps-container">
         <ButtonBar onClick={this.onButtonBarClick} activeButton={this.state.drawType} isEditing={this.state.isEditing} />
+
         <ColorBar onClick={this.onColorBarClick} activeColor={this.state.drawColor} isEditing={this.state.isEditing} />
         <MyMapsItems isEditing={this.state.isEditing}>
           <TransitionGroup>
@@ -1277,6 +1268,7 @@ class MyMaps extends Component {
           onDeleteAllClick={this.onDeleteAllClick}
           onMyMapsImport={this.onMyMapsImport}
           hasItems={this.state.items && this.state.items.length > 0}
+          extensions={this.advancedExtensions || []}
         />
         <div id={this.state.toolTipId} className={window.isDrawingOrEditing && (this.state.drawType === "Bearing" || this.state.drawType === "Measure") ? this.state.toolTipClass : "sc-hidden"} />
       </div>

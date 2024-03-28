@@ -201,7 +201,7 @@
   ],
   "arcgis": {
     "INFO_FORMAT": "text/plain",
-    "XSL_TEMPLATE": "/public/xsl/esri_transform.xsl"
+    "XSL_TEMPLATE": "/xsl/esri_transform.xsl"
   },
   "dataTypes": [
     {
@@ -264,7 +264,7 @@
       "serviceUrl": "https://ws.lioservices.lrc.gov.on.ca/arcgis1071a/services",
       "urlSuffix": "/MapServer/WMSServer",
       "INFO_FORMAT": "text/plain",
-      "XSL_TEMPLATE": "/public/xsl/esri_transform.xsl"
+      "XSL_TEMPLATE": "/xsl/esri_transform.xsl"
     },
 
     {
@@ -277,7 +277,7 @@
       "serviceUrl": "https://maps.simcoe.ca/arcgis/services",
       "urlSuffix": "/MapServer/WMSServer",
       "INFO_FORMAT": "text/plain",
-      "XSL_TEMPLATE": "/public/xsl/esri_transform.xsl",
+      "XSL_TEMPLATE": "/xsl/esri_transform.xsl",
       "filterServices": ["Public/Operational_Layers_Dynamic"]
     }
   ]

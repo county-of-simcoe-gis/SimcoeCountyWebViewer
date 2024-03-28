@@ -76,6 +76,41 @@
   padding: 0 4px;
   color: white;
   text-decoration: none;
+  /* border: 1px solid #fff; */
+}
+.map-theme .ol-popup-previous {
+  position: absolute;
+  top: 6px;
+  right: 48px;
+  /* width: 10px; */
+  font-size: 15pt;
+  padding: 0 4px;
+  color: white;
+  text-decoration: none;
+  /* border: 1px solid #fff; */
+
+  padding-left: 0px !important;
+  padding-right: 0px !important;
+}
+.map-theme .ol-popup-next {
+  position: absolute;
+  top: 6px;
+  right: 27px;
+  /* width: 10px; */
+  font-size: 15pt;
+  padding: 0 4px;
+  color: white;
+  text-decoration: none;
+  /* border: 1px solid #fff; */
+
+  padding-left: 0px !important;
+  padding-right: 0px !important;
+}
+.map-theme .ol-popup-previous:after {
+  content: "\23F4";
+}
+.map-theme .ol-popup-next:after {
+  content: "\23F5";
 }
 
 .map-theme .ol-popup-closer:after {

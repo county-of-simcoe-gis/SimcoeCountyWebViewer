@@ -66,7 +66,6 @@ export function httpGetText(url, callback) {
       if (callback !== undefined) callback(responseText);
     })
     .catch((error) => {
-      //httpGetText(url.replace("opengis.simcoe.ca", "opengis2.simcoe.ca"), callback);
       console.error(error);
     });
 }

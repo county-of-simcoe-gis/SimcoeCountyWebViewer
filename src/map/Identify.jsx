@@ -9,7 +9,7 @@ import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
 import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style.js";
 import useIframeContentHeight from "../components/react-use-iframe-content-height";
-
+import { get } from "../helpers/api";
 class Identify extends Component {
   constructor(props) {
     super(props);
@@ -64,19 +64,12 @@ class Identify extends Component {
             let type = layer.get("tocDisplayName");
             let wfsUrl = layer.get("wfsUrl");
             let attachmentUrl = layer.get("attachmentUrl");
-            // https://maps2.simcoe.ca/arcgis/rest/services/OroMedonte/Oro_OperationalLayers_Dynamic/MapServer/74/queryAttachments?objectIds=56&globalIds=&definitionExpression=&attachmentsDefinitionExpression=&attachmentTypes=&size=&keywords=&resultOffset=&resultRecordCount=&returnUrl=true&f=pjson
-            const secureKey = layer.get("secureKey");
+            const secured = layer.get("secured");
             const minScale = layer.get("minScale");
             const hasAttachments = layer.get("hasAttachments");
 
             const params = {};
-            params["headers"] = {};
-            if (secureKey !== undefined) {
-              const headers = {};
-              headers[secureKey] = "GIS";
-              params["mode"] = "cors";
-              params.headers = headers;
-            }
+            if (secured) params["useBearerToken"] = secured;
             const isArcGISLayer = LayerHelpers.getLayerSourceType(layer.getSource()) === OL_DATA_TYPES.ImageArcGISRest;
             if (wfsUrl !== undefined && (geometry.getType() !== "Point" || isArcGISLayer)) {
               const feature = new Feature(geometry);
@@ -110,7 +103,7 @@ class Identify extends Component {
               if (wfsUrl.length > 8000) {
                 helpers.showMessage("Geometry too complex", "The geometry you are trying to use is too complex to identify.", helpers.messageColors.red);
               } else {
-                helpers.getJSONWithParams(wfsUrl, params, (result) => {
+                get(wfsUrl, params, (result) => {
                   const featureList = isArcGISLayer ? LayerHelpers.parseESRIIdentify(result) : new GeoJSON().readFeatures(result);
                   if (featureList.length > 0) {
                     if (displayName === "" || displayName === undefined) displayName = this.getDisplayNameFromFeature(featureList[0]);
@@ -150,17 +143,13 @@ class Identify extends Component {
                 : "";
               if (url) {
                 url += "&feature_count=1000000";
-                //console.log(url);
-                params.headers["Content-Type"] = "application/text";
-                helpers.httpGetTextWithParams(url, params, (result) => {
+                get(url, { ...params, type: "text" }, (result) => {
                   let tempResult = helpers.tryParseJSON(result);
-                  //console.log(tempResult);
                   if (tempResult !== false) {
                     result = tempResult;
                   } else {
                     return;
                   }
-                  //console.log(result);
                   const featureList = new GeoJSON().readFeatures(result);
                   if (featureList.length === 0) {
                     return;
@@ -189,7 +178,6 @@ class Identify extends Component {
             let displayName = "";
             let type = layer.get("tocDisplayName");
             const minScale = layer.get("minScale");
-            const params = {};
             let featureList = [];
             let pixel = window.map.getPixelFromCoordinate(geometry.flatCoordinates);
             window.map.forEachFeatureAtPixel(pixel, (feature, layer) => {

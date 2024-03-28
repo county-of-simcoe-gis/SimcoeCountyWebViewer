@@ -10,7 +10,7 @@
   font-size: 10pt;
   font-family: Arial !important;
 }
-#sc-theme-search-addresses-muni {
+#sc-tool-search-addresses-muni {
   z-index: 2 !important;
 }
 #sc-tool-search-addresses-street-search::placeholder {
@@ -26,41 +26,41 @@
   font-size: 9pt;
 }
 
-.sc-theme-search-addresses-controls {
+.sc-tool-search-addresses-controls {
   margin-top: 5px;
   margin-bottom: 5px;
   height: 145px;
 }
 
-.sc-theme-search-addresses-control {
+.sc-tool-search-addresses-control {
   display: table-cell;
 }
-.sc-theme-search-addresses-control.label {
+.sc-tool-search-addresses-control.label {
   width: 108px;
   font-size: 10pt;
 }
 
-.sc-theme-search-addresses-control.input {
+.sc-tool-search-addresses-control.input {
   width: 238px;
   font-size: 10pt;
 }
 
-.sc-theme-search-addresses-number {
+.sc-tool-search-addresses-number {
   width: 233px;
   height: 24px;
 }
 
-.sc-theme-search-addresses-control-row {
+.sc-tool-search-addresses-control-row {
   display: table;
   margin-top: 5px;
 }
 
-.sc-theme-search-addresses-button-container {
+.sc-tool-search-addresses-button-container {
   float: right;
   height: 34px;
 }
 
-.sc-theme-search-addresses-button {
+.sc-tool-search-addresses-button {
   display: table-cell;
   width: 112px;
   height: 31px;
@@ -82,14 +82,14 @@
   border-radius: 2px;
 }
 
-.sc-theme-search-addresses-control legend {
+.sc-tool-search-addresses-control legend {
   display: none !important;
 }
-.sc-theme-search-addresses-control fieldset {
+.sc-tool-search-addresses-control fieldset {
   top: 0px !important;
   box-shadow: none !important;
 }
-.sc-theme-search-addresses-number:focus-visible {
+.sc-tool-search-addresses-number:focus-visible {
   outline-color: #337ab7 !important;
 }
 .sc-tool-search-addresses-street-search-menu {
