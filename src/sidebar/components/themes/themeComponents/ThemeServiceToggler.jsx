@@ -15,7 +15,10 @@ const ThemeServiceToggler = (props) => {
   const [layers, setLayers] = useState([]);
   const [token, setToken] = useState("");
   const [showAll, setShowAll] = useState(false);
-
+  const idToIndexMap = new Map();
+  props.serviceConfig.layers.forEach((id, index) => {
+    idToIndexMap.set(id, index);
+  });
   const processLayers = (capabilities) => {
     let layerArray = [];
     let zIndex = props.serviceConfig.zIndex || 1000;
@@ -95,12 +98,20 @@ const ThemeServiceToggler = (props) => {
           hasAttachments: hasAttachments,
           recordCountUrl: recordCountUrl,
           featureQueryUrl: queryUrl,
+          layerId: layer.id,
         });
         newLayer["layerConfig"] = layer;
         newLayer["key"] = helpers.getUID();
         layerArray.push(newLayer);
       });
     });
+
+    layerArray = layerArray.sort((a, b) => {
+      const indexA = idToIndexMap.get(a.get("layerId"));
+      const indexB = idToIndexMap.get(b.get("layerId"));
+      return indexA - indexB; // Ascending order (use `indexB - indexA` for descending order)
+    });
+
     setLayers(layerArray);
   };
   useEffect(() => {
