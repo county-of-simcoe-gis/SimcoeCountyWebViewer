@@ -466,6 +466,7 @@ class AddLayerForm extends Component {
         layer_file: selectedFile,
         layer_displayName: displayName,
         selectedFormat: selectedFormat,
+        showExtent: selectedFormat.type === "static",
       });
     }
   };

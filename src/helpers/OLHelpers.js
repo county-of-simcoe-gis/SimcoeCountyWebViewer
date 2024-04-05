@@ -3,7 +3,8 @@ import * as esriHelpers from "./esriHelpers";
 import { get, createObjectURL } from "../helpers/api";
 // OPEN LAYERS
 import { Image as ImageLayer, Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup, VectorTile as VectorTileLayer } from "ol/layer.js";
-import { ImageWMS, OSM, TileArcGISRest, ImageArcGISRest, TileWMS, TileImage, Vector, Stamen, XYZ, ImageStatic } from "ol/source.js";
+import WebGLTileLayer from "ol/layer/WebGLTile.js";
+import { ImageWMS, OSM, TileArcGISRest, ImageArcGISRest, TileWMS, TileImage, Vector, Stamen, XYZ, ImageStatic, GeoTIFF } from "ol/source.js";
 import WMTS, { optionsFromCapabilities } from "ol/source/WMTS";
 import VectorTileSource from "ol/source/VectorTile";
 // import stylefunction from "ol-mapbox-style/dist/stylefunction";
@@ -57,6 +58,7 @@ export const OL_DATA_TYPES = {
   ImageArcGISRest: "ImageArcGISRest",
   LayerGroup: "LayerGroup",
   VectorTile: "VectorTile",
+  GeoTIFF: "GeoTIFF",
 };
 
 export class FeatureHelpers {
@@ -88,6 +90,8 @@ export class FeatureHelpers {
         return new MVT();
       case OL_DATA_TYPES.VectorTile:
         return new VectorTileSource();
+      case OL_DATA_TYPES.GeoTIFF:
+        return new GeoTIFF();
       default:
         return;
     }
@@ -603,6 +607,7 @@ export class LayerHelpers {
     if (source instanceof WMTS) return OL_DATA_TYPES.WMTS;
     if (source instanceof TileWMS) return OL_DATA_TYPES.TileWMS;
     if (source instanceof VectorTileSource) return OL_DATA_TYPES.VectorTile;
+    if (source instanceof GeoTIFF) return OL_DATA_TYPES.GeoTIFF;
 
     return "unknown";
   }
@@ -725,6 +730,21 @@ export class LayerHelpers {
               rebuildParams: rebuildParams,
               source: new Vector({
                 name: name,
+              }),
+            })
+          );
+          return;
+        } else if (file.type === "image/tiff") {
+          const imageUrl = createObjectURL(file);
+          callback(
+            new WebGLTileLayer({
+              rebuildParams: rebuildParams,
+              source: new GeoTIFF({
+                sources: [
+                  {
+                    url: imageUrl,
+                  },
+                ],
               }),
             })
           );
@@ -949,6 +969,18 @@ export class LayerHelpers {
               strategy: tiled ? LoadingStrategyTile(TileGrid.createXYZ({ maxZoom: 19 })) : LoadingStrategyAll,
               format: new MVT(),
               loader: Vector_FileLoader,
+              crossOrigin: "anonymous",
+            }),
+          })
+        );
+        break;
+      case OL_DATA_TYPES.GeoTIFF:
+        callback(
+          new WebGLTileLayer({
+            rebuildParams: rebuildParams,
+            source: new GeoTIFF({
+              name: name,
+              sources: [{ url: url }],
               crossOrigin: "anonymous",
             }),
           })
