@@ -128,6 +128,13 @@
       "extensions": "kml"
     },
     {
+      "key": "local_geotiff",
+      "source": "file",
+      "method": "raster",
+      "type": "GeoTIFF",
+      "extensions": "tif"
+    },
+    {
       "key": "local_osmxml",
       "source": "file",
       "method": "vector",

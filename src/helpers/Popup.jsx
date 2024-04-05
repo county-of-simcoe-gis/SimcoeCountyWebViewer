@@ -85,7 +85,7 @@ export default class Popup extends Overlay {
         this.contentPrevButtonContainer.className = "sc-popup-content-prev-button";
       }
 
-      this.headerTitle.innerHTML = this.contentArray[this.contentIndex].title;
+      this.headerTitle.innerHTML = this.contentArray[this.contentIndex].title || "Info";
       //ReactDOM.render(html, this.content);
       if (isDOMTypeElement(this.contentArray[this.contentIndex].html)) {
         // REGULAR HTML
