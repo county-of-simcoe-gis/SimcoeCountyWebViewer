@@ -1,0 +1,13 @@
+node_modules
+.vs_code
+.github
+SQL_Scripts
+config.js.dev
+config.js.prod
+Build.ps1
+sc_copyToServer.bat
+.gitignore
+Dockerfile
+.env.development
+.env.local
+.env.production
