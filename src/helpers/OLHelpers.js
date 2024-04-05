@@ -4,7 +4,7 @@ import { get, createObjectURL } from "../helpers/api";
 // OPEN LAYERS
 import { Image as ImageLayer, Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup, VectorTile as VectorTileLayer } from "ol/layer.js";
 import WebGLTileLayer from "ol/layer/WebGLTile.js";
-import { ImageWMS, OSM, TileArcGISRest, ImageArcGISRest, TileWMS, TileImage, Vector, Stamen, XYZ, ImageStatic, GeoTIFF } from "ol/source.js";
+import { ImageWMS, OSM, TileArcGISRest, ImageArcGISRest, TileWMS, TileImage, Vector, XYZ, ImageStatic, GeoTIFF, StadiaMaps as Stamen } from "ol/source.js";
 import WMTS, { optionsFromCapabilities } from "ol/source/WMTS";
 import VectorTileSource from "ol/source/VectorTile";
 // import stylefunction from "ol-mapbox-style/dist/stylefunction";
