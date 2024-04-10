@@ -871,7 +871,8 @@ export function stringDivider(str, width, spaceReplacer) {
   return str;
 }
 
-export function saveToStorage(storageKey, item) {
+export function saveToStorage(storageKey, item, options = {}) {
+  const { allowSaveToServer = true } = options;
   try {
     if (typeof item === "object") window.localStorage.setItem(storageKey, JSON.stringify(item));
     else window.localStorage.setItem(storageKey, JSON.stringify(item));
@@ -879,7 +880,7 @@ export function saveToStorage(storageKey, item) {
     console.log(e);
     cleanupStorage();
   }
-  if (window.security.includes("saveToServer")) setUserStorage();
+  if (window.security.includes("saveToServer") && allowSaveToServer) setUserStorage();
 }
 export function removeFromStorage(storageKey) {
   try {

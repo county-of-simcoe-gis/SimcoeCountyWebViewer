@@ -69,7 +69,7 @@ export const login = (callback) => {
   });
 };
 
-export function processToken(esriLogin) {
+export function processToken(esriLogin, callback = undefined) {
   let configSecured = {};
   helpers.waitForLoad("settings", Date.now(), 30, () => {
     configSecured = window.config.configSecured;
@@ -88,8 +88,9 @@ export function processToken(esriLogin) {
   if (!esriLogin["IssueDate"]) esriLogin["IssueDate"] = currentTime;
   if (!esriLogin["RenewalDate"]) esriLogin["RenewalDate"] = currentTime + parseInt(esriLogin.expires_in) - configSecured.securedArcGIS.maxActiveTime; //maxActiveTime = 43200000 = 12 hours in ms
   if (esriLogin["access_token"]) sessionStorage.removeItem("esriJSAPIOAuth");
-  helpers.saveToStorage("ArcGIS_Token", esriLogin);
+  helpers.saveToStorage("ArcGIS_Token", esriLogin, { allowSaveToServer: false });
   helpers.addIsLoaded("esriLogin");
+  if (callback) callback(esriLogin);
 }
 
 export async function getAccessToken(callback) {
@@ -97,13 +98,13 @@ export async function getAccessToken(callback) {
   helpers.waitForLoad("settings", Date.now(), 30, () => {
     configSecured = window.config.configSecured;
   });
-  const forceAppRefresh = (tokenInfo) => {
-    const refreshDelay = 5000;
+
+  const forceAppRefresh = (tokenInfo, refreshDelay = 5000, title = "ArcGIS Token expired!", message = "ArcGIS Token expired, refreshing page...", color = helpers.messageColors.red) => {
     const reloadTimeout = tokenInfo.RenewalDate - Date.now();
 
     setTimeout(() => {
       //force refresh of page if left active for longer than the maxActiveTime
-      helpers.showMessage("ArcGIS Token expired!", "ArcGIS Token expired, refreshing page...", helpers.messageColors.red, refreshDelay, true);
+      helpers.showMessage(title, message, color, refreshDelay, true);
       console.warn("ArcGIS Token expired.  Page will automatically refresh.");
       setTimeout(() => {
         window.location.reload();
@@ -111,8 +112,11 @@ export async function getAccessToken(callback) {
     }, reloadTimeout - refreshDelay);
   };
   let esriLogin = sessionStorage.getItem("esriJSAPIOAuth");
-  if (esriLogin) processToken(JSON.parse(esriLogin));
-  esriLogin = helpers.getItemsFromStorage("ArcGIS_Token");
+  if (esriLogin)
+    processToken(JSON.parse(esriLogin), (retLogin) => {
+      esriLogin = retLogin;
+    });
+  else esriLogin = helpers.getItemsFromStorage("ArcGIS_Token");
 
   if (esriLogin && esriLogin.access_token && Date.now() < esriLogin.RenewalDate) {
     forceAppRefresh(esriLogin);
@@ -120,23 +124,23 @@ export async function getAccessToken(callback) {
     else return esriLogin.access_token;
   } else {
     login((esriLogin) => {
-      processToken({
-        expires_in: esriLogin["expires"] - Date.now(),
-        IssueDate: esriLogin["creationTime"],
-        ExpiryDate: esriLogin["expires"],
-        RenewalDate: parseInt(esriLogin["expires"]) - configSecured.securedArcGIS.maxActiveTime, //maxActiveTime = 43200000 = 12 hours in ms
-        username: esriLogin["userId"],
-        ssl: esriLogin["ssl"],
-        access_token: esriLogin["token"],
-        state: { portalUrl: esriLogin["server"] },
-      });
-
-      //autoLogin();
-      helpers.waitForLoad(["esriLogin"], Date.now(), 60, () => {
-        const esriLogin = helpers.getItemsFromStorage("ArcGIS_Token");
-        forceAppRefresh(esriLogin);
-        if (esriLogin && Date.now() < esriLogin.RenewalDate) callback(esriLogin.access_token);
-      });
+      processToken(
+        {
+          expires_in: esriLogin["expires"] - Date.now(),
+          IssueDate: esriLogin["creationTime"],
+          ExpiryDate: esriLogin["expires"],
+          RenewalDate: parseInt(esriLogin["expires"]) - configSecured.securedArcGIS.maxActiveTime, //maxActiveTime = 43200000 = 12 hours in ms
+          username: esriLogin["userId"],
+          ssl: esriLogin["ssl"],
+          access_token: esriLogin["token"],
+          state: { portalUrl: esriLogin["server"] },
+        },
+        (retLogin) => {
+          esriLogin = retLogin;
+          if (esriLogin && Date.now() < esriLogin.RenewalDate) callback(esriLogin.access_token);
+          else forceAppRefresh(esriLogin, 2500, "Acquiring ArcGIS Token", "Acquiring ArcGIS Token, refreshing page...", helpers.messageColors.yellow);
+        }
+      );
     });
   }
 }
