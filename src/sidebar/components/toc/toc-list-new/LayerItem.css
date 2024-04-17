@@ -1,5 +1,8 @@
 .sc-toc-item-container {
   display: table;
+  -webkit-user-select: none; /* Chrome all / Safari all */
+  -moz-user-select: none; /* Firefox all */
+  -ms-user-select: none; /* IE 10+ */
   user-select: none;
   margin-right: 2px;
   margin-left: 2px;

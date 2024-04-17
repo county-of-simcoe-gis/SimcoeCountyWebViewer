@@ -494,6 +494,10 @@ input[type="number"]::-webkit-outer-spin-button {
 .sc-attachment-icon {
   color: #626262;
 }
+
+.sc-drag-icon {
+  color: #626262;
+}
 @media print {
   .no-print,
   .no-print * {

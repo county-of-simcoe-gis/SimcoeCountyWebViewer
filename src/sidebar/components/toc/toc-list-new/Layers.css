@@ -8,7 +8,17 @@
   margin-left: 5px !important;
 }
 
-.sc-dragover {
-  background-color: blueviolet;
-  padding-left: 10px;
+#sc-toc-list-layers-sortablevirtuallist-virtual-layers {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sc-toc-list-layers-sortablevirtuallist-virtual-layers-listitem {
+  min-height: 30px;
+  list-style: none;
+}
+
+.sc-toc-list-layers-sortablevirtuallist-virtual-layers-listitem.sc-dragged {
+  z-index: 4 !important; /*override default z-index to show dragged item above sidebar*/
 }

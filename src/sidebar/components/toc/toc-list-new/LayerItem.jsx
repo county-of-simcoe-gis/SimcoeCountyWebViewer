@@ -4,6 +4,7 @@ import Highlighter from "react-highlight-words";
 import LayerLegend from "../common/LayerLegend";
 import { acceptDisclaimer } from "../common/TOCHelpers.jsx";
 import { FaPaperclip } from "react-icons/fa";
+import { IoReorderThreeSharp } from "react-icons/io5";
 
 import "./LayerItem.css";
 class LayerItem extends Component {
@@ -67,7 +68,9 @@ class LayerItem extends Component {
     return (
       <div id={layerInfo.name + "_" + layerInfo.group + "_listview"}>
         <div className={containerClassName}>
-          <div className="sc-toc-item-plus-minus-container" onClick={() => this.props.onLegendToggle(layerInfo, this.props.group)}>
+          <IoReorderThreeSharp className="sc-drag-icon" size="15px" title="Drag to reorder" />
+
+          <div className="sc-toc-item-plus-minus-container" role="button" onClick={() => this.props.onLegendToggle(layerInfo, this.props.group)}>
             <img
               src={
                 this.props.layerInfo.styleUrl === "" && (this.props.layerInfo.legendObj === undefined || this.props.layerInfo.legendObj === null)
@@ -88,9 +91,9 @@ class LayerItem extends Component {
             <div className="sc-toc-item-plus-minus-sign" />
             <div className="sc-toc-item-lines-expanded" />
           </div>
-          <label>
+          <label htmlFor={`sc-toc-item-checkbox-${layerInfo.name}_${layerInfo.group}`}>
             <input
-              id="sc-toc-item-checkbox"
+              id={`sc-toc-item-checkbox-${layerInfo.name}_${layerInfo.group}`}
               className="sc-toc-item-checkbox"
               key={helpers.getUID()}
               type="checkbox"
@@ -122,7 +125,7 @@ class LayerItem extends Component {
             <img src={images["user-icon.png"]} alt="user added layer" />
           </div>
         </div>
-        <div className="sc-toc-list-item-toolbox" title="Layer Options" onClick={(evt) => this.props.onLayerOptionsClick(evt, layerInfo)}>
+        <div className="sc-toc-list-item-toolbox" title="Layer Options" role="button" onClick={(evt) => this.props.onLayerOptionsClick(evt, layerInfo)}>
           <img src={images["more-options.png"]} alt="more options" />
         </div>
         <div className={layerInfo.showLegend ? "sc-toc-layer-info-container" : "sc-hidden"}>
