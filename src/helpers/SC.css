@@ -382,6 +382,12 @@ p {
 .sc-fieldset > legend > img {
   vertical-align: text-bottom;
 }
+.sc-draggable {
+}
+
+/* (Optional) Apply a "closed-hand" cursor during drag operation. */
+.sc-draggable:active {
+}
 
 .sc-noselect {
   -webkit-touch-callout: none; /* iOS Safari */
@@ -389,8 +395,7 @@ p {
   -khtml-user-select: none; /* Konqueror HTML */
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* Internet Explorer/Edge */
-  user-select: none; /* Non-prefixed version, currently
-                                  supported by Chrome and Opera */
+  user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
 }
 
 .sc-disabled {

@@ -7,7 +7,7 @@ import { isMobile } from "react-device-detect";
 import * as TOCHelpers from "./common/TOCHelpers.jsx";
 import TOCHeader from "./common/TOCHeader.jsx";
 import LayerOptionsMenu from "./common/LayerOptionsMenu.jsx";
-import TOCListView from "./toc-list-view/TOCListView.jsx";
+import TOCListView from "./toc-list-new/TOCListView.jsx";
 import TOCFolderView from "./toc-folder-view/TOCFolderView.jsx";
 import * as helpers from "../../../helpers/helpers";
 import { LayerHelpers } from "../../../helpers/OLHelpers";
