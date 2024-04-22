@@ -55,17 +55,22 @@ export const login = (callback) => {
     configSecured = window.config.configSecured;
 
     initialize(configSecured.securedArcGIS.appId, configSecured.securedArcGIS.portalUrl);
-    let creds = signIn().then(
-      (result) => {
-        return result;
-      },
-      (error) => {
-        console.error(error);
-      }
-    );
+    let creds = new Promise((resolve, reject) => {
+      signIn().then(
+        (result) => {
+          resolve(result);
+        },
+        (error) => {
+          console.error(error);
+          reject(error);
+        }
+      );
+    });
 
-    if (!callback) return creds;
-    else callback(creds);
+    creds.then((result) => {
+      if (!callback) return result;
+      else callback(result);
+    });
   });
 };
 
