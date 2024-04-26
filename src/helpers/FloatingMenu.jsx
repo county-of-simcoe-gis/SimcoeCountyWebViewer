@@ -7,13 +7,16 @@ import { waitForLoad } from "./helpers";
 
 // PROPER USE OF THIS COMPONENT IS TO USE A PORTAL.  HAVE A LOOK AT MyMapsItem FOR AN EXAMPLE.
 const FloatingMenu = (props) => {
+  let { positionX, positionY } = props;
+  if (positionX === undefined) positionX = props.buttonEvent.pageX;
+  if (positionY === undefined) positionY = props.buttonEvent.pageY;
   const isMounted = useRef(false);
   const [isVisible, setIsVisible] = useState(true);
   const [style, setStyle] = useState({
     position: "absolute",
     zIndex: 10000,
-    top: props.buttonEvent.pageY,
-    left: props.buttonEvent.pageX,
+    top: positionY,
+    left: positionX,
     backgroundColor: "white",
     width: "180px",
   });
@@ -36,7 +39,7 @@ const FloatingMenu = (props) => {
     getStyle((newStyle) => {
       setStyle(newStyle);
     });
-  }, [props.autoX, props.autoY, props.buttonEvent.pageX, props.buttonEvent.pageY, props.styleMode]);
+  }, [props.autoX, props.autoY, props.buttonEvent.pageX, props.buttonEvent.pageY, props.styleMode, props.positionX, props.positionY, props.yOffset, props.xOffset, props.width]);
   const cleanup = () => {
     document.body.removeEventListener("click", handleClickAway, true);
     container.current = null;
@@ -89,17 +92,17 @@ const FloatingMenu = (props) => {
       }
 
       if (props.styleMode === "right") {
-        xOffset = props.buttonEvent.pageX;
+        xOffset = positionX;
       } else if (props.styleMode === "left") {
-        xOffset = props.buttonEvent.pageX - 180;
+        xOffset = positionX - 180;
       } else if (props.autoX) {
-        if (props.buttonEvent.pageX < 180) {
-          xOffset = props.buttonEvent.pageX;
+        if (positionX < 180) {
+          xOffset = positionX;
         } else {
-          xOffset = props.buttonEvent.pageX - 180;
+          xOffset = positionX - 180;
         }
       } else {
-        xOffset = props.buttonEvent.pageX;
+        xOffset = positionX;
       }
 
       if (props.yOffset !== undefined) yOffset = props.yOffset;
@@ -108,7 +111,7 @@ const FloatingMenu = (props) => {
       style = {
         position: "absolute",
         zIndex: 1000,
-        top: props.buttonEvent.pageY - yOffset,
+        top: positionY - yOffset,
         //left: this.state.styleMode === "right" ? this.props.buttonEvent.pageX : this.props.buttonEvent.pageX - 180,
         left: xOffset,
         backgroundColor: "white",

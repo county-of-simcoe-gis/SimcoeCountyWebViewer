@@ -1,6 +1,5 @@
 // REACT
 import React, { Component } from "react";
-import ReactDOM from "react-dom";
 import { isMobile } from "react-device-detect";
 
 //CUSTOM
@@ -98,7 +97,10 @@ class TOC extends Component {
             layers.forEach((layer) => {
               if (layer.visible && layer.liveLayer) {
                 LayerHelpers.identifyFeatures(layer.layer, evt.coordinate, (feature) => {
-                  if (feature !== undefined) helpers.showFeaturePopup(evt.coordinate, feature);
+                  if (feature !== undefined) {
+                    feature.setProperties({ layerDisplayName: layer.displayName });
+                    helpers.showFeaturePopup(evt.coordinate, feature);
+                  }
                 });
               }
             });
@@ -494,7 +496,10 @@ class TOC extends Component {
       allLayers.forEach((layer) => {
         if (layer.visible && layer.liveLayer) {
           LayerHelpers.identifyFeatures(layer.layer, evt.coordinate, (feature) => {
-            if (feature !== undefined) helpers.showFeaturePopup(evt.coordinate, feature);
+            if (feature !== undefined) {
+              feature.setProperties({ layerDisplayName: layer.displayName });
+              helpers.showFeaturePopup(evt.coordinate, feature);
+            }
           });
         }
       });
@@ -923,7 +928,7 @@ class TOC extends Component {
   onLayerOptionsClick = (evt, layerInfo) => {
     var evtClone = Object.assign({}, evt);
     const menu = <LayerOptionsMenu key={helpers.getUID} evt={evtClone} layerInfo={layerInfo} onLayerChange={this.onLayerChange} onRemoveLayer={this.removeCustomLayer} />;
-    ReactDOM.render(menu, document.getElementById("portal-root"));
+    window.portalRoot.render(menu);
   };
   //#endregion
   //#region HANDLE HEADER CALLBACKS

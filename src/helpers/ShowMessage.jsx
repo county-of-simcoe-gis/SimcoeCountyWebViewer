@@ -27,6 +27,7 @@ class ShowMessage extends Component {
     this._isMounted = false;
   }
   onCloseClick = (value) => {
+    if (this.props.onClose) this.props.onClose(value);
     if (this._isMounted) this.setState({ hide: true });
   };
 

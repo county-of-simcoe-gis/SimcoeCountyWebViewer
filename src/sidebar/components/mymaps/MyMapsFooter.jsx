@@ -1,5 +1,4 @@
 import React from "react";
-import ReactDOM from "react-dom";
 import "./MyMapsFooter.css";
 import * as helpers from "../../../helpers/helpers";
 import FloatingMenu, { FloatingMenuItem } from "../../../helpers/FloatingMenu.jsx";
@@ -13,11 +12,18 @@ const MyMapsFooter = (props) => {
 
   // PARENT CHANGES THE COLOR FROM STORAGE
   //useEffect(() => {});
+  function getPositionXY(element) {
+    let rect = element.getBoundingClientRect();
+    return { positionX: rect.x, positionY: rect.y };
+  }
   function onToolsClick(evt) {
     var evtClone = Object.assign({}, evt);
+    const { positionX, positionY } = getPositionXY(document.getElementById("sc-mymaps-footer-button-tools"));
     const menu = (
       <Portal>
         <FloatingMenu
+          positionX={positionX}
+          positionY={positionY}
           autoY={true}
           key={helpers.getUID()}
           buttonEvent={evtClone}
@@ -55,7 +61,7 @@ const MyMapsFooter = (props) => {
       </Portal>
     );
 
-    ReactDOM.render(menu, document.getElementById("portal-root"));
+    window.portalRoot.render(menu);
   }
 
   return (
@@ -63,7 +69,7 @@ const MyMapsFooter = (props) => {
       <button className="sc-button sc-mymaps-footer-button delete" onClick={props.onDeleteAllClick}>
         Delete All
       </button>
-      <button className="sc-button sc-mymaps-footer-button tools" onClick={onToolsClick}>
+      <button id={"sc-mymaps-footer-button-tools"} className="sc-button sc-mymaps-footer-button tools" onClick={onToolsClick}>
         Additional Tools
       </button>
     </div>

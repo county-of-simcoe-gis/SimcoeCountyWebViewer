@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import ReactDOM from "react-dom";
 import * as helpers from "../../../../helpers/helpers";
 import FloatingMenu, { FloatingMenuItem } from "../../../../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
@@ -104,7 +103,7 @@ class GroupItem extends Component {
       </Portal>
     );
 
-    ReactDOM.render(menu, document.getElementById("portal-root"));
+    window.portalRoot.render(menu);
   };
   componentDidMount() {
     this._isMounted = true;
