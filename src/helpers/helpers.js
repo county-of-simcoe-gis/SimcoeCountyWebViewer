@@ -123,7 +123,9 @@ export function isMobile() {
 
 // SHOW CONTENT WINDOW
 export function showWindow(contents, options = { title: "Information", showFooter: false, mode: "normal", hideScroll: false }) {
-  const uniqueId = `map-modal-window-${getUID()}}`;
+  const uniqueId = `map-modal-window-${"show-window"}}`;
+  if (document.getElementById(uniqueId) !== null) document.getElementById(uniqueId).remove();
+
   const element = document.createElement("div");
   element.setAttribute("id", uniqueId);
   document.getElementById("map-modal-window").appendChild(element);
@@ -140,9 +142,9 @@ export function showWindow(contents, options = { title: "Information", showFoote
         }
       };
     }, []);
-    return <ShowWindow key={props.id} title={props.title} mode={props.mode} showFooter={props.showFooter} contents={props.contents} hideScroll={props.hideScroll} />;
+    return <ShowWindow key={props.id} {...props} />;
   };
-  root.render(<ShowWindowWithCallback key={uuidv4()} title={options.title} mode={options.mode} showFooter={options.showFooter} contents={contents} hideScroll={options.hideScroll} />);
+  root.render(<ShowWindowWithCallback id={uuidv4()} contents={contents} {...options} />);
 }
 
 // SHOW URL WINDOW
@@ -1586,6 +1588,7 @@ export function loadConfig(configSecured = {}, callback) {
         }, 1500);
         window.config = config;
         callback();
+        return;
       }
       const settings = JSON.parse(result.json);
       if (settings.name !== undefined) document.title = settings.name;
