@@ -1066,7 +1066,7 @@ class TOC extends Component {
           savedLayers[layer.name] = saveLayer;
         });
         let currentGroup = currentGroupList.filter((item) => item.value === group)[0];
-
+        if (currentGroup === undefined) continue;
         savedGroup["name"] = groupName;
         savedGroup["value"] = currentGroup.value;
         savedGroup["label"] = currentGroup.label;
