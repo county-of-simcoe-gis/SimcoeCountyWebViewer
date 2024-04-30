@@ -129,8 +129,8 @@ class LayerItem extends Component {
           <img src={images["more-options.png"]} alt="more options" />
         </div>
         <div className={layerInfo.showLegend ? "sc-toc-layer-info-container" : "sc-hidden"}>
-          <div className="sc-toc-item-layer-info-container-open-vertical-lines" />
-          <div className="sc-toc-item-layer-info-container-open-horizontal-lines" />
+          <div className="sc-toc-item-layer-list-info-container-open-vertical-lines" />
+          <div className="sc-toc-item-layer-list-info-container-open-horizontal-lines" />
           <LayerLegend legend={layerInfo.legendObj} image={layerInfo.legendImage} key={helpers.getUID()} />
         </div>
       </div>

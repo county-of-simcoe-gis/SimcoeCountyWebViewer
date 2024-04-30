@@ -83,7 +83,7 @@
   vertical-align: text-top;
 }
 
-.sc-toc-item-layer-info-container-open-vertical-lines {
+.sc-toc-item-layer-list-info-container-open-vertical-lines {
   height: 22px;
   width: 11px;
   position: relative;
@@ -93,7 +93,7 @@
 
   background: url(../images/verticle_dots.png) 0px repeat-y;
 }
-.sc-toc-item-layer-info-container-open-horizontal-lines {
+.sc-toc-item-layer-list-info-container-open-horizontal-lines {
   height: 5px;
   width: 11px;
   position: relative;
