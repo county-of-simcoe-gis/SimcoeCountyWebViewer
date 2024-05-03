@@ -7,33 +7,37 @@ import { waitForLoad } from "./helpers";
 
 // PROPER USE OF THIS COMPONENT IS TO USE A PORTAL.  HAVE A LOOK AT MyMapsItem FOR AN EXAMPLE.
 const FloatingMenu = (props) => {
-  let { positionX, positionY } = props;
-  if (positionX === undefined) positionX = props.buttonEvent.pageX;
-  if (positionY === undefined) positionY = props.buttonEvent.pageY;
+  const positionXRef = useRef(props.positionX || props.buttonEvent.pageX);
+  const positionYRef = useRef(props.positionY || props.buttonEvent.pageY);
   const isMounted = useRef(false);
   const [isVisible, setIsVisible] = useState(true);
   const [style, setStyle] = useState({
     position: "absolute",
-    zIndex: 10000,
-    top: positionY,
-    left: positionX,
+    zIndex: 0,
+    top: positionYRef.current,
+    left: positionXRef.current,
     backgroundColor: "white",
     width: "180px",
   });
   const container = useRef(null);
   useEffect(() => {
+    if (props.positionX !== undefined) positionXRef.current = props.positionX;
+    if (props.positionY !== undefined) positionYRef.current = props.positionY;
+    if (props.buttonEvent.pageX !== undefined) positionXRef.current = props.buttonEvent.pageX;
+    if (props.buttonEvent.pageY !== undefined) positionYRef.current = props.buttonEvent.pageY;
+    if (props.isVisible !== undefined) setIsVisible(props.isVisible);
+  }, [props.positionX, props.positionY, props.buttonEvent.pageX, props.buttonEvent.pageY, props.isVisible]);
+
+  useEffect(() => {
     isMounted.current = true;
     waitForLoad("settings", Date.now(), 30, () => {
       document.body.addEventListener("click", handleClickAway, true);
     });
-  }, []);
-  useEffect(
-    () => () => {
+    return () => {
       isMounted.current = false;
       cleanup();
-    },
-    []
-  );
+    };
+  }, []);
   useEffect(() => {
     if (isMounted.current === false) return;
     getStyle((newStyle) => {
@@ -78,9 +82,13 @@ const FloatingMenu = (props) => {
   };
 
   const getStyle = (callback) => {
+    if (!isVisible || !isMounted.current) {
+      callback({ display: "none" });
+      return;
+    }
     let yOffset = 0;
     let xOffset = 0;
-    let style = null;
+    let styleLocal = null;
     window.requestAnimationFrame(() => {
       if (props.autoY) {
         if (container.current !== undefined && container.current !== null) {
@@ -92,33 +100,34 @@ const FloatingMenu = (props) => {
       }
 
       if (props.styleMode === "right") {
-        xOffset = positionX;
+        xOffset = positionXRef.current;
       } else if (props.styleMode === "left") {
-        xOffset = positionX - 180;
+        xOffset = positionXRef.current - 180;
       } else if (props.autoX) {
-        if (positionX < 180) {
-          xOffset = positionX;
+        if (positionXRef.current < 180) {
+          xOffset = positionXRef.current;
         } else {
-          xOffset = positionX - 180;
+          xOffset = positionXRef.current - 180;
         }
       } else {
-        xOffset = positionX;
+        xOffset = positionXRef.current;
       }
 
       if (props.yOffset !== undefined) yOffset = props.yOffset;
       if (props.xOffset !== undefined) xOffset = props.xOffset;
       let width = props.width !== undefined ? props.width : "180px";
-      style = {
+      styleLocal = {
         position: "absolute",
         zIndex: 1000,
-        top: positionY - yOffset,
+        top: positionYRef.current - yOffset,
         //left: this.state.styleMode === "right" ? this.props.buttonEvent.pageX : this.props.buttonEvent.pageX - 180,
         left: xOffset,
         backgroundColor: "white",
         width: width,
       };
 
-      callback(style);
+      if (callback) callback(styleLocal);
+      else return styleLocal;
     });
   };
 
