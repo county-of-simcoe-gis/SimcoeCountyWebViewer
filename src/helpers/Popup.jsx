@@ -39,10 +39,10 @@ export default class Popup extends Overlay {
     }
 
     //options.stopEvent = false;
-
     var element = document.createElement("div");
     options.element = element;
     super(options);
+    this.root = null;
     this.container = element;
     this.container.className = "ol-popup";
     this.container.id = "sc-window-popup";
@@ -91,7 +91,7 @@ export default class Popup extends Overlay {
         this.content.appendChild(this.contentArray[this.contentIndex].html);
       } else {
         // REACT COMPONENT
-        this.root.render(this.contentArray[this.contentIndex].html);
+        this.renderRoot(this.contentArray[this.contentIndex].html);
       }
     });
     this.contentPrevButton.addEventListener("click", () => {
@@ -117,7 +117,7 @@ export default class Popup extends Overlay {
         this.content.appendChild(this.contentArray[this.contentIndex].html);
       } else {
         // REACT COMPONENT
-        this.root.render(this.contentArray[this.contentIndex].html);
+        this.renderRoot(this.contentArray[this.contentIndex].html);
       }
     });
     this.headerCloseContainer = document.createElement("div");
@@ -159,11 +159,9 @@ export default class Popup extends Overlay {
 
     this.content = document.createElement("div");
     this.content.className = "ol-popup-content";
-    this.uniqueId = `sc-popup-content-${helpers.getUID()}}`;
+    this.uniqueId = `sc-window-popup-content`;
     this.content.setAttribute("id", this.uniqueId);
-    this.root = createRoot(this.content);
     this.container.appendChild(this.content);
-
     // Apply workaround to enable scrolling of content div on touch devices
     Popup.enableTouchScroll_(this.content);
 
@@ -183,7 +181,21 @@ export default class Popup extends Overlay {
       window.popupActive = false;
     };
   }
-
+  renderRoot(child) {
+    if (isDOMTypeElement(child)) {
+      // REGULAR HTML
+      this.content.innerHTML = "";
+      this.content.appendChild(child);
+    } else {
+      // REACT COMPONENT
+      if (this.root !== null) {
+        this.root.render(child);
+      } else {
+        this.root = createRoot(this.content);
+        this.root.render(child);
+      }
+    }
+  }
   /**
    * Show the popup.
    * @param {ol.Coordinate} coord Where to anchor the popup.
@@ -231,7 +243,7 @@ export default class Popup extends Overlay {
       this.content.appendChild(html);
     } else {
       // REACT COMPONENT
-      this.root.render(html);
+      this.renderRoot(html);
     }
 
     this.container.style.display = "block";
