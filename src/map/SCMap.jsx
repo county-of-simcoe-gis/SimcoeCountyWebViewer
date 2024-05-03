@@ -181,7 +181,7 @@ const SCMap = (props) => {
 
         const menu = (
           <Portal>
-            <FloatingMenu key={helpers.getUID()} buttonEvent={evt} onMenuItemClick={onMenuItemClick} autoY={true} autoX={true}>
+            <FloatingMenu key={helpers.getUID()} buttonEvent={evt} onMenuItemClick={onMenuItemClick} autoY={true}>
               <MenuItem
                 className={helpers.isMobile() || !window.config.rightClickMenuVisibility["sc-floating-menu-basic-mode"] ? "sc-hidden" : "sc-floating-menu-toolbox-menu-item"}
                 key="sc-floating-menu-basic-mode"
