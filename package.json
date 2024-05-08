@@ -38,7 +38,6 @@
     "react-scripts": "5.0.1",
     "react-select": "^5.7.4",
     "react-slick": "^0.29.0",
-    "react-sortable-hoc": "^2.0.0",
     "react-switch": "^7.0.0",
     "react-table": "^7.8.0",
     "react-table-sticky": "^1.1.3",
