@@ -109,8 +109,17 @@ const Layers = (layersProps) => {
               {children}
             </ul>
           )}
-          renderItem={({ value, props, isDragged, isSelected }) => (
-            <li id={virtualId + "-listitem"} className={`${virtualId}-listitem${isDragged || isSelected ? " sc-dragged" : ""}`} {...props}>
+          renderItem={({  value, props, isDragged, isSelected }) => (
+              <li key={props.key} 
+              tabIndex = {props.tabIndex} 
+              aria-roledescription={props["aria-roledescription"]}
+              onKeyDown={props.onKeyDown}
+              onWheel={props.onWheel}
+              style={props.style}
+              ref={props.ref} 
+              id={virtualId + "-listitem"} 
+              className={`${virtualId}-listitem${isDragged || isSelected ? " sc-dragged" : ""}`} >
+
               <LayerItem
                 key={layersProps.id + "-" + helpers.getHash(value.name)}
                 id={layersProps.id + "-" + helpers.getHash(value.name)}
@@ -129,4 +138,14 @@ const Layers = (layersProps) => {
     );
 };
 
+
+const LayerListItem = ({children, virtualId, isDragged, isSelected, options}) => {
+  console.log("LayerListItem", virtualId, isDragged, isSelected, options);
+  return (
+    <li id={virtualId + "-listitem"} className={`${virtualId}-listitem${isDragged || isSelected ? " sc-dragged" : ""}`} {...options}>
+      {children}
+    </li>
+
+  );
+}
 export default Layers;

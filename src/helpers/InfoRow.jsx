@@ -1,6 +1,5 @@
 import React from "react";
 import moment from "moment";
-import * as helpers from "../helpers/helpers";
 import Attachments from "../map/Attachments";
 export const InfoRow = (props) => {
   // CONVERT URL'S TO LINKS
@@ -30,7 +29,7 @@ export const InfoRow = (props) => {
         {props.value}
       </a>
     );
-  } else if (props.value != null && props.value.length >= 8 && moment(props.value, formats, true).isValid()) {
+  } else if (props.value != null && props.value.length >= 8 && moment(props.value, formats, true).isValid() && !label.toUpperCase().includes("NUMBER")) {
     value = moment(props.value).format("YYYY-MM-DD");
   }
 

@@ -4,8 +4,6 @@ import { createRoot } from "react-dom/client";
 
 import "./index.css";
 import * as serviceWorker from "./serviceWorker";
-import { MsalProvider } from "@azure/msal-react";
-import { Configuration, PublicClientApplication } from "@azure/msal-browser";
 import "alertifyjs/build/css/alertify.css";
 import "alertifyjs/build/css/themes/default.min.css";
 
@@ -19,18 +17,8 @@ if (process.env.REACT_APP_SECURED === "true") {
   import(`./AppSecure.jsx`)
     .then((module) => {
       const AppSecure = module.default;
-      // MSAL configuration
-      const configuration = Configuration({
-        auth: {
-          clientId: process.env.REACT_APP_CLIENTID,
-        },
-      });
-      const pca = new PublicClientApplication(configuration);
-
       root.render(
-        <MsalProvider instance={pca}>
           <AppSecure />
-        </MsalProvider>
       );
     })
     .catch((error) => {
