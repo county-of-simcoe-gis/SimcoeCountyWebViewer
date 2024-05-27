@@ -1,5 +1,4 @@
 import React, { useState, useRef, useContext, useEffect } from "react";
-import ReactDOM from "react-dom";
 import Slider from "rc-slider";
 import "./BasicBasemapSwitcher.css";
 import * as helpers from "../helpers/helpers";
@@ -186,7 +185,7 @@ const BasicBasemapSwitcher = (props) => {
       </Portal>
     );
 
-    ReactDOM.render(menu, document.getElementById("portal-root"));
+    window.portalRoot.render(menu);
   };
 
   const controlStateChange = (control, state) => {

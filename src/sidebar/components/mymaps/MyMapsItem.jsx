@@ -10,15 +10,14 @@ import * as helpers from "../../../helpers/helpers";
 function MyMapsItem(props) {
   const [label, setLabel] = useState(props.info.label);
   const [checked, setChecked] = useState(props.info.visible);
-  const [vectorLayer, setVectorLayer] = useState(null);
-
+  const vectorLayerRef = React.createRef();
   useEffect(() => {
     return () => {
-      if (vectorLayer !== null) {
-        window.map.removeLayer(vectorLayer);
+      if (vectorLayerRef.current !== null) {
+        window.map.removeLayer(vectorLayerRef.current);
       }
     };
-  }, [vectorLayer]);
+  }, []);
 
   const onLabelTextChange = (evt) => {
     const newLabel = evt.target.value;
@@ -28,9 +27,9 @@ function MyMapsItem(props) {
 
   const onItemDelete = (evt) => {
     props.onItemDelete && props.onItemDelete(props.info.id);
-    if (vectorLayer !== null) {
-      window.map.removeLayer(vectorLayer);
-      setVectorLayer(null);
+    if (vectorLayerRef.current !== null) {
+      window.map.removeLayer(vectorLayerRef.current);
+      vectorLayerRef.current = null;
     }
   };
 
@@ -81,7 +80,7 @@ function MyMapsItem(props) {
       geometry: feature.getGeometry(),
     });
 
-    const highlightLayer = new VectorLayer({
+    vectorLayerRef.current = new VectorLayer({
       source: new VectorSource({
         features: [highlightFeature],
       }),
@@ -89,14 +88,13 @@ function MyMapsItem(props) {
       style: shadowStyle,
     });
 
-    setVectorLayer(highlightLayer);
-    window.map.addLayer(highlightLayer);
+    window.map.addLayer(vectorLayerRef.current);
   };
 
   const onMouseOut = (evt) => {
-    if (vectorLayer !== null) {
-      window.map.removeLayer(vectorLayer);
-      setVectorLayer(null);
+    if (vectorLayerRef.current !== null) {
+      window.map.removeLayer(vectorLayerRef.current);
+      vectorLayerRef.current = null;
     }
   };
 

@@ -1,28 +1,24 @@
 // import 'react-app-polyfill/ie11';
 import React from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
+
 import "./index.css";
 import * as serviceWorker from "./serviceWorker";
-import { MsalProvider } from "@azure/msal-react";
-import { Configuration, PublicClientApplication } from "@azure/msal-browser";
 import "alertifyjs/build/css/alertify.css";
 import "alertifyjs/build/css/themes/default.min.css";
+
+const root = createRoot(document.getElementById("root"));
+let element = document.createElement("div");
+element.setAttribute("id", "portal-root");
+document.getElementById("root").appendChild(element);
+window.portalRoot = createRoot(document.getElementById("portal-root"));
+
 if (process.env.REACT_APP_SECURED === "true") {
   import(`./AppSecure.jsx`)
     .then((module) => {
       const AppSecure = module.default;
-      // MSAL configuration
-      const configuration: Configuration = {
-        auth: {
-          clientId: process.env.REACT_APP_CLIENTID,
-        },
-      };
-      const pca = new PublicClientApplication(configuration);
-      ReactDOM.render(
-        <MsalProvider instance={pca}>
+      root.render(
           <AppSecure />
-        </MsalProvider>,
-        document.getElementById("root")
       );
     })
     .catch((error) => {
@@ -32,7 +28,7 @@ if (process.env.REACT_APP_SECURED === "true") {
   import(`./App.js`)
     .then((module) => {
       const App = module.default;
-      ReactDOM.render(<App />, document.getElementById("root"));
+      root.render(<App />);
     })
     .catch((error) => {
       console.log(error);

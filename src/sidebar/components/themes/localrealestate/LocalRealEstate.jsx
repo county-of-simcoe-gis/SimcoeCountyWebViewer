@@ -1,10 +1,11 @@
 import React, { Component } from "react";
+import { createRoot } from "react-dom/client";
+
 import "./LocalRealEstate.css";
 import PanelComponent from "../../../PanelComponent";
 import config from "./config.json";
 import LocalRealEstateLayerToggler from "./LocalRealEstateLayerToggler.jsx";
 import * as helpers from "../../../../helpers/helpers";
-import ReactDOM from "react-dom";
 import LocalRealEstateImageSlider from "./LocalRealEstateImageSlider.jsx";
 import LocalRealEstateRecents from "./LocalRealEstateRecents.jsx";
 import LocalRealEstatePopupContent from "./LocalRealEstatePopupContent.jsx";
@@ -26,13 +27,14 @@ class LocalRealEstate extends Component {
     this.imageSlider.id = "sc-theme-real-estate-photo-slider";
     this.storageKey = "theme-real-estate";
     this.state = { visibleLayers: null, viewedItems: [] };
+    this.root = null;
   }
 
   componentDidMount() {
     //window.disableParcelClick = true;
     // CREATE DIV FOR SLIDER
     document.body.appendChild(this.imageSlider);
-
+    this.root = createRoot(document.getElementById(this.imageSlider.id));
     let visibleLayers = [];
     config.layers.forEach((layer) => {
       if (layer.visible && layer.displayName !== "All") visibleLayers.push(layer.displayName);
@@ -46,10 +48,7 @@ class LocalRealEstate extends Component {
   }
 
   renderImageSlider = () => {
-    ReactDOM.render(
-      <LocalRealEstateImageSlider config={config} visibleLayers={this.state.visibleLayers} onImageSliderClick={this.onImageSliderClick} onViewed={this.onViewed} />,
-      document.getElementById(this.imageSlider.id)
-    );
+    this.root.render(<LocalRealEstateImageSlider config={config} visibleLayers={this.state.visibleLayers} onImageSliderClick={this.onImageSliderClick} onViewed={this.onViewed} />);
   };
   componentWillUnmount() {
     //window.disableParcelClick = false;

@@ -1,6 +1,6 @@
 // REACT
-import React from "react";
-import ReactDOM from "react-dom";
+import React, { useEffect } from "react";
+import { createRoot } from "react-dom/client";
 
 // OPEN LAYERS
 import Feature from "ol/Feature";
@@ -123,22 +123,60 @@ export function isMobile() {
 
 // SHOW CONTENT WINDOW
 export function showWindow(contents, options = { title: "Information", showFooter: false, mode: "normal", hideScroll: false }) {
-  ReactDOM.render(
-    <ShowWindow key={uuidv4()} title={options.title} mode={options.mode} showFooter={options.showFooter} contents={contents} hideScroll={options.hideScroll} style={options.style} />,
-    document.getElementById("map-modal-window")
-  );
+  const uniqueId = `map-modal-window-${"show-window"}}`;
+  if (document.getElementById(uniqueId) !== null) document.getElementById(uniqueId).remove();
+
+  const element = document.createElement("div");
+  element.setAttribute("id", uniqueId);
+  document.getElementById("map-modal-window").appendChild(element);
+  const root = createRoot(document.getElementById(uniqueId));
+
+  const ShowWindowWithCallback = (props) => {
+    useEffect(() => {
+      return () => {
+        try {
+          root.unmount();
+          document.getElementById(uniqueId).remove();
+        } catch (err) {
+          console.log(err);
+        }
+      };
+    }, []);
+    return <ShowWindow key={props.id} {...props} />;
+  };
+  root.render(<ShowWindowWithCallback id={uuidv4()} contents={contents} {...options} />);
 }
 
 // SHOW URL WINDOW
 export function showURLWindow(url, showFooter = false, mode = "normal", honorDontShow = false, hideScroll = false) {
   let isSameOrigin = true;
+  const uniqueId = `map-modal-window-${getUID()}}`;
+  const element = document.createElement("div");
+  element.setAttribute("id", uniqueId);
+  document.getElementById("map-modal-window").appendChild(element);
+  const root = createRoot(document.getElementById(uniqueId));
+
+  const URLWindowWithCallback = (props) => {
+    useEffect(() => {
+      return () => {
+        try {
+          root.unmount();
+          document.getElementById(uniqueId).remove();
+        } catch (err) {
+          console.log(err);
+        }
+      };
+    }, []);
+    return <URLWindow key={props.id} mode={props.mode} showFooter={props.showFooter} url={props.url} honorDontShow={props.honorDontShow} hideScroll={props.hideScroll} />;
+  };
+
   waitForLoad("settings", Date.now(), 30, () => {
     if (window.config.restrictOriginForUrlWindow) {
       if (url !== undefined) isSameOrigin = url.toLowerCase().indexOf(window.location.origin.toLowerCase()) !== -1;
     }
 
     if (isSameOrigin) {
-      ReactDOM.render(<URLWindow key={uuidv4()} mode={mode} showFooter={showFooter} url={url} honorDontShow={honorDontShow} hideScroll={hideScroll} />, document.getElementById("map-modal-window"));
+      root.render(<URLWindowWithCallback key={uuidv4()} mode={mode} showFooter={showFooter} url={url} honorDontShow={honorDontShow} hideScroll={hideScroll} />);
     } else {
       window.open(url, "_blank");
     }
@@ -414,7 +452,7 @@ export function showTerms(title = "Terms and Condition", messageText = "Message"
   const domId = "portal-root";
   const termsDomId = "sc-show-terms-root";
 
-  ReactDOM.render(
+  window.portalRoot.render(
     <ShowTerms
       id={domId}
       key={termsDomId}
@@ -427,13 +465,12 @@ export function showTerms(title = "Terms and Condition", messageText = "Message"
       options={options}
       onClose={(ref) => {
         try {
-          ReactDOM.unmountComponentAtNode(ref.current.parentNode);
+          window.portalRoot.unmount();
         } catch (err) {
           console.log(err);
         }
       }}
-    />,
-    document.getElementById("portal-root")
+    />
   );
 }
 
@@ -442,24 +479,42 @@ export function showMessage(title = "Info", messageText = "Message", color = mes
   const domId = "sc-show-message-content";
   var existingMsg = document.getElementById(domId);
   if (existingMsg !== undefined && existingMsg !== null) existingMsg.remove();
-  try {
-    ReactDOM.unmountComponentAtNode(document.getElementById("sc-sidebar-message-container"));
-  } catch {}
-  const message = ReactDOM.render(
-    <ShowMessage id={domId} key={domId} title={title} message={messageText} color={color} hideButton={hideButton} />,
-    document.getElementById("sc-sidebar-message-container"),
-    () => {
+  const uniqueId = `sc-sidebar-message-container-${getUID()}}`;
+  const messageElement = document.createElement("div");
+  messageElement.setAttribute("id", uniqueId);
+  document.getElementById("sc-sidebar-message-container").appendChild(messageElement);
+
+  const root = createRoot(document.getElementById(uniqueId), { identifierPrefix: getUID() });
+
+  const ShowMessageWithCallback = (props) => {
+    const handleOnClose = () => {
+      try {
+        root.unmount();
+        document.getElementById(uniqueId).remove();
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    useEffect(() => {
       setTimeout(() => {
         try {
-          ReactDOM.unmountComponentAtNode(document.getElementById("sc-sidebar-message-container"));
+          handleOnClose();
         } catch (err) {
           console.log(err);
         }
-      }, timeout);
-    }
-  );
+      }, props.timeout);
+      return () => {
+        try {
+          if (props.onClose) props.onClose();
+        } catch (err) {
+          console.log(err);
+        }
+      };
+    }, [props.timeout]);
+    return <ShowMessage key={props.id} title={props.title} message={props.message} color={props.color} hideButton={props.hideButton} onClose={props.onClose} />;
+  };
+  root.render(<ShowMessageWithCallback id={domId} key={domId} title={title} message={messageText} color={color} hideButton={hideButton} timeout={timeout} />);
 }
-
 export function searchArrayByKey(nameKey, myArray) {
   for (var i = 0; i < myArray.length; i++) {
     if (myArray[i].name === nameKey) {
@@ -1184,7 +1239,7 @@ function _escapeRegExp(str) {
 }
 
 export function showFeaturePopup(coord, feature) {
-  window.popup.show(coord, <FeatureContent feature={feature} class="sc-live-layer-popup-content" />);
+  window.popup.show(coord, <FeatureContent feature={feature} class="sc-live-layer-popup-content" />, feature.get("layerDisplayName") || "Feature Info");
 }
 
 export function removeURLParameter(url, parameter) {
@@ -1211,7 +1266,22 @@ export function FilterKeys(feature) {
   //WILDCARD = .*
   //LITERAL STRING = [] EG: [_][.]
   //NOT STRING = (?!string) EG: geostasis[.](?!test).*
-  const filterKeys = ["[_].*", "id", "geometry", "geom", "extent_geom", ".*gid.*", "globalid", "objectid.*", "shape.*", "displayfieldname", "displayfieldvalue", "geostasis[.].*", ".*fid.*"];
+  const filterKeys = [
+    "[_].*",
+    "id",
+    "geometry",
+    "geom",
+    "extent_geom",
+    ".*gid.*",
+    "globalid",
+    "objectid.*",
+    "shape.*",
+    "displayfieldname",
+    "displayfieldvalue",
+    "layerdisplayname",
+    "geostasis[.].*",
+    ".*fid.*",
+  ];
   const featureProps = feature.getProperties();
 
   let keys = Object.keys(featureProps);
@@ -1403,7 +1473,7 @@ export function getBase64FromImageUrl(url, callback) {
 export function waitForLoad(items, startTime = Date.now(), timeout = 30, callback) {
   if (startTime + timeout * 1000 <= Date.now()) {
     showMessage("Timeout", "Items Failed to load in a timely manner. Please reload the page", messageColors.red);
-    console.error("timeout loading", items);
+    console.error("timeout loading", items, window.loaded);
   } else {
     if (isLoaded(items)) {
       callback();
@@ -1518,6 +1588,7 @@ export function loadConfig(configSecured = {}, callback) {
         }, 1500);
         window.config = config;
         callback();
+        return;
       }
       const settings = JSON.parse(result.json);
       if (settings.name !== undefined) document.title = settings.name;

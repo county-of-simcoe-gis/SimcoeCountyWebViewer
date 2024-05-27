@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import ReactDOM from "react-dom";
 import "./Header.css";
 import Search from "./Search.jsx";
 import * as helpers from "../helpers/helpers";
@@ -50,7 +49,7 @@ const Header = (props) => {
         </FloatingMenu>
       </Portal>
     );
-    ReactDOM.render(menu, document.getElementById("portal-root"));
+    window.portalRoot.render(menu);
 
     helpers.addAppStat("Header Dot Menu", "Click");
   };

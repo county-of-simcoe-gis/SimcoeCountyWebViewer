@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect, Fragment } from "react";
-import ReactDOM from "react-dom";
 // import GitHubButton from "react-github-btn";
 import GitHubButton from "../components/sc-github-btn";
 //OPENLAYERS
@@ -230,7 +229,8 @@ const SCMap = (props) => {
             </FloatingMenu>
           </Portal>
         );
-        ReactDOM.render(menu, document.getElementById("portal-root"));
+
+        window.portalRoot.render(menu);
       });
 
       // APP STAT

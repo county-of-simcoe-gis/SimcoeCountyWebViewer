@@ -15,7 +15,7 @@
   float: right;
 }
 
-.sc-toc-layer-container {
+.sc-toc-layer-container-folder {
   max-width: 400px;
   width: 100%;
 }
@@ -77,10 +77,10 @@
   width: 95%;
 }
 
-.sc-toc-layer-container > div > div {
+.sc-toc-layer-container-folder > div > div {
   height: unset;
 }
-.sc-toc-layer-container > div > div > div {
+.sc-toc-layer-container-folder > div > div > div {
   max-height: unset;
 }
 

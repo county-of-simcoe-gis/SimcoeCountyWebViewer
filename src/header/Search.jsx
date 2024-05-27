@@ -838,6 +838,7 @@ const Search = (props) => {
           if (item.type === "Map Layer") type = item.layerGroupName;
           else if (item.type === "Tool" || item.type === "Theme") type = "";
           else type = item.municipality;
+          delete props["key"]; //remove key from props
           return (
             <div key={helpers.getUID()} className={"sc-search-item-mui"} {...props}>
               <div className="sc-search-item-left">

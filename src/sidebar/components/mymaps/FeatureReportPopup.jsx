@@ -60,9 +60,6 @@ class FeatureReportPopup extends Component {
       this.setState({ isLoading: false });
     });
   }
-  componentWillReceiveProps(nextProps) {
-    // this.popupLabelRef.forceUpdate();
-  }
 
   render() {
     return (

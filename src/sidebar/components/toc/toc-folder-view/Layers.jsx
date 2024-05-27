@@ -53,7 +53,7 @@ class Layers extends Component {
     });
 
     return (
-      <div className="sc-toc-layer-container" key={this.props.id + "-sc-toc-layer-container"}>
+      <div className="sc-toc-layer-container-folder" key={this.props.id + "-sc-toc-layer-container"}>
         <div id={this.props.id + "-container"}>
           {layers.map((layer) => (
             <LayerItem

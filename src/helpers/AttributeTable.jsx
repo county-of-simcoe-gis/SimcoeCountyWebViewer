@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, useEffect } from "react";
 import * as helpers from "./helpers";
 import "./AttributeTable.css";
 import { Resizable } from "re-resizable";
@@ -6,12 +6,12 @@ import AttributeTableTabs from "./AttributeTableTabs.jsx";
 import FloatingMenu, { FloatingMenuItem } from "../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
 import Portal from "../helpers/Portal.jsx";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 
 class AttrbuteTable extends Component {
   constructor(props) {
     super(props);
-
+    this.resizable = {};
     this.numRecordsToPull = 200;
     this.state = {
       visible: false,
@@ -44,6 +44,7 @@ class AttrbuteTable extends Component {
 
   resizeFromMap = () => {
     const mapWidth = document.getElementById("map").offsetWidth;
+    if (!this.resizable) return;
     this.resizable.updateSize({
       width: mapWidth,
       height: this.resizable.resizable.offsetHeight,
@@ -195,7 +196,21 @@ class AttrbuteTable extends Component {
         </FloatingMenu>
       </Portal>
     );
-    ReactDOM.render(menu, document.getElementById("portal-root"));
+    const uniqueId = `portal-root-${"attribute-table-header"}}`;
+    const element = document.createElement("div");
+    element.setAttribute("id", uniqueId);
+    document.getElementById("portal-root").appendChild(element);
+    const root = createRoot(document.getElementById(uniqueId));
+    const MenuWithCallback = () => {
+      useEffect(() => {
+        return () => {
+          root.unmount();
+          document.getElementById(uniqueId).remove();
+        };
+      }, []);
+      return menu;
+    };
+    root.render(<MenuWithCallback />);
   };
 
   onRowClick = (evt, item, rowIndex) => {
@@ -217,7 +232,22 @@ class AttrbuteTable extends Component {
         </FloatingMenu>
       </Portal>
     );
-    ReactDOM.render(menu, document.getElementById("portal-root"));
+    const uniqueId = `portal-root-${"attribute-table-row"}`;
+    const element = document.createElement("div");
+    element.setAttribute("id", uniqueId);
+    document.getElementById("portal-root").appendChild(element);
+    const root = createRoot(document.getElementById(uniqueId));
+    const MenuWithCallback = () => {
+      useEffect(() => {
+        return () => {
+          root.unmount();
+          document.getElementById(uniqueId).remove();
+        };
+      }, []);
+      return menu;
+    };
+
+    root.render(<MenuWithCallback />);
   };
 
   onRowMenuItemClick = (key, item, rowIndex) => {

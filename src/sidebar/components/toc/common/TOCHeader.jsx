@@ -1,6 +1,5 @@
 // REACT
 import React, { Component } from "react";
-import ReactDOM from "react-dom";
 import Switch from "react-switch";
 import { Item as MenuItem } from "rc-menu";
 import { Tooltip as ReactTooltip } from "react-tooltip";
@@ -19,7 +18,6 @@ class TOCHeader extends Component {
       searchText: "",
     };
   }
-
   onSettingsClick = (evt) => {
     var evtClone = Object.assign({}, evt);
     var switchMenuLabel = `Switch to ${this.props.tocType === "LIST" ? "Folder" : "List"} View`;
@@ -61,7 +59,7 @@ class TOCHeader extends Component {
       </Portal>
     );
 
-    ReactDOM.render(menu, document.getElementById("portal-root"));
+    window.portalRoot.render(menu);
   };
 
   onSettingsMenuItemClick = (action) => {
@@ -102,7 +100,7 @@ class TOCHeader extends Component {
       this.props.onSearchChange(searchText);
     });
   };
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.searchText === "" && this.state.searchText !== "") {
       this.setState({ searchText: nextProps.searchText });
     }
