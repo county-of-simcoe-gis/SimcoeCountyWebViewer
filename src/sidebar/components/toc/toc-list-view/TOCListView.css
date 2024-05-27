@@ -1,18 +1,26 @@
 .sc-toc-main-container {
-	height: 40px;
+  height: 40px;
 }
 
 .sc-toc-layer-container {
-	max-width: 400px;
-	position: absolute;
-	top: 148px;
-	bottom: 0px;
-	width: 100%;
-	overflow: visible;
-	margin-left: 5px;
+  max-width: 400px;
+  position: absolute;
+  top: 148px;
+  bottom: 0px;
+  width: 100%;
+  overflow-y: scroll;
+  margin-left: 0px;
+  user-select: all;
+}
+
+.sc-toc-layer-container > ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  user-select: all;
 }
 
 .sc-toc-footer-button.tools {
-	background-position-x: 6px;
-	width: 122px;
+  background-position-x: 6px;
+  width: 122px;
 }

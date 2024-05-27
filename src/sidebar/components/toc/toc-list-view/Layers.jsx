@@ -1,62 +1,66 @@
 // REACT
-import React, { Component } from "react";
-import { SortableContainer } from "react-sortable-hoc";
-import { AutoSizer } from "react-virtualized";
-import VirtualLayers from "./VirtualLayers.jsx";
-import * as helpers from "../../../../helpers/helpers";
-
+//https://medium.com/nerd-for-tech/simple-drag-and-drop-in-react-without-an-external-library-ebf1c1b809e
+import React, { useState, useEffect, useRef } from "react";
+import * as helpers from "../../../../helpers/helpers.js";
+import { List, arrayMove } from "react-movable";
+import LayerItem from "./LayerItem.jsx";
+import "./Layers.css";
 // CUSTOM
 import "./Layers.css";
+const Layers = (layersProps) => {
+  const storageKey = "Layers";
+  const lastPositionRef = useRef(null);
+  const virtualId = "sc-toc-list-layers-sortablevirtuallist-virtual-layers";
+  const [recalcId, setRecalcId] = useState("");
+  const [layers, setLayers] = useState([]);
+  const [allLayers, setAllLayers] = useState([]);
 
-const SortableVirtualList = SortableContainer(VirtualLayers, { withRef: true });
-
-class Layers extends Component {
-  constructor(props) {
-    super(props);
-    this.storageKey = "Layers";
-    this.lastPosition = null;
-    this.virtualId = "sc-toc-list-layers-sortablevirtuallist-virtual-layers";
-
-    //this.virtualId = "sc-toc-list-layers-virtual-layers";
-
-    this.state = {
-      //allLayers: {},
-      //layers: [],
-      recalcId: "",
-    };
-
+  useEffect(() => {
     // LISTEN FOR SEARCH RESULT
-    window.emitter.addListener("activeTocLayer", (layerItem) => {
-      if (this.props.visible) this.onActivateLayer(layerItem);
-    });
+    const activeTocLayerListener = (layerItem) => {
+      if (layersProps.visible) onActivateLayer(layerItem);
+    };
+    window.emitter.addListener("activeTocLayer", activeTocLayerListener);
+    window.addEventListener("resize", updateRecalcId);
+    return () => {
+      window.emitter.removeListener("activeTocLayer", activeTocLayerListener);
+      window.removeEventListener("resize", updateRecalcId);
+    };
+  }, []);
 
-    window.addEventListener("resize", this.updateRecalcId);
-  }
+  useEffect(() => {
+    if (layersProps.group.layers && layersProps.group.layers.length > 0) {
+      setAllLayers(layersProps.group.layers);
+      setLayers(
+        layersProps.group.layers.filter((layer) => {
+          if (layersProps.searchText === "") return true;
+          else if (layer.tocDisplayName.toUpperCase().indexOf(layersProps.searchText.toUpperCase()) !== -1) return true;
+          else return false;
+        })
+      );
+    }
+  }, [layersProps.searchText, layersProps.group]);
 
-  updateRecalcId = () => {
-    if (!this.props.visible) return;
+  const updateRecalcId = () => {
+    if (!layersProps.visible) return;
     try {
-      this.lastPosition = document.getElementById(this.virtualId).scrollTop;
+      lastPositionRef.current = document.getElementById(virtualId).scrollTop;
     } catch (e) {
       return;
     }
-    this.setState({ recalcId: helpers.getUID() }, () => {
-      setTimeout(() => {
-        document.getElementById(this.virtualId).scrollTop += this.lastPosition;
-      }, 10);
-    });
+    setRecalcId(helpers.getUID());
+    setTimeout(() => {
+      document.getElementById(virtualId).scrollTop += lastPositionRef.current;
+    }, 10);
   };
 
-  onActivateLayer = (layerItem) => {
-    if (!this.props.visible) return;
-    const elementId = layerItem.fullName + "_" + layerItem.layerGroup + "_listview";
+  const onActivateLayer = (layerItem) => {
+    if (!layersProps.visible) return;
+    const elementId = layerItem.fullName + "_" + layerItem.layerGroup + "-container";
 
-    this.props.group.layers.forEach((layer) => {
+    allLayers.forEach((layer) => {
       if (layer.name === layerItem.fullName) {
-        //layer.visible = true;
-        //layer.layer.setVisible(true);
-
-        document.getElementById(this.virtualId).scrollTop = 0;
+        document.getElementById(virtualId).scrollTop = 0;
 
         var i = 0;
         var elemFound = false;
@@ -73,7 +77,7 @@ class Layers extends Component {
                 elem.scrollIntoView();
                 return;
               } else {
-                document.getElementById(this.virtualId).scrollTop += i * 5;
+                document.getElementById(virtualId).scrollTop += i * 5;
               }
             }, i * 100);
           })(i);
@@ -82,54 +86,66 @@ class Layers extends Component {
     });
   };
 
-  render() {
-    if (this.props.group.layers === undefined) return <div />;
-
-    // FILTER LAYERS FROM SEARCH INPUT
-    // eslint-disable-next-line
-    const layers = this.props.group.layers.filter((layer) => {
-      if (this.props.searchText === "") return layer;
-
-      if (layer.tocDisplayName.toUpperCase().indexOf(this.props.searchText.toUpperCase()) !== -1) return layer;
-    });
-
+  if (layersProps.group.layers === undefined) return <div />;
+  else
     return (
       <div className="sc-toc-layer-container">
-        <AutoSizer disableWidth key={this.props.id + "-autosizer-" + this.state.recalcId} id={this.props.id + "-autosizer"}>
-          {({ height }) => {
-            return (
-              <SortableVirtualList
-                //key={helpers.getUID()}
-                key={this.props.id + "-sortablevirtuallist"}
-                id={this.props.id + "-sortablevirtuallist"}
-                ref={(instance) => {
-                  this.SortableVirtualList = instance;
-                }}
-                items={layers}
-                sortAlpha={this.props.sortAlpha}
-                onSortMove={this.props.onSortMove}
-                onSortEnd={this.props.onSortEnd}
-                helperClass={"sc-layer-list-sortable-helper"}
-                rowHeight={height}
-                height={height}
-                lockAxis={"y"}
-                distance={5}
-                group={this.props.group}
-                onLegendToggle={this.props.onLegendToggle}
-                onCheckboxChange={this.props.onCheckboxChange}
-                searchText={this.props.searchText}
-                onLayerOptionsClick={this.props.onLayerOptionsClick}
-                onLayerChange={this.props.onLayerChange}
-                scrollTop={this.props.id + "-sortablevirtuallist"}
+        <List
+          values={layers}
+          onChange={({ oldIndex, newIndex }) => {
+            if (layersProps.sortAlpha) return;
+            const oldIndexAllLayers = allLayers.indexOf(layers[oldIndex]);
+            const newIndexAllLayers = allLayers.indexOf(layers[newIndex]);
 
-                //scrollToIndex={50}
-              />
-            );
+            setLayers(arrayMove(layers, oldIndex, newIndex));
+            layersProps.onSortEnd({ oldIndex: oldIndexAllLayers, newIndex: newIndexAllLayers });
           }}
-        </AutoSizer>
+          lockVertically={true}
+          beforeDrag={() => {
+            if (layersProps.sortAlpha) return;
+          }}
+          renderList={({ children, props }) => (
+            <ul id={virtualId} {...props}>
+              {children}
+            </ul>
+          )}
+          renderItem={({  value, props, isDragged, isSelected }) => (
+              <li key={props.key} 
+              tabIndex = {props.tabIndex} 
+              aria-roledescription={props["aria-roledescription"]}
+              onKeyDown={props.onKeyDown}
+              onWheel={props.onWheel}
+              style={props.style}
+              ref={props.ref} 
+              id={virtualId + "-listitem"} 
+              className={`${virtualId}-listitem${isDragged || isSelected ? " sc-dragged" : ""}`} >
+
+              <LayerItem
+                key={layersProps.id + "-" + helpers.getHash(value.name)}
+                id={layersProps.id + "-" + helpers.getHash(value.name)}
+                layerInfo={value}
+                onLegendToggle={layersProps.onLegendToggle}
+                group={layersProps.group}
+                onLayerChange={layersProps.onLayerChange}
+                onCheckboxChange={layersProps.onCheckboxChange}
+                searchText={layersProps.searchText}
+                onLayerOptionsClick={layersProps.onLayerOptionsClick}
+              />
+            </li>
+          )}
+        />
       </div>
     );
-  }
-}
+};
 
+
+const LayerListItem = ({children, virtualId, isDragged, isSelected, options}) => {
+  console.log("LayerListItem", virtualId, isDragged, isSelected, options);
+  return (
+    <li id={virtualId + "-listitem"} className={`${virtualId}-listitem${isDragged || isSelected ? " sc-dragged" : ""}`} {...options}>
+      {children}
+    </li>
+
+  );
+}
 export default Layers;

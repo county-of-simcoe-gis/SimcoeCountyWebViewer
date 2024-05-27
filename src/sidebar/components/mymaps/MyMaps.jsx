@@ -1,6 +1,5 @@
 // REACT
 import React, { Component, Fragment } from "react";
-import ReactDOM from "react-dom";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
 import { SubMenu, Item as MenuItem } from "rc-menu";
 
@@ -811,8 +810,7 @@ class MyMaps extends Component {
         </FloatingMenu>
       </Portal>
     );
-
-    ReactDOM.render(menu, document.getElementById("portal-root"));
+    window.portalRoot.render(menu);
   };
 
   onMenuItemClick = (action, item) => {
@@ -963,7 +961,6 @@ class MyMaps extends Component {
     var evtClone = Object.assign({}, evt);
     const feature = helpers.getFeatureFromGeoJSON(item.featureGeoJSON);
     const showCoordinates = feature.get("is_open_data");
-
     const menu = (
       <Portal>
         <FloatingMenu
@@ -1042,8 +1039,7 @@ class MyMaps extends Component {
         </FloatingMenu>
       </Portal>
     );
-
-    ReactDOM.render(menu, document.getElementById("portal-root"));
+    window.portalRoot.render(menu);
   };
 
   deleteSelected = (selected) => {

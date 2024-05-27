@@ -1,6 +1,7 @@
 // THIS CODE WAS PULLED FROM https://github.com/walkermatt/ol-popup
 import React from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
+
 import Overlay from "ol/Overlay";
 import "./Popup.css";
 import { getWidth } from "ol/extent.js";
@@ -38,10 +39,10 @@ export default class Popup extends Overlay {
     }
 
     //options.stopEvent = false;
-
     var element = document.createElement("div");
     options.element = element;
     super(options);
+    this.root = null;
     this.container = element;
     this.container.className = "ol-popup";
     this.container.id = "sc-window-popup";
@@ -67,7 +68,6 @@ export default class Popup extends Overlay {
     this.contentNextButton.href = "#";
     this.contentNextButtonContainer.appendChild(this.contentNextButton);
     this.contentPrevButtonContainer.appendChild(this.contentPrevButton);
-
     this.contentNextButton.addEventListener("click", () => {
       this.contentIndex++;
       if (this.contentIndex >= this.contentArray.length) {
@@ -84,16 +84,14 @@ export default class Popup extends Overlay {
         this.contentNextButtonContainer.className = "sc-popup-content-next-button";
         this.contentPrevButtonContainer.className = "sc-popup-content-prev-button";
       }
-
       this.headerTitle.innerHTML = this.contentArray[this.contentIndex].title || "Info";
-      //ReactDOM.render(html, this.content);
       if (isDOMTypeElement(this.contentArray[this.contentIndex].html)) {
         // REGULAR HTML
         this.content.innerHTML = "";
         this.content.appendChild(this.contentArray[this.contentIndex].html);
       } else {
         // REACT COMPONENT
-        ReactDOM.render(this.contentArray[this.contentIndex].html, this.content);
+        this.renderRoot(this.contentArray[this.contentIndex].html);
       }
     });
     this.contentPrevButton.addEventListener("click", () => {
@@ -113,14 +111,13 @@ export default class Popup extends Overlay {
       }
       // SET TITLE
       this.headerTitle.innerHTML = this.contentArray[this.contentIndex].title;
-      //ReactDOM.render(html, this.content);
       if (isDOMTypeElement(this.contentArray[this.contentIndex].html)) {
         // REGULAR HTML
         this.content.innerHTML = "";
         this.content.appendChild(this.contentArray[this.contentIndex].html);
       } else {
         // REACT COMPONENT
-        ReactDOM.render(this.contentArray[this.contentIndex].html, this.content);
+        this.renderRoot(this.contentArray[this.contentIndex].html);
       }
     });
     this.headerCloseContainer = document.createElement("div");
@@ -162,8 +159,9 @@ export default class Popup extends Overlay {
 
     this.content = document.createElement("div");
     this.content.className = "ol-popup-content";
+    this.uniqueId = `sc-window-popup-content`;
+    this.content.setAttribute("id", this.uniqueId);
     this.container.appendChild(this.content);
-
     // Apply workaround to enable scrolling of content div on touch devices
     Popup.enableTouchScroll_(this.content);
 
@@ -183,7 +181,21 @@ export default class Popup extends Overlay {
       window.popupActive = false;
     };
   }
-
+  renderRoot(child) {
+    if (isDOMTypeElement(child)) {
+      // REGULAR HTML
+      this.content.innerHTML = "";
+      this.content.appendChild(child);
+    } else {
+      // REACT COMPONENT
+      if (this.root !== null) {
+        this.root.render(child);
+      } else {
+        this.root = createRoot(this.content);
+        this.root.render(child);
+      }
+    }
+  }
   /**
    * Show the popup.
    * @param {ol.Coordinate} coord Where to anchor the popup.
@@ -225,14 +237,13 @@ export default class Popup extends Overlay {
 
     // SET TITLE
     this.headerTitle.innerHTML = title;
-    //ReactDOM.render(html, this.content);
     if (isDOMTypeElement(html)) {
       // REGULAR HTML
       this.content.innerHTML = "";
       this.content.appendChild(html);
     } else {
       // REACT COMPONENT
-      ReactDOM.render(html, this.content);
+      this.renderRoot(html);
     }
 
     this.container.style.display = "block";
