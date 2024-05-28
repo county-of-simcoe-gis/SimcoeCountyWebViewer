@@ -140,6 +140,7 @@ export async function getMap(sources, isReset, tocType, callback) {
                 requiresToken: source.secure,
                 grouped: source.grouped,
                 grouped_name: source.name,
+                descriptionOverride: source.descriptionOverride,
                 secured: source.secure,
                 token: accessToken.access_token,
                 open: source.open || false,
@@ -177,6 +178,7 @@ export async function getMap(sources, isReset, tocType, callback) {
               requiresToken: source.secure,
               grouped: source.grouped,
               grouped_name: source.name,
+              descriptionOverride: source.descriptionOverride,
               secured: source.secure,
               appToken: source.appToken,
               open: source.open || false,
@@ -422,7 +424,7 @@ export function getGroupsESRI(options, callback) {
 
     layers.forEach((layer) => {
       if (layer.subLayerIds === undefined && layer.subLayers.length === 0) {
-        const layerOptions = parseESRIDescription(layer.description);
+        const layerOptions = parseESRIDescription(options.descriptionOverride || layer.description);
         let visible = options.visibleLayers ? (options.visibleLayers.indexOf(layer.name) === -1 ? false : true) : layer.defaultVisibility;
         layerOptions["id"] = layer.id;
         layerOptions["name"] = layer.name;
