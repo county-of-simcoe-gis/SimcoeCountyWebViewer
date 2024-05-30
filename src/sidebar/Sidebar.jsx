@@ -232,7 +232,7 @@ const Sidebar = (props) => {
         if (window.config.viewerMode.toUpperCase() === "ADVANCED") sidebarVisiblityEventHandler("OPEN");
       }
 
-      helpers.waitForLoad(["tools", "themes", "header", "map"], Date.now(), 30, () => {
+      helpers.waitForLoad(["tools", "themes", "header", "map", "toc"], Date.now(), 30, () => {
         initToolAndThemeUrlParameter({ tools: loadedTools, themes: loadedThemes, shortcuts: shortcuts }, () => {
           // TAB PARAMETER
           const tabNameParameter = helpers.getURLParameter("TAB");

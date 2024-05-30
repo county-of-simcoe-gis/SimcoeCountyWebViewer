@@ -94,6 +94,7 @@ const WeatherRadar = (props) => {
   };
 
   const setStartAndEndDateDefault = () => {
+    if (radarImages.current.length === 0) return;
     const firstImage = radarImages.current[0];
     const startDate = firstImage.get("radarDate");
     const lastImage = radarImages.current[radarImages.current.length - 1];
