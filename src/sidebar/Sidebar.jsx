@@ -16,8 +16,6 @@ import MenuButton from "./MenuButton.jsx";
 
 const Sidebar = (props) => {
   const toolComponentsRef = useRef([]);
-
-  const toolComponentsLoaded = useRef(false);
   const mapLoadingRef = useRef(props.mapLoading);
   const headerLoadingRef = useRef(props.headerLoading);
 
@@ -214,8 +212,9 @@ const Sidebar = (props) => {
             loadedComponents.push(value.component);
           });
 
-        toolComponentsLoaded.current = true;
         toolComponentsRef.current = loadedComponents;
+        helpers.addIsLoaded("tools");
+        helpers.addIsLoaded("themes");
       });
 
       // CHECK VISIBILITY OF LAYERS MENUE
@@ -247,11 +246,6 @@ const Sidebar = (props) => {
       });
     });
   };
-
-  useEffect(() => {
-    helpers.addIsLoaded("tools");
-    helpers.addIsLoaded("themes");
-  }, [toolComponentsRef]);
 
   useEffect(() => {
     mapLoadingRef.current = props.mapLoading;

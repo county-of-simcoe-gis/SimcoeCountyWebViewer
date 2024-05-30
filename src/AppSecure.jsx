@@ -130,8 +130,10 @@ const MainContent = () => {
           document.title = window.config.title;
           if (window.config.favicon) changeIcon(window.config.favicon);
           helpers.addIsLoaded("settings");
-          if (window.config.default_theme !== undefined) window.emitter.emit("activateSidebarItem", window.config.default_theme, "themes");
-          if (window.config.default_tool !== undefined) window.emitter.emit("activateSidebarItem", window.config.default_tool, "tools");
+          helpers.waitForLoad("sidebar", Date.now(), 30, () => {
+            if (window.config.default_theme !== undefined) window.emitter.emit("activateSidebarItem", window.config.default_theme, "themes");
+            if (window.config.default_tool !== undefined) window.emitter.emit("activateSidebarItem", window.config.default_tool, "tools");
+          });
         });
       });
     });
