@@ -18,7 +18,7 @@ const Sidebar = (props) => {
   const toolComponentsRef = useRef([]);
   const mapLoadingRef = useRef(props.mapLoading);
   const headerLoadingRef = useRef(props.headerLoading);
-
+  const tabIndexRef = useRef(0);
   const tabClassName = "sidebar-advanced-tab";
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [tabIndex, setTabIndex] = useState(0);
@@ -370,6 +370,7 @@ const Sidebar = (props) => {
           return;
         }
         flushSync(() => {
+          tabIndexRef.current = 1;
           setTabIndex(1);
           //CLEAR LOADED TOOL
           setToolTabComponent(null);
@@ -386,6 +387,7 @@ const Sidebar = (props) => {
           return;
         }
         flushSync(() => {
+          tabIndexRef.current = 3;
           setTabIndex(3);
           //CLEAR LOADED THEME
           setThemeTabComponent(null);
@@ -412,12 +414,22 @@ const Sidebar = (props) => {
       sidebarVisiblityEventHandler("OPEN");
       flushSync(() => {
         // SET SELECTED TAB
-        if (tabName === "layers") setTabIndex(0);
-        else if (tabName === "tools") setTabIndex(1);
-        else if (tabName === "mymaps") setTabIndex(2);
-        else if (tabName === "themes") setTabIndex(3);
-        else if (tabName === "reports") setTabIndex(4);
-        else console.log("NO VALID TAB FOUND");
+        if (tabName === "layers") {
+          setTabIndex(0);
+          tabIndexRef.current = 0;
+        } else if (tabName === "tools") {
+          setTabIndex(1);
+          tabIndexRef.current = 1;
+        } else if (tabName === "mymaps") {
+          setTabIndex(2);
+          tabIndexRef.current = 2;
+        } else if (tabName === "themes") {
+          setTabIndex(3);
+          tabIndexRef.current = 3;
+        } else if (tabName === "reports") {
+          setTabIndex(4);
+          tabIndexRef.current = 4;
+        } else console.log("NO VALID TAB FOUND");
       });
     });
   };
@@ -446,10 +458,11 @@ const Sidebar = (props) => {
 
   const onPanelComponentClose = (evt) => {
     // HANDLES UNLOADING OF TOOL/THEME
-    if (tabIndex === 1) {
+    if (tabIndex === 1 || tabIndexRef.current === 1) {
       // SET TOOLS
+
       setToolTabComponent(null);
-    } else if (tabIndex === 3) {
+    } else if (tabIndex === 3 || tabIndexRef.current === 3) {
       // SET THEMES
       setThemeTabComponent(null);
     }
@@ -464,6 +477,7 @@ const Sidebar = (props) => {
 
   const onTabSelect = (tabIndexLocal) => {
     setTabIndex(tabIndexLocal);
+    tabIndexRef.current = tabIndexLocal;
     if (tabIndexLocal === 0) helpers.addAppStat("Tab", "Layers");
     else if (tabIndexLocal === 1) helpers.addAppStat("Tab", "Tools");
     else if (tabIndexLocal === 2) helpers.addAppStat("Tab", "MyMaps");
