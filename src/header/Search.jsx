@@ -2,9 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import * as helpers from "../helpers/helpers";
 import * as drawingHelpers from "../helpers/drawingHelpers";
 import TextField from "@mui/material/TextField";
-
-import { Autocomplete as MUIAutocomplete } from "@mui/material";
-import { MdCancel } from "react-icons/md";
+import Autocomplete from "@mui/material/Autocomplete";
 import "./Search.css";
 import Highlighter from "react-highlight-words";
 import { Vector as VectorLayer } from "ol/layer";
@@ -767,7 +765,7 @@ const Search = (props) => {
         <Select tabIndex="-1" styles={groupsDropDownStyles.current} isSearchable={false} onChange={onTypeDropDownChange} options={searchTypes} value={selectedType} />
       </div>
 
-      <MUIAutocomplete
+      <Autocomplete
         id={"sc-search-textbox-mui"}
         filterOptions={(options) => {
           // console.log("filterOptions", options);

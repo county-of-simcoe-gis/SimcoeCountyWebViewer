@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { flushSync } from "react-dom";
 import "./Sidebar.css";
 import * as helpers from "../helpers/helpers";
@@ -16,11 +16,9 @@ import MenuButton from "./MenuButton.jsx";
 
 const Sidebar = (props) => {
   const toolComponentsRef = useRef([]);
-
-  const toolComponentsLoaded = useRef(false);
   const mapLoadingRef = useRef(props.mapLoading);
   const headerLoadingRef = useRef(props.headerLoading);
-
+  const tabIndexRef = useRef(0);
   const tabClassName = "sidebar-advanced-tab";
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [tabIndex, setTabIndex] = useState(0);
@@ -63,20 +61,24 @@ const Sidebar = (props) => {
   const activateSidebarItem = (name, type, options = undefined) => {
     // THIS HANDLES WHAT TOOL/THEME IS LOADED IN THE SIDEBAR
     if (type === "tools") {
-      toolComponentsRef.current.map((Component) => {
-        if (Component.props.name.toLowerCase() === name.toLowerCase()) {
+      toolComponentsRef.current.map((componentItem) => {
+        if (componentItem.props.name.toLowerCase() === name.toLowerCase()) {
+          const Component = lazy(() => componentItem.load);
+
           // CREATE TOOL COMPONENT
           var comp = (
-            <Component
-              key={helpers.getUID()}
-              name={Component.props.name}
-              helpLink={Component.props.helpLink}
-              hideHeader={Component.props.hideHeader}
-              onClose={onPanelComponentClose}
-              onSidebarVisibility={() => togglePanelVisibility()}
-              config={Component.props.config}
-              options={options}
-            />
+            <Suspense fallback={<div>Loading...</div>}>
+              <Component
+                key={helpers.getUID()}
+                name={componentItem.props.name}
+                helpLink={componentItem.props.helpLink}
+                hideHeader={componentItem.props.hideHeader}
+                onClose={onPanelComponentClose}
+                onSidebarVisibility={() => togglePanelVisibility()}
+                config={componentItem.props.config}
+                options={options}
+              />
+            </Suspense>
           );
           setToolTabComponent(comp);
           return comp;
@@ -85,20 +87,24 @@ const Sidebar = (props) => {
 
       helpers.addAppStat("Tool", name);
     } else {
-      toolComponentsRef.current.map((Component) => {
-        if (Component.props.name.toLowerCase() === name.toLowerCase()) {
+      toolComponentsRef.current.map((componentItem) => {
+        if (componentItem.props.name.toLowerCase() === name.toLowerCase()) {
           // CREATE THEME COMPONENT
+          const Component = lazy(() => componentItem.load);
+
           var comp = (
-            <Component
-              key={helpers.getUID()}
-              name={Component.props.name}
-              helpLink={Component.props.helpLink}
-              hideHeader={Component.props.hideHeader}
-              onClose={onPanelComponentClose}
-              onSidebarVisibility={() => togglePanelVisibility()}
-              config={Component.props.config}
-              options={options}
-            />
+            <Suspense fallback={<div>Loading...</div>}>
+              <Component
+                key={helpers.getUID()}
+                name={componentItem.props.name}
+                helpLink={componentItem.props.helpLink}
+                hideHeader={componentItem.props.hideHeader}
+                onClose={onPanelComponentClose}
+                onSidebarVisibility={() => togglePanelVisibility()}
+                config={componentItem.props.config}
+                options={options}
+              />
+            </Suspense>
           );
           setThemeTabComponent(comp);
           return comp;
@@ -214,8 +220,9 @@ const Sidebar = (props) => {
             loadedComponents.push(value.component);
           });
 
-        toolComponentsLoaded.current = true;
         toolComponentsRef.current = loadedComponents;
+        helpers.addIsLoaded("tools");
+        helpers.addIsLoaded("themes");
       });
 
       // CHECK VISIBILITY OF LAYERS MENUE
@@ -232,7 +239,7 @@ const Sidebar = (props) => {
         if (window.config.viewerMode.toUpperCase() === "ADVANCED") sidebarVisiblityEventHandler("OPEN");
       }
 
-      helpers.waitForLoad(["tools", "themes", "header", "map"], Date.now(), 30, () => {
+      helpers.waitForLoad(["tools", "themes", "header", "map", "toc"], Date.now(), 30, () => {
         initToolAndThemeUrlParameter({ tools: loadedTools, themes: loadedThemes, shortcuts: shortcuts }, () => {
           // TAB PARAMETER
           const tabNameParameter = helpers.getURLParameter("TAB");
@@ -247,11 +254,6 @@ const Sidebar = (props) => {
       });
     });
   };
-
-  useEffect(() => {
-    helpers.addIsLoaded("tools");
-    helpers.addIsLoaded("themes");
-  }, [toolComponentsRef]);
 
   useEffect(() => {
     mapLoadingRef.current = props.mapLoading;
@@ -269,31 +271,21 @@ const Sidebar = (props) => {
     const typeLowerCase = `${componentConfig.componentName}`.toLowerCase().replace(/\s/g, "");
     const path = `./components/${typeFolder}/${typeLowerCase}/${componentConfig.componentName}.jsx`;
 
-    import(`${path}`)
-      .then((component) => {
-        // SET PROPS FROM CONFIG
-        let comp = component.default;
-        comp.props = [];
-        comp.props.active = false;
-        comp.props.id = helpers.getUID();
-        comp.props.description = componentConfig.description;
-        comp.props.name = componentConfig.name;
-        comp.props.componentName = componentConfig.componentName;
-        comp.props.helpLink = componentConfig.helpLink;
-        comp.props.config = componentConfig.config;
-        if (componentConfig.hideHeader !== undefined) comp.props.hideHeader = componentConfig.hideHeader;
+    // SET PROPS FROM CONFIG
+    let comp = {};
+    comp.props = {};
+    comp.load = import(`${path}`);
 
-        // ADD COMPONENT TO LIST
-        callback(comp);
-      })
-      .catch((error) => {
-        console.log(error);
-        console.error(`"${componentConfig.name}" not yet supported`);
-        callback();
-      })
-      .finally(() => {
-        if (callback === undefined) return "Done";
-      });
+    comp.props.active = false;
+    comp.props.id = helpers.getUID();
+    comp.props.description = componentConfig.description;
+    comp.props.name = componentConfig.name;
+    comp.props.componentName = componentConfig.componentName;
+    comp.props.helpLink = componentConfig.helpLink;
+    comp.props.config = componentConfig.config;
+    if (componentConfig.hideHeader !== undefined) comp.props.hideHeader = componentConfig.hideHeader;
+    // ADD COMPONENT TO LIST
+    callback(comp);
   };
 
   const initToolAndThemeUrlParameter = (components, callback) => {
@@ -376,6 +368,7 @@ const Sidebar = (props) => {
           return;
         }
         flushSync(() => {
+          tabIndexRef.current = 1;
           setTabIndex(1);
           //CLEAR LOADED TOOL
           setToolTabComponent(null);
@@ -392,6 +385,7 @@ const Sidebar = (props) => {
           return;
         }
         flushSync(() => {
+          tabIndexRef.current = 3;
           setTabIndex(3);
           //CLEAR LOADED THEME
           setThemeTabComponent(null);
@@ -418,12 +412,22 @@ const Sidebar = (props) => {
       sidebarVisiblityEventHandler("OPEN");
       flushSync(() => {
         // SET SELECTED TAB
-        if (tabName === "layers") setTabIndex(0);
-        else if (tabName === "tools") setTabIndex(1);
-        else if (tabName === "mymaps") setTabIndex(2);
-        else if (tabName === "themes") setTabIndex(3);
-        else if (tabName === "reports") setTabIndex(4);
-        else console.log("NO VALID TAB FOUND");
+        if (tabName === "layers") {
+          setTabIndex(0);
+          tabIndexRef.current = 0;
+        } else if (tabName === "tools") {
+          setTabIndex(1);
+          tabIndexRef.current = 1;
+        } else if (tabName === "mymaps") {
+          setTabIndex(2);
+          tabIndexRef.current = 2;
+        } else if (tabName === "themes") {
+          setTabIndex(3);
+          tabIndexRef.current = 3;
+        } else if (tabName === "reports") {
+          setTabIndex(4);
+          tabIndexRef.current = 4;
+        } else console.log("NO VALID TAB FOUND");
       });
     });
   };
@@ -452,10 +456,11 @@ const Sidebar = (props) => {
 
   const onPanelComponentClose = (evt) => {
     // HANDLES UNLOADING OF TOOL/THEME
-    if (tabIndex === 1) {
+    if (tabIndex === 1 || tabIndexRef.current === 1) {
       // SET TOOLS
+
       setToolTabComponent(null);
-    } else if (tabIndex === 3) {
+    } else if (tabIndex === 3 || tabIndexRef.current === 3) {
       // SET THEMES
       setThemeTabComponent(null);
     }
@@ -470,6 +475,7 @@ const Sidebar = (props) => {
 
   const onTabSelect = (tabIndexLocal) => {
     setTabIndex(tabIndexLocal);
+    tabIndexRef.current = tabIndexLocal;
     if (tabIndexLocal === 0) helpers.addAppStat("Tab", "Layers");
     else if (tabIndexLocal === 1) helpers.addAppStat("Tab", "Tools");
     else if (tabIndexLocal === 2) helpers.addAppStat("Tab", "MyMaps");
