@@ -8,7 +8,7 @@ import { Vector as VectorSource } from "ol/source.js";
 import VectorLayer from "ol/layer/Vector";
 import { Circle as CircleStyle, Icon, Fill, Stroke, Style } from "ol/style.js";
 import TextField from "@mui/material/TextField";
-import { Autocomplete as MUIAutocomplete } from "@mui/material";
+import Autocomplete from "@mui/material/Autocomplete";
 
 import searchAddressConfig from "./config.json";
 const SearchAddresses = (props) => {
@@ -227,7 +227,7 @@ const SearchAddresses = (props) => {
           <div className="sc-tool-search-addresses-control-row">
             <label className="sc-tool-search-addresses-control label">Street Name:</label>
             <div className="sc-tool-search-addresses-control input">
-              <MUIAutocomplete
+              <Autocomplete
                 id="sc-tool-search-addresses-street-search"
                 freeSolo
                 fullWidth
