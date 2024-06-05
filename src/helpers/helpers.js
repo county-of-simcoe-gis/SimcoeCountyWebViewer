@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 
 // OPEN LAYERS
 import Feature from "ol/Feature";
-import * as ol from "ol";
+import View from "ol/View";
 import { Image as ImageLayer, Tile as TileLayer, Vector as VectorLayer, VectorTile as VectorTileLayer } from "ol/layer.js";
 import { ImageWMS, OSM, TileArcGISRest, TileImage, Vector, XYZ } from "ol/source.js";
 import MVT from "ol/format/MVT";
@@ -798,7 +798,7 @@ export function centerMap(coords, zoom) {
   //var newExtent = [extent[0], extent[1], extent[2], total];
 
   window.map.setView(
-    new ol.View({
+    new View({
       center: newCoords,
       //extent: newExtent,
       zoom: 13,

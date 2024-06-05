@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useState, useEffect } from "react";
 import TextField from "@mui/material/TextField";
 import Autocomplete from "@mui/material/Autocomplete";
 import { get } from "../helpers/api";
@@ -8,20 +8,20 @@ import { getUID } from "../helpers/react";
 // You need to create a new one for your application.
 
 const SCAutoComplete = (props) => {
-  const [url, setUrl] = React.useState(null);
-  const [value, setValue] = React.useState(null);
-  const [inputValue, setInputValue] = React.useState("");
-  const [options, setOptions] = React.useState([]);
-  const [loading, setLoading] = React.useState(false);
+  const [url, setUrl] = useState(null);
+  const [value, setValue] = useState(null);
+  const [inputValue, setInputValue] = useState("");
+  const [options, setOptions] = useState([]);
+  const [loading, setLoading] = useState(false);
   const handleChange = (e) => {
     setValue(e.target.value);
     if (props.onChange) props.onChange(e.target.value);
   };
-  React.useEffect(() => {
+  useEffect(() => {
     if (props.url) setUrl(props.url);
   }, [props.url]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (inputValue === "") {
       setOptions(value ? [value] : []);
       return undefined;

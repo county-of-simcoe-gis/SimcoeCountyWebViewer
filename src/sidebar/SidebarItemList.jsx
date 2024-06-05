@@ -23,7 +23,7 @@ const SidebarItemList = (props) => {
   }, [props.listtype]);
 
   useEffect(() => {
-    helpers.waitForLoad(["settings", "sidebar", "security"], Date.now(), 30, () => {
+    helpers.waitForLoad(["settings", "tools", "themes", "security"], Date.now(), 30, () => {
       let listItems = null;
       if (listtype === "tools") {
         let tools = window.config.sidebarToolComponents;

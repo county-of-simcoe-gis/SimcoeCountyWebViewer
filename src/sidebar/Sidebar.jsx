@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { flushSync } from "react-dom";
 import "./Sidebar.css";
 import * as helpers from "../helpers/helpers";
@@ -61,20 +61,24 @@ const Sidebar = (props) => {
   const activateSidebarItem = (name, type, options = undefined) => {
     // THIS HANDLES WHAT TOOL/THEME IS LOADED IN THE SIDEBAR
     if (type === "tools") {
-      toolComponentsRef.current.map((Component) => {
-        if (Component.props.name.toLowerCase() === name.toLowerCase()) {
+      toolComponentsRef.current.map((componentItem) => {
+        if (componentItem.props.name.toLowerCase() === name.toLowerCase()) {
+          const Component = lazy(() => componentItem.load);
+
           // CREATE TOOL COMPONENT
           var comp = (
-            <Component
-              key={helpers.getUID()}
-              name={Component.props.name}
-              helpLink={Component.props.helpLink}
-              hideHeader={Component.props.hideHeader}
-              onClose={onPanelComponentClose}
-              onSidebarVisibility={() => togglePanelVisibility()}
-              config={Component.props.config}
-              options={options}
-            />
+            <Suspense fallback={<div>Loading...</div>}>
+              <Component
+                key={helpers.getUID()}
+                name={componentItem.props.name}
+                helpLink={componentItem.props.helpLink}
+                hideHeader={componentItem.props.hideHeader}
+                onClose={onPanelComponentClose}
+                onSidebarVisibility={() => togglePanelVisibility()}
+                config={componentItem.props.config}
+                options={options}
+              />
+            </Suspense>
           );
           setToolTabComponent(comp);
           return comp;
@@ -83,20 +87,24 @@ const Sidebar = (props) => {
 
       helpers.addAppStat("Tool", name);
     } else {
-      toolComponentsRef.current.map((Component) => {
-        if (Component.props.name.toLowerCase() === name.toLowerCase()) {
+      toolComponentsRef.current.map((componentItem) => {
+        if (componentItem.props.name.toLowerCase() === name.toLowerCase()) {
           // CREATE THEME COMPONENT
+          const Component = lazy(() => componentItem.load);
+
           var comp = (
-            <Component
-              key={helpers.getUID()}
-              name={Component.props.name}
-              helpLink={Component.props.helpLink}
-              hideHeader={Component.props.hideHeader}
-              onClose={onPanelComponentClose}
-              onSidebarVisibility={() => togglePanelVisibility()}
-              config={Component.props.config}
-              options={options}
-            />
+            <Suspense fallback={<div>Loading...</div>}>
+              <Component
+                key={helpers.getUID()}
+                name={componentItem.props.name}
+                helpLink={componentItem.props.helpLink}
+                hideHeader={componentItem.props.hideHeader}
+                onClose={onPanelComponentClose}
+                onSidebarVisibility={() => togglePanelVisibility()}
+                config={componentItem.props.config}
+                options={options}
+              />
+            </Suspense>
           );
           setThemeTabComponent(comp);
           return comp;
@@ -263,31 +271,21 @@ const Sidebar = (props) => {
     const typeLowerCase = `${componentConfig.componentName}`.toLowerCase().replace(/\s/g, "");
     const path = `./components/${typeFolder}/${typeLowerCase}/${componentConfig.componentName}.jsx`;
 
-    import(`${path}`)
-      .then((component) => {
-        // SET PROPS FROM CONFIG
-        let comp = component.default;
-        comp.props = [];
-        comp.props.active = false;
-        comp.props.id = helpers.getUID();
-        comp.props.description = componentConfig.description;
-        comp.props.name = componentConfig.name;
-        comp.props.componentName = componentConfig.componentName;
-        comp.props.helpLink = componentConfig.helpLink;
-        comp.props.config = componentConfig.config;
-        if (componentConfig.hideHeader !== undefined) comp.props.hideHeader = componentConfig.hideHeader;
+    // SET PROPS FROM CONFIG
+    let comp = {};
+    comp.props = {};
+    comp.load = import(`${path}`);
 
-        // ADD COMPONENT TO LIST
-        callback(comp);
-      })
-      .catch((error) => {
-        console.log(error);
-        console.error(`"${componentConfig.name}" not yet supported`);
-        callback();
-      })
-      .finally(() => {
-        if (callback === undefined) return "Done";
-      });
+    comp.props.active = false;
+    comp.props.id = helpers.getUID();
+    comp.props.description = componentConfig.description;
+    comp.props.name = componentConfig.name;
+    comp.props.componentName = componentConfig.componentName;
+    comp.props.helpLink = componentConfig.helpLink;
+    comp.props.config = componentConfig.config;
+    if (componentConfig.hideHeader !== undefined) comp.props.hideHeader = componentConfig.hideHeader;
+    // ADD COMPONENT TO LIST
+    callback(comp);
   };
 
   const initToolAndThemeUrlParameter = (components, callback) => {
