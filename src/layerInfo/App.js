@@ -83,43 +83,49 @@ class LayerInfoApp extends Component {
     callback(featureType);
   };
   parseArcGisFeature = (featureInfo, callback) => {
-    let featureType = {};
-    featureType["nativeCRS"] = {};
-    featureType.nativeCRS["@class"] = "Projected";
-    if (featureInfo.sourceSpatialReference.wkt === undefined) {
-      featureType.nativeCRS["$"] = ` "EPSG:${featureInfo.sourceSpatialReference.latestWkid}`;
-    } else {
-      if (featureInfo.sourceSpatialReference.wkt.indexOf("GEOGCS") !== -1) featureType.nativeCRS["@class"] = "Geographic";
-      featureType.nativeCRS["$"] = featureInfo.sourceSpatialReference.wkt;
-    }
+    try {
+      let featureType = {};
+      featureType["nativeCRS"] = {};
+      featureType.nativeCRS["@class"] = "Projected";
+      let spatialReference = featureInfo.sourceSpatialReference || featureInfo.extent.spatialReference;
+      if (spatialReference.wkt === undefined) {
+        featureType.nativeCRS["$"] = ` "EPSG:${spatialReference.latestWkid}`;
+      } else {
+        if (spatialReference.wkt.indexOf("GEOGCS") !== -1) featureType.nativeCRS["@class"] = "Geographic";
+        featureType.nativeCRS["$"] = spatialReference.wkt;
+      }
 
-    featureType["title"] = featureInfo.name;
-    featureType["name"] = featureInfo.name;
-    featureType["nativeBoundingBox"] = {};
-    featureType.nativeBoundingBox["minx"] = featureInfo.extent.xmin;
-    featureType.nativeBoundingBox["maxx"] = featureInfo.extent.xmax;
-    featureType.nativeBoundingBox["miny"] = featureInfo.extent.ymin;
-    featureType.nativeBoundingBox["maxy"] = featureInfo.extent.ymax;
-    let nativeBoundingBoxCrs = {};
-    nativeBoundingBoxCrs["@class"] = "projected";
-    nativeBoundingBoxCrs["$"] = `EPSG:${featureInfo.extent.spatialReference.latestWkid}`;
-    featureType.nativeBoundingBox["crs"] = nativeBoundingBoxCrs;
-    const descriptionObj = layerInfoHelpers.parseESRIDescription(featureInfo.description);
-    featureType["abstract"] = descriptionObj.description;
-    featureType["attributes"] = {};
-    featureType.attributes["attribute"] = featureInfo.fields.map((item) => {
-      return {
-        name: item.name,
-        binding: item.type.replace("esriFieldType", ""),
-      };
-    });
-    const epsgUrl = (wkt) => `https://epsg.io/${wkt}.wkt`;
-    if (featureInfo.sourceSpatialReference.latestWkid === undefined) callback(featureType);
-    else
-      get(epsgUrl(featureInfo.sourceSpatialReference.latestWkid), { type: "text" }, (projection) => {
-        if (projection !== "ERROR") featureType.nativeCRS["$"] = projection;
-        callback(featureType);
+      featureType["title"] = featureInfo.name;
+      featureType["name"] = featureInfo.name;
+      featureType["nativeBoundingBox"] = {};
+      featureType.nativeBoundingBox["minx"] = featureInfo.extent.xmin;
+      featureType.nativeBoundingBox["maxx"] = featureInfo.extent.xmax;
+      featureType.nativeBoundingBox["miny"] = featureInfo.extent.ymin;
+      featureType.nativeBoundingBox["maxy"] = featureInfo.extent.ymax;
+      let nativeBoundingBoxCrs = {};
+      nativeBoundingBoxCrs["@class"] = "projected";
+      nativeBoundingBoxCrs["$"] = `EPSG:${featureInfo.extent.spatialReference.latestWkid}`;
+      featureType.nativeBoundingBox["crs"] = nativeBoundingBoxCrs;
+      const descriptionObj = layerInfoHelpers.parseESRIDescription(featureInfo.description);
+      featureType["abstract"] = descriptionObj.description;
+      featureType["attributes"] = {};
+      if (!featureInfo.fields) featureInfo.fields = [];
+      featureType.attributes["attribute"] = featureInfo.fields.map((item) => {
+        return {
+          name: item.name,
+          binding: item.type.replace("esriFieldType", ""),
+        };
       });
+      const epsgUrl = (wkt) => `https://epsg.io/${wkt}.wkt`;
+      if (spatialReference.latestWkid === undefined) callback(featureType);
+      else
+        get(epsgUrl(spatialReference.latestWkid), { type: "text" }, (projection) => {
+          if (projection !== "ERROR") featureType.nativeCRS["$"] = projection;
+          callback(featureType);
+        });
+    } catch (e) {
+      console.log(e, featureInfo);
+    }
   };
   // CLEAN UP THE PROJECTION STRING
   getFormattedProjection = () => {
