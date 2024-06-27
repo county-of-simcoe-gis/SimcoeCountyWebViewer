@@ -206,6 +206,7 @@ p {
   font-size: 11px;
   word-wrap: break-word;
   min-height: 10px;
+  overflow-wrap: anywhere;
 }
 .sc-info-window-label-table {
   display: table-cell;
