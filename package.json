@@ -11,7 +11,7 @@
     "@emotion/styled": "^11.11.0",
     "@mui/material": "^5.14.4",
     "alertifyjs": "^1.13.1",
-    "fast-xml-parser": "^4.2.7",
+    "fast-xml-parser": "^4.4.1",
     "github-buttons": "^2.27.0",
     "html-to-image": "^1.11.11",
     "moment": "^2.29.4",
