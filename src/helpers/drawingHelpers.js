@@ -472,7 +472,6 @@ export function exportMyMaps(callback2, id = null) {
     const storage = localStorage.getItem(window.config.storageKeys.Draw);
     if (storage === null) return [];
     const data = JSON.parse(storage);
-
     let item = null;
     if (id !== null) {
       item = data.items.filter((item) => {
@@ -483,8 +482,17 @@ export function exportMyMaps(callback2, id = null) {
       if (item !== null) {
         data.items = [item];
       }
+    } else {
+      data.items = data.items.map((item) => {
+        if ((item.hasChanged || false) === false) return item;
+        const oldId = item.id;
+        const newId = helpers.getUID();
+        item.id = newId;
+        item.hasChanged = false;
+        item.featureGeoJSON = item.featureGeoJSON.replace(oldId, newId);
+        return item;
+      });
     }
-
     helpers.postJSON(window.config.apiUrl + "public/map/mymaps/", data, (result) => {
       callback2(result);
     });
