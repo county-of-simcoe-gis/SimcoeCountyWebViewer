@@ -456,11 +456,16 @@ class MyMaps extends Component {
       dataProjection: "EPSG:3857",
       featureProjection: "EPSG:3857",
     });
-
+    // COMPARE TO STATE AND UPDATE
+    const originalItem = this.state.items.filter((item) => {
+      return item.id === feature.get("id");
+    })[0];
+    let hasChanged = false;
+    if (originalItem.featureGeoJSON !== featureGeoJSON) hasChanged = true;
     this.setState(
       {
         // UPDATE LABEL
-        items: this.state.items.map((item) => (item.id === feature.get("id") ? Object.assign({}, item, { featureGeoJSON: featureGeoJSON }) : item)),
+        items: this.state.items.map((item) => (item.id === feature.get("id") ? Object.assign({}, item, { featureGeoJSON: featureGeoJSON, hasChanged: hasChanged }) : item)),
       },
       () => {
         if (callback !== undefined) callback();
@@ -1181,7 +1186,7 @@ class MyMaps extends Component {
       window.map.addInteraction(this.modify);
 
       // MOVE
-      this.translate = new Translate({ source: this.vectorSource });
+      this.translate = new Translate({ layers: [this.vectorLayer] });
       this.translate.on("translateend", (e) => {
         this.updateFeatureGeometries(e.features.getArray());
       });
