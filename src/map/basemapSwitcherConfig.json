@@ -106,9 +106,22 @@
       ]
     },
     {
+      "name": "LIO Topographic",
+      "image": "LIO_Topo_2.png",
+      "index": 3,
+      "layers": [
+        {
+          "url": "https://ws.lioservices.lrc.gov.on.ca/arcgis1/rest/services/LIO_Cartographic/LIO_Topographic/MapServer/tile/{z}/{y}/{x}",
+          "type": "ESRI_TILED",
+          "isOverlay": true,
+          "fullExtent": [-1.85562536661e7, -773026.2100000009, -2019762.2597999983, 1.0008766186999999]
+        }
+      ]
+    },
+    {
       "name": "Open Street Map",
       "image": "osm-topo.jpg",
-      "index": 3,
+      "index": 4,
       "layers": [
         {
           "url": "",
