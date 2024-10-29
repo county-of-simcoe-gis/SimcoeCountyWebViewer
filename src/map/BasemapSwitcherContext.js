@@ -5,7 +5,6 @@ import { XMLParser } from "fast-xml-parser";
 
 import * as helpers from "../helpers/helpers";
 import BasemapConfig from "./basemapSwitcherConfig.json";
-import { set } from "date-fns";
 
 const BasemapSwitcherContext = createContext();
 export function BasemapSwitcherProvider({ children }) {
@@ -19,6 +18,7 @@ export function BasemapSwitcherProvider({ children }) {
   useEffect(() => {
     helpers.waitForLoad(["map", "settings"], Date.now(), 30, () => {
       if (window.config.baseMapServices !== undefined) {
+        if (window.config.baseMapServices.defaultButton !== undefined) BasemapConfig.defaultButton = window.config.baseMapServices.defaultButton;
         let basemapConfig = helpers.mergeObj(window.config.baseMapServices, BasemapConfig, true);
         basemapConfig.topoServices = [...new Map(basemapConfig.topoServices.reverse().map((item) => [item["name"], item])).values()].reverse();
         basemapConfig.imageryServices = [...new Map(basemapConfig.imageryServices.reverse().map((item) => [item["name"], item])).values()].reverse();

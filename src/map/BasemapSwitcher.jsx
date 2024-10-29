@@ -4,7 +4,6 @@ import "./BasemapSwitcher.css";
 import * as helpers from "../helpers/helpers";
 import BasemapSwitcherContext from "./BasemapSwitcherContext";
 import BasemapItem from "./BasemapItem.jsx";
-import BasemapConfig from "./basemapSwitcherConfig.json";
 import Slider from "rc-slider";
 
 const BasemapSwitcher = (props) => {
@@ -43,10 +42,10 @@ const BasemapSwitcher = (props) => {
     }
     return marks;
   };
-  const [imagerySliderMarks, setImagerySliderMarks] = useState(getImagerySliderMarks(BasemapConfig));
-  const [imagerySliderMax, setImagerySliderMax] = useState(BasemapConfig.imageryServices.length - 1);
-  const [imagerySliderDefaultValue, setImagerySliderDefaultValue] = useState(BasemapConfig.imageryServices.length - 1);
-  const [imagerySliderValue, setImagerySliderValue] = useState(BasemapConfig.imageryServices.length - 1);
+  const [imagerySliderMarks, setImagerySliderMarks] = useState(getImagerySliderMarks(baseMapServicesOptions));
+  const [imagerySliderMax, setImagerySliderMax] = useState(baseMapServicesOptions.imageryServices.length - 1);
+  const [imagerySliderDefaultValue, setImagerySliderDefaultValue] = useState(baseMapServicesOptions.imageryServices.length - 1);
+  const [imagerySliderValue, setImagerySliderValue] = useState(baseMapServicesOptions.imageryServices.length - 1);
   const [imageryPanelOpen, setImageryPanelOpen] = useState(false);
   const [streetsCheckbox, setStreetsCheckbox] = useState(true);
   const [containerCollapsed, setContainerCollapsed] = useState(false);
@@ -54,7 +53,7 @@ const BasemapSwitcher = (props) => {
   const [topoActiveIndex, setTopoActiveIndex] = useState(0);
   const [showBaseMapSwitcher, setShowBaseMapSwitcher] = useState(true);
 
-  const [activeButton, setActiveButton] = useState(BasemapConfig.defaultButton || "topo");
+  const [activeButton, setActiveButton] = useState(baseMapServicesOptions.defaultButton || "topo");
 
   const isLoadedRef = useRef(false);
   useEffect(() => {
@@ -63,20 +62,6 @@ const BasemapSwitcher = (props) => {
     const mapControlsChangedListener = window.emitter.addListener("mapControlsChanged", (control, visible) => controlStateChange(control, visible));
     helpers.waitForLoad(["map", "settings"], Date.now(), 30, () => {
       setShowBaseMapSwitcher(window.mapControls.basemap);
-      if (baseMapServicesOptions !== undefined) {
-        setImagerySliderMarks(getImagerySliderMarks(baseMapServicesOptions));
-        setImagerySliderMax(baseMapServicesOptions.imageryServices.length - 1);
-        setImagerySliderDefaultValue(baseMapServicesOptions.imageryServices.length - 1);
-        setImagerySliderValue(baseMapServicesOptions.imageryServices.length - 1);
-        setActiveButton(baseMapServicesOptions.defaultButton);
-        loadTopoLayers(baseMapServicesOptions);
-        loadBathymetry(baseMapServicesOptions);
-        loadWorldImagery(baseMapServicesOptions);
-        loadStreets(baseMapServicesOptions);
-        loadImageryLayers(baseMapServicesOptions);
-        isLoadedRef.current = true;
-        helpers.addIsLoaded("basemap");
-      }
       setTimeout(() => {
         handleURLParameters();
       }, 100);
@@ -94,6 +79,24 @@ const BasemapSwitcher = (props) => {
       // mapControlsChangedListener.remove();
     };
   }, []);
+
+  useEffect(() => {
+    if (baseMapServicesOptions === undefined) return;
+    setImagerySliderMarks(getImagerySliderMarks(baseMapServicesOptions));
+    setImagerySliderMax(baseMapServicesOptions.imageryServices.length - 1);
+    setImagerySliderDefaultValue(baseMapServicesOptions.imageryServices.length - 1);
+    setImagerySliderValue(baseMapServicesOptions.imageryServices.length - 1);
+    updateImageryLayers(baseMapServicesOptions.imageryServices.length - 1);
+    setActiveButton(baseMapServicesOptions.defaultButton);
+    loadTopoLayers(baseMapServicesOptions);
+    loadBathymetry(baseMapServicesOptions);
+    loadWorldImagery(baseMapServicesOptions);
+    loadStreets(baseMapServicesOptions);
+    loadImageryLayers(baseMapServicesOptions);
+    setActiveButton(baseMapServicesOptions.defaultButton || "topo");
+    isLoadedRef.current = true;
+    helpers.addIsLoaded("basemap");
+  }, [baseMapServicesOptions]);
 
   // HANDLE URL PARAMETERS
   const handleURLParameters = (value) => {

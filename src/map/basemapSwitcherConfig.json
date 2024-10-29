@@ -202,6 +202,12 @@
       "name": "2023",
       "fullExtent": [-8939184.811223287, 5454803.475123089, -8801041.532479914, 5612759.410739516],
       "type": "TileImage"
+    },
+    {
+      "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2024_Cache/MapServer/tile/{z}/{y}/{x}",
+      "name": "2024",
+      "fullExtent": [-8897238.520918317, 5489107.141924027, -8844782.837534107, 5578047.364868764],
+      "type": "TileImage"
     }
   ]
 }
