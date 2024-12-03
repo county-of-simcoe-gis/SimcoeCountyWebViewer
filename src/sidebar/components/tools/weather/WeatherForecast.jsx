@@ -67,12 +67,16 @@ const Forecast = (props) => {
   let warningEvents = [];
   let warningUrl = "";
   if (warnings !== "") {
-    warningUrl = warnings.$.url;
-    if (warnings.event.length === undefined) warningEvents.push(warnings.event);
-    else
-      warnings.event.forEach((event) => {
-        warningEvents.push(event);
-      });
+    try {
+      warningUrl = warnings.event.$.url;
+      if (warnings.event.length === undefined) warningEvents.push(warnings.event);
+      else
+        warnings.event.forEach((event) => {
+          warningEvents.push(event);
+        });
+    } catch (e) {
+      console.error("Weather Forecast Warning Error: ", e);
+    }
   }
 
   return (
