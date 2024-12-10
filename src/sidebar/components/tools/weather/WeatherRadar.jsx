@@ -6,20 +6,28 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import ImageLayer from "ol/layer/Image";
 import Static from "ol/source/ImageStatic";
+const tzoffset = new Date().getTimezoneOffset() * 60000;
+const pad2 = (number) => {
+  var str = "" + number;
+  while (str.length < 2) {
+    str = "0" + str;
+  }
 
+  return str;
+};
 const WeatherRadar = (props) => {
   const radarImages = useRef([]);
   const radarInterval = useRef(null);
-
-  const [radarDateSliderValue, setRadarDateSliderValue] = useState(helpers.roundTime(new Date()));
+  const initialDate = new Date();
+  const [radarDateSliderValue, setRadarDateSliderValue] = useState(helpers.roundTime(initialDate));
   const [radarOpacitySliderValue, setRadarOpacitySliderValue] = useState(0.7);
-  const [startDate, setStartDate] = useState(helpers.roundTime(new Date(new Date().setHours(new Date().getHours() - 3))));
-  const [endDate, setEndDate] = useState(helpers.roundTime(new Date()));
+  const [startDate, setStartDate] = useState(helpers.roundTime(new Date(new Date().setHours(initialDate.getHours() - 3))));
+  const [endDate, setEndDate] = useState(helpers.roundTime(initialDate));
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [timeSettingValue, setTimeSettingValue] = useState("last3hours");
   const [CASKR, setCASKR] = useState(true);
   const [CASBI, setCASBI] = useState(false);
-  const [WSO, setWSO] = useState(false);
+  const [CASET, setCASET] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
   const isPlayingRef = useRef(false);
@@ -57,7 +65,6 @@ const WeatherRadar = (props) => {
       setEndDate(helpers.roundTime(new Date()));
       setStartDate(helpers.roundTime(date3HoursBehind));
     }
-
     helpers.getJSON(radarUrlTemplate(getDateString(startDate), getDateString(endDate)), (result) => {
       radarImages.current.forEach((layer) => {
         window.map.removeLayer(layer);
@@ -80,7 +87,7 @@ const WeatherRadar = (props) => {
 
         imageLayer.setProperties({
           radarCode: imageObj.RADAR_CODE,
-          radarDate: new Date(imageObj.RADAR_DATE),
+          radarDate: new Date(new Date(imageObj.RADAR_DATE).valueOf() + tzoffset),
           timeId: imageObj.TIME_ID,
         });
 
@@ -96,10 +103,9 @@ const WeatherRadar = (props) => {
   const setStartAndEndDateDefault = () => {
     if (radarImages.current.length === 0) return;
     const firstImage = radarImages.current[0];
-    const startDate = firstImage.get("radarDate");
+    const startDate = new Date(firstImage.get("radarDate").valueOf());
     const lastImage = radarImages.current[radarImages.current.length - 1];
-    const endDate = lastImage.get("radarDate");
-
+    const endDate = new Date(lastImage.get("radarDate").valueOf());
     setStartDate(startDate);
     setEndDate(endDate);
     setRadarDateSliderValue(endDate);
@@ -119,7 +125,7 @@ const WeatherRadar = (props) => {
       const radarCode = layer.get("radarCode");
       if (radarDate) {
         if (radarDate.getTime() === radarDateSliderValue.getTime() && radarDate.toDateString() === radarDateSliderValue.toDateString()) {
-          if ((CASKR && radarCode === "CASKR") || (CASBI && radarCode === "CASBI") || (WSO && radarCode === "WSO")) {
+          if ((CASKR && radarCode === "CASKR") || (CASBI && radarCode === "CASBI") || (CASET && radarCode === "CASET")) {
             layer.setVisible(true);
           } else layer.setVisible(false);
         } else {
@@ -127,7 +133,7 @@ const WeatherRadar = (props) => {
         }
       }
     });
-  }, [radarDateSliderValue, CASKR, CASBI, WSO]);
+  }, [radarDateSliderValue, CASKR, CASBI, CASET]);
 
   const onClose = () => {
     // ADD CLEAN UP HERE (e.g. Map Layers, Popups, etc)
@@ -180,8 +186,8 @@ const WeatherRadar = (props) => {
     setCASBI(evt.target.checked);
   };
 
-  const onWSOChange = (evt) => {
-    setWSO(evt.target.checked);
+  const onCASETChange = (evt) => {
+    setCASET(evt.target.checked);
   };
 
   useEffect(() => {
@@ -235,15 +241,6 @@ const WeatherRadar = (props) => {
     if (!dt) return "";
     var dtstring = dt.getFullYear() + "-" + pad2(dt.getMonth() + 1) + "-" + pad2(dt.getDate()) + " " + pad2(dt.getHours()) + ":" + pad2(dt.getMinutes()) + ":" + pad2(dt.getSeconds());
     return dtstring;
-  };
-
-  const pad2 = (number) => {
-    var str = "" + number;
-    while (str.length < 2) {
-      str = "0" + str;
-    }
-
-    return str;
   };
 
   // STYLE USED BY SLIDER
@@ -351,8 +348,8 @@ const WeatherRadar = (props) => {
               CASBI (Britt)
             </label>
             <label>
-              <input type="checkbox" checked={WSO} onChange={onWSOChange} />
-              WSO (Exeter)
+              <input type="checkbox" checked={CASET} onChange={onCASETChange} />
+              CASET (Exeter)
             </label>
           </div>
         </div>
@@ -419,7 +416,6 @@ const DateSlider = (props) => {
     dateSteps.current = [stepValue];
     for (let index = 0; index < currentSteps; index++) {
       var newStepValue = new Date(stepValue.getTime() + 10 * 60000);
-      // console.log(newStepValue);
       dateSteps.current.push(newStepValue);
       stepValue = newStepValue;
     }

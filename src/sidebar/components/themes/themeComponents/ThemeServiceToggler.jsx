@@ -16,9 +16,6 @@ const ThemeServiceToggler = (props) => {
   const [token, setToken] = useState("");
   const [showAll, setShowAll] = useState(false);
   const idToIndexMap = new Map();
-  props.serviceConfig.layers.forEach((id, index) => {
-    idToIndexMap.set(id, index);
-  });
   const processLayers = (capabilities) => {
     let layerArray = [];
     let zIndex = props.serviceConfig.zIndex || 1000;
@@ -119,6 +116,10 @@ const ThemeServiceToggler = (props) => {
   }, [props.visibleAll]);
 
   useEffect(() => {
+    if (props.serviceConfig.layers)
+      props.serviceConfig.layers.forEach((id, index) => {
+        idToIndexMap.set(id, index);
+      });
     if (props.serviceConfig.secure)
       if (props.serviceConfig.tokenType === "app")
         getAppAccessToken(props.serviceConfig.serviceUrl, (accessToken) => {
