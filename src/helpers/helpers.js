@@ -592,25 +592,25 @@ export function getJSON(url, callback) {
     });
 }
 
-export function getObjectFromXMLUrl(url, callback) {
-  return fetch(url)
-    .then((response) => response.text())
-    .then((responseText) => {
-      // CALLBACK WITH RESULT
-      if (callback !== undefined) {
-        const options = {
-          ignoreAttributes: false, // Ignore the XML attributes
-          attributeNamePrefix: "", // Default is an underscore. Set to null to disable it
-          attributesGroupName: "$", // XML node attributes group name prefix
-        };
-        const parser = new XMLParser(options);
+export function getObjectFromXMLUrl({ url, options, callback }) {
+  let { secured } = options;
 
-        callback(parser.parse(responseText));
-      }
-    })
-    .catch((error) => {
-      console.error(error);
-    });
+  if (secured === undefined) secured = false;
+  let header = {
+    "Content-Type": "application/text",
+  };
+  get(url, { useBearerToken: secured, headers: header, type: "text" }, (responseText) => {
+    // CALLBACK WITH RESULT
+    if (callback !== undefined) {
+      const options = {
+        ignoreAttributes: false, // Ignore the XML attributes
+        attributeNamePrefix: "", // Default is an underscore. Set to null to disable it
+        attributesGroupName: "$", // XML node attributes group name prefix
+      };
+      const parser = new XMLParser(options);
+      callback(parser.parse(responseText));
+    }
+  });
 }
 
 export function isParcelClickEnabled() {
@@ -670,8 +670,12 @@ export function getWFSLayerRecordCount(options, callback) {
   if (secured === undefined) secured = false;
   const recordCountUrlTemplate = (serverURL, layerName) => `${serverURL}wfs?REQUEST=GetFeature&VERSION=1.1&typeName=${layerName}&RESULTTYPE=hits`;
   const recordCountUrl = recordCountUrlTemplate(serverUrl, layerName);
-  getObjectFromXMLUrl(recordCountUrl, (result) => {
-    callback(result["wfs:FeatureCollection"]["$"].numberOfFeatures);
+  getObjectFromXMLUrl({
+    url: recordCountUrl,
+    options: { secured: secured },
+    callback: (result) => {
+      callback(result["wfs:FeatureCollection"]["$"].numberOfFeatures);
+    },
   });
 }
 
