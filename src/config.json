@@ -21,7 +21,6 @@
   "googleAnalyticsID": "G-GC5RRXFML6",
   "appStatsUrl": "https://opengis.simcoe.ca/api_v2/public/stats/write/",
   "apiUrl": "https://opengis.simcoe.ca/api_v2/",
-  "apiUrlDev": "http://localhost:8085/",
   "termsUrl": "https://maps.simcoe.ca/terms.html",
   "openLicenseUrl": "http://maps.simcoe.ca/openlicense.html",
   "whatsNewUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/WhatsNew/2021-03-22",

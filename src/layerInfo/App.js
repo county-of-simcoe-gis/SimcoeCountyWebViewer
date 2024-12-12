@@ -116,13 +116,15 @@ class LayerInfoApp extends Component {
           binding: item.type.replace("esriFieldType", ""),
         };
       });
-      const epsgUrl = (wkt) => `https://epsg.io/${wkt}.wkt`;
-      if (spatialReference.latestWkid === undefined) callback(featureType);
-      else
-        get(epsgUrl(spatialReference.latestWkid), { type: "text" }, (projection) => {
-          if (projection !== "ERROR") featureType.nativeCRS["$"] = projection;
-          callback(featureType);
-        });
+      helpers.waitForLoad("settings", Date.now(), 30, () => {
+        const epsgUrl = (wkt) => `${window.config.apiUrl}public/map/geometry/epsg/${wkt}/wkt`;
+        if (spatialReference.latestWkid === undefined) callback(featureType);
+        else
+          get(epsgUrl(spatialReference.latestWkid), { type: "text" }, (projection) => {
+            if (projection !== "ERROR") featureType.nativeCRS["$"] = projection;
+            callback(featureType);
+          });
+      });
     } catch (e) {
       console.log(e, featureInfo);
     }

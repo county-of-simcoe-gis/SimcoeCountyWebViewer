@@ -58,13 +58,16 @@ const _nad83Proj = new Projection({
 export function registerCustomProjection(wkt, callback) {
   if (proj4.defs(`EPSG:${wkt}`)) callback();
   else {
-    const epsgUrl = (wkt) => `https://epsg.io/${wkt}.proj4`;
-    httpGetText(epsgUrl(wkt), (projection) => {
-      if (projection !== "ERROR") {
-        proj4.defs(`EPSG:${wkt}`, projection);
-        register(proj4);
-      }
-      callback();
+    waitForLoad("settings", Date.now(), 30, () => {
+      const epsgUrl = (wkt) => `${window.config.apiUrl}public/map/geometry/epsg/${wkt}/proj4`;
+
+      httpGetText(epsgUrl(wkt), (projection) => {
+        if (projection !== "ERROR") {
+          proj4.defs(`EPSG:${wkt}`, projection);
+          register(proj4);
+        }
+        callback();
+      });
     });
   }
 }
