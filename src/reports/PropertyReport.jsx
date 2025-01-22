@@ -130,18 +130,30 @@ const PropertyReport = (props) => {
               </div>
             </div>
           </div>
-          <div>
+          {info.Schools && info.Schools.PublicElementry && (
             <div>
-              <div className="sc-property-report-html-label">Public Elementary: </div>
-              <div className="sc-property-report-html-value">{info.Schools && info.Schools.PublicElementry ? info.Schools.PublicElementry : ""}</div>
+              <div>
+                <div className="sc-property-report-html-label">Public Elementary: </div>
+                <div className="sc-property-report-html-value">{info.Schools && info.Schools.PublicElementry ? info.Schools.PublicElementry : ""}</div>
+              </div>
             </div>
-          </div>
-          <div>
+          )}
+          {info.Schools && info.Schools.PublicSecondary && (
             <div>
               <div className="sc-property-report-html-label">Public Secondary: </div>
               <div className="sc-property-report-html-value">{info.Schools && info.Schools.PublicSecondary ? info.Schools.PublicSecondary : ""}</div>
             </div>
-          </div>
+          )}
+          {info.Schools && info.Schools.PublicLookup && (
+            <div>
+              <div className="sc-property-report-html-label">Public School Lookup: </div>
+              <div className="sc-property-report-html-value">
+                <a rel="noopener noreferrer" href={info.Schools && info.Schools.PublicLookup ? info.Schools.PublicLookup : ""} target="_blank">
+                  School Lookup
+                </a>
+              </div>
+            </div>
+          )}
           <div>
             <div>
               <div className="sc-property-report-html-label">Public School Board Website: </div>
