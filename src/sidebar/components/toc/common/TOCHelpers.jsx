@@ -447,7 +447,7 @@ export function getGroupsESRI(options, callback) {
               value: groupValue,
               label: category,
               url: options.url,
-              secured: false,
+              secured: options.secured,
               primary: options.primary,
               red: options.useRedFolder,
               prefix: "",
@@ -480,7 +480,7 @@ export function getGroupsESRI(options, callback) {
         value: category === "All Layers" ? "opengis:all_layers" : category,
         label: category,
         url: options.url,
-        secured: false,
+        secured: options.secured,
         primary: options.primary,
         red: options.useRedFolder,
         prefix: "",
@@ -1312,7 +1312,9 @@ export async function buildESRILayer(options, callback) {
   let group = options.group;
   let layer = options.layer;
   let layerIndex = options.layerIndex;
-  let secured = options.secured !== undefined ? options.secured : false;
+  let secured = options.group.secured !== undefined ? options.group.secured : false;
+  let primary = options.group.primary !== undefined ? options.group.primary : false;
+
   if (layer !== undefined) {
     const visibleLayers = group.visibleLayers === undefined ? [] : group.visibleLayers;
 
@@ -1470,6 +1472,7 @@ export async function buildESRILayer(options, callback) {
         serverUrl: serverUrl + "/", // BASE URL FOR GEOSERVER
         noAttributeTable: noAttributeTable, // IF TRUE, DISABLE ATTRIBUTE TABLE
         secured: secured,
+        primary: primary,
         hasAttachments: hasAttachments,
         // elementId: layerNameOnly + "_" + group.value,
       };

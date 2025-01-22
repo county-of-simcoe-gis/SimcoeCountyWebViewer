@@ -91,9 +91,11 @@
   border-color: #aaa;
   border-right: 1px solid #ddd !important;
 }
-
+.react-tabs__tab:focus:after {
+  background: none !important;
+}
 .react-tabs__tab--selected {
-  box-shadow: 1px 1px 3px #ccc !important;
+  box-shadow: 1px 1px 0px 0px #ccc !important;
   background-color: #ddd !important;
   color: #000000 !important;
   border: 1px solid #4a92d0 !important;
