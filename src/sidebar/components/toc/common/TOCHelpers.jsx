@@ -1085,6 +1085,38 @@ export function updateLayerIndex(layers, callback = undefined) {
     layerIndex--;
   }
 }
+export function updateGroupLayerIndex(groups, callback = undefined) {
+  let newGroups = [];
+  let layerIndex = layerIndexStart;
+  // Loop through groups in reverse to maintain proper layer ordering
+  for (let i = groups.length - 1; i >= 0; i--) {
+    const group = groups[i];
+    let newGroup = Object.assign({}, group);
+    newGroup.layers = [];
+
+    // Update each layer's index within the group
+    for (let j = group.layers.length - 1; j >= 0; j--) {
+      const layer = group.layers[j];
+      let newLayer = Object.assign({}, layer);
+
+      // Update the layer's z-index and drawing properties
+      newLayer.layer.setZIndex(layerIndex);
+      newLayer.drawIndex = layerIndex;
+      newLayer.index = layerIndex;
+
+      newGroup.layers.unshift(newLayer);
+      layerIndex++;
+    }
+
+    newGroups.unshift(newGroup);
+  }
+
+  if (callback !== undefined) {
+    callback(newGroups);
+  } else {
+    return newGroups;
+  }
+}
 
 export function getLayerInfo(layerInfo, callback) {
   const params = {};
@@ -1479,4 +1511,45 @@ export async function buildESRILayer(options, callback) {
       callback(returnLayer);
     });
   }
+}
+export function sortLayers(layers, sortAlpha = false) {
+  let newLayers = Object.assign([{}], layers);
+  if (sortAlpha) newLayers.sort(sortByAlphaCompare);
+  else newLayers.sort(sortByIndexCompare);
+
+  return updateLayerIndex(newLayers);
+}
+
+export function sortGroups(groups, callback = undefined) {
+  let primaryGroups = Object.assign(
+    [],
+    groups.filter((item) => item.primary)
+  );
+  let nonPrimaryGroups = Object.assign(
+    [],
+    groups.filter((item) => !item.primary)
+  );
+  primaryGroups.sort(sortGroupAlphaCompare);
+  nonPrimaryGroups.sort(sortGroupAlphaCompare);
+  if (callback !== undefined) callback([...primaryGroups, ...nonPrimaryGroups]);
+  else return [...primaryGroups, ...nonPrimaryGroups];
+}
+
+export function sortGroupsLayers(groups, sortAlpha = false, callback = undefined) {
+  sortGroups(groups, (sortedGroups) => {
+    const newGroups = [];
+    sortedGroups.forEach((group) => {
+      let newGroup = Object.assign({}, group);
+      let newLayers = Object.assign([], group.layers);
+      if (sortAlpha) newLayers.sort(sortByAlphaCompare);
+      else newLayers.sort(sortByIndexCompare);
+      newGroup.layers = newLayers;
+      newGroups.push(newGroup);
+    });
+
+    updateGroupLayerIndex(newGroups, (indexedGroups) => {
+      if (callback !== undefined) callback(indexedGroups);
+      else return indexedGroups;
+    });
+  });
 }
