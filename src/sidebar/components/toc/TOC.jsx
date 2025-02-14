@@ -195,23 +195,24 @@ class TOC extends Component {
     const defaultGroup = this.getDefaultGroup(groupInfo.defaultGroupName, listLayerGroups);
 
     listLayerGroups = listLayerGroups.map((group) => {
-      if (group.layers.length > 0) group.layers = this.sortLayers(group.layers);
+      if (group.layers.length > 0) group.layers = TOCHelpers.sortLayers(group.layers, this.state.sortListAlpha);
       return group;
     });
-    folderLayerGroups = folderLayerGroups.map((group) => {
-      if (group.layers.length > 0) group.layers = this.sortLayers(group.layers);
-      if (defaultGroup.value === group.value) {
-        group.panelOpen = true;
-        //update folder view default visibility
-        group.layers = group.layers.map((layer) => {
-          const defaultLayer = defaultGroup.layers.filter((item) => item.name === layer.name)[0];
-          if (defaultLayer) {
-            layer.visible = defaultLayer.visible;
-          }
-          return layer;
-        });
-      }
-      return group;
+    TOCHelpers.sortGroupsLayers(folderLayerGroups, this.state.sortFolderAlpha, (sortedGroups) => {
+      folderLayerGroups = sortedGroups.map((group) => {
+        if (defaultGroup.value === group.value) {
+          group.panelOpen = true;
+          //update folder view default visibility
+          group.layers = group.layers.map((layer) => {
+            const defaultLayer = defaultGroup.layers.filter((item) => item.name === layer.name)[0];
+            if (defaultLayer) {
+              layer.visible = defaultLayer.visible;
+            }
+            return layer;
+          });
+        }
+        return group;
+      });
     });
 
     this.setState(
@@ -289,7 +290,7 @@ class TOC extends Component {
       console.warn(e);
     }
     if (savedGroup !== undefined && savedGroup.panelOpen !== undefined) group.panelOpen = savedGroup.panelOpen;
-    group.layers = this.sortLayers(
+    group.layers = TOCHelpers.sortLayers(
       group.layers.map((layer) => {
         const savedLayer = savedLayers[layer.name];
         if (savedLayer !== undefined) {
@@ -299,7 +300,8 @@ class TOC extends Component {
           layer.drawIndex = savedLayer.index;
         }
         return layer;
-      })
+      }),
+      this.state.sortListAlpha
     );
     return group;
   };
@@ -345,18 +347,19 @@ class TOC extends Component {
       });
       return group;
     });
-    layerGroups.map((group) => {
-      group.layers = this.sortLayers(group.layers);
-      return group;
-    });
-
     if (type === "LIST") {
+      layerGroups.map((group) => {
+        group.layers = TOCHelpers.sortLayers(group.layers, this.state.sortListAlpha);
+        return group;
+      });
       this.setState({ layerListGroups: layerGroups }, () => {
         this.forceUpdate();
       });
     } else {
-      this.setState({ layerFolderGroups: layerGroups }, () => {
-        this.forceUpdate();
+      layerGroups = TOCHelpers.sortGroupsLayers(layerGroups, this.state.sortFolderAlpha, (sortedLayerGroup) => {
+        this.setState({ layerFolderGroups: sortedLayerGroup }, () => {
+          this.forceUpdate();
+        });
       });
     }
   };
@@ -520,7 +523,7 @@ class TOC extends Component {
     let allLayers = [];
     const layerList = Object.assign([], this.getActiveLayerGroups());
     layerList.forEach((group) => {
-      allLayers.push(this.sortLayers(group.layers));
+      allLayers.push(TOCHelpers.sortLayers(group.layers, this.state.sortListAlpha));
     });
     callback(allLayers);
   };
@@ -600,9 +603,11 @@ class TOC extends Component {
             layer.layer.setVisible(false);
           });
         });
-        layerFolderGroups.forEach((group) => {
-          group.layers.forEach((layer) => {
-            if (layer.visible) layer.layer.setVisible(true);
+        TOCHelpers.updateGroupLayerIndex(layerFolderGroups, (groups) => {
+          groups.forEach((group) => {
+            group.layers.forEach((layer) => {
+              if (layer.visible) layer.layer.setVisible(true);
+            });
           });
         });
         break;
@@ -672,27 +677,6 @@ class TOC extends Component {
   getInitialSort = () => {
     if (isMobile) return true;
     else return false;
-  };
-  sortGroups = (groups) => {
-    let primaryGroups = Object.assign(
-      [],
-      groups.filter((item) => item.primary)
-    );
-    let nonPrimaryGroups = Object.assign(
-      [],
-      groups.filter((item) => !item.primary)
-    );
-    primaryGroups.sort(TOCHelpers.sortGroupAlphaCompare);
-    nonPrimaryGroups.sort(TOCHelpers.sortGroupAlphaCompare);
-
-    return [...primaryGroups, ...nonPrimaryGroups];
-  };
-  sortLayers = (layers) => {
-    let newLayers = Object.assign([{}], layers);
-    if (this.state.sortListAlpha) newLayers.sort(TOCHelpers.sortByAlphaCompare);
-    else newLayers.sort(TOCHelpers.sortByIndexCompare);
-
-    return TOCHelpers.updateLayerIndex(newLayers);
   };
   //#endregion
   //#region HANDLE FOLDER LIST SPECIFIC FUNCTIONS
@@ -1127,7 +1111,7 @@ class TOC extends Component {
           key="sc-toc-folder"
           id="sc-toc-folder"
           visible={this.state.type === "FOLDER"}
-          layerGroups={this.sortGroups(this.state.layerFolderGroups)}
+          layerGroups={this.state.layerFolderGroups}
           sortAlpha={this.state.sortFolderAlpha}
           searchText={this.state.searchText}
           saveLayerOptions={this.state.saveLayerOptions}
