@@ -47,7 +47,7 @@ const CommercialRealEstatePopupContent = (props) => {
       <div className="sc-theme-commercial-real-estate-popup-details-container">
         <div className="sc-theme-commercial-real-estate-row-container">
           <label className="sc-theme-commercial-real-estate-popup-row-label">Price:</label>
-          <label className="sc-theme-commercial-real-estate-popup-row-value">{"$" + numberWithCommas(feature.get("_listprice"))}</label>
+          <label className="sc-theme-commercial-real-estate-popup-row-value">{feature.get("_listprice") <= 1 ? "Price Not Defined" : "$" + numberWithCommas(feature.get("_listprice"))}</label>
         </div>
         <div className="sc-theme-commercial-real-estate-row-container">
           <label className="sc-theme-commercial-real-estate-popup-row-label">Sale Type:</label>
@@ -55,7 +55,7 @@ const CommercialRealEstatePopupContent = (props) => {
         </div>
         <div className="sc-theme-commercial-real-estate-row-container">
           <label className="sc-theme-commercial-real-estate-popup-row-label">Size:</label>
-          <label className="sc-theme-commercial-real-estate-popup-row-value">{feature.get("_squarefeet") === 0 ? "Not Available" : feature.get("_squarefeet")}</label>
+          <label className="sc-theme-commercial-real-estate-popup-row-value">{feature.get("_squarefeet") == 0 ? "Not Available" : feature.get("_squarefeet")}</label>
         </div>
         <div className="sc-theme-commercial-real-estate-row-container">
           <label className="sc-theme-commercial-real-estate-popup-row-label">Brochure:</label>
