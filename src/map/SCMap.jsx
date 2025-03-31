@@ -108,6 +108,7 @@ const SCMap = (props) => {
     helpers.addIsLoaded("map_control");
 
     helpers.waitForLoad(["settings", "map_control"], Date.now(), 30, () => {
+      window.mapControls = { ...window.mapControls, ...window.config.controls };
       setGitHubFollowHandle(window.config.gitHubFollowHandle);
       setGitHubFollowUrl(window.config.gitHubFollowUrl);
       setGitHubFollowHandleLabel(window.config.gitHubFollowHandle + " on GitHub");

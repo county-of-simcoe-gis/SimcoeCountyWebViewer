@@ -175,6 +175,14 @@
   top: 51px;
   right: -87px;
 }
+
+.sc-menu-button-main-container.sideBarOpen.no-controls {
+  right: -49px;
+}
+
+.sc-menu-button-main-container.sideBarOpen.no-github-button {
+  top: 10px;
+}
 .sc-menu-button-main-container.sideBarOpen .sc-menu-more-button {
   width: 37px !important;
   height: 37px !important;
