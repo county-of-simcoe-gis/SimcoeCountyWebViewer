@@ -855,6 +855,7 @@ const Search = (props) => {
             <TextField
               classes={{ root: "sc-search-textbox-input-mui" }}
               hiddenLabel
+              placeholder={placeHolderText}
               {...params}
               InputProps={{
                 ...params.InputProps,
