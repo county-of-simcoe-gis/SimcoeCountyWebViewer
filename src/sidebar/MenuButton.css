@@ -207,6 +207,7 @@
   position: absolute;
   bottom: 9px;
   right: -49px;
+  height: 50px;
 }
 .sc-menu-button-main-container.map-float .sc-menu-more-button {
   display: block;
