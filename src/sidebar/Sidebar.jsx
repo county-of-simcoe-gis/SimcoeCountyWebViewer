@@ -155,17 +155,20 @@ const Sidebar = (props) => {
 
   const initSidebar = () => {
     helpers.waitForLoad("settings", Date.now(), 30, () => {
+      if (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems.tools !== undefined && window.config.mainSidebarItems.tools.title !== undefined)
+        setTools({ ...tools, title: window.config.mainSidebarItems.tools.title });
       // IMPORT TOOLS FROM CONFIG and CHECK VISIBILITY
-      let tools = window.config.sidebarToolComponents;
-      tools = tools.filter((item) => item.enabled === undefined || item.enabled);
-      if (tools.length === 1) {
-        setTools({ title: tools[0].name, icon: tools[0].imageName });
-        tools[0]["hideHeader"] = true;
+      let currentTools = window.config.sidebarToolComponents;
+      currentTools = currentTools.filter((item) => item.enabled === undefined || item.enabled);
+
+      if (currentTools.length === 1) {
+        setTools({ title: currentTools[0].name, icon: currentTools[0].imageName });
+        currentTools[0]["hideHeader"] = true;
       }
-      if (tools.length === 0 || (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideTools"])) setHideTools(true);
+      if (currentTools.length === 0 || (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideTools"])) setHideTools(true);
       let componentPromises = [];
       componentPromises.push(
-        ...tools.map((component) => {
+        ...currentTools.map((component) => {
           return new Promise((resolve, reject) => {
             addComponent(component, "tools", (result) => {
               if (result) {
@@ -182,16 +185,18 @@ const Sidebar = (props) => {
         })
       );
 
+      if (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems.themes !== undefined && window.config.mainSidebarItems.themes.title !== undefined)
+        setThemes({ ...themes, title: window.config.mainSidebarItems.themes.title });
       // IMPORT THEMES FROM CONFIG
-      let themes = window.config.sidebarThemeComponents;
-      themes = themes.filter((item) => item.enabled === undefined || item.enabled);
-      if (themes.length === 1) {
-        setThemes({ title: themes[0].name, icon: themes[0].imageName });
-        themes[0]["hideHeader"] = true;
+      let currentThemes = window.config.sidebarThemeComponents;
+      currentThemes = currentThemes.filter((item) => item.enabled === undefined || item.enabled);
+      if (currentThemes.length === 1) {
+        setThemes({ title: currentThemes[0].name, icon: currentThemes[0].imageName });
+        currentThemes[0]["hideHeader"] = true;
       }
-      if (themes.length === 0 || (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideThemes"])) setHideThemes(true);
+      if (currentThemes.length === 0 || (window.config.mainSidebarItems !== undefined && window.config.mainSidebarItems["hideThemes"])) setHideThemes(true);
       componentPromises.push(
-        ...themes.map((component) => {
+        ...currentThemes.map((component) => {
           return new Promise((resolve, reject) => {
             addComponent(component, "themes", (result) => {
               if (result) {
@@ -298,21 +303,23 @@ const Sidebar = (props) => {
         let shortcuts = [];
         let params = [];
         components.tools.forEach((item) => {
-          shortcuts.push({
-            name: item.name.toLowerCase(),
-            component: item.name,
-            type: "tools",
-            url_param: "TOOL",
-          });
+          if (item.name)
+            shortcuts.push({
+              name: item.name.toLowerCase(),
+              component: item.name,
+              type: "tools",
+              url_param: "TOOL",
+            });
           if (!params.includes("tool")) params.push("tool");
         });
         components.themes.forEach((item) => {
-          shortcuts.push({
-            name: item.name.toLowerCase(),
-            component: item.name,
-            type: "themes",
-            url_param: "THEME",
-          });
+          if (item.name)
+            shortcuts.push({
+              name: item.name.toLowerCase(),
+              component: item.name,
+              type: "themes",
+              url_param: "THEME",
+            });
           if (!params.includes("theme")) params.push("theme");
         });
         components.shortcuts.forEach((item) => {
