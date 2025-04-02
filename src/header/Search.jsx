@@ -151,10 +151,11 @@ const Search = (props) => {
       if (muni) setMunicipality(muni);
       apiUrlRef.current = window.config.apiUrl;
       setStorageKey(window.config.storageKeys.SearchHistory);
+      if (window.config.hideSearch !== undefined) setHideSearch(window.config.hideSearch);
+
       if (window.config.search) {
         if (window.config.search.placeHolder !== undefined) setPlaceHolderText(window.config.search.placeHolder);
         if (window.config.search.hideTypes !== undefined) setHideTypeDropDown(window.config.search.hideTypes);
-        if (window.config.hideSearch !== undefined) setHideSearch(window.config.hideSearch);
       }
       helpers.getJSON(searchTypesURL(apiUrlRef.current), (result) => {
         let items = [];
@@ -168,7 +169,9 @@ const Search = (props) => {
         items.push({ label: "Tool", value: "Tool" });
         items.push({ label: "Theme", value: "Theme" });
         setSearchTypes(items);
-        setSelectedType(items[0]);
+
+        if (window.config.search.defaultSearchType !== undefined) setSelectedType(window.config.search.defaultSearchType);
+        else setSelectedType(items[0]);
       });
     });
     return () => {
