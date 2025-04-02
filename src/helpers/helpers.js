@@ -1662,7 +1662,9 @@ export function getConfig(component, name) {
     default:
       break;
   }
-  return configArray.filter((item) => item.name !== undefined && item.name.toLowerCase() === name.toLowerCase())[0];
+  return configArray.filter(
+    (item) => (item.name !== undefined && item.name.toLowerCase() === name.toLowerCase()) || (item.componentName !== undefined && item.componentName.toLowerCase() === name.toLowerCase())
+  )[0];
 }
 
 export function mergeObjArray(targetArray, sourceArray) {

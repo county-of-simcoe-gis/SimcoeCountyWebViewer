@@ -21,45 +21,49 @@ class CommercialRealEstateLayerToggler extends Component {
   }
 
   componentDidMount() {
-    this.initLayer(() => {
-      // LEGEND
-      const styleUrlTemplate = (serverURL, layerName, styleName) => `${serverURL}wms?REQUEST=GetLegendGraphic&VERSION=1.1&FORMAT=image/png&WIDTH=30&HEIGHT=30&TRANSPARENT=true&LAYER=${layerName}`;
-      const styleUrl = styleUrlTemplate(this.props.layer.serverUrl, this.props.layer.layerName);
+    helpers.waitForLoad("settings", Date.now(), 30, () => {
+      this.initLayer(() => {
+        this.setState({ panelOpen: this.props.layer.expanded === undefined ? false : this.props.layer.expanded });
 
-      // RECORD COUNT
-      helpers.getWFSLayerRecordCount({ serverUrl: this.props.layer.serverUrl, layerName: this.props.layer.layerName }, (count) => {
-        this.setState({ recordCount: count, styleUrl: styleUrl });
-        // this.setState({ styleUrl: styleUrl });
-      });
+        // LEGEND
+        const styleUrlTemplate = (serverURL, layerName, styleName) => `${serverURL}wms?REQUEST=GetLegendGraphic&VERSION=1.1&FORMAT=image/png&WIDTH=30&HEIGHT=30&TRANSPARENT=true&LAYER=${layerName}`;
+        const styleUrl = styleUrlTemplate(this.props.layer.serverUrl, this.props.layer.layerName);
 
-      const rootInfoUrl = this.state.layer.get("rootInfoUrl");
-      helpers.getJSON(rootInfoUrl, (rootResult) => {
-        helpers.getJSON(rootResult.layer.resource.href.replace("http:", "https:"), (result) => {
-          const abstract = result.featureType.abstract;
-          if (abstract !== undefined && this.state.metadata === "Retreiving info....") this.setState({ metadata: abstract });
+        // RECORD COUNT
+        helpers.getWFSLayerRecordCount({ serverUrl: this.props.layer.serverUrl, layerName: this.props.layer.layerName }, (count) => {
+          this.setState({ recordCount: count, styleUrl: styleUrl });
+          // this.setState({ styleUrl: styleUrl });
         });
-      });
 
-      // MAP CLICK FOR POPUP INFO
-      // this.mapClickEvent = window.map.on("click", (evt) => {
-      //   if (window.isDrawingOrEditing) return;
-      //   var viewResolution = window.map.getView().getResolution();
-      //   var url = this.state.layer.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", {
-      //     INFO_FORMAT: "application/json",
-      //   });
-      //   if (url) {
-      //     helpers.getJSON(url, (result) => {
-      //       const features = result.features;
-      //       if (features.length === 0) {
-      //         return;
-      //       }
-      //       const geoJSON = new GeoJSON().readFeatures(result);
-      //       const feature = geoJSON[0];
-      //       const entries = Object.entries(feature.getProperties());
-      //       window.popup.show(evt.coordinate, <ThemePopupContent key={helpers.getUID()} values={entries} layerConfig={this.props.layer} />, this.props.layer.displayName);
-      //     });
-      //   }
-      // });
+        const rootInfoUrl = this.state.layer.get("rootInfoUrl");
+        helpers.getJSON(rootInfoUrl, (rootResult) => {
+          helpers.getJSON(rootResult.layer.resource.href.replace("http:", "https:"), (result) => {
+            const abstract = this.props.layer.description ? this.props.layer.description : result.featureType.abstract;
+            if (abstract !== undefined && this.state.metadata === "Retreiving info....") this.setState({ metadata: abstract });
+          });
+        });
+
+        // MAP CLICK FOR POPUP INFO
+        // this.mapClickEvent = window.map.on("click", (evt) => {
+        //   if (window.isDrawingOrEditing) return;
+        //   var viewResolution = window.map.getView().getResolution();
+        //   var url = this.state.layer.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", {
+        //     INFO_FORMAT: "application/json",
+        //   });
+        //   if (url) {
+        //     helpers.getJSON(url, (result) => {
+        //       const features = result.features;
+        //       if (features.length === 0) {
+        //         return;
+        //       }
+        //       const geoJSON = new GeoJSON().readFeatures(result);
+        //       const feature = geoJSON[0];
+        //       const entries = Object.entries(feature.getProperties());
+        //       window.popup.show(evt.coordinate, <ThemePopupContent key={helpers.getUID()} values={entries} layerConfig={this.props.layer} />, this.props.layer.displayName);
+        //     });
+        //   }
+        // });
+      });
     });
   }
   componentDidUpdate(prevProps, prevState, snapshot) {
