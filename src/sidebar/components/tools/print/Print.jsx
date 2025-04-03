@@ -49,6 +49,8 @@ class Print extends Component {
       const globalConfig = helpers.getConfig("TOOLS", "Print");
       const mainConfig = window.config;
       if (globalConfig.config !== undefined) {
+        if (globalConfig.config.printLogo !== undefined) window.config.printLogo = globalConfig.config.printLogo;
+
         const defaultSizes = this.config.printSizes;
         this.config = helpers.mergeObj(this.config, globalConfig.config);
         if (printConfig.overwrite) this.config.printSizes = [...new Set([...printConfig.printSizes])];
