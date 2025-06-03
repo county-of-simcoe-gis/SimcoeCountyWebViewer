@@ -111,7 +111,7 @@ const SCMap = (props) => {
 
     helpers.waitForLoad(["settings", "map_control"], Date.now(), 30, () => {
       window.mapControls = { ...window.mapControls, ...window.config.controls };
-      if (window.config.controls && window.config.controls.rotate) {
+      if (window.mapControls && window.mapControls.rotate) {
         map.addInteraction(
           new PinchRotate({
             altShiftDragRotate: true,
