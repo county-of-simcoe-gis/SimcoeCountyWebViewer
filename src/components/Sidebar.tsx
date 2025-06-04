@@ -1,0 +1,235 @@
+"use client";
+
+import "./Sidebar.css";
+import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
+import { useSidebarStore } from "@/stores/sidebarStore";
+import { useEventStore } from "@/stores/eventStore";
+import { useMapStore } from "@/stores/mapStore";
+import { useAppStore } from "@/stores/appStore";
+import { useEffect, useState, Suspense } from "react";
+import { lazy } from "react";
+
+// Lazy load tool components
+const MeasureTool = lazy(() => import("@/components/tools/MeasureTool"));
+const CoordinatesTool = lazy(() => import("@/components/tools/CoordinatesTool"));
+const SettingsTool = lazy(() => import("@/components/tools/SettingsTool"));
+const PrintTool = lazy(() => import("@/components/tools/PrintTool"));
+const WeatherTool = lazy(() => import("@/components/tools/WeatherTool"));
+
+// Lazy load theme components
+const ForestryTheme = lazy(() => import("@/components/themes/ForestryTheme"));
+
+// Tool mapping for dynamic loading
+const toolComponents: Record<
+  string,
+  React.LazyExoticComponent<
+    React.ComponentType<{
+      name?: string;
+      helpLink?: string;
+      hideHeader?: boolean;
+      onClose: () => void;
+      onSidebarVisibility?: () => void;
+      config?: Record<string, unknown>;
+      options?: Record<string, unknown>;
+    }>
+  >
+> = {
+  Measure: MeasureTool,
+  Coordinates: CoordinatesTool,
+  Settings: SettingsTool,
+  Print: PrintTool,
+  Weather: WeatherTool,
+};
+
+// Theme mapping for dynamic loading
+const themeComponents: Record<
+  string,
+  React.LazyExoticComponent<
+    React.ComponentType<{
+      name?: string;
+      helpLink?: string;
+      hideHeader?: boolean;
+      onClose: () => void;
+      onSidebarVisibility?: () => void;
+      config?: Record<string, unknown>;
+      options?: Record<string, unknown>;
+    }>
+  >
+> = {
+  Forestry: ForestryTheme,
+};
+
+export default function Sidebar() {
+  const { isOpen, themes, tools, activeTheme, activeTool, activeTab, setActiveTab, activateSidebarItem } = useSidebarStore();
+  const { emitSidebarLoaded } = useEventStore();
+  const { addLoadedItem } = useMapStore();
+  const { setSidebarLoading } = useAppStore();
+
+  // State for active components
+  const [activeToolComponent, setActiveToolComponent] = useState<React.ReactNode>(null);
+  const [activeThemeComponent, setActiveThemeComponent] = useState<React.ReactNode>(null);
+
+  useEffect(() => {
+    // Mark sidebar as loaded (replaces window.emitter.emit("sidebarLoaded"))
+    emitSidebarLoaded();
+    addLoadedItem("sidebar");
+    setSidebarLoading(false);
+  }, [emitSidebarLoaded, addLoadedItem, setSidebarLoading]);
+
+  const handleTabSelect = (index: number) => {
+    setActiveTab(index);
+  };
+
+  const handleSidebarItemClick = (name: string, type: "tools" | "themes") => {
+    activateSidebarItem(name, type);
+
+    if (type === "tools") {
+      const ToolComponent = toolComponents[name];
+      if (ToolComponent) {
+        const component = (
+          <Suspense fallback={<div style={{ padding: "20px" }}>Loading tool...</div>}>
+            <ToolComponent name={name} onClose={() => setActiveToolComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
+          </Suspense>
+        );
+        setActiveToolComponent(component);
+      } else {
+        // Fallback for unknown tools
+        setActiveToolComponent(
+          <div style={{ padding: "20px" }}>
+            <h3>{name}</h3>
+            <p>This tool is not yet implemented.</p>
+            <button className="sc-button" onClick={() => setActiveToolComponent(null)}>
+              Close
+            </button>
+          </div>
+        );
+      }
+    } else if (type === "themes") {
+      const ThemeComponent = themeComponents[name];
+      if (ThemeComponent) {
+        const component = (
+          <Suspense fallback={<div style={{ padding: "20px" }}>Loading theme...</div>}>
+            <ThemeComponent name={name} onClose={() => setActiveThemeComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
+          </Suspense>
+        );
+        setActiveThemeComponent(component);
+      } else {
+        // Fallback for unknown themes
+        setActiveThemeComponent(
+          <div style={{ padding: "20px" }}>
+            <h3>{name}</h3>
+            <p>This theme is not yet implemented.</p>
+            <button className="sc-button" onClick={() => setActiveThemeComponent(null)}>
+              Close
+            </button>
+          </div>
+        );
+      }
+    }
+  };
+
+  const renderDefaultToolsContent = () => (
+    <div className="sc-sidebar-items-container">
+      {tools.map((tool) => (
+        <div key={tool.id} className={`sc-sidebar-item ${activeTool === tool.id ? "active" : ""}`} onClick={() => handleSidebarItemClick(tool.name, "tools")}>
+          <div className="sc-sidebar-item-image">
+            <img src={`/images/${tool.imageName}`} alt={tool.name} />
+          </div>
+          <div className="sc-sidebar-item-content">
+            <div className="sc-sidebar-item-title">{tool.name}</div>
+            <div className="sc-sidebar-item-description">{tool.description}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderDefaultThemesContent = () => (
+    <div className="sc-sidebar-items-container">
+      {themes.map((theme) => (
+        <div key={theme.id} className={`sc-sidebar-item ${activeTheme === theme.id ? "active" : ""}`} onClick={() => handleSidebarItemClick(theme.name, "themes")}>
+          <div className="sc-sidebar-item-image">
+            <img src={`/images/${theme.imageName}`} alt={theme.name} />
+          </div>
+          <div className="sc-sidebar-item-content">
+            <div className="sc-sidebar-item-title">{theme.name}</div>
+            <div className="sc-sidebar-item-description">{theme.description}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  return (
+    <div className={`sc-sidebar ${!isOpen ? "closed" : ""}`}>
+      <Tabs selectedIndex={activeTab} onSelect={handleTabSelect}>
+        <TabList>
+          <Tab>
+            <div className="tab-content">
+              <img src="/images/legend-32x32.png" alt="Layers" className="tab-icon" />
+              <div className="tab-text">Layers</div>
+            </div>
+          </Tab>
+          <Tab>
+            <div className="tab-content">
+              <img src="/images/tools-32x32.png" alt="Tools" className="tab-icon" />
+              <div className="tab-text">Tools</div>
+            </div>
+          </Tab>
+          <Tab>
+            <div className="tab-content">
+              <img src="/images/map-32x32.png" alt="My Maps" className="tab-icon" />
+              <div className="tab-text">My Maps</div>
+            </div>
+          </Tab>
+          <Tab>
+            <div className="tab-content">
+              <img src="/images/theme-32x32.png" alt="Themes" className="tab-icon" />
+              <div className="tab-text">Themes</div>
+            </div>
+          </Tab>
+          <Tab>
+            <div className="tab-content">
+              <img src="/images/report-32x32.png" alt="Reports" className="tab-icon" />
+              <div className="tab-text">Reports</div>
+            </div>
+          </Tab>
+        </TabList>
+
+        <TabPanel>
+          <div className="sc-sidebar-content">
+            <div style={{ marginBottom: "10px", fontWeight: "bold", fontSize: "12px" }}>All Layers</div>
+            {/* Layer tree would go here - for now show placeholder */}
+            <div style={{ fontSize: "12px", color: "#666" }}>Layer tree will be implemented here...</div>
+          </div>
+        </TabPanel>
+
+        <TabPanel>
+          <div className="sc-sidebar-content">
+            {activeToolComponent ? activeToolComponent : tools.length === 0 ? <div style={{ fontSize: "12px", color: "#666" }}>Loading tools...</div> : renderDefaultToolsContent()}
+          </div>
+        </TabPanel>
+
+        <TabPanel>
+          <div className="sc-sidebar-content">
+            <div style={{ marginBottom: "10px", fontWeight: "bold", fontSize: "12px" }}>MY MAPS</div>
+            <div style={{ fontSize: "12px", color: "#666" }}>My Maps functionality will be implemented here...</div>
+          </div>
+        </TabPanel>
+
+        <TabPanel>
+          <div className="sc-sidebar-content">
+            {activeThemeComponent ? activeThemeComponent : themes.length === 0 ? <div style={{ fontSize: "12px", color: "#666" }}>Loading themes...</div> : renderDefaultThemesContent()}
+          </div>
+        </TabPanel>
+
+        <TabPanel>
+          <div className="sc-sidebar-content">
+            <div style={{ marginBottom: "10px", fontWeight: "bold", fontSize: "12px" }}>REPORTS</div>
+            <div style={{ fontSize: "12px", color: "#666" }}>Reports functionality will be implemented here...</div>
+          </div>
+        </TabPanel>
+      </Tabs>
+    </div>
+  );
+}
