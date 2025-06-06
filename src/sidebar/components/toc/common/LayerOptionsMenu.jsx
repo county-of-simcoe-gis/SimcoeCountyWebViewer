@@ -119,9 +119,9 @@ class LayerOptionsMenu extends Component {
             helpers.addAppStat("Download", layerInfo.name);
             if (helpers.isMobile()) {
               window.emitter.emit("setSidebarVisiblity", "CLOSE");
-              helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} showDownload={1} />);
+              helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} showDownload={1} secure={layerInfo.secured || false} />);
             } else {
-              helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} showDownload={1} />);
+              helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} showDownload={1} secure={layerInfo.secured || false} />);
             }
           }
         });
