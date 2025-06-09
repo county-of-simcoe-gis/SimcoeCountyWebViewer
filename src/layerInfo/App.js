@@ -177,7 +177,7 @@ class LayerInfoApp extends Component {
     const workspace = this.state.layerInfo.namespace.name;
     const layerName = this.state.layerInfo.name;
     if (this.state.layerURL.indexOf(mainConfig.geoserverURL) !== -1) {
-      get(downloadTemplate(serverUrl(this.state.layerURL), workspace, layerName), { useBearerToken: true, type: "blob" }, (result) => {
+      get(downloadTemplate(serverUrl(this.state.layerURL), workspace, layerName), { useBearerToken: this.props.secure || false, type: "blob" }, (result) => {
         helpers.download(result, layerName, { isBlob: true });
       });
     } else {
