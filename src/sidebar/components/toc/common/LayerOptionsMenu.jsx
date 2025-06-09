@@ -73,17 +73,17 @@ class LayerOptionsMenu extends Component {
         else if (layerInfo.metadataUrl.indexOf("?token=") > 0) {
           if (helpers.isMobile()) {
             window.emitter.emit("setSidebarVisiblity", "CLOSE");
-            helpers.showWindow(<LayerInfoApp layerURL={layerInfo.metadataUrl} />);
+            helpers.showWindow(<LayerInfoApp layerURL={layerInfo.metadataUrl} secure={layerInfo.secured || false} />);
           } else {
-            helpers.showWindow(<LayerInfoApp layerURL={layerInfo.metadataUrl} />);
+            helpers.showWindow(<LayerInfoApp layerURL={layerInfo.metadataUrl} secure={layerInfo.secured || false} />);
           }
         } else
           TOCHelpers.getLayerInfo(layerInfo, (result) => {
             if (helpers.isMobile()) {
               window.emitter.emit("setSidebarVisiblity", "CLOSE");
-              helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} />);
+              helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} secure={layerInfo.secured || false} />);
             } else {
-              helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} />);
+              helpers.showWindow(<LayerInfoApp layerURL={result.featureType.fullUrl} params={result.requestParams} secure={layerInfo.secured || false} />);
             }
           });
         helpers.addAppStat("Metadata", layerInfo.name);
