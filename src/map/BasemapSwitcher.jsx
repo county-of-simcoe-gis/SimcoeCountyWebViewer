@@ -89,7 +89,7 @@ const BasemapSwitcher = (props) => {
     updateImageryLayers(baseMapServicesOptions.imageryServices.length - 1);
     setActiveButton(baseMapServicesOptions.defaultButton);
     loadTopoLayers(baseMapServicesOptions);
-    loadBathymetry(baseMapServicesOptions);
+    // loadBathymetry(baseMapServicesOptions);
     loadWorldImagery(baseMapServicesOptions);
     loadStreets(baseMapServicesOptions);
     loadImageryLayers(baseMapServicesOptions);
