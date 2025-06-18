@@ -174,6 +174,13 @@
 
   "sidebarToolComponents": [
     {
+      "id": 11,
+      "name": "Available Maps",
+      "componentName": "AvailableMaps",
+      "description": "View all the available maps and switch to a different map configuration.",
+      "imageName": "availablemaps.png"
+    },
+    {
       "id": 1,
       "name": "Measure",
       "componentName": "Measure",
