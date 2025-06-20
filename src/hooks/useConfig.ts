@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { loadConfig, getConfig, updatePageMetadata, type AppConfig } from '@/utils/config';
 
 interface UseConfigReturn {
@@ -16,7 +16,7 @@ export function useConfig(): UseConfigReturn {
   const [loading, setLoading] = useState<boolean>(!config);
   const [error, setError] = useState<string | null>(null);
 
-  const loadAppConfig = async () => {
+  const loadAppConfig = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -34,7 +34,7 @@ export function useConfig(): UseConfigReturn {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const reloadConfig = async () => {
     await loadAppConfig();
@@ -44,7 +44,7 @@ export function useConfig(): UseConfigReturn {
     if (!config) {
       loadAppConfig();
     }
-  }, []);
+  }, [config, loadAppConfig]);
 
   return {
     config,

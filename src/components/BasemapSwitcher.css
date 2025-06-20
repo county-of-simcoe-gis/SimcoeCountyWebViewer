@@ -1,0 +1,199 @@
+.sc-basemap-main-container {
+  left: auto;
+  top: 56px;
+  right: 7px;
+  height: 33px;
+  position: absolute;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 4px;
+  opacity: 0.9;
+  border-radius: 4px;
+  display: table;
+  z-index: 2;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.sc-basemap-main-container:hover {
+  opacity: 1;
+}
+
+.sc-basemap-imagery-slider-container {
+  right: 107px;
+  width: 100px;
+  height: 280px;
+  top: 100px;
+  background-color: #fff;
+  border-radius: 4px;
+  position: absolute;
+  user-select: none;
+  opacity: 0.9;
+  z-index: 2;
+  border: 1px solid #ccc;
+  padding: 8px;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.sc-basemap-imagery-slider-container:hover {
+  opacity: 1;
+}
+
+.sc-basemap-imagery-slider-container .rc-slider-mark {
+  top: 0px;
+  left: 25px !important;
+  width: 60px;
+}
+
+.sc-basemap-imagery-slider-container .rc-slider-mark-text {
+  color: #337ab7 !important;
+  text-decoration: underline;
+  cursor: pointer !important;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  font-size: 10px;
+  font-weight: bold;
+  writing-mode: initial;
+  text-orientation: initial;
+  transform: none;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.sc-basemap-imagery-slider-container .rc-slider-vertical {
+  width: 4px;
+  left: 15px;
+}
+
+.sc-basemap-imagery-slider-container .rc-slider-vertical .rc-slider-rail {
+  width: 4px;
+}
+
+.sc-basemap-imagery-slider-container .rc-slider-vertical .rc-slider-track {
+  width: 4px;
+}
+
+.sc-basemap-collapse-button {
+  display: table-cell;
+  background-position: center center;
+  background-repeat: no-repeat;
+  color: #999;
+  min-width: 20px !important;
+  cursor: pointer;
+  border-right: 1px solid #ccc;
+}
+
+.sc-basemap-collapse-button.closed {
+  background-image: url(/images/tab-open.png);
+}
+
+.sc-basemap-collapse-button.open {
+  background-image: url(/images/tab-close.png);
+}
+
+.sc-basemap-imagery {
+  display: table-cell;
+  padding-left: 5px;
+  width: 83px;
+}
+
+.sc-basemap-imagery-button {
+  width: 69px;
+  padding: 2px 4px;
+  font-size: 11px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  cursor: pointer;
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.sc-basemap-imagery-button.active {
+  background-color: #007cba;
+  color: white;
+}
+
+.sc-basemap-topo-button {
+  width: 69px;
+  padding: 2px 4px;
+  font-size: 11px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  cursor: pointer;
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.sc-basemap-topo-button.active {
+  background-color: #007cba;
+  color: white;
+}
+
+.sc-basemap-topo {
+  display: table-cell;
+  padding-left: 5px;
+  width: 83px;
+}
+
+.sc-basemap-arrow {
+  width: 12px;
+  height: 32px;
+  float: right;
+  background-image: url(/images/arrow-down.png) !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.sc-basemap-streets-label {
+  display: block;
+  font-size: 10pt;
+  margin-left: 5px;
+  padding-bottom: 5px;
+  padding-top: 7px;
+}
+
+.sc-basemap-streets-checkbox {
+  width: 13px;
+  height: 13px;
+  padding: 0;
+  margin: 0;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+  transform: scale(1.1, 1.1);
+}
+
+.sc-hidden {
+  display: none !important;
+}
+
+/* Slider track and handle styling */
+.sc-basemap-imagery-slider-container .rc-slider-rail,
+.sc-basemap-imagery-slider-container .rc-slider-track {
+  background-color: #337ab7;
+}
+
+.sc-basemap-imagery-slider-container .rc-slider-handle {
+  border-color: #337ab7;
+  background-color: #337ab7;
+  width: 12px;
+  height: 12px;
+  margin-left: -4px;
+}
+
+.sc-basemap-imagery-slider-container .rc-slider-handle:hover,
+.sc-basemap-imagery-slider-container .rc-slider-handle:focus {
+  border-color: #23527c;
+  background-color: #23527c;
+}
+
+/* Responsive adjustments */
+@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+  .sc-basemap-imagery-slider-container {
+    right: 75px;
+  }
+} 

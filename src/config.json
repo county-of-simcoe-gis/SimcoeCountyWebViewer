@@ -156,6 +156,13 @@
         "primary": false,
         "urlType": "root",
         "type": "geoserver"
+      },
+      {
+        "layerUrl": "https://maps.simcoe.ca/arcgis/rest/services/Public/Operational_Layers_Dynamic/MapServer",
+        "primary": false,
+        "type": "arcgis",
+        "open": true,
+        "useRedFolder": true
       }
     ],
     "helpLink": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers",

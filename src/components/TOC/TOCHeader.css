@@ -1,0 +1,424 @@
+/* TOC Header Container */
+.sc-toc-main-container {
+  height: 40px;
+  padding: 5px;
+  border-bottom: 1px solid #ddd;
+  background-color: #f8f9fa;
+}
+
+/* Search Container */
+.sc-toc-search-container {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+}
+
+.sc-toc-search-input-container {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+/* Search Input */
+.sc-toc-search-textbox {
+  width: 100%;
+  height: 30px;
+  padding: 0 30px 0 8px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-size: 9pt;
+  font-family: Verdana, Arial, sans-serif;
+  background: white;
+}
+
+.sc-toc-search-textbox.short {
+  padding-right: 60px; /* Make room for help button */
+}
+
+.sc-toc-search-textbox:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* Clear Button */
+.sc-toc-search-clear-btn {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sc-toc-search-clear-btn img {
+  width: 12px;
+  height: 12px;
+}
+
+.sc-toc-search-clear-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 2px;
+}
+
+/* Help Button */
+.sc-toc-header-help {
+  width: 30px;
+  height: 30px;
+  background: #e9ecef;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #666;
+  font-size: 12px;
+}
+
+.sc-toc-header-help:hover {
+  background-color: #dee2e6;
+  color: #333;
+}
+
+/* Settings Container */
+.sc-toc-settings-container {
+  position: relative;
+}
+
+/* Settings Button */
+.sc-toc-settings-btn {
+  width: 30px;
+  height: 30px;
+  background: #e9ecef;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #666;
+  font-size: 12px;
+}
+
+.sc-toc-settings-btn:hover {
+  background-color: #dee2e6;
+  color: #333;
+}
+
+/* Settings Dropdown */
+.sc-toc-settings-dropdown {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+}
+
+.sc-toc-settings-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+}
+
+.sc-toc-settings-menu {
+  position: absolute;
+  top: 40px;
+  right: 10px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  overflow: hidden;
+  z-index: 1001;
+}
+
+/* Settings Menu Items */
+.sc-toc-settings-item {
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: white;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 9pt;
+  font-family: Verdana, Arial, sans-serif;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.sc-toc-settings-item:last-child {
+  border-bottom: none;
+}
+
+.sc-toc-settings-item:hover {
+  background-color: #f8f9fa;
+}
+
+.sc-toc-settings-item img {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.sc-toc-settings-item span {
+  flex: 1;
+}
+
+/* Special settings items */
+.sc-toc-settings-item.opacity-slider {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.sc-toc-settings-item.opacity-slider label {
+  font-size: 9pt;
+  color: #333;
+}
+
+.sc-toc-opacity-slider {
+  width: 100%;
+  height: 4px;
+  background: #ddd;
+  outline: none;
+  border-radius: 2px;
+}
+
+.sc-toc-settings-item.sort-toggle {
+  justify-content: space-between;
+}
+
+.sc-toc-sort-checkbox {
+  width: 16px;
+  height: 16px;
+}
+
+/* Loading styles */
+.sc-toc-main-container-loading {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  background-color: #f8f9fa;
+}
+
+.sc-toc-loading {
+  width: 20px;
+  height: 20px;
+}
+
+/* Responsive design */
+@media (max-width: 770px) {
+  .sc-toc-search-textbox {
+    font-size: 14px;
+    height: 32px;
+  }
+  
+  .sc-toc-header-help,
+  .sc-toc-settings-btn {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .sc-toc-settings-menu {
+    right: 5px;
+    min-width: 180px;
+  }
+}
+
+.sc-toc-header {
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #ddd;
+  gap: 5px;
+  font-family: Verdana, Arial, sans-serif;
+  font-size: 9pt;
+}
+
+.sc-toc-search-container {
+  flex: 1;
+  position: relative;
+}
+
+.sc-toc-search {
+  width: 100%;
+  padding: 3px 20px 3px 5px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-family: Verdana, Arial, sans-serif;
+  font-size: 9pt;
+  background-color: white;
+}
+
+.sc-toc-search:focus {
+  outline: 1px solid #4a90e2;
+  border-color: #4a90e2;
+}
+
+.sc-toc-search-clear {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #999;
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sc-toc-search-clear:hover {
+  color: #666;
+}
+
+.sc-toc-settings-container {
+  position: relative;
+}
+
+.sc-toc-settings-button {
+  background: none;
+  border: none;
+  padding: 3px;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.sc-toc-settings-button:hover {
+  background-color: #e0e0e0;
+}
+
+.sc-toc-settings-button img {
+  width: 16px;
+  height: 16px;
+}
+
+.sc-toc-settings-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1000;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  min-width: 200px;
+}
+
+.sc-toc-settings-content {
+  padding: 5px;
+}
+
+.sc-toc-settings-item {
+  margin-bottom: 8px;
+  padding: 3px 0;
+}
+
+.sc-toc-settings-action {
+  background: none;
+  border: none;
+  text-align: left;
+  width: 100%;
+  padding: 5px;
+  cursor: pointer;
+  font-family: Verdana, Arial, sans-serif;
+  font-size: 9pt;
+  border-radius: 3px;
+}
+
+.sc-toc-settings-action:hover {
+  background-color: #f0f0f0;
+}
+
+.sc-toc-settings-label {
+  display: block;
+  font-family: Verdana, Arial, sans-serif;
+  font-size: 9pt;
+  margin-bottom: 3px;
+  color: #333;
+}
+
+.sc-toc-opacity-slider {
+  width: 100%;
+  height: 20px;
+}
+
+.sc-toc-settings-checkbox {
+  display: flex;
+  align-items: center;
+  font-family: Verdana, Arial, sans-serif;
+  font-size: 9pt;
+  cursor: pointer;
+}
+
+.sc-toc-settings-checkbox input {
+  margin-right: 5px;
+}
+
+.sc-toc-help-container {
+  display: flex;
+  align-items: center;
+}
+
+.sc-toc-help-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  text-decoration: none;
+  border-radius: 3px;
+}
+
+.sc-toc-help-button:hover {
+  background-color: #e0e0e0;
+}
+
+.sc-toc-help-button img {
+  width: 14px;
+  height: 14px;
+}
+
+.sc-toc-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 5px;
+}
+
+.sc-toc-loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+} 

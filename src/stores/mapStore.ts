@@ -1,9 +1,10 @@
 import { create } from 'zustand'
+import Map from 'ol/Map'
 
 // Map interaction states that were previously window variables
 interface MapState {
   // Core map instance
-  map: unknown | null  // OpenLayers Map instance
+  map: Map | null  // OpenLayers Map instance
   
   // Popup state
   popup: unknown | null  // Popup instance
@@ -27,7 +28,7 @@ interface MapState {
   currentCenter: number[] | null
   
   // Actions
-  setMap: (map: unknown) => void
+  setMap: (map: Map) => void
   setPopup: (popup: unknown) => void
   setDisableParcelClick: (disabled: boolean) => void
   setDisableIdentifyClick: (disabled: boolean) => void

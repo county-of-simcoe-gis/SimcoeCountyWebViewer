@@ -11,7 +11,11 @@ export default function Home() {
 
   useEffect(() => {
     // Initialize app info (similar to old app)
-    setAppInfo("simcoecountywebviewernextjs", "0.1.0", "");
+    setAppInfo({
+      name: "simcoecountywebviewernextjs",
+      version: "0.1.0",
+      homepage: "",
+    });
 
     // Simulate loading completion
     setTimeout(() => {
@@ -24,16 +28,16 @@ export default function Home() {
 
     // Initialize with some dummy themes and tools for testing
     setThemes([
-      { id: "property", name: "Property Information", type: "theme" },
-      { id: "roads", name: "Roads & Transportation", type: "theme" },
-      { id: "environment", name: "Environment", type: "theme" },
+      { id: "property", name: "Property Information", type: "theme", imageName: "default.png", enabled: true },
+      { id: "roads", name: "Roads & Transportation", type: "theme", imageName: "default.png", enabled: true },
+      { id: "environment", name: "Environment", type: "theme", imageName: "default.png", enabled: true },
     ]);
 
     setTools([
-      { id: "measure", name: "Measure", type: "tool" },
-      { id: "print", name: "Print", type: "tool" },
-      { id: "search", name: "Search", type: "tool" },
-      { id: "settings", name: "Settings", type: "tool" },
+      { id: "measure", name: "Measure", type: "tool", imageName: "default.png", enabled: true },
+      { id: "print", name: "Print", type: "tool", imageName: "default.png", enabled: true },
+      { id: "search", name: "Search", type: "tool", imageName: "default.png", enabled: true },
+      { id: "settings", name: "Settings", type: "tool", imageName: "default.png", enabled: true },
     ]);
   }, [setAppInfo, setHeaderLoading, setSidebarLoading, setThemes, setTools]);
 

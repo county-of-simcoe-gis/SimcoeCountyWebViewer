@@ -81,7 +81,7 @@ export default function Layout({ children }: LayoutProps) {
       {/* Slim Sidebar - shows when sidebar is closed */}
       <SidebarSlim />
 
-      {/* Map Container - positioned below header */}
+      {/* Main Map */}
       <MapContainer />
 
       {/* Additional content */}

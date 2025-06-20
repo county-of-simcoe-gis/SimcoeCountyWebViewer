@@ -1,0 +1,65 @@
+/* Layer Container */
+.sc-toc-layer-container {
+  max-width: 400px;
+  position: absolute;
+  top: 148px;
+  bottom: 0px;
+  width: 100%;
+  overflow-y: scroll;
+  margin-left: 0px;
+  user-select: all;
+}
+
+.sc-toc-layer-container > ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  user-select: all;
+}
+
+/* Layer List */
+.sc-toc-layers-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Layer Item */
+.sc-toc-layer-item {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: move;
+  min-height: 3em;
+  line-height: 2em;
+}
+
+.sc-toc-layer-item.sc-dragged {
+  opacity: 0.5;
+}
+
+.sc-toc-layer-item:not([draggable="true"]) {
+  cursor: default;
+}
+
+/* No Layers Message */
+.sc-toc-no-layers {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}
+
+.sc-toc-no-layers p {
+  margin: 0;
+  font-size: 9pt;
+  font-family: Verdana, Arial, sans-serif;
+}
+
+/* Responsive design */
+@media (max-width: 770px) {
+  .sc-toc-layer-container {
+    top: 160px;
+  }
+} 

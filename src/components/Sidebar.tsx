@@ -19,6 +19,9 @@ const WeatherTool = lazy(() => import("@/components/tools/WeatherTool"));
 // Lazy load theme components
 const ForestryTheme = lazy(() => import("@/components/themes/ForestryTheme"));
 
+// Lazy load TOC component
+const TOC = lazy(() => import("@/components/TOC/TOC"));
+
 // Tool mapping for dynamic loading
 const toolComponents: Record<
   string,
@@ -198,9 +201,9 @@ export default function Sidebar() {
 
         <TabPanel>
           <div className="sc-sidebar-content">
-            <div style={{ marginBottom: "10px", fontWeight: "bold", fontSize: "12px" }}>All Layers</div>
-            {/* Layer tree would go here - for now show placeholder */}
-            <div style={{ fontSize: "12px", color: "#666" }}>Layer tree will be implemented here...</div>
+            <Suspense fallback={<div style={{ padding: "20px" }}>Loading layers...</div>}>
+              <TOC visible={activeTab === 0} />
+            </Suspense>
           </div>
         </TabPanel>
 
