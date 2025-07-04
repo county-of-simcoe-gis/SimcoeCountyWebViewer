@@ -108,5 +108,5 @@ p {
 }
 
 .sc-map.sidebar-closed {
-  left: 0px;
+  left: 65px; /* Account for slim sidebar width */
 }

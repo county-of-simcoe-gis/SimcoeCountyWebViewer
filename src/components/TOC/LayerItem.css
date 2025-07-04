@@ -26,18 +26,7 @@
   color: gray;
 }
 
-/* Drag Icon */
-.sc-drag-icon {
-  display: inline-flex;
-  align-items: center;
-  margin-right: 3px;
-  color: #999;
-  cursor: grab;
-}
 
-.sc-drag-icon:active {
-  cursor: grabbing;
-}
 
 /* Layer Label */
 .sc-toc-item-layer-label {

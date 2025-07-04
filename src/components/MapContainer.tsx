@@ -20,11 +20,7 @@ import BasemapSwitcher from "./BasemapSwitcher";
 // Import config
 import config from "@/config.json";
 
-interface MapContainerProps {
-  className?: string;
-}
-
-export default function MapContainer({ className = "" }: MapContainerProps) {
+export default function MapContainer() {
   const { isOpen } = useSidebarStore();
   const { emitMapLoaded } = useEventStore();
   const { map, setMap, addLoadedItem, setMapControls, setCurrentExtent, setCurrentZoom, setCurrentCenter } = useMapStore();
@@ -45,10 +41,10 @@ export default function MapContainer({ className = "" }: MapContainerProps) {
     const storageExtentKey = "Map Extent";
     const storedExtent = sessionStorage.getItem(storageExtentKey);
     let extent = null;
-    const centerCoords = [-8873031.186926253, 5524904.429248115];
-    const defaultZoom = 17;
-    // const centerCoords = config.centerCoords || [-8878504.68, 5543492.45];
-    // const defaultZoom = config.defaultZoom || 10;
+    // const centerCoords = [-8873031.186926253, 5524904.429248115];
+    // const defaultZoom = 17;
+    const centerCoords = config.centerCoords || [-8878504.68, 5543492.45];
+    const defaultZoom = config.defaultZoom || 10;
 
     if (storedExtent) {
       try {
@@ -161,19 +157,31 @@ export default function MapContainer({ className = "" }: MapContainerProps) {
     };
   }, [setMap, setMapControls, addLoadedItem, setMapLoading, emitMapLoaded, setCurrentExtent, setCurrentZoom, setCurrentCenter]);
 
+  // Update map size when sidebar state changes
+  useEffect(() => {
+    if (map) {
+      // Small delay to allow CSS transition to complete
+      const timer = setTimeout(() => {
+        map.updateSize();
+      }, 350); // Slightly longer than the 0.3s CSS transition
+
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, map]);
+
   // Debug logging for render
   const shouldShowBasemap = config.controls?.basemap !== false && !!map;
 
   return (
-    <div className={`relative w-full h-full ${className}`}>
-      <div ref={mapRef} id="map" className={`sc-map w-full h-full ${!isOpen ? "sidebar-closed" : ""}`} style={{ minHeight: "400px" }} />
+    <>
+      <div ref={mapRef} id="map" className={`sc-map ${!isOpen ? "sidebar-closed" : ""}`} />
 
       {/* Basemap Switcher */}
       {shouldShowBasemap && (
-        <div style={{ position: "absolute", top: "10px", right: "10px", zIndex: 9999, background: "red", padding: "5px" }}>
+        <div style={{ position: "absolute", top: "10px", right: "10px", zIndex: 9999 }}>
           <BasemapSwitcher />
         </div>
       )}
-    </div>
+    </>
   );
 }

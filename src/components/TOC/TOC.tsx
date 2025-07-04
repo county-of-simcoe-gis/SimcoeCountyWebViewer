@@ -45,7 +45,13 @@ export default function TOC({ visible = true }: TOCProps) {
   useEffect(() => {
     if (config && !initialized) {
       initializeFromConfig(config);
-      refreshTOC();
+      refreshTOC().then(() => {
+        // Initialize OpenLayers layers after TOC is loaded
+        setTimeout(() => {
+          // Small delay to ensure layers are ready
+          useTOCStore.getState().initializeOpenLayersLayers();
+        }, 500);
+      });
       setInitialized(true);
     }
   }, [config, initialized, initializeFromConfig, refreshTOC]);
@@ -120,6 +126,8 @@ export default function TOC({ visible = true }: TOCProps) {
   };
 
   const handleLayerChange = (layer: TOCLayer, group: TOCLayerGroup) => {
+    console.log("🎯 handleLayerChange called for:", layer.name, "group:", group.label, "visible:", layer.visible);
+    console.log("🎯 Layer has OpenLayers layer object:", !!layer.layer);
     updateLayerVisibility(layer.name, group.label, layer.visible);
   };
 
@@ -193,12 +201,10 @@ export default function TOC({ visible = true }: TOCProps) {
           layerGroups={currentGroups}
           selectedGroup={selectedGroup}
           searchText={searchText}
-          sortAlpha={sortAlpha}
           onGroupDropDownChange={handleGroupDropDownChange}
           onLayerChange={handleLayerChange}
           onLegendToggle={handleLegendToggle}
           onLayerOptionsClick={handleLayerOptionsClick}
-          onSortEnd={handleSortEnd}
         />
       ) : (
         <TOCFolderView

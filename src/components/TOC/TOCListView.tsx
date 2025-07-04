@@ -11,27 +11,13 @@ interface TOCListViewProps {
   layerGroups: TOCLayerGroup[];
   selectedGroup: TOCLayerGroup | null;
   searchText: string;
-  sortAlpha: boolean;
   onGroupDropDownChange: (group: TOCLayerGroup) => void;
   onLayerChange: (layer: TOCLayer, group: TOCLayerGroup) => void;
   onLegendToggle: (layerInfo: TOCLayer, group: TOCLayerGroup) => void;
   onLayerOptionsClick: (evt: React.MouseEvent, layerInfo: TOCLayer) => void;
-  onSortEnd: ({ oldIndex, newIndex }: { oldIndex: number; newIndex: number }) => void;
 }
 
-export default function TOCListView({
-  id,
-  visible,
-  layerGroups,
-  selectedGroup,
-  searchText,
-  sortAlpha,
-  onGroupDropDownChange,
-  onLayerChange,
-  onLegendToggle,
-  onLayerOptionsClick,
-  onSortEnd,
-}: TOCListViewProps) {
+export default function TOCListView({ id, visible, layerGroups, selectedGroup, searchText, onGroupDropDownChange, onLayerChange, onLegendToggle, onLayerOptionsClick }: TOCListViewProps) {
   const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedValue = e.target.value;
     const group = layerGroups.find((g) => g.value === selectedValue);
@@ -65,15 +51,7 @@ export default function TOCListView({
       {/* Layers List */}
       {selectedGroup && (
         <div className="sc-toc-layers-section">
-          <LayersList
-            group={selectedGroup}
-            searchText={searchText}
-            sortAlpha={sortAlpha}
-            onLayerChange={onLayerChange}
-            onLegendToggle={onLegendToggle}
-            onLayerOptionsClick={onLayerOptionsClick}
-            onSortEnd={onSortEnd}
-          />
+          <LayersList group={selectedGroup} searchText={searchText} onLayerChange={onLayerChange} onLegendToggle={onLegendToggle} onLayerOptionsClick={onLayerOptionsClick} />
         </div>
       )}
     </div>

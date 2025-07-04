@@ -30,17 +30,9 @@
   padding: 0;
   border: none;
   background: transparent;
-  cursor: move;
+  cursor: default;
   min-height: 3em;
   line-height: 2em;
-}
-
-.sc-toc-layer-item.sc-dragged {
-  opacity: 0.5;
-}
-
-.sc-toc-layer-item:not([draggable="true"]) {
-  cursor: default;
 }
 
 /* No Layers Message */

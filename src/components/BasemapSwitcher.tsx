@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useMapStore } from "@/stores/mapStore";
 import { LayerHelpers, OL_DATA_TYPES } from "@/utils/openlayers";
 import { OLDataType } from "@/utils/openlayers/types";
+import { LayerManager } from "@/utils/openlayers/LayerManager";
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
 import "./BasemapSwitcher.css";
@@ -60,8 +61,11 @@ export default function BasemapSwitcher() {
   const [streetsCheckbox, setStreetsCheckbox] = useState(true);
   const [containerCollapsed, setContainerCollapsed] = useState(false);
 
-  // Layer references
-  const imageryLayersRef = useRef<Layer[]>([]);
+  // Topo panel state
+  const [topoPanelOpen, setTopoPanelOpen] = useState(false);
+  const [selectedTopoService, setSelectedTopoService] = useState<BasemapService | null>(null);
+
+  // Layer references (simplified with LayerManager)
   const streetsLayerRef = useRef<Layer | null>(null);
   const worldImageryLayerRef = useRef<Layer | null>(null);
   const isLoadedRef = useRef(false);
@@ -91,6 +95,12 @@ export default function BasemapSwitcher() {
         }
 
         setActiveButton(data.defaultButton || "topo");
+
+        // Initialize selected topo service
+        if (data.topoServices && data.topoServices.length > 0) {
+          const defaultService = data.topoServices.find((service) => service.name === "Topographic") || data.topoServices[0];
+          setSelectedTopoService(defaultService);
+        }
       } catch (error) {
         console.error("BasemapSwitcher: Failed to load config:", error);
       }
@@ -104,7 +114,6 @@ export default function BasemapSwitcher() {
     (basemapConfig: BasemapConfig) => {
       if (!map || !basemapConfig.imageryServices) return;
 
-      const layerList: Layer[] = [];
       let index = 0;
 
       basemapConfig.imageryServices.forEach((service) => {
@@ -131,16 +140,21 @@ export default function BasemapSwitcher() {
           },
           (newLayer) => {
             if (newLayer) {
-              // LAYER PROPS
-              newLayer.setProperties({ index: index, name: service.name });
-              // Set z-index to 100+ so local imagery is above world imagery (z-index 0)
-              newLayer.setZIndex(100 + index);
               // All imagery layers start as invisible - they'll be managed by enableImagery/disableImagery
               newLayer.setVisible(false);
 
-              // ADD THE LAYER
-              map.addLayer(newLayer);
-              layerList.push(newLayer);
+              // Add layer using LayerManager with TOC category for proper layer ordering
+              const layerId = LayerManager.addLayer(newLayer, "TOC", `Imagery_${service.name}`, {
+                index: 5 + index, // Put imagery layers at bottom of TOC category (above BaseMap, below other TOC layers)
+                visible: false,
+                metadata: {
+                  isImagery: true,
+                  imageryIndex: index,
+                  serviceName: service.name,
+                },
+              });
+
+              console.log(`🖼️ Added imagery layer "${service.name}" with LayerManager ID: ${layerId}`);
             } else {
               console.warn(`Failed to create imagery layer for: ${service.name}`);
             }
@@ -148,7 +162,6 @@ export default function BasemapSwitcher() {
           }
         );
       });
-      imageryLayersRef.current = layerList;
     },
     [map]
   );
@@ -167,11 +180,19 @@ export default function BasemapSwitcher() {
         },
         (newLayer) => {
           if (newLayer) {
-            newLayer.setProperties({ name: "Streets" });
-            // Streets overlay should be on top of everything
-            newLayer.setZIndex(200);
             newLayer.setVisible(false);
-            map.addLayer(newLayer);
+
+            // Add streets layer using LayerManager with TOC category for proper layer ordering
+            const layerId = LayerManager.addLayer(newLayer, "TOC", "Streets_Overlay", {
+              index: 20, // Put streets above imagery layers in TOC category
+              visible: false,
+              metadata: {
+                isStreets: true,
+                isOverlay: true,
+              },
+            });
+
+            console.log(`🛣️ Added streets layer with LayerManager ID: ${layerId}`);
             streetsLayerRef.current = newLayer;
           }
         }
@@ -193,11 +214,19 @@ export default function BasemapSwitcher() {
         },
         (newLayer) => {
           if (newLayer) {
-            newLayer.setProperties({ name: "World Imagery" });
-            // World imagery should be at the bottom
-            newLayer.setZIndex(0);
             newLayer.setVisible(false);
-            map.addLayer(newLayer);
+
+            // Add world imagery using LayerManager with TOC category for proper layer ordering
+            const layerId = LayerManager.addLayer(newLayer, "TOC", "World_Imagery", {
+              index: 0, // Put world imagery at bottom of TOC category (below individual imagery layers)
+              visible: false,
+              metadata: {
+                isWorldImagery: true,
+                isBackground: true,
+              },
+            });
+
+            console.log(`🌍 Added world imagery layer with LayerManager ID: ${layerId}`);
             worldImageryLayerRef.current = newLayer;
           }
         }
@@ -208,22 +237,28 @@ export default function BasemapSwitcher() {
 
   // Update imagery layers with fade effect
   const updateImageryLayers = useCallback((value: number) => {
-    imageryLayersRef.current.forEach((layer) => {
+    // Use LayerManager to get imagery layers from TOC category
+    const tocLayers = LayerManager.getLayersByCategory("TOC");
+    const imageryLayers = tocLayers.filter((managedLayer) => managedLayer.metadata?.isImagery === true);
+
+    console.log(`🔍 updateImageryLayers: Found ${imageryLayers.length} imagery layers, slider value: ${value}`);
+
+    imageryLayers.forEach((managedLayer) => {
       if (value === -1) {
-        layer.setVisible(false);
+        managedLayer.layer.setVisible(false);
       } else {
-        const layerIndex = layer.getProperties().index;
+        const layerIndex = managedLayer.metadata?.imageryIndex as number;
         const indexRatio = 1 - Math.abs(layerIndex - value);
 
         if (layerIndex === value) {
-          layer.setOpacity(1);
-          layer.setVisible(true);
+          managedLayer.layer.setOpacity(1);
+          managedLayer.layer.setVisible(true);
         } else if (indexRatio <= 0) {
-          layer.setOpacity(0);
-          layer.setVisible(false);
+          managedLayer.layer.setOpacity(0);
+          managedLayer.layer.setVisible(false);
         } else {
-          layer.setOpacity(indexRatio);
-          layer.setVisible(true);
+          managedLayer.layer.setOpacity(indexRatio);
+          managedLayer.layer.setVisible(true);
         }
       }
     });
@@ -236,16 +271,10 @@ export default function BasemapSwitcher() {
 
       console.log("BasemapSwitcher: Applying basemap:", basemapService.name);
 
-      // Remove existing basemap layers
-      const layersToRemove = map
-        .getLayers()
-        .getArray()
-        .filter((layer) => layer.get("isBasemap"));
-
-      layersToRemove.forEach((layer) => map.removeLayer(layer));
+      // Clear existing basemap layers using LayerManager
+      LayerManager.clearCategory("BaseMap");
 
       // Create and add new basemap layers
-      const createdLayers: Layer[] = [];
       const layerCreationPromises = basemapService.layers.map((layerConfig, i) => {
         return new Promise<void>((resolve) => {
           let sourceType: string;
@@ -288,41 +317,44 @@ export default function BasemapSwitcher() {
             },
             (layer) => {
               if (layer) {
-                layer.setProperties({
-                  name: `${basemapService.name}_${i}`,
-                  isBasemap: true,
-                  index: i,
-                  excludePrint: layerConfig.excludePrint || false,
-                  isOverlay: layerConfig.isOverlay || false,
-                });
-
-                const zIndex = i * 1000;
-                layer.setZIndex(zIndex);
-
                 // Set opacity for overlay layers
+                let opacity = 1.0;
                 if (layerConfig.isOverlay && layerConfig.type === "ESRI_VECTOR_TILED") {
                   if (layerConfig.url.includes("Hillshade")) {
-                    layer.setOpacity(0.3);
+                    opacity = 0.3;
                   } else if (layerConfig.url.includes("Topographic") || layerConfig.url.includes("Labels")) {
-                    layer.setOpacity(0.8);
+                    opacity = 0.8;
                   } else if (layerConfig.url.includes("World_Basemap_v2")) {
                     if (basemapService.name === "Light Grey") {
-                      layer.setOpacity(1.0);
+                      opacity = 1.0;
                     } else {
-                      layer.setOpacity(0.7);
+                      opacity = 0.7;
                     }
                   } else {
-                    layer.setOpacity(0.8);
+                    opacity = 0.8;
                   }
                 } else if (layerConfig.isOverlay && layerConfig.type === "ESRI_TILED") {
                   if (layerConfig.url.includes("Hillshade")) {
-                    layer.setOpacity(0.3);
+                    opacity = 0.3;
                   } else {
-                    layer.setOpacity(0.8);
+                    opacity = 0.8;
                   }
                 }
 
-                createdLayers.push(layer);
+                // Add layer using LayerManager for proper z-index management
+                const layerId = LayerManager.addLayer(layer, "BaseMap", `${basemapService.name}_${i}`, {
+                  index: i,
+                  opacity: opacity,
+                  metadata: {
+                    isBasemap: true,
+                    excludePrint: layerConfig.excludePrint || false,
+                    isOverlay: layerConfig.isOverlay || false,
+                    basemapService: basemapService.name,
+                    layerConfig: layerConfig,
+                  },
+                });
+
+                console.log(`🗺️ Added basemap layer "${basemapService.name}_${i}" with LayerManager ID: ${layerId}`);
               }
               resolve();
             }
@@ -332,9 +364,8 @@ export default function BasemapSwitcher() {
 
       await Promise.all(layerCreationPromises);
 
-      createdLayers.forEach((layer) => {
-        map.addLayer(layer);
-      });
+      // Layers are now added via LayerManager, so no need to add them directly to the map
+      console.log(`🎯 Basemap "${basemapService.name}" applied with proper z-index management`);
     },
     [map]
   );
@@ -363,6 +394,10 @@ export default function BasemapSwitcher() {
           if (worldImageryLayerRef.current) {
             worldImageryLayerRef.current.setVisible(false);
           }
+
+          // Debug: Log layer order after initialization
+          console.log("🔍 BasemapSwitcher: Logging layer order after initialization:");
+          LayerManager.logLayerOrder();
         }, 100);
       }
     }
@@ -378,54 +413,76 @@ export default function BasemapSwitcher() {
   const onImageryButtonClick = () => {
     if (!isLoadedRef.current) return;
 
-    // Disable topo
+    // Always close both panels when clicking main buttons
+    setImageryPanelOpen(false);
+    setTopoPanelOpen(false);
+
+    // Always switch to imagery and ensure proper layer management
     disableTopo();
-
-    // Close panel if already open
-    if (imageryPanelOpen) {
-      setImageryPanelOpen(false);
-    }
-
-    enableImagery();
-  };
-
-  const onImageryArrowClick = () => {
-    if (!isLoadedRef.current) return;
-
-    // Disable topo
-    disableTopo();
-
-    // Toggle imagery panel
-    setImageryPanelOpen(!imageryPanelOpen);
-    setActiveButton("imagery");
-
     enableImagery();
   };
 
   const onTopoButtonClick = () => {
-    if (imageryPanelOpen) setImageryPanelOpen(false);
+    if (!isLoadedRef.current) return;
+
+    // Always close both panels when clicking main buttons
+    setImageryPanelOpen(false);
+    setTopoPanelOpen(false);
+
+    // Always switch to topo and ensure proper layer management
     enableTopo();
+  };
+
+  const onSettingsClick = () => {
+    if (!isLoadedRef.current) return;
+
+    if (activeButton === "imagery") {
+      // Close topo panel if open
+      if (topoPanelOpen) setTopoPanelOpen(false);
+      // Toggle imagery panel
+      setImageryPanelOpen(!imageryPanelOpen);
+    } else if (activeButton === "topo") {
+      // Close imagery panel if open
+      if (imageryPanelOpen) setImageryPanelOpen(false);
+      // Toggle topo panel
+      setTopoPanelOpen(!topoPanelOpen);
+    }
   };
 
   const enableImagery = () => {
     if (!isLoadedRef.current) return;
 
-    updateImageryLayers(imagerySliderValue);
-    setActiveButton("imagery");
+    console.log("🖼️ enableImagery: Starting imagery mode");
 
-    if (streetsLayerRef.current) {
-      streetsLayerRef.current.setVisible(streetsCheckbox);
-    }
+    // Hide topo basemap layers first
+    const basemapLayers = LayerManager.getLayersByCategory("BaseMap");
+    const topoLayers = basemapLayers.filter((managedLayer) => managedLayer.metadata?.isBasemap === true);
+    topoLayers.forEach((managedLayer) => {
+      managedLayer.layer.setVisible(false);
+      console.log(`🙈 Hidden topo layer: ${managedLayer.name}`);
+    });
+
+    // Show world imagery (background)
     if (worldImageryLayerRef.current) {
       worldImageryLayerRef.current.setVisible(true);
+      console.log("🌍 World imagery set visible");
     }
 
-    // Hide topo layers
-    const basemapLayers = map
-      ?.getLayers()
-      .getArray()
-      .filter((layer) => layer.get("isBasemap"));
-    basemapLayers?.forEach((layer) => layer.setVisible(false));
+    // Show imagery layers
+    updateImageryLayers(imagerySliderValue);
+    console.log(`🖼️ Updated imagery layers with slider value: ${imagerySliderValue}`);
+
+    // Show streets if enabled
+    if (streetsLayerRef.current) {
+      streetsLayerRef.current.setVisible(streetsCheckbox);
+      console.log(`🛣️ Streets set visible: ${streetsCheckbox}`);
+    }
+
+    setActiveButton("imagery");
+
+    // Debug: Log current layer order
+    console.log("🔍 enableImagery: Current layer order:");
+    LayerManager.logLayerOrder();
   };
 
   const disableImagery = () => {
@@ -443,20 +500,17 @@ export default function BasemapSwitcher() {
     setActiveButton("topo");
     disableImagery();
 
-    // Show basemap layers
-    const basemapLayers = map
-      ?.getLayers()
-      .getArray()
-      .filter((layer) => layer.get("isBasemap"));
-    basemapLayers?.forEach((layer) => layer.setVisible(true));
+    // Show basemap layers using LayerManager
+    const basemapLayers = LayerManager.getLayersByCategory("BaseMap");
+    const topoLayers = basemapLayers.filter((managedLayer) => managedLayer.metadata?.isBasemap === true);
+    topoLayers.forEach((managedLayer) => managedLayer.layer.setVisible(true));
   };
 
   const disableTopo = () => {
-    const basemapLayers = map
-      ?.getLayers()
-      .getArray()
-      .filter((layer) => layer.get("isBasemap"));
-    basemapLayers?.forEach((layer) => layer.setVisible(false));
+    // Hide basemap layers using LayerManager
+    const basemapLayers = LayerManager.getLayersByCategory("BaseMap");
+    const topoLayers = basemapLayers.filter((managedLayer) => managedLayer.metadata?.isBasemap === true);
+    topoLayers.forEach((managedLayer) => managedLayer.layer.setVisible(false));
   };
 
   const onStreetsCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -471,8 +525,15 @@ export default function BasemapSwitcher() {
   const onCollapsedClick = () => {
     if (!containerCollapsed) {
       setImageryPanelOpen(false);
+      setTopoPanelOpen(false);
     }
     setContainerCollapsed(!containerCollapsed);
+  };
+
+  const onTopoServiceSelect = (service: BasemapService) => {
+    setSelectedTopoService(service);
+    applyBasemap(service);
+    setTopoPanelOpen(false);
   };
 
   if (!config || !map) {
@@ -494,16 +555,23 @@ export default function BasemapSwitcher() {
 
         {!containerCollapsed && (
           <>
-            <div className="sc-basemap-imagery">
-              <button className={`sc-basemap-imagery-button${activeButton === "imagery" ? " active" : ""}`} onClick={onImageryButtonClick}>
-                Imagery
-              </button>
-              <button className="sc-basemap-arrow" onClick={onImageryArrowClick} />
+            <div className="sc-basemap-buttons-row">
+              <div className="sc-basemap-imagery">
+                <button className={`sc-basemap-imagery-button${activeButton === "imagery" ? " active" : ""}`} onClick={onImageryButtonClick}>
+                  Imagery
+                </button>
+              </div>
+
+              <div className="sc-basemap-topo">
+                <button className={`sc-basemap-topo-button${activeButton === "topo" ? " active" : ""}`} onClick={onTopoButtonClick}>
+                  Topo
+                </button>
+              </div>
             </div>
 
-            <div className="sc-basemap-topo">
-              <button className={`sc-basemap-topo-button${activeButton === "topo" ? " active" : ""}`} onClick={onTopoButtonClick}>
-                Topo
+            <div className="sc-basemap-settings-row">
+              <button className="sc-basemap-settings-button" onClick={onSettingsClick}>
+                <img src="/images/settings.png" alt="Settings" />
               </button>
             </div>
           </>
@@ -518,6 +586,16 @@ export default function BasemapSwitcher() {
         </label>
 
         <Slider vertical included={false} style={sliderWrapperStyle} marks={imagerySliderMarks} max={imagerySliderMax} min={0} step={0.01} value={imagerySliderValue} onChange={onSliderChange} />
+      </div>
+
+      {/* Topo Options Panel */}
+      <div className={`sc-basemap-topo-options-container${!topoPanelOpen ? " sc-hidden" : ""}`}>
+        {config &&
+          config.topoServices.map((service) => (
+            <button key={service.name} className={`sc-basemap-topo-option${selectedTopoService?.name === service.name ? " active" : ""}`} onClick={() => onTopoServiceSelect(service)}>
+              {service.name}
+            </button>
+          ))}
       </div>
     </>
   );

@@ -1,0 +1,54 @@
+{
+  "categories": {
+    "BaseMap": {
+      "priority": 0,
+      "zIndexRange": {
+        "min": 0,
+        "max": 99
+      },
+      "description": "Base map layers (imagery, streets, topographic)"
+    },
+    "TOC": {
+      "priority": 100,
+      "zIndexRange": {
+        "min": 100,
+        "max": 499
+      },
+      "description": "Table of Contents layers from GeoServer"
+    },
+    "MyMaps": {
+      "priority": 500,
+      "zIndexRange": {
+        "min": 500,
+        "max": 699
+      },
+      "description": "User-created drawing and custom layers"
+    },
+    "Tools": {
+      "priority": 700,
+      "zIndexRange": {
+        "min": 700,
+        "max": 899
+      },
+      "description": "Tool-related layers (measure, coordinates, etc.)"
+    },
+    "Graphics": {
+      "priority": 900,
+      "zIndexRange": {
+        "min": 900,
+        "max": 999
+      },
+      "description": "Temporary graphics, highlights, and overlays"
+    },
+    "Popup": {
+      "priority": 1000,
+      "zIndexRange": {
+        "min": 1000,
+        "max": 1099
+      },
+      "description": "Popup and tooltip layers"
+    }
+  },
+  "defaultLayersPerCategory": 50,
+  "zIndexIncrement": 1
+}

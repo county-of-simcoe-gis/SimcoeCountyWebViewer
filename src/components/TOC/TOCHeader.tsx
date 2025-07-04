@@ -129,7 +129,7 @@ export default function TOCHeader({
       {/* Help Button */}
       <div className="sc-toc-help-container">
         <a href={helpLink} target="_blank" rel="noopener noreferrer" className="sc-toc-help-button" title="Layer Help">
-          <img src="/images/toc/help.png" alt="help" />
+          <img src="/images/help.png" alt="help" />
         </a>
       </div>
 

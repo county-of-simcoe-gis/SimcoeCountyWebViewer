@@ -61,6 +61,10 @@ export default function Header() {
     console.log("Feedback clicked");
   };
 
+  const handleBurgerClick = () => {
+    toggleSidebar();
+  };
+
   return (
     <div
       className="w-full border-b border-gray-300 flex items-center h-[52px] max-h-[52px] p-0 z-auto absolute left-0 top-0 right-0 bottom-auto"
@@ -71,10 +75,10 @@ export default function Header() {
       {/* Burger Button */}
       <div
         className="cursor-pointer ml-3 w-[65px] h-11 flex items-center justify-center pt-1 outline-none bg-transparent"
-        onClick={toggleSidebar}
+        onClick={handleBurgerClick}
         role="button"
         tabIndex={2}
-        onKeyDown={(e) => e.key === "Enter" && toggleSidebar()}
+        onKeyDown={(e) => e.key === "Enter" && handleBurgerClick()}
         aria-label="Toggle sidebar"
       >
         <img src="/images/burger-button.png" alt="Menu" className="max-w-full max-h-full w-auto h-auto" />

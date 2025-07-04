@@ -1,6 +1,9 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 import { loadLayerGroupsFromSources } from '../utils/tocHelpers'
+import { LayerHelpers } from '../utils/openlayers/LayerHelpers'
+import { OL_DATA_TYPES } from '../utils/openlayers/types'
+import { LayerManager } from '../utils/openlayers/LayerManager'
 
 // Layer interface based on the old app's layer structure
 export interface TOCLayer {
@@ -17,6 +20,7 @@ export interface TOCLayer {
   legendObj: unknown | null
   visible: boolean
   layer: unknown | null // OpenLayers layer object
+  managedLayerId?: string // ID from LayerManager for proper layer management
   metadataUrl: string | null
   opacity: number
   minScale: number
@@ -142,6 +146,9 @@ interface TOCState {
 
   // Utility function to check if a legend is blank/empty
   isLegendBlank: (layer: TOCLayer) => boolean
+  
+  // Initialize OpenLayers layers for all TOC layers
+  initializeOpenLayersLayers: () => void
 }
 
 export const useTOCStore = create<TOCState>()(
@@ -263,16 +270,33 @@ export const useTOCStore = create<TOCState>()(
     
     // Layer manipulation
     updateLayerVisibility: (layerName, groupName, visible) => {
+      console.log("🔧 updateLayerVisibility called:", layerName, groupName, visible);
       set((state) => {
         const groups = state.tocType === 'LIST' ? state.layerListGroups : state.layerFolderGroups
         const group = groups.find(g => g.label === groupName || g.value === groupName)
+        console.log("🔧 Found group:", !!group, group?.label);
         if (group) {
           const layer = group.layers.find(l => l.name === layerName)
+          console.log("🔧 Found layer:", !!layer, "has OpenLayers layer:", !!layer?.layer);
           if (layer) {
             layer.visible = visible
             if (layer.layer) {
-              // Apply to OpenLayers layer when available
-              // layer.layer.setVisible(visible)
+              // Use LayerManager if available, otherwise direct layer manipulation
+              if (layer.managedLayerId) {
+                console.log("🔧 Setting layer visibility via LayerManager:", visible);
+                LayerManager.setLayerVisibility(layer.managedLayerId, visible)
+              } else {
+                console.log("🔧 Setting OpenLayers layer visibility directly:", visible);
+                (layer.layer as any).setVisible(visible)
+              }
+            } else {
+              console.log("⚠️ No OpenLayers layer object found for:", layerName);
+            }
+            
+            // Also update the allLayers array to keep it in sync
+            const allLayerItem = state.allLayers.find(l => l.name === layerName && l.groupName === groupName)
+            if (allLayerItem) {
+              allLayerItem.visible = visible
             }
           }
         }
@@ -818,6 +842,104 @@ export const useTOCStore = create<TOCState>()(
       }
 
       return false;
+    },
+    
+    // Initialize OpenLayers layers for all TOC layers
+    initializeOpenLayersLayers: () => {
+      console.log("🚀 initializeOpenLayersLayers called");
+      const state = get();
+      const groups = state.tocType === 'LIST' ? state.layerListGroups : state.layerFolderGroups;
+      console.log("🚀 Found groups:", groups.length);
+      
+      groups.forEach(group => {
+        console.log("🗂️ Processing group:", group.label, "with", group.layers.length, "layers");
+        group.layers.forEach(layer => {
+          console.log("📋 Processing layer:", layer.name, "has existing layer:", !!layer.layer, "wmsGroupUrl:", group.wmsGroupUrl);
+          if (!layer.layer && group.wmsGroupUrl) {
+            // Extract server URL from the WMS group URL
+            const serverUrl = group.wmsGroupUrl.split('/wms')[0] + '/wms';
+            console.log("🌐 Creating layer with URL:", serverUrl);
+            
+            // Create OpenLayers layer
+            LayerHelpers.getLayer({
+              sourceType: OL_DATA_TYPES.ImageWMS,
+              url: serverUrl,
+              layerName: layer.name,
+              name: layer.name,
+              projection: 'EPSG:3857'
+            }, (olLayer: unknown) => {
+              if (olLayer) {
+                const typedLayer = olLayer as any; // Type assertion to avoid linter error
+                console.log("✅ OpenLayers layer created for:", layer.name);
+                
+                // Set layer properties
+                typedLayer.setProperties({
+                  name: layer.name,
+                  tocDisplayName: layer.tocDisplayName,
+                  displayName: layer.displayName,
+                  minScale: layer.minScale,
+                  maxScale: layer.maxScale,
+                  queryable: layer.liveLayer,
+                  secured: layer.secured,
+                  disableParcelClick: false
+                });
+                
+                // Set initial visibility and opacity
+                typedLayer.setVisible(layer.visible);
+                typedLayer.setOpacity(layer.opacity);
+                
+                // Add to map using LayerManager for proper categorization and z-index management
+                const managedLayerId = LayerManager.addLayer(
+                  typedLayer, 
+                  'TOC', 
+                  layer.name,
+                  {
+                    visible: layer.visible,
+                    opacity: layer.opacity,
+                    metadata: {
+                      groupName: group.label,
+                      groupUrl: group.wmsGroupUrl,
+                      secured: group.secured || false,
+                      drawIndex: layer.drawIndex
+                    }
+                  }
+                );
+                
+                console.log("🗺️ Added layer to map via LayerManager:", layer.name, "ID:", managedLayerId);
+                
+                // Debug: Log layer order after adding each TOC layer
+                if (managedLayerId) {
+                  console.log("🔍 TOC: Logging layer order after adding", layer.name);
+                  LayerManager.logLayerOrder();
+                }
+                
+                // Update the layer in the store
+                set((state) => {
+                  const currentGroups = state.tocType === 'LIST' ? state.layerListGroups : state.layerFolderGroups;
+                  const currentGroup = currentGroups.find(g => g.label === group.label);
+                  if (currentGroup) {
+                    const currentLayer = currentGroup.layers.find(l => l.name === layer.name);
+                    if (currentLayer) {
+                      currentLayer.layer = typedLayer;
+                      currentLayer.managedLayerId = managedLayerId || undefined;
+                      console.log("💾 Updated layer in store:", layer.name, "with managed ID:", managedLayerId);
+                    }
+                  }
+                  
+                  // Also update in allLayers
+                  const allLayerItem = state.allLayers.find(l => l.name === layer.name && l.groupName === group.label);
+                  if (allLayerItem) {
+                    allLayerItem.layer = typedLayer;
+                    allLayerItem.managedLayerId = managedLayerId || undefined;
+                  }
+                });
+              } else {
+                console.error("❌ Failed to create OpenLayers layer for:", layer.name);
+              }
+            });
+          }
+        });
+      });
     },
   }))
 ) 

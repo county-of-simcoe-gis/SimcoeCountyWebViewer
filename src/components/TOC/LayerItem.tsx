@@ -43,14 +43,18 @@ export default function LayerItem({ layerInfo, group, searchText, onLayerChange,
   }, [currentLayerData.legendImage]);
 
   const onCheckboxChange = () => {
+    console.log("🔄 Checkbox clicked for layer:", layerInfo.name, "current visible:", layerInfo.visible);
+
     // Handle disclaimer if present
     if (layerInfo.disclaimer) {
       // TODO: Show disclaimer dialog
       console.log("Layer has disclaimer:", layerInfo.disclaimer);
     }
 
-    // Toggle layer visibility
-    const updatedLayer = { ...layerInfo, visible: !layerInfo.visible };
+    // Use the current layer data from the store (which has the OpenLayers layer object)
+    const currentLayerFromStore = currentLayerData;
+    const updatedLayer = { ...currentLayerFromStore, visible: !currentLayerFromStore.visible };
+    console.log("🔄 Calling onLayerChange with:", updatedLayer.name, "visible:", updatedLayer.visible, "has OL layer:", !!updatedLayer.layer);
     onLayerChange(updatedLayer, group);
   };
 
@@ -72,7 +76,7 @@ export default function LayerItem({ layerInfo, group, searchText, onLayerChange,
   // Determine container class based on layer state
   let containerClassName = "sc-toc-item-container";
   if (!isVisibleAtScale) containerClassName += " not-in-scale";
-  if (layerInfo.visible) containerClassName += " on";
+  if (currentLayerData.visible) containerClassName += " on";
 
   // Truncate display name if too long
   const displayName = layerInfo.tocDisplayName.length < 60 ? layerInfo.tocDisplayName : `${layerInfo.tocDisplayName.slice(0, 57)}...`;
@@ -112,7 +116,7 @@ export default function LayerItem({ layerInfo, group, searchText, onLayerChange,
 
         {/* Checkbox and label */}
         <label htmlFor={`sc-toc-item-checkbox-${layerInfo.name}_${layerInfo.group}`}>
-          <input id={`sc-toc-item-checkbox-${layerInfo.name}_${layerInfo.group}`} className="sc-toc-item-checkbox" type="checkbox" onChange={onCheckboxChange} checked={layerInfo.visible} />
+          <input id={`sc-toc-item-checkbox-${layerInfo.name}_${layerInfo.group}`} className="sc-toc-item-checkbox" type="checkbox" onChange={onCheckboxChange} checked={currentLayerData.visible} />
           {/* Inline legend for 20x20 images - before layer name */}
           {isInlineLegend && currentLayerData.legendImage && <LayerLegend legend={null} image={currentLayerData.legendImage} inline={true} />}
           <span className="sc-toc-item-layer-label" title={layerInfo.tocDisplayName} style={isLegendBlank(currentLayerData) && !isInlineLegend ? { marginLeft: "8px" } : undefined}>
