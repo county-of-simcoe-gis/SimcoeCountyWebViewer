@@ -429,7 +429,7 @@ const SCMap = (props) => {
       const urlNG911ID = helpers.getURLParameter("NG911ID");
       if (urlNG911ID !== null) {
         const ng911UrlTemplate = (mainURL, id) => `${mainURL}&cql_filter=NGUID='${id}'`;
-        let ng911Url = "https://giswebdev.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Civic_Address_Point_Lookup&outputFormat=application/json";
+        let ng911Url = "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Civic_Address_Point_Lookup&outputFormat=application/json";
         const ng911IDUrl = ng911UrlTemplate(ng911Url, urlNG911ID);
         helpers.getJSON(ng911IDUrl, (result) => {
           if (result?.features[0]) {
