@@ -128,7 +128,7 @@ const AvailableMaps = (props) => {
         { useBearerToken: false },
         (result) => {
           try {
-            console.log("Public maps result:", result);
+            // console.log("Public maps result:", result);
 
             // Handle various error scenarios
             if (!result) {
@@ -349,7 +349,7 @@ const AvailableMaps = (props) => {
               <div className="sc-maps-list">
                 {maps.map((map, index) => (
                   <div key={index} className="sc-map-item">
-                    <button className="sc-map-link" onClick={() => handleMapClick(map.map_name)} title={map.description || `Switch to ${map.map_name} map`}>
+                    <button key={index} className="sc-map-link" onClick={() => handleMapClick(map.map_name)} title={map.description || `Switch to ${map.map_name} map`}>
                       <div className="sc-map-content">
                         <div className="sc-map-info">
                           <div className="sc-map-name">
