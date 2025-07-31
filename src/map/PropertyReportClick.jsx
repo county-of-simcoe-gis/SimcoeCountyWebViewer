@@ -428,36 +428,81 @@ class PropertyReportClick extends Component {
 
         const feature = geoJSON[0];
         feature.setStyle(parcelLayerStyle);
+        console.log("property report click", result.features);
         const arn = result.features[0].properties.arn;
-        feature.setProperties({ arn: arn });
-        this.setState({ shareURL: this.getShareURL(arn), feature: feature });
+        if (arn.length > 15) {
+          console.log("arn", arn);
+          this.getCondoData(arn, (result) => {
+            console.log("condo data", result);
+            result.forEach((item) => {
+              feature.setProperties({ arn: item.arn });
+              this.setState({ shareURL: this.getShareURL(item.arn), feature: feature });
 
-        // GET CENTER COORDS
-        var latLongCoords = null;
-        var pointerPoint = null;
-        if (clickEvt === null) {
-          helpers.getGeometryCenter(feature.getGeometry(), (center) => {
-            pointerPoint = center.flatCoordinates;
-            latLongCoords = helpers.toLatLongFromWebMercator(pointerPoint);
-            window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize());
+              // GET CENTER COORDS
+              var latLongCoords = null;
+              var pointerPoint = null;
+              if (clickEvt === null) {
+                helpers.getGeometryCenter(feature.getGeometry(), (center) => {
+                  pointerPoint = center.flatCoordinates;
+                  latLongCoords = helpers.toLatLongFromWebMercator(pointerPoint);
+                  window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize());
+
+                  // GET FULL INFO
+                  this.getData({ feature, arn: item.arn, pointerPoint, latLongCoords }, (result) => {
+                    this.setState({ propInfo: result, userClickCoords: pointerPoint });
+                    window.popup.show(pointerPoint, this.getPopupContent(result), "Property Information", () => {});
+                  });
+                });
+              } else {
+                latLongCoords = helpers.toLatLongFromWebMercator(clickEvt.coordinate);
+                pointerPoint = clickEvt.coordinate;
+
+                // GET FULL INFO
+                this.getData({ feature, arn, pointerPoint, latLongCoords }, (result) => {
+                  this.setState({ propInfo: result, userClickCoords: pointerPoint });
+                  window.popup.show(pointerPoint, this.getPopupContent(result), "Property Information", () => {});
+                });
+              }
+            });
+          });
+        } else {
+          feature.setProperties({ arn: arn });
+          this.setState({ shareURL: this.getShareURL(arn), feature: feature });
+
+          // GET CENTER COORDS
+          var latLongCoords = null;
+          var pointerPoint = null;
+          if (clickEvt === null) {
+            helpers.getGeometryCenter(feature.getGeometry(), (center) => {
+              pointerPoint = center.flatCoordinates;
+              latLongCoords = helpers.toLatLongFromWebMercator(pointerPoint);
+              window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize());
+
+              // GET FULL INFO
+              this.getData({ feature, arn, pointerPoint, latLongCoords }, (result) => {
+                this.setState({ propInfo: result, userClickCoords: pointerPoint });
+                window.popup.show(pointerPoint, this.getPopupContent(result), "Property Information", () => {});
+              });
+            });
+          } else {
+            latLongCoords = helpers.toLatLongFromWebMercator(clickEvt.coordinate);
+            pointerPoint = clickEvt.coordinate;
 
             // GET FULL INFO
             this.getData({ feature, arn, pointerPoint, latLongCoords }, (result) => {
               this.setState({ propInfo: result, userClickCoords: pointerPoint });
               window.popup.show(pointerPoint, this.getPopupContent(result), "Property Information", () => {});
             });
-          });
-        } else {
-          latLongCoords = helpers.toLatLongFromWebMercator(clickEvt.coordinate);
-          pointerPoint = clickEvt.coordinate;
-
-          // GET FULL INFO
-          this.getData({ feature, arn, pointerPoint, latLongCoords }, (result) => {
-            this.setState({ propInfo: result, userClickCoords: pointerPoint });
-            window.popup.show(pointerPoint, this.getPopupContent(result), "Property Information", () => {});
-          });
+          }
         }
       });
+    });
+  };
+
+  getCondoData = (arn, callback) => {
+    const infoURL = window.config.condoUrl + arn;
+    helpers.getJSON(infoURL, (result) => {
+      callback(result);
     });
   };
 
