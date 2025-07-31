@@ -61,8 +61,10 @@ class LayerInfoApp extends Component {
   }
   // GET LAYER INFO FROM URL
   async getInfo() {
+    let useBearerToken = this.props.secure || false;
+    if (this.state.layerURL.indexOf("token=") !== -1) useBearerToken = false;
     if (this.state.layerURL && this.state.layerURL != "null" && this.state.layerURL !== "")
-      get(this.state.layerURL, { ...this.state.params, useBearerToken: this.props.secure || false }, (response) => {
+      get(this.state.layerURL, { ...this.state.params, useBearerToken: useBearerToken }, (response) => {
         if (response.coverage !== undefined) {
           this.setState({ layerInfo: response.coverage });
         } else if (response.featureType === undefined) {
@@ -83,6 +85,7 @@ class LayerInfoApp extends Component {
     callback(featureType);
   };
   parseArcGisFeature = (featureInfo, callback) => {
+    console.log(featureInfo);
     try {
       let featureType = {};
       featureType["nativeCRS"] = {};
