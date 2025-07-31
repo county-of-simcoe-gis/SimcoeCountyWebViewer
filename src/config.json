@@ -43,6 +43,13 @@
   "centerCoords": [-8878504.68, 5543492.45],
   "defaultZoom": 10,
   "maxZoom": 20,
+  "search": {
+    "hideTypes": false,
+    "defaultSearchType": {
+      "label": "All",
+      "value": "All"
+    }
+  },
   "controls": {
     "rotate": true,
     "fullScreen": true,
