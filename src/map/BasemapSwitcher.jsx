@@ -89,7 +89,7 @@ const BasemapSwitcher = (props) => {
     
     // Load all the layers (cleanup is now handled in the context)
     loadTopoLayers(baseMapServicesOptions);
-    loadBathymetry(baseMapServicesOptions);
+    // loadBathymetry(baseMapServicesOptions);
     loadWorldImagery(baseMapServicesOptions);
     loadStreets(baseMapServicesOptions);
     loadImageryLayers(baseMapServicesOptions);
