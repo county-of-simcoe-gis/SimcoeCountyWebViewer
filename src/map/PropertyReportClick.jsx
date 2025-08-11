@@ -431,12 +431,10 @@ class PropertyReportClick extends Component {
         console.log("property report click", result.features);
         const arn = result.features[0].properties.arn;
         if (arn.length > 15) {
-          console.log("arn", arn);
-          this.getCondoData(arn, (result) => {
-            console.log("condo data", result);
-            result.forEach((item) => {
-              feature.setProperties({ arn: item.arn });
-              this.setState({ shareURL: this.getShareURL(item.arn), feature: feature });
+          this.getCondoData(arn, (condoResult) => {
+            condoResult.forEach((item) => {
+              feature.setProperties({ arn: item.ARN });
+              this.setState({ shareURL: this.getShareURL(item.ARN), feature: feature });
 
               // GET CENTER COORDS
               var latLongCoords = null;
@@ -448,9 +446,9 @@ class PropertyReportClick extends Component {
                   window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize());
 
                   // GET FULL INFO
-                  this.getData({ feature, arn: item.arn, pointerPoint, latLongCoords }, (result) => {
-                    this.setState({ propInfo: result, userClickCoords: pointerPoint });
-                    window.popup.show(pointerPoint, this.getPopupContent(result), "Property Information", () => {});
+                  this.getData({ feature, arn: item.ARN, pointerPoint, latLongCoords }, (itemResult) => {
+                    this.setState({ propInfo: itemResult, userClickCoords: pointerPoint });
+                    window.popup.show(pointerPoint, this.getPopupContent(itemResult), "Property Information", () => {});
                   });
                 });
               } else {
@@ -458,9 +456,9 @@ class PropertyReportClick extends Component {
                 pointerPoint = clickEvt.coordinate;
 
                 // GET FULL INFO
-                this.getData({ feature, arn, pointerPoint, latLongCoords }, (result) => {
-                  this.setState({ propInfo: result, userClickCoords: pointerPoint });
-                  window.popup.show(pointerPoint, this.getPopupContent(result), "Property Information", () => {});
+                this.getData({ feature, arn: item.ARN, pointerPoint, latLongCoords }, (itemResult) => {
+                  this.setState({ propInfo: itemResult, userClickCoords: pointerPoint });
+                  window.popup.show(pointerPoint, this.getPopupContent(itemResult), "Property Information", () => {});
                 });
               }
             });
