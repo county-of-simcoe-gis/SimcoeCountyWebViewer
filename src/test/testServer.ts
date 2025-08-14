@@ -126,7 +126,7 @@ export const handlers = [
     )
   }),
   
-  http.get('**/public/search/:locationId', ({ params }) => {
+  http.get('**/public/search/:locationId', () => {
     return HttpResponse.json({
       name: 'Detailed Location',
       type: 'Address',

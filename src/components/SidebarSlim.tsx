@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { useEventStore } from "@/stores/eventStore";
 
@@ -20,7 +21,7 @@ function SlimButton({ title, icon, isSelected, isActive, hidden, onClick }: Slim
     <div className={`sc-sidebar-slim-button-container ${isSelected ? "active" : ""}`} onClick={onClick}>
       {isActive && <span className="sc-sidebar-slim-button-dot" />}
       <button className="sc-sidebar-slim-button">
-        <img src={`/images/${icon}`} alt={title} />
+        <Image src={`/images/${icon}`} alt={title} width={32} height={32} />
         <span>{title}</span>
       </button>
     </div>

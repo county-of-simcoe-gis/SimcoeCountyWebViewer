@@ -169,7 +169,7 @@ export * from "@testing-library/react";
 export { customRender as render };
 
 // Common test helpers
-export const waitForElement = async (getByTestId: any, testId: string, timeout = 3000) => {
+export const waitForElement = async (getByTestId: (testId: string) => HTMLElement, testId: string, timeout = 3000) => {
   return new Promise((resolve, reject) => {
     const start = Date.now();
     const check = () => {
@@ -221,7 +221,7 @@ export const setupWindowSearchHandlers = () => {
   const mockHandleLocationResult = vi.fn();
   const mockHandleGeocodedResult = vi.fn();
 
-  (window as any).searchZoomHandlers = {
+  (window as Window & typeof globalThis & { searchZoomHandlers: Record<string, unknown> }).searchZoomHandlers = {
     handleLocationResult: mockHandleLocationResult,
     handleGeocodedResult: mockHandleGeocodedResult,
   };

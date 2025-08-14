@@ -1,6 +1,7 @@
 "use client";
 
 import "./Sidebar.css";
+import Image from "next/image";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { useEventStore } from "@/stores/eventStore";
@@ -136,7 +137,7 @@ export default function Sidebar() {
       {tools.map((tool) => (
         <div key={tool.id} className={`sc-sidebar-item ${activeTool === tool.id ? "active" : ""}`} onClick={() => handleSidebarItemClick(tool.name, "tools")}>
           <div className="sc-sidebar-item-image">
-            <img src={`/images/${tool.imageName}`} alt={tool.name} />
+            <Image src={`/images/${tool.imageName}`} alt={tool.name} width={32} height={32} />
           </div>
           <div className="sc-sidebar-item-content">
             <div className="sc-sidebar-item-title">{tool.name}</div>
@@ -152,7 +153,7 @@ export default function Sidebar() {
       {themes.map((theme) => (
         <div key={theme.id} className={`sc-sidebar-item ${activeTheme === theme.id ? "active" : ""}`} onClick={() => handleSidebarItemClick(theme.name, "themes")}>
           <div className="sc-sidebar-item-image">
-            <img src={`/images/${theme.imageName}`} alt={theme.name} />
+            <Image src={`/images/${theme.imageName}`} alt={theme.name} width={32} height={32} />
           </div>
           <div className="sc-sidebar-item-content">
             <div className="sc-sidebar-item-title">{theme.name}</div>
@@ -169,31 +170,31 @@ export default function Sidebar() {
         <TabList>
           <Tab>
             <div className="tab-content">
-              <img src="/images/legend-32x32.png" alt="Layers" className="tab-icon" />
+              <Image src="/images/legend-32x32.png" alt="Layers" width={32} height={32} className="tab-icon" />
               <div className="tab-text">Layers</div>
             </div>
           </Tab>
           <Tab>
             <div className="tab-content">
-              <img src="/images/tools-32x32.png" alt="Tools" className="tab-icon" />
+              <Image src="/images/tools-32x32.png" alt="Tools" width={32} height={32} className="tab-icon" />
               <div className="tab-text">Tools</div>
             </div>
           </Tab>
           <Tab>
             <div className="tab-content">
-              <img src="/images/map-32x32.png" alt="My Maps" className="tab-icon" />
+              <Image src="/images/map-32x32.png" alt="My Maps" width={32} height={32} className="tab-icon" />
               <div className="tab-text">My Maps</div>
             </div>
           </Tab>
           <Tab>
             <div className="tab-content">
-              <img src="/images/theme-32x32.png" alt="Themes" className="tab-icon" />
+              <Image src="/images/theme-32x32.png" alt="Themes" width={32} height={32} className="tab-icon" />
               <div className="tab-text">Themes</div>
             </div>
           </Tab>
           <Tab>
             <div className="tab-content">
-              <img src="/images/report-32x32.png" alt="Reports" className="tab-icon" />
+              <Image src="/images/report-32x32.png" alt="Reports" width={32} height={32} className="tab-icon" />
               <div className="tab-text">Reports</div>
             </div>
           </Tab>

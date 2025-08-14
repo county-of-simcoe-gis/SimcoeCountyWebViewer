@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import "./TOCHeader.css";
 
 interface TOCHeaderProps {
@@ -67,7 +68,7 @@ export default function TOCHeader({
       {/* Settings Dropdown */}
       <div className="sc-toc-settings-container">
         <button className="sc-toc-settings-button" onClick={toggleSettings} title="Layer Settings">
-          <img src="/images/toc/settings.png" alt="settings" />
+          <Image src="/images/toc/settings.png" alt="settings" width={16} height={16} />
         </button>
 
         {showSettings && (
@@ -129,7 +130,7 @@ export default function TOCHeader({
       {/* Help Button */}
       <div className="sc-toc-help-container">
         <a href={helpLink} target="_blank" rel="noopener noreferrer" className="sc-toc-help-button" title="Layer Help">
-          <img src="/images/help.png" alt="help" />
+          <Image src="/images/help.png" alt="help" width={16} height={16} />
         </a>
       </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import Image from "next/image";
 import { useMapStore } from "@/stores/mapStore";
 import { LayerHelpers, OL_DATA_TYPES } from "@/utils/openlayers";
 import { OLDataType } from "@/utils/openlayers/types";
@@ -571,7 +572,7 @@ export default function BasemapSwitcher() {
 
             <div className="sc-basemap-settings-row">
               <button className="sc-basemap-settings-button" onClick={onSettingsClick}>
-                <img src="/images/settings.png" alt="Settings" />
+                <Image src="/images/settings.png" alt="Settings" width={20} height={20} />
               </button>
             </div>
           </>

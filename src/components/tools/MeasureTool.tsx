@@ -2,6 +2,7 @@
 
 import "./MeasureTool.css";
 import React, { useState } from "react";
+import Image from "next/image";
 import PanelComponent from "@/components/PanelComponent";
 
 interface MeasureToolProps {
@@ -74,7 +75,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
                   setUnitType(btn.unitType);
                 }}
               >
-                <img src={btn.icon} alt={btn.alt} />
+                <Image src={btn.icon} alt={btn.alt} width={24} height={24} />
               </button>
             </div>
           ))}

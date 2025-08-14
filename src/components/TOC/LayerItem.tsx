@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+
 import { TOCLayerGroup, TOCLayer, useTOCStore } from "../../stores/tocStore";
 import { FaPaperclip } from "react-icons/fa";
 import LayerLegend from "./LayerLegend";
@@ -107,6 +108,7 @@ export default function LayerItem({ layerInfo, group, searchText, onLayerChange,
                   : "/images/toc/tree-expander-closed-16.png"
               }
               alt="legend toggle"
+              style={{ width: "16px", height: "16px" }}
               title={layerInfo.styleUrl === "" && !currentLayerData.legendObj ? "No Legend Available" : currentLayerData.showLegend ? "Hide Legend" : "Show Legend"}
             />
             <div className="sc-toc-item-plus-minus-sign" />
@@ -126,7 +128,7 @@ export default function LayerItem({ layerInfo, group, searchText, onLayerChange,
 
         {/* Layer indicators */}
         <div className={currentLayerData.liveLayer ? "sc-toc-item-layer-info-live-layer" : "sc-hidden"} title="This layer is Interactable in the map.">
-          <img src="/images/toc/callout.png" alt="callout" />
+          <img src="/images/toc/callout.png" alt="callout" style={{ width: "16px", height: "16px" }} />
         </div>
 
         <div className={currentLayerData.hasAttachments ? "sc-toc-item-layer-info-attachment-layer" : "sc-hidden"} title="This layer has attachments.">
@@ -134,20 +136,20 @@ export default function LayerItem({ layerInfo, group, searchText, onLayerChange,
         </div>
 
         <div className={currentLayerData.canDownload ? "sc-toc-item-layer-info-download" : "sc-hidden"} title="This layer can be downloaded.">
-          <img src="/images/toc/download.png" alt="can download" />
+          <img src="/images/toc/download.png" alt="can download" style={{ width: "16px", height: "16px" }} />
         </div>
 
         <div className={currentLayerData.secured ? "sc-toc-item-layer-info-secured" : "sc-hidden"} title="This layer is secured.">
-          <img src="/images/toc/lock.png" alt="secure" />
+          <img src="/images/toc/lock.png" alt="secure" style={{ width: "16px", height: "16px" }} />
         </div>
 
         <div className={currentLayerData.userLayer ? "sc-toc-item-layer-info-secured" : "sc-hidden"} title="This layer was user added.">
-          <img src="/images/toc/user-icon.png" alt="user added layer" />
+          <img src="/images/toc/user-icon.png" alt="user added layer" style={{ width: "16px", height: "16px" }} />
         </div>
 
         {/* Layer options menu button - moved inside flex container */}
         <div className="sc-toc-list-item-toolbox" title="Layer Options" role="button" onClick={(evt) => onLayerOptionsClick(evt, layerInfo)}>
-          <img src="/images/toc/more-options.png" alt="more options" />
+          <img src="/images/toc/more-options.png" alt="more options" style={{ width: "16px", height: "16px" }} />
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+
 import "./LayerLegend.css";
 
 interface LayerLegendProps {
@@ -52,7 +53,7 @@ export default function LayerLegend({ legend, image, inline = false }: LayerLege
 
     // For inline mode (20x20 images), return just the image
     if (inline) {
-      return <img src={image} alt="Layer Legend" className="sc-toc-legend-inline" style={{ width: "20px", height: "20px", marginLeft: "4px", marginRight: "4px" }} />;
+      return <img src={image} alt="Layer Legend" style={{ width: "20px", height: "20px", marginLeft: "4px", marginRight: "4px" }} className="sc-toc-legend-inline" />;
     }
 
     // For regular expandable legends
@@ -62,6 +63,7 @@ export default function LayerLegend({ legend, image, inline = false }: LayerLege
           src={image}
           alt="Layer Legend"
           className="sc-toc-legend-image"
+          style={{ width: "auto", height: "auto", maxWidth: "100%" }}
           onError={(e) => {
             // console.log('LayerLegend: Image failed to load:', image);
             // Hide broken images
@@ -100,6 +102,7 @@ export default function LayerLegend({ legend, image, inline = false }: LayerLege
                 src={legend}
                 alt="Layer Legend"
                 className="sc-toc-legend-image"
+                style={{ width: "auto", height: "auto", maxWidth: "100%" }}
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = "none";
                 }}

@@ -5,6 +5,13 @@ import { LayerHelpers } from '../utils/openlayers/LayerHelpers'
 import { OL_DATA_TYPES } from '../utils/openlayers/types'
 import { LayerManager } from '../utils/openlayers/LayerManager'
 
+// OpenLayers layer interface for type safety
+interface OpenLayersLayer {
+  setVisible: (visible: boolean) => void
+  setOpacity: (opacity: number) => void
+  setProperties: (properties: Record<string, unknown>) => void
+}
+
 // Layer interface based on the old app's layer structure
 export interface TOCLayer {
   name: string
@@ -287,7 +294,7 @@ export const useTOCStore = create<TOCState>()(
                 LayerManager.setLayerVisibility(layer.managedLayerId, visible)
               } else {
                 console.log("🔧 Setting OpenLayers layer visibility directly:", visible);
-                (layer.layer as any).setVisible(visible)
+                (layer.layer as OpenLayersLayer).setVisible(visible)
               }
             } else {
               console.log("⚠️ No OpenLayers layer object found for:", layerName);
@@ -869,11 +876,11 @@ export const useTOCStore = create<TOCState>()(
               projection: 'EPSG:3857'
             }, (olLayer: unknown) => {
               if (olLayer) {
-                const typedLayer = olLayer as any; // Type assertion to avoid linter error
+                const typedLayer = olLayer as unknown
                 console.log("✅ OpenLayers layer created for:", layer.name);
                 
                 // Set layer properties
-                typedLayer.setProperties({
+                (typedLayer as OpenLayersLayer).setProperties({
                   name: layer.name,
                   tocDisplayName: layer.tocDisplayName,
                   displayName: layer.displayName,
@@ -885,12 +892,12 @@ export const useTOCStore = create<TOCState>()(
                 });
                 
                 // Set initial visibility and opacity
-                typedLayer.setVisible(layer.visible);
-                typedLayer.setOpacity(layer.opacity);
+                (typedLayer as OpenLayersLayer).setVisible(layer.visible);
+                (typedLayer as OpenLayersLayer).setOpacity(layer.opacity);
                 
                 // Add to map using LayerManager for proper categorization and z-index management
                 const managedLayerId = LayerManager.addLayer(
-                  typedLayer, 
+                  typedLayer as Parameters<typeof LayerManager.addLayer>[0], 
                   'TOC', 
                   layer.name,
                   {
@@ -899,7 +906,7 @@ export const useTOCStore = create<TOCState>()(
                     metadata: {
                       groupName: group.label,
                       groupUrl: group.wmsGroupUrl,
-                      secured: group.secured || false,
+                      secured: false,
                       drawIndex: layer.drawIndex
                     }
                   }

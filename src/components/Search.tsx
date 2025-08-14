@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
 import { useConfig } from "@/hooks/useConfig";
 import { getJSON } from "@/utils/helpersHttp";
 import { getURLParameter } from "@/utils/helpersUrl";
@@ -122,27 +123,6 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
     loadSearchTypes();
   }, [config]);
 
-  // Handle initial search from URL parameters
-  useEffect(() => {
-    const handleInitialSearch = () => {
-      const search = getURLParameter("q", true, true);
-      const searchType = getURLParameter("qt", true, true);
-
-      if (search) {
-        setSearchValue(search);
-        if (searchType) {
-          const type = searchTypes.find((t) => t.value === searchType) || selectedType;
-          setSelectedType(type);
-        }
-        performSearch(search, searchType || "All");
-      }
-    };
-
-    if (searchTypes.length > 0) {
-      handleInitialSearch();
-    }
-  }, [searchTypes, selectedType]);
-
   // Enhanced search results handler
   const searchResultsHandler = useCallback(
     (results: SearchResult[]) => {
@@ -231,6 +211,27 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
     },
     [municipality, searchResultsHandler]
   );
+
+  // Handle initial search from URL parameters
+  useEffect(() => {
+    const handleInitialSearch = () => {
+      const search = getURLParameter("q", true, true);
+      const searchType = getURLParameter("qt", true, true);
+
+      if (search) {
+        setSearchValue(search);
+        if (searchType) {
+          const type = searchTypes.find((t) => t.value === searchType) || selectedType;
+          setSelectedType(type);
+        }
+        performSearch(search, searchType || "All");
+      }
+    };
+
+    if (searchTypes.length > 0) {
+      handleInitialSearch();
+    }
+  }, [searchTypes, selectedType, performSearch]);
 
   // Debounced search
   useEffect(() => {
@@ -467,7 +468,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
 
         {/* Search Icon */}
         <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-          <img src="/images/magnify.png" alt="Search" className="w-auto h-auto opacity-70" />
+          <Image src="/images/magnify.png" alt="Search" width={16} height={16} className="opacity-70" />
         </div>
 
         {/* Clear Button */}
@@ -501,7 +502,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
                       onClick={() => handleResultSelect(result)}
                     >
                       <div className="w-8 h-8 mr-3 flex-shrink-0 flex items-center justify-center">
-                        <img src={`/images/${result.imageName || "map-marker-light-blue.png"}`} alt="" className="w-auto h-auto max-w-full max-h-full" />
+                        <Image src={`/images/${result.imageName || "map-marker-light-blue.png"}`} alt="" width={24} height={24} className="max-w-full max-h-full" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-gray-900 truncate">

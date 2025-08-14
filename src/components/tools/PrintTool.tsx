@@ -2,6 +2,7 @@
 
 import "./PrintTool.css";
 import React, { useState } from "react";
+import Image from "next/image";
 import PanelComponent from "@/components/PanelComponent";
 
 interface PrintToolProps {
@@ -117,7 +118,7 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
 
         <div className={isPrinting ? "sc-print-loading" : "sc-hidden"}>
           Printing...&nbsp;
-          <img src="/images/loading20.gif" alt="loading" />
+          <Image src="/images/loading20.gif" alt="loading" width={20} height={20} />
         </div>
 
         {/* ADVANCED OPTIONS */}

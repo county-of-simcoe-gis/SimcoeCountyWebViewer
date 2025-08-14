@@ -2,6 +2,7 @@
 
 import "./Header.css";
 import { useEffect } from "react";
+import Image from "next/image";
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { useEventStore } from "@/stores/eventStore";
 import { useMapStore } from "@/stores/mapStore";
@@ -47,12 +48,12 @@ export default function Header() {
         onKeyDown={(e) => e.key === "Enter" && handleBurgerClick()}
         aria-label="Toggle sidebar"
       >
-        <img src="/images/burger-button.png" alt="Menu" className="max-w-full max-h-full w-auto h-auto" />
+        <Image src="/images/burger-button.png" alt="Menu" width={32} height={32} className="max-w-full max-h-full" />
       </div>
 
       {/* Logo */}
       <div className="flex items-end pl-2 w-[111px]">
-        <img src="/images/logo.png" alt="Simcoe County" className="max-w-full max-h-full w-auto h-auto" />
+        <Image src="/images/logo.png" alt="Simcoe County" width={111} height={40} className="max-w-full max-h-full" />
       </div>
 
       {/* Search Container - takes remaining space */}
@@ -74,7 +75,7 @@ export default function Header() {
         onClick={onFeedbackClick}
         title="Feedback"
       >
-        <img src="/images/feedback.png" alt="Feedback" className="mt-1 mb-1" />
+        <Image src="/images/feedback.png" alt="Feedback" width={16} height={16} className="mt-1 mb-1" />
         <span>Feedback</span>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import { render, RenderOptions } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { vi } from "vitest";
 
 /**
@@ -58,7 +58,7 @@ export const actOnStore = <T,>(storeHook: () => T, action: (store: T) => void) =
 /**
  * Mock a Zustand store for testing
  */
-export const createMockStore = <T extends Record<string, any>>(initialState: Partial<T> = {}) => {
+export const createMockStore = <T extends Record<string, unknown>>(initialState: Partial<T> = {}) => {
   const mockStore = { ...initialState };
 
   return {
