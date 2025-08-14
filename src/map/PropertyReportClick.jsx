@@ -42,7 +42,6 @@ class PropertyReportClick extends Component {
     helpers.waitForLoad(["map", "toc"], Date.now(), 30, () => this.onMapLoad());
 
     this.state = {
-      propInfo: null,
       feature: null,
     };
   }
@@ -212,8 +211,8 @@ class PropertyReportClick extends Component {
     window.map.getView().fit(this.state.feature.getGeometry().getExtent(), window.map.getSize());
   };
 
-  onMoreInfoClick = () => {
-    window.emitter.emit("loadReport", <PropertyReport propInfo={this.state.propInfo} onZoomClick={this.onZoomClick} />);
+  onMoreInfoClick = (propInfo) => {
+    window.emitter.emit("loadReport", <PropertyReport propInfo={propInfo} onZoomClick={this.onZoomClick} />);
     helpers.addAppStat("Property Click More Info", "click");
   };
 
@@ -391,7 +390,7 @@ class PropertyReportClick extends Component {
         <div>
           <div className="sc-property-report-top-container">{rows}</div>
 
-          <button key={helpers.getUID()} id={helpers.getUID()} className="sc-button sc-property-report-click-more-info" onClick={this.onMoreInfoClick}>
+          <button key={helpers.getUID()} id={helpers.getUID()} className="sc-button sc-property-report-click-more-info" onClick={() => this.onMoreInfoClick(props.propInfo)}>
             More Information
           </button>
 
@@ -407,7 +406,7 @@ class PropertyReportClick extends Component {
       );
     };
 
-    return <PropertyReportContent extensions={this.extensions} />;
+    return <PropertyReportContent extensions={this.extensions} propInfo={propInfo} />;
   };
 
   showPropertyWindow = (wmsURL, clickEvt = null) => {
@@ -447,7 +446,7 @@ class PropertyReportClick extends Component {
 
                   // GET FULL INFO
                   this.getData({ feature, arn: item.ARN, pointerPoint, latLongCoords }, (itemResult) => {
-                    this.setState({ propInfo: itemResult, userClickCoords: pointerPoint });
+                    // this.setState({ propInfo: itemResult, userClickCoords: pointerPoint });
                     window.popup.show(pointerPoint, this.getPopupContent(itemResult), "Property Information", () => {});
                   });
                 });
@@ -457,7 +456,7 @@ class PropertyReportClick extends Component {
 
                 // GET FULL INFO
                 this.getData({ feature, arn: item.ARN, pointerPoint, latLongCoords }, (itemResult) => {
-                  this.setState({ propInfo: itemResult, userClickCoords: pointerPoint });
+                  // this.setState({ propInfo: itemResult, userClickCoords: pointerPoint });
                   window.popup.show(pointerPoint, this.getPopupContent(itemResult), "Property Information", () => {});
                 });
               }
@@ -478,7 +477,7 @@ class PropertyReportClick extends Component {
 
               // GET FULL INFO
               this.getData({ feature, arn, pointerPoint, latLongCoords }, (result) => {
-                this.setState({ propInfo: result, userClickCoords: pointerPoint });
+                this.setState({ userClickCoords: pointerPoint });
                 window.popup.show(pointerPoint, this.getPopupContent(result), "Property Information", () => {});
               });
             });
@@ -488,7 +487,7 @@ class PropertyReportClick extends Component {
 
             // GET FULL INFO
             this.getData({ feature, arn, pointerPoint, latLongCoords }, (result) => {
-              this.setState({ propInfo: result, userClickCoords: pointerPoint });
+              this.setState({ userClickCoords: pointerPoint });
               window.popup.show(pointerPoint, this.getPopupContent(result), "Property Information", () => {});
             });
           }
