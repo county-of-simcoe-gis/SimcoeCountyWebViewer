@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, waitFor } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import BasemapSwitcher from "@/components/BasemapSwitcher";
 import { useMapStore } from "@/stores/mapStore";
 
@@ -23,7 +23,7 @@ vi.mock("@/components/basemapSwitcherConfig.json", () => ({
 
 // Mock rc-slider
 vi.mock("rc-slider", () => ({
-  default: (props: any) => {
+  default: () => {
     return <div data-testid="slider" />;
   },
 }));
@@ -70,7 +70,7 @@ class MockMap {
       getProjection: () => ({ getCode: () => "EPSG:3857" }),
       getZoom: () => 10,
       getCenter: () => [0, 0],
-    } as any;
+    } as const;
   }
   getLayers() {
     return { getArray: () => [] };
@@ -103,7 +103,7 @@ describe("BasemapSwitcher", () => {
 
   it("renders appropriately when map is present", () => {
     // Provide map
-    useMapStore.setState({ map: new MockMap() as any });
+    useMapStore.setState({ map: new MockMap() as unknown as ReturnType<typeof useMapStore.getState>["map"] });
 
     const { container } = render(<BasemapSwitcher />);
 

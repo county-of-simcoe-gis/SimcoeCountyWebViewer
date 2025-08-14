@@ -1,5 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { useLayerManagerStore, type LayerCategory, type ManagedLayer } from '@/stores/layerManagerStore'
+import { useLayerManagerStore, type LayerCategory } from '@/stores/layerManagerStore'
+
+
 
 // Mock OpenLayers Layer
 const mockLayer = {
@@ -42,7 +45,7 @@ beforeEach(() => {
       Graphics: 400,
       Popup: 500
     },
-  }, true)
+  })
   
   vi.clearAllMocks()
 })

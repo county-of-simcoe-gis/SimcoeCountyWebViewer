@@ -30,7 +30,7 @@ beforeEach(() => {
     currentExtent: null,
     currentZoom: null,
     currentCenter: null,
-  }, true)
+  })
 })
 
 describe('mapStore', () => {
@@ -307,7 +307,7 @@ describe('mapStore', () => {
     it('should handle loading workflow', () => {
       // Simulate loading sequence step by step
       let state = useMapStore.getState()
-      let checkItems = ['map', 'sidebar', 'header']
+      const checkItems = ['map', 'sidebar', 'header']
       expect(checkItems.every(item => state.loadedItems.includes(item))).toBe(false)
       
       // Add 'map'

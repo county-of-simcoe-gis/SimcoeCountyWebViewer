@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
 import { useConfig } from '@/hooks/useConfig'
+import type { AppConfig } from '@/utils/config'
 
 const mockConfig = {
   useMapConfigApi: false,
@@ -75,7 +76,7 @@ const mockConfig = {
   },
   sidebarToolComponents: [],
   sidebarThemeComponents: [],
-} as any
+} as AppConfig
 
 describe('useConfig', () => {
   beforeEach(() => {
@@ -83,7 +84,7 @@ describe('useConfig', () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       json: async () => mockConfig,
-    } as any)
+    } as Response)
   })
 
   it('loads config and updates metadata', async () => {

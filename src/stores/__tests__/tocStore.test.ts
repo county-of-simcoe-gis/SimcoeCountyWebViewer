@@ -96,7 +96,7 @@ beforeEach(() => {
     layerCount: 0,
     helpLink: '',
     sources: [],
-  }, true)
+  })
   
   vi.clearAllMocks()
 })
@@ -430,15 +430,6 @@ describe('tocStore', () => {
 
   describe('Configuration', () => {
     it('should initialize from config', () => {
-      const config = {
-        toc: {
-          tocType: 'FOLDER',
-          sources: [mockTOCSource],
-          helpLink: 'http://help.com',
-          default_group: 'test_group'
-        }
-      }
-      
       // Use setState to simulate initialization from config
       useTOCStore.setState({
         tocType: 'FOLDER',

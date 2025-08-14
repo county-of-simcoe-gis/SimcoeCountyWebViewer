@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import TOC from "@/components/TOC/TOC";
 import { useAppStore } from "@/stores/appStore";
 import { useTOCStore } from "@/stores/tocStore";
+import type { AppConfig } from "@/utils/config";
 
 describe("TOC", () => {
   it("initializes from config and shows header controls", async () => {
@@ -10,8 +11,8 @@ describe("TOC", () => {
     useAppStore.setState({
       config: {
         toc: { tocType: "LIST", sources: [], helpLink: "", default_group: "" },
-      } as any,
-    } as any);
+      } as unknown as AppConfig,
+    });
 
     render(<TOC visible />);
 

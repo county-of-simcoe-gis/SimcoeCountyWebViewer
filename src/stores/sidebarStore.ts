@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import type { SidebarComponent } from '@/utils/config'
 
-interface SidebarItem {
+export interface SidebarItem {
   id: string
   name: string
   type: 'theme' | 'tool'

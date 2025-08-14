@@ -15,6 +15,7 @@ const mockToolComponents: SidebarComponent[] = [
     id: 2,
     name: 'Disabled_Tool',
     componentName: 'DisabledTool',
+    description: 'Disabled tool',
     imageName: 'disabled.png',
     enabled: false,
   },
@@ -25,6 +26,7 @@ const mockThemeComponents: SidebarComponent[] = [
     id: 1,
     name: 'Forestry',
     componentName: 'ForestryTheme',
+    description: 'Forestry theme',
     imageName: 'forestry.png',
     enabled: true,
   },
@@ -42,7 +44,7 @@ beforeEach(() => {
     activePanelId: null,
     panelMinimized: false,
     emitSidebarChanged: undefined,
-  }, true)
+  })
 })
 
 describe('sidebarStore', () => {

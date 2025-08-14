@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
+import { renderHook } from '@testing-library/react'
 import { useAppStore } from '@/stores/appStore'
 import type { AppConfig } from '@/utils/config'
 
@@ -17,7 +17,7 @@ beforeEach(() => {
       version: '1.0.0',
       homepage: ''
     }
-  }, true)
+  })
 })
 
 describe('appStore', () => {

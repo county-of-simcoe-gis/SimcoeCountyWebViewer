@@ -5,7 +5,7 @@ import { useEventStore } from '@/stores/eventStore'
 beforeEach(() => {
   useEventStore.setState({
     listeners: []
-  }, true)
+  })
 })
 
 describe('eventStore', () => {
