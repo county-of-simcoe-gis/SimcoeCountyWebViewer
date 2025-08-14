@@ -234,6 +234,13 @@ export function getConfig(): AppConfig | null {
 }
 
 /**
+ * Reset the global configuration (for testing)
+ */
+export function resetConfig(): void {
+  globalConfig = null;
+}
+
+/**
  * Get configuration for a specific component (tool or theme)
  */
 export function getComponentConfig(component: 'tools' | 'themes', name: string): SidebarComponent | undefined {

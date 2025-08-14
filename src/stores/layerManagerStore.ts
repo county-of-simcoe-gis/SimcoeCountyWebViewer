@@ -218,19 +218,19 @@ export const useLayerManagerStore = create<LayerManagerState>()(
       }
       
       set((draft) => {
-        // Remove from source category
+        // Remove from source category and take a draft copy
         const sourceIndex = draft.layers[sourceCategory!].findIndex(l => l.id === layerId)
-        draft.layers[sourceCategory!].splice(sourceIndex, 1)
+        const [removedLayer] = draft.layers[sourceCategory!].splice(sourceIndex, 1)
         
-        // Update category
-        managedLayer!.category = newCategory
+        // Update category on the draft object
+        removedLayer.category = newCategory
         
         // Insert into new category
         const insertIndex = newIndex !== undefined 
           ? Math.min(newIndex, draft.layers[newCategory].length)
           : draft.layers[newCategory].length
         
-        draft.layers[newCategory].splice(insertIndex, 0, managedLayer!)
+        draft.layers[newCategory].splice(insertIndex, 0, removedLayer)
         
         // Reorder both categories
         draft.layers[sourceCategory!].forEach((layer, idx) => {
