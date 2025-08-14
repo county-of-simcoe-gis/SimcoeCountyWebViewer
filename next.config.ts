@@ -2,9 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: 'standalone',
-  experimental: {
-    outputFileTracingRoot: process.cwd(),
-  },
+  /* config options here */
 };
 
 export default nextConfig;
