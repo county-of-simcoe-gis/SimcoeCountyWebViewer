@@ -13,6 +13,8 @@ const Navigation = (props) => {
   const [extentHistory, setExtentHistory] = useState([0, 1]);
   const [showGridButton, setShowGridButton] = useState(true);
   const [showGrid, setShowGrid] = useState(false);
+  const [showZoomInOut, setShowZoomInOut] = useState(true);
+  const [showExtentHistory, setShowExtentHistory] = useState(true);
   const graticuleRef = useRef(
     new Graticule({
       // the style to use for the lines, optional.
@@ -39,6 +41,8 @@ const Navigation = (props) => {
       setShowCurrentLocation(window.mapControls && window.mapControls.currentLocation);
       setShowZoomExtent(window.mapControls && window.mapControls.zoomExtent);
       setShowGridButton(window.mapControls && window.mapControls.showGrid);
+      setShowZoomInOut(window.mapControls && window.mapControls.zoomInOut);
+      setShowExtentHistory(window.mapControls && window.mapControls.extentHistory);
     });
     return () => {
       window.emitter.removeListener("sidebarChanged", (isSidebarOpen) => sidebarChanged(isSidebarOpen));
@@ -118,56 +122,70 @@ const Navigation = (props) => {
     <div>
       <div className="map-theme">
         <div className={containerClassName}>
-          <div
-            className="zoomButton"
-            title="Zoom In"
-            onClick={() => {
-              window.map.getView().setZoom(window.map.getView().getZoom() + 1);
-            }}
-          >
-            +
-          </div>
-          <div
-            className="zoomButton"
-            title="Zoom Out"
-            onClick={() => {
-              window.map.getView().setZoom(window.map.getView().getZoom() - 1);
-            }}
-          >
-            -
-          </div>
-          <div className="extentHistory">
-            <div
-              className={`prevExtentButton ${extentHistory[0] === 0 ? "disabled" : ""}`}
-              title="Previous Extent"
-              onClick={() => {
-                helpers.addAppStat("ExtentHistory", "Button press previous");
-                helpers.extentHistory("previous");
-              }}
-            >
-              <FaBackward size={15} />
-            </div>
-            <div
-              className={`nextExtentButton ${extentHistory[0] === extentHistory[1] - 1 ? "disabled" : ""}`}
-              title="Next Extent"
-              onClick={() => {
-                helpers.addAppStat("ExtentHistory", "Button press next");
-                helpers.extentHistory("next");
-              }}
-            >
-              <FaForward size={15} />
-            </div>
-          </div>
+          {showZoomInOut && (
+            <>
+              <div
+                className="zoomButton"
+                title="Zoom In"
+                onClick={() => {
+                  window.map.getView().setZoom(window.map.getView().getZoom() + 1);
+                }}
+              >
+                +
+              </div>
+              <div
+                className="zoomButton"
+                title="Zoom Out"
+                onClick={() => {
+                  window.map.getView().setZoom(window.map.getView().getZoom() - 1);
+                }}
+              >
+                -
+              </div>
+            </>
+          )}
+          {showExtentHistory && (
+            <>
+              <div className="extentHistory">
+                <div
+                  className={`prevExtentButton ${extentHistory[0] === 0 ? "disabled" : ""}`}
+                  title="Previous Extent"
+                  onClick={() => {
+                    helpers.addAppStat("ExtentHistory", "Button press previous");
+                    helpers.extentHistory("previous");
+                  }}
+                >
+                  <FaBackward size={15} />
+                </div>
+                <div
+                  className={`nextExtentButton ${extentHistory[0] === extentHistory[1] - 1 ? "disabled" : ""}`}
+                  title="Next Extent"
+                  onClick={() => {
+                    helpers.addAppStat("ExtentHistory", "Button press next");
+                    helpers.extentHistory("next");
+                  }}
+                >
+                  <FaForward size={15} />
+                </div>
+              </div>
+            </>
+          )}
 
-          <div className="fullExtentButton" onClick={zoomFullExtent}>
-            <div className="fullExtentContent" />
-          </div>
-          <div className="zoomToCurrentLocationButton" onClick={zoomToCurrentLocation}>
-            <div className="zoomToCurrentLocationContent" />
-          </div>
-          <div className="showGridButton" onClick={onShowGridToggle} title={`${showGrid ? "Hide" : "Show"} map grid`}>
-            <div className={`showGridContent${showGrid ? " active" : ""}`}>{showGrid ? <MdGridOff size={25} color={"#838383"} /> : <MdGridOn size={25} color={"#838383"} />}</div>
-          </div>
+          {showZoomExtent && (
+            <div className="fullExtentButton" onClick={zoomFullExtent}>
+              <div className="fullExtentContent" />
+            </div>
+          )}
+          {showCurrentLocation && (
+            <div className="zoomToCurrentLocationButton" onClick={zoomToCurrentLocation}>
+              <div className="zoomToCurrentLocationContent" />
+            </div>
+          )}
+          {showGridButton && (
+            <div className="showGridButton" onClick={onShowGridToggle} title={`${showGrid ? "Hide" : "Show"} map grid`}>
+              <div className={`showGridContent${showGrid ? " active" : ""}`}>{showGrid ? <MdGridOff size={25} color={"#838383"} /> : <MdGridOn size={25} color={"#838383"} />}</div>
+            </div>
+          )}
         </div>
       </div>
     </div>

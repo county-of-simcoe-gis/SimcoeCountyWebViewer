@@ -10,7 +10,7 @@ const feedbackTemplate = (url, xmin, xmax, ymin, ymax, centerx, centery, scale) 
 
 const Header = (props) => {
   const [logoImage, setLogoImage] = useState("");
-
+  const [draft, setDraft] = useState(false);
   window.emitter.addListener("feedback", () => onFeedbackClick());
 
   // ON LOGO IMAGE CHANGE
@@ -23,6 +23,7 @@ const Header = (props) => {
   useEffect(() => {
     helpers.waitForLoad("settings", Date.now(), 30, () => {
       setLogoImage(window.config.headerLogoImageName);
+      if (window.config.draft) setDraft(window.config.draft);
     });
   }, []);
 
@@ -99,7 +100,7 @@ const Header = (props) => {
       <div id="sc-header-bar-button">
         <img src={require("./images/bar-button.png")} alt="Header Logo" />
       </div>
-      <div id="sc-header-bar-logo">
+      <div id="sc-header-bar-logo" className={`${draft ? "sc-draft-header" : ""}`}>
         <img src={logoImage === "" || logoImage.toString().substring(0, 4).toUpperCase() === "HTTP" ? logoImage : require("./images/" + logoImage)} alt="Header Logo" />
       </div>
       <div id="sc-header-search-container">

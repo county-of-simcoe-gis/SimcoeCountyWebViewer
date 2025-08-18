@@ -8,6 +8,7 @@ const FooterTools = (props) => {
   const [scale, setScale] = useState("");
   const [basemapType, setBasemapType] = useState("IMAGERY");
   const [scaleSelector, setScaleSelector] = useState(false);
+  const [showScale, setShowScale] = useState(true);
   const mapScales = [
     { label: "1:250", value: 250 },
     { label: "1:500", value: 500 },
@@ -34,6 +35,7 @@ const FooterTools = (props) => {
     });
     helpers.waitForLoad("settings", Date.now(), 30, () => {
       setScaleSelector(window.mapControls.scaleSelector);
+      setShowScale(window.mapControls.scale);
     });
 
     return () => {
@@ -99,7 +101,7 @@ const FooterTools = (props) => {
         </div>
       ) : (
         <div id="sc-scale-bar-text" className={basemapType === "IMAGERY" ? "sc-map-footer-scale-only imagery" : "sc-map-footer-scale-only topo"}>
-          {"Scale: 1:" + scale}
+          {showScale && "Scale: 1:" + scale}
         </div>
       )}
     </div>

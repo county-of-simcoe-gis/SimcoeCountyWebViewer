@@ -58,7 +58,7 @@ class CommercialRealEstate extends Component {
   componentDidMount() {
     helpers.waitForLoad("settings", Date.now(), 30, () => {
       let themeConfig = localConfig;
-      const globalConfig = helpers.getConfig("THEMES", "Commercial Real Estate");
+      const globalConfig = helpers.getConfig("THEMES", "CommercialRealEstate");
       if (globalConfig.config !== undefined) {
         themeConfig = helpers.mergeObj(themeConfig, globalConfig.config);
         this.setState({ toggleLayers: themeConfig.toggleLayers });

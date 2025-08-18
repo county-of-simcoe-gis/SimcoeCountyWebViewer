@@ -257,6 +257,8 @@
     "World_Topo_Map",
     "Topo_Cache",
     "Streets_Cache",
+    "Ortho_2024_Cache",
+    "Ortho_2023_Cache",
     "Ortho_2022_Cache",
     "Ortho_2018_Cache",
     "Ortho_2016_Cache",
