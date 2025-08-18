@@ -1521,6 +1521,7 @@ export function loadConfig(configSecured = {}, callback) {
 
   const queryString = window.location.search;
   let mapId = null;
+  let mapVersion = null;
   let loaderType = "DEFAULT"; //MAPID, ARCGIS, GEOSERVER
   let geoserverUrl = config.toc.geoserverLayerGroupsUrl;
   let geoserverUrlType = config.toc.geoserverLayerGroupsUrlType;
@@ -1530,6 +1531,7 @@ export function loadConfig(configSecured = {}, callback) {
   if (queryString.length > 0) {
     const urlParams = new URLSearchParams(queryString);
     const url_mapId = urlParams.get("MAP_ID");
+    const url_mapVersion = urlParams.get("MAP_VERSION");
     const url_geoserverUrlType = urlParams.get("GEO_TYPE");
     const url_tocType = urlParams.get("TOCTYPE");
     const url_geoserverUrl = urlParams.get("GEO_URL");
@@ -1541,6 +1543,7 @@ export function loadConfig(configSecured = {}, callback) {
       mapId = url_mapId.toLowerCase();
       loaderType = "MAPID";
       config["mapId"] = mapId;
+      config["mapVersion"] = url_mapVersion;
     }
     if (viewerMode !== null) {
       config["viewerMode"] = viewerMode;
@@ -1577,10 +1580,12 @@ export function loadConfig(configSecured = {}, callback) {
 
   config.toc["loaderType"] = loaderType;
   if (mapId === null) mapId = config.mapId;
+  if (mapVersion === null) mapVersion = config.mapVersion;
   if (config.useMapConfigApi || (mapId !== null && mapId !== undefined && mapId.trim() !== "")) {
     config.toc["loaderType"] = "MAPID";
     const mapSettingURL = (apiUrl, mapId) => {
       if (mapId === null || mapId === undefined || mapId.trim() === "") return `${apiUrl}/map/default`;
+      else if (mapVersion) return `${apiUrl}/map/${mapId}/${mapVersion}`;
       else return `${apiUrl}/map/${mapId}`;
     };
     const apiUrl = configSecured.apiUrlSecured ? `${configSecured.apiUrlSecured}secure` : `${config.apiUrl}public`;
@@ -1595,6 +1600,7 @@ export function loadConfig(configSecured = {}, callback) {
         return;
       }
       const settings = JSON.parse(result.json);
+      if (result.published === false) settings.draft = true;
       if (settings.name !== undefined) document.title = settings.name;
       if (settings.zoom_level !== undefined) {
         settings["defaultZoom"] = settings.zoom_level;
@@ -1656,7 +1662,9 @@ export function getConfig(component, name) {
     default:
       break;
   }
-  return configArray.filter((item) => item.name !== undefined && item.name.toLowerCase() === name.toLowerCase())[0];
+  return configArray.filter(
+    (item) => (item.name !== undefined && item.name.toLowerCase() === name.toLowerCase()) || (item.componentName !== undefined && item.componentName.toLowerCase() === name.toLowerCase())
+  )[0];
 }
 
 export function mergeObjArray(targetArray, sourceArray) {

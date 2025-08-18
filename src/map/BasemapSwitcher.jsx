@@ -86,14 +86,36 @@ const BasemapSwitcher = (props) => {
     setImagerySliderMax(baseMapServicesOptions.imageryServices.length - 1);
     setImagerySliderDefaultValue(baseMapServicesOptions.imageryServices.length - 1);
     setImagerySliderValue(baseMapServicesOptions.imageryServices.length - 1);
-    updateImageryLayers(baseMapServicesOptions.imageryServices.length - 1);
-    setActiveButton(baseMapServicesOptions.defaultButton);
+    
+    // Load all the layers (cleanup is now handled in the context)
     loadTopoLayers(baseMapServicesOptions);
     // loadBathymetry(baseMapServicesOptions);
     loadWorldImagery(baseMapServicesOptions);
     loadStreets(baseMapServicesOptions);
     loadImageryLayers(baseMapServicesOptions);
-    setActiveButton(baseMapServicesOptions.defaultButton || "topo");
+    
+    // Set the active button from config
+    const newActiveButton = baseMapServicesOptions.defaultButton || "topo";
+    setActiveButton(newActiveButton);
+    
+    // For initial load, enable the appropriate basemap based on default button
+    // For subsequent updates, respect the current active button
+    const buttonToActivate = isLoadedRef.current ? activeButton : newActiveButton;
+    
+    if (buttonToActivate === "imagery") {
+      // Enable imagery (safety checks will handle if layers aren't ready yet)
+      updateImageryLayers(baseMapServicesOptions.imageryServices.length - 1);
+      if (streetsLayerRef.current) streetsLayerRef.current.setVisible(streetsCheckbox);
+      if (worldImageryLayerRef.current) worldImageryLayerRef.current.setVisible(true);
+      setTopoLayerVisiblity(-1);
+    } else {
+      // Enable topo and ensure imagery is disabled
+      updateImageryLayers(-1);
+      if (streetsLayerRef.current) streetsLayerRef.current.setVisible(false);
+      if (worldImageryLayerRef.current) worldImageryLayerRef.current.setVisible(false);
+      setTopoLayerVisiblity(topoActiveIndex);
+    }
+    
     isLoadedRef.current = true;
     helpers.addIsLoaded("basemap");
   }, [baseMapServicesOptions]);
@@ -109,7 +131,7 @@ const BasemapSwitcher = (props) => {
 
       if (imagerySliderOpen === "TRUE") setImageryPanelOpen(true);
 
-      if (name !== undefined) {
+      if (name !== undefined && imageryLayersRef.current && imageryLayersRef.current.length > 0) {
         for (let index = 0; index < imageryLayersRef.current.length; index++) {
           const layer = imageryLayersRef.current[index];
           const layerName = layer.getProperties().name.toUpperCase();
@@ -124,12 +146,14 @@ const BasemapSwitcher = (props) => {
     } else if (basemap === "TOPO") {
       enableTopo();
 
-      for (let index = 0; index < topoLayersRef.current.length; index++) {
-        let layer = topoLayersRef.current[index];
-        const layerName = layer.getProperties().name;
-        if (layerName.toUpperCase() === name) {
-          setTopoActiveIndex(index);
-          setTopoLayerVisiblity(index);
+      if (name !== undefined && topoLayersRef.current && topoLayersRef.current.length > 0) {
+        for (let index = 0; index < topoLayersRef.current.length; index++) {
+          let layer = topoLayersRef.current[index];
+          const layerName = layer.getProperties().name;
+          if (layerName.toUpperCase() === name) {
+            setTopoActiveIndex(index);
+            setTopoLayerVisiblity(index);
+          }
         }
       }
     }
@@ -137,10 +161,18 @@ const BasemapSwitcher = (props) => {
 
   // CALLED WHEN SLIDING OR TO RESET
   const updateImageryLayers = (value) => {
+    // Safety check - ensure imagery layers exist before trying to update them
+    if (!imageryLayersRef.current || imageryLayersRef.current.length === 0) {
+      return;
+    }
+
     for (let index = 0; index < imageryLayersRef.current.length; index++) {
       let layer = imageryLayersRef.current[index];
-      if (value === -1) layer.setVisible(false);
-      else {
+      if (value === -1) {
+        // Completely disable all imagery layers for performance
+        layer.setVisible(false);
+        layer.setOpacity(0);
+      } else {
         const layerIndex = layer.getProperties().index;
         const indexRatio = 1 - Math.abs(layerIndex - value);
         if (layerIndex === value) {
@@ -212,9 +244,10 @@ const BasemapSwitcher = (props) => {
   };
 
   const disableImagery = (value) => {
-    // DISABLE IMAGERY
+    // DISABLE IMAGERY - ensure all imagery layers are completely disabled for performance
     if (streetsLayerRef.current) streetsLayerRef.current.setVisible(false);
     if (worldImageryLayerRef.current) worldImageryLayerRef.current.setVisible(false);
+    if (bathymetryLayerRef.current) bathymetryLayerRef.current.setVisible(false);
     setImageryPanelOpen(false);
     updateImageryLayers(-1);
   };
@@ -278,6 +311,11 @@ const BasemapSwitcher = (props) => {
 
   // ADJUST VISIBILITY
   const setTopoLayerVisiblity = (activeIndex) => {
+    // Safety check - ensure topo layers exist before trying to update them
+    if (!topoLayersRef.current || topoLayersRef.current.length === 0) {
+      return;
+    }
+
     for (let index = 0; index < topoLayersRef.current.length; index++) {
       let layer = topoLayersRef.current[index];
       const layerIndex = layer.getProperties().index;

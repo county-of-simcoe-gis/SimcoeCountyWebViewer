@@ -11,6 +11,8 @@ const feedbackTemplate = (url, xmin, xmax, ymin, ymax, centerx, centery, scale) 
 class MenuButton extends Component {
   state = {
     isOpen: false,
+    controlsVisible: true,
+    gitHubButtonVisible: true,
   };
 
   componentDidMount() {
@@ -34,6 +36,7 @@ class MenuButton extends Component {
       this.themes = this.getThemes();
       this.others = this.getOthers();
       this.tools = this.getTools();
+      this.setState({ controlsVisible: this.controlsVisible(), gitHubButtonVisible: this.gitHubButtonVisible() });
     });
   }
 
@@ -106,6 +109,28 @@ class MenuButton extends Component {
     if (!this.state.isOpen) return "sc-hidden";
     else if (window.sidebarOpen) return "sc-menu-button-list-container sideBarOpen";
     else return "sc-menu-button-list-container";
+  };
+
+  controlsVisible = () => {
+    let controls = {
+      zoomInOut: window.mapControls.zoomInOut !== undefined ? window.mapControls.zoomInOut : true,
+      currentLocation: window.mapControls.currentLocation !== undefined ? window.mapControls.currentLocation : true,
+      zoomExtent: window.mapControls.zoomExtent !== undefined ? window.mapControls.zoomExtent : true,
+      extentHistory: window.mapControls.extentHistory !== undefined ? window.mapControls.extentHistory : false,
+      showGrid: window.mapControls.showGrid !== undefined ? window.mapControls.showGrid : false,
+    };
+    return (
+      controls.gitHubButton === true ||
+      controls.zoomInOut === true ||
+      controls.currentLocation === true ||
+      controls.zoomExtent === true ||
+      controls.extentHistory === true ||
+      controls.showGrid === true
+    );
+  };
+
+  gitHubButtonVisible = () => {
+    return window.mapControls.gitHubButton !== undefined ? window.mapControls.gitHubButton : true;
   };
   getIconToggleState = () => {
     let currentState = true;
@@ -191,7 +216,13 @@ class MenuButton extends Component {
     const iconToggleState = this.getIconToggleState();
     return (
       <div
-        className={"sc-menu-button-main-container" + (this.props.hidden ? " sc-hidden" : "") + (this.props.className !== undefined && this.props.className !== "" ? " " + this.props.className : "")}
+        className={
+          "sc-menu-button-main-container" +
+          (this.props.hidden ? " sc-hidden" : "") +
+          (this.props.className !== undefined && this.props.className !== "" ? " " + this.props.className : "") +
+          (this.state.controlsVisible ? "" : " no-controls") +
+          (this.state.gitHubButtonVisible ? "" : " no-github-button")
+        }
         alt="More Options"
         title="More Options"
       >

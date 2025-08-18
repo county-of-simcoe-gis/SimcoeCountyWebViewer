@@ -28,6 +28,14 @@ export function BasemapSwitcherProvider({ children }) {
   }, []);
 
   const loadImageryLayers = (basemapConfig) => {
+    // CLEAN UP EXISTING IMAGERY LAYERS
+    if (imageryLayersRef.current && imageryLayersRef.current.length > 0) {
+      imageryLayersRef.current.forEach((layer) => {
+        window.map.removeLayer(layer);
+      });
+      imageryLayersRef.current = [];
+    }
+
     // LOAD IMAGERY LAYERS
     let layerList = [];
     let index = 0;
@@ -68,6 +76,14 @@ export function BasemapSwitcherProvider({ children }) {
   };
 
   const loadTopoLayers = (basemapConfig) => {
+    // CLEAN UP EXISTING TOPO LAYERS
+    if (topoLayersRef.current && topoLayersRef.current.length > 0) {
+      topoLayersRef.current.forEach((layer) => {
+        window.map.removeLayer(layer);
+      });
+      topoLayersRef.current = [];
+    }
+
     // LOAD TOPO LAYERS
     let index = 0;
     let basemapList = [];
@@ -256,6 +272,12 @@ export function BasemapSwitcherProvider({ children }) {
     topoLayersRef.current = basemapList;
   };
   const loadWorldImagery = (basemapConfig) => {
+    // CLEAN UP EXISTING WORLD IMAGERY LAYER
+    if (worldImageryLayerRef.current) {
+      window.map.removeLayer(worldImageryLayerRef.current);
+      worldImageryLayerRef.current = null;
+    }
+
     // LOAD WORLD IMAGERY LAYER
     if (basemapConfig.worldImageryService !== undefined) {
       LayerHelpers.getLayer(
@@ -277,6 +299,12 @@ export function BasemapSwitcherProvider({ children }) {
     }
   };
   const loadBathymetry = (basemapConfig) => {
+    // CLEAN UP EXISTING BATHYMETRY LAYER
+    if (bathymetryLayerRef.current) {
+      window.map.removeLayer(bathymetryLayerRef.current);
+      bathymetryLayerRef.current = null;
+    }
+
     // LOAD BATHYMETRY LAYER
     if (basemapConfig.bathymetryService.url !== undefined) {
       LayerHelpers.getLayer(
@@ -301,6 +329,12 @@ export function BasemapSwitcherProvider({ children }) {
     }
   };
   const loadStreets = (basemapConfig) => {
+    // CLEAN UP EXISTING STREETS LAYER
+    if (streetsLayerRef.current) {
+      window.map.removeLayer(streetsLayerRef.current);
+      streetsLayerRef.current = null;
+    }
+
     // LOAD STREETS LAYER
     if (basemapConfig.streetService.url !== undefined) {
       LayerHelpers.getLayer(

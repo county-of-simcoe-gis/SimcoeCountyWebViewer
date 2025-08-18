@@ -94,6 +94,8 @@ const SCMap = (props) => {
         zoom: 2,
       }),
       interactions: defaultInteractions({
+        altShiftDragRotate:false, 
+        pinchRotate:false,
         keyboard: true,
         mouseWheelZoom: false,
       }).extend([
@@ -108,6 +110,23 @@ const SCMap = (props) => {
     helpers.addIsLoaded("map_control");
 
     helpers.waitForLoad(["settings", "map_control"], Date.now(), 30, () => {
+      window.mapControls = { ...window.mapControls, ...window.config.controls };
+      if (window.mapControls && window.mapControls.rotate) {
+        map.addInteraction(
+          new PinchRotate({
+            altShiftDragRotate: true,
+            pinchRotate: true,
+          })
+        );
+        map.addInteraction(
+          new DragRotate({
+            altShiftDragRotate: true,
+            pinchRotate: true,
+          })
+        );
+        
+      }
+      
       setGitHubFollowHandle(window.config.gitHubFollowHandle);
       setGitHubFollowUrl(window.config.gitHubFollowUrl);
       setGitHubFollowHandleLabel(window.config.gitHubFollowHandle + " on GitHub");

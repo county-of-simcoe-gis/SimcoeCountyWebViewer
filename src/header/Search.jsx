@@ -47,6 +47,7 @@ const Search = (props) => {
   const [municipality, setMunicipality] = useState(undefined);
   const [placeHolderText, setPlaceHolderText] = useState("Search...");
   const [hideTypeDropDown, setHideTypeDropDown] = useState(false);
+  const [hideSearch, setHideSearch] = useState(false);
   const searchResultsRef = useRef([]);
   // VECTOR LAYERS
   const searchGeoLayerRef = useRef(null);
@@ -150,6 +151,8 @@ const Search = (props) => {
       if (muni) setMunicipality(muni);
       apiUrlRef.current = window.config.apiUrl;
       setStorageKey(window.config.storageKeys.SearchHistory);
+      if (window.config.hideSearch !== undefined) setHideSearch(window.config.hideSearch);
+
       if (window.config.search) {
         if (window.config.search.placeHolder !== undefined) setPlaceHolderText(window.config.search.placeHolder);
         if (window.config.search.hideTypes !== undefined) setHideTypeDropDown(window.config.search.hideTypes);
@@ -166,7 +169,9 @@ const Search = (props) => {
         items.push({ label: "Tool", value: "Tool" });
         items.push({ label: "Theme", value: "Theme" });
         setSearchTypes(items);
-        setSelectedType(items[0]);
+
+        if (window.config.search.defaultSearchType !== undefined) setSelectedType(window.config.search.defaultSearchType);
+        else setSelectedType(items[0]);
       });
     });
     return () => {
@@ -760,7 +765,7 @@ const Search = (props) => {
   const [loading, setLoading] = useState(false);
 
   return (
-    <div>
+    <div className={hideSearch ? "sc-hidden" : ""}>
       <div className={hideTypeDropDown ? "sc-hidden" : "sc-search-types-container"} tabIndex="-1">
         <Select tabIndex="-1" styles={groupsDropDownStyles.current} isSearchable={false} onChange={onTypeDropDownChange} options={searchTypes} value={selectedType} />
       </div>
@@ -855,6 +860,7 @@ const Search = (props) => {
             <TextField
               classes={{ root: "sc-search-textbox-input-mui" }}
               hiddenLabel
+              placeholder={placeHolderText}
               {...params}
               InputProps={{
                 ...params.InputProps,
