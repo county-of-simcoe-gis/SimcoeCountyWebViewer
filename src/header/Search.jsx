@@ -170,8 +170,10 @@ const Search = (props) => {
         items.push({ label: "Theme", value: "Theme" });
         setSearchTypes(items);
 
-        if (window.config.search.defaultSearchType !== undefined) setSelectedType(window.config.search.defaultSearchType);
-        else setSelectedType(items[0]);
+        //if (window.config.search.defaultSearchType !== undefined) setSelectedType(window.config.search.defaultSearchType);
+        //else setSelectedType(items[0]);
+        //DISABLED DUE TO ERROR IN ZONING MAPS
+        setSelectedType(items[0]);
       });
     });
     return () => {
