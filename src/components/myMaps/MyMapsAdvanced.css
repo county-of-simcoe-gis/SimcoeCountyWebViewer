@@ -1,0 +1,381 @@
+#sc-mymaps-advanced {
+  margin-top: auto; /* Push to bottom */
+  position: relative;
+}
+
+.sc-mymaps-advanced-trigger {
+  background: #e9ecef;
+  border: 1px solid #adb5bd;
+  border-radius: 4px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #495057;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin: 0;
+  outline: none;
+  transition: all 0.4s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.sc-mymaps-advanced-trigger:hover {
+  background-color: #d6d8db;
+}
+
+.sc-mymaps-trigger-icon {
+  margin-right: 8px;
+}
+
+.sc-mymaps-trigger-arrow {
+  font-size: 12px;
+  transition: transform 0.4s ease;
+  color: #6c757d;
+}
+
+.sc-mymaps-trigger-arrow.open {
+  transform: rotate(180deg);
+}
+
+/* When panel is open, adjust trigger to connect with content above */
+.sc-mymaps-advanced-trigger.open {
+  border-radius: 0 0 4px 4px;
+  border-top-color: #dee2e6;
+}
+
+.sc-mymaps-advanced-content {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  border: 1px solid #dee2e6;
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  background: #fff;
+  padding: 0 12px;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
+  z-index: 10001; /* Same as advanced panel */
+  
+  /* Smooth transitions */
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.6s ease-in-out, opacity 0.5s ease-in-out, padding 0.6s ease-in-out;
+}
+
+.sc-mymaps-advanced-content.open {
+  max-height: 80vh; /* Large enough for content */
+  opacity: 1;
+  padding: 12px;
+}
+
+.sc-mymaps-advanced-content.closed {
+  max-height: 0;
+  opacity: 0;
+  padding: 0 12px;
+}
+
+.sc-mymaps-advanced-import-container {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.sc-mymaps-advanced-main-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+.sc-mymaps-advanced-import-input,
+#sc-mymaps-advanced .sc-editable {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-size: 12px;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+}
+
+.sc-mymaps-advanced-import-input:focus,
+#sc-mymaps-advanced .sc-editable:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+#sc-mymaps-advanced .sc-button {
+  background: #007bff;
+  color: white;
+  border: 1px solid #007bff;
+  border-radius: 3px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  margin-right: 4px;
+  transition: background-color 0.2s ease;
+}
+
+#sc-mymaps-advanced .sc-button:hover {
+  background: #0056b3;
+  border-color: #0056b3;
+}
+
+#sc-mymaps-advanced .sc-button:disabled {
+  background: #6c757d;
+  border-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.sc-mymaps-advanced-import-button {
+  margin-bottom: 4px;
+}
+
+.sc-mymaps-advanced-edit-container {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.sc-mymaps-advanced-switch-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+.sc-mymaps-advanced-switch-label.on {
+  color: #007bff;
+}
+
+.sc-mymaps-advanced-switch {
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.sc-mymaps-advanced-edit-radio {
+  margin-right: 4px;
+  cursor: pointer;
+}
+
+.sc-mymaps-advanced-edit-container label {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  color: #495057;
+  cursor: pointer;
+  user-select: none;
+}
+
+.sc-mymaps-advanced-edit-container label:hover {
+  color: #007bff;
+}
+
+/* Large action buttons */
+.sc-mymaps-advanced-buttons-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+}
+
+.sc-mymaps-advanced-large-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #f8f9fa;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 45px;
+}
+
+.sc-mymaps-advanced-large-button:hover:not(:disabled) {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.sc-mymaps-advanced-large-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.sc-mymaps-advanced-large-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f8f9fa;
+  border-color: #dee2e6;
+}
+
+.sc-mymaps-advanced-large-button.delete-all {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.sc-mymaps-advanced-large-button.delete-all:hover:not(:disabled) {
+  background: #f8d7da;
+  border-color: #dc3545;
+}
+
+.sc-mymaps-advanced-large-button.additional-tools {
+  color: #28a745;
+  border-color: #28a745;
+}
+
+.sc-mymaps-advanced-large-button.additional-tools:hover:not(:disabled) {
+  background: #d4edda;
+  border-color: #28a745;
+}
+
+.sc-mymaps-button-icon {
+  margin-right: 6px;
+}
+
+/* Additional Tools Menu */
+.sc-mymaps-additional-tools-container {
+  position: relative;
+}
+
+.sc-mymaps-additional-menu {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 10002; /* Above the advanced panel */
+  min-width: 180px;
+  margin-bottom: 4px;
+}
+
+.sc-mymaps-menu-item {
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #495057;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.sc-mymaps-menu-item:last-child {
+  border-bottom: none;
+}
+
+.sc-mymaps-menu-item:hover {
+  background: #f8f9fa;
+  color: #007bff;
+}
+
+.sc-mymaps-menu-item:active {
+  background: #e9ecef;
+}
+
+.sc-mymaps-menu-separator {
+  height: 1px;
+  background: #dee2e6;
+  margin: 4px 0;
+}
+
+.sc-mymaps-menu-icon {
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.sc-mymaps-menu-arrow {
+  margin-left: auto;
+  font-size: 10px;
+  color: #6c757d;
+}
+
+/* Export submenu is now rendered as portal */
+
+.sc-mymaps-submenu-item {
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #495057;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
+}
+
+.sc-mymaps-submenu-item:last-child {
+  border-bottom: none;
+}
+
+.sc-mymaps-submenu-item:hover {
+  background: #f8f9fa;
+  color: #007bff;
+}
+
+.sc-mymaps-submenu-item:active {
+  background: #e9ecef;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .sc-mymaps-advanced-content {
+    padding: 8px;
+  }
+  
+  .sc-mymaps-advanced-import-container,
+  .sc-mymaps-advanced-edit-container {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+  }
+  
+  .sc-mymaps-advanced-import-button {
+    margin-bottom: 2px;
+    margin-right: 2px;
+  }
+
+  .sc-mymaps-advanced-buttons-container {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  
+  .sc-mymaps-advanced-large-button {
+    padding: 10px 12px;
+    font-size: 12px;
+    min-height: 40px;
+  }
+  
+  .sc-mymaps-advanced-content {
+    max-height: 60vh; /* Prevent content from going off screen */
+    overflow-y: auto;
+  }
+  
+  .sc-mymaps-additional-menu {
+    max-height: 40vh;
+    overflow-y: auto;
+    min-width: 150px;
+  }
+  
+  /* Export submenu positioning is now handled by portal */
+}

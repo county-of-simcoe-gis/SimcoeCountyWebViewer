@@ -10,6 +10,8 @@ import Sidebar from "@/components/Sidebar";
 import SidebarSlim from "@/components/SidebarSlim";
 import MapContainer from "@/components/MapContainer";
 import LoadingScreen from "@/components/LoadingScreen";
+import MyMapsService from "@/components/myMaps/MyMapsService";
+import GlobalDrawingOptionsPopup from "@/components/myMaps/GlobalDrawingOptionsPopup";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -83,6 +85,12 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Main Map */}
       <MapContainer />
+
+      {/* MyMaps Service - runs in background to manage map features */}
+      <MyMapsService />
+
+      {/* Global Drawing Options Popup - available even when MyMaps panel is closed */}
+      <GlobalDrawingOptionsPopup />
 
       {/* Additional content */}
       {children}

@@ -1,0 +1,71 @@
+.sc-mymaps-color-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  margin-bottom: 8px;
+}
+
+.sc-mymaps-color-bar.sc-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.sc-mymaps-color-item {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #ccc;
+  border-radius: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.sc-mymaps-color-item:hover {
+  border-color: #999;
+  transform: scale(1.1);
+}
+
+.sc-mymaps-color-item.active {
+  border-color: #007bff;
+  border-width: 3px;
+}
+
+.sc-mymaps-color-checkmark {
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+/* Special handling for white color */
+.sc-mymaps-color-item[style*="background-color: #ffffff"] .sc-mymaps-color-checkmark,
+.sc-mymaps-color-item[style*="background-color: #fff"] .sc-mymaps-color-checkmark {
+  color: #000;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.7);
+}
+
+/* Focus styles for accessibility */
+.sc-mymaps-color-item:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+/* Responsive layout */
+@media (max-width: 768px) {
+  .sc-mymaps-color-bar {
+    justify-content: center;
+    gap: 3px;
+    padding: 6px;
+  }
+  
+  .sc-mymaps-color-item {
+    width: 20px;
+    height: 20px;
+  }
+}

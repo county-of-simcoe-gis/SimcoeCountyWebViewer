@@ -159,7 +159,7 @@ export const useLayerManagerStore = create<LayerManagerState>()(
         draft.nextZIndex[category] = calculateZIndex(category, draft.layers[category].length)
       })
       
-      console.log(`🔧 Added layer "${name}" to category "${category}" with z-index ${zIndex}`)
+      // console.log(`🔧 Added layer "${name}" to category "${category}" with z-index ${zIndex}`)
       
       return id
     },
@@ -352,23 +352,23 @@ export const useLayerManagerStore = create<LayerManagerState>()(
     
     // Debug helper to log current layer order
     logLayerOrder: () => {
-      const state = get()
-      console.group('🗺️ Layer Order')
+      // const state = get()
+      // console.group('🗺️ Layer Order')
       
-      Object.keys(state.layers).forEach((category) => {
-        const categoryKey = category as LayerCategory
-        const layers = state.layers[categoryKey]
+      // Object.keys(state.layers).forEach((category) => {
+        // const categoryKey = category as LayerCategory
+        // const layers = state.layers[categoryKey]
         
-        if (layers.length > 0) {
-          console.group(`📁 ${category} (${layers.length} layers)`)
-          layers.forEach((layer, index) => {
-            console.log(`  ${index + 1}. ${layer.name} (z-index: ${layer.zIndex}, visible: ${layer.visible})`)
-          })
-          console.groupEnd()
-        }
-      })
+        // if (layers.length > 0) {
+        //   console.group(`📁 ${category} (${layers.length} layers)`)
+        //   layers.forEach((layer, index) => {
+        //     console.log(`  ${index + 1}. ${layer.name} (z-index: ${layer.zIndex}, visible: ${layer.visible})`)
+        //   })
+        //   console.groupEnd()
+        // }
+      // })
       
-      console.groupEnd()
+      // console.groupEnd()
     },
     
     // Clear all layers in a category
@@ -377,7 +377,7 @@ export const useLayerManagerStore = create<LayerManagerState>()(
         draft.layers[category] = []
         draft.nextZIndex[category] = LayerOrderConfig.categories[category].zIndexRange.min
       })
-      console.log(`🧹 Cleared all layers from category: ${category}`)
+      // console.log(`🧹 Cleared all layers from category: ${category}`)
     },
     
     // Clear all layers

@@ -1,0 +1,195 @@
+.sc-mymaps-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-bottom: 1px solid #eee;
+  border-left: 2px solid transparent;
+  background-color: #fff;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.sc-mymaps-item:hover {
+  background-color: #f0f8ff;
+  border-left: 2px solid #007bff;
+  transform: translateX(2px);
+}
+
+.sc-mymaps-item.hidden {
+  opacity: 0.5;
+}
+
+.sc-mymaps-item.editing {
+  background-color: #e3f2fd;
+  border-left: 3px solid #2196f3;
+}
+
+.sc-mymaps-item-checkbox {
+  flex-shrink: 0;
+}
+
+.sc-mymaps-item-checkbox input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.sc-mymaps-item-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.sc-mymaps-item-label {
+  flex: 1;
+  min-width: 0; /* Allow text to truncate */
+  cursor: pointer;
+  margin-right: 2px; /* Reduced space between label and action buttons */
+}
+
+.sc-mymaps-item-label-text-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 1px solid #d0d0d0;
+  border-radius: 2px;
+  background-color: white;
+  padding: 2px 4px;
+  min-height: 20px;
+}
+
+.sc-mymaps-item-label-text {
+  flex: 1;
+  font-size: 12px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 16px; /* Make room for pencil icon */
+}
+
+.sc-mymaps-item-label-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 1px solid #d0d0d0;
+  border-radius: 2px;
+  background-color: white;
+  padding: 0;
+}
+
+.sc-mymaps-item-label-input-container:focus-within {
+  border-color: #007bff;
+  box-shadow: 0 0 0 1px rgba(0, 123, 255, 0.25);
+}
+
+.sc-mymaps-item-label-input {
+  width: 100%;
+  font-size: 12px;
+  border: none;
+  background-color: transparent;
+  padding: 2px 4px;
+  padding-right: 20px; /* Make room for pencil icon */
+}
+
+.sc-mymaps-item-label-input:focus {
+  outline: none;
+}
+
+.sc-mymaps-item-label-pencil-icon {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.sc-mymaps-item-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-left: 2px; /* Reduced space between label and action buttons */
+}
+
+.sc-mymaps-item-action-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background-color: transparent;
+  border-radius: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.sc-mymaps-item-action-btn:hover {
+  background-color: #f0f0f0;
+  transform: scale(1.05);
+}
+
+.sc-mymaps-item-action-btn:active {
+  transform: scale(0.95);
+}
+
+.sc-mymaps-item-label-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  opacity: 0.6;
+}
+
+/* Animation for new items */
+.sc-mymaps-item-enter {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.sc-mymaps-item-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 300ms ease, transform 300ms ease;
+}
+
+.sc-mymaps-item-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.sc-mymaps-item-exit-active {
+  opacity: 0;
+  transform: translateX(10px);
+  transition: opacity 300ms ease, transform 300ms ease;
+}
+
+/* Compact mode for smaller screens */
+@media (max-width: 768px) {
+  .sc-mymaps-item {
+    padding: 4px 6px;
+    gap: 4px;
+  }
+  
+  .sc-mymaps-item-label-text {
+    font-size: 11px;
+  }
+  
+  .sc-mymaps-item-action-btn {
+    width: 18px;
+    height: 18px;
+  }
+}

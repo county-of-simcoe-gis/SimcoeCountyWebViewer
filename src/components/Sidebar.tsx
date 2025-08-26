@@ -23,6 +23,9 @@ const ForestryTheme = lazy(() => import("@/components/themes/ForestryTheme"));
 // Lazy load TOC component
 const TOC = lazy(() => import("@/components/TOC/TOC"));
 
+// Lazy load MyMaps component
+const MyMaps = lazy(() => import("@/components/myMaps/MyMaps"));
+
 // Tool mapping for dynamic loading
 const toolComponents: Record<
   string,
@@ -216,8 +219,9 @@ export default function Sidebar() {
 
         <TabPanel>
           <div className="sc-sidebar-content">
-            <div style={{ marginBottom: "10px", fontWeight: "bold", fontSize: "12px" }}>MY MAPS</div>
-            <div style={{ fontSize: "12px", color: "#666" }}>My Maps functionality will be implemented here...</div>
+            <Suspense fallback={<div style={{ padding: "20px" }}>Loading MyMaps...</div>}>
+              <MyMaps visible={activeTab === 2} />
+            </Suspense>
           </div>
         </TabPanel>
 

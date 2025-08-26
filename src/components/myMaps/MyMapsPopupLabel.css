@@ -1,0 +1,240 @@
+/* MyMaps Popup Label Component Styles - Matching Old Application */
+
+.sc-mymaps-popup-label-toggler {
+  display: table;
+  margin-bottom: 3px;
+  width: 100%;
+}
+
+.sc-mymaps-popup-checkbox {
+  position: relative;
+  top: -2px;
+  display: table-cell;
+  width: 120px;
+}
+
+.sc-mymaps-popup-checkbox.disabled {
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.sc-mymaps-popup-checkbox label {
+  font-size: 11px;
+  font-family: Arial, sans-serif;
+  color: #333;
+  cursor: pointer;
+  margin: 0;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.sc-mymaps-popup-checkbox input[type="checkbox"] {
+  margin-right: 4px;
+  margin-left: 0;
+}
+
+.sc-mymaps-popup-slider {
+  font-size: 7pt;
+  display: table-cell;
+  padding-left: 20px;
+  position: relative;
+  vertical-align: top;
+  width: 130px;
+}
+
+.sc-mymaps-popup-slider.disabled {
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.sc-mymaps-popup-slider-label {
+  position: absolute;
+  right: -13px;
+  top: 8px;
+  font-size: 7pt;
+  width: 100%;
+  text-align: center;
+}
+
+.sc-mymaps-popup-slider input[type="range"] {
+  -webkit-appearance: none;
+}
+
+/* CHROME */
+.sc-mymaps-popup-slider input[type="range"]::-webkit-slider-runnable-track {
+  width: 100px;
+  height: 5px;
+  background: #ddd;
+  border: none;
+  border-radius: 3px;
+}
+
+.sc-mymaps-popup-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  border: none;
+  height: 14px;
+  width: 14px;
+  border-radius: 50%;
+  background: #4a90e2;
+  margin-top: -4px;
+  cursor: pointer;
+}
+
+.sc-mymaps-popup-slider input[type="range"]:focus {
+  outline: none;
+}
+
+.sc-mymaps-popup-slider input[type="range"]:focus::-webkit-slider-runnable-track {
+  background: #ccc;
+}
+
+/* FIREFOX */
+.sc-mymaps-popup-slider input[type="range"]::-moz-range-track {
+  width: 100px;
+  height: 5px;
+  background: #ddd;
+  border: none;
+  border-radius: 3px;
+}
+
+.sc-mymaps-popup-slider input[type="range"]::-moz-range-thumb {
+  border: none;
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  background: #4a90e2;
+  cursor: pointer;
+  margin-top: -4px;
+}
+
+/*hide the outline behind the border*/
+.sc-mymaps-popup-slider input[type="range"]:-moz-focusring {
+  outline: 1px solid white;
+  outline-offset: -1px;
+}
+
+.sc-mymaps-popup-slider input[type="range"]:focus::-moz-range-track {
+  background: #ccc;
+}
+
+/* IE 10+ */
+.sc-mymaps-popup-slider input[type="range"]::-ms-track {
+  width: 100px;
+  height: 5px;
+  cursor: pointer;
+  background: transparent;
+  border-color: transparent;
+  border-width: 16px 0;
+  color: transparent;
+}
+
+.sc-mymaps-popup-slider input[type="range"]::-ms-fill-lower {
+  background: #777;
+  border-radius: 10px;
+}
+
+.sc-mymaps-popup-slider input[type="range"]::-ms-fill-upper {
+  background: #ddd;
+  border-radius: 10px;
+}
+
+.sc-mymaps-popup-slider input[type="range"]::-ms-thumb {
+  border: none;
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  background: #4a90e2;
+  cursor: pointer;
+}
+
+.sc-mymaps-popup-slider input[type="range"]:focus::-ms-fill-lower {
+  background: #888;
+}
+
+.sc-mymaps-popup-slider input[type="range"]:focus::-ms-fill-upper {
+  background: #ccc;
+}
+
+input[type="range"]::-ms-tooltip {
+  display: none;
+}
+
+.sc-mymaps-popup-label-input {
+  width: 246px;
+  height: 32px;
+  padding: 5px 30px 5px 5px;
+  font-size: 16px;
+  color: #367cc5;
+  border-radius: 3px;
+  outline: none;
+  border: 1px solid #cecece;
+  margin-top: 5px;
+  box-sizing: border-box;
+  background-image: url('/images/edit.png');
+  background-repeat: no-repeat;
+  background-position: calc(100% - 8px) center;
+  background-size: 16px 16px;
+}
+
+.sc-mymaps-popup-label-input:focus {
+  outline: none;
+  border-color: #367cc5;
+}
+
+.sc-editable {
+  background-color: #fff;
+  color: #367cc5;
+}
+
+.sc-editable:focus {
+  background-color: #fff;
+}
+
+/* Browser-specific fixes */
+@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+  .sc-mymaps-popup-slider input[type="range"] {
+    border: 1px solid white;
+    outline: 1px solid white;
+    outline-offset: -1px;
+  }
+
+  .sc-mymaps-popup-slider {
+    position: absolute;
+    left: 152px;
+    top: -16px;
+    width: 30px;
+  }
+
+  .sc-mymaps-popup-slider-label {
+    position: relative;
+    right: -38px;
+    top: -34px;
+    font-size: 7pt;
+  }
+}
+
+@-moz-document url-prefix() {
+  .sc-mymaps-popup-slider input[type="range"] {
+    border: 1px solid white;
+    outline: 1px solid white;
+    outline-offset: -1px;
+  }
+
+  .sc-mymaps-popup-slider {
+    position: absolute;
+    left: 106px;
+    top: -2px;
+    width: 30px;
+  }
+
+  .sc-mymaps-popup-slider-label {
+    position: relative;
+    right: -31px;
+    top: -7px;
+    font-size: 7pt;
+  }
+}

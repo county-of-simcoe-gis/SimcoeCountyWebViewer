@@ -853,19 +853,19 @@ export const useTOCStore = create<TOCState>()(
     
     // Initialize OpenLayers layers for all TOC layers
     initializeOpenLayersLayers: () => {
-      console.log("🚀 initializeOpenLayersLayers called");
+      // console.log("🚀 initializeOpenLayersLayers called");
       const state = get();
       const groups = state.tocType === 'LIST' ? state.layerListGroups : state.layerFolderGroups;
-      console.log("🚀 Found groups:", groups.length);
+      // console.log("🚀 Found groups:", groups.length);
       
       groups.forEach(group => {
-        console.log("🗂️ Processing group:", group.label, "with", group.layers.length, "layers");
+        // console.log("🗂️ Processing group:", group.label, "with", group.layers.length, "layers");
         group.layers.forEach(layer => {
-          console.log("📋 Processing layer:", layer.name, "has existing layer:", !!layer.layer, "wmsGroupUrl:", group.wmsGroupUrl);
+          // console.log("📋 Processing layer:", layer.name, "has existing layer:", !!layer.layer, "wmsGroupUrl:", group.wmsGroupUrl);
           if (!layer.layer && group.wmsGroupUrl) {
             // Extract server URL from the WMS group URL
             const serverUrl = group.wmsGroupUrl.split('/wms')[0] + '/wms';
-            console.log("🌐 Creating layer with URL:", serverUrl);
+            // console.log("🌐 Creating layer with URL:", serverUrl);
             
             // Create OpenLayers layer
             LayerHelpers.getLayer({
@@ -877,7 +877,7 @@ export const useTOCStore = create<TOCState>()(
             }, (olLayer: unknown) => {
               if (olLayer) {
                 const typedLayer = olLayer as unknown
-                console.log("✅ OpenLayers layer created for:", layer.name);
+                // console.log("✅ OpenLayers layer created for:", layer.name);
                 
                 // Set layer properties
                 (typedLayer as OpenLayersLayer).setProperties({
@@ -912,11 +912,11 @@ export const useTOCStore = create<TOCState>()(
                   }
                 );
                 
-                console.log("🗺️ Added layer to map via LayerManager:", layer.name, "ID:", managedLayerId);
+                // console.log("🗺️ Added layer to map via LayerManager:", layer.name, "ID:", managedLayerId);
                 
                 // Debug: Log layer order after adding each TOC layer
                 if (managedLayerId) {
-                  console.log("🔍 TOC: Logging layer order after adding", layer.name);
+                  // console.log("🔍 TOC: Logging layer order after adding", layer.name);
                   LayerManager.logLayerOrder();
                 }
                 
@@ -929,7 +929,7 @@ export const useTOCStore = create<TOCState>()(
                     if (currentLayer) {
                       currentLayer.layer = typedLayer;
                       currentLayer.managedLayerId = managedLayerId || undefined;
-                      console.log("💾 Updated layer in store:", layer.name, "with managed ID:", managedLayerId);
+                      // console.log("💾 Updated layer in store:", layer.name, "with managed ID:", managedLayerId);
                     }
                   }
                   
