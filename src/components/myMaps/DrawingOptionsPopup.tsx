@@ -28,6 +28,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({ item, coordin
   const overlayElementRef = useRef<HTMLDivElement | null>(null);
   const lastItemIdRef = useRef<string | null>(null);
   const activeInteractionIdsRef = useRef<number[]>([]);
+  const hasBeenDraggedRef = useRef<boolean>(false);
   const { map } = useMapStore();
 
   // Create stable references for dependencies
@@ -173,6 +174,11 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({ item, coordin
     const itemChanged = lastItemIdRef.current !== itemId;
     lastItemIdRef.current = itemId || null;
 
+    // Reset drag flag when item changes (new feature selected)
+    if (itemChanged) {
+      hasBeenDraggedRef.current = false;
+    }
+
     if (itemChanged && itemId) {
       // Preserve focus and cursor position before copying content
       const activeElement = overlayElementRef.current.querySelector(":focus") as HTMLInputElement;
@@ -254,9 +260,14 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({ item, coordin
 
     try {
       if (isOpen && coordinate) {
-        overlayRef.current.setPosition(coordinate);
+        // Only auto-position if popup hasn't been manually dragged
+        if (!hasBeenDraggedRef.current) {
+          overlayRef.current.setPosition(coordinate);
+        }
       } else {
         overlayRef.current.setPosition(undefined);
+        // Reset drag flag when popup closes
+        hasBeenDraggedRef.current = false;
       }
     } catch {
       // Ignore errors when updating overlay position
@@ -390,6 +401,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({ item, coordin
 
           if (isMoving) {
             overlayRef.current.setPosition(newCoord);
+            hasBeenDraggedRef.current = true; // Mark as manually dragged
           } else {
             isMoving = true;
           }
