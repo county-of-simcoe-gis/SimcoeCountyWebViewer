@@ -115,6 +115,39 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({ item, coordin
       };
     }
 
+    // Re-attach rotation slider change listener (React handlers are lost when copying HTML to overlay)
+    const rotationSlider = overlayElementRef.current.querySelector(".sc-mymaps-popup-slider input[type='range']") as HTMLInputElement;
+    if (rotationSlider && onLabelRotationChange && item) {
+      rotationSlider.oninput = (e) => {
+        e.stopPropagation();
+
+        const newRotation = parseInt((e.target as HTMLInputElement).value);
+
+        // Update the store
+        onLabelRotationChange(item.id, newRotation);
+      };
+    }
+
+    // Re-attach footer button event listeners (React handlers are lost when copying HTML to overlay)
+    const footerButtons = overlayElementRef.current.querySelectorAll(".sc-mymaps-popup-footer-button");
+    footerButtons.forEach((button) => {
+      const buttonText = button.textContent?.trim().toLowerCase();
+      if (buttonText && item) {
+        button.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          if (buttonText === "tools" && onTools) {
+            onTools(item);
+          } else if (buttonText === "delete" && onDelete) {
+            onDelete(item);
+          } else if (buttonText === "close") {
+            onClose();
+          }
+        });
+      }
+    });
+
     // Re-attach other button event listeners if they exist
     const toolsButtons = overlayElementRef.current.querySelectorAll("[data-action]");
     toolsButtons.forEach((button) => {
@@ -130,7 +163,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({ item, coordin
         });
       }
     });
-  }, [item, onClose, onTools, onDelete, onLabelChange, onLabelVisibilityChange]);
+  }, [item, onClose, onTools, onDelete, onLabelChange, onLabelVisibilityChange, onLabelRotationChange]);
 
   // Sync React content to overlay element only when structure changes (not just label changes)
   useEffect(() => {
@@ -183,6 +216,16 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({ item, coordin
       }
     }
   }, [isOpen, item?.labelVisible, item]); // Watch for item changes
+
+  // Sync rotation slider value when it changes externally (e.g., from store updates)
+  useEffect(() => {
+    if (overlayElementRef.current && item && isOpen) {
+      const rotationSlider = overlayElementRef.current.querySelector(".sc-mymaps-popup-slider input[type='range']") as HTMLInputElement;
+      if (rotationSlider) {
+        rotationSlider.value = (item.labelRotation || 0).toString();
+      }
+    }
+  }, [isOpen, item?.labelRotation, item]); // Watch for rotation changes
 
   // Cleanup overlay only on unmount
   useEffect(() => {
@@ -279,6 +322,26 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({ item, coordin
       (window as unknown as { popupActive: boolean }).popupActive = false;
     };
   }, [map, isOpen]);
+
+  // Ensure interactions are restored when popup closes (regardless of close method)
+  useEffect(() => {
+    // When popup closes, restore interactions if they were disabled
+    if (!isOpen && map && activeInteractionIdsRef.current.length > 0) {
+      console.log("🔓 Popup closed - restoring interactions");
+
+      map.getInteractions().forEach((interaction) => {
+        const interactionUid = (interaction as unknown as { ol_uid: number }).ol_uid;
+        if (activeInteractionIdsRef.current.includes(interactionUid)) {
+          interaction.setActive(true);
+        }
+      });
+
+      // Clear the active interactions list and popup active flag
+      activeInteractionIdsRef.current = [];
+      (window as unknown as { popupActive: boolean }).popupActive = false;
+      console.log("🔓 Global popupActive set to FALSE on popup close");
+    }
+  }, [isOpen, map]);
 
   // Handle drag functionality - matching old app implementation
   useEffect(() => {
