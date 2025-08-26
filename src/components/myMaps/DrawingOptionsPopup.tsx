@@ -428,7 +428,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({ item, coordin
     return () => {
       headerElement.removeEventListener("mousedown", handleMouseDown);
     };
-  }, [map, isOpen]); // Depend on isOpen to reinitialize when popup opens
+  }, [map, isOpen, itemId]); // Depend on itemId to reinitialize when item changes
 
   // Always render the popup element, visibility is controlled by overlay position
   if (!item) {
