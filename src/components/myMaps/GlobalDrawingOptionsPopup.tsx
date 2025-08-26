@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useEventStore } from "@/stores/eventStore";
 import { useMyMapsStore } from "@/stores/myMapsStore";
 import DrawingOptionsPopup from "./DrawingOptionsPopup";
+import MyMapsItemPopup from "./MyMapsItemPopup";
 import type { MyMapsItem as MyMapsItemType } from "@/types/myMaps";
-import { useMapStore } from "@/stores/mapStore";
-import type { Coordinate } from "ol/coordinate";
 
 /**
  * GlobalDrawingOptionsPopup - Manages the drawing options popup globally
@@ -18,16 +17,20 @@ export default function GlobalDrawingOptionsPopup() {
   const [drawingOptionsPosition, setDrawingOptionsPosition] = useState({ x: 0, y: 0 });
   const [isDrawingOptionsOpen, setIsDrawingOptionsOpen] = useState(false);
 
+  // Tools Popup state
+  const [toolsPopupItem, setToolsPopupItem] = useState<MyMapsItemType | null>(null);
+  const [toolsPopupPosition, setToolsPopupPosition] = useState({ x: 0, y: 0 });
+  const [isToolsPopupOpen, setIsToolsPopupOpen] = useState(false);
+
   const { emit, addListener, removeListener } = useEventStore();
   const { items, removeItem, updateItemLabel, updateItemLabelVisibility, updateItemLabelRotation } = useMyMapsStore();
-  const map = useMapStore((state) => state.map);
 
   // Get fresh item data from store (reactive subscription)
   const drawingOptionsItem = drawingOptionsItemId ? items.find((item) => item.id === drawingOptionsItemId) || null : null;
 
   // Listen for changes in the myMapsStore and update the item state
   useEffect(() => {
-    const unsubscribe = useMyMapsStore.subscribe((state, prevState) => {
+    const unsubscribe = useMyMapsStore.subscribe((state) => {
       if (drawingOptionsItemId) {
         const currentItems = state.items;
         const updatedItem = currentItems.find((i) => i.id === drawingOptionsItemId);
@@ -57,12 +60,36 @@ export default function GlobalDrawingOptionsPopup() {
     }
   }, [drawingOptionsItemId, drawingOptionsItem, isDrawingOptionsOpen, handleCloseDrawingOptions]);
 
-  const handleDrawingOptionsTools = React.useCallback(
-    (item: MyMapsItemType) => {
-      emit("mymap-drawing-options-tools", { item });
-    },
-    [emit]
-  );
+  const handleDrawingOptionsTools = React.useCallback((item: MyMapsItemType, event?: React.MouseEvent) => {
+    // Show the tools popup instead of just emitting an event
+    setToolsPopupItem(item);
+
+    let x = 200;
+    let y = 200;
+
+    if (event) {
+      x = event.clientX;
+      y = event.clientY;
+    }
+
+    // Adjust position to keep popup within viewport (same logic as MyMaps.tsx)
+    const popupWidth = 200;
+    const popupHeight = 300;
+
+    if (x + popupWidth > window.innerWidth) {
+      x = window.innerWidth - popupWidth - 10;
+    }
+
+    if (y + popupHeight > window.innerHeight) {
+      y = window.innerHeight - popupHeight - 10;
+    }
+
+    if (x < 10) x = 10;
+    if (y < 10) y = 10;
+
+    setToolsPopupPosition({ x, y });
+    setIsToolsPopupOpen(true);
+  }, []);
 
   const handleDrawingOptionsDelete = React.useCallback(
     (item: MyMapsItemType) => {
@@ -103,6 +130,109 @@ export default function GlobalDrawingOptionsPopup() {
     [updateItemLabelRotation, emit]
   );
 
+  // Tools popup action handlers (same as in MyMaps.tsx)
+  const handleToolsPopupClose = useCallback(() => {
+    setIsToolsPopupOpen(false);
+    setToolsPopupItem(null);
+  }, []);
+
+  const handleBuffer = useCallback(
+    (item: MyMapsItemType) => {
+      console.log("Buffer feature:", item.id);
+      emit("mymap-buffer", { item });
+      handleToolsPopupClose();
+    },
+    [emit, handleToolsPopupClose]
+  );
+
+  const handleSymbolize = useCallback(
+    (item: MyMapsItemType) => {
+      console.log("Symbolize feature:", item.id);
+      emit("mymap-symbolize", { item });
+      handleToolsPopupClose();
+    },
+    [emit, handleToolsPopupClose]
+  );
+
+  const handleZoomTo = useCallback(
+    (item: MyMapsItemType) => {
+      console.log("Zoom to item:", item.id);
+      emit("mymap-zoom-to", { item });
+      handleToolsPopupClose();
+    },
+    [emit, handleToolsPopupClose]
+  );
+
+  const handleDeleteFromToolsPopup = useCallback(
+    (item: MyMapsItemType) => {
+      removeItem(item.id);
+      emit("mymap-item-deleted", { id: item.id });
+      handleToolsPopupClose();
+    },
+    [removeItem, emit, handleToolsPopupClose]
+  );
+
+  const handleShowGeometry = useCallback(
+    (item: MyMapsItemType) => {
+      console.log("Show geometry for item:", item.id);
+      emit("mymap-show-geometry", { item });
+      handleToolsPopupClose();
+    },
+    [emit, handleToolsPopupClose]
+  );
+
+  const handleExportFeature = useCallback(
+    (item: MyMapsItemType) => {
+      console.log("Export feature:", item.id);
+      try {
+        const exportData = {
+          type: "Feature",
+          properties: {
+            id: item.id,
+            label: item.label || "Unnamed Feature",
+            geometryType: item.geometryType,
+          },
+          geometry: item.featureGeoJSON ? JSON.parse(item.featureGeoJSON).geometry : null,
+        };
+
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${item.label || "feature"}.geojson`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        console.log("Feature exported successfully");
+      } catch (error) {
+        console.error("Export failed:", error);
+      }
+      handleToolsPopupClose();
+    },
+    [handleToolsPopupClose]
+  );
+
+  const handleIdentify = useCallback(
+    (item: MyMapsItemType) => {
+      console.log("Identify feature:", item.id);
+      emit("mymap-identify", { item });
+      handleToolsPopupClose();
+    },
+    [emit, handleToolsPopupClose]
+  );
+
+  const handleReportProblem = useCallback(
+    (item: MyMapsItemType) => {
+      console.log("Report problem for feature:", item.id);
+      emit("mymap-report-problem", { item });
+      handleToolsPopupClose();
+    },
+    [emit, handleToolsPopupClose]
+  );
+
   // Listen for requests to show the drawing options popup
   useEffect(() => {
     const handleShowDrawingOptions = (data?: { [key: string]: unknown }) => {
@@ -131,16 +261,34 @@ export default function GlobalDrawingOptionsPopup() {
   }, [addListener, removeListener]);
 
   return (
-    <DrawingOptionsPopup
-      item={drawingOptionsItem}
-      coordinate={drawingOptionsPosition ? [drawingOptionsPosition.x, drawingOptionsPosition.y] : null}
-      isOpen={isDrawingOptionsOpen}
-      onClose={handleCloseDrawingOptions}
-      onTools={handleDrawingOptionsTools}
-      onDelete={handleDrawingOptionsDelete}
-      onLabelChange={handleDrawingOptionsLabelChange}
-      onLabelVisibilityChange={handleDrawingOptionsLabelVisibilityChange}
-      onLabelRotationChange={handleDrawingOptionsLabelRotationChange}
-    />
+    <>
+      <DrawingOptionsPopup
+        item={drawingOptionsItem}
+        coordinate={drawingOptionsPosition ? [drawingOptionsPosition.x, drawingOptionsPosition.y] : null}
+        isOpen={isDrawingOptionsOpen}
+        onClose={handleCloseDrawingOptions}
+        onTools={handleDrawingOptionsTools}
+        onDelete={handleDrawingOptionsDelete}
+        onLabelChange={handleDrawingOptionsLabelChange}
+        onLabelVisibilityChange={handleDrawingOptionsLabelVisibilityChange}
+        onLabelRotationChange={handleDrawingOptionsLabelRotationChange}
+      />
+
+      {/* Tools Popup */}
+      <MyMapsItemPopup
+        item={toolsPopupItem}
+        position={toolsPopupPosition}
+        isOpen={isToolsPopupOpen}
+        onClose={handleToolsPopupClose}
+        onBuffer={handleBuffer}
+        onSymbolize={handleSymbolize}
+        onZoomTo={handleZoomTo}
+        onDelete={handleDeleteFromToolsPopup}
+        onShowGeometry={handleShowGeometry}
+        onExport={handleExportFeature}
+        onIdentify={handleIdentify}
+        onReportProblem={handleReportProblem}
+      />
+    </>
   );
 }

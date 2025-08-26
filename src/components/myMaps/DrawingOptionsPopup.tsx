@@ -15,7 +15,7 @@ interface DrawingOptionsPopupProps {
   coordinate: Coordinate | null;
   isOpen: boolean;
   onClose: () => void;
-  onTools?: (item: MyMapsItemType) => void;
+  onTools?: (item: MyMapsItemType, event?: React.MouseEvent) => void;
   onDelete?: (item: MyMapsItemType) => void;
   onLabelChange?: (id: string, label: string) => void;
   onLabelVisibilityChange?: (id: string, visible: boolean) => void;
@@ -157,7 +157,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({ item, coordin
         button.addEventListener("click", (e) => {
           e.preventDefault();
           if (action === "tools" && onTools) {
-            onTools(item);
+            onTools(item, e as unknown as React.MouseEvent);
           } else if (action === "delete" && onDelete) {
             onDelete(item);
           }
@@ -482,7 +482,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({ item, coordin
           <div className="sc-hidden">{/* Measure placeholder */}</div>
 
           {/* Footer Buttons - Always shown */}
-          <FooterButtons onTools={onTools ? () => onTools(item) : undefined} onDelete={onDelete ? () => onDelete(item) : undefined} onClose={onClose} />
+          <FooterButtons onTools={onTools ? (event) => onTools(item, event) : undefined} onDelete={onDelete ? () => onDelete(item) : undefined} onClose={onClose} />
         </div>
       </div>
     </div>
