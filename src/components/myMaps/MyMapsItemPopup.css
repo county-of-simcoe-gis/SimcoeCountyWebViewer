@@ -59,6 +59,7 @@
   cursor: pointer;
   transition: background-color 0.15s ease;
   user-select: none;
+  max-height: 25px;
 }
 
 .sc-mymaps-popup-item:hover {

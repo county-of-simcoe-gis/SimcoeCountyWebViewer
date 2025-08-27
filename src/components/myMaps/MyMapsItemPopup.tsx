@@ -72,11 +72,6 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({ item, position, isOpe
           top: `${position.y}px`,
         }}
       >
-        <div className="sc-mymaps-popup-header">
-          <span className="sc-mymaps-popup-title">{item.label}</span>
-          <span className="sc-mymaps-popup-type">({item.geometryType})</span>
-        </div>
-
         <div className="sc-mymaps-popup-menu">
           {/* Buffer */}
           {onBuffer && (
