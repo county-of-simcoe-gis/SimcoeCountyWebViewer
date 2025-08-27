@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { MyMapsItem } from "@/types/myMaps";
 import "./MyMapsItemPopup.css";
@@ -15,13 +15,14 @@ export interface MyMapsItemPopupProps {
   onZoomTo?: (item: MyMapsItem) => void;
   onDelete?: (item: MyMapsItem) => void;
   onShowGeometry?: (item: MyMapsItem) => void;
-  onExport?: (item: MyMapsItem) => void;
+  onExport?: (item: MyMapsItem, format: "geojson" | "kml" | "esrijson") => void;
   onIdentify?: (item: MyMapsItem) => void;
   onReportProblem?: (item: MyMapsItem) => void;
 }
 
 const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({ item, position, isOpen, onClose, onBuffer, onSymbolize, onZoomTo, onDelete, onShowGeometry, onExport, onIdentify, onReportProblem }) => {
   const popupRef = useRef<HTMLDivElement>(null);
+  const [showExportSubmenu, setShowExportSubmenu] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -117,9 +118,30 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({ item, position, isOpe
 
           {/* Export to */}
           {onExport && (
-            <div className="sc-mymaps-popup-item" onClick={() => handleMenuItemClick(() => onExport(item))} title="Export this feature">
+            <div
+              className="sc-mymaps-popup-item sc-mymaps-popup-submenu-parent"
+              onMouseEnter={() => setShowExportSubmenu(true)}
+              onMouseLeave={() => setShowExportSubmenu(false)}
+              title="Export this feature"
+            >
               <Image src="/images/toc/download.png" alt="Export" width={16} height={16} />
               <span>Export to ...</span>
+              <span className="sc-mymaps-popup-arrow">▶</span>
+
+              {/* Export Submenu */}
+              {showExportSubmenu && (
+                <div className="sc-mymaps-popup-submenu">
+                  <div className="sc-mymaps-popup-item sc-mymaps-popup-submenu-item" onClick={() => handleMenuItemClick(() => onExport(item, "geojson"))} title="Export as GeoJSON">
+                    <span>GeoJSON</span>
+                  </div>
+                  <div className="sc-mymaps-popup-item sc-mymaps-popup-submenu-item" onClick={() => handleMenuItemClick(() => onExport(item, "kml"))} title="Export as KML">
+                    <span>KML</span>
+                  </div>
+                  <div className="sc-mymaps-popup-item sc-mymaps-popup-submenu-item" onClick={() => handleMenuItemClick(() => onExport(item, "esrijson"))} title="Export as EsriJSON">
+                    <span>EsriJSON</span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

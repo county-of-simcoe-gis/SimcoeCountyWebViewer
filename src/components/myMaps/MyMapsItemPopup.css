@@ -94,6 +94,54 @@
   margin: 4px 0;
 }
 
+/* Submenu Styles */
+.sc-mymaps-popup-submenu-parent {
+  position: relative;
+  justify-content: space-between;
+}
+
+.sc-mymaps-popup-arrow {
+  font-size: 10px;
+  color: #999;
+  margin-left: auto;
+  padding-left: 8px;
+}
+
+.sc-mymaps-popup-submenu {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  background: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 120px;
+  z-index: 100000;
+  animation: submenuFadeIn 0.15s ease-out;
+}
+
+.sc-mymaps-popup-submenu-item {
+  padding: 6px 12px;
+  border: none;
+  min-height: auto;
+  max-height: none;
+}
+
+.sc-mymaps-popup-submenu-item span {
+  font-size: 13px;
+}
+
+@keyframes submenuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .sc-mymaps-item-popup {

@@ -112,36 +112,104 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
   );
 
   const handleExportFeature = useCallback(
-    (item: MyMapsItemType) => {
-      console.log("Export feature:", item.id);
+    (item: MyMapsItemType, format: "geojson" | "kml" | "esrijson" = "geojson") => {
+      console.log("Export feature:", item.id, "as", format);
       try {
-        const exportData = {
-          type: "Feature",
-          properties: {
-            id: item.id,
-            label: item.label,
-            drawType: item.drawType,
-            geometryType: item.geometryType,
-            visible: item.visible,
-            labelVisible: item.labelVisible,
-          },
-          geometry: JSON.parse(item.featureGeoJSON),
-        };
+        let exportData: string;
+        let mimeType: string;
+        let fileExtension: string;
 
-        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+        switch (format) {
+          case "kml":
+            // For KML, we need to create proper KML structure
+            const kmlData = `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <Placemark>
+      <name><![CDATA[${item.label || "Unnamed Feature"}]]></name>
+      <description><![CDATA[Exported from SimcoeCounty WebViewer]]></description>
+      ${item.featureGeoJSON ? convertGeoJSONToKMLGeometry(JSON.parse(item.featureGeoJSON).geometry) : ""}
+    </Placemark>
+  </Document>
+</kml>`;
+            exportData = kmlData;
+            mimeType = "application/vnd.google-earth.kml+xml";
+            fileExtension = "kml";
+            break;
+
+          case "esrijson":
+            // For EsriJSON, convert from GeoJSON
+            const esriData = {
+              geometry: item.featureGeoJSON ? JSON.parse(item.featureGeoJSON).geometry : null,
+              attributes: {
+                id: item.id,
+                label: item.label,
+                drawType: item.drawType,
+                geometryType: item.geometryType,
+                visible: item.visible,
+                labelVisible: item.labelVisible,
+              },
+            };
+            exportData = JSON.stringify(esriData, null, 2);
+            mimeType = "application/json";
+            fileExtension = "json";
+            break;
+
+          default: // geojson
+            const geoJsonData = {
+              type: "Feature",
+              properties: {
+                id: item.id,
+                label: item.label,
+                drawType: item.drawType,
+                geometryType: item.geometryType,
+                visible: item.visible,
+                labelVisible: item.labelVisible,
+              },
+              geometry: JSON.parse(item.featureGeoJSON),
+            };
+            exportData = JSON.stringify(geoJsonData, null, 2);
+            mimeType = "application/json";
+            fileExtension = "geojson";
+            break;
+        }
+
+        const blob = new Blob([exportData], { type: mimeType });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = `${item.label.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.geojson`;
+        link.download = `${item.label.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.${fileExtension}`;
         link.click();
         URL.revokeObjectURL(url);
+
+        console.log(`Feature exported successfully as ${format.toUpperCase()}`);
       } catch (error) {
         console.error("Error exporting feature:", error);
       }
-      emit("mymap-export-feature", { item });
+      emit("mymap-export-feature", { item, format });
     },
     [emit]
   );
+
+  // Helper function to convert GeoJSON geometry to KML geometry
+  const convertGeoJSONToKMLGeometry = (geometry: { type: string; coordinates: unknown }): string => {
+    if (!geometry) return "";
+
+    switch (geometry.type) {
+      case "Point":
+        const pointCoords = geometry.coordinates as number[];
+        return `<Point><coordinates>${pointCoords.join(",")}</coordinates></Point>`;
+      case "LineString":
+        const lineCoords = geometry.coordinates as number[][];
+        return `<LineString><coordinates>${lineCoords.map((coord: number[]) => coord.join(",")).join(" ")}</coordinates></LineString>`;
+      case "Polygon":
+        const polyCoords = geometry.coordinates as number[][][];
+        const outerRing = polyCoords[0].map((coord: number[]) => coord.join(",")).join(" ");
+        return `<Polygon><outerBoundaryIs><LinearRing><coordinates>${outerRing}</coordinates></LinearRing></outerBoundaryIs></Polygon>`;
+      default:
+        return "";
+    }
+  };
 
   const handleIdentify = useCallback(
     (item: MyMapsItemType) => {
