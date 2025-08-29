@@ -11,7 +11,7 @@
   background: #f8f9fa;
   border: 1px solid #dee2e6;
   border-radius: 3px;
-  padding: 3px 5px;
+  padding: 4px 5px;
   cursor: pointer;
   font-size: 11px;
   font-family: Arial, sans-serif;
@@ -21,7 +21,8 @@
   justify-content: center;
   gap: 3px;
   transition: all 0.15s ease;
-  min-height: 20px;
+  min-height: 24px;
+  overflow: visible;
 }
 
 .sc-button:hover {
@@ -49,6 +50,8 @@
   width: 14px;
   height: 14px;
   flex-shrink: 0;
+  vertical-align: middle;
+  object-fit: contain;
 }
 
 /* IE/Edge specific adjustments */

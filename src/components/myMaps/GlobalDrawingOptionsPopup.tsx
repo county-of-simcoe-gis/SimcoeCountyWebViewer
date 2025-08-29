@@ -16,6 +16,7 @@ export default function GlobalDrawingOptionsPopup() {
   const [drawingOptionsItemId, setDrawingOptionsItemId] = useState<string | null>(null);
   const [drawingOptionsPosition, setDrawingOptionsPosition] = useState({ x: 0, y: 0 });
   const [isDrawingOptionsOpen, setIsDrawingOptionsOpen] = useState(false);
+  const [activeTool, setActiveTool] = useState<string | undefined>(undefined);
 
   // Tools Popup state
   const [toolsPopupItem, setToolsPopupItem] = useState<MyMapsItemType | null>(null);
@@ -51,6 +52,7 @@ export default function GlobalDrawingOptionsPopup() {
   const handleCloseDrawingOptions = React.useCallback(() => {
     setIsDrawingOptionsOpen(false);
     setDrawingOptionsItemId(null);
+    setActiveTool(undefined);
   }, []);
 
   // Close popup if item no longer exists in store (e.g., was deleted)
@@ -138,11 +140,10 @@ export default function GlobalDrawingOptionsPopup() {
 
   const handleBuffer = useCallback(
     (item: MyMapsItemType) => {
-      console.log("Buffer feature:", item.id);
-      emit("mymap-buffer", { item });
+      setActiveTool("buffer");
       handleToolsPopupClose();
     },
-    [emit, handleToolsPopupClose]
+    [handleToolsPopupClose]
   );
 
   const handleSymbolize = useCallback(
@@ -305,6 +306,13 @@ export default function GlobalDrawingOptionsPopup() {
         setDrawingOptionsItemId(item.id);
         setDrawingOptionsPosition({ x: coordinate[0], y: coordinate[1] });
         setIsDrawingOptionsOpen(true);
+        // ✅ CRITICAL: Reset activeTool when switching to a new feature
+        setActiveTool(undefined);
+
+        console.log("🔄 Switching to new feature - reset activeTool to default popup", {
+          newFeatureId: item.id,
+          previousTool: activeTool,
+        });
       } else {
         console.warn("❌ Invalid data received for drawing options:", {
           hasData: !!data,
@@ -320,7 +328,7 @@ export default function GlobalDrawingOptionsPopup() {
     return () => {
       removeListener(listenerId);
     };
-  }, [addListener, removeListener]);
+  }, [addListener, removeListener, activeTool]); // Include activeTool to capture current state
 
   return (
     <>
@@ -328,6 +336,7 @@ export default function GlobalDrawingOptionsPopup() {
         item={drawingOptionsItem}
         coordinate={drawingOptionsPosition ? [drawingOptionsPosition.x, drawingOptionsPosition.y] : null}
         isOpen={isDrawingOptionsOpen}
+        activeTool={activeTool}
         onClose={handleCloseDrawingOptions}
         onTools={handleDrawingOptionsTools}
         onDelete={handleDrawingOptionsDelete}
