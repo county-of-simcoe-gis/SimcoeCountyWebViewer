@@ -28,7 +28,7 @@ interface ColorRGB {
 
 const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
   const { map } = useMapStore();
-  const { emit } = useEventStore();
+  const { emit, addListener, removeListener } = useEventStore();
 
   const [color, setColor] = useState<ColorRGB>({ r: 85, g: 243, b: 30, a: 1 });
   const [distance, setDistance] = useState<number>(0);
@@ -65,17 +65,32 @@ const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
   useEffect(() => {
     const cleanup = () => {
       if (vectorLayerRef.current && map) {
-        map.removeLayer(vectorLayerRef.current);
+        console.log("🧹 MyMapsBuffer: Clearing buffer preview layer");
+        const source = vectorLayerRef.current.getSource();
+        if (source) {
+          source.clear();
+        }
       }
       setAddMessageVisible(false);
     };
 
-    // Listen for popup close events
-    const handlePopupClose = () => cleanup();
+    // Listen for popup close events via event store
+    const handlePopupClose = () => {
+      console.log("🧹 MyMapsBuffer: Received popup close event");
+      cleanup();
+    };
 
-    // Since we don't have window.emitter in the new app, we'll rely on the component unmounting
-    return cleanup;
-  }, [map]);
+    // Add event listener for popup close - returns listener ID
+    console.log("🧹 MyMapsBuffer: Setting up popup close listener");
+    const listenerId = addListener("drawing-options-popup-close", handlePopupClose);
+    console.log("🧹 MyMapsBuffer: Listener set up with ID:", listenerId);
+
+    // Cleanup on unmount
+    return () => {
+      removeListener(listenerId);
+      cleanup();
+    };
+  }, [map, addListener, removeListener]);
 
   // Create style for buffer preview
   const getStyle = (): Style => {

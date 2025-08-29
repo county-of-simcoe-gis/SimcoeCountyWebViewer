@@ -52,10 +52,33 @@ export default function GlobalDrawingOptionsPopup() {
   }, [drawingOptionsItemId, drawingOptionsItem]);
 
   const handleCloseDrawingOptions = React.useCallback(() => {
+    console.log("🧹 Closing Drawing Options popup - triggering cleanup");
+
+    // Clean up the buffer preview layer from DrawingOptionsPopup
+    if (map) {
+      const bufferLayer = map.getAllLayers().find((layer) => layer.get("id") === "drawing-options-buffer-preview");
+      if (bufferLayer) {
+        console.log("🧹 Found and clearing drawing-options-buffer-preview layer");
+        const source = bufferLayer.getSource();
+        if (source && "clear" in source) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (source as any).clear();
+          console.log("🧹 Buffer preview layer cleared");
+        }
+      } else {
+        console.log("🧹 No drawing-options-buffer-preview layer found");
+      }
+    }
+
+    // Also emit cleanup event for buffer component (for MyMapsBuffer layer)
+    console.log("🧹 About to emit drawing-options-popup-close event");
+    emit("drawing-options-popup-close");
+    console.log("🧹 Emitted drawing-options-popup-close event");
+
     setIsDrawingOptionsOpen(false);
     setDrawingOptionsItemId(null);
     setActiveTool(undefined);
-  }, []);
+  }, [emit, map]);
 
   // Close popup if item no longer exists in store (e.g., was deleted)
   useEffect(() => {
