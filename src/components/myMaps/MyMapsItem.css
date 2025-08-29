@@ -177,6 +177,14 @@
   transition: opacity 300ms ease, transform 300ms ease;
 }
 
+/* Deleting state for smooth fade-out */
+.sc-mymaps-item.deleting {
+  opacity: 0;
+  transform: translateX(10px) scale(0.95);
+  transition: opacity 400ms ease, transform 400ms ease;
+  pointer-events: none;
+}
+
 /* Compact mode for smaller screens */
 @media (max-width: 768px) {
   .sc-mymaps-item {

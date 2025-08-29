@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useEventStore } from "@/stores/eventStore";
 import { useMyMapsStore } from "@/stores/myMapsStore";
+import { useMapStore } from "@/stores/mapStore";
 import DrawingOptionsPopup from "./DrawingOptionsPopup";
 import MyMapsItemPopup from "./MyMapsItemPopup";
 import type { MyMapsItem as MyMapsItemType } from "@/types/myMaps";
@@ -25,6 +26,7 @@ export default function GlobalDrawingOptionsPopup() {
 
   const { emit, addListener, removeListener } = useEventStore();
   const { items, removeItem, updateItemLabel, updateItemLabelVisibility, updateItemLabelRotation } = useMyMapsStore();
+  const { map } = useMapStore();
 
   // Get fresh item data from store (reactive subscription)
   const drawingOptionsItem = drawingOptionsItemId ? items.find((item) => item.id === drawingOptionsItemId) || null : null;
@@ -138,10 +140,166 @@ export default function GlobalDrawingOptionsPopup() {
     setToolsPopupItem(null);
   }, []);
 
-  const handleBuffer = useCallback(
+  // Helper function to calculate polygon centroid
+  const calculatePolygonCentroid = (coordinates: number[][]): [number, number] => {
+    let x = 0;
+    let y = 0;
+    const length = coordinates.length;
+
+    for (let i = 0; i < length; i++) {
+      x += coordinates[i][0];
+      y += coordinates[i][1];
+    }
+
+    return [x / length, y / length];
+  };
+
+  // Helper function to calculate LineString point at 50% distance
+  const calculateLineStringMidpoint = (coordinates: number[][]): [number, number] => {
+    if (coordinates.length < 2) return [0, 0];
+    if (coordinates.length === 2) {
+      // Simple midpoint for 2 points
+      return [(coordinates[0][0] + coordinates[1][0]) / 2, (coordinates[0][1] + coordinates[1][1]) / 2];
+    }
+
+    // Calculate total line length
+    let totalLength = 0;
+    const segments: { length: number; start: number[]; end: number[] }[] = [];
+
+    for (let i = 0; i < coordinates.length - 1; i++) {
+      const start = coordinates[i];
+      const end = coordinates[i + 1];
+      const segmentLength = Math.sqrt(Math.pow(end[0] - start[0], 2) + Math.pow(end[1] - start[1], 2));
+      segments.push({ length: segmentLength, start, end });
+      totalLength += segmentLength;
+    }
+
+    // Find point at 50% of total length
+    const targetLength = totalLength / 2;
+    let accumulatedLength = 0;
+
+    for (const segment of segments) {
+      if (accumulatedLength + segment.length >= targetLength) {
+        // Point is in this segment
+        const remainingLength = targetLength - accumulatedLength;
+        const ratio = remainingLength / segment.length;
+        return [segment.start[0] + (segment.end[0] - segment.start[0]) * ratio, segment.start[1] + (segment.end[1] - segment.start[1]) * ratio];
+      }
+      accumulatedLength += segment.length;
+    }
+
+    // Fallback to last point
+    return coordinates[coordinates.length - 1] as [number, number];
+  };
+
+  // Buffer handler for MyMaps list (should open Drawing Options popup)
+  const handleBufferFromMyMapsList = useCallback(
     (item: MyMapsItemType) => {
+      console.log("Opening buffer tool for item from MyMaps list:", item.id);
+
+      // For Drawing Options popup, we need map coordinates, not screen coordinates
+      // Try to get the feature's map coordinates first, fallback to map center
+      let coordinate = [0, 0];
+
+      if (item.featureGeoJSON) {
+        try {
+          console.log("Raw featureGeoJSON for item:", item.id, ":", item.featureGeoJSON);
+          const feature = JSON.parse(item.featureGeoJSON);
+          console.log("Parsed feature:", feature);
+
+          // Handle GeoJSON Feature format
+          const geometry = feature.type === "Feature" ? feature.geometry : feature;
+          console.log("Extracted geometry:", geometry);
+
+          if (geometry && geometry.coordinates) {
+            // Calculate center coordinates for each geometry type
+            switch (geometry.type) {
+              case "Point":
+                coordinate = geometry.coordinates;
+                console.log("Point coordinates extracted:", coordinate);
+                break;
+              case "LineString":
+                // Find point at 50% distance along the line
+                coordinate = calculateLineStringMidpoint(geometry.coordinates);
+                console.log("LineString 50% distance point extracted:", coordinate);
+                break;
+              case "Polygon":
+                // Calculate proper centroid of polygon
+                coordinate = calculatePolygonCentroid(geometry.coordinates[0]); // Use outer ring
+                console.log("Polygon centroid coordinates extracted:", coordinate);
+                break;
+              default:
+                console.log("Unknown geometry type:", geometry.type);
+                coordinate = [0, 0];
+            }
+          } else {
+            console.log("No coordinates found in geometry");
+            coordinate = [0, 0];
+          }
+        } catch (error) {
+          console.error("Error parsing geometry for buffer positioning:", error);
+          coordinate = [0, 0];
+        }
+      } else {
+        console.log("No featureGeoJSON found for item:", item.id);
+      }
+
+      // If coordinates are invalid (0,0 or undefined), use map center as fallback
+      if (!coordinate || coordinate.length < 2 || (coordinate[0] === 0 && coordinate[1] === 0)) {
+        console.log("Invalid/zero coordinates detected, using map center as fallback");
+
+        // Try to get map center with a slight delay to ensure map is ready
+        setTimeout(() => {
+          if (map) {
+            const view = map.getView();
+            const center = view.getCenter();
+            if (center) {
+              coordinate = center;
+              console.log("Using delayed map center coordinate:", coordinate);
+
+              // Open drawing options popup with buffer tool active
+              setDrawingOptionsItemId(item.id);
+              setDrawingOptionsPosition({ x: coordinate[0], y: coordinate[1] });
+              setIsDrawingOptionsOpen(true);
+              setActiveTool("buffer");
+              return;
+            }
+          }
+
+          // Fallback if map center still not available
+          console.log("Using fallback coordinate");
+          coordinate = [-8500000, 5600000]; // Approximate Ontario center in Web Mercator
+
+          setDrawingOptionsItemId(item.id);
+          setDrawingOptionsPosition({ x: coordinate[0], y: coordinate[1] });
+          setIsDrawingOptionsOpen(true);
+          setActiveTool("buffer");
+        }, 100);
+
+        return; // Exit early, popup will open in setTimeout
+      }
+
+      console.log("Using valid feature coordinate:", coordinate);
+
+      // Open drawing options popup with buffer tool active immediately
+      setDrawingOptionsItemId(item.id);
+      setDrawingOptionsPosition({ x: coordinate[0], y: coordinate[1] });
+      setIsDrawingOptionsOpen(true);
       setActiveTool("buffer");
+    },
+    [map]
+  );
+
+  // Buffer handler for Drawing Options tools popup (should just activate buffer tool)
+  const handleBufferFromDrawingOptions = useCallback(
+    (item: MyMapsItemType) => {
+      console.log("Activating buffer tool for item from Drawing Options:", item.id);
+
+      // Close the tools popup
       handleToolsPopupClose();
+
+      // Just activate the buffer tool since Drawing Options popup is already open
+      setActiveTool("buffer");
     },
     [handleToolsPopupClose]
   );
@@ -296,7 +454,7 @@ export default function GlobalDrawingOptionsPopup() {
     [emit, handleToolsPopupClose]
   );
 
-  // Listen for requests to show the drawing options popup
+  // Listen for requests to show the drawing options popup and buffer events
   useEffect(() => {
     const handleShowDrawingOptions = (data?: { [key: string]: unknown }) => {
       if (data && data.item && data.coordinate) {
@@ -323,12 +481,23 @@ export default function GlobalDrawingOptionsPopup() {
       }
     };
 
-    const listenerId = addListener("mymap-show-drawing-options", handleShowDrawingOptions);
+    const handleBufferFromMyMaps = (data?: { [key: string]: unknown }) => {
+      if (data && data.item) {
+        const item = data.item as MyMapsItemType;
+        handleBufferFromMyMapsList(item);
+      } else {
+        console.warn("❌ Invalid data received for buffer:", data);
+      }
+    };
+
+    const drawingOptionsListenerId = addListener("mymap-show-drawing-options", handleShowDrawingOptions);
+    const bufferListenerId = addListener("mymap-buffer", handleBufferFromMyMaps);
 
     return () => {
-      removeListener(listenerId);
+      removeListener(drawingOptionsListenerId);
+      removeListener(bufferListenerId);
     };
-  }, [addListener, removeListener, activeTool]); // Include activeTool to capture current state
+  }, [addListener, removeListener, activeTool, handleBufferFromMyMapsList]); // Include activeTool to capture current state
 
   return (
     <>
@@ -351,7 +520,7 @@ export default function GlobalDrawingOptionsPopup() {
         position={toolsPopupPosition}
         isOpen={isToolsPopupOpen}
         onClose={handleToolsPopupClose}
-        onBuffer={handleBuffer}
+        onBuffer={handleBufferFromDrawingOptions}
         onSymbolize={handleSymbolize}
         onZoomTo={handleZoomTo}
         onDelete={handleDeleteFromToolsPopup}

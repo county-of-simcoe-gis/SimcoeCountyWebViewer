@@ -20,6 +20,7 @@ const MyMapsItem: React.FC<MyMapsItemProps> = ({ item, onLabelChange, onDelete, 
   const { toggleItemVisibility } = useMyMapsStore();
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [tempLabel, setTempLabel] = useState(item.label);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Sync tempLabel with item.label when it changes from external updates
   useEffect(() => {
@@ -54,7 +55,14 @@ const MyMapsItem: React.FC<MyMapsItemProps> = ({ item, onLabelChange, onDelete, 
   };
 
   const handleDeleteClick = () => {
-    onDelete(item.id);
+    if (isDeleting) return; // Prevent multiple clicks during animation
+
+    setIsDeleting(true);
+
+    // Delay the actual deletion to allow fade-out animation
+    setTimeout(() => {
+      onDelete(item.id);
+    }, 400); // Match the CSS transition duration
   };
 
   const handleOptionsClick = (e: React.MouseEvent) => {
@@ -92,7 +100,7 @@ const MyMapsItem: React.FC<MyMapsItemProps> = ({ item, onLabelChange, onDelete, 
   };
 
   return (
-    <div className={`sc-mymaps-item ${!item.visible ? "hidden" : ""} ${isEditing ? "editing" : ""}`} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+    <div className={`sc-mymaps-item ${!item.visible ? "hidden" : ""} ${isEditing ? "editing" : ""} ${isDeleting ? "deleting" : ""}`} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
       {/* Visibility checkbox */}
       <div className="sc-mymaps-item-checkbox">
         <input type="checkbox" checked={item.visible} onChange={handleVisibilityToggle} title={item.visible ? "Hide item" : "Show item"} />
@@ -139,9 +147,9 @@ const MyMapsItem: React.FC<MyMapsItemProps> = ({ item, onLabelChange, onDelete, 
 
       {/* Action buttons */}
       <div className="sc-mymaps-item-actions">
-        {/* Symbolizer button */}
-        <button className="sc-mymaps-item-action-btn" onClick={handleOptionsClick} title="Symbolize feature" type="button">
-          <Image src="/images/symbolize.png" alt="Symbolize" width={16} height={16} />
+        {/* Delete button */}
+        <button className="sc-mymaps-item-action-btn" onClick={handleDeleteClick} title="Delete item" type="button">
+          <Image src="/images/myMaps/eraser.png" alt="Delete" width={16} height={16} />
         </button>
 
         {/* Toolbox button */}

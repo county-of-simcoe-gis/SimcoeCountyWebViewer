@@ -44,15 +44,22 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
 
     // Adjust position to keep popup within viewport
     const popupWidth = 200;
-    const popupHeight = 300;
+    const popupHeight = 250; // Reduced from 300 as it was too large
+    const margin = 10; // Minimum distance from viewport edges
 
-    if (x + popupWidth > window.innerWidth) {
-      x = x - popupWidth;
+    // Horizontal adjustment - prefer showing to the left if not enough space on the right
+    if (x + popupWidth + margin > window.innerWidth) {
+      x = Math.max(margin, x - popupWidth);
     }
 
-    if (y + popupHeight > window.innerHeight) {
-      y = y - popupHeight;
+    // Vertical adjustment - prefer showing above if not enough space below
+    if (y + popupHeight + margin > window.innerHeight) {
+      y = Math.max(margin, y - popupHeight);
     }
+
+    // Ensure minimum margins from viewport edges
+    x = Math.max(margin, Math.min(x, window.innerWidth - popupWidth - margin));
+    y = Math.max(margin, Math.min(y, window.innerHeight - popupHeight - margin));
 
     setPopupItem(item);
     setPopupPosition({ x, y });
@@ -68,7 +75,6 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
   const handleBuffer = useCallback(
     (item: MyMapsItemType) => {
       console.log("Buffer feature:", item.id);
-      // TODO: Open buffer dialog for the item
       emit("mymap-buffer", { item });
     },
     [emit]
