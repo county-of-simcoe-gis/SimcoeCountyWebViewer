@@ -332,6 +332,9 @@ export default function GlobalDrawingOptionsPopup() {
       console.log("Symbolize feature:", item.id);
       emit("mymap-symbolize", { item });
       handleToolsPopupClose();
+
+      // Set the active tool to show the symbolizer component
+      setActiveTool("symbolize");
     },
     [emit, handleToolsPopupClose]
   );

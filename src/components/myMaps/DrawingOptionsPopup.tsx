@@ -9,6 +9,7 @@ import { useMapStore } from "@/stores/mapStore";
 import { activateTab } from "@/utils/helpersUI";
 import MyMapsPopupLabel from "./MyMapsPopupLabel";
 import MyMapsBuffer from "./MyMapsBuffer";
+import MyMapsSymbolizer from "./MyMapsSymbolizer";
 import FooterButtons from "./FooterButtons";
 import "./DrawingOptionsPopup.css";
 
@@ -926,6 +927,80 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       console.log("❌ Could not find buffer add link element for event binding");
     }
 
+    // Re-attach symbolizer component event listeners (React handlers are lost when copying HTML to overlay)
+    const symbolizerContainer = overlayElementRef.current.querySelector(".sc-mymaps-symbolizer-container");
+    if (symbolizerContainer) {
+      console.log("🔧 Setting up Symbolizer DOM event listeners");
+
+      // Point style dropdown
+      const pointStyleSelect = symbolizerContainer.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
+      if (pointStyleSelect) {
+        pointStyleSelect.addEventListener("change", (e) => {
+          e.stopPropagation();
+          console.log("🎯 Point style changed via DOM event:", (e.target as HTMLSelectElement).value);
+        });
+        (pointStyleSelect as HTMLElement).style.pointerEvents = "auto";
+      }
+
+      // Stroke type dropdown
+      const strokeTypeSelect = symbolizerContainer.querySelector("select[name='pointOutline']") as HTMLSelectElement;
+      if (strokeTypeSelect) {
+        strokeTypeSelect.addEventListener("change", (e) => {
+          e.stopPropagation();
+          console.log("🎯 Stroke type changed via DOM event:", (e.target as HTMLSelectElement).value);
+        });
+        (strokeTypeSelect as HTMLElement).style.pointerEvents = "auto";
+      }
+
+      // Range sliders (size, opacity, stroke width, rotation)
+      const sliders = symbolizerContainer.querySelectorAll("input[type='range']");
+      sliders.forEach((slider, index) => {
+        const handleSliderChange = (e: Event) => {
+          e.stopPropagation();
+          console.log(`🎯 Slider ${index} changed via DOM event:`, (e.target as HTMLInputElement).value);
+        };
+
+        slider.addEventListener("input", handleSliderChange);
+        slider.addEventListener("change", handleSliderChange);
+        (slider as HTMLElement).style.pointerEvents = "auto";
+
+        // Prevent slider from interfering with header drag
+        slider.addEventListener("mousedown", (e) => {
+          e.stopPropagation();
+        });
+      });
+
+      // Color picker buttons
+      const fillColorButton = symbolizerContainer.querySelector("#sc-mymaps-symbolizer-color-button") as HTMLButtonElement;
+      if (fillColorButton) {
+        fillColorButton.addEventListener("click", (e) => {
+          console.log("🎯 Fill color button clicked via DOM event");
+          e.preventDefault();
+          e.stopPropagation();
+        });
+        fillColorButton.addEventListener("mousedown", (e) => {
+          e.stopPropagation();
+        });
+        (fillColorButton as HTMLElement).style.pointerEvents = "auto";
+      }
+
+      const strokeColorButton = symbolizerContainer.querySelector("#sc-mymaps-symbolizer-stroke-color-button") as HTMLButtonElement;
+      if (strokeColorButton) {
+        strokeColorButton.addEventListener("click", (e) => {
+          console.log("🎯 Stroke color button clicked via DOM event");
+          e.preventDefault();
+          e.stopPropagation();
+        });
+        strokeColorButton.addEventListener("mousedown", (e) => {
+          e.stopPropagation();
+        });
+        (strokeColorButton as HTMLElement).style.pointerEvents = "auto";
+      }
+
+      // The container itself should NOT have pointerEvents = "auto" to avoid header conflicts
+      (symbolizerContainer as HTMLElement).style.pointerEvents = "";
+    }
+
     // Enable interactions ONLY on specific buffer elements (targeted approach)
     // This prevents conflicts with header drag functionality
     const bufferContainer = overlayElementRef.current.querySelector(".sc-mymaps-buffer-container");
@@ -1160,9 +1235,16 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         return;
       }
 
-      // Additional safeguard: Don't start drag if click is on any buffer-related elements
-      if (target.closest(".sc-mymaps-buffer-container") || target.id === "sc-mymaps-buffer-color-button-picker" || target.matches("input, select, button, label")) {
-        console.log("🚫 Drag blocked - click on buffer element:", target.tagName, target.id || target.className);
+      // Additional safeguard: Don't start drag if click is on any tool-related elements
+      if (
+        target.closest(".sc-mymaps-buffer-container") ||
+        target.closest(".sc-mymaps-symbolizer-container") ||
+        target.id === "sc-mymaps-buffer-color-button-picker" ||
+        target.id === "sc-mymaps-symbolizer-color-button" ||
+        target.id === "sc-mymaps-symbolizer-stroke-color-button" ||
+        target.matches("input, select, button, label")
+      ) {
+        console.log("🚫 Drag blocked - click on tool element:", target.tagName, target.id || target.className);
         return;
       }
 
@@ -1275,7 +1357,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
           <MyMapsPopupLabel item={item} onLabelChange={onLabelChange} onLabelRotationChange={onLabelRotationChange} />
 
           {/* Tool-specific components */}
-          <div className="sc-hidden">{/* Symbolizer placeholder */}</div>
+          <MyMapsSymbolizer visible={activeTool === "symbolize"} item={item} />
           <MyMapsBuffer visible={activeTool === "buffer"} item={item} />
           <div className="sc-hidden">{/* Measure placeholder */}</div>
 
