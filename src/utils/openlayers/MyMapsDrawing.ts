@@ -12,7 +12,7 @@ import { fromCircle } from "ol/geom/Polygon";
 import { Style, Fill, Stroke, Circle as CircleStyle, Text, RegularShape } from "ol/style";
 import { Feature } from "ol";
 import { Circle, LineString } from "ol/geom";
-import { generateUID, convertLineToArrow } from "@/utils/myMapsHelpers";
+import { generateUID, convertLineToArrow, getBearing } from "@/utils/myMapsHelpers";
 import type { MyMapsItem, StyleJSON } from "@/types/myMaps";
 
 
@@ -187,6 +187,20 @@ export class MyMapsDrawingManager {
       const arrowLine = convertLineToArrow(geometry as LineString);
       feature.setGeometry(arrowLine);
       feature.setProperties({ ...feature.getProperties(), isArrow: true });
+    }
+
+    // Calculate bearing for bearing type
+    if (drawType === "Bearing" && geometry?.getType() === "LineString") {
+      const lineGeometry = geometry as LineString;
+      const coords = lineGeometry.getCoordinates();
+      if (coords.length >= 2) {
+        const bearing = getBearing(coords[0], coords[coords.length - 1]);
+        feature.setProperties({ 
+          ...feature.getProperties(), 
+          bearing: bearing,
+          bearingLabel: `Bearing: ${bearing}°`
+        });
+      }
     }
 
     // Apply styling based on type
@@ -708,6 +722,13 @@ export class MyMapsDrawingManager {
       featureLabel: feature.get(fieldName)
     });
     
+    // Apply bearing rotation adjustment for Bearing and Measure tools (like original app)
+    const drawType = feature.get("drawType") || feature.get("originalDrawType");
+    if (drawType === "Bearing" || drawType === "Measure") {
+      // Use the same rotation logic as original app: bearing > 180 ? bearing + 90 : bearing - 90
+      rotation = rotation > 180 ? rotation + 90 : rotation - 90;
+    }
+    
     // OLD APP EXACT PARAMETERS (from drawingHelpers.js call):
     // helpers.createTextStyle(feature, "label", undefined, undefined, undefined,
     //   "15px", undefined, -8, "bold", undefined, undefined, 
@@ -856,11 +877,20 @@ export class MyMapsDrawingManager {
       const style = feature.getStyle() as Style;
       if (style && style.getText()) {
         const label = feature.get("label") || "";
+        
+        // Apply bearing rotation adjustment for Bearing and Measure tools (like original app)
+        let displayRotation = rotation;
+        const drawType = feature.get("drawType") || feature.get("originalDrawType");
+        if (drawType === "Bearing" || drawType === "Measure") {
+          // Use the same rotation logic as original app: bearing > 180 ? bearing + 90 : bearing - 90
+          displayRotation = rotation > 180 ? rotation + 90 : rotation - 90;
+        }
+        
         const newTextStyle = this.createTextStyle(
           label,
           "15px", 
           "bold",
-          rotation,
+          displayRotation,
           -8
         );
         

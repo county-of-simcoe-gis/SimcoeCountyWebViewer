@@ -490,11 +490,21 @@ export const createMyMapsItem = (
     }
   }
 
+  // Set label rotation to the actual bearing value for the slider
+  let labelRotation = 0
+  if (drawType === 'Bearing' || drawType === 'Measure') {
+    const bearing = feature.get('bearing')
+    if (typeof bearing === 'number') {
+      // Store the raw bearing value for the rotation slider
+      labelRotation = bearing
+    }
+  }
+
   return {
     id,
     label: defaultLabel,
     labelVisible: drawType === 'Text' || drawType === 'Bearing' || drawType === 'Measure',
-    labelRotation: 0,
+    labelRotation,
     labelStyle: null,
     featureGeoJSON: '', // Will be set by calling code
     style: style || {} as StyleJSON,

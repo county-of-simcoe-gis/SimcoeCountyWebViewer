@@ -7,6 +7,7 @@ import { Feature } from 'ol'
 import { Point, LineString, Polygon, Circle } from 'ol/geom'
 import { fromCircle } from 'ol/geom/Polygon'
 import { getLength, getArea } from 'ol/sphere'
+import { transform } from 'ol/proj'
 import GeoJSON from 'ol/format/GeoJSON'
 import KML from 'ol/format/KML'
 import EsriJSON from 'ol/format/EsriJSON'
@@ -32,16 +33,41 @@ export const radiansToDegrees = (radians: number): number => {
   return radians * (180 / Math.PI)
 }
 
-// Calculate bearing between two points
-export const calculateBearing = (coord1: number[], coord2: number[]): number => {
-  const dLon = coord2[0] - coord1[0]
-  const y = Math.sin(dLon) * Math.cos(coord2[1])
-  const x = Math.cos(coord1[1]) * Math.sin(coord2[1]) - 
-            Math.sin(coord1[1]) * Math.cos(coord2[1]) * Math.cos(dLon)
-  
-  const bearing = Math.atan2(y, x)
-  return ((radiansToDegrees(bearing) + 360) % 360)
+// Convert Web Mercator coordinates to Lat/Long
+export const toLatLongFromWebMercator = (coords: number[]): number[] => {
+  return transform(coords, 'EPSG:3857', 'EPSG:4326')
 }
+
+// Convert Lat/Long coordinates to Web Mercator  
+export const toWebMercatorFromLatLong = (coords: number[]): number[] => {
+  return transform(coords, 'EPSG:4326', 'EPSG:3857')
+}
+
+// Calculate geographic bearing between two points (like original app)
+export const getBearing = (fromPoint: number[], toPoint: number[]): number => {
+  const fromPointLL = toLatLongFromWebMercator(fromPoint)
+  const toPointLL = toLatLongFromWebMercator(toPoint)
+
+  const startLat = degreesToRadians(fromPointLL[1])
+  const startLong = degreesToRadians(fromPointLL[0])
+  const endLat = degreesToRadians(toPointLL[1])
+  const endLong = degreesToRadians(toPointLL[0])
+
+  let dLong = endLong - startLong
+
+  const dPhi = Math.log(Math.tan(endLat / 2.0 + Math.PI / 4.0) / Math.tan(startLat / 2.0 + Math.PI / 4.0))
+  if (Math.abs(dLong) > Math.PI) {
+    if (dLong > 0.0) dLong = -(2.0 * Math.PI - dLong)
+    else dLong = 2.0 * Math.PI + dLong
+  }
+
+  const deg = (radiansToDegrees(Math.atan2(dLong, dPhi)) + 360.0) % 360.0
+  const degRounded = Math.round(deg * 100) / 100
+  return degRounded
+}
+
+// Legacy function name for backward compatibility
+export const calculateBearing = getBearing
 
 // Format length output
 export const formatLength = (line: LineString): string => {
