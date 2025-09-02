@@ -11,8 +11,8 @@ import GeoJSON from "ol/format/GeoJSON";
 import { fromCircle } from "ol/geom/Polygon";
 import { Style, Fill, Stroke, Circle as CircleStyle, Text, RegularShape } from "ol/style";
 import { Feature } from "ol";
-import { Circle } from "ol/geom";
-import { generateUID } from "@/utils/myMapsHelpers";
+import { Circle, LineString } from "ol/geom";
+import { generateUID, convertLineToArrow } from "@/utils/myMapsHelpers";
 import type { MyMapsItem, StyleJSON } from "@/types/myMaps";
 
 
@@ -184,7 +184,8 @@ export class MyMapsDrawingManager {
 
     // Convert line to arrow for arrow type
     if (drawType === "Arrow" && geometry?.getType() === "LineString") {
-      // This would be implemented with arrow geometry conversion
+      const arrowLine = convertLineToArrow(geometry as LineString);
+      feature.setGeometry(arrowLine);
       feature.setProperties({ ...feature.getProperties(), isArrow: true });
     }
 

@@ -227,7 +227,7 @@ export const styleFromJSON = (styleJSON: StyleJSON): Style => {
   const styleConfig: {
     fill?: Fill
     stroke?: Stroke
-    image?: CircleStyle
+    image?: CircleStyle | RegularShape
     text?: Text
   } = {}
 
@@ -378,40 +378,27 @@ export const convertCircleToPolygon = (feature: Feature): Feature => {
   return feature
 }
 
-// Create arrow geometry from LineString
-export const createArrowFromLine = (lineGeometry: LineString): Polygon => {
-  const coords = lineGeometry.getCoordinates()
-  if (coords.length < 2) throw new Error('Line must have at least 2 coordinates')
-  
-  const start = coords[0]
-  const end = coords[coords.length - 1]
-  
-  // Calculate arrow head
-  const angle = Math.atan2(end[1] - start[1], end[0] - start[0])
-  const arrowLength = 20
-  const arrowAngle = Math.PI / 6 // 30 degrees
-  
-  const arrowHead1 = [
-    end[0] - arrowLength * Math.cos(angle - arrowAngle),
-    end[1] - arrowLength * Math.sin(angle - arrowAngle)
-  ]
-  
-  const arrowHead2 = [
-    end[0] - arrowLength * Math.cos(angle + arrowAngle),
-    end[1] - arrowLength * Math.sin(angle + arrowAngle)
-  ]
-  
-  // Create polygon for arrow
-  const arrowCoords = [
-    ...coords,
-    arrowHead1,
-    end,
-    arrowHead2,
-    end,
-    coords[0] // Close the polygon
-  ]
-  
-  return new Polygon([arrowCoords])
+// Convert LineString to arrow (keeps as LineString with arrowhead at end)
+export const convertLineToArrow = (geometry: LineString): LineString => {
+  // GET 10% OF THE END OF LINE TO USE AS ARROW (like original app)
+  const start = geometry.getCoordinateAt(0.8)
+  const end = geometry.getCoordinateAt(1)
+
+  // RIGHT OF LINE - create arrow wing
+  const lineStr1 = new LineString([start, end])
+  lineStr1.rotate(0.7853981634, end) // 45 degrees in radians
+
+  // LEFT OF LINE - create arrow wing  
+  const lineStr2 = new LineString([start, end])
+  lineStr2.rotate(-0.7853981634, end) // -45 degrees in radians
+
+  // Clone original line and append arrowhead coordinates
+  const clone = geometry.clone()
+  clone.appendCoordinate(lineStr1.getFirstCoordinate())
+  clone.appendCoordinate(lineStr2.getFirstCoordinate())
+  clone.appendCoordinate(end)
+
+  return clone
 }
 
 // Validate MyMaps item
