@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { Style } from 'ol/style'
 import type { Feature } from 'ol'
 import type { Geometry } from 'ol/geom'
+import { styleToJSON } from '@/utils/myMapsHelpers'
 
 // OpenLayers style JSON representation
 export interface StyleJSON {
@@ -17,13 +18,14 @@ export interface StyleJSON {
     type: 'circle' | 'icon' | 'regularShape'
     radius?: number
     fill?: { color: string | number[] }
-    stroke?: { color: string | number[]; width?: number }
+    stroke?: { color: string | number[]; width?: number; lineDash?: number[] }
     src?: string
     scale?: number
     // RegularShape specific properties
     points?: number
     radius2?: number
     angle?: number
+    rotation?: number
   }
   text?: {
     text: string
@@ -75,6 +77,8 @@ export interface MyMapsItem {
   isParcel?: boolean // For property features
   pointType?: string // For point styling
   strokeType?: string // For line styling
+  fillAlpha?: number // For style opacity slider persistence
+  strokeAlpha?: number // For outline opacity slider persistence
   hasChanged?: boolean // For tracking modifications
 }
 
@@ -360,14 +364,29 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => ({
   saveToStorage: () => {
     try {
       const state = get()
+      
+      // Convert OpenLayers Style objects to JSON for proper serialization
+      const serializedItems = state.items.map(item => {
+        if (item.style instanceof Style) {
+          // Convert OpenLayers Style to JSON
+          return {
+            ...item,
+            style: styleToJSON(item.style)
+          }
+        }
+        // If style is already JSON or null, keep as-is
+        return item
+      })
+      
       const dataToSave = {
-        items: state.items,
+        items: serializedItems,
         drawColor: state.drawColor,
         drawOpacity: state.drawOpacity,
         drawingCounter: state.drawingCounter,
         config: state.config
       }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave))
+      console.log('💾 MyMaps saved to storage:', { itemCount: serializedItems.length })
     } catch (error) {
       console.error('Failed to save MyMaps to storage:', error)
     }
@@ -401,6 +420,17 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => ({
           drawOpacity: data.drawOpacity || 0.8,
           drawingCounter,
           config: { ...DEFAULT_CONFIG, ...data.config }
+        })
+        
+        console.log('📥 MyMaps loaded from storage:', { 
+          itemCount: data.items?.length || 0,
+          items: data.items?.map((item: MyMapsItem) => ({
+            id: item.id,
+            label: item.label,
+            visible: item.visible,
+            hasStyle: !!item.style,
+            styleType: item.style instanceof Style ? 'OpenLayers Style' : 'StyleJSON'
+          })) || []
         })
       }
     } catch (error) {

@@ -60,16 +60,31 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
   const itemLabel = item?.label;
 
   // Color utility function for hex conversion (used by color picker popup and state extraction)
-  const hexToRgbObject = useCallback((hex: string): { r: number; g: number; b: number; a: number } => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-      ? {
-          r: parseInt(result[1], 16),
-          g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16),
-          a: 1,
-        }
-      : { r: 0, g: 0, b: 0, a: 1 };
+  const hexToRgbObject = useCallback((colorStr: string): { r: number; g: number; b: number; a: number } => {
+    // Handle rgba format: rgba(255, 0, 0, 0.5)
+    const rgbaMatch = /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/.exec(colorStr);
+    if (rgbaMatch) {
+      return {
+        r: parseInt(rgbaMatch[1], 10),
+        g: parseInt(rgbaMatch[2], 10),
+        b: parseInt(rgbaMatch[3], 10),
+        a: rgbaMatch[4] ? parseFloat(rgbaMatch[4]) : 1,
+      };
+    }
+
+    // Handle hex format: #ff0000
+    const hexMatch = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(colorStr);
+    if (hexMatch) {
+      return {
+        r: parseInt(hexMatch[1], 16),
+        g: parseInt(hexMatch[2], 16),
+        b: parseInt(hexMatch[3], 16),
+        a: 1,
+      };
+    }
+
+    // Fallback
+    return { r: 0, g: 0, b: 0, a: 1 };
   }, []);
 
   // Helper function to extract current color from DOM color button
@@ -143,12 +158,12 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       pointType: item.pointType || "circle",
       strokeType: item.strokeType || "normal",
       radius: 8,
-      fillAlpha: 0.8,
-      strokeAlpha: 1.0,
+      fillAlpha: item.fillAlpha ?? 0.8, // Use saved fillAlpha or default
+      strokeAlpha: item.strokeAlpha ?? 1.0, // Use saved strokeAlpha or default
       strokeWidth: 2,
       rotation: 0,
-      fillColor: { r: 232, g: 9, b: 229, a: 0.8 }, // Default pink
-      strokeColor: { r: 255, g: 255, b: 255, a: 1.0 }, // Default white
+      fillColor: { r: 232, g: 9, b: 229, a: item.fillAlpha ?? 0.8 }, // Default pink with saved alpha
+      strokeColor: { r: 255, g: 255, b: 255, a: item.strokeAlpha ?? 1.0 }, // Default white with saved alpha
     };
 
     // Extract current values from style object - handle the actual storage format
@@ -172,11 +187,22 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
             const fill = imageStyle.getFill();
             console.log("🔍 Circle Fill object:", fill);
             if (fill) {
-              const fillColor = fill.getColor() as [number, number, number, number];
-              console.log("🔍 Circle fill color from OpenLayers:", fillColor);
-              if (Array.isArray(fillColor)) {
-                currentState.fillColor = { r: fillColor[0], g: fillColor[1], b: fillColor[2], a: fillColor[3] || 0.8 };
-                currentState.fillAlpha = fillColor[3] || 0.8;
+              const fillColorRaw = fill.getColor();
+              console.log("🔍 Circle fill color from OpenLayers (raw):", fillColorRaw, typeof fillColorRaw);
+
+              let fillColor: { r: number; g: number; b: number; a: number } | null = null;
+
+              if (Array.isArray(fillColorRaw)) {
+                // Handle array format [r, g, b, a]
+                fillColor = { r: fillColorRaw[0], g: fillColorRaw[1], b: fillColorRaw[2], a: fillColorRaw[3] || 0.8 };
+              } else if (typeof fillColorRaw === "string") {
+                // Handle string format (hex or rgba)
+                fillColor = hexToRgbObject(fillColorRaw);
+              }
+
+              if (fillColor) {
+                currentState.fillColor = fillColor;
+                currentState.fillAlpha = fillColor.a;
                 console.log("🔍 Converted circle fill color:", currentState.fillColor);
               }
             }
@@ -184,16 +210,30 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
             const stroke = imageStyle.getStroke();
             if (stroke) {
               currentState.strokeWidth = stroke.getWidth() || 2;
-              const strokeColor = stroke.getColor() as [number, number, number, number];
-              if (Array.isArray(strokeColor)) {
-                currentState.strokeColor = { r: strokeColor[0], g: strokeColor[1], b: strokeColor[2], a: strokeColor[3] || 1.0 };
-                currentState.strokeAlpha = strokeColor[3] || 1.0;
+              const strokeColorRaw = stroke.getColor();
+              console.log("🔍 Circle stroke color from OpenLayers (raw):", strokeColorRaw, typeof strokeColorRaw);
+
+              let strokeColor: { r: number; g: number; b: number; a: number } | null = null;
+
+              if (Array.isArray(strokeColorRaw)) {
+                // Handle array format [r, g, b, a]
+                strokeColor = { r: strokeColorRaw[0], g: strokeColorRaw[1], b: strokeColorRaw[2], a: strokeColorRaw[3] || 1.0 };
+              } else if (typeof strokeColorRaw === "string") {
+                // Handle string format (hex or rgba)
+                strokeColor = hexToRgbObject(strokeColorRaw);
+              }
+
+              if (strokeColor) {
+                currentState.strokeColor = strokeColor;
+                currentState.strokeAlpha = strokeColor.a;
+                console.log("🔍 Converted circle stroke color:", currentState.strokeColor);
               }
             }
           }
           // Handle RegularShape
           else if (imageStyle instanceof RegularShape) {
             currentState.radius = imageStyle.getRadius();
+            currentState.rotation = imageStyle.getRotation(); // Extract rotation for Angle slider!
             const points = imageStyle.getPoints();
             const radius2 = imageStyle.getRadius2();
 
@@ -210,11 +250,22 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
             const fill = imageStyle.getFill();
             console.log("🔍 RegularShape Fill object:", fill);
             if (fill) {
-              const fillColor = fill.getColor() as [number, number, number, number];
-              console.log("🔍 RegularShape fill color from OpenLayers:", fillColor);
-              if (Array.isArray(fillColor)) {
-                currentState.fillColor = { r: fillColor[0], g: fillColor[1], b: fillColor[2], a: fillColor[3] || 0.8 };
-                currentState.fillAlpha = fillColor[3] || 0.8;
+              const fillColorRaw = fill.getColor();
+              console.log("🔍 RegularShape fill color from OpenLayers (raw):", fillColorRaw, typeof fillColorRaw);
+
+              let fillColor: { r: number; g: number; b: number; a: number } | null = null;
+
+              if (Array.isArray(fillColorRaw)) {
+                // Handle array format [r, g, b, a]
+                fillColor = { r: fillColorRaw[0], g: fillColorRaw[1], b: fillColorRaw[2], a: fillColorRaw[3] || 0.8 };
+              } else if (typeof fillColorRaw === "string") {
+                // Handle string format (hex or rgba)
+                fillColor = hexToRgbObject(fillColorRaw);
+              }
+
+              if (fillColor) {
+                currentState.fillColor = fillColor;
+                currentState.fillAlpha = fillColor.a;
                 console.log("🔍 Converted RegularShape fill color:", currentState.fillColor);
               }
             }
@@ -223,11 +274,22 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
             console.log("🔍 RegularShape Stroke object:", stroke);
             if (stroke) {
               currentState.strokeWidth = stroke.getWidth() || 2;
-              const strokeColor = stroke.getColor() as [number, number, number, number];
-              console.log("🔍 RegularShape stroke color from OpenLayers:", strokeColor);
-              if (Array.isArray(strokeColor)) {
-                currentState.strokeColor = { r: strokeColor[0], g: strokeColor[1], b: strokeColor[2], a: strokeColor[3] || 1.0 };
-                currentState.strokeAlpha = strokeColor[3] || 1.0;
+              const strokeColorRaw = stroke.getColor();
+              console.log("🔍 RegularShape stroke color from OpenLayers (raw):", strokeColorRaw, typeof strokeColorRaw);
+
+              let strokeColor: { r: number; g: number; b: number; a: number } | null = null;
+
+              if (Array.isArray(strokeColorRaw)) {
+                // Handle array format [r, g, b, a]
+                strokeColor = { r: strokeColorRaw[0], g: strokeColorRaw[1], b: strokeColorRaw[2], a: strokeColorRaw[3] || 1.0 };
+              } else if (typeof strokeColorRaw === "string") {
+                // Handle string format (hex or rgba)
+                strokeColor = hexToRgbObject(strokeColorRaw);
+              }
+
+              if (strokeColor) {
+                currentState.strokeColor = strokeColor;
+                currentState.strokeAlpha = strokeColor.a;
                 console.log("🔍 Converted RegularShape stroke color:", currentState.strokeColor);
               }
             }
@@ -242,6 +304,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
             stroke?: { color?: string | [number, number, number, number]; width?: number };
             radius?: number;
             type?: string;
+            rotation?: number; // Add rotation for angle slider
           };
           fill?: { color?: string | [number, number, number, number] };
           stroke?: { color?: string | [number, number, number, number]; width?: number };
@@ -252,19 +315,28 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
 
           // Extract basic properties
           currentState.radius = style.image.radius || 8;
+          currentState.rotation = style.image.rotation || 0; // Extract rotation for angle slider
           currentState.pointType = style.image.type === "circle" ? "circle" : item.pointType || "circle";
 
-          // Extract fill color - handle both hex and rgba formats
+          // Extract fill color - handle both array and string formats
           if (style.image.fill && style.image.fill.color) {
-            const fillColorStr = style.image.fill.color;
-            console.log("🔍 Found fill color:", fillColorStr);
+            const fillColorData = style.image.fill.color;
+            console.log("🔍 Found fill color:", fillColorData, typeof fillColorData);
 
-            if (typeof fillColorStr === "string") {
-              // Convert hex to RGB
-              const fillColor = hexToRgbObject(fillColorStr);
+            let fillColor: { r: number; g: number; b: number; a: number } | null = null;
+
+            if (Array.isArray(fillColorData)) {
+              // Handle array format [r, g, b, a]
+              fillColor = { r: fillColorData[0], g: fillColorData[1], b: fillColorData[2], a: fillColorData[3] || 0.8 };
+            } else if (typeof fillColorData === "string") {
+              // Handle string format (hex or rgba)
+              fillColor = hexToRgbObject(fillColorData);
+            }
+
+            if (fillColor) {
               currentState.fillColor = fillColor;
               currentState.fillAlpha = fillColor.a;
-              console.log("🔍 Converted fill color to RGB:", fillColor);
+              console.log("🔍 Converted JSON fill color:", fillColor);
             }
           }
 
@@ -274,17 +346,25 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
 
             currentState.strokeWidth = style.image.stroke.width || 2;
 
-            // Extract stroke color - handle both hex and rgba formats
+            // Extract stroke color - handle both array and string formats
             if (style.image.stroke.color) {
-              const strokeColorStr = style.image.stroke.color;
-              console.log("🔍 Found stroke color:", strokeColorStr);
+              const strokeColorData = style.image.stroke.color;
+              console.log("🔍 Found stroke color:", strokeColorData, typeof strokeColorData);
 
-              if (typeof strokeColorStr === "string") {
-                // Convert hex to RGB
-                const strokeColor = hexToRgbObject(strokeColorStr);
+              let strokeColor: { r: number; g: number; b: number; a: number } | null = null;
+
+              if (Array.isArray(strokeColorData)) {
+                // Handle array format [r, g, b, a]
+                strokeColor = { r: strokeColorData[0], g: strokeColorData[1], b: strokeColorData[2], a: strokeColorData[3] || 1.0 };
+              } else if (typeof strokeColorData === "string") {
+                // Handle string format (hex or rgba)
+                strokeColor = hexToRgbObject(strokeColorData);
+              }
+
+              if (strokeColor) {
                 currentState.strokeColor = strokeColor;
                 currentState.strokeAlpha = strokeColor.a;
-                console.log("🔍 Converted stroke color to RGB:", strokeColor);
+                console.log("🔍 Converted JSON stroke color:", strokeColor);
               }
             }
           }
@@ -651,6 +731,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         style: style, // Store the full OpenLayers style object
         pointType: updatedState.pointType, // Preserve pointType
         strokeType: updatedState.strokeType, // Preserve strokeType
+        fillAlpha: newOpacity, // Preserve fillAlpha for persistence
       };
 
       console.log("🎯 Updating item in store with new fill opacity:", { itemId, updates, style });
@@ -744,6 +825,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         style: style, // Store the full OpenLayers style object
         pointType: updatedState.pointType, // Preserve pointType
         strokeType: updatedState.strokeType, // Preserve strokeType
+        strokeAlpha: newOpacity, // Preserve strokeAlpha for persistence
       };
 
       console.log("🎯 Updating item in store with new stroke opacity:", { itemId, updates, style });

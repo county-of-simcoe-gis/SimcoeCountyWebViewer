@@ -155,7 +155,8 @@ export const styleToJSON = (style: Style): StyleJSON => {
     if (color) {
       styleObj.stroke = {
         color: typeof color === 'string' ? color : (color as number[]),
-        width: stroke.getWidth()
+        width: stroke.getWidth(),
+        lineDash: stroke.getLineDash() || undefined
       }
     }
   }
@@ -171,7 +172,8 @@ export const styleToJSON = (style: Style): StyleJSON => {
       fill: imageFill ? { color: imageFill.getColor() as string } : undefined,
       stroke: imageStroke ? { 
         color: imageStroke.getColor() as string, 
-        width: imageStroke.getWidth() 
+        width: imageStroke.getWidth(),
+        lineDash: imageStroke.getLineDash() || undefined
       } : undefined
     }
   } else if (image instanceof RegularShape) {
@@ -184,10 +186,12 @@ export const styleToJSON = (style: Style): StyleJSON => {
       radius2: image.getRadius2(),
       points: image.getPoints(),
       angle: image.getAngle(),
+      rotation: image.getRotation(), // This is what the Angle slider controls!
       fill: imageFill ? { color: imageFill.getColor() as string } : undefined,
       stroke: imageStroke ? { 
         color: imageStroke.getColor() as string, 
-        width: imageStroke.getWidth() 
+        width: imageStroke.getWidth(),
+        lineDash: imageStroke.getLineDash() || undefined
       } : undefined
     }
   }
@@ -236,7 +240,8 @@ export const styleFromJSON = (styleJSON: StyleJSON): Style => {
   if (styleJSON.stroke) {
     styleConfig.stroke = new Stroke({
       color: styleJSON.stroke.color,
-      width: styleJSON.stroke.width
+      width: styleJSON.stroke.width,
+      lineDash: styleJSON.stroke.lineDash
     })
   }
 
@@ -259,7 +264,8 @@ export const styleFromJSON = (styleJSON: StyleJSON): Style => {
       if (styleJSON.image.stroke) {
         imageConfig.stroke = new Stroke({
           color: styleJSON.image.stroke.color,
-          width: styleJSON.image.stroke.width
+          width: styleJSON.image.stroke.width,
+          lineDash: styleJSON.image.stroke.lineDash
         })
       }
       
@@ -270,13 +276,15 @@ export const styleFromJSON = (styleJSON: StyleJSON): Style => {
         radius: number
         radius2?: number
         angle?: number
+        rotation?: number
         fill?: Fill
         stroke?: Stroke
       } = {
         points: styleJSON.image.points || 4,
         radius: styleJSON.image.radius || 8,
         radius2: styleJSON.image.radius2,
-        angle: styleJSON.image.angle || 0
+        angle: styleJSON.image.angle || 0,
+        rotation: styleJSON.image.rotation || 0
       }
       
       if (styleJSON.image.fill) {
@@ -288,7 +296,8 @@ export const styleFromJSON = (styleJSON: StyleJSON): Style => {
       if (styleJSON.image.stroke) {
         regularShapeConfig.stroke = new Stroke({
           color: styleJSON.image.stroke.color,
-          width: styleJSON.image.stroke.width
+          width: styleJSON.image.stroke.width,
+          lineDash: styleJSON.image.stroke.lineDash
         })
       }
       
