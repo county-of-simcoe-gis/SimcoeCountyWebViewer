@@ -13,7 +13,7 @@ import { useMyMapsStore } from "@/stores/myMapsStore";
 import { useEventStore } from "@/stores/eventStore";
 import { activateTab } from "@/utils/helpersUI";
 
-import { getPointStyle } from "@/utils/openlayers/DrawingHelpers";
+import { getPointStyle, getLineStringStyle, getPolygonStyle } from "@/utils/openlayers/DrawingHelpers";
 import MyMapsPopupLabel from "./MyMapsPopupLabel";
 import MyMapsBuffer from "./MyMapsBuffer";
 import MyMapsSymbolizer from "./MyMapsSymbolizer";
@@ -175,9 +175,15 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         console.log("🔍 Reading from OpenLayers Style object using public API");
         console.log("🔍 Full OpenLayers Style object:", item.style);
 
-        // Use OpenLayers public API methods
+        // POINTS: Use image styles (existing logic)
         const imageStyle = item.style.getImage();
         console.log("🔍 ImageStyle from getImage():", imageStyle);
+
+        // LINES & POLYGONS: Use direct fill/stroke styles
+        const directFill = item.style.getFill();
+        const directStroke = item.style.getStroke();
+        console.log("🔍 Direct Fill/Stroke from style:", { directFill, directStroke });
+
         if (imageStyle) {
           // Handle CircleStyle
           if (imageStyle instanceof Circle) {
@@ -295,6 +301,74 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
             }
           }
         }
+
+        // LINES & POLYGONS: Handle direct fill/stroke styles (for non-point geometries)
+        if (!imageStyle && (directFill || directStroke)) {
+          console.log("🔍 Processing direct fill/stroke styles for line/polygon");
+
+          // Handle direct fill (for polygons)
+          if (directFill) {
+            const fillColorRaw = directFill.getColor();
+            console.log("🔍 Direct fill color from OpenLayers (raw):", fillColorRaw, typeof fillColorRaw);
+
+            let fillColor: { r: number; g: number; b: number; a: number } | null = null;
+
+            if (Array.isArray(fillColorRaw)) {
+              // Handle array format [r, g, b, a]
+              fillColor = { r: fillColorRaw[0], g: fillColorRaw[1], b: fillColorRaw[2], a: fillColorRaw[3] || 0.8 };
+            } else if (typeof fillColorRaw === "string") {
+              // Handle string format (hex or rgba)
+              fillColor = hexToRgbObject(fillColorRaw);
+            }
+
+            if (fillColor) {
+              currentState.fillColor = fillColor;
+              currentState.fillAlpha = fillColor.a;
+              console.log("🔍 Converted direct fill color:", currentState.fillColor);
+            }
+          }
+
+          // Handle direct stroke (for lines and polygons)
+          if (directStroke) {
+            const strokeColorRaw = directStroke.getColor();
+            console.log("🔍 Direct stroke color from OpenLayers (raw):", strokeColorRaw, typeof strokeColorRaw);
+
+            let strokeColor: { r: number; g: number; b: number; a: number } | null = null;
+
+            if (Array.isArray(strokeColorRaw)) {
+              // Handle array format [r, g, b, a]
+              strokeColor = { r: strokeColorRaw[0], g: strokeColorRaw[1], b: strokeColorRaw[2], a: strokeColorRaw[3] || 1.0 };
+            } else if (typeof strokeColorRaw === "string") {
+              // Handle string format (hex or rgba)
+              strokeColor = hexToRgbObject(strokeColorRaw);
+            }
+
+            if (strokeColor) {
+              currentState.strokeColor = strokeColor;
+              currentState.strokeAlpha = strokeColor.a;
+              console.log("🔍 Converted direct stroke color:", currentState.strokeColor);
+            }
+
+            // Extract stroke width and dash pattern
+            const extractedWidth = directStroke.getWidth();
+            currentState.strokeWidth = extractedWidth || 2;
+            console.log("🔍 STROKE WIDTH DEBUG - Raw width from directStroke.getWidth():", extractedWidth, "Final strokeWidth:", currentState.strokeWidth);
+
+            const lineDash = directStroke.getLineDash();
+            if (lineDash && lineDash.length > 0) {
+              if (lineDash.length === 1 && lineDash[0] === 10) {
+                currentState.strokeType = "dash";
+              } else if (lineDash.length === 2 && lineDash[0] === 1 && lineDash[1] === 5) {
+                currentState.strokeType = "dot";
+              }
+            }
+            console.log("🔍 Extracted stroke properties for", item.geometryType, ":", {
+              strokeWidth: currentState.strokeWidth,
+              strokeType: currentState.strokeType,
+              lineDash,
+            });
+          }
+        }
       } else {
         // Regular JSON object format (current storage structure)
         console.log("🔍 Reading from JSON style object format");
@@ -369,6 +443,63 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
             }
           }
         }
+
+        // LINES & POLYGONS: Handle direct fill/stroke in JSON (not from image)
+        if (!style.image || (item.geometryType !== "Point" && item.geometryType !== "MultiPoint")) {
+          console.log("🔍 Processing direct fill/stroke from JSON for line/polygon");
+
+          // Handle direct fill (for polygons)
+          if (style.fill && style.fill.color) {
+            const fillColorData = style.fill.color;
+            console.log("🔍 Found direct fill color:", fillColorData, typeof fillColorData);
+
+            let fillColor: { r: number; g: number; b: number; a: number } | null = null;
+
+            if (Array.isArray(fillColorData)) {
+              // Handle array format [r, g, b, a]
+              fillColor = { r: fillColorData[0], g: fillColorData[1], b: fillColorData[2], a: fillColorData[3] || 0.8 };
+            } else if (typeof fillColorData === "string") {
+              // Handle string format (hex or rgba)
+              fillColor = hexToRgbObject(fillColorData);
+            }
+
+            if (fillColor) {
+              currentState.fillColor = fillColor;
+              currentState.fillAlpha = fillColor.a;
+              console.log("🔍 Converted JSON direct fill color:", fillColor);
+            }
+          }
+
+          // Handle direct stroke (for lines and polygons)
+          if (style.stroke && style.stroke.color) {
+            const strokeColorData = style.stroke.color;
+            console.log("🔍 Found direct stroke color:", strokeColorData, typeof strokeColorData);
+
+            let strokeColor: { r: number; g: number; b: number; a: number } | null = null;
+
+            if (Array.isArray(strokeColorData)) {
+              // Handle array format [r, g, b, a]
+              strokeColor = { r: strokeColorData[0], g: strokeColorData[1], b: strokeColorData[2], a: strokeColorData[3] || 1.0 };
+            } else if (typeof strokeColorData === "string") {
+              // Handle string format (hex or rgba)
+              strokeColor = hexToRgbObject(strokeColorData);
+            }
+
+            if (strokeColor) {
+              currentState.strokeColor = strokeColor;
+              currentState.strokeAlpha = strokeColor.a;
+              console.log("🔍 Converted JSON direct stroke color:", strokeColor);
+            }
+          }
+
+          // Handle stroke width from direct stroke
+          if (style.stroke && style.stroke.width) {
+            currentState.strokeWidth = style.stroke.width;
+            console.log("🔍 STROKE WIDTH DEBUG - JSON stroke width:", style.stroke.width, "Final strokeWidth:", currentState.strokeWidth);
+          } else {
+            console.log("🔍 STROKE WIDTH DEBUG - No stroke width found in JSON style.stroke:", style.stroke);
+          }
+        }
       }
     }
 
@@ -376,12 +507,30 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
     return currentState;
   }, [item, hexToRgbObject]);
 
-  // Use proper drawing helpers for style creation
+  // Geometry-aware style creation function for all feature types
   const createPointStyleFromHelpers = useCallback(
     (pointType: string, radius: number, strokeColor: [number, number, number, number], strokeWidth: number, fillColor: [number, number, number, number], rotation: number, strokeType: string) => {
-      return getPointStyle(pointType, radius, strokeColor, strokeWidth, fillColor, rotation, strokeType);
+      if (!item) {
+        // Fallback to point style if no item
+        return getPointStyle(pointType, radius, strokeColor, strokeWidth, fillColor, rotation, strokeType);
+      }
+
+      console.log("🎨 Creating style for geometry type:", item.geometryType, { pointType, strokeType, strokeColor, fillColor });
+
+      // Use geometry type to determine correct styling function
+      if (item.geometryType === "Point" || item.geometryType === "MultiPoint") {
+        return getPointStyle(pointType, radius, strokeColor, strokeWidth, fillColor, rotation, strokeType);
+      } else if (item.geometryType === "LineString" || item.geometryType === "MultiLineString") {
+        return getLineStringStyle(strokeColor, strokeWidth, strokeType);
+      } else if (item.geometryType === "Polygon" || item.geometryType === "MultiPolygon") {
+        return getPolygonStyle(strokeColor, strokeWidth, fillColor, strokeType);
+      } else {
+        // Fallback to point style for unknown geometry types
+        console.warn("Unknown geometry type:", item.geometryType, "falling back to point style");
+        return getPointStyle(pointType, radius, strokeColor, strokeWidth, fillColor, rotation, strokeType);
+      }
     },
-    []
+    [item]
   );
 
   // Function to update symbolizer point type
@@ -650,49 +799,64 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
     [item, updateItem, emit, getCurrentSymbolizerState, createPointStyleFromHelpers, extractColorFromDOMButton]
   );
 
-  // Function to update symbolizer fill opacity
+  // Function to update symbolizer fill opacity - GEOMETRY AWARE
   const updateSymbolizerFillOpacity = useCallback(
     (itemId: string, newOpacity: number) => {
       if (!item) return;
 
-      console.log("🎯 Updating symbolizer fill opacity:", { itemId, newOpacity });
+      console.log("🎯 Updating symbolizer fill opacity for", item.geometryType, ":", { itemId, newOpacity });
 
-      // CRITICAL FIX: Get current dropdown values AND slider values from DOM to preserve all current settings
       const symbolizerContainer = overlayElementRef.current?.querySelector(".sc-mymaps-symbolizer-container");
-      const pointStyleSelect = symbolizerContainer?.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
-      const currentPointType = pointStyleSelect ? pointStyleSelect.value : item.pointType || "circle";
-
-      const strokeStyleSelect = symbolizerContainer?.querySelector("select[name='pointOutline']") as HTMLSelectElement;
-      const currentStrokeType = strokeStyleSelect ? strokeStyleSelect.value : item.strokeType || "normal";
-
-      // Get current state from store/item (not DOM)
       const state = getCurrentSymbolizerState();
       if (!state) return;
 
-      // Read ALL current values from DOM to prevent any resets
-      const sizeSlider = symbolizerContainer?.querySelector("input[type='range']:nth-of-type(1)") as HTMLInputElement;
-      const currentRadius = sizeSlider ? parseFloat(sizeSlider.value) : state.radius;
-
-      // Get ALL slider values from DOM using positional selectors
-      const allSliders = symbolizerContainer?.querySelectorAll("input[type='range']") as NodeListOf<HTMLInputElement>;
+      // Read geometry-specific values from DOM
+      let currentPointType = state.pointType;
+      let currentRadius = state.radius;
+      let currentRotation = state.rotation;
       let currentStrokeAlpha = state.strokeAlpha;
       let currentStrokeWidth = state.strokeWidth;
-      let currentRotation = state.rotation;
+      let currentStrokeType = state.strokeType;
 
-      if (allSliders && allSliders.length > 1) {
-        // Order: [0] = size, [1] = fill opacity, [2] = stroke opacity, [3] = stroke width, [4] = rotation
-        // Note: We're updating fill opacity, so we don't read [1], but read everything else
-        if (allSliders[2]) currentStrokeAlpha = parseFloat(allSliders[2].value);
-        if (allSliders[3]) currentStrokeWidth = parseFloat(allSliders[3].value);
-        if (allSliders[4]) currentRotation = parseFloat(allSliders[4].value);
+      // Only read point-specific values for point geometries
+      if (item.geometryType === "Point" || item.geometryType === "MultiPoint") {
+        const pointStyleSelect = symbolizerContainer?.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
+        currentPointType = pointStyleSelect ? pointStyleSelect.value : currentPointType;
+
+        const sizeSlider = symbolizerContainer?.querySelector("input[type='range']:nth-of-type(1)") as HTMLInputElement;
+        currentRadius = sizeSlider ? parseFloat(sizeSlider.value) : currentRadius;
+      }
+
+      // Read stroke-specific values for all geometries that have strokes
+      const strokeStyleSelect = symbolizerContainer?.querySelector("select[name='pointOutline']") as HTMLSelectElement;
+      currentStrokeType = strokeStyleSelect ? strokeStyleSelect.value : currentStrokeType;
+
+      // Get ALL slider values from DOM using positional selectors - GEOMETRY AWARE
+      const allSliders = symbolizerContainer?.querySelectorAll("input[type='range']") as NodeListOf<HTMLInputElement>;
+      if (allSliders && allSliders.length > 0) {
+        // GEOMETRY-AWARE SLIDER INDICES - Different slider orders for different geometry types
+        // Note: We're updating fill opacity, so we don't read the fill opacity slider itself
+
+        if (item.geometryType === "Point" || item.geometryType === "MultiPoint") {
+          // For points: [0] = size, [1] = fill opacity (changing), [2] = stroke opacity, [3] = stroke width, [4] = rotation
+          if (allSliders[2]) currentStrokeAlpha = parseFloat(allSliders[2].value);
+          if (allSliders[3]) currentStrokeWidth = parseFloat(allSliders[3].value);
+          if (allSliders[4]) currentRotation = parseFloat(allSliders[4].value);
+        } else if (item.geometryType === "Polygon" || item.geometryType === "MultiPolygon") {
+          // For polygons: [0] = fill opacity (changing), [1] = stroke opacity, [2] = stroke width
+          if (allSliders[1]) currentStrokeAlpha = parseFloat(allSliders[1].value);
+          if (allSliders[2]) currentStrokeWidth = parseFloat(allSliders[2].value);
+          // No rotation for polygons
+        }
+        // Note: Lines don't have fill opacity, so no case needed for LineString
       }
 
       // Read current colors from DOM
       const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
       const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
 
-      console.log("🔍 Current state before fill opacity update:", state);
-      console.log("🔧 Using DOM values for fill opacity:", {
+      console.log("🔧 Geometry-aware DOM values for fill opacity:", {
+        geometryType: item.geometryType,
         pointType: currentPointType,
         strokeType: currentStrokeType,
         radius: currentRadius,
@@ -701,7 +865,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         rotation: currentRotation,
       });
 
-      // Update the fill opacity in state and override all values with DOM values
+      // Update the fill opacity in state
       const updatedState = {
         ...state,
         fillAlpha: newOpacity,
@@ -715,78 +879,109 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         strokeAlpha: currentStrokeAlpha,
       };
 
-      // Create new style with updated fill opacity
-      const style = createPointStyleFromHelpers(
-        updatedState.pointType,
-        updatedState.radius,
-        [updatedState.strokeColor.r, updatedState.strokeColor.g, updatedState.strokeColor.b, updatedState.strokeAlpha],
-        updatedState.strokeWidth,
-        [updatedState.fillColor.r, updatedState.fillColor.g, updatedState.fillColor.b, newOpacity], // Use new opacity
-        updatedState.rotation,
-        updatedState.strokeType
-      );
+      // Create new style - EXPLICIT GEOMETRY TYPE CHECKING like old app
+      let style = null;
+      if (item.geometryType === "Point" || item.geometryType === "MultiPoint") {
+        style = getPointStyle(
+          updatedState.pointType,
+          updatedState.radius,
+          [updatedState.strokeColor.r, updatedState.strokeColor.g, updatedState.strokeColor.b, updatedState.strokeAlpha],
+          updatedState.strokeWidth,
+          [updatedState.fillColor.r, updatedState.fillColor.g, updatedState.fillColor.b, newOpacity], // Use new opacity
+          updatedState.rotation,
+          updatedState.strokeType
+        );
+      } else if (item.geometryType === "Polygon" || item.geometryType === "MultiPolygon") {
+        style = getPolygonStyle(
+          [updatedState.strokeColor.r, updatedState.strokeColor.g, updatedState.strokeColor.b, updatedState.strokeAlpha],
+          updatedState.strokeWidth,
+          [updatedState.fillColor.r, updatedState.fillColor.g, updatedState.fillColor.b, newOpacity], // Use new opacity
+          updatedState.strokeType
+        );
+      }
+      // Note: LineString doesn't have fill, so no style creation needed
 
-      // Update the item in the store with the full OpenLayers style object (matching old app)
-      const updates = {
-        style: style, // Store the full OpenLayers style object
-        pointType: updatedState.pointType, // Preserve pointType
-        strokeType: updatedState.strokeType, // Preserve strokeType
-        fillAlpha: newOpacity, // Preserve fillAlpha for persistence
-      };
+      // Only update if style was created successfully
+      if (style) {
+        const updates = {
+          style: style,
+          pointType: updatedState.pointType,
+          strokeType: updatedState.strokeType,
+          fillAlpha: newOpacity, // Preserve fillAlpha for persistence
+        };
 
-      console.log("🎯 Updating item in store with new fill opacity:", { itemId, updates, style });
-      updateItem(itemId, updates);
+        console.log("🎯 Updating", item.geometryType, "item in store with new fill opacity:", { itemId, updates, style });
+        updateItem(itemId, updates);
 
-      // Emit event to refresh the feature on the map
-      emit("mymap-style-updated", { itemId, style, fillOpacity: newOpacity });
-      console.log("🔄 Emitted mymap-style-updated event for fill opacity change:", itemId);
+        // Emit event to refresh the feature on the map
+        emit("mymap-style-updated", { itemId, style, fillOpacity: newOpacity });
+        console.log("🔄 Emitted mymap-style-updated event for fill opacity change:", itemId);
+      }
     },
-    [item, updateItem, emit, getCurrentSymbolizerState, createPointStyleFromHelpers, extractColorFromDOMButton]
+    [item, updateItem, emit, getCurrentSymbolizerState, extractColorFromDOMButton]
   );
 
-  // Function to update symbolizer stroke opacity
+  // Function to update symbolizer stroke opacity - GEOMETRY AWARE
   const updateSymbolizerStrokeOpacity = useCallback(
     (itemId: string, newOpacity: number) => {
       if (!item) return;
 
-      console.log("🎯 Updating symbolizer stroke opacity:", { itemId, newOpacity });
+      console.log("🎯 Updating symbolizer stroke opacity for", item.geometryType, ":", { itemId, newOpacity });
 
-      // CRITICAL FIX: Get current dropdown values AND slider values from DOM to preserve all current settings
       const symbolizerContainer = overlayElementRef.current?.querySelector(".sc-mymaps-symbolizer-container");
-      const pointStyleSelect = symbolizerContainer?.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
-      const currentPointType = pointStyleSelect ? pointStyleSelect.value : item.pointType || "circle";
-
-      const strokeStyleSelect = symbolizerContainer?.querySelector("select[name='pointOutline']") as HTMLSelectElement;
-      const currentStrokeType = strokeStyleSelect ? strokeStyleSelect.value : item.strokeType || "normal";
-
-      // Get current state from store/item (not DOM)
       const state = getCurrentSymbolizerState();
       if (!state) return;
 
-      // Read ALL current values from DOM to prevent any resets
-      const sizeSlider = symbolizerContainer?.querySelector("input[type='range']:nth-of-type(1)") as HTMLInputElement;
-      const currentRadius = sizeSlider ? parseFloat(sizeSlider.value) : state.radius;
-
-      // Get ALL slider values from DOM using positional selectors
-      const allSliders = symbolizerContainer?.querySelectorAll("input[type='range']") as NodeListOf<HTMLInputElement>;
-      let currentFillAlpha = state.fillAlpha;
-      let currentStrokeWidth = state.strokeWidth;
+      // Read geometry-specific values from DOM
+      let currentPointType = state.pointType;
+      let currentRadius = state.radius;
       let currentRotation = state.rotation;
+      let currentFillAlpha = state.fillAlpha; // ⚠️ CRITICAL: Don't change fill opacity when changing stroke opacity!
+      let currentStrokeWidth = state.strokeWidth;
+      let currentStrokeType = state.strokeType;
 
-      if (allSliders && allSliders.length > 1) {
-        // Order: [0] = size, [1] = fill opacity, [2] = stroke opacity, [3] = stroke width, [4] = rotation
-        // Note: We're updating stroke opacity, so we don't read [2], but read everything else
-        if (allSliders[1]) currentFillAlpha = parseFloat(allSliders[1].value);
-        if (allSliders[3]) currentStrokeWidth = parseFloat(allSliders[3].value);
-        if (allSliders[4]) currentRotation = parseFloat(allSliders[4].value);
+      // Only read point-specific values for point geometries
+      if (item.geometryType === "Point" || item.geometryType === "MultiPoint") {
+        const pointStyleSelect = symbolizerContainer?.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
+        currentPointType = pointStyleSelect ? pointStyleSelect.value : currentPointType;
+
+        const sizeSlider = symbolizerContainer?.querySelector("input[type='range']:nth-of-type(1)") as HTMLInputElement;
+        currentRadius = sizeSlider ? parseFloat(sizeSlider.value) : currentRadius;
+      }
+
+      // Read stroke-specific values for all geometries that have strokes
+      const strokeStyleSelect = symbolizerContainer?.querySelector("select[name='pointOutline']") as HTMLSelectElement;
+      currentStrokeType = strokeStyleSelect ? strokeStyleSelect.value : currentStrokeType;
+
+      // Get ALL slider values from DOM using positional selectors - GEOMETRY AWARE
+      const allSliders = symbolizerContainer?.querySelectorAll("input[type='range']") as NodeListOf<HTMLInputElement>;
+      if (allSliders && allSliders.length > 0) {
+        // GEOMETRY-AWARE SLIDER INDICES - Different slider orders for different geometry types
+        // Note: We're updating stroke opacity, so we don't read the stroke opacity slider itself
+
+        if (item.geometryType === "Point" || item.geometryType === "MultiPoint") {
+          // For points: [0] = size, [1] = fill opacity, [2] = stroke opacity (changing), [3] = stroke width, [4] = rotation
+          if (allSliders[1]) currentFillAlpha = parseFloat(allSliders[1].value);
+          if (allSliders[3]) currentStrokeWidth = parseFloat(allSliders[3].value);
+          if (allSliders[4]) currentRotation = parseFloat(allSliders[4].value);
+        } else if (item.geometryType === "Polygon" || item.geometryType === "MultiPolygon") {
+          // For polygons: [0] = fill opacity, [1] = stroke opacity (changing), [2] = stroke width
+          if (allSliders[0]) currentFillAlpha = parseFloat(allSliders[0].value);
+          if (allSliders[2]) currentStrokeWidth = parseFloat(allSliders[2].value);
+          // No rotation for polygons
+        } else if (item.geometryType === "LineString" || item.geometryType === "MultiLineString") {
+          // For lines: [0] = stroke opacity (changing), [1] = stroke width
+          if (allSliders[1]) currentStrokeWidth = parseFloat(allSliders[1].value);
+          // No fill or rotation for lines
+        }
       }
 
       // Read current colors from DOM
       const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
       const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
 
-      console.log("🔍 Current state before stroke opacity update:", state);
-      console.log("🔧 Using DOM values for stroke opacity:", {
+      console.log("🔧 Geometry-aware DOM values for stroke opacity:", {
+        geometryType: item.geometryType,
         pointType: currentPointType,
         strokeType: currentStrokeType,
         radius: currentRadius,
@@ -795,47 +990,65 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         rotation: currentRotation,
       });
 
-      // Update the stroke opacity in state and override all values with DOM values
+      // Update the stroke opacity in state
       const updatedState = {
         ...state,
         strokeAlpha: newOpacity,
-        fillColor: { ...currentFillColor, a: currentFillAlpha }, // Use DOM fill color and alpha
-        strokeColor: { ...currentStrokeColor, a: newOpacity }, // Use DOM stroke color with new alpha
+        fillColor: { ...currentFillColor, a: currentFillAlpha }, // Keep existing fill alpha - DON'T change it!
+        strokeColor: { ...currentStrokeColor, a: newOpacity }, // Use new stroke alpha
         pointType: currentPointType,
         strokeType: currentStrokeType,
         radius: currentRadius,
         strokeWidth: currentStrokeWidth,
         rotation: currentRotation,
-        fillAlpha: currentFillAlpha,
+        fillAlpha: currentFillAlpha, // Preserve existing fill alpha
       };
 
-      // Create new style with updated stroke opacity
-      const style = createPointStyleFromHelpers(
-        updatedState.pointType,
-        updatedState.radius,
-        [updatedState.strokeColor.r, updatedState.strokeColor.g, updatedState.strokeColor.b, newOpacity], // Use new opacity
-        updatedState.strokeWidth,
-        [updatedState.fillColor.r, updatedState.fillColor.g, updatedState.fillColor.b, updatedState.fillAlpha],
-        updatedState.rotation,
-        updatedState.strokeType
-      );
+      // Create new style - EXPLICIT GEOMETRY TYPE CHECKING like old app
+      let style = null;
+      if (item.geometryType === "Point" || item.geometryType === "MultiPoint") {
+        style = getPointStyle(
+          updatedState.pointType,
+          updatedState.radius,
+          [updatedState.strokeColor.r, updatedState.strokeColor.g, updatedState.strokeColor.b, newOpacity], // Use new stroke opacity
+          updatedState.strokeWidth,
+          [updatedState.fillColor.r, updatedState.fillColor.g, updatedState.fillColor.b, updatedState.fillAlpha], // Keep existing fill
+          updatedState.rotation,
+          updatedState.strokeType
+        );
+      } else if (item.geometryType === "LineString" || item.geometryType === "MultiLineString") {
+        style = getLineStringStyle(
+          [updatedState.strokeColor.r, updatedState.strokeColor.g, updatedState.strokeColor.b, newOpacity], // Use new stroke opacity
+          updatedState.strokeWidth,
+          updatedState.strokeType
+        );
+      } else if (item.geometryType === "Polygon" || item.geometryType === "MultiPolygon") {
+        style = getPolygonStyle(
+          [updatedState.strokeColor.r, updatedState.strokeColor.g, updatedState.strokeColor.b, newOpacity], // Use new stroke opacity
+          updatedState.strokeWidth,
+          [updatedState.fillColor.r, updatedState.fillColor.g, updatedState.fillColor.b, updatedState.fillAlpha], // Keep existing fill
+          updatedState.strokeType
+        );
+      }
 
-      // Update the item in the store with the full OpenLayers style object (matching old app)
-      const updates = {
-        style: style, // Store the full OpenLayers style object
-        pointType: updatedState.pointType, // Preserve pointType
-        strokeType: updatedState.strokeType, // Preserve strokeType
-        strokeAlpha: newOpacity, // Preserve strokeAlpha for persistence
-      };
+      // Only update if style was created successfully
+      if (style) {
+        const updates = {
+          style: style,
+          pointType: updatedState.pointType,
+          strokeType: updatedState.strokeType,
+          strokeAlpha: newOpacity, // Preserve strokeAlpha for persistence
+        };
 
-      console.log("🎯 Updating item in store with new stroke opacity:", { itemId, updates, style });
-      updateItem(itemId, updates);
+        console.log("🎯 Updating", item.geometryType, "item in store with new stroke opacity:", { itemId, updates, style });
+        updateItem(itemId, updates);
 
-      // Emit event to refresh the feature on the map
-      emit("mymap-style-updated", { itemId, style, strokeOpacity: newOpacity });
-      console.log("🔄 Emitted mymap-style-updated event for stroke opacity change:", itemId);
+        // Emit event to refresh the feature on the map
+        emit("mymap-style-updated", { itemId, style, strokeOpacity: newOpacity });
+        console.log("🔄 Emitted mymap-style-updated event for stroke opacity change:", itemId);
+      }
     },
-    [item, updateItem, emit, getCurrentSymbolizerState, createPointStyleFromHelpers, extractColorFromDOMButton]
+    [item, updateItem, emit, getCurrentSymbolizerState, extractColorFromDOMButton]
   );
 
   // Function to show color picker popup (matching MyMapsSymbolizer approach)
@@ -1921,29 +2134,47 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
           });
 
           if (item?.id) {
-            // Create style with ALL current DOM values and new stroke type
-            const style = createPointStyleFromHelpers(
-              currentPointType,
-              currentRadius,
-              [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha],
-              currentStrokeWidth,
-              [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha],
-              currentRotation,
-              newStrokeType // Use the new stroke type
-            );
+            // Create style - EXPLICIT GEOMETRY TYPE CHECKING like old app
+            let style = null;
+            if (item?.geometryType === "Point" || item?.geometryType === "MultiPoint") {
+              style = getPointStyle(
+                currentPointType,
+                currentRadius,
+                [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha],
+                currentStrokeWidth,
+                [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha],
+                currentRotation,
+                newStrokeType // Use the new stroke type
+              );
+            } else if (item?.geometryType === "LineString" || item?.geometryType === "MultiLineString") {
+              style = getLineStringStyle(
+                [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha],
+                currentStrokeWidth,
+                newStrokeType // Use the new stroke type
+              );
+            } else if (item?.geometryType === "Polygon" || item?.geometryType === "MultiPolygon") {
+              style = getPolygonStyle(
+                [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha],
+                currentStrokeWidth,
+                [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha],
+                newStrokeType // Use the new stroke type
+              );
+            }
 
-            // Update the item in the store
-            const updates = {
-              style: style,
-              pointType: currentPointType,
-              strokeType: newStrokeType, // Update stroke type
-            };
+            // Only update if style was created successfully
+            if (style) {
+              const updates = {
+                style: style,
+                pointType: currentPointType,
+                strokeType: newStrokeType, // Update stroke type
+              };
 
-            console.log("🎯 Updating item in store with new stroke type:", { itemId: item.id, updates, style });
-            updateItem(item.id, updates);
+              console.log("🎯 Updating item in store with new stroke type:", { itemId: item.id, updates, style });
+              updateItem(item.id, updates);
 
-            // Emit event to refresh the feature on the map
-            emit("mymap-style-updated", { itemId: item.id, style, strokeType: newStrokeType });
+              // Emit event to refresh the feature on the map
+              emit("mymap-style-updated", { itemId: item.id, style, strokeType: newStrokeType });
+            }
           }
         });
         (strokeTypeSelect as HTMLElement).style.pointerEvents = "auto";
@@ -2037,16 +2268,26 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         });
       }
 
-      // Fill opacity slider - try multiple selectors
-      let fillOpacitySlider = symbolizerContainer.querySelector("input[key='sc-mymaps-symbolizer-fill-opacity']") as HTMLInputElement;
-      if (!fillOpacitySlider) {
-        fillOpacitySlider = symbolizerContainer.querySelector(".sc-mymaps-symbolizer-slider.opacity input[type='range']") as HTMLInputElement;
+      // Fill opacity slider - GEOMETRY-AWARE SELECTION (only for geometries that have fills)
+      let fillOpacitySlider: HTMLInputElement | null = null;
+
+      if (item?.geometryType === "Point" || item?.geometryType === "MultiPoint" || item?.geometryType === "Polygon" || item?.geometryType === "MultiPolygon") {
+        fillOpacitySlider = symbolizerContainer.querySelector("input[key='sc-mymaps-symbolizer-fill-opacity']") as HTMLInputElement;
+        if (!fillOpacitySlider) {
+          fillOpacitySlider = symbolizerContainer.querySelector(".sc-mymaps-symbolizer-slider.opacity input[type='range']") as HTMLInputElement;
+        }
+        if (!fillOpacitySlider) {
+          const allRangeInputs = symbolizerContainer.querySelectorAll("input[type='range']");
+          if (item?.geometryType === "Point" || item?.geometryType === "MultiPoint") {
+            // For points: [0] = size, [1] = fill opacity
+            fillOpacitySlider = allRangeInputs[1] as HTMLInputElement;
+          } else if (item?.geometryType === "Polygon" || item?.geometryType === "MultiPolygon") {
+            // For polygons: [0] = fill opacity
+            fillOpacitySlider = allRangeInputs[0] as HTMLInputElement;
+          }
+        }
       }
-      if (!fillOpacitySlider) {
-        // Try finding all range inputs and get the second one (after size slider)
-        const allRangeInputs = symbolizerContainer.querySelectorAll("input[type='range']");
-        fillOpacitySlider = allRangeInputs[1] as HTMLInputElement; // Second one should be fill opacity
-      }
+      // Note: Lines don't have fill, so fillOpacitySlider stays null for lines
       if (fillOpacitySlider) {
         // 🎯 Set fill opacity slider value from current state
         fillOpacitySlider.value = currentState.fillAlpha.toString();
@@ -2074,14 +2315,20 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       // Stroke opacity slider - try multiple selectors
       let strokeOpacitySlider = symbolizerContainer.querySelector("input[key='sc-mymaps-symbolizer-stroke-opacity']") as HTMLInputElement;
       if (!strokeOpacitySlider) {
-        // Try finding all opacity sliders and get the second one
-        const opacitySliders = symbolizerContainer.querySelectorAll(".sc-mymaps-symbolizer-slider.opacity input[type='range']");
-        strokeOpacitySlider = opacitySliders[1] as HTMLInputElement; // Second opacity slider should be stroke
-      }
-      if (!strokeOpacitySlider) {
-        // Try finding all range inputs and get the third one (after size and fill opacity)
-        const allRangeInputs = symbolizerContainer.querySelectorAll("input[type='range']");
-        strokeOpacitySlider = allRangeInputs[2] as HTMLInputElement; // Third one should be stroke opacity
+        // GEOMETRY-AWARE SLIDER SELECTION
+        if (item?.geometryType === "LineString" || item?.geometryType === "MultiLineString") {
+          // For lines: stroke opacity is the ONLY opacity slider at index [0]
+          const allRangeInputs = symbolizerContainer.querySelectorAll("input[type='range']");
+          strokeOpacitySlider = allRangeInputs[0] as HTMLInputElement;
+        } else if (item?.geometryType === "Point" || item?.geometryType === "MultiPoint") {
+          // For points: stroke opacity is at index [2] (after size and fill opacity)
+          const allRangeInputs = symbolizerContainer.querySelectorAll("input[type='range']");
+          strokeOpacitySlider = allRangeInputs[2] as HTMLInputElement;
+        } else if (item?.geometryType === "Polygon" || item?.geometryType === "MultiPolygon") {
+          // For polygons: stroke opacity is at index [1] (after fill opacity)
+          const allRangeInputs = symbolizerContainer.querySelectorAll("input[type='range']");
+          strokeOpacitySlider = allRangeInputs[1] as HTMLInputElement;
+        }
       }
       if (strokeOpacitySlider) {
         // 🎯 Set stroke opacity slider value from current state
@@ -2107,49 +2354,83 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         });
       }
 
-      // Stroke Width slider (4th range input - index 3)
+      // Stroke Width slider - GEOMETRY-AWARE SELECTION
       const allSliders = symbolizerContainer.querySelectorAll("input[type='range']") as NodeListOf<HTMLInputElement>;
-      const strokeWidthSlider = allSliders[3] as HTMLInputElement; // [0]=size, [1]=fill opacity, [2]=stroke opacity, [3]=stroke width
+      let strokeWidthSlider: HTMLInputElement | null = null;
+
+      if (item?.geometryType === "LineString" || item?.geometryType === "MultiLineString") {
+        // For lines: [0] = stroke opacity, [1] = stroke width
+        strokeWidthSlider = allSliders[1] as HTMLInputElement;
+      } else if (item?.geometryType === "Point" || item?.geometryType === "MultiPoint") {
+        // For points: [0] = size, [1] = fill opacity, [2] = stroke opacity, [3] = stroke width
+        strokeWidthSlider = allSliders[3] as HTMLInputElement;
+      } else if (item?.geometryType === "Polygon" || item?.geometryType === "MultiPolygon") {
+        // For polygons: [0] = fill opacity, [1] = stroke opacity, [2] = stroke width
+        strokeWidthSlider = allSliders[2] as HTMLInputElement;
+      }
       if (strokeWidthSlider) {
         // Set stroke width slider value from current state
         strokeWidthSlider.value = currentState.strokeWidth.toString();
-        console.log("🔧 Set stroke width slider value from state:", currentState.strokeWidth);
+        console.log("🔧 STROKE WIDTH SLIDER DEBUG - Setting slider value to:", currentState.strokeWidth, "for geometry:", item?.geometryType);
+        console.log("🔧 STROKE WIDTH SLIDER DEBUG - Slider element:", strokeWidthSlider, "Final value:", strokeWidthSlider.value);
 
         const handleStrokeWidthChange = (e: Event) => {
           e.stopPropagation();
           const newStrokeWidth = parseFloat((e.target as HTMLInputElement).value);
-          console.log("🎯 Stroke width slider changed via DOM event:", newStrokeWidth);
-
-          // CRITICAL FIX: Get ALL current values from DOM to preserve all current settings
-          const pointStyleSelect = symbolizerContainer.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
-          const currentPointType = pointStyleSelect ? pointStyleSelect.value : item.pointType || "circle";
-
-          const strokeStyleSelect = symbolizerContainer.querySelector("select[name='pointOutline']") as HTMLSelectElement;
-          const currentStrokeType = strokeStyleSelect ? strokeStyleSelect.value : item.strokeType || "normal";
+          console.log("🎯 Stroke width slider changed via DOM event for", item?.geometryType, ":", newStrokeWidth);
 
           // Get current state from store/item (not DOM)
           const state = getCurrentSymbolizerState();
           if (!state) return;
 
-          // Get ALL slider values from DOM using positional selectors
+          // Read geometry-specific values from DOM
+          let currentPointType = state.pointType;
           let currentRadius = state.radius;
+          let currentRotation = state.rotation;
           let currentFillAlpha = state.fillAlpha;
           let currentStrokeAlpha = state.strokeAlpha;
-          let currentRotation = state.rotation;
+          let currentStrokeType = state.strokeType;
 
+          // Only read point-specific values for point geometries
+          if (item?.geometryType === "Point" || item?.geometryType === "MultiPoint") {
+            const pointStyleSelect = symbolizerContainer.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
+            currentPointType = pointStyleSelect ? pointStyleSelect.value : currentPointType;
+
+            if (allSliders && allSliders.length > 0 && allSliders[0]) {
+              currentRadius = parseFloat(allSliders[0].value);
+            }
+            if (allSliders && allSliders.length > 4 && allSliders[4]) {
+              currentRotation = parseFloat(allSliders[4].value);
+            }
+          }
+
+          // Read stroke-specific values for all geometries that have strokes
+          const strokeStyleSelect = symbolizerContainer.querySelector("select[name='pointOutline']") as HTMLSelectElement;
+          currentStrokeType = strokeStyleSelect ? strokeStyleSelect.value : currentStrokeType;
+
+          // Read opacity values for relevant geometries
           if (allSliders && allSliders.length > 0) {
-            // Order: [0] = size, [1] = fill opacity, [2] = stroke opacity, [3] = stroke width (we're changing), [4] = rotation
-            if (allSliders[0]) currentRadius = parseFloat(allSliders[0].value);
-            if (allSliders[1]) currentFillAlpha = parseFloat(allSliders[1].value);
-            if (allSliders[2]) currentStrokeAlpha = parseFloat(allSliders[2].value);
-            if (allSliders[4]) currentRotation = parseFloat(allSliders[4].value);
+            // GEOMETRY-AWARE SLIDER INDICES - Different slider orders for different geometry types
+            if (item?.geometryType === "LineString" || item?.geometryType === "MultiLineString") {
+              // For lines: [0] = stroke opacity, [1] = stroke width
+              if (allSliders[0]) currentStrokeAlpha = parseFloat(allSliders[0].value);
+            } else if (item?.geometryType === "Point" || item?.geometryType === "MultiPoint") {
+              // For points: [0] = size, [1] = fill opacity, [2] = stroke opacity, [3] = stroke width, [4] = rotation
+              if (allSliders[1]) currentFillAlpha = parseFloat(allSliders[1].value);
+              if (allSliders[2]) currentStrokeAlpha = parseFloat(allSliders[2].value);
+            } else if (item?.geometryType === "Polygon" || item?.geometryType === "MultiPolygon") {
+              // For polygons: [0] = fill opacity, [1] = stroke opacity, [2] = stroke width
+              if (allSliders[0]) currentFillAlpha = parseFloat(allSliders[0].value);
+              if (allSliders[1]) currentStrokeAlpha = parseFloat(allSliders[1].value);
+            }
           }
 
           // Read current colors from DOM color buttons
           const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
           const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
 
-          console.log("🔧 Using DOM values for stroke width change:", {
+          console.log("🔧 Geometry-aware DOM values for stroke width change:", {
+            geometryType: item?.geometryType,
             pointType: currentPointType,
             strokeType: currentStrokeType,
             radius: currentRadius,
@@ -2160,29 +2441,48 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
           });
 
           if (item?.id) {
-            // Create style with ALL current DOM values and new stroke width
-            const style = createPointStyleFromHelpers(
-              currentPointType,
-              currentRadius,
-              [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha],
-              newStrokeWidth, // Use the new stroke width
-              [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha],
-              currentRotation,
-              currentStrokeType
-            );
+            // Create style - EXPLICIT GEOMETRY TYPE CHECKING like old app
+            let style = null;
+            if (item?.geometryType === "Point" || item?.geometryType === "MultiPoint") {
+              style = getPointStyle(
+                currentPointType,
+                currentRadius,
+                [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha],
+                newStrokeWidth, // Use the new stroke width
+                [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha],
+                currentRotation,
+                currentStrokeType
+              );
+            } else if (item?.geometryType === "LineString" || item?.geometryType === "MultiLineString") {
+              style = getLineStringStyle(
+                [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha],
+                newStrokeWidth, // Use the new stroke width
+                currentStrokeType
+              );
+            } else if (item?.geometryType === "Polygon" || item?.geometryType === "MultiPolygon") {
+              style = getPolygonStyle(
+                [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha],
+                newStrokeWidth, // Use the new stroke width
+                [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha],
+                currentStrokeType
+              );
+            }
 
-            // Update the item in the store
-            const updates = {
-              style: style,
-              pointType: currentPointType,
-              strokeType: currentStrokeType,
-            };
+            // Only update if style was created successfully
+            if (style) {
+              const updates = {
+                style: style,
+                pointType: currentPointType,
+                strokeType: currentStrokeType,
+              };
 
-            console.log("🎯 Updating item in store with new stroke width:", { itemId: item.id, updates, style });
-            updateItem(item.id, updates);
+              console.log("🎯 Updating", item?.geometryType, "item in store with new stroke width:", { itemId: item.id, updates, style });
+              updateItem(item.id, updates);
 
-            // Emit event to refresh the feature on the map
-            emit("mymap-style-updated", { itemId: item.id, style, strokeWidth: newStrokeWidth });
+              // Emit event to refresh the feature on the map
+              emit("mymap-style-updated", { itemId: item.id, style, strokeWidth: newStrokeWidth });
+              console.log("🔄 Emitted mymap-style-updated event for stroke width change:", item.id);
+            }
           }
         };
 
