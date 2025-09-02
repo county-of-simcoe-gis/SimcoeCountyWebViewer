@@ -83,7 +83,6 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
   const handleSymbolize = useCallback(
     (item: MyMapsItemType) => {
       console.log("Symbolize feature:", item.id);
-      // TODO: Open symbolization dialog for the item
       emit("mymap-symbolize", { item });
     },
     [emit]

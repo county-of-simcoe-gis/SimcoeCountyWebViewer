@@ -51,6 +51,7 @@ export type DrawType =
   | 'Bearing' 
   | 'Measure' 
   | 'Eraser'
+  | 'Buffer'
 
 export type GeometryType = 
   | 'Point' 
