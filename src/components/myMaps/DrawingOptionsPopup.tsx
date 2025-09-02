@@ -1796,7 +1796,73 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
 
         strokeTypeSelect.addEventListener("change", (e) => {
           e.stopPropagation();
-          console.log("🎯 Stroke type changed via DOM event:", (e.target as HTMLSelectElement).value);
+          const newStrokeType = (e.target as HTMLSelectElement).value;
+          console.log("🎯 Stroke type changed via DOM event:", newStrokeType);
+
+          // CRITICAL FIX: Get ALL current values from DOM to preserve all current settings
+          const pointStyleSelect = symbolizerContainer.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
+          const currentPointType = pointStyleSelect ? pointStyleSelect.value : item.pointType || "circle";
+
+          // Get current state from store/item (not DOM)
+          const state = getCurrentSymbolizerState();
+          if (!state) return;
+
+          // Get ALL slider values from DOM using positional selectors
+          const allSliders = symbolizerContainer.querySelectorAll("input[type='range']") as NodeListOf<HTMLInputElement>;
+          let currentRadius = state.radius;
+          let currentFillAlpha = state.fillAlpha;
+          let currentStrokeAlpha = state.strokeAlpha;
+          let currentStrokeWidth = state.strokeWidth;
+          let currentRotation = state.rotation;
+
+          if (allSliders && allSliders.length > 0) {
+            // Order: [0] = size, [1] = fill opacity, [2] = stroke opacity, [3] = stroke width, [4] = rotation
+            if (allSliders[0]) currentRadius = parseFloat(allSliders[0].value);
+            if (allSliders[1]) currentFillAlpha = parseFloat(allSliders[1].value);
+            if (allSliders[2]) currentStrokeAlpha = parseFloat(allSliders[2].value);
+            if (allSliders[3]) currentStrokeWidth = parseFloat(allSliders[3].value);
+            if (allSliders[4]) currentRotation = parseFloat(allSliders[4].value);
+          }
+
+          // Read current colors from DOM color buttons
+          const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
+          const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
+
+          console.log("🔧 Using DOM values for stroke type change:", {
+            pointType: currentPointType,
+            strokeType: newStrokeType,
+            radius: currentRadius,
+            fillAlpha: currentFillAlpha,
+            strokeAlpha: currentStrokeAlpha,
+            strokeWidth: currentStrokeWidth,
+            rotation: currentRotation,
+          });
+
+          if (item?.id) {
+            // Create style with ALL current DOM values and new stroke type
+            const style = createPointStyleFromHelpers(
+              currentPointType,
+              currentRadius,
+              [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha],
+              currentStrokeWidth,
+              [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha],
+              currentRotation,
+              newStrokeType // Use the new stroke type
+            );
+
+            // Update the item in the store
+            const updates = {
+              style: style,
+              pointType: currentPointType,
+              strokeType: newStrokeType, // Update stroke type
+            };
+
+            console.log("🎯 Updating item in store with new stroke type:", { itemId: item.id, updates, style });
+            updateItem(item.id, updates);
+
+            // Emit event to refresh the feature on the map
+            emit("mymap-style-updated", { itemId: item.id, style, strokeType: newStrokeType });
+          }
         });
         (strokeTypeSelect as HTMLElement).style.pointerEvents = "auto";
       }
@@ -1959,26 +2025,182 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         });
       }
 
-      // Other sliders (stroke width, rotation) - placeholder for now
-      const otherSliders = symbolizerContainer.querySelectorAll(
-        "input[type='range']:not(:nth-of-type(1)):not([key='sc-mymaps-symbolizer-fill-opacity']):not([key='sc-mymaps-symbolizer-stroke-opacity'])"
-      );
-      otherSliders.forEach((slider, index) => {
-        const handleSliderChange = (e: Event) => {
+      // Stroke Width slider (4th range input - index 3)
+      const allSliders = symbolizerContainer.querySelectorAll("input[type='range']") as NodeListOf<HTMLInputElement>;
+      const strokeWidthSlider = allSliders[3] as HTMLInputElement; // [0]=size, [1]=fill opacity, [2]=stroke opacity, [3]=stroke width
+      if (strokeWidthSlider) {
+        // Set stroke width slider value from current state
+        strokeWidthSlider.value = currentState.strokeWidth.toString();
+        console.log("🔧 Set stroke width slider value from state:", currentState.strokeWidth);
+
+        const handleStrokeWidthChange = (e: Event) => {
           e.stopPropagation();
-          console.log(`🎯 Other slider ${index + 1} changed via DOM event:`, (e.target as HTMLInputElement).value);
-          // TODO: Implement specific handlers for stroke width, rotation
+          const newStrokeWidth = parseFloat((e.target as HTMLInputElement).value);
+          console.log("🎯 Stroke width slider changed via DOM event:", newStrokeWidth);
+
+          // CRITICAL FIX: Get ALL current values from DOM to preserve all current settings
+          const pointStyleSelect = symbolizerContainer.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
+          const currentPointType = pointStyleSelect ? pointStyleSelect.value : item.pointType || "circle";
+
+          const strokeStyleSelect = symbolizerContainer.querySelector("select[name='pointOutline']") as HTMLSelectElement;
+          const currentStrokeType = strokeStyleSelect ? strokeStyleSelect.value : item.strokeType || "normal";
+
+          // Get current state from store/item (not DOM)
+          const state = getCurrentSymbolizerState();
+          if (!state) return;
+
+          // Get ALL slider values from DOM using positional selectors
+          let currentRadius = state.radius;
+          let currentFillAlpha = state.fillAlpha;
+          let currentStrokeAlpha = state.strokeAlpha;
+          let currentRotation = state.rotation;
+
+          if (allSliders && allSliders.length > 0) {
+            // Order: [0] = size, [1] = fill opacity, [2] = stroke opacity, [3] = stroke width (we're changing), [4] = rotation
+            if (allSliders[0]) currentRadius = parseFloat(allSliders[0].value);
+            if (allSliders[1]) currentFillAlpha = parseFloat(allSliders[1].value);
+            if (allSliders[2]) currentStrokeAlpha = parseFloat(allSliders[2].value);
+            if (allSliders[4]) currentRotation = parseFloat(allSliders[4].value);
+          }
+
+          // Read current colors from DOM color buttons
+          const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
+          const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
+
+          console.log("🔧 Using DOM values for stroke width change:", {
+            pointType: currentPointType,
+            strokeType: currentStrokeType,
+            radius: currentRadius,
+            fillAlpha: currentFillAlpha,
+            strokeAlpha: currentStrokeAlpha,
+            strokeWidth: newStrokeWidth,
+            rotation: currentRotation,
+          });
+
+          if (item?.id) {
+            // Create style with ALL current DOM values and new stroke width
+            const style = createPointStyleFromHelpers(
+              currentPointType,
+              currentRadius,
+              [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha],
+              newStrokeWidth, // Use the new stroke width
+              [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha],
+              currentRotation,
+              currentStrokeType
+            );
+
+            // Update the item in the store
+            const updates = {
+              style: style,
+              pointType: currentPointType,
+              strokeType: currentStrokeType,
+            };
+
+            console.log("🎯 Updating item in store with new stroke width:", { itemId: item.id, updates, style });
+            updateItem(item.id, updates);
+
+            // Emit event to refresh the feature on the map
+            emit("mymap-style-updated", { itemId: item.id, style, strokeWidth: newStrokeWidth });
+          }
         };
 
-        slider.addEventListener("input", handleSliderChange);
-        slider.addEventListener("change", handleSliderChange);
-        (slider as HTMLElement).style.pointerEvents = "auto";
+        strokeWidthSlider.addEventListener("input", handleStrokeWidthChange);
+        strokeWidthSlider.addEventListener("change", handleStrokeWidthChange);
+        (strokeWidthSlider as HTMLElement).style.pointerEvents = "auto";
 
         // Prevent slider from interfering with header drag
-        slider.addEventListener("mousedown", (e) => {
+        strokeWidthSlider.addEventListener("mousedown", (e) => {
           e.stopPropagation();
         });
-      });
+      }
+
+      // Rotation/Angle slider (5th range input - index 4)
+      const rotationSlider = allSliders[4] as HTMLInputElement; // [0]=size, [1]=fill opacity, [2]=stroke opacity, [3]=stroke width, [4]=rotation
+      if (rotationSlider) {
+        // Set rotation slider value from current state
+        rotationSlider.value = currentState.rotation.toString();
+        console.log("🔧 Set rotation slider value from state:", currentState.rotation);
+
+        const handleRotationChange = (e: Event) => {
+          e.stopPropagation();
+          const newRotation = parseFloat((e.target as HTMLInputElement).value);
+          console.log("🎯 Rotation slider changed via DOM event:", newRotation);
+
+          // CRITICAL FIX: Get ALL current values from DOM to preserve all current settings
+          const pointStyleSelect = symbolizerContainer.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
+          const currentPointType = pointStyleSelect ? pointStyleSelect.value : item.pointType || "circle";
+
+          const strokeStyleSelect = symbolizerContainer.querySelector("select[name='pointOutline']") as HTMLSelectElement;
+          const currentStrokeType = strokeStyleSelect ? strokeStyleSelect.value : item.strokeType || "normal";
+
+          // Get current state from store/item (not DOM)
+          const state = getCurrentSymbolizerState();
+          if (!state) return;
+
+          // Get ALL slider values from DOM using positional selectors
+          let currentRadius = state.radius;
+          let currentFillAlpha = state.fillAlpha;
+          let currentStrokeAlpha = state.strokeAlpha;
+          let currentStrokeWidth = state.strokeWidth;
+
+          if (allSliders && allSliders.length > 0) {
+            // Order: [0] = size, [1] = fill opacity, [2] = stroke opacity, [3] = stroke width, [4] = rotation (we're changing)
+            if (allSliders[0]) currentRadius = parseFloat(allSliders[0].value);
+            if (allSliders[1]) currentFillAlpha = parseFloat(allSliders[1].value);
+            if (allSliders[2]) currentStrokeAlpha = parseFloat(allSliders[2].value);
+            if (allSliders[3]) currentStrokeWidth = parseFloat(allSliders[3].value);
+          }
+
+          // Read current colors from DOM color buttons
+          const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
+          const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
+
+          console.log("🔧 Using DOM values for rotation change:", {
+            pointType: currentPointType,
+            strokeType: currentStrokeType,
+            radius: currentRadius,
+            fillAlpha: currentFillAlpha,
+            strokeAlpha: currentStrokeAlpha,
+            strokeWidth: currentStrokeWidth,
+            rotation: newRotation,
+          });
+
+          if (item?.id) {
+            // Create style with ALL current DOM values and new rotation
+            const style = createPointStyleFromHelpers(
+              currentPointType,
+              currentRadius,
+              [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha],
+              currentStrokeWidth,
+              [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha],
+              newRotation, // Use the new rotation
+              currentStrokeType
+            );
+
+            // Update the item in the store
+            const updates = {
+              style: style,
+              pointType: currentPointType,
+              strokeType: currentStrokeType,
+            };
+
+            console.log("🎯 Updating item in store with new rotation:", { itemId: item.id, updates, style });
+            updateItem(item.id, updates);
+
+            // Emit event to refresh the feature on the map
+            emit("mymap-style-updated", { itemId: item.id, style, rotation: newRotation });
+          }
+        };
+
+        rotationSlider.addEventListener("input", handleRotationChange);
+        rotationSlider.addEventListener("change", handleRotationChange);
+        (rotationSlider as HTMLElement).style.pointerEvents = "auto";
+
+        // Prevent slider from interfering with header drag
+        rotationSlider.addEventListener("mousedown", (e) => {
+          e.stopPropagation();
+        });
+      }
 
       // Fill color picker button
       const fillColorButton = symbolizerContainer.querySelector("#sc-mymaps-symbolizer-color-button") as HTMLButtonElement;
