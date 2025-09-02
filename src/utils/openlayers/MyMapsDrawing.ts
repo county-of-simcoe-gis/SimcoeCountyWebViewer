@@ -9,11 +9,11 @@ import { Modify, Translate } from "ol/interaction";
 import Collection from "ol/Collection";
 import GeoJSON from "ol/format/GeoJSON";
 import { fromCircle } from "ol/geom/Polygon";
-import { Style, Fill, Stroke, Circle as CircleStyle, Text } from "ol/style";
+import { Style, Fill, Stroke, Circle as CircleStyle, Text, RegularShape } from "ol/style";
 import { Feature } from "ol";
 import { Circle } from "ol/geom";
 import { generateUID } from "@/utils/myMapsHelpers";
-import { MyMapsItem, StyleJSON } from "@/types/myMaps";
+import type { MyMapsItem, StyleJSON } from "@/types/myMaps";
 
 
 export class MyMapsDrawingManager {
@@ -451,9 +451,19 @@ export class MyMapsDrawingManager {
             originalDrawType: item.drawType,
           });
 
-          // Apply item's style
+          // Apply item's style - handle both new OpenLayers Style objects and legacy StyleJSON
           if (item.style) {
-            const style = this.styleFromJSON(item.style);
+            let style: Style;
+            
+            // Check if it's already a Style object (new approach) or needs conversion (legacy StyleJSON)
+            if (item.style instanceof Style) {
+              console.log("🎨 Using stored OpenLayers Style object directly");
+              style = item.style;
+            } else {
+              console.log("🎨 Converting legacy StyleJSON to OpenLayers Style");
+              style = this.styleFromJSON(item.style as StyleJSON, item.pointType);
+            }
+            
             feature.setStyle(style);
           }
 
@@ -479,13 +489,13 @@ export class MyMapsDrawingManager {
     });
   }
 
-  private styleFromJSON(styleJson: StyleJSON): Style {
+  private styleFromJSON(styleJson: StyleJSON, pointType?: string): Style {
     if (!styleJson) return this.getDefaultStyle("#e809e5");
 
     const styleConfig: {
       fill?: Fill;
       stroke?: Stroke;
-      image?: CircleStyle;
+      image?: CircleStyle | RegularShape;
     } = {};
 
     // Fill
@@ -499,11 +509,12 @@ export class MyMapsDrawingManager {
     if (styleJson.stroke && styleJson.stroke.color) {
       styleConfig.stroke = new Stroke({
         color: styleJson.stroke.color,
-        width: styleJson.stroke.width || 1
+        width: styleJson.stroke.width || 1,
+        lineDash: styleJson.stroke.lineDash
       });
     }
 
-    // Image (CircleStyle for points)
+    // Image (CircleStyle or RegularShape for points)
     if (styleJson.image && styleJson.image.radius) {
       const imageFill = styleJson.image.fill ? new Fill({
         color: styleJson.image.fill.color
@@ -511,14 +522,79 @@ export class MyMapsDrawingManager {
 
       const imageStroke = styleJson.image.stroke ? new Stroke({
         color: styleJson.image.stroke.color,
-        width: styleJson.image.stroke.width || 1
+        width: styleJson.image.stroke.width || 1,
+        lineDash: styleJson.image.stroke.lineDash
       }) : new Stroke({ color: '#e809e5', width: 1 });
 
-      styleConfig.image = new CircleStyle({
-        radius: styleJson.image.radius,
-        fill: imageFill,
-        stroke: imageStroke
-      });
+      // Handle different point types (matching old app logic)
+      if (!pointType || pointType === "circle") {
+        styleConfig.image = new CircleStyle({
+          radius: styleJson.image.radius,
+          fill: imageFill,
+          stroke: imageStroke
+        });
+      } else if (pointType === "square") {
+        styleConfig.image = new RegularShape({
+          fill: imageFill,
+          stroke: imageStroke,
+          points: 4,
+          radius: styleJson.image.radius,
+          angle: Math.PI / 4,
+          rotation: styleJson.image.rotation || 0,
+        });
+      } else if (pointType === "triangle") {
+        styleConfig.image = new RegularShape({
+          fill: imageFill,
+          stroke: imageStroke,
+          points: 3,
+          radius: styleJson.image.radius,
+          rotation: styleJson.image.rotation || 0,
+          angle: 0,
+        });
+      } else if (pointType === "star") {
+        let radius2 = 4;
+        if (styleJson.image.radius < 15) radius2 = 4;
+        else if (styleJson.image.radius > 15 && styleJson.image.radius < 40) radius2 = 8;
+        else if (styleJson.image.radius > 40 && styleJson.image.radius < 70) radius2 = 16;
+        else radius2 = 22;
+        
+        styleConfig.image = new RegularShape({
+          fill: imageFill,
+          stroke: imageStroke,
+          points: 5,
+          radius: styleJson.image.radius,
+          radius2: radius2,
+          angle: 0,
+          rotation: styleJson.image.rotation || 0,
+        });
+      } else if (pointType === "cross") {
+        styleConfig.image = new RegularShape({
+          fill: imageFill,
+          stroke: imageStroke,
+          points: 4,
+          radius: styleJson.image.radius,
+          radius2: 0,
+          angle: 0,
+          rotation: styleJson.image.rotation || 0,
+        });
+      } else if (pointType === "x") {
+        styleConfig.image = new RegularShape({
+          fill: imageFill,
+          stroke: imageStroke,
+          points: 4,
+          radius: styleJson.image.radius,
+          radius2: 0,
+          angle: Math.PI / 4,
+          rotation: styleJson.image.rotation || 0,
+        });
+      } else {
+        // Default to circle for unknown types
+        styleConfig.image = new CircleStyle({
+          radius: styleJson.image.radius,
+          fill: imageFill,
+          stroke: imageStroke
+        });
+      }
     }
 
     return new Style(styleConfig);
@@ -791,6 +867,49 @@ export class MyMapsDrawingManager {
         feature.setStyle(style);
         this.vectorSource.changed();
       }
+    }
+  }
+
+  // Update feature style (when user changes symbolizer settings)
+  public updateFeatureStyle(featureId: string, styleOrJSON: StyleJSON | Style, pointType?: string) {
+    const feature = this.getFeatureById(featureId);
+    if (!feature) {
+      console.warn(`❌ Feature with id ${featureId} not found for style update`);
+      return;
+    }
+
+    try {
+      let newStyle: Style;
+      
+      // Check if it's already a Style object (from new approach) or StyleJSON (legacy)
+      if (styleOrJSON instanceof Style) {
+        console.log("🎨 Using OpenLayers Style object directly (new approach)");
+        newStyle = styleOrJSON;
+      } else {
+        console.log("🎨 Converting StyleJSON to OpenLayers Style (legacy approach)");
+        newStyle = this.styleFromJSON(styleOrJSON, pointType);
+      }
+      
+      // Preserve existing text style if feature has a label
+      const currentStyle = feature.getStyle() as Style;
+      if (currentStyle && currentStyle.getText() && feature.get("labelVisible")) {
+        newStyle.setText(currentStyle.getText());
+      }
+      
+      // Apply new style to feature
+      feature.setStyle(newStyle);
+      
+      // Trigger map refresh
+      this.vectorSource.changed();
+      
+      console.log("✅ Feature style updated successfully:", { 
+        featureId, 
+        pointType, 
+        hasTextStyle: !!newStyle.getText(),
+        styleType: styleOrJSON instanceof Style ? "OpenLayers Style" : "StyleJSON"
+      });
+    } catch (error) {
+      console.error("❌ Error updating feature style:", error);
     }
   }
 

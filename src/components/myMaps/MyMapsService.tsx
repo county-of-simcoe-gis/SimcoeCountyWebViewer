@@ -385,6 +385,44 @@ export default function MyMapsService() {
       updateItem(featureId, { labelRotation: rotation });
     };
 
+    const handleStyleUpdate = (data?: { [key: string]: unknown }) => {
+      console.log("🎯 MyMapsService: handleStyleUpdate called", {
+        data,
+        timestamp: Date.now(),
+        hasDrawingManager: !!drawingManagerRef.current,
+      });
+
+      if (!data || !data.itemId || !data.style) {
+        console.warn("❌ MyMapsService: Invalid data for style update", {
+          data,
+          hasItemId: !!data?.itemId,
+          hasStyle: !!data?.style,
+        });
+        return;
+      }
+
+      const featureId = data.itemId as string;
+      const style = data.style; // Now using full OpenLayers style object
+      const pointType = data.pointType as string;
+
+      console.log("🎨 MyMapsService: Updating feature with OpenLayers style object", {
+        featureId,
+        style,
+        pointType,
+        timestamp: Date.now(),
+      });
+
+      if (drawingManagerRef.current) {
+        // For now, we'll continue using the existing updateFeatureStyle method
+        // but we should convert the style object to styleJSON if needed
+        console.log("🔄 MyMapsService: Converting OpenLayers style object for compatibility");
+        drawingManagerRef.current.updateFeatureStyle(featureId, style, pointType);
+        console.log("✅ MyMapsService: Feature style updated successfully");
+      } else {
+        console.warn("❌ MyMapsService: Cannot update feature style - no drawing manager");
+      }
+    };
+
     // Buffer feature handler
     const handleAddMyMapsFeature = (data?: { [key: string]: unknown }) => {
       if (data && data.feature && data.label) {
@@ -434,6 +472,9 @@ export default function MyMapsService() {
     const labelVisibilityId = addListener("mymap-label-visibility-change", handleLabelVisibilityChange);
     const labelRotationId = addListener("mymap-label-rotation-change", handleLabelRotationChange);
 
+    // Style event handler
+    const styleUpdateId = addListener("mymap-style-updated", handleStyleUpdate);
+
     // Buffer event handler
     const addFeatureId = addListener("addMyMapsFeature", handleAddMyMapsFeature);
 
@@ -444,6 +485,7 @@ export default function MyMapsService() {
       removeListener(labelChangeId);
       removeListener(labelVisibilityId);
       removeListener(labelRotationId);
+      removeListener(styleUpdateId);
       removeListener(addFeatureId);
     };
   }, [map, addItem, emit]);

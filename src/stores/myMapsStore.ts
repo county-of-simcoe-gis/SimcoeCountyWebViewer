@@ -14,12 +14,16 @@ export interface StyleJSON {
     lineDash?: number[]
   }
   image?: {
-    type: 'circle' | 'icon'
+    type: 'circle' | 'icon' | 'regularShape'
     radius?: number
     fill?: { color: string | number[] }
     stroke?: { color: string | number[]; width?: number }
     src?: string
     scale?: number
+    // RegularShape specific properties
+    points?: number
+    radius2?: number
+    angle?: number
   }
   text?: {
     text: string
@@ -49,7 +53,10 @@ export type DrawType =
 export type GeometryType = 
   | 'Point' 
   | 'LineString' 
-  | 'Polygon' 
+  | 'Polygon'
+  | 'MultiPoint'
+  | 'MultiLineString'
+  | 'MultiPolygon' 
   | 'Circle'
 
 export type EditMode = 'vertices' | 'translate' | null
@@ -61,7 +68,7 @@ export interface MyMapsItem {
   labelRotation: number
   labelStyle?: Style | null
   featureGeoJSON: string // Serialized GeoJSON
-  style: StyleJSON // OpenLayers style JSON representation
+  style: Style | StyleJSON // OpenLayers style object (new approach) or JSON representation (legacy)
   visible: boolean
   drawType: DrawType
   geometryType: GeometryType

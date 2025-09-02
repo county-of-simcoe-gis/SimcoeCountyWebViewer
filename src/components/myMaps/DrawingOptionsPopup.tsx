@@ -3,10 +3,17 @@
 import React, { useRef, useEffect, useCallback } from "react";
 import { Overlay } from "ol";
 import { Coordinate } from "ol/coordinate";
+import { Style } from "ol/style";
+import Circle from "ol/style/Circle";
+import RegularShape from "ol/style/RegularShape";
 
 import type { MyMapsItem as MyMapsItemType } from "@/types/myMaps";
 import { useMapStore } from "@/stores/mapStore";
+import { useMyMapsStore } from "@/stores/myMapsStore";
+import { useEventStore } from "@/stores/eventStore";
 import { activateTab } from "@/utils/helpersUI";
+
+import { getPointStyle } from "@/utils/openlayers/DrawingHelpers";
 import MyMapsPopupLabel from "./MyMapsPopupLabel";
 import MyMapsBuffer from "./MyMapsBuffer";
 import MyMapsSymbolizer from "./MyMapsSymbolizer";
@@ -45,10 +52,59 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
   const activeInteractionIdsRef = useRef<number[]>([]);
   const hasBeenDraggedRef = useRef<boolean>(false);
   const { map } = useMapStore();
+  const { updateItem } = useMyMapsStore();
+  const { emit } = useEventStore();
 
   // Create stable references for dependencies
   const itemId = item?.id;
   const itemLabel = item?.label;
+
+  // Color utility function for hex conversion (used by color picker popup and state extraction)
+  const hexToRgbObject = useCallback((hex: string): { r: number; g: number; b: number; a: number } => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result
+      ? {
+          r: parseInt(result[1], 16),
+          g: parseInt(result[2], 16),
+          b: parseInt(result[3], 16),
+          a: 1,
+        }
+      : { r: 0, g: 0, b: 0, a: 1 };
+  }, []);
+
+  // Helper function to extract current color from DOM color button
+  const extractColorFromDOMButton = useCallback(
+    (buttonId: string): { r: number; g: number; b: number } => {
+      const symbolizerContainer = overlayElementRef.current?.querySelector(".sc-mymaps-symbolizer-container");
+      const colorButton = symbolizerContainer?.querySelector(`#${buttonId}`) as HTMLButtonElement;
+
+      if (colorButton && colorButton.style.backgroundColor) {
+        const bgColor = colorButton.style.backgroundColor;
+
+        // Handle rgb(r, g, b) format
+        if (bgColor.startsWith("rgb(")) {
+          const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+          if (match) {
+            return {
+              r: parseInt(match[1]),
+              g: parseInt(match[2]),
+              b: parseInt(match[3]),
+            };
+          }
+        }
+
+        // Handle hex format
+        if (bgColor.startsWith("#")) {
+          const rgb = hexToRgbObject(bgColor);
+          return { r: rgb.r, g: rgb.g, b: rgb.b };
+        }
+      }
+
+      // Fallback to default colors
+      return buttonId.includes("stroke") ? { r: 255, g: 255, b: 255 } : { r: 232, g: 9, b: 229 }; // Default white stroke, pink fill
+    },
+    [hexToRgbObject]
+  );
 
   // Create overlay element and overlay once when first needed
   useEffect(() => {
@@ -75,6 +131,778 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
     overlayRef.current = overlay;
     map.addOverlay(overlay);
   }, [map, coordinate]);
+
+  // Helper function to get current symbolizer state from store/item (not DOM)
+  const getCurrentSymbolizerState = useCallback(() => {
+    if (!item) return null;
+
+    console.log("🔍 Getting current state from item:", item.id);
+
+    // If item has a style, try to extract values from it
+    const currentState = {
+      pointType: item.pointType || "circle",
+      strokeType: item.strokeType || "normal",
+      radius: 8,
+      fillAlpha: 0.8,
+      strokeAlpha: 1.0,
+      strokeWidth: 2,
+      rotation: 0,
+      fillColor: { r: 232, g: 9, b: 229, a: 0.8 }, // Default pink
+      strokeColor: { r: 255, g: 255, b: 255, a: 1.0 }, // Default white
+    };
+
+    // Extract current values from style object - handle the actual storage format
+    if (item.style) {
+      console.log("🔍 Reading style object:", item.style);
+
+      // Check if it's an OpenLayers Style object
+      if (item.style instanceof Style) {
+        console.log("🔍 Reading from OpenLayers Style object using public API");
+        console.log("🔍 Full OpenLayers Style object:", item.style);
+
+        // Use OpenLayers public API methods
+        const imageStyle = item.style.getImage();
+        console.log("🔍 ImageStyle from getImage():", imageStyle);
+        if (imageStyle) {
+          // Handle CircleStyle
+          if (imageStyle instanceof Circle) {
+            currentState.radius = imageStyle.getRadius();
+            currentState.pointType = "circle";
+
+            const fill = imageStyle.getFill();
+            console.log("🔍 Circle Fill object:", fill);
+            if (fill) {
+              const fillColor = fill.getColor() as [number, number, number, number];
+              console.log("🔍 Circle fill color from OpenLayers:", fillColor);
+              if (Array.isArray(fillColor)) {
+                currentState.fillColor = { r: fillColor[0], g: fillColor[1], b: fillColor[2], a: fillColor[3] || 0.8 };
+                currentState.fillAlpha = fillColor[3] || 0.8;
+                console.log("🔍 Converted circle fill color:", currentState.fillColor);
+              }
+            }
+
+            const stroke = imageStyle.getStroke();
+            if (stroke) {
+              currentState.strokeWidth = stroke.getWidth() || 2;
+              const strokeColor = stroke.getColor() as [number, number, number, number];
+              if (Array.isArray(strokeColor)) {
+                currentState.strokeColor = { r: strokeColor[0], g: strokeColor[1], b: strokeColor[2], a: strokeColor[3] || 1.0 };
+                currentState.strokeAlpha = strokeColor[3] || 1.0;
+              }
+            }
+          }
+          // Handle RegularShape
+          else if (imageStyle instanceof RegularShape) {
+            currentState.radius = imageStyle.getRadius();
+            const points = imageStyle.getPoints();
+            const radius2 = imageStyle.getRadius2();
+
+            if (points === 4 && radius2 === 0) {
+              currentState.pointType = "cross";
+            } else if (points === 4 && radius2 !== 0) {
+              currentState.pointType = "square";
+            } else if (points === 3) {
+              currentState.pointType = "triangle";
+            } else if (points === 5) {
+              currentState.pointType = "star";
+            }
+
+            const fill = imageStyle.getFill();
+            console.log("🔍 RegularShape Fill object:", fill);
+            if (fill) {
+              const fillColor = fill.getColor() as [number, number, number, number];
+              console.log("🔍 RegularShape fill color from OpenLayers:", fillColor);
+              if (Array.isArray(fillColor)) {
+                currentState.fillColor = { r: fillColor[0], g: fillColor[1], b: fillColor[2], a: fillColor[3] || 0.8 };
+                currentState.fillAlpha = fillColor[3] || 0.8;
+                console.log("🔍 Converted RegularShape fill color:", currentState.fillColor);
+              }
+            }
+
+            const stroke = imageStyle.getStroke();
+            console.log("🔍 RegularShape Stroke object:", stroke);
+            if (stroke) {
+              currentState.strokeWidth = stroke.getWidth() || 2;
+              const strokeColor = stroke.getColor() as [number, number, number, number];
+              console.log("🔍 RegularShape stroke color from OpenLayers:", strokeColor);
+              if (Array.isArray(strokeColor)) {
+                currentState.strokeColor = { r: strokeColor[0], g: strokeColor[1], b: strokeColor[2], a: strokeColor[3] || 1.0 };
+                currentState.strokeAlpha = strokeColor[3] || 1.0;
+                console.log("🔍 Converted RegularShape stroke color:", currentState.strokeColor);
+              }
+            }
+          }
+        }
+      } else {
+        // Regular JSON object format (current storage structure)
+        console.log("🔍 Reading from JSON style object format");
+        const style = item.style as {
+          image?: {
+            fill?: { color?: string | [number, number, number, number] };
+            stroke?: { color?: string | [number, number, number, number]; width?: number };
+            radius?: number;
+            type?: string;
+          };
+          fill?: { color?: string | [number, number, number, number] };
+          stroke?: { color?: string | [number, number, number, number]; width?: number };
+        };
+
+        if (style.image) {
+          console.log("🔍 Found style.image:", style.image);
+
+          // Extract basic properties
+          currentState.radius = style.image.radius || 8;
+          currentState.pointType = style.image.type === "circle" ? "circle" : item.pointType || "circle";
+
+          // Extract fill color - handle both hex and rgba formats
+          if (style.image.fill && style.image.fill.color) {
+            const fillColorStr = style.image.fill.color;
+            console.log("🔍 Found fill color:", fillColorStr);
+
+            if (typeof fillColorStr === "string") {
+              // Convert hex to RGB
+              const fillColor = hexToRgbObject(fillColorStr);
+              currentState.fillColor = fillColor;
+              currentState.fillAlpha = fillColor.a;
+              console.log("🔍 Converted fill color to RGB:", fillColor);
+            }
+          }
+
+          // Extract stroke properties
+          if (style.image.stroke) {
+            console.log("🔍 Found stroke:", style.image.stroke);
+
+            currentState.strokeWidth = style.image.stroke.width || 2;
+
+            // Extract stroke color - handle both hex and rgba formats
+            if (style.image.stroke.color) {
+              const strokeColorStr = style.image.stroke.color;
+              console.log("🔍 Found stroke color:", strokeColorStr);
+
+              if (typeof strokeColorStr === "string") {
+                // Convert hex to RGB
+                const strokeColor = hexToRgbObject(strokeColorStr);
+                currentState.strokeColor = strokeColor;
+                currentState.strokeAlpha = strokeColor.a;
+                console.log("🔍 Converted stroke color to RGB:", strokeColor);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    console.log("🔍 Current state extracted:", currentState);
+    return currentState;
+  }, [item, hexToRgbObject]);
+
+  // Use proper drawing helpers for style creation
+  const createPointStyleFromHelpers = useCallback(
+    (pointType: string, radius: number, strokeColor: [number, number, number, number], strokeWidth: number, fillColor: [number, number, number, number], rotation: number, strokeType: string) => {
+      return getPointStyle(pointType, radius, strokeColor, strokeWidth, fillColor, rotation, strokeType);
+    },
+    []
+  );
+
+  // Function to update symbolizer point type
+  const updateSymbolizerPointType = useCallback(
+    (itemId: string, newPointType: string) => {
+      if (!item) return;
+
+      console.log("🎯 Updating symbolizer point type:", { itemId, newPointType });
+
+      // CRITICAL FIX: Get ALL current values from DOM to preserve all current settings
+      const symbolizerContainer = overlayElementRef.current?.querySelector(".sc-mymaps-symbolizer-container");
+      const strokeStyleSelect = symbolizerContainer?.querySelector("select[name='pointOutline']") as HTMLSelectElement;
+      const currentStrokeType = strokeStyleSelect ? strokeStyleSelect.value : item.strokeType || "normal";
+
+      // Get current state from store/item (not DOM)
+      const state = getCurrentSymbolizerState();
+      if (!state) return;
+
+      // Read ALL current values from DOM to prevent any resets
+      const sizeSlider = symbolizerContainer?.querySelector("input[type='range']:nth-of-type(1)") as HTMLInputElement;
+      const currentRadius = sizeSlider ? parseFloat(sizeSlider.value) : state.radius;
+
+      // Get ALL slider values from DOM using positional selectors
+      const allSliders = symbolizerContainer?.querySelectorAll("input[type='range']") as NodeListOf<HTMLInputElement>;
+      let currentFillAlpha = state.fillAlpha;
+      let currentStrokeAlpha = state.strokeAlpha;
+      let currentStrokeWidth = state.strokeWidth;
+      let currentRotation = state.rotation;
+
+      if (allSliders && allSliders.length > 1) {
+        // Order: [0] = size, [1] = fill opacity, [2] = stroke opacity, [3] = stroke width, [4] = rotation
+        if (allSliders[1]) currentFillAlpha = parseFloat(allSliders[1].value);
+        if (allSliders[2]) currentStrokeAlpha = parseFloat(allSliders[2].value);
+        if (allSliders[3]) currentStrokeWidth = parseFloat(allSliders[3].value);
+        if (allSliders[4]) currentRotation = parseFloat(allSliders[4].value);
+      }
+
+      // Read current colors from DOM color buttons
+      const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
+      const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
+
+      console.log("🔍 Current state before point type update:", state);
+      console.log("🔧 Using DOM values for point type change:", {
+        pointType: newPointType,
+        strokeType: currentStrokeType,
+        radius: currentRadius,
+        fillAlpha: currentFillAlpha,
+        strokeAlpha: currentStrokeAlpha,
+        strokeWidth: currentStrokeWidth,
+        rotation: currentRotation,
+      });
+
+      // Create new style with updated point type using ALL current DOM values
+      const style = createPointStyleFromHelpers(
+        newPointType, // Use the new point type
+        currentRadius, // Use current radius from DOM
+        [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha], // Use current values
+        currentStrokeWidth, // Use current stroke width from DOM
+        [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha], // Use current values
+        currentRotation, // Use current rotation from DOM
+        currentStrokeType // Use current stroke type from DOM
+      );
+
+      // Update the item in the store with the full OpenLayers style object
+      const updates = {
+        style: style,
+        pointType: newPointType,
+        strokeType: currentStrokeType,
+      };
+
+      console.log("🎯 Updating item in store with new point type:", { itemId, updates, style });
+      updateItem(itemId, updates);
+
+      // Emit event to refresh the feature on the map
+      emit("mymap-style-updated", { itemId, style, pointType: newPointType });
+      console.log("🔄 Emitted mymap-style-updated event for point type change:", itemId);
+    },
+    [item, updateItem, emit, getCurrentSymbolizerState, createPointStyleFromHelpers, extractColorFromDOMButton]
+  );
+
+  // Function to update symbolizer fill color
+  const updateSymbolizerFillColor = useCallback(
+    (itemId: string, newColor: { r: number; g: number; b: number }) => {
+      if (!item) return;
+
+      console.log("🎯 Updating symbolizer fill color:", { itemId, newColor });
+
+      // CRITICAL FIX: Get current dropdown values AND slider values from DOM to preserve all current settings
+      const symbolizerContainer = overlayElementRef.current?.querySelector(".sc-mymaps-symbolizer-container");
+      const pointStyleSelect = symbolizerContainer?.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
+      const currentPointType = pointStyleSelect ? pointStyleSelect.value : item.pointType || "circle";
+
+      const strokeStyleSelect = symbolizerContainer?.querySelector("select[name='pointOutline']") as HTMLSelectElement;
+      const currentStrokeType = strokeStyleSelect ? strokeStyleSelect.value : item.strokeType || "normal";
+
+      // Get current state from store/item (not DOM)
+      const state = getCurrentSymbolizerState();
+      if (!state) return;
+
+      // Read ALL current values from DOM to prevent any resets
+      const sizeSlider = symbolizerContainer?.querySelector("input[type='range']:nth-of-type(1)") as HTMLInputElement;
+      const currentRadius = sizeSlider ? parseFloat(sizeSlider.value) : state.radius;
+
+      // Get ALL slider values from DOM using positional selectors
+      const allSliders = symbolizerContainer?.querySelectorAll("input[type='range']") as NodeListOf<HTMLInputElement>;
+      let currentFillAlpha = state.fillAlpha;
+      let currentStrokeAlpha = state.strokeAlpha;
+      let currentStrokeWidth = state.strokeWidth;
+      let currentRotation = state.rotation;
+
+      if (allSliders && allSliders.length > 1) {
+        // Order: [0] = size, [1] = fill opacity, [2] = stroke opacity, [3] = stroke width, [4] = rotation
+        if (allSliders[1]) currentFillAlpha = parseFloat(allSliders[1].value);
+        if (allSliders[2]) currentStrokeAlpha = parseFloat(allSliders[2].value);
+        if (allSliders[3]) currentStrokeWidth = parseFloat(allSliders[3].value);
+        if (allSliders[4]) currentRotation = parseFloat(allSliders[4].value);
+      }
+
+      // Read current stroke color from DOM
+      const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
+
+      console.log("🔍 Current state before fill color update:", state);
+      console.log("🔧 Using DOM values for fill color:", {
+        pointType: currentPointType,
+        strokeType: currentStrokeType,
+        radius: currentRadius,
+        fillAlpha: currentFillAlpha,
+        strokeAlpha: currentStrokeAlpha,
+        strokeWidth: currentStrokeWidth,
+        rotation: currentRotation,
+      });
+
+      // Update the fill color in state and override all values with DOM values
+      const updatedState = {
+        ...state,
+        fillColor: { ...newColor, a: currentFillAlpha }, // Use DOM alpha
+        strokeColor: { ...currentStrokeColor, a: currentStrokeAlpha }, // Use DOM stroke color and alpha
+        pointType: currentPointType, // Override with DOM value
+        strokeType: currentStrokeType, // Override with DOM value
+        radius: currentRadius, // Override with DOM value
+        strokeWidth: currentStrokeWidth, // Override with DOM value
+        rotation: currentRotation, // Override with DOM value
+        fillAlpha: currentFillAlpha, // Override with DOM value
+        strokeAlpha: currentStrokeAlpha, // Override with DOM value
+      };
+
+      // Create new style with updated fill color
+      const style = createPointStyleFromHelpers(
+        updatedState.pointType,
+        updatedState.radius,
+        [updatedState.strokeColor.r, updatedState.strokeColor.g, updatedState.strokeColor.b, updatedState.strokeAlpha],
+        updatedState.strokeWidth,
+        [newColor.r, newColor.g, newColor.b, updatedState.fillAlpha], // Use new fill color
+        updatedState.rotation,
+        updatedState.strokeType
+      );
+
+      // Update the item in the store with the full OpenLayers style object (matching old app)
+      const updates = {
+        style: style, // Store the full OpenLayers style object
+        pointType: updatedState.pointType, // Preserve pointType
+        strokeType: updatedState.strokeType, // Preserve strokeType
+      };
+
+      console.log("🎯 Updating item in store with new fill color:", { itemId, updates, style });
+      updateItem(itemId, updates);
+
+      // Emit event to refresh the feature on the map
+      emit("mymap-style-updated", { itemId, style, fillColor: newColor });
+      console.log("🔄 Emitted mymap-style-updated event for fill color change:", itemId);
+    },
+    [item, updateItem, emit, getCurrentSymbolizerState, createPointStyleFromHelpers, extractColorFromDOMButton]
+  );
+
+  // Function to update symbolizer stroke color
+  const updateSymbolizerStrokeColor = useCallback(
+    (itemId: string, newColor: { r: number; g: number; b: number }) => {
+      if (!item) return;
+
+      console.log("🎯 Updating symbolizer stroke color:", { itemId, newColor });
+
+      // CRITICAL FIX: Get current dropdown values AND slider values from DOM to preserve all current settings
+      const symbolizerContainer = overlayElementRef.current?.querySelector(".sc-mymaps-symbolizer-container");
+      const pointStyleSelect = symbolizerContainer?.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
+      const currentPointType = pointStyleSelect ? pointStyleSelect.value : item.pointType || "circle";
+
+      const strokeStyleSelect = symbolizerContainer?.querySelector("select[name='pointOutline']") as HTMLSelectElement;
+      const currentStrokeType = strokeStyleSelect ? strokeStyleSelect.value : item.strokeType || "normal";
+
+      // Get current state from store/item (not DOM)
+      const state = getCurrentSymbolizerState();
+      if (!state) return;
+
+      // Read ALL current values from DOM to prevent any resets
+      const sizeSlider = symbolizerContainer?.querySelector("input[type='range']:nth-of-type(1)") as HTMLInputElement;
+      const currentRadius = sizeSlider ? parseFloat(sizeSlider.value) : state.radius;
+
+      // Get ALL slider values from DOM using positional selectors
+      const allSliders = symbolizerContainer?.querySelectorAll("input[type='range']") as NodeListOf<HTMLInputElement>;
+      let currentFillAlpha = state.fillAlpha;
+      let currentStrokeAlpha = state.strokeAlpha;
+      let currentStrokeWidth = state.strokeWidth;
+      let currentRotation = state.rotation;
+
+      if (allSliders && allSliders.length > 1) {
+        // Order: [0] = size, [1] = fill opacity, [2] = stroke opacity, [3] = stroke width, [4] = rotation
+        if (allSliders[1]) currentFillAlpha = parseFloat(allSliders[1].value);
+        if (allSliders[2]) currentStrokeAlpha = parseFloat(allSliders[2].value);
+        if (allSliders[3]) currentStrokeWidth = parseFloat(allSliders[3].value);
+        if (allSliders[4]) currentRotation = parseFloat(allSliders[4].value);
+      }
+
+      // Read current fill color from DOM
+      const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
+
+      console.log("🔍 Current state before stroke color update:", state);
+      console.log("🔧 Using DOM values for stroke color:", {
+        pointType: currentPointType,
+        strokeType: currentStrokeType,
+        radius: currentRadius,
+        fillAlpha: currentFillAlpha,
+        strokeAlpha: currentStrokeAlpha,
+        strokeWidth: currentStrokeWidth,
+        rotation: currentRotation,
+      });
+
+      // Update the stroke color in state and override all values with DOM values
+      const updatedState = {
+        ...state,
+        strokeColor: { ...newColor, a: currentStrokeAlpha }, // Use DOM alpha
+        fillColor: { ...currentFillColor, a: currentFillAlpha }, // Use DOM fill color and alpha
+        pointType: currentPointType, // Override with DOM value
+        strokeType: currentStrokeType, // Override with DOM value
+        radius: currentRadius, // Override with DOM value
+        strokeWidth: currentStrokeWidth, // Override with DOM value
+        rotation: currentRotation, // Override with DOM value
+        fillAlpha: currentFillAlpha, // Override with DOM value
+        strokeAlpha: currentStrokeAlpha, // Override with DOM value
+      };
+
+      // Create new style with updated stroke color
+      const style = createPointStyleFromHelpers(
+        updatedState.pointType,
+        updatedState.radius,
+        [newColor.r, newColor.g, newColor.b, updatedState.strokeAlpha], // Use new stroke color
+        updatedState.strokeWidth,
+        [updatedState.fillColor.r, updatedState.fillColor.g, updatedState.fillColor.b, updatedState.fillAlpha],
+        updatedState.rotation,
+        updatedState.strokeType
+      );
+
+      // Update the item in the store with the full OpenLayers style object (matching old app)
+      const updates = {
+        style: style, // Store the full OpenLayers style object
+        pointType: updatedState.pointType, // Preserve pointType
+        strokeType: updatedState.strokeType, // Preserve strokeType
+      };
+
+      console.log("🎯 Updating item in store with new stroke color:", { itemId, updates, style });
+      updateItem(itemId, updates);
+
+      // Emit event to refresh the feature on the map
+      emit("mymap-style-updated", { itemId, style, strokeColor: newColor });
+      console.log("🔄 Emitted mymap-style-updated event for stroke color change:", itemId);
+    },
+    [item, updateItem, emit, getCurrentSymbolizerState, createPointStyleFromHelpers, extractColorFromDOMButton]
+  );
+
+  // Function to update symbolizer fill opacity
+  const updateSymbolizerFillOpacity = useCallback(
+    (itemId: string, newOpacity: number) => {
+      if (!item) return;
+
+      console.log("🎯 Updating symbolizer fill opacity:", { itemId, newOpacity });
+
+      // CRITICAL FIX: Get current dropdown values AND slider values from DOM to preserve all current settings
+      const symbolizerContainer = overlayElementRef.current?.querySelector(".sc-mymaps-symbolizer-container");
+      const pointStyleSelect = symbolizerContainer?.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
+      const currentPointType = pointStyleSelect ? pointStyleSelect.value : item.pointType || "circle";
+
+      const strokeStyleSelect = symbolizerContainer?.querySelector("select[name='pointOutline']") as HTMLSelectElement;
+      const currentStrokeType = strokeStyleSelect ? strokeStyleSelect.value : item.strokeType || "normal";
+
+      // Get current state from store/item (not DOM)
+      const state = getCurrentSymbolizerState();
+      if (!state) return;
+
+      // Read ALL current values from DOM to prevent any resets
+      const sizeSlider = symbolizerContainer?.querySelector("input[type='range']:nth-of-type(1)") as HTMLInputElement;
+      const currentRadius = sizeSlider ? parseFloat(sizeSlider.value) : state.radius;
+
+      // Get ALL slider values from DOM using positional selectors
+      const allSliders = symbolizerContainer?.querySelectorAll("input[type='range']") as NodeListOf<HTMLInputElement>;
+      let currentStrokeAlpha = state.strokeAlpha;
+      let currentStrokeWidth = state.strokeWidth;
+      let currentRotation = state.rotation;
+
+      if (allSliders && allSliders.length > 1) {
+        // Order: [0] = size, [1] = fill opacity, [2] = stroke opacity, [3] = stroke width, [4] = rotation
+        // Note: We're updating fill opacity, so we don't read [1], but read everything else
+        if (allSliders[2]) currentStrokeAlpha = parseFloat(allSliders[2].value);
+        if (allSliders[3]) currentStrokeWidth = parseFloat(allSliders[3].value);
+        if (allSliders[4]) currentRotation = parseFloat(allSliders[4].value);
+      }
+
+      // Read current colors from DOM
+      const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
+      const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
+
+      console.log("🔍 Current state before fill opacity update:", state);
+      console.log("🔧 Using DOM values for fill opacity:", {
+        pointType: currentPointType,
+        strokeType: currentStrokeType,
+        radius: currentRadius,
+        strokeAlpha: currentStrokeAlpha,
+        strokeWidth: currentStrokeWidth,
+        rotation: currentRotation,
+      });
+
+      // Update the fill opacity in state and override all values with DOM values
+      const updatedState = {
+        ...state,
+        fillAlpha: newOpacity,
+        fillColor: { ...currentFillColor, a: newOpacity }, // Use DOM fill color with new alpha
+        strokeColor: { ...currentStrokeColor, a: currentStrokeAlpha }, // Use DOM stroke color and alpha
+        pointType: currentPointType,
+        strokeType: currentStrokeType,
+        radius: currentRadius,
+        strokeWidth: currentStrokeWidth,
+        rotation: currentRotation,
+        strokeAlpha: currentStrokeAlpha,
+      };
+
+      // Create new style with updated fill opacity
+      const style = createPointStyleFromHelpers(
+        updatedState.pointType,
+        updatedState.radius,
+        [updatedState.strokeColor.r, updatedState.strokeColor.g, updatedState.strokeColor.b, updatedState.strokeAlpha],
+        updatedState.strokeWidth,
+        [updatedState.fillColor.r, updatedState.fillColor.g, updatedState.fillColor.b, newOpacity], // Use new opacity
+        updatedState.rotation,
+        updatedState.strokeType
+      );
+
+      // Update the item in the store with the full OpenLayers style object (matching old app)
+      const updates = {
+        style: style, // Store the full OpenLayers style object
+        pointType: updatedState.pointType, // Preserve pointType
+        strokeType: updatedState.strokeType, // Preserve strokeType
+      };
+
+      console.log("🎯 Updating item in store with new fill opacity:", { itemId, updates, style });
+      updateItem(itemId, updates);
+
+      // Emit event to refresh the feature on the map
+      emit("mymap-style-updated", { itemId, style, fillOpacity: newOpacity });
+      console.log("🔄 Emitted mymap-style-updated event for fill opacity change:", itemId);
+    },
+    [item, updateItem, emit, getCurrentSymbolizerState, createPointStyleFromHelpers, extractColorFromDOMButton]
+  );
+
+  // Function to update symbolizer stroke opacity
+  const updateSymbolizerStrokeOpacity = useCallback(
+    (itemId: string, newOpacity: number) => {
+      if (!item) return;
+
+      console.log("🎯 Updating symbolizer stroke opacity:", { itemId, newOpacity });
+
+      // CRITICAL FIX: Get current dropdown values AND slider values from DOM to preserve all current settings
+      const symbolizerContainer = overlayElementRef.current?.querySelector(".sc-mymaps-symbolizer-container");
+      const pointStyleSelect = symbolizerContainer?.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
+      const currentPointType = pointStyleSelect ? pointStyleSelect.value : item.pointType || "circle";
+
+      const strokeStyleSelect = symbolizerContainer?.querySelector("select[name='pointOutline']") as HTMLSelectElement;
+      const currentStrokeType = strokeStyleSelect ? strokeStyleSelect.value : item.strokeType || "normal";
+
+      // Get current state from store/item (not DOM)
+      const state = getCurrentSymbolizerState();
+      if (!state) return;
+
+      // Read ALL current values from DOM to prevent any resets
+      const sizeSlider = symbolizerContainer?.querySelector("input[type='range']:nth-of-type(1)") as HTMLInputElement;
+      const currentRadius = sizeSlider ? parseFloat(sizeSlider.value) : state.radius;
+
+      // Get ALL slider values from DOM using positional selectors
+      const allSliders = symbolizerContainer?.querySelectorAll("input[type='range']") as NodeListOf<HTMLInputElement>;
+      let currentFillAlpha = state.fillAlpha;
+      let currentStrokeWidth = state.strokeWidth;
+      let currentRotation = state.rotation;
+
+      if (allSliders && allSliders.length > 1) {
+        // Order: [0] = size, [1] = fill opacity, [2] = stroke opacity, [3] = stroke width, [4] = rotation
+        // Note: We're updating stroke opacity, so we don't read [2], but read everything else
+        if (allSliders[1]) currentFillAlpha = parseFloat(allSliders[1].value);
+        if (allSliders[3]) currentStrokeWidth = parseFloat(allSliders[3].value);
+        if (allSliders[4]) currentRotation = parseFloat(allSliders[4].value);
+      }
+
+      // Read current colors from DOM
+      const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
+      const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
+
+      console.log("🔍 Current state before stroke opacity update:", state);
+      console.log("🔧 Using DOM values for stroke opacity:", {
+        pointType: currentPointType,
+        strokeType: currentStrokeType,
+        radius: currentRadius,
+        fillAlpha: currentFillAlpha,
+        strokeWidth: currentStrokeWidth,
+        rotation: currentRotation,
+      });
+
+      // Update the stroke opacity in state and override all values with DOM values
+      const updatedState = {
+        ...state,
+        strokeAlpha: newOpacity,
+        fillColor: { ...currentFillColor, a: currentFillAlpha }, // Use DOM fill color and alpha
+        strokeColor: { ...currentStrokeColor, a: newOpacity }, // Use DOM stroke color with new alpha
+        pointType: currentPointType,
+        strokeType: currentStrokeType,
+        radius: currentRadius,
+        strokeWidth: currentStrokeWidth,
+        rotation: currentRotation,
+        fillAlpha: currentFillAlpha,
+      };
+
+      // Create new style with updated stroke opacity
+      const style = createPointStyleFromHelpers(
+        updatedState.pointType,
+        updatedState.radius,
+        [updatedState.strokeColor.r, updatedState.strokeColor.g, updatedState.strokeColor.b, newOpacity], // Use new opacity
+        updatedState.strokeWidth,
+        [updatedState.fillColor.r, updatedState.fillColor.g, updatedState.fillColor.b, updatedState.fillAlpha],
+        updatedState.rotation,
+        updatedState.strokeType
+      );
+
+      // Update the item in the store with the full OpenLayers style object (matching old app)
+      const updates = {
+        style: style, // Store the full OpenLayers style object
+        pointType: updatedState.pointType, // Preserve pointType
+        strokeType: updatedState.strokeType, // Preserve strokeType
+      };
+
+      console.log("🎯 Updating item in store with new stroke opacity:", { itemId, updates, style });
+      updateItem(itemId, updates);
+
+      // Emit event to refresh the feature on the map
+      emit("mymap-style-updated", { itemId, style, strokeOpacity: newOpacity });
+      console.log("🔄 Emitted mymap-style-updated event for stroke opacity change:", itemId);
+    },
+    [item, updateItem, emit, getCurrentSymbolizerState, createPointStyleFromHelpers, extractColorFromDOMButton]
+  );
+
+  // Function to show color picker popup (matching MyMapsSymbolizer approach)
+  const showSymbolizerColorPicker = useCallback(
+    (event: MouseEvent, colorType: "fill" | "stroke") => {
+      // Remove any existing color picker
+      const existingPicker = document.getElementById("sc-symbolizer-color-picker-container");
+      if (existingPicker) {
+        existingPicker.remove();
+        return;
+      }
+
+      if (!item?.id) return;
+
+      // Create CompactPicker replica
+      const colorPicker = document.createElement("div");
+      colorPicker.id = "sc-symbolizer-color-picker-container";
+      colorPicker.style.cssText = `
+     position: absolute;
+     z-index: 10000;
+     background: white;
+     border: 1px solid #ccc;
+     border-radius: 4px;
+     padding: 10px;
+     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+     font-family: Arial, sans-serif;
+   `;
+
+      // CompactPicker colors - exact layout from react-color
+      const compactColors = [
+        "#4D4D4D",
+        "#999999",
+        "#FFFFFF",
+        "#F44E3B",
+        "#FE9200",
+        "#FCDC00",
+        "#DBDF00",
+        "#A4DD00",
+        "#68CCCA",
+        "#73D8FF",
+        "#AEA1FF",
+        "#FDA1FF",
+        "#333333",
+        "#808080",
+        "#cccccc",
+        "#D33115",
+        "#E27300",
+        "#FCC400",
+        "#B0BC00",
+        "#68BC00",
+        "#16A5A5",
+        "#009CE0",
+        "#7B64FF",
+        "#FA28FF",
+        "#000000",
+        "#666666",
+        "#B3B3B3",
+        "#9F0500",
+        "#C45100",
+        "#FB9E00",
+        "#808900",
+        "#194D33",
+        "#0C797D",
+        "#0062B1",
+        "#653294",
+        "#AB149E",
+      ];
+
+      // Create the picker content with color swatches
+      let pickerHTML = '<div style="display: grid; grid-template-columns: repeat(12, 16px); gap: 2px;">';
+      compactColors.forEach((color) => {
+        pickerHTML += `
+       <div 
+         class="color-swatch" 
+         style="
+           width: 16px; 
+           height: 16px; 
+           background-color: ${color}; 
+           border: 1px solid #ddd; 
+           cursor: pointer;
+           border-radius: 2px;
+         " 
+         data-color="${color}">
+       </div>
+     `;
+      });
+      pickerHTML += "</div>";
+
+      colorPicker.innerHTML = pickerHTML;
+
+      // Position picker near the button
+      const buttonRect = (event.target as HTMLElement).getBoundingClientRect();
+      colorPicker.style.left = `${buttonRect.left}px`;
+      colorPicker.style.top = `${buttonRect.bottom + 5}px`;
+
+      // Add to page
+      document.body.appendChild(colorPicker);
+
+      // Handle color selection
+      const handleColorClick = (colorEvent: Event) => {
+        const colorElement = colorEvent.target as HTMLElement;
+        const selectedColor = colorElement.getAttribute("data-color");
+
+        if (selectedColor) {
+          const rgbColor = hexToRgbObject(selectedColor);
+
+          // Update button color immediately
+          const targetButton =
+            colorType === "fill"
+              ? (overlayElementRef.current?.querySelector("#sc-mymaps-symbolizer-color-button") as HTMLButtonElement)
+              : (overlayElementRef.current?.querySelector("#sc-mymaps-symbolizer-stroke-color-button") as HTMLButtonElement);
+
+          if (targetButton) {
+            targetButton.style.backgroundColor = selectedColor;
+          }
+
+          // Update the style
+          if (colorType === "fill") {
+            updateSymbolizerFillColor(item.id, { r: rgbColor.r, g: rgbColor.g, b: rgbColor.b });
+          } else {
+            updateSymbolizerStrokeColor(item.id, { r: rgbColor.r, g: rgbColor.g, b: rgbColor.b });
+          }
+        }
+
+        // Remove picker
+        colorPicker.remove();
+      };
+
+      // Add click listeners to color swatches
+      const swatches = colorPicker.querySelectorAll(".color-swatch");
+      swatches.forEach((swatch) => {
+        swatch.addEventListener("click", handleColorClick);
+      });
+
+      // Close picker when clicking outside
+      const handleOutsideClick = (outsideEvent: MouseEvent) => {
+        if (!colorPicker.contains(outsideEvent.target as Node)) {
+          colorPicker.remove();
+          document.removeEventListener("click", handleOutsideClick);
+        }
+      };
+
+      // Delay adding the outside click listener to prevent immediate closure
+      setTimeout(() => {
+        document.addEventListener("click", handleOutsideClick);
+      }, 100);
+    },
+    [item, updateSymbolizerFillColor, updateSymbolizerStrokeColor, hexToRgbObject]
+  );
 
   // Attach event listeners (memoized to prevent unnecessary re-attachments)
   const attachEventListeners = useCallback(() => {
@@ -930,14 +1758,30 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
     // Re-attach symbolizer component event listeners (React handlers are lost when copying HTML to overlay)
     const symbolizerContainer = overlayElementRef.current.querySelector(".sc-mymaps-symbolizer-container");
     if (symbolizerContainer) {
-      console.log("🔧 Setting up Symbolizer DOM event listeners");
+      console.log("🔧 Setting up Symbolizer DOM event listeners with store-based state management");
+
+      // 🎯 Get current state once at the top for all controls to use
+      const currentState = getCurrentSymbolizerState();
+      if (!currentState) {
+        console.warn("⚠️ Could not get current symbolizer state");
+        return;
+      }
 
       // Point style dropdown
       const pointStyleSelect = symbolizerContainer.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
       if (pointStyleSelect) {
+        // 🎯 CRITICAL: Set dropdown value from current state before attaching events
+        const currentPointType = item.pointType || currentState.pointType || "circle";
+        pointStyleSelect.value = currentPointType;
+        console.log("🔧 Set point style dropdown value from state:", currentPointType);
+
         pointStyleSelect.addEventListener("change", (e) => {
           e.stopPropagation();
-          console.log("🎯 Point style changed via DOM event:", (e.target as HTMLSelectElement).value);
+          const newPointType = (e.target as HTMLSelectElement).value;
+          console.log("🎯 Point style changed via DOM event:", newPointType);
+
+          // Update the item's point type and style
+          updateSymbolizerPointType(item.id, newPointType);
         });
         (pointStyleSelect as HTMLElement).style.pointerEvents = "auto";
       }
@@ -945,6 +1789,11 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       // Stroke type dropdown
       const strokeTypeSelect = symbolizerContainer.querySelector("select[name='pointOutline']") as HTMLSelectElement;
       if (strokeTypeSelect) {
+        // 🎯 Set stroke type dropdown value from current state
+        const currentStrokeType = item.strokeType || currentState.strokeType || "normal";
+        strokeTypeSelect.value = currentStrokeType;
+        console.log("🔧 Set stroke type dropdown value from state:", currentStrokeType);
+
         strokeTypeSelect.addEventListener("change", (e) => {
           e.stopPropagation();
           console.log("🎯 Stroke type changed via DOM event:", (e.target as HTMLSelectElement).value);
@@ -952,12 +1801,173 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         (strokeTypeSelect as HTMLElement).style.pointerEvents = "auto";
       }
 
-      // Range sliders (size, opacity, stroke width, rotation)
-      const sliders = symbolizerContainer.querySelectorAll("input[type='range']");
-      sliders.forEach((slider, index) => {
+      // Size/Radius slider (first range input)
+      const sizeSlider = symbolizerContainer.querySelector("input[type='range']:nth-of-type(1)") as HTMLInputElement;
+      if (sizeSlider) {
+        // 🎯 Set slider value from current state
+        sizeSlider.value = currentState.radius.toString();
+        console.log("🔧 Set size slider value from state:", currentState.radius);
+        const handleSizeChange = (e: Event) => {
+          e.stopPropagation();
+          const newRadius = parseFloat((e.target as HTMLInputElement).value);
+          console.log("🎯 Size slider changed via DOM event:", newRadius);
+
+          // CRITICAL FIX: Get ALL current values from DOM to preserve all current settings
+          const pointStyleSelect = symbolizerContainer.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
+          const currentPointType = pointStyleSelect ? pointStyleSelect.value : item.pointType || "circle";
+
+          const strokeStyleSelect = symbolizerContainer.querySelector("select[name='pointOutline']") as HTMLSelectElement;
+          const currentStrokeType = strokeStyleSelect ? strokeStyleSelect.value : item.strokeType || "normal";
+
+          // Get current state from store/item (not DOM)
+          const state = getCurrentSymbolizerState();
+          if (!state) return;
+
+          // Get ALL slider values from DOM using positional selectors
+          const allSliders = symbolizerContainer.querySelectorAll("input[type='range']") as NodeListOf<HTMLInputElement>;
+          let currentFillAlpha = state.fillAlpha;
+          let currentStrokeAlpha = state.strokeAlpha;
+          let currentStrokeWidth = state.strokeWidth;
+          let currentRotation = state.rotation;
+
+          if (allSliders && allSliders.length > 1) {
+            // Order: [0] = size (we're changing this), [1] = fill opacity, [2] = stroke opacity, [3] = stroke width, [4] = rotation
+            if (allSliders[1]) currentFillAlpha = parseFloat(allSliders[1].value);
+            if (allSliders[2]) currentStrokeAlpha = parseFloat(allSliders[2].value);
+            if (allSliders[3]) currentStrokeWidth = parseFloat(allSliders[3].value);
+            if (allSliders[4]) currentRotation = parseFloat(allSliders[4].value);
+          }
+
+          // Read current colors from DOM color buttons
+          const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
+          const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
+
+          console.log("🔧 Using DOM values for size change:", {
+            pointType: currentPointType,
+            strokeType: currentStrokeType,
+            radius: newRadius,
+            fillAlpha: currentFillAlpha,
+            strokeAlpha: currentStrokeAlpha,
+            strokeWidth: currentStrokeWidth,
+            rotation: currentRotation,
+          });
+
+          if (item?.id) {
+            // Create style with ALL current DOM values
+            const style = createPointStyleFromHelpers(
+              currentPointType,
+              newRadius, // Use the new radius value
+              [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha], // Use current values from DOM
+              currentStrokeWidth,
+              [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha], // Use current values from DOM
+              currentRotation,
+              currentStrokeType
+            );
+
+            // Update the item in the store
+            const updates = {
+              style: style,
+              pointType: currentPointType,
+              strokeType: currentStrokeType,
+            };
+
+            console.log("🎯 Updating item in store with new size:", { itemId: item.id, updates, style });
+            updateItem(item.id, updates);
+
+            // Emit event to refresh the feature on the map
+            emit("mymap-style-updated", { itemId: item.id, style, radius: newRadius });
+          }
+        };
+
+        sizeSlider.addEventListener("input", handleSizeChange);
+        sizeSlider.addEventListener("change", handleSizeChange);
+        (sizeSlider as HTMLElement).style.pointerEvents = "auto";
+
+        // Prevent slider from interfering with header drag
+        sizeSlider.addEventListener("mousedown", (e) => {
+          e.stopPropagation();
+        });
+      }
+
+      // Fill opacity slider - try multiple selectors
+      let fillOpacitySlider = symbolizerContainer.querySelector("input[key='sc-mymaps-symbolizer-fill-opacity']") as HTMLInputElement;
+      if (!fillOpacitySlider) {
+        fillOpacitySlider = symbolizerContainer.querySelector(".sc-mymaps-symbolizer-slider.opacity input[type='range']") as HTMLInputElement;
+      }
+      if (!fillOpacitySlider) {
+        // Try finding all range inputs and get the second one (after size slider)
+        const allRangeInputs = symbolizerContainer.querySelectorAll("input[type='range']");
+        fillOpacitySlider = allRangeInputs[1] as HTMLInputElement; // Second one should be fill opacity
+      }
+      if (fillOpacitySlider) {
+        // 🎯 Set fill opacity slider value from current state
+        fillOpacitySlider.value = currentState.fillAlpha.toString();
+        console.log("🔧 Set fill opacity slider value from state:", currentState.fillAlpha);
+
+        const handleFillOpacityChange = (e: Event) => {
+          e.stopPropagation();
+          const newOpacity = parseFloat((e.target as HTMLInputElement).value);
+          console.log("🎯 Fill opacity slider changed via DOM event:", newOpacity);
+          if (item?.id) {
+            updateSymbolizerFillOpacity(item.id, newOpacity);
+          }
+        };
+
+        fillOpacitySlider.addEventListener("input", handleFillOpacityChange);
+        fillOpacitySlider.addEventListener("change", handleFillOpacityChange);
+        (fillOpacitySlider as HTMLElement).style.pointerEvents = "auto";
+
+        // Prevent slider from interfering with header drag
+        fillOpacitySlider.addEventListener("mousedown", (e) => {
+          e.stopPropagation();
+        });
+      }
+
+      // Stroke opacity slider - try multiple selectors
+      let strokeOpacitySlider = symbolizerContainer.querySelector("input[key='sc-mymaps-symbolizer-stroke-opacity']") as HTMLInputElement;
+      if (!strokeOpacitySlider) {
+        // Try finding all opacity sliders and get the second one
+        const opacitySliders = symbolizerContainer.querySelectorAll(".sc-mymaps-symbolizer-slider.opacity input[type='range']");
+        strokeOpacitySlider = opacitySliders[1] as HTMLInputElement; // Second opacity slider should be stroke
+      }
+      if (!strokeOpacitySlider) {
+        // Try finding all range inputs and get the third one (after size and fill opacity)
+        const allRangeInputs = symbolizerContainer.querySelectorAll("input[type='range']");
+        strokeOpacitySlider = allRangeInputs[2] as HTMLInputElement; // Third one should be stroke opacity
+      }
+      if (strokeOpacitySlider) {
+        // 🎯 Set stroke opacity slider value from current state
+        strokeOpacitySlider.value = currentState.strokeAlpha.toString();
+        console.log("🔧 Set stroke opacity slider value from state:", currentState.strokeAlpha);
+
+        const handleStrokeOpacityChange = (e: Event) => {
+          e.stopPropagation();
+          const newOpacity = parseFloat((e.target as HTMLInputElement).value);
+          console.log("🎯 Stroke opacity slider changed via DOM event:", newOpacity);
+          if (item?.id) {
+            updateSymbolizerStrokeOpacity(item.id, newOpacity);
+          }
+        };
+
+        strokeOpacitySlider.addEventListener("input", handleStrokeOpacityChange);
+        strokeOpacitySlider.addEventListener("change", handleStrokeOpacityChange);
+        (strokeOpacitySlider as HTMLElement).style.pointerEvents = "auto";
+
+        // Prevent slider from interfering with header drag
+        strokeOpacitySlider.addEventListener("mousedown", (e) => {
+          e.stopPropagation();
+        });
+      }
+
+      // Other sliders (stroke width, rotation) - placeholder for now
+      const otherSliders = symbolizerContainer.querySelectorAll(
+        "input[type='range']:not(:nth-of-type(1)):not([key='sc-mymaps-symbolizer-fill-opacity']):not([key='sc-mymaps-symbolizer-stroke-opacity'])"
+      );
+      otherSliders.forEach((slider, index) => {
         const handleSliderChange = (e: Event) => {
           e.stopPropagation();
-          console.log(`🎯 Slider ${index} changed via DOM event:`, (e.target as HTMLInputElement).value);
+          console.log(`🎯 Other slider ${index + 1} changed via DOM event:`, (e.target as HTMLInputElement).value);
+          // TODO: Implement specific handlers for stroke width, rotation
         };
 
         slider.addEventListener("input", handleSliderChange);
@@ -970,27 +1980,46 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         });
       });
 
-      // Color picker buttons
+      // Fill color picker button
       const fillColorButton = symbolizerContainer.querySelector("#sc-mymaps-symbolizer-color-button") as HTMLButtonElement;
       if (fillColorButton) {
-        fillColorButton.addEventListener("click", (e) => {
-          console.log("🎯 Fill color button clicked via DOM event");
+        // 🎯 Set fill color button background to reflect current state
+        const currentFillColor = currentState.fillColor;
+        const fillColorHex = `rgb(${currentFillColor.r}, ${currentFillColor.g}, ${currentFillColor.b})`;
+        fillColorButton.style.backgroundColor = fillColorHex;
+        console.log("🔧 Set fill color button background from state:", fillColorHex);
+
+        const handleFillColorClick = (e: Event) => {
           e.preventDefault();
           e.stopPropagation();
-        });
+          console.log("🎯 Fill color button clicked - showing popup");
+          showSymbolizerColorPicker(e as MouseEvent, "fill");
+        };
+
+        fillColorButton.addEventListener("click", handleFillColorClick);
         fillColorButton.addEventListener("mousedown", (e) => {
           e.stopPropagation();
         });
         (fillColorButton as HTMLElement).style.pointerEvents = "auto";
       }
 
+      // Stroke color picker button
       const strokeColorButton = symbolizerContainer.querySelector("#sc-mymaps-symbolizer-stroke-color-button") as HTMLButtonElement;
       if (strokeColorButton) {
-        strokeColorButton.addEventListener("click", (e) => {
-          console.log("🎯 Stroke color button clicked via DOM event");
+        // 🎯 Set stroke color button background to reflect current state
+        const currentStrokeColor = currentState.strokeColor;
+        const strokeColorHex = `rgb(${currentStrokeColor.r}, ${currentStrokeColor.g}, ${currentStrokeColor.b})`;
+        strokeColorButton.style.backgroundColor = strokeColorHex;
+        console.log("🔧 Set stroke color button background from state:", strokeColorHex);
+
+        const handleStrokeColorClick = (e: Event) => {
           e.preventDefault();
           e.stopPropagation();
-        });
+          console.log("🎯 Stroke color button clicked - showing popup");
+          showSymbolizerColorPicker(e as MouseEvent, "stroke");
+        };
+
+        strokeColorButton.addEventListener("click", handleStrokeColorClick);
         strokeColorButton.addEventListener("mousedown", (e) => {
           e.stopPropagation();
         });
@@ -1017,7 +2046,24 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       // The container itself should NOT have pointerEvents = "auto" to avoid header conflicts
       (bufferContainer as HTMLElement).style.pointerEvents = "";
     }
-  }, [item, onClose, onTools, onDelete, onLabelChange, onLabelVisibilityChange, onLabelRotationChange]);
+  }, [
+    item,
+    onClose,
+    onTools,
+    onDelete,
+    onLabelChange,
+    onLabelVisibilityChange,
+    onLabelRotationChange,
+    updateSymbolizerPointType,
+    updateSymbolizerFillOpacity,
+    updateSymbolizerStrokeOpacity,
+    showSymbolizerColorPicker,
+    createPointStyleFromHelpers,
+    emit,
+    getCurrentSymbolizerState,
+    updateItem,
+    extractColorFromDOMButton,
+  ]);
 
   // Track when activeTool changes for proper DOM sync
   const lastActiveToolRef = useRef<string | undefined>(undefined);

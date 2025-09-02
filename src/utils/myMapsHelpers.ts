@@ -2,7 +2,7 @@
  * Utility functions for MyMaps functionality
  */
 
-import { Style, Fill, Stroke, Circle as CircleStyle, Text } from 'ol/style'
+import { Style, Fill, Stroke, Circle as CircleStyle, Text, RegularShape } from 'ol/style'
 import { Feature } from 'ol'
 import { Point, LineString, Polygon, Circle } from 'ol/geom'
 import { fromCircle } from 'ol/geom/Polygon'
@@ -174,6 +174,22 @@ export const styleToJSON = (style: Style): StyleJSON => {
         width: imageStroke.getWidth() 
       } : undefined
     }
+  } else if (image instanceof RegularShape) {
+    const imageFill = image.getFill()
+    const imageStroke = image.getStroke()
+    
+    styleObj.image = {
+      type: 'regularShape' as const,
+      radius: image.getRadius(),
+      radius2: image.getRadius2(),
+      points: image.getPoints(),
+      angle: image.getAngle(),
+      fill: imageFill ? { color: imageFill.getColor() as string } : undefined,
+      stroke: imageStroke ? { 
+        color: imageStroke.getColor() as string, 
+        width: imageStroke.getWidth() 
+      } : undefined
+    }
   }
 
   const text = style.getText()
@@ -248,6 +264,35 @@ export const styleFromJSON = (styleJSON: StyleJSON): Style => {
       }
       
       styleConfig.image = new CircleStyle(imageConfig)
+    } else if (styleJSON.image.type === 'regularShape') {
+      const regularShapeConfig: {
+        points: number
+        radius: number
+        radius2?: number
+        angle?: number
+        fill?: Fill
+        stroke?: Stroke
+      } = {
+        points: styleJSON.image.points || 4,
+        radius: styleJSON.image.radius || 8,
+        radius2: styleJSON.image.radius2,
+        angle: styleJSON.image.angle || 0
+      }
+      
+      if (styleJSON.image.fill) {
+        regularShapeConfig.fill = new Fill({
+          color: styleJSON.image.fill.color
+        })
+      }
+      
+      if (styleJSON.image.stroke) {
+        regularShapeConfig.stroke = new Stroke({
+          color: styleJSON.image.stroke.color,
+          width: styleJSON.image.stroke.width
+        })
+      }
+      
+      styleConfig.image = new RegularShape(regularShapeConfig)
     }
   }
 
