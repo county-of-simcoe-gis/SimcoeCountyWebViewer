@@ -113,17 +113,21 @@ export default function MyMapsService() {
 
   const handleFeatureClicked = React.useCallback(
     (feature: Feature, coordinate: number[]) => {
+      // Get the current draw type from store to avoid stale closures
+      const currentDrawType = useMyMapsStore.getState().drawType;
+
       console.log("🎯 MyMapsService: Feature clicked!", {
         featureId: feature.get("id"),
         label: feature.get("label"),
         labelVisible: feature.get("labelVisible"),
         drawType: feature.get("drawType"),
+        currentDrawType,
         coordinate,
       });
 
       const id = feature.get("id");
 
-      if (drawType === "Eraser") {
+      if (currentDrawType === "Eraser") {
         console.log("🗑️ Removing feature in eraser mode:", id);
         // Remove feature when in eraser mode
         if (id) {
@@ -150,7 +154,7 @@ export default function MyMapsService() {
         }
       }
     },
-    [drawType, removeItem, emit]
+    [removeItem, emit] // Remove drawType from dependencies to avoid stale closures
   );
 
   // Initialize drawing manager when map is available
