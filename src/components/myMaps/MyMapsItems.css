@@ -43,6 +43,7 @@
 .sc-mymaps-items-container-list {
   max-height: 300px;
   overflow-y: auto;
+  overflow-x: hidden; /* Disable horizontal scrolling */
   border-bottom: 1px solid #eee;
 }
 

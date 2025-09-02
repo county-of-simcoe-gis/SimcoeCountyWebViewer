@@ -95,8 +95,7 @@
 .sc-mymaps-container .sc-mymaps-item-container {
   flex: 1 1 auto;
   min-height: 0;
-  overflow-y: auto; /* Allow vertical scrolling for items */
-  overflow-x: visible; /* Allow horizontal overflow for menus */
+  overflow: visible; /* Allow menus to overflow, scrolling handled by inner list */
 }
 
 /* Advanced panel should be at bottom */
