@@ -25,6 +25,9 @@ export class MyMapsDrawingManager {
   private translateInteraction: Translate | null = null;
   private layerName = "MyMaps Drawing Layer";
   
+  // Highlight layer for hover effects (like old app)
+  private highlightLayer: VectorLayer<VectorSource> | null = null;
+  
   // Callbacks from MyMaps component
   private onFeatureDrawn: (feature: Feature) => void;
   private onFeatureModified: (feature: Feature) => void;
@@ -338,90 +341,100 @@ export class MyMapsDrawingManager {
 
   public highlightFeature(featureId: string) {
     const feature = this.getFeatureById(featureId);
-    if (feature) {
-      // Store original style if not already stored
-      if (!feature.get("originalStyle")) {
-        feature.set("originalStyle", feature.getStyle());
+    if (!feature) return;
+
+    // Remove any existing highlight first
+    this.unhighlightFeature(featureId);
+
+    // Get the geometry and clone it to avoid any reference issues
+    const geometry = feature.getGeometry();
+    if (!geometry) return;
+
+    console.log("🎯 Highlighting feature:", {
+      featureId,
+      geometryType: geometry.getType(),
+      bounds: geometry.getExtent()
+    });
+
+    // Create geometry-specific shadow style - completely separate objects
+    let shadowStyle: Style;
+    
+    if (geometry.getType() === "Point") {
+      // Points: Only image style (like old app for points)
+      shadowStyle = new Style({
+        image: new CircleStyle({
+          radius: 10,
+          stroke: new Stroke({
+            color: [0, 0, 127, 0.3],
+            width: 6,
+          }),
+          fill: new Fill({
+            color: [0, 0, 127, 0.3],
+          }),
+        }),
+        zIndex: 100000,
+      });
+    } else {
+      // Lines and Polygons: Only stroke and fill (NO image property at all)
+      const styleConfig: any = {
+        stroke: new Stroke({
+          color: [0, 0, 127, 0.3],
+          width: 6,
+        }),
+        zIndex: 100000,
+      };
+      
+      // Add fill only for polygons
+      if (geometry.getType() === "Polygon") {
+        styleConfig.fill = new Fill({
+          color: [0, 0, 127, 0.3],
+        });
       }
       
-      // Apply highlight style
-      const highlightStyle = this.getHighlightStyle(feature);
-      feature.setStyle(highlightStyle);
-      
-      // Trigger a redraw
-      this.vectorSource.changed();
+      shadowStyle = new Style(styleConfig);
     }
+
+    console.log("🎨 Created shadow style for:", geometry.getType(), {
+      hasStroke: !!shadowStyle.getStroke(),
+      hasFill: !!shadowStyle.getFill(),
+      hasImage: !!shadowStyle.getImage()
+    });
+
+    // Create clean highlight feature (like old app)
+    const highlightFeature = new Feature({
+      geometry: geometry.clone(), // Clone to avoid reference issues
+    });
+
+    // Create or reuse highlight layer
+    if (!this.highlightLayer) {
+      this.highlightLayer = new VectorLayer({
+        source: new VectorSource({
+          features: [],
+        }),
+        zIndex: 100000,
+        style: shadowStyle, // Set style on layer like old app
+      });
+      this.map.addLayer(this.highlightLayer);
+    }
+
+    // Add highlight feature to layer (style is set on layer level)
+    this.highlightLayer.getSource()?.addFeature(highlightFeature);
+    
+    console.log("✅ Added highlight feature to layer");
   }
 
   public unhighlightFeature(featureId: string) {
-    const feature = this.getFeatureById(featureId);
-    if (feature) {
-      // Restore original style
-      const originalStyle = feature.get("originalStyle");
-      if (originalStyle) {
-        feature.setStyle(originalStyle);
-        feature.unset("originalStyle");
-      }
+    if (this.highlightLayer) {
+      // Clear all features from highlight layer
+      this.highlightLayer.getSource()?.clear();
       
-      // Trigger a redraw
-      this.vectorSource.changed();
+      // Remove and cleanup highlight layer
+      this.map.removeLayer(this.highlightLayer);
+      this.highlightLayer = null;
     }
   }
 
-  private getHighlightStyle(feature: Feature): Style {
-    const originalStyle = feature.getStyle() as Style;
-    const drawType = feature.get("drawType") || "Point";
-    const drawColor = feature.get("drawColor") || "#e809e5";
-    
-    // Create a brighter, more prominent version of the original style
-    const highlightColor = this.brightenColor(drawColor, 0.3);
-    
-    if (drawType === "Point" || drawType === "Text") {
-      return new Style({
-        fill: new Fill({
-          color: this.hexToRgba(highlightColor, 0.6),
-        }),
-        stroke: new Stroke({
-          color: highlightColor,
-          width: 4,
-        }),
-        image: new CircleStyle({
-          radius: 8,
-          fill: new Fill({
-            color: highlightColor,
-          }),
-          stroke: new Stroke({
-            color: "#fff",
-            width: 3,
-          }),
-        }),
-        text: drawType === "Text" ? originalStyle.getText() : undefined,
-      });
-    } else {
-      // For lines and polygons, make stroke thicker and brighter
-      return new Style({
-        fill: originalStyle.getFill() ? new Fill({
-          color: this.hexToRgba(highlightColor, 0.5),
-        }) : undefined,
-        stroke: new Stroke({
-          color: highlightColor,
-          width: (originalStyle.getStroke()?.getWidth() || 2) + 2,
-        }),
-      });
-    }
-  }
 
-  private brightenColor(hex: string, factor: number): string {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    
-    const newR = Math.min(255, Math.round(r + (255 - r) * factor));
-    const newG = Math.min(255, Math.round(g + (255 - g) * factor));
-    const newB = Math.min(255, Math.round(b + (255 - b) * factor));
-    
-    return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
-  }
 
   public clearAllFeatures() {
     this.vectorSource.clear();
@@ -628,6 +641,12 @@ export class MyMapsDrawingManager {
   public cleanup() {
     this.clearDrawing();
     this.clearEditing();
+    
+    // Clean up highlight layer
+    if (this.highlightLayer) {
+      this.map.removeLayer(this.highlightLayer);
+      this.highlightLayer = null;
+    }
     
     // Layer removal will be handled by the layer manager in the component
     // Don't remove layer directly here since layer manager should handle it
