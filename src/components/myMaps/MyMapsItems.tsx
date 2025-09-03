@@ -39,16 +39,6 @@ const MyMapsItems: React.FC<MyMapsItemsProps> = ({ onLabelChange, onItemDelete, 
           </div>
         ))}
       </div>
-
-      {/* Summary info */}
-      {items.length > 0 && (
-        <div className="sc-mymaps-items-summary">
-          <span className="sc-mymaps-items-count">
-            {items.length} item{items.length !== 1 ? "s" : ""}
-            {items.filter((item) => item.visible).length !== items.length && ` (${items.filter((item) => item.visible).length} visible)`}
-          </span>
-        </div>
-      )}
     </div>
   );
 };
