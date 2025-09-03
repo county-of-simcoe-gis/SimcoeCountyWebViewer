@@ -7,7 +7,7 @@ import { Vector as VectorLayer } from "ol/layer";
 import { Vector as VectorSource } from "ol/source";
 import { useMapStore } from "@/stores/mapStore";
 import { useEventStore } from "@/stores/eventStore";
-import { featureFromGeoJSON, generateUID } from "@/utils/myMapsHelpers";
+import { featureFromGeoJSON } from "@/utils/myMapsHelpers";
 import { bufferGeometry, convertToMeters } from "@/utils/openlayers/BufferHelpers";
 import { MYMAPS_CONSTANTS } from "@/types/myMaps";
 import { activateTab } from "@/utils/helpersUI";
@@ -42,13 +42,17 @@ const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
   useEffect(() => {
     if (!map) return;
 
-    // Create layer for buffer preview
+    // Create layer for buffer preview with specific ID for cleanup
     const vectorLayer = new VectorLayer({
       source: new VectorSource({
         features: [],
       }),
       zIndex: 999,
     });
+
+    // Set a specific ID so global cleanup can find this layer
+    vectorLayer.set("id", "buffer-preview-layer");
+    vectorLayer.set("name", "Buffer Preview");
 
     vectorLayerRef.current = vectorLayer;
     map.addLayer(vectorLayer);
@@ -65,25 +69,25 @@ const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
   useEffect(() => {
     const cleanup = () => {
       if (vectorLayerRef.current && map) {
-        console.log("🧹 MyMapsBuffer: Clearing buffer preview layer");
+        // Clear features first
         const source = vectorLayerRef.current.getSource();
         if (source) {
           source.clear();
         }
+        // Remove layer from map
+        map.removeLayer(vectorLayerRef.current);
+        vectorLayerRef.current = null;
       }
       setAddMessageVisible(false);
     };
 
     // Listen for popup close events via event store
     const handlePopupClose = () => {
-      console.log("🧹 MyMapsBuffer: Received popup close event");
       cleanup();
     };
 
     // Add event listener for popup close - returns listener ID
-    console.log("🧹 MyMapsBuffer: Setting up popup close listener");
     const listenerId = addListener("drawing-options-popup-close", handlePopupClose);
-    console.log("🧹 MyMapsBuffer: Listener set up with ID:", listenerId);
 
     // Cleanup on unmount
     return () => {
@@ -133,7 +137,9 @@ const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
     if (vectorLayerRef.current) {
       vectorLayerRef.current.setStyle(getStyle());
       if (!isNaN(distance) && distance > 0) {
-        onPreviewBufferClick();
+        onPreviewBufferClick().catch((error) => {
+          console.error("Error in color change buffer preview:", error);
+        });
       }
     }
   };
@@ -153,7 +159,9 @@ const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
     setDistance(newDistance);
 
     if (!isNaN(newDistance)) {
-      onPreviewBufferClick();
+      onPreviewBufferClick().catch((error) => {
+        console.error("Error in distance change buffer preview:", error);
+      });
     }
   };
 
@@ -162,12 +170,14 @@ const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
     setUnits(evt.target.value);
 
     if (!isNaN(distance)) {
-      onPreviewBufferClick();
+      onPreviewBufferClick().catch((error) => {
+        console.error("Error in units change buffer preview:", error);
+      });
     }
   };
 
   // Preview buffer on map
-  const onPreviewBufferClick = () => {
+  const onPreviewBufferClick = async () => {
     if (!item.featureGeoJSON || !vectorLayerRef.current) {
       return;
     }
@@ -183,7 +193,8 @@ const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
 
       const distanceMeters = convertToMeters(distance, units);
 
-      bufferGeometry(geometry, distanceMeters, (bufferedGeometry) => {
+      // bufferGeometry is now async, so we await it
+      await bufferGeometry(geometry, distanceMeters, (bufferedGeometry) => {
         const bufferFeature = new Feature({
           geometry: bufferedGeometry,
         });
@@ -278,7 +289,7 @@ const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
           style={{
             gridColumn: "1 / 3",
             gridRowStart: "4",
-            textAlign: "-webkit-center" as any,
+            textAlign: "center" as React.CSSProperties["textAlign"],
             alignSelf: "center",
           }}
           onClick={onAddBufferToMyMaps}

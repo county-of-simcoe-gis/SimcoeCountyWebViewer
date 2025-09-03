@@ -52,28 +52,23 @@ export default function GlobalDrawingOptionsPopup() {
   }, [drawingOptionsItemId, drawingOptionsItem]);
 
   const handleCloseDrawingOptions = React.useCallback(() => {
-    console.log("🧹 Closing Drawing Options popup - triggering cleanup");
-
-    // Clean up the buffer preview layer from DrawingOptionsPopup
+    // Clean up buffer preview layers
     if (map) {
-      const bufferLayer = map.getAllLayers().find((layer) => layer.get("id") === "drawing-options-buffer-preview");
+      // Look for MyMapsBuffer preview layer
+      const bufferLayer = map.getAllLayers().find((layer) => layer.get("id") === "buffer-preview-layer");
       if (bufferLayer) {
-        console.log("🧹 Found and clearing drawing-options-buffer-preview layer");
-        const source = bufferLayer.getSource();
-        if (source && "clear" in source) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (source as any).clear();
-          console.log("🧹 Buffer preview layer cleared");
-        }
-      } else {
-        console.log("🧹 No drawing-options-buffer-preview layer found");
+        map.removeLayer(bufferLayer);
+      }
+
+      // Also look for any other drawing options buffer layers (fallback)
+      const drawingBufferLayer = map.getAllLayers().find((layer) => layer.get("id") === "drawing-options-buffer-preview");
+      if (drawingBufferLayer) {
+        map.removeLayer(drawingBufferLayer);
       }
     }
 
     // Also emit cleanup event for buffer component (for MyMapsBuffer layer)
-    console.log("🧹 About to emit drawing-options-popup-close event");
     emit("drawing-options-popup-close");
-    console.log("🧹 Emitted drawing-options-popup-close event");
 
     setIsDrawingOptionsOpen(false);
     setDrawingOptionsItemId(null);

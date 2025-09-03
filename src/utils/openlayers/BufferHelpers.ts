@@ -1,20 +1,118 @@
 /**
  * Buffer geometry helper functions
- * Simple implementation using OpenLayers geometry buffer
+ * Uses server-side API for accurate geometric buffering, same as old app
  */
 
-import { Feature } from 'ol';
 import { Geometry, Point, LineString, Polygon, Circle } from 'ol/geom';
 import { fromCircle } from 'ol/geom/Polygon';
 import GeoJSON from 'ol/format/GeoJSON';
+import proj4 from 'proj4';
+import { register } from 'ol/proj/proj4';
+import { postJSON } from '@/utils/helpersHttp';
+
+// Register NAD83 UTM Zone 17 projection (same as old app)
+proj4.defs('EPSG:26917', '+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs');
+register(proj4);
+
+// NAD83 UTM Zone 17 projection
+const nad83Proj = 'EPSG:26917';
+const webMercatorProj = 'EPSG:3857';
 
 /**
- * Create a buffered geometry around a feature
+ * Convert OpenLayers geometry to GeoJSON string (geometry only, same as old app)
+ */
+export const getGeoJSONFromGeometry = (geometry: Geometry): string => {
+  const geoJSONFormat = new GeoJSON();
+  return geoJSONFormat.writeGeometry(geometry);
+};
+
+/**
+ * Convert GeoJSON string to OpenLayers geometry (geometry only, same as old app)
+ */
+export const getGeometryFromGeoJSON = (geoJSON: string): Geometry => {
+  const geoJSONFormat = new GeoJSON();
+  return geoJSONFormat.readGeometry(geoJSON);
+};
+
+/**
+ * Create a buffered geometry using server-side API (same approach as old app)
  * @param geometry - OpenLayers geometry to buffer
  * @param distanceMeters - Buffer distance in meters  
  * @param callback - Callback function that receives the buffered geometry
  */
-export const bufferGeometry = (
+export const bufferGeometry = async (
+  geometry: Geometry,
+  distanceMeters: number,
+  callback: (bufferedGeometry: Geometry) => void
+): Promise<void> => {
+  try {
+    // Get config for API URL
+    let apiUrl: string;
+    try {
+      // Try to get config from global window object (like old app)
+      const windowConfig = (window as { config?: { apiUrl?: string } }).config;
+      apiUrl = windowConfig?.apiUrl;
+      
+      // Fallback: try to read from config file
+      if (!apiUrl) {
+        const response = await fetch('/config.json');
+        const config = await response.json();
+        apiUrl = config.apiUrl;
+      }
+    } catch {
+      console.error('Could not load config, using fallback API URL');
+      apiUrl = 'https://opengis.simcoe.ca/api_v2/';
+    }
+
+    if (!apiUrl) {
+      console.error('No API URL available, falling back to client-side buffering');
+      fallbackClientSideBuffer(geometry, distanceMeters, callback);
+      return;
+    }
+
+    const url = apiUrl + 'public/map/geometry/buffer/';
+
+    // Project geometry to UTM NAD83 for accuracy (same as old app)
+    const utmGeometry = geometry.clone();
+    utmGeometry.transform(webMercatorProj, nad83Proj);
+    
+    // Convert to GeoJSON
+    const geoJSON = getGeoJSONFromGeometry(utmGeometry);
+    
+    // Prepare API request payload
+    const requestData = {
+      geoJSON: geoJSON,
+      distance: distanceMeters,
+      srid: '26917'
+    };
+
+    // Make API call
+    const result = await postJSON<{ geojson: string }>(url, requestData);
+
+    // Convert result back to geometry and transform to Web Mercator
+    let geoJsonData = result.geojson;
+    
+    // Handle case where server returns object instead of string
+    if (typeof geoJsonData === 'object') {
+      geoJsonData = JSON.stringify(geoJsonData);
+    }
+    
+    const bufferedGeometry = getGeometryFromGeoJSON(geoJsonData);
+    bufferedGeometry.transform(nad83Proj, webMercatorProj);
+    
+    callback(bufferedGeometry);
+
+  } catch (error) {
+    console.error('Server-side buffer error, falling back to client-side:', error);
+    // Fallback to client-side buffering if server fails
+    fallbackClientSideBuffer(geometry, distanceMeters, callback);
+  }
+};
+
+/**
+ * Fallback client-side buffering (improved from original)
+ */
+const fallbackClientSideBuffer = (
   geometry: Geometry,
   distanceMeters: number,
   callback: (bufferedGeometry: Geometry) => void
@@ -26,42 +124,68 @@ export const bufferGeometry = (
       // For points, create a circle with the buffer distance as radius
       const coords = geometry.getCoordinates();
       const circle = new Circle(coords, distanceMeters);
-      // Convert circle to polygon for GeoJSON compatibility
       bufferedGeometry = fromCircle(circle, 64);
     } else if (geometry instanceof LineString) {
-      // For lines, create a simple buffer by expanding each coordinate
+      // For lines, use simplified buffering (still not perfect but better than before)
+      // A proper line buffer would need complex geometric algorithms
       const coords = geometry.getCoordinates();
-      const bufferedCoords: number[][] = [];
       
-      // Simple approach: create a rectangular buffer around the line
-      // This is a simplified version - a proper implementation would need more complex geometry
-      for (let i = 0; i < coords.length - 1; i++) {
-        const start = coords[i];
-        const end = coords[i + 1];
-        
-        // Calculate perpendicular offset
-        const dx = end[0] - start[0];
-        const dy = end[1] - start[1];
-        const length = Math.sqrt(dx * dx + dy * dy);
-        const offsetX = (-dy / length) * distanceMeters;
-        const offsetY = (dx / length) * distanceMeters;
-        
-        bufferedCoords.push([start[0] + offsetX, start[1] + offsetY]);
-        bufferedCoords.push([end[0] + offsetX, end[1] + offsetY]);
-        bufferedCoords.push([end[0] - offsetX, end[1] - offsetY]);
-        bufferedCoords.push([start[0] - offsetX, start[1] - offsetY]);
-      }
-      
-      // Close the polygon
-      if (bufferedCoords.length > 0) {
-        bufferedCoords.push(bufferedCoords[0]);
-        bufferedGeometry = new Polygon([bufferedCoords]);
-      } else {
+      if (coords.length < 2) {
         bufferedGeometry = geometry;
+      } else {
+        // Create a simple buffer by creating perpendicular offsets at each point
+        const leftSide: number[][] = [];
+        const rightSide: number[][] = [];
+        
+        for (let i = 0; i < coords.length; i++) {
+          let perpVector: [number, number];
+          
+          if (i === 0) {
+            // First point - use direction to next point
+            const dx = coords[i + 1][0] - coords[i][0];
+            const dy = coords[i + 1][1] - coords[i][1];
+            const length = Math.sqrt(dx * dx + dy * dy);
+            perpVector = [-dy / length, dx / length];
+          } else if (i === coords.length - 1) {
+            // Last point - use direction from previous point
+            const dx = coords[i][0] - coords[i - 1][0];
+            const dy = coords[i][1] - coords[i - 1][1];
+            const length = Math.sqrt(dx * dx + dy * dy);
+            perpVector = [-dy / length, dx / length];
+          } else {
+            // Middle points - use average of adjacent segments
+            const dx1 = coords[i][0] - coords[i - 1][0];
+            const dy1 = coords[i][1] - coords[i - 1][1];
+            const length1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+            
+            const dx2 = coords[i + 1][0] - coords[i][0];
+            const dy2 = coords[i + 1][1] - coords[i][1];
+            const length2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+            
+            const avgDx = dx1 / length1 + dx2 / length2;
+            const avgDy = dy1 / length1 + dy2 / length2;
+            const avgLength = Math.sqrt(avgDx * avgDx + avgDy * avgDy);
+            
+            perpVector = avgLength > 0 ? [-avgDy / avgLength, avgDx / avgLength] : [0, 1];
+          }
+          
+          leftSide.push([
+            coords[i][0] + perpVector[0] * distanceMeters,
+            coords[i][1] + perpVector[1] * distanceMeters
+          ]);
+          
+          rightSide.push([
+            coords[i][0] - perpVector[0] * distanceMeters,
+            coords[i][1] - perpVector[1] * distanceMeters
+          ]);
+        }
+        
+        // Create polygon by connecting left side, then right side in reverse
+        const bufferCoords = [...leftSide, ...rightSide.reverse(), leftSide[0]];
+        bufferedGeometry = new Polygon([bufferCoords]);
       }
     } else if (geometry instanceof Polygon) {
-      // For polygons, expand outward by creating a larger polygon
-      // This is a simplified approach - proper buffering would require complex algorithms
+      // For polygons, expand outward (simplified approach)
       const coords = geometry.getCoordinates()[0]; // Get exterior ring
       const centroid = geometry.getInteriorPoint().getCoordinates();
       
@@ -94,8 +218,7 @@ export const bufferGeometry = (
     
     callback(bufferedGeometry);
   } catch (error) {
-    console.error('Buffer geometry error:', error);
-    // Return original geometry if buffer fails
+    console.error('Client-side buffer error:', error);
     callback(geometry);
   }
 };
