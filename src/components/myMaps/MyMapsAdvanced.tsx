@@ -164,15 +164,17 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
           <div>
             <input className={inputId} id={inputId} type="text" placeholder="Enter ID here" onChange={onInputChange} onFocus={handleFocus} onBlur={handleBlur} value={inputText} />
             <br />
-            <button className="sc-button sc-mymaps-advanced-import-button" onClick={onImport}>
-              Import
-            </button>
-            <button className="sc-button sc-mymaps-advanced-import-button" onClick={onSave} disabled={!hasItems}>
-              Save
-            </button>
-            <button className="sc-button sc-mymaps-advanced-import-button" onClick={onShare}>
-              Share
-            </button>
+            <div className="sc-mymaps-import-buttons">
+              <button className="sc-button sc-mymaps-advanced-import-button" onClick={onImport}>
+                Import
+              </button>
+              <button className="sc-button sc-mymaps-advanced-import-button" onClick={onSave} disabled={!hasItems}>
+                Save
+              </button>
+              <button className="sc-button sc-mymaps-advanced-import-button" onClick={onShare}>
+                Share
+              </button>
+            </div>
           </div>
         </div>
 
@@ -192,7 +194,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
             />
           </label>
 
-          <label style={{ marginRight: "15px" }}>
+          <label style={{ marginRight: "15px", marginLeft: "15px" }}>
             <input className="sc-mymaps-advanced-edit-radio" type="radio" name="editOptions" value="vertices" checked={editOption === "vertices"} onChange={onEditOption} />
             Vertices
           </label>
@@ -202,10 +204,10 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
           </label>
         </div>
 
-        {/* Delete All and Additional Tools buttons */}
-        <div className="sc-mymaps-advanced-buttons-container">
+        {/* Footer buttons - matching old MyMapsFooter structure */}
+        <div className="sc-mymaps-footer-buttons">
           <button
-            className="sc-mymaps-advanced-large-button delete-all"
+            className="sc-button sc-mymaps-footer-button delete"
             onClick={() => {
               if (window.confirm("Delete all items? This action cannot be undone.")) {
                 onDeleteAllClick();
@@ -213,12 +215,10 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
             }}
             disabled={!hasItems}
           >
-            <Image src="/images/myMaps/eraser.png" alt="Delete" width={16} height={16} className="sc-mymaps-button-icon" />
             Delete All
           </button>
           <div className="sc-mymaps-additional-tools-container" ref={additionalMenuRef}>
-            <button className="sc-mymaps-advanced-large-button additional-tools" onClick={() => setShowAdditionalMenu(!showAdditionalMenu)}>
-              <Image src="/images/myMaps/toolbox.png" alt="Tools" width={16} height={16} className="sc-mymaps-button-icon" />
+            <button id="sc-mymaps-footer-button-tools" className="sc-button sc-mymaps-footer-button tools" onClick={() => setShowAdditionalMenu(!showAdditionalMenu)}>
               Additional Tools
             </button>
 

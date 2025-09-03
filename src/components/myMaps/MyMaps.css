@@ -98,12 +98,7 @@
   overflow: visible; /* Allow menus to overflow, scrolling handled by inner list */
 }
 
-/* Advanced panel should be at bottom */
-.sc-mymaps-container #sc-mymaps-advanced {
-  flex-shrink: 0;
-  margin-top: auto;
-  z-index: 10001; /* Above the container */
-}
+/* Advanced panel should be at bottom - handled by the component's own CSS */
 
 /* Loading state */
 .sc-mymaps-container.loading {
