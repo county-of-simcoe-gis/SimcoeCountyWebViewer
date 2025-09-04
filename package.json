@@ -13,6 +13,7 @@
     "e2e": "playwright test"
   },
   "dependencies": {
+    "@types/uuid": "^10.0.0",
     "copy-to-clipboard": "^3.3.3",
     "daisyui": "^5.0.43",
     "immer": "^10.1.1",
@@ -26,6 +27,7 @@
     "react-icons": "^5.5.0",
     "react-switch": "^7.1.0",
     "react-tabs": "^6.1.0",
+    "uuid": "^11.1.0",
     "zustand": "^5.0.5"
   },
   "devDependencies": {

@@ -285,9 +285,26 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
     }
   };
 
+  // Handle export to different formats
+  const exportToFormat = (format: "KML" | "GeoJSON" | "EsriJSON") => {
+    const { exportToFile } = useMyMapsStore.getState();
+
+    try {
+      const result = exportToFile(format);
+      if (result.success) {
+        console.log(`MyMaps: Successfully exported ${result.count} features to ${format}`);
+      } else {
+        alert(result.message || `Unable to export to ${format}. Please ensure you have visible features to export.`);
+      }
+    } catch (error) {
+      console.error(`Error exporting to ${format}:`, error);
+      alert(`Error occurred while exporting to ${format}. Please try again.`);
+    }
+  };
+
   // Handle Additional Tools menu actions
   const handleAdditionalToolsAction = (action: string) => {
-    const { toggleAllVisibility, deleteSelected, showByType, zoomToSelected } = useMyMapsStore.getState();
+    const { toggleAllVisibility, deleteSelected, showByType, zoomToSelected, mergePolygons } = useMyMapsStore.getState();
 
     switch (action) {
       case "show-all":
@@ -306,6 +323,15 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
           deleteSelected(false);
         }
         break;
+      case "merge-polygons":
+        const result = mergePolygons();
+        if (result.success) {
+          console.log("MyMaps: Successfully merged polygons");
+          // Show success message or notification here if needed
+        } else {
+          alert(result.message || "Unable to merge polygons. Please ensure you have at least 2 visible polygon features.");
+        }
+        break;
       case "show-points-only":
         showByType("Point");
         break;
@@ -318,6 +344,15 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
       case "zoom-to-selected":
         zoomToSelected();
         console.log("MyMaps: Zoom to selected items");
+        break;
+      case "export-kml":
+        exportToFormat("KML");
+        break;
+      case "export-esri-json":
+        exportToFormat("EsriJSON");
+        break;
+      case "export-geo-json":
+        exportToFormat("GeoJSON");
         break;
       default:
         console.log("MyMaps: Additional tool action", action);

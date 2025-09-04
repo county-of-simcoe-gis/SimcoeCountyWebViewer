@@ -294,8 +294,10 @@ export class MyMapsDrawingManager {
       
       this.map.addInteraction(this.modifyInteraction);
     } else {
+      // For translate mode, configure to work on individual features from our layer
       this.translateInteraction = new Translate({
-        features: new Collection(this.vectorSource.getFeatures()),
+        // Configure to work with features from our vector layer
+        layers: [this.vectorLayer],
       });
       
       this.translateInteraction.on("translateend", (event) => {
