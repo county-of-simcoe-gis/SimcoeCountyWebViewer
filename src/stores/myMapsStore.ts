@@ -779,15 +779,8 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => ({
     const state = get();
     
     try {
-      // Get config for API URL
-      const config = await getConfig();
-      if (!config?.apiUrl) {
-        return {
-          success: false,
-          message: 'API URL not configured'
-        };
-      }
-
+      // Using local API endpoint - no external config needed
+      
       // Prepare data similar to old app format
       const dataToSave = {
         items: state.items.map((item) => {
@@ -810,8 +803,8 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => ({
         drawColor: state.drawColor
       };
 
-      // Make API call
-      const response = await fetch(`${config.apiUrl}public/map/mymaps/`, {
+      // Make API call to new local endpoint
+      const response = await fetch(`/api/mymaps`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -864,17 +857,10 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => ({
         };
       }
 
-      // Get config for API URL
-      const config = await getConfig();
-      if (!config?.apiUrl) {
-        return {
-          success: false,
-          message: 'API URL not configured'
-        };
-      }
+      // Using local API endpoint - no external config needed
 
-      // Make API call
-      const response = await fetch(`${config.apiUrl}public/map/mymaps/${id}`);
+      // Make API call to new local endpoint
+      const response = await fetch(`/api/mymaps/${id}`);
       
       if (!response.ok) {
         if (response.status === 404) {
