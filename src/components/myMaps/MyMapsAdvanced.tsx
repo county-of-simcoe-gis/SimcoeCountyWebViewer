@@ -105,8 +105,8 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
         alert(result.message || "Success! MyMaps imported.");
 
         // Trigger the parent callback if provided for compatibility
-        if (onMyMapsImport && result.data) {
-          onMyMapsImport(result.data);
+        if (onMyMapsImport && result.data && typeof result.data === "object" && "id" in result.data && "json" in result.data) {
+          onMyMapsImport(result.data as { id: string; json: string });
         }
 
         // Clear the input after successful import

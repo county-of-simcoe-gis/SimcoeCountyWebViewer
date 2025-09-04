@@ -37,7 +37,7 @@ export class Postgres {
     });
   }
 
-  private _logError(error: Error, sql: string, values?: any[], method?: string): void {
+  private _logError(error: Error, sql: string, values?: unknown[], method?: string): void {
     const truncatedSql = sql.length > 200 ? sql.substring(0, 200) + '...' : sql;
     console.error(`[POSTGRES-${this.dbName.toUpperCase()}] ${method} error:`, {
       error: error.message,
@@ -48,7 +48,7 @@ export class Postgres {
     });
   }
 
-  async insertWithReturnId(sql: string, values: any[]): Promise<number> {
+  async insertWithReturnId(sql: string, values: unknown[]): Promise<number> {
     try {
       const result = await this.pool.query(sql, values);
       return result.rows[0]?.id || null;
@@ -58,7 +58,7 @@ export class Postgres {
     }
   }
 
-  async selectFirstWithValues(sql: string, values: any[]): Promise<any> {
+  async selectFirstWithValues(sql: string, values: unknown[]): Promise<unknown> {
     try {
       const result = await this.pool.query(sql, values);
       return result.rows[0] || undefined;

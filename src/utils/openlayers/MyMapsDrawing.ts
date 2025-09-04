@@ -6,7 +6,6 @@ import { Vector as VectorLayer } from "ol/layer";
 import Draw, { createBox } from "ol/interaction/Draw";
 import type { Type as GeometryType } from "ol/geom/Geometry";
 import { Modify, Translate } from "ol/interaction";
-import Collection from "ol/Collection";
 import GeoJSON from "ol/format/GeoJSON";
 import { fromCircle } from "ol/geom/Polygon";
 import { Style, Fill, Stroke, Circle as CircleStyle, Text, RegularShape } from "ol/style";
@@ -378,7 +377,11 @@ export class MyMapsDrawingManager {
       });
     } else {
       // Lines and Polygons: Only stroke and fill (NO image property at all)
-      const styleConfig: any = {
+      const styleConfig: {
+        stroke: Stroke;
+        fill?: Fill;
+        zIndex?: number;
+      } = {
         stroke: new Stroke({
           color: [0, 0, 127, 0.3],
           width: 6,
@@ -425,7 +428,8 @@ export class MyMapsDrawingManager {
     console.log("✅ Added highlight feature to layer");
   }
 
-  public unhighlightFeature(featureId: string) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public unhighlightFeature(_featureId: string) {
     if (this.highlightLayer) {
       // Clear all features from highlight layer
       this.highlightLayer.getSource()?.clear();
@@ -703,7 +707,7 @@ export class MyMapsDrawingManager {
       });
     } else {
       console.log("❌ Removing label (labelVisible=false or no label text)");
-      style.setText(null);
+      style.setText(new Text({ text: '' }));
       feature.setProperties({ 
         labelVisible: false,
         label: itemInfo.label || "",
@@ -870,7 +874,6 @@ export class MyMapsDrawingManager {
     if (feature.get("labelVisible")) {
       const style = feature.getStyle() as Style;
       if (style && style.getText()) {
-        const currentTextStyle = style.getText()!;
         const newTextStyle = this.createTextStyle(
           newLabel,
           "15px",
@@ -945,7 +948,10 @@ export class MyMapsDrawingManager {
       // Preserve existing text style if feature has a label
       const currentStyle = feature.getStyle() as Style;
       if (currentStyle && currentStyle.getText() && feature.get("labelVisible")) {
-        newStyle.setText(currentStyle.getText());
+        const currentText = currentStyle.getText();
+        if (currentText) {
+          newStyle.setText(currentText);
+        }
       }
       
       // Apply new style to feature

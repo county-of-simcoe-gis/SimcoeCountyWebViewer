@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   try {
     // Check if the host is allowed
     const host = request.headers.get('host');
-    if (!isHostAllowed(host)) {
+    if (!isHostAllowed(host ?? undefined)) {
       console.log('Unauthorized Domain!', host);
       return NextResponse.json(
         { error: 'Unauthorized Domain!' },

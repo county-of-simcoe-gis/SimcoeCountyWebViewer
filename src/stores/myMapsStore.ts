@@ -149,7 +149,7 @@ export interface MyMapsState {
   mergePolygons: () => { success: boolean; message?: string }
   exportToFile: (format: "KML" | "GeoJSON" | "EsriJSON") => { success: boolean; message?: string; count?: number }
   saveToApi: () => Promise<{ success: boolean; message?: string; id?: string }>
-  importFromApi: (id: string) => Promise<{ success: boolean; message?: string; data?: any }>
+  importFromApi: (id: string) => Promise<{ success: boolean; message?: string; data?: unknown }>
   
   // Actions - Edit mode
   setEditMode: (isEditing: boolean, mode?: EditMode) => void
@@ -226,16 +226,17 @@ const getOpenLayersFeaturesForExport = (items: MyMapsItem[]): OLFeature[] => {
           name: item.label,
           label: item.label,
           drawType: item.drawType,
-          drawColor: item.drawColor,
           visible: item.visible
         });
 
         // Apply the item's style to the feature for proper KML export
         if (item.style && item.style instanceof Style) {
           feature.setStyle(item.style);
-        } else if (item.drawColor) {
-          // Fallback: create a basic style from the drawColor
-          const basicStyle = createBasicStyleFromColor(item.drawColor, item.drawType);
+        } else if (item.style && typeof item.style === 'object' && 'fill' in item.style) {
+          // Fallback: create a basic style from the style color
+          const styleJSON = item.style as StyleJSON;
+          const color = styleJSON.fill?.color || '#FF0000';
+          const basicStyle = createBasicStyleFromColor(typeof color === 'string' ? color : '#FF0000', item.drawType);
           feature.setStyle(basicStyle);
         }
 
@@ -330,7 +331,18 @@ const convertToKMLWithProjection = (features: OLFeature[]): string => {
       kml += `      <styleUrl>#${styleMap.get(styleKey)}</styleUrl>\n`;
       
       // Add geometry
-      kml += createKMLGeometry(geometry);
+      interface GeometryInterface {
+        getCoordinates(): number[] | number[][] | number[][][];
+        getCenter?(): number[];
+        getRadius?(): number;
+      }
+      
+      kml += createKMLGeometry({
+        getType: () => geometry.getType(),
+        getCoordinates: () => (geometry as unknown as GeometryInterface).getCoordinates(),
+        getCenter: geometry.getType() === 'Circle' ? () => (geometry as unknown as GeometryInterface).getCenter?.() || [0, 0] : undefined,
+        getRadius: geometry.getType() === 'Circle' ? () => (geometry as unknown as GeometryInterface).getRadius?.() || 1000 : undefined
+      });
       
       kml += '    </Placemark>\n';
     }
@@ -391,21 +403,21 @@ const createKMLGeometry = (geometry: { getType(): string; getCoordinates(): numb
   const type = geometry.getType();
   
   if (type === 'Point') {
-    const coords = geometry.getCoordinates();
+    const coords = geometry.getCoordinates() as number[];
     return `      <Point>\n        <coordinates>${coords[0]},${coords[1]},0</coordinates>\n      </Point>\n`;
   } else if (type === 'LineString') {
-    const coords = geometry.getCoordinates();
+    const coords = geometry.getCoordinates() as number[][];
     const coordStr = coords.map((coord: number[]) => `${coord[0]},${coord[1]},0`).join(' ');
     return `      <LineString>\n        <coordinates>${coordStr}</coordinates>\n      </LineString>\n`;
   } else if (type === 'Polygon') {
-    const coords = geometry.getCoordinates();
+    const coords = geometry.getCoordinates() as number[][][];
     const outerRing = coords[0];
     const coordStr = outerRing.map((coord: number[]) => `${coord[0]},${coord[1]},0`).join(' ');
     return `      <Polygon>\n        <outerBoundaryIs>\n          <LinearRing>\n            <coordinates>${coordStr}</coordinates>\n          </LinearRing>\n        </outerBoundaryIs>\n      </Polygon>\n`;
   } else if (type === 'Circle') {
     // Convert circle to polygon approximation
-    const center = geometry.getCenter();
-    const radius = geometry.getRadius();
+    const center = geometry.getCenter?.() || [0, 0];
+    const radius = geometry.getRadius?.() || 1000;
     const points = 32; // Number of points to approximate circle
     let coords = '';
     
@@ -465,20 +477,6 @@ const generateNewId = (): string => {
   return uuidv4();
 };
 
-// Helper function to get config - loads from public config.json
-const getConfig = async (): Promise<{ apiUrl?: string } | null> => {
-  try {
-    const response = await fetch('/config.json');
-    if (!response.ok) {
-      console.error('Failed to load config.json');
-      return null;
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error loading config:', error);
-    return null;
-  }
-};
 
 export const useMyMapsStore = create<MyMapsState>((set, get) => ({
   // Initial state
@@ -667,13 +665,10 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => ({
         labelRotation: 0,
         geometryType: 'Polygon',
         drawType: 'Polygon',
-        drawColor: visiblePolygons[0].drawColor, // Use color from first polygon
+        style: visiblePolygons[0].style, // Use style from first polygon
         pointType: '',
         strokeType: '',
-        featureGeoJSON: JSON.stringify(mergedGeoJSON),
-        styleGeoJSON: visiblePolygons[0].styleGeoJSON, // Use style from first polygon
-        selected: false,
-        dateAdded: new Date().toISOString()
+        featureGeoJSON: JSON.stringify(mergedGeoJSON)
       };
 
       // Remove original polygons and add merged polygon
@@ -899,19 +894,24 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => ({
           const currentState = get();
           
           // Filter out items that already exist (same logic as old app)
-          let itemsToAdd: MyMapsItem[] = [];
-          parsedData.items.forEach((item: any) => {
-            const searchItem = currentState.items.filter((stateItem) => {
-              return stateItem.id === item.id;
-            })[0];
+          const itemsToAdd: MyMapsItem[] = [];
+          parsedData.items.forEach((item: unknown) => {
+            // Type guard for MyMapsItem-like object
+            if (typeof item === 'object' && item !== null && 'id' in item) {
+              const typedItem = item as Partial<MyMapsItem> & { id?: string };
+              
+              const searchItem = currentState.items.filter((stateItem) => {
+                return stateItem.id === typedItem.id;
+              })[0];
 
-            // Only add if item doesn't already exist
-            if (searchItem === undefined) {
-              itemsToAdd.push({
-                ...item,
-                id: item.id || generateNewId(),
-                visible: item.visible !== undefined ? item.visible : true
-              });
+              // Only add if item doesn't already exist
+              if (searchItem === undefined) {
+                itemsToAdd.push({
+                  ...typedItem,
+                  id: typedItem.id || generateNewId(),
+                  visible: typedItem.visible !== undefined ? typedItem.visible : true
+                } as MyMapsItem);
+              }
             }
           });
 

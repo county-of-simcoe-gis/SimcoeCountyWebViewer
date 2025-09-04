@@ -7,8 +7,9 @@ import { useEventStore } from "@/stores/eventStore";
 import { useLayerManagerStore } from "@/stores/layerManagerStore";
 import { MyMapsDrawingManager } from "@/utils/openlayers/MyMapsDrawing";
 import { Feature } from "ol";
+import { Style } from "ol/style";
 import { featureToGeoJSON, styleToJSON } from "@/utils/myMapsHelpers";
-import type { MyMapsItem as MyMapsItemType, GeometryType } from "@/types/myMaps";
+import type { MyMapsItem as MyMapsItemType } from "@/types/myMaps";
 import { createMyMapsItem } from "@/stores/myMapsStore";
 
 /**
@@ -28,21 +29,21 @@ export default function MyMapsService() {
   const { addLayer, removeLayer } = useLayerManagerStore();
 
   // Helper function to convert OpenLayers geometry type to our GeometryType
-  const mapGeometryType = (olType: string): GeometryType => {
-    switch (olType) {
-      case "Point":
-        return "Point";
-      case "LineString":
-      case "LinearRing":
-        return "LineString";
-      case "Polygon":
-        return "Polygon";
-      case "Circle":
-        return "Circle";
-      default:
-        return "Point";
-    }
-  };
+  // const mapGeometryType = (olType: string): GeometryType => {
+  //   switch (olType) {
+  //     case "Point":
+  //       return "Point";
+  //     case "LineString":
+  //     case "LinearRing":
+  //       return "LineString";
+  //     case "Polygon":
+  //       return "Polygon";
+  //     case "Circle":
+  //       return "Circle";
+  //     default:
+  //       return "Point";
+  //   }
+  // };
 
   // Drawing manager callback handlers
   const handleFeatureDrawn = React.useCallback(
@@ -72,7 +73,7 @@ export default function MyMapsService() {
 
       // Create MyMaps item using standalone function
       const featureStyle = feature.getStyle();
-      const myMapsItem = createMyMapsItem(feature, featureDrawType, label, featureStyle ? styleToJSON(featureStyle as any) : undefined);
+      const myMapsItem = createMyMapsItem(feature, featureDrawType, label, featureStyle instanceof Style ? styleToJSON(featureStyle) : undefined);
 
       // Set the featureGeoJSON from the actual feature
       myMapsItem.featureGeoJSON = featureToGeoJSON(feature);
@@ -440,7 +441,7 @@ export default function MyMapsService() {
 
         // Create MyMaps item from the buffer feature (same pattern as regular drawings)
         const featureStyle = feature.getStyle();
-        const myMapsItem = createMyMapsItem(feature, "Buffer", label, featureStyle ? styleToJSON(featureStyle as any) : undefined);
+        const myMapsItem = createMyMapsItem(feature, "Buffer", label, featureStyle instanceof Style ? styleToJSON(featureStyle) : undefined);
 
         // Set the featureGeoJSON from the actual feature
         myMapsItem.featureGeoJSON = featureToGeoJSON(feature);
