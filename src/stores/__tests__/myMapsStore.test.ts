@@ -242,7 +242,7 @@ describe('myMapsStore', () => {
   describe('Computed Properties', () => {
     it('should compute hasItems correctly when empty', () => {
       const { result } = renderHook(() => useMyMapsStore())
-      expect(result.current.hasItems).toBe(false)
+      expect(result.current.hasItems()).toBe(false)
     })
 
     it('should compute hasItems correctly when has items', () => {
@@ -261,7 +261,7 @@ describe('myMapsStore', () => {
       }
       
       result.current.addItem(item)
-      expect(result.current.hasItems).toBe(true)
+      expect(result.current.hasItems()).toBe(true)
     })
   })
 
@@ -285,8 +285,8 @@ describe('myMapsStore', () => {
       result.current.saveToStorage()
       
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        'myMapsItems',
-        JSON.stringify([item])
+        'simcoe-mymaps-data',
+        expect.stringContaining('"items":[{"id":"1"')
       )
     })
 
@@ -303,7 +303,14 @@ describe('myMapsStore', () => {
         style: { fill: { color: '#e809e5' } }
       }]
       
-      localStorageMock.getItem.mockReturnValue(JSON.stringify(savedItems))
+      const storageData = {
+        items: savedItems,
+        drawColor: '#e809e5',
+        drawOpacity: 0.8,
+        drawingCounter: 1,
+        config: { showBearingButton: true, showMeasureButton: false, nonPointCursorSize: 1 }
+      }
+      localStorageMock.getItem.mockReturnValue(JSON.stringify(storageData))
       
       const { result } = renderHook(() => useMyMapsStore())
       result.current.loadFromStorage()
@@ -413,7 +420,7 @@ describe('createMyMapsItem helper', () => {
       { fill: { color: '#ff0000' } } // Valid StyleJSON
     )
     
-    expect(item.id).toMatch(/^mymaps-item-\d+$/)
+    expect(item.id).toMatch(/^mymaps_\d+_[a-z0-9]+$/)
     expect(item.label).toBe('Default Label')
   })
 })
