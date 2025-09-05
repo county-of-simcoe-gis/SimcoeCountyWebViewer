@@ -149,11 +149,41 @@
   min-width: 60px;
 }
 
+/* Disabled state for import buttons */
+.sc-mymaps-advanced-import-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f8f9fa;
+  color: #6c757d;
+  border-color: #dee2e6;
+}
+
+.sc-mymaps-advanced-import-button:disabled:hover {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  border-color: #dee2e6;
+}
+
 /* Use standard sc-button styling for footer buttons */
 .sc-mymaps-footer-button {
   min-width: 60px;
   flex: 1;
   width: 100%;
+}
+
+/* Disabled state for footer buttons */
+.sc-mymaps-footer-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f8f9fa;
+  color: #6c757d;
+  border-color: #dee2e6;
+}
+
+.sc-mymaps-footer-button:disabled:hover {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  border-color: #dee2e6;
 }
 
 .sc-mymaps-advanced-edit-container {

@@ -201,13 +201,18 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
             <input className={inputId} id={inputId} type="text" placeholder="Enter ID here" onChange={onInputChange} onFocus={handleFocus} onBlur={handleBlur} value={inputText} />
             <br />
             <div className="sc-mymaps-import-buttons">
-              <button className="sc-button sc-mymaps-advanced-import-button" onClick={onImport}>
+              <button className="sc-button sc-mymaps-advanced-import-button" onClick={onImport} title="Load map items from an existing MyMaps ID">
                 Import
               </button>
-              <button className="sc-button sc-mymaps-advanced-import-button" onClick={onSave} disabled={!hasItems}>
+              <button
+                className="sc-button sc-mymaps-advanced-import-button"
+                onClick={onSave}
+                disabled={!hasItems}
+                title={hasItems ? "Save your current map items and get a shareable ID" : "No items to save - draw something on the map first"}
+              >
                 Save
               </button>
-              <button className="sc-button sc-mymaps-advanced-import-button" onClick={onShare}>
+              <button className="sc-button sc-mymaps-advanced-import-button" onClick={onShare} title="Create a shareable link with your saved MyMaps ID">
                 Share
               </button>
             </div>
