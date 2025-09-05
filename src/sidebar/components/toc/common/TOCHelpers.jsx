@@ -143,6 +143,7 @@ export async function getMap(sources, isReset, tocType, callback) {
                 descriptionOverride: source.descriptionOverride,
                 secured: source.secure,
                 token: accessToken.access_token,
+                appToken: source.appToken,
                 open: source.open || false,
                 useRedFolder: source.useRedFolder || false,
                 primary: source.primary || false,
