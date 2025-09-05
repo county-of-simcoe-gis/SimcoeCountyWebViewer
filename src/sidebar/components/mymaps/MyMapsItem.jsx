@@ -10,15 +10,19 @@ import * as helpers from "../../../helpers/helpers";
 function MyMapsItem(props) {
   const [label, setLabel] = useState(props.info.label);
   const [checked, setChecked] = useState(props.info.visible);
-  const vectorLayerRef = React.createRef();
   useEffect(() => {
     return () => {
-      if (vectorLayerRef.current !== null) {
-        window.map.removeLayer(vectorLayerRef.current);
-      }
+      removeHighlightLayer();
     };
   }, []);
-
+  const removeHighlightLayer = () => {
+    window.map.getLayers().forEach((layer) => {
+      if (layer?.get("name") === "sc-mymaps-item-highlight") {
+        window.map.removeLayer(layer);
+        return;
+      }
+    });
+  };
   const onLabelTextChange = (evt) => {
     const newLabel = evt.target.value;
     setLabel(newLabel);
@@ -27,10 +31,7 @@ function MyMapsItem(props) {
 
   const onItemDelete = (evt) => {
     props.onItemDelete && props.onItemDelete(props.info.id);
-    if (vectorLayerRef.current !== null) {
-      window.map.removeLayer(vectorLayerRef.current);
-      vectorLayerRef.current = null;
-    }
+    removeHighlightLayer();
   };
 
   const onItemCheckbox = (evt) => {
@@ -80,22 +81,19 @@ function MyMapsItem(props) {
       geometry: feature.getGeometry(),
     });
 
-    vectorLayerRef.current = new VectorLayer({
+    const highlightLayer = new VectorLayer({
+      name: "sc-mymaps-item-highlight",
       source: new VectorSource({
         features: [highlightFeature],
       }),
       zIndex: 100000,
       style: shadowStyle,
     });
-
-    window.map.addLayer(vectorLayerRef.current);
+    window.map.addLayer(highlightLayer);
   };
 
   const onMouseOut = (evt) => {
-    if (vectorLayerRef.current !== null) {
-      window.map.removeLayer(vectorLayerRef.current);
-      vectorLayerRef.current = null;
-    }
+    removeHighlightLayer();
   };
 
   return (
