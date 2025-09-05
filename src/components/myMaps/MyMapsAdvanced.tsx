@@ -141,11 +141,6 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
   };
 
   const onSave = async () => {
-    if (!hasItems) {
-      alert("Cannot save MyMaps! No Items Found!");
-      return;
-    }
-
     try {
       const result = await saveToApi();
 
