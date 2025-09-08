@@ -1,0 +1,133 @@
+.sc-mymaps-item-container {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  height: 100%;
+}
+
+.sc-mymaps-items-container-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  font-size: 12px;
+  font-weight: 600;
+  color: #495057;
+}
+
+.sc-mymaps-items-header-text {
+  flex: 1;
+}
+
+.sc-mymaps-items-container-header-editing {
+  color: #007bff;
+  font-size: 11px;
+  font-weight: 500;
+  background-color: #e3f2fd;
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid #bbdefb;
+}
+
+.sc-mymaps-items-no-data {
+  padding: 20px;
+  text-align: center;
+  color: #6c757d;
+  font-size: 12px;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+.sc-mymaps-items-container-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden; /* Disable horizontal scrolling */
+  border-bottom: 1px solid #eee;
+}
+
+.sc-mymaps-items-container-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sc-mymaps-items-container-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.sc-mymaps-items-container-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.sc-mymaps-items-container-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.sc-mymaps-items-summary {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  background-color: #f8f9fa;
+  border-top: 1px solid #eee;
+  font-size: 11px;
+  color: #6c757d;
+  text-align: center;
+}
+
+.sc-mymaps-items-count {
+  font-weight: 500;
+}
+
+/* Empty state styling */
+.sc-mymaps-items-no-data::before {
+  content: "📝";
+  display: block;
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .sc-mymaps-items-container-header {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+  
+  .sc-mymaps-items-no-data {
+    padding: 15px 10px;
+    font-size: 11px;
+  }
+  
+  .sc-mymaps-items-container-list {
+    /* Use flex layout instead of fixed height on mobile too */
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  
+  .sc-mymaps-items-summary {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+}
+
+/* Item wrapper animation */
+.sc-mymaps-item-wrapper {
+  animation: fadeIn 0.3s ease-out;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

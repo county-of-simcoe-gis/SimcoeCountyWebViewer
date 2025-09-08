@@ -56,7 +56,7 @@ export class LayerManager {
       metadata: options.metadata
     })
     
-    console.log(`✅ Added layer "${name}" to map with category "${category}" (ID: ${layerId})`)
+    // console.log(`✅ Added layer "${name}" to map with category "${category}" (ID: ${layerId})`)
     
     return layerId
   }
@@ -174,7 +174,7 @@ export class LayerManager {
     // Clear from layer manager
     layerManager.clearCategory(category)
     
-    console.log(`🧹 Cleared ${layersToRemove.length} layers from category: ${category}`)
+    // console.log(`🧹 Cleared ${layersToRemove.length} layers from category: ${category}`)
   }
   
   /**

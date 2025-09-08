@@ -30,14 +30,14 @@ export const SearchZoom: React.FC = () => {
 
   // Initialize search layers
   const initSearchLayers = useCallback(() => {
-    console.log("SearchZoom: initSearchLayers called", {
-      hasMap: !!map,
-      hasGeoLayer: !!searchGeoLayerRef.current,
-      hasIconLayer: !!searchIconLayerRef.current,
-    });
+    // console.log("SearchZoom: initSearchLayers called", {
+    //   hasMap: !!map,
+    //   hasGeoLayer: !!searchGeoLayerRef.current,
+    //   hasIconLayer: !!searchIconLayerRef.current,
+    // });
 
     if (map && !searchGeoLayerRef.current) {
-      console.log("SearchZoom: Creating search layers");
+      // console.log("SearchZoom: Creating search layers");
 
       // Layer for geometry (lines, polygons)
       searchGeoLayerRef.current = new VectorLayer({
@@ -64,7 +64,7 @@ export const SearchZoom: React.FC = () => {
       searchIconLayerRef.current.set("name", "sc-search-icon");
       map.addLayer(searchIconLayerRef.current);
 
-      console.log("SearchZoom: Search layers created and added to map");
+      // console.log("SearchZoom: Search layers created and added to map");
     } else if (!map) {
       console.warn("SearchZoom: No map available for layer initialization");
     } else {
@@ -433,7 +433,7 @@ export const SearchZoom: React.FC = () => {
 
   // Expose the handler functions through the window object
   useEffect(() => {
-    console.log("SearchZoom: Exposing handlers to window object", { map: !!map });
+    // console.log("SearchZoom: Exposing handlers to window object", { map: !!map });
     (window as unknown as Record<string, unknown>).searchZoomHandlers = {
       handleLocationResult,
       handleGeocodedResult,

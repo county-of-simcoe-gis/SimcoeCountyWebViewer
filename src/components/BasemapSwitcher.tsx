@@ -145,7 +145,7 @@ export default function BasemapSwitcher() {
               newLayer.setVisible(false);
 
               // Add layer using LayerManager with TOC category for proper layer ordering
-              const layerId = LayerManager.addLayer(newLayer, "TOC", `Imagery_${service.name}`, {
+              LayerManager.addLayer(newLayer, "TOC", `Imagery_${service.name}`, {
                 index: 5 + index, // Put imagery layers at bottom of TOC category (above BaseMap, below other TOC layers)
                 visible: false,
                 metadata: {
@@ -155,7 +155,7 @@ export default function BasemapSwitcher() {
                 },
               });
 
-              console.log(`🖼️ Added imagery layer "${service.name}" with LayerManager ID: ${layerId}`);
+              // console.log(`🖼️ Added imagery layer "${service.name}" with LayerManager ID: ${layerId}`);
             } else {
               console.warn(`Failed to create imagery layer for: ${service.name}`);
             }
@@ -184,7 +184,7 @@ export default function BasemapSwitcher() {
             newLayer.setVisible(false);
 
             // Add streets layer using LayerManager with TOC category for proper layer ordering
-            const layerId = LayerManager.addLayer(newLayer, "TOC", "Streets_Overlay", {
+            LayerManager.addLayer(newLayer, "TOC", "Streets_Overlay", {
               index: 20, // Put streets above imagery layers in TOC category
               visible: false,
               metadata: {
@@ -193,7 +193,7 @@ export default function BasemapSwitcher() {
               },
             });
 
-            console.log(`🛣️ Added streets layer with LayerManager ID: ${layerId}`);
+            // console.log(`🛣️ Added streets layer with LayerManager ID: ${layerId}`);
             streetsLayerRef.current = newLayer;
           }
         }
@@ -218,7 +218,7 @@ export default function BasemapSwitcher() {
             newLayer.setVisible(false);
 
             // Add world imagery using LayerManager with TOC category for proper layer ordering
-            const layerId = LayerManager.addLayer(newLayer, "TOC", "World_Imagery", {
+            LayerManager.addLayer(newLayer, "TOC", "World_Imagery", {
               index: 0, // Put world imagery at bottom of TOC category (below individual imagery layers)
               visible: false,
               metadata: {
@@ -227,7 +227,7 @@ export default function BasemapSwitcher() {
               },
             });
 
-            console.log(`🌍 Added world imagery layer with LayerManager ID: ${layerId}`);
+            // console.log(`🌍 Added world imagery layer with LayerManager ID: ${layerId}`);
             worldImageryLayerRef.current = newLayer;
           }
         }
@@ -242,7 +242,7 @@ export default function BasemapSwitcher() {
     const tocLayers = LayerManager.getLayersByCategory("TOC");
     const imageryLayers = tocLayers.filter((managedLayer) => managedLayer.metadata?.isImagery === true);
 
-    console.log(`🔍 updateImageryLayers: Found ${imageryLayers.length} imagery layers, slider value: ${value}`);
+    // console.log(`🔍 updateImageryLayers: Found ${imageryLayers.length} imagery layers, slider value: ${value}`);
 
     imageryLayers.forEach((managedLayer) => {
       if (value === -1) {
@@ -270,7 +270,7 @@ export default function BasemapSwitcher() {
     async (basemapService: BasemapService) => {
       if (!map) return;
 
-      console.log("BasemapSwitcher: Applying basemap:", basemapService.name);
+      // console.log("BasemapSwitcher: Applying basemap:", basemapService.name);
 
       // Clear existing basemap layers using LayerManager
       LayerManager.clearCategory("BaseMap");
@@ -343,7 +343,7 @@ export default function BasemapSwitcher() {
                 }
 
                 // Add layer using LayerManager for proper z-index management
-                const layerId = LayerManager.addLayer(layer, "BaseMap", `${basemapService.name}_${i}`, {
+                LayerManager.addLayer(layer, "BaseMap", `${basemapService.name}_${i}`, {
                   index: i,
                   opacity: opacity,
                   metadata: {
@@ -355,7 +355,7 @@ export default function BasemapSwitcher() {
                   },
                 });
 
-                console.log(`🗺️ Added basemap layer "${basemapService.name}_${i}" with LayerManager ID: ${layerId}`);
+                // console.log(`🗺️ Added basemap layer "${basemapService.name}_${i}" with LayerManager ID: ${layerId}`);
               }
               resolve();
             }
@@ -366,7 +366,7 @@ export default function BasemapSwitcher() {
       await Promise.all(layerCreationPromises);
 
       // Layers are now added via LayerManager, so no need to add them directly to the map
-      console.log(`🎯 Basemap "${basemapService.name}" applied with proper z-index management`);
+      // console.log(`🎯 Basemap "${basemapService.name}" applied with proper z-index management`);
     },
     [map]
   );
@@ -397,7 +397,7 @@ export default function BasemapSwitcher() {
           }
 
           // Debug: Log layer order after initialization
-          console.log("🔍 BasemapSwitcher: Logging layer order after initialization:");
+          // console.log("🔍 BasemapSwitcher: Logging layer order after initialization:");
           LayerManager.logLayerOrder();
         }, 100);
       }
@@ -453,36 +453,36 @@ export default function BasemapSwitcher() {
   const enableImagery = () => {
     if (!isLoadedRef.current) return;
 
-    console.log("🖼️ enableImagery: Starting imagery mode");
+    // console.log("🖼️ enableImagery: Starting imagery mode");
 
     // Hide topo basemap layers first
     const basemapLayers = LayerManager.getLayersByCategory("BaseMap");
     const topoLayers = basemapLayers.filter((managedLayer) => managedLayer.metadata?.isBasemap === true);
     topoLayers.forEach((managedLayer) => {
       managedLayer.layer.setVisible(false);
-      console.log(`🙈 Hidden topo layer: ${managedLayer.name}`);
+      // console.log(`🙈 Hidden topo layer: ${managedLayer.name}`);
     });
 
     // Show world imagery (background)
     if (worldImageryLayerRef.current) {
       worldImageryLayerRef.current.setVisible(true);
-      console.log("🌍 World imagery set visible");
+      // console.log("🌍 World imagery set visible");
     }
 
     // Show imagery layers
     updateImageryLayers(imagerySliderValue);
-    console.log(`🖼️ Updated imagery layers with slider value: ${imagerySliderValue}`);
+    // console.log(`🖼️ Updated imagery layers with slider value: ${imagerySliderValue}`);
 
     // Show streets if enabled
     if (streetsLayerRef.current) {
       streetsLayerRef.current.setVisible(streetsCheckbox);
-      console.log(`🛣️ Streets set visible: ${streetsCheckbox}`);
+      // console.log(`🛣️ Streets set visible: ${streetsCheckbox}`);
     }
 
     setActiveButton("imagery");
 
     // Debug: Log current layer order
-    console.log("🔍 enableImagery: Current layer order:");
+    // console.log("🔍 enableImagery: Current layer order:");
     LayerManager.logLayerOrder();
   };
 
