@@ -204,10 +204,28 @@ const mockMyMapsStore = {
   importItems: vi.fn(),
   hasItems: vi.fn(() => false),
   clearAllItems: vi.fn(),
+  saveToApi: vi.fn(),
 };
 
 const mockEventStore = {
   emit: vi.fn(),
+};
+
+const mockMapStore = {
+  map: {
+    getView: vi.fn(() => ({
+      getResolution: vi.fn(() => 1),
+      getCenter: vi.fn(() => [0, 0]),
+    })),
+    getSize: vi.fn(() => [1024, 768]),
+  },
+};
+
+const mockAppStore = {
+  config: {
+    feedbackUrl: "https://example.com/feedback",
+    mapId: "test-map-id",
+  },
 };
 
 vi.mock("@/stores/myMapsStore", () => ({
@@ -216,6 +234,22 @@ vi.mock("@/stores/myMapsStore", () => ({
 
 vi.mock("@/stores/eventStore", () => ({
   useEventStore: vi.fn(() => mockEventStore),
+}));
+
+vi.mock("@/stores/mapStore", () => ({
+  useMapStore: vi.fn(() => mockMapStore),
+}));
+
+vi.mock("@/stores/appStore", () => ({
+  useAppStore: vi.fn(() => mockAppStore),
+}));
+
+// Mock the utils/mapHelpers
+vi.mock("@/utils/mapHelpers", () => ({
+  getMapScale: vi.fn(() => 5000),
+  getMapExtent: vi.fn(() => [-79, 44, -78, 45]),
+  getMapCenter: vi.fn(() => [-78.5, 44.5]),
+  buildFeedbackUrl: vi.fn(({ feedbackUrl, myMapsId, featureId }) => `${feedbackUrl}?myMapsId=${myMapsId}&featureId=${featureId}`),
 }));
 
 describe("MyMaps Component", () => {
@@ -228,6 +262,7 @@ describe("MyMaps Component", () => {
     mockMyMapsStore.isEditing = false;
     mockMyMapsStore.items = [];
     mockMyMapsStore.hasItems.mockReturnValue(false);
+    mockMyMapsStore.saveToApi.mockResolvedValue({ success: true, id: "test-export-id" });
   });
 
   describe("Rendering", () => {
@@ -370,48 +405,56 @@ describe("MyMaps Component", () => {
 
       render(<MyMaps />);
 
-      await user.click(screen.getByTestId("test-show-options"));
-
       // Test buffer action
+      await user.click(screen.getByTestId("test-show-options"));
+      mockEventStore.emit.mockClear();
       await user.click(screen.getByTestId("popup-buffer"));
       expect(mockEventStore.emit).toHaveBeenCalledWith("mymap-buffer", { item: testItem });
 
-      await user.click(screen.getByTestId("test-show-options"));
-
       // Test symbolize action
+      await user.click(screen.getByTestId("test-show-options"));
+      mockEventStore.emit.mockClear();
       await user.click(screen.getByTestId("popup-symbolize"));
       expect(mockEventStore.emit).toHaveBeenCalledWith("mymap-symbolize", { item: testItem });
 
-      await user.click(screen.getByTestId("test-show-options"));
-
       // Test zoom to action
+      await user.click(screen.getByTestId("test-show-options"));
+      mockEventStore.emit.mockClear();
       await user.click(screen.getByTestId("popup-zoom-to"));
       expect(mockEventStore.emit).toHaveBeenCalledWith("mymap-zoom-to", { item: testItem });
 
-      await user.click(screen.getByTestId("test-show-options"));
-
       // Test delete action
+      await user.click(screen.getByTestId("test-show-options"));
+      mockEventStore.emit.mockClear();
+      mockMyMapsStore.removeItem.mockClear();
       await user.click(screen.getByTestId("popup-delete"));
       expect(mockMyMapsStore.removeItem).toHaveBeenCalledWith("test-id");
       expect(mockEventStore.emit).toHaveBeenCalledWith("mymap-item-deleted", { id: "test-id" });
 
-      await user.click(screen.getByTestId("test-show-options"));
-
       // Test show geometry action
+      await user.click(screen.getByTestId("test-show-options"));
+      mockEventStore.emit.mockClear();
       await user.click(screen.getByTestId("popup-show-geometry"));
       expect(mockEventStore.emit).toHaveBeenCalledWith("mymap-show-geometry", { item: testItem });
 
-      await user.click(screen.getByTestId("test-show-options"));
-
       // Test identify action
+      await user.click(screen.getByTestId("test-show-options"));
+      mockEventStore.emit.mockClear();
       await user.click(screen.getByTestId("popup-identify"));
       expect(mockEventStore.emit).toHaveBeenCalledWith("mymap-identify", { item: testItem });
 
-      await user.click(screen.getByTestId("test-show-options"));
-
       // Test report problem action
+      await user.click(screen.getByTestId("test-show-options"));
+      mockEventStore.emit.mockClear();
       await user.click(screen.getByTestId("popup-report-problem"));
-      expect(mockEventStore.emit).toHaveBeenCalledWith("mymap-report-problem", { item: testItem });
+
+      // Wait for async operation to complete
+      await vi.waitFor(() => {
+        expect(mockEventStore.emit).toHaveBeenCalledWith("mymap-report-problem", {
+          item: testItem,
+          url: expect.any(String),
+        });
+      });
     });
   });
 
