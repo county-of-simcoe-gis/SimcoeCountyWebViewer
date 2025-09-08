@@ -419,6 +419,104 @@ export default function GlobalDrawingOptionsPopup() {
     [map]
   );
 
+  // Measure handler for MyMaps list (should open Drawing Options popup)
+  const handleMeasureFromMyMapsList = useCallback(
+    (item: MyMapsItemType) => {
+      console.log("Opening measure tool for item from MyMaps list:", item.id);
+
+      // For Drawing Options popup, we need map coordinates, not screen coordinates
+      // Try to get the feature's map coordinates first, fallback to map center
+      let coordinate = [0, 0];
+
+      if (item.featureGeoJSON) {
+        try {
+          console.log("Raw featureGeoJSON for item:", item.id, ":", item.featureGeoJSON);
+          const feature = JSON.parse(item.featureGeoJSON);
+          console.log("Parsed feature:", feature);
+
+          // Handle GeoJSON Feature format
+          const geometry = feature.type === "Feature" ? feature.geometry : feature;
+          console.log("Extracted geometry:", geometry);
+
+          if (geometry && geometry.coordinates) {
+            // Calculate center coordinates for each geometry type
+            switch (geometry.type) {
+              case "Point":
+                coordinate = geometry.coordinates;
+                console.log("Point coordinates extracted:", coordinate);
+                break;
+              case "LineString":
+                // Find point at 50% distance along the line
+                coordinate = calculateLineStringMidpoint(geometry.coordinates);
+                console.log("LineString 50% distance point extracted:", coordinate);
+                break;
+              case "Polygon":
+                // Calculate proper centroid of polygon
+                coordinate = calculatePolygonCentroid(geometry.coordinates[0]); // Use outer ring
+                console.log("Polygon centroid coordinates extracted:", coordinate);
+                break;
+              default:
+                console.log("Unknown geometry type:", geometry.type);
+                coordinate = [0, 0];
+            }
+          } else {
+            console.log("No coordinates found in geometry");
+            coordinate = [0, 0];
+          }
+        } catch (error) {
+          console.error("Error parsing geometry for measure positioning:", error);
+          coordinate = [0, 0];
+        }
+      } else {
+        console.log("No featureGeoJSON found for item:", item.id);
+      }
+
+      // If coordinates are invalid (0,0 or undefined), use map center as fallback
+      if (!coordinate || coordinate.length < 2 || (coordinate[0] === 0 && coordinate[1] === 0)) {
+        console.log("Invalid/zero coordinates detected, using map center as fallback");
+
+        // Try to get map center with a slight delay to ensure map is ready
+        setTimeout(() => {
+          if (map) {
+            const view = map.getView();
+            const center = view.getCenter();
+            if (center) {
+              coordinate = center;
+              console.log("Using delayed map center coordinate:", coordinate);
+
+              // Open drawing options popup with measure tool active
+              setDrawingOptionsItemId(item.id);
+              setDrawingOptionsPosition({ x: coordinate[0], y: coordinate[1] });
+              setIsDrawingOptionsOpen(true);
+              setActiveTool("measure");
+              return;
+            }
+          }
+
+          // Fallback if map center still not available
+          console.log("Using fallback coordinate");
+          coordinate = [-8500000, 5600000]; // Approximate Ontario center in Web Mercator
+
+          setDrawingOptionsItemId(item.id);
+          setDrawingOptionsPosition({ x: coordinate[0], y: coordinate[1] });
+          setIsDrawingOptionsOpen(true);
+          setActiveTool("measure");
+        }, 100);
+
+        return; // Exit early, popup will open in setTimeout
+      }
+
+      console.log("Using valid feature coordinate:", coordinate);
+
+      // Open drawing options popup with measure tool active immediately
+      setDrawingOptionsItemId(item.id);
+      setDrawingOptionsPosition({ x: coordinate[0], y: coordinate[1] });
+      setIsDrawingOptionsOpen(true);
+      setActiveTool("measure");
+    },
+    [map]
+  );
+
   // Buffer handler for Drawing Options tools popup (should just activate buffer tool)
   const handleBufferFromDrawingOptions = useCallback(
     (item: MyMapsItemType) => {
@@ -441,6 +539,18 @@ export default function GlobalDrawingOptionsPopup() {
 
       // Set the active tool to show the symbolizer component
       setActiveTool("symbolize");
+    },
+    [emit, handleToolsPopupClose]
+  );
+
+  const handleMeasure = useCallback(
+    (item: MyMapsItemType) => {
+      console.log("Measure feature:", item.id);
+      emit("mymap-measure", { item });
+      handleToolsPopupClose();
+
+      // Set the active tool to show the measure component
+      setActiveTool("measure");
     },
     [emit, handleToolsPopupClose]
   );
@@ -705,16 +815,27 @@ export default function GlobalDrawingOptionsPopup() {
       }
     };
 
+    const handleMeasureFromMyMaps = (data?: { [key: string]: unknown }) => {
+      if (data && data.item) {
+        const item = data.item as MyMapsItemType;
+        handleMeasureFromMyMapsList(item);
+      } else {
+        console.warn("❌ Invalid data received for measure:", data);
+      }
+    };
+
     const drawingOptionsListenerId = addListener("mymap-show-drawing-options", handleShowDrawingOptions);
     const bufferListenerId = addListener("mymap-buffer", handleBufferFromMyMaps);
     const symbolizeListenerId = addListener("mymap-symbolize", handleSymbolizeFromMyMaps);
+    const measureListenerId = addListener("mymap-measure", handleMeasureFromMyMaps);
 
     return () => {
       removeListener(drawingOptionsListenerId);
       removeListener(bufferListenerId);
       removeListener(symbolizeListenerId);
+      removeListener(measureListenerId);
     };
-  }, [addListener, removeListener, activeTool, handleBufferFromMyMapsList, handleSymbolizeFromMyMapsList]); // Include activeTool to capture current state
+  }, [addListener, removeListener, activeTool, handleBufferFromMyMapsList, handleSymbolizeFromMyMapsList, handleMeasureFromMyMapsList]); // Include activeTool to capture current state
 
   return (
     <>
@@ -739,6 +860,7 @@ export default function GlobalDrawingOptionsPopup() {
         onClose={handleToolsPopupClose}
         onBuffer={handleBufferFromDrawingOptions}
         onSymbolize={handleSymbolize}
+        onMeasure={handleMeasure}
         onZoomTo={handleZoomTo}
         onDelete={handleDeleteFromToolsPopup}
         onShowGeometry={handleShowGeometry}

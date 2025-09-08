@@ -12,6 +12,7 @@ export interface MyMapsItemPopupProps {
   onClose: () => void;
   onBuffer?: (item: MyMapsItem) => void;
   onSymbolize?: (item: MyMapsItem) => void;
+  onMeasure?: (item: MyMapsItem) => void;
   onZoomTo?: (item: MyMapsItem) => void;
   onDelete?: (item: MyMapsItem) => void;
   onShowGeometry?: (item: MyMapsItem) => void;
@@ -20,7 +21,21 @@ export interface MyMapsItemPopupProps {
   onReportProblem?: (item: MyMapsItem) => void;
 }
 
-const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({ item, position, isOpen, onClose, onBuffer, onSymbolize, onZoomTo, onDelete, onShowGeometry, onExport, onIdentify, onReportProblem }) => {
+const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({
+  item,
+  position,
+  isOpen,
+  onClose,
+  onBuffer,
+  onSymbolize,
+  onMeasure,
+  onZoomTo,
+  onDelete,
+  onShowGeometry,
+  onExport,
+  onIdentify,
+  onReportProblem,
+}) => {
   const popupRef = useRef<HTMLDivElement>(null);
   const [showExportSubmenu, setShowExportSubmenu] = useState(false);
 
@@ -87,6 +102,14 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({ item, position, isOpe
             <div className="sc-mymaps-popup-item" onClick={() => handleMenuItemClick(() => onSymbolize(item))} title="Change feature symbolization">
               <Image src="/images/symbolize.png" alt="Symbolize" width={16} height={16} />
               <span>Symbolize</span>
+            </div>
+          )}
+
+          {/* Measure */}
+          {onMeasure && (item.geometryType === "LineString" || item.geometryType === "MultiLineString" || item.geometryType === "Polygon" || item.geometryType === "MultiPolygon") && (
+            <div className="sc-mymaps-popup-item" onClick={() => handleMenuItemClick(() => onMeasure(item))} title="Measure feature dimensions">
+              <Image src="/images/measure.png" alt="Measure" width={16} height={16} />
+              <span>Measure</span>
             </div>
           )}
 

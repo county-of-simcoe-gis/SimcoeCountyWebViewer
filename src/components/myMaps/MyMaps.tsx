@@ -102,6 +102,14 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
     [emit]
   );
 
+  const handleMeasure = useCallback(
+    (item: MyMapsItemType) => {
+      console.log("Measure feature:", item.id);
+      emit("mymap-measure", { item });
+    },
+    [emit]
+  );
+
   const handleZoomTo = useCallback(
     (item: MyMapsItemType) => {
       console.log("Zoom to item:", item.id);
@@ -486,6 +494,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
         onClose={handleClosePopup}
         onBuffer={handleBuffer}
         onSymbolize={handleSymbolize}
+        onMeasure={handleMeasure}
         onZoomTo={handleZoomTo}
         onDelete={handleDeleteFromPopup}
         onShowGeometry={handleShowGeometry}

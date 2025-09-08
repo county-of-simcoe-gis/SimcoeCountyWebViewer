@@ -17,6 +17,7 @@ import { getPointStyle, getLineStringStyle, getPolygonStyle } from "@/utils/open
 import MyMapsPopupLabel from "./MyMapsPopupLabel";
 import MyMapsBuffer from "./MyMapsBuffer";
 import MyMapsSymbolizer from "./MyMapsSymbolizer";
+import MyMapsMeasure from "./MyMapsMeasure";
 import FooterButtons from "./FooterButtons";
 import "./DrawingOptionsPopup.css";
 
@@ -2634,6 +2635,199 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       (symbolizerContainer as HTMLElement).style.pointerEvents = "";
     }
 
+    // Helper functions for measure component calculations
+    const convertFromMetersLine = (distance: number, units: string): number => {
+      switch (units) {
+        case "meters":
+          return distance;
+        case "kilometers":
+          return distance / 1000;
+        case "miles":
+          return distance / 1609.34;
+        case "feet":
+          return distance * 3.281;
+        case "yards":
+          return distance / 0.9144;
+        case "nauticalMiles":
+          return distance / 1852;
+        default:
+          return distance;
+      }
+    };
+
+    const convertFromMetersPolygon = (area: number, units: string): number => {
+      switch (units) {
+        case "square meters":
+          return area;
+        case "acres":
+          return area / 4046.856;
+        case "square feet":
+          return area * 10.764;
+        case "square kilometers":
+          return area / 1000000;
+        case "square miles":
+          return area * 0.000000038610215855;
+        case "hectares":
+          return area / 10000;
+        default:
+          return area;
+      }
+    };
+
+    const numberWithCommas = (x: number): string => {
+      return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    };
+
+    // Re-attach measure component event listeners (React handlers are lost when copying HTML to overlay)
+    const measureContainer = overlayElementRef.current.querySelector(".sc-mymaps-measure-container");
+    if (measureContainer) {
+      // Handle units dropdown change for both line and area units
+      const unitsSelects = measureContainer.querySelectorAll("select");
+      unitsSelects.forEach((unitsSelect, index) => {
+        if (unitsSelect) {
+          const handleUnitsChange = (e: Event) => {
+            console.log("🎯 Measure units changed via DOM event:", (e.target as HTMLSelectElement).value);
+            const newUnits = (e.target as HTMLSelectElement).value;
+
+            // Dispatch custom event that will bubble up to document
+            const measureUpdateEvent = new CustomEvent("measureUnitsUpdate", {
+              detail: { units: newUnits },
+              bubbles: true,
+            });
+            measureContainer.dispatchEvent(measureUpdateEvent);
+
+            // Also directly update the result field in the overlay DOM
+            // Since React re-renders won't update the overlay automatically
+            import("@/stores/myMapsStore").then(({ useMyMapsStore }) => {
+              const { items } = useMyMapsStore.getState();
+              const currentItemId = overlayElementRef.current?.getAttribute("data-item-id");
+              const currentItem = items.find((item) => item.id === currentItemId);
+
+              if (currentItem && currentItem.featureGeoJSON) {
+                // Recalculate measurement with new units
+                import("@/utils/myMapsHelpers").then((helpers) => {
+                  import("ol/sphere.js").then(({ getArea, getLength }) => {
+                    try {
+                      const feature = helpers.featureFromGeoJSON(currentItem.featureGeoJSON);
+                      const geometry = feature.getGeometry();
+
+                      if (geometry) {
+                        let newResult = "";
+
+                        if (currentItem.geometryType === "LineString" || currentItem.geometryType === "MultiLineString") {
+                          const lengthMeters = getLength(geometry);
+                          const convertedLength = convertFromMetersLine(lengthMeters, newUnits);
+                          newResult = numberWithCommas(Number(Math.round(convertedLength + "e" + 3) + "e-" + 3));
+                        } else if (currentItem.geometryType === "Polygon" || currentItem.geometryType === "MultiPolygon") {
+                          const areaMeters = getArea(geometry);
+                          const convertedArea = convertFromMetersPolygon(areaMeters, newUnits);
+                          newResult = numberWithCommas(Number(Math.round(convertedArea + "e" + 3) + "e-" + 3));
+                        }
+
+                        // Update the result input field directly in the overlay DOM
+                        const resultInput = measureContainer.querySelector(".sc-mymaps-measure-result") as HTMLInputElement;
+                        if (resultInput) {
+                          resultInput.value = newResult;
+                          console.log("🎯 Updated overlay result directly:", newResult);
+                        }
+                      }
+                    } catch (error) {
+                      console.error("Error updating overlay measurement:", error);
+                    }
+                  });
+                });
+              }
+            });
+          };
+
+          unitsSelect.addEventListener("change", handleUnitsChange);
+
+          // Prevent select from interfering with header drag
+          unitsSelect.addEventListener("mousedown", (e) => {
+            e.stopPropagation();
+          });
+
+          // Enable pointer events on this specific element
+          (unitsSelect as HTMLElement).style.pointerEvents = "auto";
+        }
+      });
+
+      // Handle auto-format checkbox change
+      const autoFormatCheckbox = measureContainer.querySelector("input[type='checkbox']") as HTMLInputElement;
+      if (autoFormatCheckbox) {
+        const handleAutoFormatChange = (e: Event) => {
+          console.log("🎯 Measure auto-format changed via DOM event:", (e.target as HTMLInputElement).checked);
+          const newAutoFormat = (e.target as HTMLInputElement).checked;
+
+          // Dispatch custom event that will bubble up to document
+          const measureUpdateEvent = new CustomEvent("measureAutoFormatUpdate", {
+            detail: { autoFormat: newAutoFormat },
+            bubbles: true,
+          });
+          measureContainer.dispatchEvent(measureUpdateEvent);
+
+          // Also directly update the result field in the overlay DOM for auto-format changes
+          import("@/stores/myMapsStore").then(({ useMyMapsStore }) => {
+            const { items } = useMyMapsStore.getState();
+            const currentItemId = overlayElementRef.current?.getAttribute("data-item-id");
+            const currentItem = items.find((item) => item.id === currentItemId);
+
+            if (currentItem && currentItem.featureGeoJSON) {
+              // Get current units from the dropdown
+              const currentUnitsSelect = measureContainer.querySelector("select:not(.sc-hidden)") as HTMLSelectElement;
+              const currentUnits = currentUnitsSelect ? currentUnitsSelect.value : "meters";
+
+              // Recalculate measurement with new auto-format setting
+              import("@/utils/myMapsHelpers").then((helpers) => {
+                import("ol/sphere.js").then(({ getArea, getLength }) => {
+                  try {
+                    const feature = helpers.featureFromGeoJSON(currentItem.featureGeoJSON);
+                    const geometry = feature.getGeometry();
+
+                    if (geometry) {
+                      let newResult = "";
+
+                      if (currentItem.geometryType === "LineString" || currentItem.geometryType === "MultiLineString") {
+                        const lengthMeters = getLength(geometry);
+                        const convertedLength = convertFromMetersLine(lengthMeters, currentUnits);
+                        newResult = newAutoFormat ? numberWithCommas(Number(Math.round(convertedLength + "e" + 3) + "e-" + 3)) : convertedLength.toString();
+                      } else if (currentItem.geometryType === "Polygon" || currentItem.geometryType === "MultiPolygon") {
+                        const areaMeters = getArea(geometry);
+                        const convertedArea = convertFromMetersPolygon(areaMeters, currentUnits);
+                        newResult = newAutoFormat ? numberWithCommas(Number(Math.round(convertedArea + "e" + 3) + "e-" + 3)) : convertedArea.toString();
+                      }
+
+                      // Update the result input field directly in the overlay DOM
+                      const resultInput = measureContainer.querySelector(".sc-mymaps-measure-result") as HTMLInputElement;
+                      if (resultInput) {
+                        resultInput.value = newResult;
+                        console.log("🎯 Updated overlay result for auto-format:", newResult);
+                      }
+                    }
+                  } catch (error) {
+                    console.error("Error updating overlay measurement for auto-format:", error);
+                  }
+                });
+              });
+            }
+          });
+        };
+
+        autoFormatCheckbox.addEventListener("change", handleAutoFormatChange);
+
+        // Prevent checkbox from interfering with header drag
+        autoFormatCheckbox.addEventListener("mousedown", (e) => {
+          e.stopPropagation();
+        });
+
+        // Enable pointer events on this specific element
+        (autoFormatCheckbox as HTMLElement).style.pointerEvents = "auto";
+      }
+
+      // The container itself should NOT have pointerEvents = "auto" to avoid header conflicts
+      (measureContainer as HTMLElement).style.pointerEvents = "";
+    }
+
     // Enable interactions ONLY on specific buffer elements (targeted approach)
     // This prevents conflicts with header drag functionality
     const bufferContainer = overlayElementRef.current.querySelector(".sc-mymaps-buffer-container");
@@ -2696,6 +2890,9 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
 
       // Copy the React-rendered content to the overlay element
       overlayElementRef.current.innerHTML = popupRef.current.innerHTML;
+
+      // Store the current item ID for DOM event handlers to use
+      overlayElementRef.current.setAttribute("data-item-id", itemId);
 
       // Restore focus and cursor position after copying
       if (wasInputFocused) {
@@ -3009,7 +3206,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
           {/* Tool-specific components */}
           <MyMapsSymbolizer visible={activeTool === "symbolize"} item={item} />
           <MyMapsBuffer visible={activeTool === "buffer"} item={item} />
-          <div className="sc-hidden">{/* Measure placeholder */}</div>
+          <MyMapsMeasure visible={activeTool === "measure"} item={item} />
 
           {/* Footer Buttons - Always shown */}
           <FooterButtons onTools={onTools ? (event) => onTools(item, event) : undefined} onDelete={onDelete ? () => onDelete(item) : undefined} onClose={onClose} />
