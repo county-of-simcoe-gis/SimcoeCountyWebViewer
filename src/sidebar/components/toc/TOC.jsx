@@ -714,7 +714,7 @@ class TOC extends Component {
   // TOGGLE LEGEND FOR GROUP
   onLegendToggleGroup = (group, showLegend) => {
     group.layers.forEach((layer) => {
-      layer.showLegend = showLegend;
+      // layer.showLegend = showLegend;
       this.onLegendToggle(layer, group);
     });
   };
