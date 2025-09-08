@@ -4,8 +4,12 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useEventStore } from "@/stores/eventStore";
 import { useMyMapsStore } from "@/stores/myMapsStore";
 import { useMapStore } from "@/stores/mapStore";
+import { useAppStore } from "@/stores/appStore";
 import DrawingOptionsPopup from "./DrawingOptionsPopup";
 import MyMapsItemPopup from "./MyMapsItemPopup";
+import ShowGeometryModal from "./ShowGeometryModal";
+import URLModal from "../common/URLModal";
+import { getMapScale, getMapExtent, getMapCenter, buildFeedbackUrl } from "@/utils/mapHelpers";
 import type { MyMapsItem as MyMapsItemType } from "@/types/myMaps";
 
 /**
@@ -24,9 +28,18 @@ export default function GlobalDrawingOptionsPopup() {
   const [toolsPopupPosition, setToolsPopupPosition] = useState({ x: 0, y: 0 });
   const [isToolsPopupOpen, setIsToolsPopupOpen] = useState(false);
 
+  // Show Geometry Modal state
+  const [geometryModalItem, setGeometryModalItem] = useState<MyMapsItemType | null>(null);
+  const [isGeometryModalOpen, setIsGeometryModalOpen] = useState(false);
+
+  // Report Problem Modal state
+  const [reportProblemUrl, setReportProblemUrl] = useState<string>("");
+  const [isReportProblemModalOpen, setIsReportProblemModalOpen] = useState(false);
+
   const { emit, addListener, removeListener } = useEventStore();
-  const { items, removeItem, updateItemLabel, updateItemLabelVisibility, updateItemLabelRotation } = useMyMapsStore();
+  const { items, removeItem, updateItemLabel, updateItemLabelVisibility, updateItemLabelRotation, saveToApi } = useMyMapsStore();
   const { map } = useMapStore();
+  const { config } = useAppStore();
 
   // Get fresh item data from store (reactive subscription)
   const drawingOptionsItem = drawingOptionsItemId ? items.find((item) => item.id === drawingOptionsItemId) || null : null;
@@ -453,11 +466,33 @@ export default function GlobalDrawingOptionsPopup() {
   const handleShowGeometry = useCallback(
     (item: MyMapsItemType) => {
       console.log("Show geometry for item:", item.id);
+
+      // Check if is_open_data allows showing coordinates (like the old app)
+      try {
+        const feature = JSON.parse(item.featureGeoJSON || "{}");
+        const showCoordinates = feature.properties?.is_open_data;
+
+        // If is_open_data is false, don't show geometry
+        if (showCoordinates === false) {
+          console.log("Geometry viewing not allowed for this feature");
+          return;
+        }
+      } catch (error) {
+        console.warn("Could not parse feature for coordinate check:", error);
+      }
+
+      setGeometryModalItem(item);
+      setIsGeometryModalOpen(true);
       emit("mymap-show-geometry", { item });
       handleToolsPopupClose();
     },
     [emit, handleToolsPopupClose]
   );
+
+  const handleCloseGeometryModal = useCallback(() => {
+    setIsGeometryModalOpen(false);
+    setGeometryModalItem(null);
+  }, []);
 
   const handleExportFeature = useCallback(
     (item: MyMapsItemType, format: "geojson" | "kml" | "esrijson" = "geojson") => {
@@ -565,13 +600,65 @@ export default function GlobalDrawingOptionsPopup() {
   );
 
   const handleReportProblem = useCallback(
-    (item: MyMapsItemType) => {
+    async (item: MyMapsItemType) => {
       console.log("Report problem for feature:", item.id);
-      emit("mymap-report-problem", { item });
-      handleToolsPopupClose();
+
+      if (!map || !config) {
+        console.error("Map or config not available");
+        return;
+      }
+
+      try {
+        // Get map data (like the old app)
+        const scale = getMapScale(map);
+        const extent = getMapExtent(map);
+        const center = getMapCenter(map);
+
+        const [xmin, ymin, xmax, ymax] = extent;
+        const [centerx, centery] = center;
+
+        // Export MyMaps to get an ID (like the old app)
+        const exportResult = await saveToApi();
+
+        if (!exportResult.success || !exportResult.id) {
+          console.error("Failed to export MyMaps for report problem");
+          alert("Failed to prepare report. Please try again.");
+          return;
+        }
+
+        // Build the feedback URL with all parameters (matching old app exactly)
+        const feedbackUrl = buildFeedbackUrl({
+          feedbackUrl: config.feedbackUrl || "https://opengis.simcoe.ca/feedback",
+          xmin,
+          xmax,
+          ymin,
+          ymax,
+          centerx,
+          centery,
+          scale,
+          myMapsId: exportResult.id,
+          featureId: item.id,
+          mapId: config.mapId,
+        });
+
+        // Open in modal (like the old app's showURLWindow)
+        setReportProblemUrl(feedbackUrl);
+        setIsReportProblemModalOpen(true);
+
+        emit("mymap-report-problem", { item, url: feedbackUrl });
+        handleToolsPopupClose();
+      } catch (error) {
+        console.error("Error preparing report problem:", error);
+        alert("Error occurred while preparing the report. Please try again.");
+      }
     },
-    [emit, handleToolsPopupClose]
+    [map, config, saveToApi, emit, handleToolsPopupClose]
   );
+
+  const handleCloseReportProblemModal = useCallback(() => {
+    setIsReportProblemModalOpen(false);
+    setReportProblemUrl("");
+  }, []);
 
   // Listen for requests to show the drawing options popup and buffer events
   useEffect(() => {
@@ -659,6 +746,12 @@ export default function GlobalDrawingOptionsPopup() {
         onIdentify={handleIdentify}
         onReportProblem={handleReportProblem}
       />
+
+      {/* Show Geometry Modal */}
+      <ShowGeometryModal item={geometryModalItem} isOpen={isGeometryModalOpen} onClose={handleCloseGeometryModal} />
+
+      {/* Report Problem Modal */}
+      <URLModal url={reportProblemUrl} title="Report a Problem" isOpen={isReportProblemModalOpen} onClose={handleCloseReportProblemModal} width="90vw" height="80vh" />
     </>
   );
 }

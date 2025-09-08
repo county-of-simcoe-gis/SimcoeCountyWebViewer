@@ -156,7 +156,7 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({ item, position, isOpe
           {/* Report a Problem */}
           {onReportProblem && (
             <div className="sc-mymaps-popup-item" onClick={() => handleMenuItemClick(() => onReportProblem(item))} title="Report a problem with this feature">
-              <Image src="/images/report_24x24.png" alt="Report Problem" width={16} height={16} />
+              <Image src="/images/error.png" alt="Report Problem" width={16} height={16} />
               <span>Report a Problem</span>
             </div>
           )}
