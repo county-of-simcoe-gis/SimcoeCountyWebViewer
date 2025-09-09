@@ -51,7 +51,7 @@
     }
   },
   "controls": {
-    "rotate": true,
+    "rotate": false,
     "fullScreen": true,
     "zoomInOut": true,
     "currentLocation": true,
@@ -60,7 +60,9 @@
     "scaleLine": true,
     "basemap": true,
     "gitHubButton": true,
-    "scaleSelector": false
+    "scaleSelector": false,
+    "showGrid": true,
+    "extentHistory": true
   },
   "mapTheme": "SIMCOE_COUNTY",
   "showFloatingMenuHeader": false,
