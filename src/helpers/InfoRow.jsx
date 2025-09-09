@@ -29,7 +29,7 @@ export const InfoRow = (props) => {
         {props.value}
       </a>
     );
-  } else if (props.value != null && props.value.length >= 8 && moment(props.value, formats, true).isValid() && !label.toUpperCase().includes("NUMBER")) {
+  } else if (props.value != null && props.value.length >= 8 && moment(props.value, formats, true).isValid() && !["NUMBER", "BYLAW"].some((word) => label.toUpperCase().includes(word))) {
     value = moment(props.value).format("YYYY-MM-DD");
   }
 
