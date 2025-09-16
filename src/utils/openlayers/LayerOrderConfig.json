@@ -40,11 +40,19 @@
       },
       "description": "Temporary graphics, highlights, and overlays"
     },
-    "Popup": {
+    "Overlay": {
       "priority": 1000,
       "zIndexRange": {
         "min": 1000,
         "max": 1099
+      },
+      "description": "Overlay layers"
+    },
+    "Popup": {
+      "priority": 1100,
+      "zIndexRange": {
+        "min": 1100,
+        "max": 1199
       },
       "description": "Popup and tooltip layers"
     }

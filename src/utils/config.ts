@@ -9,7 +9,7 @@ export interface AppConfig {
   favicon: string;
   originUrl: string;
   feedbackUrl: string;
-  
+
   // Server URLs
   geoserverUrl: string;
   publicUrl: string;
@@ -17,7 +17,7 @@ export interface AppConfig {
   printUrl: string;
   apiUrl: string;
   apiUrlDev: string;
-  
+
   // Feature flags
   includeAppStats: boolean;
   htmlIdentify: boolean;
@@ -28,7 +28,7 @@ export interface AppConfig {
   showWhatsNewOnStartup: boolean;
   showWhatsNewPopupOnStartup: boolean;
   showTermsOnStartup: boolean;
-  
+
   // External URLs
   termsUrl: string;
   reportUrl: string;
@@ -38,16 +38,16 @@ export interface AppConfig {
   ieWarningUrl: string;
   propertyReportUrl: string;
   weatherRadarApiUrl: string;
-  
+
   // Google Analytics
   googleAnalyticsID: string;
   appStatsUrl: string;
-  
+
   // Map settings
   centerCoords: number[];
   defaultZoom: number;
   maxZoom: number;
-  
+
   // Map controls
   controls: {
     rotate: boolean;
@@ -60,26 +60,29 @@ export interface AppConfig {
     basemap: boolean;
     gitHubButton: boolean;
     scaleSelector: boolean;
+    showGrid: boolean;
+    extentHistory: boolean;
+    attribution: boolean;
   };
-  
+
   // Storage keys
   storageKeys: {
     SearchHistory: string;
     Draw: string;
     URLDontShowAgain: string;
   };
-  
+
   // UI settings
   mapTheme: string;
   showFloatingMenuHeader: boolean;
   showLoadingScreens: boolean;
   onlyStandardCursor: boolean;
   restrictOriginForUrlWindow: boolean;
-  
+
   // Menu visibility settings
   rightClickMenuVisibility: Record<string, boolean>;
   drawingOptionsToolsMenuVisibility: Record<string, boolean>;
-  
+
   // TOC configuration
   toc: {
     tocType: string;
@@ -104,11 +107,11 @@ export interface AppConfig {
     keywords: Record<string, unknown>;
     loaderType?: string;
   };
-  
+
   // Sidebar components
   sidebarToolComponents: SidebarComponent[];
   sidebarThemeComponents: SidebarComponent[];
-  
+
   // Other properties that might be added dynamically
   [key: string]: unknown;
 }
@@ -137,14 +140,14 @@ let globalConfig: AppConfig | null = null;
 export async function loadConfig(configSecured: Record<string, unknown> = {}): Promise<AppConfig> {
   try {
     // Load the base config from public/config.json
-    const response = await fetch('/config.json');
+    const response = await fetch("/config.json");
     if (!response.ok) {
       throw new Error(`Failed to load config: ${response.statusText}`);
     }
-    
+
     const config: AppConfig = await response.json();
     config.configSecured = configSecured;
-    
+
     // Process URL parameters
     const queryString = window.location.search;
     let mapId = config.mapId;
@@ -153,7 +156,7 @@ export async function loadConfig(configSecured: Record<string, unknown> = {}): P
     let geoserverUrlType = config.toc.geoserverLayerGroupsUrlType;
     let tocType = config.toc.tocType;
     let esriServiceUrl = config.toc.esriServiceUrl;
-    
+
     if (queryString.length > 0) {
       const urlParams = new URLSearchParams(queryString);
       const url_mapId = urlParams.get("MAP_ID");
@@ -162,7 +165,7 @@ export async function loadConfig(configSecured: Record<string, unknown> = {}): P
       const url_geoserverUrl = urlParams.get("GEO_URL");
       const url_esriServiceUrl = urlParams.get("ARCGIS_SERVICE");
       const viewerMode = urlParams.get("MODE");
-      
+
       if (url_geoserverUrlType !== null) geoserverUrlType = url_geoserverUrlType;
       if (url_mapId !== null) {
         mapId = url_mapId.toLowerCase();
@@ -182,7 +185,7 @@ export async function loadConfig(configSecured: Record<string, unknown> = {}): P
       }
       if (url_tocType !== null) tocType = url_tocType;
     }
-    
+
     // Update config with URL parameters
     if (tocType !== config.toc.tocType) config.toc.tocType = tocType;
     if (geoserverUrl !== config.toc.geoserverLayerGroupsUrl) {
@@ -197,7 +200,7 @@ export async function loadConfig(configSecured: Record<string, unknown> = {}): P
     if (esriServiceUrl !== config.toc.esriServiceUrl) {
       config.toc.esriServiceUrl = esriServiceUrl;
     }
-    
+
     // Determine loader type
     if (loaderType === "DEFAULT") {
       if (mapId !== null && mapId !== undefined && mapId.trim() !== "") {
@@ -209,19 +212,18 @@ export async function loadConfig(configSecured: Record<string, unknown> = {}): P
         loaderType = "ARCGIS";
       }
     }
-    
+
     config.toc.loaderType = loaderType;
-    
+
     // TODO: Implement API-based config loading if useMapConfigApi is true
     // For now, just return the basic config
-    
+
     // Store globally for easy access
     globalConfig = config;
-    
+
     return config;
-    
   } catch (error) {
-    console.error('Error loading configuration:', error);
+    console.error("Error loading configuration:", error);
     throw error;
   }
 }
@@ -243,17 +245,12 @@ export function resetConfig(): void {
 /**
  * Get configuration for a specific component (tool or theme)
  */
-export function getComponentConfig(component: 'tools' | 'themes', name: string): SidebarComponent | undefined {
+export function getComponentConfig(component: "tools" | "themes", name: string): SidebarComponent | undefined {
   if (!globalConfig) return undefined;
-  
-  const configArray = component === 'tools' 
-    ? globalConfig.sidebarToolComponents 
-    : globalConfig.sidebarThemeComponents;
-    
-  return configArray.find(item => 
-    item.name !== undefined && 
-    item.name.toLowerCase() === name.toLowerCase()
-  );
+
+  const configArray = component === "tools" ? globalConfig.sidebarToolComponents : globalConfig.sidebarThemeComponents;
+
+  return configArray.find((item) => item.name !== undefined && item.name.toLowerCase() === name.toLowerCase());
 }
 
 /**
@@ -263,7 +260,7 @@ export function updatePageMetadata(config: AppConfig) {
   if (config.title) {
     document.title = config.title;
   }
-  
+
   if (config.favicon) {
     changeIcon(config.favicon);
   }
@@ -280,11 +277,11 @@ export function changeIcon(icon: string) {
     link.id = "favicon";
     document.getElementsByTagName("head")[0].appendChild(link);
   }
-  
+
   // If it's not a full URL, assume it's in the public directory
-  if (!icon.startsWith('http')) {
+  if (!icon.startsWith("http")) {
     icon = `/${icon}`;
   }
-  
+
   link.href = icon;
-} 
+}
