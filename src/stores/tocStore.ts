@@ -4,7 +4,6 @@ import { loadLayerGroupsFromSources } from "../utils/tocHelpers";
 import { LayerHelpers } from "../utils/openlayers/LayerHelpers";
 import { OL_DATA_TYPES } from "../utils/openlayers/types";
 import { LayerManager } from "../utils/openlayers/LayerManager";
-//adding placeholder comment for secure imports
 // OpenLayers layer interface for type safety
 interface OpenLayersLayer {
   setVisible: (visible: boolean) => void;
