@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Image from "next/image";
 import { useMapStore } from "@/stores/mapStore";
+import { useAppStore } from "@/stores/appStore";
 import { LayerHelpers, OL_DATA_TYPES } from "@/utils/openlayers";
 import { OLDataType } from "@/utils/openlayers/types";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
@@ -51,6 +52,7 @@ interface BasemapConfig {
 
 export default function BasemapSwitcher() {
   const { map } = useMapStore();
+  const urlParameters = useAppStore((state) => state.urlParameters);
   const [config, setConfig] = useState<BasemapConfig | null>(null);
   const [activeButton, setActiveButton] = useState<string>("topo");
 
@@ -450,7 +452,7 @@ export default function BasemapSwitcher() {
     }
   };
 
-  const enableImagery = () => {
+  const enableImagery = useCallback(() => {
     if (!isLoadedRef.current) return;
 
     // console.log("🖼️ enableImagery: Starting imagery mode");
@@ -484,9 +486,9 @@ export default function BasemapSwitcher() {
     // Debug: Log current layer order
     // console.log("🔍 enableImagery: Current layer order:");
     LayerManager.logLayerOrder();
-  };
+  }, [imagerySliderValue, streetsCheckbox, updateImageryLayers]);
 
-  const disableImagery = () => {
+  const disableImagery = useCallback(() => {
     if (streetsLayerRef.current) {
       streetsLayerRef.current.setVisible(false);
     }
@@ -495,9 +497,9 @@ export default function BasemapSwitcher() {
     }
     setImageryPanelOpen(false);
     updateImageryLayers(-1);
-  };
+  }, [updateImageryLayers]);
 
-  const enableTopo = () => {
+  const enableTopo = useCallback(() => {
     setActiveButton("topo");
     disableImagery();
 
@@ -505,7 +507,7 @@ export default function BasemapSwitcher() {
     const basemapLayers = LayerManager.getLayersByCategory("BaseMap");
     const topoLayers = basemapLayers.filter((managedLayer) => managedLayer.metadata?.isBasemap === true);
     topoLayers.forEach((managedLayer) => managedLayer.layer.setVisible(true));
-  };
+  }, [disableImagery]);
 
   const disableTopo = () => {
     // Hide basemap layers using LayerManager
@@ -536,6 +538,59 @@ export default function BasemapSwitcher() {
     applyBasemap(service);
     setTopoPanelOpen(false);
   };
+
+  // Handle URL parameters for basemap configuration
+  const handleURLParameters = useCallback(() => {
+    if (!config || !isLoadedRef.current) return;
+
+    const basemap = urlParameters.BASEMAP?.toUpperCase() || null;
+    const name = urlParameters.NAME?.toUpperCase() || null;
+    const imagerySliderOpen = urlParameters.SLIDER_OPEN?.toUpperCase() || null;
+
+    if (basemap === "IMAGERY") {
+      enableImagery();
+
+      if (imagerySliderOpen === "TRUE") {
+        setImageryPanelOpen(true);
+      }
+
+      if (name && config.imageryServices && config.imageryServices.length > 0) {
+        for (let index = 0; index < config.imageryServices.length; index++) {
+          const service = config.imageryServices[index];
+          const serviceName = service.name.toUpperCase();
+          if (serviceName === name) {
+            updateImageryLayers(index);
+            setImagerySliderValue(index);
+            return;
+          }
+        }
+      }
+    } else if (basemap === "TOPO") {
+      enableTopo();
+
+      if (name && config.topoServices && config.topoServices.length > 0) {
+        for (let index = 0; index < config.topoServices.length; index++) {
+          const service = config.topoServices[index];
+          const serviceName = service.name.toUpperCase();
+          if (serviceName === name) {
+            setSelectedTopoService(service);
+            applyBasemap(service);
+            return;
+          }
+        }
+      }
+    }
+  }, [config, urlParameters, isLoadedRef, enableImagery, enableTopo, updateImageryLayers, applyBasemap]);
+
+  // Handle URL parameters after initialization
+  useEffect(() => {
+    if (config && isLoadedRef.current && Object.keys(urlParameters).length > 0) {
+      // Add a small delay to ensure all layers are properly loaded
+      setTimeout(() => {
+        handleURLParameters();
+      }, 200);
+    }
+  }, [config, urlParameters, handleURLParameters]);
 
   if (!config || !map) {
     return null;

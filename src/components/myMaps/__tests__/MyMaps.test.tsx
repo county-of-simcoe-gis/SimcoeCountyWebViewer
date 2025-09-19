@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import MyMaps from "../MyMaps";
 import { useMyMapsStore } from "@/stores/myMapsStore";
+import { useAppStore } from "@/stores/appStore";
 import type { MyMapsItem } from "@/types/myMaps";
 
 // Mock all the child components
@@ -226,6 +227,7 @@ const mockAppStore = {
     feedbackUrl: "https://example.com/feedback",
     mapId: "test-map-id",
   },
+  urlParameters: {},
 };
 
 vi.mock("@/stores/myMapsStore", () => ({
@@ -606,6 +608,34 @@ describe("MyMaps Component", () => {
 
       expect(mockToggleAllVisibility).toHaveBeenCalledWith(true);
       expect(mockEventStore.emit).toHaveBeenCalledWith("mymap-additional-tool-action", { action: "show-all" });
+    });
+  });
+
+  describe("URL Parameters", () => {
+    it("should handle URL parameters for MyMaps import", () => {
+      // Update mockAppStore to include URL parameters
+      const mockUseAppStore = vi.mocked(useAppStore);
+      mockUseAppStore.mockReturnValue({
+        ...mockAppStore,
+        urlParameters: {
+          MY_MAPS_ID: "test-my-maps-id",
+          MY_MAPS_FEATURE_ID: "test-feature-id",
+        },
+      });
+
+      const { container } = render(<MyMaps />);
+
+      // Test passes if component renders without crashing when URL parameters are present
+      expect(container).toBeDefined();
+      expect(mockUseAppStore).toHaveBeenCalled();
+    });
+
+    it("should render normally without URL parameters", () => {
+      // Use default mockAppStore with empty urlParameters
+      const { container } = render(<MyMaps />);
+
+      // Test passes if component renders without crashing
+      expect(container).toBeDefined();
     });
   });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { useMyMapsStore } from "@/stores/myMapsStore";
 import { useEventStore } from "@/stores/eventStore";
 import { useMapStore } from "@/stores/mapStore";
@@ -14,6 +14,8 @@ import ShowGeometryModal from "./ShowGeometryModal";
 import URLModal from "../common/URLModal";
 import { getMapScale, getMapExtent, getMapCenter, buildFeedbackUrl } from "@/utils/mapHelpers";
 import type { MyMapsItem as MyMapsItemType } from "@/types/myMaps";
+import { Feature } from "ol";
+import GeoJSON from "ol/format/GeoJSON";
 import "./MyMaps.css";
 
 interface MyMapsProps {
@@ -35,9 +37,10 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
   const [isReportProblemModalOpen, setIsReportProblemModalOpen] = useState(false);
 
   // Store hooks
-  const { drawType, drawColor, isEditing, items, setDrawType, updateItemLabel, removeItem, setEditMode, toolTipId, toolTipClass, importItems, hasItems, saveToApi } = useMyMapsStore();
+  const { drawType, drawColor, isEditing, items, setDrawType, updateItemLabel, removeItem, setEditMode, toolTipId, toolTipClass, importItems, hasItems, saveToApi, importFromApi } = useMyMapsStore();
   const { map } = useMapStore();
   const { config } = useAppStore();
+  const urlParameters = useAppStore((state) => state.urlParameters);
   const { emit } = useEventStore();
 
   // Handle showing item options popup
@@ -372,12 +375,113 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
   };
 
   // Handle import from Advanced panel
-  const handleMyMapsImport = (result: { id: string; json: string }) => {
-    const success = importItems(result.json);
-    if (success) {
-      emit("mymap-items-imported", { count: items.length });
+  const handleMyMapsImport = useCallback(
+    (result: { id: string; json: string }) => {
+      const success = importItems(result.json);
+      if (success) {
+        emit("mymap-items-imported", { count: items.length });
+      }
+    },
+    [importItems, items.length, emit]
+  );
+
+  // Utility function to create feature from GeoJSON
+  const getFeatureFromGeoJSON = useCallback((geoJsonString: string): Feature | null => {
+    try {
+      const geoJsonFormat = new GeoJSON();
+      const geoJsonObject = JSON.parse(geoJsonString);
+      const result = geoJsonFormat.readFeature(geoJsonObject) as Feature | Feature[];
+
+      // readFeature can return a single feature or array of features
+      if (Array.isArray(result)) {
+        return result.length > 0 ? result[0] : null;
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Error creating feature from GeoJSON:", error);
+      return null;
     }
-  };
+  }, []);
+
+  // Utility function to zoom to a feature
+  const zoomToFeature = useCallback(
+    (feature: Feature) => {
+      if (!map) return;
+
+      const geometry = feature.getGeometry();
+      if (geometry) {
+        map.getView().fit(geometry.getExtent(), {
+          size: map.getSize(),
+          duration: 1000,
+          padding: [20, 20, 20, 20],
+        });
+      }
+    },
+    [map]
+  );
+
+  // Show message function (simplified version)
+  const showMessage = useCallback((title: string, message: string, isError = false) => {
+    // This is a simplified version - in a real app you might want to use a toast library
+    // or integrate with your existing notification system
+    console.log(`${title}: ${message}`);
+    if (isError) {
+      alert(`${title}: ${message}`); // Fallback for error messages
+    }
+  }, []);
+
+  // Handle URL parameters for MyMaps import
+  const handleURLParameters = useCallback(async () => {
+    const myMapsId = urlParameters.MY_MAPS_ID;
+
+    if (myMapsId) {
+      try {
+        const result = await importFromApi(myMapsId);
+
+        if (result.success && result.data) {
+          // Import was successful
+          showMessage("MyMaps Import", "Success! MyMaps imported.");
+
+          // If we have the data, import it
+          if (typeof result.data === "object" && "json" in result.data) {
+            const importResult = result.data as { id: string; json: string };
+            handleMyMapsImport(importResult);
+
+            // Check for feature ID to zoom to specific feature
+            const featureId = urlParameters.MY_MAPS_FEATURE_ID;
+            if (featureId) {
+              // Find the item with the specified feature ID
+              const item = items.find((item) => item.id === featureId);
+
+              if (item) {
+                const feature = getFeatureFromGeoJSON(item.featureGeoJSON);
+                if (feature) {
+                  zoomToFeature(feature);
+                }
+              }
+            }
+          }
+        } else {
+          // Import failed
+          showMessage("MyMaps Import", result.message || "That MyMaps ID was NOT found!", true);
+        }
+      } catch (error) {
+        console.error("Error importing MyMaps:", error);
+        showMessage("MyMaps Import", "Error occurred while importing MyMaps. Please try again.", true);
+      }
+    }
+  }, [urlParameters, importFromApi, items, showMessage, handleMyMapsImport, getFeatureFromGeoJSON, zoomToFeature]);
+
+  // Handle URL parameters after component is loaded
+  useEffect(() => {
+    if (Object.keys(urlParameters).length > 0) {
+      // Add a small delay to ensure component is fully initialized
+      setTimeout(() => {
+        handleURLParameters();
+      }, 100);
+    }
+  }, [urlParameters, handleURLParameters]);
 
   // Handle export to different formats
   const exportToFormat = (format: "KML" | "GeoJSON" | "EsriJSON") => {

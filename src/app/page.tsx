@@ -4,12 +4,17 @@ import { useEffect } from "react";
 import Layout from "@/components/Layout";
 import { useAppStore } from "@/stores/appStore";
 import { useSidebarStore } from "@/stores/sidebarStore";
+import { getAllURLParameters } from "@/utils/helpersUrl";
 
 export default function Home() {
-  const { setAppInfo, setHeaderLoading, setSidebarLoading } = useAppStore();
+  const { setAppInfo, setHeaderLoading, setSidebarLoading, setUrlParameters } = useAppStore();
   const { setThemes, setTools } = useSidebarStore();
 
   useEffect(() => {
+    // Initialize URL parameters from current URL
+    const urlParams = getAllURLParameters();
+    setUrlParameters(urlParams);
+
     // Initialize app info (similar to old app)
     setAppInfo({
       name: "simcoecountywebviewernextjs",
@@ -39,7 +44,7 @@ export default function Home() {
       { id: "search", name: "Search", type: "tool", imageName: "default.png", enabled: true },
       { id: "settings", name: "Settings", type: "tool", imageName: "default.png", enabled: true },
     ]);
-  }, [setAppInfo, setHeaderLoading, setSidebarLoading, setThemes, setTools]);
+  }, [setAppInfo, setHeaderLoading, setSidebarLoading, setThemes, setTools, setUrlParameters]);
 
   return <Layout />;
 }

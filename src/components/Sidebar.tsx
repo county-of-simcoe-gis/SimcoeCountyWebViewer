@@ -7,7 +7,7 @@ import { useSidebarStore } from "@/stores/sidebarStore";
 import { useEventStore } from "@/stores/eventStore";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useCallback } from "react";
 import { lazy } from "react";
 
 // Lazy load tool components
@@ -25,6 +25,16 @@ const TOC = lazy(() => import("@/components/TOC/TOC"));
 
 // Lazy load MyMaps component
 const MyMaps = lazy(() => import("@/components/myMaps/MyMaps"));
+
+// Tab name to index mapping (constant)
+const TAB_MAPPING: Record<string, number> = {
+  layers: 0,
+  tools: 1,
+  mymaps: 2,
+  "my maps": 2,
+  themes: 3,
+  reports: 4,
+};
 
 // Tool mapping for dynamic loading
 const toolComponents: Record<
@@ -67,14 +77,43 @@ const themeComponents: Record<
 };
 
 export default function Sidebar() {
-  const { isOpen, themes, tools, activeTheme, activeTool, activeTab, setActiveTab, activateSidebarItem } = useSidebarStore();
+  const { isOpen, themes, tools, activeTheme, activeTool, activeTab, setActiveTab, activateSidebarItem, openSidebar } = useSidebarStore();
   const { emitSidebarLoaded } = useEventStore();
   const { addLoadedItem } = useMapStore();
   const { setSidebarLoading } = useAppStore();
+  const urlParameters = useAppStore((state) => state.urlParameters);
 
   // State for active components
   const [activeToolComponent, setActiveToolComponent] = useState<React.ReactNode>(null);
   const [activeThemeComponent, setActiveThemeComponent] = useState<React.ReactNode>(null);
+
+  // Function to activate tab by name
+  const activateTab = useCallback(
+    (tabName: string) => {
+      const normalizedTabName = tabName.toLowerCase().trim();
+      const tabIndex = TAB_MAPPING[normalizedTabName];
+
+      if (tabIndex !== undefined) {
+        setActiveTab(tabIndex);
+      } else {
+        console.warn(`Unknown tab name: ${tabName}`);
+      }
+    },
+    [setActiveTab]
+  );
+
+  // Handle URL parameters for tab activation
+  const handleURLParameters = useCallback(() => {
+    const tabNameParameter = urlParameters.TAB;
+    if (tabNameParameter) {
+      // Open sidebar first, then activate the specified tab
+      openSidebar();
+      // Use a small delay to ensure sidebar is open before activating tab
+      setTimeout(() => {
+        activateTab(tabNameParameter);
+      }, 100);
+    }
+  }, [urlParameters.TAB, openSidebar, activateTab]);
 
   useEffect(() => {
     // Mark sidebar as loaded (replaces window.emitter.emit("sidebarLoaded"))
@@ -82,6 +121,13 @@ export default function Sidebar() {
     addLoadedItem("sidebar");
     setSidebarLoading(false);
   }, [emitSidebarLoaded, addLoadedItem, setSidebarLoading]);
+
+  // Handle URL parameters after component is loaded
+  useEffect(() => {
+    if (Object.keys(urlParameters).length > 0) {
+      handleURLParameters();
+    }
+  }, [urlParameters, handleURLParameters]);
 
   const handleTabSelect = (index: number) => {
     setActiveTab(index);

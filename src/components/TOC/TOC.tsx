@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useTOCStore, TOCLayer, TOCLayerGroup } from "../../stores/tocStore";
 import { useAppStore } from "../../stores/appStore";
 import { useEventListener } from "../../hooks/useEventListener";
@@ -39,7 +39,9 @@ export default function TOC({ visible = true }: TOCProps) {
   } = useTOCStore();
 
   const { config } = useAppStore();
+  const urlParameters = useAppStore((state) => state.urlParameters);
   const [initialized, setInitialized] = useState(false);
+  const expandLegendProcessedRef = useRef(false);
 
   // Initialize TOC from config
   useEffect(() => {
@@ -166,6 +168,134 @@ export default function TOC({ visible = true }: TOCProps) {
     // Emit event to open legend
     window.dispatchEvent(new CustomEvent("openLegend"));
   };
+
+  // Handle URL parameters for TOC type, group, and layers
+  const handleURLParameters = useCallback(() => {
+    // Handle TOCTYPE parameter
+    const tocTypeParam = urlParameters.TOCTYPE;
+
+    if (tocTypeParam !== null && tocTypeParam !== undefined) {
+      // Available TOC types for validation
+      const validTocTypes = ["LIST", "FOLDER"];
+
+      // Check if the tocType is valid, convert to uppercase for comparison
+      const upperCaseType = tocTypeParam.toUpperCase();
+
+      if (validTocTypes.includes(upperCaseType)) {
+        const validTocType = upperCaseType as "LIST" | "FOLDER";
+        setTocType(validTocType);
+        // Also save to localStorage to persist the setting
+        localStorage.setItem("TOC_Type", validTocType);
+      }
+    }
+
+    // Handle GROUP and LAYERS parameters
+    const urlGroupName = urlParameters.GROUP;
+    const urlVisibleLayers = urlParameters.LAYERS;
+    const urlExpandLegend = urlParameters.EXPAND_LEGEND;
+
+    if (urlGroupName || urlVisibleLayers || urlExpandLegend) {
+      // Get the current layer groups based on TOC type
+      const currentGroups = tocType === "LIST" ? layerListGroups : layerFolderGroups;
+
+      if (currentGroups.length > 0) {
+        let targetGroup: TOCLayerGroup | null = null;
+
+        if (urlGroupName) {
+          // Find group by label or value
+          targetGroup = currentGroups.find((group) => group.label === urlGroupName || group.value === urlGroupName) || null;
+        }
+
+        // If no specific group found or specified, use current selected/default group
+        if (!targetGroup) {
+          targetGroup = selectedGroup || currentGroups.find((g) => g.defaultGroup) || currentGroups[0];
+        }
+
+        if (targetGroup) {
+          // Set the group as selected
+          setSelectedGroup(targetGroup);
+
+          // Handle visible layers if specified
+          if (urlVisibleLayers) {
+            const visibleLayerNames = urlVisibleLayers.split(",").map((name) => name.trim());
+
+            // Update layer visibility in the target group
+            const updatedLayers = targetGroup.layers.map((layer) => {
+              const shouldBeVisible = visibleLayerNames.includes(layer.tocDisplayName) || visibleLayerNames.includes(layer.name) || visibleLayerNames.includes(layer.displayName || layer.name);
+
+              if (shouldBeVisible !== layer.visible) {
+                // Update layer visibility using the store action
+                updateLayerVisibility(layer.name, targetGroup!.label, shouldBeVisible);
+              }
+
+              return layer;
+            });
+
+            // Store the visible layers list in the group for reference
+            const updatedGroup = {
+              ...targetGroup,
+              visibleLayers: visibleLayerNames,
+              layers: updatedLayers,
+            };
+
+            // Update the group with the new layer visibility
+            setSelectedGroup(updatedGroup);
+          }
+
+          // Handle EXPAND_LEGEND parameter (only process once to avoid loops)
+          if (urlExpandLegend && urlExpandLegend.toUpperCase() === "TRUE" && !expandLegendProcessedRef.current) {
+            // Expand legends for all layers in the target group
+            targetGroup.layers.forEach((layer) => {
+              if (!layer.showLegend) {
+                // Toggle the legend to show it
+                toggleLayerLegend(layer.name, targetGroup!.label);
+              }
+            });
+            // Mark as processed to prevent repeated execution
+            expandLegendProcessedRef.current = true;
+          }
+        }
+      }
+    }
+  }, [
+    urlParameters.TOCTYPE,
+    urlParameters.GROUP,
+    urlParameters.LAYERS,
+    urlParameters.EXPAND_LEGEND,
+    setTocType,
+    tocType,
+    layerListGroups,
+    layerFolderGroups,
+    selectedGroup,
+    setSelectedGroup,
+    updateLayerVisibility,
+    toggleLayerLegend,
+  ]);
+
+  // Handle URL parameters after TOC is initialized
+  useEffect(() => {
+    if (initialized && Object.keys(urlParameters).length > 0) {
+      // Add a small delay to ensure TOC is fully loaded and groups are available
+      setTimeout(() => {
+        handleURLParameters();
+      }, 200); // Slightly longer delay to ensure groups are loaded
+    }
+  }, [initialized, urlParameters, handleURLParameters]);
+
+  // Reset expandLegendProcessed when URL parameters change (for new page loads)
+  useEffect(() => {
+    expandLegendProcessedRef.current = false;
+  }, [urlParameters.EXPAND_LEGEND]);
+
+  // Also handle URL parameters when groups change (for dynamic loading)
+  useEffect(() => {
+    if (initialized && (layerListGroups.length > 0 || layerFolderGroups.length > 0) && Object.keys(urlParameters).length > 0) {
+      // Handle URL parameters when groups become available
+      setTimeout(() => {
+        handleURLParameters();
+      }, 100);
+    }
+  }, [initialized, layerListGroups.length, layerFolderGroups.length, urlParameters, handleURLParameters]);
 
   // Get current layer groups
   const currentGroups = tocType === "LIST" ? layerListGroups : layerFolderGroups;

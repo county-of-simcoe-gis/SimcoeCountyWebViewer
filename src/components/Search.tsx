@@ -4,9 +4,9 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { useConfig } from "@/hooks/useConfig";
 import { getJSON } from "@/utils/helpersHttp";
-import { getURLParameter } from "@/utils/helpersUrl";
 import { appendToStorage, getItemsFromStorage } from "@/utils/storage";
 import { useEventStore } from "@/stores/eventStore";
+import { useAppStore } from "@/stores/appStore";
 
 interface SearchType {
   label: string;
@@ -42,6 +42,7 @@ interface SearchProps {
 const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeholder = "Search...", disabled = false }) => {
   const { config } = useConfig();
   const { emit } = useEventStore();
+  const urlParameters = useAppStore((state) => state.urlParameters);
 
   const [searchValue, setSearchValue] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -88,8 +89,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
     // Set municipality from config or URL parameter
     let muni: string | undefined = config.municipality as string | undefined;
     if (!muni) {
-      const urlParams = new URLSearchParams(window.location.search);
-      muni = urlParams.get("MUNI") || undefined;
+      muni = urlParameters.MUNI || undefined;
     }
     if (muni) setMunicipality(muni);
 
@@ -121,7 +121,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
     };
 
     loadSearchTypes();
-  }, [config]);
+  }, [config, urlParameters]);
 
   // Enhanced search results handler
   const searchResultsHandler = useCallback(
@@ -215,8 +215,8 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
   // Handle initial search from URL parameters
   useEffect(() => {
     const handleInitialSearch = () => {
-      const search = getURLParameter("q", true, true);
-      const searchType = getURLParameter("qt", true, true);
+      const search = urlParameters.q;
+      const searchType = urlParameters.qt;
 
       if (search) {
         setSearchValue(search);
@@ -231,7 +231,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
     if (searchTypes.length > 0) {
       handleInitialSearch();
     }
-  }, [searchTypes, selectedType, performSearch]);
+  }, [searchTypes, selectedType, performSearch, urlParameters]);
 
   // Debounced search
   useEffect(() => {

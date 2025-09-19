@@ -14,6 +14,12 @@ import Map from "ol/Map";
 import View from "ol/View";
 import { defaults as defaultInteractions, MouseWheelZoom, PinchRotate, DragRotate } from "ol/interaction";
 import { ScaleLine, Attribution } from "ol/control";
+import { Feature } from "ol";
+import { Point } from "ol/geom";
+import { Vector as VectorLayer } from "ol/layer";
+import { Vector as VectorSource } from "ol/source";
+import { Style, Icon } from "ol/style";
+import { fromLonLat } from "ol/proj";
 // Import zone-based control system
 import { createZoneControlsFromConfig, ControlConfig } from "@/components/map/controls/MapControlZones";
 
@@ -24,6 +30,9 @@ import BasemapSwitcher from "@/components/BasemapSwitcher";
 
 // Import config
 import config from "@/config.json";
+
+// Import utilities
+import { getJSON } from "@/utils/helpersHttp";
 
 // Define dynamic imports for control components
 const dynamicControlImports = {
@@ -61,9 +70,11 @@ export default function MapContainer() {
   const { emitMapLoaded } = useEventStore();
   const { map, setMap, addLoadedItem, setMapControls, setCurrentExtent, setCurrentZoom, setCurrentCenter, initExtentHistory, saveCurrentExtentToHistory } = useMapStore();
   const { setMapLoading } = useAppStore();
+  const urlParameters = useAppStore((state) => state.urlParameters);
 
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<Map | null>(null);
+  const identifyIconLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
@@ -179,6 +190,16 @@ export default function MapContainer() {
       mapInstance.getView().fit(extent, { size: mapInstance.getSize() });
     }
 
+    // Create identify icon layer
+    const identifyIconLayer = new VectorLayer({
+      source: new VectorSource(),
+      style: undefined, // Style will be set per feature
+      zIndex: 10000, // High z-index to ensure it appears on top
+    });
+
+    identifyIconLayerRef.current = identifyIconLayer;
+    mapInstance.addLayer(identifyIconLayer);
+
     // Store map instance and configuration
     mapInstanceRef.current = mapInstance;
     setMap(mapInstance);
@@ -195,8 +216,171 @@ export default function MapContainer() {
         mapInstanceRef.current.setTarget(undefined);
         mapInstanceRef.current = null;
       }
+      identifyIconLayerRef.current = null;
     };
   }, [setMap, setMapControls, addLoadedItem, setMapLoading, emitMapLoaded, setCurrentExtent, setCurrentZoom, setCurrentCenter, initExtentHistory, saveCurrentExtentToHistory]);
+
+  // Utility functions for URL parameter handling
+  const flashPoint = useCallback((coords: number[]) => {
+    // Simple flash animation by temporarily adding a feature with animation
+    // This is a simplified version - in the original it might use more complex animations
+    const flashFeature = new Feature({
+      geometry: new Point(coords),
+    });
+
+    const flashStyle = new Style({
+      image: new Icon({
+        anchor: [0.5, 0.5],
+        src: "/images/map-marker-light-blue.png", // Fallback to a basic marker
+        scale: 1.5,
+      }),
+    });
+
+    flashFeature.setStyle(flashStyle);
+
+    if (identifyIconLayerRef.current) {
+      identifyIconLayerRef.current.getSource()?.addFeature(flashFeature);
+
+      // Remove flash feature after animation
+      setTimeout(() => {
+        identifyIconLayerRef.current?.getSource()?.removeFeature(flashFeature);
+      }, 1000);
+    }
+  }, []);
+
+  const zoomToFeature = useCallback(
+    (feature: Feature) => {
+      if (!map) return;
+
+      const geometry = feature.getGeometry();
+      if (geometry) {
+        map.getView().fit(geometry.getExtent(), {
+          size: map.getSize(),
+          duration: 1000,
+          padding: [20, 20, 20, 20],
+        });
+      }
+    },
+    [map]
+  );
+
+  const getFeatureFromGeoJSON = useCallback((geoJsonFeature: { geometry: { coordinates: number[] }; properties?: Record<string, unknown> }) => {
+    const coordinates = geoJsonFeature.geometry.coordinates;
+    const feature = new Feature({
+      geometry: new Point(coordinates),
+      properties: geoJsonFeature.properties,
+    });
+    return feature;
+  }, []);
+
+  // Handle URL parameters for zooming and positioning
+  const handleURLParameters = useCallback(() => {
+    if (!map || !identifyIconLayerRef.current) return;
+
+    // Get URL parameters
+    const x = urlParameters.X;
+    const y = urlParameters.Y;
+    const sr = urlParameters.SR || "WEB";
+    const id = urlParameters.ID;
+
+    // Get extent parameters
+    const xmin = urlParameters.XMIN;
+    const ymin = urlParameters.YMIN;
+    const xmax = urlParameters.XMAX;
+    const ymax = urlParameters.YMAX;
+
+    // Get NG911ID parameter
+    const urlNG911ID = urlParameters.NG911ID;
+
+    // Handle NG911ID lookup
+    if (urlNG911ID) {
+      const ng911UrlTemplate = (mainURL: string, id: string) => `${mainURL}&cql_filter=NGUID='${id}'`;
+      const ng911Url = "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Civic_Address_Point_Lookup&outputFormat=application/json";
+      const ng911IDUrl = ng911UrlTemplate(ng911Url, urlNG911ID);
+
+      getJSON<{ features?: Array<{ geometry: { coordinates: number[] }; properties?: Record<string, unknown> }> }>(ng911IDUrl)
+        .then((result) => {
+          if (result?.features?.[0]) {
+            const feature = getFeatureFromGeoJSON(result.features[0]);
+            const iconStyle = new Style({
+              image: new Icon({
+                anchor: [0.5, 1],
+                src: "/images/map-marker-light-blue.png", // Using a fallback icon
+              }),
+            });
+
+            feature.setStyle(iconStyle);
+            identifyIconLayerRef.current?.getSource()?.clear();
+            identifyIconLayerRef.current?.getSource()?.addFeature(feature);
+            zoomToFeature(feature);
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching NG911ID data:", error);
+        });
+
+      return; // Exit early for NG911ID handling
+    }
+
+    // Handle coordinate zoom (X, Y)
+    if (x && y) {
+      let coords = [parseFloat(x), parseFloat(y)];
+
+      // Handle coordinate system transformation
+      if (sr && sr.toUpperCase() === "WGS84") {
+        coords = fromLonLat([Math.round(parseFloat(x) * 100000) / 100000, Math.round(parseFloat(y) * 100000) / 100000]);
+      }
+
+      // Add marker if ID is specified or onCoordinateZoomID is configured
+      if (id === "true" || (config as Record<string, unknown>).onCoordinateZoomID) {
+        const iconFeature = new Feature({
+          geometry: new Point(coords),
+        });
+
+        const iconStyle = new Style({
+          image: new Icon({
+            anchor: [0.5, 1],
+            src: "/images/map-marker-light-blue.png", // Using a fallback icon
+          }),
+        });
+
+        iconFeature.setStyle(iconStyle);
+        identifyIconLayerRef.current.getSource()?.clear();
+        identifyIconLayerRef.current.getSource()?.addFeature(iconFeature);
+      }
+
+      // Center map on coordinates
+      map.getView().setCenter(coords);
+      map.getView().setZoom(config.defaultZoom || 17);
+
+      // Flash the point after a delay
+      setTimeout(() => {
+        flashPoint(coords);
+      }, 1000);
+
+      // Handle extent zoom (XMIN, YMIN, XMAX, YMAX)
+    } else if (xmin && ymin && xmax && ymax) {
+      const extent = [parseFloat(xmin), parseFloat(ymin), parseFloat(xmax), parseFloat(ymax)];
+
+      map.getView().fit(extent, {
+        size: map.getSize(),
+        duration: 1000,
+      });
+    }
+
+    // Emit map parameters complete event
+    // emitMapLoaded(); // This might be redundant since we already emit this
+  }, [map, urlParameters, flashPoint, zoomToFeature, getFeatureFromGeoJSON]);
+
+  // Handle URL parameters after map is loaded
+  useEffect(() => {
+    if (map && Object.keys(urlParameters).length > 0) {
+      // Add a small delay to ensure map is fully initialized
+      setTimeout(() => {
+        handleURLParameters();
+      }, 100);
+    }
+  }, [map, urlParameters, handleURLParameters]);
 
   // Update map size when sidebar state changes
   useEffect(() => {
