@@ -3,20 +3,20 @@
  * Uses server-side API for accurate geometric buffering, same as old app
  */
 
-import { Geometry, Point, LineString, Polygon, Circle } from 'ol/geom';
-import { fromCircle } from 'ol/geom/Polygon';
-import GeoJSON from 'ol/format/GeoJSON';
-import proj4 from 'proj4';
-import { register } from 'ol/proj/proj4';
-import { postJSON } from '@/utils/helpersHttp';
+import { Geometry, Point, LineString, Polygon, Circle } from "ol/geom";
+import { fromCircle } from "ol/geom/Polygon";
+import GeoJSON from "ol/format/GeoJSON";
+import proj4 from "proj4";
+import { register } from "ol/proj/proj4";
+import { getAxiosClient } from "@/lib/axiosInstance";
 
 // Register NAD83 UTM Zone 17 projection (same as old app)
-proj4.defs('EPSG:26917', '+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs');
+proj4.defs("EPSG:26917", "+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs");
 register(proj4);
 
 // NAD83 UTM Zone 17 projection
-const nad83Proj = 'EPSG:26917';
-const webMercatorProj = 'EPSG:3857';
+const nad83Proj = "EPSG:26917";
+const webMercatorProj = "EPSG:3857";
 
 /**
  * Convert OpenLayers geometry to GeoJSON string (geometry only, same as old app)
@@ -37,73 +37,70 @@ export const getGeometryFromGeoJSON = (geoJSON: string): Geometry => {
 /**
  * Create a buffered geometry using server-side API (same approach as old app)
  * @param geometry - OpenLayers geometry to buffer
- * @param distanceMeters - Buffer distance in meters  
+ * @param distanceMeters - Buffer distance in meters
  * @param callback - Callback function that receives the buffered geometry
  */
-export const bufferGeometry = async (
-  geometry: Geometry,
-  distanceMeters: number,
-  callback: (bufferedGeometry: Geometry) => void
-): Promise<void> => {
+export const bufferGeometry = async (geometry: Geometry, distanceMeters: number, callback: (bufferedGeometry: Geometry) => void): Promise<void> => {
   try {
     // Get config for API URL
     let apiUrl: string;
     try {
       // Try to get config from global window object (like old app)
       const windowConfig = (window as { config?: { apiUrl?: string } }).config;
-      apiUrl = windowConfig?.apiUrl;
-      
+      apiUrl = windowConfig?.apiUrl || "";
+
       // Fallback: try to read from config file
       if (!apiUrl) {
-        const response = await fetch('/config.json');
-        const config = await response.json();
-        apiUrl = config.apiUrl;
+        const axiosClient = getAxiosClient("/config.json");
+        const response = await axiosClient.get<{ apiUrl?: string }>("/config.json");
+        apiUrl = response.data.apiUrl || "";
       }
     } catch {
-      console.error('Could not load config, using fallback API URL');
-      apiUrl = 'https://opengis.simcoe.ca/api_v2/';
+      console.error("Could not load config, using fallback API URL");
+      apiUrl = "https://opengis.simcoe.ca/api_v2/";
     }
 
     if (!apiUrl) {
-      console.error('No API URL available, falling back to client-side buffering');
+      console.error("No API URL available, falling back to client-side buffering");
       fallbackClientSideBuffer(geometry, distanceMeters, callback);
       return;
     }
 
-    const url = apiUrl + 'public/map/geometry/buffer/';
+    const url = apiUrl + "public/map/geometry/buffer/";
 
     // Project geometry to UTM NAD83 for accuracy (same as old app)
     const utmGeometry = geometry.clone();
     utmGeometry.transform(webMercatorProj, nad83Proj);
-    
+
     // Convert to GeoJSON
     const geoJSON = getGeoJSONFromGeometry(utmGeometry);
-    
+
     // Prepare API request payload
     const requestData = {
       geoJSON: geoJSON,
       distance: distanceMeters,
-      srid: '26917'
+      srid: "26917",
     };
 
     // Make API call
-    const result = await postJSON<{ geojson: string }>(url, requestData);
+    const axiosClient = getAxiosClient(url);
+    const response = await axiosClient.post<{ geojson: string }>(url, requestData);
+    const result = response.data;
 
     // Convert result back to geometry and transform to Web Mercator
     let geoJsonData = result.geojson;
-    
+
     // Handle case where server returns object instead of string
-    if (typeof geoJsonData === 'object') {
+    if (typeof geoJsonData === "object") {
       geoJsonData = JSON.stringify(geoJsonData);
     }
-    
+
     const bufferedGeometry = getGeometryFromGeoJSON(geoJsonData);
     bufferedGeometry.transform(nad83Proj, webMercatorProj);
-    
-    callback(bufferedGeometry);
 
+    callback(bufferedGeometry);
   } catch (error) {
-    console.error('Server-side buffer error, falling back to client-side:', error);
+    console.error("Server-side buffer error, falling back to client-side:", error);
     // Fallback to client-side buffering if server fails
     fallbackClientSideBuffer(geometry, distanceMeters, callback);
   }
@@ -112,11 +109,7 @@ export const bufferGeometry = async (
 /**
  * Fallback client-side buffering (improved from original)
  */
-const fallbackClientSideBuffer = (
-  geometry: Geometry,
-  distanceMeters: number,
-  callback: (bufferedGeometry: Geometry) => void
-): void => {
+const fallbackClientSideBuffer = (geometry: Geometry, distanceMeters: number, callback: (bufferedGeometry: Geometry) => void): void => {
   try {
     let bufferedGeometry: Geometry;
 
@@ -129,17 +122,17 @@ const fallbackClientSideBuffer = (
       // For lines, use simplified buffering (still not perfect but better than before)
       // A proper line buffer would need complex geometric algorithms
       const coords = geometry.getCoordinates();
-      
+
       if (coords.length < 2) {
         bufferedGeometry = geometry;
       } else {
         // Create a simple buffer by creating perpendicular offsets at each point
         const leftSide: number[][] = [];
         const rightSide: number[][] = [];
-        
+
         for (let i = 0; i < coords.length; i++) {
           let perpVector: [number, number];
-          
+
           if (i === 0) {
             // First point - use direction to next point
             const dx = coords[i + 1][0] - coords[i][0];
@@ -157,29 +150,23 @@ const fallbackClientSideBuffer = (
             const dx1 = coords[i][0] - coords[i - 1][0];
             const dy1 = coords[i][1] - coords[i - 1][1];
             const length1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
-            
+
             const dx2 = coords[i + 1][0] - coords[i][0];
             const dy2 = coords[i + 1][1] - coords[i][1];
             const length2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
-            
+
             const avgDx = dx1 / length1 + dx2 / length2;
             const avgDy = dy1 / length1 + dy2 / length2;
             const avgLength = Math.sqrt(avgDx * avgDx + avgDy * avgDy);
-            
+
             perpVector = avgLength > 0 ? [-avgDy / avgLength, avgDx / avgLength] : [0, 1];
           }
-          
-          leftSide.push([
-            coords[i][0] + perpVector[0] * distanceMeters,
-            coords[i][1] + perpVector[1] * distanceMeters
-          ]);
-          
-          rightSide.push([
-            coords[i][0] - perpVector[0] * distanceMeters,
-            coords[i][1] - perpVector[1] * distanceMeters
-          ]);
+
+          leftSide.push([coords[i][0] + perpVector[0] * distanceMeters, coords[i][1] + perpVector[1] * distanceMeters]);
+
+          rightSide.push([coords[i][0] - perpVector[0] * distanceMeters, coords[i][1] - perpVector[1] * distanceMeters]);
         }
-        
+
         // Create polygon by connecting left side, then right side in reverse
         const bufferCoords = [...leftSide, ...rightSide.reverse(), leftSide[0]];
         bufferedGeometry = new Polygon([bufferCoords]);
@@ -188,22 +175,19 @@ const fallbackClientSideBuffer = (
       // For polygons, expand outward (simplified approach)
       const coords = geometry.getCoordinates()[0]; // Get exterior ring
       const centroid = geometry.getInteriorPoint().getCoordinates();
-      
-      const bufferedCoords = coords.map(coord => {
+
+      const bufferedCoords = coords.map((coord) => {
         const dx = coord[0] - centroid[0];
         const dy = coord[1] - centroid[1];
         const distance = Math.sqrt(dx * dx + dy * dy);
-        
+
         if (distance > 0) {
           const factor = (distance + distanceMeters) / distance;
-          return [
-            centroid[0] + dx * factor,
-            centroid[1] + dy * factor
-          ];
+          return [centroid[0] + dx * factor, centroid[1] + dy * factor];
         }
         return coord;
       });
-      
+
       bufferedGeometry = new Polygon([bufferedCoords]);
     } else if (geometry instanceof Circle) {
       // For circles, just increase the radius
@@ -215,10 +199,10 @@ const fallbackClientSideBuffer = (
       // Fallback for other geometry types
       bufferedGeometry = geometry;
     }
-    
+
     callback(bufferedGeometry);
   } catch (error) {
-    console.error('Client-side buffer error:', error);
+    console.error("Client-side buffer error:", error);
     callback(geometry);
   }
 };
@@ -229,19 +213,19 @@ const fallbackClientSideBuffer = (
 export const convertToMeters = (distance: number, units: string): number => {
   const value = parseFloat(distance.toString());
   if (isNaN(value)) return 0;
-  
+
   switch (units) {
-    case 'meters':
+    case "meters":
       return value;
-    case 'kilometers':
+    case "kilometers":
       return value * 1000;
-    case 'miles':
+    case "miles":
       return value * 1609.34;
-    case 'feet':
+    case "feet":
       return value / 3.281;
-    case 'yards':
+    case "yards":
       return value * 0.9144;
-    case 'nauticalMiles':
+    case "nauticalMiles":
       return value * 1852;
     default:
       return value;

@@ -1,7 +1,19 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
+  output: "standalone",
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "*.simcoe.ca",
+      },
+      {
+        protocol: "http",
+        hostname: "*.simcoe.ca",
+      },
+    ],
+  },
   eslint: {
     // Suppress ESLint warnings during build (use with caution)
     ignoreDuringBuilds: true,

@@ -14,7 +14,7 @@ export default function Header() {
   const { toggleSidebar } = useSidebarStore();
   const { emitHeaderLoaded } = useEventStore();
   const { addLoadedItem } = useMapStore();
-  const { setHeaderLoading } = useAppStore();
+  const { setHeaderLoading, config } = useAppStore();
 
   useEffect(() => {
     // Mark header as loaded (replaces window.emitter.emit("headerLoaded"))
@@ -30,6 +30,20 @@ export default function Header() {
 
   const handleBurgerClick = () => {
     toggleSidebar();
+  };
+
+  // Get logo image from config, with fallback
+  const getLogoImage = () => {
+    if (config?.headerLogoImageName) {
+      // If the config value already includes a path, use it as-is
+      if (config.headerLogoImageName.startsWith("/") || config.headerLogoImageName.startsWith("http")) {
+        return config.headerLogoImageName;
+      }
+      // Otherwise, prepend the /images/ path
+      return `/images/${config.headerLogoImageName}`;
+    }
+    // Fallback to original logo
+    return "/images/logo.png";
   };
 
   return (
@@ -53,7 +67,7 @@ export default function Header() {
 
       {/* Logo */}
       <div className="flex items-end pl-2 w-[111px]">
-        <Image src="/images/logo.png" alt="Simcoe County" width={111} height={40} className="max-w-full max-h-full" />
+        <Image src={getLogoImage()} alt={config?.title || "Simcoe County"} width={111} height={40} className="max-w-full max-h-full w-auto h-auto" />
       </div>
 
       {/* Search Container - takes remaining space */}

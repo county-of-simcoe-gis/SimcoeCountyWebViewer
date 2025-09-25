@@ -51,6 +51,7 @@ import {
   GroupedLayerOptions,
 } from "./types";
 import { FeatureHelpers } from "./FeatureHelpers";
+import { getAxiosClient } from "@/lib/axiosInstance";
 
 export class LayerHelpers {
   /**
@@ -392,14 +393,10 @@ export class LayerHelpers {
           if (rootPath) {
             const styleUrl = rootPath.startsWith("/") ? rootPath : "/" + rootPath;
 
-            fetch(styleUrl)
+            const axiosClient = getAxiosClient(styleUrl);
+            axiosClient.get(styleUrl)
               .then((response) => {
-                if (!response.ok) {
-                  throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                return response.json();
-              })
-              .then((glStyle) => {
+                const glStyle = response.data;
                 // Patch Esri VectorTileServer styles: add "tiles" template when only "url" provided
                 if (glStyle.sources) {
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any

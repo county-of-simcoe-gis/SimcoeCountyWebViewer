@@ -3,6 +3,7 @@
   "mapId": "land-values",
   "headerLogoImageName": "logo.png",
   "title": "Interactive Map - County of Simcoe (GIS)",
+  "description": "Interactive web mapping application for Simcoe County GIS data",
   "favicon": "simcoe_favicon.ico",
   "originUrl": "https://opengis.simcoe.ca",
   "feedbackUrl": "https://opengis.simcoe.ca/feedback",

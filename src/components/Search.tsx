@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { useConfig } from "@/hooks/useConfig";
-import { getJSON } from "@/utils/helpersHttp";
+import { getAxiosClient } from "@/lib/axiosInstance";
 import { appendToStorage, getItemsFromStorage } from "@/utils/storage";
 import { useEventStore } from "@/stores/eventStore";
 import { useAppStore } from "@/stores/appStore";
@@ -96,7 +96,9 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
     // Load search types
     const loadSearchTypes = async () => {
       try {
-        const result = await getJSON<string[]>(getSearchTypesURL());
+        const axiosClient = getAxiosClient(getSearchTypesURL());
+        const response = await axiosClient.get<string[]>(getSearchTypesURL());
+        const result = response.data;
         const types: SearchType[] = [
           { label: "All", value: "All" },
           ...result.map((type) => ({ label: type, value: type })),
@@ -197,7 +199,9 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
       try {
         const limit = maxSearchLimit; // Always use max limit
         const url = getSearchURL(searchText, type, municipality, limit);
-        const results = await getJSON<SearchResult[]>(url);
+        const axiosClient = getAxiosClient(url);
+        const response = await axiosClient.get<SearchResult[]>(url);
+        const results = response.data;
 
         if (results) {
           searchResultsHandler(results);
@@ -316,7 +320,9 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
     } else if (result.location_id) {
       // Handle location-based result
       try {
-        const locationInfo = await getJSON<SearchResult>(getSearchInfoURL(result.location_id));
+        const locationAxiosClient = getAxiosClient(getSearchInfoURL(result.location_id));
+        const locationResponse = await locationAxiosClient.get<SearchResult>(getSearchInfoURL(result.location_id));
+        const locationInfo = locationResponse.data;
         if (locationInfo.geojson) {
           // Use the SearchZoom handlers if available
           console.log("Search: Attempting to call handleLocationResult", locationInfo);

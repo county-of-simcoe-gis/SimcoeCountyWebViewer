@@ -655,15 +655,20 @@ export const useTOCStore = create<TOCState>()(
     fetchLayerLegendFromRest: async (layer: TOCLayer, group: TOCLayerGroup) => {
       try {
         if (layer.metadataUrl) {
-          const response = await fetch(layer.metadataUrl);
-          if (response.ok) {
-            const metadata = await response.json();
+          const { getAxiosClient } = await import("@/lib/axiosInstance");
+          const axiosClient = getAxiosClient(layer.metadataUrl);
+
+          try {
+            const response = await axiosClient.get(layer.metadataUrl);
+            const metadata = response.data;
 
             // Check if there's style information in the metadata
             if (metadata.defaultStyle && metadata.defaultStyle.href) {
-              const styleResponse = await fetch(metadata.defaultStyle.href + ".json");
-              if (styleResponse.ok) {
-                const styleData = await styleResponse.json();
+              try {
+                const { getAxiosClient: getStyleAxiosClient } = await import("@/lib/axiosInstance");
+                const styleAxiosClient = getStyleAxiosClient(metadata.defaultStyle.href + ".json");
+                const styleResponse = await styleAxiosClient.get(metadata.defaultStyle.href + ".json");
+                const styleData = styleResponse.data;
 
                 // Update layer with legend object
                 set((state) => {
@@ -685,8 +690,12 @@ export const useTOCStore = create<TOCState>()(
                   }
                 });
                 return;
+              } catch (styleError) {
+                console.error("Error fetching style data:", styleError);
               }
             }
+          } catch (metadataError) {
+            console.error("Error fetching metadata:", metadataError);
           }
         }
 

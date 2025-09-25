@@ -1,0 +1,35 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "windows", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model TblMymaps {
+  id           String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  json         String?   @db.Text
+  date_created DateTime? @db.Date
+
+  @@map("tbl_mymaps")
+}
+
+// Maps are now accessed via stored procedures usp_get_map_settings and usp_get_all_maps
+// No direct table model needed as we use raw SQL queries
+
+model TblSecurityRoles {
+  id                 Int     @id @default(autoincrement())
+  name               String  @db.VarChar
+  azure_ad_group_id  String? @db.VarChar
+  description        String? @db.VarChar
+  azure_tenant_id    String? @db.VarChar
+  azure_app_id       String? @db.VarChar
+
+  @@index([azure_tenant_id, azure_app_id], name: "idx_usp_get_security_roles")
+  @@map("tbl_security_roles")
+}

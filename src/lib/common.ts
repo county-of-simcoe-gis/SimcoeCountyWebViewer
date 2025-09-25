@@ -14,7 +14,7 @@ export function getSqlDateString(dt: Date): string {
   const hours = pad2(dt.getHours());
   const minutes = pad2(dt.getMinutes());
   const seconds = pad2(dt.getSeconds());
-  
+
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
@@ -26,7 +26,7 @@ export function getSqlDateString(dt: Date): string {
 export function pad2(number: number): string {
   let str = number.toString();
   while (str.length < 2) {
-    str = '0' + str;
+    str = "0" + str;
   }
   return str;
 }
@@ -41,6 +41,19 @@ export function isHostAllowed(host?: string): boolean {
     return false;
   }
 
-  const allowedOrigins = process.env.APP_ALLOWED_ORIGINS?.split(',') || ['localhost'];
+  const allowedOrigins = process.env.APP_ALLOWED_ORIGINS?.split(",") || ["localhost"];
   return allowedOrigins.includes(host);
+}
+
+/**
+ * Validates if a Bearer token exists in the Authorization header
+ * @param request NextRequest object
+ * @returns Bearer token string or null if not found
+ */
+export function extractBearerToken(request: Request): string | null {
+  const authHeader = request.headers.get("authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return null;
+  }
+  return authHeader.substring(7);
 }

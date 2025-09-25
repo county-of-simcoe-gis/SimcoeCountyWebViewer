@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { getAxiosClient } from "@/lib/axiosInstance";
 
 /**
  * Stand-alone OpenLayers map that demonstrates a working ESRI vector-tile style
@@ -18,8 +19,9 @@ export default function OLMapStandalone() {
     async function init() {
       const { apply } = await import("ol-mapbox-style");
 
-      const styleResponse = await fetch("/basemap/ESRI_Canada_Topographic.json");
-      const styleJson = await styleResponse.json();
+      const axiosClient = getAxiosClient("/basemap/ESRI_Canada_Topographic.json");
+      const styleResponse = await axiosClient.get("/basemap/ESRI_Canada_Topographic.json");
+      const styleJson = styleResponse.data;
 
       // Ensure the ArcGIS source has full tile template
       const esriSrc = styleJson.sources?.esri as { url?: string; tiles?: string[] } | undefined;

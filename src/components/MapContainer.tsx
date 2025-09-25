@@ -32,7 +32,7 @@ import BasemapSwitcher from "@/components/BasemapSwitcher";
 import config from "@/config.json";
 
 // Import utilities
-import { getJSON } from "@/utils/helpersHttp";
+import { getAxiosClient } from "@/lib/axiosInstance";
 
 // Define dynamic imports for control components
 const dynamicControlImports = {
@@ -298,8 +298,11 @@ export default function MapContainer() {
       const ng911Url = "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Civic_Address_Point_Lookup&outputFormat=application/json";
       const ng911IDUrl = ng911UrlTemplate(ng911Url, urlNG911ID);
 
-      getJSON<{ features?: Array<{ geometry: { coordinates: number[] }; properties?: Record<string, unknown> }> }>(ng911IDUrl)
-        .then((result) => {
+      const axiosClient = getAxiosClient(ng911IDUrl);
+      axiosClient
+        .get<{ features?: Array<{ geometry: { coordinates: number[] }; properties?: Record<string, unknown> }> }>(ng911IDUrl)
+        .then((response) => {
+          const result = response.data;
           if (result?.features?.[0]) {
             const feature = getFeatureFromGeoJSON(result.features[0]);
             const iconStyle = new Style({
@@ -496,6 +499,12 @@ export default function MapContainer() {
   // Define control configuration - memoized to prevent recreation on every render
   const controlsConfig: Record<string, ControlConfig> = useMemo(
     () => ({
+      gitHubButton: {
+        component: GitHubButtonWrapper,
+        zone: "top-left",
+        order: 1,
+        enabled: config.controls?.gitHubButton ?? true,
+      },
       zoomControls: {
         component: ZoomControlsWrapper,
         zone: "top-left",
@@ -527,16 +536,10 @@ export default function MapContainer() {
         enabled: config.controls?.showGrid ?? false,
       },
 
-      gitHubButton: {
-        component: GitHubButtonWrapper,
-        zone: "top-right",
-        order: 1,
-        enabled: config.controls?.gitHubButton ?? true,
-      },
       basemap: {
         component: BasemapSwitcher,
         zone: "top-right",
-        order: 2,
+        order: 1,
         enabled: config.controls?.basemap ?? true,
       },
 

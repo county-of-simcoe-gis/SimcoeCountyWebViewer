@@ -1,6 +1,5 @@
-import { Postgres } from './database';
-import { getSqlDateString } from './common';
-import type { MyMapsItem, DrawType } from '@/stores/myMapsStore';
+import { prisma } from "./prisma";
+import type { MyMapsItem, DrawType } from "@/stores/myMapsStore";
 
 /**
  * Interface for MyMaps save data structure
@@ -15,9 +14,9 @@ export interface MyMapsSaveData {
  * Interface for MyMaps database record
  */
 export interface MyMapsRecord {
-  id: number;
-  json: string;
-  date_created: string;
+  id: string;
+  json: string | null;
+  date_created: Date | null;
 }
 
 /**
@@ -29,21 +28,19 @@ export class MyMapsService {
    * @param json The MyMaps JSON data to store
    * @returns Promise resolving to the inserted record ID
    */
-  static async insertMyMaps(json: MyMapsSaveData): Promise<number> {
-    // Format the date
-    const dtString = getSqlDateString(new Date());
-
-    // Build SQL
-    const insertSql = `INSERT INTO public.tbl_mymaps (json, date_created) VALUES ($1, $2) RETURNING id;`;
-    const values = [JSON.stringify(json), dtString];
-
-    // Insert record
-    const pg = new Postgres({ dbName: 'tabular' });
+  static async insertMyMaps(json: MyMapsSaveData): Promise<string> {
     try {
-      const id = await pg.insertWithReturnId(insertSql, values);
-      return id;
-    } finally {
-      await pg.close();
+      const record = await prisma.tblMymaps.create({
+        data: {
+          json: JSON.stringify(json),
+          date_created: new Date(),
+        },
+      });
+
+      return record.id;
+    } catch (error) {
+      console.error("Error inserting MyMaps record:", error);
+      throw error;
     }
   }
 
@@ -53,15 +50,25 @@ export class MyMapsService {
    * @returns Promise resolving to the MyMaps record or undefined if not found
    */
   static async getMyMaps(id: string): Promise<MyMapsRecord | undefined> {
-    const sql = `SELECT * FROM public.tbl_mymaps WHERE id = $1`;
-    const values = [id];
-
-    const pg = new Postgres({ dbName: 'tabular' });
     try {
-      const result = await pg.selectFirstWithValues(sql, values);
-      return result as MyMapsRecord | undefined;
-    } finally {
-      await pg.close();
+      const record = await prisma.tblMymaps.findUnique({
+        where: {
+          id: id,
+        },
+      });
+
+      if (!record) {
+        return undefined;
+      }
+
+      return {
+        id: record.id,
+        json: record.json,
+        date_created: record.date_created,
+      };
+    } catch (error) {
+      console.error("Error fetching MyMaps record:", error);
+      throw error;
     }
   }
 }
