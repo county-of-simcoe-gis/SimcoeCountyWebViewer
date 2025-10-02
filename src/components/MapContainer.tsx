@@ -536,6 +536,12 @@ export default function MapContainer() {
         enabled: config.controls?.showGrid ?? false,
       },
 
+      // gitHubButton: {
+      //   component: GitHubButtonWrapper,
+      //   zone: "top-right",
+      //   order: 1,
+      //   enabled: config.controls?.gitHubButton ?? true,
+      // },
       basemap: {
         component: BasemapSwitcher,
         zone: "top-right",

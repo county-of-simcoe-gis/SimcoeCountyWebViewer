@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import Image from "next/image";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
 import { LayerHelpers, OL_DATA_TYPES } from "@/utils/openlayers";
@@ -11,6 +10,8 @@ import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
 import "./BasemapSwitcher.css";
 import { Layer } from "ol/layer";
+import { FaCog } from "react-icons/fa";
+import Image from "next/image";
 
 interface BasemapLayer {
   url: string;
@@ -62,7 +63,6 @@ export default function BasemapSwitcher() {
   const [imagerySliderMarks, setImagerySliderMarks] = useState<Record<number, string>>({});
   const [imageryPanelOpen, setImageryPanelOpen] = useState(false);
   const [streetsCheckbox, setStreetsCheckbox] = useState(true);
-  const [containerCollapsed, setContainerCollapsed] = useState(false);
 
   // Topo panel state
   const [topoPanelOpen, setTopoPanelOpen] = useState(false);
@@ -413,43 +413,52 @@ export default function BasemapSwitcher() {
     setImagerySliderValue(sliderValue);
   };
 
-  const onImageryButtonClick = () => {
-    if (!isLoadedRef.current) return;
-
-    // Always close both panels when clicking main buttons
-    setImageryPanelOpen(false);
-    setTopoPanelOpen(false);
-
-    // Always switch to imagery and ensure proper layer management
-    disableTopo();
-    enableImagery();
-  };
-
-  const onTopoButtonClick = () => {
-    if (!isLoadedRef.current) return;
-
-    // Always close both panels when clicking main buttons
-    setImageryPanelOpen(false);
-    setTopoPanelOpen(false);
-
-    // Always switch to topo and ensure proper layer management
-    enableTopo();
-  };
-
-  const onSettingsClick = () => {
+  const onBasemapImageClick = () => {
     if (!isLoadedRef.current) return;
 
     if (activeButton === "imagery") {
       // Close topo panel if open
       if (topoPanelOpen) setTopoPanelOpen(false);
-      // Toggle imagery panel
-      setImageryPanelOpen(!imageryPanelOpen);
+      // Toggle topo panel
+      setTopoPanelOpen(!topoPanelOpen);
     } else if (activeButton === "topo") {
       // Close imagery panel if open
       if (imageryPanelOpen) setImageryPanelOpen(false);
       // Toggle topo panel
       setTopoPanelOpen(!topoPanelOpen);
     }
+  };
+
+  const onSettingsClick = () => {
+    if (!isLoadedRef.current) return;
+
+    // Settings button only works for imagery
+    if (activeButton === "imagery") {
+      // Close topo panel if open
+      if (topoPanelOpen) setTopoPanelOpen(false);
+      // Toggle imagery panel
+      setImageryPanelOpen(!imageryPanelOpen);
+    }
+  };
+
+  // Helper function to get the current basemap image
+  const getCurrentBasemapImage = () => {
+    if (activeButton === "imagery") {
+      return "/images/imagery-basemap.png";
+    } else if (activeButton === "topo" && selectedTopoService) {
+      return `/images/${selectedTopoService.image}`;
+    }
+    return "/images/topo.png"; // fallback
+  };
+
+  // Helper function to get the current basemap name
+  const getCurrentBasemapName = () => {
+    if (activeButton === "imagery") {
+      return "Imagery";
+    } else if (activeButton === "topo" && selectedTopoService) {
+      return selectedTopoService.name;
+    }
+    return "Topographic"; // fallback
   };
 
   const enableImagery = useCallback(() => {
@@ -509,13 +518,6 @@ export default function BasemapSwitcher() {
     topoLayers.forEach((managedLayer) => managedLayer.layer.setVisible(true));
   }, [disableImagery]);
 
-  const disableTopo = () => {
-    // Hide basemap layers using LayerManager
-    const basemapLayers = LayerManager.getLayersByCategory("BaseMap");
-    const topoLayers = basemapLayers.filter((managedLayer) => managedLayer.metadata?.isBasemap === true);
-    topoLayers.forEach((managedLayer) => managedLayer.layer.setVisible(false));
-  };
-
   const onStreetsCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!isLoadedRef.current) return;
 
@@ -525,18 +527,21 @@ export default function BasemapSwitcher() {
     setStreetsCheckbox(event.target.checked);
   };
 
-  const onCollapsedClick = () => {
-    if (!containerCollapsed) {
-      setImageryPanelOpen(false);
-      setTopoPanelOpen(false);
-    }
-    setContainerCollapsed(!containerCollapsed);
-  };
-
   const onTopoServiceSelect = (service: BasemapService) => {
     setSelectedTopoService(service);
+    // Disable imagery layers first if switching from imagery
+    if (activeButton === "imagery") {
+      disableImagery();
+    }
     applyBasemap(service);
     setTopoPanelOpen(false);
+    setActiveButton("topo");
+  };
+
+  const onImagerySelect = () => {
+    setTopoPanelOpen(false);
+    setActiveButton("imagery");
+    enableImagery();
   };
 
   // Handle URL parameters for basemap configuration
@@ -598,7 +603,7 @@ export default function BasemapSwitcher() {
 
   const sliderWrapperStyle = {
     width: 4,
-    marginLeft: 15,
+    marginLeft: -9,
     height: 225,
     marginTop: 8,
     marginBottom: 15,
@@ -606,32 +611,19 @@ export default function BasemapSwitcher() {
 
   return (
     <>
-      <div className={`sc-basemap-main-container${!map ? " sc-hidden" : ""}`}>
-        <div className={`sc-basemap-collapse-button ${containerCollapsed ? "closed" : "open"}`} onClick={onCollapsedClick} />
+      <div id="sc-basemap-main-container" className={!map ? "sc-hidden" : ""}>
+        <div className="sc-basemap-image-container">
+          <button className="sc-basemap-image-button" onClick={onBasemapImageClick} title={`Click to select ${getCurrentBasemapName()}`}>
+            <Image src={getCurrentBasemapImage()} alt={getCurrentBasemapName()} width={48} height={48} className="sc-basemap-current-image" style={{ width: "48px", height: "48px" }} />
+          </button>
 
-        {!containerCollapsed && (
-          <>
-            <div className="sc-basemap-buttons-row">
-              <div className="sc-basemap-imagery">
-                <button className={`sc-basemap-imagery-button${activeButton === "imagery" ? " active" : ""}`} onClick={onImageryButtonClick}>
-                  Imagery
-                </button>
-              </div>
-
-              <div className="sc-basemap-topo">
-                <button className={`sc-basemap-topo-button${activeButton === "topo" ? " active" : ""}`} onClick={onTopoButtonClick}>
-                  Topo
-                </button>
-              </div>
-            </div>
-
-            <div className="sc-basemap-settings-row">
-              <button className="sc-basemap-settings-button" onClick={onSettingsClick}>
-                <Image src="/images/settings.png" alt="Settings" width={20} height={20} />
-              </button>
-            </div>
-          </>
-        )}
+          {/* Settings button overlaid on top of image for imagery */}
+          {activeButton === "imagery" && (
+            <button className="sc-basemap-settings-overlay" onClick={onSettingsClick} title="Imagery Settings">
+              <FaCog size={8} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Imagery Slider Panel */}
@@ -646,11 +638,24 @@ export default function BasemapSwitcher() {
 
       {/* Topo Options Panel */}
       <div className={`sc-basemap-topo-options-container${!topoPanelOpen ? " sc-hidden" : ""}`}>
+        {/* Imagery Option */}
+        <div className={`sc-basemap-topo-item-container${activeButton === "imagery" ? " active" : ""}`} onClick={onImagerySelect} title="Imagery">
+          <div className="sc-basemap-topo-item-title">Imagery</div>
+          <Image className="sc-basemap-topo-image" src="/images/imagery-basemap.png" alt="Imagery" width={80} height={60} />
+        </div>
+
+        {/* Topo Services */}
         {config &&
           config.topoServices.map((service) => (
-            <button key={service.name} className={`sc-basemap-topo-option${selectedTopoService?.name === service.name ? " active" : ""}`} onClick={() => onTopoServiceSelect(service)}>
-              {service.name}
-            </button>
+            <div
+              key={service.name}
+              className={`sc-basemap-topo-item-container${selectedTopoService?.name === service.name && activeButton === "topo" ? " active" : ""}`}
+              onClick={() => onTopoServiceSelect(service)}
+              title={service.name}
+            >
+              <div className="sc-basemap-topo-item-title">{service.name}</div>
+              <Image className="sc-basemap-topo-image" src={`/images/${service.image}`} alt={service.name} width={80} height={60} />
+            </div>
           ))}
       </div>
     </>

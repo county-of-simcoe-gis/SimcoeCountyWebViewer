@@ -1,37 +1,41 @@
-.sc-basemap-main-container {
+#sc-basemap-main-container {
   left: auto;
-  top: 56px;
-  right: 7px;
-  min-height: 33px;
+  top: 0px;
+  right: 2px;
+  height: auto;
+  width: 60px;
   position: absolute;
   background-color: #fff;
   border: 1px solid #ccc;
-  padding: 4px;
+  padding: 2px;
   opacity: 0.9;
   border-radius: 4px;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 2;
-  transition: opacity 0.2s ease-in-out;
+  outline: none;
+}
+#sc-basemap-main-container:hover {
+  opacity: 1;
+  outline: none;
 }
 
-.sc-basemap-main-container:hover {
-  opacity: 1;
-}
 
 .sc-basemap-imagery-slider-container {
-  right: 7px;
-  width: 100px;
-  height: 280px;
-  top: 125px;
-  background-color: #fff;
-  border-radius: 4px;
-  position: absolute;
-  user-select: none;
-  opacity: 0.9;
-  z-index: 2;
-  border: 1px solid #ccc;
-  padding: 8px;
-  transition: opacity 0.2s ease-in-out;
+  right: 2px;
+    width: 88px;
+    height: 280px;
+    top: 45px;
+    background-color: #fff;
+    border-radius: 4px;
+    position: absolute;
+    user-select: none;
+    opacity: 0.9;
+    z-index: 2;
+    border: 1px solid #ccc;
+    padding: 8px;
+    transition: opacity 0.2s ease-in-out;
 }
 
 .sc-basemap-imagery-slider-container:hover {
@@ -74,125 +78,142 @@
   width: 4px;
 }
 
-.sc-basemap-collapse-button {
-  display: table-cell;
-  background-position: center center;
-  background-repeat: no-repeat;
-  color: #999;
-  min-width: 20px !important;
-  cursor: pointer;
-  border-right: 1px solid #ccc;
-}
-
-.sc-basemap-collapse-button.closed {
-  background-image: url(/images/tab-open.png);
-}
-
-.sc-basemap-collapse-button.open {
-  background-image: url(/images/tab-close.png);
-}
-
-.sc-basemap-buttons-row {
+.sc-basemap-image-container {
   display: flex;
   align-items: center;
-  gap: 5px;
+  position: relative;
 }
 
-.sc-basemap-imagery {
-  display: inline-block;
-}
-
-.sc-basemap-imagery-button {
-  width: 69px;
-  padding: 2px 4px;
-  font-size: 11px;
-  border: 1px solid #ccc;
-  border-radius: 3px;
+.sc-basemap-image-button {
+  border: none;
+  border-radius: 2px;
+  background: none;
+  padding: 0;
   cursor: pointer;
-  background-color: #f5f5f5;
-  color: #333;
-}
-
-.sc-basemap-imagery-button.active {
-  background-color: #007cba;
-  color: white;
-}
-
-.sc-basemap-topo-button {
-  width: 69px;
-  padding: 2px 4px;
-  font-size: 11px;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  cursor: pointer;
-  background-color: #f5f5f5;
-  color: #333;
-}
-
-.sc-basemap-topo-button.active {
-  background-color: #007cba;
-  color: white;
-}
-
-.sc-basemap-topo {
-  display: inline-block;
-}
-
-.sc-basemap-settings-row {
-  display: flex;
-  justify-content: center;
-  margin-top: 4px;
-  padding-top: 4px;
-  border-top: 1px solid #eee;
-}
-
-.sc-basemap-settings-button {
-  padding: 4px 6px;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  cursor: pointer;
-  background-color: #f9f9f9;
+  transition: all 0.2s ease-in-out;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 28px;
-  height: 24px;
+  width: 48px !important;
+  height: 35px !important;
+  overflow: hidden;
+  outline: none !important;
 }
 
-.sc-basemap-settings-button:hover {
-  background-color: #e5f3ff;
+.sc-basemap-image-button:hover,
+.sc-basemap-image-button:focus,
+.sc-basemap-image-button:active {
+  outline: none !important;
+  border: none !important;
 }
 
-.sc-basemap-settings-button img {
-  width: 16px;
-  height: 16px;
-  opacity: 0.7;
+.sc-basemap-image-button:hover {
+  transform: scale(1.05);
 }
 
-.sc-basemap-settings-button:hover img {
-  opacity: 1;
+.sc-basemap-current-image {
+  border-radius: 2px;
+  object-fit: contain;
+  max-width: 48px !important;
+  max-height: 48px !important;
+  width: 48px !important;
+  height: 48px !important;
+  margin-top: -6px;
 }
 
-/* Arrow button styles - no longer needed with single Settings button
+#sc-basemap-main-container .sc-button {
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  background: rgb(255, 255, 255) !important; /* Old browsers */
+  background: -moz-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%) !important; /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, rgba(255, 255, 255, 1)), color-stop(100%, rgba(229, 229, 229, 1))) !important; /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%) !important; /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%) !important; /* Opera 11.10+ */
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%) !important; /* W3C */
+  font-size: 12px !important;
+  padding: 5px !important;
+  color: #2d343c !important;
+  border-radius: 2px !important;
+  min-height: 32px !important;
+  height: auto !important;
+  width: auto !important;
+  border: 1px solid #ccc !important;
+  font-weight: normal !important;
+  cursor: pointer !important;
+  display: inline-block !important;
+  text-align: center !important;
+  margin: 0 !important;
+}
+
+#sc-basemap-main-container .sc-button:hover {
+  border: 1px solid #80b9ff !important;
+  box-shadow: 0px 0px 5px #80b9ff !important;
+}
+
+#sc-basemap-main-container .sc-button.active {
+  color: #000000 !important;
+  background: linear-gradient(to bottom, rgba(240, 249, 255, 1) 0%, rgb(191, 214, 228) 100%) !important;
+  border: 1px solid #90b5d5 !important;
+}
+
+
+.sc-basemap-settings-overlay {
+  position: absolute;
+  bottom: -2px;
+  right: -3px;
+  background-color: #e0e0e0 !important;
+  border: 1px solid #000 !important;
+  border-radius: 2px;
+  cursor: pointer;
+  padding: 1px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  transition: all 0.2s ease-in-out;
+  width: 12px !important;
+  height: 12px !important;
+  z-index: 3;
+}
+
+.sc-basemap-settings-overlay:hover {
+  background-color: #d0d0d0;
+  color: #000;
+  transform: scale(1.1);
+}
+
 .sc-basemap-arrow {
-  width: 12px;
-  height: 32px;
+  width: 12px !important;
+  height: 32px !important;
   float: right;
   background-image: url(/images/arrow-down.png) !important;
   background-position: center center !important;
   background-repeat: no-repeat !important;
-  border: none;
-  background-color: transparent;
-  cursor: pointer;
+  border: none !important;
+  background-color: transparent !important;
+  padding: 0 !important;
 }
-*/
+
+.sc-basemap-settings-button {
+  width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 4px !important;
+}
+
+
 
 .sc-basemap-streets-label {
   display: block;
-  font-size: 10pt;
-  margin-left: 5px;
+  font-size: 8pt;
+  margin-left: 10px;
   padding-bottom: 5px;
-  padding-top: 7px;
+  padding-top: 0px;
 }
 
 .sc-basemap-streets-checkbox {
@@ -238,9 +259,9 @@
 }
 
 .sc-basemap-topo-options-container {
-  right: 7px;
+  right: 2px;
   width: 120px;
-  top: 125px;
+  top: 47px;
   background-color: #fff;
   border-radius: 4px;
   position: absolute;
@@ -248,34 +269,61 @@
   opacity: 0.9;
   z-index: 2;
   border: 1px solid #ccc;
-  padding: 8px;
+  padding: 4px;
   transition: opacity 0.2s ease-in-out;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 .sc-basemap-topo-options-container:hover {
   opacity: 1;
 }
 
-.sc-basemap-topo-option {
-  padding: 6px 8px;
-  font-size: 11px;
+.sc-basemap-topo-item-container {
+  padding: 0px;
   border: 1px solid #ccc;
-  border-radius: 3px;
+  border-radius: 4px;
   cursor: pointer;
-  background-color: #f5f5f5;
-  color: #333;
-  text-align: left;
-  white-space: nowrap;
+  background-color: #f9f9f9;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 70px;
 }
 
-.sc-basemap-topo-option:hover {
+.sc-basemap-topo-item-container:hover {
   background-color: #e5f3ff;
+  border-color: #80b9ff;
+  box-shadow: 0px 0px 3px #80b9ff;
 }
 
-.sc-basemap-topo-option.active {
-  background-color: #007cba;
-  color: white;
+.sc-basemap-topo-item-container.active {
+  background-color: #d4edda;
+  border-color: #28a745;
+  color: #155724;
+  box-shadow: 0px 0px 3px #28a745;
+}
+
+.sc-basemap-topo-item-title {
+  font-size: 9px;
+  font-weight: bold;
+  margin-bottom: 0px;
+  color: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.sc-basemap-topo-image {
+  border-radius: 3px;
+  border: 1px solid #ddd;
+  object-fit: cover;
+  max-width: 72px;
+  max-height: 50px;
 } 
