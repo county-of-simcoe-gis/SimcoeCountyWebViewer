@@ -425,8 +425,9 @@ export function getGroupsESRI(options, callback) {
 
     layers.forEach((layer) => {
       if (layer.subLayerIds === undefined && layer.subLayers.length === 0) {
-        const layerOptions = parseESRIDescription(options.descriptionOverride || layer.description);
+        const layerOptions = parseESRIDescription(options.descriptionOverride || layer.description, options.descriptionOverride !== undefined);
         let visible = options.visibleLayers ? (options.visibleLayers.indexOf(layer.name) === -1 ? false : true) : layer.defaultVisibility;
+        if (layerOptions.isVisible !== null) visible = layerOptions.isVisible;
         layerOptions["id"] = layer.id;
         layerOptions["name"] = layer.name;
         layerOptions["minScale"] = layer.minScale;
@@ -434,7 +435,7 @@ export function getGroupsESRI(options, callback) {
         layerOptions["defaultVisibility"] = visible;
         layerOptions["identifyTitleColumn"] = layer.displayField;
         layerOptions["opacity"] = 1 - (layer.drawingInfo === undefined || layer.drawingInfo.transparency === undefined ? 0 : layer.drawingInfo.transparency / 100);
-        layerOptions["liveLayer"] = layerOptions.isLiveLayer;
+        layerOptions["liveLayer"] = layerOptions.isLiveLayer !== null ? layerOptions.isLiveLayer : layer.liveLayer;
         layerOptions["secured"] = options.secured;
         layerOptions["hasAttachments"] = layer.hasAttachments;
 
@@ -1279,20 +1280,19 @@ export function parseGeoServerKeywords(keywords) {
  * =======================================
  */
 
-function parseESRIDescription(description) {
+function parseESRIDescription(description, isOverride = false) {
   const descriptionParts = description.replace(/(<([^>]+)>)/gi, "").split("#");
   let returnObj = {
     isGroupOn: "",
-    isLiveLayer: false,
-    isVisible: false,
-    isOpen: false,
-    sar: false,
+    isLiveLayer: null,
+    isVisible: null,
+    isOpen: null,
+    sar: null,
     description: "",
     refreshInterval: "",
     modalURL: "",
     categories: [],
   };
-
   descriptionParts.forEach((descriptionPart) => {
     let parts = descriptionPart.split("=");
     let key = parts[0].trim();
@@ -1312,6 +1312,7 @@ function parseESRIDescription(description) {
           returnObj.isGroupOn = value.trim().toUpperCase() === "TRUE";
           break;
         case "VISIBLE":
+          console.log(value);
           returnObj.isVisible = value.trim().toUpperCase() === "TRUE";
           break;
         case "OPEN":
