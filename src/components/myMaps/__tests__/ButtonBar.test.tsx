@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import ButtonBar from "../ButtonBar";
+import ButtonBar from "@/components/myMaps/ButtonBar";
 import { DrawType } from "@/types/myMaps";
 
 vi.mock("@/config/myMapsConfig.json", () => ({
@@ -76,7 +76,7 @@ vi.mock("@/config/myMapsConfig.json", () => ({
 }));
 
 // Mock DrawButton component
-vi.mock("../DrawButton", () => ({
+vi.mock("@/components/myMaps/DrawButton", () => ({
   default: ({ title, imageName, onClick, isActive, disabled, visible }: { title: string; imageName: string; onClick: () => void; isActive?: boolean; disabled?: boolean; visible?: boolean }) => {
     if (!visible) return null;
 

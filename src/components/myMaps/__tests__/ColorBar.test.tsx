@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import ColorBar from "../ColorBar";
+import ColorBar from "@/components/myMaps/ColorBar";
 import { MYMAPS_CONSTANTS } from "@/types/myMaps";
 
 vi.mock("@/types/myMaps", () => ({

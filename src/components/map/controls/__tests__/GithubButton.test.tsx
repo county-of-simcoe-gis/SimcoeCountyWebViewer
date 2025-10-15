@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
-import GithubButton from "../GithubButton";
+import { describe, expect, it } from "vitest";
+import GithubButton from "@/components/map/controls/GithubButton";
 
 describe("GithubButton", () => {
   it("renders github button with link", () => {

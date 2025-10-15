@@ -1,20 +1,19 @@
-import { Layer } from 'ol/layer'
-import { useLayerManagerStore, type LayerCategory } from '../../stores/layerManagerStore'
-import { useMapStore } from '../../stores/mapStore'
+import { Layer } from "ol/layer";
+import { useLayerManagerStore, type LayerCategory } from "@/stores/layerManagerStore";
+import { useMapStore } from "@/stores/mapStore";
 
 export interface AddLayerOptions {
-  index?: number
-  id?: string
-  metadata?: Record<string, unknown>
-  visible?: boolean
-  opacity?: number
+  index?: number;
+  id?: string;
+  metadata?: Record<string, unknown>;
+  visible?: boolean;
+  opacity?: number;
 }
 
 /**
  * LayerManager - Central utility for managing map layers with proper categorization and z-index ordering
  */
 export class LayerManager {
-  
   /**
    * Add a layer to the map with proper category management and z-index ordering
    * @param layer - OpenLayers layer instance
@@ -23,75 +22,69 @@ export class LayerManager {
    * @param options - Additional options for layer configuration
    * @returns Layer ID for future reference
    */
-  static addLayer(
-    layer: Layer, 
-    category: LayerCategory, 
-    name: string, 
-    options: AddLayerOptions = {}
-  ): string | null {
-    
+  static addLayer(layer: Layer, category: LayerCategory, name: string, options: AddLayerOptions = {}): string | null {
     // Get the map instance
-    const map = useMapStore.getState().map
+    const map = useMapStore.getState().map;
     if (!map) {
-      console.error('❌ Map not available - cannot add layer')
-      return null
+      console.error("❌ Map not available - cannot add layer");
+      return null;
     }
-    
+
     // Set layer properties if provided
     if (options.visible !== undefined) {
-      layer.setVisible(options.visible)
+      layer.setVisible(options.visible);
     }
-    
+
     if (options.opacity !== undefined) {
-      layer.setOpacity(options.opacity)
+      layer.setOpacity(options.opacity);
     }
-    
+
     // Add layer to map first
-    map.addLayer(layer)
-    
+    map.addLayer(layer);
+
     // Register with layer manager
     const layerId = useLayerManagerStore.getState().addLayer(layer, category, name, {
       index: options.index,
       id: options.id,
-      metadata: options.metadata
-    })
-    
+      metadata: options.metadata,
+    });
+
     // console.log(`✅ Added layer "${name}" to map with category "${category}" (ID: ${layerId})`)
-    
-    return layerId
+
+    return layerId;
   }
-  
+
   /**
    * Remove a layer from the map and layer manager
    * @param layerId - Layer ID returned from addLayer
    * @returns Success status
    */
   static removeLayer(layerId: string): boolean {
-    const layerManager = useLayerManagerStore.getState()
-    const managedLayer = layerManager.getLayer(layerId)
-    
+    const layerManager = useLayerManagerStore.getState();
+    const managedLayer = layerManager.getLayer(layerId);
+
     if (!managedLayer) {
-      console.warn(`⚠️ Layer ${layerId} not found in layer manager`)
-      return false
+      console.warn(`⚠️ Layer ${layerId} not found in layer manager`);
+      return false;
     }
-    
+
     // Get the map instance
-    const map = useMapStore.getState().map
+    const map = useMapStore.getState().map;
     if (map) {
       // Remove from map
-      map.removeLayer(managedLayer.layer)
+      map.removeLayer(managedLayer.layer);
     }
-    
+
     // Remove from layer manager
-    const success = layerManager.removeLayer(layerId)
-    
+    const success = layerManager.removeLayer(layerId);
+
     if (success) {
-      console.log(`🗑️ Removed layer "${managedLayer.name}" from map (ID: ${layerId})`)
+      console.log(`🗑️ Removed layer "${managedLayer.name}" from map (ID: ${layerId})`);
     }
-    
-    return success
+
+    return success;
   }
-  
+
   /**
    * Move a layer to a different category or position
    * @param layerId - Layer ID
@@ -100,10 +93,10 @@ export class LayerManager {
    * @returns Success status
    */
   static moveLayer(layerId: string, newCategory: LayerCategory, newIndex?: number): boolean {
-    const layerManager = useLayerManagerStore.getState()
-    return layerManager.moveLayer(layerId, newCategory, newIndex)
+    const layerManager = useLayerManagerStore.getState();
+    return layerManager.moveLayer(layerId, newCategory, newIndex);
   }
-  
+
   /**
    * Update layer visibility
    * @param layerId - Layer ID
@@ -111,10 +104,10 @@ export class LayerManager {
    * @returns Success status
    */
   static setLayerVisibility(layerId: string, visible: boolean): boolean {
-    const layerManager = useLayerManagerStore.getState()
-    return layerManager.updateLayerVisibility(layerId, visible)
+    const layerManager = useLayerManagerStore.getState();
+    return layerManager.updateLayerVisibility(layerId, visible);
   }
-  
+
   /**
    * Update layer opacity
    * @param layerId - Layer ID
@@ -122,90 +115,90 @@ export class LayerManager {
    * @returns Success status
    */
   static setLayerOpacity(layerId: string, opacity: number): boolean {
-    const layerManager = useLayerManagerStore.getState()
-    return layerManager.updateLayerOpacity(layerId, opacity)
+    const layerManager = useLayerManagerStore.getState();
+    return layerManager.updateLayerOpacity(layerId, opacity);
   }
-  
+
   /**
    * Get all layers in a specific category
    * @param category - Layer category
    * @returns Array of managed layers
    */
   static getLayersByCategory(category: LayerCategory) {
-    const layerManager = useLayerManagerStore.getState()
-    return layerManager.getLayersByCategory(category)
+    const layerManager = useLayerManagerStore.getState();
+    return layerManager.getLayersByCategory(category);
   }
-  
+
   /**
    * Get a specific layer by ID
    * @param layerId - Layer ID
    * @returns Managed layer or null
    */
   static getLayer(layerId: string) {
-    const layerManager = useLayerManagerStore.getState()
-    return layerManager.getLayer(layerId)
+    const layerManager = useLayerManagerStore.getState();
+    return layerManager.getLayer(layerId);
   }
-  
+
   /**
    * Get all layers across all categories, sorted by z-index
    * @returns Array of all managed layers
    */
   static getAllLayers() {
-    const layerManager = useLayerManagerStore.getState()
-    return layerManager.getAllLayers()
+    const layerManager = useLayerManagerStore.getState();
+    return layerManager.getAllLayers();
   }
-  
+
   /**
    * Clear all layers in a specific category
    * @param category - Layer category to clear
    */
   static clearCategory(category: LayerCategory): void {
-    const layerManager = useLayerManagerStore.getState()
-    const layersToRemove = layerManager.getLayersByCategory(category)
-    
+    const layerManager = useLayerManagerStore.getState();
+    const layersToRemove = layerManager.getLayersByCategory(category);
+
     // Remove from map first
-    const map = useMapStore.getState().map
+    const map = useMapStore.getState().map;
     if (map) {
-      layersToRemove.forEach(managedLayer => {
-        map.removeLayer(managedLayer.layer)
-      })
+      layersToRemove.forEach((managedLayer) => {
+        map.removeLayer(managedLayer.layer);
+      });
     }
-    
+
     // Clear from layer manager
-    layerManager.clearCategory(category)
-    
+    layerManager.clearCategory(category);
+
     // console.log(`🧹 Cleared ${layersToRemove.length} layers from category: ${category}`)
   }
-  
+
   /**
    * Clear all layers from all categories
    */
   static clearAllLayers(): void {
-    const layerManager = useLayerManagerStore.getState()
-    const allLayers = layerManager.getAllLayers()
-    
+    const layerManager = useLayerManagerStore.getState();
+    const allLayers = layerManager.getAllLayers();
+
     // Remove from map first
-    const map = useMapStore.getState().map
+    const map = useMapStore.getState().map;
     if (map) {
-      allLayers.forEach(managedLayer => {
-        map.removeLayer(managedLayer.layer)
-      })
+      allLayers.forEach((managedLayer) => {
+        map.removeLayer(managedLayer.layer);
+      });
     }
-    
+
     // Clear from layer manager
-    layerManager.clearAllLayers()
-    
-    console.log(`🧹 Cleared ${allLayers.length} layers from all categories`)
+    layerManager.clearAllLayers();
+
+    console.log(`🧹 Cleared ${allLayers.length} layers from all categories`);
   }
-  
+
   /**
    * Debug helper to log current layer order
    */
   static logLayerOrder(): void {
-    const layerManager = useLayerManagerStore.getState()
-    layerManager.logLayerOrder()
+    const layerManager = useLayerManagerStore.getState();
+    layerManager.logLayerOrder();
   }
-  
+
   /**
    * Get the next available z-index for a category
    * @param category - Layer category
@@ -213,32 +206,32 @@ export class LayerManager {
    * @returns Z-index value
    */
   static getNextZIndex(category: LayerCategory, index?: number): number {
-    const layerManager = useLayerManagerStore.getState()
-    return layerManager.getNextZIndex(category, index)
+    const layerManager = useLayerManagerStore.getState();
+    return layerManager.getNextZIndex(category, index);
   }
-  
+
   /**
    * Reorder all layers in a category to fix z-index gaps
    * @param category - Layer category to reorder
    */
   static reorderCategory(category: LayerCategory): void {
-    const layerManager = useLayerManagerStore.getState()
-    layerManager.reorderCategory(category)
+    const layerManager = useLayerManagerStore.getState();
+    layerManager.reorderCategory(category);
   }
 }
 
 // Convenience functions for common operations
-export const addLayer = LayerManager.addLayer.bind(LayerManager)
-export const removeLayer = LayerManager.removeLayer.bind(LayerManager)
-export const moveLayer = LayerManager.moveLayer.bind(LayerManager)
-export const setLayerVisibility = LayerManager.setLayerVisibility.bind(LayerManager)
-export const setLayerOpacity = LayerManager.setLayerOpacity.bind(LayerManager)
-export const getLayersByCategory = LayerManager.getLayersByCategory.bind(LayerManager)
-export const getLayer = LayerManager.getLayer.bind(LayerManager)
-export const getAllLayers = LayerManager.getAllLayers.bind(LayerManager)
-export const clearCategory = LayerManager.clearCategory.bind(LayerManager)
-export const clearAllLayers = LayerManager.clearAllLayers.bind(LayerManager)
-export const logLayerOrder = LayerManager.logLayerOrder.bind(LayerManager)
+export const addLayer = LayerManager.addLayer.bind(LayerManager);
+export const removeLayer = LayerManager.removeLayer.bind(LayerManager);
+export const moveLayer = LayerManager.moveLayer.bind(LayerManager);
+export const setLayerVisibility = LayerManager.setLayerVisibility.bind(LayerManager);
+export const setLayerOpacity = LayerManager.setLayerOpacity.bind(LayerManager);
+export const getLayersByCategory = LayerManager.getLayersByCategory.bind(LayerManager);
+export const getLayer = LayerManager.getLayer.bind(LayerManager);
+export const getAllLayers = LayerManager.getAllLayers.bind(LayerManager);
+export const clearCategory = LayerManager.clearCategory.bind(LayerManager);
+export const clearAllLayers = LayerManager.clearAllLayers.bind(LayerManager);
+export const logLayerOrder = LayerManager.logLayerOrder.bind(LayerManager);
 
 // Export types for convenience
-export type { LayerCategory, ManagedLayer } from '../../stores/layerManagerStore' 
+export type { LayerCategory, ManagedLayer } from "@/stores/layerManagerStore";

@@ -1,14 +1,15 @@
 "use client";
 
-import "./Header.css";
+import "@/components/Header.css";
 import { useEffect } from "react";
 import Image from "next/image";
+import { FaBars, FaEnvelope } from "react-icons/fa";
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { useEventStore } from "@/stores/eventStore";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
-import Search from "./Search";
-import SearchZoom from "./SearchZoom";
+import Search from "@/components/Search";
+import SearchZoom from "@/components/SearchZoom";
 
 export default function Header() {
   const { toggleSidebar } = useSidebarStore();
@@ -25,7 +26,6 @@ export default function Header() {
 
   const onFeedbackClick = () => {
     // TODO: Implement feedback functionality
-    console.log("Feedback clicked");
   };
 
   const handleBurgerClick = () => {
@@ -62,7 +62,7 @@ export default function Header() {
         onKeyDown={(e) => e.key === "Enter" && handleBurgerClick()}
         aria-label="Toggle sidebar"
       >
-        <Image src="/images/burger-button.png" alt="Menu" width={32} height={32} className="max-w-full max-h-full" />
+        <FaBars size={32} className="max-w-full max-h-full" />
       </div>
 
       {/* Logo */}
@@ -76,7 +76,6 @@ export default function Header() {
           className="w-full"
           placeholder="Search..."
           onResultSelect={(result) => {
-            console.log("Search result selected:", result);
             // Handle search result selection
           }}
         />
@@ -89,7 +88,7 @@ export default function Header() {
         onClick={onFeedbackClick}
         title="Feedback"
       >
-        <Image src="/images/feedback.png" alt="Feedback" width={16} height={16} className="mt-1 mb-1" />
+        <FaEnvelope size={16} className="mt-1 mb-1" />
         <span>Feedback</span>
       </div>
     </div>

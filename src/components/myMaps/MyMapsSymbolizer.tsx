@@ -5,7 +5,7 @@ import { Style, Stroke, Fill, Circle as CircleStyle, RegularShape } from "ol/sty
 import type { MyMapsItem } from "@/types/myMaps";
 
 import { useMyMapsStore } from "@/stores/myMapsStore";
-import "./MyMapsSymbolizer.css";
+import "@/components/myMaps/MyMapsSymbolizer.css";
 
 interface MyMapsSymbolizerProps {
   visible: boolean;

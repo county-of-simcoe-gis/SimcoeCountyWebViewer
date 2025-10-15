@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import AttributionControl from "../AttributionControl";
+import AttributionControl from "@/components/map/controls/AttributionControl";
 import type Map from "ol/Map";
 
 // Mock OpenLayers

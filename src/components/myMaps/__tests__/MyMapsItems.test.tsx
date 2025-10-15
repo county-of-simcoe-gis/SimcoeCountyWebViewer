@@ -1,8 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import MyMapsItems from "../MyMapsItems";
-import { useMyMapsStore } from "@/stores/myMapsStore";
+import MyMapsItems from "@/components/myMaps/MyMapsItems";
 import type { MyMapsItem } from "@/types/myMaps";
 
 // Mock next/image
@@ -11,7 +10,7 @@ vi.mock("next/image", () => ({
 }));
 
 // Mock MyMapsItem component
-vi.mock("../MyMapsItem", () => ({
+vi.mock("@/components/myMaps/MyMapsItem", () => ({
   default: ({ item, onLabelChange, onDelete, onShowOptions, onHoverStart, onHoverEnd, isEditing }: any) => (
     <div data-testid={`mymaps-item-${item.id}`} data-editing={isEditing}>
       <span>{item.label}</span>

@@ -4,22 +4,22 @@
  */
 
 // Core utilities
-export * from "./helpersCore";
+export * from "@/utils/helpersCore";
 
 // String manipulation
-export * from "./helpersString";
+export * from "@/utils/helpersString";
 
 // URL utilities
-export * from "./helpersUrl";
+export * from "@/utils/helpersUrl";
 
 // Array utilities
-export * from "./helpersArray";
+export * from "@/utils/helpersArray";
 
 // Browser/DOM utilities
-export * from "./helpersBrowser";
+export * from "@/utils/helpersBrowser";
 
 // Zustand store integration
-export * from "./helpersStore";
+export * from "@/utils/helpersStore";
 
 // UI utilities
-export * from "./helpersUI";
+export * from "@/utils/helpersUI";

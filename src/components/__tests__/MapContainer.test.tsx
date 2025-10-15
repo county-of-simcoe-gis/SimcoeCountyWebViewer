@@ -41,24 +41,54 @@ vi.mock("@/stores/appStore", () => ({
 }));
 
 // Mock other required stores
+const mockMapStore = {
+  map: null,
+  setMap: vi.fn(),
+  addLoadedItem: vi.fn(),
+  setMapControls: vi.fn(),
+  setCurrentExtent: vi.fn(),
+  setCurrentZoom: vi.fn(),
+  setCurrentCenter: vi.fn(),
+  initExtentHistory: vi.fn(),
+  saveCurrentExtentToHistory: vi.fn(),
+};
+
 vi.mock("@/stores/mapStore", () => ({
-  useMapStore: vi.fn(() => ({
-    map: null,
-    setMap: vi.fn(),
-    addLoadedItem: vi.fn(),
-    setMapControls: vi.fn(),
-    setCurrentExtent: vi.fn(),
-    setCurrentZoom: vi.fn(),
-    setCurrentCenter: vi.fn(),
-    initExtentHistory: vi.fn(),
-    saveCurrentExtentToHistory: vi.fn(),
-  })),
+  useMapStore: Object.assign(
+    vi.fn(() => mockMapStore),
+    {
+      getState: vi.fn(() => mockMapStore),
+      setState: vi.fn(),
+      subscribe: vi.fn(),
+    }
+  ),
 }));
 
 vi.mock("@/stores/eventStore", () => ({
   useEventStore: vi.fn(() => ({
     emitMapLoaded: vi.fn(),
   })),
+}));
+
+vi.mock("@/stores/layerManagerStore", () => ({
+  useLayerManagerStore: Object.assign(
+    vi.fn(() => ({
+      addLayer: vi.fn(() => "test-layer-id"),
+      removeLayer: vi.fn(),
+      getLayer: vi.fn(),
+      getAllLayers: vi.fn(() => []),
+    })),
+    {
+      getState: vi.fn(() => ({
+        addLayer: vi.fn(() => "test-layer-id"),
+        removeLayer: vi.fn(),
+        getLayer: vi.fn(),
+        getAllLayers: vi.fn(() => []),
+      })),
+      setState: vi.fn(),
+      subscribe: vi.fn(),
+    }
+  ),
 }));
 
 vi.mock("@/stores/sidebarStore", () => ({
@@ -109,6 +139,11 @@ vi.mock("ol/interaction", () => ({
   MouseWheelZoom: vi.fn(),
   PinchRotate: vi.fn(),
   DragRotate: vi.fn(),
+  Interaction: class MockInteraction {
+    setActive = vi.fn();
+    getActive = vi.fn(() => true);
+    getMap = vi.fn();
+  },
 }));
 
 vi.mock("ol/control", () => ({
@@ -150,6 +185,10 @@ vi.mock("ol/source", () => ({
 vi.mock("ol/style", () => ({
   Style: vi.fn(() => ({})),
   Icon: vi.fn(() => ({})),
+  Fill: vi.fn(() => ({})),
+  Stroke: vi.fn(() => ({})),
+  Circle: vi.fn(() => ({})),
+  Text: vi.fn(() => ({})),
 }));
 
 vi.mock("ol/proj", () => ({

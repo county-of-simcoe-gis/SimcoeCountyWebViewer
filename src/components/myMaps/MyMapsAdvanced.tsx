@@ -7,7 +7,7 @@ import Image from "next/image";
 import copy from "copy-to-clipboard";
 import { useMyMapsStore } from "@/stores/myMapsStore";
 
-import "./MyMapsAdvanced.css";
+import "@/components/myMaps/MyMapsAdvanced.css";
 
 interface MyMapsAdvancedProps {
   onEditFeatures: (editOn: boolean, option?: string) => void;

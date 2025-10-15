@@ -1,6 +1,6 @@
 "use client";
 
-import "./MeasureTool.css";
+import "@/components/tools/MeasureTool.css";
 import React, { useState } from "react";
 import Image from "next/image";
 import PanelComponent from "@/components/PanelComponent";

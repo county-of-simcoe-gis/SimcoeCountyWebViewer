@@ -14,12 +14,12 @@ import { useEventStore } from "@/stores/eventStore";
 import { activateTab } from "@/utils/helpersUI";
 
 import { getPointStyle, getLineStringStyle, getPolygonStyle } from "@/utils/openlayers/DrawingHelpers";
-import MyMapsPopupLabel from "./MyMapsPopupLabel";
-import MyMapsBuffer from "./MyMapsBuffer";
-import MyMapsSymbolizer from "./MyMapsSymbolizer";
-import MyMapsMeasure from "./MyMapsMeasure";
-import FooterButtons from "./FooterButtons";
-import "./DrawingOptionsPopup.css";
+import MyMapsPopupLabel from "@/components/myMaps/MyMapsPopupLabel";
+import MyMapsBuffer from "@/components/myMaps/MyMapsBuffer";
+import MyMapsSymbolizer from "@/components/myMaps/MyMapsSymbolizer";
+import MyMapsMeasure from "@/components/myMaps/MyMapsMeasure";
+import FooterButtons from "@/components/myMaps/FooterButtons";
+import "@/components/myMaps/DrawingOptionsPopup.css";
 
 interface DrawingOptionsPopupProps {
   item: MyMapsItemType | null;

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import type { MyMapsItem as MyMapsItemType } from "@/types/myMaps";
-import "./MyMapsPopupLabel.css";
+import "@/components/myMaps/MyMapsPopupLabel.css";
 
 interface MyMapsPopupLabelProps {
   item: MyMapsItemType;

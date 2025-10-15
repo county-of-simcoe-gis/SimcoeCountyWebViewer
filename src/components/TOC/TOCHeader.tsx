@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
-import "./TOCHeader.css";
+import React from "react";
+import { FaQuestionCircle } from "react-icons/fa";
+import TOCSettingsControl from "@/components/TOC/TOCSettingsControl";
+import "@/components/TOC/TOCHeader.css";
 
 interface TOCHeaderProps {
   tocType: "LIST" | "FOLDER";
@@ -19,6 +20,7 @@ interface TOCHeaderProps {
   onResetToDefault: () => void;
   onTurnOffLayers: () => void;
   onSaveAllLayers: () => void;
+  onClearSavedLayers: () => void;
   onOpenLegend: () => void;
 }
 
@@ -37,20 +39,11 @@ export default function TOCHeader({
   onResetToDefault,
   onTurnOffLayers,
   onSaveAllLayers,
+  onClearSavedLayers,
   onOpenLegend,
 }: TOCHeaderProps) {
-  const [showSettings, setShowSettings] = useState(false);
-
   const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     onSearchChange(e.target.value);
-  };
-
-  const handleOpacityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onGlobalOpacityChange(parseFloat(e.target.value));
-  };
-
-  const toggleSettings = () => {
-    setShowSettings(!showSettings);
   };
 
   return (
@@ -65,72 +58,25 @@ export default function TOCHeader({
         )}
       </div>
 
-      {/* Settings Dropdown */}
-      <div className="sc-toc-settings-container">
-        <button className="sc-toc-settings-button" onClick={toggleSettings} title="Layer Settings">
-          <Image src="/images/toc/settings.png" alt="settings" width={16} height={16} />
-        </button>
-
-        {showSettings && (
-          <div className="sc-toc-settings-dropdown">
-            <div className="sc-toc-settings-content">
-              {/* View Type Toggle */}
-              <div className="sc-toc-settings-item">
-                <button onClick={onTOCTypeChange} className="sc-toc-settings-action">
-                  Switch to {tocType === "LIST" ? "Folder" : "List"} View
-                </button>
-              </div>
-
-              {/* Save Layers */}
-              <div className="sc-toc-settings-item">
-                <button onClick={onSaveAllLayers} className="sc-toc-settings-action">
-                  Save Layers to My Maps
-                </button>
-              </div>
-
-              {/* Reset to Default */}
-              <div className="sc-toc-settings-item">
-                <button onClick={onResetToDefault} className="sc-toc-settings-action">
-                  Reset to Default
-                </button>
-              </div>
-
-              {/* Turn Off All Layers */}
-              <div className="sc-toc-settings-item">
-                <button onClick={onTurnOffLayers} className="sc-toc-settings-action">
-                  Turn off all Layers
-                </button>
-              </div>
-
-              {/* Show Legend */}
-              <div className="sc-toc-settings-item">
-                <button onClick={onOpenLegend} className="sc-toc-settings-action">
-                  Show Legend
-                </button>
-              </div>
-
-              {/* Global Opacity */}
-              <div className="sc-toc-settings-item">
-                <label className="sc-toc-settings-label">Opacity: {Math.round(globalOpacity * 100)}%</label>
-                <input type="range" min="0" max="1" step="0.1" value={globalOpacity} onChange={handleOpacityChange} className="sc-toc-opacity-slider" />
-              </div>
-
-              {/* Alpha Sort Toggle */}
-              <div className="sc-toc-settings-item">
-                <label className="sc-toc-settings-checkbox">
-                  <input type="checkbox" checked={sortAlpha} onChange={(e) => onSortChange(e.target.checked)} />
-                  Sort Alphabetically
-                </label>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      {/* Settings Control */}
+      <TOCSettingsControl
+        tocType={tocType}
+        sortAlpha={sortAlpha}
+        globalOpacity={globalOpacity}
+        onSortChange={onSortChange}
+        onGlobalOpacityChange={onGlobalOpacityChange}
+        onTOCTypeChange={onTOCTypeChange}
+        onResetToDefault={onResetToDefault}
+        onTurnOffLayers={onTurnOffLayers}
+        onSaveAllLayers={onSaveAllLayers}
+        onClearSavedLayers={onClearSavedLayers}
+        onOpenLegend={onOpenLegend}
+      />
 
       {/* Help Button */}
       <div className="sc-toc-help-container">
         <a href={helpLink} target="_blank" rel="noopener noreferrer" className="sc-toc-help-button" title="Layer Help">
-          <Image src="/images/help.png" alt="help" width={16} height={16} />
+          <FaQuestionCircle size={16} />
         </a>
       </div>
 

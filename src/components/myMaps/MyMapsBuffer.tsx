@@ -7,12 +7,13 @@ import { Vector as VectorLayer } from "ol/layer";
 import { Vector as VectorSource } from "ol/source";
 import { useMapStore } from "@/stores/mapStore";
 import { useEventStore } from "@/stores/eventStore";
+import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { featureFromGeoJSON } from "@/utils/myMapsHelpers";
 import { bufferGeometry, convertToMeters } from "@/utils/openlayers/BufferHelpers";
 import { MYMAPS_CONSTANTS } from "@/types/myMaps";
 import { activateTab } from "@/utils/helpersUI";
 import type { MyMapsItem } from "@/types/myMaps";
-import "./MyMapsBuffer.css";
+import "@/components/myMaps/MyMapsBuffer.css";
 
 interface MyMapsBufferProps {
   visible: boolean;
@@ -36,6 +37,7 @@ const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
   const [addMessageVisible, setAddMessageVisible] = useState<boolean>(false);
 
   const vectorLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
+  const layerIdRef = useRef<string | null>(null);
   const bufferFeatureRef = useRef<Feature | null>(null);
 
   // Create vector layer for buffer preview
@@ -47,37 +49,45 @@ const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
       source: new VectorSource({
         features: [],
       }),
-      zIndex: 999,
     });
 
     // Set a specific ID so global cleanup can find this layer
     vectorLayer.set("id", "buffer-preview-layer");
     vectorLayer.set("name", "Buffer Preview");
 
+    const layerId = LayerManager.addLayer(vectorLayer, "Tools", "Buffer Preview", {
+      index: 10,
+      metadata: {
+        isBufferPreview: true,
+        isTool: true,
+      },
+    });
+
     vectorLayerRef.current = vectorLayer;
-    map.addLayer(vectorLayer);
+    layerIdRef.current = layerId;
 
     return () => {
       // Cleanup layer on unmount
-      if (map && vectorLayer) {
-        map.removeLayer(vectorLayer);
+      if (layerIdRef.current) {
+        LayerManager.removeLayer(layerIdRef.current);
+        layerIdRef.current = null;
       }
+      vectorLayerRef.current = null;
     };
   }, [map]);
 
   // Cleanup when popup closes or component unmounts
   useEffect(() => {
     const cleanup = () => {
-      if (vectorLayerRef.current && map) {
+      if (vectorLayerRef.current) {
         // Clear features first
         const source = vectorLayerRef.current.getSource();
         if (source) {
           source.clear();
         }
-        // Remove layer from map
-        map.removeLayer(vectorLayerRef.current);
-        vectorLayerRef.current = null;
       }
+      // Note: Layer cleanup is handled by the useEffect cleanup above
+      // No need to manually remove here as it will be done on unmount
       setAddMessageVisible(false);
     };
 

@@ -1,5 +1,5 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
-import { createMapControl } from "../MapControlWrapper";
+import { createMapControl } from "@/components/map/controls/MapControlWrapper";
 import type Map from "ol/Map";
 
 // Store original functions for restoration

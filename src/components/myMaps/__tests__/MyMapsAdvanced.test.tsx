@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import MyMapsAdvanced from "../MyMapsAdvanced";
+import MyMapsAdvanced from "@/components/myMaps/MyMapsAdvanced";
 
 // Mock copy-to-clipboard
 vi.mock("copy-to-clipboard", () => ({

@@ -2,7 +2,7 @@
 import { JSONToSettings } from "@/lib/JSONTranslation";
 import type { SettingsType } from "@/interfaces/SettingsType";
 import { getAxiosClient } from "@/lib/axiosInstance";
-import localConfig from "../config.json";
+import localConfig from "@/config.json";
 
 export interface AppConfig {
   // Basic app settings

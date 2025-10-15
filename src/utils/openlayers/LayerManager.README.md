@@ -18,11 +18,12 @@ Categories are defined in `LayerOrderConfig.json` with priority-based z-index ra
 | Category     | Z-Index Range | Purpose                                          |
 | ------------ | ------------- | ------------------------------------------------ |
 | **BaseMap**  | 0-99          | Base map layers (imagery, streets, topographic)  |
-| **TOC**      | 100-499       | Table of Contents layers from GeoServer          |
-| **MyMaps**   | 500-699       | User-created drawing and custom layers           |
-| **Tools**    | 700-899       | Tool-related layers (measure, coordinates, etc.) |
-| **Graphics** | 900-999       | Temporary graphics, highlights, and overlays     |
-| **Popup**    | 1000-1099     | Popup and tooltip layers                         |
+| **TOC**      | 100-1999      | Table of Contents layers from GeoServer          |
+| **MyMaps**   | 2000-2199     | User-created drawing and custom layers           |
+| **Tools**    | 2200-2399     | Tool-related layers (measure, coordinates, etc.) |
+| **Graphics** | 2400-2499     | Temporary graphics, highlights, and overlays     |
+| **Overlay**  | 2500-2599     | Overlay layers                                   |
+| **Popup**    | 2600-2699     | Popup and tooltip layers                         |
 
 ## Basic Usage
 

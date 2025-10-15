@@ -1,6 +1,10 @@
 import { WMSCapabilities } from "ol/format.js";
-import { TOCLayerGroup, TOCLayer, TOCSource } from "../stores/tocStore";
+import { TOCLayerGroup, TOCLayer, TOCSource } from "@/stores/tocStore";
 import { getAxiosClient } from "@/lib/axiosInstance";
+import { LayerHelpers } from "@/utils/openlayers/LayerHelpers";
+import { OL_DATA_TYPES, LayerOptions } from "@/utils/openlayers/types";
+import { LayerManager } from "@/utils/openlayers/LayerManager";
+import type { Layer as OpenLayersLayer } from "ol/layer";
 
 // Types for WMS Capabilities parsing
 interface WMSLayer {
@@ -171,7 +175,17 @@ export function buildLayerFromWMS(group: Partial<TOCLayerGroup> & { secure?: boo
   const serverUrl = group.wmsGroupUrl?.split(`/${geoserverPath}/`)[0] + `/${geoserverPath}` || "";
   const metadataUrl = `${serverUrl}/rest/layers/${layerNameOnly.split(" ").join("%20")}.json`;
 
+  // Generate unique ID for this layer
+  const generateUniqueLayerId = (name: string, groupName: string): string => {
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 8);
+    const safeName = name.replace(/[^a-zA-Z0-9]/g, "_");
+    const safeGroupName = groupName.replace(/[^a-zA-Z0-9]/g, "_");
+    return `toc_layer_${safeGroupName}_${safeName}_${timestamp}_${random}`;
+  };
+
   return {
+    id: generateUniqueLayerId(layerNameOnly, group.label || ""),
     name: layerNameOnly,
     displayName,
     tocDisplayName: layerTitle,
@@ -179,10 +193,12 @@ export function buildLayerFromWMS(group: Partial<TOCLayerGroup> & { secure?: boo
     height: 30,
     drawIndex: layerIndex,
     index: layerIndex,
+    initialDrawIndex: layerIndex, // Preserve initial sort order from server
     showLegend: false,
     legendHeight: -1,
     legendImage: null,
     legendObj: null,
+    legendFetching: false,
     visible: layerVisible,
     layer: null, // Will be populated when map integration is added
     metadataUrl,
@@ -204,17 +220,8 @@ export function buildLayerFromWMS(group: Partial<TOCLayerGroup> & { secure?: boo
  * Fetch and parse WMS GetCapabilities
  */
 export async function fetchWMSCapabilities(url: string, secured: boolean = false): Promise<WMSCapabilitiesResponse> {
-  const params: RequestInit = {
-    mode: "cors",
-    headers: {
-      "Content-Type": "application/text",
-    },
-  };
-
-  if (secured) {
-    // Add bearer token handling if needed
-    // params.headers['Authorization'] = `Bearer ${token}`
-  }
+  // TODO: Use secured parameter for authentication when needed
+  console.debug("Fetching WMS capabilities", { url, secured });
 
   try {
     const axiosClient = getAxiosClient(url);
@@ -240,7 +247,7 @@ export async function getGroupsFromGeoServer(source: TOCSource, config: Config):
   try {
     const resultObj = await fetchWMSCapabilities(source.layerUrl, source.secure);
 
-    const urlType = source.urlType || "root";
+    const urlType = source.urlType || "group";
     const groupLayerList = urlType === "root" ? [resultObj.Capability.Layer.Layer[0]] : urlType === "group" ? resultObj.Capability.Layer.Layer[0].Layer || [] : [resultObj.Capability.Layer.Layer[0]];
 
     const parentGroup = urlType === "root" ? resultObj.Capability.Layer.Layer[0] : urlType === "group" ? resultObj.Capability.Layer.Layer[0] : resultObj.Capability.Layer.Layer[0];
@@ -358,18 +365,8 @@ function isDuplicate(layerList: TOCLayer[], newLayerName: string): boolean {
  */
 export async function fetchArcGISService(url: string, secured: boolean = false): Promise<Record<string, unknown>> {
   const serviceUrl = url.endsWith("?f=json") ? url : `${url}?f=json`;
-
-  const params: RequestInit = {
-    mode: "cors",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-
-  if (secured) {
-    // Add token handling if needed
-    // params.headers['Authorization'] = `Bearer ${token}`
-  }
+  // TODO: Use secured parameter for authentication when needed
+  console.debug("Fetching ArcGIS service", { url, secured });
 
   try {
     const axiosClient = getAxiosClient(serviceUrl);
@@ -418,21 +415,152 @@ export async function getGroupsFromArcGIS(source: TOCSource): Promise<TOCLayerGr
 }
 
 /**
- * Main function to load layer groups from all sources
+ * Merges groups together, handling duplicate layers with priority logic
+ */
+export function mergeGroupsTogether(targetGroup: TOCLayerGroup, sourceGroups: TOCLayerGroup[], alphaSort = true): TOCLayerGroup {
+  sourceGroups.forEach((sourceGroup) => {
+    sourceGroup.layers.forEach((sourceLayer) => {
+      const newLayer = {
+        ...sourceLayer,
+        group: targetGroup.value,
+        groupName: targetGroup.label,
+      };
+
+      let isDuplicateLayer = false;
+      targetGroup.layers = targetGroup.layers.map((existingLayer) => {
+        if (newLayer.tocDisplayName === existingLayer.tocDisplayName) {
+          isDuplicateLayer = true;
+          // Priority logic: prefer secured/primary layers over non-primary groups
+          if ((newLayer.secured || sourceGroup.primary) && !targetGroup.primary) {
+            return newLayer;
+          } else {
+            return existingLayer;
+          }
+        } else {
+          return existingLayer;
+        }
+      });
+
+      if (!isDuplicateLayer) {
+        targetGroup.layers.push(newLayer);
+      }
+    });
+  });
+
+  // First, set initialDrawIndex ONLY if not already set
+  // This preserves the true initial order from the server (before any sorting)
+  let initialIndex = targetGroup.layers.length;
+  targetGroup.layers = targetGroup.layers.map((layer) => {
+    initialIndex--;
+    // Only set initialDrawIndex if it's not already set (preserve server order)
+    if (layer.initialDrawIndex === undefined || layer.initialDrawIndex === null) {
+      layer.initialDrawIndex = initialIndex;
+    }
+    return layer;
+  });
+
+  // Now apply alphabetical sorting if requested
+  if (alphaSort) {
+    targetGroup.layers = targetGroup.layers.sort((a, b) => {
+      return a.tocDisplayName.localeCompare(b.tocDisplayName);
+    });
+  }
+
+  // Update current index and drawIndex based on the (potentially sorted) order
+  let index = targetGroup.layers.length;
+  targetGroup.layers = targetGroup.layers.map((layer) => {
+    index--;
+    layer.index = index;
+    layer.drawIndex = index;
+    return layer;
+  });
+
+  return targetGroup;
+}
+
+/**
+ * Merges multiple groups together, handling duplicates with priority logic
+ */
+export function mergeGroups(originalGroups: TOCLayerGroup[], newGroups: TOCLayerGroup[], alphaSort = true): TOCLayerGroup[] {
+  let mergedGroups = [...originalGroups];
+
+  newGroups.forEach((newGroup) => {
+    let isDuplicateGroup = false;
+
+    mergedGroups = mergedGroups.map((existingGroup) => {
+      if (newGroup.label === existingGroup.label) {
+        isDuplicateGroup = true;
+
+        newGroup.layers.forEach((sourceLayer) => {
+          let isDuplicateLayer = false;
+
+          existingGroup.layers = existingGroup.layers.map((existingLayer) => {
+            if (sourceLayer.tocDisplayName === existingLayer.tocDisplayName) {
+              isDuplicateLayer = true;
+              // Priority logic: prefer secured/primary layers
+              if ((sourceLayer.secured || newGroup.primary) && !existingGroup.primary) {
+                const updatedLayer = {
+                  ...sourceLayer,
+                  group: existingGroup.value,
+                  groupName: existingGroup.label,
+                };
+                return updatedLayer;
+              } else {
+                return existingLayer;
+              }
+            } else {
+              return existingLayer;
+            }
+          });
+
+          if (!isDuplicateLayer) {
+            const newLayer = {
+              ...sourceLayer,
+              group: existingGroup.value,
+              groupName: existingGroup.label,
+            };
+            existingGroup.layers.push(newLayer);
+          }
+        });
+
+        return existingGroup;
+      } else {
+        return existingGroup;
+      }
+    });
+
+    if (!isDuplicateGroup) {
+      mergedGroups.push(newGroup);
+    }
+  });
+
+  if (alphaSort) {
+    return mergedGroups.sort((a, b) => {
+      return a.value.localeCompare(b.value);
+    });
+  } else {
+    return mergedGroups;
+  }
+}
+
+/**
+ * Main function to load layer groups from all sources with proper merging
  */
 export async function loadLayerGroupsFromSources(sources: TOCSource[], config: Config): Promise<{ groups: TOCLayerGroup[]; defaultGroupName: string }> {
-  const allGroups: TOCLayerGroup[] = [];
+  let mergedGroups: TOCLayerGroup[] = [];
   let defaultGroupName = config.toc.default_group || "";
 
-  for (const source of sources) {
+  // Process sources in order, with primary sources first for priority
+  const sortedSources = [...sources].sort((a, b) => {
+    if (a.primary && !b.primary) return -1;
+    if (!a.primary && b.primary) return 1;
+    return 0;
+  });
+  console.log("sortedSources", sortedSources);
+  for (const source of sortedSources) {
     try {
       let groups: TOCLayerGroup[] = [];
       const type = source.type || "geoserver";
-      // Ensure source.type exists and is a string
-      if (!source.type || typeof source.type !== "string") {
-        console.warn("Source is missing type property or type is not a string:", source);
-        // continue;
-      }
 
       switch (type.toLowerCase()) {
         case "geoserver":
@@ -446,7 +574,14 @@ export async function loadLayerGroupsFromSources(sources: TOCSource[], config: C
           continue;
       }
 
-      // Find default group
+      // Mark groups with source properties
+      groups = groups.map((group) => ({
+        ...group,
+        primary: source.primary,
+        secured: source.secure,
+      }));
+
+      // Find default group from primary source
       if (source.primary && !defaultGroupName) {
         const defaultGroup = groups.find((g) => g.defaultGroup);
         if (defaultGroup) {
@@ -454,7 +589,12 @@ export async function loadLayerGroupsFromSources(sources: TOCSource[], config: C
         }
       }
 
-      allGroups.push(...groups);
+      // Merge with existing groups using sophisticated logic
+      if (mergedGroups.length === 0) {
+        mergedGroups = groups;
+      } else {
+        mergedGroups = mergeGroups(mergedGroups, groups, true);
+      }
     } catch (error) {
       console.error(`Error loading source ${source.layerUrl}:`, error);
       // Continue with other sources even if one fails
@@ -462,7 +602,437 @@ export async function loadLayerGroupsFromSources(sources: TOCSource[], config: C
   }
 
   return {
-    groups: allGroups,
+    groups: mergedGroups,
     defaultGroupName,
   };
+}
+
+/**
+ * Parse ESRI layer description for metadata
+ */
+interface ESRILayerOptions {
+  isGroupOn: string;
+  isLiveLayer: boolean;
+  isVisible: boolean;
+  isOpen: boolean;
+  sar: boolean;
+  description: string;
+  refreshInterval: string;
+  modalURL: string;
+  categories: string[];
+}
+
+export function parseESRIDescription(description: string): ESRILayerOptions {
+  const descriptionParts = description.replace(/(<([^>]+)>)/gi, "").split("#");
+  const returnObj: ESRILayerOptions = {
+    isGroupOn: "",
+    isLiveLayer: false,
+    isVisible: false,
+    isOpen: false,
+    sar: false,
+    description: "",
+    refreshInterval: "",
+    modalURL: "",
+    categories: [],
+  };
+
+  descriptionParts.forEach((descriptionPart) => {
+    const parts = descriptionPart.split("=");
+    const key = parts[0]?.trim();
+    if (key != null && key.length !== 0) {
+      // VALUE STRING
+      const value = parts[1];
+      if (value) {
+        switch (key.toUpperCase()) {
+          case "CATEGORY":
+            value.split(",").forEach((item) => {
+              returnObj.categories.push(item.trim());
+            });
+            break;
+          case "LIVELAYER":
+            returnObj.isLiveLayer = value.trim().toUpperCase() === "TRUE";
+            break;
+          case "GROUPON":
+            returnObj.isGroupOn = value.trim().toUpperCase() === "TRUE" ? "true" : "false";
+            break;
+          case "VISIBLE":
+            returnObj.isVisible = value.trim().toUpperCase() === "TRUE";
+            break;
+          case "OPEN":
+            returnObj.isOpen = value.trim().toUpperCase() === "TRUE";
+            break;
+          case "SAR":
+            returnObj.sar = value.trim().toUpperCase() === "TRUE";
+            break;
+          case "DESCRIPTION":
+            returnObj.description = value;
+            break;
+          case "REFRESH":
+            returnObj.refreshInterval = value;
+            break;
+          case "MODALURL":
+            returnObj.modalURL = value;
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  });
+
+  if (returnObj.categories.length === 0) {
+    returnObj.categories.push("Uncategorized");
+  }
+
+  return returnObj;
+}
+
+/**
+ * Sorting helper functions
+ */
+const sortByAlphaCompare = (a: TOCLayer, b: TOCLayer): number => {
+  if (a.tocDisplayName < b.tocDisplayName) {
+    return -1;
+  } else if (a.tocDisplayName > b.tocDisplayName) {
+    return 1;
+  } else {
+    return 0;
+  }
+};
+
+const sortByIndexCompare = (a: TOCLayer, b: TOCLayer): number => {
+  return b.drawIndex - a.drawIndex;
+};
+
+const sortGroupAlphaCompare = (a: TOCLayerGroup, b: TOCLayerGroup): number => {
+  if (a.value < b.value) {
+    return -1;
+  } else if (a.value > b.value) {
+    return 1;
+  } else {
+    return 0;
+  }
+};
+
+const updateLayerIndex = (layers: TOCLayer[], preserveInitialOrder = false): TOCLayer[] => {
+  let index = layers.length;
+  return layers.map((layer) => {
+    index--;
+    return {
+      ...layer,
+      index: index,
+      drawIndex: index,
+      // Only update initialDrawIndex if we're setting initial order
+      ...(preserveInitialOrder && { initialDrawIndex: index }),
+    };
+  });
+};
+
+const updateGroupLayerIndex = (groups: TOCLayerGroup[], callback?: (groups: TOCLayerGroup[]) => void): TOCLayerGroup[] => {
+  const updatedGroups = groups.map((group) => ({
+    ...group,
+    layers: updateLayerIndex(group.layers),
+  }));
+
+  if (callback) {
+    callback(updatedGroups);
+  }
+  return updatedGroups;
+};
+
+/**
+ * Sort layers by alpha or index
+ */
+export function sortLayers(layers: TOCLayer[], sortAlpha = false): TOCLayer[] {
+  const newLayers = [...layers];
+  if (sortAlpha) {
+    newLayers.sort(sortByAlphaCompare);
+  } else {
+    newLayers.sort(sortByIndexCompare);
+  }
+
+  return updateLayerIndex(newLayers);
+}
+
+/**
+ * Sort groups with primary groups first
+ */
+export function sortGroups(groups: TOCLayerGroup[], callback?: (groups: TOCLayerGroup[]) => void): TOCLayerGroup[] {
+  const primaryGroups = groups.filter((item) => item.primary);
+  const nonPrimaryGroups = groups.filter((item) => !item.primary);
+
+  primaryGroups.sort(sortGroupAlphaCompare);
+  nonPrimaryGroups.sort(sortGroupAlphaCompare);
+
+  const sortedGroups = [...primaryGroups, ...nonPrimaryGroups];
+
+  if (callback) {
+    callback(sortedGroups);
+    return sortedGroups;
+  } else {
+    return sortedGroups;
+  }
+}
+
+/**
+ * Sort groups and their layers
+ */
+export function sortGroupsLayers(groups: TOCLayerGroup[], sortAlpha = false, callback?: (groups: TOCLayerGroup[]) => void): TOCLayerGroup[] {
+  return sortGroups(groups, (sortedGroups) => {
+    const newGroups = sortedGroups.map((group) => {
+      const newGroup = { ...group };
+      const newLayers = [...group.layers];
+      if (sortAlpha) {
+        newLayers.sort(sortByAlphaCompare);
+      } else {
+        newLayers.sort(sortByIndexCompare);
+      }
+      newGroup.layers = newLayers;
+      return newGroup;
+    });
+
+    const indexedGroups = updateGroupLayerIndex(newGroups, callback);
+    return indexedGroups;
+  });
+}
+
+/**
+ * Build ESRI layer with all metadata and properties
+ */
+interface BuildESRILayerOptions {
+  tocType?: "LIST" | "FOLDER";
+  group: TOCLayerGroup;
+  layer: {
+    name: string;
+    url: string;
+    rootUrl?: string;
+    id: number;
+    options: ESRILayerOptions & {
+      title?: string;
+      opacity?: number;
+      minScale?: number;
+      maxScale?: number;
+      canDownload?: boolean;
+      identifyName?: string;
+      displayName?: string;
+      noAttributeTable?: boolean;
+      identifyTitleColumn?: string;
+      identifyIdColumn?: string;
+      disclaimerTitle?: string;
+      disclaimerUrl?: string;
+    };
+    hasAttachments?: boolean;
+    visible?: boolean;
+    queryable?: boolean;
+    opaque?: boolean;
+    legend?: {
+      legend: Array<{ height: number }>;
+    };
+    layers?: unknown[];
+    grouped?: boolean;
+    extent?: number[];
+    sourceSpatialReference?: { latestWkid?: number };
+  };
+  layerIndex: number;
+}
+
+export async function buildESRILayer(options: BuildESRILayerOptions, callback: (layer: TOCLayer) => void): Promise<void> {
+  const { group, layer, layerIndex } = options;
+  const secured = group.secured || false;
+
+  if (!layer) {
+    console.error("Layer is undefined in buildESRILayer");
+    return;
+  }
+
+  const visibleLayers = group.visibleLayers || [];
+  const layerNameOnly = layer.name;
+  let layerTitle = layer.options.title;
+  const queryable = layer.queryable !== undefined ? layer.queryable : false;
+  const opaque = layer.opaque !== undefined ? layer.opaque : false;
+  if (layerTitle === undefined) layerTitle = layerNameOnly;
+
+  const styleUrl = "";
+  const metadataUrl = `${layer.url}${layer.url.indexOf("?") > 0 ? "&" : "?"}f=json`;
+
+  // LIVE LAYER
+  const liveLayer = layer.options.isLiveLayer || false;
+  // DOWNLOAD
+  const canDownload = layer.options.canDownload !== undefined ? layer.options.canDownload : false;
+  // DISPLAY NAME
+  let displayName = layer.options.displayName;
+  if (displayName === "" || displayName === undefined) displayName = layerTitle;
+
+  if (group.prefix !== undefined && group.prefix !== "") {
+    displayName = `${group.prefix} - ${displayName}`;
+  }
+
+  // TOC DISPLAY NAME
+  const tocDisplayName = layerTitle;
+  // HAS ATTACHMENTS
+  const hasAttachments = layer.hasAttachments || false;
+  // OPACITY
+  const opacity = layer.options.opacity || 1;
+
+  // DISCLAIMER
+  const disclaimerTitle = layer.options.disclaimerTitle;
+  const disclaimerUrl = layer.options.disclaimerUrl;
+  let disclaimer: { title: string; url: string } | undefined = undefined;
+  if (disclaimerUrl !== "" || disclaimerTitle !== "") {
+    disclaimer = { title: disclaimerTitle || "", url: disclaimerUrl || "" };
+  }
+
+  const minScale = layer.options.minScale || 0;
+  const maxScale = layer.options.maxScale || 0;
+
+  // SET VISIBILITY
+  const layerVisible = layer.visible || visibleLayers.includes(layerNameOnly);
+
+  // LAYER PROPS
+  const layerOptions = {
+    sourceType: layer.grouped ? OL_DATA_TYPES.LayerGroup : OL_DATA_TYPES.ImageArcGISRest,
+    source: "rest",
+    projection: layer.sourceSpatialReference && layer.sourceSpatialReference.latestWkid ? `${layer.sourceSpatialReference.latestWkid}` : "3857",
+    layerName: layer.name,
+    url: layer.url,
+    tiled: false,
+    extent: layer.extent,
+    name: layer.name,
+    ...(layer.grouped &&
+      layer.layers && {
+        layers: layer.layers as LayerOptions[],
+      }),
+  };
+
+  try {
+    LayerHelpers.getLayer(layerOptions, (newLayer: unknown) => {
+      // Type assertion for OpenLayers layer
+      const olLayer = newLayer as {
+        setVisible: (visible: boolean) => void;
+        setOpacity: (opacity: number) => void;
+        setProperties: (properties: Record<string, unknown>) => void;
+        setZIndex: (index: number) => void;
+      };
+
+      const identifyUrl = (options: { url: string; point: string; layerId: number; tolerance: string; extent: string; resolution: string; geometryType: string }) =>
+        `${options.url}/identify?geometry=${options.point}&geometryType=${options.geometryType}&layers=visible%3A${options.layerId}&sr=3857&datumTransformations=3857&tolerance=${options.tolerance}&mapExtent=${options.extent}&imageDisplay=${options.resolution}&maxAllowableOffset=10&returnGeometry=true&returnFieldName=false&f=json`;
+
+      const getAttachmentUrl = (options: { url: string; layerId: number; objectId: string }) =>
+        `${options.url}/${options.layerId}/queryAttachments?objectIds=${options.objectId}&returnUrl=true&f=json`;
+
+      const rootInfoUrl = layer.url;
+
+      let attachmentUrl = getAttachmentUrl({
+        url: layer.rootUrl || layer.url,
+        layerId: layer.id,
+        objectId: "#OBJECTID#",
+      });
+
+      let wfsUrl = identifyUrl({
+        url: layer.rootUrl || layer.url,
+        point: "#GEOMETRY#",
+        layerId: layer.id,
+        tolerance: "#TOLERANCE#",
+        extent: "#EXTENT#",
+        resolution: "#RESOLUTION#",
+        geometryType: "#GEOMETRYTYPE#",
+      });
+
+      // Handle token authentication
+      try {
+        const url = new URL(rootInfoUrl);
+        const urlParams = new URLSearchParams(url.searchParams);
+        const url_token = urlParams.get("token");
+        if (url_token) {
+          wfsUrl = `${wfsUrl}&token=${url_token}`;
+          if (hasAttachments) {
+            attachmentUrl = `${attachmentUrl}&token=${url_token}`;
+          }
+        }
+      } catch (error) {
+        console.warn("Error parsing URL for token:", error);
+      }
+
+      olLayer.setVisible(layerVisible);
+      olLayer.setOpacity(opacity);
+      olLayer.setProperties({
+        name: layerNameOnly,
+        displayName: displayName,
+        tocDisplayName: tocDisplayName,
+        wfsUrl: wfsUrl,
+        rootInfoUrl: rootInfoUrl,
+        disableParcelClick: liveLayer,
+        queryable: queryable,
+        opaque: opaque,
+        minScale: minScale,
+        maxScale: maxScale,
+        attachmentUrl: hasAttachments ? attachmentUrl : null,
+        hasAttachments: hasAttachments,
+      });
+
+      // Add to map using LayerManager for proper categorization and z-index management
+      const managedLayerId = LayerManager.addLayer(olLayer as OpenLayersLayer, "TOC", layerNameOnly, {
+        index: layerIndex, // Use layerIndex for proper z-ordering
+        metadata: {
+          groupName: group.label,
+          groupUrl: group.url,
+          secured: secured,
+          drawIndex: layerIndex,
+        },
+      });
+
+      let legendHeight = -1;
+      if (layer.legend !== undefined && layer.legend !== null) {
+        legendHeight = 36;
+        layer.legend.legend.forEach((legendItem) => {
+          legendHeight += parseInt(legendItem.height.toString());
+        });
+      }
+
+      // Generate unique ID for this layer
+      const generateUniqueLayerId = (name: string, groupName: string): string => {
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substring(2, 8);
+        const safeName = name.replace(/[^a-zA-Z0-9]/g, "_");
+        const safeGroupName = groupName.replace(/[^a-zA-Z0-9]/g, "_");
+        return `toc_layer_${safeGroupName}_${safeName}_${timestamp}_${random}`;
+      };
+
+      const returnLayer: TOCLayer = {
+        id: generateUniqueLayerId(layerNameOnly, group.label || ""),
+        name: layerNameOnly,
+        height: 30,
+        drawIndex: layerIndex,
+        index: layerIndex,
+        initialDrawIndex: layerIndex, // Preserve initial sort order from server
+        styleUrl: styleUrl,
+        showLegend: false,
+        legendHeight: legendHeight,
+        legendImage: null,
+        legendObj: layer.legend || null,
+        legendFetching: false,
+        visible: layerVisible,
+        layer: olLayer,
+        managedLayerId: managedLayerId || undefined, // Store the managed layer ID from LayerManager
+        metadataUrl: metadataUrl,
+        opacity: opacity,
+        minScale: minScale,
+        maxScale: maxScale,
+        liveLayer: liveLayer,
+        group: group.value,
+        groupName: group.label,
+        userLayer: false,
+        secured: secured,
+        canDownload: canDownload,
+        displayName: displayName,
+        tocDisplayName: tocDisplayName,
+        hasAttachments: hasAttachments,
+        disclaimer: disclaimer ? disclaimer.title : undefined,
+      };
+
+      callback(returnLayer);
+    });
+  } catch (error) {
+    console.error("Error building ESRI layer:", error);
+  }
 }

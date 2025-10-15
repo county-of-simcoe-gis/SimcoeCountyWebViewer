@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import ZoomToExtent from "../ZoomToExtent";
+import ZoomToExtent from "@/components/map/controls/ZoomToExtent";
 import type Map from "ol/Map";
 
 // Create mock map and view

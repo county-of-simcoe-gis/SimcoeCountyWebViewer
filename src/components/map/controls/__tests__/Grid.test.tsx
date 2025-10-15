@@ -1,8 +1,17 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import Grid from "../Grid";
+import Grid from "@/components/map/controls/Grid";
 import type Map from "ol/Map";
 import Graticule from "ol/layer/Graticule";
+import { LayerManager } from "@/utils/openlayers/LayerManager";
+
+// Mock LayerManager
+vi.mock("@/utils/openlayers/LayerManager", () => ({
+  LayerManager: {
+    addLayer: vi.fn().mockReturnValue("grid-layer-id"),
+    removeLayer: vi.fn().mockReturnValue(true),
+  },
+}));
 
 // Mock OpenLayers Graticule
 const mockGraticule = {
@@ -33,6 +42,9 @@ const mockLayers = {
 describe("Grid", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Re-set mock return values after clearing
+    vi.mocked(LayerManager.addLayer).mockReturnValue("grid-layer-id");
+    vi.mocked(LayerManager.removeLayer).mockReturnValue(true);
     mockMap.getLayers = vi.fn().mockReturnValue(mockLayers);
     mockLayers.getArray.mockReturnValue([]);
   });
@@ -50,29 +62,71 @@ describe("Grid", () => {
     expect(button).toBeInTheDocument();
   });
 
-  it("toggles grid when button is clicked", () => {
+  it("toggles grid when button is clicked", async () => {
     render(<Grid map={mockMap} />);
 
     const button = screen.getByTitle("Show map grid");
-    fireEvent.click(button);
 
-    expect(mockMap.addLayer).toHaveBeenCalledWith(mockGraticule);
-    expect(screen.getByTitle("Hide map grid")).toBeInTheDocument();
+    await act(async () => {
+      fireEvent.click(button);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTitle("Hide map grid")).toBeInTheDocument();
+    });
+
+    expect(LayerManager.addLayer).toHaveBeenCalledWith(mockGraticule, "Overlay", "Grid Graticule", {
+      index: 0,
+      metadata: {
+        isGrid: true,
+        isOverlay: true,
+      },
+    });
   });
 
-  it("removes grid when toggled off", () => {
+  it("removes grid when toggled off", async () => {
     render(<Grid map={mockMap} />);
 
     const button = screen.getByTitle("Show map grid");
 
     // Turn on grid
-    fireEvent.click(button);
-    expect(mockMap.addLayer).toHaveBeenCalledWith(mockGraticule);
+    await act(async () => {
+      fireEvent.click(button);
+    });
 
-    // Turn off grid
+    // Verify that addLayer was called and the grid state updated
+    await waitFor(() => {
+      expect(screen.getByTitle("Hide map grid")).toBeInTheDocument();
+    });
+
+    // Check that addLayer was called
+    expect(LayerManager.addLayer).toHaveBeenCalled();
+    expect(LayerManager.addLayer).toHaveBeenCalledWith(mockGraticule, "Overlay", "Grid Graticule", {
+      index: 0,
+      metadata: {
+        isGrid: true,
+        isOverlay: true,
+      },
+    });
+
+    // Turn off grid - query for the updated button title
+    await waitFor(() => {
+      expect(screen.getByTitle("Hide map grid")).toBeInTheDocument();
+    });
+
     const hideButton = screen.getByTitle("Hide map grid");
-    fireEvent.click(hideButton);
-    expect(mockMap.removeLayer).toHaveBeenCalledWith(mockGraticule);
+    await act(async () => {
+      fireEvent.click(hideButton);
+    });
+
+    // Wait for state to update back to "Show"
+    await waitFor(() => {
+      expect(screen.getByTitle("Show map grid")).toBeInTheDocument();
+    });
+
+    // Verify removeLayer was called at some point (check all calls, not after clearing)
+    expect(LayerManager.removeLayer).toHaveBeenCalled();
+    expect(LayerManager.removeLayer).toHaveBeenCalledWith("grid-layer-id");
   });
 
   it("creates graticule with correct styling", () => {
@@ -82,40 +136,44 @@ describe("Grid", () => {
       strokeStyle: expect.any(Object),
       showLabels: true,
       wrapX: false,
-      zIndex: 10000,
     });
   });
 
-  it("cleans up layer on unmount when grid is active", () => {
+  it("cleans up layer on unmount when grid is active", async () => {
     const { unmount } = render(<Grid map={mockMap} />);
 
     // Turn on grid
     const button = screen.getByTitle("Show map grid");
-    fireEvent.click(button);
+    await act(async () => {
+      fireEvent.click(button);
+    });
 
-    // Mock that the layer exists in the map
-    mockLayers.getArray.mockReturnValue([mockGraticule]);
+    // Clear the mock to focus on unmount behavior
+    vi.mocked(LayerManager.removeLayer).mockClear();
 
     unmount();
 
-    expect(mockMap.removeLayer).toHaveBeenCalledWith(mockGraticule);
+    // Should be called once on unmount cleanup
+    await waitFor(() => {
+      expect(LayerManager.removeLayer).toHaveBeenCalledTimes(1);
+    });
+    expect(LayerManager.removeLayer).toHaveBeenCalledWith("grid-layer-id");
   });
 
   it("does not call removeLayer when layer is not in map on unmount", () => {
     // Reset all mocks specifically for this test
     vi.clearAllMocks();
-    mockMap.getLayers = vi.fn().mockReturnValue(mockLayers);
-    mockLayers.getArray.mockReturnValue([]); // Empty array means layer not in map
 
     const { unmount } = render(<Grid map={mockMap} />);
 
+    // Don't turn on grid - it should remain off
     // Reset the call count after initial render to focus on unmount behavior
-    mockMap.removeLayer.mockClear();
+    vi.mocked(LayerManager.removeLayer).mockClear();
 
     unmount();
 
-    // Since the layer is not in the map (empty array), removeLayer should not be called
-    expect(mockMap.removeLayer).toHaveBeenCalledTimes(0);
+    // Since the grid was never turned on, removeLayer should not be called
+    expect(LayerManager.removeLayer).toHaveBeenCalledTimes(0);
   });
 
   it("handles missing map gracefully", () => {

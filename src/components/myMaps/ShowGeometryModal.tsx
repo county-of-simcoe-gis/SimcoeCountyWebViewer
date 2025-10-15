@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { MyMapsItem } from "@/types/myMaps";
-import "./ShowGeometryModal.css";
+import "@/components/myMaps/ShowGeometryModal.css";
 
 interface ShowGeometryModalProps {
   item: MyMapsItem | null;

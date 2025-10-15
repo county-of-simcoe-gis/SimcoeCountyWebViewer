@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { TOCLayerGroup, TOCLayer } from "../../stores/tocStore";
-import LayerItem from "./LayerItem";
-import "./LayersList.css";
+import React, { useState, useEffect, useRef } from "react";
+import { TOCLayerGroup, TOCLayer, useTOCStore } from "@/stores/tocStore";
+import LayerItem from "@/components/TOC/LayerItem";
+import "@/components/TOC/LayersList.css";
 
 interface LayersListProps {
   group: TOCLayerGroup;
@@ -15,6 +15,11 @@ interface LayersListProps {
 
 export default function LayersList({ group, searchText, onLayerChange, onLegendToggle, onLayerOptionsClick }: LayersListProps) {
   const [layers, setLayers] = useState<TOCLayer[]>([]);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const dragCounter = useRef(0);
+
+  const { moveLayer } = useTOCStore();
 
   // Update layers when group or search text changes
   useEffect(() => {
@@ -27,7 +32,91 @@ export default function LayersList({ group, searchText, onLayerChange, onLegendT
 
       setLayers(filteredLayers);
     }
-  }, [group, searchText]);
+  }, [group, group.layers, searchText]);
+
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", `${index}:${layers[index].id}`);
+
+    // Add dragging class to the dragged element
+    const target = e.target as HTMLElement;
+    const container = target.closest(".sc-toc-item-container") as HTMLElement;
+    if (container) {
+      container.classList.add("dragging");
+    }
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+    dragCounter.current = 0;
+
+    // Remove dragging class
+    const target = e.target as HTMLElement;
+    const container = target.closest(".sc-toc-item-container") as HTMLElement;
+    if (container) {
+      container.classList.remove("dragging");
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+
+    // Only set drag over if it's a different item
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragLeave = () => {
+    dragCounter.current--;
+
+    // Only clear drag over if all child elements have been left
+    if (dragCounter.current === 0) {
+      setDragOverIndex(null);
+    }
+  };
+
+  const handleDragEnter = (e: React.DragEvent, index: number) => {
+    dragCounter.current++;
+
+    // Set drag over index
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    setDragOverIndex(null);
+    dragCounter.current = 0;
+
+    const dragData = e.dataTransfer.getData("text/plain");
+    const [draggedIndexStr, draggedLayerId] = dragData.split(":");
+    const draggedIndex = parseInt(draggedIndexStr, 10);
+
+    if (isNaN(draggedIndex) || draggedIndex === dropIndex) {
+      return;
+    }
+
+    // Verify that the dragged layer ID matches the layer at the dragged index
+    if (layers[draggedIndex]?.id !== draggedLayerId) {
+      console.warn("Drag data mismatch - layer may have been reordered during drag");
+      return;
+    }
+
+    // Reorder layers locally first for immediate feedback
+    const newLayers = [...layers];
+    const [movedLayer] = newLayers.splice(draggedIndex, 1);
+    newLayers.splice(dropIndex, 0, movedLayer);
+    setLayers(newLayers);
+
+    // Update the store to persist the change (this also updates LayerManager z-indices)
+    moveLayer(group.label, draggedIndex, dropIndex);
+  };
 
   if (!group.layers || group.layers.length === 0) {
     return (
@@ -40,9 +129,27 @@ export default function LayersList({ group, searchText, onLayerChange, onLegendT
   return (
     <div className="sc-toc-layer-container">
       <ul className="sc-toc-layers-list">
-        {layers.map((layer) => (
-          <li key={layer.name} className="sc-toc-layer-item">
-            <LayerItem layerInfo={layer} group={group} searchText={searchText} onLayerChange={onLayerChange} onLegendToggle={onLegendToggle} onLayerOptionsClick={onLayerOptionsClick} />
+        {layers.map((layer, index) => (
+          <li
+            key={`${group.value}-${layer.name}`}
+            className={`sc-toc-layer-item ${dragOverIndex === index ? "drag-over" : ""}`}
+            draggable={false}
+            onDragOver={(e) => handleDragOver(e, index)}
+            onDragLeave={handleDragLeave}
+            onDragEnter={(e) => handleDragEnter(e, index)}
+            onDrop={(e) => handleDrop(e, index)}
+          >
+            <div draggable onDragStart={(e) => handleDragStart(e, index)} onDragEnd={handleDragEnd} className={draggedIndex === index ? "dragging" : ""}>
+              <LayerItem
+                layerInfo={layer}
+                group={group}
+                searchText={searchText}
+                showDragHandle={true}
+                onLayerChange={onLayerChange}
+                onLegendToggle={onLegendToggle}
+                onLayerOptionsClick={onLayerOptionsClick}
+              />
+            </div>
           </li>
         ))}
       </ul>

@@ -12,6 +12,8 @@ import MapContainer from "@/components/MapContainer";
 import LoadingScreen from "@/components/LoadingScreen";
 import MyMapsService from "@/components/myMaps/MyMapsService";
 import GlobalDrawingOptionsPopup from "@/components/myMaps/GlobalDrawingOptionsPopup";
+import LayerInfoModal from "@/components/LayerInfo/LayerInfoModal";
+import LegendModal from "@/components/Legend/LegendModal";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -46,7 +48,7 @@ export default function Layout({ children }: LayoutProps) {
   const isLoading = isAnyLoading();
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden" }}>
+    <div className="app-layout-container print:hidden" style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden" }}>
       {/* Portal root for modals */}
       <div id="portal-root" />
 
@@ -91,6 +93,12 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Global Drawing Options Popup - available even when MyMaps panel is closed */}
       <GlobalDrawingOptionsPopup />
+
+      {/* Layer Info Modal - displays layer metadata and download options */}
+      <LayerInfoModal />
+
+      {/* Legend Modal - displays legends for visible layers */}
+      <LegendModal />
 
       {/* Additional content */}
       {children}

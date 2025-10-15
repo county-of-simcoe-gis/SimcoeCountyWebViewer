@@ -1,4 +1,4 @@
-import { prisma } from "./prisma";
+import { prisma } from "@/lib/prisma";
 import type { MyMapsItem, DrawType } from "@/stores/myMapsStore";
 
 /**

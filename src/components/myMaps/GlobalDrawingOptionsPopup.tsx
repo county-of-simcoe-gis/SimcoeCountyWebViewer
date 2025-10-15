@@ -5,10 +5,10 @@ import { useEventStore } from "@/stores/eventStore";
 import { useMyMapsStore } from "@/stores/myMapsStore";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
-import DrawingOptionsPopup from "./DrawingOptionsPopup";
-import MyMapsItemPopup from "./MyMapsItemPopup";
-import ShowGeometryModal from "./ShowGeometryModal";
-import URLModal from "../common/URLModal";
+import DrawingOptionsPopup from "@/components/myMaps/DrawingOptionsPopup";
+import MyMapsItemPopup from "@/components/myMaps/MyMapsItemPopup";
+import ShowGeometryModal from "@/components/myMaps/ShowGeometryModal";
+import URLModal from "@/components/common/URLModal";
 import { getMapScale, getMapExtent, getMapCenter, buildFeedbackUrl } from "@/utils/mapHelpers";
 import type { MyMapsItem as MyMapsItemType } from "@/types/myMaps";
 

@@ -3,7 +3,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_BASE_PATH}/api`, // This baseURL will prepend /api to all requests made using this instance
+  baseURL: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/api`, // This baseURL will prepend /api to all requests made using this instance
 });
 
 /**

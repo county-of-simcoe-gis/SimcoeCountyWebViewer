@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import ExtentHistory from "../ExtentHistory";
+import ExtentHistory from "@/components/map/controls/ExtentHistory";
 import type Map from "ol/Map";
 
 // Mock the mapStore

@@ -2,9 +2,20 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import type { Layer } from "ol/layer";
 import LayerOrderConfig from "@/utils/openlayers/LayerOrderConfig.json";
+import { calculateZIndex } from "@/stores/tocStore";
 
 // Layer category types
 export type LayerCategory = "BaseMap" | "TOC" | "MyMaps" | "Tools" | "Graphics" | "Overlay" | "Popup";
+
+// Image cache interface for legend images
+export interface ImageCacheEntry {
+  url: string;
+  width: number;
+  height: number;
+  loadedAt: Date;
+  isLoading: boolean;
+  error?: string;
+}
 
 // Managed layer interface
 export interface ManagedLayer {
@@ -26,6 +37,12 @@ interface LayerManagerState {
 
   // Next available z-index for each category
   nextZIndex: Record<LayerCategory, number>;
+
+  // Global opacity multiplier (0.0 to 1.0)
+  globalOpacity: number;
+
+  // Image cache for legend images
+  imageCache: Record<string, ImageCacheEntry>;
 
   // Actions
   addLayer: (
@@ -57,6 +74,18 @@ interface LayerManagerState {
 
   getNextZIndex: (category: LayerCategory, index?: number) => number;
 
+  // Get layer extent
+  getLayerExtent: (layerId: string) => number[] | { needsCapabilities: boolean; wmsUrl: string; layerName: string } | null;
+
+  // Global opacity methods
+  setGlobalOpacity: (opacity: number) => void;
+  getGlobalOpacity: () => number;
+
+  // Image cache methods
+  getCachedImage: (url: string) => ImageCacheEntry | null;
+  cacheImage: (url: string) => Promise<ImageCacheEntry>;
+  clearImageCache: () => void;
+
   // Debug helpers
   logLayerOrder: () => void;
 
@@ -70,25 +99,6 @@ function generateLayerId(category: LayerCategory, name: string): string {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2, 8);
   return `${category}_${name.replace(/[^a-zA-Z0-9]/g, "_")}_${timestamp}_${random}`;
-}
-
-// Calculate z-index for a layer based on category and position
-function calculateZIndex(category: LayerCategory, index: number): number {
-  const categoryConfig = LayerOrderConfig.categories[category];
-  if (!categoryConfig) {
-    console.warn(`Unknown layer category: ${category}`);
-    return 0;
-  }
-
-  const zIndex = categoryConfig.zIndexRange.min + index;
-
-  // Ensure we don't exceed the max z-index for this category
-  if (zIndex > categoryConfig.zIndexRange.max) {
-    console.warn(`Z-index ${zIndex} exceeds maximum for category ${category} (${categoryConfig.zIndexRange.max})`);
-    return categoryConfig.zIndexRange.max;
-  }
-
-  return zIndex;
 }
 
 export const useLayerManagerStore = create<LayerManagerState>()(
@@ -113,6 +123,12 @@ export const useLayerManagerStore = create<LayerManagerState>()(
       Overlay: LayerOrderConfig.categories.Overlay.zIndexRange.min,
       Popup: LayerOrderConfig.categories.Popup.zIndexRange.min,
     },
+
+    // Global opacity multiplier (1.0 = full opacity)
+    globalOpacity: 1.0,
+
+    // Image cache for legend images
+    imageCache: {},
 
     // Add a layer to the specified category
     addLayer: (layer, category, name, options = {}) => {
@@ -144,6 +160,12 @@ export const useLayerManagerStore = create<LayerManagerState>()(
       // Set the z-index on the actual OpenLayers layer
       layer.setZIndex(zIndex);
 
+      // Apply global opacity to the new layer only if it's a TOC layer
+      if (category === "TOC") {
+        const currentOpacity = layer.getOpacity();
+        layer.setOpacity(currentOpacity * get().globalOpacity);
+      }
+
       set((draft) => {
         // Insert layer at the specified index
         draft.layers[category].splice(insertIndex, 0, managedLayer);
@@ -158,8 +180,6 @@ export const useLayerManagerStore = create<LayerManagerState>()(
         // Update next available z-index
         draft.nextZIndex[category] = calculateZIndex(category, draft.layers[category].length);
       });
-
-      // console.log(`🔧 Added layer "${name}" to category "${category}" with z-index ${zIndex}`)
 
       return id;
     },
@@ -191,7 +211,6 @@ export const useLayerManagerStore = create<LayerManagerState>()(
       });
 
       if (found) {
-        console.log(`🗑️ Removed layer ${layerId}`);
       }
 
       return found;
@@ -248,7 +267,6 @@ export const useLayerManagerStore = create<LayerManagerState>()(
         draft.nextZIndex[newCategory] = calculateZIndex(newCategory, draft.layers[newCategory].length);
       });
 
-      console.log(`📦 Moved layer ${layerId} from ${sourceCategory} to ${newCategory}`);
       return true;
     },
 
@@ -284,8 +302,13 @@ export const useLayerManagerStore = create<LayerManagerState>()(
       if (!layer) return false;
 
       // Update the OpenLayers layer directly (outside of Immer)
+      // Only apply global opacity if this is a TOC layer
       if (layer.layer) {
-        layer.layer.setOpacity(opacity);
+        if (layer.category === "TOC") {
+          layer.layer.setOpacity(opacity * state.globalOpacity);
+        } else {
+          layer.layer.setOpacity(opacity);
+        }
       }
 
       set((draft) => {
@@ -348,22 +371,271 @@ export const useLayerManagerStore = create<LayerManagerState>()(
       return calculateZIndex(category, insertIndex);
     },
 
+    // Get layer extent using OpenLayers getExtent method
+    getLayerExtent: (layerId) => {
+      const state = get();
+      const managedLayer = state.getLayer(layerId);
+
+      if (!managedLayer || !managedLayer.layer) {
+        return null;
+      }
+
+      try {
+        const olLayer = managedLayer.layer;
+
+        // Method 1: Try to get extent from the layer source
+        if ("getSource" in olLayer && typeof olLayer.getSource === "function") {
+          const source = olLayer.getSource();
+
+          if (source && "getExtent" in source && typeof source.getExtent === "function") {
+            const extent = source.getExtent();
+
+            // Validate the extent is not infinite or invalid
+            if (extent && Array.isArray(extent) && extent.length === 4) {
+              const [minX, minY, maxX, maxY] = extent;
+              const isValidExtent =
+                isFinite(minX) &&
+                isFinite(minY) &&
+                isFinite(maxX) &&
+                isFinite(maxY) &&
+                minX !== -Infinity &&
+                minY !== -Infinity &&
+                maxX !== Infinity &&
+                maxY !== Infinity &&
+                minX < maxX &&
+                minY < maxY;
+
+              if (isValidExtent) {
+                // Check if extent seems to be in geographic coordinates (EPSG:4326)
+                // If coordinates are in the range of lat/lon, we'll handle transformation in the UI layer
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const isGeographic = minX >= -180 && maxX <= 180 && minY >= -90 && maxY <= 90;
+
+                return extent;
+              }
+            } else {
+            }
+          }
+
+          // Method 2: For WMS layers, try to get extent from source params or capabilities
+          if (source && "getParams" in source && typeof source.getParams === "function") {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const params = (source as any).getParams();
+
+            // Check if we have layer-specific extent information in metadata
+            if (managedLayer.metadata && managedLayer.metadata.extent) {
+              return managedLayer.metadata.extent as number[];
+            }
+
+            // Try to get the WMS URL from the source and make a GetCapabilities request
+            if (source && "getUrl" in source && typeof source.getUrl === "function") {
+              try {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const wmsUrl = (source as any).getUrl();
+
+                if (wmsUrl && typeof wmsUrl === "string") {
+                  const layerName = params.LAYERS;
+                  if (layerName) {
+                    // Make a synchronous attempt to get capabilities
+                    // Note: This is a fallback - the UI layer will handle this better with async
+                    // Return a special marker that indicates we should try GetCapabilities
+                    return { needsCapabilities: true, wmsUrl, layerName };
+                  }
+                }
+              } catch (error) {
+                console.warn(`Failed to get WMS URL from source:`, error);
+              }
+            }
+          }
+
+          // Method 3: For Image sources, try to get projection extent
+          if (source && "getProjection" in source && typeof source.getProjection === "function") {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const projection = (source as any).getProjection();
+            if (projection && "getExtent" in projection && typeof projection.getExtent === "function") {
+              const projExtent = projection.getExtent();
+              if (projExtent && Array.isArray(projExtent) && projExtent.length === 4) {
+                // This might be the full projection extent, which could be too large
+                // But it's better than nothing
+                return projExtent;
+              }
+            }
+          }
+        }
+
+        // Method 4: Fallback - try to get extent directly from the layer if it has the method
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ("getExtent" in olLayer && typeof (olLayer as any).getExtent === "function") {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const extent = (olLayer as any).getExtent();
+
+          if (extent && Array.isArray(extent) && extent.length === 4) {
+            const [minX, minY, maxX, maxY] = extent;
+            const isValidExtent =
+              isFinite(minX) && isFinite(minY) && isFinite(maxX) && isFinite(maxY) && minX !== -Infinity && minY !== -Infinity && maxX !== Infinity && maxY !== Infinity && minX < maxX && minY < maxY;
+
+            if (isValidExtent) {
+              return extent;
+            }
+          }
+        }
+
+        return null;
+      } catch (error) {
+        console.warn(`Failed to get extent for layer ${layerId}:`, error);
+        return null;
+      }
+    },
+
+    // Set global opacity and apply to all TOC layers only
+    setGlobalOpacity: (opacity) => {
+      // Clamp opacity between 0 and 1
+      const clampedOpacity = Math.max(0, Math.min(1, opacity));
+
+      set((draft) => {
+        draft.globalOpacity = clampedOpacity;
+      });
+
+      // Apply the new global opacity ONLY to TOC category layers
+      const state = get();
+      const tocLayers = state.getLayersByCategory("TOC");
+      tocLayers.forEach((managedLayer) => {
+        if (managedLayer.layer) {
+          // Apply both individual layer opacity and global opacity
+          managedLayer.layer.setOpacity(managedLayer.opacity * clampedOpacity);
+        }
+      });
+    },
+
+    // Get current global opacity
+    getGlobalOpacity: () => {
+      return get().globalOpacity;
+    },
+
+    // Get cached image entry
+    getCachedImage: (url) => {
+      const state = get();
+      return state.imageCache[url] || null;
+    },
+
+    // Cache an image and return its dimensions
+    cacheImage: async (url) => {
+      const state = get();
+
+      // Check if already cached and not loading
+      if (state.imageCache[url] && !state.imageCache[url].isLoading) {
+        return state.imageCache[url];
+      }
+
+      // If already loading, wait for it to complete instead of starting a new request
+      if (state.imageCache[url] && state.imageCache[url].isLoading) {
+        // Wait for the existing request to complete
+        return new Promise((resolve) => {
+          const checkInterval = setInterval(() => {
+            const currentCache = get().imageCache[url];
+            if (currentCache && !currentCache.isLoading) {
+              clearInterval(checkInterval);
+              resolve(currentCache);
+            }
+          }, 50);
+
+          // Timeout after 10 seconds to prevent infinite waiting
+          setTimeout(() => {
+            clearInterval(checkInterval);
+            resolve(
+              get().imageCache[url] || {
+                url,
+                width: 0,
+                height: 0,
+                loadedAt: new Date(),
+                isLoading: false,
+                error: "Timeout waiting for image to load",
+              }
+            );
+          }, 10000);
+        });
+      }
+
+      // Set loading state
+      set((draft) => {
+        draft.imageCache[url] = {
+          url,
+          width: 0,
+          height: 0,
+          loadedAt: new Date(),
+          isLoading: true,
+        };
+      });
+
+      try {
+        // Load the image to get dimensions
+        const img = new Image();
+        const loadPromise = new Promise<{ width: number; height: number }>((resolve, reject) => {
+          img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+          img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+        });
+
+        img.src = url;
+        const { width, height } = await loadPromise;
+
+        // Update cache with loaded data
+        const cacheEntry: ImageCacheEntry = {
+          url,
+          width,
+          height,
+          loadedAt: new Date(),
+          isLoading: false,
+        };
+
+        set((draft) => {
+          draft.imageCache[url] = cacheEntry;
+        });
+
+        return cacheEntry;
+      } catch (error) {
+        // Update cache with error
+        const errorEntry: ImageCacheEntry = {
+          url,
+          width: 0,
+          height: 0,
+          loadedAt: new Date(),
+          isLoading: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        };
+
+        set((draft) => {
+          draft.imageCache[url] = errorEntry;
+        });
+
+        return errorEntry;
+      }
+    },
+
+    // Clear image cache
+    clearImageCache: () => {
+      set((draft) => {
+        draft.imageCache = {};
+      });
+    },
+
     // Debug helper to log current layer order
     logLayerOrder: () => {
-      // const state = get()
-      // console.group('🗺️ Layer Order')
-      // Object.keys(state.layers).forEach((category) => {
-      // const categoryKey = category as LayerCategory
-      // const layers = state.layers[categoryKey]
-      // if (layers.length > 0) {
-      //   console.group(`📁 ${category} (${layers.length} layers)`)
-      //   layers.forEach((layer, index) => {
-      //     console.log(`  ${index + 1}. ${layer.name} (z-index: ${layer.zIndex}, visible: ${layer.visible})`)
-      //   })
-      //   console.groupEnd()
-      // }
-      // })
-      // console.groupEnd()
+      const state = get();
+      console.log("📊 Layer Manager - Current Layer Order:");
+
+      Object.keys(state.layers).forEach((category) => {
+        const categoryKey = category as LayerCategory;
+        const categoryLayers = state.layers[categoryKey];
+
+        if (categoryLayers.length > 0) {
+          console.log(`\n  ${categoryKey} (${categoryLayers.length} layers):`);
+          categoryLayers.forEach((layer, idx) => {
+            console.log(`    [${idx}] z:${layer.zIndex} - ${layer.name} (visible: ${layer.visible}, opacity: ${layer.opacity})`, layer.metadata);
+          });
+        }
+      });
+
+      console.log("\n");
     },
 
     // Clear all layers in a category
@@ -372,7 +644,6 @@ export const useLayerManagerStore = create<LayerManagerState>()(
         draft.layers[category] = [];
         draft.nextZIndex[category] = LayerOrderConfig.categories[category].zIndexRange.min;
       });
-      // console.log(`🧹 Cleared all layers from category: ${category}`)
     },
 
     // Clear all layers
@@ -384,7 +655,6 @@ export const useLayerManagerStore = create<LayerManagerState>()(
           draft.nextZIndex[categoryKey] = LayerOrderConfig.categories[categoryKey].zIndexRange.min;
         });
       });
-      console.log("🧹 Cleared all layers from all categories");
     },
   }))
 );

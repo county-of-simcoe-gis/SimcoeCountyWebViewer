@@ -25,7 +25,7 @@ describe("SidebarSlim", () => {
     // Ensure sidebar is closed
     useSidebarStore.setState({ isOpen: false, activeTab: 0, themes: [], tools: [] });
 
-    const { container } = render(<SidebarSlim />);
+    const { container, unmount } = render(<SidebarSlim />);
     expect(screen.getByText("Layers")).toBeInTheDocument();
 
     const more = screen.getByTitle("More Options");
@@ -41,5 +41,8 @@ describe("SidebarSlim", () => {
 
     // backdrop appears
     expect(document.querySelector(".sc-menu-button-list-container")).toBeTruthy();
+
+    // Clean up
+    unmount();
   });
 });

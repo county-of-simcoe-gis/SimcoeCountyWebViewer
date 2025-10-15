@@ -11,20 +11,9 @@ declare global {
     map?: Map;
   }
 }
-import {
-  GML,
-  GPX,
-  KML,
-  EsriJSON,
-  GeoJSON,
-  TopoJSON,
-  IGC,
-  Polyline,
-  WKT,
-  MVT,
-} from "ol/format";
+import { GML, GPX, KML, EsriJSON, GeoJSON, TopoJSON, IGC, Polyline, WKT, MVT } from "ol/format";
 
-import { OL_DATA_TYPES, OLDataType } from "./types";
+import { OL_DATA_TYPES, OLDataType } from "@/utils/openlayers/types";
 
 export class FeatureHelpers {
   /**
@@ -88,7 +77,7 @@ export class FeatureHelpers {
     // Get map projection from global map instance
     const mapProjection = featureProjection || window.map?.getView().getProjection();
     const parser = this.getVectorFormat(targetFormat);
-    
+
     if (!parser || !("writeFeatures" in parser)) {
       console.error("Invalid format parser for writing features");
       return undefined;
@@ -116,16 +105,12 @@ export class FeatureHelpers {
    * @param projection - Source projection
    * @returns Array of parsed features or undefined
    */
-  static getFeatures(
-    featuresData: string,
-    sourceFormat: OLDataType = OL_DATA_TYPES.GeoJSON,
-    projection = "EPSG:3857"
-  ): Feature<Geometry>[] | undefined {
+  static getFeatures(featuresData: string, sourceFormat: OLDataType = OL_DATA_TYPES.GeoJSON, projection = "EPSG:3857"): Feature<Geometry>[] | undefined {
     if (!featuresData || featuresData.length === 0) return undefined;
 
     const mapProjection = window.map?.getView().getProjection();
     const parser = this.getVectorFormat(sourceFormat, projection);
-    
+
     if (!parser || !("readFeatures" in parser)) {
       console.error("Invalid format parser for reading features");
       return undefined;
@@ -151,12 +136,9 @@ export class FeatureHelpers {
    * @param targetFormat - Target format type
    * @returns Converted geometry string or undefined
    */
-  static setGeometry(
-    sourceGeometry: Geometry,
-    targetFormat: OLDataType = OL_DATA_TYPES.GeoJSON
-  ): string | undefined {
+  static setGeometry(sourceGeometry: Geometry, targetFormat: OLDataType = OL_DATA_TYPES.GeoJSON): string | undefined {
     const parser = this.getVectorFormat(targetFormat);
-    
+
     if (!parser || !("writeGeometry" in parser)) {
       console.error("Invalid format parser for writing geometry");
       return undefined;
@@ -179,12 +161,9 @@ export class FeatureHelpers {
    * @param sourceFormat - Source format type
    * @returns Parsed geometry or undefined
    */
-  static getGeometry(
-    geometryData: string,
-    sourceFormat: OLDataType = OL_DATA_TYPES.GeoJSON
-  ): Geometry | undefined {
+  static getGeometry(geometryData: string, sourceFormat: OLDataType = OL_DATA_TYPES.GeoJSON): Geometry | undefined {
     const parser = this.getVectorFormat(sourceFormat);
-    
+
     if (!parser || !("readGeometry" in parser)) {
       console.error("Invalid format parser for reading geometry");
       return undefined;
@@ -200,4 +179,4 @@ export class FeatureHelpers {
     }
     return output;
   }
-} 
+}

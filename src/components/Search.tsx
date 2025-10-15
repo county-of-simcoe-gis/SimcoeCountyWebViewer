@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
+import { FaSearch } from "react-icons/fa";
 import { useConfig } from "@/hooks/useConfig";
 import { getAxiosClient } from "@/lib/axiosInstance";
 import { appendToStorage, getItemsFromStorage } from "@/utils/storage";
@@ -261,9 +262,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
   // Handle showing history after clear
   useEffect(() => {
     if (justCleared) {
-      console.log("Search: justCleared effect triggered");
       const history = loadSearchHistory();
-      console.log("Search: Effect loaded history:", history);
       setSearchResults(history);
       setShowHistory(true);
       setIsOpen(history.length > 0);
@@ -325,11 +324,8 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
         const locationInfo = locationResponse.data;
         if (locationInfo.geojson) {
           // Use the SearchZoom handlers if available
-          console.log("Search: Attempting to call handleLocationResult", locationInfo);
           const searchZoomHandlers = (window as unknown as Record<string, unknown>).searchZoomHandlers as Record<string, (result: SearchResult) => void>;
-          console.log("Search: searchZoomHandlers available:", !!searchZoomHandlers);
           if (searchZoomHandlers?.handleLocationResult) {
-            console.log("Search: Calling handleLocationResult");
             await searchZoomHandlers.handleLocationResult(locationInfo);
           } else {
             console.error("Search: handleLocationResult not available");
@@ -340,11 +336,8 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
       }
     } else if (result.place_id || result.x !== undefined) {
       // Handle geocoded result
-      console.log("Search: Attempting to call handleGeocodedResult", result);
       const searchZoomHandlers = (window as unknown as Record<string, unknown>).searchZoomHandlers as Record<string, (result: SearchResult) => void>;
-      console.log("Search: searchZoomHandlers available:", !!searchZoomHandlers);
       if (searchZoomHandlers?.handleGeocodedResult) {
-        console.log("Search: Calling handleGeocodedResult");
         searchZoomHandlers.handleGeocodedResult(result);
       } else {
         console.error("Search: handleGeocodedResult not available");
@@ -447,7 +440,6 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
           onChange={handleSearchChange}
           onKeyDown={handleKeyDown}
           onFocus={() => {
-            console.log("Search: Input focused, searchValue length:", searchValue.length, "justCleared:", justCleared);
             if (searchValue.length === 0 && !justCleared) {
               const history = loadSearchHistory();
               console.log("Search: OnFocus loaded history:", history);
@@ -474,7 +466,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
 
         {/* Search Icon */}
         <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-          <Image src="/images/magnify.png" alt="Search" width={16} height={16} className="opacity-70" />
+          <FaSearch size={16} className="opacity-70" />
         </div>
 
         {/* Clear Button */}

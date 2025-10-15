@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import FullscreenControl from "../FullscreenControl";
+import FullscreenControl from "@/components/map/controls/FullscreenControl";
 import type Map from "ol/Map";
 
 const mockMap = {

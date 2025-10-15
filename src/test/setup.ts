@@ -1,11 +1,12 @@
 import "@testing-library/jest-dom";
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
-import { server } from "./testServer";
+import { server } from "@/test/testServer";
 import React from "react";
 
 // Mock all react-icons at the top level to ensure they're available globally
 vi.mock("react-icons/fa", () => ({
+  // Existing icons
   FaPlus: (props: any) => React.createElement("div", { ...props, "data-testid": "plus-icon" }, "Plus"),
   FaMinus: (props: any) => React.createElement("div", { ...props, "data-testid": "minus-icon" }, "Minus"),
   FaGlobe: (props: any) => React.createElement("div", { ...props, "data-testid": "globe-icon" }, "Globe"),
@@ -17,11 +18,47 @@ vi.mock("react-icons/fa", () => ({
   FaCrosshairs: (props: any) => React.createElement("div", { ...props, "data-testid": "crosshairs-icon" }, "Crosshairs"),
   FaGithub: (props: any) => React.createElement("div", { ...props, "data-testid": "github-icon" }, "GitHub"),
   FaQuestion: (props: any) => React.createElement("div", { ...props, "data-testid": "question-icon" }, "Question"),
+
+  // Missing icons that were causing test failures
+  FaBars: (props: any) => React.createElement("div", { ...props, "data-testid": "bars-icon" }, "Bars"),
+  FaSearch: (props: any) => React.createElement("div", { ...props, "data-testid": "search-icon" }, "Search"),
+  FaQuestionCircle: (props: any) => React.createElement("div", { ...props, "data-testid": "question-circle-icon" }, "QuestionCircle"),
+  FaEnvelope: (props: any) => React.createElement("div", { ...props, "data-testid": "envelope-icon" }, "Envelope"),
+
+  // TOC related icons
+  FaPaperclip: (props: any) => React.createElement("div", { ...props, "data-testid": "paperclip-icon" }, "Paperclip"),
+  FaInfoCircle: (props: any) => React.createElement("div", { ...props, "data-testid": "info-circle-icon" }, "InfoCircle"),
+  FaDownload: (props: any) => React.createElement("div", { ...props, "data-testid": "download-icon" }, "Download"),
+  FaLock: (props: any) => React.createElement("div", { ...props, "data-testid": "lock-icon" }, "Lock"),
+  FaUser: (props: any) => React.createElement("div", { ...props, "data-testid": "user-icon" }, "User"),
+  FaEllipsisV: (props: any) => React.createElement("div", { ...props, "data-testid": "ellipsis-v-icon" }, "EllipsisV"),
+  FaEyeSlash: (props: any) => React.createElement("div", { ...props, "data-testid": "eye-slash-icon" }, "EyeSlash"),
+  FaChevronDown: (props: any) => React.createElement("div", { ...props, "data-testid": "chevron-down-icon" }, "ChevronDown"),
+  FaChevronRight: (props: any) => React.createElement("div", { ...props, "data-testid": "chevron-right-icon" }, "ChevronRight"),
+  FaFolder: (props: any) => React.createElement("div", { ...props, "data-testid": "folder-icon" }, "Folder"),
+  FaFolderOpen: (props: any) => React.createElement("div", { ...props, "data-testid": "folder-open-icon" }, "FolderOpen"),
+
+  // LayerOptionsMenu specific icons
+  FaSearchPlus: (props: any) => React.createElement("div", { ...props, "data-testid": "search-plus-icon" }, "SearchPlus"),
+  FaTable: (props: any) => React.createElement("div", { ...props, "data-testid": "table-icon" }, "Table"),
+  FaTrash: (props: any) => React.createElement("div", { ...props, "data-testid": "trash-icon" }, "Trash"),
+  FaTimes: (props: any) => React.createElement("div", { ...props, "data-testid": "times-icon" }, "Times"),
+  FaEye: (props: any) => React.createElement("div", { ...props, "data-testid": "eye-icon" }, "Eye"),
+
+  // LayerInfo specific icons
+  FaPrint: (props: any) => React.createElement("div", { ...props, "data-testid": "print-icon" }, "Print"),
+  FaExternalLinkAlt: (props: any) => React.createElement("div", { ...props, "data-testid": "external-link-icon" }, "ExternalLink"),
 }));
 
 vi.mock("react-icons/md", () => ({
   MdGridOff: (props: any) => React.createElement("div", { ...props, "data-testid": "grid-off-icon" }, "Grid Off"),
   MdGridOn: (props: any) => React.createElement("div", { ...props, "data-testid": "grid-on-icon" }, "Grid On"),
+}));
+
+vi.mock("react-icons/fi", () => ({
+  FiSettings: (props: any) => React.createElement("div", { ...props, "data-testid": "settings-icon" }, "Settings"),
+  FiSave: (props: any) => React.createElement("div", { ...props, "data-testid": "save-icon" }, "Save"),
+  FiTrash2: (props: any) => React.createElement("div", { ...props, "data-testid": "trash-icon" }, "Trash"),
 }));
 
 // Setup MSW for API mocking

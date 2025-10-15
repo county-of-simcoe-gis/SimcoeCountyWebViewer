@@ -3,6 +3,7 @@
 import { useEffect, useCallback, useRef } from "react";
 import { useMapStore } from "@/stores/mapStore";
 import { useEventStore } from "@/stores/eventStore";
+import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { Vector as VectorLayer } from "ol/layer";
 import { Vector as VectorSource } from "ol/source";
 import { Fill, Icon, Stroke, Style, Circle as CircleStyle } from "ol/style";
@@ -27,6 +28,8 @@ export const SearchZoom: React.FC = () => {
   const { emit } = useEventStore();
   const searchGeoLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const searchIconLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
+  const geoLayerIdRef = useRef<string | null>(null);
+  const iconLayerIdRef = useRef<string | null>(null);
 
   // Initialize search layers
   const initSearchLayers = useCallback(() => {
@@ -40,17 +43,25 @@ export const SearchZoom: React.FC = () => {
       // console.log("SearchZoom: Creating search layers");
 
       // Layer for geometry (lines, polygons)
-      searchGeoLayerRef.current = new VectorLayer({
+      const geoLayer = new VectorLayer({
         source: new VectorSource(),
-        zIndex: 1000,
       });
-      searchGeoLayerRef.current.set("name", "sc-search-geo");
-      map.addLayer(searchGeoLayerRef.current);
+      geoLayer.set("name", "sc-search-geo");
+
+      const geoLayerId = LayerManager.addLayer(geoLayer, "Graphics", "Search Geometry", {
+        index: 10,
+        metadata: {
+          isSearch: true,
+          searchLayerType: "geometry",
+        },
+      });
+
+      searchGeoLayerRef.current = geoLayer;
+      geoLayerIdRef.current = geoLayerId;
 
       // Layer for point icons
-      searchIconLayerRef.current = new VectorLayer({
+      const iconLayer = new VectorLayer({
         source: new VectorSource(),
-        zIndex: 1000,
       });
 
       const pointStyle = new Style({
@@ -60,9 +71,19 @@ export const SearchZoom: React.FC = () => {
         }),
       });
 
-      searchIconLayerRef.current.setStyle(pointStyle);
-      searchIconLayerRef.current.set("name", "sc-search-icon");
-      map.addLayer(searchIconLayerRef.current);
+      iconLayer.setStyle(pointStyle);
+      iconLayer.set("name", "sc-search-icon");
+
+      const iconLayerId = LayerManager.addLayer(iconLayer, "Graphics", "Search Icon", {
+        index: 11,
+        metadata: {
+          isSearch: true,
+          searchLayerType: "icon",
+        },
+      });
+
+      searchIconLayerRef.current = iconLayer;
+      iconLayerIdRef.current = iconLayerId;
 
       // console.log("SearchZoom: Search layers created and added to map");
     } else if (!map) {
@@ -429,6 +450,20 @@ export const SearchZoom: React.FC = () => {
     if (map) {
       initSearchLayers();
     }
+
+    // Cleanup
+    return () => {
+      if (geoLayerIdRef.current) {
+        LayerManager.removeLayer(geoLayerIdRef.current);
+        geoLayerIdRef.current = null;
+      }
+      if (iconLayerIdRef.current) {
+        LayerManager.removeLayer(iconLayerIdRef.current);
+        iconLayerIdRef.current = null;
+      }
+      searchGeoLayerRef.current = null;
+      searchIconLayerRef.current = null;
+    };
   }, [map, initSearchLayers]);
 
   // Expose the handler functions through the window object

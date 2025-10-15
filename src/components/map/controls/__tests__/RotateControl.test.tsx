@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import RotateControl from "../RotateControl";
+import RotateControl from "@/components/map/controls/RotateControl";
 import type Map from "ol/Map";
 
 const mockMap = {

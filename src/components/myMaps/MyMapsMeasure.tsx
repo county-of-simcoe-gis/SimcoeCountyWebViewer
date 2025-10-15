@@ -2,10 +2,9 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { getArea, getLength } from "ol/sphere.js";
-import { Feature } from "ol";
 import type { MyMapsItem } from "@/types/myMaps";
 import * as helpers from "@/utils/myMapsHelpers";
-import "./MyMapsMeasure.css";
+import "@/components/myMaps/MyMapsMeasure.css";
 
 interface MyMapsMeasureProps {
   visible: boolean;

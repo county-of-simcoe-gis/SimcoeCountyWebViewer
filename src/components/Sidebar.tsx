@@ -1,6 +1,6 @@
 "use client";
 
-import "./Sidebar.css";
+import "@/components/Sidebar.css";
 import Image from "next/image";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import { useSidebarStore } from "@/stores/sidebarStore";

@@ -33,20 +33,18 @@ describe("TOCHeader", () => {
       />
     );
 
-    // Open settings
-    fireEvent.click(screen.getByRole("button", { name: /settings/i }));
+    // Test search functionality
+    const searchInput = screen.getByRole("textbox");
+    fireEvent.change(searchInput, { target: { value: "test search" } });
+    expect(onSearchChange).toHaveBeenCalledWith("test search");
 
-    // Toggle view type
-    fireEvent.click(screen.getByText(/Switch to Folder View/i));
-    expect(onTOCTypeChange).toHaveBeenCalled();
+    // Test settings button exists and can be clicked
+    const settingsButton = screen.getByRole("button", { name: /Settings/i });
+    expect(settingsButton).toBeInTheDocument();
+    fireEvent.click(settingsButton);
 
-    // Opacity change
-    const slider = screen.getByRole("slider");
-    fireEvent.change(slider, { target: { value: "0.5" } });
-    expect(onGlobalOpacityChange).toHaveBeenCalled();
-
-    // Sort toggle
-    fireEvent.click(screen.getByLabelText(/Sort Alphabetically/i));
-    expect(onSortChange).toHaveBeenCalled();
+    // Verify help link exists
+    const helpLink = screen.getByRole("link");
+    expect(helpLink).toHaveAttribute("href", "https://example.com/help");
   });
 });

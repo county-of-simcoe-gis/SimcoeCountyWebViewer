@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import "./FooterButtons.css";
+import "@/components/myMaps/FooterButtons.css";
 
 interface FooterButtonsProps {
   onTools?: (event?: React.MouseEvent) => void;

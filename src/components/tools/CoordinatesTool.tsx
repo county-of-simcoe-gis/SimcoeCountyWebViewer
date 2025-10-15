@@ -1,6 +1,6 @@
 "use client";
 
-import "./CoordinatesTool.css";
+import "@/components/tools/CoordinatesTool.css";
 import React, { useState } from "react";
 import PanelComponent from "@/components/PanelComponent";
 

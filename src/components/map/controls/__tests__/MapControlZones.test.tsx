@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createZoneControlsFromConfig, type ControlConfig } from "../MapControlZones";
+import { createZoneControlsFromConfig, type ControlConfig } from "@/components/map/controls/MapControlZones";
 import type Map from "ol/Map";
 
 // Mock MapControlWrapper
-vi.mock("../MapControlWrapper", () => ({
+vi.mock("@/components/map/controls/MapControlWrapper", () => ({
   createMapControl: vi.fn((component, className) => ({
     element: document.createElement("div"),
     className,

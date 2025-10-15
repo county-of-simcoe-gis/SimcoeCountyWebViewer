@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import CurrentLocation from "../CurrentLocation";
+import CurrentLocation from "@/components/map/controls/CurrentLocation";
 import type Map from "ol/Map";
 
 // Mock ol/proj

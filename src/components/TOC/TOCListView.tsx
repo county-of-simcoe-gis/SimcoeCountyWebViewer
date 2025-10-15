@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { TOCLayerGroup, TOCLayer } from "../../stores/tocStore";
-import LayersList from "./LayersList";
-import "./TOCListView.css";
+import { TOCLayerGroup, TOCLayer, useTOCStore } from "@/stores/tocStore";
+import LayersList from "@/components/TOC/LayersList";
+import "@/components/TOC/TOCListView.css";
 
 interface TOCListViewProps {
   id: string;
@@ -18,10 +18,15 @@ interface TOCListViewProps {
 }
 
 export default function TOCListView({ id, visible, layerGroups, selectedGroup, searchText, onGroupDropDownChange, onLayerChange, onLegendToggle, onLayerOptionsClick }: TOCListViewProps) {
+  const { switchToGroup } = useTOCStore();
+
   const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedValue = e.target.value;
     const group = layerGroups.find((g) => g.value === selectedValue);
     if (group) {
+      // Use the new switchToGroup function that handles layer visibility
+      switchToGroup(group);
+      // Also call the original callback for compatibility
       onGroupDropDownChange(group);
     }
   };

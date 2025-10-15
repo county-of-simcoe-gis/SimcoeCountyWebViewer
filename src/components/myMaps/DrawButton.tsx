@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import "./DrawButton.css";
+import "@/components/myMaps/DrawButton.css";
 
 interface DrawButtonProps {
   title: string;

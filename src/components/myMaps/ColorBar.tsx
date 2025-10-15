@@ -3,7 +3,7 @@
 import React from "react";
 import { useMyMapsStore } from "@/stores/myMapsStore";
 import { MYMAPS_CONSTANTS } from "@/types/myMaps";
-import "./ColorBar.css";
+import "@/components/myMaps/ColorBar.css";
 
 interface ColorBarProps {
   isEditing?: boolean;

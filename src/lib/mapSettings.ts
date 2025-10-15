@@ -1,4 +1,4 @@
-import { prisma } from "./prisma";
+import { prisma } from "@/lib/prisma";
 import type { MapItem, MapConfig, User, CallbackResult } from "@/types/mapSettings";
 import { checkUserAccess } from "@/types/mapSettings";
 

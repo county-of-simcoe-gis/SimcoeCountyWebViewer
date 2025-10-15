@@ -1,31 +1,62 @@
 "use client";
 
-import React from "react";
-import { TOCLayerGroup, TOCLayer } from "../../stores/tocStore";
+import React, { useState, useEffect } from "react";
+import { TOCLayerGroup, TOCLayer } from "@/stores/tocStore";
+import GroupItem from "@/components/TOC/GroupItem";
+import "@/components/TOC/TOCFolderView.css";
 
 interface TOCFolderViewProps {
   id: string;
   visible: boolean;
   layerGroups: TOCLayerGroup[];
-  selectedGroup: TOCLayerGroup | null;
+  selectedGroup?: TOCLayerGroup | null;
   searchText: string;
   sortAlpha: boolean;
   onLayerChange: (layer: TOCLayer, group: TOCLayerGroup) => void;
   onLegendToggle: (layerInfo: TOCLayer, group: TOCLayerGroup) => void;
   onLayerOptionsClick: (evt: React.MouseEvent, layerInfo: TOCLayer) => void;
-  onSortEnd: ({ oldIndex, newIndex }: { oldIndex: number; newIndex: number }) => void;
+  onLayerVisibilityGroup: (group: TOCLayerGroup, visible: boolean) => void;
+  onGroupFolderToggle: (groupValue: string, isOpen: boolean) => void;
+  onSortEnd?: ({ oldIndex, newIndex }: { oldIndex: number; newIndex: number }) => void;
 }
 
-export default function TOCFolderView({ id, visible, layerGroups }: TOCFolderViewProps) {
-  if (!visible) {
-    return <div className="sc-hidden" />;
-  }
+export default function TOCFolderView({
+  id,
+  visible,
+  layerGroups,
+  searchText,
+  sortAlpha,
+  onLayerChange,
+  onLegendToggle,
+  onLayerOptionsClick,
+  onLayerVisibilityGroup,
+  onGroupFolderToggle,
+}: TOCFolderViewProps) {
+  const [isVisible, setIsVisible] = useState(visible);
+
+  useEffect(() => {
+    setIsVisible(visible);
+  }, [visible]);
 
   return (
-    <div id={`${id}-container-main`} className="sc-toc-folder-view-container">
-      <div className="sc-toc-folder-placeholder">
-        <p>Folder view coming soon...</p>
-        <p>Currently showing {layerGroups.length} groups</p>
+    <div className={isVisible ? "" : "sc-hidden"} id="sc-toc-simcoe-folder-view-container-main" data-testid="sc-toc-simcoe-folder-view-container-main">
+      <div className="toc-group-list">
+        {layerGroups.map((group, index) => (
+          <GroupItem
+            key={`${id}-group-${group.value}-${index}`}
+            id={`${id}-group-${group.value}-${index}`}
+            group={group}
+            searchText={searchText}
+            sortAlpha={sortAlpha}
+            panelOpen={true}
+            visible={isVisible}
+            onLayerChange={onLayerChange}
+            onLegendToggle={onLegendToggle}
+            onLayerVisibilityGroup={onLayerVisibilityGroup}
+            onGroupFolderToggle={onGroupFolderToggle}
+            onLayerOptionsClick={onLayerOptionsClick}
+          />
+        ))}
       </div>
     </div>
   );

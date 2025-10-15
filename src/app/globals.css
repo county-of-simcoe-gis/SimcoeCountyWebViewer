@@ -110,3 +110,22 @@ p {
 .sc-map.sidebar-closed {
   left: 65px; /* Account for slim sidebar width */
 }
+
+/* Print Styles */
+@media print {
+  /* Additional fallback to hide map elements if needed */
+  #map,
+  .sc-map,
+  .basemap-switcher,
+  .ol-control,
+  .ol-viewport {
+    display: none !important;
+  }
+
+  /* Ensure modal overlays are styled for print */
+  .fixed.inset-0 {
+    position: static !important;
+    background: white !important;
+    padding: 0 !important;
+  }
+}

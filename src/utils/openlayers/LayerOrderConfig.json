@@ -12,47 +12,47 @@
       "priority": 100,
       "zIndexRange": {
         "min": 100,
-        "max": 499
+        "max": 1999
       },
       "description": "Table of Contents layers from GeoServer"
     },
     "MyMaps": {
-      "priority": 500,
+      "priority": 2000,
       "zIndexRange": {
-        "min": 500,
-        "max": 699
+        "min": 2000,
+        "max": 2199
       },
       "description": "User-created drawing and custom layers"
     },
     "Tools": {
-      "priority": 700,
+      "priority": 2200,
       "zIndexRange": {
-        "min": 700,
-        "max": 899
+        "min": 2200,
+        "max": 2399
       },
       "description": "Tool-related layers (measure, coordinates, etc.)"
     },
     "Graphics": {
-      "priority": 900,
+      "priority": 2400,
       "zIndexRange": {
-        "min": 900,
-        "max": 999
+        "min": 2400,
+        "max": 2499
       },
       "description": "Temporary graphics, highlights, and overlays"
     },
     "Overlay": {
-      "priority": 1000,
+      "priority": 2500,
       "zIndexRange": {
-        "min": 1000,
-        "max": 1099
+        "min": 2500,
+        "max": 2599
       },
       "description": "Overlay layers"
     },
     "Popup": {
-      "priority": 1100,
+      "priority": 2600,
       "zIndexRange": {
-        "min": 1100,
-        "max": 1199
+        "min": 2600,
+        "max": 2699
       },
       "description": "Popup and tooltip layers"
     }

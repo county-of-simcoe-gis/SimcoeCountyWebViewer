@@ -1,6 +1,6 @@
 import React from "react";
 import Map from "ol/Map";
-import MapControl, { createMapControl } from "./MapControlWrapper";
+import MapControl, { createMapControl } from "@/components/map/controls/MapControlWrapper";
 
 // Import control components - removed individual imports since they're now configured in MapContainer
 

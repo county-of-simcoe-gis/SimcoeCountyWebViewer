@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import MyMaps from "../MyMaps";
+import MyMaps from "@/components/myMaps/MyMaps";
 import { useMyMapsStore } from "@/stores/myMapsStore";
 import { useAppStore } from "@/stores/appStore";
 import type { MyMapsItem } from "@/types/myMaps";
 
 // Mock all the child components
-vi.mock("../ButtonBar", () => ({
+vi.mock("@/components/myMaps/ButtonBar", () => ({
   default: ({ isEditing }: { isEditing: boolean }) => (
     <div data-testid="button-bar" data-editing={isEditing}>
       ButtonBar
@@ -15,7 +15,7 @@ vi.mock("../ButtonBar", () => ({
   ),
 }));
 
-vi.mock("../ColorBar", () => ({
+vi.mock("@/components/myMaps/ColorBar", () => ({
   default: ({ isEditing }: { isEditing: boolean }) => (
     <div data-testid="color-bar" data-editing={isEditing}>
       ColorBar
@@ -23,7 +23,7 @@ vi.mock("../ColorBar", () => ({
   ),
 }));
 
-vi.mock("../MyMapsItems", () => ({
+vi.mock("@/components/myMaps/MyMapsItems", () => ({
   default: ({
     onLabelChange,
     onItemDelete,
@@ -75,7 +75,7 @@ vi.mock("../MyMapsItems", () => ({
   ),
 }));
 
-vi.mock("../MyMapsAdvanced", () => ({
+vi.mock("@/components/myMaps/MyMapsAdvanced", () => ({
   default: ({
     onEditFeatures,
     onDeleteAllClick,
@@ -106,7 +106,7 @@ vi.mock("../MyMapsAdvanced", () => ({
   ),
 }));
 
-vi.mock("../MyMapsItemPopup", () => ({
+vi.mock("@/components/myMaps/MyMapsItemPopup", () => ({
   default: ({
     item,
     position,

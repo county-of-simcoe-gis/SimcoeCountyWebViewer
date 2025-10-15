@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import Scale from "../Scale";
+import Scale from "@/components/map/controls/Scale";
 import type Map from "ol/Map";
 import * as mapHelpers from "@/utils/mapHelpers";
 

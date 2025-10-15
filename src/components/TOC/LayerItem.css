@@ -26,13 +26,15 @@
   color: gray;
 }
 
-
-
 /* Layer Label */
 .sc-toc-item-layer-label {
   display: inline-flex;
   align-items: center;
-  max-width: 274px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-left: 8px;
 }
 
 /* Layer Info Indicators */
@@ -72,7 +74,72 @@
   display: inline-flex;
   align-items: center;
   cursor: pointer;
-  margin-right: 3px;
+  margin-right: 8px;
+  margin-left: 8px;
+}
+
+/* Drag Handle */
+.sc-toc-drag-handle {
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  margin-right: 8px;
+  padding: 4px;
+  border-radius: 3px;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+  min-width: 20px;
+  min-height: 20px;
+}
+
+.sc-toc-drag-handle:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.sc-toc-drag-handle:active {
+  cursor: grabbing;
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+/* Drag states for layer items */
+.sc-toc-item-container[draggable="true"] {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sc-toc-item-container.dragging {
+  opacity: 0.5;
+  transform: rotate(2deg);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.sc-toc-item-container.drag-over {
+  border: 2px dashed #007bff;
+  background-color: rgba(0, 123, 255, 0.1);
+  transform: scale(1.02);
+}
+
+.sc-toc-item-container.drag-above::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #007bff;
+  z-index: 10;
+}
+
+.sc-toc-item-container.drag-below::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #007bff;
+  z-index: 10;
 }
 
 /* Toolbox */
@@ -80,8 +147,13 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  margin-left: auto;
+  margin-left: 5px;
   padding-right: 5px;
+}
+
+/* Toolbox right-aligned (when drag handle is hidden in folder view) */
+.sc-toc-list-item-toolbox-right {
+  margin-left: auto;
 }
 
 /* Plus/Minus Sign */
@@ -91,7 +163,7 @@
   position: relative;
   top: -11px;
   right: -8px;
-  background: url('/images/toc/horizontal_dots.png') 0px no-repeat;
+  background: url("/images/toc/horizontal_dots.png") 0px no-repeat;
 }
 
 /* Layer Name */
@@ -114,7 +186,7 @@
   top: -11px;
   right: -6px;
   display: table-cell;
-  background: url('/images/toc/verticle_dots.png') 0px repeat-y;
+  background: url("/images/toc/verticle_dots.png") 0px repeat-y;
 }
 
 .sc-toc-item-layer-list-info-container-open-horizontal-lines {
@@ -123,7 +195,7 @@
   position: relative;
   top: 15px;
   right: 2px;
-  background: url('/images/toc/horizontal_dots.png') 0px no-repeat;
+  background: url("/images/toc/horizontal_dots.png") 0px no-repeat;
 }
 
 .sc-toc-item-layer-info-container-open {
@@ -173,4 +245,4 @@
       margin-right: 4px;
     }
   }
-} 
+}

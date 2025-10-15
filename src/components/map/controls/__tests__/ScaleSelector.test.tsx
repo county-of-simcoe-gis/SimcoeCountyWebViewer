@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import ScaleSelector from "../ScaleSelector";
+import ScaleSelector from "@/components/map/controls/ScaleSelector";
 import type Map from "ol/Map";
 
 const mockMap = {

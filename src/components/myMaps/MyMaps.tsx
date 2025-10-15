@@ -5,18 +5,18 @@ import { useMyMapsStore } from "@/stores/myMapsStore";
 import { useEventStore } from "@/stores/eventStore";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
-import ButtonBar from "./ButtonBar";
-import ColorBar from "./ColorBar";
-import MyMapsItems from "./MyMapsItems";
-import MyMapsAdvanced from "./MyMapsAdvanced";
-import MyMapsItemPopup from "./MyMapsItemPopup";
-import ShowGeometryModal from "./ShowGeometryModal";
-import URLModal from "../common/URLModal";
+import ButtonBar from "@/components/myMaps/ButtonBar";
+import ColorBar from "@/components/myMaps/ColorBar";
+import MyMapsItems from "@/components/myMaps/MyMapsItems";
+import MyMapsAdvanced from "@/components/myMaps/MyMapsAdvanced";
+import MyMapsItemPopup from "@/components/myMaps/MyMapsItemPopup";
+import ShowGeometryModal from "@/components/myMaps/ShowGeometryModal";
+import URLModal from "@/components/common/URLModal";
 import { getMapScale, getMapExtent, getMapCenter, buildFeedbackUrl } from "@/utils/mapHelpers";
 import type { MyMapsItem as MyMapsItemType } from "@/types/myMaps";
 import { Feature } from "ol";
 import GeoJSON from "ol/format/GeoJSON";
-import "./MyMaps.css";
+import "@/components/myMaps/MyMaps.css";
 
 interface MyMapsProps {
   visible?: boolean;

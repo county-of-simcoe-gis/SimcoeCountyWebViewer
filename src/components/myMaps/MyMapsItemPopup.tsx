@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { MyMapsItem } from "@/types/myMaps";
-import "./MyMapsItemPopup.css";
+import "@/components/myMaps/MyMapsItemPopup.css";
 
 export interface MyMapsItemPopupProps {
   item: MyMapsItem | null;

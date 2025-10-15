@@ -5,6 +5,7 @@ import { useSidebarStore } from "@/stores/sidebarStore";
 import { useEventStore } from "@/stores/eventStore";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
+import { LayerManager } from "@/utils/openlayers/LayerManager";
 
 // OpenLayers imports
 import "ol/ol.css";
@@ -28,6 +29,10 @@ import { createZoneControlsFromConfig, ControlConfig } from "@/components/map/co
 // Import basemap components
 import BasemapSwitcher from "@/components/BasemapSwitcher";
 
+// Import property report click functionality
+import PropertyReportClick from "@/components/PropertyReportClick";
+import MapPopup from "@/components/MapPopup";
+
 // Import config
 import config from "@/config.json";
 
@@ -39,7 +44,7 @@ const dynamicControlImports = {
   CurrentLocationButton: () => import("@/components/map/controls/CurrentLocation").then((m) => ({ default: m.CurrentLocationButton })),
   ExtentHistoryButtons: () => import("@/components/map/controls/ExtentHistory").then((m) => ({ default: m.ExtentHistoryButtons })),
   ZoomToExtentButton: () => import("@/components/map/controls/ZoomToExtent").then((m) => ({ default: m.ZoomToExtentButton })),
-  GridButton: () => import("@/components/map/controls/Grid").then((m) => ({ default: m.GridButton })),
+  GridButton: () => import("@/components/map/controls/Grid"),
   GitHubButtonDisplay: () => import("@/components/map/controls/GithubButton").then((m) => ({ default: m.GitHubButtonDisplay })),
   ScaleDisplay: () => import("@/components/map/controls/Scale").then((m) => ({ default: m.ScaleDisplay })),
   ScaleSelector: () => import("@/components/map/controls/ScaleSelector").then((m) => ({ default: m.ScaleSelector })),
@@ -75,6 +80,7 @@ export default function MapContainer() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<Map | null>(null);
   const identifyIconLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
+  const identifyIconLayerIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
@@ -190,20 +196,32 @@ export default function MapContainer() {
       mapInstance.getView().fit(extent, { size: mapInstance.getSize() });
     }
 
+    // Store map instance and configuration FIRST (before adding layers)
+    mapInstanceRef.current = mapInstance;
+    setMap(mapInstance);
+    setMapControls(mapControls);
+
+    // Set map on window for backward compatibility with legacy code
+    if (typeof window !== "undefined") {
+      (window as unknown as { map: Map | null; config: typeof config | null }).map = mapInstance;
+      (window as unknown as { map: Map | null; config: typeof config | null }).config = config;
+    }
+
     // Create identify icon layer
     const identifyIconLayer = new VectorLayer({
       source: new VectorSource(),
       style: undefined, // Style will be set per feature
-      zIndex: 10000, // High z-index to ensure it appears on top
+    });
+
+    const identifyLayerId = LayerManager.addLayer(identifyIconLayer, "Graphics", "Identify Icon", {
+      index: 50, // High index to ensure it appears on top
+      metadata: {
+        isIdentifyIcon: true,
+      },
     });
 
     identifyIconLayerRef.current = identifyIconLayer;
-    mapInstance.addLayer(identifyIconLayer);
-
-    // Store map instance and configuration
-    mapInstanceRef.current = mapInstance;
-    setMap(mapInstance);
-    setMapControls(mapControls);
+    identifyIconLayerIdRef.current = identifyLayerId;
 
     // Mark map as loaded
     addLoadedItem("map");
@@ -212,11 +230,24 @@ export default function MapContainer() {
 
     // Cleanup function
     return () => {
+      if (identifyIconLayerIdRef.current) {
+        LayerManager.removeLayer(identifyIconLayerIdRef.current);
+        identifyIconLayerIdRef.current = null;
+      }
+      identifyIconLayerRef.current = null;
+
       if (mapInstanceRef.current) {
         mapInstanceRef.current.setTarget(undefined);
         mapInstanceRef.current = null;
       }
-      identifyIconLayerRef.current = null;
+
+      // Clean up window references
+      if (typeof window !== "undefined") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        delete (window as any).map;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        delete (window as any).config;
+      }
     };
   }, [setMap, setMapControls, addLoadedItem, setMapLoading, emitMapLoaded, setCurrentExtent, setCurrentZoom, setCurrentCenter, initExtentHistory, saveCurrentExtentToHistory]);
 
@@ -615,5 +646,11 @@ export default function MapContainer() {
     }
   }, [map, zoneControls]);
 
-  return <div ref={mapRef} id="map" className={`sc-map ${!isOpen ? "sidebar-closed" : ""}`} />;
+  return (
+    <>
+      <div ref={mapRef} id="map" className={`sc-map ${!isOpen ? "sidebar-closed" : ""}`} />
+      <PropertyReportClick />
+      <MapPopup />
+    </>
+  );
 }

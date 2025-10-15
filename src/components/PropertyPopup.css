@@ -1,0 +1,133 @@
+.sc-property-popup {
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  max-width: 350px;
+  min-width: 280px;
+}
+
+.sc-property-popup-content {
+  padding: 8px 12px;
+}
+
+/* Override InfoRow styles for property popup */
+.sc-property-popup-content .sc-info-row {
+  margin-bottom: 6px;
+  align-items: flex-start;
+  font-size: 12px;
+}
+
+.sc-property-popup-content .sc-info-row:last-of-type {
+  margin-bottom: 8px;
+}
+
+.sc-copy-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: 6px;
+  padding: 2px 4px;
+  font-size: 12px;
+  transition: transform 0.2s;
+}
+
+.sc-copy-button:hover {
+  transform: scale(1.2);
+}
+
+.sc-copied-message {
+  color: #4caf50;
+  font-size: 10px;
+  margin-left: 6px;
+  animation: fadeOut 2s forwards;
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.sc-property-note {
+  font-size: 10px;
+  color: #777;
+  margin-top: 2px;
+  font-style: italic;
+}
+
+.sc-assessed-value-img {
+  display: block;
+  height: auto;
+  margin-bottom: 4px;
+}
+
+.sc-property-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sc-tool-link {
+  background: none;
+  border: none;
+  color: #1976d2;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 12px;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.sc-tool-link:hover {
+  color: #1565c0;
+  text-decoration: underline;
+}
+
+.sc-property-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e0e0e0;
+  flex-wrap: wrap;
+}
+
+.sc-property-button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s;
+  flex: 1;
+  min-width: 80px;
+}
+
+.sc-property-button-primary {
+  background-color: #1976d2;
+  color: white;
+}
+
+.sc-property-button-primary:hover {
+  background-color: #1565c0;
+}
+
+.sc-property-button-secondary {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.sc-property-button-secondary:hover {
+  background-color: #e0e0e0;
+}
+
+.sc-property-button:active {
+  transform: scale(0.98);
+}

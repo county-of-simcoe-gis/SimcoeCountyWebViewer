@@ -1,28 +1,48 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
-import { TOCLayerGroup, TOCLayer, useTOCStore } from "../../stores/tocStore";
-import { FaPaperclip } from "react-icons/fa";
-import LayerLegend from "./LayerLegend";
-import "./LayerItem.css";
+import { TOCLayerGroup, TOCLayer, useTOCStore } from "@/stores/tocStore";
+import { FaPaperclip, FaInfoCircle, FaDownload, FaLock, FaUser, FaEllipsisV, FaGripVertical } from "react-icons/fa";
+import LayerLegend, { LegendToggleButton, useLegendDisplayMode } from "@/components/TOC/LayerLegend";
+import "@/components/TOC/LayerItem.css";
 
 interface LayerItemProps {
   layerInfo: TOCLayer;
   group: TOCLayerGroup;
   searchText: string;
+  showDragHandle?: boolean; // Controls whether to show the drag handle (default: true for backwards compatibility)
   onLayerChange: (layer: TOCLayer, group: TOCLayerGroup) => void;
   onLegendToggle: (layerInfo: TOCLayer, group: TOCLayerGroup) => void;
   onLayerOptionsClick: (evt: React.MouseEvent, layerInfo: TOCLayer) => void;
 }
 
-export default function LayerItem({ layerInfo, group, searchText, onLayerChange, onLegendToggle, onLayerOptionsClick }: LayerItemProps) {
+export default function LayerItem({ layerInfo, group, searchText, showDragHandle = true, onLayerChange, onLegendToggle, onLayerOptionsClick }: LayerItemProps) {
   const [isVisibleAtScale, setIsVisibleAtScale] = useState(true);
-  const [isInlineLegend, setIsInlineLegend] = useState(false);
+  const [shouldLoadLegend, setShouldLoadLegend] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Get the live layer data from the store to ensure we have the latest legend data
-  const { allLayers, isLegendBlank } = useTOCStore();
+  const { allLayers } = useTOCStore();
   const currentLayerData = allLayers.find((l) => l.name === layerInfo.name) || layerInfo;
+
+  // Use the hook to determine legend display mode, but ONLY when shouldLoadLegend is true
+  // This way we only load/check images for items that are in or near the viewport
+  const legendDisplayMode = useLegendDisplayMode(shouldLoadLegend ? currentLayerData.legendImage : null, shouldLoadLegend ? currentLayerData.legendObj : null);
+
+  // Fetch legend data on-demand when layer becomes visible
+  useEffect(() => {
+    if (shouldLoadLegend && !currentLayerData.legendImage && !currentLayerData.legendObj && !currentLayerData.legendFetching) {
+      // Trigger legend fetch from the TOC store
+      const { fetchLayerLegend, fetchLayerLegendFromRest } = useTOCStore.getState();
+
+      if (currentLayerData.styleUrl) {
+        fetchLayerLegend(currentLayerData, group);
+      } else if (currentLayerData.metadataUrl) {
+        fetchLayerLegendFromRest(currentLayerData, group);
+      }
+    }
+  }, [shouldLoadLegend, currentLayerData, group]);
 
   useEffect(() => {
     // For now, assume all layers are visible at current scale
@@ -30,32 +50,50 @@ export default function LayerItem({ layerInfo, group, searchText, onLayerChange,
     setIsVisibleAtScale(true);
   }, []);
 
-  // Check if legend image is 20x20 to determine inline display
+  // Intersection Observer for lazy loading legend images
   useEffect(() => {
-    if (currentLayerData.legendImage) {
-      const img = new Image();
-      img.onload = () => {
-        setIsInlineLegend(img.naturalWidth === 20 && img.naturalHeight === 20);
-      };
-      img.src = currentLayerData.legendImage;
-    } else {
-      setIsInlineLegend(false);
+    let observer: IntersectionObserver | null = null;
+
+    observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // Trigger legend loading when in viewport
+            setShouldLoadLegend(true);
+            // Once triggered, disconnect the observer
+            if (observer) {
+              observer.disconnect();
+            }
+          }
+        });
+      },
+      {
+        root: null, // Use viewport as root
+        rootMargin: "200px", // Load images 200px before they enter viewport for smooth experience
+        threshold: 0.01, // Trigger when at least 1% is visible
+      }
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
     }
-  }, [currentLayerData.legendImage]);
+
+    return () => {
+      if (observer) {
+        observer.disconnect();
+      }
+    };
+  }, []);
 
   const onCheckboxChange = () => {
-    console.log("🔄 Checkbox clicked for layer:", layerInfo.name, "current visible:", layerInfo.visible);
-
     // Handle disclaimer if present
     if (layerInfo.disclaimer) {
       // TODO: Show disclaimer dialog
-      console.log("Layer has disclaimer:", layerInfo.disclaimer);
     }
 
     // Use the current layer data from the store (which has the OpenLayers layer object)
     const currentLayerFromStore = currentLayerData;
     const updatedLayer = { ...currentLayerFromStore, visible: !currentLayerFromStore.visible };
-    console.log("🔄 Calling onLayerChange with:", updatedLayer.name, "visible:", updatedLayer.visible, "has OL layer:", !!updatedLayer.layer);
     onLayerChange(updatedLayer, group);
   };
 
@@ -83,52 +121,37 @@ export default function LayerItem({ layerInfo, group, searchText, onLayerChange,
   const displayName = layerInfo.tocDisplayName.length < 60 ? layerInfo.tocDisplayName : `${layerInfo.tocDisplayName.slice(0, 57)}...`;
 
   return (
-    <div id={`${layerInfo.name}_${layerInfo.group}_listview`}>
+    <div id={`${layerInfo.id}_listview`} ref={containerRef}>
       <div className={containerClassName}>
-        {/* Legend toggle button - hide for 20x20 inline legends only */}
-        {!isInlineLegend && (
-          <div
-            className="sc-toc-item-plus-minus-container"
-            role="button"
-            onClick={() => {
-              console.log(`Clicked legend toggle for ${layerInfo.name} - current showLegend: ${currentLayerData.showLegend}`);
-              console.log(`LayerItem debug - allLayers.length: ${allLayers.length}, currentLayerData found:`, currentLayerData === layerInfo ? "NO (using fallback)" : "YES (from store)");
+        {/* Legend toggle button - inline with other elements for expandable legends */}
+        {legendDisplayMode === "expandable" && (
+          <LegendToggleButton
+            showLegend={currentLayerData.showLegend}
+            onToggleLegend={() => {
               if (currentLayerData !== layerInfo) {
-                console.log(`Store data for ${layerInfo.name}:`, { showLegend: currentLayerData.showLegend, legendImage: currentLayerData.legendImage });
               }
               onLegendToggle(layerInfo, group);
             }}
-          >
-            <img
-              src={
-                layerInfo.styleUrl === "" && !currentLayerData.legendObj
-                  ? "/images/toc/no-legend.png"
-                  : currentLayerData.showLegend
-                  ? "/images/toc/tree-expander-open-16.png"
-                  : "/images/toc/tree-expander-closed-16.png"
-              }
-              alt="legend toggle"
-              style={{ width: "16px", height: "16px" }}
-              title={layerInfo.styleUrl === "" && !currentLayerData.legendObj ? "No Legend Available" : currentLayerData.showLegend ? "Hide Legend" : "Show Legend"}
-            />
-            <div className="sc-toc-item-plus-minus-sign" />
-            <div className="sc-toc-item-lines-expanded" />
-          </div>
+            hasLegend={!!(currentLayerData.legendObj || currentLayerData.legendImage)}
+            styleUrl={layerInfo.styleUrl}
+          />
         )}
 
         {/* Checkbox and label */}
-        <label htmlFor={`sc-toc-item-checkbox-${layerInfo.name}_${layerInfo.group}`}>
-          <input id={`sc-toc-item-checkbox-${layerInfo.name}_${layerInfo.group}`} className="sc-toc-item-checkbox" type="checkbox" onChange={onCheckboxChange} checked={currentLayerData.visible} />
-          {/* Inline legend for 20x20 images - before layer name */}
-          {isInlineLegend && currentLayerData.legendImage && <LayerLegend legend={null} image={currentLayerData.legendImage} inline={true} />}
-          <span className="sc-toc-item-layer-label" title={layerInfo.tocDisplayName} style={isLegendBlank(currentLayerData) && !isInlineLegend ? { marginLeft: "8px" } : undefined}>
+        {/* Inline legend for small images - before layer name */}
+        <label htmlFor={`sc-toc-item-checkbox-${layerInfo.id}`}>
+          {legendDisplayMode === "inline" && shouldLoadLegend && <LayerLegend legend={currentLayerData.legendObj} image={currentLayerData.legendImage} forceMode="inline" />}
+
+          <input id={`sc-toc-item-checkbox-${layerInfo.id}`} className="sc-toc-item-checkbox" type="checkbox" onChange={onCheckboxChange} checked={currentLayerData.visible} />
+
+          <span className="sc-toc-item-layer-label" title={layerInfo.tocDisplayName}>
             {highlightText(displayName, searchText)}
           </span>
         </label>
 
         {/* Layer indicators */}
         <div className={currentLayerData.liveLayer ? "sc-toc-item-layer-info-live-layer" : "sc-hidden"} title="This layer is Interactable in the map.">
-          <img src="/images/toc/callout.png" alt="callout" style={{ width: "16px", height: "16px" }} />
+          <FaInfoCircle size={16} style={{ opacity: 0.7, color: "#666" }} />
         </div>
 
         <div className={currentLayerData.hasAttachments ? "sc-toc-item-layer-info-attachment-layer" : "sc-hidden"} title="This layer has attachments.">
@@ -136,29 +159,53 @@ export default function LayerItem({ layerInfo, group, searchText, onLayerChange,
         </div>
 
         <div className={currentLayerData.canDownload ? "sc-toc-item-layer-info-download" : "sc-hidden"} title="This layer can be downloaded.">
-          <img src="/images/toc/download.png" alt="can download" style={{ width: "16px", height: "16px" }} />
+          <FaDownload size={16} style={{ opacity: 0.7, color: "#666" }} />
         </div>
 
         <div className={currentLayerData.secured ? "sc-toc-item-layer-info-secured" : "sc-hidden"} title="This layer is secured.">
-          <img src="/images/toc/lock.png" alt="secure" style={{ width: "16px", height: "16px" }} />
+          <FaLock size={16} style={{ opacity: 0.7, color: "#666" }} />
         </div>
 
         <div className={currentLayerData.userLayer ? "sc-toc-item-layer-info-secured" : "sc-hidden"} title="This layer was user added.">
-          <img src="/images/toc/user-icon.png" alt="user added layer" style={{ width: "16px", height: "16px" }} />
+          <FaUser size={16} style={{ opacity: 0.7, color: "#666" }} />
         </div>
 
+        {/* Drag handle - only shown in LIST view */}
+        {showDragHandle && (
+          <div
+            className="sc-toc-drag-handle"
+            title="Drag to reorder layer"
+            draggable
+            onDragStart={(e) => {
+              e.dataTransfer.effectAllowed = "move";
+              e.dataTransfer.setData("text/plain", layerInfo.id);
+              e.currentTarget.style.cursor = "grabbing";
+            }}
+            onDragEnd={(e) => {
+              e.currentTarget.style.cursor = "grab";
+            }}
+          >
+            <FaGripVertical size={14} style={{ opacity: 0.6, color: "#666" }} />
+          </div>
+        )}
+
         {/* Layer options menu button - moved inside flex container */}
-        <div className="sc-toc-list-item-toolbox" title="Layer Options" role="button" onClick={(evt) => onLayerOptionsClick(evt, layerInfo)}>
-          <img src="/images/toc/more-options.png" alt="more options" style={{ width: "16px", height: "16px" }} />
+        <div
+          className={`sc-toc-list-item-toolbox${!showDragHandle ? " sc-toc-list-item-toolbox-right" : ""}`}
+          title="Layer Options"
+          role="button"
+          onClick={(evt) => onLayerOptionsClick(evt, layerInfo)}
+        >
+          <FaEllipsisV size={16} style={{ opacity: 0.7, color: "#666" }} />
         </div>
       </div>
 
-      {/* Legend container - Use currentLayerData for live legend data, hide for inline legends */}
-      {!isInlineLegend && (
-        <div className={currentLayerData.showLegend ? "sc-toc-layer-info-container" : "sc-hidden"}>
+      {/* Legend container - Legend content appears below when expanded */}
+      {legendDisplayMode === "expandable" && currentLayerData.showLegend && (
+        <div className="sc-toc-layer-info-container">
           <div className="sc-toc-item-layer-list-info-container-open-vertical-lines" />
           <div className="sc-toc-item-layer-list-info-container-open-horizontal-lines" />
-          <LayerLegend legend={currentLayerData.legendObj} image={currentLayerData.legendImage} />
+          {shouldLoadLegend && <LayerLegend legend={currentLayerData.legendObj} image={currentLayerData.legendImage} forceMode="expandable" />}
         </div>
       )}
     </div>

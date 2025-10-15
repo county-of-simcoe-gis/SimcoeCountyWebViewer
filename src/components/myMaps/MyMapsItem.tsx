@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useMyMapsStore } from "@/stores/myMapsStore";
 import type { MyMapsItem as MyMapsItemType } from "@/types/myMaps";
-import "./MyMapsItem.css";
+import "@/components/myMaps/MyMapsItem.css";
 
 interface MyMapsItemProps {
   item: MyMapsItemType;

@@ -33,6 +33,23 @@
   cursor: default;
   min-height: 3em;
   line-height: 2em;
+  position: relative;
+}
+
+/* Drag and drop styles */
+.sc-toc-layer-item.drag-over {
+  background-color: rgba(0, 123, 255, 0.05);
+}
+
+.sc-toc-layer-item.drag-over::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #007bff;
+  z-index: 10;
 }
 
 /* No Layers Message */
@@ -54,4 +71,4 @@
   .sc-toc-layer-container {
     top: 160px;
   }
-} 
+}

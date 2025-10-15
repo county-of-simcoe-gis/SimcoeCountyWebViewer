@@ -4,8 +4,8 @@ import React from "react";
 import { useMyMapsStore } from "@/stores/myMapsStore";
 import { DrawType } from "@/types/myMaps";
 import myMapsConfig from "@/config/myMapsConfig.json";
-import DrawButton from "./DrawButton";
-import "./ButtonBar.css";
+import DrawButton from "@/components/myMaps/DrawButton";
+import "@/components/myMaps/ButtonBar.css";
 
 interface ButtonBarProps {
   isEditing?: boolean;

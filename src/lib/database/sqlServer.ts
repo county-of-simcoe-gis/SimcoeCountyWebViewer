@@ -1,0 +1,175 @@
+/**
+ * SQL Server database connection utility
+ */
+import sql from "mssql";
+
+interface SQLServerConfig {
+  dbName: string;
+  user?: string;
+  password?: string;
+  server?: string;
+  port?: number;
+}
+
+export class SQLServer {
+  private config: sql.config;
+  private pool: sql.ConnectionPool | null = null;
+
+  constructor(options: SQLServerConfig) {
+    const { dbName, user, password, server, port } = options;
+
+    this.config = {
+      server: server || process.env.SQL_HOST || "localhost",
+      port: port || parseInt(process.env.SQL_PORT || "1433"),
+      database: dbName,
+      user: user || this.getUserForDatabase(dbName),
+      password: password || this.getPasswordForDatabase(dbName),
+      options: {
+        encrypt: true,
+        trustServerCertificate: true,
+        enableArithAbort: true,
+      },
+      pool: {
+        max: 10,
+        min: 0,
+        idleTimeoutMillis: 30000,
+      },
+    };
+  }
+
+  /**
+   * Get user credentials based on database name
+   */
+  private getUserForDatabase(dbName: string): string {
+    const dbLower = dbName.toLowerCase();
+    if (dbLower === "tabular") {
+      return process.env.SQL_TABULAR_USER || "";
+    }
+    if (dbLower === "weblive") {
+      return process.env.SQL_WEBLIVE_USER || "";
+    }
+    return "";
+  }
+
+  /**
+   * Get password based on database name
+   */
+  private getPasswordForDatabase(dbName: string): string {
+    const dbLower = dbName.toLowerCase();
+    if (dbLower === "tabular") {
+      return process.env.SQL_TABULAR_PASS || "";
+    }
+    if (dbLower === "weblive") {
+      return process.env.SQL_WEBLIVE_PASS || "";
+    }
+    return "";
+  }
+
+  /**
+   * Get or create connection pool
+   */
+  private async getPool(): Promise<sql.ConnectionPool> {
+    if (!this.pool) {
+      this.pool = await new sql.ConnectionPool(this.config).connect();
+    }
+    return this.pool;
+  }
+
+  /**
+   * Execute query and return first result
+   */
+  async selectFirstWithValues<T = Record<string, unknown>>(query: string, values: Array<{ name: string; type: string; typeOpts?: Record<string, unknown>; value: unknown }>): Promise<T | null> {
+    try {
+      const pool = await this.getPool();
+      const request = pool.request();
+
+      // Add parameters
+      for (const param of values) {
+        const sqlType = this.getSQLType(param.type, param.typeOpts);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        request.input(param.name, sqlType as any, param.value);
+      }
+
+      const result = await request.query(query);
+
+      if (result.recordset && result.recordset.length > 0) {
+        return result.recordset[0] as T;
+      }
+
+      return null;
+    } catch (error) {
+      console.error("SQL Server query error:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Execute query and return all results
+   */
+  async selectAllWithValues<T = Record<string, unknown>>(query: string, values: Array<{ name: string; type: string; typeOpts?: Record<string, unknown>; value: unknown }>): Promise<T[]> {
+    try {
+      const pool = await this.getPool();
+      const request = pool.request();
+
+      // Add parameters
+      for (const param of values) {
+        const sqlType = this.getSQLType(param.type, param.typeOpts);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        request.input(param.name, sqlType as any, param.value);
+      }
+
+      const result = await request.query(query);
+      return (result.recordset || []) as T[];
+    } catch (error) {
+      console.error("SQL Server query error:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get SQL type from string
+   */
+  private getSQLType(type: string, typeOpts?: Record<string, unknown>): sql.ISqlType | sql.ISqlTypeFactory {
+    switch (type.toLowerCase()) {
+      case "nvarchar": {
+        const length = typeof typeOpts?.length === "number" ? typeOpts.length : sql.MAX;
+        return sql.NVarChar(length);
+      }
+      case "varchar": {
+        const length = typeof typeOpts?.length === "number" ? typeOpts.length : sql.MAX;
+        return sql.VarChar(length);
+      }
+      case "int":
+        return sql.Int();
+      case "bigint":
+        return sql.BigInt();
+      case "float":
+        return sql.Float();
+      case "decimal": {
+        const precision = typeof typeOpts?.precision === "number" ? typeOpts.precision : undefined;
+        const scale = typeof typeOpts?.scale === "number" ? typeOpts.scale : undefined;
+        return sql.Decimal(precision, scale);
+      }
+      case "bit":
+        return sql.Bit();
+      case "datetime":
+        return sql.DateTime();
+      case "date":
+        return sql.Date();
+      default:
+        return sql.NVarChar(sql.MAX);
+    }
+  }
+
+  /**
+   * Close connection pool
+   */
+  async close(): Promise<void> {
+    if (this.pool) {
+      await this.pool.close();
+      this.pool = null;
+    }
+  }
+}
+
+export default SQLServer;

@@ -8,26 +8,9 @@ declare global {
     map?: Map;
   }
 }
-import {
-  Image as ImageLayer,
-  Tile as TileLayer,
-  Vector as VectorLayer,
-  Group as LayerGroup,
-  VectorTile as VectorTileLayer,
-} from "ol/layer";
+import { Image as ImageLayer, Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup, VectorTile as VectorTileLayer } from "ol/layer";
 import WebGLTileLayer from "ol/layer/WebGLTile";
-import {
-  ImageWMS,
-  OSM,
-  TileArcGISRest,
-  ImageArcGISRest,
-  TileWMS,
-  TileImage,
-  Vector,
-  XYZ,
-  ImageStatic,
-  GeoTIFF,
-} from "ol/source";
+import { ImageWMS, OSM, TileArcGISRest, ImageArcGISRest, TileWMS, TileImage, Vector, XYZ, ImageStatic, GeoTIFF } from "ol/source";
 import WMTS from "ol/source/WMTS";
 import VectorTileSource from "ol/source/VectorTile";
 import { GeoJSON } from "ol/format";
@@ -41,16 +24,8 @@ import TileGrid from "ol/tilegrid/TileGrid";
 import { getTopLeft } from "ol/extent";
 import { applyStyle } from "ol-mapbox-style";
 
-import {
-  OL_LAYER_TYPES,
-  OL_DATA_TYPES,
-  OLLayerType,
-  OLDataType,
-  LayerOptions,
-  RebuildParams,
-  GroupedLayerOptions,
-} from "./types";
-import { FeatureHelpers } from "./FeatureHelpers";
+import { OL_LAYER_TYPES, OL_DATA_TYPES, OLLayerType, OLDataType, LayerOptions, RebuildParams, GroupedLayerOptions } from "@/utils/openlayers/types";
+import { FeatureHelpers } from "@/utils/openlayers/FeatureHelpers";
 import { getAxiosClient } from "@/lib/axiosInstance";
 
 export class LayerHelpers {
@@ -95,14 +70,11 @@ export class LayerHelpers {
    * @param options - Grouped layer options
    * @param callback - Callback function with created layer group
    */
-  static getGroupedLayer(
-    options: GroupedLayerOptions,
-    callback: (layer: LayerGroup) => void
-  ): void {
+  static getGroupedLayer(options: GroupedLayerOptions, callback: (layer: LayerGroup) => void): void {
     const layerOptions = options.layers;
     const name = options.name || "";
     const layers: Layer[] = [];
-    
+
     const rebuildParams = {
       sourceType: OL_DATA_TYPES.LayerGroup,
       name: name,
@@ -110,7 +82,7 @@ export class LayerHelpers {
     };
 
     let completedLayers = 0;
-    
+
     layerOptions.forEach((layerOption) => {
       this.getLayer(
         {
@@ -125,7 +97,7 @@ export class LayerHelpers {
         (layer) => {
           layers.push(layer);
           completedLayers++;
-          
+
           if (completedLayers >= layerOptions.length) {
             callback(
               new LayerGroup({
@@ -180,8 +152,7 @@ export class LayerHelpers {
 
     let finalName = name;
     let finalUrl: string | ((extent: Extent, resolution: number, proj: Projection) => string) = url;
-    let vectorFileLoader: ((extent: unknown, resolution: unknown, proj: unknown) => void) | undefined =
-      undefined;
+    let vectorFileLoader: ((extent: unknown, resolution: unknown, proj: unknown) => void) | undefined = undefined;
 
     // Handle different source types
     switch (source) {
@@ -246,20 +217,11 @@ export class LayerHelpers {
         break;
 
       case "wfs":
-        // eslint-disable-next-line no-case-declarations
+         
         const type = sourceType === OL_DATA_TYPES.GeoJSON ? "application/json" : sourceType;
-        finalUrl = /^((http)|(https))(:\/\/)/.test(finalUrl as string)
-          ? (finalUrl as string)
-          : "https://" + finalUrl;
+        finalUrl = /^((http)|(https))(:\/\/)/.test(finalUrl as string) ? (finalUrl as string) : "https://" + finalUrl;
         finalUrl = /\?/.test(finalUrl as string) ? (finalUrl as string) + "&" : (finalUrl as string) + "?";
-        finalUrl =
-          finalUrl +
-          "SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=" +
-          layerName +
-          "&SRSNAME=" +
-          projection +
-          "&OUTPUTFORMAT=" +
-          type;
+        finalUrl = finalUrl + "SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=" + layerName + "&SRSNAME=" + projection + "&OUTPUTFORMAT=" + type;
         break;
     }
 
@@ -289,14 +251,37 @@ export class LayerHelpers {
         break;
 
       case OL_DATA_TYPES.ImageWMS:
+        console.log("🌐 Creating ImageWMS layer:", {
+          url: finalUrl,
+          layerName: layerName,
+          finalName: finalName,
+        });
+
+        const imageWMSSource = new ImageWMS({
+          url: finalUrl as string,
+          params: {
+            LAYERS: layerName,
+            VERSION: "1.3.0",
+            FORMAT: "image/png",
+            SRS: "EPSG:3857",
+            TRANSPARENT: true,
+          },
+          ratio: 1,
+        });
+
+        // Add error handling for WMS source
+        imageWMSSource.on("tileloaderror", (event) => {
+          console.error("❌ WMS tile load error for", layerName, ":", event);
+        });
+
+        imageWMSSource.on("imageloaderror", (event) => {
+          console.error("❌ WMS image load error for", layerName, ":", event);
+        });
+
         callback(
           new ImageLayer({
             properties: { rebuildParams, name: finalName },
-            source: new ImageWMS({
-              url: finalUrl as string,
-              params: { LAYERS: layerName },
-              ratio: 1,
-            }),
+            source: imageWMSSource,
           })
         );
         break;
@@ -328,7 +313,7 @@ export class LayerHelpers {
         break;
 
       case OL_DATA_TYPES.SimcoeTiled:
-        // eslint-disable-next-line no-case-declarations
+         
         const tileGrid = createXYZ({
           extent: extent,
         });
@@ -345,13 +330,12 @@ export class LayerHelpers {
         break;
 
       case OL_DATA_TYPES.TileImage:
-        // eslint-disable-next-line no-case-declarations
+         
         const resolutions = [
-          305.74811314055756, 152.87405657041106, 76.43702828507324, 38.21851414253662, 19.10925707126831, 
-          9.554628535634155, 4.77731426794937, 2.388657133974685, 1.1943285668550503,
+          305.74811314055756, 152.87405657041106, 76.43702828507324, 38.21851414253662, 19.10925707126831, 9.554628535634155, 4.77731426794937, 2.388657133974685, 1.1943285668550503,
           0.5971642835598172, 0.29858214164761665, 0.1492252984505969,
         ];
-        // eslint-disable-next-line no-case-declarations
+         
         let projExtent_ti;
         try {
           projExtent_ti = window.map?.getView()?.getProjection()?.getExtent();
@@ -359,7 +343,7 @@ export class LayerHelpers {
           // Map not available yet, use default Web Mercator extent
           projExtent_ti = [-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244];
         }
-        // eslint-disable-next-line no-case-declarations
+         
         const customTileGrid = new TileGrid({
           resolutions: resolutions,
           tileSize: [256, 256],
@@ -367,7 +351,7 @@ export class LayerHelpers {
         });
         // Use XYZ source with custom tile grid instead of TileImage
         // This ensures proper coordinate handling
-        // eslint-disable-next-line no-case-declarations
+         
         const xyzSource = new XYZ({
           url: finalUrl as string,
           tileGrid: customTileGrid,
@@ -394,7 +378,8 @@ export class LayerHelpers {
             const styleUrl = rootPath.startsWith("/") ? rootPath : "/" + rootPath;
 
             const axiosClient = getAxiosClient(styleUrl);
-            axiosClient.get(styleUrl)
+            axiosClient
+              .get(styleUrl)
               .then((response) => {
                 const glStyle = response.data;
                 // Patch Esri VectorTileServer styles: add "tiles" template when only "url" provided
@@ -442,10 +427,7 @@ export class LayerHelpers {
         break;
 
       case OL_DATA_TYPES.LayerGroup:
-        this.getGroupedLayer(
-          rebuildParams as unknown as GroupedLayerOptions,
-          callback as unknown as (layer: LayerGroup) => void
-        );
+        this.getGroupedLayer(rebuildParams as unknown as GroupedLayerOptions, callback as unknown as (layer: LayerGroup) => void);
         break;
 
       default:
@@ -455,4 +437,4 @@ export class LayerHelpers {
         return;
     }
   }
-} 
+}

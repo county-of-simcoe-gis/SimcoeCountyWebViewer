@@ -3,9 +3,9 @@
 import React from "react";
 import Image from "next/image";
 import { useMyMapsStore } from "@/stores/myMapsStore";
-import MyMapsItem from "./MyMapsItem";
+import MyMapsItem from "@/components/myMaps/MyMapsItem";
 import type { MyMapsItem as MyMapsItemType } from "@/types/myMaps";
-import "./MyMapsItems.css";
+import "@/components/myMaps/MyMapsItems.css";
 
 interface MyMapsItemsProps {
   onLabelChange: (id: string, label: string) => void;

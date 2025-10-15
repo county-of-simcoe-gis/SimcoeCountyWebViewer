@@ -1,6 +1,6 @@
 "use client";
 
-import "./PanelComponent.css";
+import "@/components/PanelComponent.css";
 import React, { useEffect } from "react";
 import Image from "next/image";
 import { FaQuestion } from "react-icons/fa";

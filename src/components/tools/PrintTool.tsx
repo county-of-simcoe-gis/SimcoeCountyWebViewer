@@ -1,6 +1,6 @@
 "use client";
 
-import "./PrintTool.css";
+import "@/components/tools/PrintTool.css";
 import React, { useState } from "react";
 import Image from "next/image";
 import PanelComponent from "@/components/PanelComponent";

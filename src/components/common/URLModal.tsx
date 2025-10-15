@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import "./URLModal.css";
+import "@/components/common/URLModal.css";
 
 interface URLModalProps {
   url: string;
