@@ -14,6 +14,7 @@ import MyMapsService from "@/components/myMaps/MyMapsService";
 import GlobalDrawingOptionsPopup from "@/components/myMaps/GlobalDrawingOptionsPopup";
 import LayerInfoModal from "@/components/LayerInfo/LayerInfoModal";
 import LegendModal from "@/components/Legend/LegendModal";
+import MoreMenu from "@/components/MoreMenu";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -99,6 +100,9 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Legend Modal - displays legends for visible layers */}
       <LegendModal />
+
+      {/* More Menu - displays themes, tools, and other options */}
+      <MoreMenu />
 
       {/* Additional content */}
       {children}

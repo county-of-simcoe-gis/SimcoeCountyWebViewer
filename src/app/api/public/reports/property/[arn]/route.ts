@@ -202,8 +202,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const sql = `
       SELECT *
-      FROM TABULAR.dbo.view_PropertyReportInfo_New 
-      WHERE UniqueMaps = 1 AND ARN = @arn
+      FROM TABULAR.dbo.view_PropertyReportInfo_dev
+      WHERE ARN = @arn
     `;
     const values = [{ name: "arn", type: "NVarChar", typeOpts: { length: 250 }, value: arn }];
 

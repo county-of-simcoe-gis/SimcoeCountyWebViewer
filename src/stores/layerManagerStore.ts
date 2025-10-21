@@ -621,7 +621,7 @@ export const useLayerManagerStore = create<LayerManagerState>()(
     // Debug helper to log current layer order
     logLayerOrder: () => {
       const state = get();
-      console.log("📊 Layer Manager - Current Layer Order:");
+      // console.log("📊 Layer Manager - Current Layer Order:");
 
       Object.keys(state.layers).forEach((category) => {
         const categoryKey = category as LayerCategory;

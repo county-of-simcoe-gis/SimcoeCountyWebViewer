@@ -40,10 +40,13 @@ vi.mock("@/stores/appStore", () => ({
   })),
 }));
 
-// Mock other required stores
-const mockMapStore = {
+// Mock other required stores with proper state management
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockMapStore: Record<string, any> = {
   map: null,
-  setMap: vi.fn(),
+  setMap: vi.fn((newMap: unknown) => {
+    mockMapStore.map = newMap;
+  }),
   addLoadedItem: vi.fn(),
   setMapControls: vi.fn(),
   setCurrentExtent: vi.fn(),
@@ -121,6 +124,7 @@ const mockMapInstance = {
   getInteractions: vi.fn(() => ({
     getArray: vi.fn(() => []),
   })),
+  addInteraction: vi.fn(),
   removeInteraction: vi.fn(),
 };
 
@@ -268,6 +272,9 @@ describe("MapContainer", () => {
 
     // Clear sessionStorage
     sessionStorage.clear();
+
+    // Reset map store state
+    mockMapStore.map = null;
 
     // Reset useAppStore mock
     const mockUseAppStore = vi.mocked(useAppStore);

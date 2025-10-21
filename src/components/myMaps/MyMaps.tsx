@@ -5,6 +5,8 @@ import { useMyMapsStore } from "@/stores/myMapsStore";
 import { useEventStore } from "@/stores/eventStore";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
+import { useReportsStore } from "@/stores/reportsStore";
+import { useSidebarStore } from "@/stores/sidebarStore";
 import ButtonBar from "@/components/myMaps/ButtonBar";
 import ColorBar from "@/components/myMaps/ColorBar";
 import MyMapsItems from "@/components/myMaps/MyMapsItems";
@@ -12,10 +14,12 @@ import MyMapsAdvanced from "@/components/myMaps/MyMapsAdvanced";
 import MyMapsItemPopup from "@/components/myMaps/MyMapsItemPopup";
 import ShowGeometryModal from "@/components/myMaps/ShowGeometryModal";
 import URLModal from "@/components/common/URLModal";
+import Identify from "@/components/Identify/Identify";
 import { getMapScale, getMapExtent, getMapCenter, buildFeedbackUrl } from "@/utils/mapHelpers";
 import type { MyMapsItem as MyMapsItemType } from "@/types/myMaps";
 import { Feature } from "ol";
 import GeoJSON from "ol/format/GeoJSON";
+import Geometry from "ol/geom/Geometry";
 import "@/components/myMaps/MyMaps.css";
 
 interface MyMapsProps {
@@ -42,6 +46,8 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
   const { config } = useAppStore();
   const urlParameters = useAppStore((state) => state.urlParameters);
   const { emit } = useEventStore();
+  const { setReport } = useReportsStore();
+  const { openSidebar, setActiveTab } = useSidebarStore();
 
   // Handle showing item options popup
   const handleShowItemOptions = useCallback((item: MyMapsItemType, event?: React.MouseEvent) => {
@@ -265,10 +271,51 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
   const handleIdentify = useCallback(
     (item: MyMapsItemType) => {
       console.log("Identify feature:", item.id);
-      // TODO: Show feature identification details
-      emit("mymap-identify", { item });
+
+      try {
+        // Parse the GeoJSON to get the feature
+        const geoJsonFormat = new GeoJSON({
+          dataProjection: "EPSG:3857",
+          featureProjection: "EPSG:3857",
+        });
+
+        const featureResult = geoJsonFormat.readFeature(item.featureGeoJSON) as Feature<Geometry> | Feature<Geometry>[];
+
+        // readFeature can return either a Feature or Feature[], ensure we have a single feature
+        const feature: Feature<Geometry> = Array.isArray(featureResult) ? featureResult[0] : featureResult;
+
+        if (!feature) {
+          console.error("No feature parsed from GeoJSON:", item.id);
+          return;
+        }
+
+        const geometry = feature.getGeometry();
+
+        if (!geometry) {
+          console.error("No geometry found for feature:", item.id);
+          return;
+        }
+
+        // Generate report content
+        const reportId = `identify-mymaps-${item.id}-${Date.now()}`;
+        setReport({
+          id: reportId,
+          title: `Identify Results - ${item.label || "MyMaps Feature"}`,
+          content: <Identify geometry={geometry} />,
+          createdAt: new Date(),
+        });
+
+        // Open sidebar and switch to reports tab
+        openSidebar();
+        setActiveTab(4); // Reports tab is index 4
+
+        // Emit event for backward compatibility
+        emit("mymap-identify", { item });
+      } catch (error) {
+        console.error("Error identifying MyMaps feature:", error);
+      }
     },
-    [emit]
+    [emit, setReport, openSidebar, setActiveTab]
   );
 
   const handleReportProblem = useCallback(

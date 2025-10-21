@@ -171,7 +171,7 @@ const translationTable: { [section: string]: Mapping } = {
       drawingOptionsToolsMenuVisibility: {
         sourceKey: "drawingOptionsToolsMenuVisibility",
         transform: (src) => {
-          console.log("Transform drawingOptionsToolsMenuVisibility from JSON:", src);
+          // console.log("Transform drawingOptionsToolsMenuVisibility from JSON:", src);
           const typedSrc = src as { mainSidebarItems?: { drawingOptionsToolsMenuVisibility?: Record<string, boolean> } };
           return (
             typedSrc.mainSidebarItems?.drawingOptionsToolsMenuVisibility || {

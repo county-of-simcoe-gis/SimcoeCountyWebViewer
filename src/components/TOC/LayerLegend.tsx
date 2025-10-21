@@ -71,10 +71,18 @@ interface LegendItem {
   label?: string;
 }
 
-export default function LayerLegend({ legend, image, inline = false, forceMode, showLegend = false, onToggleLegend, styleUrl = "", renderToggleOnly = false }: LayerLegendProps) {
+const LayerLegendComponent = ({ legend, image, inline = false, forceMode, showLegend = false, onToggleLegend, styleUrl = "", renderToggleOnly = false }: LayerLegendProps) => {
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [displayMode, setDisplayMode] = useState<LegendDisplayMode>("hidden");
   const [isModeReady, setIsModeReady] = useState(false);
+  const renderedImageRef = React.useRef<string | null>(null);
+
+  // Reset loading state when image changes
+  React.useEffect(() => {
+    if (image && image !== renderedImageRef.current) {
+      setIsImageLoading(true);
+    }
+  }, [image]);
 
   // Determine display mode based on image dimensions and props
   useEffect(() => {
@@ -228,7 +236,10 @@ export default function LayerLegend({ legend, image, inline = false, forceMode, 
 
   // If we have an image URL, display it
   if (image) {
-    // console.log('LayerLegend: Rendering image:', image, 'mode:', displayMode);
+    // Mark this image as rendered to prevent re-fetching
+    if (renderedImageRef.current !== image) {
+      renderedImageRef.current = image;
+    }
 
     // For inline mode (small images), return just the image
     if (displayMode === "inline") {
@@ -240,11 +251,13 @@ export default function LayerLegend({ legend, image, inline = false, forceMode, 
             </div>
           )}
           <img
+            key={image}
             src={image}
             alt="Layer Legend"
             width={25}
             height={25}
             className="inline-block align-middle mx-1"
+            loading="lazy"
             onError={(e) => {
               setIsImageLoading(false);
               (e.target as HTMLImageElement).style.display = "none";
@@ -264,10 +277,12 @@ export default function LayerLegend({ legend, image, inline = false, forceMode, 
             </div>
           )}
           <img
+            key={image}
             src={image}
             alt="Layer Legend"
             className="w-auto h-auto"
             style={{ width: "auto", height: "auto" }}
+            loading="lazy"
             onError={(e) => {
               setIsImageLoading(false);
               // console.log('LayerLegend: Image failed to load:', image);
@@ -445,11 +460,17 @@ export default function LayerLegend({ legend, image, inline = false, forceMode, 
   }
 
   return null;
-}
+};
+
+// Memoize the component to prevent unnecessary re-renders
+const LayerLegend = React.memo(LayerLegendComponent);
+export default LayerLegend;
 
 // Helper hook to get legend display mode without rendering
 export function useLegendDisplayMode(image: string | null, legend: unknown | null): LegendDisplayMode {
   const [displayMode, setDisplayMode] = useState<LegendDisplayMode>("hidden");
+  const checkedImageRef = React.useRef<string | null>(null);
+  const displayModeRef = React.useRef<LegendDisplayMode>("hidden");
 
   useEffect(() => {
     let isCancelled = false;
@@ -459,41 +480,69 @@ export function useLegendDisplayMode(image: string | null, legend: unknown | nul
 
       // If we have an image, check its dimensions
       if (image) {
+        // Skip if we've already determined the mode for this image
+        if (image === checkedImageRef.current && displayModeRef.current !== "hidden") {
+          return;
+        }
+
         try {
           const { getCachedImage, cacheImage } = useLayerManagerStore.getState();
-          let imageInfo = getCachedImage(image);
+          const cachedInfo = getCachedImage(image);
 
-          // Only cache if not already cached
-          if (!imageInfo) {
-            imageInfo = await cacheImage(image);
-          } else {
+          // If we have a valid cached entry (not loading, no error), use it immediately
+          if (cachedInfo && !cachedInfo.isLoading && !cachedInfo.error) {
+            // If component was unmounted during check, don't update state
+            if (isCancelled) return;
+
+            // Mark this image as checked
+            checkedImageRef.current = image;
+
+            // Determine mode based on cached dimensions
+            const newMode = cachedInfo.width <= 30 && cachedInfo.height <= 30 ? "inline" : "expandable";
+            displayModeRef.current = newMode;
+            setDisplayMode(newMode);
+            return;
           }
 
-          // If component was unmounted during async operation, don't update state
-          if (isCancelled) return;
+          // Only call cacheImage if we don't have valid cached data
+          if (!cachedInfo || cachedInfo.isLoading || cachedInfo.error) {
+            const imageInfo = await cacheImage(image);
 
-          // Determine mode based on dimensions
-          if (imageInfo.error) {
-            setDisplayMode("hidden");
-          } else if (imageInfo.width <= 30 && imageInfo.height <= 30) {
-            setDisplayMode("inline");
-          } else {
-            setDisplayMode("expandable");
+            // If component was unmounted during async operation, don't update state
+            if (isCancelled) return;
+
+            // Mark this image as checked
+            checkedImageRef.current = image;
+
+            // Determine mode based on dimensions
+            let newMode: LegendDisplayMode = "hidden";
+            if (imageInfo.error) {
+              newMode = "hidden";
+            } else if (imageInfo.width <= 30 && imageInfo.height <= 30) {
+              newMode = "inline";
+            } else {
+              newMode = "expandable";
+            }
+            displayModeRef.current = newMode;
+            setDisplayMode(newMode);
           }
         } catch (error) {
           if (!isCancelled) {
             console.warn("Error determining legend display mode:", error);
+            displayModeRef.current = "expandable";
             setDisplayMode("expandable"); // Default to expandable on error
           }
         }
       } else if (legend) {
         // If we have legend object data, always show as expandable
-        if (!isCancelled) {
+        if (!isCancelled && displayModeRef.current !== "expandable") {
+          displayModeRef.current = "expandable";
           setDisplayMode("expandable");
         }
       } else {
         // No legend data available
-        if (!isCancelled) {
+        if (!isCancelled && displayModeRef.current !== "hidden") {
+          displayModeRef.current = "hidden";
           setDisplayMode("hidden");
         }
       }

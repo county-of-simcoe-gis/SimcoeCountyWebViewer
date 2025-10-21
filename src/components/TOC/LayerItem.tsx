@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 
 import { TOCLayerGroup, TOCLayer, useTOCStore } from "@/stores/tocStore";
 import { FaPaperclip, FaInfoCircle, FaDownload, FaLock, FaUser, FaEllipsisV, FaGripVertical } from "react-icons/fa";
@@ -23,12 +23,21 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Get the live layer data from the store to ensure we have the latest legend data
-  const { allLayers } = useTOCStore();
-  const currentLayerData = allLayers.find((l) => l.name === layerInfo.name) || layerInfo;
+  // Use a selector to only subscribe to this specific layer's data
+  const currentLayerData = useTOCStore((state) => state.allLayers.find((l) => l.name === layerInfo.name) || layerInfo);
+
+  // Memoize the legend data to prevent unnecessary recalculations
+  const legendData = useMemo(
+    () => ({
+      image: shouldLoadLegend ? currentLayerData.legendImage : null,
+      obj: shouldLoadLegend ? currentLayerData.legendObj : null,
+    }),
+    [shouldLoadLegend, currentLayerData.legendImage, currentLayerData.legendObj]
+  );
 
   // Use the hook to determine legend display mode, but ONLY when shouldLoadLegend is true
   // This way we only load/check images for items that are in or near the viewport
-  const legendDisplayMode = useLegendDisplayMode(shouldLoadLegend ? currentLayerData.legendImage : null, shouldLoadLegend ? currentLayerData.legendObj : null);
+  const legendDisplayMode = useLegendDisplayMode(legendData.image, legendData.obj);
 
   // Fetch legend data on-demand when layer becomes visible
   useEffect(() => {
@@ -52,6 +61,14 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
 
   // Intersection Observer for lazy loading legend images
   useEffect(() => {
+    // If legend is already loaded OR already marked to load, skip observer setup
+    if (shouldLoadLegend || currentLayerData.legendImage || currentLayerData.legendObj) {
+      if (!shouldLoadLegend) {
+        setShouldLoadLegend(true);
+      }
+      return;
+    }
+
     let observer: IntersectionObserver | null = null;
 
     observer = new IntersectionObserver(
@@ -83,7 +100,7 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
         observer.disconnect();
       }
     };
-  }, []);
+  }, [shouldLoadLegend, currentLayerData.legendImage, currentLayerData.legendObj]);
 
   const onCheckboxChange = () => {
     // Handle disclaimer if present

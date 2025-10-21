@@ -404,7 +404,7 @@ export default function BasemapSwitcher() {
 
           // Debug: Log layer order after initialization
           // console.log("🔍 BasemapSwitcher: Logging layer order after initialization:");
-          LayerManager.logLayerOrder();
+          // LayerManager.logLayerOrder();
         }, 100);
       }
     }
@@ -512,7 +512,7 @@ export default function BasemapSwitcher() {
 
     // Debug: Log current layer order
     // console.log("🔍 enableImagery: Current layer order:");
-    LayerManager.logLayerOrder();
+    // LayerManager.logLayerOrder();
   }, [imagerySliderValue, streetsCheckbox, updateImageryLayers]);
 
   const disableImagery = useCallback(() => {

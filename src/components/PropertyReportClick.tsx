@@ -12,7 +12,9 @@ import { getArea } from "ol/sphere";
 import { getAxiosClient } from "@/lib/axiosInstance";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { ParcelClickInteraction } from "@/utils/openlayers/ParcelClickInteraction";
-import PropertyPopup from "@/components/PropertyPopup";
+import ResultsPopup, { createPropertyResult, createCondoResult } from "@/components/ResultsPopup";
+import { getAxiosClient as getAxiosClientUtil } from "@/lib/axiosInstance";
+import { useInteractionManager } from "@/components/MapContainer";
 import config from "@/config.json";
 
 // Parcel URL template for WFS queries
@@ -63,10 +65,10 @@ export default function PropertyReportClick() {
   const { map, disableParcelClick, isDrawingOrEditing, isCoordinateToolOpen, isMeasuring } = useMapStore();
   const { show: showPopup, hide: hidePopup } = usePopupStore();
   const urlParameters = useAppStore((state) => state.urlParameters);
+  const { registerHandler, unregisterHandler } = useInteractionManager();
 
   const parcelLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const parcelLayerIdRef = useRef<string | null>(null);
-  const parcelInteractionRef = useRef<ParcelClickInteraction | null>(null);
 
   // Check if parcel click should be disabled
   const checkDisableFlags = useCallback(() => {
@@ -170,9 +172,9 @@ export default function PropertyReportClick() {
     return [lon, lat];
   }, []);
 
-  // Show property window
-  const showPropertyWindow = useCallback(
-    async (wfsURL: string, clickEvt: { coordinate: number[]; zoomToFeature?: boolean } | null = null) => {
+  // Show property window for URL parameter (ARN)
+  const showPropertyWindowForARN = useCallback(
+    async (wfsURL: string, shouldZoomToFeature: boolean) => {
       try {
         const axiosClient = getAxiosClient(wfsURL);
         const response = await axiosClient.get<WFSResponse>(wfsURL);
@@ -191,40 +193,78 @@ export default function PropertyReportClick() {
         const arn = result.features[0].properties.arn;
         feature.setProperties({ arn });
 
-        // Get coordinates
-        let pointerPoint: number[];
-        let latLongCoords: number[];
+        // Get coordinates from feature center
+        const extent = feature.getGeometry()?.getExtent();
+        if (!extent) return;
 
-        if (clickEvt === null || clickEvt.zoomToFeature) {
-          // From URL parameter - zoom to feature
-          const extent = feature.getGeometry()?.getExtent();
-          if (extent) {
-            const centerX = (extent[0] + extent[2]) / 2;
-            const centerY = (extent[1] + extent[3]) / 2;
-            pointerPoint = [centerX, centerY];
-            latLongCoords = toLatLongFromWebMercator(pointerPoint);
-            map?.getView().fit(extent, { size: map.getSize() });
-          } else {
-            return;
-          }
-        } else {
-          pointerPoint = clickEvt.coordinate;
-          latLongCoords = toLatLongFromWebMercator(clickEvt.coordinate);
+        const centerX = (extent[0] + extent[2]) / 2;
+        const centerY = (extent[1] + extent[3]) / 2;
+        const pointerPoint = [centerX, centerY];
+        const latLongCoords = toLatLongFromWebMercator(pointerPoint);
+
+        // Zoom to feature if requested
+        if (shouldZoomToFeature) {
+          map?.getView().fit(extent, { size: map.getSize() });
         }
 
-        // Fetch full property information
-        const propInfo = await fetchPropertyInfo(arn, feature, pointerPoint, latLongCoords);
-
-        // Show popup with property information
-        const handleClose = () => {
+        // Build results using the same logic as fetchParcelResults
+        const results = [];
+        const clearParcelLayer = () => {
           parcelLayerRef.current?.getSource()?.clear();
+        };
+
+        if (arn.length === 20) {
+          // Condo parent - fetch all children
+          try {
+            const apiUrl = `/api/public/reports/condo-children/${arn}`;
+            const client = getAxiosClientUtil(apiUrl);
+            const requestPath = apiUrl.startsWith("/api/") ? apiUrl.replace("/api", "") : apiUrl;
+            const condoResponse = await client.get(requestPath);
+
+            if (Array.isArray(condoResponse.data) && condoResponse.data.length > 0) {
+              condoResponse.data.forEach((unit: any) => {
+                const condoResult = createCondoResult(unit.ARN, unit.UnitNumber, unit.Address, feature);
+
+                // Attach lazy-loading function for property info
+                (condoResult as any).loadDetails = async () => {
+                  if (!condoResult.data.propInfo) {
+                    const propInfo = await fetchPropertyInfo(unit.ARN, feature, pointerPoint, latLongCoords);
+                    condoResult.data.propInfo = propInfo;
+                    condoResult.data.feature = feature;
+                  }
+                };
+
+                (condoResult as any).clearParcelLayer = clearParcelLayer;
+                results.push(condoResult);
+              });
+            }
+          } catch (error) {
+            console.error("Error fetching condo children:", error);
+          }
+        } else {
+          // Regular property
+          const propInfo = await fetchPropertyInfo(arn, feature, pointerPoint, latLongCoords);
+          const propertyResult = createPropertyResult(arn, propInfo.Address || "", feature, propInfo);
+          (propertyResult as any).clearParcelLayer = clearParcelLayer;
+          results.push(propertyResult);
+        }
+
+        // Show unified popup
+        const handleClose = () => {
+          clearParcelLayer();
           hidePopup();
+        };
+
+        const handleSelectResult = async (result: any) => {
+          if (result.loadDetails) {
+            await result.loadDetails();
+          }
         };
 
         showPopup(
           pointerPoint,
-          <PropertyPopup propInfo={propInfo} feature={feature} onClose={handleClose} onClearParcelLayer={() => parcelLayerRef.current?.getSource()?.clear()} />,
-          "Property Information"
+          <ResultsPopup results={results} onClose={handleClose} onSelectResult={handleSelectResult} onClearParcelLayer={clearParcelLayer} />,
+          results.length > 1 ? `Results (${results.length})` : "Property Information"
         );
       } catch (error) {
         console.error("Error fetching parcel data:", error);
@@ -233,57 +273,120 @@ export default function PropertyReportClick() {
     [map, toLatLongFromWebMercator, fetchPropertyInfo, showPopup, hidePopup]
   );
 
-  // Handle parcel click from interaction
-  const handleParcelClick = useCallback(
-    (coordinate: number[]) => {
-      // Get parcel layer URL from config
-      const parcelLayerUrl = (config as any).parcelLayer?.url;
-      if (!parcelLayerUrl) {
-        console.warn("Parcel layer URL not configured");
-        return;
-      }
+  // Fetch parcel data and return results (for interaction handler)
+  const fetchParcelResults = useCallback(
+    async (coordinate: number[]) => {
+      try {
+        const parcelLayerUrl = (config as any).parcelLayer?.url;
+        if (!parcelLayerUrl) {
+          console.warn("Parcel layer URL not configured");
+          return [];
+        }
 
-      const parcelURL = parcelURLTemplate(parcelLayerUrl, coordinate[0], coordinate[1]);
-      showPropertyWindow(parcelURL, { coordinate });
+        const parcelURL = parcelURLTemplate(parcelLayerUrl, coordinate[0], coordinate[1]);
+        const axiosClient = getAxiosClient(parcelURL);
+        const response = await axiosClient.get<WFSResponse>(parcelURL);
+        const result = response.data;
+
+        if (!result.features || result.features.length === 0) return [];
+
+        const geoJSON = new GeoJSON().readFeatures(result);
+        const vectorSource = new VectorSource({ features: geoJSON });
+        parcelLayerRef.current?.setSource(vectorSource);
+
+        const feature = geoJSON[0];
+        feature.setStyle(parcelLayerStyle);
+
+        const arn = result.features[0].properties.arn;
+        feature.setProperties({ arn });
+
+        const pointerPoint = coordinate;
+        const latLongCoords = toLatLongFromWebMercator(coordinate);
+
+        const results = [];
+
+        // Function to clear parcel layer
+        const clearParcelLayer = () => {
+          parcelLayerRef.current?.getSource()?.clear();
+        };
+
+        // Check if this is a condo parent ARN (20 characters)
+        if (arn.length === 20) {
+          // Fetch all condo children
+          try {
+            const apiUrl = `/api/public/reports/condo-children/${arn}`;
+            const client = getAxiosClientUtil(apiUrl);
+            const requestPath = apiUrl.startsWith("/api/") ? apiUrl.replace("/api", "") : apiUrl;
+            const condoResponse = await client.get(requestPath);
+
+            if (Array.isArray(condoResponse.data) && condoResponse.data.length > 0) {
+              // Add each condo unit as a result (without property info - will be lazy-loaded)
+              condoResponse.data.forEach((unit: any) => {
+                const condoResult = createCondoResult(unit.ARN, unit.UnitNumber, unit.Address, feature);
+
+                // Attach lazy-loading function for property info
+                (condoResult as any).loadDetails = async () => {
+                  if (!condoResult.data.propInfo) {
+                    const propInfo = await fetchPropertyInfo(unit.ARN, feature, pointerPoint, latLongCoords);
+                    condoResult.data.propInfo = propInfo;
+                    condoResult.data.feature = feature;
+                  }
+                };
+
+                // Attach parcel layer clearing function
+                (condoResult as any).clearParcelLayer = clearParcelLayer;
+
+                results.push(condoResult);
+              });
+            }
+          } catch (error) {
+            console.error("Error fetching condo children:", error);
+          }
+        } else {
+          // Regular property - fetch property information
+          const propInfo = await fetchPropertyInfo(arn, feature, pointerPoint, latLongCoords);
+          const propertyResult = createPropertyResult(arn, propInfo.Address || "", feature, propInfo);
+
+          // Attach parcel layer clearing function
+          (propertyResult as any).clearParcelLayer = clearParcelLayer;
+
+          results.push(propertyResult);
+        }
+
+        return results;
+      } catch (error) {
+        console.error("Error fetching parcel data:", error);
+        return [];
+      }
     },
-    [showPropertyWindow]
+    [toLatLongFromWebMercator, fetchPropertyInfo]
   );
 
-  // Initialize and manage parcel click interaction
+  // Register handler for parcel clicks using new system
   useEffect(() => {
-    if (!map || parcelInteractionRef.current) return;
+    if (!map) return;
 
-    // Create parcel click interaction
-    const parcelInteraction = new ParcelClickInteraction({
-      maxScale: 20000,
-      checkDisableFlags,
-      checkLayerFilters: ParcelClickInteraction.checkLayersForDisable,
-      onParcelClick: (coordinate) => {
-        handleParcelClick(coordinate);
+    // Register handler with MapContainer
+    registerHandler({
+      id: "property-report-click",
+      eventType: "singleclick",
+      priority: 10, // Lower priority to run before other handlers
+      conditions: {
+        maxScale: 20000,
+        checkDisableFlags,
+        checkLayerFilters: ParcelClickInteraction.checkLayersForDisable,
+      },
+      handler: async (coordinate) => {
+        // Fetch parcel data and return results for aggregation
+        const results = await fetchParcelResults(coordinate);
+        return results;
       },
     });
 
-    // Add interaction to map
-    map.addInteraction(parcelInteraction);
-    parcelInteractionRef.current = parcelInteraction;
-
     return () => {
-      if (parcelInteractionRef.current) {
-        map.removeInteraction(parcelInteractionRef.current);
-        parcelInteractionRef.current = null;
-      }
+      unregisterHandler("property-report-click");
     };
-  }, [map, checkDisableFlags, handleParcelClick]);
-
-  // Update interaction callbacks when dependencies change
-  useEffect(() => {
-    if (!parcelInteractionRef.current) return;
-
-    parcelInteractionRef.current.setDisableFlagsChecker(checkDisableFlags);
-    parcelInteractionRef.current.setParcelClickCallback((coordinate) => {
-      handleParcelClick(coordinate);
-    });
-  }, [checkDisableFlags, handleParcelClick]);
+  }, [map, checkDisableFlags, fetchParcelResults, registerHandler, unregisterHandler]);
 
   // Handle ARN URL parameter
   useEffect(() => {
@@ -302,12 +405,12 @@ export default function PropertyReportClick() {
 
       // Small delay to ensure map is fully loaded
       const timer = setTimeout(() => {
-        showPropertyWindow(parcelARNURL, { coordinate: [0, 0], zoomToFeature: true });
+        showPropertyWindowForARN(parcelARNURL, true);
       }, 500);
 
       return () => clearTimeout(timer);
     }
-  }, [map, urlParameters, showPropertyWindow]);
+  }, [map, urlParameters, showPropertyWindowForARN]);
 
   return null; // This component doesn't render anything directly
 }

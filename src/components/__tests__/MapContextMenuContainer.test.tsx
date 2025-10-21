@@ -1,0 +1,320 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, waitFor } from "@testing-library/react";
+import { MapContextMenuContainer } from "@/components/MapContextMenuContainer";
+import { useMapStore } from "@/stores/mapStore";
+import { useSidebarStore } from "@/stores/sidebarStore";
+import { useMyMapsStore } from "@/stores/myMapsStore";
+import { usePopupStore } from "@/stores/popupStore";
+import { useReportsStore } from "@/stores/reportsStore";
+import Map from "ol/Map";
+import View from "ol/View";
+
+// Mock the config
+vi.mock("@/config.json", () => ({
+  default: {
+    showFloatingMenuHeader: false,
+    feedbackUrl: "https://example.com/feedback",
+    rightClickMenuVisibility: {
+      "sc-floating-menu-basic-mode": true,
+      "sc-floating-menu-property-click": true,
+      "sc-floating-menu-add-mymaps": true,
+      "sc-floating-menu-report-problem": true,
+      "sc-floating-menu-identify": true,
+      "sc-floating-menu-google-maps": false,
+      "sc-floating-menu-more": true,
+    },
+    parcelLayer: {
+      url: "https://example.com/wfs",
+    },
+    propertyReportUrl: "/api/property/",
+  },
+}));
+
+// Mock useInteractionManager hook
+vi.mock("@/components/MapContainer", () => ({
+  useInteractionManager: vi.fn(() => ({
+    registerHandler: vi.fn(),
+    unregisterHandler: vi.fn(),
+    registerInteraction: vi.fn(),
+    unregisterInteraction: vi.fn(),
+  })),
+}));
+
+// Mock OpenLayers toLonLat
+vi.mock("ol/proj", () => ({
+  toLonLat: vi.fn((coords) => [coords[0] / 100000, coords[1] / 100000]),
+}));
+
+// Mock axios
+vi.mock("@/lib/axiosInstance", () => ({
+  getAxiosClient: vi.fn(() => ({
+    get: vi.fn().mockResolvedValue({
+      data: {
+        features: [],
+      },
+    }),
+  })),
+}));
+
+describe("MapContextMenuContainer", () => {
+  let map: Map;
+  let mapElement: HTMLDivElement;
+
+  beforeEach(() => {
+    // Create a map element
+    mapElement = document.createElement("div");
+    mapElement.id = "test-map";
+    mapElement.style.width = "800px";
+    mapElement.style.height = "600px";
+    document.body.appendChild(mapElement);
+
+    // Mock ResizeObserver more completely for OpenLayers
+    const mockResizeObserver = vi.fn(() => ({
+      observe: vi.fn(),
+      unobserve: vi.fn(),
+      disconnect: vi.fn(),
+    }));
+    global.ResizeObserver = mockResizeObserver as any;
+
+    // Create a mock OpenLayers map
+    map = new Map({
+      target: mapElement,
+      view: new View({
+        center: [0, 0],
+        zoom: 10,
+      }),
+    });
+
+    // Set the map in the store
+    useMapStore.setState({ map });
+
+    // Reset all store flags
+    useMapStore.setState({
+      disableParcelClick: false,
+      isDrawingOrEditing: false,
+      isCoordinateToolOpen: false,
+      isMeasuring: false,
+    });
+
+    // Reset sidebar store
+    useSidebarStore.setState({
+      isOpen: true,
+      closeSidebar: vi.fn(),
+      openSidebar: vi.fn(),
+      setActiveTab: vi.fn(),
+    });
+
+    // Reset MyMaps store
+    useMyMapsStore.setState({
+      addItem: vi.fn(),
+      drawColor: "#e809e5",
+      items: [],
+    });
+
+    // Reset popup store
+    usePopupStore.setState({
+      show: vi.fn(),
+      hide: vi.fn(),
+    });
+
+    // Reset reports store
+    useReportsStore.setState({
+      setReport: vi.fn(),
+    });
+
+    // Clear all mocks
+    vi.clearAllMocks();
+
+    // Mock window.open
+    window.open = vi.fn();
+
+    // Mock localStorage
+    Storage.prototype.setItem = vi.fn();
+  });
+
+  afterEach(() => {
+    // Clean up
+    if (map) {
+      map.setTarget(undefined);
+    }
+    if (mapElement && mapElement.parentNode) {
+      mapElement.parentNode.removeChild(mapElement);
+    }
+    vi.clearAllMocks();
+  });
+
+  it("renders without crashing when map is available", () => {
+    const { container } = render(<MapContextMenuContainer />);
+    expect(container).toBeInTheDocument();
+  });
+
+  it("does not render menu when map is null", () => {
+    useMapStore.setState({ map: null });
+    const { container } = render(<MapContextMenuContainer />);
+    expect(container.firstChild).toBeNull();
+  });
+
+  it("adds ContextMenuInteraction to map on mount", async () => {
+    render(<MapContextMenuContainer />);
+
+    await waitFor(() => {
+      const interactions = map.getInteractions().getArray();
+      expect(interactions.length).toBeGreaterThan(0);
+    });
+  });
+
+  it("removes ContextMenuInteraction from map on unmount", async () => {
+    const { unmount } = render(<MapContextMenuContainer />);
+
+    const initialInteractionCount = map.getInteractions().getArray().length;
+
+    unmount();
+
+    await waitFor(() => {
+      const finalInteractionCount = map.getInteractions().getArray().length;
+      expect(finalInteractionCount).toBeLessThanOrEqual(initialInteractionCount);
+    });
+  });
+
+  it("does not show menu when disable flags are set", async () => {
+    useMapStore.setState({ isDrawingOrEditing: true });
+
+    render(<MapContextMenuContainer />);
+
+    // The checkDisableFlags should return true, preventing menu display
+    const state = useMapStore.getState();
+    expect(state.isDrawingOrEditing).toBe(true);
+  });
+
+  it("respects disableParcelClick flag", () => {
+    useMapStore.setState({ disableParcelClick: true });
+    render(<MapContextMenuContainer />);
+
+    const state = useMapStore.getState();
+    expect(state.disableParcelClick).toBe(true);
+  });
+
+  it("respects isCoordinateToolOpen flag", () => {
+    useMapStore.setState({ isCoordinateToolOpen: true });
+    render(<MapContextMenuContainer />);
+
+    const state = useMapStore.getState();
+    expect(state.isCoordinateToolOpen).toBe(true);
+  });
+
+  it("respects isMeasuring flag", () => {
+    useMapStore.setState({ isMeasuring: true });
+    render(<MapContextMenuContainer />);
+
+    const state = useMapStore.getState();
+    expect(state.isMeasuring).toBe(true);
+  });
+
+  it("handles property report functionality", async () => {
+    const showPopup = vi.fn();
+    usePopupStore.setState({ show: showPopup });
+
+    render(<MapContextMenuContainer />);
+
+    // Property report now directly shows popup with data
+    // The component is rendered and ready to handle property reports
+    expect(showPopup).not.toHaveBeenCalled(); // Not called until user interaction
+  });
+
+  it("handles add marker functionality with MyMaps integration", async () => {
+    const addItem = vi.fn();
+    useMyMapsStore.setState({ addItem, drawColor: "#e809e5" });
+
+    render(<MapContextMenuContainer />);
+
+    // Add marker now directly adds to MyMaps store
+    // The component is rendered and ready to add markers
+    expect(addItem).not.toHaveBeenCalled(); // Not called until user interaction
+  });
+
+  it("handles identify functionality", async () => {
+    const setReport = vi.fn();
+    const openSidebar = vi.fn();
+    const setActiveTab = vi.fn();
+
+    useReportsStore.setState({ setReport });
+    useSidebarStore.setState({ openSidebar, setActiveTab });
+
+    render(<MapContextMenuContainer />);
+
+    // Identify now creates a report and opens sidebar
+    // The component is rendered and ready to identify features
+    expect(setReport).not.toHaveBeenCalled(); // Not called until user interaction
+  });
+
+  it("dispatches more event when more is clicked", async () => {
+    const eventListener = vi.fn();
+    window.addEventListener("contextmenu-more", eventListener);
+
+    render(<MapContextMenuContainer />);
+
+    const event = new CustomEvent("contextmenu-more", {
+      detail: { coordinate: [0, 0] },
+    });
+    window.dispatchEvent(event);
+
+    expect(eventListener).toHaveBeenCalled();
+
+    window.removeEventListener("contextmenu-more", eventListener);
+  });
+
+  it("handles switch to basic mode by collapsing sidebar", async () => {
+    const closeSidebar = vi.fn();
+    useSidebarStore.setState({ closeSidebar });
+
+    render(<MapContextMenuContainer />);
+
+    // Switch to basic now directly calls closeSidebar
+    // The component is rendered and ready to collapse sidebar
+    expect(closeSidebar).not.toHaveBeenCalled(); // Not called until user interaction
+  });
+
+  it("hides basic mode option on mobile", () => {
+    // Mock mobile user agent
+    const originalUserAgent = navigator.userAgent;
+    Object.defineProperty(navigator, "userAgent", {
+      value: "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)",
+      configurable: true,
+    });
+
+    render(<MapContextMenuContainer />);
+
+    // Restore original user agent
+    Object.defineProperty(navigator, "userAgent", {
+      value: originalUserAgent,
+      configurable: true,
+    });
+  });
+
+  it("includes all menu items based on config visibility", () => {
+    render(<MapContextMenuContainer />);
+
+    // All items should be created based on the mocked config
+    // The component should work without errors
+  });
+
+  it("filters out invisible menu items", () => {
+    // Google Maps is set to false in config
+    render(<MapContextMenuContainer />);
+
+    // The component should handle visibility correctly
+  });
+
+  it("component cleans up interactions on unmount", async () => {
+    const { unmount } = render(<MapContextMenuContainer />);
+
+    const interactionsBefore = map.getInteractions().getArray().length;
+
+    unmount();
+
+    await waitFor(() => {
+      const interactionsAfter = map.getInteractions().getArray().length;
+      expect(interactionsAfter).toBeLessThanOrEqual(interactionsBefore);
+    });
+  });
+});

@@ -1,55 +1,61 @@
-import { create } from 'zustand'
-import type { SidebarComponent } from '@/utils/config'
+import { create } from "zustand";
+import type { SidebarComponent } from "@/utils/config";
 
 export interface SidebarItem {
-  id: string
-  name: string
-  type: 'theme' | 'tool'
-  component?: string
-  config?: Record<string, unknown>
-  imageName: string
-  description?: string
-  helpLink?: string
-  enabled: boolean
+  id: string;
+  name: string;
+  type: "theme" | "tool";
+  component?: string;
+  config?: Record<string, unknown>;
+  imageName: string;
+  description?: string;
+  helpLink?: string;
+  enabled: boolean;
 }
 
 interface SidebarState {
   // Sidebar visibility and state
-  isOpen: boolean
-  isSlim: boolean
-  activeTab: number // Track which tab is active (0=layers, 1=tools, 2=mymaps, 3=themes, 4=reports)
-  activeTheme: string | null
-  activeTool: string | null
-  
+  isOpen: boolean;
+  isSlim: boolean;
+  activeTab: number; // Track which tab is active (0=layers, 1=tools, 2=mymaps, 3=themes, 4=reports)
+  activeTheme: string | null;
+  activeTool: string | null;
+
   // Available items (loaded from config)
-  themes: SidebarItem[]
-  tools: SidebarItem[]
-  
+  themes: SidebarItem[];
+  tools: SidebarItem[];
+
   // Panel state
-  activePanelId: string | null
-  panelMinimized: boolean
-  
+  activePanelId: string | null;
+  panelMinimized: boolean;
+
+  // More menu state
+  isMoreMenuOpen: boolean;
+
   // Actions
-  toggleSidebar: () => void
-  openSidebar: () => void
-  closeSidebar: () => void
-  setActiveTab: (tabIndex: number) => void
-  setSlimMode: (slim: boolean) => void
-  setActiveTheme: (themeId: string | null) => void
-  setActiveTool: (toolId: string | null) => void
-  setThemes: (themes: SidebarItem[]) => void
-  setTools: (tools: SidebarItem[]) => void
-  setActivePanel: (panelId: string | null) => void
-  togglePanelMinimized: () => void
-  activateSidebarItem: (itemId: string, itemType: 'themes' | 'tools') => void
-  loadFromConfig: (sidebarToolComponents: SidebarComponent[], sidebarThemeComponents: SidebarComponent[]) => void
-  
+  toggleSidebar: () => void;
+  openSidebar: () => void;
+  closeSidebar: () => void;
+  setActiveTab: (tabIndex: number) => void;
+  setSlimMode: (slim: boolean) => void;
+  setActiveTheme: (themeId: string | null) => void;
+  setActiveTool: (toolId: string | null) => void;
+  setThemes: (themes: SidebarItem[]) => void;
+  setTools: (tools: SidebarItem[]) => void;
+  setActivePanel: (panelId: string | null) => void;
+  togglePanelMinimized: () => void;
+  activateSidebarItem: (itemId: string, itemType: "themes" | "tools") => void;
+  loadFromConfig: (sidebarToolComponents: SidebarComponent[], sidebarThemeComponents: SidebarComponent[]) => void;
+  openMoreMenu: () => void;
+  closeMoreMenu: () => void;
+  toggleMoreMenu: () => void;
+
   // Event emitters (integrate with event store when available)
-  emitSidebarChanged?: (isOpen: boolean) => void
-  setEventEmitter: (emitter: (isOpen: boolean) => void) => void
+  emitSidebarChanged?: (isOpen: boolean) => void;
+  setEventEmitter: (emitter: (isOpen: boolean) => void) => void;
 }
 
-function convertToSidebarItem(component: SidebarComponent, type: 'theme' | 'tool'): SidebarItem {
+function convertToSidebarItem(component: SidebarComponent, type: "theme" | "tool"): SidebarItem {
   return {
     id: component.id.toString(),
     name: component.name,
@@ -59,8 +65,8 @@ function convertToSidebarItem(component: SidebarComponent, type: 'theme' | 'tool
     description: component.description,
     helpLink: component.helpLink,
     enabled: component.enabled !== false && component.disable !== true, // Default to enabled unless explicitly disabled
-    config: {}
-  }
+    config: {},
+  };
 }
 
 export const useSidebarStore = create<SidebarState>((set, get) => ({
@@ -74,20 +80,21 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
   tools: [],
   activePanelId: null,
   panelMinimized: false,
+  isMoreMenuOpen: false,
   emitSidebarChanged: undefined,
-  
+
   // Actions
   toggleSidebar: () => {
-    const state = get()
-    const newIsOpen = !state.isOpen
-    set({ isOpen: newIsOpen })
-    
+    const state = get();
+    const newIsOpen = !state.isOpen;
+    set({ isOpen: newIsOpen });
+
     // Emit sidebar changed event if emitter is available
     if (state.emitSidebarChanged) {
-      state.emitSidebarChanged(newIsOpen)
+      state.emitSidebarChanged(newIsOpen);
     }
   },
-  
+
   openSidebar: () => set({ isOpen: true }),
   closeSidebar: () => set({ isOpen: false }),
   setActiveTab: (tabIndex) => set({ activeTab: tabIndex }),
@@ -98,38 +105,38 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
   setTools: (tools) => set({ tools }),
   setActivePanel: (panelId) => set({ activePanelId: panelId }),
   togglePanelMinimized: () => set((state) => ({ panelMinimized: !state.panelMinimized })),
-  
+
   activateSidebarItem: (itemId, itemType) => {
-    if (itemType === 'themes') {
+    if (itemType === "themes") {
       // Deactivate current tool and activate theme
-      set({ 
-        activeTheme: itemId, 
+      set({
+        activeTheme: itemId,
         activeTool: null,
-        activePanelId: itemId
-      })
-    } else if (itemType === 'tools') {
+        activePanelId: itemId,
+      });
+    } else if (itemType === "tools") {
       // Deactivate current theme and activate tool
-      set({ 
-        activeTool: itemId, 
+      set({
+        activeTool: itemId,
         activeTheme: null,
-        activePanelId: itemId
-      })
+        activePanelId: itemId,
+      });
     }
   },
-  
+
   loadFromConfig: (sidebarToolComponents, sidebarThemeComponents) => {
     // Convert and filter enabled tools
-    const tools = sidebarToolComponents
-      .filter(component => component.enabled !== false && component.disable !== true)
-      .map(component => convertToSidebarItem(component, 'tool'))
-    
-    // Convert and filter enabled themes  
-    const themes = sidebarThemeComponents
-      .filter(component => component.enabled !== false && component.disable !== true)
-      .map(component => convertToSidebarItem(component, 'theme'))
-    
-    set({ tools, themes })
+    const tools = sidebarToolComponents.filter((component) => component.enabled !== false && component.disable !== true).map((component) => convertToSidebarItem(component, "tool"));
+
+    // Convert and filter enabled themes
+    const themes = sidebarThemeComponents.filter((component) => component.enabled !== false && component.disable !== true).map((component) => convertToSidebarItem(component, "theme"));
+
+    set({ tools, themes });
   },
-  
-  setEventEmitter: (emitter) => set({ emitSidebarChanged: emitter })
-})) 
+
+  openMoreMenu: () => set({ isMoreMenuOpen: true }),
+  closeMoreMenu: () => set({ isMoreMenuOpen: false }),
+  toggleMoreMenu: () => set((state) => ({ isMoreMenuOpen: !state.isMoreMenuOpen })),
+
+  setEventEmitter: (emitter) => set({ emitSidebarChanged: emitter }),
+}));

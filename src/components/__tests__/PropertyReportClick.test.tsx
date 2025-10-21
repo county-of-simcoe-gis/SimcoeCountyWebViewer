@@ -19,6 +19,20 @@ vi.mock("@/config.json", () => ({
   },
 }));
 
+// Mock interaction manager functions
+const mockRegisterHandler = vi.fn();
+const mockUnregisterHandler = vi.fn();
+
+// Mock useInteractionManager hook
+vi.mock("@/components/MapContainer", () => ({
+  useInteractionManager: vi.fn(() => ({
+    registerHandler: mockRegisterHandler,
+    unregisterHandler: mockUnregisterHandler,
+    registerInteraction: vi.fn(),
+    unregisterInteraction: vi.fn(),
+  })),
+}));
+
 // Mock PropertyPopup component
 vi.mock("@/components/PropertyPopup", () => ({
   default: ({ propInfo, onClose }: any) => (
@@ -117,6 +131,8 @@ describe("PropertyReportClick", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockRegisterHandler.mockClear();
+    mockUnregisterHandler.mockClear();
 
     // Mock useMapStore
     (useMapStore as any).mockReturnValue({
@@ -155,7 +171,13 @@ describe("PropertyReportClick", () => {
   it("initializes parcel layer and interaction when map is available", () => {
     render(<PropertyReportClick />);
 
-    expect(mockMap.addInteraction).toHaveBeenCalled();
+    expect(mockRegisterHandler).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "property-report-click",
+        eventType: "singleclick",
+        priority: 10,
+      })
+    );
   });
 
   it("does not initialize if map is not available", () => {
@@ -169,7 +191,7 @@ describe("PropertyReportClick", () => {
 
     render(<PropertyReportClick />);
 
-    expect(mockMap.addInteraction).not.toHaveBeenCalled();
+    expect(mockRegisterHandler).not.toHaveBeenCalled();
   });
 
   it("cleans up interaction and layer on unmount", () => {
@@ -177,7 +199,7 @@ describe("PropertyReportClick", () => {
 
     unmount();
 
-    expect(mockMap.removeInteraction).toHaveBeenCalled();
+    expect(mockUnregisterHandler).toHaveBeenCalledWith("property-report-click");
   });
 
   it("updates interaction callbacks when dependencies change", () => {
@@ -196,7 +218,7 @@ describe("PropertyReportClick", () => {
 
     // The component should handle the state change
     // The interaction callbacks are managed internally
-    expect(mockMap.addInteraction).toHaveBeenCalled();
+    expect(mockRegisterHandler).toHaveBeenCalled();
   });
 
   it("handles ARN URL parameter and shows property window", () => {
@@ -248,7 +270,7 @@ describe("PropertyReportClick", () => {
     render(<PropertyReportClick />);
 
     // The component should initialize without errors when ARN is present
-    expect(mockMap.addInteraction).toHaveBeenCalled();
+    expect(mockRegisterHandler).toHaveBeenCalled();
 
     // Note: Full async flow testing with setTimeout and axios is complex
     // and would be better tested in integration tests
@@ -328,6 +350,6 @@ describe("PropertyReportClick", () => {
     // The parcel layer is initialized and will have a clear method
     // This test verifies the component renders without errors
     // Actual clearing is tested through integration with popup close
-    expect(mockMap.addInteraction).toHaveBeenCalled();
+    expect(mockRegisterHandler).toHaveBeenCalled();
   });
 });

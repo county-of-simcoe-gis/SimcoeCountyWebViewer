@@ -143,8 +143,14 @@ export function buildLayerFromWMS(group: Partial<TOCLayerGroup> & { secure?: boo
   }
 
   // Extract metadata from keywords
+  // Note: liveLayer is for special interactivity features (info icon in TOC)
+  // Layers are queryable by default for identify functionality
   const liveLayer = allKeywords["LIVE_LAYER"] || false;
   const canDownload = allKeywords["DOWNLOAD"] || false;
+
+  // Check if layer is queryable (from WMS capabilities)
+  // Default to true unless explicitly disabled
+  const isQueryable = wmsLayer.queryable !== false;
   let displayName = (allKeywords["DISPLAY_NAME"] as string) || layerTitle;
   const opacity = (allKeywords["OPACITY"] as number) || 1;
   const disclaimerTitle = (allKeywords["DISCLAIMER_TITLE"] as string) || "";
@@ -206,6 +212,7 @@ export function buildLayerFromWMS(group: Partial<TOCLayerGroup> & { secure?: boo
     minScale,
     maxScale,
     liveLayer: Boolean(liveLayer) || false,
+    isQueryable, // Queryable by default for identify functionality
     groupName: group.label || "",
     group: group.value || "",
     userLayer: false,
@@ -230,10 +237,13 @@ export async function fetchWMSCapabilities(url: string, secured: boolean = false
       headers: {
         "Content-Type": "application/text",
       },
+      transformResponse: [(data) => data], // Prevent axios from auto-parsing
     });
 
     const parser = new WMSCapabilities();
-    return parser.read(response.data) as WMSCapabilitiesResponse;
+    const parsed = parser.read(response.data) as WMSCapabilitiesResponse;
+
+    return parsed;
   } catch (error) {
     console.error("Error fetching WMS capabilities:", error);
     throw error;
@@ -556,7 +566,7 @@ export async function loadLayerGroupsFromSources(sources: TOCSource[], config: C
     if (!a.primary && b.primary) return 1;
     return 0;
   });
-  console.log("sortedSources", sortedSources);
+  // console.log("sortedSources", sortedSources);
   for (const source of sortedSources) {
     try {
       let groups: TOCLayerGroup[] = [];

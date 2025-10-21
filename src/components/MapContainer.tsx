@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useMemo, useCallback, Suspense, lazy } from "react";
+import { useEffect, useRef, useMemo, useCallback, Suspense, lazy, createContext, useContext, useState } from "react";
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { useEventStore } from "@/stores/eventStore";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
+import { usePopupStore } from "@/stores/popupStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 
 // OpenLayers imports
@@ -13,7 +14,7 @@ import "@/components/MapContainer.css";
 import "@/components/map/controls/MapControls.css";
 import Map from "ol/Map";
 import View from "ol/View";
-import { defaults as defaultInteractions, MouseWheelZoom, PinchRotate, DragRotate } from "ol/interaction";
+import { defaults as defaultInteractions, MouseWheelZoom, PinchRotate, DragRotate, Interaction } from "ol/interaction";
 import { ScaleLine, Attribution } from "ol/control";
 import { Feature } from "ol";
 import { Point } from "ol/geom";
@@ -31,7 +32,10 @@ import BasemapSwitcher from "@/components/BasemapSwitcher";
 
 // Import property report click functionality
 import PropertyReportClick from "@/components/PropertyReportClick";
+import LiveLayerClick from "@/components/LiveLayerClick";
 import MapPopup from "@/components/MapPopup";
+import { MapContextMenuContainer } from "@/components/MapContextMenuContainer";
+import ResultsPopup, { type Result } from "@/components/ResultsPopup";
 
 // Import config
 import config from "@/config.json";
@@ -70,17 +74,197 @@ const LazyAttributionControl = lazy(dynamicControlImports.AttributionControl);
 // Loading placeholder component
 const ControlLoadingPlaceholder = () => <div className="control-loading-placeholder" style={{ width: "32px", height: "32px", backgroundColor: "#f0f0f0", borderRadius: "4px" }} />;
 
+// Unified Interaction Handler System
+import type { MapBrowserEvent } from "ol";
+
+export type InteractionEventType = "singleclick" | "contextmenu" | "pointermove" | "dblclick";
+
+// OpenLayers uses this type for browser events
+type OLUIEvent = PointerEvent;
+
+export interface InteractionHandlerConditions {
+  maxZoom?: number; // Handler only works when zoom is less than this
+  minZoom?: number; // Handler only works when zoom is greater than this
+  maxScale?: number; // Handler only works when scale is less than this (for parcel clicks)
+  checkDisableFlags?: () => boolean; // Function that returns true if handler should be disabled
+  checkLayerFilters?: (event: MapBrowserEvent<OLUIEvent>) => boolean; // Returns true if handler should be disabled based on layers
+}
+
+// InteractionResult is an alias for Result for consistency
+export type InteractionResult = Result;
+
+export interface InteractionHandler {
+  id: string; // Unique ID for this handler
+  eventType: InteractionEventType;
+  priority?: number; // Lower numbers execute first (default: 100)
+  conditions?: InteractionHandlerConditions;
+  handler: (coordinate: number[], pixel: number[], event: MapBrowserEvent<OLUIEvent>) => Promise<InteractionResult[]> | InteractionResult[] | Promise<void> | void;
+}
+
+interface InteractionManagerContextType {
+  registerHandler: (handler: InteractionHandler) => void;
+  unregisterHandler: (handlerId: string) => void;
+  // Legacy support - will be removed
+  registerInteraction: (id: string, interaction: Interaction) => void;
+  unregisterInteraction: (id: string) => void;
+}
+
+const InteractionManagerContext = createContext<InteractionManagerContextType | null>(null);
+
+export const useInteractionManager = () => {
+  const context = useContext(InteractionManagerContext);
+  if (!context) {
+    throw new Error("useInteractionManager must be used within MapContainer");
+  }
+  return context;
+};
+
 export default function MapContainer() {
   const { isOpen } = useSidebarStore();
   const { emitMapLoaded } = useEventStore();
   const { map, setMap, addLoadedItem, setMapControls, setCurrentExtent, setCurrentZoom, setCurrentCenter, initExtentHistory, saveCurrentExtentToHistory } = useMapStore();
   const { setMapLoading } = useAppStore();
+  const { show: showPopup, hide: hidePopup } = usePopupStore();
   const urlParameters = useAppStore((state) => state.urlParameters);
 
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<Map | null>(null);
   const identifyIconLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const identifyIconLayerIdRef = useRef<string | null>(null);
+
+  // Handler-based system
+  const handlersRef = useRef<InteractionHandler[]>([]);
+  const unifiedInteractionRef = useRef<Interaction | null>(null);
+  const shouldExecuteHandlerRef = useRef<((handler: InteractionHandler, event: MapBrowserEvent<OLUIEvent>) => boolean) | null>(null);
+
+  // Legacy interaction system (for backward compatibility)
+  const registeredInteractionsRef = useRef<globalThis.Map<string, Interaction>>(new globalThis.Map());
+
+  // State for aggregated results
+  const [aggregatedResults, setAggregatedResults] = useState<Result[]>([]);
+  const [resultsCoordinate, setResultsCoordinate] = useState<number[] | null>(null);
+  const [isLoadingResults, setIsLoadingResults] = useState(false);
+
+  // Helper: Calculate map scale
+  const calculateMapScale = useCallback(() => {
+    if (!map) return 0;
+    const view = map.getView();
+    const resolution = view.getResolution();
+    const units = view.getProjection().getUnits();
+    const dpi = 25.4 / 0.28;
+    const mpu = units === "degrees" ? 111194.87428468118 : 1;
+    return resolution ? resolution * mpu * 39.37 * dpi : 0;
+  }, [map]);
+
+  // Helper: Check if handler should execute based on conditions
+  const shouldExecuteHandler = useCallback(
+    (handler: InteractionHandler, event: MapBrowserEvent<OLUIEvent>): boolean => {
+      if (!handler.conditions) return true;
+
+      const conditions = handler.conditions;
+
+      // Check zoom level
+      if (map) {
+        const currentZoom = map.getView().getZoom() || 0;
+        if (conditions.maxZoom !== undefined && currentZoom > conditions.maxZoom) {
+          return false;
+        }
+        if (conditions.minZoom !== undefined && currentZoom < conditions.minZoom) {
+          return false;
+        }
+      }
+
+      // Check scale
+      if (conditions.maxScale !== undefined) {
+        const scale = calculateMapScale();
+        if (scale > conditions.maxScale) {
+          return false;
+        }
+      }
+
+      // Check disable flags
+      if (conditions.checkDisableFlags && conditions.checkDisableFlags()) {
+        return false;
+      }
+
+      // Check layer filters
+      if (conditions.checkLayerFilters && conditions.checkLayerFilters(event)) {
+        return false;
+      }
+
+      return true;
+    },
+    [map, calculateMapScale]
+  );
+
+  // Update ref whenever shouldExecuteHandler changes
+  useEffect(() => {
+    shouldExecuteHandlerRef.current = shouldExecuteHandler;
+  }, [shouldExecuteHandler]);
+
+  // Handler registration
+  const registerHandler = useCallback((handler: InteractionHandler) => {
+    // Remove existing handler with same ID if it exists
+    handlersRef.current = handlersRef.current.filter((h) => h.id !== handler.id);
+
+    // Add new handler
+    handlersRef.current.push(handler);
+
+    // Sort by priority
+    handlersRef.current.sort((a, b) => (a.priority || 100) - (b.priority || 100));
+
+    console.log(`MapContainer: Registered handler "${handler.id}" for event "${handler.eventType}"`);
+  }, []);
+
+  const unregisterHandler = useCallback((handlerId: string) => {
+    const initialLength = handlersRef.current.length;
+    handlersRef.current = handlersRef.current.filter((h) => h.id !== handlerId);
+
+    if (handlersRef.current.length < initialLength) {
+      console.log(`MapContainer: Unregistered handler "${handlerId}"`);
+    }
+  }, []);
+
+  // Legacy interaction callbacks (for backward compatibility)
+  const registerInteraction = useCallback(
+    (id: string, interaction: Interaction) => {
+      if (registeredInteractionsRef.current.has(id)) {
+        const existingInteraction = registeredInteractionsRef.current.get(id);
+        if (existingInteraction && map) {
+          map.removeInteraction(existingInteraction);
+        }
+      }
+
+      if (map) {
+        map.addInteraction(interaction);
+        registeredInteractionsRef.current.set(id, interaction);
+        console.log(`MapContainer: Registered legacy interaction "${id}"`);
+      }
+    },
+    [map]
+  );
+
+  const unregisterInteraction = useCallback(
+    (id: string) => {
+      const interaction = registeredInteractionsRef.current.get(id);
+      if (interaction && map) {
+        map.removeInteraction(interaction);
+        registeredInteractionsRef.current.delete(id);
+        console.log(`MapContainer: Unregistered legacy interaction "${id}"`);
+      }
+    },
+    [map]
+  );
+
+  const interactionManager = useMemo(
+    () => ({
+      registerHandler,
+      unregisterHandler,
+      registerInteraction,
+      unregisterInteraction,
+    }),
+    [registerHandler, unregisterHandler, registerInteraction, unregisterInteraction]
+  );
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
@@ -207,6 +391,97 @@ export default function MapContainer() {
       (window as unknown as { map: Map | null; config: typeof config | null }).config = config;
     }
 
+    // Create unified interaction to handle all registered handlers
+    class UnifiedInteraction extends Interaction {
+      handleEvent(event: MapBrowserEvent<OLUIEvent>): boolean {
+        const eventType = event.type as InteractionEventType;
+
+        // Get handlers for this event type - use ref to get current version
+        const checkHandler = shouldExecuteHandlerRef.current || (() => true);
+        const applicableHandlers = handlersRef.current.filter((h) => h.eventType === eventType && checkHandler(h, event));
+
+        if (applicableHandlers.length === 0) {
+          return true; // Allow event to propagate
+        }
+
+        // Prevent double clicks for singleclick events
+        if (eventType === "singleclick") {
+          const now = event.originalEvent.timeStamp;
+          const lastClickTime = (this as unknown as { lastClickTime?: number }).lastClickTime;
+          if (lastClickTime && now - lastClickTime < 300) {
+            return false; // Ignore double click
+          }
+          (this as unknown as { lastClickTime: number }).lastClickTime = now;
+        }
+
+        // Prevent default for contextmenu
+        if (eventType === "contextmenu") {
+          event.originalEvent.preventDefault();
+        }
+
+        // For click events, aggregate results and show unified popup
+        if (eventType === "singleclick") {
+          // Set loading state
+          setIsLoadingResults(true);
+          setResultsCoordinate(event.coordinate);
+          setAggregatedResults([]);
+
+          // Execute all applicable handlers
+          const handlerPromises = applicableHandlers.map(async (handler) => {
+            try {
+              return await Promise.resolve(handler.handler(event.coordinate, event.pixel, event));
+            } catch (error) {
+              console.error(`Error executing handler "${handler.id}":`, error);
+              return null;
+            }
+          });
+
+          // Collect all results and show unified popup
+          Promise.all(handlerPromises)
+            .then((allResults) => {
+              // Filter out null/undefined and flatten results
+              const flatResults: Result[] = [];
+              allResults.forEach((result) => {
+                if (result) {
+                  if (Array.isArray(result)) {
+                    flatResults.push(...result);
+                  }
+                }
+              });
+
+              console.log(`UnifiedInteraction: ${eventType} - ${applicableHandlers.length} handlers executed, ${flatResults.length} results collected`);
+
+              // Update state with results
+              setAggregatedResults(flatResults);
+              setIsLoadingResults(false);
+            })
+            .catch((error) => {
+              console.error("Error collecting interaction results:", error);
+              setIsLoadingResults(false);
+            });
+
+          // Stop event propagation for handled events
+          return false;
+        }
+
+        // For other events (contextmenu, etc.), execute handlers without aggregation
+        applicableHandlers.forEach((handler) => {
+          try {
+            handler.handler(event.coordinate, event.pixel, event);
+          } catch (error) {
+            console.error(`Error executing handler "${handler.id}":`, error);
+          }
+        });
+
+        // Stop event propagation for handled events
+        return false;
+      }
+    }
+
+    const unifiedInteraction = new UnifiedInteraction();
+    mapInstance.addInteraction(unifiedInteraction);
+    unifiedInteractionRef.current = unifiedInteraction;
+
     // Create identify icon layer
     const identifyIconLayer = new VectorLayer({
       source: new VectorSource(),
@@ -230,6 +505,12 @@ export default function MapContainer() {
 
     // Cleanup function
     return () => {
+      // Remove unified interaction
+      if (unifiedInteractionRef.current && mapInstanceRef.current) {
+        mapInstanceRef.current.removeInteraction(unifiedInteractionRef.current);
+        unifiedInteractionRef.current = null;
+      }
+
       if (identifyIconLayerIdRef.current) {
         LayerManager.removeLayer(identifyIconLayerIdRef.current);
         identifyIconLayerIdRef.current = null;
@@ -646,11 +927,53 @@ export default function MapContainer() {
     }
   }, [map, zoneControls]);
 
+  // Show unified popup when results are available
+  useEffect(() => {
+    if (aggregatedResults.length > 0 && resultsCoordinate) {
+      const handleClose = () => {
+        // Clear parcel layers from any results that have the clear function
+        aggregatedResults.forEach((result) => {
+          if ((result as any).clearParcelLayer) {
+            (result as any).clearParcelLayer();
+          }
+        });
+
+        setAggregatedResults([]);
+        setResultsCoordinate(null);
+        hidePopup();
+      };
+
+      const handleSelectResult = async (result: Result) => {
+        // Call lazy-loading function if it exists on the result
+        if ((result as any).loadDetails) {
+          await (result as any).loadDetails();
+        }
+      };
+
+      const handleClearParcelLayer = () => {
+        // Clear parcel layers from any results that have the clear function
+        aggregatedResults.forEach((result) => {
+          if ((result as any).clearParcelLayer) {
+            (result as any).clearParcelLayer();
+          }
+        });
+      };
+
+      showPopup(
+        resultsCoordinate,
+        <ResultsPopup results={aggregatedResults} onClose={handleClose} isLoadingResults={isLoadingResults} onSelectResult={handleSelectResult} onClearParcelLayer={handleClearParcelLayer} />,
+        aggregatedResults.length > 1 ? `Results (${aggregatedResults.length})` : "Result"
+      );
+    }
+  }, [aggregatedResults, resultsCoordinate, isLoadingResults, showPopup, hidePopup]);
+
   return (
-    <>
+    <InteractionManagerContext.Provider value={interactionManager}>
       <div ref={mapRef} id="map" className={`sc-map ${!isOpen ? "sidebar-closed" : ""}`} />
       <PropertyReportClick />
+      <LiveLayerClick />
       <MapPopup />
-    </>
+      <MapContextMenuContainer />
+    </InteractionManagerContext.Provider>
   );
 }

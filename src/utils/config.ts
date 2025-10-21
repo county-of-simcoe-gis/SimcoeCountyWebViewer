@@ -83,6 +83,7 @@ export interface AppConfig {
   showLoadingScreens: boolean;
   onlyStandardCursor: boolean;
   restrictOriginForUrlWindow: boolean;
+  showHelpButtonInsteadOfFeedback?: boolean;
 
   // Menu visibility settings
   rightClickMenuVisibility: Record<string, boolean>;
@@ -147,7 +148,7 @@ async function loadConfigFromApi(mapId: string): Promise<Partial<AppConfig> | nu
     // Determine which API endpoint to use
     const apiUrl = mapId && mapId.trim() !== "" ? `/api/map/${mapId}` : `/api/map`; // Use default map endpoint
 
-    console.log(`Loading config from API: ${apiUrl}`);
+    // console.log(`Loading config from API: ${apiUrl}`);
 
     // Fetch map configuration from the API using axios
     const axiosClient = getAxiosClient(apiUrl);
@@ -182,7 +183,7 @@ async function loadConfigFromApi(mapId: string): Promise<Partial<AppConfig> | nu
     // Convert SettingsType to AppConfig format
     const apiConfig = convertSettingsToAppConfig(translatedSettings);
 
-    console.log("Successfully loaded and translated config from API:", apiConfig);
+    // console.log("Successfully loaded and translated config from API:", apiConfig);
     return apiConfig;
   } catch (error) {
     console.error("Error loading config from API:", error);
@@ -380,9 +381,18 @@ export async function loadConfig(configSecured: Record<string, unknown> = {}): P
       try {
         const apiConfig = await loadConfigFromApi(config.mapId);
         if (apiConfig) {
-          // Merge API config with base config, with API config taking precedence
+          // Preserve keywords from local config before merging
+          const localKeywords = config.toc?.keywords || {};
 
+          // Merge API config with base config, with API config taking precedence
           Object.assign(config, apiConfig);
+
+          // Restore keywords from local config (API doesn't provide keyword definitions)
+          if (config.toc) {
+            config.toc.keywords = localKeywords;
+          }
+
+          // console.log("Config merged with API, keywords preserved:", Object.keys(localKeywords).length);
         }
       } catch (apiError) {
         console.warn("Failed to load config from API, using base config:", apiError);

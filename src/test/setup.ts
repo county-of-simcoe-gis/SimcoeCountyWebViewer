@@ -48,6 +48,25 @@ vi.mock("react-icons/fa", () => ({
   // LayerInfo specific icons
   FaPrint: (props: any) => React.createElement("div", { ...props, "data-testid": "print-icon" }, "Print"),
   FaExternalLinkAlt: (props: any) => React.createElement("div", { ...props, "data-testid": "external-link-icon" }, "ExternalLink"),
+
+  // MapContextMenu specific icons
+  FaFileAlt: (props: any) => React.createElement("div", { ...props, "data-testid": "file-alt-icon" }, "FileAlt"),
+  FaMapMarkerAlt: (props: any) => React.createElement("div", { ...props, "data-testid": "map-marker-alt-icon" }, "MapMarkerAlt"),
+  FaGlobeAmericas: (props: any) => React.createElement("div", { ...props, "data-testid": "globe-americas-icon" }, "GlobeAmericas"),
+  FaExclamationTriangle: (props: any) => React.createElement("div", { ...props, "data-testid": "exclamation-triangle-icon" }, "ExclamationTriangle"),
+  FaGoogle: (props: any) => React.createElement("div", { ...props, "data-testid": "google-icon" }, "Google"),
+  FaEllipsisH: (props: any) => React.createElement("div", { ...props, "data-testid": "ellipsis-h-icon" }, "EllipsisH"),
+  FaCompressArrowsAlt: (props: any) => React.createElement("div", { ...props, "data-testid": "compress-arrows-alt-icon" }, "CompressArrowsAlt"),
+
+  // MoreMenu specific icons
+  FaCamera: (props: any) => React.createElement("div", { ...props, "data-testid": "camera-icon" }, "Camera"),
+  FaCommentDots: (props: any) => React.createElement("div", { ...props, "data-testid": "comment-dots-icon" }, "CommentDots"),
+  FaMap: (props: any) => React.createElement("div", { ...props, "data-testid": "map-icon" }, "Map"),
+  FaFileContract: (props: any) => React.createElement("div", { ...props, "data-testid": "file-contract-icon" }, "FileContract"),
+  FaNewspaper: (props: any) => React.createElement("div", { ...props, "data-testid": "newspaper-icon" }, "Newspaper"),
+  FaPalette: (props: any) => React.createElement("div", { ...props, "data-testid": "palette-icon" }, "Palette"),
+  FaTools: (props: any) => React.createElement("div", { ...props, "data-testid": "tools-icon" }, "Tools"),
+  FaDrawPolygon: (props: any) => React.createElement("div", { ...props, "data-testid": "draw-polygon-icon" }, "DrawPolygon"),
 }));
 
 vi.mock("react-icons/md", () => ({

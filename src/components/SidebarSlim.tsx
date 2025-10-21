@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { useEventStore } from "@/stores/eventStore";
@@ -28,66 +27,9 @@ function SlimButton({ title, icon, isSelected, isActive, hidden, onClick }: Slim
   );
 }
 
-interface MoreMenuProps {
-  isOpen: boolean;
-  onClose: () => void;
-  themes: Array<{ id: string; name: string; imageName: string }>;
-  tools: Array<{ id: string; name: string; imageName: string }>;
-}
-
-function MoreMenu({ isOpen, onClose, themes, tools }: MoreMenuProps) {
-  if (!isOpen) return null;
-
-  const handleItemClick = (name: string, type: string) => {
-    console.log(`Clicked ${type}: ${name}`);
-    onClose();
-    // TODO: Implement item activation
-  };
-
-  return (
-    <>
-      {/* Backdrop to close menu when clicking outside */}
-      <div className="fixed inset-0 z-[99999]" onClick={onClose} />
-      <div className="sc-menu-button-list-container">
-        <div className="sc-menu-list-item-heading">MAP THEMES</div>
-        {themes.map((theme) => (
-          <div key={theme.id} className="sc-menu-list-item" onClick={() => handleItemClick(theme.name, "themes")}>
-            <div className="sc-menu-list-item-label sc-menu-theme-icon">{theme.name}</div>
-          </div>
-        ))}
-
-        <div className="sc-menu-list-item-heading">MAP TOOLS</div>
-        <div className="sc-menu-list-item" onClick={() => handleItemClick("Take a Screenshot", "tools")}>
-          <div className="sc-menu-list-item-label sc-menu-screenshot-icon">Take a Screenshot</div>
-        </div>
-        {tools.map((tool) => (
-          <div key={tool.id} className="sc-menu-list-item" onClick={() => handleItemClick(tool.name, "tools")}>
-            <div className="sc-menu-list-item-label sc-menu-tools-icon">{tool.name}</div>
-          </div>
-        ))}
-
-        <div className="sc-menu-list-item-heading">OTHER</div>
-        <div className="sc-menu-list-item" onClick={() => handleItemClick("What&apos;s New", "other")}>
-          <div className="sc-menu-list-item-label sc-menu-terms-icon">What&apos;s New</div>
-        </div>
-        <div className="sc-menu-list-item" onClick={() => handleItemClick("Map Legend", "other")}>
-          <div className="sc-menu-list-item-label sc-menu-legend-icon">Map Legend</div>
-        </div>
-        <div className="sc-menu-list-item" onClick={() => handleItemClick("Help", "other")}>
-          <div className="sc-menu-list-item-label sc-menu-help-icon">Help</div>
-        </div>
-        <div className="sc-menu-list-item" onClick={() => handleItemClick("Terms and Conditions", "other")}>
-          <div className="sc-menu-list-item-label sc-menu-terms-icon">Terms and Conditions</div>
-        </div>
-      </div>
-    </>
-  );
-}
-
 export default function SidebarSlim() {
-  const { isOpen, activeTab, openSidebar, setActiveTab, themes, tools } = useSidebarStore();
+  const { isOpen, activeTab, openSidebar, setActiveTab, isMoreMenuOpen, toggleMoreMenu } = useSidebarStore();
   const { emitActivateTab } = useEventStore();
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   // Only show when sidebar is closed
   if (isOpen) return null;
@@ -99,7 +41,7 @@ export default function SidebarSlim() {
   };
 
   const handleMoreClick = () => {
-    setShowMoreMenu(!showMoreMenu);
+    toggleMoreMenu();
   };
 
   return (
@@ -132,7 +74,7 @@ export default function SidebarSlim() {
       <SlimButton title="Reports" icon="report-32x32.png" onClick={() => handleTabClick("reports", 4)} isSelected={activeTab === 4} isActive={false} hidden={false} />
 
       <div className="sc-sidebar-slim-footer-container">
-        <div className={`sc-sidebar-slim-button-container ${showMoreMenu ? "active" : ""}`} onClick={handleMoreClick}>
+        <div className={`sc-sidebar-slim-button-container ${isMoreMenuOpen ? "active" : ""}`} onClick={handleMoreClick}>
           <button className="sc-menu-more-button" title="More Options" style={{ pointerEvents: "none" }}>
             <svg
               stroke="currentColor"
@@ -151,7 +93,6 @@ export default function SidebarSlim() {
             <span style={{ pointerEvents: "none" }}>More</span>
           </button>
         </div>
-        <MoreMenu isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} themes={themes} tools={tools} />
       </div>
     </div>
   );

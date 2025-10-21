@@ -7,9 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "set NODE_OPTIONS=--max-old-space-size=8192 && vitest run --no-coverage --run",
-    "test:watch": "set NODE_OPTIONS=--max-old-space-size=8192 && vitest",
-    "test:ui": "set NODE_OPTIONS=--max-old-space-size=8192 && vitest --ui",
+    "test": "cross-env NODE_OPTIONS=--max-old-space-size=8192 vitest run --no-coverage --run",
+    "test:watch": "cross-env NODE_OPTIONS=--max-old-space-size=8192 vitest",
+    "test:ui": "cross-env NODE_OPTIONS=--max-old-space-size=8192 vitest --ui",
     "e2e": "playwright test"
   },
   "dependencies": {
@@ -51,6 +51,7 @@
     "@types/react-dom": "^19",
     "@types/testing-library__jest-dom": "^6.0.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
     "jsdom": "^26.1.0",

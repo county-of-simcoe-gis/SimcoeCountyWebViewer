@@ -431,4 +431,23 @@
 
 .sc-menu-terms-icon {
   background-image: url(/images/terms.png);
-} 
+}
+
+/* Report Container Styles */
+.sc-sidebar-report-container {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.sc-sidebar-report-title {
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ddd;
+  color: #333;
+}
+
+.sc-sidebar-report-content {
+  font-size: 12px;
+}

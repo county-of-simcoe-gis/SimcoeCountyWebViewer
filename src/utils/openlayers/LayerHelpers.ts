@@ -217,7 +217,6 @@ export class LayerHelpers {
         break;
 
       case "wfs":
-         
         const type = sourceType === OL_DATA_TYPES.GeoJSON ? "application/json" : sourceType;
         finalUrl = /^((http)|(https))(:\/\/)/.test(finalUrl as string) ? (finalUrl as string) : "https://" + finalUrl;
         finalUrl = /\?/.test(finalUrl as string) ? (finalUrl as string) + "&" : (finalUrl as string) + "?";
@@ -251,11 +250,11 @@ export class LayerHelpers {
         break;
 
       case OL_DATA_TYPES.ImageWMS:
-        console.log("🌐 Creating ImageWMS layer:", {
-          url: finalUrl,
-          layerName: layerName,
-          finalName: finalName,
-        });
+        // console.log("🌐 Creating ImageWMS layer:", {
+        //   url: finalUrl,
+        //   layerName: layerName,
+        //   finalName: finalName,
+        // });
 
         const imageWMSSource = new ImageWMS({
           url: finalUrl as string,
@@ -313,7 +312,6 @@ export class LayerHelpers {
         break;
 
       case OL_DATA_TYPES.SimcoeTiled:
-         
         const tileGrid = createXYZ({
           extent: extent,
         });
@@ -330,12 +328,11 @@ export class LayerHelpers {
         break;
 
       case OL_DATA_TYPES.TileImage:
-         
         const resolutions = [
           305.74811314055756, 152.87405657041106, 76.43702828507324, 38.21851414253662, 19.10925707126831, 9.554628535634155, 4.77731426794937, 2.388657133974685, 1.1943285668550503,
           0.5971642835598172, 0.29858214164761665, 0.1492252984505969,
         ];
-         
+
         let projExtent_ti;
         try {
           projExtent_ti = window.map?.getView()?.getProjection()?.getExtent();
@@ -343,7 +340,7 @@ export class LayerHelpers {
           // Map not available yet, use default Web Mercator extent
           projExtent_ti = [-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244];
         }
-         
+
         const customTileGrid = new TileGrid({
           resolutions: resolutions,
           tileSize: [256, 256],
@@ -351,7 +348,7 @@ export class LayerHelpers {
         });
         // Use XYZ source with custom tile grid instead of TileImage
         // This ensures proper coordinate handling
-         
+
         const xyzSource = new XYZ({
           url: finalUrl as string,
           tileGrid: customTileGrid,

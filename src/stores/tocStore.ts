@@ -63,6 +63,7 @@ export interface TOCLayer {
   minScale: number;
   maxScale: number;
   liveLayer: boolean;
+  isQueryable?: boolean; // Queryable by default for identify functionality
   groupName: string;
   group: string;
   userLayer: boolean;
@@ -1102,8 +1103,10 @@ export const useTOCStore = create<TOCState>()(
       state.setIsLoading(true);
 
       try {
-        // Get config from app store or window global
-        const config = ((globalThis as Record<string, unknown>).config as {
+        // Get config from app store
+        const appConfig = (await import("@/stores/appStore")).useAppStore.getState().config;
+
+        const config = (appConfig as {
           toc: {
             keywords: Record<
               string,
@@ -1126,13 +1129,19 @@ export const useTOCStore = create<TOCState>()(
               LIVE_LAYER: { keyword: "LIVE_LAYER", type: "bool", value: false },
               GROUP_PREFIX: { keyword: "GROUP_PREFIX", type: "string", value: "" },
               DISPLAY_NAME: { keyword: "DISPLAY_NAME", type: "string", value: "" },
-              OPACITY: { keyword: "OPACITY", type: "float", value: 1 },
-              DOWNLOAD: { keyword: "DOWNLOAD", type: "bool", value: false },
+              IDENTIFY_TITLE_COLUMN: { keyword: "IDENTIFY_TITLE_COLUMN", type: "string", value: "" },
+              IDENTIFY_DISPLAY_NAME: { keyword: "IDENTIFY_DISPLAY_NAME", type: "string", value: "" },
+              WARNING: { keyword: "WARNING", type: "string", value: "", splitChar: '"' },
+              DISCLAIMER_URL: { keyword: "DISCLAIMER_URL", type: "string", value: "", splitChar: '"' },
+              DISCLAIMER_TITLE: { keyword: "DISCLAIMER_TITLE", type: "string", value: "", splitChar: '"' },
+              IDENTIFY_ID_COLUMN: { keyword: "IDENTIFY_ID_COLUMN", type: "string", value: "" },
               VISIBLE_LAYERS: { keyword: "VISIBLE_LAYERS", type: "array", value: [], splitChar: ",", relatedKeys: ["All_VISIBLE_LAYERS"] },
               All_VISIBLE_LAYERS: { keyword: "VISIBLE_LAYERS", type: "bool", value: false, checkValue: "ALL" },
-              DISCLAIMER_TITLE: { keyword: "DISCLAIMER_TITLE", type: "string", value: "" },
-              DISCLAIMER_URL: { keyword: "DISCLAIMER_URL", type: "string", value: "" },
-              WARNING: { keyword: "WARNING", type: "string", value: "" },
+              MAP_CENTER: { keyword: "MAP_CENTER", type: "array", value: [], splitChar: "," },
+              MAP_ZOOM: { keyword: "MAP_ZOOM", type: "int", value: 1 },
+              OPACITY: { keyword: "OPACITY", type: "float", value: 1 },
+              DOWNLOAD: { keyword: "DOWNLOAD", type: "bool", value: false },
+              NO_ATTRIBUTE_TABLE: { keyword: "NO_ATTRIBUTE_TABLE", type: "bool", value: false },
               STATIC_IMAGE_LEGEND: { keyword: "STATIC_IMAGE_LEGEND", type: "bool", value: false },
             },
             default_group: "All_Layers_Public",
@@ -1652,7 +1661,8 @@ export const useTOCStore = create<TOCState>()(
                     displayName: layer.displayName,
                     minScale: layer.minScale,
                     maxScale: layer.maxScale,
-                    queryable: layer.liveLayer,
+                    queryable: layer.isQueryable !== undefined ? layer.isQueryable : true, // Default to queryable
+                    liveLayer: layer.liveLayer, // Keep liveLayer for special features
                     secured: layer.secured,
                     disableParcelClick: false,
                   });

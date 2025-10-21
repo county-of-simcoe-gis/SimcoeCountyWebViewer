@@ -7,6 +7,7 @@ import { useSidebarStore } from "@/stores/sidebarStore";
 import { useEventStore } from "@/stores/eventStore";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
+import { useReportsStore } from "@/stores/reportsStore";
 import { useEffect, useState, Suspense, useCallback } from "react";
 import { lazy } from "react";
 
@@ -82,6 +83,7 @@ export default function Sidebar() {
   const { addLoadedItem } = useMapStore();
   const { setSidebarLoading } = useAppStore();
   const urlParameters = useAppStore((state) => state.urlParameters);
+  const { currentReport } = useReportsStore();
 
   // State for active components
   const [activeToolComponent, setActiveToolComponent] = useState<React.ReactNode>(null);
@@ -215,7 +217,7 @@ export default function Sidebar() {
 
   return (
     <div className={`sc-sidebar ${!isOpen ? "closed" : ""}`}>
-      <Tabs selectedIndex={activeTab} onSelect={handleTabSelect}>
+      <Tabs selectedIndex={activeTab} onSelect={handleTabSelect} forceRenderTabPanel={true}>
         <TabList>
           <Tab>
             <div className="tab-content">
@@ -279,8 +281,17 @@ export default function Sidebar() {
 
         <TabPanel>
           <div className="sc-sidebar-content">
-            <div style={{ marginBottom: "10px", fontWeight: "bold", fontSize: "12px" }}>REPORTS</div>
-            <div style={{ fontSize: "12px", color: "#666" }}>Reports functionality will be implemented here...</div>
+            {currentReport ? (
+              <div className="sc-sidebar-report-container">
+                <div className="sc-sidebar-report-title">{currentReport.title}</div>
+                <div className="sc-sidebar-report-content">{currentReport.content}</div>
+              </div>
+            ) : (
+              <div>
+                <div style={{ marginBottom: "10px", fontWeight: "bold", fontSize: "12px" }}>REPORTS</div>
+                <div style={{ fontSize: "12px", color: "#666" }}>No report currently loaded. Use the identify tool from the map context menu to generate a report.</div>
+              </div>
+            )}
           </div>
         </TabPanel>
       </Tabs>
