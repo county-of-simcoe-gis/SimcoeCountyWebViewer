@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import Image from "next/image";
-import { FaSearch } from "react-icons/fa";
+import { FaSearch, FaMapMarkerAlt, FaTools, FaPalette, FaLayerGroup, FaMapPin, FaHome, FaMapMarkedAlt, FaClock, FaBuilding, FaRoad } from "react-icons/fa";
 import { useConfig } from "@/hooks/useConfig";
 import { getAxiosClient } from "@/lib/axiosInstance";
-import { appendToStorage, getItemsFromStorage } from "@/utils/storage";
+import { appendToStorage, getItemsFromStorage, removeItemFromStorage } from "@/utils/storage";
 import { useEventStore } from "@/stores/eventStore";
 import { useAppStore } from "@/stores/appStore";
 
@@ -58,6 +57,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
 
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const apiUrlRef = useRef<string>("");
   const defaultSearchLimit = 10;
@@ -139,13 +139,6 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
       // Remove duplicates based on location_id
       newResults = newResults.filter((item, index, self) => index === self.findIndex((t) => t.location_id === item.location_id));
 
-      // Set default image names
-      newResults.forEach((item) => {
-        if (!item.imageName) {
-          item.imageName = "map-marker-light-blue.png";
-        }
-      });
-
       const selectedTypeValue = selectedType.value;
 
       // Search layers if needed
@@ -162,7 +155,6 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
             .map((tool) => ({
               name: tool.name.replace(/_/g, " "),
               type: "Tool",
-              imageName: "tools.png",
             }));
           newResults = [...tools, ...newResults];
         }
@@ -176,7 +168,6 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
             .map((theme) => ({
               name: theme.name!.replace(/_/g, " "),
               type: "Theme",
-              imageName: "themes.png",
             }));
           newResults = [...themes, ...newResults];
         }
@@ -269,6 +260,24 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
       setJustCleared(false);
     }
   }, [justCleared, loadSearchHistory]);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node) && inputRef.current && !inputRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+        setHighlightedIndex(-1);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
 
   // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -369,6 +378,30 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
           handleResultSelect(searchResults[highlightedIndex]);
         }
         break;
+      case "Delete":
+        e.preventDefault();
+        // Only allow deleting history items when search is empty (showing history)
+        if (showHistory && searchValue.length === 0 && highlightedIndex >= 0 && config?.storageKeys?.SearchHistory) {
+          const result = searchResults[highlightedIndex];
+          removeItemFromStorage(config.storageKeys.SearchHistory, result);
+
+          // Refresh the displayed history
+          const updatedHistory = loadSearchHistory();
+          setSearchResults(updatedHistory);
+
+          // Adjust highlighted index if needed
+          if (highlightedIndex >= updatedHistory.length) {
+            setHighlightedIndex(updatedHistory.length - 1);
+          }
+
+          // Close dropdown if no more history items
+          if (updatedHistory.length === 0) {
+            setIsOpen(false);
+            setShowHistory(false);
+            setHighlightedIndex(-1);
+          }
+        }
+        break;
       case "Escape":
         setIsOpen(false);
         setHighlightedIndex(-1);
@@ -382,7 +415,39 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
     setHighlightedIndex(-1);
     setJustCleared(true);
 
+    // Clear the search layers from the map
+    const searchZoomHandlers = (window as unknown as Record<string, unknown>).searchZoomHandlers as Record<string, () => void>;
+    if (searchZoomHandlers?.clearSearchLayers) {
+      searchZoomHandlers.clearSearchLayers();
+    }
+
     inputRef.current?.focus();
+  };
+
+  // Dismiss dropdown
+  const handleDismissDropdown = () => {
+    setIsOpen(false);
+    setHighlightedIndex(-1);
+    setShowHistory(false);
+  };
+
+  // Remove item from search history
+  const handleRemoveFromHistory = (e: React.MouseEvent, result: SearchResult) => {
+    e.stopPropagation(); // Prevent selecting the item
+    if (!config?.storageKeys?.SearchHistory) return;
+
+    // Remove from storage
+    removeItemFromStorage(config.storageKeys.SearchHistory, result);
+
+    // Refresh the displayed history
+    const updatedHistory = loadSearchHistory();
+    setSearchResults(updatedHistory);
+
+    // Close dropdown if no more history items
+    if (updatedHistory.length === 0) {
+      setIsOpen(false);
+      setShowHistory(false);
+    }
   };
 
   // Get result display info
@@ -402,125 +467,232 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
     };
   };
 
+  // Get icon for search result
+  const getResultIcon = (result: SearchResult) => {
+    const iconProps = { size: 20, className: "text-blue-600" };
+
+    // Map Layer
+    if (result.type === "Map Layer") {
+      return <FaLayerGroup {...iconProps} />;
+    }
+
+    // Tool
+    if (result.type === "Tool") {
+      return <FaTools {...iconProps} className="text-orange-600" />;
+    }
+
+    // Theme
+    if (result.type === "Theme") {
+      return <FaPalette {...iconProps} className="text-purple-600" />;
+    }
+
+    // OpenStreetMap
+    if (result.place_id) {
+      return <FaMapMarkedAlt {...iconProps} className="text-green-600" />;
+    }
+
+    // Address
+    if (result.type === "Address") {
+      return <FaHome {...iconProps} className="text-blue-600" />;
+    }
+
+    // Street
+    if (result.type === "Street") {
+      return <FaRoad {...iconProps} className="text-gray-600" />;
+    }
+
+    // Building/Property
+    if (result.type === "Building" || result.type === "Property") {
+      return <FaBuilding {...iconProps} className="text-indigo-600" />;
+    }
+
+    // Parcel
+    if (result.type === "Parcel") {
+      return <FaMapPin {...iconProps} className="text-red-600" />;
+    }
+
+    // Default marker for other location types
+    return <FaMapMarkerAlt {...iconProps} className="text-cyan-600" />;
+  };
+
   return (
     <div className={`relative w-full ${className}`}>
-      {/* Search Types Dropdown */}
-      <div
-        className="absolute top-[7px] ml-[1px] z-[1000000] max-w-[600px]"
-        style={{
-          width: `${50 + selectedType.label.length * 9}px`,
-        }}
-      >
-        <select
-          value={selectedType.value}
-          onChange={handleTypeChange}
-          className="h-[38px] w-full border-none shadow-none bg-transparent text-sm pr-8 pl-2 outline-none appearance-none cursor-pointer"
-          style={{
-            background: "transparent",
-            backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e")`,
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "right 8px center",
-            backgroundSize: "16px",
-          }}
-        >
-          {searchTypes.map((type) => (
-            <option key={type.value} value={type.value}>
-              {type.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Search Input */}
-      <div className="relative">
-        <input
-          ref={inputRef}
-          type="text"
-          value={searchValue}
-          onChange={handleSearchChange}
-          onKeyDown={handleKeyDown}
-          onFocus={() => {
-            if (searchValue.length === 0 && !justCleared) {
-              const history = loadSearchHistory();
-              console.log("Search: OnFocus loaded history:", history);
-              setSearchResults(history);
-              setShowHistory(true);
-              setIsOpen(history.length > 0);
-            } else if (searchValue.length >= 2) {
-              setIsOpen(searchResults.length > 0);
-            }
-          }}
-          placeholder={placeholder}
-          disabled={disabled}
-          className="h-[41px] w-full text-[22px] border border-gray-300 box-border outline-none focus:border-[#f9c280] pr-12"
-          style={{
-            fontFamily: "Verdana, Arial, sans-serif",
-            paddingLeft: `${50 + selectedType.label.length * 9 + 5}px`,
-            paddingRight: "40px",
-          }}
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          spellCheck="false"
-        />
-
-        {/* Search Icon */}
-        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-          <FaSearch size={16} className="opacity-70" />
+      <div className="flex w-full shadow-sm rounded-md overflow-hidden border border-gray-300">
+        {/* Search Types Dropdown */}
+        <div className="relative border-r border-gray-300">
+          <select
+            value={selectedType.value}
+            onChange={handleTypeChange}
+            className="h-[41px] min-w-[140px] px-3 font-semibold text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-orange-300 border-0 cursor-pointer appearance-none pr-8"
+            style={{
+              backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e")`,
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "right 8px center",
+              backgroundSize: "16px",
+            }}
+          >
+            {searchTypes.map((type) => (
+              <option key={type.value} value={type.value}>
+                {type.label}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {/* Clear Button */}
-        {searchValue && (
-          <button onClick={handleClear} className="absolute right-12 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 text-xl font-bold w-6 h-6 flex items-center justify-center">
-            ×
-          </button>
-        )}
+        {/* Search Input Container */}
+        <div className="relative flex-1">
+          <input
+            ref={inputRef}
+            type="text"
+            value={searchValue}
+            onChange={handleSearchChange}
+            onKeyDown={handleKeyDown}
+            onFocus={() => {
+              if (searchValue.length === 0 && !justCleared) {
+                const history = loadSearchHistory();
+                console.log("Search: OnFocus loaded history:", history);
+                setSearchResults(history);
+                setShowHistory(true);
+                setIsOpen(history.length > 0);
+              } else if (searchValue.length >= 2) {
+                setIsOpen(searchResults.length > 0);
+              }
+            }}
+            placeholder={placeholder}
+            disabled={disabled}
+            className="w-full h-[41px] text-lg pl-4 pr-20 bg-white border-0 focus:outline-none focus:ring-0 disabled:opacity-50"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck="false"
+          />
+
+          {/* Action Buttons Container */}
+          <div className="absolute right-1 top-1/2 transform -translate-y-1/2 flex items-center gap-0.5">
+            {/* Clear Button */}
+            {searchValue && (
+              <button onClick={handleClear} className="btn btn-ghost btn-xs btn-circle text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors duration-200" aria-label="Clear search">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+
+            {/* Search Icon */}
+            <div className="w-8 h-8 flex items-center justify-center text-gray-500">{isLoading ? <span className="loading loading-spinner loading-xs"></span> : <FaSearch size={14} />}</div>
+          </div>
+        </div>
       </div>
 
       {/* Search Results Dropdown */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 z-[99999999] bg-white border border-gray-300 border-t-0 shadow-lg h-[300px] overflow-hidden">
-          {isLoading ? (
-            <div className="p-4 text-center text-gray-500">Searching...</div>
-          ) : searchResults.length === 0 && searchValue.length >= 2 ? (
-            <div className="p-4 text-center text-gray-500">No results found</div>
-          ) : searchResults.length > 0 ? (
-            <div className="h-full flex flex-col">
-              {/* Header for search history */}
-              {showHistory && searchValue.length === 0 && <div className="p-2 bg-gray-100 text-sm text-gray-600 border-b border-gray-200 flex-shrink-0">Recent Searches</div>}
-
-              {/* Scrollable results area */}
-              <div ref={listRef} className="flex-1 overflow-y-auto">
-                {searchResults.map((result, index) => {
-                  const displayInfo = getResultDisplayInfo(result);
-                  return (
-                    <div
-                      key={`${result.location_id || result.name}-${index}`}
-                      className={`flex items-center p-1.5 border-b border-gray-200 cursor-pointer hover:bg-blue-50 ${index === highlightedIndex ? "bg-blue-100" : ""}`}
-                      onClick={() => handleResultSelect(result)}
-                    >
-                      <div className="w-8 h-8 mr-3 flex-shrink-0 flex items-center justify-center">
-                        <Image src={`/images/${result.imageName || "map-marker-light-blue.png"}`} alt="" width={24} height={24} className="max-w-full max-h-full" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-gray-900 truncate">
-                          {/* Highlight search terms only if we're actively searching */}
-                          {showHistory && searchValue.length === 0
-                            ? result.name
-                            : result.name.split(new RegExp(`(${searchValue})`, "gi")).map((part, i) => (
-                                <span key={i} className={part.toLowerCase() === searchValue.toLowerCase() ? "font-bold bg-yellow-200" : ""}>
-                                  {part}
-                                </span>
-                              ))}
-                        </div>
-                        <div className="text-sm text-gray-500 truncate">{displayInfo.subtitle}</div>
-                      </div>
-                    </div>
-                  );
-                })}
+        <div ref={dropdownRef} className="absolute top-full left-0 right-0 z-[99999999] mt-0.5 bg-white shadow-2xl border border-gray-300 border-t-0 rounded-b-md overflow-hidden">
+          <div className="h-[400px] flex flex-col">
+            {isLoading ? (
+              <div className="flex-1 flex flex-col items-center justify-center gap-3 text-gray-600">
+                <span className="loading loading-spinner loading-lg text-blue-600"></span>
+                <p className="text-sm font-medium">Searching...</p>
               </div>
-            </div>
-          ) : null}
+            ) : searchResults.length === 0 && searchValue.length >= 2 ? (
+              <div className="flex-1 flex flex-col items-center justify-center gap-2 text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <p className="text-sm font-medium">No results found</p>
+                <p className="text-xs text-gray-500">Try adjusting your search terms</p>
+              </div>
+            ) : searchResults.length > 0 ? (
+              <>
+                {/* Header for search history or results */}
+                {showHistory && searchValue.length === 0 ? (
+                  <div className="px-3 py-2.5 bg-gray-100 border-b border-gray-200 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FaClock className="h-4 w-4 text-gray-600" />
+                      <span className="text-sm font-semibold text-gray-700">Recent Searches</span>
+                    </div>
+                    <button onClick={handleDismissDropdown} className="btn btn-ghost btn-xs btn-circle text-gray-500 hover:text-gray-700 hover:bg-gray-200" aria-label="Close dropdown">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="px-3 py-2.5 bg-gray-100 border-b border-gray-200 flex items-center justify-between">
+                    <span className="text-sm font-semibold text-gray-700">{searchResults.length} Results</span>
+                    <button onClick={handleDismissDropdown} className="btn btn-ghost btn-xs btn-circle text-gray-500 hover:text-gray-700 hover:bg-gray-200" aria-label="Close dropdown">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+
+                {/* Scrollable results area */}
+                <div ref={listRef} className="flex-1 overflow-y-auto">
+                  {searchResults.map((result, index) => {
+                    const displayInfo = getResultDisplayInfo(result);
+                    const isHistoryItem = showHistory && searchValue.length === 0;
+                    return (
+                      <div
+                        key={`${result.location_id || result.name}-${index}`}
+                        className={`
+                          group flex items-center gap-3 px-3 py-2.5 border-b border-gray-200 cursor-pointer 
+                          transition-all duration-150
+                          hover:bg-blue-50
+                          ${index === highlightedIndex ? "bg-blue-100" : ""}
+                          last:border-b-0
+                        `}
+                        onClick={() => handleResultSelect(result)}
+                      >
+                        {/* Icon */}
+                        <div className="w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-lg bg-gray-100 group-hover:bg-blue-50 transition-colors duration-150">
+                          {getResultIcon(result)}
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-gray-900 truncate leading-tight text-sm">
+                            {isHistoryItem
+                              ? result.name
+                              : result.name.split(new RegExp(`(${searchValue})`, "gi")).map((part, i) => (
+                                  <span key={i} className={part.toLowerCase() === searchValue.toLowerCase() ? "bg-yellow-200 px-0.5 rounded" : ""}>
+                                    {part}
+                                  </span>
+                                ))}
+                          </div>
+                          {displayInfo.subtitle && (
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="text-xs text-gray-600 truncate max-w-full">{displayInfo.subtitle}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Remove button for history items or arrow for search results */}
+                        {isHistoryItem ? (
+                          <button
+                            onClick={(e) => handleRemoveFromHistory(e, result)}
+                            className="flex-shrink-0 opacity-0 group-hover:opacity-100 btn btn-ghost btn-xs btn-circle text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all duration-150"
+                            aria-label="Remove from history"
+                            title="Remove from history (or press Delete)"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        ) : (
+                          <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            ) : null}
+          </div>
         </div>
       )}
     </div>
