@@ -1084,6 +1084,10 @@ export class LayerHelpers {
           ratio: 1,
           projection: projection,
           crossOrigin: "anonymous",
+          imageLoadFunction: (image, src) => {
+            const newSrc = src.replace(/DPI=\d+/i, "DPI=96");
+            image.getImage().src = newSrc;
+          },
         };
         if (token) {
           sourceParams.params["TOKEN"] = token;
