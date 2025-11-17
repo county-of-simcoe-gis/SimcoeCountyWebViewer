@@ -811,6 +811,17 @@ export function centerMap(coords, zoom) {
 }
 
 export function formatTitleCase(str, maxLength = undefined) {
+  // Check if string is already mixed case (has both upper and lower case letters)
+  const hasLowerCase = /[a-z]/.test(str);
+  const hasUpperCase = /[A-Z]/.test(str);
+
+  if (hasLowerCase && hasUpperCase) {
+    // Already mixed case, return as-is (but still apply maxLength if specified)
+    if (maxLength && maxLength < str.length) return str.substring(0, maxLength) + "...";
+    return str;
+  }
+
+  // If not mixed case, format as title case
   //replace title case with space
   //replace underscore with space
   let formattedTitle = toTitleCase(

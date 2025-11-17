@@ -29,6 +29,7 @@
   "reportUrl": "https://opengis.simcoe.ca/reports/",
   "ieWarningUrl": "https://opengis.simcoe.ca/public/ieWarning.html",
   "propertyReportUrl": "https://opengis.simcoe.ca/api_v2/public/reports/property/",
+  "condoUrl": "https://opengis.simcoe.ca/api_v2/public/reports/property/CondoChildren/",
   "weatherRadarApiUrl": "https://opengis.simcoe.ca/api_v2/public/map/tool/weather/RadarImages/",
   "parcelLayer": {
     "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
