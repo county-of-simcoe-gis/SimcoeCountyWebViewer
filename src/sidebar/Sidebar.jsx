@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { flushSync } from "react-dom";
 import "./Sidebar.css";
 import * as helpers from "../helpers/helpers";
+import closeTabImg from "./images/close-tab.png";
 
 import TOC from "./components/toc/TOC.jsx";
 
@@ -279,7 +280,7 @@ const Sidebar = (props) => {
     // SET PROPS FROM CONFIG
     let comp = {};
     comp.props = {};
-    comp.load = import(`${path}`);
+    comp.load = import(/* @vite-ignore */ `${path}`);
 
     comp.props.active = false;
     comp.props.id = helpers.getUID();
@@ -538,7 +539,7 @@ const Sidebar = (props) => {
           </Tabs>
 
           <div id="sc-sidebar-advanced-tab" className={tabClassName} onClick={() => togglePanelVisibility()}>
-            <img src={require("./images/close-tab.png")} alt="Close Tab" />
+            <img src={closeTabImg} alt="Close Tab" />
           </div>
           <SidebarSlim
             onClick={slimSidebarButtonClick}
@@ -583,9 +584,7 @@ const TabButton = (props) => {
 };
 
 // IMPORT ALL IMAGES
-const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
-function importAllImages(r) {
-  let images = {};
-  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
-  return images;
-}
+import { createImagesObject } from "../helpers/imageHelper";
+const images = createImagesObject(
+  import.meta.glob('./images/*.{png,jpg,jpeg,svg,gif}', { eager: true, query: '?url', import: 'default' })
+);

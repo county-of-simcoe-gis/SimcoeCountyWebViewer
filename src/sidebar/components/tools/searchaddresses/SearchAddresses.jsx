@@ -9,6 +9,7 @@ import VectorLayer from "ol/layer/Vector";
 import { Circle as CircleStyle, Icon, Fill, Stroke, Style } from "ol/style.js";
 import TextField from "@mui/material/TextField";
 import Autocomplete from "@mui/material/Autocomplete";
+import mapMarkerLightBlueImg from "./images/map-marker-light-blue.png";
 
 import searchAddressConfig from "./config.json";
 const SearchAddresses = (props) => {
@@ -286,7 +287,7 @@ const SearchAddresses = (props) => {
                   return (
                     <li {...props} key={helpers.getUID()} className="sc-tool-search-addresses-street-search-item">
                       <div className="sc-search-item-left">
-                        <img src={require("./images/map-marker-light-blue.png")} alt="blue pin" />
+                        <img src={mapMarkerLightBlueImg} alt="blue pin" />
                       </div>
                       <div className="sc-search-item-content">
                         <Highlighter highlightClassName="sc-search-highlight-words" searchWords={[streetValue]} textToHighlight={item.streetname} />
@@ -341,7 +342,7 @@ const SearchAddresses = (props) => {
                 renderItem={(item, isHighlighted) => (
                   <div className={isHighlighted ? "sc-tool-search-addresses-street-search-highlighted" : "sc-tool-search-addresses-street-search-item"} key={helpers.getUID()}>
                     <div className="sc-search-item-left">
-                      <img src={require("./images/map-marker-light-blue.png")} alt="blue pin" />
+                      <img src={mapMarkerLightBlueImg} alt="blue pin" />
                     </div>
                     <div className="sc-search-item-content">
                       <Highlighter highlightClassName="sc-search-highlight-words" searchWords={[streetValue]} textToHighlight={item.streetname} />
@@ -471,9 +472,7 @@ const munis = [
 ];
 
 // IMPORT ALL IMAGES
-const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
-function importAllImages(r) {
-  let images = {};
-  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
-  return images;
-}
+import { createImagesObject } from "../../../../helpers/imageHelper";
+const images = createImagesObject(
+  import.meta.glob('./images/*.{png,jpg,jpeg,svg,gif}', { eager: true, query: '?url', import: 'default' })
+);

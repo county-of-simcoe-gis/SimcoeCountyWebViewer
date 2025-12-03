@@ -1,7 +1,8 @@
 import { v4 as uuidv4 } from "uuid";
 
+import hash from "object-hash";
+
 export function generateKey(obj) {
-  var hash = require("object-hash");
   return hash(obj);
 }
 

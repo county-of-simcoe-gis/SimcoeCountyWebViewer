@@ -3,7 +3,7 @@ export const fetchExtensions = (props, callback = undefined) => {
   let allPromises = [];
   config.extensions.forEach((ext) => {
     const promise = new Promise((resolve, reject) => {
-      import(`./${ext.file}`)
+      import(/* @vite-ignore */ `./${ext.file}`)
         .then((item) => {
           const { fetchData, dataRows, content, arnExtension, actions } = item;
           props.addExtension(fetchData, dataRows, content, arnExtension, actions, config.extensions.indexOf(ext), ext.type);

@@ -1,6 +1,6 @@
 import { Item as MenuItem } from "rc-menu";
 import { FloatingMenuItem } from "../../../../helpers/FloatingMenu.jsx";
-import * as drawingHelpers from "../../../../helpers/drawingHelpers";
+import * as drawingHelpers from "../../../../helpers/drawingHelpers.js";
 import * as helpers from "../../../../helpers/helpers.js";
 
 const onReportProblem = (id) => {

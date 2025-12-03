@@ -3,7 +3,7 @@ export const fetchExtensions = (props, callback = undefined) => {
   let allPromises = [];
   config.extensions.forEach((ext) => {
     const promise = new Promise((resolve, reject) => {
-      import(`./${ext.file}`)
+      import(/* @vite-ignore */ `./${ext.file}`)
         .then((item) => {
           const { component, action } = item;
           props.addExtension(component, action, config.extensions.indexOf(ext), ext.type);

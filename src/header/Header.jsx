@@ -5,6 +5,9 @@ import * as helpers from "../helpers/helpers";
 import FloatingMenu, { FloatingMenuItem } from "../helpers/FloatingMenu.jsx";
 import { Item as MenuItem } from "rc-menu";
 import Portal from "../helpers/Portal.jsx";
+import burgerButtonImg from "./images/burger-button.png";
+import barButtonImg from "./images/bar-button.png";
+import feedbackImg from "./images/feedback.png";
 
 const feedbackTemplate = (url, xmin, xmax, ymin, ymax, centerx, centery, scale) => `${url}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}`;
 
@@ -94,14 +97,14 @@ const Header = (props) => {
           }
         }}
       >
-        <img src={require("./images/burger-button.png")} alt="Header Logo" />
+        <img src={burgerButtonImg} alt="Header Logo" />
       </div>
 
       <div id="sc-header-bar-button">
-        <img src={require("./images/bar-button.png")} alt="Header Logo" />
+        <img src={barButtonImg} alt="Header Logo" />
       </div>
       <div id="sc-header-bar-logo" className={`${draft ? "sc-draft-header" : ""}`}>
-        <img src={logoImage === "" || logoImage.toString().substring(0, 4).toUpperCase() === "HTTP" ? logoImage : require("./images/" + logoImage)} alt="Header Logo" />
+        <img src={logoImage === "" || logoImage.toString().substring(0, 4).toUpperCase() === "HTTP" ? logoImage : images[logoImage]} alt="Header Logo" />
       </div>
       <div id="sc-header-search-container">
         <Search options={props.options} />
@@ -114,13 +117,17 @@ const Header = (props) => {
         </div>
       ) : (
         <div className="sc-header-feedback-container" title="Feedback" onClick={onFeedbackClick}>
-          <img style={{ marginTop: "5px" }} src={require("./images/feedback.png")} alt="feedback" />
+          <img style={{ marginTop: "5px" }} src={feedbackImg} alt="feedback" />
           Feedback
         </div>
       )}
 
-      {/* <div className="sc-header-dot-menu-container" onClick={onDotMenuClick}><img className="sc-header-dot-menu-img" src={require("./images/vertical-dot-menu.png")} alt="dots"></img></div> */}
+      {/* <div className="sc-header-dot-menu-container" onClick={onDotMenuClick}><img className="sc-header-dot-menu-img" src={verticalDotMenuImg} alt="dots"></img></div> */}
     </div>
   );
 };
 export default Header;
+
+// IMPORT ALL IMAGES for dynamic logo loading
+import { createImagesObject } from "../helpers/imageHelper";
+const images = createImagesObject(import.meta.glob("./images/*.{png,jpg,jpeg,svg,gif}", { eager: true, query: "?url", import: "default" }));

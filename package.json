@@ -35,7 +35,6 @@
     "react-movable": "^3.2.0",
     "react-responsive-modal": "^6.4.2",
     "react-router-dom": "^6.15.0",
-    "react-scripts": "5.0.1",
     "react-select": "^5.7.4",
     "react-slick": "^0.29.0",
     "react-switch": "^7.0.0",
@@ -48,16 +47,14 @@
     "react-window": "^1.8.9",
     "slick-carousel": "^1.8.1",
     "styled-components": "^5.3.6",
-    "url": "^0.11.1"
+    "url": "^0.11.1",
+    "uuid": "^13.0.0"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
+    "dev": "vite",
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "browserslist": [
     ">0.2%",
@@ -70,6 +67,9 @@
     "jsx-a11y/anchor-is-valid": true
   },
   "devDependencies": {
-    "dotenv": "^16.4.5"
+    "@vitejs/plugin-react": "^5.1.1",
+    "dotenv": "^16.4.5",
+    "vite": "^7.2.6",
+    "vite-plugin-node-polyfills": "^0.24.0"
   }
 }
