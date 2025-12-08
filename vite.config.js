@@ -37,23 +37,24 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: (id) => {
             // Split node_modules into vendor chunks
+            // Be careful not to split packages with interdependencies
             if (id.includes('node_modules')) {
-              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              // React ecosystem - keep together
+              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router') || 
+                  id.includes('scheduler') || id.includes('use-sync-external-store')) {
                 return 'vendor-react';
               }
-              if (id.includes('ol') || id.includes('proj4')) {
+              // OpenLayers mapping - keep together
+              if (id.includes('/ol/') || id.includes('ol-mapbox-style') || id.includes('proj4') || 
+                  id.includes('geotiff') || id.includes('lerc') || id.includes('rbush')) {
                 return 'vendor-ol';
               }
-              if (id.includes('@mui') || id.includes('@emotion') || id.includes('alertifyjs') || 
-                  id.includes('react-select') || id.includes('react-datepicker') || 
-                  id.includes('react-tooltip') || id.includes('react-modal')) {
-                return 'vendor-ui';
-              }
-              // Don't split @arcgis/core - let it be handled automatically
+              // ArcGIS - keep separate
               if (id.includes('@arcgis/core')) {
                 return 'vendor-arcgis';
               }
-              return 'vendor-other';
+              // Let everything else be handled automatically by Vite
+              // This prevents circular dependency issues
             }
           },
         },

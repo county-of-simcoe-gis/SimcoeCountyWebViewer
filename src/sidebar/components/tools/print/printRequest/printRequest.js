@@ -332,7 +332,7 @@ const switchTemplates = (options, callback = undefined) => {
   const mapScale = 2990000;
   const rotation = 0;
   const dpi = parseInt(options.mapResolutionOption);
-  let printSize = options.printSizeSelectedOption.size === [] ? window.map.getSize() : options.printSizeSelectedOption.size;
+  let printSize = !options.printSizeSelectedOption.size || options.printSizeSelectedOption.size.length === 0 ? window.map.getSize() : options.printSizeSelectedOption.size;
   const parameters = options.options.parameters || [];
 
   const attributes = {

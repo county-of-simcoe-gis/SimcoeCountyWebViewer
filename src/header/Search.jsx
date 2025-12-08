@@ -148,12 +148,18 @@ const Search = (props) => {
       }
       if (muni) setMunicipality(muni);
       apiUrlRef.current = window.config.apiUrl;
-      setStorageKey(window.config.storageKeys.SearchHistory);
+      setStorageKey(window.config.storageKeys?.SearchHistory || "");
       if (window.config.hideSearch !== undefined) setHideSearch(window.config.hideSearch);
 
       if (window.config.search) {
         if (window.config.search.placeHolder !== undefined) setPlaceHolderText(window.config.search.placeHolder);
         if (window.config.search.hideTypes !== undefined) setHideTypeDropDown(window.config.search.hideTypes);
+      }
+      
+      // Only fetch search types if apiUrl is defined
+      if (!apiUrlRef.current) {
+        console.warn("Search: apiUrl is not defined, skipping search types fetch");
+        return;
       }
       helpers.getJSON(searchTypesURL(apiUrlRef.current), (result) => {
         let items = [];
@@ -228,6 +234,7 @@ const Search = (props) => {
       setSelectedType({ label: search_type, value: search_type });
     }
     helpers.waitForLoad(["map", "settings"], Date.now(), 30, () => {
+      if (!apiUrlRef.current) return;
       helpers.getJSON(encodeURI(searchURL(apiUrlRef.current, search, search_type, municipality, 1)), (responseJson) => {
         if (responseJson[0] !== undefined && responseJson[0].location_id !== null && responseJson[0].location_id !== undefined) {
           helpers.getJSON(searchInfoURL(apiUrlRef.current, responseJson[0].location_id), (result) => jsonCallback(result, hidden, timeout));
@@ -236,11 +243,15 @@ const Search = (props) => {
     });
   };
   useEffect(() => {
+    // Don't search if selectedType is not properly initialized
+    if (!selectedType || !selectedType.value) return;
+    
     let limit = 100;
 
     // let limit = defaultSearchLimit;
     // if (showMore) limit = 50;
     helpers.waitForLoad(["map", "settings"], Date.now(), 30, () => {
+      if (!apiUrlRef.current) return;
       helpers.getJSON(searchURL(apiUrlRef.current, value, selectedType.value, municipality, limit), (responseJson) => {
         if (responseJson !== undefined) searchResultsHandler(responseJson, limit);
         // if (responseJson !== undefined) setSearchResults(responseJson);
@@ -566,9 +577,13 @@ const Search = (props) => {
   };
 
   useEffect(() => {
+    // Don't search if not properly initialized
+    if (!selectedType || !selectedType.value) return;
+    
     let limit = defaultSearchLimit;
     if (showMore) limit = 50;
     helpers.waitForLoad(["map", "settings"], Date.now(), 30, () => {
+      if (!apiUrlRef.current) return;
       helpers.getJSON(searchURL(apiUrlRef.current, value, selectedType.value, municipality, limit), (responseJson) => {
         if (responseJson !== undefined) searchResultsHandler(responseJson, limit);
       });
@@ -725,6 +740,7 @@ const Search = (props) => {
       // let limit = defaultSearchLimit;
       // if (showMore) limit = 50;
       helpers.waitForLoad(["map", "settings"], Date.now(), 30, () => {
+        if (!apiUrlRef.current || !selectedType || !selectedType.value) return;
         helpers.getJSON(searchURL(apiUrlRef.current, value, selectedType.value, municipality, limit), (responseJson) => {
           if (responseJson !== undefined) searchResultsHandler(responseJson, limit);
 

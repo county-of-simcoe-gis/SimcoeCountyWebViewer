@@ -13,6 +13,7 @@ import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import { unByKey } from "ol/Observable.js";
 import mainConfig from "../../../../config.json";
+import { createImagesObject } from "../../../../helpers/imageHelper";
 
 class LHRS extends Component {
   constructor(props) {
@@ -1056,7 +1057,6 @@ class LHRS extends Component {
 
 export default LHRS;
 // IMPORT ALL IMAGES
-import { createImagesObject } from "../../../../helpers/imageHelper";
 const images = createImagesObject(
-  import.meta.glob('./images/*.{png,jpg,jpeg,svg,gif}', { eager: true, query: '?url', import: 'default' })
+  import.meta.glob("./images/*.{png,jpg,jpeg,svg,gif}", { eager: true, query: "?url", import: "default" })
 );
