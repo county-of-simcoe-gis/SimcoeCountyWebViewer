@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- <script src="//cdn.polyfill.io/v2/polyfill.min.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-polyfills/0.1.42/polyfill.min.js" integrity="sha256-/XfEHUGimdIk42Vy7oTnNLtT8sVrO6vnhhnsQT1W1oo=" crossorigin="anonymous"></script>
+    <meta charset="utf-8" />
+    <link rel="shortcut icon" id="favicon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="theme-color" content="#000000" />
+
+    <meta name="description" content="GIS Interactive Map viewer.  It's built using Open Source Technologies.  OpenLayers, GeoServer and Postgres/PostGIS." />
+    <!--
+		<meta
+			name="google-site-verification"
+			content="_qMDiULpRgjarvItQg7XItqCrPF_lOr_wm1ZJk0R-1o"
+		/>
+		
+      manifest.json provides metadata used when your web app is added to the
+      homescreen on Android. See https://developers.google.com/web/fundamentals/web-app-manifest/
+    -->
+    <link rel="manifest" href="/manifest.json" />
+    <!--
+      Notice the use of %PUBLIC_URL% in the tags above.
+      It will be replaced with the URL of the `public` folder during the build.
+      Only files inside the `public` folder can be referenced from the HTML.
+
+      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
+      work correctly both with client-side routing and a non-root public URL.
+      Learn how to configure a non-root public URL by running `npm run build`.
+    -->
+    <!-- <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+      integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
+      crossorigin="anonymous"
+    /> -->
+    <!-- <style type="text/css">
+      .sc-hidden { display:none; }
+  </style> -->
+    <title>Interactive Map</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/index.jsx"></script>
+  </body>
+
+  <script>
+    // WARNING FOR IE
+    var ua = window.navigator.userAgent;
+    var msie = ua.indexOf("MSIE ");
+
+    // eslint-disable-next-line
+    if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
+      // If Internet Explorer, return version number
+      window.location = "/ieWarning.html";
+    }
+  </script>
+</html>

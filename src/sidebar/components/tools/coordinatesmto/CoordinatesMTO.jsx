@@ -546,9 +546,7 @@ class CoordinatesMTO extends Component {
 
 export default CoordinatesMTO;
 // IMPORT ALL IMAGES
-const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
-function importAllImages(r) {
-  let images = {};
-  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
-  return images;
-}
+import { createImagesObject } from "../../../../helpers/imageHelper";
+const images = createImagesObject(
+  import.meta.glob('./images/*.{png,jpg,jpeg,svg,gif}', { eager: true, query: '?url', import: 'default' })
+);

@@ -24,6 +24,39 @@ import packageJson from "../package.json";
 import LegendApp from "./legend/App";
 import LayerInfoApp from "./layerInfo/App";
 
+// Debug: Log MSAL config to verify env vars are loaded
+console.log("MSAL Config - clientId:", msalConfig.auth.clientId);
+console.log("MSAL Config - authority:", msalConfig.auth.authority);
+
+// Validate MSAL config before initialization
+if (!msalConfig.auth.clientId) {
+  console.error("ERROR: REACT_APP_CLIENTID is not set in your .env file!");
+}
+if (!msalConfig.auth.authority) {
+  console.error("ERROR: REACT_APP_AUTHORITY is not set in your .env file!");
+}
+
+// Clear potentially corrupted MSAL cache entries
+try {
+  const keysToRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && (key.includes("msal") || key.includes("login.windows"))) {
+      // Check if the key or value is corrupted
+      const value = localStorage.getItem(key);
+      if (key === "undefined" || key === "null" || value === "undefined") {
+        keysToRemove.push(key);
+      }
+    }
+  }
+  keysToRemove.forEach(key => {
+    console.log("Removing corrupted MSAL cache key:", key);
+    localStorage.removeItem(key);
+  });
+} catch (e) {
+  console.warn("Could not clean MSAL cache:", e);
+}
+
 const msalInstance = new PublicClientApplication(msalConfig);
 await msalInstance.initialize();
 const apiUrl = configSecured.apiUrlSecured;
@@ -95,6 +128,18 @@ const MainContent = () => {
     icon = `${urlArray.join("/")}/${icon}`;
     link.href = icon;
   };
+
+  // Clean up authentication parameters from URL after successful authentication
+  useEffect(() => {
+    if (isAuthenticated && inProgress === InteractionStatus.None) {
+      // Small delay to ensure MSAL has finished processing
+      const timeoutId = setTimeout(() => {
+        cleanupAuthParameters();
+      }, 500);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isAuthenticated, inProgress]);
 
   useEffect(() => {
     if (!isAuthenticated && inProgress === InteractionStatus.None) {
@@ -168,7 +213,6 @@ export default function AppSecure() {
         <Route path="/legend" element={<LegendApp />} />
         <Route path="/layerInfo" element={<LayerInfoApp secure={true} />} />
         <Route path="/public" element={<MapApp />} />
-        <Route path="/oauth-callback.html" element={<OAuthCallback />} />
         <Route exact path="/" element={<MapApp />} />
         <Route path="*" element={<MapApp />} />
       </Routes>
@@ -248,11 +292,40 @@ const setControlPreferences = () => {
     if (localMapControls.basemap) window.mapControls.basemap = localMapControls.basemap;
     if (localMapControls.gitHubButton) window.mapControls.gitHubButton = localMapControls.gitHubButton;
     if (localMapControls.scaleSelector) window.mapControls.scaleSelector = localMapControls.scaleSelector;
+    if (localMapControls.showGrid) window.mapControls.showGrid = localMapControls.showGrid;
   }
 };
-const OAuthCallback = () => {
-  useEffect(() => {
-    window.location.href = process.env.PUBLIC_URL + "oauth-callback.html";
-  }, []);
-  return <div></div>;
+// URL cleanup function to remove authentication parameters after successful login
+const cleanupAuthParameters = () => {
+  const currentUrl = window.location.href;
+
+  // Check if URL contains authentication parameters that need cleanup
+  if (
+    currentUrl.includes("#code=") ||
+    currentUrl.includes("#access_token=") ||
+    currentUrl.includes("#id_token=") ||
+    currentUrl.includes("?code=") ||
+    currentUrl.includes("&code=") ||
+    currentUrl.includes("#state=") ||
+    currentUrl.includes("&state=") ||
+    currentUrl.includes("#session_state=")
+  ) {
+    // Create clean URL without authentication parameters
+    const url = new URL(currentUrl);
+
+    // Remove hash completely if it contains auth parameters
+    if (url.hash && (url.hash.includes("code=") || url.hash.includes("access_token=") || url.hash.includes("id_token=") || url.hash.includes("state="))) {
+      url.hash = "";
+    }
+
+    // Remove auth-related query parameters
+    const authParams = ["code", "state", "session_state", "admin_consent"];
+    authParams.forEach((param) => url.searchParams.delete(param));
+
+    // Only update if URL actually changed
+    const cleanUrl = url.toString();
+    if (cleanUrl !== currentUrl) {
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
+  }
 };

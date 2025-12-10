@@ -312,14 +312,10 @@ class LayerInfoApp extends Component {
 export default LayerInfoApp;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
-function importAllImages(r) {
-  let images = {};
-  r.keys().map((item, index) => {
-    images[item.replace("./", "")] = r(item);
-  });
-  return images;
-}
+import { createImagesObject } from "../helpers/imageHelper";
+const images = createImagesObject(
+  import.meta.glob('./images/*.{png,jpg,jpeg,svg,gif}', { eager: true, query: '?url', import: 'default' })
+);
 
 function FieldItem(props) {
   const fieldInfo = props.fieldInfo;

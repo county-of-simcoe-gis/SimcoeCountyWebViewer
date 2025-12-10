@@ -1223,7 +1223,7 @@ export class LayerHelpers {
           }
         };
         const projExtent = window.map.getView().getProjection().getExtent();
-        if (extent === []) extent = projExtent;
+        if (!extent || extent.length === 0) extent = projExtent;
         callback(
           new ImageLayer({
             rebuildParams: rebuildParams,

@@ -5,7 +5,7 @@ import "react-tabs/style/react-tabs.css";
 import CommercialRealEstateSearch from "./CommercialRealEstateSearch.jsx";
 import { default as localConfig } from "./config.json";
 import * as helpers from "../../../../helpers/helpers";
-import * as CommercialRealEstateSearchObjects from "./CommercialRealEstateObjects";
+import CommercialRealEstateSearchObjects from "./CommercialRealEstateObjects";
 import { unByKey } from "ol/Observable.js";
 import { GeoJSON } from "ol/format.js";
 import CommercialRealEstatePopupContent from "./CommercialRealEstatePopupContent.jsx";

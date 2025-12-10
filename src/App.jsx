@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
-import Header from "./header/Header";
-import Sidebar from "./sidebar/Sidebar";
-import SCMap from "./map/SCMap";
-import LegendApp from "./legend/App";
-import LayerInfoApp from "./layerInfo/App";
+import Header from "./header/Header.jsx";
+import Sidebar from "./sidebar/Sidebar.jsx";
+import SCMap from "./map/SCMap.jsx";
+import LegendApp from "./legend/App.jsx";
+import LayerInfoApp from "./layerInfo/App.jsx";
 
 import "./helpers/SC.css";
 import mainConfig from "./config.json";
-import * as helpers from "./helpers/helpers";
+import * as helpers from "./helpers/helpers.js";
 import LoadingScreen from "./helpers/LoadingScreen.jsx";
 import ReactGA from "react-ga4";
 import packageJson from "../package.json";
