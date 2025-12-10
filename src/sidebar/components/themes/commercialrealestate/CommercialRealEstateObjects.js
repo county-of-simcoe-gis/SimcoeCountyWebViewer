@@ -1,4 +1,4 @@
-module.exports = {
+export default {
 	getTypes() {
 		return [
 			{ label: "For Sale or Lease", value: "For Sale or Lease" },

@@ -43,8 +43,9 @@ class AttrbuteTable extends Component {
   };
 
   resizeFromMap = () => {
-    const mapWidth = document.getElementById("map").offsetWidth;
-    if (!this.resizable) return;
+    const mapElement = document.getElementById("map");
+    if (!mapElement || !this.resizable) return;
+    const mapWidth = mapElement.offsetWidth;
     this.resizable.updateSize({
       width: mapWidth,
       height: this.resizable.resizable.offsetHeight,
@@ -127,7 +128,9 @@ class AttrbuteTable extends Component {
   };
 
   updateSize = () => {
-    const mapWidth = document.getElementById("map").offsetWidth;
+    const mapElement = document.getElementById("map");
+    if (!mapElement || !this.resizable) return;
+    const mapWidth = mapElement.offsetWidth;
     this.resizable.updateSize({ width: mapWidth, height: 200 });
     this.setState({ mapWidth: mapWidth, height: 200 });
     window.emitter.emit("attributeTableResize", 200);
@@ -336,9 +339,5 @@ class AttrbuteTable extends Component {
 export default AttrbuteTable;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
-function importAllImages(r) {
-  let images = {};
-  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
-  return images;
-}
+import { createImagesObject } from "./imageHelper";
+const images = createImagesObject(import.meta.glob("./images/*.{png,jpg,jpeg,svg,gif}", { eager: true, query: "?url", import: "default" }));

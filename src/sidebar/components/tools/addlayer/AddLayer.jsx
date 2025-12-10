@@ -504,10 +504,6 @@ class AddLayerForm extends Component {
       }
     });
   };
-  onClose() {
-    // CALL PARENT WITH CLOSE
-    this.props.onClose();
-  }
   onTabSelect = (tabIndex) => {
     this.setState({ tabIndex, serverUrl: "" }, () => {
       this.onLayerSourceChange(tabIndex === 2);

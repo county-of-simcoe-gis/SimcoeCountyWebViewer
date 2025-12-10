@@ -1,4 +1,14 @@
 import { LogLevel } from "@azure/msal-browser";
+
+// Get the base URL - in production this will be "/secure", in dev it might be "/"
+const getRedirectUri = () => {
+  // Use import.meta.env.BASE_URL which Vite sets based on the "base" config
+  const baseUrl = import.meta.env.BASE_URL || "/";
+  // Remove trailing slash if present and combine with origin
+  const base = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+  return window.location.origin + base;
+};
+
 // Config object to be passed to Msal on creation
 export const msalConfig = {
   tenant: process.env.REACT_APP_TENANT,
@@ -6,6 +16,7 @@ export const msalConfig = {
   auth: {
     clientId: process.env.REACT_APP_CLIENTID,
     authority: process.env.REACT_APP_AUTHORITY,
+    redirectUri: getRedirectUri(),
   },
   scopes: ["openid", "profile", "email", "offline_access"],
 

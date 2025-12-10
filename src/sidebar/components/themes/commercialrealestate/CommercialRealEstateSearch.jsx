@@ -3,7 +3,7 @@ import "./CommercialRealEstateSearch.css";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 import CommercialRealEstateSearchPropTypes from "./CommercialRealEstateSearchPropTypes.jsx";
-import * as CommercialRealEstateSearchObjects from "./CommercialRealEstateObjects";
+import CommercialRealEstateSearchObjects from "./CommercialRealEstateObjects";
 import CommercialRealEstateSearchType from "./CommercialRealEstateSearchType.jsx";
 import CommercialRealEstateSearchBuildingSpace from "./CommercialRealEstateSearchBuildingSpace";
 import CommercialRealEstateSearchLandSize from "./CommercialRealEstateSearchLandSize";
@@ -194,9 +194,7 @@ const CommercialRealEstateSearchTab = (props) => {
 };
 
 // IMPORT ALL IMAGES
-const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
-function importAllImages(r) {
-	let images = {};
-	r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
-	return images;
-}
+import { createImagesObject } from "../../../../helpers/imageHelper";
+const images = createImagesObject(
+  import.meta.glob('./images/*.{png,jpg,jpeg,svg,gif}', { eager: true, query: '?url', import: 'default' })
+);

@@ -8,7 +8,7 @@ export const InfoRow = (props) => {
   var formats = [moment.ISO_8601, "YYYY-MM-DDZ"];
   const infoRowStyle = window.config.infoRowStyle !== undefined ? window.config.infoRowStyle.toLowerCase() : "Default";
 
-  if (props.value != null && props.value.toString().substring(0, 4).toUpperCase() === "HTTP" && label === "Attachment Url") {
+  if (props.value != null && props.value.toString().substring(0, 4).toUpperCase() === "HTTP" && label === "attachmentUrl") {
     label = "Attachments";
     value = <Attachments attachmentUrl={props.value} />;
   } else if (props.value != null && props.value.toString().substring(0, 4).toUpperCase() === "HTTP") {

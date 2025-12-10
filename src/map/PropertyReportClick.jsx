@@ -1,6 +1,7 @@
 import React, { Component, Fragment } from "react";
 import * as helpers from "../helpers/helpers";
 import { get } from "../helpers/api";
+import { createImagesObject } from "../helpers/imageHelper";
 
 import "./PropertyReportClick.css";
 import InfoRow from "../helpers/InfoRow.jsx";
@@ -42,6 +43,7 @@ class PropertyReportClick extends Component {
     helpers.waitForLoad(["map", "toc"], Date.now(), 30, () => this.onMapLoad());
 
     this.state = {
+      propInfo: null,
       feature: null,
     };
   }
@@ -211,8 +213,8 @@ class PropertyReportClick extends Component {
     window.map.getView().fit(this.state.feature.getGeometry().getExtent(), window.map.getSize());
   };
 
-  onMoreInfoClick = (propInfo) => {
-    window.emitter.emit("loadReport", <PropertyReport propInfo={propInfo} onZoomClick={this.onZoomClick} />);
+  onMoreInfoClick = () => {
+    window.emitter.emit("loadReport", <PropertyReport propInfo={this.state.propInfo} onZoomClick={this.onZoomClick} />);
     helpers.addAppStat("Property Click More Info", "click");
   };
 
@@ -390,7 +392,7 @@ class PropertyReportClick extends Component {
         <div>
           <div className="sc-property-report-top-container">{rows}</div>
 
-          <button key={helpers.getUID()} id={helpers.getUID()} className="sc-button sc-property-report-click-more-info" onClick={() => this.onMoreInfoClick(props.propInfo)}>
+          <button key={helpers.getUID()} id={helpers.getUID()} className="sc-button sc-property-report-click-more-info" onClick={this.onMoreInfoClick}>
             More Information
           </button>
 
@@ -406,7 +408,7 @@ class PropertyReportClick extends Component {
       );
     };
 
-    return <PropertyReportContent extensions={this.extensions} propInfo={propInfo} />;
+    return <PropertyReportContent extensions={this.extensions} />;
   };
 
   showPropertyWindow = (wmsURL, clickEvt = null) => {
@@ -427,79 +429,36 @@ class PropertyReportClick extends Component {
 
         const feature = geoJSON[0];
         feature.setStyle(parcelLayerStyle);
-        console.log("property report click", result.features);
         const arn = result.features[0].properties.arn;
-        if (arn.length > 15) {
-          this.getCondoData(arn, (condoResult) => {
-            condoResult.forEach((item) => {
-              feature.setProperties({ arn: item.ARN });
-              this.setState({ shareURL: this.getShareURL(item.ARN), feature: feature });
+        feature.setProperties({ arn: arn });
+        this.setState({ shareURL: this.getShareURL(arn), feature: feature });
 
-              // GET CENTER COORDS
-              var latLongCoords = null;
-              var pointerPoint = null;
-              if (clickEvt === null) {
-                helpers.getGeometryCenter(feature.getGeometry(), (center) => {
-                  pointerPoint = center.flatCoordinates;
-                  latLongCoords = helpers.toLatLongFromWebMercator(pointerPoint);
-                  window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize());
-
-                  // GET FULL INFO
-                  this.getData({ feature, arn: item.ARN, pointerPoint, latLongCoords }, (itemResult) => {
-                    // this.setState({ propInfo: itemResult, userClickCoords: pointerPoint });
-                    window.popup.show(pointerPoint, this.getPopupContent(itemResult), "Property Information", () => {});
-                  });
-                });
-              } else {
-                latLongCoords = helpers.toLatLongFromWebMercator(clickEvt.coordinate);
-                pointerPoint = clickEvt.coordinate;
-
-                // GET FULL INFO
-                this.getData({ feature, arn: item.ARN, pointerPoint, latLongCoords }, (itemResult) => {
-                  // this.setState({ propInfo: itemResult, userClickCoords: pointerPoint });
-                  window.popup.show(pointerPoint, this.getPopupContent(itemResult), "Property Information", () => {});
-                });
-              }
-            });
-          });
-        } else {
-          feature.setProperties({ arn: arn });
-          this.setState({ shareURL: this.getShareURL(arn), feature: feature });
-
-          // GET CENTER COORDS
-          var latLongCoords = null;
-          var pointerPoint = null;
-          if (clickEvt === null) {
-            helpers.getGeometryCenter(feature.getGeometry(), (center) => {
-              pointerPoint = center.flatCoordinates;
-              latLongCoords = helpers.toLatLongFromWebMercator(pointerPoint);
-              window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize());
-
-              // GET FULL INFO
-              this.getData({ feature, arn, pointerPoint, latLongCoords }, (result) => {
-                this.setState({ userClickCoords: pointerPoint });
-                window.popup.show(pointerPoint, this.getPopupContent(result), "Property Information", () => {});
-              });
-            });
-          } else {
-            latLongCoords = helpers.toLatLongFromWebMercator(clickEvt.coordinate);
-            pointerPoint = clickEvt.coordinate;
+        // GET CENTER COORDS
+        var latLongCoords = null;
+        var pointerPoint = null;
+        if (clickEvt === null) {
+          helpers.getGeometryCenter(feature.getGeometry(), (center) => {
+            pointerPoint = center.flatCoordinates;
+            latLongCoords = helpers.toLatLongFromWebMercator(pointerPoint);
+            window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize());
 
             // GET FULL INFO
             this.getData({ feature, arn, pointerPoint, latLongCoords }, (result) => {
-              this.setState({ userClickCoords: pointerPoint });
+              this.setState({ propInfo: result, userClickCoords: pointerPoint });
               window.popup.show(pointerPoint, this.getPopupContent(result), "Property Information", () => {});
             });
-          }
+          });
+        } else {
+          latLongCoords = helpers.toLatLongFromWebMercator(clickEvt.coordinate);
+          pointerPoint = clickEvt.coordinate;
+
+          // GET FULL INFO
+          this.getData({ feature, arn, pointerPoint, latLongCoords }, (result) => {
+            this.setState({ propInfo: result, userClickCoords: pointerPoint });
+            window.popup.show(pointerPoint, this.getPopupContent(result), "Property Information", () => {});
+          });
         }
       });
-    });
-  };
-
-  getCondoData = (arn, callback) => {
-    const infoURL = window.config.condoUrl + arn;
-    helpers.getJSON(infoURL, (result) => {
-      callback(result);
     });
   };
 
@@ -540,9 +499,6 @@ class PropertyReportClick extends Component {
 export default PropertyReportClick;
 
 // IMPORT ALL IMAGES
-const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg|gif)$/));
-function importAllImages(r) {
-  let images = {};
-  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
-  return images;
-}
+const images = createImagesObject(
+  import.meta.glob("./images/*.{png,jpg,jpeg,svg,gif}", { eager: true, query: "?url", import: "default" })
+);

@@ -1,9 +1,10 @@
 // import 'react-app-polyfill/ie11';
 import React from "react";
 import { createRoot } from "react-dom/client";
+import { EventEmitter } from "events";
 
 import "./index.css";
-import * as serviceWorker from "./serviceWorker";
+import * as serviceWorker from "./serviceWorker.js";
 import "alertifyjs/build/css/alertify.css";
 import "alertifyjs/build/css/themes/default.min.css";
 
@@ -14,18 +15,16 @@ document.getElementById("root").appendChild(element);
 window.portalRoot = createRoot(document.getElementById("portal-root"));
 
 if (process.env.REACT_APP_SECURED === "true") {
-  import(`./AppSecure.jsx`)
+  import("./AppSecure.jsx")
     .then((module) => {
       const AppSecure = module.default;
-      root.render(
-          <AppSecure />
-      );
+      root.render(<AppSecure />);
     })
     .catch((error) => {
       console.log(error);
     });
 } else {
-  import(`./App.js`)
+  import("./App.jsx")
     .then((module) => {
       const App = module.default;
       root.render(<App />);
@@ -34,8 +33,6 @@ if (process.env.REACT_APP_SECURED === "true") {
       console.log(error);
     });
 }
-
-const { EventEmitter } = require("events");
 
 // GLOBAL VARIABLES
 window.map = null; // MAIN MAP OBJECT

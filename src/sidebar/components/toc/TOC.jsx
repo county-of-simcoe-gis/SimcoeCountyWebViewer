@@ -631,7 +631,7 @@ class TOC extends Component {
     }
   };
   updateLayerCount = (numLayers) => {
-    if (this.state.layerFolderGroups.length === 0 || this.state.selectedGroup === {}) return;
+    if (this.state.layerFolderGroups.length === 0 || !this.state.selectedGroup || Object.keys(this.state.selectedGroup).length === 0) return;
     switch (this.state.type) {
       case "LIST":
         if (numLayers === undefined) numLayers = this.state.selectedGroup.layers.length;

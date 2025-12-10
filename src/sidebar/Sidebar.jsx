@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { flushSync } from "react-dom";
 import "./Sidebar.css";
 import * as helpers from "../helpers/helpers";
+import closeTabImg from "./images/close-tab.png";
 
 import TOC from "./components/toc/TOC.jsx";
 
@@ -13,6 +14,10 @@ import "react-tabs/style/react-tabs.css";
 import SidebarComponent from "../components/sc-sidebar.jsx";
 import SidebarSlim from "./SidebarSlim.jsx";
 import MenuButton from "./MenuButton.jsx";
+
+// Pre-load all tool and theme components using import.meta.glob for Vite compatibility
+const toolModules = import.meta.glob("./components/tools/*/*.jsx");
+const themeModules = import.meta.glob("./components/themes/*/*.jsx");
 
 const Sidebar = (props) => {
   const toolComponentsRef = useRef([]);
@@ -276,10 +281,20 @@ const Sidebar = (props) => {
     const typeLowerCase = `${componentConfig.componentName}`.toLowerCase().replace(/\s/g, "");
     const path = `./components/${typeFolder}/${typeLowerCase}/${componentConfig.componentName}.jsx`;
 
+    // Select the correct module loader from pre-loaded glob
+    const modules = typeFolder === "tools" ? toolModules : themeModules;
+    const moduleLoader = modules[path];
+
+    if (!moduleLoader) {
+      console.error(`Component not found: ${path}`);
+      callback(null);
+      return;
+    }
+
     // SET PROPS FROM CONFIG
     let comp = {};
     comp.props = {};
-    comp.load = import(`${path}`);
+    comp.load = moduleLoader(); // Call the loader function to get the promise
 
     comp.props.active = false;
     comp.props.id = helpers.getUID();
@@ -538,7 +553,7 @@ const Sidebar = (props) => {
           </Tabs>
 
           <div id="sc-sidebar-advanced-tab" className={tabClassName} onClick={() => togglePanelVisibility()}>
-            <img src={require("./images/close-tab.png")} alt="Close Tab" />
+            <img src={closeTabImg} alt="Close Tab" />
           </div>
           <SidebarSlim
             onClick={slimSidebarButtonClick}
@@ -583,9 +598,5 @@ const TabButton = (props) => {
 };
 
 // IMPORT ALL IMAGES
-const images = importAllImages(require.context("./images", false, /\.(png|jpe?g|svg)$/));
-function importAllImages(r) {
-  let images = {};
-  r.keys().map((item, index) => (images[item.replace("./", "")] = r(item)));
-  return images;
-}
+import { createImagesObject } from "../helpers/imageHelper";
+const images = createImagesObject(import.meta.glob("./images/*.{png,jpg,jpeg,svg,gif}", { eager: true, query: "?url", import: "default" }));

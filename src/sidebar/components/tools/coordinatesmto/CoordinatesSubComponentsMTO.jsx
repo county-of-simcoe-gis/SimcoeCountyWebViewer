@@ -1,6 +1,7 @@
 import React from "react";
 import * as helpers from "../../../../helpers/helpers";
 import Select from "react-select";
+import copyImg from "./images/copy16.png";
 
 const inputMsg = "(listening for input)";
 export const LiveCoordinates = (props) => {
@@ -96,7 +97,7 @@ export const CopyCoordinates = (props) => {
 				<div className="sc-coordinates-copy sc-arrow">
 					<span>
 						<input id={props.inputId} className="sc-input sc-coordinates-input" type="text" value={output} placeholder={placeholderText} readOnly />
-						<img src={require("./images/copy16.png")} alt="Copy Coordinates" onClick={props.onCopy} title="Copy Coordinates to Clip Board" />
+						<img src={copyImg} alt="Copy Coordinates" onClick={props.onCopy} title="Copy Coordinates to Clip Board" />
 					</span>
 				</div>
 			</div>
