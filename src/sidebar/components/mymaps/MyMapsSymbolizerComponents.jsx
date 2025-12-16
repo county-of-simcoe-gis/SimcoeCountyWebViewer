@@ -151,3 +151,167 @@ export const Rotation = (props) => {
 		</React.Fragment>
 	);
 };
+
+// LABEL STYLE COMPONENTS
+
+export const LabelTextColor = (props) => {
+	return (
+		<React.Fragment>
+			<label className={props.visible ? "sc-mymaps-sub-label" : "sc-hidden"}>Text Color:</label>
+			<div className={props.visible ? "sc-mymaps-fill-color-button" : "sc-hidden"}>
+				<button
+					id={props.colorPickerButtonId}
+					style={{
+						backgroundColor: props.textColor,
+						width: "30px",
+						height: "15px",
+						cursor: "pointer",
+					}}
+					onMouseUp={props.onTextColorPickerButton}
+				/>
+			</div>
+		</React.Fragment>
+	);
+};
+
+export const LabelFontSize = (props) => {
+	return (
+		<React.Fragment>
+			<label className={props.visible ? "sc-mymaps-sub-label" : "sc-hidden"}>Font Size:</label>
+			<select 
+				className={props.visible ? "sc-mymaps-style-dropdown" : "sc-hidden"} 
+				value={props.fontSize} 
+				onChange={props.onFontSizeChange}
+			>
+				<option value="10px">10px</option>
+				<option value="12px">12px</option>
+				<option value="14px">14px</option>
+				<option value="16px">16px</option>
+				<option value="18px">18px</option>
+				<option value="20px">20px</option>
+				<option value="24px">24px</option>
+			</select>
+		</React.Fragment>
+	);
+};
+
+export const LabelOutlineColor = (props) => {
+	return (
+		<React.Fragment>
+			<label className={props.visible ? "sc-mymaps-sub-label" : "sc-hidden"}>Outline Color:</label>
+			<div className={props.visible ? "sc-mymaps-fill-color-button" : "sc-hidden"}>
+				<button
+					id={props.colorPickerButtonId}
+					style={{
+						backgroundColor: props.outlineColor,
+						width: "30px",
+						height: "15px",
+						cursor: "pointer",
+					}}
+					onMouseUp={props.onOutlineColorPickerButton}
+				/>
+			</div>
+		</React.Fragment>
+	);
+};
+
+export const LabelOutlineWidth = (props) => {
+	return (
+		<React.Fragment>
+			<label className={props.visible ? "sc-mymaps-sub-label" : "sc-hidden"}>Outline Width:</label>
+			<div className={props.visible ? "sc-mymaps-symbolizer-slider size" : "sc-hidden"}>
+				<input
+					type="range"
+					style={{ width: "169px" }}
+					min={0}
+					max={4}
+					value={props.outlineWidth}
+					step="0.5"
+					onChange={props.onOutlineWidthChange}
+				/>
+			</div>
+		</React.Fragment>
+	);
+};
+
+// CALLOUT-SPECIFIC COMPONENTS
+
+export const CalloutBackgroundColor = (props) => {
+	return (
+		<React.Fragment>
+			<label className={props.visible ? "sc-mymaps-sub-label" : "sc-hidden"}>Background:</label>
+			<div className={props.visible ? "sc-mymaps-fill-color-button" : "sc-hidden"}>
+				<button
+					id={props.colorPickerButtonId}
+					style={{
+						backgroundColor: props.backgroundColor,
+						width: "30px",
+						height: "15px",
+						cursor: "pointer",
+					}}
+					onMouseUp={props.onBackgroundColorPickerButton}
+				/>
+			</div>
+		</React.Fragment>
+	);
+};
+
+export const CalloutBorderColor = (props) => {
+	return (
+		<React.Fragment>
+			<label className={props.visible ? "sc-mymaps-sub-label" : "sc-hidden"}>Border:</label>
+			<div className={props.visible ? "sc-mymaps-fill-color-button" : "sc-hidden"}>
+				<button
+					id={props.colorPickerButtonId}
+					style={{
+						backgroundColor: props.borderColor,
+						width: "30px",
+						height: "15px",
+						cursor: "pointer",
+					}}
+					onMouseUp={props.onBorderColorPickerButton}
+				/>
+			</div>
+		</React.Fragment>
+	);
+};
+
+export const CalloutLineColor = (props) => {
+	return (
+		<React.Fragment>
+			<label className={props.visible ? "sc-mymaps-sub-label" : "sc-hidden"}>Line:</label>
+			<div className={props.visible ? "sc-mymaps-fill-color-button" : "sc-hidden"}>
+				<button
+					id={props.colorPickerButtonId}
+					style={{
+						backgroundColor: props.lineColor,
+						width: "30px",
+						height: "15px",
+						cursor: "pointer",
+					}}
+					onMouseUp={props.onLineColorPickerButton}
+				/>
+			</div>
+		</React.Fragment>
+	);
+};
+
+export const CalloutAnchorColor = (props) => {
+	return (
+		<React.Fragment>
+			<label className={props.visible ? "sc-mymaps-sub-label" : "sc-hidden"}>Anchor:</label>
+			<div className={props.visible ? "sc-mymaps-fill-color-button" : "sc-hidden"}>
+				<button
+					id={props.colorPickerButtonId}
+					style={{
+						backgroundColor: props.anchorColor,
+						width: "30px",
+						height: "15px",
+						cursor: "pointer",
+					}}
+					onMouseUp={props.onAnchorColorPickerButton}
+				/>
+			</div>
+		</React.Fragment>
+	);
+};
