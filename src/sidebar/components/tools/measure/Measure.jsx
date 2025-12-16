@@ -9,6 +9,7 @@ import PanelComponent from "../../../PanelComponent.jsx";
 
 // OPEN LAYERS
 import Draw, { createBox } from "ol/interaction/Draw.js";
+import { Snap } from "ol/interaction.js";
 import { Vector as VectorSource } from "ol/source.js";
 import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style.js";
 import { LineString, Polygon, Circle } from "ol/geom.js";
@@ -24,6 +25,7 @@ class Measure extends Component {
 
     this.state = {
       hideTooltips: false,
+      enableSnapping: true,
       geometryType: "",
       unitType: "distance",
       feature: null,
@@ -184,8 +186,27 @@ class Measure extends Component {
     this.continueCircleMsg = "Move pointer to size the circle";
     this.continueRectangleMsg = "Move pointer to size the rectangle";
     this.draw = null;
+    this.snap = null;
     this.listener = null;
     this.pointerMoveEvent = null;
+  };
+
+  // Get all visible vector sources for snapping
+  getVisibleVectorSources = () => {
+    const sources = [];
+    const layers = window.map.getLayers().getArray();
+
+    layers.forEach((layer) => {
+      // Skip the measure tool's own layer
+      if (layer === this.vectorLayer) return;
+
+      // Only include visible layers with vector sources
+      if (layer.getVisible() && layer.getSource && layer.getSource() instanceof VectorSource) {
+        sources.push(layer.getSource());
+      }
+    });
+
+    return sources;
   };
 
   componentDidMount() {
@@ -276,6 +297,7 @@ class Measure extends Component {
   addInteraction = () => {
     this.setState({ unitMeters: -1 });
     if (this.draw !== null) window.map.removeInteraction(this.draw);
+    if (this.snap !== null) window.map.removeInteraction(this.snap);
 
     if (this.source !== undefined && this.source !== null) this.source.clear();
 
@@ -389,6 +411,28 @@ class Measure extends Component {
     );
 
     window.map.addInteraction(this.draw);
+
+    // Add snap interaction for edge snapping to all visible vector layers (if enabled)
+    if (this.state.enableSnapping) {
+      const snapSources = this.getVisibleVectorSources();
+      if (snapSources.length > 0) {
+        // Create a combined source with features from all visible vector sources
+        const combinedSource = new VectorSource();
+        snapSources.forEach((source) => {
+          source.getFeatures().forEach((feature) => {
+            combinedSource.addFeature(feature.clone());
+          });
+        });
+
+        this.snap = new Snap({
+          source: combinedSource,
+          edge: true,
+          vertex: true,
+          pixelTolerance: 15,
+        });
+        window.map.addInteraction(this.snap);
+      }
+    }
   };
 
   // POINTER MOVE HANDLER
@@ -444,6 +488,10 @@ class Measure extends Component {
 
     // CLEAN UP
     window.map.removeInteraction(this.draw);
+    if (this.snap !== null) {
+      window.map.removeInteraction(this.snap);
+      this.snap = null;
+    }
     if (this.source !== undefined) this.source.clear();
 
     window.map.removeLayer(this.vectorLayer);
@@ -459,6 +507,10 @@ class Measure extends Component {
 
   reset = () => {
     window.map.removeInteraction(this.draw);
+    if (this.snap !== null) {
+      window.map.removeInteraction(this.snap);
+      this.snap = null;
+    }
     if (this.source !== undefined) this.source.clear();
 
     this.vectorLayer.getSource().clear();
@@ -492,6 +544,41 @@ class Measure extends Component {
     this.setState({ hideTooltips: evt.target.checked });
   };
 
+  onSnappingCheckboxChange = (evt) => {
+    const enableSnapping = evt.target.checked;
+    this.setState({ enableSnapping }, () => {
+      // Dynamically add or remove snap interaction
+      if (this.state.activeTool) {
+        if (enableSnapping) {
+          // Add snap interaction
+          const snapSources = this.getVisibleVectorSources();
+          if (snapSources.length > 0) {
+            const combinedSource = new VectorSource();
+            snapSources.forEach((source) => {
+              source.getFeatures().forEach((feature) => {
+                combinedSource.addFeature(feature.clone());
+              });
+            });
+
+            this.snap = new Snap({
+              source: combinedSource,
+              edge: true,
+              vertex: true,
+              pixelTolerance: 15,
+            });
+            window.map.addInteraction(this.snap);
+          }
+        } else {
+          // Remove snap interaction
+          if (this.snap !== null) {
+            window.map.removeInteraction(this.snap);
+            this.snap = null;
+          }
+        }
+      }
+    });
+  };
+
   addToMyMaps = (feature, label) => {
     // ADD MYMAPS
     window.emitter.emit("addMyMapsFeature", feature, label);
@@ -510,8 +597,10 @@ class Measure extends Component {
           {/* BUTTON BAR */}
           <div className="sc-measure-title">Measure Tools</div>
           <div className="sc-measure-tooltip-message-container">
+            {"Snapping"}
+            <input style={{ position: "relative", top: "2px", marginRight: "10px" }} type="checkbox" onChange={this.onSnappingCheckboxChange} checked={this.state.enableSnapping} />
             {"Hide Tooltips"}
-            <input style={{ position: "relative", top: "2px" }} type="checkbox" onChange={this.onTooltipCheckboxChange} value={this.state.hideTooltips} />
+            <input style={{ position: "relative", top: "2px" }} type="checkbox" onChange={this.onTooltipCheckboxChange} checked={this.state.hideTooltips} />
           </div>
 
           <div key={helpers.getUID()} className="sc-measure-button-bar">
@@ -659,6 +748,4 @@ class MeasureResult extends Component {
 
 // IMPORT ALL IMAGES
 import { createImagesObject } from "../../../../helpers/imageHelper";
-const images = createImagesObject(
-  import.meta.glob('./images/*.{png,jpg,jpeg,svg,gif}', { eager: true, query: '?url', import: 'default' })
-);
+const images = createImagesObject(import.meta.glob("./images/*.{png,jpg,jpeg,svg,gif}", { eager: true, query: "?url", import: "default" }));
