@@ -231,7 +231,7 @@ class MyMaps extends Component {
     if (drawType === "Eraser") return;
 
     if (drawType === "Rectangle") drawType = "Circle";
-    else if (drawType === "Arrow" || drawType === "Bearing" || drawType === "Measure") drawType = "LineString";
+    else if (drawType === "Arrow" || drawType === "Bearing" || drawType === "Measure" || drawType === "Callout") drawType = "LineString";
     else if (drawType === "Text") drawType = "Point";
 
     // ACTIVE TOOLTIP
@@ -248,7 +248,7 @@ class MyMaps extends Component {
       type: drawType,
       geometryFunction: this.state.drawType === "Rectangle" ? createBox() : undefined,
       style: this.state.drawType !== "Point" ? pointStyle : this.state.drawStyle,
-      maxPoints: this.state.drawType === "Bearing" || this.state.drawType === "Measure" ? 2 : undefined,
+      maxPoints: this.state.drawType === "Bearing" || this.state.drawType === "Measure" || this.state.drawType === "Callout" ? 2 : undefined,
     });
 
     // END DRAWING
@@ -363,6 +363,8 @@ class MyMaps extends Component {
     if (this.state.drawType === "Measure") labelText = this.length;
     // GIVE TEXT A CUSTOM MESSAGE
     if (this.state.drawType === "Text") labelText = "Enter Custom Text";
+    // GIVE CALLOUT A CUSTOM MESSAGE
+    if (this.state.drawType === "Callout") labelText = "Enter Callout Text";
 
     let customStyle = null;
     if (!fromEmmiter) {
@@ -378,6 +380,12 @@ class MyMaps extends Component {
         labelText = "Enter Custom Text";
         customStyle = drawingHelpers.getDefaultDrawStyle({ drawColor: this.state.drawColor, isText: true, geometryType: feature.getGeometry().getType() });
         feature.setStyle(customStyle);
+      } else if (this.state.drawType === "Callout") {
+        labelText = "Enter Callout Text";
+        // Callout uses a line style for the tail - store a regular style for serialization
+        // The actual rendering style function will be applied via setFeatureLabel
+        customStyle = drawingHelpers.getDefaultDrawStyle({ drawColor: this.state.drawColor, geometryType: "LineString" });
+        feature.setStyle(drawingHelpers.getCalloutStyle({ drawColor: this.state.drawColor }));
       } else {
         customStyle = drawingHelpers.getDefaultDrawStyle({ drawColor: this.state.drawColor, geometryType: feature.getGeometry().getType() });
         feature.setStyle(customStyle);
@@ -404,8 +412,8 @@ class MyMaps extends Component {
     const itemInfo = {
       id: featureId,
       label: labelText,
-      labelVisible: this.state.drawType === "Text" || this.state.drawType === "Bearing" || this.state.drawType === "Measure" ? true : false,
-      labelStyle: null,
+      labelVisible: this.state.drawType === "Text" || this.state.drawType === "Callout" || this.state.drawType === "Bearing" || this.state.drawType === "Measure" ? true : false,
+      labelStyle: drawingHelpers.getDefaultLabelStyle(this.state.drawType),
       labelRotation: this.state.drawType === "Bearing" || this.state.drawType === "Measure" ? (this.bearing > 180 ? this.bearing + 90 : this.bearing - 90) : 0,
       featureGeoJSON: helpers.featureToGeoJson(feature),
       style: customStyle === null ? this.state.drawStyle : customStyle,
@@ -428,8 +436,8 @@ class MyMaps extends Component {
         // UPDATE FEATURE LABEL
         drawingHelpers.setFeatureLabel(itemInfo);
 
-        // SHOW POPUP IF WE'RE ADDING TEXT
-        if (itemInfo.drawType === "Text") this.showDrawingOptionsPopup(feature);
+        // SHOW POPUP IF WE'RE ADDING TEXT OR CALLOUT
+        if (itemInfo.drawType === "Text" || itemInfo.drawType === "Callout") this.showDrawingOptionsPopup(feature);
       }
     );
 
@@ -479,8 +487,8 @@ class MyMaps extends Component {
     })[0];
 
     // IF WE HAVE A REF TO A POPUP, SEND THE UPDATE
-    if (this.popupRef !== undefined) {
-      this.popupRef.parentLabelChanged(itemInfo, label);
+    if (this.popupRef && this.popupRef.current) {
+      this.popupRef.current.parentLabelChange(itemInfo, label);
     }
 
     this.setState(
@@ -554,16 +562,32 @@ class MyMaps extends Component {
 
   // LABEL VISIBILITY CHECKBOX FROM POPUP
   onLabelVisibilityChange = (itemId, visible) => {
-    if (this.popupRef !== undefined) {
-      const item = this.state.items.filter((item) => {
-        return item.id === itemId;
-      })[0];
-      this.popupRef.parentLabelVisibleChanged(item, visible);
-    }
-
     this.setState(
       {
         items: this.state.items.map((item) => (item.id === itemId ? Object.assign({}, item, { labelVisible: visible }) : item)),
+      },
+      () => {
+        const item = this.state.items.filter((item) => {
+          return item.id === itemId;
+        })[0];
+
+        // Update the popup with the new item
+        if (this.popupRef && this.popupRef.current) {
+          this.popupRef.current.parentLabelVisibleChanged(item, visible);
+        }
+
+        drawingHelpers.setFeatureLabel(item);
+        this.saveStateToStorage();
+        this.importGeometries();
+      }
+    );
+  };
+
+  // LABEL STYLE CHANGE FROM POPUP
+  onLabelStyleChange = (itemId, labelStyle) => {
+    this.setState(
+      {
+        items: this.state.items.map((item) => (item.id === itemId ? Object.assign({}, item, { labelStyle: { ...item.labelStyle, ...labelStyle } }) : item)),
       },
       () => {
         const item = this.state.items.filter((item) => {
@@ -581,12 +605,26 @@ class MyMaps extends Component {
   importGeometries = () => {
     this.vectorLayer.getSource().clear();
     this.state.items.forEach((item) => {
-      const style = drawingHelpers.getStyleFromJSON(item.style, item.pointType);
       let feature = helpers.getFeatureFromGeoJSON(item.featureGeoJSON);
 
       // VISIBILITY
-      if (item.visible) feature.setStyle(style);
-      else feature.setStyle(new Style({}));
+      if (item.visible) {
+        // Use callout style for Callout items, otherwise use regular style
+        if (item.drawType === "Callout") {
+          const labelStyle = item.labelStyle || drawingHelpers.getDefaultLabelStyle(item.drawType);
+          feature.setStyle(
+            drawingHelpers.getCalloutStyle({
+              lineColor: labelStyle.lineColor,
+              anchorColor: labelStyle.anchorColor,
+            })
+          );
+        } else {
+          const style = drawingHelpers.getStyleFromJSON(item.style, item.pointType);
+          feature.setStyle(style);
+        }
+      } else {
+        feature.setStyle(new Style({}));
+      }
 
       this.vectorLayer.getSource().addFeature(feature);
 
@@ -730,15 +768,17 @@ class MyMaps extends Component {
       if (geom === undefined) return;
       helpers.getGeometryCenter(geom, (featureCenter) => {
         window.popup.hide(); // SHOW POPUP
+        this.popupRef = React.createRef();
         window.popup.show(
           featureCenter.flatCoordinates,
           <MyMapsPopup
             key={helpers.getUID()}
             activeTool={activeTool}
-            onRef={(ref) => (this.popupRef = ref)}
+            ref={this.popupRef}
             item={item}
             onLabelChange={this.onLabelChange}
             onLabelVisibilityChange={this.onLabelVisibilityChange}
+            onLabelStyleChange={this.onLabelStyleChange}
             onLabelRotationChange={this.onLabelRotationChange}
             onFooterToolsButtonClick={this.onFooterToolsButtonClick}
             onDeleteButtonClick={this.onItemDelete}
@@ -765,15 +805,17 @@ class MyMaps extends Component {
       center = evt.coordinate;
       window.popup.hide();
       // SHOW POPUP
+      this.popupRef = React.createRef();
       window.popup.show(
         center,
         <MyMapsPopup
           key={helpers.getUID()}
           activeTool={activeTool}
-          onRef={(ref) => (this.popupRef = ref)}
+          ref={this.popupRef}
           item={item}
           onLabelChange={this.onLabelChange}
           onLabelVisibilityChange={this.onLabelVisibilityChange}
+          onLabelStyleChange={this.onLabelStyleChange}
           onLabelRotationChange={this.onLabelRotationChange}
           onFooterToolsButtonClick={this.onFooterToolsButtonClick}
           onDeleteButtonClick={this.onItemDelete}
@@ -1068,8 +1110,21 @@ class MyMaps extends Component {
             return item.id === feature.get("id");
           })[0];
 
-          if (visible) feature.setStyle(drawingHelpers.getStyleFromJSON(item.style, item.pointType));
-          else feature.setStyle(new Style({}));
+          if (visible) {
+            if (item.drawType === "Callout") {
+              const labelStyle = item.labelStyle || drawingHelpers.getDefaultLabelStyle(item.drawType);
+              feature.setStyle(
+                drawingHelpers.getCalloutStyle({
+                  lineColor: labelStyle.lineColor,
+                  anchorColor: labelStyle.anchorColor,
+                })
+              );
+            } else {
+              feature.setStyle(drawingHelpers.getStyleFromJSON(item.style, item.pointType));
+            }
+          } else {
+            feature.setStyle(new Style({}));
+          }
 
           drawingHelpers.setFeatureLabel(item);
           this.updateItemVisibility(item, visible);
@@ -1126,7 +1181,17 @@ class MyMaps extends Component {
       const id = feature.getProperties().id;
       if (id === itemInfo.id) {
         if (visible) {
-          feature.setStyle(drawingHelpers.getStyleFromJSON(itemInfo.style, itemInfo.pointType));
+          if (itemInfo.drawType === "Callout") {
+            const labelStyle = itemInfo.labelStyle || drawingHelpers.getDefaultLabelStyle(itemInfo.drawType);
+            feature.setStyle(
+              drawingHelpers.getCalloutStyle({
+                lineColor: labelStyle.lineColor,
+                anchorColor: labelStyle.anchorColor,
+              })
+            );
+          } else {
+            feature.setStyle(drawingHelpers.getStyleFromJSON(itemInfo.style, itemInfo.pointType));
+          }
           drawingHelpers.setFeatureLabel(itemInfo);
         } else feature.setStyle(new Style({}));
 
@@ -1139,8 +1204,21 @@ class MyMaps extends Component {
     this.vectorSource.getFeatures().forEach((feature) => {
       const id = feature.getProperties().id;
       if (id === itemInfo.id) {
-        if (visible) feature.setStyle(drawingHelpers.getStyleFromJSON(itemInfo.style, itemInfo.pointType));
-        else feature.setStyle(new Style({}));
+        if (visible) {
+          if (itemInfo.drawType === "Callout") {
+            const labelStyle = itemInfo.labelStyle || drawingHelpers.getDefaultLabelStyle(itemInfo.drawType);
+            feature.setStyle(
+              drawingHelpers.getCalloutStyle({
+                lineColor: labelStyle.lineColor,
+                anchorColor: labelStyle.anchorColor,
+              })
+            );
+          } else {
+            feature.setStyle(drawingHelpers.getStyleFromJSON(itemInfo.style, itemInfo.pointType));
+          }
+        } else {
+          feature.setStyle(new Style({}));
+        }
 
         return;
       }

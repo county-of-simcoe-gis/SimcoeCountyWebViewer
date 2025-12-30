@@ -49,7 +49,7 @@ function MyMapsPopupLabel(props) {
   return (
     <div>
       <div className="sc-mymaps-popup-label-toggler">
-        <div className={props.item.drawType === "Text" ? "sc-mymaps-popup-checkbox disabled" : "sc-mymaps-popup-checkbox"}>
+        <div className={props.item.drawType === "Text" || props.item.drawType === "Callout" ? "sc-mymaps-popup-checkbox disabled" : "sc-mymaps-popup-checkbox"}>
           <label
             style={{
               WebkitTouchCallout: "none",

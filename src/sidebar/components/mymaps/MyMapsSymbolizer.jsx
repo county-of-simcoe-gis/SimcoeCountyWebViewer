@@ -4,7 +4,11 @@ import * as helpers from "../../../helpers/helpers";
 import * as drawingHelpers from "../../../helpers/drawingHelpers";
 import "./MyMapsSymbolizer.css";
 import ColorPicker from "./ColorPicker";
-import { PointType, StyleSize, FillColor, StrokeType, StrokeColor, StrokeWidth, Rotation } from "./MyMapsSymbolizerComponents";
+import { 
+  PointType, StyleSize, FillColor, StrokeType, StrokeColor, StrokeWidth, Rotation,
+  LabelTextColor, LabelFontSize, LabelOutlineColor, LabelOutlineWidth, 
+  CalloutBackgroundColor, CalloutBorderColor, CalloutLineColor, CalloutAnchorColor 
+} from "./MyMapsSymbolizerComponents";
 
 class MyMapsSymbolizer extends Component {
   constructor(props) {
@@ -58,6 +62,9 @@ class MyMapsSymbolizer extends Component {
     const pointType = this.props.item.pointType !== undefined ? this.props.item.pointType : "circle";
     const strokeType = this.props.item.strokeType !== undefined ? this.props.item.strokeType : "normal";
 
+    // Get label style from item or use defaults
+    const labelStyle = this.props.item.labelStyle || drawingHelpers.getDefaultLabelStyle(this.props.item.drawType);
+
     this.state = {
       fillColorPickerVisible: false,
       selectedPointStyleDropDown: pointType,
@@ -81,6 +88,16 @@ class MyMapsSymbolizer extends Component {
       fillAlpha: fillColor[3],
       radius: this.props.item.style !== null && this.props.item.style.image_ !== null ? this.props.item.style.image_.radius_ : 0,
       rotation: this.props.item.style !== null && this.props.item.style.image_ !== null ? this.props.item.style.image_.rotation_ : 0,
+      // Label style state
+      textColor: labelStyle.textColor || "#000000",
+      textSize: labelStyle.textSize || "14px",
+      labelOutlineColor: labelStyle.outlineColor || "#000000",
+      labelOutlineWidth: labelStyle.outlineWidth || 1,
+      // Callout-specific
+      backgroundColor: labelStyle.backgroundColor || "rgba(255, 255, 255, 0.95)",
+      borderColor: labelStyle.borderColor || "#333333",
+      lineColor: labelStyle.lineColor || "#333333",
+      anchorColor: labelStyle.anchorColor || "#333333",
     };
   }
 
@@ -330,6 +347,86 @@ class MyMapsSymbolizer extends Component {
     colorPicker.show();
   };
 
+  // LABEL STYLE HANDLERS
+  onTextColorChange = (color) => {
+    this.setState({ textColor: color.hex });
+    this.props.onLabelStyleChange && this.props.onLabelStyleChange(this.props.item.id, { textColor: color.hex });
+  };
+
+  onTextColorPickerButton = (evt) => {
+    const compactPicker = <CompactPicker color={this.state.textColor} onChangeComplete={this.onTextColorChange} />;
+    const colorPicker = new ColorPicker(evt, compactPicker, "sc-mymaps-text-color-picker");
+    colorPicker.show();
+  };
+
+  onFontSizeChange = (evt) => {
+    const newSize = evt.target.value;
+    this.setState({ textSize: newSize });
+    this.props.onLabelStyleChange && this.props.onLabelStyleChange(this.props.item.id, { textSize: newSize });
+  };
+
+  onLabelOutlineColorChange = (color) => {
+    this.setState({ labelOutlineColor: color.hex });
+    this.props.onLabelStyleChange && this.props.onLabelStyleChange(this.props.item.id, { outlineColor: color.hex });
+  };
+
+  onLabelOutlineColorPickerButton = (evt) => {
+    const compactPicker = <CompactPicker color={this.state.labelOutlineColor} onChangeComplete={this.onLabelOutlineColorChange} />;
+    const colorPicker = new ColorPicker(evt, compactPicker, "sc-mymaps-label-outline-color-picker");
+    colorPicker.show();
+  };
+
+  onLabelOutlineWidthChange = (evt) => {
+    const width = parseFloat(evt.target.value);
+    this.setState({ labelOutlineWidth: width });
+    this.props.onLabelStyleChange && this.props.onLabelStyleChange(this.props.item.id, { outlineWidth: width });
+  };
+
+  // CALLOUT-SPECIFIC HANDLERS
+  onBackgroundColorChange = (color) => {
+    this.setState({ backgroundColor: color.hex });
+    this.props.onLabelStyleChange && this.props.onLabelStyleChange(this.props.item.id, { backgroundColor: color.hex });
+  };
+
+  onBackgroundColorPickerButton = (evt) => {
+    const compactPicker = <CompactPicker color={this.state.backgroundColor} onChangeComplete={this.onBackgroundColorChange} />;
+    const colorPicker = new ColorPicker(evt, compactPicker, "sc-mymaps-bg-color-picker");
+    colorPicker.show();
+  };
+
+  onBorderColorChange = (color) => {
+    this.setState({ borderColor: color.hex });
+    this.props.onLabelStyleChange && this.props.onLabelStyleChange(this.props.item.id, { borderColor: color.hex });
+  };
+
+  onBorderColorPickerButton = (evt) => {
+    const compactPicker = <CompactPicker color={this.state.borderColor} onChangeComplete={this.onBorderColorChange} />;
+    const colorPicker = new ColorPicker(evt, compactPicker, "sc-mymaps-border-color-picker");
+    colorPicker.show();
+  };
+
+  onLineColorChange = (color) => {
+    this.setState({ lineColor: color.hex });
+    this.props.onLabelStyleChange && this.props.onLabelStyleChange(this.props.item.id, { lineColor: color.hex });
+  };
+
+  onLineColorPickerButton = (evt) => {
+    const compactPicker = <CompactPicker color={this.state.lineColor} onChangeComplete={this.onLineColorChange} />;
+    const colorPicker = new ColorPicker(evt, compactPicker, "sc-mymaps-line-color-picker");
+    colorPicker.show();
+  };
+
+  onAnchorColorChange = (color) => {
+    this.setState({ anchorColor: color.hex });
+    this.props.onLabelStyleChange && this.props.onLabelStyleChange(this.props.item.id, { anchorColor: color.hex });
+  };
+
+  onAnchorColorPickerButton = (evt) => {
+    const compactPicker = <CompactPicker color={this.state.anchorColor} onChangeComplete={this.onAnchorColorChange} />;
+    const colorPicker = new ColorPicker(evt, compactPicker, "sc-mymaps-anchor-color-picker");
+    colorPicker.show();
+  };
+
   render() {
     // ADJUST THE COLOR FOR HTML
     const rgbFill = "rgb(" + this.state.fillColor.r + "," + this.state.fillColor.g + "," + this.state.fillColor.b + ")";
@@ -410,6 +507,78 @@ class MyMapsSymbolizer extends Component {
             rotation={this.state.rotation}
             onRotationSliderChange={this.onRotationSliderChange}
           />
+
+          {/* LABEL STYLE SECTION - only show when label is visible */}
+          {this.props.item.labelVisible && (
+            <>
+              <div className="sc-mymaps-symbolizer-divider">Label Style</div>
+              
+              {/* Text Color */}
+              <LabelTextColor
+                visible={true}
+                colorPickerButtonId="sc-mymaps-text-color-picker"
+                textColor={this.state.textColor}
+                onTextColorPickerButton={this.onTextColorPickerButton}
+              />
+
+              {/* Font Size */}
+              <LabelFontSize
+                visible={true}
+                fontSize={this.state.textSize}
+                onFontSizeChange={this.onFontSizeChange}
+              />
+
+              {/* Label Outline Color */}
+              <LabelOutlineColor
+                visible={true}
+                colorPickerButtonId="sc-mymaps-label-outline-color-picker"
+                outlineColor={this.state.labelOutlineColor}
+                onOutlineColorPickerButton={this.onLabelOutlineColorPickerButton}
+              />
+
+              {/* Label Outline Width */}
+              <LabelOutlineWidth
+                visible={true}
+                outlineWidth={this.state.labelOutlineWidth}
+                onOutlineWidthChange={this.onLabelOutlineWidthChange}
+              />
+
+              {/* Callout-specific controls */}
+              {this.props.item.drawType === "Callout" && (
+                <>
+                  <div className="sc-mymaps-symbolizer-divider">Callout Style</div>
+                  
+                  <CalloutBackgroundColor
+                    visible={true}
+                    colorPickerButtonId="sc-mymaps-bg-color-picker"
+                    backgroundColor={this.state.backgroundColor}
+                    onBackgroundColorPickerButton={this.onBackgroundColorPickerButton}
+                  />
+
+                  <CalloutBorderColor
+                    visible={true}
+                    colorPickerButtonId="sc-mymaps-border-color-picker"
+                    borderColor={this.state.borderColor}
+                    onBorderColorPickerButton={this.onBorderColorPickerButton}
+                  />
+
+                  <CalloutLineColor
+                    visible={true}
+                    colorPickerButtonId="sc-mymaps-line-color-picker"
+                    lineColor={this.state.lineColor}
+                    onLineColorPickerButton={this.onLineColorPickerButton}
+                  />
+
+                  <CalloutAnchorColor
+                    visible={true}
+                    colorPickerButtonId="sc-mymaps-anchor-color-picker"
+                    anchorColor={this.state.anchorColor}
+                    onAnchorColorPickerButton={this.onAnchorColorPickerButton}
+                  />
+                </>
+              )}
+            </>
+          )}
         </div>
       </div>
     );

@@ -6,6 +6,385 @@ import { FeatureHelpers, LayerHelpers, OL_DATA_TYPES } from "../../../../../help
 import * as drawingHelpers from "../../../../../helpers/drawingHelpers";
 import { Vector as VectorLayer, Tile as TileLayer, Image as ImageLayer, Group as LayerGroup } from "ol/layer.js";
 
+// =============================================================================
+// GENERIC STYLE-TO-MAPFISH CONVERSION HELPERS
+// These functions provide a generic way to convert OpenLayers styles to MapFish
+// Print format without requiring special cases for each feature type.
+// =============================================================================
+
+/**
+ * Looks up a font name in the print config, returns default if not found
+ */
+const lookupFont = (font) => {
+  if (!font) return printConfig.fonts[0];
+  const foundFont = printConfig.fonts.find((item) => font.toLowerCase() === item.toLowerCase());
+  return foundFont || printConfig.fonts[0];
+};
+
+/**
+ * Converts an OpenLayers color (array or string) to hex format
+ */
+const colorToHex = (color) => {
+  if (!color) return null;
+  if (Array.isArray(color)) return utils.rgbToHex(...color);
+  return color;
+};
+
+/**
+ * Gets opacity from an OpenLayers color
+ */
+const colorToOpacity = (color) => {
+  if (!color) return 1;
+  if (Array.isArray(color)) return color[3] !== undefined ? color[3] : 1;
+  return asArray(color)[3];
+};
+
+/**
+ * Extracts all visual components from an OpenLayers style or style function.
+ * Returns an array of { geometry, style, type } objects representing each
+ * distinct visual element that needs to be rendered.
+ *
+ * @param {Feature} feature - The OpenLayers feature
+ * @param {Style|Function|null} featureStyle - The feature's style
+ * @param {Style|null} layerStyle - Fallback layer style
+ * @returns {Array<{geometry: Geometry, style: Style, type: string}>}
+ */
+const extractVisualComponents = (feature, featureStyle, layerStyle) => {
+  const components = [];
+  const featureGeometry = feature.getGeometry();
+
+  // Resolve style function if needed
+  let resolvedStyles = [];
+  if (typeof featureStyle === "function") {
+    const result = featureStyle(feature);
+    resolvedStyles = Array.isArray(result) ? result : result ? [result] : [];
+  } else if (featureStyle) {
+    resolvedStyles = [featureStyle];
+  } else if (layerStyle) {
+    resolvedStyles = [layerStyle];
+  }
+
+  // Process each style in the array
+  resolvedStyles.forEach((style, index) => {
+    if (!style) return;
+
+    // Determine the geometry for this style component
+    // Some styles have custom geometries (e.g., anchor points at specific locations)
+    let geometry = featureGeometry;
+    if (style.getGeometry && typeof style.getGeometry === "function") {
+      const customGeom = style.getGeometry();
+      if (customGeom && typeof customGeom === "function") {
+        geometry = customGeom(feature);
+      } else if (customGeom) {
+        geometry = customGeom;
+      }
+    }
+
+    // Determine what type of visual this style represents
+    let visualType = "shape"; // default
+    if (style.getText && style.getText()) {
+      visualType = "text";
+    } else if (style.getImage && style.getImage() && geometry !== featureGeometry) {
+      visualType = "marker"; // Point marker with custom geometry (like callout anchor)
+    }
+
+    components.push({
+      geometry,
+      style,
+      type: visualType,
+      isCustomGeometry: geometry !== featureGeometry,
+    });
+  });
+
+  return components;
+};
+
+/**
+ * Converts an OpenLayers Fill to MapFish symbolizer properties
+ */
+const fillToSymbolizer = (olFill) => {
+  if (!olFill) return {};
+  const color = olFill.getColor ? olFill.getColor() : null;
+  if (!color) return {};
+  return {
+    fillColor: colorToHex(color),
+    fillOpacity: colorToOpacity(color),
+  };
+};
+
+/**
+ * Converts an OpenLayers Stroke to MapFish symbolizer properties
+ */
+const strokeToSymbolizer = (olStroke) => {
+  if (!olStroke) return {};
+  const color = olStroke.getColor ? olStroke.getColor() : null;
+  const width = olStroke.getWidth ? olStroke.getWidth() : null;
+  const lineDash = olStroke.getLineDash ? olStroke.getLineDash() : null;
+
+  const result = {};
+  if (color) {
+    result.strokeColor = colorToHex(color);
+    result.strokeOpacity = colorToOpacity(color);
+  }
+  if (width !== null) {
+    result.strokeWidth = width;
+  }
+  if (lineDash) {
+    result.strokeDashstyle = lineDash[0] === 1 ? "dot" : "dash";
+    result.strokeLinejoin = "round";
+    result.strokeLinecap = "round";
+  }
+  return result;
+};
+
+/**
+ * Converts an OpenLayers Text style to MapFish text symbolizer
+ */
+const textToSymbolizer = (olText, options = {}) => {
+  if (!olText || !olText.getText || !olText.getText()) return null;
+
+  const fontString = olText.getFont ? olText.getFont() : "normal 12px Arial";
+  const font = (fontString || "normal 12px Arial").split(" ");
+  const textFill = olText.getFill ? olText.getFill() : null;
+  const textStroke = olText.getStroke ? olText.getStroke() : null;
+  const textAlign = olText.getTextAlign ? olText.getTextAlign() : "center";
+  const textBaseline = olText.getTextBaseline ? olText.getTextBaseline() : "middle";
+
+  let textFillColor = textFill && textFill.getColor ? colorToHex(textFill.getColor()) : "#000000";
+  let strokeColor = textStroke && textStroke.getColor ? colorToHex(textStroke.getColor()) : "#000000";
+
+  // Handle white/light text for print readability
+  let useStrokeAsFill = false;
+  if (textFillColor) {
+    const colorStr = String(textFillColor).toLowerCase();
+    if (colorStr === "#ffffff" || colorStr === "#fff" || colorStr === "white") {
+      useStrokeAsFill = true;
+      textFillColor = strokeColor || "#000000";
+    }
+  }
+
+  // Scale font size for print - convert pixels to smaller print-appropriate size
+  // Screen is typically 96 DPI, print is higher, so we scale down
+  let fontSize = font.length >= 2 ? font[1] : "12px";
+  const fontSizeMatch = String(fontSize).match(/^(\d+(?:\.\d+)?)(px|pt)?$/i);
+  if (fontSizeMatch) {
+    const sizeValue = parseFloat(fontSizeMatch[1]);
+    const unit = (fontSizeMatch[2] || "px").toLowerCase();
+    // Scale factor to make print text similar size to screen
+    const scaleFactor = 0.6;
+    const scaledSize = unit === "px" ? Math.round(sizeValue * scaleFactor) : sizeValue;
+    fontSize = `${scaledSize}px`;
+  }
+
+  const symbolizer = {
+    type: "text",
+    fontFamily: font.length >= 3 ? lookupFont(font[2]) : "Arial",
+    fontSize: fontSize,
+    fontStyle: "normal",
+    fontWeight: font.length >= 1 ? font[0] : "normal",
+    label: olText.getText(),
+    fontColor: textFillColor,
+    labelAlign: `${(textAlign || "center").substring(0, 1)}${(textBaseline || "middle").substring(0, 1)}`,
+    labelRotation: drawingHelpers._degrees(olText.getRotation ? olText.getRotation() || 0 : 0),
+    labelXOffset: (olText.getOffsetX ? olText.getOffsetX() || 0 : 0) * -1,
+    labelYOffset: (olText.getOffsetY ? olText.getOffsetY() || 0 : 0) * -1,
+    goodnessOfFit: 0,
+  };
+
+  // Add halo for readability
+  if (useStrokeAsFill) {
+    symbolizer.haloColor = "#ffffff";
+    symbolizer.haloOpacity = 0.9;
+    symbolizer.haloRadius = 2;
+  } else if (textStroke && textStroke.getWidth && textStroke.getWidth() > 1 && !options.skipHalo) {
+    symbolizer.haloColor = strokeColor;
+    symbolizer.haloOpacity = 0.4;
+    symbolizer.haloRadius = Math.min(1.5, Number(textStroke.getWidth()) * 0.3);
+  }
+
+  return symbolizer;
+};
+
+/**
+ * Converts an OpenLayers Circle/RegularShape image to MapFish point symbolizer
+ */
+const circleImageToSymbolizer = (olImage) => {
+  if (!olImage) return null;
+
+  const symbolizer = {
+    type: "point",
+    graphicName: "circle",
+  };
+
+  if (olImage.getRadius) {
+    symbolizer.pointRadius = olImage.getRadius();
+  }
+
+  const fill = olImage.getFill ? olImage.getFill() : null;
+  const stroke = olImage.getStroke ? olImage.getStroke() : null;
+
+  if (fill && fill.getColor) {
+    const color = fill.getColor();
+    symbolizer.fillColor = colorToHex(color);
+    symbolizer.fillOpacity = colorToOpacity(color);
+  }
+
+  if (stroke && stroke.getColor) {
+    const color = stroke.getColor();
+    symbolizer.strokeColor = colorToHex(color);
+    symbolizer.strokeWidth = stroke.getWidth ? stroke.getWidth() : 1;
+    symbolizer.strokeOpacity = colorToOpacity(color);
+  }
+
+  return symbolizer;
+};
+
+/**
+ * Converts an OpenLayers Icon image to MapFish symbolizer
+ */
+const iconImageToSymbolizer = (olImage) => {
+  if (!olImage || !olImage.getSrc) return null;
+
+  const iconSrc = olImage.getSrc();
+  if (!iconSrc) return null;
+
+  return {
+    type: "point",
+    rotation: parseFloat(olImage.getRotation ? olImage.getRotation() : 0) * (180 / Math.PI),
+    externalGraphic: iconSrc,
+    graphicName: "icon",
+    graphicOpacity: olImage.getOpacity ? olImage.getOpacity() : 1,
+  };
+};
+
+/**
+ * Creates a MapFish GeoJSON layer from geometry, symbolizers, and properties
+ */
+const createGeoJsonLayer = (layerName, featureId, geometry, symbolizers, properties = {}) => {
+  const geojsonType = geometry.getType();
+  let coordinates;
+
+  // Convert OL geometry to GeoJSON coordinates
+  if (geojsonType === "Point") {
+    coordinates = geometry.getCoordinates();
+  } else if (geojsonType === "LineString") {
+    coordinates = geometry.getCoordinates();
+  } else if (geojsonType === "Polygon") {
+    coordinates = geometry.getCoordinates();
+  } else if (geojsonType === "MultiPoint") {
+    coordinates = geometry.getCoordinates();
+  } else if (geojsonType === "MultiLineString") {
+    coordinates = geometry.getCoordinates();
+  } else if (geojsonType === "MultiPolygon") {
+    coordinates = geometry.getCoordinates();
+  } else {
+    // Fallback for other types
+    coordinates = geometry.getCoordinates();
+  }
+
+  const styleObj = { version: "2" };
+  styleObj["*"] = { symbolizers };
+
+  return {
+    type: "geojson",
+    geoJson: {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          geometry: {
+            type: geojsonType,
+            coordinates,
+          },
+          properties,
+        },
+      ],
+    },
+    name: `${layerName}-${featureId}`,
+    style: styleObj,
+  };
+};
+
+/**
+ * Creates a text background box layer (for labels with backgrounds)
+ */
+const createTextBackgroundLayer = (layerName, featureId, centerPoint, textContent, textStyle) => {
+  if (!textStyle) return null;
+
+  const bgFill = textStyle.getBackgroundFill ? textStyle.getBackgroundFill() : null;
+  const bgStroke = textStyle.getBackgroundStroke ? textStyle.getBackgroundStroke() : null;
+
+  // Only create background if there's a background fill
+  if (!bgFill) return null;
+
+  const fontString = textStyle.getFont ? textStyle.getFont() : "14px Arial";
+  const fontSizeMatch = fontString.match(/(\d+)px/);
+  let fontSizeNum = fontSizeMatch ? parseInt(fontSizeMatch[1]) : 14;
+
+  // Apply same scaling factor as text (must match textToSymbolizer scaleFactor)
+  const scaleFactor = 0.6;
+  const scaledFontSize = Math.round(fontSizeNum * scaleFactor);
+
+  // Calculate box dimensions - use wider character width for bold text
+  const charWidth = scaledFontSize * 0.65;
+  const textWidthPx = textContent.length * charWidth;
+  const textHeightPx = scaledFontSize * 1.4;
+  const paddingPx = 20;
+  const boxWidthPx = textWidthPx + paddingPx * 2;
+  const boxHeightPx = textHeightPx + paddingPx;
+
+  // Convert pixels to meters (EPSG:3857)
+  const resolution = window.map ? window.map.getView().getResolution() : 1;
+  const boxWidthMeters = boxWidthPx * resolution;
+  const boxHeightMeters = boxHeightPx * resolution;
+
+  const halfW = boxWidthMeters / 2;
+  const halfH = boxHeightMeters / 2;
+  const boxCoords = [
+    [centerPoint[0] - halfW, centerPoint[1] - halfH],
+    [centerPoint[0] + halfW, centerPoint[1] - halfH],
+    [centerPoint[0] + halfW, centerPoint[1] + halfH],
+    [centerPoint[0] - halfW, centerPoint[1] + halfH],
+    [centerPoint[0] - halfW, centerPoint[1] - halfH],
+  ];
+
+  const bgFillColor = bgFill && bgFill.getColor ? colorToHex(bgFill.getColor()) : "#ffffff";
+  const bgStrokeColor = bgStroke && bgStroke.getColor ? colorToHex(bgStroke.getColor()) : "#333333";
+
+  const styleObj = { version: "2" };
+  styleObj["*"] = {
+    symbolizers: [
+      {
+        type: "polygon",
+        fillColor: bgFillColor,
+        fillOpacity: 0.95,
+        strokeColor: bgStrokeColor,
+        strokeWidth: 1,
+        strokeOpacity: 1,
+      },
+    ],
+  };
+
+  return {
+    type: "geojson",
+    geoJson: {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          geometry: {
+            type: "Polygon",
+            coordinates: [boxCoords],
+          },
+          properties: {},
+        },
+      ],
+    },
+    name: `${layerName}-${featureId}-bg`,
+    style: styleObj,
+  };
+};
+
 // ..........................................................................
 // Load Tile matrix and build out WMTS Object
 // ..........................................................................
@@ -52,7 +431,17 @@ export async function loadWMTSConfig(url, opacity) {
 
   return wmtsCongif;
 }
-//build vector layer
+/**
+ * Build vector layer for MapFish Print - GENERIC APPROACH
+ * This function processes ALL feature types uniformly by:
+ * 1. Extracting visual components from style (including style functions)
+ * 2. Converting each component to MapFish symbolizers using generic helpers
+ * 3. Creating separate layers for components with custom geometries
+ *
+ * NOTE: MapFish renders layers in REVERSE order from OpenLayers
+ * (MapFish: first = top, last = bottom; OpenLayers: first = bottom, last = top)
+ * So we reverse the feature layers at the end to maintain correct z-order.
+ */
 const buildVectorLayer = (layer, callback = undefined) => {
   let returnLayers = [];
   let olFeatures = [];
@@ -60,116 +449,167 @@ const buildVectorLayer = (layer, callback = undefined) => {
   layer.getSource().forEachFeatureInExtent(extent, function (feature) {
     olFeatures.push(feature);
   });
-  let olLayerStyle = layer.getStyle();
+  const olLayerStyle = layer.getStyle();
+  const layerName = layer.get("name") || "vector";
 
-  olFeatures.forEach((item) => {
-    let isHidden = false;
-    let styles = { version: "2" };
-    let itemSymbolizers = [];
-    const itemFilter = `*`;
-    let olStyle = item.getStyle();
-    if (olStyle === null || (olStyle.fill_ === null && olStyle.stroke_ === null && olStyle.text_ === null && olStyle.image_ === null)) {
-      isHidden = true;
-    } else if (olStyle.fill_ === undefined || olStyle.stroke_ === undefined || olStyle.text_ === undefined) {
-      olStyle = drawingHelpers.getDrawStyle({ drawColor: "#000000", opacity: 0 });
-      if (olLayerStyle.fill_ !== null && olLayerStyle.fill_ !== undefined) olStyle.setFill(olLayerStyle.getFill());
-      if (olLayerStyle.stroke_ !== null && olLayerStyle.stroke_ !== undefined) olStyle.setStroke(olLayerStyle.getStroke());
-      if (olLayerStyle.text_ !== null && olLayerStyle.text_ !== undefined) olStyle.setText(olLayerStyle.getText());
-      if (olLayerStyle.image_ !== null && olLayerStyle.image_ !== undefined) olStyle.setImage(olLayerStyle.getImage());
-    }
-    let olFill = olStyle && olStyle.fill_ !== null && olStyle.fill_ !== undefined ? olStyle.getFill() : null;
-    let olStroke = olStyle && olStyle.stroke_ !== null && olStyle.stroke_ !== undefined ? olStyle.getStroke() : null;
-    let olText = olStyle && olStyle.text_ !== null && olStyle.text_ !== undefined ? olStyle.getText() : null;
-    const olImage = olStyle && olStyle.image_ !== null && olStyle.image_ !== undefined ? olStyle.getImage() : null;
-    if (olFill === null && olImage !== null) {
-      olFill = olImage.fill_;
-    }
-    if (olStroke === null && olImage !== null) {
-      olStroke = olImage.stroke_;
-    }
-    if (olFill === null && olImage !== null) {
-      olText = olImage.text_;
-    }
-    let itemStrokeFill = {};
-    itemStrokeFill.type = printConfig.drawTypes[item.get("drawType")];
-    //if drawType is undefined try setting based on geometry type
-    if (itemStrokeFill.type === undefined) itemStrokeFill.type = printConfig.drawTypes[item.getGeometry().getType()];
-    //if unsupported geometry type, default to Polygon
-    if (itemStrokeFill.type === undefined) itemStrokeFill.type = "Polygon";
+  olFeatures.forEach((feature) => {
+    const featureId = feature.ol_uid;
+    const featureStyle = feature.getStyle();
+    const featureGeometry = feature.getGeometry();
+    const drawType = feature.get("drawType");
+    const labelText = feature.get("label") || "";
 
-    if (olFill) {
-      itemStrokeFill.fillColor = Array.isArray(olFill.color_) ? utils.rgbToHex(...olFill.color_) : olFill.color_;
-      itemStrokeFill.fillOpacity = Array.isArray(olFill.color_) ? olFill.color_[3] : asArray(olFill.color_)[3];
+    if (!featureGeometry) return;
+
+    // Extract all visual components from the style (handles style functions automatically)
+    const components = extractVisualComponents(feature, featureStyle, olLayerStyle);
+
+    if (components.length === 0) {
+      // No visible components - skip this feature
+      return;
     }
-    if (olStroke) {
-      itemStrokeFill.strokeColor = olStroke.color_ && Array.isArray(olStroke.color_) ? utils.rgbToHex(...olStroke.color_) : olStroke.color_;
-      itemStrokeFill.strokeOpacity = olStroke.color_ && Array.isArray(olStroke.color_) ? olStroke.color_[3] : asArray(olStroke.color_)[3];
-      itemStrokeFill.strokeWidth = olStroke.width_;
-      if (olStroke.lineDash_ !== undefined && olStroke.lineDash_ !== null) {
-        itemStrokeFill.strokeDashstyle = olStroke.lineDash_[0] === 1 ? "dot" : "dash";
-        itemStrokeFill.strokeLinejoin = "round";
-        itemStrokeFill.strokeLinecap = "round";
+
+    // Collect layers for this feature in OpenLayers order (bottom to top)
+    const featureLayers = [];
+
+    // Process each visual component generically
+    components.forEach((component, index) => {
+      const { geometry, style, type, isCustomGeometry } = component;
+      const symbolizers = [];
+      const suffix = isCustomGeometry ? `-${type}-${index}` : "";
+
+      // Extract fill/stroke from style
+      const olFill = style.getFill ? style.getFill() : null;
+      const olStroke = style.getStroke ? style.getStroke() : null;
+      const olText = style.getText ? style.getText() : null;
+      const olImage = style.getImage ? style.getImage() : null;
+
+      // Determine geometry type for MapFish
+      const geomType = geometry.getType();
+      let mapfishType = printConfig.drawTypes[drawType] || printConfig.drawTypes[geomType] || "Polygon";
+
+      // Build shape symbolizer (fill/stroke)
+      if (olFill || olStroke || olImage) {
+        const shapeSymbolizer = { type: mapfishType.toLowerCase() };
+
+        // Add fill properties
+        if (olFill) {
+          Object.assign(shapeSymbolizer, fillToSymbolizer(olFill));
+        }
+
+        // Add stroke properties
+        if (olStroke) {
+          Object.assign(shapeSymbolizer, strokeToSymbolizer(olStroke));
+        }
+
+        // Handle circle/marker images (for custom geometry points like anchors)
+        if (olImage && olImage.getRadius) {
+          const circleSymbolizer = circleImageToSymbolizer(olImage);
+          if (circleSymbolizer) {
+            symbolizers.push(circleSymbolizer);
+          }
+        }
+        // Handle icon images
+        else if (olImage && olImage.getSrc) {
+          const iconSymbolizer = iconImageToSymbolizer(olImage);
+          if (iconSymbolizer) {
+            symbolizers.push(iconSymbolizer);
+          }
+        }
+        // For non-image shapes, add the shape symbolizer
+        else if (olFill || olStroke) {
+          // For Text drawType, use invisible point marker
+          if (drawType === "Text") {
+            symbolizers.push({
+              type: "point",
+              graphicName: "circle",
+              pointRadius: 1,
+              fillColor: "#000000",
+              fillOpacity: 0,
+              strokeOpacity: 0,
+            });
+          } else {
+            symbolizers.push(shapeSymbolizer);
+          }
+        }
       }
-    }
-    if (olImage && olImage.iconImage_) {
-      itemStrokeFill.rotation = parseFloat(olImage.rotation_) * (180 / Math.PI);
-      itemStrokeFill.externalGraphic = olImage.iconImage_.src_;
-      itemStrokeFill.graphicName = "icon";
-      itemStrokeFill.graphicOpacity = olImage.opacity_;
-    }
-    itemSymbolizers.push(itemStrokeFill);
-    const lookupFont = (font) => {
-      const foundFont = printConfig.fonts.find((item) => font.toLowerCase() === item.toLowerCase());
-      if (foundFont) {
-        return foundFont;
-      } else {
-        return printConfig.fonts[0];
+
+      // Handle text with background
+      if (olText && olText.getText && olText.getText()) {
+        const textSymbolizer = textToSymbolizer(olText, { skipHalo: !!olText.getBackgroundFill });
+        if (textSymbolizer) {
+          // If text has a background, create separate layers for background box and text
+          if (olText.getBackgroundFill && olText.getBackgroundFill()) {
+            const textPoint = geometry.getType() === "Point" ? geometry.getCoordinates() : geometry.getCoordinates()[geometry.getCoordinates().length - 1];
+
+            // Create background box layer (pushed first, will be below text after processing)
+            const bgLayer = createTextBackgroundLayer(layerName, featureId, textPoint, olText.getText(), olText);
+            if (bgLayer) {
+              featureLayers.push(bgLayer);
+            }
+
+            // Create text layer at the same point (pushed after bg, will be above after processing)
+            const textStyleObj = { version: "2" };
+            textStyleObj["*"] = {
+              symbolizers: [{ type: "point", graphicName: "circle", pointRadius: 1, fillOpacity: 0, strokeOpacity: 0 }, textSymbolizer],
+            };
+
+            featureLayers.push({
+              type: "geojson",
+              geoJson: {
+                type: "FeatureCollection",
+                features: [
+                  {
+                    type: "Feature",
+                    geometry: { type: "Point", coordinates: textPoint },
+                    properties: { label: olText.getText() },
+                  },
+                ],
+              },
+              name: `${layerName}-${featureId}-text`,
+              style: textStyleObj,
+            });
+          } else {
+            // Regular text without background - add to symbolizers
+            symbolizers.push(textSymbolizer);
+          }
+        }
       }
-    };
 
-    if (olText !== null) {
-      const font = olText.font_.split(" ");
+      // Create layer for this component if it has symbolizers
+      if (symbolizers.length > 0) {
+        if (isCustomGeometry) {
+          const componentLayer = createGeoJsonLayer(layerName, `${featureId}${suffix}`, geometry, symbolizers, { label: labelText });
+          featureLayers.push(componentLayer);
+        } else {
+          const styles = { version: "2" };
+          styles["*"] = { symbolizers };
 
-      let itemText = {
-        type: "text",
-        fontFamily: lookupFont(font[2]),
-        fontSize: font[1],
-        fontStyle: "normal",
-        fontWeight: font[0],
-        haloColor: olText.stroke_.color_,
-        haloOpacity: 1,
-        haloRadius: Number(olText.stroke_.width_) + 1,
-        label: olText.text_,
-        fillColor: olText.fill_.color_,
-        labelAlign: `${olText.textAlign_.substring(0, 1)}${olText.textBaseline_.substring(0, 1)}`,
-        labelRotation: drawingHelpers._degrees(olText.rotation_),
-        labelXOffset: olText.offsetX_ * -1,
-        labelYOffset: olText.offsetY_ * -1,
-        goodnessOfFit: 0,
-      };
-      itemSymbolizers.push(itemText);
-    }
-    styles[itemFilter] = {
-      symbolizers: itemSymbolizers,
-    };
-    let itemLayer = {
-      type: "geojson",
-      geoJson: {},
-      name: `${layer.get("name")}-${item.ol_uid}`,
-      style: styles,
-    };
+          let itemLayer = {
+            type: "geojson",
+            geoJson: {},
+            name: `${layerName}-${featureId}`,
+            style: styles,
+          };
 
-    let feature = FeatureHelpers.setFeatures([item], OL_DATA_TYPES.GeoJSON, "EPSG:4326", "EPSG:4326");
-    if (feature !== undefined && !isHidden) {
-      feature = JSON.parse(feature);
+          let geoJsonFeature = FeatureHelpers.setFeatures([feature], OL_DATA_TYPES.GeoJSON, "EPSG:4326", "EPSG:4326");
+          if (geoJsonFeature !== undefined) {
+            geoJsonFeature = JSON.parse(geoJsonFeature);
+            itemLayer.geoJson = geoJsonFeature.features.map((f) => {
+              if (f.properties === null) f.properties = {};
+              return f;
+            });
+            featureLayers.push(itemLayer);
+          }
+        }
+      }
+    });
 
-      itemLayer.geoJson = feature.features.map((item) => {
-        if (item.properties === null) item.properties = {};
-        return item;
-      });
-      returnLayers.push(itemLayer);
-    }
+    // Reverse layer order for MapFish (renders first = top, last = bottom)
+    // OpenLayers style arrays are ordered bottom-to-top, so we reverse for MapFish
+    returnLayers.push(...featureLayers.reverse());
   });
+
   if (returnLayers.length === 0) returnLayers = undefined;
   if (callback !== undefined) callback(returnLayers);
   else return returnLayers;

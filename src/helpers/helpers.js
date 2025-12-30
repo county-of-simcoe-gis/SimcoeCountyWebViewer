@@ -879,7 +879,11 @@ export function createTextStyle(
   font = "arial",
   fillColor = "black",
   outlineColor = "black",
-  outlineWidth = 1
+  outlineWidth = 1,
+  backgroundFillColor = null,
+  backgroundStrokeColor = null,
+  backgroundStrokeWidth = 2,
+  padding = null
 ) {
   offsetX = parseInt(offsetX, 10);
   offsetY = parseInt(offsetY, 10);
@@ -888,7 +892,7 @@ export function createTextStyle(
   var fullFont = weight + " " + size + " " + font;
   outlineWidth = parseInt(outlineWidth, 10);
 
-  var texts = new TextStyle({
+  const textStyleOptions = {
     textAlign: align,
     textBaseline: baseline,
     font: fullFont,
@@ -901,7 +905,20 @@ export function createTextStyle(
     maxAngle: maxAngleDegrees,
     overflow: overflow,
     rotation: rotation,
-  });
+  };
+
+  // Add background styling if provided (for callout boxes)
+  if (backgroundFillColor) {
+    textStyleOptions.backgroundFill = new Fill({ color: backgroundFillColor });
+  }
+  if (backgroundStrokeColor) {
+    textStyleOptions.backgroundStroke = new Stroke({ color: backgroundStrokeColor, width: backgroundStrokeWidth });
+  }
+  if (padding) {
+    textStyleOptions.padding = padding;
+  }
+
+  var texts = new TextStyle(textStyleOptions);
   return texts;
 }
 

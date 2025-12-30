@@ -66,6 +66,15 @@ const ButtonBar = (props) => {
       />
       <DrawButton
         disabled={false}
+        title="Add a callout box on the map"
+        imageName="callout.svg"
+        onClick={() => {
+          props.onClick("Callout");
+        }}
+        isActive={props.activeButton === "Callout" ? true : false}
+      />
+      <DrawButton
+        disabled={false}
         title="Add Bearing Line"
         imageName="compass.png"
         onClick={() => {
