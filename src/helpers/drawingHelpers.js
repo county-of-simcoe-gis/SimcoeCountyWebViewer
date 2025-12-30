@@ -2,6 +2,7 @@ import { Circle as CircleStyle, Fill, Stroke, Style, RegularShape } from "ol/sty
 import { asArray } from "ol/color";
 import DoubleClickZoom from "ol/interaction/DoubleClickZoom";
 import LineString from "ol/geom/LineString.js";
+import Point from "ol/geom/Point.js";
 import * as helpers from "./helpers";
 
 // GET LAYER BY NAME FROM LAYER
@@ -399,43 +400,168 @@ export function controlDoubleClickZoom(active) {
   }
 }
 
+// GET DEFAULT LABEL STYLE based on draw type
+export function getDefaultLabelStyle(drawType) {
+  const isCallout = drawType === "Callout";
+  return {
+    textColor: isCallout ? "#000000" : "#ffffff",
+    textSize: "14px",
+    outlineColor: "#000000",
+    outlineWidth: isCallout ? 1 : 2,
+    // Callout-specific properties
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    borderColor: "#333333",
+    lineColor: "#333333",
+    anchorColor: "#333333",
+  };
+}
+
 // HANDLE LABELS
 export function setFeatureLabel(itemInfo) {
   let feature = getFeatureById(itemInfo.id);
   let style = feature.getStyle();
 
   if (itemInfo.labelVisible) {
+    // Get label style from itemInfo or use defaults
+    const labelStyle = itemInfo.labelStyle || getDefaultLabelStyle(itemInfo.drawType);
+    const isCallout = itemInfo.drawType === "Callout";
+
+    // Extract label style properties
+    const textColor = labelStyle.textColor || (isCallout ? "#000000" : "#ffffff");
+    const textSize = labelStyle.textSize || "14px";
+    const outlineColor = labelStyle.outlineColor || "#000000";
+    const outlineWidth = labelStyle.outlineWidth !== undefined ? labelStyle.outlineWidth : (isCallout ? 1 : 2);
+    
+    // Callout-specific properties
+    const backgroundColor = labelStyle.backgroundColor || "rgba(255, 255, 255, 0.95)";
+    const borderColor = labelStyle.borderColor || "#333333";
+    const lineColor = labelStyle.lineColor || "#333333";
+    const anchorColor = labelStyle.anchorColor || "#333333";
+
     const textStyle = helpers.createTextStyle(
       feature,
       "label",
-      undefined,
-      undefined,
-      undefined,
-      "15px",
-      undefined,
-      -8,
-      "bold",
-      undefined,
-      undefined,
-      true,
-      itemInfo.labelRotation,
-      undefined,
-      undefined,
-      "#ffffff",
-      0.4
+      undefined, // maxScale
+      undefined, // align
+      undefined, // baseline
+      textSize, // size - from labelStyle
+      undefined, // offsetX
+      isCallout ? 0 : -8, // offsetY
+      "bold", // weight
+      undefined, // placement
+      undefined, // maxAngleDegrees
+      true, // overflow
+      itemInfo.labelRotation, // rotation
+      undefined, // font
+      textColor, // fillColor - from labelStyle
+      outlineColor, // outlineColor - from labelStyle
+      outlineWidth, // outlineWidth - from labelStyle
+      // Background styling for callouts
+      isCallout ? backgroundColor : null,
+      isCallout ? borderColor : null,
+      isCallout ? 2 : 2,
+      isCallout ? [5, 8, 5, 8] : null
     );
 
-    style.setText(textStyle);
+    if (isCallout) {
+      // Parse line and anchor colors
+      const lineColorArray = asArray(lineColor);
+      const anchorColorArray = asArray(anchorColor);
+
+      // For callouts, we need to create a style function that positions the text at the end of the line
+      const calloutStyleFunction = (feature) => {
+        const geometry = feature.getGeometry();
+        const coordinates = geometry.getCoordinates();
+        const startPoint = coordinates[0];
+        const endPoint = coordinates[coordinates.length - 1];
+
+        // Style for the tail line - use lineColor from labelStyle
+        const lineStyle = new Style({
+          stroke: new Stroke({
+            color: [lineColorArray[0], lineColorArray[1], lineColorArray[2], 0.8],
+            width: 2,
+          }),
+        });
+
+        // Style for the anchor circle at the start point - use anchorColor from labelStyle
+        const anchorStyle = new Style({
+          geometry: new Point(startPoint),
+          image: new CircleStyle({
+            radius: 5,
+            fill: new Fill({ color: [anchorColorArray[0], anchorColorArray[1], anchorColorArray[2], 0.8] }),
+            stroke: new Stroke({ color: [anchorColorArray[0], anchorColorArray[1], anchorColorArray[2], 1], width: 1 }),
+          }),
+        });
+
+        // Style for the text box at the end point
+        const textBoxStyle = new Style({
+          geometry: new Point(endPoint),
+          text: textStyle,
+        });
+
+        return [lineStyle, anchorStyle, textBoxStyle];
+      };
+
+      feature.setStyle(calloutStyleFunction);
+    } else {
+      style.setText(textStyle);
+      feature.setStyle(style);
+    }
+
     feature.setProperties({ labelVisible: true });
-    feature.setStyle(style);
   } else {
     feature.setProperties({ labelVisible: false });
 
     if (style !== null) {
-      style.setText(null);
-      feature.setStyle(style);
+      if (itemInfo.drawType === "Callout") {
+        // Reset to base callout style without text - use labelStyle colors if available
+        const labelStyle = itemInfo.labelStyle || getDefaultLabelStyle(itemInfo.drawType);
+        feature.setStyle(getCalloutStyle({ 
+          lineColor: labelStyle.lineColor, 
+          anchorColor: labelStyle.anchorColor 
+        }));
+      } else {
+        style.setText(null);
+        feature.setStyle(style);
+      }
     }
   }
+}
+
+// GET CALLOUT STYLE - Returns a style function for line with circle at anchor point
+export function getCalloutStyle(opts = {}) {
+  const { drawColor = "#333333", lineColor, anchorColor } = opts;
+  
+  // Use specific colors if provided, otherwise fall back to drawColor
+  const lineColorArray = asArray(lineColor || drawColor);
+  const anchorColorArray = asArray(anchorColor || drawColor);
+
+  // Return a style function that positions anchor circle at start of line
+  return (feature) => {
+    const geometry = feature.getGeometry();
+    const coordinates = geometry.getCoordinates();
+    const startPoint = coordinates[0];
+
+    // Style for the tail line
+    const lineStyle = new Style({
+      stroke: new Stroke({
+        color: [lineColorArray[0], lineColorArray[1], lineColorArray[2], 0.8],
+        width: 2,
+      }),
+    });
+
+    // Style for the anchor circle at the start point
+    const anchorStyle = new Style({
+      geometry: new Point(startPoint),
+      image: new CircleStyle({
+        radius: 5,
+        fill: new Fill({ color: [anchorColorArray[0], anchorColorArray[1], anchorColorArray[2], 0.8] }),
+        stroke: new Stroke({ color: [anchorColorArray[0], anchorColorArray[1], anchorColorArray[2], 1], width: 1 }),
+      }),
+    });
+
+    return [lineStyle, anchorStyle];
+  };
 }
 
 export function convertLineToArrow(geometry) {

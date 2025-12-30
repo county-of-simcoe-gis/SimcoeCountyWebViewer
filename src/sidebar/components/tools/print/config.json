@@ -72,6 +72,7 @@
     "Arrow": "Line",
     "Text": "Point",
     "Bearing": "Line",
+    "Callout": "Line",
     "MultiPolygon": "Polygon"
   },
   "fonts": [
@@ -257,6 +258,7 @@
     "World_Topo_Map",
     "Topo_Cache",
     "Streets_Cache",
+    "Ortho_2025_Cache",
     "Ortho_2024_Cache",
     "Ortho_2023_Cache",
     "Ortho_2022_Cache",

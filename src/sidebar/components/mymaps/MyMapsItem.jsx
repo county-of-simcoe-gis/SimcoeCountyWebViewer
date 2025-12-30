@@ -10,6 +10,16 @@ import * as helpers from "../../../helpers/helpers";
 function MyMapsItem(props) {
   const [label, setLabel] = useState(props.info.label);
   const [checked, setChecked] = useState(props.info.visible);
+
+  // Sync state with props when they change from parent
+  useEffect(() => {
+    setLabel(props.info.label);
+  }, [props.info.label]);
+
+  useEffect(() => {
+    setChecked(props.info.visible);
+  }, [props.info.visible]);
+
   useEffect(() => {
     return () => {
       removeHighlightLayer();
