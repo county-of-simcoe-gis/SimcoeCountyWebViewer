@@ -25,7 +25,7 @@ class Measure extends Component {
 
     this.state = {
       hideTooltips: false,
-      enableSnapping: true,
+      enableSnapping: false,
       geometryType: "",
       unitType: "distance",
       feature: null,

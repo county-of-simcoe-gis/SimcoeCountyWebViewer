@@ -293,6 +293,10 @@ export class LayerHelpers {
           service = "json";
           url = root_url + "/layers?f=json";
           break;
+        case "wfs":
+          service = "WFS";
+          url = url + "REQUEST=GetCapabilities&SERVICE=" + service;
+          break;
         default:
           service = "WFS";
           url = url + "REQUEST=GetCapabilities&SERVICE=" + service;
@@ -389,9 +393,9 @@ export class LayerHelpers {
             };
             const xmlParser = new XMLParser(options);
             let result = xmlParser.parse(responseText);
-            result["wfs:WFS_Capabilities"].FeatureTypeList[0].FeatureType.forEach((layer) => {
-              var layerTitle = layer.Title[0];
-              var layerName = layer.Name[0];
+            result["wfs:WFS_Capabilities"].FeatureTypeList.FeatureType.forEach((layer) => {
+              var layerTitle = layer.Title;
+              var layerName = layer.Name;
               if (layerTitle === undefined || layerTitle === "") layerTitle = layerName;
               layers.push({
                 label: layerTitle,
