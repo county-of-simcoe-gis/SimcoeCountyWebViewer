@@ -285,7 +285,8 @@
       "name": "Local Real Estate",
       "componentName": "LocalRealEstate",
       "description": "View listings by categories and view photos for the listing with the option to link to the Realtor.ca listing",
-      "imageName": "localrealestate.png"
+      "imageName": "localrealestate.png",
+      "disable": true
     },
     {
       "id": 4,
