@@ -15,7 +15,9 @@
   overflow-y: auto;
   max-height: 200px;
 }
-
+.sc-property-report-top-container .sc-info-window-value {
+  max-width: 220px;
+}
 .sc-property-report-click-propertylink {
   width: 99%;
   margin-top: 5px;
