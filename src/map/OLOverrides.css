@@ -44,7 +44,7 @@
   border: 1px solid #cccccc;
   bottom: 12px;
   left: -50px;
-  max-width: 270px !important;
+  max-width: 282px !important;
   border-radius: 3px !important;
 }
 
@@ -75,8 +75,8 @@
 
 .map-theme .ol-popup-content {
   position: relative;
-  width: 258px;
-  max-width: 258px !important;
+  width: 270px;
+  max-width: 270px !important;
   z-index: 1;
   padding: 6px !important;
   background-color: #fff !important;
