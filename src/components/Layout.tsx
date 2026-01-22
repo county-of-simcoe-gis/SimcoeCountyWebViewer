@@ -38,7 +38,11 @@ export default function Layout({ children }: LayoutProps) {
     if (config) {
       setConfig(config);
       // Load sidebar items from config
-      loadFromConfig(config.sidebarToolComponents, config.sidebarThemeComponents);
+      console.log("Loading sidebar components from config:", {
+        tools: config.sidebarToolComponents?.length || 0,
+        themes: config.sidebarThemeComponents?.length || 0,
+      });
+      loadFromConfig(config.sidebarToolComponents || [], config.sidebarThemeComponents || []);
     }
 
     if (configError) {

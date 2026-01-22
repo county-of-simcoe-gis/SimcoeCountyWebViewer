@@ -1,0 +1,1162 @@
+/**
+ * Print Request Builder for MapFish Print Server
+ * Ported from SimcoeCountyWebViewer printRequest/printRequest.js
+ */
+
+import { Feature } from "ol";
+import { Geometry, Point, LineString, Polygon, MultiPolygon } from "ol/geom";
+import { Style, Fill, Stroke, Text, Circle as CircleStyle, Icon } from "ol/style";
+import { asArray } from "ol/color";
+import { Vector as VectorLayer, Tile as TileLayer, Image as ImageLayer, Group as LayerGroup } from "ol/layer";
+import { Layer } from "ol/layer";
+import Map from "ol/Map";
+
+import { printConfig, PrintSize, PrintFormat } from "./printConfig";
+import { rgbToHex, xmlToJson, extractServiceName, computeDimension, computeExtent, radiansToDegrees } from "./printUtils";
+import { FeatureHelpers } from "@/utils/openlayers/FeatureHelpers";
+import { LayerHelpers } from "@/utils/openlayers/LayerHelpers";
+import { OL_DATA_TYPES } from "@/utils/openlayers/types";
+import { getMapScale } from "@/utils/mapHelpers";
+
+// =============================================================================
+// Types
+// =============================================================================
+
+export interface PrintState {
+  mapTitle: string;
+  printSizeSelectedOption: PrintSize;
+  printFormatSelectedOption: PrintFormat;
+  mapScaleOption: "preserveMapScale" | "preserveMapExtent" | "forceScale";
+  forceScale: string;
+  mapOnlyWidth: string;
+  mapOnlyHeight: string;
+  mapResolutionOption: string;
+  termsOfUse: string;
+  options?: {
+    parameters?: Array<{ name: string; value: string }>;
+  };
+}
+
+interface MapFishSymbolizer {
+  type: string;
+  [key: string]: unknown;
+}
+
+interface MapFishStyle {
+  version: string;
+  "*"?: {
+    symbolizers: MapFishSymbolizer[];
+  };
+  [key: string]: unknown;
+}
+
+interface MapFishGeoJsonLayer {
+  type: "geojson";
+  geoJson: {
+    type: "FeatureCollection";
+    features: Array<{
+      type: "Feature";
+      geometry: {
+        type: string;
+        coordinates: unknown;
+      };
+      properties: Record<string, unknown>;
+    }>;
+  } | Array<{
+    type: "Feature";
+    geometry: {
+      type: string;
+      coordinates: unknown;
+    };
+    properties: Record<string, unknown>;
+  }>;
+  name: string;
+  style: MapFishStyle;
+}
+
+interface MapFishWMTSLayer {
+  type: "WMTS";
+  baseURL: string;
+  layer: string;
+  opacity: number;
+  imageFormat: string;
+  style: string;
+  version: string;
+  dimensions: string[];
+  dimensionParams: Record<string, unknown>;
+  requestEncoding: string;
+  customParams: {
+    TRANSPARENT: string;
+    zIndex: number | null;
+  };
+  matrixSet: string;
+  matrices: TileMatrix[];
+}
+
+interface MapFishOSMLayer {
+  type: "OSM";
+  baseURL: string;
+  imageExtension: string;
+  customParams: {
+    zIndex: number;
+  };
+}
+
+interface MapFishImageLayer {
+  type: "image";
+  baseURL: string | URL;
+  opacity: number;
+  imageFormat: string;
+  extent: number[];
+  name: string;
+}
+
+interface MapFishWMSLayer {
+  type: "wms";
+  baseURL: string;
+  serverType?: string;
+  opacity: number;
+  layers: string[];
+  imageFormat: string;
+  customParams: {
+    TRANSPARENT: string;
+    zIndex: number;
+  };
+  version: string;
+}
+
+type MapFishLayer = MapFishGeoJsonLayer | MapFishWMTSLayer | MapFishOSMLayer | MapFishImageLayer | MapFishWMSLayer;
+
+interface TileMatrix {
+  identifier: string;
+  scaleDenominator: number;
+  topLeftCorner: number[];
+  tileSize: number[];
+  matrixSize: number[];
+}
+
+interface PrintRequestAttributes {
+  title: string;
+  description: string;
+  map: {
+    projection?: string;
+    longitudeFirst?: boolean;
+    rotation?: number;
+    dpi?: number;
+    scale?: number;
+    center?: number[];
+    bbox?: number[];
+    height?: number;
+    width?: number;
+    layers?: MapFishLayer[];
+  };
+  scalebar: {
+    geodetic: number;
+  };
+  scale: string;
+  overviewMap?: {
+    projection: string;
+    center: number[];
+    scale: number;
+    longitudeFirst: boolean;
+    rotation: number;
+    dpi: number;
+    layers?: MapFishLayer[];
+  };
+  imageName?: string;
+  [key: string]: unknown;
+}
+
+interface PrintRequestObject {
+  layout: string;
+  outputFormat: string;
+  dpi: number;
+  compressed: boolean;
+  parameters: Array<{ name: string; value: string }>;
+  attributes: PrintRequestAttributes;
+}
+
+// =============================================================================
+// Style Conversion Helpers
+// =============================================================================
+
+/**
+ * Look up font in config, return default if not found
+ */
+function lookupFont(font: string | undefined): string {
+  if (!font) return printConfig.fonts[0];
+  const foundFont = printConfig.fonts.find(
+    (item) => font.toLowerCase() === item.toLowerCase()
+  );
+  return foundFont || printConfig.fonts[0];
+}
+
+/**
+ * Convert OpenLayers color to hex format
+ */
+function colorToHex(color: unknown): string | null {
+  if (!color) return null;
+  if (Array.isArray(color)) {
+    return rgbToHex(color[0], color[1], color[2], color[3]);
+  }
+  return color as string;
+}
+
+/**
+ * Get opacity from OpenLayers color
+ */
+function colorToOpacity(color: unknown): number {
+  if (!color) return 1;
+  if (Array.isArray(color)) {
+    return color[3] !== undefined ? color[3] : 1;
+  }
+  try {
+    return asArray(color as string)[3] ?? 1;
+  } catch {
+    return 1;
+  }
+}
+
+/**
+ * Extract visual components from OpenLayers style
+ */
+function extractVisualComponents(
+  feature: Feature<Geometry>,
+  featureStyle: Style | Style[] | ((feature: Feature<Geometry>) => Style | Style[]) | null,
+  layerStyle: Style | null
+): Array<{
+  geometry: Geometry;
+  style: Style;
+  type: string;
+  isCustomGeometry: boolean;
+}> {
+  const components: Array<{
+    geometry: Geometry;
+    style: Style;
+    type: string;
+    isCustomGeometry: boolean;
+  }> = [];
+  const featureGeometry = feature.getGeometry();
+
+  if (!featureGeometry) return components;
+
+  // Resolve style function if needed
+  let resolvedStyles: Style[] = [];
+  if (typeof featureStyle === "function") {
+    const result = featureStyle(feature);
+    resolvedStyles = Array.isArray(result) ? result : result ? [result] : [];
+  } else if (featureStyle) {
+    resolvedStyles = Array.isArray(featureStyle) ? featureStyle : [featureStyle];
+  } else if (layerStyle) {
+    resolvedStyles = [layerStyle];
+  }
+
+  // Process each style in the array
+  resolvedStyles.forEach((style, index) => {
+    if (!style) return;
+
+    // Determine geometry for this style component
+    let geometry: Geometry = featureGeometry;
+    const styleGeom = style.getGeometry?.();
+    if (styleGeom) {
+      if (typeof styleGeom === "function") {
+        const customGeom = styleGeom(feature);
+        if (customGeom) geometry = customGeom;
+      } else {
+        geometry = styleGeom;
+      }
+    }
+
+    // Determine visual type
+    let visualType = "shape";
+    if (style.getText?.()?.getText?.()) {
+      visualType = "text";
+    } else if (style.getImage?.() && geometry !== featureGeometry) {
+      visualType = "marker";
+    }
+
+    components.push({
+      geometry,
+      style,
+      type: visualType,
+      isCustomGeometry: geometry !== featureGeometry,
+    });
+  });
+
+  return components;
+}
+
+/**
+ * Convert OpenLayers Fill to MapFish symbolizer properties
+ */
+function fillToSymbolizer(olFill: Fill | null): Record<string, unknown> {
+  if (!olFill) return {};
+  const color = olFill.getColor?.();
+  if (!color) return {};
+  return {
+    fillColor: colorToHex(color),
+    fillOpacity: colorToOpacity(color),
+  };
+}
+
+/**
+ * Convert OpenLayers Stroke to MapFish symbolizer properties
+ */
+function strokeToSymbolizer(olStroke: Stroke | null): Record<string, unknown> {
+  if (!olStroke) return {};
+  const color = olStroke.getColor?.();
+  const width = olStroke.getWidth?.();
+  const lineDash = olStroke.getLineDash?.();
+
+  const result: Record<string, unknown> = {};
+  if (color) {
+    result.strokeColor = colorToHex(color);
+    result.strokeOpacity = colorToOpacity(color);
+  }
+  if (width !== null && width !== undefined) {
+    result.strokeWidth = width;
+  }
+  if (lineDash) {
+    result.strokeDashstyle = lineDash[0] === 1 ? "dot" : "dash";
+    result.strokeLinejoin = "round";
+    result.strokeLinecap = "round";
+  }
+  return result;
+}
+
+/**
+ * Convert OpenLayers Text to MapFish text symbolizer
+ */
+function textToSymbolizer(
+  olText: Text | null,
+  options: { skipHalo?: boolean } = {}
+): MapFishSymbolizer | null {
+  if (!olText?.getText?.()) return null;
+
+  const fontString = olText.getFont?.() || "normal 12px Arial";
+  const font = fontString.split(" ");
+  const textFill = olText.getFill?.();
+  const textStroke = olText.getStroke?.();
+  const textAlign = olText.getTextAlign?.() || "center";
+  const textBaseline = olText.getTextBaseline?.() || "middle";
+
+  let textFillColor = textFill?.getColor ? colorToHex(textFill.getColor()) : "#000000";
+  const strokeColor = textStroke?.getColor ? colorToHex(textStroke.getColor()) : "#000000";
+
+  // Handle white/light text for print readability
+  let useStrokeAsFill = false;
+  if (textFillColor) {
+    const colorStr = String(textFillColor).toLowerCase();
+    if (colorStr === "#ffffff" || colorStr === "#fff" || colorStr === "white") {
+      useStrokeAsFill = true;
+      textFillColor = strokeColor || "#000000";
+    }
+  }
+
+  // Scale font size for print
+  let fontSize = font.length >= 2 ? font[1] : "12px";
+  const fontSizeMatch = String(fontSize).match(/^(\d+(?:\.\d+)?)(px|pt)?$/i);
+  if (fontSizeMatch) {
+    const sizeValue = parseFloat(fontSizeMatch[1]);
+    const unit = (fontSizeMatch[2] || "px").toLowerCase();
+    const scaleFactor = 0.6;
+    const scaledSize = unit === "px" ? Math.round(sizeValue * scaleFactor) : sizeValue;
+    fontSize = `${scaledSize}px`;
+  }
+
+  const symbolizer: MapFishSymbolizer = {
+    type: "text",
+    fontFamily: font.length >= 3 ? lookupFont(font[2]) : "Arial",
+    fontSize: fontSize,
+    fontStyle: "normal",
+    fontWeight: font.length >= 1 ? font[0] : "normal",
+    label: olText.getText(),
+    fontColor: textFillColor,
+    labelAlign: `${(textAlign || "center").substring(0, 1)}${(textBaseline || "middle").substring(0, 1)}`,
+    labelRotation: radiansToDegrees(olText.getRotation?.() || 0),
+    labelXOffset: (olText.getOffsetX?.() || 0) * -1,
+    labelYOffset: (olText.getOffsetY?.() || 0) * -1,
+    goodnessOfFit: 0,
+  };
+
+  // Add halo for readability
+  if (useStrokeAsFill) {
+    symbolizer.haloColor = "#ffffff";
+    symbolizer.haloOpacity = 0.9;
+    symbolizer.haloRadius = 2;
+  } else if (textStroke?.getWidth?.() && textStroke.getWidth()! > 1 && !options.skipHalo) {
+    symbolizer.haloColor = strokeColor;
+    symbolizer.haloOpacity = 0.4;
+    symbolizer.haloRadius = Math.min(1.5, Number(textStroke.getWidth()) * 0.3);
+  }
+
+  return symbolizer;
+}
+
+/**
+ * Convert OpenLayers Circle image to MapFish point symbolizer
+ */
+function circleImageToSymbolizer(olImage: CircleStyle | null): MapFishSymbolizer | null {
+  if (!olImage) return null;
+
+  const symbolizer: MapFishSymbolizer = {
+    type: "point",
+    graphicName: "circle",
+  };
+
+  if (olImage.getRadius) {
+    symbolizer.pointRadius = olImage.getRadius();
+  }
+
+  const fill = olImage.getFill?.();
+  const stroke = olImage.getStroke?.();
+
+  if (fill?.getColor) {
+    const color = fill.getColor();
+    symbolizer.fillColor = colorToHex(color);
+    symbolizer.fillOpacity = colorToOpacity(color);
+  }
+
+  if (stroke?.getColor) {
+    const color = stroke.getColor();
+    symbolizer.strokeColor = colorToHex(color);
+    symbolizer.strokeWidth = stroke.getWidth?.() || 1;
+    symbolizer.strokeOpacity = colorToOpacity(color);
+  }
+
+  return symbolizer;
+}
+
+/**
+ * Convert OpenLayers Icon to MapFish symbolizer
+ */
+function iconImageToSymbolizer(olImage: Icon | null): MapFishSymbolizer | null {
+  if (!olImage?.getSrc) return null;
+
+  const iconSrc = olImage.getSrc();
+  if (!iconSrc) return null;
+
+  return {
+    type: "point",
+    rotation: (olImage.getRotation?.() || 0) * (180 / Math.PI),
+    externalGraphic: iconSrc,
+    graphicName: "icon",
+    graphicOpacity: olImage.getOpacity?.() ?? 1,
+  };
+}
+
+/**
+ * Create MapFish GeoJSON layer
+ */
+function createGeoJsonLayer(
+  layerName: string,
+  featureId: string,
+  geometry: Geometry,
+  symbolizers: MapFishSymbolizer[],
+  properties: Record<string, unknown> = {}
+): MapFishGeoJsonLayer {
+  const geojsonType = geometry.getType();
+  const coordinates = (geometry as Point | LineString | Polygon | MultiPolygon).getCoordinates();
+
+  const styleObj: MapFishStyle = { version: "2" };
+  styleObj["*"] = { symbolizers };
+
+  return {
+    type: "geojson",
+    geoJson: {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          geometry: {
+            type: geojsonType,
+            coordinates,
+          },
+          properties,
+        },
+      ],
+    },
+    name: `${layerName}-${featureId}`,
+    style: styleObj,
+  };
+}
+
+/**
+ * Create text background box layer
+ */
+function createTextBackgroundLayer(
+  layerName: string,
+  featureId: string,
+  centerPoint: number[],
+  textContent: string,
+  textStyle: Text,
+  map: Map
+): MapFishGeoJsonLayer | null {
+  const bgFill = textStyle.getBackgroundFill?.();
+  if (!bgFill) return null;
+
+  const fontString = textStyle.getFont?.() || "14px Arial";
+  const fontSizeMatch = fontString.match(/(\d+)px/);
+  let fontSizeNum = fontSizeMatch ? parseInt(fontSizeMatch[1]) : 14;
+
+  const scaleFactor = 0.6;
+  const scaledFontSize = Math.round(fontSizeNum * scaleFactor);
+
+  // Calculate box dimensions
+  const charWidth = scaledFontSize * 0.65;
+  const textWidthPx = textContent.length * charWidth;
+  const textHeightPx = scaledFontSize * 1.4;
+  const paddingPx = 20;
+  const boxWidthPx = textWidthPx + paddingPx * 2;
+  const boxHeightPx = textHeightPx + paddingPx;
+
+  // Convert pixels to meters
+  const resolution = map.getView().getResolution() || 1;
+  const boxWidthMeters = boxWidthPx * resolution;
+  const boxHeightMeters = boxHeightPx * resolution;
+
+  const halfW = boxWidthMeters / 2;
+  const halfH = boxHeightMeters / 2;
+  const boxCoords = [
+    [centerPoint[0] - halfW, centerPoint[1] - halfH],
+    [centerPoint[0] + halfW, centerPoint[1] - halfH],
+    [centerPoint[0] + halfW, centerPoint[1] + halfH],
+    [centerPoint[0] - halfW, centerPoint[1] + halfH],
+    [centerPoint[0] - halfW, centerPoint[1] - halfH],
+  ];
+
+  const bgStroke = textStyle.getBackgroundStroke?.();
+  const bgFillColor = bgFill?.getColor ? colorToHex(bgFill.getColor()) : "#ffffff";
+  const bgStrokeColor = bgStroke?.getColor ? colorToHex(bgStroke.getColor()) : "#333333";
+
+  const styleObj: MapFishStyle = { version: "2" };
+  styleObj["*"] = {
+    symbolizers: [
+      {
+        type: "polygon",
+        fillColor: bgFillColor,
+        fillOpacity: 0.95,
+        strokeColor: bgStrokeColor,
+        strokeWidth: 1,
+        strokeOpacity: 1,
+      },
+    ],
+  };
+
+  return {
+    type: "geojson",
+    geoJson: {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          geometry: {
+            type: "Polygon",
+            coordinates: [boxCoords],
+          },
+          properties: {},
+        },
+      ],
+    },
+    name: `${layerName}-${featureId}-bg`,
+    style: styleObj,
+  };
+}
+
+// =============================================================================
+// Layer Configuration Functions
+// =============================================================================
+
+/**
+ * Load tile matrix from WMTS capabilities
+ */
+export async function loadTileMatrix(url: string): Promise<TileMatrix[]> {
+  const response = await fetch(url);
+  const data = await response.text();
+  const xml = new DOMParser().parseFromString(data, "text/xml");
+  const json = xmlToJson(xml) as Record<string, unknown>;
+
+  const capabilities = json.Capabilities as Record<string, unknown>;
+  const contents = capabilities?.Contents as Record<string, unknown>;
+  let tileMatrixSet = contents?.TileMatrixSet as Record<string, unknown> | Record<string, unknown>[];
+  
+  if (Array.isArray(tileMatrixSet)) {
+    tileMatrixSet = tileMatrixSet[0];
+  }
+
+  const flatTileMatrix = (tileMatrixSet?.TileMatrix || []) as Array<Record<string, Record<string, string>>>;
+
+  return flatTileMatrix.map((m) => ({
+    identifier: m["ows:Identifier"]?.["#text"] || "",
+    scaleDenominator: Number(m["ScaleDenominator"]?.["#text"] || 0),
+    topLeftCorner: (m["TopLeftCorner"]?.["#text"] || "0 0")
+      .split(" ")
+      .map(Number),
+    tileSize: [256, 256],
+    matrixSize: [
+      Number(m["MatrixWidth"]?.["#text"] || 1),
+      Number(m["MatrixHeight"]?.["#text"] || 1),
+    ],
+  }));
+}
+
+/**
+ * Load WMTS configuration for layer
+ */
+export async function loadWMTSConfig(
+  url: string,
+  opacity: number
+): Promise<MapFishWMTSLayer> {
+  const matrices = await loadTileMatrix(url + "/WMTS/1.0.0/WMTSCapabilities.xml");
+
+  return {
+    type: "WMTS",
+    imageFormat: "image/png",
+    opacity,
+    style: "Default Style",
+    version: "1.0.0",
+    dimensions: [],
+    dimensionParams: {},
+    requestEncoding: "REST",
+    customParams: {
+      TRANSPARENT: "true",
+      zIndex: null,
+    },
+    matrixSet: "EPSG:3857",
+    baseURL: url + "/tile/{TileMatrix}/{TileRow}/{TileCol}",
+    layer: extractServiceName(url),
+    matrices,
+  };
+}
+
+/**
+ * Build vector layer for MapFish Print
+ */
+function buildVectorLayer(layer: VectorLayer<Feature<Geometry>>, map: Map): MapFishGeoJsonLayer[] | undefined {
+  const returnLayers: MapFishGeoJsonLayer[] = [];
+  const olFeatures: Feature<Geometry>[] = [];
+  const extent = map.getView().calculateExtent(map.getSize());
+
+  layer.getSource()?.forEachFeatureInExtent(extent, (feature) => {
+    olFeatures.push(feature);
+  });
+
+  const olLayerStyle = layer.getStyle() as Style | null;
+  const layerName = layer.get("name") || "vector";
+
+  olFeatures.forEach((feature) => {
+    const featureId = (feature as unknown as { ol_uid: string }).ol_uid;
+    const featureStyle = feature.getStyle() as Style | Style[] | ((f: Feature<Geometry>) => Style | Style[]) | null;
+    const featureGeometry = feature.getGeometry();
+    const drawType = feature.get("drawType") as string | undefined;
+    const labelText = (feature.get("label") || "") as string;
+
+    if (!featureGeometry) return;
+
+    const components = extractVisualComponents(feature, featureStyle, olLayerStyle);
+
+    if (components.length === 0) return;
+
+    const featureLayers: MapFishGeoJsonLayer[] = [];
+
+    components.forEach((component, index) => {
+      const { geometry, style, isCustomGeometry } = component;
+      const symbolizers: MapFishSymbolizer[] = [];
+      const suffix = isCustomGeometry ? `-${component.type}-${index}` : "";
+
+      const olFill = style.getFill?.();
+      const olStroke = style.getStroke?.();
+      const olText = style.getText?.();
+      const olImage = style.getImage?.();
+
+      const geomType = geometry.getType();
+      let mapfishType = printConfig.drawTypes[drawType || ""] || printConfig.drawTypes[geomType] || "Polygon";
+
+      // Build shape symbolizer
+      if (olFill || olStroke || olImage) {
+        const shapeSymbolizer: MapFishSymbolizer = { type: mapfishType.toLowerCase() };
+
+        if (olFill) {
+          Object.assign(shapeSymbolizer, fillToSymbolizer(olFill));
+        }
+
+        if (olStroke) {
+          Object.assign(shapeSymbolizer, strokeToSymbolizer(olStroke));
+        }
+
+        // Handle circle/marker images
+        if (olImage && "getRadius" in olImage) {
+          const circleSymbolizer = circleImageToSymbolizer(olImage as CircleStyle);
+          if (circleSymbolizer) {
+            symbolizers.push(circleSymbolizer);
+          }
+        } else if (olImage && "getSrc" in olImage) {
+          const iconSymbolizer = iconImageToSymbolizer(olImage as Icon);
+          if (iconSymbolizer) {
+            symbolizers.push(iconSymbolizer);
+          }
+        } else if (olFill || olStroke) {
+          if (drawType === "Text") {
+            symbolizers.push({
+              type: "point",
+              graphicName: "circle",
+              pointRadius: 1,
+              fillColor: "#000000",
+              fillOpacity: 0,
+              strokeOpacity: 0,
+            });
+          } else {
+            symbolizers.push(shapeSymbolizer);
+          }
+        }
+      }
+
+      // Handle text with background
+      if (olText?.getText?.()) {
+        const textSymbolizer = textToSymbolizer(olText, { skipHalo: !!olText.getBackgroundFill?.() });
+        if (textSymbolizer) {
+          if (olText.getBackgroundFill?.()) {
+            const textPoint =
+              geometry.getType() === "Point"
+                ? (geometry as Point).getCoordinates()
+                : (geometry as LineString | Polygon).getCoordinates().slice(-1)[0] as number[];
+
+            const bgLayer = createTextBackgroundLayer(layerName, featureId, textPoint, olText.getText() as string, olText, map);
+            if (bgLayer) {
+              featureLayers.push(bgLayer);
+            }
+
+            const textStyleObj: MapFishStyle = { version: "2" };
+            textStyleObj["*"] = {
+              symbolizers: [
+                { type: "point", graphicName: "circle", pointRadius: 1, fillOpacity: 0, strokeOpacity: 0 },
+                textSymbolizer,
+              ],
+            };
+
+            featureLayers.push({
+              type: "geojson",
+              geoJson: {
+                type: "FeatureCollection",
+                features: [
+                  {
+                    type: "Feature",
+                    geometry: { type: "Point", coordinates: textPoint },
+                    properties: { label: olText.getText() },
+                  },
+                ],
+              },
+              name: `${layerName}-${featureId}-text`,
+              style: textStyleObj,
+            });
+          } else {
+            symbolizers.push(textSymbolizer);
+          }
+        }
+      }
+
+      // Create layer for this component
+      if (symbolizers.length > 0) {
+        if (isCustomGeometry) {
+          const componentLayer = createGeoJsonLayer(layerName, `${featureId}${suffix}`, geometry, symbolizers, { label: labelText });
+          featureLayers.push(componentLayer);
+        } else {
+          const styles: MapFishStyle = { version: "2" };
+          styles["*"] = { symbolizers };
+
+          const itemLayer: MapFishGeoJsonLayer = {
+            type: "geojson",
+            geoJson: [],
+            name: `${layerName}-${featureId}`,
+            style: styles,
+          };
+
+          const geoJsonString = FeatureHelpers.setFeatures([feature], OL_DATA_TYPES.GeoJSON, "EPSG:4326", "EPSG:4326");
+          if (geoJsonString) {
+            const geoJsonFeature = JSON.parse(geoJsonString);
+            itemLayer.geoJson = geoJsonFeature.features.map((f: { properties: unknown }) => {
+              if (f.properties === null) f.properties = {};
+              return f;
+            });
+            featureLayers.push(itemLayer);
+          }
+        }
+      }
+    });
+
+    // Reverse layer order for MapFish
+    returnLayers.push(...featureLayers.reverse());
+  });
+
+  return returnLayers.length > 0 ? returnLayers : undefined;
+}
+
+/**
+ * Configure tile layer for MapFish
+ */
+async function configureTileLayer(layer: TileLayer): Promise<MapFishWMTSLayer | MapFishOSMLayer> {
+  const layerSource = layer.getSource();
+  if (!layerSource) {
+    throw new Error("Layer source not found");
+  }
+
+  const urls = (layerSource as { getUrls?: () => string[] }).getUrls?.();
+  if (!urls || urls.length === 0) {
+    throw new Error("Layer URLs not found");
+  }
+
+  let tileUrl = urls[0];
+  tileUrl = tileUrl.includes("/MapServer/WMTS/")
+    ? tileUrl.split("/WMTS/")[0]
+    : tileUrl.split("/tile/")[0];
+
+  // Check for OpenStreetMap
+  const sourceKey = (layerSource as { key_?: string }).key_ || "";
+  if (sourceKey.includes("openstreetmap.org")) {
+    return {
+      type: "OSM",
+      baseURL: sourceKey.split("\n")[0],
+      imageExtension: "png",
+      customParams: {
+        zIndex: 1,
+      },
+    };
+  }
+
+  const retLayer = await loadWMTSConfig(tileUrl, layer.getOpacity());
+  const layerIndex = layer.getZIndex() || 0;
+  const printIndex = layer.get("printIndex") || 0;
+  retLayer.customParams.zIndex = layerIndex + printIndex;
+  return retLayer;
+}
+
+/**
+ * Configure image layer for MapFish
+ */
+function configureImageLayer(layer: ImageLayer, options: PrintRequestAttributes): MapFishImageLayer {
+  const source = layer.getSource() as { image_?: { src_: string } };
+  const imageSrc = source?.image_?.src_;
+  
+  if (!imageSrc) {
+    throw new Error("Image source not found");
+  }
+
+  const url = new URL(imageSrc);
+  const urlParams = new URLSearchParams(url.searchParams);
+  const urlDPI = parseInt(urlParams.get("DPI") || "96");
+  const urlSIZE = (urlParams.get("SIZE") || "800,600").split(",");
+  const urlBBOX = (urlParams.get("BBOX") || "0,0,0,0").split(",");
+
+  const printSize = !options.map.height
+    ? [800, 600]
+    : [parseInt(String(options.map.height)), parseInt(String(options.map.width))];
+
+  const extent = options.map.bbox
+    ? options.map.bbox
+    : computeExtent(printSize[0], printSize[1], 72, options.map.scale || 1, options.map.center || [0, 0]);
+
+  let outputDPI = options.map.dpi || 96;
+  let outputSize = [
+    parseInt(
+      String(
+        (parseInt(urlSIZE[0]) /
+          ((parseFloat(urlBBOX[0]) - parseFloat(urlBBOX[2])) /
+            (extent[0] - extent[2]))) *
+          (outputDPI / urlDPI)
+      )
+    ),
+    parseInt(
+      String(
+        (parseInt(urlSIZE[1]) /
+          ((parseFloat(urlBBOX[1]) - parseFloat(urlBBOX[3])) /
+            (extent[1] - extent[3]))) *
+          (outputDPI / urlDPI)
+      )
+    ),
+  ];
+
+  if (outputSize[0] > 4096 || outputSize[1] > 4096) {
+    const outputScaler = 4096 / Math.max(outputSize[0], outputSize[1]);
+    outputDPI = parseInt(String(outputDPI * outputScaler));
+    outputSize = [
+      parseInt(String(outputSize[0] * outputScaler)),
+      parseInt(String(outputSize[1] * outputScaler)),
+    ];
+  }
+
+  url.searchParams.set("SIZE", outputSize.join(","));
+  url.searchParams.set("DPI", String(outputDPI));
+  url.searchParams.set("BBOX", extent.join(","));
+  url.searchParams.set("BBOXSR", "3857");
+  url.searchParams.set("IMAGESR", "3857");
+
+  return {
+    type: "image",
+    baseURL: url,
+    opacity: layer.getOpacity(),
+    imageFormat: "image/png",
+    extent: extent,
+    name: "image",
+  };
+}
+
+/**
+ * Configure WMS image layer for MapFish
+ */
+function configureWMSImageLayer(layer: ImageLayer): MapFishWMSLayer {
+  const source = layer.getSource() as {
+    url_?: string;
+    serverType_?: string;
+    params_?: { LAYERS: string };
+  };
+
+  const baseURL = source?.url_?.split("?")[0] || "";
+
+  return {
+    type: "wms",
+    baseURL,
+    serverType: source?.serverType_,
+    opacity: layer.getOpacity(),
+    layers: [source?.params_?.LAYERS || ""],
+    imageFormat: "image/png",
+    customParams: {
+      TRANSPARENT: "true",
+      zIndex: (layer.getZIndex() || 0) + (layer.get("printIndex") || 0),
+    },
+    version: "1.3.0",
+  };
+}
+
+/**
+ * Get layer by type for MapFish
+ */
+async function getLayerByType(
+  layer: Layer,
+  printOptions: PrintRequestAttributes,
+  map: Map
+): Promise<MapFishLayer | MapFishLayer[] | undefined> {
+  if (layer instanceof VectorLayer) {
+    return buildVectorLayer(layer as VectorLayer<Feature<Geometry>>, map);
+  } else if (layer instanceof ImageLayer) {
+    const sourceType = LayerHelpers.getLayerSourceType(layer.getSource()!);
+    if (sourceType === OL_DATA_TYPES.ImageArcGISRest) {
+      return configureImageLayer(layer, printOptions);
+    } else {
+      return configureWMSImageLayer(layer);
+    }
+  } else if (layer instanceof TileLayer) {
+    return await configureTileLayer(layer);
+  } else if (layer instanceof LayerGroup) {
+    const layers: MapFishLayer[] = [];
+    const groupLayers = layer.getLayers().getArray();
+
+    for (const item of groupLayers) {
+      if (item.getProperties().print === false) continue;
+
+      const retLayers = await getLayerByType(item, printOptions, map);
+      if (retLayers) {
+        if (Array.isArray(retLayers)) {
+          layers.push(...retLayers);
+        } else {
+          layers.push(retLayers);
+        }
+      }
+    }
+
+    return layers.length > 0 ? layers : undefined;
+  }
+
+  console.warn("Unsupported Layer Type", layer);
+  return undefined;
+}
+
+/**
+ * Sort layers by zIndex
+ */
+function sortLayers(layers: MapFishLayer[]): MapFishLayer[] {
+  return layers.sort((a, b) => {
+    const indexA = (a as MapFishWMTSLayer | MapFishOSMLayer | MapFishWMSLayer).customParams?.zIndex ?? 99999999;
+    const indexB = (b as MapFishWMTSLayer | MapFishOSMLayer | MapFishWMSLayer).customParams?.zIndex ?? 99999999;
+
+    if (indexA > indexB) return -1;
+    if (indexA < indexB) return 1;
+    return 0;
+  });
+}
+
+/**
+ * Check if layer is overview layer
+ */
+function isOverviewLayer(layerName: string): boolean {
+  return printConfig.overviewMapLayers.includes(layerName);
+}
+
+/**
+ * Switch templates based on options
+ */
+function switchTemplates(options: PrintState, map: Map): PrintRequestAttributes {
+  const mapProjection = map.getView().getProjection().getCode();
+  const longitudeFirst = true;
+  const currentMapViewCenter = map.getView().getCenter() || [0, 0];
+  const mapExtent = map.getView().calculateExtent();
+  const currentMapScale = getMapScale(map);
+  const overviewMapScale = 2990000;
+  const rotation = 0;
+  const dpi = parseInt(options.mapResolutionOption);
+
+  let printSize = !options.printSizeSelectedOption.size || options.printSizeSelectedOption.size.length === 0
+    ? map.getSize() || [800, 600]
+    : options.printSizeSelectedOption.size;
+
+  const parameters = options.options?.parameters || [];
+
+  const attributes: PrintRequestAttributes = {
+    title: options.mapTitle,
+    description: options.termsOfUse,
+    map: {},
+    scalebar: {
+      geodetic: currentMapScale,
+    },
+    scale: "1 : " + currentMapScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+  };
+
+  // Add custom parameters
+  parameters.forEach((item) => {
+    attributes[item.name] = item.value;
+  });
+
+  attributes.map.projection = mapProjection;
+  attributes.map.longitudeFirst = longitudeFirst;
+  attributes.map.rotation = rotation;
+  attributes.map.dpi = dpi;
+
+  if (options.printSizeSelectedOption.size.length === 0) {
+    if (options.mapOnlyHeight) attributes.map.height = parseInt(options.mapOnlyHeight);
+    if (options.mapOnlyWidth) attributes.map.width = parseInt(options.mapOnlyWidth);
+    printSize = [parseInt(options.mapOnlyWidth), parseInt(options.mapOnlyHeight)];
+  }
+
+  switch (options.mapScaleOption) {
+    case "forceScale":
+      attributes.scalebar.geodetic = parseInt(options.forceScale);
+      attributes.map.scale = parseInt(options.forceScale);
+      attributes.scale = "1 : " + options.forceScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      attributes.map.center = currentMapViewCenter;
+      break;
+
+    case "preserveMapExtent":
+      const dims = computeDimension(printSize[0], printSize[1], mapExtent);
+      attributes.map.height = dims.newHeight;
+      attributes.map.width = dims.newWidth;
+      attributes.map.bbox = mapExtent;
+      break;
+
+    default: // preserveMapScale
+      attributes.map.scale = currentMapScale;
+      attributes.map.center = currentMapViewCenter;
+      break;
+  }
+
+  if (options.printSizeSelectedOption.overview) {
+    attributes.overviewMap = {
+      projection: mapProjection,
+      center: currentMapViewCenter,
+      scale: overviewMapScale,
+      longitudeFirst,
+      rotation,
+      dpi,
+    };
+  }
+
+  return attributes;
+}
+
+// =============================================================================
+// Main Print Request Function
+// =============================================================================
+
+/**
+ * Build print request for MapFish Print server
+ */
+export async function buildPrintRequest(
+  mapLayers: Layer[],
+  printSelectedOption: PrintState,
+  map: Map,
+  printLogo?: string
+): Promise<PrintRequestObject> {
+  // Initialize print request object
+  const printRequest: PrintRequestObject = {
+    layout: "",
+    outputFormat: "",
+    dpi: parseInt(printSelectedOption.mapResolutionOption),
+    compressed: true,
+    parameters: printSelectedOption.options?.parameters || [],
+    attributes: switchTemplates(printSelectedOption, map),
+  };
+
+  printRequest.outputFormat = printSelectedOption.printFormatSelectedOption.value;
+  printRequest.layout = printSelectedOption.printSizeSelectedOption.layout;
+
+  let mainMap: MapFishLayer[] = [];
+  let overviewMap: MapFishLayer[] = [];
+
+  // Set print index for layer ordering
+  let layerOrder = 0;
+  mapLayers.forEach((layer) => {
+    if (layer instanceof LayerGroup) {
+      layer.getLayers().forEach((item) => {
+        layerOrder++;
+        item.setProperties({ printIndex: layerOrder });
+      });
+    } else {
+      layerOrder++;
+      layer.setProperties({ printIndex: layerOrder });
+    }
+  });
+
+  // Process each layer
+  // Note: Layers with print=false are skipped
+  // Layers with display=false are NOT visible on map but ARE included in print
+  for (const layer of mapLayers) {
+    if (layer.getProperties().print === false) continue;
+
+    const retLayers = await getLayerByType(layer, printRequest.attributes, map);
+    if (retLayers) {
+      if (Array.isArray(retLayers)) {
+        mainMap.push(...retLayers);
+        retLayers.forEach((item) => {
+          const layerItem = item as MapFishWMTSLayer;
+          if (layerItem.layer && isOverviewLayer(layerItem.layer)) {
+            overviewMap.push(item);
+          }
+        });
+      } else {
+        mainMap.push(retLayers);
+        const layerItem = retLayers as MapFishWMTSLayer;
+        if (layerItem.layer && isOverviewLayer(layerItem.layer)) {
+          overviewMap.push(retLayers);
+        }
+      }
+    }
+  }
+
+  // Sort and assign layers
+  printRequest.attributes.map.layers = sortLayers(mainMap);
+
+  if (printRequest.attributes.overviewMap) {
+    printRequest.attributes.overviewMap.layers = sortLayers(overviewMap);
+  }
+
+  // Add logo if specified
+  if (printLogo) {
+    printRequest.attributes.imageName = printSelectedOption.printSizeSelectedOption.imageName || printLogo;
+  }
+
+  return printRequest;
+}
+
+export default {
+  buildPrintRequest,
+  loadTileMatrix,
+  loadWMTSConfig,
+};

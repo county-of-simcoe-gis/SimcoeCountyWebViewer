@@ -381,8 +381,10 @@ export async function loadConfig(configSecured: Record<string, unknown> = {}): P
       try {
         const apiConfig = await loadConfigFromApi(config.mapId);
         if (apiConfig) {
-          // Preserve keywords from local config before merging
+          // Preserve important arrays from local config before merging
           const localKeywords = config.toc?.keywords || {};
+          const localToolComponents = config.sidebarToolComponents || [];
+          const localThemeComponents = config.sidebarThemeComponents || [];
 
           // Merge API config with base config, with API config taking precedence
           Object.assign(config, apiConfig);
@@ -390,6 +392,16 @@ export async function loadConfig(configSecured: Record<string, unknown> = {}): P
           // Restore keywords from local config (API doesn't provide keyword definitions)
           if (config.toc) {
             config.toc.keywords = localKeywords;
+          }
+
+          // If API didn't provide tool/theme components, use local config
+          if (!config.sidebarToolComponents || config.sidebarToolComponents.length === 0) {
+            config.sidebarToolComponents = localToolComponents;
+            console.log("Using local tool components from config.json:", localToolComponents.length);
+          }
+          if (!config.sidebarThemeComponents || config.sidebarThemeComponents.length === 0) {
+            config.sidebarThemeComponents = localThemeComponents;
+            console.log("Using local theme components from config.json:", localThemeComponents.length);
           }
 
           // console.log("Config merged with API, keywords preserved:", Object.keys(localKeywords).length);

@@ -266,6 +266,7 @@ export class LayerHelpers {
             TRANSPARENT: true,
           },
           ratio: 1,
+          crossOrigin: "anonymous", // Enable CORS for print functionality
         });
 
         // Add error handling for WMS source

@@ -12,11 +12,12 @@ import { useEffect, useState, Suspense, useCallback } from "react";
 import { lazy } from "react";
 
 // Lazy load tool components
-const MeasureTool = lazy(() => import("@/components/tools/MeasureTool"));
-const CoordinatesTool = lazy(() => import("@/components/tools/CoordinatesTool"));
-const SettingsTool = lazy(() => import("@/components/tools/SettingsTool"));
-const PrintTool = lazy(() => import("@/components/tools/PrintTool"));
-const WeatherTool = lazy(() => import("@/components/tools/WeatherTool"));
+const MeasureTool = lazy(() => import("@/components/tools/Measure/MeasureTool"));
+const CoordinatesTool = lazy(() => import("@/components/tools/Coorfinates/CoordinatesTool"));
+const SettingsTool = lazy(() => import("@/components/tools/Settings/SettingsTool"));
+const PrintTool = lazy(() => import("@/components/tools/Print/PrintTool"));
+const PrintLocalTool = lazy(() => import("@/components/tools/PrintLocal/PrintLocalTool"));
+const WeatherTool = lazy(() => import("@/components/tools/Weather/WeatherTool"));
 
 // Lazy load theme components
 const ForestryTheme = lazy(() => import("@/components/themes/ForestryTheme"));
@@ -56,6 +57,7 @@ const toolComponents: Record<
   Coordinates: CoordinatesTool,
   Settings: SettingsTool,
   Print: PrintTool,
+  PrintLocal: PrintLocalTool,
   Weather: WeatherTool,
 };
 
@@ -88,6 +90,9 @@ export default function Sidebar() {
   // State for active components
   const [activeToolComponent, setActiveToolComponent] = useState<React.ReactNode>(null);
   const [activeThemeComponent, setActiveThemeComponent] = useState<React.ReactNode>(null);
+
+  // Debug logging
+  console.log("Sidebar render:", { toolsCount: tools.length, themesCount: themes.length });
 
   // Function to activate tab by name
   const activateTab = useCallback(
@@ -135,15 +140,15 @@ export default function Sidebar() {
     setActiveTab(index);
   };
 
-  const handleSidebarItemClick = (name: string, type: "tools" | "themes") => {
-    activateSidebarItem(name, type);
+  const handleSidebarItemClick = (componentName: string, displayName: string, type: "tools" | "themes") => {
+    activateSidebarItem(componentName, type);
 
     if (type === "tools") {
-      const ToolComponent = toolComponents[name];
+      const ToolComponent = toolComponents[componentName];
       if (ToolComponent) {
         const component = (
           <Suspense fallback={<div style={{ padding: "20px" }}>Loading tool...</div>}>
-            <ToolComponent name={name} onClose={() => setActiveToolComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
+            <ToolComponent name={displayName} onClose={() => setActiveToolComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
           </Suspense>
         );
         setActiveToolComponent(component);
@@ -151,7 +156,7 @@ export default function Sidebar() {
         // Fallback for unknown tools
         setActiveToolComponent(
           <div style={{ padding: "20px" }}>
-            <h3>{name}</h3>
+            <h3>{displayName}</h3>
             <p>This tool is not yet implemented.</p>
             <button className="sc-button" onClick={() => setActiveToolComponent(null)}>
               Close
@@ -160,11 +165,11 @@ export default function Sidebar() {
         );
       }
     } else if (type === "themes") {
-      const ThemeComponent = themeComponents[name];
+      const ThemeComponent = themeComponents[componentName];
       if (ThemeComponent) {
         const component = (
           <Suspense fallback={<div style={{ padding: "20px" }}>Loading theme...</div>}>
-            <ThemeComponent name={name} onClose={() => setActiveThemeComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
+            <ThemeComponent name={displayName} onClose={() => setActiveThemeComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
           </Suspense>
         );
         setActiveThemeComponent(component);
@@ -172,7 +177,7 @@ export default function Sidebar() {
         // Fallback for unknown themes
         setActiveThemeComponent(
           <div style={{ padding: "20px" }}>
-            <h3>{name}</h3>
+            <h3>{displayName}</h3>
             <p>This theme is not yet implemented.</p>
             <button className="sc-button" onClick={() => setActiveThemeComponent(null)}>
               Close
@@ -186,7 +191,7 @@ export default function Sidebar() {
   const renderDefaultToolsContent = () => (
     <div className="sc-sidebar-items-container">
       {tools.map((tool) => (
-        <div key={tool.id} className={`sc-sidebar-item ${activeTool === tool.id ? "active" : ""}`} onClick={() => handleSidebarItemClick(tool.name, "tools")}>
+        <div key={tool.id} className={`sc-sidebar-item ${activeTool === tool.id ? "active" : ""}`} onClick={() => handleSidebarItemClick(tool.component || tool.name, tool.name, "tools")}>
           <div className="sc-sidebar-item-image">
             <Image src={`/images/${tool.imageName}`} alt={tool.name} width={32} height={32} />
           </div>
@@ -202,7 +207,7 @@ export default function Sidebar() {
   const renderDefaultThemesContent = () => (
     <div className="sc-sidebar-items-container">
       {themes.map((theme) => (
-        <div key={theme.id} className={`sc-sidebar-item ${activeTheme === theme.id ? "active" : ""}`} onClick={() => handleSidebarItemClick(theme.name, "themes")}>
+        <div key={theme.id} className={`sc-sidebar-item ${activeTheme === theme.id ? "active" : ""}`} onClick={() => handleSidebarItemClick(theme.component || theme.name, theme.name, "themes")}>
           <div className="sc-sidebar-item-image">
             <Image src={`/images/${theme.imageName}`} alt={theme.name} width={32} height={32} />
           </div>

@@ -1,5 +1,5 @@
 {
-  "useMapConfigApi": true,
+  "useMapConfigApi": false,
   "mapId": "public",
   "headerLogoImageName": "logo.png",
   "title": "Interactive Map - County of Simcoe (GIS)",
@@ -294,6 +294,13 @@
       "name": "Print",
       "componentName": "Print",
       "description": "This tool allows users to print their map view in a variety of formats such as pdf and jpeg.",
+      "imageName": "print.png"
+    },
+    {
+      "id": 11,
+      "name": "Print Local (Beta)",
+      "componentName": "PrintLocal",
+      "description": "This tool allows users to print their map view in a variety of formats such as pdf and jpeg locally.",
       "imageName": "print.png"
     },
     {

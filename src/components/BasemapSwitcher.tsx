@@ -17,7 +17,8 @@ interface BasemapLayer {
   url: string;
   type: string;
   isOverlay?: boolean;
-  excludePrint?: boolean;
+  display?: boolean;
+  print?: boolean;
   fullExtent?: number[];
   minZoom?: number;
   maxZoom?: number;
@@ -348,13 +349,23 @@ export default function BasemapSwitcher() {
                   }
                 }
 
+                // Use display/print flags (default to true if not specified)
+                const shouldDisplay = layerConfig.display !== false;
+                const shouldPrint = layerConfig.print !== false;
+                
+                // Set print property on the layer itself so print request builder can access it
+                layer.set("print", shouldPrint);
+                layer.set("display", shouldDisplay);
+                
                 // Add layer using LayerManager for proper z-index management
                 LayerManager.addLayer(layer, "BaseMap", `${basemapService.name}_${i}`, {
                   index: i,
                   opacity: opacity,
+                  visible: shouldDisplay,
                   metadata: {
                     isBasemap: true,
-                    excludePrint: layerConfig.excludePrint || false,
+                    display: shouldDisplay,
+                    print: shouldPrint,
                     isOverlay: layerConfig.isOverlay || false,
                     basemapService: basemapService.name,
                     layerConfig: layerConfig,
@@ -530,10 +541,14 @@ export default function BasemapSwitcher() {
     setActiveButton("topo");
     disableImagery();
 
-    // Show basemap layers using LayerManager
+    // Show basemap layers using LayerManager (only those with display: true)
     const basemapLayers = LayerManager.getLayersByCategory("BaseMap");
     const topoLayers = basemapLayers.filter((managedLayer) => managedLayer.metadata?.isBasemap === true);
-    topoLayers.forEach((managedLayer) => managedLayer.layer.setVisible(true));
+    topoLayers.forEach((managedLayer) => {
+      // Only show layers that have display: true
+      const shouldShow = managedLayer.metadata?.display !== false;
+      managedLayer.layer.setVisible(shouldShow);
+    });
   }, [disableImagery]);
 
   const onStreetsCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
