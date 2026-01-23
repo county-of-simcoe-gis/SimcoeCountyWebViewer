@@ -21,6 +21,7 @@ const WeatherTool = lazy(() => import("@/components/tools/Weather/WeatherTool"))
 
 // Lazy load theme components
 const ForestryTheme = lazy(() => import("@/components/themes/ForestryTheme"));
+const AvlTheme = lazy(() => import("@/components/themes/avl/AvlTheme"));
 
 // Lazy load TOC component
 const TOC = lazy(() => import("@/components/TOC/TOC"));
@@ -77,6 +78,7 @@ const themeComponents: Record<
   >
 > = {
   Forestry: ForestryTheme,
+  Avl: AvlTheme,
 };
 
 export default function Sidebar() {

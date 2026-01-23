@@ -22,6 +22,8 @@ export interface AppConfig {
   printUrl: string;
   apiUrl: string;
   apiUrlDev: string;
+  apiUrlSecured?: string;
+  apiUrlSecuredDev?: string;
 
   // Feature flags
   includeAppStats: boolean;

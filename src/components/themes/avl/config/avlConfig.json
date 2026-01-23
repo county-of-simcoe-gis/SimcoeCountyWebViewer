@@ -1,0 +1,95 @@
+{
+  "groups": [
+    {
+      "name": "Roads",
+      "visible": false,
+      "open": false,
+      "subGroups": [
+        { "name": "Heavy Equipment", "imageName": "heavyEquipment.png", "visible": true },
+        { "name": "Other", "imageName": "other.png", "visible": true },
+        { "name": "Patrol", "imageName": "patrol.png", "visible": true },
+        { "name": "Plow", "imageName": "plow.png", "visible": true }
+      ]
+    },
+    {
+      "name": "Roads GeoTab",
+      "hasGeoTabSpreaderData": true,
+      "showTripsTab": true,
+      "isGeoTabDevice": true,
+      "geoTabAPIKey": "roads",
+      "visible": true,
+      "open": false,
+      "subGroups": [
+        { "name": "Heavy Equipment", "imageName": "heavyEquipment.png", "visible": true },
+        { "name": "Other", "imageName": "other.png", "visible": true },
+        { "name": "Patrol", "imageName": "patrol.png", "visible": true },
+        { "name": "Plow", "imageName": "plow.png", "visible": true }
+      ]
+    },
+    {
+      "name": "Solid Waste",
+      "visible": false,
+      "open": false,
+      "subGroups": [
+        { "name": "Heavy Equipment", "imageName": "heavyEquipment.png", "visible": true },
+        { "name": "Other", "imageName": "other.png", "visible": true },
+        { "name": "Bulky Collections", "imageName": "bulky-collections.png", "visible": true },
+        { "name": "By Law", "imageName": "byLaw.png", "visible": true }
+      ]
+    },
+    {
+      "name": "Solid Waste GeoTab",
+      "visible": false,
+      "open": false,
+      "isGeoTabDevice": true,
+      "geoTabAPIKey": "solid_waste",
+      "subGroups": [
+        { "name": "Heavy Equipment", "imageName": "heavyEquipment.png", "visible": true },
+        { "name": "Other", "imageName": "other.png", "visible": true },
+        { "name": "Bulky Collections", "imageName": "bulky-collections.png", "visible": true },
+        { "name": "By Law", "imageName": "byLaw.png", "visible": true }
+      ]
+    },
+    {
+      "name": "Waste Contractor",
+      "visible": false,
+      "open": false,
+      "isGeoTabDevice": true,
+      "geoTabAPIKey": "waste_contractor",
+      "subGroups": [
+        { "name": "Regular Collection", "imageName": "recycling.png", "visible": true },
+        { "name": "Regular Collection Supervisor", "imageName": "supervisor.png", "visible": true },
+        { "name": "Regular Collection Mini", "imageName": "mini.png", "visible": true },
+        { "name": "Special Collection", "imageName": "specialCollection.png", "visible": true }
+      ]
+    },
+    {
+      "name": "Innisfil",
+      "visible": false,
+      "hasGeoTabSpreaderData": true,
+      "open": false,
+      "isGeoTabDevice": true,
+      "geoTabAPIKey": "innisfil_roads",
+      "subGroups": [
+        { "name": "Heavy Equipment", "imageName": "heavyEquipment.png", "visible": true },
+        { "name": "Other", "imageName": "other.png", "visible": true },
+        { "name": "Patrol", "imageName": "patrol.png", "visible": true },
+        { "name": "Plow", "imageName": "plow.png", "visible": true }
+      ]
+    },
+    {
+      "name": "Severn",
+      "visible": false,
+      "hasGeoTabSpreaderData": true,
+      "open": false,
+      "isGeoTabDevice": true,
+      "geoTabAPIKey": "severn_roads",
+      "subGroups": [
+        { "name": "Heavy Equipment", "imageName": "heavyEquipment.png", "visible": true },
+        { "name": "Other", "imageName": "other.png", "visible": true },
+        { "name": "Patrol", "imageName": "patrol.png", "visible": true },
+        { "name": "Plow", "imageName": "plow.png", "visible": true }
+      ]
+    }
+  ]
+}
