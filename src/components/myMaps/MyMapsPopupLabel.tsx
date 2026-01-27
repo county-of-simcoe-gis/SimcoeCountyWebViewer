@@ -7,13 +7,15 @@ import "@/components/myMaps/MyMapsPopupLabel.css";
 interface MyMapsPopupLabelProps {
   item: MyMapsItemType;
   onLabelChange?: (id: string, label: string) => void;
+  onLabelVisibilityChange?: (id: string, visible: boolean) => void;
   onLabelRotationChange?: (id: string, rotation: number) => void;
 }
 
-const MyMapsPopupLabel: React.FC<MyMapsPopupLabelProps> = ({ item, onLabelChange, onLabelRotationChange }) => {
+const MyMapsPopupLabel: React.FC<MyMapsPopupLabelProps> = ({ item, onLabelChange, onLabelVisibilityChange, onLabelRotationChange }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [tempLabel, setTempLabel] = useState(item.label);
   const [labelRotation, setLabelRotation] = useState(item.labelRotation || 0);
+  const [showLabel, setShowLabel] = useState(item.labelVisible || false);
 
   // Only sync when not editing to prevent infinite loops
   useEffect(() => {
@@ -21,7 +23,8 @@ const MyMapsPopupLabel: React.FC<MyMapsPopupLabelProps> = ({ item, onLabelChange
       setTempLabel(item.label);
       setLabelRotation(item.labelRotation || 0);
     }
-  }, [item.label, item.labelRotation, isEditing]);
+    setShowLabel(item.labelVisible || false);
+  }, [item.label, item.labelRotation, item.labelVisible, isEditing]);
 
   const handleLabelSubmit = () => {
     if (onLabelChange) {
@@ -51,10 +54,21 @@ const MyMapsPopupLabel: React.FC<MyMapsPopupLabelProps> = ({ item, onLabelChange
     }
   };
 
+  const handleLabelVisibilityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const visible = e.target.checked;
+    setShowLabel(visible);
+    if (onLabelVisibilityChange) {
+      onLabelVisibilityChange(item.id, visible);
+    }
+  };
+
+  // Check if checkbox should be disabled (Text and Callout types always have labels visible)
+  const isCheckboxDisabled = item.drawType === "Text" || item.drawType === "Callout";
+
   return (
     <div>
       <div className="sc-mymaps-popup-label-toggler">
-        <div className={item.drawType === "Text" ? "sc-mymaps-popup-checkbox disabled" : "sc-mymaps-popup-checkbox"}>
+        <div className={isCheckboxDisabled ? "sc-mymaps-popup-checkbox disabled" : "sc-mymaps-popup-checkbox"}>
           <label
             style={{
               WebkitTouchCallout: "none",
@@ -65,7 +79,7 @@ const MyMapsPopupLabel: React.FC<MyMapsPopupLabelProps> = ({ item, onLabelChange
               userSelect: "none",
             }}
           >
-            <input style={{ position: "relative", top: "1.5px" }} type="checkbox" checked={item.labelVisible} readOnly disabled={item.drawType === "Text"} />
+            <input style={{ position: "relative", top: "1.5px" }} type="checkbox" checked={showLabel} onChange={handleLabelVisibilityChange} disabled={isCheckboxDisabled} />
             Show Label
           </label>
         </div>

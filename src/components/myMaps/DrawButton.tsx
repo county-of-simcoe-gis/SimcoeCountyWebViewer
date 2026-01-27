@@ -36,7 +36,7 @@ const DrawButton: React.FC<DrawButtonProps> = ({ title, imageName, onClick, isAc
         }
       }}
     >
-      <Image src={imageName} alt={title} width={20} height={20} className="sc-mymaps-draw-button-image" />
+      <Image src={imageName} alt={title} width={20} height={20} className="sc-mymaps-draw-button-image" unoptimized={imageName.endsWith(".svg")} />
     </div>
   );
 };

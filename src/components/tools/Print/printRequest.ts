@@ -5,7 +5,7 @@
 
 import { Feature } from "ol";
 import { Geometry, Point, LineString, Polygon, MultiPolygon } from "ol/geom";
-import { Style, Fill, Stroke, Text, Circle as CircleStyle, Icon } from "ol/style";
+import { Style, Fill, Stroke, Text, Circle as CircleStyle, Icon, RegularShape } from "ol/style";
 import { asArray } from "ol/color";
 import { Vector as VectorLayer, Tile as TileLayer, Image as ImageLayer, Group as LayerGroup } from "ol/layer";
 import { Layer } from "ol/layer";
@@ -52,24 +52,26 @@ interface MapFishStyle {
 
 interface MapFishGeoJsonLayer {
   type: "geojson";
-  geoJson: {
-    type: "FeatureCollection";
-    features: Array<{
-      type: "Feature";
-      geometry: {
-        type: string;
-        coordinates: unknown;
-      };
-      properties: Record<string, unknown>;
-    }>;
-  } | Array<{
-    type: "Feature";
-    geometry: {
-      type: string;
-      coordinates: unknown;
-    };
-    properties: Record<string, unknown>;
-  }>;
+  geoJson:
+    | {
+        type: "FeatureCollection";
+        features: Array<{
+          type: "Feature";
+          geometry: {
+            type: string;
+            coordinates: unknown;
+          };
+          properties: Record<string, unknown>;
+        }>;
+      }
+    | Array<{
+        type: "Feature";
+        geometry: {
+          type: string;
+          coordinates: unknown;
+        };
+        properties: Record<string, unknown>;
+      }>;
   name: string;
   style: MapFishStyle;
 }
@@ -185,9 +187,7 @@ interface PrintRequestObject {
  */
 function lookupFont(font: string | undefined): string {
   if (!font) return printConfig.fonts[0];
-  const foundFont = printConfig.fonts.find(
-    (item) => font.toLowerCase() === item.toLowerCase()
-  );
+  const foundFont = printConfig.fonts.find((item) => font.toLowerCase() === item.toLowerCase());
   return foundFont || printConfig.fonts[0];
 }
 
@@ -199,7 +199,17 @@ function colorToHex(color: unknown): string | null {
   if (Array.isArray(color)) {
     return rgbToHex(color[0], color[1], color[2], color[3]);
   }
-  return color as string;
+  // Handle string colors - convert rgba/rgb strings to hex
+  const colorStr = String(color);
+  if (colorStr.startsWith("rgba(") || colorStr.startsWith("rgb(")) {
+    try {
+      const arr = asArray(colorStr);
+      return rgbToHex(arr[0], arr[1], arr[2], arr[3]);
+    } catch {
+      return colorStr;
+    }
+  }
+  return colorStr;
 }
 
 /**
@@ -223,7 +233,7 @@ function colorToOpacity(color: unknown): number {
 function extractVisualComponents(
   feature: Feature<Geometry>,
   featureStyle: Style | Style[] | ((feature: Feature<Geometry>) => Style | Style[]) | null,
-  layerStyle: Style | null
+  layerStyle: Style | null,
 ): Array<{
   geometry: Geometry;
   style: Style;
@@ -252,7 +262,7 @@ function extractVisualComponents(
   }
 
   // Process each style in the array
-  resolvedStyles.forEach((style, index) => {
+  resolvedStyles.forEach((style) => {
     if (!style) return;
 
     // Determine geometry for this style component
@@ -302,7 +312,7 @@ function fillToSymbolizer(olFill: Fill | null): Record<string, unknown> {
 /**
  * Convert OpenLayers Stroke to MapFish symbolizer properties
  */
-function strokeToSymbolizer(olStroke: Stroke | null): Record<string, unknown> {
+function strokeToSymbolizer(olStroke: Stroke | null, dpi: number = 96): Record<string, unknown> {
   if (!olStroke) return {};
   const color = olStroke.getColor?.();
   const width = olStroke.getWidth?.();
@@ -314,7 +324,9 @@ function strokeToSymbolizer(olStroke: Stroke | null): Record<string, unknown> {
     result.strokeOpacity = colorToOpacity(color);
   }
   if (width !== null && width !== undefined) {
-    result.strokeWidth = width;
+    // Scale stroke width based on DPI
+    const dpiScale = dpi / 96;
+    result.strokeWidth = Math.max(1, Math.round(width * dpiScale));
   }
   if (lineDash) {
     result.strokeDashstyle = lineDash[0] === 1 ? "dot" : "dash";
@@ -327,10 +339,7 @@ function strokeToSymbolizer(olStroke: Stroke | null): Record<string, unknown> {
 /**
  * Convert OpenLayers Text to MapFish text symbolizer
  */
-function textToSymbolizer(
-  olText: Text | null,
-  options: { skipHalo?: boolean } = {}
-): MapFishSymbolizer | null {
+function textToSymbolizer(olText: Text | null, options: { skipHalo?: boolean; drawType?: string; featureLabelRotation?: number } = {}): MapFishSymbolizer | null {
   if (!olText?.getText?.()) return null;
 
   const fontString = olText.getFont?.() || "normal 12px Arial";
@@ -364,6 +373,16 @@ function textToSymbolizer(
     fontSize = `${scaledSize}px`;
   }
 
+  // Get the label rotation - use text style rotation, or fallback to feature's labelRotation
+  const textStyleRotation = olText.getRotation?.() || 0;
+  let labelRotationDegrees = textStyleRotation !== 0 ? radiansToDegrees(textStyleRotation) : options.featureLabelRotation || 0;
+
+  // Apply bearing rotation adjustment for Bearing and Measure tools
+  // The original app uses: rotation > 180 ? rotation + 90 : rotation - 90
+  if (options.drawType === "Bearing" || options.drawType === "Measure") {
+    labelRotationDegrees = labelRotationDegrees > 180 ? labelRotationDegrees + 90 : labelRotationDegrees - 90;
+  }
+
   const symbolizer: MapFishSymbolizer = {
     type: "text",
     fontFamily: font.length >= 3 ? lookupFont(font[2]) : "Arial",
@@ -373,7 +392,7 @@ function textToSymbolizer(
     label: olText.getText(),
     fontColor: textFillColor,
     labelAlign: `${(textAlign || "center").substring(0, 1)}${(textBaseline || "middle").substring(0, 1)}`,
-    labelRotation: radiansToDegrees(olText.getRotation?.() || 0),
+    labelRotation: labelRotationDegrees,
     labelXOffset: (olText.getOffsetX?.() || 0) * -1,
     labelYOffset: (olText.getOffsetY?.() || 0) * -1,
     goodnessOfFit: 0,
@@ -384,10 +403,10 @@ function textToSymbolizer(
     symbolizer.haloColor = "#ffffff";
     symbolizer.haloOpacity = 0.9;
     symbolizer.haloRadius = 2;
-  } else if (textStroke?.getWidth?.() && textStroke.getWidth()! > 1 && !options.skipHalo) {
+  } else if (textStroke?.getWidth?.() && textStroke.getWidth()! > 0 && !options.skipHalo) {
     symbolizer.haloColor = strokeColor;
-    symbolizer.haloOpacity = 0.4;
-    symbolizer.haloRadius = Math.min(1.5, Number(textStroke.getWidth()) * 0.3);
+    symbolizer.haloOpacity = 1;
+    symbolizer.haloRadius = Math.max(1, Number(textStroke.getWidth()) * 0.5);
   }
 
   return symbolizer;
@@ -396,7 +415,7 @@ function textToSymbolizer(
 /**
  * Convert OpenLayers Circle image to MapFish point symbolizer
  */
-function circleImageToSymbolizer(olImage: CircleStyle | null): MapFishSymbolizer | null {
+function circleImageToSymbolizer(olImage: CircleStyle | null, dpi: number = 96): MapFishSymbolizer | null {
   if (!olImage) return null;
 
   const symbolizer: MapFishSymbolizer = {
@@ -405,7 +424,10 @@ function circleImageToSymbolizer(olImage: CircleStyle | null): MapFishSymbolizer
   };
 
   if (olImage.getRadius) {
-    symbolizer.pointRadius = olImage.getRadius();
+    // Scale radius based on DPI (screen pixels to print points)
+    // At 96 DPI, 1 pixel = 1 point. At higher DPI, scale up proportionally
+    const dpiScale = dpi / 96;
+    symbolizer.pointRadius = Math.round(olImage.getRadius() * dpiScale);
   }
 
   const fill = olImage.getFill?.();
@@ -446,15 +468,72 @@ function iconImageToSymbolizer(olImage: Icon | null): MapFishSymbolizer | null {
 }
 
 /**
+ * Map OpenLayers RegularShape points to MapFish graphicName
+ */
+function getGraphicNameFromPoints(points: number, radius2?: number): string {
+  // MapFish Print supports: circle, square, triangle, star, cross, x
+  if (points === 4 && (radius2 === 0 || radius2 === undefined)) {
+    return "cross"; // 4 points with radius2=0 is a cross
+  }
+  if (points === 4) {
+    return "square"; // 4 points with radius2 is a square
+  }
+  if (points === 3) {
+    return "triangle";
+  }
+  if (points === 5) {
+    return "star"; // 5 points is a star
+  }
+  // Default to circle for unknown shapes
+  return "circle";
+}
+
+/**
+ * Convert OpenLayers RegularShape to MapFish point symbolizer
+ */
+function regularShapeImageToSymbolizer(olImage: RegularShape | null, dpi: number = 96): MapFishSymbolizer | null {
+  if (!olImage) return null;
+
+  const points = olImage.getPoints?.() || 4;
+  const radius = olImage.getRadius?.() || 10;
+  const radius2 = olImage.getRadius2?.();
+  const rotation = olImage.getRotation?.() || 0;
+  const angle = olImage.getAngle?.() || 0;
+
+  // Scale radius based on DPI (screen pixels to print points)
+  const dpiScale = dpi / 96;
+  const scaledRadius = Math.round(radius * dpiScale);
+
+  const symbolizer: MapFishSymbolizer = {
+    type: "point",
+    graphicName: getGraphicNameFromPoints(points, radius2),
+    pointRadius: scaledRadius,
+    rotation: radiansToDegrees(rotation + angle),
+  };
+
+  const fill = olImage.getFill?.();
+  const stroke = olImage.getStroke?.();
+
+  if (fill?.getColor) {
+    const color = fill.getColor();
+    symbolizer.fillColor = colorToHex(color);
+    symbolizer.fillOpacity = colorToOpacity(color);
+  }
+
+  if (stroke?.getColor) {
+    const color = stroke.getColor();
+    symbolizer.strokeColor = colorToHex(color);
+    symbolizer.strokeWidth = stroke.getWidth?.() || 1;
+    symbolizer.strokeOpacity = colorToOpacity(color);
+  }
+
+  return symbolizer;
+}
+
+/**
  * Create MapFish GeoJSON layer
  */
-function createGeoJsonLayer(
-  layerName: string,
-  featureId: string,
-  geometry: Geometry,
-  symbolizers: MapFishSymbolizer[],
-  properties: Record<string, unknown> = {}
-): MapFishGeoJsonLayer {
+function createGeoJsonLayer(layerName: string, featureId: string, geometry: Geometry, symbolizers: MapFishSymbolizer[], properties: Record<string, unknown> = {}): MapFishGeoJsonLayer {
   const geojsonType = geometry.getType();
   const coordinates = (geometry as Point | LineString | Polygon | MultiPolygon).getCoordinates();
 
@@ -490,14 +569,16 @@ function createTextBackgroundLayer(
   centerPoint: number[],
   textContent: string,
   textStyle: Text,
-  map: Map
+  map: Map,
+  drawType?: string,
+  featureLabelRotation?: number,
 ): MapFishGeoJsonLayer | null {
   const bgFill = textStyle.getBackgroundFill?.();
   if (!bgFill) return null;
 
   const fontString = textStyle.getFont?.() || "14px Arial";
   const fontSizeMatch = fontString.match(/(\d+)px/);
-  let fontSizeNum = fontSizeMatch ? parseInt(fontSizeMatch[1]) : 14;
+  const fontSizeNum = fontSizeMatch ? parseInt(fontSizeMatch[1]) : 14;
 
   const scaleFactor = 0.6;
   const scaledFontSize = Math.round(fontSizeNum * scaleFactor);
@@ -517,17 +598,48 @@ function createTextBackgroundLayer(
 
   const halfW = boxWidthMeters / 2;
   const halfH = boxHeightMeters / 2;
-  const boxCoords = [
+
+  // Get rotation from text style (in radians) or from feature's labelRotation (in degrees)
+  // Use feature's labelRotation as fallback since style functions may not preserve rotation
+  const textStyleRotation = textStyle.getRotation?.() || 0;
+  let rotationDegrees = textStyleRotation !== 0 ? radiansToDegrees(textStyleRotation) : featureLabelRotation || 0;
+
+  // Apply bearing rotation adjustment for Bearing and Measure tools (same as textToSymbolizer)
+  if (drawType === "Bearing" || drawType === "Measure") {
+    rotationDegrees = rotationDegrees > 180 ? rotationDegrees + 90 : rotationDegrees - 90;
+  }
+
+  // Convert to radians for the rotation calculation
+  const rotation = rotationDegrees * (Math.PI / 180);
+
+  // Helper function to rotate a point around center
+  const rotatePoint = (x: number, y: number, cx: number, cy: number, angle: number): [number, number] => {
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    const dx = x - cx;
+    const dy = y - cy;
+    return [cx + dx * cos - dy * sin, cy + dx * sin + dy * cos];
+  };
+
+  // Create box corners (unrotated)
+  const corners: [number, number][] = [
     [centerPoint[0] - halfW, centerPoint[1] - halfH],
     [centerPoint[0] + halfW, centerPoint[1] - halfH],
     [centerPoint[0] + halfW, centerPoint[1] + halfH],
     [centerPoint[0] - halfW, centerPoint[1] + halfH],
-    [centerPoint[0] - halfW, centerPoint[1] - halfH],
   ];
+
+  // Apply rotation to each corner
+  const rotatedCorners = corners.map(([x, y]) => rotatePoint(x, y, centerPoint[0], centerPoint[1], rotation));
+
+  // Close the polygon
+  const boxCoords = [...rotatedCorners, rotatedCorners[0]];
 
   const bgStroke = textStyle.getBackgroundStroke?.();
   const bgFillColor = bgFill?.getColor ? colorToHex(bgFill.getColor()) : "#ffffff";
+  const bgFillOpacity = bgFill?.getColor ? colorToOpacity(bgFill.getColor()) : 0.95;
   const bgStrokeColor = bgStroke?.getColor ? colorToHex(bgStroke.getColor()) : "#333333";
+  const bgStrokeOpacity = bgStroke?.getColor ? colorToOpacity(bgStroke.getColor()) : 1;
 
   const styleObj: MapFishStyle = { version: "2" };
   styleObj["*"] = {
@@ -535,10 +647,10 @@ function createTextBackgroundLayer(
       {
         type: "polygon",
         fillColor: bgFillColor,
-        fillOpacity: 0.95,
+        fillOpacity: bgFillOpacity,
         strokeColor: bgStrokeColor,
-        strokeWidth: 1,
-        strokeOpacity: 1,
+        strokeWidth: bgStroke?.getWidth?.() || 1,
+        strokeOpacity: bgStrokeOpacity,
       },
     ],
   };
@@ -579,7 +691,7 @@ export async function loadTileMatrix(url: string): Promise<TileMatrix[]> {
   const capabilities = json.Capabilities as Record<string, unknown>;
   const contents = capabilities?.Contents as Record<string, unknown>;
   let tileMatrixSet = contents?.TileMatrixSet as Record<string, unknown> | Record<string, unknown>[];
-  
+
   if (Array.isArray(tileMatrixSet)) {
     tileMatrixSet = tileMatrixSet[0];
   }
@@ -589,24 +701,16 @@ export async function loadTileMatrix(url: string): Promise<TileMatrix[]> {
   return flatTileMatrix.map((m) => ({
     identifier: m["ows:Identifier"]?.["#text"] || "",
     scaleDenominator: Number(m["ScaleDenominator"]?.["#text"] || 0),
-    topLeftCorner: (m["TopLeftCorner"]?.["#text"] || "0 0")
-      .split(" ")
-      .map(Number),
+    topLeftCorner: (m["TopLeftCorner"]?.["#text"] || "0 0").split(" ").map(Number),
     tileSize: [256, 256],
-    matrixSize: [
-      Number(m["MatrixWidth"]?.["#text"] || 1),
-      Number(m["MatrixHeight"]?.["#text"] || 1),
-    ],
+    matrixSize: [Number(m["MatrixWidth"]?.["#text"] || 1), Number(m["MatrixHeight"]?.["#text"] || 1)],
   }));
 }
 
 /**
  * Load WMTS configuration for layer
  */
-export async function loadWMTSConfig(
-  url: string,
-  opacity: number
-): Promise<MapFishWMTSLayer> {
+export async function loadWMTSConfig(url: string, opacity: number): Promise<MapFishWMTSLayer> {
   const matrices = await loadTileMatrix(url + "/WMTS/1.0.0/WMTSCapabilities.xml");
 
   return {
@@ -632,7 +736,7 @@ export async function loadWMTSConfig(
 /**
  * Build vector layer for MapFish Print
  */
-function buildVectorLayer(layer: VectorLayer<Feature<Geometry>>, map: Map): MapFishGeoJsonLayer[] | undefined {
+function buildVectorLayer(layer: VectorLayer, map: Map, dpi: number = 96): MapFishGeoJsonLayer[] | undefined {
   const returnLayers: MapFishGeoJsonLayer[] = [];
   const olFeatures: Feature<Geometry>[] = [];
   const extent = map.getView().calculateExtent(map.getSize());
@@ -670,7 +774,7 @@ function buildVectorLayer(layer: VectorLayer<Feature<Geometry>>, map: Map): MapF
       const olImage = style.getImage?.();
 
       const geomType = geometry.getType();
-      let mapfishType = printConfig.drawTypes[drawType || ""] || printConfig.drawTypes[geomType] || "Polygon";
+      const mapfishType = printConfig.drawTypes[drawType || ""] || printConfig.drawTypes[geomType] || "Polygon";
 
       // Build shape symbolizer
       if (olFill || olStroke || olImage) {
@@ -681,12 +785,19 @@ function buildVectorLayer(layer: VectorLayer<Feature<Geometry>>, map: Map): MapF
         }
 
         if (olStroke) {
-          Object.assign(shapeSymbolizer, strokeToSymbolizer(olStroke));
+          Object.assign(shapeSymbolizer, strokeToSymbolizer(olStroke, dpi));
         }
 
-        // Handle circle/marker images
-        if (olImage && "getRadius" in olImage) {
-          const circleSymbolizer = circleImageToSymbolizer(olImage as CircleStyle);
+        // Handle circle/marker images - check for RegularShape first (it also has getRadius)
+        if (olImage && "getPoints" in olImage) {
+          // RegularShape (triangles, stars, crosses, etc.)
+          const regularShapeSymbolizer = regularShapeImageToSymbolizer(olImage as RegularShape, dpi);
+          if (regularShapeSymbolizer) {
+            symbolizers.push(regularShapeSymbolizer);
+          }
+        } else if (olImage && "getRadius" in olImage) {
+          // CircleStyle
+          const circleSymbolizer = circleImageToSymbolizer(olImage as CircleStyle, dpi);
           if (circleSymbolizer) {
             symbolizers.push(circleSymbolizer);
           }
@@ -713,25 +824,21 @@ function buildVectorLayer(layer: VectorLayer<Feature<Geometry>>, map: Map): MapF
 
       // Handle text with background
       if (olText?.getText?.()) {
-        const textSymbolizer = textToSymbolizer(olText, { skipHalo: !!olText.getBackgroundFill?.() });
+        // Get labelRotation from feature for cases where style function doesn't preserve rotation
+        const featureLabelRotation = feature.get("labelRotation") as number | undefined;
+        const textSymbolizer = textToSymbolizer(olText, { skipHalo: !!olText.getBackgroundFill?.(), drawType, featureLabelRotation });
         if (textSymbolizer) {
           if (olText.getBackgroundFill?.()) {
-            const textPoint =
-              geometry.getType() === "Point"
-                ? (geometry as Point).getCoordinates()
-                : (geometry as LineString | Polygon).getCoordinates().slice(-1)[0] as number[];
+            const textPoint = geometry.getType() === "Point" ? (geometry as Point).getCoordinates() : ((geometry as LineString | Polygon).getCoordinates().slice(-1)[0] as number[]);
 
-            const bgLayer = createTextBackgroundLayer(layerName, featureId, textPoint, olText.getText() as string, olText, map);
+            const bgLayer = createTextBackgroundLayer(layerName, featureId, textPoint, olText.getText() as string, olText, map, drawType, featureLabelRotation);
             if (bgLayer) {
               featureLayers.push(bgLayer);
             }
 
             const textStyleObj: MapFishStyle = { version: "2" };
             textStyleObj["*"] = {
-              symbolizers: [
-                { type: "point", graphicName: "circle", pointRadius: 1, fillOpacity: 0, strokeOpacity: 0 },
-                textSymbolizer,
-              ],
+              symbolizers: [{ type: "point", graphicName: "circle", pointRadius: 1, fillOpacity: 0, strokeOpacity: 0 }, textSymbolizer],
             };
 
             featureLayers.push({
@@ -771,7 +878,7 @@ function buildVectorLayer(layer: VectorLayer<Feature<Geometry>>, map: Map): MapF
             style: styles,
           };
 
-          const geoJsonString = FeatureHelpers.setFeatures([feature], OL_DATA_TYPES.GeoJSON, "EPSG:4326", "EPSG:4326");
+          const geoJsonString = FeatureHelpers.setFeatures([feature], OL_DATA_TYPES.GeoJSON, null, null);
           if (geoJsonString) {
             const geoJsonFeature = JSON.parse(geoJsonString);
             itemLayer.geoJson = geoJsonFeature.features.map((f: { properties: unknown }) => {
@@ -806,9 +913,7 @@ async function configureTileLayer(layer: TileLayer): Promise<MapFishWMTSLayer | 
   }
 
   let tileUrl = urls[0];
-  tileUrl = tileUrl.includes("/MapServer/WMTS/")
-    ? tileUrl.split("/WMTS/")[0]
-    : tileUrl.split("/tile/")[0];
+  tileUrl = tileUrl.includes("/MapServer/WMTS/") ? tileUrl.split("/WMTS/")[0] : tileUrl.split("/tile/")[0];
 
   // Check for OpenStreetMap
   const sourceKey = (layerSource as { key_?: string }).key_ || "";
@@ -833,10 +938,10 @@ async function configureTileLayer(layer: TileLayer): Promise<MapFishWMTSLayer | 
 /**
  * Configure image layer for MapFish
  */
-function configureImageLayer(layer: ImageLayer, options: PrintRequestAttributes): MapFishImageLayer {
+function configureImageLayer(layer: ImageLayer<any>, options: PrintRequestAttributes): MapFishImageLayer {
   const source = layer.getSource() as { image_?: { src_: string } };
   const imageSrc = source?.image_?.src_;
-  
+
   if (!imageSrc) {
     throw new Error("Image source not found");
   }
@@ -847,41 +952,20 @@ function configureImageLayer(layer: ImageLayer, options: PrintRequestAttributes)
   const urlSIZE = (urlParams.get("SIZE") || "800,600").split(",");
   const urlBBOX = (urlParams.get("BBOX") || "0,0,0,0").split(",");
 
-  const printSize = !options.map.height
-    ? [800, 600]
-    : [parseInt(String(options.map.height)), parseInt(String(options.map.width))];
+  const printSize = !options.map.height ? [800, 600] : [parseInt(String(options.map.height)), parseInt(String(options.map.width))];
 
-  const extent = options.map.bbox
-    ? options.map.bbox
-    : computeExtent(printSize[0], printSize[1], 72, options.map.scale || 1, options.map.center || [0, 0]);
+  const extent = options.map.bbox ? options.map.bbox : computeExtent(printSize[0], printSize[1], 72, options.map.scale || 1, options.map.center || [0, 0]);
 
   let outputDPI = options.map.dpi || 96;
   let outputSize = [
-    parseInt(
-      String(
-        (parseInt(urlSIZE[0]) /
-          ((parseFloat(urlBBOX[0]) - parseFloat(urlBBOX[2])) /
-            (extent[0] - extent[2]))) *
-          (outputDPI / urlDPI)
-      )
-    ),
-    parseInt(
-      String(
-        (parseInt(urlSIZE[1]) /
-          ((parseFloat(urlBBOX[1]) - parseFloat(urlBBOX[3])) /
-            (extent[1] - extent[3]))) *
-          (outputDPI / urlDPI)
-      )
-    ),
+    parseInt(String((parseInt(urlSIZE[0]) / ((parseFloat(urlBBOX[0]) - parseFloat(urlBBOX[2])) / (extent[0] - extent[2]))) * (outputDPI / urlDPI))),
+    parseInt(String((parseInt(urlSIZE[1]) / ((parseFloat(urlBBOX[1]) - parseFloat(urlBBOX[3])) / (extent[1] - extent[3]))) * (outputDPI / urlDPI))),
   ];
 
   if (outputSize[0] > 4096 || outputSize[1] > 4096) {
     const outputScaler = 4096 / Math.max(outputSize[0], outputSize[1]);
     outputDPI = parseInt(String(outputDPI * outputScaler));
-    outputSize = [
-      parseInt(String(outputSize[0] * outputScaler)),
-      parseInt(String(outputSize[1] * outputScaler)),
-    ];
+    outputSize = [parseInt(String(outputSize[0] * outputScaler)), parseInt(String(outputSize[1] * outputScaler))];
   }
 
   url.searchParams.set("SIZE", outputSize.join(","));
@@ -903,7 +987,7 @@ function configureImageLayer(layer: ImageLayer, options: PrintRequestAttributes)
 /**
  * Configure WMS image layer for MapFish
  */
-function configureWMSImageLayer(layer: ImageLayer): MapFishWMSLayer {
+function configureWMSImageLayer(layer: ImageLayer<any>): MapFishWMSLayer {
   const source = layer.getSource() as {
     url_?: string;
     serverType_?: string;
@@ -930,13 +1014,10 @@ function configureWMSImageLayer(layer: ImageLayer): MapFishWMSLayer {
 /**
  * Get layer by type for MapFish
  */
-async function getLayerByType(
-  layer: Layer,
-  printOptions: PrintRequestAttributes,
-  map: Map
-): Promise<MapFishLayer | MapFishLayer[] | undefined> {
+async function getLayerByType(layer: Layer, printOptions: PrintRequestAttributes, map: Map): Promise<MapFishLayer | MapFishLayer[] | undefined> {
   if (layer instanceof VectorLayer) {
-    return buildVectorLayer(layer as VectorLayer<Feature<Geometry>>, map);
+    const dpi = printOptions.map.dpi || 96;
+    return buildVectorLayer(layer as VectorLayer, map, dpi);
   } else if (layer instanceof ImageLayer) {
     const sourceType = LayerHelpers.getLayerSourceType(layer.getSource()!);
     if (sourceType === OL_DATA_TYPES.ImageArcGISRest) {
@@ -1004,9 +1085,7 @@ function switchTemplates(options: PrintState, map: Map): PrintRequestAttributes 
   const rotation = 0;
   const dpi = parseInt(options.mapResolutionOption);
 
-  let printSize = !options.printSizeSelectedOption.size || options.printSizeSelectedOption.size.length === 0
-    ? map.getSize() || [800, 600]
-    : options.printSizeSelectedOption.size;
+  let printSize = !options.printSizeSelectedOption.size || options.printSizeSelectedOption.size.length === 0 ? map.getSize() || [800, 600] : options.printSizeSelectedOption.size;
 
   const parameters = options.options?.parameters || [];
 
@@ -1078,12 +1157,7 @@ function switchTemplates(options: PrintState, map: Map): PrintRequestAttributes 
 /**
  * Build print request for MapFish Print server
  */
-export async function buildPrintRequest(
-  mapLayers: Layer[],
-  printSelectedOption: PrintState,
-  map: Map,
-  printLogo?: string
-): Promise<PrintRequestObject> {
+export async function buildPrintRequest(mapLayers: Layer[], printSelectedOption: PrintState, map: Map, printLogo?: string): Promise<PrintRequestObject> {
   // Initialize print request object
   const printRequest: PrintRequestObject = {
     layout: "",
@@ -1097,8 +1171,8 @@ export async function buildPrintRequest(
   printRequest.outputFormat = printSelectedOption.printFormatSelectedOption.value;
   printRequest.layout = printSelectedOption.printSizeSelectedOption.layout;
 
-  let mainMap: MapFishLayer[] = [];
-  let overviewMap: MapFishLayer[] = [];
+  const mainMap: MapFishLayer[] = [];
+  const overviewMap: MapFishLayer[] = [];
 
   // Set print index for layer ordering
   let layerOrder = 0;

@@ -14,6 +14,7 @@ import { useEventStore } from "@/stores/eventStore";
 import { activateTab } from "@/utils/helpersUI";
 
 import { getPointStyle, getLineStringStyle, getPolygonStyle } from "@/utils/openlayers/DrawingHelpers";
+import { getDefaultLabelStyle } from "@/components/myMaps/myMapsStyles";
 import MyMapsPopupLabel from "@/components/myMaps/MyMapsPopupLabel";
 import MyMapsBuffer from "@/components/myMaps/MyMapsBuffer";
 import MyMapsSymbolizer from "@/components/myMaps/MyMapsSymbolizer";
@@ -119,7 +120,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       // Fallback to default colors
       return buttonId.includes("stroke") ? { r: 255, g: 255, b: 255 } : { r: 232, g: 9, b: 229 }; // Default white stroke, pink fill
     },
-    [hexToRgbObject]
+    [hexToRgbObject],
   );
 
   // Create overlay element and overlay once when first needed
@@ -531,7 +532,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         return getPointStyle(pointType, radius, strokeColor, strokeWidth, fillColor, rotation, strokeType);
       }
     },
-    [item]
+    [item],
   );
 
   // Function to update symbolizer point type
@@ -592,7 +593,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         currentStrokeWidth, // Use current stroke width from DOM
         [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha], // Use current values
         currentRotation, // Use current rotation from DOM
-        currentStrokeType // Use current stroke type from DOM
+        currentStrokeType, // Use current stroke type from DOM
       );
 
       // Update the item in the store with the full OpenLayers style object
@@ -609,7 +610,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       emit("mymap-style-updated", { itemId, style, pointType: newPointType });
       console.log("🔄 Emitted mymap-style-updated event for point type change:", itemId);
     },
-    [item, updateItem, emit, getCurrentSymbolizerState, createPointStyleFromHelpers, extractColorFromDOMButton]
+    [item, updateItem, emit, getCurrentSymbolizerState, createPointStyleFromHelpers, extractColorFromDOMButton],
   );
 
   // Function to update symbolizer fill color
@@ -686,7 +687,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         updatedState.strokeWidth,
         [newColor.r, newColor.g, newColor.b, updatedState.fillAlpha], // Use new fill color
         updatedState.rotation,
-        updatedState.strokeType
+        updatedState.strokeType,
       );
 
       // Update the item in the store with the full OpenLayers style object (matching old app)
@@ -703,7 +704,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       emit("mymap-style-updated", { itemId, style, fillColor: newColor });
       console.log("🔄 Emitted mymap-style-updated event for fill color change:", itemId);
     },
-    [item, updateItem, emit, getCurrentSymbolizerState, createPointStyleFromHelpers, extractColorFromDOMButton]
+    [item, updateItem, emit, getCurrentSymbolizerState, createPointStyleFromHelpers, extractColorFromDOMButton],
   );
 
   // Function to update symbolizer stroke color
@@ -780,7 +781,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         updatedState.strokeWidth,
         [updatedState.fillColor.r, updatedState.fillColor.g, updatedState.fillColor.b, updatedState.fillAlpha],
         updatedState.rotation,
-        updatedState.strokeType
+        updatedState.strokeType,
       );
 
       // Update the item in the store with the full OpenLayers style object (matching old app)
@@ -797,7 +798,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       emit("mymap-style-updated", { itemId, style, strokeColor: newColor });
       console.log("🔄 Emitted mymap-style-updated event for stroke color change:", itemId);
     },
-    [item, updateItem, emit, getCurrentSymbolizerState, createPointStyleFromHelpers, extractColorFromDOMButton]
+    [item, updateItem, emit, getCurrentSymbolizerState, createPointStyleFromHelpers, extractColorFromDOMButton],
   );
 
   // Function to update symbolizer fill opacity - GEOMETRY AWARE
@@ -890,14 +891,14 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
           updatedState.strokeWidth,
           [updatedState.fillColor.r, updatedState.fillColor.g, updatedState.fillColor.b, newOpacity], // Use new opacity
           updatedState.rotation,
-          updatedState.strokeType
+          updatedState.strokeType,
         );
       } else if (item.geometryType === "Polygon" || item.geometryType === "MultiPolygon") {
         style = getPolygonStyle(
           [updatedState.strokeColor.r, updatedState.strokeColor.g, updatedState.strokeColor.b, updatedState.strokeAlpha],
           updatedState.strokeWidth,
           [updatedState.fillColor.r, updatedState.fillColor.g, updatedState.fillColor.b, newOpacity], // Use new opacity
-          updatedState.strokeType
+          updatedState.strokeType,
         );
       }
       // Note: LineString doesn't have fill, so no style creation needed
@@ -919,7 +920,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         console.log("🔄 Emitted mymap-style-updated event for fill opacity change:", itemId);
       }
     },
-    [item, updateItem, emit, getCurrentSymbolizerState, extractColorFromDOMButton]
+    [item, updateItem, emit, getCurrentSymbolizerState, extractColorFromDOMButton],
   );
 
   // Function to update symbolizer stroke opacity - GEOMETRY AWARE
@@ -1015,20 +1016,20 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
           updatedState.strokeWidth,
           [updatedState.fillColor.r, updatedState.fillColor.g, updatedState.fillColor.b, updatedState.fillAlpha], // Keep existing fill
           updatedState.rotation,
-          updatedState.strokeType
+          updatedState.strokeType,
         );
       } else if (item.geometryType === "LineString" || item.geometryType === "MultiLineString") {
         style = getLineStringStyle(
           [updatedState.strokeColor.r, updatedState.strokeColor.g, updatedState.strokeColor.b, newOpacity], // Use new stroke opacity
           updatedState.strokeWidth,
-          updatedState.strokeType
+          updatedState.strokeType,
         );
       } else if (item.geometryType === "Polygon" || item.geometryType === "MultiPolygon") {
         style = getPolygonStyle(
           [updatedState.strokeColor.r, updatedState.strokeColor.g, updatedState.strokeColor.b, newOpacity], // Use new stroke opacity
           updatedState.strokeWidth,
           [updatedState.fillColor.r, updatedState.fillColor.g, updatedState.fillColor.b, updatedState.fillAlpha], // Keep existing fill
-          updatedState.strokeType
+          updatedState.strokeType,
         );
       }
 
@@ -1049,12 +1050,15 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         console.log("🔄 Emitted mymap-style-updated event for stroke opacity change:", itemId);
       }
     },
-    [item, updateItem, emit, getCurrentSymbolizerState, extractColorFromDOMButton]
+    [item, updateItem, emit, getCurrentSymbolizerState, extractColorFromDOMButton],
   );
 
   // Function to show color picker popup (matching MyMapsSymbolizer approach)
+  // Extended to support all color types including label/callout colors
+  type ColorType = "fill" | "stroke" | "textColor" | "labelOutlineColor" | "backgroundColor" | "borderColor" | "lineColor" | "anchorColor";
+
   const showSymbolizerColorPicker = useCallback(
-    (event: MouseEvent, colorType: "fill" | "stroke") => {
+    (event: MouseEvent, colorType: ColorType) => {
       // Remove any existing color picker
       const existingPicker = document.getElementById("sc-symbolizer-color-picker-container");
       if (existingPicker) {
@@ -1148,6 +1152,18 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       // Add to page
       document.body.appendChild(colorPicker);
 
+      // Map color type to button ID for updating button background
+      const colorTypeToButtonId: Record<ColorType, string> = {
+        fill: "sc-mymaps-symbolizer-color-button",
+        stroke: "sc-mymaps-symbolizer-stroke-color-button",
+        textColor: "sc-mymaps-symbolizer-text-color-button",
+        labelOutlineColor: "sc-mymaps-symbolizer-label-outline-color-button",
+        backgroundColor: "sc-mymaps-symbolizer-callout-background-color-button",
+        borderColor: "sc-mymaps-symbolizer-callout-border-color-button",
+        lineColor: "sc-mymaps-symbolizer-callout-line-color-button",
+        anchorColor: "sc-mymaps-symbolizer-callout-anchor-color-button",
+      };
+
       // Handle color selection
       const handleColorClick = (colorEvent: Event) => {
         const colorElement = colorEvent.target as HTMLElement;
@@ -1157,20 +1173,52 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
           const rgbColor = hexToRgbObject(selectedColor);
 
           // Update button color immediately
-          const targetButton =
-            colorType === "fill"
-              ? (overlayElementRef.current?.querySelector("#sc-mymaps-symbolizer-color-button") as HTMLButtonElement)
-              : (overlayElementRef.current?.querySelector("#sc-mymaps-symbolizer-stroke-color-button") as HTMLButtonElement);
-
+          const buttonId = colorTypeToButtonId[colorType];
+          const targetButton = overlayElementRef.current?.querySelector(`#${buttonId}`) as HTMLButtonElement;
           if (targetButton) {
             targetButton.style.backgroundColor = selectedColor;
           }
 
-          // Update the style
+          // Get the CURRENT item from store to avoid stale closure issues
+          const currentItems = useMyMapsStore.getState().items;
+          const currentItem = currentItems.find((i) => i.id === item?.id);
+          if (!currentItem) return;
+
+          // Update the style based on color type
           if (colorType === "fill") {
-            updateSymbolizerFillColor(item.id, { r: rgbColor.r, g: rgbColor.g, b: rgbColor.b });
+            updateSymbolizerFillColor(currentItem.id, { r: rgbColor.r, g: rgbColor.g, b: rgbColor.b });
+          } else if (colorType === "stroke") {
+            updateSymbolizerStrokeColor(currentItem.id, { r: rgbColor.r, g: rgbColor.g, b: rgbColor.b });
           } else {
-            updateSymbolizerStrokeColor(item.id, { r: rgbColor.r, g: rgbColor.g, b: rgbColor.b });
+            // Handle label/callout colors
+            // Get current labelStyle from CURRENT item (not stale closure), merged with defaults
+            const defaultLabelStyle = getDefaultLabelStyle(currentItem.drawType);
+            const currentLabelStyle = {
+              ...defaultLabelStyle,
+              ...((currentItem.labelStyle as Record<string, unknown>) || {}),
+            };
+
+            // Map our colorType to the labelStyle property names
+            const labelStylePropertyMap: Record<string, string> = {
+              textColor: "textColor",
+              labelOutlineColor: "outlineColor",
+              backgroundColor: "backgroundColor",
+              borderColor: "borderColor",
+              lineColor: "lineColor",
+              anchorColor: "anchorColor",
+            };
+
+            const propertyName = labelStylePropertyMap[colorType];
+            if (propertyName) {
+              const updatedLabelStyle = {
+                ...currentLabelStyle,
+                [propertyName]: selectedColor,
+              };
+
+              console.log("🏷️ Updating label style via DOM color picker:", { colorType, propertyName, selectedColor, updatedLabelStyle });
+              updateItem(currentItem.id, { labelStyle: updatedLabelStyle });
+              emit("mymap-label-style-change", { id: currentItem.id, labelStyle: updatedLabelStyle });
+            }
           }
         }
 
@@ -1197,7 +1245,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         document.addEventListener("click", handleOutsideClick);
       }, 100);
     },
-    [item, updateSymbolizerFillColor, updateSymbolizerStrokeColor, hexToRgbObject]
+    [item, updateSymbolizerFillColor, updateSymbolizerStrokeColor, hexToRgbObject, updateItem, emit],
   );
 
   // Attach event listeners (memoized to prevent unnecessary re-attachments)
@@ -1496,7 +1544,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
                        border: 1px solid #ddd;
                        border-radius: 2px;
                      "></div>
-              `
+              `,
                 )
                 .join("")}
             </div>
@@ -2145,20 +2193,20 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
                 currentStrokeWidth,
                 [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha],
                 currentRotation,
-                newStrokeType // Use the new stroke type
+                newStrokeType, // Use the new stroke type
               );
             } else if (item?.geometryType === "LineString" || item?.geometryType === "MultiLineString") {
               style = getLineStringStyle(
                 [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha],
                 currentStrokeWidth,
-                newStrokeType // Use the new stroke type
+                newStrokeType, // Use the new stroke type
               );
             } else if (item?.geometryType === "Polygon" || item?.geometryType === "MultiPolygon") {
               style = getPolygonStyle(
                 [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha],
                 currentStrokeWidth,
                 [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha],
-                newStrokeType // Use the new stroke type
+                newStrokeType, // Use the new stroke type
               );
             }
 
@@ -2241,7 +2289,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
               currentStrokeWidth,
               [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha], // Use current values from DOM
               currentRotation,
-              currentStrokeType
+              currentStrokeType,
             );
 
             // Update the item in the store
@@ -2452,20 +2500,20 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
                 newStrokeWidth, // Use the new stroke width
                 [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha],
                 currentRotation,
-                currentStrokeType
+                currentStrokeType,
               );
             } else if (item?.geometryType === "LineString" || item?.geometryType === "MultiLineString") {
               style = getLineStringStyle(
                 [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha],
                 newStrokeWidth, // Use the new stroke width
-                currentStrokeType
+                currentStrokeType,
               );
             } else if (item?.geometryType === "Polygon" || item?.geometryType === "MultiPolygon") {
               style = getPolygonStyle(
                 [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha],
                 newStrokeWidth, // Use the new stroke width
                 [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha],
-                currentStrokeType
+                currentStrokeType,
               );
             }
 
@@ -2557,7 +2605,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
               currentStrokeWidth,
               [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha],
               newRotation, // Use the new rotation
-              currentStrokeType
+              currentStrokeType,
             );
 
             // Update the item in the store
@@ -2629,6 +2677,201 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
           e.stopPropagation();
         });
         (strokeColorButton as HTMLElement).style.pointerEvents = "auto";
+      }
+
+      // Text color picker button
+      const textColorButton = symbolizerContainer.querySelector("#sc-mymaps-symbolizer-text-color-button") as HTMLButtonElement;
+      if (textColorButton) {
+        const handleTextColorClick = (e: Event) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log("🎯 Text color button clicked - showing popup");
+          showSymbolizerColorPicker(e as MouseEvent, "textColor");
+        };
+
+        textColorButton.addEventListener("click", handleTextColorClick);
+        textColorButton.addEventListener("mousedown", (e) => {
+          e.stopPropagation();
+        });
+        (textColorButton as HTMLElement).style.pointerEvents = "auto";
+      }
+
+      // Label outline color picker button
+      const labelOutlineColorButton = symbolizerContainer.querySelector("#sc-mymaps-symbolizer-label-outline-color-button") as HTMLButtonElement;
+      if (labelOutlineColorButton) {
+        const handleLabelOutlineColorClick = (e: Event) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log("🎯 Label outline color button clicked - showing popup");
+          showSymbolizerColorPicker(e as MouseEvent, "labelOutlineColor");
+        };
+
+        labelOutlineColorButton.addEventListener("click", handleLabelOutlineColorClick);
+        labelOutlineColorButton.addEventListener("mousedown", (e) => {
+          e.stopPropagation();
+        });
+        (labelOutlineColorButton as HTMLElement).style.pointerEvents = "auto";
+      }
+
+      // Font size dropdown (for label text size)
+      const fontSizeDropdowns = symbolizerContainer.querySelectorAll(".sc-mymaps-style-dropdown");
+      // The font size dropdown is typically the last dropdown in the label style section
+      // Find the one that contains font size options (10px, 12px, etc.)
+      fontSizeDropdowns.forEach((dropdown) => {
+        const selectElement = dropdown as HTMLSelectElement;
+        // Check if this is the font size dropdown by looking at options
+        const options = Array.from(selectElement.options);
+        const isFontSizeDropdown = options.some((opt) => opt.value.includes("px") && !opt.value.includes("Normal") && !opt.value.includes("Dashed"));
+
+        if (isFontSizeDropdown) {
+          const handleFontSizeChange = (e: Event) => {
+            e.stopPropagation();
+            const newFontSize = (e.target as HTMLSelectElement).value;
+            console.log("🎯 Font size changed via DOM event:", newFontSize);
+
+            // Get the CURRENT item from store to avoid stale closure issues
+            const currentItems = useMyMapsStore.getState().items;
+            const currentItem = currentItems.find((i) => i.id === item?.id);
+            if (!currentItem) return;
+
+            // Get current labelStyle from CURRENT item (not stale closure), merged with defaults
+            const defaultLabelStyle = getDefaultLabelStyle(currentItem.drawType);
+            const currentLabelStyle = {
+              ...defaultLabelStyle,
+              ...((currentItem.labelStyle as Record<string, unknown>) || {}),
+            };
+
+            const updatedLabelStyle = {
+              ...currentLabelStyle,
+              textSize: newFontSize,
+            };
+
+            console.log("🏷️ Updating font size via DOM event:", { newFontSize, updatedLabelStyle });
+            updateItem(currentItem.id, { labelStyle: updatedLabelStyle });
+            emit("mymap-label-style-change", { id: currentItem.id, labelStyle: updatedLabelStyle });
+          };
+
+          selectElement.addEventListener("change", handleFontSizeChange);
+          selectElement.addEventListener("mousedown", (e) => {
+            e.stopPropagation();
+          });
+          (selectElement as HTMLElement).style.pointerEvents = "auto";
+        }
+      });
+
+      // Label outline width slider
+      // The label outline width slider is in the label style section - find sliders within the symbolizer
+      // that are NOT the main style sliders (size, fill opacity, stroke opacity, stroke width, rotation)
+      const labelSliders = symbolizerContainer.querySelectorAll("input[type='range']") as NodeListOf<HTMLInputElement>;
+      // The label outline width slider has max=4 and step=0.5, which distinguishes it from other sliders
+      labelSliders.forEach((slider) => {
+        const max = parseFloat(slider.getAttribute("max") || "100");
+        const step = slider.getAttribute("step");
+
+        // Label outline width slider has max=4 and step=0.5
+        if (max === 4 && step === "0.5") {
+          const handleLabelOutlineWidthChange = (e: Event) => {
+            e.stopPropagation();
+            const newOutlineWidth = parseFloat((e.target as HTMLInputElement).value);
+            console.log("🎯 Label outline width changed via DOM event:", newOutlineWidth);
+
+            // Get the CURRENT item from store to avoid stale closure issues
+            const currentItems = useMyMapsStore.getState().items;
+            const currentItem = currentItems.find((i) => i.id === item?.id);
+            if (!currentItem) return;
+
+            // Get current labelStyle from CURRENT item (not stale closure), merged with defaults
+            const defaultLabelStyle = getDefaultLabelStyle(currentItem.drawType);
+            const currentLabelStyle = {
+              ...defaultLabelStyle,
+              ...((currentItem.labelStyle as Record<string, unknown>) || {}),
+            };
+
+            const updatedLabelStyle = {
+              ...currentLabelStyle,
+              outlineWidth: newOutlineWidth,
+            };
+
+            console.log("🏷️ Updating label outline width via DOM event:", { newOutlineWidth, updatedLabelStyle });
+            updateItem(currentItem.id, { labelStyle: updatedLabelStyle });
+            emit("mymap-label-style-change", { id: currentItem.id, labelStyle: updatedLabelStyle });
+          };
+
+          slider.addEventListener("input", handleLabelOutlineWidthChange);
+          slider.addEventListener("change", handleLabelOutlineWidthChange);
+          slider.addEventListener("mousedown", (e) => {
+            e.stopPropagation();
+          });
+          (slider as HTMLElement).style.pointerEvents = "auto";
+        }
+      });
+
+      // Callout background color picker button
+      const calloutBackgroundColorButton = symbolizerContainer.querySelector("#sc-mymaps-symbolizer-callout-background-color-button") as HTMLButtonElement;
+      if (calloutBackgroundColorButton) {
+        const handleCalloutBackgroundColorClick = (e: Event) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log("🎯 Callout background color button clicked - showing popup");
+          showSymbolizerColorPicker(e as MouseEvent, "backgroundColor");
+        };
+
+        calloutBackgroundColorButton.addEventListener("click", handleCalloutBackgroundColorClick);
+        calloutBackgroundColorButton.addEventListener("mousedown", (e) => {
+          e.stopPropagation();
+        });
+        (calloutBackgroundColorButton as HTMLElement).style.pointerEvents = "auto";
+      }
+
+      // Callout border color picker button
+      const calloutBorderColorButton = symbolizerContainer.querySelector("#sc-mymaps-symbolizer-callout-border-color-button") as HTMLButtonElement;
+      if (calloutBorderColorButton) {
+        const handleCalloutBorderColorClick = (e: Event) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log("🎯 Callout border color button clicked - showing popup");
+          showSymbolizerColorPicker(e as MouseEvent, "borderColor");
+        };
+
+        calloutBorderColorButton.addEventListener("click", handleCalloutBorderColorClick);
+        calloutBorderColorButton.addEventListener("mousedown", (e) => {
+          e.stopPropagation();
+        });
+        (calloutBorderColorButton as HTMLElement).style.pointerEvents = "auto";
+      }
+
+      // Callout line color picker button
+      const calloutLineColorButton = symbolizerContainer.querySelector("#sc-mymaps-symbolizer-callout-line-color-button") as HTMLButtonElement;
+      if (calloutLineColorButton) {
+        const handleCalloutLineColorClick = (e: Event) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log("🎯 Callout line color button clicked - showing popup");
+          showSymbolizerColorPicker(e as MouseEvent, "lineColor");
+        };
+
+        calloutLineColorButton.addEventListener("click", handleCalloutLineColorClick);
+        calloutLineColorButton.addEventListener("mousedown", (e) => {
+          e.stopPropagation();
+        });
+        (calloutLineColorButton as HTMLElement).style.pointerEvents = "auto";
+      }
+
+      // Callout anchor color picker button
+      const calloutAnchorColorButton = symbolizerContainer.querySelector("#sc-mymaps-symbolizer-callout-anchor-color-button") as HTMLButtonElement;
+      if (calloutAnchorColorButton) {
+        const handleCalloutAnchorColorClick = (e: Event) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log("🎯 Callout anchor color button clicked - showing popup");
+          showSymbolizerColorPicker(e as MouseEvent, "anchorColor");
+        };
+
+        calloutAnchorColorButton.addEventListener("click", handleCalloutAnchorColorClick);
+        calloutAnchorColorButton.addEventListener("mousedown", (e) => {
+          e.stopPropagation();
+        });
+        (calloutAnchorColorButton as HTMLElement).style.pointerEvents = "auto";
       }
 
       // The container itself should NOT have pointerEvents = "auto" to avoid header conflicts
@@ -3201,7 +3444,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       <div className="ol-popup-content" id="sc-window-popup-content">
         <div className="sc-mymaps-popup-container">
           {/* Label Component - Always shown */}
-          <MyMapsPopupLabel item={item} onLabelChange={onLabelChange} onLabelRotationChange={onLabelRotationChange} />
+          <MyMapsPopupLabel item={item} onLabelChange={onLabelChange} onLabelVisibilityChange={onLabelVisibilityChange} onLabelRotationChange={onLabelRotationChange} />
 
           {/* Tool-specific components */}
           <MyMapsSymbolizer visible={activeTool === "symbolize"} item={item} />

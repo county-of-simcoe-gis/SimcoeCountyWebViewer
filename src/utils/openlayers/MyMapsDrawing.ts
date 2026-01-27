@@ -10,8 +10,9 @@ import GeoJSON from "ol/format/GeoJSON";
 import { fromCircle } from "ol/geom/Polygon";
 import { Style, Fill, Stroke, Circle as CircleStyle, Text, RegularShape } from "ol/style";
 import { Feature } from "ol";
-import { Circle, LineString } from "ol/geom";
-import { generateUID, convertLineToArrow, getBearing } from "@/utils/myMapsHelpers";
+import { Circle, LineString, Point } from "ol/geom";
+import { asArray } from "ol/color";
+import { generateUID, convertLineToArrow, getBearing, getCalloutStyle, getDefaultLabelStyle, type LabelStyle } from "@/utils/myMapsHelpers";
 import type { MyMapsItem, StyleJSON } from "@/types/myMaps";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 
@@ -39,7 +40,7 @@ export class MyMapsDrawingManager {
       onFeatureDrawn: (feature: Feature) => void;
       onFeatureModified: (feature: Feature) => void;
       onFeatureClicked: (feature: Feature, coordinate: number[]) => void;
-    }
+    },
   ) {
     this.map = map;
     this.onFeatureDrawn = callbacks.onFeatureDrawn;
@@ -110,7 +111,7 @@ export class MyMapsDrawingManager {
         },
         {
           layerFilter: (layer) => layer.get("name") === this.layerName,
-        }
+        },
       );
     });
   }
@@ -132,6 +133,7 @@ export class MyMapsDrawingManager {
       case "Arrow":
       case "Bearing":
       case "Measure":
+      case "Callout":
         olDrawType = "LineString";
         break;
       case "Text":
@@ -148,7 +150,7 @@ export class MyMapsDrawingManager {
       type: olDrawType,
       geometryFunction,
       style,
-      maxPoints: drawType === "Bearing" || drawType === "Measure" ? 2 : undefined,
+      maxPoints: drawType === "Bearing" || drawType === "Measure" || drawType === "Callout" ? 2 : undefined,
     });
 
     // Handle draw end
@@ -204,6 +206,20 @@ export class MyMapsDrawingManager {
           bearingLabel: `Bearing: ${bearing}°`,
         });
       }
+    }
+
+    // Handle Callout type - apply callout style and set label properties
+    if (drawType === "Callout" && geometry?.getType() === "LineString") {
+      feature.setProperties({
+        ...feature.getProperties(),
+        label: "Enter Callout Text",
+        labelVisible: true,
+        labelStyle: getDefaultLabelStyle("Callout"),
+      });
+      // Apply callout style function
+      const calloutStyleFn = getCalloutStyle({ drawColor });
+      feature.setStyle(calloutStyleFn);
+      return; // Skip regular styling for callouts
     }
 
     // Apply styling based on type
@@ -495,7 +511,16 @@ export class MyMapsDrawingManager {
           });
 
           // Apply item's style - handle both new OpenLayers Style objects and legacy StyleJSON
-          if (item.style) {
+          // Special handling for Callout items - use callout style function
+          if (item.drawType === "Callout") {
+            console.log("🎨 Applying Callout style function");
+            const labelStyle = item.labelStyle || getDefaultLabelStyle("Callout");
+            const calloutStyleFn = getCalloutStyle({
+              lineColor: typeof labelStyle === "object" && "lineColor" in labelStyle ? labelStyle.lineColor : undefined,
+              anchorColor: typeof labelStyle === "object" && "anchorColor" in labelStyle ? labelStyle.anchorColor : undefined,
+            });
+            feature.setStyle(calloutStyleFn);
+          } else if (item.style) {
             let style: Style;
 
             // Check if it's already a Style object (new approach) or needs conversion (legacy StyleJSON)
@@ -679,6 +704,7 @@ export class MyMapsDrawingManager {
       labelVisible: itemInfo.labelVisible,
       label: itemInfo.label,
       labelRotation: itemInfo.labelRotation,
+      drawType: itemInfo.drawType,
       timestamp: Date.now(),
     });
 
@@ -688,50 +714,174 @@ export class MyMapsDrawingManager {
       return;
     }
 
+    const isCallout = itemInfo.drawType === "Callout";
     let style = feature.getStyle() as Style;
-    if (!style) {
+    if (!style && !isCallout) {
       console.log("⚠️ No style found, creating default style");
-      // If no style exists, create a default one
       style = this.getDefaultStyle("#e809e5");
     }
 
     if (itemInfo.labelVisible && itemInfo.label) {
       console.log("✅ Creating text style for label:", itemInfo.label);
 
-      // CRITICAL FIX: Store the label in the feature property first (like old app)
+      // Store the label in the feature property first
       feature.setProperties({
         labelVisible: true,
         label: itemInfo.label,
         labelRotation: itemInfo.labelRotation || 0,
       });
 
-      // Use the OLD APP EXACT pattern - let createTextStyle get text from feature
-      const textStyle = this.createTextStyleFromFeature(
-        feature,
-        "label", // fieldName - matches old app
-        itemInfo.labelRotation || 0
-      );
+      if (isCallout) {
+        // CALLOUT: Create special style function with text box at end of line
+        const labelStyle = (itemInfo.labelStyle as LabelStyle) || getDefaultLabelStyle("Callout");
 
-      style.setText(textStyle);
+        // Extract label style properties
+        const textColor = labelStyle.textColor || "#000000";
+        const textSize = labelStyle.textSize || "14px";
+        const outlineColor = labelStyle.outlineColor || "#000000";
+        const outlineWidth = labelStyle.outlineWidth ?? 1;
+        const backgroundColor = labelStyle.backgroundColor || "rgba(255, 255, 255, 0.95)";
+        const borderColor = labelStyle.borderColor || "#333333";
+        const lineColor = labelStyle.lineColor || "#333333";
+        const anchorColor = labelStyle.anchorColor || "#333333";
 
-      console.log("📝 Text style applied to feature", {
-        hasTextStyle: !!style.getText(),
-        textContent: style.getText()?.getText?.(),
-        featureLabel: feature.get("label"),
-      });
+        // Parse colors to arrays
+        const lineColorArray = asArray(lineColor);
+        const anchorColorArray = asArray(anchorColor);
+
+        // Create callout style function
+        const calloutStyleFunction = (feat: Feature): Style[] => {
+          const geometry = feat.getGeometry();
+          if (!geometry || geometry.getType() !== "LineString") {
+            return [];
+          }
+
+          const lineGeometry = geometry as LineString;
+          const coordinates = lineGeometry.getCoordinates();
+          const startPoint = coordinates[0];
+          const endPoint = coordinates[coordinates.length - 1];
+
+          // Get the current label rotation from the feature (may have been updated by slider)
+          const labelRotation = feat.get("labelRotation") || itemInfo.labelRotation || 0;
+          const rotationInRadians = labelRotation * (Math.PI / 180);
+
+          // Style for the tail line
+          const lineStyle = new Style({
+            stroke: new Stroke({
+              color: [lineColorArray[0], lineColorArray[1], lineColorArray[2], 0.8],
+              width: 2,
+            }),
+          });
+
+          // Style for the anchor circle at the start point
+          const anchorStyle = new Style({
+            geometry: new Point(startPoint),
+            image: new CircleStyle({
+              radius: 5,
+              fill: new Fill({ color: [anchorColorArray[0], anchorColorArray[1], anchorColorArray[2], 0.8] }),
+              stroke: new Stroke({ color: [anchorColorArray[0], anchorColorArray[1], anchorColorArray[2], 1], width: 1 }),
+            }),
+          });
+
+          // Create text style with background for the callout box (with rotation support)
+          const textStyle = new Text({
+            text: feat.get("label") || itemInfo.label || "",
+            font: `bold ${textSize} arial`,
+            fill: new Fill({ color: textColor }),
+            stroke: new Stroke({ color: outlineColor, width: outlineWidth }),
+            textAlign: "center",
+            textBaseline: "middle",
+            offsetX: 0,
+            offsetY: 0,
+            overflow: true,
+            rotation: rotationInRadians,
+            backgroundFill: new Fill({ color: backgroundColor }),
+            backgroundStroke: new Stroke({ color: borderColor, width: 2 }),
+            padding: [5, 8, 5, 8],
+          });
+
+          // Style for the text box at the end point
+          const textBoxStyle = new Style({
+            geometry: new Point(endPoint),
+            text: textStyle,
+          });
+
+          return [lineStyle, anchorStyle, textBoxStyle];
+        };
+
+        feature.setStyle(calloutStyleFunction);
+        console.log("📝 Callout style function applied to feature");
+      } else {
+        // Regular label handling - use labelStyle if available
+        const labelStyle = (itemInfo.labelStyle as LabelStyle) || getDefaultLabelStyle(itemInfo.drawType || "Point");
+        const isCallout = itemInfo.drawType === "Callout";
+
+        // Extract label style properties - match source app defaults
+        const textColor = labelStyle.textColor || (isCallout ? "#000000" : "#ffffff");
+        const textSize = labelStyle.textSize || "14px";
+        const outlineColor = labelStyle.outlineColor || "#000000";
+        const outlineWidth = labelStyle.outlineWidth !== undefined ? labelStyle.outlineWidth : isCallout ? 1 : 2;
+
+        // Apply bearing rotation adjustment for Bearing and Measure tools (like original app)
+        let displayRotation = itemInfo.labelRotation || 0;
+        const drawType = feature.get("drawType") || feature.get("originalDrawType") || itemInfo.drawType;
+        if (drawType === "Bearing" || drawType === "Measure") {
+          displayRotation = displayRotation > 180 ? displayRotation + 90 : displayRotation - 90;
+        }
+
+        // Convert rotation to radians
+        const rotationInRadians = displayRotation * (Math.PI / 180);
+
+        const textStyle = new Text({
+          text: feature.get("label") || itemInfo.label || "",
+          font: `bold ${textSize} arial`,
+          fill: new Fill({ color: textColor }),
+          stroke: new Stroke({ color: outlineColor, width: outlineWidth }),
+          textAlign: "center",
+          textBaseline: "middle",
+          offsetY: -8,
+          rotation: rotationInRadians,
+          overflow: true,
+          placement: "point",
+        });
+
+        style.setText(textStyle);
+
+        console.log("📝 Text style applied to feature", {
+          hasTextStyle: !!style.getText(),
+          textContent: style.getText()?.getText?.(),
+          featureLabel: feature.get("label"),
+          textColor,
+          textSize,
+          outlineColor,
+          outlineWidth,
+        });
+
+        feature.setStyle(style);
+      }
     } else {
       console.log("❌ Removing label (labelVisible=false or no label text)");
-      style.setText(new Text({ text: "" }));
       feature.setProperties({
         labelVisible: false,
         label: itemInfo.label || "",
         labelRotation: itemInfo.labelRotation || 0,
       });
+
+      if (isCallout) {
+        // Reset to base callout style without text
+        const labelStyle = (itemInfo.labelStyle as LabelStyle) || getDefaultLabelStyle("Callout");
+        const calloutStyleFn = getCalloutStyle({
+          lineColor: labelStyle.lineColor,
+          anchorColor: labelStyle.anchorColor,
+        });
+        feature.setStyle(calloutStyleFn);
+      } else {
+        style.setText(new Text({ text: "" }));
+        feature.setStyle(style);
+      }
     }
 
-    feature.setStyle(style);
-
-    // CRITICAL FIX: Force layer to render on top
+    // Force layer to render on top
     this.vectorLayer.setZIndex(9999);
     this.vectorLayer.changed();
 
@@ -741,8 +891,7 @@ export class MyMapsDrawingManager {
     console.log("🏁 MyMapsDrawing: setFeatureLabel completed", {
       featureId: itemInfo.id,
       finalLabelVisible: feature.get("labelVisible"),
-      hasTextInStyle: !!style.getText(),
-      textContent: style.getText()?.getText?.(),
+      isCallout,
       layerZIndex: this.vectorLayer.getZIndex(),
       vectorSourceFeatureCount: this.vectorSource.getFeatures().length,
       timestamp: Date.now(),
