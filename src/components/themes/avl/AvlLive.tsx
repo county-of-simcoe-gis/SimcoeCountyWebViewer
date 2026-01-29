@@ -13,10 +13,13 @@ import type { EventsKey } from "ol/events";
 
 import { useAvlStore } from "@/stores/avlStore";
 import { useMapStore } from "@/stores/mapStore";
+import { usePopupStore } from "@/stores/popupStore";
+import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { useAvlApi } from "./hooks/useAvlApi";
 import { useGeoTab } from "./hooks/useGeoTab";
 import AvlLiveGroup from "./components/AvlLiveGroup";
 import AvlLiveVehicle from "./components/AvlLiveVehicle";
+import AvlLivePopup from "./components/AvlLivePopup";
 import {
   addVehicleInfo,
   sortByVehicleIdAsc,
@@ -30,14 +33,7 @@ import {
   cleanDeviceNameForMatching,
 } from "./utils/avlHelpers";
 import { avlLiveDropDownStyles } from "./utils/avlStyles";
-import type {
-  AvlLiveProps,
-  AvlVehicle,
-  AvlGroup,
-  AvlSubGroup,
-  SortOption,
-  GeoTabDevice,
-} from "./types/avl.types";
+import type { AvlLiveProps, AvlVehicle, AvlGroup, AvlSubGroup, SortOption, GeoTabDevice } from "./types/avl.types";
 import "./styles/AvlLive.css";
 
 // Import images - using a simpler approach for NextJS
@@ -94,41 +90,63 @@ export default function AvlLive({
   } = useAvlStore();
 
   const { map } = useMapStore();
+  const { show: showPopupStore, hide: hidePopup, updateContent } = usePopupStore();
   const { fetchCurrentLocations } = useAvlApi();
-  const {
-    authenticateGeoTab,
-    fetchGeoTabDevices,
-    fetchDeviceStatusInfo,
-  } = useGeoTab();
+  const { authenticateGeoTab, fetchGeoTabDevices, fetchDeviceStatusInfo, fetchGeoTabDiagnostics } = useGeoTab();
 
   // Local refs
   const layerRef = useRef<VectorLayer<VectorSource> | null>(null);
+  const layerIdRef = useRef<string | null>(null);
   const mapClickEventRef = useRef<EventsKey | null>(null);
   const fetchIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const geoTabIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const popupFeatureRef = useRef<(Feature & { vehicleInfo: AvlVehicle }) | null>(null);
+
+  // Refs to hold latest callback functions for intervals (prevents stale closures)
+  const fetchCurrentLocationsRef = useRef<() => Promise<void>>();
+  const getGeoTabCurrentLocationsRef = useRef<() => Promise<void>>();
+  const updateVehiclesFromGeoTabRef = useRef<
+    (
+      groupName: string,
+      statusInfo: Array<{
+        latitude: number;
+        longitude: number;
+        speed?: number;
+        bearing?: number;
+        dateTime: string;
+        device: { id: string };
+        exceptionEvents?: Array<{ rule?: { id: string }; diagnostic?: { id: string } }>;
+      }>,
+    ) => void
+  >();
 
   // Initialize component
   useEffect(() => {
     if (!map) return;
 
+    // Don't run until allowedGroups is populated (prevents empty initialization)
+    if (!allowedGroups || allowedGroups.length === 0) {
+      return;
+    }
+
     initLayers();
     if (useStorage) {
       loadFromStorage();
     }
+
+    // Initial fetch - direct call since refs may not be set yet
     fetchCurrentLocationsForAllGroups();
 
-    // Set up fetch interval
+    // Set up fetch interval - uses ref to always call latest function (avoids stale closures)
     fetchIntervalRef.current = setInterval(() => {
-      fetchCurrentLocationsForAllGroups();
+      fetchCurrentLocationsRef.current?.();
     }, FETCH_INTERVAL);
 
-    // Set up GeoTab interval if we have GeoTab devices
-    const hasGeoTabDevices = configGroups.some(
-      (group) => allowedGroups.includes(group.name) && group.isGeoTabDevice
-    );
+    // Set up GeoTab interval if we have GeoTab devices - uses ref to always call latest function
+    const hasGeoTabDevices = configGroups.some((group) => allowedGroups.includes(group.name) && group.isGeoTabDevice);
     if (hasGeoTabDevices) {
       geoTabIntervalRef.current = setInterval(() => {
-        getGeoTabCurrentLocations();
+        getGeoTabCurrentLocationsRef.current?.();
       }, GEOTAB_FETCH_INTERVAL);
     }
 
@@ -137,9 +155,11 @@ export default function AvlLive({
 
     return () => {
       // Cleanup
-      if (layerRef.current && map) {
-        map.removeLayer(layerRef.current);
+      if (layerIdRef.current) {
+        LayerManager.removeLayer(layerIdRef.current);
+        layerIdRef.current = null;
       }
+      layerRef.current = null;
       if (fetchIntervalRef.current) {
         clearInterval(fetchIntervalRef.current);
       }
@@ -165,13 +185,134 @@ export default function AvlLive({
 
     const layer = new VectorLayer({
       source: new VectorSource({ features: [] }),
-      zIndex: 1000000000000000000000,
     });
     layer.setProperties({ disableParcelClick: true, name: "avlLive" });
-    layer.setZIndex(1000000000000000000000);
-    map.addLayer(layer);
+
+    // Use LayerManager to add layer with "Overlay" category for highest z-index
+    const layerId = LayerManager.addLayer(layer, "Overlay", "AVL Live Vehicles", {
+      id: "avl-live-layer",
+      metadata: { type: "avl", component: "AvlLive" },
+    });
+
     layerRef.current = layer;
+    layerIdRef.current = layerId;
   }, [map]);
+
+  // Show popup for a vehicle feature
+  const showVehiclePopup = useCallback(
+    async (feature: Feature & { vehicleInfo: AvlVehicle }) => {
+      popupFeatureRef.current = feature;
+      const vehicleInfo = feature.vehicleInfo;
+      const coords = (feature.getGeometry() as Point)?.getCoordinates();
+
+      if (!coords) return;
+
+      // Check if this is a plow vehicle and if the group has spreader data enabled
+      const groupFromConfig = configGroups.find((g) => g.name === vehicleInfo.grouping);
+      const hasGeoTabSpreaderData = groupFromConfig?.hasGeoTabSpreaderData === true;
+
+      // Handler for follow button
+      const onFollowClick = (vehicle: AvlVehicle | null) => {
+        if (vehicle) {
+          setFollowingVehicle({ name: vehicle.vehicle_name, grouping: vehicle.grouping });
+        } else {
+          setFollowingVehicle(null);
+        }
+        // Re-show popup to update the follow button state
+        if (popupFeatureRef.current) {
+          showVehiclePopup(popupFeatureRef.current);
+        }
+      };
+
+      // Handler for history button
+      const onHistoryClick = () => {
+        hidePopup();
+        onHistoryPopupButtonClick(vehicleInfo);
+      };
+
+      // For plow vehicles with GeoTab spreader data, show popup with placeholders first
+      if (vehicleInfo.subgrouping === "Plow" && hasGeoTabSpreaderData) {
+        const initialInfo: AvlVehicle = {
+          ...vehicleInfo,
+          hasGeoTabSpreaderData: true,
+          isPlowActive: vehicleInfo.isPlowActive ?? false,
+          isSpreaderActive: vehicleInfo.isSpreaderActive ?? false,
+          isWingActive: vehicleInfo.isWingActive ?? false,
+          SpreaderRate: vehicleInfo.SpreaderRate ?? "Getting Data...",
+          SurfaceTemperature: vehicleInfo.SurfaceTemperature ?? "Getting Data...",
+          AirTemperature: vehicleInfo.AirTemperature ?? "Getting Data...",
+          MaterialType: vehicleInfo.MaterialType ?? "Getting Data...",
+        };
+
+        // Show popup immediately with placeholders
+        showPopupStore(
+          coords,
+          <AvlLivePopup
+            key={`popup-${Date.now()}`}
+            info={initialInfo}
+            followingVehicleName={followingVehicle?.name || ""}
+            onFollowClick={onFollowClick}
+            onHistoryClick={onHistoryClick}
+            onClose={hidePopup}
+            showFollowButton={showFollowButton}
+            showHistoryButton={showHistoryButton}
+          />,
+          "Avl",
+        );
+
+        // Fetch diagnostic data asynchronously
+        const diagnosticData = await fetchGeoTabDiagnostics(vehicleInfo);
+
+        if (diagnosticData && popupFeatureRef.current === feature) {
+          const updatedInfo: AvlVehicle = {
+            ...vehicleInfo,
+            ...diagnosticData,
+            hasGeoTabSpreaderData: true,
+            isPlowActive: vehicleInfo.isPlowActive ?? false,
+            isSpreaderActive: vehicleInfo.isSpreaderActive ?? false,
+            isWingActive: vehicleInfo.isWingActive ?? false,
+          };
+
+          // Update the feature's vehicleInfo so follow updates also have the data
+          feature.vehicleInfo = updatedInfo;
+
+          // Update popup content with diagnostic data
+          updateContent(
+            <AvlLivePopup
+              key={`popup-${Date.now()}`}
+              info={updatedInfo}
+              followingVehicleName={followingVehicle?.name || ""}
+              onFollowClick={onFollowClick}
+              onHistoryClick={onHistoryClick}
+              onClose={hidePopup}
+              showFollowButton={showFollowButton}
+              showHistoryButton={showHistoryButton}
+            />,
+          );
+        }
+      } else {
+        // For non-plow vehicles, show popup immediately with available data
+        showPopupStore(
+          coords,
+          <AvlLivePopup
+            key={`popup-${Date.now()}`}
+            info={{
+              ...vehicleInfo,
+              hasGeoTabSpreaderData: hasGeoTabSpreaderData || false,
+            }}
+            followingVehicleName={followingVehicle?.name || ""}
+            onFollowClick={onFollowClick}
+            onHistoryClick={onHistoryClick}
+            onClose={hidePopup}
+            showFollowButton={showFollowButton}
+            showHistoryButton={showHistoryButton}
+          />,
+          "Avl",
+        );
+      }
+    },
+    [configGroups, followingVehicle, showFollowButton, showHistoryButton, setFollowingVehicle, showPopupStore, updateContent, hidePopup, fetchGeoTabDiagnostics, onHistoryPopupButtonClick],
+  );
 
   // Handle map click
   const handleMapClick = useCallback(
@@ -182,24 +323,20 @@ export default function AvlLive({
         evt.pixel,
         (feature) => {
           if (feature instanceof Feature) {
-            const vehicleInfo = (feature as Feature & { vehicleInfo?: AvlVehicle }).vehicleInfo;
-            if (vehicleInfo) {
-              console.log("Show popup for vehicle:", vehicleInfo.vehicle_name);
+            const vehicleFeature = feature as Feature & { vehicleInfo?: AvlVehicle };
+            if (vehicleFeature.vehicleInfo) {
+              showVehiclePopup(vehicleFeature as Feature & { vehicleInfo: AvlVehicle });
             }
           }
         },
         {
           layerFilter: (layer) => {
-            return (
-              layer.get("name") === "avlLive" &&
-              layer.getVisible() &&
-              layer instanceof VectorLayer
-            );
+            return layer.get("name") === "avlLive" && layer.getVisible() && layer instanceof VectorLayer;
           },
-        }
+        },
       );
     },
-    [map]
+    [map, showVehiclePopup],
   );
 
   // Fetch current locations for all allowed groups
@@ -207,62 +344,57 @@ export default function AvlLive({
     const sortOrder = sortAscendingChecked ? "ASC" : "DESC";
     const updatedGroups = [...configGroups];
 
-    for (const group of updatedGroups) {
-      if (!allowedGroups.includes(group.name)) continue;
-
-      // For GeoTab devices, only fetch initial data to set up device matching
-      if (group.isGeoTabDevice) {
-        if (!geoTabDevices[group.name] || geoTabDevices[group.name].length === 0) {
-          try {
-            const result = await fetchCurrentLocations(
-              group.name,
-              selectedSortOption.value,
-              sortOrder
-            );
-            if (Array.isArray(result)) {
-              const groupIndex = updatedGroups.findIndex((g) => g.name === group.name);
-              if (groupIndex !== -1) {
-                updatedGroups[groupIndex] = { ...updatedGroups[groupIndex], data: result };
-              }
-              // Authenticate and get devices
-              authenticateAndGetDevices(group, result);
-            }
-          } catch (error) {
-            console.error(`Error fetching data for group ${group.name}:`, error);
-          }
-        }
-        continue;
+    // Filter groups that need to be fetched
+    const groupsToFetch = updatedGroups.filter((group) => {
+      if (!allowedGroups.includes(group.name)) return false;
+      // For GeoTab groups that already have devices, skip
+      if (group.isGeoTabDevice && geoTabDevices[group.name]?.length > 0) {
+        return false;
       }
+      return true;
+    });
 
-      // For non-GeoTab devices, fetch normally
+    // Fetch all groups in parallel
+    const fetchPromises = groupsToFetch.map(async (group) => {
       try {
-        const result = await fetchCurrentLocations(
-          group.name,
-          selectedSortOption.value,
-          sortOrder
-        );
-        if (Array.isArray(result)) {
-          const groupIndex = updatedGroups.findIndex((g) => g.name === group.name);
-          if (groupIndex !== -1) {
-            updatedGroups[groupIndex] = { ...updatedGroups[groupIndex], data: result };
-          }
-        }
+        const result = await fetchCurrentLocations(group.name, selectedSortOption.value, sortOrder);
+        return { group, result };
       } catch (error) {
         console.error(`Error fetching data for group ${group.name}:`, error);
+        return { group, result: null };
       }
+    });
+
+    const results = await Promise.all(fetchPromises);
+
+    // Process results and update groups
+    const geoTabAuthPromises: Promise<void>[] = [];
+    for (const { group, result } of results) {
+      if (Array.isArray(result)) {
+        const groupIndex = updatedGroups.findIndex((g) => g.name === group.name);
+        if (groupIndex !== -1) {
+          updatedGroups[groupIndex] = { ...updatedGroups[groupIndex], data: result };
+        }
+        // For GeoTab groups, start authentication (in parallel)
+        if (group.isGeoTabDevice) {
+          geoTabAuthPromises.push(authenticateAndGetDevices(group, result));
+        }
+      }
+    }
+
+    // Wait for all GeoTab authentications to complete (they run in parallel)
+    if (geoTabAuthPromises.length > 0) {
+      await Promise.all(geoTabAuthPromises);
     }
 
     setConfigGroups(updatedGroups);
     sortVehicles(updatedGroups);
-  }, [
-    allowedGroups,
-    configGroups,
-    fetchCurrentLocations,
-    geoTabDevices,
-    selectedSortOption,
-    sortAscendingChecked,
-    setConfigGroups,
-  ]);
+  }, [allowedGroups, configGroups, fetchCurrentLocations, geoTabDevices, selectedSortOption, sortAscendingChecked, setConfigGroups]);
+
+  // Keep ref updated with latest callback
+  useEffect(() => {
+    fetchCurrentLocationsRef.current = fetchCurrentLocationsForAllGroups;
+  }, [fetchCurrentLocationsForAllGroups]);
 
   // Authenticate with GeoTab and get devices
   const authenticateAndGetDevices = useCallback(
@@ -272,7 +404,7 @@ export default function AvlLive({
         await fetchGeoTabDevices(group, credentials, vehicles);
       }
     },
-    [authenticateGeoTab, fetchGeoTabDevices]
+    [authenticateGeoTab, fetchGeoTabDevices],
   );
 
   // Get GeoTab current locations (real-time updates)
@@ -290,23 +422,34 @@ export default function AvlLive({
       try {
         const statusInfo = await fetchDeviceStatusInfo(deviceIds, credentials);
         if (statusInfo.length > 0) {
-          updateVehiclesFromGeoTab(groupName, statusInfo);
+          // Use ref to avoid circular dependency
+          updateVehiclesFromGeoTabRef.current?.(groupName, statusInfo);
         }
       } catch (error) {
         console.error(`GeoTab API error for group ${groupName}:`, error);
       }
     }
-  }, [
-    allowedGroups,
-    configGroups,
-    geoTabDevices,
-    geoTabCredentials,
-    fetchDeviceStatusInfo,
-  ]);
+  }, [allowedGroups, configGroups, geoTabDevices, geoTabCredentials, fetchDeviceStatusInfo]);
+
+  // Keep ref updated with latest callback
+  useEffect(() => {
+    getGeoTabCurrentLocationsRef.current = getGeoTabCurrentLocations;
+  }, [getGeoTabCurrentLocations]);
 
   // Update vehicles from GeoTab status info
   const updateVehiclesFromGeoTab = useCallback(
-    (groupName: string, statusInfo: Array<{ latitude: number; longitude: number; speed?: number; bearing?: number; dateTime: string; device: { id: string }; exceptionEvents?: Array<{ rule?: { id: string }; diagnostic?: { id: string } }> }>) => {
+    (
+      groupName: string,
+      statusInfo: Array<{
+        latitude: number;
+        longitude: number;
+        speed?: number;
+        bearing?: number;
+        dateTime: string;
+        device: { id: string };
+        exceptionEvents?: Array<{ rule?: { id: string }; diagnostic?: { id: string } }>;
+      }>,
+    ) => {
       const devices = geoTabDevices[groupName];
       if (!devices) return;
 
@@ -320,12 +463,7 @@ export default function AvlLive({
             const device = devices.find((d: GeoTabDevice) => d.id === info.device.id);
             if (!device) return false;
             const cleanedName = cleanDeviceNameForMatching(device.name, groupName);
-            return (
-              vehicle.vehicle_name === cleanedName ||
-              (parseInt(cleanedName) &&
-                parseInt(vehicle.vehicle_name) &&
-                parseInt(cleanedName) === parseInt(vehicle.vehicle_name))
-            );
+            return vehicle.vehicle_name === cleanedName || (parseInt(cleanedName) && parseInt(vehicle.vehicle_name) && parseInt(cleanedName) === parseInt(vehicle.vehicle_name));
           });
 
           if (!matchingDevice) return vehicle;
@@ -368,8 +506,13 @@ export default function AvlLive({
       setConfigGroups(updatedGroups);
       sortVehicles(updatedGroups);
     },
-    [configGroups, geoTabDevices, setConfigGroups]
+    [configGroups, geoTabDevices, setConfigGroups],
   );
+
+  // Keep ref updated with latest callback
+  useEffect(() => {
+    updateVehiclesFromGeoTabRef.current = updateVehiclesFromGeoTab;
+  }, [updateVehiclesFromGeoTab]);
 
   // Sort and filter vehicles
   const sortVehicles = useCallback(
@@ -400,26 +543,18 @@ export default function AvlLive({
       // Sort vehicles
       let sortedVehicles = [...vehicleList];
       if (selectedSortOption.value === "vehicle_name") {
-        sortedVehicles = sortAscendingChecked
-          ? sortedVehicles.sort(sortByVehicleIdAsc)
-          : sortedVehicles.sort(sortByVehicleIdDesc);
+        sortedVehicles = sortAscendingChecked ? sortedVehicles.sort(sortByVehicleIdAsc) : sortedVehicles.sort(sortByVehicleIdDesc);
       } else if (selectedSortOption.value === "velocity") {
-        sortedVehicles = sortAscendingChecked
-          ? sortedVehicles.sort(sortBySpeedAsc)
-          : sortedVehicles.sort(sortBySpeedDesc);
+        sortedVehicles = sortAscendingChecked ? sortedVehicles.sort(sortBySpeedAsc) : sortedVehicles.sort(sortBySpeedDesc);
       } else if (selectedSortOption.value === "date") {
-        sortedVehicles = sortAscendingChecked
-          ? sortedVehicles.sort(sortByDateAsc)
-          : sortedVehicles.sort(sortByDateDesc);
+        sortedVehicles = sortAscendingChecked ? sortedVehicles.sort(sortByDateAsc) : sortedVehicles.sort(sortByDateDesc);
       }
 
       setVehicles(sortedVehicles);
       updateMap(sortedVehicles);
 
       // Update trips tab visibility
-      const hasShowTripsTab = groups.some(
-        (g) => g.visible === true && g.showTripsTab === true
-      );
+      const hasShowTripsTab = groups.some((g) => g.visible === true && g.showTripsTab === true);
       onPlowVehiclesUpdate?.(hasShowTripsTab);
 
       // Update plow groups for trips
@@ -427,104 +562,80 @@ export default function AvlLive({
         .filter((g) => g.visible === true && g.showTripsTab === true)
         .map((g) => ({
           ...g,
-          vehicles: Array.isArray(g.data)
-            ? g.data.filter((v) => v.subgrouping === "Plow")
-            : [],
+          vehicles: Array.isArray(g.data) ? g.data.filter((v) => v.subgrouping === "Plow") : [],
         }));
       onPlowGroupsUpdate?.(groupsWithVehicles);
     },
-    [
-      configGroups,
-      selectedSortOption,
-      sortAscendingChecked,
-      setVehicles,
-      onPlowVehiclesUpdate,
-      onPlowGroupsUpdate,
-    ]
+    [configGroups, selectedSortOption, sortAscendingChecked, setVehicles, onPlowVehiclesUpdate, onPlowGroupsUpdate],
   );
 
   // Update map with vehicles
-  const updateMap = useCallback(
-    (vehicleList: AvlVehicle[]) => {
-      if (!layerRef.current) return;
+  const updateMap = useCallback((vehicleList: AvlVehicle[]) => {
+    if (!layerRef.current) {
+      return;
+    }
 
-      const source = layerRef.current.getSource();
-      if (!source) return;
+    const source = layerRef.current.getSource();
+    if (!source) {
+      return;
+    }
 
-      // Hide features that are no longer visible
-      source.getFeatures().forEach((feature) => {
-        const featInfo = (feature as Feature & { vehicleInfo?: AvlVehicle }).vehicleInfo;
-        if (!featInfo) return;
+    // Hide features that are no longer visible
+    source.getFeatures().forEach((feature) => {
+      const featInfo = (feature as Feature & { vehicleInfo?: AvlVehicle }).vehicleInfo;
+      if (!featInfo) return;
 
-        const found = vehicleList.find(
-          (v) =>
-            v.vehicle_name === featInfo.vehicle_name && v.grouping === featInfo.grouping
-        );
-        if (!found) {
-          feature.setStyle(new Style({}));
-        } else {
-          setFeatureStyle(feature as Feature & { vehicleInfo: AvlVehicle });
-        }
-      });
+      const found = vehicleList.find((v) => v.vehicle_name === featInfo.vehicle_name && v.grouping === featInfo.grouping);
+      if (!found) {
+        feature.setStyle(new Style({}));
+      } else {
+        setFeatureStyle(feature as Feature & { vehicleInfo: AvlVehicle });
+      }
+    });
 
-      // Add/update features
-      vehicleList.forEach((vehicle) => {
-        const coords = toWebMercatorFromLatLong([vehicle.longitude, Math.abs(vehicle.latitude)]);
-        const existingFeature = getFeatureForVehicle(vehicle);
+    // Add/update features
+    vehicleList.forEach((vehicle) => {
+      const coords = toWebMercatorFromLatLong([vehicle.longitude, Math.abs(vehicle.latitude)]);
+      const existingFeature = getFeatureForVehicle(vehicle);
 
-        if (!existingFeature) {
-          const newFeature = new Feature(new Point(coords)) as Feature & { vehicleInfo: AvlVehicle };
-          newFeature.set("name", vehicle.vehicle_name);
-          newFeature.set("grouping", vehicle.grouping);
-          newFeature.vehicleInfo = vehicle;
-          setFeatureStyle(newFeature);
-          source.addFeature(newFeature);
-        } else {
-          // Animate existing feature
-          animateFeature(existingFeature, vehicle, coords);
-        }
-      });
-    },
-    []
-  );
+      if (!existingFeature) {
+        const newFeature = new Feature(new Point(coords)) as Feature & { vehicleInfo: AvlVehicle };
+        newFeature.set("name", vehicle.vehicle_name);
+        newFeature.set("grouping", vehicle.grouping);
+        newFeature.vehicleInfo = vehicle;
+        setFeatureStyle(newFeature);
+        source.addFeature(newFeature);
+      } else {
+        // Animate existing feature
+        animateFeature(existingFeature, vehicle, coords);
+      }
+    });
+  }, []);
 
   // Get feature for a vehicle
-  const getFeatureForVehicle = useCallback(
-    (vehicle: AvlVehicle): (Feature & { vehicleInfo: AvlVehicle }) | null => {
-      if (!layerRef.current) return null;
-      const source = layerRef.current.getSource();
-      if (!source) return null;
+  const getFeatureForVehicle = useCallback((vehicle: AvlVehicle): (Feature & { vehicleInfo: AvlVehicle }) | null => {
+    if (!layerRef.current) return null;
+    const source = layerRef.current.getSource();
+    if (!source) return null;
 
-      let found: (Feature & { vehicleInfo: AvlVehicle }) | null = null;
-      source.getFeatures().forEach((feature) => {
-        const featInfo = (feature as Feature & { vehicleInfo?: AvlVehicle }).vehicleInfo;
-        if (
-          featInfo?.vehicle_name === vehicle.vehicle_name &&
-          featInfo?.grouping === vehicle.grouping
-        ) {
-          found = feature as Feature & { vehicleInfo: AvlVehicle };
-        }
-      });
-      return found;
-    },
-    []
-  );
+    let found: (Feature & { vehicleInfo: AvlVehicle }) | null = null;
+    source.getFeatures().forEach((feature) => {
+      const featInfo = (feature as Feature & { vehicleInfo?: AvlVehicle }).vehicleInfo;
+      if (featInfo?.vehicle_name === vehicle.vehicle_name && featInfo?.grouping === vehicle.grouping) {
+        found = feature as Feature & { vehicleInfo: AvlVehicle };
+      }
+    });
+    return found;
+  }, []);
 
   // Animate feature movement
   const animateFeature = useCallback(
-    (
-      feature: Feature & { vehicleInfo: AvlVehicle; isAnimating?: boolean },
-      newVehicle: AvlVehicle,
-      newCoords: [number, number]
-    ) => {
+    (feature: Feature & { vehicleInfo: AvlVehicle; isAnimating?: boolean }, newVehicle: AvlVehicle, newCoords: [number, number]) => {
       const oldCoords = (feature.getGeometry() as Point)?.getCoordinates();
       if (!oldCoords || feature.isAnimating) return;
 
       // Check if position changed
-      if (
-        feature.vehicleInfo.latitude === newVehicle.latitude &&
-        feature.vehicleInfo.longitude === newVehicle.longitude
-      ) {
+      if (feature.vehicleInfo.latitude === newVehicle.latitude && feature.vehicleInfo.longitude === newVehicle.longitude) {
         return;
       }
 
@@ -546,14 +657,11 @@ export default function AvlLive({
       setFeatureStyle(feature);
 
       // Update popup if following this vehicle
-      if (
-        followingVehicle?.name === newVehicle.vehicle_name &&
-        followingVehicle?.grouping === newVehicle.grouping
-      ) {
+      if (followingVehicle?.name === newVehicle.vehicle_name && followingVehicle?.grouping === newVehicle.grouping) {
         map?.getView().animate({ center: newCoords, zoom: 17 });
       }
     },
-    [followingVehicle, map]
+    [followingVehicle, map],
   );
 
   // Set feature style
@@ -589,7 +697,7 @@ export default function AvlLive({
 
       feature.setStyle(style);
     },
-    [showLabels]
+    [showLabels],
   );
 
   // Handle sort dropdown change
@@ -624,6 +732,8 @@ export default function AvlLive({
       const coords = (feature.getGeometry() as Point)?.getCoordinates();
       if (coords) {
         map.getView().animate({ center: coords, zoom: 17 });
+        // Show popup for the vehicle
+        showVehiclePopup(feature);
       }
     }
   };
@@ -635,11 +745,7 @@ export default function AvlLive({
   };
 
   // Handle subgroup visibility change
-  const handleSubGroupChange = (
-    subGroup: AvlSubGroup,
-    group: AvlGroup,
-    checked: boolean
-  ) => {
+  const handleSubGroupChange = (subGroup: AvlSubGroup, group: AvlGroup, checked: boolean) => {
     setSubGroupVisibility(group.name, subGroup.name, checked);
     sortVehicles();
   };
@@ -659,38 +765,22 @@ export default function AvlLive({
   };
 
   // Filter vehicles by search text
-  const filteredVehicles = searchText
-    ? vehicles.filter((v) =>
-        v.vehicle_name.toUpperCase().includes(searchText.toUpperCase())
-      )
-    : vehicles;
+  const filteredVehicles = searchText ? vehicles.filter((v) => v.vehicle_name.toUpperCase().includes(searchText.toUpperCase())) : vehicles;
 
   return (
     <div className={showVehicleList ? "sc-avl-live-container" : "sc-avl-live-container-no-list"}>
       {/* Following message */}
       <div className={followingVehicle ? "sc-avl-live-following-msg" : "sc-hidden"}>
-        <label className="sc-avl-live-following-msg-label">
-          {"Following: " + (followingVehicle?.name || "")}
-        </label>
-        <button
-          className="sc-button"
-          style={{ width: "60px" }}
-          onClick={() => handleFollowClick(null)}
-        >
+        <label className="sc-avl-live-following-msg-label">{"Following: " + (followingVehicle?.name || "")}</label>
+        <button className="sc-button" style={{ width: "60px" }} onClick={() => handleFollowClick(null)}>
           Stop
         </button>
       </div>
 
       {/* Groups */}
-      <div className="sc-avl-live-groups">
+      <div className="sc-theme-avl-live-groups">
         {configGroups.map((group) => (
-          <AvlLiveGroup
-            key={group.name}
-            info={group}
-            onInputChangeSubGroup={handleSubGroupChange}
-            onInputChangeGroup={handleGroupChange}
-            onPanelOpen={handlePanelOpen}
-          />
+          <AvlLiveGroup key={group.name} info={group} onInputChangeSubGroup={handleSubGroupChange} onInputChangeGroup={handleGroupChange} onPanelOpen={handlePanelOpen} />
         ))}
       </div>
 
@@ -704,13 +794,7 @@ export default function AvlLive({
             {/* Search */}
             <div className="sc-avl-live-controls-search">
               <label>Search:</label>
-              <input
-                className="sc-avl-live-controls-search-input"
-                type="text"
-                placeholder=" Enter Vehicle Name..."
-                onChange={handleSearchChange}
-                value={searchText}
-              />
+              <input className="sc-avl-live-controls-search-input" type="text" placeholder=" Enter Vehicle Name..." onChange={handleSearchChange} value={searchText} />
               <button className="sc-button" onClick={() => setSearchText("")}>
                 Clear
               </button>
@@ -719,28 +803,14 @@ export default function AvlLive({
             {/* Sort */}
             <div className="sc-avl-live-controls-sort">
               <label style={{ width: "106px" }}>Sort By:</label>
-              <Select
-                styles={avlLiveDropDownStyles}
-                isSearchable={false}
-                onChange={handleSortDropDownChange}
-                options={SORT_OPTIONS}
-                value={selectedSortOption}
-              />
+              <Select styles={avlLiveDropDownStyles} isSearchable={false} onChange={handleSortDropDownChange} options={SORT_OPTIONS} value={selectedSortOption} />
               <div style={{ fontSize: "11pt" }}>
                 <label>
-                  <input
-                    type="checkbox"
-                    onChange={handleSortChange}
-                    checked={sortAscendingChecked}
-                  />
+                  <input type="checkbox" onChange={handleSortChange} checked={sortAscendingChecked} />
                   Sort Ascending
                 </label>
                 <label>
-                  <input
-                    type="checkbox"
-                    onChange={handleLabelsChange}
-                    checked={showLabels}
-                  />
+                  <input type="checkbox" onChange={handleLabelsChange} checked={showLabels} />
                   Show Labels
                 </label>
               </div>
@@ -749,11 +819,7 @@ export default function AvlLive({
 
           {/* Vehicle list items */}
           {filteredVehicles.map((vehicle) => (
-            <AvlLiveVehicle
-              key={`${vehicle.grouping}-${vehicle.subgrouping}-${vehicle.vehicle_name}`}
-              info={vehicle}
-              onVechileClick={handleVehicleListItemClick}
-            />
+            <AvlLiveVehicle key={`${vehicle.grouping}-${vehicle.subgrouping}-${vehicle.vehicle_name}`} info={vehicle} onVechileClick={handleVehicleListItemClick} />
           ))}
         </div>
       </div>

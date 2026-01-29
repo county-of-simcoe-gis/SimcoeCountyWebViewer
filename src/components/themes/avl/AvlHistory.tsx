@@ -21,29 +21,11 @@ import { useAvlStore } from "@/stores/avlStore";
 import { useMapStore } from "@/stores/mapStore";
 import { useAvlApi } from "./hooks/useAvlApi";
 import { useGeoTab } from "./hooks/useGeoTab";
+import { LayerManager } from "@/utils/openlayers/LayerManager";
 import AvlHistoryVehicle from "./components/AvlHistoryVehicle";
-import {
-  toWebMercatorFromLatLong,
-  getFriendlyDateString,
-  roundTime,
-  download,
-} from "./utils/avlHelpers";
-import {
-  avlGroupDropDownStyles,
-  avlVehicleDropDownStyles,
-  avlSpeedOperatorDropDownStyles,
-  avlSpeedDropDownStyles,
-  avlHistorySliderWrapperStyle,
-  avlHistoryMarks,
-} from "./utils/avlStyles";
-import type {
-  AvlHistoryProps,
-  AvlHistoryVehicle as AvlHistoryVehicleType,
-  AvlVehicle,
-  SelectOption,
-  SpeedOperatorOption,
-  GroupSelectOption,
-} from "./types/avl.types";
+import { toWebMercatorFromLatLong, getFriendlyDateString, roundTime, download } from "./utils/avlHelpers";
+import { avlGroupDropDownStyles, avlVehicleDropDownStyles, avlSpeedOperatorDropDownStyles, avlSpeedDropDownStyles, avlHistorySliderWrapperStyle, avlHistoryMarks } from "./utils/avlStyles";
+import type { AvlHistoryProps, AvlHistoryVehicle as AvlHistoryVehicleType, AvlVehicle, SelectOption, SpeedOperatorOption, GroupSelectOption } from "./types/avl.types";
 import "./styles/AvlHistory.css";
 
 // Image helper
@@ -76,10 +58,7 @@ const ALL_TYPES_OPTION: SelectOption = { label: "All Types", value: "All Types" 
 const getInitialStartDate = (): Date => roundTime(new Date(Date.now() - 3 * 60 * 60 * 1000));
 const getInitialEndDate = (): Date => roundTime(new Date());
 
-export default function AvlHistory({
-  historyVehicle,
-  onHistoryVehicleConsumed,
-}: AvlHistoryProps) {
+export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }: AvlHistoryProps) {
   const { map } = useMapStore();
   const { allowedGroups, configGroups } = useAvlStore();
   const { fetchAllVehicles, fetchHistory, fetchHistorySpreader } = useAvlApi();
@@ -108,6 +87,8 @@ export default function AvlHistory({
   const layerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const shadowLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const mapClickEventRef = useRef<EventsKey | null>(null);
+  const layerIdRef = useRef<string | null>(null);
+  const shadowLayerIdRef = useRef<string | null>(null);
 
   // Initialize
   useEffect(() => {
@@ -130,11 +111,12 @@ export default function AvlHistory({
     createShadowLayer();
 
     return () => {
-      if (layerRef.current && map) {
-        map.removeLayer(layerRef.current);
+      // Use LayerManager for cleanup
+      if (layerIdRef.current) {
+        LayerManager.removeLayer(layerIdRef.current);
       }
-      if (shadowLayerRef.current && map) {
-        map.removeLayer(shadowLayerRef.current);
+      if (shadowLayerIdRef.current) {
+        LayerManager.removeLayer(shadowLayerIdRef.current);
       }
       if (mapClickEventRef.current) {
         unByKey(mapClickEventRef.current);
@@ -172,14 +154,21 @@ export default function AvlHistory({
   }, [fetchAllVehicles]);
 
   const initLayers = useCallback(() => {
+    console.log("[AVL History] initLayers called, map:", !!map, "layerRef.current:", !!layerRef.current);
     if (!map || layerRef.current) return;
 
     const layer = new VectorLayer({
       source: new VectorSource({ features: [] }),
-      zIndex: 1000,
+      zIndex: 10000, // Set high zIndex explicitly
     });
     layer.setProperties({ disableParcelClick: true, name: "avlHistory" });
-    map.addLayer(layer);
+
+    // Use LayerManager to add layer with "Overlay" category for highest z-index
+    const layerId = LayerManager.addLayer(layer, "Overlay", "AVL History Vehicles", {
+      userAdded: true,
+    });
+    console.log("[AVL History] Layer added with ID:", layerId, "zIndex:", layer.getZIndex());
+    layerIdRef.current = layerId;
     layerRef.current = layer;
 
     mapClickEventRef.current = map.on("singleclick", (evt) => {
@@ -192,9 +181,8 @@ export default function AvlHistory({
           }
         },
         {
-          layerFilter: (layer) =>
-            layer.get("name") === "avlHistory" && layer.getVisible() && layer instanceof VectorLayer,
-        }
+          layerFilter: (layer) => layer.get("name") === "avlHistory" && layer.getVisible() && layer instanceof VectorLayer,
+        },
       );
     });
   }, [map]);
@@ -214,10 +202,14 @@ export default function AvlHistory({
 
     const layer = new VectorLayer({
       source: new VectorSource({ features: [] }),
-      zIndex: 10000000,
       style: shadowStyle,
     });
-    map.addLayer(layer);
+
+    // Use LayerManager with "Overlay" category - shadow should be on top of history points
+    const shadowLayerId = LayerManager.addLayer(layer, "Overlay", "AVL History Shadow", {
+      userAdded: true,
+    });
+    shadowLayerIdRef.current = shadowLayerId;
     shadowLayerRef.current = layer;
   }, [map]);
 
@@ -228,9 +220,7 @@ export default function AvlHistory({
       filtered = allVehicles.filter(
         (v) =>
           v.grouping?.toUpperCase() === selectedGroupOption.value.toUpperCase() ||
-          (selectedGroupOption.value.toUpperCase() === "ROADS (SPREADER)" &&
-            v.grouping?.toUpperCase() === "ROADS" &&
-            v.device_id)
+          (selectedGroupOption.value.toUpperCase() === "ROADS (SPREADER)" && v.grouping?.toUpperCase() === "ROADS" && v.device_id),
       );
     }
 
@@ -303,9 +293,7 @@ export default function AvlHistory({
     };
 
     try {
-      const result = isSpreader
-        ? await fetchHistorySpreader(params)
-        : await fetchHistory(params);
+      const result = isSpreader ? await fetchHistorySpreader(params) : await fetchHistory(params);
 
       const tooMany = result.length >= 5000;
       setTooManyRecords(tooMany);
@@ -318,38 +306,36 @@ export default function AvlHistory({
     } finally {
       setIsLoading(false);
     }
-  }, [
-    selectedGroupOption,
-    selectedVehicleOption,
-    startDate,
-    endDate,
-    selectedSpeedOperator,
-    selectedSpeed,
-    sliderValue,
-    onlyVisibleExtent,
-    map,
-    fetchHistory,
-    fetchHistorySpreader,
-  ]);
+  }, [selectedGroupOption, selectedVehicleOption, startDate, endDate, selectedSpeedOperator, selectedSpeed, sliderValue, onlyVisibleExtent, map, fetchHistory, fetchHistorySpreader]);
 
   const displayResults = useCallback(
     (results: AvlHistoryVehicleType[]) => {
-      if (!layerRef.current || !map) return;
+      console.log("[AVL History] displayResults called with", results.length, "results");
+      console.log("[AVL History] layerRef.current:", layerRef.current);
+      console.log("[AVL History] map:", map);
+
+      if (!layerRef.current || !map) {
+        console.log("[AVL History] Missing layer or map, returning");
+        return;
+      }
 
       const source = layerRef.current.getSource();
-      if (!source) return;
+      if (!source) {
+        console.log("[AVL History] No source found on layer");
+        return;
+      }
 
       source.clear();
 
       if (results.length === 0) return;
 
-      results.forEach((vehicle) => {
+      results.forEach((vehicle, index) => {
         const coords = toWebMercatorFromLatLong([vehicle.longitude, Math.abs(vehicle.latitude)]);
         const feature = new Feature(new Point(coords)) as Feature & { vehicleInfo: AvlHistoryVehicleType };
         feature.set("name", vehicle.vehicle_name);
         feature.vehicleInfo = vehicle;
 
-        let iconName = "default-history.png";
+        let iconName = "default.png"; // Use default.png which exists (lowercase)
         if (vehicle.PlowDown !== undefined) {
           if (vehicle.Blasting) iconName = "blasting.png";
           else if (vehicle.PlowDown && vehicle.DryOn) iconName = "plow-down-spreader-on.png";
@@ -357,7 +343,13 @@ export default function AvlHistory({
           else if (!vehicle.PlowDown && vehicle.DryOn) iconName = "plow-up-spreader-on.png";
         }
 
-        const style = new Style({
+        if (index === 0) {
+          console.log("[AVL History] First feature coords:", coords);
+          console.log("[AVL History] Icon path:", getImagePath(iconName));
+        }
+
+        // Create icon style with fallback circle
+        const iconStyle = new Style({
           image: new Icon({
             anchor: [0.5, 0.5],
             scale: 0.75,
@@ -365,13 +357,30 @@ export default function AvlHistory({
             rotation: (vehicle.direction || 0) * (Math.PI / 180),
           }),
         });
-        feature.setStyle(style);
+
+        // Fallback circle style in case icon doesn't load
+        const fallbackStyle = new Style({
+          image: new CircleStyle({
+            radius: 6,
+            fill: new Fill({ color: "#FF0000" }),
+            stroke: new Stroke({ color: "#FFFFFF", width: 2 }),
+          }),
+        });
+
+        // Try icon first, use fallback if needed
+        feature.setStyle([fallbackStyle, iconStyle]);
         source.addFeature(feature);
       });
 
-      map.getView().fit(source.getExtent());
+      console.log("[AVL History] Added", source.getFeatures().length, "features to layer");
+      console.log("[AVL History] Layer visible:", layerRef.current.getVisible());
+      console.log("[AVL History] Layer zIndex:", layerRef.current.getZIndex());
+
+      const extent = source.getExtent();
+      console.log("[AVL History] Source extent:", extent);
+      map.getView().fit(extent);
     },
-    [map]
+    [map],
   );
 
   const handleVehicleClick = useCallback(
@@ -380,22 +389,19 @@ export default function AvlHistory({
       const coords = toWebMercatorFromLatLong([vehicle.longitude, Math.abs(vehicle.latitude)]);
       map.getView().animate({ center: coords, zoom: 17 });
     },
-    [map]
+    [map],
   );
 
-  const handleVehicleMouseEnter = useCallback(
-    (vehicle: AvlHistoryVehicleType) => {
-      if (!shadowLayerRef.current) return;
-      const source = shadowLayerRef.current.getSource();
-      if (!source) return;
+  const handleVehicleMouseEnter = useCallback((vehicle: AvlHistoryVehicleType) => {
+    if (!shadowLayerRef.current) return;
+    const source = shadowLayerRef.current.getSource();
+    if (!source) return;
 
-      source.clear();
-      const coords = toWebMercatorFromLatLong([vehicle.longitude, Math.abs(vehicle.latitude)]);
-      const feature = new Feature(new Point(coords));
-      source.addFeature(feature);
-    },
-    []
-  );
+    source.clear();
+    const coords = toWebMercatorFromLatLong([vehicle.longitude, Math.abs(vehicle.latitude)]);
+    const feature = new Feature(new Point(coords));
+    source.addFeature(feature);
+  }, []);
 
   const handleVehicleMouseLeave = useCallback(() => {
     if (!shadowLayerRef.current) return;
@@ -418,12 +424,7 @@ export default function AvlHistory({
     }));
 
     const fields = Object.keys(vehicles[0]);
-    const csv = [
-      fields.join(","),
-      ...vehicles.map((row) =>
-        fields.map((field) => JSON.stringify((row as Record<string, unknown>)[field] ?? "")).join(",")
-      ),
-    ].join("\r\n");
+    const csv = [fields.join(","), ...vehicles.map((row) => fields.map((field) => JSON.stringify((row as Record<string, unknown>)[field] ?? "")).join(","))].join("\r\n");
 
     download("data:text/csv;charset=utf-8," + encodeURIComponent(csv), "avl_export.csv");
   }, [searchResults]);
@@ -434,21 +435,12 @@ export default function AvlHistory({
       if (!vehicle) return <div key={key}>Null</div>;
 
       return (
-        <li
-          key={key}
-          style={style}
-          className="sc-theme-avl-history-list-item sc-noselect"
-          onMouseEnter={() => handleVehicleMouseEnter(vehicle)}
-          onMouseLeave={handleVehicleMouseLeave}
-        >
-          <AvlHistoryVehicle
-            info={vehicle}
-            onVechileClick={() => handleVehicleClick(vehicle)}
-          />
+        <li key={key} style={style} className="sc-theme-avl-history-list-item sc-noselect" onMouseEnter={() => handleVehicleMouseEnter(vehicle)} onMouseLeave={handleVehicleMouseLeave}>
+          <AvlHistoryVehicle info={vehicle} onVechileClick={() => handleVehicleClick(vehicle)} />
         </li>
       );
     },
-    [searchResults, handleVehicleClick, handleVehicleMouseEnter, handleVehicleMouseLeave]
+    [searchResults, handleVehicleClick, handleVehicleMouseEnter, handleVehicleMouseLeave],
   );
 
   const listHeight = typeof window !== "undefined" ? window.innerHeight - 245 : 400;
@@ -505,24 +497,12 @@ export default function AvlHistory({
 
           <div className="sc-theme-avl-history-control-row">
             <label className="sc-theme-avl-history-label">From:</label>
-            <DatePicker
-              className="sc-input sc-theme-avl-history-date-picker"
-              selected={startDate}
-              onChange={(date) => date && setStartDate(date)}
-              showTimeSelect
-              dateFormat="MMMM d, yyyy h:mm aa"
-            />
+            <DatePicker className="sc-input sc-theme-avl-history-date-picker" selected={startDate} onChange={(date) => date && setStartDate(date)} showTimeSelect dateFormat="MMMM d, yyyy h:mm aa" />
           </div>
 
           <div className="sc-theme-avl-history-control-row">
             <label className="sc-theme-avl-history-label">To:</label>
-            <DatePicker
-              className="sc-input sc-theme-avl-history-date-picker"
-              selected={endDate}
-              onChange={(date) => date && setEndDate(date)}
-              showTimeSelect
-              dateFormat="MMMM d, yyyy h:mm aa"
-            />
+            <DatePicker className="sc-input sc-theme-avl-history-date-picker" selected={endDate} onChange={(date) => date && setEndDate(date)} showTimeSelect dateFormat="MMMM d, yyyy h:mm aa" />
           </div>
 
           <div className="sc-theme-avl-history-control-row">
@@ -548,36 +528,19 @@ export default function AvlHistory({
 
           <div className="sc-theme-avl-history-control-row">
             <label className="sc-theme-avl-history-label">Simplify:</label>
-            <Slider
-              style={avlHistorySliderWrapperStyle}
-              marks={avlHistoryMarks}
-              min={0}
-              max={10}
-              step={1}
-              value={sliderValue}
-              onChange={(value) => setSliderValue(value as number)}
-            />
+            <Slider style={avlHistorySliderWrapperStyle} marks={avlHistoryMarks} min={0} max={10} step={1} value={sliderValue} onChange={(value) => setSliderValue(value as number)} />
           </div>
 
           <div className="sc-theme-avl-history-only-visible-extent">
             <label>
               Only Visible Extent
-              <input
-                type="checkbox"
-                onChange={(e) => setOnlyVisibleExtent(e.target.checked)}
-                checked={onlyVisibleExtent}
-              />
+              <input type="checkbox" onChange={(e) => setOnlyVisibleExtent(e.target.checked)} checked={onlyVisibleExtent} />
             </label>
           </div>
         </div>
 
         <div style={{ display: "flex", gap: "5px", marginTop: "5px" }}>
-          <button
-            className={isLoading ? "sc-button sc-disabled" : "sc-button"}
-            style={{ flex: 1, padding: "5px 2px" }}
-            onClick={handleSearch}
-            disabled={isLoading}
-          >
+          <button className={isLoading ? "sc-button sc-disabled" : "sc-button"} style={{ flex: 1, padding: "5px 2px" }} onClick={handleSearch} disabled={isLoading}>
             {isLoading ? "Searching..." : "Search"}
           </button>
           <button className="sc-button" style={{ flex: 1, padding: "5px 2px" }} onClick={handleClear}>
@@ -587,49 +550,24 @@ export default function AvlHistory({
             Export
           </button>
           {groupHasGeoTabSpreaderData(selectedGroupOption?.value || "") && (
-            <button
-              className="sc-button"
-              style={{ flex: 1, padding: "5px 2px" }}
-              onClick={() => setShowLegendTooltip(!showLegendTooltip)}
-            >
+            <button className="sc-button" style={{ flex: 1, padding: "5px 2px" }} onClick={() => setShowLegendTooltip(!showLegendTooltip)}>
               Legend
             </button>
           )}
         </div>
       </Collapsible>
 
-      <Collapsible
-        trigger={searchResults.length > 0 ? `Results (${searchResults.length} records)` : "Results"}
-        open={true}
-      >
-        {tooManyRecords && (
-          <div className="sc-container sc-theme-avl-history-warning">
-            Your search returned too many records. Only showing top 5000 records.
-          </div>
-        )}
-        {zeroRecords && (
-          <div className="sc-container sc-theme-avl-history-warning">
-            Your search returned ZERO records. Please try again.
-          </div>
-        )}
+      <Collapsible trigger={searchResults.length > 0 ? `Results (${searchResults.length} records)` : "Results"} open={true}>
+        {tooManyRecords && <div className="sc-container sc-theme-avl-history-warning">Your search returned too many records. Only showing top 5000 records.</div>}
+        {zeroRecords && <div className="sc-container sc-theme-avl-history-warning">Your search returned ZERO records. Please try again.</div>}
         {searchResults.length > 0 && (
           <div className="sc-container sc-theme-avl-history-results-container">
-            <List
-              id="sc-avl-history-virtual-layers"
-              rowHeight={50}
-              rowRenderer={renderRow}
-              rowCount={searchResults.length}
-              width={listWidth}
-              height={listHeight}
-              style={{ outline: "none" }}
-            />
+            <List id="sc-avl-history-virtual-layers" rowHeight={50} rowRenderer={renderRow} rowCount={searchResults.length} width={listWidth} height={listHeight} style={{ outline: "none" }} />
           </div>
         )}
       </Collapsible>
 
-      {showLegendTooltip && (
-        <AVLLegendTooltip onClose={() => setShowLegendTooltip(false)} />
-      )}
+      {showLegendTooltip && <AVLLegendTooltip onClose={() => setShowLegendTooltip(false)} />}
     </div>
   );
 }
@@ -666,9 +604,7 @@ function AVLLegendTooltip({ onClose }: { onClose: () => void }) {
         >
           ×
         </button>
-        <h3 style={{ margin: "0 0 10px 0", fontSize: "14px", borderBottom: "1px solid #eee", paddingBottom: "5px" }}>
-          AVL Vehicle Legend
-        </h3>
+        <h3 style={{ margin: "0 0 10px 0", fontSize: "14px", borderBottom: "1px solid #eee", paddingBottom: "5px" }}>AVL Vehicle Legend</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {[
             { label: "Blasting", image: "blasting.png" },

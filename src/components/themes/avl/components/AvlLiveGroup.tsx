@@ -1,8 +1,21 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import Collapsible from "react-collapsible";
 import type { AvlLiveGroupProps, AvlGroup, AvlSubGroup } from "../types/avl.types";
+
+// Get label offset based on group name (to position the count properly)
+const getLabelOffset = (name: string): string => {
+  if (name === "Roads") return "102px";
+  if (name === "Roads GeoTab") return "170px";
+  if (name === "Solid Waste") return "145px";
+  if (name === "Solid Waste GeoTab") return "210px";
+  if (name === "Waste Contractor") return "188px";
+  if (name === "Severn") return "110px";
+  if (name === "Innisfil") return "110px";
+  return "200px";
+};
 
 export default function AvlLiveGroup({
   info,
@@ -10,82 +23,59 @@ export default function AvlLiveGroup({
   onInputChangeGroup,
   onPanelOpen,
 }: AvlLiveGroupProps) {
-  // Calculate count of visible vehicles
-  const getVehicleCount = (): number => {
-    if (!info.data || !Array.isArray(info.data)) return 0;
-    let count = 0;
-    for (const subGroup of info.subGroups) {
-      if (subGroup.visible) {
-        count += info.data.filter((v) => v.subgrouping === subGroup.name).length;
-      }
-    }
-    return count;
-  };
+  // Get vehicle count from data array
+  const vehicleCount = Array.isArray(info.data) ? info.data.length : 0;
 
-  const vehicleCount = getVehicleCount();
-
-  // Label offset based on character count
-  const getLabelOffset = (): number => {
-    const charCount = String(vehicleCount).length;
-    if (charCount === 1) return 18;
-    if (charCount === 2) return 23;
-    return 26;
-  };
+  // Hide the group if no data
+  if (!Array.isArray(info.data) || info.data.length === 0) {
+    return null;
+  }
 
   // Handle group visibility change
   const handleGroupCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onInputChangeGroup(info, e.target.checked);
   };
 
-  // Handle panel open/close
-  const handlePanelOpen = () => {
-    onPanelOpen(info, !info.open);
-  };
-
-  // Checkbox style based on visibility
-  const checkboxStyle: React.CSSProperties = {
-    transform: "scale(1.2)",
-    marginLeft: "5px",
-    marginTop: "4px",
-    float: "left",
+  // Get checkbox style adjustment for certain groups
+  const getCheckboxStyle = (): React.CSSProperties => {
+    if (info.name === "Waste Contractor" || info.name === "Innisfil") {
+      return { left: "-1px" };
+    }
+    return {};
   };
 
   return (
-    <div className="sc-avl-live-group-container">
-      <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-        <input
-          id={`group-checkbox-${info.name}`}
-          type="checkbox"
-          style={checkboxStyle}
-          checked={info.visible}
-          onChange={handleGroupCheckboxChange}
-        />
-        <span
-          style={{
-            position: "absolute",
-            right: getLabelOffset() + "px",
-            top: "3px",
-            fontSize: "10pt",
-          }}
-        >
-          {"(" + vehicleCount + ")"}
-        </span>
-      </div>
+    <div className="sc-theme-avl-live-group-container">
+      <label
+        className="sc-theme-avl-live-group-count sc-no-select"
+        style={{ left: getLabelOffset(info.name) }}
+      >
+        ({vehicleCount})
+      </label>
+      <input
+        type="checkbox"
+        className="sc-theme-avl-group-input"
+        style={getCheckboxStyle()}
+        onChange={handleGroupCheckboxChange}
+        checked={info.visible}
+      />
       <Collapsible
         trigger={info.name}
         open={info.open}
-        onOpening={handlePanelOpen}
-        onClosing={handlePanelOpen}
-        transitionTime={100}
+        onOpening={() => onPanelOpen(info, true)}
+        onClosing={() => onPanelOpen(info, false)}
+        transitionTime={200}
       >
-        {info.subGroups.map((subGroup) => (
-          <AvlLiveSubGroup
-            key={subGroup.name}
-            info={subGroup}
-            group={info}
-            onInputChange={onInputChangeSubGroup}
-          />
-        ))}
+        <div className="sc-theme-avl-live-group-content">
+          {info.subGroups.map((subGroup) => (
+            <AvlLiveSubGroup
+              key={subGroup.name}
+              subGroup={subGroup}
+              group={info}
+              onInputChangeSubGroup={onInputChangeSubGroup}
+            />
+          ))}
+        </div>
       </Collapsible>
     </div>
   );
@@ -93,35 +83,37 @@ export default function AvlLiveGroup({
 
 // AvlLiveSubGroup Component
 interface AvlLiveSubGroupProps {
-  info: AvlSubGroup;
+  subGroup: AvlSubGroup;
   group: AvlGroup;
-  onInputChange: (subGroup: AvlSubGroup, group: AvlGroup, checked: boolean) => void;
+  onInputChangeSubGroup: (subGroup: AvlSubGroup, group: AvlGroup, checked: boolean) => void;
 }
 
-function AvlLiveSubGroup({ info, group, onInputChange }: AvlLiveSubGroupProps) {
+function AvlLiveSubGroup({ subGroup, group, onInputChangeSubGroup }: AvlLiveSubGroupProps) {
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onInputChange(info, group, e.target.checked);
+    onInputChangeSubGroup(subGroup, group, e.target.checked);
   };
 
-  const checkboxStyle: React.CSSProperties = {
-    transform: "scale(1.2)",
-    marginLeft: "5px",
-    marginTop: "4px",
-    float: "left",
-    cursor: "pointer",
-  };
+  // Get the image path from the public folder
+  const imageSrc = `/images/avl/${subGroup.imageName || "default.png"}`;
 
   return (
-    <div className="sc-avl-live-sub-group-container">
-      <label style={{ cursor: "pointer" }}>
-        <input
-          id={`subgroup-checkbox-${group.name}-${info.name}`}
-          type="checkbox"
-          style={checkboxStyle}
-          checked={info.visible}
-          onChange={handleCheckboxChange}
+    <div className="sc-theme-avl-live-subgroup sc-noselect">
+      <div className="sc-theme-avl-icon">
+        <Image
+          src={imageSrc}
+          alt={subGroup.name}
+          width={30}
+          height={30}
         />
-        <span style={{ marginLeft: "8px" }}>{info.name}</span>
+      </div>
+      <label className={subGroup.visible ? "sc-theme-avl-group-label on" : "sc-theme-avl-group-label"}>
+        <input
+          type="checkbox"
+          className="sc-theme-avl-subgroup-input"
+          onChange={handleCheckboxChange}
+          checked={subGroup.visible}
+        />
+        {subGroup.name}
       </label>
     </div>
   );

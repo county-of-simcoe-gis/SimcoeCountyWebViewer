@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useSession } from "next-auth/react";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
+import { FaSignInAlt, FaSpinner, FaLock } from "react-icons/fa";
 import PanelComponent from "@/components/PanelComponent";
 import { useAvlStore } from "@/stores/avlStore";
-import { useMapStore } from "@/stores/mapStore";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import AvlLive from "./AvlLive";
 import AvlHistory from "./AvlHistory";
 import AvlTrips from "./AvlTrips";
@@ -25,72 +25,28 @@ const SECURITY_GROUPS: AvlSecurityGroup[] = [
   { key: "avl_innisfil_roads", label: "Innisfil", value: "Innisfil" },
 ];
 
-export default function AvlTheme({
-  name = "AVL",
-  helpLink,
-  hideHeader = false,
-  onClose,
-  onSidebarVisibility,
-  config: propsConfig,
-}: AvlThemeProps) {
-  const { data: session } = useSession();
-  const { areItemsLoaded } = useMapStore();
+// AVL roles required for access
+const AVL_ROLES = ["avl_waste_contractor", "avl_roads", "avl_solid_waste", "avl_oro_roads", "avl_severn_roads", "avl_innisfil_roads"];
+
+export default function AvlTheme({ name = "AVL", helpLink, hideHeader = false, onClose, onSidebarVisibility, config: propsConfig }: AvlThemeProps) {
+  // Use the require auth hook for authentication
+  const {
+    isLoading: authLoading,
+    isAuthenticated,
+    hasAccess,
+    roles: userRoles,
+    promptLogin,
+  } = useRequireAuth({
+    requiredRoles: AVL_ROLES,
+  });
 
   // Get store values and actions
-  const {
-    activeTab,
-    setActiveTab,
-    config,
-    setConfig,
-    setAllowedGroups,
-    showTripsTab,
-    setShowTripsTab,
-    plowGroups,
-    setPlowGroups,
-    loadFromStorage,
-  } = useAvlStore();
+  const { activeTab, setActiveTab, config, setConfig, setAllowedGroups, showTripsTab, setShowTripsTab, plowGroups, setPlowGroups, loadFromStorage } = useAvlStore();
 
   // Local state
   const [noAccess, setNoAccess] = useState(false);
   const [historyVehicle, setHistoryVehicle] = useState<AvlVehicle | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
-
-  // Get user roles from session
-  const userRoles = (session?.user as { roles?: string[] })?.roles || [];
-
-  // Initialize the theme
-  useEffect(() => {
-    // Wait for required components to load
-    const checkLoaded = () => {
-      if (areItemsLoaded(["security", "sidebar", "toc", "settings"])) {
-        initializeTheme();
-        return true;
-      }
-      return false;
-    };
-
-    // Check immediately
-    if (!checkLoaded()) {
-      // If not loaded, set up an interval to check
-      const interval = setInterval(() => {
-        if (checkLoaded()) {
-          clearInterval(interval);
-        }
-      }, 100);
-
-      // Clean up after 30 seconds
-      const timeout = setTimeout(() => {
-        clearInterval(interval);
-        // Initialize anyway after timeout
-        initializeTheme();
-      }, 30000);
-
-      return () => {
-        clearInterval(interval);
-        clearTimeout(timeout);
-      };
-    }
-  }, [areItemsLoaded]);
 
   // Initialize theme function
   const initializeTheme = useCallback(() => {
@@ -104,10 +60,11 @@ export default function AvlTheme({
       });
     }
 
-    // Determine allowed groups based on user roles
+    // Determine allowed groups based on user roles (case-insensitive matching)
     const allowedGroups: string[] = [];
+    const userRolesLower = userRoles.map((r) => r.toLowerCase());
     SECURITY_GROUPS.forEach((group) => {
-      if (userRoles.includes(group.key)) {
+      if (userRolesLower.includes(group.key.toLowerCase())) {
         allowedGroups.push(group.label);
       }
     });
@@ -131,16 +88,16 @@ export default function AvlTheme({
     }
 
     setIsInitialized(true);
-  }, [
-    isInitialized,
-    propsConfig,
-    config,
-    setConfig,
-    userRoles,
-    setAllowedGroups,
-    loadFromStorage,
-    setActiveTab,
-  ]);
+  }, [isInitialized, propsConfig, config, setConfig, userRoles, setAllowedGroups, loadFromStorage, setActiveTab]);
+
+  // Initialize the theme when auth is ready
+  useEffect(() => {
+    // Only initialize once auth is loaded and we have roles info
+    if (authLoading) {
+      return;
+    }
+    initializeTheme();
+  }, [authLoading, userRoles, initializeTheme]);
 
   // Handle tab selection
   const handleTabSelect = (index: number) => {
@@ -175,44 +132,76 @@ export default function AvlTheme({
     onClose();
   };
 
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <PanelComponent name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={handleClose} onSidebarVisibility={onSidebarVisibility}>
+        <div className="flex flex-col items-center justify-center p-8 text-gray-600">
+          <FaSpinner size={32} className="animate-spin mb-4" />
+          <p>Checking authentication...</p>
+        </div>
+      </PanelComponent>
+    );
+  }
+
+  // Show login prompt if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <PanelComponent name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={handleClose} onSidebarVisibility={onSidebarVisibility}>
+        <div className="flex flex-col items-center justify-center p-8 text-center">
+          <FaSignInAlt size={48} className="text-blue-500 mb-4" />
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">Authentication Required</h3>
+          <p className="text-gray-600 mb-6">Please sign in to access AVL vehicle tracking features.</p>
+          <button onClick={promptLogin} className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center gap-2">
+            <FaSignInAlt size={16} />
+            Sign In with Azure AD
+          </button>
+        </div>
+      </PanelComponent>
+    );
+  }
+
+  // Show access denied if authenticated but lacking required roles
+  if (!hasAccess) {
+    return (
+      <PanelComponent name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={handleClose} onSidebarVisibility={onSidebarVisibility}>
+        <div className="flex flex-col items-center justify-center p-8 text-center">
+          <FaLock size={48} className="text-orange-500 mb-4" />
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">Access Denied</h3>
+          <p className="text-gray-600 mb-4">You don&apos;t have access to any AVL groups.</p>
+          <p className="text-gray-500 text-sm mb-6">
+            Contact your administrator or{" "}
+            <a href="mailto:sim-gis@simcoe.ca?subject=Secure Access to AVL on opengis.simcoe.ca" className="text-blue-500 hover:underline">
+              email us
+            </a>{" "}
+            for access.
+          </p>
+        </div>
+      </PanelComponent>
+    );
+  }
+
   return (
-    <PanelComponent
-      name={name}
-      helpLink={helpLink}
-      hideHeader={hideHeader}
-      onClose={handleClose}
-      onSidebarVisibility={onSidebarVisibility}
-    >
-      {/* No Access Message */}
+    <PanelComponent name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={handleClose} onSidebarVisibility={onSidebarVisibility}>
+      {/* No Access Message (legacy - shown when user has auth but no matching groups) */}
       <div className={noAccess ? "" : "sc-hidden"}>
         You don&apos;t have access to any AVL groups.{" "}
         <div>
-          <a href="mailto:<Simcoe County GIS>sim-gis@simcoe.ca?subject=Secure Access to AVL on opengis.simcoe.ca">
-            Email us for Access
-          </a>
+          <a href="mailto:<Simcoe County GIS>sim-gis@simcoe.ca?subject=Secure Access to AVL on opengis.simcoe.ca">Email us for Access</a>
         </div>
       </div>
 
       {/* Main Content */}
       <div className={noAccess ? "sc-hidden" : "sc-theme-avl-container"}>
-        <Tabs
-          forceRenderTabPanel={true}
-          selectedIndex={activeTab}
-          onSelect={handleTabSelect}
-        >
-          <TabList
-            className={config.hideLiveFeed ? "sc-hidden" : "react-tabs__tab-list"}
-          >
+        <Tabs forceRenderTabPanel={true} selectedIndex={activeTab} onSelect={handleTabSelect}>
+          <TabList className={config.hideLiveFeed ? "sc-hidden" : "react-tabs__tab-list"}>
             <Tab id="tab-avl-live">Live Vehicles</Tab>
             <Tab id="tab-avl-history">Vehicle History</Tab>
             {showTripsTab && <Tab id="tab-avl-trips">Trips</Tab>}
           </TabList>
 
           {/* Live Tab */}
-          <TabPanel
-            id="tab-avl-live"
-            className={config.hideLiveFeed ? "sc-hidden" : "react-tabs__tab-panel"}
-          >
+          <TabPanel id="tab-avl-live" className={config.hideLiveFeed ? "sc-hidden" : "react-tabs__tab-panel"}>
             <AvlLive
               config={config}
               securityGroups={SECURITY_GROUPS}
@@ -229,10 +218,7 @@ export default function AvlTheme({
 
           {/* History Tab */}
           <TabPanel id="tab-avl-history">
-            <AvlHistory
-              historyVehicle={historyVehicle}
-              onHistoryVehicleConsumed={clearHistoryVehicle}
-            />
+            <AvlHistory historyVehicle={historyVehicle} onHistoryVehicleConsumed={clearHistoryVehicle} />
           </TabPanel>
 
           {/* Trips Tab (conditionally rendered) */}

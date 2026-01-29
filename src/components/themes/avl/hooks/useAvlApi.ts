@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import axios from "axios";
-import { useSession } from "next-auth/react";
+import axios, { AxiosError } from "axios";
 import type {
   CurrentLocationResponse,
   AllVehiclesResponse,
@@ -15,28 +14,52 @@ import { getSqlDateString } from "../utils/avlHelpers";
 // AVL API base path - uses local NextJS API routes
 const AVL_BASE_PATH = "/api/secure/avl";
 
+// Custom error class for authentication errors
+export class AuthenticationError extends Error {
+  constructor(message: string = "Authentication required") {
+    super(message);
+    this.name = "AuthenticationError";
+  }
+}
+
+// Custom error class for authorization errors
+export class AuthorizationError extends Error {
+  constructor(message: string = "Insufficient permissions") {
+    super(message);
+    this.name = "AuthorizationError";
+  }
+}
+
 /**
- * Hook for making AVL API calls through the local NextJS API
+ * Hook for making AVL API calls through the local NextJS API.
+ * 
+ * Authentication is handled server-side via NextAuth session cookies.
+ * The server API route uses getToken() to validate the session.
+ * 
+ * Throws AuthenticationError (401) or AuthorizationError (403) on auth failures.
  */
 export function useAvlApi() {
-  const { data: session } = useSession();
+  // Handle API errors and throw appropriate custom errors
+  const handleApiError = useCallback((error: unknown): never => {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError<{ error?: string }>;
+      const status = axiosError.response?.status;
+      const message = axiosError.response?.data?.error || axiosError.message;
 
-  // Get authorization headers
-  const getHeaders = useCallback(() => {
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
-
-    // Add bearer token if available from session
-    if (session?.accessToken) {
-      headers["Authorization"] = `Bearer ${session.accessToken}`;
+      if (status === 401) {
+        throw new AuthenticationError(message);
+      }
+      if (status === 403) {
+        throw new AuthorizationError(message);
+      }
     }
-
-    return headers;
-  }, [session?.accessToken]);
+    throw error;
+  }, []);
 
   /**
    * Fetch current vehicle locations for a group
+   * @throws {AuthenticationError} When user is not authenticated
+   * @throws {AuthorizationError} When user lacks required permissions
    */
   const fetchCurrentLocations = useCallback(
     async (
@@ -49,20 +72,19 @@ export function useAvlApi() {
       )}/${sortField}/${sortOrder}`;
 
       try {
-        const response = await axios.get<CurrentLocationResponse[]>(url, {
-          headers: getHeaders(),
-        });
+        const response = await axios.get<CurrentLocationResponse[]>(url);
         return response.data;
       } catch (error) {
-        console.error("Error fetching current locations:", error);
-        return [];
+        handleApiError(error);
       }
     },
-    [getHeaders]
+    [handleApiError]
   );
 
   /**
    * Fetch current spreader vehicle locations for a group
+   * @throws {AuthenticationError} When user is not authenticated
+   * @throws {AuthorizationError} When user lacks required permissions
    */
   const fetchCurrentLocationsSpreader = useCallback(
     async (
@@ -75,37 +97,35 @@ export function useAvlApi() {
       )}/${sortField}/${sortOrder}`;
 
       try {
-        const response = await axios.get<CurrentLocationResponse[]>(url, {
-          headers: getHeaders(),
-        });
+        const response = await axios.get<CurrentLocationResponse[]>(url);
         return response.data;
       } catch (error) {
-        console.error("Error fetching current locations spreader:", error);
-        return [];
+        handleApiError(error);
       }
     },
-    [getHeaders]
+    [handleApiError]
   );
 
   /**
    * Fetch all vehicles from the lookup table
+   * @throws {AuthenticationError} When user is not authenticated
+   * @throws {AuthorizationError} When user lacks required permissions
    */
   const fetchAllVehicles = useCallback(async (): Promise<AllVehiclesResponse[]> => {
     const url = `${AVL_BASE_PATH}/AllVehicles`;
 
     try {
-      const response = await axios.get<AllVehiclesResponse[]>(url, {
-        headers: getHeaders(),
-      });
+      const response = await axios.get<AllVehiclesResponse[]>(url);
       return response.data;
     } catch (error) {
-      console.error("Error fetching all vehicles:", error);
-      return [];
+      handleApiError(error);
     }
-  }, [getHeaders]);
+  }, [handleApiError]);
 
   /**
    * Fetch vehicle history
+   * @throws {AuthenticationError} When user is not authenticated
+   * @throws {AuthorizationError} When user lacks required permissions
    */
   const fetchHistory = useCallback(
     async (params: {
@@ -132,20 +152,19 @@ export function useAvlApi() {
       }
 
       try {
-        const response = await axios.get<HistoryResponse[]>(url, {
-          headers: getHeaders(),
-        });
+        const response = await axios.get<HistoryResponse[]>(url);
         return response.data;
       } catch (error) {
-        console.error("Error fetching history:", error);
-        return [];
+        handleApiError(error);
       }
     },
-    [getHeaders]
+    [handleApiError]
   );
 
   /**
    * Fetch spreader vehicle history
+   * @throws {AuthenticationError} When user is not authenticated
+   * @throws {AuthorizationError} When user lacks required permissions
    */
   const fetchHistorySpreader = useCallback(
     async (params: {
@@ -172,20 +191,19 @@ export function useAvlApi() {
       }
 
       try {
-        const response = await axios.get<HistoryResponse[]>(url, {
-          headers: getHeaders(),
-        });
+        const response = await axios.get<HistoryResponse[]>(url);
         return response.data;
       } catch (error) {
-        console.error("Error fetching history spreader:", error);
-        return [];
+        handleApiError(error);
       }
     },
-    [getHeaders]
+    [handleApiError]
   );
 
   /**
    * Fetch GeoTab run list for trips
+   * @throws {AuthenticationError} When user is not authenticated
+   * @throws {AuthorizationError} When user lacks required permissions
    */
   const fetchGeoTabRunList = useCallback(
     async (
@@ -203,20 +221,19 @@ export function useAvlApi() {
       }
 
       try {
-        const response = await axios.get<GeoTabRunListItem[]>(url, {
-          headers: getHeaders(),
-        });
+        const response = await axios.get<GeoTabRunListItem[]>(url);
         return response.data;
       } catch (error) {
-        console.error("Error fetching GeoTab run list:", error);
-        return [];
+        handleApiError(error);
       }
     },
-    [getHeaders]
+    [handleApiError]
   );
 
   /**
    * Fetch GeoTab session credentials
+   * @throws {AuthenticationError} When user is not authenticated
+   * @throws {AuthorizationError} When user lacks required permissions
    */
   const fetchGeoTabSessionId = useCallback(
     async (geoTabAPIKey: string): Promise<GeoTabSessionResponse | null> => {
@@ -225,16 +242,13 @@ export function useAvlApi() {
       )}`;
 
       try {
-        const response = await axios.get<GeoTabSessionResponse>(url, {
-          headers: getHeaders(),
-        });
+        const response = await axios.get<GeoTabSessionResponse>(url);
         return response.data;
       } catch (error) {
-        console.error("Error fetching GeoTab session:", error);
-        return null;
+        handleApiError(error);
       }
     },
-    [getHeaders]
+    [handleApiError]
   );
 
   return {

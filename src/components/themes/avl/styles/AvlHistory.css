@@ -1,11 +1,9 @@
 .sc-theme-avl-history-container {
-  position: absolute;
-  top: 140px;
+  position: relative;
   overflow-x: hidden;
   overflow-y: auto;
-  bottom: 0px;
-  right: 1px;
-  left: 5px;
+  max-height: calc(100vh - 280px);
+  padding-right: 5px;
 }
 
 .sc-theme-avl-history-date-picker {
@@ -102,6 +100,8 @@
 .sc-theme-avl-history-list-item {
   list-style: none;
   max-width: 95%;
+  display: flex;
+  justify-content: center;
 }
 
 .sc-theme-avl-history-loading-container {

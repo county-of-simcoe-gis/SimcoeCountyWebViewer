@@ -5,56 +5,27 @@ import { getFriendlyDateString } from "../utils/avlHelpers";
 import type { AvlHistoryVehicleProps } from "../types/avl.types";
 
 export default function AvlHistoryVehicle({ info, onVechileClick }: AvlHistoryVehicleProps) {
-  const handleClick = () => {
-    onVechileClick(info);
-  };
+  if (!info.vehicle_name) return null;
 
-  // Format the date
+  // Format the date with timezone offset adjustment (same as old app)
   const formattedDate = (() => {
     if (!info.date) return "";
     try {
-      return getFriendlyDateString(new Date(info.date));
+      const date = new Date(info.date);
+      const userTimezoneOffset = date.getTimezoneOffset() * 60000;
+      const newDate = new Date(date.getTime() + userTimezoneOffset);
+      return getFriendlyDateString(newDate);
     } catch {
       return info.date;
     }
   })();
 
   return (
-    <div
-      className="sc-theme-avl-history-vehicle-container"
-      onClick={handleClick}
-      title={`Click to zoom to ${info.vehicle_name}`}
-    >
-      <div className="sc-theme-avl-history-vehicle-info">
-        <div className="sc-theme-avl-history-vehicle-name">
-          <label>{info.vehicle_name}</label>
-          <label
-            style={{
-              fontSize: "9pt",
-              fontWeight: "normal",
-              marginLeft: "5px",
-              color: "#999",
-            }}
-          >
-            {info.grouping}
-          </label>
-        </div>
-        <div className="sc-theme-avl-history-vehicle-details">
-          <label className="sc-theme-avl-history-vehicle-speed" title="Speed">
-            {Math.round(info.velocity || 0)} km/h
-          </label>
-          <label
-            style={{
-              fontSize: "9pt",
-              fontWeight: "normal",
-              marginLeft: "10px",
-            }}
-            title="Date Reported"
-          >
-            {formattedDate}
-          </label>
-        </div>
-      </div>
+    <div className="sc-theme-avl-history-vehicle-container sc-container" onClick={() => onVechileClick(info)}>
+      <label className="sc-theme-avl-history-vehicle-info-name">{info.vehicle_name}</label>
+      <label className="sc-theme-avl-history-vehicle-info-group">{info.grouping}</label>
+      <label className="sc-theme-avl-history-vehicle-info-speed">{"Speed: " + (info.velocity || 0) + " Kph"}</label>
+      <label className="sc-theme-avl-history-vehicle-info-date">{formattedDate}</label>
     </div>
   );
 }

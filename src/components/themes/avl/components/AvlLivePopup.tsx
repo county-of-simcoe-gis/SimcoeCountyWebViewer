@@ -2,17 +2,15 @@
 
 import React, { useState, useEffect } from "react";
 import type { AvlLivePopupProps } from "../types/avl.types";
+import "../styles/AvlLive.css";
 
-// Image helper
-const getImagePath = (imageName: string): string => `/images/avl/${imageName}`;
-
-// Info row component
+// InfoRow component - matches the legacy app structure
 function InfoRow({ label, value }: { label: string; value: string | number | undefined | null }) {
   if (value === undefined || value === null || value === "") return null;
   return (
-    <div className="sc-avl-live-popup-info-row">
-      <span className="sc-avl-live-popup-info-label">{label}:</span>
-      <span className="sc-avl-live-popup-info-value">{value}</span>
+    <div className="sc-info-window-row">
+      <div className="sc-info-window-label">{label}</div>
+      <div className="sc-info-window-value">{value}</div>
     </div>
   );
 }
@@ -25,7 +23,9 @@ export default function AvlLivePopup({
   showFollowButton = true,
   showHistoryButton = true,
   onRef,
-}: AvlLivePopupProps) {
+  onClose,
+}: AvlLivePopupProps & { onClose?: () => void }) {
+  const [isFollowing, setIsFollowing] = useState(followingVehicleName === info.vehicle_name);
   const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -34,13 +34,18 @@ export default function AvlLivePopup({
     }
   }, [containerRef, onRef]);
 
+  useEffect(() => {
+    // Update following state when prop changes
+    setIsFollowing(followingVehicleName === info.vehicle_name);
+  }, [followingVehicleName, info.vehicle_name]);
+
   const handleFollowClick = () => {
-    if (followingVehicleName === info.vehicle_name) {
-      // Stop following
+    if (isFollowing) {
       onFollowClick(null);
+      setIsFollowing(false);
     } else {
-      // Start following
       onFollowClick(info);
+      setIsFollowing(true);
     }
   };
 
@@ -48,104 +53,81 @@ export default function AvlLivePopup({
     onHistoryClick();
   };
 
-  const isFollowing = followingVehicleName === info.vehicle_name;
-
-  // Get image icon based on plow status
-  const getPlowIcon = (): string => {
-    let iconName = info.imageName || "default.png";
-
-    if (info.subgrouping === "Plow" && info.hasGeoTabSpreaderData) {
-      const isPlowOrWingActive = info.isPlowActive || info.isWingActive;
-
-      if (isPlowOrWingActive && info.isSpreaderActive) {
-        iconName = "plow_red.png";
-      } else if (isPlowOrWingActive && !info.isSpreaderActive) {
-        iconName = "plow_green.png";
-      } else if (!isPlowOrWingActive && info.isSpreaderActive) {
-        iconName = "plow_orange.png";
-      } else {
-        iconName = "plow.png";
-      }
+  const handleCloseClick = () => {
+    if (onClose) {
+      onClose();
     }
-
-    return getImagePath(iconName);
   };
 
-  // Format spreader rate
-  const formatSpreaderRate = (value: number | string | undefined): string | null => {
-    if (value === undefined || value === null) return null;
-    const numValue = typeof value === "string" ? parseFloat(value) : value;
-    if (isNaN(numValue)) return null;
-    return `${numValue.toFixed(1)} kg/km`;
+  // Calculate "Last Reported" time difference
+  const diff = Math.round((new Date().getTime() - new Date(info.date).getTime()) / 1000);
+  const lastReportedClass = diff < 80000 ? "sc-theme-avl-last-reported green" : "sc-theme-avl-last-reported red";
+
+  // Format spreader rate value with "Reported on" timestamp
+  const formatSpreaderRate = (): string => {
+    if (info.SpreaderRate === undefined) return "";
+    if (typeof info.SpreaderRate === "string") return info.SpreaderRate;
+    // If spreader is not active, show 0
+    const rate = info.isSpreaderActive ? Math.round(info.SpreaderRate) : 0;
+    return info.SpreaderRateReportedOn ? `${rate} (Reported on: ${info.SpreaderRateReportedOn})` : `${rate}`;
   };
 
-  // Format temperature
-  const formatTemperature = (value: number | string | undefined): string | null => {
-    if (value === undefined || value === null) return null;
-    const numValue = typeof value === "string" ? parseFloat(value) : value;
-    if (isNaN(numValue)) return null;
-    return `${numValue.toFixed(1)} °C`;
+  // Format material type with "Reported on" timestamp
+  const formatMaterialType = (): string => {
+    if (info.MaterialType === undefined) return "";
+    if (info.MaterialType === "No Data Found" || info.MaterialType === "Getting Data...") {
+      return info.MaterialType;
+    }
+    return info.MaterialTypeReportedOn ? `${info.MaterialType} (Reported on: ${info.MaterialTypeReportedOn})` : info.MaterialType;
+  };
+
+  // Format temperature with "Reported on" timestamp
+  const formatTemperature = (temp: number | string | undefined, reportedOn: string | null | undefined): string => {
+    if (temp === undefined) return "";
+    if (typeof temp === "string") return temp;
+    const formatted = `${Math.round(temp)}°C`;
+    return reportedOn ? `${formatted} (Reported on: ${reportedOn})` : formatted;
   };
 
   return (
-    <div className="sc-avl-live-popup" ref={(ref) => setContainerRef(ref)}>
-      <div className="sc-avl-live-popup-header">
-        <img src={getPlowIcon()} alt={info.vehicle_name} style={{ height: "24px", marginRight: "10px" }} />
-        <span className="sc-avl-live-popup-title">{info.vehicle_name}</span>
-      </div>
+    <div ref={(ref) => setContainerRef(ref)}>
+      <InfoRow label="Name" value={info.vehicle_name} />
+      <InfoRow label="Group" value={info.subgrouping} />
+      <InfoRow label="Description" value={info.vehicle_description || info.subgrouping} />
 
-      <div className="sc-avl-live-popup-content">
-        <InfoRow label="Name" value={info.vehicle_name} />
-        <InfoRow label="Group" value={info.grouping} />
-        <InfoRow label="Type" value={info.subgrouping} />
-        <InfoRow label="Speed" value={`${Math.round(info.velocity || 0)} km/h`} />
-        <InfoRow label="Direction" value={info.direction ? `${Math.round(info.direction)}°` : undefined} />
-        <InfoRow label="Date" value={info.dateFriendly} />
-        <InfoRow label="Last Reported" value={info.lastReported?.replace("Last Reported: ", "")} />
+      {/* GeoTab Spreader Data - only for Plow vehicles with hasGeoTabSpreaderData */}
+      {info.subgrouping === "Plow" && info.hasGeoTabSpreaderData && info.isPlowActive !== undefined && info.isSpreaderActive !== undefined && (
+        <>
+          <InfoRow label="Plow Active" value={info.isPlowActive ? "Yes" : "No"} />
+          <InfoRow label="Wing Active" value={info.isWingActive ? "Yes" : "No"} />
+          <InfoRow label="Spreader Active" value={info.isSpreaderActive ? "Yes" : "No"} />
+          {info.SpreaderRate !== undefined && <InfoRow label="Spreader Rate" value={formatSpreaderRate()} />}
+          {info.MaterialType !== undefined && <InfoRow label="Material Type" value={formatMaterialType()} />}
+          {info.Blasting !== undefined && <InfoRow label="Blasting" value={info.Blasting ? "Yes" : "No"} />}
+          {info.SurfaceTemperature !== undefined && <InfoRow label="Surface Temp" value={formatTemperature(info.SurfaceTemperature, info.SurfaceTemperatureReportedOn)} />}
+          {info.AirTemperature !== undefined && <InfoRow label="Air Temp" value={formatTemperature(info.AirTemperature, info.AirTemperatureReportedOn)} />}
+        </>
+      )}
 
-        {/* GeoTab Spreader Data */}
-        {info.hasGeoTabSpreaderData && (
-          <>
-            <div className="sc-avl-live-popup-section-header">Spreader Data</div>
-            <InfoRow
-              label="Plow"
-              value={info.isPlowActive ? "Active" : "Inactive"}
-            />
-            <InfoRow
-              label="Spreader"
-              value={info.isSpreaderActive ? "Active" : "Inactive"}
-            />
-            <InfoRow
-              label="Wing"
-              value={info.isWingActive ? "Active" : "Inactive"}
-            />
-            <InfoRow label="Spreader Rate" value={formatSpreaderRate(info.SpreaderRate)} />
-            <InfoRow label="Air Temp" value={formatTemperature(info.AirTemperature)} />
-            <InfoRow label="Surface Temp" value={formatTemperature(info.SurfaceTemperature)} />
-            <InfoRow label="Material" value={info.MaterialType} />
-          </>
-        )}
-      </div>
+      <InfoRow label="Speed" value={info.velocity} />
+      <InfoRow label="Date" value={info.dateFriendly} />
 
-      <div className="sc-avl-live-popup-buttons">
+      <label className={lastReportedClass}>{info.lastReported}</label>
+
+      <div className="sc-avl-live-popup-button-container">
         {showFollowButton && (
-          <button
-            className="sc-button"
-            onClick={handleFollowClick}
-            title={isFollowing ? "Stop following this vehicle" : "Follow this vehicle on the map"}
-          >
+          <button className="sc-button sc-avl-live-popup-button" onClick={handleFollowClick} style={isFollowing ? { fontSize: "8pt" } : {}}>
             {isFollowing ? "Stop Following" : "Follow"}
           </button>
         )}
         {showHistoryButton && (
-          <button
-            className="sc-button"
-            onClick={handleHistoryClick}
-            title="View history for this vehicle"
-          >
+          <button className="sc-button sc-avl-live-popup-button" onClick={handleHistoryClick}>
             History
           </button>
         )}
+        <button className="sc-button sc-avl-live-popup-button" style={{ marginRight: "0px" }} onClick={handleCloseClick}>
+          Close
+        </button>
       </div>
     </div>
   );

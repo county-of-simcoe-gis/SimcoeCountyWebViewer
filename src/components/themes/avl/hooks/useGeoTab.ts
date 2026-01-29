@@ -598,6 +598,232 @@ export function useGeoTab() {
     [configGroups]
   );
 
+  /**
+   * Diagnostic data result from fetchGeoTabDiagnostics
+   */
+  interface GeoTabDiagnosticData {
+    SpreaderRate: number | string;
+    SpreaderRateReportedOn: string | null;
+    AirTemperature: number | string;
+    AirTemperatureReportedOn: string | null;
+    SurfaceTemperature: number | string;
+    SurfaceTemperatureReportedOn: string | null;
+    MaterialType: string;
+    MaterialTypeReportedOn: string | null;
+    Blasting: boolean;
+  }
+
+  /**
+   * Fetch GeoTab diagnostic data for a vehicle (Spreader Rate, Air Temp, Surface Temp, Material Type)
+   * This is called when a vehicle is clicked to show detailed snow operations data
+   */
+  const fetchGeoTabDiagnostics = useCallback(
+    async (vehicleInfo: AvlVehicle): Promise<GeoTabDiagnosticData | null> => {
+      // Get fresh state from the store to avoid stale closure issues
+      const storeState = useAvlStore.getState();
+      const currentConfigGroups = storeState.configGroups;
+      const currentGeoTabCredentials = storeState.geoTabCredentials;
+      const currentGeoTabDevices = storeState.geoTabDevices;
+      
+      // Find the matching group config
+      const groupFromConfig = currentConfigGroups.find((g) => g.name === vehicleInfo.grouping);
+      if (!groupFromConfig || !groupFromConfig.isGeoTabDevice) {
+        return null;
+      }
+
+      // Check for credentials
+      const credentials = currentGeoTabCredentials[vehicleInfo.grouping];
+      if (!credentials) {
+        console.warn(`[GEOTAB DIAG] No credentials for group: ${vehicleInfo.grouping}`);
+        return null;
+      }
+
+      // Find the matching device
+      const devices = currentGeoTabDevices[vehicleInfo.grouping];
+      if (!devices) {
+        console.warn(`[GEOTAB DIAG] No devices for group: ${vehicleInfo.grouping}`);
+        return null;
+      }
+
+      const matchingDevice = devices.find((device) => {
+        const cleanedName = cleanDeviceNameForMatching(device.name, vehicleInfo.grouping);
+        return cleanedName === vehicleInfo.vehicle_name ||
+          (isPurelyNumeric(cleanedName) &&
+            isPurelyNumeric(vehicleInfo.vehicle_name) &&
+            parseInt(cleanedName) === parseInt(vehicleInfo.vehicle_name));
+      });
+
+      if (!matchingDevice) {
+        console.warn(`[GEOTAB DIAG] No matching device for vehicle: ${vehicleInfo.vehicle_name}`);
+        return null;
+      }
+
+      // Helper function to get the most recent record from an array of StatusData
+      const getMostRecent = (
+        records: Array<{ dateTime: string; data: number }> | null
+      ): { dateTime: string; data: number } | null => {
+        if (!records || records.length === 0) return null;
+        // Sort by dateTime descending and return the first (most recent) record
+        return records.sort(
+          (a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime()
+        )[0];
+      };
+
+      // Helper function to format UTC date to friendly EST/EDT format for "Reported on" display
+      const formatReportedOnDate = (utcDateString: string): string | null => {
+        if (!utcDateString) return null;
+        const date = new Date(utcDateString);
+
+        // Use Intl.DateTimeFormat with explicit timezone for proper UTC to EST/EDT conversion
+        const options: Intl.DateTimeFormatOptions = {
+          timeZone: "America/New_York",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        };
+
+        const parts = new Intl.DateTimeFormat("en-US", options).formatToParts(date);
+        const year = parts.find((p) => p.type === "year")?.value;
+        const month = parts.find((p) => p.type === "month")?.value;
+        const day = parts.find((p) => p.type === "day")?.value;
+        const hour = parts.find((p) => p.type === "hour")?.value;
+        const minute = parts.find((p) => p.type === "minute")?.value;
+        const dayPeriod = parts.find((p) => p.type === "dayPeriod")?.value;
+
+        return `${year}-${month}-${day} ${hour}:${minute} ${dayPeriod}`;
+      };
+
+      // Search for data from the last day to get recent records
+      const fromDate = new Date();
+      fromDate.setDate(fromDate.getDate() - 1);
+
+      try {
+        // Make ExecuteMultiCall for 4 diagnostics in one API call
+        interface StatusDataResult {
+          dateTime: string;
+          data: number;
+        }
+
+        const result = await postToGeoTab<StatusDataResult[][]>("ExecuteMultiCall", {
+          calls: [
+            {
+              method: "Get",
+              params: {
+                typeName: "StatusData",
+                search: {
+                  deviceSearch: { id: matchingDevice.id },
+                  diagnosticSearch: { id: "DiagnosticSolidMaterialRateId" },
+                  fromDate: fromDate.toISOString(),
+                },
+              },
+            },
+            {
+              method: "Get",
+              params: {
+                typeName: "StatusData",
+                search: {
+                  deviceSearch: { id: matchingDevice.id },
+                  diagnosticSearch: { id: "DiagnosticOutsideTemperatureId" },
+                  fromDate: fromDate.toISOString(),
+                },
+              },
+            },
+            {
+              method: "Get",
+              params: {
+                typeName: "StatusData",
+                search: {
+                  deviceSearch: { id: matchingDevice.id },
+                  diagnosticSearch: { id: "IoxWrksRoadTemperature" },
+                  fromDate: fromDate.toISOString(),
+                },
+              },
+            },
+            {
+              method: "Get",
+              params: {
+                typeName: "StatusData",
+                search: {
+                  deviceSearch: { id: matchingDevice.id },
+                  diagnosticSearch: { id: "DiagnosticSolidMaterialTypeId" },
+                  fromDate: fromDate.toISOString(),
+                },
+              },
+            },
+          ],
+          credentials: {
+            database: credentials.database,
+            sessionId: credentials.sessionId,
+            userName: credentials.userName,
+          },
+        });
+
+        if (result) {
+          // Get the most recent record from each result set
+          const spreaderRecord = getMostRecent(result[0]);
+          const airTempRecord = getMostRecent(result[1]);
+          const surfaceTempRecord = getMostRecent(result[2]);
+          const materialTypeRecord = getMostRecent(result[3]);
+
+          // Convert material type numeric value to readable string (37=SALT, 38=SAND)
+          let materialTypeValue = "No Data Found";
+          if (materialTypeRecord?.data !== undefined) {
+            if (materialTypeRecord.data === 37) {
+              materialTypeValue = "SALT";
+            } else if (materialTypeRecord.data === 38) {
+              materialTypeValue = "SAND";
+            } else {
+              materialTypeValue = `Unknown (${materialTypeRecord.data})`;
+            }
+          }
+
+          // Calculate Blasting flag based on material type and spreader rate
+          // SALT with rate > 175 = Blasting
+          // SAND with rate > 600 = Blasting
+          let isBlasting = false;
+          const spreaderRate = spreaderRecord?.data;
+          if (typeof spreaderRate === "number") {
+            if (materialTypeValue === "SALT" && spreaderRate > 175) {
+              isBlasting = true;
+            } else if (materialTypeValue === "SAND" && spreaderRate > 600) {
+              isBlasting = true;
+            }
+          }
+
+          const diagnosticData: GeoTabDiagnosticData = {
+            SpreaderRate: spreaderRecord?.data ?? "No Data Found",
+            SpreaderRateReportedOn: spreaderRecord
+              ? formatReportedOnDate(spreaderRecord.dateTime)
+              : null,
+            AirTemperature: airTempRecord?.data ?? "No Data Found",
+            AirTemperatureReportedOn: airTempRecord
+              ? formatReportedOnDate(airTempRecord.dateTime)
+              : null,
+            SurfaceTemperature: surfaceTempRecord?.data ?? "No Data Found",
+            SurfaceTemperatureReportedOn: surfaceTempRecord
+              ? formatReportedOnDate(surfaceTempRecord.dateTime)
+              : null,
+            MaterialType: materialTypeValue,
+            MaterialTypeReportedOn: materialTypeRecord
+              ? formatReportedOnDate(materialTypeRecord.dateTime)
+              : null,
+            Blasting: isBlasting,
+          };
+
+          return diagnosticData;
+        }
+        return null;
+      } catch (error) {
+        console.error("GeoTab diagnostics API error:", error);
+        return null;
+      }
+    },
+    [postToGeoTab]
+  );
+
   return {
     authenticateGeoTab,
     fetchGeoTabDevices,
@@ -606,6 +832,7 @@ export function useGeoTab() {
     fetchStatusData,
     fetchSpreaderData,
     fetchLogRecords,
+    fetchGeoTabDiagnostics,
     isActiveAtTime,
     findClosestStatusValue,
     getDeviceIdForVehicle,

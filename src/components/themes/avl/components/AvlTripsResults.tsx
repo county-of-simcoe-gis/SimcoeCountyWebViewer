@@ -9,6 +9,7 @@ import { Style, Icon, Circle as CircleStyle, Fill, Stroke } from "ol/style";
 import { useMapStore } from "@/stores/mapStore";
 import { useGeoTab } from "../hooks/useGeoTab";
 import { toWebMercatorFromLatLong, getFriendlyDateString } from "../utils/avlHelpers";
+import { LayerManager } from "@/utils/openlayers/LayerManager";
 import type { AvlTripsResultsProps, GeoTabCredentials, GeoTabDevice, AvlGroup } from "../types/avl.types";
 
 // Image helper
@@ -74,11 +75,7 @@ function LegendTooltip({ onClose }: { onClose: () => void }) {
               }}
             >
               <span style={{ fontSize: "12px" }}>{item.label}</span>
-              <img
-                src={getImagePath(item.image)}
-                alt={item.label}
-                style={{ height: "20px" }}
-              />
+              <img src={getImagePath(item.image)} alt={item.label} style={{ height: "20px" }} />
             </div>
           ))}
         </div>
@@ -97,17 +94,11 @@ export default function AvlTripsResults({
   ensureGeoTabCredentialsAndDevices,
 }: AvlTripsResultsProps) {
   const { map } = useMapStore();
-  const {
-    fetchLogRecords,
-    fetchSpreaderData,
-    isActiveAtTime,
-    findClosestStatusValue,
-    STATUS_DATA_CONFIG,
-  } = useGeoTab();
+  const { fetchLogRecords, fetchSpreaderData, isActiveAtTime, findClosestStatusValue, STATUS_DATA_CONFIG } = useGeoTab();
 
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const [showLegend, setShowLegend] = useState<boolean>(false);
-  const [tripLayers, setTripLayers] = useState<VectorLayer<VectorSource>[]>([]);
+  const [tripLayerIds, setTripLayerIds] = useState<string[]>([]);
 
   // Format date for display
   const formatDate = (dateStr: string): string => {
@@ -121,11 +112,10 @@ export default function AvlTripsResults({
 
   // Clear trip layers from map
   const clearTripLayers = () => {
-    if (!map) return;
-    tripLayers.forEach((layer) => {
-      map.removeLayer(layer);
+    tripLayerIds.forEach((layerId) => {
+      LayerManager.removeLayer(layerId);
     });
-    setTripLayers([]);
+    setTripLayerIds([]);
   };
 
   // Clean up on unmount
@@ -136,12 +126,7 @@ export default function AvlTripsResults({
   }, []);
 
   // Get style for a feature based on spreader data
-  const getStyle = (record: {
-    PlowActive?: boolean;
-    SpreaderActive?: boolean;
-    Blasting?: boolean;
-    direction?: number;
-  }): Style => {
+  const getStyle = (record: { PlowActive?: boolean; SpreaderActive?: boolean; Blasting?: boolean; direction?: number }): Style => {
     let iconName = "plow-up-spreader-off.png";
 
     if (record.Blasting) {
@@ -178,12 +163,7 @@ export default function AvlTripsResults({
       // Find the matching device
       const matchingDevice = devices.find((device) => {
         const cleanedName = cleanDeviceNameForMatching(device.name, selectedGroup.name);
-        return (
-          cleanedName === selectedVehicleId ||
-          (parseInt(cleanedName) &&
-            parseInt(selectedVehicleId) &&
-            parseInt(cleanedName) === parseInt(selectedVehicleId))
-        );
+        return cleanedName === selectedVehicleId || (parseInt(cleanedName) && parseInt(selectedVehicleId) && parseInt(cleanedName) === parseInt(selectedVehicleId));
       });
 
       if (!matchingDevice) {
@@ -195,12 +175,7 @@ export default function AvlTripsResults({
       // Fetch log records
       const startDate = new Date(trip.start_date);
       const endDate = new Date(trip.end_date);
-      const logRecordsResponse = await fetchLogRecords(
-        [matchingDevice.id],
-        startDate,
-        endDate,
-        credentials
-      );
+      const logRecordsResponse = await fetchLogRecords([matchingDevice.id], startDate, endDate, credentials);
 
       if (!logRecordsResponse || logRecordsResponse.length === 0) {
         console.log("No log records found for trip");
@@ -211,12 +186,7 @@ export default function AvlTripsResults({
       const logRecords = logRecordsResponse[0]?.records || [];
 
       // Fetch spreader data
-      const spreaderData = await fetchSpreaderData(
-        [matchingDevice.id],
-        startDate,
-        endDate,
-        credentials
-      );
+      const spreaderData = await fetchSpreaderData([matchingDevice.id], startDate, endDate, credentials);
 
       // Create vector layer for the trip
       const source = new VectorSource();
@@ -229,22 +199,9 @@ export default function AvlTripsResults({
       logRecords.forEach((record) => {
         const enrichedRecord = {
           ...record,
-          PlowActive: isActiveAtTime(
-            matchingDevice.id,
-            record.dateTime,
-            spreaderData.plowActiveEvents
-          ),
-          SpreaderActive: isActiveAtTime(
-            matchingDevice.id,
-            record.dateTime,
-            spreaderData.spreaderActiveEvents
-          ),
-          SpreaderRate: findClosestStatusValue(
-            matchingDevice.id,
-            record.dateTime,
-            spreaderData.spreaderRateData,
-            STATUS_DATA_CONFIG.spreaderRate.matchWindowMinutes * 60 * 1000
-          )?.value,
+          PlowActive: isActiveAtTime(matchingDevice.id, record.dateTime, spreaderData.plowActiveEvents),
+          SpreaderActive: isActiveAtTime(matchingDevice.id, record.dateTime, spreaderData.spreaderActiveEvents),
+          SpreaderRate: findClosestStatusValue(matchingDevice.id, record.dateTime, spreaderData.spreaderRateData, STATUS_DATA_CONFIG.spreaderRate.matchWindowMinutes * 60 * 1000)?.value,
         };
 
         const coords = toWebMercatorFromLatLong([record.longitude, Math.abs(record.latitude)]);
@@ -254,8 +211,11 @@ export default function AvlTripsResults({
         source.addFeature(feature);
       });
 
-      map.addLayer(layer);
-      setTripLayers((prev) => [...prev, layer]);
+      // Use LayerManager with "Overlay" category for highest z-index
+      const layerId = LayerManager.addLayer(layer, "Overlay", `AVL Trip ${result.vehicle_name}`, {
+        userAdded: true,
+      });
+      setTripLayerIds((prev) => [...prev, layerId]);
 
       // Zoom to extent
       if (source.getFeatures().length > 0) {
@@ -315,19 +275,12 @@ export default function AvlTripsResults({
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontWeight: "bold" }}>
-                    {typedTrip.vehicle_name || selectedVehicleId}
-                  </div>
+                  <div style={{ fontWeight: "bold" }}>{typedTrip.vehicle_name || selectedVehicleId}</div>
                   <div style={{ fontSize: "10pt", color: "#666" }}>
                     {formatDate(typedTrip.start_date)} - {formatDate(typedTrip.end_date)}
                   </div>
                 </div>
-                <button
-                  className="sc-button"
-                  onClick={() => handleZoomClick(typedTrip)}
-                  disabled={isLoading === typedTrip.run_id}
-                  style={{ minWidth: "80px" }}
-                >
+                <button className="sc-button" onClick={() => handleZoomClick(typedTrip)} disabled={isLoading === typedTrip.run_id} style={{ minWidth: "80px" }}>
                   {isLoading === typedTrip.run_id ? "Loading..." : "Zoom To"}
                 </button>
               </div>
