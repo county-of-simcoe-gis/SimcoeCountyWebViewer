@@ -94,7 +94,7 @@ export default function Sidebar() {
   const [activeThemeComponent, setActiveThemeComponent] = useState<React.ReactNode>(null);
 
   // Debug logging
-  console.log("Sidebar render:", { toolsCount: tools.length, themesCount: themes.length });
+  // console.log("Sidebar render:", { toolsCount: tools.length, themesCount: themes.length });
 
   // Function to activate tab by name
   const activateTab = useCallback(
