@@ -213,7 +213,7 @@ export default function MapContainer() {
     // Sort by priority
     handlersRef.current.sort((a, b) => (a.priority || 100) - (b.priority || 100));
 
-    console.log(`MapContainer: Registered handler "${handler.id}" for event "${handler.eventType}"`);
+    // console.log(`MapContainer: Registered handler "${handler.id}" for event "${handler.eventType}"`);
   }, []);
 
   const unregisterHandler = useCallback((handlerId: string) => {
@@ -221,7 +221,7 @@ export default function MapContainer() {
     handlersRef.current = handlersRef.current.filter((h) => h.id !== handlerId);
 
     if (handlersRef.current.length < initialLength) {
-      console.log(`MapContainer: Unregistered handler "${handlerId}"`);
+      // console.log(`MapContainer: Unregistered handler "${handlerId}"`);
     }
   }, []);
 
