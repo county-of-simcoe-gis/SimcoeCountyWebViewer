@@ -47,30 +47,30 @@ vi.mock("@/components/PropertyPopup", () => ({
 
 // Mock OpenLayers modules
 vi.mock("ol/layer", () => ({
-  Vector: vi.fn(() => ({
-    setSource: vi.fn(),
-    getSource: vi.fn(() => ({
+  Vector: vi.fn(function () {
+    this.setSource = vi.fn();
+    this.getSource = vi.fn(() => ({
       clear: vi.fn(),
-    })),
-  })),
+    }));
+  }),
 }));
 
 vi.mock("ol/source", () => ({
-  Vector: vi.fn(() => ({
-    clear: vi.fn(),
-    addFeature: vi.fn(),
-  })),
+  Vector: vi.fn(function () {
+    this.clear = vi.fn();
+    this.addFeature = vi.fn();
+  }),
 }));
 
 vi.mock("ol/style", () => ({
-  Style: vi.fn(() => ({})),
-  Stroke: vi.fn(() => ({})),
-  Fill: vi.fn(() => ({})),
+  Style: vi.fn(function () {}),
+  Stroke: vi.fn(function () {}),
+  Fill: vi.fn(function () {}),
 }));
 
 vi.mock("ol/format", () => ({
-  GeoJSON: vi.fn(() => ({
-    readFeatures: vi.fn(() => [
+  GeoJSON: vi.fn(function () {
+    this.readFeatures = vi.fn(() => [
       {
         getGeometry: vi.fn(() => ({
           getExtent: vi.fn(() => [0, 0, 100, 100]),
@@ -78,8 +78,8 @@ vi.mock("ol/format", () => ({
         setStyle: vi.fn(),
         setProperties: vi.fn(),
       },
-    ]),
-  })),
+    ]);
+  }),
 }));
 
 vi.mock("ol/sphere", () => ({
@@ -96,11 +96,11 @@ vi.mock("@/utils/openlayers/LayerManager", () => ({
 
 // Mock ParcelClickInteraction - define inside the mock factory
 vi.mock("@/utils/openlayers/ParcelClickInteraction", () => ({
-  ParcelClickInteraction: vi.fn(() => ({
-    setDisableFlagsChecker: vi.fn(),
-    setParcelClickCallback: vi.fn(),
-    setLayerFiltersChecker: vi.fn(),
-  })),
+  ParcelClickInteraction: vi.fn(function () {
+    this.setDisableFlagsChecker = vi.fn();
+    this.setParcelClickCallback = vi.fn();
+    this.setLayerFiltersChecker = vi.fn();
+  }),
 }));
 
 // Mock stores
@@ -176,7 +176,7 @@ describe("PropertyReportClick", () => {
         id: "property-report-click",
         eventType: "singleclick",
         priority: 10,
-      })
+      }),
     );
   });
 
@@ -248,7 +248,7 @@ describe("PropertyReportClick", () => {
             },
           ],
         });
-      })
+      }),
     );
 
     // Mock property report response
@@ -259,7 +259,7 @@ describe("PropertyReportClick", () => {
           Address: "123 Test St",
           AssessedValue: "data:image/png;base64,test",
         });
-      })
+      }),
     );
 
     // Set ARN in URL parameters
@@ -331,7 +331,7 @@ describe("PropertyReportClick", () => {
     server.use(
       http.get("**/public/reports/property/*", () => {
         return HttpResponse.json({ message: "Error" }, { status: 500 });
-      })
+      }),
     );
 
     const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});

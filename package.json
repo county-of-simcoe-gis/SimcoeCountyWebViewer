@@ -19,8 +19,9 @@
     "canvas": "^3.2.0",
     "copy-to-clipboard": "^3.3.3",
     "daisyui": "^5.0.43",
+    "fast-xml-parser": "^4.3.9",
     "immer": "^10.1.1",
-    "jspdf": "^3.0.4",
+    "jspdf": "^4.0.0",
     "mssql": "^12.0.0",
     "next": "^15.5.7",
     "next-auth": "^4.24.11",
@@ -30,6 +31,7 @@
     "proj4": "^2.19.10",
     "rc-slider": "^11.1.8",
     "react": "^19.0.0",
+    "react-datepicker": "^9.1.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",
     "react-switch": "^7.1.0",
@@ -62,6 +64,6 @@
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "typescript": "^5",
-    "vitest": "^2.0.5"
+    "vitest": "^4.0.18"
   }
 }

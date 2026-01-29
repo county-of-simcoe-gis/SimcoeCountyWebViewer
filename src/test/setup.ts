@@ -19,6 +19,11 @@ vi.mock("react-icons/fa", () => ({
   FaGithub: (props: any) => React.createElement("div", { ...props, "data-testid": "github-icon" }, "GitHub"),
   FaQuestion: (props: any) => React.createElement("div", { ...props, "data-testid": "question-icon" }, "Question"),
 
+  // Playback / sync icons used by Weather components
+  FaSyncAlt: (props: any) => React.createElement("div", { ...props, "data-testid": "sync-icon" }, "Sync"),
+  FaPlay: (props: any) => React.createElement("div", { ...props, "data-testid": "play-icon" }, "Play"),
+  FaPause: (props: any) => React.createElement("div", { ...props, "data-testid": "pause-icon" }, "Pause"),
+
   // Missing icons that were causing test failures
   FaBars: (props: any) => React.createElement("div", { ...props, "data-testid": "bars-icon" }, "Bars"),
   FaSearch: (props: any) => React.createElement("div", { ...props, "data-testid": "search-icon" }, "Search"),

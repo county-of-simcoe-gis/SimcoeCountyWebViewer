@@ -33,15 +33,18 @@ vi.mock("@/components/PropertyPopup", () => ({
 
 // Mock OpenLayers Feature
 vi.mock("ol", () => ({
-  Feature: vi.fn(() => ({
-    getGeometry: vi.fn(() => ({
+  Feature: vi.fn(function (config: any) {
+    this.config = config;
+    this.getGeometry = vi.fn(() => ({
       getExtent: vi.fn(() => [0, 0, 100, 100]),
-    })),
-  })),
+    }));
+  }),
 }));
 
 vi.mock("ol/geom", () => ({
-  Point: vi.fn(() => ({})),
+  Point: vi.fn(function (coords: number[]) {
+    this.coords = coords;
+  }),
 }));
 
 describe("ResultsPopup", () => {

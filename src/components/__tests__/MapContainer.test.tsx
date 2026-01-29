@@ -63,7 +63,7 @@ vi.mock("@/stores/mapStore", () => ({
       getState: vi.fn(() => mockMapStore),
       setState: vi.fn(),
       subscribe: vi.fn(),
-    }
+    },
   ),
 }));
 
@@ -90,7 +90,7 @@ vi.mock("@/stores/layerManagerStore", () => ({
       })),
       setState: vi.fn(),
       subscribe: vi.fn(),
-    }
+    },
   ),
 }));
 
@@ -129,11 +129,15 @@ const mockMapInstance = {
 };
 
 vi.mock("ol/Map", () => ({
-  default: vi.fn(() => mockMapInstance),
+  default: vi.fn(function () {
+    return mockMapInstance;
+  }),
 }));
 
 vi.mock("ol/View", () => ({
-  default: vi.fn(() => mockView),
+  default: vi.fn(function () {
+    return mockView;
+  }),
 }));
 
 vi.mock("ol/interaction", () => ({
@@ -151,8 +155,8 @@ vi.mock("ol/interaction", () => ({
 }));
 
 vi.mock("ol/control", () => ({
-  ScaleLine: vi.fn(() => ({})),
-  Attribution: vi.fn(() => ({})),
+  ScaleLine: vi.fn(function () {}),
+  Attribution: vi.fn(function () {}),
 }));
 
 const mockFeature = {
@@ -163,11 +167,13 @@ const mockFeature = {
 };
 
 vi.mock("ol", () => ({
-  Feature: vi.fn(() => mockFeature),
+  Feature: vi.fn(function () {
+    return mockFeature;
+  }),
 }));
 
 vi.mock("ol/geom", () => ({
-  Point: vi.fn(() => ({})),
+  Point: vi.fn(function () {}),
 }));
 
 const mockVectorSource = {
@@ -177,22 +183,26 @@ const mockVectorSource = {
 };
 
 vi.mock("ol/layer", () => ({
-  Vector: vi.fn(() => ({
-    getSource: vi.fn(() => mockVectorSource),
-  })),
+  Vector: vi.fn(function () {
+    return {
+      getSource: vi.fn(() => mockVectorSource),
+    };
+  }),
 }));
 
 vi.mock("ol/source", () => ({
-  Vector: vi.fn(() => mockVectorSource),
+  Vector: vi.fn(function () {
+    return mockVectorSource;
+  }),
 }));
 
 vi.mock("ol/style", () => ({
-  Style: vi.fn(() => ({})),
-  Icon: vi.fn(() => ({})),
-  Fill: vi.fn(() => ({})),
-  Stroke: vi.fn(() => ({})),
-  Circle: vi.fn(() => ({})),
-  Text: vi.fn(() => ({})),
+  Style: vi.fn(function () {}),
+  Icon: vi.fn(function () {}),
+  Fill: vi.fn(function () {}),
+  Stroke: vi.fn(function () {}),
+  Circle: vi.fn(function () {}),
+  Text: vi.fn(function () {}),
 }));
 
 vi.mock("ol/proj", () => ({

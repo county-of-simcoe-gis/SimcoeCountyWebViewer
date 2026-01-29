@@ -62,7 +62,9 @@ const mockDrawingManager = {
 
 // Mock the MyMapsDrawingManager
 vi.mock("@/utils/openlayers/MyMapsDrawing", () => ({
-  MyMapsDrawingManager: vi.fn(() => mockDrawingManager),
+  MyMapsDrawingManager: vi.fn(function () {
+    return mockDrawingManager;
+  }),
 }));
 
 // Mock helper functions
