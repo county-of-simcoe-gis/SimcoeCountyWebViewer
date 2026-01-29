@@ -8,7 +8,7 @@ export default function SignIn() {
     // Automatically trigger the Azure AD sign-in flow with a callback to the homepage
     const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
     // Set callbackUrl to homepage rather than sign in page
-    signIn("azure-ad", {
+    signIn("azuread", {
       callbackUrl: window.location.origin + basePath + "/",
     });
   }, []);

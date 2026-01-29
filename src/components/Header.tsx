@@ -10,6 +10,7 @@ import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
 import Search from "@/components/Search";
 import SearchZoom from "@/components/SearchZoom";
+import ProfileButton from "@/components/ProfileButton";
 
 export default function Header() {
   const { toggleSidebar } = useSidebarStore();
@@ -81,6 +82,9 @@ export default function Header() {
         />
         <SearchZoom />
       </div>
+
+      {/* Profile Button */}
+      <ProfileButton />
 
       {/* Feedback Button */}
       <div
