@@ -27,18 +27,23 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 6px;
-  border-bottom: 1px solid #e0e0e0;
-  background-color: #f8f9fa;
+  height: 25px;
+  padding: 6px;
+  background: linear-gradient(to bottom, #3980cc 0%, #2865a2 100%);
+  border-bottom: 2px solid #e7a614;
+  color: #fff !important;
+  line-height: 20px;
+  cursor: default;
+  font-size: 15px;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
 }
 
 .sc-map-popup-title {
   margin: 0;
-  font-size: 13px;
-  font-weight: 600;
-  color: #333;
+  font-size: 15px;
+  font-weight: 400;
+  color: #fff;
 }
 
 .sc-map-popup-close {
@@ -46,7 +51,7 @@
   border: none;
   font-size: 22px;
   line-height: 1;
-  color: #666;
+  color: #fff;
   cursor: pointer;
   padding: 0;
   width: 22px;
@@ -59,11 +64,12 @@
 }
 
 .sc-map-popup-close:hover {
-  background-color: #e0e0e0;
-  color: #333;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
 }
 
 .sc-map-popup-content {
+  padding: 6px;
   max-height: 350px;
   overflow-y: auto;
   overscroll-behavior: contain;
