@@ -60,6 +60,8 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const apiUrlRef = useRef<string>("");
+  const isUrlSearchRef = useRef<boolean>(false); // Track if search is from URL parameter
+  const hasProcessedUrlSearchRef = useRef<boolean>(false); // Track if URL search has been processed
   const defaultSearchLimit = 10;
   const maxSearchLimit = 100;
 
@@ -175,12 +177,12 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
 
       setSearchResults(newResults);
     },
-    [searchValue, selectedType, config]
+    [searchValue, selectedType, config],
   );
 
   // Perform search
   const performSearch = useCallback(
-    async (searchText: string, type: string) => {
+    async (searchText: string, type: string, fromUrl: boolean = false) => {
       if (searchText.length < 2) {
         setSearchResults([]);
         return;
@@ -189,55 +191,95 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
       setIsLoading(true);
 
       try {
-        const limit = maxSearchLimit; // Always use max limit
+        // For URL searches, fetch a few results to check if there's exactly 1 or multiple
+        // If exactly 1, auto-zoom. If multiple, show the dropdown.
+        const limit = fromUrl ? 10 : maxSearchLimit;
         const url = getSearchURL(searchText, type, municipality, limit);
         const axiosClient = getAxiosClient(url);
         const response = await axiosClient.get<SearchResult[]>(url);
         const results = response.data;
 
         if (results) {
-          searchResultsHandler(results);
+          // For URL searches with exactly 1 result, auto-select it
+          if (fromUrl && results.length === 1 && results[0].location_id) {
+            // Store the result so it's available when user focuses the textbox
+            setSearchResults(results);
+
+            // Fetch the full location info and zoom to it
+            try {
+              const locationUrl = `${apiUrlRef.current}public/search/${results[0].location_id}`;
+              const locationAxiosClient = getAxiosClient(locationUrl);
+              const locationResponse = await locationAxiosClient.get<SearchResult>(locationUrl);
+              const locationInfo = locationResponse.data;
+
+              if (locationInfo.geojson) {
+                const searchZoomHandlers = (window as unknown as Record<string, unknown>).searchZoomHandlers as Record<string, (result: SearchResult) => void>;
+                if (searchZoomHandlers?.handleLocationResult) {
+                  await searchZoomHandlers.handleLocationResult(locationInfo);
+                }
+              }
+              // Don't show results dropdown for single URL result (but results are stored for later)
+              setIsOpen(false);
+            } catch (locationError) {
+              console.error("Failed to get location info for URL search:", locationError);
+            }
+          } else if (fromUrl && results.length > 1) {
+            // Multiple results from URL search - set results directly (don't use searchResultsHandler
+            // because searchValue state may not be updated yet due to async React state)
+            setSearchResults(results);
+            setIsOpen(true);
+          } else {
+            // Normal search - show results
+            searchResultsHandler(results);
+          }
         }
       } catch (error) {
         console.error("Search failed:", error);
         setSearchResults([]);
       } finally {
         setIsLoading(false);
+        isUrlSearchRef.current = false; // Reset URL search flag
       }
     },
-    [municipality, searchResultsHandler]
+    [municipality, searchResultsHandler],
   );
 
   // Handle initial search from URL parameters
   useEffect(() => {
-    const handleInitialSearch = () => {
-      const search = urlParameters.q;
-      const searchType = urlParameters.qt;
+    // Only process URL search once
+    if (hasProcessedUrlSearchRef.current) return;
 
-      if (search) {
-        setSearchValue(search);
-        if (searchType) {
-          const type = searchTypes.find((t) => t.value === searchType) || selectedType;
-          setSelectedType(type);
-        }
-        performSearch(search, searchType || "All");
+    const search = urlParameters.q;
+    const searchType = urlParameters.qt;
+
+    if (search && searchTypes.length > 0) {
+      hasProcessedUrlSearchRef.current = true;
+      isUrlSearchRef.current = true;
+
+      setSearchValue(search);
+      if (searchType) {
+        const type = searchTypes.find((t) => t.value === searchType) || selectedType;
+        setSelectedType(type);
       }
-    };
-
-    if (searchTypes.length > 0) {
-      handleInitialSearch();
+      // Pass fromUrl=true to handle single result differently
+      performSearch(search, searchType || "All", true);
     }
-  }, [searchTypes, selectedType, performSearch, urlParameters]);
+  }, [searchTypes.length, urlParameters.q, urlParameters.qt]); // Minimal dependencies
 
-  // Debounced search
+  // Debounced search - only for user-initiated searches (not URL parameter searches)
   useEffect(() => {
+    // Skip debounced search if this is a URL-initiated search
+    if (isUrlSearchRef.current) {
+      return;
+    }
+
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
 
     if (searchValue.length >= 2) {
       searchTimeoutRef.current = setTimeout(() => {
-        performSearch(searchValue, selectedType.value);
+        performSearch(searchValue, selectedType.value, false);
       }, 300);
     } else {
       setSearchResults([]);

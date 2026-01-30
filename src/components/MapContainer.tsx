@@ -7,6 +7,7 @@ import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
 import { usePopupStore } from "@/stores/popupStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
+import { useUrlParameterContextOptional } from "@/contexts/UrlParameterContext";
 
 // OpenLayers imports
 import "ol/ol.css";
@@ -17,11 +18,14 @@ import View from "ol/View";
 import { defaults as defaultInteractions, MouseWheelZoom, PinchRotate, DragRotate, Interaction } from "ol/interaction";
 import { ScaleLine, Attribution } from "ol/control";
 import { Feature } from "ol";
-import { Point } from "ol/geom";
+import { Point, Geometry } from "ol/geom";
 import { Vector as VectorLayer } from "ol/layer";
 import { Vector as VectorSource } from "ol/source";
-import { Style, Icon } from "ol/style";
+import { Style, Icon, Circle as CircleStyle, Fill, Stroke } from "ol/style";
 import { fromLonLat } from "ol/proj";
+import { getVectorContext } from "ol/render";
+import { unByKey } from "ol/Observable";
+import { easeOut } from "ol/easing";
 // Import zone-based control system
 import { createZoneControlsFromConfig, ControlConfig } from "@/components/map/controls/MapControlZones";
 
@@ -36,6 +40,12 @@ import LiveLayerClick from "@/components/LiveLayerClick";
 import MapPopup from "@/components/MapPopup";
 import { MapContextMenuContainer } from "@/components/MapContextMenuContainer";
 import ResultsPopup, { type Result } from "@/components/ResultsPopup";
+
+// Extended Result type with optional methods that may be added at runtime
+interface ResultWithMethods extends Result {
+  clearParcelLayer?: () => void;
+  loadDetails?: () => Promise<void>;
+}
 
 // Import config
 import config from "@/config.json";
@@ -127,9 +137,12 @@ export default function MapContainer() {
   const { show: showPopup, hide: hidePopup } = usePopupStore();
   const urlParameters = useAppStore((state) => state.urlParameters);
 
+  // URL Parameter context for registering map readiness
+  const urlParamContext = useUrlParameterContextOptional();
+
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<Map | null>(null);
-  const identifyIconLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
+  const identifyIconLayerRef = useRef<VectorLayer<VectorSource<Feature<Geometry>>> | null>(null);
   const identifyIconLayerIdRef = useRef<string | null>(null);
 
   // Handler-based system
@@ -194,7 +207,7 @@ export default function MapContainer() {
 
       return true;
     },
-    [map, calculateMapScale]
+    [map, calculateMapScale],
   );
 
   // Update ref whenever shouldExecuteHandler changes
@@ -241,7 +254,7 @@ export default function MapContainer() {
         console.log(`MapContainer: Registered legacy interaction "${id}"`);
       }
     },
-    [map]
+    [map],
   );
 
   const unregisterInteraction = useCallback(
@@ -253,7 +266,7 @@ export default function MapContainer() {
         console.log(`MapContainer: Unregistered legacy interaction "${id}"`);
       }
     },
-    [map]
+    [map],
   );
 
   const interactionManager = useMemo(
@@ -263,7 +276,7 @@ export default function MapContainer() {
       registerInteraction,
       unregisterInteraction,
     }),
-    [registerHandler, unregisterHandler, registerInteraction, unregisterInteraction]
+    [registerHandler, unregisterHandler, registerInteraction, unregisterInteraction],
   );
 
   useEffect(() => {
@@ -283,7 +296,12 @@ export default function MapContainer() {
     const centerCoords = config.centerCoords || [-8878504.68, 5543492.45];
     const defaultZoom = config.defaultZoom || 10;
 
-    if (storedExtent) {
+    // Check if URL has coordinate parameters - if so, don't apply stored extent
+    // This matches legacy behavior where URL params take precedence
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasCoordParams = urlParams.has("X") || urlParams.has("x") || urlParams.has("XMIN") || urlParams.has("xmin");
+
+    if (storedExtent && !hasCoordParams) {
       try {
         extent = JSON.parse(storedExtent);
       } catch (error) {
@@ -503,6 +521,16 @@ export default function MapContainer() {
     setMapLoading(false);
     emitMapLoaded();
 
+    // Register map as ready for URL parameter processing
+    // Use 'dataLoaded' because the map is now fully initialized and interactive
+    console.log("[MapContainer] Map initialization complete, urlParamContext:", !!urlParamContext, "registerComponentReady:", !!urlParamContext?.registerComponentReady);
+    if (urlParamContext?.registerComponentReady) {
+      console.log("[MapContainer] Calling registerComponentReady('map')");
+      urlParamContext.registerComponentReady("map", { readinessType: "dataLoaded" });
+    } else {
+      console.warn("[MapContainer] urlParamContext or registerComponentReady not available");
+    }
+
     // Cleanup function
     return () => {
       // Remove unified interaction
@@ -530,35 +558,91 @@ export default function MapContainer() {
         delete (window as any).config;
       }
     };
-  }, [setMap, setMapControls, addLoadedItem, setMapLoading, emitMapLoaded, setCurrentExtent, setCurrentZoom, setCurrentCenter, initExtentHistory, saveCurrentExtentToHistory]);
+  }, [setMap, setMapControls, addLoadedItem, setMapLoading, emitMapLoaded, setCurrentExtent, setCurrentZoom, setCurrentCenter, initExtentHistory, saveCurrentExtentToHistory, urlParamContext]);
 
   // Utility functions for URL parameter handling
-  const flashPoint = useCallback((coords: number[]) => {
-    // Simple flash animation by temporarily adding a feature with animation
-    // This is a simplified version - in the original it might use more complex animations
-    const flashFeature = new Feature({
-      geometry: new Point(coords),
-    });
+  const flashPoint = useCallback(
+    (coords: number[], duration = 5000) => {
+      if (!map) return;
 
-    const flashStyle = new Style({
-      image: new Icon({
-        anchor: [0.5, 0.5],
-        src: "/images/map-marker-light-blue.png", // Fallback to a basic marker
-        scale: 1.5,
-      }),
-    });
+      // Create marker feature with white dot and blue outline (matching legacy app)
+      const marker = new Feature(new Point(coords));
+      const markerStyle = new Style({
+        image: new CircleStyle({
+          radius: 5,
+          fill: new Fill({
+            color: "#fff",
+          }),
+          stroke: new Stroke({
+            color: "blue",
+            width: 2,
+          }),
+        }),
+        zIndex: 100,
+      });
+      marker.setStyle(markerStyle);
 
-    flashFeature.setStyle(flashStyle);
+      // Create a dedicated vector layer for the flash animation
+      const flashLayer = new VectorLayer({
+        zIndex: 1000,
+        source: new VectorSource({
+          features: [marker],
+        }),
+      });
+      map.addLayer(flashLayer);
 
-    if (identifyIconLayerRef.current) {
-      identifyIconLayerRef.current.getSource()?.addFeature(flashFeature);
+      // Pulsating animation - matching legacy app behavior
+      const start = Date.now();
 
-      // Remove flash feature after animation
-      setTimeout(() => {
-        identifyIconLayerRef.current?.getSource()?.removeFeature(flashFeature);
-      }, 1000);
-    }
-  }, []);
+      const animationKey = flashLayer.on("postrender", (event) => {
+        const vectorContext = getVectorContext(event);
+        const frameState = event.frameState;
+        if (!frameState) return;
+
+        const flashGeom = marker.getGeometry()?.clone();
+        if (!flashGeom) return;
+
+        const elapsed = frameState.time - start;
+        const elapsedRatio = elapsed / duration;
+        const radius = easeOut(elapsedRatio) * 35 + 5;
+        // Clamp opacity values to valid range (0-1) to prevent invalid rgba colors
+        const opacity = Math.max(0, easeOut(1 - elapsedRatio));
+        const fillOpacity = Math.max(0, easeOut(0.5 - elapsedRatio));
+
+        // Draw the expanding pulsating circle
+        vectorContext.setStyle(
+          new Style({
+            image: new CircleStyle({
+              radius: radius,
+              fill: new Fill({
+                color: `rgba(119, 170, 203, ${fillOpacity})`,
+              }),
+              stroke: new Stroke({
+                color: `rgba(119, 170, 203, ${opacity})`,
+                width: 2 + opacity,
+              }),
+            }),
+          }),
+        );
+        vectorContext.drawGeometry(flashGeom);
+
+        // Redraw the marker on top
+        vectorContext.setStyle(markerStyle);
+        vectorContext.drawGeometry(flashGeom);
+
+        // End animation after duration
+        if (elapsed > duration) {
+          unByKey(animationKey);
+          map.removeLayer(flashLayer);
+          return;
+        }
+
+        // Request next frame
+        map.render();
+      });
+    },
+    [map],
+  );
 
   const zoomToFeature = useCallback(
     (feature: Feature) => {
@@ -573,7 +657,7 @@ export default function MapContainer() {
         });
       }
     },
-    [map]
+    [map],
   );
 
   const getFeatureFromGeoJSON = useCallback((geoJsonFeature: { geometry: { coordinates: number[] }; properties?: Record<string, unknown> }) => {
@@ -592,6 +676,7 @@ export default function MapContainer() {
     // Get URL parameters
     const x = urlParameters.X;
     const y = urlParameters.Y;
+    const z = urlParameters.Z || urlParameters.ZOOM; // Support both Z and ZOOM
     const sr = urlParameters.SR || "WEB";
     const id = urlParameters.ID;
 
@@ -655,7 +740,7 @@ export default function MapContainer() {
         const iconStyle = new Style({
           image: new Icon({
             anchor: [0.5, 1],
-            src: "/images/map-marker-light-blue.png", // Using a fallback icon
+            src: "/images/identify-marker.png",
           }),
         });
 
@@ -664,9 +749,10 @@ export default function MapContainer() {
         identifyIconLayerRef.current.getSource()?.addFeature(iconFeature);
       }
 
-      // Center map on coordinates
+      // Center map on coordinates - use Z/ZOOM parameter if provided, otherwise use default
+      const zoomLevel = z ? parseInt(z, 10) : config.defaultZoom || 17;
       map.getView().setCenter(coords);
-      map.getView().setZoom(config.defaultZoom || 17);
+      map.getView().setZoom(zoomLevel);
 
       // Flash the point after a delay
       setTimeout(() => {
@@ -722,7 +808,7 @@ export default function MapContainer() {
         </Suspense>
       );
     },
-    [centerCoords, defaultZoom]
+    [centerCoords, defaultZoom],
   );
 
   const GitHubButtonWrapper = useCallback(({ map }: { map: Map }) => {
@@ -905,7 +991,7 @@ export default function MapContainer() {
       ScaleDisplayWrapper,
       ScaleSelectorWrapper,
       AttributionControlWrapper,
-    ]
+    ],
   );
 
   // Get zone controls based on configuration (memoized)
@@ -933,8 +1019,9 @@ export default function MapContainer() {
       const handleClose = () => {
         // Clear parcel layers from any results that have the clear function
         aggregatedResults.forEach((result) => {
-          if ((result as any).clearParcelLayer) {
-            (result as any).clearParcelLayer();
+          const resultWithMethods = result as ResultWithMethods;
+          if (resultWithMethods.clearParcelLayer) {
+            resultWithMethods.clearParcelLayer();
           }
         });
 
@@ -945,16 +1032,18 @@ export default function MapContainer() {
 
       const handleSelectResult = async (result: Result) => {
         // Call lazy-loading function if it exists on the result
-        if ((result as any).loadDetails) {
-          await (result as any).loadDetails();
+        const resultWithMethods = result as ResultWithMethods;
+        if (resultWithMethods.loadDetails) {
+          await resultWithMethods.loadDetails();
         }
       };
 
       const handleClearParcelLayer = () => {
         // Clear parcel layers from any results that have the clear function
         aggregatedResults.forEach((result) => {
-          if ((result as any).clearParcelLayer) {
-            (result as any).clearParcelLayer();
+          const resultWithMethods = result as ResultWithMethods;
+          if (resultWithMethods.clearParcelLayer) {
+            resultWithMethods.clearParcelLayer();
           }
         });
       };
@@ -962,7 +1051,7 @@ export default function MapContainer() {
       showPopup(
         resultsCoordinate,
         <ResultsPopup results={aggregatedResults} onClose={handleClose} isLoadingResults={isLoadingResults} onSelectResult={handleSelectResult} onClearParcelLayer={handleClearParcelLayer} />,
-        aggregatedResults.length > 1 ? `Results (${aggregatedResults.length})` : "Result"
+        aggregatedResults.length > 1 ? `Results (${aggregatedResults.length})` : "Result",
       );
     }
   }, [aggregatedResults, resultsCoordinate, isLoadingResults, showPopup, hidePopup]);

@@ -21,6 +21,7 @@ interface AppState {
 
   // URL parameters
   urlParameters: Record<string, string>;
+  urlParametersLoaded: boolean;
 
   // Actions
   setMapLoading: (loading: boolean) => void;
@@ -31,6 +32,7 @@ interface AppState {
   setConfigError: (error: string | null) => void;
   setAppInfo: (info: Partial<AppState["appInfo"]>) => void;
   setUrlParameters: (params: Record<string, string>) => void;
+  setUrlParametersLoaded: (loaded: boolean) => void;
 
   // Computed
   isAnyLoading: () => boolean;
@@ -50,6 +52,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     homepage: "",
   },
   urlParameters: {},
+  urlParametersLoaded: false,
 
   // Actions
   setMapLoading: (loading) => set({ mapLoading: loading }),
@@ -62,7 +65,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     set((state) => ({
       appInfo: { ...state.appInfo, ...info },
     })),
-  setUrlParameters: (params) => set({ urlParameters: params }),
+  setUrlParameters: (params) => set({ urlParameters: params, urlParametersLoaded: true }),
+  setUrlParametersLoaded: (loaded) => set({ urlParametersLoaded: loaded }),
 
   // Computed
   isAnyLoading: () => {

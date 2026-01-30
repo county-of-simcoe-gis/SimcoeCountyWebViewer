@@ -24,8 +24,9 @@ interface SearchResult {
 }
 
 export const SearchZoom: React.FC = () => {
-  const { map } = useMapStore();
-  const { emit } = useEventStore();
+  // Use selectors to prevent re-renders from unrelated store changes
+  const map = useMapStore((state) => state.map);
+  const emit = useEventStore((state) => state.emit);
   const searchGeoLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const searchIconLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const geoLayerIdRef = useRef<string | null>(null);
@@ -246,11 +247,11 @@ export const SearchZoom: React.FC = () => {
           const allIconFeatures = searchIconLayerRef.current.getSource()?.getFeatures() || [];
           console.log(
             "SearchZoom: All geo features:",
-            allGeoFeatures.map((f) => f.getGeometry()?.getExtent())
+            allGeoFeatures.map((f) => f.getGeometry()?.getExtent()),
           );
           console.log(
             "SearchZoom: All icon features:",
-            allIconFeatures.map((f) => f.getGeometry()?.getExtent())
+            allIconFeatures.map((f) => f.getGeometry()?.getExtent()),
           );
 
           // Style and zoom based on geometry type
@@ -379,7 +380,7 @@ export const SearchZoom: React.FC = () => {
         console.error("Error handling location result:", error);
       }
     },
-    [map, initSearchLayers, clearSearchLayers, emit]
+    [map, initSearchLayers, clearSearchLayers, emit],
   );
 
   // Handle geocoded result (coordinates only)
@@ -442,29 +443,46 @@ export const SearchZoom: React.FC = () => {
         console.error("Error handling geocoded result:", error);
       }
     },
-    [map, initSearchLayers, clearSearchLayers, emit]
+    [map, initSearchLayers, clearSearchLayers, emit],
   );
 
   // Initialize layers when map is available
+  // Use a ref to track if we've initialized to handle React StrictMode double-mount
+  const initializedRef = useRef(false);
+
   useEffect(() => {
-    if (map) {
+    if (map && !initializedRef.current) {
+      initializedRef.current = true;
       initSearchLayers();
     }
 
-    // Cleanup
+    // Cleanup only on actual unmount, not on StrictMode re-runs
+    // We check if layers exist before removing to avoid unnecessary state updates
     return () => {
-      if (geoLayerIdRef.current) {
-        LayerManager.removeLayer(geoLayerIdRef.current);
+      // Only cleanup if we actually have layer IDs and this is a real unmount
+      // The refs will be null if cleanup already ran or layers were never created
+      const geoId = geoLayerIdRef.current;
+      const iconId = iconLayerIdRef.current;
+
+      if (geoId) {
         geoLayerIdRef.current = null;
+        // Use setTimeout to defer the state update and break the render cycle
+        setTimeout(() => {
+          LayerManager.removeLayer(geoId);
+        }, 0);
       }
-      if (iconLayerIdRef.current) {
-        LayerManager.removeLayer(iconLayerIdRef.current);
+      if (iconId) {
         iconLayerIdRef.current = null;
+        setTimeout(() => {
+          LayerManager.removeLayer(iconId);
+        }, 0);
       }
       searchGeoLayerRef.current = null;
       searchIconLayerRef.current = null;
+      initializedRef.current = false;
     };
-  }, [map, initSearchLayers]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map]);
 
   // Expose the handler functions through the window object
   useEffect(() => {

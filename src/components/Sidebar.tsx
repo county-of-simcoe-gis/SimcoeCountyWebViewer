@@ -93,6 +93,54 @@ export default function Sidebar() {
   const [activeToolComponent, setActiveToolComponent] = useState<React.ReactNode>(null);
   const [activeThemeComponent, setActiveThemeComponent] = useState<React.ReactNode>(null);
 
+  // Sync theme component when activeTheme changes (for URL parameter activation)
+  useEffect(() => {
+    if (activeTheme && themes.length > 0) {
+      // Find the theme in the list
+      const theme = themes.find((t) => t.id === activeTheme);
+      if (theme) {
+        const componentName = theme.component || theme.name;
+        const ThemeComponent = themeComponents[componentName];
+        if (ThemeComponent) {
+          console.log(`[Sidebar] Syncing theme component for: ${theme.name} (${componentName})`);
+          const component = (
+            <Suspense fallback={<div style={{ padding: "20px" }}>Loading theme...</div>}>
+              <ThemeComponent name={theme.name} onClose={() => setActiveThemeComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
+            </Suspense>
+          );
+          setActiveThemeComponent(component);
+        }
+      }
+    } else if (!activeTheme) {
+      // Clear theme component when no theme is active
+      setActiveThemeComponent(null);
+    }
+  }, [activeTheme, themes]);
+
+  // Sync tool component when activeTool changes (for URL parameter activation)
+  useEffect(() => {
+    if (activeTool && tools.length > 0) {
+      // Find the tool in the list
+      const tool = tools.find((t) => t.id === activeTool);
+      if (tool) {
+        const componentName = tool.component || tool.name;
+        const ToolComponent = toolComponents[componentName];
+        if (ToolComponent) {
+          console.log(`[Sidebar] Syncing tool component for: ${tool.name} (${componentName})`);
+          const component = (
+            <Suspense fallback={<div style={{ padding: "20px" }}>Loading tool...</div>}>
+              <ToolComponent name={tool.name} onClose={() => setActiveToolComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
+            </Suspense>
+          );
+          setActiveToolComponent(component);
+        }
+      }
+    } else if (!activeTool) {
+      // Clear tool component when no tool is active
+      setActiveToolComponent(null);
+    }
+  }, [activeTool, tools]);
+
   // Debug logging
   // console.log("Sidebar render:", { toolsCount: tools.length, themesCount: themes.length });
 
@@ -108,7 +156,7 @@ export default function Sidebar() {
         console.warn(`Unknown tab name: ${tabName}`);
       }
     },
-    [setActiveTab]
+    [setActiveTab],
   );
 
   // Handle URL parameters for tab activation
@@ -163,7 +211,7 @@ export default function Sidebar() {
             <button className="sc-button" onClick={() => setActiveToolComponent(null)}>
               Close
             </button>
-          </div>
+          </div>,
         );
       }
     } else if (type === "themes") {
@@ -184,7 +232,7 @@ export default function Sidebar() {
             <button className="sc-button" onClick={() => setActiveThemeComponent(null)}>
               Close
             </button>
-          </div>
+          </div>,
         );
       }
     }

@@ -186,34 +186,44 @@ export const useLayerManagerStore = create<LayerManagerState>()(
 
     // Remove a layer by ID
     removeLayer: (layerId) => {
-      let found = false;
-
-      set((draft) => {
-        // Find and remove the layer from its category
-        Object.keys(draft.layers).forEach((category) => {
-          const categoryKey = category as LayerCategory;
-          const index = draft.layers[categoryKey].findIndex((l) => l.id === layerId);
-          if (index !== -1) {
-            draft.layers[categoryKey].splice(index, 1);
-            found = true;
-
-            // Reorder remaining layers in this category
-            draft.layers[categoryKey].forEach((layer, idx) => {
-              const newZIndex = calculateZIndex(categoryKey, idx);
-              layer.zIndex = newZIndex;
-              layer.layer.setZIndex(newZIndex);
-            });
-
-            // Update next available z-index
-            draft.nextZIndex[categoryKey] = calculateZIndex(categoryKey, draft.layers[categoryKey].length);
-          }
-        });
+      // First check if the layer exists without triggering set()
+      const state = get();
+      let layerExists = false;
+      let targetCategory: LayerCategory | null = null;
+      
+      Object.keys(state.layers).forEach((category) => {
+        const categoryKey = category as LayerCategory;
+        const index = state.layers[categoryKey].findIndex((l) => l.id === layerId);
+        if (index !== -1) {
+          layerExists = true;
+          targetCategory = categoryKey;
+        }
       });
-
-      if (found) {
+      
+      // Only call set() if the layer actually exists
+      if (!layerExists || !targetCategory) {
+        return false;
       }
 
-      return found;
+      set((draft) => {
+        const categoryKey = targetCategory as LayerCategory;
+        const index = draft.layers[categoryKey].findIndex((l) => l.id === layerId);
+        if (index !== -1) {
+          draft.layers[categoryKey].splice(index, 1);
+
+          // Reorder remaining layers in this category
+          draft.layers[categoryKey].forEach((layer, idx) => {
+            const newZIndex = calculateZIndex(categoryKey, idx);
+            layer.zIndex = newZIndex;
+            layer.layer.setZIndex(newZIndex);
+          });
+
+          // Update next available z-index
+          draft.nextZIndex[categoryKey] = calculateZIndex(categoryKey, draft.layers[categoryKey].length);
+        }
+      });
+
+      return true;
     },
 
     // Move a layer to a different category or position
