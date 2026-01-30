@@ -72,6 +72,8 @@ export function useGeoTab() {
   const postToGeoTab = useCallback(
     async <T>(method: string, params: Record<string, unknown>): Promise<T | null> => {
       try {
+        console.log(`[useGeoTab] postToGeoTab method: ${method}`);
+        
         const response = await axios.post<GeoTabApiResponse<T>>(GEOTAB_API_URL, {
           method,
           params,
@@ -82,6 +84,7 @@ export function useGeoTab() {
           return null;
         }
 
+        console.log(`[useGeoTab] postToGeoTab ${method} response received`);
         return response.data.result ?? null;
       } catch (error) {
         console.error("GeoTab API request failed:", error);
@@ -220,6 +223,10 @@ export function useGeoTab() {
       credentials: GeoTabCredentials,
       ruleId: string
     ): Promise<GeoTabExceptionEvent[]> => {
+      console.log(`[useGeoTab] fetchExceptionEvents for ${ruleId}`);
+      console.log(`[useGeoTab]   fromDate: ${fromDate.toISOString()}`);
+      console.log(`[useGeoTab]   toDate: ${toDate.toISOString()}`);
+
       // Build calls for each device
       const calls = deviceIds.map((deviceId) => ({
         method: "Get",
@@ -249,6 +256,8 @@ export function useGeoTab() {
         },
       });
 
+      console.log(`[useGeoTab] fetchExceptionEvents ${ruleId} raw result:`, result ? `${result.length} device arrays` : "null");
+
       if (!result) return [];
 
       // Flatten and transform results
@@ -264,6 +273,11 @@ export function useGeoTab() {
           });
         }
       });
+
+      console.log(`[useGeoTab] fetchExceptionEvents ${ruleId} parsed events:`, events.length);
+      if (events.length > 0) {
+        console.log(`[useGeoTab] First event:`, events[0]);
+      }
 
       return events;
     },
@@ -281,6 +295,10 @@ export function useGeoTab() {
       credentials: GeoTabCredentials,
       diagnosticId: string
     ): Promise<GeoTabStatusData[]> => {
+      console.log(`[useGeoTab] fetchStatusData for ${diagnosticId}`);
+      console.log(`[useGeoTab]   fromDate: ${fromDate.toISOString()}`);
+      console.log(`[useGeoTab]   toDate: ${toDate.toISOString()}`);
+
       // Build calls for each device
       const calls = deviceIds.map((deviceId) => ({
         method: "Get",
@@ -310,6 +328,8 @@ export function useGeoTab() {
         },
       });
 
+      console.log(`[useGeoTab] fetchStatusData ${diagnosticId} raw result:`, result ? `${result.length} device arrays` : "null");
+
       if (!result) return [];
 
       // Flatten and transform results
@@ -326,6 +346,11 @@ export function useGeoTab() {
         }
       });
 
+      console.log(`[useGeoTab] fetchStatusData ${diagnosticId} parsed records:`, statusData.length);
+      if (statusData.length > 0) {
+        console.log(`[useGeoTab] First record:`, statusData[0]);
+      }
+
       return statusData;
     },
     [postToGeoTab]
@@ -341,6 +366,11 @@ export function useGeoTab() {
       toDate: Date,
       credentials: GeoTabCredentials
     ): Promise<GeoTabSpreaderData> => {
+      console.log("[useGeoTab] fetchSpreaderData called");
+      console.log("[useGeoTab] deviceIds:", deviceIds.length, deviceIds.slice(0, 3));
+      console.log("[useGeoTab] fromDate:", fromDate.toISOString());
+      console.log("[useGeoTab] toDate:", toDate.toISOString());
+
       // Helper to calculate buffered fromDate
       const getBufferedFromDate = (bufferHours: number) => {
         const bufferMs = bufferHours * 60 * 60 * 1000;
@@ -407,6 +437,15 @@ export function useGeoTab() {
           STATUS_DATA_CONFIG.materialType.diagnosticId
         ),
       ]);
+
+      console.log("[useGeoTab] fetchSpreaderData results:");
+      console.log("[useGeoTab]   plowActiveEvents:", plowActiveEvents.length);
+      console.log("[useGeoTab]   spreaderActiveEvents:", spreaderActiveEvents.length);
+      console.log("[useGeoTab]   spreaderRateData:", spreaderRateData.length);
+      console.log("[useGeoTab]   wingData:", wingData.length);
+      console.log("[useGeoTab]   airTempData:", airTempData.length);
+      console.log("[useGeoTab]   surfaceTempData:", surfaceTempData.length);
+      console.log("[useGeoTab]   materialTypeData:", materialTypeData.length);
 
       return {
         plowActiveEvents,
@@ -541,9 +580,11 @@ export function useGeoTab() {
         return null;
       }
 
+      // TypeScript type guard - we know closestBefore is not null here
+      const matchedData: GeoTabStatusData = closestBefore;
       return {
-        value: closestBefore.value,
-        matchedDateTime: closestBefore.dateTime.toISOString(),
+        value: matchedData.value,
+        matchedDateTime: matchedData.dateTime.toISOString(),
       };
     },
     []
@@ -592,7 +633,9 @@ export function useGeoTab() {
    */
   const groupHasGeoTabSpreaderData = useCallback(
     (groupName: string): boolean => {
-      const configGroup = configGroups.find((g) => g.name === groupName);
+      // Handle special case: "Roads (Spreader)" maps to "Roads" config group
+      const configGroupName = groupName === "Roads (Spreader)" ? "Roads" : groupName;
+      const configGroup = configGroups.find((g) => g.name === configGroupName);
       return configGroup?.hasGeoTabSpreaderData === true;
     },
     [configGroups]

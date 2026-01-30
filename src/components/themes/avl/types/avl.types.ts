@@ -215,14 +215,14 @@ export interface GroupSelectOption extends SelectOption {
  */
 export type SortField = 'date' | 'vehicle_name' | 'velocity';
 
-export interface SortOption extends SelectOption<SortField> {}
+export type SortOption = SelectOption<SortField>;
 
 /**
  * Speed operator options for history filter
  */
 export type SpeedOperator = '>=' | '<=' | '>' | '<' | '=';
 
-export interface SpeedOperatorOption extends SelectOption<SpeedOperator> {}
+export type SpeedOperatorOption = SelectOption<SpeedOperator>;
 
 // ==================== API Response Types ====================
 

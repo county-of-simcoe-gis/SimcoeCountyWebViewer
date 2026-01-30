@@ -75,7 +75,7 @@ export function useAvlApi() {
         const response = await axios.get<CurrentLocationResponse[]>(url);
         return response.data;
       } catch (error) {
-        handleApiError(error);
+        return handleApiError(error);
       }
     },
     [handleApiError]
@@ -100,7 +100,7 @@ export function useAvlApi() {
         const response = await axios.get<CurrentLocationResponse[]>(url);
         return response.data;
       } catch (error) {
-        handleApiError(error);
+        return handleApiError(error);
       }
     },
     [handleApiError]
@@ -118,7 +118,7 @@ export function useAvlApi() {
       const response = await axios.get<AllVehiclesResponse[]>(url);
       return response.data;
     } catch (error) {
-      handleApiError(error);
+      return handleApiError(error);
     }
   }, [handleApiError]);
 
@@ -155,7 +155,7 @@ export function useAvlApi() {
         const response = await axios.get<HistoryResponse[]>(url);
         return response.data;
       } catch (error) {
-        handleApiError(error);
+        return handleApiError(error);
       }
     },
     [handleApiError]
@@ -194,7 +194,7 @@ export function useAvlApi() {
         const response = await axios.get<HistoryResponse[]>(url);
         return response.data;
       } catch (error) {
-        handleApiError(error);
+        return handleApiError(error);
       }
     },
     [handleApiError]
@@ -224,7 +224,7 @@ export function useAvlApi() {
         const response = await axios.get<GeoTabRunListItem[]>(url);
         return response.data;
       } catch (error) {
-        handleApiError(error);
+        return handleApiError(error);
       }
     },
     [handleApiError]
@@ -245,7 +245,7 @@ export function useAvlApi() {
         const response = await axios.get<GeoTabSessionResponse>(url);
         return response.data;
       } catch (error) {
-        handleApiError(error);
+        return handleApiError(error);
       }
     },
     [handleApiError]

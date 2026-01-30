@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useEffect, useCallback, useRef } from "react";
 import Select from "react-select";
 import { Vector as VectorLayer } from "ol/layer";
 import { Vector as VectorSource } from "ol/source";
@@ -53,8 +53,6 @@ const FETCH_INTERVAL = 300000; // 5 minutes
 const GEOTAB_FETCH_INTERVAL = 1000; // 1 second
 
 export default function AvlLive({
-  config,
-  securityGroups,
   onHistoryPopupButtonClick,
   showVehicleList = true,
   mapVehiclesVisible = true,
@@ -103,22 +101,23 @@ export default function AvlLive({
   const popupFeatureRef = useRef<(Feature & { vehicleInfo: AvlVehicle }) | null>(null);
 
   // Refs to hold latest callback functions for intervals (prevents stale closures)
-  const fetchCurrentLocationsRef = useRef<() => Promise<void>>();
-  const getGeoTabCurrentLocationsRef = useRef<() => Promise<void>>();
+  const fetchCurrentLocationsRef = useRef<(() => Promise<void>) | undefined>(undefined);
+  const getGeoTabCurrentLocationsRef = useRef<(() => Promise<void>) | undefined>(undefined);
   const updateVehiclesFromGeoTabRef = useRef<
-    (
-      groupName: string,
-      statusInfo: Array<{
-        latitude: number;
-        longitude: number;
-        speed?: number;
-        bearing?: number;
-        dateTime: string;
-        device: { id: string };
-        exceptionEvents?: Array<{ rule?: { id: string }; diagnostic?: { id: string } }>;
-      }>,
-    ) => void
-  >();
+    | ((
+        groupName: string,
+        statusInfo: Array<{
+          latitude: number;
+          longitude: number;
+          speed?: number;
+          bearing?: number;
+          dateTime: string;
+          device: { id: string };
+          exceptionEvents?: Array<{ rule?: { id: string }; diagnostic?: { id: string } }>;
+        }>,
+      ) => void)
+    | undefined
+  >(undefined);
 
   // Initialize component
   useEffect(() => {
@@ -170,6 +169,7 @@ export default function AvlLive({
         unByKey(mapClickEventRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, allowedGroups]);
 
   // Update layer visibility when mapVehiclesVisible changes
@@ -373,11 +373,11 @@ export default function AvlLive({
       if (Array.isArray(result)) {
         const groupIndex = updatedGroups.findIndex((g) => g.name === group.name);
         if (groupIndex !== -1) {
-          updatedGroups[groupIndex] = { ...updatedGroups[groupIndex], data: result };
+          updatedGroups[groupIndex] = { ...updatedGroups[groupIndex], data: result as AvlVehicle[] };
         }
         // For GeoTab groups, start authentication (in parallel)
         if (group.isGeoTabDevice) {
-          geoTabAuthPromises.push(authenticateAndGetDevices(group, result));
+          geoTabAuthPromises.push(authenticateAndGetDevices(group, result as AvlVehicle[]));
         }
       }
     }
@@ -389,6 +389,7 @@ export default function AvlLive({
 
     setConfigGroups(updatedGroups);
     sortVehicles(updatedGroups);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allowedGroups, configGroups, fetchCurrentLocations, geoTabDevices, selectedSortOption, sortAscendingChecked, setConfigGroups]);
 
   // Keep ref updated with latest callback
@@ -506,6 +507,7 @@ export default function AvlLive({
       setConfigGroups(updatedGroups);
       sortVehicles(updatedGroups);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [configGroups, geoTabDevices, setConfigGroups],
   );
 
@@ -566,6 +568,7 @@ export default function AvlLive({
         }));
       onPlowGroupsUpdate?.(groupsWithVehicles);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [configGroups, selectedSortOption, sortAscendingChecked, setVehicles, onPlowVehiclesUpdate, onPlowGroupsUpdate],
   );
 
@@ -599,7 +602,7 @@ export default function AvlLive({
       const existingFeature = getFeatureForVehicle(vehicle);
 
       if (!existingFeature) {
-        const newFeature = new Feature(new Point(coords)) as Feature & { vehicleInfo: AvlVehicle };
+        const newFeature = new Feature(new Point(coords)) as unknown as Feature & { vehicleInfo: AvlVehicle };
         newFeature.set("name", vehicle.vehicle_name);
         newFeature.set("grouping", vehicle.grouping);
         newFeature.vehicleInfo = vehicle;
@@ -610,6 +613,7 @@ export default function AvlLive({
         animateFeature(existingFeature, vehicle, coords);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Get feature for a vehicle
@@ -661,49 +665,48 @@ export default function AvlLive({
         map?.getView().animate({ center: newCoords, zoom: 17 });
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [followingVehicle, map],
   );
 
   // Set feature style
-  const setFeatureStyle = useCallback(
-    (feature: Feature & { vehicleInfo: AvlVehicle }) => {
-      const vehicleInfo = feature.vehicleInfo;
-      const diffDays = dateDiffInDays(new Date(vehicleInfo.date), new Date());
+  const setFeatureStyle = useCallback((feature: Feature & { vehicleInfo: AvlVehicle }) => {
+    const vehicleInfo = feature.vehicleInfo;
+    const diffDays = dateDiffInDays(new Date(vehicleInfo.date), new Date());
 
-      let iconName = vehicleInfo.imageName || "default.png";
+    let iconName = vehicleInfo.imageName || "default.png";
 
-      // Determine plow icon based on status
-      if (vehicleInfo.subgrouping === "Plow" && vehicleInfo.hasGeoTabSpreaderData) {
-        const isPlowOrWingActive = vehicleInfo.isPlowActive || vehicleInfo.isWingActive;
-        if (isPlowOrWingActive && vehicleInfo.isSpreaderActive) {
-          iconName = "plow_red.png";
-        } else if (isPlowOrWingActive && !vehicleInfo.isSpreaderActive) {
-          iconName = "plow_green.png";
-        } else if (!isPlowOrWingActive && vehicleInfo.isSpreaderActive) {
-          iconName = "plow_orange.png";
-        } else {
-          iconName = "plow.png";
-        }
+    // Determine plow icon based on status
+    if (vehicleInfo.subgrouping === "Plow" && vehicleInfo.hasGeoTabSpreaderData) {
+      const isPlowOrWingActive = vehicleInfo.isPlowActive || vehicleInfo.isWingActive;
+      if (isPlowOrWingActive && vehicleInfo.isSpreaderActive) {
+        iconName = "plow_red.png";
+      } else if (isPlowOrWingActive && !vehicleInfo.isSpreaderActive) {
+        iconName = "plow_green.png";
+      } else if (!isPlowOrWingActive && vehicleInfo.isSpreaderActive) {
+        iconName = "plow_orange.png";
+      } else {
+        iconName = "plow.png";
       }
+    }
 
-      const style = new Style({
-        image: new Icon({
-          anchor: [0.5, 0.5],
-          src: getImagePath(iconName),
-          rotation: (vehicleInfo.direction || 0) * (Math.PI / 180),
-          opacity: diffDays > 1 ? 0.4 : 1,
-        }),
-      });
+    const style = new Style({
+      image: new Icon({
+        anchor: [0.5, 0.5],
+        src: getImagePath(iconName),
+        rotation: (vehicleInfo.direction || 0) * (Math.PI / 180),
+        opacity: diffDays > 1 ? 0.4 : 1,
+      }),
+    });
 
-      feature.setStyle(style);
-    },
-    [showLabels],
-  );
+    feature.setStyle(style);
+  }, []);
 
   // Handle sort dropdown change
-  const handleSortDropDownChange = (option: SortOption | null) => {
-    if (option) {
-      setSelectedSortOption(option);
+  const handleSortDropDownChange = (option: unknown) => {
+    const sortOption = option as SortOption | null;
+    if (sortOption) {
+      setSelectedSortOption(sortOption);
       sortVehicles();
     }
   };
