@@ -7,7 +7,7 @@ import { useAvlStore } from "@/stores/avlStore";
 import { useAvlApi } from "./hooks/useAvlApi";
 import { useGeoTab } from "./hooks/useGeoTab";
 import AvlTripsResults from "./components/AvlTripsResults";
-import type { AvlTripsProps, AvlGroup, GeoTabCredentials, GeoTabDevice } from "./types/avl.types";
+import type { AvlTripsProps, AvlGroup, GeoTabCredentials, GeoTabDevice, GeoTabRunListItem } from "./types/avl.types";
 import "./styles/Avl.css";
 
 export default function AvlTrips({ groups }: AvlTripsProps) {
@@ -22,21 +22,15 @@ export default function AvlTrips({ groups }: AvlTripsProps) {
   const [startDate, setStartDate] = useState<Date>(new Date(Date.now() - 24 * 60 * 60 * 1000));
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [searchResults, setSearchResults] = useState<unknown[]>([]);
+  const [searchResults, setSearchResults] = useState<GeoTabRunListItem[]>([]);
   const [localCredentials, setLocalCredentials] = useState<Record<string, GeoTabCredentials>>({});
   const [localDevices, setLocalDevices] = useState<Record<string, GeoTabDevice[]>>({});
 
   const selectedGroupObject = filteredGroups.find((g) => g.name === selectedGroup);
 
-  const vehicles = (
-    filteredGroups.find((g) => g.name === selectedGroup)?.vehicles || []
-  )
-    .slice()
-    .sort((a, b) => a.vehicle_name.localeCompare(b.vehicle_name));
+  const vehicles = (filteredGroups.find((g) => g.name === selectedGroup)?.vehicles || []).slice().sort((a, b) => a.vehicle_name.localeCompare(b.vehicle_name));
 
-  const ensureGeoTabCredentialsAndDevices = async (
-    groupOption: AvlGroup
-  ): Promise<{ credentials: GeoTabCredentials; devices: GeoTabDevice[] }> => {
+  const ensureGeoTabCredentialsAndDevices = async (groupOption: AvlGroup): Promise<{ credentials: GeoTabCredentials; devices: GeoTabDevice[] }> => {
     const existingCreds = geoTabCredentials[groupOption.name] || localCredentials[groupOption.name];
     const existingDevices = geoTabDevices[groupOption.name] || localDevices[groupOption.name];
 
@@ -85,11 +79,7 @@ export default function AvlTrips({ groups }: AvlTripsProps) {
       <div className="sc-container">
         <div className="sc-theme-avl-history-control-row">
           <label className="sc-theme-avl-history-label">Group:</label>
-          <select
-            className="sc-input"
-            value={selectedGroup}
-            onChange={(e) => setSelectedGroup(e.target.value)}
-          >
+          <select className="sc-input" value={selectedGroup} onChange={(e) => setSelectedGroup(e.target.value)}>
             <option value="">Select a group...</option>
             {filteredGroups.map((group, index) => (
               <option key={`group-${index}`} value={group.name}>
@@ -101,12 +91,7 @@ export default function AvlTrips({ groups }: AvlTripsProps) {
 
         <div className="sc-theme-avl-history-control-row">
           <label className="sc-theme-avl-history-label">Vehicle ID:</label>
-          <select
-            className="sc-input"
-            value={selectedVehicleId}
-            onChange={(e) => setSelectedVehicleId(e.target.value)}
-            disabled={!selectedGroup}
-          >
+          <select className="sc-input" value={selectedVehicleId} onChange={(e) => setSelectedVehicleId(e.target.value)} disabled={!selectedGroup}>
             <option value="">Select a vehicle...</option>
             {vehicles.map((vehicle, index) => (
               <option key={`vehicle-${index}`} value={vehicle.vehicle_name}>
@@ -121,7 +106,7 @@ export default function AvlTrips({ groups }: AvlTripsProps) {
           <DatePicker
             className="sc-input sc-theme-avl-history-date-picker"
             selected={startDate}
-            onChange={(date) => date && setStartDate(date)}
+            onChange={(date: Date | null) => date && setStartDate(date)}
             showTimeSelect
             dateFormat="MMMM d, yyyy h:mm aa"
           />
@@ -132,19 +117,14 @@ export default function AvlTrips({ groups }: AvlTripsProps) {
           <DatePicker
             className="sc-input sc-theme-avl-history-date-picker"
             selected={endDate}
-            onChange={(date) => date && setEndDate(date)}
+            onChange={(date: Date | null) => date && setEndDate(date)}
             showTimeSelect
             dateFormat="MMMM d, yyyy h:mm aa"
           />
         </div>
 
         <div className="sc-theme-avl-history-control-row" style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
-          <button
-            className="sc-button"
-            onClick={handleSearch}
-            disabled={isLoading}
-            style={{ width: "100px" }}
-          >
+          <button className="sc-button" onClick={handleSearch} disabled={isLoading} style={{ width: "100px" }}>
             {isLoading ? "Searching..." : "Search"}
           </button>
           <button className="sc-button" onClick={handleReset} style={{ width: "100px" }}>
