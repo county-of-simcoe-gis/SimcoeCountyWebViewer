@@ -4,14 +4,8 @@ import React, { useEffect } from "react";
 import { getFriendlyDateString, getUID } from "../utils/avlHelpers";
 import type { AvlHistoryPopupProps } from "../types/avl.types";
 
-// Info row component
-function InfoRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | number | boolean | undefined | null;
-}) {
+// Info row component - matches the legacy app structure
+function InfoRow({ label, value }: { label: string; value: string | number | boolean | undefined | null }) {
   if (value === undefined || value === null || value === "") return null;
 
   // Handle boolean values
@@ -23,9 +17,9 @@ function InfoRow({
   }
 
   return (
-    <div className="sc-theme-avl-history-popup-info-row">
-      <span className="sc-theme-avl-history-popup-info-label">{label}:</span>
-      <span className="sc-theme-avl-history-popup-info-value">{displayValue}</span>
+    <div className="sc-info-window-row">
+      <div className="sc-info-window-label">{label}</div>
+      <div className="sc-info-window-value">{displayValue}</div>
     </div>
   );
 }
@@ -46,108 +40,59 @@ export default function AvlHistoryPopup({ info, onRef }: AvlHistoryPopupProps) {
   const formattedDate = (() => {
     if (!info.date) return "";
     try {
-      return getFriendlyDateString(new Date(info.date));
+      // Match legacy: remove Z from date string before parsing
+      const dateStr = info.date.replace("Z", "");
+      return getFriendlyDateString(new Date(dateStr));
     } catch {
       return info.date;
     }
   })();
 
-  // Format spreader rate value
-  const formatSpreaderRate = (value: number | string | undefined): string | null => {
-    if (value === undefined || value === null) return null;
-    const numValue = typeof value === "string" ? parseFloat(value) : value;
-    if (isNaN(numValue)) return null;
-    return `${numValue.toFixed(1)} kg/km`;
+  // Helper function to format value with "Reported on" timestamp (matching legacy)
+  const formatWithReportedOn = (value: string | number | boolean | undefined | null, reportedOn: string | null | undefined): string => {
+    if (value === "No Data" || value === null || value === undefined) return "No Data";
+    if (reportedOn) return `${value} - Reported on: ${reportedOn}`;
+    return String(value);
   };
 
-  // Format temperature value
-  const formatTemperature = (value: number | string | undefined): string | null => {
-    if (value === undefined || value === null) return null;
-    const numValue = typeof value === "string" ? parseFloat(value) : value;
-    if (isNaN(numValue)) return null;
-    return `${numValue.toFixed(1)} °C`;
-  };
+  // Check if we have spreader data (PlowDown is the indicator)
+  const isSpreader = info.PlowDown !== undefined;
 
-  // Check if we have spreader data
-  const hasSpreaderData =
-    info.PlowDown !== undefined ||
-    info.DryOn !== undefined ||
-    info.DryRateKilosPerLaneKilometer !== undefined ||
-    info.TemperatureAir !== undefined ||
-    info.TemperatureSurface !== undefined;
+  // Format spread rate with reported on (rounded to whole number)
+  const spreadRateValue = typeof info.DryRateKilosPerLaneKilometer === "number" ? Math.round(info.DryRateKilosPerLaneKilometer) : info.DryRateKilosPerLaneKilometer;
+  const spreadRateDisplay = info.DryRateKilosPerLaneKilometer === "No Data" ? "No Data" : info.DryRateKilosPerLaneKilometer === 0 ? "0" : formatWithReportedOn(spreadRateValue, info.DryRateReportedOn);
+
+  // Format material type with reported on
+  const materialTypeDisplay = formatWithReportedOn(info.MaterialType, info.MaterialTypeReportedOn);
+
+  // Format wing down with reported on
+  const wingDownDisplay = info.WingDown === "No Data" ? "No Data" : info.WingReportedOn ? `${info.WingDown ? "Yes" : "No"} - Reported on: ${info.WingReportedOn}` : info.WingDown ? "Yes" : "No";
+
+  // Format temperatures with reported on (rounded to whole numbers)
+  const airTempValue = typeof info.TemperatureAir === "number" ? Math.round(info.TemperatureAir) : info.TemperatureAir;
+  const surfaceTempValue = typeof info.TemperatureSurface === "number" ? Math.round(info.TemperatureSurface) : info.TemperatureSurface;
+  const airTempDisplay = formatWithReportedOn(airTempValue, info.TemperatureAirReportedOn);
+  const surfaceTempDisplay = formatWithReportedOn(surfaceTempValue, info.TemperatureSurfaceReportedOn);
 
   return (
     <div className="sc-theme-avl-history-popup-content" id={`avl-history-popup-${uniqueId}`}>
-      {/* General Information */}
+      {/* General Information - matching legacy order */}
       <InfoRow label="Name" value={info.vehicle_name} />
-      <InfoRow label="Group" value={info.grouping} />
-      <InfoRow label="Type" value={info.subgrouping} />
-      <InfoRow label="Speed" value={`${Math.round(info.velocity || 0)} km/h`} />
-      <InfoRow
-        label="Direction"
-        value={info.direction ? `${Math.round(info.direction)}°` : undefined}
-      />
+      <InfoRow label="Description" value={info.vehicle_description} />
+      <InfoRow label="Speed" value={info.velocity} />
       <InfoRow label="Date" value={formattedDate} />
-      <InfoRow label="Latitude" value={info.latitude?.toFixed(6)} />
-      <InfoRow label="Longitude" value={info.longitude?.toFixed(6)} />
 
-      {/* Spreader Data Section */}
-      {hasSpreaderData && (
+      {/* Spreader Data Section - only shown when PlowDown is defined */}
+      {isSpreader && (
         <>
-          <div className="sc-theme-avl-history-popup-section-header">Spreader Data</div>
-          <InfoRow label="Plow Down" value={info.PlowDown} />
-          <InfoRow label="Spreader On" value={info.DryOn} />
-          <InfoRow label="Blasting" value={info.Blasting} />
-          <InfoRow
-            label="Spreader Rate"
-            value={formatSpreaderRate(info.DryRateKilosPerLaneKilometer)}
-          />
-          <InfoRow label="Air Temperature" value={formatTemperature(info.TemperatureAir)} />
-          <InfoRow
-            label="Surface Temperature"
-            value={formatTemperature(info.TemperatureSurface)}
-          />
-          {info.DryRateReportedOn && (
-            <InfoRow
-              label="Rate Reported"
-              value={(() => {
-                try {
-                  return getFriendlyDateString(new Date(info.DryRateReportedOn));
-                } catch {
-                  return info.DryRateReportedOn;
-                }
-              })()}
-            />
-          )}
-        </>
-      )}
-
-      {/* Wing Data (GeoTab specific) */}
-      {info.WingDown !== undefined && (
-        <>
-          <div className="sc-theme-avl-history-popup-section-header">Wing Data</div>
-          <InfoRow
-            label="Wing"
-            value={
-              typeof info.WingDown === "boolean"
-                ? info.WingDown
-                  ? "Down"
-                  : "Up"
-                : info.WingDown
-            }
-          />
-          {info.WingReportedOn && (
-            <InfoRow
-              label="Reported"
-              value={(() => {
-                try {
-                  return getFriendlyDateString(new Date(info.WingReportedOn));
-                } catch {
-                  return info.WingReportedOn;
-                }
-              })()}
-            />
-          )}
+          <InfoRow label="Spreader On" value={info.DryOn ? "Yes" : "No"} />
+          <InfoRow label="Spread Rate" value={spreadRateDisplay} />
+          <InfoRow label="Material Type" value={materialTypeDisplay} />
+          <InfoRow label="Plow Down" value={info.PlowDown ? "Yes" : "No"} />
+          <InfoRow label="Wing Down" value={wingDownDisplay} />
+          <InfoRow label="Air Temperature" value={airTempDisplay} />
+          <InfoRow label="Surface Temperature" value={surfaceTempDisplay} />
+          <InfoRow label="Blasting" value={info.Blasting ? "Yes" : "No"} />
         </>
       )}
     </div>

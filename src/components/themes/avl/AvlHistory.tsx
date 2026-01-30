@@ -19,10 +19,12 @@ import type { EventsKey } from "ol/events";
 
 import { useAvlStore } from "@/stores/avlStore";
 import { useMapStore } from "@/stores/mapStore";
+import { usePopupStore } from "@/stores/popupStore";
 import { useAvlApi } from "./hooks/useAvlApi";
 import { useGeoTab } from "./hooks/useGeoTab";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import AvlHistoryVehicle from "./components/AvlHistoryVehicle";
+import AvlHistoryPopup from "./components/AvlHistoryPopup";
 import { toWebMercatorFromLatLong, getFriendlyDateString, roundTime, download } from "./utils/avlHelpers";
 import { avlGroupDropDownStyles, avlVehicleDropDownStyles, avlSpeedOperatorDropDownStyles, avlSpeedDropDownStyles, avlHistorySliderWrapperStyle, avlHistoryMarks } from "./utils/avlStyles";
 import type { AvlHistoryProps, AvlHistoryVehicle as AvlHistoryVehicleType, AvlVehicle, SelectOption, SpeedOperatorOption, GroupSelectOption } from "./types/avl.types";
@@ -30,6 +32,22 @@ import "./styles/AvlHistory.css";
 
 // Image helper
 const getImagePath = (imageName: string): string => `/images/avl/${imageName}`;
+
+/**
+ * Convert a date string from the SQL API to actual UTC.
+ * The SQL database stores dates in Eastern time, but the API serializes them with a 'Z' suffix.
+ * For example, '2026-01-30T11:30:07.000Z' from the API is actually 11:30 AM EST, not 11:30 UTC.
+ * To get the true UTC time, we need to ADD the timezone offset (EST = UTC-5).
+ * So 11:30 EST = 16:30 UTC
+ */
+const convertSqlDateToActualUTC = (sqlDateString: string): string => {
+  if (!sqlDateString) return sqlDateString;
+  const date = new Date(sqlDateString);
+  // SQL dates are stored in EST (UTC-5) but serialized as UTC
+  // Add 5 hours to convert from "EST stored as UTC" to actual UTC
+  const estOffsetMs = 5 * 60 * 60 * 1000;
+  return new Date(date.getTime() + estOffsetMs).toISOString();
+};
 
 // Group options
 const GROUPS: GroupSelectOption[] = [
@@ -60,9 +78,10 @@ const getInitialEndDate = (): Date => roundTime(new Date());
 
 export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }: AvlHistoryProps) {
   const { map } = useMapStore();
-  const { allowedGroups, configGroups } = useAvlStore();
+  const { allowedGroups, configGroups, geoTabCredentials, geoTabDevices } = useAvlStore();
+  const { show: showPopup } = usePopupStore();
   const { fetchAllVehicles, fetchHistory, fetchHistorySpreader } = useAvlApi();
-  const { groupHasGeoTabSpreaderData } = useGeoTab();
+  const { groupHasGeoTabSpreaderData, fetchSpreaderData, isActiveAtTime, findClosestStatusValue, getDeviceIdForVehicle, authenticateGeoTab, fetchGeoTabDevices } = useGeoTab();
 
   // State
   const [groupOptions, setGroupOptions] = useState<GroupSelectOption[]>([]);
@@ -89,6 +108,14 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
   const mapClickEventRef = useRef<EventsKey | null>(null);
   const layerIdRef = useRef<string | null>(null);
   const shadowLayerIdRef = useRef<string | null>(null);
+  const showPopupRef = useRef<((coords: number[], vehicleInfo: AvlHistoryVehicleType) => void) | null>(null);
+
+  // Store the showPopup function in a ref to avoid stale closures in event handlers
+  useEffect(() => {
+    showPopupRef.current = (coords: number[], vehicleInfo: AvlHistoryVehicleType) => {
+      showPopup(coords, <AvlHistoryPopup info={vehicleInfo} />, "AVL History");
+    };
+  }, [showPopup]);
 
   // Initialize
   useEffect(() => {
@@ -114,14 +141,20 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
       // Use LayerManager for cleanup
       if (layerIdRef.current) {
         LayerManager.removeLayer(layerIdRef.current);
+        layerIdRef.current = null;
       }
+      layerRef.current = null;
       if (shadowLayerIdRef.current) {
         LayerManager.removeLayer(shadowLayerIdRef.current);
+        shadowLayerIdRef.current = null;
       }
+      shadowLayerRef.current = null;
       if (mapClickEventRef.current) {
         unByKey(mapClickEventRef.current);
+        mapClickEventRef.current = null;
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, allowedGroups]);
 
   useEffect(() => {
@@ -159,15 +192,21 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
 
     const layer = new VectorLayer({
       source: new VectorSource({ features: [] }),
-      zIndex: 10000, // Set high zIndex explicitly
     });
     layer.setProperties({ disableParcelClick: true, name: "avlHistory" });
 
     // Use LayerManager to add layer with "Overlay" category for highest z-index
     const layerId = LayerManager.addLayer(layer, "Overlay", "AVL History Vehicles", {
-      userAdded: true,
+      id: "avl-history-layer",
     });
+
+    if (!layerId) {
+      console.error("[AVL History] LayerManager.addLayer returned null - adding directly to map");
+      map.addLayer(layer);
+    }
+
     console.log("[AVL History] Layer added with ID:", layerId, "zIndex:", layer.getZIndex());
+    console.log("[AVL History] Layer in map after add:", map.getLayers().getArray().includes(layer));
     layerIdRef.current = layerId;
     layerRef.current = layer;
 
@@ -178,6 +217,12 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
           const vehicleInfo = (feature as Feature & { vehicleInfo?: AvlHistoryVehicleType }).vehicleInfo;
           if (vehicleInfo) {
             console.log("Show popup for history vehicle:", vehicleInfo.vehicle_name);
+            const coords = (feature as Feature).getGeometry()?.getExtent();
+            if (coords) {
+              const center = [(coords[0] + coords[2]) / 2, (coords[1] + coords[3]) / 2];
+              // Use the popup store via the ref
+              showPopupRef.current?.(center, vehicleInfo);
+            }
           }
         },
         {
@@ -207,7 +252,7 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
 
     // Use LayerManager with "Overlay" category - shadow should be on top of history points
     const shadowLayerId = LayerManager.addLayer(layer, "Overlay", "AVL History Shadow", {
-      userAdded: true,
+      id: "avl-history-shadow-layer",
     });
     shadowLayerIdRef.current = shadowLayerId;
     shadowLayerRef.current = layer;
@@ -294,19 +339,332 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
 
     try {
       const result = isSpreader ? await fetchHistorySpreader(params) : await fetchHistory(params);
+      let enrichedResults = result as AvlHistoryVehicleType[];
 
       const tooMany = result.length >= 5000;
       setTooManyRecords(tooMany);
       setZeroRecords(result.length === 0);
-      setSearchResults(result as AvlHistoryVehicleType[]);
-      displayResults(result as AvlHistoryVehicleType[]);
+
+      // Check if this group has GeoTab spreader data and needs enrichment
+      const hasGeoTabSpreaderData = groupHasGeoTabSpreaderData(selectedGroupOption.value);
+
+      console.log("[AVL History] === ENRICHMENT DEBUG START ===");
+      console.log("[AVL History] Selected group:", selectedGroupOption.value);
+      console.log("[AVL History] hasGeoTabSpreaderData:", hasGeoTabSpreaderData);
+      console.log("[AVL History] Result count:", result.length);
+      console.log(
+        "[AVL History] First few results subgroupings:",
+        result.slice(0, 5).map((r) => r.subgrouping),
+      );
+      if (result.length > 0) {
+        const firstRecord = result[0];
+        console.log("[AVL History] First record keys:", Object.keys(firstRecord));
+        console.log("[AVL History] First record date:", firstRecord.date);
+        console.log("[AVL History] First record dateUTC:", (firstRecord as AvlHistoryVehicleType).dateUTC);
+      }
+
+      if (hasGeoTabSpreaderData && result.length > 0) {
+        console.log("[AVL History] Enriching results with GeoTab spreader data");
+
+        // Find the config group for this selection
+        // "Roads (Spreader)" maps to "Roads" config group
+        const configGroupName = selectedGroupOption.value === "Roads (Spreader)" ? "Roads" : selectedGroupOption.value;
+        const configGroup = configGroups.find((g) => g.name === configGroupName);
+
+        console.log("[AVL History] Config group name:", configGroupName);
+        console.log("[AVL History] Config group found:", !!configGroup);
+        console.log(
+          "[AVL History] Available config groups:",
+          configGroups.map((g) => g.name),
+        );
+
+        // Get or authenticate credentials
+        let credentials = geoTabCredentials[configGroupName];
+        let devices = geoTabDevices[configGroupName];
+
+        console.log("[AVL History] Existing credentials:", !!credentials);
+        console.log("[AVL History] Existing devices:", devices?.length || 0);
+
+        // If no credentials exist, authenticate first
+        if (!credentials && configGroup) {
+          console.log("[AVL History] No credentials found, authenticating with GeoTab...");
+          const authResult = await authenticateGeoTab(configGroup);
+          if (authResult) {
+            credentials = authResult;
+            console.log("[AVL History] Authentication successful");
+          } else {
+            console.log("[AVL History] Authentication FAILED");
+          }
+        }
+
+        // If no devices exist, fetch them
+        if (credentials && (!devices || devices.length === 0) && configGroup) {
+          console.log("[AVL History] No devices found, fetching GeoTab devices...");
+          // Get vehicles to match with devices
+          const vehiclesToMatch = enrichedResults.filter((r) => r.subgrouping === "Plow");
+          console.log("[AVL History] Plow vehicles to match:", vehiclesToMatch.length);
+          devices = await fetchGeoTabDevices(configGroup, credentials, vehiclesToMatch as AvlVehicle[]);
+          console.log("[AVL History] Fetched devices:", devices?.length || 0);
+        }
+
+        if (credentials && devices && devices.length > 0) {
+          // Filter to get only plow vehicles for enrichment
+          const plowResults = enrichedResults.filter((r) => r.subgrouping === "Plow");
+          console.log("[AVL History] Plow results to enrich:", plowResults.length);
+
+          if (plowResults.length > 0) {
+            // Get unique device IDs for plow vehicles
+            const plowDeviceIds = [...new Set(plowResults.map((r) => getDeviceIdForVehicle(r.vehicle_name, configGroupName)).filter((id): id is string => id !== null))];
+
+            console.log("[AVL History] Plow device IDs found:", plowDeviceIds.length);
+            console.log("[AVL History] Device IDs:", plowDeviceIds.slice(0, 5));
+
+            if (plowDeviceIds.length > 0) {
+              console.log("[AVL History] Fetching spreader data for", plowDeviceIds.length, "devices");
+              console.log("[AVL History] Date range:", startDate.toISOString(), "to", endDate.toISOString());
+
+              // Fetch spreader data from GeoTab
+              const spreaderData = await fetchSpreaderData(plowDeviceIds, startDate, endDate, credentials);
+
+              console.log("[AVL History] === SPREADER DATA RECEIVED ===");
+              console.log("[AVL History] plowActiveEvents count:", spreaderData.plowActiveEvents.length);
+              console.log("[AVL History] spreaderActiveEvents count:", spreaderData.spreaderActiveEvents.length);
+              console.log("[AVL History] spreaderRateData count:", spreaderData.spreaderRateData.length);
+              console.log("[AVL History] wingData count:", spreaderData.wingData.length);
+              console.log("[AVL History] airTempData count:", spreaderData.airTempData.length);
+              console.log("[AVL History] surfaceTempData count:", spreaderData.surfaceTempData.length);
+              console.log("[AVL History] materialTypeData count:", spreaderData.materialTypeData.length);
+
+              // Log sample data
+              if (spreaderData.plowActiveEvents.length > 0) {
+                console.log("[AVL History] Sample plowActiveEvent:", spreaderData.plowActiveEvents[0]);
+              }
+              if (spreaderData.airTempData.length > 0) {
+                console.log("[AVL History] Sample airTempData:", spreaderData.airTempData[0]);
+              }
+
+              // Enrich results with spreader data
+              let enrichedCount = 0;
+              enrichedResults = enrichedResults.map((record, idx) => {
+                if (record.subgrouping !== "Plow") return record;
+
+                const deviceId = getDeviceIdForVehicle(record.vehicle_name, configGroupName);
+                if (!deviceId) {
+                  if (idx === 0) console.log("[AVL History] First plow record - NO device ID found for:", record.vehicle_name);
+                  return record;
+                }
+
+                // Convert SQL date (stored in EST but serialized as UTC) to actual UTC
+                // The SQL API returns dates like '2026-01-30T11:30:07.000Z' which is actually 11:30 AM EST
+                // GeoTab events are in actual UTC, so we need to convert for proper comparison
+                const sqlDate = record.dateUTC || record.date;
+                const recordDateUTC = convertSqlDateToActualUTC(sqlDate);
+
+                // Debug first record
+                if (enrichedCount === 0) {
+                  console.log("[AVL History] === ENRICHING FIRST RECORD ===");
+                  console.log("[AVL History] Vehicle:", record.vehicle_name);
+                  console.log("[AVL History] Device ID:", deviceId);
+                  console.log("[AVL History] Original SQL date:", sqlDate);
+                  console.log("[AVL History] Converted to actual UTC:", recordDateUTC);
+                }
+
+                // Check plow and spreader active status
+                const isPlowActive = isActiveAtTime(deviceId, recordDateUTC, spreaderData.plowActiveEvents);
+                const isSpreaderActive = isActiveAtTime(deviceId, recordDateUTC, spreaderData.spreaderActiveEvents);
+
+                if (enrichedCount === 0) {
+                  console.log("[AVL History] isPlowActive:", isPlowActive);
+                  console.log("[AVL History] isSpreaderActive:", isSpreaderActive);
+                  // Log matching events
+                  const matchingPlowEvents = spreaderData.plowActiveEvents.filter((e) => e.deviceId === deviceId);
+                  console.log("[AVL History] Matching plow events for device:", matchingPlowEvents.length);
+                  if (matchingPlowEvents.length > 0) {
+                    console.log("[AVL History] First plow event:", {
+                      activeFrom: matchingPlowEvents[0].activeFrom.toISOString(),
+                      activeTo: matchingPlowEvents[0].activeTo.toISOString(),
+                    });
+                  }
+                }
+
+                const enrichedRecord = { ...record };
+                enrichedRecord.PlowDown = isPlowActive;
+                enrichedRecord.DryOn = isSpreaderActive;
+
+                // Helper function to format date for "Reported on" display
+                const formatReportedOn = (isoDateString: string): string => {
+                  try {
+                    const d = new Date(isoDateString);
+                    return d.toLocaleString();
+                  } catch {
+                    return isoDateString;
+                  }
+                };
+
+                // Get spreader rate
+                if (isSpreaderActive) {
+                  const spreaderRateResult = findClosestStatusValue(
+                    deviceId,
+                    recordDateUTC,
+                    spreaderData.spreaderRateData,
+                    60 * 60 * 1000, // 60 minutes
+                  );
+                  if (spreaderRateResult) {
+                    enrichedRecord.DryRateKilosPerLaneKilometer = spreaderRateResult.value;
+                    enrichedRecord.DryRateReportedOn = formatReportedOn(spreaderRateResult.matchedDateTime);
+                  }
+                }
+
+                // Get wing status
+                const wingResult = findClosestStatusValue(
+                  deviceId,
+                  recordDateUTC,
+                  spreaderData.wingData,
+                  15 * 60 * 1000, // 15 minutes
+                );
+                if (wingResult) {
+                  enrichedRecord.WingDown = wingResult.value === 1;
+                  enrichedRecord.WingReportedOn = formatReportedOn(wingResult.matchedDateTime);
+                }
+
+                // Get temperatures
+                const airTempResult = findClosestStatusValue(
+                  deviceId,
+                  recordDateUTC,
+                  spreaderData.airTempData,
+                  6 * 60 * 60 * 1000, // 6 hours
+                );
+                if (airTempResult) {
+                  enrichedRecord.TemperatureAir = airTempResult.value;
+                  enrichedRecord.TemperatureAirReportedOn = formatReportedOn(airTempResult.matchedDateTime);
+                }
+
+                const surfaceTempResult = findClosestStatusValue(
+                  deviceId,
+                  recordDateUTC,
+                  spreaderData.surfaceTempData,
+                  6 * 60 * 60 * 1000, // 6 hours
+                );
+                if (surfaceTempResult) {
+                  enrichedRecord.TemperatureSurface = surfaceTempResult.value;
+                  enrichedRecord.TemperatureSurfaceReportedOn = formatReportedOn(surfaceTempResult.matchedDateTime);
+                }
+
+                // Debug logging for first record
+                if (enrichedCount === 0) {
+                  console.log("[AVL History] Air temp result:", airTempResult);
+                  console.log("[AVL History] Surface temp result:", surfaceTempResult);
+                }
+
+                // Get material type
+                if (isSpreaderActive) {
+                  const materialTypeResult = findClosestStatusValue(
+                    deviceId,
+                    recordDateUTC,
+                    spreaderData.materialTypeData,
+                    12 * 60 * 60 * 1000, // 12 hours
+                  );
+                  if (materialTypeResult) {
+                    const materialValue = materialTypeResult.value;
+                    if (materialValue === 37) {
+                      enrichedRecord.MaterialType = "SALT";
+                    } else if (materialValue === 38) {
+                      enrichedRecord.MaterialType = "SAND";
+                    }
+                    enrichedRecord.MaterialTypeReportedOn = formatReportedOn(materialTypeResult.matchedDateTime);
+                  }
+                }
+
+                // Determine blasting status
+                const spreaderRate = enrichedRecord.DryRateKilosPerLaneKilometer;
+                const materialType = enrichedRecord.MaterialType;
+                if (typeof spreaderRate === "number" && materialType) {
+                  if (materialType === "SALT" && spreaderRate > 175) {
+                    enrichedRecord.Blasting = true;
+                  } else if (materialType === "SAND" && spreaderRate > 600) {
+                    enrichedRecord.Blasting = true;
+                  } else {
+                    enrichedRecord.Blasting = false;
+                  }
+                }
+
+                enrichedCount++;
+                return enrichedRecord;
+              });
+
+              console.log("[AVL History] Enrichment complete, enriched records:", enrichedCount);
+
+              // Count how many have PlowDown true vs false
+              const plowDownTrue = enrichedResults.filter((r) => r.PlowDown === true).length;
+              const plowDownFalse = enrichedResults.filter((r) => r.PlowDown === false).length;
+              const dryOnTrue = enrichedResults.filter((r) => r.DryOn === true).length;
+              console.log("[AVL History] PlowDown=true count:", plowDownTrue);
+              console.log("[AVL History] PlowDown=false count:", plowDownFalse);
+              console.log("[AVL History] DryOn=true count:", dryOnTrue);
+
+              // Find a record that SHOULD be within plow active time
+              if (spreaderData.plowActiveEvents.length > 0) {
+                const firstEvent = spreaderData.plowActiveEvents[0];
+                const midEventTime = new Date((firstEvent.activeFrom.getTime() + firstEvent.activeTo.getTime()) / 2);
+                console.log("[AVL History] Looking for records near plow event at:", midEventTime.toISOString());
+
+                // Find records close to this time (use converted UTC time)
+                const recordsNearPlowEvent = enrichedResults.filter((r) => {
+                  const recordTimeUTC = new Date(convertSqlDateToActualUTC(r.dateUTC || r.date)).getTime();
+                  return Math.abs(recordTimeUTC - midEventTime.getTime()) < 5 * 60 * 1000; // within 5 minutes
+                });
+                console.log("[AVL History] Records within 5 min of plow event:", recordsNearPlowEvent.length);
+                if (recordsNearPlowEvent.length > 0) {
+                  const sample = recordsNearPlowEvent[0];
+                  console.log("[AVL History] Sample record near plow event:", {
+                    originalDate: sample.date,
+                    convertedUTC: convertSqlDateToActualUTC(sample.date),
+                    PlowDown: sample.PlowDown,
+                    DryOn: sample.DryOn,
+                    vehicle: sample.vehicle_name,
+                  });
+                }
+              }
+            }
+          }
+        }
+      } else {
+        console.log("[AVL History] Skipping enrichment - hasGeoTabSpreaderData:", hasGeoTabSpreaderData, "results:", result.length);
+      }
+      console.log("[AVL History] === ENRICHMENT DEBUG END ===");
+
+      setSearchResults(enrichedResults);
+      displayResults(enrichedResults);
     } catch (error) {
       console.error("Error fetching history:", error);
       setZeroRecords(true);
     } finally {
       setIsLoading(false);
     }
-  }, [selectedGroupOption, selectedVehicleOption, startDate, endDate, selectedSpeedOperator, selectedSpeed, sliderValue, onlyVisibleExtent, map, fetchHistory, fetchHistorySpreader]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    selectedGroupOption,
+    selectedVehicleOption,
+    startDate,
+    endDate,
+    selectedSpeedOperator,
+    selectedSpeed,
+    sliderValue,
+    onlyVisibleExtent,
+    map,
+    fetchHistory,
+    fetchHistorySpreader,
+    groupHasGeoTabSpreaderData,
+    geoTabCredentials,
+    geoTabDevices,
+    configGroups,
+    getDeviceIdForVehicle,
+    fetchSpreaderData,
+    isActiveAtTime,
+    findClosestStatusValue,
+    authenticateGeoTab,
+    fetchGeoTabDevices,
+  ]);
 
   const displayResults = useCallback(
     (results: AvlHistoryVehicleType[]) => {
@@ -317,6 +675,16 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
       if (!layerRef.current || !map) {
         console.log("[AVL History] Missing layer or map, returning");
         return;
+      }
+
+      // Verify the layer is actually in the map
+      const mapLayers = map.getLayers().getArray();
+      const layerInMap = mapLayers.includes(layerRef.current);
+      console.log("[AVL History] Layer in map:", layerInMap, "Total map layers:", mapLayers.length);
+
+      if (!layerInMap) {
+        console.error("[AVL History] Layer is NOT in map! Re-adding...");
+        map.addLayer(layerRef.current);
       }
 
       const source = layerRef.current.getSource();
@@ -331,25 +699,33 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
 
       results.forEach((vehicle, index) => {
         const coords = toWebMercatorFromLatLong([vehicle.longitude, Math.abs(vehicle.latitude)]);
-        const feature = new Feature(new Point(coords)) as Feature & { vehicleInfo: AvlHistoryVehicleType };
+        const feature = new Feature(new Point(coords));
         feature.set("name", vehicle.vehicle_name);
-        feature.vehicleInfo = vehicle;
+        (feature as unknown as Feature & { vehicleInfo: AvlHistoryVehicleType }).vehicleInfo = vehicle;
 
-        let iconName = "default.png"; // Use default.png which exists (lowercase)
+        // Determine appropriate icon based on vehicle state (matching legacy app logic)
+        let iconName = "Default-History.png";
         if (vehicle.PlowDown !== undefined) {
           if (vehicle.Blasting) iconName = "blasting.png";
           else if (vehicle.PlowDown && vehicle.DryOn) iconName = "plow-down-spreader-on.png";
           else if (vehicle.PlowDown && !vehicle.DryOn) iconName = "plow-down-spreader-off.png";
           else if (!vehicle.PlowDown && vehicle.DryOn) iconName = "plow-up-spreader-on.png";
+          else if (!vehicle.PlowDown && !vehicle.DryOn) iconName = "plow-up-spreader-off.png";
         }
 
         if (index === 0) {
-          console.log("[AVL History] First feature coords:", coords);
-          console.log("[AVL History] Icon path:", getImagePath(iconName));
+          console.log("[AVL History] First vehicle:", {
+            vehicle_name: vehicle.vehicle_name,
+            subgrouping: vehicle.subgrouping,
+            PlowDown: vehicle.PlowDown,
+            DryOn: vehicle.DryOn,
+            Blasting: vehicle.Blasting,
+          });
+          console.log("[AVL History] First feature icon:", iconName, "path:", getImagePath(iconName));
         }
 
-        // Create icon style with fallback circle
-        const iconStyle = new Style({
+        // Create icon style matching legacy app
+        const style = new Style({
           image: new Icon({
             anchor: [0.5, 0.5],
             scale: 0.75,
@@ -358,17 +734,7 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
           }),
         });
 
-        // Fallback circle style in case icon doesn't load
-        const fallbackStyle = new Style({
-          image: new CircleStyle({
-            radius: 6,
-            fill: new Fill({ color: "#FF0000" }),
-            stroke: new Stroke({ color: "#FFFFFF", width: 2 }),
-          }),
-        });
-
-        // Try icon first, use fallback if needed
-        feature.setStyle([fallbackStyle, iconStyle]);
+        feature.setStyle(style);
         source.addFeature(feature);
       });
 
@@ -456,7 +822,7 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
               styles={avlGroupDropDownStyles}
               isSearchable={false}
               onChange={(option) => {
-                setSelectedGroupOption(option);
+                setSelectedGroupOption(option as GroupSelectOption | null);
                 setSelectedVehicleTypeOption(ALL_TYPES_OPTION);
                 setSelectedVehicleOption(ALL_VEHICLES_OPTION);
               }}
@@ -473,7 +839,7 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
               isSearchable={false}
               onChange={(option) => {
                 if (option) {
-                  setSelectedVehicleTypeOption(option);
+                  setSelectedVehicleTypeOption(option as SelectOption<string>);
                   setSelectedVehicleOption(ALL_VEHICLES_OPTION);
                 }
               }}
@@ -488,7 +854,7 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
             <Select
               styles={avlVehicleDropDownStyles}
               isSearchable={false}
-              onChange={(option) => option && setSelectedVehicleOption(option)}
+              onChange={(option) => option && setSelectedVehicleOption(option as SelectOption<string> | null)}
               options={getVehiclesByGroup()}
               value={selectedVehicleOption}
               menuPortalTarget={typeof document !== "undefined" ? document.body : null}
@@ -497,12 +863,24 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
 
           <div className="sc-theme-avl-history-control-row">
             <label className="sc-theme-avl-history-label">From:</label>
-            <DatePicker className="sc-input sc-theme-avl-history-date-picker" selected={startDate} onChange={(date) => date && setStartDate(date)} showTimeSelect dateFormat="MMMM d, yyyy h:mm aa" />
+            <DatePicker
+              className="sc-input sc-theme-avl-history-date-picker"
+              selected={startDate}
+              onChange={(date: Date | null) => date && setStartDate(date)}
+              showTimeSelect
+              dateFormat="MMMM d, yyyy h:mm aa"
+            />
           </div>
 
           <div className="sc-theme-avl-history-control-row">
             <label className="sc-theme-avl-history-label">To:</label>
-            <DatePicker className="sc-input sc-theme-avl-history-date-picker" selected={endDate} onChange={(date) => date && setEndDate(date)} showTimeSelect dateFormat="MMMM d, yyyy h:mm aa" />
+            <DatePicker
+              className="sc-input sc-theme-avl-history-date-picker"
+              selected={endDate}
+              onChange={(date: Date | null) => date && setEndDate(date)}
+              showTimeSelect
+              dateFormat="MMMM d, yyyy h:mm aa"
+            />
           </div>
 
           <div className="sc-theme-avl-history-control-row">
@@ -510,7 +888,7 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
             <Select
               styles={avlSpeedOperatorDropDownStyles}
               isSearchable={false}
-              onChange={(option) => option && setSelectedSpeedOperator(option)}
+              onChange={(option) => option && setSelectedSpeedOperator(option as SpeedOperatorOption)}
               options={SPEED_OPERATORS}
               value={selectedSpeedOperator}
               menuPortalTarget={typeof document !== "undefined" ? document.body : null}
@@ -518,7 +896,7 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
             <Select
               styles={avlSpeedDropDownStyles}
               isSearchable={false}
-              onChange={(option) => option && setSelectedSpeed(option)}
+              onChange={(option) => option && setSelectedSpeed(option as SelectOption<number>)}
               options={speedOptions}
               value={selectedSpeed}
               menuPortalTarget={typeof document !== "undefined" ? document.body : null}
@@ -615,6 +993,7 @@ function AVLLegendTooltip({ onClose }: { onClose: () => void }) {
           ].map((item) => (
             <div key={item.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ fontSize: "12px" }}>{item.label}</span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={getImagePath(item.image)} alt={item.label} style={{ height: "20px" }} />
             </div>
           ))}
