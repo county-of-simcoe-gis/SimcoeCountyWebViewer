@@ -505,7 +505,7 @@ const buildVectorLayer = (layer, callback = undefined) => {
         // For line geometries, prioritize stroke symbolizer over image symbolizer
         // The image property is often just for cursor/drawing feedback, not the actual line style
         const isLineGeometry = geomType === "LineString" || geomType === "MultiLineString";
-        
+
         // For non-line shapes that only have an image, use the image symbolizer
         if (olImage && !isLineGeometry && geomType === "Point") {
           // Handle circle/marker images (for custom geometry points like anchors)
@@ -730,7 +730,7 @@ const getLayerByType = async (layer, printoptions, callback = undefined) => {
               if (Array.isArray(retLayers)) layers = layers.concat(retLayers);
               else layers.push(retLayers);
             }
-          })
+          }),
         );
       //wait for list of layer promises to be resolved
       await Promise.all(layersPromise);
@@ -894,7 +894,7 @@ export async function printRequest(mapLayers, printSelectedOption) {
             if (isOverviewLayer(retLayers.layer)) overviewMap.push(retLayers);
           }
         }
-      })
+      }),
     );
 
   //wait for list of layer promises to be resolved
