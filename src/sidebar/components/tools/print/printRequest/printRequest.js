@@ -502,21 +502,28 @@ const buildVectorLayer = (layer, callback = undefined) => {
           Object.assign(shapeSymbolizer, strokeToSymbolizer(olStroke));
         }
 
-        // Handle circle/marker images (for custom geometry points like anchors)
-        if (olImage && olImage.getRadius) {
-          const circleSymbolizer = circleImageToSymbolizer(olImage);
-          if (circleSymbolizer) {
-            symbolizers.push(circleSymbolizer);
+        // For line geometries, prioritize stroke symbolizer over image symbolizer
+        // The image property is often just for cursor/drawing feedback, not the actual line style
+        const isLineGeometry = geomType === "LineString" || geomType === "MultiLineString";
+        
+        // For non-line shapes that only have an image, use the image symbolizer
+        if (olImage && !isLineGeometry && geomType === "Point") {
+          // Handle circle/marker images (for custom geometry points like anchors)
+          if (olImage.getRadius) {
+            const circleSymbolizer = circleImageToSymbolizer(olImage);
+            if (circleSymbolizer) {
+              symbolizers.push(circleSymbolizer);
+            }
+          }
+          // Handle icon images
+          else if (olImage.getSrc) {
+            const iconSymbolizer = iconImageToSymbolizer(olImage);
+            if (iconSymbolizer) {
+              symbolizers.push(iconSymbolizer);
+            }
           }
         }
-        // Handle icon images
-        else if (olImage && olImage.getSrc) {
-          const iconSymbolizer = iconImageToSymbolizer(olImage);
-          if (iconSymbolizer) {
-            symbolizers.push(iconSymbolizer);
-          }
-        }
-        // For non-image shapes, add the shape symbolizer
+        // For lines, polygons, or shapes with fill/stroke, use the shape symbolizer
         else if (olFill || olStroke) {
           // For Text drawType, use invisible point marker
           if (drawType === "Text") {
