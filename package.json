@@ -11,7 +11,7 @@
     "@emotion/styled": "^11.11.0",
     "@mui/material": "^5.14.4",
     "alertifyjs": "^1.13.1",
-    "fast-xml-parser": "^4.4.1",
+    "fast-xml-parser": "^5.3.4",
     "github-buttons": "^2.27.0",
     "html-to-image": "^1.11.11",
     "moment": "^2.29.4",
@@ -70,6 +70,6 @@
     "@vitejs/plugin-react": "^5.1.1",
     "dotenv": "^16.4.5",
     "vite": "^7.2.6",
-    "vite-plugin-node-polyfills": "^0.24.0"
+    "vite-plugin-node-polyfills": "^0.25.0"
   }
 }
