@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useCallback, useRef } from "react";
+import React, { useEffect, useCallback, useRef, useState } from "react";
 import Select from "react-select";
 import { Vector as VectorLayer } from "ol/layer";
 import { Vector as VectorSource } from "ol/source";
@@ -92,6 +92,9 @@ export default function AvlLive({
   const { fetchCurrentLocations } = useAvlApi();
   const { authenticateGeoTab, fetchGeoTabDevices, fetchDeviceStatusInfo, fetchGeoTabDiagnostics } = useGeoTab();
 
+  // Local state
+  const [isLoading, setIsLoading] = useState(true);
+
   // Local refs
   const layerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const layerIdRef = useRef<string | null>(null);
@@ -134,7 +137,10 @@ export default function AvlLive({
     }
 
     // Initial fetch - direct call since refs may not be set yet
-    fetchCurrentLocationsForAllGroups();
+    setIsLoading(true);
+    fetchCurrentLocationsForAllGroups().finally(() => {
+      setIsLoading(false);
+    });
 
     // Set up fetch interval - uses ref to always call latest function (avoids stale closures)
     fetchIntervalRef.current = setInterval(() => {
@@ -178,6 +184,24 @@ export default function AvlLive({
       layerRef.current.setVisible(mapVehiclesVisible);
     }
   }, [mapVehiclesVisible]);
+
+  // Re-sort vehicles when group/subgroup visibility changes
+  // This ensures sortVehicles uses the updated configGroups state after visibility toggles
+  useEffect(() => {
+    // Only run after initial load (when vehicles exist or map is ready)
+    if (!map || !layerRef.current) return;
+
+    // sortVehicles will now have access to the updated configGroups and sort options
+    sortVehicles(configGroups);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    // Track changes to visibility and sorting parameters
+    configGroups,
+    selectedSortOption,
+    sortAscendingChecked,
+    showLabels,
+  ]);
 
   // Initialize map layers
   const initLayers = useCallback(() => {
@@ -707,20 +731,20 @@ export default function AvlLive({
     const sortOption = option as SortOption | null;
     if (sortOption) {
       setSelectedSortOption(sortOption);
-      sortVehicles();
+      // Note: sortVehicles is called via useEffect when selectedSortOption changes
     }
   };
 
   // Handle sort checkbox change
   const handleSortChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSortAscendingChecked(e.target.checked);
-    sortVehicles();
+    // Note: sortVehicles is called via useEffect when sortAscendingChecked changes
   };
 
   // Handle labels checkbox change
   const handleLabelsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setShowLabels(e.target.checked);
-    sortVehicles();
+    // Note: sortVehicles is called via useEffect when showLabels changes
   };
 
   // Handle search input change
@@ -744,13 +768,15 @@ export default function AvlLive({
   // Handle group visibility change
   const handleGroupChange = (group: AvlGroup, checked: boolean) => {
     setGroupVisibility(group.name, checked);
-    sortVehicles();
+    // Note: sortVehicles is called via useEffect when configGroups changes
+    // This avoids the race condition where sortVehicles uses stale configGroups
   };
 
   // Handle subgroup visibility change
   const handleSubGroupChange = (subGroup: AvlSubGroup, group: AvlGroup, checked: boolean) => {
     setSubGroupVisibility(group.name, subGroup.name, checked);
-    sortVehicles();
+    // Note: sortVehicles is called via useEffect when configGroups changes
+    // This avoids the race condition where sortVehicles uses stale configGroups
   };
 
   // Handle group panel open/close
@@ -780,15 +806,29 @@ export default function AvlLive({
         </button>
       </div>
 
+      {/* Loading indicator */}
+      {isLoading && (
+        <div className="sc-theme-avl-live-groups" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 0" }}>
+          <svg style={{ width: "48px", height: "48px", animation: "spin 1s linear infinite" }} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="#e5e7eb" strokeWidth="3" />
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round" />
+          </svg>
+          <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+          <span style={{ marginTop: "8px", fontSize: "14px", color: "#6b7280" }}>Loading vehicle groups...</span>
+        </div>
+      )}
+
       {/* Groups */}
-      <div className="sc-theme-avl-live-groups">
-        {configGroups.map((group) => (
-          <AvlLiveGroup key={group.name} info={group} onInputChangeSubGroup={handleSubGroupChange} onInputChangeGroup={handleGroupChange} onPanelOpen={handlePanelOpen} />
-        ))}
-      </div>
+      {!isLoading && (
+        <div className="sc-theme-avl-live-groups">
+          {configGroups.map((group) => (
+            <AvlLiveGroup key={group.name} info={group} onInputChangeSubGroup={handleSubGroupChange} onInputChangeGroup={handleGroupChange} onPanelOpen={handlePanelOpen} />
+          ))}
+        </div>
+      )}
 
       {/* Vehicle list */}
-      <div className={showVehicleList ? "sc-avl-live-vehicles" : "sc-hidden"}>
+      <div className={showVehicleList && !isLoading ? "sc-avl-live-vehicles" : "sc-hidden"}>
         <div className="sc-title sc-border-bottom" style={{ fontSize: "12pt" }}>
           Avl Vehicles
         </div>
@@ -807,7 +847,7 @@ export default function AvlLive({
             <div className="sc-avl-live-controls-sort">
               <label style={{ width: "106px" }}>Sort By:</label>
               <Select styles={avlLiveDropDownStyles} isSearchable={false} onChange={handleSortDropDownChange} options={SORT_OPTIONS} value={selectedSortOption} />
-              <div style={{ fontSize: "11pt" }}>
+              <div style={{ fontSize: "11pt", paddingLeft: "5px" }}>
                 <label>
                   <input type="checkbox" onChange={handleSortChange} checked={sortAscendingChecked} />
                   Sort Ascending

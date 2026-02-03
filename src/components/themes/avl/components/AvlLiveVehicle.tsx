@@ -38,61 +38,17 @@ export default function AvlLiveVehicle({ info, onVechileClick }: AvlLiveVehicleP
     return getImagePath(iconName);
   };
 
+  if (info.vehicle_name === undefined) return null;
+
   return (
-    <div
-      className="sc-theme-avl-live-vehicle-container"
-      onClick={handleClick}
-      title={`Click to zoom to ${info.vehicle_name}`}
-    >
-      <img
-        src={getPlowIcon()}
-        alt={info.vehicle_name}
-        style={{
-          height: "30px",
-          width: "auto",
-          marginRight: "10px",
-        }}
-      />
-      <div className="sc-theme-avl-live-vehicle-info">
-        <div className="sc-theme-avl-live-vehicle-name">
-          <label>{info.vehicle_name}</label>
-          <label
-            style={{
-              fontSize: "9pt",
-              fontWeight: "normal",
-              marginLeft: "5px",
-              color: "#999",
-            }}
-          >
-            {info.grouping}
-          </label>
-        </div>
-        <div className="sc-theme-avl-live-vehicle-details">
-          <label
-            className={"sc-theme-avl-live-vehicle-speed"}
-            title="Current Speed"
-          >
-            {Math.round(info.velocity || 0)} km/h
-          </label>
-          <label
-            style={{
-              fontSize: "9pt",
-              fontWeight: "normal",
-              marginLeft: "10px",
-            }}
-            title="Date Reported"
-          >
-            {info.dateFriendly}
-          </label>
-        </div>
-        <div className="sc-theme-avl-live-vehicle-last-reported">
-          <label
-            className={`sc-theme-avl-live-vehicle-last-reported-label ${info.cssClass}`}
-          >
-            {info.lastReported}
-          </label>
-        </div>
-      </div>
+    <div className="sc-theme-avl-live-vehicle-container sc-container" onClick={handleClick} title={`Click to zoom to ${info.vehicle_name}`}>
+      <img className="sc-theme-avl-live-vehicle-info-img" src={getPlowIcon()} alt={info.vehicle_name} />
+      <label className="sc-theme-avl-live-vehicle-info-name">
+        {info.vehicle_name} - {info.grouping}
+      </label>
+      <label className="sc-theme-avl-live-vehicle-info-speed">Speed: {Math.round(info.velocity || 0)} Kph</label>
+      <label className="sc-theme-avl-live-vehicle-info-date">{info.dateFriendly}</label>
+      <label className={`sc-theme-avl-live-vehicle-info-last-reported ${info.cssClass}`}>{info.lastReported}</label>
     </div>
   );
 }

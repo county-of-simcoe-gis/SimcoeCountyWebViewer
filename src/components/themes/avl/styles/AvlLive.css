@@ -18,22 +18,42 @@
 
 .sc-theme-avl-live-group-container .Collapsible__trigger {
   display: block;
-  background-image: url(/images/avl/metadata.png), url(/images/avl/down.png);
-  background-position-y: center, 8px;
-  background-repeat: no-repeat, no-repeat;
-  background-position-x: 36px, 341px;
+  position: relative;
+  background-image: url(/images/avl/metadata.png);
+  background-position-y: center;
+  background-repeat: no-repeat;
+  background-position-x: 36px;
   width: 331px;
   margin-left: -30px;
   padding-left: 28px;
   font-weight: bold;
-  padding-top: 3px;
   padding-left: 75px;
+  padding-right: 25px;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
   margin-top: -20px;
+}
+
+.sc-theme-avl-live-group-container .Collapsible__trigger::after {
+  content: "";
+  position: absolute;
+  left: 330px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background-image: url(/images/avl/down.png);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  transition: transform 0.2s ease;
+}
+
+.sc-theme-avl-live-group-container .Collapsible__trigger.is-open::after {
+  transform: translateY(-50%) rotate(180deg);
 }
 
 .sc-theme-avl-live-group-container .is-closed {
@@ -125,6 +145,8 @@
   position: relative;
   top: 13px;
   left: 5px;
+  z-index: 10;
+  cursor: pointer;
 }
 
 .sc-theme-avl-live-groups {
@@ -135,7 +157,7 @@
   position: relative;
   overflow-x: hidden;
   overflow-y: auto;
-  max-height: calc(100vh - 280px);
+  max-height: calc(100vh - 200px);
   padding-right: 5px;
 }
 
@@ -175,8 +197,7 @@
 }
 
 .sc-theme-avl-live-vehicle-info-last-reported {
-  grid-column-start: 2;
-  grid-column-end: 4;
+  grid-column-start: 3;
   grid-row: 2;
   font-size: 8pt;
   justify-self: end;
@@ -201,6 +222,7 @@
   font-weight: bold;
   color: #666 !important;
   cursor: pointer;
+  font-size: 9pt;
 }
 
 .sc-theme-avl-live-vehicle-info-img {
@@ -226,6 +248,7 @@
   grid-row: 2;
   cursor: pointer;
   align-self: end;
+  font-size: 9pt;
 }
 
 .sc-avl-live-controls {
@@ -233,7 +256,8 @@
 }
 
 .sc-avl-live-controls-search {
-  /* display: table-cell; */
+  display: flex;
+  align-items: center;
 }
 
 .sc-avl-live-controls-sort {

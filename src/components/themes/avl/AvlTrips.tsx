@@ -124,10 +124,10 @@ export default function AvlTrips({ groups }: AvlTripsProps) {
         </div>
 
         <div className="sc-theme-avl-history-control-row" style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
-          <button className="sc-button" onClick={handleSearch} disabled={isLoading} style={{ width: "100px" }}>
+          <button className={isLoading ? "sc-button sc-disabled" : "sc-button"} onClick={handleSearch} disabled={isLoading} style={{ flex: 1, padding: "5px 2px" }}>
             {isLoading ? "Searching..." : "Search"}
           </button>
-          <button className="sc-button" onClick={handleReset} style={{ width: "100px" }}>
+          <button className="sc-button" onClick={handleReset} style={{ flex: 1, padding: "5px 2px" }}>
             Reset
           </button>
         </div>
