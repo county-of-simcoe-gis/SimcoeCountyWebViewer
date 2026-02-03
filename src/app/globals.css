@@ -81,6 +81,10 @@ p {
   padding: 5px;
 }
 
+.sc-border-bottom {
+  border-bottom: 1px solid #ddd;
+}
+
 .sc-arrow {
   background-image: url(/images/arrow_curve.gif);
   background-repeat: no-repeat;
@@ -113,7 +117,7 @@ p {
 
 /* Info Window Row Styles (used in popups) */
 .sc-info-window-row {
-  display: block;
+  display: table-row;
   width: 100%;
 }
 
@@ -126,7 +130,7 @@ p {
 .sc-info-window-value {
   color: #484848;
   border-bottom: 1px solid #eeeeee;
-  padding-bottom: 3px;
+  padding-bottom: 2px;
   padding-left: 20px;
   background-image: url("/images/arrow_curve.gif");
   background-repeat: no-repeat;
