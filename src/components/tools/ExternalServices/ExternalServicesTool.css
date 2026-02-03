@@ -1,0 +1,18 @@
+/* External Services Tool Styles */
+
+.sc-external-services-link {
+  background-image: url("/images/tools/externalservices/arrow_curve.gif");
+  background-repeat: no-repeat;
+  background-position: 10px center;
+  background-size: 14px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.sc-external-services-link:hover {
+  text-decoration: underline;
+}
+
+.sc-external-services-link.opacity-50 {
+  cursor: not-allowed;
+}

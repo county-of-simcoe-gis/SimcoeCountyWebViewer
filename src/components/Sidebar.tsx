@@ -18,6 +18,9 @@ const SettingsTool = lazy(() => import("@/components/tools/Settings/SettingsTool
 const PrintTool = lazy(() => import("@/components/tools/Print/PrintTool"));
 const PrintLocalTool = lazy(() => import("@/components/tools/PrintLocal/PrintLocalTool"));
 const WeatherTool = lazy(() => import("@/components/tools/Weather/WeatherTool"));
+const LotAndConcessionTool = lazy(() => import("@/components/tools/LotAndConcession/LotAndConcessionTool"));
+const ExternalServicesTool = lazy(() => import("@/components/tools/ExternalServices/ExternalServicesTool"));
+const AddLayerTool = lazy(() => import("@/components/tools/AddLayer/AddLayerTool"));
 
 // Lazy load theme components
 const ForestryTheme = lazy(() => import("@/components/themes/ForestryTheme"));
@@ -59,6 +62,9 @@ const toolComponents: Record<
   Print: PrintTool,
   PrintLocal: PrintLocalTool,
   Weather: WeatherTool,
+  LotAndConcession: LotAndConcessionTool,
+  ExternalServices: ExternalServicesTool,
+  AddLayer: AddLayerTool,
 };
 
 // Theme mapping for dynamic loading
@@ -106,7 +112,7 @@ export default function Sidebar() {
         console.warn(`Unknown tab name: ${tabName}`);
       }
     },
-    [setActiveTab]
+    [setActiveTab],
   );
 
   // Handle URL parameters for tab activation
@@ -161,7 +167,7 @@ export default function Sidebar() {
             <button className="sc-button" onClick={() => setActiveToolComponent(null)}>
               Close
             </button>
-          </div>
+          </div>,
         );
       }
     } else if (type === "themes") {
@@ -182,7 +188,7 @@ export default function Sidebar() {
             <button className="sc-button" onClick={() => setActiveThemeComponent(null)}>
               Close
             </button>
-          </div>
+          </div>,
         );
       }
     }

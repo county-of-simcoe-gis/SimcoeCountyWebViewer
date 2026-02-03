@@ -5,6 +5,7 @@ import LayerOptionsMenu from "@/components/TOC/LayerOptionsMenu";
 import { useTOCStore, type TOCLayer, type TOCLayerGroup } from "@/stores/tocStore";
 import { useLayerManagerStore, type ManagedLayer } from "@/stores/layerManagerStore";
 import { useMapStore } from "@/stores/mapStore";
+import { LayerManager } from "@/utils/openlayers/LayerManager";
 import * as layerInfoHelpers from "@/lib/layerInfoHelpers";
 
 // Mock the stores
@@ -20,9 +21,21 @@ vi.mock("@/stores/layerManagerStore", () => ({
 }));
 
 vi.mock("@/stores/mapStore", () => ({
-  useMapStore: vi.fn(() => ({
-    map: null,
-  })),
+  useMapStore: Object.assign(
+    vi.fn(() => ({
+      map: null,
+    })),
+    {
+      getState: vi.fn(() => ({ map: null })),
+    },
+  ),
+}));
+
+// Mock LayerManager
+vi.mock("@/utils/openlayers/LayerManager", () => ({
+  LayerManager: {
+    removeLayer: vi.fn(() => true),
+  },
 }));
 
 // Mock layerInfoHelpers
@@ -146,6 +159,7 @@ describe("LayerOptionsMenu", () => {
     mockTOCStore = {
       getLayerById: vi.fn(() => mockLayer),
       updateLayerOpacityById: vi.fn(),
+      removeCustomLayer: vi.fn(),
       layerListGroups: [mockGroup],
       layerFolderGroups: [],
     };
@@ -307,7 +321,7 @@ describe("LayerOptionsMenu", () => {
           name: "Test Layer",
           tocDisplayName: "Test Layer TOC",
         }),
-        { showDownload: false }
+        { showDownload: false },
       );
       expect(mockOnClose).toHaveBeenCalled();
     });
@@ -366,7 +380,7 @@ describe("LayerOptionsMenu", () => {
           name: "Test Layer",
           tocDisplayName: "Test Layer TOC",
         }),
-        { showDownload: true }
+        { showDownload: true },
       );
       expect(mockOnClose).toHaveBeenCalled();
     });
@@ -391,7 +405,9 @@ describe("LayerOptionsMenu", () => {
       await user.click(removeButton);
 
       expect(mockConfirm).toHaveBeenCalledWith('Are you sure you want to remove the layer "Test Layer TOC"?');
-      expect(mockAlert).toHaveBeenCalledWith("Layer removal would be implemented here.");
+      // Verify layer removal was called
+      expect(LayerManager.removeLayer).toHaveBeenCalledWith("managed-layer-id");
+      expect(mockTOCStore.removeCustomLayer).toHaveBeenCalledWith("Test Layer", "Test Group", "test-layer-id");
       expect(mockOnClose).toHaveBeenCalled();
     });
   });
@@ -432,7 +448,7 @@ describe("LayerOptionsMenu", () => {
         <div>
           <div data-testid="outside">Outside</div>
           <LayerOptionsMenu {...defaultProps} onClose={mockOnClose} onLayerChange={mockOnLayerChange} />
-        </div>
+        </div>,
       );
 
       // Wait for the component to be fully rendered

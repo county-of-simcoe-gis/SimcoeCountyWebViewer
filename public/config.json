@@ -297,20 +297,6 @@
       "helpLink": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Tools/AddData/"
     },
     {
-      "id": 4,
-      "name": "Search Addresses",
-      "componentName": "SearchAddresses",
-      "description": "This tool allows you to search Addresses.",
-      "imageName": "searchAddresses.png"
-    },
-    {
-      "id": 5,
-      "name": "Search History",
-      "componentName": "SearchHistory",
-      "description": "This tool provides users with a list of their 25 most recent searches.",
-      "imageName": "searchHistory.png"
-    },
-    {
       "id": 6,
       "name": "Lot And Concession",
       "componentName": "LotAndConcession",

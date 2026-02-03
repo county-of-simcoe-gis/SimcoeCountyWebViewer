@@ -312,7 +312,7 @@ function fillToSymbolizer(olFill: Fill | null): Record<string, unknown> {
 /**
  * Convert OpenLayers Stroke to MapFish symbolizer properties
  */
-function strokeToSymbolizer(olStroke: Stroke | null, dpi: number = 96): Record<string, unknown> {
+function strokeToSymbolizer(olStroke: Stroke | null): Record<string, unknown> {
   if (!olStroke) return {};
   const color = olStroke.getColor?.();
   const width = olStroke.getWidth?.();
@@ -324,9 +324,7 @@ function strokeToSymbolizer(olStroke: Stroke | null, dpi: number = 96): Record<s
     result.strokeOpacity = colorToOpacity(color);
   }
   if (width !== null && width !== undefined) {
-    // Scale stroke width based on DPI
-    const dpiScale = dpi / 96;
-    result.strokeWidth = Math.max(1, Math.round(width * dpiScale));
+    result.strokeWidth = width;
   }
   if (lineDash) {
     result.strokeDashstyle = lineDash[0] === 1 ? "dot" : "dash";
@@ -403,10 +401,10 @@ function textToSymbolizer(olText: Text | null, options: { skipHalo?: boolean; dr
     symbolizer.haloColor = "#ffffff";
     symbolizer.haloOpacity = 0.9;
     symbolizer.haloRadius = 2;
-  } else if (textStroke?.getWidth?.() && textStroke.getWidth()! > 0 && !options.skipHalo) {
+  } else if (textStroke?.getWidth?.() && textStroke.getWidth()! > 1 && !options.skipHalo) {
     symbolizer.haloColor = strokeColor;
-    symbolizer.haloOpacity = 1;
-    symbolizer.haloRadius = Math.max(1, Number(textStroke.getWidth()) * 0.5);
+    symbolizer.haloOpacity = 0.4;
+    symbolizer.haloRadius = Math.min(1.5, Number(textStroke.getWidth()) * 0.3);
   }
 
   return symbolizer;
@@ -415,7 +413,7 @@ function textToSymbolizer(olText: Text | null, options: { skipHalo?: boolean; dr
 /**
  * Convert OpenLayers Circle image to MapFish point symbolizer
  */
-function circleImageToSymbolizer(olImage: CircleStyle | null, dpi: number = 96): MapFishSymbolizer | null {
+function circleImageToSymbolizer(olImage: CircleStyle | null): MapFishSymbolizer | null {
   if (!olImage) return null;
 
   const symbolizer: MapFishSymbolizer = {
@@ -424,10 +422,7 @@ function circleImageToSymbolizer(olImage: CircleStyle | null, dpi: number = 96):
   };
 
   if (olImage.getRadius) {
-    // Scale radius based on DPI (screen pixels to print points)
-    // At 96 DPI, 1 pixel = 1 point. At higher DPI, scale up proportionally
-    const dpiScale = dpi / 96;
-    symbolizer.pointRadius = Math.round(olImage.getRadius() * dpiScale);
+    symbolizer.pointRadius = olImage.getRadius();
   }
 
   const fill = olImage.getFill?.();
@@ -491,7 +486,7 @@ function getGraphicNameFromPoints(points: number, radius2?: number): string {
 /**
  * Convert OpenLayers RegularShape to MapFish point symbolizer
  */
-function regularShapeImageToSymbolizer(olImage: RegularShape | null, dpi: number = 96): MapFishSymbolizer | null {
+function regularShapeImageToSymbolizer(olImage: RegularShape | null): MapFishSymbolizer | null {
   if (!olImage) return null;
 
   const points = olImage.getPoints?.() || 4;
@@ -500,14 +495,10 @@ function regularShapeImageToSymbolizer(olImage: RegularShape | null, dpi: number
   const rotation = olImage.getRotation?.() || 0;
   const angle = olImage.getAngle?.() || 0;
 
-  // Scale radius based on DPI (screen pixels to print points)
-  const dpiScale = dpi / 96;
-  const scaledRadius = Math.round(radius * dpiScale);
-
   const symbolizer: MapFishSymbolizer = {
     type: "point",
     graphicName: getGraphicNameFromPoints(points, radius2),
-    pointRadius: scaledRadius,
+    pointRadius: radius,
     rotation: radiansToDegrees(rotation + angle),
   };
 
@@ -736,7 +727,7 @@ export async function loadWMTSConfig(url: string, opacity: number): Promise<MapF
 /**
  * Build vector layer for MapFish Print
  */
-function buildVectorLayer(layer: VectorLayer, map: Map, dpi: number = 96): MapFishGeoJsonLayer[] | undefined {
+function buildVectorLayer(layer: VectorLayer, map: Map): MapFishGeoJsonLayer[] | undefined {
   const returnLayers: MapFishGeoJsonLayer[] = [];
   const olFeatures: Feature<Geometry>[] = [];
   const extent = map.getView().calculateExtent(map.getSize());
@@ -785,28 +776,41 @@ function buildVectorLayer(layer: VectorLayer, map: Map, dpi: number = 96): MapFi
         }
 
         if (olStroke) {
-          Object.assign(shapeSymbolizer, strokeToSymbolizer(olStroke, dpi));
+          Object.assign(shapeSymbolizer, strokeToSymbolizer(olStroke));
         }
 
-        // Handle circle/marker images - check for RegularShape first (it also has getRadius)
-        if (olImage && "getPoints" in olImage) {
-          // RegularShape (triangles, stars, crosses, etc.)
-          const regularShapeSymbolizer = regularShapeImageToSymbolizer(olImage as RegularShape, dpi);
-          if (regularShapeSymbolizer) {
-            symbolizers.push(regularShapeSymbolizer);
+        // For line geometries, prioritize stroke symbolizer over image symbolizer
+        // The image property is often just for cursor/drawing feedback, not the actual line style
+        const isLineGeometry = geomType === "LineString" || geomType === "MultiLineString";
+
+        // For non-line shapes that only have an image, use the image symbolizer
+        if (olImage && !isLineGeometry && geomType === "Point") {
+          // Handle circle/marker images (for custom geometry points like anchors)
+          // Check for RegularShape first (it also has getRadius)
+          if ("getPoints" in olImage) {
+            // RegularShape (triangles, stars, crosses, etc.)
+            const regularShapeSymbolizer = regularShapeImageToSymbolizer(olImage as RegularShape);
+            if (regularShapeSymbolizer) {
+              symbolizers.push(regularShapeSymbolizer);
+            }
+          } else if ("getRadius" in olImage) {
+            // CircleStyle
+            const circleSymbolizer = circleImageToSymbolizer(olImage as CircleStyle);
+            if (circleSymbolizer) {
+              symbolizers.push(circleSymbolizer);
+            }
           }
-        } else if (olImage && "getRadius" in olImage) {
-          // CircleStyle
-          const circleSymbolizer = circleImageToSymbolizer(olImage as CircleStyle, dpi);
-          if (circleSymbolizer) {
-            symbolizers.push(circleSymbolizer);
+          // Handle icon images
+          else if ("getSrc" in olImage) {
+            const iconSymbolizer = iconImageToSymbolizer(olImage as Icon);
+            if (iconSymbolizer) {
+              symbolizers.push(iconSymbolizer);
+            }
           }
-        } else if (olImage && "getSrc" in olImage) {
-          const iconSymbolizer = iconImageToSymbolizer(olImage as Icon);
-          if (iconSymbolizer) {
-            symbolizers.push(iconSymbolizer);
-          }
-        } else if (olFill || olStroke) {
+        }
+        // For lines, polygons, or shapes with fill/stroke, use the shape symbolizer
+        else if (olFill || olStroke) {
+          // For Text drawType, use invisible point marker
           if (drawType === "Text") {
             symbolizers.push({
               type: "point",
@@ -1016,8 +1020,7 @@ function configureWMSImageLayer(layer: ImageLayer<any>): MapFishWMSLayer {
  */
 async function getLayerByType(layer: Layer, printOptions: PrintRequestAttributes, map: Map): Promise<MapFishLayer | MapFishLayer[] | undefined> {
   if (layer instanceof VectorLayer) {
-    const dpi = printOptions.map.dpi || 96;
-    return buildVectorLayer(layer as VectorLayer, map, dpi);
+    return buildVectorLayer(layer as VectorLayer, map);
   } else if (layer instanceof ImageLayer) {
     const sourceType = LayerHelpers.getLayerSourceType(layer.getSource()!);
     if (sourceType === OL_DATA_TYPES.ImageArcGISRest) {

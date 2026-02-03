@@ -187,7 +187,7 @@ export default function TOC({ visible = true }: TOCProps) {
         setLayerGroups("FOLDER", sortedGroups);
       }
     },
-    [sortAlpha, updateLayerVisibility]
+    [sortAlpha, updateLayerVisibility],
   );
 
   // Initialize TOC from config
@@ -330,8 +330,16 @@ export default function TOC({ visible = true }: TOCProps) {
     // Handle visibility changes ONLY if visibility actually changed
     if (isVisibilityChange) {
       // Update the TOC store state to reflect the visibility change
-      const { updateLayerVisibility: updateTOCLayerVisibility } = useTOCStore.getState();
-      updateTOCLayerVisibility(layer.name, group.label, layer.visible);
+      // Use ID-based update for unique identification (handles duplicate layer names)
+      const { updateLayerVisibilityById, updateLayerVisibility: updateTOCLayerVisibility } = useTOCStore.getState();
+
+      if (layer.id) {
+        // Prefer ID-based update for unique layer identification
+        updateLayerVisibilityById(layer.id, layer.visible);
+      } else {
+        // Fall back to name-based update for legacy layers without ID
+        updateTOCLayerVisibility(layer.name, group.label, layer.visible);
+      }
 
       // Then update the OpenLayers layer via layerManagerStore if available
       if (layer.managedLayerId) {

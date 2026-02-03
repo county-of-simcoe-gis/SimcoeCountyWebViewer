@@ -72,6 +72,9 @@ vi.mock("react-icons/fa", () => ({
   FaPalette: (props: any) => React.createElement("div", { ...props, "data-testid": "palette-icon" }, "Palette"),
   FaTools: (props: any) => React.createElement("div", { ...props, "data-testid": "tools-icon" }, "Tools"),
   FaDrawPolygon: (props: any) => React.createElement("div", { ...props, "data-testid": "draw-polygon-icon" }, "DrawPolygon"),
+
+  // AddLayerTool specific icons
+  FaUpload: (props: any) => React.createElement("div", { ...props, "data-testid": "upload-icon" }, "Upload"),
 }));
 
 vi.mock("react-icons/md", () => ({

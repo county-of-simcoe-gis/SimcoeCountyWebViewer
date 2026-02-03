@@ -131,7 +131,7 @@ export default function LayersList({ group, searchText, onLayerChange, onLegendT
       <ul className="sc-toc-layers-list">
         {layers.map((layer, index) => (
           <li
-            key={`${group.value}-${layer.name}`}
+            key={layer.id || `${group.value}-${layer.name}-${index}`}
             className={`sc-toc-layer-item ${dragOverIndex === index ? "drag-over" : ""}`}
             draggable={false}
             onDragOver={(e) => handleDragOver(e, index)}
