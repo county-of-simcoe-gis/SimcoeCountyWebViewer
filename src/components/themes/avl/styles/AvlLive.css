@@ -290,6 +290,8 @@
   text-align: center;
   height: 33px;
   margin-top: 8px;
+  display: flex;
+  padding-left: 82px;
 }
 
 .sc-avl-live-following-msg-label {
@@ -315,4 +317,38 @@
 
 .sc-theme-avl-last-reported.green {
   color: green;
+}
+
+/* ===== AVL Popup Info Window Overrides (more compact) ===== */
+.sc-theme-avl-live-popup-content .sc-info-window-row,
+.sc-theme-avl-history-popup-content .sc-info-window-row {
+  display: table-row;
+  width: 100%;
+}
+
+.sc-theme-avl-live-popup-content .sc-info-window-label,
+.sc-theme-avl-history-popup-content .sc-info-window-label {
+  font-weight: bold;
+  color: #333333;
+  font-size: 11px;
+  padding: 0;
+  margin: 0;
+}
+
+.sc-theme-avl-live-popup-content .sc-info-window-value,
+.sc-theme-avl-history-popup-content .sc-info-window-value {
+  color: #484848;
+  border-bottom: 1px solid #eeeeee;
+  padding-bottom: 1px;
+  padding-top: 0;
+  padding-left: 20px;
+  background-image: url("/images/arrow_curve.gif");
+  background-repeat: no-repeat;
+  background-position: left;
+  font-size: 11px;
+  word-wrap: break-word;
+  min-height: 10px;
+  max-height: 12px;
+  overflow-wrap: anywhere;
+  margin: 0;
 }

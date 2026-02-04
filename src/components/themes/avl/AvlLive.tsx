@@ -106,6 +106,10 @@ export default function AvlLive({
   // Refs to hold latest callback functions for intervals (prevents stale closures)
   const fetchCurrentLocationsRef = useRef<(() => Promise<void>) | undefined>(undefined);
   const getGeoTabCurrentLocationsRef = useRef<(() => Promise<void>) | undefined>(undefined);
+  // Refs for map interactions to prevent stale closures in callbacks
+  const showVehiclePopupRef = useRef<((feature: Feature & { vehicleInfo: AvlVehicle }, overrideCoords?: number[]) => Promise<void>) | undefined>(undefined);
+  const animateFeatureRef = useRef<((feature: Feature & { vehicleInfo: AvlVehicle; isAnimating?: boolean }, newVehicle: AvlVehicle, newCoords: [number, number]) => void) | undefined>(undefined);
+
   const updateVehiclesFromGeoTabRef = useRef<
     | ((
         groupName: string,
@@ -156,7 +160,8 @@ export default function AvlLive({
     }
 
     // Set up map click handler
-    mapClickEventRef.current = map.on("singleclick", handleMapClick);
+    // Use a wrapper function to always access the current ref value
+    mapClickEventRef.current = map.on("singleclick", (evt) => handleMapClick(evt));
 
     return () => {
       // Cleanup
@@ -224,10 +229,10 @@ export default function AvlLive({
 
   // Show popup for a vehicle feature
   const showVehiclePopup = useCallback(
-    async (feature: Feature & { vehicleInfo: AvlVehicle }) => {
+    async (feature: Feature & { vehicleInfo: AvlVehicle }, overrideCoords?: number[]) => {
       popupFeatureRef.current = feature;
       const vehicleInfo = feature.vehicleInfo;
-      const coords = (feature.getGeometry() as Point)?.getCoordinates();
+      const coords = overrideCoords || (feature.getGeometry() as Point)?.getCoordinates();
 
       if (!coords) return;
 
@@ -241,10 +246,6 @@ export default function AvlLive({
           setFollowingVehicle({ name: vehicle.vehicle_name, grouping: vehicle.grouping });
         } else {
           setFollowingVehicle(null);
-        }
-        // Re-show popup to update the follow button state
-        if (popupFeatureRef.current) {
-          showVehiclePopup(popupFeatureRef.current);
         }
       };
 
@@ -338,7 +339,12 @@ export default function AvlLive({
     [configGroups, followingVehicle, showFollowButton, showHistoryButton, setFollowingVehicle, showPopupStore, updateContent, hidePopup, fetchGeoTabDiagnostics, onHistoryPopupButtonClick],
   );
 
-  // Handle map click
+  // Keep refs updated - moved to render body to avoid useEffect before definition issues
+  // But safer to keep in useEffect, just need to be after the function definitions
+  // Or simply assign them directly here in the render body since they are stable across renders due to useCallback
+  // However, assigning to ref.current during render is generally bad practice (side effect).
+  // Better to move the useEffect that updates them to be AFTER the function definitions.
+
   const handleMapClick = useCallback(
     (evt: { pixel: number[] }) => {
       if (!map || !layerRef.current) return;
@@ -349,7 +355,8 @@ export default function AvlLive({
           if (feature instanceof Feature) {
             const vehicleFeature = feature as Feature & { vehicleInfo?: AvlVehicle };
             if (vehicleFeature.vehicleInfo) {
-              showVehiclePopup(vehicleFeature as Feature & { vehicleInfo: AvlVehicle });
+              // Use ref to access latest showVehiclePopup function
+              showVehiclePopupRef.current?.(vehicleFeature as Feature & { vehicleInfo: AvlVehicle });
             }
           }
         },
@@ -360,7 +367,8 @@ export default function AvlLive({
         },
       );
     },
-    [map, showVehiclePopup],
+    // Dependency on map is enough, showVehiclePopup is accessed via ref
+    [map],
   );
 
   // Fetch current locations for all allowed groups
@@ -633,8 +641,8 @@ export default function AvlLive({
         setFeatureStyle(newFeature);
         source.addFeature(newFeature);
       } else {
-        // Animate existing feature
-        animateFeature(existingFeature, vehicle, coords);
+        // Animate existing feature via ref to ensure latest closure
+        animateFeatureRef.current?.(existingFeature, vehicle, coords);
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -680,18 +688,33 @@ export default function AvlLive({
         })(i);
       }
 
+      // Update immediately (not after animation) - matches legacy behavior
       feature.isAnimating = false;
       feature.vehicleInfo = newVehicle;
       setFeatureStyle(feature);
 
       // Update popup if following this vehicle
+      // NOTE: Using animateFeatureRef ensures we have the latest followingVehicle state
       if (followingVehicle?.name === newVehicle.vehicle_name && followingVehicle?.grouping === newVehicle.grouping) {
         map?.getView().animate({ center: newCoords, zoom: 17 });
+        // Check if popup is currently open and showing AVL content
+        const popupStore = usePopupStore.getState();
+        if (popupStore.isVisible && popupStore.content?.title === "Avl") {
+          // Update the popup with the latest vehicle data (feature now has updated info)
+          // We must check if showVehiclePopupRef.current is available
+          showVehiclePopupRef.current?.(feature, newCoords);
+        }
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [followingVehicle, map],
+    [followingVehicle, map], // showVehiclePopup is used via ref, so removing from dependencies
   );
+
+  // Update refs effect - must be AFTER definitions
+  useEffect(() => {
+    showVehiclePopupRef.current = showVehiclePopup;
+    animateFeatureRef.current = animateFeature;
+  }, [showVehiclePopup, animateFeature]);
 
   // Set feature style
   const setFeatureStyle = useCallback((feature: Feature & { vehicleInfo: AvlVehicle }) => {

@@ -90,7 +90,7 @@ export default function AvlLivePopup({
   };
 
   return (
-    <div ref={(ref) => setContainerRef(ref)}>
+    <div className="sc-theme-avl-live-popup-content" ref={(ref) => setContainerRef(ref)}>
       <InfoRow label="Name" value={info.vehicle_name} />
       <InfoRow label="Group" value={info.subgrouping} />
       <InfoRow label="Description" value={info.vehicle_description || info.subgrouping} />

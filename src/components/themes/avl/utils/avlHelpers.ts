@@ -96,9 +96,11 @@ export function addVehicleInfo(vehicle: AvlVehicle, subGroup: AvlSubGroup): AvlV
   vehicle.imageName = subGroup.imageName;
 
   const date = new Date(vehicle.date);
-  const userTimezoneOffset = date.getTimezoneOffset() * 60000;
-  const newDate = new Date(date.getTime() + userTimezoneOffset);
-  const diff = Math.round((Date.now() - newDate.getTime()) / 1000);
+  // Date from API is in UTC but treated as local by new Date() in some browsers if 'Z' is missing/implicit
+  // Legacy code suggests subtracting 5 hours, but clean UTC handling should just work if we treat it as Date.
+  // The previous explicit timezone addition was causing double-shifting.
+  // We use the date object directly which will be formatted to local time by getFriendlyDateString.
+  const diff = Math.round((Date.now() - date.getTime()) / 1000);
 
   let differenceString = "";
   let cssClass = " ";
@@ -128,7 +130,7 @@ export function addVehicleInfo(vehicle: AvlVehicle, subGroup: AvlSubGroup): AvlV
 
   vehicle.lastReported = "Last Reported: " + differenceString;
   vehicle.cssClass = cssClass;
-  vehicle.dateFriendly = getFriendlyDateString(newDate);
+  vehicle.dateFriendly = getFriendlyDateString(date);
 
   return vehicle;
 }
