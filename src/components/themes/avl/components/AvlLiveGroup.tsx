@@ -1,8 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import Image from "next/image";
-import Collapsible from "react-collapsible";
 import type { AvlLiveGroupProps, AvlGroup, AvlSubGroup } from "../types/avl.types";
 
 // Get label offset based on group name (to position the count properly)
@@ -17,12 +16,16 @@ const getLabelOffset = (name: string): string => {
   return "200px";
 };
 
-export default function AvlLiveGroup({
-  info,
-  onInputChangeSubGroup,
-  onInputChangeGroup,
-  onPanelOpen,
-}: AvlLiveGroupProps) {
+export default function AvlLiveGroup({ info, onInputChangeSubGroup, onInputChangeGroup, onPanelOpen }: AvlLiveGroupProps) {
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+
+  // Sync external open state changes to the details element
+  useEffect(() => {
+    if (detailsRef.current && detailsRef.current.open !== info.open) {
+      detailsRef.current.open = info.open;
+    }
+  }, [info.open]);
+
   // Get vehicle count from data array
   const vehicleCount = Array.isArray(info.data) ? info.data.length : 0;
 
@@ -46,37 +49,30 @@ export default function AvlLiveGroup({
 
   return (
     <div className="sc-theme-avl-live-group-container">
-      <label
-        className="sc-theme-avl-live-group-count sc-no-select"
-        style={{ left: getLabelOffset(info.name) }}
-      >
+      <label className="sc-theme-avl-live-group-count sc-no-select" style={{ left: getLabelOffset(info.name) }}>
         ({vehicleCount})
       </label>
-      <input
-        type="checkbox"
-        className="sc-theme-avl-group-input"
-        style={getCheckboxStyle()}
-        onChange={handleGroupCheckboxChange}
-        checked={info.visible}
-      />
-      <Collapsible
-        trigger={info.name}
+      <input type="checkbox" className="sc-theme-avl-group-input" style={getCheckboxStyle()} onChange={handleGroupCheckboxChange} checked={info.visible} />
+      <details
+        ref={detailsRef}
+        className="sc-theme-avl-collapse"
         open={info.open}
-        onOpening={() => onPanelOpen(info, true)}
-        onClosing={() => onPanelOpen(info, false)}
-        transitionTime={200}
+        onToggle={(e) => {
+          const isOpen = e.currentTarget.open;
+          if (isOpen !== info.open) {
+            onPanelOpen(info, isOpen);
+          }
+        }}
       >
-        <div className="sc-theme-avl-live-group-content">
-          {info.subGroups.map((subGroup) => (
-            <AvlLiveSubGroup
-              key={subGroup.name}
-              subGroup={subGroup}
-              group={info}
-              onInputChangeSubGroup={onInputChangeSubGroup}
-            />
-          ))}
+        <summary className="sc-theme-avl-collapse-trigger">{info.name}</summary>
+        <div className="sc-theme-avl-collapse-content">
+          <div className="sc-theme-avl-live-group-content">
+            {info.subGroups.map((subGroup) => (
+              <AvlLiveSubGroup key={subGroup.name} subGroup={subGroup} group={info} onInputChangeSubGroup={onInputChangeSubGroup} />
+            ))}
+          </div>
         </div>
-      </Collapsible>
+      </details>
     </div>
   );
 }
@@ -99,20 +95,10 @@ function AvlLiveSubGroup({ subGroup, group, onInputChangeSubGroup }: AvlLiveSubG
   return (
     <div className="sc-theme-avl-live-subgroup sc-noselect">
       <div className="sc-theme-avl-icon">
-        <Image
-          src={imageSrc}
-          alt={subGroup.name}
-          width={30}
-          height={30}
-        />
+        <Image src={imageSrc} alt={subGroup.name} width={30} height={30} />
       </div>
       <label className={subGroup.visible ? "sc-theme-avl-group-label on" : "sc-theme-avl-group-label"}>
-        <input
-          type="checkbox"
-          className="sc-theme-avl-subgroup-input"
-          onChange={handleCheckboxChange}
-          checked={subGroup.visible}
-        />
+        <input type="checkbox" className="sc-theme-avl-subgroup-input" onChange={handleCheckboxChange} checked={subGroup.visible} />
         {subGroup.name}
       </label>
     </div>

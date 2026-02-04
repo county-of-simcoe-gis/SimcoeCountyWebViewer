@@ -109,10 +109,10 @@ export function addVehicleInfo(vehicle: AvlVehicle, subGroup: AvlSubGroup): AvlV
     differenceString = "1 sec";
     cssClass = "green";
   } else if (diff < 60) {
-    differenceString = diff + " seconds";
+    differenceString = diff + " sec";
     cssClass = "green";
   } else if (diff >= 60 && diff < 90) {
-    differenceString = "1 minute";
+    differenceString = "1 min";
     cssClass = "green";
   } else if (diff > 60 && diff < 3600) {
     differenceString = Math.round(diff / 60) + " min";

@@ -6,7 +6,6 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
-import Collapsible from "react-collapsible";
 import { List } from "react-virtualized";
 import { Vector as VectorLayer } from "ol/layer";
 import { Vector as VectorSource } from "ol/source";
@@ -814,136 +813,142 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
 
   return (
     <div className="sc-theme-avl-history-container">
-      <Collapsible trigger="Search" open={true}>
-        <div className="sc-container" style={{ marginTop: "5px" }}>
-          <div className="sc-theme-avl-history-control-row">
-            <label className="sc-theme-avl-history-label">Group:</label>
-            <Select
-              styles={avlGroupDropDownStyles}
-              isSearchable={false}
-              onChange={(option) => {
-                setSelectedGroupOption(option as GroupSelectOption | null);
-                setSelectedVehicleTypeOption(ALL_TYPES_OPTION);
-                setSelectedVehicleOption(ALL_VEHICLES_OPTION);
-              }}
-              options={groupOptions}
-              value={selectedGroupOption}
-              menuPortalTarget={typeof document !== "undefined" ? document.body : null}
-            />
-          </div>
-
-          <div className="sc-theme-avl-history-control-row">
-            <label className="sc-theme-avl-history-label">Type:</label>
-            <Select
-              styles={avlVehicleDropDownStyles}
-              isSearchable={false}
-              onChange={(option) => {
-                if (option) {
-                  setSelectedVehicleTypeOption(option as SelectOption<string>);
+      <details className="sc-theme-avl-collapse" open>
+        <summary className="sc-theme-avl-collapse-trigger">Search</summary>
+        <div className="sc-theme-avl-collapse-content">
+          <div className="sc-container" style={{ marginTop: "5px" }}>
+            <div className="sc-theme-avl-history-control-row">
+              <label className="sc-theme-avl-history-label">Group:</label>
+              <Select
+                styles={avlGroupDropDownStyles}
+                isSearchable={false}
+                onChange={(option) => {
+                  setSelectedGroupOption(option as GroupSelectOption | null);
+                  setSelectedVehicleTypeOption(ALL_TYPES_OPTION);
                   setSelectedVehicleOption(ALL_VEHICLES_OPTION);
-                }
-              }}
-              options={getVehicleTypes()}
-              value={selectedVehicleTypeOption}
-              menuPortalTarget={typeof document !== "undefined" ? document.body : null}
-            />
+                }}
+                options={groupOptions}
+                value={selectedGroupOption}
+                menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+              />
+            </div>
+
+            <div className="sc-theme-avl-history-control-row">
+              <label className="sc-theme-avl-history-label">Type:</label>
+              <Select
+                styles={avlVehicleDropDownStyles}
+                isSearchable={false}
+                onChange={(option) => {
+                  if (option) {
+                    setSelectedVehicleTypeOption(option as SelectOption<string>);
+                    setSelectedVehicleOption(ALL_VEHICLES_OPTION);
+                  }
+                }}
+                options={getVehicleTypes()}
+                value={selectedVehicleTypeOption}
+                menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+              />
+            </div>
+
+            <div className="sc-theme-avl-history-control-row">
+              <label className="sc-theme-avl-history-label">Vehicle Id:</label>
+              <Select
+                styles={avlVehicleDropDownStyles}
+                isSearchable={false}
+                onChange={(option) => option && setSelectedVehicleOption(option as SelectOption<string> | null)}
+                options={getVehiclesByGroup()}
+                value={selectedVehicleOption}
+                menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+              />
+            </div>
+
+            <div className="sc-theme-avl-history-control-row">
+              <label className="sc-theme-avl-history-label">From:</label>
+              <DatePicker
+                className="sc-input sc-theme-avl-history-date-picker"
+                selected={startDate}
+                onChange={(date: Date | null) => date && setStartDate(date)}
+                showTimeSelect
+                dateFormat="MMMM d, yyyy h:mm aa"
+              />
+            </div>
+
+            <div className="sc-theme-avl-history-control-row">
+              <label className="sc-theme-avl-history-label">To:</label>
+              <DatePicker
+                className="sc-input sc-theme-avl-history-date-picker"
+                selected={endDate}
+                onChange={(date: Date | null) => date && setEndDate(date)}
+                showTimeSelect
+                dateFormat="MMMM d, yyyy h:mm aa"
+              />
+            </div>
+
+            <div className="sc-theme-avl-history-control-row">
+              <label className="sc-theme-avl-history-label">Speed:</label>
+              <Select
+                styles={avlSpeedOperatorDropDownStyles}
+                isSearchable={false}
+                onChange={(option) => option && setSelectedSpeedOperator(option as SpeedOperatorOption)}
+                options={SPEED_OPERATORS}
+                value={selectedSpeedOperator}
+                menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+              />
+              <Select
+                styles={avlSpeedDropDownStyles}
+                isSearchable={false}
+                onChange={(option) => option && setSelectedSpeed(option as SelectOption<number>)}
+                options={speedOptions}
+                value={selectedSpeed}
+                menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+              />
+              <label className="sc-theme-avl-history-kph"> KPH</label>
+            </div>
+
+            <div className="sc-theme-avl-history-control-row">
+              <label className="sc-theme-avl-history-label">Simplify:</label>
+              <Slider style={avlHistorySliderWrapperStyle} marks={avlHistoryMarks} min={0} max={10} step={1} value={sliderValue} onChange={(value) => setSliderValue(value as number)} />
+            </div>
+
+            <div className="sc-theme-avl-history-only-visible-extent">
+              <label>
+                Only Visible Extent
+                <input type="checkbox" style={{ marginLeft: "5px" }} onChange={(e) => setOnlyVisibleExtent(e.target.checked)} checked={onlyVisibleExtent} />
+              </label>
+            </div>
           </div>
 
-          <div className="sc-theme-avl-history-control-row">
-            <label className="sc-theme-avl-history-label">Vehicle Id:</label>
-            <Select
-              styles={avlVehicleDropDownStyles}
-              isSearchable={false}
-              onChange={(option) => option && setSelectedVehicleOption(option as SelectOption<string> | null)}
-              options={getVehiclesByGroup()}
-              value={selectedVehicleOption}
-              menuPortalTarget={typeof document !== "undefined" ? document.body : null}
-            />
-          </div>
-
-          <div className="sc-theme-avl-history-control-row">
-            <label className="sc-theme-avl-history-label">From:</label>
-            <DatePicker
-              className="sc-input sc-theme-avl-history-date-picker"
-              selected={startDate}
-              onChange={(date: Date | null) => date && setStartDate(date)}
-              showTimeSelect
-              dateFormat="MMMM d, yyyy h:mm aa"
-            />
-          </div>
-
-          <div className="sc-theme-avl-history-control-row">
-            <label className="sc-theme-avl-history-label">To:</label>
-            <DatePicker
-              className="sc-input sc-theme-avl-history-date-picker"
-              selected={endDate}
-              onChange={(date: Date | null) => date && setEndDate(date)}
-              showTimeSelect
-              dateFormat="MMMM d, yyyy h:mm aa"
-            />
-          </div>
-
-          <div className="sc-theme-avl-history-control-row">
-            <label className="sc-theme-avl-history-label">Speed:</label>
-            <Select
-              styles={avlSpeedOperatorDropDownStyles}
-              isSearchable={false}
-              onChange={(option) => option && setSelectedSpeedOperator(option as SpeedOperatorOption)}
-              options={SPEED_OPERATORS}
-              value={selectedSpeedOperator}
-              menuPortalTarget={typeof document !== "undefined" ? document.body : null}
-            />
-            <Select
-              styles={avlSpeedDropDownStyles}
-              isSearchable={false}
-              onChange={(option) => option && setSelectedSpeed(option as SelectOption<number>)}
-              options={speedOptions}
-              value={selectedSpeed}
-              menuPortalTarget={typeof document !== "undefined" ? document.body : null}
-            />
-            <label className="sc-theme-avl-history-kph"> KPH</label>
-          </div>
-
-          <div className="sc-theme-avl-history-control-row">
-            <label className="sc-theme-avl-history-label">Simplify:</label>
-            <Slider style={avlHistorySliderWrapperStyle} marks={avlHistoryMarks} min={0} max={10} step={1} value={sliderValue} onChange={(value) => setSliderValue(value as number)} />
-          </div>
-
-          <div className="sc-theme-avl-history-only-visible-extent">
-            <label>
-              Only Visible Extent
-              <input type="checkbox" onChange={(e) => setOnlyVisibleExtent(e.target.checked)} checked={onlyVisibleExtent} />
-            </label>
+          <div style={{ display: "flex", gap: "5px", marginTop: "5px" }}>
+            <button className={isLoading ? "sc-button sc-disabled" : "sc-button"} style={{ flex: 1, padding: "5px 2px" }} onClick={handleSearch} disabled={isLoading}>
+              {isLoading ? "Searching..." : "Search"}
+            </button>
+            <button className="sc-button" style={{ flex: 1, padding: "5px 2px" }} onClick={handleClear}>
+              Clear
+            </button>
+            <button className="sc-button" style={{ flex: 1, padding: "5px 2px" }} onClick={handleExport}>
+              Export
+            </button>
+            {groupHasGeoTabSpreaderData(selectedGroupOption?.value || "") && (
+              <button className="sc-button" style={{ flex: 1, padding: "5px 2px" }} onClick={() => setShowLegendTooltip(!showLegendTooltip)}>
+                Legend
+              </button>
+            )}
           </div>
         </div>
+      </details>
 
-        <div style={{ display: "flex", gap: "5px", marginTop: "5px" }}>
-          <button className={isLoading ? "sc-button sc-disabled" : "sc-button"} style={{ flex: 1, padding: "5px 2px" }} onClick={handleSearch} disabled={isLoading}>
-            {isLoading ? "Searching..." : "Search"}
-          </button>
-          <button className="sc-button" style={{ flex: 1, padding: "5px 2px" }} onClick={handleClear}>
-            Clear
-          </button>
-          <button className="sc-button" style={{ flex: 1, padding: "5px 2px" }} onClick={handleExport}>
-            Export
-          </button>
-          {groupHasGeoTabSpreaderData(selectedGroupOption?.value || "") && (
-            <button className="sc-button" style={{ flex: 1, padding: "5px 2px" }} onClick={() => setShowLegendTooltip(!showLegendTooltip)}>
-              Legend
-            </button>
+      <details className="sc-theme-avl-collapse" open>
+        <summary className="sc-theme-avl-collapse-trigger">{searchResults.length > 0 ? `Results (${searchResults.length} records)` : "Results"}</summary>
+        <div className="sc-theme-avl-collapse-content">
+          {tooManyRecords && <div className="sc-container sc-theme-avl-history-warning">Your search returned too many records. Only showing top 5000 records.</div>}
+          {zeroRecords && <div className="sc-container sc-theme-avl-history-warning">Your search returned ZERO records. Please try again.</div>}
+          {searchResults.length > 0 && (
+            <div className="sc-container sc-theme-avl-history-results-container">
+              <List id="sc-avl-history-virtual-layers" rowHeight={50} rowRenderer={renderRow} rowCount={searchResults.length} width={listWidth} height={listHeight} style={{ outline: "none" }} />
+            </div>
           )}
         </div>
-      </Collapsible>
-
-      <Collapsible trigger={searchResults.length > 0 ? `Results (${searchResults.length} records)` : "Results"} open={true}>
-        {tooManyRecords && <div className="sc-container sc-theme-avl-history-warning">Your search returned too many records. Only showing top 5000 records.</div>}
-        {zeroRecords && <div className="sc-container sc-theme-avl-history-warning">Your search returned ZERO records. Please try again.</div>}
-        {searchResults.length > 0 && (
-          <div className="sc-container sc-theme-avl-history-results-container">
-            <List id="sc-avl-history-virtual-layers" rowHeight={50} rowRenderer={renderRow} rowCount={searchResults.length} width={listWidth} height={listHeight} style={{ outline: "none" }} />
-          </div>
-        )}
-      </Collapsible>
+      </details>
 
       {showLegendTooltip && <AVLLegendTooltip onClose={() => setShowLegendTooltip(false)} />}
     </div>

@@ -216,8 +216,8 @@ describe("avlHelpers", () => {
       const result = addVehicleInfo(vehicle, mockSubGroup);
 
       expect(result.cssClass).toBe("green");
-      // The function may show "sec" or "seconds" depending on exact timing
-      expect(result.lastReported).toMatch(/sec|seconds/);
+      // The function shows "sec" for seconds
+      expect(result.lastReported).toMatch(/sec/);
     });
 
     const getVehicleDateForDiffSeconds = (diffSeconds: number) => {

@@ -1,7 +1,7 @@
 .sc-theme-avl-live-group-container {
   /* margin-top: -20px; */
 }
-.sc-theme-avl-live-group-container > .Collapsible {
+.sc-theme-avl-live-group-container > .sc-theme-avl-collapse {
   width: 337px;
   margin: 5px;
   background-color: #e8e8e8;
@@ -16,51 +16,55 @@
                                   supported by Chrome and Opera */
 }
 
-.sc-theme-avl-live-group-container .Collapsible__trigger {
+.sc-theme-avl-live-group-container .sc-theme-avl-collapse-trigger {
   display: block;
   position: relative;
   background-image: url(/images/avl/metadata.png);
   background-position-y: center;
   background-repeat: no-repeat;
   background-position-x: 36px;
-  width: 331px;
+  width: 355px;
   margin-left: -30px;
-  padding-left: 28px;
-  font-weight: bold;
   padding-left: 75px;
   padding-right: 25px;
+  font-weight: bold;
+  min-height: 30px;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
   margin-top: -20px;
+  list-style: none;
 }
 
-.sc-theme-avl-live-group-container .Collapsible__trigger::after {
+.sc-theme-avl-live-group-container .sc-theme-avl-collapse-trigger::-webkit-details-marker {
+  display: none;
+}
+
+.sc-theme-avl-live-group-container .sc-theme-avl-collapse-trigger::after {
   content: "";
   position: absolute;
-  left: 330px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
-  background-image: url(/images/avl/down.png);
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #666;
   transition: transform 0.2s ease;
 }
 
-.sc-theme-avl-live-group-container .Collapsible__trigger.is-open::after {
+.sc-theme-avl-live-group-container .sc-theme-avl-collapse[open] .sc-theme-avl-collapse-trigger::after {
   transform: translateY(-50%) rotate(180deg);
 }
 
-.sc-theme-avl-live-group-container .is-closed {
-  /* background-image: url(/images/avl/settings.png), url(/images/avl/up.png); */
+.sc-theme-avl-live-group-container .sc-theme-avl-collapse-content {
+  transition: all 200ms ease-in-out;
 }
 
-.sc-theme-avl-live-group-container .Collapsible__contentOuter {
+.sc-theme-avl-live-group-container .sc-theme-avl-collapse-content-inner {
   /* position: absolute;
     margin-left: -32px;
     bottom: 31px;
@@ -184,7 +188,7 @@
 
 .sc-theme-avl-live-vehicle-container {
   display: grid;
-  grid-template-rows: auto 17px;
+  grid-template-rows: auto auto;
   grid-template-columns: 35px 158px 122px;
   margin-top: 5px;
   cursor: pointer;

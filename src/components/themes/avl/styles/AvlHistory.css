@@ -2,7 +2,7 @@
   position: relative;
   overflow-x: hidden;
   overflow-y: auto;
-  max-height: calc(100vh - 280px);
+  max-height: calc(100vh - 200px);
   padding-right: 5px;
 }
 
@@ -47,6 +47,7 @@
   font-size: 9pt;
   height: 40px;
   max-width: 330px;
+  margin-left: 10px;
 }
 
 .sc-theme-avl-history-vehicle-container:hover {
@@ -162,7 +163,7 @@
   overflow: hidden;
 }
 
-.sc-theme-avl-history-container > .Collapsible {
+.sc-theme-avl-history-container > .sc-theme-avl-collapse {
   width: 337px;
   margin: 5px;
   /* background-color: #e8e8e8; */
@@ -177,23 +178,53 @@
                                   supported by Chrome and Opera */
 }
 
-.sc-theme-avl-history-container .Collapsible__trigger {
+.sc-theme-avl-history-container .sc-theme-avl-collapse-trigger {
   display: block;
-  background-image: url(/images/avl/metadata.png), url(/images/avl/down.png);
+  position: relative;
+  background-image: url(/images/avl/metadata.png);
   background-color: #e8e8e8;
-  background-position-y: center, 8px;
-  background-repeat: no-repeat, no-repeat;
-  background-position-x: 36px, 341px;
+  background-position-y: center;
+  background-repeat: no-repeat;
+  background-position-x: 36px;
   /* width: 331px; */
   margin-left: -30px;
-  padding-left: 28px;
   font-weight: bold;
   padding-top: 3px;
   padding-left: 75px;
+  min-height: 30px;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  list-style: none;
   /* margin-top: -20px; */
+}
+
+.sc-theme-avl-history-container .sc-theme-avl-collapse-trigger::-webkit-details-marker {
+  display: none;
+}
+
+.sc-theme-avl-history-container .sc-theme-avl-collapse-trigger::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #666;
+  transition: transform 0.2s ease;
+}
+
+.sc-theme-avl-history-container .sc-theme-avl-collapse[open] .sc-theme-avl-collapse-trigger::after {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.sc-theme-avl-history-container .sc-theme-avl-collapse-content {
+  transition: all 200ms ease-in-out;
+  cursor: default;
+  line-height: normal;
 }
