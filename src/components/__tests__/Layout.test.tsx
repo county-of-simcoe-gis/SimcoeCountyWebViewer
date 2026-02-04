@@ -2,6 +2,11 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { vi } from "vitest";
 import Layout from "@/components/Layout";
 
+// Mock Header to avoid next-auth dependency in ProfileButton
+vi.mock("@/components/Header", () => ({
+  default: () => <div role="button" aria-label="Toggle sidebar" />,
+}));
+
 // Mock MapContainer to avoid OpenLayers complexity
 vi.mock("@/components/MapContainer", () => ({
   default: () => <div id="map" role="presentation" />,
@@ -30,7 +35,7 @@ vi.mock("@/stores/myMapsStore", () => ({
         loadFromStorage: vi.fn(),
       })),
       subscribe: vi.fn(() => vi.fn()), // Returns unsubscribe function
-    }
+    },
   ),
   createMyMapsItem: vi.fn(),
 }));
@@ -70,7 +75,7 @@ vi.mock("@/stores/appStore", () => ({
         setSidebarLoading: vi.fn(),
         setMapLoading: vi.fn(),
       })),
-    }
+    },
   ),
 }));
 
@@ -97,7 +102,7 @@ vi.mock("@/stores/sidebarStore", () => ({
         setIsOpen: vi.fn(),
         setActiveItem: vi.fn(),
       })),
-    }
+    },
   ),
 }));
 
@@ -117,7 +122,7 @@ vi.mock("@/stores/eventStore", () => ({
     vi.fn(() => mockEventStore),
     {
       getState: vi.fn(() => mockEventStore),
-    }
+    },
   ),
 }));
 
