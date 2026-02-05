@@ -83,57 +83,83 @@ vi.mock("@/utils/openlayers/LayerManager", () => ({
 }));
 
 // Mock OpenLayers modules
-vi.mock("ol/layer", () => ({
-  Vector: vi.fn(() => ({
-    setVisible: vi.fn(),
-    setProperties: vi.fn(),
-    setZIndex: vi.fn(),
-    getZIndex: vi.fn(() => 100),
-    getSource: vi.fn(() => ({
-      clear: vi.fn(),
-      addFeatures: vi.fn(),
-      addFeature: vi.fn(),
-      getFeatures: vi.fn(() => []),
-      getExtent: vi.fn(() => [-8900000, 5400000, -8800000, 5500000]),
-    })),
-  })),
-}));
+vi.mock("ol/layer", () => {
+  class MockVectorLayer {
+    private source: any;
+    constructor(options?: { source?: any }) {
+      this.source = options?.source;
+    }
+    setVisible = vi.fn();
+    setProperties = vi.fn();
+    setZIndex = vi.fn();
+    getZIndex = vi.fn(() => 100);
+    getSource = vi.fn(() => this.source);
+  }
 
-vi.mock("ol/source", () => ({
-  Vector: vi.fn(() => ({
-    clear: vi.fn(),
-    addFeatures: vi.fn(),
-    addFeature: vi.fn(),
-    getFeatures: vi.fn(() => []),
-    getExtent: vi.fn(() => [-8900000, 5400000, -8800000, 5500000]),
-  })),
-}));
+  return {
+    Vector: MockVectorLayer,
+  };
+});
 
-vi.mock("ol/Feature", () => ({
-  default: vi.fn((opts) => ({
-    setGeometry: vi.fn(),
-    getGeometry: vi.fn(() => ({
+vi.mock("ol/source", () => {
+  class MockVectorSource {
+    clear = vi.fn();
+    addFeatures = vi.fn();
+    addFeature = vi.fn();
+    getFeatures = vi.fn(() => []);
+    getExtent = vi.fn(() => [-8900000, 5400000, -8800000, 5500000]);
+  }
+
+  return {
+    Vector: MockVectorSource,
+  };
+});
+
+vi.mock("ol/Feature", () => {
+  class MockFeature {
+    private opts: any;
+    constructor(opts?: any) {
+      this.opts = opts;
+    }
+    setGeometry = vi.fn();
+    getGeometry = vi.fn(() => ({
       getCoordinates: vi.fn(() => [0, 0]),
-    })),
-    setStyle: vi.fn(),
-    get: vi.fn((key) => opts?.[key]),
-    set: vi.fn(),
-  })),
-}));
+    }));
+    setStyle = vi.fn();
+    get = vi.fn((key) => this.opts?.[key]);
+    set = vi.fn();
+  }
 
-vi.mock("ol/geom/Point", () => ({
-  default: vi.fn(() => ({
-    getCoordinates: vi.fn(() => [0, 0]),
-  })),
-}));
+  return {
+    default: MockFeature,
+  };
+});
 
-vi.mock("ol/style", () => ({
-  Circle: vi.fn(() => ({})),
-  Fill: vi.fn(() => ({})),
-  Stroke: vi.fn(() => ({})),
-  Style: vi.fn(() => ({})),
-  Icon: vi.fn(() => ({})),
-}));
+vi.mock("ol/geom/Point", () => {
+  class MockPoint {
+    getCoordinates = vi.fn(() => [0, 0]);
+  }
+
+  return {
+    default: MockPoint,
+  };
+});
+
+vi.mock("ol/style", () => {
+  class MockStyle {}
+  class MockCircle {}
+  class MockFill {}
+  class MockStroke {}
+  class MockIcon {}
+
+  return {
+    Circle: MockCircle,
+    Fill: MockFill,
+    Stroke: MockStroke,
+    Style: MockStyle,
+    Icon: MockIcon,
+  };
+});
 
 vi.mock("ol/proj", () => ({
   transformExtent: vi.fn((extent) => extent),
@@ -298,7 +324,7 @@ describe("AvlHistory", () => {
         expect(screen.getAllByRole("button", { name: /search/i }).length).toBeGreaterThan(0);
       });
 
-      const searchButton = screen.getAllByRole("button", { name: /search/i })[1];
+      const searchButton = screen.getAllByRole("button", { name: /search/i })[0];
       fireEvent.click(searchButton);
 
       // Search should be triggered (API call mocked)
@@ -317,7 +343,7 @@ describe("AvlHistory", () => {
         expect(screen.getAllByRole("button", { name: /search/i }).length).toBeGreaterThan(0);
       });
 
-      const searchButton = screen.getAllByRole("button", { name: /search/i })[1];
+      const searchButton = screen.getAllByRole("button", { name: /search/i })[0];
       fireEvent.click(searchButton);
 
       // Check for loading indicator (implementation dependent)
@@ -335,7 +361,7 @@ describe("AvlHistory", () => {
         expect(screen.getAllByRole("button", { name: /search/i }).length).toBeGreaterThan(0);
       });
 
-      const searchButton = screen.getAllByRole("button", { name: /search/i })[1];
+      const searchButton = screen.getAllByRole("button", { name: /search/i })[0];
       fireEvent.click(searchButton);
 
       await waitFor(() => {
@@ -432,7 +458,7 @@ describe("AvlHistory", () => {
         expect(screen.getAllByRole("button", { name: /search/i }).length).toBeGreaterThan(0);
       });
 
-      fireEvent.click(screen.getAllByRole("button", { name: /search/i })[1]);
+      fireEvent.click(screen.getAllByRole("button", { name: /search/i })[0]);
 
       await waitFor(() => {
         expect(screen.getByTestId("virtualized-list")).toBeInTheDocument();
@@ -448,7 +474,7 @@ describe("AvlHistory", () => {
         expect(screen.getAllByRole("button", { name: /search/i }).length).toBeGreaterThan(0);
       });
 
-      fireEvent.click(screen.getAllByRole("button", { name: /search/i })[1]);
+      fireEvent.click(screen.getAllByRole("button", { name: /search/i })[0]);
 
       // Should show no results message or empty state
       await waitFor(() => {
@@ -467,7 +493,7 @@ describe("AvlHistory", () => {
         expect(screen.getAllByRole("button", { name: /search/i }).length).toBeGreaterThan(0);
       });
 
-      fireEvent.click(screen.getAllByRole("button", { name: /search/i })[1]);
+      fireEvent.click(screen.getAllByRole("button", { name: /search/i })[0]);
 
       await waitFor(() => {
         // Export button should appear after results load
@@ -499,7 +525,7 @@ describe("AvlHistory", () => {
         expect(screen.getAllByRole("button", { name: /search/i }).length).toBeGreaterThan(0);
       });
 
-      fireEvent.click(screen.getAllByRole("button", { name: /search/i })[1]);
+      fireEvent.click(screen.getAllByRole("button", { name: /search/i })[0]);
 
       // Should handle error gracefully
       await waitFor(() => {

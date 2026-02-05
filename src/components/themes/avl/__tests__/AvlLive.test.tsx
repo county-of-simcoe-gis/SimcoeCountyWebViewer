@@ -115,60 +115,91 @@ vi.mock("@/utils/openlayers/LayerManager", () => ({
 }));
 
 // Mock OpenLayers modules
-vi.mock("ol/layer", () => ({
-  Vector: vi.fn(() => ({
-    setVisible: vi.fn(),
-    setProperties: vi.fn(),
-    setZIndex: vi.fn(),
-    getZIndex: vi.fn(() => 100),
-    getSource: vi.fn(() => ({
-      clear: vi.fn(),
-      addFeatures: vi.fn(),
-      addFeature: vi.fn(),
-      getFeatures: vi.fn(() => []),
-    })),
-  })),
-}));
+vi.mock("ol/layer", () => {
+  class MockVectorLayer {
+    private source: any;
+    constructor(options?: { source?: any }) {
+      this.source = options?.source;
+    }
+    setVisible = vi.fn();
+    setProperties = vi.fn();
+    setZIndex = vi.fn();
+    getZIndex = vi.fn(() => 100);
+    getSource = vi.fn(() => this.source);
+  }
 
-vi.mock("ol/source", () => ({
-  Vector: vi.fn(() => ({
-    clear: vi.fn(),
-    addFeatures: vi.fn(),
-    addFeature: vi.fn(),
-    getFeatures: vi.fn(() => []),
-    removeFeature: vi.fn(),
-  })),
-}));
+  return {
+    Vector: MockVectorLayer,
+  };
+});
 
-vi.mock("ol/Feature", () => ({
-  default: vi.fn((opts) => ({
-    setGeometry: vi.fn(),
-    getGeometry: vi.fn(() => ({
+vi.mock("ol/source", () => {
+  class MockVectorSource {
+    clear = vi.fn();
+    addFeatures = vi.fn();
+    addFeature = vi.fn();
+    getFeatures = vi.fn(() => []);
+    removeFeature = vi.fn();
+  }
+
+  return {
+    Vector: MockVectorSource,
+  };
+});
+
+vi.mock("ol/Feature", () => {
+  class MockFeature {
+    private opts: any;
+    constructor(opts?: any) {
+      this.opts = opts;
+    }
+    setGeometry = vi.fn();
+    getGeometry = vi.fn(() => ({
       getCoordinates: vi.fn(() => [0, 0]),
-    })),
-    setStyle: vi.fn(),
-    get: vi.fn((key) => opts?.[key]),
-    set: vi.fn(),
-  })),
-}));
+    }));
+    setStyle = vi.fn();
+    get = vi.fn((key) => this.opts?.[key]);
+    set = vi.fn();
+  }
 
-vi.mock("ol/geom/Point", () => ({
-  default: vi.fn(() => ({
-    getCoordinates: vi.fn(() => [0, 0]),
-  })),
-}));
+  return {
+    default: MockFeature,
+  };
+});
 
-vi.mock("ol/geom/LineString", () => ({
-  default: vi.fn(() => ({})),
-}));
+vi.mock("ol/geom/Point", () => {
+  class MockPoint {
+    getCoordinates = vi.fn(() => [0, 0]);
+  }
 
-vi.mock("ol/style", () => ({
-  Icon: vi.fn(() => ({})),
-  Style: vi.fn(() => ({})),
-  Text: vi.fn(() => ({})),
-  Fill: vi.fn(() => ({})),
-  Stroke: vi.fn(() => ({})),
-}));
+  return {
+    default: MockPoint,
+  };
+});
+
+vi.mock("ol/geom/LineString", () => {
+  class MockLineString {}
+
+  return {
+    default: MockLineString,
+  };
+});
+
+vi.mock("ol/style", () => {
+  class MockStyle {}
+  class MockIcon {}
+  class MockText {}
+  class MockFill {}
+  class MockStroke {}
+
+  return {
+    Icon: MockIcon,
+    Style: MockStyle,
+    Text: MockText,
+    Fill: MockFill,
+    Stroke: MockStroke,
+  };
+});
 
 vi.mock("ol/Observable", () => ({
   unByKey: vi.fn(),

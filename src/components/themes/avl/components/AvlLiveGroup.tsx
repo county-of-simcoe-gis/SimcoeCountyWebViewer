@@ -57,6 +57,7 @@ export default function AvlLiveGroup({ info, onInputChangeSubGroup, onInputChang
         ref={detailsRef}
         className="sc-theme-avl-collapse"
         open={info.open}
+        data-testid="collapsible"
         onToggle={(e) => {
           const isOpen = e.currentTarget.open;
           if (isOpen !== info.open) {
@@ -64,14 +65,24 @@ export default function AvlLiveGroup({ info, onInputChangeSubGroup, onInputChang
           }
         }}
       >
-        <summary className="sc-theme-avl-collapse-trigger">{info.name}</summary>
-        <div className="sc-theme-avl-collapse-content">
-          <div className="sc-theme-avl-live-group-content">
-            {info.subGroups.map((subGroup) => (
-              <AvlLiveSubGroup key={subGroup.name} subGroup={subGroup} group={info} onInputChangeSubGroup={onInputChangeSubGroup} />
-            ))}
+        <summary
+          className="sc-theme-avl-collapse-trigger"
+          data-testid="collapsible-trigger"
+          onClick={() => {
+            onPanelOpen(info, !info.open);
+          }}
+        >
+          {info.name}
+        </summary>
+        {info.open && (
+          <div className="sc-theme-avl-collapse-content" data-testid="collapsible-content">
+            <div className="sc-theme-avl-live-group-content">
+              {info.subGroups.map((subGroup) => (
+                <AvlLiveSubGroup key={subGroup.name} subGroup={subGroup} group={info} onInputChangeSubGroup={onInputChangeSubGroup} />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </details>
     </div>
   );
