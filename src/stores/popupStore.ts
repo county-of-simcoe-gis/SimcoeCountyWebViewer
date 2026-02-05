@@ -17,6 +17,7 @@ interface PopupState {
   show: (coordinates: number[], content: React.ReactNode, title: string) => void;
   hide: () => void;
   updateContent: (content: React.ReactNode) => void;
+  updatePosition: (coordinates: number[]) => void;
 }
 
 export const usePopupStore = create<PopupState>((set) => ({
@@ -52,5 +53,15 @@ export const usePopupStore = create<PopupState>((set) => ({
     set((state) => ({
       content: state.content ? { ...state.content, content } : null,
     })),
+
+  updatePosition: (coordinates: number[]) =>
+    set((state) => {
+      if (state.overlay) {
+        state.overlay.setPosition(coordinates);
+      }
+      return {
+        content: state.content ? { ...state.content, coordinates } : null,
+      };
+    }),
 }));
 

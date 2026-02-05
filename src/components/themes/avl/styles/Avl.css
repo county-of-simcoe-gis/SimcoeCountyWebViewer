@@ -1,0 +1,95 @@
+.sc-theme-avl-container {
+  /* position: absolute; */
+  padding-left: 5px;
+  padding-right: 5px;
+  /* overflow-y: auto; */
+  /* overflow-x: hidden; */
+}
+
+/* Override global panel content padding for AVL theme */
+#sc-panel-component-content:has(.sc-theme-avl-container) {
+  padding: 0;
+}
+
+/* Override global tab styles for inner AVL tabs - these are text-only tabs, not icon tabs */
+.sc-theme-avl-container .react-tabs__tab {
+  height: auto !important;
+  padding: 6px 12px !important;
+  font-size: 10pt;
+  vertical-align: middle;
+}
+
+.sc-theme-avl-container .react-tabs__tab-list {
+  margin-bottom: 0 !important;
+}
+
+.sc-theme-avl-last-reported {
+  padding-left: 0px;
+  font-size: 9px;
+  font-style: italic;
+  position: relative;
+  bottom: 5px;
+}
+
+.sc-theme-avl-last-reported.red {
+  color: red;
+}
+
+.sc-theme-avl-last-reported.green {
+  color: green;
+}
+
+.sc-theme-avl-trips-results-container {
+  margin-top: 20px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.sc-theme-avl-trips-result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.sc-theme-avl-trips-result-row:last-child {
+  border-bottom: none;
+}
+
+.sc-theme-avl-trips-result-info {
+  flex: 1;
+}
+
+.sc-theme-avl-trips-result-runid {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.sc-theme-avl-trips-result-vehicle {
+  color: #666;
+  font-size: 0.9em;
+}
+
+.sc-theme-avl-trips-result-actions {
+  margin-left: 10px;
+}
+
+.sc-theme-avl-trips-zoom-button {
+  padding: 6px 10px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.sc-theme-avl-trips-zoom-button:hover {
+  background-color: #e0e0e0;
+}
+
+.sc-theme-avl-trips-zoom-button i {
+  color: #666;
+}

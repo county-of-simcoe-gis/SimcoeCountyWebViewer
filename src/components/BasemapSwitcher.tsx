@@ -55,6 +55,7 @@ interface BasemapConfig {
 export default function BasemapSwitcher() {
   const { map } = useMapStore();
   const urlParameters = useAppStore((state) => state.urlParameters);
+  const urlParametersLoaded = useAppStore((state) => state.urlParametersLoaded);
   const [config, setConfig] = useState<BasemapConfig | null>(null);
   const [activeButton, setActiveButton] = useState<string>("topo");
 
@@ -73,6 +74,8 @@ export default function BasemapSwitcher() {
   const streetsLayerRef = useRef<Layer | null>(null);
   const worldImageryLayerRef = useRef<Layer | null>(null);
   const isLoadedRef = useRef(false);
+  const hasProcessedUrlParamsRef = useRef(false);
+  const hasSetDefaultSliderRef = useRef(false);
 
   // Load basemap configuration
   useEffect(() => {
@@ -85,10 +88,8 @@ export default function BasemapSwitcher() {
         // Initialize imagery slider settings
         if (data.imageryServices && data.imageryServices.length > 0) {
           const maxValue = data.imageryServices.length - 1;
-          const defaultValue = maxValue; // Default to newest imagery
 
           setImagerySliderMax(maxValue);
-          setImagerySliderValue(defaultValue);
 
           // Create marks for slider
           const marks: Record<number, string> = {};
@@ -150,7 +151,7 @@ export default function BasemapSwitcher() {
 
               // Add layer using LayerManager with BaseMap category for proper layer ordering
               // Use low index values for high z-index (on top)
-              const layerId = LayerManager.addLayer(newLayer, "BaseMap", `Imagery_${service.name}`, {
+              LayerManager.addLayer(newLayer, "BaseMap", `Imagery_${service.name}`, {
                 index: 1 + currentIndex, // Start at 1, world imagery will be at higher index (below)
                 visible: false,
                 metadata: {
@@ -160,15 +161,15 @@ export default function BasemapSwitcher() {
                 },
               });
 
-              // console.log(`🖼️ Added imagery layer "${service.name}" (index: ${currentIndex}, z-index position: ${1 + currentIndex}) with LayerManager ID: ${layerId}`);
+              // console.log(`🖼️ Added imagery layer "${service.name}" (index: ${currentIndex}, z-index position: ${1 + currentIndex})`);
             } else {
               console.warn(`Failed to create imagery layer for: ${service.name}`);
             }
-          }
+          },
         );
       });
     },
-    [map]
+    [map],
   );
 
   // Load streets layer
@@ -201,10 +202,10 @@ export default function BasemapSwitcher() {
             // console.log(`🛣️ Added streets layer (z-index position: 0 = top layer)`);
             streetsLayerRef.current = newLayer;
           }
-        }
+        },
       );
     },
-    [map]
+    [map],
   );
 
   // Load world imagery
@@ -235,10 +236,10 @@ export default function BasemapSwitcher() {
 
             worldImageryLayerRef.current = newLayer;
           }
-        }
+        },
       );
     },
-    [map]
+    [map],
   );
 
   // Update imagery layers with fade effect
@@ -352,11 +353,11 @@ export default function BasemapSwitcher() {
                 // Use display/print flags (default to true if not specified)
                 const shouldDisplay = layerConfig.display !== false;
                 const shouldPrint = layerConfig.print !== false;
-                
+
                 // Set print property on the layer itself so print request builder can access it
                 layer.set("print", shouldPrint);
                 layer.set("display", shouldDisplay);
-                
+
                 // Add layer using LayerManager for proper z-index management
                 LayerManager.addLayer(layer, "BaseMap", `${basemapService.name}_${i}`, {
                   index: i,
@@ -375,7 +376,7 @@ export default function BasemapSwitcher() {
                 // console.log(`🗺️ Added basemap layer "${basemapService.name}_${i}" with LayerManager ID: ${layerId}`);
               }
               resolve();
-            }
+            },
           );
         });
       });
@@ -385,7 +386,7 @@ export default function BasemapSwitcher() {
       // Layers are now added via LayerManager, so no need to add them directly to the map
       // console.log(`🎯 Basemap "${basemapService.name}" applied with proper z-index management`);
     },
-    [map]
+    [map],
   );
 
   // Initialize layers when config loads
@@ -577,31 +578,85 @@ export default function BasemapSwitcher() {
     enableImagery();
   };
 
+  // Helper to get URL parameter value case-insensitively
+  const getUrlParam = useCallback(
+    (paramName: string): string | null => {
+      // Try exact match first
+      if (urlParameters[paramName] !== undefined) {
+        return urlParameters[paramName];
+      }
+      // Try case-insensitive match
+      const upperName = paramName.toUpperCase();
+      const lowerName = paramName.toLowerCase();
+      for (const key of Object.keys(urlParameters)) {
+        if (key.toUpperCase() === upperName || key.toLowerCase() === lowerName) {
+          return urlParameters[key];
+        }
+      }
+      return null;
+    },
+    [urlParameters],
+  );
+
   // Handle URL parameters for basemap configuration
   const handleURLParameters = useCallback(() => {
     if (!config || !isLoadedRef.current) return;
 
-    const basemap = urlParameters.BASEMAP?.toUpperCase() || null;
-    const name = urlParameters.NAME?.toUpperCase() || null;
-    const imagerySliderOpen = urlParameters.SLIDER_OPEN?.toUpperCase() || null;
+    const basemap = getUrlParam("BASEMAP")?.toUpperCase() || null;
+    const name = getUrlParam("NAME")?.toUpperCase() || null;
+    const imagerySliderOpen = getUrlParam("SLIDER_OPEN")?.toUpperCase() || null;
+
+    // Only process if we have relevant URL parameters
+    if (!basemap) return;
+
+    // Mark that we've processed URL parameters
+    hasProcessedUrlParamsRef.current = true;
+    hasSetDefaultSliderRef.current = true;
 
     if (basemap === "IMAGERY") {
-      enableImagery();
-
-      if (imagerySliderOpen === "TRUE") {
-        setImageryPanelOpen(true);
-      }
+      // Determine the target imagery index from NAME parameter
+      // Default to the newest imagery (max index) if no NAME match found
+      let targetIndex = config.imageryServices.length - 1;
 
       if (name && config.imageryServices && config.imageryServices.length > 0) {
         for (let index = 0; index < config.imageryServices.length; index++) {
           const service = config.imageryServices[index];
           const serviceName = service.name.toUpperCase();
           if (serviceName === name) {
-            updateImageryLayers(index);
-            setImagerySliderValue(index);
-            return;
+            targetIndex = index;
+            break;
           }
         }
+      }
+
+      // Enable imagery mode (sets up visibility for world imagery, streets, etc.)
+      // But temporarily handle layer visibility ourselves to avoid using stale state
+
+      // Hide topo basemap layers first
+      const baseMapLayers = LayerManager.getLayersByCategory("BaseMap");
+      const topoLayers = baseMapLayers.filter((managedLayer) => managedLayer.metadata?.isBasemap === true);
+      topoLayers.forEach((managedLayer) => {
+        managedLayer.layer.setVisible(false);
+      });
+
+      // Show world imagery (background)
+      if (worldImageryLayerRef.current) {
+        worldImageryLayerRef.current.setVisible(true);
+      }
+
+      // Show imagery layers with correct target index
+      updateImageryLayers(targetIndex);
+
+      // Show streets if enabled
+      if (streetsLayerRef.current) {
+        streetsLayerRef.current.setVisible(streetsCheckbox);
+      }
+
+      setActiveButton("imagery");
+      setImagerySliderValue(targetIndex);
+
+      if (imagerySliderOpen === "TRUE") {
+        setImageryPanelOpen(true);
       }
     } else if (basemap === "TOPO") {
       enableTopo();
@@ -618,17 +673,33 @@ export default function BasemapSwitcher() {
         }
       }
     }
-  }, [config, urlParameters, isLoadedRef, enableImagery, enableTopo, updateImageryLayers, applyBasemap]);
+  }, [config, getUrlParam, streetsCheckbox, updateImageryLayers, enableTopo, applyBasemap]);
 
-  // Handle URL parameters after initialization
+  // Handle URL parameters after initialization OR set defaults if no URL params
   useEffect(() => {
-    if (config && isLoadedRef.current && Object.keys(urlParameters).length > 0) {
-      // Add a small delay to ensure all layers are properly loaded
+    // Only process once
+    if (hasProcessedUrlParamsRef.current) return;
+    // Wait for config, layers to be loaded, AND URL params to be loaded from the URL
+    if (!config || !isLoadedRef.current || !urlParametersLoaded) return;
+
+    // Check for BASEMAP param case-insensitively
+    const hasBasemapParam = Boolean(getUrlParam("BASEMAP"));
+
+    if (hasBasemapParam) {
+      // Process URL params with a small delay to ensure layers are loaded
       setTimeout(() => {
-        handleURLParameters();
+        if (!hasProcessedUrlParamsRef.current) {
+          handleURLParameters();
+        }
       }, 200);
+    } else {
+      // No BASEMAP URL param, set defaults
+      hasSetDefaultSliderRef.current = true;
+      hasProcessedUrlParamsRef.current = true;
+      const maxValue = config.imageryServices.length - 1;
+      setImagerySliderValue(maxValue);
     }
-  }, [config, urlParameters, handleURLParameters]);
+  }, [config, urlParameters, urlParametersLoaded, getUrlParam, handleURLParameters]);
 
   if (!config || !map) {
     return null;

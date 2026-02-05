@@ -73,6 +73,14 @@ vi.mock("react-icons/fa", () => ({
   FaTools: (props: any) => React.createElement("div", { ...props, "data-testid": "tools-icon" }, "Tools"),
   FaDrawPolygon: (props: any) => React.createElement("div", { ...props, "data-testid": "draw-polygon-icon" }, "DrawPolygon"),
 
+  // AVL Theme specific icons
+  FaSpinner: (props: any) => React.createElement("div", { ...props, "data-testid": "spinner-icon" }, "Spinner"),
+  FaSignInAlt: (props: any) => React.createElement("div", { ...props, "data-testid": "sign-in-icon" }, "SignIn"),
+  FaTruck: (props: any) => React.createElement("div", { ...props, "data-testid": "truck-icon" }, "Truck"),
+  FaHistory: (props: any) => React.createElement("div", { ...props, "data-testid": "history-icon" }, "History"),
+  FaClock: (props: any) => React.createElement("div", { ...props, "data-testid": "clock-icon" }, "Clock"),
+  FaRoute: (props: any) => React.createElement("div", { ...props, "data-testid": "route-icon" }, "Route"),
+
   // AddLayerTool specific icons
   FaUpload: (props: any) => React.createElement("div", { ...props, "data-testid": "upload-icon" }, "Upload"),
 }));

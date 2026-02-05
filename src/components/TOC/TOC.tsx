@@ -6,6 +6,7 @@ import { useAppStore } from "@/stores/appStore";
 import { useLayerManagerStore } from "@/stores/layerManagerStore";
 import { useMapStore } from "@/stores/mapStore";
 import { useEventListener } from "@/hooks/useEventListener";
+import { useUrlParameterContextOptional } from "@/contexts/UrlParameterContext";
 import TOCHeader from "@/components/TOC/TOCHeader";
 import TOCListView from "@/components/TOC/TOCListView";
 import TOCFolderView from "@/components/TOC/TOCFolderView";
@@ -71,6 +72,9 @@ export default function TOC({ visible = true }: TOCProps) {
   const [initialized, setInitialized] = useState(false);
   const [savedOptionsApplied, setSavedOptionsApplied] = useState(false);
   const expandLegendProcessedRef = useRef(false);
+
+  // URL Parameter context for registering TOC readiness
+  const urlParamContext = useUrlParameterContextOptional();
 
   // Layer options menu state
   const [layerOptionsMenu, setLayerOptionsMenu] = useState<{
@@ -221,6 +225,11 @@ export default function TOC({ visible = true }: TOCProps) {
                 applySavedLayerOptions(tocType);
               }
               setSavedOptionsApplied(true);
+
+              // Register TOC as ready for URL parameter processing
+              if (urlParamContext?.registerComponentReady) {
+                urlParamContext.registerComponentReady("toc", { readinessType: "dataLoaded" });
+              }
             }, 500); // Small delay to ensure layers are fully initialized
           } else {
             setTimeout(waitForMap, 100);
@@ -279,8 +288,9 @@ export default function TOC({ visible = true }: TOCProps) {
     }
   };
 
-  const onActivateLayer = (layerItem: unknown, visible = true) => {
-    // Implementation for activating specific layers
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const onActivateLayer = (_layerItem: unknown, _visible = true) => {
+    // Implementation for activating specific layers - placeholder for future use
   };
 
   const getLayerList = (callback: (layers: unknown) => void) => {
@@ -343,7 +353,7 @@ export default function TOC({ visible = true }: TOCProps) {
 
       // Then update the OpenLayers layer via layerManagerStore if available
       if (layer.managedLayerId) {
-        const success = updateLayerVisibility(layer.managedLayerId, layer.visible);
+        updateLayerVisibility(layer.managedLayerId, layer.visible);
       }
     }
 
@@ -365,17 +375,13 @@ export default function TOC({ visible = true }: TOCProps) {
         if (source) {
         }
 
-        // Check if layer is actually on the map
-        const map = useMapStore.getState().map;
-        if (map) {
-          const mapLayers = map.getLayers().getArray();
-          const layerOnMap = mapLayers.find((l) => l === managedLayer.layer);
-
-          // Check layer z-index
-
-          // Check map extent
-          const view = map.getView();
-        }
+        // Debug: Check if layer is actually on the map
+        // const map = useMapStore.getState().map;
+        // if (map) {
+        //   const mapLayers = map.getLayers().getArray();
+        //   const layerOnMap = mapLayers.find((l) => l === managedLayer.layer);
+        //   const view = map.getView();
+        // }
       }
     }
   };
@@ -587,9 +593,9 @@ export default function TOC({ visible = true }: TOCProps) {
     });
   };
 
-  const handleGroupFolderToggle = (groupValue: string, isOpen: boolean) => {
-    // Handle group folder expand/collapse
-    // You can add state management here if needed to track open/closed groups
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleGroupFolderToggle = (_groupValue: string, _isOpen: boolean) => {
+    // Handle group folder expand/collapse - placeholder for future state management
   };
 
   // Handle URL parameters for TOC type, group, and layers

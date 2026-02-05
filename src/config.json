@@ -24,6 +24,8 @@
   "appStatsUrl": "https://opengis.simcoe.ca/api_v2/public/stats/write/",
   "apiUrl": "https://opengis.simcoe.ca/api_v2/",
   "apiUrlDev": "http://localhost:8085/",
+  "apiUrlSecured": "https://opengis2.simcoe.ca/api_v2/",
+  "apiUrlSecuredDev": "http://localhost:8083/",
   "termsUrl": "https://maps.simcoe.ca/terms.html",
   "reportUrl": "https://opengis.simcoe.ca/reports/",
   "openLicenseUrl": "http://maps.simcoe.ca/openlicense.html",

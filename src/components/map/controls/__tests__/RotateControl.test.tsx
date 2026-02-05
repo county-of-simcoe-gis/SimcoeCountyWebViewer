@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import RotateControl from "@/components/map/controls/RotateControl";
 import type Map from "ol/Map";
@@ -52,13 +52,15 @@ describe("RotateControl", () => {
     expect(screen.getByTitle("Reset rotation (45°)")).toBeInTheDocument();
   });
 
-  it("applies rotation transform to button", () => {
+  it("applies rotation transform to button", async () => {
     mockView.getRotation.mockReturnValue(Math.PI / 2); // 90 degrees
 
     render(<RotateControl map={mockMap} />);
 
     const button = screen.getByTitle("Reset rotation (90°)");
-    expect(button).toHaveStyle({ transform: "rotate(90deg)" });
+    await waitFor(() => {
+      expect(button.getAttribute("style")).toContain("rotate(90deg)");
+    });
   });
 
   it("renders nothing when not rotated", () => {

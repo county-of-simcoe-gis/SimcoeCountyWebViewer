@@ -1,0 +1,358 @@
+.sc-theme-avl-live-group-container {
+  /* margin-top: -20px; */
+}
+.sc-theme-avl-live-group-container > .sc-theme-avl-collapse {
+  width: 337px;
+  margin: 5px;
+  background-color: #e8e8e8;
+  cursor: pointer;
+  line-height: 30px;
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+}
+
+.sc-theme-avl-live-group-container .sc-theme-avl-collapse-trigger {
+  display: block;
+  position: relative;
+  background-image: url(/images/avl/metadata.png);
+  background-position-y: center;
+  background-repeat: no-repeat;
+  background-position-x: 36px;
+  width: 355px;
+  margin-left: -30px;
+  padding-left: 75px;
+  padding-right: 25px;
+  font-weight: bold;
+  min-height: 30px;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  margin-top: -20px;
+  list-style: none;
+}
+
+.sc-theme-avl-live-group-container .sc-theme-avl-collapse-trigger::-webkit-details-marker {
+  display: none;
+}
+
+.sc-theme-avl-live-group-container .sc-theme-avl-collapse-trigger::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #666;
+  transition: transform 0.2s ease;
+}
+
+.sc-theme-avl-live-group-container .sc-theme-avl-collapse[open] .sc-theme-avl-collapse-trigger::after {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.sc-theme-avl-live-group-container .sc-theme-avl-collapse-content {
+  transition: all 200ms ease-in-out;
+}
+
+.sc-theme-avl-live-group-container .sc-theme-avl-collapse-content-inner {
+  /* position: absolute;
+    margin-left: -32px;
+    bottom: 31px;
+    width: 358px;
+    border-style: solid;
+    border-bottom: none;
+    border-color: #d8dadc;
+    border-width: thin;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 0px;
+    border-bottom-left-radius: 0px;
+    background-color: white; */
+}
+
+.sc-theme-avl-live-group-count {
+  position: relative;
+  top: 11px;
+  font-size: 10pt;
+  pointer-events: none;
+}
+
+.sc-theme-avl-live-group-content {
+}
+
+.sc-theme-avl-icon {
+  background: rgba(0, 0, 0, 0) linear-gradient(to bottom, rgba(242, 245, 246, 1) 0%, rgba(230, 230, 230, 1) 100%) repeat scroll 0 0;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  margin-bottom: 2px;
+  margin-top: 2px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  text-align: center;
+  width: 45px;
+  /* float: left; */
+}
+
+.sc-theme-avl-icon img {
+  width: 30px;
+  height: 30px;
+}
+
+.sc-theme-avl-live-subgroup {
+  display: flex;
+  align-items: center;
+  font-size: 9px;
+  font-weight: bold;
+  border-bottom: 1px solid #e3e3e3;
+  border-top: 1px solid #e3e3e3;
+  cursor: pointer;
+  width: 100%;
+  height: 48px;
+  padding-left: 10px;
+  background-color: #f9f8f8;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.sc-theme-avl-group-label {
+  display: flex;
+  align-items: center;
+  padding-left: 5px;
+  font-size: 10pt;
+  color: dimgrey;
+  cursor: pointer;
+}
+
+.sc-theme-avl-group-label.on {
+  color: black;
+}
+
+.sc-theme-avl-subgroup-input {
+  position: relative;
+  top: 1px;
+}
+
+.sc-theme-avl-group-input {
+  position: relative;
+  top: 13px;
+  left: 5px;
+  z-index: 10;
+  cursor: pointer;
+}
+
+.sc-theme-avl-live-groups {
+  overflow-x: hidden;
+}
+
+.sc-avl-live-container {
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+  padding-right: 5px;
+}
+
+.sc-avl-live-container-no-list {
+  top: -5px;
+  position: relative;
+}
+
+.sc-avl-live-vehicles {
+  padding: 5px;
+}
+
+.sc-avl-live-vehicles-container {
+  margin-top: 5px;
+}
+
+.sc-theme-avl-live-results-container {
+  /* position: absolute;
+  top: 261px;
+  left: 0px;
+  right: 7px;
+  bottom: 5px; */
+}
+
+.sc-theme-avl-live-vehicle-container {
+  display: grid;
+  grid-template-rows: auto auto;
+  grid-template-columns: 35px 158px 122px;
+  margin-top: 5px;
+  cursor: pointer;
+  font-size: 9pt;
+}
+
+.sc-theme-avl-live-vehicle-container:hover {
+  border: 1px solid #2074b7;
+  box-shadow: 0px 0px 5px #80b9ff;
+}
+
+.sc-theme-avl-live-vehicle-info-last-reported {
+  grid-column-start: 3;
+  grid-row: 2;
+  font-size: 8pt;
+  justify-self: end;
+  padding-right: 12px;
+  padding-top: 2px;
+  align-self: end;
+  cursor: pointer;
+  color: #666 !important;
+}
+
+.sc-theme-avl-live-vehicle-info-last-reported.green {
+  color: #009924 !important;
+}
+
+.sc-theme-avl-live-vehicle-info-last-reported.red {
+  color: #be0000 !important;
+}
+
+.sc-theme-avl-live-vehicle-info-date {
+  grid-column-start: 3;
+  grid-row: 1;
+  font-weight: bold;
+  color: #666 !important;
+  cursor: pointer;
+  font-size: 9pt;
+}
+
+.sc-theme-avl-live-vehicle-info-img {
+  grid-column-start: 1;
+  grid-row-start: 1;
+  grid-row-end: 3;
+  padding-top: 3px;
+  width: 25px;
+  cursor: pointer;
+}
+
+.sc-theme-avl-live-vehicle-info-name {
+  grid-column-start: 2;
+  grid-row: 1;
+  font-weight: bold;
+  word-break: break-all;
+  cursor: pointer;
+  font-size: 10pt;
+}
+
+.sc-theme-avl-live-vehicle-info-speed {
+  grid-column-start: 2;
+  grid-row: 2;
+  cursor: pointer;
+  align-self: end;
+  font-size: 9pt;
+}
+
+.sc-avl-live-controls {
+  /* display: inline-table; */
+}
+
+.sc-avl-live-controls-search {
+  display: flex;
+  align-items: center;
+}
+
+.sc-avl-live-controls-sort {
+  display: inline-flex;
+  margin-top: 5px;
+  align-items: center;
+}
+
+.sc-avl-live-controls-search-input {
+  height: 25px;
+  margin-left: 5px;
+  margin-right: 5px;
+  width: 207px;
+}
+
+.sc-avl-live-popup-button-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.sc-avl-live-popup-button {
+  width: 75px;
+}
+
+.sc-avl-live-following-msg {
+  color: green;
+  font-weight: bold;
+  text-align: center;
+  height: 33px;
+  margin-top: 8px;
+  display: flex;
+  padding-left: 82px;
+}
+
+.sc-avl-live-following-msg-label {
+  position: relative;
+  top: 3px;
+  margin-right: 8px;
+}
+
+/* ===== AVL Live Popup Styles ===== */
+.sc-theme-avl-last-reported {
+  padding-left: 5px;
+  font-size: 10px;
+  font-style: italic;
+  position: relative;
+  display: block;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.sc-theme-avl-last-reported.red {
+  color: red;
+}
+
+.sc-theme-avl-last-reported.green {
+  color: green;
+}
+
+/* ===== AVL Popup Info Window Overrides (more compact) ===== */
+.sc-theme-avl-live-popup-content .sc-info-window-row,
+.sc-theme-avl-history-popup-content .sc-info-window-row {
+  display: table-row;
+  width: 100%;
+}
+
+.sc-theme-avl-live-popup-content .sc-info-window-label,
+.sc-theme-avl-history-popup-content .sc-info-window-label {
+  font-weight: bold;
+  color: #333333;
+  font-size: 11px;
+  padding: 0;
+  margin: 0;
+}
+
+.sc-theme-avl-live-popup-content .sc-info-window-value,
+.sc-theme-avl-history-popup-content .sc-info-window-value {
+  color: #484848;
+  border-bottom: 1px solid #eeeeee;
+  padding-bottom: 1px;
+  padding-top: 0;
+  padding-left: 20px;
+  background-image: url("/images/arrow_curve.gif");
+  background-repeat: no-repeat;
+  background-position: left;
+  font-size: 11px;
+  word-wrap: break-word;
+  min-height: 10px;
+  max-height: 12px;
+  overflow-wrap: anywhere;
+  margin: 0;
+}

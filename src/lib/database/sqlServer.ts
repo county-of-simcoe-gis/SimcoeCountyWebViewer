@@ -152,6 +152,10 @@ export class SQLServer {
       }
       case "bit":
         return sql.Bit();
+      case "tinyint":
+        return sql.TinyInt();
+      case "smallint":
+        return sql.SmallInt();
       case "datetime":
         return sql.DateTime();
       case "date":
