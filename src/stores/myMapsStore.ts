@@ -8,6 +8,19 @@ import GeoJSON from "ol/format/GeoJSON";
 import EsriJSON from "ol/format/EsriJSON";
 import { v4 as uuidv4 } from "uuid";
 
+// Label style JSON representation for callouts and labels
+export interface LabelStyleJSON {
+  textColor?: string;
+  textSize?: string;
+  outlineColor?: string;
+  outlineWidth?: number;
+  // Callout-specific properties
+  backgroundColor?: string;
+  borderColor?: string;
+  lineColor?: string;
+  anchorColor?: string;
+}
+
 // OpenLayers style JSON representation
 export interface StyleJSON {
   fill?: {
@@ -43,7 +56,7 @@ export interface StyleJSON {
 }
 
 // Types for MyMaps functionality
-export type DrawType = "Cancel" | "Point" | "LineString" | "Polygon" | "Circle" | "Rectangle" | "Arrow" | "Text" | "Bearing" | "Measure" | "Eraser" | "Buffer";
+export type DrawType = "Cancel" | "Point" | "LineString" | "Polygon" | "Circle" | "Rectangle" | "Arrow" | "Text" | "Callout" | "Bearing" | "Measure" | "Eraser" | "Buffer";
 
 export type GeometryType = "Point" | "LineString" | "Polygon" | "MultiPoint" | "MultiLineString" | "MultiPolygon" | "Circle";
 
@@ -54,7 +67,7 @@ export interface MyMapsItem {
   label: string;
   labelVisible: boolean;
   labelRotation: number;
-  labelStyle?: Style | null;
+  labelStyle?: Style | LabelStyleJSON | null;
   featureGeoJSON: string; // Serialized GeoJSON
   style: Style | StyleJSON; // OpenLayers style object (new approach) or JSON representation (legacy)
   visible: boolean;
@@ -1083,6 +1096,9 @@ export const createMyMapsItem = (feature: Feature<Geometry>, drawType: DrawType,
       case "Text":
         defaultLabel = "Enter Custom Text";
         break;
+      case "Callout":
+        defaultLabel = "Enter Callout Text";
+        break;
       default:
         // This should not be used anymore as labels are generated in the component
         defaultLabel = `Drawing ${Date.now()}`;
@@ -1102,7 +1118,7 @@ export const createMyMapsItem = (feature: Feature<Geometry>, drawType: DrawType,
   return {
     id,
     label: defaultLabel,
-    labelVisible: drawType === "Text" || drawType === "Bearing" || drawType === "Measure",
+    labelVisible: drawType === "Text" || drawType === "Callout" || drawType === "Bearing" || drawType === "Measure",
     labelRotation,
     labelStyle: null,
     featureGeoJSON: "", // Will be set by calling code

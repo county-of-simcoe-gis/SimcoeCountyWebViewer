@@ -5,6 +5,7 @@
 import { Style, Fill, Stroke, Circle as CircleStyle, Text, RegularShape } from 'ol/style'
 import { Feature } from 'ol'
 import { Point, LineString, Polygon, Circle } from 'ol/geom'
+import { asArray } from 'ol/color'
 import { fromCircle } from 'ol/geom/Polygon'
 import { getLength, getArea } from 'ol/sphere'
 import { transform } from 'ol/proj'
@@ -546,5 +547,82 @@ export const debounce = <T extends (...args: unknown[]) => unknown>(
   return (...args: Parameters<T>) => {
     clearTimeout(timeoutId)
     timeoutId = setTimeout(() => func(...args), delay)
+  }
+}
+
+// Label style interface for callouts and other label styling
+export interface LabelStyle {
+  textColor: string
+  textSize: string
+  outlineColor: string
+  outlineWidth: number
+  backgroundColor: string
+  borderColor: string
+  lineColor: string
+  anchorColor: string
+}
+
+// Get default label style based on draw type (matching original app)
+export const getDefaultLabelStyle = (drawType: string): LabelStyle => {
+  const isCallout = drawType === 'Callout'
+  return {
+    textColor: isCallout ? '#000000' : '#ffffff',
+    textSize: '14px',
+    outlineColor: '#000000',
+    outlineWidth: isCallout ? 1 : 2,
+    // Callout-specific properties
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderColor: '#333333',
+    lineColor: '#333333',
+    anchorColor: '#333333'
+  }
+}
+
+// Options for callout style
+export interface CalloutStyleOptions {
+  drawColor?: string
+  lineColor?: string
+  anchorColor?: string
+}
+
+// Get callout style - Returns a style function for line with circle at anchor point
+// Matching original app implementation exactly
+export const getCalloutStyle = (opts: CalloutStyleOptions = {}): (feature: Feature) => Style[] => {
+  const { drawColor = '#333333', lineColor, anchorColor } = opts
+  
+  // Use specific colors if provided, otherwise fall back to drawColor
+  const lineColorArray = asArray(lineColor || drawColor)
+  const anchorColorArray = asArray(anchorColor || drawColor)
+
+  // Return a style function that positions anchor circle at start of line
+  return (feature: Feature): Style[] => {
+    const geometry = feature.getGeometry()
+    if (!geometry || geometry.getType() !== 'LineString') {
+      return []
+    }
+    
+    const lineGeometry = geometry as LineString
+    const coordinates = lineGeometry.getCoordinates()
+    const startPoint = coordinates[0]
+
+    // Style for the tail line
+    const lineStyle = new Style({
+      stroke: new Stroke({
+        color: [lineColorArray[0], lineColorArray[1], lineColorArray[2], 0.8],
+        width: 2,
+      }),
+    })
+
+    // Style for the anchor circle at the start point
+    const anchorStyle = new Style({
+      geometry: new Point(startPoint),
+      image: new CircleStyle({
+        radius: 5,
+        fill: new Fill({ color: [anchorColorArray[0], anchorColorArray[1], anchorColorArray[2], 0.8] }),
+        stroke: new Stroke({ color: [anchorColorArray[0], anchorColorArray[1], anchorColorArray[2], 1], width: 1 }),
+      }),
+    })
+
+    return [lineStyle, anchorStyle]
   }
 }

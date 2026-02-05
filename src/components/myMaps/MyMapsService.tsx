@@ -96,7 +96,7 @@ export default function MyMapsService() {
       // Reset draw type to Cancel after drawing
       setDrawType("Cancel");
     },
-    [drawType, addItem, emit, setDrawType, getNextDrawingNumber]
+    [drawType, addItem, emit, setDrawType, getNextDrawingNumber],
   );
 
   const handleFeatureModified = React.useCallback(
@@ -109,7 +109,7 @@ export default function MyMapsService() {
 
       emit("mymap-item-modified", { id, geoJSON });
     },
-    [updateItem, emit]
+    [updateItem, emit],
   );
 
   const handleFeatureClicked = React.useCallback(
@@ -155,7 +155,7 @@ export default function MyMapsService() {
         }
       }
     },
-    [removeItem, emit] // Remove drawType from dependencies to avoid stale closures
+    [removeItem, emit], // Remove drawType from dependencies to avoid stale closures
   );
 
   // Initialize drawing manager when map is available
@@ -382,12 +382,70 @@ export default function MyMapsService() {
       const featureId = data.id as string;
       const rotation = data.rotation;
 
-      if (drawingManagerRef.current) {
-        drawingManagerRef.current.updateFeatureLabelRotation(featureId, rotation);
+      // Update the store item first
+      updateItem(featureId, { labelRotation: rotation });
+
+      // Use setTimeout to ensure store update has completed, then use setFeatureLabel
+      // which properly applies all label style properties including rotation
+      setTimeout(() => {
+        const currentItems = useMyMapsStore.getState().items;
+        const item = currentItems.find((item) => item.id === featureId);
+
+        if (item && drawingManagerRef.current && item.labelVisible) {
+          // Use setFeatureLabel which properly handles all label style properties
+          drawingManagerRef.current.setFeatureLabel(item);
+        }
+      }, 0);
+    };
+
+    // Handle label style changes (for callouts and text labels)
+    const handleLabelStyleChange = (data?: { [key: string]: unknown }) => {
+      console.log("🎯 MyMapsService: handleLabelStyleChange called", {
+        data,
+        timestamp: Date.now(),
+        hasDrawingManager: !!drawingManagerRef.current,
+      });
+
+      if (!data || !data.id || !data.labelStyle) {
+        console.warn("❌ MyMapsService: Invalid data for label style change", {
+          data,
+          hasId: !!data?.id,
+          hasLabelStyle: !!data?.labelStyle,
+        });
+        return;
       }
 
-      // Update the store item
-      updateItem(featureId, { labelRotation: rotation });
+      const featureId = data.id as string;
+      const labelStyle = data.labelStyle as Record<string, unknown>;
+
+      console.log("📝 MyMapsService: Updating label style", {
+        featureId,
+        labelStyle,
+        timestamp: Date.now(),
+      });
+
+      // Update the store item first
+      updateItem(featureId, { labelStyle });
+
+      // Use setTimeout to ensure store update has completed
+      setTimeout(() => {
+        // Get the fresh updated item from store
+        const currentItems = useMyMapsStore.getState().items;
+        const item = currentItems.find((item) => item.id === featureId);
+
+        console.log("🔍 MyMapsService: Found item after label style update", {
+          itemFound: !!item,
+          drawType: item?.drawType,
+          labelVisible: item?.labelVisible,
+          hasDrawingManager: !!drawingManagerRef.current,
+          timestamp: Date.now(),
+        });
+
+        if (item && drawingManagerRef.current && item.labelVisible) {
+          console.log("✅ MyMapsService: Calling setFeatureLabel with updated label style");
+          drawingManagerRef.current.setFeatureLabel(item);
+        }
+      }, 0);
     };
 
     const handleStyleUpdate = (data?: { [key: string]: unknown }) => {
@@ -476,6 +534,7 @@ export default function MyMapsService() {
     const labelChangeId = addListener("mymap-label-change", handleLabelChange);
     const labelVisibilityId = addListener("mymap-label-visibility-change", handleLabelVisibilityChange);
     const labelRotationId = addListener("mymap-label-rotation-change", handleLabelRotationChange);
+    const labelStyleId = addListener("mymap-label-style-change", handleLabelStyleChange);
 
     // Style event handler
     const styleUpdateId = addListener("mymap-style-updated", handleStyleUpdate);
@@ -490,6 +549,7 @@ export default function MyMapsService() {
       removeListener(labelChangeId);
       removeListener(labelVisibilityId);
       removeListener(labelRotationId);
+      removeListener(labelStyleId);
       removeListener(styleUpdateId);
       removeListener(addFeatureId);
     };

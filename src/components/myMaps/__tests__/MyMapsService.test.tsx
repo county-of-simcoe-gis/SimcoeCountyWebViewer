@@ -62,7 +62,9 @@ const mockDrawingManager = {
 
 // Mock the MyMapsDrawingManager
 vi.mock("@/utils/openlayers/MyMapsDrawing", () => ({
-  MyMapsDrawingManager: vi.fn(() => mockDrawingManager),
+  MyMapsDrawingManager: vi.fn(function () {
+    return mockDrawingManager;
+  }),
 }));
 
 // Mock helper functions
@@ -666,7 +668,7 @@ describe("MyMapsService Component", () => {
       unmount();
 
       // Should remove all registered listeners
-      expect(mockRemoveListener).toHaveBeenCalledTimes(8); // 8 event listeners registered
+      expect(mockRemoveListener).toHaveBeenCalledTimes(9); // 9 event listeners registered
     });
   });
 

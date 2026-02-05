@@ -251,28 +251,28 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             WasteURL: barrieMsg,
           }
         : isOrillia
-        ? {
-            GarbageDay: orilliaMsg,
-            LandfillLocation_General: orilliaMsg,
-            LandfillLocation_GeneralPin: orilliaMsg,
-            LandfillLocation_Hazardous: orilliaMsg,
-            LandfillLocation_HazardousPin: orilliaMsg,
-            BagTagleLocation1: orilliaMsg,
-            BagTagleLocation2: orilliaMsg,
-            BagTagleLocation3: orilliaMsg,
-            WasteURL: orilliaMsg,
-          }
-        : {
-            GarbageDay: result.REGULAR_COLLECTION_DAY,
-            LandfillLocation_General: result.LANDFILL_CLOSEST_NAME ? `${result.LANDFILL_CLOSEST_NAME} (${result.LANDFILL_CLOSEST_KM} KM)` : undefined,
-            LandfillLocation_GeneralPin: result.LANDFILL_CLOSEST_PIN,
-            LandfillLocation_Hazardous: result.LANDFILL_HAZARD_NAME ? `${result.LANDFILL_HAZARD_NAME} (${result.LANDFILL_HAZARD_KM} KM)` : undefined,
-            LandfillLocation_HazardousPin: result.LANDFILL_HAZARD_PIN,
-            BagTagleLocation1: result.BAG_TAG1_NAME ? `${result.BAG_TAG1_NAME} (${result.BAG_TAG1_KM} KM)` : undefined,
-            BagTagleLocation2: result.BAG_TAG2_NAME ? `${result.BAG_TAG2_NAME} (${result.BAG_TAG2_KM} KM)` : undefined,
-            BagTagleLocation3: result.BAG_TAG3_NAME ? `${result.BAG_TAG3_NAME} (${result.BAG_TAG3_KM} KM)` : undefined,
-            WasteURL: "http://www.simcoe.ca/SolidWasteManagement/Pages/schedules.aspx",
-          },
+          ? {
+              GarbageDay: orilliaMsg,
+              LandfillLocation_General: orilliaMsg,
+              LandfillLocation_GeneralPin: orilliaMsg,
+              LandfillLocation_Hazardous: orilliaMsg,
+              LandfillLocation_HazardousPin: orilliaMsg,
+              BagTagleLocation1: orilliaMsg,
+              BagTagleLocation2: orilliaMsg,
+              BagTagleLocation3: orilliaMsg,
+              WasteURL: orilliaMsg,
+            }
+          : {
+              GarbageDay: result.REGULAR_COLLECTION_DAY,
+              LandfillLocation_General: result.LANDFILL_CLOSEST_NAME ? `${result.LANDFILL_CLOSEST_NAME} (${result.LANDFILL_CLOSEST_KM} KM)` : undefined,
+              LandfillLocation_GeneralPin: result.LANDFILL_CLOSEST_PIN,
+              LandfillLocation_Hazardous: result.LANDFILL_HAZARD_NAME ? `${result.LANDFILL_HAZARD_NAME} (${result.LANDFILL_HAZARD_KM} KM)` : undefined,
+              LandfillLocation_HazardousPin: result.LANDFILL_HAZARD_PIN,
+              BagTagleLocation1: result.BAG_TAG1_NAME ? `${result.BAG_TAG1_NAME} (${result.BAG_TAG1_KM} KM)` : undefined,
+              BagTagleLocation2: result.BAG_TAG2_NAME ? `${result.BAG_TAG2_NAME} (${result.BAG_TAG2_KM} KM)` : undefined,
+              BagTagleLocation3: result.BAG_TAG3_NAME ? `${result.BAG_TAG3_NAME} (${result.BAG_TAG3_KM} KM)` : undefined,
+              WasteURL: "http://www.simcoe.ca/SolidWasteManagement/Pages/schedules.aspx",
+            },
       Schools: {
         CatholicElementry: result.SCHOOL_CATHOLIC_ELEMENTARY,
         CatholicSecondary: result.SCHOOL_CATHOLIC_SECONDARY,

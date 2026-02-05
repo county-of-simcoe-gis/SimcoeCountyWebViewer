@@ -71,6 +71,8 @@ export interface TOCLayer {
   canDownload?: boolean;
   hasAttachments?: boolean;
   disclaimer?: string;
+  infoFormat?: string; // INFO_FORMAT for WMS GetFeatureInfo requests (e.g., text/plain, text/html)
+  xslTemplate?: string; // XSL template URL for transforming identify results
 }
 
 // Layer group interface based on the old app's group structure
@@ -160,6 +162,7 @@ interface TOCState {
 
   // Layer manipulation
   updateLayerVisibility: (layerName: string, groupName: string, visible: boolean) => void;
+  updateLayerVisibilityById: (layerId: string, visible: boolean) => void;
   updateLayerOpacity: (layerName: string, groupName: string, opacity: number) => void;
   updateLayerOpacityById: (layerId: string, opacity: number) => void;
   toggleLayerLegend: (layerName: string, groupName: string) => void;
@@ -168,7 +171,7 @@ interface TOCState {
 
   // Group manipulation
   addCustomLayer: (layer: TOCLayer, groupName: string) => void;
-  removeCustomLayer: (layerName: string, groupName: string) => void;
+  removeCustomLayer: (layerName: string, groupName: string, layerId?: string) => void;
 
   // Utility functions
   getLayerByName: (layerName: string, groupName?: string) => TOCLayer | null;
@@ -817,6 +820,44 @@ export const useTOCStore = create<TOCState>()(
       });
     },
 
+    // Update layer visibility by unique ID - handles duplicate layer names correctly
+    updateLayerVisibilityById: (layerId, visible) => {
+      const state = get();
+      const targetLayer = state.allLayers.find((l) => l.id === layerId);
+
+      if (!targetLayer) {
+        console.warn(`⚠️ Layer with ID ${layerId} not found`);
+        return;
+      }
+
+      // Update TOC store state in all views
+      set((state) => {
+        const updateLayerInAllGroups = (groups: TOCLayerGroup[]) => {
+          groups.forEach((group) => {
+            const layer = group.layers.find((l) => l.id === layerId);
+            if (layer) {
+              layer.visible = visible;
+            }
+          });
+        };
+
+        updateLayerInAllGroups(state.layerListGroups);
+        updateLayerInAllGroups(state.layerFolderGroups);
+
+        const allLayerItem = state.allLayers.find((l) => l.id === layerId);
+        if (allLayerItem) {
+          allLayerItem.visible = visible;
+        }
+      });
+
+      // Handle OpenLayers layer visibility
+      if (targetLayer.managedLayerId) {
+        LayerManager.setLayerVisibility(targetLayer.managedLayerId, visible);
+      } else if (targetLayer.layer) {
+        (targetLayer.layer as OpenLayersLayer).setVisible(visible);
+      }
+    },
+
     // Update layer opacity by unique ID
     updateLayerOpacityById: (layerId, opacity) => {
       const state = get();
@@ -967,69 +1008,141 @@ export const useTOCStore = create<TOCState>()(
     },
 
     addCustomLayer: (layer, groupName) => {
-      set((state) => {
-        const groups = state.tocType === "LIST" ? state.layerListGroups : state.layerFolderGroups;
-        let group = groups.find((g) => g.label === groupName || g.value === groupName);
+      // Get the OpenLayers layer from the TOCLayer object
+      const olLayer = layer.layer as Layer;
 
-        if (!group) {
-          // Create new group if it doesn't exist
-          group = {
-            value: groupName.toLowerCase().replace(/\s+/g, "_"),
-            label: groupName,
-            defaultGroup: false,
-            url: "",
-            prefix: "",
-            visibleLayers: [],
-            wmsGroupUrl: "",
-            customRestUrl: "",
-            layers: [],
-          };
-          groups.push(group);
+      if (olLayer) {
+        // New custom layers should always go at the top (index 0)
+        const drawIndex = 0;
+
+        // Add to map using LayerManager - THIS IS THE CRITICAL STEP
+        const managedLayerId = LayerManager.addLayer(olLayer, "TOC", layer.name, {
+          index: drawIndex,
+          metadata: {
+            groupName: groupName,
+            userLayer: true,
+            drawIndex: drawIndex,
+          },
+        });
+
+        if (managedLayerId) {
+          layer.managedLayerId = managedLayerId;
+        } else {
+          console.error("❌ Failed to add custom layer to map:", layer.name);
         }
+      } else {
+        console.error("❌ No OpenLayers layer object provided for custom layer:", layer.name);
+      }
 
-        // Add layer to group
-        layer.groupName = groupName;
-        layer.group = group.value;
-        layer.drawIndex = group.layers.length;
-        layer.index = group.layers.length;
-        layer.initialDrawIndex = group.layers.length; // Set initial order for custom layers
-        group.layers.push(layer);
+      set((state) => {
+        // Add layer to BOTH LIST and FOLDER views so it's available when switching
+        const addLayerToGroups = (groups: TOCLayerGroup[]) => {
+          let group = groups.find((g) => g.label === groupName || g.value === groupName);
 
-        // Update all layers
+          if (!group) {
+            // Create new group if it doesn't exist
+            group = {
+              value: groupName.toLowerCase().replace(/\s+/g, "_"),
+              label: groupName,
+              defaultGroup: false,
+              url: "",
+              prefix: "",
+              visibleLayers: [],
+              wmsGroupUrl: "",
+              customRestUrl: "",
+              layers: [],
+            };
+            groups.push(group);
+          }
+
+          // Check if layer already exists in this group (by id to handle duplicates)
+          const existingLayer = group.layers.find((l) => l.id === layer.id);
+          if (!existingLayer) {
+            // Clone the layer for this view
+            const layerClone = { ...layer };
+            layerClone.groupName = groupName;
+            layerClone.group = group.value;
+            layerClone.drawIndex = 0; // New layers go at the top
+            layerClone.index = 0;
+            layerClone.initialDrawIndex = 0;
+
+            // Add new layer at the beginning of the array (top of TOC)
+            group.layers = [layerClone, ...group.layers];
+
+            // Update indices for all existing layers
+            group.layers.forEach((l, idx) => {
+              l.drawIndex = idx;
+              l.index = idx;
+            });
+          }
+        };
+
+        // Add to both views
+        addLayerToGroups(state.layerListGroups);
+        addLayerToGroups(state.layerFolderGroups);
+
+        // Update all layers from current view
+        const currentGroups = state.tocType === "LIST" ? state.layerListGroups : state.layerFolderGroups;
         const allLayers: TOCLayer[] = [];
-        groups.forEach((grp) => {
+        currentGroups.forEach((grp) => {
           allLayers.push(...grp.layers);
         });
         state.allLayers = allLayers;
         state.layerCount = allLayers.length;
+
+        // CRITICAL: Update selectedGroup reference to trigger React re-render
+        // This ensures the TOC UI updates immediately when a layer is added
+        if (state.selectedGroup) {
+          const updatedGroup = currentGroups.find((g) => g.value === state.selectedGroup!.value || g.label === state.selectedGroup!.label);
+          if (updatedGroup) {
+            state.selectedGroup = { ...updatedGroup }; // Create new reference to trigger re-render
+          }
+        }
       });
 
       // Update z-indices in LayerManager to match the new order
       LayerManager.reorderCategory("TOC");
     },
 
-    removeCustomLayer: (layerName, groupName) => {
+    removeCustomLayer: (layerName, groupName, layerId) => {
       set((state) => {
-        const groups = state.tocType === "LIST" ? state.layerListGroups : state.layerFolderGroups;
-        const group = groups.find((g) => g.label === groupName || g.value === groupName);
-        if (group) {
-          const layerIndex = group.layers.findIndex((l) => l.name === layerName);
-          if (layerIndex !== -1) {
-            group.layers.splice(layerIndex, 1);
+        // Helper function to remove layer from a group array
+        const removeFromGroups = (groups: TOCLayerGroup[]) => {
+          const group = groups.find((g) => g.label === groupName || g.value === groupName);
+          if (group) {
+            // Find by ID first (more reliable), then by name
+            const layerIndex = layerId ? group.layers.findIndex((l) => l.id === layerId) : group.layers.findIndex((l) => l.name === layerName);
 
-            // Update draw indices (but not initialDrawIndex - that should remain constant)
-            group.layers.forEach((layer, index) => {
-              layer.drawIndex = index;
-              layer.index = index;
-            });
+            if (layerIndex !== -1) {
+              group.layers.splice(layerIndex, 1);
 
-            // Update all layers
-            const allLayers: TOCLayer[] = [];
-            groups.forEach((grp) => {
-              allLayers.push(...grp.layers);
-            });
-            state.allLayers = allLayers;
-            state.layerCount = allLayers.length;
+              // Update draw indices
+              group.layers.forEach((layer, index) => {
+                layer.drawIndex = index;
+                layer.index = index;
+              });
+            }
+          }
+        };
+
+        // Remove from BOTH views (like addCustomLayer does)
+        removeFromGroups(state.layerListGroups);
+        removeFromGroups(state.layerFolderGroups);
+
+        // Update allLayers from whichever view is current
+        const currentGroups = state.tocType === "LIST" ? state.layerListGroups : state.layerFolderGroups;
+        const allLayers: TOCLayer[] = [];
+        currentGroups.forEach((grp) => {
+          allLayers.push(...grp.layers);
+        });
+        state.allLayers = allLayers;
+        state.layerCount = allLayers.length;
+
+        // Update selectedGroup reference to trigger re-render
+        if (state.selectedGroup) {
+          const updatedGroup = currentGroups.find((g) => g.value === state.selectedGroup!.value || g.label === state.selectedGroup!.label);
+          if (updatedGroup) {
+            state.selectedGroup = { ...updatedGroup };
           }
         }
       });
@@ -1715,7 +1828,7 @@ export const useTOCStore = create<TOCState>()(
                 } else {
                   console.error("❌ Failed to create OpenLayers layer for:", layer.name);
                 }
-              }
+              },
             );
           }
         });
@@ -1730,5 +1843,5 @@ export const useTOCStore = create<TOCState>()(
     getGlobalOpacity: () => {
       return useLayerManagerStore.getState().getGlobalOpacity();
     },
-  }))
+  })),
 );

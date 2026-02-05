@@ -1,11 +1,32 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { Style, Stroke, Fill, Circle as CircleStyle, RegularShape } from "ol/style";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { Style, Circle as CircleStyle, RegularShape } from "ol/style";
 import type { MyMapsItem } from "@/types/myMaps";
 
 import { useMyMapsStore } from "@/stores/myMapsStore";
+import { useEventStore } from "@/stores/eventStore";
 import "@/components/myMaps/MyMapsSymbolizer.css";
+
+import ColorPicker from "./ColorPicker";
+import {
+  PointType,
+  StyleSize,
+  FillColor,
+  StrokeType,
+  StrokeColor,
+  StrokeWidth,
+  Rotation,
+  LabelTextColor,
+  LabelFontSize,
+  LabelOutlineColor,
+  LabelOutlineWidth,
+  CalloutBackgroundColor,
+  CalloutBorderColor,
+  CalloutLineColor,
+  CalloutAnchorColor,
+} from "./MyMapsSymbolizerComponents";
+import { getPointStyle, getLineStringStyle, getPolygonStyle, extractPointTypeFromStyle, getDefaultLabelStyle, type LabelStyleOptions } from "./myMapsStyles";
 
 interface MyMapsSymbolizerProps {
   visible: boolean;
@@ -19,6 +40,17 @@ interface ColorRGB {
   a: number;
 }
 
+interface LabelStyleState {
+  textColor: string;
+  textSize: string;
+  labelOutlineColor: string;
+  labelOutlineWidth: number;
+  backgroundColor: string;
+  borderColor: string;
+  lineColor: string;
+  anchorColor: string;
+}
+
 interface SymbolizerState {
   selectedPointStyleDropDown: string;
   selectedStrokeTypeDropDown: string;
@@ -29,35 +61,68 @@ interface SymbolizerState {
   fillAlpha: number;
   radius: number;
   rotation: number;
+  labelStyle: LabelStyleState;
 }
+
+interface ColorPickerState {
+  visible: boolean;
+  position: { x: number; y: number };
+  colorType: "fill" | "stroke" | "label";
+  labelColorType?: "textColor" | "labelOutlineColor" | "backgroundColor" | "borderColor" | "lineColor" | "anchorColor";
+  currentColor: string;
+}
+
+// Constants
+const SLIDER_RADIUS_MIN = 1;
+const SLIDER_RADIUS_MAX = 100;
+const SLIDER_FILL_OPACITY_MIN = 0;
+const SLIDER_FILL_OPACITY_MAX = 1;
+const SLIDER_STROKE_OPACITY_MIN = 0;
+const SLIDER_STROKE_OPACITY_MAX = 1;
+const SLIDER_STROKE_WIDTH_MIN = 1;
+const SLIDER_STROKE_WIDTH_MAX = 10;
+const SLIDER_ROTATION_MIN = 0;
+const SLIDER_ROTATION_MAX = 6.28319;
+
+// Helper function to convert hex to RGB
+const hexToRgb = (hex: string): ColorRGB => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+        a: 1,
+      }
+    : { r: 0, g: 0, b: 0, a: 1 };
+};
+
+// Helper to convert RGB to hex
+const rgbToHex = (rgb: ColorRGB): string => {
+  const toHex = (n: number) => {
+    const hex = Math.round(n).toString(16);
+    return hex.length === 1 ? "0" + hex : hex;
+  };
+  return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
+};
 
 const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) => {
   const { updateItem } = useMyMapsStore();
+  const { emit } = useEventStore();
 
-  // Constants from old app
-  const sliderRadiusMin = 1;
-  const sliderRadiusMax = 100;
-  const sliderFillOpacityMin = 0;
-  const sliderFillOpacityMax = 1;
-  const sliderStrokeOpacityMin = 0;
-  const sliderStrokeOpacityMax = 1;
-  const sliderStrokeWidthMin = 1;
-  const sliderStrokeWidthMax = 10;
-  const sliderRotationMin = 0;
-  const sliderRotationMax = 6.28319;
+  // Color picker state
+  const [colorPicker, setColorPicker] = useState<ColorPickerState>({
+    visible: false,
+    position: { x: 0, y: 0 },
+    colorType: "fill",
+    currentColor: "#000000",
+  });
 
-  // Helper function to convert hex to RGB
-  const hexToRgb = (hex: string): ColorRGB => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-      ? {
-          r: parseInt(result[1], 16),
-          g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16),
-          a: 1,
-        }
-      : { r: 0, g: 0, b: 0, a: 1 };
-  };
+  // Ref to track current color picker state for use in callbacks (avoids stale closure)
+  const colorPickerRef = useRef<ColorPickerState>(colorPicker);
+  useEffect(() => {
+    colorPickerRef.current = colorPicker;
+  }, [colorPicker]);
 
   // Extract initial values from item's style
   const getInitialState = useCallback((): SymbolizerState => {
@@ -65,33 +130,24 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
     let strokeColor: ColorRGB = { r: 0, g: 0, b: 0, a: 0.8 };
     let strokeWidth = 1;
     let radius = 8;
-    const rotation = 0;
-    let pointType = "circle"; // Default point type
-    let extractedPointType = false; // Track if we extracted point type from OpenLayers object
+    let rotation = 0;
+    let pointType = "circle";
+    let extractedPointType = false;
 
-    // Try to extract values from style if available - handle both OpenLayers Style objects and JSON format
     if (item.style) {
-      // Check if it's an OpenLayers Style object
       if (item.style instanceof Style) {
-        console.log("🔍 MyMapsSymbolizer: Reading from OpenLayers Style object");
-
-        // Use OpenLayers public API methods
         const imageStyle = item.style.getImage();
         if (imageStyle) {
-          // Handle CircleStyle
           if (imageStyle instanceof CircleStyle) {
             radius = imageStyle.getRadius();
-            // Point type is always "circle" for CircleStyle
             pointType = "circle";
             extractedPointType = true;
-            console.log("🔍 MyMapsSymbolizer: Point type from CircleStyle:", "circle");
 
             const fill = imageStyle.getFill();
             if (fill) {
               const fillColorArray = fill.getColor() as [number, number, number, number];
               if (Array.isArray(fillColorArray)) {
                 fillColor = { r: fillColorArray[0], g: fillColorArray[1], b: fillColorArray[2], a: fillColorArray[3] || 0.8 };
-                console.log("🔍 MyMapsSymbolizer: Extracted fill color from OpenLayers:", fillColor);
               }
             }
 
@@ -101,39 +157,19 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
               const strokeColorArray = stroke.getColor() as [number, number, number, number];
               if (Array.isArray(strokeColorArray)) {
                 strokeColor = { r: strokeColorArray[0], g: strokeColorArray[1], b: strokeColorArray[2], a: strokeColorArray[3] || 0.8 };
-                console.log("🔍 MyMapsSymbolizer: Extracted stroke color from OpenLayers:", strokeColor);
               }
             }
-          }
-          // Handle RegularShape
-          else if (imageStyle instanceof RegularShape) {
+          } else if (imageStyle instanceof RegularShape) {
             radius = imageStyle.getRadius();
-
-            // Extract point type from RegularShape properties
-            const points = imageStyle.getPoints();
-            const radius2 = imageStyle.getRadius2();
-
-            if (points === 4 && radius2 === 0) {
-              pointType = "cross";
-            } else if (points === 4 && radius2 !== 0) {
-              pointType = "square";
-            } else if (points === 3) {
-              pointType = "triangle";
-            } else if (points === 5) {
-              pointType = "star";
-            } else {
-              pointType = "circle"; // fallback
-            }
-
+            rotation = imageStyle.getRotation() || 0;
+            pointType = extractPointTypeFromStyle(imageStyle);
             extractedPointType = true;
-            console.log("🔍 MyMapsSymbolizer: Point type from RegularShape:", pointType, { points, radius2 });
 
             const fill = imageStyle.getFill();
             if (fill) {
               const fillColorArray = fill.getColor() as [number, number, number, number];
               if (Array.isArray(fillColorArray)) {
                 fillColor = { r: fillColorArray[0], g: fillColorArray[1], b: fillColorArray[2], a: fillColorArray[3] || 0.8 };
-                console.log("🔍 MyMapsSymbolizer: Extracted RegularShape fill color from OpenLayers:", fillColor);
               }
             }
 
@@ -143,67 +179,61 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
               const strokeColorArray = stroke.getColor() as [number, number, number, number];
               if (Array.isArray(strokeColorArray)) {
                 strokeColor = { r: strokeColorArray[0], g: strokeColorArray[1], b: strokeColorArray[2], a: strokeColorArray[3] || 0.8 };
-                console.log("🔍 MyMapsSymbolizer: Extracted RegularShape stroke color from OpenLayers:", strokeColor);
               }
             }
           }
         }
-      } else {
-        // Regular JSON object format
-        console.log("🔍 MyMapsSymbolizer: Reading from JSON style object");
-        const style = item.style as {
-          image?: {
-            fill?: { color?: string | [number, number, number, number] };
-            stroke?: { color?: string | [number, number, number, number]; width?: number };
-            radius?: number;
-            type?: string;
-          };
-          fill?: { color?: string | [number, number, number, number] };
-          stroke?: { color?: string | [number, number, number, number]; width?: number };
-        };
 
-        // Fill color
-        if (item.geometryType === "Point" || item.geometryType === "MultiPoint") {
-          if (style.image?.fill?.color) {
-            const color = style.image.fill.color;
-            fillColor = Array.isArray(color) ? { r: color[0], g: color[1], b: color[2], a: color[3] || 0.8 } : hexToRgb(color.toString());
-            console.log("🔍 MyMapsSymbolizer: Extracted fill color from JSON:", fillColor);
-          }
-        } else if (item.geometryType === "Polygon" || item.geometryType === "MultiPolygon") {
-          if (style.fill?.color) {
-            const color = style.fill.color;
-            fillColor = Array.isArray(color) ? { r: color[0], g: color[1], b: color[2], a: color[3] || 0.8 } : hexToRgb(color.toString());
+        // Handle polygon/line styles
+        const styleStroke = item.style.getStroke();
+        const styleFill = item.style.getFill();
+
+        if (styleStroke && !item.style.getImage()) {
+          strokeWidth = styleStroke.getWidth() || 1;
+          const strokeColorArray = styleStroke.getColor() as [number, number, number, number];
+          if (Array.isArray(strokeColorArray)) {
+            strokeColor = { r: strokeColorArray[0], g: strokeColorArray[1], b: strokeColorArray[2], a: strokeColorArray[3] || 0.8 };
           }
         }
 
-        // Stroke color and width
-        if (item.geometryType === "Point" || item.geometryType === "MultiPoint") {
-          if (style.image?.stroke?.color) {
-            const color = style.image.stroke.color;
-            strokeColor = Array.isArray(color) ? { r: color[0], g: color[1], b: color[2], a: color[3] || 0.8 } : hexToRgb(color.toString());
-            console.log("🔍 MyMapsSymbolizer: Extracted stroke color from JSON:", strokeColor);
+        if (styleFill && !item.style.getImage()) {
+          const fillColorArray = styleFill.getColor() as [number, number, number, number];
+          if (Array.isArray(fillColorArray)) {
+            fillColor = { r: fillColorArray[0], g: fillColorArray[1], b: fillColorArray[2], a: fillColorArray[3] || 0.8 };
           }
-          strokeWidth = style.image?.stroke?.width || 1;
-          radius = style.image?.radius || 8;
-        } else {
-          if (style.stroke?.color) {
-            const color = style.stroke.color;
-            strokeColor = Array.isArray(color) ? { r: color[0], g: color[1], b: color[2], a: color[3] || 0.8 } : hexToRgb(color.toString());
-          }
-          strokeWidth = style.stroke?.width || 1;
         }
       }
     }
 
-    // Use extracted pointType if we got it from OpenLayers object, otherwise fall back to item.pointType
     const finalPointType = extractedPointType ? pointType : item.pointType !== undefined ? item.pointType : "circle";
     const strokeType = item.strokeType !== undefined ? item.strokeType : "normal";
 
-    console.log("🔍 MyMapsSymbolizer: Final point type determined:", finalPointType, {
-      extracted: pointType,
-      fromItem: item.pointType,
-      usedExtracted: extractedPointType,
-    });
+    // Get label style from item or use defaults
+    const defaultLabelStyle = getDefaultLabelStyle(item.drawType);
+    let labelStyleState: LabelStyleState = {
+      textColor: defaultLabelStyle.textColor,
+      textSize: defaultLabelStyle.textSize,
+      labelOutlineColor: defaultLabelStyle.outlineColor,
+      labelOutlineWidth: defaultLabelStyle.outlineWidth,
+      backgroundColor: defaultLabelStyle.backgroundColor,
+      borderColor: defaultLabelStyle.borderColor,
+      lineColor: defaultLabelStyle.lineColor,
+      anchorColor: defaultLabelStyle.anchorColor,
+    };
+
+    if (item.labelStyle && typeof item.labelStyle === "object") {
+      const ls = item.labelStyle as Record<string, unknown>;
+      labelStyleState = {
+        textColor: (ls.textColor as string) || labelStyleState.textColor,
+        textSize: (ls.textSize as string) || labelStyleState.textSize,
+        labelOutlineColor: (ls.outlineColor as string) || labelStyleState.labelOutlineColor,
+        labelOutlineWidth: (ls.outlineWidth as number) ?? labelStyleState.labelOutlineWidth,
+        backgroundColor: (ls.backgroundColor as string) || labelStyleState.backgroundColor,
+        borderColor: (ls.borderColor as string) || labelStyleState.borderColor,
+        lineColor: (ls.lineColor as string) || labelStyleState.lineColor,
+        anchorColor: (ls.anchorColor as string) || labelStyleState.anchorColor,
+      };
+    }
 
     return {
       selectedPointStyleDropDown: finalPointType,
@@ -215,6 +245,7 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
       fillAlpha: fillColor.a,
       radius,
       rotation,
+      labelStyle: labelStyleState,
     };
   }, [item]);
 
@@ -225,133 +256,34 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
     setState(getInitialState());
   }, [item.id, getInitialState]);
 
-  // Style creation functions matching the old app's drawingHelpers
-  const getPointStyle = (
-    pointType: string,
-    radius: number,
-    strokeColor: [number, number, number, number],
-    strokeWidth: number,
-    fillColor: [number, number, number, number],
-    rotation: number,
-    strokeType: string
-  ): Style => {
-    const strokeConfig: { color: [number, number, number, number]; width: number; lineDash?: number[] } = {
-      color: strokeColor,
-      width: strokeWidth,
-    };
+  // Update item with new style
+  const updateItemStyle = useCallback(
+    (newStyle: Style, additionalProps: Partial<MyMapsItem> = {}) => {
+      const currentPointType = additionalProps.pointType || state.selectedPointStyleDropDown || item.pointType || "circle";
+      const currentStrokeType = additionalProps.strokeType || state.selectedStrokeTypeDropDown || item.strokeType || "normal";
 
-    // Add line dash for stroke types
-    if (strokeType === "dash") {
-      strokeConfig.lineDash = [10, 10];
-    } else if (strokeType === "dot") {
-      strokeConfig.lineDash = [2, 8];
-    }
-
-    let imageStyle;
-
-    if (pointType === "circle") {
-      imageStyle = new CircleStyle({
-        radius: radius,
-        fill: new Fill({ color: fillColor }),
-        stroke: new Stroke(strokeConfig),
+      updateItem(item.id, {
+        style: newStyle,
+        pointType: currentPointType,
+        strokeType: currentStrokeType,
+        ...additionalProps,
       });
-    } else {
-      // For other shapes, use RegularShape
-      let points = 4;
-      let radius2 = undefined;
 
-      switch (pointType) {
-        case "square":
-          points = 4;
-          break;
-        case "triangle":
-          points = 3;
-          break;
-        case "star":
-          points = 5;
-          radius2 = radius * 0.5;
-          break;
-        case "cross":
-          points = 4;
-          radius2 = 0;
-          break;
-        case "x":
-          points = 4;
-          radius2 = 0;
-          rotation = Math.PI / 4;
-          break;
-      }
-
-      imageStyle = new RegularShape({
-        points: points,
-        radius: radius,
-        radius2: radius2,
-        angle: rotation,
-        fill: new Fill({ color: fillColor }),
-        stroke: new Stroke(strokeConfig),
+      // Emit event to update the actual OpenLayers feature on the map
+      emit("mymap-style-updated", {
+        itemId: item.id,
+        style: newStyle,
+        pointType: currentPointType,
+        strokeType: currentStrokeType,
       });
-    }
+    },
+    [item.id, item.pointType, item.strokeType, state.selectedPointStyleDropDown, state.selectedStrokeTypeDropDown, updateItem, emit],
+  );
 
-    return new Style({
-      image: imageStyle,
-    });
-  };
+  // ============================================
+  // EVENT HANDLERS - POINT STYLE
+  // ============================================
 
-  const getLineStringStyle = (strokeColor: [number, number, number, number], strokeWidth: number, strokeType: string): Style => {
-    const strokeConfig: { color: [number, number, number, number]; width: number; lineDash?: number[] } = {
-      color: strokeColor,
-      width: strokeWidth,
-    };
-
-    if (strokeType === "dash") {
-      strokeConfig.lineDash = [10, 10];
-    } else if (strokeType === "dot") {
-      strokeConfig.lineDash = [2, 8];
-    }
-
-    return new Style({
-      stroke: new Stroke(strokeConfig),
-    });
-  };
-
-  const getPolygonStyle = (strokeColor: [number, number, number, number], strokeWidth: number, fillColor: [number, number, number, number], strokeType: string): Style => {
-    const strokeConfig: { color: [number, number, number, number]; width: number; lineDash?: number[] } = {
-      color: strokeColor,
-      width: strokeWidth,
-    };
-
-    if (strokeType === "dash") {
-      strokeConfig.lineDash = [10, 10];
-    } else if (strokeType === "dot") {
-      strokeConfig.lineDash = [2, 8];
-    }
-
-    return new Style({
-      fill: new Fill({ color: fillColor }),
-      stroke: new Stroke(strokeConfig),
-    });
-  };
-
-  // Update item with new style - preserve pointType and strokeType consistently
-  const updateItemStyle = (newStyle: Style, additionalProps: Partial<MyMapsItem> = {}) => {
-    console.log("💾 MyMapsSymbolizer: Saving new style:", newStyle);
-
-    // Always preserve the current pointType and strokeType from state
-    const currentPointType = additionalProps.pointType || state.selectedPointStyleDropDown || item.pointType || "circle";
-    const currentStrokeType = additionalProps.strokeType || state.selectedStrokeTypeDropDown || item.strokeType || "normal";
-
-    console.log("💾 Preserving pointType:", currentPointType, "strokeType:", currentStrokeType);
-
-    const updates = {
-      style: newStyle, // Store the OpenLayers Style object directly
-      pointType: currentPointType, // Always preserve pointType at the top level
-      strokeType: currentStrokeType, // Always preserve strokeType at the top level
-      ...additionalProps,
-    };
-    updateItem(item.id, updates);
-  };
-
-  // Event handlers
   const onPointStyleDropDown = (evt: React.ChangeEvent<HTMLSelectElement>) => {
     const newPointType = evt.target.value;
     setState((prev) => ({ ...prev, selectedPointStyleDropDown: newPointType }));
@@ -363,11 +295,61 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
       state.strokeWidth,
       [state.fillColor.r, state.fillColor.g, state.fillColor.b, state.fillAlpha],
       state.rotation,
-      state.selectedStrokeTypeDropDown
+      state.selectedStrokeTypeDropDown,
     );
 
     updateItemStyle(style, { pointType: newPointType });
   };
+
+  const onRadiusSliderChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const newRadius = parseFloat(evt.target.value);
+
+    setState((prev) => {
+      const style = getPointStyle(
+        prev.selectedPointStyleDropDown,
+        newRadius,
+        [prev.strokeColor.r, prev.strokeColor.g, prev.strokeColor.b, prev.strokeAlpha],
+        prev.strokeWidth,
+        [prev.fillColor.r, prev.fillColor.g, prev.fillColor.b, prev.fillAlpha],
+        prev.rotation,
+        prev.selectedStrokeTypeDropDown,
+      );
+
+      updateItemStyle(style, {
+        pointType: prev.selectedPointStyleDropDown,
+        strokeType: prev.selectedStrokeTypeDropDown,
+      });
+
+      return { ...prev, radius: newRadius };
+    });
+  };
+
+  const onRotationSliderChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const newRotation = parseFloat(evt.target.value);
+
+    setState((prev) => {
+      const style = getPointStyle(
+        prev.selectedPointStyleDropDown,
+        prev.radius,
+        [prev.strokeColor.r, prev.strokeColor.g, prev.strokeColor.b, prev.strokeAlpha],
+        prev.strokeWidth,
+        [prev.fillColor.r, prev.fillColor.g, prev.fillColor.b, prev.fillAlpha],
+        newRotation,
+        prev.selectedStrokeTypeDropDown,
+      );
+
+      updateItemStyle(style, {
+        pointType: prev.selectedPointStyleDropDown,
+        strokeType: prev.selectedStrokeTypeDropDown,
+      });
+
+      return { ...prev, rotation: newRotation };
+    });
+  };
+
+  // ============================================
+  // EVENT HANDLERS - STROKE
+  // ============================================
 
   const onStrokeTypeDropDown = (evt: React.ChangeEvent<HTMLSelectElement>) => {
     const newStrokeType = evt.target.value;
@@ -382,7 +364,7 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
         state.strokeWidth,
         [state.fillColor.r, state.fillColor.g, state.fillColor.b, state.fillAlpha],
         state.rotation,
-        newStrokeType
+        newStrokeType,
       );
     } else if (item.geometryType === "LineString" || item.geometryType === "MultiLineString") {
       style = getLineStringStyle([state.strokeColor.r, state.strokeColor.g, state.strokeColor.b, state.strokeAlpha], state.strokeWidth, newStrokeType);
@@ -391,523 +373,385 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
         [state.strokeColor.r, state.strokeColor.g, state.strokeColor.b, state.strokeAlpha],
         state.strokeWidth,
         [state.fillColor.r, state.fillColor.g, state.fillColor.b, state.fillAlpha],
-        newStrokeType
+        newStrokeType,
       );
     }
 
     updateItemStyle(style, { strokeType: newStrokeType });
   };
 
-  const onRadiusSliderChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
-    const newRadius = parseFloat(evt.target.value);
-
-    // Use setState callback to get current state values and avoid stale closures
-    setState((prevState) => {
-      const updatedState = { ...prevState, radius: newRadius };
-
-      // Create style with current state values (not stale ones)
-      const style = getPointStyle(
-        prevState.selectedPointStyleDropDown,
-        newRadius,
-        [prevState.strokeColor.r, prevState.strokeColor.g, prevState.strokeColor.b, prevState.strokeAlpha],
-        prevState.strokeWidth,
-        [prevState.fillColor.r, prevState.fillColor.g, prevState.fillColor.b, prevState.fillAlpha],
-        prevState.rotation,
-        prevState.selectedStrokeTypeDropDown
-      );
-
-      // Update store with current values (not stale ones)
-      updateItemStyle(style, {
-        pointType: prevState.selectedPointStyleDropDown,
-        strokeType: prevState.selectedStrokeTypeDropDown,
-      });
-
-      return updatedState;
-    });
-  };
-
   const onStrokeWidthSliderChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const newStrokeWidth = parseFloat(evt.target.value);
 
-    // Use setState callback to get current state values and avoid stale closures
-    setState((prevState) => {
-      const updatedState = { ...prevState, strokeWidth: newStrokeWidth };
-
+    setState((prev) => {
       let style: Style;
       if (item.geometryType === "Point" || item.geometryType === "MultiPoint") {
         style = getPointStyle(
-          prevState.selectedPointStyleDropDown,
-          prevState.radius,
-          [prevState.strokeColor.r, prevState.strokeColor.g, prevState.strokeColor.b, prevState.strokeAlpha],
+          prev.selectedPointStyleDropDown,
+          prev.radius,
+          [prev.strokeColor.r, prev.strokeColor.g, prev.strokeColor.b, prev.strokeAlpha],
           newStrokeWidth,
-          [prevState.fillColor.r, prevState.fillColor.g, prevState.fillColor.b, prevState.fillAlpha],
-          prevState.rotation,
-          prevState.selectedStrokeTypeDropDown
+          [prev.fillColor.r, prev.fillColor.g, prev.fillColor.b, prev.fillAlpha],
+          prev.rotation,
+          prev.selectedStrokeTypeDropDown,
         );
       } else if (item.geometryType === "LineString" || item.geometryType === "MultiLineString") {
-        style = getLineStringStyle([prevState.strokeColor.r, prevState.strokeColor.g, prevState.strokeColor.b, prevState.strokeAlpha], newStrokeWidth, prevState.selectedStrokeTypeDropDown);
+        style = getLineStringStyle([prev.strokeColor.r, prev.strokeColor.g, prev.strokeColor.b, prev.strokeAlpha], newStrokeWidth, prev.selectedStrokeTypeDropDown);
       } else {
         style = getPolygonStyle(
-          [prevState.strokeColor.r, prevState.strokeColor.g, prevState.strokeColor.b, prevState.strokeAlpha],
+          [prev.strokeColor.r, prev.strokeColor.g, prev.strokeColor.b, prev.strokeAlpha],
           newStrokeWidth,
-          [prevState.fillColor.r, prevState.fillColor.g, prevState.fillColor.b, prevState.fillAlpha],
-          prevState.selectedStrokeTypeDropDown
+          [prev.fillColor.r, prev.fillColor.g, prev.fillColor.b, prev.fillAlpha],
+          prev.selectedStrokeTypeDropDown,
         );
       }
 
       updateItemStyle(style, {
-        pointType: prevState.selectedPointStyleDropDown,
-        strokeType: prevState.selectedStrokeTypeDropDown,
+        pointType: prev.selectedPointStyleDropDown,
+        strokeType: prev.selectedStrokeTypeDropDown,
       });
 
-      return updatedState;
-    });
-  };
-
-  const onFillOpacitySliderChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
-    const newFillAlpha = parseFloat(evt.target.value);
-
-    // Use setState callback to get current state values and avoid stale closures
-    setState((prevState) => {
-      const updatedState = { ...prevState, fillAlpha: newFillAlpha };
-
-      let style: Style;
-      if (item.geometryType === "Point" || item.geometryType === "MultiPoint") {
-        style = getPointStyle(
-          prevState.selectedPointStyleDropDown,
-          prevState.radius,
-          [prevState.strokeColor.r, prevState.strokeColor.g, prevState.strokeColor.b, prevState.strokeAlpha],
-          prevState.strokeWidth,
-          [prevState.fillColor.r, prevState.fillColor.g, prevState.fillColor.b, newFillAlpha],
-          prevState.rotation,
-          prevState.selectedStrokeTypeDropDown
-        );
-      } else if (item.geometryType === "Polygon" || item.geometryType === "MultiPolygon") {
-        style = getPolygonStyle(
-          [prevState.strokeColor.r, prevState.strokeColor.g, prevState.strokeColor.b, prevState.strokeAlpha],
-          prevState.strokeWidth,
-          [prevState.fillColor.r, prevState.fillColor.g, prevState.fillColor.b, newFillAlpha],
-          prevState.selectedStrokeTypeDropDown
-        );
-      } else {
-        return updatedState; // LineString doesn't have fill
-      }
-
-      updateItemStyle(style, {
-        pointType: prevState.selectedPointStyleDropDown,
-        strokeType: prevState.selectedStrokeTypeDropDown,
-      });
-
-      return updatedState;
+      return { ...prev, strokeWidth: newStrokeWidth };
     });
   };
 
   const onStrokeOpacitySliderChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const newStrokeAlpha = parseFloat(evt.target.value);
 
-    // Use setState callback to get current state values and avoid stale closures
-    setState((prevState) => {
-      const updatedState = { ...prevState, strokeAlpha: newStrokeAlpha };
-
+    setState((prev) => {
       let style: Style;
       if (item.geometryType === "Point" || item.geometryType === "MultiPoint") {
         style = getPointStyle(
-          prevState.selectedPointStyleDropDown,
-          prevState.radius,
-          [prevState.strokeColor.r, prevState.strokeColor.g, prevState.strokeColor.b, newStrokeAlpha],
-          prevState.strokeWidth,
-          [prevState.fillColor.r, prevState.fillColor.g, prevState.fillColor.b, prevState.fillAlpha],
-          prevState.rotation,
-          prevState.selectedStrokeTypeDropDown
+          prev.selectedPointStyleDropDown,
+          prev.radius,
+          [prev.strokeColor.r, prev.strokeColor.g, prev.strokeColor.b, newStrokeAlpha],
+          prev.strokeWidth,
+          [prev.fillColor.r, prev.fillColor.g, prev.fillColor.b, prev.fillAlpha],
+          prev.rotation,
+          prev.selectedStrokeTypeDropDown,
         );
       } else if (item.geometryType === "LineString" || item.geometryType === "MultiLineString") {
-        style = getLineStringStyle([prevState.strokeColor.r, prevState.strokeColor.g, prevState.strokeColor.b, newStrokeAlpha], prevState.strokeWidth, prevState.selectedStrokeTypeDropDown);
+        style = getLineStringStyle([prev.strokeColor.r, prev.strokeColor.g, prev.strokeColor.b, newStrokeAlpha], prev.strokeWidth, prev.selectedStrokeTypeDropDown);
       } else {
         style = getPolygonStyle(
-          [prevState.strokeColor.r, prevState.strokeColor.g, prevState.strokeColor.b, newStrokeAlpha],
-          prevState.strokeWidth,
-          [prevState.fillColor.r, prevState.fillColor.g, prevState.fillColor.b, prevState.fillAlpha],
-          prevState.selectedStrokeTypeDropDown
+          [prev.strokeColor.r, prev.strokeColor.g, prev.strokeColor.b, newStrokeAlpha],
+          prev.strokeWidth,
+          [prev.fillColor.r, prev.fillColor.g, prev.fillColor.b, prev.fillAlpha],
+          prev.selectedStrokeTypeDropDown,
         );
       }
 
       updateItemStyle(style, {
-        pointType: prevState.selectedPointStyleDropDown,
-        strokeType: prevState.selectedStrokeTypeDropDown,
+        pointType: prev.selectedPointStyleDropDown,
+        strokeType: prev.selectedStrokeTypeDropDown,
       });
 
-      return updatedState;
+      return { ...prev, strokeAlpha: newStrokeAlpha };
     });
   };
 
-  const onRotationSliderChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
-    const newRotation = parseFloat(evt.target.value);
+  // ============================================
+  // EVENT HANDLERS - FILL
+  // ============================================
 
-    // Use setState callback to get current state values and avoid stale closures
-    setState((prevState) => {
-      const updatedState = { ...prevState, rotation: newRotation };
+  const onFillOpacitySliderChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const newFillAlpha = parseFloat(evt.target.value);
 
-      const style = getPointStyle(
-        prevState.selectedPointStyleDropDown,
-        prevState.radius,
-        [prevState.strokeColor.r, prevState.strokeColor.g, prevState.strokeColor.b, prevState.strokeAlpha],
-        prevState.strokeWidth,
-        [prevState.fillColor.r, prevState.fillColor.g, prevState.fillColor.b, prevState.fillAlpha],
-        newRotation,
-        prevState.selectedStrokeTypeDropDown
-      );
+    setState((prev) => {
+      let style: Style;
+      if (item.geometryType === "Point" || item.geometryType === "MultiPoint") {
+        style = getPointStyle(
+          prev.selectedPointStyleDropDown,
+          prev.radius,
+          [prev.strokeColor.r, prev.strokeColor.g, prev.strokeColor.b, prev.strokeAlpha],
+          prev.strokeWidth,
+          [prev.fillColor.r, prev.fillColor.g, prev.fillColor.b, newFillAlpha],
+          prev.rotation,
+          prev.selectedStrokeTypeDropDown,
+        );
+      } else if (item.geometryType === "Polygon" || item.geometryType === "MultiPolygon") {
+        style = getPolygonStyle(
+          [prev.strokeColor.r, prev.strokeColor.g, prev.strokeColor.b, prev.strokeAlpha],
+          prev.strokeWidth,
+          [prev.fillColor.r, prev.fillColor.g, prev.fillColor.b, newFillAlpha],
+          prev.selectedStrokeTypeDropDown,
+        );
+      } else {
+        return { ...prev, fillAlpha: newFillAlpha };
+      }
 
       updateItemStyle(style, {
-        pointType: prevState.selectedPointStyleDropDown,
-        strokeType: prevState.selectedStrokeTypeDropDown,
+        pointType: prev.selectedPointStyleDropDown,
+        strokeType: prev.selectedStrokeTypeDropDown,
       });
 
-      return updatedState;
+      return { ...prev, fillAlpha: newFillAlpha };
     });
   };
 
-  // Color picker handlers
+  // ============================================
+  // COLOR PICKER HANDLERS
+  // ============================================
+
   const onFillColorPickerButton = (evt: React.MouseEvent) => {
-    showColorPicker(evt.nativeEvent, "fill");
+    setColorPicker({
+      visible: true,
+      position: { x: evt.clientX, y: evt.clientY },
+      colorType: "fill",
+      currentColor: rgbToHex(state.fillColor),
+    });
   };
 
   const onStrokeColorPickerButton = (evt: React.MouseEvent) => {
-    showColorPicker(evt.nativeEvent, "stroke");
-  };
-
-  // Color picker implementation matching the old app's CompactPicker behavior
-  const showColorPicker = (event: MouseEvent, colorType: "fill" | "stroke") => {
-    // Remove any existing color picker
-    const existingPicker = document.getElementById("sc-symbolizer-color-picker-container");
-    if (existingPicker) {
-      existingPicker.remove();
-      return;
-    }
-
-    const currentColor = colorType === "fill" ? state.fillColor : state.strokeColor;
-    const initialHex = rgbToHex(currentColor);
-
-    // Create CompactPicker replica
-    const colorPicker = document.createElement("div");
-    colorPicker.id = "sc-symbolizer-color-picker-container";
-    colorPicker.style.cssText = `
-      position: absolute;
-      z-index: 10000;
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      padding: 0;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-      font-family: Arial, sans-serif;
-    `;
-
-    // CompactPicker colors - exact layout from react-color
-    const compactColors = [
-      "#4D4D4D",
-      "#999999",
-      "#FFFFFF",
-      "#F44E3B",
-      "#FE9200",
-      "#FCDC00",
-      "#DBDF00",
-      "#A4DD00",
-      "#68CCCA",
-      "#73D8FF",
-      "#AEA1FF",
-      "#FDA1FF",
-      "#333333",
-      "#808080",
-      "#cccccc",
-      "#D33115",
-      "#E27300",
-      "#FCC400",
-      "#B0BC00",
-      "#68BC00",
-      "#16A5A5",
-      "#009CE0",
-      "#7B64FF",
-      "#FA28FF",
-      "#000000",
-      "#666666",
-      "#B3B3B3",
-      "#9F0500",
-      "#C45100",
-      "#FB9E00",
-      "#808900",
-      "#194D33",
-      "#0C797D",
-      "#0062B1",
-      "#653294",
-      "#AB149E",
-    ];
-
-    // Create the picker content
-    colorPicker.innerHTML = `
-      <div style="padding: 8px;">
-        <div style="display: flex; flex-wrap: wrap; width: 270px;">
-          ${compactColors
-            .map(
-              (color) => `
-            <div class="color-swatch" 
-                 data-color="${color}"
-                 style="
-                   width: 17px; 
-                   height: 17px; 
-                   background-color: ${color}; 
-                   margin: 1px; 
-                   cursor: pointer; 
-                   border: 1px solid #ddd;
-                   border-radius: 2px;
-                 "></div>
-          `
-            )
-            .join("")}
-        </div>
-        <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee;">
-          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #666;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <div id="selected-color-display" style="
-                width: 16px; 
-                height: 16px; 
-                background-color: ${initialHex}; 
-                border: 1px solid #ddd; 
-                border-radius: 3px;
-              "></div>
-              <input 
-                id="hex-input" 
-                type="text" 
-                value="${initialHex}"
-                class="sc-color-picker-input"
-                style="
-                  width: 70px; 
-                  font-size: 11px; 
-                  border: 1px solid #ddd; 
-                  border-radius: 2px; 
-                  padding: 3px 5px;
-                  font-weight: bold;
-                "
-              />
-            </div>
-            <div style="display: flex; gap: 4px; align-items: center;">
-              <span style="display: flex; align-items: center; gap: 2px;">R <input id="r-input" type="number" min="0" max="255" value="${
-                currentColor.r
-              }" class="sc-color-picker-input" style="width: 45px; font-size: 11px; border: 1px solid #ddd; border-radius: 2px; padding: 3px 5px; text-align: center;"></span>
-              <span style="display: flex; align-items: center; gap: 2px;">G <input id="g-input" type="number" min="0" max="255" value="${
-                currentColor.g
-              }" class="sc-color-picker-input" style="width: 45px; font-size: 11px; border: 1px solid #ddd; border-radius: 2px; padding: 3px 5px; text-align: center;"></span>
-              <span style="display: flex; align-items: center; gap: 2px;">B <input id="b-input" type="number" min="0" max="255" value="${
-                currentColor.b
-              }" class="sc-color-picker-input" style="width: 45px; font-size: 11px; border: 1px solid #ddd; border-radius: 2px; padding: 3px 5px; text-align: center;"></span>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-
-    // Position the picker at cursor position like old app
-    colorPicker.style.left = `${event.pageX}px`;
-    colorPicker.style.top = `${event.pageY}px`;
-
-    // Add to body
-    document.body.appendChild(colorPicker);
-
-    // Prevent event bubbling
-    colorPicker.addEventListener("click", (e) => e.stopPropagation());
-    colorPicker.addEventListener("mousedown", (e) => e.stopPropagation());
-
-    // Add event listeners to color swatches
-    const swatches = colorPicker.querySelectorAll(".color-swatch");
-    swatches.forEach((swatch) => {
-      swatch.addEventListener("click", (e) => {
-        const selectedColor = (e.target as HTMLElement).getAttribute("data-color")!;
-        handleColorSelection(selectedColor, colorType);
-        updateColorDisplay(selectedColor);
-        colorPicker.remove();
-      });
-
-      swatch.addEventListener("mouseenter", (e) => {
-        const hoverColor = (e.target as HTMLElement).getAttribute("data-color")!;
-        updateColorDisplay(hoverColor);
-        (e.target as HTMLElement).style.border = "2px solid #333";
-      });
-
-      swatch.addEventListener("mouseleave", (e) => {
-        (e.target as HTMLElement).style.border = "1px solid #ddd";
-        const hexInput = document.getElementById("hex-input") as HTMLInputElement;
-        if (hexInput) updateColorDisplay(hexInput.value);
-      });
+    setColorPicker({
+      visible: true,
+      position: { x: evt.clientX, y: evt.clientY },
+      colorType: "stroke",
+      currentColor: rgbToHex(state.strokeColor),
     });
-
-    // Add input field event listeners
-    const hexInput = colorPicker.querySelector("#hex-input") as HTMLInputElement;
-    const rInput = colorPicker.querySelector("#r-input") as HTMLInputElement;
-    const gInput = colorPicker.querySelector("#g-input") as HTMLInputElement;
-    const bInput = colorPicker.querySelector("#b-input") as HTMLInputElement;
-
-    if (hexInput) {
-      hexInput.addEventListener("input", (e) => {
-        const hexValue = (e.target as HTMLInputElement).value;
-        if (isValidHex(hexValue)) {
-          const rgb = hexToRgb(hexValue);
-          updateRGBInputs(rgb.r, rgb.g, rgb.b);
-          handleColorSelection(hexValue, colorType);
-        }
-      });
-      hexInput.addEventListener("focus", (e) => e.stopPropagation());
-      hexInput.addEventListener("click", (e) => e.stopPropagation());
-    }
-
-    const updateFromRGB = () => {
-      const r = Math.max(0, Math.min(255, parseInt(rInput.value) || 0));
-      const g = Math.max(0, Math.min(255, parseInt(gInput.value) || 0));
-      const b = Math.max(0, Math.min(255, parseInt(bInput.value) || 0));
-
-      rInput.value = r.toString();
-      gInput.value = g.toString();
-      bInput.value = b.toString();
-
-      const hexValue = `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`.toUpperCase();
-      hexInput.value = hexValue;
-      updateColorDisplay(hexValue);
-      handleColorSelection(hexValue, colorType);
-    };
-
-    [rInput, gInput, bInput].forEach((input) => {
-      if (input) {
-        input.addEventListener("input", updateFromRGB);
-        input.addEventListener("focus", (e) => e.stopPropagation());
-        input.addEventListener("click", (e) => e.stopPropagation());
-      }
-    });
-
-    // Close picker when clicking outside
-    const handleOutsideClick = (e: MouseEvent) => {
-      if (!colorPicker.contains(e.target as Node)) {
-        colorPicker.remove();
-        document.removeEventListener("click", handleOutsideClick);
-      }
-    };
-
-    setTimeout(() => {
-      document.addEventListener("click", handleOutsideClick);
-    }, 100);
   };
 
-  // Helper function to convert RGB to hex
-  const rgbToHex = (rgb: ColorRGB): string => {
-    const toHex = (n: number) => {
-      const hex = Math.round(n).toString(16);
-      return hex.length === 1 ? "0" + hex : hex;
-    };
-    return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
-  };
-
-  // Helper to validate hex color
-  const isValidHex = (hex: string): boolean => {
-    return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(hex);
-  };
-
-  // Color picker display helper functions
-  const updateColorDisplay = (hexColor: string) => {
-    const rgb = hexToRgb(hexColor);
-    const hexInput = document.getElementById("hex-input") as HTMLInputElement;
-    const rInput = document.getElementById("r-input") as HTMLInputElement;
-    const gInput = document.getElementById("g-input") as HTMLInputElement;
-    const bInput = document.getElementById("b-input") as HTMLInputElement;
-
-    if (hexInput) hexInput.value = hexColor.toUpperCase();
-    if (rInput) rInput.value = rgb.r.toString();
-    if (gInput) gInput.value = rgb.g.toString();
-    if (bInput) bInput.value = rgb.b.toString();
-
-    const colorDisplay = document.getElementById("selected-color-display");
-    if (colorDisplay) {
-      colorDisplay.style.backgroundColor = hexColor;
-    }
-  };
-
-  const updateRGBInputs = (r: number, g: number, b: number) => {
-    const rInput = document.getElementById("r-input") as HTMLInputElement;
-    const gInput = document.getElementById("g-input") as HTMLInputElement;
-    const bInput = document.getElementById("b-input") as HTMLInputElement;
-
-    if (rInput) rInput.value = r.toString();
-    if (gInput) gInput.value = g.toString();
-    if (bInput) bInput.value = b.toString();
-  };
-
-  const handleColorSelection = (hexColor: string, colorType: "fill" | "stroke") => {
+  const handleColorChange = (hexColor: string) => {
     const rgb = hexToRgb(hexColor);
 
-    // Use setState callback to get current state values and avoid stale closures
-    setState((prevState) => {
-      const rgbWithAlpha = { ...rgb, a: colorType === "fill" ? prevState.fillAlpha : prevState.strokeAlpha };
+    // Use ref to get current colorPicker state to avoid stale closure issues
+    const currentColorPicker = colorPickerRef.current;
 
-      if (colorType === "fill") {
-        const updatedState = { ...prevState, fillColor: rgbWithAlpha };
+    console.log("🎨 MyMapsSymbolizer: handleColorChange called", {
+      hexColor,
+      colorType: currentColorPicker.colorType,
+      labelColorType: currentColorPicker.labelColorType,
+      itemId: item.id,
+    });
+
+    setState((prev) => {
+      if (currentColorPicker.colorType === "fill") {
+        const rgbWithAlpha = { ...rgb, a: prev.fillAlpha };
 
         let style: Style;
         if (item.geometryType === "Point" || item.geometryType === "MultiPoint") {
           style = getPointStyle(
-            prevState.selectedPointStyleDropDown,
-            prevState.radius,
-            [prevState.strokeColor.r, prevState.strokeColor.g, prevState.strokeColor.b, prevState.strokeAlpha],
-            prevState.strokeWidth,
-            [rgb.r, rgb.g, rgb.b, prevState.fillAlpha],
-            prevState.rotation,
-            prevState.selectedStrokeTypeDropDown
+            prev.selectedPointStyleDropDown,
+            prev.radius,
+            [prev.strokeColor.r, prev.strokeColor.g, prev.strokeColor.b, prev.strokeAlpha],
+            prev.strokeWidth,
+            [rgb.r, rgb.g, rgb.b, prev.fillAlpha],
+            prev.rotation,
+            prev.selectedStrokeTypeDropDown,
           );
         } else if (item.geometryType === "Polygon" || item.geometryType === "MultiPolygon") {
           style = getPolygonStyle(
-            [prevState.strokeColor.r, prevState.strokeColor.g, prevState.strokeColor.b, prevState.strokeAlpha],
-            prevState.strokeWidth,
-            [rgb.r, rgb.g, rgb.b, prevState.fillAlpha],
-            prevState.selectedStrokeTypeDropDown
+            [prev.strokeColor.r, prev.strokeColor.g, prev.strokeColor.b, prev.strokeAlpha],
+            prev.strokeWidth,
+            [rgb.r, rgb.g, rgb.b, prev.fillAlpha],
+            prev.selectedStrokeTypeDropDown,
           );
         } else {
-          return updatedState;
+          return { ...prev, fillColor: rgbWithAlpha };
         }
 
         updateItemStyle(style, {
-          pointType: prevState.selectedPointStyleDropDown,
-          strokeType: prevState.selectedStrokeTypeDropDown,
+          pointType: prev.selectedPointStyleDropDown,
+          strokeType: prev.selectedStrokeTypeDropDown,
         });
 
-        return updatedState;
-      } else {
-        const updatedState = { ...prevState, strokeColor: rgbWithAlpha };
+        return { ...prev, fillColor: rgbWithAlpha };
+      } else if (currentColorPicker.colorType === "stroke") {
+        const rgbWithAlpha = { ...rgb, a: prev.strokeAlpha };
 
         let style: Style;
         if (item.geometryType === "Point" || item.geometryType === "MultiPoint") {
           style = getPointStyle(
-            prevState.selectedPointStyleDropDown,
-            prevState.radius,
-            [rgb.r, rgb.g, rgb.b, prevState.strokeAlpha],
-            prevState.strokeWidth,
-            [prevState.fillColor.r, prevState.fillColor.g, prevState.fillColor.b, prevState.fillAlpha],
-            prevState.rotation,
-            prevState.selectedStrokeTypeDropDown
+            prev.selectedPointStyleDropDown,
+            prev.radius,
+            [rgb.r, rgb.g, rgb.b, prev.strokeAlpha],
+            prev.strokeWidth,
+            [prev.fillColor.r, prev.fillColor.g, prev.fillColor.b, prev.fillAlpha],
+            prev.rotation,
+            prev.selectedStrokeTypeDropDown,
           );
         } else if (item.geometryType === "LineString" || item.geometryType === "MultiLineString") {
-          style = getLineStringStyle([rgb.r, rgb.g, rgb.b, prevState.strokeAlpha], prevState.strokeWidth, prevState.selectedStrokeTypeDropDown);
+          style = getLineStringStyle([rgb.r, rgb.g, rgb.b, prev.strokeAlpha], prev.strokeWidth, prev.selectedStrokeTypeDropDown);
         } else {
-          style = getPolygonStyle(
-            [rgb.r, rgb.g, rgb.b, prevState.strokeAlpha],
-            prevState.strokeWidth,
-            [prevState.fillColor.r, prevState.fillColor.g, prevState.fillColor.b, prevState.fillAlpha],
-            prevState.selectedStrokeTypeDropDown
-          );
+          style = getPolygonStyle([rgb.r, rgb.g, rgb.b, prev.strokeAlpha], prev.strokeWidth, [prev.fillColor.r, prev.fillColor.g, prev.fillColor.b, prev.fillAlpha], prev.selectedStrokeTypeDropDown);
         }
 
         updateItemStyle(style, {
-          pointType: prevState.selectedPointStyleDropDown,
-          strokeType: prevState.selectedStrokeTypeDropDown,
+          pointType: prev.selectedPointStyleDropDown,
+          strokeType: prev.selectedStrokeTypeDropDown,
         });
 
-        return updatedState;
+        return { ...prev, strokeColor: rgbWithAlpha };
+      } else if (currentColorPicker.colorType === "label" && currentColorPicker.labelColorType) {
+        return handleLabelColorChange(prev, currentColorPicker.labelColorType, hexColor);
       }
+
+      return prev;
     });
   };
+
+  const closeColorPicker = () => {
+    console.log("🔴 MyMapsSymbolizer: closeColorPicker called", {
+      wasVisible: colorPicker.visible,
+      colorType: colorPicker.colorType,
+      labelColorType: colorPicker.labelColorType,
+    });
+    setColorPicker((prev) => ({ ...prev, visible: false }));
+  };
+
+  // ============================================
+  // LABEL STYLE HANDLERS
+  // ============================================
+
+  const handleLabelColorChange = (prev: SymbolizerState, labelColorType: string, hexColor: string): SymbolizerState => {
+    console.log("🏷️ MyMapsSymbolizer: handleLabelColorChange called", {
+      labelColorType,
+      hexColor,
+      itemId: item.id,
+    });
+
+    const newLabelStyle = { ...prev.labelStyle };
+
+    switch (labelColorType) {
+      case "textColor":
+        newLabelStyle.textColor = hexColor;
+        break;
+      case "labelOutlineColor":
+        newLabelStyle.labelOutlineColor = hexColor;
+        break;
+      case "backgroundColor":
+        newLabelStyle.backgroundColor = hexColor;
+        break;
+      case "borderColor":
+        newLabelStyle.borderColor = hexColor;
+        break;
+      case "lineColor":
+        newLabelStyle.lineColor = hexColor;
+        break;
+      case "anchorColor":
+        newLabelStyle.anchorColor = hexColor;
+        break;
+    }
+
+    // Update the item's labelStyle in the store
+    const fullLabelStyle: LabelStyleOptions = {
+      textColor: newLabelStyle.textColor,
+      textSize: newLabelStyle.textSize,
+      outlineColor: newLabelStyle.labelOutlineColor,
+      outlineWidth: newLabelStyle.labelOutlineWidth,
+      backgroundColor: newLabelStyle.backgroundColor,
+      borderColor: newLabelStyle.borderColor,
+      lineColor: newLabelStyle.lineColor,
+      anchorColor: newLabelStyle.anchorColor,
+    };
+
+    updateItem(item.id, { labelStyle: fullLabelStyle });
+    emit("mymap-label-style-change", { id: item.id, labelStyle: fullLabelStyle });
+
+    return { ...prev, labelStyle: newLabelStyle };
+  };
+
+  const updateLabelStyle = (updates: Partial<LabelStyleState>) => {
+    setState((prev) => {
+      const newLabelStyle = { ...prev.labelStyle, ...updates };
+
+      const fullLabelStyle: LabelStyleOptions = {
+        textColor: newLabelStyle.textColor,
+        textSize: newLabelStyle.textSize,
+        outlineColor: newLabelStyle.labelOutlineColor,
+        outlineWidth: newLabelStyle.labelOutlineWidth,
+        backgroundColor: newLabelStyle.backgroundColor,
+        borderColor: newLabelStyle.borderColor,
+        lineColor: newLabelStyle.lineColor,
+        anchorColor: newLabelStyle.anchorColor,
+      };
+
+      updateItem(item.id, { labelStyle: fullLabelStyle });
+      emit("mymap-label-style-change", { id: item.id, labelStyle: fullLabelStyle });
+
+      return { ...prev, labelStyle: newLabelStyle };
+    });
+  };
+
+  const onTextColorPickerButton = (evt: React.MouseEvent) => {
+    setColorPicker({
+      visible: true,
+      position: { x: evt.clientX, y: evt.clientY },
+      colorType: "label",
+      labelColorType: "textColor",
+      currentColor: state.labelStyle.textColor,
+    });
+  };
+
+  const onFontSizeChange = (evt: React.ChangeEvent<HTMLSelectElement>) => {
+    updateLabelStyle({ textSize: evt.target.value });
+  };
+
+  const onLabelOutlineColorPickerButton = (evt: React.MouseEvent) => {
+    setColorPicker({
+      visible: true,
+      position: { x: evt.clientX, y: evt.clientY },
+      colorType: "label",
+      labelColorType: "labelOutlineColor",
+      currentColor: state.labelStyle.labelOutlineColor,
+    });
+  };
+
+  const onLabelOutlineWidthChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    updateLabelStyle({ labelOutlineWidth: parseFloat(evt.target.value) });
+  };
+
+  const onBackgroundColorPickerButton = (evt: React.MouseEvent) => {
+    setColorPicker({
+      visible: true,
+      position: { x: evt.clientX, y: evt.clientY },
+      colorType: "label",
+      labelColorType: "backgroundColor",
+      currentColor: state.labelStyle.backgroundColor,
+    });
+  };
+
+  const onBorderColorPickerButton = (evt: React.MouseEvent) => {
+    setColorPicker({
+      visible: true,
+      position: { x: evt.clientX, y: evt.clientY },
+      colorType: "label",
+      labelColorType: "borderColor",
+      currentColor: state.labelStyle.borderColor,
+    });
+  };
+
+  const onLineColorPickerButton = (evt: React.MouseEvent) => {
+    setColorPicker({
+      visible: true,
+      position: { x: evt.clientX, y: evt.clientY },
+      colorType: "label",
+      labelColorType: "lineColor",
+      currentColor: state.labelStyle.lineColor,
+    });
+  };
+
+  const onAnchorColorPickerButton = (evt: React.MouseEvent) => {
+    setColorPicker({
+      visible: true,
+      position: { x: evt.clientX, y: evt.clientY },
+      colorType: "label",
+      labelColorType: "anchorColor",
+      currentColor: state.labelStyle.anchorColor,
+    });
+  };
+
+  // ============================================
+  // RENDER
+  // ============================================
+
+  console.log("🎯 MyMapsSymbolizer render", {
+    visible,
+    itemId: item.id,
+    drawType: item.drawType,
+    labelVisible: item.labelVisible,
+    colorPickerVisible: colorPicker.visible,
+  });
 
   if (!visible) {
     return <div className="sc-hidden" />;
@@ -916,123 +760,97 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
   const rgbFill = `rgb(${state.fillColor.r},${state.fillColor.g},${state.fillColor.b})`;
   const rgbStroke = `rgb(${state.strokeColor.r},${state.strokeColor.g},${state.strokeColor.b})`;
   const geometryType = item.geometryType;
+  const isPoint = geometryType === "Point" || geometryType === "MultiPoint";
+  const isPolygon = geometryType === "Polygon" || geometryType === "MultiPolygon";
+  const isCallout = item.drawType === "Callout";
 
   return (
     <fieldset className="sc-fieldset">
       <legend>
-        <img src="/images/symbolizer.png" alt="symbolizer" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/images/symbolizer.png" alt="symbolizer" width={16} height={16} />
         Symbolizer
       </legend>
       <div className="sc-mymaps-symbolizer-container">
         {/* POINT TYPE */}
-        {geometryType === "Point" && (
-          <>
-            <label className="sc-mymaps-style-label">Style:</label>
-            <select className="sc-mymaps-style-dropdown" name="pointSymbols" value={state.selectedPointStyleDropDown} onChange={onPointStyleDropDown}>
-              <option value="circle">Circle</option>
-              <option value="cross">Cross</option>
-              <option value="square">Square</option>
-              <option value="triangle">Triangle</option>
-              <option value="star">Star</option>
-              <option value="x">X</option>
-            </select>
-          </>
-        )}
+        <PointType visible={isPoint} selectedPointStyleDropDown={state.selectedPointStyleDropDown} onPointStyleDropDown={onPointStyleDropDown} />
 
         {/* STYLE SIZE */}
-        {geometryType === "Point" && (
-          <>
-            <label className="sc-mymaps-sub-label">Size:</label>
-            <div className="sc-mymaps-symbolizer-slider size">
-              <input type="range" style={{ width: "100%" }} min={sliderRadiusMin} max={sliderRadiusMax} value={state.radius} step="1" onChange={onRadiusSliderChange} />
-            </div>
-          </>
-        )}
+        <StyleSize visible={isPoint} sliderRadiusMin={SLIDER_RADIUS_MIN} sliderRadiusMax={SLIDER_RADIUS_MAX} radius={state.radius} onRadiusSliderChange={onRadiusSliderChange} />
 
         {/* FILL COLOR */}
-        {(geometryType === "Point" || geometryType === "Polygon" || geometryType === "MultiPolygon") && (
-          <>
-            <label className={geometryType === "Point" ? "sc-mymaps-sub-label" : "sc-mymaps-style-label"}>Color:</label>
-            <div className="sc-mymaps-fill-color-button">
-              <button
-                id="sc-mymaps-symbolizer-color-button"
-                style={{
-                  backgroundColor: rgbFill,
-                  width: "30px",
-                  height: "15px",
-                  cursor: "pointer",
-                }}
-                onMouseUp={onFillColorPickerButton}
-              />
-              <div className="sc-mymaps-symbolizer-slider opacity">
-                <input
-                  key="sc-mymaps-symbolizer-fill-opacity"
-                  type="range"
-                  style={{ width: "100%" }}
-                  min={sliderFillOpacityMin}
-                  max={sliderFillOpacityMax}
-                  value={state.fillAlpha}
-                  step="0.05"
-                  onChange={onFillOpacitySliderChange}
-                />
-              </div>
-            </div>
-          </>
-        )}
+        <FillColor
+          visible={isPoint || isPolygon}
+          isPolygon={isPolygon}
+          rgbFill={rgbFill}
+          fillAlpha={state.fillAlpha}
+          sliderFillOpacityMin={SLIDER_FILL_OPACITY_MIN}
+          sliderFillOpacityMax={SLIDER_FILL_OPACITY_MAX}
+          onFillColorPickerButton={onFillColorPickerButton}
+          onFillOpacitySliderChange={onFillOpacitySliderChange}
+        />
 
         {/* STROKE TYPE */}
-        <label className="sc-mymaps-style-label">Outline:</label>
-        <select className="sc-mymaps-style-dropdown" name="pointOutline" value={state.selectedStrokeTypeDropDown} onChange={onStrokeTypeDropDown}>
-          <option value="normal">Normal</option>
-          <option value="dash">Dash</option>
-          <option value="dot">Dot</option>
-        </select>
+        <StrokeType visible={!isCallout} selectedStrokeTypeDropDown={state.selectedStrokeTypeDropDown} onStrokeTypeDropDown={onStrokeTypeDropDown} />
 
         {/* STROKE COLOR */}
-        <label className="sc-mymaps-sub-label">Color:</label>
-        <div className="sc-mymaps-fill-color-button">
-          <button
-            id="sc-mymaps-symbolizer-stroke-color-button"
-            style={{
-              backgroundColor: rgbStroke,
-              width: "30px",
-              height: "15px",
-              cursor: "pointer",
-            }}
-            onMouseUp={onStrokeColorPickerButton}
-          />
-          <div className="sc-mymaps-symbolizer-slider opacity">
-            <input
-              key="sc-mymaps-symbolizer-stroke-opacity"
-              type="range"
-              style={{ width: "100%" }}
-              min={sliderStrokeOpacityMin}
-              max={sliderStrokeOpacityMax}
-              value={state.strokeAlpha}
-              step="0.05"
-              onChange={onStrokeOpacitySliderChange}
-            />
-          </div>
-        </div>
+        <StrokeColor
+          visible={!isCallout}
+          rgbStroke={rgbStroke}
+          strokeAlpha={state.strokeAlpha}
+          sliderStrokeOpacityMin={SLIDER_STROKE_OPACITY_MIN}
+          sliderStrokeOpacityMax={SLIDER_STROKE_OPACITY_MAX}
+          onStrokeColorPickerButton={onStrokeColorPickerButton}
+          onStrokeOpacitySliderChange={onStrokeOpacitySliderChange}
+        />
 
         {/* STROKE WIDTH */}
-        <label className="sc-mymaps-sub-label">Width:</label>
-        <div className="sc-mymaps-symbolizer-slider size">
-          <input type="range" style={{ width: "100%" }} min={sliderStrokeWidthMin} max={sliderStrokeWidthMax} value={state.strokeWidth} step="0.5" onChange={onStrokeWidthSliderChange} />
-        </div>
+        <StrokeWidth
+          visible={!isCallout}
+          strokeWidth={state.strokeWidth}
+          sliderStrokeWidthMin={SLIDER_STROKE_WIDTH_MIN}
+          sliderStrokeWidthMax={SLIDER_STROKE_WIDTH_MAX}
+          onStrokeWidthSliderChange={onStrokeWidthSliderChange}
+        />
 
         {/* ROTATION */}
-        {geometryType === "Point" && (
+        <Rotation visible={isPoint} rotation={state.rotation} sliderRotationMin={SLIDER_ROTATION_MIN} sliderRotationMax={SLIDER_ROTATION_MAX} onRotationSliderChange={onRotationSliderChange} />
+
+        {/* LABEL STYLE SECTION */}
+        {item.labelVisible && (
           <>
-            <label className="sc-mymaps-style-label">Angle:</label>
-            <div className="sc-mymaps-angle-slider">
-              <div className="sc-mymaps-symbolizer-slider angle">
-                <input type="range" min={sliderRotationMin} max={sliderRotationMax} value={state.rotation} step="0.1" onChange={onRotationSliderChange} />
-              </div>
-            </div>
+            <div className="sc-mymaps-symbolizer-divider">Label Style</div>
+
+            <LabelTextColor visible={true} textColor={state.labelStyle.textColor} onTextColorPickerButton={onTextColorPickerButton} />
+
+            <LabelFontSize visible={true} fontSize={state.labelStyle.textSize} onFontSizeChange={onFontSizeChange} />
+
+            <LabelOutlineColor visible={true} outlineColor={state.labelStyle.labelOutlineColor} onOutlineColorPickerButton={onLabelOutlineColorPickerButton} />
+
+            <LabelOutlineWidth visible={true} outlineWidth={state.labelStyle.labelOutlineWidth} onOutlineWidthChange={onLabelOutlineWidthChange} />
+
+            {/* Callout-specific controls */}
+            {item.drawType === "Callout" && (
+              <>
+                <div className="sc-mymaps-symbolizer-divider">Callout Style</div>
+
+                <CalloutBackgroundColor visible={true} backgroundColor={state.labelStyle.backgroundColor} onBackgroundColorPickerButton={onBackgroundColorPickerButton} />
+
+                <CalloutBorderColor visible={true} borderColor={state.labelStyle.borderColor} onBorderColorPickerButton={onBorderColorPickerButton} />
+
+                <CalloutLineColor visible={true} lineColor={state.labelStyle.lineColor} onLineColorPickerButton={onLineColorPickerButton} />
+
+                <CalloutAnchorColor visible={true} anchorColor={state.labelStyle.anchorColor} onAnchorColorPickerButton={onAnchorColorPickerButton} />
+              </>
+            )}
           </>
         )}
       </div>
+
+      {/* Color Picker Portal */}
+      {colorPicker.visible && (
+        <ColorPicker color={colorPicker.currentColor} position={colorPicker.position} onColorChange={handleColorChange} onClose={closeColorPicker} showRGBInputs={colorPicker.colorType !== "label"} />
+      )}
     </fieldset>
   );
 };

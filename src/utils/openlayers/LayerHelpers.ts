@@ -11,9 +11,17 @@ declare global {
 import { Image as ImageLayer, Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup, VectorTile as VectorTileLayer } from "ol/layer";
 import WebGLTileLayer from "ol/layer/WebGLTile";
 import { ImageWMS, OSM, TileArcGISRest, ImageArcGISRest, TileWMS, TileImage, Vector, XYZ, ImageStatic, GeoTIFF } from "ol/source";
-import WMTS from "ol/source/WMTS";
+import WMTS, { optionsFromCapabilities } from "ol/source/WMTS";
+import WMTSCapabilities from "ol/format/WMTSCapabilities";
 import VectorTileSource from "ol/source/VectorTile";
-import { GeoJSON } from "ol/format";
+import proj4 from "proj4";
+import { register } from "ol/proj/proj4";
+
+// Register common Canadian projections for WMTS support
+proj4.defs("EPSG:3978", "+proj=lcc +lat_0=49 +lon_0=-95 +lat_1=49 +lat_2=77 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs");
+proj4.defs("EPSG:3979", "+proj=lcc +lat_0=49 +lon_0=-95 +lat_1=49 +lat_2=77 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs");
+register(proj4);
+import { GeoJSON, GPX, KML, EsriJSON, GML2, GML3, TopoJSON, IGC, Polyline, WKT } from "ol/format";
 import { all as LoadingStrategyAll } from "ol/loadingstrategy";
 import { Extent } from "ol/extent";
 import { Projection } from "ol/proj";
@@ -106,10 +114,10 @@ export class LayerHelpers {
                   rebuildParams: rebuildParams,
                 },
                 layers: layers,
-              })
+              }),
             );
           }
-        }
+        },
       );
     });
   }
@@ -135,7 +143,7 @@ export class LayerHelpers {
       minZoom = null,
       maxZoom = null,
     }: LayerOptions,
-    callback: (layer: Layer) => void
+    callback: (layer: Layer) => void,
   ): void {
     const rebuildParams: RebuildParams = {
       sourceType,
@@ -167,7 +175,7 @@ export class LayerHelpers {
             new VectorLayer({
               properties: { rebuildParams },
               source: new Vector(),
-            })
+            }),
           );
           return;
         }
@@ -180,7 +188,7 @@ export class LayerHelpers {
               source: new GeoTIFF({
                 sources: [{ url: imageUrl }],
               }),
-            })
+            }),
           );
           return;
         }
@@ -197,18 +205,54 @@ export class LayerHelpers {
               const fr = new FileReader();
 
               fr.onload = (evt) => {
-                const vectorData = evt.target?.result as ArrayBuffer;
-                if (featureParser && "readFeatures" in featureParser && vectorData) {
-                  const features = featureParser.readFeatures(vectorData, {
-                    dataProjection: projection,
-                    featureProjection: mapProjection,
-                  });
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  (this as any).addFeatures(features);
+                try {
+                  const vectorData = evt.target?.result as string;
+                  if (featureParser && "readFeatures" in featureParser && vectorData) {
+                    // Auto-detect projection from file data (important for KML which uses EPSG:4326)
+                    let dataProjection = projection;
+                    if ("readProjection" in featureParser) {
+                      const detectedProjection = featureParser.readProjection(vectorData);
+                      if (detectedProjection) {
+                        dataProjection = detectedProjection.getCode();
+                      }
+                    }
+
+                    const features = featureParser.readFeatures(vectorData, {
+                      dataProjection: dataProjection,
+                      featureProjection: mapProjection,
+                    });
+
+                    if (features.length === 0) {
+                      console.warn("No features found in file");
+                      return;
+                    }
+
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (this as any).addFeatures(features);
+
+                    // Zoom to extent of loaded features if map is available
+                    if (features.length > 0 && window.map) {
+                      const vectorSource = (this as any) as Vector;
+                      const extent = vectorSource.getExtent();
+                      if (extent && extent.some((val) => isFinite(val))) {
+                        window.map.getView().fit(extent, {
+                          padding: [50, 50, 50, 50],
+                          maxZoom: 18,
+                          duration: 500,
+                        });
+                      }
+                    }
+                  }
+                } catch (error) {
+                  console.error("Error parsing file data:", error);
                 }
               };
 
-              fr.readAsArrayBuffer(file);
+              fr.onerror = (error) => {
+                console.error("Error reading file:", error);
+              };
+
+              fr.readAsText(file);
             } catch (error) {
               console.error("Error loading file:", error);
             }
@@ -236,7 +280,7 @@ export class LayerHelpers {
             }),
             minZoom: minZoom || undefined,
             maxZoom: maxZoom || undefined,
-          })
+          }),
         );
         break;
 
@@ -245,7 +289,7 @@ export class LayerHelpers {
           new TileLayer({
             properties: { rebuildParams, name: finalName },
             source: new OSM(),
-          })
+          }),
         );
         break;
 
@@ -282,7 +326,7 @@ export class LayerHelpers {
           new ImageLayer({
             properties: { rebuildParams, name: finalName },
             source: imageWMSSource,
-          })
+          }),
         );
         break;
 
@@ -297,7 +341,7 @@ export class LayerHelpers {
                 TILED: tiled,
               },
             }),
-          })
+          }),
         );
         break;
 
@@ -308,8 +352,95 @@ export class LayerHelpers {
             source: new TileArcGISRest({
               url: finalUrl as string,
             }),
-          })
+          }),
         );
+        break;
+
+      case OL_DATA_TYPES.WMTS:
+        {
+          // WMTS requires fetching capabilities to get tile matrix set
+          const wmtsCapabilitiesUrl = finalUrl as string;
+          const capUrl = wmtsCapabilitiesUrl.includes("GetCapabilities")
+            ? wmtsCapabilitiesUrl
+            : `${wmtsCapabilitiesUrl}${wmtsCapabilitiesUrl.includes("?") ? "&" : "?"}service=WMTS&version=1.0.0&request=GetCapabilities`;
+
+          fetch(capUrl)
+            .then((response) => response.text())
+            .then((text) => {
+              const parser = new WMTSCapabilities();
+              const capabilities = parser.read(text);
+
+              // Get available matrix sets from capabilities
+              const availableMatrixSets: string[] = capabilities?.Contents?.TileMatrixSet?.map((t: { Identifier: string }) => t.Identifier) || [];
+
+              // Try common matrix sets first, then fall back to available ones
+              const matrixSetNames = [
+                projection || "EPSG:3857",
+                "EPSG:3857",
+                "GoogleMapsCompatible",
+                "WebMercatorQuad",
+                "EPSG:900913",
+                "EPSG:4326",
+                ...availableMatrixSets, // Add all available matrix sets as fallback
+              ];
+
+              // Remove duplicates
+              const uniqueMatrixSets = [...new Set(matrixSetNames)];
+
+              let wmtsOptions = null;
+              for (const matrixSet of uniqueMatrixSets) {
+                try {
+                  wmtsOptions = optionsFromCapabilities(capabilities, {
+                    layer: layerName,
+                    matrixSet: matrixSet,
+                  });
+                  if (wmtsOptions) {
+                    console.log(`✅ WMTS: Found matching matrix set: ${matrixSet} for layer: ${layerName}`);
+                    break;
+                  }
+                } catch (e) {
+                  // Try next matrix set - this can happen if the projection isn't registered
+                  console.debug(`WMTS: Matrix set ${matrixSet} not compatible:`, e);
+                }
+              }
+
+              // If still no options, try without specifying matrixSet (let it auto-detect)
+              if (!wmtsOptions) {
+                try {
+                  wmtsOptions = optionsFromCapabilities(capabilities, {
+                    layer: layerName,
+                  });
+                  if (wmtsOptions) {
+                    console.log(`✅ WMTS: Auto-detected matrix set for layer: ${layerName}`);
+                  }
+                } catch (e) {
+                  console.error("❌ WMTS: Failed to auto-detect matrix set:", e);
+                }
+              }
+
+              if (wmtsOptions) {
+                wmtsOptions.crossOrigin = "anonymous";
+                callback(
+                  new TileLayer({
+                    properties: { rebuildParams, name: finalName },
+                    source: new WMTS(wmtsOptions),
+                  }),
+                );
+              } else {
+                console.error("❌ WMTS: Could not create options from capabilities for layer:", layerName);
+                console.error(
+                  "❌ WMTS: Available layers:",
+                  capabilities?.Contents?.Layer?.map((l: { Identifier: string }) => l.Identifier),
+                );
+                console.error("❌ WMTS: Available matrix sets:", availableMatrixSets);
+                callback(null as unknown as Layer);
+              }
+            })
+            .catch((error) => {
+              console.error("❌ WMTS: Error fetching capabilities:", error);
+              callback(null as unknown as Layer);
+            });
+        }
         break;
 
       case OL_DATA_TYPES.SimcoeTiled:
@@ -324,7 +455,7 @@ export class LayerHelpers {
               crossOrigin: "anonymous",
               tileGrid: tileGrid,
             }),
-          })
+          }),
         );
         break;
 
@@ -359,7 +490,7 @@ export class LayerHelpers {
           new TileLayer({
             properties: { rebuildParams, name: finalName },
             source: xyzSource,
-          })
+          }),
         );
         break;
 
@@ -420,7 +551,136 @@ export class LayerHelpers {
               strategy: LoadingStrategyAll,
               loader: vectorFileLoader,
             }),
-          })
+          }),
+        );
+        break;
+
+      case OL_DATA_TYPES.KML:
+        callback(
+          new VectorLayer({
+            properties: { rebuildParams, name: finalName },
+            source: new Vector({
+              format: new KML({
+                extractStyles: true,
+                showPointNames: false,
+              }),
+              url: finalUrl as string,
+              strategy: LoadingStrategyAll,
+              loader: vectorFileLoader,
+            }),
+          }),
+        );
+        break;
+
+      case OL_DATA_TYPES.GPX:
+        callback(
+          new VectorLayer({
+            properties: { rebuildParams, name: finalName },
+            source: new Vector({
+              format: new GPX(),
+              url: finalUrl as string,
+              strategy: LoadingStrategyAll,
+              loader: vectorFileLoader,
+            }),
+          }),
+        );
+        break;
+
+      case OL_DATA_TYPES.GML3:
+        callback(
+          new VectorLayer({
+            properties: { rebuildParams, name: finalName },
+            source: new Vector({
+              format: new GML3({ srsName: projection }),
+              url: finalUrl as string,
+              strategy: LoadingStrategyAll,
+              loader: vectorFileLoader,
+            }),
+          }),
+        );
+        break;
+
+      case OL_DATA_TYPES.GML2:
+        callback(
+          new VectorLayer({
+            properties: { rebuildParams, name: finalName },
+            source: new Vector({
+              format: new GML2({ srsName: projection }),
+              url: finalUrl as string,
+              strategy: LoadingStrategyAll,
+              loader: vectorFileLoader,
+            }),
+          }),
+        );
+        break;
+
+      case OL_DATA_TYPES.EsriJSON:
+        callback(
+          new VectorLayer({
+            properties: { rebuildParams, name: finalName },
+            source: new Vector({
+              format: new EsriJSON(),
+              url: finalUrl as string,
+              strategy: LoadingStrategyAll,
+              loader: vectorFileLoader,
+            }),
+          }),
+        );
+        break;
+
+      case OL_DATA_TYPES.TopoJSON:
+        callback(
+          new VectorLayer({
+            properties: { rebuildParams, name: finalName },
+            source: new Vector({
+              format: new TopoJSON(),
+              url: finalUrl as string,
+              strategy: LoadingStrategyAll,
+              loader: vectorFileLoader,
+            }),
+          }),
+        );
+        break;
+
+      case OL_DATA_TYPES.IGC:
+        callback(
+          new VectorLayer({
+            properties: { rebuildParams, name: finalName },
+            source: new Vector({
+              format: new IGC(),
+              url: finalUrl as string,
+              strategy: LoadingStrategyAll,
+              loader: vectorFileLoader,
+            }),
+          }),
+        );
+        break;
+
+      case OL_DATA_TYPES.Polyline:
+        callback(
+          new VectorLayer({
+            properties: { rebuildParams, name: finalName },
+            source: new Vector({
+              format: new Polyline(),
+              url: finalUrl as string,
+              strategy: LoadingStrategyAll,
+              loader: vectorFileLoader,
+            }),
+          }),
+        );
+        break;
+
+      case OL_DATA_TYPES.WKT:
+        callback(
+          new VectorLayer({
+            properties: { rebuildParams, name: finalName },
+            source: new Vector({
+              format: new WKT(),
+              url: finalUrl as string,
+              strategy: LoadingStrategyAll,
+              loader: vectorFileLoader,
+            }),
+          }),
         );
         break;
 

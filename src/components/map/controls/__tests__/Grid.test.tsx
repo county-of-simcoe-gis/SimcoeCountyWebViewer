@@ -14,14 +14,15 @@ vi.mock("@/utils/openlayers/LayerManager", () => ({
 }));
 
 // Mock OpenLayers Graticule
-const mockGraticule = {
-  setMap: vi.fn(),
-};
-//clear render mocks
-vi.clearAllMocks();
-vi.mock("ol/layer/Graticule", () => ({
-  default: vi.fn(() => mockGraticule),
-}));
+vi.mock("ol/layer/Graticule", () => {
+  return {
+    default: vi.fn(function () {
+      return {
+        setMap: vi.fn(),
+      };
+    }),
+  };
+});
 
 vi.mock("ol/style", () => ({
   Stroke: vi.fn().mockImplementation(function () {
@@ -75,7 +76,8 @@ describe("Grid", () => {
       expect(screen.getByTitle("Hide map grid")).toBeInTheDocument();
     });
 
-    expect(LayerManager.addLayer).toHaveBeenCalledWith(mockGraticule, "Overlay", "Grid Graticule", {
+    expect(LayerManager.addLayer).toHaveBeenCalled();
+    expect(LayerManager.addLayer).toHaveBeenCalledWith(expect.any(Object), "Overlay", "Grid Graticule", {
       index: 0,
       metadata: {
         isGrid: true,
@@ -101,7 +103,7 @@ describe("Grid", () => {
 
     // Check that addLayer was called
     expect(LayerManager.addLayer).toHaveBeenCalled();
-    expect(LayerManager.addLayer).toHaveBeenCalledWith(mockGraticule, "Overlay", "Grid Graticule", {
+    expect(LayerManager.addLayer).toHaveBeenCalledWith(expect.any(Object), "Overlay", "Grid Graticule", {
       index: 0,
       metadata: {
         isGrid: true,

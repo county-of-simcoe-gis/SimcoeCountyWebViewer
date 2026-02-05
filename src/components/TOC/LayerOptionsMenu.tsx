@@ -6,6 +6,7 @@ import type { Layer } from "ol/layer";
 import { TOCLayer, TOCLayerGroup, useTOCStore } from "@/stores/tocStore";
 import { useLayerManagerStore } from "@/stores/layerManagerStore";
 import { useMapStore } from "@/stores/mapStore";
+import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { FaInfoCircle, FaSearchPlus, FaDownload, FaTrash, FaTable, FaTimes, FaEye } from "react-icons/fa";
 import { openLayerInfo } from "@/lib/layerInfoHelpers";
 import "@/components/TOC/LayerOptionsMenu.css";
@@ -18,7 +19,7 @@ interface LayerOptionsMenuProps {
   onLayerChange: (layer: TOCLayer, group: TOCLayerGroup) => void;
 }
 
-export default function LayerOptionsMenu({ layerInfo, position, onClose }: LayerOptionsMenuProps) {
+export default function LayerOptionsMenu({ layerInfo, group, position, onClose }: LayerOptionsMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Always get the most current layer info from TOC store to avoid stale data
@@ -507,8 +508,16 @@ export default function LayerOptionsMenu({ layerInfo, position, onClose }: Layer
     }
 
     if (confirm(`Are you sure you want to remove the layer "${layerInfo.tocDisplayName}"?`)) {
-      // Implement layer removal
-      alert("Layer removal would be implemented here.");
+      // Remove from OpenLayers map via LayerManager
+      if (layerInfo.managedLayerId) {
+        LayerManager.removeLayer(layerInfo.managedLayerId);
+      }
+
+      // Remove from TOC store (both LIST and FOLDER views)
+      const groupName = group?.label || group?.value || "User Added";
+      useTOCStore.getState().removeCustomLayer(layerInfo.name, groupName, layerInfo.id);
+
+      console.log(`🗑️ User layer "${layerInfo.tocDisplayName}" removed`);
     }
     onClose();
   };
@@ -622,6 +631,6 @@ export default function LayerOptionsMenu({ layerInfo, position, onClose }: Layer
         {visibleMenuItems.length === 0 && <div className="layer-options-menu-item layer-options-menu-empty">No options available for this layer.</div>}
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

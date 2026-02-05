@@ -23,8 +23,8 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Get the live layer data from the store to ensure we have the latest legend data
-  // Use a selector to only subscribe to this specific layer's data
-  const currentLayerData = useTOCStore((state) => state.allLayers.find((l) => l.name === layerInfo.name) || layerInfo);
+  // Use id as primary lookup (unique), fall back to name for legacy layers
+  const currentLayerData = useTOCStore((state) => state.allLayers.find((l) => (layerInfo.id ? l.id === layerInfo.id : l.name === layerInfo.name)) || layerInfo);
 
   // Memoize the legend data to prevent unnecessary recalculations
   const legendData = useMemo(
@@ -32,7 +32,7 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
       image: shouldLoadLegend ? currentLayerData.legendImage : null,
       obj: shouldLoadLegend ? currentLayerData.legendObj : null,
     }),
-    [shouldLoadLegend, currentLayerData.legendImage, currentLayerData.legendObj]
+    [shouldLoadLegend, currentLayerData.legendImage, currentLayerData.legendObj],
   );
 
   // Use the hook to determine legend display mode, but ONLY when shouldLoadLegend is true
@@ -88,7 +88,7 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
         root: null, // Use viewport as root
         rootMargin: "200px", // Load images 200px before they enter viewport for smooth experience
         threshold: 0.01, // Trigger when at least 1% is visible
-      }
+      },
     );
 
     if (containerRef.current) {
@@ -125,7 +125,7 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
         </span>
       ) : (
         part
-      )
+      ),
     );
   };
 
