@@ -1,7 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import PanelComponent from "@/components/PanelComponent";
+import { useMapStore, type ControlVisibility } from "@/stores/mapStore";
+import config from "@/config.json";
 
 interface SettingsToolProps {
   name?: string;
@@ -13,101 +15,251 @@ interface SettingsToolProps {
   options?: Record<string, unknown>;
 }
 
+interface LocalStorageItem {
+  key: string;
+  size: number;
+}
+
+// Control display configuration with logical grouping
+const controlGroups = {
+  navigation: [
+    { key: "rotate" as keyof ControlVisibility, label: "Rotate Map" },
+    { key: "fullScreen" as keyof ControlVisibility, label: "Full Screen" },
+    { key: "zoomInOut" as keyof ControlVisibility, label: "Zoom In/Out" },
+    { key: "currentLocation" as keyof ControlVisibility, label: "Current Location" },
+    { key: "zoomExtent" as keyof ControlVisibility, label: "Zoom to Extent" },
+    { key: "extentHistory" as keyof ControlVisibility, label: "Extent History" },
+  ],
+  display: [
+    { key: "scale" as keyof ControlVisibility, label: "Scale Text" },
+    { key: "scaleLine" as keyof ControlVisibility, label: "Scale Line" },
+    { key: "basemap" as keyof ControlVisibility, label: "Basemap Switcher" },
+    { key: "grid" as keyof ControlVisibility, label: "Grid" },
+  ],
+  other: [
+    { key: "gitHubButton" as keyof ControlVisibility, label: "GitHub Button" },
+    { key: "scaleSelector" as keyof ControlVisibility, label: "Scale Selector" },
+  ],
+};
+
 export default function SettingsTool({ name = "Settings", helpLink, hideHeader = false, onClose, onSidebarVisibility }: SettingsToolProps) {
+  const { controlVisibility, setControlVisibility, resetControlVisibilityToDefaults } = useMapStore();
+  const [localStorageItems, setLocalStorageItems] = useState<LocalStorageItem[]>([]);
+  const [showClearAllModal, setShowClearAllModal] = useState(false);
+
+  // Load localStorage items on mount
+  useEffect(() => {
+    loadLocalStorageItems();
+  }, []);
+
+  const loadLocalStorageItems = () => {
+    if (typeof window === "undefined") return;
+
+    const items: LocalStorageItem[] = [];
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+
+      // Filter out Next-Auth tokens
+      if (key.startsWith("next-auth") || key.startsWith("__Secure-next-auth") || key.includes("session-token") || key.includes("csrf-token")) {
+        continue;
+      }
+
+      const value = localStorage.getItem(key);
+      const size = value ? new Blob([value]).size : 0;
+
+      items.push({ key, size });
+    }
+
+    // Sort by key name
+    items.sort((a, b) => a.key.localeCompare(b.key));
+    setLocalStorageItems(items);
+  };
+
+  const handleControlToggle = (key: keyof ControlVisibility) => {
+    setControlVisibility(key, !controlVisibility[key]);
+  };
+
+  const handleResetToDefaults = () => {
+    resetControlVisibilityToDefaults(config);
+  };
+
+  const handleReloadPage = () => {
+    window.location.reload();
+  };
+
+  const handleClearAll = () => {
+    setShowClearAllModal(true);
+  };
+
+  const confirmClearAll = () => {
+    if (typeof window === "undefined") return;
+
+    // Clear all except Next-Auth tokens
+    const keysToRemove: string[] = [];
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+
+      // Keep Next-Auth tokens
+      if (key.startsWith("next-auth") || key.startsWith("__Secure-next-auth") || key.includes("session-token") || key.includes("csrf-token")) {
+        continue;
+      }
+
+      keysToRemove.push(key);
+    }
+
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+
+    setShowClearAllModal(false);
+    loadLocalStorageItems();
+  };
+
+  const handleClearItem = (key: string) => {
+    if (typeof window === "undefined") return;
+
+    localStorage.removeItem(key);
+    loadLocalStorageItems();
+  };
+
+  const formatBytes = (bytes: number): string => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+  };
+
   return (
     <PanelComponent name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={onClose} onSidebarVisibility={onSidebarVisibility}>
-      <div className="sc-container">
-        <div style={{ marginBottom: "15px" }}>
-          <label style={{ display: "block", marginBottom: "10px", fontWeight: "bold", fontSize: "14px" }}>Map Controls:</label>
+      <div className="flex flex-col gap-4 p-4 text-sm">
+        {/* Map Controls Section */}
+        <div className="card bg-base-100 border border-base-200 shadow-sm">
+          <div className="card-body p-4 gap-4">
+            <div className="flex items-center justify-between">
+              <h3 className="card-title text-sm">Map Controls</h3>
+              <button className="btn btn-primary btn-xs shadow-sm" onClick={handleResetToDefaults}>
+                Reset to Defaults
+              </button>
+            </div>
 
-          <div style={{ marginBottom: "8px" }}>
-            <label style={{ display: "flex", alignItems: "center", fontSize: "12px" }}>
-              <input type="checkbox" defaultChecked style={{ marginRight: "8px" }} />
-              Show Zoom In/Out Controls
-            </label>
-          </div>
+            {/* Navigation Controls */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="badge badge-ghost badge-sm">Navigation</span>
+                <span className="text-xs text-base-content/60">Map movement tools</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                {controlGroups.navigation.map(({ key, label }) => (
+                  <label key={key} className="label cursor-pointer justify-start gap-3 rounded-lg px-2 py-1 hover:bg-base-200/60">
+                    <input type="checkbox" className="checkbox checkbox-sm" checked={controlVisibility[key]} onChange={() => handleControlToggle(key)} />
+                    <span className="label-text text-xs">{label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
 
-          <div style={{ marginBottom: "8px" }}>
-            <label style={{ display: "flex", alignItems: "center", fontSize: "12px" }}>
-              <input type="checkbox" defaultChecked style={{ marginRight: "8px" }} />
-              Show Full Screen Control
-            </label>
-          </div>
+            {/* Display Controls */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="badge badge-ghost badge-sm">Display</span>
+                <span className="text-xs text-base-content/60">Map visual aids</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                {controlGroups.display.map(({ key, label }) => (
+                  <label key={key} className="label cursor-pointer justify-start gap-3 rounded-lg px-2 py-1 hover:bg-base-200/60">
+                    <input type="checkbox" className="checkbox checkbox-sm" checked={controlVisibility[key]} onChange={() => handleControlToggle(key)} />
+                    <span className="label-text text-xs">{label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
 
-          <div style={{ marginBottom: "8px" }}>
-            <label style={{ display: "flex", alignItems: "center", fontSize: "12px" }}>
-              <input type="checkbox" defaultChecked style={{ marginRight: "8px" }} />
-              Show Current Location Control
-            </label>
-          </div>
-
-          <div style={{ marginBottom: "8px" }}>
-            <label style={{ display: "flex", alignItems: "center", fontSize: "12px" }}>
-              <input type="checkbox" defaultChecked style={{ marginRight: "8px" }} />
-              Show Scale Control
-            </label>
-          </div>
-
-          <div style={{ marginBottom: "8px" }}>
-            <label style={{ display: "flex", alignItems: "center", fontSize: "12px" }}>
-              <input type="checkbox" defaultChecked style={{ marginRight: "8px" }} />
-              Show Scale Line
-            </label>
-          </div>
-
-          <div style={{ marginBottom: "8px" }}>
-            <label style={{ display: "flex", alignItems: "center", fontSize: "12px" }}>
-              <input type="checkbox" defaultChecked style={{ marginRight: "8px" }} />
-              Show Basemap Switcher
-            </label>
-          </div>
-        </div>
-
-        <div style={{ marginBottom: "15px" }}>
-          <label style={{ display: "block", marginBottom: "10px", fontWeight: "bold", fontSize: "14px" }}>Display Options:</label>
-
-          <div style={{ marginBottom: "8px" }}>
-            <label style={{ display: "flex", alignItems: "center", fontSize: "12px" }}>
-              <input type="checkbox" defaultChecked style={{ marginRight: "8px" }} />
-              Show Layer Opacity Controls
-            </label>
-          </div>
-
-          <div style={{ marginBottom: "8px" }}>
-            <label style={{ display: "flex", alignItems: "center", fontSize: "12px" }}>
-              <input type="checkbox" style={{ marginRight: "8px" }} />
-              Show Layer Metadata
-            </label>
-          </div>
-
-          <div style={{ marginBottom: "8px" }}>
-            <label style={{ display: "flex", alignItems: "center", fontSize: "12px" }}>
-              <input type="checkbox" defaultChecked style={{ marginRight: "8px" }} />
-              Show Search History
-            </label>
+            {/* Other Controls */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="badge badge-ghost badge-sm">Other</span>
+                <span className="text-xs text-base-content/60">Misc controls</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                {controlGroups.other.map(({ key, label }) => (
+                  <label key={key} className="label cursor-pointer justify-start gap-3 rounded-lg px-2 py-1 hover:bg-base-200/60">
+                    <input type="checkbox" className="checkbox checkbox-sm" checked={controlVisibility[key]} onChange={() => handleControlToggle(key)} />
+                    <span className="label-text text-xs">{label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
-        <div style={{ marginBottom: "15px" }}>
-          <label style={{ display: "block", marginBottom: "10px", fontWeight: "bold", fontSize: "14px" }}>Local Storage:</label>
+        {/* Local Storage Management Section */}
+        <div className="card bg-base-100 border border-base-200 shadow-sm">
+          <div className="card-body p-4 gap-4">
+            <div className="flex items-center justify-between">
+              <h3 className="card-title text-sm">Local Storage</h3>
+              <div className="flex gap-2">
+                <button className="btn btn-sm btn-secondary shadow-sm" onClick={handleReloadPage}>
+                  Reload
+                </button>
+                <button className="btn btn-sm btn-error shadow-sm" onClick={handleClearAll}>
+                  Clear All
+                </button>
+              </div>
+            </div>
 
-          <div style={{ marginBottom: "10px" }}>
-            <button className="sc-button" style={{ width: "100%", marginBottom: "5px" }}>
-              Clear Search History
-            </button>
-            <button className="sc-button" style={{ width: "100%", marginBottom: "5px" }}>
-              Clear My Maps Data
-            </button>
-            <button className="sc-button" style={{ width: "100%", marginBottom: "5px" }}>
-              Clear All Local Data
-            </button>
+            {/* Individual Storage Items */}
+            {localStorageItems.length > 0 && (
+              <div>
+                <h4 className="text-xs font-semibold text-base-content/70 mb-2">Stored Items</h4>
+                <div className="flex flex-col gap-2 max-h-64 overflow-y-auto pr-1">
+                  {localStorageItems.map(({ key, size }) => (
+                    <div key={key} className="flex items-center justify-between gap-3 rounded-lg border border-base-200 bg-base-200/40 p-2 text-xs">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">{key}</div>
+                        <div className="text-base-content/60 text-xs">{formatBytes(size)}</div>
+                      </div>
+                      <button className="btn btn-xs btn-error shadow-sm" onClick={() => handleClearItem(key)} title={`Clear ${key}`}>
+                        Clear
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {localStorageItems.length === 0 && <div className="text-xs text-base-content/60 text-center py-6">No stored items found</div>}
           </div>
         </div>
 
-        <div style={{ fontSize: "12px", color: "#666", backgroundColor: "#f9f9f9", padding: "8px", borderRadius: "3px" }}>
-          <strong>Note:</strong> Changes to map controls will take effect immediately. Local storage options will clear saved data from your browser.
+        {/* Info Note */}
+        <div className="alert alert-info text-xs">
+          <span>
+            <strong>Note:</strong> Map control changes apply immediately. Clearing storage removes saved data from your browser.
+          </span>
         </div>
       </div>
+
+      {/* Clear All Confirmation Modal */}
+      {showClearAllModal && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg">Clear All Saved Data?</h3>
+            <p className="py-4 text-sm text-base-content/70">This will remove all saved settings, search history, and other local data. This action cannot be undone.</p>
+            <div className="modal-action">
+              <button className="btn btn-sm shadow-sm" onClick={() => setShowClearAllModal(false)}>
+                Cancel
+              </button>
+              <button className="btn btn-error btn-sm shadow-sm" onClick={confirmClearAll}>
+                Clear All Data
+              </button>
+            </div>
+          </div>
+          <div className="modal-backdrop" onClick={() => setShowClearAllModal(false)}></div>
+        </div>
+      )}
     </PanelComponent>
   );
 }

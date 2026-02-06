@@ -225,7 +225,8 @@ export const MapContextMenuContainer: React.FC = () => {
               }
             }}
           />,
-          results.length > 1 ? `Results (${results.length})` : "Property Information"
+          results.length > 1 ? `Results (${results.length})` : "Property Information",
+          "Parcel",
         );
       }
     } catch (error) {

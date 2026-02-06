@@ -14,11 +14,11 @@
   },
   "dependencies": {
     "@camptocamp/inkmap": "^2.0.0",
+    "@types/react-window": "^1.8.8",
     "@types/uuid": "^10.0.0",
     "axios": "^1.12.2",
     "canvas": "^3.2.0",
     "copy-to-clipboard": "^3.3.3",
-    "daisyui": "^5.0.43",
     "fast-xml-parser": "^4.3.9",
     "immer": "^10.1.1",
     "jspdf": "^4.0.0",
@@ -37,6 +37,7 @@
     "react-select": "^5.10.2",
     "react-switch": "^7.1.0",
     "react-tabs": "^6.1.0",
+    "react-window": "^2.2.6",
     "react-virtualized": "^9.22.6",
     "uuid": "^11.1.0",
     "zustand": "^5.0.5"
@@ -58,6 +59,7 @@
     "@types/testing-library__jest-dom": "^6.0.0",
     "@vitejs/plugin-react": "^4.3.4",
     "cross-env": "^7.0.3",
+    "daisyui": "^5.5.17",
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
     "jsdom": "^26.1.0",

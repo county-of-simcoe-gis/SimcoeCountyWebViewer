@@ -110,3 +110,49 @@
 .sc-map-popup {
   animation: popupFadeIn 0.2s ease-out;
 }
+
+/* Multi-feature navigation */
+.sc-map-popup-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background-color: #f0f0f0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.sc-map-popup-nav-btn {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.sc-map-popup-nav-btn:hover {
+  background-color: #e8e8e8;
+  border-color: #ccc;
+}
+
+.sc-map-popup-nav-count {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  min-width: 60px;
+  text-align: center;
+}
+
+/* Layer name badge */
+.sc-map-popup-layer-badge {
+  font-size: 10px;
+  color: #666;
+  background-color: #e8f4fd;
+  border-bottom: 1px solid #d0e8f7;
+  padding: 4px 10px;
+  font-weight: 500;
+}

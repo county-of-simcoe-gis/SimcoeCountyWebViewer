@@ -4,11 +4,12 @@ import { useEffect, useRef } from "react";
 import { Overlay } from "ol";
 import { useMapStore } from "@/stores/mapStore";
 import { usePopupStore } from "@/stores/popupStore";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import "./MapPopup.css";
 
 export default function MapPopup() {
   const { map } = useMapStore();
-  const { setOverlay, isVisible, content, hide } = usePopupStore();
+  const { setOverlay, isVisible, features, selectedIndex, hide, nextFeature, prevFeature } = usePopupStore();
   const popupRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<Overlay | null>(null);
 
@@ -36,7 +37,7 @@ export default function MapPopup() {
     };
   }, [map, setOverlay]);
 
-  if (!isVisible || !content) {
+  if (!isVisible || features.length === 0) {
     return (
       <div ref={popupRef} className="sc-map-popup" style={{ display: "none" }}>
         <div className="sc-map-popup-content"></div>
@@ -44,15 +45,37 @@ export default function MapPopup() {
     );
   }
 
+  const currentFeature = features[selectedIndex];
+  const hasMultipleFeatures = features.length > 1;
+
   return (
     <div ref={popupRef} className="sc-map-popup">
       <div className="sc-map-popup-header">
-        <h3 className="sc-map-popup-title">{content.title}</h3>
+        <h3 className="sc-map-popup-title">{currentFeature.title}</h3>
         <button className="sc-map-popup-close" onClick={hide} aria-label="Close popup">
           ×
         </button>
       </div>
-      <div className="sc-map-popup-content">{content.content}</div>
+
+      {/* Feature navigation for multiple features */}
+      {hasMultipleFeatures && (
+        <div className="sc-map-popup-nav">
+          <button className="sc-map-popup-nav-btn" onClick={prevFeature} aria-label="Previous feature">
+            <FaChevronLeft size={12} />
+          </button>
+          <span className="sc-map-popup-nav-count">
+            {selectedIndex + 1} of {features.length}
+          </span>
+          <button className="sc-map-popup-nav-btn" onClick={nextFeature} aria-label="Next feature">
+            <FaChevronRight size={12} />
+          </button>
+        </div>
+      )}
+
+      {/* Layer name badge if available */}
+      {currentFeature.layerName && <div className="sc-map-popup-layer-badge">{currentFeature.layerName}</div>}
+
+      <div className="sc-map-popup-content">{currentFeature.content}</div>
     </div>
   );
 }

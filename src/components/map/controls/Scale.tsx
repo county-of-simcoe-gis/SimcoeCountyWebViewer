@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { getMapScale } from "@/utils/mapHelpers";
 import Map from "ol/Map";
-import config from "@/config.json";
+import { useMapStore } from "@/stores/mapStore";
+
 // React component for scale display
 interface ScaleDisplayProps {
   map?: Map;
@@ -9,35 +10,41 @@ interface ScaleDisplayProps {
 
 export const ScaleDisplay = React.memo(({ map }: ScaleDisplayProps) => {
   const [scale, setScale] = useState("1:0");
+  const controlVisibility = useMapStore((state) => state.controlVisibility);
+
   useEffect(() => {
     if (map) {
       const updateScale = () => {
         const newScale = getMapScale(map);
         setScale("1:" + newScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
-        // Find the ol-scale-line-inner element and update it with scale info
-        // Use a slight delay to ensure OpenLayers has updated the scale line first
-        setTimeout(() => {
-          const scaleLineInner = document.querySelector(".ol-scale-line-inner");
-          if (scaleLineInner) {
-            const formattedScale = newScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        
+        // Only update scale line if it's visible
+        if (controlVisibility.scaleLine) {
+          // Find the ol-scale-line-inner element and update it with scale info
+          // Use a slight delay to ensure OpenLayers has updated the scale line first
+          setTimeout(() => {
+            const scaleLineInner = document.querySelector(".ol-scale-line-inner");
+            if (scaleLineInner) {
+              const formattedScale = newScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
-            // Get the original distance text, but check if we've already modified it
-            let originalText = scaleLineInner.textContent || "";
+              // Get the original distance text, but check if we've already modified it
+              let originalText = scaleLineInner.textContent || "";
 
-            // If we've already added our scale, extract just the distance part
-            const scaleRatioRegex = /1:[0-9,]+/;
-            if (scaleRatioRegex.test(originalText)) {
-              // Extract just the distance part (everything after our scale ratio)
-              originalText = originalText.replace(/\s+1:[0-9,]+/, "").trim();
-            }
+              // If we've already added our scale, extract just the distance part
+              const scaleRatioRegex = /1:[0-9,]+/;
+              if (scaleRatioRegex.test(originalText)) {
+                // Extract just the distance part (everything after our scale ratio)
+                originalText = originalText.replace(/\s+1:[0-9,]+/, "").trim();
+              }
 
-            // Create HTML content with scale ratio on top and distance below
-            scaleLineInner.innerHTML = `<div style="line-height: 1.2; text-align: center;">
+              // Create HTML content with scale ratio on top and distance below
+              scaleLineInner.innerHTML = `<div style="line-height: 1.2; text-align: center;">
               <div>${originalText}</div>
               <div>1:${formattedScale}</div>
             </div>`;
-          }
-        }, 10);
+            }
+          }, 10);
+        }
       };
 
       // Initial update
@@ -57,10 +64,10 @@ export const ScaleDisplay = React.memo(({ map }: ScaleDisplayProps) => {
         map.un("rendercomplete", updateScale);
       };
     }
-  }, [map]);
+  }, [map, controlVisibility.scaleLine]);
 
   // Return null since we're directly manipulating the DOM
-  if (!config.controls?.scaleLine) {
+  if (!controlVisibility.scaleLine) {
     return (
       <div className="text-gray-700 text-xs ol-scale-line" style={{ transform: "translateY(2em)" }}>
         {scale}

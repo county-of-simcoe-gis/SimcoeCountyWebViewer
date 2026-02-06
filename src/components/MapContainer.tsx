@@ -6,6 +6,7 @@ import { useEventStore } from "@/stores/eventStore";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
 import { usePopupStore } from "@/stores/popupStore";
+import { useInteractionManagerStore, type InteractionHandler as StoreInteractionHandler } from "@/stores/interactionManagerStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { useUrlParameterContextOptional } from "@/contexts/UrlParameterContext";
 
@@ -132,7 +133,20 @@ export const useInteractionManager = () => {
 export default function MapContainer() {
   const { isOpen } = useSidebarStore();
   const { emitMapLoaded } = useEventStore();
-  const { map, setMap, addLoadedItem, setMapControls, setCurrentExtent, setCurrentZoom, setCurrentCenter, initExtentHistory, saveCurrentExtentToHistory } = useMapStore();
+  const {
+    map,
+    setMap,
+    addLoadedItem,
+    setMapControls,
+    setCurrentExtent,
+    setCurrentZoom,
+    setCurrentCenter,
+    initExtentHistory,
+    saveCurrentExtentToHistory,
+    controlVisibility,
+    initControlVisibility,
+    setControlVisibility,
+  } = useMapStore();
   const { setMapLoading } = useAppStore();
   const { show: showPopup, hide: hidePopup } = usePopupStore();
   const urlParameters = useAppStore((state) => state.urlParameters);
@@ -145,8 +159,8 @@ export default function MapContainer() {
   const identifyIconLayerRef = useRef<VectorLayer<VectorSource<Feature<Geometry>>> | null>(null);
   const identifyIconLayerIdRef = useRef<string | null>(null);
 
-  // Handler-based system
-  const handlersRef = useRef<InteractionHandler[]>([]);
+  // Handler-based system - use store
+  const { registerHandler: storeRegisterHandler, unregisterHandler: storeUnregisterHandler } = useInteractionManagerStore();
   const unifiedInteractionRef = useRef<Interaction | null>(null);
   const shouldExecuteHandlerRef = useRef<((handler: InteractionHandler, event: MapBrowserEvent<OLUIEvent>) => boolean) | null>(null);
 
@@ -215,28 +229,22 @@ export default function MapContainer() {
     shouldExecuteHandlerRef.current = shouldExecuteHandler;
   }, [shouldExecuteHandler]);
 
-  // Handler registration
-  const registerHandler = useCallback((handler: InteractionHandler) => {
-    // Remove existing handler with same ID if it exists
-    handlersRef.current = handlersRef.current.filter((h) => h.id !== handler.id);
+  // Handler registration - delegate to store
+  const registerHandler = useCallback(
+    (handler: InteractionHandler) => {
+      storeRegisterHandler(handler as StoreInteractionHandler);
+      console.log(`MapContainer: Registered handler "${handler.id}" for event "${handler.eventType}"`);
+    },
+    [storeRegisterHandler],
+  );
 
-    // Add new handler
-    handlersRef.current.push(handler);
-
-    // Sort by priority
-    handlersRef.current.sort((a, b) => (a.priority || 100) - (b.priority || 100));
-
-    // console.log(`MapContainer: Registered handler "${handler.id}" for event "${handler.eventType}"`);
-  }, []);
-
-  const unregisterHandler = useCallback((handlerId: string) => {
-    const initialLength = handlersRef.current.length;
-    handlersRef.current = handlersRef.current.filter((h) => h.id !== handlerId);
-
-    if (handlersRef.current.length < initialLength) {
-      // console.log(`MapContainer: Unregistered handler "${handlerId}"`);
-    }
-  }, []);
+  const unregisterHandler = useCallback(
+    (handlerId: string) => {
+      storeUnregisterHandler(handlerId);
+      console.log(`MapContainer: Unregistered handler "${handlerId}"`);
+    },
+    [storeUnregisterHandler],
+  );
 
   // Legacy interaction callbacks (for backward compatibility)
   const registerInteraction = useCallback(
@@ -331,7 +339,10 @@ export default function MapContainer() {
       keyboardEventTarget: document,
     });
 
-    // Configure map controls based on config
+    // Initialize control visibility from config and localStorage
+    initControlVisibility(config);
+
+    // Configure map controls based on config (for backward compatibility)
     const mapControls: Record<string, boolean> = {
       rotate: config.controls?.rotate ?? true,
       fullScreen: config.controls?.fullScreen ?? true,
@@ -414,9 +425,18 @@ export default function MapContainer() {
       handleEvent(event: MapBrowserEvent<OLUIEvent>): boolean {
         const eventType = event.type as InteractionEventType;
 
-        // Get handlers for this event type - use ref to get current version
+        // Get handlers directly from store to ensure we have the latest
+        const currentHandlers = useInteractionManagerStore.getState().handlers as InteractionHandler[];
         const checkHandler = shouldExecuteHandlerRef.current || (() => true);
-        const applicableHandlers = handlersRef.current.filter((h) => h.eventType === eventType && checkHandler(h, event));
+        console.log(
+          `UnifiedInteraction: Event "${eventType}", total handlers in store: ${currentHandlers.length}`,
+          currentHandlers.map((h) => h.id),
+        );
+        const applicableHandlers = currentHandlers.filter((h) => h.eventType === eventType && checkHandler(h, event));
+        console.log(
+          `UnifiedInteraction: Applicable handlers for "${eventType}": ${applicableHandlers.length}`,
+          applicableHandlers.map((h) => h.id),
+        );
 
         if (applicableHandlers.length === 0) {
           return true; // Allow event to propagate
@@ -901,85 +921,86 @@ export default function MapContainer() {
         component: GitHubButtonWrapper,
         zone: "top-left",
         order: 1,
-        enabled: config.controls?.gitHubButton ?? true,
+        enabled: controlVisibility.gitHubButton,
       },
       zoomControls: {
         component: ZoomControlsWrapper,
         zone: "top-left",
         order: 1,
-        enabled: config.controls?.zoomInOut ?? true,
+        enabled: controlVisibility.zoomInOut,
       },
       currentLocation: {
         component: CurrentLocationWrapper,
         zone: "top-left",
         order: 2,
-        enabled: config.controls?.currentLocation ?? true,
+        enabled: controlVisibility.currentLocation,
       },
       extentHistory: {
         component: ExtentHistoryWrapper,
         zone: "top-left",
         order: 3,
-        enabled: config.controls?.extentHistory ?? false,
+        enabled: controlVisibility.extentHistory,
       },
       zoomExtent: {
         component: ZoomToExtentWrapper,
         zone: "top-left",
         order: 4,
-        enabled: config.controls?.zoomExtent ?? true,
+        enabled: controlVisibility.zoomExtent,
       },
       grid: {
         component: GridWrapper,
         zone: "top-left",
         order: 5,
-        enabled: config.controls?.showGrid ?? false,
+        enabled: controlVisibility.grid,
       },
 
       // gitHubButton: {
       //   component: GitHubButtonWrapper,
       //   zone: "top-right",
       //   order: 1,
-      //   enabled: config.controls?.gitHubButton ?? true,
+      //   enabled: controlVisibility.gitHubButton,
       // },
       basemap: {
         component: BasemapSwitcher,
         zone: "top-right",
         order: 1,
-        enabled: config.controls?.basemap ?? true,
+        enabled: controlVisibility.basemap,
       },
 
       fullScreen: {
         component: FullscreenControlWrapper,
         zone: "bottom-left",
         order: 1,
-        enabled: config.controls?.fullScreen ?? true,
+        enabled: controlVisibility.fullScreen,
       },
       rotate: {
         component: RotateControlWrapper,
         zone: "bottom-left",
         order: 2,
-        enabled: config.controls?.rotate ?? true,
+        enabled: controlVisibility.rotate,
       },
 
       scaleSelector: {
         component: ScaleSelectorWrapper,
         zone: "bottom-right",
         order: 2,
-        enabled: config.controls?.scaleSelector ?? false,
+        enabled: controlVisibility.scaleSelector,
       },
       scale: {
         component: ScaleDisplayWrapper,
         zone: "bottom-right",
         order: 1,
-        enabled: config.controls?.scale ?? true,
+        enabled: controlVisibility.scale,
       },
       attribution: {
         component: AttributionControlWrapper,
         zone: "bottom-right",
         order: 3,
-        enabled: config.controls?.attribution ?? true,
+        enabled: controlVisibility.attribution,
       },
     }),
     [
+      controlVisibility,
       ZoomControlsWrapper,
       CurrentLocationWrapper,
       ExtentHistoryWrapper,
@@ -1013,8 +1034,111 @@ export default function MapContainer() {
     }
   }, [map, zoneControls]);
 
+  // Handle ScaleLine control visibility
+  useEffect(() => {
+    if (!map) return;
+
+    const scaleLineControl = new ScaleLine();
+
+    if (controlVisibility.scaleLine) {
+      // Check if ScaleLine is already added
+      const controls = map.getControls().getArray();
+      const hasScaleLine = controls.some((c) => c instanceof ScaleLine);
+
+      if (!hasScaleLine) {
+        map.addControl(scaleLineControl);
+      }
+    } else {
+      // Remove ScaleLine if it exists
+      const controls = map.getControls().getArray();
+      const existingScaleLine = controls.find((c) => c instanceof ScaleLine);
+
+      if (existingScaleLine) {
+        map.removeControl(existingScaleLine);
+      }
+    }
+
+    return () => {
+      // Cleanup on unmount
+      const controls = map.getControls().getArray();
+      const existingScaleLine = controls.find((c) => c instanceof ScaleLine);
+      if (existingScaleLine) {
+        map.removeControl(existingScaleLine);
+      }
+    };
+  }, [map, controlVisibility.scaleLine]);
+
+  // Handle Attribution control visibility
+  useEffect(() => {
+    if (!map) return;
+
+    if (controlVisibility.attribution) {
+      // Check if Attribution is already added
+      const controls = map.getControls().getArray();
+      const hasAttribution = controls.some((c) => c instanceof Attribution);
+
+      if (!hasAttribution) {
+        const attributionControl = new Attribution({
+          collapsible: false,
+        });
+        map.addControl(attributionControl);
+      }
+    } else {
+      // Remove Attribution if it exists
+      const controls = map.getControls().getArray();
+      const existingAttribution = controls.find((c) => c instanceof Attribution);
+
+      if (existingAttribution) {
+        map.removeControl(existingAttribution);
+      }
+    }
+
+    return () => {
+      // Cleanup on unmount
+      const controls = map.getControls().getArray();
+      const existingAttribution = controls.find((c) => c instanceof Attribution);
+      if (existingAttribution) {
+        map.removeControl(existingAttribution);
+      }
+    };
+  }, [map, controlVisibility.attribution]);
+
+  // Handle rotate interactions visibility
+  useEffect(() => {
+    if (!map) return;
+
+    const interactions = map.getInteractions().getArray();
+
+    if (controlVisibility.rotate) {
+      // Add rotate interactions if they don't exist
+      const hasPinchRotate = interactions.some((i) => i instanceof PinchRotate);
+      const hasDragRotate = interactions.some((i) => i instanceof DragRotate);
+
+      if (!hasPinchRotate) {
+        map.addInteraction(new PinchRotate());
+      }
+      if (!hasDragRotate) {
+        map.addInteraction(new DragRotate());
+      }
+    } else {
+      // Remove rotate interactions without resetting rotation
+      const pinchRotate = interactions.find((i) => i instanceof PinchRotate);
+      const dragRotate = interactions.find((i) => i instanceof DragRotate);
+
+      if (pinchRotate) map.removeInteraction(pinchRotate);
+      if (dragRotate) map.removeInteraction(dragRotate);
+    }
+  }, [map, controlVisibility.rotate]);
+
   // Show unified popup when results are available
   useEffect(() => {
+    // If no results but we have a coordinate, hide the popup (user clicked on empty area)
+    if (aggregatedResults.length === 0 && resultsCoordinate && !isLoadingResults) {
+      hidePopup();
+      setResultsCoordinate(null);
+      return;
+    }
+
     if (aggregatedResults.length > 0 && resultsCoordinate) {
       const handleClose = () => {
         // Clear parcel layers from any results that have the clear function
@@ -1048,10 +1172,14 @@ export default function MapContainer() {
         });
       };
 
+      // Hide any existing popup first, then show the new one
+      hidePopup();
+
       showPopup(
         resultsCoordinate,
         <ResultsPopup results={aggregatedResults} onClose={handleClose} isLoadingResults={isLoadingResults} onSelectResult={handleSelectResult} onClearParcelLayer={handleClearParcelLayer} />,
         aggregatedResults.length > 1 ? `Results (${aggregatedResults.length})` : "Result",
+        "Query Results",
       );
     }
   }, [aggregatedResults, resultsCoordinate, isLoadingResults, showPopup, hidePopup]);
