@@ -149,15 +149,18 @@ export class ParcelClickInteraction extends Interaction {
 
   /**
    * Static helper: Check vector and image layers for disableParcelClick property
+   * Returns true if parcel click should be disabled (i.e., a feature from a layer
+   * with disableParcelClick=true was clicked)
    */
   public static checkLayersForDisable(event: MapBrowserEvent<UIEvent>): boolean {
     const map = event.map;
     let shouldDisable = false;
 
-    // Check vector layers
+    // Check vector layers - look for features from layers that have disableParcelClick=true
     map.forEachFeatureAtPixel(
       event.pixel,
       (feature, layer) => {
+        // If we found a feature from a layer with disableParcelClick, disable parcel click
         if (layer && layer.get("disableParcelClick") === true) {
           shouldDisable = true;
           return true; // Stop iteration
@@ -165,9 +168,10 @@ export class ParcelClickInteraction extends Interaction {
       },
       {
         layerFilter: (layer) => {
-          return layer.get("disableParcelClick") !== true && layer.getVisible() && layer instanceof VectorLayer;
+          // Only check layers that have disableParcelClick=true and are visible vector layers
+          return layer.get("disableParcelClick") === true && layer.getVisible() && layer instanceof VectorLayer;
         },
-      }
+      },
     );
 
     if (shouldDisable) return true;

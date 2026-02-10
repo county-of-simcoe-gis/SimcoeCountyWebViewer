@@ -22,12 +22,12 @@ export default function WeatherTool({ name = "Weather", helpLink, hideHeader = f
 
   return (
     <PanelComponent name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={onClose} onSidebarVisibility={onSidebarVisibility}>
-      <Tabs selectedIndex={activeTab} onSelect={setActiveTab} className="w-full flex flex-col h-full" selectedTabClassName="border-b-2 border-primary text-primary">
-        <TabList className="flex gap-1 border-b border-base-300 mb-0 sticky top-0 bg-base-100 z-50">
-          <Tab className="py-2 px-4 text-sm font-medium cursor-pointer border-b-2 border-transparent hover:border-base-300 outline-none btn" selectedClassName="border-b-2 border-primary text-primary">
+      <Tabs selectedIndex={activeTab} onSelect={setActiveTab} className="w-full flex flex-col h-full">
+        <TabList className="tabs tabs-bordered sticky top-0 bg-base-100 z-50">
+          <Tab className="tab text-sm" selectedClassName="tab-active">
             Radar
           </Tab>
-          <Tab className="py-2 px-4 text-sm font-medium cursor-pointer border-b-2 border-transparent hover:border-base-300 outline-none" selectedClassName="border-b-2 border-primary text-primary">
+          <Tab className="tab text-sm" selectedClassName="tab-active">
             Forecast
           </Tab>
         </TabList>

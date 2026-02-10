@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Feature } from "ol";
 import { FaHome, FaBuilding, FaLayerGroup } from "react-icons/fa";
 import RecordSelectorPopup, { RecordItem } from "@/components/RecordSelectorPopup";
@@ -62,6 +62,21 @@ interface ResultsPopupProps {
 export default function ResultsPopup({ results, onClose, onClearParcelLayer, isLoadingResults = false, resultsError = null, onSelectResult }: ResultsPopupProps) {
   const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
   const [isLoadingContent, setIsLoadingContent] = useState(false);
+
+  // Auto-select first result when results change
+  useEffect(() => {
+    if (results.length > 0 && !isLoadingResults) {
+      const firstResult = results[0];
+      setSelectedRecordId(firstResult.id);
+
+      // Also trigger lazy loading for the first result if needed
+      if (onSelectResult) {
+        onSelectResult(firstResult);
+      }
+    } else if (results.length === 0) {
+      setSelectedRecordId(null);
+    }
+  }, [results, isLoadingResults, onSelectResult]);
 
   // Custom icon renderer for collapsed state
   const renderCollapsedIcon = (result: Result, index: number, isSelected: boolean) => {
@@ -151,6 +166,11 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
   // Render content based on result type
   const renderContent = (result: Result | null) => {
     if (!result) return null;
+
+    // Check for custom render function first
+    if (result.data?.renderContent && typeof result.data.renderContent === "function") {
+      return result.data.renderContent();
+    }
 
     switch (result.type) {
       case "property":

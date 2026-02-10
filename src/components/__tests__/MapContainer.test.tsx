@@ -54,6 +54,23 @@ const mockMapStore: Record<string, any> = {
   setCurrentCenter: vi.fn(),
   initExtentHistory: vi.fn(),
   saveCurrentExtentToHistory: vi.fn(),
+  controlVisibility: {
+    rotate: true,
+    fullScreen: true,
+    zoomInOut: true,
+    currentLocation: true,
+    zoomExtent: true,
+    extentHistory: true,
+    scale: true,
+    scaleLine: true,
+    basemap: true,
+    grid: false,
+    gitHubButton: true,
+    scaleSelector: false,
+  },
+  setControlVisibility: vi.fn(),
+  resetControlVisibilityToDefaults: vi.fn(),
+  initControlVisibility: vi.fn(),
 };
 
 vi.mock("@/stores/mapStore", () => ({

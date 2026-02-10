@@ -24,7 +24,11 @@ const AddLayerTool = lazy(() => import("@/components/tools/AddLayer/AddLayerTool
 const TogglerTool = lazy(() => import("@/components/tools/toggler/TogglerTool"));
 
 // Lazy load theme components
-const ForestryTheme = lazy(() => import("@/components/themes/ForestryTheme"));
+const ForestryTheme = lazy(() => import("@/components/themes/Forestry/Forestry"));
+const ChildCareFacilitiesTheme = lazy(() => import("@/components/themes/ChildCareFacilities/ChildCareFacilities"));
+const TwoOneOneTheme = lazy(() => import("@/components/themes/TwoOneOne/TwoOneOne"));
+const SolidWasteFacilitiesTheme = lazy(() => import("@/components/themes/SolidWasteFacilities/SolidWasteFacilities"));
+const ImmigrationServicesTheme = lazy(() => import("@/components/themes/ImmigrationServices/ImmigrationServices"));
 const AvlTheme = lazy(() => import("@/components/themes/avl/AvlTheme"));
 
 // Lazy load TOC component
@@ -86,6 +90,11 @@ const themeComponents: Record<
   >
 > = {
   Forestry: ForestryTheme,
+  ChildCareFacilities: ChildCareFacilitiesTheme,
+  TwoOneOne: TwoOneOneTheme,
+  "211": TwoOneOneTheme,
+  SolidWasteFacilities: SolidWasteFacilitiesTheme,
+  ImmigrationServices: ImmigrationServicesTheme,
   Avl: AvlTheme,
 };
 

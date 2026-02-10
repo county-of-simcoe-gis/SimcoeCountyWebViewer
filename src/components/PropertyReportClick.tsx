@@ -162,7 +162,7 @@ export default function PropertyReportClick() {
         };
       }
     },
-    [getShareURL]
+    [getShareURL],
   );
 
   // Convert Web Mercator to Lat/Long
@@ -264,13 +264,14 @@ export default function PropertyReportClick() {
         showPopup(
           pointerPoint,
           <ResultsPopup results={results} onClose={handleClose} onSelectResult={handleSelectResult} onClearParcelLayer={clearParcelLayer} />,
-          results.length > 1 ? `Results (${results.length})` : "Property Information"
+          results.length > 1 ? `Results (${results.length})` : "Property Information",
+          "Parcel",
         );
       } catch (error) {
         console.error("Error fetching parcel data:", error);
       }
     },
-    [map, toLatLongFromWebMercator, fetchPropertyInfo, showPopup, hidePopup]
+    [map, toLatLongFromWebMercator, fetchPropertyInfo, showPopup, hidePopup],
   );
 
   // Fetch parcel data and return results (for interaction handler)
@@ -359,7 +360,7 @@ export default function PropertyReportClick() {
         return [];
       }
     },
-    [toLatLongFromWebMercator, fetchPropertyInfo]
+    [toLatLongFromWebMercator, fetchPropertyInfo],
   );
 
   // Register handler for parcel clicks using new system

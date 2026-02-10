@@ -51,7 +51,7 @@ export function ExtentHistoryButtons({}: ExtentHistoryButtonsProps) {
   return (
     <div className="flex gap-1 w-[38px] h-[38px]">
       <div
-        className={`w-[19px] h-[38px] bg-gradient-to-b from-white to-gray-200 rounded-full shadow-md btn btn-sm border-0 hover:shadow-lg transition-all duration-200 inline-flex items-center justify-center ${
+        className={`w-[19px] h-[38px] bg-gradient-to-b from-white to-gray-200 rounded-full shadow-md border-0 hover:shadow-lg transition-all duration-200 inline-flex items-center justify-center ${
           !canGoPrev ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:scale-105"
         }`}
         title="Previous Extent"
@@ -61,7 +61,7 @@ export function ExtentHistoryButtons({}: ExtentHistoryButtonsProps) {
       </div>
 
       <div
-        className={`w-[19px] h-[38px] bg-gradient-to-b from-white to-gray-200 rounded-full shadow-md btn btn-sm border-0 hover:shadow-lg transition-all duration-200 inline-flex items-center justify-center ${
+        className={`w-[19px] h-[38px] bg-gradient-to-b from-white to-gray-200 rounded-full shadow-md border-0 hover:shadow-lg transition-all duration-200 inline-flex items-center justify-center ${
           !canGoFwd ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:scale-105"
         }`}
         title="Next Extent"

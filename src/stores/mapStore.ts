@@ -1,6 +1,25 @@
 import { create } from "zustand";
 import Map from "ol/Map";
 
+// Control visibility configuration
+export interface ControlVisibility {
+  rotate: boolean;
+  fullScreen: boolean;
+  zoomInOut: boolean;
+  currentLocation: boolean;
+  zoomExtent: boolean;
+  scale: boolean;
+  scaleLine: boolean;
+  basemap: boolean;
+  gitHubButton: boolean;
+  scaleSelector: boolean;
+  grid: boolean;
+  extentHistory: boolean;
+  attribution: boolean;
+}
+
+const STORAGE_KEY_MAP_CONTROLS = "Map_Control_Settings";
+
 // Map interaction states that were previously window variables
 interface MapState {
   // Core map instance
@@ -19,6 +38,9 @@ interface MapState {
   // Map controls configuration
   mapControls: Record<string, unknown> | null;
 
+  // Control visibility (runtime state)
+  controlVisibility: ControlVisibility;
+
   // Loading tracking (previously window.loaded array)
   loadedItems: string[];
 
@@ -30,6 +52,7 @@ interface MapState {
   // Enhanced extent history
   extentHistory: Array<{ center: number[]; zoom: number }>;
   currentExtentIndex: number;
+  
   // Actions
   setMap: (map: Map) => void;
   setPopup: (popup: unknown) => void;
@@ -39,6 +62,11 @@ interface MapState {
   setIsCoordinateToolOpen: (isOpen: boolean) => void;
   setIsMeasuring: (isMeasuring: boolean) => void;
   setMapControls: (controls: Record<string, unknown>) => void;
+
+  // Control visibility actions
+  setControlVisibility: (key: keyof ControlVisibility, value: boolean) => void;
+  resetControlVisibilityToDefaults: (config: { controls?: Partial<ControlVisibility> }) => void;
+  initControlVisibility: (config: { controls?: Partial<ControlVisibility> }) => void;
 
   // Loading management (replaces window.loaded array)
   addLoadedItem: (item: string) => void;
@@ -59,6 +87,45 @@ interface MapState {
   setCurrentExtentIndex: (index: number) => void;
 }
 
+// Helper function to get default control visibility from config
+const getDefaultControlVisibility = (config?: { controls?: Partial<ControlVisibility> }): ControlVisibility => {
+  return {
+    rotate: config?.controls?.rotate ?? false,
+    fullScreen: config?.controls?.fullScreen ?? true,
+    zoomInOut: config?.controls?.zoomInOut ?? true,
+    currentLocation: config?.controls?.currentLocation ?? true,
+    zoomExtent: config?.controls?.zoomExtent ?? true,
+    scale: config?.controls?.scale ?? true,
+    scaleLine: config?.controls?.scaleLine ?? true,
+    basemap: config?.controls?.basemap ?? true,
+    gitHubButton: config?.controls?.gitHubButton ?? true,
+    scaleSelector: config?.controls?.scaleSelector ?? false,
+    grid: config?.controls?.grid ?? false,
+    extentHistory: config?.controls?.extentHistory ?? false,
+    attribution: config?.controls?.attribution ?? true,
+  };
+};
+
+// Helper function to load control visibility from localStorage
+const loadControlVisibilityFromStorage = (config?: { controls?: Partial<ControlVisibility> }): ControlVisibility => {
+  if (typeof window === "undefined") {
+    return getDefaultControlVisibility(config);
+  }
+
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY_MAP_CONTROLS);
+    if (stored) {
+      const parsed = JSON.parse(stored) as Partial<ControlVisibility>;
+      // Merge with defaults to ensure all keys exist
+      return { ...getDefaultControlVisibility(config), ...parsed };
+    }
+  } catch (e) {
+    console.warn("Failed to parse stored control settings", e);
+  }
+
+  return getDefaultControlVisibility(config);
+};
+
 export const useMapStore = create<MapState>((set, get) => ({
   // Initial state
   map: null,
@@ -69,6 +136,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   isCoordinateToolOpen: false,
   isMeasuring: false,
   mapControls: null,
+  controlVisibility: getDefaultControlVisibility(),
   loadedItems: [],
   currentExtent: null,
   currentZoom: null,
@@ -77,6 +145,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   // Enhanced extent history initial state
   extentHistory: [],
   currentExtentIndex: -1,
+  
   // Actions
   setMap: (map) => set({ map }),
   setPopup: (popup) => set({ popup }),
@@ -86,6 +155,44 @@ export const useMapStore = create<MapState>((set, get) => ({
   setIsCoordinateToolOpen: (isOpen) => set({ isCoordinateToolOpen: isOpen }),
   setIsMeasuring: (isMeasuring) => set({ isMeasuring }),
   setMapControls: (controls) => set({ mapControls: controls }),
+
+  // Control visibility actions
+  setControlVisibility: (key, value) => {
+    set((state) => {
+      const newVisibility = { ...state.controlVisibility, [key]: value };
+      
+      // Save to localStorage
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem(STORAGE_KEY_MAP_CONTROLS, JSON.stringify(newVisibility));
+        } catch (e) {
+          console.warn("Failed to save control settings to localStorage", e);
+        }
+      }
+      
+      return { controlVisibility: newVisibility };
+    });
+  },
+
+  resetControlVisibilityToDefaults: (config) => {
+    const defaults = getDefaultControlVisibility(config);
+    set({ controlVisibility: defaults });
+    
+    // Save to localStorage
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(STORAGE_KEY_MAP_CONTROLS, JSON.stringify(defaults));
+      } catch (e) {
+        console.warn("Failed to save control settings to localStorage", e);
+      }
+    }
+  },
+
+  initControlVisibility: (config) => {
+    const visibility = loadControlVisibilityFromStorage(config);
+    set({ controlVisibility: visibility });
+  },
+  
   // Loading management
   addLoadedItem: (item) => {
     const state = get();
