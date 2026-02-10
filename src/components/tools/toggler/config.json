@@ -1,0 +1,169 @@
+{
+  "layers": [
+    {
+      "label": "Unit Counts - Multi Residential",
+      "value": "Unit Counts - Multi Residential",
+      "serverUrl": "https://opengis2.simcoe.ca/geoserver",
+      "layerName": "Toggler_-_Multi_Residential",
+      "sourceTable": "TABULAR.dbo.tbl_toggle_waste_units_multi_res",
+      "wfsSource": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
+      "keyField": "arn",
+      "zIndex": 500,
+      "security_keywords": ["toggler_solid_waste"]
+    },
+    {
+      "label": "Unit Counts - Condo",
+      "value": "Unit Counts - Condo",
+      "serverUrl": "https://opengis2.simcoe.ca/geoserver",
+      "layerName": "Toggler_-_Condo",
+      "sourceTable": "TABULAR.dbo.tbl_toggle_waste_units_condo",
+      "wfsSource": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
+      "keyField": "arn",
+      "zIndex": 500,
+      "security_keywords": ["toggler_solid_waste"]
+    },
+    {
+      "label": "Unit Counts - ICI",
+      "value": "Unit Counts - ICI",
+      "serverUrl": "https://opengis2.simcoe.ca/geoserver",
+      "layerName": "Toggler_-_ICI",
+      "sourceTable": "TABULAR.dbo.tbl_toggle_waste_units_ici",
+      "wfsSource": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
+      "keyField": "arn",
+      "zIndex": 500,
+      "security_keywords": ["toggler_solid_waste"]
+    },
+    {
+      "label": "Unit Counts - Schools",
+      "value": "Unit Counts - Schools",
+      "serverUrl": "https://opengis2.simcoe.ca/geoserver",
+      "layerName": "Toggler_-_School",
+      "sourceTable": "TABULAR.dbo.tbl_toggle_waste_units_school",
+      "wfsSource": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
+      "keyField": "arn",
+      "zIndex": 500,
+      "security_keywords": ["toggler_solid_waste"]
+    },
+    {
+      "label": "Unit Counts - Mobile Parks",
+      "value": "Unit Counts - Mobile Parks",
+      "serverUrl": "https://opengis2.simcoe.ca/geoserver",
+      "layerName": "Toggler_-_Mobile_Park",
+      "sourceTable": "TABULAR.dbo.tbl_toggle_waste_units_mobile_park",
+      "wfsSource": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
+      "keyField": "arn",
+      "zIndex": 500,
+      "security_keywords": ["toggler_solid_waste"]
+    },
+    {
+      "label": "Rehrig Multi Res 6 Unit Exceptions",
+      "value": "Rehrig Multi Res 6 Unit Exceptions",
+      "serverUrl": "https://opengis2.simcoe.ca/geoserver",
+      "layerName": "Toggler_-_Rehrig_Multi_Res_6_Unit_Exceptions",
+      "sourceTable": "TABULAR.dbo.tbl_toggle_waste_multi_res_six_unit_exception",
+      "wfsSource": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
+      "keyField": "arn",
+      "zIndex": 500,
+      "security_keywords": ["toggler_solid_waste"]
+    },
+    {
+      "label": "Route Exceptions - Early Collection",
+      "value": "Route Exceptions - Early Collection",
+      "serverUrl": "https://opengis2.simcoe.ca/geoserver",
+      "layerName": "Toggler_-_Route_Exception_Early_Collection",
+      "sourceTable": "TABULAR.dbo.tbl_toggle_waste_route_exception_early_collection",
+      "wfsSource": "https://opengis2.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe-secured:ssview_sc_e911slrn_geom&outputFormat=application/json",
+      "keyField": "ID",
+      "zIndex": 500,
+      "security_keywords": ["toggler_solid_waste"]
+    },
+    {
+      "label": "Route Exceptions - Mini",
+      "value": "Route Exceptions - Mini",
+      "serverUrl": "https://opengis2.simcoe.ca/geoserver",
+      "layerName": "Toggler_-_Route_Exception_Mini",
+      "sourceTable": "TABULAR.dbo.tbl_toggle_waste_route_exception_mini",
+      "wfsSource": "https://opengis2.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe-secured:ssview_sc_e911slrn_geom&outputFormat=application/json",
+      "keyField": "ID",
+      "zIndex": 500,
+      "security_keywords": ["toggler_solid_waste"]
+    },
+    {
+      "label": "Route Exceptions - Mini Winter",
+      "value": "Route Exceptions - Mini Winter",
+      "serverUrl": "https://opengis2.simcoe.ca/geoserver",
+      "layerName": "Toggler_-_Route_Exception_Mini_Winter",
+      "sourceTable": "TABULAR.dbo.tbl_toggle_waste_route_exception_mini_winter",
+      "wfsSource": "https://opengis2.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe-secured:ssview_sc_e911slrn_geom&outputFormat=application/json",
+      "keyField": "ID",
+      "zIndex": 500,
+      "security_keywords": ["toggler_solid_waste"]
+    },
+    {
+      "label": "Route Exceptions - Supervisor",
+      "value": "Route Exceptions - Supervisor",
+      "serverUrl": "https://opengis2.simcoe.ca/geoserver",
+      "layerName": "Toggler_-_Route_Exception_Supervisor",
+      "sourceTable": "TABULAR.dbo.tbl_toggle_waste_route_exception_supervisor",
+      "wfsSource": "https://opengis2.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe-secured:ssview_sc_e911slrn_geom&outputFormat=application/json",
+      "keyField": "ID",
+      "zIndex": 500,
+      "security_keywords": ["toggler_solid_waste"]
+    },
+    {
+      "label": "Calendar Mail Out Additions",
+      "value": "Calendar Mail Out Additions",
+      "serverUrl": "https://opengis2.simcoe.ca/geoserver",
+      "layerName": "Toggler_-_Calendar_Mailouts",
+      "sourceTable": "TABULAR.dbo.tbl_toggle_calendar_mailouts",
+      "wfsSource": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
+      "keyField": "arn",
+      "zIndex": 500,
+      "security_keywords": ["toggler_solid_waste"]
+    },
+    {
+      "label": "Freehold Condo Townhouse",
+      "value": "Freehold Condo Townhouse",
+      "serverUrl": "https://opengis2.simcoe.ca/geoserver",
+      "layerName": "Toggler_-_Freehold_Condo_Townhouse",
+      "sourceTable": "TABULAR.dbo.tbl_toggle_waste_freehold_condo_townhouse_on_private_roads",
+      "wfsSource": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
+      "keyField": "arn",
+      "zIndex": 500,
+      "security_keywords": ["toggler_solid_waste"]
+    },
+    {
+      "label": "Subsidy Accounts",
+      "value": "Subsidy Accounts",
+      "serverUrl": "https://opengis2.simcoe.ca/geoserver",
+      "layerName": "Toggler_-_Subsidy_Accounts",
+      "sourceTable": "TABULAR.dbo.tbl_toggle_waste_subsidy_accounts",
+      "wfsSource": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
+      "keyField": "arn",
+      "zIndex": 500,
+      "security_keywords": ["toggler_solid_waste"]
+    },
+    {
+      "label": "Multi-Residential Organics",
+      "value": "Multi-Residential Organics",
+      "serverUrl": "https://opengis2.simcoe.ca/geoserver",
+      "layerName": "Toggler_-_Multi-Residential_Organics",
+      "sourceTable": "TABULAR.dbo.tbl_toggle_waste_multi_res_organics",
+      "wfsSource": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
+      "keyField": "arn",
+      "zIndex": 500,
+      "security_keywords": ["toggler_solid_waste"]
+    },
+    {
+      "label": "Multi-Residential Recycling Pass",
+      "value": "Multi-Residential Recycling Pass",
+      "serverUrl": "https://opengis2.simcoe.ca/geoserver",
+      "layerName": "Toggler_-_Multi-Residential_Recycling_Pass",
+      "sourceTable": "TABULAR.dbo.tbl_toggle_waste_multi_res_recycle_pass",
+      "wfsSource": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
+      "keyField": "arn",
+      "zIndex": 500,
+      "security_keywords": ["toggler_solid_waste"]
+    }
+  ]
+}

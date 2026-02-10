@@ -21,6 +21,7 @@ const WeatherTool = lazy(() => import("@/components/tools/Weather/WeatherTool"))
 const LotAndConcessionTool = lazy(() => import("@/components/tools/LotAndConcession/LotAndConcessionTool"));
 const ExternalServicesTool = lazy(() => import("@/components/tools/ExternalServices/ExternalServicesTool"));
 const AddLayerTool = lazy(() => import("@/components/tools/AddLayer/AddLayerTool"));
+const TogglerTool = lazy(() => import("@/components/tools/toggler/TogglerTool"));
 
 // Lazy load theme components
 const ForestryTheme = lazy(() => import("@/components/themes/Forestry/Forestry"));
@@ -70,6 +71,7 @@ const toolComponents: Record<
   LotAndConcession: LotAndConcessionTool,
   ExternalServices: ExternalServicesTool,
   AddLayer: AddLayerTool,
+  Toggler: TogglerTool,
 };
 
 // Theme mapping for dynamic loading
