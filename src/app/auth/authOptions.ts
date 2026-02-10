@@ -14,6 +14,59 @@ interface ExtendedToken extends JWT {
   email?: string;
 }
 
+/**
+ * Refreshes an expired Azure AD access token using the refresh token
+ */
+async function refreshAccessToken(token: ExtendedToken): Promise<ExtendedToken> {
+  try {
+    console.log("[NextAuth] Refreshing expired access token...");
+
+    const tenantId = process.env.AZURE_AD_TENANT_ID!;
+    const clientId = process.env.AZURE_AD_CLIENT_ID!;
+    const clientSecret = process.env.AZURE_AD_CLIENT_SECRET!;
+    const scope = `openid profile email offline_access${process.env.GEOSERVER_SCOPE ? ` ${process.env.GEOSERVER_SCOPE}` : ""}`;
+
+    const url = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        grant_type: "refresh_token",
+        refresh_token: token.refreshToken!,
+        scope: scope,
+      }),
+    });
+
+    const refreshedTokens = await response.json();
+
+    if (!response.ok) {
+      console.error("[NextAuth] Token refresh failed:", refreshedTokens);
+      throw refreshedTokens;
+    }
+
+    console.log("[NextAuth] Token refreshed successfully, expires in:", refreshedTokens.expires_in, "seconds");
+
+    return {
+      ...token,
+      accessToken: refreshedTokens.access_token,
+      accessTokenExpires: Date.now() + refreshedTokens.expires_in * 1000,
+      refreshToken: refreshedTokens.refresh_token ?? token.refreshToken, // Fall back to old refresh token if not provided
+    };
+  } catch (error) {
+    console.error("[NextAuth] Error refreshing access token:", error);
+
+    return {
+      ...token,
+      error: "RefreshAccessTokenError",
+    };
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     AzureADProvider({
@@ -63,7 +116,8 @@ export const authOptions: NextAuthOptions = {
     jwt: async ({ token, account, profile }) => {
       const extendedToken = token as ExtendedToken;
 
-      if (account) {
+      // Initial sign in - store tokens from account and process profile
+      if (account && profile) {
         console.log("[NextAuth JWT] Account received:", {
           provider: account.provider,
           type: account.type,
@@ -73,8 +127,7 @@ export const authOptions: NextAuthOptions = {
         extendedToken.accessToken = account.access_token;
         extendedToken.refreshToken = account.refresh_token;
         extendedToken.accessTokenExpires = account.expires_at ? account.expires_at * 1000 : undefined;
-      }
-      if (profile) {
+
         console.log("[NextAuth JWT] Profile received:", {
           sub: profile.sub,
           name: profile.name,
@@ -107,17 +160,41 @@ export const authOptions: NextAuthOptions = {
         extendedToken.locations = authorization.locations;
         console.log("[NextAuth JWT] Final token roles:", extendedToken.roles);
         console.log("[NextAuth JWT] Final token locations:", extendedToken.locations);
+
+        return extendedToken;
       }
-      return extendedToken;
+
+      // Subsequent requests - check if token needs refresh
+      // Return previous token if the access token has not expired yet
+      if (extendedToken.accessTokenExpires && Date.now() < extendedToken.accessTokenExpires - 5 * 60 * 1000) {
+        // Token still valid (expires in more than 5 minutes), return as-is
+        return extendedToken;
+      }
+
+      // Access token has expired or is about to expire, try to refresh it
+      if (extendedToken.refreshToken) {
+        console.log("[NextAuth JWT] Access token expired, attempting refresh...");
+        return refreshAccessToken(extendedToken);
+      }
+
+      // No refresh token available, return token with error
+      console.warn("[NextAuth JWT] Access token expired but no refresh token available");
+      return {
+        ...extendedToken,
+        error: "RefreshAccessTokenError",
+      };
     },
     session: async ({ session, token }) => {
       const extendedToken = token as ExtendedToken;
       return {
         ...session,
+        accessToken: extendedToken.accessToken,
+        error: extendedToken.error,
         user: {
           ...session.user,
           roles: extendedToken.roles,
           locations: extendedToken.locations,
+          accessToken: extendedToken.accessToken,
         },
       };
     },
