@@ -83,8 +83,9 @@ export default function ThemeBaseLayers({ config, themeId }: ThemeBaseLayersProp
   const [visible, setVisible] = useState(config.defaultVisibility);
   const [opacity, setOpacity] = useState(config.opacity);
   const layerIdsRef = useRef<string[]>([]);
+  const effectIdRef = useRef(0);
 
-  const loadLayers = async () => {
+  const loadLayers = async (effectId: number) => {
     for (const layerConfig of config.layers) {
       try {
         const serverUrl = layerConfig.serverUrl.endsWith("/") ? layerConfig.serverUrl : layerConfig.serverUrl + "/";
@@ -114,8 +115,8 @@ export default function ThemeBaseLayers({ config, themeId }: ThemeBaseLayersProp
                   });
                 }
 
-                // Add layer via LayerManager
-                const layerId = LayerManager.addLayer(olLayer, "TOC", layerConfig.displayName, {
+                // Add layer via LayerManager - append (default) so base layers are below toggle layers
+                const layerId = LayerManager.addLayer(olLayer, "Themes", layerConfig.displayName, {
                   visible: visible,
                   opacity: opacity,
                   metadata: {
@@ -125,7 +126,12 @@ export default function ThemeBaseLayers({ config, themeId }: ThemeBaseLayersProp
                 });
 
                 if (layerId) {
-                  layerIdsRef.current.push(layerId);
+                  if (effectId !== effectIdRef.current) {
+                    // Stale effect — callback fired after a re-mount or unmount; remove immediately
+                    LayerManager.removeLayer(layerId);
+                  } else {
+                    layerIdsRef.current.push(layerId);
+                  }
                 }
               }
               resolve();
@@ -139,12 +145,14 @@ export default function ThemeBaseLayers({ config, themeId }: ThemeBaseLayersProp
   };
 
   useEffect(() => {
-    loadLayers();
+    const effectId = ++effectIdRef.current;
+    layerIdsRef.current = [];
+    loadLayers(effectId);
 
     return () => {
-      // Cleanup on unmount
-      const layerIds = layerIdsRef.current;
-      layerIds.forEach((id) => LayerManager.removeLayer(id));
+      // Cleanup on unmount — remove all layers tracked by this effect
+      layerIdsRef.current.forEach((id) => LayerManager.removeLayer(id));
+      layerIdsRef.current = [];
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

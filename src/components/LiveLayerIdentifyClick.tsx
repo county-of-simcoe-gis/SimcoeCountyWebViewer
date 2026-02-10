@@ -19,6 +19,7 @@ import React, { useEffect, useCallback } from "react";
 import { useMapStore } from "@/stores/mapStore";
 import { useTOCStore } from "@/stores/tocStore";
 import { useInteractionManagerStore, type InteractionResult } from "@/stores/interactionManagerStore";
+import { useLayerManagerStore } from "@/stores/layerManagerStore";
 import { GeoJSON } from "ol/format";
 import { getAxiosClient } from "@/lib/axiosInstance";
 import type TileWMS from "ol/source/TileWMS";
@@ -261,10 +262,17 @@ export default function LiveLayerIdentifyClick() {
         const properties = feature.getProperties();
         const featureId = feature.getId() || `live-${index}-${Date.now()}`;
 
+        // Look up layer z-index from LayerManager for sorting
+        const tocLayer = visibleLiveLayers[index];
+        const managedLayerId = tocLayer?.managedLayerId;
+        const managedLayer = managedLayerId ? useLayerManagerStore.getState().getLayer(managedLayerId) : null;
+        const layerZIndex = managedLayer?.zIndex ?? 0;
+
         results.push({
           id: `livelayer-${featureId}`,
           type: "identify",
           displayName: layerDisplayName,
+          layerZIndex,
           data: {
             layerName: layerDisplayName,
             featureId: String(featureId),

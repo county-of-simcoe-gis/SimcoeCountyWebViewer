@@ -31,8 +31,12 @@ export default function ThemeLayers({ layers, themeId, onVisibilityChange }: The
   const [featureCounts, setFeatureCounts] = useState<Record<string, number | null>>({});
   const [legendUrls, setLegendUrls] = useState<Record<string, string>>({});
   const layerRefsMap = useRef<Record<string, string>>({});
+  const effectIdRef = useRef(0);
 
   useEffect(() => {
+    const effectId = ++effectIdRef.current;
+    layerRefsMap.current = {};
+
     // Initialize layer states
     const initialStates: Record<string, boolean> = {};
     layers.forEach((layer) => {
@@ -50,24 +54,22 @@ export default function ThemeLayers({ layers, themeId, onVisibilityChange }: The
     setLegendUrls(urls);
 
     // Load all layers
-    loadLayers();
+    loadLayers(effectId);
 
     // Fetch feature counts
     fetchAllFeatureCounts();
 
-    // Capture ref value for cleanup
-    const currentLayerRefs = layerRefsMap.current;
-
     return () => {
-      // Cleanup on unmount
-      Object.values(currentLayerRefs).forEach((layerId) => {
+      // Cleanup on unmount — remove all layers tracked by this effect
+      Object.values(layerRefsMap.current).forEach((layerId) => {
         LayerManager.removeLayer(layerId);
       });
+      layerRefsMap.current = {};
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadLayers = async () => {
+  const loadLayers = async (effectId: number) => {
     for (const layerConfig of layers) {
       try {
         const serverUrl = layerConfig.serverUrl.endsWith("/") ? layerConfig.serverUrl : layerConfig.serverUrl + "/";
@@ -95,9 +97,10 @@ export default function ThemeLayers({ layers, themeId, onVisibilityChange }: The
                   });
                 }
 
-                // Add layer via LayerManager
-                const layerId = LayerManager.addLayer(olLayer, "TOC", layerConfig.displayName, {
+                // Add layer via LayerManager - prepend (index: 0) so toggle layers are on top of base layers
+                const layerId = LayerManager.addLayer(olLayer, "Themes", layerConfig.displayName, {
                   visible: layerConfig.visible,
+                  index: 0,
                   metadata: {
                     themeId: themeId,
                     layerType: "toggle",
@@ -105,7 +108,12 @@ export default function ThemeLayers({ layers, themeId, onVisibilityChange }: The
                 });
 
                 if (layerId) {
-                  layerRefsMap.current[layerConfig.layerName] = layerId;
+                  if (effectId !== effectIdRef.current) {
+                    // Stale effect — callback fired after a re-mount or unmount; remove immediately
+                    LayerManager.removeLayer(layerId);
+                  } else {
+                    layerRefsMap.current[layerConfig.layerName] = layerId;
+                  }
                 }
               }
               resolve();

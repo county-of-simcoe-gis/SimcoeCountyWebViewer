@@ -489,6 +489,9 @@ export default function MapContainer() {
 
               console.log(`UnifiedInteraction: ${eventType} - ${applicableHandlers.length} handlers executed, ${flatResults.length} results collected`);
 
+              // Sort results by layer z-index descending so top-most layers appear first
+              flatResults.sort((a, b) => (b.layerZIndex ?? 0) - (a.layerZIndex ?? 0));
+
               // Update state with results
               setAggregatedResults(flatResults);
               setIsLoadingResults(false);

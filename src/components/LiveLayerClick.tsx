@@ -7,6 +7,7 @@ import { GeoJSON } from "ol/format";
 import { getAxiosClient } from "@/lib/axiosInstance";
 import { useInteractionManager } from "@/components/MapContainer";
 import { createIdentifyResult } from "@/components/ResultsPopup";
+import { useLayerManagerStore } from "@/stores/layerManagerStore";
 import type TileWMS from "ol/source/TileWMS";
 import type ImageWMS from "ol/source/ImageWMS";
 import type { Feature } from "ol";
@@ -85,6 +86,7 @@ export interface LiveLayerResult {
   featureId: string;
   attributes: Record<string, any>;
   feature: Feature<Geometry>;
+  layerZIndex?: number;
 }
 
 export default function LiveLayerClick() {
@@ -214,7 +216,7 @@ export default function LiveLayerClick() {
         return null;
       }
     },
-    [map]
+    [map],
   );
 
   // Query all visible live layers at coordinate
@@ -234,7 +236,7 @@ export default function LiveLayerClick() {
       if (visibleLiveLayers.length > 0) {
         console.log(
           "LiveLayerClick: Live layers to query:",
-          visibleLiveLayers.map((l) => l.displayName)
+          visibleLiveLayers.map((l) => l.displayName),
         );
       }
 
@@ -268,12 +270,18 @@ export default function LiveLayerClick() {
               }
             });
 
-            console.log(`LiveLayerClick: Creating result for ${layerName} with ID ${featureId}`);
+            // Look up layer z-index from LayerManager for sorting
+            const managedLayerId = tocLayer.managedLayerId;
+            const managedLayer = managedLayerId ? useLayerManagerStore.getState().getLayer(managedLayerId) : null;
+            const layerZIndex = managedLayer?.zIndex ?? 0;
+
+            console.log(`LiveLayerClick: Creating result for ${layerName} with ID ${featureId}, zIndex: ${layerZIndex}`);
             results.push({
               layerName,
               featureId: String(featureId),
               attributes: cleanAttributes,
               feature: identifyFeature,
+              layerZIndex,
             });
           }
         } catch (error) {
@@ -288,7 +296,7 @@ export default function LiveLayerClick() {
 
       return results;
     },
-    [allLayers, queryLiveLayer]
+    [allLayers, queryLiveLayer],
   );
 
   // Register handler for live layer clicks using new system
@@ -314,8 +322,8 @@ export default function LiveLayerClick() {
         if (liveLayerResults.length > 0) {
           console.log(`LiveLayerClick: Found ${liveLayerResults.length} live layer results`);
 
-          // Convert to InteractionResult format
-          const results = liveLayerResults.map((result) => createIdentifyResult(result.layerName, result.featureId, result.attributes, result.feature));
+          // Convert to InteractionResult format, passing through layer z-index for sorting
+          const results = liveLayerResults.map((result) => createIdentifyResult(result.layerName, result.featureId, result.attributes, result.feature, result.layerZIndex));
 
           return results;
         } else {

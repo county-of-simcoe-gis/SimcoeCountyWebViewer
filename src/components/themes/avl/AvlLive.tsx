@@ -217,8 +217,8 @@ export default function AvlLive({
     });
     layer.setProperties({ disableParcelClick: true, name: "avlLive" });
 
-    // Use LayerManager to add layer with "Overlay" category for highest z-index
-    const layerId = LayerManager.addLayer(layer, "Overlay", "AVL Live Vehicles", {
+    // Use LayerManager to add layer with "Themes" category
+    const layerId = LayerManager.addLayer(layer, "Themes", "AVL Live Vehicles", {
       id: "avl-live-layer",
       metadata: { type: "avl", component: "AvlLive" },
     });

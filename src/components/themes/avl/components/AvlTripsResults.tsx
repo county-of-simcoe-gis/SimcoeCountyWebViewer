@@ -530,7 +530,7 @@ export default function AvlTripsResults({
       });
 
       // Add layer to map using LayerManager
-      const layerId = LayerManager.addLayer(pointsLayer, "Overlay", `AVL Trip ${run.Vehicle_name}`, {
+      const layerId = LayerManager.addLayer(pointsLayer, "Themes", `AVL Trip ${run.Vehicle_name}`, {
         id: `avl-trip-${run.RunId}`,
       });
       layerIdRef.current = layerId;

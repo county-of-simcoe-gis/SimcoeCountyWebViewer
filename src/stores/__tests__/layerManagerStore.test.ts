@@ -18,10 +18,11 @@ vi.mock("@/utils/openlayers/LayerOrderConfig.json", () => ({
       BaseMap: { zIndexRange: { min: 0, max: 99 } },
       TOC: { zIndexRange: { min: 100, max: 499 } },
       MyMaps: { zIndexRange: { min: 500, max: 699 } },
-      Tools: { zIndexRange: { min: 700, max: 899 } },
-      Graphics: { zIndexRange: { min: 900, max: 999 } },
-      Overlay: { zIndexRange: { min: 1000, max: 1099 } },
-      Popup: { zIndexRange: { min: 1100, max: 1199 } },
+      Themes: { zIndexRange: { min: 700, max: 899 } },
+      Tools: { zIndexRange: { min: 900, max: 1099 } },
+      Graphics: { zIndexRange: { min: 1100, max: 1199 } },
+      Overlay: { zIndexRange: { min: 1200, max: 1299 } },
+      Popup: { zIndexRange: { min: 1300, max: 1399 } },
     },
   },
 }));
@@ -32,17 +33,21 @@ beforeEach(() => {
       BaseMap: [],
       TOC: [],
       MyMaps: [],
+      Themes: [],
       Tools: [],
       Graphics: [],
+      Overlay: [],
       Popup: [],
     },
     nextZIndex: {
       BaseMap: 0,
       TOC: 100,
       MyMaps: 200,
-      Tools: 300,
-      Graphics: 400,
-      Popup: 500,
+      Themes: 300,
+      Tools: 400,
+      Graphics: 500,
+      Overlay: 600,
+      Popup: 700,
     },
   });
 
@@ -68,9 +73,11 @@ describe("layerManagerStore", () => {
       expect(state.nextZIndex.BaseMap).toBe(0);
       expect(state.nextZIndex.TOC).toBe(100);
       expect(state.nextZIndex.MyMaps).toBe(200);
-      expect(state.nextZIndex.Tools).toBe(300);
-      expect(state.nextZIndex.Graphics).toBe(400);
-      expect(state.nextZIndex.Popup).toBe(500);
+      expect(state.nextZIndex.Themes).toBe(300);
+      expect(state.nextZIndex.Tools).toBe(400);
+      expect(state.nextZIndex.Graphics).toBe(500);
+      expect(state.nextZIndex.Overlay).toBe(600);
+      expect(state.nextZIndex.Popup).toBe(700);
     });
   });
 
