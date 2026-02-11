@@ -92,22 +92,24 @@ export function showMessage(
 }
 
 /**
- * Show URL window (placeholder - can be enhanced)
+ * Show URL in a full-screen iframe modal overlay.
+ * Uses the global urlModalStore so it can be called from anywhere.
  */
 export function showURLWindow(
-  url: string, 
+  url: string,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  showFooter = false, 
+  showFooter = false,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  mode = 'normal', 
+  mode = 'normal',
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  honorDontShow = false, 
+  honorDontShow = false,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  hideScroll = false
+  hideScroll = false,
+  title = 'Information'
 ): void {
-  // For now, just open in new window
-  // TODO: Replace with proper modal system
-  window.open(url, '_blank');
+  // Lazy-import the store to avoid circular deps in non-React contexts
+  const { useURLModalStore } = require('@/stores/urlModalStore');
+  useURLModalStore.getState().open(url, title);
 }
 
 /**

@@ -86,6 +86,12 @@ vi.mock("react-icons/fa", () => ({
 
   // AddLayerTool specific icons
   FaUpload: (props: any) => React.createElement("div", { ...props, "data-testid": "upload-icon" }, "Upload"),
+
+  // Commercial Real Estate theme icons
+  FaListUl: (props: any) => React.createElement("div", { ...props, "data-testid": "list-ul-icon" }, "ListUl"),
+  FaArrowLeft: (props: any) => React.createElement("div", { ...props, "data-testid": "arrow-left-icon" }, "ArrowLeft"),
+  FaStar: (props: any) => React.createElement("div", { ...props, "data-testid": "star-icon" }, "Star"),
+  FaChevronUp: (props: any) => React.createElement("div", { ...props, "data-testid": "chevron-up-icon" }, "ChevronUp"),
 }));
 
 vi.mock("react-icons/md", () => ({
