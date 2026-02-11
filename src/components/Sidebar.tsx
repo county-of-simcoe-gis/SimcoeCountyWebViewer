@@ -30,6 +30,7 @@ const TwoOneOneTheme = lazy(() => import("@/components/themes/TwoOneOne/TwoOneOn
 const SolidWasteFacilitiesTheme = lazy(() => import("@/components/themes/SolidWasteFacilities/SolidWasteFacilities"));
 const ImmigrationServicesTheme = lazy(() => import("@/components/themes/ImmigrationServices/ImmigrationServices"));
 const AvlTheme = lazy(() => import("@/components/themes/avl/AvlTheme"));
+const CustomerServiceTheme = lazy(() => import("@/components/themes/customerservice/CustomerServiceTheme"));
 
 // Lazy load TOC component
 const TOC = lazy(() => import("@/components/TOC/TOC"));
@@ -96,6 +97,7 @@ const themeComponents: Record<
   SolidWasteFacilities: SolidWasteFacilitiesTheme,
   ImmigrationServices: ImmigrationServicesTheme,
   Avl: AvlTheme,
+  CustomerService: CustomerServiceTheme,
 };
 
 export default function Sidebar() {
