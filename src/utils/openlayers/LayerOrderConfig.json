@@ -24,35 +24,43 @@
       },
       "description": "User-created drawing and custom layers"
     },
-    "Tools": {
+    "Themes": {
       "priority": 2200,
       "zIndexRange": {
         "min": 2200,
         "max": 2399
       },
-      "description": "Tool-related layers (measure, coordinates, etc.)"
+      "description": "Theme-specific layers (511, AVL, Forestry, etc.)"
     },
-    "Graphics": {
+    "Tools": {
       "priority": 2400,
       "zIndexRange": {
         "min": 2400,
-        "max": 2499
-      },
-      "description": "Temporary graphics, highlights, and overlays"
-    },
-    "Overlay": {
-      "priority": 2500,
-      "zIndexRange": {
-        "min": 2500,
         "max": 2599
       },
-      "description": "Overlay layers"
+      "description": "Tool-related layers (measure, coordinates, etc.)"
     },
-    "Popup": {
+    "Graphics": {
       "priority": 2600,
       "zIndexRange": {
         "min": 2600,
         "max": 2699
+      },
+      "description": "Temporary graphics, highlights, and overlays"
+    },
+    "Overlay": {
+      "priority": 2700,
+      "zIndexRange": {
+        "min": 2700,
+        "max": 2799
+      },
+      "description": "Overlay layers"
+    },
+    "Popup": {
+      "priority": 2800,
+      "zIndexRange": {
+        "min": 2800,
+        "max": 2899
       },
       "description": "Popup and tooltip layers"
     }

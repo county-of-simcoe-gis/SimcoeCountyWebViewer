@@ -81,6 +81,9 @@ vi.mock("react-icons/fa", () => ({
   FaClock: (props: any) => React.createElement("div", { ...props, "data-testid": "clock-icon" }, "Clock"),
   FaRoute: (props: any) => React.createElement("div", { ...props, "data-testid": "route-icon" }, "Route"),
 
+  // 511 Theme specific icons
+  FaSync: (props: any) => React.createElement("div", { ...props, "data-testid": "sync-icon-fa" }, "Sync"),
+
   // AddLayerTool specific icons
   FaUpload: (props: any) => React.createElement("div", { ...props, "data-testid": "upload-icon" }, "Upload"),
 }));

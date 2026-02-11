@@ -13,6 +13,8 @@ export interface Result extends RecordItem {
   type: "property" | "condo" | "identify" | "layer";
   displayName: string;
   data: any;
+  /** Z-index of the source layer, used to sort results so top-most layers appear first */
+  layerZIndex?: number;
 }
 
 // Property result
@@ -238,6 +240,7 @@ export function createPropertyResult(arn: string, address: string, feature: Feat
     id: `property_${arn}`,
     type: "property",
     displayName: address || arn,
+    layerZIndex: -1, // Property results sort to bottom
     data: {
       ARN: arn,
       Address: address,
@@ -255,6 +258,7 @@ export function createCondoResult(arn: string, unitNumber: string | undefined, a
     id: `condo_${arn}`,
     type: "condo",
     displayName,
+    layerZIndex: -1, // Condo results sort to bottom
     data: {
       ARN: arn,
       UnitNumber: unitNumber,
@@ -266,7 +270,7 @@ export function createCondoResult(arn: string, unitNumber: string | undefined, a
 }
 
 // Helper function to create an identify result
-export function createIdentifyResult(layerName: string, featureId: string, attributes: Record<string, any>, feature?: Feature): IdentifyResult {
+export function createIdentifyResult(layerName: string, featureId: string, attributes: Record<string, any>, feature?: Feature, layerZIndex?: number): IdentifyResult {
   // Try to create a meaningful display name from attributes
   const displayName = attributes.name || attributes.NAME || attributes.label || featureId;
 
@@ -274,6 +278,7 @@ export function createIdentifyResult(layerName: string, featureId: string, attri
     id: `identify_${layerName}_${featureId}`,
     type: "identify",
     displayName,
+    layerZIndex,
     data: {
       layerName,
       featureId,

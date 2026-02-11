@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { usePopupStore } from "@/stores/popupStore";
 import ThemeDataList from "./ThemeDataList";
 
 interface ToggleLayerConfig {
@@ -22,13 +23,16 @@ interface ThemeDataProps {
   popupLogoImage?: string;
 }
 
-export default function ThemeData({
-  toggleLayers,
-  themeId,
-  layerVisibilityStates = {},
-  popupLogoImage,
-}: ThemeDataProps) {
+export default function ThemeData({ toggleLayers, themeId, layerVisibilityStates = {}, popupLogoImage }: ThemeDataProps) {
   const [onlyFeaturesWithinMap, setOnlyFeaturesWithinMap] = useState(false);
+  const { hide: hidePopup } = usePopupStore();
+
+  // Hide any open popups when the theme unmounts
+  useEffect(() => {
+    return () => {
+      hidePopup();
+    };
+  }, [hidePopup]);
 
   // Determine visibility for each layer
   const getLayerVisibility = (layerName: string, defaultVisible: boolean) => {
@@ -40,18 +44,11 @@ export default function ThemeData({
 
   return (
     <div className="mt-4">
-      <h3 className="text-sm font-semibold mb-3 border-b border-base-300 pb-2">
-        THEME DATA
-      </h3>
+      <h3 className="text-sm font-semibold mb-3 border-b border-base-300 pb-2">THEME DATA</h3>
 
       {/* Filter checkbox */}
       <label className="flex items-center gap-2 mb-3 cursor-pointer">
-        <input
-          type="checkbox"
-          className="checkbox checkbox-sm"
-          checked={onlyFeaturesWithinMap}
-          onChange={(e) => setOnlyFeaturesWithinMap(e.target.checked)}
-        />
+        <input type="checkbox" className="checkbox checkbox-sm" checked={onlyFeaturesWithinMap} onChange={(e) => setOnlyFeaturesWithinMap(e.target.checked)} />
         <span className="text-xs">Only show data visible in the map</span>
       </label>
 

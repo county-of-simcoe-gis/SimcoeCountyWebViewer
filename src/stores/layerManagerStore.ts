@@ -5,7 +5,7 @@ import LayerOrderConfig from "@/utils/openlayers/LayerOrderConfig.json";
 import { calculateZIndex } from "@/stores/tocStore";
 
 // Layer category types
-export type LayerCategory = "BaseMap" | "TOC" | "MyMaps" | "Tools" | "Graphics" | "Overlay" | "Popup";
+export type LayerCategory = "BaseMap" | "TOC" | "MyMaps" | "Themes" | "Tools" | "Graphics" | "Overlay" | "Popup";
 
 // Image cache interface for legend images
 export interface ImageCacheEntry {
@@ -53,7 +53,7 @@ interface LayerManagerState {
       index?: number;
       id?: string;
       metadata?: Record<string, unknown>;
-    }
+    },
   ) => string;
 
   removeLayer: (layerId: string) => boolean;
@@ -108,6 +108,7 @@ export const useLayerManagerStore = create<LayerManagerState>()(
       BaseMap: [],
       TOC: [],
       MyMaps: [],
+      Themes: [],
       Tools: [],
       Graphics: [],
       Overlay: [],
@@ -118,6 +119,7 @@ export const useLayerManagerStore = create<LayerManagerState>()(
       BaseMap: LayerOrderConfig.categories.BaseMap.zIndexRange.min,
       TOC: LayerOrderConfig.categories.TOC.zIndexRange.min,
       MyMaps: LayerOrderConfig.categories.MyMaps.zIndexRange.min,
+      Themes: LayerOrderConfig.categories.Themes.zIndexRange.min,
       Tools: LayerOrderConfig.categories.Tools.zIndexRange.min,
       Graphics: LayerOrderConfig.categories.Graphics.zIndexRange.min,
       Overlay: LayerOrderConfig.categories.Overlay.zIndexRange.min,
@@ -190,7 +192,7 @@ export const useLayerManagerStore = create<LayerManagerState>()(
       const state = get();
       let layerExists = false;
       let targetCategory: LayerCategory | null = null;
-      
+
       Object.keys(state.layers).forEach((category) => {
         const categoryKey = category as LayerCategory;
         const index = state.layers[categoryKey].findIndex((l) => l.id === layerId);
@@ -199,7 +201,7 @@ export const useLayerManagerStore = create<LayerManagerState>()(
           targetCategory = categoryKey;
         }
       });
-      
+
       // Only call set() if the layer actually exists
       if (!layerExists || !targetCategory) {
         return false;
@@ -560,7 +562,7 @@ export const useLayerManagerStore = create<LayerManagerState>()(
                 loadedAt: new Date(),
                 isLoading: false,
                 error: "Timeout waiting for image to load",
-              }
+              },
             );
           }, 10000);
         });
@@ -666,5 +668,5 @@ export const useLayerManagerStore = create<LayerManagerState>()(
         });
       });
     },
-  }))
+  })),
 );

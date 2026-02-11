@@ -194,14 +194,14 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
     });
     layer.setProperties({ disableParcelClick: true, name: "avlHistory" });
 
-    // Use LayerManager to add layer with "Overlay" category for highest z-index
-    const layerId = LayerManager.addLayer(layer, "Overlay", "AVL History Vehicles", {
+    // Use LayerManager to add layer with "Themes" category
+    const layerId = LayerManager.addLayer(layer, "Themes", "AVL History Vehicles", {
       id: "avl-history-layer",
     });
 
     if (!layerId) {
-      console.error("[AVL History] LayerManager.addLayer returned null - adding directly to map");
-      map.addLayer(layer);
+      console.error("[AVL History] LayerManager.addLayer returned null - map may not be ready");
+      return;
     }
 
     console.log("[AVL History] Layer added with ID:", layerId, "zIndex:", layer.getZIndex());
@@ -249,8 +249,8 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
       style: shadowStyle,
     });
 
-    // Use LayerManager with "Overlay" category - shadow should be on top of history points
-    const shadowLayerId = LayerManager.addLayer(layer, "Overlay", "AVL History Shadow", {
+    // Use LayerManager with "Themes" category - shadow should be on top of history points
+    const shadowLayerId = LayerManager.addLayer(layer, "Themes", "AVL History Shadow", {
       id: "avl-history-shadow-layer",
     });
     shadowLayerIdRef.current = shadowLayerId;
@@ -682,8 +682,16 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
       console.log("[AVL History] Layer in map:", layerInMap, "Total map layers:", mapLayers.length);
 
       if (!layerInMap) {
-        console.error("[AVL History] Layer is NOT in map! Re-adding...");
-        map.addLayer(layerRef.current);
+        console.error("[AVL History] Layer is NOT in map! Re-adding via LayerManager...");
+        const newLayerId = LayerManager.addLayer(layerRef.current, "Themes", "AVL History Vehicles", {
+          id: "avl-history-layer",
+        });
+        if (newLayerId) {
+          layerIdRef.current = newLayerId;
+        } else {
+          console.error("[AVL History] Failed to re-add layer via LayerManager");
+          return;
+        }
       }
 
       const source = layerRef.current.getSource();

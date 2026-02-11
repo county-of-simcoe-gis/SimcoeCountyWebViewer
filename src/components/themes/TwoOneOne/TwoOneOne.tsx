@@ -159,7 +159,7 @@ export default function TwoOneOne({ name = "211 Community Services", helpLink, h
     vectorLayer.set("name", "sc-211");
     vectorLayer.set("disableParcelClick", true);
 
-    const layerId = LayerManager.addLayer(vectorLayer, "Tools", "211 Services", {
+    const layerId = LayerManager.addLayer(vectorLayer, "Themes", "211 Services", {
       visible: true,
     });
 
