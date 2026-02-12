@@ -8,18 +8,21 @@ import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import LineString from "ol/geom/LineString";
 import { Icon, Style } from "ol/style";
-import { unByKey } from "ol/Observable";
-import type { EventsKey } from "ol/events";
 
 import { useAvlStore } from "@/stores/avlStore";
 import { useMapStore } from "@/stores/mapStore";
 import { usePopupStore } from "@/stores/popupStore";
+import { useInteractionManagerStore } from "@/stores/interactionManagerStore";
+import { useLayerManagerStore } from "@/stores/layerManagerStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { useAvlApi } from "./hooks/useAvlApi";
 import { useGeoTab } from "./hooks/useGeoTab";
 import AvlLiveGroup from "./components/AvlLiveGroup";
 import AvlLiveVehicle from "./components/AvlLiveVehicle";
 import AvlLivePopup from "./components/AvlLivePopup";
+import AvlLivePopupWrapper from "./components/AvlLivePopupWrapper";
+import { FaTruck } from "react-icons/fa";
+import type { InteractionResult } from "@/stores/interactionManagerStore";
 import {
   addVehicleInfo,
   sortByVehicleIdAsc,
@@ -98,10 +101,12 @@ export default function AvlLive({
   // Local refs
   const layerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const layerIdRef = useRef<string | null>(null);
-  const mapClickEventRef = useRef<EventsKey | null>(null);
   const fetchIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const geoTabIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const popupFeatureRef = useRef<(Feature & { vehicleInfo: AvlVehicle }) | null>(null);
+
+  // InteractionManager for unified click handling
+  const { registerHandler, unregisterHandler } = useInteractionManagerStore();
 
   // Refs to hold latest callback functions for intervals (prevents stale closures)
   const fetchCurrentLocationsRef = useRef<(() => Promise<void>) | undefined>(undefined);
@@ -109,6 +114,9 @@ export default function AvlLive({
   // Refs for map interactions to prevent stale closures in callbacks
   const showVehiclePopupRef = useRef<((feature: Feature & { vehicleInfo: AvlVehicle }, overrideCoords?: number[]) => Promise<void>) | undefined>(undefined);
   const animateFeatureRef = useRef<((feature: Feature & { vehicleInfo: AvlVehicle; isAnimating?: boolean }, newVehicle: AvlVehicle, newCoords: [number, number]) => void) | undefined>(undefined);
+  // Refs for latest state values used in InteractionManager handler (avoids stale closures)
+  const configGroupsRef = useRef(configGroups);
+  const followingVehicleRef = useRef(followingVehicle);
 
   const updateVehiclesFromGeoTabRef = useRef<
     | ((
@@ -159,12 +167,21 @@ export default function AvlLive({
       }, GEOTAB_FETCH_INTERVAL);
     }
 
-    // Set up map click handler
-    // Use a wrapper function to always access the current ref value
-    mapClickEventRef.current = map.on("singleclick", (evt) => handleMapClick(evt));
+    // Set up map click handler via InteractionManager (unified click system)
+    registerHandler({
+      id: "avl-live-click",
+      eventType: "singleclick",
+      conditions: {
+        checkDisableFlags: () => useMapStore.getState().checkGlobalDisable(),
+      },
+      handler: (coordinate: number[], pixel: number[]) => {
+        return handleAvlClickHandler(pixel);
+      },
+    });
 
     return () => {
       // Cleanup
+      unregisterHandler("avl-live-click");
       if (layerIdRef.current) {
         LayerManager.removeLayer(layerIdRef.current);
         layerIdRef.current = null;
@@ -175,9 +192,6 @@ export default function AvlLive({
       }
       if (geoTabIntervalRef.current) {
         clearInterval(geoTabIntervalRef.current);
-      }
-      if (mapClickEventRef.current) {
-        unByKey(mapClickEventRef.current);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -215,11 +229,12 @@ export default function AvlLive({
     const layer = new VectorLayer({
       source: new VectorSource({ features: [] }),
     });
-    layer.setProperties({ disableParcelClick: true, name: "avlLive" });
+    layer.setProperties({ name: "avlLive" });
 
     // Use LayerManager to add layer with "Themes" category
     const layerId = LayerManager.addLayer(layer, "Themes", "AVL Live Vehicles", {
       id: "avl-live-layer",
+      clickable: true,
       metadata: { type: "avl", component: "AvlLive" },
     });
 
@@ -339,37 +354,67 @@ export default function AvlLive({
     [configGroups, followingVehicle, showFollowButton, showHistoryButton, setFollowingVehicle, showPopupStore, updateContent, hidePopup, fetchGeoTabDiagnostics, onHistoryPopupButtonClick],
   );
 
-  // Keep refs updated - moved to render body to avoid useEffect before definition issues
-  // But safer to keep in useEffect, just need to be after the function definitions
-  // Or simply assign them directly here in the render body since they are stable across renders due to useCallback
-  // However, assigning to ref.current during render is generally bad practice (side effect).
-  // Better to move the useEffect that updates them to be AFTER the function definitions.
+  // Handler for InteractionManager - returns results for unified popup
+  const handleAvlClickHandler = (pixel: number[]): InteractionResult[] => {
+    if (!map || !layerRef.current) return [];
 
-  const handleMapClick = useCallback(
-    (evt: { pixel: number[] }) => {
-      if (!map || !layerRef.current) return;
+    const results: InteractionResult[] = [];
+    const avlLayer = useLayerManagerStore.getState().getLayer("avl-live-layer");
+    const layerZIndex = avlLayer?.zIndex ?? 2200;
+    const layerDisplayName = avlLayer?.name ?? "AVL Live";
 
-      map.forEachFeatureAtPixel(
-        evt.pixel,
-        (feature) => {
-          if (feature instanceof Feature) {
-            const vehicleFeature = feature as Feature & { vehicleInfo?: AvlVehicle };
-            if (vehicleFeature.vehicleInfo) {
-              // Use ref to access latest showVehiclePopup function
-              showVehiclePopupRef.current?.(vehicleFeature as Feature & { vehicleInfo: AvlVehicle });
-            }
+    map.forEachFeatureAtPixel(
+      pixel,
+      (feature) => {
+        if (feature instanceof Feature) {
+          const vehicleFeature = feature as Feature & { vehicleInfo?: AvlVehicle };
+          if (vehicleFeature.vehicleInfo) {
+            const vehicleInfo = vehicleFeature.vehicleInfo;
+            const onFollowClick = (vehicle: AvlVehicle | null) => {
+              if (vehicle) {
+                setFollowingVehicle({ name: vehicle.vehicle_name, grouping: vehicle.grouping });
+              } else {
+                setFollowingVehicle(null);
+              }
+            };
+            const onHistoryClick = () => {
+              usePopupStore.getState().hide();
+              onHistoryPopupButtonClick(vehicleInfo);
+            };
+
+            results.push({
+              id: `avl-${vehicleInfo.vehicle_name}-${vehicleInfo.grouping}`,
+              type: "layer",
+              displayName: vehicleInfo.vehicle_name || "Vehicle",
+              layerZIndex,
+              data: { vehicleInfo, layerName: layerDisplayName, featureId: vehicleInfo.vehicle_name },
+              renderContent: () => (
+                <AvlLivePopupWrapper
+                  vehicleInfo={vehicleInfo}
+                  configGroups={configGroupsRef.current}
+                  followingVehicleName={followingVehicleRef.current?.name || ""}
+                  onFollowClick={onFollowClick}
+                  onHistoryClick={onHistoryClick}
+                  onClose={() => usePopupStore.getState().hide()}
+                  showFollowButton={showFollowButton}
+                  showHistoryButton={showHistoryButton}
+                  fetchGeoTabDiagnostics={fetchGeoTabDiagnostics}
+                />
+              ),
+              renderSidebarIcon: () => <FaTruck />,
+            });
           }
+        }
+      },
+      {
+        layerFilter: (layer) => {
+          return layer.get("name") === "avlLive" && layer.getVisible() && layer instanceof VectorLayer;
         },
-        {
-          layerFilter: (layer) => {
-            return layer.get("name") === "avlLive" && layer.getVisible() && layer instanceof VectorLayer;
-          },
-        },
-      );
-    },
-    // Dependency on map is enough, showVehiclePopup is accessed via ref
-    [map],
-  );
+      },
+    );
+
+    return results;
+  };
 
   // Fetch current locations for all allowed groups
   const fetchCurrentLocationsForAllGroups = useCallback(async () => {
@@ -714,7 +759,9 @@ export default function AvlLive({
   useEffect(() => {
     showVehiclePopupRef.current = showVehiclePopup;
     animateFeatureRef.current = animateFeature;
-  }, [showVehiclePopup, animateFeature]);
+    configGroupsRef.current = configGroups;
+    followingVehicleRef.current = followingVehicle;
+  }, [showVehiclePopup, animateFeature, configGroups, followingVehicle]);
 
   // Set feature style
   const setFeatureStyle = useCallback((feature: Feature & { vehicleInfo: AvlVehicle }) => {

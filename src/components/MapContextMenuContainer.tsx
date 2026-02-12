@@ -434,8 +434,7 @@ export const MapContextMenuContainer: React.FC = () => {
 
   // Check if context menu should be disabled
   const checkDisableFlags = useCallback(() => {
-    const state = useMapStore.getState();
-    return state.disableParcelClick || state.isDrawingOrEditing || state.isCoordinateToolOpen || state.isMeasuring;
+    return useMapStore.getState().checkGlobalDisable();
   }, []);
 
   // Initialize parcel layer

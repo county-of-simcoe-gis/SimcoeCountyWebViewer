@@ -3,7 +3,8 @@
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   min-width: 280px;
-  max-width: 350px;
+  max-width: 300px;
+  max-width: 300px;
   position: relative;
   pointer-events: auto;
   z-index: 1000;

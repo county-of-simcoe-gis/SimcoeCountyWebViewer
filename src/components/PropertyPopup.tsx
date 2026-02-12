@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Feature } from "ol";
 import config from "@/config.json";
-import InfoRow from "@/components/common/InfoRow";
 import "@/components/PropertyPopup.css";
 
 interface PropertyInfo {
@@ -31,6 +30,28 @@ interface PropertyPopupProps {
   onClearParcelLayer?: () => void;
 }
 
+// Compact info row matching legacy sc-info-window pattern
+function InfoRow({ label, value, children }: { label: string; value?: string | number | boolean | null; children?: React.ReactNode }) {
+  if (!children && (value === undefined || value === null || value === "")) return null;
+
+  let displayValue: React.ReactNode;
+  if (typeof value === "boolean") {
+    displayValue = value ? "Yes" : "No";
+  } else {
+    displayValue = value != null ? String(value) : null;
+  }
+
+  return (
+    <div className="sc-info-window-row">
+      <div className="sc-info-window-label">{label}</div>
+      <div className="sc-info-window-value">
+        {displayValue}
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export default function PropertyPopup({ propInfo, feature, onClose, onClearParcelLayer }: PropertyPopupProps) {
   const [copied, setCopied] = useState(false);
 
@@ -47,16 +68,12 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
   const handleShare = () => {
     if (shareURL) {
       navigator.clipboard.writeText(shareURL);
-      // Show a message or toast notification
       alert("Link copied to clipboard!");
     }
   };
 
   const handleAddToMyMaps = () => {
-    // Emit event to add to My Maps
-    // This would integrate with your existing MyMaps functionality
     console.log("Add to MyMaps:", { arn, address, feature });
-    // window.emitter.emit("addMyMapsFeature", feature, address || arn);
   };
 
   const handleZoom = () => {
@@ -71,13 +88,10 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
   };
 
   const handleMoreInfo = () => {
-    // Open detailed property report
     console.log("Show more info for:", arn);
-    // This would open a modal or sidebar with detailed information
   };
 
   const handleCloseClick = () => {
-    // Clear parcel layer and hide popup
     if (onClearParcelLayer) {
       onClearParcelLayer();
     }
@@ -86,13 +100,14 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
 
   return (
     <div className="sc-property-popup">
-      <div className="sc-property-popup-content">
+      <div className="sc-property-report-top-container">
         {/* Address */}
         {address && <InfoRow label="Address" value={address} />}
 
-        {/* Roll Number (ARN) */}
+        {/* Roll Number (ARN) with copy button */}
         {arn && (
-          <InfoRow label="Roll Number" value={arn}>
+          <InfoRow label="Roll Number">
+            {arn}
             <button className="sc-copy-button" onClick={handleCopyARN} title="Copy to Clipboard" aria-label="Copy ARN to clipboard">
               📋
             </button>
@@ -101,9 +116,9 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
         )}
 
         {/* Has Zoning */}
-        {hasZoning !== undefined && <InfoRow label="Has Zoning" value={hasZoning ? "Yes" : "No"} />}
+        {hasZoning !== undefined && <InfoRow label="Has Zoning" value={hasZoning} />}
 
-        {/* Assessed Value */}
+        {/* Assessed Value - rendered as image matching legacy */}
         {assessedValue && (
           <InfoRow label="Assessed Value">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -121,16 +136,15 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
         {/* Tools */}
         <InfoRow label="Tools">
           <div className="sc-property-tools">
-            <button className="sc-tool-link" onClick={handleAddToMyMaps}>
+            <span className="sc-fakeLink" onClick={handleAddToMyMaps}>
               [Add to My Maps]
-            </button>
-            <button className="sc-tool-link" onClick={handleShare}>
+            </span>
+            <span className="sc-fakeLink" onClick={handleShare}>
               [Share]
-            </button>
-            <button
-              className="sc-tool-link"
+            </span>
+            <span
+              className="sc-fakeLink"
               onClick={() => {
-                // Open terms URL
                 const termsUrl = (config as { termsUrl?: string }).termsUrl;
                 if (termsUrl) {
                   window.open(termsUrl, "_blank");
@@ -138,25 +152,22 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
               }}
             >
               [Terms]
-            </button>
+            </span>
           </div>
         </InfoRow>
 
         {/* Coordinates */}
-        {pointCoordinates && <InfoRow label="Coordinates" value={`Lat: ${Math.round(pointCoordinates[1] * 10000) / 10000} Long: ${Math.round(pointCoordinates[0] * 10000) / 10000}`} />}
+        {pointCoordinates && <InfoRow label="Pointer Coordinates" value={`Lat: ${Math.round(pointCoordinates[1] * 10000) / 10000}  Long: ${Math.round(pointCoordinates[0] * 10000) / 10000}`} />}
+      </div>
 
-        {/* Action Buttons */}
-        <div className="sc-property-actions">
-          <button className="sc-property-button sc-property-button-primary" onClick={handleMoreInfo}>
-            More Information
-          </button>
-          <button className="sc-property-button sc-property-button-secondary" onClick={handleZoom}>
-            Zoom
-          </button>
-          <button className="sc-property-button sc-property-button-secondary" onClick={handleCloseClick}>
-            Close
-          </button>
-        </div>
+      {/* Action Buttons */}
+      <div className="sc-property-actions">
+        <button className="sc-button sc-property-report-click-more-info" onClick={handleMoreInfo}>
+          More Information
+        </button>
+        <button className="sc-button sc-property-report-click-close" onClick={handleCloseClick}>
+          Close
+        </button>
       </div>
     </div>
   );

@@ -43,7 +43,6 @@ export const useInteractionManagerStore = create<InteractionManagerState>((set, 
       // Add new handler and sort by priority
       const newHandlers = [...filteredHandlers, { ...handler, priority: handler.priority ?? 100 }];
       newHandlers.sort((a, b) => (a.priority ?? 100) - (b.priority ?? 100));
-      console.log(`InteractionManagerStore: Registered handler "${handler.id}", total handlers: ${newHandlers.length}`);
       return { handlers: newHandlers };
     });
   },
@@ -51,7 +50,6 @@ export const useInteractionManagerStore = create<InteractionManagerState>((set, 
   unregisterHandler: (handlerId: string) => {
     set((state) => {
       const newHandlers = state.handlers.filter((h) => h.id !== handlerId);
-      console.log(`InteractionManagerStore: Unregistered handler "${handlerId}", total handlers: ${newHandlers.length}`);
       return { handlers: newHandlers };
     });
   },

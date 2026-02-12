@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { Feature } from "ol";
 import { FaHome, FaBuilding, FaLayerGroup } from "react-icons/fa";
 import RecordSelectorPopup, { RecordItem } from "@/components/RecordSelectorPopup";
@@ -15,6 +15,10 @@ export interface Result extends RecordItem {
   data: any;
   /** Z-index of the source layer, used to sort results so top-most layers appear first */
   layerZIndex?: number;
+  /** Optional custom render function for the popup content area */
+  renderContent?: () => ReactNode;
+  /** Optional custom render function for the sidebar icon in collapsed mode */
+  renderSidebarIcon?: () => ReactNode;
 }
 
 // Property result
@@ -82,6 +86,11 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
 
   // Custom icon renderer for collapsed state
   const renderCollapsedIcon = (result: Result, index: number, isSelected: boolean) => {
+    // Use custom sidebar icon if provided
+    if (result.renderSidebarIcon) {
+      return <div className={`sc-result-icon ${isSelected ? "sc-result-icon-selected" : ""}`}>{result.renderSidebarIcon()}</div>;
+    }
+
     let IconComponent = FaLayerGroup;
 
     switch (result.type) {
@@ -152,7 +161,6 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
           <div className="sc-result-details">
             <div className={`sc-result-type ${baseClasses}`}>{result.data.layerName}</div>
             <div className={`sc-result-text ${baseClasses}`}>{result.displayName}</div>
-            <div className={`sc-result-id ${baseClasses}`}>{result.data.featureId}</div>
           </div>
         );
 
@@ -169,7 +177,12 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
   const renderContent = (result: Result | null) => {
     if (!result) return null;
 
-    // Check for custom render function first
+    // Check for type-safe custom render function first (preferred)
+    if (result.renderContent) {
+      return result.renderContent();
+    }
+
+    // Fallback: check data.renderContent for backward compatibility
     if (result.data?.renderContent && typeof result.data.renderContent === "function") {
       return result.data.renderContent();
     }

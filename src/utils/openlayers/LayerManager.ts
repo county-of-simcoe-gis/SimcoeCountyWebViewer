@@ -8,6 +8,8 @@ export interface AddLayerOptions {
   metadata?: Record<string, unknown>;
   visible?: boolean;
   opacity?: number;
+  /** Whether this layer participates in map click identification/popups */
+  clickable?: boolean;
 }
 
 /**
@@ -47,6 +49,7 @@ export class LayerManager {
       index: options.index,
       id: options.id,
       metadata: options.metadata,
+      clickable: options.clickable,
     });
 
     // console.log(`✅ Added layer "${name}" to map with category "${category}" (ID: ${layerId})`)

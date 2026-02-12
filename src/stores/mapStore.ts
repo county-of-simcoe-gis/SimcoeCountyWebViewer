@@ -28,7 +28,12 @@ interface MapState {
   // Popup state
   popup: unknown | null; // Popup instance
 
-  // Interaction flags (previously window.disableParcelClick, etc.)
+  // Unified active tool tracking — replaces scattered disable flags
+  // When a tool is active (non-null), map click handlers are suppressed
+  activeToolId: string | null;
+
+  // Legacy interaction flags (deprecated — use activeToolId instead)
+  // Kept for backward compatibility with OL layer property checks
   disableParcelClick: boolean;
   disableIdentifyClick: boolean;
   isDrawingOrEditing: boolean;
@@ -56,6 +61,15 @@ interface MapState {
   // Actions
   setMap: (map: Map) => void;
   setPopup: (popup: unknown) => void;
+
+  // Active tool management
+  setActiveToolId: (toolId: string | null) => void;
+  /** Returns true if any tool is currently active (click handlers should be suppressed) */
+  isToolActive: () => boolean;
+  /** Centralized disable check for InteractionManager conditions — returns true when disabled */
+  checkGlobalDisable: () => boolean;
+
+  // Legacy setters (deprecated — use setActiveToolId instead)
   setDisableParcelClick: (disabled: boolean) => void;
   setDisableIdentifyClick: (disabled: boolean) => void;
   setIsDrawingOrEditing: (isDrawing: boolean) => void;
@@ -130,6 +144,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   // Initial state
   map: null,
   popup: null,
+  activeToolId: null,
   disableParcelClick: false,
   disableIdentifyClick: false,
   isDrawingOrEditing: false,
@@ -149,6 +164,22 @@ export const useMapStore = create<MapState>((set, get) => ({
   // Actions
   setMap: (map) => set({ map }),
   setPopup: (popup) => set({ popup }),
+
+  // Active tool management
+  setActiveToolId: (toolId) => {
+    set({
+      activeToolId: toolId,
+      // Keep legacy flags in sync
+      disableParcelClick: toolId !== null,
+      isMeasuring: toolId === "measure",
+      isCoordinateToolOpen: toolId === "coordinates",
+      isDrawingOrEditing: toolId === "mymaps-draw" || toolId === "mymaps-edit",
+    });
+  },
+  isToolActive: () => get().activeToolId !== null,
+  checkGlobalDisable: () => get().activeToolId !== null,
+
+  // Legacy setters (deprecated — kept for backward compatibility)
   setDisableParcelClick: (disabled) => set({ disableParcelClick: disabled }),
   setDisableIdentifyClick: (disabled) => set({ disableIdentifyClick: disabled }),
   setIsDrawingOrEditing: (isDrawing) => set({ isDrawingOrEditing: isDrawing }),

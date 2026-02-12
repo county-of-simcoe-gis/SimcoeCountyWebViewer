@@ -133,20 +133,8 @@ export const useInteractionManager = () => {
 export default function MapContainer() {
   const { isOpen } = useSidebarStore();
   const { emitMapLoaded } = useEventStore();
-  const {
-    map,
-    setMap,
-    addLoadedItem,
-    setMapControls,
-    setCurrentExtent,
-    setCurrentZoom,
-    setCurrentCenter,
-    initExtentHistory,
-    saveCurrentExtentToHistory,
-    controlVisibility,
-    initControlVisibility,
-    setControlVisibility,
-  } = useMapStore();
+  const { map, setMap, addLoadedItem, setMapControls, setCurrentExtent, setCurrentZoom, setCurrentCenter, initExtentHistory, saveCurrentExtentToHistory, controlVisibility, initControlVisibility } =
+    useMapStore();
   const { setMapLoading } = useAppStore();
   const { show: showPopup, hide: hidePopup } = usePopupStore();
   const urlParameters = useAppStore((state) => state.urlParameters);
@@ -233,7 +221,6 @@ export default function MapContainer() {
   const registerHandler = useCallback(
     (handler: InteractionHandler) => {
       storeRegisterHandler(handler as StoreInteractionHandler);
-      console.log(`MapContainer: Registered handler "${handler.id}" for event "${handler.eventType}"`);
     },
     [storeRegisterHandler],
   );
@@ -241,7 +228,6 @@ export default function MapContainer() {
   const unregisterHandler = useCallback(
     (handlerId: string) => {
       storeUnregisterHandler(handlerId);
-      console.log(`MapContainer: Unregistered handler "${handlerId}"`);
     },
     [storeUnregisterHandler],
   );
@@ -259,7 +245,6 @@ export default function MapContainer() {
       if (map) {
         map.addInteraction(interaction);
         registeredInteractionsRef.current.set(id, interaction);
-        console.log(`MapContainer: Registered legacy interaction "${id}"`);
       }
     },
     [map],
@@ -271,7 +256,6 @@ export default function MapContainer() {
       if (interaction && map) {
         map.removeInteraction(interaction);
         registeredInteractionsRef.current.delete(id);
-        console.log(`MapContainer: Unregistered legacy interaction "${id}"`);
       }
     },
     [map],
@@ -428,15 +412,7 @@ export default function MapContainer() {
         // Get handlers directly from store to ensure we have the latest
         const currentHandlers = useInteractionManagerStore.getState().handlers as InteractionHandler[];
         const checkHandler = shouldExecuteHandlerRef.current || (() => true);
-        console.log(
-          `UnifiedInteraction: Event "${eventType}", total handlers in store: ${currentHandlers.length}`,
-          currentHandlers.map((h) => h.id),
-        );
         const applicableHandlers = currentHandlers.filter((h) => h.eventType === eventType && checkHandler(h, event));
-        console.log(
-          `UnifiedInteraction: Applicable handlers for "${eventType}": ${applicableHandlers.length}`,
-          applicableHandlers.map((h) => h.id),
-        );
 
         if (applicableHandlers.length === 0) {
           return true; // Allow event to propagate
@@ -486,8 +462,6 @@ export default function MapContainer() {
                   }
                 }
               });
-
-              console.log(`UnifiedInteraction: ${eventType} - ${applicableHandlers.length} handlers executed, ${flatResults.length} results collected`);
 
               // Sort results by layer z-index descending so top-most layers appear first
               flatResults.sort((a, b) => (b.layerZIndex ?? 0) - (a.layerZIndex ?? 0));
@@ -546,12 +520,8 @@ export default function MapContainer() {
 
     // Register map as ready for URL parameter processing
     // Use 'dataLoaded' because the map is now fully initialized and interactive
-    console.log("[MapContainer] Map initialization complete, urlParamContext:", !!urlParamContext, "registerComponentReady:", !!urlParamContext?.registerComponentReady);
     if (urlParamContext?.registerComponentReady) {
-      console.log("[MapContainer] Calling registerComponentReady('map')");
       urlParamContext.registerComponentReady("map", { readinessType: "dataLoaded" });
-    } else {
-      console.warn("[MapContainer] urlParamContext or registerComponentReady not available");
     }
 
     // Cleanup function
@@ -581,7 +551,20 @@ export default function MapContainer() {
         delete (window as any).config;
       }
     };
-  }, [setMap, setMapControls, addLoadedItem, setMapLoading, emitMapLoaded, setCurrentExtent, setCurrentZoom, setCurrentCenter, initExtentHistory, saveCurrentExtentToHistory, urlParamContext]);
+  }, [
+    setMap,
+    setMapControls,
+    addLoadedItem,
+    setMapLoading,
+    emitMapLoaded,
+    setCurrentExtent,
+    setCurrentZoom,
+    setCurrentCenter,
+    initExtentHistory,
+    saveCurrentExtentToHistory,
+    initControlVisibility,
+    urlParamContext,
+  ]);
 
   // Utility functions for URL parameter handling
   const flashPoint = useCallback(
@@ -1182,7 +1165,6 @@ export default function MapContainer() {
         resultsCoordinate,
         <ResultsPopup results={aggregatedResults} onClose={handleClose} isLoadingResults={isLoadingResults} onSelectResult={handleSelectResult} onClearParcelLayer={handleClearParcelLayer} />,
         aggregatedResults.length > 1 ? `Results (${aggregatedResults.length})` : "Result",
-        "Query Results",
       );
     }
   }, [aggregatedResults, resultsCoordinate, isLoadingResults, showPopup, hidePopup]);

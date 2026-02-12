@@ -983,6 +983,7 @@ export async function buildESRILayer(options: BuildESRILayerOptions, callback: (
       // Add to map using LayerManager for proper categorization and z-index management
       const managedLayerId = LayerManager.addLayer(olLayer as OpenLayersLayer, "TOC", layerNameOnly, {
         index: layerIndex, // Use layerIndex for proper z-ordering
+        clickable: liveLayer || queryable, // Layers flagged as live or queryable participate in click identification
         metadata: {
           groupName: group.label,
           groupUrl: group.url,

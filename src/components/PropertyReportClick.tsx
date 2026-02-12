@@ -62,18 +62,13 @@ interface WFSResponse {
 }
 
 export default function PropertyReportClick() {
-  const { map, disableParcelClick, isDrawingOrEditing, isCoordinateToolOpen, isMeasuring } = useMapStore();
+  const { map, checkGlobalDisable } = useMapStore();
   const { show: showPopup, hide: hidePopup } = usePopupStore();
   const urlParameters = useAppStore((state) => state.urlParameters);
   const { registerHandler, unregisterHandler } = useInteractionManager();
 
   const parcelLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const parcelLayerIdRef = useRef<string | null>(null);
-
-  // Check if parcel click should be disabled
-  const checkDisableFlags = useCallback(() => {
-    return disableParcelClick || isDrawingOrEditing || isCoordinateToolOpen || isMeasuring;
-  }, [disableParcelClick, isDrawingOrEditing, isCoordinateToolOpen, isMeasuring]);
 
   // Initialize parcel layer
   useEffect(() => {
@@ -374,7 +369,7 @@ export default function PropertyReportClick() {
       priority: 10, // Lower priority to run before other handlers
       conditions: {
         maxScale: 20000,
-        checkDisableFlags,
+        checkDisableFlags: checkGlobalDisable,
         checkLayerFilters: ParcelClickInteraction.checkLayersForDisable,
       },
       handler: async (coordinate) => {
@@ -387,7 +382,7 @@ export default function PropertyReportClick() {
     return () => {
       unregisterHandler("property-report-click");
     };
-  }, [map, checkDisableFlags, fetchParcelResults, registerHandler, unregisterHandler]);
+  }, [map, checkGlobalDisable, fetchParcelResults, registerHandler, unregisterHandler]);
 
   // Handle ARN URL parameter
   useEffect(() => {
