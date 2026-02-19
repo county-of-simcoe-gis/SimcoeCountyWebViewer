@@ -149,7 +149,7 @@ const unitList: UnitDefinition[] = [
 
 export default function MeasureTool({ name = "Measure", helpLink, hideHeader = false, onClose, onSidebarVisibility }: MeasureToolProps) {
   // Stores
-  const { map, isDrawingOrEditing, setDisableParcelClick, setIsMeasuring } = useMapStore();
+  const { map, isDrawingOrEditing, setActiveToolId } = useMapStore();
   const { hide: hidePopup } = usePopupStore();
   const { emitAddMyMapsFeature } = useEventStore();
 
@@ -297,7 +297,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
         setMeasureToolTipClass("sc-hidden");
       }
     },
-    [activeTool, geometryType, hideTooltips]
+    [activeTool, geometryType, hideTooltips],
   );
 
   // Reset function
@@ -325,9 +325,8 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
     setActiveTool(false);
     setFeature(null);
 
-    setDisableParcelClick(false);
-    setIsMeasuring(false);
-  }, [map, setDisableParcelClick, setIsMeasuring]);
+    setActiveToolId(null);
+  }, [map, setActiveToolId]);
 
   // Add interaction
   const addInteraction = useCallback(() => {
@@ -355,7 +354,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
     }
 
     // Disable parcel click
-    setDisableParcelClick(true);
+    setActiveToolId("measure");
     setHelpToolTipClass("sc-measure-tooltip-help");
     setActiveTool(true);
 
@@ -414,7 +413,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
     // Draw start event
     draw.on("drawstart", (evt) => {
       hidePopup();
-      setIsMeasuring(true);
+      setActiveToolId("measure");
       vectorSourceRef.current?.clear();
       setFeature(evt.feature);
       sketchRef.current = evt.feature;
@@ -507,8 +506,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
     isDrawingOrEditing,
     enableSnapping,
     hideTooltips,
-    setDisableParcelClick,
-    setIsMeasuring,
+    setActiveToolId,
     hidePopup,
     formatLength,
     formatArea,
@@ -525,13 +523,13 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
         reset();
         setGeometryType(type);
         setUnitType(newUnitType);
-        setIsMeasuring(false);
+        setActiveToolId(null);
       } else {
         setGeometryType(type);
         setUnitType(newUnitType);
       }
     },
-    [reset, setIsMeasuring]
+    [reset, setActiveToolId],
   );
 
   // Handle snapping checkbox change
@@ -570,7 +568,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
         }
       }
     },
-    [map, activeTool, getVisibleVectorSources]
+    [map, activeTool, getVisibleVectorSources],
   );
 
   // Add to MyMaps
@@ -582,7 +580,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
         addInteraction();
       }
     },
-    [emitAddMyMapsFeature, activeTool, geometryType, addInteraction]
+    [emitAddMyMapsFeature, activeTool, geometryType, addInteraction],
   );
 
   // Initialize vector layer and tooltips
@@ -674,10 +672,9 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
       if (vectorLayerRef.current) {
         map.removeLayer(vectorLayerRef.current);
       }
-      setDisableParcelClick(false);
-      setIsMeasuring(false);
+      setActiveToolId(null);
     };
-  }, [map, helpToolTipId, measureToolTipId, setDisableParcelClick, setIsMeasuring]);
+  }, [map, helpToolTipId, measureToolTipId, setActiveToolId]);
 
   // Trigger addInteraction when geometry type changes
   useEffect(() => {
@@ -693,36 +690,24 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
       const result = unit.convertFunction(typeof unitMeters === "number" ? unitMeters : parseFloat(unitMeters as string));
       return String(result);
     },
-    [unitMeters]
+    [unitMeters],
   );
 
   return (
     <PanelComponent name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={onClose} onSidebarVisibility={onSidebarVisibility}>
       <div className="relative w-full overflow-auto text-base-content">
-        <p className="p-3 text-sm">
-          Please select the type of measurements you wish to perform from the toolbar below. Use the line tools for distances and polygon tools for area.
-        </p>
+        <p className="p-3 text-sm">Please select the type of measurements you wish to perform from the toolbar below. Use the line tools for distances and polygon tools for area.</p>
 
         {/* HEADER WITH TITLE AND OPTIONS */}
         <div className="flex items-center justify-between px-3 mb-2">
           <h3 className="font-semibold text-sm">Measure Tools</h3>
           <div className="flex items-center gap-3 text-xs">
             <label className="flex items-center gap-1 cursor-pointer">
-              <input
-                type="checkbox"
-                className="checkbox checkbox-xs"
-                onChange={onSnappingCheckboxChange}
-                checked={enableSnapping}
-              />
+              <input type="checkbox" className="checkbox checkbox-xs" onChange={onSnappingCheckboxChange} checked={enableSnapping} />
               <span>Snapping</span>
             </label>
             <label className="flex items-center gap-1 cursor-pointer">
-              <input
-                type="checkbox"
-                className="checkbox checkbox-xs"
-                onChange={(e) => setHideTooltips(e.target.checked)}
-                checked={hideTooltips}
-              />
+              <input type="checkbox" className="checkbox checkbox-xs" onChange={(e) => setHideTooltips(e.target.checked)} checked={hideTooltips} />
               <span>Hide Tooltips</span>
             </label>
           </div>
@@ -734,12 +719,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
             const IconComponent = btn.icon;
             const isActive = geometryType === btn.type;
             return (
-              <button
-                key={btn.type}
-                className={`btn btn-square btn-sm ${isActive ? "btn-primary" : "btn-ghost"}`}
-                title={btn.title}
-                onClick={() => onGeometryButtonClick(btn.type, btn.unitType)}
-              >
+              <button key={btn.type} className={`btn btn-square btn-sm ${isActive ? "btn-primary" : "btn-ghost"}`} title={btn.title} onClick={() => onGeometryButtonClick(btn.type, btn.unitType)}>
                 <IconComponent size={18} />
               </button>
             );
@@ -804,21 +784,12 @@ function MeasureResult({ unitDetails, feature, addToMyMaps, getConvertedValue, i
         </div>
 
         <div className="flex items-center gap-2">
-          <input
-            readOnly
-            className="input input-bordered input-sm flex-1 text-center text-primary font-medium"
-            placeholder="Waiting..."
-            type="text"
-            value={displayValue}
-          />
+          <input readOnly className="input input-bordered input-sm flex-1 text-center text-primary font-medium" placeholder="Waiting..." type="text" value={displayValue} />
           <span className="text-xs text-base-content/70 w-12">{unitDetails.abbreviation}</span>
         </div>
 
         {feature !== null && !isMeasuring && (
-          <button
-            className="link link-primary text-xs mt-1 self-start"
-            onClick={handleAddToMyMaps}
-          >
+          <button className="link link-primary text-xs mt-1 self-start" onClick={handleAddToMyMaps}>
             Add to My Maps
           </button>
         )}

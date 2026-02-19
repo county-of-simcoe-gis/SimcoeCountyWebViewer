@@ -113,14 +113,9 @@ function LiveLayerPopupContent({ properties }: { properties: Record<string, any>
 }
 
 export default function LiveLayerIdentifyClick() {
-  const { map, disableIdentifyClick, isDrawingOrEditing, isCoordinateToolOpen, isMeasuring } = useMapStore();
+  const { map, checkGlobalDisable } = useMapStore();
   const allLayers = useTOCStore((state) => state.allLayers);
   const { registerHandler, unregisterHandler } = useInteractionManagerStore();
-
-  // Check if identify should be disabled
-  const checkDisableFlags = useCallback(() => {
-    return disableIdentifyClick || isDrawingOrEditing || isCoordinateToolOpen || isMeasuring;
-  }, [disableIdentifyClick, isDrawingOrEditing, isCoordinateToolOpen, isMeasuring]);
 
   /**
    * Identify features on a single layer
@@ -226,7 +221,7 @@ export default function LiveLayerIdentifyClick() {
    */
   const identifyHandler = useCallback(
     async (coordinate: number[]): Promise<InteractionResult[]> => {
-      if (!map || checkDisableFlags()) return [];
+      if (!map || checkGlobalDisable()) return [];
 
       console.log("LiveLayerIdentify: Click at", coordinate);
 
@@ -287,7 +282,7 @@ export default function LiveLayerIdentifyClick() {
 
       return results;
     },
-    [map, allLayers, identifyLayerFeatures, checkDisableFlags],
+    [map, allLayers, identifyLayerFeatures, checkGlobalDisable],
   );
 
   // Register handler with InteractionManager

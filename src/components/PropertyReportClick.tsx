@@ -4,6 +4,7 @@ import { useEffect, useRef, useCallback } from "react";
 import { useMapStore } from "@/stores/mapStore";
 import { usePopupStore } from "@/stores/popupStore";
 import { useAppStore } from "@/stores/appStore";
+import { Feature } from "ol";
 import { Vector as VectorLayer } from "ol/layer";
 import { Vector as VectorSource } from "ol/source";
 import { Style, Stroke, Fill } from "ol/style";
@@ -12,7 +13,7 @@ import { getArea } from "ol/sphere";
 import { getAxiosClient } from "@/lib/axiosInstance";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { ParcelClickInteraction } from "@/utils/openlayers/ParcelClickInteraction";
-import ResultsPopup, { createPropertyResult, createCondoResult } from "@/components/ResultsPopup";
+import ResultsPopup, { createPropertyResult, createCondoResult, type Result } from "@/components/ResultsPopup";
 import { getAxiosClient as getAxiosClientUtil } from "@/lib/axiosInstance";
 import { useInteractionManager } from "@/components/MapContainer";
 import config from "@/config.json";
@@ -61,19 +62,25 @@ interface WFSResponse {
   }>;
 }
 
+interface CondoUnit {
+  ARN: string;
+  UnitNumber?: string;
+  Address?: string;
+}
+
+interface ClickResult extends Result {
+  loadDetails?: () => Promise<void>;
+  clearParcelLayer?: () => void;
+}
+
 export default function PropertyReportClick() {
-  const { map, disableParcelClick, isDrawingOrEditing, isCoordinateToolOpen, isMeasuring } = useMapStore();
+  const { map, checkGlobalDisable } = useMapStore();
   const { show: showPopup, hide: hidePopup } = usePopupStore();
   const urlParameters = useAppStore((state) => state.urlParameters);
   const { registerHandler, unregisterHandler } = useInteractionManager();
 
   const parcelLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const parcelLayerIdRef = useRef<string | null>(null);
-
-  // Check if parcel click should be disabled
-  const checkDisableFlags = useCallback(() => {
-    return disableParcelClick || isDrawingOrEditing || isCoordinateToolOpen || isMeasuring;
-  }, [disableParcelClick, isDrawingOrEditing, isCoordinateToolOpen, isMeasuring]);
 
   // Initialize parcel layer
   useEffect(() => {
@@ -122,8 +129,8 @@ export default function PropertyReportClick() {
 
   // Fetch property information
   const fetchPropertyInfo = useCallback(
-    async (arn: string, feature: any, pointerPoint: number[], latLongCoords: number[]): Promise<PropertyInfo> => {
-      const propertyReportUrl = (config as any).propertyReportUrl;
+    async (arn: string, feature: Feature | null, pointerPoint: number[], latLongCoords: number[]): Promise<PropertyInfo> => {
+      const propertyReportUrl = config.propertyReportUrl;
       if (!propertyReportUrl) {
         // Return basic info if no property report URL configured
         return {
@@ -131,7 +138,7 @@ export default function PropertyReportClick() {
           pointCoordinates: latLongCoords,
           pointerCoordinates: pointerPoint,
           shareURL: getShareURL(arn),
-          area: feature ? getArea(feature.getGeometry()) : 0,
+          area: feature?.getGeometry() ? getArea(feature.getGeometry()!) : 0,
         };
       }
 
@@ -149,7 +156,7 @@ export default function PropertyReportClick() {
           pointerCoordinates: pointerPoint,
           pointCoordinates: latLongCoords,
           shareURL: getShareURL(arn),
-          area: feature ? getArea(feature.getGeometry()) : 0,
+          area: feature?.getGeometry() ? getArea(feature.getGeometry()!) : 0,
         };
       } catch (error) {
         console.error("Error fetching property info:", error);
@@ -158,7 +165,7 @@ export default function PropertyReportClick() {
           pointCoordinates: latLongCoords,
           pointerCoordinates: pointerPoint,
           shareURL: getShareURL(arn),
-          area: feature ? getArea(feature.getGeometry()) : 0,
+          area: feature?.getGeometry() ? getArea(feature.getGeometry()!) : 0,
         };
       }
     },
@@ -208,7 +215,7 @@ export default function PropertyReportClick() {
         }
 
         // Build results using the same logic as fetchParcelResults
-        const results = [];
+        const results: ClickResult[] = [];
         const clearParcelLayer = () => {
           parcelLayerRef.current?.getSource()?.clear();
         };
@@ -222,11 +229,11 @@ export default function PropertyReportClick() {
             const condoResponse = await client.get(requestPath);
 
             if (Array.isArray(condoResponse.data) && condoResponse.data.length > 0) {
-              condoResponse.data.forEach((unit: any) => {
-                const condoResult = createCondoResult(unit.ARN, unit.UnitNumber, unit.Address, feature);
+              condoResponse.data.forEach((unit: CondoUnit) => {
+                const condoResult: ClickResult = createCondoResult(unit.ARN, unit.UnitNumber, unit.Address, feature);
 
                 // Attach lazy-loading function for property info
-                (condoResult as any).loadDetails = async () => {
+                condoResult.loadDetails = async () => {
                   if (!condoResult.data.propInfo) {
                     const propInfo = await fetchPropertyInfo(unit.ARN, feature, pointerPoint, latLongCoords);
                     condoResult.data.propInfo = propInfo;
@@ -234,7 +241,7 @@ export default function PropertyReportClick() {
                   }
                 };
 
-                (condoResult as any).clearParcelLayer = clearParcelLayer;
+                condoResult.clearParcelLayer = clearParcelLayer;
                 results.push(condoResult);
               });
             }
@@ -244,8 +251,8 @@ export default function PropertyReportClick() {
         } else {
           // Regular property
           const propInfo = await fetchPropertyInfo(arn, feature, pointerPoint, latLongCoords);
-          const propertyResult = createPropertyResult(arn, propInfo.Address || "", feature, propInfo);
-          (propertyResult as any).clearParcelLayer = clearParcelLayer;
+          const propertyResult: ClickResult = createPropertyResult(arn, propInfo.Address || "", feature, propInfo);
+          propertyResult.clearParcelLayer = clearParcelLayer;
           results.push(propertyResult);
         }
 
@@ -255,9 +262,10 @@ export default function PropertyReportClick() {
           hidePopup();
         };
 
-        const handleSelectResult = async (result: any) => {
-          if (result.loadDetails) {
-            await result.loadDetails();
+        const handleSelectResult = async (result: Result) => {
+          const extended = result as ClickResult;
+          if (extended.loadDetails) {
+            await extended.loadDetails();
           }
         };
 
@@ -278,7 +286,7 @@ export default function PropertyReportClick() {
   const fetchParcelResults = useCallback(
     async (coordinate: number[]) => {
       try {
-        const parcelLayerUrl = (config as any).parcelLayer?.url;
+        const parcelLayerUrl = config.parcelLayer?.url;
         if (!parcelLayerUrl) {
           console.warn("Parcel layer URL not configured");
           return [];
@@ -304,7 +312,7 @@ export default function PropertyReportClick() {
         const pointerPoint = coordinate;
         const latLongCoords = toLatLongFromWebMercator(coordinate);
 
-        const results = [];
+        const results: ClickResult[] = [];
 
         // Function to clear parcel layer
         const clearParcelLayer = () => {
@@ -322,11 +330,11 @@ export default function PropertyReportClick() {
 
             if (Array.isArray(condoResponse.data) && condoResponse.data.length > 0) {
               // Add each condo unit as a result (without property info - will be lazy-loaded)
-              condoResponse.data.forEach((unit: any) => {
-                const condoResult = createCondoResult(unit.ARN, unit.UnitNumber, unit.Address, feature);
+              condoResponse.data.forEach((unit: CondoUnit) => {
+                const condoResult: ClickResult = createCondoResult(unit.ARN, unit.UnitNumber, unit.Address, feature);
 
                 // Attach lazy-loading function for property info
-                (condoResult as any).loadDetails = async () => {
+                condoResult.loadDetails = async () => {
                   if (!condoResult.data.propInfo) {
                     const propInfo = await fetchPropertyInfo(unit.ARN, feature, pointerPoint, latLongCoords);
                     condoResult.data.propInfo = propInfo;
@@ -335,7 +343,7 @@ export default function PropertyReportClick() {
                 };
 
                 // Attach parcel layer clearing function
-                (condoResult as any).clearParcelLayer = clearParcelLayer;
+                condoResult.clearParcelLayer = clearParcelLayer;
 
                 results.push(condoResult);
               });
@@ -346,10 +354,10 @@ export default function PropertyReportClick() {
         } else {
           // Regular property - fetch property information
           const propInfo = await fetchPropertyInfo(arn, feature, pointerPoint, latLongCoords);
-          const propertyResult = createPropertyResult(arn, propInfo.Address || "", feature, propInfo);
+          const propertyResult: ClickResult = createPropertyResult(arn, propInfo.Address || "", feature, propInfo);
 
           // Attach parcel layer clearing function
-          (propertyResult as any).clearParcelLayer = clearParcelLayer;
+          propertyResult.clearParcelLayer = clearParcelLayer;
 
           results.push(propertyResult);
         }
@@ -374,7 +382,7 @@ export default function PropertyReportClick() {
       priority: 10, // Lower priority to run before other handlers
       conditions: {
         maxScale: 20000,
-        checkDisableFlags,
+        checkDisableFlags: checkGlobalDisable,
         checkLayerFilters: ParcelClickInteraction.checkLayersForDisable,
       },
       handler: async (coordinate) => {
@@ -387,7 +395,7 @@ export default function PropertyReportClick() {
     return () => {
       unregisterHandler("property-report-click");
     };
-  }, [map, checkDisableFlags, fetchParcelResults, registerHandler, unregisterHandler]);
+  }, [map, checkGlobalDisable, fetchParcelResults, registerHandler, unregisterHandler]);
 
   // Handle ARN URL parameter
   useEffect(() => {
@@ -395,7 +403,7 @@ export default function PropertyReportClick() {
 
     const urlARN = urlParameters.ARN;
     if (urlARN) {
-      const parcelLayerUrl = (config as any).parcelLayer?.url;
+      const parcelLayerUrl = config.parcelLayer?.url;
       if (!parcelLayerUrl) {
         console.warn("Parcel layer URL not configured");
         return;

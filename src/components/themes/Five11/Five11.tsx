@@ -103,8 +103,7 @@ export default function Five11({ name = "511 Live Feeds", helpLink, hideHeader =
       priority: 50,
       conditions: {
         checkDisableFlags: () => {
-          const { isDrawingOrEditing, isCoordinateToolOpen, isMeasuring } = useMapStore.getState();
-          return isDrawingOrEditing || isCoordinateToolOpen || isMeasuring;
+          return useMapStore.getState().checkGlobalDisable();
         },
       },
       handler: async (coordinate: number[], pixel: number[]): Promise<InteractionResult[]> => {

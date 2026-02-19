@@ -153,9 +153,8 @@
   position: relative;
   top: 0px;
   bottom: 0px;
-  max-height: 210px;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 
 .sc-theme-avl-history-controls-container {

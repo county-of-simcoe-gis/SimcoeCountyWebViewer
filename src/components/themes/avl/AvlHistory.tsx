@@ -13,17 +13,17 @@ import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import { Circle as CircleStyle, Fill, Stroke, Style, Icon } from "ol/style";
 import { transformExtent } from "ol/proj";
-import { unByKey } from "ol/Observable";
-import type { EventsKey } from "ol/events";
-
 import { useAvlStore } from "@/stores/avlStore";
 import { useMapStore } from "@/stores/mapStore";
-import { usePopupStore } from "@/stores/popupStore";
+import { useInteractionManagerStore } from "@/stores/interactionManagerStore";
+import { useLayerManagerStore } from "@/stores/layerManagerStore";
+import type { InteractionResult } from "@/stores/interactionManagerStore";
 import { useAvlApi } from "./hooks/useAvlApi";
 import { useGeoTab } from "./hooks/useGeoTab";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import AvlHistoryVehicle from "./components/AvlHistoryVehicle";
 import AvlHistoryPopup from "./components/AvlHistoryPopup";
+import { FaTruck } from "react-icons/fa";
 import { toWebMercatorFromLatLong, getFriendlyDateString, roundTime, download } from "./utils/avlHelpers";
 import { avlGroupDropDownStyles, avlVehicleDropDownStyles, avlSpeedOperatorDropDownStyles, avlSpeedDropDownStyles, avlHistorySliderWrapperStyle, avlHistoryMarks } from "./utils/avlStyles";
 import type { AvlHistoryProps, AvlHistoryVehicle as AvlHistoryVehicleType, AvlVehicle, SelectOption, SpeedOperatorOption, GroupSelectOption } from "./types/avl.types";
@@ -76,9 +76,9 @@ const getInitialStartDate = (): Date => roundTime(new Date(Date.now() - 3 * 60 *
 const getInitialEndDate = (): Date => roundTime(new Date());
 
 export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }: AvlHistoryProps) {
-  const { map } = useMapStore();
+  const { map, checkGlobalDisable } = useMapStore();
   const { allowedGroups, configGroups, geoTabCredentials, geoTabDevices } = useAvlStore();
-  const { show: showPopup } = usePopupStore();
+  const { registerHandler, unregisterHandler } = useInteractionManagerStore();
   const { fetchAllVehicles, fetchHistory, fetchHistorySpreader } = useAvlApi();
   const { groupHasGeoTabSpreaderData, fetchSpreaderData, isActiveAtTime, findClosestStatusValue, getDeviceIdForVehicle, authenticateGeoTab, fetchGeoTabDevices } = useGeoTab();
 
@@ -104,17 +104,8 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
   // Refs
   const layerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const shadowLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
-  const mapClickEventRef = useRef<EventsKey | null>(null);
   const layerIdRef = useRef<string | null>(null);
   const shadowLayerIdRef = useRef<string | null>(null);
-  const showPopupRef = useRef<((coords: number[], vehicleInfo: AvlHistoryVehicleType) => void) | null>(null);
-
-  // Store the showPopup function in a ref to avoid stale closures in event handlers
-  useEffect(() => {
-    showPopupRef.current = (coords: number[], vehicleInfo: AvlHistoryVehicleType) => {
-      showPopup(coords, <AvlHistoryPopup info={vehicleInfo} />, "AVL History");
-    };
-  }, [showPopup]);
 
   // Initialize
   useEffect(() => {
@@ -148,10 +139,7 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
         shadowLayerIdRef.current = null;
       }
       shadowLayerRef.current = null;
-      if (mapClickEventRef.current) {
-        unByKey(mapClickEventRef.current);
-        mapClickEventRef.current = null;
-      }
+      unregisterHandler("avl-history-click");
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, allowedGroups]);
@@ -192,11 +180,12 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
     const layer = new VectorLayer({
       source: new VectorSource({ features: [] }),
     });
-    layer.setProperties({ disableParcelClick: true, name: "avlHistory" });
+    layer.setProperties({ name: "avlHistory" });
 
     // Use LayerManager to add layer with "Themes" category
     const layerId = LayerManager.addLayer(layer, "Themes", "AVL History Vehicles", {
       id: "avl-history-layer",
+      clickable: true,
     });
 
     if (!layerId) {
@@ -209,27 +198,51 @@ export default function AvlHistory({ historyVehicle, onHistoryVehicleConsumed }:
     layerIdRef.current = layerId;
     layerRef.current = layer;
 
-    mapClickEventRef.current = map.on("singleclick", (evt) => {
-      map.forEachFeatureAtPixel(
-        evt.pixel,
-        (feature) => {
-          const vehicleInfo = (feature as Feature & { vehicleInfo?: AvlHistoryVehicleType }).vehicleInfo;
-          if (vehicleInfo) {
-            console.log("Show popup for history vehicle:", vehicleInfo.vehicle_name);
-            const coords = (feature as Feature).getGeometry()?.getExtent();
-            if (coords) {
-              const center = [(coords[0] + coords[2]) / 2, (coords[1] + coords[3]) / 2];
-              // Use the popup store via the ref
-              showPopupRef.current?.(center, vehicleInfo);
-            }
-          }
-        },
-        {
-          layerFilter: (layer) => layer.get("name") === "avlHistory" && layer.getVisible() && layer instanceof VectorLayer,
-        },
-      );
+    // Register click handler via InteractionManager (unified click system)
+    registerHandler({
+      id: "avl-history-click",
+      eventType: "singleclick",
+      conditions: {
+        checkDisableFlags: () => useMapStore.getState().checkGlobalDisable(),
+      },
+      handler: (coordinate: number[], pixel: number[]) => {
+        return handleAvlHistoryClick(pixel);
+      },
     });
   }, [map]);
+
+  // Handler for InteractionManager - returns results for unified popup
+  const handleAvlHistoryClick = (pixel: number[]): InteractionResult[] => {
+    if (!map || !layerRef.current) return [];
+
+    const results: InteractionResult[] = [];
+    const historyLayer = useLayerManagerStore.getState().getLayer("avl-history-layer");
+    const layerZIndex = historyLayer?.zIndex ?? 2200;
+    const layerDisplayName = historyLayer?.name ?? "AVL History";
+
+    map.forEachFeatureAtPixel(
+      pixel,
+      (feature) => {
+        const vehicleInfo = (feature as Feature & { vehicleInfo?: AvlHistoryVehicleType }).vehicleInfo;
+        if (vehicleInfo) {
+          results.push({
+            id: `avl-history-${vehicleInfo.vehicle_name}-${vehicleInfo.date}`,
+            type: "layer",
+            displayName: vehicleInfo.vehicle_name || "Vehicle",
+            layerZIndex,
+            data: { vehicleInfo, layerName: layerDisplayName },
+            renderContent: () => <AvlHistoryPopup info={vehicleInfo} />,
+            renderSidebarIcon: () => <FaTruck />,
+          });
+        }
+      },
+      {
+        layerFilter: (layer) => layer.get("name") === "avlHistory" && layer.getVisible() && layer instanceof VectorLayer,
+      },
+    );
+
+    return results;
+  };
 
   const createShadowLayer = useCallback(() => {
     if (!map || shadowLayerRef.current) return;

@@ -192,7 +192,7 @@ describe("TogglerTool", () => {
     on: vi.fn(() => ({ event: "click", handler: vi.fn() })),
   };
 
-  const mockSetDisableParcelClick = vi.fn();
+  const mockSetActiveToolId = vi.fn();
   const mockShowPopup = vi.fn();
 
   beforeEach(() => {
@@ -214,7 +214,7 @@ describe("TogglerTool", () => {
     // Mock stores
     vi.mocked(useMapStore).mockReturnValue({
       map: mockMap,
-      setDisableParcelClick: mockSetDisableParcelClick,
+      setActiveToolId: mockSetActiveToolId,
       isDrawingOrEditing: false,
     } as ReturnType<typeof useMapStore>);
 
@@ -417,7 +417,7 @@ describe("TogglerTool", () => {
       expect(mockSetToggleOn).toHaveBeenCalledWith(true);
     });
 
-    it("disables parcel click when toggle is on", async () => {
+    it("sets active tool ID when toggle is on", async () => {
       const baseStore = vi.mocked(useTogglerStore)();
       vi.mocked(useTogglerStore).mockReturnValue({
         ...baseStore,
@@ -427,7 +427,7 @@ describe("TogglerTool", () => {
       render(<TogglerTool onClose={mockOnClose} />);
 
       await waitFor(() => {
-        expect(mockSetDisableParcelClick).toHaveBeenCalledWith(true);
+        expect(mockSetActiveToolId).toHaveBeenCalledWith("toggler");
       });
     });
 
@@ -505,7 +505,7 @@ describe("TogglerTool", () => {
       expect(mockOnClose).toHaveBeenCalled();
     });
 
-    it("re-enables parcel click on unmount", async () => {
+    it("clears active tool ID on unmount", async () => {
       const baseStore = vi.mocked(useTogglerStore)();
       vi.mocked(useTogglerStore).mockReturnValue({
         ...baseStore,
@@ -515,13 +515,13 @@ describe("TogglerTool", () => {
       const { unmount } = render(<TogglerTool onClose={mockOnClose} />);
 
       await waitFor(() => {
-        expect(mockSetDisableParcelClick).toHaveBeenCalledWith(true);
+        expect(mockSetActiveToolId).toHaveBeenCalledWith("toggler");
       });
 
       unmount();
 
-      // Should be called again with false on cleanup
-      expect(mockSetDisableParcelClick).toHaveBeenCalledWith(false);
+      // Should be called with null on cleanup
+      expect(mockSetActiveToolId).toHaveBeenCalledWith(null);
     });
   });
 

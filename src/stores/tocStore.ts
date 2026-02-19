@@ -1018,6 +1018,7 @@ export const useTOCStore = create<TOCState>()(
         // Add to map using LayerManager - THIS IS THE CRITICAL STEP
         const managedLayerId = LayerManager.addLayer(olLayer, "TOC", layer.name, {
           index: drawIndex,
+          clickable: layer.liveLayer || layer.isQueryable || false,
           metadata: {
             groupName: groupName,
             userLayer: true,
@@ -1787,6 +1788,7 @@ export const useTOCStore = create<TOCState>()(
                   // Add to map using LayerManager for proper categorization and z-index management
                   const managedLayerId = LayerManager.addLayer(typedLayer as Layer, "TOC", layer.name, {
                     index: layer.drawIndex, // Use drawIndex as insertion index for proper z-ordering
+                    clickable: layer.liveLayer || (layer.isQueryable !== undefined ? layer.isQueryable : true),
                     metadata: {
                       groupName: group.label,
                       groupUrl: group.wmsGroupUrl,

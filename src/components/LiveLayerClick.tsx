@@ -90,14 +90,9 @@ export interface LiveLayerResult {
 }
 
 export default function LiveLayerClick() {
-  const { map, disableParcelClick, isDrawingOrEditing, isCoordinateToolOpen, isMeasuring } = useMapStore();
+  const { map, checkGlobalDisable } = useMapStore();
   const { allLayers } = useTOCStore();
   const { registerHandler, unregisterHandler } = useInteractionManager();
-
-  // Check if live layer click should be disabled
-  const checkDisableFlags = useCallback(() => {
-    return disableParcelClick || isDrawingOrEditing || isCoordinateToolOpen || isMeasuring;
-  }, [disableParcelClick, isDrawingOrEditing, isCoordinateToolOpen, isMeasuring]);
 
   // Query a single live layer for features at coordinate
   const queryLiveLayer = useCallback(
@@ -228,8 +223,11 @@ export default function LiveLayerClick() {
         const hasLayer = !!tocLayer.layer;
         const isVisible = tocLayer.visible;
         const isLiveLayer = tocLayer.liveLayer;
-        console.log(`LiveLayerClick: Layer ${tocLayer.displayName}, hasLayer: ${hasLayer}, visible: ${isVisible}, liveLayer: ${isLiveLayer}`);
-        return hasLayer && isVisible && isLiveLayer;
+        // Also check the clickable property from LayerManager (central click gating)
+        const managedLayer = tocLayer.managedLayerId ? useLayerManagerStore.getState().getLayer(tocLayer.managedLayerId) : null;
+        const isClickable = managedLayer ? managedLayer.clickable : true; // default true if not in LayerManager
+        console.log(`LiveLayerClick: Layer ${tocLayer.displayName}, hasLayer: ${hasLayer}, visible: ${isVisible}, liveLayer: ${isLiveLayer}, clickable: ${isClickable}`);
+        return hasLayer && isVisible && isLiveLayer && isClickable;
       });
 
       console.log(`LiveLayerClick: Found ${visibleLiveLayers.length} visible live layers to query`);
@@ -311,7 +309,7 @@ export default function LiveLayerClick() {
       eventType: "singleclick",
       priority: 20,
       conditions: {
-        checkDisableFlags,
+        checkDisableFlags: checkGlobalDisable,
       },
       handler: async (coordinate) => {
         console.log("LiveLayerClick: Handler triggered at coordinate:", coordinate);
@@ -336,7 +334,7 @@ export default function LiveLayerClick() {
     return () => {
       unregisterHandler("live-layer-click");
     };
-  }, [map, checkDisableFlags, queryAllLiveLayers, registerHandler, unregisterHandler]);
+  }, [map, checkGlobalDisable, queryAllLiveLayers, registerHandler, unregisterHandler]);
 
   return null; // This component doesn't render anything directly
 }

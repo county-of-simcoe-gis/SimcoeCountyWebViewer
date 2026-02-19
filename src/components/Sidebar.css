@@ -126,8 +126,8 @@
 }
 
 .sc-sidebar-content {
-  height: calc(100vh - 92px); /* 52px header + 40px tab list */
-  max-height: calc(100vh - 92px);
+  height: calc(100vh - 130px); /* 52px header + 40px tab list */
+  max-height: calc(100vh - 130px);
   overflow: hidden;
   display: flex;
   flex-direction: column;

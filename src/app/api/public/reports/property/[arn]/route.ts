@@ -3,9 +3,9 @@
  * GET /api/public/reports/property/[arn]
  */
 import { NextRequest, NextResponse } from "next/server";
-import { SQLServer } from "@/lib/database/sqlServer";
-import { Postgres } from "@/lib/database/postgres";
+import { sqlTabular, pgWeblive } from "@/lib/database/connections";
 import { createCanvas } from "canvas";
+
 
 interface PropertyReportResult {
   ARN: string;
@@ -134,48 +134,27 @@ function getAssessedValueImage(value: number | string): string {
 }
 
 /**
- * Convert value to string, handling SQL Server type conversions
- */
-function toStringValue(value: unknown): string | undefined {
-  if (!value) return undefined;
-
-  // If it's already a string, return it
-  if (typeof value === "string") return value;
-
-  // If it's a Date object, convert to string representation
-  // Note: If you're seeing dates instead of day names (e.g., "2001-01-01" instead of "MONDAY ZONE 1"),
-  // the database column type or view may need to be fixed
-  if (value instanceof Date) {
-    return value.toISOString().split("T")[0];
-  }
-
-  return String(value);
-}
-
-/**
  * Get broadband speed information
  */
-async function getBroadbandSpeed(arn: string): Promise<string> {
-  const broadbandSql = `
-    SELECT potential_coverage,
-           CASE potential_coverage 
-             WHEN 'Up to or exceeds 50 Mbps Down/10 Mbps Up' THEN 1
-             WHEN 'Up to 25 Mbps Down/5 Mbps Up' THEN 2 
-             WHEN 'Up to 10 Mbps Down/2 Mbps Up' THEN 3
-             WHEN 'Up to 5 Mbps Down/1 Mbps Up' THEN 4 
-             WHEN 'Less than 5 Mbps Down/1 Mbps Up' THEN 5 
-             ELSE 6 
-           END AS order_field 
-    FROM public.ssmatview_can_isp_combined_parcels 
-    WHERE arn = $1 
-    ORDER BY order_field 
-    LIMIT 1
-  `;
+const broadbandSql = `
+  SELECT potential_coverage,
+         CASE potential_coverage 
+           WHEN 'Up to or exceeds 50 Mbps Down/10 Mbps Up' THEN 1
+           WHEN 'Up to 25 Mbps Down/5 Mbps Up' THEN 2 
+           WHEN 'Up to 10 Mbps Down/2 Mbps Up' THEN 3
+           WHEN 'Up to 5 Mbps Down/1 Mbps Up' THEN 4 
+           WHEN 'Less than 5 Mbps Down/1 Mbps Up' THEN 5 
+           ELSE 6 
+         END AS order_field 
+  FROM public.ssmatview_can_isp_combined_parcels 
+  WHERE arn = $1 
+  ORDER BY order_field 
+  LIMIT 1
+`;
 
+async function getBroadbandSpeed(arn: string): Promise<string> {
   try {
-    const pg = new Postgres({ dbName: "weblive" });
-    const broadbandResult = await pg.selectFirstWithValues<BroadbandResult>(broadbandSql, [arn]);
-    await pg.close();
+    const broadbandResult = await pgWeblive.selectFirstWithValues<BroadbandResult>(broadbandSql, [arn]);
 
     if (broadbandResult?.potential_coverage) {
       return broadbandResult.potential_coverage;
@@ -198,8 +177,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 
   try {
-    const ss = new SQLServer({ dbName: "tabular" });
-
     const sql = `
       SELECT *
       FROM TABULAR.dbo.view_PropertyReportInfo_map
@@ -207,15 +184,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     `;
     const values = [{ name: "arn", type: "NVarChar", typeOpts: { length: 250 }, value: arn }];
 
-    const result = await ss.selectFirstWithValues<SQLResult>(sql, values);
-    await ss.close();
+    // Run both DB queries in parallel
+    const [result, broadbandSpeed] = await Promise.all([
+      sqlTabular.selectFirstWithValues<SQLResult>(sql, values),
+      getBroadbandSpeed(arn),
+    ]);
 
     if (!result) {
       return NextResponse.json({ error: "Property not found" }, { status: 404 });
     }
-
-    // Get broadband speed
-    const broadbandSpeed = await getBroadbandSpeed(arn);
 
     // Messages for special municipalities
     const barrieMsg = "Please contact City of Barrie.";

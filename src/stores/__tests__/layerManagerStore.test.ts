@@ -568,4 +568,178 @@ describe("layerManagerStore", () => {
       expect(layer2.setZIndex).toHaveBeenCalledWith(101);
     });
   });
+
+  describe("Clickable Layers", () => {
+    it("should default clickable to false when not specified", () => {
+      const managedLayer = {
+        id: "TOC_Layer_1",
+        name: "Layer 1",
+        category: "TOC" as LayerCategory,
+        layer: mockLayer as any,
+        zIndex: 100,
+        visible: true,
+        opacity: 1,
+        clickable: false,
+        addedAt: new Date(),
+      };
+
+      useLayerManagerStore.setState((state) => {
+        state.layers.TOC = [managedLayer];
+      });
+
+      const state = useLayerManagerStore.getState();
+      expect(state.layers.TOC[0].clickable).toBe(false);
+    });
+
+    it("should store clickable as true when specified", () => {
+      const managedLayer = {
+        id: "TOC_Layer_1",
+        name: "Layer 1",
+        category: "TOC" as LayerCategory,
+        layer: mockLayer as any,
+        zIndex: 100,
+        visible: true,
+        opacity: 1,
+        clickable: true,
+        addedAt: new Date(),
+      };
+
+      useLayerManagerStore.setState((state) => {
+        state.layers.TOC = [managedLayer];
+      });
+
+      const state = useLayerManagerStore.getState();
+      expect(state.layers.TOC[0].clickable).toBe(true);
+    });
+
+    it("getClickableLayers should return only clickable and visible layers", () => {
+      const clickableVisible = {
+        id: "TOC_Clickable_Visible",
+        name: "Clickable Visible",
+        category: "TOC" as LayerCategory,
+        layer: mockLayer as any,
+        zIndex: 100,
+        visible: true,
+        opacity: 1,
+        clickable: true,
+        addedAt: new Date(),
+      };
+
+      const clickableHidden = {
+        id: "TOC_Clickable_Hidden",
+        name: "Clickable Hidden",
+        category: "TOC" as LayerCategory,
+        layer: mockLayer as any,
+        zIndex: 101,
+        visible: false,
+        opacity: 1,
+        clickable: true,
+        addedAt: new Date(),
+      };
+
+      const notClickable = {
+        id: "TOC_Not_Clickable",
+        name: "Not Clickable",
+        category: "TOC" as LayerCategory,
+        layer: mockLayer as any,
+        zIndex: 102,
+        visible: true,
+        opacity: 1,
+        clickable: false,
+        addedAt: new Date(),
+      };
+
+      useLayerManagerStore.setState((state) => {
+        state.layers.TOC = [clickableVisible, clickableHidden, notClickable];
+      });
+
+      const result = useLayerManagerStore.getState().getClickableLayers();
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe("TOC_Clickable_Visible");
+    });
+
+    it("getClickableLayers should sort by z-index descending (top-most first)", () => {
+      const lowZ = {
+        id: "TOC_Low",
+        name: "Low Z",
+        category: "TOC" as LayerCategory,
+        layer: mockLayer as any,
+        zIndex: 100,
+        visible: true,
+        opacity: 1,
+        clickable: true,
+        addedAt: new Date(),
+      };
+
+      const highZ = {
+        id: "Themes_High",
+        name: "High Z",
+        category: "Themes" as LayerCategory,
+        layer: mockLayer as any,
+        zIndex: 700,
+        visible: true,
+        opacity: 1,
+        clickable: true,
+        addedAt: new Date(),
+      };
+
+      useLayerManagerStore.setState((state) => {
+        state.layers.TOC = [lowZ];
+        state.layers.Themes = [highZ];
+      });
+
+      const result = useLayerManagerStore.getState().getClickableLayers();
+      expect(result).toHaveLength(2);
+      expect(result[0].id).toBe("Themes_High"); // Higher z-index first
+      expect(result[1].id).toBe("TOC_Low");
+    });
+
+    it("getClickableLayers should return empty array when no clickable layers", () => {
+      const nonClickable = {
+        id: "TOC_NonClick",
+        name: "Non Clickable",
+        category: "TOC" as LayerCategory,
+        layer: mockLayer as any,
+        zIndex: 100,
+        visible: true,
+        opacity: 1,
+        clickable: false,
+        addedAt: new Date(),
+      };
+
+      useLayerManagerStore.setState((state) => {
+        state.layers.TOC = [nonClickable];
+      });
+
+      const result = useLayerManagerStore.getState().getClickableLayers();
+      expect(result).toHaveLength(0);
+    });
+
+    it("updateLayerClickable should update the clickable property", () => {
+      const managedLayer = {
+        id: "TOC_Layer_1",
+        name: "Layer 1",
+        category: "TOC" as LayerCategory,
+        layer: mockLayer as any,
+        zIndex: 100,
+        visible: true,
+        opacity: 1,
+        clickable: false,
+        addedAt: new Date(),
+      };
+
+      useLayerManagerStore.setState((state) => {
+        state.layers.TOC = [managedLayer];
+      });
+
+      const result = useLayerManagerStore.getState().updateLayerClickable("TOC_Layer_1", true);
+      expect(result).toBe(true);
+      expect(useLayerManagerStore.getState().layers.TOC[0].clickable).toBe(true);
+    });
+
+    it("updateLayerClickable should return false for non-existent layer", () => {
+      const result = useLayerManagerStore.getState().updateLayerClickable("non-existent", true);
+      expect(result).toBe(false);
+    });
+  });
 });

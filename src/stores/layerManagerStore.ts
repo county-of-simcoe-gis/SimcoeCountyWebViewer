@@ -26,6 +26,8 @@ export interface ManagedLayer {
   zIndex: number;
   visible: boolean;
   opacity: number;
+  /** Whether this layer participates in map click identification/popups */
+  clickable: boolean;
   metadata?: Record<string, unknown>;
   addedAt: Date;
 }
@@ -53,6 +55,8 @@ interface LayerManagerState {
       index?: number;
       id?: string;
       metadata?: Record<string, unknown>;
+      /** Whether this layer participates in map click identification/popups */
+      clickable?: boolean;
     },
   ) => string;
 
@@ -69,6 +73,12 @@ interface LayerManagerState {
   getLayersByCategory: (category: LayerCategory) => ManagedLayer[];
 
   getAllLayers: () => ManagedLayer[];
+
+  /** Get all clickable and visible layers, sorted by z-index descending (top-most first) */
+  getClickableLayers: () => ManagedLayer[];
+
+  /** Update the clickable property of a managed layer */
+  updateLayerClickable: (layerId: string, clickable: boolean) => boolean;
 
   reorderCategory: (category: LayerCategory) => void;
 
@@ -155,6 +165,7 @@ export const useLayerManagerStore = create<LayerManagerState>()(
         zIndex,
         visible: layer.getVisible(),
         opacity: layer.getOpacity(),
+        clickable: options.clickable ?? false,
         metadata: options.metadata || {},
         addedAt: new Date(),
       };
@@ -360,6 +371,48 @@ export const useLayerManagerStore = create<LayerManagerState>()(
         allLayers.push(...categoryLayers);
       });
       return allLayers.sort((a, b) => a.zIndex - b.zIndex);
+    },
+
+    // Get all clickable and visible layers, sorted by z-index descending (top-most first)
+    getClickableLayers: () => {
+      const state = get();
+      const clickableLayers: ManagedLayer[] = [];
+      Object.values(state.layers).forEach((categoryLayers) => {
+        categoryLayers.forEach((layer) => {
+          if (layer.clickable && layer.visible) {
+            clickableLayers.push(layer);
+          }
+        });
+      });
+      return clickableLayers.sort((a, b) => b.zIndex - a.zIndex);
+    },
+
+    // Update the clickable property of a managed layer
+    updateLayerClickable: (layerId, clickable) => {
+      const state = get();
+      let found = false;
+
+      Object.keys(state.layers).forEach((category) => {
+        const categoryKey = category as LayerCategory;
+        const index = state.layers[categoryKey].findIndex((l) => l.id === layerId);
+        if (index !== -1) {
+          found = true;
+        }
+      });
+
+      if (!found) return false;
+
+      set((draft) => {
+        Object.keys(draft.layers).forEach((category) => {
+          const categoryKey = category as LayerCategory;
+          const layer = draft.layers[categoryKey].find((l) => l.id === layerId);
+          if (layer) {
+            layer.clickable = clickable;
+          }
+        });
+      });
+
+      return true;
     },
 
     // Reorder all layers in a category

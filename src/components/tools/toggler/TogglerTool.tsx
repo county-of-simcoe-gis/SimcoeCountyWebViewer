@@ -82,7 +82,7 @@ export default function TogglerTool({ name = "Toggler", helpLink, hideHeader = f
   // Stores
   const { toggleOn, selectedLayer, isLoading, error, layerUpdateTime, setToggleOn, setSelectedLayer, setLoading, setError, setLayerId, refreshLayer, reset } = useTogglerStore();
 
-  const { map, setDisableParcelClick, isDrawingOrEditing } = useMapStore();
+  const { map, setActiveToolId, isDrawingOrEditing } = useMapStore();
   const { show: showPopup } = usePopupStore();
 
   // Local state
@@ -512,13 +512,13 @@ export default function TogglerTool({ name = "Toggler", helpLink, hideHeader = f
    */
   useEffect(() => {
     if (toggleOn) {
-      setDisableParcelClick(true);
+      setActiveToolId("toggler");
     }
 
     return () => {
-      setDisableParcelClick(false);
+      setActiveToolId(null);
     };
-  }, [toggleOn, setDisableParcelClick]);
+  }, [toggleOn, setActiveToolId]);
 
   /**
    * Cleanup on unmount

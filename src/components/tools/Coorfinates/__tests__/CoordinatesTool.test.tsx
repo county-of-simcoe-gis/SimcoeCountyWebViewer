@@ -127,8 +127,7 @@ describe("CoordinatesTool", () => {
     // Reset stores
     useMapStore.setState({
       map: null,
-      setDisableParcelClick: vi.fn(),
-      setIsCoordinateToolOpen: vi.fn(),
+      setActiveToolId: vi.fn(),
     });
     useEventStore.setState({
       emitAddMyMapsFeature: vi.fn(),
@@ -323,30 +322,16 @@ describe("CoordinatesTool", () => {
   });
 
   describe("Store Integration", () => {
-    it("calls setDisableParcelClick on mount", () => {
-      const setDisableParcelClick = vi.fn();
+    it("calls setActiveToolId on mount", () => {
+      const setActiveToolId = vi.fn();
       useMapStore.setState({
         map: mockMap as unknown as ReturnType<typeof useMapStore.getState>["map"],
-        setDisableParcelClick,
-        setIsCoordinateToolOpen: vi.fn(),
+        setActiveToolId,
       });
 
       render(<CoordinatesTool onClose={mockOnClose} />);
 
-      expect(setDisableParcelClick).toHaveBeenCalledWith(true);
-    });
-
-    it("calls setIsCoordinateToolOpen on mount", () => {
-      const setIsCoordinateToolOpen = vi.fn();
-      useMapStore.setState({
-        map: mockMap as unknown as ReturnType<typeof useMapStore.getState>["map"],
-        setDisableParcelClick: vi.fn(),
-        setIsCoordinateToolOpen,
-      });
-
-      render(<CoordinatesTool onClose={mockOnClose} />);
-
-      expect(setIsCoordinateToolOpen).toHaveBeenCalledWith(true);
+      expect(setActiveToolId).toHaveBeenCalledWith("coordinates");
     });
   });
 

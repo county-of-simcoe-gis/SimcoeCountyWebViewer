@@ -68,7 +68,7 @@ const nad27Proj = new Projection({
 
 export default function CoordinatesTool({ name = "Coordinates", helpLink, hideHeader = false, onClose, onSidebarVisibility }: CoordinatesToolProps) {
   // Stores
-  const { map, setDisableParcelClick, setIsCoordinateToolOpen } = useMapStore();
+  const { map, setActiveToolId } = useMapStore();
   const { emitAddMyMapsFeature } = useEventStore();
 
   // Live coordinates state
@@ -127,7 +127,7 @@ export default function CoordinatesTool({ name = "Coordinates", helpLink, hideHe
         map.getView().animate({ center: coords, zoom: 18 });
       }
     },
-    [map]
+    [map],
   );
 
   // Glow all coordinate inputs
@@ -153,7 +153,7 @@ export default function CoordinatesTool({ name = "Coordinates", helpLink, hideHe
       glowAllInputs();
       createPoint(webMercator, false);
     },
-    [createPoint, glowAllInputs]
+    [createPoint, glowAllInputs],
   );
 
   // Handle pointer move
@@ -193,7 +193,7 @@ export default function CoordinatesTool({ name = "Coordinates", helpLink, hideHe
         createPoint(webMercatorCoords, true);
       }
     },
-    [createPoint]
+    [createPoint],
   );
 
   // Handle add to MyMaps
@@ -206,7 +206,7 @@ export default function CoordinatesTool({ name = "Coordinates", helpLink, hideHe
         emitAddMyMapsFeature(features[0], `X:${x}, Y:${y}`);
       }
     },
-    [emitAddMyMapsFeature]
+    [emitAddMyMapsFeature],
   );
 
   // Copy to clipboard
@@ -241,8 +241,7 @@ export default function CoordinatesTool({ name = "Coordinates", helpLink, hideHe
     map.addLayer(vectorLayer);
 
     // Disable parcel click
-    setDisableParcelClick(true);
-    setIsCoordinateToolOpen(true);
+    setActiveToolId("coordinates");
 
     // Register map events
     pointerMoveEventRef.current = map.on("pointermove", onPointerMove);
@@ -258,14 +257,13 @@ export default function CoordinatesTool({ name = "Coordinates", helpLink, hideHe
       if (mapClickEventRef.current) unByKey(mapClickEventRef.current);
       if (mapMoveEndEventRef.current) unByKey(mapMoveEndEventRef.current);
 
-      setDisableParcelClick(false);
-      setIsCoordinateToolOpen(false);
+      setActiveToolId(null);
 
       if (vectorLayerRef.current) {
         map.removeLayer(vectorLayerRef.current);
       }
     };
-  }, [map, onPointerMove, onMapClick, updateExtent, setDisableParcelClick, setIsCoordinateToolOpen]);
+  }, [map, onPointerMove, onMapClick, updateExtent, setActiveToolId]);
 
   // Format number for display
   const formatNumber = useCallback((num: number | null, decimals = 6): string => {

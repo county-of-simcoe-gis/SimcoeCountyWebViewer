@@ -1,32 +1,21 @@
 .sc-property-popup {
   background: white;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  max-width: 350px;
-  min-width: 280px;
 }
 
-.sc-property-popup-content {
-  padding: 8px 12px;
-}
-
-/* Override InfoRow styles for property popup */
-.sc-property-popup-content .sc-info-row {
-  margin-bottom: 6px;
-  align-items: flex-start;
-  font-size: 12px;
-}
-
-.sc-property-popup-content .sc-info-row:last-of-type {
-  margin-bottom: 8px;
+/* Scrollable top container */
+.sc-property-report-top-container {
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .sc-copy-button {
   background: none;
   border: none;
   cursor: pointer;
-  margin-left: 6px;
-  padding: 2px 4px;
+  margin-left: 5px;
+  margin-bottom: -3px;
+  padding: 0;
   font-size: 12px;
   transition: transform 0.2s;
 }
@@ -55,79 +44,62 @@
 }
 
 .sc-property-note {
-  font-size: 10px;
-  color: #777;
-  margin-top: 2px;
-  font-style: italic;
+  font-size: 9px;
+  color: #555;
+  padding-bottom: 4px;
 }
 
 .sc-assessed-value-img {
-  display: block;
-  height: auto;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .sc-property-tools {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  display: inline;
 }
 
-.sc-tool-link {
-  background: none;
-  border: none;
-  color: #1976d2;
-  cursor: pointer;
-  text-decoration: none;
-  font-size: 12px;
-  padding: 0;
-  transition: color 0.2s;
-}
-
-.sc-tool-link:hover {
-  color: #1565c0;
+/* Legacy fake link style for tools */
+.sc-fakeLink {
+  color: #337ab7 !important;
   text-decoration: underline;
+  cursor: pointer !important;
+  user-select: none;
+  margin-right: 4px;
 }
 
+.sc-fakeLink:hover {
+  color: #23527c !important;
+}
+
+/* Action buttons matching legacy sc-button style */
 .sc-property-actions {
   display: flex;
-  gap: 6px;
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid #e0e0e0;
-  flex-wrap: wrap;
+  margin-top: 5px;
+  width: 100%;
 }
 
-.sc-property-button {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
+.sc-property-report-click-more-info {
+  flex: 6;
+  margin-right: 5px;
+}
+
+.sc-property-report-click-close {
+  flex: 4;
+}
+
+.sc-button {
+  user-select: none;
+  background: linear-gradient(to bottom, #ffffff 0%, #e5e5e5 100%);
   font-size: 12px;
-  font-weight: 500;
-  transition: all 0.2s;
-  flex: 1;
-  min-width: 80px;
+  padding: 5px;
+  color: #2d343c !important;
+  border-radius: 2px;
+  min-height: 32px;
+  border: 1px solid #ccc;
+  font-weight: normal;
+  cursor: pointer;
 }
 
-.sc-property-button-primary {
-  background-color: #1976d2;
-  color: white;
-}
-
-.sc-property-button-primary:hover {
-  background-color: #1565c0;
-}
-
-.sc-property-button-secondary {
-  background-color: #f5f5f5;
-  color: #333;
-}
-
-.sc-property-button-secondary:hover {
-  background-color: #e0e0e0;
-}
-
-.sc-property-button:active {
-  transform: scale(0.98);
+.sc-button:hover {
+  border: 1px solid #80b9ff;
+  box-shadow: 0 0 5px #80b9ff;
 }
