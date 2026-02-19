@@ -145,8 +145,7 @@ describe("MeasureTool", () => {
     useMapStore.setState({
       map: null,
       isDrawingOrEditing: false,
-      setDisableParcelClick: vi.fn(),
-      setIsMeasuring: vi.fn(),
+      setActiveToolId: vi.fn(),
     });
     usePopupStore.setState({
       hide: vi.fn(),
@@ -361,12 +360,11 @@ describe("MeasureTool", () => {
   });
 
   describe("Store Integration", () => {
-    it("calls setIsMeasuring(false) when clear is clicked", async () => {
-      const setIsMeasuring = vi.fn();
+    it("calls setActiveToolId(null) when clear is clicked", async () => {
+      const setActiveToolId = vi.fn();
       useMapStore.setState({
         map: mockMap as unknown as ReturnType<typeof useMapStore.getState>["map"],
-        setDisableParcelClick: vi.fn(),
-        setIsMeasuring,
+        setActiveToolId,
       });
       const user = userEvent.setup();
 
@@ -375,16 +373,14 @@ describe("MeasureTool", () => {
       const clearButton = screen.getByTitle("Clear Drawing");
       await user.click(clearButton);
 
-      expect(setIsMeasuring).toHaveBeenCalledWith(false);
+      expect(setActiveToolId).toHaveBeenCalledWith(null);
     });
 
     it("accesses mapStore state correctly", () => {
-      const setDisableParcelClick = vi.fn();
-      const setIsMeasuring = vi.fn();
+      const setActiveToolId = vi.fn();
       useMapStore.setState({
         map: mockMap as unknown as ReturnType<typeof useMapStore.getState>["map"],
-        setDisableParcelClick,
-        setIsMeasuring,
+        setActiveToolId,
       });
 
       render(<MeasureTool onClose={mockOnClose} />);

@@ -9,6 +9,7 @@
 /* Override global panel content padding for AVL theme */
 #sc-panel-component-content:has(.sc-theme-avl-container) {
   padding: 0;
+  height: 100%;
 }
 
 /* Override global tab styles for inner AVL tabs - these are text-only tabs, not icon tabs */

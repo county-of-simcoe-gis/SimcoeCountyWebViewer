@@ -45,6 +45,7 @@ vi.mock("@/stores/mapStore", () => ({
         isDrawingOrEditing: false,
         isCoordinateToolOpen: false,
         isMeasuring: false,
+        checkGlobalDisable: () => false,
       };
       return selector ? selector(state) : state;
     }),
@@ -54,6 +55,7 @@ vi.mock("@/stores/mapStore", () => ({
         isDrawingOrEditing: false,
         isCoordinateToolOpen: false,
         isMeasuring: false,
+        checkGlobalDisable: () => false,
       })),
       setState: vi.fn(),
       subscribe: vi.fn(),

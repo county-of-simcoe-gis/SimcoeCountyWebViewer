@@ -6,24 +6,12 @@ import { Polygon } from "ol/geom";
 
 // Mock CSS
 vi.mock("@/components/PropertyPopup.css", () => ({}));
-vi.mock("@/components/common/InfoRow.css", () => ({}));
 
 // Mock config
 vi.mock("@/config.json", () => ({
   default: {
     termsUrl: "https://example.com/terms",
   },
-}));
-
-// Mock InfoRow component
-vi.mock("@/components/common/InfoRow", () => ({
-  default: ({ label, value, children }: any) => (
-    <div data-testid="info-row">
-      <span data-testid="info-label">{label}</span>
-      {value && <span data-testid="info-value">{value}</span>}
-      {children}
-    </div>
-  ),
 }));
 
 describe("PropertyPopup", () => {
@@ -132,7 +120,7 @@ describe("PropertyPopup", () => {
   it("displays coordinates with proper formatting", () => {
     render(<PropertyPopup propInfo={defaultPropInfo} feature={mockFeature} onClose={mockOnClose} onClearParcelLayer={mockOnClearParcelLayer} />);
 
-    expect(screen.getByText("Coordinates")).toBeInTheDocument();
+    expect(screen.getByText("Pointer Coordinates")).toBeInTheDocument();
     // Coordinates are formatted to 4 decimal places
     const coordText = screen.getByText(/Lat:.*Long:/);
     expect(coordText).toBeInTheDocument();
@@ -156,7 +144,7 @@ describe("PropertyPopup", () => {
       () => {
         expect(screen.queryByText("Copied!")).not.toBeInTheDocument();
       },
-      { timeout: 2500 }
+      { timeout: 2500 },
     );
   });
 
@@ -194,23 +182,6 @@ describe("PropertyPopup", () => {
     expect(windowOpenSpy).toHaveBeenCalledWith("https://example.com/terms", "_blank");
 
     windowOpenSpy.mockRestore();
-  });
-
-  it("zooms to feature when zoom button is clicked", () => {
-    const mockFit = vi.fn();
-    (global as any).window.map = {
-      getView: vi.fn(() => ({
-        fit: mockFit,
-      })),
-      getSize: vi.fn(() => [1024, 768]),
-    };
-
-    render(<PropertyPopup propInfo={defaultPropInfo} feature={mockFeature} onClose={mockOnClose} onClearParcelLayer={mockOnClearParcelLayer} />);
-
-    const zoomButton = screen.getByText("Zoom");
-    fireEvent.click(zoomButton);
-
-    expect(mockFit).toHaveBeenCalled();
   });
 
   it("shows more information when button is clicked", () => {
@@ -262,7 +233,6 @@ describe("PropertyPopup", () => {
     render(<PropertyPopup propInfo={defaultPropInfo} feature={mockFeature} onClose={mockOnClose} onClearParcelLayer={mockOnClearParcelLayer} />);
 
     expect(screen.getByText("More Information")).toBeInTheDocument();
-    expect(screen.getByText("Zoom")).toBeInTheDocument();
     expect(screen.getByText("Close")).toBeInTheDocument();
   });
 
