@@ -3,7 +3,7 @@
  * GET /api/public/reports/condo-children/[arn]
  */
 import { NextRequest, NextResponse } from "next/server";
-import { SQLServer } from "@/lib/database/sqlServer";
+import { sqlTabular } from "@/lib/database/connections";
 
 export interface CondoChild {
   ARN: string;
@@ -29,8 +29,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 
   try {
-    const ss = new SQLServer({ dbName: "tabular" });
-
     // Get locations from query parameter (optional)
     const url = new URL(request.url);
     const locations = url.searchParams.get("locations") || "COUNTY OF SIMCOE";
@@ -41,9 +39,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     ];
 
     // Execute stored procedure to get condo children
-    const children = await ss.selectAllWithValues<CondoChild>("EXEC [uspOpenGISCondoChildren] @condoArn, @locations", values);
+    const children = await sqlTabular.selectAllWithValues<CondoChild>("EXEC [uspOpenGISCondoChildren] @condoArn, @locations", values);
     console.log(values, children);
-    await ss.close();
 
     // If no children found, return empty array
     if (!children || children.length === 0) {

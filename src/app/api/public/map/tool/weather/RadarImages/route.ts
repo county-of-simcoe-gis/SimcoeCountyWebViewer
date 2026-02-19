@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { SQLServer } from "@/lib/database/sqlServer";
+import { sqlTabular } from "@/lib/database/connections";
 
 /**
  * Validate if a date string is valid (YYYY-MM-DD format)
@@ -37,8 +37,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
 
     // Query the local `tabular` database for radar images
-    const ss = new SQLServer({ dbName: "tabular" });
-
     const values = [
       { name: "fromDate", type: "NVarChar", typeOpts: { length: 50 }, value: fromDate },
       { name: "toDate", type: "NVarChar", typeOpts: { length: 50 }, value: toDate },
@@ -57,15 +55,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     `;
 
     try {
-      const results = await ss.selectAllWithValues(sqlQuery, values);
-      await ss.close();
+      const results = await sqlTabular.selectAllWithValues(sqlQuery, values);
 
       return NextResponse.json(results || []);
     } catch (dbErr) {
       console.error("Database error fetching radar images:", dbErr);
-      try {
-        await ss.close();
-      } catch {}
       return NextResponse.json({ error: "Failed to fetch radar images" }, { status: 500 });
     }
   } catch (error) {
