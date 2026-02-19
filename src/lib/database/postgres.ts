@@ -99,6 +99,15 @@ export class Postgres {
   async close(): Promise<void> {
     await this.pool.end();
   }
+
+  /**
+   * Eagerly establish a connection in the pool (call at startup to avoid cold-start latency).
+   * Returns a promise that resolves when a connection is ready.
+   */
+  async warmup(): Promise<void> {
+    const client = await this.pool.connect();
+    client.release();
+  }
 }
 
 export default Postgres;

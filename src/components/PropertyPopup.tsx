@@ -5,7 +5,7 @@ import { Feature } from "ol";
 import config from "@/config.json";
 import "@/components/PropertyPopup.css";
 
-interface PropertyInfo {
+export interface PropertyInfo {
   ARN: string;
   Address?: string;
   AssessedValue?: string; // Base64 encoded PNG image (data:image/png;base64,...)

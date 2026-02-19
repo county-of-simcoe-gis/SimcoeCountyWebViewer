@@ -13,7 +13,7 @@ interface SQLServerConfig {
 
 export class SQLServer {
   private config: sql.config;
-  private pool: sql.ConnectionPool | null = null;
+  private poolPromise: Promise<sql.ConnectionPool> | null = null;
 
   constructor(options: SQLServerConfig) {
     const { dbName, user, password, server, port } = options;
@@ -66,13 +66,21 @@ export class SQLServer {
   }
 
   /**
-   * Get or create connection pool
+   * Get or create connection pool (safe against concurrent calls)
    */
-  private async getPool(): Promise<sql.ConnectionPool> {
-    if (!this.pool) {
-      this.pool = await new sql.ConnectionPool(this.config).connect();
+  private getPool(): Promise<sql.ConnectionPool> {
+    if (!this.poolPromise) {
+      this.poolPromise = new sql.ConnectionPool(this.config).connect();
     }
-    return this.pool;
+    return this.poolPromise;
+  }
+
+  /**
+   * Eagerly establish the connection pool (call at module load to avoid cold-start latency).
+   * Returns a promise that resolves when the pool is ready — await it in request handlers.
+   */
+  warmup(): Promise<void> {
+    return this.getPool().then(() => {});
   }
 
   /**
