@@ -15,6 +15,7 @@ import GlobalDrawingOptionsPopup from "@/components/myMaps/GlobalDrawingOptionsP
 import LayerInfoModal from "@/components/LayerInfo/LayerInfoModal";
 import LegendModal from "@/components/Legend/LegendModal";
 import MoreMenu from "@/components/MoreMenu";
+import GlobalURLModal from "@/components/common/GlobalURLModal";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -107,6 +108,9 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* More Menu - displays themes, tools, and other options */}
       <MoreMenu />
+
+      {/* Global URL Modal - full-screen iframe overlay triggered by showURLWindow() */}
+      <GlobalURLModal />
 
       {/* Additional content */}
       {children}

@@ -396,7 +396,7 @@
       "componentName": "CommercialRealEstate",
       "description": "Search commercial real estate throughout the County of Simcoe.",
       "imageName": "commercialRealEstate.png",
-      "disable": true
+      "disable": false
     },
     {
       "id": 8,
