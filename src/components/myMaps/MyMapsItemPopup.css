@@ -94,6 +94,17 @@
   margin: 4px 0;
 }
 
+/* Extension icon wrapper (react-icons) */
+.sc-mymaps-popup-ext-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: #555;
+}
+
 /* Submenu Styles */
 .sc-mymaps-popup-submenu-parent {
   position: relative;
@@ -156,6 +167,17 @@
   .sc-mymaps-popup-item span {
     font-size: 14px;
   }
+}
+
+/* Extension group header */
+.sc-mymaps-popup-group-header {
+  padding: 4px 12px 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  user-select: none;
 }
 
 /* Animation for popup appearance */

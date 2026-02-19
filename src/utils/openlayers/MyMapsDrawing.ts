@@ -15,6 +15,7 @@ import { asArray } from "ol/color";
 import { generateUID, convertLineToArrow, getBearing, getCalloutStyle, getDefaultLabelStyle, type LabelStyle } from "@/utils/myMapsHelpers";
 import type { MyMapsItem, StyleJSON } from "@/types/myMaps";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
+import { useMapStore } from "@/stores/mapStore";
 
 export class MyMapsDrawingManager {
   private map: Map;
@@ -120,6 +121,9 @@ export class MyMapsDrawingManager {
     this.clearDrawing();
 
     if (drawType === "Cancel" || drawType === "Eraser") return;
+
+    // Signal other interactions that drawing is active
+    useMapStore.getState().setIsDrawingOrEditing(true);
 
     // Convert draw type for OpenLayers
     let olDrawType: GeometryType = drawType as GeometryType;
@@ -294,10 +298,17 @@ export class MyMapsDrawingManager {
       this.map.removeInteraction(this.drawInteraction);
       this.drawInteraction = null;
     }
+    // Only clear the flag if we're also not editing
+    if (!this.isEditing()) {
+      useMapStore.getState().setIsDrawingOrEditing(false);
+    }
   }
 
   public startEditing(mode: "vertices" | "translate") {
     this.clearEditing();
+
+    // Signal other interactions that editing is active
+    useMapStore.getState().setIsDrawingOrEditing(true);
 
     if (mode === "vertices") {
       this.modifyInteraction = new Modify({
@@ -336,6 +347,10 @@ export class MyMapsDrawingManager {
     if (this.translateInteraction) {
       this.map.removeInteraction(this.translateInteraction);
       this.translateInteraction = null;
+    }
+    // Only clear the flag if we're also not drawing
+    if (!this.drawInteraction) {
+      useMapStore.getState().setIsDrawingOrEditing(false);
     }
   }
 

@@ -54,7 +54,7 @@ export default function Layout({ children }: LayoutProps) {
   const isLoading = isAnyLoading();
 
   return (
-    <div className="app-layout-container print:hidden" style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden" }}>
+    <div id="app-root" className="app-layout-container print:hidden" style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden" }}>
       {/* Portal root for modals */}
       <div id="portal-root" />
 

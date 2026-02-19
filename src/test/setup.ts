@@ -92,6 +92,9 @@ vi.mock("react-icons/fa", () => ({
   FaArrowLeft: (props: any) => React.createElement("div", { ...props, "data-testid": "arrow-left-icon" }, "ArrowLeft"),
   FaStar: (props: any) => React.createElement("div", { ...props, "data-testid": "star-icon" }, "Star"),
   FaChevronUp: (props: any) => React.createElement("div", { ...props, "data-testid": "chevron-up-icon" }, "ChevronUp"),
+
+  // AppTrack specific icons
+  FaPlusSquare: (props: any) => React.createElement("div", { ...props, "data-testid": "plus-square-icon" }, "PlusSquare"),
 }));
 
 vi.mock("react-icons/md", () => ({
@@ -103,6 +106,16 @@ vi.mock("react-icons/fi", () => ({
   FiSettings: (props: any) => React.createElement("div", { ...props, "data-testid": "settings-icon" }, "Settings"),
   FiSave: (props: any) => React.createElement("div", { ...props, "data-testid": "save-icon" }, "Save"),
   FiTrash2: (props: any) => React.createElement("div", { ...props, "data-testid": "trash-icon" }, "Trash"),
+  FiSearch: (props: any) => React.createElement("div", { ...props, "data-testid": "fi-search-icon" }, "Search"),
+  FiX: (props: any) => React.createElement("div", { ...props, "data-testid": "fi-x-icon" }, "X"),
+  FiTable: (props: any) => React.createElement("div", { ...props, "data-testid": "fi-table-icon" }, "Table"),
+  FiZoomIn: (props: any) => React.createElement("div", { ...props, "data-testid": "fi-zoom-in-icon" }, "ZoomIn"),
+  FiChevronDown: (props: any) => React.createElement("div", { ...props, "data-testid": "fi-chevron-down-icon" }, "ChevronDown"),
+  FiChevronRight: (props: any) => React.createElement("div", { ...props, "data-testid": "fi-chevron-right-icon" }, "ChevronRight"),
+}));
+
+vi.mock("react-icons/gi", () => ({
+  GiBroom: (props: any) => React.createElement("div", { ...props, "data-testid": "broom-icon" }, "Broom"),
 }));
 
 // Setup MSW for API mocking

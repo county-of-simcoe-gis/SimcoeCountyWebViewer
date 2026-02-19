@@ -11,6 +11,7 @@
 }
 /* Zone content wrapper */
 .map-control-zone-content {
+  width: 0px; /* prevent wrapper from interfering with map interaction */
   display: flex;
   gap: 0.5em;
   pointer-events: none; /* Allow map interaction through empty space */

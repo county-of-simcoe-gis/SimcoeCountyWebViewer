@@ -10,7 +10,6 @@ type EventType =
   | 'activateSidebarItem'
   | 'setSidebarVisiblity'
   | 'activateTab'
-  | 'loadReport'
   | 'openLegend'
   | 'openMoreMenu'
   | 'takeScreenshot'

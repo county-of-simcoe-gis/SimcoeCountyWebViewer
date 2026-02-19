@@ -141,6 +141,9 @@ const mockMapInstance = {
   getInteractions: vi.fn(() => ({
     getArray: vi.fn(() => []),
   })),
+  getLayers: vi.fn(() => ({
+    getArray: vi.fn(() => []),
+  })),
   addInteraction: vi.fn(),
   removeInteraction: vi.fn(),
 };

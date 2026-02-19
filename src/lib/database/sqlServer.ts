@@ -68,19 +68,14 @@ export class SQLServer {
   /**
    * Get or create connection pool (safe against concurrent calls)
    */
-  private getPool(): Promise<sql.ConnectionPool> {
+  private async getPool(): Promise<sql.ConnectionPool> {
     if (!this.poolPromise) {
-      this.poolPromise = new sql.ConnectionPool(this.config).connect();
+      this.poolPromise = new sql.ConnectionPool(this.config).connect().then((pool) => {
+        this.pool = pool;
+        return pool;
+      });
     }
     return this.poolPromise;
-  }
-
-  /**
-   * Eagerly establish the connection pool (call at module load to avoid cold-start latency).
-   * Returns a promise that resolves when the pool is ready — await it in request handlers.
-   */
-  warmup(): Promise<void> {
-    return this.getPool().then(() => {});
   }
 
   /**
@@ -174,12 +169,21 @@ export class SQLServer {
   }
 
   /**
+   * Warm up the connection pool so the first real query is fast.
+   */
+  async warmup(): Promise<void> {
+    await this.getPool();
+  }
+
+  /**
    * Close connection pool
    */
   async close(): Promise<void> {
-    if (this.pool) {
-      await this.pool.close();
+    if (this.poolPromise) {
+      const pool = await this.poolPromise;
+      await pool.close();
       this.pool = null;
+      this.poolPromise = null;
     }
   }
 }

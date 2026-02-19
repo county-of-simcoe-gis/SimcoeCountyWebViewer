@@ -32,6 +32,17 @@ export class LayerManager {
       return null;
     }
 
+    // Guard: prevent adding the same OL layer object twice
+    const existingMapLayers = map.getLayers().getArray();
+    if (existingMapLayers.includes(layer)) {
+      console.warn(`⚠️ Layer "${name}" already exists on map - skipping duplicate add`);
+      // Check if it's already registered in the store
+      const store = useLayerManagerStore.getState();
+      const allManaged = store.getAllLayers();
+      const existing = allManaged.find((m) => m.layer === layer);
+      return existing?.id ?? null;
+    }
+
     // Set layer properties if provided
     if (options.visible !== undefined) {
       layer.setVisible(options.visible);

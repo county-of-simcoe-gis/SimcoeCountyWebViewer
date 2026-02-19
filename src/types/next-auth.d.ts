@@ -6,12 +6,14 @@ declare module "next-auth" {
    * Extended Session interface with custom properties
    */
   interface Session {
+    accessToken?: string;
     user: {
       name?: string | null;
       email?: string | null;
       image?: string | null;
       roles?: string[];
       locations?: string[];
+      accessToken?: string;
     };
     error?: string;
   }

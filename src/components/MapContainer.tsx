@@ -409,10 +409,22 @@ export default function MapContainer() {
       handleEvent(event: MapBrowserEvent<OLUIEvent>): boolean {
         const eventType = event.type as InteractionEventType;
 
+        // Global guard: suppress all singleclick handling while drawing, editing, or measuring
+        if (eventType === "singleclick") {
+          const mapState = useMapStore.getState();
+          if (mapState.isDrawingOrEditing || mapState.isMeasuring || mapState.isCoordinateToolOpen) {
+            return true; // Allow event to propagate to OL draw/modify interactions
+          }
+        }
+
         // Get handlers directly from store to ensure we have the latest
         const currentHandlers = useInteractionManagerStore.getState().handlers as InteractionHandler[];
         const checkHandler = shouldExecuteHandlerRef.current || (() => true);
         const applicableHandlers = currentHandlers.filter((h) => h.eventType === eventType && checkHandler(h, event));
+        console.log(
+          `UnifiedInteraction: Applicable handlers for "${eventType}": ${applicableHandlers.length}`,
+          applicableHandlers.map((h) => h.id),
+        );
 
         if (applicableHandlers.length === 0) {
           return true; // Allow event to propagate

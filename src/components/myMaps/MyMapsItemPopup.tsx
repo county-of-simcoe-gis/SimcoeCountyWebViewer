@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import Image from "next/image";
 import { MyMapsItem } from "@/types/myMaps";
+import { useMyMapsExtensionStore, type MyMapsExtensionItem } from "@/stores/myMapsExtensionStore";
 import "@/components/myMaps/MyMapsItemPopup.css";
 
 export interface MyMapsItemPopupProps {
@@ -38,6 +39,22 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({
 }) => {
   const popupRef = useRef<HTMLDivElement>(null);
   const [showExportSubmenu, setShowExportSubmenu] = useState(false);
+  const [openExtSubmenu, setOpenExtSubmenu] = useState<string | null>(null);
+  const extensionItemsMap = useMyMapsExtensionStore((s) => s.items);
+
+  // Derive visible items and group them — both computed from the stable `items` Map reference
+  const extensionGroups = useMemo(() => {
+    const visible = Array.from(extensionItemsMap.values())
+      .filter((item) => !item.isVisible || item.isVisible())
+      .sort((a, b) => (a.order ?? 50) - (b.order ?? 50));
+    const groups = new Map<string, MyMapsExtensionItem[]>();
+    visible.forEach((ext) => {
+      const group = ext.group ?? "";
+      if (!groups.has(group)) groups.set(group, []);
+      groups.get(group)!.push(ext);
+    });
+    return groups;
+  }, [extensionItemsMap]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -70,6 +87,8 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({
   const handleMenuItemClick = (action: () => void, closeAfter = true) => {
     action();
     if (closeAfter) {
+      setShowExportSubmenu(false);
+      setOpenExtSubmenu(null);
       onClose();
     }
   };
@@ -175,6 +194,55 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({
               <span>Identify</span>
             </div>
           )}
+
+          {/* Extension Items — render each group as a submenu */}
+          {extensionGroups.size > 0 && <div className="sc-mymaps-popup-separator" />}
+          {Array.from(extensionGroups.entries()).map(([groupName, groupItems]) => {
+            // Items without a group name render inline (flat)
+            if (!groupName) {
+              return groupItems.map((ext) => (
+                <div
+                  key={ext.id}
+                  className="sc-mymaps-popup-item"
+                  onClick={() => handleMenuItemClick(() => ext.onClick(item))}
+                  title={ext.label}
+                >
+                  {ext.icon && <span className="sc-mymaps-popup-ext-icon">{ext.icon}</span>}
+                  <span>{ext.label}</span>
+                </div>
+              ));
+            }
+
+            // Named groups render as hoverable submenus (same pattern as "Export to ...")
+            return (
+              <div
+                key={`ext-group-${groupName}`}
+                className="sc-mymaps-popup-item sc-mymaps-popup-submenu-parent"
+                onMouseEnter={() => setOpenExtSubmenu(groupName)}
+                onMouseLeave={() => setOpenExtSubmenu(null)}
+                title={groupName}
+              >
+                <span>{groupName}</span>
+                <span className="sc-mymaps-popup-arrow">▶</span>
+
+                {openExtSubmenu === groupName && (
+                  <div className="sc-mymaps-popup-submenu">
+                    {groupItems.map((ext) => (
+                      <div
+                        key={ext.id}
+                        className="sc-mymaps-popup-item sc-mymaps-popup-submenu-item"
+                        onClick={() => handleMenuItemClick(() => ext.onClick(item))}
+                        title={ext.label}
+                      >
+                        {ext.icon && <span className="sc-mymaps-popup-ext-icon">{ext.icon}</span>}
+                        <span>{ext.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
 
           {/* Report a Problem */}
           {onReportProblem && (

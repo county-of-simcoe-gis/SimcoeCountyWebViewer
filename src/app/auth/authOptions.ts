@@ -1,7 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import AzureADProvider from "next-auth/providers/azure-ad";
-import { AuthorizeUser } from "@/lib/secure/authorizeUser";
-import { getUserGroups } from "@/lib/secure/microsoftGraph";
+import { AuthorizeUser } from "@/lib/authorizeUser";
+import { getUserGroups } from "@/lib/microsoftGraph";
 import { JWT } from "next-auth/jwt";
 
 interface ExtendedToken extends JWT {

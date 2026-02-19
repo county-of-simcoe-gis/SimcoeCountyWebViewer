@@ -66,10 +66,10 @@ interface CustomerServiceAvlProps {
 }
 
 /**
- * Create a secured WMS ImageLayer that proxies through our NextJS API route.
- * Follows the same pattern as TogglerTool.tsx.
+ * Create a secured WMS ImageLayer that fetches tiles directly with auth headers.
+ * Uses a ref to always read the latest token value.
  */
-function createSecuredWMSLayer(layerName: string, cqlFilter: string, initialVisible: boolean): ImageLayer<ImageWMS> {
+function createSecuredWMSLayer(layerName: string, cqlFilter: string, initialVisible: boolean, tokenRef: React.RefObject<string | undefined>): ImageLayer<ImageWMS> {
   const wmsSource = new ImageWMS({
     url: GEOSERVER_WMS_URL,
     params: {
@@ -88,11 +88,18 @@ function createSecuredWMSLayer(layerName: string, cqlFilter: string, initialVisi
         console.warn(`[CS-AVL] Failed to load WMS image for ${layerName}`);
       };
 
-      // Proxy through NextJS API to handle auth server-side
-      const proxyUrl = `/api/proxy/wms?url=${encodeURIComponent(src)}`;
-      fetch(proxyUrl)
+      const token = tokenRef.current;
+      if (!token) {
+        img.src = src;
+        return;
+      }
+
+      // Direct fetch with auth header for secured GeoServer
+      const headers: HeadersInit = src.includes("opengis2.simcoe.ca") ? { Authorization: `Bearer ${token}` } : {};
+
+      fetch(src, { headers })
         .then((response) => {
-          if (!response.ok) throw new Error(`WMS proxy request failed: ${response.status}`);
+          if (!response.ok) throw new Error(`WMS request failed: ${response.status}`);
           return response.blob();
         })
         .then((blob) => {
@@ -154,8 +161,8 @@ export default function CustomerServiceAvl({ visible }: CustomerServiceAvlProps)
   const [chkSummarySpecial, setChkSummarySpecial] = useState(false);
   const [chkRaw, setChkRaw] = useState(false);
 
-  // Access token (for the WMS proxy; cookie auth should suffice, but keep ref for consistency)
-  const accessToken = (session as { accessToken?: string })?.accessToken || (session?.user as { accessToken?: string })?.accessToken;
+  // Access token for direct GeoServer WMS calls
+  const accessToken = session?.accessToken || session?.user?.accessToken;
   const accessTokenRef = useRef<string | undefined>(accessToken);
   useEffect(() => {
     accessTokenRef.current = accessToken;
@@ -248,14 +255,14 @@ export default function CustomerServiceAvl({ visible }: CustomerServiceAvlProps)
     const cqlStops = getStopsDateCQLFilter();
 
     // Create all 8 WMS layers
-    rawLayerRef.current = createSecuredWMSLayer(HISTORY_LAYERS.raw.geoserverName, cqlHistory, false);
-    armCycleLayerRef.current = createSecuredWMSLayer(HISTORY_LAYERS.armCycle.geoserverName, cqlHistory, true);
-    excessMaterialLayerRef.current = createSecuredWMSLayer(HISTORY_LAYERS.excessMaterial.geoserverName, cqlHistory, true);
-    nothingAtCurbLayerRef.current = createSecuredWMSLayer(HISTORY_LAYERS.nothingAtCurb.geoserverName, cqlHistory, true);
-    wrongWeekLayerRef.current = createSecuredWMSLayer(HISTORY_LAYERS.wrongWeek.geoserverName, cqlHistory, true);
-    specialCollectionLayerRef.current = createSecuredWMSLayer(HISTORY_LAYERS.specialCollection.geoserverName, cqlHistory, true);
-    stopsRegularLayerRef.current = createSecuredWMSLayer(HISTORY_LAYERS.stopsRegular.geoserverName, cqlStops, false);
-    stopsSpecialLayerRef.current = createSecuredWMSLayer(HISTORY_LAYERS.stopsSpecial.geoserverName, cqlStops, false);
+    rawLayerRef.current = createSecuredWMSLayer(HISTORY_LAYERS.raw.geoserverName, cqlHistory, false, accessTokenRef);
+    armCycleLayerRef.current = createSecuredWMSLayer(HISTORY_LAYERS.armCycle.geoserverName, cqlHistory, true, accessTokenRef);
+    excessMaterialLayerRef.current = createSecuredWMSLayer(HISTORY_LAYERS.excessMaterial.geoserverName, cqlHistory, true, accessTokenRef);
+    nothingAtCurbLayerRef.current = createSecuredWMSLayer(HISTORY_LAYERS.nothingAtCurb.geoserverName, cqlHistory, true, accessTokenRef);
+    wrongWeekLayerRef.current = createSecuredWMSLayer(HISTORY_LAYERS.wrongWeek.geoserverName, cqlHistory, true, accessTokenRef);
+    specialCollectionLayerRef.current = createSecuredWMSLayer(HISTORY_LAYERS.specialCollection.geoserverName, cqlHistory, true, accessTokenRef);
+    stopsRegularLayerRef.current = createSecuredWMSLayer(HISTORY_LAYERS.stopsRegular.geoserverName, cqlStops, false, accessTokenRef);
+    stopsSpecialLayerRef.current = createSecuredWMSLayer(HISTORY_LAYERS.stopsSpecial.geoserverName, cqlStops, false, accessTokenRef);
 
     // Register all layers with LayerManager
     const layerEntries: Array<{ ref: React.RefObject<ImageLayer<ImageWMS> | null>; name: string }> = [

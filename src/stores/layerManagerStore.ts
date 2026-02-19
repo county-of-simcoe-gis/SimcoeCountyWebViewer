@@ -147,6 +147,16 @@ export const useLayerManagerStore = create<LayerManagerState>()(
       const state = get();
       const categoryLayers = state.layers[category];
 
+      // Guard: check if this exact OL layer object is already registered in any category
+      const allCategories = Object.keys(state.layers) as LayerCategory[];
+      for (const cat of allCategories) {
+        const existing = state.layers[cat].find((m) => m.layer === layer);
+        if (existing) {
+          console.warn(`⚠️ Layer "${name}" (OL ref) already registered as "${existing.name}" in category "${cat}" — returning existing ID`);
+          return existing.id;
+        }
+      }
+
       // Generate unique ID
       const id = options.id || generateLayerId(category, name);
 

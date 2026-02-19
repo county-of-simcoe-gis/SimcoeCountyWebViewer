@@ -21,7 +21,9 @@ import { register } from "ol/proj/proj4";
 proj4.defs("EPSG:3978", "+proj=lcc +lat_0=49 +lon_0=-95 +lat_1=49 +lat_2=77 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs");
 proj4.defs("EPSG:3979", "+proj=lcc +lat_0=49 +lon_0=-95 +lat_1=49 +lat_2=77 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs");
 register(proj4);
-import { GeoJSON, GPX, KML, EsriJSON, GML2, GML3, TopoJSON, IGC, Polyline, WKT } from "ol/format";
+import { GeoJSON, GPX, KML, EsriJSON, TopoJSON, IGC, Polyline, WKT } from "ol/format";
+import GML2 from "ol/format/GML2";
+import GML3 from "ol/format/GML3";
 import { all as LoadingStrategyAll } from "ol/loadingstrategy";
 import { Extent } from "ol/extent";
 import { Projection } from "ol/proj";
@@ -232,7 +234,7 @@ export class LayerHelpers {
 
                     // Zoom to extent of loaded features if map is available
                     if (features.length > 0 && window.map) {
-                      const vectorSource = (this as any) as Vector;
+                      const vectorSource = this as any as Vector;
                       const extent = vectorSource.getExtent();
                       if (extent && extent.some((val) => isFinite(val))) {
                         window.map.getView().fit(extent, {
@@ -354,6 +356,47 @@ export class LayerHelpers {
             }),
           }),
         );
+        break;
+
+      case OL_DATA_TYPES.ImageArcGISRest:
+        {
+          // Parse the URL to extract sublayer ID and optional token
+          // e.g. "MapServer/3?token=abc" → baseUrl="MapServer", sublayerId="3", token="abc"
+          const arcUrl = finalUrl as string;
+          const [arcPath, arcQuery] = arcUrl.split("?");
+          const arcParts = arcPath.split("/");
+          const sublayerId = arcParts[arcParts.length - 1];
+          const arcBaseUrl = arcParts.slice(0, -1).join("/");
+
+          // Extract token from query string if present
+          let arcToken: string | undefined;
+          if (arcQuery) {
+            const tokenMatch = arcQuery.match(/token=([^&]+)/);
+            if (tokenMatch) arcToken = tokenMatch[1];
+          }
+
+          // Build source params
+          const arcParams: Record<string, string> = { LAYERS: `SHOW:${sublayerId}` };
+          if (arcToken) arcParams["TOKEN"] = arcToken;
+
+          const arcSourceOpts: Record<string, unknown> = {
+            url: arcBaseUrl,
+            params: arcParams,
+            ratio: 1,
+            crossOrigin: "anonymous",
+            imageLoadFunction: (image: { getImage: () => HTMLImageElement }, src: string) => {
+              const newSrc = src.replace(/DPI=\d+/i, "DPI=96");
+              image.getImage().src = newSrc;
+            },
+          };
+
+          callback(
+            new ImageLayer({
+              properties: { rebuildParams, name: finalName },
+              source: new ImageArcGISRest(arcSourceOpts),
+            }),
+          );
+        }
         break;
 
       case OL_DATA_TYPES.WMTS:
