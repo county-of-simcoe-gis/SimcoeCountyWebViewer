@@ -1,35 +1,41 @@
 "use client";
 
 import React, { ReactNode } from "react";
-import "./InfoRow.css";
+import Attachments from "./Attachments";
 
 export interface InfoRowProps {
   label: string;
-  value?: string | number | ReactNode;
+  value?: string | number | boolean | ReactNode;
   className?: string;
   children?: ReactNode;
   imageData?: boolean;
   styleMode?: "default" | "table";
 }
 
+// Tailwind class maps for style modes
+const LABEL_CLASSES = {
+  default: "font-semibold text-gray-800 min-w-[110px] shrink-0 pr-1.5",
+  table: "font-semibold text-gray-800 min-w-[160px] shrink-0 p-2 bg-gray-100 border border-gray-300 border-r-0",
+} as const;
+
+const VALUE_CLASSES = {
+  default: "text-gray-600 flex-1 break-words [&_a]:text-blue-600 [&_a]:no-underline [&_a:hover]:text-blue-700 [&_a:hover]:underline",
+  table: "text-gray-600 flex-1 p-2 border border-gray-300 break-words [&_a]:text-blue-600 [&_a]:no-underline [&_a:hover]:text-blue-700 [&_a:hover]:underline",
+} as const;
+
 export const InfoRow: React.FC<InfoRowProps> = ({ label, value, className = "", children, imageData = false, styleMode = "default" }) => {
   // Convert URLs to links and handle special cases
   let displayLabel = label;
-  let displayValue = value;
+  let displayValue: ReactNode = typeof value === "boolean" ? (value ? "Yes" : "No") : value;
 
   // Check if value is a string for URL/path detection
   const valueStr = typeof value === "string" ? value : "";
 
   // Handle HTTP URLs
   if (valueStr && valueStr.substring(0, 4).toUpperCase() === "HTTP") {
-    if (label === "Attachment Url") {
+    if (label.toLowerCase() === "attachmenturl" || label.toLowerCase() === "attachment url") {
       displayLabel = "Attachments";
-      // You can add Attachments component logic here if needed
-      displayValue = (
-        <a href={valueStr} target="_blank" rel="noopener noreferrer">
-          View Attachments
-        </a>
-      );
+      displayValue = <Attachments attachmentUrl={valueStr} />;
     } else {
       displayValue = (
         <a href={valueStr} target="_blank" rel="noopener noreferrer">
@@ -54,9 +60,12 @@ export const InfoRow: React.FC<InfoRowProps> = ({ label, value, className = "", 
       </a>
     );
   }
-  // Handle date formatting
-  else if (valueStr && valueStr.length >= 8 && !["NUMBER", "BYLAW", "WASTE COLLECTION DAY"].some((word) => label.toUpperCase().includes(word))) {
-    // Try to parse as ISO date
+  // Handle date formatting — only strict ISO 8601 strings (e.g. "2024-03-15T10:30:00.000Z")
+  else if (
+    valueStr &&
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(valueStr) &&
+    !["NUMBER", "BYLAW", "WASTE COLLECTION DAY"].some((word) => label.toUpperCase().includes(word))
+  ) {
     const date = new Date(valueStr);
     if (!isNaN(date.getTime())) {
       // Valid date - format as YYYY-MM-DD
@@ -67,12 +76,10 @@ export const InfoRow: React.FC<InfoRowProps> = ({ label, value, className = "", 
     }
   }
 
-  const labelClass = styleMode === "table" ? "sc-info-row-label-table" : "sc-info-row-label";
-  const valueClass = styleMode === "table" ? "sc-info-row-value-table" : "sc-info-row-value";
   return (
-    <div className={`sc-info-row ${className}`}>
-      <div className={labelClass}>{displayLabel}:</div>
-      <div className={imageData ? "sc-hidden" : valueClass}>
+    <div className={`flex mb-1.5 items-start text-xs ${className}`} data-testid="info-row">
+      <div className={LABEL_CLASSES[styleMode]}>{displayLabel}:</div>
+      <div className={imageData ? "hidden" : VALUE_CLASSES[styleMode]}>
         {displayValue}
         {children}
       </div>
@@ -91,7 +98,8 @@ export interface InfoRowValueProps {
 export const InfoRowValue: React.FC<InfoRowValueProps> = ({ value, className = "", children, onClick, feature }) => {
   return (
     <div
-      className={`sc-info-row-value ${className}`}
+      className={`text-gray-600 flex-1 break-words ${className}`}
+      data-testid="info-row-value"
       onClick={() => {
         if (onClick) onClick(feature);
       }}

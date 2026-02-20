@@ -60,23 +60,23 @@ interface UseRequireAuthResult {
 
 /**
  * Hook for lazy authentication in secured components.
- * 
+ *
  * Use this hook in components that require authentication.
  * It checks the session status and provides utilities for:
  * - Checking if user is authenticated
  * - Checking if user has required roles
  * - Prompting user to login
- * 
+ *
  * @example
  * ```tsx
  * const { isAuthenticated, hasAccess, promptLogin, isLoading } = useRequireAuth({
- *   requiredRoles: ['avl_roads', 'avl_solid_waste'],
+ *   requiredRoles: ['role_name', 'other_role'],
  * });
- * 
+ *
  * if (isLoading) return <LoadingSpinner />;
  * if (!isAuthenticated) return <LoginPrompt onLogin={promptLogin} />;
  * if (!hasAccess) return <AccessDenied />;
- * 
+ *
  * return <SecuredContent />;
  * ```
  */
@@ -105,17 +105,15 @@ export function useRequireAuth(options: UseRequireAuthOptions = {}): UseRequireA
     (role: string): boolean => {
       return roles.some((r) => r.toLowerCase() === role.toLowerCase());
     },
-    [roles]
+    [roles],
   );
 
   // Check if user has any of the specified roles (case-insensitive)
   const hasAnyRole = useCallback(
     (checkRoles: string[]): boolean => {
-      return checkRoles.some((role) =>
-        roles.some((r) => r.toLowerCase() === role.toLowerCase())
-      );
+      return checkRoles.some((role) => roles.some((r) => r.toLowerCase() === role.toLowerCase()));
     },
-    [roles]
+    [roles],
   );
 
   // Check if user has access based on required roles

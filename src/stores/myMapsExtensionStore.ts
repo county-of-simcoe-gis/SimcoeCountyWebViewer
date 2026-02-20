@@ -4,7 +4,7 @@ import type { MyMapsItem } from "@/stores/myMapsStore";
 
 /**
  * A registered context menu extension item for the MyMaps popup.
- * Themes like AppTrack can register additional context menu items
+ * Themes can register additional context menu items
  * that appear when a user right-clicks a MyMaps drawing.
  */
 export interface MyMapsExtensionItem {

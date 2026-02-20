@@ -40,13 +40,19 @@ export default function MapPopup() {
     };
   }, [map, setOverlay]);
 
-  // Disable/enable map interactions on popup mouseover/mouseout (matches legacy Popup.jsx pattern)
+  // Disable/enable map interactions when mouse enters/leaves the popup.
+  // Uses mouseenter/mouseleave (not mouseover/mouseout) to avoid spurious
+  // events from child elements bubbling up, which was causing
+  // activeInteractionIdsRef to be reset while interactions were still disabled,
+  // permanently locking out map interactions after closing the popup.
   useEffect(() => {
     if (!map || !popupRef.current || !isVisible) return;
 
     const container = popupRef.current;
+    let interactionsDisabled = false;
 
-    const handleMouseOver = () => {
+    const handleMouseEnter = () => {
+      if (interactionsDisabled) return; // Already disabled, nothing to do
       activeInteractionIdsRef.current = [];
       map.getInteractions().forEach((interaction) => {
         if (interaction.getActive()) {
@@ -54,10 +60,12 @@ export default function MapPopup() {
         }
         interaction.setActive(false);
       });
+      interactionsDisabled = true;
       (window as unknown as { popupActive: boolean }).popupActive = true;
     };
 
-    const handleMouseOut = () => {
+    const handleMouseLeave = () => {
+      if (!interactionsDisabled) return; // Nothing to restore
       map.getInteractions().forEach((interaction) => {
         const uid = (interaction as unknown as { ol_uid: number }).ol_uid;
         if (activeInteractionIdsRef.current.includes(uid)) {
@@ -65,26 +73,28 @@ export default function MapPopup() {
         }
       });
       activeInteractionIdsRef.current = [];
+      interactionsDisabled = false;
       (window as unknown as { popupActive: boolean }).popupActive = false;
     };
 
-    container.onmouseover = handleMouseOver;
-    container.onmouseout = handleMouseOut;
+    const restoreAllInteractions = () => {
+      // Unconditionally re-enable all interactions — used on cleanup to
+      // guarantee we never leave the map in a disabled state.
+      map.getInteractions().forEach((interaction) => {
+        interaction.setActive(true);
+      });
+      activeInteractionIdsRef.current = [];
+      interactionsDisabled = false;
+      (window as unknown as { popupActive: boolean }).popupActive = false;
+    };
+
+    container.addEventListener("mouseenter", handleMouseEnter);
+    container.addEventListener("mouseleave", handleMouseLeave);
 
     return () => {
-      container.onmouseover = null;
-      container.onmouseout = null;
-      // Restore interactions on cleanup
-      if (activeInteractionIdsRef.current.length > 0) {
-        map.getInteractions().forEach((interaction) => {
-          const uid = (interaction as unknown as { ol_uid: number }).ol_uid;
-          if (activeInteractionIdsRef.current.includes(uid)) {
-            interaction.setActive(true);
-          }
-        });
-        activeInteractionIdsRef.current = [];
-      }
-      (window as unknown as { popupActive: boolean }).popupActive = false;
+      container.removeEventListener("mouseenter", handleMouseEnter);
+      container.removeEventListener("mouseleave", handleMouseLeave);
+      restoreAllInteractions();
     };
   }, [map, isVisible]);
 

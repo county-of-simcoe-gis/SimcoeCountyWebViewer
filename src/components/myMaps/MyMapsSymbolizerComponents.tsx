@@ -69,7 +69,7 @@ export const StyleSize: React.FC<StyleSizeProps> = ({ visible, sliderRadiusMin, 
     <>
       <label className="sc-mymaps-sub-label">Size:</label>
       <div className="sc-mymaps-symbolizer-slider size">
-        <input type="range" style={{ width: "169px" }} min={sliderRadiusMin} max={sliderRadiusMax} value={radius} step="1" onChange={onRadiusSliderChange} />
+        <input type="range" data-slider-type="size" style={{ width: "169px" }} min={sliderRadiusMin} max={sliderRadiusMax} value={radius} step="1" onChange={onRadiusSliderChange} />
       </div>
     </>
   );
@@ -111,7 +111,16 @@ export const FillColor: React.FC<FillColorProps> = ({ visible, isPolygon, rgbFil
           onMouseUp={onFillColorPickerButton}
         />
         <div className="sc-mymaps-symbolizer-slider opacity">
-          <input type="range" style={{ width: "138px" }} min={sliderFillOpacityMin} max={sliderFillOpacityMax} value={fillAlpha} step="0.05" onChange={onFillOpacitySliderChange} />
+          <input
+            type="range"
+            data-slider-type="fill-opacity"
+            style={{ width: "138px" }}
+            min={sliderFillOpacityMin}
+            max={sliderFillOpacityMax}
+            value={fillAlpha}
+            step="0.05"
+            onChange={onFillOpacitySliderChange}
+          />
         </div>
       </div>
     </>
@@ -182,7 +191,16 @@ export const StrokeColor: React.FC<StrokeColorProps> = ({
           onMouseUp={onStrokeColorPickerButton}
         />
         <div className="sc-mymaps-symbolizer-slider opacity">
-          <input type="range" style={{ width: "138px" }} min={sliderStrokeOpacityMin} max={sliderStrokeOpacityMax} value={strokeAlpha} step="0.05" onChange={onStrokeOpacitySliderChange} />
+          <input
+            type="range"
+            data-slider-type="stroke-opacity"
+            style={{ width: "138px" }}
+            min={sliderStrokeOpacityMin}
+            max={sliderStrokeOpacityMax}
+            value={strokeAlpha}
+            step="0.05"
+            onChange={onStrokeOpacitySliderChange}
+          />
         </div>
       </div>
     </>
@@ -204,7 +222,16 @@ export const StrokeWidth: React.FC<StrokeWidthProps> = ({ visible = true, stroke
     <>
       <label className="sc-mymaps-sub-label">Width:</label>
       <div className="sc-mymaps-symbolizer-slider size">
-        <input type="range" style={{ width: "169px" }} min={sliderStrokeWidthMin} max={sliderStrokeWidthMax} value={strokeWidth} step="0.5" onChange={onStrokeWidthSliderChange} />
+        <input
+          type="range"
+          data-slider-type="stroke-width"
+          style={{ width: "169px" }}
+          min={sliderStrokeWidthMin}
+          max={sliderStrokeWidthMax}
+          value={strokeWidth}
+          step="0.5"
+          onChange={onStrokeWidthSliderChange}
+        />
       </div>
     </>
   );
@@ -230,7 +257,7 @@ export const Rotation: React.FC<RotationProps> = ({ visible, rotation, sliderRot
       <label className="sc-mymaps-style-label">Angle:</label>
       <div className="sc-mymaps-angle-slider">
         <div className="sc-mymaps-symbolizer-slider angle">
-          <input type="range" min={sliderRotationMin} max={sliderRotationMax} value={rotation} step="0.1" onChange={onRotationSliderChange} />
+          <input type="range" data-slider-type="rotation" min={sliderRotationMin} max={sliderRotationMax} value={rotation} step="0.1" onChange={onRotationSliderChange} />
         </div>
       </div>
     </>
@@ -341,7 +368,7 @@ export const LabelOutlineWidth: React.FC<LabelOutlineWidthProps> = ({ visible, o
     <>
       <label className="sc-mymaps-sub-label">Outline Width:</label>
       <div className="sc-mymaps-symbolizer-slider size">
-        <input type="range" style={{ width: "169px" }} min={0} max={4} value={outlineWidth} step="0.5" onChange={onOutlineWidthChange} />
+        <input type="range" data-slider-type="label-outline-width" style={{ width: "169px" }} min={0} max={4} value={outlineWidth} step="0.5" onChange={onOutlineWidthChange} />
       </div>
     </>
   );

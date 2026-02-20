@@ -3,7 +3,11 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { InfoRow, InfoRowValue } from "@/components/common/InfoRow";
 
 // Mock CSS
-vi.mock("@/components/common/InfoRow.css", () => ({}));
+
+// Mock the Attachments component
+vi.mock("@/components/common/Attachments", () => ({
+  default: ({ attachmentUrl }: { attachmentUrl: string }) => <div data-testid="attachments-component">{attachmentUrl}</div>,
+}));
 
 describe("InfoRow", () => {
   it("renders label and value correctly", () => {
@@ -26,29 +30,34 @@ describe("InfoRow", () => {
   it("applies custom className", () => {
     const { container } = render(<InfoRow label="Test Label" value="Test Value" className="custom-class" />);
 
-    const infoRow = container.querySelector(".sc-info-row");
+    const infoRow = container.querySelector("[data-testid='info-row']");
     expect(infoRow).toHaveClass("custom-class");
   });
 
   it("renders in default style mode", () => {
     const { container } = render(<InfoRow label="Test Label" value="Test Value" />);
 
-    expect(container.querySelector(".sc-info-row-label")).toBeInTheDocument();
-    expect(container.querySelector(".sc-info-row-value")).toBeInTheDocument();
+    const infoRow = container.querySelector("[data-testid='info-row']");
+    expect(infoRow).toBeInTheDocument();
+    // Default mode: label should have min-w-[110px] class
+    const label = screen.getByText("Test Label:");
+    expect(label.className).toContain("min-w-[110px]");
   });
 
   it("renders in table style mode", () => {
-    const { container } = render(<InfoRow label="Test Label" value="Test Value" styleMode="table" />);
+    render(<InfoRow label="Test Label" value="Test Value" styleMode="table" />);
 
-    expect(container.querySelector(".sc-info-row-label-table")).toBeInTheDocument();
-    expect(container.querySelector(".sc-info-row-value-table")).toBeInTheDocument();
+    // Table mode: label should have min-w-[160px] and bg-gray-100 classes
+    const label = screen.getByText("Test Label:");
+    expect(label.className).toContain("min-w-[160px]");
+    expect(label.className).toContain("bg-gray-100");
   });
 
   it("hides value when imageData is true", () => {
     const { container } = render(<InfoRow label="Test Label" value="Test Value" imageData={true} />);
 
-    const valueDiv = container.querySelector(".sc-hidden");
-    expect(valueDiv).toBeInTheDocument();
+    const hiddenDiv = container.querySelector(".hidden");
+    expect(hiddenDiv).toBeInTheDocument();
   });
 
   it("converts HTTP URL to clickable link", () => {
@@ -68,12 +77,21 @@ describe("InfoRow", () => {
     expect(link).toBeInTheDocument();
   });
 
-  it("handles Attachment Url specially", () => {
+  it("handles attachmentUrl label (camelCase) with Attachments component", () => {
+    render(<InfoRow label="attachmentUrl" value="https://example.com/attachments" />);
+
+    expect(screen.getByText("Attachments:")).toBeInTheDocument();
+    const attachmentsComponent = screen.getByTestId("attachments-component");
+    expect(attachmentsComponent).toBeInTheDocument();
+    expect(attachmentsComponent).toHaveTextContent("https://example.com/attachments");
+  });
+
+  it("handles Attachment Url label (Title Case) with Attachments component", () => {
     render(<InfoRow label="Attachment Url" value="https://example.com/attachment.pdf" />);
 
     expect(screen.getByText("Attachments:")).toBeInTheDocument();
-    const link = screen.getByText("View Attachments");
-    expect(link).toHaveAttribute("href", "https://example.com/attachment.pdf");
+    const attachmentsComponent = screen.getByTestId("attachments-component");
+    expect(attachmentsComponent).toBeInTheDocument();
   });
 
   it("converts UNC paths to clickable links", () => {
@@ -146,6 +164,18 @@ describe("InfoRow", () => {
     expect(screen.getByText("12345")).toBeInTheDocument();
   });
 
+  it("renders boolean true as Yes", () => {
+    render(<InfoRow label="Active" value={true} />);
+
+    expect(screen.getByText("Yes")).toBeInTheDocument();
+  });
+
+  it("renders boolean false as No", () => {
+    render(<InfoRow label="Active" value={false} />);
+
+    expect(screen.getByText("No")).toBeInTheDocument();
+  });
+
   it("renders ReactNode as value", () => {
     render(<InfoRow label="Test Label" value={<div data-testid="custom-node">Custom Content</div>} />);
 
@@ -191,7 +221,7 @@ describe("InfoRowValue", () => {
   it("applies custom className", () => {
     const { container } = render(<InfoRowValue value="Test Value" className="custom-class" />);
 
-    const valueDiv = container.querySelector(".sc-info-row-value");
+    const valueDiv = container.querySelector("[data-testid='info-row-value']");
     expect(valueDiv).toHaveClass("custom-class");
   });
 
@@ -221,14 +251,14 @@ describe("InfoRowValue", () => {
     const handleClick = vi.fn();
     const { container } = render(<InfoRowValue value="Test Value" onClick={handleClick} />);
 
-    const valueDiv = container.querySelector(".sc-info-row-value") as HTMLElement;
+    const valueDiv = container.querySelector("[data-testid='info-row-value']") as HTMLElement;
     expect(valueDiv.style.cursor).toBe("pointer");
   });
 
   it("does not apply pointer cursor when onClick is not provided", () => {
     const { container } = render(<InfoRowValue value="Test Value" />);
 
-    const valueDiv = container.querySelector(".sc-info-row-value") as HTMLElement;
+    const valueDiv = container.querySelector("[data-testid='info-row-value']") as HTMLElement;
     expect(valueDiv.style.cursor).toBe("");
   });
 

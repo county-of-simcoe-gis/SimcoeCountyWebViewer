@@ -460,22 +460,21 @@ describe("ResultsPopup", () => {
       await waitFor(() => {
         expect(screen.getByRole("heading", { name: "Test Layer" })).toBeInTheDocument();
         expect(screen.getByText(/Feature ID: feature_123/i)).toBeInTheDocument();
-        expect(screen.getByText("Attributes")).toBeInTheDocument();
 
-        // Check attributes table structure
-        const table = container.querySelector(".sc-result-attributes-table");
-        expect(table).toBeInTheDocument();
+        // Check attributes container structure
+        const attrs = container.querySelector(".sc-result-attributes");
+        expect(attrs).toBeInTheDocument();
 
-        // Check for attribute keys (these are unique)
-        expect(screen.getByText("name")).toBeInTheDocument();
-        expect(screen.getByText("type")).toBeInTheDocument();
-        expect(screen.getByText("elevation")).toBeInTheDocument();
-        expect(screen.getByText("status")).toBeInTheDocument();
+        // Check for attribute keys (rendered as InfoRow labels with colons)
+        expect(screen.getByText("name:")).toBeInTheDocument();
+        expect(screen.getByText("type:")).toBeInTheDocument();
+        expect(screen.getByText("elevation:")).toBeInTheDocument();
+        expect(screen.getByText("status:")).toBeInTheDocument();
 
-        // Check for attribute values within the table
+        // Check for attribute values within the rows
         expect(screen.getByText("100")).toBeInTheDocument();
         expect(screen.getByText("Active")).toBeInTheDocument();
-        // Note: "Test Feature" and "Point" also appear in sidebar, so we verify table exists instead
+        // Note: "Test Feature" and "Point" also appear in sidebar, so we verify container exists instead
       });
     });
 
@@ -497,10 +496,11 @@ describe("ResultsPopup", () => {
 
       await waitFor(() => {
         expect(screen.getByText(/Feature ID: feature_123/i)).toBeInTheDocument();
-        expect(screen.getByText("Attributes")).toBeInTheDocument();
-        // Check that tbody is empty (no rows)
-        const tbody = container.querySelector(".sc-result-attributes-table tbody");
-        expect(tbody?.children.length).toBe(0);
+        // Check that attributes container has no InfoRow children
+        const attrs = container.querySelector(".sc-result-attributes");
+        expect(attrs).toBeInTheDocument();
+        const infoRows = attrs?.querySelectorAll("[data-testid='info-row']");
+        expect(infoRows?.length).toBe(0);
       });
     });
   });
@@ -530,7 +530,6 @@ describe("ResultsPopup", () => {
 
       // Should show identify result content first (auto-selected) - check for unique content element
       expect(screen.getByText(/Feature ID: feature_123/i)).toBeInTheDocument();
-      expect(screen.getByText("Attributes")).toBeInTheDocument();
     });
   });
 

@@ -14,6 +14,8 @@ interface PopupState {
   features: PopupFeature[];
   coordinates: number[] | null;
   selectedIndex: number;
+  /** Optional callback invoked when the popup is hidden (e.g. via the × button). */
+  onCloseCallback: (() => void) | null;
 
   // Actions
   setOverlay: (overlay: Overlay) => void;
@@ -21,6 +23,8 @@ interface PopupState {
   showMultiple: (coordinates: number[], features: PopupFeature[]) => void;
   addFeature: (feature: PopupFeature) => void;
   hide: () => void;
+  /** Register a callback that will be invoked when hide() is called. */
+  setOnClose: (cb: (() => void) | null) => void;
   selectFeature: (index: number) => void;
   nextFeature: () => void;
   prevFeature: () => void;
@@ -34,8 +38,11 @@ export const usePopupStore = create<PopupState>((set, get) => ({
   features: [],
   coordinates: null,
   selectedIndex: 0,
+  onCloseCallback: null,
 
   setOverlay: (overlay) => set({ overlay }),
+
+  setOnClose: (cb) => set({ onCloseCallback: cb }),
 
   // Show a single feature (backwards compatible)
   show: (coordinates, content, title, layerName) =>
@@ -77,7 +84,11 @@ export const usePopupStore = create<PopupState>((set, get) => ({
       features: [...state.features, feature],
     })),
 
-  hide: () =>
+  hide: () => {
+    const { onCloseCallback } = get();
+    if (onCloseCallback) {
+      onCloseCallback();
+    }
     set((state) => {
       if (state.overlay) {
         state.overlay.setPosition(undefined);
@@ -87,8 +98,10 @@ export const usePopupStore = create<PopupState>((set, get) => ({
         features: [],
         coordinates: null,
         selectedIndex: 0,
+        onCloseCallback: null,
       };
-    }),
+    });
+  },
 
   selectFeature: (index) => {
     const { features } = get();

@@ -5,7 +5,6 @@ import { Feature } from "ol";
 import { Polygon } from "ol/geom";
 
 // Mock CSS
-vi.mock("@/components/PropertyPopup.css", () => ({}));
 
 // Mock config
 vi.mock("@/config.json", () => ({
@@ -74,9 +73,9 @@ describe("PropertyPopup", () => {
   it("renders property information correctly", () => {
     render(<PropertyPopup propInfo={defaultPropInfo} feature={mockFeature} onClose={mockOnClose} onClearParcelLayer={mockOnClearParcelLayer} />);
 
-    expect(screen.getByText("Address")).toBeInTheDocument();
+    expect(screen.getByText("Address:")).toBeInTheDocument();
     expect(screen.getByText("123 Test Street")).toBeInTheDocument();
-    expect(screen.getByText("Roll Number")).toBeInTheDocument();
+    expect(screen.getByText("Roll Number:")).toBeInTheDocument();
     expect(screen.getByText("1234567890")).toBeInTheDocument();
   });
 
@@ -91,7 +90,7 @@ describe("PropertyPopup", () => {
   it("displays zoning information", () => {
     render(<PropertyPopup propInfo={defaultPropInfo} feature={mockFeature} onClose={mockOnClose} onClearParcelLayer={mockOnClearParcelLayer} />);
 
-    expect(screen.getByText("Has Zoning")).toBeInTheDocument();
+    expect(screen.getByText("Has Zoning:")).toBeInTheDocument();
     expect(screen.getByText("Yes")).toBeInTheDocument();
   });
 
@@ -99,28 +98,28 @@ describe("PropertyPopup", () => {
     const propInfo = { ...defaultPropInfo, HasZoning: false };
     render(<PropertyPopup propInfo={propInfo} feature={mockFeature} onClose={mockOnClose} onClearParcelLayer={mockOnClearParcelLayer} />);
 
-    expect(screen.getByText("Has Zoning")).toBeInTheDocument();
+    expect(screen.getByText("Has Zoning:")).toBeInTheDocument();
     expect(screen.getByText("No")).toBeInTheDocument();
   });
 
   it("displays waste collection day", () => {
     render(<PropertyPopup propInfo={defaultPropInfo} feature={mockFeature} onClose={mockOnClose} onClearParcelLayer={mockOnClearParcelLayer} />);
 
-    expect(screen.getByText("Waste Collection Day")).toBeInTheDocument();
+    expect(screen.getByText("Waste Collection Day:")).toBeInTheDocument();
     expect(screen.getByText("Monday")).toBeInTheDocument();
   });
 
   it("displays broadband speed", () => {
     render(<PropertyPopup propInfo={defaultPropInfo} feature={mockFeature} onClose={mockOnClose} onClearParcelLayer={mockOnClearParcelLayer} />);
 
-    expect(screen.getByText("Potential Broadband Coverage")).toBeInTheDocument();
+    expect(screen.getByText("Potential Broadband Coverage:")).toBeInTheDocument();
     expect(screen.getByText("100 Mbps")).toBeInTheDocument();
   });
 
   it("displays coordinates with proper formatting", () => {
     render(<PropertyPopup propInfo={defaultPropInfo} feature={mockFeature} onClose={mockOnClose} onClearParcelLayer={mockOnClearParcelLayer} />);
 
-    expect(screen.getByText("Pointer Coordinates")).toBeInTheDocument();
+    expect(screen.getByText("Pointer Coordinates:")).toBeInTheDocument();
     // Coordinates are formatted to 4 decimal places
     const coordText = screen.getByText(/Lat:.*Long:/);
     expect(coordText).toBeInTheDocument();

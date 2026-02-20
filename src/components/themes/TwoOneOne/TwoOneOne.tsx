@@ -185,25 +185,32 @@ export default function TwoOneOne({ name = "211 Community Services", helpLink, h
         const results: InteractionResult[] = features.map((f, index) => {
           const feature = f as Feature<Point>;
           const props = feature.getProperties();
+          // Filter out internal OL properties from display attributes
+          const filteredAttributes: Record<string, unknown> = {};
+          Object.entries(props).forEach(([key, value]) => {
+            if (key !== "geometry" && key !== "bbox" && !key.startsWith("_") && typeof value !== "object") {
+              filteredAttributes[key] = value;
+            }
+          });
           return {
             id: `211-${props.recordNumber || index}`,
             type: "layer" as const,
             displayName: props.organizationProgramName || "211 Service",
+            // Custom render component for this result type
+            renderContent: () => (
+              <TwoOneOnePopupContent
+                name={props.organizationProgramName || "Unknown"}
+                description={props.descriptionBrief}
+                website={props.website}
+                recordNumber={props.recordNumber}
+                isFrench={isFrenchRef.current}
+              />
+            ),
             data: {
               layerName: "211 Community Services",
               featureId: props.recordNumber || String(index),
-              attributes: props,
+              attributes: filteredAttributes,
               feature: feature,
-              // Custom render component for this result type
-              renderContent: () => (
-                <TwoOneOnePopupContent
-                  name={props.organizationProgramName || "Unknown"}
-                  description={props.descriptionBrief}
-                  website={props.website}
-                  recordNumber={props.recordNumber}
-                  isFrench={isFrenchRef.current}
-                />
-              ),
             },
           };
         });
@@ -364,19 +371,19 @@ export default function TwoOneOne({ name = "211 Community Services", helpLink, h
           id: `211-${item.recordNumber || Date.now()}`,
           type: "layer",
           displayName: item.organizationProgramName || "211 Service",
+          renderContent: () => (
+            <TwoOneOnePopupContent
+              name={item.organizationProgramName || "Unknown"}
+              description={item.descriptionBrief}
+              website={item.website}
+              recordNumber={item.recordNumber}
+              isFrench={isFrenchRef.current}
+            />
+          ),
           data: {
             layerName: "211 Community Services",
             featureId: item.recordNumber || String(Date.now()),
             attributes: item,
-            renderContent: () => (
-              <TwoOneOnePopupContent
-                name={item.organizationProgramName || "Unknown"}
-                description={item.descriptionBrief}
-                website={item.website}
-                recordNumber={item.recordNumber}
-                isFrench={isFrenchRef.current}
-              />
-            ),
           },
         };
 

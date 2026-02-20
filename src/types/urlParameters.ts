@@ -1,6 +1,6 @@
 /**
  * URL Parameter Types and Configuration
- * 
+ *
  * Centralized type definitions for the URL parameter handling system.
  * Supports 40+ legacy URL parameters with dependency management,
  * configurable notifications, and feature selection priority.
@@ -15,58 +15,54 @@
  */
 export const URL_PARAMS = {
   // Analytics
-  ANALYTICS: 'ANALYTICS',
-  
+  ANALYTICS: "ANALYTICS",
+
   // Basemap & Visual
-  BASEMAP: 'BASEMAP',
-  NAME: 'NAME',
-  SLIDER_OPEN: 'SLIDER_OPEN',
-  
+  BASEMAP: "BASEMAP",
+  NAME: "NAME",
+  SLIDER_OPEN: "SLIDER_OPEN",
+
   // Table of Contents & Layers
-  TOCTYPE: 'TOCTYPE',
-  GROUP: 'GROUP',
-  LAYERS: 'LAYERS',
-  EXPAND_LEGEND: 'EXPAND_LEGEND',
-  
+  TOCTYPE: "TOCTYPE",
+  GROUP: "GROUP",
+  LAYERS: "LAYERS",
+  EXPAND_LEGEND: "EXPAND_LEGEND",
+
   // Themes & Tools
-  THEME: 'THEME',
-  TOOL: 'TOOL',
-  
+  THEME: "THEME",
+  TOOL: "TOOL",
+
   // Location & Navigation
-  X: 'X',
-  Y: 'Y',
-  SR: 'SR',
-  ID: 'ID',
-  XMIN: 'XMIN',
-  YMIN: 'YMIN',
-  XMAX: 'XMAX',
-  YMAX: 'YMAX',
-  ZOOM: 'ZOOM',
-  
+  X: "X",
+  Y: "Y",
+  SR: "SR",
+  ID: "ID",
+  XMIN: "XMIN",
+  YMIN: "YMIN",
+  XMAX: "XMAX",
+  YMAX: "YMAX",
+  ZOOM: "ZOOM",
+
   // Search
-  Q: 'q',
-  QT: 'qt',
-  LOCATIONID: 'LOCATIONID',
-  
+  Q: "q",
+  QT: "qt",
+  LOCATIONID: "LOCATIONID",
+
   // Feature Selection (mutually exclusive, priority-based)
-  NG911ID: 'NG911ID',
-  ARN: 'ARN',
-  PROPERTYLINK: 'PROPERTYLINK',
-  
+  NG911ID: "NG911ID",
+  ARN: "ARN",
+  PROPERTYLINK: "PROPERTYLINK",
+
   // MyMaps
-  MY_MAPS_ID: 'MY_MAPS_ID',
-  MY_MAPS_FEATURE_ID: 'MY_MAPS_FEATURE_ID',
-  
-  // AVL (Secure)
-  VEHICLEID: 'VEHICLEID',
-  STARTDATE: 'STARTDATE',
-  ENDDATE: 'ENDDATE',
-  
+  MY_MAPS_ID: "MY_MAPS_ID",
+  MY_MAPS_FEATURE_ID: "MY_MAPS_FEATURE_ID",
+
+
   // UI
-  TAB: 'TAB',
+  TAB: "TAB",
 } as const;
 
-export type UrlParamName = typeof URL_PARAMS[keyof typeof URL_PARAMS];
+export type UrlParamName = (typeof URL_PARAMS)[keyof typeof URL_PARAMS];
 
 // ============================================================================
 // Execution Phases
@@ -87,7 +83,7 @@ export enum UrlParamPhase {
   LOCATION = 4,
   /** Phase 5: Search and UI state */
   SEARCH_UI = 5,
-  /** Phase 6: Feature selection, MyMaps, AVL (after all dependencies ready) */
+  /** Phase 6: Feature selection, MyMaps (after all dependencies ready) */
   FEATURES = 6,
 }
 
@@ -98,13 +94,12 @@ export enum UrlParamPhase {
 /**
  * Components that URL parameters can depend on
  */
-export type ComponentDependency = 
-  | 'map'      // Map component fully loaded and interactive
-  | 'toc'      // Table of Contents mounted
-  | 'search'   // Search service initialized
-  | 'myMaps'   // MyMaps service ready
-  | 'avl'      // AVL service ready
-  | 'auth';    // Authentication completed
+export type ComponentDependency =
+  | "map" // Map component fully loaded and interactive
+  | "toc" // Table of Contents mounted
+  | "search" // Search service initialized
+  | "myMaps" // MyMaps service ready
+  | "auth"; // Authentication completed
 
 // ============================================================================
 // Parameter Configuration Types
@@ -117,7 +112,7 @@ export interface UrlParameterConfig {
   /** Parameter name (case-insensitive matching supported) */
   name: string;
   /** Expected value type */
-  type: 'string' | 'number' | 'boolean' | 'coordinates';
+  type: "string" | "number" | "boolean" | "coordinates";
   /** Execution phase (1-6) */
   phase: UrlParamPhase;
   /** Components that must be ready before this param can execute */
@@ -161,12 +156,12 @@ export interface FeatureSelectionConfig extends UrlParameterConfig {
  * Options for registering component readiness
  */
 export interface ComponentReadinessOptions {
-  /** 
+  /**
    * When the component signals readiness:
    * - 'mount': Ready immediately on component mount
    * - 'dataLoaded': Ready after async data fetching completes
    */
-  readinessType: 'mount' | 'dataLoaded';
+  readinessType: "mount" | "dataLoaded";
   /** Maximum time to wait for component readiness (ms) */
   timeout?: number;
   /** Other components that must be ready first (e.g., 'auth' for secured components) */
@@ -182,7 +177,7 @@ export interface ComponentReady {
   /** Whether the component is ready */
   isReady: boolean;
   /** How readiness was determined */
-  readinessType: 'mount' | 'dataLoaded';
+  readinessType: "mount" | "dataLoaded";
   /** When component became ready */
   timestamp: number | null;
   /** Dependencies this component requires */
@@ -196,12 +191,12 @@ export interface ComponentReady {
 /**
  * Status of parameter execution
  */
-export type ParameterExecutionStatus = 
-  | 'queued'     // Waiting for dependencies
-  | 'executing'  // Currently being processed
-  | 'completed'  // Successfully applied
-  | 'failed'     // Failed to apply
-  | 'skipped';   // Skipped (e.g., lower priority feature selection)
+export type ParameterExecutionStatus =
+  | "queued" // Waiting for dependencies
+  | "executing" // Currently being processed
+  | "completed" // Successfully applied
+  | "failed" // Failed to apply
+  | "skipped"; // Skipped (e.g., lower priority feature selection)
 
 /**
  * Tracks execution state for a single parameter
@@ -233,10 +228,7 @@ export interface ParameterExecutionState {
  * @param config - The parameter configuration
  * @returns Promise resolving to optional success message, or rejecting with error
  */
-export type UrlParameterHandler = (
-  value: string,
-  config: UrlParameterConfig | FeatureSelectionConfig
-) => Promise<string | void>;
+export type UrlParameterHandler = (value: string, config: UrlParameterConfig | FeatureSelectionConfig) => Promise<string | void>;
 
 /**
  * Map of handler keys to handler functions
@@ -259,15 +251,12 @@ export interface UseUrlParametersReturn {
   failedParameters: string[];
   /** List of skipped parameter names (e.g., lower priority feature selections) */
   skippedParameters: string[];
-  /** 
+  /**
    * Register a component as ready for URL parameter processing
    * Call this when your component is fully initialized
    */
-  registerComponentReady: (
-    componentName: ComponentDependency,
-    options?: ComponentReadinessOptions
-  ) => void;
-  /** 
+  registerComponentReady: (componentName: ComponentDependency, options?: ComponentReadinessOptions) => void;
+  /**
    * Wait for a specific component to be ready
    * Useful in handlers that need to ensure dependencies
    */
@@ -291,20 +280,20 @@ export interface UseUrlParametersReturn {
  * Matches sidebarStore: 0=layers, 1=tools, 2=mymaps, 3=themes, 4=reports
  */
 export const SIDEBAR_TAB_INDEX: Record<string, number> = {
-  'layers': 0,
-  'toc': 0,
-  'tools': 1,
-  'mymaps': 2,
-  'my_maps': 2,
-  'themes': 3,
-  'reports': 4,
+  layers: 0,
+  toc: 0,
+  tools: 1,
+  mymaps: 2,
+  my_maps: 2,
+  themes: 3,
+  reports: 4,
 };
 
 /**
  * Convert tab name string to index number
  */
 export function tabNameToIndex(tabName: string): number {
-  const normalized = tabName.toLowerCase().replace(/[-_\s]/g, '');
+  const normalized = tabName.toLowerCase().replace(/[-_\s]/g, "");
   return SIDEBAR_TAB_INDEX[normalized] ?? 0;
 }
 
@@ -315,14 +304,14 @@ export function tabNameToIndex(tabName: string): number {
 /**
  * Supported spatial reference identifiers
  */
-export type SpatialReferenceId = 
-  | '4326'    // WGS84 Lat/Long (default)
-  | 'LATLONG' // Alias for 4326
-  | 'WGS84'   // Alias for 4326
-  | '3857'    // Web Mercator
-  | 'WEB'     // Alias for 3857
-  | 'UTM'     // UTM NAD83 Zone 17N
-  | '26917';  // EPSG code for UTM Zone 17N
+export type SpatialReferenceId =
+  | "4326" // WGS84 Lat/Long (default)
+  | "LATLONG" // Alias for 4326
+  | "WGS84" // Alias for 4326
+  | "3857" // Web Mercator
+  | "WEB" // Alias for 3857
+  | "UTM" // UTM NAD83 Zone 17N
+  | "26917"; // EPSG code for UTM Zone 17N
 
 /**
  * Coordinate pair

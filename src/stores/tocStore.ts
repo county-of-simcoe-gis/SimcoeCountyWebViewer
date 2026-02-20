@@ -219,6 +219,28 @@ interface TOCState {
   getGlobalOpacity: () => number;
 }
 
+/**
+ * Helper: update a layer's properties across BOTH view types (LIST and FOLDER)
+ * and the allLayers array. Call inside an immer set() callback with the draft.
+ * This ensures legend/showLegend data is never lost when switching views.
+ *
+ * Uses forEach (not find) so that ALL occurrences of the layer are updated —
+ * in folder view the same layer can appear in more than one folder group,
+ * and allLayers may contain duplicate entries for such layers.
+ */
+function updateLayerInAllViews(draft: TOCState, layerName: string, updater: (layer: TOCLayer) => void) {
+  [draft.layerListGroups, draft.layerFolderGroups].forEach((groups) => {
+    groups.forEach((g) => {
+      g.layers.forEach((l) => {
+        if (l.name === layerName) updater(l);
+      });
+    });
+  });
+  draft.allLayers.forEach((l) => {
+    if (l.name === layerName) updater(l);
+  });
+}
+
 export const useTOCStore = create<TOCState>()(
   immer((set, get) => ({
     // Initial state
@@ -908,22 +930,11 @@ export const useTOCStore = create<TOCState>()(
         if (layer) {
           const shouldShow = !layer.showLegend;
 
-          // Update the showLegend state
-          set((state) => {
-            const groups = state.tocType === "LIST" ? state.layerListGroups : state.layerFolderGroups;
-            const currentGroup = groups.find((g) => g.label === groupName || g.value === groupName);
-            if (currentGroup) {
-              const currentLayer = currentGroup.layers.find((l) => l.name === layerName);
-              if (currentLayer) {
-                currentLayer.showLegend = shouldShow;
-
-                // ALSO update the allLayers array
-                const allLayerItem = state.allLayers.find((l) => l.name === layerName);
-                if (allLayerItem) {
-                  allLayerItem.showLegend = shouldShow;
-                }
-              }
-            }
+          // Update the showLegend state in BOTH view types
+          set((draft) => {
+            updateLayerInAllViews(draft, layerName, (l) => {
+              l.showLegend = shouldShow;
+            });
           });
 
           // If showing legend and no legend data exists, fetch it (outside of set)
@@ -1361,20 +1372,11 @@ export const useTOCStore = create<TOCState>()(
         return; // Already fetching, skip
       }
 
-      // Mark as fetching
+      // Mark as fetching in BOTH view types
       set((draft) => {
-        const groups = draft.tocType === "LIST" ? draft.layerListGroups : draft.layerFolderGroups;
-        const currentGroup = groups.find((g) => g.label === group.label || g.value === group.value);
-        if (currentGroup) {
-          const currentLayer = currentGroup.layers.find((l) => l.name === layer.name);
-          if (currentLayer) {
-            currentLayer.legendFetching = true;
-          }
-        }
-        const allLayerItem = draft.allLayers.find((l) => l.name === layer.name);
-        if (allLayerItem) {
-          allLayerItem.legendFetching = true;
-        }
+        updateLayerInAllViews(draft, layer.name, (l) => {
+          l.legendFetching = true;
+        });
       });
 
       try {
@@ -1383,43 +1385,21 @@ export const useTOCStore = create<TOCState>()(
           // Test if the image URL is accessible
           const img = new Image();
           img.onload = () => {
-            // Image loaded successfully, update the layer
+            // Image loaded successfully, update the layer in BOTH view types
             set((draft) => {
-              const groups = draft.tocType === "LIST" ? draft.layerListGroups : draft.layerFolderGroups;
-              const currentGroup = groups.find((g) => g.label === group.label || g.value === group.value);
-              if (currentGroup) {
-                const currentLayer = currentGroup.layers.find((l) => l.name === layer.name);
-                if (currentLayer) {
-                  currentLayer.legendImage = layer.styleUrl;
-                  currentLayer.legendHeight = img.height || 20;
-                  currentLayer.legendFetching = false;
-
-                  // ALSO update the allLayers array
-                  const allLayerItem = draft.allLayers.find((l) => l.name === layer.name);
-                  if (allLayerItem) {
-                    allLayerItem.legendImage = layer.styleUrl;
-                    allLayerItem.legendHeight = img.height || 20;
-                    allLayerItem.legendFetching = false;
-                  }
-                }
-              }
+              updateLayerInAllViews(draft, layer.name, (l) => {
+                l.legendImage = layer.styleUrl;
+                l.legendHeight = img.height || 20;
+                l.legendFetching = false;
+              });
             });
           };
           img.onerror = async () => {
-            // Clear fetching flag before trying REST
+            // Clear fetching flag in BOTH view types before trying REST
             set((draft) => {
-              const groups = draft.tocType === "LIST" ? draft.layerListGroups : draft.layerFolderGroups;
-              const currentGroup = groups.find((g) => g.label === group.label || g.value === group.value);
-              if (currentGroup) {
-                const currentLayer = currentGroup.layers.find((l) => l.name === layer.name);
-                if (currentLayer) {
-                  currentLayer.legendFetching = false;
-                }
-              }
-              const allLayerItem = draft.allLayers.find((l) => l.name === layer.name);
-              if (allLayerItem) {
-                allLayerItem.legendFetching = false;
-              }
+              updateLayerInAllViews(draft, layer.name, (l) => {
+                l.legendFetching = false;
+              });
             });
             // Image failed to load, try to fetch legend info from geoserver REST
             await get().fetchLayerLegendFromRest(layer, group);
@@ -1431,20 +1411,11 @@ export const useTOCStore = create<TOCState>()(
         }
       } catch (error) {
         console.error("Error fetching layer legend:", error);
-        // Clear fetching flag on error
+        // Clear fetching flag in BOTH view types on error
         set((draft) => {
-          const groups = draft.tocType === "LIST" ? draft.layerListGroups : draft.layerFolderGroups;
-          const currentGroup = groups.find((g) => g.label === group.label || g.value === group.value);
-          if (currentGroup) {
-            const currentLayer = currentGroup.layers.find((l) => l.name === layer.name);
-            if (currentLayer) {
-              currentLayer.legendFetching = false;
-            }
-          }
-          const allLayerItem = draft.allLayers.find((l) => l.name === layer.name);
-          if (allLayerItem) {
-            allLayerItem.legendFetching = false;
-          }
+          updateLayerInAllViews(draft, layer.name, (l) => {
+            l.legendFetching = false;
+          });
         });
       }
     },
@@ -1468,24 +1439,12 @@ export const useTOCStore = create<TOCState>()(
                 const styleResponse = await styleAxiosClient.get(metadata.defaultStyle.href + ".json");
                 const styleData = styleResponse.data;
 
-                // Update layer with legend object
-                set((state) => {
-                  const groups = state.tocType === "LIST" ? state.layerListGroups : state.layerFolderGroups;
-                  const currentGroup = groups.find((g) => g.label === group.label || g.value === group.value);
-                  if (currentGroup) {
-                    const currentLayer = currentGroup.layers.find((l) => l.name === layer.name);
-                    if (currentLayer) {
-                      currentLayer.legendObj = styleData;
-                      currentLayer.legendHeight = 100; // Default height for object legends
-
-                      // ALSO update the allLayers array
-                      const allLayerItem = state.allLayers.find((l) => l.name === layer.name);
-                      if (allLayerItem) {
-                        allLayerItem.legendObj = styleData;
-                        allLayerItem.legendHeight = 100;
-                      }
-                    }
-                  }
+                // Update layer with legend object in BOTH view types
+                set((draft) => {
+                  updateLayerInAllViews(draft, layer.name, (l) => {
+                    l.legendObj = styleData;
+                    l.legendHeight = 100; // Default height for object legends
+                  });
                 });
                 return;
               } catch (styleError) {
@@ -1497,58 +1456,28 @@ export const useTOCStore = create<TOCState>()(
           }
         }
 
-        // Fallback: create a simple text legend
-        set((state) => {
-          const groups = state.tocType === "LIST" ? state.layerListGroups : state.layerFolderGroups;
-          const currentGroup = groups.find((g) => g.label === group.label || g.value === group.value);
-          if (currentGroup) {
-            const currentLayer = currentGroup.layers.find((l) => l.name === layer.name);
-            if (currentLayer) {
-              currentLayer.legendObj = {
-                type: "text",
-                content: `Legend for ${layer.tocDisplayName}`,
-              };
-              currentLayer.legendHeight = 30;
-
-              // ALSO update the allLayers array
-              const allLayerItem = state.allLayers.find((l) => l.name === layer.name);
-              if (allLayerItem) {
-                allLayerItem.legendObj = {
-                  type: "text",
-                  content: `Legend for ${layer.tocDisplayName}`,
-                };
-                allLayerItem.legendHeight = 30;
-              }
-            }
-          }
+        // Fallback: create a simple text legend in BOTH view types
+        set((draft) => {
+          updateLayerInAllViews(draft, layer.name, (l) => {
+            l.legendObj = {
+              type: "text",
+              content: `Legend for ${layer.tocDisplayName}`,
+            };
+            l.legendHeight = 30;
+          });
         });
       } catch (error) {
         console.error("Error fetching legend from REST API:", error);
 
-        // Fallback: create a simple text legend
-        set((state) => {
-          const groups = state.tocType === "LIST" ? state.layerListGroups : state.layerFolderGroups;
-          const currentGroup = groups.find((g) => g.label === group.label || g.value === group.value);
-          if (currentGroup) {
-            const currentLayer = currentGroup.layers.find((l) => l.name === layer.name);
-            if (currentLayer) {
-              currentLayer.legendObj = {
-                type: "text",
-                content: `Legend for ${layer.tocDisplayName}`,
-              };
-              currentLayer.legendHeight = 30;
-
-              // ALSO update the allLayers array
-              const allLayerItem = state.allLayers.find((l) => l.name === layer.name);
-              if (allLayerItem) {
-                allLayerItem.legendObj = {
-                  type: "text",
-                  content: `Legend for ${layer.tocDisplayName}`,
-                };
-                allLayerItem.legendHeight = 30;
-              }
-            }
-          }
+        // Fallback: create a simple text legend in BOTH view types
+        set((draft) => {
+          updateLayerInAllViews(draft, layer.name, (l) => {
+            l.legendObj = {
+              type: "text",
+              content: `Legend for ${layer.tocDisplayName}`,
+            };
+            l.legendHeight = 30;
+          });
         });
       }
     },

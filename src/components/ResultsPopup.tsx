@@ -5,6 +5,7 @@ import { Feature } from "ol";
 import { FaHome, FaBuilding, FaLayerGroup } from "react-icons/fa";
 import RecordSelectorPopup, { RecordItem } from "@/components/RecordSelectorPopup";
 import PropertyPopup, { type PropertyInfo } from "@/components/PropertyPopup";
+import { InfoRow } from "@/components/common/InfoRow";
 import "@/components/ResultsPopup.css";
 
 // Base interface for common result fields
@@ -195,17 +196,11 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
             <h3>{result.data.layerName}</h3>
             <p className="sc-result-feature-id">Feature ID: {result.data.featureId}</p>
             <div className="sc-result-attributes">
-              <h4>Attributes</h4>
-              <table className="sc-result-attributes-table">
-                <tbody>
-                  {Object.entries(result.data.attributes).map(([key, value]) => (
-                    <tr key={key}>
-                      <td className="sc-result-attr-key">{key}</td>
-                      <td className="sc-result-attr-value">{String(value)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              {Object.entries(result.data.attributes)
+                .filter(([key, value]) => key !== "geometry" && key !== "bbox" && !key.startsWith("_") && typeof value !== "object")
+                .map(([key, value]) => (
+                  <InfoRow key={key} label={key} value={value != null ? String(value) : ""} />
+                ))}
             </div>
           </div>
         );

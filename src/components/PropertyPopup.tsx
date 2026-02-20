@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Feature } from "ol";
 import config from "@/config.json";
-import "@/components/PropertyPopup.css";
+import { InfoRow } from "@/components/common/InfoRow";
 
 export interface PropertyInfo {
   ARN: string;
@@ -28,28 +28,6 @@ interface PropertyPopupProps {
   feature: Feature;
   onClose: () => void;
   onClearParcelLayer?: () => void;
-}
-
-// Compact info row matching legacy sc-info-window pattern
-function InfoRow({ label, value, children }: { label: string; value?: string | number | boolean | null; children?: React.ReactNode }) {
-  if (!children && (value === undefined || value === null || value === "")) return null;
-
-  let displayValue: React.ReactNode;
-  if (typeof value === "boolean") {
-    displayValue = value ? "Yes" : "No";
-  } else {
-    displayValue = value != null ? String(value) : null;
-  }
-
-  return (
-    <div className="sc-info-window-row">
-      <div className="sc-info-window-label">{label}</div>
-      <div className="sc-info-window-value">
-        {displayValue}
-        {children}
-      </div>
-    </div>
-  );
 }
 
 export default function PropertyPopup({ propInfo, feature, onClose, onClearParcelLayer }: PropertyPopupProps) {
@@ -99,8 +77,8 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
   };
 
   return (
-    <div className="sc-property-popup">
-      <div className="sc-property-report-top-container">
+    <div className="bg-white">
+      <div className="relative overflow-x-hidden overflow-y-auto">
         {/* Address */}
         {address && <InfoRow label="Address" value={address} />}
 
@@ -108,10 +86,15 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
         {arn && (
           <InfoRow label="Roll Number">
             {arn}
-            <button className="sc-copy-button" onClick={handleCopyARN} title="Copy to Clipboard" aria-label="Copy ARN to clipboard">
+            <button
+              className="bg-transparent border-none cursor-pointer ml-1.5 -mb-0.5 p-0 text-xs transition-transform hover:scale-125"
+              onClick={handleCopyARN}
+              title="Copy to Clipboard"
+              aria-label="Copy ARN to clipboard"
+            >
               📋
             </button>
-            {copied && <span className="sc-copied-message">Copied!</span>}
+            {copied && <span className="text-green-500 text-[10px] ml-1.5 animate-[fadeOut_2s_forwards]">Copied!</span>}
           </InfoRow>
         )}
 
@@ -122,8 +105,8 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
         {assessedValue && (
           <InfoRow label="Assessed Value">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={assessedValue} alt="Assessed Value" className="sc-assessed-value-img" />
-            <div className="sc-property-note">(may not reflect current market value)</div>
+            <img src={assessedValue} alt="Assessed Value" className="mb-0.5" />
+            <div className="text-[9px] text-gray-600 pb-1">(may not reflect current market value)</div>
           </InfoRow>
         )}
 
@@ -135,15 +118,15 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
 
         {/* Tools */}
         <InfoRow label="Tools">
-          <div className="sc-property-tools">
-            <span className="sc-fakeLink" onClick={handleAddToMyMaps}>
+          <div className="inline">
+            <span className="text-[#337ab7] underline cursor-pointer select-none mr-1 hover:text-[#23527c]" onClick={handleAddToMyMaps}>
               [Add to My Maps]
             </span>
-            <span className="sc-fakeLink" onClick={handleShare}>
+            <span className="text-[#337ab7] underline cursor-pointer select-none mr-1 hover:text-[#23527c]" onClick={handleShare}>
               [Share]
             </span>
             <span
-              className="sc-fakeLink"
+              className="text-[#337ab7] underline cursor-pointer select-none mr-1 hover:text-[#23527c]"
               onClick={() => {
                 const termsUrl = (config as { termsUrl?: string }).termsUrl;
                 if (termsUrl) {
@@ -161,11 +144,11 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
       </div>
 
       {/* Action Buttons */}
-      <div className="sc-property-actions">
-        <button className="sc-button sc-property-report-click-more-info" onClick={handleMoreInfo}>
+      <div className="flex mt-1.5 w-full">
+        <button className="sc-button flex-[6] mr-1.5" onClick={handleMoreInfo}>
           More Information
         </button>
-        <button className="sc-button sc-property-report-click-close" onClick={handleCloseClick}>
+        <button className="sc-button flex-[4]" onClick={handleCloseClick}>
           Close
         </button>
       </div>

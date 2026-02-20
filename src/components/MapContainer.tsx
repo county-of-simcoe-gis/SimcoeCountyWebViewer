@@ -136,7 +136,7 @@ export default function MapContainer() {
   const { map, setMap, addLoadedItem, setMapControls, setCurrentExtent, setCurrentZoom, setCurrentCenter, initExtentHistory, saveCurrentExtentToHistory, controlVisibility, initControlVisibility } =
     useMapStore();
   const { setMapLoading } = useAppStore();
-  const { show: showPopup, hide: hidePopup } = usePopupStore();
+  const { show: showPopup, hide: hidePopup, setOnClose } = usePopupStore();
   const urlParameters = useAppStore((state) => state.urlParameters);
 
   // URL Parameter context for registering map readiness
@@ -1138,7 +1138,7 @@ export default function MapContainer() {
     }
 
     if (aggregatedResults.length > 0 && resultsCoordinate) {
-      const handleClose = () => {
+      const cleanupResults = () => {
         // Clear parcel layers from any results that have the clear function
         aggregatedResults.forEach((result) => {
           const resultWithMethods = result as ResultWithMethods;
@@ -1149,8 +1149,15 @@ export default function MapContainer() {
 
         setAggregatedResults([]);
         setResultsCoordinate(null);
+      };
+
+      const handleClose = () => {
+        cleanupResults();
         hidePopup();
       };
+
+      // Register cleanup so the popup store's × button also clears state
+      setOnClose(cleanupResults);
 
       const handleSelectResult = async (result: Result) => {
         // Call lazy-loading function if it exists on the result
@@ -1179,7 +1186,7 @@ export default function MapContainer() {
         aggregatedResults.length > 1 ? `Results (${aggregatedResults.length})` : "Result",
       );
     }
-  }, [aggregatedResults, resultsCoordinate, isLoadingResults, showPopup, hidePopup]);
+  }, [aggregatedResults, resultsCoordinate, isLoadingResults, showPopup, hidePopup, setOnClose]);
 
   return (
     <InteractionManagerContext.Provider value={interactionManager}>

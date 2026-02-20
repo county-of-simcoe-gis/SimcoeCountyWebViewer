@@ -130,6 +130,14 @@ export default function Five11({ name = "511 Live Feeds", helpLink, hideHeader =
             const displayName = layer.get("tocDisplayName") as string;
             const properties = (feature as Feature<Geometry>).getProperties();
 
+            // Filter out internal OL properties from display attributes
+            const filteredAttributes: Record<string, unknown> = {};
+            Object.entries(properties).forEach(([key, value]) => {
+              if (key !== "geometry" && key !== "bbox" && !key.startsWith("_") && typeof value !== "object") {
+                filteredAttributes[key] = value;
+              }
+            });
+
             // Determine popup content based on layer type
             let renderContent: () => React.ReactNode;
 
@@ -148,12 +156,12 @@ export default function Five11({ name = "511 Live Feeds", helpLink, hideHeader =
               id: uniqueKey,
               type: "layer" as const,
               displayName: displayName || layerName,
+              renderContent,
               data: {
                 layerName: displayName,
                 featureId: String(featureId),
-                attributes: properties,
+                attributes: filteredAttributes,
                 feature: feature as Feature<Geometry>,
-                renderContent,
               },
             });
           },

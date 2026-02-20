@@ -535,6 +535,33 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
     [item],
   );
 
+  /**
+   * Read a slider value from the symbolizer container by its data-slider-type
+   * attribute. Returns undefined if the slider is not present (e.g. fill-opacity
+   * on a LineString).
+   */
+  const readSliderValue = useCallback((container: Element | null | undefined, sliderType: string): number | undefined => {
+    if (!container) return undefined;
+    const slider = container.querySelector(`input[data-slider-type="${sliderType}"]`) as HTMLInputElement | null;
+    return slider ? parseFloat(slider.value) : undefined;
+  }, []);
+
+  /**
+   * Read all symbolizer slider values from the overlay DOM using data-slider-type
+   * attributes. Falls back to the supplied defaults for any slider not present in
+   * the DOM (geometry-dependent visibility).
+   */
+  const readAllSliderValues = useCallback(
+    (container: Element | null | undefined, defaults: { fillAlpha: number; strokeAlpha: number; strokeWidth: number; radius: number; rotation: number }) => ({
+      fillAlpha: readSliderValue(container, "fill-opacity") ?? defaults.fillAlpha,
+      strokeAlpha: readSliderValue(container, "stroke-opacity") ?? defaults.strokeAlpha,
+      strokeWidth: readSliderValue(container, "stroke-width") ?? defaults.strokeWidth,
+      radius: readSliderValue(container, "size") ?? defaults.radius,
+      rotation: readSliderValue(container, "rotation") ?? defaults.rotation,
+    }),
+    [readSliderValue],
+  );
+
   // Function to update symbolizer point type
   const updateSymbolizerPointType = useCallback(
     (itemId: string, newPointType: string) => {
@@ -551,24 +578,13 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       const state = getCurrentSymbolizerState();
       if (!state) return;
 
-      // Read ALL current values from DOM to prevent any resets
-      const sizeSlider = symbolizerContainer?.querySelector("input[type='range']:nth-of-type(1)") as HTMLInputElement;
-      const currentRadius = sizeSlider ? parseFloat(sizeSlider.value) : state.radius;
-
-      // Get ALL slider values from DOM using positional selectors
-      const allSliders = symbolizerContainer?.querySelectorAll("input[type='range']") as NodeListOf<HTMLInputElement>;
-      let currentFillAlpha = state.fillAlpha;
-      let currentStrokeAlpha = state.strokeAlpha;
-      let currentStrokeWidth = state.strokeWidth;
-      let currentRotation = state.rotation;
-
-      if (allSliders && allSliders.length > 1) {
-        // Order: [0] = size, [1] = fill opacity, [2] = stroke opacity, [3] = stroke width, [4] = rotation
-        if (allSliders[1]) currentFillAlpha = parseFloat(allSliders[1].value);
-        if (allSliders[2]) currentStrokeAlpha = parseFloat(allSliders[2].value);
-        if (allSliders[3]) currentStrokeWidth = parseFloat(allSliders[3].value);
-        if (allSliders[4]) currentRotation = parseFloat(allSliders[4].value);
-      }
+      // Read ALL current values from DOM using data-slider-type attributes
+      const sliderValues = readAllSliderValues(symbolizerContainer, state);
+      const currentRadius = sliderValues.radius;
+      let currentFillAlpha = sliderValues.fillAlpha;
+      let currentStrokeAlpha = sliderValues.strokeAlpha;
+      let currentStrokeWidth = sliderValues.strokeWidth;
+      let currentRotation = sliderValues.rotation;
 
       // Read current colors from DOM color buttons
       const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
@@ -610,7 +626,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       emit("mymap-style-updated", { itemId, style, pointType: newPointType });
       console.log("🔄 Emitted mymap-style-updated event for point type change:", itemId);
     },
-    [item, updateItem, emit, getCurrentSymbolizerState, createPointStyleFromHelpers, extractColorFromDOMButton],
+    [item, updateItem, emit, getCurrentSymbolizerState, createPointStyleFromHelpers, extractColorFromDOMButton, readAllSliderValues],
   );
 
   // Function to update symbolizer fill color
@@ -632,24 +648,13 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       const state = getCurrentSymbolizerState();
       if (!state) return;
 
-      // Read ALL current values from DOM to prevent any resets
-      const sizeSlider = symbolizerContainer?.querySelector("input[type='range']:nth-of-type(1)") as HTMLInputElement;
-      const currentRadius = sizeSlider ? parseFloat(sizeSlider.value) : state.radius;
-
-      // Get ALL slider values from DOM using positional selectors
-      const allSliders = symbolizerContainer?.querySelectorAll("input[type='range']") as NodeListOf<HTMLInputElement>;
-      let currentFillAlpha = state.fillAlpha;
-      let currentStrokeAlpha = state.strokeAlpha;
-      let currentStrokeWidth = state.strokeWidth;
-      let currentRotation = state.rotation;
-
-      if (allSliders && allSliders.length > 1) {
-        // Order: [0] = size, [1] = fill opacity, [2] = stroke opacity, [3] = stroke width, [4] = rotation
-        if (allSliders[1]) currentFillAlpha = parseFloat(allSliders[1].value);
-        if (allSliders[2]) currentStrokeAlpha = parseFloat(allSliders[2].value);
-        if (allSliders[3]) currentStrokeWidth = parseFloat(allSliders[3].value);
-        if (allSliders[4]) currentRotation = parseFloat(allSliders[4].value);
-      }
+      // Read ALL current values from DOM using data-slider-type attributes
+      const sliderValues = readAllSliderValues(symbolizerContainer, state);
+      const currentRadius = sliderValues.radius;
+      let currentFillAlpha = sliderValues.fillAlpha;
+      let currentStrokeAlpha = sliderValues.strokeAlpha;
+      let currentStrokeWidth = sliderValues.strokeWidth;
+      let currentRotation = sliderValues.rotation;
 
       // Read current stroke color from DOM
       const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
@@ -704,7 +709,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       emit("mymap-style-updated", { itemId, style, fillColor: newColor });
       console.log("🔄 Emitted mymap-style-updated event for fill color change:", itemId);
     },
-    [item, updateItem, emit, getCurrentSymbolizerState, createPointStyleFromHelpers, extractColorFromDOMButton],
+    [item, updateItem, emit, getCurrentSymbolizerState, createPointStyleFromHelpers, extractColorFromDOMButton, readAllSliderValues],
   );
 
   // Function to update symbolizer stroke color
@@ -726,24 +731,13 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       const state = getCurrentSymbolizerState();
       if (!state) return;
 
-      // Read ALL current values from DOM to prevent any resets
-      const sizeSlider = symbolizerContainer?.querySelector("input[type='range']:nth-of-type(1)") as HTMLInputElement;
-      const currentRadius = sizeSlider ? parseFloat(sizeSlider.value) : state.radius;
-
-      // Get ALL slider values from DOM using positional selectors
-      const allSliders = symbolizerContainer?.querySelectorAll("input[type='range']") as NodeListOf<HTMLInputElement>;
-      let currentFillAlpha = state.fillAlpha;
-      let currentStrokeAlpha = state.strokeAlpha;
-      let currentStrokeWidth = state.strokeWidth;
-      let currentRotation = state.rotation;
-
-      if (allSliders && allSliders.length > 1) {
-        // Order: [0] = size, [1] = fill opacity, [2] = stroke opacity, [3] = stroke width, [4] = rotation
-        if (allSliders[1]) currentFillAlpha = parseFloat(allSliders[1].value);
-        if (allSliders[2]) currentStrokeAlpha = parseFloat(allSliders[2].value);
-        if (allSliders[3]) currentStrokeWidth = parseFloat(allSliders[3].value);
-        if (allSliders[4]) currentRotation = parseFloat(allSliders[4].value);
-      }
+      // Read ALL current values from DOM using data-slider-type attributes
+      const sliderValues = readAllSliderValues(symbolizerContainer, state);
+      const currentRadius = sliderValues.radius;
+      let currentFillAlpha = sliderValues.fillAlpha;
+      let currentStrokeAlpha = sliderValues.strokeAlpha;
+      let currentStrokeWidth = sliderValues.strokeWidth;
+      let currentRotation = sliderValues.rotation;
 
       // Read current fill color from DOM
       const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
@@ -798,7 +792,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       emit("mymap-style-updated", { itemId, style, strokeColor: newColor });
       console.log("🔄 Emitted mymap-style-updated event for stroke color change:", itemId);
     },
-    [item, updateItem, emit, getCurrentSymbolizerState, createPointStyleFromHelpers, extractColorFromDOMButton],
+    [item, updateItem, emit, getCurrentSymbolizerState, createPointStyleFromHelpers, extractColorFromDOMButton, readAllSliderValues],
   );
 
   // Function to update symbolizer fill opacity - GEOMETRY AWARE
@@ -814,57 +808,33 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
 
       // Read geometry-specific values from DOM
       let currentPointType = state.pointType;
-      let currentRadius = state.radius;
-      let currentRotation = state.rotation;
-      let currentStrokeAlpha = state.strokeAlpha;
-      let currentStrokeWidth = state.strokeWidth;
       let currentStrokeType = state.strokeType;
 
       // Only read point-specific values for point geometries
       if (item.geometryType === "Point" || item.geometryType === "MultiPoint") {
         const pointStyleSelect = symbolizerContainer?.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
         currentPointType = pointStyleSelect ? pointStyleSelect.value : currentPointType;
-
-        const sizeSlider = symbolizerContainer?.querySelector("input[type='range']:nth-of-type(1)") as HTMLInputElement;
-        currentRadius = sizeSlider ? parseFloat(sizeSlider.value) : currentRadius;
       }
 
       // Read stroke-specific values for all geometries that have strokes
       const strokeStyleSelect = symbolizerContainer?.querySelector("select[name='pointOutline']") as HTMLSelectElement;
       currentStrokeType = strokeStyleSelect ? strokeStyleSelect.value : currentStrokeType;
 
-      // Get ALL slider values from DOM using positional selectors - GEOMETRY AWARE
-      const allSliders = symbolizerContainer?.querySelectorAll("input[type='range']") as NodeListOf<HTMLInputElement>;
-      if (allSliders && allSliders.length > 0) {
-        // GEOMETRY-AWARE SLIDER INDICES - Different slider orders for different geometry types
-        // Note: We're updating fill opacity, so we don't read the fill opacity slider itself
-
-        if (item.geometryType === "Point" || item.geometryType === "MultiPoint") {
-          // For points: [0] = size, [1] = fill opacity (changing), [2] = stroke opacity, [3] = stroke width, [4] = rotation
-          if (allSliders[2]) currentStrokeAlpha = parseFloat(allSliders[2].value);
-          if (allSliders[3]) currentStrokeWidth = parseFloat(allSliders[3].value);
-          if (allSliders[4]) currentRotation = parseFloat(allSliders[4].value);
-        } else if (item.geometryType === "Polygon" || item.geometryType === "MultiPolygon") {
-          // For polygons: [0] = fill opacity (changing), [1] = stroke opacity, [2] = stroke width
-          if (allSliders[1]) currentStrokeAlpha = parseFloat(allSliders[1].value);
-          if (allSliders[2]) currentStrokeWidth = parseFloat(allSliders[2].value);
-          // No rotation for polygons
-        }
-        // Note: Lines don't have fill opacity, so no case needed for LineString
-      }
+      // Read all slider values from DOM using data-slider-type attributes
+      const sliderVals = readAllSliderValues(symbolizerContainer as Element | null, state);
 
       // Read current colors from DOM
       const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
       const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
 
-      console.log("🔧 Geometry-aware DOM values for fill opacity:", {
+      console.log("🔧 DOM values for fill opacity:", {
         geometryType: item.geometryType,
         pointType: currentPointType,
         strokeType: currentStrokeType,
-        radius: currentRadius,
-        strokeAlpha: currentStrokeAlpha,
-        strokeWidth: currentStrokeWidth,
-        rotation: currentRotation,
+        radius: sliderVals.radius,
+        strokeAlpha: sliderVals.strokeAlpha,
+        strokeWidth: sliderVals.strokeWidth,
+        rotation: sliderVals.rotation,
       });
 
       // Update the fill opacity in state
@@ -872,13 +842,13 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         ...state,
         fillAlpha: newOpacity,
         fillColor: { ...currentFillColor, a: newOpacity }, // Use DOM fill color with new alpha
-        strokeColor: { ...currentStrokeColor, a: currentStrokeAlpha }, // Use DOM stroke color and alpha
+        strokeColor: { ...currentStrokeColor, a: sliderVals.strokeAlpha }, // Use DOM stroke color and alpha
         pointType: currentPointType,
         strokeType: currentStrokeType,
-        radius: currentRadius,
-        strokeWidth: currentStrokeWidth,
-        rotation: currentRotation,
-        strokeAlpha: currentStrokeAlpha,
+        radius: sliderVals.radius,
+        strokeWidth: sliderVals.strokeWidth,
+        rotation: sliderVals.rotation,
+        strokeAlpha: sliderVals.strokeAlpha,
       };
 
       // Create new style - EXPLICIT GEOMETRY TYPE CHECKING like old app
@@ -920,7 +890,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         console.log("🔄 Emitted mymap-style-updated event for fill opacity change:", itemId);
       }
     },
-    [item, updateItem, emit, getCurrentSymbolizerState, extractColorFromDOMButton],
+    [item, updateItem, emit, getCurrentSymbolizerState, extractColorFromDOMButton, readAllSliderValues],
   );
 
   // Function to update symbolizer stroke opacity - GEOMETRY AWARE
@@ -936,74 +906,47 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
 
       // Read geometry-specific values from DOM
       let currentPointType = state.pointType;
-      let currentRadius = state.radius;
-      let currentRotation = state.rotation;
-      let currentFillAlpha = state.fillAlpha; // ⚠️ CRITICAL: Don't change fill opacity when changing stroke opacity!
-      let currentStrokeWidth = state.strokeWidth;
       let currentStrokeType = state.strokeType;
 
       // Only read point-specific values for point geometries
       if (item.geometryType === "Point" || item.geometryType === "MultiPoint") {
         const pointStyleSelect = symbolizerContainer?.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
         currentPointType = pointStyleSelect ? pointStyleSelect.value : currentPointType;
-
-        const sizeSlider = symbolizerContainer?.querySelector("input[type='range']:nth-of-type(1)") as HTMLInputElement;
-        currentRadius = sizeSlider ? parseFloat(sizeSlider.value) : currentRadius;
       }
 
       // Read stroke-specific values for all geometries that have strokes
       const strokeStyleSelect = symbolizerContainer?.querySelector("select[name='pointOutline']") as HTMLSelectElement;
       currentStrokeType = strokeStyleSelect ? strokeStyleSelect.value : currentStrokeType;
 
-      // Get ALL slider values from DOM using positional selectors - GEOMETRY AWARE
-      const allSliders = symbolizerContainer?.querySelectorAll("input[type='range']") as NodeListOf<HTMLInputElement>;
-      if (allSliders && allSliders.length > 0) {
-        // GEOMETRY-AWARE SLIDER INDICES - Different slider orders for different geometry types
-        // Note: We're updating stroke opacity, so we don't read the stroke opacity slider itself
-
-        if (item.geometryType === "Point" || item.geometryType === "MultiPoint") {
-          // For points: [0] = size, [1] = fill opacity, [2] = stroke opacity (changing), [3] = stroke width, [4] = rotation
-          if (allSliders[1]) currentFillAlpha = parseFloat(allSliders[1].value);
-          if (allSliders[3]) currentStrokeWidth = parseFloat(allSliders[3].value);
-          if (allSliders[4]) currentRotation = parseFloat(allSliders[4].value);
-        } else if (item.geometryType === "Polygon" || item.geometryType === "MultiPolygon") {
-          // For polygons: [0] = fill opacity, [1] = stroke opacity (changing), [2] = stroke width
-          if (allSliders[0]) currentFillAlpha = parseFloat(allSliders[0].value);
-          if (allSliders[2]) currentStrokeWidth = parseFloat(allSliders[2].value);
-          // No rotation for polygons
-        } else if (item.geometryType === "LineString" || item.geometryType === "MultiLineString") {
-          // For lines: [0] = stroke opacity (changing), [1] = stroke width
-          if (allSliders[1]) currentStrokeWidth = parseFloat(allSliders[1].value);
-          // No fill or rotation for lines
-        }
-      }
+      // Read all slider values from DOM using data-slider-type attributes
+      const sliderVals = readAllSliderValues(symbolizerContainer as Element | null, state);
 
       // Read current colors from DOM
       const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
       const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
 
-      console.log("🔧 Geometry-aware DOM values for stroke opacity:", {
+      console.log("🔧 DOM values for stroke opacity:", {
         geometryType: item.geometryType,
         pointType: currentPointType,
         strokeType: currentStrokeType,
-        radius: currentRadius,
-        fillAlpha: currentFillAlpha,
-        strokeWidth: currentStrokeWidth,
-        rotation: currentRotation,
+        radius: sliderVals.radius,
+        fillAlpha: sliderVals.fillAlpha,
+        strokeWidth: sliderVals.strokeWidth,
+        rotation: sliderVals.rotation,
       });
 
       // Update the stroke opacity in state
       const updatedState = {
         ...state,
         strokeAlpha: newOpacity,
-        fillColor: { ...currentFillColor, a: currentFillAlpha }, // Keep existing fill alpha - DON'T change it!
+        fillColor: { ...currentFillColor, a: sliderVals.fillAlpha }, // Keep existing fill alpha - DON'T change it!
         strokeColor: { ...currentStrokeColor, a: newOpacity }, // Use new stroke alpha
         pointType: currentPointType,
         strokeType: currentStrokeType,
-        radius: currentRadius,
-        strokeWidth: currentStrokeWidth,
-        rotation: currentRotation,
-        fillAlpha: currentFillAlpha, // Preserve existing fill alpha
+        radius: sliderVals.radius,
+        strokeWidth: sliderVals.strokeWidth,
+        rotation: sliderVals.rotation,
+        fillAlpha: sliderVals.fillAlpha, // Preserve existing fill alpha
       };
 
       // Create new style - EXPLICIT GEOMETRY TYPE CHECKING like old app
@@ -1050,7 +993,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         console.log("🔄 Emitted mymap-style-updated event for stroke opacity change:", itemId);
       }
     },
-    [item, updateItem, emit, getCurrentSymbolizerState, extractColorFromDOMButton],
+    [item, updateItem, emit, getCurrentSymbolizerState, extractColorFromDOMButton, readAllSliderValues],
   );
 
   // Function to show color picker popup (matching MyMapsSymbolizer approach)
@@ -2151,22 +2094,8 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
           const state = getCurrentSymbolizerState();
           if (!state) return;
 
-          // Get ALL slider values from DOM using positional selectors
-          const allSliders = symbolizerContainer.querySelectorAll("input[type='range']") as NodeListOf<HTMLInputElement>;
-          let currentRadius = state.radius;
-          let currentFillAlpha = state.fillAlpha;
-          let currentStrokeAlpha = state.strokeAlpha;
-          let currentStrokeWidth = state.strokeWidth;
-          let currentRotation = state.rotation;
-
-          if (allSliders && allSliders.length > 0) {
-            // Order: [0] = size, [1] = fill opacity, [2] = stroke opacity, [3] = stroke width, [4] = rotation
-            if (allSliders[0]) currentRadius = parseFloat(allSliders[0].value);
-            if (allSliders[1]) currentFillAlpha = parseFloat(allSliders[1].value);
-            if (allSliders[2]) currentStrokeAlpha = parseFloat(allSliders[2].value);
-            if (allSliders[3]) currentStrokeWidth = parseFloat(allSliders[3].value);
-            if (allSliders[4]) currentRotation = parseFloat(allSliders[4].value);
-          }
+          // Read all slider values from DOM using data-slider-type attributes
+          const sliderVals = readAllSliderValues(symbolizerContainer, state);
 
           // Read current colors from DOM color buttons
           const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
@@ -2175,11 +2104,11 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
           console.log("🔧 Using DOM values for stroke type change:", {
             pointType: currentPointType,
             strokeType: newStrokeType,
-            radius: currentRadius,
-            fillAlpha: currentFillAlpha,
-            strokeAlpha: currentStrokeAlpha,
-            strokeWidth: currentStrokeWidth,
-            rotation: currentRotation,
+            radius: sliderVals.radius,
+            fillAlpha: sliderVals.fillAlpha,
+            strokeAlpha: sliderVals.strokeAlpha,
+            strokeWidth: sliderVals.strokeWidth,
+            rotation: sliderVals.rotation,
           });
 
           if (item?.id) {
@@ -2188,24 +2117,24 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
             if (item?.geometryType === "Point" || item?.geometryType === "MultiPoint") {
               style = getPointStyle(
                 currentPointType,
-                currentRadius,
-                [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha],
-                currentStrokeWidth,
-                [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha],
-                currentRotation,
+                sliderVals.radius,
+                [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, sliderVals.strokeAlpha],
+                sliderVals.strokeWidth,
+                [currentFillColor.r, currentFillColor.g, currentFillColor.b, sliderVals.fillAlpha],
+                sliderVals.rotation,
                 newStrokeType, // Use the new stroke type
               );
             } else if (item?.geometryType === "LineString" || item?.geometryType === "MultiLineString") {
               style = getLineStringStyle(
-                [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha],
-                currentStrokeWidth,
+                [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, sliderVals.strokeAlpha],
+                sliderVals.strokeWidth,
                 newStrokeType, // Use the new stroke type
               );
             } else if (item?.geometryType === "Polygon" || item?.geometryType === "MultiPolygon") {
               style = getPolygonStyle(
-                [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha],
-                currentStrokeWidth,
-                [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha],
+                [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, sliderVals.strokeAlpha],
+                sliderVals.strokeWidth,
+                [currentFillColor.r, currentFillColor.g, currentFillColor.b, sliderVals.fillAlpha],
                 newStrokeType, // Use the new stroke type
               );
             }
@@ -2251,20 +2180,8 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
           const state = getCurrentSymbolizerState();
           if (!state) return;
 
-          // Get ALL slider values from DOM using positional selectors
-          const allSliders = symbolizerContainer.querySelectorAll("input[type='range']") as NodeListOf<HTMLInputElement>;
-          let currentFillAlpha = state.fillAlpha;
-          let currentStrokeAlpha = state.strokeAlpha;
-          let currentStrokeWidth = state.strokeWidth;
-          let currentRotation = state.rotation;
-
-          if (allSliders && allSliders.length > 1) {
-            // Order: [0] = size (we're changing this), [1] = fill opacity, [2] = stroke opacity, [3] = stroke width, [4] = rotation
-            if (allSliders[1]) currentFillAlpha = parseFloat(allSliders[1].value);
-            if (allSliders[2]) currentStrokeAlpha = parseFloat(allSliders[2].value);
-            if (allSliders[3]) currentStrokeWidth = parseFloat(allSliders[3].value);
-            if (allSliders[4]) currentRotation = parseFloat(allSliders[4].value);
-          }
+          // Read all slider values from DOM using data-slider-type attributes
+          const sliderVals = readAllSliderValues(symbolizerContainer, state);
 
           // Read current colors from DOM color buttons
           const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
@@ -2274,10 +2191,10 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
             pointType: currentPointType,
             strokeType: currentStrokeType,
             radius: newRadius,
-            fillAlpha: currentFillAlpha,
-            strokeAlpha: currentStrokeAlpha,
-            strokeWidth: currentStrokeWidth,
-            rotation: currentRotation,
+            fillAlpha: sliderVals.fillAlpha,
+            strokeAlpha: sliderVals.strokeAlpha,
+            strokeWidth: sliderVals.strokeWidth,
+            rotation: sliderVals.rotation,
           });
 
           if (item?.id) {
@@ -2285,10 +2202,10 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
             const style = createPointStyleFromHelpers(
               currentPointType,
               newRadius, // Use the new radius value
-              [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha], // Use current values from DOM
-              currentStrokeWidth,
-              [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha], // Use current values from DOM
-              currentRotation,
+              [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, sliderVals.strokeAlpha],
+              sliderVals.strokeWidth,
+              [currentFillColor.r, currentFillColor.g, currentFillColor.b, sliderVals.fillAlpha],
+              sliderVals.rotation,
               currentStrokeType,
             );
 
@@ -2317,26 +2234,8 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         });
       }
 
-      // Fill opacity slider - GEOMETRY-AWARE SELECTION (only for geometries that have fills)
-      let fillOpacitySlider: HTMLInputElement | null = null;
-
-      if (item?.geometryType === "Point" || item?.geometryType === "MultiPoint" || item?.geometryType === "Polygon" || item?.geometryType === "MultiPolygon") {
-        fillOpacitySlider = symbolizerContainer.querySelector("input[key='sc-mymaps-symbolizer-fill-opacity']") as HTMLInputElement;
-        if (!fillOpacitySlider) {
-          fillOpacitySlider = symbolizerContainer.querySelector(".sc-mymaps-symbolizer-slider.opacity input[type='range']") as HTMLInputElement;
-        }
-        if (!fillOpacitySlider) {
-          const allRangeInputs = symbolizerContainer.querySelectorAll("input[type='range']");
-          if (item?.geometryType === "Point" || item?.geometryType === "MultiPoint") {
-            // For points: [0] = size, [1] = fill opacity
-            fillOpacitySlider = allRangeInputs[1] as HTMLInputElement;
-          } else if (item?.geometryType === "Polygon" || item?.geometryType === "MultiPolygon") {
-            // For polygons: [0] = fill opacity
-            fillOpacitySlider = allRangeInputs[0] as HTMLInputElement;
-          }
-        }
-      }
-      // Note: Lines don't have fill, so fillOpacitySlider stays null for lines
+      // Fill opacity slider - use data-slider-type attribute
+      const fillOpacitySlider = symbolizerContainer.querySelector("input[data-slider-type='fill-opacity']") as HTMLInputElement | null;
       if (fillOpacitySlider) {
         // 🎯 Set fill opacity slider value from current state
         fillOpacitySlider.value = currentState.fillAlpha.toString();
@@ -2361,24 +2260,8 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         });
       }
 
-      // Stroke opacity slider - try multiple selectors
-      let strokeOpacitySlider = symbolizerContainer.querySelector("input[key='sc-mymaps-symbolizer-stroke-opacity']") as HTMLInputElement;
-      if (!strokeOpacitySlider) {
-        // GEOMETRY-AWARE SLIDER SELECTION
-        if (item?.geometryType === "LineString" || item?.geometryType === "MultiLineString") {
-          // For lines: stroke opacity is the ONLY opacity slider at index [0]
-          const allRangeInputs = symbolizerContainer.querySelectorAll("input[type='range']");
-          strokeOpacitySlider = allRangeInputs[0] as HTMLInputElement;
-        } else if (item?.geometryType === "Point" || item?.geometryType === "MultiPoint") {
-          // For points: stroke opacity is at index [2] (after size and fill opacity)
-          const allRangeInputs = symbolizerContainer.querySelectorAll("input[type='range']");
-          strokeOpacitySlider = allRangeInputs[2] as HTMLInputElement;
-        } else if (item?.geometryType === "Polygon" || item?.geometryType === "MultiPolygon") {
-          // For polygons: stroke opacity is at index [1] (after fill opacity)
-          const allRangeInputs = symbolizerContainer.querySelectorAll("input[type='range']");
-          strokeOpacitySlider = allRangeInputs[1] as HTMLInputElement;
-        }
-      }
+      // Stroke opacity slider - use data-slider-type attribute
+      const strokeOpacitySlider = symbolizerContainer.querySelector("input[data-slider-type='stroke-opacity']") as HTMLInputElement | null;
       if (strokeOpacitySlider) {
         // 🎯 Set stroke opacity slider value from current state
         strokeOpacitySlider.value = currentState.strokeAlpha.toString();
@@ -2403,20 +2286,8 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         });
       }
 
-      // Stroke Width slider - GEOMETRY-AWARE SELECTION
-      const allSliders = symbolizerContainer.querySelectorAll("input[type='range']") as NodeListOf<HTMLInputElement>;
-      let strokeWidthSlider: HTMLInputElement | null = null;
-
-      if (item?.geometryType === "LineString" || item?.geometryType === "MultiLineString") {
-        // For lines: [0] = stroke opacity, [1] = stroke width
-        strokeWidthSlider = allSliders[1] as HTMLInputElement;
-      } else if (item?.geometryType === "Point" || item?.geometryType === "MultiPoint") {
-        // For points: [0] = size, [1] = fill opacity, [2] = stroke opacity, [3] = stroke width
-        strokeWidthSlider = allSliders[3] as HTMLInputElement;
-      } else if (item?.geometryType === "Polygon" || item?.geometryType === "MultiPolygon") {
-        // For polygons: [0] = fill opacity, [1] = stroke opacity, [2] = stroke width
-        strokeWidthSlider = allSliders[2] as HTMLInputElement;
-      }
+      // Stroke Width slider - use data-slider-type attribute
+      const strokeWidthSlider = symbolizerContainer.querySelector("input[data-slider-type='stroke-width']") as HTMLInputElement | null;
       if (strokeWidthSlider) {
         // Set stroke width slider value from current state
         strokeWidthSlider.value = currentState.strokeWidth.toString();
@@ -2432,61 +2303,33 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
           const state = getCurrentSymbolizerState();
           if (!state) return;
 
-          // Read geometry-specific values from DOM
+          // Read all current values from DOM using data-slider-type attributes
+          const sliderVals = readAllSliderValues(symbolizerContainer, state);
           let currentPointType = state.pointType;
-          let currentRadius = state.radius;
-          let currentRotation = state.rotation;
-          let currentFillAlpha = state.fillAlpha;
-          let currentStrokeAlpha = state.strokeAlpha;
           let currentStrokeType = state.strokeType;
 
-          // Only read point-specific values for point geometries
+          // Read dropdown values
           if (item?.geometryType === "Point" || item?.geometryType === "MultiPoint") {
             const pointStyleSelect = symbolizerContainer.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
             currentPointType = pointStyleSelect ? pointStyleSelect.value : currentPointType;
-
-            if (allSliders && allSliders.length > 0 && allSliders[0]) {
-              currentRadius = parseFloat(allSliders[0].value);
-            }
-            if (allSliders && allSliders.length > 4 && allSliders[4]) {
-              currentRotation = parseFloat(allSliders[4].value);
-            }
           }
 
-          // Read stroke-specific values for all geometries that have strokes
           const strokeStyleSelect = symbolizerContainer.querySelector("select[name='pointOutline']") as HTMLSelectElement;
           currentStrokeType = strokeStyleSelect ? strokeStyleSelect.value : currentStrokeType;
-
-          // Read opacity values for relevant geometries
-          if (allSliders && allSliders.length > 0) {
-            // GEOMETRY-AWARE SLIDER INDICES - Different slider orders for different geometry types
-            if (item?.geometryType === "LineString" || item?.geometryType === "MultiLineString") {
-              // For lines: [0] = stroke opacity, [1] = stroke width
-              if (allSliders[0]) currentStrokeAlpha = parseFloat(allSliders[0].value);
-            } else if (item?.geometryType === "Point" || item?.geometryType === "MultiPoint") {
-              // For points: [0] = size, [1] = fill opacity, [2] = stroke opacity, [3] = stroke width, [4] = rotation
-              if (allSliders[1]) currentFillAlpha = parseFloat(allSliders[1].value);
-              if (allSliders[2]) currentStrokeAlpha = parseFloat(allSliders[2].value);
-            } else if (item?.geometryType === "Polygon" || item?.geometryType === "MultiPolygon") {
-              // For polygons: [0] = fill opacity, [1] = stroke opacity, [2] = stroke width
-              if (allSliders[0]) currentFillAlpha = parseFloat(allSliders[0].value);
-              if (allSliders[1]) currentStrokeAlpha = parseFloat(allSliders[1].value);
-            }
-          }
 
           // Read current colors from DOM color buttons
           const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
           const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
 
-          console.log("🔧 Geometry-aware DOM values for stroke width change:", {
+          console.log("🔧 DOM values for stroke width change:", {
             geometryType: item?.geometryType,
             pointType: currentPointType,
             strokeType: currentStrokeType,
-            radius: currentRadius,
-            fillAlpha: currentFillAlpha,
-            strokeAlpha: currentStrokeAlpha,
+            radius: sliderVals.radius,
+            fillAlpha: sliderVals.fillAlpha,
+            strokeAlpha: sliderVals.strokeAlpha,
             strokeWidth: newStrokeWidth,
-            rotation: currentRotation,
+            rotation: sliderVals.rotation,
           });
 
           if (item?.id) {
@@ -2495,24 +2338,24 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
             if (item?.geometryType === "Point" || item?.geometryType === "MultiPoint") {
               style = getPointStyle(
                 currentPointType,
-                currentRadius,
-                [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha],
+                sliderVals.radius,
+                [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, sliderVals.strokeAlpha],
                 newStrokeWidth, // Use the new stroke width
-                [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha],
-                currentRotation,
+                [currentFillColor.r, currentFillColor.g, currentFillColor.b, sliderVals.fillAlpha],
+                sliderVals.rotation,
                 currentStrokeType,
               );
             } else if (item?.geometryType === "LineString" || item?.geometryType === "MultiLineString") {
               style = getLineStringStyle(
-                [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha],
+                [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, sliderVals.strokeAlpha],
                 newStrokeWidth, // Use the new stroke width
                 currentStrokeType,
               );
             } else if (item?.geometryType === "Polygon" || item?.geometryType === "MultiPolygon") {
               style = getPolygonStyle(
-                [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha],
+                [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, sliderVals.strokeAlpha],
                 newStrokeWidth, // Use the new stroke width
-                [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha],
+                [currentFillColor.r, currentFillColor.g, currentFillColor.b, sliderVals.fillAlpha],
                 currentStrokeType,
               );
             }
@@ -2545,8 +2388,8 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         });
       }
 
-      // Rotation/Angle slider (5th range input - index 4)
-      const rotationSlider = allSliders[4] as HTMLInputElement; // [0]=size, [1]=fill opacity, [2]=stroke opacity, [3]=stroke width, [4]=rotation
+      // Rotation/Angle slider - find by data-slider-type attribute
+      const rotationSlider = symbolizerContainer.querySelector("input[data-slider-type='rotation']") as HTMLInputElement;
       if (rotationSlider) {
         // Set rotation slider value from current state
         rotationSlider.value = currentState.rotation.toString();
@@ -2557,30 +2400,19 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
           const newRotation = parseFloat((e.target as HTMLInputElement).value);
           console.log("🎯 Rotation slider changed via DOM event:", newRotation);
 
-          // CRITICAL FIX: Get ALL current values from DOM to preserve all current settings
+          // Get current state from store/item (not DOM)
+          const state = getCurrentSymbolizerState();
+          if (!state) return;
+
+          // Read all current values from DOM using data-slider-type attributes
+          const sliderVals = readAllSliderValues(symbolizerContainer, state);
+
+          // Read dropdown values
           const pointStyleSelect = symbolizerContainer.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
           const currentPointType = pointStyleSelect ? pointStyleSelect.value : item.pointType || "circle";
 
           const strokeStyleSelect = symbolizerContainer.querySelector("select[name='pointOutline']") as HTMLSelectElement;
           const currentStrokeType = strokeStyleSelect ? strokeStyleSelect.value : item.strokeType || "normal";
-
-          // Get current state from store/item (not DOM)
-          const state = getCurrentSymbolizerState();
-          if (!state) return;
-
-          // Get ALL slider values from DOM using positional selectors
-          let currentRadius = state.radius;
-          let currentFillAlpha = state.fillAlpha;
-          let currentStrokeAlpha = state.strokeAlpha;
-          let currentStrokeWidth = state.strokeWidth;
-
-          if (allSliders && allSliders.length > 0) {
-            // Order: [0] = size, [1] = fill opacity, [2] = stroke opacity, [3] = stroke width, [4] = rotation (we're changing)
-            if (allSliders[0]) currentRadius = parseFloat(allSliders[0].value);
-            if (allSliders[1]) currentFillAlpha = parseFloat(allSliders[1].value);
-            if (allSliders[2]) currentStrokeAlpha = parseFloat(allSliders[2].value);
-            if (allSliders[3]) currentStrokeWidth = parseFloat(allSliders[3].value);
-          }
 
           // Read current colors from DOM color buttons
           const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
@@ -2589,10 +2421,10 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
           console.log("🔧 Using DOM values for rotation change:", {
             pointType: currentPointType,
             strokeType: currentStrokeType,
-            radius: currentRadius,
-            fillAlpha: currentFillAlpha,
-            strokeAlpha: currentStrokeAlpha,
-            strokeWidth: currentStrokeWidth,
+            radius: sliderVals.radius,
+            fillAlpha: sliderVals.fillAlpha,
+            strokeAlpha: sliderVals.strokeAlpha,
+            strokeWidth: sliderVals.strokeWidth,
             rotation: newRotation,
           });
 
@@ -2600,10 +2432,10 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
             // Create style with ALL current DOM values and new rotation
             const style = createPointStyleFromHelpers(
               currentPointType,
-              currentRadius,
-              [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, currentStrokeAlpha],
-              currentStrokeWidth,
-              [currentFillColor.r, currentFillColor.g, currentFillColor.b, currentFillAlpha],
+              sliderVals.radius,
+              [currentStrokeColor.r, currentStrokeColor.g, currentStrokeColor.b, sliderVals.strokeAlpha],
+              sliderVals.strokeWidth,
+              [currentFillColor.r, currentFillColor.g, currentFillColor.b, sliderVals.fillAlpha],
               newRotation, // Use the new rotation
               currentStrokeType,
             );
