@@ -78,7 +78,7 @@
       "displayName": "County Forest Tracts",
       "serverUrl": "https://opengis.simcoe.ca/geoserver/",
       "layerName": "simcoe:Forest_Tract_Points_Theme",
-      "visible": true,
+      "visible": false,
       "expanded": true,
       "zIndex": 202,
       "legendStyleName": "",
