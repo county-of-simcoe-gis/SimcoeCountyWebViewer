@@ -42,6 +42,7 @@ import MapPopup from "@/components/MapPopup";
 import { MapContextMenuContainer } from "@/components/MapContextMenuContainer";
 import ResultsPopup, { type Result } from "@/components/ResultsPopup";
 
+
 // Extended Result type with optional methods that may be added at runtime
 interface ResultWithMethods extends Result {
   clearParcelLayer?: () => void;

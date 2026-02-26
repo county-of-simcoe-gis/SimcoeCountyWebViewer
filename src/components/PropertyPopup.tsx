@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Feature } from "ol";
 import config from "@/config.json";
 import { InfoRow } from "@/components/common/InfoRow";
+import { usePropertyPopupExtensionStore } from "@/stores/propertyPopupExtensionStore";
 
 export interface PropertyInfo {
   ARN: string;
@@ -32,6 +33,7 @@ interface PropertyPopupProps {
 
 export default function PropertyPopup({ propInfo, feature, onClose, onClearParcelLayer }: PropertyPopupProps) {
   const [copied, setCopied] = useState(false);
+  const extensionItems = usePropertyPopupExtensionStore((s) => s.getVisibleItems)();
 
   const { ARN: arn, Address: address, AssessedValue: assessedValue, HasZoning: hasZoning, WasteCollection: wasteCollection, Other: other, pointCoordinates, shareURL } = propInfo;
   const garbageDay = wasteCollection?.GarbageDay;
@@ -115,6 +117,14 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
 
         {/* Broadband Speed */}
         {broadbandSpeed && <InfoRow label="Potential Broadband Coverage" value={broadbandSpeed} />}
+
+        {/* Extension items (e.g. MPac/Teranet report links, owner names) */}
+        {arn &&
+          extensionItems.map((ext) => (
+            <InfoRow key={ext.id} label={ext.label}>
+              {ext.render(arn)}
+            </InfoRow>
+          ))}
 
         {/* Tools */}
         <InfoRow label="Tools">
