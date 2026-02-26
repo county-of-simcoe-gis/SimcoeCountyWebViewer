@@ -357,7 +357,7 @@ export default function Sidebar() {
           <div className="sc-sidebar-content">
             {currentReport ? (
               <div className="sc-sidebar-report-container">
-                <div className="sc-sidebar-report-title">{currentReport.title}</div>
+                {currentReport.title && <div className="sc-sidebar-report-title">{currentReport.title}</div>}
                 <div className="sc-sidebar-report-content">{currentReport.content}</div>
               </div>
             ) : (
