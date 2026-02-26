@@ -12,6 +12,15 @@
   font-family: Verdana, Arial, sans-serif !important;
   font-size: 9pt;
   min-height: 3em;
+  min-width: 0;
+}
+
+.sc-toc-item-container > label {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1 1 0%;
+  overflow: hidden;
 }
 
 .sc-toc-item-container.on {
@@ -28,9 +37,10 @@
 
 /* Layer Label */
 .sc-toc-item-layer-label {
-  display: inline-flex;
-  align-items: center;
-  max-width: 200px;
+  display: inline-block;
+  vertical-align: middle;
+  min-width: 0;
+  max-width: calc(100% - 16px);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -88,7 +98,9 @@
   margin-right: 8px;
   padding: 4px;
   border-radius: 3px;
-  transition: background-color 0.2s ease, opacity 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    opacity 0.2s ease;
   min-width: 20px;
   min-height: 20px;
 }
@@ -104,7 +116,9 @@
 
 /* Drag states for layer items */
 .sc-toc-item-container[draggable="true"] {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .sc-toc-item-container.dragging {

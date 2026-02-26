@@ -120,6 +120,17 @@ export interface AppConfig {
   sidebarToolComponents: SidebarComponent[];
   sidebarThemeComponents: SidebarComponent[];
 
+  // Default active theme/tool (from map config)
+  default_theme?: string;
+  default_tool?: string;
+
+  // Sidebar section visibility (from map config)
+  hideLayers?: boolean;
+  hideTools?: boolean;
+  hideMyMaps?: boolean;
+  hideThemes?: boolean;
+  hideReports?: boolean;
+
   // Other properties that might be added dynamically
   [key: string]: unknown;
 }
@@ -137,6 +148,48 @@ export interface SidebarComponent {
   disable?: boolean;
   enabled?: boolean;
   hideHeader?: boolean;
+}
+
+/**
+ * Merge two arrays of objects by matching on `id`.
+ * For each item in the targetArray (local config), if a matching item exists in sourceArray (API config),
+ * merge the source properties onto the target. Preserves local display metadata (name, description, imageName)
+ * while applying API overrides (enabled, disable, config).
+ * Any items in sourceArray that don't exist in targetArray are appended.
+ * Ported from the old app's mergeObjArray in helpers.js.
+ */
+function mergeObjArray(targetArray: SidebarComponent[], sourceArray: SidebarComponent[]): SidebarComponent[] {
+  const resultArray: SidebarComponent[] = [];
+  const remainingSource = [...sourceArray];
+
+  targetArray.forEach((targetObj) => {
+    const sourceIndex = remainingSource.findIndex((source) => targetObj.id === source.id);
+    if (sourceIndex !== -1) {
+      const sourceObj = remainingSource[sourceIndex];
+      // Merge source properties onto a copy of the target, preserving target's display metadata
+      const merged: SidebarComponent = { ...targetObj };
+      // Apply API overrides selectively
+      if (sourceObj.enabled !== undefined) merged.enabled = sourceObj.enabled;
+      if (sourceObj.disable !== undefined) merged.disable = sourceObj.disable;
+      if (sourceObj.config !== undefined) merged.config = sourceObj.config;
+      if (sourceObj.secure !== undefined) merged.secure = sourceObj.secure;
+      if (sourceObj.securityKeywords !== undefined) merged.securityKeywords = sourceObj.securityKeywords;
+      if (sourceObj.hideHeader !== undefined) merged.hideHeader = sourceObj.hideHeader;
+      // Only override display fields if the source actually provides them (non-empty)
+      if (sourceObj.name && sourceObj.name !== sourceObj.componentName) merged.name = sourceObj.name;
+      if (sourceObj.description) merged.description = sourceObj.description;
+      if (sourceObj.imageName) merged.imageName = sourceObj.imageName;
+      if (sourceObj.helpLink) merged.helpLink = sourceObj.helpLink;
+
+      resultArray.push(merged);
+      remainingSource.splice(sourceIndex, 1);
+    } else {
+      resultArray.push({ ...targetObj });
+    }
+  });
+
+  // Append any API-only items not found in local config
+  return resultArray.concat(remainingSource);
 }
 
 // Global config store
@@ -235,19 +288,24 @@ function convertSettingsToAppConfig(settings: SettingsType & Record<string, unkn
   }
 
   // Map Layers settings to TOC
+  // Only create toc override if Layers has meaningful data (non-empty sources, tocType, or defaultGroup)
   if (settings.Layers) {
     const layers = settings.Layers;
-    config.toc = {
-      tocType: layers.tocType || "",
-      geoserverLayerGroupsUrl: "",
-      geoserverLayerGroupsUrlType: "",
-      esriServiceUrl: "",
-      default_group: layers.defaultGroup || "",
-      sources: layers.sources || [],
-      helpLink: layers.helpLink || "",
-      layerInfoURL: "",
-      keywords: {},
-    };
+    const hasMeaningfulSources = Array.isArray(layers.sources) && layers.sources.length > 0;
+    const hasMeaningfulData = hasMeaningfulSources || (layers.tocType && layers.tocType.trim() !== "") || (layers.defaultGroup && layers.defaultGroup.trim() !== "");
+
+    if (hasMeaningfulData) {
+      config.toc = {} as AppConfig["toc"];
+      if (layers.tocType && layers.tocType.trim() !== "") config.toc.tocType = layers.tocType;
+      if (layers.defaultGroup && layers.defaultGroup.trim() !== "") config.toc.default_group = layers.defaultGroup;
+      if (hasMeaningfulSources && layers.sources) config.toc.sources = layers.sources;
+      if (layers.helpLink && layers.helpLink.trim() !== "") config.toc.helpLink = layers.helpLink;
+    } else {
+      console.log("API Layers section has no meaningful data to override local config. Raw layers:", layers);
+    }
+
+    // Hide layers flag (independent of toc data)
+    if (layers.hideLayers !== undefined) config.hideLayers = layers.hideLayers;
   }
 
   // Map Tools settings
@@ -265,6 +323,8 @@ function convertSettingsToAppConfig(settings: SettingsType & Record<string, unkn
         config: JSON.stringify(comp.config || {}),
       }));
     }
+    if (tools.default_tool) config.default_tool = tools.default_tool;
+    if (tools.hideTools !== undefined) config.hideTools = tools.hideTools;
   }
 
   // Map Themes settings
@@ -282,6 +342,8 @@ function convertSettingsToAppConfig(settings: SettingsType & Record<string, unkn
         config: JSON.stringify(comp.config || {}),
       }));
     }
+    if (themes.default_theme) config.default_theme = themes.default_theme;
+    if (themes.hideThemes !== undefined) config.hideThemes = themes.hideThemes;
   }
 
   // Map MyMaps settings
@@ -290,6 +352,13 @@ function convertSettingsToAppConfig(settings: SettingsType & Record<string, unkn
     if (myMaps.drawingOptionsToolsMenuVisibility) {
       config.drawingOptionsToolsMenuVisibility = { ...myMaps.drawingOptionsToolsMenuVisibility };
     }
+    if (myMaps.hideMyMaps !== undefined) config.hideMyMaps = myMaps.hideMyMaps;
+  }
+
+  // Map Reports settings
+  if (settings.Reports) {
+    const reports = settings.Reports;
+    if (reports.hideReports !== undefined) config.hideReports = reports.hideReports;
   }
 
   // Copy any additional properties that don't fit the standard structure
@@ -307,8 +376,8 @@ function convertSettingsToAppConfig(settings: SettingsType & Record<string, unkn
  */
 export async function loadConfig(configSecured: Record<string, unknown> = {}): Promise<AppConfig> {
   try {
-    // Load the base config from imported config.json
-    const config: AppConfig = localConfig as AppConfig;
+    // Load the base config from imported config.json (deep clone to avoid mutating the module singleton)
+    const config: AppConfig = JSON.parse(JSON.stringify(localConfig)) as AppConfig;
     config.configSecured = configSecured;
 
     // Process URL parameters
@@ -378,35 +447,77 @@ export async function loadConfig(configSecured: Record<string, unknown> = {}): P
 
     config.toc.loaderType = loaderType;
 
-    // Load additional config from API if enabled
-    if (config.useMapConfigApi) {
+    // Load additional config from API if enabled, or if a mapId is provided (via URL or config)
+    const shouldLoadFromApi = config.useMapConfigApi || (mapId !== null && mapId !== undefined && mapId.trim() !== "");
+    if (shouldLoadFromApi) {
+      config.toc.loaderType = "MAPID";
       try {
         const apiConfig = await loadConfigFromApi(config.mapId);
         if (apiConfig) {
-          // Preserve important arrays from local config before merging
+          // Preserve local config values that the API doesn't provide
           const localKeywords = config.toc?.keywords || {};
+          const localToc = { ...config.toc };
           const localToolComponents = config.sidebarToolComponents || [];
           const localThemeComponents = config.sidebarThemeComponents || [];
 
-          // Merge API config with base config, with API config taking precedence
+          // Extract API toc before the shallow merge so it doesn't overwrite the full toc
+          const apiToc = apiConfig.toc;
+          delete apiConfig.toc;
+
+          // Merge non-toc API config with base config (API takes precedence)
           Object.assign(config, apiConfig);
 
-          // Restore keywords from local config (API doesn't provide keyword definitions)
-          if (config.toc) {
-            config.toc.keywords = localKeywords;
+          // Deep-merge toc: start from local toc, then overlay API toc fields
+          config.toc = { ...localToc };
+          if (apiToc) {
+            // Only override fields that the API actually provides
+            if (apiToc.tocType) config.toc.tocType = apiToc.tocType;
+            if (apiToc.default_group) config.toc.default_group = apiToc.default_group;
+            if (apiToc.helpLink) config.toc.helpLink = apiToc.helpLink;
+            if (apiToc.geoserverLayerGroupsUrl) config.toc.geoserverLayerGroupsUrl = apiToc.geoserverLayerGroupsUrl;
+            if (apiToc.geoserverLayerGroupsUrlType) config.toc.geoserverLayerGroupsUrlType = apiToc.geoserverLayerGroupsUrlType;
+            if (apiToc.esriServiceUrl) config.toc.esriServiceUrl = apiToc.esriServiceUrl;
+            if (apiToc.layerInfoURL) config.toc.layerInfoURL = apiToc.layerInfoURL;
+
+            // Sources: replace only if API provides non-empty sources
+            if (Array.isArray(apiToc.sources) && apiToc.sources.length > 0) {
+              config.toc.sources = apiToc.sources;
+              console.log("Using API-provided layer sources:", apiToc.sources.length, "sources");
+            } else {
+              console.log("API config has no sources, keeping local config sources:", config.toc.sources?.length || 0, "sources");
+            }
           }
 
-          // If API didn't provide tool/theme components, use local config
-          if (!config.sidebarToolComponents || config.sidebarToolComponents.length === 0) {
+          // Always restore keywords from local config (API doesn't provide keyword definitions)
+          config.toc.keywords = localKeywords;
+
+          // Smart merge tool/theme arrays: match by id, preserve local display metadata,
+          // apply API overrides (enabled/disable/config). Falls back to local if API provides none.
+          if (config.sidebarToolComponents && config.sidebarToolComponents.length > 0) {
+            config.sidebarToolComponents = mergeObjArray(localToolComponents, config.sidebarToolComponents);
+            console.log("Merged tool components:", config.sidebarToolComponents.length, "(local:", localToolComponents.length, ")");
+          } else {
             config.sidebarToolComponents = localToolComponents;
             console.log("Using local tool components from config.json:", localToolComponents.length);
           }
-          if (!config.sidebarThemeComponents || config.sidebarThemeComponents.length === 0) {
+          if (config.sidebarThemeComponents && config.sidebarThemeComponents.length > 0) {
+            config.sidebarThemeComponents = mergeObjArray(localThemeComponents, config.sidebarThemeComponents);
+            console.log("Merged theme components:", config.sidebarThemeComponents.length, "(local:", localThemeComponents.length, ")");
+          } else {
             config.sidebarThemeComponents = localThemeComponents;
             console.log("Using local theme components from config.json:", localThemeComponents.length);
           }
 
-          // console.log("Config merged with API, keywords preserved:", Object.keys(localKeywords).length);
+          console.log(
+            "Config merged with API. TOC sources:",
+            config.toc.sources?.length || 0,
+            "| default_theme:",
+            config.default_theme || "(none)",
+            "| default_tool:",
+            config.default_tool || "(none)",
+            "| hideFlags:",
+            { hideLayers: config.hideLayers, hideTools: config.hideTools, hideMyMaps: config.hideMyMaps, hideThemes: config.hideThemes, hideReports: config.hideReports },
+          );
         }
       } catch (apiError) {
         console.warn("Failed to load config from API, using base config:", apiError);

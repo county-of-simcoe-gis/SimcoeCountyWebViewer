@@ -13,6 +13,7 @@ import ShowGeometryModal from "@/components/myMaps/ShowGeometryModal";
 import URLModal from "@/components/common/URLModal";
 import Identify from "@/components/Identify/Identify";
 import { getMapScale, getMapExtent, getMapCenter, buildFeedbackUrl } from "@/utils/mapHelpers";
+import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { GeoJSON } from "ol/format";
 import Feature from "ol/Feature";
 import Geometry from "ol/geom/Geometry";
@@ -73,15 +74,23 @@ export default function GlobalDrawingOptionsPopup() {
   }, [drawingOptionsItemId, drawingOptionsItem]);
 
   const handleCloseDrawingOptions = React.useCallback(() => {
-    // Clean up buffer preview layers
+    // Clean up buffer preview layers via LayerManager
+    // Look for buffer preview layers by scanning all managed layers
+    const allLayers = LayerManager.getAllLayers();
+    for (const managedLayer of allLayers) {
+      const olLayer = managedLayer.layer;
+      if (olLayer.get("id") === "buffer-preview-layer" || olLayer.get("id") === "drawing-options-buffer-preview") {
+        LayerManager.removeLayer(managedLayer.id);
+      }
+    }
+
+    // Fallback: also scan map directly for any unmanaged buffer layers
     if (map) {
-      // Look for MyMapsBuffer preview layer
       const bufferLayer = map.getAllLayers().find((layer) => layer.get("id") === "buffer-preview-layer");
       if (bufferLayer) {
         map.removeLayer(bufferLayer);
       }
 
-      // Also look for any other drawing options buffer layers (fallback)
       const drawingBufferLayer = map.getAllLayers().find((layer) => layer.get("id") === "drawing-options-buffer-preview");
       if (drawingBufferLayer) {
         map.removeLayer(drawingBufferLayer);
@@ -140,7 +149,7 @@ export default function GlobalDrawingOptionsPopup() {
       handleCloseDrawingOptions();
       emit("mymap-item-deleted", { id: item.id });
     },
-    [removeItem, handleCloseDrawingOptions, emit]
+    [removeItem, handleCloseDrawingOptions, emit],
   );
 
   const handleDrawingOptionsLabelChange = React.useCallback(
@@ -148,7 +157,7 @@ export default function GlobalDrawingOptionsPopup() {
       updateItemLabel(id, label);
       emit("mymap-label-change", { id, label });
     },
-    [updateItemLabel, emit]
+    [updateItemLabel, emit],
   );
 
   const handleDrawingOptionsLabelVisibilityChange = React.useCallback(
@@ -159,7 +168,7 @@ export default function GlobalDrawingOptionsPopup() {
       // Then emit event for map rendering
       emit("mymap-label-visibility-change", { id, visible });
     },
-    [updateItemLabelVisibility, emit]
+    [updateItemLabelVisibility, emit],
   );
 
   const handleDrawingOptionsLabelRotationChange = React.useCallback(
@@ -170,7 +179,7 @@ export default function GlobalDrawingOptionsPopup() {
       // Then emit event for map rendering
       emit("mymap-label-rotation-change", { id, rotation });
     },
-    [updateItemLabelRotation, emit]
+    [updateItemLabelRotation, emit],
   );
 
   // Tools popup action handlers (same as in MyMaps.tsx)
@@ -326,7 +335,7 @@ export default function GlobalDrawingOptionsPopup() {
       setIsDrawingOptionsOpen(true);
       setActiveTool("buffer");
     },
-    [map]
+    [map],
   );
 
   // Symbolize handler for MyMaps list (should open Drawing Options popup)
@@ -424,7 +433,7 @@ export default function GlobalDrawingOptionsPopup() {
       setIsDrawingOptionsOpen(true);
       setActiveTool("symbolize");
     },
-    [map]
+    [map],
   );
 
   // Measure handler for MyMaps list (should open Drawing Options popup)
@@ -522,7 +531,7 @@ export default function GlobalDrawingOptionsPopup() {
       setIsDrawingOptionsOpen(true);
       setActiveTool("measure");
     },
-    [map]
+    [map],
   );
 
   // Buffer handler for Drawing Options tools popup (should just activate buffer tool)
@@ -536,7 +545,7 @@ export default function GlobalDrawingOptionsPopup() {
       // Just activate the buffer tool since Drawing Options popup is already open
       setActiveTool("buffer");
     },
-    [handleToolsPopupClose]
+    [handleToolsPopupClose],
   );
 
   const handleSymbolize = useCallback(
@@ -548,7 +557,7 @@ export default function GlobalDrawingOptionsPopup() {
       // Set the active tool to show the symbolizer component
       setActiveTool("symbolize");
     },
-    [emit, handleToolsPopupClose]
+    [emit, handleToolsPopupClose],
   );
 
   const handleMeasure = useCallback(
@@ -560,7 +569,7 @@ export default function GlobalDrawingOptionsPopup() {
       // Set the active tool to show the measure component
       setActiveTool("measure");
     },
-    [emit, handleToolsPopupClose]
+    [emit, handleToolsPopupClose],
   );
 
   const handleZoomTo = useCallback(
@@ -569,7 +578,7 @@ export default function GlobalDrawingOptionsPopup() {
       emit("mymap-zoom-to", { item });
       handleToolsPopupClose();
     },
-    [emit, handleToolsPopupClose]
+    [emit, handleToolsPopupClose],
   );
 
   const handleDeleteFromToolsPopup = useCallback(
@@ -578,7 +587,7 @@ export default function GlobalDrawingOptionsPopup() {
       emit("mymap-item-deleted", { id: item.id });
       handleToolsPopupClose();
     },
-    [removeItem, emit, handleToolsPopupClose]
+    [removeItem, emit, handleToolsPopupClose],
   );
 
   const handleShowGeometry = useCallback(
@@ -604,7 +613,7 @@ export default function GlobalDrawingOptionsPopup() {
       emit("mymap-show-geometry", { item });
       handleToolsPopupClose();
     },
-    [emit, handleToolsPopupClose]
+    [emit, handleToolsPopupClose],
   );
 
   const handleCloseGeometryModal = useCallback(() => {
@@ -685,7 +694,7 @@ export default function GlobalDrawingOptionsPopup() {
       }
       handleToolsPopupClose();
     },
-    [handleToolsPopupClose]
+    [handleToolsPopupClose],
   );
 
   // Helper function to convert GeoJSON geometry to KML geometry
@@ -757,7 +766,7 @@ export default function GlobalDrawingOptionsPopup() {
 
       handleToolsPopupClose();
     },
-    [emit, handleToolsPopupClose, setReport, openSidebar, setActiveTab]
+    [emit, handleToolsPopupClose, setReport, openSidebar, setActiveTab],
   );
 
   const handleReportProblem = useCallback(
@@ -813,7 +822,7 @@ export default function GlobalDrawingOptionsPopup() {
         alert("Error occurred while preparing the report. Please try again.");
       }
     },
-    [map, config, saveToApi, emit, handleToolsPopupClose]
+    [map, config, saveToApi, emit, handleToolsPopupClose],
   );
 
   const handleCloseReportProblemModal = useCallback(() => {

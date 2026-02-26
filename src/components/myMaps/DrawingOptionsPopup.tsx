@@ -1338,65 +1338,67 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
                 import("ol/layer/Vector").then(({ default: VectorLayer }) => {
                   import("ol/source").then(({ Vector: VectorSource }) => {
                     import("@/stores/mapStore").then(({ useMapStore }) => {
-                      try {
-                        const { map } = useMapStore.getState();
-                        if (!map) return;
+                      import("@/utils/openlayers/LayerManager").then(({ LayerManager }) => {
+                        try {
+                          const { map } = useMapStore.getState();
+                          if (!map) return;
 
-                        // Get or create buffer layer
-                        let bufferLayer = map.getAllLayers().find((layer) => layer.get("id") === "drawing-options-buffer-preview");
+                          // Get or create buffer layer via LayerManager
+                          let bufferLayer = map.getAllLayers().find((layer) => layer.get("id") === "drawing-options-buffer-preview");
 
-                        if (!bufferLayer) {
-                          bufferLayer = new VectorLayer({
-                            source: new VectorSource(),
-                            zIndex: 999,
-                          });
-                          bufferLayer.set("id", "drawing-options-buffer-preview");
-                          map.addLayer(bufferLayer);
-                        }
-
-                        // Create buffer
-                        const feature = featureFromGeoJSON(item.featureGeoJSON);
-                        const geometry = feature.getGeometry();
-                        if (!geometry) return;
-
-                        const distanceMeters = convertToMeters(distance, units);
-
-                        bufferGeometry(geometry, distanceMeters, (bufferedGeometry) => {
-                          const bufferFeature = new Feature({ geometry: bufferedGeometry });
-
-                          // Get current color from color picker button
-                          const currentColor = getCurrentColor();
-                          console.log("🎨 Using buffer color:", currentColor);
-
-                          // Create style using selected color
-                          const style = new Style({
-                            stroke: new Stroke({
-                              color: [currentColor.r, currentColor.g, currentColor.b, 1],
-                              width: 3,
-                            }),
-                            fill: new Fill({
-                              color: [currentColor.r, currentColor.g, currentColor.b, 0.7],
-                            }),
-                          });
-
-                          bufferFeature.setStyle(style);
-
-                          // Clear and add buffer
-                          const source = bufferLayer.getSource();
-                          if (source && "clear" in source && "addFeature" in source) {
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            (source as any).clear();
-                            if (distanceMeters > 0) {
-                              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                              (source as any).addFeature(bufferFeature);
-                            }
+                          if (!bufferLayer) {
+                            bufferLayer = new VectorLayer({
+                              source: new VectorSource(),
+                              zIndex: 999,
+                            });
+                            bufferLayer.set("id", "drawing-options-buffer-preview");
+                            LayerManager.addLayer(bufferLayer, "Tools", "DrawingOptionsBufferPreview", { visible: true });
                           }
 
-                          console.log("✅ Buffer preview created successfully");
-                        });
-                      } catch (error) {
-                        console.error("❌ Error creating buffer preview:", error);
-                      }
+                          // Create buffer
+                          const feature = featureFromGeoJSON(item.featureGeoJSON);
+                          const geometry = feature.getGeometry();
+                          if (!geometry) return;
+
+                          const distanceMeters = convertToMeters(distance, units);
+
+                          bufferGeometry(geometry, distanceMeters, (bufferedGeometry) => {
+                            const bufferFeature = new Feature({ geometry: bufferedGeometry });
+
+                            // Get current color from color picker button
+                            const currentColor = getCurrentColor();
+                            console.log("🎨 Using buffer color:", currentColor);
+
+                            // Create style using selected color
+                            const style = new Style({
+                              stroke: new Stroke({
+                                color: [currentColor.r, currentColor.g, currentColor.b, 1],
+                                width: 3,
+                              }),
+                              fill: new Fill({
+                                color: [currentColor.r, currentColor.g, currentColor.b, 0.7],
+                              }),
+                            });
+
+                            bufferFeature.setStyle(style);
+
+                            // Clear and add buffer
+                            const source = bufferLayer.getSource();
+                            if (source && "clear" in source && "addFeature" in source) {
+                              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                              (source as any).clear();
+                              if (distanceMeters > 0) {
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                (source as any).addFeature(bufferFeature);
+                              }
+                            }
+
+                            console.log("✅ Buffer preview created successfully");
+                          });
+                        } catch (error) {
+                          console.error("❌ Error creating buffer preview:", error);
+                        }
+                      });
                     });
                   });
                 });

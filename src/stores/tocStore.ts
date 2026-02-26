@@ -8,6 +8,7 @@ import { useLayerManagerStore } from "@/stores/layerManagerStore";
 import { useMapStore } from "@/stores/mapStore";
 import { type LayerCategory, type ManagedLayer } from "@/stores/layerManagerStore";
 import LayerOrderConfig from "@/utils/openlayers/LayerOrderConfig.json";
+import { fetchWithAuth, isSecuredUrl } from "@/utils/auth";
 
 // Helper function to calculate z-index for a layer based on category and position
 // Layers at the beginning of the array (index 0) should have HIGHER z-index (drawn on top)
@@ -298,13 +299,33 @@ export const useTOCStore = create<TOCState>()(
         if (type === "LIST") {
           // For LIST view, create an "All Layers" group that contains all layers flattened
           const allLayers: TOCLayer[] = [];
-          const seenLayers = new Set<string>();
+          // Use tocDisplayName for dedup to match mergeGroups() duplicate detection
+          const seenLayers = new Map<string, number>();
 
           groups.forEach((group) => {
             group.layers.forEach((layer) => {
-              // Only add layer if we haven't seen this layer name before
-              if (!seenLayers.has(layer.name)) {
-                seenLayers.add(layer.name);
+              const key = layer.tocDisplayName;
+              const existingIndex = seenLayers.get(key);
+
+              if (existingIndex !== undefined) {
+                // Duplicate found — apply same priority logic as mergeGroups:
+                // prefer secured/primary layers over non-primary
+                const existingLayer = allLayers[existingIndex];
+                const existingGroup = groups.find((g) => g.value === existingLayer.group || g.label === existingLayer.groupName);
+                if ((layer.secured || group.primary) && !existingGroup?.primary) {
+                  // Incoming layer wins — remove discarded OL layer from map
+                  if (existingLayer.managedLayerId) {
+                    LayerManager.removeLayer(existingLayer.managedLayerId);
+                  }
+                  allLayers[existingIndex] = { ...layer };
+                } else {
+                  // Existing layer wins — remove discarded OL layer from map
+                  if (layer.managedLayerId) {
+                    LayerManager.removeLayer(layer.managedLayerId);
+                  }
+                }
+              } else {
+                seenLayers.set(key, allLayers.length);
                 // Create a copy of the layer to avoid mutating the original group's layer
                 allLayers.push({ ...layer });
               }
@@ -1227,6 +1248,17 @@ export const useTOCStore = create<TOCState>()(
 
       state.setIsLoading(true);
 
+      // Log which sources are being loaded
+      console.log(
+        `[TOC] Loading layers from ${state.sources.length} source(s):`,
+        state.sources.map((s) => ({
+          type: s.type || "geoserver",
+          group: s.group?.name || "(no group)",
+          url: s.layerUrl,
+          primary: s.primary,
+        })),
+      );
+
       try {
         // Get config from app store
         const appConfig = (await import("@/stores/appStore")).useAppStore.getState().config;
@@ -1382,29 +1414,68 @@ export const useTOCStore = create<TOCState>()(
       try {
         // If we have a style URL (WMS GetLegendGraphic), try to fetch it
         if (layer.styleUrl) {
-          // Test if the image URL is accessible
-          const img = new Image();
-          img.onload = () => {
-            // Image loaded successfully, update the layer in BOTH view types
-            set((draft) => {
-              updateLayerInAllViews(draft, layer.name, (l) => {
-                l.legendImage = layer.styleUrl;
-                l.legendHeight = img.height || 20;
-                l.legendFetching = false;
+          // For secured endpoints, use fetch with auth headers and convert to blob URL
+          if (layer.secured || isSecuredUrl(layer.styleUrl)) {
+            try {
+              const response = await fetchWithAuth(layer.styleUrl, true);
+              if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+              }
+              const blob = await response.blob();
+              const blobUrl = URL.createObjectURL(blob);
+
+              // Probe image dimensions
+              const img = new Image();
+              img.onload = () => {
+                set((draft) => {
+                  updateLayerInAllViews(draft, layer.name, (l) => {
+                    l.legendImage = blobUrl;
+                    l.legendHeight = img.height || 20;
+                    l.legendFetching = false;
+                  });
+                });
+              };
+              img.onerror = async () => {
+                URL.revokeObjectURL(blobUrl);
+                set((draft) => {
+                  updateLayerInAllViews(draft, layer.name, (l) => {
+                    l.legendFetching = false;
+                  });
+                });
+                await get().fetchLayerLegendFromRest(layer, group);
+              };
+              img.src = blobUrl;
+            } catch (authErr) {
+              console.warn(`Secured legend fetch failed for ${layer.name}:`, authErr);
+              set((draft) => {
+                updateLayerInAllViews(draft, layer.name, (l) => {
+                  l.legendFetching = false;
+                });
               });
-            });
-          };
-          img.onerror = async () => {
-            // Clear fetching flag in BOTH view types before trying REST
-            set((draft) => {
-              updateLayerInAllViews(draft, layer.name, (l) => {
-                l.legendFetching = false;
+              await get().fetchLayerLegendFromRest(layer, group);
+            }
+          } else {
+            // Public endpoint — load directly with an <img> tag
+            const img = new Image();
+            img.onload = () => {
+              set((draft) => {
+                updateLayerInAllViews(draft, layer.name, (l) => {
+                  l.legendImage = layer.styleUrl;
+                  l.legendHeight = img.height || 20;
+                  l.legendFetching = false;
+                });
               });
-            });
-            // Image failed to load, try to fetch legend info from geoserver REST
-            await get().fetchLayerLegendFromRest(layer, group);
-          };
-          img.src = layer.styleUrl;
+            };
+            img.onerror = async () => {
+              set((draft) => {
+                updateLayerInAllViews(draft, layer.name, (l) => {
+                  l.legendFetching = false;
+                });
+              });
+              await get().fetchLayerLegendFromRest(layer, group);
+            };
+            img.src = layer.styleUrl;
+          }
         } else {
           // No style URL, try to fetch from REST API
           await get().fetchLayerLegendFromRest(layer, group);
@@ -1424,20 +1495,40 @@ export const useTOCStore = create<TOCState>()(
     fetchLayerLegendFromRest: async (layer: TOCLayer, group: TOCLayerGroup) => {
       try {
         if (layer.metadataUrl) {
-          const { getAxiosClient } = await import("@/lib/axiosInstance");
-          const axiosClient = getAxiosClient(layer.metadataUrl);
+          const isSecured = layer.secured || isSecuredUrl(layer.metadataUrl);
 
           try {
-            const response = await axiosClient.get(layer.metadataUrl);
-            const metadata = response.data;
+            let metadata: Record<string, unknown>;
+
+            if (isSecured) {
+              // Use fetchWithAuth for secured endpoints
+              const response = await fetchWithAuth(layer.metadataUrl, true);
+              if (!response.ok) throw new Error(`HTTP ${response.status}`);
+              metadata = await response.json();
+            } else {
+              const { getAxiosClient } = await import("@/lib/axiosInstance");
+              const axiosClient = getAxiosClient(layer.metadataUrl);
+              const response = await axiosClient.get(layer.metadataUrl);
+              metadata = response.data;
+            }
 
             // Check if there's style information in the metadata
-            if (metadata.defaultStyle && metadata.defaultStyle.href) {
+            if (metadata.defaultStyle && (metadata.defaultStyle as Record<string, unknown>).href) {
               try {
-                const { getAxiosClient: getStyleAxiosClient } = await import("@/lib/axiosInstance");
-                const styleAxiosClient = getStyleAxiosClient(metadata.defaultStyle.href + ".json");
-                const styleResponse = await styleAxiosClient.get(metadata.defaultStyle.href + ".json");
-                const styleData = styleResponse.data;
+                const styleHref = (metadata.defaultStyle as Record<string, unknown>).href as string;
+                const styleUrl = styleHref + ".json";
+                let styleData: unknown;
+
+                if (isSecured) {
+                  const styleResp = await fetchWithAuth(styleUrl, true);
+                  if (!styleResp.ok) throw new Error(`HTTP ${styleResp.status}`);
+                  styleData = await styleResp.json();
+                } else {
+                  const { getAxiosClient: getStyleAxiosClient } = await import("@/lib/axiosInstance");
+                  const styleAxiosClient = getStyleAxiosClient(styleUrl);
+                  const styleResponse = await styleAxiosClient.get(styleUrl);
+                  styleData = styleResponse.data;
+                }
 
                 // Update layer with legend object in BOTH view types
                 set((draft) => {
@@ -1692,6 +1783,7 @@ export const useTOCStore = create<TOCState>()(
                 layerName: layer.name,
                 name: layer.name,
                 projection: "EPSG:3857",
+                secured: !!layer.secured,
               },
               (olLayer: unknown) => {
                 if (olLayer) {
@@ -1721,7 +1813,7 @@ export const useTOCStore = create<TOCState>()(
                     metadata: {
                       groupName: group.label,
                       groupUrl: group.wmsGroupUrl,
-                      secured: false,
+                      secured: !!layer.secured,
                       drawIndex: layer.drawIndex,
                     },
                   });

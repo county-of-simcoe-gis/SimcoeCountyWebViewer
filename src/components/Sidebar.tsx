@@ -21,6 +21,7 @@ const WeatherTool = lazy(() => import("@/components/tools/Weather/WeatherTool"))
 const LotAndConcessionTool = lazy(() => import("@/components/tools/LotAndConcession/LotAndConcessionTool"));
 const ExternalServicesTool = lazy(() => import("@/components/tools/ExternalServices/ExternalServicesTool"));
 const AddLayerTool = lazy(() => import("@/components/tools/AddLayer/AddLayerTool"));
+const AvailableMapsTool = lazy(() => import("@/components/tools/AvailableMaps/AvailableMapsTool"));
 
 // Lazy load theme components
 const ForestryTheme = lazy(() => import("@/components/themes/Forestry/Forestry"));
@@ -28,6 +29,8 @@ const ChildCareFacilitiesTheme = lazy(() => import("@/components/themes/ChildCar
 const TwoOneOneTheme = lazy(() => import("@/components/themes/TwoOneOne/TwoOneOne"));
 const SolidWasteFacilitiesTheme = lazy(() => import("@/components/themes/SolidWasteFacilities/SolidWasteFacilities"));
 const ImmigrationServicesTheme = lazy(() => import("@/components/themes/ImmigrationServices/ImmigrationServices"));
+const BroadbandTheme = lazy(() => import("@/components/themes/Broadband/Broadband"));
+const ZoningTheme = lazy(() => import("@/components/themes/Zoning/Zoning"));
 const Five11Theme = lazy(() => import("@/components/themes/Five11/Five11"));
 const CommercialRealEstateTheme = lazy(() => import("@/components/themes/CommercialRealEstate/CommercialRealEstate"));
 
@@ -37,15 +40,8 @@ const TOC = lazy(() => import("@/components/TOC/TOC"));
 // Lazy load MyMaps component
 const MyMaps = lazy(() => import("@/components/myMaps/MyMaps"));
 
-// Tab name to index mapping (constant)
-const TAB_MAPPING: Record<string, number> = {
-  layers: 0,
-  tools: 1,
-  mymaps: 2,
-  "my maps": 2,
-  themes: 3,
-  reports: 4,
-};
+// Tab names in display order — used to compute dynamic tab indices
+const ALL_TAB_NAMES = ["layers", "tools", "mymaps", "themes", "reports"] as const;
 
 // Tool mapping for dynamic loading
 const toolComponents: Record<
@@ -71,6 +67,7 @@ const toolComponents: Record<
   LotAndConcession: LotAndConcessionTool,
   ExternalServices: ExternalServicesTool,
   AddLayer: AddLayerTool,
+  AvailableMaps: AvailableMapsTool,
 };
 
 // Theme mapping for dynamic loading
@@ -98,10 +95,12 @@ const themeComponents: Record<
   Five11LiveFeeds: Five11Theme,
   "511": Five11Theme,
   CommercialRealEstate: CommercialRealEstateTheme,
+  Broadband: BroadbandTheme,
+  Zoning: ZoningTheme,
 };
 
 export default function Sidebar() {
-  const { isOpen, themes, tools, activeTheme, activeTool, activeTab, setActiveTab, activateSidebarItem, openSidebar } = useSidebarStore();
+  const { isOpen, themes, tools, activeTheme, activeTool, activeTab, setActiveTab, activateSidebarItem, openSidebar, hideLayers, hideTools, hideMyMaps, hideThemes, hideReports } = useSidebarStore();
   const { emitSidebarLoaded } = useEventStore();
   const { addLoadedItem } = useMapStore();
   const { setSidebarLoading } = useAppStore();
@@ -163,11 +162,27 @@ export default function Sidebar() {
   // Debug logging
   // console.log("Sidebar render:", { toolsCount: tools.length, themesCount: themes.length });
 
+  // Build dynamic tab index mapping based on which tabs are visible
+  const visibleTabs = ALL_TAB_NAMES.filter((tab) => {
+    if (tab === "layers" && hideLayers) return false;
+    if (tab === "tools" && hideTools) return false;
+    if (tab === "mymaps" && hideMyMaps) return false;
+    if (tab === "themes" && hideThemes) return false;
+    if (tab === "reports" && hideReports) return false;
+    return true;
+  });
+
+  const tabMapping: Record<string, number> = {};
+  visibleTabs.forEach((tab, index) => {
+    tabMapping[tab] = index;
+    if (tab === "mymaps") tabMapping["my maps"] = index; // alias
+  });
+
   // Function to activate tab by name
   const activateTab = useCallback(
     (tabName: string) => {
       const normalizedTabName = tabName.toLowerCase().trim();
-      const tabIndex = TAB_MAPPING[normalizedTabName];
+      const tabIndex = tabMapping[normalizedTabName];
 
       if (tabIndex !== undefined) {
         setActiveTab(tabIndex);
@@ -175,7 +190,7 @@ export default function Sidebar() {
         console.warn(`Unknown tab name: ${tabName}`);
       }
     },
-    [setActiveTab],
+    [setActiveTab, tabMapping],
   );
 
   // Handle URL parameters for tab activation
@@ -293,81 +308,101 @@ export default function Sidebar() {
     <div className={`sc-sidebar ${!isOpen ? "closed" : ""}`}>
       <Tabs selectedIndex={activeTab} onSelect={handleTabSelect} forceRenderTabPanel={true}>
         <TabList>
-          <Tab>
-            <div className="tab-content">
-              <Image src="/images/legend-32x32.png" alt="Layers" width={32} height={32} className="tab-icon" />
-              <div className="tab-text">Layers</div>
-            </div>
-          </Tab>
-          <Tab>
-            <div className="tab-content">
-              <Image src="/images/tools-32x32.png" alt="Tools" width={32} height={32} className="tab-icon" />
-              <div className="tab-text">Tools</div>
-            </div>
-          </Tab>
-          <Tab>
-            <div className="tab-content">
-              <Image src="/images/map-32x32.png" alt="My Maps" width={32} height={32} className="tab-icon" />
-              <div className="tab-text">My Maps</div>
-            </div>
-          </Tab>
-          <Tab>
-            <div className="tab-content">
-              <Image src="/images/theme-32x32.png" alt="Themes" width={32} height={32} className="tab-icon" />
-              <div className="tab-text">Themes</div>
-            </div>
-          </Tab>
-          <Tab>
-            <div className="tab-content">
-              <Image src="/images/report-32x32.png" alt="Reports" width={32} height={32} className="tab-icon" />
-              <div className="tab-text">Reports</div>
-            </div>
-          </Tab>
+          {!hideLayers && (
+            <Tab>
+              <div className="tab-content">
+                <Image src="/images/legend-32x32.png" alt="Layers" width={32} height={32} className="tab-icon" />
+                <div className="tab-text">Layers</div>
+              </div>
+            </Tab>
+          )}
+          {!hideTools && (
+            <Tab>
+              <div className="tab-content">
+                <Image src="/images/tools-32x32.png" alt="Tools" width={32} height={32} className="tab-icon" />
+                <div className="tab-text">Tools</div>
+              </div>
+            </Tab>
+          )}
+          {!hideMyMaps && (
+            <Tab>
+              <div className="tab-content">
+                <Image src="/images/map-32x32.png" alt="My Maps" width={32} height={32} className="tab-icon" />
+                <div className="tab-text">My Maps</div>
+              </div>
+            </Tab>
+          )}
+          {!hideThemes && (
+            <Tab>
+              <div className="tab-content">
+                <Image src="/images/theme-32x32.png" alt="Themes" width={32} height={32} className="tab-icon" />
+                <div className="tab-text">Themes</div>
+              </div>
+            </Tab>
+          )}
+          {!hideReports && (
+            <Tab>
+              <div className="tab-content">
+                <Image src="/images/report-32x32.png" alt="Reports" width={32} height={32} className="tab-icon" />
+                <div className="tab-text">Reports</div>
+              </div>
+            </Tab>
+          )}
         </TabList>
 
-        <TabPanel>
-          <div className="sc-sidebar-content">
-            <Suspense fallback={<div style={{ padding: "20px" }}>Loading layers...</div>}>
-              <TOC visible={activeTab === 0} />
-            </Suspense>
-          </div>
-        </TabPanel>
+        {!hideLayers && (
+          <TabPanel>
+            <div className="sc-sidebar-content">
+              <Suspense fallback={<div style={{ padding: "20px" }}>Loading layers...</div>}>
+                <TOC visible={activeTab === 0} />
+              </Suspense>
+            </div>
+          </TabPanel>
+        )}
 
-        <TabPanel>
-          <div className="sc-sidebar-content">
-            {activeToolComponent ? activeToolComponent : tools.length === 0 ? <div style={{ fontSize: "12px", color: "#666" }}>Loading tools...</div> : renderDefaultToolsContent()}
-          </div>
-        </TabPanel>
+        {!hideTools && (
+          <TabPanel>
+            <div className="sc-sidebar-content">
+              {activeToolComponent ? activeToolComponent : tools.length === 0 ? <div style={{ fontSize: "12px", color: "#666" }}>Loading tools...</div> : renderDefaultToolsContent()}
+            </div>
+          </TabPanel>
+        )}
 
-        <TabPanel>
-          <div className="sc-sidebar-content">
-            <Suspense fallback={<div style={{ padding: "20px" }}>Loading MyMaps...</div>}>
-              <MyMaps visible={activeTab === 2} />
-            </Suspense>
-          </div>
-        </TabPanel>
+        {!hideMyMaps && (
+          <TabPanel>
+            <div className="sc-sidebar-content">
+              <Suspense fallback={<div style={{ padding: "20px" }}>Loading MyMaps...</div>}>
+                <MyMaps visible={activeTab === 2} />
+              </Suspense>
+            </div>
+          </TabPanel>
+        )}
 
-        <TabPanel>
-          <div className="sc-sidebar-content">
-            {activeThemeComponent ? activeThemeComponent : themes.length === 0 ? <div style={{ fontSize: "12px", color: "#666" }}>Loading themes...</div> : renderDefaultThemesContent()}
-          </div>
-        </TabPanel>
+        {!hideThemes && (
+          <TabPanel>
+            <div className="sc-sidebar-content">
+              {activeThemeComponent ? activeThemeComponent : themes.length === 0 ? <div style={{ fontSize: "12px", color: "#666" }}>Loading themes...</div> : renderDefaultThemesContent()}
+            </div>
+          </TabPanel>
+        )}
 
-        <TabPanel>
-          <div className="sc-sidebar-content">
-            {currentReport ? (
-              <div className="sc-sidebar-report-container">
-                {currentReport.title && <div className="sc-sidebar-report-title">{currentReport.title}</div>}
-                <div className="sc-sidebar-report-content">{currentReport.content}</div>
-              </div>
-            ) : (
-              <div>
-                <div style={{ marginBottom: "10px", fontWeight: "bold", fontSize: "12px" }}>REPORTS</div>
-                <div style={{ fontSize: "12px", color: "#666" }}>No report currently loaded. Use the identify tool from the map context menu to generate a report.</div>
-              </div>
-            )}
-          </div>
-        </TabPanel>
+        {!hideReports && (
+          <TabPanel>
+            <div className="sc-sidebar-content">
+              {currentReport ? (
+                <div className="sc-sidebar-report-container">
+                  <div className="sc-sidebar-report-title">{currentReport.title}</div>
+                  <div className="sc-sidebar-report-content">{currentReport.content}</div>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ marginBottom: "10px", fontWeight: "bold", fontSize: "12px" }}>REPORTS</div>
+                  <div style={{ fontSize: "12px", color: "#666" }}>No report currently loaded. Use the identify tool from the map context menu to generate a report.</div>
+                </div>
+              )}
+            </div>
+          </TabPanel>
+        )}
       </Tabs>
     </div>
   );

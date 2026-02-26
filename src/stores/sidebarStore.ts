@@ -25,6 +25,13 @@ interface SidebarState {
   themes: SidebarItem[];
   tools: SidebarItem[];
 
+  // Section hide flags (from map config)
+  hideLayers: boolean;
+  hideTools: boolean;
+  hideMyMaps: boolean;
+  hideThemes: boolean;
+  hideReports: boolean;
+
   // Panel state
   activePanelId: string | null;
   panelMinimized: boolean;
@@ -45,7 +52,12 @@ interface SidebarState {
   setActivePanel: (panelId: string | null) => void;
   togglePanelMinimized: () => void;
   activateSidebarItem: (itemId: string, itemType: "themes" | "tools") => void;
-  loadFromConfig: (sidebarToolComponents: SidebarComponent[], sidebarThemeComponents: SidebarComponent[]) => void;
+  loadFromConfig: (
+    sidebarToolComponents: SidebarComponent[],
+    sidebarThemeComponents: SidebarComponent[],
+    hideFlags?: { hideLayers?: boolean; hideTools?: boolean; hideMyMaps?: boolean; hideThemes?: boolean; hideReports?: boolean },
+  ) => void;
+  activateDefaultItems: (defaultTheme?: string, defaultTool?: string) => void;
   openMoreMenu: () => void;
   closeMoreMenu: () => void;
   toggleMoreMenu: () => void;
@@ -78,6 +90,11 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
   activeTool: null,
   themes: [],
   tools: [],
+  hideLayers: false,
+  hideTools: false,
+  hideMyMaps: false,
+  hideThemes: false,
+  hideReports: false,
   activePanelId: null,
   panelMinimized: false,
   isMoreMenuOpen: false,
@@ -124,7 +141,7 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
     }
   },
 
-  loadFromConfig: (sidebarToolComponents, sidebarThemeComponents) => {
+  loadFromConfig: (sidebarToolComponents, sidebarThemeComponents, hideFlags) => {
     // Convert and filter enabled tools
     const tools = sidebarToolComponents.filter((component) => component.enabled !== false && component.disable !== true).map((component) => convertToSidebarItem(component, "tool"));
 
@@ -136,9 +153,55 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
       filteredTools: tools.length,
       rawThemes: sidebarThemeComponents.length,
       filteredThemes: themes.length,
+      hideFlags: hideFlags || {},
     });
 
-    set({ tools, themes });
+    set({
+      tools,
+      themes,
+      hideLayers: hideFlags?.hideLayers || false,
+      hideTools: hideFlags?.hideTools || false,
+      hideMyMaps: hideFlags?.hideMyMaps || false,
+      hideThemes: hideFlags?.hideThemes || false,
+      hideReports: hideFlags?.hideReports || false,
+    });
+  },
+
+  activateDefaultItems: (defaultTheme, defaultTool) => {
+    const state = get();
+    if (defaultTheme) {
+      // Find the theme by componentName (matching old app behavior)
+      const theme = state.themes.find(
+        (t) => t.component === defaultTheme || t.name === defaultTheme,
+      );
+      if (theme) {
+        console.log("Activating default theme:", defaultTheme, "-> id:", theme.id);
+        set({
+          activeTheme: theme.id,
+          activeTool: null,
+          activePanelId: theme.id,
+          activeTab: 3, // Themes tab
+        });
+      } else {
+        console.warn("Default theme not found in loaded themes:", defaultTheme);
+      }
+    } else if (defaultTool) {
+      // Find the tool by componentName
+      const tool = state.tools.find(
+        (t) => t.component === defaultTool || t.name === defaultTool,
+      );
+      if (tool) {
+        console.log("Activating default tool:", defaultTool, "-> id:", tool.id);
+        set({
+          activeTool: tool.id,
+          activeTheme: null,
+          activePanelId: tool.id,
+          activeTab: 1, // Tools tab
+        });
+      } else {
+        console.warn("Default tool not found in loaded tools:", defaultTool);
+      }
+    }
   },
 
   openMoreMenu: () => set({ isMoreMenuOpen: true }),

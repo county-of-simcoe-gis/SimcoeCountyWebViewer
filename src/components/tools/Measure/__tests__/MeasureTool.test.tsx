@@ -6,6 +6,16 @@ import { useMapStore } from "@/stores/mapStore";
 import { usePopupStore } from "@/stores/popupStore";
 import { useEventStore } from "@/stores/eventStore";
 
+// Mock LayerManager
+const mockAddLayer = vi.fn().mockReturnValue("mock-layer-id");
+const mockRemoveLayer = vi.fn().mockReturnValue(true);
+vi.mock("@/utils/openlayers/LayerManager", () => ({
+  LayerManager: {
+    addLayer: (...args: unknown[]) => mockAddLayer(...args),
+    removeLayer: (...args: unknown[]) => mockRemoveLayer(...args),
+  },
+}));
+
 // Mock react-icons
 vi.mock("react-icons/fa", () => ({
   FaRulerHorizontal: () => <div data-testid="icon-line" />,
@@ -396,7 +406,7 @@ describe("MeasureTool", () => {
 
       render(<MeasureTool onClose={mockOnClose} />);
 
-      expect(mockMap.addLayer).toHaveBeenCalled();
+      expect(mockAddLayer).toHaveBeenCalled();
     });
 
     it("adds overlay to map for tooltips", () => {

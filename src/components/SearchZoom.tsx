@@ -3,6 +3,7 @@
 import { useEffect, useCallback, useRef } from "react";
 import { useMapStore } from "@/stores/mapStore";
 import { useEventStore } from "@/stores/eventStore";
+import { useSearchStore } from "@/stores/searchStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { Vector as VectorLayer } from "ol/layer";
 import { Vector as VectorSource } from "ol/source";
@@ -27,6 +28,7 @@ export const SearchZoom: React.FC = () => {
   // Use selectors to prevent re-renders from unrelated store changes
   const map = useMapStore((state) => state.map);
   const emit = useEventStore((state) => state.emit);
+  const setLastResult = useSearchStore((state) => state.setLastResult);
   const searchGeoLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const searchIconLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const geoLayerIdRef = useRef<string | null>(null);
@@ -376,11 +378,12 @@ export const SearchZoom: React.FC = () => {
 
         // Emit search complete event
         emit("searchComplete", { result });
+        setLastResult(result);
       } catch (error) {
         console.error("Error handling location result:", error);
       }
     },
-    [map, initSearchLayers, clearSearchLayers, emit],
+    [map, initSearchLayers, clearSearchLayers, emit, setLastResult],
   );
 
   // Handle geocoded result (coordinates only)
@@ -439,11 +442,12 @@ export const SearchZoom: React.FC = () => {
 
         // Emit search complete event
         emit("searchComplete", { result });
+        setLastResult(result);
       } catch (error) {
         console.error("Error handling geocoded result:", error);
       }
     },
-    [map, initSearchLayers, clearSearchLayers, emit],
+    [map, initSearchLayers, clearSearchLayers, emit, setLastResult],
   );
 
   // Initialize layers when map is available

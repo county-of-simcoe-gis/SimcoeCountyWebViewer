@@ -13,6 +13,7 @@
     "e2e": "playwright test"
   },
   "dependencies": {
+    "@arcgis/core": "^4.34.8",
     "@camptocamp/inkmap": "^2.0.0",
     "@mapbox/polyline": "^1.2.1",
     "@types/geojson": "^7946.0.16",

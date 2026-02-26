@@ -11,10 +11,13 @@ export const mapSettings = {
       console.log("Executing getAllMaps query using stored procedure");
 
       // Determine if user needs secured maps based on roles
-      const isSecured = user.roles && user.roles.length > 0;
+      const isAuthenticated = user.roles && user.roles.length > 0;
 
-      // Call stored procedure to get all maps
-      const maps = await prisma.$queryRaw<
+      // The stored procedure filters by is_secured flag exactly, so
+      // usp_get_all_maps(false) returns only public maps and
+      // usp_get_all_maps(true) returns only secured maps.
+      // Always fetch public maps; also fetch secured maps if authenticated.
+      const publicMaps = await prisma.$queryRaw<
         {
           map_name: string;
           description: string | null;
@@ -22,9 +25,15 @@ export const mapSettings = {
           is_secured: boolean;
           is_default: boolean;
         }[]
-      >`SELECT * FROM public.usp_get_all_maps(${isSecured}::boolean)`;
+      >`SELECT * FROM public.usp_get_all_maps(${false}::boolean)`;
 
-      console.log("getAllMaps query result:", maps);
+      let securedMaps: typeof publicMaps = [];
+      if (isAuthenticated) {
+        securedMaps = await prisma.$queryRaw<typeof publicMaps>`SELECT * FROM public.usp_get_all_maps(${true}::boolean)`;
+      }
+
+      const maps = [...publicMaps, ...securedMaps];
+      console.log("getAllMaps query result:", maps.length, "maps (public:", publicMaps.length, "secured:", securedMaps.length, ")");
 
       // If no maps found, return empty array
       if (maps.length === 0) {

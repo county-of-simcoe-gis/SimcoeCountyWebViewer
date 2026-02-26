@@ -23,7 +23,7 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const { isAnyLoading, setConfig, setConfigLoading, setConfigError } = useAppStore();
-  const { loadFromConfig, setEventEmitter } = useSidebarStore();
+  const { loadFromConfig, activateDefaultItems, setEventEmitter } = useSidebarStore();
   const { emitSidebarChanged } = useEventStore();
   const { config, loading: configLoading, error: configError } = useConfig();
 
@@ -38,18 +38,36 @@ export default function Layout({ children }: LayoutProps) {
 
     if (config) {
       setConfig(config);
-      // Load sidebar items from config
+      // Load sidebar items from config, including hide flags
       console.log("Loading sidebar components from config:", {
         tools: config.sidebarToolComponents?.length || 0,
         themes: config.sidebarThemeComponents?.length || 0,
+        default_theme: config.default_theme || "(none)",
+        default_tool: config.default_tool || "(none)",
       });
-      loadFromConfig(config.sidebarToolComponents || [], config.sidebarThemeComponents || []);
+      loadFromConfig(config.sidebarToolComponents || [], config.sidebarThemeComponents || [], {
+        hideLayers: !!config.hideLayers,
+        hideTools: !!config.hideTools,
+        hideMyMaps: !!config.hideMyMaps,
+        hideThemes: !!config.hideThemes,
+        hideReports: !!config.hideReports,
+      });
+
+      // Activate default theme/tool after sidebar items are loaded
+      const defaultTheme = config.default_theme as string | undefined;
+      const defaultTool = config.default_tool as string | undefined;
+      if (defaultTheme || defaultTool) {
+        // Small delay to ensure sidebar store has processed the items
+        setTimeout(() => {
+          activateDefaultItems(defaultTheme, defaultTool);
+        }, 100);
+      }
     }
 
     if (configError) {
       setConfigError(configError);
     }
-  }, [config, configLoading, configError, setConfig, setConfigLoading, setConfigError, loadFromConfig]);
+  }, [config, configLoading, configError, setConfig, setConfigLoading, setConfigError, loadFromConfig, activateDefaultItems]);
 
   const isLoading = isAnyLoading();
 

@@ -28,6 +28,7 @@ import Point from "ol/geom/Point";
 import { unByKey } from "ol/Observable";
 import type { EventsKey } from "ol/events";
 import type { Coordinate } from "ol/coordinate";
+import { LayerManager } from "@/utils/openlayers/LayerManager";
 
 interface CoordinatesToolProps {
   name?: string;
@@ -94,6 +95,7 @@ export default function CoordinatesTool({ name = "Coordinates", helpLink, hideHe
 
   // Refs for OpenLayers objects
   const vectorLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
+  const layerIdRef = useRef<string | null>(null);
   const pointerMoveEventRef = useRef<EventsKey | null>(null);
   const mapClickEventRef = useRef<EventsKey | null>(null);
   const mapMoveEndEventRef = useRef<EventsKey | null>(null);
@@ -238,7 +240,8 @@ export default function CoordinatesTool({ name = "Coordinates", helpLink, hideHe
       zIndex: 500,
     });
     vectorLayerRef.current = vectorLayer;
-    map.addLayer(vectorLayer);
+    const coordLayerId = LayerManager.addLayer(vectorLayer, "Tools", "Coordinates Tool", { visible: true });
+    layerIdRef.current = coordLayerId;
 
     // Disable parcel click
     setActiveToolId("coordinates");
@@ -259,8 +262,9 @@ export default function CoordinatesTool({ name = "Coordinates", helpLink, hideHe
 
       setActiveToolId(null);
 
-      if (vectorLayerRef.current) {
-        map.removeLayer(vectorLayerRef.current);
+      if (layerIdRef.current) {
+        LayerManager.removeLayer(layerIdRef.current);
+        layerIdRef.current = null;
       }
     };
   }, [map, onPointerMove, onMapClick, updateExtent, setActiveToolId]);

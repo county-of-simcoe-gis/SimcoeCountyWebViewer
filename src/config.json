@@ -340,6 +340,13 @@
       "componentName": "Settings",
       "description": "Customize for your preferences",
       "imageName": "settings.png"
+    },
+    {
+      "id": 12,
+      "name": "Available Maps",
+      "componentName": "AvailableMaps",
+      "description": "Browse and switch between available map configurations.",
+      "imageName": "map-32x32.png"
     }
   ],
   "sidebarThemeComponents": [
@@ -409,17 +416,15 @@
       "id": 9,
       "name": "Zoning",
       "componentName": "Zoning",
-      "description": "",
-      "imageName": "zoning.png",
-      "disable": true
+      "description": "View zoning information for properties within the County.",
+      "imageName": "zoning.png"
     },
     {
       "id": 10,
       "name": "Broadband",
       "componentName": "Broadband",
-      "description": "",
-      "imageName": "broadband_icon.png",
-      "disable": true
+      "description": "View broadband coverage information for properties.",
+      "imageName": "broadband_icon.png"
     },
     {
       "id": 11,

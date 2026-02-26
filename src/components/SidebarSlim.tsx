@@ -28,11 +28,22 @@ function SlimButton({ title, icon, isSelected, isActive, hidden, onClick }: Slim
 }
 
 export default function SidebarSlim() {
-  const { isOpen, activeTab, openSidebar, setActiveTab, isMoreMenuOpen, toggleMoreMenu } = useSidebarStore();
+  const { isOpen, activeTab, openSidebar, setActiveTab, isMoreMenuOpen, toggleMoreMenu, hideLayers, hideTools, hideMyMaps, hideThemes, hideReports } = useSidebarStore();
   const { emitActivateTab } = useEventStore();
 
   // Only show when sidebar is closed
   if (isOpen) return null;
+
+  // Build dynamic tab indices based on visible tabs
+  const visibleTabs: { name: string; index: number }[] = [];
+  let idx = 0;
+  if (!hideLayers) visibleTabs.push({ name: "layers", index: idx++ });
+  if (!hideTools) visibleTabs.push({ name: "tools", index: idx++ });
+  if (!hideMyMaps) visibleTabs.push({ name: "mymaps", index: idx++ });
+  if (!hideThemes) visibleTabs.push({ name: "themes", index: idx++ });
+  if (!hideReports) visibleTabs.push({ name: "reports", index: idx++ });
+
+  const getTabIndex = (name: string) => visibleTabs.find((t) => t.name === name)?.index ?? -1;
 
   const handleTabClick = (tabName: string, tabIndex: number) => {
     openSidebar();
@@ -46,32 +57,38 @@ export default function SidebarSlim() {
 
   return (
     <div className="sc-sidebar-slim-container">
-      <SlimButton title="Layers" icon="legend-32x32.png" onClick={() => handleTabClick("layers", 0)} isSelected={activeTab === 0} isActive={false} hidden={false} />
-      <SlimButton
-        title="Tools"
-        icon="tools-32x32.png"
-        onClick={() => handleTabClick("tools", 1)}
-        isSelected={activeTab === 1}
-        isActive={false} // TODO: Detect if any tool is active
-        hidden={false}
-      />
-      <SlimButton
-        title="My Maps"
-        icon="map-32x32.png"
-        onClick={() => handleTabClick("mymaps", 2)}
-        isSelected={activeTab === 2}
-        isActive={false} // TODO: Detect if editing
-        hidden={false}
-      />
-      <SlimButton
-        title="Themes"
-        icon="theme-32x32.png"
-        onClick={() => handleTabClick("themes", 3)}
-        isSelected={activeTab === 3}
-        isActive={false} // TODO: Detect if any theme is active
-        hidden={false}
-      />
-      <SlimButton title="Reports" icon="report-32x32.png" onClick={() => handleTabClick("reports", 4)} isSelected={activeTab === 4} isActive={false} hidden={false} />
+      {!hideLayers && <SlimButton title="Layers" icon="legend-32x32.png" onClick={() => handleTabClick("layers", getTabIndex("layers"))} isSelected={activeTab === getTabIndex("layers")} isActive={false} hidden={false} />}
+      {!hideTools && (
+        <SlimButton
+          title="Tools"
+          icon="tools-32x32.png"
+          onClick={() => handleTabClick("tools", getTabIndex("tools"))}
+          isSelected={activeTab === getTabIndex("tools")}
+          isActive={false}
+          hidden={false}
+        />
+      )}
+      {!hideMyMaps && (
+        <SlimButton
+          title="My Maps"
+          icon="map-32x32.png"
+          onClick={() => handleTabClick("mymaps", getTabIndex("mymaps"))}
+          isSelected={activeTab === getTabIndex("mymaps")}
+          isActive={false}
+          hidden={false}
+        />
+      )}
+      {!hideThemes && (
+        <SlimButton
+          title="Themes"
+          icon="theme-32x32.png"
+          onClick={() => handleTabClick("themes", getTabIndex("themes"))}
+          isSelected={activeTab === getTabIndex("themes")}
+          isActive={false}
+          hidden={false}
+        />
+      )}
+      {!hideReports && <SlimButton title="Reports" icon="report-32x32.png" onClick={() => handleTabClick("reports", getTabIndex("reports"))} isSelected={activeTab === getTabIndex("reports")} isActive={false} hidden={false} />}
 
       <div className="sc-sidebar-slim-footer-container">
         <div className={`sc-sidebar-slim-button-container ${isMoreMenuOpen ? "active" : ""}`} onClick={handleMoreClick}>

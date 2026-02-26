@@ -95,6 +95,10 @@ vi.mock("react-icons/fa", () => ({
 
   // AppTrack specific icons
   FaPlusSquare: (props: any) => React.createElement("div", { ...props, "data-testid": "plus-square-icon" }, "PlusSquare"),
+
+  // Campus theme icons
+  FaRegCheckCircle: (props: any) => React.createElement("div", { ...props, "data-testid": "reg-check-circle-icon" }, "RegCheckCircle"),
+  FaRegCircle: (props: any) => React.createElement("div", { ...props, "data-testid": "reg-circle-icon" }, "RegCircle"),
 }));
 
 vi.mock("react-icons/md", () => ({

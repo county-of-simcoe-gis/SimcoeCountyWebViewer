@@ -16,6 +16,7 @@ import { generateUID, convertLineToArrow, getBearing, getCalloutStyle, getDefaul
 import type { MyMapsItem, StyleJSON } from "@/types/myMaps";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { useMapStore } from "@/stores/mapStore";
+import { useInteractionManagerStore } from "@/stores/interactionManagerStore";
 
 export class MyMapsDrawingManager {
   private map: Map;
@@ -179,7 +180,8 @@ export class MyMapsDrawingManager {
       setTimeout(() => this.clearDrawing(), 100);
     });
 
-    this.map.addInteraction(this.drawInteraction);
+    // Register with centralized interaction store (which also adds to map)
+    useInteractionManagerStore.getState().registerInteraction("myMaps-draw", this.drawInteraction, "myMaps");
   }
 
   private postProcessFeature(feature: Feature, drawType: string, drawColor: string) {
@@ -295,7 +297,7 @@ export class MyMapsDrawingManager {
 
   public clearDrawing() {
     if (this.drawInteraction) {
-      this.map.removeInteraction(this.drawInteraction);
+      useInteractionManagerStore.getState().unregisterInteraction("myMaps-draw");
       this.drawInteraction = null;
     }
     // Only clear the flag if we're also not editing
@@ -321,7 +323,7 @@ export class MyMapsDrawingManager {
         });
       });
 
-      this.map.addInteraction(this.modifyInteraction);
+      useInteractionManagerStore.getState().registerInteraction("myMaps-modify", this.modifyInteraction, "myMaps");
     } else {
       // For translate mode, configure to work on individual features from our layer
       this.translateInteraction = new Translate({
@@ -335,17 +337,17 @@ export class MyMapsDrawingManager {
         });
       });
 
-      this.map.addInteraction(this.translateInteraction);
+      useInteractionManagerStore.getState().registerInteraction("myMaps-translate", this.translateInteraction, "myMaps");
     }
   }
 
   public clearEditing() {
     if (this.modifyInteraction) {
-      this.map.removeInteraction(this.modifyInteraction);
+      useInteractionManagerStore.getState().unregisterInteraction("myMaps-modify");
       this.modifyInteraction = null;
     }
     if (this.translateInteraction) {
-      this.map.removeInteraction(this.translateInteraction);
+      useInteractionManagerStore.getState().unregisterInteraction("myMaps-translate");
       this.translateInteraction = null;
     }
     // Only clear the flag if we're also not drawing

@@ -32,6 +32,8 @@ import type { Feature } from "ol";
 import type { Geometry } from "ol/geom";
 import type { EventsKey } from "ol/events";
 import type { Coordinate } from "ol/coordinate";
+import { LayerManager } from "@/utils/openlayers/LayerManager";
+import { useInteractionManagerStore } from "@/stores/interactionManagerStore";
 
 interface MeasureToolProps {
   name?: string;
@@ -177,6 +179,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
   const measureTooltipRef = useRef<Overlay | null>(null);
   const helpTooltipElementRef = useRef<HTMLDivElement | null>(null);
   const measureTooltipElementRef = useRef<HTMLDivElement | null>(null);
+  const layerIdRef = useRef<string | null>(null);
 
   // Generate stable IDs
   const measureToolTipId = useMemo(() => `measure-tooltip-${getUID()}`, []);
@@ -305,11 +308,11 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
     if (!map) return;
 
     if (drawRef.current) {
-      map.removeInteraction(drawRef.current);
+      useInteractionManagerStore.getState().unregisterInteraction("measure-draw");
       drawRef.current = null;
     }
     if (snapRef.current) {
-      map.removeInteraction(snapRef.current);
+      useInteractionManagerStore.getState().unregisterInteraction("measure-snap");
       snapRef.current = null;
     }
     if (vectorLayerRef.current) {
@@ -336,11 +339,11 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
 
     // Clean up existing interactions
     if (drawRef.current) {
-      map.removeInteraction(drawRef.current);
+      useInteractionManagerStore.getState().unregisterInteraction("measure-draw");
       drawRef.current = null;
     }
     if (snapRef.current) {
-      map.removeInteraction(snapRef.current);
+      useInteractionManagerStore.getState().unregisterInteraction("measure-snap");
       snapRef.current = null;
     }
     if (vectorSourceRef.current) {
@@ -476,7 +479,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
       }
     });
 
-    map.addInteraction(draw);
+    useInteractionManagerStore.getState().registerInteraction("measure-draw", draw, "measure");
     drawRef.current = draw;
 
     // Add snap interaction if enabled
@@ -496,7 +499,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
           vertex: true,
           pixelTolerance: 15,
         });
-        map.addInteraction(snap);
+        useInteractionManagerStore.getState().registerInteraction("measure-snap", snap, "measure");
         snapRef.current = snap;
       }
     }
@@ -557,13 +560,13 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
             vertex: true,
             pixelTolerance: 15,
           });
-          map.addInteraction(snap);
+          useInteractionManagerStore.getState().registerInteraction("measure-snap", snap, "measure");
           snapRef.current = snap;
         }
       } else {
         // Remove snap interaction
         if (snapRef.current) {
-          map.removeInteraction(snapRef.current);
+          useInteractionManagerStore.getState().unregisterInteraction("measure-snap");
           snapRef.current = null;
         }
       }
@@ -611,7 +614,8 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
       }),
     });
     vectorLayerRef.current = vectorLayer;
-    map.addLayer(vectorLayer);
+    const measureLayerId = LayerManager.addLayer(vectorLayer, "Tools", "Measure", { visible: true });
+    layerIdRef.current = measureLayerId;
 
     // Create help tooltip
     const helpTooltipElement = document.getElementById(helpToolTipId) as HTMLDivElement;
@@ -660,17 +664,16 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
       if (mouseOutEventRef.current) {
         map.getViewport().removeEventListener("mouseout", mouseOutEventRef.current);
       }
-      if (drawRef.current) {
-        map.removeInteraction(drawRef.current);
-      }
-      if (snapRef.current) {
-        map.removeInteraction(snapRef.current);
-      }
+      // Clean up interactions via centralized store
+      useInteractionManagerStore.getState().unregisterAllByOwner("measure");
+      drawRef.current = null;
+      snapRef.current = null;
       if (vectorSourceRef.current) {
         vectorSourceRef.current.clear();
       }
-      if (vectorLayerRef.current) {
-        map.removeLayer(vectorLayerRef.current);
+      if (layerIdRef.current) {
+        LayerManager.removeLayer(layerIdRef.current);
+        layerIdRef.current = null;
       }
       setActiveToolId(null);
     };

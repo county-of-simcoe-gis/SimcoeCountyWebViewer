@@ -37,6 +37,7 @@ import { applyStyle } from "ol-mapbox-style";
 import { OL_LAYER_TYPES, OL_DATA_TYPES, OLLayerType, OLDataType, LayerOptions, RebuildParams, GroupedLayerOptions } from "@/utils/openlayers/types";
 import { FeatureHelpers } from "@/utils/openlayers/FeatureHelpers";
 import { getAxiosClient } from "@/lib/axiosInstance";
+import { getAccessToken, isSecuredUrl } from "@/utils/auth";
 
 export class LayerHelpers {
   /**
@@ -140,6 +141,7 @@ export class LayerHelpers {
       file,
       extent = [],
       name = "",
+      secured = false,
       background = null,
       rootPath = null,
       minZoom = null,
@@ -296,55 +298,119 @@ export class LayerHelpers {
         break;
 
       case OL_DATA_TYPES.ImageWMS:
-        // console.log("🌐 Creating ImageWMS layer:", {
-        //   url: finalUrl,
-        //   layerName: layerName,
-        //   finalName: finalName,
-        // });
+        {
+          // Determine if this layer needs auth (explicitly secured or URL-based detection)
+          const wmsNeedsAuth = secured || isSecuredUrl(finalUrl as string);
 
-        const imageWMSSource = new ImageWMS({
-          url: finalUrl as string,
-          params: {
-            LAYERS: layerName,
-            VERSION: "1.3.0",
-            FORMAT: "image/png",
-            SRS: "EPSG:3857",
-            TRANSPARENT: true,
-          },
-          ratio: 1,
-          crossOrigin: "anonymous", // Enable CORS for print functionality
-        });
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const imageWMSOptions: Record<string, any> = {
+            url: finalUrl as string,
+            params: {
+              LAYERS: layerName,
+              VERSION: "1.3.0",
+              FORMAT: "image/png",
+              SRS: "EPSG:3857",
+              TRANSPARENT: true,
+            },
+            ratio: 1,
+            crossOrigin: "anonymous", // Enable CORS for print functionality
+          };
 
-        // Add error handling for WMS source
-        imageWMSSource.on("tileloaderror", (event) => {
-          console.error("❌ WMS tile load error for", layerName, ":", event);
-        });
+          if (wmsNeedsAuth) {
+            imageWMSOptions.imageLoadFunction = (image: { getImage: () => HTMLImageElement }, src: string) => {
+              const img = image.getImage();
+              img.onerror = () => {
+                console.warn(`[LayerHelpers] Failed to load secured WMS image: ${src.substring(0, 120)}...`);
+              };
 
-        imageWMSSource.on("imageloaderror", (event) => {
-          console.error("❌ WMS image load error for", layerName, ":", event);
-        });
+              getAccessToken().then((token) => {
+                if (!token) {
+                  // No token available — fall back to direct src (will likely 401)
+                  img.src = src;
+                  return;
+                }
 
-        callback(
-          new ImageLayer({
-            properties: { rebuildParams, name: finalName },
-            source: imageWMSSource,
-          }),
-        );
+                fetch(src, { headers: { Authorization: `Bearer ${token}` } })
+                  .then((response) => {
+                    if (!response.ok) throw new Error(`WMS request failed: ${response.status}`);
+                    return response.blob();
+                  })
+                  .then((blob) => {
+                    const objectUrl = URL.createObjectURL(blob);
+                    img.onload = () => URL.revokeObjectURL(objectUrl);
+                    img.src = objectUrl;
+                  })
+                  .catch((err) => {
+                    console.warn("[LayerHelpers] Secured WMS fetch error:", err);
+                  });
+              });
+            };
+          }
+
+          const imageWMSSource = new ImageWMS(imageWMSOptions);
+
+          // Add error handling for WMS source
+          imageWMSSource.on("imageloaderror", (event) => {
+            console.error("❌ WMS image load error for", layerName, ":", event);
+          });
+
+          callback(
+            new ImageLayer({
+              properties: { rebuildParams, name: finalName, secured: !!wmsNeedsAuth },
+              source: imageWMSSource,
+            }),
+          );
+        }
         break;
 
       case OL_DATA_TYPES.TileWMS:
-        callback(
-          new TileLayer({
-            properties: { rebuildParams, name: finalName },
-            source: new TileWMS({
-              url: finalUrl as string,
-              params: {
-                LAYERS: layerName,
-                TILED: tiled,
-              },
+        {
+          const tileWmsNeedsAuth = secured || isSecuredUrl(finalUrl as string);
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const tileWmsOptions: Record<string, any> = {
+            url: finalUrl as string,
+            params: {
+              LAYERS: layerName,
+              TILED: tiled,
+            },
+            crossOrigin: "anonymous",
+          };
+
+          if (tileWmsNeedsAuth) {
+            tileWmsOptions.tileLoadFunction = (tile: { getImage: () => HTMLImageElement }, src: string) => {
+              const img = tile.getImage();
+
+              getAccessToken().then((token) => {
+                if (!token) {
+                  img.src = src;
+                  return;
+                }
+
+                fetch(src, { headers: { Authorization: `Bearer ${token}` } })
+                  .then((response) => {
+                    if (!response.ok) throw new Error(`TileWMS request failed: ${response.status}`);
+                    return response.blob();
+                  })
+                  .then((blob) => {
+                    const objectUrl = URL.createObjectURL(blob);
+                    img.onload = () => URL.revokeObjectURL(objectUrl);
+                    img.src = objectUrl;
+                  })
+                  .catch((err) => {
+                    console.warn("[LayerHelpers] Secured TileWMS fetch error:", err);
+                  });
+              });
+            };
+          }
+
+          callback(
+            new TileLayer({
+              properties: { rebuildParams, name: finalName, secured: !!tileWmsNeedsAuth },
+              source: new TileWMS(tileWmsOptions),
             }),
-          }),
-        );
+          );
+        }
         break;
 
       case OL_DATA_TYPES.TileArcGISRest:
@@ -375,6 +441,18 @@ export class LayerHelpers {
             if (tokenMatch) arcToken = tokenMatch[1];
           }
 
+          // Fall back to the arcgisTokenStore when the layer is secured but has no token in URL
+          if (!arcToken && secured) {
+            try {
+              // Dynamic import to avoid circular dependencies at module load
+              // eslint-disable-next-line @typescript-eslint/no-require-imports
+              const { useArcGISTokenStore } = require("@/stores/arcgisTokenStore");
+              arcToken = useArcGISTokenStore.getState().token ?? undefined;
+            } catch {
+              // Store unavailable (SSR or first load) — continue without token
+            }
+          }
+
           // Build source params
           const arcParams: Record<string, string> = { LAYERS: `SHOW:${sublayerId}` };
           if (arcToken) arcParams["TOKEN"] = arcToken;
@@ -385,17 +463,39 @@ export class LayerHelpers {
             ratio: 1,
             crossOrigin: "anonymous",
             imageLoadFunction: (image: { getImage: () => HTMLImageElement }, src: string) => {
-              const newSrc = src.replace(/DPI=\d+/i, "DPI=96");
+              // Fix DPI for consistent rendering
+              let newSrc = src.replace(/DPI=\d+/i, "DPI=96");
+
+              // For secured layers, always inject the latest token from the store
+              // This ensures image requests use a fresh token even after refresh
+              if (secured) {
+                try {
+                  // eslint-disable-next-line @typescript-eslint/no-require-imports
+                  const { useArcGISTokenStore } = require("@/stores/arcgisTokenStore");
+                  const freshToken = useArcGISTokenStore.getState().token;
+                  if (freshToken) {
+                    // Replace existing TOKEN param or append it
+                    if (/TOKEN=[^&]*/i.test(newSrc)) {
+                      newSrc = newSrc.replace(/TOKEN=[^&]*/i, `TOKEN=${freshToken}`);
+                    } else {
+                      newSrc += `&TOKEN=${freshToken}`;
+                    }
+                  }
+                } catch {
+                  // Continue with existing URL
+                }
+              }
+
               image.getImage().src = newSrc;
             },
           };
 
-          callback(
-            new ImageLayer({
-              properties: { rebuildParams, name: finalName },
-              source: new ImageArcGISRest(arcSourceOpts),
-            }),
-          );
+          const arcLayer = new ImageLayer({
+            properties: { rebuildParams, name: finalName, isArcGIS: true, secured: !!secured },
+            source: new ImageArcGISRest(arcSourceOpts),
+          });
+
+          callback(arcLayer);
         }
         break;
 

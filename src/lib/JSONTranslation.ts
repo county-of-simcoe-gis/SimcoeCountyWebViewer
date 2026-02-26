@@ -423,26 +423,40 @@ function deepMerge(target: any, source: any): any {
 }
 
 /**
+ * Keys whose values should be preserved as-is during cleanup.
+ * This prevents source config arrays (with empty visibleLayers, etc.) from being stripped.
+ */
+const PRESERVE_KEYS = new Set(["sources", "visibleLayers", "centerCoords"]);
+
+/**
  * Recursively removes empty values from an object:
  * - Empty strings
  * - null/undefined values
  * - Empty arrays
  * - Objects with no properties (after cleaning)
  * This helps keep the final JSON output clean and minimal.
+ * Keys listed in PRESERVE_KEYS are kept as-is (even when empty).
  */
-function removeEmptyValues(obj: any): any {
+function removeEmptyValues(obj: any, currentKey?: string): any {
+  // Never strip values under preserved keys
+  if (currentKey && PRESERVE_KEYS.has(currentKey)) {
+    return obj;
+  }
+
   if (Array.isArray(obj)) {
-    const cleanedArray = obj.map(removeEmptyValues).filter((item) => {
-      if (item === "" || item === null || item === undefined) return false;
-      if (typeof item === "object" && !Array.isArray(item) && Object.keys(item).length === 0) return false;
-      if (Array.isArray(item) && item.length === 0) return false;
-      return true;
-    });
+    const cleanedArray = obj
+      .map((item) => removeEmptyValues(item))
+      .filter((item) => {
+        if (item === "" || item === null || item === undefined) return false;
+        if (typeof item === "object" && !Array.isArray(item) && Object.keys(item).length === 0) return false;
+        if (Array.isArray(item) && item.length === 0) return false;
+        return true;
+      });
     return cleanedArray.length === 0 ? undefined : cleanedArray;
   } else if (typeof obj === "object" && obj !== null) {
     for (const key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
-        const cleanedValue = removeEmptyValues(obj[key]);
+        const cleanedValue = removeEmptyValues(obj[key], key);
         if (
           cleanedValue === "" ||
           cleanedValue === null ||

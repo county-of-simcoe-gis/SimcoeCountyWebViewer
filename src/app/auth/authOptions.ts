@@ -153,7 +153,7 @@ export const authOptions: NextAuthOptions = {
         console.log("[NextAuth JWT] Calling AuthorizeUser with groups:", groups);
         const authorization = await AuthorizeUser(groups);
         console.log("[NextAuth JWT] AuthorizeUser returned:", authorization);
-        if (authorization && authorization.roles.includes("admin") && extendedToken.email?.endsWith("@simcoe.ca") && !authorization.locations.includes("COUNTY OF SIMCOE")) {
+        if (authorization && authorization.roles.includes("gis_internal") && extendedToken.email?.endsWith("@simcoe.ca") && !authorization.locations.includes("COUNTY OF SIMCOE")) {
           authorization.locations.push("COUNTY OF SIMCOE");
         }
         extendedToken.roles = authorization.roles;

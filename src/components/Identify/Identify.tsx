@@ -9,6 +9,7 @@ import MultiPolygon from "ol/geom/MultiPolygon";
 import { useMapStore } from "@/stores/mapStore";
 import { useLayerManagerStore } from "@/stores/layerManagerStore";
 import { useReportsStore } from "@/stores/reportsStore";
+import { useArcGISTokenStore } from "@/stores/arcgisTokenStore";
 import { getAxiosClient } from "@/lib/axiosInstance";
 import IdentifyLayer from "@/components/Identify/IdentifyLayer";
 import Point from "ol/geom/Point";
@@ -205,6 +206,18 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
               .replace("#TOLERANCE#", "3")
               .replace("#EXTENT#", extent.join(","))
               .replace("#RESOLUTION#", resolution);
+
+            // For secured ArcGIS layers, ensure the identify URL has a fresh token
+            if (secured) {
+              const freshToken = useArcGISTokenStore.getState().token;
+              if (freshToken) {
+                if (/[?&]token=[^&]*/i.test(queryUrl)) {
+                  queryUrl = queryUrl.replace(/([?&])token=[^&]*/i, `$1token=${freshToken}`);
+                } else {
+                  queryUrl += `&token=${freshToken}`;
+                }
+              }
+            }
           } else {
             // Build proper WFS GetFeature request with CQL filter
             const baseUrl = wfsUrl.split("?")[0];

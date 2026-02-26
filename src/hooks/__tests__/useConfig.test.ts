@@ -89,6 +89,16 @@ vi.mock("@/config.json", () => ({
 describe("useConfig", () => {
   beforeEach(() => {
     resetConfig();
+    // Mock the map API endpoint to return empty config (test config has mapId: "public"
+    // and loadConfig will try to load from API when mapId is non-empty)
+    server.use(
+      http.get("*/map/public", () => {
+        return HttpResponse.json({ json: null });
+      }),
+      http.get("*/map", () => {
+        return HttpResponse.json({ json: null });
+      }),
+    );
   });
 
   it("loads config and updates metadata", async () => {

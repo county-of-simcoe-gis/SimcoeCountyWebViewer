@@ -5,6 +5,8 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import { FaUser, FaSignInAlt, FaSignOutAlt, FaSpinner } from "react-icons/fa";
 import "@/components/ProfileButton.css";
 
+const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0";
+
 export default function ProfileButton() {
   const { data: session, status } = useSession();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -54,10 +56,7 @@ export default function ProfileButton() {
   // Loading state
   if (status === "loading") {
     return (
-      <div
-        className="w-[60px] text-center flex flex-col items-center justify-center px-1 text-xs text-[#5b5b5b] h-[52px]"
-        title="Loading..."
-      >
+      <div className="w-[60px] text-center flex flex-col items-center justify-center px-1 text-xs text-[#5b5b5b] h-[52px]" title="Loading...">
         <FaSpinner size={16} className="mt-1 mb-1 animate-spin" />
         <span>Loading</span>
       </div>
@@ -98,9 +97,7 @@ export default function ProfileButton() {
         aria-expanded={isDropdownOpen}
         aria-haspopup="true"
       >
-        <div className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-medium mt-1 mb-0.5">
-          {userInitial}
-        </div>
+        <div className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-medium mt-1 mb-0.5">{userInitial}</div>
         <span className="truncate max-w-[58px]">Profile</span>
       </div>
 
@@ -110,9 +107,7 @@ export default function ProfileButton() {
           {/* User Info Section */}
           <div className="px-4 py-3 border-b border-gray-200">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center text-lg font-medium">
-                {userInitial}
-              </div>
+              <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center text-lg font-medium">{userInitial}</div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">{userName}</p>
                 <p className="text-xs text-gray-500 truncate">{userEmail}</p>
@@ -126,11 +121,22 @@ export default function ProfileButton() {
               <p className="text-xs text-gray-500 mb-1">Roles:</p>
               <div className="flex flex-wrap gap-1">
                 {session.user.roles.map((role, index) => (
-                  <span
-                    key={index}
-                    className="inline-block px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded"
-                  >
+                  <span key={index} className="inline-block px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded">
                     {role}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Locations Section (if any) */}
+          {session.user?.locations && session.user.locations.length > 0 && (
+            <div className="px-4 py-2 border-b border-gray-200">
+              <p className="text-xs text-gray-500 mb-1">Locations:</p>
+              <div className="flex flex-wrap gap-1">
+                {session.user.locations.map((location, index) => (
+                  <span key={index} className="inline-block px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded">
+                    {location}
                   </span>
                 ))}
               </div>
@@ -139,13 +145,15 @@ export default function ProfileButton() {
 
           {/* Sign Out Button */}
           <div className="px-2 py-2">
-            <button
-              onClick={handleSignOut}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded transition-colors"
-            >
+            <button onClick={handleSignOut} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded transition-colors">
               <FaSignOutAlt size={14} />
               <span>Sign Out</span>
             </button>
+          </div>
+
+          {/* Version */}
+          <div className="px-4 py-2 border-t border-gray-200">
+            <p className="text-xs text-gray-400 text-center">v{APP_VERSION}</p>
           </div>
         </div>
       )}

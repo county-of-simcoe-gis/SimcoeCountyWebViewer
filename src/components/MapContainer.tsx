@@ -7,6 +7,7 @@ import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
 import { usePopupStore } from "@/stores/popupStore";
 import { useInteractionManagerStore, type InteractionHandler as StoreInteractionHandler } from "@/stores/interactionManagerStore";
+import type { Interaction as OLInteraction } from "ol/interaction";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { useUrlParameterContextOptional } from "@/contexts/UrlParameterContext";
 
@@ -49,8 +50,8 @@ interface ResultWithMethods extends Result {
   loadDetails?: () => Promise<void>;
 }
 
-// Import config
-import config from "@/config.json";
+// Import static config as fallback
+import staticConfig from "@/config.json";
 
 // Import utilities
 import { getAxiosClient } from "@/lib/axiosInstance";
@@ -116,8 +117,7 @@ export interface InteractionHandler {
 interface InteractionManagerContextType {
   registerHandler: (handler: InteractionHandler) => void;
   unregisterHandler: (handlerId: string) => void;
-  // Legacy support - will be removed
-  registerInteraction: (id: string, interaction: Interaction) => void;
+  registerInteraction: (id: string, interaction: OLInteraction, owner?: string) => void;
   unregisterInteraction: (id: string) => void;
 }
 
@@ -147,14 +147,17 @@ export default function MapContainer() {
   const mapInstanceRef = useRef<Map | null>(null);
   const identifyIconLayerRef = useRef<VectorLayer<VectorSource<Feature<Geometry>>> | null>(null);
   const identifyIconLayerIdRef = useRef<string | null>(null);
+  const hasAppliedApiConfigRef = useRef(false);
 
   // Handler-based system - use store
-  const { registerHandler: storeRegisterHandler, unregisterHandler: storeUnregisterHandler } = useInteractionManagerStore();
+  const {
+    registerHandler: storeRegisterHandler,
+    unregisterHandler: storeUnregisterHandler,
+    registerInteraction: storeRegisterInteraction,
+    unregisterInteraction: storeUnregisterInteraction,
+  } = useInteractionManagerStore();
   const unifiedInteractionRef = useRef<Interaction | null>(null);
   const shouldExecuteHandlerRef = useRef<((handler: InteractionHandler, event: MapBrowserEvent<OLUIEvent>) => boolean) | null>(null);
-
-  // Legacy interaction system (for backward compatibility)
-  const registeredInteractionsRef = useRef<globalThis.Map<string, Interaction>>(new globalThis.Map());
 
   // State for aggregated results
   const [aggregatedResults, setAggregatedResults] = useState<Result[]>([]);
@@ -233,33 +236,19 @@ export default function MapContainer() {
     [storeUnregisterHandler],
   );
 
-  // Legacy interaction callbacks (for backward compatibility)
+  // OL Interaction registration — delegates to centralized store
   const registerInteraction = useCallback(
-    (id: string, interaction: Interaction) => {
-      if (registeredInteractionsRef.current.has(id)) {
-        const existingInteraction = registeredInteractionsRef.current.get(id);
-        if (existingInteraction && map) {
-          map.removeInteraction(existingInteraction);
-        }
-      }
-
-      if (map) {
-        map.addInteraction(interaction);
-        registeredInteractionsRef.current.set(id, interaction);
-      }
+    (id: string, interaction: OLInteraction, owner?: string) => {
+      storeRegisterInteraction(id, interaction, owner);
     },
-    [map],
+    [storeRegisterInteraction],
   );
 
   const unregisterInteraction = useCallback(
     (id: string) => {
-      const interaction = registeredInteractionsRef.current.get(id);
-      if (interaction && map) {
-        map.removeInteraction(interaction);
-        registeredInteractionsRef.current.delete(id);
-      }
+      storeUnregisterInteraction(id);
     },
-    [map],
+    [storeUnregisterInteraction],
   );
 
   const interactionManager = useMemo(
@@ -280,14 +269,16 @@ export default function MapContainer() {
       minWidth: 80,
     });
 
+    // Use dynamic config from app store if available, otherwise fall back to static import
+    const dynamicConfig = useAppStore.getState().config;
+    const activeConfig = dynamicConfig || staticConfig;
+
     // Get stored extent or use defaults
     const storageExtentKey = "Map Extent";
     const storedExtent = sessionStorage.getItem(storageExtentKey);
     let extent = null;
-    // const centerCoords = [-8873031.186926253, 5524904.429248115];
-    // const defaultZoom = 17;
-    const centerCoords = config.centerCoords || [-8878504.68, 5543492.45];
-    const defaultZoom = config.defaultZoom || 10;
+    const centerCoords = activeConfig.centerCoords || [-8878504.68, 5543492.45];
+    const defaultZoom = activeConfig.defaultZoom || 10;
 
     // Check if URL has coordinate parameters - if so, don't apply stored extent
     // This matches legacy behavior where URL params take precedence
@@ -310,7 +301,7 @@ export default function MapContainer() {
       view: new View({
         center: centerCoords,
         zoom: defaultZoom,
-        maxZoom: config.maxZoom || 20,
+        maxZoom: activeConfig.maxZoom || 20,
       }),
       interactions: defaultInteractions({
         keyboard: true,
@@ -325,23 +316,23 @@ export default function MapContainer() {
     });
 
     // Initialize control visibility from config and localStorage
-    initControlVisibility(config);
+    initControlVisibility(activeConfig);
 
     // Configure map controls based on config (for backward compatibility)
     const mapControls: Record<string, boolean> = {
-      rotate: config.controls?.rotate ?? true,
-      fullScreen: config.controls?.fullScreen ?? true,
-      zoomInOut: config.controls?.zoomInOut ?? true,
-      currentLocation: config.controls?.currentLocation ?? true,
-      zoomExtent: config.controls?.zoomExtent ?? true,
-      scale: config.controls?.scale ?? true,
-      scaleLine: config.controls?.scaleLine ?? true,
-      basemap: config.controls?.basemap ?? true,
-      gitHubButton: config.controls?.gitHubButton ?? true,
-      scaleSelector: config.controls?.scaleSelector ?? false,
-      grid: config.controls?.showGrid ?? false,
-      extentHistory: config.controls?.extentHistory ?? false,
-      attribution: config.controls?.attribution ?? true,
+      rotate: activeConfig.controls?.rotate ?? true,
+      fullScreen: activeConfig.controls?.fullScreen ?? true,
+      zoomInOut: activeConfig.controls?.zoomInOut ?? true,
+      currentLocation: activeConfig.controls?.currentLocation ?? true,
+      zoomExtent: activeConfig.controls?.zoomExtent ?? true,
+      scale: activeConfig.controls?.scale ?? true,
+      scaleLine: activeConfig.controls?.scaleLine ?? true,
+      basemap: activeConfig.controls?.basemap ?? true,
+      gitHubButton: activeConfig.controls?.gitHubButton ?? true,
+      scaleSelector: activeConfig.controls?.scaleSelector ?? false,
+      grid: activeConfig.controls?.showGrid ?? false,
+      extentHistory: activeConfig.controls?.extentHistory ?? false,
+      attribution: activeConfig.controls?.attribution ?? true,
     };
 
     // Add OpenLayers built-in controls based on configuration
@@ -401,8 +392,8 @@ export default function MapContainer() {
 
     // Set map on window for backward compatibility with legacy code
     if (typeof window !== "undefined") {
-      (window as unknown as { map: Map | null; config: typeof config | null }).map = mapInstance;
-      (window as unknown as { map: Map | null; config: typeof config | null }).config = config;
+      (window as unknown as { map: Map | null; config: typeof activeConfig | null }).map = mapInstance;
+      (window as unknown as { map: Map | null; config: typeof activeConfig | null }).config = activeConfig;
     }
 
     // Create unified interaction to handle all registered handlers
@@ -751,7 +742,8 @@ export default function MapContainer() {
       }
 
       // Add marker if ID is specified or onCoordinateZoomID is configured
-      if (id === "true" || (config as Record<string, unknown>).onCoordinateZoomID) {
+      const currentConfig = useAppStore.getState().config;
+      if (id === "true" || (currentConfig as Record<string, unknown>)?.onCoordinateZoomID) {
         const iconFeature = new Feature({
           geometry: new Point(coords),
         });
@@ -769,7 +761,7 @@ export default function MapContainer() {
       }
 
       // Center map on coordinates - use Z/ZOOM parameter if provided, otherwise use default
-      const zoomLevel = z ? parseInt(z, 10) : config.defaultZoom || 17;
+      const zoomLevel = z ? parseInt(z, 10) : currentConfig?.defaultZoom || 17;
       map.getView().setCenter(coords);
       map.getView().setZoom(zoomLevel);
 
@@ -815,8 +807,43 @@ export default function MapContainer() {
   }, [isOpen, map]);
 
   // Get center coordinates and default zoom from config (memoized)
-  const centerCoords = useMemo(() => config.centerCoords || [-8878504.68, 5543492.45], []);
-  const defaultZoom = useMemo(() => config.defaultZoom || 10, []);
+  const appStoreConfig = useAppStore((state) => state.config);
+  const centerCoords = useMemo(() => appStoreConfig?.centerCoords || staticConfig.centerCoords || [-8878504.68, 5543492.45], [appStoreConfig]);
+  const defaultZoom = useMemo(() => appStoreConfig?.defaultZoom || staticConfig.defaultZoom || 10, [appStoreConfig]);
+
+  // Apply API config zoom/center/maxZoom when it first loads (after map is already initialized with static defaults)
+  useEffect(() => {
+    if (!map || !appStoreConfig || hasAppliedApiConfigRef.current) return;
+
+    hasAppliedApiConfigRef.current = true;
+
+    // Don't override if URL has coordinate params (URL params take precedence)
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasCoordParams = urlParams.has("X") || urlParams.has("x") || urlParams.has("XMIN") || urlParams.has("xmin");
+    if (hasCoordParams) return;
+
+    // Don't override if there's a stored extent from a previous session
+    const storedExtent = sessionStorage.getItem("Map Extent");
+    if (storedExtent) return;
+
+    const configCenter = appStoreConfig.centerCoords;
+    const configZoom = appStoreConfig.defaultZoom;
+    const configMaxZoom = appStoreConfig.maxZoom;
+
+    // Update maxZoom on the view if the API config specifies a different one
+    if (configMaxZoom && configMaxZoom !== map.getView().getMaxZoom()) {
+      map.getView().setMaxZoom(configMaxZoom);
+    }
+
+    // Apply center and zoom if they differ from current (i.e., API config overrides static defaults)
+    if (configCenter || configZoom) {
+      map.getView().animate({
+        center: configCenter || map.getView().getCenter(),
+        zoom: configZoom || map.getView().getZoom(),
+        duration: 0,
+      });
+    }
+  }, [map, appStoreConfig]);
 
   // Control wrapper components that handle props and lazy loading (memoized to prevent recreation)
   const ZoomToExtentWrapper = useCallback(
@@ -1102,32 +1129,27 @@ export default function MapContainer() {
     };
   }, [map, controlVisibility.attribution]);
 
-  // Handle rotate interactions visibility
+  // Handle rotate interactions visibility — managed via centralized interaction store
   useEffect(() => {
     if (!map) return;
 
-    const interactions = map.getInteractions().getArray();
-
     if (controlVisibility.rotate) {
-      // Add rotate interactions if they don't exist
-      const hasPinchRotate = interactions.some((i) => i instanceof PinchRotate);
-      const hasDragRotate = interactions.some((i) => i instanceof DragRotate);
+      // Add rotate interactions if they don't already exist in the store
+      const existingPinch = useInteractionManagerStore.getState().getInteraction("rotation-pinch");
+      const existingDrag = useInteractionManagerStore.getState().getInteraction("rotation-drag");
 
-      if (!hasPinchRotate) {
-        map.addInteraction(new PinchRotate());
+      if (!existingPinch) {
+        storeRegisterInteraction("rotation-pinch", new PinchRotate(), "rotation");
       }
-      if (!hasDragRotate) {
-        map.addInteraction(new DragRotate());
+      if (!existingDrag) {
+        storeRegisterInteraction("rotation-drag", new DragRotate(), "rotation");
       }
     } else {
       // Remove rotate interactions without resetting rotation
-      const pinchRotate = interactions.find((i) => i instanceof PinchRotate);
-      const dragRotate = interactions.find((i) => i instanceof DragRotate);
-
-      if (pinchRotate) map.removeInteraction(pinchRotate);
-      if (dragRotate) map.removeInteraction(dragRotate);
+      storeUnregisterInteraction("rotation-pinch");
+      storeUnregisterInteraction("rotation-drag");
     }
-  }, [map, controlVisibility.rotate]);
+  }, [map, controlVisibility.rotate, storeRegisterInteraction, storeUnregisterInteraction]);
 
   // Show unified popup when results are available
   useEffect(() => {

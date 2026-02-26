@@ -33,11 +33,43 @@ vi.mock("@/config.json", () => ({
 }));
 
 // Mock useAppStore
+const mockAppStoreState = {
+  setMapLoading: vi.fn(),
+  urlParameters: {},
+  config: {
+    centerCoords: [-8878504.68, 5543492.45],
+    defaultZoom: 10,
+    maxZoom: 20,
+    controls: {
+      rotate: true,
+      fullScreen: true,
+      zoomInOut: true,
+      currentLocation: true,
+      zoomExtent: true,
+      scale: true,
+      scaleLine: true,
+      basemap: true,
+      gitHubButton: true,
+      scaleSelector: false,
+      showGrid: false,
+      extentHistory: false,
+      attribution: true,
+    },
+  },
+};
+
 vi.mock("@/stores/appStore", () => ({
-  useAppStore: vi.fn(() => ({
-    setMapLoading: vi.fn(),
-    urlParameters: {},
-  })),
+  useAppStore: Object.assign(
+    vi.fn((selector?: (state: typeof mockAppStoreState) => unknown) => {
+      if (typeof selector === "function") return selector(mockAppStoreState);
+      return mockAppStoreState;
+    }),
+    {
+      getState: vi.fn(() => mockAppStoreState),
+      setState: vi.fn(),
+      subscribe: vi.fn(),
+    },
+  ),
 }));
 
 // Mock other required stores with proper state management

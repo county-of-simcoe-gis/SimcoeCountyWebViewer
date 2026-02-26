@@ -134,8 +134,8 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
   if (!isVisibleAtScale) containerClassName += " not-in-scale";
   if (currentLayerData.visible) containerClassName += " on";
 
-  // Truncate display name if too long
-  const displayName = layerInfo.tocDisplayName.length < 60 ? layerInfo.tocDisplayName : `${layerInfo.tocDisplayName.slice(0, 57)}...`;
+  // Let CSS handle truncation with text-overflow: ellipsis; title attribute provides full name on hover
+  const displayName = layerInfo.tocDisplayName;
 
   return (
     <div id={`${layerInfo.id}_listview`} ref={containerRef}>

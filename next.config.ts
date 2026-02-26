@@ -1,7 +1,13 @@
 import type { NextConfig } from "next";
+import packageJson from "./package.json";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  env: {
+    NEXT_PUBLIC_APP_VERSION: packageJson.version,
+  },
+  // @arcgis/core ships as ESM — Next.js needs to transpile it for SSR/CSR compat
+  transpilePackages: ["@arcgis/core"],
   images: {
     remotePatterns: [
       {

@@ -1,10 +1,11 @@
 import { WMSCapabilities } from "ol/format.js";
 import { TOCLayerGroup, TOCLayer, TOCSource } from "@/stores/tocStore";
-import { getAxiosClient } from "@/lib/axiosInstance";
 import { LayerHelpers } from "@/utils/openlayers/LayerHelpers";
 import { OL_DATA_TYPES, LayerOptions } from "@/utils/openlayers/types";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import type { Layer as OpenLayersLayer } from "ol/layer";
+import { buildAuthFetchOptions, getAccessToken } from "@/utils/auth";
+import { useArcGISTokenStore } from "@/stores/arcgisTokenStore";
 
 // Types for WMS Capabilities parsing
 interface WMSLayer {
@@ -225,27 +226,38 @@ export function buildLayerFromWMS(group: Partial<TOCLayerGroup> & { secure?: boo
 
 /**
  * Fetch and parse WMS GetCapabilities
+ *
+ * @param url      WMS GetCapabilities URL
+ * @param secured  Whether the endpoint requires authentication
+ * @param token    Pre-fetched access token (avoids redundant getSession calls)
  */
-export async function fetchWMSCapabilities(url: string, secured: boolean = false): Promise<WMSCapabilitiesResponse> {
-  // TODO: Use secured parameter for authentication when needed
-  console.debug("Fetching WMS capabilities", { url, secured });
+export async function fetchWMSCapabilities(url: string, secured: boolean = false, token?: string): Promise<WMSCapabilitiesResponse> {
+  console.debug("Fetching WMS capabilities", { url, secured, hasToken: !!token });
 
   try {
-    const axiosClient = getAxiosClient(url);
-    const response = await axiosClient.get(url, {
-      responseType: "text",
-      headers: {
-        "Content-Type": "application/text",
-      },
-      transformResponse: [(data) => data], // Prevent axios from auto-parsing
-    });
+    const fetchOptions = await buildAuthFetchOptions(secured, token);
+    const response = await fetch(url, fetchOptions);
 
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const text = await response.text();
     const parser = new WMSCapabilities();
-    const parsed = parser.read(response.data) as WMSCapabilitiesResponse;
+    const parsed = parser.read(text) as WMSCapabilitiesResponse;
 
     return parsed;
   } catch (error) {
-    console.error("Error fetching WMS capabilities:", error);
+    if (error instanceof TypeError && error.message === "Failed to fetch") {
+      console.error(
+        `[TOC] WMS capabilities fetch failed for ${url}.`,
+        secured
+          ? "This is a secured endpoint — verify the access token is valid and that GeoServer " + "allows CORS requests with Authorization headers (Access-Control-Allow-Headers)."
+          : "The server may be unreachable or blocking cross-origin requests.",
+      );
+    } else {
+      console.error("Error fetching WMS capabilities:", error);
+    }
     throw error;
   }
 }
@@ -253,9 +265,9 @@ export async function fetchWMSCapabilities(url: string, secured: boolean = false
 /**
  * Build layer groups from GeoServer WMS capabilities
  */
-export async function getGroupsFromGeoServer(source: TOCSource, config: Config): Promise<TOCLayerGroup[]> {
+export async function getGroupsFromGeoServer(source: TOCSource, config: Config, token?: string): Promise<TOCLayerGroup[]> {
   try {
-    const resultObj = await fetchWMSCapabilities(source.layerUrl, source.secure);
+    const resultObj = await fetchWMSCapabilities(source.layerUrl, source.secure, token);
 
     const urlType = source.urlType || "group";
     const groupLayerList = urlType === "root" ? [resultObj.Capability.Layer.Layer[0]] : urlType === "group" ? resultObj.Capability.Layer.Layer[0].Layer || [] : [resultObj.Capability.Layer.Layer[0]];
@@ -371,22 +383,32 @@ function isDuplicate(layerList: TOCLayer[], newLayerName: string): boolean {
 }
 
 /**
- * Fetch and parse ArcGIS REST service
+ * Fetch and parse ArcGIS REST service.
+ * For secured ArcGIS services, appends ?token= from the arcgisTokenStore
+ * (NOT a Bearer header — ArcGIS REST uses query-param tokens).
  */
 export async function fetchArcGISService(url: string, secured: boolean = false): Promise<Record<string, unknown>> {
-  const serviceUrl = url.endsWith("?f=json") ? url : `${url}?f=json`;
-  // TODO: Use secured parameter for authentication when needed
+  let serviceUrl = url.endsWith("?f=json") ? url : `${url}?f=json`;
   console.debug("Fetching ArcGIS service", { url, secured });
 
   try {
-    const axiosClient = getAxiosClient(serviceUrl);
-    const response = await axiosClient.get<Record<string, unknown>>(serviceUrl, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    // For secured ArcGIS endpoints, append the user token as a query param
+    if (secured) {
+      const token = await useArcGISTokenStore.getState().getValidToken();
+      if (token) {
+        serviceUrl += `&token=${token}`;
+      } else {
+        console.warn("ArcGIS: Secured service requested but no token available");
+      }
+    }
 
-    return response.data;
+    const response = await fetch(serviceUrl, { method: "GET", mode: "cors" });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return await response.json();
   } catch (error) {
     console.error("Error fetching ArcGIS service:", error);
     throw error;
@@ -394,30 +416,203 @@ export async function fetchArcGISService(url: string, secured: boolean = false):
 }
 
 /**
- * Build layer groups from ArcGIS REST service
+ * Fetch ArcGIS legend info from the /legend endpoint.
+ */
+async function fetchArcGISLegend(rootUrl: string, secured: boolean = false): Promise<Record<number, ArcGISLegendEntry>> {
+  let legendUrl = `${rootUrl}/legend?f=json`;
+  if (secured) {
+    const token = await useArcGISTokenStore.getState().getValidToken();
+    if (token) legendUrl += `&token=${token}`;
+  }
+
+  try {
+    const response = await fetch(legendUrl, { method: "GET", mode: "cors" });
+    if (!response.ok) return {};
+
+    const data = await response.json();
+    const legendMap: Record<number, ArcGISLegendEntry> = {};
+    if (data.layers) {
+      for (const layer of data.layers) {
+        legendMap[layer.layerId] = layer;
+      }
+    }
+    return legendMap;
+  } catch {
+    console.warn("ArcGIS: Failed to fetch legend");
+    return {};
+  }
+}
+
+/** Single legend entry from ArcGIS /legend endpoint. */
+interface ArcGISLegendEntry {
+  layerId: number;
+  layerName: string;
+  layerType: string;
+  legend: Array<{
+    label: string;
+    url: string;
+    imageData: string;
+    contentType: string;
+    height: number;
+    width: number;
+  }>;
+}
+
+/**
+ * Build layer groups from an ArcGIS REST MapServer service.
+ *
+ * This mirrors the old app's getGroupsESRI() flow:
+ *  1. Fetch /layers?f=json for full layer metadata
+ *  2. Fetch /legend?f=json for legend images
+ *  3. Parse each leaf layer (no subLayerIds) through parseESRIDescription()
+ *  4. Group layers by their CATEGORY tag from the description
+ *  5. Build OpenLayers layers via buildESRILayer()
  */
 export async function getGroupsFromArcGIS(source: TOCSource): Promise<TOCLayerGroup[]> {
   try {
-    const serviceInfo = await fetchArcGISService(source.layerUrl, source.secure);
+    const secured = source.secure || false;
+    const rootUrl = source.layerUrl;
 
-    // For now, create a basic group structure
-    // This would need to be expanded based on the actual ArcGIS service structure
-    const groupName = source.group?.name || "ArcGIS_Group";
-    const groupDisplayName = source.group?.displayName || (serviceInfo.mapName as string) || "ArcGIS Layers";
+    // Build the ArcGIS token query param once
+    let tokenParam = "";
+    if (secured) {
+      const token = await useArcGISTokenStore.getState().getValidToken();
+      if (token) tokenParam = token;
+    }
 
-    const group: TOCLayerGroup = {
-      value: groupName,
-      label: groupDisplayName,
-      url: source.layerUrl,
-      prefix: "",
-      defaultGroup: source.primary || false,
-      visibleLayers: source.group?.visibleLayers || [],
-      wmsGroupUrl: source.layerUrl,
-      customRestUrl: source.layerUrl,
-      layers: [], // Would need to parse service.layers and build TOCLayer objects
-    };
+    // Fetch full layer list from the /layers endpoint
+    let layersUrl = `${rootUrl}/layers?f=json`;
+    if (tokenParam) layersUrl += `&token=${tokenParam}`;
 
-    return [group];
+    const layersResponse = await fetch(layersUrl, { method: "GET", mode: "cors" });
+    if (!layersResponse.ok) {
+      throw new Error(`HTTP ${layersResponse.status}: ${layersResponse.statusText}`);
+    }
+    const layersData = await layersResponse.json();
+    const serviceLayers = layersData.layers || [];
+
+    if (serviceLayers.length === 0) {
+      console.warn("ArcGIS: No layers found in service", rootUrl);
+      return [];
+    }
+
+    // Fetch legend data
+    const legendMap = await fetchArcGISLegend(rootUrl, secured);
+
+    // Parse each leaf layer and group by category
+    const groupsObj: Record<string, TOCLayerGroup & { rawLayers: BuildESRILayerOptions["layer"][] }> = {};
+
+    for (const item of serviceLayers) {
+      // Skip group layers (ones that have sublayers)
+      if (item.subLayerIds && item.subLayerIds.length > 0) continue;
+
+      // Parse the description for config options (CATEGORY, VISIBLE, LIVELAYER, etc.)
+      const layerOptions = parseESRIDescription(item.description || "");
+
+      // Determine visibility — match WMS behaviour: layers are off by default
+      // unless explicitly listed in visibleLayers or flagged VISIBLE=TRUE in
+      // the ESRI description. We intentionally ignore ArcGIS defaultVisibility
+      // so that maps don't start with every layer turned on.
+      const visibleLayers = source.group?.visibleLayers || [];
+      let visible = visibleLayers.length > 0 ? visibleLayers.includes(item.name) : false;
+      if (layerOptions.isVisible) visible = true;
+
+      // Swap min/max scale (ArcGIS convention is inverted)
+      const origMin = item.minScale || 0;
+      const origMax = item.maxScale || 0;
+      const minScale = origMax;
+      const maxScale = origMin;
+
+      // Build the layer URL with optional token
+      const layerUrl = tokenParam ? `${rootUrl}/${item.id}?token=${tokenParam}` : `${rootUrl}/${item.id}`;
+
+      // Build the layer object expected by buildESRILayer()
+      const parsedLayer: BuildESRILayerOptions["layer"] = {
+        name: item.name,
+        url: layerUrl,
+        rootUrl: rootUrl,
+        id: item.id,
+        options: {
+          ...layerOptions,
+          title: item.name,
+          opacity: item.drawingInfo?.transparency != null ? 1 - item.drawingInfo.transparency / 100 : 1,
+          minScale,
+          maxScale,
+          canDownload: false,
+          identifyTitleColumn: item.displayField || "",
+          displayName: item.name,
+        },
+        hasAttachments: item.hasAttachments ?? false,
+        visible,
+        queryable: true,
+        opaque: false,
+        legend: legendMap[item.id] || undefined,
+        sourceSpatialReference: item.sourceSpatialReference,
+        extent: item.extent ? [item.extent.xmin, item.extent.ymin, item.extent.xmax, item.extent.ymax] : undefined,
+      };
+
+      // Group by category
+      for (const category of layerOptions.categories) {
+        const cleanCategory = category.replaceAll("_", " ");
+        const groupValue = cleanCategory === "All Layers" ? "opengis:all_layers" : cleanCategory;
+
+        if (!groupsObj[groupValue]) {
+          groupsObj[groupValue] = {
+            value: groupValue,
+            label: cleanCategory,
+            url: rootUrl,
+            prefix: "",
+            defaultGroup: false,
+            visibleLayers: [],
+            wmsGroupUrl: rootUrl,
+            customRestUrl: rootUrl,
+            layers: [],
+            secured,
+            primary: source.primary || false,
+            rawLayers: [],
+          };
+        }
+        groupsObj[groupValue].rawLayers.push(parsedLayer);
+      }
+    }
+
+    // Build OL layers for each group
+    const groups: TOCLayerGroup[] = [];
+
+    for (const groupValue of Object.keys(groupsObj)) {
+      const groupDef = groupsObj[groupValue];
+      const builtLayers: TOCLayer[] = [];
+      let layerIndex = groupDef.rawLayers.length;
+
+      for (const rawLayer of groupDef.rawLayers) {
+        layerIndex--;
+        await new Promise<void>((resolve) => {
+          buildESRILayer(
+            {
+              group: groupDef,
+              layer: rawLayer,
+              layerIndex,
+            },
+            (builtLayer) => {
+              builtLayers.push(builtLayer);
+              resolve();
+            },
+          );
+        });
+      }
+
+      if (builtLayers.length > 0) {
+        // Strip the temporary rawLayers property before returning
+        const { rawLayers: _unused, ...cleanGroup } = groupDef;
+        void _unused;
+        groups.push({
+          ...cleanGroup,
+          layers: builtLayers,
+        });
+      }
+    }
+
+    return groups;
   } catch (error) {
     console.error("Error loading ArcGIS groups:", error);
     throw error;
@@ -442,8 +637,16 @@ export function mergeGroupsTogether(targetGroup: TOCLayerGroup, sourceGroups: TO
           isDuplicateLayer = true;
           // Priority logic: prefer secured/primary layers over non-primary groups
           if ((newLayer.secured || sourceGroup.primary) && !targetGroup.primary) {
+            // Remove the discarded existing layer from the map if it has an OL layer
+            if (existingLayer.managedLayerId) {
+              LayerManager.removeLayer(existingLayer.managedLayerId);
+            }
             return newLayer;
           } else {
+            // Remove the discarded incoming layer from the map if it has an OL layer
+            if (newLayer.managedLayerId) {
+              LayerManager.removeLayer(newLayer.managedLayerId);
+            }
             return existingLayer;
           }
         } else {
@@ -509,6 +712,10 @@ export function mergeGroups(originalGroups: TOCLayerGroup[], newGroups: TOCLayer
               isDuplicateLayer = true;
               // Priority logic: prefer secured/primary layers
               if ((sourceLayer.secured || newGroup.primary) && !existingGroup.primary) {
+                // Remove the discarded existing layer from the map if it has an OL layer
+                if (existingLayer.managedLayerId) {
+                  LayerManager.removeLayer(existingLayer.managedLayerId);
+                }
                 const updatedLayer = {
                   ...sourceLayer,
                   group: existingGroup.value,
@@ -516,6 +723,10 @@ export function mergeGroups(originalGroups: TOCLayerGroup[], newGroups: TOCLayer
                 };
                 return updatedLayer;
               } else {
+                // Remove the discarded incoming layer from the map if it has an OL layer
+                if (sourceLayer.managedLayerId) {
+                  LayerManager.removeLayer(sourceLayer.managedLayerId);
+                }
                 return existingLayer;
               }
             } else {
@@ -560,6 +771,18 @@ export async function loadLayerGroupsFromSources(sources: TOCSource[], config: C
   let mergedGroups: TOCLayerGroup[] = [];
   let defaultGroupName = config.toc.default_group || "";
 
+  // Pre-fetch the access token once so we can:
+  //  1. Skip secured sources entirely when the user isn't authenticated
+  //  2. Pass the token through to avoid redundant getSession() calls per source
+  const hasSecuredSources = sources.some((s) => s.secure);
+  let accessToken: string | undefined;
+  if (hasSecuredSources) {
+    accessToken = await getAccessToken();
+    if (!accessToken) {
+      console.warn("[TOC] No access token available — skipping secured sources. " + "The user may not be signed in or the session may have expired.");
+    }
+  }
+
   // Process sources in order, with primary sources first for priority
   const sortedSources = [...sources].sort((a, b) => {
     if (a.primary && !b.primary) return -1;
@@ -568,13 +791,19 @@ export async function loadLayerGroupsFromSources(sources: TOCSource[], config: C
   });
   // console.log("sortedSources", sortedSources);
   for (const source of sortedSources) {
+    // Skip secured sources when the user isn't authenticated
+    if (source.secure && !accessToken) {
+      console.debug(`[TOC] Skipping secured source (no token): ${source.layerUrl}`);
+      continue;
+    }
+
     try {
       let groups: TOCLayerGroup[] = [];
       const type = source.type || "geoserver";
 
       switch (type.toLowerCase()) {
         case "geoserver":
-          groups = await getGroupsFromGeoServer(source, config);
+          groups = await getGroupsFromGeoServer(source, config, accessToken);
           break;
         case "arcgis":
           groups = await getGroupsFromArcGIS(source);
@@ -895,8 +1124,9 @@ export async function buildESRILayer(options: BuildESRILayerOptions, callback: (
   const minScale = layer.options.minScale || 0;
   const maxScale = layer.options.maxScale || 0;
 
-  // SET VISIBILITY
-  const layerVisible = layer.visible || visibleLayers.includes(layerNameOnly);
+  // SET VISIBILITY — use the visibility already computed by getGroupsFromArcGIS.
+  // Only fall back to visibleLayers if the caller didn't set layer.visible.
+  const layerVisible = layer.visible === true || visibleLayers.includes(layerNameOnly);
 
   // LAYER PROPS
   const layerOptions = {
@@ -908,6 +1138,7 @@ export async function buildESRILayer(options: BuildESRILayerOptions, callback: (
     tiled: false,
     extent: layer.extent,
     name: layer.name,
+    secured: secured,
     ...(layer.grouped &&
       layer.layers && {
         layers: layer.layers as LayerOptions[],
@@ -948,11 +1179,17 @@ export async function buildESRILayer(options: BuildESRILayerOptions, callback: (
         geometryType: "#GEOMETRYTYPE#",
       });
 
-      // Handle token authentication
+      // Handle token authentication — try URL first, then fall back to store
       try {
         const url = new URL(rootInfoUrl);
         const urlParams = new URLSearchParams(url.searchParams);
-        const url_token = urlParams.get("token");
+        let url_token = urlParams.get("token");
+
+        // Fall back to the arcgisTokenStore if no token in the URL and layer is secured
+        if (!url_token && secured) {
+          url_token = useArcGISTokenStore.getState().token;
+        }
+
         if (url_token) {
           wfsUrl = `${wfsUrl}&token=${url_token}`;
           if (hasAttachments) {
@@ -978,6 +1215,8 @@ export async function buildESRILayer(options: BuildESRILayerOptions, callback: (
         maxScale: maxScale,
         attachmentUrl: hasAttachments ? attachmentUrl : null,
         hasAttachments: hasAttachments,
+        isArcGIS: true,
+        secured: secured,
       });
 
       // Add to map using LayerManager for proper categorization and z-index management

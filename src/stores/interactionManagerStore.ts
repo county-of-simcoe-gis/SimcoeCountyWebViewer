@@ -2,7 +2,9 @@
 
 import { create } from "zustand";
 import type { MapBrowserEvent } from "ol";
+import type { Interaction } from "ol/interaction";
 import type { Result } from "@/components/ResultsPopup";
+import { useMapStore } from "@/stores/mapStore";
 
 // Event types that can be handled
 export type InteractionEventType = "singleclick" | "contextmenu" | "pointermove" | "dblclick";
@@ -17,7 +19,7 @@ export interface InteractionConditions {
   checkLayerFilters?: (event: MapBrowserEvent<PointerEvent>) => boolean; // Returns true if handler should be disabled based on layers
 }
 
-// Handler definition
+// Handler definition (for logical click/move/contextmenu callbacks)
 export interface InteractionHandler {
   id: string;
   eventType: InteractionEventType;
@@ -26,15 +28,34 @@ export interface InteractionHandler {
   handler: (coordinate: number[], pixel: number[], event: MapBrowserEvent<PointerEvent>) => Promise<InteractionResult[]> | InteractionResult[] | Promise<void> | void;
 }
 
+// Managed OL Interaction object (Draw, Modify, Translate, Snap, PinchRotate, DragRotate, etc.)
+export interface ManagedInteraction {
+  id: string;
+  interaction: Interaction;
+  owner: string; // Component/system that owns this interaction (e.g., "myMaps", "measure", "rotation")
+}
+
 interface InteractionManagerState {
+  // Logical handler callbacks
   handlers: InteractionHandler[];
   registerHandler: (handler: InteractionHandler) => void;
   unregisterHandler: (handlerId: string) => void;
   getHandlers: (eventType?: InteractionEventType) => InteractionHandler[];
+
+  // OL Interaction object management
+  interactions: ManagedInteraction[];
+  registerInteraction: (id: string, interaction: Interaction, owner?: string) => void;
+  unregisterInteraction: (id: string) => void;
+  getInteraction: (id: string) => ManagedInteraction | undefined;
+  getInteractionsByOwner: (owner: string) => ManagedInteraction[];
+  unregisterAllByOwner: (owner: string) => void;
 }
 
 export const useInteractionManagerStore = create<InteractionManagerState>((set, get) => ({
   handlers: [],
+  interactions: [],
+
+  // --- Logical handler callbacks ---
 
   registerHandler: (handler: InteractionHandler) => {
     set((state) => {
@@ -60,5 +81,65 @@ export const useInteractionManagerStore = create<InteractionManagerState>((set, 
       return handlers.filter((h) => h.eventType === eventType);
     }
     return handlers;
+  },
+
+  // --- OL Interaction object management ---
+
+  registerInteraction: (id: string, interaction: Interaction, owner: string = "unknown") => {
+    const map = useMapStore.getState().map;
+
+    // If an interaction with the same ID already exists, remove it first
+    const existing = get().interactions.find((i) => i.id === id);
+    if (existing) {
+      if (map) {
+        map.removeInteraction(existing.interaction);
+      }
+    }
+
+    // Add to map
+    if (map) {
+      map.addInteraction(interaction);
+    }
+
+    set((state) => ({
+      interactions: [...state.interactions.filter((i) => i.id !== id), { id, interaction, owner }],
+    }));
+  },
+
+  unregisterInteraction: (id: string) => {
+    const map = useMapStore.getState().map;
+    const existing = get().interactions.find((i) => i.id === id);
+
+    if (existing) {
+      if (map) {
+        map.removeInteraction(existing.interaction);
+      }
+      set((state) => ({
+        interactions: state.interactions.filter((i) => i.id !== id),
+      }));
+    }
+  },
+
+  getInteraction: (id: string) => {
+    return get().interactions.find((i) => i.id === id);
+  },
+
+  getInteractionsByOwner: (owner: string) => {
+    return get().interactions.filter((i) => i.owner === owner);
+  },
+
+  unregisterAllByOwner: (owner: string) => {
+    const map = useMapStore.getState().map;
+    const toRemove = get().interactions.filter((i) => i.owner === owner);
+
+    toRemove.forEach((managed) => {
+      if (map) {
+        map.removeInteraction(managed.interaction);
+      }
+    });
+
+    set((state) => ({
+      interactions: state.interactions.filter((i) => i.owner !== owner),
+    }));
   },
 }));

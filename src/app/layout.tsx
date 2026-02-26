@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@/app/globals.css";
 import AuthProvider from "@/app/auth/Provider";
+import ArcGISAuthProvider from "@/components/auth/ArcGISAuthProvider";
 import { ToastContainer } from "@/components/Toast";
 import { UrlParameterProvider } from "@/contexts/UrlParameterContext";
 
@@ -32,10 +33,12 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>
-          <UrlParameterProvider>
-            {children}
-            <ToastContainer />
-          </UrlParameterProvider>
+          <ArcGISAuthProvider>
+            <UrlParameterProvider>
+              {children}
+              <ToastContainer />
+            </UrlParameterProvider>
+          </ArcGISAuthProvider>
         </AuthProvider>
       </body>
     </html>

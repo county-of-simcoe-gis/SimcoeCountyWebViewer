@@ -5,6 +5,16 @@ import CoordinatesTool from "../CoordinatesTool";
 import { useMapStore } from "@/stores/mapStore";
 import { useEventStore } from "@/stores/eventStore";
 
+// Mock LayerManager
+const mockAddLayer = vi.fn().mockReturnValue("mock-layer-id");
+const mockRemoveLayer = vi.fn().mockReturnValue(true);
+vi.mock("@/utils/openlayers/LayerManager", () => ({
+  LayerManager: {
+    addLayer: (...args: unknown[]) => mockAddLayer(...args),
+    removeLayer: (...args: unknown[]) => mockRemoveLayer(...args),
+  },
+}));
+
 // Mock react-icons
 vi.mock("react-icons/fa", () => ({
   FaCrosshairs: () => <div data-testid="icon-crosshairs" />,
@@ -341,7 +351,7 @@ describe("CoordinatesTool", () => {
 
       render(<CoordinatesTool onClose={mockOnClose} />);
 
-      expect(mockMap.addLayer).toHaveBeenCalled();
+      expect(mockAddLayer).toHaveBeenCalled();
     });
 
     it("registers map events on mount", () => {
