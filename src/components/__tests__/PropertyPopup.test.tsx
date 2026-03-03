@@ -3,6 +3,8 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import PropertyPopup from "@/components/PropertyPopup";
 import { Feature } from "ol";
 import { Polygon } from "ol/geom";
+import { useReportsStore } from "@/stores/reportsStore";
+import { useEventStore } from "@/stores/eventStore";
 
 // Mock CSS
 
@@ -158,16 +160,15 @@ describe("PropertyPopup", () => {
   });
 
   it("handles add to my maps action", () => {
-    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const emitSpy = vi.fn();
+    useEventStore.setState({ emitAddMyMapsFeature: emitSpy });
 
     render(<PropertyPopup propInfo={defaultPropInfo} feature={mockFeature} onClose={mockOnClose} onClearParcelLayer={mockOnClearParcelLayer} />);
 
     const addToMyMapsButton = screen.getByText("[Add to My Maps]");
     fireEvent.click(addToMyMapsButton);
 
-    expect(consoleLogSpy).toHaveBeenCalledWith("Add to MyMaps:", expect.objectContaining({ arn: "1234567890" }));
-
-    consoleLogSpy.mockRestore();
+    expect(emitSpy).toHaveBeenCalledWith(mockFeature, "123 Test Street");
   });
 
   it("opens terms URL in new window", () => {
@@ -184,16 +185,16 @@ describe("PropertyPopup", () => {
   });
 
   it("shows more information when button is clicked", () => {
-    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-
     render(<PropertyPopup propInfo={defaultPropInfo} feature={mockFeature} onClose={mockOnClose} onClearParcelLayer={mockOnClearParcelLayer} />);
 
     const moreInfoButton = screen.getByText("More Information");
     fireEvent.click(moreInfoButton);
 
-    expect(consoleLogSpy).toHaveBeenCalledWith("Show more info for:", "1234567890");
-
-    consoleLogSpy.mockRestore();
+    // Should load a property report into the reports store
+    const report = useReportsStore.getState().currentReport;
+    expect(report).not.toBeNull();
+    expect(report!.title).toContain("123 Test Street");
+    expect(report!.source).toBe("propertyReport");
   });
 
   it("calls onClose and clears parcel layer when close button is clicked", () => {

@@ -42,6 +42,9 @@ import LiveLayerClick from "@/components/LiveLayerClick";
 import MapPopup from "@/components/MapPopup";
 import { MapContextMenuContainer } from "@/components/MapContextMenuContainer";
 import ResultsPopup, { type Result } from "@/components/ResultsPopup";
+import ReportsFeatureList from "@/components/ReportsFeatureList";
+import { useReportsStore } from "@/stores/reportsStore";
+import { activateTab } from "@/utils/helpersUI";
 
 
 // Extended Result type with optional methods that may be added at runtime
@@ -148,6 +151,7 @@ export default function MapContainer() {
   const identifyIconLayerRef = useRef<VectorLayer<VectorSource<Feature<Geometry>>> | null>(null);
   const identifyIconLayerIdRef = useRef<string | null>(null);
   const hasAppliedApiConfigRef = useRef(false);
+  const initialViewRef = useRef<{ center: number[]; zoom: number } | null>(null);
 
   // Handler-based system - use store
   const {
@@ -279,6 +283,9 @@ export default function MapContainer() {
     let extent = null;
     const centerCoords = activeConfig.centerCoords || [-8878504.68, 5543492.45];
     const defaultZoom = activeConfig.defaultZoom || 10;
+
+    // Store initial view state so we can detect user navigation later
+    initialViewRef.current = { center: [...centerCoords], zoom: defaultZoom };
 
     // Check if URL has coordinate parameters - if so, don't apply stored extent
     // This matches legacy behavior where URL params take precedence
@@ -413,10 +420,10 @@ export default function MapContainer() {
         const currentHandlers = useInteractionManagerStore.getState().handlers as InteractionHandler[];
         const checkHandler = shouldExecuteHandlerRef.current || (() => true);
         const applicableHandlers = currentHandlers.filter((h) => h.eventType === eventType && checkHandler(h, event));
-        console.log(
-          `UnifiedInteraction: Applicable handlers for "${eventType}": ${applicableHandlers.length}`,
-          applicableHandlers.map((h) => h.id),
-        );
+        // console.log(
+        //   `UnifiedInteraction: Applicable handlers for "${eventType}": ${applicableHandlers.length}`,
+        //   applicableHandlers.map((h) => h.id),
+        // );
 
         if (applicableHandlers.length === 0) {
           return true; // Allow event to propagate
@@ -826,6 +833,17 @@ export default function MapContainer() {
     const storedExtent = sessionStorage.getItem("Map Extent");
     if (storedExtent) return;
 
+    // Don't override if the user has already navigated away from the initial view
+    // (race condition: API config may arrive after user has zoomed/panned)
+    if (initialViewRef.current) {
+      const currentZoom = map.getView().getZoom() ?? 0;
+      const currentCenter = map.getView().getCenter();
+      const { center: initCenter, zoom: initZoom } = initialViewRef.current;
+      if (currentCenter && (Math.abs(currentZoom - initZoom) > 0.1 || Math.abs(currentCenter[0] - initCenter[0]) > 1 || Math.abs(currentCenter[1] - initCenter[1]) > 1)) {
+        return;
+      }
+    }
+
     const configCenter = appStoreConfig.centerCoords;
     const configZoom = appStoreConfig.defaultZoom;
     const configMaxZoom = appStoreConfig.maxZoom;
@@ -1179,9 +1197,6 @@ export default function MapContainer() {
         hidePopup();
       };
 
-      // Register cleanup so the popup store's × button also clears state
-      setOnClose(cleanupResults);
-
       const handleSelectResult = async (result: Result) => {
         // Call lazy-loading function if it exists on the result
         const resultWithMethods = result as ResultWithMethods;
@@ -1200,8 +1215,29 @@ export default function MapContainer() {
         });
       };
 
-      // Hide any existing popup first, then show the new one
+      // Hide any existing popup first, then register the new cleanup callback.
+      // Order matters: hidePopup() invokes (and clears) the previous onCloseCallback,
+      // so setOnClose must come AFTER to ensure the new callback survives.
       hidePopup();
+      setOnClose(cleanupResults);
+
+      // If the user opted to always send popup content to the Reports tab,
+      // bypass the map overlay entirely and route to the sidebar.
+      if (usePopupStore.getState().alwaysUseReportsTab) {
+        const title = aggregatedResults.length > 1 ? `${aggregatedResults.length} Features` : "Result";
+        useReportsStore.getState().setReport({
+          id: `popup-auto-${Date.now()}`,
+          title,
+          content: <ReportsFeatureList results={aggregatedResults} onClose={handleClose} onClearParcelLayer={handleClearParcelLayer} />,
+          createdAt: new Date(),
+          source: "popupPopOut",
+        });
+        activateTab("reports");
+        return;
+      }
+
+      // Store the raw results so the pop-out handler in MapPopup can access them
+      usePopupStore.getState().setRawResults(aggregatedResults as unknown[]);
 
       showPopup(
         resultsCoordinate,

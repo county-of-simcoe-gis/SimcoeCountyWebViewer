@@ -10,6 +10,7 @@ import { useAppStore } from "@/stores/appStore";
 import { useReportsStore } from "@/stores/reportsStore";
 import { useEffect, useState, Suspense, useCallback } from "react";
 import { lazy } from "react";
+import ReportsNavBar from "@/components/ReportsNavBar";
 
 // Lazy load tool components
 const MeasureTool = lazy(() => import("@/components/tools/Measure/MeasureTool"));
@@ -389,6 +390,7 @@ export default function Sidebar() {
         {!hideReports && (
           <TabPanel>
             <div className="sc-sidebar-content">
+              <ReportsNavBar />
               {currentReport ? (
                 <div className="sc-sidebar-report-container">
                   <div className="sc-sidebar-report-title">{currentReport.title}</div>

@@ -1,0 +1,77 @@
+/* ──────────────────────────────────────────────────────────────
+   PopupReportContent — styling overrides when popup content is
+   rendered inside the Reports sidebar tab instead of the OL overlay.
+   ────────────────────────────────────────────────────────────── */
+
+.sc-popup-in-reports {
+  width: 100%;
+}
+
+/* Remove the OL overlay constraints when inside the sidebar */
+.sc-popup-in-reports .sc-map-popup {
+  max-width: 100%;
+  min-width: unset;
+  box-shadow: none;
+  animation: none;
+  border-radius: 0;
+}
+
+/* Hide the arrow that points to the map (not relevant in sidebar) */
+.sc-popup-in-reports .sc-map-popup::after {
+  display: none;
+}
+
+/* Let content fill the sidebar's available height */
+.sc-popup-in-reports .sc-map-popup-content {
+  max-height: none;
+  padding: 8px;
+}
+
+/* Feature navigation bar in Reports context */
+.sc-popup-report-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background-color: #f0f0f0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.sc-popup-report-nav-btn {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.sc-popup-report-nav-btn:hover {
+  background-color: #e8e8e8;
+  border-color: #ccc;
+}
+
+.sc-popup-report-nav-count {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  min-width: 60px;
+  text-align: center;
+}
+
+.sc-popup-report-layer-badge {
+  font-size: 10px;
+  color: #666;
+  background-color: #e8f4fd;
+  border-bottom: 1px solid #d0e8f7;
+  padding: 4px 10px;
+  font-weight: 500;
+}
+
+.sc-popup-report-content {
+  padding: 6px;
+}

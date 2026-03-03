@@ -5,6 +5,12 @@ import { Feature } from "ol";
 import config from "@/config.json";
 import { InfoRow } from "@/components/common/InfoRow";
 import { usePropertyPopupExtensionStore } from "@/stores/propertyPopupExtensionStore";
+import { usePopupStore } from "@/stores/popupStore";
+import { useReportsStore } from "@/stores/reportsStore";
+import { useEventStore } from "@/stores/eventStore";
+import { useToastStore } from "@/hooks/useToast";
+import PropertyReport from "@/components/PropertyReport";
+import { activateTab } from "@/utils/helpersUI";
 
 export interface PropertyInfo {
   ARN: string;
@@ -27,7 +33,7 @@ export interface PropertyInfo {
 interface PropertyPopupProps {
   propInfo: PropertyInfo;
   feature: Feature;
-  onClose: () => void;
+  onClose?: () => void;
   onClearParcelLayer?: () => void;
 }
 
@@ -53,29 +59,59 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
   };
 
   const handleAddToMyMaps = () => {
-    console.log("Add to MyMaps:", { arn, address, feature });
-  };
-
-  const handleZoom = () => {
-    const geometry = feature.getGeometry();
-    if (geometry && window.map) {
-      window.map.getView().fit(geometry.getExtent(), {
-        size: window.map.getSize(),
-        duration: 1000,
-        padding: [50, 50, 50, 50],
-      });
-    }
+    const label = address || `Property ${arn}`;
+    useEventStore.getState().emitAddMyMapsFeature(feature, label);
+    activateTab("mymaps");
+    useToastStore.getState().addToast("Feature added to MyMaps", "success");
   };
 
   const handleMoreInfo = () => {
-    console.log("Show more info for:", arn);
+    // Close the popup overlay and parcel highlight
+    onClearParcelLayer?.();
+    onClose?.();
+    usePopupStore.getState().hide();
+
+    // Load the detailed property report into the Reports tab
+    useReportsStore.getState().setReport({
+      id: `property-report-${arn}-${Date.now()}`,
+      title: address ? `Property: ${address}` : `Property: ${arn}`,
+      content: (
+        <PropertyReport
+          arn={arn}
+          onZoomClick={
+            feature
+              ? () => {
+                  const map = (window as unknown as { map?: { getView: () => { fit: (extent: unknown, size: unknown) => void } }; getSize: () => unknown }).map;
+                  const geom = feature.getGeometry();
+                  if (map && geom) {
+                    map.getView().fit(geom.getExtent(), map.getSize());
+                  }
+                }
+              : undefined
+          }
+        />
+      ),
+      createdAt: new Date(),
+      source: "propertyReport",
+    });
+    activateTab("reports");
   };
 
   const handleCloseClick = () => {
-    if (onClearParcelLayer) {
-      onClearParcelLayer();
+    // Call the parent-provided callbacks first (parcel layer cleanup, etc.)
+    onClearParcelLayer?.();
+    onClose?.();
+
+    // Also close via the store directly — this ensures the popup closes
+    // even when rendered inside the Reports tab (where onClose may not
+    // be wired to popupStore.hide).
+    usePopupStore.getState().hide();
+
+    // If we are rendering inside the Reports tab, clear the current report
+    // (keeps session history intact so Back still works).
+    if (useReportsStore.getState().currentReport) {
+      useReportsStore.getState().clearReport();
     }
-    onClose();
   };
 
   return (
@@ -107,7 +143,7 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
         {assessedValue && (
           <InfoRow label="Assessed Value">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={assessedValue} alt="Assessed Value" className="mb-0.5" />
+            <img src={assessedValue} alt="Assessed Value" className="mb-0.5" style={{ height: "16px", minWidth: "300px" }} />
             <div className="text-[9px] text-gray-600 pb-1">(may not reflect current market value)</div>
           </InfoRow>
         )}
@@ -153,8 +189,8 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
         {pointCoordinates && <InfoRow label="Pointer Coordinates" value={`Lat: ${Math.round(pointCoordinates[1] * 10000) / 10000}  Long: ${Math.round(pointCoordinates[0] * 10000) / 10000}`} />}
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex mt-1.5 w-full">
+      {/* Action Buttons — sticky so the scroll container can't shift them away from the cursor */}
+      <div className="flex mt-1.5 w-full sticky bottom-0 bg-white pt-1 pb-0.5 z-10">
         <button className="sc-button flex-[6] mr-1.5" onClick={handleMoreInfo}>
           More Information
         </button>
