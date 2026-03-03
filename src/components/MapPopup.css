@@ -57,6 +57,35 @@
   font-size: 15px;
   font-weight: 400;
   color: #fff;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Pop-out button (opens content in Reports tab) */
+.sc-map-popup-popout {
+  background: none;
+  border: none;
+  font-size: 14px;
+  line-height: 1;
+  color: #fff;
+  cursor: pointer;
+  padding: 0;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.sc-map-popup-popout:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
 }
 
 .sc-map-popup-close {
@@ -74,6 +103,7 @@
   justify-content: center;
   border-radius: 3px;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .sc-map-popup-close:hover {

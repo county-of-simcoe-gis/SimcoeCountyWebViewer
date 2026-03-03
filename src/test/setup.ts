@@ -39,6 +39,7 @@ vi.mock("react-icons/fa", () => ({
   FaEllipsisV: (props: any) => React.createElement("div", { ...props, "data-testid": "ellipsis-v-icon" }, "EllipsisV"),
   FaEyeSlash: (props: any) => React.createElement("div", { ...props, "data-testid": "eye-slash-icon" }, "EyeSlash"),
   FaChevronDown: (props: any) => React.createElement("div", { ...props, "data-testid": "chevron-down-icon" }, "ChevronDown"),
+  FaChevronLeft: (props: any) => React.createElement("div", { ...props, "data-testid": "chevron-left-icon" }, "ChevronLeft"),
   FaChevronRight: (props: any) => React.createElement("div", { ...props, "data-testid": "chevron-right-icon" }, "ChevronRight"),
   FaFolder: (props: any) => React.createElement("div", { ...props, "data-testid": "folder-icon" }, "Folder"),
   FaFolderOpen: (props: any) => React.createElement("div", { ...props, "data-testid": "folder-open-icon" }, "FolderOpen"),

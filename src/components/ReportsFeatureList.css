@@ -1,0 +1,139 @@
+/* ──────────────────────────────────────────────────────────────
+   ReportsFeatureList — accordion-style multi-feature display
+   for the Reports sidebar tab.
+   ────────────────────────────────────────────────────────────── */
+
+.sc-rfl-container {
+  width: 100%;
+}
+
+/* ─── Header ─── */
+.sc-rfl-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: #f0f0f0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.sc-rfl-header-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: #444;
+}
+
+/* ─── Panel list ─── */
+.sc-rfl-panels {
+  display: flex;
+  flex-direction: column;
+}
+
+.sc-rfl-panel {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.sc-rfl-panel:last-child {
+  border-bottom: none;
+}
+
+/* ─── Panel header (clickable) ─── */
+.sc-rfl-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  background: #fafafa;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 13px;
+  transition: background-color 0.15s;
+}
+
+.sc-rfl-panel-header:hover {
+  background-color: #f0f0f0;
+}
+
+.sc-rfl-panel-expanded .sc-rfl-panel-header {
+  background-color: #e8f0fe;
+  border-bottom: 1px solid #d4e4f7;
+}
+
+.sc-rfl-panel-chevron {
+  flex-shrink: 0;
+  color: #888;
+  display: flex;
+  align-items: center;
+}
+
+.sc-rfl-panel-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  color: #555;
+}
+
+.sc-rfl-panel-expanded .sc-rfl-panel-icon {
+  background-color: #1976d2;
+  color: #fff;
+}
+
+.sc-rfl-icon-svg {
+  font-size: 12px;
+}
+
+.sc-rfl-panel-title-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sc-rfl-panel-title {
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sc-rfl-panel-subtitle {
+  font-size: 11px;
+  color: #888;
+  margin-top: 1px;
+}
+
+/* ─── Panel body (expanded content) ─── */
+.sc-rfl-panel-body {
+  padding: 0;
+  border-top: none;
+  background: #fff;
+}
+
+/* ─── Identify content inside panel ─── */
+.sc-rfl-identify-content {
+  padding: 10px 12px;
+}
+
+.sc-rfl-feature-id {
+  font-size: 11px;
+  color: #999;
+  margin-bottom: 6px;
+}
+
+.sc-rfl-attributes {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Empty state ─── */
+.sc-rfl-empty {
+  padding: 12px;
+  font-size: 13px;
+  color: #999;
+}

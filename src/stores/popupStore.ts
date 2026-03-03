@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { Overlay } from "ol";
 
+const ALWAYS_REPORTS_TAB_KEY = "sc-always-reports-tab";
+
 export interface PopupFeature {
   id: string;
   title: string;
@@ -16,6 +18,10 @@ interface PopupState {
   selectedIndex: number;
   /** Optional callback invoked when the popup is hidden (e.g. via the × button). */
   onCloseCallback: (() => void) | null;
+  /** When true, map-click popup content is sent directly to the Reports tab. */
+  alwaysUseReportsTab: boolean;
+  /** The raw interaction Result[] from the last map click (used by pop-out to render collapsible list). */
+  rawResults: unknown[] | null;
 
   // Actions
   setOverlay: (overlay: Overlay) => void;
@@ -30,6 +36,8 @@ interface PopupState {
   prevFeature: () => void;
   updateContent: (content: React.ReactNode) => void;
   updatePosition: (coordinates: number[]) => void;
+  setAlwaysUseReportsTab: (value: boolean) => void;
+  setRawResults: (results: unknown[] | null) => void;
 }
 
 export const usePopupStore = create<PopupState>((set, get) => ({
@@ -39,6 +47,8 @@ export const usePopupStore = create<PopupState>((set, get) => ({
   coordinates: null,
   selectedIndex: 0,
   onCloseCallback: null,
+  alwaysUseReportsTab: typeof window !== "undefined" && localStorage.getItem(ALWAYS_REPORTS_TAB_KEY) === "true",
+  rawResults: null,
 
   setOverlay: (overlay) => set({ overlay }),
 
@@ -99,6 +109,7 @@ export const usePopupStore = create<PopupState>((set, get) => ({
         coordinates: null,
         selectedIndex: 0,
         onCloseCallback: null,
+        rawResults: null,
       };
     });
   },
@@ -142,4 +153,13 @@ export const usePopupStore = create<PopupState>((set, get) => ({
       }
       return { coordinates };
     }),
+
+  setAlwaysUseReportsTab: (value: boolean) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(ALWAYS_REPORTS_TAB_KEY, String(value));
+    }
+    set({ alwaysUseReportsTab: value });
+  },
+
+  setRawResults: (results) => set({ rawResults: results }),
 }));

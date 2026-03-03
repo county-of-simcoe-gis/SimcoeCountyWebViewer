@@ -4,12 +4,17 @@ import { useEffect, useRef, useCallback } from "react";
 import { Overlay } from "ol";
 import { useMapStore } from "@/stores/mapStore";
 import { usePopupStore } from "@/stores/popupStore";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { useReportsStore } from "@/stores/reportsStore";
+import { activateTab } from "@/utils/helpersUI";
+import { FaChevronLeft, FaChevronRight, FaExternalLinkAlt } from "react-icons/fa";
+import PopupReportContent from "@/components/PopupReportContent";
+import ReportsFeatureList from "@/components/ReportsFeatureList";
+import type { Result } from "@/components/ResultsPopup";
 import "./MapPopup.css";
 
 export default function MapPopup() {
   const { map } = useMapStore();
-  const { setOverlay, isVisible, features, selectedIndex, hide, nextFeature, prevFeature } = usePopupStore();
+  const { setOverlay, isVisible, features, selectedIndex, hide, nextFeature, prevFeature, coordinates } = usePopupStore();
   const popupRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<Overlay | null>(null);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -108,8 +113,8 @@ export default function MapPopup() {
     const handleMouseDown = (evt: MouseEvent) => {
       const target = evt.target as HTMLElement;
 
-      // Ignore close button clicks
-      if (target.closest(".sc-map-popup-close") || target.closest(".sc-map-popup-nav-btn")) {
+      // Ignore close / popout button clicks
+      if (target.closest(".sc-map-popup-close") || target.closest(".sc-map-popup-popout") || target.closest(".sc-map-popup-nav-btn")) {
         return;
       }
 
@@ -174,6 +179,65 @@ export default function MapPopup() {
     return cleanup;
   }, [isVisible, setupDrag]);
 
+  // Auto-pan: when the popup first opens (new coordinates), wait for it to
+  // render, measure its bounds against the map viewport, and smoothly pan
+  // the map so the popup is fully visible. Skipped after user drags.
+  useEffect(() => {
+    if (!isVisible || !map || !popupRef.current || !coordinates || hasBeenDraggedRef.current) return;
+
+    // Wait two frames so the overlay element has its final size/position.
+    let cancelled = false;
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        if (cancelled || !popupRef.current || !map) return;
+
+        const popupEl = popupRef.current;
+        const mapEl = map.getTargetElement() as HTMLElement | null;
+        if (!mapEl) return;
+
+        const mapRect = mapEl.getBoundingClientRect();
+        const popupRect = popupEl.getBoundingClientRect();
+
+        const margin = 20; // px padding from viewport edges
+        let deltaX = 0;
+        let deltaY = 0;
+
+        // Check each edge
+        if (popupRect.top < mapRect.top + margin) {
+          deltaY = mapRect.top + margin - popupRect.top; // need to pan map down (negative pixel shift)
+        } else if (popupRect.bottom > mapRect.bottom - margin) {
+          deltaY = mapRect.bottom - margin - popupRect.bottom; // pan map up
+        }
+
+        if (popupRect.left < mapRect.left + margin) {
+          deltaX = mapRect.left + margin - popupRect.left; // pan map right
+        } else if (popupRect.right > mapRect.right - margin) {
+          deltaX = mapRect.right - margin - popupRect.right; // pan map left
+        }
+
+        if (deltaX === 0 && deltaY === 0) return; // fully visible, no pan needed
+
+        // Convert pixel delta to map coordinates
+        const view = map.getView();
+        const center = view.getCenter();
+        if (!center) return;
+
+        const centerPixel = map.getPixelFromCoordinate(center);
+        const newCenterPixel = [centerPixel[0] - deltaX, centerPixel[1] - deltaY];
+        const newCenter = map.getCoordinateFromPixel(newCenterPixel);
+
+        view.animate({ center: newCenter, duration: 250 });
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+    };
+  }, [isVisible, coordinates, map]);
+
   if (!isVisible || features.length === 0) {
     return (
       <div ref={popupRef} className="sc-map-popup" style={{ display: "none" }}>
@@ -185,10 +249,46 @@ export default function MapPopup() {
   const currentFeature = features[selectedIndex];
   const hasMultipleFeatures = features.length > 1;
 
+  /** Pop current popup content out to the sidebar Reports tab. */
+  const handlePopOut = () => {
+    const popupState = usePopupStore.getState();
+    const rawResults = popupState.rawResults as Result[] | null;
+
+    // If we have the original Result[] (multi-feature click), use the collapsible list
+    if (rawResults && rawResults.length > 0) {
+      const title = rawResults.length > 1 ? `${rawResults.length} Features` : rawResults[0]?.displayName || "Result";
+      useReportsStore.getState().setReport({
+        id: `popup-popout-${Date.now()}`,
+        title,
+        content: <ReportsFeatureList results={rawResults} onClose={() => hide()} />,
+        createdAt: new Date(),
+        source: "popupPopOut",
+      });
+    } else {
+      // Fallback: use PopupReportContent for non-interaction popups
+      const popupFeatures = popupState.features;
+      const popupIndex = popupState.selectedIndex;
+      const title = popupFeatures.length > 1 ? `Results (${popupFeatures.length})` : popupFeatures[0]?.title || "Result";
+      useReportsStore.getState().setReport({
+        id: `popup-popout-${Date.now()}`,
+        title,
+        content: <PopupReportContent features={popupFeatures} initialSelectedIndex={popupIndex} />,
+        createdAt: new Date(),
+        source: "popupPopOut",
+      });
+    }
+
+    activateTab("reports");
+    hide();
+  };
+
   return (
     <div ref={popupRef} className="sc-map-popup">
       <div ref={headerRef} className="sc-map-popup-header sc-no-select">
         <h3 className="sc-map-popup-title">{currentFeature.title}</h3>
+        <button className="sc-map-popup-popout" onClick={handlePopOut} aria-label="Pop out to Reports tab" title="Pop out to Reports tab">
+          <FaExternalLinkAlt size={11} />
+        </button>
         <button className="sc-map-popup-close" onClick={hide} aria-label="Close popup">
           ×
         </button>
