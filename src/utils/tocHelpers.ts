@@ -221,6 +221,9 @@ export function buildLayerFromWMS(group: Partial<TOCLayerGroup> & { secure?: boo
     canDownload: Boolean(canDownload) || false,
     hasAttachments: false, // GeoServer layers don't typically have attachments
     disclaimer,
+    extendedProperties: { keywords: { ...allKeywords } },
+    wfsUrl: `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerNameOnly}&outputFormat=application/json&cql_filter=`,
+    serverUrl: serverUrl + "/",
   };
 }
 
@@ -1217,6 +1220,13 @@ export async function buildESRILayer(options: BuildESRILayerOptions, callback: (
         hasAttachments: hasAttachments,
         isArcGIS: true,
         secured: secured,
+        group: group.label,
+        extendedProperties: {
+          keywords: {
+            SAR: layer.options.sar || false,
+            CATEGORY: layer.options.categories || [],
+          },
+        },
       });
 
       // Add to map using LayerManager for proper categorization and z-index management
@@ -1278,6 +1288,13 @@ export async function buildESRILayer(options: BuildESRILayerOptions, callback: (
         tocDisplayName: tocDisplayName,
         hasAttachments: hasAttachments,
         disclaimer: disclaimer ? disclaimer.title : undefined,
+        extendedProperties: {
+          keywords: {
+            SAR: layer.options.sar || false,
+            CATEGORY: layer.options.categories || [],
+          },
+        },
+        wfsUrl: wfsUrl,
       };
 
       callback(returnLayer);

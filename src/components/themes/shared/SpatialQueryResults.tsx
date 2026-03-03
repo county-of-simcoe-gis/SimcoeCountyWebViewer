@@ -38,8 +38,8 @@ export default function SpatialQueryResults({ sections, highlightSource, emptyMe
 
   return (
     <div className="flex flex-col divide-y divide-base-300">
-      {sections.map((section) => (
-        <SectionPanel key={section.title} section={section} highlightSource={highlightSource} />
+      {sections.map((section, idx) => (
+        <SectionPanel key={`${idx}-${section.title}`} section={section} highlightSource={highlightSource} />
       ))}
     </div>
   );

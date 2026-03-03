@@ -74,6 +74,9 @@ export interface TOCLayer {
   disclaimer?: string;
   infoFormat?: string; // INFO_FORMAT for WMS GetFeatureInfo requests (e.g., text/plain, text/html)
   xslTemplate?: string; // XSL template URL for transforming identify results
+  extendedProperties?: { keywords: Record<string, unknown> }; // Parsed GeoServer keywords (e.g. SAR, CATEGORY)
+  wfsUrl?: string; // WFS query URL template for this layer
+  serverUrl?: string; // Base GeoServer URL for this layer
 }
 
 // Layer group interface based on the old app's group structure
@@ -1800,6 +1803,10 @@ export const useTOCStore = create<TOCState>()(
                     liveLayer: layer.liveLayer, // Keep liveLayer for special features
                     secured: layer.secured,
                     disableParcelClick: false,
+                    extendedProperties: layer.extendedProperties,
+                    wfsUrl: layer.wfsUrl,
+                    group: group.label,
+                    INFO_FORMAT: layer.infoFormat,
                   });
 
                   // Set initial visibility and opacity

@@ -13,6 +13,7 @@ import { Vector as VectorSource } from "ol/source";
 import VectorLayer from "ol/layer/Vector";
 import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style";
 import { GeoJSON } from "ol/format";
+import { showURLWindow } from "@/utils/helpersUI";
 import config from "./config.json";
 
 // ── Props ────────────────────────────────────────────────────────────────────
@@ -97,6 +98,7 @@ export default function Broadband({ name = "Broadband", helpLink, hideHeader, on
           layerName: layer.layerName,
           geometryField: layer.geometryField,
           wkt,
+          buffer: -1,
         });
 
         const olFeatures = result.features
@@ -147,19 +149,19 @@ export default function Broadband({ name = "Broadband", helpLink, hideHeader, on
         </div>
 
         {/* Footer links */}
-        <div className="flex flex-wrap gap-2 px-3 py-2 border-t border-base-300 text-xs">
+        <div className="flex flex-wrap justify-center gap-2 px-3 py-2 border-t border-base-300 bg-base-200">
           {config.termsUrl && (
-            <a href={config.termsUrl} target="_blank" rel="noopener noreferrer" className="btn btn-xs btn-ghost">
+            <button className="btn btn-sm btn-outline flex-1" onClick={() => showURLWindow(config.termsUrl, false, "normal", false, false, "Terms")}>
               Terms
-            </a>
+            </button>
           )}
           {config.aboutUrl && (
-            <a href={config.aboutUrl} target="_blank" rel="noopener noreferrer" className="btn btn-xs btn-ghost">
+            <a href={config.aboutUrl} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline flex-1">
               About the Data
             </a>
           )}
           {config.contactUsEmail && (
-            <a href={`mailto:${config.contactUsEmail}`} className="btn btn-xs btn-ghost">
+            <a href={`mailto:${config.contactUsEmail}`} className="btn btn-sm btn-outline flex-1">
               Contact Us
             </a>
           )}

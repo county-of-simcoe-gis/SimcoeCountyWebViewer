@@ -522,6 +522,8 @@ export interface SpatialQueryOptions {
   outputFormat?: string;
   /** Coordinate system (default: EPSG:3857) */
   srsName?: string;
+  /** Buffer distance to apply to the query geometry (negative values shrink). Uses GeoServer CQL buffer(). */
+  buffer?: number;
 }
 
 /**
@@ -556,16 +558,24 @@ export interface AttributeQueryOptions {
  * });
  */
 export async function queryFeaturesByGeometry(options: SpatialQueryOptions): Promise<FeatureQueryResult> {
-  const { serviceUrl, layerName, geometryField, wkt, maxFeatures = 1000, outputFormat, srsName } = options;
+  const { serviceUrl, layerName, geometryField, wkt, maxFeatures = 1000, outputFormat, srsName, buffer } = options;
 
   if (!wkt || wkt.trim() === "") {
     return { success: false, error: "WKT geometry is required", count: 0 };
   }
 
+  // When a buffer distance is specified, wrap the search geometry in a CQL
+  // buffer() call.  A negative value shrinks the search polygon inward so
+  // that slightly shifted layer boundaries don't cause false matches with
+  // adjacent features.  The buffer is applied to the WKT (second argument)
+  // because GeoServer CQL requires the first INTERSECTS argument to be a
+  // plain property name.
+  const geomExpression = buffer != null ? `buffer(${wkt}, ${buffer})` : wkt;
+
   return queryFeature({
     serviceUrl,
     layerName,
-    cqlFilter: `INTERSECTS(${geometryField}, ${wkt})`,
+    cqlFilter: `INTERSECTS(${geometryField}, ${geomExpression})`,
     maxFeatures,
     ...(outputFormat && { outputFormat }),
     ...(srsName && { srsName }),

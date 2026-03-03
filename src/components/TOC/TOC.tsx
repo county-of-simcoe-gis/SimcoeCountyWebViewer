@@ -288,9 +288,26 @@ export default function TOC({ visible = true }: TOCProps) {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const onActivateLayer = (_layerItem: unknown, _visible = true) => {
-    // Implementation for activating specific layers - placeholder for future use
+  const onActivateLayer = (layerItem: unknown, visible = true) => {
+    const item = layerItem as { fullName?: string; layerGroup?: string };
+    if (!item?.fullName) return;
+
+    // Use the tocStore to update visibility in the TOC state AND the OL layer
+    const { updateLayerVisibility: updateTocVis } = useTOCStore.getState();
+
+    // Try the provided group first
+    if (item.layerGroup) {
+      updateTocVis(item.fullName, item.layerGroup, visible);
+    }
+
+    // Also search all groups in case the group name doesn't match exactly
+    const currentGroups = tocType === "LIST" ? layerListGroups : layerFolderGroups;
+    for (const group of currentGroups) {
+      const found = group.layers.find((l) => l.name === item.fullName);
+      if (found && group.label !== item.layerGroup && group.value !== item.layerGroup) {
+        updateTocVis(item.fullName, group.label, visible);
+      }
+    }
   };
 
   const getLayerList = (callback: (layers: unknown) => void) => {

@@ -2,16 +2,21 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useURLModalStore } from "@/stores/urlModalStore";
-import { useSidebarStore } from "@/stores/sidebarStore";
+import { appendToStorage } from "@/utils/storage";
 
 /**
  * Global URL Window — overlays the map area with an iframe, matching old app behaviour.
  * Positioned to the right of the sidebar, just like the old URLWindow.
  */
 export default function GlobalURLModal() {
-  const { isOpen, url, title, close } = useURLModalStore();
-  const sidebarOpen = useSidebarStore((s) => s.isOpen);
+  const { isOpen, url, title, showFooter, mode, hideScroll, close } = useURLModalStore();
   const [isLoading, setIsLoading] = useState(true);
+
+  const handleDontShowAgain = useCallback(() => {
+    const storageKey = "sc_dontshowagain";
+    appendToStorage(storageKey, { url, dateAdded: new Date().toLocaleString() });
+    close();
+  }, [url, close]);
 
   // Reset loading state when URL changes
   useEffect(() => {
@@ -35,18 +40,15 @@ export default function GlobalURLModal() {
 
   if (!isOpen) return null;
 
-  // Match the map container positioning
-  const left = sidebarOpen ? "370px" : "65px";
-
   return (
     <div
       style={{
         position: "absolute",
-        top: "52px",
-        left,
+        top: "62px",
+        left: "10px",
         right: "10px",
         bottom: "10px",
-        zIndex: 110,
+        zIndex: 200000,
         backgroundColor: "#fff",
         borderRadius: "5px 5px 0 0",
         display: "flex",
@@ -127,10 +129,50 @@ export default function GlobalURLModal() {
           src={url}
           title={title}
           onLoad={() => setIsLoading(false)}
-          style={{ width: "100%", height: "100%", border: "none" }}
-          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads"
+          style={{ width: "100%", height: "100%", border: "none", overflow: hideScroll ? "hidden" : "auto" }}
         />
       </div>
+
+      {/* Footer with Close and Don't Show Again buttons */}
+      {showFooter && (
+        <div
+          style={{
+            width: "100%",
+            textAlign: "right",
+            padding: "8px 14px",
+            borderTop: "1px solid #ccc",
+            backgroundColor: "#fff",
+          }}
+        >
+          <button
+            onClick={close}
+            style={{
+              padding: "6px 16px",
+              marginRight: "5px",
+              border: "1px solid #ddd",
+              borderRadius: "4px",
+              background: "#fff",
+              cursor: "pointer",
+              fontSize: "13px",
+            }}
+          >
+            Close Window
+          </button>
+          <button
+            onClick={handleDontShowAgain}
+            style={{
+              padding: "6px 16px",
+              border: "1px solid #ddd",
+              borderRadius: "4px",
+              background: "#fff",
+              cursor: "pointer",
+              fontSize: "13px",
+            }}
+          >
+            Don&apos;t Show this Again
+          </button>
+        </div>
+      )}
     </div>
   );
 }

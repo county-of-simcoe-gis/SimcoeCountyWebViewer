@@ -262,6 +262,17 @@
         "keyword": "STATIC_IMAGE_LEGEND",
         "type": "bool",
         "value": false
+      },
+      "SAR": {
+        "keyword": "SAR",
+        "type": "bool",
+        "value": false
+      },
+      "CATEGORY": {
+        "keyword": "CATEGORY",
+        "type": "array",
+        "value": [],
+        "splitChar": ","
       }
     }
   },

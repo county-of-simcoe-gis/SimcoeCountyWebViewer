@@ -68,6 +68,22 @@ vi.mock("@/utils/geoServerClient", () => ({
   queryFeaturesByAttribute: (...args: unknown[]) => mockQueryByAttribute(...args),
 }));
 
+// ── config mock ──────────────────────────────────────────────────────────────
+
+let mockComponentConfig: Record<string, unknown> | undefined;
+
+vi.mock("@/utils/config", () => ({
+  getComponentConfig: vi.fn(() => mockComponentConfig),
+}));
+
+// ── helpersUI mock ───────────────────────────────────────────────────────────
+
+const mockShowURLWindow = vi.fn();
+
+vi.mock("@/utils/helpersUI", () => ({
+  showURLWindow: (...args: unknown[]) => mockShowURLWindow(...args),
+}));
+
 // ── PanelComponent mock ─────────────────────────────────────────────────────
 
 vi.mock("@/components/PanelComponent", () => ({
@@ -110,6 +126,7 @@ describe("Zoning", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockLastResult = null;
+    mockComponentConfig = undefined;
     mockQueryByGeometry.mockResolvedValue({ features: [] });
     mockQueryByAttribute.mockResolvedValue({ features: [] });
   });
@@ -178,8 +195,186 @@ describe("Zoning", () => {
     // We still test that the footer section exists.
     it("renders the footer area", () => {
       const { container } = render(<Zoning {...defaultProps} />);
-      const footer = container.querySelector(".border-t.border-base-300");
+      const footer = container.querySelector(".border-t.border-base-300.bg-base-200");
       expect(footer).toBeInTheDocument();
+    });
+
+    it("does not render footer links when config values are empty", () => {
+      render(<Zoning {...defaultProps} />);
+      expect(screen.queryByText("Terms")).not.toBeInTheDocument();
+      expect(screen.queryByText("Zoning Bylaw")).not.toBeInTheDocument();
+      expect(screen.queryByText("Contact Us")).not.toBeInTheDocument();
+    });
+
+    it("renders all footer links when map config provides values", () => {
+      mockComponentConfig = {
+        config: JSON.stringify({
+          termsUrl: "https://example.com/terms",
+          byLawUrl: "https://example.com/bylaw",
+          contactUsEmail: "test@example.com",
+        }),
+      };
+
+      render(<Zoning {...defaultProps} />);
+
+      const termsBtn = screen.getByText("Terms");
+      expect(termsBtn).toBeInTheDocument();
+      expect(termsBtn.tagName).toBe("BUTTON");
+
+      const bylawLink = screen.getByText("Zoning Bylaw");
+      expect(bylawLink).toBeInTheDocument();
+      expect(bylawLink.closest("a")).toHaveAttribute("href", "https://example.com/bylaw");
+      expect(bylawLink.closest("a")).toHaveAttribute("target", "_blank");
+
+      const contactLink = screen.getByText("Contact Us");
+      expect(contactLink).toBeInTheDocument();
+      expect(contactLink.closest("a")).toHaveAttribute("href", "mailto:test@example.com");
+    });
+
+    it("renders only links with non-empty config values", () => {
+      mockComponentConfig = {
+        config: JSON.stringify({
+          termsUrl: "https://example.com/terms",
+          byLawUrl: "",
+          contactUsEmail: "test@example.com",
+        }),
+      };
+
+      render(<Zoning {...defaultProps} />);
+
+      expect(screen.getByText("Terms")).toBeInTheDocument();
+      expect(screen.queryByText("Zoning Bylaw")).not.toBeInTheDocument();
+      expect(screen.getByText("Contact Us")).toBeInTheDocument();
+    });
+  });
+
+  // ── Config merge: queryLayers deep merge ──────────────────────────────────
+
+  describe("Config Merge", () => {
+    it("preserves local serviceUrl when API override omits it from queryLayers", async () => {
+      // API override provides queryLayers without serviceUrl
+      mockComponentConfig = {
+        config: JSON.stringify({
+          queryLayers: [
+            {
+              title: "Custom Zoning",
+              featureTitleColumn: "label",
+              layerName: "simcoe:zoning",
+              geometryField: "geom",
+            },
+          ],
+        }),
+      };
+
+      mockLastResult = {
+        geojson: '{"type":"Feature","geometry":{"type":"Point","coordinates":[0,0]}}',
+        type: "Address",
+        name: "123 Main St",
+      };
+
+      render(<Zoning {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(mockQueryByGeometry).toHaveBeenCalledWith(
+          expect.objectContaining({
+            serviceUrl: "https://opengis.simcoe.ca/geoserver/ows",
+          }),
+        );
+      });
+    });
+
+    it("allows API override to replace serviceUrl in queryLayers", async () => {
+      mockComponentConfig = {
+        config: JSON.stringify({
+          queryLayers: [
+            {
+              title: "Zoning",
+              featureTitleColumn: "label",
+              serviceUrl: "https://custom.example.com/geoserver/ows",
+              layerName: "simcoe:zoning",
+              geometryField: "geom",
+            },
+          ],
+        }),
+      };
+
+      mockLastResult = {
+        geojson: '{"type":"Feature","geometry":{"type":"Point","coordinates":[0,0]}}',
+        type: "Address",
+        name: "123 Main St",
+      };
+
+      render(<Zoning {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(mockQueryByGeometry).toHaveBeenCalledWith(
+          expect.objectContaining({
+            serviceUrl: "https://custom.example.com/geoserver/ows",
+          }),
+        );
+      });
+    });
+
+    it("falls back to default serviceUrl for override layers with different layerName", async () => {
+      mockComponentConfig = {
+        config: JSON.stringify({
+          queryLayers: [
+            {
+              title: "Custom Layer",
+              featureTitleColumn: "name",
+              layerName: "simcoe:custom_zoning",
+              geometryField: "geom",
+            },
+          ],
+        }),
+      };
+
+      mockLastResult = {
+        geojson: '{"type":"Feature","geometry":{"type":"Point","coordinates":[0,0]}}',
+        type: "Address",
+        name: "123 Main St",
+      };
+
+      render(<Zoning {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(mockQueryByGeometry).toHaveBeenCalledWith(
+          expect.objectContaining({
+            serviceUrl: "https://opengis.simcoe.ca/geoserver/ows",
+            layerName: "simcoe:custom_zoning",
+          }),
+        );
+      });
+    });
+
+    it("preserves base layerName and serviceUrl when API override entry has neither", async () => {
+      // API provides a sparse override with only a title change
+      mockComponentConfig = {
+        config: JSON.stringify({
+          queryLayers: [
+            {
+              title: "Renamed Zoning",
+            },
+          ],
+        }),
+      };
+
+      mockLastResult = {
+        geojson: '{"type":"Feature","geometry":{"type":"Point","coordinates":[0,0]}}',
+        type: "Address",
+        name: "123 Main St",
+      };
+
+      render(<Zoning {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(mockQueryByGeometry).toHaveBeenCalledWith(
+          expect.objectContaining({
+            serviceUrl: "https://opengis.simcoe.ca/geoserver/ows",
+            layerName: "simcoe:zoning",
+          }),
+        );
+      });
     });
   });
 });

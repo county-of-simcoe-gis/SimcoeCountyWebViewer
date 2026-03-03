@@ -8,8 +8,9 @@ import { useEventStore } from "@/stores/eventStore";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
 import { useReportsStore } from "@/stores/reportsStore";
-import { useEffect, useState, Suspense, useCallback } from "react";
+import { useEffect, useState, Suspense, useCallback, useMemo } from "react";
 import { lazy } from "react";
+import { useSession } from "next-auth/react";
 import ReportsNavBar from "@/components/ReportsNavBar";
 
 // Lazy load tool components
@@ -107,6 +108,15 @@ export default function Sidebar() {
   const { setSidebarLoading } = useAppStore();
   const urlParameters = useAppStore((state) => state.urlParameters);
   const { currentReport } = useReportsStore();
+  const { data: session } = useSession();
+
+  // Filter out secure items when user is not authenticated
+  const visibleThemes = useMemo(() => (session ? themes : themes.filter((t) => !t.secure)), [themes, session]);
+  const visibleTools = useMemo(() => (session ? tools : tools.filter((t) => !t.secure)), [tools, session]);
+
+  // When only one theme/tool exists, show its icon and name on the tab instead of generic "Themes"/"Tools"
+  const isSingleTheme = visibleThemes.length === 1;
+  const singleTheme = isSingleTheme ? visibleThemes[0] : null;
 
   // State for active components
   const [activeToolComponent, setActiveToolComponent] = useState<React.ReactNode>(null);
@@ -114,9 +124,9 @@ export default function Sidebar() {
 
   // Sync theme component when activeTheme changes (for URL parameter activation)
   useEffect(() => {
-    if (activeTheme && themes.length > 0) {
+    if (activeTheme && visibleThemes.length > 0) {
       // Find the theme in the list
-      const theme = themes.find((t) => t.id === activeTheme);
+      const theme = visibleThemes.find((t) => t.id === activeTheme);
       if (theme) {
         const componentName = theme.component || theme.name;
         const ThemeComponent = themeComponents[componentName];
@@ -124,7 +134,7 @@ export default function Sidebar() {
           console.log(`[Sidebar] Syncing theme component for: ${theme.name} (${componentName})`);
           const component = (
             <Suspense fallback={<div style={{ padding: "20px" }}>Loading theme...</div>}>
-              <ThemeComponent name={theme.name} onClose={() => setActiveThemeComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
+              <ThemeComponent name={theme.name} hideHeader={isSingleTheme} onClose={() => setActiveThemeComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
             </Suspense>
           );
           setActiveThemeComponent(component);
@@ -134,13 +144,29 @@ export default function Sidebar() {
       // Clear theme component when no theme is active
       setActiveThemeComponent(null);
     }
-  }, [activeTheme, themes]);
+  }, [activeTheme, visibleThemes, isSingleTheme]);
+
+  // Auto-activate the single theme so it renders directly (no selector needed)
+  useEffect(() => {
+    if (isSingleTheme && singleTheme && !activeTheme) {
+      const componentName = singleTheme.component || singleTheme.name;
+      activateSidebarItem(componentName, "themes");
+      const ThemeComponent = themeComponents[componentName];
+      if (ThemeComponent) {
+        setActiveThemeComponent(
+          <Suspense fallback={<div style={{ padding: "20px" }}>Loading theme...</div>}>
+            <ThemeComponent name={singleTheme.name} hideHeader={true} onClose={() => setActiveThemeComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
+          </Suspense>,
+        );
+      }
+    }
+  }, [isSingleTheme, singleTheme, activeTheme, activateSidebarItem]);
 
   // Sync tool component when activeTool changes (for URL parameter activation)
   useEffect(() => {
-    if (activeTool && tools.length > 0) {
+    if (activeTool && visibleTools.length > 0) {
       // Find the tool in the list
-      const tool = tools.find((t) => t.id === activeTool);
+      const tool = visibleTools.find((t) => t.id === activeTool);
       if (tool) {
         const componentName = tool.component || tool.name;
         const ToolComponent = toolComponents[componentName];
@@ -158,7 +184,7 @@ export default function Sidebar() {
       // Clear tool component when no tool is active
       setActiveToolComponent(null);
     }
-  }, [activeTool, tools]);
+  }, [activeTool, visibleTools]);
 
   // Debug logging
   // console.log("Sidebar render:", { toolsCount: tools.length, themesCount: themes.length });
@@ -254,7 +280,7 @@ export default function Sidebar() {
       if (ThemeComponent) {
         const component = (
           <Suspense fallback={<div style={{ padding: "20px" }}>Loading theme...</div>}>
-            <ThemeComponent name={displayName} onClose={() => setActiveThemeComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
+            <ThemeComponent name={displayName} hideHeader={isSingleTheme} onClose={() => setActiveThemeComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
           </Suspense>
         );
         setActiveThemeComponent(component);
@@ -275,7 +301,7 @@ export default function Sidebar() {
 
   const renderDefaultToolsContent = () => (
     <div className="sc-sidebar-items-container">
-      {tools.map((tool) => (
+      {visibleTools.map((tool) => (
         <div key={tool.id} className={`sc-sidebar-item ${activeTool === tool.id ? "active" : ""}`} onClick={() => handleSidebarItemClick(tool.component || tool.name, tool.name, "tools")}>
           <div className="sc-sidebar-item-image">
             <Image src={`/images/${tool.imageName}`} alt={tool.name} width={32} height={32} />
@@ -291,7 +317,7 @@ export default function Sidebar() {
 
   const renderDefaultThemesContent = () => (
     <div className="sc-sidebar-items-container">
-      {themes.map((theme) => (
+      {visibleThemes.map((theme) => (
         <div key={theme.id} className={`sc-sidebar-item ${activeTheme === theme.id ? "active" : ""}`} onClick={() => handleSidebarItemClick(theme.component || theme.name, theme.name, "themes")}>
           <div className="sc-sidebar-item-image">
             <Image src={`/images/${theme.imageName}`} alt={theme.name} width={32} height={32} />
@@ -336,8 +362,8 @@ export default function Sidebar() {
           {!hideThemes && (
             <Tab>
               <div className="tab-content">
-                <Image src="/images/theme-32x32.png" alt="Themes" width={32} height={32} className="tab-icon" />
-                <div className="tab-text">Themes</div>
+                <Image src={singleTheme ? `/images/${singleTheme.imageName}` : "/images/theme-32x32.png"} alt={singleTheme ? singleTheme.name : "Themes"} width={32} height={32} className="tab-icon" />
+                <div className="tab-text">{singleTheme ? singleTheme.name : "Themes"}</div>
               </div>
             </Tab>
           )}
@@ -364,7 +390,7 @@ export default function Sidebar() {
         {!hideTools && (
           <TabPanel>
             <div className="sc-sidebar-content">
-              {activeToolComponent ? activeToolComponent : tools.length === 0 ? <div style={{ fontSize: "12px", color: "#666" }}>Loading tools...</div> : renderDefaultToolsContent()}
+              {activeToolComponent ? activeToolComponent : visibleTools.length === 0 ? <div style={{ fontSize: "12px", color: "#666" }}>Loading tools...</div> : renderDefaultToolsContent()}
             </div>
           </TabPanel>
         )}
@@ -382,7 +408,7 @@ export default function Sidebar() {
         {!hideThemes && (
           <TabPanel>
             <div className="sc-sidebar-content">
-              {activeThemeComponent ? activeThemeComponent : themes.length === 0 ? <div style={{ fontSize: "12px", color: "#666" }}>Loading themes...</div> : renderDefaultThemesContent()}
+              {activeThemeComponent ? activeThemeComponent : visibleThemes.length === 0 ? <div style={{ fontSize: "12px", color: "#666" }}>Loading themes...</div> : renderDefaultThemesContent()}
             </div>
           </TabPanel>
         )}

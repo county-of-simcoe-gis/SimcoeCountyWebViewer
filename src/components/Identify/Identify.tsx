@@ -11,6 +11,7 @@ import { useLayerManagerStore } from "@/stores/layerManagerStore";
 import { useReportsStore } from "@/stores/reportsStore";
 import { useArcGISTokenStore } from "@/stores/arcgisTokenStore";
 import { getAxiosClient } from "@/lib/axiosInstance";
+import { getAccessToken } from "@/utils/auth";
 import IdentifyLayer from "@/components/Identify/IdentifyLayer";
 import Point from "ol/geom/Point";
 import { getCenter } from "ol/extent";
@@ -123,10 +124,10 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
     console.log("Identify: Total managed layers:", allManagedLayers.length);
 
     let olLayers = allManagedLayers
-      .filter((ml) => ml.category === "TOC") // Only query TOC layers
+      .filter((ml) => ml.category === "TOC" || ml.category === "Themes") // Query TOC and Theme layers
       .map((ml) => ml.layer);
 
-    console.log("Identify: TOC layers found:", olLayers.length);
+    console.log("Identify: Queryable layers found:", olLayers.length);
 
     // Filter by specific layer if provided
     if (layerFilter) {
@@ -162,8 +163,14 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
       const secured = layer.get("secured");
       const minScale = layer.get("minScale");
 
-      const params: Record<string, unknown> = {};
-      if (secured) params["useBearerToken"] = secured;
+      // Build axios config with auth headers for secured layers
+      const axiosConfig: Record<string, unknown> = {};
+      if (secured) {
+        const token = await getAccessToken();
+        if (token) {
+          axiosConfig.headers = { Authorization: `Bearer ${token}` };
+        }
+      }
 
       // Check if this is a non-Point geometry and try WFS query
       let wfsUrl = layer.get("wfsUrl");
@@ -253,7 +260,7 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
           console.log(`Identify: Querying "${layerName}" with WFS at URL:`, queryUrl);
 
           const axiosClient = getAxiosClient(queryUrl);
-          const response = await axiosClient.get(queryUrl, { ...params });
+          const response = await axiosClient.get(queryUrl, { ...axiosConfig });
 
           console.log(`Identify: WFS Response from "${layerName}":`, response.data);
 
@@ -324,7 +331,7 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
         console.log(`Identify: Querying "${layerName}" with WMS at URL:`, fullUrl);
 
         const axiosClient = getAxiosClient(fullUrl);
-        const response = await axiosClient.get(fullUrl, { ...params });
+        const response = await axiosClient.get(fullUrl, { ...axiosConfig });
 
         console.log(`Identify: Response from "${layerName}":`, response.data);
 

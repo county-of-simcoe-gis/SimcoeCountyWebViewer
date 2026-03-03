@@ -39,10 +39,14 @@ interface SearchProps {
   disabled?: boolean;
 }
 
-const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeholder = "Search...", disabled = false }) => {
+const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeholder, disabled = false }) => {
   const { config } = useConfig();
   const { emit } = useEventStore();
   const urlParameters = useAppStore((state) => state.urlParameters);
+
+  // Derive placeholder and hideTypes from config, with prop override
+  const resolvedPlaceholder = placeholder ?? config?.searchPlaceHolder ?? "Search...";
+  const hideTypeDropdown = config?.searchHideTypes ?? false;
 
   const [searchValue, setSearchValue] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -561,6 +565,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
     <div className={`relative w-full ${className}`}>
       <div className="flex w-full shadow-sm rounded-md overflow-hidden border border-gray-300">
         {/* Search Types Dropdown */}
+        {!hideTypeDropdown && (
         <div className="relative border-r border-gray-300">
           <select
             value={selectedType.value}
@@ -580,6 +585,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
             ))}
           </select>
         </div>
+        )}
 
         {/* Search Input Container */}
         <div className="relative flex-1">
@@ -600,7 +606,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
                 setIsOpen(searchResults.length > 0);
               }
             }}
-            placeholder={placeholder}
+            placeholder={resolvedPlaceholder}
             disabled={disabled}
             className="w-full h-[41px] text-lg pl-4 pr-20 bg-white border-0 focus:outline-none focus:ring-0 disabled:opacity-50"
             autoComplete="off"

@@ -14,6 +14,7 @@ interface SQLServerConfig {
 export class SQLServer {
   private config: sql.config;
   private poolPromise: Promise<sql.ConnectionPool> | null = null;
+  private pool: sql.ConnectionPool | null = null;
 
   constructor(options: SQLServerConfig) {
     const { dbName, user, password, server, port } = options;
@@ -165,6 +166,32 @@ export class SQLServer {
         return sql.Date();
       default:
         return sql.NVarChar(sql.MAX);
+    }
+  }
+
+  /**
+   * Execute a statement that does not return a recordset (INSERT / UPDATE / DELETE / EXEC).
+   * Returns the number of rows affected.
+   */
+  async executeWithValues(
+    query: string,
+    values: Array<{ name: string; type: string; typeOpts?: Record<string, unknown>; value: unknown }>
+  ): Promise<number> {
+    try {
+      const pool = await this.getPool();
+      const request = pool.request();
+
+      for (const param of values) {
+        const sqlType = this.getSQLType(param.type, param.typeOpts);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        request.input(param.name, sqlType as any, param.value);
+      }
+
+      const result = await request.query(query);
+      return result.rowsAffected?.[0] ?? 0;
+    } catch (error) {
+      console.error("SQL Server execute error:", error);
+      throw error;
     }
   }
 

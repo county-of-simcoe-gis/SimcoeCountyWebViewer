@@ -12,6 +12,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import Broadband from "../Broadband";
 
 // ── Store mocks ──────────────────────────────────────────────────────────────
@@ -66,6 +67,14 @@ vi.mock("@/utils/geoServerClient", () => ({
   queryFeaturesByGeometry: (...args: unknown[]) => mockQueryByGeometry(...args),
 }));
 
+// ── helpersUI mock ───────────────────────────────────────────────────────────
+
+const mockShowURLWindow = vi.fn();
+
+vi.mock("@/utils/helpersUI", () => ({
+  showURLWindow: (...args: unknown[]) => mockShowURLWindow(...args),
+}));
+
 // ── PanelComponent mock ─────────────────────────────────────────────────────
 
 vi.mock("@/components/PanelComponent", () => ({
@@ -109,6 +118,7 @@ describe("Broadband", () => {
     vi.clearAllMocks();
     mockLastResult = null;
     mockQueryByGeometry.mockResolvedValue({ features: [] });
+    mockShowURLWindow.mockReset();
   });
 
   afterEach(() => {
@@ -171,11 +181,10 @@ describe("Broadband", () => {
   // ── Footer links ───────────────────────────────────────────────────────────
 
   describe("Footer Links", () => {
-    it("renders Terms link", () => {
+    it("renders Terms button", () => {
       render(<Broadband {...defaultProps} />);
-      const link = screen.getByText("Terms");
-      expect(link).toBeInTheDocument();
-      expect(link.closest("a")).toHaveAttribute("href", "https://maps.simcoe.ca/terms.html");
+      const btn = screen.getByRole("button", { name: "Terms" });
+      expect(btn).toBeInTheDocument();
     });
 
     it("renders About the Data link", () => {
@@ -192,11 +201,11 @@ describe("Broadband", () => {
       expect(link.closest("a")).toHaveAttribute("href", "mailto:sim-gis@simcoe.ca");
     });
 
-    it("footer links open in new tab", () => {
+    it("Terms button calls showURLWindow", async () => {
       render(<Broadband {...defaultProps} />);
-      const termsLink = screen.getByText("Terms").closest("a");
-      expect(termsLink).toHaveAttribute("target", "_blank");
-      expect(termsLink).toHaveAttribute("rel", "noopener noreferrer");
+      const btn = screen.getByRole("button", { name: "Terms" });
+      await userEvent.click(btn);
+      expect(mockShowURLWindow).toHaveBeenCalledWith("https://maps.simcoe.ca/terms.html", false, "normal", false, false, "Terms");
     });
   });
 });

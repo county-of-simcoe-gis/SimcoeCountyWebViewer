@@ -43,3 +43,5 @@ next-env.d.ts
 OldAppAPI
 OldAppAPISecured
 .github
+vitest-output.txt
+tsc-output.txt

@@ -5,6 +5,7 @@ import { useMapStore } from "@/stores/mapStore";
 import { useTOCStore } from "@/stores/tocStore";
 import { GeoJSON } from "ol/format";
 import { getAxiosClient } from "@/lib/axiosInstance";
+import { getAccessToken } from "@/utils/auth";
 import { useInteractionManager } from "@/components/MapContainer";
 import { createIdentifyResult } from "@/components/ResultsPopup";
 import { useLayerManagerStore } from "@/stores/layerManagerStore";
@@ -114,9 +115,13 @@ export default function LiveLayerClick() {
       // Get layer properties
       const secured = layer.get("secured");
 
-      const params: Record<string, unknown> = {};
+      // Build axios config with auth headers for secured layers
+      const axiosConfig: Record<string, unknown> = {};
       if (secured) {
-        params["useBearerToken"] = true;
+        const token = await getAccessToken();
+        if (token) {
+          axiosConfig.headers = { Authorization: `Bearer ${token}` };
+        }
       }
 
       let url: string | undefined;
@@ -167,7 +172,7 @@ export default function LiveLayerClick() {
       try {
         console.log(`LiveLayerClick: "${displayName}" - Making request...`);
         const axiosClient = getAxiosClient(url);
-        const response = await axiosClient.get(url, { ...params });
+        const response = await axiosClient.get(url, { ...axiosConfig });
         let result = response.data;
 
         console.log(`LiveLayerClick: "${displayName}" - Response received, type:`, typeof result);

@@ -138,6 +138,24 @@
   background-color: #fff;
 }
 
+.sc-identify-export-csv {
+  font-size: 9pt;
+  color: dimgray;
+  text-align: right;
+  padding: 2px 8px 4px;
+  line-height: 10px;
+}
+
+.sc-identify-export-csv .sc-fakeLink {
+  color: #007bff;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.sc-identify-export-csv .sc-fakeLink:hover {
+  text-decoration: underline;
+}
+
 /* Feature Container */
 .sc-identify-feature-container {
   margin-bottom: 10px;

@@ -4,6 +4,15 @@ import { cleanup } from "@testing-library/react";
 import { server } from "@/test/testServer";
 import React from "react";
 
+// Mock next-auth/react globally so any component calling useSession works
+// without a real <SessionProvider />.
+vi.mock("next-auth/react", () => ({
+  useSession: vi.fn(() => ({ data: null, status: "unauthenticated" })),
+  signIn: vi.fn(),
+  signOut: vi.fn(),
+  SessionProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 // Mock all react-icons at the top level to ensure they're available globally
 vi.mock("react-icons/fa", () => ({
   // Existing icons
@@ -96,6 +105,13 @@ vi.mock("react-icons/fa", () => ({
 
   // AppTrack specific icons
   FaPlusSquare: (props: any) => React.createElement("div", { ...props, "data-testid": "plus-square-icon" }, "PlusSquare"),
+
+  // EMaps specific icons
+  FaAddressBook: (props: any) => React.createElement("div", { ...props, "data-testid": "address-book-icon" }, "AddressBook"),
+
+  // Secure report extension icons (MPac / Teranet)
+  FaBuilding: (props: any) => React.createElement("div", { ...props, "data-testid": "building-icon" }, "Building"),
+  FaLandmark: (props: any) => React.createElement("div", { ...props, "data-testid": "landmark-icon" }, "Landmark"),
 
   // Campus theme icons
   FaRegCheckCircle: (props: any) => React.createElement("div", { ...props, "data-testid": "reg-check-circle-icon" }, "RegCheckCircle"),

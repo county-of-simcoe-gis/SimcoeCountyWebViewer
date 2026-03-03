@@ -1,6 +1,10 @@
 import { create } from "zustand";
 import type { SidebarComponent } from "@/utils/config";
 
+/** Canonical tab names in default order. */
+const ALL_TAB_NAMES = ["layers", "tools", "mymaps", "themes", "reports"] as const;
+export type TabName = (typeof ALL_TAB_NAMES)[number];
+
 export interface SidebarItem {
   id: string;
   name: string;
@@ -11,6 +15,7 @@ export interface SidebarItem {
   description?: string;
   helpLink?: string;
   enabled: boolean;
+  secure?: boolean;
 }
 
 interface SidebarState {
@@ -44,6 +49,7 @@ interface SidebarState {
   openSidebar: () => void;
   closeSidebar: () => void;
   setActiveTab: (tabIndex: number) => void;
+  setActiveTabByName: (tabName: string) => void;
   setSlimMode: (slim: boolean) => void;
   setActiveTheme: (themeId: string | null) => void;
   setActiveTool: (toolId: string | null) => void;
@@ -78,6 +84,7 @@ function convertToSidebarItem(component: SidebarComponent, type: "theme" | "tool
     helpLink: component.helpLink,
     enabled: component.enabled !== false && component.disable !== true, // Default to enabled unless explicitly disabled
     config: {},
+    secure: component.secure ?? false,
   };
 }
 
@@ -115,6 +122,28 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
   openSidebar: () => set({ isOpen: true }),
   closeSidebar: () => set({ isOpen: false }),
   setActiveTab: (tabIndex) => set({ activeTab: tabIndex }),
+
+  setActiveTabByName: (tabName) => {
+    const state = get();
+    const normalizedName = tabName.toLowerCase().trim();
+    // Build the same visible-tabs list the Sidebar component uses
+    const visibleTabs = ALL_TAB_NAMES.filter((tab) => {
+      if (tab === "layers" && state.hideLayers) return false;
+      if (tab === "tools" && state.hideTools) return false;
+      if (tab === "mymaps" && state.hideMyMaps) return false;
+      if (tab === "themes" && state.hideThemes) return false;
+      if (tab === "reports" && state.hideReports) return false;
+      return true;
+    });
+    const lookup = normalizedName === "my maps" ? "mymaps" : normalizedName;
+    const index = visibleTabs.indexOf(lookup as TabName);
+    if (index !== -1) {
+      set({ activeTab: index });
+    } else {
+      console.warn(`[sidebarStore] setActiveTabByName: unknown or hidden tab "${tabName}"`);
+    }
+  },
+
   setSlimMode: (slim) => set({ isSlim: slim }),
   setActiveTheme: (themeId) => set({ activeTheme: themeId }),
   setActiveTool: (toolId) => set({ activeTool: toolId }),
@@ -171,33 +200,31 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
     const state = get();
     if (defaultTheme) {
       // Find the theme by componentName (matching old app behavior)
-      const theme = state.themes.find(
-        (t) => t.component === defaultTheme || t.name === defaultTheme,
-      );
+      const theme = state.themes.find((t) => t.component === defaultTheme || t.name === defaultTheme);
       if (theme) {
         console.log("Activating default theme:", defaultTheme, "-> id:", theme.id);
         set({
           activeTheme: theme.id,
           activeTool: null,
           activePanelId: theme.id,
-          activeTab: 3, // Themes tab
         });
+        // Use name-based activation so hidden tabs don't shift the index
+        get().setActiveTabByName("themes");
       } else {
         console.warn("Default theme not found in loaded themes:", defaultTheme);
       }
     } else if (defaultTool) {
       // Find the tool by componentName
-      const tool = state.tools.find(
-        (t) => t.component === defaultTool || t.name === defaultTool,
-      );
+      const tool = state.tools.find((t) => t.component === defaultTool || t.name === defaultTool);
       if (tool) {
         console.log("Activating default tool:", defaultTool, "-> id:", tool.id);
         set({
           activeTool: tool.id,
           activeTheme: null,
           activePanelId: tool.id,
-          activeTab: 1, // Tools tab
         });
+        // Use name-based activation so hidden tabs don't shift the index
+        get().setActiveTabByName("tools");
       } else {
         console.warn("Default tool not found in loaded tools:", defaultTool);
       }

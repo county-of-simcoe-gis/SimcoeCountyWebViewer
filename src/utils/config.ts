@@ -131,6 +131,11 @@ export interface AppConfig {
   hideThemes?: boolean;
   hideReports?: boolean;
 
+  // Search settings (from map config)
+  searchPlaceHolder?: string;
+  searchHideTypes?: boolean;
+  searchDefaultType?: string;
+
   // Other properties that might be added dynamically
   [key: string]: unknown;
 }
@@ -361,6 +366,15 @@ function convertSettingsToAppConfig(settings: SettingsType & Record<string, unkn
     if (reports.hideReports !== undefined) config.hideReports = reports.hideReports;
   }
 
+  // Map Search settings
+  if (settings.Search) {
+    const search = settings.Search;
+    if (search.municipality) config.municipality = search.municipality;
+    if (search.placeHolder) config.searchPlaceHolder = search.placeHolder;
+    if (search.hideTypes !== undefined) config.searchHideTypes = search.hideTypes;
+    if (search.defaultSearchType) config.searchDefaultType = search.defaultSearchType;
+  }
+
   // Copy any additional properties that don't fit the standard structure
   for (const key in settings) {
     if (!["General", "Layers", "Search", "Tools", "MyMaps", "Themes", "Reports", "Basemaps"].includes(key)) {
@@ -488,8 +502,10 @@ export async function loadConfig(configSecured: Record<string, unknown> = {}): P
             }
           }
 
-          // Always restore keywords from local config (API doesn't provide keyword definitions)
-          config.toc.keywords = localKeywords;
+          // Merge API keywords with local keywords (API may provide additional keyword
+          // definitions, e.g. SAR, CATEGORY for Emergency Management maps). Local keywords
+          // serve as the base; API keywords are layered on top so both sets are available.
+          config.toc.keywords = { ...localKeywords, ...(apiToc?.keywords || {}) };
 
           // Smart merge tool/theme arrays: match by id, preserve local display metadata,
           // apply API overrides (enabled/disable/config). Falls back to local if API provides none.

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import PanelComponent from "@/components/PanelComponent";
 import SpatialQueryResults, { FeatureSection } from "../shared/SpatialQueryResults";
 import { useSearchStore } from "@/stores/searchStore";
@@ -9,11 +9,13 @@ import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { FeatureHelpers } from "@/utils/openlayers/FeatureHelpers";
 import { OL_DATA_TYPES } from "@/utils/openlayers/types";
 import { queryFeaturesByGeometry, queryFeaturesByAttribute } from "@/utils/geoServerClient";
+import { getComponentConfig } from "@/utils/config";
+import { showURLWindow } from "@/utils/helpersUI";
 import { Vector as VectorSource } from "ol/source";
 import VectorLayer from "ol/layer/Vector";
 import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style";
 import { GeoJSON } from "ol/format";
-import config from "./config.json";
+import localConfig from "./config.json";
 
 // ── Props ────────────────────────────────────────────────────────────────────
 
@@ -42,6 +44,72 @@ const HIGHLIGHT_STYLE = new Style({
 export default function Zoning({ name = "Zoning", helpLink, hideHeader, onClose, onSidebarVisibility }: ZoningProps) {
   const lastResult = useSearchStore((s) => s.lastResult);
   const map = useMapStore((s) => s.map);
+
+  // Merge local config with map-level overrides (termsUrl, byLawUrl, etc. vary per map)
+  const config = useMemo(() => {
+    const base = { ...localConfig } as Record<string, unknown>;
+    const entry = getComponentConfig("themes", "Zoning");
+    if (entry?.config) {
+      try {
+        const overrides = typeof entry.config === "string" ? JSON.parse(entry.config) : entry.config;
+        Object.keys(overrides).forEach((key) => {
+          if (overrides[key] !== undefined && overrides[key] !== "") {
+            // Deep-merge queryLayers: keep the local list as the base, then
+            // overlay matching API entries so local defaults (serviceUrl,
+            // layerName, geometryField) are never lost. Match by layerName
+            // when present, otherwise by position.  Append any extra API
+            // entries that don't match an existing base entry.
+            if (key === "queryLayers" && Array.isArray(overrides[key]) && Array.isArray(base[key])) {
+              const baseLayers = base[key] as Record<string, unknown>[];
+              const overrideLayers = overrides[key] as Record<string, unknown>[];
+              const usedOverrideIndices = new Set<number>();
+
+              // Pass 1 – merge onto each base entry
+              base[key] = baseLayers.map((baseLayer, idx) => {
+                // Try matching by layerName first, fall back to same index
+                let matchIdx = overrideLayers.findIndex((o, i) => !usedOverrideIndices.has(i) && o.layerName && o.layerName === baseLayer.layerName);
+                if (matchIdx === -1 && idx < overrideLayers.length && !usedOverrideIndices.has(idx)) {
+                  matchIdx = idx;
+                }
+                if (matchIdx !== -1) {
+                  usedOverrideIndices.add(matchIdx);
+                  return { ...baseLayer, ...overrideLayers[matchIdx] };
+                }
+                return baseLayer;
+              });
+
+              // Pass 2 – append any unmatched override entries that have
+              // at least a layerName (required for a valid query)
+              overrideLayers.forEach((o, i) => {
+                if (!usedOverrideIndices.has(i) && o.layerName) {
+                  (base[key] as Record<string, unknown>[]).push(o);
+                }
+              });
+            } else {
+              base[key] = overrides[key];
+            }
+          }
+        });
+      } catch {
+        /* ignore parse errors */
+      }
+    }
+
+    // Safety net: ensure every queryLayer has the required fields.
+    // Fill in a default serviceUrl from the local config when missing,
+    // then drop entries that still lack serviceUrl or layerName.
+    if (Array.isArray(base.queryLayers)) {
+      const defaultServiceUrl = localConfig.queryLayers?.[0]?.serviceUrl;
+      base.queryLayers = (base.queryLayers as Record<string, unknown>[])
+        .map<Record<string, unknown>>((layer) => ({
+          ...layer,
+          serviceUrl: layer.serviceUrl || defaultServiceUrl,
+        }))
+        .filter((layer) => !!layer.serviceUrl && !!layer.layerName);
+    }
+
+    return base as typeof localConfig;
+  }, []);
 
   const [sections, setSections] = useState<FeatureSection[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -103,12 +171,15 @@ export default function Zoning({ name = "Zoning", helpLink, hideHeader, onClose,
             attributeValue: searchName,
           });
         } else {
-          // Spatial INTERSECTS query
+          // Spatial INTERSECTS query — use a small negative buffer on the
+          // search geometry to avoid selecting adjacent features that share
+          // a boundary edge.
           result = await queryFeaturesByGeometry({
             serviceUrl: layer.serviceUrl,
             layerName: layer.layerName,
             geometryField: layer.geometryField,
             wkt: wkt!,
+            buffer: -5,
           });
         }
 
@@ -156,19 +227,19 @@ export default function Zoning({ name = "Zoning", helpLink, hideHeader, onClose,
         </div>
 
         {/* Footer links */}
-        <div className="flex flex-wrap gap-2 px-3 py-2 border-t border-base-300 text-xs">
+        <div className="flex flex-wrap justify-center gap-2 px-3 py-2 border-t border-base-300 bg-base-200">
           {config.termsUrl && (
-            <a href={config.termsUrl} target="_blank" rel="noopener noreferrer" className="btn btn-xs btn-ghost">
+            <button className="btn btn-sm btn-outline flex-1" onClick={() => showURLWindow(config.termsUrl)}>
               Terms
-            </a>
+            </button>
           )}
           {config.byLawUrl && (
-            <a href={config.byLawUrl} target="_blank" rel="noopener noreferrer" className="btn btn-xs btn-ghost">
+            <a href={config.byLawUrl} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline flex-1">
               Zoning Bylaw
             </a>
           )}
           {config.contactUsEmail && (
-            <a href={`mailto:${config.contactUsEmail}`} className="btn btn-xs btn-ghost">
+            <a href={`mailto:${config.contactUsEmail}`} className="btn btn-sm btn-outline flex-1">
               Contact Us
             </a>
           )}

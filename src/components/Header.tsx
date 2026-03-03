@@ -75,7 +75,6 @@ export default function Header() {
       <div className="flex-1 pt-1.5 pr-3 relative">
         <Search
           className="w-full"
-          placeholder="Search..."
           onResultSelect={(result) => {
             // Handle search result selection
           }}

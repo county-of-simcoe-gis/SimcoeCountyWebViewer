@@ -7,6 +7,7 @@ import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
 import { usePopupStore } from "@/stores/popupStore";
 import { useInteractionManagerStore, type InteractionHandler as StoreInteractionHandler } from "@/stores/interactionManagerStore";
+import { useSession } from "next-auth/react";
 import type { Interaction as OLInteraction } from "ol/interaction";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { useUrlParameterContextOptional } from "@/contexts/UrlParameterContext";
@@ -137,6 +138,7 @@ export const useInteractionManager = () => {
 export default function MapContainer() {
   const { isOpen } = useSidebarStore();
   const { emitMapLoaded } = useEventStore();
+  const { data: session } = useSession();
   const { map, setMap, addLoadedItem, setMapControls, setCurrentExtent, setCurrentZoom, setCurrentCenter, initExtentHistory, saveCurrentExtentToHistory, controlVisibility, initControlVisibility } =
     useMapStore();
   const { setMapLoading } = useAppStore();
@@ -528,6 +530,12 @@ export default function MapContainer() {
     addLoadedItem("map");
     setMapLoading(false);
     emitMapLoaded();
+
+    // Show terms popup on startup (matches old app behaviour)
+    if (activeConfig.termsUrl && activeConfig.showTermsOnStartup) {
+      const { showURLWindow } = require("@/utils/helpersUI");
+      showURLWindow(activeConfig.termsUrl, true, "full", true, true, "Terms and Conditions");
+    }
 
     // Register map as ready for URL parameter processing
     // Use 'dataLoaded' because the map is now fully initialized and interactive

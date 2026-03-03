@@ -22,6 +22,7 @@ import { useInteractionManagerStore, type InteractionResult } from "@/stores/int
 import { useLayerManagerStore } from "@/stores/layerManagerStore";
 import { GeoJSON } from "ol/format";
 import { getAxiosClient } from "@/lib/axiosInstance";
+import { getAccessToken } from "@/utils/auth";
 import type TileWMS from "ol/source/TileWMS";
 import type ImageWMS from "ol/source/ImageWMS";
 import type { Feature } from "ol";
@@ -134,9 +135,13 @@ export default function LiveLayerIdentifyClick() {
       const attachmentUrl = layer.get("attachmentUrl");
       const displayName = layer.get("tocDisplayName") || layer.get("displayName") || layer.get("name");
 
-      const params: Record<string, unknown> = {};
+      // Build axios config with auth headers for secured layers
+      const axiosConfig: Record<string, unknown> = {};
       if (secured) {
-        params["useBearerToken"] = true;
+        const token = await getAccessToken();
+        if (token) {
+          axiosConfig.headers = { Authorization: `Bearer ${token}` };
+        }
       }
 
       let url: string | undefined;
@@ -171,7 +176,7 @@ export default function LiveLayerIdentifyClick() {
 
       try {
         const axiosClient = getAxiosClient(url);
-        const response = await axiosClient.get(url, { ...params });
+        const response = await axiosClient.get(url, { ...axiosConfig });
         let result = response.data;
 
         // Parse string responses
