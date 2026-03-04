@@ -76,7 +76,7 @@ export default function Header() {
       <div className="flex-1 pt-1.5 pr-3 relative" style={{ paddingTop: "0px" }}>
         <Search
           className="w-full"
-          onResultSelect={(result) => {
+          onResultSelect={() => {
             // Handle search result selection
           }}
         />

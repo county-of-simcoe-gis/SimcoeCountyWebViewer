@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
-import { FaUser, FaSignInAlt, FaSignOutAlt, FaSpinner } from "react-icons/fa";
+import { FaSignInAlt, FaSignOutAlt, FaSpinner } from "react-icons/fa";
 import "@/components/ProfileButton.css";
 
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0";
