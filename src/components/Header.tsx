@@ -49,30 +49,31 @@ export default function Header() {
 
   return (
     <div
-      className="w-full border-b border-gray-300 flex items-center h-[52px] max-h-[52px] p-0 z-auto absolute left-0 top-0 right-0 bottom-auto"
+      className="w-full border-b border-gray-300 flex items-center h-[52px] max-h-[52px] p-0 z-[1001] absolute left-0 top-0 right-0 bottom-auto"
       style={{
         background: "linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%)",
       }}
     >
       {/* Burger Button */}
       <div
-        className="cursor-pointer ml-3 w-[65px] h-11 flex items-center justify-center pt-1 outline-none bg-transparent"
+        className="cursor-pointer w-[65px] h-11 flex items-center justify-center pt-1 outline-none bg-transparent rounded transition-colors duration-150 hover:bg-black/10 active:bg-black/20"
         onClick={handleBurgerClick}
         role="button"
         tabIndex={2}
         onKeyDown={(e) => e.key === "Enter" && handleBurgerClick()}
         aria-label="Toggle sidebar"
+        style={{ marginLeft: "0px" }}
       >
         <FaBars size={32} className="max-w-full max-h-full" />
       </div>
 
       {/* Logo */}
-      <div className="flex items-end pl-2 w-[111px]">
-        <Image src={getLogoImage()} alt={config?.title || "Simcoe County"} width={111} height={40} className="max-w-full max-h-full w-auto h-auto" />
+      <div className="flex items-center pl-2 shrink-0" style={{ marginRight: "10px", paddingLeft: "0px" }}>
+        <Image src={getLogoImage()} alt={config?.title || "Simcoe County"} width={92} height={45} className="w-[92px] h-[45px]" />
       </div>
 
       {/* Search Container - takes remaining space */}
-      <div className="flex-1 pt-1.5 pr-3 relative">
+      <div className="flex-1 pt-1.5 pr-3 relative" style={{ paddingTop: "0px" }}>
         <Search
           className="w-full"
           onResultSelect={(result) => {
@@ -90,6 +91,7 @@ export default function Header() {
         className="w-[60px] text-center flex flex-col items-center justify-center cursor-pointer px-1 text-xs text-[#5b5b5b] h-[52px] hover:bg-black hover:bg-opacity-5"
         onClick={onFeedbackClick}
         title="Feedback"
+        style={{ marginTop: "5px" }}
       >
         <FaEnvelope size={16} className="mt-1 mb-1" />
         <span>Feedback</span>

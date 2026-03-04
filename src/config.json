@@ -1,7 +1,7 @@
 {
   "useMapConfigApi": false,
   "mapId": "public",
-  "headerLogoImageName": "logo.png",
+  "headerLogoImageName": "countyofsimcoelogo.png",
   "title": "Interactive Map - County of Simcoe (GIS)",
   "description": "Interactive web mapping application for Simcoe County GIS data",
   "favicon": "simcoe_favicon.ico",
