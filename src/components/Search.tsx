@@ -58,8 +58,10 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
   const [municipality, setMunicipality] = useState<string | undefined>();
   const [showHistory, setShowHistory] = useState(false);
   const [justCleared, setJustCleared] = useState(false);
+  const [selectWidth, setSelectWidth] = useState<number | undefined>(undefined);
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const measureSpanRef = useRef<HTMLSpanElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -68,6 +70,14 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
   const hasProcessedUrlSearchRef = useRef<boolean>(false); // Track if URL search has been processed
   const defaultSearchLimit = 10;
   const maxSearchLimit = 100;
+
+  // Update select width whenever selected type changes
+  useEffect(() => {
+    if (measureSpanRef.current) {
+      // px-3 (12px left padding) + pr-8 (32px right padding for arrow) + 4px buffer
+      setSelectWidth(measureSpanRef.current.offsetWidth + 12 + 32 + 4);
+    }
+  }, [selectedType]);
 
   // API URL builders
   const getSearchURL = (searchText: string, type: string, muni?: string, limit: number = defaultSearchLimit) => {
@@ -566,25 +576,30 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
       <div className="flex w-full shadow-sm rounded-md overflow-hidden border border-gray-300">
         {/* Search Types Dropdown */}
         {!hideTypeDropdown && (
-        <div className="relative border-r border-gray-300">
-          <select
-            value={selectedType.value}
-            onChange={handleTypeChange}
-            className="h-[41px] min-w-[140px] px-3 font-semibold text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-orange-300 border-0 cursor-pointer appearance-none pr-8"
-            style={{
-              backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e")`,
-              backgroundRepeat: "no-repeat",
-              backgroundPosition: "right 8px center",
-              backgroundSize: "16px",
-            }}
-          >
-            {searchTypes.map((type) => (
-              <option key={type.value} value={type.value}>
-                {type.label}
-              </option>
-            ))}
-          </select>
-        </div>
+          <div className="relative border-r border-gray-300">
+            {/* Hidden span used to measure selected label width for dynamic select sizing */}
+            <span ref={measureSpanRef} className="invisible absolute whitespace-nowrap text-sm font-semibold pointer-events-none" aria-hidden="true">
+              {selectedType.label}
+            </span>
+            <select
+              value={selectedType.value}
+              onChange={handleTypeChange}
+              className="h-[41px] px-3 font-semibold text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-orange-300 border-0 cursor-pointer appearance-none pr-8"
+              style={{
+                width: selectWidth ? `${selectWidth}px` : undefined,
+                backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "right 8px center",
+                backgroundSize: "16px",
+              }}
+            >
+              {searchTypes.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
+          </div>
         )}
 
         {/* Search Input Container */}
