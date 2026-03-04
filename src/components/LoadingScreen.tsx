@@ -1,16 +1,34 @@
+import Image from "next/image";
+
 interface LoadingScreenProps {
   visible: boolean;
   backgroundColor?: string;
 }
 
-export default function LoadingScreen({ visible, backgroundColor = "#3498db" }: LoadingScreenProps) {
+export default function LoadingScreen({ visible }: LoadingScreenProps) {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor }}>
-      <div className="flex flex-col items-center space-y-4">
-        <div className="loading loading-spinner loading-lg text-white"></div>
-        <div className="text-white text-lg font-medium">Loading Application...</div>
+    <div className="fixed inset-0 flex items-center justify-center bg-base-200" style={{ zIndex: 999999999 }}>
+      <div className="shadow-2xl rounded-2xl bg-base-100 p-8 flex flex-col items-center gap-6 w-[90vw] max-w-md">
+        {/* Logos side by side */}
+        <div className="flex flex-row items-center justify-center gap-6 w-full">
+          <div className="relative h-16 w-32 sm:h-20 sm:w-40 flex-shrink-0">
+            <Image src="/images/countyofsimcoelogo.png" alt="County of Simcoe" fill style={{ objectFit: "contain" }} priority />
+          </div>
+          <div className="relative h-16 w-32 sm:h-20 sm:w-40 flex-shrink-0">
+            <Image src="/images/opengislogo.png" alt="OpenGIS" fill style={{ objectFit: "contain" }} priority />
+          </div>
+        </div>
+
+        {/* Copyright */}
+        <p className="text-base-content text-center text-sm sm:text-base font-medium">© The Corporation of the County of Simcoe</p>
+
+        {/* Spinner */}
+        <span className="loading loading-spinner loading-lg text-primary"></span>
+
+        {/* Loading text */}
+        <p className="text-base-content/70 text-sm">Loading Application</p>
       </div>
     </div>
   );
