@@ -1,4 +1,4 @@
-import axios from "axios";
+import axiosInstance from "./axiosInstance";
 
 // Types for Radar Images API
 export interface RadarImage {
@@ -45,7 +45,7 @@ export interface CityWeatherData {
  */
 export async function getRadarImages(fromDate: string, toDate: string): Promise<RadarImage[]> {
   try {
-    const response = await axios.get("/api/public/map/tool/weather/RadarImages", {
+    const response = await axiosInstance.get("/public/map/tool/weather/RadarImages", {
       params: {
         fromDate,
         toDate,
@@ -63,7 +63,7 @@ export async function getRadarImages(fromDate: string, toDate: string): Promise<
  */
 export async function getCityWeather(city: string): Promise<CityWeatherData | null> {
   try {
-    const response = await axios.get(`/api/public/map/tool/weather/${encodeURIComponent(city)}`);
+    const response = await axiosInstance.get(`/public/map/tool/weather/${encodeURIComponent(city)}`);
 
     if (!response.data) {
       return null;

@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { loadConfig, getConfig, updatePageMetadata, type AppConfig } from '@/utils/config';
+import { useState, useEffect, useCallback } from "react";
+import { signIn } from "next-auth/react";
+import { loadConfig, getConfig, updatePageMetadata, AuthenticationRequiredError, type AppConfig } from "@/utils/config";
 
 interface UseConfigReturn {
   config: AppConfig | null;
@@ -20,17 +21,25 @@ export function useConfig(): UseConfigReturn {
     try {
       setLoading(true);
       setError(null);
-      
+
       const loadedConfig = await loadConfig();
       setConfig(loadedConfig);
-      
+
       // Update page metadata (title, favicon)
       updatePageMetadata(loadedConfig);
-      
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load configuration';
+      // Check if this is an authentication required error for a secured map
+      if (err instanceof AuthenticationRequiredError) {
+        console.log(`Secured map "${err.mapId}" requires login - redirecting to sign in`);
+        // Redirect to sign in with current URL as callback
+        const currentUrl = typeof window !== "undefined" ? window.location.href : undefined;
+        signIn("azuread", { callbackUrl: currentUrl });
+        return; // Don't set error - we're redirecting to login
+      }
+
+      const errorMessage = err instanceof Error ? err.message : "Failed to load configuration";
       setError(errorMessage);
-      console.error('Error loading config:', err);
+      console.error("Error loading config:", err);
     } finally {
       setLoading(false);
     }
@@ -52,4 +61,4 @@ export function useConfig(): UseConfigReturn {
     error,
     reloadConfig,
   };
-} 
+}

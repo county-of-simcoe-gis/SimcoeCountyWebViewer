@@ -3,6 +3,8 @@
 import "@/components/tools/PrintLocal/PrintLocalTool.css";
 import React, { useState, useCallback } from "react";
 import Image from "next/image";
+
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 import PanelComponent from "@/components/PanelComponent";
 import { useMapStore } from "@/stores/mapStore";
 import { captureMapCanvas, type DecorationPosition, type MapDecorations } from "@/utils/openlayers/SimpleCanvasCapture";
@@ -151,7 +153,7 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
         },
         (progress) => {
           setPrintProgress(progress.message);
-        }
+        },
       );
 
       if (!blob || blob.size === 0) {
@@ -314,7 +316,7 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
         },
         (progress) => {
           setPrintProgress(progress.message);
-        }
+        },
       );
 
       if (!blob || blob.size === 0) {
@@ -473,7 +475,7 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
         <div className={isPrinting && !showPreview ? "sc-print-loading" : "sc-hidden"}>
           {printProgress || "Processing..."}
           &nbsp;
-          <Image src="/images/loading20.gif" alt="loading" width={20} height={20} unoptimized />
+          <Image src={`${basePath}/images/loading20.gif`} alt="loading" width={20} height={20} unoptimized />
         </div>
 
         {/* ADVANCED OPTIONS */}

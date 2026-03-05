@@ -2,25 +2,18 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-// Read basePath from environment variable ONCE
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ""; // Default to empty string if not set
-
 // Define paths that require authentication (protected routes)
 // Only /api/secure/* routes require authentication
+// Note: When basePath is configured in next.config.ts, Next.js strips the
+// basePath from pathnames before passing them to middleware, so these paths
+// should NOT include the basePath prefix.
 const protectedPrefixes = [
-  `${basePath}/api/secure`, // All secure API routes require authentication
+  `/api/secure`, // All secure API routes require authentication
 ];
 
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  // console.log("Middleware:", { pathname, basePath });
-
-  // Check if the request path is outside the configured basePath
-  // If basePath is set, only apply auth logic to paths starting with it.
-  if (basePath && !pathname.startsWith(basePath)) {
-    // Let Next.js handle routing (it should manage basePath redirects etc.)
-    return NextResponse.next();
-  }
+  // console.log("Middleware:", { pathname });
 
   // Check if the path requires authentication
   const isProtected = protectedPrefixes.some((prefix) => pathname.startsWith(prefix));

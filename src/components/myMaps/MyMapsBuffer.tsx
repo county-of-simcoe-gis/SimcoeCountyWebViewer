@@ -8,6 +8,7 @@ import { Vector as VectorSource } from "ol/source";
 import { useMapStore } from "@/stores/mapStore";
 import { useEventStore } from "@/stores/eventStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
+import { getPublicPath } from "@/utils/getPublicPath";
 import { featureFromGeoJSON } from "@/utils/myMapsHelpers";
 import { bufferGeometry, convertToMeters } from "@/utils/openlayers/BufferHelpers";
 import { MYMAPS_CONSTANTS } from "@/types/myMaps";
@@ -263,7 +264,7 @@ const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
   return (
     <fieldset className="sc-fieldset">
       <legend>
-        <img src="/images/buffer.png" alt="buffer" />
+        <img src={getPublicPath("/images/buffer.png")} alt="buffer" />
         &nbsp; Buffer
       </legend>
       <div className="sc-mymaps-buffer-container">

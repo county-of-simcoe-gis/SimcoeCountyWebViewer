@@ -6,6 +6,7 @@ import type { MyMapsItem } from "@/types/myMaps";
 
 import { useMyMapsStore } from "@/stores/myMapsStore";
 import { useEventStore } from "@/stores/eventStore";
+import { getPublicPath } from "@/utils/getPublicPath";
 import "@/components/myMaps/MyMapsSymbolizer.css";
 
 import ColorPicker from "./ColorPicker";
@@ -768,7 +769,7 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
     <fieldset className="sc-fieldset">
       <legend>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/images/symbolizer.png" alt="symbolizer" width={16} height={16} />
+        <img src={getPublicPath("/images/symbolizer.png")} alt="symbolizer" width={16} height={16} />
         Symbolizer
       </legend>
       <div className="sc-mymaps-symbolizer-container">

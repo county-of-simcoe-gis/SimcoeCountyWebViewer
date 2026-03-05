@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import "./PrintPreviewModal.css";
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 interface PrintPreviewModalProps {
   /** The preview image blob */
   previewBlob: Blob | null;
@@ -29,16 +31,7 @@ interface PrintPreviewModalProps {
   progressMessage?: string;
 }
 
-export default function PrintPreviewModal({
-  previewBlob,
-  isOpen,
-  mapTitle,
-  settings,
-  onDownload,
-  onClose,
-  isDownloading = false,
-  progressMessage = "",
-}: PrintPreviewModalProps) {
+export default function PrintPreviewModal({ previewBlob, isOpen, mapTitle, settings, onDownload, onClose, isDownloading = false, progressMessage = "" }: PrintPreviewModalProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -85,12 +78,7 @@ export default function PrintPreviewModal({
                     <span>Loading preview...</span>
                   </div>
                 )}
-                <img
-                  src={previewUrl}
-                  alt="Map Preview"
-                  className={`print-preview-image ${imageLoaded ? "loaded" : ""}`}
-                  onLoad={() => setImageLoaded(true)}
-                />
+                <img src={previewUrl} alt="Map Preview" className={`print-preview-image ${imageLoaded ? "loaded" : ""}`} onLoad={() => setImageLoaded(true)} />
               </>
             ) : (
               <div className="print-preview-loading">
@@ -135,11 +123,7 @@ export default function PrintPreviewModal({
                   <span className="layer-label">Canvas capture</span>
                 </div>
               </div>
-              {settings.unsupportedLayers > 0 && (
-                <p className="print-preview-note">
-                  Some layers were captured from the map canvas. These may appear at lower resolution.
-                </p>
-              )}
+              {settings.unsupportedLayers > 0 && <p className="print-preview-note">Some layers were captured from the map canvas. These may appear at lower resolution.</p>}
             </div>
           </div>
         </div>
@@ -152,7 +136,7 @@ export default function PrintPreviewModal({
           <button className="print-preview-btn download" onClick={onDownload} disabled={isDownloading || !previewBlob}>
             {isDownloading ? (
               <>
-                <Image src="/images/loading20.gif" alt="loading" width={16} height={16} unoptimized />
+                <Image src={`${basePath}/images/loading20.gif`} alt="loading" width={16} height={16} unoptimized />
                 <span>Downloading...</span>
               </>
             ) : (

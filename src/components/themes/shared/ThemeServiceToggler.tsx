@@ -13,6 +13,7 @@
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import axiosInstance from "@/lib/axiosInstance";
 import { Layer } from "ol/layer";
 import { LayerHelpers, OL_DATA_TYPES } from "@/utils/openlayers";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
@@ -115,18 +116,8 @@ export default function ThemeServiceToggler({
     if (!serviceConfig.secure) return null;
 
     try {
-      const response = await fetch("/api/secure/arcgis/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (!response.ok) {
-        console.error("[ThemeServiceToggler] Failed to fetch ArcGIS token:", response.status);
-        return null;
-      }
-
-      const result = await response.json();
-      return result.access_token || null;
+      const response = await axiosInstance.post("/secure/arcgis/token");
+      return response.data?.access_token || null;
     } catch (err) {
       console.error("[ThemeServiceToggler] Error fetching ArcGIS token:", err);
       return null;
@@ -267,8 +258,7 @@ export default function ThemeServiceToggler({
 
           // Get legend info
           const legendEntries = layerConfig.legend?.legend || [];
-          const styleUrl =
-            legendEntries.length > 0 && legendEntries[0].imageData ? `data:${legendEntries[0].contentType};base64,${legendEntries[0].imageData}` : "";
+          const styleUrl = legendEntries.length > 0 && legendEntries[0].imageData ? `data:${legendEntries[0].contentType};base64,${legendEntries[0].imageData}` : "";
 
           layerStates.push({
             olLayer,

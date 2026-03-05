@@ -8,6 +8,7 @@ import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { LayerHelpers, OL_DATA_TYPES } from "@/utils/openlayers";
 import { useCREStore } from "@/stores/creStore";
 import { PROPERTY_TYPES } from "./creObjects";
+import { getPublicPath } from "@/utils/getPublicPath";
 import { updateAllLayerFilters, fetchAllResults } from "./creHelpers";
 import CRESearch from "./CRESearch";
 import CREPopupContent from "./CREPopupContent";
@@ -297,7 +298,7 @@ export default function CommercialRealEstate({ name = "Commercial Real Estate", 
                         className="w-full h-[70px] object-cover"
                         onError={(e) => {
                           e.currentTarget.onerror = null;
-                          e.currentTarget.src = "/images/commercialrealestate/noPhoto.png";
+                          e.currentTarget.src = getPublicPath("/images/commercialrealestate/noPhoto.png");
                         }}
                       />
                       <span className="text-[10px] leading-tight px-1 py-0.5 truncate w-full text-left">

@@ -1778,6 +1778,16 @@ export const useTOCStore = create<TOCState>()(
             // Create new OpenLayers layer
             const serverUrl = group.wmsGroupUrl.split("/wms")[0] + "/wms";
 
+            // Debug log for secured layer detection
+            if (layer.secured) {
+              console.debug(`[tocStore] Creating secured layer "${layer.name}":`, {
+                layerSecured: layer.secured,
+                groupLabel: group.label,
+                groupValue: group.value,
+                serverUrl,
+              });
+            }
+
             // Create OpenLayers layer
             LayerHelpers.getLayer(
               {

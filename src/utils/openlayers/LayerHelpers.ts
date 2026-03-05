@@ -302,6 +302,15 @@ export class LayerHelpers {
           // Determine if this layer needs auth (explicitly secured or URL-based detection)
           const wmsNeedsAuth = secured || isSecuredUrl(finalUrl as string);
 
+          // Debug log for troubleshooting auth detection
+          if (wmsNeedsAuth) {
+            console.debug(`[LayerHelpers] ImageWMS layer "${layerName}" using auth:`, {
+              explicitlySecured: secured,
+              urlDetectedSecured: isSecuredUrl(finalUrl as string),
+              url: finalUrl,
+            });
+          }
+
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const imageWMSOptions: Record<string, any> = {
             url: finalUrl as string,
@@ -333,12 +342,25 @@ export class LayerHelpers {
                 fetch(src, { headers: { Authorization: `Bearer ${token}` } })
                   .then((response) => {
                     if (!response.ok) throw new Error(`WMS request failed: ${response.status}`);
+
+                    // Check if response is actually an image (WMS errors return XML)
+                    const contentType = response.headers.get("content-type") || "";
+                    if (!contentType.startsWith("image/")) {
+                      // WMS likely returned an error (XML ServiceException)
+                      return response.text().then((text) => {
+                        console.warn(`[LayerHelpers] WMS returned non-image content for ${layerName}:`, text.substring(0, 200));
+                        throw new Error("WMS returned non-image content");
+                      });
+                    }
+
                     return response.blob();
                   })
                   .then((blob) => {
-                    const objectUrl = URL.createObjectURL(blob);
-                    img.onload = () => URL.revokeObjectURL(objectUrl);
-                    img.src = objectUrl;
+                    if (blob instanceof Blob) {
+                      const objectUrl = URL.createObjectURL(blob);
+                      img.onload = () => URL.revokeObjectURL(objectUrl);
+                      img.src = objectUrl;
+                    }
                   })
                   .catch((err) => {
                     console.warn("[LayerHelpers] Secured WMS fetch error:", err);
@@ -349,9 +371,16 @@ export class LayerHelpers {
 
           const imageWMSSource = new ImageWMS(imageWMSOptions);
 
-          // Add error handling for WMS source
+          // Add error handling for WMS source with detailed diagnostics
           imageWMSSource.on("imageloaderror", (event) => {
-            console.error("❌ WMS image load error for", layerName, ":", event);
+            // Attempt to get the failed URL for debugging
+            const image = event.image;
+            const failedUrl = image?.getImage?.()?.src || "unknown URL";
+            console.error(`❌ WMS image load error for ${layerName}:`, {
+              layerName,
+              url: failedUrl.substring(0, 200) + (failedUrl.length > 200 ? "..." : ""),
+              event,
+            });
           });
 
           callback(
@@ -378,6 +407,13 @@ export class LayerHelpers {
           };
 
           if (tileWmsNeedsAuth) {
+            // Debug log for troubleshooting auth detection
+            console.debug(`[LayerHelpers] TileWMS layer "${layerName}" using auth:`, {
+              explicitlySecured: secured,
+              urlDetectedSecured: isSecuredUrl(finalUrl as string),
+              url: finalUrl,
+            });
+
             tileWmsOptions.tileLoadFunction = (tile: { getImage: () => HTMLImageElement }, src: string) => {
               const img = tile.getImage();
 
@@ -390,12 +426,24 @@ export class LayerHelpers {
                 fetch(src, { headers: { Authorization: `Bearer ${token}` } })
                   .then((response) => {
                     if (!response.ok) throw new Error(`TileWMS request failed: ${response.status}`);
+
+                    // Check if response is actually an image (WMS errors return XML)
+                    const contentType = response.headers.get("content-type") || "";
+                    if (!contentType.startsWith("image/")) {
+                      return response.text().then((text) => {
+                        console.warn(`[LayerHelpers] TileWMS returned non-image content for ${layerName}:`, text.substring(0, 200));
+                        throw new Error("TileWMS returned non-image content");
+                      });
+                    }
+
                     return response.blob();
                   })
                   .then((blob) => {
-                    const objectUrl = URL.createObjectURL(blob);
-                    img.onload = () => URL.revokeObjectURL(objectUrl);
-                    img.src = objectUrl;
+                    if (blob instanceof Blob) {
+                      const objectUrl = URL.createObjectURL(blob);
+                      img.onload = () => URL.revokeObjectURL(objectUrl);
+                      img.src = objectUrl;
+                    }
                   })
                   .catch((err) => {
                     console.warn("[LayerHelpers] Secured TileWMS fetch error:", err);

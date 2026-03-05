@@ -5,8 +5,9 @@ import type { Geometry } from "ol/geom";
 import { usePopupStore } from "@/stores/popupStore";
 import { showURLWindow, showMessage } from "@/utils/helpersUI";
 import { numberWithCommas } from "./creHelpers";
+import { getPublicPath } from "@/utils/getPublicPath";
 
-const NO_PHOTO = "/images/commercialrealestate/noPhoto.png";
+const NO_PHOTO = getPublicPath("/images/commercialrealestate/noPhoto.png");
 
 interface CREPopupContentProps {
   feature: Feature<Geometry>;

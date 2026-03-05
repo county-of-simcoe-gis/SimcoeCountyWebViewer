@@ -5,6 +5,7 @@ import { Layer } from "ol/layer";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { LayerHelpers, OL_DATA_TYPES } from "@/utils/openlayers";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
+import { getPublicPath } from "@/utils/getPublicPath";
 
 interface BaseLayerConfig {
   serverUrl: string;
@@ -197,7 +198,7 @@ export default function ThemeBaseLayers({ config, themeId }: ThemeBaseLayersProp
           {config.useDynamicLegend === false && config.legendImageName && (
             <div className="mt-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/images/${config.legendImageName}`} alt="Legend" className="w-full" />
+              <img src={getPublicPath(`/images/${config.legendImageName}`)} alt="Legend" className="w-full" />
             </div>
           )}
         </>

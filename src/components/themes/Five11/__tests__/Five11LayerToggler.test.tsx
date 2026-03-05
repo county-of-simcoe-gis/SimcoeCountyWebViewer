@@ -4,6 +4,14 @@ import Five11LayerToggler from "../Five11LayerToggler";
 import type { Five11LayerConfig } from "../types";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 
+// Mock axiosInstance
+const mockAxiosGet = vi.fn();
+vi.mock("@/lib/axiosInstance", () => ({
+  default: {
+    get: (...args: unknown[]) => mockAxiosGet(...args),
+  },
+}));
+
 // Mock mapStore
 const mockMap = {
   getView: () => ({
@@ -83,14 +91,11 @@ describe("Five11LayerToggler", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (global.fetch as ReturnType<typeof vi.fn>) = vi.fn();
+    mockAxiosGet.mockReset;
   });
 
   it("renders the layer display name", () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(createGeoJsonResponse(3)),
-    });
+    mockAxiosGet.mockResolvedValueOnce({ data: createGeoJsonResponse(3) });
 
     render(<Five11LayerToggler layer={pointLayer} visible={true} onVisibilityChange={mockOnVisibilityChange} onLayerIdChange={mockOnLayerIdChange} />);
 
@@ -98,10 +103,7 @@ describe("Five11LayerToggler", () => {
   });
 
   it("renders a checkbox", () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(createGeoJsonResponse(3)),
-    });
+    mockAxiosGet.mockResolvedValueOnce({ data: createGeoJsonResponse(3) });
 
     render(<Five11LayerToggler layer={pointLayer} visible={true} onVisibilityChange={mockOnVisibilityChange} onLayerIdChange={mockOnLayerIdChange} />);
 
@@ -109,10 +111,7 @@ describe("Five11LayerToggler", () => {
   });
 
   it("checkbox reflects visible=true prop", () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(createGeoJsonResponse(3)),
-    });
+    mockAxiosGet.mockResolvedValueOnce({ data: createGeoJsonResponse(3) });
 
     render(<Five11LayerToggler layer={pointLayer} visible={true} onVisibilityChange={mockOnVisibilityChange} onLayerIdChange={mockOnLayerIdChange} />);
 
@@ -120,10 +119,7 @@ describe("Five11LayerToggler", () => {
   });
 
   it("checkbox reflects visible=false prop", () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(createGeoJsonResponse(3)),
-    });
+    mockAxiosGet.mockResolvedValueOnce({ data: createGeoJsonResponse(3) });
 
     render(<Five11LayerToggler layer={pointLayer} visible={false} onVisibilityChange={mockOnVisibilityChange} onLayerIdChange={mockOnLayerIdChange} />);
 
@@ -131,10 +127,7 @@ describe("Five11LayerToggler", () => {
   });
 
   it("calls onVisibilityChange when checkbox is clicked", () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(createGeoJsonResponse(3)),
-    });
+    mockAxiosGet.mockResolvedValueOnce({ data: createGeoJsonResponse(3) });
 
     render(<Five11LayerToggler layer={pointLayer} visible={true} onVisibilityChange={mockOnVisibilityChange} onLayerIdChange={mockOnLayerIdChange} />);
 
@@ -143,10 +136,7 @@ describe("Five11LayerToggler", () => {
   });
 
   it("calls onVisibilityChange when label text is clicked", () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(createGeoJsonResponse(3)),
-    });
+    mockAxiosGet.mockResolvedValueOnce({ data: createGeoJsonResponse(3) });
 
     render(<Five11LayerToggler layer={pointLayer} visible={true} onVisibilityChange={mockOnVisibilityChange} onLayerIdChange={mockOnLayerIdChange} />);
 
@@ -155,10 +145,7 @@ describe("Five11LayerToggler", () => {
   });
 
   it("displays feature count after loading", async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(createGeoJsonResponse(5)),
-    });
+    mockAxiosGet.mockResolvedValueOnce({ data: createGeoJsonResponse(5) });
 
     render(<Five11LayerToggler layer={pointLayer} visible={true} onVisibilityChange={mockOnVisibilityChange} onLayerIdChange={mockOnLayerIdChange} />);
 
@@ -168,7 +155,7 @@ describe("Five11LayerToggler", () => {
   });
 
   it("shows loading spinner initially", () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockReturnValueOnce(new Promise(() => {})); // never resolves
+    mockAxiosGet.mockReturnValueOnce(new Promise(() => {})); // never resolves
 
     render(<Five11LayerToggler layer={pointLayer} visible={true} onVisibilityChange={mockOnVisibilityChange} onLayerIdChange={mockOnLayerIdChange} />);
 
@@ -176,10 +163,7 @@ describe("Five11LayerToggler", () => {
   });
 
   it("renders an image icon for point layers", () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(createGeoJsonResponse(1)),
-    });
+    mockAxiosGet.mockResolvedValueOnce({ data: createGeoJsonResponse(1) });
 
     render(<Five11LayerToggler layer={pointLayer} visible={true} onVisibilityChange={mockOnVisibilityChange} onLayerIdChange={mockOnLayerIdChange} />);
 
@@ -189,10 +173,7 @@ describe("Five11LayerToggler", () => {
   });
 
   it("renders a line indicator for LineString layers", () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(createGeoJsonResponse(1)),
-    });
+    mockAxiosGet.mockResolvedValueOnce({ data: createGeoJsonResponse(1) });
 
     const { container } = render(<Five11LayerToggler layer={lineLayer} visible={true} onVisibilityChange={mockOnVisibilityChange} onLayerIdChange={mockOnLayerIdChange} />);
 
@@ -202,10 +183,7 @@ describe("Five11LayerToggler", () => {
   });
 
   it("adds layer to map via LayerManager on successful fetch", async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(createGeoJsonResponse(2)),
-    });
+    mockAxiosGet.mockResolvedValueOnce({ data: createGeoJsonResponse(2) });
 
     render(<Five11LayerToggler layer={pointLayer} visible={true} onVisibilityChange={mockOnVisibilityChange} onLayerIdChange={mockOnLayerIdChange} />);
 
@@ -215,10 +193,7 @@ describe("Five11LayerToggler", () => {
   });
 
   it("notifies parent of layer id after creation", async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(createGeoJsonResponse(2)),
-    });
+    mockAxiosGet.mockResolvedValueOnce({ data: createGeoJsonResponse(2) });
 
     render(<Five11LayerToggler layer={pointLayer} visible={true} onVisibilityChange={mockOnVisibilityChange} onLayerIdChange={mockOnLayerIdChange} />);
 
@@ -228,10 +203,7 @@ describe("Five11LayerToggler", () => {
   });
 
   it("removes layer via LayerManager on unmount", async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(createGeoJsonResponse(2)),
-    });
+    mockAxiosGet.mockResolvedValueOnce({ data: createGeoJsonResponse(2) });
 
     const { unmount } = render(<Five11LayerToggler layer={pointLayer} visible={true} onVisibilityChange={mockOnVisibilityChange} onLayerIdChange={mockOnLayerIdChange} />);
 
@@ -245,11 +217,7 @@ describe("Five11LayerToggler", () => {
   });
 
   it("handles failed API response gracefully", async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-      statusText: "Internal Server Error",
-    });
+    mockAxiosGet.mockRejectedValueOnce(new Error("Server Error"));
 
     render(<Five11LayerToggler layer={pointLayer} visible={true} onVisibilityChange={mockOnVisibilityChange} onLayerIdChange={mockOnLayerIdChange} />);
 
@@ -260,10 +228,7 @@ describe("Five11LayerToggler", () => {
   });
 
   it("handles invalid data structure gracefully", async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve([]), // Array instead of FeatureCollection
-    });
+    mockAxiosGet.mockResolvedValueOnce({ data: [] });
 
     render(<Five11LayerToggler layer={pointLayer} visible={true} onVisibilityChange={mockOnVisibilityChange} onLayerIdChange={mockOnLayerIdChange} />);
 
@@ -274,7 +239,7 @@ describe("Five11LayerToggler", () => {
   });
 
   it("disables checkbox while loading", () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockReturnValueOnce(new Promise(() => {})); // never resolves
+    mockAxiosGet.mockReturnValueOnce(new Promise(() => {})); // never resolves
 
     render(<Five11LayerToggler layer={pointLayer} visible={true} onVisibilityChange={mockOnVisibilityChange} onLayerIdChange={mockOnLayerIdChange} />);
 
@@ -282,10 +247,7 @@ describe("Five11LayerToggler", () => {
   });
 
   it("updates LayerManager visibility when visible prop changes", async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(createGeoJsonResponse(2)),
-    });
+    mockAxiosGet.mockResolvedValue({ data: createGeoJsonResponse(2) });
 
     const { rerender } = render(<Five11LayerToggler layer={pointLayer} visible={true} onVisibilityChange={mockOnVisibilityChange} onLayerIdChange={mockOnLayerIdChange} />);
 

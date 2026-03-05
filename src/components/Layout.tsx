@@ -14,6 +14,7 @@ import MyMapsService from "@/components/myMaps/MyMapsService";
 import GlobalDrawingOptionsPopup from "@/components/myMaps/GlobalDrawingOptionsPopup";
 import LayerInfoModal from "@/components/LayerInfo/LayerInfoModal";
 import LegendModal from "@/components/Legend/LegendModal";
+import HelpModal from "@/components/HelpModal";
 import MoreMenu from "@/components/MoreMenu";
 import GlobalURLModal from "@/components/common/GlobalURLModal";
 
@@ -123,6 +124,9 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Legend Modal - displays legends for visible layers */}
       <LegendModal />
+
+      {/* Help Modal - displays README.md as help documentation */}
+      <HelpModal />
 
       {/* More Menu - displays themes, tools, and other options */}
       <MoreMenu />

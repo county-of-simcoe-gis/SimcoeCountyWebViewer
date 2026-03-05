@@ -9,15 +9,18 @@ import { Postgres } from "./postgres";
 const globalForDb = globalThis as unknown as {
   sqlTabular: SQLServer | undefined;
   pgWeblive: Postgres | undefined;
+  pgTabular: Postgres | undefined;
   dbPoolsWarmedUp: boolean | undefined;
 };
 
 export const sqlTabular = globalForDb.sqlTabular ?? new SQLServer({ dbName: "tabular" });
 export const pgWeblive = globalForDb.pgWeblive ?? new Postgres({ dbName: "weblive" });
+export const pgTabular = globalForDb.pgTabular ?? new Postgres({ dbName: "tabular" });
 
 if (process.env.NODE_ENV !== "production") {
   globalForDb.sqlTabular = sqlTabular;
   globalForDb.pgWeblive = pgWeblive;
+  globalForDb.pgTabular = pgTabular;
 }
 
 // Fire-and-forget warmup — only once, skip if pools are already warm
@@ -26,6 +29,7 @@ if (!globalForDb.dbPoolsWarmedUp) {
   Promise.all([
     sqlTabular.warmup(),
     pgWeblive.warmup(),
+    pgTabular.warmup(),
   ]).then(() => console.log("[DB] Connection pools warmed up"))
     .catch((err) => console.error("[DB] Pool warmup error:", err));
 }

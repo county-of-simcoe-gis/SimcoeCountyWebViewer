@@ -13,6 +13,7 @@ import PanelComponent from "@/components/PanelComponent";
 import { useMapStore } from "@/stores/mapStore";
 import { useEventStore } from "@/stores/eventStore";
 import { getMapScale } from "@/utils/mapHelpers";
+import { getPublicPath } from "@/utils/getPublicPath";
 import { glowContainer } from "@/utils/helpersBrowser";
 
 // OpenLayers imports
@@ -234,7 +235,7 @@ export default function CoordinatesTool({ name = "Coordinates", helpLink, hideHe
       source: vectorSource,
       style: new Style({
         image: new Icon({
-          src: "/images/cross-hair.png",
+          src: getPublicPath("/images/cross-hair.png"),
         }),
       }),
       zIndex: 500,

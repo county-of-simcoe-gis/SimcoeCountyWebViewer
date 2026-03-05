@@ -45,3 +45,6 @@ OldAppAPISecured
 .github
 vitest-output.txt
 tsc-output.txt
+
+# Generated help content
+public/README.md

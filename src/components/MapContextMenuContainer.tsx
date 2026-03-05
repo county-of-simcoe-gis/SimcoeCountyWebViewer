@@ -13,6 +13,7 @@ import config from "@/config.json";
 import { toLonLat } from "ol/proj";
 import { FaFileAlt, FaMapMarkerAlt, FaExclamationTriangle, FaInfoCircle, FaGoogle, FaEllipsisH, FaCompressArrowsAlt } from "react-icons/fa";
 import { Vector as VectorLayer } from "ol/layer";
+import { getPublicPath } from "@/utils/getPublicPath";
 import { Vector as VectorSource } from "ol/source";
 import { Point } from "ol/geom";
 import { Feature } from "ol";
@@ -483,7 +484,7 @@ export const MapContextMenuContainer: React.FC = () => {
     const identifyStyle = new Style({
       image: new Icon({
         anchor: [0.5, 1],
-        src: "/images/map-marker.png",
+        src: getPublicPath("/images/map-marker.png"),
         scale: 1,
       }),
     });

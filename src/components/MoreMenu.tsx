@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { useLegendStore } from "@/stores/legendStore";
+import { useHelpModalStore } from "@/stores/helpModalStore";
 import { useMapStore } from "@/stores/mapStore";
 import { useTOCStore } from "@/stores/tocStore";
 import { useAppStore } from "@/stores/appStore";
@@ -75,7 +76,7 @@ export default function MoreMenu() {
         setActiveTab(3); // Themes tab
       }
     },
-    [closeMoreMenu, activateSidebarItem, openSidebar, setActiveTab]
+    [closeMoreMenu, activateSidebarItem, openSidebar, setActiveTab],
   );
 
   // Handle My Maps click
@@ -144,14 +145,17 @@ export default function MoreMenu() {
 
     // Get visible layers grouped by group
     const visibleLayers = layers.filter((layer) => layer.visible);
-    const groupedLayers = visibleLayers.reduce((acc, layer) => {
-      const groupName = layer.groupName || layer.group || "Other";
-      if (!acc[groupName]) {
-        acc[groupName] = [];
-      }
-      acc[groupName].push(layer);
-      return acc;
-    }, {} as Record<string, typeof layers>);
+    const groupedLayers = visibleLayers.reduce(
+      (acc, layer) => {
+        const groupName = layer.groupName || layer.group || "Other";
+        if (!acc[groupName]) {
+          acc[groupName] = [];
+        }
+        acc[groupName].push(layer);
+        return acc;
+      },
+      {} as Record<string, typeof layers>,
+    );
 
     // Convert to legend groups
     const allGroups = Object.entries(groupedLayers).map(([groupName, groupLayers]) => ({
@@ -171,7 +175,7 @@ export default function MoreMenu() {
       setUrlModalOpen(true);
       closeMoreMenu();
     },
-    [closeMoreMenu]
+    [closeMoreMenu],
   );
 
   // Handle feedback
@@ -277,14 +281,12 @@ export default function MoreMenu() {
     });
 
     // Help
-    if (config?.helpUrl) {
-      items.push({
-        id: "help",
-        name: "Help",
-        icon: <FaQuestionCircle />,
-        onClick: () => showURLWindow(config.helpUrl, "Help"),
-      });
-    }
+    items.push({
+      id: "help",
+      name: "Help",
+      icon: <FaQuestionCircle />,
+      onClick: () => useHelpModalStore.getState().openHelp(),
+    });
 
     // Terms and Conditions
     if (config?.termsUrl) {
@@ -376,7 +378,7 @@ export default function MoreMenu() {
           {menuContent}
           {modalContent}
         </>,
-        document.body
+        document.body,
       )
     : null;
 }

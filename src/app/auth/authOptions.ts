@@ -67,6 +67,9 @@ async function refreshAccessToken(token: ExtendedToken): Promise<ExtendedToken> 
   }
 }
 
+// Construct the correct callback URL with /api/auth/ path
+const getCallbackUrl = () => `${process.env.NEXTAUTH_URL}api/auth/callback/azuread`;
+
 export const authOptions: NextAuthOptions = {
   providers: [
     AzureADProvider({
@@ -80,6 +83,35 @@ export const authOptions: NextAuthOptions = {
       authorization: {
         params: {
           scope: `openid profile email offline_access${process.env.GEOSERVER_SCOPE ? ` ${process.env.GEOSERVER_SCOPE}` : ""}`,
+          // Explicitly set redirect_uri to ensure correct callback path with basePath
+          redirect_uri: getCallbackUrl(),
+        },
+      },
+      token: {
+        // Custom token request to ensure redirect_uri matches authorization request
+        async request({ params, provider }) {
+          const tenantId = process.env.AZURE_AD_TENANT_ID!;
+          const tokenUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
+
+          const response = await fetch(tokenUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+              client_id: provider.clientId!,
+              client_secret: provider.clientSecret as string,
+              code: params.code as string,
+              grant_type: "authorization_code",
+              redirect_uri: getCallbackUrl(), // Must match authorization request
+            }),
+          });
+
+          const tokens = await response.json();
+          if (!response.ok) {
+            throw new Error(tokens.error_description || tokens.error || "Token exchange failed");
+          }
+          return { tokens };
         },
       },
       profile(profile) {

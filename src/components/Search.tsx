@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { FaSearch, FaMapMarkerAlt, FaTools, FaPalette, FaLayerGroup, FaMapPin, FaHome, FaMapMarkedAlt, FaClock, FaBuilding, FaRoad } from "react-icons/fa";
 import { useConfig } from "@/hooks/useConfig";
-import { getAxiosClient } from "@/lib/axiosInstance";
+import axiosInstance, { getAxiosClient } from "@/lib/axiosInstance";
 import { appendToStorage, getItemsFromStorage, removeItemFromStorage } from "@/utils/storage";
 import { useEventStore } from "@/stores/eventStore";
 import { useAppStore } from "@/stores/appStore";
@@ -79,15 +79,23 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
     }
   }, [selectedType]);
 
-  // API URL builders
+  // Update select width whenever selected type changes
+  useEffect(() => {
+    if (measureSpanRef.current) {
+      // px-3 (12px left padding) + pr-8 (32px right padding for arrow) + 4px buffer
+      setSelectWidth(measureSpanRef.current.offsetWidth + 12 + 32 + 4);
+    }
+  }, [selectedType]);
+
+  // API URL builders — paths are relative to axiosInstance baseURL (which includes /api)
   const getSearchURL = (searchText: string, type: string, muni?: string, limit: number = defaultSearchLimit) => {
-    const url = `${apiUrlRef.current}public/search?q=${encodeURIComponent(searchText)}&type=${type}&limit=${limit}`;
+    const url = `/public/search?q=${encodeURIComponent(searchText)}&type=${type}&limit=${limit}`;
     return muni ? `${url}&muni=${muni}` : url;
   };
 
-  const getSearchInfoURL = (locationID: string) => `${apiUrlRef.current}public/search/${locationID}`;
+  const getSearchInfoURL = (locationID: string) => `/public/search/${locationID}`;
 
-  const getSearchTypesURL = () => `${apiUrlRef.current}public/search/types`;
+  const getSearchTypesURL = () => `/public/search/types`;
 
   // Load search history
   const loadSearchHistory = useCallback(() => {
@@ -113,8 +121,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
     // Load search types
     const loadSearchTypes = async () => {
       try {
-        const axiosClient = getAxiosClient(getSearchTypesURL());
-        const response = await axiosClient.get<string[]>(getSearchTypesURL());
+        const response = await axiosInstance.get<string[]>(getSearchTypesURL());
         const result = response.data;
         const types: SearchType[] = [
           { label: "All", value: "All" },
@@ -209,8 +216,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
         // If exactly 1, auto-zoom. If multiple, show the dropdown.
         const limit = fromUrl ? 10 : maxSearchLimit;
         const url = getSearchURL(searchText, type, municipality, limit);
-        const axiosClient = getAxiosClient(url);
-        const response = await axiosClient.get<SearchResult[]>(url);
+        const response = await axiosInstance.get<SearchResult[]>(url);
         const results = response.data;
 
         if (results) {
@@ -221,9 +227,8 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
 
             // Fetch the full location info and zoom to it
             try {
-              const locationUrl = `${apiUrlRef.current}public/search/${results[0].location_id}`;
-              const locationAxiosClient = getAxiosClient(locationUrl);
-              const locationResponse = await locationAxiosClient.get<SearchResult>(locationUrl);
+              const locationUrl = `/public/search/${results[0].location_id}`;
+              const locationResponse = await axiosInstance.get<SearchResult>(locationUrl);
               const locationInfo = locationResponse.data;
 
               if (locationInfo.geojson) {
@@ -384,8 +389,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
     } else if (result.location_id) {
       // Handle location-based result
       try {
-        const locationAxiosClient = getAxiosClient(getSearchInfoURL(result.location_id));
-        const locationResponse = await locationAxiosClient.get<SearchResult>(getSearchInfoURL(result.location_id));
+        const locationResponse = await axiosInstance.get<SearchResult>(getSearchInfoURL(result.location_id));
         const locationInfo = locationResponse.data;
         if (locationInfo.geojson) {
           // Use the SearchZoom handlers if available

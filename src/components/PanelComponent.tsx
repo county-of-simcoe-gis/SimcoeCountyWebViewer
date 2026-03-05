@@ -3,7 +3,7 @@
 import "@/components/PanelComponent.css";
 import React, { useEffect } from "react";
 import Image from "next/image";
-import { FaQuestion } from "react-icons/fa";
+import { FaQuestion, FaChevronLeft, FaTimes } from "react-icons/fa";
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { showURLWindow } from "@/utils/helpersUI";
 
@@ -58,8 +58,12 @@ export default function PanelComponent({ name, helpLink, hideHeader = false, onC
               <div id="sc-panel-component-help" className={`sc-panel-component-help ${helpLink ? "" : "sc-hidden"}`} title={`View Help for ${name}`} onClick={handleHelpClick}>
                 <FaQuestion />
               </div>
-              <Image id="sc-panel-component-tool-img" src="/images/tab-close-24x24.png" alt="Minimize Panel" title="Minimize Panel" width={24} height={24} onClick={handleSidebarVisibility} />
-              <Image id="sc-panel-component-tool-close" src="/images/close-x-24x24.png" alt={`Close ${name}`} title={`Close ${name}`} width={24} height={24} onClick={onClose} />
+              <button id="sc-panel-component-tool-img" title="Minimize Panel" aria-label="Minimize Panel" onClick={handleSidebarVisibility}>
+                <FaChevronLeft size={14} />
+              </button>
+              <button id="sc-panel-component-tool-close" title={`Close ${name}`} aria-label={`Close ${name}`} onClick={onClose}>
+                <FaTimes size={14} />
+              </button>
             </div>
           </div>
         </div>

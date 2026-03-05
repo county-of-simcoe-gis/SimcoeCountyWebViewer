@@ -8,6 +8,8 @@
 import "./PrintTool.css";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
+
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 import PanelComponent from "@/components/PanelComponent";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
@@ -182,7 +184,7 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
         alert("Failed to check print status. Please try again.");
       }
     },
-    [originUrl, printUrl]
+    [originUrl, printUrl],
   );
 
   /**
@@ -349,13 +351,11 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
         <div className={isPrinting ? "sc-print-loading" : "sc-hidden"}>
           {printProgress || "Processing..."}
           &nbsp;
-          <Image src="/images/loading20.gif" alt="loading" width={20} height={20} unoptimized />
+          <Image src={`${basePath}/images/loading20.gif`} alt="loading" width={20} height={20} unoptimized />
         </div>
 
         {/* NO PRINT URL WARNING */}
-        {!printUrl && (
-          <div className="sc-print-warning">Print server not configured. Please contact the site administrator.</div>
-        )}
+        {!printUrl && <div className="sc-print-warning">Print server not configured. Please contact the site administrator.</div>}
 
         {/* ADVANCED OPTIONS */}
         <div className={`sc-print-advanced-options-collapsible ${advancedOptionsOpen ? "open" : ""}`} onClick={() => setAdvancedOptionsOpen(!advancedOptionsOpen)}>

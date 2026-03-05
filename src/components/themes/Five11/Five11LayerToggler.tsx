@@ -6,9 +6,11 @@ import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import GeoJSON from "ol/format/GeoJSON";
 import { Style, Icon, Stroke } from "ol/style";
+import axiosInstance from "@/lib/axiosInstance";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { useMapStore } from "@/stores/mapStore";
 import type { Five11LayerConfig } from "./types";
+import { getPublicPath } from "@/utils/getPublicPath";
 import type { FeatureCollection } from "geojson";
 
 interface Five11LayerTogglerProps {
@@ -44,7 +46,7 @@ export default function Five11LayerToggler({ layer, visible, onVisibilityChange,
       return new Style({
         image: new Icon({
           anchor: [0.5, 1],
-          src: `/images/five11/${layer.imageName}`,
+          src: getPublicPath(`/images/five11/${layer.imageName}`),
         }),
       });
     }
@@ -70,18 +72,13 @@ export default function Five11LayerToggler({ layer, visible, onVisibilityChange,
           initializedRef.current = false;
         }
 
-        // Fetch GeoJSON data
+        // Fetch GeoJSON data - layer.apiUrl is like "/api/public/map/theme/511/..."
+        // publicAxiosInstance baseURL includes /api, so strip /api prefix
         console.log(`[511] Fetching layer: ${layer.displayName} from ${layer.apiUrl}`);
-        const response = await fetch(layer.apiUrl, { signal: abortController.signal });
+        const apiPath = layer.apiUrl.replace(/^\/api/, "");
+        const response = await axiosInstance.get<FeatureCollection>(apiPath, { signal: abortController.signal });
 
-        if (!response.ok) {
-          console.error(`[511] Failed to fetch ${layer.displayName}: ${response.status} ${response.statusText}`);
-          setRecordCount(0);
-          setIsLoading(false);
-          return;
-        }
-
-        const data: FeatureCollection = await response.json();
+        const data = response.data;
 
         // Discard if this init was superseded or component unmounted
         if (initId !== initCounterRef.current || !mountedRef.current) return;

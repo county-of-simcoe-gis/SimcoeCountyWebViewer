@@ -78,6 +78,19 @@ export class Postgres {
   }
 
   /**
+   * Execute query with no parameters and return all results
+   */
+  async selectAll<T = Record<string, unknown>>(query: string): Promise<T[]> {
+    try {
+      const result = await this.pool.query(query);
+      return result.rows as T[];
+    } catch (error) {
+      console.error("PostgreSQL query error:", error);
+      throw error;
+    }
+  }
+
+  /**
    * Execute query and return first result
    */
   async selectFirstWithValues<T = Record<string, unknown>>(query: string, values: unknown[]): Promise<T | null> {

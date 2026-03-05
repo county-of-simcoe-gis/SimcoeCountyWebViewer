@@ -11,6 +11,7 @@ import { useSession } from "next-auth/react";
 import type { Interaction as OLInteraction } from "ol/interaction";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { useUrlParameterContextOptional } from "@/contexts/UrlParameterContext";
+import { getPublicPath } from "@/utils/getPublicPath";
 
 // OpenLayers imports
 import "ol/ol.css";
@@ -164,6 +165,7 @@ export default function MapContainer() {
   } = useInteractionManagerStore();
   const unifiedInteractionRef = useRef<Interaction | null>(null);
   const shouldExecuteHandlerRef = useRef<((handler: InteractionHandler, event: MapBrowserEvent<OLUIEvent>) => boolean) | null>(null);
+  const termsShownRef = useRef(false);
 
   // State for aggregated results
   const [aggregatedResults, setAggregatedResults] = useState<Result[]>([]);
@@ -531,8 +533,9 @@ export default function MapContainer() {
     setMapLoading(false);
     emitMapLoaded();
 
-    // Show terms popup on startup (matches old app behaviour)
-    if (activeConfig.termsUrl && activeConfig.showTermsOnStartup) {
+    // Show terms popup on startup (matches old app behaviour) — only once
+    if (activeConfig.termsUrl && activeConfig.showTermsOnStartup && !termsShownRef.current) {
+      termsShownRef.current = true;
       const { showURLWindow } = require("@/utils/helpersUI");
       showURLWindow(activeConfig.termsUrl, true, "full", true, true, "Terms and Conditions");
     }
@@ -730,7 +733,7 @@ export default function MapContainer() {
             const iconStyle = new Style({
               image: new Icon({
                 anchor: [0.5, 1],
-                src: "/images/map-marker-light-blue.png", // Using a fallback icon
+                src: getPublicPath("/images/map-marker-light-blue.png"), // Using a fallback icon
               }),
             });
 
@@ -766,7 +769,7 @@ export default function MapContainer() {
         const iconStyle = new Style({
           image: new Icon({
             anchor: [0.5, 1],
-            src: "/images/identify-marker.png",
+            src: getPublicPath("/images/identify-marker.png"),
           }),
         });
 

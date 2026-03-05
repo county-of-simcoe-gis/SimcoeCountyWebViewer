@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { getArea, getLength } from "ol/sphere.js";
 import type { MyMapsItem } from "@/types/myMaps";
 import * as helpers from "@/utils/myMapsHelpers";
+import { getPublicPath } from "@/utils/getPublicPath";
 import "@/components/myMaps/MyMapsMeasure.css";
 
 interface MyMapsMeasureProps {
@@ -149,7 +150,7 @@ const MyMapsMeasure: React.FC<MyMapsMeasureProps> = ({ visible, item }) => {
   return (
     <fieldset className="sc-fieldset">
       <legend>
-        <img src="/images/measure.png" alt="measure" />
+        <img src={getPublicPath("/images/measure.png")} alt="measure" />
         &nbsp; Measure
       </legend>
       <div className="sc-mymaps-measure-container">

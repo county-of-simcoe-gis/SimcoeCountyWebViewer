@@ -12,6 +12,7 @@ import { Feature } from "ol";
 import { Point } from "ol/geom";
 import { transform } from "ol/proj";
 import { GeoJSON } from "ol/format";
+import { getPublicPath } from "@/utils/getPublicPath";
 
 interface SearchResult {
   name: string;
@@ -70,7 +71,7 @@ export const SearchZoom: React.FC = () => {
       const pointStyle = new Style({
         image: new Icon({
           anchor: [0.5, 1],
-          src: "/images/map-marker.png",
+          src: getPublicPath("/images/map-marker.png"),
         }),
       });
 

@@ -7,8 +7,9 @@ import { numberWithCommas } from "./creHelpers";
 import type { Feature } from "ol";
 import type { Geometry } from "ol/geom";
 import { FaArrowLeft, FaStar } from "react-icons/fa";
+import { getPublicPath } from "@/utils/getPublicPath";
 
-const NO_PHOTO = "/images/commercialrealestate/noPhoto.png";
+const NO_PHOTO = getPublicPath("/images/commercialrealestate/noPhoto.png");
 
 export default function CREResults() {
   const allResults = useCREStore((s) => s.allResults);

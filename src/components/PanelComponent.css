@@ -103,28 +103,34 @@
 
 #sc-panel-component-tool-img {
   border: 1px solid rgba(202, 202, 202, 0.69);
-  padding: 1px;
+  padding: 4px;
   border-radius: 2px;
   margin-left: 5px;
   cursor: pointer;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   vertical-align: top;
   background-color: #e0e0e0;
   width: 24px;
   height: 24px;
+  color: #333;
 }
 
 #sc-panel-component-tool-close {
   background-color: #6ea8cf;
   border: 1px solid #6ea8cf;
-  padding: 1px;
+  padding: 4px;
   border-radius: 2px;
   margin-left: 5px;
   cursor: pointer;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   vertical-align: top;
   width: 24px;
   height: 24px;
+  color: #fff;
 }
 
 #sc-panel-component-content {

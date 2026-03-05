@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, CSSProperties } from "react";
+import axiosInstance from "@/lib/axiosInstance";
 import PanelComponent from "@/components/PanelComponent";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { List } from "react-window";
@@ -230,8 +231,8 @@ export default function TwoOneOne({ name = "211 Community Services", helpLink, h
   // Fetch categories
   const fetchCategories = useCallback(async () => {
     try {
-      const response = await fetch(`/api/public/map/theme/211/categories/${isFrench}`);
-      const data = await response.json();
+      const response = await axiosInstance.get(`/public/map/theme/211/categories/${isFrench}`);
+      const data = response.data;
       const options: SelectOption[] = [{ value: "All", label: isFrench ? "Tout" : "All" }, ...data.map((cat: string) => ({ value: cat, label: cat }))];
       setCategories(options);
       setCategorySelected("All");
@@ -243,8 +244,8 @@ export default function TwoOneOne({ name = "211 Community Services", helpLink, h
   // Fetch subcategories
   const fetchSubCategories = useCallback(async () => {
     try {
-      const response = await fetch(`/api/public/map/theme/211/subcategories/${encodeURIComponent(categorySelected)}/${isFrench}`);
-      const data = await response.json();
+      const response = await axiosInstance.get(`/public/map/theme/211/subcategories/${encodeURIComponent(categorySelected)}/${isFrench}`);
+      const data = response.data;
       const options: SelectOption[] = [{ value: "All", label: isFrench ? "Tout" : "All" }, ...data.map((subCat: string) => ({ value: subCat, label: subCat }))];
       setSubCategories(options);
       setSubCategorySelected("All");
@@ -257,13 +258,12 @@ export default function TwoOneOne({ name = "211 Community Services", helpLink, h
   const fetchResults = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `/api/public/map/theme/211/results/${encodeURIComponent(categorySelected)}/${encodeURIComponent(
+      const response = await axiosInstance.get(
+        `/public/map/theme/211/results/${encodeURIComponent(categorySelected)}/${encodeURIComponent(
           categorySelected === "All" ? "All" : subCategorySelected,
         )}/${encodeURIComponent(ageSelected)}/${isFrench}`,
       );
-      const data = await response.json();
-      setResults(data);
+      setResults(response.data);
     } catch (error) {
       console.error("Error fetching results:", error);
       setResults([]);

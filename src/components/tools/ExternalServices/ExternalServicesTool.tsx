@@ -13,6 +13,7 @@ import { Vector as VectorLayer } from "ol/layer";
 import { Vector as VectorSource } from "ol/source";
 import { Icon, Style } from "ol/style";
 import { Point } from "ol/geom";
+import { getPublicPath } from "@/utils/getPublicPath";
 import { Feature } from "ol";
 import GeoJSON from "ol/format/GeoJSON";
 import { transform } from "ol/proj";
@@ -145,7 +146,7 @@ export default function ExternalServicesTool({
 
     const iconStyle = new Style({
       image: new Icon({
-        src: "/images/tools/externalservices/marker.png",
+        src: getPublicPath("/images/tools/externalservices/marker.png"),
         anchor: [0.5, 1], // Bottom center of icon
       }),
     });

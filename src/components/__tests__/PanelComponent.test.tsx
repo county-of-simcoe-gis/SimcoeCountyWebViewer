@@ -14,10 +14,10 @@ describe("PanelComponent", () => {
     render(
       <PanelComponent name="Test Tool" onClose={onClose}>
         <div>content</div>
-      </PanelComponent>
+      </PanelComponent>,
     );
     expect(screen.getByText("Test Tool")).toBeInTheDocument();
-    const close = screen.getByAltText("Close Test Tool");
+    const close = screen.getByRole("button", { name: "Close Test Tool" });
     fireEvent.click(close);
     expect(onClose).toHaveBeenCalled();
   });
@@ -28,7 +28,7 @@ describe("PanelComponent", () => {
     render(
       <PanelComponent name="Help Tool" helpLink="https://example.com" onClose={onClose}>
         <div />
-      </PanelComponent>
+      </PanelComponent>,
     );
     const help = screen.getByTitle("View Help for Help Tool");
     fireEvent.click(help);

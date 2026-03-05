@@ -201,6 +201,18 @@ function mergeObjArray(targetArray: SidebarComponent[], sourceArray: SidebarComp
 let globalConfig: AppConfig | null = null;
 
 /**
+ * Custom error class for when a secured map requires authentication
+ */
+export class AuthenticationRequiredError extends Error {
+  mapId: string;
+  constructor(mapId: string) {
+    super(`Map "${mapId}" requires authentication`);
+    this.name = "AuthenticationRequiredError";
+    this.mapId = mapId;
+  }
+}
+
+/**
  * Load configuration from the map API and translate using JSONTranslation
  */
 async function loadConfigFromApi(mapId: string): Promise<Partial<AppConfig> | null> {
@@ -246,6 +258,18 @@ async function loadConfigFromApi(mapId: string): Promise<Partial<AppConfig> | nu
     // console.log("Successfully loaded and translated config from API:", apiConfig);
     return apiConfig;
   } catch (error) {
+    // Check if this is a 401 Unauthorized or 404 Not Found error
+    // Both can indicate a secured map that requires authentication:
+    // - 401: API explicitly says authentication required
+    // - 404: Map may be filtered out for unauthenticated users (appears as "not found")
+    if (error && typeof error === "object" && "response" in error) {
+      const axiosError = error as { response?: { status?: number } };
+      const status = axiosError.response?.status;
+      if (status === 401 || (status === 404 && mapId && mapId.trim() !== "")) {
+        console.log(`Map "${mapId}" requires authentication (status: ${status}) - throwing AuthenticationRequiredError`);
+        throw new AuthenticationRequiredError(mapId);
+      }
+    }
     console.error("Error loading config from API:", error);
     throw error;
   }
@@ -536,8 +560,12 @@ export async function loadConfig(configSecured: Record<string, unknown> = {}): P
           );
         }
       } catch (apiError) {
+        // Re-throw authentication errors so the UI can redirect to login
+        if (apiError instanceof AuthenticationRequiredError) {
+          throw apiError;
+        }
         console.warn("Failed to load config from API, using base config:", apiError);
-        // Continue with base config if API fails
+        // Continue with base config if API fails for other reasons
       }
     }
 
