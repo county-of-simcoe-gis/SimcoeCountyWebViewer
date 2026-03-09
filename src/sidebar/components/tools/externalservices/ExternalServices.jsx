@@ -135,11 +135,14 @@ const ExternalServicesGroup = (props) => {
 const ExternalServicesLink = (props) => {
   const { link, coords, address } = props;
 
-  // eslint-disable-next-line
-  const template = (x, y, address) => eval("`" + link.url + "`");
+  const buildUrl = (x, y, addr) =>
+    link.url
+      .replace(/\$\{x\}/g, x)
+      .replace(/\$\{y\}/g, y)
+      .replace(/\$\{address\}/g, addr ?? "");
   return (
     <div className="sc-tool-external-services-item-link">
-      <a href={template(coords[0], coords[1], address)} target="_blank" rel="noopener noreferrer">
+      <a href={buildUrl(coords[0], coords[1], address)} target="_blank" rel="noopener noreferrer">
         {link.name}
       </a>
     </div>
@@ -148,6 +151,4 @@ const ExternalServicesLink = (props) => {
 
 // IMPORT ALL IMAGES
 import { createImagesObject } from "../../../../helpers/imageHelper";
-const images = createImagesObject(
-  import.meta.glob('./images/*.{png,jpg,jpeg,svg,gif}', { eager: true, query: '?url', import: 'default' })
-);
+const images = createImagesObject(import.meta.glob("./images/*.{png,jpg,jpeg,svg,gif}", { eager: true, query: "?url", import: "default" }));

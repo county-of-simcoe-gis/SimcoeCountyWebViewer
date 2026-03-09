@@ -34,26 +34,31 @@ export default defineConfig(({ mode }) => {
       sourcemap: false,
       chunkSizeWarningLimit: 1000,
       rollupOptions: {
+        onwarn(warning, warn) {
+          // Suppress known react-virtualized flow directive warning
+          if (warning.message?.includes("Module level directives cause errors when bundled") && warning.id?.includes("react-virtualized")) {
+            return;
+          }
+          warn(warning);
+        },
         output: {
           manualChunks: (id) => {
             // Split node_modules into vendor chunks
-            // Be careful not to split packages with interdependencies
-            if (id.includes('node_modules')) {
-              // React ecosystem - keep together
-              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router') || 
-                  id.includes('scheduler') || id.includes('use-sync-external-store')) {
-                return 'vendor-react';
+            // Order matters: check specific packages first to avoid circular chunks
+            if (id.includes("node_modules")) {
+              // ArcGIS - check first (most specific)
+              if (id.includes("@arcgis/core")) {
+                return "vendor-arcgis";
               }
-              // OpenLayers mapping - keep together
-              if (id.includes('/ol/') || id.includes('ol-mapbox-style') || id.includes('proj4') || 
-                  id.includes('geotiff') || id.includes('lerc') || id.includes('rbush')) {
-                return 'vendor-ol';
+              // OpenLayers mapping - check before react to avoid catching react-* packages that depend on ol
+              if (id.includes("/ol/") || id.includes("ol-mapbox-style") || id.includes("proj4") || id.includes("geotiff") || id.includes("lerc") || id.includes("rbush")) {
+                return "vendor-ol";
               }
-              // ArcGIS - keep separate
-              if (id.includes('@arcgis/core')) {
-                return 'vendor-arcgis';
+              // Core React packages only (exact package names to avoid circular deps with react-* ecosystem packages)
+              if (/[/\\]node_modules[/\\](react|react-dom|react-router|react-router-dom|scheduler|use-sync-external-store)[/\\]/.test(id)) {
+                return "vendor-react";
               }
-              // Let everything else be handled automatically by Vite
+              // Let everything else (including react-* ecosystem packages) be handled automatically by Vite
               // This prevents circular dependency issues
             }
           },
@@ -78,7 +83,7 @@ export default defineConfig(({ mode }) => {
           ".js": "jsx",
         },
       },
-      exclude: ['@arcgis/core'],
+      exclude: ["@arcgis/core"],
     },
     resolve: {
       alias: {
