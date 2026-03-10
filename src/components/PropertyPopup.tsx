@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Feature } from "ol";
-import config from "@/config.json";
+import { useAppStore } from "@/stores/appStore";
 import { InfoRow } from "@/components/common/InfoRow";
 import { usePropertyPopupExtensionStore } from "@/stores/propertyPopupExtensionStore";
 import { usePopupStore } from "@/stores/popupStore";
@@ -10,6 +10,7 @@ import { useReportsStore } from "@/stores/reportsStore";
 import { useEventStore } from "@/stores/eventStore";
 import { useToastStore } from "@/hooks/useToast";
 import PropertyReport from "@/components/PropertyReport";
+import IdentifyQuery from "@/components/Identify/IdentifyQuery";
 import { activateTab } from "@/utils/helpersUI";
 
 export interface PropertyInfo {
@@ -38,6 +39,7 @@ interface PropertyPopupProps {
 }
 
 export default function PropertyPopup({ propInfo, feature, onClose, onClearParcelLayer }: PropertyPopupProps) {
+  const config = useAppStore((state) => state.config);
   const [copied, setCopied] = useState(false);
   const extensionItems = usePropertyPopupExtensionStore((s) => s.getVisibleItems)();
 
@@ -114,6 +116,36 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
     }
   };
 
+  const handleCustomIdentify = (item: NonNullable<NonNullable<typeof config>["propertyReport"]>["customIdentify"] extends Array<infer T> ? T : never) => {
+    if (!item) return;
+    const whereClause = item.whereFormat.replace("{arn}", arn);
+
+    // Close popup and parcel layer
+    onClearParcelLayer?.();
+    onClose?.();
+    usePopupStore.getState().hide();
+
+    // Load the ArcGIS query report into the Reports tab
+    useReportsStore.getState().setReport({
+      id: `custom-identify-${arn}-${Date.now()}`,
+      title: item.title || item.label,
+      content: (
+        <IdentifyQuery
+          title={item.title || item.label}
+          layerURL={item.layerURL}
+          layerId={item.layerId}
+          where={whereClause}
+          fields={item.fields || ["*"]}
+          secured={item.secured}
+          type={item.type}
+        />
+      ),
+      createdAt: new Date(),
+      source: "customIdentify",
+    });
+    activateTab("reports");
+  };
+
   return (
     <div className="bg-white">
       <div className="relative overflow-x-hidden overflow-y-auto">
@@ -162,6 +194,20 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
             </InfoRow>
           ))}
 
+        {/* Custom Identify items from propertyReport config */}
+        {(() => { console.log("PropertyPopup customIdentify check:", { arn, propertyReport: config?.propertyReport, customIdentify: config?.propertyReport?.customIdentify }); return null; })()}
+        {arn &&
+          config?.propertyReport?.customIdentify?.map((item, idx) => (
+            <InfoRow key={`custom-identify-${idx}`} label={item.label}>
+              <span
+                className="text-[#337ab7] underline cursor-pointer select-none hover:text-[#23527c]"
+                onClick={() => handleCustomIdentify(item)}
+              >
+                {item.linkText}
+              </span>
+            </InfoRow>
+          ))}
+
         {/* Tools */}
         <InfoRow label="Tools">
           <div className="inline">
@@ -174,7 +220,7 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
             <span
               className="text-[#337ab7] underline cursor-pointer select-none mr-1 hover:text-[#23527c]"
               onClick={() => {
-                const termsUrl = (config as { termsUrl?: string }).termsUrl;
+                const termsUrl = config?.termsUrl as string | undefined;
                 if (termsUrl) {
                   window.open(termsUrl, "_blank");
                 }

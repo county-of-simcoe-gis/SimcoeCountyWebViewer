@@ -100,6 +100,7 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
 
     if (config.originUrl) setOriginUrl(config.originUrl);
     if (config.printLogo) setPrintLogo(config.printLogo);
+    else if (appConfig?.printLogo) setPrintLogo(appConfig.printLogo);
     if (config.printSizes) {
       setPrintSizes(config.printSizes);
       setPrintSizeSelectedOption(config.printSizes[0]);

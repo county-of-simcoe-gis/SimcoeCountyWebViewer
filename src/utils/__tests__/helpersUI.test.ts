@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { activateTab, showMessage, showURLWindow, addAppStat } from "@/utils/helpersUI";
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { useURLModalStore } from "@/stores/urlModalStore";
+import { useAppStore } from "@/stores/appStore";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -63,7 +64,7 @@ describe("helpersUI", () => {
       const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       // @ts-expect-error - testing invalid input
       activateTab("invalid");
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid tab name"));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("is hidden or invalid"));
     });
   });
 
@@ -141,10 +142,15 @@ describe("helpersUI", () => {
   });
 
   describe("addAppStat", () => {
-    it("logs stat to console", () => {
-      const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    it("sends stat via fetch when config is available", () => {
+      const fetchSpy = vi.spyOn(global, "fetch").mockImplementation(() => Promise.resolve(new Response()));
+      useAppStore.setState({ config: { includeAppStats: true, appStatsUrl: "https://stats.example.com/", title: "TestApp" } as any });
+      // Mock hostname to be non-localhost
+      Object.defineProperty(window, "location", { value: { hostname: "example.com" }, writable: true, configurable: true });
+
       addAppStat("click", "button-pressed");
-      expect(consoleSpy).toHaveBeenCalledWith("App Stat: click - button-pressed");
+      expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining("click"), expect.objectContaining({ method: "GET", mode: "no-cors" }));
+      fetchSpy.mockRestore();
     });
   });
 });

@@ -341,7 +341,7 @@ export default function MapContainer() {
       basemap: activeConfig.controls?.basemap ?? true,
       gitHubButton: activeConfig.controls?.gitHubButton ?? true,
       scaleSelector: activeConfig.controls?.scaleSelector ?? false,
-      grid: activeConfig.controls?.showGrid ?? false,
+      grid: activeConfig.controls?.showGrid ?? true,
       extentHistory: activeConfig.controls?.extentHistory ?? false,
       attribution: activeConfig.controls?.attribution ?? true,
     };

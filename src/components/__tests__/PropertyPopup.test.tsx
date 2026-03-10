@@ -5,15 +5,7 @@ import { Feature } from "ol";
 import { Polygon } from "ol/geom";
 import { useReportsStore } from "@/stores/reportsStore";
 import { useEventStore } from "@/stores/eventStore";
-
-// Mock CSS
-
-// Mock config
-vi.mock("@/config.json", () => ({
-  default: {
-    termsUrl: "https://example.com/terms",
-  },
-}));
+import { useAppStore } from "@/stores/appStore";
 
 describe("PropertyPopup", () => {
   const mockFeature = new Feature({
@@ -62,6 +54,9 @@ describe("PropertyPopup", () => {
 
     // Mock alert
     global.alert = vi.fn();
+
+    // Set config in app store
+    useAppStore.setState({ config: { termsUrl: "https://example.com/terms" } as any });
 
     // Mock window.map
     (global as any).window.map = {

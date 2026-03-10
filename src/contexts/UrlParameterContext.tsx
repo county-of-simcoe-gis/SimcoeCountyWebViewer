@@ -460,8 +460,72 @@ function createLazyHandler(paramName: string): HandlerFn {
 
       // Add more handlers as needed
 
-      default:
-        console.log(`[Handler] No specific handler for: ${paramName}, value: ${value}`);
+      default: {
+        // Check sidebarShortcutParams from merged config for custom URL param handling
+        const { useAppStore } = await import("@/stores/appStore");
+        const appConfig = useAppStore.getState().config;
+        const shortcuts = (appConfig?.sidebarShortcutParams as Array<{
+          url_param: string;
+          type: string;
+          component: string;
+          matchValue?: string;
+          hidden?: boolean;
+          timeout?: number;
+        }>) || [];
+
+        // Find a matching shortcut entry
+        const shortcut = shortcuts.find((s) => {
+          if (s.url_param.toUpperCase() !== paramName.toUpperCase()) return false;
+          // If matchValue is specified, the URL param value must match it
+          if (s.matchValue && s.matchValue.toUpperCase() !== value.toUpperCase()) return false;
+          return true;
+        });
+
+        if (shortcut) {
+          console.log(`[Handler] Matched sidebarShortcutParam: ${shortcut.url_param} → ${shortcut.type}/${shortcut.component}`);
+
+          if (shortcut.type === "search") {
+            // Emit a search event with the URL parameter value
+            const { useEventStore } = await import("@/stores/eventStore");
+            useEventStore.getState().emit("searchItem", { value, type: shortcut.component });
+          } else if (shortcut.type === "themes" || shortcut.type === "tools") {
+            // Wait for sidebar items to be loaded
+            const maxWaitShortcut = shortcut.timeout || 5000;
+            const checkIntervalShortcut = 100;
+            let waitedShortcut = 0;
+            let sidebarStateShortcut = useSidebarStore.getState();
+            const items = shortcut.type === "themes" ? sidebarStateShortcut.themes : sidebarStateShortcut.tools;
+
+            while (items.length === 0 && waitedShortcut < maxWaitShortcut) {
+              await new Promise((resolve) => setTimeout(resolve, checkIntervalShortcut));
+              waitedShortcut += checkIntervalShortcut;
+              sidebarStateShortcut = useSidebarStore.getState();
+            }
+
+            // Find the item by component name (case-insensitive)
+            const finalItems = shortcut.type === "themes" ? sidebarStateShortcut.themes : sidebarStateShortcut.tools;
+            const item = finalItems.find(
+              (i) => i.name.toUpperCase() === shortcut.component.toUpperCase() || i.id.toUpperCase() === shortcut.component.toUpperCase()
+            );
+
+            if (item) {
+              sidebarStateShortcut.openSidebar();
+              const tabIndex = shortcut.type === "themes" ? 3 : 1;
+              sidebarStateShortcut.setActiveTab(tabIndex);
+              sidebarStateShortcut.activateSidebarItem(item.id, shortcut.type);
+              console.log(`[Handler] Shortcut activated: ${item.name}`);
+            } else {
+              console.warn(`[Handler] Shortcut component "${shortcut.component}" not found in ${shortcut.type}`);
+            }
+          } else if (shortcut.type === "MYMAPS") {
+            // TODO: Load MyMaps configuration
+            console.log(`[Handler] MyMaps shortcut: ${shortcut.component}, value: ${value}`);
+          }
+        } else {
+          console.log(`[Handler] No specific handler for: ${paramName}, value: ${value}`);
+        }
+        break;
+      }
     }
   };
 }

@@ -135,6 +135,73 @@ export interface AppConfig {
   searchPlaceHolder?: string;
   searchHideTypes?: boolean;
   searchDefaultType?: string;
+  hideSearch?: boolean;
+  municipality?: string;
+
+  // Viewer mode (from map config)
+  viewerMode?: string;
+  disableRightClickMenu?: boolean;
+  feedback_contact?: string;
+
+  // Property report configuration (from map config)
+  propertyReport?: {
+    customIdentify?: Array<{
+      identifyType: string;
+      label: string;
+      title: string;
+      linkText: string;
+      layerURL: string;
+      layerId: string;
+      whereFormat: string;
+      fields: string[];
+      secured?: boolean;
+      type?: string;
+    }>;
+  };
+
+  // Print logo (from map config)
+  printLogo?: string;
+
+  // Feature highlight styles (from map config)
+  featureHighlitStyles?: {
+    zoomFactor?: number;
+    circleRadius?: number;
+    circleStroke?: string;
+    circleStrokeWidth?: number;
+    circleFill?: string;
+    stroke?: string;
+    strokeWidth?: number;
+    fill?: string;
+  };
+
+  // Basemap configuration (from map config)
+  baseMapType?: string;
+  baseMapServices?: {
+    defaultButton?: string;
+    imageryServices?: unknown[];
+    topoServices?: unknown[];
+  };
+
+  // Sidebar shortcut params (URL → sidebar item mappings)
+  sidebarShortcutParams?: Array<{
+    id?: number;
+    url_param: string;
+    type: string;
+    component: string;
+    matchValue?: string;
+    hidden?: boolean;
+    timeout?: number;
+  }>;
+
+  // Sidebar tab title customization
+  toolsTitle?: string;
+  themesTitle?: string;
+
+  // Parcel layer config
+  parcelLayer?: {
+    url: string;
+    rollNumberFieldName?: string;
+  };
 
   // Other properties that might be added dynamically
   [key: string]: unknown;
@@ -302,6 +369,16 @@ function convertSettingsToAppConfig(settings: SettingsType & Record<string, unkn
     if (general.feedbackUrl) config.feedbackUrl = general.feedbackUrl;
     if (general.whatsNewUrl) config.whatsNewUrl = general.whatsNewUrl;
 
+    // Additional General properties
+    if (general.viewerMode) config.viewerMode = general.viewerMode;
+    if (general.disableRightClickMenu !== undefined) config.disableRightClickMenu = general.disableRightClickMenu;
+    if (general.feedback_contact) config.feedback_contact = general.feedback_contact;
+    if (general.showHelpButtonInsteadOfFeedback !== undefined) config.showHelpButtonInsteadOfFeedback = general.showHelpButtonInsteadOfFeedback;
+    if ((general as Record<string, unknown>).printLogo) config.printLogo = (general as Record<string, unknown>).printLogo as string;
+    if ((general as Record<string, unknown>).baseMapType) config.baseMapType = (general as Record<string, unknown>).baseMapType as string;
+    if ((general as Record<string, unknown>).featureHighlitStyles) config.featureHighlitStyles = (general as Record<string, unknown>).featureHighlitStyles as AppConfig["featureHighlitStyles"];
+    if ((general as Record<string, unknown>).sidebarShortcutParams) config.sidebarShortcutParams = (general as Record<string, unknown>).sidebarShortcutParams as AppConfig["sidebarShortcutParams"];
+
     // Map controls
     if (general.controls) {
       config.controls = {
@@ -397,6 +474,32 @@ function convertSettingsToAppConfig(settings: SettingsType & Record<string, unkn
     if (search.placeHolder) config.searchPlaceHolder = search.placeHolder;
     if (search.hideTypes !== undefined) config.searchHideTypes = search.hideTypes;
     if (search.defaultSearchType) config.searchDefaultType = search.defaultSearchType;
+    if (search.hideSearch !== undefined) config.hideSearch = search.hideSearch;
+  }
+
+  // Map Basemaps settings
+  if (settings.Basemaps) {
+    const basemaps = settings.Basemaps;
+    const hasBasemapData = basemaps.defaultButton ||
+      (Array.isArray(basemaps.imageryServices) && basemaps.imageryServices.length > 0) ||
+      (Array.isArray(basemaps.topoServices) && basemaps.topoServices.length > 0);
+    if (hasBasemapData) {
+      config.baseMapServices = {};
+      if (basemaps.defaultButton) config.baseMapServices.defaultButton = basemaps.defaultButton;
+      if (Array.isArray(basemaps.imageryServices) && basemaps.imageryServices.length > 0) config.baseMapServices.imageryServices = basemaps.imageryServices;
+      if (Array.isArray(basemaps.topoServices) && basemaps.topoServices.length > 0) config.baseMapServices.topoServices = basemaps.topoServices;
+    }
+  }
+
+  // Map Tools title
+  if (settings.Tools?.title) config.toolsTitle = settings.Tools.title;
+
+  // Map Themes title
+  if (settings.Themes?.title) config.themesTitle = settings.Themes.title;
+
+  // Map propertyReport settings (passed through from translation)
+  if (settings.propertyReport) {
+    config.propertyReport = settings.propertyReport as AppConfig["propertyReport"];
   }
 
   // Copy any additional properties that don't fit the standard structure
@@ -521,6 +624,11 @@ export async function loadConfig(configSecured: Record<string, unknown> = {}): P
             if (Array.isArray(apiToc.sources) && apiToc.sources.length > 0) {
               config.toc.sources = apiToc.sources;
               console.log("Using API-provided layer sources:", apiToc.sources.length, "sources");
+              // Log visibleLayers for each source
+              apiToc.sources.forEach((s: Record<string, unknown>, i: number) => {
+                const grp = s.group as Record<string, unknown> | undefined;
+                console.log(`  Source[${i}]: group="${grp?.name}", visibleLayers=`, grp?.visibleLayers);
+              });
             } else {
               console.log("API config has no sources, keeping local config sources:", config.toc.sources?.length || 0, "sources");
             }

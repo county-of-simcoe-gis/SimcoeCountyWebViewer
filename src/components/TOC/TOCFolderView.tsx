@@ -48,7 +48,7 @@ export default function TOCFolderView({
             group={group}
             searchText={searchText}
             sortAlpha={sortAlpha}
-            panelOpen={true}
+            panelOpen={group.sourceOpen !== undefined ? group.sourceOpen : true}
             visible={isVisible}
             onLayerChange={onLayerChange}
             onLegendToggle={onLegendToggle}

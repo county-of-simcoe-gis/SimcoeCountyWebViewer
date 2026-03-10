@@ -173,9 +173,19 @@ export function buildLayerFromWMS(group: Partial<TOCLayerGroup> & { secure?: boo
   const minScale = wmsLayer.MinScaleDenominator || 0;
   const maxScale = wmsLayer.MaxScaleDenominator || 100000000000;
 
-  // Check if layer should be visible
+  // Check if layer should be visible.
+  // Match against both the full WMS name (e.g. "simcoe:Assessment Parcel")
+  // and the name without the workspace prefix (e.g. "Assessment Parcel") to
+  // handle config entries that may or may not include the namespace.
   const visibleLayers = group.visibleLayers || [];
-  const layerVisible = visibleLayers.includes(layerNameOnly);
+  const nameWithoutPrefix = layerNameOnly.includes(":") ? layerNameOnly.split(":").slice(1).join(":") : layerNameOnly;
+  const layerVisible = visibleLayers.some(
+    (v) => v === layerNameOnly || v === nameWithoutPrefix || (v.includes(":") ? v.split(":").slice(1).join(":") : v) === layerNameOnly,
+  );
+  // Diagnostic: log visibility check for layers that should be visible
+  if (layerVisible || visibleLayers.length > 0) {
+    console.log(`[TOC] buildLayerFromWMS visibility: "${layerNameOnly}" visible=${layerVisible}, group="${group.label}", visibleLayers=`, visibleLayers);
+  }
 
   // Build server URLs
   const geoserverPath = config.geoserverPath || "geoserver";
@@ -312,10 +322,12 @@ export async function getGroupsFromGeoServer(source: TOCSource, config: Config, 
           visibleLayers = (allGroupKeywords["VISIBLE_LAYERS"] as string[]) || [];
         }
 
-        // Override with source configuration
-        if (source.group?.visibleLayers) {
+        // Override with source configuration (only if config provides a non-empty array;
+        // an empty array [] is truthy and would clobber GeoServer keyword visibility)
+        if (source.group?.visibleLayers && source.group.visibleLayers.length > 0) {
           visibleLayers = source.group.visibleLayers;
         }
+        console.log(`[TOC] getGroupsFromGeoServer: group="${source.group?.name || groupName}", visibleLayers=`, visibleLayers, `source.group?.visibleLayers=`, source.group?.visibleLayers);
 
         // Build layers
         const layerList: TOCLayer[] = [];
@@ -506,18 +518,19 @@ export async function getGroupsFromArcGIS(source: TOCSource): Promise<TOCLayerGr
     const groupsObj: Record<string, TOCLayerGroup & { rawLayers: BuildESRILayerOptions["layer"][] }> = {};
 
     for (const item of serviceLayers) {
-      // Skip group layers (ones that have sublayers)
+      // Skip group layers — check type, subLayerIds, and subLayers
+      if (item.type === "Group Layer") continue;
       if (item.subLayerIds && item.subLayerIds.length > 0) continue;
+      if (item.subLayers && item.subLayers.length > 0) continue;
 
       // Parse the description for config options (CATEGORY, VISIBLE, LIVELAYER, etc.)
       const layerOptions = parseESRIDescription(item.description || "");
 
-      // Determine visibility — match WMS behaviour: layers are off by default
-      // unless explicitly listed in visibleLayers or flagged VISIBLE=TRUE in
-      // the ESRI description. We intentionally ignore ArcGIS defaultVisibility
-      // so that maps don't start with every layer turned on.
+      // Determine visibility: if visibleLayers is specified in config, use that
+      // list. Otherwise fall back to the ArcGIS service's defaultVisibility.
+      // A VISIBLE=TRUE flag in the ESRI description can also override.
       const visibleLayers = source.group?.visibleLayers || [];
-      let visible = visibleLayers.length > 0 ? visibleLayers.includes(item.name) : false;
+      let visible = visibleLayers.length > 0 ? visibleLayers.includes(item.name) : (item.defaultVisibility ?? false);
       if (layerOptions.isVisible) visible = true;
 
       // Swap min/max scale (ArcGIS convention is inverted)
@@ -821,6 +834,8 @@ export async function loadLayerGroupsFromSources(sources: TOCSource[], config: C
         ...group,
         primary: source.primary,
         secured: source.secure,
+        useRedFolder: source.useRedFolder || false,
+        sourceOpen: source.open !== undefined ? source.open : undefined,
       }));
 
       // Find default group from primary source

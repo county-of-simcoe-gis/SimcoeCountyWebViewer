@@ -9,7 +9,7 @@ import { usePopupStore } from "@/stores/popupStore";
 import { useMyMapsStore, createMyMapsItem } from "@/stores/myMapsStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { useInteractionManager } from "@/components/MapContainer";
-import config from "@/config.json";
+import { useAppStore } from "@/stores/appStore";
 import { toLonLat } from "ol/proj";
 import { FaFileAlt, FaMapMarkerAlt, FaExclamationTriangle, FaInfoCircle, FaGoogle, FaEllipsisH, FaCompressArrowsAlt } from "react-icons/fa";
 import { Vector as VectorLayer } from "ol/layer";
@@ -21,13 +21,16 @@ import { Style, Icon, Fill, Stroke, Circle as CircleStyle } from "ol/style";
 import { GeoJSON } from "ol/format";
 import { getArea } from "ol/sphere";
 import { getAxiosClient } from "@/lib/axiosInstance";
+import { showFeedbackWindow } from "@/utils/mapHelpers";
 import { featureToGeoJSON } from "@/utils/myMapsHelpers";
+import { getHighlightStyles } from "@/utils/highlightStyles";
 import Identify from "@/components/Identify/Identify";
 import ResultsPopup, { Result, createPropertyResult, createCondoResult } from "@/components/ResultsPopup";
 import { getAxiosClient as getAxiosClientUtil } from "@/lib/axiosInstance";
 
 export const MapContextMenuContainer: React.FC = () => {
   const { map } = useMapStore();
+  const config = useAppStore((state) => state.config);
   const { openSidebar, setActiveTab, closeSidebar } = useSidebarStore();
   const { setReport } = useReportsStore();
   const { show: showPopup, hide: hidePopup } = usePopupStore();
@@ -58,16 +61,8 @@ export const MapContextMenuContainer: React.FC = () => {
       return;
     }
 
-    // Parcel layer style
-    const parcelLayerStyle = new Style({
-      fill: new Fill({
-        color: [0, 0, 0, 0.0],
-      }),
-      stroke: new Stroke({
-        color: [231, 128, 128, 0.8],
-        width: 3,
-      }),
-    });
+    // Parcel layer style (configurable via featureHighlitStyles)
+    const { parcel: parcelLayerStyle } = getHighlightStyles();
 
     try {
       // Build WFS query URL
@@ -283,11 +278,9 @@ export const MapContextMenuContainer: React.FC = () => {
   }, [map, addItem, drawColor]);
 
   const handleReportProblem = useCallback(() => {
-    const lonLat = toLonLat(coordinateRef.current);
-    const feedbackUrl = config.feedbackUrl || "https://opengis.simcoe.ca/feedback";
-    const url = `${feedbackUrl}?x=${lonLat[0]}&y=${lonLat[1]}`;
-    window.open(url, "_blank");
-  }, []);
+    const feedbackUrl = config?.feedbackUrl || "https://opengis.simcoe.ca/feedback";
+    showFeedbackWindow(map, feedbackUrl, { title: "Report a Problem", reportProblem: true });
+  }, [map, config?.feedbackUrl]);
 
   const handleIdentify = useCallback(() => {
     if (!map || !identifyIconLayerRef.current) return;
@@ -355,7 +348,7 @@ export const MapContextMenuContainer: React.FC = () => {
 
   // Get menu items based on config
   const getMenuItems = useCallback((): ContextMenuItem[] => {
-    const visibility = config.rightClickMenuVisibility || {};
+    const visibility = config?.rightClickMenuVisibility || {};
 
     // Check if user is on mobile
     const isMobile = typeof window !== "undefined" && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -411,22 +404,28 @@ export const MapContextMenuContainer: React.FC = () => {
         onClick: handleMore,
       },
     ];
-  }, [handlePropertyReport, handleAddMarker, handleReportProblem, handleIdentify, handleGoogleMaps, handleMore, handleSwitchToBasic]);
+  }, [config, handlePropertyReport, handleAddMarker, handleReportProblem, handleIdentify, handleGoogleMaps, handleMore, handleSwitchToBasic]);
 
   // Handle context menu display
-  const handleContextMenu = useCallback((coordinate: number[], pixel: number[], event: any) => {
-    coordinateRef.current = coordinate;
+  const handleContextMenu = useCallback(
+    (coordinate: number[], pixel: number[], event: any) => {
+      // Check if right-click menu is disabled via config
+      if (config?.disableRightClickMenu) return;
 
-    // Get the page coordinates from the original event
-    const originalEvent = event.originalEvent as MouseEvent;
+      coordinateRef.current = coordinate;
 
-    setMenuState({
-      visible: true,
-      x: originalEvent.pageX,
-      y: originalEvent.pageY,
-      coordinate,
-    });
-  }, []);
+      // Get the page coordinates from the original event
+      const originalEvent = event.originalEvent as MouseEvent;
+
+      setMenuState({
+        visible: true,
+        x: originalEvent.pageX,
+        y: originalEvent.pageY,
+        coordinate,
+      });
+    },
+    [config?.disableRightClickMenu],
+  );
 
   // Close menu
   const handleCloseMenu = useCallback(() => {
@@ -543,5 +542,5 @@ export const MapContextMenuContainer: React.FC = () => {
     return null;
   }
 
-  return <MapContextMenu x={menuState.x} y={menuState.y} items={getMenuItems()} onClose={handleCloseMenu} showHeader={config.showFloatingMenuHeader || false} title="Map Menu" />;
+  return <MapContextMenu x={menuState.x} y={menuState.y} items={getMenuItems()} onClose={handleCloseMenu} showHeader={config?.showFloatingMenuHeader || false} title="Map Menu" />;
 };

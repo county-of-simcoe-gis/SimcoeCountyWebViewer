@@ -16,7 +16,6 @@ import { ParcelClickInteraction } from "@/utils/openlayers/ParcelClickInteractio
 import ResultsPopup, { createPropertyResult, createCondoResult, type Result } from "@/components/ResultsPopup";
 import { getAxiosClient as getAxiosClientUtil } from "@/lib/axiosInstance";
 import { useInteractionManager } from "@/components/MapContainer";
-import config from "@/config.json";
 
 // Parcel URL template for WFS queries
 const parcelURLTemplate = (mainURL: string, x: number, y: number) => `${mainURL}&cql_filter=INTERSECTS(geom,%20POINT%20(${x}%20${y}))`;
@@ -77,6 +76,7 @@ export default function PropertyReportClick() {
   const { map, checkGlobalDisable } = useMapStore();
   const { show: showPopup, hide: hidePopup } = usePopupStore();
   const urlParameters = useAppStore((state) => state.urlParameters);
+  const config = useAppStore((state) => state.config);
   const { registerHandler, unregisterHandler } = useInteractionManager();
 
   const parcelLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
@@ -130,7 +130,7 @@ export default function PropertyReportClick() {
   // Fetch property information
   const fetchPropertyInfo = useCallback(
     async (arn: string, feature: Feature | null, pointerPoint: number[], latLongCoords: number[]): Promise<PropertyInfo> => {
-      const propertyReportUrl = config.propertyReportUrl;
+      const propertyReportUrl = config?.propertyReportUrl;
       if (!propertyReportUrl) {
         // Return basic info if no property report URL configured
         return {
@@ -169,7 +169,7 @@ export default function PropertyReportClick() {
         };
       }
     },
-    [getShareURL],
+    [config, getShareURL],
   );
 
   // Convert Web Mercator to Lat/Long
@@ -286,7 +286,7 @@ export default function PropertyReportClick() {
   const fetchParcelResults = useCallback(
     async (coordinate: number[]) => {
       try {
-        const parcelLayerUrl = config.parcelLayer?.url;
+        const parcelLayerUrl = config?.parcelLayer?.url;
         if (!parcelLayerUrl) {
           console.warn("Parcel layer URL not configured");
           return [];
@@ -368,7 +368,7 @@ export default function PropertyReportClick() {
         return [];
       }
     },
-    [toLatLongFromWebMercator, fetchPropertyInfo],
+    [config, toLatLongFromWebMercator, fetchPropertyInfo],
   );
 
   // Register handler for parcel clicks using new system
@@ -403,7 +403,7 @@ export default function PropertyReportClick() {
 
     const urlARN = urlParameters.ARN;
     if (urlARN) {
-      const parcelLayerUrl = config.parcelLayer?.url;
+      const parcelLayerUrl = config?.parcelLayer?.url;
       if (!parcelLayerUrl) {
         console.warn("Parcel layer URL not configured");
         return;

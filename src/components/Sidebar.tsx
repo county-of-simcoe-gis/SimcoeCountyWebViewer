@@ -107,6 +107,7 @@ export default function Sidebar() {
   const { addLoadedItem } = useMapStore();
   const { setSidebarLoading } = useAppStore();
   const urlParameters = useAppStore((state) => state.urlParameters);
+  const appConfig = useAppStore((state) => state.config);
   const { currentReport } = useReportsStore();
   const { data: session } = useSession();
 
@@ -346,8 +347,8 @@ export default function Sidebar() {
           {!hideTools && (
             <Tab>
               <div className="tab-content">
-                <Image src="/images/tools-32x32.png" alt="Tools" width={32} height={32} className="tab-icon" />
-                <div className="tab-text">Tools</div>
+                <Image src="/images/tools-32x32.png" alt={appConfig?.toolsTitle || "Tools"} width={32} height={32} className="tab-icon" />
+                <div className="tab-text">{appConfig?.toolsTitle || "Tools"}</div>
               </div>
             </Tab>
           )}
@@ -362,8 +363,8 @@ export default function Sidebar() {
           {!hideThemes && (
             <Tab>
               <div className="tab-content">
-                <Image src={singleTheme ? `/images/${singleTheme.imageName}` : "/images/theme-32x32.png"} alt={singleTheme ? singleTheme.name : "Themes"} width={32} height={32} className="tab-icon" />
-                <div className="tab-text">{singleTheme ? singleTheme.name : "Themes"}</div>
+                <Image src={singleTheme ? `/images/${singleTheme.imageName}` : "/images/theme-32x32.png"} alt={singleTheme ? singleTheme.name : (appConfig?.themesTitle || "Themes")} width={32} height={32} className="tab-icon" />
+                <div className="tab-text">{singleTheme ? singleTheme.name : (appConfig?.themesTitle || "Themes")}</div>
               </div>
             </Tab>
           )}

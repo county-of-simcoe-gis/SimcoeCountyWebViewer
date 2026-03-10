@@ -4,6 +4,7 @@
 
 import { Map } from "ol";
 import { getPointResolution } from "ol/proj";
+import { showURLWindow } from "@/utils/helpersUI";
 
 /**
  * Calculate map scale from OpenLayers map (same approach as old app)
@@ -89,27 +90,75 @@ export interface FeedbackUrlParams {
   centerx: number;
   centery: number;
   scale: number;
+  reportProblem?: boolean;
   myMapsId?: string;
   featureId?: string;
   mapId?: string;
 }
 
 export const buildFeedbackUrl = (params: FeedbackUrlParams): string => {
-  const { feedbackUrl, xmin, xmax, ymin, ymax, centerx, centery, scale, myMapsId, featureId, mapId } = params;
+  const { feedbackUrl, xmin, xmax, ymin, ymax, centerx, centery, scale, reportProblem, myMapsId, featureId, mapId } = params;
 
-  let url = `${feedbackUrl}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${centerx}&centery=${centery}&scale=${scale}&REPORT_PROBLEM=True`;
+  const qs = new URLSearchParams({
+    xmin: xmin.toString(),
+    xmax: xmax.toString(),
+    ymin: ymin.toString(),
+    ymax: ymax.toString(),
+    centerx: centerx.toFixed(2),
+    centery: centery.toFixed(2),
+    scale: scale.toString(),
+  });
 
-  if (myMapsId) {
-    url += `&MY_MAPS_ID=${myMapsId}`;
-  }
+  if (reportProblem) qs.set("REPORT_PROBLEM", "True");
+  if (myMapsId) qs.set("MY_MAPS_ID", myMapsId);
+  if (featureId) qs.set("MY_MAPS_FEATURE_ID", featureId);
+  if (mapId?.trim()) qs.set("MAP_ID", mapId);
 
-  if (featureId) {
-    url += `&MY_MAPS_FEATURE_ID=${featureId}`;
-  }
+  return `${feedbackUrl}/?${qs.toString()}`;
+};
 
-  if (mapId && mapId.trim() !== "") {
-    url += `&MAP_ID=${mapId}`;
-  }
+/**
+ * Build a feedback URL using the current map view state.
+ * Returns the base URL unchanged if the map is unavailable.
+ */
+export const buildFeedbackUrlFromMap = (map: Map | null, baseUrl: string, extra?: Partial<Pick<FeedbackUrlParams, "reportProblem" | "myMapsId" | "featureId" | "mapId">>): string => {
+  if (!map) return baseUrl;
+  const extent = getMapExtent(map);
+  const center = getMapCenter(map);
+  const scale = getMapScale(map);
+  return buildFeedbackUrl({
+    feedbackUrl: baseUrl,
+    xmin: extent[0],
+    xmax: extent[2],
+    ymin: extent[1],
+    ymax: extent[3],
+    centerx: center[0],
+    centery: center[1],
+    scale,
+    ...extra,
+  });
+};
 
-  return url;
+/**
+ * Build the feedback URL from the current map view and show it in the
+ * built-in URL modal overlay (same one used for terms).
+ */
+export const showFeedbackWindow = (
+  map: Map | null,
+  baseUrl: string,
+  options?: {
+    title?: string;
+    reportProblem?: boolean;
+    myMapsId?: string;
+    featureId?: string;
+    mapId?: string;
+  },
+): void => {
+  const url = buildFeedbackUrlFromMap(map, baseUrl, {
+    reportProblem: options?.reportProblem,
+    myMapsId: options?.myMapsId,
+    featureId: options?.featureId,
+    mapId: options?.mapId,
+  });
+  showURLWindow(url, false, "normal", false, false, options?.title ?? "Feedback");
 };

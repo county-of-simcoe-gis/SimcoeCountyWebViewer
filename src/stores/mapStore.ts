@@ -57,7 +57,7 @@ interface MapState {
   // Enhanced extent history
   extentHistory: Array<{ center: number[]; zoom: number }>;
   currentExtentIndex: number;
-  
+
   // Actions
   setMap: (map: Map) => void;
   setPopup: (popup: unknown) => void;
@@ -114,7 +114,7 @@ const getDefaultControlVisibility = (config?: { controls?: Partial<ControlVisibi
     basemap: config?.controls?.basemap ?? true,
     gitHubButton: config?.controls?.gitHubButton ?? true,
     scaleSelector: config?.controls?.scaleSelector ?? false,
-    grid: config?.controls?.grid ?? false,
+    grid: config?.controls?.grid ?? true,
     extentHistory: config?.controls?.extentHistory ?? false,
     attribution: config?.controls?.attribution ?? true,
   };
@@ -160,7 +160,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   // Enhanced extent history initial state
   extentHistory: [],
   currentExtentIndex: -1,
-  
+
   // Actions
   setMap: (map) => set({ map }),
   setPopup: (popup) => set({ popup }),
@@ -191,7 +191,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   setControlVisibility: (key, value) => {
     set((state) => {
       const newVisibility = { ...state.controlVisibility, [key]: value };
-      
+
       // Save to localStorage
       if (typeof window !== "undefined") {
         try {
@@ -200,7 +200,7 @@ export const useMapStore = create<MapState>((set, get) => ({
           console.warn("Failed to save control settings to localStorage", e);
         }
       }
-      
+
       return { controlVisibility: newVisibility };
     });
   },
@@ -208,7 +208,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   resetControlVisibilityToDefaults: (config) => {
     const defaults = getDefaultControlVisibility(config);
     set({ controlVisibility: defaults });
-    
+
     // Save to localStorage
     if (typeof window !== "undefined") {
       try {
@@ -223,7 +223,7 @@ export const useMapStore = create<MapState>((set, get) => ({
     const visibility = loadControlVisibilityFromStorage(config);
     set({ controlVisibility: visibility });
   },
-  
+
   // Loading management
   addLoadedItem: (item) => {
     const state = get();

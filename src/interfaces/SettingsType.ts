@@ -133,6 +133,22 @@ export interface SettingsType {
     topoServices?: unknown[];
   };
 
+  // Property Report settings (from map config)
+  propertyReport?: {
+    customIdentify?: Array<{
+      identifyType: string;
+      label: string;
+      title: string;
+      linkText: string;
+      layerURL: string;
+      layerId: string;
+      whereFormat: string;
+      fields: string[];
+      secured?: boolean;
+      type?: string;
+    }>;
+  };
+
   // Allow for additional dynamic properties
   [key: string]: unknown;
 }

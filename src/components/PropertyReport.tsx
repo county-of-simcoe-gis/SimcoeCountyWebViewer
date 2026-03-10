@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import "./PropertyReport.css";
-import config from "@/config.json";
+import { useAppStore } from "@/stores/appStore";
 
 /** Shape returned by /api/public/reports/property/[arn] */
 interface PropertyReportData {
@@ -53,6 +53,7 @@ interface PropertyReportProps {
 }
 
 export default function PropertyReport({ arn, onZoomClick }: PropertyReportProps) {
+  const config = useAppStore((state) => state.config);
   const [data, setData] = useState<PropertyReportData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,7 +66,7 @@ export default function PropertyReport({ arn, onZoomClick }: PropertyReportProps
       setError(null);
 
       try {
-        const url = `${(config as { propertyReportUrl?: string }).propertyReportUrl ?? "/api/public/reports/property/"}${arn}`;
+        const url = `${config?.propertyReportUrl ?? "/api/public/reports/property/"}${arn}`;
         const res = await fetch(url);
         if (!res.ok) {
           throw new Error(res.status === 404 ? "Property not found." : `Server error (${res.status})`);
@@ -91,8 +92,8 @@ export default function PropertyReport({ arn, onZoomClick }: PropertyReportProps
 
     try {
       const reportName = "Public_Embedded";
-      const apiUrl = (config as { apiUrl?: string }).apiUrl ?? "https://opengis.simcoe.ca/api_v2/";
-      const reportUrl = (config as { reportUrl?: string }).reportUrl ?? "https://opengis.simcoe.ca/reports/";
+      const apiUrl = (config as Record<string, unknown>)?.apiUrl as string ?? "https://opengis.simcoe.ca/api_v2/";
+      const reportUrl = (config as Record<string, unknown>)?.reportUrl as string ?? "https://opengis.simcoe.ca/reports/";
 
       const res = await fetch(`${apiUrl}public/reports/embed/${reportName}`, {
         method: "POST",

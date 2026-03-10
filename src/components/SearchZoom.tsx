@@ -7,12 +7,13 @@ import { useSearchStore } from "@/stores/searchStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { Vector as VectorLayer } from "ol/layer";
 import { Vector as VectorSource } from "ol/source";
-import { Fill, Icon, Stroke, Style, Circle as CircleStyle } from "ol/style";
+import { Icon, Style } from "ol/style";
 import { Feature } from "ol";
 import { Point } from "ol/geom";
 import { transform } from "ol/proj";
 import { GeoJSON } from "ol/format";
 import { getPublicPath } from "@/utils/getPublicPath";
+import { getHighlightStyles } from "@/utils/highlightStyles";
 
 interface SearchResult {
   name: string;
@@ -319,19 +320,8 @@ export const SearchZoom: React.FC = () => {
             }
 
             if (geometryType === "Point") {
-              // Style for points
-              const pointStyle = new Style({
-                image: new CircleStyle({
-                  radius: 7,
-                  stroke: new Stroke({
-                    color: [0, 0, 0, 1],
-                    width: 2,
-                  }),
-                  fill: new Fill({
-                    color: [250, 40, 255, 1],
-                  }),
-                }),
-              });
+              // Style for points (configurable via featureHighlitStyles)
+              const { point: pointStyle, zoomFactor } = getHighlightStyles();
               fullFeature.setStyle(pointStyle);
 
               // For points, use setCenter instead of fit for more reliable zooming
@@ -347,16 +337,8 @@ export const SearchZoom: React.FC = () => {
                 console.error("SearchZoom: Error zooming to point center:", error);
               }
             } else {
-              // Style for lines and polygons
-              const polyStyle = new Style({
-                stroke: new Stroke({
-                  width: 4,
-                  color: [255, 0, 0, 0.8],
-                }),
-                fill: new Fill({
-                  color: [255, 0, 0, 0],
-                }),
-              });
+              // Style for lines and polygons (configurable via featureHighlitStyles)
+              const { polygon: polyStyle, zoomFactor } = getHighlightStyles();
               fullFeature.setStyle(polyStyle);
 
               console.log("SearchZoom: Zooming to polygon/line with extent:", extent);

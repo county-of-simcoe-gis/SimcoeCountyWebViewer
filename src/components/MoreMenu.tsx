@@ -10,6 +10,7 @@ import { useTOCStore } from "@/stores/tocStore";
 import { useAppStore } from "@/stores/appStore";
 import { FaCamera, FaCommentDots, FaMap, FaQuestionCircle, FaFileContract, FaNewspaper, FaPalette, FaTools, FaDrawPolygon } from "react-icons/fa";
 import URLModal from "@/components/common/URLModal";
+import { showFeedbackWindow } from "@/utils/mapHelpers";
 import "./MoreMenu.css";
 
 interface MenuItem {
@@ -180,24 +181,8 @@ export default function MoreMenu() {
 
   // Handle feedback
   const handleFeedback = useCallback(() => {
-    if (!config || !map) return;
-
-    const view = map.getView();
-    const extent = view.calculateExtent(map.getSize());
-    const center = view.getCenter();
-    const scale = Math.round(view.getResolution()! * 39.37 * 72);
-
-    const xmin = extent[0];
-    const xmax = extent[1];
-    const ymin = extent[2];
-    const ymax = extent[3];
-
-    let feedbackUrl = `${config.feedbackUrl}/?xmin=${xmin}&xmax=${xmax}&ymin=${ymin}&ymax=${ymax}&centerx=${center?.[0]}&centery=${center?.[1]}&scale=${scale}`;
-    if (config.mapId) {
-      feedbackUrl += `&MAP_ID=${config.mapId}`;
-    }
-
-    window.open(feedbackUrl, "_blank");
+    if (!config?.feedbackUrl) return;
+    showFeedbackWindow(map, config.feedbackUrl, { mapId: config.mapId });
     closeMoreMenu();
   }, [config, map, closeMoreMenu]);
 

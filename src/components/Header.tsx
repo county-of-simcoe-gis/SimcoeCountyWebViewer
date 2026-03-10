@@ -3,7 +3,7 @@
 import "@/components/Header.css";
 import { useEffect } from "react";
 import Image from "next/image";
-import { FaBars, FaEnvelope } from "react-icons/fa";
+import { FaBars, FaEnvelope, FaQuestionCircle } from "react-icons/fa";
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { useEventStore } from "@/stores/eventStore";
 import { useMapStore } from "@/stores/mapStore";
@@ -11,11 +11,12 @@ import { useAppStore } from "@/stores/appStore";
 import Search from "@/components/Search";
 import SearchZoom from "@/components/SearchZoom";
 import ProfileButton from "@/components/ProfileButton";
+import { showFeedbackWindow } from "@/utils/mapHelpers";
 
 export default function Header() {
   const { toggleSidebar } = useSidebarStore();
   const { emitHeaderLoaded } = useEventStore();
-  const { addLoadedItem } = useMapStore();
+  const { addLoadedItem, map } = useMapStore();
   const { setHeaderLoading, config } = useAppStore();
 
   useEffect(() => {
@@ -26,7 +27,13 @@ export default function Header() {
   }, [emitHeaderLoaded, addLoadedItem, setHeaderLoading]);
 
   const onFeedbackClick = () => {
-    // TODO: Implement feedback functionality
+    if (config?.showHelpButtonInsteadOfFeedback && config?.helpUrl) {
+      window.open(config.helpUrl, "_blank");
+    } else if (config?.feedbackUrl) {
+      showFeedbackWindow(map, config.feedbackUrl as string);
+    } else if (config?.feedback_contact) {
+      window.location.href = `mailto:${config.feedback_contact}`;
+    }
   };
 
   const handleBurgerClick = () => {
@@ -74,27 +81,38 @@ export default function Header() {
 
       {/* Search Container - takes remaining space */}
       <div className="flex-1 pt-1.5 pr-3 relative" style={{ paddingTop: "0px" }}>
-        <Search
-          className="w-full"
-          onResultSelect={() => {
-            // Handle search result selection
-          }}
-        />
+        {!config?.hideSearch && (
+          <Search
+            className="w-full"
+            onResultSelect={() => {
+              // Handle search result selection
+            }}
+          />
+        )}
         <SearchZoom />
       </div>
 
       {/* Profile Button */}
       <ProfileButton />
 
-      {/* Feedback Button */}
+      {/* Feedback / Help Button */}
       <div
         className="w-[60px] text-center flex flex-col items-center justify-center cursor-pointer px-1 text-xs text-[#5b5b5b] h-[52px] hover:bg-black hover:bg-opacity-5"
         onClick={onFeedbackClick}
-        title="Feedback"
+        title={config?.showHelpButtonInsteadOfFeedback ? "Help" : "Feedback"}
         style={{ marginTop: "5px" }}
       >
-        <FaEnvelope size={16} className="mt-1 mb-1" />
-        <span>Feedback</span>
+        {config?.showHelpButtonInsteadOfFeedback ? (
+          <>
+            <FaQuestionCircle size={16} className="mt-1 mb-1" />
+            <span>Help</span>
+          </>
+        ) : (
+          <>
+            <FaEnvelope size={16} className="mt-1 mb-1" />
+            <span>Feedback</span>
+          </>
+        )}
       </div>
     </div>
   );

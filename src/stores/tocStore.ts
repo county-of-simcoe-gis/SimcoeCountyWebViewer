@@ -93,6 +93,8 @@ export interface TOCLayerGroup {
   primary?: boolean;
   secured?: boolean;
   panelOpen?: boolean; // Track if the group panel is open in the UI
+  useRedFolder?: boolean; // Use red folder icons instead of default gray
+  sourceOpen?: boolean; // Whether the source folder should be initially expanded
 }
 
 // Configuration for TOC sources from config.json
@@ -107,6 +109,8 @@ export interface TOCSource {
   primary: boolean;
   urlType: string;
   type: string;
+  useRedFolder?: boolean;
+  open?: boolean;
 }
 
 interface TOCState {
@@ -1311,33 +1315,90 @@ export const useTOCStore = create<TOCState>()(
 
         // Load from actual sources using TOC helpers
         const result = await loadLayerGroupsFromSources(state.sources, config);
+        
+        // Log visibility stats from loaded groups
+        let totalLayers = 0, visibleCount = 0;
+        result.groups.forEach((g) => {
+          g.layers.forEach((l) => { totalLayers++; if (l.visible) visibleCount++; });
+        });
+        console.log(`[TOC] loadLayerGroupsFromSources: ${result.groups.length} groups, ${totalLayers} layers, ${visibleCount} visible`);
+        
         // Set the layer groups for BOTH LIST and FOLDER types (same data, different display)
         state.setLayerGroups("LIST", result.groups);
         state.setLayerGroups("FOLDER", result.groups);
 
+        // Log "All Layers" visibility after setLayerGroups
+        const currentAllLayers = get().layerListGroups.find((g) => g.value === "all_layers");
+        if (currentAllLayers) {
+          const alVisible = currentAllLayers.layers.filter((l) => l.visible).length;
+          console.log(`[TOC] After setLayerGroups: "All Layers" has ${currentAllLayers.layers.length} layers, ${alVisible} visible`);
+          if (alVisible > 0) {
+            currentAllLayers.layers.filter((l) => l.visible).forEach((l) => console.log(`[TOC]   visible: "${l.name}" (group: ${l.groupName})`));
+          }
+        }
+
         // Set default group if found
         if (result.groups.length > 0) {
-          let defaultGroup = result.groups.find((g) => g.defaultGroup);
+          // Use the defaultGroupName from config/geoserver to find the right group
+          const configDefaultName = result.defaultGroupName;
+          let defaultGroup: TOCLayerGroup | undefined;
+
+          // First, try matching by name/value/label against the config default_group
+          if (configDefaultName) {
+            defaultGroup = result.groups.find(
+              (g) =>
+                g.value === configDefaultName ||
+                g.label === configDefaultName ||
+                g.value.toUpperCase() === configDefaultName.toUpperCase() ||
+                g.label.toUpperCase() === configDefaultName.toUpperCase(),
+            );
+          }
+
+          // Fall back to the boolean defaultGroup flag (set from GeoServer DEFAULT_GROUP keyword)
           if (!defaultGroup) {
-            // If no default group marked, use the primary source's first group
+            defaultGroup = result.groups.find((g) => g.defaultGroup);
+          }
+
+          // Fall back to primary source's group
+          if (!defaultGroup) {
             const primarySource = state.sources.find((s) => s.primary);
             if (primarySource) {
               defaultGroup = result.groups.find((g) => g.url.includes(primarySource.layerUrl));
             }
-            // If still no default, use first group
-            if (!defaultGroup) {
-              defaultGroup = result.groups[0];
-            }
           }
+
+          // Last resort: first group
+          if (!defaultGroup) {
+            defaultGroup = result.groups[0];
+          }
+
           state.setDefaultGroup(defaultGroup);
 
-          // Explicitly set the selected group based on the current TOC type
+          // Set the selected group based on the current TOC type
           const currentState = get();
           if (currentState.tocType === "LIST") {
-            // For LIST view, select "All Layers" group if it exists
-            const allLayersGroup = currentState.layerListGroups.find((g) => g.value === "all_layers");
-            if (allLayersGroup) {
-              state.setSelectedGroup(allLayersGroup);
+            // For LIST view, check if the default group matches "All Layers" or a specific group
+            // Try to find the matching group in layerListGroups (which includes "All Layers")
+            const listGroups = currentState.layerListGroups;
+            let selectedGroup: TOCLayerGroup | undefined;
+
+            if (configDefaultName) {
+              selectedGroup = listGroups.find(
+                (g) =>
+                  g.value === configDefaultName ||
+                  g.label === configDefaultName ||
+                  g.value.toUpperCase() === configDefaultName.toUpperCase() ||
+                  g.label.toUpperCase() === configDefaultName.toUpperCase(),
+              );
+            }
+
+            // Fall back to "All Layers"
+            if (!selectedGroup) {
+              selectedGroup = listGroups.find((g) => g.value === "all_layers");
+            }
+
+            if (selectedGroup) {
+              state.setSelectedGroup(selectedGroup);
             }
           } else {
             // For FOLDER view, clear selected group to show all folders
@@ -1820,6 +1881,9 @@ export const useTOCStore = create<TOCState>()(
                   });
 
                   // Set initial visibility and opacity
+                  if (layer.visible) {
+                    console.log(`[TOC] initializeOpenLayersLayers: Setting "${layer.name}" VISIBLE (group="${group.label}")`);
+                  }
                   (typedLayer as OpenLayersLayer).setVisible(layer.visible);
                   (typedLayer as OpenLayersLayer).setOpacity(layer.opacity);
 

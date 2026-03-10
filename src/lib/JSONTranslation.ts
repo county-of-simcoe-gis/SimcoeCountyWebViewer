@@ -64,6 +64,10 @@ const translationTable: { [section: string]: Mapping } = {
         reverse: (value: unknown) => value,
       },
       maxZoom: { sourceKey: "maxZoom" },
+      printLogo: { sourceKey: "printLogo" },
+      baseMapType: { sourceKey: "baseMapType" },
+      featureHighlitStyles: { sourceKey: "featureHighlitStyles" },
+      sidebarShortcutParams: { sourceKey: "sidebarShortcutParams" },
       controls: {
         sourceKey: "controls",
         children: {
@@ -282,6 +286,10 @@ const translationTable: { [section: string]: Mapping } = {
       imageryServices: { sourceKey: "baseMapServices.imageryServices", default: [] },
       topoServices: { sourceKey: "baseMapServices.topoServices", default: [] },
     },
+  },
+  // Property Report settings (passed through directly)
+  propertyReport: {
+    sourceKey: "propertyReport",
   },
 };
 

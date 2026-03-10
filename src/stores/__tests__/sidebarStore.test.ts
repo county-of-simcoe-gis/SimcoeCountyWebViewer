@@ -314,7 +314,7 @@ describe("sidebarStore", () => {
       const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
       useSidebarStore.getState().activateDefaultItems("NonExistentTheme");
 
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("not found"), "NonExistentTheme");
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("not found"), "NonExistentTheme", "available:", expect.any(Array));
     });
 
     it("should adjust tab index for hidden tabs", () => {

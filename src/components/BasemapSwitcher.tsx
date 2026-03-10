@@ -52,6 +52,30 @@ interface BasemapConfig {
   };
 }
 
+/**
+ * Merge two arrays of services by `name`, replicating the old app's
+ * concat → reverse → Map-dedup → reverse algorithm.
+ *
+ * 1. Concatenate: [...local, ...api]  (local items first)
+ * 2. Reverse the combined array
+ * 3. Build a Map keyed by `name` — last write wins, so because of the
+ *    reverse the *first* occurrence from the original order survives
+ *    (i.e. local entries beat API entries with the same name).
+ * 4. Spread the Map values and reverse back to restore original order.
+ *
+ * This keeps local ordering intact (e.g. "Google" stays between year
+ * entries where the local config placed it) and appends API-only entries
+ * at the end.
+ */
+function mergeServicesByName<T extends { name: string }>(local: T[], api: T[]): T[] {
+  const combined = [...local, ...api];
+
+  // reverse → Map (last value per key wins) → values → reverse
+  const deduped = [...new Map(combined.reverse().map((item) => [item.name, item])).values()].reverse();
+
+  return deduped;
+}
+
 export default function BasemapSwitcher() {
   const { map } = useMapStore();
   const urlParameters = useAppStore((state) => state.urlParameters);
@@ -81,8 +105,46 @@ export default function BasemapSwitcher() {
   useEffect(() => {
     const loadConfig = async () => {
       try {
+        // Always start with local basemapSwitcherConfig.json as the base
         const configModule = await import("@/components/basemapSwitcherConfig.json");
-        const data = configModule.default;
+        let data: BasemapConfig = { ...configModule.default };
+        console.log("BasemapSwitcher: Loaded local basemapSwitcherConfig.json as base");
+
+        // Merge API-provided basemap config on top (only overrides fields that are present)
+        const appConfig = useAppStore.getState().config;
+        const apiBasemapServices = appConfig?.baseMapServices as Partial<BasemapConfig> | undefined;
+
+        if (apiBasemapServices) {
+          if (apiBasemapServices.defaultButton) {
+            data.defaultButton = apiBasemapServices.defaultButton;
+          }
+
+          // Merge imagery services: API entries replace matching local entries (by name),
+          // API-only entries are appended. Matches old app's mergeObj + dedup-by-name.
+          if (Array.isArray(apiBasemapServices.imageryServices) && apiBasemapServices.imageryServices.length > 0) {
+            data.imageryServices = mergeServicesByName(data.imageryServices || [], apiBasemapServices.imageryServices);
+          }
+
+          // Same merge logic for topo services
+          if (Array.isArray(apiBasemapServices.topoServices) && apiBasemapServices.topoServices.length > 0) {
+            data.topoServices = mergeServicesByName(data.topoServices || [], apiBasemapServices.topoServices);
+          }
+
+          if (apiBasemapServices.streetService) {
+            data.streetService = apiBasemapServices.streetService;
+          }
+          if (apiBasemapServices.worldImageryService) {
+            data.worldImageryService = apiBasemapServices.worldImageryService;
+          }
+          console.log("BasemapSwitcher: Merged API basemap overrides", Object.keys(apiBasemapServices));
+        }
+
+        // Override defaultButton from baseMapType if available
+        const baseMapType = appConfig?.baseMapType as string | undefined;
+        if (baseMapType) {
+          data.defaultButton = baseMapType;
+        }
+
         setConfig(data);
 
         // Initialize imagery slider settings
@@ -358,9 +420,14 @@ export default function BasemapSwitcher() {
                 layer.set("print", shouldPrint);
                 layer.set("display", shouldDisplay);
 
+                // Ensure the layer visibility is set before adding to prevent flash of content
+                layer.setVisible(shouldDisplay);
+
                 // Add layer using LayerManager for proper z-index management
+                // Reverse index so last layer in config array gets the highest z-index (renders on top)
+                const reversedIndex = basemapService.layers.length - 1 - i;
                 LayerManager.addLayer(layer, "BaseMap", `${basemapService.name}_${i}`, {
-                  index: i,
+                  index: reversedIndex,
                   opacity: opacity,
                   visible: shouldDisplay,
                   metadata: {
@@ -391,35 +458,54 @@ export default function BasemapSwitcher() {
 
   // Initialize layers when config loads
   useEffect(() => {
-    if (config && map) {
+    if (!config || !map) return;
+
+    const initBasemap = async () => {
       loadImageryLayers(config);
       loadStreets(config);
       loadWorldImagery(config);
       isLoadedRef.current = true;
 
-      // Apply default basemap and ensure proper layer visibility
-      if (config.topoServices.length > 0) {
+      // Always load the topo basemap layers (needed for switching later).
+      // Await so layers are fully created before we toggle visibility.
+      if (config.topoServices && config.topoServices.length > 0) {
         const defaultService = config.topoServices.find((service) => service.name === "Topographic") || config.topoServices[0];
-        applyBasemap(defaultService);
-
-        // Since topo is default, ensure all imagery is disabled
-        // Use setTimeout to ensure layers are loaded before disabling
-        setTimeout(() => {
-          // Disable imagery layers directly
-          updateImageryLayers(-1);
-          if (streetsLayerRef.current) {
-            streetsLayerRef.current.setVisible(false);
-          }
-          if (worldImageryLayerRef.current) {
-            worldImageryLayerRef.current.setVisible(false);
-          }
-
-          // Debug: Log layer order after initialization
-          // console.log("🔍 BasemapSwitcher: Logging layer order after initialization:");
-          // LayerManager.logLayerOrder();
-        }, 100);
+        await applyBasemap(defaultService);
       }
-    }
+
+      // Set proper visibility based on the configured default basemap
+      if (config.defaultButton === "imagery") {
+        // Imagery is the default — hide topo, show imagery
+        const baseMapLayers = LayerManager.getLayersByCategory("BaseMap");
+        const topoLayers = baseMapLayers.filter((ml) => ml.metadata?.isBasemap === true);
+        topoLayers.forEach((ml) => ml.layer.setVisible(false));
+
+        if (worldImageryLayerRef.current) {
+          worldImageryLayerRef.current.setVisible(true);
+        }
+
+        const maxValue = config.imageryServices?.length ? config.imageryServices.length - 1 : 0;
+        updateImageryLayers(maxValue);
+        setImagerySliderValue(maxValue);
+
+        if (streetsLayerRef.current) {
+          streetsLayerRef.current.setVisible(streetsCheckbox);
+        }
+
+        setActiveButton("imagery");
+      } else {
+        // Topo is the default — disable all imagery layers
+        updateImageryLayers(-1);
+        if (streetsLayerRef.current) {
+          streetsLayerRef.current.setVisible(false);
+        }
+        if (worldImageryLayerRef.current) {
+          worldImageryLayerRef.current.setVisible(false);
+        }
+      }
+    };
+
+    initBasemap();
   }, [config, map, loadImageryLayers, loadStreets, loadWorldImagery, applyBasemap, updateImageryLayers]);
 
   // Event handlers
@@ -750,7 +836,7 @@ export default function BasemapSwitcher() {
 
         {/* Topo Services */}
         {config &&
-          config.topoServices.map((service) => (
+          config.topoServices?.map((service) => (
             <div
               key={service.name}
               className={`sc-basemap-topo-item-container${selectedTopoService?.name === service.name && activeButton === "topo" ? " active" : ""}`}

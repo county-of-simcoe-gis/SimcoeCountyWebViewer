@@ -10,9 +10,8 @@ import { useSidebarStore } from "@/stores/sidebarStore";
 import DrawingOptionsPopup from "@/components/myMaps/DrawingOptionsPopup";
 import MyMapsItemPopup from "@/components/myMaps/MyMapsItemPopup";
 import ShowGeometryModal from "@/components/myMaps/ShowGeometryModal";
-import URLModal from "@/components/common/URLModal";
 import Identify from "@/components/Identify/Identify";
-import { getMapScale, getMapExtent, getMapCenter, buildFeedbackUrl } from "@/utils/mapHelpers";
+import { showFeedbackWindow } from "@/utils/mapHelpers";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { GeoJSON } from "ol/format";
 import Feature from "ol/Feature";
@@ -38,10 +37,6 @@ export default function GlobalDrawingOptionsPopup() {
   // Show Geometry Modal state
   const [geometryModalItem, setGeometryModalItem] = useState<MyMapsItemType | null>(null);
   const [isGeometryModalOpen, setIsGeometryModalOpen] = useState(false);
-
-  // Report Problem Modal state
-  const [reportProblemUrl, setReportProblemUrl] = useState<string>("");
-  const [isReportProblemModalOpen, setIsReportProblemModalOpen] = useState(false);
 
   const { emit, addListener, removeListener } = useEventStore();
   const { items, removeItem, updateItemLabel, updateItemLabelVisibility, updateItemLabelRotation, saveToApi } = useMyMapsStore();
@@ -779,14 +774,6 @@ export default function GlobalDrawingOptionsPopup() {
       }
 
       try {
-        // Get map data (like the old app)
-        const scale = getMapScale(map);
-        const extent = getMapExtent(map);
-        const center = getMapCenter(map);
-
-        const [xmin, ymin, xmax, ymax] = extent;
-        const [centerx, centery] = center;
-
         // Export MyMaps to get an ID (like the old app)
         const exportResult = await saveToApi();
 
@@ -796,26 +783,16 @@ export default function GlobalDrawingOptionsPopup() {
           return;
         }
 
-        // Build the feedback URL with all parameters (matching old app exactly)
-        const feedbackUrl = buildFeedbackUrl({
-          feedbackUrl: config.feedbackUrl || "https://opengis.simcoe.ca/feedback",
-          xmin,
-          xmax,
-          ymin,
-          ymax,
-          centerx,
-          centery,
-          scale,
+        const baseUrl = config.feedbackUrl || "https://opengis.simcoe.ca/feedback";
+        showFeedbackWindow(map, baseUrl, {
+          title: "Report a Problem",
+          reportProblem: true,
           myMapsId: exportResult.id,
           featureId: item.id,
           mapId: config.mapId,
         });
 
-        // Open in modal (like the old app's showURLWindow)
-        setReportProblemUrl(feedbackUrl);
-        setIsReportProblemModalOpen(true);
-
-        emit("mymap-report-problem", { item, url: feedbackUrl });
+        emit("mymap-report-problem", { item });
         handleToolsPopupClose();
       } catch (error) {
         console.error("Error preparing report problem:", error);
@@ -824,11 +801,6 @@ export default function GlobalDrawingOptionsPopup() {
     },
     [map, config, saveToApi, emit, handleToolsPopupClose],
   );
-
-  const handleCloseReportProblemModal = useCallback(() => {
-    setIsReportProblemModalOpen(false);
-    setReportProblemUrl("");
-  }, []);
 
   // Listen for requests to show the drawing options popup and buffer events
   useEffect(() => {
@@ -931,9 +903,6 @@ export default function GlobalDrawingOptionsPopup() {
 
       {/* Show Geometry Modal */}
       <ShowGeometryModal item={geometryModalItem} isOpen={isGeometryModalOpen} onClose={handleCloseGeometryModal} />
-
-      {/* Report Problem Modal */}
-      <URLModal url={reportProblemUrl} title="Report a Problem" isOpen={isReportProblemModalOpen} onClose={handleCloseReportProblemModal} width="90vw" height="80vh" />
     </>
   );
 }

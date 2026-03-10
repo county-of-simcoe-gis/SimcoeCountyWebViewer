@@ -135,7 +135,7 @@ export default function GroupItem({
     <div className="sc-toc-group-list-container" key={`${id}-sc-toc-group-list-container`}>
       <div className={`sc-toc-group-list-header${panelOpen ? " open" : ""}${activeLayerCount > 0 ? " active" : ""}`} onClick={onHeaderClick}>
         <div className="sc-toc-group-list-header-icon">
-          {panelOpen ? <FaFolderOpen size={16} style={{ opacity: 0.7, color: "#666", marginRight: "8px" }} /> : <FaFolder size={16} style={{ opacity: 0.7, color: "#666", marginRight: "8px" }} />}
+          {panelOpen ? <FaFolderOpen size={16} style={{ opacity: 0.7, color: group.useRedFolder ? "#cc0000" : "#666", marginRight: "8px" }} /> : <FaFolder size={16} style={{ opacity: 0.7, color: group.useRedFolder ? "#cc0000" : "#666", marginRight: "8px" }} />}
         </div>
         <div className="sc-toc-group-list-header-label">{`${group.label} - (${activeLayerCount}/${group.layers.length})`}</div>
       </div>

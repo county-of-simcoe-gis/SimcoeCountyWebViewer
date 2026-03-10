@@ -943,10 +943,50 @@ async function configureTileLayer(layer: TileLayer): Promise<MapFishWMTSLayer | 
  * Configure image layer for MapFish
  */
 function configureImageLayer(layer: ImageLayer<any>, options: PrintRequestAttributes): MapFishImageLayer {
-  const source = layer.getSource() as { image_?: { src_: string } };
-  const imageSrc = source?.image_?.src_;
+  const source = layer.getSource() as {
+    image_?: { src_: string };
+    getUrl?: () => string | undefined;
+    getParams?: () => Record<string, string>;
+  };
+
+  // Prefer the cached rendered image URL, but fall back to building one from
+  // the source's public API (getUrl/getParams) when the layer hasn't rendered yet.
+  let imageSrc = source?.image_?.src_;
 
   if (!imageSrc) {
+    const baseUrl = source?.getUrl?.();
+    if (baseUrl) {
+      const params = source?.getParams?.() || {};
+      const fallbackUrl = new URL(`${baseUrl}/export`);
+      for (const [k, v] of Object.entries(params)) {
+        fallbackUrl.searchParams.set(k, v);
+      }
+      // Set sensible defaults so the URL parsing below works
+      fallbackUrl.searchParams.set("F", "image");
+      fallbackUrl.searchParams.set("FORMAT", "PNG32");
+      fallbackUrl.searchParams.set("TRANSPARENT", "true");
+      fallbackUrl.searchParams.set("DPI", String(options.map.dpi || 96));
+      const printSize = !options.map.height
+        ? [800, 600]
+        : [parseInt(String(options.map.height)), parseInt(String(options.map.width))];
+      fallbackUrl.searchParams.set("SIZE", `${printSize[0]},${printSize[1]}`);
+      const extent = options.map.bbox
+        ? options.map.bbox
+        : computeExtent(printSize[0], printSize[1], 72, options.map.scale || 1, options.map.center || [0, 0]);
+      fallbackUrl.searchParams.set("BBOX", extent.join(","));
+      fallbackUrl.searchParams.set("BBOXSR", "3857");
+      fallbackUrl.searchParams.set("IMAGESR", "3857");
+
+      return {
+        type: "image",
+        baseURL: fallbackUrl,
+        opacity: layer.getOpacity(),
+        imageFormat: "image/png",
+        extent: extent,
+        name: "image",
+      };
+    }
+
     throw new Error("Image source not found");
   }
 

@@ -4,19 +4,37 @@
 
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { useURLModalStore } from "@/stores/urlModalStore";
+import { useAppStore } from "@/stores/appStore";
 
 /**
- * Tab name to index mapping
+ * All tab names in their default order
  */
-const TAB_MAPPING = {
-  layers: 0,
-  tools: 1,
-  mymaps: 2,
-  themes: 3,
-  reports: 4,
-} as const;
+const ALL_TAB_NAMES = ["layers", "tools", "mymaps", "themes", "reports"] as const;
 
-type TabName = keyof typeof TAB_MAPPING;
+type TabName = (typeof ALL_TAB_NAMES)[number];
+
+/**
+ * Compute the visible tab index for a given tab name,
+ * accounting for any hidden tabs in the sidebar store.
+ */
+function getVisibleTabIndex(tabName: TabName): number | undefined {
+  const state = useSidebarStore.getState();
+  const hideFlags: Record<string, boolean> = {
+    layers: state.hideLayers,
+    tools: state.hideTools,
+    mymaps: state.hideMyMaps,
+    themes: state.hideThemes,
+    reports: state.hideReports,
+  };
+
+  let visibleIndex = 0;
+  for (const name of ALL_TAB_NAMES) {
+    if (hideFlags[name]) continue;
+    if (name === tabName) return visibleIndex;
+    visibleIndex++;
+  }
+  return undefined; // tab is hidden
+}
 
 /**
  * Activate a sidebar tab by name
@@ -25,10 +43,10 @@ type TabName = keyof typeof TAB_MAPPING;
 export function activateTab(tabName: TabName): void {
   console.log(`activateTab called with: ${tabName}`);
 
-  const tabIndex = TAB_MAPPING[tabName];
+  const tabIndex = getVisibleTabIndex(tabName);
 
   if (tabIndex === undefined) {
-    console.error(`Invalid tab name: ${tabName}. Valid options are: ${Object.keys(TAB_MAPPING).join(", ")}`);
+    console.error(`Tab "${tabName}" is hidden or invalid.`);
     return;
   }
 
@@ -118,9 +136,35 @@ export function showURLWindow(url: string, showFooter = false, mode = "normal", 
 }
 
 /**
- * App statistics tracking (placeholder)
+ * App statistics tracking.
+ * Sends a fire-and-forget HTTP GET to the appStatsUrl endpoint.
+ * Gated by the includeAppStats config flag and skipped on localhost.
  */
 export function addAppStat(type: string, description: string): void {
-  // For now, just log - can be enhanced with actual analytics
-  console.log(`App Stat: ${type} - ${description}`);
+  try {
+    const config = useAppStore.getState().config;
+    if (!config) return;
+
+    // Gate: config opt-out
+    if (config.includeAppStats === false) return;
+
+    // Gate: skip on localhost
+    const hostname = window?.location?.hostname;
+    if (hostname === "localhost" || hostname === "127.0.0.1") return;
+
+    const appStatsUrl = config.appStatsUrl;
+    if (!appStatsUrl) return;
+
+    // Build a simple build identifier
+    const appName = config.title || "WebViewer";
+    const buildName = appName.replace(/\s+/g, "-");
+
+    // Fire-and-forget GET request (matches old app pattern)
+    const url = `${appStatsUrl}${encodeURIComponent(buildName)}/${encodeURIComponent(type)}/${encodeURIComponent(description)}`;
+    fetch(url, { method: "GET", mode: "no-cors" }).catch(() => {
+      // Intentionally swallowed — stats are best-effort
+    });
+  } catch {
+    // Intentionally swallowed
+  }
 }

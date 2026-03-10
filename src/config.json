@@ -289,6 +289,13 @@
   "wmsGeoJsonTemplate": "https://maps.simcoe.ca/ESRIWMSTemplates/featureinfo_application_geojson.xsl",
   "sidebarToolComponents": [
     {
+      "id": 11,
+      "name": "Available Maps",
+      "componentName": "AvailableMaps",
+      "description": "View all the available maps and switch to a different map configuration.",
+      "imageName": "availablemaps.png"
+    },
+    {
       "id": 1,
       "name": "Measure",
       "componentName": "Measure",
@@ -310,7 +317,7 @@
       "imageName": "print.png"
     },
     {
-      "id": 11,
+      "id": 13,
       "name": "Print Local (Beta)",
       "componentName": "PrintLocal",
       "description": "This tool allows users to print their map view in a variety of formats such as pdf and jpeg locally.",
@@ -323,6 +330,22 @@
       "description": "Add data to your map by importing layers for multiple sources.",
       "imageName": "addlayer.png",
       "helpLink": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Tools/AddData/"
+    },
+    {
+      "id": 4,
+      "name": "Search Addresses",
+      "componentName": "SearchAddresses",
+      "description": "This tool allows you to search Addresses.",
+      "imageName": "searchAddresses.png",
+      "disable": true
+    },
+    {
+      "id": 5,
+      "name": "Search History",
+      "componentName": "SearchHistory",
+      "description": "This tool provides users with a list of their 25 most recent searches.",
+      "imageName": "searchHistory.png",
+      "disable": true
     },
     {
       "id": 6,
@@ -351,13 +374,6 @@
       "componentName": "Settings",
       "description": "Customize for your preferences",
       "imageName": "settings.png"
-    },
-    {
-      "id": 12,
-      "name": "Available Maps",
-      "componentName": "AvailableMaps",
-      "description": "Browse and switch between available map configurations.",
-      "imageName": "map-32x32.png"
     }
   ],
   "sidebarThemeComponents": [
@@ -382,7 +398,8 @@
       "name": "Local Real Estate",
       "componentName": "LocalRealEstate",
       "description": "View listings by categories and view photos for the listing with the option to link to the Realtor.ca listing",
-      "imageName": "localrealestate.png"
+      "imageName": "localrealestate.png",
+      "disable": true
     },
     {
       "id": 4,
@@ -414,7 +431,7 @@
       "componentName": "CommercialRealEstate",
       "description": "Search commercial real estate throughout the County of Simcoe.",
       "imageName": "commercialRealEstate.png",
-      "disable": false
+      "disable": true
     },
     {
       "id": 8,
@@ -428,21 +445,24 @@
       "name": "Zoning",
       "componentName": "Zoning",
       "description": "View zoning information for properties within the County.",
-      "imageName": "zoning.png"
+      "imageName": "zoning.png",
+      "disable": true
     },
     {
       "id": 10,
       "name": "Broadband",
       "componentName": "Broadband",
       "description": "View broadband coverage information for properties.",
-      "imageName": "broadband_icon.png"
+      "imageName": "broadband_icon.png",
+      "disable": true
     },
     {
       "id": 11,
       "name": "511 Live Feeds",
       "componentName": "Five11LiveFeeds",
       "description": "View Live Feeds from the MTO and Waze.",
-      "imageName": "511.png"
+      "imageName": "511.png",
+      "disable": true
     }
   ],
   "sidebarShortcutParams": [

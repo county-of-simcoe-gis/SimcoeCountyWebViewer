@@ -89,8 +89,8 @@ function convertToSidebarItem(component: SidebarComponent, type: "theme" | "tool
 }
 
 export const useSidebarStore = create<SidebarState>((set, get) => ({
-  // Initial state
-  isOpen: true,
+  // Initial state - closed by default (basic mode); opened by Layout when viewerMode is "advanced"
+  isOpen: false,
   isSlim: false,
   activeTab: 0,
   activeTheme: null,
@@ -199,11 +199,13 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
   activateDefaultItems: (defaultTheme, defaultTool) => {
     const state = get();
     if (defaultTheme) {
-      // Find the theme by componentName (matching old app behavior)
-      const theme = state.themes.find((t) => t.component === defaultTheme || t.name === defaultTheme);
+      // Find the theme by name or componentName (case-insensitive, matching old app behavior)
+      const needle = defaultTheme.toLowerCase();
+      const theme = state.themes.find((t) => t.component?.toLowerCase() === needle || t.name.toLowerCase() === needle);
       if (theme) {
         console.log("Activating default theme:", defaultTheme, "-> id:", theme.id);
         set({
+          isOpen: true,
           activeTheme: theme.id,
           activeTool: null,
           activePanelId: theme.id,
@@ -211,14 +213,16 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
         // Use name-based activation so hidden tabs don't shift the index
         get().setActiveTabByName("themes");
       } else {
-        console.warn("Default theme not found in loaded themes:", defaultTheme);
+        console.warn("Default theme not found in loaded themes:", defaultTheme, "available:", state.themes.map((t) => t.name));
       }
     } else if (defaultTool) {
-      // Find the tool by componentName
-      const tool = state.tools.find((t) => t.component === defaultTool || t.name === defaultTool);
+      // Find the tool by name or componentName (case-insensitive)
+      const needle = defaultTool.toLowerCase();
+      const tool = state.tools.find((t) => t.component?.toLowerCase() === needle || t.name.toLowerCase() === needle);
       if (tool) {
         console.log("Activating default tool:", defaultTool, "-> id:", tool.id);
         set({
+          isOpen: true,
           activeTool: tool.id,
           activeTheme: null,
           activePanelId: tool.id,
@@ -226,7 +230,7 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
         // Use name-based activation so hidden tabs don't shift the index
         get().setActiveTabByName("tools");
       } else {
-        console.warn("Default tool not found in loaded tools:", defaultTool);
+        console.warn("Default tool not found in loaded tools:", defaultTool, "available:", state.tools.map((t) => t.name));
       }
     }
   },

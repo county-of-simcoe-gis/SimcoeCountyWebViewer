@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import PanelComponent from "@/components/PanelComponent";
 import { useMapStore, type ControlVisibility } from "@/stores/mapStore";
-import config from "@/config.json";
+import { useAppStore } from "@/stores/appStore";
 
 interface SettingsToolProps {
   name?: string;
@@ -82,7 +82,8 @@ export default function SettingsTool({ name = "Settings", helpLink, hideHeader =
   };
 
   const handleResetToDefaults = () => {
-    resetControlVisibilityToDefaults(config);
+    const appConfig = useAppStore.getState().config;
+    resetControlVisibilityToDefaults(appConfig);
   };
 
   const handleReloadPage = () => {
