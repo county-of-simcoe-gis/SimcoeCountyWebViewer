@@ -15,7 +15,7 @@ export default function ReportsNavBar() {
   const { canGoBack, canGoForward, goBack, goForward, currentReport } = useReportsStore();
   const { alwaysUseReportsTab, setAlwaysUseReportsTab } = usePopupStore();
 
-  const showToggle = currentReport?.source === "popupPopOut";
+  const showToggle = currentReport?.source === "popupPopOut" || currentReport?.source === "propertyReport";
 
   return (
     <div className="sc-reports-navbar">

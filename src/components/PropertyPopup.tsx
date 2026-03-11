@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Feature } from "ol";
 import { useAppStore } from "@/stores/appStore";
-import { InfoRow } from "@/components/common/InfoRow";
+import { InfoWindowRow } from "@/components/ui/InfoWindowRow";
 import { usePropertyPopupExtensionStore } from "@/stores/propertyPopupExtensionStore";
 import { usePopupStore } from "@/stores/popupStore";
 import { useReportsStore } from "@/stores/reportsStore";
@@ -130,15 +130,7 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
       id: `custom-identify-${arn}-${Date.now()}`,
       title: item.title || item.label,
       content: (
-        <IdentifyQuery
-          title={item.title || item.label}
-          layerURL={item.layerURL}
-          layerId={item.layerId}
-          where={whereClause}
-          fields={item.fields || ["*"]}
-          secured={item.secured}
-          type={item.type}
-        />
+        <IdentifyQuery title={item.title || item.label} layerURL={item.layerURL} layerId={item.layerId} where={whereClause} fields={item.fields || ["*"]} secured={item.secured} type={item.type} />
       ),
       createdAt: new Date(),
       source: "customIdentify",
@@ -150,11 +142,11 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
     <div className="bg-white">
       <div className="relative overflow-x-hidden overflow-y-auto">
         {/* Address */}
-        {address && <InfoRow label="Address" value={address} />}
+        {address && <InfoWindowRow label="Address" value={address} />}
 
         {/* Roll Number (ARN) with copy button */}
         {arn && (
-          <InfoRow label="Roll Number">
+          <InfoWindowRow label="Roll Number">
             {arn}
             <button
               className="bg-transparent border-none cursor-pointer ml-1.5 -mb-0.5 p-0 text-xs transition-transform hover:scale-125"
@@ -165,51 +157,47 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
               📋
             </button>
             {copied && <span className="text-green-500 text-[10px] ml-1.5 animate-[fadeOut_2s_forwards]">Copied!</span>}
-          </InfoRow>
+          </InfoWindowRow>
         )}
 
         {/* Has Zoning */}
-        {hasZoning !== undefined && <InfoRow label="Has Zoning" value={hasZoning} />}
+        {hasZoning !== undefined && <InfoWindowRow label="Has Zoning" value={hasZoning ? "Yes" : "No"} />}
 
         {/* Assessed Value - rendered as image matching legacy */}
         {assessedValue && (
-          <InfoRow label="Assessed Value">
+          <InfoWindowRow label="Assessed Value">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={assessedValue} alt="Assessed Value" className="mb-0.5" style={{ height: "16px", minWidth: "300px" }} />
             <div className="text-[9px] text-gray-600 pb-1">(may not reflect current market value)</div>
-          </InfoRow>
+          </InfoWindowRow>
         )}
 
         {/* Garbage Day */}
-        {garbageDay && <InfoRow label="Waste Collection Day" value={garbageDay} />}
+        {garbageDay && <InfoWindowRow label="Waste Collection Day" value={garbageDay} />}
 
         {/* Broadband Speed */}
-        {broadbandSpeed && <InfoRow label="Potential Broadband Coverage" value={broadbandSpeed} />}
+        {broadbandSpeed && <InfoWindowRow label="Potential Broadband Coverage" value={broadbandSpeed} />}
 
         {/* Extension items (e.g. MPac/Teranet report links, owner names) */}
         {arn &&
           extensionItems.map((ext) => (
-            <InfoRow key={ext.id} label={ext.label}>
+            <InfoWindowRow key={ext.id} label={ext.label}>
               {ext.render(arn)}
-            </InfoRow>
+            </InfoWindowRow>
           ))}
 
         {/* Custom Identify items from propertyReport config */}
-        {(() => { console.log("PropertyPopup customIdentify check:", { arn, propertyReport: config?.propertyReport, customIdentify: config?.propertyReport?.customIdentify }); return null; })()}
         {arn &&
           config?.propertyReport?.customIdentify?.map((item, idx) => (
-            <InfoRow key={`custom-identify-${idx}`} label={item.label}>
-              <span
-                className="text-[#337ab7] underline cursor-pointer select-none hover:text-[#23527c]"
-                onClick={() => handleCustomIdentify(item)}
-              >
+            <InfoWindowRow key={`custom-identify-${idx}`} label={item.label}>
+              <span className="text-[#337ab7] underline cursor-pointer select-none hover:text-[#23527c]" onClick={() => handleCustomIdentify(item)}>
                 {item.linkText}
               </span>
-            </InfoRow>
+            </InfoWindowRow>
           ))}
 
         {/* Tools */}
-        <InfoRow label="Tools">
+        <InfoWindowRow label="Tools">
           <div className="inline">
             <span className="text-[#337ab7] underline cursor-pointer select-none mr-1 hover:text-[#23527c]" onClick={handleAddToMyMaps}>
               [Add to My Maps]
@@ -229,10 +217,10 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
               [Terms]
             </span>
           </div>
-        </InfoRow>
+        </InfoWindowRow>
 
         {/* Coordinates */}
-        {pointCoordinates && <InfoRow label="Pointer Coordinates" value={`Lat: ${Math.round(pointCoordinates[1] * 10000) / 10000}  Long: ${Math.round(pointCoordinates[0] * 10000) / 10000}`} />}
+        {pointCoordinates && <InfoWindowRow label="Pointer Coordinates" value={`Lat: ${Math.round(pointCoordinates[1] * 10000) / 10000}  Long: ${Math.round(pointCoordinates[0] * 10000) / 10000}`} />}
       </div>
 
       {/* Action Buttons — sticky so the scroll container can't shift them away from the cursor */}

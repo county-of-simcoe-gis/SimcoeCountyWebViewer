@@ -1,158 +1,49 @@
 @import "tailwindcss";
-@plugin "daisyui";
 @plugin "@tailwindcss/typography";
+@plugin "daisyui";
 
-/* Import original styling */
+/* Simcoe County custom DaisyUI theme */
+@plugin "daisyui/theme" {
+  name: "simcoe";
+  default: true;
+  color-scheme: light;
+  --color-primary: #3980cc;
+  --color-primary-content: #ffffff;
+  --color-secondary: #6ea8cf;
+  --color-secondary-content: #ffffff;
+  --color-accent: #e7a614;
+  --color-accent-content: #ffffff;
+  --color-neutral: #5b5b5b;
+  --color-neutral-content: #ffffff;
+  --color-base-100: #ffffff;
+  --color-base-200: #f9f9f9;
+  --color-base-300: #e5e5e5;
+  --color-base-content: #2d343c;
+  --color-info: #007bff;
+  --color-info-content: #ffffff;
+  --color-success: #28a745;
+  --color-success-content: #ffffff;
+  --color-warning: #f9c280;
+  --color-warning-content: #2d343c;
+  --color-error: #dc3545;
+  --color-error-content: #ffffff;
+}
+
+/* Custom CSS properties for brand gradients */
+:root {
+  --sc-gradient-default: linear-gradient(to bottom, #ffffff 0%, #e5e5e5 100%);
+  --sc-gradient-active: linear-gradient(to bottom, #f0f9ff 0%, #bfd6e4 100%);
+  --sc-gradient-hover: linear-gradient(to bottom, #f2f5f6 0%, #c8d7dc 100%);
+  --sc-gradient-header: linear-gradient(to bottom, #3980cc 0%, #2865a2 100%);
+}
+
+/* Global base styles */
 body {
   overflow: hidden;
-  font-family: Arial !important;
+  font-family: Arial, sans-serif;
 }
 
-.body,
-div,
-p {
-  font-family: Arial !important;
-}
-
-.sc-hidden {
-  display: none !important;
-}
-
-.sc-container {
-  padding: 5px;
-  border: 1px solid #ddd;
-  border-radius: 3px;
-}
-
-.sc-button {
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
-  font-size: 12px;
-  padding: 5px;
-  color: #2d343c !important;
-  border-radius: 2px;
-  min-height: 32px;
-  border: 1px solid #ccc;
-  font-weight: normal;
-  cursor: pointer;
-}
-
-.sc-button:hover {
-  border: 1px solid #80b9ff;
-  box-shadow: 0px 0px 5px #80b9ff;
-}
-
-.sc-button:active {
-  border: 1px solid #2074b7;
-}
-
-.sc-button:focus {
-  border: 1px solid #2074b7;
-}
-
-.sc-button.active {
-  color: #000000 !important;
-  background: linear-gradient(to bottom, rgba(240, 249, 255, 1) 0%, rgb(191, 214, 228) 100%);
-  border: 1px solid #90b5d5;
-}
-
-/* Generic Title and Description styles */
-.sc-title {
-  font-size: 14px;
-  color: #797979;
-  margin-top: 5px;
-  margin-bottom: 7px;
-  text-transform: uppercase;
-  padding-left: 20px;
-  background-image: url(/images/title-icon.png);
-  background-repeat: no-repeat;
-  background-position-y: center;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-.sc-description {
-  font-size: 11px;
-  color: #808080;
-  padding: 5px;
-}
-
-.sc-border-bottom {
-  border-bottom: 1px solid #ddd;
-}
-
-.sc-arrow {
-  background-image: url(/images/arrow_curve.gif);
-  background-repeat: no-repeat;
-}
-
-.sc-fakeLink {
-  color: #337ab7 !important;
-  text-decoration: underline;
-  cursor: pointer !important;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-/* Legacy-style toggle switch */
-.sc-toggle-switch {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 48px;
-  height: 20px;
-  background: #e5e5e5;
-  border: 1px solid #bdbdbd;
-  border-radius: 999px;
-  position: relative;
-  display: inline-block;
-  vertical-align: middle;
-  cursor: pointer;
-  transition:
-    background 0.2s ease-in-out,
-    border-color 0.2s ease-in-out;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
-}
-
-.sc-toggle-switch::after {
-  content: "";
-  position: absolute;
-  top: 1px;
-  left: 1px;
-  width: 16px;
-  height: 16px;
-  background: #ffffff;
-  border: 1px solid #bdbdbd;
-  border-radius: 50%;
-  transition:
-    transform 0.2s ease-in-out,
-    border-color 0.2s ease-in-out;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.sc-toggle-switch:checked {
-  background: #16a34a;
-  border-color: #148a3a;
-}
-
-.sc-toggle-switch:checked::after {
-  transform: translateX(28px);
-  border-color: #148a3a;
-}
-
-.sc-toggle-switch:focus-visible {
-  outline: 2px solid #80b9ff;
-  outline-offset: 2px;
-}
-
-/* Map Styles */
+/* Map positioning */
 .sc-map {
   position: absolute;
   top: 52px;
@@ -164,63 +55,19 @@ p {
 }
 
 .sc-map.sidebar-closed {
-  left: 65px; /* Account for slim sidebar width */
+  left: 65px;
 }
 
-/* Info Window Row Styles (used in popups) */
-.sc-info-window-row {
-  display: table-row;
-  width: 100%;
-}
-
-.sc-info-window-label {
-  font-weight: bold;
-  color: #333333;
-  font-size: 11px;
-}
-
-.sc-info-window-value {
-  color: #484848;
-  border-bottom: 1px solid #eeeeee;
-  padding-bottom: 2px;
-  padding-left: 20px;
-  background-image: url("/images/arrow_curve.gif");
-  background-repeat: no-repeat;
-  background-position: left;
-  font-size: 11px;
-  word-wrap: break-word;
-  min-height: 10px;
-  overflow-wrap: anywhere;
-}
-
-.sc-info-window-label-table {
-  display: table-cell;
-  font-weight: bold;
-  color: #333333;
-  font-size: 11px;
-  padding: 3px;
-  word-wrap: break-word;
-  border-color: #f1efeffa !important;
-  border: solid;
-  border-width: 1px;
-  width: 25%;
-}
-
-.sc-info-window-value-table {
-  display: table-cell;
-  color: #484848;
-  font-size: 12px;
-  word-wrap: break-word;
-  padding: 3px;
-  width: 75%;
-  border: solid;
-  border-width: 1px;
-  border-color: #f1efeffa;
+/* No-select utility */
+.sc-no-select {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 /* Print Styles */
 @media print {
-  /* Additional fallback to hide map elements if needed */
   #map,
   .sc-map,
   .basemap-switcher,
@@ -229,7 +76,6 @@ p {
     display: none !important;
   }
 
-  /* Ensure modal overlays are styled for print */
   .fixed.inset-0 {
     position: static !important;
     background: white !important;
