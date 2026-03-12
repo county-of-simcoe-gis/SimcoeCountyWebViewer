@@ -283,7 +283,7 @@
       "name": "Measure",
       "componentName": "Measure",
       "description": "This tool will allow for the measurement of distance and areas in various units.",
-      "imageName": "measure.png"
+      "imageName": "measure-tool-sidebar.png"
     },
     {
       "id": 2,
@@ -333,7 +333,7 @@
       "name": "Settings",
       "componentName": "Settings",
       "description": "Customize for your preferences",
-      "imageName": "settings.png"
+      "imageName": "settings-sidebar.png"
     }
   ],
   "sidebarThemeComponents": [
@@ -358,7 +358,7 @@
       "name": "Local Real Estate",
       "componentName": "LocalRealEstate",
       "description": "View listings by categories and view photos for the listing with the option to link to the Realtor.ca listing",
-      "imageName": "localrealestate.png"
+      "imageName": "localrealestate-sidebar.png"
     },
     {
       "id": 4,

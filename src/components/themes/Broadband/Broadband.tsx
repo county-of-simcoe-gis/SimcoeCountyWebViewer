@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import PanelComponent from "@/components/PanelComponent";
+import { FaPalette } from "react-icons/fa";
 import SpatialQueryResults, { FeatureSection } from "../shared/SpatialQueryResults";
 import { useSearchStore } from "@/stores/searchStore";
 import { useMapStore } from "@/stores/mapStore";
@@ -128,7 +129,7 @@ export default function Broadband({ name = "Broadband", helpLink, hideHeader, on
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <PanelComponent name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={onClose} onSidebarVisibility={onSidebarVisibility}>
+    <PanelComponent icon={<FaPalette size={20} className="text-neutral/70" />} name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={onClose} onSidebarVisibility={onSidebarVisibility}>
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="px-3 pt-3 pb-1 font-semibold text-sm">Broadband Results</div>

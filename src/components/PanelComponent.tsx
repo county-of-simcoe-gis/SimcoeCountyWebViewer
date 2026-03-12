@@ -1,11 +1,10 @@
 "use client";
 
-import "@/components/PanelComponent.css";
 import React, { useEffect } from "react";
-import Image from "next/image";
-import { FaQuestion, FaChevronLeft, FaTimes } from "react-icons/fa";
+import { FaChevronLeft, FaWrench } from "react-icons/fa";
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { showURLWindow } from "@/utils/helpersUI";
+import { PanelHeader } from "@/components/ui";
 
 interface PanelComponentProps {
   name: string;
@@ -17,9 +16,10 @@ interface PanelComponentProps {
   options?: Record<string, unknown>;
   children: React.ReactNode;
   allowClick?: boolean;
+  icon?: React.ReactNode;
 }
 
-export default function PanelComponent({ name, helpLink, hideHeader = false, onClose, onSidebarVisibility, children }: PanelComponentProps) {
+export default function PanelComponent({ name, helpLink, hideHeader = false, onClose, onSidebarVisibility, children, icon }: PanelComponentProps) {
   const { closeSidebar } = useSidebarStore();
 
   useEffect(() => {
@@ -43,32 +43,27 @@ export default function PanelComponent({ name, helpLink, hideHeader = false, onC
   };
 
   return (
-    <div className="sc-panel-component">
-      <div id="sc-panel-component-header" className={hideHeader ? "sc-hidden" : ""}>
-        <div id="sc-panel-component-title">
-          <div id="sc-panel-component-title-container">
-            <div id="sc-panel-component-tool-icon">
-              <Image src="/images/tools-icon.png" alt="Tool" width={24} height={24} />
-            </div>
-            <div id="sc-panel-component-tool-text" className={`sc-panel-component-tool-text${name.length < 25 ? "" : " small"}${helpLink ? " short" : ""}`} title={name}>
-              {name}
-            </div>
-
-            <div id="sc-panel-component-tool-controls">
-              <div id="sc-panel-component-help" className={`sc-panel-component-help ${helpLink ? "" : "sc-hidden"}`} title={`View Help for ${name}`} onClick={handleHelpClick}>
-                <FaQuestion />
-              </div>
-              <button id="sc-panel-component-tool-img" title="Minimize Panel" aria-label="Minimize Panel" onClick={handleSidebarVisibility}>
-                <FaChevronLeft size={14} />
-              </button>
-              <button id="sc-panel-component-tool-close" title={`Close ${name}`} aria-label={`Close ${name}`} onClick={onClose}>
-                <FaTimes size={14} />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div id="sc-panel-component-content">{children}</div>
+    <div className="w-full h-full min-h-0 overflow-hidden flex flex-col">
+      {!hideHeader && (
+        <PanelHeader
+          title={name}
+          icon={icon || <FaWrench size={20} className="text-neutral/70" />}
+          onClose={onClose}
+          onHelp={helpLink ? handleHelpClick : undefined}
+          compact={!!helpLink}
+          controls={
+            <button
+              className="border border-gray-300/70 p-1 rounded-sm ml-1.5 cursor-pointer inline-flex items-center justify-center align-top bg-base-300 w-6 h-6 text-gray-700"
+              title="Minimize Panel"
+              aria-label="Minimize Panel"
+              onClick={handleSidebarVisibility}
+            >
+              <FaChevronLeft size={14} />
+            </button>
+          }
+        />
+      )}
+      <div className="flex-1 min-h-0 box-border overflow-y-auto p-0.5">{children}</div>
     </div>
   );
 }

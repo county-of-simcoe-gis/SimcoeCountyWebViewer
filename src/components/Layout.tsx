@@ -20,6 +20,7 @@ import HelpModal from "@/components/HelpModal";
 import MoreMenu from "@/components/MoreMenu";
 import GlobalURLModal from "@/components/common/GlobalURLModal";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import "@/styles/react-tabs.css";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -68,7 +69,7 @@ export default function Layout({ children }: LayoutProps) {
       }
 
       // Auto-open sidebar if viewerMode is "ADVANCED" (matches old app behavior)
-      const viewerMode = (config.viewerMode as string || "").toUpperCase();
+      const viewerMode = ((config.viewerMode as string) || "").toUpperCase();
       if (viewerMode === "ADVANCED") {
         openSidebar();
       }
@@ -100,25 +101,19 @@ export default function Layout({ children }: LayoutProps) {
           const items: Array<{ url?: string }> = Array.isArray(data) ? data : (data?.value ?? []);
           isDismissed = items.some((item) => item.url?.toLowerCase() === config.whatsNewUrl.toLowerCase());
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
 
       if (!isDismissed) {
-        useToastStore.getState().addToast(
-          `What's changed? Click the hamburger menu ☰ → "What's New" to find out!`,
-          "info",
-          10000,
-        );
+        useToastStore.getState().addToast(`What's changed? Click the hamburger menu ☰ → "What's New" to find out!`, "info", 10000);
       }
     }
 
     // Feedback message — delayed toast after 60 seconds
     if (config.showFeedbackMessageOnStartup) {
       setTimeout(() => {
-        useToastStore.getState().addToast(
-          "Please provide us feedback! Click the feedback button in the header to share your thoughts.",
-          "info",
-          10000,
-        );
+        useToastStore.getState().addToast("Please provide us feedback! Click the feedback button in the header to share your thoughts.", "info", 10000);
       }, 60000);
     }
   }, [config]);
@@ -126,7 +121,7 @@ export default function Layout({ children }: LayoutProps) {
   const isLoading = isAnyLoading();
 
   return (
-    <div id="app-root" className="app-layout-container print:hidden" style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden" }}>
+    <div id="app-root" className="relative w-full h-screen overflow-hidden print:hidden">
       {/* Portal root for modals */}
       <div id="portal-root" />
 
@@ -135,20 +130,7 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Error Display */}
       {configError && (
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            background: "#f8d7da",
-            color: "#721c24",
-            padding: "20px",
-            borderRadius: "5px",
-            border: "1px solid #f5c6cb",
-            zIndex: 9999,
-          }}
-        >
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-error/10 text-error p-5 rounded-md border border-error/30 z-[9999]">
           <h3>Configuration Error</h3>
           <p>{configError}</p>
         </div>

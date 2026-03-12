@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import PanelComponent from "@/components/PanelComponent";
+import { FaPalette } from "react-icons/fa";
 import SpatialQueryResults, { FeatureSection } from "../shared/SpatialQueryResults";
 import { useSearchStore } from "@/stores/searchStore";
 import { useMapStore } from "@/stores/mapStore";
@@ -210,7 +211,7 @@ export default function Zoning({ name = "Zoning", helpLink, hideHeader, onClose,
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <PanelComponent name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={onClose} onSidebarVisibility={onSidebarVisibility}>
+    <PanelComponent icon={<FaPalette size={20} className="text-neutral/70" />} name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={onClose} onSidebarVisibility={onSidebarVisibility}>
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="px-3 pt-3 pb-2 font-semibold text-sm">Zoning Results</div>

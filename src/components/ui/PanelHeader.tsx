@@ -8,6 +8,8 @@ export interface PanelHeaderProps {
   title: string;
   /** Tool icon src (shown before title) */
   iconSrc?: string;
+  /** React node icon (shown before title, takes precedence over iconSrc) */
+  icon?: React.ReactNode;
   /** Called when close button is clicked */
   onClose?: () => void;
   /** Called when help button is clicked */
@@ -22,16 +24,12 @@ export interface PanelHeaderProps {
 /**
  * Replaces legacy #sc-panel-component-header, #sc-panel-component-title, and related elements.
  */
-export const PanelHeader: React.FC<PanelHeaderProps> = ({ title, iconSrc, onClose, onHelp, controls, compact = false, className = "" }) => {
+export const PanelHeader: React.FC<PanelHeaderProps> = ({ title, iconSrc, icon, onClose, onHelp, controls, compact = false, className = "" }) => {
   return (
     <div className={`w-full h-[43px] shrink-0 overflow-visible border-b border-base-300 ${className}`}>
-      <div className="p-1.5 pt-1 text-lg font-bold text-neutral bg-[#ececec] overflow-visible relative min-h-[29px] [text-shadow:0.5px_0.5px_#fff]">
+      <div className="p-1.5 pt-1 mt-[3px] text-lg font-bold text-neutral bg-[#ececec] overflow-visible relative min-h-[29px] [text-shadow:0.5px_0.5px_#fff]">
         <div className="w-full overflow-hidden max-h-[29px] after:content-[''] after:table after:clear-both">
-          {iconSrc && (
-            <div className="w-9 float-left">
-              <Image src={iconSrc} alt="" width={32} height={32} />
-            </div>
-          )}
+          {(icon || iconSrc) && <div className="w-9 mt-[5px] float-left flex items-center justify-center">{icon || <Image src={iconSrc!} alt="" width={32} height={32} />}</div>}
 
           {onHelp && (
             <button onClick={onHelp} className="bg-secondary border border-gray-300/70 p-px rounded-sm h-6 w-6 ml-1.5 float-left cursor-pointer" aria-label="Help">

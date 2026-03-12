@@ -1,6 +1,5 @@
 "use client";
 
-import "@/components/Header.css";
 import { useEffect } from "react";
 import Image from "next/image";
 import { FaBars, FaEnvelope, FaQuestionCircle } from "react-icons/fa";
@@ -55,12 +54,7 @@ export default function Header() {
   };
 
   return (
-    <div
-      className="w-full border-b border-gray-300 flex items-center h-[52px] max-h-[52px] p-0 z-[1001] absolute left-0 top-0 right-0 bottom-auto"
-      style={{
-        background: "linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%)",
-      }}
-    >
+    <div className="w-full border-b border-gray-300 flex items-center h-[52px] max-h-[52px] p-0 z-[1001] absolute left-0 top-0 right-0 bottom-auto bg-[image:var(--sc-gradient-default)]">
       {/* Burger Button */}
       <div
         className="cursor-pointer w-[65px] h-11 flex items-center justify-center pt-1 outline-none bg-transparent rounded transition-colors duration-150 hover:bg-black/10 active:bg-black/20"
@@ -69,18 +63,17 @@ export default function Header() {
         tabIndex={2}
         onKeyDown={(e) => e.key === "Enter" && handleBurgerClick()}
         aria-label="Toggle sidebar"
-        style={{ marginLeft: "0px" }}
       >
         <FaBars size={32} className="max-w-full max-h-full" />
       </div>
 
       {/* Logo */}
-      <div className="flex items-center pl-2 shrink-0" style={{ marginRight: "10px", paddingLeft: "0px" }}>
+      <div className="flex items-center mr-2.5 shrink-0">
         <Image src={getLogoImage()} alt={config?.title || "Simcoe County"} width={92} height={45} className="w-[92px] h-[45px]" />
       </div>
 
       {/* Search Container - takes remaining space */}
-      <div className="flex-1 pt-1.5 pr-3 relative" style={{ paddingTop: "0px" }}>
+      <div className="flex-1 pr-3 relative">
         {!config?.hideSearch && (
           <Search
             className="w-full"
