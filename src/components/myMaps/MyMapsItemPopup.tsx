@@ -5,7 +5,6 @@ import Image from "next/image";
 import { MyMapsItem } from "@/types/myMaps";
 import { useMyMapsExtensionStore, type MyMapsExtensionItem } from "@/stores/myMapsExtensionStore";
 import { useAppStore } from "@/stores/appStore";
-import "@/components/myMaps/MyMapsItemPopup.css";
 
 export interface MyMapsItemPopupProps {
   item: MyMapsItem | null;
@@ -104,21 +103,25 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({
   return (
     <>
       {/* Backdrop */}
-      <div className="sc-mymaps-popup-backdrop" />
+      <div className="fixed inset-0 z-[99998]" />
 
       {/* Popup Menu */}
       <div
         ref={popupRef}
-        className="sc-mymaps-item-popup"
+        className="fixed z-[99999] bg-white border border-[#ccc] rounded shadow-[0_4px_12px_rgba(0,0,0,0.15)] min-w-[180px] max-w-[250px] font-[Arial,sans-serif] text-[13px] text-[#333] animate-mymapsPopupFadeIn origin-top-left md:max-md:min-w-[160px] md:max-md:text-sm"
         style={{
           left: `${position.x}px`,
           top: `${position.y}px`,
         }}
       >
-        <div className="sc-mymaps-popup-menu">
+        <div className="py-1">
           {/* Buffer */}
           {onBuffer && isMenuItemVisible("sc-floating-menu-buffer") && (
-            <div className="sc-mymaps-popup-item" onClick={() => handleMenuItemClick(() => onBuffer(item))} title="Create buffer around feature">
+            <div
+              className="flex items-center px-3 py-1.5 cursor-pointer transition-colors select-none max-h-[25px] hover:bg-[#f0f8ff] hover:text-[#0066cc] [&>img]:mr-2 [&>img]:shrink-0 [&>span]:text-[13px] [&>span]:whitespace-nowrap [&>span]:overflow-hidden [&>span]:text-ellipsis"
+              onClick={() => handleMenuItemClick(() => onBuffer(item))}
+              title="Create buffer around feature"
+            >
               <Image src="/images/buffer.png" alt="Buffer" width={16} height={16} />
               <span>Buffer</span>
             </div>
@@ -126,23 +129,37 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({
 
           {/* Symbolize */}
           {onSymbolize && isMenuItemVisible("sc-floating-menu-symbolizer") && (
-            <div className="sc-mymaps-popup-item" onClick={() => handleMenuItemClick(() => onSymbolize(item))} title="Change feature symbolization">
+            <div
+              className="flex items-center px-3 py-1.5 cursor-pointer transition-colors select-none max-h-[25px] hover:bg-[#f0f8ff] hover:text-[#0066cc] [&>img]:mr-2 [&>img]:shrink-0 [&>span]:text-[13px] [&>span]:whitespace-nowrap [&>span]:overflow-hidden [&>span]:text-ellipsis"
+              onClick={() => handleMenuItemClick(() => onSymbolize(item))}
+              title="Change feature symbolization"
+            >
               <Image src="/images/symbolize.png" alt="Symbolize" width={16} height={16} />
               <span>Symbolize</span>
             </div>
           )}
 
           {/* Measure */}
-          {onMeasure && isMenuItemVisible("sc-floating-menu-measure") && (item.geometryType === "LineString" || item.geometryType === "MultiLineString" || item.geometryType === "Polygon" || item.geometryType === "MultiPolygon") && (
-            <div className="sc-mymaps-popup-item" onClick={() => handleMenuItemClick(() => onMeasure(item))} title="Measure feature dimensions">
-              <Image src="/images/measure.png" alt="Measure" width={16} height={16} />
-              <span>Measure</span>
-            </div>
-          )}
+          {onMeasure &&
+            isMenuItemVisible("sc-floating-menu-measure") &&
+            (item.geometryType === "LineString" || item.geometryType === "MultiLineString" || item.geometryType === "Polygon" || item.geometryType === "MultiPolygon") && (
+              <div
+                className="flex items-center px-3 py-1.5 cursor-pointer transition-colors select-none max-h-[25px] hover:bg-[#f0f8ff] hover:text-[#0066cc] [&>img]:mr-2 [&>img]:shrink-0 [&>span]:text-[13px] [&>span]:whitespace-nowrap [&>span]:overflow-hidden [&>span]:text-ellipsis"
+                onClick={() => handleMenuItemClick(() => onMeasure(item))}
+                title="Measure feature dimensions"
+              >
+                <Image src="/images/measure.png" alt="Measure" width={16} height={16} />
+                <span>Measure</span>
+              </div>
+            )}
 
           {/* Zoom To */}
           {onZoomTo && isMenuItemVisible("sc-floating-menu-zoomto") && (
-            <div className="sc-mymaps-popup-item" onClick={() => handleMenuItemClick(() => onZoomTo(item))} title="Zoom map to this feature">
+            <div
+              className="flex items-center px-3 py-1.5 cursor-pointer transition-colors select-none max-h-[25px] hover:bg-[#f0f8ff] hover:text-[#0066cc] [&>img]:mr-2 [&>img]:shrink-0 [&>span]:text-[13px] [&>span]:whitespace-nowrap [&>span]:overflow-hidden [&>span]:text-ellipsis"
+              onClick={() => handleMenuItemClick(() => onZoomTo(item))}
+              title="Zoom map to this feature"
+            >
               <Image src="/images/zoom.png" alt="Zoom To" width={16} height={16} />
               <span>Zoom To</span>
             </div>
@@ -150,7 +167,11 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({
 
           {/* Delete */}
           {onDelete && isMenuItemVisible("sc-floating-menu-delete") && (
-            <div className="sc-mymaps-popup-item danger" onClick={() => handleMenuItemClick(() => onDelete(item))} title="Delete this feature">
+            <div
+              className="flex items-center px-3 py-1.5 cursor-pointer transition-colors select-none max-h-[25px] hover:bg-[#ffe6e6] hover:text-[#cc0000] [&>img]:mr-2 [&>img]:shrink-0 [&>span]:text-[13px] [&>span]:whitespace-nowrap [&>span]:overflow-hidden [&>span]:text-ellipsis"
+              onClick={() => handleMenuItemClick(() => onDelete(item))}
+              title="Delete this feature"
+            >
               <Image src="/images/eraser.png" alt="Delete" width={16} height={16} />
               <span>Delete</span>
             </div>
@@ -158,41 +179,57 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({
 
           {/* Show Geometry */}
           {onShowGeometry && isMenuItemVisible("sc-floating-menu-geometry") && (
-            <div className="sc-mymaps-popup-item" onClick={() => handleMenuItemClick(() => onShowGeometry(item))} title="Show geometry details">
+            <div
+              className="flex items-center px-3 py-1.5 cursor-pointer transition-colors select-none max-h-[25px] hover:bg-[#f0f8ff] hover:text-[#0066cc] [&>img]:mr-2 [&>img]:shrink-0 [&>span]:text-[13px] [&>span]:whitespace-nowrap [&>span]:overflow-hidden [&>span]:text-ellipsis"
+              onClick={() => handleMenuItemClick(() => onShowGeometry(item))}
+              title="Show geometry details"
+            >
               <Image src="/images/edit-vertices.png" alt="Show Geometry" width={16} height={16} />
               <span>Show Geometry</span>
             </div>
           )}
 
-          <div className="sc-mymaps-popup-separator" />
+          <div className="h-px bg-[#e0e0e0] my-1" />
 
           {/* Export to */}
           {onExport && isMenuItemVisible("sc-floating-menu-export") && (
             <div
-              className="sc-mymaps-popup-item sc-mymaps-popup-submenu-parent"
+              className="relative flex items-center justify-between px-3 py-1.5 cursor-pointer transition-colors select-none max-h-[25px] hover:bg-[#f0f8ff] hover:text-[#0066cc] [&>img]:mr-2 [&>img]:shrink-0 [&>span]:text-[13px] [&>span]:whitespace-nowrap [&>span]:overflow-hidden [&>span]:text-ellipsis"
               onMouseEnter={() => setShowExportSubmenu(true)}
               onMouseLeave={() => setShowExportSubmenu(false)}
               title="Export this feature"
             >
               <Image src="/images/toc/download.png" alt="Export" width={16} height={16} />
               <span>Export to ...</span>
-              <span className="sc-mymaps-popup-arrow">▶</span>
+              <span className="text-[10px] text-[#999] ml-auto pl-2">▶</span>
 
               {/* Export Submenu */}
               {showExportSubmenu && (
-                <div className="sc-mymaps-popup-submenu">
+                <div className="absolute left-full top-0 bg-white border border-[#ccc] rounded shadow-[0_4px_12px_rgba(0,0,0,0.15)] min-w-[120px] z-[100000] animate-submenuFadeIn">
                   {isMenuItemVisible("sc-floating-menu-export-to-geojson") && (
-                    <div className="sc-mymaps-popup-item sc-mymaps-popup-submenu-item" onClick={() => handleMenuItemClick(() => onExport(item, "geojson"))} title="Export as GeoJSON">
+                    <div
+                      className="flex items-center px-3 py-1.5 cursor-pointer transition-colors select-none hover:bg-[#f0f8ff] hover:text-[#0066cc] [&>span]:text-[13px] [&>span]:whitespace-nowrap [&>span]:overflow-hidden [&>span]:text-ellipsis"
+                      onClick={() => handleMenuItemClick(() => onExport(item, "geojson"))}
+                      title="Export as GeoJSON"
+                    >
                       <span>GeoJSON</span>
                     </div>
                   )}
                   {isMenuItemVisible("sc-floating-menu-export-to-kml") && (
-                    <div className="sc-mymaps-popup-item sc-mymaps-popup-submenu-item" onClick={() => handleMenuItemClick(() => onExport(item, "kml"))} title="Export as KML">
+                    <div
+                      className="flex items-center px-3 py-1.5 cursor-pointer transition-colors select-none hover:bg-[#f0f8ff] hover:text-[#0066cc] [&>span]:text-[13px] [&>span]:whitespace-nowrap [&>span]:overflow-hidden [&>span]:text-ellipsis"
+                      onClick={() => handleMenuItemClick(() => onExport(item, "kml"))}
+                      title="Export as KML"
+                    >
                       <span>KML</span>
                     </div>
                   )}
                   {isMenuItemVisible("sc-floating-menu-export-to-esrijson") && (
-                    <div className="sc-mymaps-popup-item sc-mymaps-popup-submenu-item" onClick={() => handleMenuItemClick(() => onExport(item, "esrijson"))} title="Export as EsriJSON">
+                    <div
+                      className="flex items-center px-3 py-1.5 cursor-pointer transition-colors select-none hover:bg-[#f0f8ff] hover:text-[#0066cc] [&>span]:text-[13px] [&>span]:whitespace-nowrap [&>span]:overflow-hidden [&>span]:text-ellipsis"
+                      onClick={() => handleMenuItemClick(() => onExport(item, "esrijson"))}
+                      title="Export as EsriJSON"
+                    >
                       <span>EsriJSON</span>
                     </div>
                   )}
@@ -203,25 +240,29 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({
 
           {/* Identify */}
           {onIdentify && isMenuItemVisible("sc-floating-menu-identify") && (
-            <div className="sc-mymaps-popup-item" onClick={() => handleMenuItemClick(() => onIdentify(item))} title="Identify feature properties">
+            <div
+              className="flex items-center px-3 py-1.5 cursor-pointer transition-colors select-none max-h-[25px] hover:bg-[#f0f8ff] hover:text-[#0066cc] [&>img]:mr-2 [&>img]:shrink-0 [&>span]:text-[13px] [&>span]:whitespace-nowrap [&>span]:overflow-hidden [&>span]:text-ellipsis"
+              onClick={() => handleMenuItemClick(() => onIdentify(item))}
+              title="Identify feature properties"
+            >
               <Image src="/images/identify.png" alt="Identify" width={16} height={16} />
               <span>Identify</span>
             </div>
           )}
 
           {/* Extension Items — render each group as a submenu */}
-          {extensionGroups.size > 0 && <div className="sc-mymaps-popup-separator" />}
+          {extensionGroups.size > 0 && <div className="h-px bg-[#e0e0e0] my-1" />}
           {Array.from(extensionGroups.entries()).map(([groupName, groupItems]) => {
             // Items without a group name render inline (flat)
             if (!groupName) {
               return groupItems.map((ext) => (
                 <div
                   key={ext.id}
-                  className="sc-mymaps-popup-item"
+                  className="flex items-center px-3 py-1.5 cursor-pointer transition-colors select-none max-h-[25px] hover:bg-[#f0f8ff] hover:text-[#0066cc] [&>span]:text-[13px] [&>span]:whitespace-nowrap [&>span]:overflow-hidden [&>span]:text-ellipsis"
                   onClick={() => handleMenuItemClick(() => ext.onClick(item))}
                   title={ext.label}
                 >
-                  {ext.icon && <span className="sc-mymaps-popup-ext-icon">{ext.icon}</span>}
+                  {ext.icon && <span className="inline-flex items-center justify-center w-4 h-4 shrink-0 text-[#555]">{ext.icon}</span>}
                   <span>{ext.label}</span>
                 </div>
               ));
@@ -231,24 +272,24 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({
             return (
               <div
                 key={`ext-group-${groupName}`}
-                className="sc-mymaps-popup-item sc-mymaps-popup-submenu-parent"
+                className="relative flex items-center justify-between px-3 py-1.5 cursor-pointer transition-colors select-none max-h-[25px] hover:bg-[#f0f8ff] hover:text-[#0066cc] [&>span]:text-[13px] [&>span]:whitespace-nowrap [&>span]:overflow-hidden [&>span]:text-ellipsis"
                 onMouseEnter={() => setOpenExtSubmenu(groupName)}
                 onMouseLeave={() => setOpenExtSubmenu(null)}
                 title={groupName}
               >
                 <span>{groupName}</span>
-                <span className="sc-mymaps-popup-arrow">▶</span>
+                <span className="text-[10px] text-[#999] ml-auto pl-2">▶</span>
 
                 {openExtSubmenu === groupName && (
-                  <div className="sc-mymaps-popup-submenu">
+                  <div className="absolute left-full top-0 bg-white border border-[#ccc] rounded shadow-[0_4px_12px_rgba(0,0,0,0.15)] min-w-[120px] z-[100000] animate-submenuFadeIn">
                     {groupItems.map((ext) => (
                       <div
                         key={ext.id}
-                        className="sc-mymaps-popup-item sc-mymaps-popup-submenu-item"
+                        className="flex items-center px-3 py-1.5 cursor-pointer transition-colors select-none hover:bg-[#f0f8ff] hover:text-[#0066cc] [&>span]:text-[13px] [&>span]:whitespace-nowrap [&>span]:overflow-hidden [&>span]:text-ellipsis"
                         onClick={() => handleMenuItemClick(() => ext.onClick(item))}
                         title={ext.label}
                       >
-                        {ext.icon && <span className="sc-mymaps-popup-ext-icon">{ext.icon}</span>}
+                        {ext.icon && <span className="inline-flex items-center justify-center w-4 h-4 shrink-0 text-[#555]">{ext.icon}</span>}
                         <span>{ext.label}</span>
                       </div>
                     ))}
@@ -260,7 +301,11 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({
 
           {/* Report a Problem */}
           {onReportProblem && isMenuItemVisible("sc-floating-menu-report-problem") && (
-            <div className="sc-mymaps-popup-item" onClick={() => handleMenuItemClick(() => onReportProblem(item))} title="Report a problem with this feature">
+            <div
+              className="flex items-center px-3 py-1.5 cursor-pointer transition-colors select-none max-h-[25px] hover:bg-[#f0f8ff] hover:text-[#0066cc] [&>img]:mr-2 [&>img]:shrink-0 [&>span]:text-[13px] [&>span]:whitespace-nowrap [&>span]:overflow-hidden [&>span]:text-ellipsis"
+              onClick={() => handleMenuItemClick(() => onReportProblem(item))}
+              title="Report a problem with this feature"
+            >
               <Image src="/images/error.png" alt="Report Problem" width={16} height={16} />
               <span>Report a Problem</span>
             </div>

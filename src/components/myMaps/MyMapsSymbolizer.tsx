@@ -7,7 +7,6 @@ import type { MyMapsItem } from "@/types/myMaps";
 import { useMyMapsStore } from "@/stores/myMapsStore";
 import { useEventStore } from "@/stores/eventStore";
 import { getPublicPath } from "@/utils/getPublicPath";
-import "@/components/myMaps/MyMapsSymbolizer.css";
 
 import ColorPicker from "./ColorPicker";
 import {
@@ -755,7 +754,7 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
   });
 
   if (!visible) {
-    return <div className="sc-hidden" />;
+    return <div className="hidden" />;
   }
 
   const rgbFill = `rgb(${state.fillColor.r},${state.fillColor.g},${state.fillColor.b})`;
@@ -766,13 +765,13 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
   const isCallout = item.drawType === "Callout";
 
   return (
-    <fieldset className="sc-fieldset">
-      <legend>
+    <fieldset className="border border-[#cecece] rounded-[3px] p-2 mb-[5px] bg-[#f9f9f9] w-full box-border m-0">
+      <legend className="text-sm font-bold text-[#333] py-[2px] px-1.5 bg-[#f9f9f9] border border-[#cecece] rounded-[3px] flex items-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={getPublicPath("/images/symbolizer.png")} alt="symbolizer" width={16} height={16} />
+        <img src={getPublicPath("/images/symbolizer.png")} alt="symbolizer" className="w-4 h-4 block mr-1" />
         Symbolizer
       </legend>
-      <div className="sc-mymaps-symbolizer-container">
+      <div className="mymaps-symbolizer-container grid grid-cols-[25px_45px_52px_1fr] content-center gap-y-[5px] gap-x-[2px] w-full box-border mymaps-symbolizer-slider">
         {/* POINT TYPE */}
         <PointType visible={isPoint} selectedPointStyleDropDown={state.selectedPointStyleDropDown} onPointStyleDropDown={onPointStyleDropDown} />
 
@@ -820,7 +819,7 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
         {/* LABEL STYLE SECTION */}
         {item.labelVisible && (
           <>
-            <div className="sc-mymaps-symbolizer-divider">Label Style</div>
+            <div className="col-span-full font-bold text-[11px] text-[#333] border-t border-[#cecece] pt-2 mt-[5px] mb-[3px]">Label Style</div>
 
             <LabelTextColor visible={true} textColor={state.labelStyle.textColor} onTextColorPickerButton={onTextColorPickerButton} />
 
@@ -833,7 +832,7 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
             {/* Callout-specific controls */}
             {item.drawType === "Callout" && (
               <>
-                <div className="sc-mymaps-symbolizer-divider">Callout Style</div>
+                <div className="col-span-full font-bold text-[11px] text-[#333] border-t border-[#cecece] pt-2 mt-[5px] mb-[3px]">Callout Style</div>
 
                 <CalloutBackgroundColor visible={true} backgroundColor={state.labelStyle.backgroundColor} onBackgroundColorPickerButton={onBackgroundColorPickerButton} />
 

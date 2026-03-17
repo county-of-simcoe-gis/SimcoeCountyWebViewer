@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { FaSignInAlt, FaSignOutAlt, FaSpinner } from "react-icons/fa";
-import "@/components/ProfileButton.css";
 
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0";
 
@@ -103,7 +102,7 @@ export default function ProfileButton() {
 
       {/* Dropdown Menu */}
       {isDropdownOpen && (
-        <div className="profile-dropdown absolute right-0 top-[52px] bg-white border border-gray-300 shadow-lg rounded-b-md min-w-[220px] z-50">
+        <div className="animate-dropdownFadeIn absolute right-0 top-[52px] bg-white border border-gray-300 shadow-lg rounded-b-md min-w-[220px] z-50">
           {/* User Info Section */}
           <div className="px-4 py-3 border-b border-gray-200">
             <div className="flex items-center gap-3">

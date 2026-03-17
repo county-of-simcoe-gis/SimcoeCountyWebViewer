@@ -8,7 +8,7 @@ import { OLDataType } from "@/utils/openlayers/types";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
-import "@/components/BasemapSwitcher.css";
+import "@/styles/rc-slider-basemap.css";
 import { Layer } from "ol/layer";
 import { FaCog } from "react-icons/fa";
 import Image from "next/image";
@@ -801,15 +801,27 @@ export default function BasemapSwitcher() {
 
   return (
     <>
-      <div id="sc-basemap-main-container" className={!map ? "sc-hidden" : ""}>
-        <div className="sc-basemap-image-container">
-          <button className="sc-basemap-image-button" onClick={onBasemapImageClick} title={`Click to select ${getCurrentBasemapName()}`}>
-            <Image src={getCurrentBasemapImage()} alt={getCurrentBasemapName()} width={48} height={48} className="sc-basemap-current-image" style={{ width: "48px", height: "48px" }} />
+      <div
+        id="sc-basemap-main-container"
+        className={`absolute right-[2px] top-0 w-[60px] bg-white border border-[#ccc] p-[2px] opacity-90 rounded z-[2] outline-none hover:opacity-100${!map ? " hidden" : ""}`}
+      >
+        <div className="relative">
+          <button
+            className="border-none bg-transparent p-0 cursor-pointer outline-none block"
+            style={{ width: "100%", height: "auto", borderRadius: 0, margin: 0 }}
+            onClick={onBasemapImageClick}
+            title={`Click to select ${getCurrentBasemapName()}`}
+          >
+            <Image src={getCurrentBasemapImage()} alt={getCurrentBasemapName()} width={56} height={39} className="block" style={{ width: "100%", height: "auto", borderRadius: 0 }} />
           </button>
 
           {/* Settings button overlaid on top of image for imagery */}
           {activeButton === "imagery" && (
-            <button className="sc-basemap-settings-overlay" onClick={onSettingsClick} title="Imagery Settings">
+            <button
+              className="absolute -bottom-0.5 -right-[3px] !bg-[#e0e0e0] !border !border-black rounded-sm cursor-pointer !p-px flex items-center justify-center text-[#333] transition-all duration-200 !w-3 !h-3 z-[3] hover:bg-[#d0d0d0] hover:text-black hover:scale-110"
+              onClick={onSettingsClick}
+              title="Imagery Settings"
+            >
               <FaCog size={8} />
             </button>
           )}
@@ -817,9 +829,11 @@ export default function BasemapSwitcher() {
       </div>
 
       {/* Imagery Slider Panel */}
-      <div className={`sc-basemap-imagery-slider-container${!imageryPanelOpen ? " sc-hidden" : ""}`}>
-        <label className="sc-basemap-streets-label">
-          <input className="sc-basemap-streets-checkbox" type="checkbox" checked={streetsCheckbox} onChange={onStreetsCheckbox} />
+      <div
+        className={`basemap-slider-container absolute right-[2px] w-[88px] h-[280px] top-[45px] bg-white rounded z-[2] border border-[#ccc] p-2 opacity-90 select-none transition-opacity duration-200 hover:opacity-100${!imageryPanelOpen ? " hidden" : ""}`}
+      >
+        <label className="block text-[8pt] ml-2.5 pb-[5px] pt-0">
+          <input className="w-[13px] h-[13px] p-0 m-0 align-middle relative -top-px scale-110" type="checkbox" checked={streetsCheckbox} onChange={onStreetsCheckbox} />
           &nbsp;Streets
         </label>
 
@@ -827,11 +841,17 @@ export default function BasemapSwitcher() {
       </div>
 
       {/* Topo Options Panel */}
-      <div className={`sc-basemap-topo-options-container${!topoPanelOpen ? " sc-hidden" : ""}`}>
+      <div
+        className={`absolute right-[2px] w-[120px] top-[47px] bg-white rounded z-[2] border border-[#ccc] p-1 opacity-90 select-none transition-opacity duration-200 flex flex-col gap-1.5 max-h-[400px] overflow-y-auto hover:opacity-100${!topoPanelOpen ? " hidden" : ""}`}
+      >
         {/* Imagery Option */}
-        <div className={`sc-basemap-topo-item-container${activeButton === "imagery" ? " active" : ""}`} onClick={onImagerySelect} title="Imagery">
-          <div className="sc-basemap-topo-item-title">Imagery</div>
-          <Image className="sc-basemap-topo-image" src="/images/imagery-basemap.png" alt="Imagery" width={80} height={60} />
+        <div
+          className={`p-0 border border-[#ccc] rounded cursor-pointer bg-[#f9f9f9] transition-all duration-200 flex flex-col items-center text-center min-h-[70px] hover:bg-[#e5f3ff] hover:border-[#80b9ff] hover:shadow-[0_0_3px_#80b9ff]${activeButton === "imagery" ? " bg-[#d4edda] !border-[#28a745] text-[#155724] shadow-[0_0_3px_#28a745]" : ""}`}
+          onClick={onImagerySelect}
+          title="Imagery"
+        >
+          <div className="text-[9px] font-bold mb-0 text-inherit whitespace-nowrap overflow-hidden text-ellipsis w-full">Imagery</div>
+          <Image className="rounded-[3px] border border-[#ddd] object-cover max-w-[72px] max-h-[50px]" src="/images/imagery-basemap.png" alt="Imagery" width={80} height={60} />
         </div>
 
         {/* Topo Services */}
@@ -839,12 +859,12 @@ export default function BasemapSwitcher() {
           config.topoServices?.map((service) => (
             <div
               key={service.name}
-              className={`sc-basemap-topo-item-container${selectedTopoService?.name === service.name && activeButton === "topo" ? " active" : ""}`}
+              className={`p-0 border border-[#ccc] rounded cursor-pointer bg-[#f9f9f9] transition-all duration-200 flex flex-col items-center text-center min-h-[70px] hover:bg-[#e5f3ff] hover:border-[#80b9ff] hover:shadow-[0_0_3px_#80b9ff]${selectedTopoService?.name === service.name && activeButton === "topo" ? " bg-[#d4edda] !border-[#28a745] text-[#155724] shadow-[0_0_3px_#28a745]" : ""}`}
               onClick={() => onTopoServiceSelect(service)}
               title={service.name}
             >
-              <div className="sc-basemap-topo-item-title">{service.name}</div>
-              <Image className="sc-basemap-topo-image" src={`/images/${service.image}`} alt={service.name} width={80} height={60} />
+              <div className="text-[9px] font-bold mb-0 text-inherit whitespace-nowrap overflow-hidden text-ellipsis w-full">{service.name}</div>
+              <Image className="rounded-[3px] border border-[#ddd] object-cover max-w-[72px] max-h-[50px]" src={`/images/${service.image}`} alt={service.name} width={80} height={60} />
             </div>
           ))}
       </div>

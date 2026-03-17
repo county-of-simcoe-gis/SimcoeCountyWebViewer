@@ -38,6 +38,7 @@ export default function RootLayout({
             <UrlParameterProvider>
               {children}
               <ToastContainer />
+              <div id="datepicker-portal" className="z-[1100] relative" />
             </UrlParameterProvider>
           </ArcGISAuthProvider>
         </AuthProvider>

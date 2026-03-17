@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import "@/components/common/URLModal.css";
 
 interface URLModalProps {
   url: string;
@@ -47,34 +46,34 @@ const URLModal: React.FC<URLModalProps> = ({ url, title = "External Content", is
   }
 
   const modalContent = (
-    <div className="sc-url-modal-overlay">
-      <div className="sc-url-modal" ref={modalRef} style={{ width, height }}>
-        <div className="sc-url-modal-header">
-          <h3 className="sc-url-modal-title">{title}</h3>
-          <button className="sc-url-modal-close-btn" onClick={onClose} title="Close" type="button">
+    <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[10000] p-5">
+      <div className="bg-white rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.3)] flex flex-col relative overflow-hidden max-w-[95vw] max-h-[95vh]" ref={modalRef} style={{ width, height }}>
+        <div className="flex justify-between items-center px-5 py-4 border-b border-base-300 bg-base-200 shrink-0">
+          <h3 className="m-0 text-lg font-semibold text-base-content max-w-[calc(100%-40px)] overflow-hidden text-ellipsis whitespace-nowrap">{title}</h3>
+          <button className="btn btn-sm btn-ghost btn-circle text-2xl" onClick={onClose} title="Close" type="button">
             ×
           </button>
         </div>
-        <div className="sc-url-modal-body">
+        <div className="flex-1 relative overflow-hidden bg-base-200">
           {isLoading && (
-            <div className="sc-url-modal-loading">
-              <div className="sc-url-modal-spinner"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-3 text-base-content/60 z-[1]">
+              <span className="loading loading-spinner loading-md text-primary"></span>
               <span>Loading...</span>
             </div>
           )}
           <iframe
             src={url}
-            className={`sc-url-modal-iframe ${isLoading ? "sc-url-modal-iframe-loading" : ""}`}
+            className={`w-full h-full border-none bg-white transition-opacity duration-300 ${isLoading ? "opacity-0" : ""}`}
             title={title}
             onLoad={handleIframeLoad}
             sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads"
           />
         </div>
-        <div className="sc-url-modal-footer">
-          <button className="sc-url-modal-btn sc-url-modal-btn-secondary" onClick={() => window.open(url, "_blank")} type="button">
+        <div className="px-5 py-4 border-t border-base-300 bg-base-200 flex justify-end gap-3 shrink-0">
+          <button className="btn btn-sm btn-ghost" onClick={() => window.open(url, "_blank")} type="button">
             Open in New Tab
           </button>
-          <button className="sc-url-modal-btn sc-url-modal-btn-primary" onClick={onClose} type="button">
+          <button className="btn btn-sm btn-primary" onClick={onClose} type="button">
             Close
           </button>
         </div>

@@ -16,7 +16,7 @@ export function glowContainer(id: string, color = 'blue'): void {
   const elem = document.getElementById(id);
   if (!elem) return;
   
-  const className = `sc-glow-container-${color}`;
+  const className = `glow-container-${color}`;
   elem.classList.add(className);
   setTimeout(() => {
     elem.classList.remove(className);

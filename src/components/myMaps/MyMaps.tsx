@@ -20,7 +20,6 @@ import type { MyMapsItem as MyMapsItemType } from "@/types/myMaps";
 import { Feature } from "ol";
 import GeoJSON from "ol/format/GeoJSON";
 import Geometry from "ol/geom/Geometry";
-import "@/components/myMaps/MyMaps.css";
 
 interface MyMapsProps {
   visible?: boolean;
@@ -100,7 +99,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
       console.log("Buffer feature:", item.id);
       emit("mymap-buffer", { item });
     },
-    [emit]
+    [emit],
   );
 
   const handleSymbolize = useCallback(
@@ -108,7 +107,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
       console.log("Symbolize feature:", item.id);
       emit("mymap-symbolize", { item });
     },
-    [emit]
+    [emit],
   );
 
   const handleMeasure = useCallback(
@@ -116,7 +115,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
       console.log("Measure feature:", item.id);
       emit("mymap-measure", { item });
     },
-    [emit]
+    [emit],
   );
 
   const handleZoomTo = useCallback(
@@ -125,7 +124,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
       // Emit event for the service to handle the zoom operation
       emit("mymap-zoom-to", { item });
     },
-    [emit]
+    [emit],
   );
 
   const handleDeleteFromPopup = useCallback(
@@ -135,7 +134,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
       handleClosePopup();
       emit("mymap-item-deleted", { id: item.id });
     },
-    [removeItem, handleClosePopup, emit]
+    [removeItem, handleClosePopup, emit],
   );
 
   const handleShowGeometry = useCallback(
@@ -160,7 +159,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
       setIsGeometryModalOpen(true);
       emit("mymap-show-geometry", { item });
     },
-    [emit]
+    [emit],
   );
 
   const handleCloseGeometryModal = useCallback(() => {
@@ -245,7 +244,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
       }
       emit("mymap-export-feature", { item, format });
     },
-    [emit]
+    [emit],
   );
 
   // Helper function to convert GeoJSON geometry to KML geometry
@@ -315,7 +314,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
         console.error("Error identifying MyMaps feature:", error);
       }
     },
-    [emit, setReport, openSidebar, setActiveTab]
+    [emit, setReport, openSidebar, setActiveTab],
   );
 
   const handleReportProblem = useCallback(
@@ -370,7 +369,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
         alert("Error occurred while preparing the report. Please try again.");
       }
     },
-    [map, config, saveToApi, emit]
+    [map, config, saveToApi, emit],
   );
 
   const handleCloseReportProblemModal = useCallback(() => {
@@ -383,14 +382,14 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
     (item: MyMapsItemType) => {
       emit("mymap-item-hover-start", { item });
     },
-    [emit]
+    [emit],
   );
 
   const handleItemHoverEnd = useCallback(
     (item: MyMapsItemType) => {
       emit("mymap-item-hover-end", { item });
     },
-    [emit]
+    [emit],
   );
 
   // Handle item label changes
@@ -429,7 +428,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
         emit("mymap-items-imported", { count: items.length });
       }
     },
-    [importItems, items.length, emit]
+    [importItems, items.length, emit],
   );
 
   // Utility function to create feature from GeoJSON
@@ -465,7 +464,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
         });
       }
     },
-    [map]
+    [map],
   );
 
   // Show message function (simplified version)
@@ -611,7 +610,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
   }
 
   return (
-    <div className="sc-mymaps-container">
+    <div className="flex flex-col h-full bg-white rounded overflow-visible relative z-[10000]">
       {/* Drawing Tools */}
       <ButtonBar isEditing={isEditing} />
 
@@ -664,12 +663,12 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
       <URLModal url={reportProblemUrl} title="Report a Problem" isOpen={isReportProblemModalOpen} onClose={handleCloseReportProblemModal} width="90vw" height="80vh" />
 
       {/* Status info */}
-      <div className="sc-mymaps-status">
-        <div className="sc-mymaps-status-item">
+      <div className="flex flex-wrap gap-3 py-1.5 px-3 bg-[#f1f3f4] border-t border-[#dee2e6] text-[11px] text-[#6c757d] mt-auto">
+        <div className="flex items-center gap-1">
           Active Tool: <strong>{drawType}</strong>
         </div>
-        <div className="sc-mymaps-status-item">
-          Color: <span className="sc-mymaps-status-color" style={{ backgroundColor: drawColor }} />
+        <div className="flex items-center gap-1">
+          Color: <span className="w-3 h-3 border border-[#ccc] rounded-sm inline-block" style={{ backgroundColor: drawColor }} />
         </div>
       </div>
     </div>

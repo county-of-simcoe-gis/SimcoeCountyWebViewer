@@ -4,7 +4,6 @@ import React, { useState, useCallback } from "react";
 import { IdentifyFeature } from "./Identify";
 import { useMapStore } from "@/stores/mapStore";
 import Image from "next/image";
-import "@/components/Identify/Identify.css";
 
 interface IdentifyFeatureItemProps {
   featureItem: IdentifyFeature;
@@ -53,15 +52,15 @@ const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ feat
     });
 
     if (keys.length === 0) {
-      return <div className="sc-identify-no-attributes">No attributes found</div>;
+      return <div className="p-2.5 text-center text-[#999] italic">No attributes found</div>;
     }
 
     return (
-      <div className="sc-identify-feature-attributes">
+      <div className="flex flex-col gap-2">
         {keys.map((key) => (
-          <div key={key} className="sc-identify-feature-row">
-            <div className="sc-identify-feature-label">{formatFieldName(key)}:</div>
-            <div className="sc-identify-feature-value">{formatFieldValue(props[key])}</div>
+          <div key={key} className="grid grid-cols-[140px_1fr] gap-2.5 py-[5px] border-b border-[#f0f0f0] last:border-b-0 max-[768px]:grid-cols-1 max-[768px]:gap-1">
+            <div className="font-semibold text-[#555] break-words max-[768px]:text-[11px]">{formatFieldName(key)}:</div>
+            <div className="text-[#333] break-words max-[768px]:text-[11px] max-[768px]:pl-2.5">{formatFieldValue(props[key])}</div>
           </div>
         ))}
       </div>
@@ -72,18 +71,26 @@ const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ feat
   const hasGeom = feature.getGeometry() !== undefined && feature.getGeometry() !== null;
 
   return (
-    <div className="sc-identify-feature-container">
-      <div className="sc-identify-feature-header">
-        <div className="sc-identify-feature-header-label" onClick={() => setOpen(!open)}>
+    <div className="mb-2.5 border border-[#e0e0e0] rounded-[3px] overflow-hidden">
+      <div className="bg-[#fafafa] py-2 px-2.5 flex justify-between items-center border-b border-[#e0e0e0]">
+        <div className="flex-1 cursor-pointer font-medium text-xs hover:text-[#007bff]" onClick={() => setOpen(!open)}>
           {formatFieldName(displayName)}: {featureName}
         </div>
         {hasGeom && (
-          <div className="sc-identify-feature-actions">
-            <Image src="/images/toc/zoom-in.png" width={16} height={16} alt="Zoom" className="sc-identify-feature-header-img" onClick={onZoomClick} title="Zoom to feature" />
+          <div className="flex gap-2 items-center">
+            <Image
+              src="/images/toc/zoom-in.png"
+              width={16}
+              height={16}
+              alt="Zoom"
+              className="cursor-pointer opacity-70 transition-opacity hover:opacity-100"
+              onClick={onZoomClick}
+              title="Zoom to feature"
+            />
           </div>
         )}
       </div>
-      <div className={open ? "sc-identify-feature-content" : "sc-hidden"}>{renderFeatureContent()}</div>
+      <div className={open ? "p-2.5 bg-white" : "hidden"}>{renderFeatureContent()}</div>
     </div>
   );
 };

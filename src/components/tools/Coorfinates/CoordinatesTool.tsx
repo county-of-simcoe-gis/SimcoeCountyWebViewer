@@ -6,7 +6,6 @@
  * Displays live coordinates, allows coordinate input/conversion, and shows map extent/scale
  */
 
-import "@/components/tools/Coorfinates/CoordinatesTool.css";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { FaCrosshairs, FaSearchPlus, FaMapMarkerAlt, FaCopy } from "react-icons/fa";
 import PanelComponent from "@/components/PanelComponent";

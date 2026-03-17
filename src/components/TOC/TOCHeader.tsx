@@ -3,7 +3,6 @@
 import React from "react";
 import { FaQuestionCircle } from "react-icons/fa";
 import TOCSettingsControl from "@/components/TOC/TOCSettingsControl";
-import "@/components/TOC/TOCHeader.css";
 
 interface TOCHeaderProps {
   tocType: "LIST" | "FOLDER";
@@ -47,12 +46,22 @@ export default function TOCHeader({
   };
 
   return (
-    <div className="sc-toc-header">
+    <div className="flex items-center p-[5px] bg-[#f5f5f5] border-b border-[#ddd] gap-[5px] font-[Verdana,Arial,sans-serif] text-[9pt]">
       {/* Search Input */}
-      <div className="sc-toc-search-container">
-        <input className="sc-toc-search" type="text" placeholder={`Search ${layerCount} Layers...`} value={searchText} onChange={handleSearchInput} />
+      <div className="flex-1 relative">
+        <input
+          className="w-full py-[3px] pr-5 pl-[5px] border border-[#ccc] rounded-[3px] font-[Verdana,Arial,sans-serif] text-[9pt] bg-white focus:outline-1 focus:outline-primary focus:border-primary"
+          type="text"
+          placeholder={`Search ${layerCount} Layers...`}
+          value={searchText}
+          onChange={handleSearchInput}
+        />
         {searchText && (
-          <button className="sc-toc-search-clear" onClick={() => onSearchChange("")} title="Clear search">
+          <button
+            className="absolute right-[5px] top-1/2 -translate-y-1/2 bg-transparent border-none text-base text-[#999] cursor-pointer w-4 h-4 flex items-center justify-center hover:text-[#666]"
+            onClick={() => onSearchChange("")}
+            title="Clear search"
+          >
             ×
           </button>
         )}
@@ -74,16 +83,16 @@ export default function TOCHeader({
       />
 
       {/* Help Button */}
-      <div className="sc-toc-help-container">
-        <a href={helpLink} target="_blank" rel="noopener noreferrer" className="sc-toc-help-button" title="Layer Help">
+      <div className="flex items-center">
+        <a href={helpLink} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-5 h-5 no-underline rounded-[3px] hover:bg-[#e0e0e0]" title="Layer Help">
           <FaQuestionCircle size={16} />
         </a>
       </div>
 
       {/* Loading Indicator */}
       {isLoading && (
-        <div className="sc-toc-loading">
-          <div className="sc-toc-loading-spinner"></div>
+        <div className="flex items-center justify-center ml-[5px]">
+          <div className="w-4 h-4 border-2 border-[#f3f3f3] border-t-[#3498db] rounded-full animate-spin"></div>
         </div>
       )}
     </div>

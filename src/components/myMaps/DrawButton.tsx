@@ -2,7 +2,6 @@
 
 import React from "react";
 import Image from "next/image";
-import "@/components/myMaps/DrawButton.css";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
@@ -30,7 +29,7 @@ const DrawButton: React.FC<DrawButtonProps> = ({ title, imageName, onClick, isAc
 
   return (
     <div
-      className={`sc-mymaps-draw-button ${isActive ? "active" : ""} ${disabled ? "disabled" : ""}`}
+      className={`flex items-center justify-center w-7 h-7 border border-[#ccc] bg-white rounded-[3px] cursor-pointer transition-all select-none hover:bg-[#f0f0f0] hover:border-[#999] focus:outline-2 focus:outline-[#007bff] focus:outline-offset-[1px] ${isActive ? "!bg-[#007bff] !border-[#0056b3] text-white hover:!bg-[#0056b3]" : ""} ${disabled ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
       title={title}
       onClick={handleClick}
       role="button"
@@ -42,7 +41,7 @@ const DrawButton: React.FC<DrawButtonProps> = ({ title, imageName, onClick, isAc
         }
       }}
     >
-      <Image src={imageSrc} alt={title} width={20} height={20} className="sc-mymaps-draw-button-image" unoptimized={isUnoptimized} />
+      <Image src={imageSrc} alt={title} width={20} height={20} className={`w-4 h-4 object-contain ${isActive ? "brightness-0 invert" : ""}`} unoptimized={isUnoptimized} />
     </div>
   );
 };

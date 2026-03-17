@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import "./Identify.css";
 import { GeoJSON, WKT, EsriJSON } from "ol/format";
 import Feature from "ol/Feature";
 import Geometry from "ol/geom/Geometry";
@@ -411,27 +410,27 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
   }, [map, getAllLayers]);
 
   return (
-    <div className="sc-identify-container-wrapper">
-      <button className="sc-button sc-identify-clear-button" onClick={clearIdentify}>
+    <div className="p-2.5 text-xs h-full overflow-y-auto">
+      <button className="mb-2.5 w-full py-2 bg-[#007bff] text-white border-none rounded cursor-pointer text-xs hover:bg-[#0056b3]" onClick={clearIdentify}>
         Clear Results
       </button>
 
       {/* Debug Info */}
       {debugInfo && (
-        <div className="sc-identify-debug-info">
+        <div className="mb-2.5 p-2 bg-[#f8f9fa] border border-[#dee2e6] rounded text-[11px] text-[#495057]">
           <div>
             <strong>Layers:</strong> {debugInfo.total} total, {debugInfo.visible} visible, {debugInfo.queryable} queryable
           </div>
-          {debugInfo.visible === 0 && <div style={{ color: "#ff6b6b", marginTop: "5px", fontSize: "11px" }}>⚠️ No visible layers found. Turn on some layers to use identify.</div>}
+          {debugInfo.visible === 0 && <div className="text-[#ff6b6b] mt-[5px] text-[11px]">⚠️ No visible layers found. Turn on some layers to use identify.</div>}
         </div>
       )}
 
-      <div className={layers.length === 0 && !isLoading ? "sc-identify-loading" : "sc-hidden"}>No features were selected. Please try again.</div>
-      <div className={isLoading ? "sc-identify-loading" : "sc-hidden"}>
-        <div className="sc-identify-spinner" />
+      <div className={layers.length === 0 && !isLoading ? "flex flex-col items-center justify-center p-5 text-[#666] text-xs" : "hidden"}>No features were selected. Please try again.</div>
+      <div className={isLoading ? "flex flex-col items-center justify-center p-5 text-[#666] text-xs" : "hidden"}>
+        <div className="border-[3px] border-[#f3f3f3] border-t-[#007bff] rounded-full w-[30px] h-[30px] animate-spin mb-2.5" />
         <div>Loading...</div>
       </div>
-      <div className={layers.length === 0 ? "sc-hidden" : "sc-identify-container"}>
+      <div className={layers.length === 0 ? "hidden" : "mt-2.5"}>
         {layers.map((layer, idx) => (
           <IdentifyLayer key={`${layer.name}-${idx}`} layer={layer} expanded={layers.length <= 5} />
         ))}

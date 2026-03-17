@@ -2,7 +2,7 @@
 /* These styles are required for OpenLayers overlay positioning */
 
 /* Help tooltip for map overlay */
-.sc-measure-tooltip-help {
+.measure-tooltip-help {
   position: relative;
   background: rgba(0, 0, 0, 0.7);
   border-radius: 4px;
@@ -13,7 +13,7 @@
   pointer-events: none;
 }
 
-.sc-measure-tooltip-help::before {
+.measure-tooltip-help::before {
   border-top: 6px solid rgba(0, 0, 0, 0.7);
   border-right: 6px solid transparent;
   border-left: 6px solid transparent;
@@ -25,7 +25,7 @@
 }
 
 /* Measure tooltip for map overlay */
-.sc-measure-tooltip {
+.measure-tooltip {
   position: relative;
   background: rgba(0, 0, 0, 0.8);
   border-radius: 4px;
@@ -37,7 +37,7 @@
   pointer-events: none;
 }
 
-.sc-measure-tooltip::before {
+.measure-tooltip::before {
   border-top: 6px solid rgba(0, 0, 0, 0.8);
   border-right: 6px solid transparent;
   border-left: 6px solid transparent;
@@ -46,9 +46,4 @@
   bottom: -6px;
   margin-left: -6px;
   left: 50%;
-}
-
-/* Hidden utility class for tooltips */
-.sc-hidden {
-  display: none !important;
 }

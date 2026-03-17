@@ -20,7 +20,6 @@ import MyMapsBuffer from "@/components/myMaps/MyMapsBuffer";
 import MyMapsSymbolizer from "@/components/myMaps/MyMapsSymbolizer";
 import MyMapsMeasure from "@/components/myMaps/MyMapsMeasure";
 import FooterButtons from "@/components/myMaps/FooterButtons";
-import "@/components/myMaps/DrawingOptionsPopup.css";
 
 interface DrawingOptionsPopupProps {
   item: MyMapsItemType | null;
@@ -92,7 +91,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
   // Helper function to extract current color from DOM color button
   const extractColorFromDOMButton = useCallback(
     (buttonId: string): { r: number; g: number; b: number } => {
-      const symbolizerContainer = overlayElementRef.current?.querySelector(".sc-mymaps-symbolizer-container");
+      const symbolizerContainer = overlayElementRef.current?.querySelector(".mymaps-symbolizer-container");
       const colorButton = symbolizerContainer?.querySelector(`#${buttonId}`) as HTMLButtonElement;
 
       if (colorButton && colorButton.style.backgroundColor) {
@@ -570,7 +569,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       console.log("🎯 Updating symbolizer point type:", { itemId, newPointType });
 
       // CRITICAL FIX: Get ALL current values from DOM to preserve all current settings
-      const symbolizerContainer = overlayElementRef.current?.querySelector(".sc-mymaps-symbolizer-container");
+      const symbolizerContainer = overlayElementRef.current?.querySelector(".mymaps-symbolizer-container");
       const strokeStyleSelect = symbolizerContainer?.querySelector("select[name='pointOutline']") as HTMLSelectElement;
       const currentStrokeType = strokeStyleSelect ? strokeStyleSelect.value : item.strokeType || "normal";
 
@@ -637,7 +636,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       console.log("🎯 Updating symbolizer fill color:", { itemId, newColor });
 
       // CRITICAL FIX: Get current dropdown values AND slider values from DOM to preserve all current settings
-      const symbolizerContainer = overlayElementRef.current?.querySelector(".sc-mymaps-symbolizer-container");
+      const symbolizerContainer = overlayElementRef.current?.querySelector(".mymaps-symbolizer-container");
       const pointStyleSelect = symbolizerContainer?.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
       const currentPointType = pointStyleSelect ? pointStyleSelect.value : item.pointType || "circle";
 
@@ -720,7 +719,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       console.log("🎯 Updating symbolizer stroke color:", { itemId, newColor });
 
       // CRITICAL FIX: Get current dropdown values AND slider values from DOM to preserve all current settings
-      const symbolizerContainer = overlayElementRef.current?.querySelector(".sc-mymaps-symbolizer-container");
+      const symbolizerContainer = overlayElementRef.current?.querySelector(".mymaps-symbolizer-container");
       const pointStyleSelect = symbolizerContainer?.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
       const currentPointType = pointStyleSelect ? pointStyleSelect.value : item.pointType || "circle";
 
@@ -802,7 +801,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
 
       console.log("🎯 Updating symbolizer fill opacity for", item.geometryType, ":", { itemId, newOpacity });
 
-      const symbolizerContainer = overlayElementRef.current?.querySelector(".sc-mymaps-symbolizer-container");
+      const symbolizerContainer = overlayElementRef.current?.querySelector(".mymaps-symbolizer-container");
       const state = getCurrentSymbolizerState();
       if (!state) return;
 
@@ -900,7 +899,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
 
       console.log("🎯 Updating symbolizer stroke opacity for", item.geometryType, ":", { itemId, newOpacity });
 
-      const symbolizerContainer = overlayElementRef.current?.querySelector(".sc-mymaps-symbolizer-container");
+      const symbolizerContainer = overlayElementRef.current?.querySelector(".mymaps-symbolizer-container");
       const state = getCurrentSymbolizerState();
       if (!state) return;
 
@@ -1087,14 +1086,6 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
 
       colorPicker.innerHTML = pickerHTML;
 
-      // Position picker near the button
-      const buttonRect = (event.target as HTMLElement).getBoundingClientRect();
-      colorPicker.style.left = `${buttonRect.left}px`;
-      colorPicker.style.top = `${buttonRect.bottom + 5}px`;
-
-      // Add to page
-      document.body.appendChild(colorPicker);
-
       // Map color type to button ID for updating button background
       const colorTypeToButtonId: Record<ColorType, string> = {
         fill: "sc-mymaps-symbolizer-color-button",
@@ -1107,73 +1098,160 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         anchorColor: "sc-mymaps-symbolizer-callout-anchor-color-button",
       };
 
-      // Handle color selection
-      const handleColorClick = (colorEvent: Event) => {
-        const colorElement = colorEvent.target as HTMLElement;
-        const selectedColor = colorElement.getAttribute("data-color");
-
-        if (selectedColor) {
-          const rgbColor = hexToRgbObject(selectedColor);
-
-          // Update button color immediately
-          const buttonId = colorTypeToButtonId[colorType];
-          const targetButton = overlayElementRef.current?.querySelector(`#${buttonId}`) as HTMLButtonElement;
-          if (targetButton) {
-            targetButton.style.backgroundColor = selectedColor;
-          }
-
-          // Get the CURRENT item from store to avoid stale closure issues
-          const currentItems = useMyMapsStore.getState().items;
-          const currentItem = currentItems.find((i) => i.id === item?.id);
-          if (!currentItem) return;
-
-          // Update the style based on color type
-          if (colorType === "fill") {
-            updateSymbolizerFillColor(currentItem.id, { r: rgbColor.r, g: rgbColor.g, b: rgbColor.b });
-          } else if (colorType === "stroke") {
-            updateSymbolizerStrokeColor(currentItem.id, { r: rgbColor.r, g: rgbColor.g, b: rgbColor.b });
-          } else {
-            // Handle label/callout colors
-            // Get current labelStyle from CURRENT item (not stale closure), merged with defaults
-            const defaultLabelStyle = getDefaultLabelStyle(currentItem.drawType);
-            const currentLabelStyle = {
-              ...defaultLabelStyle,
-              ...((currentItem.labelStyle as Record<string, unknown>) || {}),
-            };
-
-            // Map our colorType to the labelStyle property names
-            const labelStylePropertyMap: Record<string, string> = {
-              textColor: "textColor",
-              labelOutlineColor: "outlineColor",
-              backgroundColor: "backgroundColor",
-              borderColor: "borderColor",
-              lineColor: "lineColor",
-              anchorColor: "anchorColor",
-            };
-
-            const propertyName = labelStylePropertyMap[colorType];
-            if (propertyName) {
-              const updatedLabelStyle = {
-                ...currentLabelStyle,
-                [propertyName]: selectedColor,
-              };
-
-              console.log("🏷️ Updating label style via DOM color picker:", { colorType, propertyName, selectedColor, updatedLabelStyle });
-              updateItem(currentItem.id, { labelStyle: updatedLabelStyle });
-              emit("mymap-label-style-change", { id: currentItem.id, labelStyle: updatedLabelStyle });
-            }
+      // Get current color from the button
+      const currentButtonColor = (() => {
+        const buttonId = colorTypeToButtonId[colorType];
+        const btn = overlayElementRef.current?.querySelector(`#${buttonId}`) as HTMLButtonElement;
+        if (btn?.style.backgroundColor) {
+          const rgbMatch = btn.style.backgroundColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+          if (rgbMatch) {
+            const r = parseInt(rgbMatch[1]).toString(16).padStart(2, "0");
+            const g = parseInt(rgbMatch[2]).toString(16).padStart(2, "0");
+            const b = parseInt(rgbMatch[3]).toString(16).padStart(2, "0");
+            return `#${r}${g}${b}`.toUpperCase();
           }
         }
+        return "#000000";
+      })();
 
-        // Remove picker
-        colorPicker.remove();
+      // Add hex/RGB inputs section
+      const inputsSection = document.createElement("div");
+      inputsSection.style.cssText = "margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee;";
+      inputsSection.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #666;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <div id="sc-sym-picker-color-display" style="width: 16px; height: 16px; background-color: ${currentButtonColor}; border: 1px solid #ddd; border-radius: 3px;"></div>
+            <input id="sc-sym-picker-hex" type="text" value="${currentButtonColor}" style="width: 70px; font-size: 11px; border: 1px solid #ddd; border-radius: 2px; padding: 3px 5px; font-weight: bold;" />
+          </div>
+          <div style="display: flex; gap: 4px; align-items: center;">
+            <span style="display: flex; align-items: center; gap: 2px;">R <input id="sc-sym-picker-r" type="number" min="0" max="255" value="${hexToRgbObject(currentButtonColor).r}" style="width: 45px; font-size: 11px; border: 1px solid #ddd; border-radius: 2px; padding: 3px 5px; text-align: center;"></span>
+            <span style="display: flex; align-items: center; gap: 2px;">G <input id="sc-sym-picker-g" type="number" min="0" max="255" value="${hexToRgbObject(currentButtonColor).g}" style="width: 45px; font-size: 11px; border: 1px solid #ddd; border-radius: 2px; padding: 3px 5px; text-align: center;"></span>
+            <span style="display: flex; align-items: center; gap: 2px;">B <input id="sc-sym-picker-b" type="number" min="0" max="255" value="${hexToRgbObject(currentButtonColor).b}" style="width: 45px; font-size: 11px; border: 1px solid #ddd; border-radius: 2px; padding: 3px 5px; text-align: center;"></span>
+          </div>
+        </div>
+      `;
+      colorPicker.appendChild(inputsSection);
+
+      // Helper to apply a color selection to the symbolizer
+      const applyColorSelection = (selectedColor: string) => {
+        const rgbColor = hexToRgbObject(selectedColor);
+
+        // Update button color immediately
+        const buttonId = colorTypeToButtonId[colorType];
+        const targetButton = overlayElementRef.current?.querySelector(`#${buttonId}`) as HTMLButtonElement;
+        if (targetButton) {
+          targetButton.style.backgroundColor = selectedColor;
+        }
+
+        // Update color display in picker
+        const display = colorPicker.querySelector("#sc-sym-picker-color-display") as HTMLElement;
+        if (display) display.style.backgroundColor = selectedColor;
+
+        // Get the CURRENT item from store to avoid stale closure issues
+        const currentItems = useMyMapsStore.getState().items;
+        const currentItem = currentItems.find((i) => i.id === item?.id);
+        if (!currentItem) return;
+
+        // Update the style based on color type
+        if (colorType === "fill") {
+          updateSymbolizerFillColor(currentItem.id, { r: rgbColor.r, g: rgbColor.g, b: rgbColor.b });
+        } else if (colorType === "stroke") {
+          updateSymbolizerStrokeColor(currentItem.id, { r: rgbColor.r, g: rgbColor.g, b: rgbColor.b });
+        } else {
+          // Handle label/callout colors
+          const defaultLabelStyle = getDefaultLabelStyle(currentItem.drawType);
+          const currentLabelStyle = {
+            ...defaultLabelStyle,
+            ...((currentItem.labelStyle as Record<string, unknown>) || {}),
+          };
+
+          const labelStylePropertyMap: Record<string, string> = {
+            textColor: "textColor",
+            labelOutlineColor: "outlineColor",
+            backgroundColor: "backgroundColor",
+            borderColor: "borderColor",
+            lineColor: "lineColor",
+            anchorColor: "anchorColor",
+          };
+
+          const propertyName = labelStylePropertyMap[colorType];
+          if (propertyName) {
+            const updatedLabelStyle = {
+              ...currentLabelStyle,
+              [propertyName]: selectedColor,
+            };
+
+            console.log("🏷️ Updating label style via DOM color picker:", { colorType, propertyName, selectedColor, updatedLabelStyle });
+            updateItem(currentItem.id, { labelStyle: updatedLabelStyle });
+            emit("mymap-label-style-change", { id: currentItem.id, labelStyle: updatedLabelStyle });
+          }
+        }
       };
+
+      // Hex input handler
+      const hexInput = colorPicker.querySelector("#sc-sym-picker-hex") as HTMLInputElement;
+      const rInput = colorPicker.querySelector("#sc-sym-picker-r") as HTMLInputElement;
+      const gInput = colorPicker.querySelector("#sc-sym-picker-g") as HTMLInputElement;
+      const bInput = colorPicker.querySelector("#sc-sym-picker-b") as HTMLInputElement;
+
+      if (hexInput) {
+        hexInput.addEventListener("input", () => {
+          let val = hexInput.value;
+          if (!val.startsWith("#")) val = "#" + val;
+          if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(val)) {
+            const rgb = hexToRgbObject(val);
+            if (rInput) rInput.value = rgb.r.toString();
+            if (gInput) gInput.value = rgb.g.toString();
+            if (bInput) bInput.value = rgb.b.toString();
+            applyColorSelection(val);
+          }
+        });
+        hexInput.addEventListener("focus", (e) => e.stopPropagation());
+        hexInput.addEventListener("click", (e) => e.stopPropagation());
+      }
+
+      const updateFromRGB = () => {
+        const r = Math.max(0, Math.min(255, parseInt(rInput?.value) || 0));
+        const g = Math.max(0, Math.min(255, parseInt(gInput?.value) || 0));
+        const b = Math.max(0, Math.min(255, parseInt(bInput?.value) || 0));
+        const hex = `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`.toUpperCase();
+        if (hexInput) hexInput.value = hex;
+        applyColorSelection(hex);
+      };
+
+      [rInput, gInput, bInput].forEach((input) => {
+        if (input) {
+          input.addEventListener("input", updateFromRGB);
+          input.addEventListener("focus", (e) => e.stopPropagation());
+          input.addEventListener("click", (e) => e.stopPropagation());
+        }
+      });
 
       // Add click listeners to color swatches
       const swatches = colorPicker.querySelectorAll(".color-swatch");
       swatches.forEach((swatch) => {
-        swatch.addEventListener("click", handleColorClick);
+        swatch.addEventListener("click", (colorEvent: Event) => {
+          const selectedColor = (colorEvent.target as HTMLElement).getAttribute("data-color");
+          if (selectedColor) {
+            // Update hex/RGB inputs
+            const rgb = hexToRgbObject(selectedColor);
+            if (hexInput) hexInput.value = selectedColor.toUpperCase();
+            if (rInput) rInput.value = rgb.r.toString();
+            if (gInput) gInput.value = rgb.g.toString();
+            if (bInput) bInput.value = rgb.b.toString();
+            applyColorSelection(selectedColor);
+          }
+          colorPicker.remove();
+        });
       });
+
+      // Position picker near the button
+      const buttonRect = (event.target as HTMLElement).getBoundingClientRect();
+      colorPicker.style.left = `${buttonRect.left}px`;
+      colorPicker.style.top = `${buttonRect.bottom + 5}px`;
+
+      // Add to page
+      document.body.appendChild(colorPicker);
 
       // Close picker when clicking outside
       const handleOutsideClick = (outsideEvent: MouseEvent) => {
@@ -1260,36 +1338,20 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
     }
 
     // Re-attach footer button event listeners (React handlers are lost when copying HTML to overlay)
-    const footerButtons = overlayElementRef.current.querySelectorAll(".sc-mymaps-popup-footer-button");
+    const footerButtons = overlayElementRef.current.querySelectorAll("[data-action]");
     footerButtons.forEach((button) => {
-      const buttonText = button.textContent?.trim().toLowerCase();
-      if (buttonText && item) {
-        button.addEventListener("click", (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-
-          if (buttonText === "tools" && onTools) {
-            onTools(item);
-          } else if (buttonText === "delete" && onDelete) {
-            onDelete(item);
-          } else if (buttonText === "close") {
-            onClose();
-          }
-        });
-      }
-    });
-
-    // Re-attach other button event listeners if they exist
-    const toolsButtons = overlayElementRef.current.querySelectorAll("[data-action]");
-    toolsButtons.forEach((button) => {
       const action = button.getAttribute("data-action");
       if (action && item) {
         button.addEventListener("click", (e) => {
           e.preventDefault();
+          e.stopPropagation();
+
           if (action === "tools" && onTools) {
             onTools(item, e as unknown as React.MouseEvent);
           } else if (action === "delete" && onDelete) {
             onDelete(item);
+          } else if (action === "close") {
+            onClose();
           }
         });
       }
@@ -2045,7 +2107,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
     }
 
     // Re-attach symbolizer component event listeners (React handlers are lost when copying HTML to overlay)
-    const symbolizerContainer = overlayElementRef.current.querySelector(".sc-mymaps-symbolizer-container");
+    const symbolizerContainer = overlayElementRef.current.querySelector(".mymaps-symbolizer-container");
     if (symbolizerContainer) {
       console.log("🔧 Setting up Symbolizer DOM event listeners with store-based state management");
 
@@ -2903,6 +2965,38 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
 
       // The container itself should NOT have pointerEvents = "auto" to avoid header conflicts
       (measureContainer as HTMLElement).style.pointerEvents = "";
+
+      // Compute and display initial measurement result (React state isn't copied to overlay DOM)
+      if (item?.featureGeoJSON) {
+        import("@/utils/myMapsHelpers").then((helpers) => {
+          import("ol/sphere.js").then(({ getArea, getLength }) => {
+            try {
+              const feature = helpers.featureFromGeoJSON(item.featureGeoJSON);
+              const geometry = feature.getGeometry();
+              if (geometry) {
+                const currentUnitsSelect = measureContainer.querySelector("select:not(.hidden)") as HTMLSelectElement;
+                const currentUnits = currentUnitsSelect ? currentUnitsSelect.value : "meters";
+                let initialResult = "";
+                if (item.geometryType === "LineString" || item.geometryType === "MultiLineString") {
+                  const lengthMeters = getLength(geometry);
+                  const converted = convertFromMetersLine(lengthMeters, currentUnits);
+                  initialResult = numberWithCommas(Number(Math.round(converted + "e" + 3) + "e-" + 3));
+                } else if (item.geometryType === "Polygon" || item.geometryType === "MultiPolygon") {
+                  const areaMeters = getArea(geometry);
+                  const converted = convertFromMetersPolygon(areaMeters, currentUnits);
+                  initialResult = numberWithCommas(Number(Math.round(converted + "e" + 3) + "e-" + 3));
+                }
+                const resultInput = measureContainer.querySelector(".sc-mymaps-measure-result") as HTMLInputElement;
+                if (resultInput) {
+                  resultInput.value = initialResult;
+                }
+              }
+            } catch (error) {
+              console.error("Error computing initial measurement:", error);
+            }
+          });
+        });
+      }
     }
 
     // Enable interactions ONLY on specific buffer elements (targeted approach)
@@ -3141,7 +3235,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
   useEffect(() => {
     if (!overlayElementRef.current || !map || !overlayRef.current || !isOpen) return;
 
-    const headerElement = overlayElementRef.current.querySelector("#sc-popup-header") as HTMLElement;
+    const headerElement = overlayElementRef.current.querySelector("#popup-header") as HTMLElement;
     if (!headerElement) return;
 
     let isMoving = false;
@@ -3162,7 +3256,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       // Additional safeguard: Don't start drag if click is on any tool-related elements
       if (
         target.closest(".sc-mymaps-buffer-container") ||
-        target.closest(".sc-mymaps-symbolizer-container") ||
+        target.closest(".mymaps-symbolizer-container") ||
         target.id === "sc-mymaps-buffer-color-button-picker" ||
         target.id === "sc-mymaps-symbolizer-color-button" ||
         target.id === "sc-mymaps-symbolizer-stroke-color-button" ||
@@ -3254,15 +3348,15 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
   return (
     <div className="ol-popup" id="sc-window-popup" ref={popupRef} style={{ position: "absolute", left: "-9999px", visibility: "hidden" }}>
       {/* Header */}
-      <div id="sc-popup-header" className="sc-popup-header sc-no-select">
+      <div id="popup-header" className="popup-header select-none">
         <div>Drawing Options</div>
-        <div className="sc-popup-content-next-button" title="Next">
+        <div className="z-[500]" title="Next">
           <a className="ol-popup-next" href="#" style={{ display: "block" }}></a>
         </div>
-        <div className="sc-popup-content-prev-button sc-disabled" title="Previous">
+        <div className="z-[500] popup-nav-disabled" title="Previous">
           <a className="ol-popup-previous" href="#" style={{ display: "block" }}></a>
         </div>
-        <div className="sc-popup-header-close-button">
+        <div className="z-[500]">
           <a
             className="ol-popup-closer"
             href="#"
@@ -3276,7 +3370,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
 
       {/* Content */}
       <div className="ol-popup-content" id="sc-window-popup-content">
-        <div className="sc-mymaps-popup-container">
+        <div className="text-xs flex flex-col gap-[3px] min-h-auto">
           {/* Label Component - Always shown */}
           <MyMapsPopupLabel item={item} onLabelChange={onLabelChange} onLabelVisibilityChange={onLabelVisibilityChange} onLabelRotationChange={onLabelRotationChange} />
 

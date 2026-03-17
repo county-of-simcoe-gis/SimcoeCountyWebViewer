@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { TOCLayerGroup, TOCLayer, useTOCStore } from "@/stores/tocStore";
 import LayerItem from "@/components/TOC/LayerItem";
-import "@/components/TOC/LayersList.css";
 
 interface LayersListProps {
   group: TOCLayerGroup;
@@ -120,19 +119,19 @@ export default function LayersList({ group, searchText, onLayerChange, onLegendT
 
   if (!group.layers || group.layers.length === 0) {
     return (
-      <div className="sc-toc-no-layers">
-        <p>No layers available in this group.</p>
+      <div className="p-5 text-center text-[#666] italic">
+        <p className="m-0 text-[9pt] font-[Verdana,Arial,sans-serif]">No layers available in this group.</p>
       </div>
     );
   }
 
   return (
-    <div className="sc-toc-layer-container">
-      <ul className="sc-toc-layers-list">
+    <div className="absolute top-[148px] bottom-0 w-full max-w-[400px] overflow-y-scroll select-all max-[770px]:top-[160px]">
+      <ul className="list-none p-0 m-0 select-all">
         {layers.map((layer, index) => (
           <li
             key={layer.id || `${group.value}-${layer.name}-${index}`}
-            className={`sc-toc-layer-item ${dragOverIndex === index ? "drag-over" : ""}`}
+            className={`m-0 p-0 border-none bg-transparent cursor-default min-h-[3em] leading-[2em] relative ${dragOverIndex === index ? "bg-primary/5 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-0.5 before:bg-primary before:z-10" : ""}`}
             draggable={false}
             onDragOver={(e) => handleDragOver(e, index)}
             onDragLeave={handleDragLeave}

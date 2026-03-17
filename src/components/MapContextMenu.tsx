@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
-import "./MapContextMenu.css";
 
 export interface ContextMenuItem {
   id: string;
@@ -85,7 +84,7 @@ export const MapContextMenu: React.FC<MapContextMenuProps> = ({ x, y, items, onC
         onClose();
       }
     },
-    [onClose]
+    [onClose],
   );
 
   const visibleItems = items.filter((item) => item.visible !== false);
@@ -95,30 +94,38 @@ export const MapContextMenu: React.FC<MapContextMenuProps> = ({ x, y, items, onC
   }
 
   const menuContent = (
-    <div ref={menuRef} className="map-context-menu-container" style={{ left: `${position.x}px`, top: `${position.y}px` }}>
+    <div
+      ref={menuRef}
+      className="fixed z-[10000] bg-white border border-[#ccc] rounded shadow-[0_2px_8px_rgba(0,0,0,0.15)] min-w-[180px] overflow-hidden"
+      style={{ left: `${position.x}px`, top: `${position.y}px` }}
+    >
       {showHeader && (
-        <div className="map-context-menu-header">
-          <div className="title">{title}</div>
-          <div className="close" onClick={onClose}>
+        <div className="w-full h-[18px] py-[5px] px-2 text-neutral bg-[#ececec] border-b border-neutral flex items-center justify-between">
+          <div className="font-bold text-center text-neutral text-ellipsis whitespace-nowrap overflow-hidden flex-1 text-[11px]">{title}</div>
+          <div className="w-4 h-4 font-bold text-center p-0.5 text-white bg-secondary rounded-[3px] cursor-pointer text-[10px] leading-3 shrink-0 ml-2 hover:bg-[#5a92b8]" onClick={onClose}>
             ×
           </div>
         </div>
       )}
-      <ul className="map-context-menu-list">
+      <ul className="list-none m-0 p-0">
         {visibleItems.map((item) => {
           if (item.separator) {
-            return <li key={item.id} className="map-context-menu-separator" />;
+            return <li key={item.id} className="h-px bg-[#e0e0e0] my-1" />;
           }
 
           return (
             <li
               key={item.id}
-              className={`map-context-menu-item ${item.disabled ? "disabled" : ""}`}
+              className={`py-2 px-3 cursor-pointer flex items-center gap-2 text-[10pt] border-b border-[#f0f0f0] select-none last:border-b-0 hover:bg-[#f5f5f5] ${item.disabled ? "opacity-50 cursor-not-allowed hover:bg-transparent" : ""}`}
               onClick={() => handleItemClick(item)}
               title={item.disabled ? "This option is not available" : undefined}
             >
-              {item.icon && <div className="map-context-menu-item-icon">{typeof item.icon === "string" ? <img src={item.icon} alt="" /> : item.icon}</div>}
-              <div className="map-context-menu-item-label">{item.label}</div>
+              {item.icon && (
+                <div className="w-4 h-4 shrink-0 flex items-center justify-center text-base text-neutral [&_img]:max-w-full [&_img]:max-h-full [&_img]:align-middle [&_svg]:w-4 [&_svg]:h-4">
+                  {typeof item.icon === "string" ? <img src={item.icon} alt="" /> : item.icon}
+                </div>
+              )}
+              <div className="flex-1 whitespace-nowrap">{item.label}</div>
             </li>
           );
         })}

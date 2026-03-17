@@ -3,7 +3,6 @@
 import React from "react";
 import { useMyMapsStore } from "@/stores/myMapsStore";
 import { MYMAPS_CONSTANTS } from "@/types/myMaps";
-import "@/components/myMaps/ColorBar.css";
 
 interface ColorBarProps {
   isEditing?: boolean;
@@ -19,11 +18,13 @@ const ColorBar: React.FC<ColorBarProps> = ({ isEditing = false }) => {
   };
 
   return (
-    <div className={`sc-mymaps-color-bar ${isEditing ? "sc-disabled" : ""}`}>
+    <div
+      className={`flex flex-wrap gap-1 p-2 pt-0 bg-[#f8f9fa] border-b border-[#dee2e6] mb-2 max-[768px]:justify-center max-[768px]:gap-[3px] max-[768px]:p-1.5 ${isEditing ? "opacity-50 pointer-events-none" : ""}`}
+    >
       {MYMAPS_CONSTANTS.DEFAULT_COLORS.map((color) => (
         <div
           key={color}
-          className={`sc-mymaps-color-item ${drawColor === color ? "active" : ""}`}
+          className={`w-6 h-6 border-2 border-[#ccc] rounded-[3px] cursor-pointer flex items-center justify-center transition-all relative hover:border-[#999] hover:scale-110 focus:outline-2 focus:outline-[#007bff] focus:outline-offset-2 max-[768px]:w-5 max-[768px]:h-5 ${drawColor === color ? "!border-[#007bff] !border-[3px]" : ""}`}
           style={{ backgroundColor: color }}
           title={`Select color ${color}`}
           onClick={() => handleColorClick(color)}
@@ -36,7 +37,7 @@ const ColorBar: React.FC<ColorBarProps> = ({ isEditing = false }) => {
             }
           }}
         >
-          {drawColor === color && <div className="sc-mymaps-color-checkmark">✓</div>}
+          {drawColor === color && <div className="text-white font-bold text-sm [text-shadow:1px_1px_2px_rgba(0,0,0,0.7)]">✓</div>}
         </div>
       ))}
     </div>

@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { useLegendStore } from "@/stores/legendStore";
 import { useTOCStore, type TOCLayer } from "@/stores/tocStore";
 import { FaChevronDown, FaTimes, FaPrint } from "react-icons/fa";
-import "./Legend.css";
 
 interface LegendItemProps {
   layer: TOCLayer;
@@ -21,11 +20,11 @@ const LegendItem: React.FC<LegendItemProps> = ({ layer, center = false }) => {
   }, [layer.styleUrl, legendImage]);
 
   return (
-    <div className={`legend-item-container ${center ? "legend-item-center" : ""}`}>
-      <label className="legend-item-title">{layer.tocDisplayName}</label>
+    <div className={`flex flex-col gap-2 ${center ? "items-center text-center" : ""}`}>
+      <label className="text-sm font-medium text-[#555] m-0">{layer.tocDisplayName}</label>
       {legendImage && legendImage !== "" && (
         <img
-          className={`legend-item-image ${center ? "legend-item-image-center" : ""}`}
+          className={`max-w-[250px] w-fit h-auto border border-[#ddd] rounded ${center ? "mx-auto" : ""}`}
           src={legendImage}
           alt={layer.tocDisplayName}
           onError={(e) => {
@@ -49,7 +48,7 @@ const LegendObject: React.FC<LegendObjectProps> = ({ legendObj }) => {
   }
 
   return (
-    <ul className="legend-list">
+    <ul className="list-none p-0 m-0 flex flex-col gap-[5px]">
       {legendObj.legend.map((item: any, index: number) => (
         <LegendRow key={`legend-row-${index}`} legend={item} />
       ))}
@@ -69,10 +68,10 @@ interface LegendRowProps {
 
 const LegendRow: React.FC<LegendRowProps> = ({ legend }) => {
   return (
-    <li className="legend-list-item" style={{ height: `${legend.height}px` }} title={legend.label}>
+    <li className="flex items-center gap-2 select-none" style={{ height: `${legend.height}px` }} title={legend.label}>
       <img style={{ height: `${legend.height}px`, width: `${legend.width}px` }} src={`data:${legend.contentType};base64,${legend.imageData}`} alt="style" />
       <div
-        className="legend-label"
+        className="flex items-center text-[13px] text-[#444]"
         style={{
           height: `${legend.height}px`,
           width: `${220 - legend.width}px`,
@@ -95,10 +94,10 @@ interface GroupItemProps {
 
 const GroupItem: React.FC<GroupItemProps> = ({ group, center = false }) => {
   return (
-    <div className="legend-group-column">
-      <fieldset className="legend-fieldset">
-        <legend className="legend-group-title">{group.label.replace(/_/g, " ")}</legend>
-        <div className="legend-group-content">
+    <div className="break-inside-avoid">
+      <fieldset className="border-2 border-[#ccc] rounded-lg p-[15px] m-0 bg-white">
+        <legend className="text-base font-semibold text-[#333] px-2.5">{group.label.replace(/_/g, " ")}</legend>
+        <div className="flex flex-col gap-[15px]">
           {group.layers.map((layer) => (
             <LegendItem key={layer.id} layer={layer} center={center} />
           ))}
@@ -152,18 +151,18 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({ options, sele
   };
 
   return (
-    <div className="legend-multiselect" ref={dropdownRef}>
-      <div className="legend-multiselect-control" onClick={() => setIsOpen(!isOpen)}>
-        <div className="legend-multiselect-value">
+    <div className="relative flex-1 max-w-[600px]" ref={dropdownRef}>
+      <div className="min-h-[38px] bg-white border border-[#ccc] rounded cursor-pointer flex items-center px-2 py-1 transition-colors hover:border-[#999]" onClick={() => setIsOpen(!isOpen)}>
+        <div className="flex-1 flex flex-wrap gap-1">
           {selectedOptions.length === 0 ? (
-            <span className="legend-multiselect-placeholder">Select groups...</span>
+            <span className="text-[#999] p-1">Select groups...</span>
           ) : (
-            <div className="legend-multiselect-tags">
+            <div className="flex flex-wrap gap-1">
               {selectedOptions.map((option) => (
-                <span key={option.value} className="legend-multiselect-tag">
+                <span key={option.value} className="inline-flex items-center gap-1 bg-[#e1f0ff] border border-[#b3d9ff] rounded-sm px-1.5 py-0.5 text-[13px] text-[#333]">
                   {option.label}
                   <button
-                    className="legend-multiselect-tag-remove"
+                    className="bg-transparent border-none cursor-pointer p-0 flex items-center text-[#666] hover:text-[#333] transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       removeOption(option);
@@ -176,10 +175,10 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({ options, sele
             </div>
           )}
         </div>
-        <div className="legend-multiselect-indicators">
+        <div className="flex items-center gap-2 pl-2">
           {selectedOptions.length > 0 && (
             <button
-              className="legend-multiselect-clear"
+              className="bg-transparent border-none cursor-pointer p-1 flex items-center text-[#999] hover:text-[#333] transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 clearAll();
@@ -189,16 +188,20 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({ options, sele
               <FaTimes size={14} />
             </button>
           )}
-          <FaChevronDown size={14} className={`legend-multiselect-arrow ${isOpen ? "open" : ""}`} />
+          <FaChevronDown size={14} className={`text-[#666] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
         </div>
       </div>
       {isOpen && (
-        <div className="legend-multiselect-menu">
+        <div className="absolute top-full left-0 right-0 bg-white border border-[#ccc] rounded mt-1 max-h-[300px] overflow-y-auto z-[1000] shadow-[0_2px_8px_rgba(0,0,0,0.15)]">
           {options.map((option) => {
             const isSelected = selectedOptions.some((o) => o.value === option.value);
             return (
-              <div key={option.value} className={`legend-multiselect-option ${isSelected ? "selected" : ""}`} onClick={() => toggleOption(option)}>
-                <input type="checkbox" checked={isSelected} onChange={() => {}} className="legend-multiselect-checkbox" />
+              <div
+                key={option.value}
+                className={`px-3 py-2 cursor-pointer flex items-center gap-2 transition-colors hover:bg-base-200 ${isSelected ? "bg-[#e1f0ff]" : ""}`}
+                onClick={() => toggleOption(option)}
+              >
+                <input type="checkbox" checked={isSelected} onChange={() => {}} className="checkbox checkbox-xs checkbox-primary" />
                 {option.label}
               </div>
             );
@@ -228,20 +231,20 @@ export default function Legend({ justifyCenter = false }: LegendProps) {
   };
 
   return (
-    <div className="legend-main-container">
-      <div className="legend-header">
-        <div className="legend-title">Legend</div>
-        <div className="legend-header-buttons">
-          <button className="legend-print-button no-print" onClick={handlePrintClick} title="Print Legend">
+    <div className="p-5 bg-white min-h-full">
+      <div className="flex justify-between items-center mb-2.5 pb-2.5 border-b-2 border-[#ddd]">
+        <div className="text-2xl font-bold text-[#333]">Legend</div>
+        <div className="flex items-center gap-[15px]">
+          <button className="btn btn-sm btn-ghost no-print" onClick={handlePrintClick} title="Print Legend">
             <FaPrint size={16} />
           </button>
-          <div className="legend-justify-buttons no-print">
-            <button className={`legend-justify-button ${!centerJustify ? "active" : ""}`} onClick={() => setCenterJustify(false)} title="Left Justify">
+          <div className="flex gap-2.5 no-print">
+            <button className={`btn btn-sm btn-ghost ${!centerJustify ? "btn-primary text-white" : ""}`} onClick={() => setCenterJustify(false)} title="Left Justify">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M3 3h18v2H3V3zm0 4h12v2H3V7zm0 4h18v2H3v-2zm0 4h12v2H3v-2zm0 4h18v2H3v-2z" />
               </svg>
             </button>
-            <button className={`legend-justify-button ${centerJustify ? "active" : ""}`} onClick={() => setCenterJustify(true)} title="Center Justify">
+            <button className={`btn btn-sm btn-ghost ${centerJustify ? "btn-primary text-white" : ""}`} onClick={() => setCenterJustify(true)} title="Center Justify">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M3 3h18v2H3V3zm3 4h12v2H6V7zm-3 4h18v2H3v-2zm3 4h12v2H6v-2zm-3 4h18v2H3v-2z" />
               </svg>
@@ -250,8 +253,8 @@ export default function Legend({ justifyCenter = false }: LegendProps) {
         </div>
       </div>
 
-      <div className="legend-group-selector no-print">
-        <label className="legend-group-label">Groups:</label>
+      <div className="mb-5 flex items-start gap-2.5 no-print">
+        <label className="font-semibold text-[#333] pt-2 min-w-[60px]">Groups:</label>
         <MultiSelectDropdown
           options={allGroups.map((g) => ({ label: g.label, value: g.value }))}
           selectedOptions={selectedGroups.map((g) => ({ label: g.label, value: g.value }))}
@@ -259,15 +262,15 @@ export default function Legend({ justifyCenter = false }: LegendProps) {
         />
       </div>
 
-      <div className="legend-masonry-grid">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-5 mb-10 sm:grid-cols-[repeat(auto-fill,minmax(400px,1fr))]">
         {selectedGroups.map((group) => (
           <GroupItem key={group.value} group={group} center={centerJustify} />
         ))}
       </div>
 
-      <div className="legend-footer no-print">
-        <div style={{ float: "left" }}>Layer info page generated using interactive mapping.</div>
-        <div style={{ float: "right" }}>{"Generated on: " + new Date().toLocaleString()}</div>
+      <div className="mt-10 pt-5 border-t border-[#ddd] text-xs text-[#666] overflow-hidden no-print flex justify-between">
+        <div>Layer info page generated using interactive mapping.</div>
+        <div>{"Generated on: " + new Date().toLocaleString()}</div>
       </div>
     </div>
   );

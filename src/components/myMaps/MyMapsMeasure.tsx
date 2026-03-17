@@ -5,7 +5,6 @@ import { getArea, getLength } from "ol/sphere.js";
 import type { MyMapsItem } from "@/types/myMaps";
 import * as helpers from "@/utils/myMapsHelpers";
 import { getPublicPath } from "@/utils/getPublicPath";
-import "@/components/myMaps/MyMapsMeasure.css";
 
 interface MyMapsMeasureProps {
   visible: boolean;
@@ -144,25 +143,25 @@ const MyMapsMeasure: React.FC<MyMapsMeasureProps> = ({ visible, item }) => {
   };
 
   if (!visible) {
-    return <div className="sc-hidden" />;
+    return <div className="hidden" />;
   }
 
   return (
-    <fieldset className="sc-fieldset">
-      <legend>
-        <img src={getPublicPath("/images/measure.png")} alt="measure" />
+    <fieldset className="sc-mymaps-measure-container border border-[#cecece] rounded-[3px] p-2 mb-[5px] bg-[#f9f9f9] w-full box-border m-0">
+      <legend className="text-sm font-bold text-[#333] py-[2px] px-1.5 bg-[#f9f9f9] border border-[#cecece] rounded-[3px] flex items-center">
+        <img src={getPublicPath("/images/measure.png")} alt="measure" className="w-4 h-4 block mr-1" />
         &nbsp; Measure
       </legend>
-      <div className="sc-mymaps-measure-container">
+      <div className="text-[11pt]">
         <label>Measurement Units:</label>
-        <label className="sc-mymaps-measure-auto-format-label">
+        <label className="text-[10pt] ml-[134px] mb-2 -mt-1 absolute top-[95px] flex items-center gap-2">
           Auto Format
           <input type="checkbox" checked={autoFormat} onChange={onAutoFormatChange} />
         </label>
 
         {/* Line String Units */}
         <select
-          className={item.geometryType === "LineString" || item.geometryType === "MultiLineString" ? "sc-mymaps-measure-units" : "sc-hidden"}
+          className={item.geometryType === "LineString" || item.geometryType === "MultiLineString" ? "text-[11pt] h-[33px] w-full mb-[5px] mt-[3px] border border-black" : "hidden"}
           name="lineUnits"
           value={units}
           onChange={onUnitChange}
@@ -176,7 +175,12 @@ const MyMapsMeasure: React.FC<MyMapsMeasureProps> = ({ visible, item }) => {
         </select>
 
         {/* Polygon Units */}
-        <select className={item.geometryType === "Polygon" || item.geometryType === "MultiPolygon" ? "sc-mymaps-measure-units" : "sc-hidden"} name="areaUnits" value={units} onChange={onUnitChange}>
+        <select
+          className={item.geometryType === "Polygon" || item.geometryType === "MultiPolygon" ? "text-[11pt] h-[33px] w-full mb-[5px] mt-[3px] border border-black" : "hidden"}
+          name="areaUnits"
+          value={units}
+          onChange={onUnitChange}
+        >
           <option value="acres">Acres</option>
           <option value="hectares">Hectares</option>
           <option value="square meters">Square Meters</option>
@@ -185,7 +189,7 @@ const MyMapsMeasure: React.FC<MyMapsMeasureProps> = ({ visible, item }) => {
           <option value="square miles">Square Miles</option>
         </select>
 
-        <input className="sc-mymaps-measure-result" readOnly value={result} />
+        <input className="sc-mymaps-measure-result h-[30px] w-[97%] text-center text-[14pt] text-blue-600 border border-black" readOnly value={result} />
       </div>
     </fieldset>
   );

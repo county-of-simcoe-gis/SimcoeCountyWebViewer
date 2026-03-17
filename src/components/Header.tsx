@@ -90,10 +90,9 @@ export default function Header() {
 
       {/* Feedback / Help Button */}
       <div
-        className="w-[60px] text-center flex flex-col items-center justify-center cursor-pointer px-1 text-xs text-[#5b5b5b] h-[52px] hover:bg-black hover:bg-opacity-5"
+        className="w-[60px] text-center flex flex-col items-center justify-center cursor-pointer px-1 text-xs text-[#5b5b5b] h-[52px] hover:bg-black hover:bg-opacity-5 mt-[5px]"
         onClick={onFeedbackClick}
         title={config?.showHelpButtonInsteadOfFeedback ? "Help" : "Feedback"}
-        style={{ marginTop: "5px" }}
       >
         {config?.showHelpButtonInsteadOfFeedback ? (
           <>

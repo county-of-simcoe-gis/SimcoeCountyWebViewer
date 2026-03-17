@@ -14,7 +14,6 @@ import LayerOptionsMenu from "@/components/TOC/LayerOptionsMenu";
 import { saveToStorage, getItemsFromStorage } from "@/utils/storage";
 import { showMessage } from "@/utils/helpersUI";
 import { sortLayers, sortGroupsLayers } from "@/utils/tocHelpers";
-import "@/components/TOC/TOC.css";
 
 interface TOCProps {
   visible?: boolean;
@@ -754,11 +753,11 @@ export default function TOC({ visible = true }: TOCProps) {
   const currentGroups = tocType === "LIST" ? layerListGroups : layerFolderGroups;
 
   if (!visible) {
-    return <div className="sc-hidden" />;
+    return <div className="hidden" />;
   }
 
   return (
-    <div className="sc-toc-container">
+    <div className="h-full w-full flex flex-col font-[Verdana,Arial,sans-serif] text-[9pt] select-none">
       <TOCHeader
         tocType={tocType}
         searchText={searchText}

@@ -11,7 +11,7 @@ import { useAppStore } from "@/stores/appStore";
 import { FaCamera, FaCommentDots, FaMap, FaQuestionCircle, FaFileContract, FaNewspaper, FaPalette, FaTools, FaDrawPolygon } from "react-icons/fa";
 import URLModal from "@/components/common/URLModal";
 import { showFeedbackWindow } from "@/utils/mapHelpers";
-import "./MoreMenu.css";
+
 
 interface MenuItem {
   id: string;
@@ -297,15 +297,15 @@ export default function MoreMenu() {
     <>
       {/* Backdrop to close menu when clicking outside */}
       <div className="fixed inset-0 z-[9999]" onClick={closeMoreMenu} />
-      <div ref={menuRef} className="sc-menu-button-list-container">
+      <div ref={menuRef} className="absolute bottom-[70px] left-0 w-[200px] max-h-[400px] bg-white border border-[#ccc] rounded p-1.5 text-xs overflow-auto mt-0.5 shadow-[2px_2px_5px_0px_rgba(77,77,77,1)] text-left z-[100000] select-none">
         {/* Map Themes */}
         {themeItems.length > 0 && (
           <>
-            <div className="sc-menu-list-item-heading">MAP THEMES</div>
+            <div className="p-[3px] cursor-default border-b border-[#e2e2e2] text-xs font-bold uppercase text-[#797979] pt-2.5 first:pt-0">MAP THEMES</div>
             {themeItems.map((item) => (
-              <div key={item.id} className="sc-menu-list-item" onClick={item.onClick}>
-                <div className="sc-menu-list-item-label">
-                  {item.icon && <span className="sc-menu-list-item-icon">{item.icon}</span>}
+              <div key={item.id} className="p-[3px] cursor-pointer rounded-sm border border-white border-b-[#e2e2e2] hover:border-[#90b5d5] hover:bg-[image:var(--sc-gradient-hover)]" onClick={item.onClick}>
+                <div className="pl-[3px] flex items-center min-h-[16px]">
+                  {item.icon && <span className="inline-flex items-center justify-center w-4 h-4 mr-1.5 text-[#666] shrink-0">{item.icon}</span>}
                   {item.name}
                 </div>
               </div>
@@ -316,11 +316,11 @@ export default function MoreMenu() {
         {/* Map Tools */}
         {toolItems.length > 0 && (
           <>
-            <div className="sc-menu-list-item-heading">MAP TOOLS</div>
+            <div className="p-[3px] cursor-default border-b border-[#e2e2e2] text-xs font-bold uppercase text-[#797979] pt-2.5 first:pt-0">MAP TOOLS</div>
             {toolItems.map((item) => (
-              <div key={item.id} className="sc-menu-list-item" onClick={item.onClick}>
-                <div className="sc-menu-list-item-label">
-                  {item.icon && <span className="sc-menu-list-item-icon">{item.icon}</span>}
+              <div key={item.id} className="p-[3px] cursor-pointer rounded-sm border border-white border-b-[#e2e2e2] hover:border-[#90b5d5] hover:bg-[image:var(--sc-gradient-hover)]" onClick={item.onClick}>
+                <div className="pl-[3px] flex items-center min-h-[16px]">
+                  {item.icon && <span className="inline-flex items-center justify-center w-4 h-4 mr-1.5 text-[#666] shrink-0">{item.icon}</span>}
                   {item.name}
                 </div>
               </div>
@@ -329,10 +329,10 @@ export default function MoreMenu() {
         )}
 
         {/* My Maps */}
-        <div className="sc-menu-list-item-heading">MY MAPS</div>
-        <div className="sc-menu-list-item" onClick={handleMyMapsClick}>
-          <div className="sc-menu-list-item-label">
-            <span className="sc-menu-list-item-icon">
+        <div className="p-[3px] cursor-default border-b border-[#e2e2e2] text-xs font-bold uppercase text-[#797979] pt-2.5 first:pt-0">MY MAPS</div>
+        <div className="p-[3px] cursor-pointer rounded-sm border border-white border-b-[#e2e2e2] hover:border-[#90b5d5] hover:bg-[image:var(--sc-gradient-hover)]" onClick={handleMyMapsClick}>
+          <div className="pl-[3px] flex items-center min-h-[16px]">
+            <span className="inline-flex items-center justify-center w-4 h-4 mr-1.5 text-[#666] shrink-0">
               <FaDrawPolygon />
             </span>
             My Maps
@@ -342,11 +342,11 @@ export default function MoreMenu() {
         {/* Other */}
         {otherItems.length > 0 && (
           <>
-            <div className="sc-menu-list-item-heading">OTHER</div>
+            <div className="p-[3px] cursor-default border-b border-[#e2e2e2] text-xs font-bold uppercase text-[#797979] pt-2.5 first:pt-0">OTHER</div>
             {otherItems.map((item) => (
-              <div key={item.id} className="sc-menu-list-item" onClick={item.onClick}>
-                <div className="sc-menu-list-item-label">
-                  {item.icon && <span className="sc-menu-list-item-icon">{item.icon}</span>}
+              <div key={item.id} className="p-[3px] cursor-pointer rounded-sm border border-white border-b-[#e2e2e2] hover:border-[#90b5d5] hover:bg-[image:var(--sc-gradient-hover)]" onClick={item.onClick}>
+                <div className="pl-[3px] flex items-center min-h-[16px]">
+                  {item.icon && <span className="inline-flex items-center justify-center w-4 h-4 mr-1.5 text-[#666] shrink-0">{item.icon}</span>}
                   {item.name}
                 </div>
               </div>

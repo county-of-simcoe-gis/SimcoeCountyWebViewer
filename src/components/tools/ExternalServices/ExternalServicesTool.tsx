@@ -18,7 +18,6 @@ import { Feature } from "ol";
 import GeoJSON from "ol/format/GeoJSON";
 import { transform } from "ol/proj";
 import config from "./config.json";
-import "./ExternalServicesTool.css";
 
 interface ExternalServicesToolProps {
   name?: string;
@@ -47,16 +46,9 @@ interface ConfigType {
 const typedConfig = config as ConfigType;
 
 // Parcel URL template for WFS queries
-const parcelURLTemplate = (mainURL: string, x: number, y: number) =>
-  `${mainURL}&cql_filter=INTERSECTS(geom,%20POINT%20(${x}%20${y}))`;
+const parcelURLTemplate = (mainURL: string, x: number, y: number) => `${mainURL}&cql_filter=INTERSECTS(geom,%20POINT%20(${x}%20${y}))`;
 
-export default function ExternalServicesTool({
-  name = "External Services",
-  helpLink,
-  hideHeader = false,
-  onClose,
-  onSidebarVisibility,
-}: ExternalServicesToolProps) {
+export default function ExternalServicesTool({ name = "External Services", helpLink, hideHeader = false, onClose, onSidebarVisibility }: ExternalServicesToolProps) {
   const { map } = useMapStore();
   const appConfig = useAppStore((state) => state.config);
 
@@ -114,7 +106,7 @@ export default function ExternalServicesTool({
         setIsLoadingAddress(false);
       }
     },
-    [appConfig]
+    [appConfig],
   );
 
   // Update marker position and fetch address
@@ -137,7 +129,7 @@ export default function ExternalServicesTool({
         fetchAddress(coordinate);
       }
     },
-    [markerLayerId, toLatLongFromWebMercator, fetchAddress]
+    [markerLayerId, toLatLongFromWebMercator, fetchAddress],
   );
 
   // Initialize marker layer
@@ -207,17 +199,11 @@ export default function ExternalServicesTool({
   }, [markerLayerId, onClose]);
 
   return (
-    <PanelComponent
-      name={name}
-      helpLink={helpLink}
-      hideHeader={hideHeader}
-      onClose={handleClose}
-      onSidebarVisibility={onSidebarVisibility}
-    >
+    <PanelComponent name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={handleClose} onSidebarVisibility={onSidebarVisibility}>
       <div className="p-3 space-y-3 text-sm">
         <div className="text-base-content">
-          Explore a selected location using a variety of external service providers (i.e. Google Maps, Bing Maps, and
-          Open Street Map). Simply click on a location and select the desired link that appears.
+          Explore a selected location using a variety of external service providers (i.e. Google Maps, Bing Maps, and Open Street Map). Simply click on a location and select the desired link that
+          appears.
         </div>
 
         {isLoadingAddress && (
@@ -256,18 +242,14 @@ function ServiceGroupComponent({ group, coords, address, isLoadingAddress }: Ser
         .replace(/\$\{y\}/g, String(coords[1]))
         .replace(/\$\{address\}/g, encodeURIComponent(address));
     },
-    [coords, address]
+    [coords, address],
   );
 
   return (
     <div className="border border-base-300 rounded-lg overflow-hidden shadow-sm">
       <div className="flex items-center gap-2 p-3 bg-gradient-to-b from-base-100 to-base-200 border-b border-base-300">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={`/images/tools/externalservices/${group.icon}`}
-          alt={group.groupName}
-          className="w-6 h-6 object-contain"
-        />
+        <img src={`/images/tools/externalservices/${group.icon}`} alt={group.groupName} className="w-6 h-6 object-contain" />
         <span className="font-semibold text-base">{group.groupName}</span>
       </div>
       <div className="p-2 space-y-1">
@@ -281,7 +263,7 @@ function ServiceGroupComponent({ group, coords, address, isLoadingAddress }: Ser
               href={url}
               target="_blank"
               rel="noopener noreferrer"
-              className={`sc-external-services-link block pl-8 py-1.5 text-sm hover:text-primary transition-colors ${
+              className={`bg-[url('/images/tools/externalservices/arrow_curve.gif')] bg-no-repeat bg-[position:10px_center] bg-[length:14px] no-underline text-inherit hover:underline block pl-8 py-1.5 text-sm hover:text-primary transition-colors ${
                 isDisabled ? "opacity-50 pointer-events-none cursor-not-allowed" : ""
               }`}
               onClick={(e) => {

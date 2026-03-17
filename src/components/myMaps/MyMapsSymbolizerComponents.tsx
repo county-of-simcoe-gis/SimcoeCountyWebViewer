@@ -18,8 +18,13 @@ export const PointType: React.FC<PointTypeProps> = ({ visible, selectedPointStyl
 
   return (
     <>
-      <label className="sc-mymaps-style-label">Style:</label>
-      <select className="sc-mymaps-style-dropdown" name="pointSymbols" value={selectedPointStyleDropDown} onChange={onPointStyleDropDown}>
+      <label className="col-start-1 col-end-3 self-center font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Style:</label>
+      <select
+        className="col-start-3 col-end-5 p-[2px] border border-[#cecece] rounded-[3px] text-[9pt] outline-none w-full box-border focus:border-[#367cc5]"
+        name="pointSymbols"
+        value={selectedPointStyleDropDown}
+        onChange={onPointStyleDropDown}
+      >
         <option value="circle">Circle</option>
         <option value="cross">Cross</option>
         <option value="square">Square</option>
@@ -42,8 +47,13 @@ export const PolygonType: React.FC<PolygonTypeProps> = ({ visible, selectedPolyg
 
   return (
     <>
-      <label className="sc-mymaps-style-label">Style:</label>
-      <select className="sc-mymaps-style-dropdown" name="polygonSymbols" value={selectedPolygonStyleDropDown} onChange={onPolygonStyleDropDown}>
+      <label className="col-start-1 col-end-3 self-center font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Style:</label>
+      <select
+        className="col-start-3 col-end-5 p-[2px] border border-[#cecece] rounded-[3px] text-[9pt] outline-none w-full box-border focus:border-[#367cc5]"
+        name="polygonSymbols"
+        value={selectedPolygonStyleDropDown}
+        onChange={onPolygonStyleDropDown}
+      >
         <option value="none">None</option>
         <option value="solid">Solid</option>
         <option value="horizontal">Horizontal</option>
@@ -67,9 +77,9 @@ export const StyleSize: React.FC<StyleSizeProps> = ({ visible, sliderRadiusMin, 
 
   return (
     <>
-      <label className="sc-mymaps-sub-label">Size:</label>
-      <div className="sc-mymaps-symbolizer-slider size">
-        <input type="range" data-slider-type="size" style={{ width: "169px" }} min={sliderRadiusMin} max={sliderRadiusMax} value={radius} step="1" onChange={onRadiusSliderChange} />
+      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Size:</label>
+      <div className="mymaps-symbolizer-slider col-start-3 col-end-5 self-center w-full min-w-0 text-[7pt]">
+        <input type="range" data-slider-type="size" className="w-full" min={sliderRadiusMin} max={sliderRadiusMax} value={radius} step="1" onChange={onRadiusSliderChange} />
       </div>
     </>
   );
@@ -95,11 +105,20 @@ export const FillColor: React.FC<FillColorProps> = ({ visible, isPolygon, rgbFil
 
   return (
     <>
-      <label className={isPolygon ? "sc-mymaps-style-label" : "sc-mymaps-sub-label"}>Color:</label>
-      <div className="sc-mymaps-fill-color-button">
+      <label
+        className={
+          isPolygon
+            ? "col-start-1 col-end-3 self-center font-bold text-[11px] font-[Arial,sans-serif] text-[#333]"
+            : "col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-[#333]"
+        }
+      >
+        Color:
+      </label>
+      <div className="col-start-3 col-end-5 inline-flex items-center min-w-0">
         <button
           id="sc-mymaps-symbolizer-color-button"
           type="button"
+          className="shrink-0"
           style={{
             backgroundColor: rgbFill,
             width: "30px",
@@ -110,11 +129,11 @@ export const FillColor: React.FC<FillColorProps> = ({ visible, isPolygon, rgbFil
           }}
           onMouseUp={onFillColorPickerButton}
         />
-        <div className="sc-mymaps-symbolizer-slider opacity">
+        <div className="mymaps-symbolizer-slider ml-2 text-[7pt] min-w-0 flex-1">
           <input
             type="range"
             data-slider-type="fill-opacity"
-            style={{ width: "138px" }}
+            className="w-full"
             min={sliderFillOpacityMin}
             max={sliderFillOpacityMax}
             value={fillAlpha}
@@ -142,8 +161,13 @@ export const StrokeType: React.FC<StrokeTypeProps> = ({ visible = true, selected
 
   return (
     <>
-      <label className="sc-mymaps-style-label">Outline:</label>
-      <select className="sc-mymaps-style-dropdown" name="pointOutline" value={selectedStrokeTypeDropDown} onChange={onStrokeTypeDropDown}>
+      <label className="col-start-1 col-end-3 self-center font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Outline:</label>
+      <select
+        className="col-start-3 col-end-5 p-[2px] border border-[#cecece] rounded-[3px] text-[9pt] outline-none w-full box-border focus:border-[#367cc5]"
+        name="pointOutline"
+        value={selectedStrokeTypeDropDown}
+        onChange={onStrokeTypeDropDown}
+      >
         <option value="normal">Normal</option>
         <option value="dash">Dash</option>
         <option value="dot">Dot</option>
@@ -175,11 +199,12 @@ export const StrokeColor: React.FC<StrokeColorProps> = ({
 
   return (
     <>
-      <label className="sc-mymaps-sub-label">Color:</label>
-      <div className="sc-mymaps-fill-color-button">
+      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Color:</label>
+      <div className="col-start-3 col-end-5 inline-flex items-center min-w-0">
         <button
           id="sc-mymaps-symbolizer-stroke-color-button"
           type="button"
+          className="shrink-0"
           style={{
             backgroundColor: rgbStroke,
             width: "30px",
@@ -190,11 +215,11 @@ export const StrokeColor: React.FC<StrokeColorProps> = ({
           }}
           onMouseUp={onStrokeColorPickerButton}
         />
-        <div className="sc-mymaps-symbolizer-slider opacity">
+        <div className="mymaps-symbolizer-slider ml-2 text-[7pt] min-w-0 flex-1">
           <input
             type="range"
             data-slider-type="stroke-opacity"
-            style={{ width: "138px" }}
+            className="w-full"
             min={sliderStrokeOpacityMin}
             max={sliderStrokeOpacityMax}
             value={strokeAlpha}
@@ -220,12 +245,12 @@ export const StrokeWidth: React.FC<StrokeWidthProps> = ({ visible = true, stroke
 
   return (
     <>
-      <label className="sc-mymaps-sub-label">Width:</label>
-      <div className="sc-mymaps-symbolizer-slider size">
+      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Width:</label>
+      <div className="mymaps-symbolizer-slider col-start-3 col-end-5 self-center w-full min-w-0 text-[7pt]">
         <input
           type="range"
           data-slider-type="stroke-width"
-          style={{ width: "169px" }}
+          className="w-full"
           min={sliderStrokeWidthMin}
           max={sliderStrokeWidthMax}
           value={strokeWidth}
@@ -254,9 +279,9 @@ export const Rotation: React.FC<RotationProps> = ({ visible, rotation, sliderRot
 
   return (
     <>
-      <label className="sc-mymaps-style-label">Angle:</label>
-      <div className="sc-mymaps-angle-slider">
-        <div className="sc-mymaps-symbolizer-slider angle">
+      <label className="col-start-1 col-end-3 self-center font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Angle:</label>
+      <div className="col-start-3 col-end-5 self-center">
+        <div className="mymaps-symbolizer-slider col-start-2 col-end-5 w-full text-[7pt]">
           <input type="range" data-slider-type="rotation" min={sliderRotationMin} max={sliderRotationMax} value={rotation} step="0.1" onChange={onRotationSliderChange} />
         </div>
       </div>
@@ -279,8 +304,8 @@ export const LabelTextColor: React.FC<LabelTextColorProps> = ({ visible, textCol
 
   return (
     <>
-      <label className="sc-mymaps-sub-label">Text Color:</label>
-      <div className="sc-mymaps-fill-color-button">
+      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Text Color:</label>
+      <div className="col-start-3 col-end-5 inline-flex items-center">
         <button
           id="sc-mymaps-symbolizer-text-color-button"
           type="button"
@@ -310,8 +335,12 @@ export const LabelFontSize: React.FC<LabelFontSizeProps> = ({ visible, fontSize,
 
   return (
     <>
-      <label className="sc-mymaps-sub-label">Font Size:</label>
-      <select className="sc-mymaps-style-dropdown" value={fontSize} onChange={onFontSizeChange}>
+      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Font Size:</label>
+      <select
+        className="col-start-3 col-end-5 p-[2px] border border-[#cecece] rounded-[3px] text-[9pt] outline-none w-full box-border focus:border-[#367cc5]"
+        value={fontSize}
+        onChange={onFontSizeChange}
+      >
         <option value="10px">10px</option>
         <option value="12px">12px</option>
         <option value="14px">14px</option>
@@ -335,8 +364,8 @@ export const LabelOutlineColor: React.FC<LabelOutlineColorProps> = ({ visible, o
 
   return (
     <>
-      <label className="sc-mymaps-sub-label">Outline Color:</label>
-      <div className="sc-mymaps-fill-color-button">
+      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Outline Color:</label>
+      <div className="col-start-3 col-end-5 inline-flex items-center">
         <button
           id="sc-mymaps-symbolizer-label-outline-color-button"
           type="button"
@@ -366,9 +395,9 @@ export const LabelOutlineWidth: React.FC<LabelOutlineWidthProps> = ({ visible, o
 
   return (
     <>
-      <label className="sc-mymaps-sub-label">Outline Width:</label>
-      <div className="sc-mymaps-symbolizer-slider size">
-        <input type="range" data-slider-type="label-outline-width" style={{ width: "169px" }} min={0} max={4} value={outlineWidth} step="0.5" onChange={onOutlineWidthChange} />
+      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Outline Width:</label>
+      <div className="mymaps-symbolizer-slider col-start-3 col-end-5 self-center w-full min-w-0 text-[7pt]">
+        <input type="range" data-slider-type="label-outline-width" className="w-full" min={0} max={4} value={outlineWidth} step="0.5" onChange={onOutlineWidthChange} />
       </div>
     </>
   );
@@ -391,8 +420,8 @@ const CalloutColorButton: React.FC<CalloutColorButtonProps> = ({ visible, label,
 
   return (
     <>
-      <label className="sc-mymaps-sub-label">{label}:</label>
-      <div className="sc-mymaps-fill-color-button">
+      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">{label}:</label>
+      <div className="col-start-3 col-end-5 inline-flex items-center">
         <button
           id={buttonId}
           type="button"

@@ -3,25 +3,25 @@
    Kept as CSS because they target OL's internal DOM structure. */
 
 /* Ensure OpenLayers map fills container */
-.sc-map .ol-viewport {
+.app-map .ol-viewport {
   width: 100% !important;
   height: 100% !important;
 }
 
 /* Zoom controls */
-.sc-map .ol-zoom {
+.app-map .ol-zoom {
   top: 0.5em;
   left: 0.5em;
 }
 
 /* Rotate control */
-.sc-map .ol-rotate {
+.app-map .ol-rotate {
   top: 0.5em;
   right: 0.5em;
 }
 
 /* Full screen button - bottom left */
-.sc-map .ol-full-screen {
+.app-map .ol-full-screen {
   position: absolute !important;
   bottom: 0.5em !important;
   left: 0.5em !important;
@@ -32,7 +32,7 @@
   z-index: 100;
 }
 
-.sc-map .ol-full-screen button {
+.app-map .ol-full-screen button {
   width: 1.375em !important;
   height: 1.375em !important;
   background-color: rgba(255, 255, 255, 0.8) !important;
@@ -41,7 +41,7 @@
 }
 
 /* Scale line positioning - bottom right */
-.sc-map .ol-scale-line {
+.app-map .ol-scale-line {
   position: absolute !important;
   bottom: 0.5em !important;
   right: 0.5em !important;
@@ -61,7 +61,7 @@
 }
 
 /* Loading state overlay */
-.sc-map.loading::before {
+.app-map.loading::before {
   content: "";
   position: absolute;
   top: 0;
@@ -72,7 +72,7 @@
   z-index: 999;
 }
 
-.sc-map.loading::after {
+.app-map.loading::after {
   content: "Loading map...";
   position: absolute;
   top: 50%;
@@ -132,7 +132,7 @@
 }
 
 /* Popup header */
-.sc-popup-header {
+.popup-header {
   height: 25px;
   background: linear-gradient(to bottom, #3980cc 0%, #2865a2 100%);
   border-bottom: 2px solid #e7a614;
@@ -147,7 +147,7 @@
   justify-content: space-between;
 }
 
-.sc-popup-header:active {
+.popup-header:active {
   cursor: grabbing;
 }
 
@@ -198,7 +198,7 @@
   content: "\2716";
 }
 
-.sc-disabled .ol-popup-previous {
+.popup-nav-disabled .ol-popup-previous {
   opacity: 0.5;
   cursor: not-allowed;
 }

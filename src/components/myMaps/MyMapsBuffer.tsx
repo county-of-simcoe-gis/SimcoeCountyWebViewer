@@ -14,7 +14,6 @@ import { bufferGeometry, convertToMeters } from "@/utils/openlayers/BufferHelper
 import { MYMAPS_CONSTANTS } from "@/types/myMaps";
 import { activateTab } from "@/utils/helpersUI";
 import type { MyMapsItem } from "@/types/myMaps";
-import "@/components/myMaps/MyMapsBuffer.css";
 
 interface MyMapsBufferProps {
   visible: boolean;
@@ -256,22 +255,22 @@ const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
   };
 
   if (!visible) {
-    return <div className="sc-hidden" />;
+    return <div className="hidden" />;
   }
 
   const rgbColor = `rgb(${color.r},${color.g},${color.b})`;
 
   return (
-    <fieldset className="sc-fieldset">
-      <legend>
-        <img src={getPublicPath("/images/buffer.png")} alt="buffer" />
+    <fieldset className="sc-mymaps-buffer-container border border-[#cecece] rounded-[3px] p-2 mb-[5px] bg-[#f9f9f9] w-full box-border m-0">
+      <legend className="text-sm font-bold text-[#333] py-[2px] px-1.5 bg-[#f9f9f9] border border-[#cecece] rounded-[3px] flex items-center">
+        <img src={getPublicPath("/images/buffer.png")} alt="buffer" className="w-4 h-4 block" />
         &nbsp; Buffer
       </legend>
-      <div className="sc-mymaps-buffer-container">
+      <div className="grid grid-cols-[50%_50%] grid-rows-[11px_25px_23px_auto] content-center gap-y-[5px] gap-x-[5px] w-full box-border [&_label]:text-[11px] [&_label]:font-[Arial,sans-serif] [&_label]:text-[#333] [&_label]:font-bold [&_input[type=number]]:p-[5px] [&_input[type=number]]:border [&_input[type=number]]:border-[#cecece] [&_input[type=number]]:rounded-[3px] [&_input[type=number]]:text-[11px] [&_input[type=number]]:outline-none [&_input[type=number]]:w-full [&_input[type=number]]:box-border [&_input[type=number]]:focus:border-[#367cc5] [&_select]:p-[5px] [&_select]:border [&_select]:border-[#cecece] [&_select]:rounded-[3px] [&_select]:text-[11px] [&_select]:outline-none [&_select]:w-full [&_select]:box-border [&_select]:focus:border-[#367cc5]">
         <label style={{ gridColumnStart: "1" }}>Distance:</label>
         <label style={{ gridColumnStart: "2" }}>Units:</label>
 
-        <input type="number" className="sc-editable" value={distance} onChange={onDistanceChange} style={{ gridColumnStart: "1", gridRowStart: "2" }} />
+        <input type="number" className="bg-white text-[#367cc5]" value={distance} onChange={onDistanceChange} style={{ gridColumnStart: "1", gridRowStart: "2" }} />
 
         <select name="pointOutline" value={units} onChange={onUnitsChange} style={{ gridColumnStart: "2", gridRowStart: "2" }}>
           <option value="meters">Meters</option>
@@ -284,19 +283,18 @@ const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
 
         <button
           id="sc-mymaps-buffer-color-button-picker"
+          className="w-full h-[23px] border border-[#cecece] rounded-[3px] cursor-pointer my-[3px] box-border hover:border-[#367cc5]"
           title="Change Buffer Color"
           onClick={onColorPickerButton}
           style={{
             gridColumnStart: "1",
             gridRowStart: "3",
             backgroundColor: rgbColor,
-            cursor: "pointer",
-            margin: "3px",
           }}
         />
 
         <label
-          className={addMessageVisible ? "sc-fakeLink" : "sc-hidden"}
+          className={addMessageVisible ? "text-[#367cc5] cursor-pointer underline text-[11px] hover:no-underline" : "hidden"}
           style={{
             gridColumn: "1 / 3",
             gridRowStart: "4",
