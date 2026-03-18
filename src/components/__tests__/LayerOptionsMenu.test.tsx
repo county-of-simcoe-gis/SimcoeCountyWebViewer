@@ -496,7 +496,7 @@ describe("LayerOptionsMenu", () => {
     it("renders at the specified position", () => {
       render(<LayerOptionsMenu {...defaultProps} onClose={mockOnClose} onLayerChange={mockOnLayerChange} />);
 
-      const menu = screen.getByText("Test Layer TOC").closest(".layer-options-menu");
+      const menu = screen.getByText("Test Layer TOC").closest('[data-testid="layer-options-menu"]');
       expect(menu).toHaveStyle({
         position: "fixed",
         left: "100px",
@@ -510,7 +510,7 @@ describe("LayerOptionsMenu", () => {
       render(<LayerOptionsMenu {...defaultProps} position={overflowPosition} onClose={mockOnClose} onLayerChange={mockOnLayerChange} />);
 
       // Position should be adjusted to keep menu within viewport
-      const menu = screen.getByText("Test Layer TOC").closest(".layer-options-menu");
+      const menu = screen.getByText("Test Layer TOC").closest('[data-testid="layer-options-menu"]');
       expect(menu).toBeInTheDocument();
     });
   });
@@ -556,3 +556,4 @@ describe("LayerOptionsMenu", () => {
     });
   });
 });
+

@@ -17,7 +17,7 @@ describe("PanelComponent", () => {
       </PanelComponent>,
     );
     expect(screen.getByText("Test Tool")).toBeInTheDocument();
-    const close = screen.getByRole("button", { name: "Close Test Tool" });
+    const close = screen.getByRole("button", { name: "Close panel" });
     fireEvent.click(close);
     expect(onClose).toHaveBeenCalled();
   });
@@ -30,7 +30,7 @@ describe("PanelComponent", () => {
         <div />
       </PanelComponent>,
     );
-    const help = screen.getByTitle("View Help for Help Tool");
+    const help = screen.getByRole("button", { name: "Help" });
     fireEvent.click(help);
     expect(showURLWindow).toHaveBeenCalled();
   });

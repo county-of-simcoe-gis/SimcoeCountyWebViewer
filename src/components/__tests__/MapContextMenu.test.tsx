@@ -53,7 +53,7 @@ describe("MapContextMenu", () => {
   it("renders menu at specified coordinates", () => {
     render(<MapContextMenu x={150} y={200} items={defaultItems} onClose={mockOnClose} />);
 
-    const menuContainer = document.body.querySelector(".map-context-menu-container");
+    const menuContainer = document.body.querySelector('[data-testid="map-context-menu-container"]');
     expect(menuContainer).toBeTruthy();
     expect(menuContainer).toHaveStyle({ left: "150px", top: "200px" });
   });
@@ -164,7 +164,7 @@ describe("MapContextMenu", () => {
 
     render(<MapContextMenu x={100} y={100} items={items} onClose={mockOnClose} />);
 
-    const separator = document.body.querySelector(".map-context-menu-separator");
+    const separator = document.body.querySelector('[data-testid="map-context-menu-separator"]');
     expect(separator).toBeTruthy();
   });
 
@@ -183,7 +183,7 @@ describe("MapContextMenu", () => {
     const { container } = render(<MapContextMenu x={100} y={100} items={defaultItems} onClose={mockOnClose} />);
 
     // Menu should be rendered
-    const menu = document.body.querySelector(".map-context-menu-container");
+    const menu = document.body.querySelector('[data-testid="map-context-menu-container"]');
     expect(menu).toBeTruthy();
 
     // Component should not crash when rendered
@@ -196,7 +196,7 @@ describe("MapContextMenu", () => {
     const { container } = render(<MapContextMenu x={100} y={100} items={defaultItems} onClose={mockOnClose} />);
 
     // Menu should be rendered
-    const menu = document.body.querySelector(".map-context-menu-container");
+    const menu = document.body.querySelector('[data-testid="map-context-menu-container"]');
     expect(menu).toBeTruthy();
 
     // Component should not crash when rendered
@@ -236,7 +236,7 @@ describe("MapContextMenu", () => {
 
     render(<MapContextMenu x={100} y={100} items={items} onClose={mockOnClose} />);
 
-    const menuItem = document.body.querySelector(".map-context-menu-item.disabled");
+    const menuItem = document.body.querySelector('[data-testid="map-context-menu-item disabled"]');
     expect(menuItem).toBeTruthy();
   });
 
@@ -260,7 +260,8 @@ describe("MapContextMenu", () => {
     render(<MapContextMenu x={100} y={100} items={defaultItems} onClose={mockOnClose} />);
 
     // The menu should be rendered as a direct child of body (via portal)
-    const menuContainer = document.body.querySelector(".map-context-menu-container");
+    const menuContainer = document.body.querySelector('[data-testid="map-context-menu-container"]');
     expect(menuContainer).toBeInTheDocument();
   });
 });
+

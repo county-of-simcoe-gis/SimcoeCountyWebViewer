@@ -225,10 +225,16 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
 
       {/* Action Buttons — sticky so the scroll container can't shift them away from the cursor */}
       <div className="flex mt-1.5 w-full sticky bottom-0 bg-white pt-1 pb-0.5 z-10">
-        <button className="sc-button flex-[6] mr-1.5" onClick={handleMoreInfo}>
+        <button
+          className="btn btn-sm flex-[6] mr-1.5 min-h-8 rounded-sm border-gray-300 bg-gradient-to-b from-white to-gray-200 text-[#2d343c] text-xs font-normal shadow-none hover:border-[#80b9ff] hover:shadow-[0_0_5px_#80b9ff]"
+          onClick={handleMoreInfo}
+        >
           More Information
         </button>
-        <button className="sc-button flex-[4]" onClick={handleCloseClick}>
+        <button
+          className="btn btn-sm flex-[4] min-h-8 rounded-sm border-gray-300 bg-gradient-to-b from-white to-gray-200 text-[#2d343c] text-xs font-normal shadow-none hover:border-[#80b9ff] hover:shadow-[0_0_5px_#80b9ff]"
+          onClick={handleCloseClick}
+        >
           Close
         </button>
       </div>

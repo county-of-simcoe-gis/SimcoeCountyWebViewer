@@ -1283,7 +1283,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
     }
 
     // Re-attach input field event listeners for the label
-    const labelInput = overlayElementRef.current.querySelector(".sc-mymaps-popup-label-input") as HTMLInputElement;
+    const labelInput = overlayElementRef.current.querySelector(".mymaps-popup-label-input") as HTMLInputElement;
 
     if (labelInput && onLabelChange) {
       // Handle input events for live sync (on every keystroke)
@@ -1311,7 +1311,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
     }
 
     // Re-attach checkbox click listener (React handlers are lost when copying HTML to overlay)
-    const checkbox = overlayElementRef.current.querySelector(".sc-mymaps-popup-checkbox input[type='checkbox']") as HTMLInputElement;
+    const checkbox = overlayElementRef.current.querySelector(".mymaps-popup-checkbox input[type='checkbox']") as HTMLInputElement;
     if (checkbox && onLabelVisibilityChange && item) {
       checkbox.onclick = (e) => {
         // Don't prevent default - let browser handle checkbox visual state
@@ -1325,7 +1325,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
     }
 
     // Re-attach rotation slider change listener (React handlers are lost when copying HTML to overlay)
-    const rotationSlider = overlayElementRef.current.querySelector(".sc-mymaps-popup-slider input[type='range']") as HTMLInputElement;
+    const rotationSlider = overlayElementRef.current.querySelector(".mymaps-popup-slider input[type='range']") as HTMLInputElement;
     if (rotationSlider && onLabelRotationChange && item) {
       rotationSlider.oninput = (e) => {
         e.stopPropagation();
@@ -3057,7 +3057,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       // Preserve focus and cursor position before copying content
       const activeElement = overlayElementRef.current.querySelector(":focus") as HTMLInputElement;
       const cursorPosition = activeElement?.selectionStart || 0;
-      const wasInputFocused = activeElement && activeElement.classList.contains("sc-mymaps-popup-label-input");
+      const wasInputFocused = activeElement && activeElement.classList.contains("mymaps-popup-label-input");
 
       // Copy the React-rendered content to the overlay element
       overlayElementRef.current.innerHTML = popupRef.current.innerHTML;
@@ -3067,7 +3067,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
 
       // Restore focus and cursor position after copying
       if (wasInputFocused) {
-        const newLabelInput = overlayElementRef.current.querySelector(".sc-mymaps-popup-label-input") as HTMLInputElement;
+        const newLabelInput = overlayElementRef.current.querySelector(".mymaps-popup-label-input") as HTMLInputElement;
         if (newLabelInput) {
           newLabelInput.focus();
           newLabelInput.setSelectionRange(cursorPosition, cursorPosition);
@@ -3082,7 +3082,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
   // Sync label value when it changes externally (without full DOM manipulation)
   useEffect(() => {
     if (overlayElementRef.current && itemId && itemLabel && isOpen && lastItemIdRef.current === itemId) {
-      const labelInput = overlayElementRef.current.querySelector(".sc-mymaps-popup-label-input") as HTMLInputElement;
+      const labelInput = overlayElementRef.current.querySelector(".mymaps-popup-label-input") as HTMLInputElement;
       if (labelInput && labelInput.value !== itemLabel && document.activeElement !== labelInput) {
         // Only sync if the input is not currently focused (user not typing)
         labelInput.value = itemLabel;
@@ -3093,7 +3093,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
   // Sync checkbox state when it changes externally (e.g., from store updates)
   useEffect(() => {
     if (overlayElementRef.current && item && isOpen) {
-      const checkbox = overlayElementRef.current.querySelector(".sc-mymaps-popup-checkbox input[type='checkbox']") as HTMLInputElement;
+      const checkbox = overlayElementRef.current.querySelector(".mymaps-popup-checkbox input[type='checkbox']") as HTMLInputElement;
       if (checkbox) {
         checkbox.checked = item.labelVisible;
       }
@@ -3103,7 +3103,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
   // Sync rotation slider value when it changes externally (e.g., from store updates)
   useEffect(() => {
     if (overlayElementRef.current && item && isOpen) {
-      const rotationSlider = overlayElementRef.current.querySelector(".sc-mymaps-popup-slider input[type='range']") as HTMLInputElement;
+      const rotationSlider = overlayElementRef.current.querySelector(".mymaps-popup-slider input[type='range']") as HTMLInputElement;
       if (rotationSlider) {
         rotationSlider.value = (item.labelRotation || 0).toString();
       }

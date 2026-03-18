@@ -67,20 +67,20 @@
 }
 
 @-moz-document url-prefix() {
-  .sc-mymaps-popup-slider input[type="range"] {
+  .mymaps-popup-slider input[type="range"] {
     border: 1px solid white;
     outline: 1px solid white;
     outline-offset: -1px;
   }
 
-  .sc-mymaps-popup-slider {
+  .mymaps-popup-slider {
     position: absolute;
     left: 106px;
     top: -2px;
     width: 30px;
   }
 
-  .sc-mymaps-popup-slider-label {
+  .mymaps-popup-slider-label {
     position: relative;
     right: -31px;
     top: -7px;

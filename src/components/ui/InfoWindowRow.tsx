@@ -33,7 +33,7 @@ export const InfoWindowRow: React.FC<InfoWindowRowProps> = ({ label, value, chil
   }
 
   return (
-    <div className={`w-full ${className}`}>
+    <div data-testid="info-row" className={`w-full ${className}`}>
       <div className="font-bold text-gray-800 text-[11px]">{label}</div>
       <div className="flex items-start gap-1 text-gray-600 border-b border-gray-100 pb-0.5 text-[11px] break-words min-h-[10px] [overflow-wrap:anywhere]">
         <FaLevelUpAlt className="mt-0.5 text-gray-400 shrink-0 rotate-90" size={10} />

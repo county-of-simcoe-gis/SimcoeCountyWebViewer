@@ -145,6 +145,7 @@ export default function RecordSelectorPopup<T extends RecordItem>({
                     className={`flex flex-col p-2.5 bg-white border-2 border-[#e0e0e0] rounded cursor-pointer transition-all text-left w-full hover:bg-[#f0f7ff] hover:border-[#90caf9] hover:translate-x-[2px] max-[768px]:p-2 ${selectedRecordId === record.id ? "!bg-[#1976d2] !border-[#1565c0] text-white" : ""}`}
                     onClick={() => onSelectRecord(record.id)}
                     aria-label={`Select record ${record.id}`}
+                    data-testid="record-selector-sidebar-item"
                   >
                     {renderSidebarItem(record, selectedRecordId === record.id)}
                   </button>

@@ -39,7 +39,7 @@ export default function TOCFolderView({
 
   return (
     <div className={isVisible ? "" : "hidden"} id="sc-toc-simcoe-folder-view-container-main" data-testid="sc-toc-simcoe-folder-view-container-main">
-      <div className="absolute top-[110px] bottom-[5px] w-full max-w-[370px] overflow-y-auto overflow-x-hidden ps-0">
+      <div data-testid="toc-group-list" className="absolute top-[110px] bottom-[5px] w-full max-w-[370px] overflow-y-auto overflow-x-hidden ps-0">
         {layerGroups.map((group, index) => (
           <GroupItem
             key={`${id}-group-${group.value}-${index}`}

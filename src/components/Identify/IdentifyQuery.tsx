@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useArcGISTokenStore } from "@/stores/arcgisTokenStore";
 import { InfoRow } from "@/components/common/InfoRow";
+import { SectionTitle } from "@/components/ui";
 
 interface IdentifyQueryProps {
   title: string;
@@ -95,7 +96,7 @@ export default function IdentifyQuery({ title, layerURL, layerId, where, fields,
 
   return (
     <div className="p-[5px]">
-      <div className="font-bold text-sm mb-2 border-b border-[#ccc] pb-1">{title}</div>
+      <SectionTitle className="border-b-[#ccc]">{title}</SectionTitle>
       {features.map((attrs, featureIdx) => (
         <div key={featureIdx} className="mb-2.5">
           {features.length > 1 && <div className="font-bold text-xs text-[#333] mb-1">Feature {featureIdx + 1}</div>}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useCallback, useState } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { useLegendStore } from "@/stores/legendStore";
@@ -11,7 +11,7 @@ import { useAppStore } from "@/stores/appStore";
 import { FaCamera, FaCommentDots, FaMap, FaQuestionCircle, FaFileContract, FaNewspaper, FaPalette, FaTools, FaDrawPolygon } from "react-icons/fa";
 import URLModal from "@/components/common/URLModal";
 import { showFeedbackWindow } from "@/utils/mapHelpers";
-
+import { MenuList, MenuItem, MenuHeading } from "@/components/ui";
 
 interface MenuItem {
   id: string;
@@ -26,24 +26,14 @@ export default function MoreMenu() {
   const { map } = useMapStore();
   const { layers } = useTOCStore();
   const config = useAppStore((state) => state.config);
-  const menuRef = useRef<HTMLDivElement>(null);
-
   // URL Modal state
   const [urlModalOpen, setUrlModalOpen] = useState(false);
   const [urlModalUrl, setUrlModalUrl] = useState("");
   const [urlModalTitle, setUrlModalTitle] = useState("");
 
-  // Close menu when clicking outside
+  // Close menu on Escape key
   useEffect(() => {
     if (!isMoreMenuOpen) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      // Don't close if clicking on the menu itself or elements with sc-menu- class
-      if (menuRef.current && !menuRef.current.contains(target) && !target.className?.toString().includes("sc-menu-")) {
-        closeMoreMenu();
-      }
-    };
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -51,15 +41,8 @@ export default function MoreMenu() {
       }
     };
 
-    // Add listeners after a small delay to prevent immediate closing
-    const timeoutId = setTimeout(() => {
-      document.addEventListener("mousedown", handleClickOutside);
-      document.addEventListener("keydown", handleEscape);
-    }, 100);
-
+    document.addEventListener("keydown", handleEscape);
     return () => {
-      clearTimeout(timeoutId);
-      document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEscape);
     };
   }, [isMoreMenuOpen, closeMoreMenu]);
@@ -297,18 +280,15 @@ export default function MoreMenu() {
     <>
       {/* Backdrop to close menu when clicking outside */}
       <div className="fixed inset-0 z-[9999]" onClick={closeMoreMenu} />
-      <div ref={menuRef} className="absolute bottom-[70px] left-0 w-[200px] max-h-[400px] bg-white border border-[#ccc] rounded p-1.5 text-xs overflow-auto mt-0.5 shadow-[2px_2px_5px_0px_rgba(77,77,77,1)] text-left z-[100000] select-none">
+      <MenuList className="absolute bottom-[70px] left-0 w-[200px] max-h-[400px] mt-0.5">
         {/* Map Themes */}
         {themeItems.length > 0 && (
           <>
-            <div className="p-[3px] cursor-default border-b border-[#e2e2e2] text-xs font-bold uppercase text-[#797979] pt-2.5 first:pt-0">MAP THEMES</div>
+            <MenuHeading>MAP THEMES</MenuHeading>
             {themeItems.map((item) => (
-              <div key={item.id} className="p-[3px] cursor-pointer rounded-sm border border-white border-b-[#e2e2e2] hover:border-[#90b5d5] hover:bg-[image:var(--sc-gradient-hover)]" onClick={item.onClick}>
-                <div className="pl-[3px] flex items-center min-h-[16px]">
-                  {item.icon && <span className="inline-flex items-center justify-center w-4 h-4 mr-1.5 text-[#666] shrink-0">{item.icon}</span>}
-                  {item.name}
-                </div>
-              </div>
+              <MenuItem key={item.id} icon={item.icon} onClick={item.onClick}>
+                {item.name}
+              </MenuItem>
             ))}
           </>
         )}
@@ -316,44 +296,33 @@ export default function MoreMenu() {
         {/* Map Tools */}
         {toolItems.length > 0 && (
           <>
-            <div className="p-[3px] cursor-default border-b border-[#e2e2e2] text-xs font-bold uppercase text-[#797979] pt-2.5 first:pt-0">MAP TOOLS</div>
+            <MenuHeading>MAP TOOLS</MenuHeading>
             {toolItems.map((item) => (
-              <div key={item.id} className="p-[3px] cursor-pointer rounded-sm border border-white border-b-[#e2e2e2] hover:border-[#90b5d5] hover:bg-[image:var(--sc-gradient-hover)]" onClick={item.onClick}>
-                <div className="pl-[3px] flex items-center min-h-[16px]">
-                  {item.icon && <span className="inline-flex items-center justify-center w-4 h-4 mr-1.5 text-[#666] shrink-0">{item.icon}</span>}
-                  {item.name}
-                </div>
-              </div>
+              <MenuItem key={item.id} icon={item.icon} onClick={item.onClick}>
+                {item.name}
+              </MenuItem>
             ))}
           </>
         )}
 
         {/* My Maps */}
-        <div className="p-[3px] cursor-default border-b border-[#e2e2e2] text-xs font-bold uppercase text-[#797979] pt-2.5 first:pt-0">MY MAPS</div>
-        <div className="p-[3px] cursor-pointer rounded-sm border border-white border-b-[#e2e2e2] hover:border-[#90b5d5] hover:bg-[image:var(--sc-gradient-hover)]" onClick={handleMyMapsClick}>
-          <div className="pl-[3px] flex items-center min-h-[16px]">
-            <span className="inline-flex items-center justify-center w-4 h-4 mr-1.5 text-[#666] shrink-0">
-              <FaDrawPolygon />
-            </span>
-            My Maps
-          </div>
-        </div>
+        <MenuHeading>MY MAPS</MenuHeading>
+        <MenuItem icon={<FaDrawPolygon />} onClick={handleMyMapsClick}>
+          My Maps
+        </MenuItem>
 
         {/* Other */}
         {otherItems.length > 0 && (
           <>
-            <div className="p-[3px] cursor-default border-b border-[#e2e2e2] text-xs font-bold uppercase text-[#797979] pt-2.5 first:pt-0">OTHER</div>
+            <MenuHeading>OTHER</MenuHeading>
             {otherItems.map((item) => (
-              <div key={item.id} className="p-[3px] cursor-pointer rounded-sm border border-white border-b-[#e2e2e2] hover:border-[#90b5d5] hover:bg-[image:var(--sc-gradient-hover)]" onClick={item.onClick}>
-                <div className="pl-[3px] flex items-center min-h-[16px]">
-                  {item.icon && <span className="inline-flex items-center justify-center w-4 h-4 mr-1.5 text-[#666] shrink-0">{item.icon}</span>}
-                  {item.name}
-                </div>
-              </div>
+              <MenuItem key={item.id} icon={item.icon} onClick={item.onClick}>
+                {item.name}
+              </MenuItem>
             ))}
           </>
         )}
-      </div>
+      </MenuList>
     </>
   ) : null;
 

@@ -233,7 +233,9 @@ describe("HelpModal", () => {
         expect(screen.getByText("Help")).toBeInTheDocument();
       });
 
-      fireEvent.keyDown(document, { key: "Escape" });
+      // Native <dialog> handles ESC → fires close event
+      const dialog = document.querySelector("dialog") as HTMLDialogElement;
+      dialog.close();
       expect(useHelpModalStore.getState().isOpen).toBe(false);
     });
 
@@ -247,9 +249,9 @@ describe("HelpModal", () => {
         expect(screen.getByText("Help")).toBeInTheDocument();
       });
 
-      // Click the overlay (the outer fixed div)
-      const overlay = document.querySelector(".fixed.inset-0") as HTMLElement;
-      fireEvent.click(overlay);
+      // Click the backdrop (the form.modal-backdrop submit button)
+      const backdrop = document.querySelector("form.modal-backdrop button") as HTMLElement;
+      fireEvent.click(backdrop);
       expect(useHelpModalStore.getState().isOpen).toBe(false);
     });
 
@@ -263,8 +265,8 @@ describe("HelpModal", () => {
         expect(screen.getByText("Help")).toBeInTheDocument();
       });
 
-      // Click the inner modal container (not the overlay)
-      const modalContent = screen.getByText("Help").closest(".bg-white") as HTMLElement;
+      // Click the inner modal container (not the backdrop)
+      const modalContent = screen.getByText("Help").closest(".modal-box") as HTMLElement;
       fireEvent.click(modalContent);
       expect(useHelpModalStore.getState().isOpen).toBe(true);
     });

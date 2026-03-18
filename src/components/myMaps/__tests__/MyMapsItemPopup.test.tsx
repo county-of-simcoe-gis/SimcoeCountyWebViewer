@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+﻿import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import MyMapsItemPopup from "@/components/myMaps/MyMapsItemPopup";
@@ -99,14 +99,14 @@ describe("MyMapsItemPopup Component", () => {
     it("should render backdrop when open", () => {
       render(<MyMapsItemPopup {...defaultProps} />);
 
-      const backdrop = document.querySelector(".sc-mymaps-popup-backdrop");
+      const backdrop = document.querySelector('[class*="fixed"][class*="inset-0"]');
       expect(backdrop).toBeInTheDocument();
     });
 
     it("should position popup correctly", () => {
       render(<MyMapsItemPopup {...defaultProps} position={{ x: 150, y: 250 }} />);
 
-      const popup = document.querySelector(".sc-mymaps-item-popup");
+      const popup = document.querySelector(".popup-container");
       expect(popup).toHaveStyle({
         left: "150px",
         top: "250px",
@@ -184,7 +184,7 @@ describe("MyMapsItemPopup Component", () => {
       render(<MyMapsItemPopup {...defaultProps} />);
 
       const exportButton = screen.getByText("Export to ...");
-      const exportContainer = exportButton.closest(".sc-mymaps-popup-submenu-parent");
+      const exportContainer = exportButton.closest(".popup-menu-item-parent");
 
       await user.hover(exportContainer!);
 
@@ -197,7 +197,7 @@ describe("MyMapsItemPopup Component", () => {
       render(<MyMapsItemPopup {...defaultProps} />);
 
       const exportButton = screen.getByText("Export to ...");
-      const exportContainer = exportButton.closest(".sc-mymaps-popup-submenu-parent");
+      const exportContainer = exportButton.closest(".popup-menu-item-parent");
 
       await user.hover(exportContainer!);
 
@@ -212,7 +212,7 @@ describe("MyMapsItemPopup Component", () => {
       render(<MyMapsItemPopup {...defaultProps} />);
 
       const exportButton = screen.getByText("Export to ...");
-      const exportContainer = exportButton.closest(".sc-mymaps-popup-submenu-parent");
+      const exportContainer = exportButton.closest(".popup-menu-item-parent");
 
       // Use fireEvent for more direct control
       fireEvent.mouseEnter(exportContainer!);
@@ -233,7 +233,7 @@ describe("MyMapsItemPopup Component", () => {
       render(<MyMapsItemPopup {...defaultProps} />);
 
       const exportButton = screen.getByText("Export to ...");
-      const exportContainer = exportButton.closest(".sc-mymaps-popup-submenu-parent");
+      const exportContainer = exportButton.closest(".popup-menu-item-parent");
 
       // Use fireEvent for more direct control
       fireEvent.mouseEnter(exportContainer!);
@@ -254,7 +254,7 @@ describe("MyMapsItemPopup Component", () => {
       render(<MyMapsItemPopup {...defaultProps} />);
 
       const exportButton = screen.getByText("Export to ...");
-      const exportContainer = exportButton.closest(".sc-mymaps-popup-submenu-parent");
+      const exportContainer = exportButton.closest(".popup-menu-item-parent");
 
       // Use fireEvent for more direct control
       fireEvent.mouseEnter(exportContainer!);
@@ -275,7 +275,7 @@ describe("MyMapsItemPopup Component", () => {
       render(<MyMapsItemPopup {...defaultProps} />);
 
       const exportButton = screen.getByText("Export to ...");
-      const arrow = exportButton.parentElement?.querySelector(".sc-mymaps-popup-arrow");
+      const arrow = exportButton.parentElement?.querySelector('[class*="ml-auto"]');
 
       expect(arrow).toBeInTheDocument();
       expect(arrow).toHaveTextContent("▶");
@@ -385,7 +385,7 @@ describe("MyMapsItemPopup Component", () => {
     it("should not call onClose when clicking inside popup", () => {
       render(<MyMapsItemPopup {...defaultProps} />);
 
-      const popup = document.querySelector(".sc-mymaps-item-popup");
+      const popup = document.querySelector(".popup-container");
       const mousedownListener = mockAddEventListener.mock.calls.find((call) => call[0] === "mousedown")?.[1];
 
       expect(mousedownListener).toBeDefined();
@@ -451,7 +451,8 @@ describe("MyMapsItemPopup Component", () => {
       ];
 
       menuItems.forEach(({ text, title }) => {
-        const menuItem = screen.getByText(text).closest(".sc-mymaps-popup-item");
+        const element = screen.getByText(text);
+        const menuItem = element.closest(".popup-menu-item") || element.closest(".popup-menu-item-danger") || element.closest(".popup-menu-item-parent");
         expect(menuItem).toHaveAttribute("title", title);
       });
     });
@@ -461,35 +462,34 @@ describe("MyMapsItemPopup Component", () => {
     it("should apply correct CSS classes to menu items", () => {
       render(<MyMapsItemPopup {...defaultProps} />);
 
-      const bufferItem = screen.getByText("Buffer").closest(".sc-mymaps-popup-item");
-      const deleteItem = screen.getByText("Delete").closest(".sc-mymaps-popup-item");
+      const bufferItem = screen.getByText("Buffer").closest(".popup-menu-item");
+      const deleteItem = screen.getByText("Delete").closest(".popup-menu-item-danger");
 
-      expect(bufferItem).toHaveClass("sc-mymaps-popup-item");
-      expect(deleteItem).toHaveClass("sc-mymaps-popup-item");
-      expect(deleteItem).toHaveClass("danger"); // Delete should have danger class
+      expect(bufferItem).toHaveClass("popup-menu-item");
+      expect(deleteItem).toHaveClass("popup-menu-item-danger");
     });
 
     it("should have proper submenu classes", async () => {
       render(<MyMapsItemPopup {...defaultProps} />);
 
       const exportButton = screen.getByText("Export to ...");
-      const exportItem = exportButton.closest(".sc-mymaps-popup-item");
+      const exportItem = exportButton.closest(".popup-menu-item-parent");
 
-      expect(exportItem).toHaveClass("sc-mymaps-popup-submenu-parent");
+      expect(exportItem).toHaveClass("popup-menu-item-parent");
 
       await user.hover(exportButton);
 
-      const submenu = document.querySelector(".sc-mymaps-popup-submenu");
+      const submenu = document.querySelector(".popup-submenu-container");
       expect(submenu).toBeInTheDocument();
 
-      const submenuItems = document.querySelectorAll(".sc-mymaps-popup-submenu-item");
+      const submenuItems = document.querySelectorAll(".popup-submenu-item");
       expect(submenuItems).toHaveLength(3); // GeoJSON, KML, EsriJSON
     });
 
     it("should have proper separator styling", () => {
       render(<MyMapsItemPopup {...defaultProps} />);
 
-      const separator = document.querySelector(".sc-mymaps-popup-separator");
+      const separator = document.querySelector('[class*="h-px"]');
       expect(separator).toBeInTheDocument();
     });
   });
@@ -537,7 +537,7 @@ describe("MyMapsItemPopup Component", () => {
       extremePositions.forEach((position) => {
         const { unmount } = render(<MyMapsItemPopup {...defaultProps} position={position} />);
 
-        const popup = document.querySelector(".sc-mymaps-item-popup");
+        const popup = document.querySelector(".popup-container");
         expect(popup).toHaveStyle({
           left: `${position.x}px`,
           top: `${position.y}px`,

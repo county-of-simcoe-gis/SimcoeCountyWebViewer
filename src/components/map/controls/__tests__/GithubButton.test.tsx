@@ -35,7 +35,7 @@ describe("GithubButton", () => {
     render(<GithubButton href="https://github.com/test/repo">View on GitHub</GithubButton>);
 
     const link = screen.getByRole("link");
-    expect(link).toHaveClass("inline-flex", "items-center", "text-xs");
+    expect(link).toHaveClass("github-button-link");
   });
 
   it("handles empty children gracefully", () => {
@@ -66,7 +66,7 @@ describe("GithubButton", () => {
     render(<GithubButton href="https://github.com/test/repo">View on GitHub</GithubButton>);
 
     const link = screen.getByRole("link");
-    // Should have focus styles for accessibility
-    expect(link).toHaveClass("focus-visible:outline-2");
+    // Should have github-button-link class which includes focus styles
+    expect(link).toHaveClass("github-button-link");
   });
 });

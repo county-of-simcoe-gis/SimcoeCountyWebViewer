@@ -6,6 +6,7 @@ import Switch from "react-switch";
 import Image from "next/image";
 import copy from "copy-to-clipboard";
 import { useMyMapsStore } from "@/stores/myMapsStore";
+import "./MyMapsAdvanced.css";
 
 interface MyMapsAdvancedProps {
   onEditFeatures: (editOn: boolean, option?: string) => void;
@@ -192,13 +193,15 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
     <div className="relative h-[30px] m-[5px] bg-[#e8e8e8] border border-[#ddd] cursor-pointer select-none leading-[30px] pl-[31px] mt-auto shrink-0">
       {/* Content that appears above when open */}
       <div
+        data-testid="mymaps-advanced-content"
+        data-state={open ? "open" : "closed"}
         className={`absolute bottom-full left-0 right-0 border border-solid border-[#d8dadc] border-b-0 rounded-t-[5px] bg-white p-[5px] z-[10001] transition-all duration-[400ms] ease-in-out ${open ? "max-h-[500px] opacity-100 translate-y-0 p-[5px]" : "max-h-0 opacity-0 translate-y-[10px] !pt-0 !pb-0 overflow-hidden"}`}
       >
         <div className="border-b border-[#d8dadc] pb-2.5">
           <label className="block font-bold">Import/Save</label>
           <div>
             <input
-              className="h-[25px] w-[280px] text-[8pt] py-[2px] pr-[25px] pl-1 border-2 border-[#999] rounded-[3px] mb-2 box-border bg-[url('/images/edit.png')] bg-no-repeat bg-[position:right_4px_center] bg-[length:16px_16px] bg-white text-[#367cc5] focus:outline-none focus:border-[#007bff] focus:shadow-[0_0_0_2px_rgba(0,123,255,0.4)]"
+              className="mymaps-text-input bg-[url('/images/edit.png')] bg-no-repeat bg-[position:right_4px_center] bg-[length:16px_16px] bg-white text-[#367cc5] focus:outline-none focus:border-[#007bff] focus:shadow-[0_0_0_2px_rgba(0,123,255,0.4)]"
               id={inputId}
               type="text"
               placeholder="Enter ID here"
@@ -209,26 +212,18 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
             />
             <br />
             <div className="flex gap-[3px] flex-wrap">
-              <button
-                className="bg-[#f8f9fa] border border-[#dee2e6] rounded-[3px] py-1 px-[5px] cursor-pointer text-[11px] font-[Arial,sans-serif] text-[#333] flex items-center justify-center gap-[3px] transition-all min-h-[24px] min-w-[60px] hover:bg-[#e9ecef]"
-                onClick={onImport}
-                title="Load map items from an existing MyMaps ID"
-              >
+              <button className="mymaps-action-btn" onClick={onImport} title="Load map items from an existing MyMaps ID">
                 Import
               </button>
               <button
-                className="bg-[#f8f9fa] border border-[#dee2e6] rounded-[3px] py-1 px-[5px] cursor-pointer text-[11px] font-[Arial,sans-serif] text-[#333] flex items-center justify-center gap-[3px] transition-all min-h-[24px] min-w-[60px] hover:bg-[#e9ecef] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="mymaps-action-btn disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={onSave}
                 disabled={!hasItems}
                 title={hasItems ? "Save your current map items and get a shareable ID" : "No items to save - draw something on the map first"}
               >
                 Save
               </button>
-              <button
-                className="bg-[#f8f9fa] border border-[#dee2e6] rounded-[3px] py-1 px-[5px] cursor-pointer text-[11px] font-[Arial,sans-serif] text-[#333] flex items-center justify-center gap-[3px] transition-all min-h-[24px] min-w-[60px] hover:bg-[#e9ecef]"
-                onClick={onShare}
-                title="Create a shareable link with your saved MyMaps ID"
-              >
+              <button className="mymaps-action-btn" onClick={onShare} title="Create a shareable link with your saved MyMaps ID">
                 Share
               </button>
             </div>
@@ -263,7 +258,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
 
         <div className="flex gap-1 pt-2.5 border-t border-[#d8dadc] mt-2.5 text-center">
           <button
-            className="bg-[#f8f9fa] border border-[#dee2e6] rounded-[3px] py-1 px-[5px] cursor-pointer text-[11px] font-[Arial,sans-serif] text-[#333] flex items-center justify-center gap-[3px] transition-all min-h-[24px] min-w-[60px] flex-1 w-full bg-[url('/images/myMaps/eraser.png')] bg-no-repeat bg-[position:8px_center] bg-[length:16px_16px] text-left hover:bg-[#e9ecef] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mymaps-action-btn flex-1 w-full bg-[url('/images/myMaps/eraser.png')] bg-no-repeat bg-[position:8px_center] bg-[length:16px_16px] text-left disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => {
               if (window.confirm("Delete all items? This action cannot be undone.")) {
                 onDeleteAllClick();
@@ -275,7 +270,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
           </button>
           <div className="relative flex-1 flex" ref={additionalMenuRef}>
             <button
-              className="bg-[#f8f9fa] border border-[#dee2e6] rounded-[3px] py-1 px-[5px] cursor-pointer text-[11px] font-[Arial,sans-serif] text-[#333] flex items-center justify-center gap-[3px] transition-all min-h-[24px] min-w-[60px] flex-1 w-full bg-[url('/images/myMaps/toolbox.png')] bg-no-repeat bg-[position:8px_center] bg-[length:16px_16px] pl-7 text-left hover:bg-[#e9ecef]"
+              className="mymaps-action-btn flex-1 w-full bg-[url('/images/myMaps/toolbox.png')] bg-no-repeat bg-[position:8px_center] bg-[length:16px_16px] pl-7 text-left"
               onClick={(e) => {
                 if (!showAdditionalMenu) {
                   const rect = e.currentTarget.getBoundingClientRect();

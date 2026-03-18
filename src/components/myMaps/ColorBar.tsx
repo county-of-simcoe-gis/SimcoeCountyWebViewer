@@ -19,11 +19,13 @@ const ColorBar: React.FC<ColorBarProps> = ({ isEditing = false }) => {
 
   return (
     <div
+      data-testid="mymaps-color-bar"
       className={`flex flex-wrap gap-1 p-2 pt-0 bg-[#f8f9fa] border-b border-[#dee2e6] mb-2 max-[768px]:justify-center max-[768px]:gap-[3px] max-[768px]:p-1.5 ${isEditing ? "opacity-50 pointer-events-none" : ""}`}
     >
       {MYMAPS_CONSTANTS.DEFAULT_COLORS.map((color) => (
         <div
           key={color}
+          data-testid="mymaps-color-item"
           className={`w-6 h-6 border-2 border-[#ccc] rounded-[3px] cursor-pointer flex items-center justify-center transition-all relative hover:border-[#999] hover:scale-110 focus:outline-2 focus:outline-[#007bff] focus:outline-offset-2 max-[768px]:w-5 max-[768px]:h-5 ${drawColor === color ? "!border-[#007bff] !border-[3px]" : ""}`}
           style={{ backgroundColor: color }}
           title={`Select color ${color}`}

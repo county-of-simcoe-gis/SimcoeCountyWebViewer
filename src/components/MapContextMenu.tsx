@@ -96,6 +96,7 @@ export const MapContextMenu: React.FC<MapContextMenuProps> = ({ x, y, items, onC
   const menuContent = (
     <div
       ref={menuRef}
+      data-testid="map-context-menu-container"
       className="fixed z-[10000] bg-white border border-[#ccc] rounded shadow-[0_2px_8px_rgba(0,0,0,0.15)] min-w-[180px] overflow-hidden"
       style={{ left: `${position.x}px`, top: `${position.y}px` }}
     >
@@ -110,13 +111,14 @@ export const MapContextMenu: React.FC<MapContextMenuProps> = ({ x, y, items, onC
       <ul className="list-none m-0 p-0">
         {visibleItems.map((item) => {
           if (item.separator) {
-            return <li key={item.id} className="h-px bg-[#e0e0e0] my-1" />;
+            return <li key={item.id} data-testid="map-context-menu-separator" className="h-px bg-[#e0e0e0] my-1" />;
           }
 
           return (
             <li
               key={item.id}
               className={`py-2 px-3 cursor-pointer flex items-center gap-2 text-[10pt] border-b border-[#f0f0f0] select-none last:border-b-0 hover:bg-[#f5f5f5] ${item.disabled ? "opacity-50 cursor-not-allowed hover:bg-transparent" : ""}`}
+              data-testid={`map-context-menu-item${item.disabled ? " disabled" : ""}`}
               onClick={() => handleItemClick(item)}
               title={item.disabled ? "This option is not available" : undefined}
             >

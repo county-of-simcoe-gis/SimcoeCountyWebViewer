@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import ColorBar from "@/components/myMaps/ColorBar";
 import { MYMAPS_CONSTANTS } from "@/types/myMaps";
@@ -56,7 +56,7 @@ describe("ColorBar Component", () => {
     it("should render all colors from constants", () => {
       const { container } = render(<ColorBar />);
 
-      const colorItems = container.querySelectorAll(".sc-mymaps-color-item");
+      const colorItems = container.querySelectorAll('[data-testid="mymaps-color-item"]');
       expect(colorItems).toHaveLength(MYMAPS_CONSTANTS.DEFAULT_COLORS.length);
 
       MYMAPS_CONSTANTS.DEFAULT_COLORS.forEach((color) => {
@@ -68,16 +68,16 @@ describe("ColorBar Component", () => {
     it("should apply correct CSS classes", () => {
       const { container } = render(<ColorBar />);
 
-      const colorBarElement = container.querySelector(".sc-mymaps-color-bar");
+      const colorBarElement = screen.getByTestId("mymaps-color-bar");
       expect(colorBarElement).toBeInTheDocument();
-      expect(colorBarElement).not.toHaveClass("sc-disabled");
+      expect(colorBarElement).not.toHaveClass("opacity-50");
     });
 
     it("should apply disabled class when editing", () => {
       const { container } = render(<ColorBar isEditing={true} />);
 
-      const colorBarElement = container.querySelector(".sc-mymaps-color-bar");
-      expect(colorBarElement).toHaveClass("sc-disabled");
+      const colorBarElement = screen.getByTestId("mymaps-color-bar");
+      expect(colorBarElement).toHaveClass("opacity-50");
     });
 
     it("should show active state for current color", () => {
@@ -86,7 +86,7 @@ describe("ColorBar Component", () => {
 
       const redColorItem = container.querySelector('[style*="background-color: rgb(255, 0, 0)"]') || container.querySelector('[style*="background-color: #ff0000"]');
       expect(redColorItem).toBeInTheDocument();
-      expect(redColorItem).toHaveClass("active");
+      expect(redColorItem).toHaveClass("!border-[#007bff]");
       expect(redColorItem).toContainHTML("✓");
     });
 
@@ -140,8 +140,8 @@ describe("ColorBar Component", () => {
       expect(redColorItem).toBeInTheDocument();
 
       // When editing, the parent container has pointer-events: none
-      const colorBar = container.querySelector(".sc-mymaps-color-bar");
-      expect(colorBar).toHaveClass("sc-disabled");
+      const colorBar = screen.getByTestId("mymaps-color-bar");
+      expect(colorBar).toHaveClass("opacity-50");
 
       // Try clicking - should fail due to pointer-events: none
       try {
@@ -171,7 +171,7 @@ describe("ColorBar Component", () => {
     it("should have proper tabIndex for interactive elements", () => {
       const { container } = render(<ColorBar />);
 
-      const colorItems = container.querySelectorAll(".sc-mymaps-color-item");
+      const colorItems = container.querySelectorAll('[data-testid="mymaps-color-item"]');
       colorItems.forEach((item) => {
         expect(item).toHaveAttribute("tabindex", "0");
         expect(item).toHaveAttribute("role", "button");
@@ -181,7 +181,7 @@ describe("ColorBar Component", () => {
     it("should set tabIndex to -1 when editing", () => {
       const { container } = render(<ColorBar isEditing={true} />);
 
-      const colorItems = container.querySelectorAll(".sc-mymaps-color-item");
+      const colorItems = container.querySelectorAll('[data-testid="mymaps-color-item"]');
       colorItems.forEach((item) => {
         expect(item).toHaveAttribute("tabindex", "-1");
       });
@@ -274,8 +274,8 @@ describe("ColorBar Component", () => {
 
       expect(redColorItem).toBeInTheDocument();
       expect(greenColorItem).toBeInTheDocument();
-      expect(redColorItem).toHaveClass("active");
-      expect(greenColorItem).not.toHaveClass("active");
+      expect(redColorItem).toHaveClass("!border-[#007bff]");
+      expect(greenColorItem).not.toHaveClass("!border-[#007bff]");
 
       mockMyMapsStore.drawColor = "#00ff00";
       rerender(<ColorBar />);
@@ -285,17 +285,17 @@ describe("ColorBar Component", () => {
 
       expect(redColorItem).toBeInTheDocument();
       expect(greenColorItem).toBeInTheDocument();
-      expect(redColorItem).not.toHaveClass("active");
-      expect(greenColorItem).toHaveClass("active");
+      expect(redColorItem).not.toHaveClass("!border-[#007bff]");
+      expect(greenColorItem).toHaveClass("!border-[#007bff]");
     });
 
     it("should handle edge case where drawColor is not in the color list", () => {
       mockMyMapsStore.drawColor = "#123456"; // Custom color not in list
       render(<ColorBar />);
 
-      const colorItems = document.querySelectorAll(".sc-mymaps-color-item");
+      const colorItems = document.querySelectorAll('[data-testid="mymaps-color-item"]');
       colorItems.forEach((item) => {
-        expect(item).not.toHaveClass("active");
+        expect(item).not.toHaveClass("!border-[#007bff]");
         expect(item).not.toContainHTML("✓");
       });
     });
@@ -304,9 +304,9 @@ describe("ColorBar Component", () => {
       mockMyMapsStore.drawColor = null;
       const { container } = render(<ColorBar />);
 
-      const colorItems = container.querySelectorAll(".sc-mymaps-color-item");
+      const colorItems = container.querySelectorAll('[data-testid="mymaps-color-item"]');
       colorItems.forEach((item) => {
-        expect(item).not.toHaveClass("active");
+        expect(item).not.toHaveClass("!border-[#007bff]");
       });
     });
   });
@@ -321,7 +321,7 @@ describe("ColorBar Component", () => {
       const redColorItem = container.querySelector('[style*="background-color: rgb(255, 0, 0)"]') || container.querySelector('[style*="background-color: #ff0000"]');
       // Note: The comparison might be case-sensitive, so this tests the exact matching
       expect(redColorItem).toBeInTheDocument();
-      expect(redColorItem).not.toHaveClass("active");
+      expect(redColorItem).not.toHaveClass("!border-[#007bff]");
     });
 
     it("should handle white and black colors properly", () => {
@@ -339,7 +339,7 @@ describe("ColorBar Component", () => {
 
       const updatedWhiteItem = container.querySelector('[style*="background-color: rgb(255, 255, 255)"]') || container.querySelector('[style*="background-color: #ffffff"]');
       expect(updatedWhiteItem).toBeInTheDocument();
-      expect(updatedWhiteItem).toHaveClass("active");
+      expect(updatedWhiteItem).toHaveClass("!border-[#007bff]");
     });
   });
 
@@ -360,7 +360,7 @@ describe("ColorBar Component", () => {
 
       const activeColorItem = container.querySelector('[style*="background-color: rgb(255, 0, 0)"]') || container.querySelector('[style*="background-color: #ff0000"]');
       expect(activeColorItem).toBeInTheDocument();
-      const checkmark = activeColorItem!.querySelector(".sc-mymaps-color-checkmark");
+      const checkmark = activeColorItem!.querySelector('[class*="text-white"]');
 
       expect(checkmark).toBeInTheDocument();
       expect(checkmark).toHaveTextContent("✓");
@@ -372,7 +372,7 @@ describe("ColorBar Component", () => {
 
       const inactiveColorItem = container.querySelector('[style*="background-color: rgb(0, 255, 0)"]') || container.querySelector('[style*="background-color: #00ff00"]');
       expect(inactiveColorItem).toBeInTheDocument();
-      const checkmark = inactiveColorItem!.querySelector(".sc-mymaps-color-checkmark");
+      const checkmark = inactiveColorItem!.querySelector('[class*="text-white"]');
 
       expect(checkmark).not.toBeInTheDocument();
     });
@@ -382,7 +382,7 @@ describe("ColorBar Component", () => {
     it("should handle focus states properly", async () => {
       const { container } = render(<ColorBar />);
 
-      const firstColorItem = container.querySelector(".sc-mymaps-color-item");
+      const firstColorItem = container.querySelector('[data-testid="mymaps-color-item"]');
 
       // Focus the element
       (firstColorItem as HTMLElement).focus();
@@ -404,7 +404,7 @@ describe("ColorBar Component", () => {
     it("should prevent default behavior for keyboard events", async () => {
       const { container } = render(<ColorBar />);
 
-      const colorItem = container.querySelector(".sc-mymaps-color-item");
+      const colorItem = container.querySelector('[data-testid="mymaps-color-item"]');
       expect(colorItem).toBeInTheDocument();
       (colorItem as HTMLElement).focus();
 
@@ -420,20 +420,20 @@ describe("ColorBar Component", () => {
     it("should render efficiently with standard color set", () => {
       const { container } = render(<ColorBar />);
 
-      const colorItems = container.querySelectorAll(".sc-mymaps-color-item");
+      const colorItems = container.querySelectorAll('[data-testid="mymaps-color-item"]');
       expect(colorItems).toHaveLength(MYMAPS_CONSTANTS.DEFAULT_COLORS.length);
     });
 
     it("should not cause unnecessary re-renders", () => {
       const { rerender, container } = render(<ColorBar />);
 
-      const initialColorItems = container.querySelectorAll(".sc-mymaps-color-item");
+      const initialColorItems = container.querySelectorAll('[data-testid="mymaps-color-item"]');
       const initialCount = initialColorItems.length;
 
       // Re-render with same props
       rerender(<ColorBar />);
 
-      const newColorItems = container.querySelectorAll(".sc-mymaps-color-item");
+      const newColorItems = container.querySelectorAll('[data-testid="mymaps-color-item"]');
       expect(newColorItems).toHaveLength(initialCount);
     });
 

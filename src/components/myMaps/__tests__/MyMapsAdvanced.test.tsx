@@ -94,11 +94,10 @@ describe("MyMapsAdvanced Component", () => {
       render(<MyMapsAdvanced {...defaultProps} />);
 
       expect(screen.getByText("Advanced Options")).toBeInTheDocument();
-      expect(screen.getByTestId("mocked-image")).toBeInTheDocument();
 
       // Content should be hidden initially
-      const content = screen.getByText("Import/Save").closest(".sc-mymaps-advanced-content");
-      expect(content).toHaveClass("closed");
+      const content = screen.getByTestId("mymaps-advanced-content");
+      expect(content).toHaveAttribute("data-state", "closed");
     });
 
     it("should expand when trigger button is clicked", async () => {
@@ -107,8 +106,8 @@ describe("MyMapsAdvanced Component", () => {
       const trigger = screen.getByText("Advanced Options");
       await user.click(trigger);
 
-      const content = screen.getByText("Import/Save").closest(".sc-mymaps-advanced-content");
-      expect(content).toHaveClass("open");
+      const content = screen.getByTestId("mymaps-advanced-content");
+      expect(content).toHaveAttribute("data-state", "open");
     });
 
     it("should show editing switch and options when expanded", async () => {

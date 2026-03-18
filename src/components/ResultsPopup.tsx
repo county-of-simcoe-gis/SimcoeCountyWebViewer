@@ -89,7 +89,11 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
   const renderCollapsedIcon = (result: Result, index: number, isSelected: boolean) => {
     // Use custom sidebar icon if provided
     if (result.renderSidebarIcon) {
-      return <div className={`text-sm flex items-center justify-center leading-none ${isSelected ? "text-white" : "text-[#666]"}`}>{result.renderSidebarIcon()}</div>;
+      return (
+        <div className={`text-sm flex items-center justify-center leading-none ${isSelected ? "text-white" : "text-[#666]"}`} data-testid="result-icon">
+          {result.renderSidebarIcon()}
+        </div>
+      );
     }
 
     let IconComponent = FaLayerGroup;
@@ -108,7 +112,7 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
     }
 
     return (
-      <div className={`text-sm flex items-center justify-center leading-none ${isSelected ? "text-white" : "text-[#666]"}`}>
+      <div className={`text-sm flex items-center justify-center leading-none ${isSelected ? "text-white" : "text-[#666]"}`} data-testid="result-icon">
         <IconComponent />
       </div>
     );
@@ -200,7 +204,7 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
           <div className="px-5 pt-1.5 pb-5">
             <h3 className="m-0 mb-2 text-[13px] font-semibold text-[#333] leading-normal">{result.data.layerName}</h3>
             <p className="m-0 mb-4 text-xs text-[#666] font-mono">Feature ID: {result.data.featureId}</p>
-            <div className="mt-4">
+            <div className="mt-4" data-testid="result-attributes">
               {Object.entries(result.data.attributes)
                 .filter(([key, value]) => key !== "geometry" && key !== "bbox" && !key.startsWith("_") && typeof value !== "object")
                 .map(([key, value]) => (

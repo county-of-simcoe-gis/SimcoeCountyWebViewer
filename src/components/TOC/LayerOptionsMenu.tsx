@@ -583,6 +583,7 @@ export default function LayerOptionsMenu({ layerInfo, group, position, onClose }
   return createPortal(
     <div
       ref={menuRef}
+      data-testid="layer-options-menu"
       className="bg-white border border-[#ccc] rounded-md shadow-lg min-w-[220px] max-w-[280px] font-inherit text-sm overflow-hidden"
       style={{
         position: "fixed",

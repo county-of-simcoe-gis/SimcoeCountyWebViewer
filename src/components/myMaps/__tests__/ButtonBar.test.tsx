@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+﻿import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import ButtonBar from "@/components/myMaps/ButtonBar";
@@ -160,16 +160,16 @@ describe("ButtonBar Component", () => {
     it("should apply correct CSS classes", () => {
       render(<ButtonBar />);
 
-      const container = document.querySelector(".sc-mymaps-button-bar");
+      const container = screen.getByTestId("mymaps-button-bar");
       expect(container).toBeInTheDocument();
-      expect(container).not.toHaveClass("sc-disabled");
+      expect(container).not.toHaveClass("opacity-50");
     });
 
     it("should apply disabled class when editing", () => {
       render(<ButtonBar isEditing={true} />);
 
-      const container = document.querySelector(".sc-mymaps-button-bar");
-      expect(container).toHaveClass("sc-disabled");
+      const container = screen.getByTestId("mymaps-button-bar");
+      expect(container).toHaveClass("opacity-50");
     });
   });
 
@@ -259,8 +259,8 @@ describe("ButtonBar Component", () => {
       });
 
       // The container should have pointer-events: none preventing all interactions
-      const container = document.querySelector(".sc-mymaps-button-bar");
-      expect(container).toHaveClass("sc-disabled");
+      const container = screen.getByTestId("mymaps-button-bar");
+      expect(container).toHaveClass("opacity-50");
 
       // Try clicking a button while editing - should fail due to pointer-events: none
       try {
@@ -321,13 +321,13 @@ describe("ButtonBar Component", () => {
       // This test validates the component structure exists even with no tools
       render(<ButtonBar />);
 
-      const container = document.querySelector(".sc-mymaps-button-bar");
+      const container = screen.getByTestId("mymaps-button-bar");
       expect(container).toBeInTheDocument();
 
       // The component should still render the container but with tools from the mocked config
       // Since we have a working mock in place, let's test the basic structure
-      expect(container).toHaveClass("sc-mymaps-button-bar");
-      expect(container).not.toHaveClass("sc-disabled");
+      expect(container).toBeInTheDocument();
+      expect(container).not.toHaveClass("opacity-50");
     });
 
     it("should handle malformed tool configurations", () => {
@@ -336,7 +336,7 @@ describe("ButtonBar Component", () => {
       render(<ButtonBar />);
 
       // Should render container without crashing
-      const container = document.querySelector(".sc-mymaps-button-bar");
+      const container = screen.getByTestId("mymaps-button-bar");
       expect(container).toBeInTheDocument();
 
       // Should render expected buttons from our mock config
@@ -407,8 +407,8 @@ describe("ButtonBar Component", () => {
       mockMyMapsStore.drawType = "Point";
       render(<ButtonBar isEditing={false} />);
 
-      const container = document.querySelector(".sc-mymaps-button-bar");
-      expect(container).not.toHaveClass("sc-disabled");
+      const container = screen.getByTestId("mymaps-button-bar");
+      expect(container).not.toHaveClass("opacity-50");
 
       const activeButton = screen.getByTestId("draw-button-point");
       expect(activeButton).toHaveClass("active");
@@ -417,13 +417,13 @@ describe("ButtonBar Component", () => {
     it("should update classes when editing state changes", () => {
       const { rerender } = render(<ButtonBar isEditing={false} />);
 
-      let container = document.querySelector(".sc-mymaps-button-bar");
-      expect(container).not.toHaveClass("sc-disabled");
+      let container = screen.getByTestId("mymaps-button-bar");
+      expect(container).not.toHaveClass("opacity-50");
 
       rerender(<ButtonBar isEditing={true} />);
 
-      container = document.querySelector(".sc-mymaps-button-bar");
-      expect(container).toHaveClass("sc-disabled");
+      container = screen.getByTestId("mymaps-button-bar");
+      expect(container).toHaveClass("opacity-50");
     });
   });
 
@@ -458,3 +458,4 @@ describe("ButtonBar Component", () => {
     });
   });
 });
+

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FaCompass } from "react-icons/fa";
 import Map from "ol/Map";
+import { MapControlButton } from "@/components/ui/MapControlButton";
 
 // React component for the rotate control
 interface RotateControlProps {
@@ -44,18 +45,14 @@ export const RotateControl = React.memo(({ map }: RotateControlProps) => {
   const hasRotation = Math.abs(rotation) > 0.01;
   if (hasRotation) {
     return (
-      <div
-        className={`w-[38px] h-[38px] bg-gradient-to-b from-white to-gray-200 bg-no-repeat bg-center rounded-full shadow-md cursor-pointer btn btn-sm border-0 hover:shadow-lg transition-all inline-flex items-center justify-center ${
-          hasRotation ? "opacity-100" : "opacity-60 hover:opacity-100"
-        }`}
+      <MapControlButton
+        className={hasRotation ? "opacity-100" : "opacity-60 hover:opacity-100"}
         onClick={resetRotation}
         title={`Reset rotation ${hasRotation ? `(${Math.round(rotationDegrees)}°)` : ""}`}
-        style={{
-          transform: `rotate(${rotationDegrees}deg)`,
-        }}
+        style={{ transform: `rotate(${rotationDegrees}deg)` }}
       >
         <FaCompass size={18} className="text-gray-600 rotate-135" />
-      </div>
+      </MapControlButton>
     );
   }
   return null;

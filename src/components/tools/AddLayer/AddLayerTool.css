@@ -1,6 +1,6 @@
 /* AddLayer Tool - react-tabs overrides (3rd-party library) */
 
-.sc-addlayer-tabs .sc-addlayer-tab-list {
+.addlayer-tabs .addlayer-tab-list {
   display: flex !important;
   list-style: none !important;
   gap: 0 !important;
@@ -12,7 +12,7 @@
   background-color: #f3f4f6 !important;
 }
 
-.sc-addlayer-tabs .sc-addlayer-tab {
+.addlayer-tabs .addlayer-tab {
   flex: 1 !important;
   padding: 0.5rem 0.75rem !important;
   font-size: 0.875rem !important;
@@ -27,25 +27,25 @@
   list-style: none !important;
 }
 
-.sc-addlayer-tabs .sc-addlayer-tab:last-child {
+.addlayer-tabs .addlayer-tab:last-child {
   border-right: none !important;
 }
 
-.sc-addlayer-tabs .sc-addlayer-tab:hover {
+.addlayer-tabs .addlayer-tab:hover {
   background-color: #e5e7eb !important;
   color: #1f2937 !important;
 }
 
-.sc-addlayer-tabs .sc-addlayer-tab.react-tabs__tab--selected {
+.addlayer-tabs .addlayer-tab.react-tabs__tab--selected {
   background-color: #3b82f6 !important;
   color: #ffffff !important;
 }
 
-.sc-addlayer-tabs .sc-addlayer-tab.react-tabs__tab--selected:hover {
+.addlayer-tabs .addlayer-tab.react-tabs__tab--selected:hover {
   background-color: #2563eb !important;
   color: #ffffff !important;
 }
 
-.sc-addlayer-tabs .sc-addlayer-tab:focus {
+.addlayer-tabs .addlayer-tab:focus {
   outline: none !important;
 }

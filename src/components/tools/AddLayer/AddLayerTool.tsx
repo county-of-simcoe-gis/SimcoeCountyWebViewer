@@ -827,11 +827,11 @@ export default function AddLayerTool({ name = "Add Data", helpLink, hideHeader =
           <div className="card-body p-3">
             <h3 className="font-semibold text-base mb-2">Source</h3>
 
-            <Tabs selectedIndex={activeTab} onSelect={setActiveTab} className="sc-addlayer-tabs">
-              <TabList className="sc-addlayer-tab-list">
-                <Tab className="sc-addlayer-tab">Services</Tab>
-                <Tab className="sc-addlayer-tab">URL</Tab>
-                <Tab className="sc-addlayer-tab">File</Tab>
+            <Tabs selectedIndex={activeTab} onSelect={setActiveTab} className="addlayer-tabs">
+              <TabList className="addlayer-tab-list">
+                <Tab className="addlayer-tab">Services</Tab>
+                <Tab className="addlayer-tab">URL</Tab>
+                <Tab className="addlayer-tab">File</Tab>
               </TabList>
 
               {/* Services Tab */}
@@ -947,7 +947,12 @@ export default function AddLayerTool({ name = "Add Data", helpLink, hideHeader =
                 <div className="space-y-3">
                   <div className="text-xs text-base-content/70 mb-2">Supported: {supportedExtensions.join(", ")}</div>
 
-                  <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-[#d1d5db] rounded-lg bg-[#f9fafb] cursor-pointer transition-all min-h-[120px] hover:border-primary hover:bg-blue-50 active:border-blue-600 active:bg-blue-100" onDrop={handleFileDrop} onDragOver={handleDragOver} onClick={() => fileInputRef.current?.click()}>
+                  <div
+                    className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-[#d1d5db] rounded-lg bg-[#f9fafb] cursor-pointer transition-all min-h-[120px] hover:border-primary hover:bg-blue-50 active:border-blue-600 active:bg-blue-100"
+                    onDrop={handleFileDrop}
+                    onDragOver={handleDragOver}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
                     <FaUpload size={32} className="text-base-content/50 mb-2" />
                     <span className="text-sm">{selectedFile ? selectedFile.name : "Drag and Drop or Click to Select File"}</span>
                     <input ref={fileInputRef} type="file" className="hidden" accept={supportedExtensions.map((ext) => `.${ext}`).join(",")} onChange={handleFileChange} />

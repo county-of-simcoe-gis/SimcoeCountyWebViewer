@@ -116,6 +116,10 @@ vi.mock("react-icons/fa", () => ({
   // Campus theme icons
   FaRegCheckCircle: (props: any) => React.createElement("div", { ...props, "data-testid": "reg-check-circle-icon" }, "RegCheckCircle"),
   FaRegCircle: (props: any) => React.createElement("div", { ...props, "data-testid": "reg-circle-icon" }, "RegCircle"),
+
+  // InfoWindowRow and PanelComponent icons
+  FaLevelUpAlt: (props: any) => React.createElement("div", { ...props, "data-testid": "level-up-alt-icon" }, "LevelUpAlt"),
+  FaWrench: (props: any) => React.createElement("div", { ...props, "data-testid": "wrench-icon" }, "Wrench"),
 }));
 
 vi.mock("react-icons/md", () => ({
@@ -169,6 +173,30 @@ afterAll(() => {
   server.close();
   cleanup();
 });
+
+// Mock HTMLDialogElement which JSDOM doesn't fully implement
+if (typeof HTMLDialogElement !== "undefined") {
+  HTMLDialogElement.prototype.showModal =
+    HTMLDialogElement.prototype.showModal ||
+    function (this: HTMLDialogElement) {
+      this.setAttribute("open", "");
+    };
+  HTMLDialogElement.prototype.close =
+    HTMLDialogElement.prototype.close ||
+    function (this: HTMLDialogElement) {
+      this.removeAttribute("open");
+      this.dispatchEvent(new Event("close"));
+    };
+}
+
+// Mock HTMLFormElement.requestSubmit which JSDOM doesn't implement
+HTMLFormElement.prototype.requestSubmit = function (this: HTMLFormElement) {
+  // For method="dialog" forms, close the parent dialog
+  const dialog = this.closest("dialog") as HTMLDialogElement | null;
+  if (dialog && this.getAttribute("method") === "dialog") {
+    dialog.close();
+  }
+};
 
 // Mock browser APIs that JSDOM doesn't provide
 Object.defineProperty(window, "matchMedia", {

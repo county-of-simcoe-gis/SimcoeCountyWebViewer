@@ -8,6 +8,7 @@ import { Vector as VectorSource } from "ol/source";
 import { useMapStore } from "@/stores/mapStore";
 import { useEventStore } from "@/stores/eventStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
+import "./MyMapsBuffer.css";
 import { getPublicPath } from "@/utils/getPublicPath";
 import { featureFromGeoJSON } from "@/utils/myMapsHelpers";
 import { bufferGeometry, convertToMeters } from "@/utils/openlayers/BufferHelpers";
@@ -266,7 +267,7 @@ const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
         <img src={getPublicPath("/images/buffer.png")} alt="buffer" className="w-4 h-4 block" />
         &nbsp; Buffer
       </legend>
-      <div className="grid grid-cols-[50%_50%] grid-rows-[11px_25px_23px_auto] content-center gap-y-[5px] gap-x-[5px] w-full box-border [&_label]:text-[11px] [&_label]:font-[Arial,sans-serif] [&_label]:text-[#333] [&_label]:font-bold [&_input[type=number]]:p-[5px] [&_input[type=number]]:border [&_input[type=number]]:border-[#cecece] [&_input[type=number]]:rounded-[3px] [&_input[type=number]]:text-[11px] [&_input[type=number]]:outline-none [&_input[type=number]]:w-full [&_input[type=number]]:box-border [&_input[type=number]]:focus:border-[#367cc5] [&_select]:p-[5px] [&_select]:border [&_select]:border-[#cecece] [&_select]:rounded-[3px] [&_select]:text-[11px] [&_select]:outline-none [&_select]:w-full [&_select]:box-border [&_select]:focus:border-[#367cc5]">
+      <div className="buffer-grid">
         <label style={{ gridColumnStart: "1" }}>Distance:</label>
         <label style={{ gridColumnStart: "2" }}>Units:</label>
 

@@ -11,6 +11,7 @@ import { useEffect, useState, Suspense, useCallback, useMemo } from "react";
 import { lazy } from "react";
 import { useSession } from "next-auth/react";
 import ReportsNavBar from "@/components/ReportsNavBar";
+import { SectionTitle } from "@/components/ui";
 
 // Lazy load tool components
 const MeasureTool = lazy(() => import("@/components/tools/Measure/MeasureTool"));
@@ -439,7 +440,7 @@ export default function Sidebar() {
               <ReportsNavBar />
               {currentReport ? (
                 <div className="h-full overflow-y-auto">
-                  <div className="font-bold text-sm mb-2.5 border-b border-gray-200 text-gray-800">{currentReport.title}</div>
+                  <SectionTitle className="mb-2.5 border-gray-200 text-gray-800">{currentReport.title}</SectionTitle>
                   <div className="text-xs">{currentReport.content}</div>
                 </div>
               ) : (

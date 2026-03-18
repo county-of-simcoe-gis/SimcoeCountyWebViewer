@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+﻿import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import MyMapsItems from "@/components/myMaps/MyMapsItems";
@@ -155,7 +155,7 @@ describe("MyMapsItems Component", () => {
 
       render(<MyMapsItems {...defaultProps} />);
 
-      const wrappers = document.querySelectorAll(".sc-mymaps-item-wrapper");
+      const wrappers = document.querySelectorAll('[data-testid="mymaps-item-wrapper"]');
       expect(wrappers).toHaveLength(2);
     });
 
@@ -296,7 +296,7 @@ describe("MyMapsItems Component", () => {
         },
         {
           id: "bearing-1",
-          label: "Bearing: 45°",
+          label: "Bearing: 45Â°",
           labelVisible: true,
           labelRotation: 0,
           drawType: "Bearing",
@@ -321,7 +321,7 @@ describe("MyMapsItems Component", () => {
       render(<MyMapsItems {...defaultProps} />);
 
       expect(screen.getByText("Text Feature")).toBeInTheDocument();
-      expect(screen.getByText("Bearing: 45°")).toBeInTheDocument();
+      expect(screen.getByText("Bearing: 45Â°")).toBeInTheDocument();
       expect(screen.getByText("100m")).toBeInTheDocument();
     });
   });
@@ -377,14 +377,14 @@ describe("MyMapsItems Component", () => {
     it("should have proper container structure", () => {
       render(<MyMapsItems {...defaultProps} />);
 
-      const container = document.querySelector(".sc-container.sc-mymaps-item-container");
+      const container = screen.getByTestId("mymaps-item-container");
       expect(container).toBeInTheDocument();
     });
 
     it("should have identifiable header", () => {
       render(<MyMapsItems {...defaultProps} />);
 
-      const header = document.querySelector(".sc-mymaps-items-container-header");
+      const header = screen.getByTestId("mymaps-items-header");
       expect(header).toBeInTheDocument();
       expect(header).toContainElement(screen.getByRole("img", { name: /my maps icon/i }));
     });
@@ -394,10 +394,10 @@ describe("MyMapsItems Component", () => {
 
       render(<MyMapsItems {...defaultProps} />);
 
-      const list = document.querySelector(".sc-mymaps-items-container-list");
+      const list = screen.getByTestId("mymaps-items-list");
       expect(list).toBeInTheDocument();
 
-      const wrappers = document.querySelectorAll(".sc-mymaps-item-wrapper");
+      const wrappers = document.querySelectorAll('[data-testid="mymaps-item-wrapper"]');
       expect(wrappers).toHaveLength(2);
     });
   });
@@ -419,9 +419,10 @@ describe("MyMapsItems Component", () => {
 
       const { container } = render(<MyMapsItems {...defaultProps} />);
 
-      expect(container.querySelectorAll(".sc-mymaps-item-wrapper")).toHaveLength(100);
+      expect(container.querySelectorAll('[data-testid="mymaps-item-wrapper"]')).toHaveLength(100);
       expect(screen.getByText("Item 0")).toBeInTheDocument();
       expect(screen.getByText("Item 99")).toBeInTheDocument();
     });
   });
 });
+

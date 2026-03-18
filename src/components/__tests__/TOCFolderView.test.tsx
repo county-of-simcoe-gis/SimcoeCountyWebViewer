@@ -153,14 +153,14 @@ describe("TOCFolderView", () => {
 
       const container = screen.getByTestId("sc-toc-simcoe-folder-view-container-main");
       expect(container).toBeInTheDocument();
-      expect(container).not.toHaveClass("sc-hidden");
+      expect(container).not.toHaveClass("hidden");
     });
 
     it("hides when not visible", () => {
       render(<TOCFolderView {...defaultProps} visible={false} />);
 
       const container = screen.getByTestId("sc-toc-simcoe-folder-view-container-main");
-      expect(container).toHaveClass("sc-hidden");
+      expect(container).toHaveClass("hidden");
     });
 
     it("renders all layer groups", () => {
@@ -186,13 +186,13 @@ describe("TOCFolderView", () => {
       const { rerender } = render(<TOCFolderView {...defaultProps} visible={true} />);
 
       let container = screen.getByTestId("sc-toc-simcoe-folder-view-container-main");
-      expect(container).not.toHaveClass("sc-hidden");
+      expect(container).not.toHaveClass("hidden");
 
       rerender(<TOCFolderView {...defaultProps} visible={false} />);
 
       await waitFor(() => {
         container = screen.getByTestId("sc-toc-simcoe-folder-view-container-main");
-        expect(container).toHaveClass("sc-hidden");
+        expect(container).toHaveClass("hidden");
       });
     });
   });
@@ -347,13 +347,13 @@ describe("TOCFolderView", () => {
       const { rerender } = render(<TOCFolderView {...defaultProps} visible={false} />);
 
       let container = screen.getByTestId("sc-toc-simcoe-folder-view-container-main");
-      expect(container).toHaveClass("sc-hidden");
+      expect(container).toHaveClass("hidden");
 
       rerender(<TOCFolderView {...defaultProps} visible={true} />);
 
       await waitFor(() => {
         container = screen.getByTestId("sc-toc-simcoe-folder-view-container-main");
-        expect(container).not.toHaveClass("sc-hidden");
+        expect(container).not.toHaveClass("hidden");
       });
     });
 
@@ -378,7 +378,7 @@ describe("TOCFolderView", () => {
       const container = screen.getByTestId("sc-toc-simcoe-folder-view-container-main");
       expect(container).toHaveAttribute("id", "sc-toc-simcoe-folder-view-container-main");
 
-      const groupList = container.querySelector(".toc-group-list");
+      const groupList = container.querySelector('[data-testid="toc-group-list"]');
       expect(groupList).toBeInTheDocument();
     });
 
@@ -386,7 +386,7 @@ describe("TOCFolderView", () => {
       render(<TOCFolderView {...defaultProps} />);
 
       const container = screen.getByTestId("sc-toc-simcoe-folder-view-container-main");
-      const groupList = container.querySelector(".toc-group-list");
+      const groupList = container.querySelector('[data-testid="toc-group-list"]');
       expect(groupList).toBeInTheDocument();
       expect(groupList?.children.length).toBe(2); // Two groups
     });
