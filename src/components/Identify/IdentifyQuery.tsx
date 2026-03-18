@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useArcGISTokenStore } from "@/stores/arcgisTokenStore";
 import { InfoRow } from "@/components/common/InfoRow";
+import { SectionTitle } from "@/components/ui";
 
 interface IdentifyQueryProps {
   title: string;
@@ -78,31 +79,27 @@ export default function IdentifyQuery({ title, layerURL, layerId, where, fields,
   }, [layerURL, layerId, where, fields, secured]);
 
   if (isLoading) {
-    return <div style={{ padding: "10px", fontSize: "12px", color: "#666" }}>Loading {title}...</div>;
+    return <div className="p-2.5 text-xs text-[#666]">Loading {title}...</div>;
   }
 
   if (error) {
     return (
-      <div style={{ padding: "10px", fontSize: "12px", color: "#c00" }}>
+      <div className="p-2.5 text-xs text-[#c00]">
         <strong>Error:</strong> {error}
       </div>
     );
   }
 
   if (features.length === 0) {
-    return <div style={{ padding: "10px", fontSize: "12px", color: "#666" }}>No results found for {title}.</div>;
+    return <div className="p-2.5 text-xs text-[#666]">No results found for {title}.</div>;
   }
 
   return (
-    <div style={{ padding: "5px" }}>
-      <div style={{ fontWeight: "bold", fontSize: "14px", marginBottom: "8px", borderBottom: "1px solid #ccc", paddingBottom: "4px" }}>{title}</div>
+    <div className="p-[5px]">
+      <SectionTitle className="border-b-[#ccc]">{title}</SectionTitle>
       {features.map((attrs, featureIdx) => (
-        <div key={featureIdx} style={{ marginBottom: "10px" }}>
-          {features.length > 1 && (
-            <div style={{ fontWeight: "bold", fontSize: "12px", color: "#333", marginBottom: "4px" }}>
-              Feature {featureIdx + 1}
-            </div>
-          )}
+        <div key={featureIdx} className="mb-2.5">
+          {features.length > 1 && <div className="font-bold text-xs text-[#333] mb-1">Feature {featureIdx + 1}</div>}
           {Object.entries(attrs)
             .filter(([, value]) => value !== null && value !== undefined && value !== "")
             .map(([key, value]) => (

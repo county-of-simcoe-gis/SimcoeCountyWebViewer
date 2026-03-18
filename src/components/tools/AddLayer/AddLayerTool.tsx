@@ -803,7 +803,7 @@ export default function AddLayerTool({ name = "Add Data", helpLink, hideHeader =
               <label className="label py-1">
                 <span className="label-text font-medium">Add to Group:</span>
               </label>
-              <select className="sc-addlayer-select" value={selectedGroup} onChange={(e) => setSelectedGroup(e.target.value)}>
+              <select className="select select-bordered w-full select-sm" value={selectedGroup} onChange={(e) => setSelectedGroup(e.target.value)}>
                 {availableGroups.map((group) => (
                   <option key={group.value} value={group.value}>
                     {group.label}
@@ -817,7 +817,7 @@ export default function AddLayerTool({ name = "Add Data", helpLink, hideHeader =
               <label className="label py-1">
                 <span className="label-text font-medium">Layer Name:</span>
               </label>
-              <input type="text" className="sc-addlayer-input" value={layerDisplayName} onChange={(e) => setLayerDisplayName(e.target.value)} placeholder="Enter layer name" />
+              <input type="text" className="input input-bordered w-full input-sm" value={layerDisplayName} onChange={(e) => setLayerDisplayName(e.target.value)} placeholder="Enter layer name" />
             </div>
           </div>
         </div>
@@ -827,11 +827,11 @@ export default function AddLayerTool({ name = "Add Data", helpLink, hideHeader =
           <div className="card-body p-3">
             <h3 className="font-semibold text-base mb-2">Source</h3>
 
-            <Tabs selectedIndex={activeTab} onSelect={setActiveTab} className="sc-addlayer-tabs">
-              <TabList className="sc-addlayer-tab-list">
-                <Tab className="sc-addlayer-tab">Services</Tab>
-                <Tab className="sc-addlayer-tab">URL</Tab>
-                <Tab className="sc-addlayer-tab">File</Tab>
+            <Tabs selectedIndex={activeTab} onSelect={setActiveTab} className="addlayer-tabs">
+              <TabList className="addlayer-tab-list">
+                <Tab className="addlayer-tab">Services</Tab>
+                <Tab className="addlayer-tab">URL</Tab>
+                <Tab className="addlayer-tab">File</Tab>
               </TabList>
 
               {/* Services Tab */}
@@ -842,7 +842,7 @@ export default function AddLayerTool({ name = "Add Data", helpLink, hideHeader =
                       <span className="label-text font-medium">Service:</span>
                     </label>
                     <select
-                      className="sc-addlayer-select"
+                      className="select select-bordered w-full select-sm"
                       value={selectedService?.value || ""}
                       onChange={(e) => {
                         const service = typedConfig.services.find((s) => s.value === e.target.value);
@@ -859,7 +859,7 @@ export default function AddLayerTool({ name = "Add Data", helpLink, hideHeader =
                     </select>
                   </div>
 
-                  <button className="sc-addlayer-btn sc-addlayer-btn-primary sc-addlayer-btn-sm sc-addlayer-btn-full" onClick={discoverServiceLayers} disabled={isLoading || !selectedService}>
+                  <button className="btn btn-primary btn-sm w-full" onClick={discoverServiceLayers} disabled={isLoading || !selectedService}>
                     <FaSearch size={14} />
                     {isLoading ? "Discovering..." : "Discover Layers"}
                   </button>
@@ -871,7 +871,7 @@ export default function AddLayerTool({ name = "Add Data", helpLink, hideHeader =
                       <label className="label py-1">
                         <span className="label-text font-medium">Available Layers:</span>
                       </label>
-                      <select className="sc-addlayer-select" value={selectedServiceLayer?.value || ""} onChange={(e) => handleServiceLayerSelect(e.target.value)}>
+                      <select className="select select-bordered w-full select-sm" value={selectedServiceLayer?.value || ""} onChange={(e) => handleServiceLayerSelect(e.target.value)}>
                         {serviceLayers.map((layer) => (
                           <option key={layer.value} value={layer.value}>
                             {layer.label}
@@ -890,7 +890,7 @@ export default function AddLayerTool({ name = "Add Data", helpLink, hideHeader =
                     <label className="label py-1">
                       <span className="label-text font-medium">URL Type:</span>
                     </label>
-                    <select className="sc-addlayer-select" value={selectedUrlFormat?.value || ""} onChange={(e) => handleUrlFormatChange(e.target.value)}>
+                    <select className="select select-bordered w-full select-sm" value={selectedUrlFormat?.value || ""} onChange={(e) => handleUrlFormatChange(e.target.value)}>
                       {urlFormatOptions.map((format) => (
                         <option key={format.value} value={format.value}>
                           {format.label}
@@ -905,7 +905,7 @@ export default function AddLayerTool({ name = "Add Data", helpLink, hideHeader =
                     </label>
                     <input
                       type="text"
-                      className="sc-addlayer-input"
+                      className="input input-bordered w-full input-sm"
                       value={serverUrl}
                       onChange={(e) => {
                         setServerUrl(e.target.value);
@@ -917,7 +917,7 @@ export default function AddLayerTool({ name = "Add Data", helpLink, hideHeader =
                   </div>
 
                   {selectedUrlFormat?.value !== "xyz" && selectedUrlFormat?.value !== "remote_geojson" && selectedUrlFormat?.value !== "remote_kml" && (
-                    <button className="sc-addlayer-btn sc-addlayer-btn-primary sc-addlayer-btn-sm sc-addlayer-btn-full" onClick={discoverLayers} disabled={isLoading || !serverUrl}>
+                    <button className="btn btn-primary btn-sm w-full" onClick={discoverLayers} disabled={isLoading || !serverUrl}>
                       <FaSearch size={14} />
                       {isLoading ? "Discovering..." : "Check for Layers"}
                     </button>
@@ -930,7 +930,7 @@ export default function AddLayerTool({ name = "Add Data", helpLink, hideHeader =
                       <label className="label py-1">
                         <span className="label-text font-medium">Available Layers:</span>
                       </label>
-                      <select className="sc-addlayer-select" value={selectedLayer?.value || ""} onChange={(e) => handleLayerSelect(e.target.value)}>
+                      <select className="select select-bordered w-full select-sm" value={selectedLayer?.value || ""} onChange={(e) => handleLayerSelect(e.target.value)}>
                         {discoveredLayers.map((layer) => (
                           <option key={layer.value} value={layer.value}>
                             {layer.label}
@@ -947,7 +947,12 @@ export default function AddLayerTool({ name = "Add Data", helpLink, hideHeader =
                 <div className="space-y-3">
                   <div className="text-xs text-base-content/70 mb-2">Supported: {supportedExtensions.join(", ")}</div>
 
-                  <div className="sc-addlayer-dropzone" onDrop={handleFileDrop} onDragOver={handleDragOver} onClick={() => fileInputRef.current?.click()}>
+                  <div
+                    className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-[#d1d5db] rounded-lg bg-[#f9fafb] cursor-pointer transition-all min-h-[120px] hover:border-primary hover:bg-blue-50 active:border-blue-600 active:bg-blue-100"
+                    onDrop={handleFileDrop}
+                    onDragOver={handleDragOver}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
                     <FaUpload size={32} className="text-base-content/50 mb-2" />
                     <span className="text-sm">{selectedFile ? selectedFile.name : "Drag and Drop or Click to Select File"}</span>
                     <input ref={fileInputRef} type="file" className="hidden" accept={supportedExtensions.map((ext) => `.${ext}`).join(",")} onChange={handleFileChange} />
@@ -961,12 +966,12 @@ export default function AddLayerTool({ name = "Add Data", helpLink, hideHeader =
         </div>
 
         {/* Action Buttons */}
-        <div className="sc-addlayer-actions">
-          <button className="sc-addlayer-btn sc-addlayer-btn-ghost sc-addlayer-btn-sm" onClick={handleClose}>
+        <div className="flex justify-end gap-2 mt-2">
+          <button className="btn btn-ghost btn-sm" onClick={handleClose}>
             Cancel
           </button>
           <button
-            className="sc-addlayer-btn sc-addlayer-btn-primary sc-addlayer-btn-sm"
+            className="btn btn-primary btn-sm"
             onClick={addLayerToMap}
             disabled={
               isLoading ||

@@ -583,7 +583,8 @@ export default function LayerOptionsMenu({ layerInfo, group, position, onClose }
   return createPortal(
     <div
       ref={menuRef}
-      className="layer-options-menu"
+      data-testid="layer-options-menu"
+      className="bg-white border border-[#ccc] rounded-md shadow-lg min-w-[220px] max-w-[280px] font-inherit text-sm overflow-hidden"
       style={{
         position: "fixed",
         left: adjustedPosition.x,
@@ -591,19 +592,23 @@ export default function LayerOptionsMenu({ layerInfo, group, position, onClose }
         zIndex: 10000,
       }}
     >
-      <div className="layer-options-menu-header">
-        <span className="layer-options-menu-title">{getCurrentLayerInfo().tocDisplayName}</span>
-        <button className="layer-options-menu-close" onClick={onClose} aria-label="Close menu">
+      <div className="flex items-center justify-between px-3 py-2 bg-[#f8f9fa] border-b border-[#e9ecef]">
+        <span className="font-medium text-[#333] flex-1 whitespace-nowrap overflow-hidden text-ellipsis text-[13px]">{getCurrentLayerInfo().tocDisplayName}</span>
+        <button
+          className="bg-transparent border-none cursor-pointer text-[#666] p-0.5 ml-2 rounded-[3px] flex items-center justify-center hover:bg-[#e9ecef] hover:text-[#333]"
+          onClick={onClose}
+          aria-label="Close menu"
+        >
           <FaTimes />
         </button>
       </div>
 
-      <div className="layer-options-menu-content">
+      <div className="py-1">
         {/* Opacity Slider */}
-        <div className="layer-options-menu-item layer-options-opacity-item">
-          <label className="layer-options-opacity-label">Adjust Opacity</label>
-          <div className="layer-options-opacity-container">
-            <span className="layer-options-opacity-value">{Math.round(opacity * 100)}%</span>
+        <div className="flex flex-col items-stretch px-3 py-3 border-b border-[#e9ecef] mb-1 cursor-default">
+          <label className="font-medium text-[#333] mb-2 text-[13px] cursor-default">Adjust Opacity</label>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[#666] min-w-[30px] text-right">{Math.round(opacity * 100)}%</span>
             <input
               type="range"
               min="0"
@@ -615,20 +620,24 @@ export default function LayerOptionsMenu({ layerInfo, group, position, onClose }
               onTouchStart={handleOpacityStart}
               onMouseUp={handleOpacityComplete}
               onTouchEnd={handleOpacityComplete}
-              className="layer-options-opacity-slider"
+              className="layer-options-opacity-slider flex-1"
             />
           </div>
         </div>
 
         {/* Menu Items */}
         {visibleMenuItems.map((item) => (
-          <button key={item.id} className="layer-options-menu-item layer-options-menu-button" onClick={item.onClick}>
-            <span className="layer-options-menu-icon">{item.icon}</span>
-            <span className="layer-options-menu-label">{item.label}</span>
+          <button
+            key={item.id}
+            className="flex items-center px-3 py-2 m-0 bg-transparent border-none w-full text-left cursor-pointer text-[#333] text-sm transition-colors duration-100 hover:bg-[#f8f9fa]"
+            onClick={item.onClick}
+          >
+            <span className="mr-2 text-[#666] w-4 flex items-center justify-center">{item.icon}</span>
+            <span className="flex-1">{item.label}</span>
           </button>
         ))}
 
-        {visibleMenuItems.length === 0 && <div className="layer-options-menu-item layer-options-menu-empty">No options available for this layer.</div>}
+        {visibleMenuItems.length === 0 && <div className="flex items-center px-3 py-2 text-[#999] cursor-default italic">No options available for this layer.</div>}
       </div>
     </div>,
     document.body,

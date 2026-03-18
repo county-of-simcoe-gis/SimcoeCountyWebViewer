@@ -41,134 +41,43 @@ export default function GlobalURLModal() {
   if (!isOpen) return null;
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        top: "62px",
-        left: "10px",
-        right: "10px",
-        bottom: "10px",
-        zIndex: 200000,
-        backgroundColor: "#fff",
-        borderRadius: "5px 5px 0 0",
-        display: "flex",
-        flexDirection: "column",
-        transition: "left 0.3s ease-in-out",
-        boxShadow: "0 0 12px 2px rgba(0,0,0,0.25)",
-      }}
-    >
+    <div className="absolute top-[62px] left-2.5 right-2.5 bottom-2.5 z-[200000] bg-white rounded-t-[5px] flex flex-col transition-[left] duration-300 ease-in-out shadow-[0_0_12px_2px_rgba(0,0,0,0.25)]">
       {/* Header bar */}
-      <div
-        style={{
-          height: "44px",
-          minHeight: "44px",
-          background: "linear-gradient(to bottom, #3980cc 0%, #2865a2 100%)",
-          borderRadius: "5px 5px 0 0",
-          display: "flex",
-          alignItems: "center",
-          padding: "0 8px",
-          color: "#fff",
-          userSelect: "none",
-        }}
-      >
-        <span style={{ flex: 1, fontSize: "14px", fontWeight: 500 }}>{title}</span>
+      <div className="h-11 min-h-[44px] bg-[image:var(--sc-gradient-header)] rounded-t-[5px] flex items-center px-2 text-white select-none">
+        <span className="flex-1 text-sm font-medium">{title}</span>
 
         {/* Pop-out button */}
         <button
           onClick={handlePopout}
           title="Open in New Window"
-          style={{
-            width: "32px",
-            height: "30px",
-            marginRight: "8px",
-            border: "1px solid #3672b1",
-            borderRadius: "3px",
-            background: "rgba(255,255,255,0.15)",
-            color: "#fff",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "16px",
-          }}
+          className="w-8 h-[30px] mr-2 border border-[#3672b1] rounded-[3px] bg-white/15 text-white cursor-pointer flex items-center justify-center text-base"
         >
           ⧉
         </button>
 
         {/* Close button */}
-        <button
-          onClick={close}
-          title="Close"
-          style={{
-            width: "32px",
-            height: "30px",
-            border: "1px solid #3672b1",
-            borderRadius: "3px",
-            background: "rgba(255,255,255,0.15)",
-            color: "#fff",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "16px",
-            fontWeight: "bold",
-          }}
-        >
+        <button onClick={close} title="Close" className="w-8 h-[30px] border border-[#3672b1] rounded-[3px] bg-white/15 text-white cursor-pointer flex items-center justify-center text-base font-bold">
           ✕
         </button>
       </div>
 
       {/* Content area with iframe */}
-      <div style={{ flex: 1, position: "relative", margin: "7px", border: "1px solid #ccc", overflow: "hidden" }}>
+      <div className="flex-1 relative m-[7px] border border-[#ccc] overflow-hidden">
         {isLoading && (
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "#f9f9f9" }}>
+          <div className="absolute inset-0 flex items-center justify-center bg-base-200">
             <span className="loading loading-spinner loading-md"></span>
           </div>
         )}
-        <iframe
-          src={url}
-          title={title}
-          onLoad={() => setIsLoading(false)}
-          style={{ width: "100%", height: "100%", border: "none", overflow: hideScroll ? "hidden" : "auto" }}
-        />
+        <iframe src={url} title={title} onLoad={() => setIsLoading(false)} className={`w-full h-full border-none ${hideScroll ? "overflow-hidden" : "overflow-auto"}`} />
       </div>
 
       {/* Footer with Close and Don't Show Again buttons */}
       {showFooter && (
-        <div
-          style={{
-            width: "100%",
-            textAlign: "right",
-            padding: "8px 14px",
-            borderTop: "1px solid #ccc",
-            backgroundColor: "#fff",
-          }}
-        >
-          <button
-            onClick={close}
-            style={{
-              padding: "6px 16px",
-              marginRight: "5px",
-              border: "1px solid #ddd",
-              borderRadius: "4px",
-              background: "#fff",
-              cursor: "pointer",
-              fontSize: "13px",
-            }}
-          >
+        <div className="w-full text-right px-3.5 py-2 border-t border-[#ccc] bg-white">
+          <button onClick={close} className="btn btn-sm btn-ghost mr-[5px]">
             Close Window
           </button>
-          <button
-            onClick={handleDontShowAgain}
-            style={{
-              padding: "6px 16px",
-              border: "1px solid #ddd",
-              borderRadius: "4px",
-              background: "#fff",
-              cursor: "pointer",
-              fontSize: "13px",
-            }}
-          >
+          <button onClick={handleDontShowAgain} className="btn btn-sm btn-ghost">
             Don&apos;t Show this Again
           </button>
         </div>

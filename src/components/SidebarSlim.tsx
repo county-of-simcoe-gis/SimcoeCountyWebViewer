@@ -17,11 +17,11 @@ function SlimButton({ title, icon, isSelected, isActive, hidden, onClick }: Slim
   if (hidden) return null;
 
   return (
-    <div className={`sc-sidebar-slim-button-container ${isSelected ? "active" : ""}`} onClick={onClick}>
-      {isActive && <span className="sc-sidebar-slim-button-dot" />}
-      <button className="sc-sidebar-slim-button">
+    <div className={`py-2.5 px-1.5 cursor-pointer rounded-sm mx-0.5 relative ${isSelected ? "bg-[image:var(--sc-gradient-active)] border border-[#90b5d5]" : "hover:bg-black/5"}`} onClick={onClick}>
+      {isActive && <span className="h-2.5 w-2.5 bg-[rgb(120,204,50)] rounded-full inline-block absolute right-1.5" />}
+      <button className="bg-transparent border-none p-0 cursor-pointer text-[9pt] flex flex-col items-center gap-1 w-full text-base-content">
         <Image src={`/images/${icon}`} alt={title} width={32} height={32} />
-        <span>{title}</span>
+        <span className="text-[9pt] leading-none text-center whitespace-nowrap">{title}</span>
       </button>
     </div>
   );
@@ -56,8 +56,17 @@ export default function SidebarSlim() {
   };
 
   return (
-    <div className="sc-sidebar-slim-container">
-      {!hideLayers && <SlimButton title="Layers" icon="legend-32x32.png" onClick={() => handleTabClick("layers", getTabIndex("layers"))} isSelected={activeTab === getTabIndex("layers")} isActive={false} hidden={false} />}
+    <div className="w-[65px] h-[calc(100vh-52px)] absolute top-[52px] left-0 text-center select-none pb-1.5 pl-0.5 pr-px bg-[image:var(--sc-gradient-default)] border-r border-gray-400 z-[1000] overflow-visible max-[770px]:hidden">
+      {!hideLayers && (
+        <SlimButton
+          title="Layers"
+          icon="legend-32x32.png"
+          onClick={() => handleTabClick("layers", getTabIndex("layers"))}
+          isSelected={activeTab === getTabIndex("layers")}
+          isActive={false}
+          hidden={false}
+        />
+      )}
       {!hideTools && (
         <SlimButton
           title="Tools"
@@ -88,26 +97,28 @@ export default function SidebarSlim() {
           hidden={false}
         />
       )}
-      {!hideReports && <SlimButton title="Reports" icon="report-32x32.png" onClick={() => handleTabClick("reports", getTabIndex("reports"))} isSelected={activeTab === getTabIndex("reports")} isActive={false} hidden={false} />}
+      {!hideReports && (
+        <SlimButton
+          title="Reports"
+          icon="report-32x32.png"
+          onClick={() => handleTabClick("reports", getTabIndex("reports"))}
+          isSelected={activeTab === getTabIndex("reports")}
+          isActive={false}
+          hidden={false}
+        />
+      )}
 
-      <div className="sc-sidebar-slim-footer-container">
-        <div className={`sc-sidebar-slim-button-container ${isMoreMenuOpen ? "active" : ""}`} onClick={handleMoreClick}>
-          <button className="sc-menu-more-button" title="More Options" style={{ pointerEvents: "none" }}>
-            <svg
-              stroke="currentColor"
-              fill="currentColor"
-              strokeWidth="0"
-              version="1.1"
-              viewBox="0 0 22 16"
-              height="24"
-              width="24"
-              xmlns="http://www.w3.org/2000/svg"
-              style={{ pointerEvents: "none" }}
-            >
+      <div className="absolute bottom-0 pb-2.5 pl-0.5 pr-px w-[calc(100%-4px)]">
+        <div
+          className={`py-2.5 px-1.5 cursor-pointer rounded-sm mx-0.5 relative ${isMoreMenuOpen ? "bg-[image:var(--sc-gradient-active)] border border-[#90b5d5]" : "hover:bg-black/5"}`}
+          onClick={handleMoreClick}
+        >
+          <button className="flex flex-col items-center gap-1 bg-transparent border-none py-2.5 px-2 text-[9pt] cursor-pointer w-full text-base-content pointer-events-none" title="More Options">
+            <svg stroke="currentColor" fill="currentColor" strokeWidth="0" version="1.1" viewBox="0 0 22 16" height="24" width="24" xmlns="http://www.w3.org/2000/svg" className="pointer-events-none">
               <path d="M0 3h14v3h-14v-3zM0 7h14v3h-14v-3zM0 11h14v3h-14v-3z"></path>
               <path d="M15.5 10l3-3 3 3z"></path>
             </svg>
-            <span style={{ pointerEvents: "none" }}>More</span>
+            <span className="text-[9pt] leading-none text-center whitespace-nowrap pointer-events-none">More</span>
           </button>
         </div>
       </div>

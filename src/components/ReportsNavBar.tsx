@@ -3,7 +3,6 @@
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useReportsStore } from "@/stores/reportsStore";
 import { usePopupStore } from "@/stores/popupStore";
-import "./ReportsNavBar.css";
 
 /**
  * Navigation bar rendered at the top of the Reports tab.
@@ -15,24 +14,38 @@ export default function ReportsNavBar() {
   const { canGoBack, canGoForward, goBack, goForward, currentReport } = useReportsStore();
   const { alwaysUseReportsTab, setAlwaysUseReportsTab } = usePopupStore();
 
-  const showToggle = currentReport?.source === "popupPopOut";
+  const showToggle = currentReport?.source === "popupPopOut" || currentReport?.source === "propertyReport";
 
   return (
-    <div className="sc-reports-navbar">
+    <div className="flex items-center justify-between py-1.5 px-2 bg-[#f5f5f5] border-b border-[#e0e0e0] gap-2 min-h-[36px]">
       {/* Back / Forward */}
-      <div className="sc-reports-navbar-nav">
-        <button className="sc-reports-navbar-btn" disabled={!canGoBack} onClick={goBack} aria-label="Go back" title="Go back">
+      <div className="flex items-center gap-1">
+        <button
+          className="bg-white border border-[#ddd] rounded px-1.5 py-1 cursor-pointer flex items-center justify-center transition-all text-[#333] hover:enabled:bg-[#e8e8e8] hover:enabled:border-[#ccc] disabled:opacity-35 disabled:cursor-default"
+          disabled={!canGoBack}
+          onClick={goBack}
+          aria-label="Go back"
+          title="Go back"
+        >
           <FaChevronLeft size={12} />
         </button>
-        <button className="sc-reports-navbar-btn" disabled={!canGoForward} onClick={goForward} aria-label="Go forward" title="Go forward">
+        <button
+          className="bg-white border border-[#ddd] rounded px-1.5 py-1 cursor-pointer flex items-center justify-center transition-all text-[#333] hover:enabled:bg-[#e8e8e8] hover:enabled:border-[#ccc] disabled:opacity-35 disabled:cursor-default"
+          disabled={!canGoForward}
+          onClick={goForward}
+          aria-label="Go forward"
+          title="Go forward"
+        >
           <FaChevronRight size={12} />
         </button>
       </div>
 
       {/* "Always display" toggle — only for popup-originated content */}
       {showToggle && (
-        <div className="sc-reports-navbar-toggle">
-          <label htmlFor="sc-always-reports-toggle">Always display popup info in Reports tab</label>
+        <div className="flex items-center gap-1.5 text-[11px] text-[#555] whitespace-nowrap">
+          <label htmlFor="sc-always-reports-toggle" className="cursor-pointer select-none">
+            Always display popup info in Reports tab
+          </label>
           <input id="sc-always-reports-toggle" type="checkbox" className="toggle toggle-sm toggle-primary" checked={alwaysUseReportsTab} onChange={(e) => setAlwaysUseReportsTab(e.target.checked)} />
         </div>
       )}

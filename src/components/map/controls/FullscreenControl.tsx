@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FaExpand, FaCompress } from "react-icons/fa";
 import Map from "ol/Map";
+import { MapControlButton } from "@/components/ui/MapControlButton";
 
 // React component for the fullscreen control
 interface FullscreenControlProps {
@@ -50,13 +51,9 @@ export const FullscreenControl = React.memo(({ map }: FullscreenControlProps) =>
   };
 
   return (
-    <div
-      className="w-[38px] h-[38px] bg-gradient-to-b from-white to-gray-200 bg-no-repeat bg-center rounded-full shadow-md cursor-pointer btn btn-sm border-0 hover:shadow-lg transition-shadow duration-200 inline-flex items-center justify-center"
-      onClick={toggleFullscreen}
-      title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-    >
+    <MapControlButton onClick={toggleFullscreen} title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>
       {isFullscreen ? <FaCompress size={16} className="text-gray-600" /> : <FaExpand size={16} className="text-gray-600" />}
-    </div>
+    </MapControlButton>
   );
 });
 

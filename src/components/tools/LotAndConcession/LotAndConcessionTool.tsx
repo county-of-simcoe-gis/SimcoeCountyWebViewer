@@ -6,7 +6,6 @@
  * Provides lot and concession search functionality for Simcoe County
  */
 
-import "@/components/tools/LotAndConcession/LotAndConcessionTool.css";
 import React, { useState, useEffect, useCallback } from "react";
 import PanelComponent from "@/components/PanelComponent";
 import { useMapStore } from "@/stores/mapStore";
@@ -79,15 +78,15 @@ function Results({ feature, onMouseEnter, onMouseLeave, onFeatureClick }: Result
 
   return (
     <div
-      className="sc-lot-con-result"
+      className="p-3 mb-2 bg-white border border-[#e5e7eb] rounded-lg cursor-pointer transition-colors hover:bg-blue-50 hover:border-[#93c5fd]"
       title="Click to Zoom"
       onMouseLeave={() => onMouseLeave(feature)}
       onMouseEnter={() => onMouseEnter(feature)}
       onClick={() => onFeatureClick(feature)}
     >
-      <div className="sc-lot-con-result-title">Lot: {lot}</div>
-      <div className="sc-lot-con-result-title">Concession: {con}</div>
-      <div className="sc-lot-con-result-subtitle">Township: {muni}</div>
+      <div className="text-sm font-medium text-[#111827] mb-0.5">Lot: {lot}</div>
+      <div className="text-sm font-medium text-[#111827] mb-0.5">Concession: {con}</div>
+      <div className="text-xs text-[#6b7280]">Township: {muni}</div>
     </div>
   );
 }
@@ -340,41 +339,41 @@ export default function LotAndConcessionTool({ name = "Lot And Concession", help
 
   return (
     <PanelComponent name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={handleClose} onSidebarVisibility={onSidebarVisibility}>
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '12px', gap: '12px' }}>
-        <div style={{ fontSize: '13px', color: '#6b7280' }}>
+      <div className="flex flex-col h-full p-3 gap-3">
+        <div className="text-[13px] text-[#6b7280]">
           Locate civic addresses within the County using the form below.
         </div>
 
-        <div className="sc-lot-con-card">
-          <div className="sc-lot-con-form-group">
-            <label htmlFor="lot-number" className="sc-lot-con-label">Lot Number:</label>
+        <div className="bg-base-200 border border-base-300 rounded-lg p-4 mb-3">
+          <div className="mb-3">
+            <label htmlFor="lot-number" className="block mb-1 text-[13px] font-semibold text-[#374151]">Lot Number:</label>
             <input
               id="lot-number"
               type="text"
               placeholder="Enter Lot Number"
-              className="sc-lot-con-input"
+              className="input input-bordered w-full input-sm"
               onChange={(e) => setLotNumber(e.target.value)}
               value={lotNumber}
             />
           </div>
 
-          <div className="sc-lot-con-form-group">
-            <label htmlFor="concession-number" className="sc-lot-con-label">Concession Number:</label>
+          <div className="mb-3">
+            <label htmlFor="concession-number" className="block mb-1 text-[13px] font-semibold text-[#374151]">Concession Number:</label>
             <input
               id="concession-number"
               type="text"
               placeholder="Concession Number"
-              className="sc-lot-con-input"
+              className="input input-bordered w-full input-sm"
               onChange={(e) => setConcessionNumber(e.target.value)}
               value={concessionNumber}
             />
           </div>
 
-          <div className="sc-lot-con-form-group">
-            <label htmlFor="township-select" className="sc-lot-con-label">Geographic Township:</label>
+          <div className="mb-3">
+            <label htmlFor="township-select" className="block mb-1 text-[13px] font-semibold text-[#374151]">Geographic Township:</label>
             <select
               id="township-select"
-              className="sc-lot-con-select"
+              className="select select-bordered w-full select-sm"
               onChange={(e) => {
                 const selected = munis.find((m) => m.value === e.target.value);
                 if (selected) setSelectedMuni(selected);
@@ -389,16 +388,16 @@ export default function LotAndConcessionTool({ name = "Lot And Concession", help
             </select>
           </div>
 
-          <div className="sc-lot-con-btn-group">
+          <div className="flex gap-2 justify-end mt-3">
             <button
               type="button"
-              className="sc-lot-con-btn sc-lot-con-btn-primary"
+              className="btn btn-primary btn-sm"
               onClick={handleSearch}
               disabled={isSearching}
             >
               {isSearching ? (
                 <>
-                  <span className="sc-lot-con-spinner"></span>
+                  <span className="loading loading-spinner loading-xs"></span>
                   Searching...
                 </>
               ) : (
@@ -407,7 +406,7 @@ export default function LotAndConcessionTool({ name = "Lot And Concession", help
             </button>
             <button
               type="button"
-              className="sc-lot-con-btn sc-lot-con-btn-secondary"
+              className="btn btn-outline btn-sm"
               onClick={handleClear}
             >
               Clear
@@ -416,7 +415,7 @@ export default function LotAndConcessionTool({ name = "Lot And Concession", help
         </div>
 
         {features.length === 0 && !isSearching && (
-          <div className="sc-lot-con-alert">
+          <div className="flex items-start gap-[10px] py-3 px-4 bg-blue-100 border border-blue-300 rounded-lg text-xs text-blue-800">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
@@ -424,7 +423,7 @@ export default function LotAndConcessionTool({ name = "Lot And Concession", help
           </div>
         )}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
+        <div className="flex-1 overflow-y-auto pr-1">
           {features.map((feature) => (
             <Results key={getUID()} feature={feature} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} onFeatureClick={handleFeatureClick} />
           ))}

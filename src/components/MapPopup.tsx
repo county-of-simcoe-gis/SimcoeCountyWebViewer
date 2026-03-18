@@ -114,7 +114,7 @@ export default function MapPopup() {
       const target = evt.target as HTMLElement;
 
       // Ignore close / popout button clicks
-      if (target.closest(".sc-map-popup-close") || target.closest(".sc-map-popup-popout") || target.closest(".sc-map-popup-nav-btn")) {
+      if (target.closest("button")) {
         return;
       }
 
@@ -240,8 +240,8 @@ export default function MapPopup() {
 
   if (!isVisible || features.length === 0) {
     return (
-      <div ref={popupRef} className="sc-map-popup" style={{ display: "none" }}>
-        <div className="sc-map-popup-content"></div>
+      <div ref={popupRef} className="map-popup" style={{ display: "none" }}>
+        <div className="p-1.5 max-h-[350px] overflow-y-auto overscroll-contain touch-pan-y"></div>
       </div>
     );
   }
@@ -283,36 +283,56 @@ export default function MapPopup() {
   };
 
   return (
-    <div ref={popupRef} className="sc-map-popup">
-      <div ref={headerRef} className="sc-map-popup-header sc-no-select">
-        <h3 className="sc-map-popup-title">{currentFeature.title}</h3>
-        <button className="sc-map-popup-popout" onClick={handlePopOut} aria-label="Pop out to Reports tab" title="Pop out to Reports tab">
+    <div ref={popupRef} className="map-popup">
+      <div
+        ref={headerRef}
+        className="flex justify-between items-center h-[25px] p-1.5 bg-[image:linear-gradient(to_bottom,#3980cc,#2865a2)] border-b-2 border-b-accent text-white cursor-grab active:cursor-grabbing text-[15px] rounded-t select-none"
+      >
+        <h3 className="m-0 text-[15px] font-normal text-white flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{currentFeature.title}</h3>
+        <button
+          className="bg-transparent border-none text-sm leading-none text-white cursor-pointer p-0 w-[22px] h-[22px] flex items-center justify-center rounded-[3px] transition-all duration-200 shrink-0 hover:bg-white/20"
+          onClick={handlePopOut}
+          aria-label="Pop out to Reports tab"
+          title="Pop out to Reports tab"
+        >
           <FaExternalLinkAlt size={11} />
         </button>
-        <button className="sc-map-popup-close" onClick={hide} aria-label="Close popup">
+        <button
+          className="bg-transparent border-none text-[22px] leading-none text-white cursor-pointer p-0 w-[22px] h-[22px] flex items-center justify-center rounded-[3px] transition-all duration-200 shrink-0 hover:bg-white/20"
+          onClick={hide}
+          aria-label="Close popup"
+        >
           ×
         </button>
       </div>
 
       {/* Feature navigation for multiple features */}
       {hasMultipleFeatures && (
-        <div className="sc-map-popup-nav">
-          <button className="sc-map-popup-nav-btn" onClick={prevFeature} aria-label="Previous feature">
+        <div className="flex items-center justify-center gap-2 py-1.5 px-2.5 bg-[#f0f0f0] border-b border-[#e0e0e0]">
+          <button
+            className="bg-white border border-[#ddd] rounded py-1 px-2 cursor-pointer flex items-center justify-center transition-all duration-200 hover:bg-[#e8e8e8] hover:border-[#ccc]"
+            onClick={prevFeature}
+            aria-label="Previous feature"
+          >
             <FaChevronLeft size={12} />
           </button>
-          <span className="sc-map-popup-nav-count">
+          <span className="text-xs text-[#666] font-medium min-w-[60px] text-center">
             {selectedIndex + 1} of {features.length}
           </span>
-          <button className="sc-map-popup-nav-btn" onClick={nextFeature} aria-label="Next feature">
+          <button
+            className="bg-white border border-[#ddd] rounded py-1 px-2 cursor-pointer flex items-center justify-center transition-all duration-200 hover:bg-[#e8e8e8] hover:border-[#ccc]"
+            onClick={nextFeature}
+            aria-label="Next feature"
+          >
             <FaChevronRight size={12} />
           </button>
         </div>
       )}
 
       {/* Layer name badge if available */}
-      {currentFeature.layerName && <div className="sc-map-popup-layer-badge">{currentFeature.layerName}</div>}
+      {currentFeature.layerName && <div className="text-[10px] text-[#666] bg-[#e8f4fd] border-b border-[#d0e8f7] py-1 px-2.5 font-medium">{currentFeature.layerName}</div>}
 
-      <div className="sc-map-popup-content">{currentFeature.content}</div>
+      <div className="p-1.5 max-h-[350px] overflow-y-auto overscroll-contain touch-pan-y">{currentFeature.content}</div>
     </div>
   );
 }

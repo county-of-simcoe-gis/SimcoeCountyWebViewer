@@ -1,17 +1,20 @@
-.sc-map-popup {
+/* MapPopup — styles that require pseudo-elements or keyframes (can't be inline Tailwind) */
+
+.map-popup {
   background-color: white;
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   min-width: 280px;
   max-width: 300px;
-  max-width: 300px;
   position: relative;
   pointer-events: auto;
   z-index: 1000;
   user-select: text;
+  animation: popupFadeIn 0.2s ease-out;
 }
 
-.sc-map-popup::after {
+/* Triangle pointer arrow */
+.map-popup::after {
   content: "";
   position: absolute;
   bottom: -10px;
@@ -24,121 +27,6 @@
   border-top: 10px solid white;
 }
 
-.sc-map-popup-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 25px;
-  padding: 6px;
-  background: linear-gradient(to bottom, #3980cc 0%, #2865a2 100%);
-  border-bottom: 2px solid #e7a614;
-  color: #fff !important;
-  line-height: 20px;
-  cursor: grab;
-  font-size: 15px;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-}
-
-.sc-map-popup-header:active {
-  cursor: grabbing;
-}
-
-/* Prevent text selection on header (fixes flashing cursor/caret) */
-.sc-no-select {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-}
-
-.sc-map-popup-title {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 400;
-  color: #fff;
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Pop-out button (opens content in Reports tab) */
-.sc-map-popup-popout {
-  background: none;
-  border: none;
-  font-size: 14px;
-  line-height: 1;
-  color: #fff;
-  cursor: pointer;
-  padding: 0;
-  width: 22px;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 3px;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-
-.sc-map-popup-popout:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: #fff;
-}
-
-.sc-map-popup-close {
-  background: none;
-  border: none;
-  font-size: 22px;
-  line-height: 1;
-  color: #fff;
-  cursor: pointer;
-  padding: 0;
-  width: 22px;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 3px;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-
-.sc-map-popup-close:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: #fff;
-}
-
-.sc-map-popup-content {
-  padding: 6px;
-  max-height: 350px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  touch-action: pan-y;
-}
-
-/* Scrollbar styling */
-.sc-map-popup-content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.sc-map-popup-content::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.sc-map-popup-content::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-.sc-map-popup-content::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-/* Animation for popup appearance */
 @keyframes popupFadeIn {
   from {
     opacity: 0;
@@ -148,54 +36,4 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.sc-map-popup {
-  animation: popupFadeIn 0.2s ease-out;
-}
-
-/* Multi-feature navigation */
-.sc-map-popup-nav {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 6px 10px;
-  background-color: #f0f0f0;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.sc-map-popup-nav-btn {
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 4px 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.sc-map-popup-nav-btn:hover {
-  background-color: #e8e8e8;
-  border-color: #ccc;
-}
-
-.sc-map-popup-nav-count {
-  font-size: 12px;
-  color: #666;
-  font-weight: 500;
-  min-width: 60px;
-  text-align: center;
-}
-
-/* Layer name badge */
-.sc-map-popup-layer-badge {
-  font-size: 10px;
-  color: #666;
-  background-color: #e8f4fd;
-  border-bottom: 1px solid #d0e8f7;
-  padding: 4px 10px;
-  font-weight: 500;
 }

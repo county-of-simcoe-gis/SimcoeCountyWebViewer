@@ -28,7 +28,7 @@ export interface ToggleButtonProps {
 export function LegendToggleButton({ showLegend, onToggleLegend, hasLegend, styleUrl = "" }: ToggleButtonProps) {
   return (
     <div
-      className="sc-toc-item-plus-minus-container ml-2 mr-2"
+      className="inline-flex items-center cursor-pointer mx-2"
       role="button"
       onClick={(e) => {
         e.stopPropagation(); // Prevent label click and checkbox toggle
@@ -36,9 +36,9 @@ export function LegendToggleButton({ showLegend, onToggleLegend, hasLegend, styl
       }}
     >
       {styleUrl === "" && !hasLegend ? (
-        <FaEyeSlash size={16} title="No Legend Available" style={{ opacity: 0.7, color: "#666" }} />
+        <FaEyeSlash size={16} title="No Legend Available" className="opacity-70 text-[#666]" />
       ) : (
-        <FaListUl size={16} title={showLegend ? "Hide Legend" : "Show Legend"} style={{ opacity: 0.7, color: "#666" }} />
+        <FaListUl size={16} title={showLegend ? "Hide Legend" : "Show Legend"} className="opacity-70 text-[#666]" />
       )}
     </div>
   );

@@ -22,7 +22,7 @@ import type { Feature } from "ol";
 import type { Geometry } from "ol/geom";
 import type { EventsKey } from "ol/events";
 import { unByKey } from "ol/Observable";
-import { FaStar, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaStar, FaChevronDown, FaChevronUp, FaPalette } from "react-icons/fa";
 
 interface CommercialRealEstateProps {
   name?: string;
@@ -264,7 +264,7 @@ export default function CommercialRealEstate({ name = "Commercial Real Estate", 
   const [incentiveCollapsed, setIncentiveCollapsed] = useState(false);
 
   return (
-    <PanelComponent name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={onClose} onSidebarVisibility={onSidebarVisibility}>
+    <PanelComponent icon={<FaPalette size={20} className="text-neutral/70" />} name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={onClose} onSidebarVisibility={onSidebarVisibility}>
       <div className="flex flex-col gap-2 p-2">
         {/* Incentive properties — collapsible */}
         {incentiveFeatures.length > 0 && (

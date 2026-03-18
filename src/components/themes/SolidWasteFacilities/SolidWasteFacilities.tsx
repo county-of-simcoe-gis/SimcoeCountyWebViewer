@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import PanelComponent from "@/components/PanelComponent";
+import { FaPalette } from "react-icons/fa";
 import ThemeBaseLayers from "../shared/ThemeBaseLayers";
 import ThemeLayers from "../shared/ThemeLayers";
 import ThemeData from "../shared/ThemeData";
@@ -26,6 +27,7 @@ export default function SolidWasteFacilities({
 
   return (
     <PanelComponent
+      icon={<FaPalette size={20} className="text-neutral/70" />}
       name={name}
       helpLink={helpLink}
       hideHeader={hideHeader}

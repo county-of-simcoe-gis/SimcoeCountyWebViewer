@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { TOCLayerGroup, TOCLayer } from "@/stores/tocStore";
 import GroupItem from "@/components/TOC/GroupItem";
-import "@/components/TOC/TOCFolderView.css";
 
 interface TOCFolderViewProps {
   id: string;
@@ -39,8 +38,8 @@ export default function TOCFolderView({
   }, [visible]);
 
   return (
-    <div className={isVisible ? "" : "sc-hidden"} id="sc-toc-simcoe-folder-view-container-main" data-testid="sc-toc-simcoe-folder-view-container-main">
-      <div className="toc-group-list">
+    <div className={isVisible ? "" : "hidden"} id="sc-toc-simcoe-folder-view-container-main" data-testid="sc-toc-simcoe-folder-view-container-main">
+      <div data-testid="toc-group-list" className="absolute top-[110px] bottom-[5px] w-full max-w-[370px] overflow-y-auto overflow-x-hidden ps-0">
         {layerGroups.map((group, index) => (
           <GroupItem
             key={`${id}-group-${group.value}-${index}`}

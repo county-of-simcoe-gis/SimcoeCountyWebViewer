@@ -15,7 +15,6 @@ import { getPublicPath } from "@/utils/getPublicPath";
 
 // OpenLayers imports
 import "ol/ol.css";
-import "@/components/MapContainer.css";
 import "@/components/map/controls/MapControls.css";
 import Map from "ol/Map";
 import View from "ol/View";
@@ -90,7 +89,7 @@ const LazyFullscreenControl = lazy(dynamicControlImports.FullscreenControl);
 const LazyAttributionControl = lazy(dynamicControlImports.AttributionControl);
 
 // Loading placeholder component
-const ControlLoadingPlaceholder = () => <div className="control-loading-placeholder" style={{ width: "32px", height: "32px", backgroundColor: "#f0f0f0", borderRadius: "4px" }} />;
+const ControlLoadingPlaceholder = () => <div className="w-8 h-8 bg-gray-100 rounded" />;
 
 // Unified Interaction Handler System
 import type { MapBrowserEvent } from "ol";
@@ -1260,7 +1259,7 @@ export default function MapContainer() {
 
   return (
     <InteractionManagerContext.Provider value={interactionManager}>
-      <div ref={mapRef} id="map" className={`sc-map ${!isOpen ? "sidebar-closed" : ""}`} />
+      <div ref={mapRef} id="map" className={`app-map ${!isOpen ? "sidebar-closed" : ""}`} />
       <PropertyReportClick />
       <LiveLayerClick />
       <MapPopup />

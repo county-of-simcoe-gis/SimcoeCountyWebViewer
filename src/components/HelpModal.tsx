@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { createPortal } from "react-dom";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { FaTimes, FaSync } from "react-icons/fa";
 import { useHelpModalStore } from "@/stores/helpModalStore";
 import { getPublicPath } from "@/utils/getPublicPath";
+import { Modal } from "@/components/ui/Modal";
 
 /**
  * HelpModal Component
@@ -45,42 +45,9 @@ export default function HelpModal() {
     }
   }, [isOpen, content, fetchReadmeContent]);
 
-  // Close on ESC key
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        useHelpModalStore.getState().closeHelp();
-      }
-    };
-
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen]);
-
-  // Prevent body scroll when modal is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
-
   if (!isOpen) {
     return null;
   }
-
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      closeHelp();
-    }
-  };
 
   // Helper to convert heading text to URL-friendly ID for anchor links
   const createId = (text: string) => {
@@ -146,43 +113,40 @@ export default function HelpModal() {
     h6: HeadingComponent(6) as Components["h6"],
   };
 
-  return createPortal(
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-5 animate-fadeIn" onClick={handleOverlayClick}>
-      <div className="bg-white rounded-lg shadow-[0_4px_24px_rgba(0,0,0,0.3)] max-w-[900px] w-full max-h-[90vh] overflow-y-auto relative animate-slideUp flex flex-col">
-        {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between z-10 rounded-t-lg">
-          <h2 className="text-lg font-semibold text-gray-800 m-0">Help</h2>
-          <div className="flex items-center gap-2">
-            <button className="btn btn-sm btn-ghost flex items-center gap-1" onClick={fetchReadmeContent} disabled={isLoading} title="Refresh content">
-              <FaSync className={isLoading ? "animate-spin" : ""} size={14} />
-            </button>
-            <button
-              className="bg-gray-700 hover:bg-gray-800 text-white border-none w-8 h-8 rounded-full flex items-center justify-center text-base cursor-pointer transition-all duration-200 p-0 hover:scale-110 active:scale-95 shadow-lg"
-              onClick={closeHelp}
-              aria-label="Close help"
-              title="Close (ESC)"
-            >
-              <FaTimes />
-            </button>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="p-6">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <span className="loading loading-spinner loading-lg text-primary" />
-            </div>
-          ) : (
-            <div className="prose prose-blue max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-                {content}
-              </ReactMarkdown>
-            </div>
-          )}
+  return (
+    <Modal isOpen={isOpen} onClose={closeHelp} className="max-w-[900px] w-full max-h-[90vh] overflow-y-auto p-0 flex flex-col animate-slideUp" portalTarget="body">
+      {/* Header */}
+      <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between z-10 rounded-t-lg">
+        <h2 className="text-lg font-semibold text-gray-800 m-0">Help</h2>
+        <div className="flex items-center gap-2">
+          <button className="btn btn-sm btn-ghost flex items-center gap-1" onClick={fetchReadmeContent} disabled={isLoading} title="Refresh content">
+            <FaSync className={isLoading ? "animate-spin" : ""} size={14} />
+          </button>
+          <button
+            className="bg-gray-700 hover:bg-gray-800 text-white border-none w-8 h-8 rounded-full flex items-center justify-center text-base cursor-pointer transition-all duration-200 p-0 hover:scale-110 active:scale-95 shadow-lg"
+            onClick={closeHelp}
+            aria-label="Close help"
+            title="Close (ESC)"
+          >
+            <FaTimes />
+          </button>
         </div>
       </div>
-    </div>,
-    document.body,
+
+      {/* Content */}
+      <div className="p-6">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <span className="loading loading-spinner loading-lg text-primary" />
+          </div>
+        ) : (
+          <div className="prose prose-blue max-w-none">
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+              {content}
+            </ReactMarkdown>
+          </div>
+        )}
+      </div>
+    </Modal>
   );
 }

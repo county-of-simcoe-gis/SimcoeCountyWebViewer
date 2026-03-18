@@ -5,7 +5,6 @@ import { FaHome, FaBuilding, FaLayerGroup, FaChevronDown, FaChevronRight } from 
 import type { Result, PropertyResult, CondoResult, IdentifyResult } from "@/components/ResultsPopup";
 import PropertyPopup from "@/components/PropertyPopup";
 import { InfoRow } from "@/components/common/InfoRow";
-import "./ReportsFeatureList.css";
 
 interface ReportsFeatureListProps {
   results: Result[];
@@ -17,12 +16,12 @@ interface ReportsFeatureListProps {
 function ResultIcon({ result }: { result: Result }) {
   switch (result.type) {
     case "property":
-      return <FaHome className="sc-rfl-icon-svg" />;
+      return <FaHome className="text-xs" />;
     case "condo":
-      return <FaBuilding className="sc-rfl-icon-svg" />;
+      return <FaBuilding className="text-xs" />;
     case "identify":
     case "layer":
-      return <FaLayerGroup className="sc-rfl-icon-svg" />;
+      return <FaLayerGroup className="text-xs" />;
   }
 }
 
@@ -67,15 +66,15 @@ function FeatureContent({ result, onClose, onClearParcelLayer }: { result: Resul
       if (r.data.propInfo && r.data.feature) {
         return <PropertyPopup propInfo={r.data.propInfo} feature={r.data.feature} onClose={onClose} onClearParcelLayer={onClearParcelLayer} />;
       }
-      return <div className="sc-rfl-empty">Loading property details…</div>;
+      return <div className="p-3 text-[13px] text-[#999]">Loading property details…</div>;
     }
     case "identify":
     case "layer": {
       const r = result as IdentifyResult;
       return (
-        <div className="sc-rfl-identify-content">
-          <p className="sc-rfl-feature-id">Feature ID: {r.data.featureId}</p>
-          <div className="sc-rfl-attributes">
+        <div className="py-2.5 px-3">
+          <p className="text-[11px] text-[#999] mb-1.5">Feature ID: {r.data.featureId}</p>
+          <div className="flex flex-col">
             {Object.entries(r.data.attributes)
               .filter(([key, value]) => key !== "geometry" && key !== "bbox" && !key.startsWith("_") && typeof value !== "object")
               .map(([key, value]) => (
@@ -86,7 +85,7 @@ function FeatureContent({ result, onClose, onClearParcelLayer }: { result: Resul
       );
     }
     default:
-      return <div className="sc-rfl-empty">No details available for this result.</div>;
+      return <div className="p-3 text-[13px] text-[#999]">No details available for this result.</div>;
   }
 }
 
@@ -109,7 +108,7 @@ export default function ReportsFeatureList({ results, onClose, onClearParcelLaye
   // Single result — render directly without accordion chrome
   if (results.length === 1) {
     return (
-      <div className="sc-rfl-container">
+      <div className="w-full">
         <FeatureContent result={results[0]} onClose={onClose} onClearParcelLayer={onClearParcelLayer} />
       </div>
     );
@@ -128,29 +127,33 @@ export default function ReportsFeatureList({ results, onClose, onClearParcelLaye
   };
 
   return (
-    <div className="sc-rfl-container">
+    <div className="w-full">
       {/* Collapsible panels */}
-      <div className="sc-rfl-panels">
+      <div className="flex flex-col">
         {results.map((result) => {
           const isExpanded = expandedIds.has(result.id);
 
           return (
-            <div key={result.id} className={`sc-rfl-panel ${isExpanded ? "sc-rfl-panel-expanded" : ""}`}>
+            <div key={result.id} className={`border-b border-[#e5e5e5] last:border-b-0 ${isExpanded ? "expanded" : ""}`}>
               {/* Panel header — clickable */}
-              <button className="sc-rfl-panel-header" onClick={() => togglePanel(result.id)} aria-expanded={isExpanded}>
-                <span className="sc-rfl-panel-chevron">{isExpanded ? <FaChevronDown size={10} /> : <FaChevronRight size={10} />}</span>
-                <span className="sc-rfl-panel-icon">
+              <button
+                className={`flex items-center gap-2 w-full py-2.5 px-3 border-none cursor-pointer text-left text-[13px] transition-colors ${isExpanded ? "bg-[#e8f0fe] border-b border-[#d4e4f7]" : "bg-[#fafafa] hover:bg-[#f0f0f0]"}`}
+                onClick={() => togglePanel(result.id)}
+                aria-expanded={isExpanded}
+              >
+                <span className="shrink-0 text-[#888] flex items-center">{isExpanded ? <FaChevronDown size={10} /> : <FaChevronRight size={10} />}</span>
+                <span className={`shrink-0 flex items-center justify-center w-[26px] h-[26px] rounded-full ${isExpanded ? "bg-[#1976d2] text-white" : "bg-[#e0e0e0] text-[#555]"}`}>
                   <ResultIcon result={result} />
                 </span>
-                <span className="sc-rfl-panel-title-group">
-                  <span className="sc-rfl-panel-title">{panelTitle(result)}</span>
-                  <span className="sc-rfl-panel-subtitle">{panelSubtitle(result)}</span>
+                <span className="flex flex-col min-w-0">
+                  <span className="font-semibold text-[#333] whitespace-nowrap overflow-hidden text-ellipsis">{panelTitle(result)}</span>
+                  <span className="text-[11px] text-[#888] mt-px">{panelSubtitle(result)}</span>
                 </span>
               </button>
 
               {/* Panel body — expanded content */}
               {isExpanded && (
-                <div className="sc-rfl-panel-body">
+                <div className="bg-white">
                   <FeatureContent result={result} onClose={onClose} onClearParcelLayer={onClearParcelLayer} />
                 </div>
               )}

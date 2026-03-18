@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import "./PropertyReport.css";
 import { useAppStore } from "@/stores/appStore";
+import { InfoWindowRow } from "@/components/ui/InfoWindowRow";
 
 /** Shape returned by /api/public/reports/property/[arn] */
 interface PropertyReportData {
@@ -92,8 +92,8 @@ export default function PropertyReport({ arn, onZoomClick }: PropertyReportProps
 
     try {
       const reportName = "Public_Embedded";
-      const apiUrl = (config as Record<string, unknown>)?.apiUrl as string ?? "https://opengis.simcoe.ca/api_v2/";
-      const reportUrl = (config as Record<string, unknown>)?.reportUrl as string ?? "https://opengis.simcoe.ca/reports/";
+      const apiUrl = ((config as Record<string, unknown>)?.apiUrl as string) ?? "https://opengis.simcoe.ca/api_v2/";
+      const reportUrl = ((config as Record<string, unknown>)?.reportUrl as string) ?? "https://opengis.simcoe.ca/reports/";
 
       const res = await fetch(`${apiUrl}public/reports/embed/${reportName}`, {
         method: "POST",
@@ -124,162 +124,144 @@ export default function PropertyReport({ arn, onZoomClick }: PropertyReportProps
   const isBarrie = data.ARN.substring(0, 4) === "4342";
 
   return (
-    <div className="sc-property-report-container">
+    <div>
       {/* Action buttons */}
-      <div className="sc-property-report-html-title-button-container" style={{ display: "flex", gap: "5px", padding: "6px" }}>
+      <div className="flex gap-1.5 p-1.5">
         {onZoomClick && (
-          <button className="sc-button sc-button-orange" style={{ flex: 1 }} onClick={onZoomClick}>
+          <button
+            className="flex-1 text-white text-xs py-1.5 px-3 rounded cursor-pointer border border-[#fb870e]"
+            style={{ background: "linear-gradient(to bottom, #ffc578 0%, #fb9d23 100%)" }}
+            onClick={onZoomClick}
+          >
             Zoom
           </button>
         )}
-        <button className="sc-button sc-button-blue" style={{ flex: 1 }} onClick={handlePrintPreview}>
+        <button
+          className="flex-1 text-white text-xs py-1.5 px-3 rounded cursor-pointer border border-[#3d7b9e]"
+          style={{ background: "linear-gradient(to bottom, #3980cc 0%, #2865a2 100%)" }}
+          onClick={handlePrintPreview}
+        >
           Print Preview
         </button>
       </div>
 
-      <div className="sc-property-report-info-container">
+      <div className="px-2.5 pt-1.5">
         {/* GENERAL INFO */}
-        <div className="sc-property-report-html-heading icon general">General Information</div>
-        <div className="sc-property-report-html-container">
-          <div>
-            <div className="sc-property-report-html-label">Roll Number: </div>
-            <div className="sc-property-report-html-value">{data.ARN}</div>
-          </div>
-          {!isBarrie && data.PropertyType && (
-            <div>
-              <div className="sc-property-report-html-label">Property Type: </div>
-              <div className="sc-property-report-html-value">{data.PropertyType}</div>
-            </div>
-          )}
-          <div>
-            <div className="sc-property-report-html-label">Address: </div>
-            <div className="sc-property-report-html-value">{data.Address}</div>
-          </div>
+        <ReportSection title="General Information" icon="/images/information.png">
+          <InfoWindowRow label="Roll Number" value={data.ARN} />
+          {!isBarrie && data.PropertyType && <InfoWindowRow label="Property Type" value={data.PropertyType} />}
+          <InfoWindowRow label="Address" value={data.Address} />
           {!isBarrie && (
-            <div>
-              <div className="sc-property-report-html-label">Assessed Value: </div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <div className="sc-property-report-html-value">{data.AssessedValue ? <img src={data.AssessedValue} alt="Assessed Value" /> : ""}</div>
-              <div className="sc-property-report-html-market">(may not reflect current market value)</div>
-            </div>
+            <>
+              <InfoWindowRow
+                label="Assessed Value"
+                value={
+                  data.AssessedValue ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={data.AssessedValue} alt="Assessed Value" className="h-[18px] w-auto inline-block" />
+                  ) : (
+                    ""
+                  )
+                }
+              />
+              <div className="text-[9px] text-gray-500 pb-1 pl-4">(may not reflect current market value)</div>
+            </>
           )}
-        </div>
+        </ReportSection>
 
         {/* EMERGENCY SERVICE */}
-        <div className="sc-property-report-html-heading icon general">Emergency Service</div>
-        <div className="sc-property-report-html-container">
-          <div>
-            <div className="sc-property-report-html-label">Police Station: </div>
-            <div className="sc-property-report-html-value">{data.EmergencyService?.PoliceStation ?? ""}</div>
-          </div>
-          <div>
-            <div className="sc-property-report-html-label">Closest Firehall: </div>
-            <div className="sc-property-report-html-value">{data.EmergencyService?.FireStation ?? ""}</div>
-          </div>
-        </div>
+        <ReportSection title="Emergency Service" icon="/images/information.png">
+          <InfoWindowRow label="Police Station" value={data.EmergencyService?.PoliceStation ?? ""} />
+          <InfoWindowRow label="Closest Firehall" value={data.EmergencyService?.FireStation ?? ""} />
+        </ReportSection>
 
         {/* WASTE COLLECTION */}
-        <div className="sc-property-report-html-heading icon general">Waste Collection</div>
-        <div className="sc-property-report-html-container">
-          <div>
-            <div className="sc-property-report-html-label">Garbage/Recycling Collection Day: </div>
-            <div className="sc-property-report-html-value">{data.WasteCollection?.GarbageDay ?? ""}</div>
-          </div>
-          <div>
-            <div className="sc-property-report-html-label">Bag Tag Locations: </div>
-            <div className="sc-property-report-html-value">{data.WasteCollection?.BagTagleLocation1 ?? ""}</div>
-            <div className="sc-property-report-html-value">{data.WasteCollection?.BagTagleLocation2 ?? ""}</div>
-            <div className="sc-property-report-html-value">{data.WasteCollection?.BagTagleLocation3 ?? ""}</div>
-          </div>
-          <div>
-            <div className="sc-property-report-html-label">Waste Management Facility: </div>
-            <div className="sc-property-report-html-value">General Waste</div>
-            <div className="sc-property-report-html-value sub">{data.WasteCollection?.LandfillLocation_General ?? ""}</div>
-            <div className="sc-property-report-html-value">Hazardous Waste</div>
-            <div className="sc-property-report-html-value sub">{data.WasteCollection?.LandfillLocation_Hazardous ?? ""}</div>
-          </div>
-        </div>
+        <ReportSection title="Waste Collection" icon="/images/information.png">
+          <InfoWindowRow label="Garbage/Recycling Collection Day" value={data.WasteCollection?.GarbageDay ?? ""} />
+          <InfoWindowRow
+            label="Bag Tag Locations"
+            value={<span>{[data.WasteCollection?.BagTagleLocation1, data.WasteCollection?.BagTagleLocation2, data.WasteCollection?.BagTagleLocation3].filter(Boolean).join(", ")}</span>}
+          />
+          <InfoWindowRow
+            label="Waste Management Facility"
+            value={
+              <div>
+                <div>
+                  <span className="font-semibold text-[11px]">General Waste:</span> <span>{data.WasteCollection?.LandfillLocation_General ?? ""}</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-[11px]">Hazardous Waste:</span> <span>{data.WasteCollection?.LandfillLocation_Hazardous ?? ""}</span>
+                </div>
+              </div>
+            }
+          />
+        </ReportSection>
 
         {/* SCHOOLS */}
-        <div className="sc-property-report-html-heading icon general">Schools</div>
-        <div className="sc-property-report-html-container">
-          <div>
-            <div className="sc-property-report-html-label">Catholic Elementary: </div>
-            <div className="sc-property-report-html-value">{data.Schools?.CatholicElementry ?? ""}</div>
-          </div>
-          <div>
-            <div className="sc-property-report-html-label">Catholic Secondary: </div>
-            <div className="sc-property-report-html-value">{data.Schools?.CatholicSecondary ?? ""}</div>
-          </div>
-          <div>
-            <div className="sc-property-report-html-label">Catholic School Board Website: </div>
-            <div className="sc-property-report-html-value">
-              {data.Schools?.CatholicBoardWebsiteURL && (
-                <a href={data.Schools.CatholicBoardWebsiteURL} target="_blank" rel="noopener noreferrer">
+        <ReportSection title="Schools" icon="/images/information.png">
+          <InfoWindowRow label="Catholic Elementary" value={data.Schools?.CatholicElementry ?? ""} />
+          <InfoWindowRow label="Catholic Secondary" value={data.Schools?.CatholicSecondary ?? ""} />
+          <InfoWindowRow
+            label="Catholic School Board Website"
+            value={
+              data.Schools?.CatholicBoardWebsiteURL ? (
+                <a href={data.Schools.CatholicBoardWebsiteURL} target="_blank" rel="noopener noreferrer" className="text-[#337ab7] underline hover:text-[#23527c]">
                   {data.Schools.CatholicBoardWebsiteURL}
                 </a>
-              )}
-            </div>
-          </div>
-          {data.Schools?.PublicElementry && (
-            <div>
-              <div className="sc-property-report-html-label">Public Elementary: </div>
-              <div className="sc-property-report-html-value">{data.Schools.PublicElementry}</div>
-            </div>
-          )}
-          {data.Schools?.PublicSecondary && (
-            <div>
-              <div className="sc-property-report-html-label">Public Secondary: </div>
-              <div className="sc-property-report-html-value">{data.Schools.PublicSecondary}</div>
-            </div>
-          )}
+              ) : (
+                ""
+              )
+            }
+          />
+          {data.Schools?.PublicElementry && <InfoWindowRow label="Public Elementary" value={data.Schools.PublicElementry} />}
+          {data.Schools?.PublicSecondary && <InfoWindowRow label="Public Secondary" value={data.Schools.PublicSecondary} />}
           {data.Schools?.PublicLookup && (
-            <div>
-              <div className="sc-property-report-html-label">Public School Lookup: </div>
-              <div className="sc-property-report-html-value">
-                <a href={data.Schools.PublicLookup} target="_blank" rel="noopener noreferrer">
+            <InfoWindowRow
+              label="Public School Lookup"
+              value={
+                <a href={data.Schools.PublicLookup} target="_blank" rel="noopener noreferrer" className="text-[#337ab7] underline hover:text-[#23527c]">
                   School Lookup
                 </a>
-              </div>
-            </div>
+              }
+            />
           )}
-          <div>
-            <div className="sc-property-report-html-label">Public School Board Website: </div>
-            <div className="sc-property-report-html-value">
-              {data.Schools?.PublicBoardWebsiteURL && (
-                <a href={data.Schools.PublicBoardWebsiteURL} target="_blank" rel="noopener noreferrer">
+          <InfoWindowRow
+            label="Public School Board Website"
+            value={
+              data.Schools?.PublicBoardWebsiteURL ? (
+                <a href={data.Schools.PublicBoardWebsiteURL} target="_blank" rel="noopener noreferrer" className="text-[#337ab7] underline hover:text-[#23527c]">
                   {data.Schools.PublicBoardWebsiteURL}
                 </a>
-              )}
-            </div>
-          </div>
-        </div>
+              ) : (
+                ""
+              )
+            }
+          />
+        </ReportSection>
 
         {/* OTHER */}
-        <div className="sc-property-report-html-heading icon general">Other</div>
-        <div className="sc-property-report-html-container">
-          <div>
-            <div className="sc-property-report-html-label">Library: </div>
-            <div className="sc-property-report-html-value">{data.Other?.Library ?? ""}</div>
-          </div>
-          <div>
-            <div className="sc-property-report-html-label">Closest Fire Hydrant: </div>
-            <div className="sc-property-report-html-value">{data.Other?.ClosestFireHydrant ?? ""}</div>
-          </div>
-          <div>
-            <div className="sc-property-report-html-label">Municipal Admin Centre: </div>
-            <div className="sc-property-report-html-value">{data.Other?.MunicipalAdminCentre ?? ""}</div>
-          </div>
-          <div>
-            <div className="sc-property-report-html-label">Closest Hospital: </div>
-            <div className="sc-property-report-html-value">{data.Other?.ClosestHospital ?? ""}</div>
-          </div>
-          <div>
-            <div className="sc-property-report-html-label">Potential Broadband Coverage: </div>
-            <div className="sc-property-report-html-value">{data.Other?.BroadbandSpeed ?? ""}</div>
-          </div>
-        </div>
+        <ReportSection title="Other" icon="/images/information.png">
+          <InfoWindowRow label="Library" value={data.Other?.Library ?? ""} />
+          <InfoWindowRow label="Closest Fire Hydrant" value={data.Other?.ClosestFireHydrant ?? ""} />
+          <InfoWindowRow label="Municipal Admin Centre" value={data.Other?.MunicipalAdminCentre ?? ""} />
+          <InfoWindowRow label="Closest Hospital" value={data.Other?.ClosestHospital ?? ""} />
+          <InfoWindowRow label="Potential Broadband Coverage" value={data.Other?.BroadbandSpeed ?? ""} />
+        </ReportSection>
       </div>
     </div>
+  );
+}
+
+/** Collapsible section heading with icon, matching the legacy report layout */
+function ReportSection({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
+  return (
+    <>
+      <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase bg-[#dfdfdf] p-1.5 border border-[#ccc] rounded-t">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={icon} alt="" className="w-5 h-5" />
+        {title}
+      </div>
+      <div className="border-x border-b border-[#ccc] mb-2.5 p-1.5 rounded-b">{children}</div>
+    </>
   );
 }

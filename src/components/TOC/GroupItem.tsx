@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { TOCLayerGroup, TOCLayer, useTOCStore } from "@/stores/tocStore";
 import { FaEllipsisV, FaFolder, FaFolderOpen } from "react-icons/fa";
 import LayerItem from "@/components/TOC/LayerItem";
-import "@/components/TOC/GroupItem.css";
 
 interface GroupItemProps {
   id: string;
@@ -85,7 +84,7 @@ export default function GroupItem({
         disableLayers();
       }
     },
-    [group, onLayerVisibilityGroup]
+    [group, onLayerVisibilityGroup],
   );
 
   // Filter layers based on search text
@@ -132,19 +131,26 @@ export default function GroupItem({
   }
 
   return (
-    <div className="sc-toc-group-list-container" key={`${id}-sc-toc-group-list-container`}>
-      <div className={`sc-toc-group-list-header${panelOpen ? " open" : ""}${activeLayerCount > 0 ? " active" : ""}`} onClick={onHeaderClick}>
-        <div className="sc-toc-group-list-header-icon">
-          {panelOpen ? <FaFolderOpen size={16} style={{ opacity: 0.7, color: group.useRedFolder ? "#cc0000" : "#666", marginRight: "8px" }} /> : <FaFolder size={16} style={{ opacity: 0.7, color: group.useRedFolder ? "#cc0000" : "#666", marginRight: "8px" }} />}
+    <div className="border-0 border-[#ddd] rounded-[3px] mb-[5px]" key={`${id}-sc-toc-group-list-container`}>
+      <div
+        className={`text-[#373737] font-bold text-sm flex items-center bg-white w-[97%] border-0 border-[#ddd] cursor-pointer select-none p-0.5 pl-2.5${activeLayerCount > 0 ? " italic text-[#001b96]" : ""}`}
+        onClick={onHeaderClick}
+      >
+        <div className="flex items-center shrink-0">
+          {panelOpen ? (
+            <FaFolderOpen size={16} className={`opacity-70 mr-2 ${group.useRedFolder ? "text-[#cc0000]" : "text-[#666]"}`} />
+          ) : (
+            <FaFolder size={16} className={`opacity-70 mr-2 ${group.useRedFolder ? "text-[#cc0000]" : "text-[#666]"}`} />
+          )}
         </div>
-        <div className="sc-toc-group-list-header-label">{`${group.label} - (${activeLayerCount}/${group.layers.length})`}</div>
+        <div className="w-[310px] ml-[5px]">{`${group.label} - (${activeLayerCount}/${group.layers.length})`}</div>
       </div>
 
-      <div className="sc-toc-group-toolbox-folder-view" title="Group Options" onClick={onGroupOptionsClick}>
-        <FaEllipsisV size={16} style={{ opacity: 0.7, color: "#666" }} />
+      <div className="absolute right-2 -mt-[18px] cursor-pointer" title="Group Options" onClick={onGroupOptionsClick}>
+        <FaEllipsisV size={16} className="opacity-70 text-[#666]" />
       </div>
 
-      <div className={panelOpen || (isGroupVisible() && searchText !== "") ? "sc-toc-group-list-item-container" : "sc-hidden"} key={`${id}-sc-toc-group-list-item-container`}>
+      <div className={panelOpen || (isGroupVisible() && searchText !== "") ? "relative pl-5 border-l-2 border-dotted border-[#ccc] ml-2.5" : "hidden"} key={`${id}-sc-toc-group-list-item-container`}>
         {getSortedLayers().map((layer, index) => (
           <LayerItem
             key={`${layer.name}-${index}`}

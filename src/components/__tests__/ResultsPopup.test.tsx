@@ -462,7 +462,7 @@ describe("ResultsPopup", () => {
         expect(screen.getByText(/Feature ID: feature_123/i)).toBeInTheDocument();
 
         // Check attributes container structure
-        const attrs = container.querySelector(".sc-result-attributes");
+        const attrs = container.querySelector('[data-testid="result-attributes"]');
         expect(attrs).toBeInTheDocument();
 
         // Check for attribute keys (rendered as InfoRow labels with colons)
@@ -497,7 +497,7 @@ describe("ResultsPopup", () => {
       await waitFor(() => {
         expect(screen.getByText(/Feature ID: feature_123/i)).toBeInTheDocument();
         // Check that attributes container has no InfoRow children
-        const attrs = container.querySelector(".sc-result-attributes");
+        const attrs = container.querySelector('[data-testid="result-attributes"]');
         expect(attrs).toBeInTheDocument();
         const infoRows = attrs?.querySelectorAll("[data-testid='info-row']");
         expect(infoRows?.length).toBe(0);
@@ -566,7 +566,7 @@ describe("ResultsPopup", () => {
 
       await waitFor(() => {
         // Check that icon is rendered in collapsed mode (default state)
-        const icons = container.querySelectorAll(".sc-result-icon");
+        const icons = container.querySelectorAll('[data-testid="result-icon"]');
         expect(icons.length).toBeGreaterThan(0);
       });
     });
@@ -579,7 +579,7 @@ describe("ResultsPopup", () => {
 
       await waitFor(() => {
         // Check that icon is rendered in collapsed mode (default state)
-        const icons = container.querySelectorAll(".sc-result-icon");
+        const icons = container.querySelectorAll('[data-testid="result-icon"]');
         expect(icons.length).toBeGreaterThan(0);
       });
     });
@@ -592,7 +592,7 @@ describe("ResultsPopup", () => {
 
       await waitFor(() => {
         // Check that icon is rendered in collapsed mode (default state)
-        const icons = container.querySelectorAll(".sc-result-icon");
+        const icons = container.querySelectorAll('[data-testid="result-icon"]');
         expect(icons.length).toBeGreaterThan(0);
       });
     });
@@ -611,7 +611,7 @@ describe("ResultsPopup", () => {
 
       await waitFor(() => {
         // Check that sidebar items are shown in expanded mode
-        const sidebarItems = container.querySelectorAll(".sc-record-selector-sidebar-item");
+        const sidebarItems = container.querySelectorAll('[data-testid="record-selector-sidebar-item"]');
         expect(sidebarItems.length).toBeGreaterThan(0);
       });
     });

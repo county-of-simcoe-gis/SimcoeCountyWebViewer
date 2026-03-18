@@ -5,7 +5,6 @@ import { useMyMapsStore } from "@/stores/myMapsStore";
 import { DrawType } from "@/types/myMaps";
 import myMapsConfig from "@/config/myMapsConfig.json";
 import DrawButton from "@/components/myMaps/DrawButton";
-import "@/components/myMaps/ButtonBar.css";
 
 interface ButtonBarProps {
   isEditing?: boolean;
@@ -19,7 +18,10 @@ const ButtonBar: React.FC<ButtonBarProps> = ({ isEditing = false }) => {
   };
 
   return (
-    <div className={`sc-mymaps-button-bar ${isEditing ? "sc-disabled" : ""}`}>
+    <div
+      data-testid="mymaps-button-bar"
+      className={`flex flex-wrap gap-1 p-2 bg-[#f8f9fa] border-b border-[#dee2e6] mb-2 max-[768px]:justify-center max-[768px]:gap-[3px] max-[768px]:p-1.5 ${isEditing ? "opacity-50 pointer-events-none" : ""}`}
+    >
       {myMapsConfig.drawingTools.map((tool) => (
         <DrawButton
           key={tool.id}

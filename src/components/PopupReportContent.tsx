@@ -3,8 +3,6 @@
 import { useState } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import type { PopupFeature } from "@/stores/popupStore";
-import "./PopupReportContent.css";
-import "./MapPopup.css";
 
 interface PopupReportContentProps {
   features: PopupFeature[];
@@ -33,27 +31,35 @@ export default function PopupReportContent({ features, initialSelectedIndex }: P
   };
 
   return (
-    <div className="sc-popup-in-reports">
+    <div className="w-full">
       {/* Feature navigation for multiple features */}
       {hasMultipleFeatures && (
-        <div className="sc-popup-report-nav">
-          <button className="sc-popup-report-nav-btn" onClick={handlePrev} aria-label="Previous feature">
+        <div className="flex items-center justify-center gap-2 py-1.5 px-2.5 bg-[#f0f0f0] border-b border-[#e0e0e0]">
+          <button
+            className="bg-white border border-[#ddd] rounded px-2 py-1 cursor-pointer flex items-center justify-center transition-all hover:bg-[#e8e8e8] hover:border-[#ccc]"
+            onClick={handlePrev}
+            aria-label="Previous feature"
+          >
             <FaChevronLeft size={12} />
           </button>
-          <span className="sc-popup-report-nav-count">
+          <span className="text-xs text-[#666] font-medium min-w-[60px] text-center">
             {selectedIndex + 1} of {features.length}
           </span>
-          <button className="sc-popup-report-nav-btn" onClick={handleNext} aria-label="Next feature">
+          <button
+            className="bg-white border border-[#ddd] rounded px-2 py-1 cursor-pointer flex items-center justify-center transition-all hover:bg-[#e8e8e8] hover:border-[#ccc]"
+            onClick={handleNext}
+            aria-label="Next feature"
+          >
             <FaChevronRight size={12} />
           </button>
         </div>
       )}
 
       {/* Layer name badge if available */}
-      {currentFeature.layerName && <div className="sc-popup-report-layer-badge">{currentFeature.layerName}</div>}
+      {currentFeature.layerName && <div className="text-[10px] text-[#666] bg-[#e8f4fd] border-b border-[#d0e8f7] px-2.5 py-1 font-medium">{currentFeature.layerName}</div>}
 
       {/* Feature content */}
-      <div className="sc-popup-report-content">{currentFeature.content}</div>
+      <div className="p-1.5">{currentFeature.content}</div>
     </div>
   );
 }

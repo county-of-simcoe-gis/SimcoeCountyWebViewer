@@ -6,8 +6,7 @@ import Switch from "react-switch";
 import Image from "next/image";
 import copy from "copy-to-clipboard";
 import { useMyMapsStore } from "@/stores/myMapsStore";
-
-import "@/components/myMaps/MyMapsAdvanced.css";
+import "./MyMapsAdvanced.css";
 
 interface MyMapsAdvancedProps {
   onEditFeatures: (editOn: boolean, option?: string) => void;
@@ -31,7 +30,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
   const additionalMenuRef = useRef<HTMLDivElement>(null);
   const exportMenuRef = useRef<HTMLDivElement>(null);
   const exportHoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const inputId = "sc-mymaps-advanced-import-input sc-editable";
+  const inputId = "mymaps-advanced-import-input";
 
   useEffect(() => {
     setEditOn(isEditing);
@@ -62,8 +61,8 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
       const isClickOutsideAdditionalMenuButton = additionalMenuRef.current && !additionalMenuRef.current.contains(target);
-      const isClickOutsideAdditionalMenu = !document.querySelector(".sc-mymaps-additional-menu-portal")?.contains(target);
-      const isClickOutsideSubmenu = !document.querySelector(".sc-mymaps-export-submenu-portal")?.contains(target);
+      const isClickOutsideAdditionalMenu = !document.querySelector(".mymaps-additional-menu-portal")?.contains(target);
+      const isClickOutsideSubmenu = !document.querySelector(".mymaps-export-submenu-portal")?.contains(target);
 
       if (isClickOutsideAdditionalMenuButton && isClickOutsideAdditionalMenu && isClickOutsideSubmenu) {
         setShowAdditionalMenu(false);
@@ -178,8 +177,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
   };
 
   const glowContainer = (elementId: string) => {
-    // Add glow effect to input similar to old app
-    const inputElement = document.querySelector(`.${elementId}`) as HTMLInputElement;
+    const inputElement = document.getElementById(elementId) as HTMLInputElement;
     if (inputElement) {
       inputElement.style.boxShadow = "0 0 10px #00ff00";
       inputElement.style.border = "2px solid #00ff00";
@@ -192,38 +190,51 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
   };
 
   return (
-    <div id="sc-mymaps-advanced">
+    <div className="relative h-[30px] m-[5px] bg-[#e8e8e8] border border-[#ddd] cursor-pointer select-none leading-[30px] pl-[31px] mt-auto shrink-0">
       {/* Content that appears above when open */}
-      <div className={`sc-mymaps-advanced-content ${open ? "open" : "closed"}`}>
-        <div className="sc-mymaps-advanced-import-container">
-          <label className="sc-mymaps-advanced-main-label">Import/Save</label>
+      <div
+        data-testid="mymaps-advanced-content"
+        data-state={open ? "open" : "closed"}
+        className={`absolute bottom-full left-0 right-0 border border-solid border-[#d8dadc] border-b-0 rounded-t-[5px] bg-white p-[5px] z-[10001] transition-all duration-[400ms] ease-in-out ${open ? "max-h-[500px] opacity-100 translate-y-0 p-[5px]" : "max-h-0 opacity-0 translate-y-[10px] !pt-0 !pb-0 overflow-hidden"}`}
+      >
+        <div className="border-b border-[#d8dadc] pb-2.5">
+          <label className="block font-bold">Import/Save</label>
           <div>
-            <input className={inputId} id={inputId} type="text" placeholder="Enter ID here" onChange={onInputChange} onFocus={handleFocus} onBlur={handleBlur} value={inputText} />
+            <input
+              className="mymaps-text-input bg-[url('/images/edit.png')] bg-no-repeat bg-[position:right_4px_center] bg-[length:16px_16px] bg-white text-[#367cc5] focus:outline-none focus:border-[#007bff] focus:shadow-[0_0_0_2px_rgba(0,123,255,0.4)]"
+              id={inputId}
+              type="text"
+              placeholder="Enter ID here"
+              onChange={onInputChange}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              value={inputText}
+            />
             <br />
-            <div className="sc-mymaps-import-buttons">
-              <button className="sc-button sc-mymaps-advanced-import-button" onClick={onImport} title="Load map items from an existing MyMaps ID">
+            <div className="flex gap-[3px] flex-wrap">
+              <button className="mymaps-action-btn" onClick={onImport} title="Load map items from an existing MyMaps ID">
                 Import
               </button>
               <button
-                className="sc-button sc-mymaps-advanced-import-button"
+                className="mymaps-action-btn disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={onSave}
                 disabled={!hasItems}
                 title={hasItems ? "Save your current map items and get a shareable ID" : "No items to save - draw something on the map first"}
               >
                 Save
               </button>
-              <button className="sc-button sc-mymaps-advanced-import-button" onClick={onShare} title="Create a shareable link with your saved MyMaps ID">
+              <button className="mymaps-action-btn" onClick={onShare} title="Create a shareable link with your saved MyMaps ID">
                 Share
               </button>
             </div>
           </div>
         </div>
 
-        <div className="sc-mymaps-advanced-edit-container">
-          <label className={editOn ? "sc-mymaps-advanced-switch-label on" : "sc-mymaps-advanced-switch-label"}>
+        <div className="pt-[5px]">
+          <label className={`inline-table w-[175px] text-xs cursor-pointer ${editOn ? "font-bold" : ""} text-[#495057]`}>
             Edit Features
             <Switch
-              className="sc-mymaps-advanced-switch"
+              className="relative top-[5px] ml-[5px]"
               onChange={onSwitchChange}
               checked={editOn}
               height={20}
@@ -235,20 +246,19 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
             />
           </label>
 
-          <label style={{ marginRight: "15px", marginLeft: "15px" }}>
-            <input className="sc-mymaps-advanced-edit-radio" type="radio" name="editOptions" value="vertices" checked={editOption === "vertices"} onChange={onEditOption} />
+          <label style={{ marginRight: "15px", marginLeft: "15px" }} className="!inline text-xs text-[#495057] cursor-pointer select-none hover:text-[#007bff]">
+            <input className="relative top-[2px] mr-1 cursor-pointer" type="radio" name="editOptions" value="vertices" checked={editOption === "vertices"} onChange={onEditOption} />
             Vertices
           </label>
-          <label>
-            <input className="sc-mymaps-advanced-edit-radio" type="radio" name="editOptions" value="translate" checked={editOption === "translate"} onChange={onEditOption} />
+          <label className="!inline text-xs text-[#495057] cursor-pointer select-none hover:text-[#007bff]">
+            <input className="relative top-[2px] mr-1 cursor-pointer" type="radio" name="editOptions" value="translate" checked={editOption === "translate"} onChange={onEditOption} />
             Move
           </label>
         </div>
 
-        {/* Footer buttons - matching old MyMapsFooter structure */}
-        <div className="sc-mymaps-footer-buttons">
+        <div className="flex gap-1 pt-2.5 border-t border-[#d8dadc] mt-2.5 text-center">
           <button
-            className="sc-button sc-mymaps-footer-button delete"
+            className="mymaps-action-btn flex-1 w-full bg-[url('/images/myMaps/eraser.png')] bg-no-repeat bg-[position:8px_center] bg-[length:16px_16px] text-left disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => {
               if (window.confirm("Delete all items? This action cannot be undone.")) {
                 onDeleteAllClick();
@@ -258,10 +268,9 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
           >
             Delete All
           </button>
-          <div className="sc-mymaps-additional-tools-container" ref={additionalMenuRef}>
+          <div className="relative flex-1 flex" ref={additionalMenuRef}>
             <button
-              id="sc-mymaps-footer-button-tools"
-              className="sc-button sc-mymaps-footer-button tools"
+              className="mymaps-action-btn flex-1 w-full bg-[url('/images/myMaps/toolbox.png')] bg-no-repeat bg-[position:8px_center] bg-[length:16px_16px] pl-7 text-left"
               onClick={(e) => {
                 if (!showAdditionalMenu) {
                   const rect = e.currentTarget.getBoundingClientRect();
@@ -280,10 +289,11 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
       </div>
 
       {/* Trigger button always at bottom */}
-      <button className={`sc-mymaps-advanced-trigger ${open ? "open" : ""}`} onClick={() => setOpen(!open)}>
-        <Image src="/images/myMaps/settings.png" alt="Settings" width={16} height={16} className="sc-mymaps-trigger-icon" />
+      <button
+        className={`block w-full -ml-[31px] pl-7 font-bold pt-px border-none bg-transparent cursor-pointer text-inherit text-inherit h-[30px] leading-[30px] transition-colors bg-[url('/images/myMaps/settings.png'),url('${open ? "/images/up.png" : "/images/down.png"}')] bg-[position:5px_center,calc(100%-25px)_9px] bg-no-repeat hover:bg-black/5`}
+        onClick={() => setOpen(!open)}
+      >
         Advanced Options
-        <span className={`sc-mymaps-trigger-arrow ${open ? "open" : ""}`}>▼</span>
       </button>
 
       {/* Export submenu rendered as portal */}
@@ -291,7 +301,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
         typeof window !== "undefined" &&
         createPortal(
           <div
-            className="sc-mymaps-export-submenu-portal"
+            className="mymaps-export-submenu-portal"
             style={{
               position: "fixed",
               left: submenuPosition.x,
@@ -321,40 +331,40 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
             }}
           >
             <div
-              className="sc-mymaps-submenu-item"
+              className="flex items-center py-2 px-3 text-xs text-[#495057] cursor-pointer transition-colors border-b border-[#f0f0f0] last:border-b-0 hover:bg-[#f8f9fa] hover:text-[#007bff] active:bg-[#e9ecef]"
               onClick={() => {
                 onAdditionalToolsAction("export-kml");
                 setShowAdditionalMenu(false);
                 setShowExportSubmenu(false);
               }}
             >
-              <Image src="/images/json.png" alt="KML" width={16} height={16} className="sc-mymaps-menu-icon" />
+              <Image src="/images/json.png" alt="KML" width={16} height={16} className="mr-2 shrink-0" />
               KML
             </div>
             <div
-              className="sc-mymaps-submenu-item"
+              className="flex items-center py-2 px-3 text-xs text-[#495057] cursor-pointer transition-colors border-b border-[#f0f0f0] last:border-b-0 hover:bg-[#f8f9fa] hover:text-[#007bff] active:bg-[#e9ecef]"
               onClick={() => {
                 onAdditionalToolsAction("export-esri-json");
                 setShowAdditionalMenu(false);
                 setShowExportSubmenu(false);
               }}
             >
-              <Image src="/images/json.png" alt="ESRI JSON" width={16} height={16} className="sc-mymaps-menu-icon" />
+              <Image src="/images/json.png" alt="ESRI JSON" width={16} height={16} className="mr-2 shrink-0" />
               ESRIJson
             </div>
             <div
-              className="sc-mymaps-submenu-item"
+              className="flex items-center py-2 px-3 text-xs text-[#495057] cursor-pointer transition-colors border-b border-[#f0f0f0] last:border-b-0 hover:bg-[#f8f9fa] hover:text-[#007bff] active:bg-[#e9ecef]"
               onClick={() => {
                 onAdditionalToolsAction("export-geo-json");
                 setShowAdditionalMenu(false);
                 setShowExportSubmenu(false);
               }}
             >
-              <Image src="/images/json.png" alt="GeoJSON" width={16} height={16} className="sc-mymaps-menu-icon" />
+              <Image src="/images/json.png" alt="GeoJSON" width={16} height={16} className="mr-2 shrink-0" />
               GeoJSON
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* Additional Tools menu rendered as portal */}
@@ -362,7 +372,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
         typeof window !== "undefined" &&
         createPortal(
           <div
-            className="sc-mymaps-additional-menu-portal"
+            className="mymaps-additional-menu-portal"
             style={{
               position: "fixed",
               left: additionalMenuPosition.x,
@@ -377,60 +387,60 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
             }}
           >
             <div
-              className="sc-mymaps-menu-item"
+              className="flex items-center py-2 px-3 text-xs text-[#495057] cursor-pointer transition-colors border-b border-[#f0f0f0] last:border-b-0 hover:bg-[#f8f9fa] hover:text-[#007bff] active:bg-[#e9ecef] relative"
               onClick={() => {
                 onAdditionalToolsAction("show-all");
                 setShowAdditionalMenu(false);
               }}
             >
-              <Image src="/images/myMaps/checkbox_on.png" alt="Show All" width={16} height={16} className="sc-mymaps-menu-icon" />
+              <Image src="/images/myMaps/checkbox_on.png" alt="Show All" width={16} height={16} className="mr-2 shrink-0" />
               Show All
             </div>
             <div
-              className="sc-mymaps-menu-item"
+              className="flex items-center py-2 px-3 text-xs text-[#495057] cursor-pointer transition-colors border-b border-[#f0f0f0] last:border-b-0 hover:bg-[#f8f9fa] hover:text-[#007bff] active:bg-[#e9ecef] relative"
               onClick={() => {
                 onAdditionalToolsAction("hide-all");
                 setShowAdditionalMenu(false);
               }}
             >
-              <Image src="/images/myMaps/checkbox_off.png" alt="Hide All" width={16} height={16} className="sc-mymaps-menu-icon" />
+              <Image src="/images/myMaps/checkbox_off.png" alt="Hide All" width={16} height={16} className="mr-2 shrink-0" />
               Hide All
             </div>
-            <div className="sc-mymaps-menu-separator"></div>
+            <div className="h-px bg-[#dee2e6] my-1"></div>
             <div
-              className="sc-mymaps-menu-item"
+              className="flex items-center py-2 px-3 text-xs text-[#495057] cursor-pointer transition-colors border-b border-[#f0f0f0] last:border-b-0 hover:bg-[#f8f9fa] hover:text-[#007bff] active:bg-[#e9ecef] relative"
               onClick={() => {
                 onAdditionalToolsAction("delete-selected");
                 setShowAdditionalMenu(false);
               }}
             >
-              <Image src="/images/myMaps/eraser.png" alt="Delete Selected" width={16} height={16} className="sc-mymaps-menu-icon" />
+              <Image src="/images/myMaps/eraser.png" alt="Delete Selected" width={16} height={16} className="mr-2 shrink-0" />
               Delete Selected
             </div>
             <div
-              className="sc-mymaps-menu-item"
+              className="flex items-center py-2 px-3 text-xs text-[#495057] cursor-pointer transition-colors border-b border-[#f0f0f0] last:border-b-0 hover:bg-[#f8f9fa] hover:text-[#007bff] active:bg-[#e9ecef] relative"
               onClick={() => {
                 onAdditionalToolsAction("delete-unselected");
                 setShowAdditionalMenu(false);
               }}
             >
-              <Image src="/images/myMaps/eraser.png" alt="Delete Unselected" width={16} height={16} className="sc-mymaps-menu-icon" />
+              <Image src="/images/myMaps/eraser.png" alt="Delete Unselected" width={16} height={16} className="mr-2 shrink-0" />
               Delete Unselected
             </div>
             <div
-              className="sc-mymaps-menu-item"
+              className="flex items-center py-2 px-3 text-xs text-[#495057] cursor-pointer transition-colors border-b border-[#f0f0f0] last:border-b-0 hover:bg-[#f8f9fa] hover:text-[#007bff] active:bg-[#e9ecef] relative"
               onClick={() => {
                 onAdditionalToolsAction("merge-polygons");
                 setShowAdditionalMenu(false);
               }}
             >
-              <Image src="/images/polygon.png" alt="Merge Polygons" width={16} height={16} className="sc-mymaps-menu-icon" />
+              <Image src="/images/polygon.png" alt="Merge Polygons" width={16} height={16} className="mr-2 shrink-0" />
               Merge Polygons
             </div>
-            <div className="sc-mymaps-menu-item-with-submenu">
+            <div>
               <div
                 ref={exportMenuRef}
-                className="sc-mymaps-menu-item"
+                className="flex items-center py-2 px-3 text-xs text-[#495057] cursor-pointer transition-colors border-b border-[#f0f0f0] last:border-b-0 hover:bg-[#f8f9fa] hover:text-[#007bff] active:bg-[#e9ecef] relative"
                 onMouseEnter={(e) => {
                   // Clear any pending close timeout
                   if (exportHoverTimeoutRef.current) {
@@ -453,13 +463,13 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
                   }, 300);
                 }}
               >
-                <Image src="/images/json.png" alt="Export" width={16} height={16} className="sc-mymaps-menu-icon" />
+                <Image src="/images/json.png" alt="Export" width={16} height={16} className="mr-2 shrink-0" />
                 Export to ...
-                <span className="sc-mymaps-menu-arrow">▶</span>
+                <span className="ml-auto text-[10px] text-[#6c757d]">▶</span>
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </div>
   );

@@ -179,7 +179,7 @@ function Forecast({ info }: { info: CityApiResult }): React.ReactElement {
           <div className="font-bold text-base mb-2">{cityName}</div>
 
           {/* Warnings (advisories) - preserve original container behavior */}
-          <div className={warningEvents.length === 0 ? "sc-hidden" : "sc-tool-weather-forecast-warnings-container"}>
+          <div className={warningEvents.length === 0 ? "hidden" : "w-full h-[25px] mb-[5px] text-center font-bold leading-[27px] cursor-pointer text-[11pt]"}>
             {warningEvents.map((event, idx) => (
               <Warning key={`${event?.$?.type ?? "event"}-${idx}`} info={event} url={warningUrl} />
             ))}

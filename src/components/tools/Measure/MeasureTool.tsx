@@ -163,8 +163,8 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
   const [unitMeters, setUnitMeters] = useState<number | string>(-1);
   const [feature, setFeature] = useState<Feature<Geometry> | null>(null);
   const [activeTool, setActiveTool] = useState(false);
-  const [measureToolTipClass, setMeasureToolTipClass] = useState("sc-hidden");
-  const [helpToolTipClass, setHelpToolTipClass] = useState("sc-hidden");
+  const [measureToolTipClass, setMeasureToolTipClass] = useState("hidden");
+  const [helpToolTipClass, setHelpToolTipClass] = useState("hidden");
 
   // Refs for OpenLayers objects and IDs
   const vectorSourceRef = useRef<VectorSource | null>(null);
@@ -252,15 +252,15 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
 
   // Mouse out event handler
   const onMouseOutEvent = useCallback(() => {
-    setHelpToolTipClass("sc-hidden");
+    setHelpToolTipClass("hidden");
   }, []);
 
   // Pointer move handler
   const pointerMoveHandler = useCallback(
     (evt: { dragging: boolean; coordinate: Coordinate }) => {
       if (evt.dragging || !activeTool) {
-        setMeasureToolTipClass("sc-hidden");
-        setHelpToolTipClass("sc-hidden");
+        setMeasureToolTipClass("hidden");
+        setHelpToolTipClass("hidden");
         return;
       }
 
@@ -293,11 +293,11 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
       }
 
       if (!hideTooltips) {
-        setHelpToolTipClass("sc-measure-tooltip-help");
-        setMeasureToolTipClass("sc-measure-tooltip");
+        setHelpToolTipClass("measure-tooltip-help");
+        setMeasureToolTipClass("measure-tooltip");
       } else {
-        setHelpToolTipClass("sc-hidden");
-        setMeasureToolTipClass("sc-hidden");
+        setHelpToolTipClass("hidden");
+        setMeasureToolTipClass("hidden");
       }
     },
     [activeTool, geometryType, hideTooltips],
@@ -323,8 +323,8 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
       listenerRef.current = null;
     }
 
-    setMeasureToolTipClass("sc-hidden");
-    setHelpToolTipClass("sc-hidden");
+    setMeasureToolTipClass("hidden");
+    setHelpToolTipClass("hidden");
     setActiveTool(false);
     setFeature(null);
 
@@ -358,7 +358,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
 
     // Disable parcel click
     setActiveToolId("measure");
-    setHelpToolTipClass("sc-measure-tooltip-help");
+    setHelpToolTipClass("measure-tooltip-help");
     setActiveTool(true);
 
     // Set up pointer move event
@@ -454,9 +454,9 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
         }
 
         if (!hideTooltips) {
-          setMeasureToolTipClass("sc-measure-tooltip");
+          setMeasureToolTipClass("measure-tooltip");
         } else {
-          setMeasureToolTipClass("sc-hidden");
+          setMeasureToolTipClass("hidden");
         }
       });
     });
@@ -469,7 +469,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
       if (measureTooltipRef.current) {
         measureTooltipRef.current.setPosition([0, 0]);
       }
-      setMeasureToolTipClass("sc-hidden");
+      setMeasureToolTipClass("hidden");
       setFeature(sketchRef.current);
       sketchRef.current = null;
 

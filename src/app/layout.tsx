@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@/app/globals.css";
+import "@/styles/openlayers.css";
 import AuthProvider from "@/app/auth/Provider";
 import ArcGISAuthProvider from "@/components/auth/ArcGISAuthProvider";
 import { ToastContainer } from "@/components/Toast";
@@ -37,6 +38,7 @@ export default function RootLayout({
             <UrlParameterProvider>
               {children}
               <ToastContainer />
+              <div id="datepicker-portal" className="z-[1100] relative" />
             </UrlParameterProvider>
           </ArcGISAuthProvider>
         </AuthProvider>

@@ -5,7 +5,7 @@ import axiosInstance from "@/lib/axiosInstance";
 import PanelComponent from "@/components/PanelComponent";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { List } from "react-window";
-import { FaSearch, FaMapMarkerAlt, FaExternalLinkAlt } from "react-icons/fa";
+import { FaSearch, FaMapMarkerAlt, FaExternalLinkAlt, FaPalette } from "react-icons/fa";
 import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector";
 import Feature from "ol/Feature";
@@ -409,7 +409,7 @@ export default function TwoOneOne({ name = "211 Community Services", helpLink, h
   const ageOptions = isFrench ? ageCategoriesFrench : ageCategoriesEnglish;
 
   return (
-    <PanelComponent name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={handleClose} onSidebarVisibility={onSidebarVisibility}>
+    <PanelComponent icon={<FaPalette size={20} className="text-neutral/70" />} name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={handleClose} onSidebarVisibility={onSidebarVisibility}>
       <div className="p-4 space-y-4">
         {/* Language Toggle */}
         <div className="form-control">

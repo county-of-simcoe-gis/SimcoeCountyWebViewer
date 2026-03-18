@@ -4,6 +4,7 @@ import { Stroke } from "ol/style";
 import { MdGridOff, MdGridOn } from "react-icons/md";
 import Map from "ol/Map";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
+import { MapControlButton } from "@/components/ui/MapControlButton";
 
 // React component for the grid toggle button
 interface GridButtonProps {
@@ -62,13 +63,9 @@ const GridButtonComponent = ({ map }: GridButtonProps) => {
   };
 
   return (
-    <div
-      className="w-[38px] h-[38px] bg-gradient-to-b from-white to-gray-200 rounded-full shadow-md bg-center inline-flex items-center justify-center cursor-pointer btn btn-sm border-0 hover:shadow-lg transition-shadow duration-200"
-      onClick={handleToggle}
-      title={`${showGrid ? "Hide" : "Show"} map grid`}
-    >
+    <MapControlButton onClick={handleToggle} title={`${showGrid ? "Hide" : "Show"} map grid`}>
       {showGrid ? <MdGridOff size={25} className="text-gray-500" /> : <MdGridOn size={25} className="text-gray-500" />}
-    </div>
+    </MapControlButton>
   );
 };
 

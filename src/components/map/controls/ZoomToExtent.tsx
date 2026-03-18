@@ -1,6 +1,7 @@
 import React from "react";
 import { FaGlobe } from "react-icons/fa";
 import Map from "ol/Map";
+import { MapControlButton } from "@/components/ui/MapControlButton";
 
 // React component for the zoom to extent button
 interface ZoomToExtentButtonProps {
@@ -21,13 +22,9 @@ export function ZoomToExtentButton({ map, centerCoords, defaultZoom }: ZoomToExt
   };
 
   return (
-    <div
-      className="w-[38px] h-[38px] bg-gradient-to-b from-white to-gray-200 bg-no-repeat bg-center rounded-full shadow-md cursor-pointer btn btn-sm border-0 hover:shadow-lg transition-all duration-200 inline-flex items-center justify-center hover:scale-105"
-      onClick={zoomFullExtent}
-      title="Zoom to full extent"
-    >
+    <MapControlButton onClick={zoomFullExtent} title="Zoom to full extent" className="hover:scale-105">
       <FaGlobe size={18} className="text-gray-600" />
-    </div>
+    </MapControlButton>
   );
 }
 

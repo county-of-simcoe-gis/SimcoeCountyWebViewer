@@ -1,6 +1,5 @@
 "use client";
 
-import "@/components/tools/PrintLocal/PrintLocalTool.css";
 import React, { useState, useCallback } from "react";
 import Image from "next/image";
 
@@ -421,16 +420,15 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
 
   return (
     <PanelComponent name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={onClose} onSidebarVisibility={onSidebarVisibility}>
-      <div className="sc-print-container">
+      <div className="relative mb-0 overflow-y-auto p-[5px] w-full text-neutral">
         {/* MAP TITLE */}
-        <label style={{ fontWeight: "bold" }}>Map Title:</label>
-        <input className="sc-print-map-title-input" onChange={(e) => setMapTitle(e.target.value)} value={mapTitle} />
+        <label className="font-bold block">Map Title:</label>
+        <input className="w-[97%] h-[30px] mb-[5px] p-[3px] border border-[#ccc] focus:border-warning focus:outline-none" onChange={(e) => setMapTitle(e.target.value)} value={mapTitle} />
 
         {/* PRINT SIZE */}
-        <label style={{ fontWeight: "bold" }}>Select Paper Size:</label>
+        <label className="font-bold block">Select Paper Size:</label>
         <select
-          className="sc-button"
-          style={{ width: "100%", marginBottom: "5px", minHeight: "30px" }}
+          className="w-full mb-[5px] min-h-[30px] p-[5px] border border-[#ccc] rounded-[3px] text-sm bg-white cursor-pointer focus:outline-none focus:border-[#4a90d9]"
           value={printSizeSelected.value}
           onChange={(e) => {
             const selected = printSizes.find((size) => size.value === e.target.value);
@@ -445,10 +443,9 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
         </select>
 
         {/* FORMAT */}
-        <label style={{ fontWeight: "bold" }}>Select Output Format:</label>
+        <label className="font-bold block">Select Output Format:</label>
         <select
-          className="sc-button"
-          style={{ width: "100%", marginBottom: "5px", minHeight: "30px" }}
+          className="w-full mb-[5px] min-h-[30px] p-[5px] border border-[#ccc] rounded-[3px] text-sm bg-white cursor-pointer focus:outline-none focus:border-[#4a90d9]"
           value={printFormatSelected.value}
           onChange={(e) => {
             const selected = printFormats.find((format) => format.value === e.target.value);
@@ -463,30 +460,41 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
         </select>
 
         {/* PRINT BUTTONS */}
-        <div className="sc-print-button-row">
-          <button className="sc-button sc-print-button sc-print-preview-btn" onClick={handlePreview} disabled={isPrinting}>
+        <div className="flex justify-end gap-[10px] mt-[10px] mb-[5px]">
+          <button
+            className="w-[100px] text-[12pt] py-2 px-4 bg-[#6c757d] text-white border-none rounded-[3px] cursor-pointer transition-colors hover:not-disabled:bg-[#5a6268] disabled:bg-[#ccc] disabled:cursor-not-allowed"
+            onClick={handlePreview}
+            disabled={isPrinting}
+          >
             Preview
           </button>
-          <button className="sc-button sc-print-button" onClick={handlePrint} disabled={isPrinting}>
+          <button
+            className="w-[100px] text-[12pt] py-2 px-4 bg-[#4a90d9] text-white border-none rounded-[3px] cursor-pointer transition-colors hover:not-disabled:bg-[#3a7bc8] disabled:bg-[#ccc] disabled:cursor-not-allowed"
+            onClick={handlePrint}
+            disabled={isPrinting}
+          >
             Print
           </button>
         </div>
 
-        <div className={isPrinting && !showPreview ? "sc-print-loading" : "sc-hidden"}>
+        <div className={isPrinting && !showPreview ? "inline-flex items-center text-xs text-[#666] mt-[10px]" : "hidden"}>
           {printProgress || "Processing..."}
           &nbsp;
           <Image src={`${basePath}/images/loading20.gif`} alt="loading" width={20} height={20} unoptimized />
         </div>
 
         {/* ADVANCED OPTIONS */}
-        <div className={`sc-print-advanced-options-collapsible ${advancedOptionsOpen ? "open" : ""}`} onClick={() => setAdvancedOptionsOpen(!advancedOptionsOpen)}>
+        <div
+          className={`h-[30px] w-[205px] bg-[#c9e7f9] border border-[#ddd] cursor-pointer select-none leading-[30px] pl-9 bg-[url('/images/settings.png'),url('${advancedOptionsOpen ? "/images/collapsed.png" : "/images/down.png"}')] bg-[position:5px_center,185px_center] bg-no-repeat bg-[length:24px_24px,16px_16px] mt-[10px] text-[11px]`}
+          onClick={() => setAdvancedOptionsOpen(!advancedOptionsOpen)}
+        >
           Advanced Print Options
         </div>
 
         {advancedOptionsOpen && (
-          <div className="sc-print-advanced-options-content-outer">
-            <label style={{ fontSize: "10pt", fontWeight: "bold" }}>Map Scale/Extent:</label>
-            <div style={{ fontSize: "10pt" }}>
+          <div className="ml-0 bg-[#f9f9f9] border border-[#ddd] p-[10px] mt-[5px] rounded-[3px] w-full box-border [&_label]:text-[10pt] [&_label]:mb-[5px] [&_label]:block [&_input[type=radio]]:mr-[5px] [&_input[type=radio]]:mb-[3px] [&_input[type=text]]:ml-[5px]">
+            <label className="font-bold">Map Scale/Extent:</label>
+            <div className="text-[10pt]">
               <div>
                 <input
                   type="radio"
@@ -512,21 +520,21 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
               <div>
                 <input type="radio" name="mapscale" id="mapscale-forceScale" value="forceScale" checked={mapScaleOption === "forceScale"} onChange={(e) => setMapScaleOption(e.target.value)} />
                 <label htmlFor="mapscale-forceScale">Force Scale:</label>
-                <input className="sc-print-advanced-options-force-scale-input" onChange={(e) => setForceScale(e.target.value)} value={forceScale} />
+                <input className="w-[75px] h-5 mb-[5px] p-[3px] border border-[#ccc] focus:border-warning focus:outline-none" onChange={(e) => setForceScale(e.target.value)} value={forceScale} />
               </div>
             </div>
 
-            <label style={{ fontSize: "10pt", fontWeight: "bold" }}>Map Only - Image Size:</label>
+            <label className="font-bold">Map Only - Image Size:</label>
             <br />
             <label>Width (px):</label>
-            <input className="sc-print-advanced-options-force-scale-input" onChange={(e) => setMapOnlyWidth(e.target.value)} value={mapOnlyWidth} />
+            <input className="w-[75px] h-5 mb-[5px] p-[3px] border border-[#ccc] focus:border-warning focus:outline-none" onChange={(e) => setMapOnlyWidth(e.target.value)} value={mapOnlyWidth} />
             <br />
             <label>Height (px):</label>
-            <input className="sc-print-advanced-options-force-scale-input" onChange={(e) => setMapOnlyHeight(e.target.value)} value={mapOnlyHeight} />
+            <input className="w-[75px] h-5 mb-[5px] p-[3px] border border-[#ccc] focus:border-warning focus:outline-none" onChange={(e) => setMapOnlyHeight(e.target.value)} value={mapOnlyHeight} />
             <br />
 
-            <label style={{ fontSize: "10pt", fontWeight: "bold" }}>Map Output Resolution:</label>
-            <div style={{ fontSize: "10pt" }}>
+            <label className="font-bold">Map Output Resolution:</label>
+            <div className="text-[10pt]">
               <div>
                 <input type="radio" name="mapresolution" id="mapresolution-veryhigh" value="300" checked={mapResolutionOption === "300"} onChange={(e) => setMapResolutionOption(e.target.value)} />
                 <label htmlFor="mapresolution-veryhigh">Very High - 300 dpi</label>
@@ -550,20 +558,20 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
             </div>
 
             {/* MAP DECORATIONS */}
-            <label style={{ fontSize: "10pt", fontWeight: "bold", marginTop: "15px" }}>Map Decorations:</label>
+            <label className="font-bold mt-[15px]">Map Decorations:</label>
 
             {/* Scale Bar */}
-            <div style={{ fontSize: "10pt", marginTop: "10px" }}>
-              <div style={{ marginBottom: "5px" }}>
+            <div className="text-[10pt] mt-[10px]">
+              <div className="mb-[5px]">
                 <input type="checkbox" id="decoration-scalebar" checked={showScaleBar} onChange={(e) => setShowScaleBar(e.target.checked)} />
-                <label htmlFor="decoration-scalebar" style={{ fontWeight: "bold", marginLeft: "5px" }}>
+                <label htmlFor="decoration-scalebar" className="font-bold ml-[5px] inline">
                   Scale Bar
                 </label>
               </div>
               {showScaleBar && (
-                <div style={{ marginLeft: "20px", marginBottom: "10px" }}>
-                  <label>Position: </label>
-                  <select value={scaleBarPosition} onChange={(e) => setScaleBarPosition(e.target.value as DecorationPosition)} style={{ fontSize: "9pt" }}>
+                <div className="ml-5 mb-[10px]">
+                  <label className="inline">Position: </label>
+                  <select value={scaleBarPosition} onChange={(e) => setScaleBarPosition(e.target.value as DecorationPosition)} className="text-[9pt]">
                     <option value="top-left">Top Left</option>
                     <option value="top-center">Top Center</option>
                     <option value="top-right">Top Right</option>
@@ -576,17 +584,17 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
             </div>
 
             {/* North Arrow */}
-            <div style={{ fontSize: "10pt" }}>
-              <div style={{ marginBottom: "5px" }}>
+            <div className="text-[10pt]">
+              <div className="mb-[5px]">
                 <input type="checkbox" id="decoration-northarrow" checked={showNorthArrow} onChange={(e) => setShowNorthArrow(e.target.checked)} />
-                <label htmlFor="decoration-northarrow" style={{ fontWeight: "bold", marginLeft: "5px" }}>
+                <label htmlFor="decoration-northarrow" className="font-bold ml-[5px] inline">
                   North Arrow
                 </label>
               </div>
               {showNorthArrow && (
-                <div style={{ marginLeft: "20px", marginBottom: "10px" }}>
-                  <label>Position: </label>
-                  <select value={northArrowPosition} onChange={(e) => setNorthArrowPosition(e.target.value as DecorationPosition)} style={{ fontSize: "9pt" }}>
+                <div className="ml-5 mb-[10px]">
+                  <label className="inline">Position: </label>
+                  <select value={northArrowPosition} onChange={(e) => setNorthArrowPosition(e.target.value as DecorationPosition)} className="text-[9pt]">
                     <option value="top-left">Top Left</option>
                     <option value="top-center">Top Center</option>
                     <option value="top-right">Top Right</option>
@@ -599,17 +607,17 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
             </div>
 
             {/* Attributions */}
-            <div style={{ fontSize: "10pt" }}>
-              <div style={{ marginBottom: "5px" }}>
+            <div className="text-[10pt]">
+              <div className="mb-[5px]">
                 <input type="checkbox" id="decoration-attributions" checked={showAttributions} onChange={(e) => setShowAttributions(e.target.checked)} />
-                <label htmlFor="decoration-attributions" style={{ fontWeight: "bold", marginLeft: "5px" }}>
+                <label htmlFor="decoration-attributions" className="font-bold ml-[5px] inline">
                   Attributions
                 </label>
               </div>
               {showAttributions && (
-                <div style={{ marginLeft: "20px", marginBottom: "10px" }}>
-                  <label>Position: </label>
-                  <select value={attributionsPosition} onChange={(e) => setAttributionsPosition(e.target.value as DecorationPosition)} style={{ fontSize: "9pt" }}>
+                <div className="ml-5 mb-[10px]">
+                  <label className="inline">Position: </label>
+                  <select value={attributionsPosition} onChange={(e) => setAttributionsPosition(e.target.value as DecorationPosition)} className="text-[9pt]">
                     <option value="top-left">Top Left</option>
                     <option value="top-center">Top Center</option>
                     <option value="top-right">Top Right</option>

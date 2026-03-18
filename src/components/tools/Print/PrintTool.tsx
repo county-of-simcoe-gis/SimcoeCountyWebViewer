@@ -5,7 +5,6 @@
  * Ported from SimcoeCountyWebViewer Print.jsx
  */
 
-import "./PrintTool.css";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 
@@ -304,15 +303,20 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
 
   return (
     <PanelComponent name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={onClose} onSidebarVisibility={onSidebarVisibility}>
-      <div className="sc-print-container">
+      <div className="relative mb-0 overflow-y-auto p-[5px] w-full text-neutral">
         {/* MAP TITLE */}
-        <label className="sc-print-label">Map Title:</label>
-        <input className="sc-print-map-title-input" onChange={(e) => setMapTitle(e.target.value)} value={mapTitle} placeholder="Enter map title" />
+        <label className="font-bold block mt-[10px] mb-[5px]">Map Title:</label>
+        <input
+          className="w-[97%] h-[30px] mb-[5px] p-[5px] border border-[#ccc] rounded-[3px] text-sm focus:outline-none focus:border-[#4a90d9] focus:shadow-[0_0_3px_rgba(74,144,217,0.3)]"
+          onChange={(e) => setMapTitle(e.target.value)}
+          value={mapTitle}
+          placeholder="Enter map title"
+        />
 
         {/* PRINT SIZE */}
-        <label className="sc-print-label">Select Paper Size:</label>
+        <label className="font-bold block mt-[10px] mb-[5px]">Select Paper Size:</label>
         <select
-          className="sc-print-select"
+          className="w-full h-[30px] mb-[5px] p-[5px] border border-[#ccc] rounded-[3px] text-sm bg-white cursor-pointer focus:outline-none focus:border-[#4a90d9]"
           value={printSizeSelectedOption.value}
           onChange={(e) => {
             const selected = printSizes.find((size) => size.value === e.target.value);
@@ -327,9 +331,9 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
         </select>
 
         {/* FORMAT */}
-        <label className="sc-print-label">Select Output Format:</label>
+        <label className="font-bold block mt-[10px] mb-[5px]">Select Output Format:</label>
         <select
-          className="sc-print-select"
+          className="w-full h-[30px] mb-[5px] p-[5px] border border-[#ccc] rounded-[3px] text-sm bg-white cursor-pointer focus:outline-none focus:border-[#4a90d9]"
           value={printFormatSelectedOption.value}
           onChange={(e) => {
             const selected = printFormats.find((format) => format.value === e.target.value);
@@ -344,30 +348,39 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
         </select>
 
         {/* PRINT BUTTON */}
-        <button className="sc-button sc-print-button" onClick={handlePrint} disabled={isPrinting}>
+        <button
+          className="float-right w-[100px] text-[12pt] mt-[10px] py-2 px-4 bg-[#4a90d9] text-white border-none rounded-[3px] cursor-pointer transition-colors hover:not-disabled:bg-[#3a7bc8] disabled:bg-[#ccc] disabled:cursor-not-allowed"
+          onClick={handlePrint}
+          disabled={isPrinting}
+        >
           Print
         </button>
 
         {/* LOADING INDICATOR */}
-        <div className={isPrinting ? "sc-print-loading" : "sc-hidden"}>
+        <div className={isPrinting ? "inline-flex items-center text-xs text-[#666] mt-[10px] clear-both" : "hidden"}>
           {printProgress || "Processing..."}
           &nbsp;
           <Image src={`${basePath}/images/loading20.gif`} alt="loading" width={20} height={20} unoptimized />
         </div>
 
         {/* NO PRINT URL WARNING */}
-        {!printUrl && <div className="sc-print-warning">Print server not configured. Please contact the site administrator.</div>}
+        {!printUrl && (
+          <div className="text-[#d9534f] text-xs mt-[5px] p-[5px] bg-[#fdf2f2] border border-[#d9534f] rounded-[3px]">Print server not configured. Please contact the site administrator.</div>
+        )}
 
         {/* ADVANCED OPTIONS */}
-        <div className={`sc-print-advanced-options-collapsible ${advancedOptionsOpen ? "open" : ""}`} onClick={() => setAdvancedOptionsOpen(!advancedOptionsOpen)}>
+        <div
+          className={`h-[30px] w-[205px] bg-[#c9e7f9] border border-[#ddd] cursor-pointer select-none leading-[30px] pl-9 bg-[url('/images/settings.png'),url('${advancedOptionsOpen ? "/images/collapsed.png" : "/images/down.png"}')] bg-[position:5px_center,188px_center] bg-no-repeat bg-[length:20px,12px] mt-[15px] clear-both text-xs rounded-[3px] transition-colors hover:bg-[#b9d7e9] ${advancedOptionsOpen ? "rounded-b-none" : ""}`}
+          onClick={() => setAdvancedOptionsOpen(!advancedOptionsOpen)}
+        >
           Advanced Print Options
         </div>
 
         {advancedOptionsOpen && (
-          <div className="sc-print-advanced-options-content">
+          <div className="p-[15px] bg-[#f9f9f9] border border-[#ddd] border-t-0 rounded-b-[3px]">
             {/* MAP SCALE OPTIONS */}
-            <label className="sc-print-advanced-label">Map Scale/Extent:</label>
-            <div className="sc-print-advanced-options-group">
+            <label className="text-[10pt] font-bold block mt-[10px] mb-[5px]">Map Scale/Extent:</label>
+            <div className="text-[10pt] mb-[10px] [&>div]:mb-[5px] [&_input[type=radio]]:mr-[5px] [&_label]:cursor-pointer">
               <div>
                 <input
                   type="radio"
@@ -400,26 +413,38 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
                   onChange={(e) => setMapScaleOption(e.target.value as typeof mapScaleOption)}
                 />
                 <label htmlFor="mapscale-forceScale">Force Scale:</label>
-                <input className="sc-print-advanced-options-input" onChange={(e) => setForceScale(e.target.value)} value={forceScale} />
+                <input
+                  className="w-[75px] h-5 ml-[10px] px-[5px] py-[2px] border border-[#ccc] rounded-[3px] text-[11px] focus:outline-none focus:border-[#4a90d9]"
+                  onChange={(e) => setForceScale(e.target.value)}
+                  value={forceScale}
+                />
               </div>
             </div>
 
             {/* MAP ONLY SIZE */}
-            <label className="sc-print-advanced-label">Map Only - Image Size:</label>
-            <div className="sc-print-advanced-options-group">
+            <label className="text-[10pt] font-bold block mt-[10px] mb-[5px]">Map Only - Image Size:</label>
+            <div className="text-[10pt] mb-[10px] [&>div]:mb-[5px] [&_input[type=radio]]:mr-[5px] [&_label]:cursor-pointer">
               <div>
                 <label>Width (px):</label>
-                <input className="sc-print-advanced-options-input" onChange={(e) => setMapOnlyWidth(e.target.value)} value={mapOnlyWidth} />
+                <input
+                  className="w-[75px] h-5 ml-[10px] px-[5px] py-[2px] border border-[#ccc] rounded-[3px] text-[11px] focus:outline-none focus:border-[#4a90d9]"
+                  onChange={(e) => setMapOnlyWidth(e.target.value)}
+                  value={mapOnlyWidth}
+                />
               </div>
               <div>
                 <label>Height (px):</label>
-                <input className="sc-print-advanced-options-input" onChange={(e) => setMapOnlyHeight(e.target.value)} value={mapOnlyHeight} />
+                <input
+                  className="w-[75px] h-5 ml-[10px] px-[5px] py-[2px] border border-[#ccc] rounded-[3px] text-[11px] focus:outline-none focus:border-[#4a90d9]"
+                  onChange={(e) => setMapOnlyHeight(e.target.value)}
+                  value={mapOnlyHeight}
+                />
               </div>
             </div>
 
             {/* MAP RESOLUTION */}
-            <label className="sc-print-advanced-label">Map Output Resolution:</label>
-            <div className="sc-print-advanced-options-group">
+            <label className="text-[10pt] font-bold block mt-[10px] mb-[5px]">Map Output Resolution:</label>
+            <div className="text-[10pt] mb-[10px] [&>div]:mb-[5px] [&_input[type=radio]]:mr-[5px] [&_label]:cursor-pointer">
               <div>
                 <input type="radio" name="mapresolution" id="mapresolution-veryhigh" value="300" checked={mapResolutionOption === "300"} onChange={(e) => setMapResolutionOption(e.target.value)} />
                 <label htmlFor="mapresolution-veryhigh">Very High - 300 dpi</label>

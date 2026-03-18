@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { FiSettings, FiTrash2, FiSave } from "react-icons/fi";
-import "@/components/TOC/TOCSettingsControl.css";
 
 interface TOCSettingsControlProps {
   tocType: "LIST" | "FOLDER";
@@ -120,15 +119,15 @@ export default function TOCSettingsControl({
   };
 
   return (
-    <div className="sc-toc-settings-container">
-      <button className="sc-toc-settings-button" onClick={toggleSettings} title="Layer Settings">
+    <div className="relative">
+      <button className="bg-transparent border-none p-[3px] cursor-pointer rounded-[3px] hover:bg-[#e0e0e0]" onClick={toggleSettings} title="Layer Settings">
         <FiSettings size={16} />
       </button>
 
       {showSettings && (
-        <div className="sc-toc-settings-dropdown" onClick={handleBackdropClick}>
+        <div className="fixed inset-0 z-[1000] bg-transparent" onClick={handleBackdropClick}>
           <div
-            className="sc-toc-settings-content"
+            className="fixed bg-white border border-[#ccc] rounded-[3px] shadow-md min-w-[200px] p-[5px] z-[1001]"
             onClick={handleSettingsMenuClick}
             style={{
               left: `${mousePosition.x}px`,
@@ -136,55 +135,73 @@ export default function TOCSettingsControl({
             }}
           >
             {/* View Type Toggle */}
-            <div className="sc-toc-settings-item">
-              <button onClick={handleTOCTypeChange} className="sc-toc-settings-action">
+            <div className="mb-2 py-[3px]">
+              <button
+                onClick={handleTOCTypeChange}
+                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-[#f0f0f0]"
+              >
                 Switch to {tocType === "LIST" ? "Folder" : "List"} View
               </button>
             </div>
 
             {/* Save and Clear Layers - side by side */}
-            <div className="sc-toc-settings-item sc-toc-settings-button-group">
-              <button onClick={handleSaveAllLayers} className="sc-toc-settings-action sc-toc-settings-action-with-icon sc-toc-settings-action-half">
+            <div className="mb-2 py-[3px] flex gap-[5px]">
+              <button
+                onClick={handleSaveAllLayers}
+                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-[#f0f0f0] flex items-center gap-1.5 flex-1 justify-center"
+              >
                 <FiSave size={14} />
                 <span>Save Layers</span>
               </button>
-              <button onClick={handleClearSavedLayers} className="sc-toc-settings-action sc-toc-settings-action-with-icon sc-toc-settings-action-half">
+              <button
+                onClick={handleClearSavedLayers}
+                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-[#f0f0f0] flex items-center gap-1.5 flex-1 justify-center"
+              >
                 <FiTrash2 size={14} />
                 <span>Clear</span>
               </button>
             </div>
 
             {/* Reset to Default */}
-            <div className="sc-toc-settings-item">
-              <button onClick={handleResetToDefault} className="sc-toc-settings-action">
+            <div className="mb-2 py-[3px]">
+              <button
+                onClick={handleResetToDefault}
+                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-[#f0f0f0]"
+              >
                 Reset to Default
               </button>
             </div>
 
             {/* Turn Off All Layers */}
-            <div className="sc-toc-settings-item">
-              <button onClick={handleTurnOffLayers} className="sc-toc-settings-action">
+            <div className="mb-2 py-[3px]">
+              <button
+                onClick={handleTurnOffLayers}
+                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-[#f0f0f0]"
+              >
                 Turn off all Layers
               </button>
             </div>
 
             {/* Show Legend */}
-            <div className="sc-toc-settings-item">
-              <button onClick={handleOpenLegend} className="sc-toc-settings-action">
+            <div className="mb-2 py-[3px]">
+              <button
+                onClick={handleOpenLegend}
+                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-[#f0f0f0]"
+              >
                 Show Legend
               </button>
             </div>
 
             {/* Global Opacity */}
-            <div className="sc-toc-settings-item">
-              <label className="sc-toc-settings-label">Opacity: {Math.round(globalOpacity * 100)}%</label>
-              <input type="range" min="0" max="1" step="0.1" value={globalOpacity} onChange={handleOpacityChange} className="sc-toc-opacity-slider" />
+            <div className="mb-2 py-[3px]">
+              <label className="block font-[Verdana,Arial,sans-serif] text-[9pt] mb-[3px] text-[#333]">Opacity: {Math.round(globalOpacity * 100)}%</label>
+              <input type="range" min="0" max="1" step="0.1" value={globalOpacity} onChange={handleOpacityChange} className="w-full h-5" />
             </div>
 
             {/* Alpha Sort Toggle */}
-            <div className="sc-toc-settings-item">
-              <label className="sc-toc-settings-checkbox">
-                <input type="checkbox" checked={sortAlpha} onChange={(e) => handleSortChange(e.target.checked)} />
+            <div className="py-[3px]">
+              <label className="flex items-center font-[Verdana,Arial,sans-serif] text-[9pt] cursor-pointer">
+                <input type="checkbox" checked={sortAlpha} onChange={(e) => handleSortChange(e.target.checked)} className="mr-[5px]" />
                 Sort Alphabetically
               </label>
             </div>

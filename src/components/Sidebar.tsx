@@ -1,6 +1,5 @@
 "use client";
 
-import "@/components/Sidebar.css";
 import Image from "next/image";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import { useSidebarStore } from "@/stores/sidebarStore";
@@ -12,6 +11,7 @@ import { useEffect, useState, Suspense, useCallback, useMemo } from "react";
 import { lazy } from "react";
 import { useSession } from "next-auth/react";
 import ReportsNavBar from "@/components/ReportsNavBar";
+import { SectionTitle } from "@/components/ui";
 
 // Lazy load tool components
 const MeasureTool = lazy(() => import("@/components/tools/Measure/MeasureTool"));
@@ -134,7 +134,7 @@ export default function Sidebar() {
         if (ThemeComponent) {
           console.log(`[Sidebar] Syncing theme component for: ${theme.name} (${componentName})`);
           const component = (
-            <Suspense fallback={<div style={{ padding: "20px" }}>Loading theme...</div>}>
+            <Suspense fallback={<div className="p-5">Loading theme...</div>}>
               <ThemeComponent name={theme.name} hideHeader={isSingleTheme} onClose={() => setActiveThemeComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
             </Suspense>
           );
@@ -155,7 +155,7 @@ export default function Sidebar() {
       const ThemeComponent = themeComponents[componentName];
       if (ThemeComponent) {
         setActiveThemeComponent(
-          <Suspense fallback={<div style={{ padding: "20px" }}>Loading theme...</div>}>
+          <Suspense fallback={<div className="p-5">Loading theme...</div>}>
             <ThemeComponent name={singleTheme.name} hideHeader={true} onClose={() => setActiveThemeComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
           </Suspense>,
         );
@@ -174,7 +174,7 @@ export default function Sidebar() {
         if (ToolComponent) {
           console.log(`[Sidebar] Syncing tool component for: ${tool.name} (${componentName})`);
           const component = (
-            <Suspense fallback={<div style={{ padding: "20px" }}>Loading tool...</div>}>
+            <Suspense fallback={<div className="p-5">Loading tool...</div>}>
               <ToolComponent name={tool.name} onClose={() => setActiveToolComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
             </Suspense>
           );
@@ -259,7 +259,7 @@ export default function Sidebar() {
       const ToolComponent = toolComponents[componentName];
       if (ToolComponent) {
         const component = (
-          <Suspense fallback={<div style={{ padding: "20px" }}>Loading tool...</div>}>
+          <Suspense fallback={<div className="p-5">Loading tool...</div>}>
             <ToolComponent name={displayName} onClose={() => setActiveToolComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
           </Suspense>
         );
@@ -267,10 +267,10 @@ export default function Sidebar() {
       } else {
         // Fallback for unknown tools
         setActiveToolComponent(
-          <div style={{ padding: "20px" }}>
+          <div className="p-5">
             <h3>{displayName}</h3>
             <p>This tool is not yet implemented.</p>
-            <button className="sc-button" onClick={() => setActiveToolComponent(null)}>
+            <button className="btn btn-sm btn-primary" onClick={() => setActiveToolComponent(null)}>
               Close
             </button>
           </div>,
@@ -280,7 +280,7 @@ export default function Sidebar() {
       const ThemeComponent = themeComponents[componentName];
       if (ThemeComponent) {
         const component = (
-          <Suspense fallback={<div style={{ padding: "20px" }}>Loading theme...</div>}>
+          <Suspense fallback={<div className="p-5">Loading theme...</div>}>
             <ThemeComponent name={displayName} hideHeader={isSingleTheme} onClose={() => setActiveThemeComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
           </Suspense>
         );
@@ -288,10 +288,10 @@ export default function Sidebar() {
       } else {
         // Fallback for unknown themes
         setActiveThemeComponent(
-          <div style={{ padding: "20px" }}>
+          <div className="p-5">
             <h3>{displayName}</h3>
             <p>This theme is not yet implemented.</p>
-            <button className="sc-button" onClick={() => setActiveThemeComponent(null)}>
+            <button className="btn btn-sm btn-primary" onClick={() => setActiveThemeComponent(null)}>
               Close
             </button>
           </div>,
@@ -301,15 +301,21 @@ export default function Sidebar() {
   };
 
   const renderDefaultToolsContent = () => (
-    <div className="sc-sidebar-items-container">
+    <div className="flex flex-col gap-px flex-auto min-h-0 max-h-full overflow-y-auto">
       {visibleTools.map((tool) => (
-        <div key={tool.id} className={`sc-sidebar-item ${activeTool === tool.id ? "active" : ""}`} onClick={() => handleSidebarItemClick(tool.component || tool.name, tool.name, "tools")}>
-          <div className="sc-sidebar-item-image">
-            <Image src={`/images/${tool.imageName}`} alt={tool.name} width={32} height={32} />
+        <div
+          key={tool.id}
+          className={`flex items-start px-1.5 pb-1.5 pt-px border border-transparent border-b-gray-300 rounded-sm cursor-pointer bg-white select-none min-h-[72px] mt-1.5 text-[#505050] hover:border-[#90b5d5] hover:bg-[image:var(--sc-gradient-hover)] ${
+            activeTool === tool.id ? "bg-[image:var(--sc-gradient-active)] !border-[#90b5d5]" : ""
+          }`}
+          onClick={() => handleSidebarItemClick(tool.component || tool.name, tool.name, "tools")}
+        >
+          <div className="w-[60px] h-[60px] shrink-0 flex items-center justify-center bg-[image:linear-gradient(to_bottom,#f2f5f6,#e6e6e6)] rounded-sm border border-gray-300 mr-4 text-center pt-1.5">
+            <Image src={`/images/${tool.imageName}`} alt={tool.name} width={50} height={50} className="w-[50px] h-[50px] object-contain opacity-70" />
           </div>
-          <div className="sc-sidebar-item-content">
-            <div className="sc-sidebar-item-title">{tool.name}</div>
-            <div className="sc-sidebar-item-description">{tool.description}</div>
+          <div className="flex-1 flex flex-col justify-start min-h-[60px]">
+            <div className="text-[15px] font-bold text-[#616161] mb-1.5 leading-tight">{tool.name}</div>
+            <div className="text-[10px] text-gray-500 leading-snug text-left pl-[18px] pr-1 bg-[url('/images/arrow_curve.gif')] bg-no-repeat">{tool.description}</div>
           </div>
         </div>
       ))}
@@ -317,15 +323,21 @@ export default function Sidebar() {
   );
 
   const renderDefaultThemesContent = () => (
-    <div className="sc-sidebar-items-container">
+    <div className="flex flex-col gap-px flex-auto min-h-0 max-h-full overflow-y-auto">
       {visibleThemes.map((theme) => (
-        <div key={theme.id} className={`sc-sidebar-item ${activeTheme === theme.id ? "active" : ""}`} onClick={() => handleSidebarItemClick(theme.component || theme.name, theme.name, "themes")}>
-          <div className="sc-sidebar-item-image">
-            <Image src={`/images/${theme.imageName}`} alt={theme.name} width={32} height={32} />
+        <div
+          key={theme.id}
+          className={`flex items-start px-1.5 pb-1.5 pt-px border border-transparent border-b-gray-300 rounded-sm cursor-pointer bg-white select-none min-h-[72px] mt-1.5 text-[#505050] hover:border-[#90b5d5] hover:bg-[image:var(--sc-gradient-hover)] ${
+            activeTheme === theme.id ? "bg-[image:var(--sc-gradient-active)] !border-[#90b5d5]" : ""
+          }`}
+          onClick={() => handleSidebarItemClick(theme.component || theme.name, theme.name, "themes")}
+        >
+          <div className="w-[60px] h-[60px] shrink-0 flex items-center justify-center bg-[image:linear-gradient(to_bottom,#f2f5f6,#e6e6e6)] rounded-sm border border-gray-300 mr-4 text-center pt-1.5">
+            <Image src={`/images/${theme.imageName}`} alt={theme.name} width={50} height={50} className="w-[50px] h-[50px] object-contain opacity-70" />
           </div>
-          <div className="sc-sidebar-item-content">
-            <div className="sc-sidebar-item-title">{theme.name}</div>
-            <div className="sc-sidebar-item-description">{theme.description}</div>
+          <div className="flex-1 flex flex-col justify-start min-h-[60px]">
+            <div className="text-[15px] font-bold text-[#616161] mb-1.5 leading-tight">{theme.name}</div>
+            <div className="text-[10px] text-gray-500 leading-snug text-left pl-[18px] pr-1 bg-[url('/images/arrow_curve.gif')] bg-no-repeat">{theme.description}</div>
           </div>
         </div>
       ))}
@@ -333,7 +345,9 @@ export default function Sidebar() {
   );
 
   return (
-    <div className={`sc-sidebar ${!isOpen ? "closed" : ""}`}>
+    <div
+      className={`absolute top-[52px] left-0 bottom-0 w-[370px] bg-base-200 border-r border-gray-400 z-[1000] overflow-hidden transition-transform duration-300 ease-in-out ${!isOpen ? "-translate-x-[370px]" : ""}`}
+    >
       <Tabs selectedIndex={activeTab} onSelect={handleTabSelect} forceRenderTabPanel={true}>
         <TabList>
           {!hideLayers && (
@@ -363,8 +377,14 @@ export default function Sidebar() {
           {!hideThemes && (
             <Tab>
               <div className="tab-content">
-                <Image src={singleTheme ? `/images/${singleTheme.imageName}` : "/images/theme-32x32.png"} alt={singleTheme ? singleTheme.name : (appConfig?.themesTitle || "Themes")} width={32} height={32} className="tab-icon" />
-                <div className="tab-text">{singleTheme ? singleTheme.name : (appConfig?.themesTitle || "Themes")}</div>
+                <Image
+                  src={singleTheme ? `/images/${singleTheme.imageName}` : "/images/theme-32x32.png"}
+                  alt={singleTheme ? singleTheme.name : appConfig?.themesTitle || "Themes"}
+                  width={32}
+                  height={32}
+                  className="tab-icon"
+                />
+                <div className="tab-text">{singleTheme ? singleTheme.name : appConfig?.themesTitle || "Themes"}</div>
               </div>
             </Tab>
           )}
@@ -380,8 +400,8 @@ export default function Sidebar() {
 
         {!hideLayers && (
           <TabPanel>
-            <div className="sc-sidebar-content">
-              <Suspense fallback={<div style={{ padding: "20px" }}>Loading layers...</div>}>
+            <div className="h-[calc(100vh-130px)] max-h-[calc(100vh-130px)] overflow-hidden flex flex-col">
+              <Suspense fallback={<div className="p-5">Loading layers...</div>}>
                 <TOC visible={activeTab === 0} />
               </Suspense>
             </div>
@@ -390,16 +410,16 @@ export default function Sidebar() {
 
         {!hideTools && (
           <TabPanel>
-            <div className="sc-sidebar-content">
-              {activeToolComponent ? activeToolComponent : visibleTools.length === 0 ? <div style={{ fontSize: "12px", color: "#666" }}>Loading tools...</div> : renderDefaultToolsContent()}
+            <div className="h-[calc(100vh-130px)] max-h-[calc(100vh-130px)] overflow-hidden flex flex-col">
+              {activeToolComponent ? activeToolComponent : visibleTools.length === 0 ? <div className="text-xs text-gray-500">Loading tools...</div> : renderDefaultToolsContent()}
             </div>
           </TabPanel>
         )}
 
         {!hideMyMaps && (
           <TabPanel>
-            <div className="sc-sidebar-content">
-              <Suspense fallback={<div style={{ padding: "20px" }}>Loading MyMaps...</div>}>
+            <div className="h-[calc(100vh-130px)] max-h-[calc(100vh-130px)] overflow-hidden flex flex-col">
+              <Suspense fallback={<div className="p-5">Loading MyMaps...</div>}>
                 <MyMaps visible={activeTab === 2} />
               </Suspense>
             </div>
@@ -408,25 +428,25 @@ export default function Sidebar() {
 
         {!hideThemes && (
           <TabPanel>
-            <div className="sc-sidebar-content">
-              {activeThemeComponent ? activeThemeComponent : visibleThemes.length === 0 ? <div style={{ fontSize: "12px", color: "#666" }}>Loading themes...</div> : renderDefaultThemesContent()}
+            <div className="h-[calc(100vh-130px)] max-h-[calc(100vh-130px)] overflow-hidden flex flex-col">
+              {activeThemeComponent ? activeThemeComponent : visibleThemes.length === 0 ? <div className="text-xs text-gray-500">Loading themes...</div> : renderDefaultThemesContent()}
             </div>
           </TabPanel>
         )}
 
         {!hideReports && (
           <TabPanel>
-            <div className="sc-sidebar-content">
+            <div className="h-[calc(100vh-130px)] max-h-[calc(100vh-130px)] overflow-hidden flex flex-col">
               <ReportsNavBar />
               {currentReport ? (
-                <div className="sc-sidebar-report-container">
-                  <div className="sc-sidebar-report-title">{currentReport.title}</div>
-                  <div className="sc-sidebar-report-content">{currentReport.content}</div>
+                <div className="h-full overflow-y-auto">
+                  <SectionTitle className="mb-2.5 border-gray-200 text-gray-800">{currentReport.title}</SectionTitle>
+                  <div className="text-xs">{currentReport.content}</div>
                 </div>
               ) : (
                 <div>
-                  <div style={{ marginBottom: "10px", fontWeight: "bold", fontSize: "12px" }}>REPORTS</div>
-                  <div style={{ fontSize: "12px", color: "#666" }}>No report currently loaded. Use the identify tool from the map context menu to generate a report.</div>
+                  <div className="mb-2.5 font-bold text-xs">REPORTS</div>
+                  <div className="text-xs text-gray-500">No report currently loaded. Use the identify tool from the map context menu to generate a report.</div>
                 </div>
               )}
             </div>

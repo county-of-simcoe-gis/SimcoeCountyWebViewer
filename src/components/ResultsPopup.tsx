@@ -6,7 +6,6 @@ import { FaHome, FaBuilding, FaLayerGroup } from "react-icons/fa";
 import RecordSelectorPopup, { RecordItem } from "@/components/RecordSelectorPopup";
 import PropertyPopup, { type PropertyInfo } from "@/components/PropertyPopup";
 import { InfoRow } from "@/components/common/InfoRow";
-import "@/components/ResultsPopup.css";
 
 // Base interface for common result fields
 interface BaseResult extends RecordItem {
@@ -90,7 +89,11 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
   const renderCollapsedIcon = (result: Result, index: number, isSelected: boolean) => {
     // Use custom sidebar icon if provided
     if (result.renderSidebarIcon) {
-      return <div className={`sc-result-icon ${isSelected ? "sc-result-icon-selected" : ""}`}>{result.renderSidebarIcon()}</div>;
+      return (
+        <div className={`text-sm flex items-center justify-center leading-none ${isSelected ? "text-white" : "text-[#666]"}`} data-testid="result-icon">
+          {result.renderSidebarIcon()}
+        </div>
+      );
     }
 
     let IconComponent = FaLayerGroup;
@@ -109,7 +112,7 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
     }
 
     return (
-      <div className={`sc-result-icon ${isSelected ? "sc-result-icon-selected" : ""}`}>
+      <div className={`text-sm flex items-center justify-center leading-none ${isSelected ? "text-white" : "text-[#666]"}`} data-testid="result-icon">
         <IconComponent />
       </div>
     );
@@ -140,29 +143,35 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
     switch (result.type) {
       case "property":
         return (
-          <div className="sc-result-details">
-            <div className={`sc-result-type ${baseClasses}`}>Property</div>
-            <div className={`sc-result-text ${baseClasses}`}>{result.data.Address || result.displayName}</div>
-            <div className={`sc-result-id ${baseClasses}`}>{result.data.ARN}</div>
+          <div className="flex flex-col gap-[3px] w-full">
+            <div className={`text-[10px] font-bold uppercase tracking-[0.5px] ${isSelected ? "text-white/90" : "text-[#1976d2]"}`}>Property</div>
+            <div className={`text-xs font-semibold whitespace-nowrap overflow-hidden text-ellipsis leading-[1.3] ${isSelected ? "text-white" : "text-[#333]"}`}>
+              {result.data.Address || result.displayName}
+            </div>
+            <div className={`text-[10px] font-mono whitespace-nowrap overflow-hidden text-ellipsis leading-[1.2] ${isSelected ? "text-white/80" : "text-[#666]"}`}>{result.data.ARN}</div>
           </div>
         );
 
       case "condo":
         return (
-          <div className="sc-result-details">
-            <div className={`sc-result-type ${baseClasses}`}>Condo Unit</div>
-            <div className={`sc-result-text ${baseClasses}`}>{result.displayName}</div>
-            {result.data.UnitNumber && <div className={`sc-result-unit ${baseClasses}`}>Unit: {result.data.UnitNumber}</div>}
-            <div className={`sc-result-id ${baseClasses}`}>{result.data.ARN}</div>
+          <div className="flex flex-col gap-[3px] w-full">
+            <div className={`text-[10px] font-bold uppercase tracking-[0.5px] ${isSelected ? "text-white/90" : "text-[#1976d2]"}`}>Condo Unit</div>
+            <div className={`text-xs font-semibold whitespace-nowrap overflow-hidden text-ellipsis leading-[1.3] ${isSelected ? "text-white" : "text-[#333]"}`}>{result.displayName}</div>
+            {result.data.UnitNumber && (
+              <div className={`text-[11px] font-medium whitespace-nowrap overflow-hidden text-ellipsis leading-[1.2] ${isSelected ? "text-white/90" : "text-[#1976d2]"}`}>
+                Unit: {result.data.UnitNumber}
+              </div>
+            )}
+            <div className={`text-[10px] font-mono whitespace-nowrap overflow-hidden text-ellipsis leading-[1.2] ${isSelected ? "text-white/80" : "text-[#666]"}`}>{result.data.ARN}</div>
           </div>
         );
 
       case "identify":
       case "layer":
         return (
-          <div className="sc-result-details">
-            <div className={`sc-result-type ${baseClasses}`}>{result.data.layerName}</div>
-            <div className={`sc-result-text ${baseClasses}`}>{result.displayName}</div>
+          <div className="flex flex-col gap-[3px] w-full">
+            <div className={`text-[10px] font-bold uppercase tracking-[0.5px] ${isSelected ? "text-white/90" : "text-[#1976d2]"}`}>{result.data.layerName}</div>
+            <div className={`text-xs font-semibold whitespace-nowrap overflow-hidden text-ellipsis leading-[1.3] ${isSelected ? "text-white" : "text-[#333]"}`}>{result.displayName}</div>
           </div>
         );
     }
@@ -184,7 +193,7 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
           return <PropertyPopup propInfo={result.data.propInfo} feature={result.data.feature} onClose={onClose} onClearParcelLayer={onClearParcelLayer} />;
         }
         return (
-          <div className="sc-result-content-loading">
+          <div className="flex items-center justify-center py-12 px-6 text-center text-[#666]">
             <p>Loading property details...</p>
           </div>
         );
@@ -192,10 +201,10 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
       case "identify":
       case "layer":
         return (
-          <div className="sc-result-identify-content">
-            <h3>{result.data.layerName}</h3>
-            <p className="sc-result-feature-id">Feature ID: {result.data.featureId}</p>
-            <div className="sc-result-attributes">
+          <div className="px-5 pt-1.5 pb-5">
+            <h3 className="m-0 mb-2 text-[13px] font-semibold text-[#333] leading-normal">{result.data.layerName}</h3>
+            <p className="m-0 mb-4 text-xs text-[#666] font-mono">Feature ID: {result.data.featureId}</p>
+            <div className="mt-4" data-testid="result-attributes">
               {Object.entries(result.data.attributes)
                 .filter(([key, value]) => key !== "geometry" && key !== "bbox" && !key.startsWith("_") && typeof value !== "object")
                 .map(([key, value]) => (
@@ -207,7 +216,7 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
 
       default:
         return (
-          <div className="sc-result-content-empty">
+          <div className="flex items-center justify-center py-12 px-6 text-center text-[#666]">
             <p>No details available for this result.</p>
           </div>
         );
