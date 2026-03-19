@@ -41,12 +41,6 @@ export default function Layout({ children }: LayoutProps) {
   const emitSidebarChanged = useEventStore((s) => s.emitSidebarChanged);
   const { config, loading: configLoading, error: configError } = useConfig();
 
-  // Diagnostic: detect full Layout mount/unmount (e.g. from Fast Refresh or crash)
-  useEffect(() => {
-    console.log("[DIAG] Layout MOUNTED", Date.now());
-    return () => console.log("[DIAG] Layout UNMOUNTED", Date.now());
-  }, []);
-
   // Wire up event emitters to stores
   useEffect(() => {
     setEventEmitter(emitSidebarChanged);

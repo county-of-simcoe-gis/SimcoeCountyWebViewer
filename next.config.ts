@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
     // optimizer's internal fetch, causing 404s for /images/* files).
     loader: "custom",
     loaderFile: "./src/lib/imageLoader.ts",
+    // The custom loader only handles basePath prefixing, not real
+    // width-based optimization, so mark images as unoptimized to
+    // suppress "loader does not implement width" console warnings.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",

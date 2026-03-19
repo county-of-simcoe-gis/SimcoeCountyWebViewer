@@ -88,11 +88,8 @@ export default function TOC({ visible = true }: TOCProps) {
       const savedData = getItemsFromStorage<Record<string, SavedGroup>>(storageKey);
 
       if (savedData === undefined || savedData === null) {
-        console.log("[TOC] No saved layer options in localStorage - using config defaults");
         return;
       }
-
-      console.log("[TOC] Applying saved layer options from localStorage:", Object.keys(savedData));
 
       // Convert to array for easier filtering
       const savedDataArray = Object.entries(savedData);

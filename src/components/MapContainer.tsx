@@ -156,7 +156,6 @@ export const useInteractionManager = () => {
 };
 
 export default function MapContainer() {
-  console.log("[DIAG] MapContainer RENDER", Date.now());
   const isOpen = useSidebarStore((s) => s.isOpen);
   const emitMapLoaded = useEventStore((s) => s.emitMapLoaded);
   const { data: session } = useSession();
@@ -320,7 +319,6 @@ export default function MapContainer() {
 
     // ─── HMR fast-path: reuse existing map after Fast Refresh ───────────
     if (_hmrRegistry.map) {
-      console.log("[DIAG] MapContainer HMR REUSE — re-targeting existing map", Date.now());
       const existingMap = _hmrRegistry.map;
       existingMap.setTarget(mapRef.current);
       mapInstanceRef.current = existingMap;
@@ -353,7 +351,6 @@ export default function MapContainer() {
       setMapLoading(false);
 
       return () => {
-        console.log("[DIAG] MapContainer HMR cleanup — untargeting (preserving map)", Date.now());
         if (mapInstanceRef.current) {
           mapInstanceRef.current.setTarget(undefined);
           mapInstanceRef.current = null;
@@ -362,7 +359,6 @@ export default function MapContainer() {
       };
     }
     // ─── End HMR fast-path ──────────────────────────────────────────────
-    console.log("[DIAG] MapContainer MAP INIT EFFECT — component (re)mounted", Date.now());
 
     // Create scale line control
     const scaleLineControl = new ScaleLine({
@@ -545,7 +541,6 @@ export default function MapContainer() {
           // Bump generation so any previous popup's onCloseCallback becomes a no-op
           clickGenerationRef.current += 1;
           const thisGeneration = clickGenerationRef.current;
-          console.log(`[DIAG] CLICK gen=${thisGeneration}, handlers=${applicableHandlers.length}`, Date.now());
 
           // Set loading state
           setIsLoadingResults(true);
@@ -567,10 +562,8 @@ export default function MapContainer() {
             .then((allResults) => {
               // If a newer click has started, discard these stale results
               if (clickGenerationRef.current !== thisGeneration) {
-                console.log(`[DIAG] STALE results discarded gen=${thisGeneration} current=${clickGenerationRef.current}`, Date.now());
                 return;
               }
-              console.log(`[DIAG] RESULTS arrived gen=${thisGeneration}`, Date.now());
 
               // Filter out null/undefined and flatten results
               const flatResults: Result[] = [];
@@ -588,7 +581,6 @@ export default function MapContainer() {
               // Update state with results
               setAggregatedResults(flatResults);
               setIsLoadingResults(false);
-              console.log(`[DIAG] setAggregatedResults(${flatResults.length}) gen=${thisGeneration}`, Date.now());
             })
             .catch((error) => {
               console.error("Error collecting interaction results:", error);
@@ -661,8 +653,6 @@ export default function MapContainer() {
 
     // Cleanup function — preserve map for HMR, only untarget
     return () => {
-      console.log("[DIAG] MapContainer MAP INIT CLEANUP — component UNMOUNTING", Date.now());
-
       // Untarget the map from the DOM but keep the OL Map instance alive
       // so that Fast Refresh can re-target it instead of rebuilding everything.
       if (mapInstanceRef.current) {
@@ -934,7 +924,6 @@ export default function MapContainer() {
     if (!map || !appStoreConfig || hasAppliedApiConfigRef.current) return;
 
     hasAppliedApiConfigRef.current = true;
-    console.log("[DIAG] Config override effect APPLYING", Date.now());
 
     // Don't override if URL has coordinate params (URL params take precedence)
     const urlParams = new URLSearchParams(window.location.search);
@@ -1283,10 +1272,8 @@ export default function MapContainer() {
 
   // Show unified popup when results are available
   useEffect(() => {
-    console.log(`[DIAG] Results useEffect: agg=${aggregatedResults.length} coord=${!!resultsCoordinate} loading=${isLoadingResults}`, Date.now());
     // If no results but we have a coordinate, hide the popup (user clicked on empty area)
     if (aggregatedResults.length === 0 && resultsCoordinate && !isLoadingResults) {
-      console.log("[DIAG] Results useEffect: EMPTY results branch — hiding popup", Date.now());
       // Defer store mutation to avoid synchronous useSyncExternalStore
       // notification during React's commit phase ("Cannot commit the same tree").
       queueMicrotask(() => hidePopup());
@@ -1295,17 +1282,14 @@ export default function MapContainer() {
     }
 
     if (aggregatedResults.length > 0 && resultsCoordinate) {
-      console.log(`[DIAG] Results useEffect: SHOWING popup with ${aggregatedResults.length} results`, Date.now());
       // Capture the current generation so this cleanup only fires if still current
       const cleanupGeneration = clickGenerationRef.current;
 
       const cleanupResults = () => {
         // Only clear state if no newer click has superseded this one
         if (clickGenerationRef.current !== cleanupGeneration) {
-          console.log(`[DIAG] cleanupResults SKIPPED (stale) gen=${cleanupGeneration} current=${clickGenerationRef.current}`, Date.now());
           return;
         }
-        console.log(`[DIAG] cleanupResults EXECUTING gen=${cleanupGeneration}`, Date.now());
 
         // Clear parcel layers from any results that have the clear function
         aggregatedResults.forEach((result) => {
