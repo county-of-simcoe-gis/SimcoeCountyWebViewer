@@ -13,7 +13,7 @@ import type { Result } from "@/components/ResultsPopup";
 import "./MapPopup.css";
 
 export default function MapPopup() {
-  const { map } = useMapStore();
+  const map = useMapStore((s) => s.map);
   const { setOverlay, isVisible, features, selectedIndex, hide, nextFeature, prevFeature, coordinates } = usePopupStore();
   const popupRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<Overlay | null>(null);

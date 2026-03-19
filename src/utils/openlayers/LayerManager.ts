@@ -93,7 +93,7 @@ export class LayerManager {
     const success = layerManager.removeLayer(layerId);
 
     if (success) {
-      console.log(`🗑️ Removed layer "${managedLayer.name}" from map (ID: ${layerId})`);
+      // console.log(`🗑️ Removed layer "${managedLayer.name}" from map (ID: ${layerId})`);
     }
 
     return success;
@@ -202,7 +202,7 @@ export class LayerManager {
     // Clear from layer manager
     layerManager.clearAllLayers();
 
-    console.log(`🧹 Cleared ${allLayers.length} layers from all categories`);
+    // console.log(`🧹 Cleared ${allLayers.length} layers from all categories`);
   }
 
   /**

@@ -60,6 +60,26 @@ import staticConfig from "@/config.json";
 // Import utilities
 import { getAxiosClient } from "@/lib/axiosInstance";
 
+// ─── HMR-resilient map registry ─────────────────────────────────────────────
+// Stores the OL Map instance on window so it survives Fast Refresh module
+// re-execution.  When MapContainer remounts after HMR it re-targets the
+// existing map instead of tearing everything down and rebuilding from scratch.
+interface HmrMapRegistry {
+  map: Map | null;
+  identifyIconLayer: VectorLayer<VectorSource<Feature<Geometry>>> | null;
+  identifyIconLayerId: string | null;
+  unifiedInteraction: Interaction | null;
+}
+const _hmrRegistry: HmrMapRegistry =
+  typeof window !== "undefined"
+    ? (((window as unknown as Record<string, unknown>).__hmrMapRegistry ??= {
+        map: null,
+        identifyIconLayer: null,
+        identifyIconLayerId: null,
+        unifiedInteraction: null,
+      } as HmrMapRegistry) as HmrMapRegistry)
+    : { map: null, identifyIconLayer: null, identifyIconLayerId: null, unifiedInteraction: null };
+
 // Define dynamic imports for control components
 const dynamicControlImports = {
   CurrentLocationButton: () => import("@/components/map/controls/CurrentLocation").then((m) => ({ default: m.CurrentLocationButton })),
@@ -136,13 +156,36 @@ export const useInteractionManager = () => {
 };
 
 export default function MapContainer() {
+  console.log("[DIAG] MapContainer RENDER", Date.now());
   const { isOpen } = useSidebarStore();
   const { emitMapLoaded } = useEventStore();
   const { data: session } = useSession();
-  const { map, setMap, addLoadedItem, setMapControls, setCurrentExtent, setCurrentZoom, setCurrentCenter, initExtentHistory, saveCurrentExtentToHistory, controlVisibility, initControlVisibility } =
-    useMapStore();
+
+  // IMPORTANT: Use individual selectors for Zustand stores to prevent
+  // unnecessary re-renders that cause React 19 "Cannot commit the same tree"
+  // errors when store state changes during effect execution.
+  const map = useMapStore((s) => s.map);
+  const setMap = useMapStore((s) => s.setMap);
+  const addLoadedItem = useMapStore((s) => s.addLoadedItem);
+  const setMapControls = useMapStore((s) => s.setMapControls);
+  const setCurrentExtent = useMapStore((s) => s.setCurrentExtent);
+  const setCurrentZoom = useMapStore((s) => s.setCurrentZoom);
+  const setCurrentCenter = useMapStore((s) => s.setCurrentCenter);
+  const initExtentHistory = useMapStore((s) => s.initExtentHistory);
+  const saveCurrentExtentToHistory = useMapStore((s) => s.saveCurrentExtentToHistory);
+  const controlVisibility = useMapStore((s) => s.controlVisibility);
+  const initControlVisibility = useMapStore((s) => s.initControlVisibility);
+
   const { setMapLoading } = useAppStore();
-  const { show: showPopup, hide: hidePopup, setOnClose } = usePopupStore();
+
+  // Only extract the stable action functions from popupStore — NOT reactive state.
+  // Subscribing to the full store (isVisible, features, etc.) would cause MapContainer
+  // to re-render whenever the popup opens or closes, which triggers a synchronous
+  // useSyncExternalStore notification during effect execution and crashes React 19.
+  const showPopup = usePopupStore((s) => s.show);
+  const hidePopup = usePopupStore((s) => s.hide);
+  const setOnClose = usePopupStore((s) => s.setOnClose);
+
   const urlParameters = useAppStore((state) => state.urlParameters);
 
   // URL Parameter context for registering map readiness
@@ -155,13 +198,11 @@ export default function MapContainer() {
   const hasAppliedApiConfigRef = useRef(false);
   const initialViewRef = useRef<{ center: number[]; zoom: number } | null>(null);
 
-  // Handler-based system - use store
-  const {
-    registerHandler: storeRegisterHandler,
-    unregisterHandler: storeUnregisterHandler,
-    registerInteraction: storeRegisterInteraction,
-    unregisterInteraction: storeUnregisterInteraction,
-  } = useInteractionManagerStore();
+  // Handler-based system - use individual selectors
+  const storeRegisterHandler = useInteractionManagerStore((s) => s.registerHandler);
+  const storeUnregisterHandler = useInteractionManagerStore((s) => s.unregisterHandler);
+  const storeRegisterInteraction = useInteractionManagerStore((s) => s.registerInteraction);
+  const storeUnregisterInteraction = useInteractionManagerStore((s) => s.unregisterInteraction);
   const unifiedInteractionRef = useRef<Interaction | null>(null);
   const shouldExecuteHandlerRef = useRef<((handler: InteractionHandler, event: MapBrowserEvent<OLUIEvent>) => boolean) | null>(null);
   const termsShownRef = useRef(false);
@@ -170,6 +211,12 @@ export default function MapContainer() {
   const [aggregatedResults, setAggregatedResults] = useState<Result[]>([]);
   const [resultsCoordinate, setResultsCoordinate] = useState<number[] | null>(null);
   const [isLoadingResults, setIsLoadingResults] = useState(false);
+
+  // Generation counter to prevent stale cleanup callbacks from clearing new click results.
+  // Each new click increments the counter; cleanup callbacks captured from a previous
+  // generation become no-ops, avoiding a race where hidePopup()'s onCloseCallback
+  // clears the results that the current click just set.
+  const clickGenerationRef = useRef(0);
 
   // Helper: Calculate map scale
   const calculateMapScale = useCallback(() => {
@@ -270,6 +317,52 @@ export default function MapContainer() {
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
+
+    // ─── HMR fast-path: reuse existing map after Fast Refresh ───────────
+    if (_hmrRegistry.map) {
+      console.log("[DIAG] MapContainer HMR REUSE — re-targeting existing map", Date.now());
+      const existingMap = _hmrRegistry.map;
+      existingMap.setTarget(mapRef.current);
+      mapInstanceRef.current = existingMap;
+      setMap(existingMap);
+
+      // Restore refs from registry
+      identifyIconLayerRef.current = _hmrRegistry.identifyIconLayer;
+      identifyIconLayerIdRef.current = _hmrRegistry.identifyIconLayerId;
+      unifiedInteractionRef.current = _hmrRegistry.unifiedInteraction;
+
+      // Prevent config override from re-applying (it was already applied on first mount)
+      hasAppliedApiConfigRef.current = true;
+      // Capture current view so navigation guard works if effect somehow fires
+      const view = existingMap.getView();
+      initialViewRef.current = {
+        center: view.getCenter() ? [...view.getCenter()!] : [0, 0],
+        zoom: view.getZoom() ?? 0,
+      };
+
+      // Re-set window refs
+      if (typeof window !== "undefined") {
+        const dynamicConfig = useAppStore.getState().config;
+        const activeConfig = dynamicConfig || staticConfig;
+        (window as unknown as { map: Map | null; config: typeof activeConfig | null }).map = existingMap;
+        (window as unknown as { map: Map | null; config: typeof activeConfig | null }).config = activeConfig;
+      }
+
+      // Mark loaded (in case loading screen is showing)
+      addLoadedItem("map");
+      setMapLoading(false);
+
+      return () => {
+        console.log("[DIAG] MapContainer HMR cleanup — untargeting (preserving map)", Date.now());
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.setTarget(undefined);
+          mapInstanceRef.current = null;
+        }
+        // Keep _hmrRegistry populated so next remount can reuse
+      };
+    }
+    // ─── End HMR fast-path ──────────────────────────────────────────────
+    console.log("[DIAG] MapContainer MAP INIT EFFECT — component (re)mounted", Date.now());
 
     // Create scale line control
     const scaleLineControl = new ScaleLine({
@@ -449,6 +542,11 @@ export default function MapContainer() {
 
         // For click events, aggregate results and show unified popup
         if (eventType === "singleclick") {
+          // Bump generation so any previous popup's onCloseCallback becomes a no-op
+          clickGenerationRef.current += 1;
+          const thisGeneration = clickGenerationRef.current;
+          console.log(`[DIAG] CLICK gen=${thisGeneration}, handlers=${applicableHandlers.length}`, Date.now());
+
           // Set loading state
           setIsLoadingResults(true);
           setResultsCoordinate(event.coordinate);
@@ -467,6 +565,13 @@ export default function MapContainer() {
           // Collect all results and show unified popup
           Promise.all(handlerPromises)
             .then((allResults) => {
+              // If a newer click has started, discard these stale results
+              if (clickGenerationRef.current !== thisGeneration) {
+                console.log(`[DIAG] STALE results discarded gen=${thisGeneration} current=${clickGenerationRef.current}`, Date.now());
+                return;
+              }
+              console.log(`[DIAG] RESULTS arrived gen=${thisGeneration}`, Date.now());
+
               // Filter out null/undefined and flatten results
               const flatResults: Result[] = [];
               allResults.forEach((result) => {
@@ -483,10 +588,13 @@ export default function MapContainer() {
               // Update state with results
               setAggregatedResults(flatResults);
               setIsLoadingResults(false);
+              console.log(`[DIAG] setAggregatedResults(${flatResults.length}) gen=${thisGeneration}`, Date.now());
             })
             .catch((error) => {
               console.error("Error collecting interaction results:", error);
-              setIsLoadingResults(false);
+              if (clickGenerationRef.current === thisGeneration) {
+                setIsLoadingResults(false);
+              }
             });
 
           // Stop event propagation for handled events
@@ -527,6 +635,12 @@ export default function MapContainer() {
     identifyIconLayerRef.current = identifyIconLayer;
     identifyIconLayerIdRef.current = identifyLayerId;
 
+    // Persist to HMR registry so the map survives Fast Refresh
+    _hmrRegistry.map = mapInstance;
+    _hmrRegistry.identifyIconLayer = identifyIconLayer;
+    _hmrRegistry.identifyIconLayerId = identifyLayerId;
+    _hmrRegistry.unifiedInteraction = unifiedInteraction;
+
     // Mark map as loaded
     addLoadedItem("map");
     setMapLoading(false);
@@ -545,32 +659,19 @@ export default function MapContainer() {
       urlParamContext.registerComponentReady("map", { readinessType: "dataLoaded" });
     }
 
-    // Cleanup function
+    // Cleanup function — preserve map for HMR, only untarget
     return () => {
-      // Remove unified interaction
-      if (unifiedInteractionRef.current && mapInstanceRef.current) {
-        mapInstanceRef.current.removeInteraction(unifiedInteractionRef.current);
-        unifiedInteractionRef.current = null;
-      }
+      console.log("[DIAG] MapContainer MAP INIT CLEANUP — component UNMOUNTING", Date.now());
 
-      if (identifyIconLayerIdRef.current) {
-        LayerManager.removeLayer(identifyIconLayerIdRef.current);
-        identifyIconLayerIdRef.current = null;
-      }
-      identifyIconLayerRef.current = null;
-
+      // Untarget the map from the DOM but keep the OL Map instance alive
+      // so that Fast Refresh can re-target it instead of rebuilding everything.
       if (mapInstanceRef.current) {
         mapInstanceRef.current.setTarget(undefined);
         mapInstanceRef.current = null;
       }
-
-      // Clean up window references
-      if (typeof window !== "undefined") {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        delete (window as any).map;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        delete (window as any).config;
-      }
+      // Don't remove interactions, layers, or clear window refs —
+      // they stay on the map instance which lives in _hmrRegistry.
+      // If the page actually navigates away, the whole window is discarded anyway.
     };
   }, [
     setMap,
@@ -833,6 +934,7 @@ export default function MapContainer() {
     if (!map || !appStoreConfig || hasAppliedApiConfigRef.current) return;
 
     hasAppliedApiConfigRef.current = true;
+    console.log("[DIAG] Config override effect APPLYING", Date.now());
 
     // Don't override if URL has coordinate params (URL params take precedence)
     const urlParams = new URLSearchParams(window.location.search);
@@ -1181,15 +1283,28 @@ export default function MapContainer() {
 
   // Show unified popup when results are available
   useEffect(() => {
+    console.log(`[DIAG] Results useEffect: agg=${aggregatedResults.length} coord=${!!resultsCoordinate} loading=${isLoadingResults}`, Date.now());
     // If no results but we have a coordinate, hide the popup (user clicked on empty area)
     if (aggregatedResults.length === 0 && resultsCoordinate && !isLoadingResults) {
+      console.log("[DIAG] Results useEffect: EMPTY results branch — hiding popup", Date.now());
       hidePopup();
       setResultsCoordinate(null);
       return;
     }
 
     if (aggregatedResults.length > 0 && resultsCoordinate) {
+      console.log(`[DIAG] Results useEffect: SHOWING popup with ${aggregatedResults.length} results`, Date.now());
+      // Capture the current generation so this cleanup only fires if still current
+      const cleanupGeneration = clickGenerationRef.current;
+
       const cleanupResults = () => {
+        // Only clear state if no newer click has superseded this one
+        if (clickGenerationRef.current !== cleanupGeneration) {
+          console.log(`[DIAG] cleanupResults SKIPPED (stale) gen=${cleanupGeneration} current=${clickGenerationRef.current}`, Date.now());
+          return;
+        }
+        console.log(`[DIAG] cleanupResults EXECUTING gen=${cleanupGeneration}`, Date.now());
+
         // Clear parcel layers from any results that have the clear function
         aggregatedResults.forEach((result) => {
           const resultWithMethods = result as ResultWithMethods;

@@ -108,7 +108,7 @@ export default function BasemapSwitcher() {
         // Always start with local basemapSwitcherConfig.json as the base
         const configModule = await import("@/components/basemapSwitcherConfig.json");
         let data: BasemapConfig = { ...configModule.default };
-        console.log("BasemapSwitcher: Loaded local basemapSwitcherConfig.json as base");
+        // console.log("BasemapSwitcher: Loaded local basemapSwitcherConfig.json as base");
 
         // Merge API-provided basemap config on top (only overrides fields that are present)
         const appConfig = useAppStore.getState().config;
@@ -136,7 +136,7 @@ export default function BasemapSwitcher() {
           if (apiBasemapServices.worldImageryService) {
             data.worldImageryService = apiBasemapServices.worldImageryService;
           }
-          console.log("BasemapSwitcher: Merged API basemap overrides", Object.keys(apiBasemapServices));
+          // console.log("BasemapSwitcher: Merged API basemap overrides", Object.keys(apiBasemapServices));
         }
 
         // Override defaultButton from baseMapType if available

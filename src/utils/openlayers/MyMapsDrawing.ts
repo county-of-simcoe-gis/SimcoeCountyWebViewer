@@ -489,16 +489,8 @@ export class MyMapsDrawingManager {
   }
 
   public loadFeatures(items: MyMapsItem[]) {
-    console.log("📥 Loading features", {
-      itemCount: items.length,
-      items: items.map((item) => ({
-        id: item.id,
-        label: item.label,
-        labelVisible: item.labelVisible,
-        drawType: item.drawType,
-        visible: item.visible,
-      })),
-    });
+    // Verbose MyMaps loading logs commented out to reduce console noise
+    // console.log("📥 Loading features", { itemCount: items.length });
 
     this.clearAllFeatures();
 
@@ -510,12 +502,12 @@ export class MyMapsDrawingManager {
     items.forEach((item) => {
       if (item.featureGeoJSON && item.visible) {
         try {
-          console.log("📍 Loading individual feature", {
-            id: item.id,
-            labelVisible: item.labelVisible,
-            label: item.label,
-            drawType: item.drawType,
-          });
+          // console.log("📍 Loading individual feature", {
+          //   id: item.id,
+          //   labelVisible: item.labelVisible,
+          //   label: item.label,
+          //   drawType: item.drawType,
+          // });
 
           const feature = geoJsonFormat.readFeature(item.featureGeoJSON) as Feature;
           feature.setProperties({
@@ -530,7 +522,7 @@ export class MyMapsDrawingManager {
           // Apply item's style - handle both new OpenLayers Style objects and legacy StyleJSON
           // Special handling for Callout items - use callout style function
           if (item.drawType === "Callout") {
-            console.log("🎨 Applying Callout style function");
+            // console.log("🎨 Applying Callout style function");
             const labelStyle = item.labelStyle || getDefaultLabelStyle("Callout");
             const calloutStyleFn = getCalloutStyle({
               lineColor: typeof labelStyle === "object" && "lineColor" in labelStyle ? labelStyle.lineColor : undefined,
@@ -542,10 +534,10 @@ export class MyMapsDrawingManager {
 
             // Check if it's already a Style object (new approach) or needs conversion (legacy StyleJSON)
             if (item.style instanceof Style) {
-              console.log("🎨 Using stored OpenLayers Style object directly");
+              // console.log("🎨 Using stored OpenLayers Style object directly");
               style = item.style;
             } else {
-              console.log("🎨 Converting legacy StyleJSON to OpenLayers Style");
+              // console.log("🎨 Converting legacy StyleJSON to OpenLayers Style");
               style = this.styleFromJSON(item.style as StyleJSON, item.pointType);
             }
 
@@ -553,14 +545,14 @@ export class MyMapsDrawingManager {
           }
 
           this.vectorSource.addFeature(feature);
-          console.log("✅ Feature loaded successfully", { id: item.id });
+          // console.log("✅ Feature loaded successfully", { id: item.id });
 
           // Apply label if it was visible when saved (after feature is added to source)
           if (item.labelVisible && item.label) {
-            console.log("🏷️ Applying saved label to feature", {
-              id: item.id,
-              label: item.label,
-            });
+            // console.log("🏷️ Applying saved label to feature", {
+            //   id: item.id,
+            //   label: item.label,
+            // });
             this.setFeatureLabel(item);
           }
         } catch (error) {
@@ -569,9 +561,7 @@ export class MyMapsDrawingManager {
       }
     });
 
-    console.log("🏁 All features loaded", {
-      totalInSource: this.vectorSource.getFeatures().length,
-    });
+    // console.log("🏁 All features loaded", { totalInSource: this.vectorSource.getFeatures().length });
   }
 
   private styleFromJSON(styleJson: StyleJSON, pointType?: string): Style {

@@ -57,6 +57,7 @@ export const usePopupStore = create<PopupState>((set, get) => ({
   // Show a single feature (backwards compatible)
   show: (coordinates, content, title, layerName) =>
     set((state) => {
+      console.log(`[DIAG] popupStore.show() title="${title}"`, Date.now());
       if (state.overlay) {
         state.overlay.setPosition(coordinates);
       }
@@ -96,6 +97,7 @@ export const usePopupStore = create<PopupState>((set, get) => ({
 
   hide: () => {
     const { onCloseCallback } = get();
+    console.log(`[DIAG] popupStore.hide() hasCallback=${!!onCloseCallback}`, Date.now());
     if (onCloseCallback) {
       onCloseCallback();
     }

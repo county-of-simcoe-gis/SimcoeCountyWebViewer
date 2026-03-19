@@ -364,15 +364,14 @@ export default function TOC({ visible = true }: TOCProps) {
 
       if (layer.id) {
         // Prefer ID-based update for unique layer identification
+        // updateLayerVisibilityById already handles both the TOC store state
+        // AND the OpenLayers layer visibility via LayerManager
         updateLayerVisibilityById(layer.id, layer.visible);
       } else {
         // Fall back to name-based update for legacy layers without ID
+        // updateTOCLayerVisibility already handles both the TOC store state
+        // AND the OpenLayers layer visibility via LayerManager
         updateTOCLayerVisibility(layer.name, group.label, layer.visible);
-      }
-
-      // Then update the OpenLayers layer via layerManagerStore if available
-      if (layer.managedLayerId) {
-        updateLayerVisibility(layer.managedLayerId, layer.visible);
       }
     }
 

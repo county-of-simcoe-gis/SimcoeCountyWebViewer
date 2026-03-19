@@ -32,6 +32,12 @@ export default function Layout({ children }: LayoutProps) {
   const { emitSidebarChanged } = useEventStore();
   const { config, loading: configLoading, error: configError } = useConfig();
 
+  // Diagnostic: detect full Layout mount/unmount (e.g. from Fast Refresh or crash)
+  useEffect(() => {
+    console.log("[DIAG] Layout MOUNTED", Date.now());
+    return () => console.log("[DIAG] Layout UNMOUNTED", Date.now());
+  }, []);
+
   // Wire up event emitters to stores
   useEffect(() => {
     setEventEmitter(emitSidebarChanged);
@@ -44,12 +50,12 @@ export default function Layout({ children }: LayoutProps) {
     if (config) {
       setConfig(config);
       // Load sidebar items from config, including hide flags
-      console.log("Loading sidebar components from config:", {
-        tools: config.sidebarToolComponents?.length || 0,
-        themes: config.sidebarThemeComponents?.length || 0,
-        default_theme: config.default_theme || "(none)",
-        default_tool: config.default_tool || "(none)",
-      });
+      // console.log("Loading sidebar components from config:", {
+      //   tools: config.sidebarToolComponents?.length || 0,
+      //   themes: config.sidebarThemeComponents?.length || 0,
+      //   default_theme: config.default_theme || "(none)",
+      //   default_tool: config.default_tool || "(none)",
+      // });
       loadFromConfig(config.sidebarToolComponents || [], config.sidebarThemeComponents || [], {
         hideLayers: !!config.hideLayers,
         hideTools: !!config.hideTools,
