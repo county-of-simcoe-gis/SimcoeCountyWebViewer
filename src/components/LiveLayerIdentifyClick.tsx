@@ -114,9 +114,11 @@ function LiveLayerPopupContent({ properties }: { properties: Record<string, any>
 }
 
 export default function LiveLayerIdentifyClick() {
-  const { map, checkGlobalDisable } = useMapStore();
+  const map = useMapStore((s) => s.map);
+  const checkGlobalDisable = useMapStore((s) => s.checkGlobalDisable);
   const allLayers = useTOCStore((state) => state.allLayers);
-  const { registerHandler, unregisterHandler } = useInteractionManagerStore();
+  const registerHandler = useInteractionManagerStore((s) => s.registerHandler);
+  const unregisterHandler = useInteractionManagerStore((s) => s.unregisterHandler);
 
   /**
    * Identify features on a single layer

@@ -17,7 +17,7 @@ interface TOCListViewProps {
 }
 
 export default function TOCListView({ id, visible, layerGroups, selectedGroup, searchText, onGroupDropDownChange, onLayerChange, onLegendToggle, onLayerOptionsClick }: TOCListViewProps) {
-  const { switchToGroup } = useTOCStore();
+  const switchToGroup = useTOCStore((s) => s.switchToGroup);
 
   const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedValue = e.target.value;

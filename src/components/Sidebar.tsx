@@ -102,13 +102,26 @@ const themeComponents: Record<
 };
 
 export default function Sidebar() {
-  const { isOpen, themes, tools, activeTheme, activeTool, activeTab, setActiveTab, activateSidebarItem, openSidebar, hideLayers, hideTools, hideMyMaps, hideThemes, hideReports } = useSidebarStore();
-  const { emitSidebarLoaded } = useEventStore();
-  const { addLoadedItem } = useMapStore();
-  const { setSidebarLoading } = useAppStore();
+  const isOpen = useSidebarStore((s) => s.isOpen);
+  const themes = useSidebarStore((s) => s.themes);
+  const tools = useSidebarStore((s) => s.tools);
+  const activeTheme = useSidebarStore((s) => s.activeTheme);
+  const activeTool = useSidebarStore((s) => s.activeTool);
+  const activeTab = useSidebarStore((s) => s.activeTab);
+  const setActiveTab = useSidebarStore((s) => s.setActiveTab);
+  const activateSidebarItem = useSidebarStore((s) => s.activateSidebarItem);
+  const openSidebar = useSidebarStore((s) => s.openSidebar);
+  const hideLayers = useSidebarStore((s) => s.hideLayers);
+  const hideTools = useSidebarStore((s) => s.hideTools);
+  const hideMyMaps = useSidebarStore((s) => s.hideMyMaps);
+  const hideThemes = useSidebarStore((s) => s.hideThemes);
+  const hideReports = useSidebarStore((s) => s.hideReports);
+  const emitSidebarLoaded = useEventStore((s) => s.emitSidebarLoaded);
+  const addLoadedItem = useMapStore((s) => s.addLoadedItem);
+  const setSidebarLoading = useAppStore((s) => s.setSidebarLoading);
   const urlParameters = useAppStore((state) => state.urlParameters);
   const appConfig = useAppStore((state) => state.config);
-  const { currentReport } = useReportsStore();
+  const currentReport = useReportsStore((s) => s.currentReport);
   const { data: session } = useSession();
 
   // Filter out secure items when user is not authenticated

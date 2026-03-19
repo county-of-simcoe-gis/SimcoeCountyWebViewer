@@ -28,8 +28,18 @@ function SlimButton({ title, icon, isSelected, isActive, hidden, onClick }: Slim
 }
 
 export default function SidebarSlim() {
-  const { isOpen, activeTab, openSidebar, setActiveTab, isMoreMenuOpen, toggleMoreMenu, hideLayers, hideTools, hideMyMaps, hideThemes, hideReports } = useSidebarStore();
-  const { emitActivateTab } = useEventStore();
+  const isOpen = useSidebarStore((s) => s.isOpen);
+  const activeTab = useSidebarStore((s) => s.activeTab);
+  const openSidebar = useSidebarStore((s) => s.openSidebar);
+  const setActiveTab = useSidebarStore((s) => s.setActiveTab);
+  const isMoreMenuOpen = useSidebarStore((s) => s.isMoreMenuOpen);
+  const toggleMoreMenu = useSidebarStore((s) => s.toggleMoreMenu);
+  const hideLayers = useSidebarStore((s) => s.hideLayers);
+  const hideTools = useSidebarStore((s) => s.hideTools);
+  const hideMyMaps = useSidebarStore((s) => s.hideMyMaps);
+  const hideThemes = useSidebarStore((s) => s.hideThemes);
+  const hideReports = useSidebarStore((s) => s.hideReports);
+  const emitActivateTab = useEventStore((s) => s.emitActivateTab);
 
   // Only show when sidebar is closed
   if (isOpen) return null;

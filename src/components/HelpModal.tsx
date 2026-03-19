@@ -13,7 +13,8 @@ import { Modal } from "@/components/ui/Modal";
  * Modal overlay that fetches and renders README.md as styled help documentation
  */
 export default function HelpModal() {
-  const { isOpen, closeHelp } = useHelpModalStore();
+  const isOpen = useHelpModalStore((s) => s.isOpen);
+  const closeHelp = useHelpModalStore((s) => s.closeHelp);
   const [content, setContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
 

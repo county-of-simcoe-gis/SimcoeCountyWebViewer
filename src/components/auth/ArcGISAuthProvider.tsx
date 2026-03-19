@@ -17,13 +17,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { useArcGISTokenStore } from "@/stores/arcgisTokenStore";
-import {
-  initialize,
-  isArcGISAuthConfigured,
-  isInitialized,
-  login,
-  processCredential,
-} from "@/utils/arcgisAuth";
+import { initialize, isArcGISAuthConfigured, isInitialized, login, processCredential } from "@/utils/arcgisAuth";
 
 interface ArcGISAuthProviderProps {
   children: React.ReactNode;
@@ -35,11 +29,11 @@ interface ArcGISAuthProviderProps {
   required?: boolean;
 }
 
-export default function ArcGISAuthProvider({
-  children,
-  required = false,
-}: ArcGISAuthProviderProps) {
-  const { setToken, hydrate, isAuthenticated, isLoading } = useArcGISTokenStore();
+export default function ArcGISAuthProvider({ children, required = false }: ArcGISAuthProviderProps) {
+  const setToken = useArcGISTokenStore((s) => s.setToken);
+  const hydrate = useArcGISTokenStore((s) => s.hydrate);
+  const isAuthenticated = useArcGISTokenStore((s) => s.isAuthenticated);
+  const isLoading = useArcGISTokenStore((s) => s.isLoading);
   const initializedRef = useRef(false);
 
   // ── Initialization effect (runs once) ──────────────────────────────────────
@@ -65,13 +59,7 @@ export default function ArcGISAuthProvider({
 
   // ── Login effect (triggers when required but not authenticated) ────────────
   useEffect(() => {
-    if (
-      !required ||
-      isAuthenticated ||
-      isLoading ||
-      !initializedRef.current ||
-      !isArcGISAuthConfigured()
-    ) {
+    if (!required || isAuthenticated || isLoading || !initializedRef.current || !isArcGISAuthConfigured()) {
       return;
     }
 

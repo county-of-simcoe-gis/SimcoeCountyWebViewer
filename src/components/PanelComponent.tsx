@@ -20,7 +20,7 @@ interface PanelComponentProps {
 }
 
 export default function PanelComponent({ name, helpLink, hideHeader = false, onClose, onSidebarVisibility, children, icon }: PanelComponentProps) {
-  const { closeSidebar } = useSidebarStore();
+  const closeSidebar = useSidebarStore((s) => s.closeSidebar);
 
   useEffect(() => {
     // TODO: Add event listener when we have proper event system

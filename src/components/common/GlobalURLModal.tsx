@@ -9,7 +9,12 @@ import { appendToStorage } from "@/utils/storage";
  * Positioned to the right of the sidebar, just like the old URLWindow.
  */
 export default function GlobalURLModal() {
-  const { isOpen, url, title, showFooter, mode, hideScroll, close } = useURLModalStore();
+  const isOpen = useURLModalStore((s) => s.isOpen);
+  const url = useURLModalStore((s) => s.url);
+  const title = useURLModalStore((s) => s.title);
+  const showFooter = useURLModalStore((s) => s.showFooter);
+  const hideScroll = useURLModalStore((s) => s.hideScroll);
+  const close = useURLModalStore((s) => s.close);
   const [isLoading, setIsLoading] = useState(true);
 
   const handleDontShowAgain = useCallback(() => {

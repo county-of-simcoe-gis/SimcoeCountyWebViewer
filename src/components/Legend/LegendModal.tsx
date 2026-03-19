@@ -11,7 +11,8 @@ import Legend from "@/components/Legend/Legend";
  * Modal overlay that displays layer legends over the map
  */
 export default function LegendModal() {
-  const { isOpen, closeLegend } = useLegendStore();
+  const isOpen = useLegendStore((s) => s.isOpen);
+  const closeLegend = useLegendStore((s) => s.closeLegend);
 
   // Close on ESC key
   useEffect(() => {
@@ -65,6 +66,6 @@ export default function LegendModal() {
         <Legend />
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

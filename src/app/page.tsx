@@ -7,7 +7,26 @@ import { getAllURLParameters } from "@/utils/helpersUrl";
 import { migrateFromLegacyStorage } from "@/utils/storageMigration";
 
 export default function Home() {
-  const { setAppInfo, setHeaderLoading, setSidebarLoading, setUrlParameters } = useAppStore();
+  const setAppInfo = useAppStore((s) => s.setAppInfo);
+  const setHeaderLoading = useAppStore((s) => s.setHeaderLoading);
+  const setSidebarLoading = useAppStore((s) => s.setSidebarLoading);
+  const setUrlParameters = useAppStore((s) => s.setUrlParameters);
+
+  // Diagnostic: catch "Cannot commit the same tree" and log a stack trace
+  useEffect(() => {
+    const handler = (event: ErrorEvent) => {
+      if (event.message?.includes("Cannot commit the same tree")) {
+        console.error(
+          "[DIAG] 🔴 'Cannot commit the same tree' intercepted!\n" +
+            "       This means a Zustand store set() fired synchronously during React's commit phase.\n" +
+            "       Look at the stack trace below to find which store/component triggered it.",
+        );
+        console.trace("[DIAG] 🔴 Stack trace at error interception");
+      }
+    };
+    window.addEventListener("error", handler);
+    return () => window.removeEventListener("error", handler);
+  }, []);
 
   useEffect(() => {
     // Migrate old-app localStorage data before any stores read it

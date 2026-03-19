@@ -38,12 +38,20 @@ export default function GlobalDrawingOptionsPopup() {
   const [geometryModalItem, setGeometryModalItem] = useState<MyMapsItemType | null>(null);
   const [isGeometryModalOpen, setIsGeometryModalOpen] = useState(false);
 
-  const { emit, addListener, removeListener } = useEventStore();
-  const { items, removeItem, updateItemLabel, updateItemLabelVisibility, updateItemLabelRotation, saveToApi } = useMyMapsStore();
-  const { map } = useMapStore();
-  const { config } = useAppStore();
-  const { setReport } = useReportsStore();
-  const { openSidebar, setActiveTab } = useSidebarStore();
+  const emit = useEventStore((s) => s.emit);
+  const addListener = useEventStore((s) => s.addListener);
+  const removeListener = useEventStore((s) => s.removeListener);
+  const items = useMyMapsStore((s) => s.items);
+  const removeItem = useMyMapsStore((s) => s.removeItem);
+  const updateItemLabel = useMyMapsStore((s) => s.updateItemLabel);
+  const updateItemLabelVisibility = useMyMapsStore((s) => s.updateItemLabelVisibility);
+  const updateItemLabelRotation = useMyMapsStore((s) => s.updateItemLabelRotation);
+  const saveToApi = useMyMapsStore((s) => s.saveToApi);
+  const map = useMapStore((s) => s.map);
+  const config = useAppStore((s) => s.config);
+  const setReport = useReportsStore((s) => s.setReport);
+  const openSidebar = useSidebarStore((s) => s.openSidebar);
+  const setActiveTab = useSidebarStore((s) => s.setActiveTab);
 
   // Get fresh item data from store (reactive subscription)
   const drawingOptionsItem = drawingOptionsItemId ? items.find((item) => item.id === drawingOptionsItemId) || null : null;

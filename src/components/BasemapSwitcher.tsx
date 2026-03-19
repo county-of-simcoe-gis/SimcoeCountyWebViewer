@@ -77,7 +77,7 @@ function mergeServicesByName<T extends { name: string }>(local: T[], api: T[]): 
 }
 
 export default function BasemapSwitcher() {
-  const { map } = useMapStore();
+  const map = useMapStore((s) => s.map);
   const urlParameters = useAppStore((state) => state.urlParameters);
   const urlParametersLoaded = useAppStore((state) => state.urlParametersLoaded);
   const [config, setConfig] = useState<BasemapConfig | null>(null);

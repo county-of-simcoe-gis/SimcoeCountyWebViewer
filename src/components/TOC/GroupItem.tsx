@@ -32,7 +32,9 @@ export default function GroupItem({
   onGroupFolderToggle,
   onLayerVisibilityGroup,
 }: GroupItemProps) {
-  const { getFolderOpenState, setFolderOpenState, allLayers } = useTOCStore();
+  const getFolderOpenState = useTOCStore((s) => s.getFolderOpenState);
+  const setFolderOpenState = useTOCStore((s) => s.setFolderOpenState);
+  const allLayers = useTOCStore((s) => s.allLayers);
 
   // Get persistent folder state from store, fallback to propsPanelOpen
   const [panelOpen, setPanelOpen] = useState(() => getFolderOpenState(group.value) ?? propsPanelOpen);

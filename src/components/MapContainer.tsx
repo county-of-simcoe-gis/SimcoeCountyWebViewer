@@ -157,8 +157,8 @@ export const useInteractionManager = () => {
 
 export default function MapContainer() {
   console.log("[DIAG] MapContainer RENDER", Date.now());
-  const { isOpen } = useSidebarStore();
-  const { emitMapLoaded } = useEventStore();
+  const isOpen = useSidebarStore((s) => s.isOpen);
+  const emitMapLoaded = useEventStore((s) => s.emitMapLoaded);
   const { data: session } = useSession();
 
   // IMPORTANT: Use individual selectors for Zustand stores to prevent
@@ -176,7 +176,7 @@ export default function MapContainer() {
   const controlVisibility = useMapStore((s) => s.controlVisibility);
   const initControlVisibility = useMapStore((s) => s.initControlVisibility);
 
-  const { setMapLoading } = useAppStore();
+  const setMapLoading = useAppStore((s) => s.setMapLoading);
 
   // Only extract the stable action functions from popupStore — NOT reactive state.
   // Subscribing to the full store (isVisible, features, etc.) would cause MapContainer
@@ -1287,7 +1287,9 @@ export default function MapContainer() {
     // If no results but we have a coordinate, hide the popup (user clicked on empty area)
     if (aggregatedResults.length === 0 && resultsCoordinate && !isLoadingResults) {
       console.log("[DIAG] Results useEffect: EMPTY results branch — hiding popup", Date.now());
-      hidePopup();
+      // Defer store mutation to avoid synchronous useSyncExternalStore
+      // notification during React's commit phase ("Cannot commit the same tree").
+      queueMicrotask(() => hidePopup());
       setResultsCoordinate(null);
       return;
     }
@@ -1343,8 +1345,14 @@ export default function MapContainer() {
       // Hide any existing popup first, then register the new cleanup callback.
       // Order matters: hidePopup() invokes (and clears) the previous onCloseCallback,
       // so setOnClose must come AFTER to ensure the new callback survives.
-      hidePopup();
-      setOnClose(cleanupResults);
+      //
+      // Invoke the old close callback directly (bypassing hidePopup's set()) so
+      // we avoid a synchronous Zustand store mutation during React's commit phase.
+      // The generation check inside the callback prevents stale cleanups.
+      const previousCallback = usePopupStore.getState().onCloseCallback;
+      if (previousCallback) {
+        previousCallback();
+      }
 
       // If the user opted to always send popup content to the Reports tab,
       // bypass the map overlay entirely and route to the sidebar.
@@ -1361,14 +1369,20 @@ export default function MapContainer() {
         return;
       }
 
-      // Store the raw results so the pop-out handler in MapPopup can access them
-      usePopupStore.getState().setRawResults(aggregatedResults as unknown[]);
-
-      showPopup(
-        resultsCoordinate,
-        <ResultsPopup results={aggregatedResults} onClose={handleClose} isLoadingResults={isLoadingResults} onSelectResult={handleSelectResult} onClearParcelLayer={handleClearParcelLayer} />,
-        aggregatedResults.length > 1 ? `Results (${aggregatedResults.length})` : "Result",
+      // Defer ALL popup store mutations to a microtask so they don't fire
+      // synchronously during React's commit phase ("Cannot commit the same tree").
+      // queueMicrotask runs before the next paint — no visible delay.
+      const coord = resultsCoordinate;
+      const title = aggregatedResults.length > 1 ? `Results (${aggregatedResults.length})` : "Result";
+      const popupContent = (
+        <ResultsPopup results={aggregatedResults} onClose={handleClose} isLoadingResults={isLoadingResults} onSelectResult={handleSelectResult} onClearParcelLayer={handleClearParcelLayer} />
       );
+      queueMicrotask(() => {
+        usePopupStore.getState().setOnClose(null);
+        setOnClose(cleanupResults);
+        usePopupStore.getState().setRawResults(aggregatedResults as unknown[]);
+        showPopup(coord, popupContent, title);
+      });
     }
   }, [aggregatedResults, resultsCoordinate, isLoadingResults, showPopup, hidePopup, setOnClose]);
 

@@ -91,8 +91,9 @@ export interface LiveLayerResult {
 }
 
 export default function LiveLayerClick() {
-  const { map, checkGlobalDisable } = useMapStore();
-  const { allLayers } = useTOCStore();
+  const map = useMapStore((s) => s.map);
+  const checkGlobalDisable = useMapStore((s) => s.checkGlobalDisable);
+  const allLayers = useTOCStore((s) => s.allLayers);
   const { registerHandler, unregisterHandler } = useInteractionManager();
 
   // Query a single live layer for features at coordinate

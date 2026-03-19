@@ -14,7 +14,14 @@ import "./MapPopup.css";
 
 export default function MapPopup() {
   const map = useMapStore((s) => s.map);
-  const { setOverlay, isVisible, features, selectedIndex, hide, nextFeature, prevFeature, coordinates } = usePopupStore();
+  const setOverlay = usePopupStore((s) => s.setOverlay);
+  const isVisible = usePopupStore((s) => s.isVisible);
+  const features = usePopupStore((s) => s.features);
+  const selectedIndex = usePopupStore((s) => s.selectedIndex);
+  const hide = usePopupStore((s) => s.hide);
+  const nextFeature = usePopupStore((s) => s.nextFeature);
+  const prevFeature = usePopupStore((s) => s.prevFeature);
+  const coordinates = usePopupStore((s) => s.coordinates);
   const popupRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<Overlay | null>(null);
   const headerRef = useRef<HTMLDivElement>(null);

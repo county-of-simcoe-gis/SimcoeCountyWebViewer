@@ -48,8 +48,8 @@ export default function LayerOptionsMenu({ layerInfo, group, position, onClose }
   const [adjustedPosition, setAdjustedPosition] = useState(position);
   const [isDragging, setIsDragging] = useState(false);
 
-  const { updateLayerOpacity } = useLayerManagerStore();
-  const { map } = useMapStore();
+  const updateLayerOpacity = useLayerManagerStore((s) => s.updateLayerOpacity);
+  const map = useMapStore((s) => s.map);
 
   // Sync opacity from store when not actively dragging
   useEffect(() => {

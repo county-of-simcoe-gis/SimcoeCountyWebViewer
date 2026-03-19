@@ -41,32 +41,30 @@ interface SavedGroup {
 }
 
 export default function TOC({ visible = true }: TOCProps) {
-  const {
-    tocType,
-    layerListGroups,
-    layerFolderGroups,
-    selectedGroup,
-    searchText,
-    sortAlpha,
-    isLoading,
-    layerCount,
-    helpLink,
-    setTocType,
-    setSelectedGroup,
-    setSearchText,
-    setSortAlpha,
-    setGlobalOpacity,
-    getGlobalOpacity,
-    initializeFromConfig,
-    refreshTOC,
-    toggleLayerLegendById,
-    moveLayer,
-    getAllVisibleLayers,
-  } = useTOCStore();
+  const tocType = useTOCStore((s) => s.tocType);
+  const layerListGroups = useTOCStore((s) => s.layerListGroups);
+  const layerFolderGroups = useTOCStore((s) => s.layerFolderGroups);
+  const selectedGroup = useTOCStore((s) => s.selectedGroup);
+  const searchText = useTOCStore((s) => s.searchText);
+  const sortAlpha = useTOCStore((s) => s.sortAlpha);
+  const isLoading = useTOCStore((s) => s.isLoading);
+  const layerCount = useTOCStore((s) => s.layerCount);
+  const helpLink = useTOCStore((s) => s.helpLink);
+  const setTocType = useTOCStore((s) => s.setTocType);
+  const setSelectedGroup = useTOCStore((s) => s.setSelectedGroup);
+  const setSearchText = useTOCStore((s) => s.setSearchText);
+  const setSortAlpha = useTOCStore((s) => s.setSortAlpha);
+  const setGlobalOpacity = useTOCStore((s) => s.setGlobalOpacity);
+  const getGlobalOpacity = useTOCStore((s) => s.getGlobalOpacity);
+  const initializeFromConfig = useTOCStore((s) => s.initializeFromConfig);
+  const refreshTOC = useTOCStore((s) => s.refreshTOC);
+  const toggleLayerLegendById = useTOCStore((s) => s.toggleLayerLegendById);
+  const moveLayer = useTOCStore((s) => s.moveLayer);
+  const getAllVisibleLayers = useTOCStore((s) => s.getAllVisibleLayers);
 
-  const { updateLayerVisibility } = useLayerManagerStore();
+  const updateLayerVisibility = useLayerManagerStore((s) => s.updateLayerVisibility);
 
-  const { config } = useAppStore();
+  const config = useAppStore((s) => s.config);
   const urlParameters = useAppStore((state) => state.urlParameters);
   const [initialized, setInitialized] = useState(false);
   const [savedOptionsApplied, setSavedOptionsApplied] = useState(false);

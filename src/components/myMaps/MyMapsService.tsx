@@ -22,11 +22,24 @@ export default function MyMapsService() {
   const managedLayerIdRef = useRef<string | null>(null);
 
   // Store hooks
-  const { drawType, drawColor, drawStyle, isEditing, editMode, items, setDrawType, loadFromStorage, saveToStorage, addItem, updateItem, removeItem, getNextDrawingNumber } = useMyMapsStore();
+  const drawType = useMyMapsStore((s) => s.drawType);
+  const drawColor = useMyMapsStore((s) => s.drawColor);
+  const drawStyle = useMyMapsStore((s) => s.drawStyle);
+  const isEditing = useMyMapsStore((s) => s.isEditing);
+  const editMode = useMyMapsStore((s) => s.editMode);
+  const items = useMyMapsStore((s) => s.items);
+  const setDrawType = useMyMapsStore((s) => s.setDrawType);
+  const loadFromStorage = useMyMapsStore((s) => s.loadFromStorage);
+  const saveToStorage = useMyMapsStore((s) => s.saveToStorage);
+  const addItem = useMyMapsStore((s) => s.addItem);
+  const updateItem = useMyMapsStore((s) => s.updateItem);
+  const removeItem = useMyMapsStore((s) => s.removeItem);
+  const getNextDrawingNumber = useMyMapsStore((s) => s.getNextDrawingNumber);
 
-  const { map } = useMapStore();
-  const { emit } = useEventStore();
-  const { addLayer, removeLayer } = useLayerManagerStore();
+  const map = useMapStore((s) => s.map);
+  const emit = useEventStore((s) => s.emit);
+  const addLayer = useLayerManagerStore((s) => s.addLayer);
+  const removeLayer = useLayerManagerStore((s) => s.removeLayer);
 
   // Helper function to convert OpenLayers geometry type to our GeometryType
   // const mapGeometryType = (olType: string): GeometryType => {

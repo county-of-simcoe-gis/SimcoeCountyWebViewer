@@ -27,9 +27,18 @@ interface LayoutProps {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const { isAnyLoading, setConfig, setConfigLoading, setConfigError } = useAppStore();
-  const { loadFromConfig, activateDefaultItems, setEventEmitter, openSidebar } = useSidebarStore();
-  const { emitSidebarChanged } = useEventStore();
+  const mapLoading = useAppStore((s) => s.mapLoading);
+  const sidebarLoading = useAppStore((s) => s.sidebarLoading);
+  const headerLoading = useAppStore((s) => s.headerLoading);
+  const appConfigLoading = useAppStore((s) => s.configLoading);
+  const setConfig = useAppStore((s) => s.setConfig);
+  const setConfigLoading = useAppStore((s) => s.setConfigLoading);
+  const setConfigError = useAppStore((s) => s.setConfigError);
+  const loadFromConfig = useSidebarStore((s) => s.loadFromConfig);
+  const activateDefaultItems = useSidebarStore((s) => s.activateDefaultItems);
+  const setEventEmitter = useSidebarStore((s) => s.setEventEmitter);
+  const openSidebar = useSidebarStore((s) => s.openSidebar);
+  const emitSidebarChanged = useEventStore((s) => s.emitSidebarChanged);
   const { config, loading: configLoading, error: configError } = useConfig();
 
   // Diagnostic: detect full Layout mount/unmount (e.g. from Fast Refresh or crash)
@@ -124,7 +133,7 @@ export default function Layout({ children }: LayoutProps) {
     }
   }, [config]);
 
-  const isLoading = isAnyLoading();
+  const isLoading = mapLoading || sidebarLoading || headerLoading || appConfigLoading;
 
   return (
     <div id="app-root" className="relative w-full h-screen overflow-hidden print:hidden">

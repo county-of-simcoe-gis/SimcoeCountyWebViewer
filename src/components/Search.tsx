@@ -41,7 +41,7 @@ interface SearchProps {
 
 const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeholder, disabled = false }) => {
   const { config } = useConfig();
-  const { emit } = useEventStore();
+  const emit = useEventStore((s) => s.emit);
   const urlParameters = useAppStore((state) => state.urlParameters);
 
   // Derive placeholder and hideTypes from config, with prop override

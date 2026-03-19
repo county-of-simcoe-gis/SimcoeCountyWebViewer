@@ -29,12 +29,16 @@ import ResultsPopup, { Result, createPropertyResult, createCondoResult } from "@
 import { getAxiosClient as getAxiosClientUtil } from "@/lib/axiosInstance";
 
 export const MapContextMenuContainer: React.FC = () => {
-  const { map } = useMapStore();
+  const map = useMapStore((s) => s.map);
   const config = useAppStore((state) => state.config);
-  const { openSidebar, setActiveTab, closeSidebar } = useSidebarStore();
-  const { setReport } = useReportsStore();
-  const { show: showPopup, hide: hidePopup } = usePopupStore();
-  const { addItem, drawColor } = useMyMapsStore();
+  const openSidebar = useSidebarStore((s) => s.openSidebar);
+  const setActiveTab = useSidebarStore((s) => s.setActiveTab);
+  const closeSidebar = useSidebarStore((s) => s.closeSidebar);
+  const setReport = useReportsStore((s) => s.setReport);
+  const showPopup = usePopupStore((s) => s.show);
+  const hidePopup = usePopupStore((s) => s.hide);
+  const addItem = useMyMapsStore((s) => s.addItem);
+  const drawColor = useMyMapsStore((s) => s.drawColor);
   const { registerHandler, unregisterHandler } = useInteractionManager();
   const [menuState, setMenuState] = useState<{
     visible: boolean;
