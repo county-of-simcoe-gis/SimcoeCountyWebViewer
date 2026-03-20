@@ -1319,26 +1319,9 @@ export const useTOCStore = create<TOCState>()(
         // Load from actual sources using TOC helpers
         const result = await loadLayerGroupsFromSources(state.sources, config);
         
-        // Log visibility stats from loaded groups
-        let totalLayers = 0, visibleCount = 0;
-        result.groups.forEach((g) => {
-          g.layers.forEach((l) => { totalLayers++; if (l.visible) visibleCount++; });
-        });
-        // console.log(`[TOC] loadLayerGroupsFromSources: ${result.groups.length} groups, ${totalLayers} layers, ${visibleCount} visible`);
-        
         // Set the layer groups for BOTH LIST and FOLDER types (same data, different display)
         state.setLayerGroups("LIST", result.groups);
         state.setLayerGroups("FOLDER", result.groups);
-
-        // Log "All Layers" visibility after setLayerGroups
-        const currentAllLayers = get().layerListGroups.find((g) => g.value === "all_layers");
-        if (currentAllLayers) {
-          const alVisible = currentAllLayers.layers.filter((l) => l.visible).length;
-          // console.log(`[TOC] After setLayerGroups: "All Layers" has ${currentAllLayers.layers.length} layers, ${alVisible} visible`);
-          // if (alVisible > 0) {
-          //   currentAllLayers.layers.filter((l) => l.visible).forEach((l) => console.log(`[TOC]   visible: "${l.name}" (group: ${l.groupName})`));
-          // }
-        }
 
         // Set default group if found
         if (result.groups.length > 0) {
@@ -1559,7 +1542,7 @@ export const useTOCStore = create<TOCState>()(
     },
 
     // Fetch legend from GeoServer REST API
-    fetchLayerLegendFromRest: async (layer: TOCLayer, group: TOCLayerGroup) => {
+    fetchLayerLegendFromRest: async (layer: TOCLayer, _group: TOCLayerGroup) => {
       try {
         if (layer.metadataUrl) {
           const isSecured = layer.secured || isSecuredUrl(layer.metadataUrl);
@@ -1774,22 +1757,17 @@ export const useTOCStore = create<TOCState>()(
 
       layersByName.forEach((layers) => {
         const firstLayer = layers[0];
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const _olVisible = "no layer";
 
         if (firstLayer.managedLayerId) {
           const managedLayer = useLayerManagerStore.getState().getLayer(firstLayer.managedLayerId);
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const _olVisible = managedLayer?.visible?.toString() || "unknown";
+          const _olVisible2 = managedLayer?.visible?.toString() || "unknown";
         } else if (firstLayer.layer) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const _olVisible = (firstLayer.layer as OpenLayersLayer).getVisible ? (firstLayer.layer as OpenLayersLayer).getVisible().toString() : "unknown";
+          const _olVisible3 = (firstLayer.layer as OpenLayersLayer).getVisible ? (firstLayer.layer as OpenLayersLayer).getVisible().toString() : "unknown";
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const tocStates = layers.map((l) => `${l.groupName}:${l.visible}`).join(", ");
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const sharedInfo = layers.length > 1 ? ` (SHARED across ${layers.length} groups)` : "";
+        const _tocStates = layers.map((l) => `${l.groupName}:${l.visible}`).join(", ");
+        const _sharedInfo = layers.length > 1 ? ` (SHARED across ${layers.length} groups)` : "";
       });
       console.groupEnd();
 

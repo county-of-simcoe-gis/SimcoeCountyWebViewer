@@ -5,7 +5,7 @@ import { TOCLayer, TOCLayerGroup, useTOCStore } from "@/stores/tocStore";
 
 // Mock the GroupItem component to isolate TOCFolderView testing
 vi.mock("@/components/TOC/GroupItem", () => ({
-  default: ({ id, group, onLayerChange, onLegendToggle, onLayerOptionsClick, onLayerVisibilityGroup, onGroupFolderToggle }: any) => (
+  default: ({ group, onLayerChange, onLegendToggle, onLayerOptionsClick, onLayerVisibilityGroup, onGroupFolderToggle }: any) => (
     <div data-testid={`group-item-${group.value}`}>
       <div data-testid={`group-${group.value}-label`}>{group.label}</div>
       <button data-testid={`group-${group.value}-toggle`} onClick={() => onGroupFolderToggle(group.value, true)}>
@@ -14,7 +14,7 @@ vi.mock("@/components/TOC/GroupItem", () => ({
       <button data-testid={`group-${group.value}-visibility`} onClick={() => onLayerVisibilityGroup(group, true)}>
         Group Visibility
       </button>
-      {group.layers.map((layer: TOCLayer, index: number) => (
+      {group.layers.map((layer: TOCLayer) => (
         <div key={layer.name} data-testid={`layer-${layer.name}`}>
           <span>{layer.tocDisplayName}</span>
           <button data-testid={`layer-${layer.name}-change`} onClick={() => onLayerChange(layer, group)}>

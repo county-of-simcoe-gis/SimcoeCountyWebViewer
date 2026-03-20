@@ -16,131 +16,131 @@ vi.mock("next-auth/react", () => ({
 // Mock all react-icons at the top level to ensure they're available globally
 vi.mock("react-icons/fa", () => ({
   // Existing icons
-  FaPlus: (props: any) => React.createElement("div", { ...props, "data-testid": "plus-icon" }, "Plus"),
-  FaMinus: (props: any) => React.createElement("div", { ...props, "data-testid": "minus-icon" }, "Minus"),
-  FaGlobe: (props: any) => React.createElement("div", { ...props, "data-testid": "globe-icon" }, "Globe"),
-  FaCompass: (props: any) => React.createElement("div", { ...props, "data-testid": "compass-icon" }, "Compass"),
-  FaExpand: (props: any) => React.createElement("div", { ...props, "data-testid": "expand-icon" }, "Expand"),
-  FaCompress: (props: any) => React.createElement("div", { ...props, "data-testid": "compress-icon" }, "Compress"),
-  FaForward: (props: any) => React.createElement("div", { ...props, "data-testid": "forward-icon" }, "Forward"),
-  FaBackward: (props: any) => React.createElement("div", { ...props, "data-testid": "backward-icon" }, "Backward"),
-  FaCrosshairs: (props: any) => React.createElement("div", { ...props, "data-testid": "crosshairs-icon" }, "Crosshairs"),
-  FaGithub: (props: any) => React.createElement("div", { ...props, "data-testid": "github-icon" }, "GitHub"),
-  FaQuestion: (props: any) => React.createElement("div", { ...props, "data-testid": "question-icon" }, "Question"),
+  FaPlus: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "plus-icon" }, "Plus"),
+  FaMinus: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "minus-icon" }, "Minus"),
+  FaGlobe: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "globe-icon" }, "Globe"),
+  FaCompass: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "compass-icon" }, "Compass"),
+  FaExpand: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "expand-icon" }, "Expand"),
+  FaCompress: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "compress-icon" }, "Compress"),
+  FaForward: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "forward-icon" }, "Forward"),
+  FaBackward: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "backward-icon" }, "Backward"),
+  FaCrosshairs: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "crosshairs-icon" }, "Crosshairs"),
+  FaGithub: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "github-icon" }, "GitHub"),
+  FaQuestion: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "question-icon" }, "Question"),
 
   // Playback / sync icons used by Weather components
-  FaSyncAlt: (props: any) => React.createElement("div", { ...props, "data-testid": "sync-icon" }, "Sync"),
-  FaPlay: (props: any) => React.createElement("div", { ...props, "data-testid": "play-icon" }, "Play"),
-  FaPause: (props: any) => React.createElement("div", { ...props, "data-testid": "pause-icon" }, "Pause"),
+  FaSyncAlt: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "sync-icon" }, "Sync"),
+  FaPlay: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "play-icon" }, "Play"),
+  FaPause: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "pause-icon" }, "Pause"),
 
   // Missing icons that were causing test failures
-  FaBars: (props: any) => React.createElement("div", { ...props, "data-testid": "bars-icon" }, "Bars"),
-  FaSearch: (props: any) => React.createElement("div", { ...props, "data-testid": "search-icon" }, "Search"),
-  FaQuestionCircle: (props: any) => React.createElement("div", { ...props, "data-testid": "question-circle-icon" }, "QuestionCircle"),
-  FaEnvelope: (props: any) => React.createElement("div", { ...props, "data-testid": "envelope-icon" }, "Envelope"),
+  FaBars: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "bars-icon" }, "Bars"),
+  FaSearch: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "search-icon" }, "Search"),
+  FaQuestionCircle: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "question-circle-icon" }, "QuestionCircle"),
+  FaEnvelope: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "envelope-icon" }, "Envelope"),
 
   // TOC related icons
-  FaPaperclip: (props: any) => React.createElement("div", { ...props, "data-testid": "paperclip-icon" }, "Paperclip"),
-  FaInfoCircle: (props: any) => React.createElement("div", { ...props, "data-testid": "info-circle-icon" }, "InfoCircle"),
-  FaDownload: (props: any) => React.createElement("div", { ...props, "data-testid": "download-icon" }, "Download"),
-  FaLock: (props: any) => React.createElement("div", { ...props, "data-testid": "lock-icon" }, "Lock"),
-  FaUser: (props: any) => React.createElement("div", { ...props, "data-testid": "user-icon" }, "User"),
-  FaEllipsisV: (props: any) => React.createElement("div", { ...props, "data-testid": "ellipsis-v-icon" }, "EllipsisV"),
-  FaEyeSlash: (props: any) => React.createElement("div", { ...props, "data-testid": "eye-slash-icon" }, "EyeSlash"),
-  FaChevronDown: (props: any) => React.createElement("div", { ...props, "data-testid": "chevron-down-icon" }, "ChevronDown"),
-  FaChevronLeft: (props: any) => React.createElement("div", { ...props, "data-testid": "chevron-left-icon" }, "ChevronLeft"),
-  FaChevronRight: (props: any) => React.createElement("div", { ...props, "data-testid": "chevron-right-icon" }, "ChevronRight"),
-  FaFolder: (props: any) => React.createElement("div", { ...props, "data-testid": "folder-icon" }, "Folder"),
-  FaFolderOpen: (props: any) => React.createElement("div", { ...props, "data-testid": "folder-open-icon" }, "FolderOpen"),
+  FaPaperclip: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "paperclip-icon" }, "Paperclip"),
+  FaInfoCircle: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "info-circle-icon" }, "InfoCircle"),
+  FaDownload: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "download-icon" }, "Download"),
+  FaLock: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "lock-icon" }, "Lock"),
+  FaUser: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "user-icon" }, "User"),
+  FaEllipsisV: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "ellipsis-v-icon" }, "EllipsisV"),
+  FaEyeSlash: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "eye-slash-icon" }, "EyeSlash"),
+  FaChevronDown: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "chevron-down-icon" }, "ChevronDown"),
+  FaChevronLeft: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "chevron-left-icon" }, "ChevronLeft"),
+  FaChevronRight: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "chevron-right-icon" }, "ChevronRight"),
+  FaFolder: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "folder-icon" }, "Folder"),
+  FaFolderOpen: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "folder-open-icon" }, "FolderOpen"),
 
   // LayerOptionsMenu specific icons
-  FaSearchPlus: (props: any) => React.createElement("div", { ...props, "data-testid": "search-plus-icon" }, "SearchPlus"),
-  FaTable: (props: any) => React.createElement("div", { ...props, "data-testid": "table-icon" }, "Table"),
-  FaTrash: (props: any) => React.createElement("div", { ...props, "data-testid": "trash-icon" }, "Trash"),
-  FaTimes: (props: any) => React.createElement("div", { ...props, "data-testid": "times-icon" }, "Times"),
-  FaEye: (props: any) => React.createElement("div", { ...props, "data-testid": "eye-icon" }, "Eye"),
+  FaSearchPlus: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "search-plus-icon" }, "SearchPlus"),
+  FaTable: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "table-icon" }, "Table"),
+  FaTrash: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "trash-icon" }, "Trash"),
+  FaTimes: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "times-icon" }, "Times"),
+  FaEye: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "eye-icon" }, "Eye"),
 
   // LayerInfo specific icons
-  FaPrint: (props: any) => React.createElement("div", { ...props, "data-testid": "print-icon" }, "Print"),
-  FaExternalLinkAlt: (props: any) => React.createElement("div", { ...props, "data-testid": "external-link-icon" }, "ExternalLink"),
+  FaPrint: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "print-icon" }, "Print"),
+  FaExternalLinkAlt: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "external-link-icon" }, "ExternalLink"),
 
   // MapContextMenu specific icons
-  FaFileAlt: (props: any) => React.createElement("div", { ...props, "data-testid": "file-alt-icon" }, "FileAlt"),
-  FaMapMarkerAlt: (props: any) => React.createElement("div", { ...props, "data-testid": "map-marker-alt-icon" }, "MapMarkerAlt"),
-  FaGlobeAmericas: (props: any) => React.createElement("div", { ...props, "data-testid": "globe-americas-icon" }, "GlobeAmericas"),
-  FaExclamationTriangle: (props: any) => React.createElement("div", { ...props, "data-testid": "exclamation-triangle-icon" }, "ExclamationTriangle"),
-  FaGoogle: (props: any) => React.createElement("div", { ...props, "data-testid": "google-icon" }, "Google"),
-  FaEllipsisH: (props: any) => React.createElement("div", { ...props, "data-testid": "ellipsis-h-icon" }, "EllipsisH"),
-  FaCompressArrowsAlt: (props: any) => React.createElement("div", { ...props, "data-testid": "compress-arrows-alt-icon" }, "CompressArrowsAlt"),
+  FaFileAlt: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "file-alt-icon" }, "FileAlt"),
+  FaMapMarkerAlt: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "map-marker-alt-icon" }, "MapMarkerAlt"),
+  FaGlobeAmericas: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "globe-americas-icon" }, "GlobeAmericas"),
+  FaExclamationTriangle: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "exclamation-triangle-icon" }, "ExclamationTriangle"),
+  FaGoogle: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "google-icon" }, "Google"),
+  FaEllipsisH: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "ellipsis-h-icon" }, "EllipsisH"),
+  FaCompressArrowsAlt: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "compress-arrows-alt-icon" }, "CompressArrowsAlt"),
 
   // MoreMenu specific icons
-  FaCamera: (props: any) => React.createElement("div", { ...props, "data-testid": "camera-icon" }, "Camera"),
-  FaCommentDots: (props: any) => React.createElement("div", { ...props, "data-testid": "comment-dots-icon" }, "CommentDots"),
-  FaMap: (props: any) => React.createElement("div", { ...props, "data-testid": "map-icon" }, "Map"),
-  FaFileContract: (props: any) => React.createElement("div", { ...props, "data-testid": "file-contract-icon" }, "FileContract"),
-  FaNewspaper: (props: any) => React.createElement("div", { ...props, "data-testid": "newspaper-icon" }, "Newspaper"),
-  FaPalette: (props: any) => React.createElement("div", { ...props, "data-testid": "palette-icon" }, "Palette"),
-  FaTools: (props: any) => React.createElement("div", { ...props, "data-testid": "tools-icon" }, "Tools"),
-  FaDrawPolygon: (props: any) => React.createElement("div", { ...props, "data-testid": "draw-polygon-icon" }, "DrawPolygon"),
+  FaCamera: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "camera-icon" }, "Camera"),
+  FaCommentDots: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "comment-dots-icon" }, "CommentDots"),
+  FaMap: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "map-icon" }, "Map"),
+  FaFileContract: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "file-contract-icon" }, "FileContract"),
+  FaNewspaper: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "newspaper-icon" }, "Newspaper"),
+  FaPalette: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "palette-icon" }, "Palette"),
+  FaTools: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "tools-icon" }, "Tools"),
+  FaDrawPolygon: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "draw-polygon-icon" }, "DrawPolygon"),
 
   // AVL Theme specific icons
-  FaSpinner: (props: any) => React.createElement("div", { ...props, "data-testid": "spinner-icon" }, "Spinner"),
-  FaSignInAlt: (props: any) => React.createElement("div", { ...props, "data-testid": "sign-in-icon" }, "SignIn"),
-  FaTruck: (props: any) => React.createElement("div", { ...props, "data-testid": "truck-icon" }, "Truck"),
-  FaHistory: (props: any) => React.createElement("div", { ...props, "data-testid": "history-icon" }, "History"),
-  FaClock: (props: any) => React.createElement("div", { ...props, "data-testid": "clock-icon" }, "Clock"),
-  FaRoute: (props: any) => React.createElement("div", { ...props, "data-testid": "route-icon" }, "Route"),
+  FaSpinner: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "spinner-icon" }, "Spinner"),
+  FaSignInAlt: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "sign-in-icon" }, "SignIn"),
+  FaTruck: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "truck-icon" }, "Truck"),
+  FaHistory: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "history-icon" }, "History"),
+  FaClock: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "clock-icon" }, "Clock"),
+  FaRoute: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "route-icon" }, "Route"),
 
   // 511 Theme specific icons
-  FaSync: (props: any) => React.createElement("div", { ...props, "data-testid": "sync-icon-fa" }, "Sync"),
+  FaSync: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "sync-icon-fa" }, "Sync"),
 
   // AddLayerTool specific icons
-  FaUpload: (props: any) => React.createElement("div", { ...props, "data-testid": "upload-icon" }, "Upload"),
+  FaUpload: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "upload-icon" }, "Upload"),
 
   // Commercial Real Estate theme icons
-  FaListUl: (props: any) => React.createElement("div", { ...props, "data-testid": "list-ul-icon" }, "ListUl"),
-  FaArrowLeft: (props: any) => React.createElement("div", { ...props, "data-testid": "arrow-left-icon" }, "ArrowLeft"),
-  FaStar: (props: any) => React.createElement("div", { ...props, "data-testid": "star-icon" }, "Star"),
-  FaChevronUp: (props: any) => React.createElement("div", { ...props, "data-testid": "chevron-up-icon" }, "ChevronUp"),
+  FaListUl: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "list-ul-icon" }, "ListUl"),
+  FaArrowLeft: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "arrow-left-icon" }, "ArrowLeft"),
+  FaStar: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "star-icon" }, "Star"),
+  FaChevronUp: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "chevron-up-icon" }, "ChevronUp"),
 
   // AppTrack specific icons
-  FaPlusSquare: (props: any) => React.createElement("div", { ...props, "data-testid": "plus-square-icon" }, "PlusSquare"),
+  FaPlusSquare: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "plus-square-icon" }, "PlusSquare"),
 
   // EMaps specific icons
-  FaAddressBook: (props: any) => React.createElement("div", { ...props, "data-testid": "address-book-icon" }, "AddressBook"),
+  FaAddressBook: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "address-book-icon" }, "AddressBook"),
 
   // Secure report extension icons (MPac / Teranet)
-  FaBuilding: (props: any) => React.createElement("div", { ...props, "data-testid": "building-icon" }, "Building"),
-  FaLandmark: (props: any) => React.createElement("div", { ...props, "data-testid": "landmark-icon" }, "Landmark"),
+  FaBuilding: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "building-icon" }, "Building"),
+  FaLandmark: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "landmark-icon" }, "Landmark"),
 
   // Campus theme icons
-  FaRegCheckCircle: (props: any) => React.createElement("div", { ...props, "data-testid": "reg-check-circle-icon" }, "RegCheckCircle"),
-  FaRegCircle: (props: any) => React.createElement("div", { ...props, "data-testid": "reg-circle-icon" }, "RegCircle"),
+  FaRegCheckCircle: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "reg-check-circle-icon" }, "RegCheckCircle"),
+  FaRegCircle: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "reg-circle-icon" }, "RegCircle"),
 
   // InfoWindowRow and PanelComponent icons
-  FaLevelUpAlt: (props: any) => React.createElement("div", { ...props, "data-testid": "level-up-alt-icon" }, "LevelUpAlt"),
-  FaWrench: (props: any) => React.createElement("div", { ...props, "data-testid": "wrench-icon" }, "Wrench"),
+  FaLevelUpAlt: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "level-up-alt-icon" }, "LevelUpAlt"),
+  FaWrench: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "wrench-icon" }, "Wrench"),
 }));
 
 vi.mock("react-icons/md", () => ({
-  MdGridOff: (props: any) => React.createElement("div", { ...props, "data-testid": "grid-off-icon" }, "Grid Off"),
-  MdGridOn: (props: any) => React.createElement("div", { ...props, "data-testid": "grid-on-icon" }, "Grid On"),
+  MdGridOff: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "grid-off-icon" }, "Grid Off"),
+  MdGridOn: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "grid-on-icon" }, "Grid On"),
 }));
 
 vi.mock("react-icons/fi", () => ({
-  FiSettings: (props: any) => React.createElement("div", { ...props, "data-testid": "settings-icon" }, "Settings"),
-  FiSave: (props: any) => React.createElement("div", { ...props, "data-testid": "save-icon" }, "Save"),
-  FiTrash2: (props: any) => React.createElement("div", { ...props, "data-testid": "trash-icon" }, "Trash"),
-  FiSearch: (props: any) => React.createElement("div", { ...props, "data-testid": "fi-search-icon" }, "Search"),
-  FiX: (props: any) => React.createElement("div", { ...props, "data-testid": "fi-x-icon" }, "X"),
-  FiTable: (props: any) => React.createElement("div", { ...props, "data-testid": "fi-table-icon" }, "Table"),
-  FiZoomIn: (props: any) => React.createElement("div", { ...props, "data-testid": "fi-zoom-in-icon" }, "ZoomIn"),
-  FiChevronDown: (props: any) => React.createElement("div", { ...props, "data-testid": "fi-chevron-down-icon" }, "ChevronDown"),
-  FiChevronRight: (props: any) => React.createElement("div", { ...props, "data-testid": "fi-chevron-right-icon" }, "ChevronRight"),
+  FiSettings: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "settings-icon" }, "Settings"),
+  FiSave: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "save-icon" }, "Save"),
+  FiTrash2: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "trash-icon" }, "Trash"),
+  FiSearch: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "fi-search-icon" }, "Search"),
+  FiX: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "fi-x-icon" }, "X"),
+  FiTable: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "fi-table-icon" }, "Table"),
+  FiZoomIn: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "fi-zoom-in-icon" }, "ZoomIn"),
+  FiChevronDown: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "fi-chevron-down-icon" }, "ChevronDown"),
+  FiChevronRight: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "fi-chevron-right-icon" }, "ChevronRight"),
 }));
 
 vi.mock("react-icons/gi", () => ({
-  GiBroom: (props: any) => React.createElement("div", { ...props, "data-testid": "broom-icon" }, "Broom"),
+  GiBroom: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "broom-icon" }, "Broom"),
 }));
 
 // Setup MSW for API mocking

@@ -14,8 +14,8 @@ vi.mock("@/components/map/controls/MapControlWrapper", () => ({
 
 const mockMap = {} as Map;
 
-const MockComponent1 = vi.fn(({ map }) => <div data-testid="mock-component-1">Mock Component 1</div>);
-const MockComponent2 = vi.fn(({ map }) => <div data-testid="mock-component-2">Mock Component 2</div>);
+const MockComponent1 = vi.fn(({ map: _map }) => <div data-testid="mock-component-1">Mock Component 1</div>);
+const MockComponent2 = vi.fn(({ map: _map2 }) => <div data-testid="mock-component-2">Mock Component 2</div>);
 
 describe("MapControlZones", () => {
   beforeEach(() => {

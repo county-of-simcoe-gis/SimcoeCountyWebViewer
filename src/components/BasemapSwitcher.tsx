@@ -107,7 +107,7 @@ export default function BasemapSwitcher() {
       try {
         // Always start with local basemapSwitcherConfig.json as the base
         const configModule = await import("@/components/basemapSwitcherConfig.json");
-        let data: BasemapConfig = { ...configModule.default };
+        const data: BasemapConfig = { ...configModule.default };
         // console.log("BasemapSwitcher: Loaded local basemapSwitcherConfig.json as base");
 
         // Merge API-provided basemap config on top (only overrides fields that are present)
@@ -506,6 +506,7 @@ export default function BasemapSwitcher() {
     };
 
     initBasemap();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config, map, loadImageryLayers, loadStreets, loadWorldImagery, applyBasemap, updateImageryLayers]);
 
   // Event handlers

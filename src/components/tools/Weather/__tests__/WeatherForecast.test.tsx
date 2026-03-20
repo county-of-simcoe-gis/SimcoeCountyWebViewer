@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import WeatherForecast from "../WeatherForecast";
-import config from "../config.json";
+
 
 const sampleCity = {
   siteData: {

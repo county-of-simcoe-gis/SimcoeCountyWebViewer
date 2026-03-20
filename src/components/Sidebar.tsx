@@ -213,11 +213,14 @@ export default function Sidebar() {
     return true;
   });
 
-  const tabMapping: Record<string, number> = {};
-  visibleTabs.forEach((tab, index) => {
-    tabMapping[tab] = index;
-    if (tab === "mymaps") tabMapping["my maps"] = index; // alias
-  });
+  const tabMapping = useMemo(() => {
+    const mapping: Record<string, number> = {};
+    visibleTabs.forEach((tab, index) => {
+      mapping[tab] = index;
+      if (tab === "mymaps") mapping["my maps"] = index; // alias
+    });
+    return mapping;
+  }, [visibleTabs]);
 
   // Function to activate tab by name
   const activateTab = useCallback(

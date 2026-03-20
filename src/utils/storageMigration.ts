@@ -242,7 +242,6 @@ interface OldMyMapsData {
  * Migrate a single MyMaps item from old OL style format to new StyleJSON format.
  */
 function migrateMyMapsItem(oldItem: OldMyMapsItem): Record<string, unknown> {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { hasChanged: _dropped, style, ...rest } = oldItem;
 
   let newStyle = style;

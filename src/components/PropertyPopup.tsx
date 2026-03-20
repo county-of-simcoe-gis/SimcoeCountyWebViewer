@@ -166,7 +166,7 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
         {/* Assessed Value - rendered as image matching legacy */}
         {assessedValue && (
           <InfoWindowRow label="Assessed Value">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {}
             <img src={assessedValue} alt="Assessed Value" className="mb-0.5" style={{ height: "16px", minWidth: "300px" }} />
             <div className="text-[9px] text-gray-600 pb-1">(may not reflect current market value)</div>
           </InfoWindowRow>

@@ -321,7 +321,7 @@ export const SearchZoom: React.FC = () => {
 
             if (geometryType === "Point") {
               // Style for points (configurable via featureHighlitStyles)
-              const { point: pointStyle, zoomFactor } = getHighlightStyles();
+              const { point: pointStyle } = getHighlightStyles();
               fullFeature.setStyle(pointStyle);
 
               // For points, use setCenter instead of fit for more reliable zooming
@@ -338,7 +338,7 @@ export const SearchZoom: React.FC = () => {
               }
             } else {
               // Style for lines and polygons (configurable via featureHighlitStyles)
-              const { polygon: polyStyle, zoomFactor } = getHighlightStyles();
+              const { polygon: polyStyle } = getHighlightStyles();
               fullFeature.setStyle(polyStyle);
 
               console.log("SearchZoom: Zooming to polygon/line with extent:", extent);

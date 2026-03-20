@@ -1,6 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach, MockedFunction } from "vitest";
-import { render, fireEvent, screen, waitFor, renderHook } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, renderHook } from "@testing-library/react";
 import BasemapSwitcher from "@/components/BasemapSwitcher";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
@@ -91,11 +90,11 @@ const createMockLayer = (name: string) => ({
   getName: vi.fn(() => name),
 });
 
-const mockTopoLayer = createMockLayer("Topographic_0");
-const mockImageryLayer1 = createMockLayer("2022");
-const mockImageryLayer2 = createMockLayer("2023");
-const mockStreetsLayer = createMockLayer("Streets");
-const mockWorldImageryLayer = createMockLayer("World Imagery");
+const _mockTopoLayer = createMockLayer("Topographic_0");
+const _mockImageryLayer1 = createMockLayer("2022");
+const _mockImageryLayer2 = createMockLayer("2023");
+const _mockStreetsLayer = createMockLayer("Streets");
+const _mockWorldImageryLayer = createMockLayer("World Imagery");
 
 // Mock LayerManager and LayerHelpers
 vi.mock("@/utils/openlayers/LayerManager", () => ({
@@ -190,7 +189,7 @@ describe("BasemapSwitcher", () => {
 
   describe("Store Integration", () => {
     it("integrates with mapStore correctly", () => {
-      const { result } = renderHook(() => useMapStore());
+      const { result: _result } = renderHook(() => useMapStore());
 
       // Set map and verify it's stored
       useMapStore.setState({ map: mockMap as any });

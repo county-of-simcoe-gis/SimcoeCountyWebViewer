@@ -641,8 +641,9 @@ export default function MapContainer() {
     // Show terms popup on startup (matches old app behaviour) — only once
     if (activeConfig.termsUrl && activeConfig.showTermsOnStartup && !termsShownRef.current) {
       termsShownRef.current = true;
-      const { showURLWindow } = require("@/utils/helpersUI");
-      showURLWindow(activeConfig.termsUrl, true, "full", true, true, "Terms and Conditions");
+      import("@/utils/helpersUI").then(({ showURLWindow }) => {
+        showURLWindow(activeConfig.termsUrl!, true, "full", true, true, "Terms and Conditions");
+      });
     }
 
     // Register map as ready for URL parameter processing

@@ -256,7 +256,7 @@ describe("LayerOptionsMenu", () => {
 
   describe("Opacity Slider", () => {
     it("updates opacity when slider is changed", async () => {
-      const user = userEvent.setup();
+      const _user = userEvent.setup();
       render(<LayerOptionsMenu {...defaultProps} onClose={mockOnClose} onLayerChange={mockOnLayerChange} />);
 
       const opacitySlider = screen.getByRole("slider");
@@ -267,7 +267,7 @@ describe("LayerOptionsMenu", () => {
     });
 
     it("falls back to TOC store for unmanaged layers", async () => {
-      const user = userEvent.setup();
+      const _user = userEvent.setup();
       const unmanagedLayer = { ...mockLayer, managedLayerId: undefined };
 
       // Set up mock TOC store state to return the unmanaged layer
@@ -288,7 +288,7 @@ describe("LayerOptionsMenu", () => {
     });
 
     it("updates displayed percentage when opacity changes", async () => {
-      const user = userEvent.setup();
+      const _user = userEvent.setup();
       render(<LayerOptionsMenu {...defaultProps} onClose={mockOnClose} onLayerChange={mockOnLayerChange} />);
 
       const opacitySlider = screen.getByRole("slider");
@@ -424,7 +424,7 @@ describe("LayerOptionsMenu", () => {
     });
 
     it("closes when Escape key is pressed", async () => {
-      const user = userEvent.setup();
+      const _user = userEvent.setup();
       render(<LayerOptionsMenu {...defaultProps} onClose={mockOnClose} onLayerChange={mockOnLayerChange} />);
 
       // Wait for the component to be fully rendered
@@ -443,7 +443,7 @@ describe("LayerOptionsMenu", () => {
     });
 
     it("closes when clicking outside the menu", async () => {
-      const user = userEvent.setup();
+      const _user = userEvent.setup();
       render(
         <div>
           <div data-testid="outside">Outside</div>
@@ -556,4 +556,3 @@ describe("LayerOptionsMenu", () => {
     });
   });
 });
-

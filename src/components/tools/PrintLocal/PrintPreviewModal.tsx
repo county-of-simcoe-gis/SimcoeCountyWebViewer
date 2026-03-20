@@ -81,7 +81,7 @@ export default function PrintPreviewModal({ previewBlob, isOpen, mapTitle, setti
                     <span>Loading preview...</span>
                   </div>
                 )}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {}
                 <img
                   src={previewUrl}
                   alt="Map Preview"

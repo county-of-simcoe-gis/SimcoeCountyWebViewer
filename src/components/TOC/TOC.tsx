@@ -606,7 +606,6 @@ export default function TOC({ visible = true }: TOCProps) {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleGroupFolderToggle = (_groupValue: string, _isOpen: boolean) => {
     // Handle group folder expand/collapse - placeholder for future state management
   };

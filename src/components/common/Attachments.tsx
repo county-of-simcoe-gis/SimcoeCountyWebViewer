@@ -124,7 +124,7 @@ const Attachments: React.FC<AttachmentsProps> = ({ attachmentUrl }) => {
                 ✕
               </button>
             </div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {}
             <img src={imagePreviewUrl} alt="Attachment Preview" className="w-full h-auto rounded" />
           </div>
           <form method="dialog" className="modal-backdrop">

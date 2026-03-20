@@ -11,13 +11,23 @@ import { createIdentifyResult } from "@/components/ResultsPopup";
 import { useLayerManagerStore } from "@/stores/layerManagerStore";
 import type TileWMS from "ol/source/TileWMS";
 import type ImageWMS from "ol/source/ImageWMS";
+import type BaseLayer from "ol/layer/Base";
 import type { Feature } from "ol";
 import type { Geometry } from "ol/geom";
+
+interface ESRIResult {
+  geometry?: Record<string, unknown>;
+  attributes?: Record<string, unknown>;
+}
+
+interface ESRIIdentifyResponse {
+  results?: ESRIResult[];
+}
 
 /**
  * Parse ESRI identify response
  */
-function parseESRIIdentify(response: any): Feature<Geometry>[] {
+function parseESRIIdentify(response: ESRIIdentifyResponse): Feature<Geometry>[] {
   if (!response || !response.results) return [];
 
   const geoJsonFormat = new GeoJSON();
@@ -32,7 +42,7 @@ function parseESRIIdentify(response: any): Feature<Geometry>[] {
       if (!esriGeometry) continue;
 
       // Simple conversion for point geometry
-      let geoJsonGeometry: any;
+      let geoJsonGeometry: Record<string, unknown> | undefined;
       if (esriGeometry.x !== undefined && esriGeometry.y !== undefined) {
         // Point geometry
         geoJsonGeometry = {
@@ -85,7 +95,7 @@ function parseESRIIdentify(response: any): Feature<Geometry>[] {
 export interface LiveLayerResult {
   layerName: string;
   featureId: string;
-  attributes: Record<string, any>;
+  attributes: Record<string, unknown>;
   feature: Feature<Geometry>;
   layerZIndex?: number;
 }
@@ -98,7 +108,7 @@ export default function LiveLayerClick() {
 
   // Query a single live layer for features at coordinate
   const queryLiveLayer = useCallback(
-    async (layer: any, coordinate: number[]): Promise<Feature<Geometry> | null> => {
+    async (layer: BaseLayer, coordinate: number[]): Promise<Feature<Geometry> | null> => {
       const displayName = layer.get("tocDisplayName") || layer.get("displayName") || layer.get("name");
       console.log(`LiveLayerClick: Starting query for "${displayName}" at coordinate:`, coordinate);
 
@@ -247,7 +257,7 @@ export default function LiveLayerClick() {
 
       // Query all layers in parallel
       const results: LiveLayerResult[] = [];
-      const identifyPromises = visibleLiveLayers.map(async (tocLayer, index) => {
+      const identifyPromises = visibleLiveLayers.map(async (tocLayer) => {
         // Per-layer query logs commented out to reduce console noise
         // console.log(`LiveLayerClick: Querying layer ${index + 1}/${visibleLiveLayers.length}: ${tocLayer.displayName}`);
         try {
@@ -269,7 +279,7 @@ export default function LiveLayerClick() {
             }
 
             // Clean up properties (remove geometry, layerDisplayName, etc.)
-            const cleanAttributes: Record<string, any> = {};
+            const cleanAttributes: Record<string, unknown> = {};
             Object.entries(properties).forEach(([key, value]) => {
               if (key !== "geometry" && key !== "layerDisplayName" && key !== "bbox" && typeof value !== "object") {
                 cleanAttributes[key] = value;

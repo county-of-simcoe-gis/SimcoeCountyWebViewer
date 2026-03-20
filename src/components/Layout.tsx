@@ -87,6 +87,7 @@ export default function Layout({ children }: LayoutProps) {
     if (configError) {
       setConfigError(configError);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config, configLoading, configError, setConfig, setConfigLoading, setConfigError, loadFromConfig, activateDefaultItems]);
 
   // --- Startup popups (What's New + Feedback) --- run once when config arrives

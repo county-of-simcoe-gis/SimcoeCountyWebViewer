@@ -58,7 +58,7 @@ export const MapContextMenuContainer: React.FC = () => {
     console.log("Property Report clicked at:", coordinateRef.current);
 
     const coordinate = coordinateRef.current;
-    const parcelLayerUrl = (config as any).parcelLayer?.url;
+    const parcelLayerUrl = config?.parcelLayer?.url;
 
     if (!parcelLayerUrl) {
       console.warn("Parcel layer URL not configured");
@@ -116,7 +116,7 @@ export const MapContextMenuContainer: React.FC = () => {
       };
 
       // Fetch property information
-      let propInfo: any = {
+      let propInfo: Record<string, unknown> = {
         ARN: arn,
         pointCoordinates: latLongCoords,
         pointerCoordinates: coordinate,
@@ -124,7 +124,7 @@ export const MapContextMenuContainer: React.FC = () => {
         area: feature && feature.getGeometry() ? getArea(feature.getGeometry()!) : 0,
       };
 
-      const propertyReportUrl = (config as any).propertyReportUrl;
+      const propertyReportUrl = config?.propertyReportUrl;
       if (propertyReportUrl) {
         const infoURL = `${propertyReportUrl}${arn}`;
         const infoClient = getAxiosClient(infoURL);
@@ -154,7 +154,7 @@ export const MapContextMenuContainer: React.FC = () => {
 
       // Helper function to fetch property info for a given ARN
       const fetchPropInfo = async (childArn: string) => {
-        let childPropInfo: any = {
+        let childPropInfo: Record<string, unknown> = {
           ARN: childArn,
           pointCoordinates: latLongCoords,
           pointerCoordinates: coordinate,
@@ -162,7 +162,7 @@ export const MapContextMenuContainer: React.FC = () => {
           area: feature && feature.getGeometry() ? getArea(feature.getGeometry()!) : 0,
         };
 
-        const propertyReportUrl = (config as any).propertyReportUrl;
+        const propertyReportUrl = config?.propertyReportUrl;
         if (propertyReportUrl) {
           const infoURL = `${propertyReportUrl}${childArn}`;
           const infoClient = getAxiosClient(infoURL);
@@ -196,7 +196,7 @@ export const MapContextMenuContainer: React.FC = () => {
 
           if (Array.isArray(condoResponse.data) && condoResponse.data.length > 0) {
             // Add each condo unit as a result
-            condoResponse.data.forEach((unit: any) => {
+            condoResponse.data.forEach((unit: { ARN: string; UnitNumber: string; Address: string }) => {
               results.push(createCondoResult(unit.ARN, unit.UnitNumber, unit.Address, feature));
             });
           }
@@ -232,6 +232,7 @@ export const MapContextMenuContainer: React.FC = () => {
     } catch (error) {
       console.error("Error fetching parcel data:", error);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showPopup, hidePopup]);
 
   const handleAddMarker = useCallback(() => {
@@ -412,7 +413,7 @@ export const MapContextMenuContainer: React.FC = () => {
 
   // Handle context menu display
   const handleContextMenu = useCallback(
-    (coordinate: number[], pixel: number[], event: any) => {
+    (coordinate: number[], _pixel: number[], _event: unknown) => {
       // Check if right-click menu is disabled via config
       if (config?.disableRightClickMenu) return;
 

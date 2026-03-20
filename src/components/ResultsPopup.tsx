@@ -138,7 +138,7 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
 
   // Render sidebar item based on result type
   const renderSidebarItem = (result: Result, isSelected: boolean) => {
-    const baseClasses = isSelected ? "selected" : "";
+
 
     switch (result.type) {
       case "property":

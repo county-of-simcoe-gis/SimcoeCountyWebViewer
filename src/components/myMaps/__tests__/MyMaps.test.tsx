@@ -561,7 +561,6 @@ describe("MyMaps Component", () => {
         getState: mockGetState,
       } as ReturnType<typeof useMyMapsStore>);
       // Mock getState as a static method
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (useMyMapsStore as any).getState = mockGetState;
 
       render(<MyMaps />);
@@ -596,7 +595,6 @@ describe("MyMaps Component", () => {
         mergePolygons: mockMergePolygons,
         exportToFile: vi.fn(() => ({ success: true, count: 1 })),
       }));
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (useMyMapsStore as any).getState = mockGetState;
 
       // Mock window.confirm

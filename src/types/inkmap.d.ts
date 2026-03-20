@@ -27,7 +27,7 @@ declare module "@camptocamp/inkmap" {
   export interface LayerSpec {
     type: string;
     opacity?: number;
-    [key: string]: any;
+    [key: string]: unknown;
   }
 
   export interface WMSLayerSpec extends LayerSpec {
@@ -50,8 +50,8 @@ declare module "@camptocamp/inkmap" {
 
   export interface GeoJSONLayerSpec extends LayerSpec {
     type: "GeoJSON";
-    geojson: any;
-    style?: any;
+    geojson: Record<string, unknown>;
+    style?: Record<string, unknown>;
   }
 
   export interface BingMapsLayerSpec extends LayerSpec {
@@ -79,7 +79,7 @@ declare module "@camptocamp/inkmap" {
    * @param jobId - The job ID
    * @returns An observable that emits job status updates
    */
-  export function getJobStatus(jobId: string): any;
+  export function getJobStatus(jobId: string): unknown;
 
   /**
    * Cancels a print job

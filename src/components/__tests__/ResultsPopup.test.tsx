@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import ResultsPopup, { createPropertyResult, createCondoResult, createIdentifyResult, PropertyResult, CondoResult, IdentifyResult } from "@/components/ResultsPopup";
+import ResultsPopup, { createPropertyResult, createCondoResult, createIdentifyResult } from "@/components/ResultsPopup";
 import { Feature } from "ol";
 import { Point } from "ol/geom";
 
@@ -273,7 +273,7 @@ describe("ResultsPopup", () => {
     });
 
     it("calls onSelectResult when a result is selected", async () => {
-      const user = userEvent.setup();
+      const _user = userEvent.setup();
       const feature = new Feature({ geometry: new Point([0, 0]) });
       const propInfo = {
         ARN: "1234567890",
@@ -291,7 +291,7 @@ describe("ResultsPopup", () => {
     });
 
     it("shows loading state while fetching result details", async () => {
-      const user = userEvent.setup();
+      const _user = userEvent.setup();
       const feature = new Feature({ geometry: new Point([0, 0]) });
       const results = [
         createCondoResult("12345678901234567890", "101", "456 Condo Tower", feature), // No propInfo

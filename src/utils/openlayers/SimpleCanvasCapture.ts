@@ -275,7 +275,7 @@ function drawAttributions(
         try {
           const sourceAttributions = source.getAttributions();
           if (sourceAttributions && typeof sourceAttributions === "function") {
-            const attrs = sourceAttributions(frameState as any);
+            const attrs = sourceAttributions(frameState as unknown as import("ol/Map").FrameState);
             if (attrs) {
               attrs.forEach((attr) => {
                 const text = typeof attr === "string" ? attr : (attr as { innerHTML?: string }).innerHTML || "";

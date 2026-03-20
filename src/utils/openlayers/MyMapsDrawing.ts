@@ -10,6 +10,7 @@ import GeoJSON from "ol/format/GeoJSON";
 import { fromCircle } from "ol/geom/Polygon";
 import { Style, Fill, Stroke, Circle as CircleStyle, Text, RegularShape } from "ol/style";
 import { Feature } from "ol";
+import type { FeatureLike } from "ol/Feature";
 import { Circle, LineString, Point } from "ol/geom";
 import { asArray } from "ol/color";
 import { generateUID, convertLineToArrow, getBearing, getCalloutStyle, getDefaultLabelStyle, type LabelStyle } from "@/utils/myMapsHelpers";
@@ -447,7 +448,6 @@ export class MyMapsDrawingManager {
     this.highlightLayer.getSource()?.addFeature(highlightFeature);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public unhighlightFeature(_featureId: string) {
     if (this.highlightLayer) {
       // Clear all features from highlight layer
@@ -724,7 +724,8 @@ export class MyMapsDrawingManager {
         const anchorColorArray = asArray(anchorColor);
 
         // Create callout style function
-        const calloutStyleFunction = (feat: Feature): Style[] => {
+        const calloutStyleFunction = (feat: FeatureLike): Style[] => {
+          if (!(feat instanceof Feature)) return [];
           const geometry = feat.getGeometry();
           if (!geometry || geometry.getType() !== "LineString") {
             return [];

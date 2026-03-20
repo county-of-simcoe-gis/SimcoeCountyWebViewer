@@ -248,7 +248,7 @@ function ServiceGroupComponent({ group, coords, address, isLoadingAddress }: Ser
   return (
     <div className="border border-base-300 rounded-lg overflow-hidden shadow-sm">
       <div className="flex items-center gap-2 p-3 bg-gradient-to-b from-base-100 to-base-200 border-b border-base-300">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {}
         <img src={`/images/tools/externalservices/${group.icon}`} alt={group.groupName} className="w-6 h-6 object-contain" />
         <span className="font-semibold text-base">{group.groupName}</span>
       </div>

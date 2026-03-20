@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import PrintTool from "../PrintTool";
 import { useMapStore } from "@/stores/mapStore";
@@ -62,7 +62,7 @@ const createMockMap = () => ({
 
 describe("PrintTool", () => {
   const mockOnClose = vi.fn();
-  const mockOnSidebarVisibility = vi.fn();
+  const _mockOnSidebarVisibility = vi.fn();
   let mockMap: ReturnType<typeof createMockMap>;
 
   beforeEach(() => {

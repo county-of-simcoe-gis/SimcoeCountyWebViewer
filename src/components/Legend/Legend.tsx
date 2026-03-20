@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useLegendStore } from "@/stores/legendStore";
-import { useTOCStore, type TOCLayer } from "@/stores/tocStore";
+import { useLegendStore, type LegendObject, type LegendEntry } from "@/stores/legendStore";
+import { type TOCLayer } from "@/stores/tocStore";
 import { FaChevronDown, FaTimes, FaPrint } from "react-icons/fa";
 
 interface LegendItemProps {
@@ -39,7 +39,7 @@ const LegendItem: React.FC<LegendItemProps> = ({ layer, center = false }) => {
 };
 
 interface LegendObjectProps {
-  legendObj: any;
+  legendObj: LegendObject;
 }
 
 const LegendObject: React.FC<LegendObjectProps> = ({ legendObj }) => {
@@ -49,7 +49,7 @@ const LegendObject: React.FC<LegendObjectProps> = ({ legendObj }) => {
 
   return (
     <ul className="list-none p-0 m-0 flex flex-col gap-[5px]">
-      {legendObj.legend.map((item: any, index: number) => (
+      {legendObj.legend.map((item: LegendEntry, index: number) => (
         <LegendRow key={`legend-row-${index}`} legend={item} />
       ))}
     </ul>

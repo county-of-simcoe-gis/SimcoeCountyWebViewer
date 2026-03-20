@@ -566,6 +566,7 @@ export default function MyMapsService() {
       removeListener(styleUpdateId);
       removeListener(addFeatureId);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, addItem, emit]);
 
   // This component doesn't render anything - it's a service component

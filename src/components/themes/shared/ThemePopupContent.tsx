@@ -38,7 +38,7 @@ export default function ThemePopupContent({
       {/* Logo if provided */}
       {popupLogoImage && (
         <div className="text-center mb-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {}
           <img
             src={`/images/${popupLogoImage}`}
             alt="Theme Logo"

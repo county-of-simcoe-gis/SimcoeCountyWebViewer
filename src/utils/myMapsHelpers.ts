@@ -4,6 +4,7 @@
 
 import { Style, Fill, Stroke, Circle as CircleStyle, Text, RegularShape } from 'ol/style'
 import { Feature } from 'ol'
+import type { FeatureLike } from 'ol/Feature'
 import { Point, LineString, Polygon, Circle } from 'ol/geom'
 import { asArray } from 'ol/color'
 import { fromCircle } from 'ol/geom/Polygon'
@@ -587,7 +588,7 @@ export interface CalloutStyleOptions {
 
 // Get callout style - Returns a style function for line with circle at anchor point
 // Matching original app implementation exactly
-export const getCalloutStyle = (opts: CalloutStyleOptions = {}): (feature: Feature) => Style[] => {
+export const getCalloutStyle = (opts: CalloutStyleOptions = {}): (feature: FeatureLike) => Style[] => {
   const { drawColor = '#333333', lineColor, anchorColor } = opts
   
   // Use specific colors if provided, otherwise fall back to drawColor
@@ -595,7 +596,8 @@ export const getCalloutStyle = (opts: CalloutStyleOptions = {}): (feature: Featu
   const anchorColorArray = asArray(anchorColor || drawColor)
 
   // Return a style function that positions anchor circle at start of line
-  return (feature: Feature): Style[] => {
+  return (feature: FeatureLike): Style[] => {
+    if (!(feature instanceof Feature)) return []
     const geometry = feature.getGeometry()
     if (!geometry || geometry.getType() !== 'LineString') {
       return []

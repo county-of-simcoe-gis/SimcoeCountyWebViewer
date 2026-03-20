@@ -421,6 +421,7 @@ export default function PropertyReportClick() {
 
       return () => clearTimeout(timer);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, urlParameters, showPropertyWindowForARN]);
 
   return null; // This component doesn't render anything directly

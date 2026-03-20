@@ -25,13 +25,24 @@ import { getAxiosClient } from "@/lib/axiosInstance";
 import { getAccessToken } from "@/utils/auth";
 import type TileWMS from "ol/source/TileWMS";
 import type ImageWMS from "ol/source/ImageWMS";
+import type BaseLayer from "ol/layer/Base";
 import type { Feature } from "ol";
 import type { Geometry } from "ol/geom";
+
+interface ESRIResult {
+  geometry?: Record<string, unknown>;
+  geometryType?: string;
+  attributes?: Record<string, unknown>;
+}
+
+interface ESRIIdentifyResponse {
+  results?: ESRIResult[];
+}
 
 /**
  * Parse ESRI identify response
  */
-function parseESRIIdentify(response: any): Feature<Geometry>[] {
+function parseESRIIdentify(response: ESRIIdentifyResponse): Feature<Geometry>[] {
   if (!response || !response.results) return [];
 
   const geoJsonFormat = new GeoJSON();
@@ -46,7 +57,7 @@ function parseESRIIdentify(response: any): Feature<Geometry>[] {
       if (!esriGeometry) continue;
 
       // Simple conversion for point geometry
-      let geoJsonGeometry: any;
+      let geoJsonGeometry: Record<string, unknown> | undefined;
       if (result.geometryType === "esriGeometryPoint") {
         geoJsonGeometry = {
           type: "Point",
@@ -89,7 +100,7 @@ function parseESRIIdentify(response: any): Feature<Geometry>[] {
 /**
  * Popup content component for live layer features
  */
-function LiveLayerPopupContent({ properties }: { properties: Record<string, any> }) {
+function LiveLayerPopupContent({ properties }: { properties: Record<string, unknown> }) {
   return (
     <div style={{ maxWidth: "400px", maxHeight: "300px", overflow: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -124,7 +135,7 @@ export default function LiveLayerIdentifyClick() {
    * Identify features on a single layer
    */
   const identifyLayerFeatures = useCallback(
-    async (layer: any, coordinate: number[]): Promise<Feature<Geometry> | undefined> => {
+    async (layer: BaseLayer, coordinate: number[]): Promise<Feature<Geometry> | undefined> => {
       if (!map) return undefined;
 
       const viewResolution = map.getView().getResolution();

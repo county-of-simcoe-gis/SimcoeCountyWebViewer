@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import AvailableMapsTool from "@/components/tools/AvailableMaps/AvailableMapsTool";
 import type { MapItem } from "@/types/mapSettings";

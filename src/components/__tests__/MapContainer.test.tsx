@@ -73,7 +73,6 @@ vi.mock("@/stores/appStore", () => ({
 }));
 
 // Mock other required stores with proper state management
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockMapStore: Record<string, any> = {
   map: null,
   setMap: vi.fn((newMap: unknown) => {

@@ -5,7 +5,7 @@ import PanelComponent from "@/components/PanelComponent";
 import { FaPalette } from "react-icons/fa";
 import SpatialQueryResults, { FeatureSection } from "../shared/SpatialQueryResults";
 import { useSearchStore } from "@/stores/searchStore";
-import { useMapStore } from "@/stores/mapStore";
+
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { FeatureHelpers } from "@/utils/openlayers/FeatureHelpers";
 import { OL_DATA_TYPES } from "@/utils/openlayers/types";
@@ -44,7 +44,6 @@ const HIGHLIGHT_STYLE = new Style({
 
 export default function Zoning({ name = "Zoning", helpLink, hideHeader, onClose, onSidebarVisibility }: ZoningProps) {
   const lastResult = useSearchStore((s) => s.lastResult);
-  const map = useMapStore((s) => s.map);
 
   // Merge local config with map-level overrides (termsUrl, byLawUrl, etc. vary per map)
   const config = useMemo(() => {
@@ -200,6 +199,7 @@ export default function Zoning({ name = "Zoning", helpLink, hideHeader, onClose,
 
     setSections(results);
     setIsLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
