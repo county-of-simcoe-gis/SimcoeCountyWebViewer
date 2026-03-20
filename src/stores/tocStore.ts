@@ -320,16 +320,13 @@ export const useTOCStore = create<TOCState>()(
                 const existingLayer = allLayers[existingIndex];
                 const existingGroup = groups.find((g) => g.value === existingLayer.group || g.label === existingLayer.groupName);
                 if ((layer.secured || group.primary) && !existingGroup?.primary) {
-                  // Incoming layer wins — remove discarded OL layer from map
-                  if (existingLayer.managedLayerId) {
-                    LayerManager.removeLayer(existingLayer.managedLayerId);
-                  }
+                  // Incoming layer wins — keep its entry in the All Layers group
+                  // Do NOT remove the OL layer here; initializeOpenLayersLayers() manages
+                  // shared OL layers across groups and removing one would break all references.
                   allLayers[existingIndex] = { ...layer };
                 } else {
-                  // Existing layer wins — remove discarded OL layer from map
-                  if (layer.managedLayerId) {
-                    LayerManager.removeLayer(layer.managedLayerId);
-                  }
+                  // Existing layer wins — skip the incoming duplicate
+                  // Do NOT remove the OL layer; it may be shared across groups.
                 }
               } else {
                 seenLayers.set(key, allLayers.length);
@@ -786,6 +783,10 @@ export const useTOCStore = create<TOCState>()(
 
     // Layer manipulation
     updateLayerVisibility: (layerName, groupName, visible) => {
+      // Track the managed layer ID for the OL layer update AFTER the store commit
+      let managedLayerIdForOL: string | undefined;
+      let olLayerDirect: OpenLayersLayer | undefined;
+
       set((state) => {
         // Update layer in ALL views - both LIST and FOLDER groups
         const updateLayerInGroups = (groups: TOCLayerGroup[], viewType: string) => {
@@ -795,13 +796,13 @@ export const useTOCStore = create<TOCState>()(
             if (layer) {
               layer.visible = visible;
 
-              // Handle OpenLayers layer visibility (only once, not for each view)
+              // Capture the OL layer info for update AFTER set() completes
+              // (avoids cross-store updates inside immer set that cause React 19 errors)
               if (layer.layer && viewType === "PRIMARY") {
-                // Use LayerManager if available, otherwise direct layer manipulation
                 if (layer.managedLayerId) {
-                  LayerManager.setLayerVisibility(layer.managedLayerId, visible);
+                  managedLayerIdForOL = layer.managedLayerId;
                 } else {
-                  (layer.layer as OpenLayersLayer).setVisible(visible);
+                  olLayerDirect = layer.layer as OpenLayersLayer;
                 }
               }
 
@@ -811,7 +812,7 @@ export const useTOCStore = create<TOCState>()(
           return false; // Layer not found in this view
         };
 
-        // Update in current view first (to handle OpenLayers)
+        // Update in current view first (to capture OL layer info)
         const currentGroups = state.tocType === "LIST" ? state.layerListGroups : state.layerFolderGroups;
         const foundInCurrent = updateLayerInGroups(currentGroups, "PRIMARY");
 
@@ -851,6 +852,14 @@ export const useTOCStore = create<TOCState>()(
           console.warn(`⚠️ Layer ${layerName} not found in group ${groupName} in any view`);
         }
       });
+
+      // Update OpenLayers layer visibility AFTER set() completes to avoid
+      // cross-store updates inside immer that trigger React 19 commit errors
+      if (managedLayerIdForOL) {
+        LayerManager.setLayerVisibility(managedLayerIdForOL, visible);
+      } else if (olLayerDirect) {
+        olLayerDirect.setVisible(visible);
+      }
     },
 
     updateLayerOpacity: (layerName, groupName, opacity) => {
@@ -1256,15 +1265,9 @@ export const useTOCStore = create<TOCState>()(
       state.setIsLoading(true);
 
       // Log which sources are being loaded
-      console.log(
-        `[TOC] Loading layers from ${state.sources.length} source(s):`,
-        state.sources.map((s) => ({
-          type: s.type || "geoserver",
-          group: s.group?.name || "(no group)",
-          url: s.layerUrl,
-          primary: s.primary,
-        })),
-      );
+      // console.log(
+      //   `[TOC] Loading layers from ${state.sources.length} source(s):`
+      // );
 
       try {
         // Get config from app store
@@ -1316,26 +1319,9 @@ export const useTOCStore = create<TOCState>()(
         // Load from actual sources using TOC helpers
         const result = await loadLayerGroupsFromSources(state.sources, config);
         
-        // Log visibility stats from loaded groups
-        let totalLayers = 0, visibleCount = 0;
-        result.groups.forEach((g) => {
-          g.layers.forEach((l) => { totalLayers++; if (l.visible) visibleCount++; });
-        });
-        console.log(`[TOC] loadLayerGroupsFromSources: ${result.groups.length} groups, ${totalLayers} layers, ${visibleCount} visible`);
-        
         // Set the layer groups for BOTH LIST and FOLDER types (same data, different display)
         state.setLayerGroups("LIST", result.groups);
         state.setLayerGroups("FOLDER", result.groups);
-
-        // Log "All Layers" visibility after setLayerGroups
-        const currentAllLayers = get().layerListGroups.find((g) => g.value === "all_layers");
-        if (currentAllLayers) {
-          const alVisible = currentAllLayers.layers.filter((l) => l.visible).length;
-          console.log(`[TOC] After setLayerGroups: "All Layers" has ${currentAllLayers.layers.length} layers, ${alVisible} visible`);
-          if (alVisible > 0) {
-            currentAllLayers.layers.filter((l) => l.visible).forEach((l) => console.log(`[TOC]   visible: "${l.name}" (group: ${l.groupName})`));
-          }
-        }
 
         // Set default group if found
         if (result.groups.length > 0) {
@@ -1556,7 +1542,7 @@ export const useTOCStore = create<TOCState>()(
     },
 
     // Fetch legend from GeoServer REST API
-    fetchLayerLegendFromRest: async (layer: TOCLayer, group: TOCLayerGroup) => {
+    fetchLayerLegendFromRest: async (layer: TOCLayer, _group: TOCLayerGroup) => {
       try {
         if (layer.metadataUrl) {
           const isSecured = layer.secured || isSecuredUrl(layer.metadataUrl);
@@ -1771,22 +1757,17 @@ export const useTOCStore = create<TOCState>()(
 
       layersByName.forEach((layers) => {
         const firstLayer = layers[0];
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const _olVisible = "no layer";
 
         if (firstLayer.managedLayerId) {
           const managedLayer = useLayerManagerStore.getState().getLayer(firstLayer.managedLayerId);
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const _olVisible = managedLayer?.visible?.toString() || "unknown";
+          const _olVisible2 = managedLayer?.visible?.toString() || "unknown";
         } else if (firstLayer.layer) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const _olVisible = (firstLayer.layer as OpenLayersLayer).getVisible ? (firstLayer.layer as OpenLayersLayer).getVisible().toString() : "unknown";
+          const _olVisible3 = (firstLayer.layer as OpenLayersLayer).getVisible ? (firstLayer.layer as OpenLayersLayer).getVisible().toString() : "unknown";
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const tocStates = layers.map((l) => `${l.groupName}:${l.visible}`).join(", ");
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const sharedInfo = layers.length > 1 ? ` (SHARED across ${layers.length} groups)` : "";
+        const _tocStates = layers.map((l) => `${l.groupName}:${l.visible}`).join(", ");
+        const _sharedInfo = layers.length > 1 ? ` (SHARED across ${layers.length} groups)` : "";
       });
       console.groupEnd();
 
@@ -1882,7 +1863,7 @@ export const useTOCStore = create<TOCState>()(
 
                   // Set initial visibility and opacity
                   if (layer.visible) {
-                    console.log(`[TOC] initializeOpenLayersLayers: Setting "${layer.name}" VISIBLE (group="${group.label}")`);
+                    // console.log(`[TOC] initializeOpenLayersLayers: Setting "${layer.name}" VISIBLE (group="${group.label}")`);
                   }
                   (typedLayer as OpenLayersLayer).setVisible(layer.visible);
                   (typedLayer as OpenLayersLayer).setOpacity(layer.opacity);

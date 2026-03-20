@@ -91,7 +91,7 @@ describe("Five11LayerToggler", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockAxiosGet.mockReset;
+    mockAxiosGet.mockReset();
   });
 
   it("renders the layer display name", () => {

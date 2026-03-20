@@ -13,7 +13,8 @@ import { Modal } from "@/components/ui/Modal";
  * Modal overlay that fetches and renders README.md as styled help documentation
  */
 export default function HelpModal() {
-  const { isOpen, closeHelp } = useHelpModalStore();
+  const isOpen = useHelpModalStore((s) => s.isOpen);
+  const closeHelp = useHelpModalStore((s) => s.closeHelp);
   const [content, setContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -75,12 +76,12 @@ export default function HelpModal() {
 
   // Custom image component to handle relative paths
   const ImageComponent: React.FC<React.ImgHTMLAttributes<HTMLImageElement>> = ({ src, alt, ...props }) => {
-    if (!src || typeof src !== "string") return <img alt={alt} {...props} />; // eslint-disable-line @next/next/no-img-element
+    if (!src || typeof src !== "string") return <img alt={alt} {...props} />;
 
     const isRelativePath = !src.startsWith("http") && !src.startsWith("data:");
     const imageSrc = isRelativePath ? getPublicPath(`/${src.replace(/^\//, "")}`) : src;
 
-    return <img src={imageSrc} alt={alt} {...props} />; // eslint-disable-line @next/next/no-img-element
+    return <img src={imageSrc} alt={alt} {...props} />;
   };
 
   // Custom link component — external links open in new tab

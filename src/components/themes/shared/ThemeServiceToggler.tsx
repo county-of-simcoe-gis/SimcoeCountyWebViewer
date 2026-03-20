@@ -496,7 +496,6 @@ function ThemeServiceTogglerItem({ state, onToggle }: { state: ServiceLayerState
             {showLegend ? "−" : "+"}
           </button>
         ) : state.styleUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
           <img src={state.styleUrl} alt="" className="w-5 h-5 object-contain flex-shrink-0" onError={(e) => (e.currentTarget.style.display = "none")} />
         ) : (
           <span className="w-5 h-5 flex-shrink-0" />
@@ -516,7 +515,7 @@ function ThemeServiceTogglerItem({ state, onToggle }: { state: ServiceLayerState
             .filter((e) => e.imageData)
             .map((entry, idx) => (
               <div key={idx} className="flex items-center gap-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {}
                 <img src={`data:${entry.contentType};base64,${entry.imageData}`} alt="" className="w-5 h-5 object-contain flex-shrink-0" />
                 <span className="text-xs text-base-content/70">{entry.label}</span>
               </div>

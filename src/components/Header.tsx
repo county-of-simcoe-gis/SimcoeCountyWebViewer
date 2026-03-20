@@ -13,10 +13,12 @@ import ProfileButton from "@/components/ProfileButton";
 import { showFeedbackWindow } from "@/utils/mapHelpers";
 
 export default function Header() {
-  const { toggleSidebar } = useSidebarStore();
-  const { emitHeaderLoaded } = useEventStore();
-  const { addLoadedItem, map } = useMapStore();
-  const { setHeaderLoading, config } = useAppStore();
+  const toggleSidebar = useSidebarStore((s) => s.toggleSidebar);
+  const emitHeaderLoaded = useEventStore((s) => s.emitHeaderLoaded);
+  const addLoadedItem = useMapStore((s) => s.addLoadedItem);
+  const map = useMapStore((s) => s.map);
+  const setHeaderLoading = useAppStore((s) => s.setHeaderLoading);
+  const config = useAppStore((s) => s.config);
 
   useEffect(() => {
     // Mark header as loaded (replaces window.emitter.emit("headerLoaded"))

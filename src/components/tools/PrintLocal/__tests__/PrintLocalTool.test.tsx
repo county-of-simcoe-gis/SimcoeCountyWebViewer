@@ -95,7 +95,7 @@ const createMockMap = () => ({
 
 describe("PrintLocalTool", () => {
   const mockOnClose = vi.fn();
-  const mockOnSidebarVisibility = vi.fn();
+  const _mockOnSidebarVisibility = vi.fn();
   let mockMap: ReturnType<typeof createMockMap>;
 
   beforeEach(() => {
@@ -364,11 +364,11 @@ describe("PrintLocalTool", () => {
   describe("Paper Size Options", () => {
     it("displays all paper size options", async () => {
       useMapStore.setState({ map: mockMap as unknown as ReturnType<typeof useMapStore.getState>["map"] });
-      const user = userEvent.setup();
+      const _user = userEvent.setup();
       
       render(<PrintLocalTool onClose={mockOnClose} />);
       
-      const paperSizeSelect = screen.getAllByRole("combobox")[0];
+      const _paperSizeSelect = screen.getAllByRole("combobox")[0];
       
       // Check all options are available
       expect(screen.getByText("8X11 Portrait (Letter)")).toBeInTheDocument();

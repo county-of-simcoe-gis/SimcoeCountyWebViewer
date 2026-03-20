@@ -1003,7 +1003,7 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => ({
         config: state.config,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
-      console.log("💾 MyMaps saved to storage:", { itemCount: serializedItems.length });
+      // console.log("💾 MyMaps saved to storage:", { itemCount: serializedItems.length });
     } catch (error) {
       console.error("Failed to save MyMaps to storage:", error);
     }
@@ -1039,17 +1039,7 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => ({
           config: { ...DEFAULT_CONFIG, ...data.config },
         });
 
-        console.log("📥 MyMaps loaded from storage:", {
-          itemCount: data.items?.length || 0,
-          items:
-            data.items?.map((item: MyMapsItem) => ({
-              id: item.id,
-              label: item.label,
-              visible: item.visible,
-              hasStyle: !!item.style,
-              styleType: item.style instanceof Style ? "OpenLayers Style" : "StyleJSON",
-            })) || [],
-        });
+        // console.log("📥 MyMaps loaded from storage:", { itemCount: data.items?.length || 0 });
       }
     } catch (error) {
       console.error("Failed to load MyMaps from storage:", error);

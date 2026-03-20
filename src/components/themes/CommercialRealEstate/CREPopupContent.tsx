@@ -30,7 +30,7 @@ export default function CREPopupContent({ feature }: CREPopupContentProps) {
     <div className="flex flex-col gap-2 text-sm min-w-[280px]">
       {/* Thumbnail and address */}
       <div className="flex flex-col items-center gap-1">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {}
         <img
           className="w-[130px] max-h-[120px] object-cover rounded"
           src={urlThumb ?? NO_PHOTO}

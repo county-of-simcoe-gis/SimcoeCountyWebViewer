@@ -333,7 +333,6 @@ async function loadConfigFromApi(mapId: string): Promise<Partial<AppConfig> | nu
       const axiosError = error as { response?: { status?: number } };
       const status = axiosError.response?.status;
       if (status === 401 || (status === 404 && mapId && mapId.trim() !== "")) {
-        console.log(`Map "${mapId}" requires authentication (status: ${status}) - throwing AuthenticationRequiredError`);
         throw new AuthenticationRequiredError(mapId);
       }
     }
@@ -407,7 +406,7 @@ function convertSettingsToAppConfig(settings: SettingsType & Record<string, unkn
       if (hasMeaningfulSources && layers.sources) config.toc.sources = layers.sources;
       if (layers.helpLink && layers.helpLink.trim() !== "") config.toc.helpLink = layers.helpLink;
     } else {
-      console.log("API Layers section has no meaningful data to override local config. Raw layers:", layers);
+      // API Layers section has no meaningful data to override local config
     }
 
     // Hide layers flag (independent of toc data)
@@ -623,14 +622,8 @@ export async function loadConfig(configSecured: Record<string, unknown> = {}): P
             // Sources: replace only if API provides non-empty sources
             if (Array.isArray(apiToc.sources) && apiToc.sources.length > 0) {
               config.toc.sources = apiToc.sources;
-              console.log("Using API-provided layer sources:", apiToc.sources.length, "sources");
-              // Log visibleLayers for each source
-              apiToc.sources.forEach((s: Record<string, unknown>, i: number) => {
-                const grp = s.group as Record<string, unknown> | undefined;
-                console.log(`  Source[${i}]: group="${grp?.name}", visibleLayers=`, grp?.visibleLayers);
-              });
             } else {
-              console.log("API config has no sources, keeping local config sources:", config.toc.sources?.length || 0, "sources");
+              // API config has no sources, keeping local config sources
             }
           }
 
@@ -643,29 +636,14 @@ export async function loadConfig(configSecured: Record<string, unknown> = {}): P
           // apply API overrides (enabled/disable/config). Falls back to local if API provides none.
           if (config.sidebarToolComponents && config.sidebarToolComponents.length > 0) {
             config.sidebarToolComponents = mergeObjArray(localToolComponents, config.sidebarToolComponents);
-            console.log("Merged tool components:", config.sidebarToolComponents.length, "(local:", localToolComponents.length, ")");
           } else {
             config.sidebarToolComponents = localToolComponents;
-            console.log("Using local tool components from config.json:", localToolComponents.length);
           }
           if (config.sidebarThemeComponents && config.sidebarThemeComponents.length > 0) {
             config.sidebarThemeComponents = mergeObjArray(localThemeComponents, config.sidebarThemeComponents);
-            console.log("Merged theme components:", config.sidebarThemeComponents.length, "(local:", localThemeComponents.length, ")");
           } else {
             config.sidebarThemeComponents = localThemeComponents;
-            console.log("Using local theme components from config.json:", localThemeComponents.length);
           }
-
-          console.log(
-            "Config merged with API. TOC sources:",
-            config.toc.sources?.length || 0,
-            "| default_theme:",
-            config.default_theme || "(none)",
-            "| default_tool:",
-            config.default_tool || "(none)",
-            "| hideFlags:",
-            { hideLayers: config.hideLayers, hideTools: config.hideTools, hideMyMaps: config.hideMyMaps, hideThemes: config.hideThemes, hideReports: config.hideReports },
-          );
         }
       } catch (apiError) {
         // Re-throw authentication errors so the UI can redirect to login

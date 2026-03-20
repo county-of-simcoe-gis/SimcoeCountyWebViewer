@@ -580,10 +580,10 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       // Read ALL current values from DOM using data-slider-type attributes
       const sliderValues = readAllSliderValues(symbolizerContainer, state);
       const currentRadius = sliderValues.radius;
-      let currentFillAlpha = sliderValues.fillAlpha;
-      let currentStrokeAlpha = sliderValues.strokeAlpha;
-      let currentStrokeWidth = sliderValues.strokeWidth;
-      let currentRotation = sliderValues.rotation;
+      const currentFillAlpha = sliderValues.fillAlpha;
+      const currentStrokeAlpha = sliderValues.strokeAlpha;
+      const currentStrokeWidth = sliderValues.strokeWidth;
+      const currentRotation = sliderValues.rotation;
 
       // Read current colors from DOM color buttons
       const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
@@ -650,10 +650,10 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       // Read ALL current values from DOM using data-slider-type attributes
       const sliderValues = readAllSliderValues(symbolizerContainer, state);
       const currentRadius = sliderValues.radius;
-      let currentFillAlpha = sliderValues.fillAlpha;
-      let currentStrokeAlpha = sliderValues.strokeAlpha;
-      let currentStrokeWidth = sliderValues.strokeWidth;
-      let currentRotation = sliderValues.rotation;
+      const currentFillAlpha = sliderValues.fillAlpha;
+      const currentStrokeAlpha = sliderValues.strokeAlpha;
+      const currentStrokeWidth = sliderValues.strokeWidth;
+      const currentRotation = sliderValues.rotation;
 
       // Read current stroke color from DOM
       const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
@@ -733,10 +733,10 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       // Read ALL current values from DOM using data-slider-type attributes
       const sliderValues = readAllSliderValues(symbolizerContainer, state);
       const currentRadius = sliderValues.radius;
-      let currentFillAlpha = sliderValues.fillAlpha;
-      let currentStrokeAlpha = sliderValues.strokeAlpha;
-      let currentStrokeWidth = sliderValues.strokeWidth;
-      let currentRotation = sliderValues.rotation;
+      const currentFillAlpha = sliderValues.fillAlpha;
+      const currentStrokeAlpha = sliderValues.strokeAlpha;
+      const currentStrokeWidth = sliderValues.strokeWidth;
+      const currentRotation = sliderValues.rotation;
 
       // Read current fill color from DOM
       const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
@@ -2822,7 +2822,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
     if (measureContainer) {
       // Handle units dropdown change for both line and area units
       const unitsSelects = measureContainer.querySelectorAll("select");
-      unitsSelects.forEach((unitsSelect, index) => {
+      unitsSelects.forEach((unitsSelect, _index) => {
         if (unitsSelect) {
           const handleUnitsChange = (e: Event) => {
             console.log("🎯 Measure units changed via DOM event:", (e.target as HTMLSelectElement).value);
@@ -3015,6 +3015,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       // The container itself should NOT have pointerEvents = "auto" to avoid header conflicts
       (bufferContainer as HTMLElement).style.pointerEvents = "";
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     item,
     onClose,

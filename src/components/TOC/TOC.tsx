@@ -41,32 +41,30 @@ interface SavedGroup {
 }
 
 export default function TOC({ visible = true }: TOCProps) {
-  const {
-    tocType,
-    layerListGroups,
-    layerFolderGroups,
-    selectedGroup,
-    searchText,
-    sortAlpha,
-    isLoading,
-    layerCount,
-    helpLink,
-    setTocType,
-    setSelectedGroup,
-    setSearchText,
-    setSortAlpha,
-    setGlobalOpacity,
-    getGlobalOpacity,
-    initializeFromConfig,
-    refreshTOC,
-    toggleLayerLegendById,
-    moveLayer,
-    getAllVisibleLayers,
-  } = useTOCStore();
+  const tocType = useTOCStore((s) => s.tocType);
+  const layerListGroups = useTOCStore((s) => s.layerListGroups);
+  const layerFolderGroups = useTOCStore((s) => s.layerFolderGroups);
+  const selectedGroup = useTOCStore((s) => s.selectedGroup);
+  const searchText = useTOCStore((s) => s.searchText);
+  const sortAlpha = useTOCStore((s) => s.sortAlpha);
+  const isLoading = useTOCStore((s) => s.isLoading);
+  const layerCount = useTOCStore((s) => s.layerCount);
+  const helpLink = useTOCStore((s) => s.helpLink);
+  const setTocType = useTOCStore((s) => s.setTocType);
+  const setSelectedGroup = useTOCStore((s) => s.setSelectedGroup);
+  const setSearchText = useTOCStore((s) => s.setSearchText);
+  const setSortAlpha = useTOCStore((s) => s.setSortAlpha);
+  const setGlobalOpacity = useTOCStore((s) => s.setGlobalOpacity);
+  const getGlobalOpacity = useTOCStore((s) => s.getGlobalOpacity);
+  const initializeFromConfig = useTOCStore((s) => s.initializeFromConfig);
+  const refreshTOC = useTOCStore((s) => s.refreshTOC);
+  const toggleLayerLegendById = useTOCStore((s) => s.toggleLayerLegendById);
+  const moveLayer = useTOCStore((s) => s.moveLayer);
+  const getAllVisibleLayers = useTOCStore((s) => s.getAllVisibleLayers);
 
-  const { updateLayerVisibility } = useLayerManagerStore();
+  const updateLayerVisibility = useLayerManagerStore((s) => s.updateLayerVisibility);
 
-  const { config } = useAppStore();
+  const config = useAppStore((s) => s.config);
   const urlParameters = useAppStore((state) => state.urlParameters);
   const [initialized, setInitialized] = useState(false);
   const [savedOptionsApplied, setSavedOptionsApplied] = useState(false);
@@ -90,11 +88,8 @@ export default function TOC({ visible = true }: TOCProps) {
       const savedData = getItemsFromStorage<Record<string, SavedGroup>>(storageKey);
 
       if (savedData === undefined || savedData === null) {
-        console.log("[TOC] No saved layer options in localStorage - using config defaults");
         return;
       }
-
-      console.log("[TOC] Applying saved layer options from localStorage:", Object.keys(savedData));
 
       // Convert to array for easier filtering
       const savedDataArray = Object.entries(savedData);
@@ -364,15 +359,14 @@ export default function TOC({ visible = true }: TOCProps) {
 
       if (layer.id) {
         // Prefer ID-based update for unique layer identification
+        // updateLayerVisibilityById already handles both the TOC store state
+        // AND the OpenLayers layer visibility via LayerManager
         updateLayerVisibilityById(layer.id, layer.visible);
       } else {
         // Fall back to name-based update for legacy layers without ID
+        // updateTOCLayerVisibility already handles both the TOC store state
+        // AND the OpenLayers layer visibility via LayerManager
         updateTOCLayerVisibility(layer.name, group.label, layer.visible);
-      }
-
-      // Then update the OpenLayers layer via layerManagerStore if available
-      if (layer.managedLayerId) {
-        updateLayerVisibility(layer.managedLayerId, layer.visible);
       }
     }
 
@@ -612,7 +606,6 @@ export default function TOC({ visible = true }: TOCProps) {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleGroupFolderToggle = (_groupValue: string, _isOpen: boolean) => {
     // Handle group folder expand/collapse - placeholder for future state management
   };

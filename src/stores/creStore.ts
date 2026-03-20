@@ -166,18 +166,18 @@ export const useCREStore = create<CREState>()(
     setPropertyLayer: (propType, layer, layerManagerId) =>
       set((state) => {
         if (state.propertyLayers[propType]) {
-          state.propertyLayers[propType].pointLayer = layer as any; // immer draft
+          state.propertyLayers[propType].pointLayer = layer; // immer draft
           state.propertyLayers[propType].layerManagerId = layerManagerId;
         }
       }),
     setResults: (results, count) =>
       set((state) => {
-        state.allResults = results as any;
+        state.allResults = results;
         state.numRecords = count;
       }),
     appendResults: (results) =>
       set((state) => {
-        state.allResults = [...state.allResults, ...(results as any)];
+        state.allResults = [...state.allResults, ...results];
         state.numRecords = state.allResults.length;
       }),
     clearResults: () =>

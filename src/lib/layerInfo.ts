@@ -40,7 +40,7 @@ export async function fetchLayerInfo(url: string, params: Record<string, unknown
 
     // Check if it's a layer response (GeoServer REST API returns layer with resource)
     if ("layer" in response.data && response.data.layer) {
-      const layerData = response.data.layer as any;
+      const layerData = response.data.layer as { resource?: { href?: string } };
       if (layerData.resource && layerData.resource.href) {
         const resourceHref = layerData.resource.href;
         console.log(`Found layer with resource link: ${resourceHref}`);

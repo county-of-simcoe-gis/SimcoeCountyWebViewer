@@ -291,7 +291,7 @@ export default function CommercialRealEstate({ name = "Commercial Real Estate", 
                       onClick={() => handleIncentiveClick(feature)}
                       title={address}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      {}
                       <img
                         src={imageUrl}
                         alt={address}

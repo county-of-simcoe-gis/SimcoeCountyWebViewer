@@ -9,6 +9,7 @@ import { Style, Fill, Stroke, Text, Circle as CircleStyle, Icon, RegularShape } 
 import { asArray } from "ol/color";
 import { Vector as VectorLayer, Tile as TileLayer, Image as ImageLayer, Group as LayerGroup } from "ol/layer";
 import { Layer } from "ol/layer";
+import type ImageSource from "ol/source/Image";
 import Map from "ol/Map";
 
 import { printConfig, PrintSize, PrintFormat } from "./printConfig";
@@ -942,7 +943,7 @@ async function configureTileLayer(layer: TileLayer): Promise<MapFishWMTSLayer | 
 /**
  * Configure image layer for MapFish
  */
-function configureImageLayer(layer: ImageLayer<any>, options: PrintRequestAttributes): MapFishImageLayer {
+function configureImageLayer(layer: ImageLayer<ImageSource>, options: PrintRequestAttributes): MapFishImageLayer {
   const source = layer.getSource() as {
     image_?: { src_: string };
     getUrl?: () => string | undefined;
@@ -951,7 +952,7 @@ function configureImageLayer(layer: ImageLayer<any>, options: PrintRequestAttrib
 
   // Prefer the cached rendered image URL, but fall back to building one from
   // the source's public API (getUrl/getParams) when the layer hasn't rendered yet.
-  let imageSrc = source?.image_?.src_;
+  const imageSrc = source?.image_?.src_;
 
   if (!imageSrc) {
     const baseUrl = source?.getUrl?.();
@@ -1031,7 +1032,7 @@ function configureImageLayer(layer: ImageLayer<any>, options: PrintRequestAttrib
 /**
  * Configure WMS image layer for MapFish
  */
-function configureWMSImageLayer(layer: ImageLayer<any>): MapFishWMSLayer {
+function configureWMSImageLayer(layer: ImageLayer<ImageSource>): MapFishWMSLayer {
   const source = layer.getSource() as {
     url_?: string;
     serverType_?: string;
@@ -1272,8 +1273,10 @@ export async function buildPrintRequest(mapLayers: Layer[], printSelectedOption:
   return printRequest;
 }
 
-export default {
+const printRequestModule = {
   buildPrintRequest,
   loadTileMatrix,
   loadWMTSConfig,
 };
+
+export default printRequestModule;

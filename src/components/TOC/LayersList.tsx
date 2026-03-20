@@ -18,7 +18,7 @@ export default function LayersList({ group, searchText, onLayerChange, onLegendT
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const dragCounter = useRef(0);
 
-  const { moveLayer } = useTOCStore();
+  const moveLayer = useTOCStore((s) => s.moveLayer);
 
   // Update layers when group or search text changes
   useEffect(() => {

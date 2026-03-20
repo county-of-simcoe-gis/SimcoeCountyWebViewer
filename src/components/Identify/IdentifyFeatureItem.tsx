@@ -13,7 +13,7 @@ interface IdentifyFeatureItemProps {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ featureItem, layerName, minScale = 0 }) => {
-  const { map } = useMapStore();
+  const map = useMapStore((s) => s.map);
   const [open, setOpen] = useState(false);
   const { feature, displayName } = featureItem;
 

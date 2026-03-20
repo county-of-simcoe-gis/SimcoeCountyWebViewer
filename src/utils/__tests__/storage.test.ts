@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { saveToStorage, getItemsFromStorage, appendToStorage, removeFromStorage, clearAllStorage, isStorageAvailable, getStorageSize } from '@/utils/storage'
+import { saveToStorage, getItemsFromStorage, appendToStorage, removeFromStorage, isStorageAvailable, getStorageSize } from '@/utils/storage'
 
 // Mock localStorage for testing
 Object.defineProperty(global, 'localStorage', {

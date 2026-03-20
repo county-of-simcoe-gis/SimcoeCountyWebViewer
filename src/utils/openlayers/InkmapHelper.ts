@@ -147,8 +147,8 @@ export function convertLayerToInkmapSpec(layer: Layer): LayerSpec | null {
     if (source instanceof BingMaps) {
       return {
         type: "BingMaps",
-        key: (source as any).getApiKey?.() || "",
-        imagerySet: (source as any).getImagerySet?.() || "Aerial",
+        key: (source as unknown as { getApiKey?: () => string }).getApiKey?.() || "",
+        imagerySet: (source as unknown as { getImagerySet?: () => string }).getImagerySet?.() || "Aerial",
         opacity: opacity,
       };
     }

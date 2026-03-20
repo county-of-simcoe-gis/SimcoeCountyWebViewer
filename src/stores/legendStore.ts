@@ -1,11 +1,23 @@
 import { create } from "zustand";
 
+export interface LegendEntry {
+  height: number;
+  width: number;
+  contentType: string;
+  imageData: string;
+  label: string;
+}
+
+export interface LegendObject {
+  legend: LegendEntry[];
+}
+
 interface LegendLayer {
   name: string;
   tocDisplayName: string;
   styleUrl?: string;
   imageUrl?: string;
-  legendObj?: any;
+  legendObj?: LegendObject;
   group: string;
   groupName: string;
 }

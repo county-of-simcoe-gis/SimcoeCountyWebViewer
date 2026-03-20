@@ -54,56 +54,59 @@ vi.mock("@/hooks/useConfig", () => ({
 }));
 
 // Mock the stores to avoid infinite loops
+const mockAppStoreState = {
+  isAnyLoading: () => false,
+  mapLoading: false,
+  sidebarLoading: false,
+  headerLoading: false,
+  configLoading: false,
+  config: null as any,
+  urlParameters: {} as Record<string, string>,
+  setConfig: vi.fn(),
+  setConfigLoading: vi.fn(),
+  setConfigError: vi.fn(),
+  setHeaderLoading: vi.fn(),
+  setSidebarLoading: vi.fn(),
+  setMapLoading: vi.fn(),
+};
+
 vi.mock("@/stores/appStore", () => ({
   useAppStore: Object.assign(
-    vi.fn(() => ({
-      isAnyLoading: () => false,
-      setConfig: vi.fn(),
-      setConfigLoading: vi.fn(),
-      setConfigError: vi.fn(),
-      setHeaderLoading: vi.fn(),
-      setSidebarLoading: vi.fn(),
-      setMapLoading: vi.fn(),
-    })),
+    vi.fn((selector?: any) => (typeof selector === "function" ? selector(mockAppStoreState) : mockAppStoreState)),
     {
-      getState: vi.fn(() => ({
-        isAnyLoading: () => false,
-        setConfig: vi.fn(),
-        setConfigLoading: vi.fn(),
-        setConfigError: vi.fn(),
-        setHeaderLoading: vi.fn(),
-        setSidebarLoading: vi.fn(),
-        setMapLoading: vi.fn(),
-      })),
+      getState: vi.fn(() => mockAppStoreState),
     },
   ),
 }));
 
+const mockSidebarStoreState = {
+  isOpen: false,
+  tools: [],
+  themes: [],
+  activeItem: null,
+  activeTheme: null,
+  activeTool: null,
+  activeTab: 0,
+  hideLayers: false,
+  hideTools: false,
+  hideMyMaps: false,
+  hideThemes: false,
+  hideReports: false,
+  loadFromConfig: vi.fn(),
+  activateDefaultItems: vi.fn(),
+  setEventEmitter: vi.fn(),
+  setIsOpen: vi.fn(),
+  setActiveItem: vi.fn(),
+  setActiveTab: vi.fn(),
+  activateSidebarItem: vi.fn(),
+  openSidebar: vi.fn(),
+};
+
 vi.mock("@/stores/sidebarStore", () => ({
   useSidebarStore: Object.assign(
-    vi.fn(() => ({
-      isOpen: false,
-      tools: [],
-      themes: [],
-      activeItem: null,
-      loadFromConfig: vi.fn(),
-      activateDefaultItems: vi.fn(),
-      setEventEmitter: vi.fn(),
-      setIsOpen: vi.fn(),
-      setActiveItem: vi.fn(),
-    })),
+    vi.fn((selector?: any) => (typeof selector === "function" ? selector(mockSidebarStoreState) : mockSidebarStoreState)),
     {
-      getState: vi.fn(() => ({
-        isOpen: false,
-        tools: [],
-        themes: [],
-        activeItem: null,
-        loadFromConfig: vi.fn(),
-        activateDefaultItems: vi.fn(),
-        setEventEmitter: vi.fn(),
-        setIsOpen: vi.fn(),
-        setActiveItem: vi.fn(),
-      })),
+      getState: vi.fn(() => mockSidebarStoreState),
     },
   ),
 }));
@@ -121,7 +124,7 @@ const mockEventStore = {
 
 vi.mock("@/stores/eventStore", () => ({
   useEventStore: Object.assign(
-    vi.fn(() => mockEventStore),
+    vi.fn((selector?: any) => (typeof selector === "function" ? selector(mockEventStore) : mockEventStore)),
     {
       getState: vi.fn(() => mockEventStore),
     },

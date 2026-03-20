@@ -11,7 +11,7 @@
  * @param a - Alpha value (optional, 0-1)
  * @returns Hex color string (e.g., "#ff0000")
  */
-export function rgbToHex(r: number, g: number, b: number, a?: number): string {
+export function rgbToHex(r: number, g: number, b: number, _a?: number): string {
   let rHex = r.toString(16);
   let gHex = g.toString(16);
   let bHex = b.toString(16);
@@ -53,7 +53,7 @@ interface XmlJsonNode {
  * @returns JSON representation of XML
  */
 export function xmlToJson(xml: Node): XmlJsonNode | string {
-  let obj: XmlJsonNode = {};
+  const obj: XmlJsonNode = {};
 
   if (xml.nodeType === 1) {
     // Element node
@@ -248,7 +248,7 @@ export function radiansToDegrees(radians: number): number {
   return radians * (180 / Math.PI);
 }
 
-export default {
+const printUtils = {
   rgbToHex,
   stringToColour,
   xmlToJson,
@@ -260,3 +260,5 @@ export default {
   degreesToRadians,
   radiansToDegrees,
 };
+
+export default printUtils;

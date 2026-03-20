@@ -11,7 +11,10 @@ import LayerInfo from "@/components/LayerInfo/LayerInfo";
  * Modal overlay that displays layer information over the map
  */
 export default function LayerInfoModal() {
-  const { isOpen, layerURL, showDownload, closeLayerInfo } = useLayerInfoStore();
+  const isOpen = useLayerInfoStore((s) => s.isOpen);
+  const layerURL = useLayerInfoStore((s) => s.layerURL);
+  const showDownload = useLayerInfoStore((s) => s.showDownload);
+  const closeLayerInfo = useLayerInfoStore((s) => s.closeLayerInfo);
 
   // Close on ESC key
   useEffect(() => {
@@ -65,6 +68,6 @@ export default function LayerInfoModal() {
         <LayerInfo layerURL={layerURL} showDownload={showDownload} hideNewWindow={true} />
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

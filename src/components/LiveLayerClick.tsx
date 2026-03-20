@@ -11,13 +11,23 @@ import { createIdentifyResult } from "@/components/ResultsPopup";
 import { useLayerManagerStore } from "@/stores/layerManagerStore";
 import type TileWMS from "ol/source/TileWMS";
 import type ImageWMS from "ol/source/ImageWMS";
+import type BaseLayer from "ol/layer/Base";
 import type { Feature } from "ol";
 import type { Geometry } from "ol/geom";
+
+interface ESRIResult {
+  geometry?: Record<string, unknown>;
+  attributes?: Record<string, unknown>;
+}
+
+interface ESRIIdentifyResponse {
+  results?: ESRIResult[];
+}
 
 /**
  * Parse ESRI identify response
  */
-function parseESRIIdentify(response: any): Feature<Geometry>[] {
+function parseESRIIdentify(response: ESRIIdentifyResponse): Feature<Geometry>[] {
   if (!response || !response.results) return [];
 
   const geoJsonFormat = new GeoJSON();
@@ -32,7 +42,7 @@ function parseESRIIdentify(response: any): Feature<Geometry>[] {
       if (!esriGeometry) continue;
 
       // Simple conversion for point geometry
-      let geoJsonGeometry: any;
+      let geoJsonGeometry: Record<string, unknown> | undefined;
       if (esriGeometry.x !== undefined && esriGeometry.y !== undefined) {
         // Point geometry
         geoJsonGeometry = {
@@ -85,19 +95,20 @@ function parseESRIIdentify(response: any): Feature<Geometry>[] {
 export interface LiveLayerResult {
   layerName: string;
   featureId: string;
-  attributes: Record<string, any>;
+  attributes: Record<string, unknown>;
   feature: Feature<Geometry>;
   layerZIndex?: number;
 }
 
 export default function LiveLayerClick() {
-  const { map, checkGlobalDisable } = useMapStore();
-  const { allLayers } = useTOCStore();
+  const map = useMapStore((s) => s.map);
+  const checkGlobalDisable = useMapStore((s) => s.checkGlobalDisable);
+  const allLayers = useTOCStore((s) => s.allLayers);
   const { registerHandler, unregisterHandler } = useInteractionManager();
 
   // Query a single live layer for features at coordinate
   const queryLiveLayer = useCallback(
-    async (layer: any, coordinate: number[]): Promise<Feature<Geometry> | null> => {
+    async (layer: BaseLayer, coordinate: number[]): Promise<Feature<Geometry> | null> => {
       const displayName = layer.get("tocDisplayName") || layer.get("displayName") || layer.get("name");
       console.log(`LiveLayerClick: Starting query for "${displayName}" at coordinate:`, coordinate);
 
@@ -231,7 +242,8 @@ export default function LiveLayerClick() {
         // Also check the clickable property from LayerManager (central click gating)
         const managedLayer = tocLayer.managedLayerId ? useLayerManagerStore.getState().getLayer(tocLayer.managedLayerId) : null;
         const isClickable = managedLayer ? managedLayer.clickable : true; // default true if not in LayerManager
-        console.log(`LiveLayerClick: Layer ${tocLayer.displayName}, hasLayer: ${hasLayer}, visible: ${isVisible}, liveLayer: ${isLiveLayer}, clickable: ${isClickable}`);
+        // Per-layer log commented out — floods console with 180+ lines per click
+        // console.log(`LiveLayerClick: Layer ${tocLayer.displayName}, hasLayer: ${hasLayer}, visible: ${isVisible}, liveLayer: ${isLiveLayer}, clickable: ${isClickable}`);
         return hasLayer && isVisible && isLiveLayer && isClickable;
       });
 
@@ -245,17 +257,18 @@ export default function LiveLayerClick() {
 
       // Query all layers in parallel
       const results: LiveLayerResult[] = [];
-      const identifyPromises = visibleLiveLayers.map(async (tocLayer, index) => {
-        console.log(`LiveLayerClick: Querying layer ${index + 1}/${visibleLiveLayers.length}: ${tocLayer.displayName}`);
+      const identifyPromises = visibleLiveLayers.map(async (tocLayer) => {
+        // Per-layer query logs commented out to reduce console noise
+        // console.log(`LiveLayerClick: Querying layer ${index + 1}/${visibleLiveLayers.length}: ${tocLayer.displayName}`);
         try {
           const identifyFeature = await queryLiveLayer(tocLayer.layer, coordinate);
-          console.log(`LiveLayerClick: Layer ${tocLayer.displayName} returned:`, identifyFeature ? "feature found" : "no feature");
+          // console.log(`LiveLayerClick: Layer ${tocLayer.displayName} returned:`, identifyFeature ? "feature found" : "no feature");
 
           if (identifyFeature) {
             const layerName = identifyFeature.get("layerDisplayName") || tocLayer.displayName || "Feature";
             const properties = identifyFeature.getProperties();
 
-            console.log(`LiveLayerClick: Feature properties from ${layerName}:`, Object.keys(properties));
+            // console.log(`LiveLayerClick: Feature properties from ${layerName}:`, Object.keys(properties));
 
             // Get a unique ID for this feature
             let featureId = properties.OBJECTID || properties.objectid || properties.id || properties.ID;
@@ -266,7 +279,7 @@ export default function LiveLayerClick() {
             }
 
             // Clean up properties (remove geometry, layerDisplayName, etc.)
-            const cleanAttributes: Record<string, any> = {};
+            const cleanAttributes: Record<string, unknown> = {};
             Object.entries(properties).forEach(([key, value]) => {
               if (key !== "geometry" && key !== "layerDisplayName" && key !== "bbox" && typeof value !== "object") {
                 cleanAttributes[key] = value;
@@ -278,7 +291,7 @@ export default function LiveLayerClick() {
             const managedLayer = managedLayerId ? useLayerManagerStore.getState().getLayer(managedLayerId) : null;
             const layerZIndex = managedLayer?.zIndex ?? 0;
 
-            console.log(`LiveLayerClick: Creating result for ${layerName} with ID ${featureId}, zIndex: ${layerZIndex}`);
+            // console.log(`LiveLayerClick: Creating result for ${layerName} with ID ${featureId}, zIndex: ${layerZIndex}`);
             results.push({
               layerName,
               featureId: String(featureId),
@@ -293,9 +306,8 @@ export default function LiveLayerClick() {
       });
 
       // Wait for all identify results
-      console.log(`LiveLayerClick: Waiting for ${identifyPromises.length} layer queries to complete`);
       await Promise.all(identifyPromises);
-      console.log(`LiveLayerClick: Finished querying all layers, found ${results.length} results`);
+      console.log(`LiveLayerClick: Finished querying ${visibleLiveLayers.length} layers, found ${results.length} results`);
 
       return results;
     },

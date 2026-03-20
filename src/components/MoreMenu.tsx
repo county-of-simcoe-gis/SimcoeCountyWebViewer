@@ -21,10 +21,16 @@ interface MenuItem {
 }
 
 export default function MoreMenu() {
-  const { isMoreMenuOpen, closeMoreMenu, themes, tools, openSidebar, activateSidebarItem, setActiveTab } = useSidebarStore();
-  const { openLegend } = useLegendStore();
-  const { map } = useMapStore();
-  const { layers } = useTOCStore();
+  const isMoreMenuOpen = useSidebarStore((s) => s.isMoreMenuOpen);
+  const closeMoreMenu = useSidebarStore((s) => s.closeMoreMenu);
+  const themes = useSidebarStore((s) => s.themes);
+  const tools = useSidebarStore((s) => s.tools);
+  const openSidebar = useSidebarStore((s) => s.openSidebar);
+  const activateSidebarItem = useSidebarStore((s) => s.activateSidebarItem);
+  const setActiveTab = useSidebarStore((s) => s.setActiveTab);
+  const openLegend = useLegendStore((s) => s.openLegend);
+  const map = useMapStore((s) => s.map);
+  const layers = useTOCStore((s) => s.layers);
   const config = useAppStore((state) => state.config);
   // URL Modal state
   const [urlModalOpen, setUrlModalOpen] = useState(false);

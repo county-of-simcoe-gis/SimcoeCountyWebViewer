@@ -73,8 +73,10 @@ interface ClickResult extends Result {
 }
 
 export default function PropertyReportClick() {
-  const { map, checkGlobalDisable } = useMapStore();
-  const { show: showPopup, hide: hidePopup } = usePopupStore();
+  const map = useMapStore((s) => s.map);
+  const checkGlobalDisable = useMapStore((s) => s.checkGlobalDisable);
+  const showPopup = usePopupStore((s) => s.show);
+  const hidePopup = usePopupStore((s) => s.hide);
   const urlParameters = useAppStore((state) => state.urlParameters);
   const config = useAppStore((state) => state.config);
   const { registerHandler, unregisterHandler } = useInteractionManager();
@@ -419,6 +421,7 @@ export default function PropertyReportClick() {
 
       return () => clearTimeout(timer);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, urlParameters, showPropertyWindowForARN]);
 
   return null; // This component doesn't render anything directly

@@ -11,9 +11,9 @@ type CityConfig = {
 };
 
 type CityApiResult = {
-  siteData?: any;
+  siteData?: Record<string, unknown>;
   forecastUrl?: string; // injected
-  [k: string]: any;
+  [k: string]: unknown;
 };
 
 type WeatherForecastProps = {
@@ -30,7 +30,7 @@ async function waitFor(predicate: () => boolean, timeoutSeconds: number, interva
 
 function getApiBaseUrl(): string | null {
   // Original: window.config.apiUrl
-  const w = window as any;
+  const w = window as unknown as { config?: { apiUrl?: string } };
   const base = w?.config?.apiUrl;
   return typeof base === "string" && base.length > 0 ? base : null;
 }
@@ -151,7 +151,7 @@ function Forecast({ info }: { info: CityApiResult }): React.ReactElement {
   const forecast3 = siteData?.forecastGroup?.forecast?.[2];
 
   const warnings = siteData?.warnings;
-  let warningEvents: any[] = [];
+  let warningEvents: Record<string, unknown>[] = [];
   let warningUrl = "";
 
   if (warnings !== "" && warnings != null) {
@@ -250,7 +250,7 @@ function DayCell({ title, period, icon, temp, summary }: { title?: string; perio
   );
 }
 
-function Warning({ info, url }: { info: any; url: string }): React.ReactElement {
+function Warning({ info, url }: { info: Record<string, unknown>; url: string }): React.ReactElement {
   const type = (info?.$?.type ?? "").toString().toUpperCase();
   const priority = (info?.$?.priority ?? "").toString();
   const description = (info?.$?.description ?? "").toString();

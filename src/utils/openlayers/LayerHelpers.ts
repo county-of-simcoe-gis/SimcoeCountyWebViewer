@@ -236,6 +236,7 @@ export class LayerHelpers {
 
                     // Zoom to extent of loaded features if map is available
                     if (features.length > 0 && window.map) {
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       const vectorSource = this as any as Vector;
                       const extent = vectorSource.getExtent();
                       if (extent && extent.some((val) => isFinite(val))) {

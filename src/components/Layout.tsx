@@ -27,9 +27,18 @@ interface LayoutProps {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const { isAnyLoading, setConfig, setConfigLoading, setConfigError } = useAppStore();
-  const { loadFromConfig, activateDefaultItems, setEventEmitter, openSidebar } = useSidebarStore();
-  const { emitSidebarChanged } = useEventStore();
+  const mapLoading = useAppStore((s) => s.mapLoading);
+  const sidebarLoading = useAppStore((s) => s.sidebarLoading);
+  const headerLoading = useAppStore((s) => s.headerLoading);
+  const appConfigLoading = useAppStore((s) => s.configLoading);
+  const setConfig = useAppStore((s) => s.setConfig);
+  const setConfigLoading = useAppStore((s) => s.setConfigLoading);
+  const setConfigError = useAppStore((s) => s.setConfigError);
+  const loadFromConfig = useSidebarStore((s) => s.loadFromConfig);
+  const activateDefaultItems = useSidebarStore((s) => s.activateDefaultItems);
+  const setEventEmitter = useSidebarStore((s) => s.setEventEmitter);
+  const openSidebar = useSidebarStore((s) => s.openSidebar);
+  const emitSidebarChanged = useEventStore((s) => s.emitSidebarChanged);
   const { config, loading: configLoading, error: configError } = useConfig();
 
   // Wire up event emitters to stores
@@ -44,12 +53,12 @@ export default function Layout({ children }: LayoutProps) {
     if (config) {
       setConfig(config);
       // Load sidebar items from config, including hide flags
-      console.log("Loading sidebar components from config:", {
-        tools: config.sidebarToolComponents?.length || 0,
-        themes: config.sidebarThemeComponents?.length || 0,
-        default_theme: config.default_theme || "(none)",
-        default_tool: config.default_tool || "(none)",
-      });
+      // console.log("Loading sidebar components from config:", {
+      //   tools: config.sidebarToolComponents?.length || 0,
+      //   themes: config.sidebarThemeComponents?.length || 0,
+      //   default_theme: config.default_theme || "(none)",
+      //   default_tool: config.default_tool || "(none)",
+      // });
       loadFromConfig(config.sidebarToolComponents || [], config.sidebarThemeComponents || [], {
         hideLayers: !!config.hideLayers,
         hideTools: !!config.hideTools,
@@ -78,6 +87,7 @@ export default function Layout({ children }: LayoutProps) {
     if (configError) {
       setConfigError(configError);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config, configLoading, configError, setConfig, setConfigLoading, setConfigError, loadFromConfig, activateDefaultItems]);
 
   // --- Startup popups (What's New + Feedback) --- run once when config arrives
@@ -118,7 +128,7 @@ export default function Layout({ children }: LayoutProps) {
     }
   }, [config]);
 
-  const isLoading = isAnyLoading();
+  const isLoading = mapLoading || sidebarLoading || headerLoading || appConfigLoading;
 
   return (
     <div id="app-root" className="relative w-full h-screen overflow-hidden print:hidden">

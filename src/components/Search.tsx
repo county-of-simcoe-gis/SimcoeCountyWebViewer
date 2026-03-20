@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { FaSearch, FaMapMarkerAlt, FaTools, FaPalette, FaLayerGroup, FaMapPin, FaHome, FaMapMarkedAlt, FaClock, FaBuilding, FaRoad } from "react-icons/fa";
 import { useConfig } from "@/hooks/useConfig";
-import axiosInstance, { getAxiosClient } from "@/lib/axiosInstance";
+import axiosInstance from "@/lib/axiosInstance";
 import { appendToStorage, getItemsFromStorage, removeItemFromStorage } from "@/utils/storage";
 import { useEventStore } from "@/stores/eventStore";
 import { useAppStore } from "@/stores/appStore";
@@ -41,7 +41,7 @@ interface SearchProps {
 
 const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeholder, disabled = false }) => {
   const { config } = useConfig();
-  const { emit } = useEventStore();
+  const emit = useEventStore((s) => s.emit);
   const urlParameters = useAppStore((state) => state.urlParameters);
 
   // Derive placeholder and hideTypes from config, with prop override
@@ -283,6 +283,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
       // Pass fromUrl=true to handle single result differently
       performSearch(search, searchType || "All", true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTypes.length, urlParameters.q, urlParameters.qt]); // Minimal dependencies
 
   // Debounced search - only for user-initiated searches (not URL parameter searches)

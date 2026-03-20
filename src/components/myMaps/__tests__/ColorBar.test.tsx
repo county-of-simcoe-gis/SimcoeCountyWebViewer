@@ -66,7 +66,7 @@ describe("ColorBar Component", () => {
     });
 
     it("should apply correct CSS classes", () => {
-      const { container } = render(<ColorBar />);
+      const { container: _container } = render(<ColorBar />);
 
       const colorBarElement = screen.getByTestId("mymaps-color-bar");
       expect(colorBarElement).toBeInTheDocument();
@@ -74,7 +74,7 @@ describe("ColorBar Component", () => {
     });
 
     it("should apply disabled class when editing", () => {
-      const { container } = render(<ColorBar isEditing={true} />);
+      const { container: _container } = render(<ColorBar isEditing={true} />);
 
       const colorBarElement = screen.getByTestId("mymaps-color-bar");
       expect(colorBarElement).toHaveClass("opacity-50");

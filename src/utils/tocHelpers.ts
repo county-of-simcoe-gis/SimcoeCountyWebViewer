@@ -182,10 +182,6 @@ export function buildLayerFromWMS(group: Partial<TOCLayerGroup> & { secure?: boo
   const layerVisible = visibleLayers.some(
     (v) => v === layerNameOnly || v === nameWithoutPrefix || (v.includes(":") ? v.split(":").slice(1).join(":") : v) === layerNameOnly,
   );
-  // Diagnostic: log visibility check for layers that should be visible
-  if (layerVisible || visibleLayers.length > 0) {
-    console.log(`[TOC] buildLayerFromWMS visibility: "${layerNameOnly}" visible=${layerVisible}, group="${group.label}", visibleLayers=`, visibleLayers);
-  }
 
   // Build server URLs
   const geoserverPath = config.geoserverPath || "geoserver";
@@ -245,8 +241,6 @@ export function buildLayerFromWMS(group: Partial<TOCLayerGroup> & { secure?: boo
  * @param token    Pre-fetched access token (avoids redundant getSession calls)
  */
 export async function fetchWMSCapabilities(url: string, secured: boolean = false, token?: string): Promise<WMSCapabilitiesResponse> {
-  console.debug("Fetching WMS capabilities", { url, secured, hasToken: !!token });
-
   try {
     const fetchOptions = await buildAuthFetchOptions(secured, token);
     const response = await fetch(url, fetchOptions);
@@ -327,7 +321,6 @@ export async function getGroupsFromGeoServer(source: TOCSource, config: Config, 
         if (source.group?.visibleLayers && source.group.visibleLayers.length > 0) {
           visibleLayers = source.group.visibleLayers;
         }
-        console.log(`[TOC] getGroupsFromGeoServer: group="${source.group?.name || groupName}", visibleLayers=`, visibleLayers, `source.group?.visibleLayers=`, source.group?.visibleLayers);
 
         // Build layers
         const layerList: TOCLayer[] = [];

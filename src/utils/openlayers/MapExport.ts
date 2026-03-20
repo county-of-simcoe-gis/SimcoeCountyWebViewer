@@ -4,7 +4,6 @@
  */
 
 import { useMapStore } from "@/stores/mapStore";
-import type Map from "ol/Map";
 
 export interface ExportOptions {
   format?: 'png' | 'jpeg';

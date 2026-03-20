@@ -13,31 +13,43 @@ vi.mock("next-auth/react", () => ({
 
 // Mock useAppStore
 vi.mock("@/stores/appStore", () => ({
-  useAppStore: vi.fn(() => ({
-    setSidebarLoading: vi.fn(),
-    urlParameters: {},
-  })),
+  useAppStore: vi.fn((selector?: any) => {
+    const state = {
+      setSidebarLoading: vi.fn(),
+      urlParameters: {},
+    };
+    return typeof selector === "function" ? selector(state) : state;
+  }),
 }));
 
 // Mock useEventStore
 vi.mock("@/stores/eventStore", () => ({
-  useEventStore: vi.fn(() => ({
-    emitSidebarLoaded: vi.fn(),
-  })),
+  useEventStore: vi.fn((selector?: any) => {
+    const state = {
+      emitSidebarLoaded: vi.fn(),
+    };
+    return typeof selector === "function" ? selector(state) : state;
+  }),
 }));
 
 // Mock useMapStore
 vi.mock("@/stores/mapStore", () => ({
-  useMapStore: vi.fn(() => ({
-    addLoadedItem: vi.fn(),
-  })),
+  useMapStore: vi.fn((selector?: any) => {
+    const state = {
+      addLoadedItem: vi.fn(),
+    };
+    return typeof selector === "function" ? selector(state) : state;
+  }),
 }));
 
 // Mock useReportsStore
 vi.mock("@/stores/reportsStore", () => ({
-  useReportsStore: vi.fn(() => ({
-    currentReport: null,
-  })),
+  useReportsStore: vi.fn((selector?: any) => {
+    const state = {
+      currentReport: null,
+    };
+    return typeof selector === "function" ? selector(state) : state;
+  }),
 }));
 
 type SidebarItem = {
@@ -76,10 +88,13 @@ describe("Sidebar", () => {
 
     // Reset useAppStore mock
     const mockUseAppStore = vi.mocked(useAppStore);
-    mockUseAppStore.mockReturnValue({
-      setSidebarLoading: vi.fn(),
-      urlParameters: {},
-    });
+    mockUseAppStore.mockImplementation(((selector?: any) => {
+      const state = {
+        setSidebarLoading: vi.fn(),
+        urlParameters: {},
+      };
+      return typeof selector === "function" ? selector(state) : state;
+    }) as any);
   });
 
   it("renders tools tab and allows item click", () => {
@@ -93,12 +108,15 @@ describe("Sidebar", () => {
   it("handles URL parameters for tab activation", () => {
     // Mock useAppStore with URL parameters
     const mockUseAppStore = vi.mocked(useAppStore);
-    mockUseAppStore.mockReturnValue({
-      setSidebarLoading: vi.fn(),
-      urlParameters: {
-        TAB: "themes",
-      },
-    });
+    mockUseAppStore.mockImplementation(((selector?: any) => {
+      const state = {
+        setSidebarLoading: vi.fn(),
+        urlParameters: {
+          TAB: "themes",
+        },
+      };
+      return typeof selector === "function" ? selector(state) : state;
+    }) as any);
 
     const { container } = render(<Sidebar />);
 

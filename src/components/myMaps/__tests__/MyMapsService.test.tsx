@@ -113,7 +113,7 @@ const mockEventStoreState = {
 };
 
 vi.mock("@/stores/myMapsStore", () => ({
-  useMyMapsStore: vi.fn(() => mockMyMapsStore),
+  useMyMapsStore: vi.fn((selector?: any) => (typeof selector === "function" ? selector(mockMyMapsStore) : mockMyMapsStore)),
   createMyMapsItem: vi.fn((feature, drawType, label, style) => ({
     id: "created-item-id",
     label: label,
@@ -131,15 +131,15 @@ vi.mock("@/stores/myMapsStore", () => ({
 let mockCreateMyMapsItem: ReturnType<typeof vi.fn>;
 
 vi.mock("@/stores/mapStore", () => ({
-  useMapStore: vi.fn(() => mockMapStore),
+  useMapStore: vi.fn((selector?: any) => (typeof selector === "function" ? selector(mockMapStore) : mockMapStore)),
 }));
 
 vi.mock("@/stores/eventStore", () => ({
-  useEventStore: vi.fn(() => mockEventStore),
+  useEventStore: vi.fn((selector?: any) => (typeof selector === "function" ? selector(mockEventStore) : mockEventStore)),
 }));
 
 vi.mock("@/stores/layerManagerStore", () => ({
-  useLayerManagerStore: vi.fn(() => mockLayerManagerStore),
+  useLayerManagerStore: vi.fn((selector?: any) => (typeof selector === "function" ? selector(mockLayerManagerStore) : mockLayerManagerStore)),
 }));
 
 describe("MyMapsService Component", () => {
@@ -151,9 +151,9 @@ describe("MyMapsService Component", () => {
     mockMyMapsStore.isEditing = false;
     mockMyMapsStore.editMode = null;
     mockMyMapsStore.items = [];
+    mockMapStore.map = mockMap;
 
     // Set up the event store getState method
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (useEventStore as any).getState = vi.fn(() => mockEventStoreState);
 
     // Get reference to the mocked createMyMapsItem function
@@ -167,7 +167,7 @@ describe("MyMapsService Component", () => {
 
   describe("Initialization", () => {
     it("should not initialize drawing manager when map is not available", () => {
-      vi.mocked(useMapStore).mockReturnValue({ map: null });
+      mockMapStore.map = null;
 
       render(<MyMapsService />);
 
@@ -230,7 +230,6 @@ describe("MyMapsService Component", () => {
         return "";
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       onFeatureDrawn(mockFeature as any);
 
       expect(mockCreateMyMapsItem).toHaveBeenCalledWith(mockFeature, "Point", "Drawing 1", undefined);
@@ -255,7 +254,6 @@ describe("MyMapsService Component", () => {
         return "";
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       onFeatureDrawn(mockFeature as any);
 
       expect(mockCreateMyMapsItem).toHaveBeenCalledWith(mockFeature, "Text", "Enter Custom Text", undefined);
@@ -282,7 +280,6 @@ describe("MyMapsService Component", () => {
         return "";
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       onFeatureDrawn(mockFeature as any);
 
       expect(mockCreateMyMapsItem).toHaveBeenCalledWith(mockFeature, "Bearing", "Bearing: 45°", undefined);
@@ -302,7 +299,6 @@ describe("MyMapsService Component", () => {
         return "";
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       onFeatureDrawn(mockFeature as any);
 
       expect(mockCreateMyMapsItem).toHaveBeenCalledWith(mockFeature, "Measure", "100 m", undefined);
@@ -320,7 +316,6 @@ describe("MyMapsService Component", () => {
         return "";
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       onFeatureModified(mockFeature as any);
 
       expect(mockMyMapsStore.updateItem).toHaveBeenCalledWith("feature-1", {
@@ -335,7 +330,6 @@ describe("MyMapsService Component", () => {
     it("should handle feature click in eraser mode", () => {
       // Mock store getState to return eraser mode
       const mockGetState = vi.fn(() => ({ drawType: "Eraser" }));
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (useMyMapsStore as any).getState = mockGetState;
 
       render(<MyMapsService />);
@@ -349,7 +343,6 @@ describe("MyMapsService Component", () => {
         return "";
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       onFeatureClicked(mockFeature as any, [0, 0]);
 
       expect(mockMyMapsStore.removeItem).toHaveBeenCalledWith("feature-1");
@@ -362,7 +355,6 @@ describe("MyMapsService Component", () => {
         drawType: "Cancel",
         items: [{ id: "feature-1", label: "Test Feature" }],
       }));
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (useMyMapsStore as any).getState = mockGetState;
 
       render(<MyMapsService />);
@@ -376,7 +368,6 @@ describe("MyMapsService Component", () => {
         return "";
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       onFeatureClicked(mockFeature as any, [100, 200]);
 
       expect(mockEventStore.emit).toHaveBeenCalledWith("mymap-show-drawing-options", {
@@ -393,7 +384,6 @@ describe("MyMapsService Component", () => {
         { id: "2", label: "Item 2", visible: true, featureGeoJSON: "{}" },
       ];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mockMyMapsStore as any).items = items;
 
       render(<MyMapsService />);
@@ -423,7 +413,6 @@ describe("MyMapsService Component", () => {
       // Change to Point drawing
       mockMyMapsStore.drawType = "Point";
       mockMyMapsStore.drawColor = "#ff0000";
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mockMyMapsStore as any).drawStyle = { strokeWidth: 2 };
 
       rerender(<MyMapsService />);
@@ -459,7 +448,6 @@ describe("MyMapsService Component", () => {
 
       // Enable editing
       mockMyMapsStore.isEditing = true;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mockMyMapsStore as any).editMode = "vertices";
 
       rerender(<MyMapsService />);
@@ -525,7 +513,6 @@ describe("MyMapsService Component", () => {
       vi.clearAllMocks();
 
       // Re-establish the event store getState mock that was cleared by clearAllMocks
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (useEventStore as any).getState = vi.fn(() => mockEventStoreState);
 
       // Create a properly mocked geometry with extent
@@ -544,7 +531,6 @@ describe("MyMapsService Component", () => {
 
       // Make sure the drawing manager returns the correct vector source with our feature
       mockDrawingManager.getVectorSource.mockReturnValue({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         getFeatures: vi.fn(() => [mockVectorFeature as any]),
       });
 
@@ -605,7 +591,6 @@ describe("MyMapsService Component", () => {
       const mockGetState = vi.fn(() => ({
         items: [{ id: "feature-1", labelVisible: true, label: "Test Label" }],
       }));
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (useMyMapsStore as any).getState = mockGetState;
 
       render(<MyMapsService />);
@@ -654,7 +639,6 @@ describe("MyMapsService Component", () => {
       const addFeatureHandler = addFeatureCall[1];
 
       // @ts-expect-error - Handler exists due to test setup
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       addFeatureHandler({ feature: mockFeature as any, label: "Buffer Feature" });
 
       expect(mockCreateMyMapsItem).toHaveBeenCalledWith(mockFeature, "Buffer", "Buffer Feature", undefined);

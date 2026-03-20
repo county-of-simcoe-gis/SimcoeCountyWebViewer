@@ -10,6 +10,7 @@ import GeoJSON from "ol/format/GeoJSON";
 import { fromCircle } from "ol/geom/Polygon";
 import { Style, Fill, Stroke, Circle as CircleStyle, Text, RegularShape } from "ol/style";
 import { Feature } from "ol";
+import type { FeatureLike } from "ol/Feature";
 import { Circle, LineString, Point } from "ol/geom";
 import { asArray } from "ol/color";
 import { generateUID, convertLineToArrow, getBearing, getCalloutStyle, getDefaultLabelStyle, type LabelStyle } from "@/utils/myMapsHelpers";
@@ -88,10 +89,8 @@ export class MyMapsDrawingManager {
 
       // Check if popup is active and prevent map interactions
       const popupActive = (window as unknown as { popupActive?: boolean }).popupActive;
-      console.log("🔍 Popup active check:", { popupActive, timestamp: Date.now() });
 
       if (popupActive) {
-        console.log("🚫 Popup is active - ignoring map click");
         return;
       }
 
@@ -101,12 +100,6 @@ export class MyMapsDrawingManager {
         evt.pixel,
         (feature, layer) => {
           if (layer.get("name") === this.layerName) {
-            console.log("🎯 Found MyMaps feature at click:", {
-              id: feature.get("id"),
-              label: feature.get("label"),
-              labelVisible: feature.get("labelVisible"),
-              drawType: feature.get("drawType"),
-            });
             this.onFeatureClicked(feature as Feature, evt.coordinate);
           }
           return;
@@ -387,12 +380,6 @@ export class MyMapsDrawingManager {
     const geometry = feature.getGeometry();
     if (!geometry) return;
 
-    console.log("🎯 Highlighting feature:", {
-      featureId,
-      geometryType: geometry.getType(),
-      bounds: geometry.getExtent(),
-    });
-
     // Create geometry-specific shadow style - completely separate objects
     let shadowStyle: Style;
 
@@ -435,12 +422,6 @@ export class MyMapsDrawingManager {
       shadowStyle = new Style(styleConfig);
     }
 
-    console.log("🎨 Created shadow style for:", geometry.getType(), {
-      hasStroke: !!shadowStyle.getStroke(),
-      hasFill: !!shadowStyle.getFill(),
-      hasImage: !!shadowStyle.getImage(),
-    });
-
     // Create clean highlight feature (like old app)
     const highlightFeature = new Feature({
       geometry: geometry.clone(), // Clone to avoid reference issues
@@ -465,11 +446,8 @@ export class MyMapsDrawingManager {
 
     // Add highlight feature to layer (style is set on layer level)
     this.highlightLayer.getSource()?.addFeature(highlightFeature);
-
-    console.log("✅ Added highlight feature to layer");
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public unhighlightFeature(_featureId: string) {
     if (this.highlightLayer) {
       // Clear all features from highlight layer
@@ -489,16 +467,8 @@ export class MyMapsDrawingManager {
   }
 
   public loadFeatures(items: MyMapsItem[]) {
-    console.log("📥 Loading features", {
-      itemCount: items.length,
-      items: items.map((item) => ({
-        id: item.id,
-        label: item.label,
-        labelVisible: item.labelVisible,
-        drawType: item.drawType,
-        visible: item.visible,
-      })),
-    });
+    // Verbose MyMaps loading logs commented out to reduce console noise
+    // console.log("📥 Loading features", { itemCount: items.length });
 
     this.clearAllFeatures();
 
@@ -510,12 +480,12 @@ export class MyMapsDrawingManager {
     items.forEach((item) => {
       if (item.featureGeoJSON && item.visible) {
         try {
-          console.log("📍 Loading individual feature", {
-            id: item.id,
-            labelVisible: item.labelVisible,
-            label: item.label,
-            drawType: item.drawType,
-          });
+          // console.log("📍 Loading individual feature", {
+          //   id: item.id,
+          //   labelVisible: item.labelVisible,
+          //   label: item.label,
+          //   drawType: item.drawType,
+          // });
 
           const feature = geoJsonFormat.readFeature(item.featureGeoJSON) as Feature;
           feature.setProperties({
@@ -530,7 +500,7 @@ export class MyMapsDrawingManager {
           // Apply item's style - handle both new OpenLayers Style objects and legacy StyleJSON
           // Special handling for Callout items - use callout style function
           if (item.drawType === "Callout") {
-            console.log("🎨 Applying Callout style function");
+            // console.log("🎨 Applying Callout style function");
             const labelStyle = item.labelStyle || getDefaultLabelStyle("Callout");
             const calloutStyleFn = getCalloutStyle({
               lineColor: typeof labelStyle === "object" && "lineColor" in labelStyle ? labelStyle.lineColor : undefined,
@@ -542,10 +512,10 @@ export class MyMapsDrawingManager {
 
             // Check if it's already a Style object (new approach) or needs conversion (legacy StyleJSON)
             if (item.style instanceof Style) {
-              console.log("🎨 Using stored OpenLayers Style object directly");
+              // console.log("🎨 Using stored OpenLayers Style object directly");
               style = item.style;
             } else {
-              console.log("🎨 Converting legacy StyleJSON to OpenLayers Style");
+              // console.log("🎨 Converting legacy StyleJSON to OpenLayers Style");
               style = this.styleFromJSON(item.style as StyleJSON, item.pointType);
             }
 
@@ -553,14 +523,14 @@ export class MyMapsDrawingManager {
           }
 
           this.vectorSource.addFeature(feature);
-          console.log("✅ Feature loaded successfully", { id: item.id });
+          // console.log("✅ Feature loaded successfully", { id: item.id });
 
           // Apply label if it was visible when saved (after feature is added to source)
           if (item.labelVisible && item.label) {
-            console.log("🏷️ Applying saved label to feature", {
-              id: item.id,
-              label: item.label,
-            });
+            // console.log("🏷️ Applying saved label to feature", {
+            //   id: item.id,
+            //   label: item.label,
+            // });
             this.setFeatureLabel(item);
           }
         } catch (error) {
@@ -569,9 +539,7 @@ export class MyMapsDrawingManager {
       }
     });
 
-    console.log("🏁 All features loaded", {
-      totalInSource: this.vectorSource.getFeatures().length,
-    });
+    // console.log("🏁 All features loaded", { totalInSource: this.vectorSource.getFeatures().length });
   }
 
   private styleFromJSON(styleJson: StyleJSON, pointType?: string): Style {
@@ -716,15 +684,6 @@ export class MyMapsDrawingManager {
 
   // Label functionality - EXACT match to old app implementation
   public setFeatureLabel(itemInfo: MyMapsItem) {
-    console.log("🏷️ MyMapsDrawing: setFeatureLabel called", {
-      id: itemInfo.id,
-      labelVisible: itemInfo.labelVisible,
-      label: itemInfo.label,
-      labelRotation: itemInfo.labelRotation,
-      drawType: itemInfo.drawType,
-      timestamp: Date.now(),
-    });
-
     const feature = this.getFeatureById(itemInfo.id);
     if (!feature) {
       console.warn("❌ Feature not found for ID:", itemInfo.id);
@@ -734,12 +693,10 @@ export class MyMapsDrawingManager {
     const isCallout = itemInfo.drawType === "Callout";
     let style = feature.getStyle() as Style;
     if (!style && !isCallout) {
-      console.log("⚠️ No style found, creating default style");
       style = this.getDefaultStyle("#e809e5");
     }
 
     if (itemInfo.labelVisible && itemInfo.label) {
-      console.log("✅ Creating text style for label:", itemInfo.label);
 
       // Store the label in the feature property first
       feature.setProperties({
@@ -767,7 +724,8 @@ export class MyMapsDrawingManager {
         const anchorColorArray = asArray(anchorColor);
 
         // Create callout style function
-        const calloutStyleFunction = (feat: Feature): Style[] => {
+        const calloutStyleFunction = (feat: FeatureLike): Style[] => {
+          if (!(feat instanceof Feature)) return [];
           const geometry = feat.getGeometry();
           if (!geometry || geometry.getType() !== "LineString") {
             return [];
@@ -827,7 +785,6 @@ export class MyMapsDrawingManager {
         };
 
         feature.setStyle(calloutStyleFunction);
-        console.log("📝 Callout style function applied to feature");
       } else {
         // Regular label handling - use labelStyle if available
         const labelStyle = (itemInfo.labelStyle as LabelStyle) || getDefaultLabelStyle(itemInfo.drawType || "Point");
@@ -864,20 +821,9 @@ export class MyMapsDrawingManager {
 
         style.setText(textStyle);
 
-        console.log("📝 Text style applied to feature", {
-          hasTextStyle: !!style.getText(),
-          textContent: style.getText()?.getText?.(),
-          featureLabel: feature.get("label"),
-          textColor,
-          textSize,
-          outlineColor,
-          outlineWidth,
-        });
-
         feature.setStyle(style);
       }
     } else {
-      console.log("❌ Removing label (labelVisible=false or no label text)");
       feature.setProperties({
         labelVisible: false,
         label: itemInfo.label || "",
@@ -904,25 +850,10 @@ export class MyMapsDrawingManager {
 
     // Trigger a redraw to show the changes
     this.vectorSource.changed();
-
-    console.log("🏁 MyMapsDrawing: setFeatureLabel completed", {
-      featureId: itemInfo.id,
-      finalLabelVisible: feature.get("labelVisible"),
-      isCallout,
-      layerZIndex: this.vectorLayer.getZIndex(),
-      vectorSourceFeatureCount: this.vectorSource.getFeatures().length,
-      timestamp: Date.now(),
-    });
   }
 
   // Create text style from feature - EXACT old app implementation
   private createTextStyleFromFeature(feature: Feature, fieldName: string = "label", rotation: number = 0): Text {
-    console.log("📝 Creating text style from feature - OLD APP EXACT MATCH", {
-      fieldName,
-      rotation,
-      featureLabel: feature.get(fieldName),
-    });
-
     // Apply bearing rotation adjustment for Bearing and Measure tools (like original app)
     const drawType = feature.get("drawType") || feature.get("originalDrawType");
     if (drawType === "Bearing" || drawType === "Measure") {
@@ -968,29 +899,11 @@ export class MyMapsDrawingManager {
       rotation: rotationInRadians,
     });
 
-    console.log("✅ OLD APP EXACT text style created from feature", {
-      text: textStyle.getText(),
-      font: textStyle.getFont(),
-      fillColor: textStyle.getFill()?.getColor(),
-      strokeColor: textStyle.getStroke()?.getColor(),
-      strokeWidth: textStyle.getStroke()?.getWidth(),
-      rotation: textStyle.getRotation(),
-      offsetY: textStyle.getOffsetY(),
-      overflow: textStyle.getOverflow(),
-    });
-
     return textStyle;
   }
 
   // Create text style matching the old app's exact implementation
   private createTextStyle(text: string, fontSize: string = "15px", fontWeight: string = "bold", rotation: number = 0, offsetY: number = -8): Text {
-    console.log("📝 Creating text style - OLD APP EXACT MATCH", {
-      text,
-      fontSize,
-      fontWeight,
-      rotation,
-      offsetY,
-    });
 
     // OLD APP EXACT PARAMETERS:
     // helpers.createTextStyle(feature, "label", undefined, undefined, undefined,
@@ -1018,16 +931,6 @@ export class MyMapsDrawingManager {
       rotation: rotationInRadians, // EXACT match old app param #13
       overflow: true, // Allow text overflow
       placement: "point", // Ensure text renders on point features
-    });
-
-    console.log("✅ OLD APP EXACT text style created", {
-      text: textStyle.getText(),
-      font: textStyle.getFont(),
-      fillColor: textStyle.getFill()?.getColor(),
-      strokeColor: textStyle.getStroke()?.getColor(),
-      strokeWidth: textStyle.getStroke()?.getWidth(),
-      rotation: textStyle.getRotation(),
-      offsetY: textStyle.getOffsetY(),
     });
 
     return textStyle;
@@ -1096,10 +999,8 @@ export class MyMapsDrawingManager {
 
       // Check if it's already a Style object (from new approach) or StyleJSON (legacy)
       if (styleOrJSON instanceof Style) {
-        console.log("🎨 Using OpenLayers Style object directly (new approach)");
         newStyle = styleOrJSON;
       } else {
-        console.log("🎨 Converting StyleJSON to OpenLayers Style (legacy approach)");
         newStyle = this.styleFromJSON(styleOrJSON, pointType);
       }
 
@@ -1117,13 +1018,6 @@ export class MyMapsDrawingManager {
 
       // Trigger map refresh
       this.vectorSource.changed();
-
-      console.log("✅ Feature style updated successfully:", {
-        featureId,
-        pointType,
-        hasTextStyle: !!newStyle.getText(),
-        styleType: styleOrJSON instanceof Style ? "OpenLayers Style" : "StyleJSON",
-      });
     } catch (error) {
       console.error("❌ Error updating feature style:", error);
     }

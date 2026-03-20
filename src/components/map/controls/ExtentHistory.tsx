@@ -9,7 +9,10 @@ interface ExtentHistoryButtonsProps {
 }
 
 export function ExtentHistoryButtons({}: ExtentHistoryButtonsProps) {
-  const { map, extentHistory, currentExtentIndex, setCurrentExtentIndex } = useMapStore();
+  const map = useMapStore((s) => s.map);
+  const extentHistory = useMapStore((s) => s.extentHistory);
+  const currentExtentIndex = useMapStore((s) => s.currentExtentIndex);
+  const setCurrentExtentIndex = useMapStore((s) => s.setCurrentExtentIndex);
 
   const goToPreviousExtent = () => {
     if (currentExtentIndex > 0) {

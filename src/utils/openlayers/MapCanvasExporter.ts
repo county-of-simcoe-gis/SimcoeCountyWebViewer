@@ -21,7 +21,7 @@
 
 import type Map from "ol/Map";
 import { getPointResolution } from "ol/proj";
-import { getDistance } from "ol/sphere";
+
 
 export type DecorationPosition =
   | "top-left"

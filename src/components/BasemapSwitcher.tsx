@@ -77,7 +77,7 @@ function mergeServicesByName<T extends { name: string }>(local: T[], api: T[]): 
 }
 
 export default function BasemapSwitcher() {
-  const { map } = useMapStore();
+  const map = useMapStore((s) => s.map);
   const urlParameters = useAppStore((state) => state.urlParameters);
   const urlParametersLoaded = useAppStore((state) => state.urlParametersLoaded);
   const [config, setConfig] = useState<BasemapConfig | null>(null);
@@ -107,8 +107,8 @@ export default function BasemapSwitcher() {
       try {
         // Always start with local basemapSwitcherConfig.json as the base
         const configModule = await import("@/components/basemapSwitcherConfig.json");
-        let data: BasemapConfig = { ...configModule.default };
-        console.log("BasemapSwitcher: Loaded local basemapSwitcherConfig.json as base");
+        const data: BasemapConfig = { ...configModule.default };
+        // console.log("BasemapSwitcher: Loaded local basemapSwitcherConfig.json as base");
 
         // Merge API-provided basemap config on top (only overrides fields that are present)
         const appConfig = useAppStore.getState().config;
@@ -136,7 +136,7 @@ export default function BasemapSwitcher() {
           if (apiBasemapServices.worldImageryService) {
             data.worldImageryService = apiBasemapServices.worldImageryService;
           }
-          console.log("BasemapSwitcher: Merged API basemap overrides", Object.keys(apiBasemapServices));
+          // console.log("BasemapSwitcher: Merged API basemap overrides", Object.keys(apiBasemapServices));
         }
 
         // Override defaultButton from baseMapType if available
@@ -506,6 +506,7 @@ export default function BasemapSwitcher() {
     };
 
     initBasemap();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config, map, loadImageryLayers, loadStreets, loadWorldImagery, applyBasemap, updateImageryLayers]);
 
   // Event handlers

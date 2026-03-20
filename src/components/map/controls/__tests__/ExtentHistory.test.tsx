@@ -12,7 +12,7 @@ const mockMapStore = {
 };
 
 vi.mock("@/stores/mapStore", () => ({
-  useMapStore: () => mockMapStore,
+  useMapStore: (selector?: any) => (typeof selector === "function" ? selector(mockMapStore) : mockMapStore),
 }));
 
 const mockMap = {

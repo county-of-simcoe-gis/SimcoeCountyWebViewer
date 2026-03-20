@@ -11,8 +11,13 @@ import { usePopupStore } from "@/stores/popupStore";
  *   when the current report came from a popup pop-out).
  */
 export default function ReportsNavBar() {
-  const { canGoBack, canGoForward, goBack, goForward, currentReport } = useReportsStore();
-  const { alwaysUseReportsTab, setAlwaysUseReportsTab } = usePopupStore();
+  const canGoBack = useReportsStore((s) => s.canGoBack);
+  const canGoForward = useReportsStore((s) => s.canGoForward);
+  const goBack = useReportsStore((s) => s.goBack);
+  const goForward = useReportsStore((s) => s.goForward);
+  const currentReport = useReportsStore((s) => s.currentReport);
+  const alwaysUseReportsTab = usePopupStore((s) => s.alwaysUseReportsTab);
+  const setAlwaysUseReportsTab = usePopupStore((s) => s.setAlwaysUseReportsTab);
 
   const showToggle = currentReport?.source === "popupPopOut" || currentReport?.source === "propertyReport";
 

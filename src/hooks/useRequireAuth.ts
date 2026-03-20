@@ -155,7 +155,7 @@ export function useRequireAuth(options: UseRequireAuthOptions = {}): UseRequireA
     const result = hasAnyRole(requiredRoles);
     // console.log("[useRequireAuth] - hasAnyRole result:", result);
     return result;
-  }, [isAuthenticated, requiredRoles, hasAnyRole, roles]);
+  }, [isAuthenticated, requiredRoles, hasAnyRole]);
 
   // Trigger sign in
   const promptLogin = useCallback(() => {

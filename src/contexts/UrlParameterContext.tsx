@@ -137,13 +137,13 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
     async (paramName: string, value: string, allParams: UrlParams): Promise<boolean> => {
       const handler = getHandler(paramName);
       if (!handler) {
-        console.log(`[UrlParameterProvider] No handler for: ${paramName}`);
+        // console.log(`[UrlParameterProvider] No handler for: ${paramName}`);
         skippedParamsRef.current.push(paramName);
         return false;
       }
 
       try {
-        console.log(`[UrlParameterProvider] Executing handler for: ${paramName}=${value}`);
+        // console.log(`[UrlParameterProvider] Executing handler for: ${paramName}=${value}`);
         await handler(value, allParams);
         completedParamsRef.current.push(paramName);
         return true;
@@ -166,7 +166,7 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
     // DEBUG: Set a window property so we can verify from browser console
     // @ts-expect-error - Adding debug property to window
     window._urlParamDebug = { status: "processing started" };
-    console.log("[UrlParameterProvider] processUrlParameters called!");
+    // console.log("[UrlParameterProvider] processUrlParameters called!");
 
     const searchParams = new URLSearchParams(window.location.search);
     const params: UrlParams = {};
@@ -176,11 +176,11 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
 
     const paramCount = Object.keys(params).length;
     if (paramCount === 0) {
-      console.log("[UrlParameterProvider] No URL parameters to process");
+      // console.log("[UrlParameterProvider] No URL parameters to process");
       return;
     }
 
-    console.log(`[UrlParameterProvider] Processing ${paramCount} URL parameters:`, params);
+    // console.log(`[UrlParameterProvider] Processing ${paramCount} URL parameters:`, params);
 
     isProcessingRef.current = true;
     setIsProcessing(true);
@@ -215,7 +215,7 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
         if (depsReady) {
           await processParameter(config.name, paramValue, params);
         } else {
-          console.log(`[UrlParameterProvider] Skipping ${config.name} - dependencies not ready`);
+          // console.log(`[UrlParameterProvider] Skipping ${config.name} - dependencies not ready`);
           skippedParamsRef.current.push(config.name);
         }
       }
@@ -225,11 +225,11 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
     isProcessingRef.current = false;
     setIsProcessing(false);
 
-    console.log("[UrlParameterProvider] URL parameter processing complete", {
-      completed: completedParamsRef.current,
-      failed: failedParamsRef.current,
-      skipped: skippedParamsRef.current,
-    });
+    // console.log("[UrlParameterProvider] URL parameter processing complete", {
+    //   completed: completedParamsRef.current,
+    //   failed: failedParamsRef.current,
+    //   skipped: skippedParamsRef.current,
+    // });
   }, [processParameter]);
 
   // -------------------------------------------------------------------------
@@ -239,7 +239,7 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
   const registerComponentReady = useCallback(
     (componentName: ComponentDependency) => {
       componentReadinessRef.current[componentName] = true;
-      console.log(`[UrlParameterProvider] Component ready: ${componentName}`);
+      // console.log(`[UrlParameterProvider] Component ready: ${componentName}`);
 
       // Notify any waiting callbacks
       const callbacks = waitingCallbacksRef.current.get(componentName) || [];
@@ -248,11 +248,11 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
 
       // Process URL params when map is ready (deferred)
       if (componentName === "map" && !hasProcessedRef.current) {
-        console.log(`[UrlParameterProvider] Map is ready, scheduling URL parameter processing in 200ms`);
+        // console.log(`[UrlParameterProvider] Map is ready, scheduling URL parameter processing in 200ms`);
         hasProcessedRef.current = true;
         // Use setTimeout to defer processing and let the app stabilize
         setTimeout(() => {
-          console.log(`[UrlParameterProvider] Starting URL parameter processing now`);
+          // console.log(`[UrlParameterProvider] Starting URL parameter processing now`);
           processUrlParameters();
         }, 200);
       }
@@ -464,14 +464,15 @@ function createLazyHandler(paramName: string): HandlerFn {
         // Check sidebarShortcutParams from merged config for custom URL param handling
         const { useAppStore } = await import("@/stores/appStore");
         const appConfig = useAppStore.getState().config;
-        const shortcuts = (appConfig?.sidebarShortcutParams as Array<{
-          url_param: string;
-          type: string;
-          component: string;
-          matchValue?: string;
-          hidden?: boolean;
-          timeout?: number;
-        }>) || [];
+        const shortcuts =
+          (appConfig?.sidebarShortcutParams as Array<{
+            url_param: string;
+            type: string;
+            component: string;
+            matchValue?: string;
+            hidden?: boolean;
+            timeout?: number;
+          }>) || [];
 
         // Find a matching shortcut entry
         const shortcut = shortcuts.find((s) => {
@@ -504,9 +505,7 @@ function createLazyHandler(paramName: string): HandlerFn {
 
             // Find the item by component name (case-insensitive)
             const finalItems = shortcut.type === "themes" ? sidebarStateShortcut.themes : sidebarStateShortcut.tools;
-            const item = finalItems.find(
-              (i) => i.name.toUpperCase() === shortcut.component.toUpperCase() || i.id.toUpperCase() === shortcut.component.toUpperCase()
-            );
+            const item = finalItems.find((i) => i.name.toUpperCase() === shortcut.component.toUpperCase() || i.id.toUpperCase() === shortcut.component.toUpperCase());
 
             if (item) {
               sidebarStateShortcut.openSidebar();

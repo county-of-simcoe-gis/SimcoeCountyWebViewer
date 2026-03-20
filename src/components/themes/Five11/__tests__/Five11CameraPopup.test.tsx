@@ -49,7 +49,7 @@ describe("Five11CameraPopup", () => {
     render(<Five11CameraPopup properties={fullProperties} />);
 
     const img = screen.getByAltText("Highway 400 at Dunlop St");
-    const initialSrc = img.getAttribute("src");
+    const _initialSrc = img.getAttribute("src");
 
     // Click refresh - the cache busting timestamp should change
     fireEvent.click(screen.getByText("Refresh"));

@@ -767,7 +767,7 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
   return (
     <fieldset className="border border-[#cecece] rounded-[3px] p-2 mb-[5px] bg-[#f9f9f9] w-full box-border m-0">
       <legend className="text-sm font-bold text-[#333] py-[2px] px-1.5 bg-[#f9f9f9] border border-[#cecece] rounded-[3px] flex items-center">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {}
         <img src={getPublicPath("/images/symbolizer.png")} alt="symbolizer" className="w-4 h-4 block mr-1" />
         Symbolizer
       </legend>

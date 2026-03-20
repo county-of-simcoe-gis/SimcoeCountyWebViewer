@@ -84,6 +84,7 @@ export default function PropertyReport({ arn, onZoomClick }: PropertyReportProps
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [arn]);
 
   /** Print Preview — posts to the legacy embed API and opens the report viewer. */
@@ -153,17 +154,7 @@ export default function PropertyReport({ arn, onZoomClick }: PropertyReportProps
           <InfoWindowRow label="Address" value={data.Address} />
           {!isBarrie && (
             <>
-              <InfoWindowRow
-                label="Assessed Value"
-                value={
-                  data.AssessedValue ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={data.AssessedValue} alt="Assessed Value" className="h-[18px] w-auto inline-block" />
-                  ) : (
-                    ""
-                  )
-                }
-              />
+              <InfoWindowRow label="Assessed Value" value={data.AssessedValue ? <img src={data.AssessedValue} alt="Assessed Value" className="h-[18px] w-auto inline-block" /> : ""} />
               <div className="text-[9px] text-gray-500 pb-1 pl-4">(may not reflect current market value)</div>
             </>
           )}
@@ -257,7 +248,7 @@ function ReportSection({ title, icon, children }: { title: string; icon: string;
   return (
     <>
       <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase bg-[#dfdfdf] p-1.5 border border-[#ccc] rounded-t">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {}
         <img src={icon} alt="" className="w-5 h-5" />
         {title}
       </div>

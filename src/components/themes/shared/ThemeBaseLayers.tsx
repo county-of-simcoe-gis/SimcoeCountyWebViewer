@@ -51,7 +51,6 @@ function LayerLegendItem({ layer }: { layer: BaseLayerConfig }) {
     <div className="mb-3 last:mb-0">
       <div className="text-xs font-semibold text-base-content/80 mb-1">{layer.displayName}</div>
       {legendUrl && (
-        /* eslint-disable-next-line @next/next/no-img-element */
         <img src={legendUrl} alt={`${layer.displayName} legend`} onError={() => setHasError(true)} />
       )}
     </div>
@@ -197,7 +196,7 @@ export default function ThemeBaseLayers({ config, themeId }: ThemeBaseLayersProp
           {/* Static legend image fallback - only used when useDynamicLegend is explicitly false */}
           {config.useDynamicLegend === false && config.legendImageName && (
             <div className="mt-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {}
               <img src={getPublicPath(`/images/${config.legendImageName}`)} alt="Legend" className="w-full" />
             </div>
           )}

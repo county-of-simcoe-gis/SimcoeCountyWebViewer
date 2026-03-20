@@ -33,7 +33,7 @@ function formatDateForApiLegacy(dt: Date): string {
   return dt.getFullYear() + "-" + pad2(dt.getMonth() + 1) + "-" + pad2(dt.getDate()) + " " + pad2(dt.getHours()) + ":" + pad2(dt.getMinutes()) + ":" + pad2(dt.getSeconds());
 }
 
-function extractFrame(img: any): { url: string; extent: [number, number, number, number] } | null {
+function extractFrame(img: RadarImage): { url: string; extent: [number, number, number, number] } | null {
   if (img?.imageUrl && Array.isArray(img?.extent) && img.extent.length === 4) {
     return { url: String(img.imageUrl), extent: img.extent };
   }
@@ -54,11 +54,11 @@ function extractFrame(img: any): { url: string; extent: [number, number, number,
   }
 }
 
-function getRadarCode(img: any): string {
+function getRadarCode(img: RadarImage): string {
   return String(img?.RADAR_STATION_CODE ?? img?.RADAR_CODE ?? img?.radarCode ?? "");
 }
 
-function getRadarDate(img: any): Date | null {
+function getRadarDate(img: RadarImage): Date | null {
   const d = img?.RADAR_DATE ?? img?.radarDate ?? img?.date;
   if (!d) return null;
   const dt = new Date(d);
@@ -69,9 +69,9 @@ function getRadarDate(img: any): Date | null {
 export default function WeatherRadar(): React.ReactElement {
   // single managed layer id (from LayerManager) or fallback OL layer
   const layerIdRef = useRef<string | null>(null);
-  const fallbackOlLayerRef = useRef<any | null>(null);
+  const fallbackOlLayerRef = useRef<ImageLayer<Static> | null>(null);
   // frame lookup: key = `${time.getTime()}_${code}` -> frame info
-  const frameLookupRef = useRef<Map<string, { url: string; extent: [number, number, number, number]; date: Date; code: string; timeId?: any }>>(new Map());
+  const frameLookupRef = useRef<Map<string, { url: string; extent: [number, number, number, number]; date: Date; code: string; timeId?: string | number }>>(new Map());
   const refreshIntervalRef = useRef<number | null>(null);
   const inFlightRef = useRef(false);
 
@@ -135,7 +135,7 @@ export default function WeatherRadar(): React.ReactElement {
 
     // As a safety-net, also scan map for any leftover layers tagged with this instance id
     try {
-      const map = (window as any)?.map;
+      const map = (window as unknown as { map?: import("ol/Map").default }).map;
       if (map) {
         const allLayers = map.getLayers?.().getArray?.() ?? [];
         for (const l of allLayers) {
@@ -165,7 +165,7 @@ export default function WeatherRadar(): React.ReactElement {
       if (codes.length === 0) {
         // nothing selected -> hide layer
         if (layerIdRef.current) {
-          const managed = getLayer(layerIdRef.current) as any;
+          const managed = getLayer(layerIdRef.current) as { layer?: ImageLayer<Static> } | null;
           const layer = managed?.layer ?? null;
           if (layer) layer.setVisible(false);
         } else if (fallbackOlLayerRef.current) {
@@ -181,7 +181,7 @@ export default function WeatherRadar(): React.ReactElement {
 
       if (frame) {
         // ensure layer shows this frame
-        const applyFrame = (layer: any) => {
+        const applyFrame = (layer: ImageLayer<Static>) => {
           try {
             layer.setVisible(true);
             layer.setProperties({ radarCode: frame.code, radarDate: frame.date, timeId: frame.timeId });
@@ -192,7 +192,7 @@ export default function WeatherRadar(): React.ReactElement {
         };
 
         if (layerIdRef.current) {
-          const managed = getLayer(layerIdRef.current) as any;
+          const managed = getLayer(layerIdRef.current) as { layer?: ImageLayer<Static> } | null;
           const layer = managed?.layer ?? null;
           if (layer) applyFrame(layer);
         } else if (fallbackOlLayerRef.current) {
@@ -201,7 +201,7 @@ export default function WeatherRadar(): React.ReactElement {
       } else {
         // no matching frame -> hide layer
         if (layerIdRef.current) {
-          const managed = getLayer(layerIdRef.current) as any;
+          const managed = getLayer(layerIdRef.current) as { layer?: ImageLayer<Static> } | null;
           const layer = managed?.layer ?? null;
           if (layer) layer.setVisible(false);
         } else if (fallbackOlLayerRef.current) {
@@ -218,7 +218,7 @@ export default function WeatherRadar(): React.ReactElement {
   useEffect(() => {
     try {
       if (layerIdRef.current) {
-        const managed = getLayer(layerIdRef.current) as any;
+        const managed = getLayer(layerIdRef.current) as { layer?: ImageLayer<Static> } | null;
         const layer = managed?.layer ?? null;
         if (layer && layer.setOpacity) layer.setOpacity(opacity);
       } else if (fallbackOlLayerRef.current && fallbackOlLayerRef.current.setOpacity) {
@@ -229,7 +229,7 @@ export default function WeatherRadar(): React.ReactElement {
 
   const fetchRadarImages = useCallback(
     async (reason: "mount" | "manual" | "interval" | "update" = "manual") => {
-      const map = (window as any)?.map;
+      const map = (window as unknown as { map?: import("ol/Map").default }).map;
       if (!map) return;
 
       // Throttle: avoid rapid repeated fetches (e.g., UI stuck firing events)
@@ -272,7 +272,7 @@ export default function WeatherRadar(): React.ReactElement {
           const code = getRadarCode(img);
           if (!frame || !d || !code) continue;
 
-          const entry = { url: frame.url, extent: frame.extent, date: d, code, timeId: (img as any)?.TIME_ID ?? (img as any)?.timeId };
+          const entry = { url: frame.url, extent: frame.extent, date: d, code, timeId: (img as RadarImage & { TIME_ID?: string; timeId?: string }).TIME_ID ?? (img as RadarImage & { timeId?: string }).timeId };
           const key = `${d.getTime()}_${code}`;
           frameLookupRef.current.set(key, entry);
           frameDates.push(d);
@@ -323,7 +323,7 @@ export default function WeatherRadar(): React.ReactElement {
               // update existing layer source to lastFrame
               try {
                 if (layerIdRef.current) {
-                  const managed = getLayer(layerIdRef.current) as any;
+                  const managed = getLayer(layerIdRef.current) as { layer?: ImageLayer<Static> } | null;
                   const layer = managed?.layer ?? null;
                   if (layer) {
                     const src = new Static({ url: lastFrame.url, projection: "EPSG:3857", imageExtent: lastFrame.extent });

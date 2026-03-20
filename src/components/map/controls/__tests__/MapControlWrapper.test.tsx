@@ -54,7 +54,7 @@ describe("MapControlWrapper", () => {
   });
 
   it("creates a map control with React component", () => {
-    const TestComponent = ({ map }: { map: Map | null }) => <div data-testid="test-component">Test Component</div>;
+    const TestComponent = ({ map: _map }: { map: Map | null }) => <div data-testid="test-component">Test Component</div>;
 
     const control = createMapControl(TestComponent, "test-class");
 
@@ -64,7 +64,7 @@ describe("MapControlWrapper", () => {
   });
 
   it("applies custom CSS class to control element", () => {
-    const TestComponent = ({ map }: { map: Map | null }) => <div data-testid="test-component">Test Component</div>;
+    const TestComponent = ({ map: _map }: { map: Map | null }) => <div data-testid="test-component">Test Component</div>;
 
     const customClass = "custom-control-class";
     const control = createMapControl(TestComponent, customClass);
@@ -95,9 +95,9 @@ describe("MapControlWrapper", () => {
   });
 
   it("creates unique control instances", () => {
-    const TestComponent1 = ({ map }: { map: Map | null }) => <div data-testid="test-component-1">Component 1</div>;
+    const TestComponent1 = ({ map: _map }: { map: Map | null }) => <div data-testid="test-component-1">Component 1</div>;
 
-    const TestComponent2 = ({ map }: { map: Map | null }) => <div data-testid="test-component-2">Component 2</div>;
+    const TestComponent2 = ({ map: _map }: { map: Map | null }) => <div data-testid="test-component-2">Component 2</div>;
 
     const control1 = createMapControl(TestComponent1, "class1");
     const control2 = createMapControl(TestComponent2, "class2");
@@ -108,10 +108,10 @@ describe("MapControlWrapper", () => {
   });
 
   it("passes map instance to React component", () => {
-    let receivedMap: Map | null = null;
+    let _receivedMap: Map | null = null;
 
     const TestComponent = ({ map }: { map: Map | null }) => {
-      receivedMap = map;
+      _receivedMap = map;
       return <div data-testid="test-component">Test</div>;
     };
 
@@ -140,7 +140,7 @@ describe("MapControlWrapper", () => {
   });
 
   it("supports different CSS classes for different controls", () => {
-    const TestComponent = ({ map }: { map: Map | null }) => <div data-testid="test-component">Test Component</div>;
+    const TestComponent = ({ map: _map }: { map: Map | null }) => <div data-testid="test-component">Test Component</div>;
 
     const classes = [
       "ol-unselectable ol-control map-control-zone-top-left",
@@ -156,7 +156,7 @@ describe("MapControlWrapper", () => {
   });
 
   it("maintains control lifecycle", () => {
-    const TestComponent = ({ map }: { map: Map | null }) => <div data-testid="test-component">Test Component</div>;
+    const TestComponent = ({ map: _map }: { map: Map | null }) => <div data-testid="test-component">Test Component</div>;
 
     const control = createMapControl(TestComponent, "test-class");
 

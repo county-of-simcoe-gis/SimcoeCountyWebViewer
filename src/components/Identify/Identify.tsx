@@ -38,8 +38,8 @@ export interface IdentifyResult {
 }
 
 const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
-  const { map } = useMapStore();
-  const { getAllLayers } = useLayerManagerStore();
+  const map = useMapStore((s) => s.map);
+  const getAllLayers = useLayerManagerStore((s) => s.getAllLayers);
   const [layers, setLayers] = useState<IdentifyResult[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const hasLoadedRef = React.useRef<boolean>(false);

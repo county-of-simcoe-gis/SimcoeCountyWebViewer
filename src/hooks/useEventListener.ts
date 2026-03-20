@@ -42,7 +42,8 @@ export function useEventListener(
   callback: (data?: EventData) => void,
   deps: React.DependencyList = []
 ) {
-  const { addListener, removeListener } = useEventStore()
+  const addListener = useEventStore((s) => s.addListener)
+  const removeListener = useEventStore((s) => s.removeListener)
 
   useEffect(() => {
     const listenerId = addListener(eventType, callback)

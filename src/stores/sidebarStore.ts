@@ -177,14 +177,6 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
     // Convert and filter enabled themes
     const themes = sidebarThemeComponents.filter((component) => component.enabled !== false && component.disable !== true).map((component) => convertToSidebarItem(component, "theme"));
 
-    console.log("Sidebar store loadFromConfig:", {
-      rawTools: sidebarToolComponents.length,
-      filteredTools: tools.length,
-      rawThemes: sidebarThemeComponents.length,
-      filteredThemes: themes.length,
-      hideFlags: hideFlags || {},
-    });
-
     set({
       tools,
       themes,

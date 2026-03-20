@@ -89,7 +89,7 @@ function CREResultItem({ feature }: { feature: Feature<Geometry> }) {
 
       {/* Thumbnail + price */}
       <div className="flex flex-col items-center gap-1 flex-shrink-0">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {}
         <img
           className="w-[80px] h-[60px] object-cover rounded"
           src={imageUrl ?? NO_PHOTO}
