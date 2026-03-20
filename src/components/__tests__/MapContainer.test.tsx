@@ -106,7 +106,7 @@ const mockMapStore: Record<string, any> = {
 
 vi.mock("@/stores/mapStore", () => ({
   useMapStore: Object.assign(
-    vi.fn(() => mockMapStore),
+    vi.fn((selector?: any) => (typeof selector === "function" ? selector(mockMapStore) : mockMapStore)),
     {
       getState: vi.fn(() => mockMapStore),
       setState: vi.fn(),
@@ -116,26 +116,26 @@ vi.mock("@/stores/mapStore", () => ({
 }));
 
 vi.mock("@/stores/eventStore", () => ({
-  useEventStore: vi.fn(() => ({
-    emitMapLoaded: vi.fn(),
-  })),
+  useEventStore: vi.fn((selector?: any) => {
+    const state = {
+      emitMapLoaded: vi.fn(),
+    };
+    return typeof selector === "function" ? selector(state) : state;
+  }),
 }));
+
+const mockLayerManagerStoreState = {
+  addLayer: vi.fn(() => "test-layer-id"),
+  removeLayer: vi.fn(),
+  getLayer: vi.fn(),
+  getAllLayers: vi.fn(() => []),
+};
 
 vi.mock("@/stores/layerManagerStore", () => ({
   useLayerManagerStore: Object.assign(
-    vi.fn(() => ({
-      addLayer: vi.fn(() => "test-layer-id"),
-      removeLayer: vi.fn(),
-      getLayer: vi.fn(),
-      getAllLayers: vi.fn(() => []),
-    })),
+    vi.fn((selector?: any) => (typeof selector === "function" ? selector(mockLayerManagerStoreState) : mockLayerManagerStoreState)),
     {
-      getState: vi.fn(() => ({
-        addLayer: vi.fn(() => "test-layer-id"),
-        removeLayer: vi.fn(),
-        getLayer: vi.fn(),
-        getAllLayers: vi.fn(() => []),
-      })),
+      getState: vi.fn(() => mockLayerManagerStoreState),
       setState: vi.fn(),
       subscribe: vi.fn(),
     },
@@ -143,9 +143,12 @@ vi.mock("@/stores/layerManagerStore", () => ({
 }));
 
 vi.mock("@/stores/sidebarStore", () => ({
-  useSidebarStore: vi.fn(() => ({
-    isOpen: false,
-  })),
+  useSidebarStore: vi.fn((selector?: any) => {
+    const state = {
+      isOpen: false,
+    };
+    return typeof selector === "function" ? selector(state) : state;
+  }),
 }));
 
 // Mock OpenLayers classes
@@ -220,6 +223,13 @@ const mockFeature = {
 vi.mock("ol", () => ({
   Feature: vi.fn(function () {
     return mockFeature;
+  }),
+  Overlay: vi.fn(function () {
+    return {
+      setPosition: vi.fn(),
+      getElement: vi.fn(),
+      setElement: vi.fn(),
+    };
   }),
 }));
 
@@ -339,10 +349,13 @@ describe("MapContainer", () => {
 
     // Reset useAppStore mock
     const mockUseAppStore = vi.mocked(useAppStore);
-    mockUseAppStore.mockReturnValue({
-      setMapLoading: vi.fn(),
-      urlParameters: {},
-    });
+    mockUseAppStore.mockImplementation(((selector?: any) => {
+      const state = {
+        setMapLoading: vi.fn(),
+        urlParameters: {},
+      };
+      return typeof selector === "function" ? selector(state) : state;
+    }) as any);
   });
 
   it("renders without crashing", () => {
@@ -354,15 +367,18 @@ describe("MapContainer", () => {
   it("handles URL parameters for coordinate positioning", () => {
     // Mock useAppStore with coordinate URL parameters
     const mockUseAppStore = vi.mocked(useAppStore);
-    mockUseAppStore.mockReturnValue({
-      setMapLoading: vi.fn(),
-      urlParameters: {
-        X: "-8900000",
-        Y: "5500000",
-        SR: "WEB",
-        ID: "true",
-      },
-    });
+    mockUseAppStore.mockImplementation(((selector?: any) => {
+      const state = {
+        setMapLoading: vi.fn(),
+        urlParameters: {
+          X: "-8900000",
+          Y: "5500000",
+          SR: "WEB",
+          ID: "true",
+        },
+      };
+      return typeof selector === "function" ? selector(state) : state;
+    }) as any);
 
     const { container } = render(<MapContainer />);
 
@@ -374,15 +390,18 @@ describe("MapContainer", () => {
   it("handles URL parameters for extent positioning", () => {
     // Mock useAppStore with extent URL parameters
     const mockUseAppStore = vi.mocked(useAppStore);
-    mockUseAppStore.mockReturnValue({
-      setMapLoading: vi.fn(),
-      urlParameters: {
-        XMIN: "-9000000",
-        YMIN: "5400000",
-        XMAX: "-8800000",
-        YMAX: "5600000",
-      },
-    });
+    mockUseAppStore.mockImplementation(((selector?: any) => {
+      const state = {
+        setMapLoading: vi.fn(),
+        urlParameters: {
+          XMIN: "-9000000",
+          YMIN: "5400000",
+          XMAX: "-8800000",
+          YMAX: "5600000",
+        },
+      };
+      return typeof selector === "function" ? selector(state) : state;
+    }) as any);
 
     const { container } = render(<MapContainer />);
 
@@ -394,12 +413,15 @@ describe("MapContainer", () => {
   it("handles URL parameters for NG911ID lookup", () => {
     // Mock useAppStore with NG911ID parameter
     const mockUseAppStore = vi.mocked(useAppStore);
-    mockUseAppStore.mockReturnValue({
-      setMapLoading: vi.fn(),
-      urlParameters: {
-        NG911ID: "test-ng911-id",
-      },
-    });
+    mockUseAppStore.mockImplementation(((selector?: any) => {
+      const state = {
+        setMapLoading: vi.fn(),
+        urlParameters: {
+          NG911ID: "test-ng911-id",
+        },
+      };
+      return typeof selector === "function" ? selector(state) : state;
+    }) as any);
 
     const { container } = render(<MapContainer />);
 

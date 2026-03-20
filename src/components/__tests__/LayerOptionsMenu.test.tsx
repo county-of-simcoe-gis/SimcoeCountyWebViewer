@@ -171,7 +171,7 @@ describe("LayerOptionsMenu", () => {
       getLayer: vi.fn(() => mockManagedLayer),
       getLayerExtent: vi.fn(() => [100, 100, 200, 200]),
     };
-    vi.mocked(useLayerManagerStore).mockReturnValue(mockLayerManagerStore);
+    vi.mocked(useLayerManagerStore).mockImplementation(((selector?: any) => (typeof selector === "function" ? selector(mockLayerManagerStore) : mockLayerManagerStore)) as any);
 
     // Mock the getState method for layerManagerStore
     const mockLayerManagerStoreForGetState = {
@@ -189,7 +189,7 @@ describe("LayerOptionsMenu", () => {
         })),
       },
     };
-    vi.mocked(useMapStore).mockReturnValue(mockMapStore);
+    vi.mocked(useMapStore).mockImplementation(((selector?: any) => (typeof selector === "function" ? selector(mockMapStore) : mockMapStore)) as any);
   });
 
   afterEach(() => {

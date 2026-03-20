@@ -135,23 +135,34 @@ describe("PropertyReportClick", () => {
     mockUnregisterHandler.mockClear();
 
     // Mock useMapStore
-    (useMapStore as any).mockReturnValue({
-      map: mockMap as any,
-      disableParcelClick: false,
-      isDrawingOrEditing: false,
-      isCoordinateToolOpen: false,
-      isMeasuring: false,
+    (useMapStore as any).mockImplementation((selector?: any) => {
+      const state = {
+        map: mockMap as any,
+        checkGlobalDisable: vi.fn(() => false),
+        disableParcelClick: false,
+        isDrawingOrEditing: false,
+        isCoordinateToolOpen: false,
+        isMeasuring: false,
+      };
+      return typeof selector === "function" ? selector(state) : state;
     });
 
     // Mock usePopupStore
-    (usePopupStore as any).mockReturnValue({
-      show: mockShowPopup,
-      hide: mockHidePopup,
+    (usePopupStore as any).mockImplementation((selector?: any) => {
+      const state = {
+        show: mockShowPopup,
+        hide: mockHidePopup,
+      };
+      return typeof selector === "function" ? selector(state) : state;
     });
 
     // Mock useAppStore
-    (useAppStore as any).mockReturnValue({
-      urlParameters: {},
+    (useAppStore as any).mockImplementation((selector?: any) => {
+      const state = {
+        urlParameters: {},
+        config: null,
+      };
+      return typeof selector === "function" ? selector(state) : state;
     });
 
     // Reset window.location
@@ -181,12 +192,16 @@ describe("PropertyReportClick", () => {
   });
 
   it("does not initialize if map is not available", () => {
-    (useMapStore as any).mockReturnValue({
-      map: null,
-      disableParcelClick: false,
-      isDrawingOrEditing: false,
-      isCoordinateToolOpen: false,
-      isMeasuring: false,
+    (useMapStore as any).mockImplementation((selector?: any) => {
+      const state = {
+        map: null,
+        checkGlobalDisable: vi.fn(() => false),
+        disableParcelClick: false,
+        isDrawingOrEditing: false,
+        isCoordinateToolOpen: false,
+        isMeasuring: false,
+      };
+      return typeof selector === "function" ? selector(state) : state;
     });
 
     render(<PropertyReportClick />);

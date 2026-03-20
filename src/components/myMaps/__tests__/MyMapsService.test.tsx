@@ -113,7 +113,7 @@ const mockEventStoreState = {
 };
 
 vi.mock("@/stores/myMapsStore", () => ({
-  useMyMapsStore: vi.fn(() => mockMyMapsStore),
+  useMyMapsStore: vi.fn((selector?: any) => (typeof selector === "function" ? selector(mockMyMapsStore) : mockMyMapsStore)),
   createMyMapsItem: vi.fn((feature, drawType, label, style) => ({
     id: "created-item-id",
     label: label,
@@ -131,15 +131,15 @@ vi.mock("@/stores/myMapsStore", () => ({
 let mockCreateMyMapsItem: ReturnType<typeof vi.fn>;
 
 vi.mock("@/stores/mapStore", () => ({
-  useMapStore: vi.fn(() => mockMapStore),
+  useMapStore: vi.fn((selector?: any) => (typeof selector === "function" ? selector(mockMapStore) : mockMapStore)),
 }));
 
 vi.mock("@/stores/eventStore", () => ({
-  useEventStore: vi.fn(() => mockEventStore),
+  useEventStore: vi.fn((selector?: any) => (typeof selector === "function" ? selector(mockEventStore) : mockEventStore)),
 }));
 
 vi.mock("@/stores/layerManagerStore", () => ({
-  useLayerManagerStore: vi.fn(() => mockLayerManagerStore),
+  useLayerManagerStore: vi.fn((selector?: any) => (typeof selector === "function" ? selector(mockLayerManagerStore) : mockLayerManagerStore)),
 }));
 
 describe("MyMapsService Component", () => {
@@ -151,6 +151,7 @@ describe("MyMapsService Component", () => {
     mockMyMapsStore.isEditing = false;
     mockMyMapsStore.editMode = null;
     mockMyMapsStore.items = [];
+    mockMapStore.map = mockMap;
 
     // Set up the event store getState method
     (useEventStore as any).getState = vi.fn(() => mockEventStoreState);
@@ -166,7 +167,7 @@ describe("MyMapsService Component", () => {
 
   describe("Initialization", () => {
     it("should not initialize drawing manager when map is not available", () => {
-      vi.mocked(useMapStore).mockReturnValue({ map: null });
+      mockMapStore.map = null;
 
       render(<MyMapsService />);
 

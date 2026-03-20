@@ -7,10 +7,13 @@ import type { AppConfig } from "@/utils/config";
 
 // Mock useAppStore
 vi.mock("@/stores/appStore", () => ({
-  useAppStore: vi.fn(() => ({
-    config: null,
-    urlParameters: {},
-  })),
+  useAppStore: vi.fn((selector?: any) => {
+    const state = {
+      config: null,
+      urlParameters: {},
+    };
+    return typeof selector === "function" ? selector(state) : state;
+  }),
 }));
 
 describe("TOC", () => {
@@ -27,21 +30,27 @@ describe("TOC", () => {
 
     // Reset useAppStore mock
     const mockUseAppStore = vi.mocked(useAppStore);
-    mockUseAppStore.mockReturnValue({
-      config: null,
-      urlParameters: {},
-    });
+    mockUseAppStore.mockImplementation(((selector?: any) => {
+      const state = {
+        config: null,
+        urlParameters: {},
+      };
+      return typeof selector === "function" ? selector(state) : state;
+    }) as any);
   });
 
   it("initializes from config and shows header controls", async () => {
     // Mock useAppStore with config
     const mockUseAppStore = vi.mocked(useAppStore);
-    mockUseAppStore.mockReturnValue({
-      config: {
-        toc: { tocType: "LIST", sources: [], helpLink: "", default_group: "" },
-      } as unknown as AppConfig,
-      urlParameters: {},
-    });
+    mockUseAppStore.mockImplementation(((selector?: any) => {
+      const state = {
+        config: {
+          toc: { tocType: "LIST", sources: [], helpLink: "", default_group: "" },
+        } as unknown as AppConfig,
+        urlParameters: {},
+      };
+      return typeof selector === "function" ? selector(state) : state;
+    }) as any);
 
     render(<TOC visible />);
 
@@ -56,17 +65,20 @@ describe("TOC", () => {
   it("handles URL parameters for TOC configuration", async () => {
     // Mock useAppStore with URL parameters
     const mockUseAppStore = vi.mocked(useAppStore);
-    mockUseAppStore.mockReturnValue({
-      config: {
-        toc: { tocType: "LIST", sources: [], helpLink: "", default_group: "" },
-      } as unknown as AppConfig,
-      urlParameters: {
-        TOCTYPE: "FOLDER",
-        GROUP: "environmental",
-        LAYERS: "layer1,layer2",
-        EXPAND_LEGEND: "true",
-      },
-    });
+    mockUseAppStore.mockImplementation(((selector?: any) => {
+      const state = {
+        config: {
+          toc: { tocType: "LIST", sources: [], helpLink: "", default_group: "" },
+        } as unknown as AppConfig,
+        urlParameters: {
+          TOCTYPE: "FOLDER",
+          GROUP: "environmental",
+          LAYERS: "layer1,layer2",
+          EXPAND_LEGEND: "true",
+        },
+      };
+      return typeof selector === "function" ? selector(state) : state;
+    }) as any);
 
     const { container } = render(<TOC visible />);
 
