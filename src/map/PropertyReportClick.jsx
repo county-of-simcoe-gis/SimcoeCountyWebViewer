@@ -94,7 +94,7 @@ class PropertyReportClick extends Component {
           layerFilter: function (layer) {
             return layer.get("disableParcelClick") !== true && layer.getVisible() && layer instanceof VectorLayer;
           },
-        }
+        },
       );
 
       // IMAGE LAYERS
@@ -150,7 +150,7 @@ class PropertyReportClick extends Component {
                     }
                     resolve();
                   }
-                })
+                }),
               );
             });
           }
@@ -231,7 +231,7 @@ class PropertyReportClick extends Component {
           secured={options.secured}
           type={options.type}
           arn={options.arn}
-        />
+        />,
       );
     } else {
       if (options.coords && options.layer) {
@@ -273,7 +273,7 @@ class PropertyReportClick extends Component {
           {this.extensions.map((extension) => {
             return <Fragment key={helpers.getUID()}>{extension.arnExtension({ arn })}</Fragment>;
           })}
-        </InfoRow>
+        </InfoRow>,
       );
     if (hasZoning !== undefined)
       rows.push(
@@ -294,14 +294,14 @@ class PropertyReportClick extends Component {
           ) : (
             ""
           )}
-        </InfoRow>
+        </InfoRow>,
       );
     if (assessedValue)
       rows.push(
         <InfoRow key={helpers.getUID()} label={"Assessed Value"}>
           <img src={assessedValue} alt="assessment" />
           <div style={{ fontSize: "9px", color: "#555", paddingBottom: "4px !important" }}>(may not reflect current market value)</div>
-        </InfoRow>
+        </InfoRow>,
       );
 
     if (garbageDay) rows.push(<InfoRow key={helpers.getUID()} label={"Waste Collection Day"} value={garbageDay} />);
@@ -328,7 +328,7 @@ class PropertyReportClick extends Component {
         >
           [Terms]
         </span>
-      </InfoRow>
+      </InfoRow>,
     );
 
     rows.push(<InfoRow key={helpers.getUID()} label={"Pointer Coordinates"} value={"Lat: " + Math.round(coords[1] * 10000) / 10000 + "  Long: " + Math.round(coords[0] * 10000) / 10000} />);
@@ -357,7 +357,7 @@ class PropertyReportClick extends Component {
             >
               {item.linkText}
             </span>
-          </InfoRow>
+          </InfoRow>,
         );
       });
     }
@@ -446,8 +446,10 @@ class PropertyReportClick extends Component {
                   window.map.getView().fit(feature.getGeometry().getExtent(), window.map.getSize());
 
                   // GET FULL INFO
-                  this.getData({ feature, arn: item.ARN, pointerPoint, latLongCoords }, (itemResult) => {
+                  this.getData({ feature, arn: item.ARN, condoArn: arn, pointerPoint, latLongCoords }, (itemResult) => {
                     // this.setState({ propInfo: itemResult, userClickCoords: pointerPoint });
+                    itemResult.condoArn = arn;
+
                     window.popup.show(pointerPoint, this.getPopupContent(itemResult), "Property Information", () => {});
                   });
                 });
@@ -456,8 +458,9 @@ class PropertyReportClick extends Component {
                 pointerPoint = clickEvt.coordinate;
 
                 // GET FULL INFO
-                this.getData({ feature, arn: item.ARN, pointerPoint, latLongCoords }, (itemResult) => {
+                this.getData({ feature, arn: item.ARN, condoArn: arn, pointerPoint, latLongCoords }, (itemResult) => {
                   // this.setState({ propInfo: itemResult, userClickCoords: pointerPoint });
+                  itemResult.condoArn = arn;
                   window.popup.show(pointerPoint, this.getPopupContent(itemResult), "Property Information", () => {});
                 });
               }
@@ -498,6 +501,11 @@ class PropertyReportClick extends Component {
   };
 
   getCondoData = (arn, callback) => {
+    if (!window.config.condoUrl) {
+      console.warn("condoUrl is not configured in config.json");
+      callback([]);
+      return;
+    }
     const infoURL = window.config.condoUrl + arn;
     helpers.getJSON(infoURL, (result) => {
       callback(result);
@@ -506,31 +514,39 @@ class PropertyReportClick extends Component {
 
   getData = (options, callback) => {
     const { feature, arn, pointerPoint, latLongCoords } = options;
-    let allPromises = [];
     if (feature !== undefined) {
       const infoURL = window.config.propertyReportUrl + arn;
-      allPromises.push(
-        new Promise((resolve, reject) => {
-          helpers.getJSON(infoURL, (result) => {
-            result.pointerCoordinates = pointerPoint;
-            result.pointCoordinates = latLongCoords;
-            result.shareURL = this.getShareURL(arn);
-            result.area = getArea(feature.getGeometry());
-            resolve(result);
+
+      const apiPromise = new Promise((resolve, reject) => {
+        helpers.getJSON(infoURL, (result) => {
+          const records = Array.isArray(result) ? result : [result];
+          records.forEach((record) => {
+            record.pointerCoordinates = pointerPoint;
+            record.pointCoordinates = latLongCoords;
+            record.shareURL = this.getShareURL(arn);
+            record.area = getArea(feature.getGeometry());
           });
-        })
-      );
+          resolve(records);
+        });
+      });
+
+      let extensionPromises = [];
       this.extensions.forEach((extension) => {
-        allPromises.push(extension.fetchData({ ...options, data: {} }));
+        extensionPromises.push(extension.fetchData({ ...options, data: {} }));
+      });
+
+      Promise.all([apiPromise, ...extensionPromises]).then((results) => {
+        const records = results[0];
+        let extensionData = {};
+        results.slice(1).forEach((result) => {
+          extensionData = { ...extensionData, ...result };
+        });
+
+        records.forEach((record) => {
+          if (callback) callback({ ...record, ...extensionData });
+        });
       });
     }
-    Promise.all(allPromises).then((results) => {
-      let allResults = {};
-      results.forEach((result) => {
-        allResults = { ...allResults, ...result };
-      });
-      if (callback) callback(allResults);
-    });
   };
 
   render() {
