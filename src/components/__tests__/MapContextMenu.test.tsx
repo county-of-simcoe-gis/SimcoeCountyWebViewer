@@ -62,7 +62,7 @@ describe("MapContextMenu", () => {
     render(<MapContextMenu x={100} y={100} items={defaultItems} onClose={mockOnClose} showHeader={true} title="Test Menu" />);
 
     expect(screen.getByText("Test Menu")).toBeInTheDocument();
-    const closeButton = screen.getByText("×");
+    const closeButton = screen.getByTitle("Close");
     expect(closeButton).toBeInTheDocument();
   });
 
@@ -171,7 +171,7 @@ describe("MapContextMenu", () => {
   it("closes menu when clicking close button in header", () => {
     render(<MapContextMenu x={100} y={100} items={defaultItems} onClose={mockOnClose} showHeader={true} title="Test" />);
 
-    const closeButton = screen.getByText("×");
+    const closeButton = screen.getByTitle("Close");
     fireEvent.click(closeButton);
 
     expect(mockOnClose).toHaveBeenCalledTimes(1);
@@ -264,4 +264,3 @@ describe("MapContextMenu", () => {
     expect(menuContainer).toBeInTheDocument();
   });
 });
-

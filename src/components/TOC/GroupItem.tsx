@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { TOCLayerGroup, TOCLayer, useTOCStore } from "@/stores/tocStore";
 import { FaEllipsisV, FaFolder, FaFolderOpen } from "react-icons/fa";
 import LayerItem from "@/components/TOC/LayerItem";
+import { MenuList, MenuItem, MenuHeading } from "@/components/ui/MenuList";
 
 interface GroupItemProps {
   id: string;
@@ -40,6 +41,9 @@ export default function GroupItem({
   const [panelOpen, setPanelOpen] = useState(() => getFolderOpenState(group.value) ?? propsPanelOpen);
   const [userPanelOpen, setUserPanelOpen] = useState(() => getFolderOpenState(group.value) ?? propsPanelOpen);
   const [activeLayerCount, setActiveLayerCount] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const menuRef = useRef<HTMLDivElement>(null);
 
   // Calculate active layer count using fresh store data
   const calculateActiveLayerCount = useCallback(() => {
@@ -70,20 +74,36 @@ export default function GroupItem({
     }
   }, [propsPanelOpen, group.value, getFolderOpenState, setFolderOpenState]);
 
-  // Simple group options click - for now just show alert, can be enhanced with proper menu later
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
+
+  // Group options menu
   const onGroupOptionsClick = useCallback(
     (evt: React.MouseEvent) => {
       evt.stopPropagation();
-      // TODO: Implement proper floating menu or dropdown
-      // For now, just provide basic functionality
-      const enableLayers = () => onLayerVisibilityGroup(group, true);
-      const disableLayers = () => onLayerVisibilityGroup(group, false);
+      const rect = (evt.currentTarget as HTMLElement).getBoundingClientRect();
+      setMenuPosition({ top: rect.bottom, left: rect.left });
+      setMenuOpen((prev) => !prev);
+    },
+    [],
+  );
 
-      // Simple implementation - can be enhanced with proper menu component
-      if (confirm(`Group Options for ${group.label}\nPress OK to turn on all layers, Cancel to turn off all layers`)) {
-        enableLayers();
-      } else {
-        disableLayers();
+  const onMenuItemClick = useCallback(
+    (action: string) => {
+      setMenuOpen(false);
+      if (action === "enable-layers") {
+        onLayerVisibilityGroup(group, true);
+      } else if (action === "disable-layers") {
+        onLayerVisibilityGroup(group, false);
       }
     },
     [group, onLayerVisibilityGroup],
@@ -151,6 +171,20 @@ export default function GroupItem({
       <div className="absolute right-2 -mt-[18px] cursor-pointer" title="Group Options" onClick={onGroupOptionsClick}>
         <FaEllipsisV size={16} className="opacity-70 text-[#666]" />
       </div>
+
+      {menuOpen && (
+        <div
+          ref={menuRef}
+          className="fixed z-[100000]"
+          style={{ top: menuPosition.top, left: menuPosition.left }}
+        >
+          <MenuList>
+            <MenuHeading>{`Options - ${group.label}`}</MenuHeading>
+            <MenuItem onClick={() => onMenuItemClick("enable-layers")}>Turn On All Layers</MenuItem>
+            <MenuItem onClick={() => onMenuItemClick("disable-layers")}>Turn Off All Layers</MenuItem>
+          </MenuList>
+        </div>
+      )}
 
       <div className={panelOpen || (isGroupVisible() && searchText !== "") ? "relative pl-5 border-l-2 border-dotted border-[#ccc] ml-2.5" : "hidden"} key={`${id}-sc-toc-group-list-item-container`}>
         {getSortedLayers().map((layer, index) => (

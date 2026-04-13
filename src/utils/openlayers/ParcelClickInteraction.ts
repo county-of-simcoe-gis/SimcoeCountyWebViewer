@@ -6,7 +6,6 @@
 import { Interaction } from "ol/interaction";
 import { MapBrowserEvent } from "ol";
 import VectorLayer from "ol/layer/Vector";
-import ImageLayer from "ol/layer/Image";
 
 export interface ParcelClickOptions {
   maxScale?: number; // Maximum scale at which parcel clicks work (default: 20000)
@@ -148,9 +147,16 @@ export class ParcelClickInteraction extends Interaction {
   }
 
   /**
-   * Static helper: Check vector and image layers for disableParcelClick property
-   * Returns true if parcel click should be disabled (i.e., a feature from a layer
-   * with disableParcelClick=true was clicked)
+   * Static helper: Check vector layers for disableParcelClick property at the
+   * clicked pixel.  Returns true when the user clicked directly on a feature
+   * belonging to a VectorLayer that has disableParcelClick=true (e.g. MyMaps
+   * drawing layer).
+   *
+   * Raster/image layers (WMS, ArcGIS ImageLayer) cannot be tested per-pixel
+   * here.  Components that need to suppress parcel clicks while their theme is
+   * active should use the `useDisableParcelClick` hook instead, which sets the
+   * global `disableParcelClick` flag in mapStore (checked via
+   * `checkGlobalDisable`).
    */
   public static checkLayersForDisable(event: MapBrowserEvent<UIEvent>): boolean {
     const map = event.map;
@@ -173,17 +179,6 @@ export class ParcelClickInteraction extends Interaction {
         },
       },
     );
-
-    if (shouldDisable) return true;
-
-    // Check image layers
-    const layers = map.getLayers().getArray();
-    for (const layer of layers) {
-      if (layer.get("disableParcelClick") && layer.getVisible() && layer instanceof ImageLayer) {
-        shouldDisable = true;
-        break;
-      }
-    }
 
     return shouldDisable;
   }

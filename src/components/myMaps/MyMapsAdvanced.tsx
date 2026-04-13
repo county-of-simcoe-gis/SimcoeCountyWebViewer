@@ -5,6 +5,8 @@ import { createPortal } from "react-dom";
 import Switch from "react-switch";
 import Image from "next/image";
 import copy from "copy-to-clipboard";
+import { useSession } from "next-auth/react";
+import { useConfig } from "@/hooks/useConfig";
 import { useMyMapsStore } from "@/stores/myMapsStore";
 import "./MyMapsAdvanced.css";
 
@@ -18,6 +20,8 @@ interface MyMapsAdvancedProps {
 
 const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDeleteAllClick, onMyMapsImport, onAdditionalToolsAction, hasItems }) => {
   const { isEditing, editMode, importText, setImportText, saveToApi, importFromApi } = useMyMapsStore();
+  const { data: session } = useSession();
+  const { config } = useConfig();
 
   const [open, setOpen] = useState(false);
   const [editOn, setEditOn] = useState(isEditing);
@@ -139,6 +143,29 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
     }
   };
 
+  const onSharePublic = () => {
+    if (!inputText.trim()) {
+      alert("Please save your MyMaps first to get an ID to share.");
+      return;
+    }
+
+    const publicUrl = config?.publicUrl;
+    if (!publicUrl) {
+      alert("Public URL is not configured.");
+      return;
+    }
+
+    const url = `${publicUrl}?MY_MAPS_ID=${inputText}`;
+
+    try {
+      copy(url);
+      alert("Public MyMaps link has been saved to clipboard.");
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error);
+      alert("Failed to copy link to clipboard. Please copy this URL manually: " + url);
+    }
+  };
+
   const onSave = async () => {
     try {
       const result = await saveToApi();
@@ -226,6 +253,11 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
               <button className="mymaps-action-btn" onClick={onShare} title="Create a shareable link with your saved MyMaps ID">
                 Share
               </button>
+              {session && (
+                <button className="mymaps-action-btn" onClick={onSharePublic} title="Create a shareable link for the public viewer">
+                  Share Public
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -18,13 +18,17 @@ interface ImageLoaderParams {
 }
 
 export default function imageLoader({ src }: ImageLoaderParams): string {
-  // External / remote images — return direct URL without proxying
-  if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("//")) {
+  // External / remote / data / blob images — return direct URL without proxying
+  if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("//") || src.startsWith("data:") || src.startsWith("blob:")) {
+    return src;
+  }
+
+  // Static imports (/_next/static/media/...) already have basePath prepended
+  // by Next.js before the loader is called — don't double-prepend.
+  if (basePath && src.startsWith(basePath)) {
     return src;
   }
 
   // Local public images — serve directly with basePath prefix.
-  // The basePath is already included by Next.js for <Image> src, but the
-  // loader receives the *original* src (without basePath), so we prepend it.
   return `${basePath}${src}`;
 }

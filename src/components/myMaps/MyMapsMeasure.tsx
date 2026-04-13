@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { getArea, getLength } from "ol/sphere.js";
 import type { MyMapsItem } from "@/types/myMaps";
 import * as helpers from "@/utils/myMapsHelpers";
-import { getPublicPath } from "@/utils/getPublicPath";
+import AppImage from "@/components/shared/AppImage";
 
 interface MyMapsMeasureProps {
   visible: boolean;
@@ -149,7 +149,7 @@ const MyMapsMeasure: React.FC<MyMapsMeasureProps> = ({ visible, item }) => {
   return (
     <fieldset className="sc-mymaps-measure-container border border-[#cecece] rounded-[3px] p-2 mb-[5px] bg-[#f9f9f9] w-full box-border m-0">
       <legend className="text-sm font-bold text-[#333] py-[2px] px-1.5 bg-[#f9f9f9] border border-[#cecece] rounded-[3px] flex items-center">
-        <img src={getPublicPath("/images/measure.png")} alt="measure" className="w-4 h-4 block mr-1" />
+        <AppImage src="/images/measure.png" alt="measure" className="w-4 h-4 block mr-1" />
         &nbsp; Measure
       </legend>
       <div className="text-[11pt]">

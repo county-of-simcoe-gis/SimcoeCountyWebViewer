@@ -14,6 +14,7 @@ import { Vector as VectorSource } from "ol/source";
 import { Icon, Style } from "ol/style";
 import { Point } from "ol/geom";
 import { getPublicPath } from "@/utils/getPublicPath";
+import AppImage from "@/components/shared/AppImage";
 import { Feature } from "ol";
 import GeoJSON from "ol/format/GeoJSON";
 import { transform } from "ol/proj";
@@ -249,7 +250,7 @@ function ServiceGroupComponent({ group, coords, address, isLoadingAddress }: Ser
     <div className="border border-base-300 rounded-lg overflow-hidden shadow-sm">
       <div className="flex items-center gap-2 p-3 bg-gradient-to-b from-base-100 to-base-200 border-b border-base-300">
         {}
-        <img src={`/images/tools/externalservices/${group.icon}`} alt={group.groupName} className="w-6 h-6 object-contain" />
+        <AppImage src={`/images/tools/externalservices/${group.icon}`} alt={group.groupName} className="w-6 h-6 object-contain" />
         <span className="font-semibold text-base">{group.groupName}</span>
       </div>
       <div className="p-2 space-y-1">

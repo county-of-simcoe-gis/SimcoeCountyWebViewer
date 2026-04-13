@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
+import { FaTimes } from "react-icons/fa";
 
 interface URLModalProps {
   url: string;
@@ -24,7 +25,7 @@ const URLModal: React.FC<URLModalProps> = ({ url, title = "External Content", is
       <div className="flex justify-between items-center px-5 py-4 border-b border-base-300 bg-base-200 shrink-0">
         <h3 className="m-0 text-lg font-semibold text-base-content max-w-[calc(100%-40px)] overflow-hidden text-ellipsis whitespace-nowrap">{title}</h3>
         <button className="btn btn-sm btn-ghost btn-circle text-2xl" onClick={onClose} title="Close" type="button">
-          ×
+          <FaTimes />
         </button>
       </div>
       <div className="flex-1 relative overflow-hidden bg-base-200">

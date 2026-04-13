@@ -5,7 +5,7 @@ import { Layer } from "ol/layer";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { LayerHelpers, OL_DATA_TYPES } from "@/utils/openlayers";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
-import { getPublicPath } from "@/utils/getPublicPath";
+import AppImage from "@/components/shared/AppImage";
 
 interface BaseLayerConfig {
   serverUrl: string;
@@ -30,6 +30,7 @@ interface BaseLayersConfig {
 interface ThemeBaseLayersProps {
   config: BaseLayersConfig;
   themeId: string;
+  popupLogoImage?: string;
 }
 
 // Component to display a single layer's WMS legend
@@ -50,9 +51,7 @@ function LayerLegendItem({ layer }: { layer: BaseLayerConfig }) {
   return (
     <div className="mb-3 last:mb-0">
       <div className="text-xs font-semibold text-base-content/80 mb-1">{layer.displayName}</div>
-      {legendUrl && (
-        <img src={legendUrl} alt={`${layer.displayName} legend`} onError={() => setHasError(true)} />
-      )}
+      {legendUrl && <img src={legendUrl} alt={`${layer.displayName} legend`} onError={() => setHasError(true)} />}
     </div>
   );
 }
@@ -79,7 +78,7 @@ function DynamicLegend({ layers }: { layers: BaseLayerConfig[] }) {
   );
 }
 
-export default function ThemeBaseLayers({ config, themeId }: ThemeBaseLayersProps) {
+export default function ThemeBaseLayers({ config, themeId, popupLogoImage }: ThemeBaseLayersProps) {
   const [visible, setVisible] = useState(config.defaultVisibility);
   const [opacity, setOpacity] = useState(config.opacity);
   const layerIdsRef = useRef<string[]>([]);
@@ -119,9 +118,11 @@ export default function ThemeBaseLayers({ config, themeId }: ThemeBaseLayersProp
                 const layerId = LayerManager.addLayer(olLayer, "Themes", layerConfig.displayName, {
                   visible: visible,
                   opacity: opacity,
+                  clickable: layerConfig.clickable ?? false,
                   metadata: {
                     themeId: themeId,
                     layerType: "base",
+                    popupLogoImage: popupLogoImage,
                   },
                 });
 
@@ -197,7 +198,7 @@ export default function ThemeBaseLayers({ config, themeId }: ThemeBaseLayersProp
           {config.useDynamicLegend === false && config.legendImageName && (
             <div className="mt-2">
               {}
-              <img src={getPublicPath(`/images/${config.legendImageName}`)} alt="Legend" className="w-full" />
+              <AppImage src={`/images/${config.legendImageName}`} alt="Legend" className="w-full" />
             </div>
           )}
         </>

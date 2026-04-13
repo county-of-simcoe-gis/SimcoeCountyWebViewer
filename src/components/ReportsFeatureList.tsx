@@ -5,6 +5,7 @@ import { FaHome, FaBuilding, FaLayerGroup, FaChevronDown, FaChevronRight } from 
 import type { Result, PropertyResult, CondoResult, IdentifyResult } from "@/components/ResultsPopup";
 import PropertyPopup from "@/components/PropertyPopup";
 import { InfoRow } from "@/components/common/InfoRow";
+import { isExcludedKey } from "@/utils/identifyHelpers";
 
 interface ReportsFeatureListProps {
   results: Result[];
@@ -76,7 +77,7 @@ function FeatureContent({ result, onClose, onClearParcelLayer }: { result: Resul
           <p className="text-[11px] text-[#999] mb-1.5">Feature ID: {r.data.featureId}</p>
           <div className="flex flex-col">
             {Object.entries(r.data.attributes)
-              .filter(([key, value]) => key !== "geometry" && key !== "bbox" && !key.startsWith("_") && typeof value !== "object")
+              .filter(([key, value]) => !isExcludedKey(key) && key !== "bbox" && typeof value !== "object")
               .map(([key, value]) => (
                 <InfoRow key={key} label={key} value={value != null ? String(value) : ""} />
               ))}

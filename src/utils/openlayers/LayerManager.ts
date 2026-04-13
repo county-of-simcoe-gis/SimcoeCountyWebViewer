@@ -1,4 +1,5 @@
 import { Layer } from "ol/layer";
+import Overlay from "ol/Overlay";
 import { useLayerManagerStore, type LayerCategory } from "@/stores/layerManagerStore";
 import { useMapStore } from "@/stores/mapStore";
 
@@ -16,6 +17,53 @@ export interface AddLayerOptions {
  * LayerManager - Central utility for managing map layers with proper categorization and z-index ordering
  */
 export class LayerManager {
+  // Track managed overlays by ID
+  private static overlays = new Map<string, Overlay>();
+
+  /**
+   * Add an OL Overlay to the map, tracked by a unique ID.
+   * @param id - Unique identifier for the overlay
+   * @param overlay - OpenLayers Overlay instance
+   * @returns true if added successfully
+   */
+  static addOverlay(id: string, overlay: Overlay): boolean {
+    const map = useMapStore.getState().map;
+    if (!map) {
+      console.error("❌ Map not available - cannot add overlay");
+      return false;
+    }
+    if (LayerManager.overlays.has(id)) {
+      console.warn(`⚠️ Overlay "${id}" already managed — removing old one first`);
+      LayerManager.removeOverlay(id);
+    }
+    map.addOverlay(overlay);
+    LayerManager.overlays.set(id, overlay);
+    return true;
+  }
+
+  /**
+   * Remove a managed overlay from the map.
+   * @param id - Overlay ID previously passed to addOverlay
+   * @returns true if the overlay was found and removed
+   */
+  static removeOverlay(id: string): boolean {
+    const overlay = LayerManager.overlays.get(id);
+    if (!overlay) return false;
+
+    const map = useMapStore.getState().map;
+    if (map) {
+      map.removeOverlay(overlay);
+    }
+    LayerManager.overlays.delete(id);
+    return true;
+  }
+
+  /**
+   * Get a managed overlay by ID.
+   */
+  static getOverlay(id: string): Overlay | undefined {
+    return LayerManager.overlays.get(id);
+  }
   /**
    * Add a layer to the map with proper category management and z-index ordering
    * @param layer - OpenLayers layer instance

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { getSession } from "next-auth/react";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
 import { LayerHelpers, OL_DATA_TYPES } from "@/utils/openlayers";
@@ -143,6 +144,12 @@ export default function BasemapSwitcher() {
         const baseMapType = appConfig?.baseMapType as string | undefined;
         if (baseMapType) {
           data.defaultButton = baseMapType;
+        }
+
+        // Exclude Google imagery when the user is not authenticated (unsecured map)
+        const session = await getSession();
+        if (!session && data.imageryServices) {
+          data.imageryServices = data.imageryServices.filter((s) => s.name !== "Google");
         }
 
         setConfig(data);

@@ -60,14 +60,12 @@ const mockLayers = [
     serverUrl: "https://example.com/geoserver/",
     layerName: "test:layer1",
     visible: true,
-    legendColor: "#FF0000",
   },
   {
     displayName: "Test Layer 2",
     serverUrl: "https://example.com/geoserver/",
     layerName: "test:layer2",
     visible: false,
-    legendColor: "#00FF00",
   },
 ];
 
@@ -149,12 +147,12 @@ describe("ThemeLayers", () => {
     });
   });
 
-  it("renders legend colors when provided", () => {
+  it("renders legend images from WMS GetLegendGraphic", () => {
     render(<ThemeLayers layers={mockLayers} themeId="test-theme" />);
 
-    // Check that legend color spans are rendered
-    const legendSpans = document.querySelectorAll('span[style*="background-color"]');
-    expect(legendSpans.length).toBeGreaterThan(0);
+    // Check that legend images are rendered via GetLegendGraphic URLs
+    const legendImages = document.querySelectorAll('img[src*="GetLegendGraphic"]');
+    expect(legendImages.length).toBeGreaterThan(0);
   });
 
   it("renders layer display names", () => {

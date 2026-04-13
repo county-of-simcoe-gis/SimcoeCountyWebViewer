@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import Attachments from "@/components/common/Attachments";
+import { showURLWindow } from "@/utils/helpersUI";
+
+vi.mock("@/utils/helpersUI", () => ({
+  showURLWindow: vi.fn(),
+}));
 
 // Sample attachment data matching ArcGIS attachment response
 const mockAttachmentResponse = {
@@ -70,7 +75,7 @@ describe("Attachments", () => {
     expect(container.querySelector(".flex")).toBeNull();
   });
 
-  it("opens image attachments in a modal/dialog", async () => {
+  it("opens image attachments via showURLWindow", async () => {
     fetchSpy.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(mockAttachmentResponse),
@@ -85,12 +90,8 @@ describe("Attachments", () => {
     // Click on an image attachment
     fireEvent.click(screen.getByText("photo.jpg"));
 
-    // Should open the image preview dialog
-    await waitFor(() => {
-      expect(screen.getByText("Attachment Preview")).toBeInTheDocument();
-      const img = screen.getByAltText("Attachment Preview");
-      expect(img).toHaveAttribute("src", "https://example.com/att/1");
-    });
+    // Should open via showURLWindow
+    expect(showURLWindow).toHaveBeenCalledWith("https://example.com/att/1", false);
   });
 
   it("opens non-image attachments in a new tab", async () => {
@@ -128,13 +129,10 @@ describe("Attachments", () => {
     // Click on an image attachment - should have token appended
     fireEvent.click(screen.getByText("photo.jpg"));
 
-    await waitFor(() => {
-      const img = screen.getByAltText("Attachment Preview");
-      expect(img).toHaveAttribute("src", "https://example.com/att/1?token=abc123");
-    });
+    expect(showURLWindow).toHaveBeenCalledWith("https://example.com/att/1?token=abc123", false);
   });
 
-  it("closes the image preview dialog when close button is clicked", async () => {
+  it("calls showURLWindow for each image click", async () => {
     fetchSpy.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(mockAttachmentResponse),
@@ -146,18 +144,13 @@ describe("Attachments", () => {
       expect(screen.getByText("photo.jpg")).toBeInTheDocument();
     });
 
-    // Open preview
+    // Click on first image
     fireEvent.click(screen.getByText("photo.jpg"));
-    await waitFor(() => {
-      expect(screen.getByText("Attachment Preview")).toBeInTheDocument();
-    });
+    expect(showURLWindow).toHaveBeenCalledWith("https://example.com/att/1", false);
 
-    // Close preview
-    fireEvent.click(screen.getByLabelText("Close preview"));
-
-    await waitFor(() => {
-      expect(screen.queryByText("Attachment Preview")).not.toBeInTheDocument();
-    });
+    // Click on second image
+    fireEvent.click(screen.getByText("diagram.png"));
+    expect(showURLWindow).toHaveBeenCalledWith("https://example.com/att/3", false);
   });
 
   it("handles fetch errors gracefully", async () => {

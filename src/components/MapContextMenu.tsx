@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { FaTimes } from "react-icons/fa";
 
 export interface ContextMenuItem {
   id: string;
@@ -103,8 +104,12 @@ export const MapContextMenu: React.FC<MapContextMenuProps> = ({ x, y, items, onC
       {showHeader && (
         <div className="w-full h-[18px] py-[5px] px-2 text-neutral bg-[#ececec] border-b border-neutral flex items-center justify-between">
           <div className="font-bold text-center text-neutral text-ellipsis whitespace-nowrap overflow-hidden flex-1 text-[11px]">{title}</div>
-          <div className="w-4 h-4 font-bold text-center p-0.5 text-white bg-secondary rounded-[3px] cursor-pointer text-[10px] leading-3 shrink-0 ml-2 hover:bg-[#5a92b8]" onClick={onClose}>
-            ×
+          <div
+            className="w-4 h-4 font-bold text-center p-0.5 text-white bg-secondary rounded-[3px] cursor-pointer text-[10px] leading-3 shrink-0 ml-2 hover:bg-[#5a92b8] flex items-center justify-center"
+            onClick={onClose}
+            title="Close"
+          >
+            <FaTimes />
           </div>
         </div>
       )}

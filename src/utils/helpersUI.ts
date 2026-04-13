@@ -14,74 +14,20 @@ const ALL_TAB_NAMES = ["layers", "tools", "mymaps", "themes", "reports"] as cons
 type TabName = (typeof ALL_TAB_NAMES)[number];
 
 /**
- * Compute the visible tab index for a given tab name,
- * accounting for any hidden tabs in the sidebar store.
- */
-function getVisibleTabIndex(tabName: TabName): number | undefined {
-  const state = useSidebarStore.getState();
-  const hideFlags: Record<string, boolean> = {
-    layers: state.hideLayers,
-    tools: state.hideTools,
-    mymaps: state.hideMyMaps,
-    themes: state.hideThemes,
-    reports: state.hideReports,
-  };
-
-  let visibleIndex = 0;
-  for (const name of ALL_TAB_NAMES) {
-    if (hideFlags[name]) continue;
-    if (name === tabName) return visibleIndex;
-    visibleIndex++;
-  }
-  return undefined; // tab is hidden
-}
-
-/**
- * Activate a sidebar tab by name
+ * Activate a sidebar tab by name. Works even if the tab button is hidden -
+ * the content will be shown while the tab button remains hidden.
  * @param tabName - The name of the tab to activate ('layers', 'tools', 'mymaps', 'themes', 'reports')
  */
 export function activateTab(tabName: TabName): void {
   console.log(`activateTab called with: ${tabName}`);
 
-  const tabIndex = getVisibleTabIndex(tabName);
+  const { openSidebar, setActiveTabByName } = useSidebarStore.getState();
 
-  if (tabIndex === undefined) {
-    console.error(`Tab "${tabName}" is hidden or invalid.`);
-    return;
-  }
+  // Open sidebar and activate the tab by name (uses absolute indices)
+  openSidebar();
+  setActiveTabByName(tabName);
 
-  console.log(`Activating tab: ${tabName} (index: ${tabIndex})`);
-
-  try {
-    // Get the current store state and actions
-    const { openSidebar, setActiveTab, isOpen: currentIsOpen, activeTab: currentActiveTab } = useSidebarStore.getState();
-
-    console.log("Current sidebar state:", {
-      isOpen: currentIsOpen,
-      activeTab: currentActiveTab,
-    });
-
-    // Force the sidebar open and set the active tab
-    // This mimics exactly what SidebarSlim.tsx does in handleTabClick
-    openSidebar();
-    setActiveTab(tabIndex);
-
-    // Check the new state
-    const { isOpen: newIsOpen, activeTab: newActiveTab } = useSidebarStore.getState();
-    console.log("Tab activation completed - new state:", {
-      isOpen: newIsOpen,
-      activeTab: newActiveTab,
-    });
-
-    // Force a re-render by triggering a small state change (toggle and toggle back)
-    if (newActiveTab === tabIndex && newIsOpen) {
-      console.log("Tab activation successful!");
-    } else {
-      console.warn("Tab activation may have failed - state did not change as expected");
-    }
-  } catch (error) {
-    console.error("Error activating tab:", error);
-  }
+  console.log(`Tab activation completed for: ${tabName}`);
 }
 
 /**

@@ -6,6 +6,8 @@ import { Geometry } from "ol/geom";
 import { Vector as VectorSource } from "ol/source";
 import { useMapStore } from "@/stores/mapStore";
 import { FaChevronDown, FaChevronRight, FaSearchPlus } from "react-icons/fa";
+import { toTitleCase } from "@/utils/helpersString";
+import { isExcludedKey } from "@/utils/identifyHelpers";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -118,10 +120,10 @@ function FeatureItem({ feature, featureTitleColumn, highlightSource }: { feature
         <div className="px-3 pb-3">
           <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
             {Object.entries(props)
-              .filter(([key]) => key !== "geometry" && key !== featureTitleColumn)
+              .filter(([key]) => !isExcludedKey(key) && key !== featureTitleColumn)
               .map(([key, value]) => (
                 <React.Fragment key={key}>
-                  <span className="font-semibold text-base-content/70 whitespace-nowrap">{key}</span>
+                  <span className="font-semibold text-base-content/70 whitespace-nowrap">{toTitleCase(key)}</span>
                   <span className="break-words">{value != null ? String(value) : ""}</span>
                 </React.Fragment>
               ))}

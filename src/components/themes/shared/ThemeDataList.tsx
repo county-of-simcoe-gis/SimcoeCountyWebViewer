@@ -131,12 +131,12 @@ export default function ThemeDataList({ layerConfig, onlyFeaturesWithinMap, isVi
       id: `theme-${layerConfig.layerName}-${featureId}`,
       type: "layer",
       displayName: properties[layerConfig.displayFieldName || "name"] || layerConfig.displayName,
+      renderContent: () => <ThemePopupContent properties={properties} moreInfoUrlFieldName={layerConfig.moreInfoUrlFieldName} popupLogoImage={popupLogoImage} />,
       data: {
         layerName: layerConfig.displayName,
         featureId: String(featureId),
         attributes: properties,
         feature: feature,
-        renderContent: () => <ThemePopupContent properties={properties} moreInfoUrlFieldName={layerConfig.moreInfoUrlFieldName} popupLogoImage={popupLogoImage} />,
       },
     };
 

@@ -179,9 +179,7 @@ export function buildLayerFromWMS(group: Partial<TOCLayerGroup> & { secure?: boo
   // handle config entries that may or may not include the namespace.
   const visibleLayers = group.visibleLayers || [];
   const nameWithoutPrefix = layerNameOnly.includes(":") ? layerNameOnly.split(":").slice(1).join(":") : layerNameOnly;
-  const layerVisible = visibleLayers.some(
-    (v) => v === layerNameOnly || v === nameWithoutPrefix || (v.includes(":") ? v.split(":").slice(1).join(":") : v) === layerNameOnly,
-  );
+  const layerVisible = visibleLayers.some((v) => v === layerNameOnly || v === nameWithoutPrefix || (v.includes(":") ? v.split(":").slice(1).join(":") : v) === layerNameOnly);
 
   // Build server URLs
   const geoserverPath = config.geoserverPath || "geoserver";
@@ -776,9 +774,10 @@ export function mergeGroups(originalGroups: TOCLayerGroup[], newGroups: TOCLayer
 /**
  * Main function to load layer groups from all sources with proper merging
  */
-export async function loadLayerGroupsFromSources(sources: TOCSource[], config: Config): Promise<{ groups: TOCLayerGroup[]; defaultGroupName: string }> {
+export async function loadLayerGroupsFromSources(sources: TOCSource[], config: Config): Promise<{ groups: TOCLayerGroup[]; defaultGroupName: string; failedSources: string[] }> {
   let mergedGroups: TOCLayerGroup[] = [];
   let defaultGroupName = config.toc.default_group || "";
+  const failedSources: string[] = [];
 
   // Pre-fetch the access token once so we can:
   //  1. Skip secured sources entirely when the user isn't authenticated
@@ -847,6 +846,7 @@ export async function loadLayerGroupsFromSources(sources: TOCSource[], config: C
       }
     } catch (error) {
       console.error(`Error loading source ${source.layerUrl}:`, error);
+      failedSources.push(source.layerUrl);
       // Continue with other sources even if one fails
     }
   }
@@ -854,6 +854,7 @@ export async function loadLayerGroupsFromSources(sources: TOCSource[], config: C
   return {
     groups: mergedGroups,
     defaultGroupName,
+    failedSources,
   };
 }
 

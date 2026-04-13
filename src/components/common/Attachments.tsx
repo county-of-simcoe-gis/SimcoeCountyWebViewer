@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
+import { showURLWindow } from "@/utils/helpersUI";
 
 interface AttachmentInfo {
   url: string;
@@ -29,7 +30,6 @@ interface AttachmentsProps {
 const Attachments: React.FC<AttachmentsProps> = ({ attachmentUrl }) => {
   const [attachments, setAttachments] = useState<AttachmentInfo[]>([]);
   const [token, setToken] = useState<string | null>(null);
-  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -75,17 +75,13 @@ const Attachments: React.FC<AttachmentsProps> = ({ attachmentUrl }) => {
     (attachment: AttachmentInfo) => {
       const url = getAttachmentUrl(attachment.url);
       if (attachment.contentType.includes("image")) {
-        setImagePreviewUrl(url);
+        showURLWindow(url, false);
       } else {
         window.open(url, "_blank");
       }
     },
     [getAttachmentUrl]
   );
-
-  const handleClosePreview = useCallback(() => {
-    setImagePreviewUrl(null);
-  }, []);
 
   if (isLoading) {
     return <span className="text-xs text-gray-400 italic">Loading attachments...</span>;
@@ -113,25 +109,6 @@ const Attachments: React.FC<AttachmentsProps> = ({ attachmentUrl }) => {
           </span>
         ))}
       </div>
-
-      {/* Image lightbox modal using daisyUI dialog */}
-      {imagePreviewUrl && (
-        <dialog className="modal modal-open" onClick={handleClosePreview}>
-          <div className="modal-box max-w-3xl p-2" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-bold text-sm">Attachment Preview</h3>
-              <button className="btn btn-sm btn-circle btn-ghost" onClick={handleClosePreview} aria-label="Close preview">
-                ✕
-              </button>
-            </div>
-            {}
-            <img src={imagePreviewUrl} alt="Attachment Preview" className="w-full h-auto rounded" />
-          </div>
-          <form method="dialog" className="modal-backdrop">
-            <button onClick={handleClosePreview}>close</button>
-          </form>
-        </dialog>
-      )}
     </>
   );
 };

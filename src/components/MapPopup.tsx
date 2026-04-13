@@ -6,7 +6,7 @@ import { useMapStore } from "@/stores/mapStore";
 import { usePopupStore } from "@/stores/popupStore";
 import { useReportsStore } from "@/stores/reportsStore";
 import { activateTab } from "@/utils/helpersUI";
-import { FaChevronLeft, FaChevronRight, FaExternalLinkAlt } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight, FaExternalLinkAlt, FaTimes } from "react-icons/fa";
 import PopupReportContent from "@/components/PopupReportContent";
 import ReportsFeatureList from "@/components/ReportsFeatureList";
 import type { Result } from "@/components/ResultsPopup";
@@ -309,7 +309,7 @@ export default function MapPopup() {
           onClick={hide}
           aria-label="Close popup"
         >
-          ×
+          <FaTimes />
         </button>
       </div>
 

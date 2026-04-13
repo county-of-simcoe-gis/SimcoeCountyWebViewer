@@ -9,10 +9,14 @@ import { useEventStore } from "@/stores/eventStore";
 // Mock LayerManager
 const mockAddLayer = vi.fn().mockReturnValue("mock-layer-id");
 const mockRemoveLayer = vi.fn().mockReturnValue(true);
+const mockAddOverlay = vi.fn();
+const mockRemoveOverlay = vi.fn();
 vi.mock("@/utils/openlayers/LayerManager", () => ({
   LayerManager: {
     addLayer: (...args: unknown[]) => mockAddLayer(...args),
     removeLayer: (...args: unknown[]) => mockRemoveLayer(...args),
+    addOverlay: (...args: unknown[]) => mockAddOverlay(...args),
+    removeOverlay: (...args: unknown[]) => mockRemoveOverlay(...args),
   },
 }));
 
@@ -409,12 +413,12 @@ describe("MeasureTool", () => {
       expect(mockAddLayer).toHaveBeenCalled();
     });
 
-    it("adds overlay to map for tooltips", () => {
+    it("adds overlays via LayerManager for tooltips", () => {
       useMapStore.setState({ map: mockMap as unknown as ReturnType<typeof useMapStore.getState>["map"] });
 
       render(<MeasureTool onClose={mockOnClose} />);
 
-      expect(mockMap.addOverlay).toHaveBeenCalled();
+      expect(mockAddOverlay).toHaveBeenCalled();
     });
   });
 });

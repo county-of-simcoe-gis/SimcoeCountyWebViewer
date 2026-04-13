@@ -7,13 +7,12 @@
  */
 
 import "@/components/tools/Measure/MeasureTool.css";
-import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { FaRulerHorizontal, FaDrawPolygon, FaRegCircle, FaRegSquare, FaCompass, FaTrash } from "react-icons/fa";
 import PanelComponent from "@/components/PanelComponent";
 import { useMapStore } from "@/stores/mapStore";
 import { usePopupStore } from "@/stores/popupStore";
 import { useEventStore } from "@/stores/eventStore";
-import { getUID } from "@/utils/helpersCore";
 import { showMessage } from "@/utils/helpersUI";
 import { getBearing } from "@/utils/myMapsHelpers";
 
@@ -163,8 +162,6 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
   const [unitMeters, setUnitMeters] = useState<number | string>(-1);
   const [feature, setFeature] = useState<Feature<Geometry> | null>(null);
   const [activeTool, setActiveTool] = useState(false);
-  const [measureToolTipClass, setMeasureToolTipClass] = useState("hidden");
-  const [helpToolTipClass, setHelpToolTipClass] = useState("hidden");
 
   // Refs for OpenLayers objects and IDs
   const vectorSourceRef = useRef<VectorSource | null>(null);
@@ -180,10 +177,14 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
   const helpTooltipElementRef = useRef<HTMLDivElement | null>(null);
   const measureTooltipElementRef = useRef<HTMLDivElement | null>(null);
   const layerIdRef = useRef<string | null>(null);
+  const activeToolRef = useRef(false);
+  const hideTooltipsRef = useRef(false);
+  const geometryTypeRef = useRef<GeometryType>("");
 
-  // Generate stable IDs
-  const measureToolTipId = useMemo(() => `measure-tooltip-${getUID()}`, []);
-  const helpToolTipId = useMemo(() => `help-tooltip-${getUID()}`, []);
+  // Keep refs in sync with state
+  activeToolRef.current = activeTool;
+  hideTooltipsRef.current = hideTooltips;
+  geometryTypeRef.current = geometryType;
 
   // Tooltip messages
   const continuePolygonMsg = "Click to continue drawing the polygon";
@@ -252,21 +253,21 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
 
   // Mouse out event handler
   const onMouseOutEvent = useCallback(() => {
-    setHelpToolTipClass("hidden");
+    if (helpTooltipElementRef.current) helpTooltipElementRef.current.className = "hidden";
   }, []);
 
   // Pointer move handler
   const pointerMoveHandler = useCallback(
     (evt: { dragging: boolean; coordinate: Coordinate }) => {
-      if (evt.dragging || !activeTool) {
-        setMeasureToolTipClass("hidden");
-        setHelpToolTipClass("hidden");
+      if (evt.dragging || !activeToolRef.current) {
+        if (measureTooltipElementRef.current) measureTooltipElementRef.current.className = "hidden";
+        if (helpTooltipElementRef.current) helpTooltipElementRef.current.className = "hidden";
         return;
       }
 
       let helpMsg = "Click to start drawing";
       if (sketchRef.current) {
-        switch (geometryType) {
+        switch (geometryTypeRef.current) {
           case "Polygon":
             helpMsg = continuePolygonMsg;
             break;
@@ -292,15 +293,15 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
         helpTooltipRef.current.setPosition(evt.coordinate);
       }
 
-      if (!hideTooltips) {
-        setHelpToolTipClass("measure-tooltip-help");
-        setMeasureToolTipClass("measure-tooltip");
+      if (!hideTooltipsRef.current) {
+        if (helpTooltipElementRef.current) helpTooltipElementRef.current.className = "measure-tooltip-help";
+        if (measureTooltipElementRef.current) measureTooltipElementRef.current.className = "measure-tooltip";
       } else {
-        setHelpToolTipClass("hidden");
-        setMeasureToolTipClass("hidden");
+        if (helpTooltipElementRef.current) helpTooltipElementRef.current.className = "hidden";
+        if (measureTooltipElementRef.current) measureTooltipElementRef.current.className = "hidden";
       }
     },
-    [activeTool, geometryType, hideTooltips],
+    [],
   );
 
   // Reset function
@@ -323,8 +324,8 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
       listenerRef.current = null;
     }
 
-    setMeasureToolTipClass("hidden");
-    setHelpToolTipClass("hidden");
+    if (measureTooltipElementRef.current) measureTooltipElementRef.current.className = "hidden";
+    if (helpTooltipElementRef.current) helpTooltipElementRef.current.className = "hidden";
     setActiveTool(false);
     setFeature(null);
 
@@ -358,7 +359,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
 
     // Disable parcel click
     setActiveToolId("measure");
-    setHelpToolTipClass("measure-tooltip-help");
+    if (helpTooltipElementRef.current) helpTooltipElementRef.current.className = "measure-tooltip-help";
     setActiveTool(true);
 
     // Set up pointer move event
@@ -453,10 +454,10 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
           measureTooltipRef.current.setPosition(tooltipCoord);
         }
 
-        if (!hideTooltips) {
-          setMeasureToolTipClass("measure-tooltip");
-        } else {
-          setMeasureToolTipClass("hidden");
+        if (!hideTooltipsRef.current && measureTooltipElementRef.current) {
+          measureTooltipElementRef.current.className = "measure-tooltip";
+        } else if (measureTooltipElementRef.current) {
+          measureTooltipElementRef.current.className = "hidden";
         }
       });
     });
@@ -467,9 +468,9 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
         measureTooltipElementRef.current.innerHTML = "";
       }
       if (measureTooltipRef.current) {
-        measureTooltipRef.current.setPosition([0, 0]);
+        measureTooltipRef.current.setPosition(undefined);
       }
-      setMeasureToolTipClass("hidden");
+      if (measureTooltipElementRef.current) measureTooltipElementRef.current.className = "hidden";
       setFeature(sketchRef.current);
       sketchRef.current = null;
 
@@ -508,7 +509,6 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
     geometryType,
     isDrawingOrEditing,
     enableSnapping,
-    hideTooltips,
     setActiveToolId,
     hidePopup,
     formatLength,
@@ -617,44 +617,42 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
     const measureLayerId = LayerManager.addLayer(vectorLayer, "Tools", "Measure", { visible: true });
     layerIdRef.current = measureLayerId;
 
-    // Create help tooltip
-    const helpTooltipElement = document.getElementById(helpToolTipId) as HTMLDivElement;
+    // Create help tooltip element imperatively (not via JSX) so OL can own the DOM node
+    const helpTooltipElement = document.createElement("div");
+    helpTooltipElement.className = "hidden";
     helpTooltipElementRef.current = helpTooltipElement;
 
-    if (helpTooltipElement) {
-      const helpTooltip = new Overlay({
-        element: helpTooltipElement,
-        offset: [15, 0],
-        positioning: "center-left",
-        stopEvent: false,
-      });
-      helpTooltipRef.current = helpTooltip;
-      map.addOverlay(helpTooltip);
-    }
+    const helpTooltip = new Overlay({
+      element: helpTooltipElement,
+      offset: [15, 0],
+      positioning: "center-left",
+      stopEvent: false,
+    });
+    helpTooltipRef.current = helpTooltip;
+    LayerManager.addOverlay("measure-help-tooltip", helpTooltip);
 
-    // Create measure tooltip
-    const measureTooltipElement = document.getElementById(measureToolTipId) as HTMLDivElement;
+    // Create measure tooltip element imperatively
+    const measureTooltipElement = document.createElement("div");
+    measureTooltipElement.className = "hidden";
     measureTooltipElementRef.current = measureTooltipElement;
 
-    if (measureTooltipElement) {
-      const measureTooltip = new Overlay({
-        element: measureTooltipElement,
-        offset: [0, -15],
-        positioning: "bottom-center",
-        stopEvent: false,
-      });
-      measureTooltipRef.current = measureTooltip;
-      map.addOverlay(measureTooltip);
-    }
+    const measureTooltip = new Overlay({
+      element: measureTooltipElement,
+      offset: [0, -15],
+      positioning: "bottom-center",
+      stopEvent: false,
+    });
+    measureTooltipRef.current = measureTooltip;
+    LayerManager.addOverlay("measure-tooltip", measureTooltip);
 
     // Cleanup
     return () => {
-      if (helpTooltipRef.current) {
-        map.removeOverlay(helpTooltipRef.current);
-      }
-      if (measureTooltipRef.current) {
-        map.removeOverlay(measureTooltipRef.current);
-      }
+      LayerManager.removeOverlay("measure-help-tooltip");
+      LayerManager.removeOverlay("measure-tooltip");
+      helpTooltipElementRef.current = null;
+      measureTooltipElementRef.current = null;
+      helpTooltipRef.current = null;
+      measureTooltipRef.current = null;
       if (listenerRef.current) {
         unByKey(listenerRef.current);
       }
@@ -677,7 +675,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
       }
       setActiveToolId(null);
     };
-  }, [map, helpToolTipId, measureToolTipId, setActiveToolId]);
+  }, [map, setActiveToolId]);
 
   // Trigger addInteraction when geometry type changes
   useEffect(() => {
@@ -752,9 +750,6 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
             ))}
         </div>
 
-        {/* Tooltips for map overlay */}
-        <div id={helpToolTipId} className={helpToolTipClass} />
-        <div id={measureToolTipId} className={measureToolTipClass} />
       </div>
     </PanelComponent>
   );

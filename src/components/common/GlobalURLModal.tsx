@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useURLModalStore } from "@/stores/urlModalStore";
 import { appendToStorage } from "@/utils/storage";
+import { FaExternalLinkAlt, FaTimes } from "react-icons/fa";
 
 /**
  * Global URL Window — overlays the map area with an iframe, matching old app behaviour.
@@ -57,12 +58,12 @@ export default function GlobalURLModal() {
           title="Open in New Window"
           className="w-8 h-[30px] mr-2 border border-[#3672b1] rounded-[3px] bg-white/15 text-white cursor-pointer flex items-center justify-center text-base"
         >
-          ⧉
+          <FaExternalLinkAlt />
         </button>
 
         {/* Close button */}
         <button onClick={close} title="Close" className="w-8 h-[30px] border border-[#3672b1] rounded-[3px] bg-white/15 text-white cursor-pointer flex items-center justify-center text-base font-bold">
-          ✕
+          <FaTimes />
         </button>
       </div>
 
@@ -79,10 +80,10 @@ export default function GlobalURLModal() {
       {/* Footer with Close and Don't Show Again buttons */}
       {showFooter && (
         <div className="w-full text-right px-3.5 py-2 border-t border-[#ccc] bg-white">
-          <button onClick={close} className="btn btn-sm btn-ghost mr-[5px]">
+          <button onClick={close} className="btn btn-sm btn-outline mr-[5px]">
             Close Window
           </button>
-          <button onClick={handleDontShowAgain} className="btn btn-sm btn-ghost">
+          <button onClick={handleDontShowAgain} className="btn btn-sm btn-outline">
             Don&apos;t Show this Again
           </button>
         </div>

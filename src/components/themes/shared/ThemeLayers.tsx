@@ -15,17 +15,17 @@ interface ToggleLayerConfig {
   clickable?: boolean;
   moreInfoUrlFieldName?: string;
   displayFieldName?: string;
-  legendColor?: string;
   legendStyleName?: string;
 }
 
 interface ThemeLayersProps {
   layers: ToggleLayerConfig[];
   themeId: string;
+  popupLogoImage?: string;
   onVisibilityChange?: (layerStates: Record<string, boolean>) => void;
 }
 
-export default function ThemeLayers({ layers, themeId, onVisibilityChange }: ThemeLayersProps) {
+export default function ThemeLayers({ layers, themeId, popupLogoImage, onVisibilityChange }: ThemeLayersProps) {
   const map = useMapStore((state) => state.map);
   const [layerStates, setLayerStates] = useState<Record<string, boolean>>({});
   const [featureCounts, setFeatureCounts] = useState<Record<string, number | null>>({});
@@ -101,9 +101,11 @@ export default function ThemeLayers({ layers, themeId, onVisibilityChange }: The
                 const layerId = LayerManager.addLayer(olLayer, "Themes", layerConfig.displayName, {
                   visible: layerConfig.visible,
                   index: 0,
+                  clickable: layerConfig.clickable ?? false,
                   metadata: {
                     themeId: themeId,
                     layerType: "toggle",
+                    popupLogoImage: popupLogoImage,
                   },
                 });
 
@@ -226,10 +228,8 @@ export default function ThemeLayers({ layers, themeId, onVisibilityChange }: The
       <div className="flex flex-col gap-2">
         {layers.map((layer) => (
           <label key={layer.layerName} className="label cursor-pointer justify-start gap-2 p-0 min-h-0">
-            {/* Legend symbol */}
-            {layer.legendColor ? (
-              <span className="w-4 h-4 rounded-full flex-shrink-0 border border-base-300" style={{ backgroundColor: layer.legendColor }} title={layer.displayName} />
-            ) : legendUrls[layer.layerName] ? (
+            {/* Legend symbol - dynamically fetched from WMS GetLegendGraphic */}
+            {legendUrls[layer.layerName] ? (
               <img src={legendUrls[layer.layerName]} alt="" className="w-5 h-5 object-contain flex-shrink-0" onError={(e) => (e.currentTarget.style.display = "none")} />
             ) : null}
 

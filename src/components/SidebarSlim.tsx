@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { useEventStore } from "@/stores/eventStore";
+import { useMyMapsStore } from "@/stores/myMapsStore";
 
 interface SlimButtonProps {
   title: string;
@@ -39,6 +40,9 @@ export default function SidebarSlim() {
   const hideMyMaps = useSidebarStore((s) => s.hideMyMaps);
   const hideThemes = useSidebarStore((s) => s.hideThemes);
   const hideReports = useSidebarStore((s) => s.hideReports);
+  const activeTool = useSidebarStore((s) => s.activeTool);
+  const activeTheme = useSidebarStore((s) => s.activeTheme);
+  const isMyMapsEditing = useMyMapsStore((s) => s.isEditing);
   const emitActivateTab = useEventStore((s) => s.emitActivateTab);
 
   // Only show when sidebar is closed
@@ -83,7 +87,7 @@ export default function SidebarSlim() {
           icon="tools-32x32.png"
           onClick={() => handleTabClick("tools", getTabIndex("tools"))}
           isSelected={activeTab === getTabIndex("tools")}
-          isActive={false}
+          isActive={activeTool !== null}
           hidden={false}
         />
       )}
@@ -93,7 +97,7 @@ export default function SidebarSlim() {
           icon="map-32x32.png"
           onClick={() => handleTabClick("mymaps", getTabIndex("mymaps"))}
           isSelected={activeTab === getTabIndex("mymaps")}
-          isActive={false}
+          isActive={isMyMapsEditing}
           hidden={false}
         />
       )}
@@ -103,7 +107,7 @@ export default function SidebarSlim() {
           icon="theme-32x32.png"
           onClick={() => handleTabClick("themes", getTabIndex("themes"))}
           isSelected={activeTab === getTabIndex("themes")}
-          isActive={false}
+          isActive={activeTheme !== null}
           hidden={false}
         />
       )}

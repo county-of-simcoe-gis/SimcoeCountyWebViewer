@@ -161,10 +161,12 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
       const displayName = layer.get("tocDisplayName") || name;
       const secured = layer.get("secured");
       const minScale = layer.get("minScale");
+      const isArcGISLayer = layer.get("isArcGIS") || false;
 
-      // Build axios config with auth headers for secured layers
+      // Build axios config with auth headers for secured GeoServer layers
+      // ArcGIS layers use URL-based tokens instead of Bearer headers
       const axiosConfig: Record<string, unknown> = {};
-      if (secured) {
+      if (secured && !isArcGISLayer) {
         const token = await getAccessToken();
         if (token) {
           axiosConfig.headers = { Authorization: `Bearer ${token}` };
@@ -173,7 +175,6 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
 
       // Check if this is a non-Point geometry and try WFS query
       let wfsUrl = layer.get("wfsUrl");
-      const isArcGISLayer = layer.get("isArcGIS") || false;
       const useGeometryQuery = geometry.getType() !== "Point" || isArcGISLayer;
 
       // If no explicit WFS URL, try to derive it from the WMS URL
@@ -274,13 +275,62 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
             }
           }
 
-          // Parse GeoJSON features
+          // Parse features from response
           if (result) {
-            const featureList = new GeoJSON().readFeatures(result);
+            let featureList: Feature<Geometry>[];
 
-            console.log(`Identify: Found ${featureList.length} features in "${layerName}" via WFS`);
+            if (isArcGISLayer && result.results) {
+              // ArcGIS Identify returns { results: [...] } — convert to OL features
+              featureList = [];
+              for (const esriResult of result.results) {
+                try {
+                  const esriGeom = esriResult.geometry;
+                  const attrs = esriResult.attributes;
+                  if (!esriGeom) continue;
+
+                  let geoJsonGeom: Record<string, unknown> | undefined;
+                  if (esriResult.geometryType === "esriGeometryPoint") {
+                    geoJsonGeom = { type: "Point", coordinates: [esriGeom.x, esriGeom.y] };
+                  } else if (esriResult.geometryType === "esriGeometryPolygon") {
+                    geoJsonGeom = { type: "Polygon", coordinates: esriGeom.rings };
+                  } else if (esriResult.geometryType === "esriGeometryPolyline") {
+                    geoJsonGeom = { type: "MultiLineString", coordinates: esriGeom.paths };
+                  } else {
+                    continue;
+                  }
+
+                  const geoJsonFeature = { type: "Feature", geometry: geoJsonGeom, properties: attrs || {} };
+                  const parsed = new GeoJSON().readFeature(geoJsonFeature, {
+                    dataProjection: "EPSG:3857",
+                    featureProjection: "EPSG:3857",
+                  });
+                  featureList.push(parsed as Feature<Geometry>);
+                } catch (parseErr) {
+                  console.warn("Identify: Error parsing ArcGIS result:", parseErr);
+                }
+              }
+            } else {
+              // Standard GeoJSON (WFS)
+              featureList = new GeoJSON().readFeatures(result);
+            }
+
+            console.log(`Identify: Found ${featureList.length} features in "${layerName}" via ${isArcGISLayer ? "ArcGIS Identify" : "WFS"}`);
 
             if (featureList.length > 0) {
+              // Inject attachmentUrl onto each feature (matching old app behavior)
+              const hasAttachments = layer.get("hasAttachments");
+              const layerAttachmentUrl = layer.get("attachmentUrl");
+              if (hasAttachments && layerAttachmentUrl) {
+                featureList.forEach((f) => {
+                  const keys = f.getKeys();
+                  const objectIdKey = keys.find((k) => k.toUpperCase().includes("OBJECTID"));
+                  const objectId = objectIdKey ? f.get(objectIdKey) : null;
+                  if (objectId != null) {
+                    f.set("attachmentUrl", layerAttachmentUrl.replace("#OBJECTID#", String(objectId)));
+                  }
+                });
+              }
+
               const displayNameField = getDisplayNameFromFeature(featureList[0]);
               const features: IdentifyFeature[] = featureList.map((feature) => ({
                 feature,
@@ -352,6 +402,20 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
         console.log(`Identify: Found ${featureList.length} features in "${layerName}"`);
 
         if (featureList.length === 0) continue;
+
+        // Inject attachmentUrl onto each feature (matching old app behavior)
+        const hasAttachments = layer.get("hasAttachments");
+        const layerAttachmentUrl = layer.get("attachmentUrl");
+        if (hasAttachments && layerAttachmentUrl) {
+          featureList.forEach((f) => {
+            const keys = f.getKeys();
+            const objectIdKey = keys.find((k) => k.toUpperCase().includes("OBJECTID"));
+            const objectId = objectIdKey ? f.get(objectIdKey) : null;
+            if (objectId != null) {
+              f.set("attachmentUrl", layerAttachmentUrl.replace("#OBJECTID#", String(objectId)));
+            }
+          });
+        }
 
         const displayNameField = getDisplayNameFromFeature(featureList[0]);
         const features: IdentifyFeature[] = featureList.map((feature) => ({

@@ -2,7 +2,9 @@
 
 import React, { useState, useCallback } from "react";
 import { IdentifyFeature } from "./Identify";
+import { filterFeatureKeys } from "./IdentifyLayer";
 import { useMapStore } from "@/stores/mapStore";
+import Attachments from "@/components/common/Attachments";
 import Image from "next/image";
 
 interface IdentifyFeatureItemProps {
@@ -46,23 +48,29 @@ const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ feat
 
   const renderFeatureContent = () => {
     const props = feature.getProperties();
-    const keys = Object.keys(props).filter((key) => {
-      // Filter out internal properties
-      return !key.startsWith("_") && key !== "geometry" && key !== "boundedBy";
-    });
+    const keys = filterFeatureKeys(feature);
+    const attachmentUrl = feature.get("attachmentUrl") as string | undefined;
 
-    if (keys.length === 0) {
+    if (keys.length === 0 && !attachmentUrl) {
       return <div className="p-2.5 text-center text-[#999] italic">No attributes found</div>;
     }
 
     return (
       <div className="flex flex-col gap-2">
-        {keys.map((key) => (
+        {keys.filter((k) => k !== "attachmentUrl").map((key) => (
           <div key={key} className="grid grid-cols-[140px_1fr] gap-2.5 py-[5px] border-b border-[#f0f0f0] last:border-b-0 max-[768px]:grid-cols-1 max-[768px]:gap-1">
             <div className="font-semibold text-[#555] break-words max-[768px]:text-[11px]">{formatFieldName(key)}:</div>
             <div className="text-[#333] break-words max-[768px]:text-[11px] max-[768px]:pl-2.5">{formatFieldValue(props[key])}</div>
           </div>
         ))}
+        {attachmentUrl && (
+          <div className="grid grid-cols-[140px_1fr] gap-2.5 py-[5px] border-b border-[#f0f0f0] last:border-b-0 max-[768px]:grid-cols-1 max-[768px]:gap-1">
+            <div className="font-semibold text-[#555] break-words max-[768px]:text-[11px]">Attachments:</div>
+            <div className="text-[#333] break-words max-[768px]:text-[11px] max-[768px]:pl-2.5">
+              <Attachments attachmentUrl={attachmentUrl} />
+            </div>
+          </div>
+        )}
       </div>
     );
   };

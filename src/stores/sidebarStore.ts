@@ -23,6 +23,7 @@ interface SidebarState {
   isOpen: boolean;
   isSlim: boolean;
   activeTab: number; // Track which tab is active (0=layers, 1=tools, 2=mymaps, 3=themes, 4=reports)
+  activeContentTab: TabName | null; // Override tab content to show (used for hidden tabs)
   activeTheme: string | null;
   activeTool: string | null;
 
@@ -50,6 +51,7 @@ interface SidebarState {
   closeSidebar: () => void;
   setActiveTab: (tabIndex: number) => void;
   setActiveTabByName: (tabName: string) => void;
+  setActiveContentTab: (tabName: TabName | null) => void;
   setSlimMode: (slim: boolean) => void;
   setActiveTheme: (themeId: string | null) => void;
   setActiveTool: (toolId: string | null) => void;
@@ -93,6 +95,7 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
   isOpen: false,
   isSlim: false,
   activeTab: 0,
+  activeContentTab: null,
   activeTheme: null,
   activeTool: null,
   themes: [],
@@ -121,12 +124,42 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
 
   openSidebar: () => set({ isOpen: true }),
   closeSidebar: () => set({ isOpen: false }),
-  setActiveTab: (tabIndex) => set({ activeTab: tabIndex }),
+  setActiveTab: (tabIndex) => set({ activeTab: tabIndex, activeContentTab: null }), // Clear content override when selecting a visible tab
+
+  setActiveContentTab: (tabName) => set({ activeContentTab: tabName }),
 
   setActiveTabByName: (tabName) => {
     const state = get();
     const normalizedName = tabName.toLowerCase().trim();
-    // Build the same visible-tabs list the Sidebar component uses
+    const lookup = (normalizedName === "my maps" ? "mymaps" : normalizedName) as TabName;
+
+    // Validate the tab name
+    if (!ALL_TAB_NAMES.includes(lookup)) {
+      console.warn(`[sidebarStore] setActiveTabByName: unknown tab "${tabName}"`);
+      return;
+    }
+
+    // Map tab names to their hide flag keys
+    const hideFlags: Record<TabName, keyof SidebarState> = {
+      layers: "hideLayers",
+      tools: "hideTools",
+      mymaps: "hideMyMaps",
+      themes: "hideThemes",
+      reports: "hideReports",
+    };
+
+    // Check if the tab is hidden
+    const hideFlagKey = hideFlags[lookup];
+    const isHidden = hideFlagKey && state[hideFlagKey];
+
+    if (isHidden) {
+      // Tab is hidden - use activeContentTab to show its content without making the tab visible
+      console.log(`[sidebarStore] Tab "${tabName}" is hidden, showing content via activeContentTab.`);
+      set({ activeContentTab: lookup });
+      return;
+    }
+
+    // Tab is visible - find its index and activate it normally
     const visibleTabs = ALL_TAB_NAMES.filter((tab) => {
       if (tab === "layers" && state.hideLayers) return false;
       if (tab === "tools" && state.hideTools) return false;
@@ -135,12 +168,9 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
       if (tab === "reports" && state.hideReports) return false;
       return true;
     });
-    const lookup = normalizedName === "my maps" ? "mymaps" : normalizedName;
-    const index = visibleTabs.indexOf(lookup as TabName);
+    const index = visibleTabs.indexOf(lookup);
     if (index !== -1) {
-      set({ activeTab: index });
-    } else {
-      console.warn(`[sidebarStore] setActiveTabByName: unknown or hidden tab "${tabName}"`);
+      set({ activeTab: index, activeContentTab: null });
     }
   },
 
@@ -205,7 +235,12 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
         // Use name-based activation so hidden tabs don't shift the index
         get().setActiveTabByName("themes");
       } else {
-        console.warn("Default theme not found in loaded themes:", defaultTheme, "available:", state.themes.map((t) => t.name));
+        console.warn(
+          "Default theme not found in loaded themes:",
+          defaultTheme,
+          "available:",
+          state.themes.map((t) => t.name),
+        );
       }
     } else if (defaultTool) {
       // Find the tool by name or componentName (case-insensitive)
@@ -222,7 +257,12 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
         // Use name-based activation so hidden tabs don't shift the index
         get().setActiveTabByName("tools");
       } else {
-        console.warn("Default tool not found in loaded tools:", defaultTool, "available:", state.tools.map((t) => t.name));
+        console.warn(
+          "Default tool not found in loaded tools:",
+          defaultTool,
+          "available:",
+          state.tools.map((t) => t.name),
+        );
       }
     }
   },

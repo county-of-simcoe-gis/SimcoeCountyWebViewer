@@ -177,7 +177,7 @@ export const useMapStore = create<MapState>((set, get) => ({
     });
   },
   isToolActive: () => get().activeToolId !== null,
-  checkGlobalDisable: () => get().activeToolId !== null,
+  checkGlobalDisable: () => get().activeToolId !== null || get().disableParcelClick,
 
   // Legacy setters (deprecated — kept for backward compatibility)
   setDisableParcelClick: (disabled) => set({ disableParcelClick: disabled }),

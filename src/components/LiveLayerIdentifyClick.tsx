@@ -23,6 +23,7 @@ import { useLayerManagerStore } from "@/stores/layerManagerStore";
 import { GeoJSON } from "ol/format";
 import { getAxiosClient } from "@/lib/axiosInstance";
 import { getAccessToken } from "@/utils/auth";
+import { filterPropertyKeys } from "@/utils/identifyHelpers";
 import type TileWMS from "ol/source/TileWMS";
 import type ImageWMS from "ol/source/ImageWMS";
 import type BaseLayer from "ol/layer/Base";
@@ -105,8 +106,8 @@ function LiveLayerPopupContent({ properties }: { properties: Record<string, unkn
     <div style={{ maxWidth: "400px", maxHeight: "300px", overflow: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <tbody>
-          {Object.keys(properties)
-            .filter((key) => !key.startsWith("_") && key !== "geometry" && key !== "layerDisplayName")
+          {filterPropertyKeys(properties)
+            .filter((key) => key !== "layerDisplayName")
             .map((key) => {
               const value = properties[key];
               if (value === null || value === undefined) return null;
@@ -148,9 +149,10 @@ export default function LiveLayerIdentifyClick() {
       const attachmentUrl = layer.get("attachmentUrl");
       const displayName = layer.get("tocDisplayName") || layer.get("displayName") || layer.get("name");
 
-      // Build axios config with auth headers for secured layers
+      // Build axios config with auth headers for secured GeoServer layers
+      // ArcGIS layers use URL-based tokens instead of Bearer headers
       const axiosConfig: Record<string, unknown> = {};
-      if (secured) {
+      if (secured && !isArcGISLayer) {
         const token = await getAccessToken();
         if (token) {
           axiosConfig.headers = { Authorization: `Bearer ${token}` };

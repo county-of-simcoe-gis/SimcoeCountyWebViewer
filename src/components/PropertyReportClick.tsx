@@ -34,6 +34,7 @@ const parcelLayerStyle = new Style({
 interface PropertyInfo {
   ARN: string;
   Address?: string;
+  Municipality?: string;
   AssessedValue?: string; // Base64 encoded PNG image (data:image/png;base64,...)
   HasZoning?: boolean;
   WasteCollection?: {

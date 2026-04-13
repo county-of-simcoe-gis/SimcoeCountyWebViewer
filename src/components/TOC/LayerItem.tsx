@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 
 import { TOCLayerGroup, TOCLayer, useTOCStore } from "@/stores/tocStore";
+import { useMapStore } from "@/stores/mapStore";
+import { getMapScale } from "@/utils/mapHelpers";
 import { FaPaperclip, FaInfoCircle, FaDownload, FaLock, FaUser, FaEllipsisV, FaGripVertical } from "react-icons/fa";
 import LayerLegend, { LegendToggleButton, useLegendDisplayMode } from "@/components/TOC/LayerLegend";
 
@@ -20,6 +22,7 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
   const [isVisibleAtScale, setIsVisibleAtScale] = useState(true);
   const [shouldLoadLegend, setShouldLoadLegend] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const map = useMapStore((s) => s.map);
 
   // Get the live layer data from the store to ensure we have the latest legend data
   // Use id as primary lookup (unique), fall back to name for legacy layers
@@ -52,11 +55,23 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
     }
   }, [shouldLoadLegend, currentLayerData, group]);
 
+  // Check if the layer is visible at the current map scale
+  const checkVisibleScale = useCallback(() => {
+    if (!map) return;
+    const currentScale = getMapScale(map);
+    const minScale = layerInfo.minScale || 0;
+    const maxScale = layerInfo.maxScale || 100000000000;
+    setIsVisibleAtScale(currentScale >= minScale && currentScale <= maxScale);
+  }, [map, layerInfo.minScale, layerInfo.maxScale]);
+
   useEffect(() => {
-    // For now, assume all layers are visible at current scale
-    // This will be implemented when map integration is added
-    setIsVisibleAtScale(true);
-  }, []);
+    if (!map) return;
+    checkVisibleScale();
+    map.on("moveend", checkVisibleScale);
+    return () => {
+      map.un("moveend", checkVisibleScale);
+    };
+  }, [map, checkVisibleScale]);
 
   // Intersection Observer for lazy loading legend images
   useEffect(() => {

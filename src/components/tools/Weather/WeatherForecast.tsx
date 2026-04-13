@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { FaSyncAlt } from "react-icons/fa";
+import { FaSyncAlt, FaTimes } from "react-icons/fa";
 import config from "./config.json";
 
 type CityConfig = {
@@ -121,7 +121,7 @@ export default function WeatherForecast(props: WeatherForecastProps): React.Reac
 
           {props.onClose && (
             <button type="button" className="btn btn-xs btn-ghost" onClick={onClose} title="Close">
-              ✕
+              <FaTimes />
             </button>
           )}
         </div>

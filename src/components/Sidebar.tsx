@@ -7,9 +7,11 @@ import { useEventStore } from "@/stores/eventStore";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
 import { useReportsStore } from "@/stores/reportsStore";
+import { useMyMapsStore } from "@/stores/myMapsStore";
 import { useEffect, useState, Suspense, useCallback, useMemo } from "react";
 import { lazy } from "react";
 import { useSession } from "next-auth/react";
+import { FaLock } from "react-icons/fa";
 import ReportsNavBar from "@/components/ReportsNavBar";
 import { SectionTitle } from "@/components/ui";
 
@@ -41,9 +43,6 @@ const TOC = lazy(() => import("@/components/TOC/TOC"));
 
 // Lazy load MyMaps component
 const MyMaps = lazy(() => import("@/components/myMaps/MyMaps"));
-
-// Tab names in display order — used to compute dynamic tab indices
-const ALL_TAB_NAMES = ["layers", "tools", "mymaps", "themes", "reports"] as const;
 
 // Tool mapping for dynamic loading
 const toolComponents: Record<
@@ -108,6 +107,7 @@ export default function Sidebar() {
   const activeTheme = useSidebarStore((s) => s.activeTheme);
   const activeTool = useSidebarStore((s) => s.activeTool);
   const activeTab = useSidebarStore((s) => s.activeTab);
+  const activeContentTab = useSidebarStore((s) => s.activeContentTab);
   const setActiveTab = useSidebarStore((s) => s.setActiveTab);
   const activateSidebarItem = useSidebarStore((s) => s.activateSidebarItem);
   const openSidebar = useSidebarStore((s) => s.openSidebar);
@@ -122,6 +122,7 @@ export default function Sidebar() {
   const urlParameters = useAppStore((state) => state.urlParameters);
   const appConfig = useAppStore((state) => state.config);
   const currentReport = useReportsStore((s) => s.currentReport);
+  const isMyMapsEditing = useMyMapsStore((s) => s.isEditing);
   const { data: session } = useSession();
 
   // Filter out secure items when user is not authenticated
@@ -203,6 +204,9 @@ export default function Sidebar() {
   // Debug logging
   // console.log("Sidebar render:", { toolsCount: tools.length, themesCount: themes.length });
 
+  // Tab names in display order
+  const ALL_TAB_NAMES = ["layers", "tools", "mymaps", "themes", "reports"] as const;
+
   // Build dynamic tab index mapping based on which tabs are visible
   const visibleTabs = ALL_TAB_NAMES.filter((tab) => {
     if (tab === "layers" && hideLayers) return false;
@@ -268,7 +272,31 @@ export default function Sidebar() {
     setActiveTab(index);
   };
 
-  const handleSidebarItemClick = (componentName: string, displayName: string, type: "tools" | "themes") => {
+  // Listen for programmatic activateSidebarItem events (e.g. from PropertyPopup)
+  useEffect(() => {
+    const addListener = useEventStore.getState().addListener;
+    const removeListener = useEventStore.getState().removeListener;
+
+    const listenerId = addListener("activateSidebarItem", (data) => {
+      if (!data) return;
+      const { itemName, itemType, data: options } = data as { itemName: string; itemType: "tools" | "themes"; data?: Record<string, unknown> };
+
+      // Find the item by name (case-insensitive)
+      const items = itemType === "tools" ? visibleTools : visibleThemes;
+      const item = items.find((i) => i.name.toLowerCase() === itemName.toLowerCase());
+      if (!item) return;
+
+      const componentName = item.component || item.name;
+      handleSidebarItemClick(componentName, item.name, itemType, options as Record<string, unknown> | undefined);
+    });
+
+    return () => {
+      removeListener(listenerId);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visibleTools, visibleThemes]);
+
+  const handleSidebarItemClick = (componentName: string, displayName: string, type: "tools" | "themes", options?: Record<string, unknown>) => {
     activateSidebarItem(componentName, type);
 
     if (type === "tools") {
@@ -276,7 +304,7 @@ export default function Sidebar() {
       if (ToolComponent) {
         const component = (
           <Suspense fallback={<div className="p-5">Loading tool...</div>}>
-            <ToolComponent name={displayName} onClose={() => setActiveToolComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
+            <ToolComponent name={displayName} options={options} onClose={() => setActiveToolComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
           </Suspense>
         );
         setActiveToolComponent(component);
@@ -326,7 +354,8 @@ export default function Sidebar() {
           }`}
           onClick={() => handleSidebarItemClick(tool.component || tool.name, tool.name, "tools")}
         >
-          <div className="w-[60px] h-[60px] shrink-0 flex items-center justify-center bg-[image:linear-gradient(to_bottom,#f2f5f6,#e6e6e6)] rounded-sm border border-gray-300 mr-4 text-center pt-1.5">
+          <div className="relative w-[60px] h-[60px] shrink-0 flex items-center justify-center bg-[image:linear-gradient(to_bottom,#f2f5f6,#e6e6e6)] rounded-sm border border-gray-300 mr-4 text-center pt-1.5">
+            {tool.secure && <FaLock className="absolute top-0.5 left-0.5 text-[10px] text-gray-500 drop-shadow-sm" />}
             <Image src={`/images/${tool.imageName}`} alt={tool.name} width={50} height={50} className="w-[50px] h-[50px] object-contain opacity-70" />
           </div>
           <div className="flex-1 flex flex-col justify-start min-h-[60px]">
@@ -348,7 +377,8 @@ export default function Sidebar() {
           }`}
           onClick={() => handleSidebarItemClick(theme.component || theme.name, theme.name, "themes")}
         >
-          <div className="w-[60px] h-[60px] shrink-0 flex items-center justify-center bg-[image:linear-gradient(to_bottom,#f2f5f6,#e6e6e6)] rounded-sm border border-gray-300 mr-4 text-center pt-1.5">
+          <div className="relative w-[60px] h-[60px] shrink-0 flex items-center justify-center bg-[image:linear-gradient(to_bottom,#f2f5f6,#e6e6e6)] rounded-sm border border-gray-300 mr-4 text-center pt-1.5">
+            {theme.secure && <FaLock className="absolute top-0.5 left-0.5 text-[10px] text-gray-500 drop-shadow-sm" />}
             <Image src={`/images/${theme.imageName}`} alt={theme.name} width={50} height={50} className="w-[50px] h-[50px] object-contain opacity-70" />
           </div>
           <div className="flex-1 flex flex-col justify-start min-h-[60px]">
@@ -377,6 +407,7 @@ export default function Sidebar() {
           {!hideTools && (
             <Tab>
               <div className="tab-content">
+                {activeToolComponent && <span className="tab-dot" />}
                 <Image src="/images/tools-32x32.png" alt={appConfig?.toolsTitle || "Tools"} width={32} height={32} className="tab-icon" />
                 <div className="tab-text">{appConfig?.toolsTitle || "Tools"}</div>
               </div>
@@ -385,6 +416,7 @@ export default function Sidebar() {
           {!hideMyMaps && (
             <Tab>
               <div className="tab-content">
+                {isMyMapsEditing && <span className="tab-dot" />}
                 <Image src="/images/map-32x32.png" alt="My Maps" width={32} height={32} className="tab-icon" />
                 <div className="tab-text">My Maps</div>
               </div>
@@ -393,6 +425,7 @@ export default function Sidebar() {
           {!hideThemes && (
             <Tab>
               <div className="tab-content">
+                {activeThemeComponent && <span className="tab-dot" />}
                 <Image
                   src={singleTheme ? `/images/${singleTheme.imageName}` : "/images/theme-32x32.png"}
                   alt={singleTheme ? singleTheme.name : appConfig?.themesTitle || "Themes"}
@@ -469,6 +502,44 @@ export default function Sidebar() {
           </TabPanel>
         )}
       </Tabs>
+
+      {/* Content override for hidden tabs - renders on top of TabPanels when activeContentTab is set */}
+      {activeContentTab && (
+        <div className="absolute top-[78px] left-0 right-0 bottom-0 bg-base-200 z-10">
+          <div className="h-[calc(100vh-130px)] max-h-[calc(100vh-130px)] overflow-hidden flex flex-col">
+            {activeContentTab === "layers" && (
+              <Suspense fallback={<div className="p-5">Loading layers...</div>}>
+                <TOC visible={true} />
+              </Suspense>
+            )}
+            {activeContentTab === "tools" &&
+              (activeToolComponent ? activeToolComponent : visibleTools.length === 0 ? <div className="text-xs text-gray-500">Loading tools...</div> : renderDefaultToolsContent())}
+            {activeContentTab === "mymaps" && (
+              <Suspense fallback={<div className="p-5">Loading MyMaps...</div>}>
+                <MyMaps visible={true} />
+              </Suspense>
+            )}
+            {activeContentTab === "themes" &&
+              (activeThemeComponent ? activeThemeComponent : visibleThemes.length === 0 ? <div className="text-xs text-gray-500">Loading themes...</div> : renderDefaultThemesContent())}
+            {activeContentTab === "reports" && (
+              <>
+                <ReportsNavBar />
+                {currentReport ? (
+                  <div className="h-full overflow-y-auto">
+                    <SectionTitle className="mb-2.5 border-gray-200 text-gray-800">{currentReport.title}</SectionTitle>
+                    <div className="text-xs">{currentReport.content}</div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="mb-2.5 font-bold text-xs">REPORTS</div>
+                    <div className="text-xs text-gray-500">No report currently loaded. Use the identify tool from the map context menu to generate a report.</div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

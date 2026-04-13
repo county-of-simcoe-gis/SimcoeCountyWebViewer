@@ -6,6 +6,7 @@ import { FaHome, FaBuilding, FaLayerGroup } from "react-icons/fa";
 import RecordSelectorPopup, { RecordItem } from "@/components/RecordSelectorPopup";
 import PropertyPopup, { type PropertyInfo } from "@/components/PropertyPopup";
 import { InfoRow } from "@/components/common/InfoRow";
+import { isExcludedKey } from "@/utils/identifyHelpers";
 
 // Base interface for common result fields
 interface BaseResult extends RecordItem {
@@ -138,8 +139,6 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
 
   // Render sidebar item based on result type
   const renderSidebarItem = (result: Result, isSelected: boolean) => {
-
-
     switch (result.type) {
       case "property":
         return (
@@ -206,7 +205,7 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
             <p className="m-0 mb-4 text-xs text-[#666] font-mono">Feature ID: {result.data.featureId}</p>
             <div className="mt-4" data-testid="result-attributes">
               {Object.entries(result.data.attributes)
-                .filter(([key, value]) => key !== "geometry" && key !== "bbox" && !key.startsWith("_") && typeof value !== "object")
+                .filter(([key, value]) => !isExcludedKey(key) && key !== "bbox" && typeof value !== "object")
                 .map(([key, value]) => (
                   <InfoRow key={key} label={key} value={value != null ? String(value) : ""} />
                 ))}

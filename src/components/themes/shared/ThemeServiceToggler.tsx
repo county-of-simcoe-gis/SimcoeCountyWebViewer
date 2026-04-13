@@ -246,6 +246,7 @@ export default function ThemeServiceToggler({
         const layerId = LayerManager.addLayer(olLayer, "Themes", layerConfig.name, {
           visible: layerConfig.defaultVisibility,
           index: 0,
+          clickable: true,
           metadata: {
             themeId: toggleLayersKey || "theme-service",
             layerType: "toggle",
@@ -348,6 +349,15 @@ export default function ThemeServiceToggler({
           layerManagerIdsRef.current.forEach((id) => LayerManager.removeLayer(id));
           layerManagerIdsRef.current = [];
           return;
+        }
+
+        // 5. If toggleVisibleAll is set, override all layers to visible on init
+        if (toggleVisibleAll) {
+          withCounts.forEach((state) => {
+            state.olLayer.setVisible(true);
+            LayerManager.setLayerVisibility(state.layerId, true);
+            state.visible = true;
+          });
         }
 
         setLayers(withCounts);

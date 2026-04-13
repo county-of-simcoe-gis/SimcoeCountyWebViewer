@@ -71,7 +71,7 @@ export default function Header() {
 
       {/* Logo */}
       <div className="flex items-center mr-2.5 shrink-0">
-        <Image src={getLogoImage()} alt={config?.title || "Simcoe County"} width={92} height={45} className="w-[92px] h-[45px]" />
+        <Image src={getLogoImage()} alt={config?.title || "Simcoe County"} width={92} height={45} className="w-[92px] h-[45px] object-contain" />
       </div>
 
       {/* Search Container - takes remaining space */}

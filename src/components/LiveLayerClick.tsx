@@ -8,7 +8,9 @@ import { getAxiosClient } from "@/lib/axiosInstance";
 import { getAccessToken } from "@/utils/auth";
 import { useInteractionManager } from "@/components/MapContainer";
 import { createIdentifyResult } from "@/components/ResultsPopup";
+import type { IdentifyResult } from "@/components/ResultsPopup";
 import { useLayerManagerStore } from "@/stores/layerManagerStore";
+import ThemePopupContent from "@/components/themes/shared/ThemePopupContent";
 import type TileWMS from "ol/source/TileWMS";
 import type ImageWMS from "ol/source/ImageWMS";
 import type BaseLayer from "ol/layer/Base";
@@ -98,11 +100,16 @@ export interface LiveLayerResult {
   attributes: Record<string, unknown>;
   feature: Feature<Geometry>;
   layerZIndex?: number;
+  /** True when this result comes from a theme layer (uses ThemePopupContent) */
+  isThemeLayer?: boolean;
+  /** Optional theme-specific popup metadata */
+  moreInfoUrlFieldName?: string;
+  popupLogoImage?: string;
 }
 
 export default function LiveLayerClick() {
   const map = useMapStore((s) => s.map);
-  const checkGlobalDisable = useMapStore((s) => s.checkGlobalDisable);
+  const isToolActive = useMapStore((s) => s.isToolActive);
   const allLayers = useTOCStore((s) => s.allLayers);
   const { registerHandler, unregisterHandler } = useInteractionManager();
 
@@ -126,9 +133,10 @@ export default function LiveLayerClick() {
       // Get layer properties
       const secured = layer.get("secured");
 
-      // Build axios config with auth headers for secured layers
+      // Build axios config with auth headers for secured GeoServer layers
+      // ArcGIS layers use URL-based tokens instead of Bearer headers
       const axiosConfig: Record<string, unknown> = {};
-      if (secured) {
+      if (secured && !isArcGISLayer) {
         const token = await getAccessToken();
         if (token) {
           axiosConfig.headers = { Authorization: `Bearer ${token}` };
@@ -307,7 +315,59 @@ export default function LiveLayerClick() {
 
       // Wait for all identify results
       await Promise.all(identifyPromises);
-      console.log(`LiveLayerClick: Finished querying ${visibleLiveLayers.length} layers, found ${results.length} results`);
+
+      // Also query clickable theme layers from LayerManager (not in TOC store)
+      const clickableThemeLayers = useLayerManagerStore
+        .getState()
+        .getLayersByCategory("Themes")
+        .filter((ml) => ml.clickable && ml.visible);
+
+      if (clickableThemeLayers.length > 0) {
+        console.log(
+          `LiveLayerClick: Found ${clickableThemeLayers.length} clickable theme layers:`,
+          clickableThemeLayers.map((l) => l.name),
+        );
+
+        const themePromises = clickableThemeLayers.map(async (managedLayer) => {
+          try {
+            const identifyFeature = await queryLiveLayer(managedLayer.layer, coordinate);
+            if (identifyFeature) {
+              const layerName = identifyFeature.get("layerDisplayName") || managedLayer.name || "Feature";
+              const properties = identifyFeature.getProperties();
+
+              let featureId = properties.OBJECTID || properties.objectid || properties.id || properties.ID;
+              if (!featureId) {
+                const firstValue = Object.values(properties).find((v) => v && typeof v !== "object");
+                featureId = firstValue ? String(firstValue) : "Unknown";
+              }
+
+              const cleanAttributes: Record<string, unknown> = {};
+              Object.entries(properties).forEach(([key, value]) => {
+                if (key !== "geometry" && key !== "layerDisplayName" && key !== "bbox" && typeof value !== "object") {
+                  cleanAttributes[key] = value;
+                }
+              });
+
+              results.push({
+                layerName,
+                featureId: String(featureId),
+                attributes: cleanAttributes,
+                feature: identifyFeature,
+                layerZIndex: managedLayer.zIndex,
+                isThemeLayer: true,
+                moreInfoUrlFieldName: managedLayer.layer.get("moreInfoUrlFieldName") || undefined,
+                popupLogoImage: (managedLayer.metadata?.popupLogoImage as string) || undefined,
+              });
+            }
+          } catch (error) {
+            console.error(`LiveLayerClick: Error querying theme layer ${managedLayer.name}:`, error);
+          }
+        });
+
+        await Promise.all(themePromises);
+      }
+
+      console.log(`LiveLayerClick: Finished querying all layers, found ${results.length} results`);
 
       return results;
     },
@@ -326,7 +386,11 @@ export default function LiveLayerClick() {
       eventType: "singleclick",
       priority: 20,
       conditions: {
-        checkDisableFlags: checkGlobalDisable,
+        // Only disable when an active tool (measure, draw, etc.) is engaged.
+        // Do NOT use checkGlobalDisable here — that also checks disableParcelClick,
+        // which themes set to suppress parcel lookups while still allowing
+        // their own clickable layers to be identified.
+        checkDisableFlags: isToolActive,
       },
       handler: async (coordinate) => {
         console.log("LiveLayerClick: Handler triggered at coordinate:", coordinate);
@@ -338,7 +402,18 @@ export default function LiveLayerClick() {
           console.log(`LiveLayerClick: Found ${liveLayerResults.length} live layer results`);
 
           // Convert to InteractionResult format, passing through layer z-index for sorting
-          const results = liveLayerResults.map((result) => createIdentifyResult(result.layerName, result.featureId, result.attributes, result.feature, result.layerZIndex));
+          const results = liveLayerResults.map((result) => {
+            const identifyResult = createIdentifyResult(result.layerName, result.featureId, result.attributes, result.feature, result.layerZIndex);
+
+            // Attach themed popup rendering for theme layers
+            if (result.isThemeLayer) {
+              (identifyResult as IdentifyResult).renderContent = () => (
+                <ThemePopupContent properties={result.attributes} moreInfoUrlFieldName={result.moreInfoUrlFieldName} popupLogoImage={result.popupLogoImage} />
+              );
+            }
+
+            return identifyResult;
+          });
 
           return results;
         } else {
@@ -351,7 +426,7 @@ export default function LiveLayerClick() {
     return () => {
       unregisterHandler("live-layer-click");
     };
-  }, [map, checkGlobalDisable, queryAllLiveLayers, registerHandler, unregisterHandler]);
+  }, [map, isToolActive, queryAllLiveLayers, registerHandler, unregisterHandler]);
 
   return null; // This component doesn't render anything directly
 }

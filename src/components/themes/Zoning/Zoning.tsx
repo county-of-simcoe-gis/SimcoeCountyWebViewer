@@ -26,6 +26,8 @@ interface ZoningProps {
   hideHeader?: boolean;
   onClose: () => void;
   onSidebarVisibility?: () => void;
+  /** When provided, immediately query zoning by this ARN on mount. */
+  initialArn?: string;
 }
 
 // ── Highlight style (cyan) ───────────────────────────────────────────────────
@@ -42,7 +44,7 @@ const HIGHLIGHT_STYLE = new Style({
 
 // ── Component ────────────────────────────────────────────────────────────────
 
-export default function Zoning({ name = "Zoning", helpLink, hideHeader, onClose, onSidebarVisibility }: ZoningProps) {
+export default function Zoning({ name = "Zoning", helpLink, hideHeader, onClose, onSidebarVisibility, initialArn }: ZoningProps) {
   const lastResult = useSearchStore((s) => s.lastResult);
 
   // Merge local config with map-level overrides (termsUrl, byLawUrl, etc. vary per map)
@@ -205,8 +207,20 @@ export default function Zoning({ name = "Zoning", helpLink, hideHeader, onClose,
   useEffect(() => {
     if (lastResult?.geojson) {
       loadReport(lastResult.geojson, lastResult.type, lastResult.name);
+    } else if (lastResult?.type === "Assessment Parcel" && lastResult?.name) {
+      // Assessment Parcel queries use ARN directly — no geojson needed
+      loadReport("", lastResult.type, lastResult.name);
     }
   }, [lastResult, loadReport]);
+
+  // Auto-query when initialArn is provided (e.g. from property popup)
+  const initialArnLoadedRef = useRef(false);
+  useEffect(() => {
+    if (initialArn && !initialArnLoadedRef.current) {
+      initialArnLoadedRef.current = true;
+      loadReport("", "Assessment Parcel", initialArn);
+    }
+  }, [initialArn, loadReport]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
 

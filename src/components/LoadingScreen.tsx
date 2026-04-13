@@ -1,4 +1,4 @@
-import Image from "next/image";
+import AppImage from "@/components/shared/AppImage";
 
 interface LoadingScreenProps {
   visible: boolean;
@@ -14,10 +14,10 @@ export default function LoadingScreen({ visible }: LoadingScreenProps) {
         {/* Logos side by side */}
         <div className="flex flex-row items-center justify-center gap-6 w-full">
           <div className="relative h-16 w-32 sm:h-20 sm:w-40 flex-shrink-0">
-            <Image src="/images/countyofsimcoelogo.png" alt="County of Simcoe" fill style={{ objectFit: "contain" }} priority />
+            <AppImage src="/images/countyofsimcoelogo.png" alt="County of Simcoe" className="absolute inset-0 h-full w-full object-contain" />
           </div>
           <div className="relative h-16 w-32 sm:h-20 sm:w-40 flex-shrink-0">
-            <Image src="/images/opengislogo.png" alt="OpenGIS" fill style={{ objectFit: "contain" }} priority />
+            <AppImage src="/images/opengislogo.png" alt="OpenGIS" className="absolute inset-0 h-full w-full object-contain" />
           </div>
         </div>
 

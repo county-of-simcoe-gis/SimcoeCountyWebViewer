@@ -78,12 +78,11 @@
       "displayName": "County Forest Tracts",
       "serverUrl": "https://opengis.simcoe.ca/geoserver/",
       "layerName": "simcoe:Forest_Tract_Points_Theme",
-      "visible": true,
+      "visible": false,
       "zIndex": 202,
       "clickable": true,
       "displayFieldName": "_tractName",
-      "moreInfoUrlFieldName": "_url",
-      "legendColor": "#228B22"
+      "moreInfoUrlFieldName": "_url"
     },
     {
       "displayName": "NVCA Conservation Areas",
@@ -92,8 +91,7 @@
       "visible": false,
       "zIndex": 203,
       "clickable": true,
-      "displayFieldName": "Name",
-      "legendColor": "#FFA500"
+      "displayFieldName": "Name"
     },
     {
       "displayName": "LSRCA Conservation Areas",
@@ -102,8 +100,7 @@
       "visible": false,
       "zIndex": 204,
       "clickable": true,
-      "displayFieldName": "Name",
-      "legendColor": "#DC143C"
+      "displayFieldName": "Name"
     },
     {
       "displayName": "Provincial Parks",
@@ -112,8 +109,7 @@
       "visible": false,
       "zIndex": 205,
       "clickable": true,
-      "displayFieldName": "_parkname",
-      "legendColor": "#0000FF"
+      "displayFieldName": "_parkname"
     },
     {
       "displayName": "Municipal Parks",
@@ -122,8 +118,7 @@
       "visible": false,
       "zIndex": 206,
       "clickable": true,
-      "displayFieldName": "_parkname",
-      "legendColor": "#9370DB"
+      "displayFieldName": "_parkname"
     }
   ]
 }

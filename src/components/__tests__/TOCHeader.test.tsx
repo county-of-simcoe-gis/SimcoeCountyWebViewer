@@ -2,6 +2,11 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import TOCHeader from "@/components/TOC/TOCHeader";
 
+vi.mock("react-icons/fi", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("react-icons/fi")>();
+  return { ...actual };
+});
+
 describe("TOCHeader", () => {
   it("renders and triggers controls", () => {
     const onSearchChange = vi.fn();
@@ -30,7 +35,7 @@ describe("TOCHeader", () => {
         onTurnOffLayers={onTurnOffLayers}
         onSaveAllLayers={onSaveAllLayers}
         onOpenLegend={onOpenLegend}
-      />
+      />,
     );
 
     // Test search functionality

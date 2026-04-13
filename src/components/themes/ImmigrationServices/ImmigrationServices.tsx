@@ -6,6 +6,7 @@ import { FaPalette } from "react-icons/fa";
 import ThemeLayers from "../shared/ThemeLayers";
 import ThemeData from "../shared/ThemeData";
 import config from "./config.json";
+import { useDisableParcelClick } from "@/hooks/useDisableParcelClick";
 
 interface ImmigrationServicesProps {
   name?: string;
@@ -15,39 +16,17 @@ interface ImmigrationServicesProps {
   onSidebarVisibility?: () => void;
 }
 
-export default function ImmigrationServices({
-  name = "Immigration Services",
-  helpLink,
-  hideHeader = false,
-  onClose,
-  onSidebarVisibility,
-}: ImmigrationServicesProps) {
+export default function ImmigrationServices({ name = "Immigration Services", helpLink, hideHeader = false, onClose, onSidebarVisibility }: ImmigrationServicesProps) {
   const [layerVisibilityStates, setLayerVisibilityStates] = useState<Record<string, boolean>>({});
+  useDisableParcelClick(config.disableParcelClick);
 
   return (
-    <PanelComponent
-      icon={<FaPalette size={20} className="text-neutral/70" />}
-      name={name}
-      helpLink={helpLink}
-      hideHeader={hideHeader}
-      onClose={onClose}
-      onSidebarVisibility={onSidebarVisibility}
-    >
+    <PanelComponent icon={<FaPalette size={20} className="text-neutral/70" />} name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={onClose} onSidebarVisibility={onSidebarVisibility}>
       <div className="p-4 space-y-6">
         {/* Introduction Card */}
         <div className="alert alert-info shadow-lg">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            className="h-6 w-6 shrink-0 stroke-current"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="h-6 w-6 shrink-0 stroke-current">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <span className="text-sm">{config.introDescription}</span>
         </div>
@@ -55,21 +34,13 @@ export default function ImmigrationServices({
         {/* Toggle Layers */}
         <div>
           <h3 className="text-sm font-semibold mb-3">Services</h3>
-          <ThemeLayers
-            layers={config.toggleLayers}
-            themeId="immigrationservices"
-            onVisibilityChange={setLayerVisibilityStates}
-          />
+          <ThemeLayers layers={config.toggleLayers} themeId="immigrationservices" onVisibilityChange={setLayerVisibilityStates} />
         </div>
 
         <div className="divider my-2"></div>
 
         {/* Theme Data */}
-        <ThemeData
-          toggleLayers={config.toggleLayers}
-          themeId="immigrationservices"
-          layerVisibilityStates={layerVisibilityStates}
-        />
+        <ThemeData toggleLayers={config.toggleLayers} themeId="immigrationservices" layerVisibilityStates={layerVisibilityStates} />
       </div>
     </PanelComponent>
   );

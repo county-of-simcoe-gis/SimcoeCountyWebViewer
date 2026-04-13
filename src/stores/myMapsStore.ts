@@ -662,9 +662,14 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => ({
         featureGeoJSON: JSON.stringify(mergedGeoJSON),
       };
 
-      // Remove original polygons and add merged polygon
+      // Add merged polygon while keeping the original features intact
+      // Hide labels on the source polygons so only the merged polygon's label shows
+      const sourceIds = new Set(visiblePolygons.map((vp) => vp.id));
       set((state) => ({
-        items: [...state.items.filter((item) => !visiblePolygons.some((vp) => vp.id === item.id)), mergedItem],
+        items: [
+          mergedItem,
+          ...state.items.map((item) => (sourceIds.has(item.id) ? { ...item, labelVisible: false } : item)),
+        ],
       }));
 
       // Save to storage

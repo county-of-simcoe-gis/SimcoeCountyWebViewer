@@ -30,7 +30,6 @@ export default function MoreMenu() {
   const setActiveTab = useSidebarStore((s) => s.setActiveTab);
   const openLegend = useLegendStore((s) => s.openLegend);
   const map = useMapStore((s) => s.map);
-  const layers = useTOCStore((s) => s.layers);
   const config = useAppStore((state) => state.config);
   // URL Modal state
   const [urlModalOpen, setUrlModalOpen] = useState(false);
@@ -130,32 +129,30 @@ export default function MoreMenu() {
   }, [map, closeMoreMenu]);
 
   // Handle legend
-  const handleLegend = useCallback(() => {
+  const handleLegend = useCallback(async () => {
     closeMoreMenu();
 
-    // Get visible layers grouped by group
-    const visibleLayers = layers.filter((layer) => layer.visible);
-    const groupedLayers = visibleLayers.reduce(
-      (acc, layer) => {
-        const groupName = layer.groupName || layer.group || "Other";
-        if (!acc[groupName]) {
-          acc[groupName] = [];
-        }
-        acc[groupName].push(layer);
-        return acc;
-      },
-      {} as Record<string, typeof layers>,
-    );
+    const tocState = useTOCStore.getState();
+    const tocType = tocState.tocType;
+    const allGroupsData = tocType === "LIST" ? tocState.layerListGroups : tocState.layerFolderGroups;
 
-    // Convert to legend groups
-    const allGroups = Object.entries(groupedLayers).map(([groupName, groupLayers]) => ({
-      label: groupName.replace(/_/g, " "),
-      value: groupName,
-      layers: groupLayers,
+    // Convert to legend group format with all layers
+    const allGroups = allGroupsData.map((group) => ({
+      label: group.label,
+      value: group.value,
+      layers: group.layers,
     }));
 
-    openLegend(allGroups, allGroups);
-  }, [closeMoreMenu, openLegend, layers]);
+    // Get visible layers to pre-select their groups
+    const allVisibleLayers = tocState.getAllVisibleLayers();
+    const visibleGroupValues = new Set(allVisibleLayers.map((layer) => layer.group));
+
+    // Pre-select groups that have visible layers, or all groups if none are visible
+    const selectedGroups = allGroups.filter((group) => visibleGroupValues.has(group.value));
+    const groupsToSelect = selectedGroups.length > 0 ? selectedGroups : allGroups;
+
+    openLegend(allGroups, groupsToSelect);
+  }, [closeMoreMenu, openLegend]);
 
   // Handle URL modal
   const showURLWindow = useCallback(

@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import { FaTimes } from "react-icons/fa";
 
 export interface PanelHeaderProps {
   /** Panel title text */
@@ -53,7 +54,7 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({ title, iconSrc, icon, 
                 className="bg-secondary border border-secondary p-1 rounded-sm ml-1.5 cursor-pointer inline-flex items-center justify-center align-top w-6 h-6 text-white"
                 aria-label="Close panel"
               >
-                ✕
+                <FaTimes />
               </button>
             )}
           </div>

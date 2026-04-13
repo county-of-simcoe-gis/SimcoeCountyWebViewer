@@ -329,8 +329,12 @@ export default function MapContainer() {
       identifyIconLayerIdRef.current = _hmrRegistry.identifyIconLayerId;
       unifiedInteractionRef.current = _hmrRegistry.unifiedInteraction;
 
-      // Prevent config override from re-applying (it was already applied on first mount)
-      hasAppliedApiConfigRef.current = true;
+      // Only block the deferred config effect if the API config has already been
+      // loaded and applied.  During React StrictMode double-mount the config is
+      // still loading (null in the store), so we must let the deferred effect run
+      // later when it arrives.  During a real HMR (dev code save) the config was
+      // applied long ago and we don't want to re-animate to it.
+      hasAppliedApiConfigRef.current = !!useAppStore.getState().config;
       // Capture current view so navigation guard works if effect somehow fires
       const view = existingMap.getView();
       initialViewRef.current = {
@@ -373,7 +377,7 @@ export default function MapContainer() {
     const storageExtentKey = "Map Extent";
     const storedExtent = sessionStorage.getItem(storageExtentKey);
     let extent = null;
-    const centerCoords = activeConfig.centerCoords || [-8878504.68, 5543492.45];
+    const centerCoords = Array.isArray(activeConfig.centerCoords) && activeConfig.centerCoords.length >= 2 ? activeConfig.centerCoords : [-8878504.68, 5543492.45];
     const defaultZoom = activeConfig.defaultZoom || 10;
 
     // Store initial view state so we can detect user navigation later
@@ -917,7 +921,10 @@ export default function MapContainer() {
 
   // Get center coordinates and default zoom from config (memoized)
   const appStoreConfig = useAppStore((state) => state.config);
-  const centerCoords = useMemo(() => appStoreConfig?.centerCoords || staticConfig.centerCoords || [-8878504.68, 5543492.45], [appStoreConfig]);
+  const centerCoords = useMemo(() => {
+    const coords = appStoreConfig?.centerCoords || staticConfig.centerCoords;
+    return Array.isArray(coords) && coords.length >= 2 ? coords : [-8878504.68, 5543492.45];
+  }, [appStoreConfig]);
   const defaultZoom = useMemo(() => appStoreConfig?.defaultZoom || staticConfig.defaultZoom || 10, [appStoreConfig]);
 
   // Apply API config zoom/center/maxZoom when it first loads (after map is already initialized with static defaults)
@@ -946,7 +953,7 @@ export default function MapContainer() {
       }
     }
 
-    const configCenter = appStoreConfig.centerCoords;
+    const configCenter = Array.isArray(appStoreConfig.centerCoords) && appStoreConfig.centerCoords.length >= 2 ? appStoreConfig.centerCoords : undefined;
     const configZoom = appStoreConfig.defaultZoom;
     const configMaxZoom = appStoreConfig.maxZoom;
 

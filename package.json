@@ -71,6 +71,7 @@
     "@types/react-dom": "^19",
     "@types/react-virtualized": "^9.22.3",
     "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^4.0.18",
     "cross-env": "^7.0.3",
     "daisyui": "^5.5.17",
     "eslint": "^9",

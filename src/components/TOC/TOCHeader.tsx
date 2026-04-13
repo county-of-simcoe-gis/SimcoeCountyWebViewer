@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { FaQuestionCircle } from "react-icons/fa";
+import { FaQuestionCircle, FaTimes } from "react-icons/fa";
 import TOCSettingsControl from "@/components/TOC/TOCSettingsControl";
 
 interface TOCHeaderProps {
@@ -62,7 +62,7 @@ export default function TOCHeader({
             onClick={() => onSearchChange("")}
             title="Clear search"
           >
-            ×
+            <FaTimes />
           </button>
         )}
       </div>

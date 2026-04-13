@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { FiSettings, FiTrash2, FiSave } from "react-icons/fi";
+import { FiSettings, FiTrash2, FiSave, FiList, FiFolder, FiRefreshCw, FiEyeOff, FiMap } from "react-icons/fi";
 
 interface TOCSettingsControlProps {
   tocType: "LIST" | "FOLDER";
@@ -138,9 +138,10 @@ export default function TOCSettingsControl({
             <div className="mb-2 py-[3px]">
               <button
                 onClick={handleTOCTypeChange}
-                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-[#f0f0f0]"
+                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-[#f0f0f0] flex items-center gap-1.5"
               >
-                Switch to {tocType === "LIST" ? "Folder" : "List"} View
+                {tocType === "LIST" ? <FiFolder size={14} /> : <FiList size={14} />}
+                <span>Switch to {tocType === "LIST" ? "Folder" : "List"} View</span>
               </button>
             </div>
 
@@ -166,9 +167,10 @@ export default function TOCSettingsControl({
             <div className="mb-2 py-[3px]">
               <button
                 onClick={handleResetToDefault}
-                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-[#f0f0f0]"
+                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-[#f0f0f0] flex items-center gap-1.5"
               >
-                Reset to Default
+                <FiRefreshCw size={14} />
+                <span>Reset to Default</span>
               </button>
             </div>
 
@@ -176,9 +178,10 @@ export default function TOCSettingsControl({
             <div className="mb-2 py-[3px]">
               <button
                 onClick={handleTurnOffLayers}
-                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-[#f0f0f0]"
+                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-[#f0f0f0] flex items-center gap-1.5"
               >
-                Turn off all Layers
+                <FiEyeOff size={14} />
+                <span>Turn off all Layers</span>
               </button>
             </div>
 
@@ -186,9 +189,10 @@ export default function TOCSettingsControl({
             <div className="mb-2 py-[3px]">
               <button
                 onClick={handleOpenLegend}
-                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-[#f0f0f0]"
+                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-[#f0f0f0] flex items-center gap-1.5"
               >
-                Show Legend
+                <FiMap size={14} />
+                <span>Show Legend</span>
               </button>
             </div>
 

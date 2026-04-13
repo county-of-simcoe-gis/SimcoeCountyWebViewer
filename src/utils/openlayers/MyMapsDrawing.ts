@@ -11,7 +11,7 @@ import { fromCircle } from "ol/geom/Polygon";
 import { Style, Fill, Stroke, Circle as CircleStyle, Text, RegularShape } from "ol/style";
 import { Feature } from "ol";
 import type { FeatureLike } from "ol/Feature";
-import { Circle, LineString, Point } from "ol/geom";
+import { Circle, LineString, MultiPolygon, Point } from "ol/geom";
 import { asArray } from "ol/color";
 import { generateUID, convertLineToArrow, getBearing, getCalloutStyle, getDefaultLabelStyle, type LabelStyle } from "@/utils/myMapsHelpers";
 import type { MyMapsItem, StyleJSON } from "@/types/myMaps";
@@ -819,9 +819,18 @@ export class MyMapsDrawingManager {
           placement: "point",
         });
 
-        style.setText(textStyle);
-
-        feature.setStyle(style);
+        // For MultiPolygon, render a single label at the center instead of one per part
+        const geom = feature.getGeometry();
+        if (geom instanceof MultiPolygon) {
+          const labelStyle = new Style({
+            geometry: new Point(geom.getInteriorPoints().getCoordinates()[0]),
+            text: textStyle,
+          });
+          feature.setStyle([style, labelStyle]);
+        } else {
+          style.setText(textStyle);
+          feature.setStyle(style);
+        }
       }
     } else {
       feature.setProperties({

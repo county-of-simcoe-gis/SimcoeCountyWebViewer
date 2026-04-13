@@ -9,6 +9,7 @@ import { useMapStore } from "@/stores/mapStore";
 import { type LayerCategory, type ManagedLayer } from "@/stores/layerManagerStore";
 import LayerOrderConfig from "@/utils/openlayers/LayerOrderConfig.json";
 import { fetchWithAuth, isSecuredUrl } from "@/utils/auth";
+import { useToastStore } from "@/hooks/useToast";
 
 // Helper function to calculate z-index for a layer based on category and position
 // Layers at the beginning of the array (index 0) should have HIGHER z-index (drawn on top)
@@ -606,7 +607,7 @@ export const useTOCStore = create<TOCState>()(
 
     getFolderOpenState: (groupValue) => {
       const state = get();
-      return state.folderOpenStates[groupValue] ?? true; // Default to open
+      return state.folderOpenStates[groupValue] ?? false; // Default to closed, matching old app behavior
     },
 
     // Group switching with layer visibility management
@@ -1318,7 +1319,12 @@ export const useTOCStore = create<TOCState>()(
 
         // Load from actual sources using TOC helpers
         const result = await loadLayerGroupsFromSources(state.sources, config);
-        
+
+        // Notify user if any sources failed to load
+        if (result.failedSources.length > 0) {
+          useToastStore.getState().addToast("Some layer sources could not be loaded. Not all layers may be available.", "warning", 8000);
+        }
+
         // Set the layer groups for BOTH LIST and FOLDER types (same data, different display)
         state.setLayerGroups("LIST", result.groups);
         state.setLayerGroups("FOLDER", result.groups);
@@ -1359,6 +1365,15 @@ export const useTOCStore = create<TOCState>()(
           }
 
           state.setDefaultGroup(defaultGroup);
+
+          // Initialize folder open states: only sourceOpen groups (source config `open: true`) are expanded
+          // The config default_group (e.g. "All_Layers_Public") only affects LIST view, not FOLDER view
+          result.groups.forEach((group) => {
+            const isSourceOpen = group.sourceOpen === true;
+            if (get().folderOpenStates[group.value] === undefined) {
+              state.setFolderOpenState(group.value, isSourceOpen);
+            }
+          });
 
           // Set the selected group based on the current TOC type
           const currentState = get();

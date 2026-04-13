@@ -6,6 +6,7 @@ import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import GeoJSON from "ol/format/GeoJSON";
 import { Style, Icon, Stroke } from "ol/style";
+import axios from "axios";
 import axiosInstance from "@/lib/axiosInstance";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { useMapStore } from "@/stores/mapStore";
@@ -147,8 +148,9 @@ export default function Five11LayerToggler({ layer, visible, onVisibilityChange,
         setRecordCount(actualFeatureCount);
         onLayerIdChange(layer.layerName, layerId);
       } catch (error) {
-        // Ignore abort errors (expected on cleanup)
+        // Ignore abort/cancel errors (expected on cleanup)
         if (error instanceof DOMException && error.name === "AbortError") return;
+        if (axios.isCancel(error)) return;
         console.error(`Error loading 511 layer ${layer.layerName}:`, error);
         setRecordCount(0);
       } finally {

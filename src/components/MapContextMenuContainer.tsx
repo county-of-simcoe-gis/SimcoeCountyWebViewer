@@ -32,7 +32,7 @@ export const MapContextMenuContainer: React.FC = () => {
   const map = useMapStore((s) => s.map);
   const config = useAppStore((state) => state.config);
   const openSidebar = useSidebarStore((s) => s.openSidebar);
-  const setActiveTab = useSidebarStore((s) => s.setActiveTab);
+  const setActiveTabByName = useSidebarStore((s) => s.setActiveTabByName);
   const closeSidebar = useSidebarStore((s) => s.closeSidebar);
   const setReport = useReportsStore((s) => s.setReport);
   const showPopup = usePopupStore((s) => s.show);
@@ -329,8 +329,8 @@ export const MapContextMenuContainer: React.FC = () => {
 
     // Open sidebar and switch to reports tab
     openSidebar();
-    setActiveTab(4); // Reports tab is index 4
-  }, [map, setReport, openSidebar, setActiveTab]);
+    setActiveTabByName("reports");
+  }, [map, setReport, openSidebar, setActiveTabByName]);
 
   const handleGoogleMaps = useCallback(() => {
     const lonLat = toLonLat(coordinateRef.current);
@@ -413,14 +413,15 @@ export const MapContextMenuContainer: React.FC = () => {
 
   // Handle context menu display
   const handleContextMenu = useCallback(
-    (coordinate: number[], _pixel: number[], _event: unknown) => {
+    (coordinate: number[], _pixel: number[], event: unknown) => {
       // Check if right-click menu is disabled via config
       if (config?.disableRightClickMenu) return;
 
       coordinateRef.current = coordinate;
 
       // Get the page coordinates from the original event
-      const originalEvent = event.originalEvent as MouseEvent;
+      const mapEvent = event as { originalEvent?: MouseEvent };
+      const originalEvent = mapEvent.originalEvent;
 
       setMenuState({
         visible: true,

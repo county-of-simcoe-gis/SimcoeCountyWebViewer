@@ -253,7 +253,7 @@ describe("sidebarStore", () => {
     });
 
     it("should warn and not change tab for hidden tab names", () => {
-      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
       useSidebarStore.setState({ hideTools: true, activeTab: 0 });
 
       useSidebarStore.getState().setActiveTabByName("tools");

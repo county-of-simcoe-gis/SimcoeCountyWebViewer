@@ -23,8 +23,7 @@
       "visible": true,
       "zIndex": 202,
       "clickable": true,
-      "displayFieldName": "Name",
-      "legendColor": "#8B4513"
+      "displayFieldName": "Name"
     },
     {
       "displayName": "Bag Tag Locations",
@@ -33,8 +32,7 @@
       "visible": true,
       "zIndex": 203,
       "clickable": true,
-      "displayFieldName": "Name",
-      "legendColor": "#228B22"
+      "displayFieldName": "Name"
     }
   ]
 }

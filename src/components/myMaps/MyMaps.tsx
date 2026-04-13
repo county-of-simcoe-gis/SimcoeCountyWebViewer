@@ -46,7 +46,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
   const urlParameters = useAppStore((state) => state.urlParameters);
   const { emit } = useEventStore();
   const { setReport } = useReportsStore();
-  const { openSidebar, setActiveTab } = useSidebarStore();
+  const { openSidebar, setActiveTabByName } = useSidebarStore();
 
   // Handle showing item options popup
   const handleShowItemOptions = useCallback((item: MyMapsItemType, event?: React.MouseEvent) => {
@@ -306,7 +306,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
 
         // Open sidebar and switch to reports tab
         openSidebar();
-        setActiveTab(4); // Reports tab is index 4
+        setActiveTabByName("reports");
 
         // Emit event for backward compatibility
         emit("mymap-identify", { item });
@@ -314,7 +314,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
         console.error("Error identifying MyMaps feature:", error);
       }
     },
-    [emit, setReport, openSidebar, setActiveTab],
+    [emit, setReport, openSidebar, setActiveTabByName],
   );
 
   const handleReportProblem = useCallback(
@@ -665,7 +665,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
       {/* Status info */}
       <div className="flex flex-wrap gap-3 py-1.5 px-3 bg-[#f1f3f4] border-t border-[#dee2e6] text-[11px] text-[#6c757d] mt-auto">
         <div className="flex items-center gap-1">
-          Active Tool: <strong>{drawType}</strong>
+          Active Tool: <strong>{drawType === "Cancel" ? "None" : drawType}</strong>
         </div>
         <div className="flex items-center gap-1">
           Color: <span className="w-3 h-3 border border-[#ccc] rounded-sm inline-block" style={{ backgroundColor: drawColor }} />

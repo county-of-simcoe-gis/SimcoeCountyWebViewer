@@ -1,21 +1,26 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Feature } from "ol";
 import { useAppStore } from "@/stores/appStore";
 import { InfoWindowRow } from "@/components/ui/InfoWindowRow";
 import { usePropertyPopupExtensionStore } from "@/stores/propertyPopupExtensionStore";
+import { isPropertyInMunicipality } from "@/utils/municipalityFilter";
 import { usePopupStore } from "@/stores/popupStore";
 import { useReportsStore } from "@/stores/reportsStore";
 import { useEventStore } from "@/stores/eventStore";
 import { useToastStore } from "@/hooks/useToast";
 import PropertyReport from "@/components/PropertyReport";
 import IdentifyQuery from "@/components/Identify/IdentifyQuery";
+import Identify from "@/components/Identify";
+import Zoning from "@/components/themes/Zoning/Zoning";
 import { activateTab } from "@/utils/helpersUI";
 
 export interface PropertyInfo {
   ARN: string;
   Address?: string;
+  Municipality?: string;
   AssessedValue?: string; // Base64 encoded PNG image (data:image/png;base64,...)
   HasZoning?: boolean;
   WasteCollection?: {
@@ -42,6 +47,7 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
   const config = useAppStore((state) => state.config);
   const [copied, setCopied] = useState(false);
   const extensionItems = usePropertyPopupExtensionStore((s) => s.getVisibleItems)();
+  const showSecuredExtensions = isPropertyInMunicipality(propInfo.Municipality);
 
   const { ARN: arn, Address: address, AssessedValue: assessedValue, HasZoning: hasZoning, WasteCollection: wasteCollection, Other: other, pointCoordinates, shareURL } = propInfo;
   const garbageDay = wasteCollection?.GarbageDay;
@@ -66,6 +72,25 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
     activateTab("mymaps");
     useToastStore.getState().addToast("Feature added to MyMaps", "success");
   };
+
+  const handleViewZoning = () => {
+    // Close popup and parcel layer
+    onClearParcelLayer?.();
+    onClose?.();
+    usePopupStore.getState().hide();
+
+    // Load Zoning directly into the Reports tab with the ARN.
+    // This works even when the Zoning theme is disabled in the sidebar.
+    useReportsStore.getState().setReport({
+      id: `zoning-${arn}-${Date.now()}`,
+      title: `Zoning: ${arn}`,
+      content: <Zoning initialArn={arn} hideHeader onClose={() => useReportsStore.getState().clearReport()} />,
+      createdAt: new Date(),
+      source: "zoning",
+    });
+    activateTab("reports");
+  };
+
 
   const handleMoreInfo = () => {
     // Close the popup overlay and parcel highlight
@@ -138,13 +163,33 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
     activateTab("reports");
   };
 
+  const handleIdentifyAdjacent = () => {
+    const geom = feature?.getGeometry();
+    if (!geom) return;
+
+    // Close popup and parcel layer
+    onClearParcelLayer?.();
+    onClose?.();
+    usePopupStore.getState().hide();
+
+    // Load the Identify component with the parcel geometry into the Reports tab
+    useReportsStore.getState().setReport({
+      id: `identify-adjacent-${arn}-${Date.now()}`,
+      title: "Identify Adjacent Features",
+      content: <Identify geometry={geom} />,
+      createdAt: new Date(),
+      source: "identifyAdjacent",
+    });
+    activateTab("reports");
+  };
+
   return (
     <div className="bg-white">
       <div className="relative overflow-x-hidden overflow-y-auto">
         {/* Address */}
         {address && <InfoWindowRow label="Address" value={address} />}
 
-        {/* Roll Number (ARN) with copy button */}
+        {/* Roll Number (ARN) with copy button and investigate button */}
         {arn && (
           <InfoWindowRow label="Roll Number">
             {arn}
@@ -161,7 +206,22 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
         )}
 
         {/* Has Zoning */}
-        {hasZoning !== undefined && <InfoWindowRow label="Has Zoning" value={hasZoning ? "Yes" : "No"} />}
+        {hasZoning !== undefined && (
+          <InfoWindowRow label="Has Zoning">
+            {hasZoning ? "Yes" : "No"}
+            {hasZoning && (
+              <Image
+                src="/images/information.png"
+                alt="View Zoning"
+                title="View Zoning"
+                width={16}
+                height={16}
+                className="inline-block -mb-0.5 ml-1.5 cursor-pointer"
+                onClick={handleViewZoning}
+              />
+            )}
+          </InfoWindowRow>
+        )}
 
         {/* Assessed Value - rendered as image matching legacy */}
         {assessedValue && (
@@ -178,17 +238,29 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
         {/* Broadband Speed */}
         {broadbandSpeed && <InfoWindowRow label="Potential Broadband Coverage" value={broadbandSpeed} />}
 
-        {/* Extension items (e.g. MPac/Teranet report links, owner names) */}
+        {/* Extension items (e.g. MPac/Teranet report links, owner names) — hidden when municipality filter active and property is outside */}
         {arn &&
+          showSecuredExtensions &&
           extensionItems.map((ext) => (
             <InfoWindowRow key={ext.id} label={ext.label}>
               {ext.render(arn)}
             </InfoWindowRow>
           ))}
 
+        {/* Identify adjacent features */}
+        {feature?.getGeometry() && (
+          <InfoWindowRow label="Identify">
+            <span className="text-[#337ab7] underline cursor-pointer select-none hover:text-[#23527c]" onClick={handleIdentifyAdjacent}>
+              Identify adjacent features
+            </span>
+          </InfoWindowRow>
+        )}
+
         {/* Custom Identify items from propertyReport config */}
         {arn &&
-          config?.propertyReport?.customIdentify?.map((item, idx) => (
+          config?.propertyReport?.customIdentify
+            ?.filter((item) => !item.secured || showSecuredExtensions)
+            .map((item, idx) => (
             <InfoWindowRow key={`custom-identify-${idx}`} label={item.label}>
               <span className="text-[#337ab7] underline cursor-pointer select-none hover:text-[#23527c]" onClick={() => handleCustomIdentify(item)}>
                 {item.linkText}
@@ -218,6 +290,11 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
             </span>
           </div>
         </InfoWindowRow>
+
+        {/* Parcel Area */}
+        {propInfo.area != null && !isNaN(propInfo.area) && propInfo.area > 0 && (
+          <InfoWindowRow label="Parcel Area" value={`${(propInfo.area / 10000).toFixed(3)} hectares`} />
+        )}
 
         {/* Coordinates */}
         {pointCoordinates && <InfoWindowRow label="Pointer Coordinates" value={`Lat: ${Math.round(pointCoordinates[1] * 10000) / 10000}  Long: ${Math.round(pointCoordinates[0] * 10000) / 10000}`} />}

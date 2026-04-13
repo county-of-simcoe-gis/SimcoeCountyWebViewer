@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { useAppStore } from "@/stores/appStore";
 import { InfoWindowRow } from "@/components/ui/InfoWindowRow";
+import { showURLWindow } from "@/utils/helpersUI";
+import AppImage from "@/components/shared/AppImage";
+import { apiUrl as toApiUrl } from "@/lib/axiosInstance";
 
 /** Shape returned by /api/public/reports/property/[arn] */
 interface PropertyReportData {
@@ -66,7 +69,8 @@ export default function PropertyReport({ arn, onZoomClick }: PropertyReportProps
       setError(null);
 
       try {
-        const url = `${config?.propertyReportUrl ?? "/api/public/reports/property/"}${arn}`;
+        const rawUrl = `${config?.propertyReportUrl ?? "/api/public/reports/property/"}${arn}`;
+        const url = rawUrl.startsWith("/api/") ? toApiUrl(rawUrl) : rawUrl;
         const res = await fetch(url);
         if (!res.ok) {
           throw new Error(res.status === 404 ? "Property not found." : `Server error (${res.status})`);
@@ -101,8 +105,11 @@ export default function PropertyReport({ arn, onZoomClick }: PropertyReportProps
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ params: [{ name: "ARN", value: data.ARN, type: "text" }] }),
       });
-      const key = await res.text();
-      window.open(`${reportUrl}?REPORT=${reportName}&KEY=${key}`, "_blank", "noopener,noreferrer");
+      // Strip quotes from the key if present (API may return quoted string)
+      const rawKey = await res.text();
+      const key = rawKey.replace(/^"|"$/g, "");
+      const previewUrl = `${reportUrl}?REPORT=${reportName}&KEY=${key}`;
+      showURLWindow(previewUrl, false, "full", false, false, "Property Report");
     } catch (err) {
       console.error("Print preview error:", err);
     }
@@ -249,7 +256,7 @@ function ReportSection({ title, icon, children }: { title: string; icon: string;
     <>
       <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase bg-[#dfdfdf] p-1.5 border border-[#ccc] rounded-t">
         {}
-        <img src={icon} alt="" className="w-5 h-5" />
+        <AppImage src={icon} alt="" className="w-5 h-5" />
         {title}
       </div>
       <div className="border-x border-b border-[#ccc] mb-2.5 p-1.5 rounded-b">{children}</div>

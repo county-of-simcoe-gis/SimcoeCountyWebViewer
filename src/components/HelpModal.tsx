@@ -5,7 +5,7 @@ import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { FaTimes, FaSync } from "react-icons/fa";
 import { useHelpModalStore } from "@/stores/helpModalStore";
-import { getPublicPath } from "@/utils/getPublicPath";
+import { resolveImageSrc } from "@/components/shared/AppImage";
 import { Modal } from "@/components/ui/Modal";
 
 /**
@@ -78,8 +78,7 @@ export default function HelpModal() {
   const ImageComponent: React.FC<React.ImgHTMLAttributes<HTMLImageElement>> = ({ src, alt, ...props }) => {
     if (!src || typeof src !== "string") return <img alt={alt} {...props} />;
 
-    const isRelativePath = !src.startsWith("http") && !src.startsWith("data:");
-    const imageSrc = isRelativePath ? getPublicPath(`/${src.replace(/^\//, "")}`) : src;
+    const imageSrc = resolveImageSrc(src.startsWith("/") ? src : `/${src}`);
 
     return <img src={imageSrc} alt={alt} {...props} />;
   };

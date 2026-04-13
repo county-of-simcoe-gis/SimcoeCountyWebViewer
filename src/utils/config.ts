@@ -356,7 +356,7 @@ function convertSettingsToAppConfig(settings: SettingsType & Record<string, unkn
     if (general.headerLogoImageName) config.headerLogoImageName = general.headerLogoImageName;
     if (general.defaultZoom) config.defaultZoom = general.defaultZoom;
     if (general.maxZoom) config.maxZoom = general.maxZoom;
-    if (general.centerCoords) config.centerCoords = general.centerCoords;
+    if (Array.isArray(general.centerCoords) && general.centerCoords.length >= 2) config.centerCoords = general.centerCoords;
     if (general.leftClickIdentify !== undefined) config.leftClickIdentify = general.leftClickIdentify;
     if (general.allowIdentifyExport !== undefined) config.allowIdentifyExport = general.allowIdentifyExport;
     if (general.showFloatingMenuHeader !== undefined) config.showFloatingMenuHeader = general.showFloatingMenuHeader;
@@ -423,8 +423,9 @@ function convertSettingsToAppConfig(settings: SettingsType & Record<string, unkn
         componentName: comp.componentName,
         description: "",
         imageName: "",
-        enabled: comp.enabled,
-        disable: comp.disable,
+        // Translate old enabled/disabled flags to new disable flag
+        // If enabled === false, set disable = true; otherwise use existing disable value
+        disable: comp.enabled === false ? true : (comp.disable ?? false),
         config: JSON.stringify(comp.config || {}),
       }));
     }
@@ -442,8 +443,9 @@ function convertSettingsToAppConfig(settings: SettingsType & Record<string, unkn
         componentName: comp.componentName,
         description: "",
         imageName: "",
-        enabled: comp.enabled,
-        disable: comp.disable,
+        // Translate old enabled/disabled flags to new disable flag
+        // If enabled === false, set disable = true; otherwise use existing disable value
+        disable: comp.enabled === false ? true : (comp.disable ?? false),
         config: JSON.stringify(comp.config || {}),
       }));
     }
@@ -479,9 +481,8 @@ function convertSettingsToAppConfig(settings: SettingsType & Record<string, unkn
   // Map Basemaps settings
   if (settings.Basemaps) {
     const basemaps = settings.Basemaps;
-    const hasBasemapData = basemaps.defaultButton ||
-      (Array.isArray(basemaps.imageryServices) && basemaps.imageryServices.length > 0) ||
-      (Array.isArray(basemaps.topoServices) && basemaps.topoServices.length > 0);
+    const hasBasemapData =
+      basemaps.defaultButton || (Array.isArray(basemaps.imageryServices) && basemaps.imageryServices.length > 0) || (Array.isArray(basemaps.topoServices) && basemaps.topoServices.length > 0);
     if (hasBasemapData) {
       config.baseMapServices = {};
       if (basemaps.defaultButton) config.baseMapServices.defaultButton = basemaps.defaultButton;

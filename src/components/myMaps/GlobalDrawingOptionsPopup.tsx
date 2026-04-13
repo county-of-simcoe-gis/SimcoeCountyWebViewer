@@ -51,7 +51,7 @@ export default function GlobalDrawingOptionsPopup() {
   const config = useAppStore((s) => s.config);
   const setReport = useReportsStore((s) => s.setReport);
   const openSidebar = useSidebarStore((s) => s.openSidebar);
-  const setActiveTab = useSidebarStore((s) => s.setActiveTab);
+  const setActiveTabByName = useSidebarStore((s) => s.setActiveTabByName);
 
   // Get fresh item data from store (reactive subscription)
   const drawingOptionsItem = drawingOptionsItemId ? items.find((item) => item.id === drawingOptionsItemId) || null : null;
@@ -759,7 +759,7 @@ export default function GlobalDrawingOptionsPopup() {
 
         // Open sidebar and switch to reports tab
         openSidebar();
-        setActiveTab(4); // Reports tab is index 4
+        setActiveTabByName("reports");
 
         // Emit event for backward compatibility
         emit("mymap-identify", { item });
@@ -769,7 +769,7 @@ export default function GlobalDrawingOptionsPopup() {
 
       handleToolsPopupClose();
     },
-    [emit, handleToolsPopupClose, setReport, openSidebar, setActiveTab],
+    [emit, handleToolsPopupClose, setReport, openSidebar, setActiveTabByName],
   );
 
   const handleReportProblem = useCallback(

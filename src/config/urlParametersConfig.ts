@@ -222,6 +222,15 @@ export const standardParameters: UrlParameterConfig[] = [
   // Phase 5: Search & UI
   // -------------------------------------------------------------------------
   {
+    name: URL_PARAMS.MUNI,
+    type: 'string',
+    phase: UrlParamPhase.SEARCH_UI,
+    dependencies: [],
+    handlerKey: 'handleMunicipality',
+    notifyOnSuccess: false,
+    notifyOnFailure: false,
+  },
+  {
     name: URL_PARAMS.Q,
     type: 'string',
     phase: UrlParamPhase.SEARCH_UI,

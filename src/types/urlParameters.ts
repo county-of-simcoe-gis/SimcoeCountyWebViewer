@@ -46,6 +46,7 @@ export const URL_PARAMS = {
   // Search
   Q: "q",
   QT: "qt",
+  MUNI: "MUNI",
   LOCATIONID: "LOCATIONID",
 
   // Feature Selection (mutually exclusive, priority-based)

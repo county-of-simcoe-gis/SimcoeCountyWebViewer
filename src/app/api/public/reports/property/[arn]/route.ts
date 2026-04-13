@@ -9,6 +9,7 @@ import { createCanvas } from "canvas";
 
 interface PropertyReportResult {
   ARN: string;
+  Municipality?: string;
   PropertyType?: string;
   Address: string;
   AssessedValue: string;
@@ -204,6 +205,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const isOrillia = arnPrefix === "4352";
     const resultFormatted: PropertyReportResult = {
       ARN: result.ARN,
+      Municipality: result.Muni || undefined,
       PropertyType: isBarrie ? "N/A" : result.PropertyDescripter,
       Address: result.StNum || result.FullName || result.Muni ? `${result.StNum || ""} ${result.FullName || ""}, ${result.Muni || ""}`.trim() : "(Not Available)",
       AssessedValue: getAssessedValueImage(isBarrie ? "N/A" : result.AssessedValue || 0),

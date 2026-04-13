@@ -745,6 +745,15 @@ export default function TOC({ visible = true }: TOCProps) {
   // Get current layer groups
   const currentGroups = tocType === "LIST" ? layerListGroups : layerFolderGroups;
 
+  // Compute displayed layer count based on current view and selected group
+  const displayedLayerCount = React.useMemo(() => {
+    if (tocType === "LIST" && selectedGroup) {
+      return selectedGroup.layers.length;
+    }
+    // FOLDER view: sum layers across all folder groups
+    return currentGroups.reduce((sum, group) => sum + group.layers.length, 0);
+  }, [tocType, selectedGroup, currentGroups]);
+
   if (!visible) {
     return <div className="hidden" />;
   }
@@ -757,7 +766,7 @@ export default function TOC({ visible = true }: TOCProps) {
         sortAlpha={sortAlpha}
         globalOpacity={getGlobalOpacity()}
         isLoading={isLoading}
-        layerCount={layerCount}
+        layerCount={displayedLayerCount}
         helpLink={helpLink}
         onSearchChange={handleSearchChange}
         onSortChange={handleSortChange}

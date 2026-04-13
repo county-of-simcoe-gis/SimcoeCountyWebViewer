@@ -60,11 +60,11 @@ describe("helpersUI", () => {
       expect(useSidebarStore.getState().activeTab).toBe(4);
     });
 
-    it("logs error for invalid tab name", () => {
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    it("logs warning for invalid tab name", () => {
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
       // @ts-expect-error - testing invalid input
       activateTab("invalid");
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("is hidden or invalid"));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("unknown tab"));
     });
   });
 

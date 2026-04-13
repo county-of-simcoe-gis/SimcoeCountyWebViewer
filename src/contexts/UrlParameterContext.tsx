@@ -113,13 +113,8 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
     const config = getParameterConfig(paramName);
     console.log(`[getHandler] Config lookup for "${paramName}":`, config ? `Found (name=${config.name})` : "NOT FOUND");
 
-    if (!config) {
-      console.warn(`[UrlParameterProvider] Unknown parameter: ${paramName}`);
-      handlersRef.current[paramName] = null;
-      return null;
-    }
-
-    // Create a handler that accesses stores at execution time (not subscription time)
+    // Always create a lazy handler — even for unknown params, the default case
+    // in createLazyHandler will check sidebarShortcutParams from config.
     const handler = createLazyHandler(paramName);
     handlersRef.current[paramName] = handler;
     console.log(`[getHandler] Created lazy handler for: "${paramName}"`);
@@ -218,6 +213,18 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
           // console.log(`[UrlParameterProvider] Skipping ${config.name} - dependencies not ready`);
           skippedParamsRef.current.push(config.name);
         }
+      }
+    }
+
+    // Process any remaining URL params not in standard or feature configs
+    // These may match sidebarShortcutParams from config (e.g. "room" → Campus theme)
+    const knownParamNames = new Set([
+      ...featureSelectionParameters.map((p) => p.name.toUpperCase()),
+      ...standardParameters.map((p) => p.name.toUpperCase()),
+    ]);
+    for (const [key, value] of Object.entries(params)) {
+      if (!knownParamNames.has(key)) {
+        await processParameter(key, value, params);
       }
     }
 
@@ -433,6 +440,14 @@ function createLazyHandler(paramName: string): HandlerFn {
             sidebarState.tools.map((t) => t.name),
           );
         }
+        break;
+      }
+
+      case "MUNI": {
+        // Municipality is handled directly by Search.tsx from the app store's urlParameters.
+        // This no-op prevents the sidebarShortcutParams default handler from incorrectly
+        // emitting a "searchItem" event for this parameter.
+        console.log(`[Handler] MUNI param "${value}" stored — Search component will use it as a filter`);
         break;
       }
 

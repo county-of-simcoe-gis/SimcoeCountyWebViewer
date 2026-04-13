@@ -2,6 +2,8 @@
 
 import { usePopupStore } from "@/stores/popupStore";
 import { FaExternalLinkAlt, FaTimes } from "react-icons/fa";
+import { isExcludedKey } from "@/utils/identifyHelpers";
+import AppImage from "@/components/shared/AppImage";
 
 interface ThemePopupContentProps {
   properties: Record<string, unknown>;
@@ -9,11 +11,7 @@ interface ThemePopupContentProps {
   popupLogoImage?: string;
 }
 
-export default function ThemePopupContent({
-  properties,
-  moreInfoUrlFieldName,
-  popupLogoImage,
-}: ThemePopupContentProps) {
+export default function ThemePopupContent({ properties, moreInfoUrlFieldName, popupLogoImage }: ThemePopupContentProps) {
   const { hide } = usePopupStore();
 
   // Find the URL field value if specified
@@ -22,9 +20,9 @@ export default function ThemePopupContent({
     moreInfoUrl = String(properties[moreInfoUrlFieldName]);
   }
 
-  // Filter out geometry and internal fields (starting with _)
+  // Filter out internal/system fields using shared identify filter
   const displayEntries = Object.entries(properties).filter(([key]) => {
-    return key !== "geometry" && !key.startsWith("_");
+    return !isExcludedKey(key);
   });
 
   const handleMoreInfo = () => {
@@ -38,28 +36,16 @@ export default function ThemePopupContent({
       {/* Logo if provided */}
       {popupLogoImage && (
         <div className="text-center mb-3">
-          {}
-          <img
-            src={`/images/${popupLogoImage}`}
-            alt="Theme Logo"
-            className="max-h-12 mx-auto"
-          />
+          <AppImage src={`/images/${popupLogoImage}`} alt="Theme Logo" className="max-h-12 mx-auto" />
         </div>
       )}
 
       {/* Property rows */}
       <div className="space-y-1 max-h-[300px] overflow-y-auto">
         {displayEntries.map(([key, value]) => (
-          <div
-            key={key}
-            className="flex gap-2 py-1 border-b border-base-200 last:border-0"
-          >
-            <span className="font-medium text-xs text-base-content/70 min-w-[80px]">
-              {formatLabel(key)}:
-            </span>
-            <span className="text-sm text-base-content flex-1">
-              {formatValue(value)}
-            </span>
+          <div key={key} className="flex gap-2 py-1 border-b border-base-200 last:border-0">
+            <span className="font-medium text-xs text-base-content/70 min-w-[80px]">{formatLabel(key)}:</span>
+            <span className="text-sm text-base-content flex-1">{formatValue(value)}</span>
           </div>
         ))}
       </div>
@@ -67,18 +53,12 @@ export default function ThemePopupContent({
       {/* Action buttons */}
       <div className="flex gap-2 mt-4">
         {moreInfoUrl && (
-          <button
-            className="btn btn-sm btn-primary flex-1"
-            onClick={handleMoreInfo}
-          >
+          <button className="btn btn-sm btn-primary flex-1" onClick={handleMoreInfo}>
             <FaExternalLinkAlt className="w-3 h-3" />
             More Information
           </button>
         )}
-        <button
-          className="btn btn-sm btn-outline flex-1"
-          onClick={hide}
-        >
+        <button className="btn btn-sm btn-outline flex-1" onClick={hide}>
           <FaTimes className="w-3 h-3" />
           Close
         </button>

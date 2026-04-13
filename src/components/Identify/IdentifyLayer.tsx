@@ -8,35 +8,9 @@ import { downloadFile } from "@/utils/helpersBrowser";
 import Feature from "ol/Feature";
 import type Geometry from "ol/geom/Geometry";
 
-/** Regex patterns for keys to exclude from CSV export (ported from old app's FilterKeys) */
-const FILTER_KEY_PATTERNS = [
-  /^_.*$/,
-  /^id$/,
-  /^geometry$/,
-  /^geom$/,
-  /^extent_geom$/,
-  /^.*gid.*$/,
-  /^globalid$/,
-  /^objectid.*$/,
-  /^shape.*$/,
-  /^displayfieldname$/,
-  /^displayfieldvalue$/,
-  /^layerdisplayname$/,
-  /^geostasis\..*$/,
-  /^.*fid.*$/,
-  /^boundedby$/,
-];
-
-/** Filter feature property keys, removing internal/system fields */
-function filterFeatureKeys(feature: Feature<Geometry>): string[] {
-  const props = feature.getProperties();
-  return Object.keys(props).filter((key) => {
-    const val = props[key];
-    if (val !== null && typeof val === "object") return false;
-    const lower = key.toLowerCase();
-    return !FILTER_KEY_PATTERNS.some((pattern) => pattern.test(lower));
-  });
-}
+// Re-export from shared utility for backward compatibility
+export { filterFeatureKeys } from "@/utils/identifyHelpers";
+import { filterFeatureKeys } from "@/utils/identifyHelpers";
 
 /** Export layer features to a CSV file */
 function exportLayerToCSV(title: string, features: Feature<Geometry>[]): void {

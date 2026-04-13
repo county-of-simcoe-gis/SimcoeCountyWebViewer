@@ -23,14 +23,21 @@ vi.mock("@/stores/appStore", () => ({
 }));
 
 // Mock useEventStore
-vi.mock("@/stores/eventStore", () => ({
-  useEventStore: vi.fn((selector?: any) => {
-    const state = {
-      emitSidebarLoaded: vi.fn(),
-    };
-    return typeof selector === "function" ? selector(state) : state;
-  }),
-}));
+vi.mock("@/stores/eventStore", () => {
+  const mockEventState = {
+    emitSidebarLoaded: vi.fn(),
+    addListener: vi.fn(() => "mock-listener-id"),
+    removeListener: vi.fn(),
+    emit: vi.fn(),
+  };
+  const mockUseEventStore = Object.assign(
+    vi.fn((selector?: any) => {
+      return typeof selector === "function" ? selector(mockEventState) : mockEventState;
+    }),
+    { getState: () => mockEventState },
+  );
+  return { useEventStore: mockUseEventStore };
+});
 
 // Mock useMapStore
 vi.mock("@/stores/mapStore", () => ({
