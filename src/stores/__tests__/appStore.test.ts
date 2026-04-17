@@ -13,8 +13,8 @@ beforeEach(() => {
     config: null,
     configError: null,
     appInfo: {
-      name: 'Simcoe County Web Viewer',
-      version: '1.0.0',
+      name: '',
+      version: '',
       homepage: ''
     }
   })
@@ -42,8 +42,8 @@ describe('appStore', () => {
       const { result } = renderHook(() => useAppStore())
 
       expect(result.current.appInfo).toEqual({
-        name: 'Simcoe County Web Viewer',
-        version: '1.0.0',
+        name: '',
+        version: '',
         homepage: ''
       })
     })
@@ -145,7 +145,7 @@ describe('appStore', () => {
       })
       
       expect(useAppStore.getState().appInfo.version).toBe('2.0.0')
-      expect(useAppStore.getState().appInfo.name).toBe('Simcoe County Web Viewer') // Should remain unchanged
+      expect(useAppStore.getState().appInfo.name).toBe('') // Should remain unchanged
       expect(useAppStore.getState().appInfo.homepage).toBe('') // Should remain unchanged
     })
 
@@ -183,7 +183,7 @@ describe('appStore', () => {
       })
       
       expect(useAppStore.getState().appInfo).toEqual({
-        name: 'Simcoe County Web Viewer',
+        name: '',
         version: '2.0.0', // Should keep previous update
         homepage: 'https://example.com'
       })

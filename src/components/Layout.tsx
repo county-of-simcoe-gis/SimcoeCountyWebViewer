@@ -3,7 +3,6 @@
 import { useEffect, useRef } from "react";
 import { useAppStore } from "@/stores/appStore";
 import { useSidebarStore } from "@/stores/sidebarStore";
-import { useEventStore } from "@/stores/eventStore";
 import { useConfig } from "@/hooks/useConfig";
 import { useToastStore } from "@/hooks/useToast";
 import { showURLWindow } from "@/utils/helpersUI";
@@ -16,6 +15,7 @@ import MyMapsService from "@/components/myMaps/MyMapsService";
 import GlobalDrawingOptionsPopup from "@/components/myMaps/GlobalDrawingOptionsPopup";
 import LayerInfoModal from "@/components/LayerInfo/LayerInfoModal";
 import LegendModal from "@/components/Legend/LegendModal";
+import AttributeTablePanel from "@/components/AttributeTable/AttributeTablePanel";
 import HelpModal from "@/components/HelpModal";
 import MoreMenu from "@/components/MoreMenu";
 import GlobalURLModal from "@/components/common/GlobalURLModal";
@@ -36,15 +36,8 @@ export default function Layout({ children }: LayoutProps) {
   const setConfigError = useAppStore((s) => s.setConfigError);
   const loadFromConfig = useSidebarStore((s) => s.loadFromConfig);
   const activateDefaultItems = useSidebarStore((s) => s.activateDefaultItems);
-  const setEventEmitter = useSidebarStore((s) => s.setEventEmitter);
   const openSidebar = useSidebarStore((s) => s.openSidebar);
-  const emitSidebarChanged = useEventStore((s) => s.emitSidebarChanged);
   const { config, loading: configLoading, error: configError } = useConfig();
-
-  // Wire up event emitters to stores
-  useEffect(() => {
-    setEventEmitter(emitSidebarChanged);
-  }, [setEventEmitter, emitSidebarChanged]);
 
   // Update app store when config changes
   useEffect(() => {
@@ -169,6 +162,9 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Legend Modal - displays legends for visible layers */}
       <LegendModal />
+
+      {/* Attribute Table - bottom-docked, tabbed data grid per layer */}
+      <AttributeTablePanel />
 
       {/* Help Modal - displays README.md as help documentation */}
       <HelpModal />

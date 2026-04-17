@@ -218,10 +218,7 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
 
     // Process any remaining URL params not in standard or feature configs
     // These may match sidebarShortcutParams from config (e.g. "room" → Campus theme)
-    const knownParamNames = new Set([
-      ...featureSelectionParameters.map((p) => p.name.toUpperCase()),
-      ...standardParameters.map((p) => p.name.toUpperCase()),
-    ]);
+    const knownParamNames = new Set([...featureSelectionParameters.map((p) => p.name.toUpperCase()), ...standardParameters.map((p) => p.name.toUpperCase())]);
     for (const [key, value] of Object.entries(params)) {
       if (!knownParamNames.has(key)) {
         await processParameter(key, value, params);
@@ -501,9 +498,9 @@ function createLazyHandler(paramName: string): HandlerFn {
           console.log(`[Handler] Matched sidebarShortcutParam: ${shortcut.url_param} → ${shortcut.type}/${shortcut.component}`);
 
           if (shortcut.type === "search") {
-            // Emit a search event with the URL parameter value
-            const { useEventStore } = await import("@/stores/eventStore");
-            useEventStore.getState().emit("searchItem", { value, type: shortcut.component });
+            // Set a pending search for the Search component to pick up
+            const { useSearchStore } = await import("@/stores/searchStore");
+            useSearchStore.getState().setPendingSearch({ value, type: shortcut.component });
           } else if (shortcut.type === "themes" || shortcut.type === "tools") {
             // Wait for sidebar items to be loaded
             const maxWaitShortcut = shortcut.timeout || 5000;

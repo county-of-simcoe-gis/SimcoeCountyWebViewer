@@ -5,7 +5,6 @@ import { useTOCStore, TOCLayer, TOCLayerGroup } from "@/stores/tocStore";
 import { useAppStore } from "@/stores/appStore";
 import { useLayerManagerStore } from "@/stores/layerManagerStore";
 import { useMapStore } from "@/stores/mapStore";
-import { useEventListener } from "@/hooks/useEventListener";
 import { useUrlParameterContextOptional } from "@/contexts/UrlParameterContext";
 import TOCHeader from "@/components/TOC/TOCHeader";
 import TOCListView from "@/components/TOC/TOCListView";
@@ -249,68 +248,6 @@ export default function TOC({ visible = true }: TOCProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tocType, initialized, savedOptionsApplied, layerListGroups.length, layerFolderGroups.length]);
-
-  // Listen for layer activation events
-  useEventListener("activeTocLayerGroup", (data) => {
-    if (data?.groupName && data?.callback) {
-      onActivateLayerGroup(data.groupName as string, data.callback as () => void);
-    }
-  });
-
-  useEventListener("activeTocLayer", (data) => {
-    if (data?.layerItem) {
-      onActivateLayer(data.layerItem, true);
-    }
-  });
-
-  useEventListener("deactiveTocLayer", (data) => {
-    if (data?.layerItem) {
-      onActivateLayer(data.layerItem, false);
-    }
-  });
-
-  useEventListener("getLayerList", (data) => {
-    if (data?.callback) {
-      getLayerList(data.callback as (layers: unknown) => void);
-    }
-  });
-
-  // Event handlers
-  const onActivateLayerGroup = (groupName: string, callback: () => void) => {
-    const currentGroups = tocType === "LIST" ? layerListGroups : layerFolderGroups;
-    const group = currentGroups.find((g) => g.label === groupName || g.value === groupName);
-    if (group) {
-      setSelectedGroup(group);
-      callback();
-    }
-  };
-
-  const onActivateLayer = (layerItem: unknown, visible = true) => {
-    const item = layerItem as { fullName?: string; layerGroup?: string };
-    if (!item?.fullName) return;
-
-    // Use the tocStore to update visibility in the TOC state AND the OL layer
-    const { updateLayerVisibility: updateTocVis } = useTOCStore.getState();
-
-    // Try the provided group first
-    if (item.layerGroup) {
-      updateTocVis(item.fullName, item.layerGroup, visible);
-    }
-
-    // Also search all groups in case the group name doesn't match exactly
-    const currentGroups = tocType === "LIST" ? layerListGroups : layerFolderGroups;
-    for (const group of currentGroups) {
-      const found = group.layers.find((l) => l.name === item.fullName);
-      if (found && group.label !== item.layerGroup && group.value !== item.layerGroup) {
-        updateTocVis(item.fullName, group.label, visible);
-      }
-    }
-  };
-
-  const getLayerList = (callback: (layers: unknown) => void) => {
-    const currentGroups = tocType === "LIST" ? layerListGroups : layerFolderGroups;
-    callback(currentGroups);
-  };
 
   const handleGroupDropDownChange = (selectedGroup: TOCLayerGroup) => {
     setSelectedGroup(selectedGroup);

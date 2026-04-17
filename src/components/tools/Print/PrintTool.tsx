@@ -16,6 +16,7 @@ import { getMapScale } from "@/utils/mapHelpers";
 import { printConfig, PrintSize, PrintFormat } from "./printConfig";
 import { buildPrintRequest, PrintState } from "./printRequest";
 import { getBaseUrl } from "./printUtils";
+import { useToast } from "@/hooks/useToast";
 import { Layer } from "ol/layer";
 
 interface PrintToolProps {
@@ -48,6 +49,7 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
   const { map } = useMapStore();
   const appConfig = useAppStore((state) => state.config);
   const printUrl = appConfig?.printUrl || "";
+  const toast = useToast();
 
   // Configuration state
   const [originUrl, setOriginUrl] = useState<string>("");
@@ -161,7 +163,7 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
 
           setIsPrinting(false);
           setPrintProgress("");
-          alert("Your print has been downloaded successfully!");
+          toast.success("Your print has been downloaded successfully!");
         } else if (data.done === false && (data.status === "running" || data.status === "waiting")) {
           setPrintProgress(`Print ${data.status}...`);
 
@@ -175,13 +177,13 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
           console.error("Print error:", data);
           setIsPrinting(false);
           setPrintProgress("");
-          alert("Print failed. If this error persists, please contact the site administrator.");
+          toast.error("Print failed. If this error persists, please contact the site administrator.");
         }
       } catch (error) {
         console.error("Error checking print status:", error);
         setIsPrinting(false);
         setPrintProgress("");
-        alert("Failed to check print status. Please try again.");
+        toast.error("Failed to check print status. Please try again.");
       }
     },
     [originUrl, printUrl],
@@ -192,12 +194,12 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
    */
   const handlePrint = useCallback(async () => {
     if (!printUrl) {
-      alert("Print server not configured. Please contact the site administrator.");
+      toast.error("Print server not configured. Please contact the site administrator.");
       return;
     }
 
     if (!map) {
-      alert("Map is not available");
+      toast.error("Map is not available");
       return;
     }
 
@@ -281,7 +283,7 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
       console.error("Print failed:", error);
       setIsPrinting(false);
       setPrintProgress("");
-      alert(`Print failed: ${error instanceof Error ? error.message : String(error)}`);
+      toast.error(`Print failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }, [
     map,

@@ -59,7 +59,7 @@ vi.mock("@/components/myMaps/MyMapsItems", () => ({
               visible: true,
               labelVisible: true,
             },
-            { clientX: 100, clientY: 200 }
+            { clientX: 100, clientY: 200 },
           )
         }
       >
@@ -183,6 +183,7 @@ const mockCreateElement = vi.fn((tagName: string) => {
     return {
       href: "",
       download: "",
+      style: {} as CSSStyleDeclaration,
       click: vi.fn(),
     } as unknown as HTMLElement;
   }
@@ -471,6 +472,7 @@ describe("MyMaps Component", () => {
       const mockLink = {
         href: "",
         download: "",
+        style: {} as CSSStyleDeclaration,
         click: vi.fn(),
       };
       const createElementSpy = vi.fn((tagName: string) => {
@@ -481,6 +483,18 @@ describe("MyMaps Component", () => {
       });
 
       document.createElement = createElementSpy;
+
+      // Mock appendChild/removeChild to handle the non-real mock link node
+      const originalAppendChild = document.body.appendChild.bind(document.body);
+      const originalRemoveChild = document.body.removeChild.bind(document.body);
+      const appendChildSpy = vi.spyOn(document.body, "appendChild").mockImplementation((node) => {
+        if (node === mockLink) return node;
+        return originalAppendChild(node);
+      });
+      const removeChildSpy = vi.spyOn(document.body, "removeChild").mockImplementation((node) => {
+        if (node === mockLink) return node;
+        return originalRemoveChild(node);
+      });
 
       render(<MyMaps />);
 
@@ -502,8 +516,10 @@ describe("MyMaps Component", () => {
         format: "geojson",
       });
 
-      // Restore original createElement
+      // Restore original createElement and DOM spies
       document.createElement = originalCreateElement;
+      appendChildSpy.mockRestore();
+      removeChildSpy.mockRestore();
     });
 
     it("should handle export errors gracefully", async () => {

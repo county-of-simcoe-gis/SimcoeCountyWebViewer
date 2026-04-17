@@ -9,6 +9,8 @@ import { useMapStore } from "@/stores/mapStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { FaInfoCircle, FaSearchPlus, FaDownload, FaTrash, FaTable, FaTimes, FaEye } from "react-icons/fa";
 import { openLayerInfo } from "@/lib/layerInfoHelpers";
+import { useToast } from "@/hooks/useToast";
+import { useAttributeTableStore } from "@/stores/attributeTableStore";
 import "@/components/TOC/LayerOptionsMenu.css";
 
 interface LayerOptionsMenuProps {
@@ -21,6 +23,7 @@ interface LayerOptionsMenuProps {
 
 export default function LayerOptionsMenu({ layerInfo, group, position, onClose }: LayerOptionsMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
+  const toast = useToast();
 
   // Always get the most current layer info from TOC store to avoid stale data
   const getCurrentLayerInfo = useCallback(() => {
@@ -147,7 +150,7 @@ export default function LayerOptionsMenu({ layerInfo, group, position, onClose }
     });
 
     if (!success) {
-      alert("Layer information is not available for this layer.");
+      toast.info("Layer information is not available for this layer.");
     }
 
     onClose();
@@ -431,7 +434,7 @@ export default function LayerOptionsMenu({ layerInfo, group, position, onClose }
       });
     } catch (error) {
       console.error("Error zooming to layer:", error);
-      alert("Could not zoom to layer extent.");
+      toast.error("Could not zoom to layer extent.");
     }
 
     onClose();
@@ -453,7 +456,7 @@ export default function LayerOptionsMenu({ layerInfo, group, position, onClose }
     if (layerInfo.maxScale !== undefined) maxScale = layerInfo.maxScale;
 
     if (currentScale >= minScale && currentScale <= maxScale) {
-      alert("Layer is already visible at this scale.");
+      toast.info("Layer is already visible at this scale.");
       onClose();
       return;
     }
@@ -485,7 +488,7 @@ export default function LayerOptionsMenu({ layerInfo, group, position, onClose }
 
   const handleDownload = () => {
     if (!layerInfo.canDownload) {
-      alert("This layer is not available for download.");
+      toast.info("This layer is not available for download.");
       return;
     }
 
@@ -495,7 +498,7 @@ export default function LayerOptionsMenu({ layerInfo, group, position, onClose }
     });
 
     if (!success) {
-      alert("Download is not available for this layer.");
+      toast.info("Download is not available for this layer.");
     }
 
     onClose();
@@ -503,7 +506,7 @@ export default function LayerOptionsMenu({ layerInfo, group, position, onClose }
 
   const handleRemoveLayer = () => {
     if (!layerInfo.userLayer) {
-      alert("Only user-added layers can be removed.");
+      toast.info("Only user-added layers can be removed.");
       return;
     }
 
@@ -522,14 +525,23 @@ export default function LayerOptionsMenu({ layerInfo, group, position, onClose }
     onClose();
   };
 
-  const handleAttributeTable = () => {
-    if (!layerInfo.liveLayer) {
-      alert("Attribute table is not available for this layer.");
-      return;
-    }
+  // Attribute-table availability — mirror the identify rule in
+  // `components/Identify/Identify.tsx`, which treats a layer as
+  // identifiable unless it's *explicitly* flagged `queryable === false`.
+  // That means layers with `isQueryable` undefined (the common case) still
+  // get the attribute table. Live layers are always allowed.
+  const attributeTableIdentifiable = layerInfo.liveLayer === true || layerInfo.isQueryable !== false;
+  const attributeTableHasEndpoint = !!layerInfo.wfsUrl;
+  const attributeTableAvailable = attributeTableIdentifiable && attributeTableHasEndpoint;
+  const attributeTableDisabledReason = !attributeTableIdentifiable
+    ? "Layer is not queryable"
+    : !attributeTableHasEndpoint
+      ? "Layer has no query endpoint configured"
+      : undefined;
 
-    // Implement attribute table opening
-    alert("Attribute table functionality would be implemented here.");
+  const handleAttributeTable = () => {
+    if (!attributeTableAvailable) return;
+    useAttributeTableStore.getState().openForLayer(layerInfo);
     onClose();
   };
 
@@ -559,7 +571,9 @@ export default function LayerOptionsMenu({ layerInfo, group, position, onClose }
       id: "attribute-table",
       label: "Attribute Table",
       icon: <FaTable />,
-      show: layerInfo.liveLayer && !layerInfo.secured,
+      show: true,
+      disabled: !attributeTableAvailable,
+      title: attributeTableDisabledReason,
       onClick: handleAttributeTable,
     },
     {
@@ -629,8 +643,15 @@ export default function LayerOptionsMenu({ layerInfo, group, position, onClose }
         {visibleMenuItems.map((item) => (
           <button
             key={item.id}
-            className="flex items-center px-3 py-2 m-0 bg-transparent border-none w-full text-left cursor-pointer text-[#333] text-sm transition-colors duration-100 hover:bg-[#f8f9fa]"
-            onClick={item.onClick}
+            className={`flex items-center px-3 py-2 m-0 bg-transparent border-none w-full text-left text-sm transition-colors duration-100 ${
+              item.disabled
+                ? "text-[#999] cursor-not-allowed opacity-60"
+                : "text-[#333] cursor-pointer hover:bg-[#f8f9fa]"
+            }`}
+            onClick={item.disabled ? undefined : item.onClick}
+            disabled={item.disabled}
+            title={item.title}
+            aria-disabled={item.disabled || undefined}
           >
             <span className="mr-2 text-[#666] w-4 flex items-center justify-center">{item.icon}</span>
             <span className="flex-1">{item.label}</span>

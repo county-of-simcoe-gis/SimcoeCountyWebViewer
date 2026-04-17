@@ -12,6 +12,8 @@ import MyMapsItemPopup from "@/components/myMaps/MyMapsItemPopup";
 import ShowGeometryModal from "@/components/myMaps/ShowGeometryModal";
 import Identify from "@/components/Identify/Identify";
 import { showFeedbackWindow } from "@/utils/mapHelpers";
+import { exportFeatures } from "@/utils/myMapsHelpers";
+import { useToast } from "@/hooks/useToast";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { GeoJSON } from "ol/format";
 import Feature from "ol/Feature";
@@ -28,6 +30,7 @@ export default function GlobalDrawingOptionsPopup() {
   const [drawingOptionsPosition, setDrawingOptionsPosition] = useState({ x: 0, y: 0 });
   const [isDrawingOptionsOpen, setIsDrawingOptionsOpen] = useState(false);
   const [activeTool, setActiveTool] = useState<string | undefined>(undefined);
+  const toast = useToast();
 
   // Tools Popup state
   const [toolsPopupItem, setToolsPopupItem] = useState<MyMapsItemType | null>(null);
@@ -626,99 +629,11 @@ export default function GlobalDrawingOptionsPopup() {
 
   const handleExportFeature = useCallback(
     (item: MyMapsItemType, format: "geojson" | "kml" | "esrijson" = "geojson") => {
-      console.log("Export feature:", item.id, "as", format);
-      try {
-        let exportData: string;
-        let mimeType: string;
-        let fileExtension: string;
-
-        switch (format) {
-          case "kml":
-            // For KML, we need to create proper KML structure
-            const kmlData = `<?xml version="1.0" encoding="UTF-8"?>
-<kml xmlns="http://www.opengis.net/kml/2.2">
-  <Document>
-    <Placemark>
-      <name><![CDATA[${item.label || "Unnamed Feature"}]]></name>
-      <description><![CDATA[Exported from SimcoeCounty WebViewer]]></description>
-      ${item.featureGeoJSON ? convertGeoJSONToKMLGeometry(JSON.parse(item.featureGeoJSON).geometry) : ""}
-    </Placemark>
-  </Document>
-</kml>`;
-            exportData = kmlData;
-            mimeType = "application/vnd.google-earth.kml+xml";
-            fileExtension = "kml";
-            break;
-
-          case "esrijson":
-            // For EsriJSON, convert from GeoJSON
-            const esriData = {
-              geometry: item.featureGeoJSON ? JSON.parse(item.featureGeoJSON).geometry : null,
-              attributes: {
-                id: item.id,
-                label: item.label || "Unnamed Feature",
-                geometryType: item.geometryType,
-              },
-            };
-            exportData = JSON.stringify(esriData, null, 2);
-            mimeType = "application/json";
-            fileExtension = "json";
-            break;
-
-          default: // geojson
-            const geoJsonData = {
-              type: "Feature",
-              properties: {
-                id: item.id,
-                label: item.label || "Unnamed Feature",
-                geometryType: item.geometryType,
-              },
-              geometry: item.featureGeoJSON ? JSON.parse(item.featureGeoJSON).geometry : null,
-            };
-            exportData = JSON.stringify(geoJsonData, null, 2);
-            mimeType = "application/json";
-            fileExtension = "geojson";
-            break;
-        }
-
-        const dataBlob = new Blob([exportData], { type: mimeType });
-        const url = URL.createObjectURL(dataBlob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `${item.label || "feature"}.${fileExtension}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-
-        console.log(`Feature exported successfully as ${format.toUpperCase()}`);
-      } catch (error) {
-        console.error("Export failed:", error);
-      }
+      exportFeatures([item], format);
       handleToolsPopupClose();
     },
     [handleToolsPopupClose],
   );
-
-  // Helper function to convert GeoJSON geometry to KML geometry
-  const convertGeoJSONToKMLGeometry = (geometry: { type: string; coordinates: unknown }): string => {
-    if (!geometry) return "";
-
-    switch (geometry.type) {
-      case "Point":
-        const pointCoords = geometry.coordinates as number[];
-        return `<Point><coordinates>${pointCoords.join(",")}</coordinates></Point>`;
-      case "LineString":
-        const lineCoords = geometry.coordinates as number[][];
-        return `<LineString><coordinates>${lineCoords.map((coord: number[]) => coord.join(",")).join(" ")}</coordinates></LineString>`;
-      case "Polygon":
-        const polyCoords = geometry.coordinates as number[][][];
-        const outerRing = polyCoords[0].map((coord: number[]) => coord.join(",")).join(" ");
-        return `<Polygon><outerBoundaryIs><LinearRing><coordinates>${outerRing}</coordinates></LinearRing></outerBoundaryIs></Polygon>`;
-      default:
-        return "";
-    }
-  };
 
   const handleIdentify = useCallback(
     (item: MyMapsItemType) => {
@@ -787,7 +702,7 @@ export default function GlobalDrawingOptionsPopup() {
 
         if (!exportResult.success || !exportResult.id) {
           console.error("Failed to export MyMaps for report problem");
-          alert("Failed to prepare report. Please try again.");
+          toast.error("Failed to prepare report. Please try again.");
           return;
         }
 
@@ -804,7 +719,7 @@ export default function GlobalDrawingOptionsPopup() {
         handleToolsPopupClose();
       } catch (error) {
         console.error("Error preparing report problem:", error);
-        alert("Error occurred while preparing the report. Please try again.");
+        toast.error("Error occurred while preparing the report. Please try again.");
       }
     },
     [map, config, saveToApi, emit, handleToolsPopupClose],

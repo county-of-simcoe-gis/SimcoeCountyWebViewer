@@ -22,10 +22,9 @@ vi.mock("@/stores/appStore", () => ({
   }),
 }));
 
-// Mock useEventStore
+// Mock useEventStore (still used by some child components)
 vi.mock("@/stores/eventStore", () => {
   const mockEventState = {
-    emitSidebarLoaded: vi.fn(),
     addListener: vi.fn(() => "mock-listener-id"),
     removeListener: vi.fn(),
     emit: vi.fn(),

@@ -5,6 +5,7 @@
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { useURLModalStore } from "@/stores/urlModalStore";
 import { useAppStore } from "@/stores/appStore";
+import { useToastStore } from "@/hooks/useToast";
 
 /**
  * All tab names in their default order
@@ -48,12 +49,8 @@ export function showMessage(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   timeout = 2000,
 ): void {
-  // For now, just use console and alert
-  // TODO: Replace with proper toast/notification system
   console.log(`${type.toUpperCase()}: ${title} - ${message}`);
-  if (type === "error") {
-    alert(`${title}: ${message}`);
-  }
+  useToastStore.getState().addToast(`${title}: ${message}`, type, timeout);
 }
 
 /**
@@ -101,9 +98,16 @@ export function addAppStat(type: string, description: string): void {
     const appStatsUrl = config.appStatsUrl;
     if (!appStatsUrl) return;
 
-    // Build a simple build identifier
-    const appName = config.title || "WebViewer";
-    const buildName = appName.replace(/\s+/g, "-");
+    // Build identifier matching old app format: {name}-{version}-{homepage}
+    const { name, version, homepage } = useAppStore.getState().appInfo;
+    let buildName = "";
+    if (name && version) {
+      buildName = `${name}-${version}`;
+    } else {
+      buildName = (config.title || "WebViewer").replace(/\s+/g, "-");
+    }
+    if (homepage) buildName += `-${homepage}`;
+    if (!buildName) buildName = "Unknown";
 
     // Fire-and-forget GET request (matches old app pattern)
     const url = `${appStatsUrl}${encodeURIComponent(buildName)}/${encodeURIComponent(type)}/${encodeURIComponent(description)}`;

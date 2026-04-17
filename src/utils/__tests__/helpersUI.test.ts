@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { activateTab, showMessage, showURLWindow, addAppStat } from "@/utils/helpersUI";
+import { useToastStore } from "@/hooks/useToast";
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { useURLModalStore } from "@/stores/urlModalStore";
 import { useAppStore } from "@/stores/appStore";
@@ -75,11 +76,11 @@ describe("helpersUI", () => {
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("INFO"));
     });
 
-    it("shows alert for error messages", () => {
-      const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    it("shows toast for error messages", () => {
+      useToastStore.setState({ toasts: [] });
       vi.spyOn(console, "log").mockImplementation(() => {});
       showMessage("Error", "Something went wrong", "error");
-      expect(alertSpy).toHaveBeenCalledWith("Error: Something went wrong");
+      expect(useToastStore.getState().toasts).toContainEqual(expect.objectContaining({ message: "Error: Something went wrong", type: "error" }));
     });
   });
 
@@ -144,12 +145,15 @@ describe("helpersUI", () => {
   describe("addAppStat", () => {
     it("sends stat via fetch when config is available", () => {
       const fetchSpy = vi.spyOn(global, "fetch").mockImplementation(() => Promise.resolve(new Response()));
-      useAppStore.setState({ config: { includeAppStats: true, appStatsUrl: "https://stats.example.com/", title: "TestApp" } as any });
+      useAppStore.setState({
+        config: { includeAppStats: true, appStatsUrl: "https://stats.example.com/", title: "TestApp" } as any,
+        appInfo: { name: "myapp", version: "1.2.3", homepage: "public" },
+      });
       // Mock hostname to be non-localhost
       Object.defineProperty(window, "location", { value: { hostname: "example.com" }, writable: true, configurable: true });
 
       addAppStat("click", "button-pressed");
-      expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining("click"), expect.objectContaining({ method: "GET", mode: "no-cors" }));
+      expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining("myapp-1.2.3-public"), expect.objectContaining({ method: "GET", mode: "no-cors" }));
       fetchSpy.mockRestore();
     });
   });

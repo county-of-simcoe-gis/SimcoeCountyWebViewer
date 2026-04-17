@@ -70,11 +70,11 @@ export class FeatureHelpers {
     features: Feature<Geometry>[],
     targetFormat: OLDataType = OL_DATA_TYPES.GeoJSON,
     dataProjection: Projection | string | null = null,
-    featureProjection: Projection | string | null = null
+    featureProjection: Projection | string | null = null,
   ): string | undefined {
     if (features.length === 0) return undefined;
 
-    // Get map projection from global map instance
+    // Get map projection from global map instance (matches old app's OLHelpers)
     const mapProjection = featureProjection || window.map?.getView().getProjection();
     const parser = this.getVectorFormat(targetFormat);
 
@@ -85,10 +85,19 @@ export class FeatureHelpers {
 
     let output: string | undefined;
     try {
-      const result = parser.writeFeatures(features, {
-        dataProjection: dataProjection || "EPSG:3857",
+      // Only include dataProjection when explicitly provided.
+      // Otherwise, omit it so OL's adaptOptions uses the format's built-in default
+      // (e.g. KML defaults to EPSG:4326, GeoJSON defaults to EPSG:4326).
+      // NOTE: passing null/undefined OVERWRITES the default via Object.assign,
+      // so we must omit the key entirely.
+      const writeOptions: Record<string, unknown> = {
         featureProjection: mapProjection,
-      });
+      };
+      if (dataProjection) {
+        writeOptions.dataProjection = dataProjection;
+      }
+
+      const result = parser.writeFeatures(features, writeOptions);
       output = typeof result === "string" ? result : undefined;
     } catch (err) {
       console.error("Error converting features:", err);
@@ -108,7 +117,8 @@ export class FeatureHelpers {
   static getFeatures(featuresData: string, sourceFormat: OLDataType = OL_DATA_TYPES.GeoJSON, projection = "EPSG:3857"): Feature<Geometry>[] | undefined {
     if (!featuresData || featuresData.length === 0) return undefined;
 
-    const mapProjection = window.map?.getView().getProjection();
+    // Get map projection: prefer map instance, then default EPSG:3857
+    const mapProjection = window.map?.getView().getProjection() || "EPSG:3857";
     const parser = this.getVectorFormat(sourceFormat, projection);
 
     if (!parser || !("readFeatures" in parser)) {

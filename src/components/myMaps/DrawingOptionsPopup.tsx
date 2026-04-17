@@ -9,9 +9,10 @@ import RegularShape from "ol/style/RegularShape";
 
 import type { MyMapsItem as MyMapsItemType } from "@/types/myMaps";
 import { useMapStore } from "@/stores/mapStore";
-import { useMyMapsStore } from "@/stores/myMapsStore";
+import { useMyMapsStore, createMyMapsItem } from "@/stores/myMapsStore";
 import { useEventStore } from "@/stores/eventStore";
 import { activateTab } from "@/utils/helpersUI";
+import { featureToGeoJSON, styleToJSON } from "@/utils/myMapsHelpers";
 
 import { getPointStyle, getLineStringStyle, getPolygonStyle } from "@/utils/openlayers/DrawingHelpers";
 import { getDefaultLabelStyle } from "@/components/myMaps/myMapsStyles";
@@ -1877,11 +1878,17 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
                   style: bufferFeature.getStyle(),
                 });
 
-                // Emit event to add the buffer feature to MyMaps
-                emit("addMyMapsFeature", {
-                  feature: bufferFeature,
-                  label: label,
-                });
+                // Add the buffer feature directly to MyMaps store
+                const featureStyle = bufferFeature.getStyle();
+                const myMapsItem = createMyMapsItem(
+                  bufferFeature,
+                  "Buffer",
+                  label,
+                  featureStyle instanceof Style ? styleToJSON(featureStyle) : undefined,
+                );
+                myMapsItem.featureGeoJSON = featureToGeoJSON(bufferFeature);
+                useMyMapsStore.getState().addItem(myMapsItem);
+                emit("mymap-item-created", { item: myMapsItem });
 
                 console.log("🎯 Event emitted successfully");
 

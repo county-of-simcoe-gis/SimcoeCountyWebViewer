@@ -7,6 +7,8 @@ import { useLayerManagerStore, type ManagedLayer } from "@/stores/layerManagerSt
 import { useMapStore } from "@/stores/mapStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import * as layerInfoHelpers from "@/lib/layerInfoHelpers";
+import { useToastStore } from "@/hooks/useToast";
+import { useAttributeTableStore } from "@/stores/attributeTableStore";
 
 // Mock the stores
 vi.mock("@/stores/tocStore", () => ({
@@ -47,7 +49,6 @@ vi.mock("@/lib/layerInfoHelpers", () => ({
 global.fetch = vi.fn();
 
 // Mock window functions - will be properly set up in beforeEach
-const mockAlert = vi.fn();
 const mockConfirm = vi.fn(() => true);
 const mockWindowOpen = vi.fn();
 
@@ -93,6 +94,7 @@ describe("LayerOptionsMenu", () => {
     userLayer: false,
     secured: false,
     canDownload: true,
+    wfsUrl: "https://example.com/wfs?service=WFS&version=1.1.0&request=GetFeature&typeName=test:layer",
   };
 
   const mockGroup: TOCLayerGroup = {
@@ -129,17 +131,13 @@ describe("LayerOptionsMenu", () => {
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks();
-    mockAlert.mockClear();
     mockConfirm.mockClear();
     mockWindowOpen.mockClear();
 
-    // Setup window mocks for each test
-    Object.defineProperty(window, "alert", {
-      writable: true,
-      configurable: true,
-      value: mockAlert,
-    });
+    // Clear toast store
+    useToastStore.setState({ toasts: [] });
 
+    // Setup window mocks for each test
     Object.defineProperty(window, "confirm", {
       writable: true,
       configurable: true,
@@ -246,11 +244,24 @@ describe("LayerOptionsMenu", () => {
       expect(screen.getByRole("button", { name: /remove layer/i })).toBeInTheDocument();
     });
 
-    it("hides attribute table button for secured layers", () => {
-      const securedLayer = { ...mockLayer, secured: true };
-      render(<LayerOptionsMenu {...defaultProps} layerInfo={securedLayer} onClose={mockOnClose} onLayerChange={mockOnLayerChange} />);
+    it("disables attribute table button for layers without wfsUrl", () => {
+      const noWfsLayer = { ...mockLayer, wfsUrl: undefined };
+      render(<LayerOptionsMenu {...defaultProps} layerInfo={noWfsLayer} onClose={mockOnClose} onLayerChange={mockOnLayerChange} />);
 
-      expect(screen.queryByRole("button", { name: /attribute table/i })).not.toBeInTheDocument();
+      const btn = screen.getByRole("button", { name: /attribute table/i });
+      expect(btn).toBeInTheDocument();
+      expect(btn).toBeDisabled();
+      expect(btn).toHaveAttribute("title", "Layer has no query endpoint configured");
+    });
+
+    it("disables attribute table button for non-queryable layers", () => {
+      const nonQueryableLayer = { ...mockLayer, liveLayer: false, isQueryable: false };
+      render(<LayerOptionsMenu {...defaultProps} layerInfo={nonQueryableLayer} onClose={mockOnClose} onLayerChange={mockOnLayerChange} />);
+
+      const btn = screen.getByRole("button", { name: /attribute table/i });
+      expect(btn).toBeInTheDocument();
+      expect(btn).toBeDisabled();
+      expect(btn).toHaveAttribute("title", "Layer is not queryable");
     });
   });
 
@@ -326,7 +337,7 @@ describe("LayerOptionsMenu", () => {
       expect(mockOnClose).toHaveBeenCalled();
     });
 
-    it("shows alert when metadata URL is not available", async () => {
+    it("shows toast when metadata URL is not available", async () => {
       const user = userEvent.setup();
       const layerWithoutMetadata = { ...mockLayer, metadataUrl: null };
 
@@ -339,8 +350,8 @@ describe("LayerOptionsMenu", () => {
       const metadataButton = screen.getByRole("button", { name: /metadata/i });
       await user.click(metadataButton);
 
-      // Should show an alert when openLayerInfo returns false
-      expect(mockAlert).toHaveBeenCalledWith("Layer information is not available for this layer.");
+      // Should show a toast when openLayerInfo returns false
+      expect(useToastStore.getState().toasts).toContainEqual(expect.objectContaining({ message: "Layer information is not available for this layer.", type: "info" }));
       expect(mockOnClose).toHaveBeenCalled();
     });
 
@@ -385,14 +396,15 @@ describe("LayerOptionsMenu", () => {
       expect(mockOnClose).toHaveBeenCalled();
     });
 
-    it("shows attribute table alert", async () => {
+    it("shows attribute table toast", async () => {
       const user = userEvent.setup();
+      const openForLayerSpy = vi.spyOn(useAttributeTableStore.getState(), "openForLayer");
       render(<LayerOptionsMenu {...defaultProps} onClose={mockOnClose} onLayerChange={mockOnLayerChange} />);
 
       const tableButton = screen.getByRole("button", { name: /attribute table/i });
       await user.click(tableButton);
 
-      expect(mockAlert).toHaveBeenCalledWith("Attribute table functionality would be implemented here.");
+      expect(openForLayerSpy).toHaveBeenCalledWith(expect.objectContaining({ name: "Test Layer" }));
       expect(mockOnClose).toHaveBeenCalled();
     });
 

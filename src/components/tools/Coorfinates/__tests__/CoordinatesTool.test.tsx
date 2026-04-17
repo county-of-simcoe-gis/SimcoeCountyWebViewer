@@ -3,7 +3,6 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import CoordinatesTool from "../CoordinatesTool";
 import { useMapStore } from "@/stores/mapStore";
-import { useEventStore } from "@/stores/eventStore";
 
 // Mock LayerManager
 const mockAddLayer = vi.fn().mockReturnValue("mock-layer-id");
@@ -138,9 +137,6 @@ describe("CoordinatesTool", () => {
     useMapStore.setState({
       map: null,
       setActiveToolId: vi.fn(),
-    });
-    useEventStore.setState({
-      emitAddMyMapsFeature: vi.fn(),
     });
   });
 

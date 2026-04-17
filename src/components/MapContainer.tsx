@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useMemo, useCallback, Suspense, lazy, createContext, useContext, useState } from "react";
 import { useSidebarStore } from "@/stores/sidebarStore";
-import { useEventStore } from "@/stores/eventStore";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
 import { usePopupStore } from "@/stores/popupStore";
@@ -157,7 +156,6 @@ export const useInteractionManager = () => {
 
 export default function MapContainer() {
   const isOpen = useSidebarStore((s) => s.isOpen);
-  const emitMapLoaded = useEventStore((s) => s.emitMapLoaded);
   const { data: session } = useSession();
 
   // IMPORTANT: Use individual selectors for Zustand stores to prevent
@@ -640,7 +638,6 @@ export default function MapContainer() {
     // Mark map as loaded
     addLoadedItem("map");
     setMapLoading(false);
-    emitMapLoaded();
 
     // Show terms popup on startup (matches old app behaviour) — only once
     if (activeConfig.termsUrl && activeConfig.showTermsOnStartup && !termsShownRef.current) {
@@ -673,7 +670,6 @@ export default function MapContainer() {
     setMapControls,
     addLoadedItem,
     setMapLoading,
-    emitMapLoaded,
     setCurrentExtent,
     setCurrentZoom,
     setCurrentCenter,
@@ -894,7 +890,6 @@ export default function MapContainer() {
     }
 
     // Emit map parameters complete event
-    // emitMapLoaded(); // This might be redundant since we already emit this
   }, [map, urlParameters, flashPoint, zoomToFeature, getFeatureFromGeoJSON]);
 
   // Handle URL parameters after map is loaded

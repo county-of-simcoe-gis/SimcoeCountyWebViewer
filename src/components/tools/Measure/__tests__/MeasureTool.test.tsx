@@ -4,7 +4,6 @@ import userEvent from "@testing-library/user-event";
 import MeasureTool from "../MeasureTool";
 import { useMapStore } from "@/stores/mapStore";
 import { usePopupStore } from "@/stores/popupStore";
-import { useEventStore } from "@/stores/eventStore";
 
 // Mock LayerManager
 const mockAddLayer = vi.fn().mockReturnValue("mock-layer-id");
@@ -163,9 +162,6 @@ describe("MeasureTool", () => {
     });
     usePopupStore.setState({
       hide: vi.fn(),
-    });
-    useEventStore.setState({
-      emitAddMyMapsFeature: vi.fn(),
     });
 
     // Mock document.getElementById for tooltip elements

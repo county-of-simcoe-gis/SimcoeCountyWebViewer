@@ -4,8 +4,9 @@ import PropertyPopup from "@/components/PropertyPopup";
 import { Feature } from "ol";
 import { Polygon } from "ol/geom";
 import { useReportsStore } from "@/stores/reportsStore";
-import { useEventStore } from "@/stores/eventStore";
+import { useMyMapsStore } from "@/stores/myMapsStore";
 import { useAppStore } from "@/stores/appStore";
+import { useToastStore } from "@/hooks/useToast";
 
 describe("PropertyPopup", () => {
   const mockFeature = new Feature({
@@ -52,8 +53,8 @@ describe("PropertyPopup", () => {
       configurable: true,
     });
 
-    // Mock alert
-    global.alert = vi.fn();
+    // Clear toast store
+    useToastStore.setState({ toasts: [] });
 
     // Set config in app store
     useAppStore.setState({ config: { termsUrl: "https://example.com/terms" } as any });
@@ -151,19 +152,22 @@ describe("PropertyPopup", () => {
     fireEvent.click(shareButton);
 
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith("http://localhost:3000?ARN=1234567890");
-    expect(global.alert).toHaveBeenCalledWith("Link copied to clipboard!");
+    expect(useToastStore.getState().toasts).toContainEqual(expect.objectContaining({ message: "Link copied to clipboard!", type: "success" }));
   });
 
   it("handles add to my maps action", () => {
-    const emitSpy = vi.fn();
-    useEventStore.setState({ emitAddMyMapsFeature: emitSpy });
+    const addItemSpy = vi.fn();
+    useMyMapsStore.setState({ addItem: addItemSpy });
 
     render(<PropertyPopup propInfo={defaultPropInfo} feature={mockFeature} onClose={mockOnClose} onClearParcelLayer={mockOnClearParcelLayer} />);
 
     const addToMyMapsButton = screen.getByText("[Add to My Maps]");
     fireEvent.click(addToMyMapsButton);
 
-    expect(emitSpy).toHaveBeenCalledWith(mockFeature, "123 Test Street");
+    expect(addItemSpy).toHaveBeenCalledTimes(1);
+    // Verify the item was created with the correct label
+    const addedItem = addItemSpy.mock.calls[0][0];
+    expect(addedItem.label).toBe("123 Test Street");
   });
 
   it("opens terms URL in new window", () => {
@@ -250,4 +254,3 @@ describe("PropertyPopup", () => {
     expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
   });
 });
-

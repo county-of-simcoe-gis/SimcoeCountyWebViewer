@@ -8,6 +8,7 @@ import copy from "copy-to-clipboard";
 import { useSession } from "next-auth/react";
 import { useConfig } from "@/hooks/useConfig";
 import { useMyMapsStore } from "@/stores/myMapsStore";
+import { useToast } from "@/hooks/useToast";
 import "./MyMapsAdvanced.css";
 
 interface MyMapsAdvancedProps {
@@ -22,6 +23,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
   const { isEditing, editMode, importText, setImportText, saveToApi, importFromApi } = useMyMapsStore();
   const { data: session } = useSession();
   const { config } = useConfig();
+  const toast = useToast();
 
   const [open, setOpen] = useState(false);
   const [editOn, setEditOn] = useState(isEditing);
@@ -96,7 +98,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
 
   const onImport = async () => {
     if (!inputText.trim()) {
-      alert("Please enter a MyMaps ID to import.");
+      toast.warning("Please enter a MyMaps ID to import.");
       return;
     }
 
@@ -105,7 +107,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
 
       if (result.success) {
         // Show success message with green highlight
-        alert(result.message || "Success! MyMaps imported.");
+        toast.success(result.message || "Success! MyMaps imported.");
 
         // Trigger the parent callback if provided for compatibility
         if (onMyMapsImport && result.data && typeof result.data === "object" && "id" in result.data && "json" in result.data) {
@@ -116,17 +118,17 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
         setInputText("");
         setImportText("");
       } else {
-        alert(result.message || "Import failed. Please try again.");
+        toast.error(result.message || "Import failed. Please try again.");
       }
     } catch (error) {
       console.error("Error importing MyMaps:", error);
-      alert("An error occurred while importing. Please try again.");
+      toast.error("An error occurred while importing. Please try again.");
     }
   };
 
   const onShare = () => {
     if (!inputText.trim()) {
-      alert("Please save your MyMaps first to get an ID to share.");
+      toast.warning("Please save your MyMaps first to get an ID to share.");
       return;
     }
 
@@ -136,7 +138,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
     try {
       // Copy to clipboard
       copy(currentUrl);
-      alert("MyMaps link has been saved to clipboard.");
+      toast.success("MyMaps link has been saved to clipboard.");
     } catch (error) {
       console.error("Failed to copy to clipboard:", error);
       alert("Failed to copy link to clipboard. Please copy this URL manually: " + currentUrl);
@@ -145,13 +147,13 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
 
   const onSharePublic = () => {
     if (!inputText.trim()) {
-      alert("Please save your MyMaps first to get an ID to share.");
+      toast.warning("Please save your MyMaps first to get an ID to share.");
       return;
     }
 
     const publicUrl = config?.publicUrl;
     if (!publicUrl) {
-      alert("Public URL is not configured.");
+      toast.warning("Public URL is not configured.");
       return;
     }
 
@@ -159,7 +161,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
 
     try {
       copy(url);
-      alert("Public MyMaps link has been saved to clipboard.");
+      toast.success("Public MyMaps link has been saved to clipboard.");
     } catch (error) {
       console.error("Failed to copy to clipboard:", error);
       alert("Failed to copy link to clipboard. Please copy this URL manually: " + url);
@@ -172,18 +174,18 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
 
       if (result.success && result.id) {
         // Show success message
-        alert(result.message || "MyMaps have been saved! Your ID has been saved to clipboard.");
+        toast.success(result.message || "MyMaps have been saved! Your ID has been saved to clipboard.");
 
         // Update the input with the saved ID and add glow effect
         setInputText(result.id);
         setImportText(result.id);
         glowContainer(inputId);
       } else {
-        alert(result.message || "Save failed. Please try again.");
+        toast.error(result.message || "Save failed. Please try again.");
       }
     } catch (error) {
       console.error("Error saving MyMaps:", error);
-      alert("An error occurred while saving. Please try again.");
+      toast.error("An error occurred while saving. Please try again.");
     }
   };
 

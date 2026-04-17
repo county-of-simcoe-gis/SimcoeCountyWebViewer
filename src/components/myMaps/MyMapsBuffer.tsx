@@ -7,10 +7,11 @@ import { Vector as VectorLayer } from "ol/layer";
 import { Vector as VectorSource } from "ol/source";
 import { useMapStore } from "@/stores/mapStore";
 import { useEventStore } from "@/stores/eventStore";
+import { useMyMapsStore, createMyMapsItem } from "@/stores/myMapsStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import "./MyMapsBuffer.css";
 import AppImage from "@/components/shared/AppImage";
-import { featureFromGeoJSON } from "@/utils/myMapsHelpers";
+import { featureFromGeoJSON, featureToGeoJSON, styleToJSON } from "@/utils/myMapsHelpers";
 import { bufferGeometry, convertToMeters } from "@/utils/openlayers/BufferHelpers";
 import { MYMAPS_CONSTANTS } from "@/types/myMaps";
 import { activateTab } from "@/utils/helpersUI";
@@ -235,11 +236,18 @@ const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
     if (bufferFeatureRef.current) {
       const label = `Buffer - ${distance} ${units}`;
 
-      // Emit event to add the buffer feature to MyMaps
-      emit("addMyMapsFeature", {
-        feature: bufferFeatureRef.current,
-        label: label,
-      });
+      // Add buffer feature directly to MyMaps store
+      const bufferFeature = bufferFeatureRef.current;
+      const featureStyle = bufferFeature.getStyle();
+      const myMapsItem = createMyMapsItem(
+        bufferFeature,
+        "Buffer",
+        label,
+        featureStyle instanceof Style ? styleToJSON(featureStyle) : undefined,
+      );
+      myMapsItem.featureGeoJSON = featureToGeoJSON(bufferFeature);
+      useMyMapsStore.getState().addItem(myMapsItem);
+      emit("mymap-item-created", { item: myMapsItem });
 
       // Hide the add message
       setAddMessageVisible(false);

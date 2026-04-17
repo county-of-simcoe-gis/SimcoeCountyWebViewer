@@ -3,6 +3,7 @@
 import React from "react";
 import { FaQuestionCircle, FaTimes } from "react-icons/fa";
 import TOCSettingsControl from "@/components/TOC/TOCSettingsControl";
+import { showURLWindow } from "@/utils/helpersUI";
 
 interface TOCHeaderProps {
   tocType: "LIST" | "FOLDER";
@@ -84,9 +85,9 @@ export default function TOCHeader({
 
       {/* Help Button */}
       <div className="flex items-center">
-        <a href={helpLink} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-5 h-5 no-underline rounded-[3px] hover:bg-[#e0e0e0]" title="Layer Help">
+        <button onClick={() => showURLWindow(helpLink, false)} className="flex items-center justify-center w-5 h-5 bg-transparent border-none cursor-pointer rounded-[3px] hover:bg-[#e0e0e0]" title="Layer Help">
           <FaQuestionCircle size={16} />
-        </a>
+        </button>
       </div>
 
       {/* Loading Indicator */}

@@ -5,7 +5,9 @@ import { FaSearch, FaMapMarkerAlt, FaTools, FaPalette, FaLayerGroup, FaMapPin, F
 import { useConfig } from "@/hooks/useConfig";
 import axiosInstance from "@/lib/axiosInstance";
 import { appendToStorage, getItemsFromStorage, removeItemFromStorage } from "@/utils/storage";
-import { useEventStore } from "@/stores/eventStore";
+import { useSidebarStore } from "@/stores/sidebarStore";
+import { useTOCStore } from "@/stores/tocStore";
+import { useSearchStore } from "@/stores/searchStore";
 import { useAppStore } from "@/stores/appStore";
 
 interface SearchType {
@@ -41,7 +43,6 @@ interface SearchProps {
 
 const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeholder, disabled = false }) => {
   const { config } = useConfig();
-  const emit = useEventStore((s) => s.emit);
   const urlParameters = useAppStore((state) => state.urlParameters);
 
   // Derive placeholder and hideTypes from config, with prop override
@@ -70,14 +71,6 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
   const hasProcessedUrlSearchRef = useRef<boolean>(false); // Track if URL search has been processed
   const defaultSearchLimit = 10;
   const maxSearchLimit = 100;
-
-  // Update select width whenever selected type changes
-  useEffect(() => {
-    if (measureSpanRef.current) {
-      // px-3 (12px left padding) + pr-8 (32px right padding for arrow) + 4px buffer
-      setSelectWidth(measureSpanRef.current.offsetWidth + 12 + 32 + 4);
-    }
-  }, [selectedType]);
 
   // Update select width whenever selected type changes
   useEffect(() => {
@@ -149,37 +142,43 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
     loadSearchTypes();
   }, [config, urlParameters]);
 
-  // Enhanced search results handler
-  const searchResultsHandler = useCallback(
-    (results: SearchResult[]) => {
-      if (searchValue.length < 2) {
-        setSearchResults([]);
-        return;
-      }
+  // Get local results (tools, themes, layers) — no network required
+  const getLocalResults = useCallback(
+    (searchText: string, selectedTypeValue: string): SearchResult[] => {
+      if (searchText.length < 2) return [];
 
-      let newResults = [...results];
+      const localResults: SearchResult[] = [];
+      const upperSearch = searchText.toUpperCase();
 
-      // Remove duplicates based on location_id
-      newResults = newResults.filter((item, index, self) => index === self.findIndex((t) => t.location_id === item.location_id));
-
-      const selectedTypeValue = selectedType.value;
-
-      // Search layers if needed
+      // Search layers from the TOC store
       if (selectedTypeValue === "All" || selectedTypeValue === "Map Layer") {
-        // This would need to be implemented with proper layer search
-        // For now, we'll skip this part as it requires integration with the TOC
+        const tocState = useTOCStore.getState();
+        const groups = tocState.tocType === "LIST" ? tocState.layerListGroups : tocState.layerFolderGroups;
+        for (const group of groups) {
+          const matchingLayers = group.layers.filter((layer) =>
+            layer.tocDisplayName.toUpperCase().includes(upperSearch)
+          );
+          for (const layer of matchingLayers) {
+            localResults.push({
+              name: layer.tocDisplayName,
+              type: "Map Layer",
+              layerGroupName: group.label,
+              layerGroup: group.value,
+            });
+          }
+        }
       }
 
       // Search tools
       if (selectedTypeValue === "All" || selectedTypeValue === "Tool") {
         if (config?.sidebarToolComponents) {
           const tools = config.sidebarToolComponents
-            .filter((tool) => tool.name.toUpperCase().includes(searchValue.toUpperCase()) && (tool.enabled === undefined || tool.enabled))
+            .filter((tool) => tool.name.toUpperCase().includes(upperSearch) && (tool.enabled === undefined || tool.enabled))
             .map((tool) => ({
               name: tool.name.replace(/_/g, " "),
               type: "Tool",
             }));
-          newResults = [...tools, ...newResults];
+          localResults.push(...tools);
         }
       }
 
@@ -187,26 +186,44 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
       if (selectedTypeValue === "All" || selectedTypeValue === "Theme") {
         if (config?.sidebarThemeComponents) {
           const themes = config.sidebarThemeComponents
-            .filter((theme) => theme.name?.toUpperCase().includes(searchValue.toUpperCase()) && (theme.enabled === undefined || theme.enabled))
+            .filter((theme) => theme.name?.toUpperCase().includes(upperSearch) && (theme.enabled === undefined || theme.enabled))
             .map((theme) => ({
               name: theme.name!.replace(/_/g, " "),
               type: "Theme",
             }));
-          newResults = [...themes, ...newResults];
+          localResults.push(...themes);
         }
       }
 
-      setSearchResults(newResults);
+      return localResults;
     },
-    [searchValue, selectedType, config],
+    [config],
   );
 
-  // Perform search
+  // Merge local results with API results, deduplicating API results
+  const mergeResults = useCallback(
+    (localResults: SearchResult[], apiResults: SearchResult[]): SearchResult[] => {
+      // Deduplicate API results by location_id (skip nulls to avoid collapsing unrelated results)
+      const dedupedApi = apiResults.filter(
+        (item, index, self) => !item.location_id || index === self.findIndex((t) => t.location_id === item.location_id)
+      );
+      return [...localResults, ...dedupedApi];
+    },
+    [],
+  );
+
+  // Perform search — shows local results instantly, then merges API results
   const performSearch = useCallback(
     async (searchText: string, type: string, fromUrl: boolean = false) => {
       if (searchText.length < 2) {
         setSearchResults([]);
         return;
+      }
+
+      // Show local results immediately (tools, themes, layers) — no network wait
+      const localResults = getLocalResults(searchText, type);
+      if (!fromUrl && localResults.length > 0) {
+        setSearchResults(localResults);
       }
 
       setIsLoading(true);
@@ -223,7 +240,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
           // For URL searches with exactly 1 result, auto-select it
           if (fromUrl && results.length === 1 && results[0].location_id) {
             // Store the result so it's available when user focuses the textbox
-            setSearchResults(results);
+            setSearchResults(mergeResults(localResults, results));
 
             // Fetch the full location info and zoom to it
             try {
@@ -243,24 +260,24 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
               console.error("Failed to get location info for URL search:", locationError);
             }
           } else if (fromUrl && results.length > 1) {
-            // Multiple results from URL search - set results directly (don't use searchResultsHandler
-            // because searchValue state may not be updated yet due to async React state)
-            setSearchResults(results);
+            // Multiple results from URL search — include local results too
+            setSearchResults(mergeResults(localResults, results));
             setIsOpen(true);
           } else {
-            // Normal search - show results
-            searchResultsHandler(results);
+            // Normal search — merge local results with API results
+            setSearchResults(mergeResults(localResults, results));
           }
         }
       } catch (error) {
         console.error("Search failed:", error);
-        setSearchResults([]);
+        // On API failure, keep local results visible instead of clearing everything
+        setSearchResults(localResults);
       } finally {
         setIsLoading(false);
         isUrlSearchRef.current = false; // Reset URL search flag
       }
     },
-    [municipality, searchResultsHandler],
+    [municipality, getLocalResults, mergeResults],
   );
 
   // Handle initial search from URL parameters
@@ -285,6 +302,22 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTypes.length, urlParameters.q, urlParameters.qt]); // Minimal dependencies
+
+  // Handle pending search from store (e.g. URL parameter shortcuts)
+  const pendingSearch = useSearchStore((s) => s.pendingSearch);
+  useEffect(() => {
+    if (!pendingSearch || searchTypes.length === 0) return;
+
+    const { value, type } = pendingSearch;
+    setSearchValue(value);
+    if (type) {
+      const matchedType = searchTypes.find((t) => t.value.toUpperCase() === type.toUpperCase());
+      if (matchedType) setSelectedType(matchedType);
+    }
+    performSearch(value, type || "All", true);
+    useSearchStore.getState().clearPendingSearch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingSearch, searchTypes.length]);
 
   // Debounced search - only for user-initiated searches (not URL parameter searches)
   useEffect(() => {
@@ -379,14 +412,17 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
 
     // Handle different result types
     if (result.type === "Tool") {
-      // Emit event to open tool
-      emit("openTool", { name: result.name });
+      // Open tool in sidebar
+      useSidebarStore.getState().requestActivateSidebarItem(result.name, "tools");
     } else if (result.type === "Theme") {
-      // Emit event to open theme
-      emit("openTheme", { name: result.name });
+      // Open theme in sidebar
+      useSidebarStore.getState().requestActivateSidebarItem(result.name, "themes");
     } else if (result.type === "Map Layer") {
-      // Emit event to show layer
-      emit("showLayer", { layer: result });
+      // Show layer in TOC
+      const groupName = result.layerGroupName || result.layerGroup || "";
+      if (groupName) {
+        useTOCStore.getState().updateLayerVisibility(result.name, groupName, true);
+      }
     } else if (result.location_id) {
       // Handle location-based result
       try {

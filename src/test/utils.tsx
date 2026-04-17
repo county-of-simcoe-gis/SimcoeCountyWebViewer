@@ -98,7 +98,7 @@ export const createMockAppStore = (overrides = {}) => ({
   appInfo: {
     name: "Test App",
     version: "1.0.0",
-    buildDate: "2024-01-01",
+    homepage: "",
   },
   setMapLoading: vi.fn(),
   setSidebarLoading: vi.fn(),

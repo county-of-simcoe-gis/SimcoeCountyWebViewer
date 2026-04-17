@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import MyMapsAdvanced from "@/components/myMaps/MyMapsAdvanced";
+import { useToastStore } from "@/hooks/useToast";
 
 // Mock copy-to-clipboard
 vi.mock("copy-to-clipboard", () => ({
@@ -42,7 +43,6 @@ vi.mock("@/stores/myMapsStore", () => ({
 }));
 
 // Mock window methods
-const mockAlert = vi.fn();
 const mockConfirm = vi.fn();
 
 // Mock window location
@@ -70,7 +70,6 @@ describe("MyMapsAdvanced Component", () => {
     vi.clearAllMocks();
 
     // Re-establish window method stubs (needed because global test setup calls vi.restoreAllMocks())
-    vi.stubGlobal("alert", mockAlert);
     vi.stubGlobal("confirm", mockConfirm);
 
     mockMyMapsStore.isEditing = false;
@@ -80,9 +79,11 @@ describe("MyMapsAdvanced Component", () => {
     mockMyMapsStore.importFromApi.mockResolvedValue({ success: true, message: "Imported successfully", data: { id: "test-id", json: "{}" } });
 
     // Reset window method mocks
-    mockAlert.mockClear();
     mockConfirm.mockClear();
     mockConfirm.mockReturnValue(true);
+
+    // Clear toast store before each test
+    useToastStore.setState({ toasts: [] });
   });
 
   afterEach(() => {
@@ -248,7 +249,7 @@ describe("MyMapsAdvanced Component", () => {
 
       expect(mockMyMapsStore.saveToApi).toHaveBeenCalled();
       await waitFor(() => {
-        expect(mockAlert).toHaveBeenCalledWith("Saved successfully");
+        expect(useToastStore.getState().toasts).toContainEqual(expect.objectContaining({ message: "Saved successfully", type: "success" }));
       });
       expect(mockMyMapsStore.setImportText).toHaveBeenCalledWith("test-id-123");
     });
@@ -265,7 +266,7 @@ describe("MyMapsAdvanced Component", () => {
       await user.click(saveButton);
 
       await waitFor(() => {
-        expect(mockAlert).toHaveBeenCalledWith("Save failed");
+        expect(useToastStore.getState().toasts).toContainEqual(expect.objectContaining({ message: "Save failed", type: "error" }));
       });
     });
 
@@ -293,7 +294,7 @@ describe("MyMapsAdvanced Component", () => {
 
       expect(mockMyMapsStore.importFromApi).toHaveBeenCalledWith("import-id-123");
       await waitFor(() => {
-        expect(mockAlert).toHaveBeenCalledWith("Imported successfully");
+        expect(useToastStore.getState().toasts).toContainEqual(expect.objectContaining({ message: "Imported successfully", type: "success" }));
       });
       expect(mockOnMyMapsImport).toHaveBeenCalledWith({ id: "test-id", json: "{}" });
     });
@@ -313,11 +314,11 @@ describe("MyMapsAdvanced Component", () => {
       await user.click(importButton);
 
       await waitFor(() => {
-        expect(mockAlert).toHaveBeenCalledWith("Import failed");
+        expect(useToastStore.getState().toasts).toContainEqual(expect.objectContaining({ message: "Import failed", type: "error" }));
       });
     });
 
-    it("should alert when trying to import without ID", async () => {
+    it("should show toast when trying to import without ID", async () => {
       render(<MyMapsAdvanced {...defaultProps} />);
 
       const trigger = screen.getByText("Advanced Options");
@@ -326,7 +327,7 @@ describe("MyMapsAdvanced Component", () => {
       const importButton = screen.getByText("Import");
       await user.click(importButton);
 
-      expect(mockAlert).toHaveBeenCalledWith("Please enter a MyMaps ID to import.");
+      expect(useToastStore.getState().toasts).toContainEqual(expect.objectContaining({ message: "Please enter a MyMaps ID to import.", type: "warning" }));
     });
 
     it("should handle share operation", async () => {
@@ -344,10 +345,10 @@ describe("MyMapsAdvanced Component", () => {
       await user.click(shareButton);
 
       expect(mockCopy.default).toHaveBeenCalledWith("http://localhost:3000/test?MY_MAPS_ID=share-id-123");
-      expect(mockAlert).toHaveBeenCalledWith("MyMaps link has been saved to clipboard.");
+      expect(useToastStore.getState().toasts).toContainEqual(expect.objectContaining({ message: "MyMaps link has been saved to clipboard.", type: "success" }));
     });
 
-    it("should alert when trying to share without ID", async () => {
+    it("should show toast when trying to share without ID", async () => {
       render(<MyMapsAdvanced {...defaultProps} />);
 
       const trigger = screen.getByText("Advanced Options");
@@ -356,7 +357,7 @@ describe("MyMapsAdvanced Component", () => {
       const shareButton = screen.getByText("Share");
       await user.click(shareButton);
 
-      expect(mockAlert).toHaveBeenCalledWith("Please save your MyMaps first to get an ID to share.");
+      expect(useToastStore.getState().toasts).toContainEqual(expect.objectContaining({ message: "Please save your MyMaps first to get an ID to share.", type: "warning" }));
     });
   });
 
@@ -472,7 +473,7 @@ describe("MyMapsAdvanced Component", () => {
       await user.click(saveButton);
 
       await waitFor(() => {
-        expect(mockAlert).toHaveBeenCalledWith("An error occurred while saving. Please try again.");
+        expect(useToastStore.getState().toasts).toContainEqual(expect.objectContaining({ message: "An error occurred while saving. Please try again.", type: "error" }));
       });
     });
 
@@ -491,7 +492,7 @@ describe("MyMapsAdvanced Component", () => {
       await user.click(importButton);
 
       await waitFor(() => {
-        expect(mockAlert).toHaveBeenCalledWith("An error occurred while importing. Please try again.");
+        expect(useToastStore.getState().toasts).toContainEqual(expect.objectContaining({ message: "An error occurred while importing. Please try again.", type: "error" }));
       });
     });
   });

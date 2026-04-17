@@ -11,8 +11,9 @@ import { fromCircle } from 'ol/geom/Polygon'
 import { getLength, getArea } from 'ol/sphere'
 import { transform } from 'ol/proj'
 import GeoJSON from 'ol/format/GeoJSON'
-import KML from 'ol/format/KML'
-import EsriJSON from 'ol/format/EsriJSON'
+import { FeatureHelpers } from '@/utils/openlayers/FeatureHelpers'
+import type { OLDataType } from '@/utils/openlayers/types'
+import { OL_DATA_TYPES } from '@/utils/openlayers/types'
 import type { 
   MyMapsItem, 
   FeatureStyleOptions,
@@ -449,22 +450,66 @@ export const validateMyMapsItem = (item: Partial<MyMapsItem>): ValidationResult 
 }
 
 // Export features to different formats
-export const exportFeatures = (features: Feature[], format: 'geojson' | 'kml' | 'esrijson'): string => {
-  switch (format) {
-    case 'geojson': {
-      const geoJSONFormat = new GeoJSON()
-      return geoJSONFormat.writeFeatures(features)
+// Format string to OL_DATA_TYPES mapping
+const FORMAT_MAP: Record<string, OLDataType> = {
+  'kml': OL_DATA_TYPES.KML,
+  'geojson': OL_DATA_TYPES.GeoJSON,
+  'esrijson': OL_DATA_TYPES.EsriJSON,
+  'KML': OL_DATA_TYPES.KML,
+  'GeoJSON': OL_DATA_TYPES.GeoJSON,
+  'EsriJSON': OL_DATA_TYPES.EsriJSON,
+}
+
+/**
+ * Export features to a file — matches old React app's onDownloadFeatures pattern.
+ * Reads OL features from MyMapsItems, clones them, strips extra properties,
+ * converts Circle → Polygon, then uses FeatureHelpers.setFeatures for format conversion
+ * (with proper projection handling via OL's built-in defaults).
+ */
+export const exportFeatures = (items: MyMapsItem[], format: string): void => {
+  const dataType = FORMAT_MAP[format]
+  if (!dataType) {
+    console.error(`Unsupported export format: ${format}`)
+    return
+  }
+
+  const visibleFeatures: Feature[] = []
+  items.forEach((item) => {
+    if (item.featureGeoJSON) {
+      try {
+        const feature = featureFromGeoJSON(item.featureGeoJSON).clone()
+        const showCoordinates = feature.get('is_open_data')
+        if (showCoordinates || showCoordinates === undefined) {
+          // Strip all properties except name, label, and geometry (same as old app)
+          const keys = feature.getKeys()
+          keys.forEach((key) => {
+            if (key.toLowerCase() !== 'name' && key.toLowerCase() !== 'label' && key.toLowerCase() !== 'geometry') {
+              feature.unset(key)
+            }
+          })
+          // Set label from item
+          feature.set('name', item.label || 'Unnamed Feature')
+          feature.set('label', item.label || 'Unnamed Feature')
+
+          // Convert Circle geometry to Polygon (GeoJSON/KML don't support Circle)
+          const geom = feature.getGeometry()
+          if (geom && geom.getType() === 'Circle') {
+            feature.setGeometry(fromCircle(geom as Circle, 64))
+          }
+
+          visibleFeatures.push(feature)
+        }
+      } catch (error) {
+        console.warn(`Failed to convert feature ${item.id} for export:`, error)
+      }
     }
-    case 'kml': {
-      const kmlFormat = new KML()
-      return kmlFormat.writeFeatures(features)
+  })
+
+  if (visibleFeatures.length > 0) {
+    const content = FeatureHelpers.setFeatures(visibleFeatures.concat([]), dataType)
+    if (content !== undefined) {
+      downloadFile(content, `features.${dataType.toLowerCase()}`, 'text/plain')
     }
-    case 'esrijson': {
-      const esriFormat = new EsriJSON()
-      return esriFormat.writeFeatures(features)
-    }
-    default:
-      throw new Error(`Unsupported format: ${format}`)
   }
 }
 

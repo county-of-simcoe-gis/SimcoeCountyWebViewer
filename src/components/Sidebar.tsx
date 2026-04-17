@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import { useSidebarStore } from "@/stores/sidebarStore";
-import { useEventStore } from "@/stores/eventStore";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
 import { useReportsStore } from "@/stores/reportsStore";
@@ -111,12 +110,13 @@ export default function Sidebar() {
   const setActiveTab = useSidebarStore((s) => s.setActiveTab);
   const activateSidebarItem = useSidebarStore((s) => s.activateSidebarItem);
   const openSidebar = useSidebarStore((s) => s.openSidebar);
+  const pendingActivation = useSidebarStore((s) => s.pendingActivation);
+  const clearPendingActivation = useSidebarStore((s) => s.clearPendingActivation);
   const hideLayers = useSidebarStore((s) => s.hideLayers);
   const hideTools = useSidebarStore((s) => s.hideTools);
   const hideMyMaps = useSidebarStore((s) => s.hideMyMaps);
   const hideThemes = useSidebarStore((s) => s.hideThemes);
   const hideReports = useSidebarStore((s) => s.hideReports);
-  const emitSidebarLoaded = useEventStore((s) => s.emitSidebarLoaded);
   const addLoadedItem = useMapStore((s) => s.addLoadedItem);
   const setSidebarLoading = useAppStore((s) => s.setSidebarLoading);
   const urlParameters = useAppStore((state) => state.urlParameters);
@@ -255,11 +255,10 @@ export default function Sidebar() {
   }, [urlParameters.TAB, openSidebar, activateTab]);
 
   useEffect(() => {
-    // Mark sidebar as loaded (replaces window.emitter.emit("sidebarLoaded"))
-    emitSidebarLoaded();
+    // Mark sidebar as loaded
     addLoadedItem("sidebar");
     setSidebarLoading(false);
-  }, [emitSidebarLoaded, addLoadedItem, setSidebarLoading]);
+  }, [addLoadedItem, setSidebarLoading]);
 
   // Handle URL parameters after component is loaded
   useEffect(() => {
@@ -272,29 +271,25 @@ export default function Sidebar() {
     setActiveTab(index);
   };
 
-  // Listen for programmatic activateSidebarItem events (e.g. from PropertyPopup)
+  // React to pendingActivation from sidebarStore (replaces activateSidebarItem event listener)
   useEffect(() => {
-    const addListener = useEventStore.getState().addListener;
-    const removeListener = useEventStore.getState().removeListener;
+    if (!pendingActivation) return;
+    const { itemName, itemType, options } = pendingActivation;
 
-    const listenerId = addListener("activateSidebarItem", (data) => {
-      if (!data) return;
-      const { itemName, itemType, data: options } = data as { itemName: string; itemType: "tools" | "themes"; data?: Record<string, unknown> };
+    // Find the item by name (case-insensitive)
+    const items = itemType === "tools" ? visibleTools : visibleThemes;
+    const item = items.find((i) => i.name.toLowerCase() === itemName.toLowerCase());
+    clearPendingActivation();
+    if (!item) return;
 
-      // Find the item by name (case-insensitive)
-      const items = itemType === "tools" ? visibleTools : visibleThemes;
-      const item = items.find((i) => i.name.toLowerCase() === itemName.toLowerCase());
-      if (!item) return;
+    // Ensure sidebar is open and switch to the correct tab
+    openSidebar();
+    activateTab(itemType);
 
-      const componentName = item.component || item.name;
-      handleSidebarItemClick(componentName, item.name, itemType, options as Record<string, unknown> | undefined);
-    });
-
-    return () => {
-      removeListener(listenerId);
-    };
+    const componentName = item.component || item.name;
+    handleSidebarItemClick(componentName, item.name, itemType, options);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visibleTools, visibleThemes]);
+  }, [pendingActivation]);
 
   const handleSidebarItemClick = (componentName: string, displayName: string, type: "tools" | "themes", options?: Record<string, unknown>) => {
     activateSidebarItem(componentName, type);

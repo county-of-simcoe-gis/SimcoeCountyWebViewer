@@ -34,6 +34,7 @@ describe("TOCHeader", () => {
         onResetToDefault={onResetToDefault}
         onTurnOffLayers={onTurnOffLayers}
         onSaveAllLayers={onSaveAllLayers}
+        onClearSavedLayers={vi.fn()}
         onOpenLegend={onOpenLegend}
       />,
     );
@@ -48,8 +49,8 @@ describe("TOCHeader", () => {
     expect(settingsButton).toBeInTheDocument();
     fireEvent.click(settingsButton);
 
-    // Verify help link exists
-    const helpLink = screen.getByRole("link");
-    expect(helpLink).toHaveAttribute("href", "https://example.com/help");
+    // Verify help button exists (renders as a button that opens URL window)
+    const helpButton = screen.getByTitle("Layer Help");
+    expect(helpButton).toBeInTheDocument();
   });
 });

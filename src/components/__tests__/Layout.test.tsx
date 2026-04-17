@@ -94,7 +94,6 @@ const mockSidebarStoreState = {
   hideReports: false,
   loadFromConfig: vi.fn(),
   activateDefaultItems: vi.fn(),
-  setEventEmitter: vi.fn(),
   setIsOpen: vi.fn(),
   setActiveItem: vi.fn(),
   setActiveTab: vi.fn(),
@@ -116,10 +115,6 @@ const mockEventStore = {
   addListener: vi.fn(() => "listener-id"),
   removeListener: vi.fn(),
   emit: vi.fn(),
-  emitSidebarChanged: vi.fn(),
-  emitHeaderLoaded: vi.fn(),
-  emitSidebarLoaded: vi.fn(),
-  emitMapLoaded: vi.fn(),
 };
 
 vi.mock("@/stores/eventStore", () => ({

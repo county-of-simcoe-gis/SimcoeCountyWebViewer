@@ -22,6 +22,8 @@ interface PopupState {
   alwaysUseReportsTab: boolean;
   /** The raw interaction Result[] from the last map click (used by pop-out to render collapsible list). */
   rawResults: unknown[] | null;
+  /** Pending property report coordinates requested by another component (e.g. AppTrackPopup). */
+  pendingPropertyLookup: { coordinates: number[]; zoomToFeature: boolean } | null;
 
   // Actions
   setOverlay: (overlay: Overlay) => void;
@@ -38,6 +40,10 @@ interface PopupState {
   updatePosition: (coordinates: number[]) => void;
   setAlwaysUseReportsTab: (value: boolean) => void;
   setRawResults: (results: unknown[] | null) => void;
+  /** Request that PropertyReportClick show a property report for the given coordinates. */
+  requestPropertyReport: (coordinates: number[], zoomToFeature?: boolean) => void;
+  /** Clear the pending property lookup after it has been consumed. */
+  clearPendingPropertyLookup: () => void;
 }
 
 export const usePopupStore = create<PopupState>((set, get) => ({
@@ -49,6 +55,7 @@ export const usePopupStore = create<PopupState>((set, get) => ({
   onCloseCallback: null,
   alwaysUseReportsTab: typeof window !== "undefined" && localStorage.getItem(ALWAYS_REPORTS_TAB_KEY) === "true",
   rawResults: null,
+  pendingPropertyLookup: null,
 
   setOverlay: (overlay) => set({ overlay }),
 
@@ -164,4 +171,9 @@ export const usePopupStore = create<PopupState>((set, get) => ({
   },
 
   setRawResults: (results) => set({ rawResults: results }),
+
+  requestPropertyReport: (coordinates, zoomToFeature = true) =>
+    set({ pendingPropertyLookup: { coordinates, zoomToFeature } }),
+
+  clearPendingPropertyLookup: () => set({ pendingPropertyLookup: null }),
 }));

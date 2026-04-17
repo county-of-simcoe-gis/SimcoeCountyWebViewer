@@ -12,9 +12,10 @@ import { FaRulerHorizontal, FaDrawPolygon, FaRegCircle, FaRegSquare, FaCompass, 
 import PanelComponent from "@/components/PanelComponent";
 import { useMapStore } from "@/stores/mapStore";
 import { usePopupStore } from "@/stores/popupStore";
+import { useMyMapsStore, createMyMapsItem } from "@/stores/myMapsStore";
 import { useEventStore } from "@/stores/eventStore";
 import { showMessage } from "@/utils/helpersUI";
-import { getBearing } from "@/utils/myMapsHelpers";
+import { getBearing, featureToGeoJSON, styleToJSON } from "@/utils/myMapsHelpers";
 
 // OpenLayers imports
 import Draw, { createBox } from "ol/interaction/Draw";
@@ -152,7 +153,6 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
   // Stores
   const { map, isDrawingOrEditing, setActiveToolId } = useMapStore();
   const { hide: hidePopup } = usePopupStore();
-  const { emitAddMyMapsFeature } = useEventStore();
 
   // State
   const [hideTooltips, setHideTooltips] = useState(false);
@@ -577,13 +577,22 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
   // Add to MyMaps
   const addToMyMaps = useCallback(
     (featureToAdd: Feature<Geometry>, label: string) => {
-      emitAddMyMapsFeature(featureToAdd, label);
+      const featureStyle = featureToAdd.getStyle();
+      const myMapsItem = createMyMapsItem(
+        featureToAdd,
+        "Buffer",
+        label,
+        featureStyle instanceof Style ? styleToJSON(featureStyle) : undefined,
+      );
+      myMapsItem.featureGeoJSON = featureToGeoJSON(featureToAdd);
+      useMyMapsStore.getState().addItem(myMapsItem);
+      useEventStore.getState().emit("mymap-item-created", { item: myMapsItem });
       // Reset interaction if user is still measuring to prevent error after click
       if (activeTool && geometryType !== "" && geometryType !== "Clear") {
         addInteraction();
       }
     },
-    [emitAddMyMapsFeature, activeTool, geometryType, addInteraction],
+    [activeTool, geometryType, addInteraction],
   );
 
   // Initialize vector layer and tooltips

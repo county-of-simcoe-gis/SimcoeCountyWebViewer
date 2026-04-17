@@ -3,14 +3,19 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Feature } from "ol";
+import { Style } from "ol/style";
 import { useAppStore } from "@/stores/appStore";
 import { InfoWindowRow } from "@/components/ui/InfoWindowRow";
 import { usePropertyPopupExtensionStore } from "@/stores/propertyPopupExtensionStore";
 import { isPropertyInMunicipality } from "@/utils/municipalityFilter";
 import { usePopupStore } from "@/stores/popupStore";
 import { useReportsStore } from "@/stores/reportsStore";
+import { useSidebarStore } from "@/stores/sidebarStore";
+import { useMyMapsStore, createMyMapsItem } from "@/stores/myMapsStore";
 import { useEventStore } from "@/stores/eventStore";
+import { featureToGeoJSON, styleToJSON } from "@/utils/myMapsHelpers";
 import { useToastStore } from "@/hooks/useToast";
+import { useToast } from "@/hooks/useToast";
 import PropertyReport from "@/components/PropertyReport";
 import IdentifyQuery from "@/components/Identify/IdentifyQuery";
 import Identify from "@/components/Identify";
@@ -46,6 +51,7 @@ interface PropertyPopupProps {
 export default function PropertyPopup({ propInfo, feature, onClose, onClearParcelLayer }: PropertyPopupProps) {
   const config = useAppStore((state) => state.config);
   const [copied, setCopied] = useState(false);
+  const toast = useToast();
   const extensionItems = usePropertyPopupExtensionStore((s) => s.getVisibleItems)();
   const showSecuredExtensions = isPropertyInMunicipality(propInfo.Municipality);
 
@@ -62,13 +68,18 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
   const handleShare = () => {
     if (shareURL) {
       navigator.clipboard.writeText(shareURL);
-      alert("Link copied to clipboard!");
+      toast.success("Link copied to clipboard!");
     }
   };
 
   const handleAddToMyMaps = () => {
     const label = address || `Property ${arn}`;
-    useEventStore.getState().emitAddMyMapsFeature(feature, label);
+    // Create a MyMaps item from the feature and add it directly to the store
+    const featureStyle = feature.getStyle();
+    const myMapsItem = createMyMapsItem(feature, "Buffer", label, featureStyle instanceof Style ? styleToJSON(featureStyle) : undefined);
+    myMapsItem.featureGeoJSON = featureToGeoJSON(feature);
+    useMyMapsStore.getState().addItem(myMapsItem);
+    useEventStore.getState().emit("mymap-item-created", { item: myMapsItem });
     activateTab("mymaps");
     useToastStore.getState().addToast("Feature added to MyMaps", "success");
   };
@@ -210,15 +221,7 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
           <InfoWindowRow label="Has Zoning">
             {hasZoning ? "Yes" : "No"}
             {hasZoning && (
-              <Image
-                src="/images/information.png"
-                alt="View Zoning"
-                title="View Zoning"
-                width={16}
-                height={16}
-                className="inline-block -mb-0.5 ml-1.5 cursor-pointer"
-                onClick={handleViewZoning}
-              />
+              <Image src="/images/information.png" alt="View Zoning" title="View Zoning" width={16} height={16} className="inline-block -mb-0.5 ml-1.5 cursor-pointer" onClick={handleViewZoning} />
             )}
           </InfoWindowRow>
         )}
@@ -261,12 +264,12 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
           config?.propertyReport?.customIdentify
             ?.filter((item) => !item.secured || showSecuredExtensions)
             .map((item, idx) => (
-            <InfoWindowRow key={`custom-identify-${idx}`} label={item.label}>
-              <span className="text-[#337ab7] underline cursor-pointer select-none hover:text-[#23527c]" onClick={() => handleCustomIdentify(item)}>
-                {item.linkText}
-              </span>
-            </InfoWindowRow>
-          ))}
+              <InfoWindowRow key={`custom-identify-${idx}`} label={item.label}>
+                <span className="text-[#337ab7] underline cursor-pointer select-none hover:text-[#23527c]" onClick={() => handleCustomIdentify(item)}>
+                  {item.linkText}
+                </span>
+              </InfoWindowRow>
+            ))}
 
         {/* Tools */}
         <InfoWindowRow label="Tools">
@@ -292,9 +295,7 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
         </InfoWindowRow>
 
         {/* Parcel Area */}
-        {propInfo.area != null && !isNaN(propInfo.area) && propInfo.area > 0 && (
-          <InfoWindowRow label="Parcel Area" value={`${(propInfo.area / 10000).toFixed(3)} hectares`} />
-        )}
+        {propInfo.area != null && !isNaN(propInfo.area) && propInfo.area > 0 && <InfoWindowRow label="Parcel Area" value={`${(propInfo.area / 10000).toFixed(3)} hectares`} />}
 
         {/* Coordinates */}
         {pointCoordinates && <InfoWindowRow label="Pointer Coordinates" value={`Lat: ${Math.round(pointCoordinates[1] * 10000) / 10000}  Long: ${Math.round(pointCoordinates[0] * 10000) / 10000}`} />}

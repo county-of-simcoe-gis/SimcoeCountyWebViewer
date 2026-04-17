@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import LayerInfo from "@/components/LayerInfo/LayerInfo";
+import { useToastStore } from "@/hooks/useToast";
 import * as layerInfoLib from "@/lib/layerInfo";
 import type { LayerInfoData } from "@/types/layerInfo";
 
@@ -78,7 +79,7 @@ describe("LayerInfo", () => {
   describe("Loading and Error States", () => {
     it("displays loading state initially", () => {
       vi.mocked(layerInfoLib.fetchLayerInfo).mockImplementation(
-        () => new Promise(() => {}) // Never resolves
+        () => new Promise(() => {}), // Never resolves
       );
 
       render(<LayerInfo layerURL="https://example.com/layer" />);
@@ -392,7 +393,7 @@ describe("LayerInfo", () => {
 
     it("handles download error gracefully", async () => {
       vi.mocked(layerInfoLib.downloadLayerFile).mockRejectedValue(new Error("Download failed"));
-      const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+      useToastStore.setState({ toasts: [] });
       const user = userEvent.setup();
 
       render(<LayerInfo layerURL="https://geoserver.example.com/rest/layer" showDownload={true} secure={true} />);
@@ -410,10 +411,8 @@ describe("LayerInfo", () => {
       await user.click(downloadButton);
 
       await waitFor(() => {
-        expect(alertSpy).toHaveBeenCalledWith("Failed to download layer. Please try again.");
+        expect(useToastStore.getState().toasts).toContainEqual(expect.objectContaining({ message: "Failed to download layer. Please try again.", type: "error" }));
       });
-
-      alertSpy.mockRestore();
     });
   });
 

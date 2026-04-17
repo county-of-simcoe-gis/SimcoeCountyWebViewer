@@ -69,7 +69,7 @@ beforeEach(() => {
     activePanelId: null,
     panelMinimized: false,
     isMoreMenuOpen: false,
-    emitSidebarChanged: undefined,
+    pendingActivation: null,
   });
 });
 
@@ -102,15 +102,12 @@ describe("sidebarStore", () => {
       expect(useSidebarStore.getState().isOpen).toBe(true);
     });
 
-    it("should call event emitter when toggling", () => {
-      const mockEmitter = vi.fn();
-      useSidebarStore.getState().setEventEmitter(mockEmitter);
+    it("should toggle sidebar", () => {
+      useSidebarStore.getState().toggleSidebar();
+      expect(useSidebarStore.getState().isOpen).toBe(false);
 
       useSidebarStore.getState().toggleSidebar();
-      expect(mockEmitter).toHaveBeenCalledWith(false);
-
-      useSidebarStore.getState().toggleSidebar();
-      expect(mockEmitter).toHaveBeenCalledWith(true);
+      expect(useSidebarStore.getState().isOpen).toBe(true);
     });
 
     it("should open and close sidebar via actions", () => {
@@ -344,14 +341,15 @@ describe("sidebarStore", () => {
     });
   });
 
-  describe("Event Emitter", () => {
-    it("should support event emitter integration", () => {
-      const mockEmitter = vi.fn();
-
-      useSidebarStore.getState().setEventEmitter(mockEmitter);
+  describe("Pending Activation", () => {
+    it("should support requestActivateSidebarItem and clearPendingActivation", () => {
+      useSidebarStore.getState().requestActivateSidebarItem("Print", "tools", { data: 1 });
 
       const state = useSidebarStore.getState();
-      expect(state.emitSidebarChanged).toBe(mockEmitter);
+      expect(state.pendingActivation).toEqual({ itemName: "Print", itemType: "tools", options: { data: 1 } });
+
+      useSidebarStore.getState().clearPendingActivation();
+      expect(useSidebarStore.getState().pendingActivation).toBeNull();
     });
   });
 });

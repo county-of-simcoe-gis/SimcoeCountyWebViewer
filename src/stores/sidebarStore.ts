@@ -70,9 +70,10 @@ interface SidebarState {
   closeMoreMenu: () => void;
   toggleMoreMenu: () => void;
 
-  // Event emitters (integrate with event store when available)
-  emitSidebarChanged?: (isOpen: boolean) => void;
-  setEventEmitter: (emitter: (isOpen: boolean) => void) => void;
+  // Pending activation request from external callers (replaces activateSidebarItem event)
+  pendingActivation: { itemName: string; itemType: "themes" | "tools"; options?: Record<string, unknown> } | null;
+  requestActivateSidebarItem: (itemName: string, itemType: "themes" | "tools", options?: Record<string, unknown>) => void;
+  clearPendingActivation: () => void;
 }
 
 function convertToSidebarItem(component: SidebarComponent, type: "theme" | "tool"): SidebarItem {
@@ -108,18 +109,12 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
   activePanelId: null,
   panelMinimized: false,
   isMoreMenuOpen: false,
-  emitSidebarChanged: undefined,
+  pendingActivation: null,
 
   // Actions
   toggleSidebar: () => {
-    const state = get();
-    const newIsOpen = !state.isOpen;
+    const newIsOpen = !get().isOpen;
     set({ isOpen: newIsOpen });
-
-    // Emit sidebar changed event if emitter is available
-    if (state.emitSidebarChanged) {
-      state.emitSidebarChanged(newIsOpen);
-    }
   },
 
   openSidebar: () => set({ isOpen: true }),
@@ -271,5 +266,7 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
   closeMoreMenu: () => set({ isMoreMenuOpen: false }),
   toggleMoreMenu: () => set((state) => ({ isMoreMenuOpen: !state.isMoreMenuOpen })),
 
-  setEventEmitter: (emitter) => set({ emitSidebarChanged: emitter }),
+  requestActivateSidebarItem: (itemName, itemType, options) => set({ pendingActivation: { itemName, itemType, options } }),
+
+  clearPendingActivation: () => set({ pendingActivation: null }),
 }));

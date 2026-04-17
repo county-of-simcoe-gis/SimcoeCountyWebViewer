@@ -131,8 +131,40 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60,
   },
-  // Add these configuration options to properly handle basePath
+  // Use app-specific cookie names to avoid collisions with other NextAuth apps
+  // on the same domain. When deployed at root ("/"), path scoping alone can't prevent
+  // cookies from being sent to sub-path apps, so unique names prevent other apps from
+  // interpreting these cookies and keep the combined header size manageable.
   useSecureCookies: process.env.NODE_ENV === "production",
+  cookies: {
+    sessionToken: {
+      name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}scwv.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: process.env.NEXT_PUBLIC_BASE_PATH || "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+    callbackUrl: {
+      name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}scwv.callback-url`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: process.env.NEXT_PUBLIC_BASE_PATH || "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+    csrfToken: {
+      name: `${process.env.NODE_ENV === "production" ? "__Host-" : ""}scwv.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: process.env.NEXT_PUBLIC_BASE_PATH || "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
   // Define URLs explicitly
   pages: {
     signIn: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/signin`,

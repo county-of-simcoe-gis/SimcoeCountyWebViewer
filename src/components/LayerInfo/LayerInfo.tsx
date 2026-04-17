@@ -5,6 +5,7 @@ import { FaPrint, FaExternalLinkAlt } from "react-icons/fa";
 import type { LayerInfoProps, LayerInfoData, LayerInfoAttribute } from "@/types/layerInfo";
 import { fetchLayerInfo, getFormattedProjection, getDownloadUrl, getServerUrl, downloadLayerFile } from "@/lib/layerInfo";
 import { useConfig } from "@/hooks/useConfig";
+import { useToast } from "@/hooks/useToast";
 
 /**
  * LayerInfo Component
@@ -16,6 +17,7 @@ export default function LayerInfo({ layerURL, showDownload = false, secure = fal
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { config } = useConfig();
+  const toast = useToast();
 
   // Store params as a JSON string to avoid infinite re-renders
   const paramsRef = React.useRef(JSON.stringify(params));
@@ -88,7 +90,7 @@ export default function LayerInfo({ layerURL, showDownload = false, secure = fal
       }
     } catch (err) {
       console.error("Error downloading layer:", err);
-      alert("Failed to download layer. Please try again.");
+      toast.error("Failed to download layer. Please try again.");
     }
   };
 

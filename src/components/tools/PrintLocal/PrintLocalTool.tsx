@@ -7,6 +7,7 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 import PanelComponent from "@/components/PanelComponent";
 import { useMapStore } from "@/stores/mapStore";
 import { captureMapCanvas, type DecorationPosition, type MapDecorations } from "@/utils/openlayers/SimpleCanvasCapture";
+import { useToast } from "@/hooks/useToast";
 import { jsPDF } from "jspdf";
 import PrintPreviewModal from "./PrintPreviewModal";
 
@@ -38,6 +39,7 @@ const printFormats = [
 
 export default function PrintLocalTool({ name = "Print Local", helpLink, hideHeader = false, onClose, onSidebarVisibility }: PrintLocalToolProps) {
   const { map } = useMapStore();
+  const toast = useToast();
   const [mapTitle, setMapTitle] = useState("County of Simcoe WebViewer");
   const [printSizeSelected, setPrintSizeSelected] = useState(printSizes[0]);
   const [printFormatSelected, setPrintFormatSelected] = useState(printFormats[0]);
@@ -107,7 +109,7 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
    */
   const handlePreview = async () => {
     if (!map) {
-      alert("Map is not available");
+      toast.error("Map is not available");
       return;
     }
 
@@ -163,7 +165,7 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
       setPreviewBlob(blob);
     } catch (error) {
       console.error("[PrintLocal] Preview generation failed:", error);
-      alert(`Failed to generate preview: ${error instanceof Error ? error.message : String(error)}`);
+      toast.error(`Failed to generate preview: ${error instanceof Error ? error.message : String(error)}`);
       setShowPreview(false);
     } finally {
       setPrintProgress("");
@@ -261,7 +263,7 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
       setPreviewBlob(null);
     } catch (error) {
       console.error("Download failed:", error);
-      alert(`Failed to download: ${error instanceof Error ? error.message : String(error)}`);
+      toast.error(`Failed to download: ${error instanceof Error ? error.message : String(error)}`);
       setIsDownloading(false);
     }
   };
@@ -280,7 +282,7 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
    */
   const handlePrint = async () => {
     if (!map) {
-      alert("Map is not available");
+      toast.error("Map is not available");
       return;
     }
 
@@ -411,7 +413,7 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
         errorMessage += `\n\n${error.message}`;
       }
 
-      alert(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setPrintProgress("");
       setIsPrinting(false);

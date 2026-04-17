@@ -16,6 +16,8 @@ import ShowGeometryModal from "@/components/myMaps/ShowGeometryModal";
 import URLModal from "@/components/common/URLModal";
 import Identify from "@/components/Identify/Identify";
 import { getMapScale, getMapExtent, getMapCenter, buildFeedbackUrl } from "@/utils/mapHelpers";
+import { exportFeatures } from "@/utils/myMapsHelpers";
+import { useToast } from "@/hooks/useToast";
 import type { MyMapsItem as MyMapsItemType } from "@/types/myMaps";
 import { Feature } from "ol";
 import GeoJSON from "ol/format/GeoJSON";
@@ -47,6 +49,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
   const { emit } = useEventStore();
   const { setReport } = useReportsStore();
   const { openSidebar, setActiveTabByName } = useSidebarStore();
+  const toast = useToast();
 
   // Handle showing item options popup
   const handleShowItemOptions = useCallback((item: MyMapsItemType, event?: React.MouseEvent) => {
@@ -169,103 +172,11 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
 
   const handleExportFeature = useCallback(
     (item: MyMapsItemType, format: "geojson" | "kml" | "esrijson" = "geojson") => {
-      console.log("Export feature:", item.id, "as", format);
-      try {
-        let exportData: string;
-        let mimeType: string;
-        let fileExtension: string;
-
-        switch (format) {
-          case "kml":
-            // For KML, we need to create proper KML structure
-            const kmlData = `<?xml version="1.0" encoding="UTF-8"?>
-<kml xmlns="http://www.opengis.net/kml/2.2">
-  <Document>
-    <Placemark>
-      <name><![CDATA[${item.label || "Unnamed Feature"}]]></name>
-      <description><![CDATA[Exported from SimcoeCounty WebViewer]]></description>
-      ${item.featureGeoJSON ? convertGeoJSONToKMLGeometry(JSON.parse(item.featureGeoJSON).geometry) : ""}
-    </Placemark>
-  </Document>
-</kml>`;
-            exportData = kmlData;
-            mimeType = "application/vnd.google-earth.kml+xml";
-            fileExtension = "kml";
-            break;
-
-          case "esrijson":
-            // For EsriJSON, convert from GeoJSON
-            const esriData = {
-              geometry: item.featureGeoJSON ? JSON.parse(item.featureGeoJSON).geometry : null,
-              attributes: {
-                id: item.id,
-                label: item.label,
-                drawType: item.drawType,
-                geometryType: item.geometryType,
-                visible: item.visible,
-                labelVisible: item.labelVisible,
-              },
-            };
-            exportData = JSON.stringify(esriData, null, 2);
-            mimeType = "application/json";
-            fileExtension = "json";
-            break;
-
-          default: // geojson
-            const geoJsonData = {
-              type: "Feature",
-              properties: {
-                id: item.id,
-                label: item.label,
-                drawType: item.drawType,
-                geometryType: item.geometryType,
-                visible: item.visible,
-                labelVisible: item.labelVisible,
-              },
-              geometry: JSON.parse(item.featureGeoJSON),
-            };
-            exportData = JSON.stringify(geoJsonData, null, 2);
-            mimeType = "application/json";
-            fileExtension = "geojson";
-            break;
-        }
-
-        const blob = new Blob([exportData], { type: mimeType });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `${item.label.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.${fileExtension}`;
-        link.click();
-        URL.revokeObjectURL(url);
-
-        console.log(`Feature exported successfully as ${format.toUpperCase()}`);
-      } catch (error) {
-        console.error("Error exporting feature:", error);
-      }
+      exportFeatures([item], format);
       emit("mymap-export-feature", { item, format });
     },
     [emit],
   );
-
-  // Helper function to convert GeoJSON geometry to KML geometry
-  const convertGeoJSONToKMLGeometry = (geometry: { type: string; coordinates: unknown }): string => {
-    if (!geometry) return "";
-
-    switch (geometry.type) {
-      case "Point":
-        const pointCoords = geometry.coordinates as number[];
-        return `<Point><coordinates>${pointCoords.join(",")}</coordinates></Point>`;
-      case "LineString":
-        const lineCoords = geometry.coordinates as number[][];
-        return `<LineString><coordinates>${lineCoords.map((coord: number[]) => coord.join(",")).join(" ")}</coordinates></LineString>`;
-      case "Polygon":
-        const polyCoords = geometry.coordinates as number[][][];
-        const outerRing = polyCoords[0].map((coord: number[]) => coord.join(",")).join(" ");
-        return `<Polygon><outerBoundaryIs><LinearRing><coordinates>${outerRing}</coordinates></LinearRing></outerBoundaryIs></Polygon>`;
-      default:
-        return "";
-    }
-  };
 
   const handleIdentify = useCallback(
     (item: MyMapsItemType) => {
@@ -340,7 +251,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
 
         if (!exportResult.success || !exportResult.id) {
           console.error("Failed to export MyMaps for report problem");
-          alert("Failed to prepare report. Please try again.");
+          toast.error("Failed to prepare report. Please try again.");
           return;
         }
 
@@ -366,7 +277,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
         emit("mymap-report-problem", { item, url: feedbackUrl });
       } catch (error) {
         console.error("Error preparing report problem:", error);
-        alert("Error occurred while preparing the report. Please try again.");
+        toast.error("Error occurred while preparing the report. Please try again.");
       }
     },
     [map, config, saveToApi, emit],
@@ -468,14 +379,17 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
   );
 
   // Show message function (simplified version)
-  const showMessage = useCallback((title: string, message: string, isError = false) => {
-    // This is a simplified version - in a real app you might want to use a toast library
-    // or integrate with your existing notification system
-    console.log(`${title}: ${message}`);
-    if (isError) {
-      alert(`${title}: ${message}`); // Fallback for error messages
-    }
-  }, []);
+  const showMessage = useCallback(
+    (title: string, message: string, isError = false) => {
+      // This is a simplified version - in a real app you might want to use a toast library
+      // or integrate with your existing notification system
+      console.log(`${title}: ${message}`);
+      if (isError) {
+        toast.error(`${title}: ${message}`);
+      }
+    },
+    [toast],
+  );
 
   // Handle URL parameters for MyMaps import
   const handleURLParameters = useCallback(async () => {
@@ -538,11 +452,11 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
       if (result.success) {
         console.log(`MyMaps: Successfully exported ${result.count} features to ${format}`);
       } else {
-        alert(result.message || `Unable to export to ${format}. Please ensure you have visible features to export.`);
+        toast.error(result.message || `Unable to export to ${format}. Please ensure you have visible features to export.`);
       }
     } catch (error) {
       console.error(`Error exporting to ${format}:`, error);
-      alert(`Error occurred while exporting to ${format}. Please try again.`);
+      toast.error(`Error occurred while exporting to ${format}. Please try again.`);
     }
   };
 
@@ -573,7 +487,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
           console.log("MyMaps: Successfully merged polygons");
           // Show success message or notification here if needed
         } else {
-          alert(result.message || "Unable to merge polygons. Please ensure you have at least 2 visible polygon features.");
+          toast.warning(result.message || "Unable to merge polygons. Please ensure you have at least 2 visible polygon features.");
         }
         break;
       case "show-points-only":

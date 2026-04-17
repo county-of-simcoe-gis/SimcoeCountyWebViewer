@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useSidebarStore } from "@/stores/sidebarStore";
-import { useEventStore } from "@/stores/eventStore";
 import { useMyMapsStore } from "@/stores/myMapsStore";
 
 interface SlimButtonProps {
@@ -43,7 +42,6 @@ export default function SidebarSlim() {
   const activeTool = useSidebarStore((s) => s.activeTool);
   const activeTheme = useSidebarStore((s) => s.activeTheme);
   const isMyMapsEditing = useMyMapsStore((s) => s.isEditing);
-  const emitActivateTab = useEventStore((s) => s.emitActivateTab);
 
   // Only show when sidebar is closed
   if (isOpen) return null;
@@ -62,7 +60,6 @@ export default function SidebarSlim() {
   const handleTabClick = (tabName: string, tabIndex: number) => {
     openSidebar();
     setActiveTab(tabIndex);
-    emitActivateTab(tabName);
   };
 
   const handleMoreClick = () => {

@@ -5,6 +5,7 @@ import Layout from "@/components/Layout";
 import { useAppStore } from "@/stores/appStore";
 import { getAllURLParameters } from "@/utils/helpersUrl";
 import { migrateFromLegacyStorage } from "@/utils/storageMigration";
+import packageJson from "../../package.json";
 
 export default function Home() {
   const setAppInfo = useAppStore((s) => s.setAppInfo);
@@ -36,11 +37,11 @@ export default function Home() {
     const urlParams = getAllURLParameters();
     setUrlParameters(urlParams);
 
-    // Initialize app info (similar to old app)
+    // Initialize app info directly from package.json
     setAppInfo({
-      name: "simcoecountywebviewernextjs",
-      version: "0.1.0",
-      homepage: "",
+      name: packageJson.name,
+      version: packageJson.version,
+      homepage: process.env.NEXT_PUBLIC_BASE_PATH || "",
     });
 
     // Simulate loading completion

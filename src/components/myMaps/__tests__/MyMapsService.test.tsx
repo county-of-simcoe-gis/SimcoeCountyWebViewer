@@ -475,7 +475,6 @@ describe("MyMapsService Component", () => {
       expect(mockAddListener).toHaveBeenCalledWith("mymap-label-visibility-change", expect.any(Function));
       expect(mockAddListener).toHaveBeenCalledWith("mymap-label-rotation-change", expect.any(Function));
       expect(mockAddListener).toHaveBeenCalledWith("mymap-style-updated", expect.any(Function));
-      expect(mockAddListener).toHaveBeenCalledWith("addMyMapsFeature", expect.any(Function));
     });
 
     it("should handle hover start event", () => {
@@ -629,30 +628,13 @@ describe("MyMapsService Component", () => {
       expect(mockDrawingManager.updateFeatureStyle).toHaveBeenCalledWith("feature-1", mockStyle, "circle");
     });
 
-    it("should handle add MyMaps feature event (buffer)", () => {
-      render(<MyMapsService />);
-
-      // @ts-expect-error - Mock array access is safe in test context
-      const addFeatureCall = mockAddListener.mock.calls.find((call) => call[0] === "addMyMapsFeature");
-      expect(addFeatureCall).toBeDefined();
-      // @ts-expect-error - We know this call exists due to the expect above
-      const addFeatureHandler = addFeatureCall[1];
-
-      // @ts-expect-error - Handler exists due to test setup
-      addFeatureHandler({ feature: mockFeature as any, label: "Buffer Feature" });
-
-      expect(mockCreateMyMapsItem).toHaveBeenCalledWith(mockFeature, "Buffer", "Buffer Feature", undefined);
-      expect(mockMyMapsStore.addItem).toHaveBeenCalled();
-      expect(mockEventStore.emit).toHaveBeenCalledWith("mymap-item-created", { item: expect.any(Object) });
-    });
-
     it("should cleanup event listeners on unmount", () => {
       const { unmount } = render(<MyMapsService />);
 
       unmount();
 
       // Should remove all registered listeners
-      expect(mockRemoveListener).toHaveBeenCalledTimes(9); // 9 event listeners registered
+      expect(mockRemoveListener).toHaveBeenCalledTimes(8); // 8 event listeners registered
     });
   });
 

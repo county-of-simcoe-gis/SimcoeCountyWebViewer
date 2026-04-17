@@ -120,6 +120,15 @@ vi.mock("react-icons/fa", () => ({
   // InfoWindowRow and PanelComponent icons
   FaLevelUpAlt: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "level-up-alt-icon" }, "LevelUpAlt"),
   FaWrench: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "wrench-icon" }, "Wrench"),
+
+  // AttributeTable specific icons
+  FaMapMarkedAlt: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "map-marked-alt-icon" }, "MapMarkedAlt"),
+  FaFilter: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "filter-icon" }, "Filter"),
+  FaWindowMinimize: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "window-minimize-icon" }, "WindowMinimize"),
+  FaSort: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "sort-icon" }, "Sort"),
+  FaSortUp: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "sort-up-icon" }, "SortUp"),
+  FaSortDown: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "sort-down-icon" }, "SortDown"),
+  FaExchangeAlt: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "exchange-alt-icon" }, "ExchangeAlt"),
 }));
 
 vi.mock("react-icons/md", () => ({

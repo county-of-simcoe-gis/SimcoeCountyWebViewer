@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import Image from "next/image";
 import { FaBars, FaEnvelope, FaQuestionCircle } from "react-icons/fa";
 import { useSidebarStore } from "@/stores/sidebarStore";
-import { useEventStore } from "@/stores/eventStore";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
 import Search from "@/components/Search";
@@ -14,18 +13,16 @@ import { showFeedbackWindow } from "@/utils/mapHelpers";
 
 export default function Header() {
   const toggleSidebar = useSidebarStore((s) => s.toggleSidebar);
-  const emitHeaderLoaded = useEventStore((s) => s.emitHeaderLoaded);
   const addLoadedItem = useMapStore((s) => s.addLoadedItem);
   const map = useMapStore((s) => s.map);
   const setHeaderLoading = useAppStore((s) => s.setHeaderLoading);
   const config = useAppStore((s) => s.config);
 
   useEffect(() => {
-    // Mark header as loaded (replaces window.emitter.emit("headerLoaded"))
-    emitHeaderLoaded();
+    // Mark header as loaded
     addLoadedItem("header");
     setHeaderLoading(false);
-  }, [emitHeaderLoaded, addLoadedItem, setHeaderLoading]);
+  }, [addLoadedItem, setHeaderLoading]);
 
   const onFeedbackClick = () => {
     if (config?.showHelpButtonInsteadOfFeedback && config?.helpUrl) {

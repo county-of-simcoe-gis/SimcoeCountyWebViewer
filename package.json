@@ -18,6 +18,8 @@
     "@camptocamp/inkmap": "^2.0.0",
     "@mapbox/polyline": "^1.2.1",
     "@tailwindcss/typography": "^0.5.19",
+    "@tanstack/react-table": "^8.21.3",
+    "@tanstack/react-virtual": "^3.13.23",
     "@types/geojson": "^7946.0.16",
     "@types/mapbox__polyline": "^1.0.5",
     "@types/react-window": "^1.8.8",

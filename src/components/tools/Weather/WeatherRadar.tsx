@@ -13,6 +13,7 @@ import Static from "ol/source/ImageStatic";
 import { addLayer, removeLayer, getLayer } from "@/utils/openlayers/LayerManager";
 
 import { getRadarImages, type RadarImage } from "@/lib/weather";
+import { useToast } from "@/hooks/useToast";
 
 const tzoffset = new Date().getTimezoneOffset() * 60000;
 const TEN_MIN_MS = 10 * 60 * 1000;
@@ -69,6 +70,7 @@ function getRadarDate(img: RadarImage): Date | null {
 export default function WeatherRadar(): React.ReactElement {
   // single managed layer id (from LayerManager) or fallback OL layer
   const layerIdRef = useRef<string | null>(null);
+  const toast = useToast();
   const fallbackOlLayerRef = useRef<ImageLayer<Static> | null>(null);
   // frame lookup: key = `${time.getTime()}_${code}` -> frame info
   const frameLookupRef = useRef<Map<string, { url: string; extent: [number, number, number, number]; date: Date; code: string; timeId?: string | number }>>(new Map());
@@ -272,7 +274,13 @@ export default function WeatherRadar(): React.ReactElement {
           const code = getRadarCode(img);
           if (!frame || !d || !code) continue;
 
-          const entry = { url: frame.url, extent: frame.extent, date: d, code, timeId: (img as RadarImage & { TIME_ID?: string; timeId?: string }).TIME_ID ?? (img as RadarImage & { timeId?: string }).timeId };
+          const entry = {
+            url: frame.url,
+            extent: frame.extent,
+            date: d,
+            code,
+            timeId: (img as RadarImage & { TIME_ID?: string; timeId?: string }).TIME_ID ?? (img as RadarImage & { timeId?: string }).timeId,
+          };
           const key = `${d.getTime()}_${code}`;
           frameLookupRef.current.set(key, entry);
           frameDates.push(d);
@@ -456,11 +464,17 @@ export default function WeatherRadar(): React.ReactElement {
   const handleUpdate = () => {
     if (timeSetting !== "custom") return;
 
-    if (endDate < startDate) return alert("Start Date needs to be before End Date");
+    if (endDate < startDate) {
+      toast.warning("Start Date needs to be before End Date");
+      return;
+    }
 
     const diffMs = Math.abs(endDate.getTime() - startDate.getTime());
     const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-    if (diffDays > 5) return alert("Cannot display more than 5 days of radar.");
+    if (diffDays > 5) {
+      toast.warning("Cannot display more than 5 days of radar.");
+      return;
+    }
 
     fetchRadarImages("update");
   };
@@ -541,7 +555,7 @@ export default function WeatherRadar(): React.ReactElement {
                   if (!value) return;
                   const v = roundTo10Minutes(value);
                   if (v < endDate) setStartDate(v);
-                  else alert("Start Date needs to be before End Date");
+                  else toast.warning("Start Date needs to be before End Date");
                 }}
                 popperPlacement="bottom"
                 popperModifiers={{
@@ -564,7 +578,7 @@ export default function WeatherRadar(): React.ReactElement {
                   if (!value) return;
                   const v = roundTo10Minutes(value);
                   if (v > startDate) setEndDate(v);
-                  else alert("End Date needs to be after Start Date");
+                  else toast.warning("End Date needs to be after Start Date");
                 }}
                 popperPlacement="bottom"
                 popperModifiers={{

@@ -499,43 +499,6 @@ export default function MyMapsService() {
       }
     };
 
-    // Buffer feature handler
-    const handleAddMyMapsFeature = (data?: { [key: string]: unknown }) => {
-      if (data && data.feature && data.label) {
-        const feature = data.feature as Feature;
-        const label = data.label as string;
-
-        console.log("🎨 Processing buffer feature for MyMaps:", {
-          label,
-          hasStyle: !!feature.getStyle(),
-        });
-
-        // Create MyMaps item from the buffer feature (same pattern as regular drawings)
-        const featureStyle = feature.getStyle();
-        const myMapsItem = createMyMapsItem(feature, "Buffer", label, featureStyle instanceof Style ? styleToJSON(featureStyle) : undefined);
-
-        // Set the featureGeoJSON from the actual feature
-        myMapsItem.featureGeoJSON = featureToGeoJSON(feature);
-
-        console.log("🎨 Buffer MyMaps item created:", {
-          id: myMapsItem.id,
-          label: myMapsItem.label,
-          hasStyle: !!myMapsItem.style,
-          styleInfo: myMapsItem.style,
-        });
-
-        // Add item to store
-        addItem(myMapsItem);
-
-        console.log("✅ Buffer feature added to MyMaps:", {
-          id: myMapsItem.id,
-          label: myMapsItem.label,
-        });
-
-        emit("mymap-item-created", { item: myMapsItem });
-      }
-    };
-
     // Subscribe to UI events
     const { addListener, removeListener } = useEventStore.getState();
 
@@ -552,9 +515,6 @@ export default function MyMapsService() {
     // Style event handler
     const styleUpdateId = addListener("mymap-style-updated", handleStyleUpdate);
 
-    // Buffer event handler
-    const addFeatureId = addListener("addMyMapsFeature", handleAddMyMapsFeature);
-
     return () => {
       removeListener(hoverStartId);
       removeListener(hoverEndId);
@@ -564,7 +524,6 @@ export default function MyMapsService() {
       removeListener(labelRotationId);
       removeListener(labelStyleId);
       removeListener(styleUpdateId);
-      removeListener(addFeatureId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, addItem, emit]);

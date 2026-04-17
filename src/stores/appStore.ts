@@ -47,8 +47,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   config: null,
   configError: null,
   appInfo: {
-    name: "Simcoe County Web Viewer",
-    version: "1.0.0",
+    name: "",
+    version: "",
     homepage: "",
   },
   urlParameters: {},

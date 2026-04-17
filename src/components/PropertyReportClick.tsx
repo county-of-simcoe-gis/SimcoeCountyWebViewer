@@ -425,5 +425,23 @@ export default function PropertyReportClick() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, urlParameters, showPropertyWindowForARN]);
 
+  // Handle pending property report requests from other components (e.g. AppTrackPopup)
+  const pendingPropertyLookup = usePopupStore((s) => s.pendingPropertyLookup);
+  useEffect(() => {
+    if (!pendingPropertyLookup || !map) return;
+
+    const { coordinates: coords, zoomToFeature } = pendingPropertyLookup;
+    usePopupStore.getState().clearPendingPropertyLookup();
+
+    const parcelLayerUrl = config?.parcelLayer?.url;
+    if (!parcelLayerUrl) {
+      console.warn("Parcel layer URL not configured");
+      return;
+    }
+
+    const parcelURL = parcelURLTemplate(parcelLayerUrl, coords[0], coords[1]);
+    showPropertyWindowForARN(parcelURL, zoomToFeature);
+  }, [pendingPropertyLookup, map, config, showPropertyWindowForARN]);
+
   return null; // This component doesn't render anything directly
 }

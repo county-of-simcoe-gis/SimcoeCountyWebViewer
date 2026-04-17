@@ -10,7 +10,9 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { FaCrosshairs, FaSearchPlus, FaMapMarkerAlt, FaCopy } from "react-icons/fa";
 import PanelComponent from "@/components/PanelComponent";
 import { useMapStore } from "@/stores/mapStore";
+import { useMyMapsStore, createMyMapsItem } from "@/stores/myMapsStore";
 import { useEventStore } from "@/stores/eventStore";
+import { featureToGeoJSON, styleToJSON } from "@/utils/myMapsHelpers";
 import { getMapScale } from "@/utils/mapHelpers";
 import { getPublicPath } from "@/utils/getPublicPath";
 import { glowContainer } from "@/utils/helpersBrowser";
@@ -70,7 +72,6 @@ const nad27Proj = new Projection({
 export default function CoordinatesTool({ name = "Coordinates", helpLink, hideHeader = false, onClose, onSidebarVisibility }: CoordinatesToolProps) {
   // Stores
   const { map, setActiveToolId } = useMapStore();
-  const { emitAddMyMapsFeature } = useEventStore();
 
   // Live coordinates state
   const [liveWebMercator, setLiveWebMercator] = useState<Coordinate | null>(null);
@@ -205,10 +206,20 @@ export default function CoordinatesTool({ name = "Coordinates", helpLink, hideHe
 
       const features = vectorLayerRef.current.getSource()?.getFeatures();
       if (features && features.length > 0) {
-        emitAddMyMapsFeature(features[0], `X:${x}, Y:${y}`);
+        const feature = features[0];
+        const featureStyle = feature.getStyle();
+        const myMapsItem = createMyMapsItem(
+          feature,
+          "Buffer",
+          `X:${x}, Y:${y}`,
+          featureStyle instanceof Style ? styleToJSON(featureStyle) : undefined,
+        );
+        myMapsItem.featureGeoJSON = featureToGeoJSON(feature);
+        useMyMapsStore.getState().addItem(myMapsItem);
+        useEventStore.getState().emit("mymap-item-created", { item: myMapsItem });
       }
     },
-    [emitAddMyMapsFeature],
+    [],
   );
 
   // Copy to clipboard

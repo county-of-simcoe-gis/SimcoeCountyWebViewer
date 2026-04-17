@@ -118,7 +118,9 @@ vi.mock("@/stores/mapStore", () => ({
 vi.mock("@/stores/eventStore", () => ({
   useEventStore: vi.fn((selector?: any) => {
     const state = {
-      emitMapLoaded: vi.fn(),
+      emit: vi.fn(),
+      addListener: vi.fn(() => "listener-id"),
+      removeListener: vi.fn(),
     };
     return typeof selector === "function" ? selector(state) : state;
   }),
