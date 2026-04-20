@@ -1,4 +1,4 @@
-import { getToken } from "next-auth/jwt";
+import { getToken } from "@/lib/authToken";
 import { NextRequest, NextResponse } from "next/server";
 import { refreshAccessToken } from "@/app/auth/refreshToken";
 
