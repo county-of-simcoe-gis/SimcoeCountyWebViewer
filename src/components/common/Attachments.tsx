@@ -16,6 +16,7 @@ interface AttachmentGroup {
 
 interface AttachmentResponse {
   attachmentGroups?: AttachmentGroup[];
+  error?: { code?: number; message?: string; details?: unknown };
 }
 
 interface AttachmentsProps {
@@ -31,6 +32,8 @@ const Attachments: React.FC<AttachmentsProps> = ({ attachmentUrl }) => {
   const [attachments, setAttachments] = useState<AttachmentInfo[]>([]);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -38,6 +41,7 @@ const Attachments: React.FC<AttachmentsProps> = ({ attachmentUrl }) => {
     const fetchAttachments = async () => {
       try {
         setIsLoading(true);
+        setHasError(false);
         const url = new URL(attachmentUrl);
         const urlParams = new URLSearchParams(url.searchParams);
         const urlToken = urlParams.get("token");
@@ -48,11 +52,22 @@ const Attachments: React.FC<AttachmentsProps> = ({ attachmentUrl }) => {
 
         const data: AttachmentResponse = await response.json();
 
-        if (!cancelled && data.attachmentGroups && data.attachmentGroups.length > 0) {
-          setAttachments(data.attachmentGroups[0].attachmentInfos ?? []);
+        // ArcGIS often returns HTTP 200 with an error body, e.g.
+        // { error: { code: 500, message: "Error performing queryAttachments operation" } }
+        if (data?.error) {
+          throw new Error(`ArcGIS error ${data.error.code ?? ""}: ${data.error.message ?? "Unknown error"}`.trim());
+        }
+
+        if (!cancelled) {
+          if (data.attachmentGroups && data.attachmentGroups.length > 0) {
+            setAttachments(data.attachmentGroups[0].attachmentInfos ?? []);
+          } else {
+            setAttachments([]);
+          }
         }
       } catch (err) {
         console.error("Failed to fetch attachments:", err);
+        if (!cancelled) setHasError(true);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -62,13 +77,17 @@ const Attachments: React.FC<AttachmentsProps> = ({ attachmentUrl }) => {
     return () => {
       cancelled = true;
     };
-  }, [attachmentUrl]);
+  }, [attachmentUrl, retryCount]);
+
+  const handleRetry = useCallback(() => {
+    setRetryCount((c) => c + 1);
+  }, []);
 
   const getAttachmentUrl = useCallback(
     (baseUrl: string) => {
       return token ? `${baseUrl}?token=${token}` : baseUrl;
     },
-    [token]
+    [token],
   );
 
   const handleAttachmentClick = useCallback(
@@ -80,15 +99,26 @@ const Attachments: React.FC<AttachmentsProps> = ({ attachmentUrl }) => {
         window.open(url, "_blank");
       }
     },
-    [getAttachmentUrl]
+    [getAttachmentUrl],
   );
 
   if (isLoading) {
     return <span className="text-xs text-gray-400 italic">Loading attachments...</span>;
   }
 
+  if (hasError) {
+    return (
+      <span className="inline-flex items-center gap-2 text-xs text-error">
+        <span>Attachment loading failed.</span>
+        <button type="button" className="btn btn-xs btn-outline btn-error" onClick={handleRetry} aria-label="Retry loading attachments">
+          Retry
+        </button>
+      </span>
+    );
+  }
+
   if (attachments.length === 0) {
-    return null;
+    return <span className="text-xs text-gray-400 italic">No attachments available.</span>;
   }
 
   return (

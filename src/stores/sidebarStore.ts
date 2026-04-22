@@ -44,6 +44,10 @@ interface SidebarState {
 
   // More menu state
   isMoreMenuOpen: boolean;
+  /** Which UI element opened the More menu. "sidebar" anchors above the slim sidebar button; "mapControl" anchors below the map control. */
+  moreMenuAnchor: "sidebar" | "mapControl";
+  /** Viewport-relative position (in px) used when moreMenuAnchor is "mapControl". */
+  moreMenuPosition: { top: number; left: number } | null;
 
   // Actions
   toggleSidebar: () => void;
@@ -69,6 +73,10 @@ interface SidebarState {
   openMoreMenu: () => void;
   closeMoreMenu: () => void;
   toggleMoreMenu: () => void;
+  /** Open the More menu anchored below a map control button at the given viewport position. */
+  openMoreMenuAtMapControl: (position: { top: number; left: number }) => void;
+  /** Toggle the More menu from the slim sidebar (default anchor above the sidebar button). */
+  toggleMoreMenuFromSidebar: () => void;
 
   // Pending activation request from external callers (replaces activateSidebarItem event)
   pendingActivation: { itemName: string; itemType: "themes" | "tools"; options?: Record<string, unknown> } | null;
@@ -109,6 +117,8 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
   activePanelId: null,
   panelMinimized: false,
   isMoreMenuOpen: false,
+  moreMenuAnchor: "sidebar",
+  moreMenuPosition: null,
   pendingActivation: null,
 
   // Actions
@@ -265,6 +275,15 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
   openMoreMenu: () => set({ isMoreMenuOpen: true }),
   closeMoreMenu: () => set({ isMoreMenuOpen: false }),
   toggleMoreMenu: () => set((state) => ({ isMoreMenuOpen: !state.isMoreMenuOpen })),
+
+  openMoreMenuAtMapControl: (position) => set({ isMoreMenuOpen: true, moreMenuAnchor: "mapControl", moreMenuPosition: position }),
+
+  toggleMoreMenuFromSidebar: () =>
+    set((state) => ({
+      isMoreMenuOpen: !state.isMoreMenuOpen,
+      moreMenuAnchor: "sidebar",
+      moreMenuPosition: null,
+    })),
 
   requestActivateSidebarItem: (itemName, itemType, options) => set({ pendingActivation: { itemName, itemType, options } }),
 

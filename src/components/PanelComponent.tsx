@@ -50,7 +50,6 @@ export default function PanelComponent({ name, helpLink, hideHeader = false, onC
           icon={icon || <FaWrench size={20} className="text-neutral/70" />}
           onClose={onClose}
           onHelp={helpLink ? handleHelpClick : undefined}
-          compact={!!helpLink}
           controls={
             <button
               className="border border-gray-300/70 p-1 rounded-sm ml-1.5 cursor-pointer inline-flex items-center justify-center align-top bg-base-300 w-6 h-6 text-gray-700"

@@ -6,6 +6,7 @@ import AuthProvider from "@/app/auth/Provider";
 import ArcGISAuthProvider from "@/components/auth/ArcGISAuthProvider";
 import { ToastContainer } from "@/components/Toast";
 import { UrlParameterProvider } from "@/contexts/UrlParameterContext";
+import appConfig from "@/config.json";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,11 +18,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Initial metadata from local config.json. These values are overridden at
+// runtime by `updatePageMetadata` once the merged map config is loaded
+// (see `useConfig` hook), which may pull values from the map settings API.
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 export const metadata: Metadata = {
-  title: "Web Viewer", // This will be updated dynamically from config
-  description: "Interactive web mapping application", // This will be updated dynamically from config
+  title: appConfig.title,
+  description: appConfig.description,
   icons: {
-    icon: "/favicon.ico", // This will be updated dynamically from config
+    icon: appConfig.favicon ? `${basePath}/${appConfig.favicon}` : `${basePath}/favicon.ico`,
   },
 };
 

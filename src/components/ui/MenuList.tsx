@@ -7,15 +7,19 @@ import React from "react";
 export interface MenuListProps {
   children: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 /**
  * Replaces legacy .sc-menu-button-list-container and .map-context-menu-list.
  * A floating menu container for sidebar "More" menus and context menus.
  */
-export const MenuList: React.FC<MenuListProps> = ({ children, className = "" }) => {
+export const MenuList: React.FC<MenuListProps> = ({ children, className = "", style }) => {
   return (
-    <ul className={`select-none bg-white border border-base-300 rounded p-1.5 text-xs overflow-auto shadow-[2px_2px_5px_rgba(77,77,77,1)] text-left z-[100000] list-none m-0 ${className}`}>
+    <ul
+      style={style}
+      className={`select-none bg-white border border-base-300 rounded p-1.5 text-xs overflow-auto shadow-[2px_2px_5px_rgba(77,77,77,1)] text-left z-[100000] list-none m-0 ${className}`}
+    >
       {children}
     </ul>
   );

@@ -350,9 +350,11 @@ function convertSettingsToAppConfig(settings: SettingsType & Record<string, unkn
   // Map General settings
   if (settings.General) {
     const general = settings.General;
+    // title/favicon: API map config wins when provided, otherwise local
+    // config.json values remain as fallback (see loadConfig).
     if (general.title) config.title = general.title;
-    if (general.description) config.description = general.description;
     if (general.favicon) config.favicon = general.favicon;
+    if (general.description) config.description = general.description;
     if (general.headerLogoImageName) config.headerLogoImageName = general.headerLogoImageName;
     if (general.defaultZoom) config.defaultZoom = general.defaultZoom;
     if (general.maxZoom) config.maxZoom = general.maxZoom;
@@ -723,20 +725,43 @@ export function updateMetaDescription(description: string) {
 
 /**
  * Change the page favicon
+ *
+ * In Next.js (App Router), a default favicon link is automatically injected
+ * from `src/app/favicon.ico`. To ensure our dynamic favicon takes effect,
+ * we update any existing icon links and remove auto-generated ones so the
+ * configured icon is the only one the browser sees.
  */
 export function changeIcon(icon: string) {
-  let link = document.getElementById("favicon") as HTMLLinkElement;
+  if (typeof document === "undefined") return;
+
+  // If it's not a full URL, assume it's in the public directory and prepend
+  // the configured basePath (if any) so the browser can resolve it correctly.
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  let resolvedIcon: string;
+  if (icon.startsWith("http")) {
+    resolvedIcon = icon;
+  } else {
+    const normalized = icon.startsWith("/") ? icon : `/${icon}`;
+    resolvedIcon = `${basePath}${normalized}`;
+  }
+
+  const head = document.getElementsByTagName("head")[0];
+
+  // Remove any existing icon links that we don't manage (e.g., Next.js auto-injected)
+  const existingIcons = document.querySelectorAll('link[rel~="icon"]');
+  existingIcons.forEach((el) => {
+    if ((el as HTMLLinkElement).id !== "favicon") {
+      el.parentNode?.removeChild(el);
+    }
+  });
+
+  let link = document.getElementById("favicon") as HTMLLinkElement | null;
   if (!link) {
     link = document.createElement("link");
     link.rel = "icon";
     link.id = "favicon";
-    document.getElementsByTagName("head")[0].appendChild(link);
+    head.appendChild(link);
   }
 
-  // If it's not a full URL, assume it's in the public directory
-  if (!icon.startsWith("http")) {
-    icon = `/${icon}`;
-  }
-
-  link.href = icon;
+  link.href = resolvedIcon;
 }

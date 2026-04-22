@@ -87,15 +87,12 @@ export default function GroupItem({
   }, [menuOpen]);
 
   // Group options menu
-  const onGroupOptionsClick = useCallback(
-    (evt: React.MouseEvent) => {
-      evt.stopPropagation();
-      const rect = (evt.currentTarget as HTMLElement).getBoundingClientRect();
-      setMenuPosition({ top: rect.bottom, left: rect.left });
-      setMenuOpen((prev) => !prev);
-    },
-    [],
-  );
+  const onGroupOptionsClick = useCallback((evt: React.MouseEvent) => {
+    evt.stopPropagation();
+    const rect = (evt.currentTarget as HTMLElement).getBoundingClientRect();
+    setMenuPosition({ top: rect.bottom, left: rect.left });
+    setMenuOpen((prev) => !prev);
+  }, []);
 
   const onMenuItemClick = useCallback(
     (action: string) => {
@@ -155,14 +152,14 @@ export default function GroupItem({
   return (
     <div className="border-0 border-[#ddd] rounded-[3px] mb-[5px]" key={`${id}-sc-toc-group-list-container`}>
       <div
-        className={`text-[#373737] font-bold text-sm flex items-center bg-white w-[97%] border-0 border-[#ddd] cursor-pointer select-none p-0.5 pl-2.5${activeLayerCount > 0 ? " italic text-[#001b96]" : ""}`}
+        className={`font-bold text-sm flex items-center bg-white w-[97%] border-0 border-[#ddd] cursor-pointer select-none p-0.5 pl-2.5 ${activeLayerCount > 0 ? "text-[#000080] font-extrabold" : "text-[#373737]"}`}
         onClick={onHeaderClick}
       >
         <div className="flex items-center shrink-0">
           {panelOpen ? (
-            <FaFolderOpen size={16} className={`opacity-70 mr-2 ${group.useRedFolder ? "text-[#cc0000]" : "text-[#666]"}`} />
+            <FaFolderOpen size={16} className={`opacity-90 mr-2 ${group.useRedFolder ? "text-[#cc0000]" : "text-[#e3b778]"}`} />
           ) : (
-            <FaFolder size={16} className={`opacity-70 mr-2 ${group.useRedFolder ? "text-[#cc0000]" : "text-[#666]"}`} />
+            <FaFolder size={16} className={`opacity-90 mr-2 ${group.useRedFolder ? "text-[#cc0000]" : "text-[#e3b778]"}`} />
           )}
         </div>
         <div className="w-[310px] ml-[5px]">{`${group.label} - (${activeLayerCount}/${group.layers.length})`}</div>
@@ -173,11 +170,7 @@ export default function GroupItem({
       </div>
 
       {menuOpen && (
-        <div
-          ref={menuRef}
-          className="fixed z-[100000]"
-          style={{ top: menuPosition.top, left: menuPosition.left }}
-        >
+        <div ref={menuRef} className="fixed z-[100000]" style={{ top: menuPosition.top, left: menuPosition.left }}>
           <MenuList>
             <MenuHeading>{`Options - ${group.label}`}</MenuHeading>
             <MenuItem onClick={() => onMenuItemClick("enable-layers")}>Turn On All Layers</MenuItem>

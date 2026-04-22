@@ -19,6 +19,7 @@ export default function LayersList({ group, searchText, onLayerChange, onLegendT
   const dragCounter = useRef(0);
 
   const moveLayer = useTOCStore((s) => s.moveLayer);
+  const sortAlpha = useTOCStore((s) => s.sortAlpha);
 
   // Update layers when group or search text changes
   useEffect(() => {
@@ -131,19 +132,24 @@ export default function LayersList({ group, searchText, onLayerChange, onLegendT
         {layers.map((layer, index) => (
           <li
             key={layer.id || `${group.value}-${layer.name}-${index}`}
-            className={`m-0 p-0 border-none bg-transparent cursor-default min-h-[3em] leading-[2em] relative ${dragOverIndex === index ? "bg-primary/5 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-0.5 before:bg-primary before:z-10" : ""}`}
+            className={`m-0 p-0 border-none bg-transparent cursor-default min-h-[3em] leading-[2em] relative ${!sortAlpha && dragOverIndex === index ? "bg-primary/5 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-0.5 before:bg-primary before:z-10" : ""}`}
             draggable={false}
-            onDragOver={(e) => handleDragOver(e, index)}
-            onDragLeave={handleDragLeave}
-            onDragEnter={(e) => handleDragEnter(e, index)}
-            onDrop={(e) => handleDrop(e, index)}
+            onDragOver={sortAlpha ? undefined : (e) => handleDragOver(e, index)}
+            onDragLeave={sortAlpha ? undefined : handleDragLeave}
+            onDragEnter={sortAlpha ? undefined : (e) => handleDragEnter(e, index)}
+            onDrop={sortAlpha ? undefined : (e) => handleDrop(e, index)}
           >
-            <div draggable onDragStart={(e) => handleDragStart(e, index)} onDragEnd={handleDragEnd} className={draggedIndex === index ? "dragging" : ""}>
+            <div
+              draggable={!sortAlpha}
+              onDragStart={sortAlpha ? undefined : (e) => handleDragStart(e, index)}
+              onDragEnd={sortAlpha ? undefined : handleDragEnd}
+              className={!sortAlpha && draggedIndex === index ? "dragging" : ""}
+            >
               <LayerItem
                 layerInfo={layer}
                 group={group}
                 searchText={searchText}
-                showDragHandle={true}
+                showDragHandle={!sortAlpha}
                 onLayerChange={onLayerChange}
                 onLegendToggle={onLegendToggle}
                 onLayerOptionsClick={onLayerOptionsClick}

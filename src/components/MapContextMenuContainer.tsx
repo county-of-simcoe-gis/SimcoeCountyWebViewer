@@ -340,10 +340,10 @@ export const MapContextMenuContainer: React.FC = () => {
 
   const handleMore = useCallback(() => {
     console.log("More options clicked at:", coordinateRef.current);
-    // Close sidebar and open More menu
+    // Close sidebar and open More menu anchored to the slim sidebar button
     closeSidebar();
-    const { openMoreMenu } = useSidebarStore.getState();
-    openMoreMenu();
+    const { isMoreMenuOpen, toggleMoreMenuFromSidebar } = useSidebarStore.getState();
+    if (!isMoreMenuOpen) toggleMoreMenuFromSidebar();
   }, [closeSidebar]);
 
   const handleSwitchToBasic = useCallback(() => {

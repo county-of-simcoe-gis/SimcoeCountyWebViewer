@@ -36,6 +36,7 @@
           "type": "ESRI_VECTOR_TILED",
           "isOverlay": true,
           "rootPath": "/basemap/ESRI_Canada_Topographic.json",
+          "minZoom": 0,
           "maxZoom": 23,
           "print": false,
           "display": true
@@ -68,6 +69,8 @@
           "type": "ESRI_VECTOR_TILED",
           "isOverlay": true,
           "rootPath": "/basemap/ESRI_LightGrey.json",
+          "minZoom": 0,
+          "maxZoom": 23,
           "print": false,
           "display": true
         }

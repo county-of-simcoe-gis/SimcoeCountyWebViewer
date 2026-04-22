@@ -17,23 +17,21 @@ export interface PanelHeaderProps {
   onHelp?: () => void;
   /** Additional control buttons (rendered in the top-right area) */
   controls?: React.ReactNode;
-  /** Whether to shorten max title width (when extra controls present) */
-  compact?: boolean;
   className?: string;
 }
 
 /**
  * Replaces legacy #sc-panel-component-header, #sc-panel-component-title, and related elements.
  */
-export const PanelHeader: React.FC<PanelHeaderProps> = ({ title, iconSrc, icon, onClose, onHelp, controls, compact = false, className = "" }) => {
+export const PanelHeader: React.FC<PanelHeaderProps> = ({ title, iconSrc, icon, onClose, onHelp, controls, className = "" }) => {
   return (
     <div className={`w-full h-[43px] shrink-0 overflow-visible border-b border-base-300 ${className}`}>
-      <div className="p-1.5 pt-1 mt-[3px] text-lg font-bold text-neutral bg-[#ececec] overflow-visible relative min-h-[29px] [text-shadow:0.5px_0.5px_#fff]">
-        <div className="w-full overflow-hidden max-h-[29px] after:content-[''] after:table after:clear-both">
-          {(icon || iconSrc) && <div className="w-9 mt-[5px] float-left flex items-center justify-center">{icon || <Image src={iconSrc!} alt="" width={32} height={32} />}</div>}
+      <div className="p-1.5 pt-1 mt-[3px] text-[17px] font-bold text-neutral bg-[#ececec] overflow-visible relative min-h-[29px] [text-shadow:0.5px_0.5px_#fff]">
+        <div className="w-full flex items-center gap-1.5 max-h-[29px]">
+          {(icon || iconSrc) && <div className="w-9 shrink-0 flex items-center justify-center">{icon || <Image src={iconSrc!} alt="" width={32} height={32} />}</div>}
 
           {onHelp && (
-            <button onClick={onHelp} className="bg-secondary border border-gray-300/70 p-px rounded-sm h-6 w-6 ml-1.5 float-left cursor-pointer" aria-label="Help">
+            <button onClick={onHelp} className="bg-secondary border border-gray-300/70 p-px rounded-sm h-6 w-6 shrink-0 cursor-pointer" aria-label="Help">
               <svg className="text-white h-[18px] w-[18px] p-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fillRule="evenodd"
@@ -44,14 +42,14 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({ title, iconSrc, icon, 
             </button>
           )}
 
-          <span className={`float-left pt-0.5 whitespace-nowrap overflow-hidden text-ellipsis ${compact ? "max-w-[225px]" : "max-w-[295px]"}`}>{title}</span>
+          <span className="flex-1 min-w-0 pt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">{title}</span>
 
-          <div className="float-right cursor-pointer h-[29px] text-center relative flex items-center gap-0.5">
+          <div className="shrink-0 cursor-pointer h-[29px] text-center flex items-center gap-0.5">
             {controls}
             {onClose && (
               <button
                 onClick={onClose}
-                className="bg-secondary border border-secondary p-1 rounded-sm ml-1.5 cursor-pointer inline-flex items-center justify-center align-top w-6 h-6 text-white"
+                className="bg-secondary border border-secondary p-1 rounded-sm cursor-pointer inline-flex items-center justify-center align-top w-6 h-6 text-white"
                 aria-label="Close panel"
               >
                 <FaTimes />

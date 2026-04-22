@@ -811,7 +811,7 @@ export default function BasemapSwitcher() {
     <>
       <div
         id="sc-basemap-main-container"
-        className={`absolute right-[2px] top-0 w-[60px] bg-white border border-[#ccc] p-[2px] opacity-90 rounded z-[2] outline-none hover:opacity-100${!map ? " hidden" : ""}`}
+        className={`absolute right-[2px] top-0 w-[74px] bg-white border border-[#ccc] p-[2px] opacity-90 rounded z-[2] outline-none hover:opacity-100${!map ? " hidden" : ""}`}
       >
         <div className="relative">
           <button
@@ -820,17 +820,17 @@ export default function BasemapSwitcher() {
             onClick={onBasemapImageClick}
             title={`Click to select ${getCurrentBasemapName()}`}
           >
-            <Image src={getCurrentBasemapImage()} alt={getCurrentBasemapName()} width={56} height={39} className="block" style={{ width: "100%", height: "auto", borderRadius: 0 }} />
+            <Image src={getCurrentBasemapImage()} alt={getCurrentBasemapName()} width={70} height={49} className="block" style={{ width: "100%", height: "auto", borderRadius: 0 }} />
           </button>
 
           {/* Settings button overlaid on top of image for imagery */}
           {activeButton === "imagery" && (
             <button
-              className="absolute -bottom-0.5 -right-[3px] !bg-[#e0e0e0] !border !border-black rounded-sm cursor-pointer !p-px flex items-center justify-center text-[#333] transition-all duration-200 !w-3 !h-3 z-[3] hover:bg-[#d0d0d0] hover:text-black hover:scale-110"
+              className="absolute bottom-0 right-0 !bg-[#e0e0e0] !border !border-black rounded-sm cursor-pointer !p-px flex items-center justify-center text-[#333] transition-all duration-200 !w-5 !h-5 z-[3] hover:bg-[#d0d0d0] hover:text-black hover:scale-110"
               onClick={onSettingsClick}
               title="Imagery Settings"
             >
-              <FaCog size={8} />
+              <FaCog size={14} className="ml-[1px]" />
             </button>
           )}
         </div>
@@ -838,7 +838,7 @@ export default function BasemapSwitcher() {
 
       {/* Imagery Slider Panel */}
       <div
-        className={`basemap-slider-container absolute right-[2px] w-[88px] h-[280px] top-[45px] bg-white rounded z-[2] border border-[#ccc] p-2 opacity-90 select-none transition-opacity duration-200 hover:opacity-100${!imageryPanelOpen ? " hidden" : ""}`}
+        className={`basemap-slider-container absolute right-[2px] w-[88px] h-[280px] top-[58px] bg-white rounded z-[2] border border-[#ccc] p-2 opacity-90 select-none transition-opacity duration-200 hover:opacity-100${!imageryPanelOpen ? " hidden" : ""}`}
       >
         <label className="block text-[8pt] ml-2.5 pb-[5px] pt-0">
           <input className="w-[13px] h-[13px] p-0 m-0 align-middle relative -top-px scale-110" type="checkbox" checked={streetsCheckbox} onChange={onStreetsCheckbox} />

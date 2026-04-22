@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import Image from "next/image";
 import { FaBars, FaEnvelope, FaQuestionCircle } from "react-icons/fa";
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { useMapStore } from "@/stores/mapStore";
@@ -9,6 +8,7 @@ import { useAppStore } from "@/stores/appStore";
 import Search from "@/components/Search";
 import SearchZoom from "@/components/SearchZoom";
 import ProfileButton from "@/components/ProfileButton";
+import AppImage from "@/components/shared/AppImage";
 import { showFeedbackWindow } from "@/utils/mapHelpers";
 
 export default function Header() {
@@ -68,7 +68,7 @@ export default function Header() {
 
       {/* Logo */}
       <div className="flex items-center mr-2.5 shrink-0">
-        <Image src={getLogoImage()} alt={config?.title || "Simcoe County"} width={92} height={45} className="w-[92px] h-[45px] object-contain" />
+        <AppImage src={getLogoImage()} alt={config?.title || "Simcoe County"} height={50} className="h-[50px] object-contain" />
       </div>
 
       {/* Search Container - takes remaining space */}

@@ -92,6 +92,7 @@ const dynamicControlImports = {
   RotateControl: () => import("@/components/map/controls/RotateControl").then((m) => ({ default: m.RotateControl })),
   FullscreenControl: () => import("@/components/map/controls/FullscreenControl").then((m) => ({ default: m.FullscreenControl })),
   AttributionControl: () => import("@/components/map/controls/AttributionControl").then((m) => ({ default: m.AttributionControl })),
+  MoreMenuButton: () => import("@/components/map/controls/MoreMenuButton").then((m) => ({ default: m.MoreMenuButton })),
 };
 
 // Create lazy components
@@ -106,6 +107,7 @@ const LazyZoomControls = lazy(dynamicControlImports.ZoomControls);
 const LazyRotateControl = lazy(dynamicControlImports.RotateControl);
 const LazyFullscreenControl = lazy(dynamicControlImports.FullscreenControl);
 const LazyAttributionControl = lazy(dynamicControlImports.AttributionControl);
+const LazyMoreMenuButton = lazy(dynamicControlImports.MoreMenuButton);
 
 // Loading placeholder component
 const ControlLoadingPlaceholder = () => <div className="w-8 h-8 bg-gray-100 rounded" />;
@@ -665,19 +667,7 @@ export default function MapContainer() {
       // they stay on the map instance which lives in _hmrRegistry.
       // If the page actually navigates away, the whole window is discarded anyway.
     };
-  }, [
-    setMap,
-    setMapControls,
-    addLoadedItem,
-    setMapLoading,
-    setCurrentExtent,
-    setCurrentZoom,
-    setCurrentCenter,
-    initExtentHistory,
-    saveCurrentExtentToHistory,
-    initControlVisibility,
-    urlParamContext,
-  ]);
+  }, [setMap, setMapControls, addLoadedItem, setMapLoading, setCurrentExtent, setCurrentZoom, setCurrentCenter, initExtentHistory, saveCurrentExtentToHistory, initControlVisibility, urlParamContext]);
 
   // Utility functions for URL parameter handling
   const flashPoint = useCallback(
@@ -1038,6 +1028,15 @@ export default function MapContainer() {
     );
   }, []);
 
+  const MoreMenuButtonWrapper = useCallback((_props: { map: Map }) => {
+    void _props;
+    return (
+      <Suspense fallback={<ControlLoadingPlaceholder />}>
+        <LazyMoreMenuButton />
+      </Suspense>
+    );
+  }, []);
+
   const RotateControlWrapper = useCallback(({ map }: { map: Map }) => {
     return (
       <Suspense fallback={<ControlLoadingPlaceholder />}>
@@ -1071,34 +1070,41 @@ export default function MapContainer() {
         order: 1,
         enabled: controlVisibility.gitHubButton,
       },
+      moreMenu: {
+        component: MoreMenuButtonWrapper,
+        zone: "top-left",
+        order: 2,
+        enabled: true,
+      },
       zoomControls: {
         component: ZoomControlsWrapper,
         zone: "top-left",
-        order: 1,
+        order: 3,
         enabled: controlVisibility.zoomInOut,
       },
+
       currentLocation: {
         component: CurrentLocationWrapper,
         zone: "top-left",
-        order: 2,
+        order: 4,
         enabled: controlVisibility.currentLocation,
       },
       extentHistory: {
         component: ExtentHistoryWrapper,
         zone: "top-left",
-        order: 3,
+        order: 5,
         enabled: controlVisibility.extentHistory,
       },
       zoomExtent: {
         component: ZoomToExtentWrapper,
         zone: "top-left",
-        order: 4,
+        order: 6,
         enabled: controlVisibility.zoomExtent,
       },
       grid: {
         component: GridWrapper,
         zone: "top-left",
-        order: 5,
+        order: 7,
         enabled: controlVisibility.grid,
       },
 
@@ -1150,6 +1156,7 @@ export default function MapContainer() {
     [
       controlVisibility,
       ZoomControlsWrapper,
+      MoreMenuButtonWrapper,
       CurrentLocationWrapper,
       ExtentHistoryWrapper,
       ZoomToExtentWrapper,

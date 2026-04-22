@@ -69,6 +69,8 @@ beforeEach(() => {
     activePanelId: null,
     panelMinimized: false,
     isMoreMenuOpen: false,
+    moreMenuAnchor: "sidebar",
+    moreMenuPosition: null,
     pendingActivation: null,
   });
 });
@@ -338,6 +340,40 @@ describe("sidebarStore", () => {
 
       toggleMoreMenu();
       expect(useSidebarStore.getState().isMoreMenuOpen).toBe(false);
+    });
+
+    it('has default anchor "sidebar" and null position', () => {
+      const state = useSidebarStore.getState();
+      expect(state.moreMenuAnchor).toBe("sidebar");
+      expect(state.moreMenuPosition).toBeNull();
+    });
+
+    it("openMoreMenuAtMapControl sets anchor, position, and opens menu", () => {
+      useSidebarStore.getState().openMoreMenuAtMapControl({ top: 120, left: 50 });
+      const state = useSidebarStore.getState();
+      expect(state.isMoreMenuOpen).toBe(true);
+      expect(state.moreMenuAnchor).toBe("mapControl");
+      expect(state.moreMenuPosition).toEqual({ top: 120, left: 50 });
+    });
+
+    it("toggleMoreMenuFromSidebar resets anchor to 'sidebar' and clears position", () => {
+      // Start as if it was opened from the map control
+      useSidebarStore.setState({
+        isMoreMenuOpen: false,
+        moreMenuAnchor: "mapControl",
+        moreMenuPosition: { top: 10, left: 20 },
+      });
+
+      useSidebarStore.getState().toggleMoreMenuFromSidebar();
+      let state = useSidebarStore.getState();
+      expect(state.isMoreMenuOpen).toBe(true);
+      expect(state.moreMenuAnchor).toBe("sidebar");
+      expect(state.moreMenuPosition).toBeNull();
+
+      useSidebarStore.getState().toggleMoreMenuFromSidebar();
+      state = useSidebarStore.getState();
+      expect(state.isMoreMenuOpen).toBe(false);
+      expect(state.moreMenuAnchor).toBe("sidebar");
     });
   });
 
