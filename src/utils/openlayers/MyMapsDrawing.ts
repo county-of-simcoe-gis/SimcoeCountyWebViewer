@@ -26,7 +26,7 @@ export class MyMapsDrawingManager {
   private drawInteraction: Draw | null = null;
   private modifyInteraction: Modify | null = null;
   private translateInteraction: Translate | null = null;
-  private layerName = "MyMaps Drawing Layer";
+  public static readonly LAYER_NAME = "MyMaps Drawing Layer";
 
   // Highlight layer for hover effects (like old app)
   private highlightLayer: VectorLayer<VectorSource> | null = null;
@@ -35,23 +35,19 @@ export class MyMapsDrawingManager {
   // Callbacks from MyMaps component
   private onFeatureDrawn: (feature: Feature) => void;
   private onFeatureModified: (feature: Feature) => void;
-  private onFeatureClicked: (feature: Feature, coordinate: number[]) => void;
 
   constructor(
     map: Map,
     callbacks: {
       onFeatureDrawn: (feature: Feature) => void;
       onFeatureModified: (feature: Feature) => void;
-      onFeatureClicked: (feature: Feature, coordinate: number[]) => void;
     },
   ) {
     this.map = map;
     this.onFeatureDrawn = callbacks.onFeatureDrawn;
     this.onFeatureModified = callbacks.onFeatureModified;
-    this.onFeatureClicked = callbacks.onFeatureClicked;
 
     this.initializeLayer();
-    this.setupMapClickHandler();
   }
 
   private initializeLayer() {
@@ -59,7 +55,7 @@ export class MyMapsDrawingManager {
     const existingLayer = this.map
       .getLayers()
       .getArray()
-      .find((layer) => layer.get("name") === this.layerName) as VectorLayer<VectorSource>;
+      .find((layer) => layer.get("name") === MyMapsDrawingManager.LAYER_NAME) as VectorLayer<VectorSource>;
 
     if (existingLayer) {
       this.vectorSource = existingLayer.getSource()!;
@@ -72,7 +68,7 @@ export class MyMapsDrawingManager {
 
       this.vectorLayer.setProperties({
         disableParcelClick: true,
-        name: this.layerName,
+        name: MyMapsDrawingManager.LAYER_NAME,
       });
 
       // Note: Layer will be registered with LayerManager by MyMapsService component
@@ -81,43 +77,13 @@ export class MyMapsDrawingManager {
     }
   }
 
-  private setupMapClickHandler() {
-    this.map.on("singleclick", (evt) => {
-      if (this.drawInteraction || this.isEditing()) {
-        return;
-      }
-
-      // Check if popup is active and prevent map interactions
-      const popupActive = (window as unknown as { popupActive?: boolean }).popupActive;
-
-      if (popupActive) {
-        return;
-      }
-
-      console.log("🖱️ Map clicked at pixel:", evt.pixel);
-
-      this.map.forEachFeatureAtPixel(
-        evt.pixel,
-        (feature, layer) => {
-          if (layer.get("name") === this.layerName) {
-            this.onFeatureClicked(feature as Feature, evt.coordinate);
-          }
-          return;
-        },
-        {
-          layerFilter: (layer) => layer.get("name") === this.layerName,
-        },
-      );
-    });
-  }
-
   public startDrawing(drawType: string, drawColor: string, drawStyle?: Style) {
     this.clearDrawing();
 
     if (drawType === "Cancel" || drawType === "Eraser") return;
 
     // Signal other interactions that drawing is active
-    useMapStore.getState().setIsDrawingOrEditing(true);
+    useMapStore.getState().setActiveToolId("mymaps-draw");
 
     // Convert draw type for OpenLayers
     let olDrawType: GeometryType = drawType as GeometryType;
@@ -295,7 +261,7 @@ export class MyMapsDrawingManager {
     }
     // Only clear the flag if we're also not editing
     if (!this.isEditing()) {
-      useMapStore.getState().setIsDrawingOrEditing(false);
+      useMapStore.getState().setActiveToolId(null);
     }
   }
 
@@ -303,7 +269,7 @@ export class MyMapsDrawingManager {
     this.clearEditing();
 
     // Signal other interactions that editing is active
-    useMapStore.getState().setIsDrawingOrEditing(true);
+    useMapStore.getState().setActiveToolId("mymaps-edit");
 
     if (mode === "vertices") {
       this.modifyInteraction = new Modify({
@@ -345,7 +311,7 @@ export class MyMapsDrawingManager {
     }
     // Only clear the flag if we're also not drawing
     if (!this.drawInteraction) {
-      useMapStore.getState().setIsDrawingOrEditing(false);
+      useMapStore.getState().setActiveToolId(null);
     }
   }
 
@@ -697,7 +663,6 @@ export class MyMapsDrawingManager {
     }
 
     if (itemInfo.labelVisible && itemInfo.label) {
-
       // Store the label in the feature property first
       feature.setProperties({
         labelVisible: true,
@@ -913,7 +878,6 @@ export class MyMapsDrawingManager {
 
   // Create text style matching the old app's exact implementation
   private createTextStyle(text: string, fontSize: string = "15px", fontWeight: string = "bold", rotation: number = 0, offsetY: number = -8): Text {
-
     // OLD APP EXACT PARAMETERS:
     // helpers.createTextStyle(feature, "label", undefined, undefined, undefined,
     //   "15px", undefined, -8, "bold", undefined, undefined,
@@ -952,14 +916,37 @@ export class MyMapsDrawingManager {
 
     feature.setProperties({ label: newLabel });
 
-    // If label is currently visible, update the text style
+    // If label is currently visible, update only the label text while preserving style
     if (feature.get("labelVisible")) {
-      const style = feature.getStyle() as Style;
-      if (style && style.getText()) {
-        const newTextStyle = this.createTextStyle(newLabel, "15px", "bold", feature.get("labelRotation") || 0, -8);
+      const featureStyle = feature.getStyle();
 
-        style.setText(newTextStyle);
-        feature.setStyle(style);
+      if (featureStyle instanceof Style) {
+        const textStyle = featureStyle.getText();
+        if (textStyle) {
+          textStyle.setText(newLabel);
+          featureStyle.setText(textStyle);
+          feature.setStyle(featureStyle);
+          this.vectorSource.changed();
+        }
+      } else if (Array.isArray(featureStyle)) {
+        const styleWithText = featureStyle.find((s) => s instanceof Style && !!s.getText());
+        if (styleWithText) {
+          const textStyle = styleWithText.getText();
+          if (textStyle) {
+            textStyle.setText(newLabel);
+            styleWithText.setText(textStyle);
+            feature.setStyle(featureStyle);
+            this.vectorSource.changed();
+          }
+        }
+      } else {
+        // Fallback when style isn't resolved to concrete Style object(s) yet
+        const fallbackStyle = this.createTextStyle(newLabel, "14px", "bold", feature.get("labelRotation") || 0, -8);
+        feature.setStyle(
+          new Style({
+            text: fallbackStyle,
+          }),
+        );
         this.vectorSource.changed();
       }
     }
@@ -972,24 +959,45 @@ export class MyMapsDrawingManager {
 
     feature.setProperties({ labelRotation: rotation });
 
-    // If label is currently visible, update the rotation
+    // If label is currently visible, update only rotation while preserving font/size/colors
     if (feature.get("labelVisible")) {
-      const style = feature.getStyle() as Style;
-      if (style && style.getText()) {
-        const label = feature.get("label") || "";
+      // Apply bearing rotation adjustment for Bearing and Measure tools (like original app)
+      let displayRotation = rotation;
+      const drawType = feature.get("drawType") || feature.get("originalDrawType");
+      if (drawType === "Bearing" || drawType === "Measure") {
+        // Use the same rotation logic as original app: bearing > 180 ? bearing + 90 : bearing - 90
+        displayRotation = rotation > 180 ? rotation + 90 : rotation - 90;
+      }
+      const rotationInRadians = displayRotation * (Math.PI / 180);
 
-        // Apply bearing rotation adjustment for Bearing and Measure tools (like original app)
-        let displayRotation = rotation;
-        const drawType = feature.get("drawType") || feature.get("originalDrawType");
-        if (drawType === "Bearing" || drawType === "Measure") {
-          // Use the same rotation logic as original app: bearing > 180 ? bearing + 90 : bearing - 90
-          displayRotation = rotation > 180 ? rotation + 90 : rotation - 90;
+      const featureStyle = feature.getStyle();
+      if (featureStyle instanceof Style) {
+        const textStyle = featureStyle.getText();
+        if (textStyle) {
+          textStyle.setRotation(rotationInRadians);
+          featureStyle.setText(textStyle);
+          feature.setStyle(featureStyle);
+          this.vectorSource.changed();
         }
-
-        const newTextStyle = this.createTextStyle(label, "15px", "bold", displayRotation, -8);
-
-        style.setText(newTextStyle);
-        feature.setStyle(style);
+      } else if (Array.isArray(featureStyle)) {
+        const styleWithText = featureStyle.find((s) => s instanceof Style && !!s.getText());
+        if (styleWithText) {
+          const textStyle = styleWithText.getText();
+          if (textStyle) {
+            textStyle.setRotation(rotationInRadians);
+            styleWithText.setText(textStyle);
+            feature.setStyle(featureStyle);
+            this.vectorSource.changed();
+          }
+        }
+      } else {
+        const label = feature.get("label") || "";
+        const fallbackTextStyle = this.createTextStyle(label, "14px", "bold", displayRotation, -8);
+        feature.setStyle(
+          new Style({
+            text: fallbackTextStyle,
+          }),
+        );
         this.vectorSource.changed();
       }
     }

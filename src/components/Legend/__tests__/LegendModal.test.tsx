@@ -12,6 +12,15 @@ vi.mock("react-dom", async () => {
   };
 });
 
+// Mock react-icons used by FloatingWindow and Legend
+vi.mock("react-icons/fa", () => ({
+  FaTimes: (props: any) => <div data-testid="times-icon" {...props} />,
+  FaExpand: (props: any) => <div data-testid="expand-icon" {...props} />,
+  FaCompress: (props: any) => <div data-testid="compress-icon" {...props} />,
+  FaPrint: (props: any) => <div data-testid="print-icon" {...props} />,
+  FaChevronDown: (props: any) => <div data-testid="chevron-down-icon" {...props} />,
+}));
+
 describe("LegendModal", () => {
   beforeEach(() => {
     // Reset the store before each test
@@ -46,7 +55,9 @@ describe("LegendModal", () => {
     useLegendStore.setState({ isOpen: true, allGroups: testGroups, selectedGroups: testGroups });
     render(<LegendModal />);
 
-    expect(screen.getByText("Legend")).toBeInTheDocument();
+    // "Legend" appears in both FloatingWindow header and Legend component heading
+    const legendElements = screen.getAllByText("Legend");
+    expect(legendElements.length).toBeGreaterThan(0);
     // Test Group appears in both the multiselect dropdown and the fieldset legend
     const testGroupElements = screen.getAllByText("Test Group");
     expect(testGroupElements.length).toBeGreaterThan(0);
@@ -64,7 +75,7 @@ describe("LegendModal", () => {
     useLegendStore.setState({ isOpen: true, allGroups: testGroups, selectedGroups: testGroups });
     render(<LegendModal />);
 
-    const closeButton = screen.getByLabelText("Close legend");
+    const closeButton = screen.getByTitle("Close (ESC)");
     fireEvent.click(closeButton);
 
     expect(useLegendStore.getState().isOpen).toBe(false);
@@ -144,7 +155,7 @@ describe("LegendModal", () => {
     render(<LegendModal />);
 
     await waitFor(() => {
-      expect(screen.getByText("Legend")).toBeInTheDocument();
+      expect(screen.getAllByText("Legend").length).toBeGreaterThan(0);
     });
 
     // Close modal

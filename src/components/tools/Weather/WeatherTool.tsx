@@ -2,8 +2,6 @@
 
 import React, { useState } from "react";
 import PanelComponent from "@/components/PanelComponent";
-import { Tabs, TabList, Tab, TabPanel } from "react-tabs";
-// react-tabs styles are imported globally in src/app/globals.css
 import WeatherRadar from "./WeatherRadar";
 import WeatherForecast from "./WeatherForecast";
 
@@ -22,24 +20,21 @@ export default function WeatherTool({ name = "Weather", helpLink, hideHeader = f
 
   return (
     <PanelComponent name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={onClose} onSidebarVisibility={onSidebarVisibility}>
-      <Tabs selectedIndex={activeTab} onSelect={setActiveTab} className="w-full flex flex-col h-full">
-        <TabList className="tabs tabs-bordered sticky top-0 bg-base-100 z-50">
-          <Tab className="tab text-sm" selectedClassName="tab-active">
+      <div className="w-full flex flex-col h-full">
+        <div role="tablist" className="tabs tabs-box sticky top-0 z-50 mb-3">
+          <button role="tab" className={`tab${activeTab === 0 ? " tab-active" : ""}`} onClick={() => setActiveTab(0)}>
             Radar
-          </Tab>
-          <Tab className="tab text-sm" selectedClassName="tab-active">
+          </button>
+          <button role="tab" className={`tab${activeTab === 1 ? " tab-active" : ""}`} onClick={() => setActiveTab(1)}>
             Forecast
-          </Tab>
-        </TabList>
+          </button>
+        </div>
 
-        <TabPanel className=" overflow-auto pt-4">
-          <WeatherRadar />
-        </TabPanel>
-
-        <TabPanel className=" overflow-auto pt-4">
-          <WeatherForecast />
-        </TabPanel>
-      </Tabs>
+        <div className="overflow-auto flex-1">
+          {activeTab === 0 && <WeatherRadar />}
+          {activeTab === 1 && <WeatherForecast />}
+        </div>
+      </div>
     </PanelComponent>
   );
 }

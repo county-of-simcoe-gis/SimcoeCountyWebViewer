@@ -23,9 +23,11 @@ vi.mock("@/hooks/useConfig", () => ({
   }),
 }));
 
-// Mock react-icons
+// Mock react-icons (includes icons used by FloatingWindow: FaTimes, FaExpand, FaCompress)
 vi.mock("react-icons/fa", () => ({
   FaTimes: (props: any) => <div data-testid="times-icon" {...props} />,
+  FaExpand: (props: any) => <div data-testid="expand-icon" {...props} />,
+  FaCompress: (props: any) => <div data-testid="compress-icon" {...props} />,
   FaPrint: (props: any) => <div data-testid="print-icon" {...props} />,
   FaExternalLinkAlt: (props: any) => <div data-testid="external-link-icon" {...props} />,
 }));
@@ -80,8 +82,6 @@ describe("LayerInfoModal", () => {
 
   afterEach(() => {
     vi.clearAllMocks();
-    // Reset body overflow
-    document.body.style.overflow = "";
   });
 
   describe("Modal Visibility", () => {
@@ -202,7 +202,6 @@ describe("LayerInfoModal", () => {
 
       await waitFor(() => {
         const closeButton = screen.getByTestId("times-icon").parentElement!;
-        expect(closeButton).toHaveAttribute("aria-label", "Close layer info");
         expect(closeButton).toHaveAttribute("title", "Close (ESC)");
       });
     });
@@ -248,93 +247,6 @@ describe("LayerInfoModal", () => {
 
       // Modal should still be open
       expect(useLayerInfoStore.getState().isOpen).toBe(true);
-    });
-  });
-
-  describe("Overlay Click", () => {
-    it("closes modal when clicking on overlay", async () => {
-      useLayerInfoStore.getState().openLayerInfo("https://example.com/layer");
-
-      const { container } = render(<LayerInfoModal />);
-
-      await waitFor(() => {
-        expect(screen.getByText("Test Layer Title")).toBeInTheDocument();
-      });
-
-      // Click on the overlay (the outermost div)
-      const overlay = container.firstChild as HTMLElement;
-      fireEvent.click(overlay);
-
-      await waitFor(() => {
-        expect(useLayerInfoStore.getState().isOpen).toBe(false);
-      });
-    });
-
-    it("does not close modal when clicking on content", async () => {
-      useLayerInfoStore.getState().openLayerInfo("https://example.com/layer");
-
-      render(<LayerInfoModal />);
-
-      await waitFor(() => {
-        expect(screen.getByText("Test Layer Title")).toBeInTheDocument();
-      });
-
-      // Click on the content
-      const title = screen.getByText("Test Layer Title");
-      fireEvent.click(title);
-
-      // Modal should still be open
-      expect(useLayerInfoStore.getState().isOpen).toBe(true);
-    });
-  });
-
-  describe("Body Scroll Prevention", () => {
-    it("prevents body scroll when modal is open", async () => {
-      expect(document.body.style.overflow).toBe("");
-
-      useLayerInfoStore.getState().openLayerInfo("https://example.com/layer");
-
-      render(<LayerInfoModal />);
-
-      await waitFor(() => {
-        expect(document.body.style.overflow).toBe("hidden");
-      });
-    });
-
-    it("restores body scroll when modal is closed", async () => {
-      useLayerInfoStore.getState().openLayerInfo("https://example.com/layer");
-
-      const { unmount } = render(<LayerInfoModal />);
-
-      await waitFor(() => {
-        expect(document.body.style.overflow).toBe("hidden");
-      });
-
-      // Close modal
-      act(() => {
-        useLayerInfoStore.getState().closeLayerInfo();
-      });
-
-      await waitFor(() => {
-        expect(document.body.style.overflow).toBe("");
-      });
-
-      unmount();
-      expect(document.body.style.overflow).toBe("");
-    });
-
-    it("restores body scroll on component unmount", async () => {
-      useLayerInfoStore.getState().openLayerInfo("https://example.com/layer");
-
-      const { unmount } = render(<LayerInfoModal />);
-
-      await waitFor(() => {
-        expect(document.body.style.overflow).toBe("hidden");
-      });
-
-      unmount();
-
-      expect(document.body.style.overflow).toBe("");
     });
   });
 
@@ -451,8 +363,6 @@ describe("LayerInfoModal", () => {
       await waitFor(() => {
         expect(screen.queryByText("Test Layer Title")).not.toBeInTheDocument();
       });
-
-      expect(document.body.style.overflow).toBe("");
     });
   });
 });

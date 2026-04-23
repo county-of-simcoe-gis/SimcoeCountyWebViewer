@@ -31,7 +31,7 @@ export class FeatureHelpers {
       case OL_DATA_TYPES.GPX:
         return new GPX();
       case OL_DATA_TYPES.KML:
-        return new KML();
+        return new KML({ extractStyles: true, showPointNames: true });
       case OL_DATA_TYPES.OSMXML:
         // OSMXML format is deprecated in newer OpenLayers versions
         return undefined;

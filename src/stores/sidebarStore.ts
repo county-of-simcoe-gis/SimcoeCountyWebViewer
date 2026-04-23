@@ -85,6 +85,15 @@ interface SidebarState {
 }
 
 function convertToSidebarItem(component: SidebarComponent, type: "theme" | "tool"): SidebarItem {
+  let config = {};
+  try {
+    if (component.config) {
+      config = typeof component.config === "string" ? JSON.parse(component.config) : component.config;
+    }
+  } catch (e) {
+    console.warn(`Failed to parse config for ${component.name}:`, e);
+  }
+
   return {
     id: component.id.toString(),
     name: component.name,
@@ -94,7 +103,7 @@ function convertToSidebarItem(component: SidebarComponent, type: "theme" | "tool
     description: component.description,
     helpLink: component.helpLink,
     enabled: component.enabled !== false && component.disable !== true, // Default to enabled unless explicitly disabled
-    config: {},
+    config,
     secure: component.secure ?? false,
   };
 }

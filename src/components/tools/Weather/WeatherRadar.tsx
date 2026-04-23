@@ -490,7 +490,7 @@ export default function WeatherRadar(): React.ReactElement {
           disabled={isPlaying}
           title={isPlaying ? "Auto refresh disabled while playing" : ""}
         />
-        <span>Automatically refresh every minute.</span>
+        <span className="text-sm">Automatically refresh every minute.</span>
 
         <button className="btn btn-xs btn-outline ml-auto" onClick={() => fetchRadarImages("manual")} disabled={isPlaying} aria-label="Refresh radar" title="Refresh now">
           <FaSyncAlt className={isLoading ? "animate-spin" : ""} />
@@ -500,10 +500,10 @@ export default function WeatherRadar(): React.ReactElement {
       <div className="divider my-1" />
 
       <div className="space-y-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 text-xs">
           <button
             type="button"
-            className="btn btn-sm btn-primary"
+            className="btn btn-xs btn-primary"
             onClick={() => setIsPlaying((p) => !p)}
             disabled={frameDatesRef.current.length === 0}
             aria-label={isPlaying ? "Pause playback" : "Play playback"}
@@ -530,26 +530,24 @@ export default function WeatherRadar(): React.ReactElement {
       </div>
 
       <div className="p-3 rounded-lg border border-base-300 bg-base-200 space-y-3">
-        <div className="grid grid-cols-[auto,1fr] gap-3 items-start">
-          <div className="text-sm font-semibold pt-1">Time Settings:</div>
-          <div className="space-y-1">
-            <label className="label cursor-pointer justify-start gap-2 p-0">
-              <input type="radio" name="timesetting" className="radio radio-sm" checked={timeSetting === "last3hours"} onChange={() => setTimeSetting("last3hours")} disabled={isPlaying} />
-              <span className="label-text">Last 3 Hours</span>
-            </label>
-            <label className="label cursor-pointer justify-start gap-2 p-0">
-              <input type="radio" name="timesetting" className="radio radio-sm" checked={timeSetting === "custom"} onChange={() => setTimeSetting("custom")} disabled={isPlaying} />
-              <span className="label-text">Custom</span>
-            </label>
-          </div>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+          <span className="text-sm font-semibold">Time Settings:</span>
+          <label className="label cursor-pointer justify-start gap-2 p-0">
+            <input type="radio" name="timesetting" className="radio radio-sm" checked={timeSetting === "last3hours"} onChange={() => setTimeSetting("last3hours")} disabled={isPlaying} />
+            <span className="label-text">Last 3 Hours</span>
+          </label>
+          <label className="label cursor-pointer justify-start gap-2 p-0">
+            <input type="radio" name="timesetting" className="radio radio-sm" checked={timeSetting === "custom"} onChange={() => setTimeSetting("custom")} disabled={isPlaying} />
+            <span className="label-text">Custom</span>
+          </label>
         </div>
 
         <div className={timeSetting === "last3hours" ? "opacity-50 pointer-events-none" : ""}>
-          <div className="grid grid-cols-1 gap-2">
-            <div className="grid grid-cols-[60px,1fr] items-center gap-2">
-              <div className="text-sm">Start:</div>
+          <div className="flex items-start gap-2 ">
+            <div className="flex flex-wrap items-center gap-2 flex-1">
+              <span className="text-sm font-semibold">Start:</span>
               <DatePicker
-                className="input input-sm input-bordered w-full"
+                className="input input-xs input-bordered"
                 selected={startDate}
                 onChange={(value: Date | null) => {
                   if (!value) return;
@@ -565,14 +563,11 @@ export default function WeatherRadar(): React.ReactElement {
                 }}
                 showTimeSelect
                 timeIntervals={10}
-                dateFormat="MMMM d, yyyy h:mm aa"
+                dateFormat="MMM d, yyyy h:mm aa"
               />
-            </div>
-
-            <div className="grid grid-cols-[60px,1fr] items-center gap-2">
-              <div className="text-sm">End:</div>
+              <span className="text-sm font-semibold">End:</span>
               <DatePicker
-                className="input input-sm input-bordered w-full"
+                className="input input-xs input-bordered"
                 selected={endDate}
                 onChange={(value: Date | null) => {
                   if (!value) return;
@@ -587,11 +582,10 @@ export default function WeatherRadar(): React.ReactElement {
                 }}
                 showTimeSelect
                 timeIntervals={10}
-                dateFormat="MMMM d, yyyy h:mm aa"
+                dateFormat="MMM d, yyyy h:mm aa"
               />
             </div>
-
-            <button className="btn btn-sm btn-outline w-[90px]" onClick={handleUpdate} disabled={isPlaying}>
+            <button className="btn btn-xs btn-outline shrink-0" onClick={handleUpdate} disabled={isPlaying}>
               Update
             </button>
           </div>

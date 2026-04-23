@@ -18,15 +18,9 @@ import { Vector as VectorSource } from "ol/source";
 import { Point } from "ol/geom";
 import { Feature } from "ol";
 import { Style, Icon, Fill, Stroke, Circle as CircleStyle } from "ol/style";
-import { GeoJSON } from "ol/format";
-import { getArea } from "ol/sphere";
-import { getAxiosClient } from "@/lib/axiosInstance";
 import { showFeedbackWindow } from "@/utils/mapHelpers";
 import { featureToGeoJSON } from "@/utils/myMapsHelpers";
-import { getHighlightStyles } from "@/utils/highlightStyles";
 import Identify from "@/components/Identify/Identify";
-import ResultsPopup, { Result, createPropertyResult, createCondoResult } from "@/components/ResultsPopup";
-import { getAxiosClient as getAxiosClientUtil } from "@/lib/axiosInstance";
 
 export const MapContextMenuContainer: React.FC = () => {
   const map = useMapStore((s) => s.map);
@@ -35,8 +29,6 @@ export const MapContextMenuContainer: React.FC = () => {
   const setActiveTabByName = useSidebarStore((s) => s.setActiveTabByName);
   const closeSidebar = useSidebarStore((s) => s.closeSidebar);
   const setReport = useReportsStore((s) => s.setReport);
-  const showPopup = usePopupStore((s) => s.show);
-  const hidePopup = usePopupStore((s) => s.hide);
   const addItem = useMyMapsStore((s) => s.addItem);
   const drawColor = useMyMapsStore((s) => s.drawColor);
   const { registerHandler, unregisterHandler } = useInteractionManager();
@@ -50,190 +42,12 @@ export const MapContextMenuContainer: React.FC = () => {
   const coordinateRef = useRef<number[]>([0, 0]);
   const identifyIconLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const identifyIconLayerIdRef = useRef<string | null>(null);
-  const parcelLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
-  const parcelLayerIdRef = useRef<string | null>(null);
 
   // Handle context menu actions
-  const handlePropertyReport = useCallback(async () => {
-    console.log("Property Report clicked at:", coordinateRef.current);
-
-    const coordinate = coordinateRef.current;
-    const parcelLayerUrl = config?.parcelLayer?.url;
-
-    if (!parcelLayerUrl) {
-      console.warn("Parcel layer URL not configured");
-      return;
-    }
-
-    // Parcel layer style (configurable via featureHighlitStyles)
-    const { parcel: parcelLayerStyle } = getHighlightStyles();
-
-    try {
-      // Build WFS query URL
-      const parcelURL = `${parcelLayerUrl}&cql_filter=INTERSECTS(geom,%20POINT%20(${coordinate[0]}%20${coordinate[1]}))`;
-
-      const axiosClient = getAxiosClient(parcelURL);
-      const response = await axiosClient.get(parcelURL);
-      const result = response.data;
-
-      if (!result.features || result.features.length === 0) {
-        console.log("No parcel found at this location");
-        return;
-      }
-
-      // Parse the GeoJSON features
-      const geoJSON = new GeoJSON().readFeatures(result);
-      const vectorSource = new VectorSource({ features: geoJSON });
-      parcelLayerRef.current?.setSource(vectorSource);
-
-      const feature = geoJSON[0];
-      feature.setStyle(parcelLayerStyle);
-
-      const arn = result.features[0].properties.arn;
-      feature.setProperties({ arn });
-
-      // Convert Web Mercator to Lat/Long
-      const toLatLongFromWebMercator = (coords: number[]) => {
-        const lon = (coords[0] * 180) / 20037508.34;
-        const lat = (Math.atan(Math.exp((coords[1] * Math.PI) / 20037508.34)) * 360) / Math.PI - 90;
-        return [lon, lat];
-      };
-
-      const latLongCoords = toLatLongFromWebMercator(coordinate);
-
-      // Get share URL with ARN parameter
-      const getShareURL = (arn: string) => {
-        let url = window.location.href.replace("#", "");
-        if (url.indexOf("?") > 0) {
-          const urlObj = new URL(url);
-          urlObj.searchParams.delete("ARN");
-          urlObj.searchParams.set("ARN", arn);
-          url = urlObj.toString();
-        } else {
-          url = `${url}?ARN=${arn}`;
-        }
-        return url;
-      };
-
-      // Fetch property information
-      let propInfo: Record<string, unknown> = {
-        ARN: arn,
-        pointCoordinates: latLongCoords,
-        pointerCoordinates: coordinate,
-        shareURL: getShareURL(arn),
-        area: feature && feature.getGeometry() ? getArea(feature.getGeometry()!) : 0,
-      };
-
-      const propertyReportUrl = config?.propertyReportUrl;
-      if (propertyReportUrl) {
-        const infoURL = `${propertyReportUrl}${arn}`;
-        const infoClient = getAxiosClient(infoURL);
-        const requestPath = infoURL.startsWith("/api/") ? infoURL.replace("/api", "") : infoURL;
-
-        try {
-          const infoResponse = await infoClient.get(requestPath);
-          propInfo = {
-            ...infoResponse.data,
-            pointerCoordinates: coordinate,
-            pointCoordinates: latLongCoords,
-            shareURL: getShareURL(arn),
-            area: feature && feature.getGeometry() ? getArea(feature.getGeometry()!) : 0,
-          };
-        } catch (error) {
-          console.error("Error fetching property info:", error);
-        }
-      }
-
-      // Collect all results for unified popup
-      const results: Result[] = [];
-
-      const handleClose = () => {
-        parcelLayerRef.current?.getSource()?.clear();
-        hidePopup();
-      };
-
-      // Helper function to fetch property info for a given ARN
-      const fetchPropInfo = async (childArn: string) => {
-        let childPropInfo: Record<string, unknown> = {
-          ARN: childArn,
-          pointCoordinates: latLongCoords,
-          pointerCoordinates: coordinate,
-          shareURL: getShareURL(childArn),
-          area: feature && feature.getGeometry() ? getArea(feature.getGeometry()!) : 0,
-        };
-
-        const propertyReportUrl = config?.propertyReportUrl;
-        if (propertyReportUrl) {
-          const infoURL = `${propertyReportUrl}${childArn}`;
-          const infoClient = getAxiosClient(infoURL);
-          const requestPath = infoURL.startsWith("/api/") ? infoURL.replace("/api", "") : infoURL;
-
-          try {
-            const infoResponse = await infoClient.get(requestPath);
-            childPropInfo = {
-              ...infoResponse.data,
-              pointerCoordinates: coordinate,
-              pointCoordinates: latLongCoords,
-              shareURL: getShareURL(childArn),
-              area: feature && feature.getGeometry() ? getArea(feature.getGeometry()!) : 0,
-            };
-          } catch (error) {
-            console.error("Error fetching child property info:", error);
-          }
-        }
-
-        return childPropInfo;
-      };
-
-      // Check if this is a condo parent ARN (20 characters)
-      if (arn.length === 20) {
-        // Fetch all condo children
-        try {
-          const apiUrl = `/api/public/reports/condo-children/${arn}`;
-          const client = getAxiosClientUtil(apiUrl);
-          const requestPath = apiUrl.startsWith("/api/") ? apiUrl.replace("/api", "") : apiUrl;
-          const condoResponse = await client.get(requestPath);
-
-          if (Array.isArray(condoResponse.data) && condoResponse.data.length > 0) {
-            // Add each condo unit as a result
-            condoResponse.data.forEach((unit: { ARN: string; UnitNumber: string; Address: string }) => {
-              results.push(createCondoResult(unit.ARN, unit.UnitNumber, unit.Address, feature));
-            });
-          }
-        } catch (error) {
-          console.error("Error fetching condo children:", error);
-        }
-      } else {
-        // Regular property
-        results.push(createPropertyResult(arn, propInfo.Address || "", feature, propInfo));
-      }
-
-      // Show unified popup with all results
-      if (results.length > 0) {
-        showPopup(
-          coordinate,
-          <ResultsPopup
-            results={results}
-            onClose={handleClose}
-            onClearParcelLayer={() => parcelLayerRef.current?.getSource()?.clear()}
-            onSelectResult={async (result) => {
-              // Lazy load property info for condo units
-              if (result.type === "condo" && !result.data.propInfo) {
-                const propInfo = await fetchPropInfo(result.data.ARN);
-                result.data.propInfo = propInfo;
-                result.data.feature = feature;
-              }
-            }}
-          />,
-          results.length > 1 ? `Results (${results.length})` : "Property Information",
-          "Parcel",
-        );
-      }
-    } catch (error) {
-      console.error("Error fetching parcel data:", error);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showPopup, hidePopup]);
+  const handlePropertyReport = useCallback(() => {
+    // Delegate to PropertyReportClick via the popup store (no scale constraint)
+    usePopupStore.getState().requestPropertyReport(coordinateRef.current, true);
+  }, []);
 
   const handleAddMarker = useCallback(() => {
     console.log("Add Marker clicked at:", coordinateRef.current);
@@ -442,44 +256,6 @@ export const MapContextMenuContainer: React.FC = () => {
   const checkDisableFlags = useCallback(() => {
     return useMapStore.getState().checkGlobalDisable();
   }, []);
-
-  // Initialize parcel layer
-  useEffect(() => {
-    if (!map || parcelLayerRef.current) return;
-
-    const parcelLayerStyle = new Style({
-      fill: new Fill({
-        color: [0, 0, 0, 0.0],
-      }),
-      stroke: new Stroke({
-        color: [231, 128, 128, 0.8],
-        width: 3,
-      }),
-    });
-
-    const parcelLayer = new VectorLayer({
-      style: parcelLayerStyle,
-      source: new VectorSource(),
-    });
-
-    const parcelLayerId = LayerManager.addLayer(parcelLayer, "Graphics", "Parcel Highlight", {
-      index: 500,
-      metadata: {
-        isParcelLayer: true,
-      },
-    });
-
-    parcelLayerRef.current = parcelLayer;
-    parcelLayerIdRef.current = parcelLayerId;
-
-    return () => {
-      if (parcelLayerIdRef.current) {
-        LayerManager.removeLayer(parcelLayerIdRef.current);
-        parcelLayerIdRef.current = null;
-      }
-      parcelLayerRef.current = null;
-    };
-  }, [map]);
 
   // Initialize identify icon layer
   useEffect(() => {

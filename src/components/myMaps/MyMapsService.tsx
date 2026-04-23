@@ -5,12 +5,15 @@ import { useMyMapsStore } from "@/stores/myMapsStore";
 import { useMapStore } from "@/stores/mapStore";
 import { useEventStore } from "@/stores/eventStore";
 import { useLayerManagerStore } from "@/stores/layerManagerStore";
+import { useInteractionManagerStore } from "@/stores/interactionManagerStore";
 import { MyMapsDrawingManager } from "@/utils/openlayers/MyMapsDrawing";
 import { Feature } from "ol";
-import { Style } from "ol/style";
+import { getCenter } from "ol/extent";
+import { Style, Text } from "ol/style";
 import { featureToGeoJSON, styleToJSON } from "@/utils/myMapsHelpers";
 import type { MyMapsItem as MyMapsItemType } from "@/types/myMaps";
 import { createMyMapsItem } from "@/stores/myMapsStore";
+import { usePopupStore } from "@/stores/popupStore";
 
 /**
  * MyMapsService - Background service that manages MyMaps features on the map
@@ -20,6 +23,7 @@ import { createMyMapsItem } from "@/stores/myMapsStore";
 export default function MyMapsService() {
   const drawingManagerRef = useRef<MyMapsDrawingManager | null>(null);
   const managedLayerIdRef = useRef<string | null>(null);
+  const lastDrawEndTimeRef = useRef<number>(0);
 
   // Store hooks
   const drawType = useMyMapsStore((s) => s.drawType);
@@ -40,6 +44,79 @@ export default function MyMapsService() {
   const emit = useEventStore((s) => s.emit);
   const addLayer = useLayerManagerStore((s) => s.addLayer);
   const removeLayer = useLayerManagerStore((s) => s.removeLayer);
+
+  const getPopupStyleFromFeature = React.useCallback((feature: Feature): Style | undefined => {
+    const featureStyle = feature.getStyle();
+
+    if (featureStyle instanceof Style) {
+      return featureStyle;
+    }
+
+    if (Array.isArray(featureStyle) && featureStyle.length > 0) {
+      const baseStyle =
+        featureStyle.find((s) => s instanceof Style && (!!s.getImage() || !!s.getFill() || !!s.getStroke())) ||
+        featureStyle.find((s) => s instanceof Style);
+      const textCarrier = featureStyle.find((s) => s instanceof Style && !!s.getText());
+
+      if (baseStyle instanceof Style) {
+        const mergedStyle = baseStyle.clone();
+        const textStyle = textCarrier?.getText();
+        if (textStyle) {
+          mergedStyle.setText(textStyle);
+        }
+        return mergedStyle;
+      }
+    }
+
+    return undefined;
+  }, []);
+
+  const extractLabelStyleFromFeature = React.useCallback((feature: Feature): Record<string, unknown> | undefined => {
+    const featureStyle = feature.getStyle();
+
+    const findTextStyle = (): Text | undefined => {
+      if (featureStyle instanceof Style) {
+        return featureStyle.getText() ?? undefined;
+      }
+      if (Array.isArray(featureStyle)) {
+        const carrier = featureStyle.find((s) => s instanceof Style && !!s.getText());
+        return carrier instanceof Style ? (carrier.getText() ?? undefined) : undefined;
+      }
+      return undefined;
+    };
+
+    const textStyle = findTextStyle();
+    if (!textStyle) return undefined;
+
+    const font = textStyle.getFont();
+    const pxMatch = typeof font === "string" ? font.match(/(\d+(?:\.\d+)?)px/i) : null;
+    const textSize = pxMatch ? `${pxMatch[1]}px` : undefined;
+
+    const normalizeColor = (color: unknown): string | undefined => {
+      if (!color) return undefined;
+      if (Array.isArray(color) && color.length >= 3) {
+        const toHex = (n: number) => {
+          const hex = Math.round(Number(n)).toString(16);
+          return hex.length === 1 ? "0" + hex : hex;
+        };
+        return `#${toHex(color[0] as number)}${toHex(color[1] as number)}${toHex(color[2] as number)}`;
+      }
+      if (typeof color !== "string") return undefined;
+      return color;
+    };
+
+    const textColor = normalizeColor(textStyle.getFill()?.getColor());
+    const outlineColor = normalizeColor(textStyle.getStroke()?.getColor());
+    const outlineWidth = textStyle.getStroke()?.getWidth();
+
+    const labelStyleSnapshot: Record<string, unknown> = {};
+    if (textSize) labelStyleSnapshot.textSize = textSize;
+    if (textColor) labelStyleSnapshot.textColor = textColor;
+    if (outlineColor) labelStyleSnapshot.outlineColor = outlineColor;
+    if (outlineWidth !== undefined) labelStyleSnapshot.outlineWidth = outlineWidth;
+
+    return Object.keys(labelStyleSnapshot).length > 0 ? labelStyleSnapshot : undefined;
+  }, []);
 
   // Helper function to convert OpenLayers geometry type to our GeometryType
   // const mapGeometryType = (olType: string): GeometryType => {
@@ -98,7 +175,6 @@ export default function MyMapsService() {
 
       // Auto-show label for Text features (like the old app)
       if (featureDrawType === "Text" && myMapsItem.labelVisible && myMapsItem.label) {
-        console.log("🏷️ Auto-applying label to Text feature:", myMapsItem.label);
         setTimeout(() => {
           if (drawingManagerRef.current) {
             drawingManagerRef.current.setFeatureLabel(myMapsItem);
@@ -108,6 +184,15 @@ export default function MyMapsService() {
 
       // Reset draw type to Cancel after drawing
       setDrawType("Cancel");
+      lastDrawEndTimeRef.current = Date.now();
+
+      // Open the feature popup after drawing completes so the user can
+      // immediately rename, symbolize, or otherwise configure the feature.
+      const coordinate = getCenter(geometry.getExtent());
+      setTimeout(() => {
+        const freshItem = useMyMapsStore.getState().items.find((i) => i.id === myMapsItem.id) || myMapsItem;
+        emit("mymap-show-drawing-options", { item: freshItem, coordinate });
+      }, 200);
     },
     [drawType, addItem, emit, setDrawType, getNextDrawingNumber],
   );
@@ -161,14 +246,31 @@ export default function MyMapsService() {
         });
 
         if (item) {
-          console.log("✅ Emitting mymap-show-drawing-options event", { item, coordinate });
-          emit("mymap-show-drawing-options", { item, coordinate });
+          const liveFeatureStyle = getPopupStyleFromFeature(feature);
+          const liveLabelStyle = extractLabelStyleFromFeature(feature);
+
+          // Sync live label text style into the store so the popup (which re-reads from
+          // the store by id) reflects actual rendered values like font size/color.
+          if (liveLabelStyle) {
+            const existingLabelStyle =
+              item.labelStyle && typeof item.labelStyle === "object" && !(item.labelStyle instanceof Style)
+                ? (item.labelStyle as Record<string, unknown>)
+                : {};
+            const mergedLabelStyle = { ...existingLabelStyle, ...liveLabelStyle };
+            useMyMapsStore.getState().updateItem(item.id, { labelStyle: mergedLabelStyle });
+          }
+
+          const refreshedItem = useMyMapsStore.getState().items.find((i) => i.id === id) || item;
+          const popupItem = liveFeatureStyle ? { ...refreshedItem, style: liveFeatureStyle } : refreshedItem;
+
+          console.log("✅ Emitting mymap-show-drawing-options event", { item: popupItem, coordinate });
+          emit("mymap-show-drawing-options", { item: popupItem, coordinate });
         } else {
           console.warn("❌ No item found in store for clicked feature:", id);
         }
       }
     },
-    [removeItem, emit], // Remove drawType from dependencies to avoid stale closures
+    [removeItem, emit, getPopupStyleFromFeature, extractLabelStyleFromFeature], // Remove drawType from dependencies to avoid stale closures
   );
 
   // Initialize drawing manager when map is available
@@ -182,7 +284,6 @@ export default function MyMapsService() {
     drawingManagerRef.current = new MyMapsDrawingManager(map, {
       onFeatureDrawn: handleFeatureDrawn,
       onFeatureModified: handleFeatureModified,
-      onFeatureClicked: handleFeatureClicked,
     });
 
     // Register the MyMaps layer with the layer manager for proper z-index ordering
@@ -215,7 +316,59 @@ export default function MyMapsService() {
         managedLayerIdRef.current = null;
       }
     };
-  }, [map, loadFromStorage, handleFeatureDrawn, handleFeatureModified, handleFeatureClicked, addLayer, removeLayer]);
+  }, [map, loadFromStorage, handleFeatureDrawn, handleFeatureModified, addLayer, removeLayer]);
+
+  // Register MyMaps feature-click handler through the unified interaction system.
+  // This replaces the old direct map.on("singleclick") in MyMapsDrawing so that the
+  // MapContainer guard properly suppresses it during drawing/measuring/etc.
+  useEffect(() => {
+    if (!map) return;
+
+    const registerHandler = useInteractionManagerStore.getState().registerHandler;
+    const unregisterHandler = useInteractionManagerStore.getState().unregisterHandler;
+    const handlerId = "mymaps-feature-click";
+
+    registerHandler({
+      id: handlerId,
+      eventType: "singleclick",
+      priority: 5,
+      conditions: {
+        checkDisableFlags: () => {
+          const mapState = useMapStore.getState();
+          // Eraser needs feature clicks to detect which feature to remove
+          if (mapState.activeToolId === "mymaps-eraser") return false;
+          if (mapState.isDrawingOrEditing) return true;
+          // Ignore stale singleclick events that arrive after a drawing just finished
+          if (Date.now() - lastDrawEndTimeRef.current < 500) return true;
+          const popupActive = (window as unknown as { popupActive?: boolean }).popupActive;
+          if (popupActive) return true;
+          return false;
+        },
+      },
+      handler: (coordinate, pixel) => {
+        let clickedFeature: Feature | null = null;
+
+        map.forEachFeatureAtPixel(
+          pixel as [number, number],
+          (feature) => {
+            clickedFeature = feature as Feature;
+            return true;
+          },
+          {
+            layerFilter: (layer) => layer.get("name") === MyMapsDrawingManager.LAYER_NAME,
+          },
+        );
+
+        if (clickedFeature) {
+          handleFeatureClicked(clickedFeature, coordinate);
+        }
+      },
+    });
+
+    return () => {
+      unregisterHandler(handlerId);
+    };
+  }, [map, handleFeatureClicked]);
 
   // Load features into drawing manager when items change (but avoid reloading on label-only changes)
   const lastItemsRef = useRef<MyMapsItemType[]>([]);
@@ -252,12 +405,18 @@ export default function MyMapsService() {
     if (drawType === "Cancel") {
       drawingManagerRef.current.clearDrawing();
     } else if (drawType === "Eraser") {
-      // Eraser is handled via feature clicks
       drawingManagerRef.current.clearDrawing();
+      useMapStore.getState().setActiveToolId("mymaps-eraser");
     } else {
       drawingManagerRef.current.startDrawing(drawType, drawColor, drawStyle || undefined);
     }
 
+    // Dismiss any open identify/property popup so it doesn't obscure the drawing area.
+    if (drawType !== "Cancel") {
+      usePopupStore.getState().hide();
+    }
+
+    // Notify listeners (GlobalDrawingOptionsPopup closes its overlay on this event).
     emit("mymap-draw-type-changed", { drawType });
   }, [drawType, drawColor, drawStyle, emit]);
 

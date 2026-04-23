@@ -321,7 +321,8 @@
       "name": "Print Local (Beta)",
       "componentName": "PrintLocal",
       "description": "This tool allows users to print their map view in a variety of formats such as pdf and jpeg locally.",
-      "imageName": "print.png"
+      "imageName": "print.png",
+      "disable": true
     },
     {
       "id": 9,
@@ -431,7 +432,7 @@
       "componentName": "CommercialRealEstate",
       "description": "Search commercial real estate throughout the County of Simcoe.",
       "imageName": "commercialRealEstate.png",
-      "disable": true
+      "disable": false
     },
     {
       "id": 8,
@@ -462,7 +463,7 @@
       "componentName": "Five11LiveFeeds",
       "description": "View Live Feeds from the MTO and Waze.",
       "imageName": "511.png",
-      "disable": true
+      "disable": false
     }
   ],
   "sidebarShortcutParams": [

@@ -149,7 +149,13 @@ export default function Sidebar() {
           console.log(`[Sidebar] Syncing theme component for: ${theme.name} (${componentName})`);
           const component = (
             <Suspense fallback={<div className="p-5">Loading theme...</div>}>
-              <ThemeComponent name={theme.name} hideHeader={isSingleTheme} onClose={() => setActiveThemeComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
+              <ThemeComponent
+                name={theme.name}
+                hideHeader={isSingleTheme}
+                config={theme.config}
+                onClose={() => setActiveThemeComponent(null)}
+                onSidebarVisibility={() => console.log("Toggle sidebar visibility")}
+              />
             </Suspense>
           );
           setActiveThemeComponent(component);
@@ -170,7 +176,13 @@ export default function Sidebar() {
       if (ThemeComponent) {
         setActiveThemeComponent(
           <Suspense fallback={<div className="p-5">Loading theme...</div>}>
-            <ThemeComponent name={singleTheme.name} hideHeader={true} onClose={() => setActiveThemeComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
+            <ThemeComponent
+              name={singleTheme.name}
+              hideHeader={true}
+              config={singleTheme.config}
+              onClose={() => setActiveThemeComponent(null)}
+              onSidebarVisibility={() => console.log("Toggle sidebar visibility")}
+            />
           </Suspense>,
         );
       }
@@ -189,7 +201,7 @@ export default function Sidebar() {
           console.log(`[Sidebar] Syncing tool component for: ${tool.name} (${componentName})`);
           const component = (
             <Suspense fallback={<div className="p-5">Loading tool...</div>}>
-              <ToolComponent name={tool.name} onClose={() => setActiveToolComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
+              <ToolComponent name={tool.name} config={tool.config} onClose={() => setActiveToolComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
             </Suspense>
           );
           setActiveToolComponent(component);

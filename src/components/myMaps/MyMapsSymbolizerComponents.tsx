@@ -333,21 +333,24 @@ interface LabelFontSizeProps {
 export const LabelFontSize: React.FC<LabelFontSizeProps> = ({ visible, fontSize, onFontSizeChange }) => {
   if (!visible) return null;
 
+  const baseFontSizes = ["10px", "12px", "14px", "15px", "16px", "18px", "20px", "24px"];
+  const isValidPxValue = /^\d+(\.\d+)?px$/i.test(fontSize);
+  const fontSizeOptions = isValidPxValue && !baseFontSizes.includes(fontSize) ? [...baseFontSizes, fontSize].sort((a, b) => parseFloat(a) - parseFloat(b)) : baseFontSizes;
+
   return (
     <>
       <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Font Size:</label>
       <select
-        className="col-start-3 col-end-5 p-[2px] border border-[#cecece] rounded-[3px] text-[9pt] outline-none w-full box-border focus:border-[#367cc5]"
+        className="sc-mymaps-style-dropdown col-start-3 col-end-5 p-[2px] border border-[#cecece] rounded-[3px] text-[9pt] outline-none w-full box-border focus:border-[#367cc5]"
+        name="labelFontSize"
         value={fontSize}
         onChange={onFontSizeChange}
       >
-        <option value="10px">10px</option>
-        <option value="12px">12px</option>
-        <option value="14px">14px</option>
-        <option value="16px">16px</option>
-        <option value="18px">18px</option>
-        <option value="20px">20px</option>
-        <option value="24px">24px</option>
+        {fontSizeOptions.map((size) => (
+          <option key={size} value={size}>
+            {size}
+          </option>
+        ))}
       </select>
     </>
   );

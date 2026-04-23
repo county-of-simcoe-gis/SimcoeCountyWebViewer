@@ -106,6 +106,49 @@ const rgbToHex = (rgb: ColorRGB): string => {
   return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
 };
 
+// Extract px font size from OpenLayers font strings like "bold 14px arial"
+const extractFontSize = (font?: string): string | undefined => {
+  if (!font) return undefined;
+  const match = font.match(/(\d+(?:\.\d+)?)px/i);
+  return match ? `${match[1]}px` : undefined;
+};
+
+const normalizeColorToHex = (color: unknown): string | undefined => {
+  if (!color) return undefined;
+
+  if (Array.isArray(color) && color.length >= 3) {
+    const [r, g, b] = color;
+    if (typeof r === "number" && typeof g === "number" && typeof b === "number") {
+      return rgbToHex({ r, g, b, a: 1 });
+    }
+    return undefined;
+  }
+
+  if (typeof color !== "string") return undefined;
+  const normalized = color.trim();
+
+  const hexMatch = normalized.match(/^#([a-f\d]{3}|[a-f\d]{6})$/i);
+  if (hexMatch) {
+    const hex = hexMatch[1];
+    if (hex.length === 3) {
+      return `#${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`;
+    }
+    return `#${hex}`;
+  }
+
+  const rgbMatch = normalized.match(/^rgba?\s*\(\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)(?:\s*,\s*(\d+(?:\.\d+)?))?\s*\)$/i);
+  if (rgbMatch) {
+    return rgbToHex({
+      r: Number(rgbMatch[1]),
+      g: Number(rgbMatch[2]),
+      b: Number(rgbMatch[3]),
+      a: 1,
+    });
+  }
+
+  return undefined;
+};
+
 const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) => {
   const { updateItem } = useMyMapsStore();
   const { emit } = useEventStore();
@@ -208,6 +251,27 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
     const finalPointType = extractedPointType ? pointType : item.pointType !== undefined ? item.pointType : "circle";
     const strokeType = item.strokeType !== undefined ? item.strokeType : "normal";
 
+    // Prefer actual feature text style values when available, then labelStyle/defaults.
+    let actualTextSize: string | undefined;
+    let actualTextColor: string | undefined;
+    let actualOutlineColor: string | undefined;
+    let actualOutlineWidth: number | undefined;
+
+    if (item.style instanceof Style) {
+      const textStyle = item.style.getText();
+      actualTextSize = extractFontSize(textStyle?.getFont());
+      actualTextColor = normalizeColorToHex(textStyle?.getFill()?.getColor());
+      actualOutlineColor = normalizeColorToHex(textStyle?.getStroke()?.getColor());
+      actualOutlineWidth = textStyle?.getStroke()?.getWidth();
+    } else if (item.style && typeof item.style === "object") {
+      const styleObj = item.style as Record<string, unknown>;
+      const textObj = styleObj.text as Record<string, unknown> | undefined;
+      actualTextSize = extractFontSize(typeof textObj?.font === "string" ? textObj.font : undefined);
+      actualTextColor = normalizeColorToHex((textObj?.fill as Record<string, unknown> | undefined)?.color);
+      actualOutlineColor = normalizeColorToHex((textObj?.stroke as Record<string, unknown> | undefined)?.color);
+      actualOutlineWidth = typeof (textObj?.stroke as Record<string, unknown> | undefined)?.width === "number" ? ((textObj?.stroke as Record<string, unknown>).width as number) : undefined;
+    }
+
     // Get label style from item or use defaults
     const defaultLabelStyle = getDefaultLabelStyle(item.drawType);
     let labelStyleState: LabelStyleState = {
@@ -234,6 +298,15 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
         anchorColor: (ls.anchorColor as string) || labelStyleState.anchorColor,
       };
     }
+
+    // Applied style is the source of truth when available.
+    labelStyleState = {
+      ...labelStyleState,
+      textSize: actualTextSize || labelStyleState.textSize,
+      textColor: actualTextColor || labelStyleState.textColor,
+      labelOutlineColor: actualOutlineColor || labelStyleState.labelOutlineColor,
+      labelOutlineWidth: actualOutlineWidth ?? labelStyleState.labelOutlineWidth,
+    };
 
     return {
       selectedPointStyleDropDown: finalPointType,

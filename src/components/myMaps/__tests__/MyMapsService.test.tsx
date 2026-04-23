@@ -61,11 +61,13 @@ const mockDrawingManager = {
 };
 
 // Mock the MyMapsDrawingManager
-vi.mock("@/utils/openlayers/MyMapsDrawing", () => ({
-  MyMapsDrawingManager: vi.fn(function () {
+vi.mock("@/utils/openlayers/MyMapsDrawing", () => {
+  const MockManager = vi.fn(function () {
     return mockDrawingManager;
-  }),
-}));
+  });
+  (MockManager as any).LAYER_NAME = "MyMaps Drawing Layer";
+  return { MyMapsDrawingManager: MockManager };
+});
 
 // Mock helper functions
 vi.mock("@/utils/myMapsHelpers", () => ({
@@ -130,8 +132,12 @@ vi.mock("@/stores/myMapsStore", () => ({
 // Get reference to the mocked function for test assertions - we'll set this up in beforeEach
 let mockCreateMyMapsItem: ReturnType<typeof vi.fn>;
 
+const mockSetActiveToolId = vi.fn();
 vi.mock("@/stores/mapStore", () => ({
-  useMapStore: vi.fn((selector?: any) => (typeof selector === "function" ? selector(mockMapStore) : mockMapStore)),
+  useMapStore: Object.assign(
+    vi.fn((selector?: any) => (typeof selector === "function" ? selector(mockMapStore) : mockMapStore)),
+    { getState: vi.fn(() => ({ ...mockMapStore, setActiveToolId: mockSetActiveToolId, isDrawingOrEditing: false })) },
+  ),
 }));
 
 vi.mock("@/stores/eventStore", () => ({
@@ -140,6 +146,22 @@ vi.mock("@/stores/eventStore", () => ({
 
 vi.mock("@/stores/layerManagerStore", () => ({
   useLayerManagerStore: vi.fn((selector?: any) => (typeof selector === "function" ? selector(mockLayerManagerStore) : mockLayerManagerStore)),
+}));
+
+const mockInteractionManagerStore = {
+  registerHandler: vi.fn(),
+  unregisterHandler: vi.fn(),
+};
+
+vi.mock("@/stores/interactionManagerStore", () => ({
+  useInteractionManagerStore: Object.assign(
+    vi.fn((selector?: any) => (typeof selector === "function" ? selector(mockInteractionManagerStore) : mockInteractionManagerStore)),
+    { getState: vi.fn(() => mockInteractionManagerStore) },
+  ),
+}));
+
+vi.mock("@/stores/popupStore", () => ({
+  usePopupStore: Object.assign(vi.fn(), { getState: vi.fn(() => ({ hide: vi.fn() })) }),
 }));
 
 describe("MyMapsService Component", () => {
@@ -181,7 +203,6 @@ describe("MyMapsService Component", () => {
       expect(MyMapsDrawingManager).toHaveBeenCalledWith(mockMap, {
         onFeatureDrawn: expect.any(Function),
         onFeatureModified: expect.any(Function),
-        onFeatureClicked: expect.any(Function),
       });
     });
 
@@ -327,53 +348,15 @@ describe("MyMapsService Component", () => {
       });
     });
 
-    it("should handle feature click in eraser mode", () => {
-      // Mock store getState to return eraser mode
-      const mockGetState = vi.fn(() => ({ drawType: "Eraser" }));
-      (useMyMapsStore as any).getState = mockGetState;
-
+    it("should register mymaps-feature-click handler via interaction manager", () => {
       render(<MyMapsService />);
 
-      const constructorCall = vi.mocked(MyMapsDrawingManager).mock.calls[0];
-      const callbacks = constructorCall[1];
-      const onFeatureClicked = callbacks.onFeatureClicked;
-
-      mockFeature.get.mockImplementation((prop) => {
-        if (prop === "id") return "feature-1";
-        return "";
-      });
-
-      onFeatureClicked(mockFeature as any, [0, 0]);
-
-      expect(mockMyMapsStore.removeItem).toHaveBeenCalledWith("feature-1");
-      expect(mockEventStore.emit).toHaveBeenCalledWith("mymap-item-deleted", { id: "feature-1" });
-    });
-
-    it("should handle feature click for showing options", () => {
-      // Mock store getState to return non-eraser mode
-      const mockGetState = vi.fn(() => ({
-        drawType: "Cancel",
-        items: [{ id: "feature-1", label: "Test Feature" }],
-      }));
-      (useMyMapsStore as any).getState = mockGetState;
-
-      render(<MyMapsService />);
-
-      const constructorCall = vi.mocked(MyMapsDrawingManager).mock.calls[0];
-      const callbacks = constructorCall[1];
-      const onFeatureClicked = callbacks.onFeatureClicked;
-
-      mockFeature.get.mockImplementation((prop) => {
-        if (prop === "id") return "feature-1";
-        return "";
-      });
-
-      onFeatureClicked(mockFeature as any, [100, 200]);
-
-      expect(mockEventStore.emit).toHaveBeenCalledWith("mymap-show-drawing-options", {
-        item: { id: "feature-1", label: "Test Feature" },
-        coordinate: [100, 200],
-      });
+      expect(mockInteractionManagerStore.registerHandler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "mymaps-feature-click",
+          eventType: "singleclick",
+        }),
+      );
     });
   });
 

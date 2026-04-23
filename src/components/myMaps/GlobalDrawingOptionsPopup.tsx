@@ -779,18 +779,27 @@ export default function GlobalDrawingOptionsPopup() {
       }
     };
 
+    const handleDrawTypeChanged = (data?: { [key: string]: unknown }) => {
+      const newDrawType = data?.drawType as string | undefined;
+      if (newDrawType && newDrawType !== "Cancel") {
+        handleCloseDrawingOptions();
+      }
+    };
+
     const drawingOptionsListenerId = addListener("mymap-show-drawing-options", handleShowDrawingOptions);
+    const drawTypeChangedListenerId = addListener("mymap-draw-type-changed", handleDrawTypeChanged);
     const bufferListenerId = addListener("mymap-buffer", handleBufferFromMyMaps);
     const symbolizeListenerId = addListener("mymap-symbolize", handleSymbolizeFromMyMaps);
     const measureListenerId = addListener("mymap-measure", handleMeasureFromMyMaps);
 
     return () => {
       removeListener(drawingOptionsListenerId);
+      removeListener(drawTypeChangedListenerId);
       removeListener(bufferListenerId);
       removeListener(symbolizeListenerId);
       removeListener(measureListenerId);
     };
-  }, [addListener, removeListener, activeTool, handleBufferFromMyMapsList, handleSymbolizeFromMyMapsList, handleMeasureFromMyMapsList]); // Include activeTool to capture current state
+  }, [addListener, removeListener, activeTool, handleCloseDrawingOptions, handleBufferFromMyMapsList, handleSymbolizeFromMyMapsList, handleMeasureFromMyMapsList]);
 
   return (
     <>

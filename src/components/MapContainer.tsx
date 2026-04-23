@@ -504,11 +504,21 @@ export default function MapContainer() {
       handleEvent(event: MapBrowserEvent<OLUIEvent>): boolean {
         const eventType = event.type as InteractionEventType;
 
-        // Global guard: suppress all singleclick handling while drawing, editing, or measuring
+        // Global guard: suppress all singleclick handling while any tool is active
+        // (drawing, editing, measuring, eraser, coordinates, toggler, etc.)
+        // Returns false to stop the event from reaching map.on("singleclick")
+        // listeners (identify, property report, etc.). The Draw interaction uses
+        // "click" events (not "singleclick") and sits higher in the interaction
+        // chain, so it is unaffected.
         if (eventType === "singleclick") {
           const mapState = useMapStore.getState();
-          if (mapState.isDrawingOrEditing || mapState.isMeasuring || mapState.isCoordinateToolOpen) {
-            return true; // Allow event to propagate to OL draw/modify interactions
+          const toolId = mapState.activeToolId;
+          // The eraser still needs singleclick events to reach the handler
+          // pipeline so it can detect which feature to remove. Other handlers
+          // (identify, property) are individually suppressed via their own
+          // checkDisableFlags when the eraser is active.
+          if (toolId && toolId !== "mymaps-eraser") {
+            return false;
           }
         }
 
@@ -1083,23 +1093,23 @@ export default function MapContainer() {
         enabled: controlVisibility.zoomInOut,
       },
 
-      currentLocation: {
-        component: CurrentLocationWrapper,
-        zone: "top-left",
-        order: 4,
-        enabled: controlVisibility.currentLocation,
-      },
       extentHistory: {
         component: ExtentHistoryWrapper,
         zone: "top-left",
-        order: 5,
+        order: 4,
         enabled: controlVisibility.extentHistory,
       },
       zoomExtent: {
         component: ZoomToExtentWrapper,
         zone: "top-left",
-        order: 6,
+        order: 5,
         enabled: controlVisibility.zoomExtent,
+      },
+      currentLocation: {
+        component: CurrentLocationWrapper,
+        zone: "top-left",
+        order: 6,
+        enabled: controlVisibility.currentLocation,
       },
       grid: {
         component: GridWrapper,

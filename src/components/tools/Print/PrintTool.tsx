@@ -349,17 +349,30 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
           ))}
         </select>
 
-        {/* PRINT BUTTON */}
-        <button
-          className="float-right w-[100px] text-[12pt] mt-[10px] py-2 px-4 bg-[#4a90d9] text-white border-none rounded-[3px] cursor-pointer transition-colors hover:not-disabled:bg-[#3a7bc8] disabled:bg-[#ccc] disabled:cursor-not-allowed"
-          onClick={handlePrint}
-          disabled={isPrinting}
-        >
-          Print
-        </button>
+        {/* DISCLAIMER */}
+        <div className="w-full text-xs mt-[5px]">** Note: Some basemap layers are currently unsupported by print</div>
+
+        {/* PRINT BUTTON AND ADVANCED OPTIONS */}
+        <div className="flex items-center gap-2 mt-[10px]">
+          <button
+            className="w-[100px] text-[12pt] py-2 px-4 bg-[#4a90d9] text-white border-none rounded-[3px] cursor-pointer transition-colors hover:not-disabled:bg-[#3a7bc8] disabled:bg-[#ccc] disabled:cursor-not-allowed"
+            onClick={handlePrint}
+            disabled={isPrinting}
+          >
+            Print
+          </button>
+
+          {/* ADVANCED OPTIONS */}
+          <div
+            className={`h-[30px] w-[205px] bg-[#c9e7f9] border border-[#ddd] cursor-pointer select-none leading-[30px] pl-9 bg-[url('/images/settings.png'),url('${advancedOptionsOpen ? "/images/collapsed.png" : "/images/down.png"}')] bg-[position:5px_center,188px_center] bg-no-repeat bg-[length:20px,12px] text-xs rounded-[3px] transition-colors hover:bg-[#b9d7e9] ${advancedOptionsOpen ? "rounded-b-none" : ""}`}
+            onClick={() => setAdvancedOptionsOpen(!advancedOptionsOpen)}
+          >
+            Advanced Print Options
+          </div>
+        </div>
 
         {/* LOADING INDICATOR */}
-        <div className={isPrinting ? "inline-flex items-center text-xs text-[#666] mt-[10px] clear-both" : "hidden"}>
+        <div className={isPrinting ? "inline-flex items-center text-xs text-[#666] mt-[10px]" : "hidden"}>
           {printProgress || "Processing..."}
           &nbsp;
           <Image src={`${basePath}/images/loading20.gif`} alt="loading" width={20} height={20} unoptimized />
@@ -369,14 +382,6 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
         {!printUrl && (
           <div className="text-[#d9534f] text-xs mt-[5px] p-[5px] bg-[#fdf2f2] border border-[#d9534f] rounded-[3px]">Print server not configured. Please contact the site administrator.</div>
         )}
-
-        {/* ADVANCED OPTIONS */}
-        <div
-          className={`h-[30px] w-[205px] bg-[#c9e7f9] border border-[#ddd] cursor-pointer select-none leading-[30px] pl-9 bg-[url('/images/settings.png'),url('${advancedOptionsOpen ? "/images/collapsed.png" : "/images/down.png"}')] bg-[position:5px_center,188px_center] bg-no-repeat bg-[length:20px,12px] mt-[15px] clear-both text-xs rounded-[3px] transition-colors hover:bg-[#b9d7e9] ${advancedOptionsOpen ? "rounded-b-none" : ""}`}
-          onClick={() => setAdvancedOptionsOpen(!advancedOptionsOpen)}
-        >
-          Advanced Print Options
-        </div>
 
         {advancedOptionsOpen && (
           <div className="p-[15px] bg-[#f9f9f9] border border-[#ddd] border-t-0 rounded-b-[3px]">

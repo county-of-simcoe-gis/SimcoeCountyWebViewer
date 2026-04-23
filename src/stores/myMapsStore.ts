@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { Style } from "ol/style";
 import type { Feature } from "ol";
 import type { Geometry } from "ol/geom";
-import { styleToJSON, exportFeatures as exportFeaturesToFile } from "@/utils/myMapsHelpers";
+import { styleToJSON, exportFeatures as exportFeaturesToFile, getDefaultLabelStyle } from "@/utils/myMapsHelpers";
 import { v4 as uuidv4 } from "uuid";
 
 // Label style JSON representation for callouts and labels
@@ -779,12 +779,14 @@ export const createMyMapsItem = (feature: Feature<Geometry>, drawType: DrawType,
     }
   }
 
+  const defaultLabelStyle = getDefaultLabelStyle(drawType);
+
   return {
     id,
     label: defaultLabel,
     labelVisible: drawType === "Text" || drawType === "Callout" || drawType === "Bearing" || drawType === "Measure",
     labelRotation,
-    labelStyle: null,
+    labelStyle: defaultLabelStyle,
     featureGeoJSON: "", // Will be set by calling code
     style: style || ({} as StyleJSON),
     visible: true,

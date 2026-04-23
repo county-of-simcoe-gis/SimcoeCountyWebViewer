@@ -138,16 +138,21 @@ export const MYMAPS_CONSTANTS = {
   LAYER_NAME: 'local:myMaps',
   STORAGE_KEY: 'simcoe-mymaps-data',
   DEFAULT_COLORS: [
-    '#e809e5', // Default pink
-    '#ff0000', // Red
-    '#00ff00', // Green  
-    '#0000ff', // Blue
-    '#ffff00', // Yellow
-    '#ff8000', // Orange
-    '#800080', // Purple
-    '#008080', // Teal
     '#000000', // Black
-    '#ffffff'  // White
+    '#e90808', // Red
+    '#3174ba', // Blue
+    '#55F31E', // Green
+    '#636363', // Dark Gray
+    '#8aedbd', // Mint
+    '#974400', // Brown
+    '#fcff1b', // Yellow
+    '#ffb016', // Orange
+    '#e809e5', // Pink
+    '#6aad2f', // Olive Green
+    '#08d1e9', // Cyan
+    '#FFFFFF', // White
+    '#aaaaaa', // Light Gray
+    '#BE00C1'  // Purple
   ],
   DEFAULT_STYLE: {
     pointRadius: 8,

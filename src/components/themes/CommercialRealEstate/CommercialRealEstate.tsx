@@ -34,19 +34,22 @@ interface CommercialRealEstateProps {
   options?: Record<string, unknown>;
 }
 
-export default function CommercialRealEstate({ name = "Commercial Real Estate", helpLink, hideHeader = false, onClose, onSidebarVisibility }: CommercialRealEstateProps) {
+export default function CommercialRealEstate({ name = "Commercial Real Estate", helpLink, hideHeader = false, onClose, onSidebarVisibility, config }: CommercialRealEstateProps) {
   const map = useMapStore((s) => s.map);
   const { registerHandler, unregisterHandler } = useInteractionManagerStore();
   const layerIdsRef = useRef<string[]>([]);
   const moveEndKeyRef = useRef<EventsKey | null>(null);
   const allLayerRef = useRef<OlImageLayer<ImageWMS> | null>(null);
 
+  // Merge local config with optional prop config
+  const mergedConfig = { ...creConfig, ...config };
+
   // Initialize property type WMS layers
   useEffect(() => {
     if (!map) return;
 
-    const serverUrl = creConfig.geoserverUrl + "wms/";
-    const pointLayerName = creConfig.pointLayerName;
+    const serverUrl = mergedConfig.geoserverUrl + "wms/";
+    const pointLayerName = mergedConfig.pointLayerName;
 
     // Create a WMS layer per property type
     PROPERTY_TYPES.forEach((propType) => {
@@ -125,7 +128,7 @@ export default function CommercialRealEstate({ name = "Commercial Real Estate", 
         useCREStore.getState().setPropertyLayer(pt, null as any, "");
       });
     };
-  }, [map]);
+  }, [map, mergedConfig.geoserverUrl, mergedConfig.pointLayerName]);
 
   // Register map click handler for identify
   useEffect(() => {
@@ -320,7 +323,7 @@ export default function CommercialRealEstate({ name = "Commercial Real Estate", 
         <div className="divider my-1 text-xs">OVERLAY LAYERS</div>
 
         {/* Toggle layers via shared ThemeLayers component */}
-        <ThemeLayers layers={creConfig.toggleLayers} themeId="commercialRealEstate" />
+        <ThemeLayers layers={mergedConfig.toggleLayers} themeId="commercialRealEstate" />
       </div>
     </PanelComponent>
   );

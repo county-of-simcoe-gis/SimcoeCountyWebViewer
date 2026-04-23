@@ -72,7 +72,6 @@ interface MapState {
   // Legacy setters (deprecated — use setActiveToolId instead)
   setDisableParcelClick: (disabled: boolean) => void;
   setDisableIdentifyClick: (disabled: boolean) => void;
-  setIsDrawingOrEditing: (isDrawing: boolean) => void;
   setIsCoordinateToolOpen: (isOpen: boolean) => void;
   setIsMeasuring: (isMeasuring: boolean) => void;
   setMapControls: (controls: Record<string, unknown>) => void;
@@ -173,7 +172,7 @@ export const useMapStore = create<MapState>((set, get) => ({
       disableParcelClick: toolId !== null,
       isMeasuring: toolId === "measure",
       isCoordinateToolOpen: toolId === "coordinates",
-      isDrawingOrEditing: toolId === "mymaps-draw" || toolId === "mymaps-edit",
+      isDrawingOrEditing: toolId === "mymaps-draw" || toolId === "mymaps-edit" || toolId === "mymaps-eraser",
     });
   },
   isToolActive: () => get().activeToolId !== null,
@@ -182,7 +181,6 @@ export const useMapStore = create<MapState>((set, get) => ({
   // Legacy setters (deprecated — kept for backward compatibility)
   setDisableParcelClick: (disabled) => set({ disableParcelClick: disabled }),
   setDisableIdentifyClick: (disabled) => set({ disableIdentifyClick: disabled }),
-  setIsDrawingOrEditing: (isDrawing) => set({ isDrawingOrEditing: isDrawing }),
   setIsCoordinateToolOpen: (isOpen) => set({ isCoordinateToolOpen: isOpen }),
   setIsMeasuring: (isMeasuring) => set({ isMeasuring }),
   setMapControls: (controls) => set({ mapControls: controls }),

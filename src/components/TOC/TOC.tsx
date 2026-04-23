@@ -511,17 +511,24 @@ export default function TOC({ visible = true }: TOCProps) {
       layers: group.layers,
     }));
 
-    // Get visible layers to pre-select their groups
-    const allVisibleLayersData = getAllVisibleLayers();
+    let groupsToSelect;
 
-    // Find which groups have visible layers
-    const visibleGroupValues = new Set(allVisibleLayersData.map((layer) => layer.group));
-
-    // Pre-select groups that have visible layers, or all groups if none are visible
-    const selectedGroups = allGroups.filter((group) => visibleGroupValues.has(group.value));
-
-    // If no layers are visible, pre-select all groups
-    const groupsToSelect = selectedGroups.length > 0 ? selectedGroups : allGroups;
+    if (tocType === "LIST") {
+      // In list view, pre-select the currently active group
+      const { selectedGroup } = useTOCStore.getState();
+      if (selectedGroup) {
+        const activeGroup = allGroups.find((group) => group.value === selectedGroup.value);
+        groupsToSelect = activeGroup ? [activeGroup] : allGroups;
+      } else {
+        groupsToSelect = allGroups;
+      }
+    } else {
+      // In folder view, pre-select groups that have visible layers
+      const allVisibleLayersData = getAllVisibleLayers();
+      const visibleGroupValues = new Set(allVisibleLayersData.map((layer) => layer.group));
+      const selectedGroups = allGroups.filter((group) => visibleGroupValues.has(group.value));
+      groupsToSelect = selectedGroups.length > 0 ? selectedGroups : allGroups;
+    }
 
     // Open the legend modal with all groups and pre-selected groups
     const { useLegendStore } = await import("@/stores/legendStore");

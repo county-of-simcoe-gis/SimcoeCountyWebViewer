@@ -2617,16 +2617,41 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       }
 
       // Font size dropdown (for label text size)
-      const fontSizeDropdowns = symbolizerContainer.querySelectorAll(".sc-mymaps-style-dropdown");
-      // The font size dropdown is typically the last dropdown in the label style section
-      // Find the one that contains font size options (10px, 12px, etc.)
-      fontSizeDropdowns.forEach((dropdown) => {
-        const selectElement = dropdown as HTMLSelectElement;
-        // Check if this is the font size dropdown by looking at options
+      // Prefer explicit selector for stability, then fall back to legacy class detection.
+      const explicitFontSizeSelect = symbolizerContainer.querySelector("select[name='labelFontSize']") as HTMLSelectElement | null;
+      const fontSizeDropdowns = explicitFontSizeSelect
+        ? [explicitFontSizeSelect]
+        : Array.from(symbolizerContainer.querySelectorAll(".sc-mymaps-style-dropdown")) as HTMLSelectElement[];
+
+      fontSizeDropdowns.forEach((selectElement) => {
+        // When falling back to class-based discovery, verify this dropdown contains px values.
         const options = Array.from(selectElement.options);
-        const isFontSizeDropdown = options.some((opt) => opt.value.includes("px") && !opt.value.includes("Normal") && !opt.value.includes("Dashed"));
+        const isFontSizeDropdown =
+          !!explicitFontSizeSelect || options.some((opt) => opt.value.includes("px") && !opt.value.includes("Normal") && !opt.value.includes("Dashed"));
 
         if (isFontSizeDropdown) {
+          // React sets <select value> via the DOM `.value` property, not the `selected`
+          // attribute on options. When the popup's HTML is copied to the overlay element
+          // via innerHTML, that property is lost and the select falls back to its first
+          // option. Re-hydrate the value from the store's label style so the dropdown
+          // reflects the feature's actual font size on open.
+          const defaultLabelStyle = getDefaultLabelStyle(item.drawType);
+          const mergedLabelStyle = {
+            ...defaultLabelStyle,
+            ...((item.labelStyle as Record<string, unknown>) || {}),
+          } as Record<string, unknown>;
+          const currentFontSize = typeof mergedLabelStyle.textSize === "string" ? mergedLabelStyle.textSize : String(defaultLabelStyle.textSize ?? "14px");
+
+          const hasMatchingOption = options.some((opt) => opt.value === currentFontSize);
+          if (!hasMatchingOption && /^\d+(\.\d+)?px$/i.test(currentFontSize)) {
+            // Ensure the current size is selectable even if it isn't in the base list.
+            const newOption = document.createElement("option");
+            newOption.value = currentFontSize;
+            newOption.textContent = currentFontSize;
+            selectElement.appendChild(newOption);
+          }
+          selectElement.value = currentFontSize;
+
           const handleFontSizeChange = (e: Event) => {
             e.stopPropagation();
             const newFontSize = (e.target as HTMLSelectElement).value;
@@ -3358,12 +3383,6 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       {/* Header */}
       <div id="popup-header" className="popup-header select-none">
         <div>Drawing Options</div>
-        <div className="z-[500]" title="Next">
-          <a className="ol-popup-next" href="#" style={{ display: "block" }}></a>
-        </div>
-        <div className="z-[500] popup-nav-disabled" title="Previous">
-          <a className="ol-popup-previous" href="#" style={{ display: "block" }}></a>
-        </div>
         <div className="z-[500]">
           <a
             className="ol-popup-closer"

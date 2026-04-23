@@ -169,13 +169,24 @@ export default function MoreMenu() {
       layers: group.layers,
     }));
 
-    // Get visible layers to pre-select their groups
-    const allVisibleLayers = tocState.getAllVisibleLayers();
-    const visibleGroupValues = new Set(allVisibleLayers.map((layer) => layer.group));
+    let groupsToSelect;
 
-    // Pre-select groups that have visible layers, or all groups if none are visible
-    const selectedGroups = allGroups.filter((group) => visibleGroupValues.has(group.value));
-    const groupsToSelect = selectedGroups.length > 0 ? selectedGroups : allGroups;
+    if (tocType === "LIST") {
+      // In list view, pre-select the currently active group
+      const { selectedGroup } = tocState;
+      if (selectedGroup) {
+        const activeGroup = allGroups.find((group) => group.value === selectedGroup.value);
+        groupsToSelect = activeGroup ? [activeGroup] : allGroups;
+      } else {
+        groupsToSelect = allGroups;
+      }
+    } else {
+      // In folder view, pre-select groups that have visible layers
+      const allVisibleLayers = tocState.getAllVisibleLayers();
+      const visibleGroupValues = new Set(allVisibleLayers.map((layer) => layer.group));
+      const selectedGroups = allGroups.filter((group) => visibleGroupValues.has(group.value));
+      groupsToSelect = selectedGroups.length > 0 ? selectedGroups : allGroups;
+    }
 
     openLegend(allGroups, groupsToSelect);
   }, [closeMoreMenu, openLegend]);
