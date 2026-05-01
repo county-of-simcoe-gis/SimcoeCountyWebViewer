@@ -105,7 +105,7 @@ describe("ThemePopupContent", () => {
     render(<ThemePopupContent properties={mockProperties} />);
 
     const closeButton = screen.getByRole("button", { name: /close/i });
-    fireEvent.click(closeButton);
+    fireEvent.pointerDown(closeButton);
 
     expect(mockHide).toHaveBeenCalled();
   });
