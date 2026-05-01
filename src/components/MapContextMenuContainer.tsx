@@ -254,7 +254,7 @@ export const MapContextMenuContainer: React.FC = () => {
 
   // Check if context menu should be disabled
   const checkDisableFlags = useCallback(() => {
-    return useMapStore.getState().checkGlobalDisable();
+    return useMapStore.getState().isToolActive();
   }, []);
 
   // Initialize identify icon layer

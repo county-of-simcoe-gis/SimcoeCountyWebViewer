@@ -6,7 +6,6 @@ import { FaPalette } from "react-icons/fa";
 import ThemeLayers from "../shared/ThemeLayers";
 import ThemeData from "../shared/ThemeData";
 import config from "./config.json";
-import { useDisableParcelClick } from "@/hooks/useDisableParcelClick";
 
 interface ImmigrationServicesProps {
   name?: string;
@@ -18,7 +17,6 @@ interface ImmigrationServicesProps {
 
 export default function ImmigrationServices({ name = "Immigration Services", helpLink, hideHeader = false, onClose, onSidebarVisibility }: ImmigrationServicesProps) {
   const [layerVisibilityStates, setLayerVisibilityStates] = useState<Record<string, boolean>>({});
-  useDisableParcelClick(config.disableParcelClick);
 
   return (
     <PanelComponent icon={<FaPalette size={20} className="text-neutral/70" />} name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={onClose} onSidebarVisibility={onSidebarVisibility}>
@@ -34,7 +32,7 @@ export default function ImmigrationServices({ name = "Immigration Services", hel
         {/* Toggle Layers */}
         <div>
           <h3 className="text-sm font-semibold mb-3">Services</h3>
-          <ThemeLayers layers={config.toggleLayers} themeId="immigrationservices" onVisibilityChange={setLayerVisibilityStates} />
+          <ThemeLayers layers={config.toggleLayers} themeId="immigrationservices" onVisibilityChange={setLayerVisibilityStates} suppressParcelClick={config.disableParcelClick} />
         </div>
 
         <div className="divider my-2"></div>

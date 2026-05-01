@@ -141,10 +141,7 @@ export default function CommercialRealEstate({ name = "Commercial Real Estate", 
       eventType: "singleclick",
       priority: 50,
       conditions: {
-        checkDisableFlags: () => {
-          const { isDrawingOrEditing, isCoordinateToolOpen, isMeasuring } = useMapStore.getState();
-          return isDrawingOrEditing || isCoordinateToolOpen || isMeasuring;
-        },
+        checkDisableFlags: () => useMapStore.getState().isToolActive(),
       },
       handler: async (coordinate: number[]): Promise<InteractionResult[]> => {
         const results: InteractionResult[] = [];

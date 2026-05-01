@@ -139,10 +139,7 @@ describe("MapContextMenuContainer", () => {
 
     // Reset all store flags
     useMapStore.setState({
-      disableParcelClick: false,
-      isDrawingOrEditing: false,
-      isCoordinateToolOpen: false,
-      isMeasuring: false,
+      activeToolId: null,
     });
 
     // Reset sidebar store
@@ -230,38 +227,34 @@ describe("MapContextMenuContainer", () => {
     });
   });
 
-  it("does not show menu when disable flags are set", async () => {
-    useMapStore.setState({ isDrawingOrEditing: true });
+  it("does not show menu when a tool is active (mymaps-draw)", async () => {
+    useMapStore.setState({ activeToolId: "mymaps-draw" });
 
     render(<MapContextMenuContainer />);
 
-    // The checkDisableFlags should return true, preventing menu display
-    const state = useMapStore.getState();
-    expect(state.isDrawingOrEditing).toBe(true);
+    // checkDisableFlags should return true, preventing menu display
+    expect(useMapStore.getState().isToolActive()).toBe(true);
   });
 
-  it("respects disableParcelClick flag", () => {
-    useMapStore.setState({ disableParcelClick: true });
+  it("respects active tool gating (parcel)", () => {
+    useMapStore.setState({ activeToolId: "toggler" });
     render(<MapContextMenuContainer />);
 
-    const state = useMapStore.getState();
-    expect(state.disableParcelClick).toBe(true);
+    expect(useMapStore.getState().isToolActive()).toBe(true);
   });
 
-  it("respects isCoordinateToolOpen flag", () => {
-    useMapStore.setState({ isCoordinateToolOpen: true });
+  it("respects active tool gating (coordinates)", () => {
+    useMapStore.setState({ activeToolId: "coordinates" });
     render(<MapContextMenuContainer />);
 
-    const state = useMapStore.getState();
-    expect(state.isCoordinateToolOpen).toBe(true);
+    expect(useMapStore.getState().isToolActive("coordinates")).toBe(true);
   });
 
-  it("respects isMeasuring flag", () => {
-    useMapStore.setState({ isMeasuring: true });
+  it("respects active tool gating (measure)", () => {
+    useMapStore.setState({ activeToolId: "measure" });
     render(<MapContextMenuContainer />);
 
-    const state = useMapStore.getState();
-    expect(state.isMeasuring).toBe(true);
+    expect(useMapStore.getState().isToolActive("measure")).toBe(true);
   });
 
   it("handles property report functionality", async () => {

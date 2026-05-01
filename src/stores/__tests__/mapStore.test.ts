@@ -21,11 +21,6 @@ beforeEach(() => {
     map: null,
     popup: null,
     activeToolId: null,
-    disableParcelClick: false,
-    disableIdentifyClick: false,
-    isDrawingOrEditing: false,
-    isCoordinateToolOpen: false,
-    isMeasuring: false,
     mapControls: null,
     loadedItems: [],
     currentExtent: null,
@@ -42,11 +37,6 @@ describe('mapStore', () => {
       expect(state.map).toBeNull()
       expect(state.popup).toBeNull()
       expect(state.activeToolId).toBeNull()
-      expect(state.disableParcelClick).toBe(false)
-      expect(state.disableIdentifyClick).toBe(false)
-      expect(state.isDrawingOrEditing).toBe(false)
-      expect(state.isCoordinateToolOpen).toBe(false)
-      expect(state.isMeasuring).toBe(false)
       expect(state.mapControls).toBeNull()
       expect(state.loadedItems).toEqual([])
       expect(state.currentExtent).toBeNull()
@@ -92,49 +82,12 @@ describe('mapStore', () => {
   })
 
   describe('Interaction State Management', () => {
-    it('should toggle parcel click state', () => {
-      // Use setState to toggle parcel click
-      useMapStore.setState({ disableParcelClick: true })
-      expect(useMapStore.getState().disableParcelClick).toBe(true)
-      
-      useMapStore.setState({ disableParcelClick: false })
-      expect(useMapStore.getState().disableParcelClick).toBe(false)
-    })
+    it('should set and clear activeToolId', () => {
+      useMapStore.getState().setActiveToolId('measure')
+      expect(useMapStore.getState().activeToolId).toBe('measure')
 
-    it('should toggle identify click state', () => {
-      // Use setState to toggle identify click
-      useMapStore.setState({ disableIdentifyClick: true })
-      expect(useMapStore.getState().disableIdentifyClick).toBe(true)
-      
-      useMapStore.setState({ disableIdentifyClick: false })
-      expect(useMapStore.getState().disableIdentifyClick).toBe(false)
-    })
-
-    it('should toggle drawing/editing state', () => {
-      // Use setState to toggle drawing/editing
-      useMapStore.setState({ isDrawingOrEditing: true })
-      expect(useMapStore.getState().isDrawingOrEditing).toBe(true)
-      
-      useMapStore.setState({ isDrawingOrEditing: false })
-      expect(useMapStore.getState().isDrawingOrEditing).toBe(false)
-    })
-
-    it('should toggle coordinate tool state', () => {
-      // Use setState to toggle coordinate tool
-      useMapStore.setState({ isCoordinateToolOpen: true })
-      expect(useMapStore.getState().isCoordinateToolOpen).toBe(true)
-      
-      useMapStore.setState({ isCoordinateToolOpen: false })
-      expect(useMapStore.getState().isCoordinateToolOpen).toBe(false)
-    })
-
-    it('should toggle measuring state', () => {
-      // Use setState to toggle measuring
-      useMapStore.setState({ isMeasuring: true })
-      expect(useMapStore.getState().isMeasuring).toBe(true)
-      
-      useMapStore.setState({ isMeasuring: false })
-      expect(useMapStore.getState().isMeasuring).toBe(false)
+      useMapStore.getState().setActiveToolId(null)
+      expect(useMapStore.getState().activeToolId).toBeNull()
     })
   })
 
@@ -290,20 +243,15 @@ describe('mapStore', () => {
   })
 
   describe('Complex Scenarios', () => {
-    it('should handle multiple interaction states simultaneously', () => {
-      // Set multiple states at once
-      useMapStore.setState({
-        isDrawingOrEditing: true,
-        isMeasuring: true,
-        disableParcelClick: true,
-        isCoordinateToolOpen: true
-      })
-      
-      const state = useMapStore.getState()
-      expect(state.isDrawingOrEditing).toBe(true)
-      expect(state.isMeasuring).toBe(true)
-      expect(state.disableParcelClick).toBe(true)
-      expect(state.isCoordinateToolOpen).toBe(true)
+    it('should handle activeToolId switches correctly', () => {
+      useMapStore.getState().setActiveToolId('measure')
+      expect(useMapStore.getState().activeToolId).toBe('measure')
+
+      useMapStore.getState().setActiveToolId('mymaps-draw')
+      expect(useMapStore.getState().activeToolId).toBe('mymaps-draw')
+
+      useMapStore.getState().setActiveToolId(null)
+      expect(useMapStore.getState().activeToolId).toBeNull()
     })
 
     it('should handle loading workflow', () => {
@@ -339,114 +287,69 @@ describe('mapStore', () => {
       useMapStore.setState({
         currentZoom: 19,  // Last zoom value (9 + 10)
         loadedItems: componentNames,
-        isDrawingOrEditing: false  // Last value (9 % 2 === 0 is false)
       })
       
       const state = useMapStore.getState()
       expect(state.currentZoom).toBe(19)
       expect(state.loadedItems).toHaveLength(10)
-      expect(state.isDrawingOrEditing).toBe(false)
     })
   })
 
   describe('Active Tool Management', () => {
-    it('should set activeToolId and sync legacy flags for measure', () => {
+    it('should set activeToolId for measure', () => {
       useMapStore.getState().setActiveToolId('measure')
-      const state = useMapStore.getState()
-
-      expect(state.activeToolId).toBe('measure')
-      expect(state.disableParcelClick).toBe(true)
-      expect(state.isMeasuring).toBe(true)
-      expect(state.isCoordinateToolOpen).toBe(false)
-      expect(state.isDrawingOrEditing).toBe(false)
+      expect(useMapStore.getState().activeToolId).toBe('measure')
     })
 
-    it('should set activeToolId and sync legacy flags for coordinates', () => {
+    it('should set activeToolId for coordinates', () => {
       useMapStore.getState().setActiveToolId('coordinates')
-      const state = useMapStore.getState()
-
-      expect(state.activeToolId).toBe('coordinates')
-      expect(state.disableParcelClick).toBe(true)
-      expect(state.isCoordinateToolOpen).toBe(true)
-      expect(state.isMeasuring).toBe(false)
-      expect(state.isDrawingOrEditing).toBe(false)
+      expect(useMapStore.getState().activeToolId).toBe('coordinates')
     })
 
-    it('should set activeToolId and sync legacy flags for mymaps-draw', () => {
+    it('should set activeToolId for mymaps-draw', () => {
       useMapStore.getState().setActiveToolId('mymaps-draw')
-      const state = useMapStore.getState()
-
-      expect(state.activeToolId).toBe('mymaps-draw')
-      expect(state.disableParcelClick).toBe(true)
-      expect(state.isDrawingOrEditing).toBe(true)
-      expect(state.isMeasuring).toBe(false)
-      expect(state.isCoordinateToolOpen).toBe(false)
+      expect(useMapStore.getState().activeToolId).toBe('mymaps-draw')
     })
 
-    it('should set activeToolId and sync legacy flags for mymaps-edit', () => {
+    it('should set activeToolId for mymaps-edit', () => {
       useMapStore.getState().setActiveToolId('mymaps-edit')
-      const state = useMapStore.getState()
-
-      expect(state.activeToolId).toBe('mymaps-edit')
-      expect(state.disableParcelClick).toBe(true)
-      expect(state.isDrawingOrEditing).toBe(true)
+      expect(useMapStore.getState().activeToolId).toBe('mymaps-edit')
     })
 
-    it('should set activeToolId for generic tool and disable parcel click', () => {
+    it('should set activeToolId for generic tool', () => {
       useMapStore.getState().setActiveToolId('toggler')
-      const state = useMapStore.getState()
-
-      expect(state.activeToolId).toBe('toggler')
-      expect(state.disableParcelClick).toBe(true)
-      expect(state.isMeasuring).toBe(false)
-      expect(state.isCoordinateToolOpen).toBe(false)
-      expect(state.isDrawingOrEditing).toBe(false)
+      expect(useMapStore.getState().activeToolId).toBe('toggler')
     })
 
-    it('should clear all flags when activeToolId is set to null', () => {
-      // First activate a tool
+    it('should clear activeToolId when set to null', () => {
       useMapStore.getState().setActiveToolId('measure')
       expect(useMapStore.getState().activeToolId).toBe('measure')
 
-      // Then deactivate
       useMapStore.getState().setActiveToolId(null)
-      const state = useMapStore.getState()
-
-      expect(state.activeToolId).toBeNull()
-      expect(state.disableParcelClick).toBe(false)
-      expect(state.isMeasuring).toBe(false)
-      expect(state.isCoordinateToolOpen).toBe(false)
-      expect(state.isDrawingOrEditing).toBe(false)
+      expect(useMapStore.getState().activeToolId).toBeNull()
     })
 
-    it('isToolActive should return true when a tool is active', () => {
+    it('isToolActive() should return true when a tool is active', () => {
       useMapStore.getState().setActiveToolId('measure')
       expect(useMapStore.getState().isToolActive()).toBe(true)
     })
 
-    it('isToolActive should return false when no tool is active', () => {
+    it('isToolActive() should return false when no tool is active', () => {
       expect(useMapStore.getState().isToolActive()).toBe(false)
     })
 
-    it('checkGlobalDisable should return true when a tool is active', () => {
-      useMapStore.getState().setActiveToolId('coordinates')
-      expect(useMapStore.getState().checkGlobalDisable()).toBe(true)
-    })
-
-    it('checkGlobalDisable should return false when no tool is active', () => {
-      expect(useMapStore.getState().checkGlobalDisable()).toBe(false)
+    it('isToolActive(toolId) should compare against activeToolId', () => {
+      useMapStore.getState().setActiveToolId('measure')
+      expect(useMapStore.getState().isToolActive('measure')).toBe(true)
+      expect(useMapStore.getState().isToolActive('coordinates')).toBe(false)
     })
 
     it('should replace previous tool when switching tools', () => {
       useMapStore.getState().setActiveToolId('measure')
-      expect(useMapStore.getState().isMeasuring).toBe(true)
+      expect(useMapStore.getState().activeToolId).toBe('measure')
 
       useMapStore.getState().setActiveToolId('coordinates')
-      const state = useMapStore.getState()
-
-      expect(state.activeToolId).toBe('coordinates')
-      expect(state.isMeasuring).toBe(false)
-      expect(state.isCoordinateToolOpen).toBe(true)
+      expect(useMapStore.getState().activeToolId).toBe('coordinates')
     })
   })
 

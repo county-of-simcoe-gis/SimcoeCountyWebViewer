@@ -7,7 +7,6 @@ import ThemeBaseLayers from "../shared/ThemeBaseLayers";
 import ThemeLayers from "../shared/ThemeLayers";
 import ThemeData from "../shared/ThemeData";
 import config from "./config.json";
-import { useDisableParcelClick } from "@/hooks/useDisableParcelClick";
 
 interface ForestryProps {
   name?: string;
@@ -19,7 +18,6 @@ interface ForestryProps {
 
 export default function Forestry({ name = "Forestry", helpLink, hideHeader = false, onClose, onSidebarVisibility }: ForestryProps) {
   const [layerVisibilityStates, setLayerVisibilityStates] = useState<Record<string, boolean>>({});
-  useDisableParcelClick(config.disableParcelClick);
 
   return (
     <PanelComponent icon={<FaPalette size={20} className="text-neutral/70" />} name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={onClose} onSidebarVisibility={onSidebarVisibility}>
@@ -33,7 +31,13 @@ export default function Forestry({ name = "Forestry", helpLink, hideHeader = fal
 
         <div>
           <h3 className="text-sm font-semibold mb-3">Toggle Layers</h3>
-          <ThemeLayers layers={config.toggleLayers} themeId="forestry" popupLogoImage={config.popupLogoImage} onVisibilityChange={setLayerVisibilityStates} />
+          <ThemeLayers
+            layers={config.toggleLayers}
+            themeId="forestry"
+            popupLogoImage={config.popupLogoImage}
+            onVisibilityChange={setLayerVisibilityStates}
+            suppressParcelClick={config.disableParcelClick}
+          />
         </div>
 
         <div className="divider my-2"></div>

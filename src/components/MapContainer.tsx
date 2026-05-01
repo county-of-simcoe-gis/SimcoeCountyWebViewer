@@ -9,6 +9,7 @@ import { useInteractionManagerStore, type InteractionHandler as StoreInteraction
 import { useSession } from "next-auth/react";
 import type { Interaction as OLInteraction } from "ol/interaction";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
+import { InteractionManager } from "@/utils/openlayers/InteractionManager";
 import { useUrlParameterContextOptional } from "@/contexts/UrlParameterContext";
 import { getPublicPath } from "@/utils/getPublicPath";
 
@@ -272,7 +273,35 @@ export default function MapContainer() {
   // Update ref whenever shouldExecuteHandler changes
   useEffect(() => {
     shouldExecuteHandlerRef.current = shouldExecuteHandler;
+    // Publish to the InteractionManager so its dispatcher can consult the
+    // up-to-date condition checker (which depends on map zoom/scale).
+    InteractionManager.setHandlerFilter(shouldExecuteHandler as Parameters<typeof InteractionManager.setHandlerFilter>[0]);
   }, [shouldExecuteHandler]);
+
+  // Wire up the aggregation callbacks once. The setters/refs they reference
+  // are stable across renders; the InteractionManager calls them on every
+  // singleclick to drive the React-side popup state machine.
+  useEffect(() => {
+    InteractionManager.setAggregationCallbacks({
+      onClickStart: (coordinate) => {
+        clickGenerationRef.current += 1;
+        const generation = clickGenerationRef.current;
+        setIsLoadingResults(true);
+        setResultsCoordinate(coordinate);
+        setAggregatedResults([]);
+        return generation;
+      },
+      onClickResults: (results, generation) => {
+        if (clickGenerationRef.current !== generation) return;
+        setAggregatedResults(results);
+        setIsLoadingResults(false);
+      },
+      onClickError: (generation) => {
+        if (clickGenerationRef.current !== generation) return;
+        setIsLoadingResults(false);
+      },
+    });
+  }, []);
 
   // Handler registration - delegate to store
   const registerHandler = useCallback(
@@ -499,130 +528,10 @@ export default function MapContainer() {
       (window as unknown as { map: Map | null; config: typeof activeConfig | null }).config = activeConfig;
     }
 
-    // Create unified interaction to handle all registered handlers
-    class UnifiedInteraction extends Interaction {
-      handleEvent(event: MapBrowserEvent<OLUIEvent>): boolean {
-        const eventType = event.type as InteractionEventType;
-
-        // Global guard: suppress all singleclick handling while any tool is active
-        // (drawing, editing, measuring, eraser, coordinates, toggler, etc.)
-        // Returns false to stop the event from reaching map.on("singleclick")
-        // listeners (identify, property report, etc.). The Draw interaction uses
-        // "click" events (not "singleclick") and sits higher in the interaction
-        // chain, so it is unaffected.
-        if (eventType === "singleclick") {
-          const mapState = useMapStore.getState();
-          const toolId = mapState.activeToolId;
-          // The eraser still needs singleclick events to reach the handler
-          // pipeline so it can detect which feature to remove. Other handlers
-          // (identify, property) are individually suppressed via their own
-          // checkDisableFlags when the eraser is active.
-          if (toolId && toolId !== "mymaps-eraser") {
-            return false;
-          }
-        }
-
-        // Get handlers directly from store to ensure we have the latest
-        const currentHandlers = useInteractionManagerStore.getState().handlers as InteractionHandler[];
-        const checkHandler = shouldExecuteHandlerRef.current || (() => true);
-        const applicableHandlers = currentHandlers.filter((h) => h.eventType === eventType && checkHandler(h, event));
-        // console.log(
-        //   `UnifiedInteraction: Applicable handlers for "${eventType}": ${applicableHandlers.length}`,
-        //   applicableHandlers.map((h) => h.id),
-        // );
-
-        if (applicableHandlers.length === 0) {
-          return true; // Allow event to propagate
-        }
-
-        // Prevent double clicks for singleclick events
-        if (eventType === "singleclick") {
-          const now = event.originalEvent.timeStamp;
-          const lastClickTime = (this as unknown as { lastClickTime?: number }).lastClickTime;
-          if (lastClickTime && now - lastClickTime < 300) {
-            return false; // Ignore double click
-          }
-          (this as unknown as { lastClickTime: number }).lastClickTime = now;
-        }
-
-        // Prevent default for contextmenu
-        if (eventType === "contextmenu") {
-          event.originalEvent.preventDefault();
-        }
-
-        // For click events, aggregate results and show unified popup
-        if (eventType === "singleclick") {
-          // Bump generation so any previous popup's onCloseCallback becomes a no-op
-          clickGenerationRef.current += 1;
-          const thisGeneration = clickGenerationRef.current;
-
-          // Set loading state
-          setIsLoadingResults(true);
-          setResultsCoordinate(event.coordinate);
-          setAggregatedResults([]);
-
-          // Execute all applicable handlers
-          const handlerPromises = applicableHandlers.map(async (handler) => {
-            try {
-              return await Promise.resolve(handler.handler(event.coordinate, event.pixel, event));
-            } catch (error) {
-              console.error(`Error executing handler "${handler.id}":`, error);
-              return null;
-            }
-          });
-
-          // Collect all results and show unified popup
-          Promise.all(handlerPromises)
-            .then((allResults) => {
-              // If a newer click has started, discard these stale results
-              if (clickGenerationRef.current !== thisGeneration) {
-                return;
-              }
-
-              // Filter out null/undefined and flatten results
-              const flatResults: Result[] = [];
-              allResults.forEach((result) => {
-                if (result) {
-                  if (Array.isArray(result)) {
-                    flatResults.push(...result);
-                  }
-                }
-              });
-
-              // Sort results by layer z-index descending so top-most layers appear first
-              flatResults.sort((a, b) => (b.layerZIndex ?? 0) - (a.layerZIndex ?? 0));
-
-              // Update state with results
-              setAggregatedResults(flatResults);
-              setIsLoadingResults(false);
-            })
-            .catch((error) => {
-              console.error("Error collecting interaction results:", error);
-              if (clickGenerationRef.current === thisGeneration) {
-                setIsLoadingResults(false);
-              }
-            });
-
-          // Stop event propagation for handled events
-          return false;
-        }
-
-        // For other events (contextmenu, etc.), execute handlers without aggregation
-        applicableHandlers.forEach((handler) => {
-          try {
-            handler.handler(event.coordinate, event.pixel, event);
-          } catch (error) {
-            console.error(`Error executing handler "${handler.id}":`, error);
-          }
-        });
-
-        // Stop event propagation for handled events
-        return false;
-      }
-    }
-
-    const unifiedInteraction = new UnifiedInteraction();
-    mapInstance.addInteraction(unifiedInteraction);
+    // Attach the singleton InteractionManager — owns handler dispatch,
+    // tool-active gating, post-aggregation parcel-click suppression, and OL
+    // interaction lifecycle. This replaces the former inline UnifiedInteraction.
+    const unifiedInteraction = InteractionManager.attach(mapInstance);
     unifiedInteractionRef.current = unifiedInteraction;
 
     // Create identify icon layer

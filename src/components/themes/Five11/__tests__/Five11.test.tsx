@@ -42,20 +42,16 @@ vi.mock("@/stores/mapStore", () => ({
     vi.fn((selector?: (state: any) => any) => {
       const state = {
         map: mockMap,
-        isDrawingOrEditing: false,
-        isCoordinateToolOpen: false,
-        isMeasuring: false,
-        checkGlobalDisable: () => false,
+        activeToolId: null,
+        isToolActive: () => false,
       };
       return selector ? selector(state) : state;
     }),
     {
       getState: vi.fn(() => ({
         map: mockMap,
-        isDrawingOrEditing: false,
-        isCoordinateToolOpen: false,
-        isMeasuring: false,
-        checkGlobalDisable: () => false,
+        activeToolId: null,
+        isToolActive: () => false,
       })),
       setState: vi.fn(),
       subscribe: vi.fn(),

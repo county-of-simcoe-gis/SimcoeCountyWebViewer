@@ -67,7 +67,6 @@ export class MyMapsDrawingManager {
       });
 
       this.vectorLayer.setProperties({
-        disableParcelClick: true,
         name: MyMapsDrawingManager.LAYER_NAME,
       });
 

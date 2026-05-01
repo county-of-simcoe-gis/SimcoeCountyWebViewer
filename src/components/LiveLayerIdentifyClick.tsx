@@ -127,7 +127,7 @@ function LiveLayerPopupContent({ properties }: { properties: Record<string, unkn
 
 export default function LiveLayerIdentifyClick() {
   const map = useMapStore((s) => s.map);
-  const checkGlobalDisable = useMapStore((s) => s.checkGlobalDisable);
+  const checkGlobalDisable = useMapStore((s) => s.isToolActive);
   const allLayers = useTOCStore((state) => state.allLayers);
   const registerHandler = useInteractionManagerStore((s) => s.registerHandler);
   const unregisterHandler = useInteractionManagerStore((s) => s.unregisterHandler);

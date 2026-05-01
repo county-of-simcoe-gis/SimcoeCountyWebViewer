@@ -212,6 +212,7 @@ describe("MyMapsService Component", () => {
       expect(mockDrawingManager.getVectorLayer).toHaveBeenCalled();
       expect(mockLayerManagerStore.addLayer).toHaveBeenCalledWith(mockVectorLayer, "MyMaps", "MyMaps Drawing Layer", {
         id: "mymaps-drawing-layer",
+        suppressParcelClick: true,
         metadata: {
           description: "User drawings and custom map features",
           category: "MyMaps",

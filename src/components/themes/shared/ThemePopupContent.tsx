@@ -40,8 +40,12 @@ export default function ThemePopupContent({ properties, moreInfoUrlFieldName, po
         </div>
       )}
 
-      {/* Property rows */}
-      <div className="space-y-1 max-h-[300px] overflow-y-auto">
+      {/* Property rows — scrolling is handled by the outer popup wrapper, so do
+          not introduce a nested scroll container here. Nested overflow
+          containers caused the popup to add/remove scrollbars in response to
+          tiny layout changes (e.g. button focus rings), which shifted the
+          Close button under the cursor between mousedown and click. */}
+      <div className="space-y-1">
         {displayEntries.map(([key, value]) => (
           <div key={key} className="flex gap-2 py-1 border-b border-base-200 last:border-0">
             <span className="font-medium text-xs text-base-content/70 min-w-[80px]">{formatLabel(key)}:</span>
@@ -50,15 +54,27 @@ export default function ThemePopupContent({ properties, moreInfoUrlFieldName, po
         ))}
       </div>
 
-      {/* Action buttons */}
-      <div className="flex gap-2 mt-4">
+      {/* Action buttons — shrink-0 keeps them from being squeezed when the
+          outer popup adds a scrollbar. The Close button fires on pointerdown
+          (rather than click) because the button's focus state can introduce a
+          1–2 px layout shift in the outer popup, causing a scrollbar to appear
+          between mousedown and mouseup; the resulting horizontal reflow moves
+          the button out from under the cursor and the click is lost. Acting on
+          pointerdown commits the close before any layout change can happen. */}
+      <div className="flex gap-2 mt-4 shrink-0">
         {moreInfoUrl && (
           <button className="btn btn-sm btn-primary flex-1" onClick={handleMoreInfo}>
             <FaExternalLinkAlt className="w-3 h-3" />
             More Information
           </button>
         )}
-        <button className="btn btn-sm btn-outline flex-1" onClick={hide}>
+        <button
+          className="btn btn-sm btn-outline flex-1"
+          onPointerDown={(e) => {
+            e.preventDefault();
+            hide();
+          }}
+        >
           <FaTimes className="w-3 h-3" />
           Close
         </button>

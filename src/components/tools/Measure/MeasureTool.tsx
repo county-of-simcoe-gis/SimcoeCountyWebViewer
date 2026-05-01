@@ -151,7 +151,8 @@ const unitList: UnitDefinition[] = [
 
 export default function MeasureTool({ name = "Measure", helpLink, hideHeader = false, onClose, onSidebarVisibility }: MeasureToolProps) {
   // Stores
-  const { map, isDrawingOrEditing, setActiveToolId } = useMapStore();
+  const { map, activeToolId, setActiveToolId } = useMapStore();
+  const isDrawingOrEditing = activeToolId === "mymaps-draw" || activeToolId === "mymaps-edit" || activeToolId === "mymaps-eraser";
   const { hide: hidePopup } = usePopupStore();
 
   // State
@@ -257,52 +258,49 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
   }, []);
 
   // Pointer move handler
-  const pointerMoveHandler = useCallback(
-    (evt: { dragging: boolean; coordinate: Coordinate }) => {
-      if (evt.dragging || !activeToolRef.current) {
-        if (measureTooltipElementRef.current) measureTooltipElementRef.current.className = "hidden";
-        if (helpTooltipElementRef.current) helpTooltipElementRef.current.className = "hidden";
-        return;
-      }
+  const pointerMoveHandler = useCallback((evt: { dragging: boolean; coordinate: Coordinate }) => {
+    if (evt.dragging || !activeToolRef.current) {
+      if (measureTooltipElementRef.current) measureTooltipElementRef.current.className = "hidden";
+      if (helpTooltipElementRef.current) helpTooltipElementRef.current.className = "hidden";
+      return;
+    }
 
-      let helpMsg = "Click to start drawing";
-      if (sketchRef.current) {
-        switch (geometryTypeRef.current) {
-          case "Polygon":
-            helpMsg = continuePolygonMsg;
-            break;
-          case "LineString":
-            helpMsg = continueLineMsg;
-            break;
-          case "Circle":
-            helpMsg = continueCircleMsg;
-            break;
-          case "Rectangle":
-            helpMsg = continueRectangleMsg;
-            break;
-          case "Bearing":
-            helpMsg = continueLineMsg;
-            break;
-        }
+    let helpMsg = "Click to start drawing";
+    if (sketchRef.current) {
+      switch (geometryTypeRef.current) {
+        case "Polygon":
+          helpMsg = continuePolygonMsg;
+          break;
+        case "LineString":
+          helpMsg = continueLineMsg;
+          break;
+        case "Circle":
+          helpMsg = continueCircleMsg;
+          break;
+        case "Rectangle":
+          helpMsg = continueRectangleMsg;
+          break;
+        case "Bearing":
+          helpMsg = continueLineMsg;
+          break;
       }
+    }
 
-      if (helpTooltipElementRef.current) {
-        helpTooltipElementRef.current.innerHTML = helpMsg;
-      }
-      if (helpTooltipRef.current) {
-        helpTooltipRef.current.setPosition(evt.coordinate);
-      }
+    if (helpTooltipElementRef.current) {
+      helpTooltipElementRef.current.innerHTML = helpMsg;
+    }
+    if (helpTooltipRef.current) {
+      helpTooltipRef.current.setPosition(evt.coordinate);
+    }
 
-      if (!hideTooltipsRef.current) {
-        if (helpTooltipElementRef.current) helpTooltipElementRef.current.className = "measure-tooltip-help";
-        if (measureTooltipElementRef.current) measureTooltipElementRef.current.className = "measure-tooltip";
-      } else {
-        if (helpTooltipElementRef.current) helpTooltipElementRef.current.className = "hidden";
-        if (measureTooltipElementRef.current) measureTooltipElementRef.current.className = "hidden";
-      }
-    },
-    [],
-  );
+    if (!hideTooltipsRef.current) {
+      if (helpTooltipElementRef.current) helpTooltipElementRef.current.className = "measure-tooltip-help";
+      if (measureTooltipElementRef.current) measureTooltipElementRef.current.className = "measure-tooltip";
+    } else {
+      if (helpTooltipElementRef.current) helpTooltipElementRef.current.className = "hidden";
+      if (measureTooltipElementRef.current) measureTooltipElementRef.current.className = "hidden";
+    }
+  }, []);
 
   // Reset function
   const reset = useCallback(() => {
@@ -504,20 +502,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
         snapRef.current = snap;
       }
     }
-  }, [
-    map,
-    geometryType,
-    isDrawingOrEditing,
-    enableSnapping,
-    setActiveToolId,
-    hidePopup,
-    formatLength,
-    formatArea,
-    formatCircle,
-    pointerMoveHandler,
-    onMouseOutEvent,
-    getVisibleVectorSources,
-  ]);
+  }, [map, geometryType, isDrawingOrEditing, enableSnapping, setActiveToolId, hidePopup, formatLength, formatArea, formatCircle, pointerMoveHandler, onMouseOutEvent, getVisibleVectorSources]);
 
   // Handle geometry button click
   const onGeometryButtonClick = useCallback(
@@ -578,12 +563,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
   const addToMyMaps = useCallback(
     (featureToAdd: Feature<Geometry>, label: string) => {
       const featureStyle = featureToAdd.getStyle();
-      const myMapsItem = createMyMapsItem(
-        featureToAdd,
-        "Buffer",
-        label,
-        featureStyle instanceof Style ? styleToJSON(featureStyle) : undefined,
-      );
+      const myMapsItem = createMyMapsItem(featureToAdd, "Buffer", label, featureStyle instanceof Style ? styleToJSON(featureStyle) : undefined);
       myMapsItem.featureGeoJSON = featureToGeoJSON(featureToAdd);
       useMyMapsStore.getState().addItem(myMapsItem);
       useEventStore.getState().emit("mymap-item-created", { item: myMapsItem });
@@ -758,7 +738,6 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
               />
             ))}
         </div>
-
       </div>
     </PanelComponent>
   );

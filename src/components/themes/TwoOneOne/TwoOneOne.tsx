@@ -15,7 +15,6 @@ import { fromLonLat } from "ol/proj";
 import { useMapStore } from "@/stores/mapStore";
 import { usePopupStore } from "@/stores/popupStore";
 import { useInteractionManagerStore, type InteractionResult } from "@/stores/interactionManagerStore";
-import { useDisableParcelClick } from "@/hooks/useDisableParcelClick";
 import TwoOneOnePopupContent from "./TwoOneOnePopupContent";
 import ResultsPopup, { type Result } from "@/components/ResultsPopup";
 
@@ -113,7 +112,6 @@ export default function TwoOneOne({ name = "211 Community Services", helpLink, h
   const map = useMapStore((state) => state.map);
   const { show: showPopup, hide: hidePopup } = usePopupStore();
   const { registerHandler, unregisterHandler } = useInteractionManagerStore();
-  useDisableParcelClick(true);
 
   // State
   const [isFrench, setIsFrench] = useState(false);
@@ -160,10 +158,10 @@ export default function TwoOneOne({ name = "211 Community Services", helpLink, h
     });
 
     vectorLayer.set("name", "sc-211");
-    vectorLayer.set("disableParcelClick", true);
 
     const layerId = LayerManager.addLayer(vectorLayer, "Themes", "211 Services", {
       visible: true,
+      suppressParcelClick: true,
     });
 
     layerIdRef.current = layerId;

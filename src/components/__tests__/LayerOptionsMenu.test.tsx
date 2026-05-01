@@ -118,6 +118,9 @@ describe("LayerOptionsMenu", () => {
     visible: true,
     opacity: 0.8,
     addedAt: new Date(),
+    clickable: false,
+    suppressParcelClick: false,
+    suppressParcelClickAlways: false,
   };
 
   const defaultProps = {

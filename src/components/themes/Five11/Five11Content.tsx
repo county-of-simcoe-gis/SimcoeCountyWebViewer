@@ -98,7 +98,7 @@ export default function Five11Content({ visible = true }: Five11ContentProps) {
       priority: 50,
       conditions: {
         checkDisableFlags: () => {
-          return useMapStore.getState().checkGlobalDisable();
+          return useMapStore.getState().isToolActive();
         },
       },
       handler: async (coordinate: number[], pixel: number[]): Promise<InteractionResult[]> => {

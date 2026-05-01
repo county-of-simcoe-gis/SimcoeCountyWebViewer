@@ -53,9 +53,7 @@ export default function MyMapsService() {
     }
 
     if (Array.isArray(featureStyle) && featureStyle.length > 0) {
-      const baseStyle =
-        featureStyle.find((s) => s instanceof Style && (!!s.getImage() || !!s.getFill() || !!s.getStroke())) ||
-        featureStyle.find((s) => s instanceof Style);
+      const baseStyle = featureStyle.find((s) => s instanceof Style && (!!s.getImage() || !!s.getFill() || !!s.getStroke())) || featureStyle.find((s) => s instanceof Style);
       const textCarrier = featureStyle.find((s) => s instanceof Style && !!s.getText());
 
       if (baseStyle instanceof Style) {
@@ -252,10 +250,7 @@ export default function MyMapsService() {
           // Sync live label text style into the store so the popup (which re-reads from
           // the store by id) reflects actual rendered values like font size/color.
           if (liveLabelStyle) {
-            const existingLabelStyle =
-              item.labelStyle && typeof item.labelStyle === "object" && !(item.labelStyle instanceof Style)
-                ? (item.labelStyle as Record<string, unknown>)
-                : {};
+            const existingLabelStyle = item.labelStyle && typeof item.labelStyle === "object" && !(item.labelStyle instanceof Style) ? (item.labelStyle as Record<string, unknown>) : {};
             const mergedLabelStyle = { ...existingLabelStyle, ...liveLabelStyle };
             useMyMapsStore.getState().updateItem(item.id, { labelStyle: mergedLabelStyle });
           }
@@ -291,6 +286,7 @@ export default function MyMapsService() {
     if (vectorLayer) {
       const managedLayerId = addLayer(vectorLayer, "MyMaps", "MyMaps Drawing Layer", {
         id: "mymaps-drawing-layer",
+        suppressParcelClick: true,
         metadata: {
           description: "User drawings and custom map features",
           category: "MyMaps",
@@ -337,7 +333,7 @@ export default function MyMapsService() {
           const mapState = useMapStore.getState();
           // Eraser needs feature clicks to detect which feature to remove
           if (mapState.activeToolId === "mymaps-eraser") return false;
-          if (mapState.isDrawingOrEditing) return true;
+          if (mapState.activeToolId === "mymaps-draw" || mapState.activeToolId === "mymaps-edit") return true;
           // Ignore stale singleclick events that arrive after a drawing just finished
           if (Date.now() - lastDrawEndTimeRef.current < 500) return true;
           const popupActive = (window as unknown as { popupActive?: boolean }).popupActive;

@@ -304,13 +304,13 @@ export class LayerHelpers {
           const wmsNeedsAuth = secured || isSecuredUrl(finalUrl as string);
 
           // Debug log for troubleshooting auth detection
-          if (wmsNeedsAuth) {
-            console.debug(`[LayerHelpers] ImageWMS layer "${layerName}" using auth:`, {
-              explicitlySecured: secured,
-              urlDetectedSecured: isSecuredUrl(finalUrl as string),
-              url: finalUrl,
-            });
-          }
+          // if (wmsNeedsAuth) {
+          //   console.debug(`[LayerHelpers] ImageWMS layer "${layerName}" using auth:`, {
+          //     explicitlySecured: secured,
+          //     urlDetectedSecured: isSecuredUrl(finalUrl as string),
+          //     url: finalUrl,
+          //   });
+          // }
 
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const imageWMSOptions: Record<string, any> = {
