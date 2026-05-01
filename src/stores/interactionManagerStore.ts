@@ -14,9 +14,16 @@ export type InteractionResult = Result;
 
 // Conditions for when a handler should execute
 export interface InteractionConditions {
-  maxScale?: number; // Only execute below this scale (e.g., 20000)
-  checkDisableFlags?: () => boolean; // Returns true if handler should be disabled
-  checkLayerFilters?: (event: MapBrowserEvent<PointerEvent>) => boolean; // Returns true if handler should be disabled based on layers
+  /** Only execute when current zoom <= maxZoom */
+  maxZoom?: number;
+  /** Only execute when current zoom >= minZoom */
+  minZoom?: number;
+  /** Only execute below this scale (e.g., 20000) */
+  maxScale?: number;
+  /** Returns true if handler should be disabled */
+  checkDisableFlags?: () => boolean;
+  /** Returns true if handler should be disabled based on layers at the click pixel */
+  checkLayerFilters?: (event: MapBrowserEvent<PointerEvent>) => boolean;
 }
 
 // Handler definition (for logical click/move/contextmenu callbacks)

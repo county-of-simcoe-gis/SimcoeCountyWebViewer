@@ -2,7 +2,7 @@
 export * from "@/utils/openlayers/types";
 export * from "@/utils/openlayers/FeatureHelpers";
 export * from "@/utils/openlayers/LayerHelpers";
-export * from "@/utils/openlayers/ContextMenuInteraction";
+export * from "@/utils/openlayers/InteractionManager";
 
 // Re-export common OpenLayers types for convenience
 export type { Layer } from "ol/layer";

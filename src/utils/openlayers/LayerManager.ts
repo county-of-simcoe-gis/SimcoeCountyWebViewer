@@ -11,6 +11,18 @@ export interface AddLayerOptions {
   opacity?: number;
   /** Whether this layer participates in map click identification/popups */
   clickable?: boolean;
+  /**
+   * Per-feature parcel-click suppression. When a click hits one of this layer's features
+   * (sync vector hit-test) OR an aggregated handler result is tagged with this layer's id,
+   * the property-report-click result is filtered out before the popup renders.
+   */
+  suppressParcelClick?: boolean;
+  /**
+   * Always-on parcel-click suppression. While the layer is registered, the property-report
+   * click handler is short-circuited unconditionally. Replaces the legacy
+   * `useDisableParcelClick(true)` pattern.
+   */
+  suppressParcelClickAlways?: boolean;
 }
 
 /**
@@ -109,6 +121,8 @@ export class LayerManager {
       id: options.id,
       metadata: options.metadata,
       clickable: options.clickable,
+      suppressParcelClick: options.suppressParcelClick,
+      suppressParcelClickAlways: options.suppressParcelClickAlways,
     });
 
     // console.log(`✅ Added layer "${name}" to map with category "${category}" (ID: ${layerId})`)
@@ -251,6 +265,25 @@ export class LayerManager {
     layerManager.clearAllLayers();
 
     // console.log(`🧹 Cleared ${allLayers.length} layers from all categories`);
+  }
+
+  /**
+   * Returns true if any registered layer has `suppressParcelClickAlways === true`.
+   * Used by the InteractionManager to short-circuit the property-report click handler.
+   */
+  static hasAlwaysSuppressLayer(): boolean {
+    const all = useLayerManagerStore.getState().getAllLayers();
+    return all.some((l) => l.suppressParcelClickAlways);
+  }
+
+  /**
+   * IDs of currently-registered layers with `suppressParcelClick === true`. Used by the
+   * post-aggregation filter to drop the property-report result when one of these layers
+   * produced a hit.
+   */
+  static getSuppressLayerIds(): Set<string> {
+    const all = useLayerManagerStore.getState().getAllLayers();
+    return new Set(all.filter((l) => l.suppressParcelClick).map((l) => l.id));
   }
 
   /**

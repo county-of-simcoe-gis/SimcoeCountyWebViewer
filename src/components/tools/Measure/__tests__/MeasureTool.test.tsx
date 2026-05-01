@@ -157,7 +157,7 @@ describe("MeasureTool", () => {
     // Reset stores
     useMapStore.setState({
       map: null,
-      isDrawingOrEditing: false,
+      activeToolId: null,
       setActiveToolId: vi.fn(),
     });
     usePopupStore.setState({

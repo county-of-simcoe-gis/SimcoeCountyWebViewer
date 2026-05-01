@@ -14,6 +14,12 @@ interface BaseResult extends RecordItem {
   displayName: string;
   /** Z-index of the source layer, used to sort results so top-most layers appear first */
   layerZIndex?: number;
+  /**
+   * ID of the LayerManager-managed layer that produced this result. Used by the
+   * InteractionManager's post-aggregation filter to drop the property-report-click
+   * result when a `suppressParcelClick` layer also returned a hit.
+   */
+  layerId?: string;
   /** Optional custom render function for the popup content area */
   renderContent?: () => ReactNode;
   /** Optional custom render function for the sidebar icon in collapsed mode */

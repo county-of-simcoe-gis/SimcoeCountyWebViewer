@@ -28,6 +28,17 @@ export interface ManagedLayer {
   opacity: number;
   /** Whether this layer participates in map click identification/popups */
   clickable: boolean;
+  /**
+   * Per-feature suppression: when a click hits one of this layer's features (sync vector hit-test)
+   * OR this layer returns a result from an async identify handler, drop the property-report-click
+   * result before the unified popup is shown.
+   */
+  suppressParcelClick: boolean;
+  /**
+   * Always-on suppression: while this layer is registered, the property-report click handler is
+   * short-circuited unconditionally. Replaces the legacy `useDisableParcelClick(true)` pattern.
+   */
+  suppressParcelClickAlways: boolean;
   metadata?: Record<string, unknown>;
   addedAt: Date;
 }
@@ -57,6 +68,10 @@ interface LayerManagerState {
       metadata?: Record<string, unknown>;
       /** Whether this layer participates in map click identification/popups */
       clickable?: boolean;
+      /** Per-feature parcel-click suppression — see ManagedLayer.suppressParcelClick */
+      suppressParcelClick?: boolean;
+      /** Always-on parcel-click suppression — see ManagedLayer.suppressParcelClickAlways */
+      suppressParcelClickAlways?: boolean;
     },
   ) => string;
 
@@ -166,6 +181,9 @@ export const useLayerManagerStore = create<LayerManagerState>()(
       // Calculate z-index
       const zIndex = calculateZIndex(category, insertIndex);
 
+      const suppressParcelClick = options.suppressParcelClick ?? false;
+      const suppressParcelClickAlways = options.suppressParcelClickAlways ?? false;
+
       // Create managed layer object
       const managedLayer: ManagedLayer = {
         id,
@@ -176,9 +194,16 @@ export const useLayerManagerStore = create<LayerManagerState>()(
         visible: layer.getVisible(),
         opacity: layer.getOpacity(),
         clickable: options.clickable ?? false,
+        suppressParcelClick,
+        suppressParcelClickAlways,
         metadata: options.metadata || {},
         addedAt: new Date(),
       };
+
+      // Mirror suppression flags onto the OL layer instance so that synchronous
+      // hit-tests (forEachFeatureAtPixel) can read them without going through the store.
+      layer.set("suppressParcelClick", suppressParcelClick);
+      layer.set("suppressParcelClickAlways", suppressParcelClickAlways);
 
       // Set the z-index on the actual OpenLayers layer
       layer.setZIndex(zIndex);

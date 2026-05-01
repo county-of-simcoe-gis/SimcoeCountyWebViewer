@@ -23,9 +23,16 @@ interface ThemeLayersProps {
   themeId: string;
   popupLogoImage?: string;
   onVisibilityChange?: (layerStates: Record<string, boolean>) => void;
+  /**
+   * When true, every layer registered by this component sets `suppressParcelClick`,
+   * so the parcel/property-report click is suppressed only when the user clicks on
+   * a feature of one of these theme layers. Clicks elsewhere on the map still trigger
+   * the property report. Replaces the legacy `useDisableParcelClick(true)` pattern.
+   */
+  suppressParcelClick?: boolean;
 }
 
-export default function ThemeLayers({ layers, themeId, popupLogoImage, onVisibilityChange }: ThemeLayersProps) {
+export default function ThemeLayers({ layers, themeId, popupLogoImage, onVisibilityChange, suppressParcelClick }: ThemeLayersProps) {
   const map = useMapStore((state) => state.map);
   const [layerStates, setLayerStates] = useState<Record<string, boolean>>({});
   const [featureCounts, setFeatureCounts] = useState<Record<string, number | null>>({});
@@ -102,6 +109,7 @@ export default function ThemeLayers({ layers, themeId, popupLogoImage, onVisibil
                   visible: layerConfig.visible,
                   index: 0,
                   clickable: layerConfig.clickable ?? false,
+                  suppressParcelClick: suppressParcelClick,
                   metadata: {
                     themeId: themeId,
                     layerType: "toggle",

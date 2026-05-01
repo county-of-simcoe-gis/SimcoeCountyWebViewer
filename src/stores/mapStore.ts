@@ -28,17 +28,11 @@ interface MapState {
   // Popup state
   popup: unknown | null; // Popup instance
 
-  // Unified active tool tracking — replaces scattered disable flags
-  // When a tool is active (non-null), map click handlers are suppressed
+  // Unified active tool tracking — single source of truth for "is some tool
+  // currently owning the map click pipeline?" Replaces the previous mix of
+  // disableParcelClick / disableIdentifyClick / isDrawingOrEditing /
+  // isCoordinateToolOpen / isMeasuring booleans.
   activeToolId: string | null;
-
-  // Legacy interaction flags (deprecated — use activeToolId instead)
-  // Kept for backward compatibility with OL layer property checks
-  disableParcelClick: boolean;
-  disableIdentifyClick: boolean;
-  isDrawingOrEditing: boolean;
-  isCoordinateToolOpen: boolean;
-  isMeasuring: boolean;
 
   // Map controls configuration
   mapControls: Record<string, unknown> | null;
@@ -64,16 +58,11 @@ interface MapState {
 
   // Active tool management
   setActiveToolId: (toolId: string | null) => void;
-  /** Returns true if any tool is currently active (click handlers should be suppressed) */
-  isToolActive: () => boolean;
-  /** Centralized disable check for InteractionManager conditions — returns true when disabled */
-  checkGlobalDisable: () => boolean;
-
-  // Legacy setters (deprecated — use setActiveToolId instead)
-  setDisableParcelClick: (disabled: boolean) => void;
-  setDisableIdentifyClick: (disabled: boolean) => void;
-  setIsCoordinateToolOpen: (isOpen: boolean) => void;
-  setIsMeasuring: (isMeasuring: boolean) => void;
+  /**
+   * Returns true if some tool is currently active. Pass an explicit `toolId`
+   * to test for a specific tool (e.g. `isToolActive("mymaps-eraser")`).
+   */
+  isToolActive: (toolId?: string) => boolean;
   setMapControls: (controls: Record<string, unknown>) => void;
 
   // Control visibility actions
@@ -144,11 +133,6 @@ export const useMapStore = create<MapState>((set, get) => ({
   map: null,
   popup: null,
   activeToolId: null,
-  disableParcelClick: false,
-  disableIdentifyClick: false,
-  isDrawingOrEditing: false,
-  isCoordinateToolOpen: false,
-  isMeasuring: false,
   mapControls: null,
   controlVisibility: getDefaultControlVisibility(),
   loadedItems: [],
@@ -164,25 +148,12 @@ export const useMapStore = create<MapState>((set, get) => ({
   setMap: (map) => set({ map }),
   setPopup: (popup) => set({ popup }),
 
-  // Active tool management
-  setActiveToolId: (toolId) => {
-    set({
-      activeToolId: toolId,
-      // Keep legacy flags in sync
-      disableParcelClick: toolId !== null,
-      isMeasuring: toolId === "measure",
-      isCoordinateToolOpen: toolId === "coordinates",
-      isDrawingOrEditing: toolId === "mymaps-draw" || toolId === "mymaps-edit" || toolId === "mymaps-eraser",
-    });
+  // Active tool management — sole source of truth for tool gating.
+  setActiveToolId: (toolId) => set({ activeToolId: toolId }),
+  isToolActive: (toolId?: string) => {
+    const active = get().activeToolId;
+    return toolId === undefined ? active !== null : active === toolId;
   },
-  isToolActive: () => get().activeToolId !== null,
-  checkGlobalDisable: () => get().activeToolId !== null || get().disableParcelClick,
-
-  // Legacy setters (deprecated — kept for backward compatibility)
-  setDisableParcelClick: (disabled) => set({ disableParcelClick: disabled }),
-  setDisableIdentifyClick: (disabled) => set({ disableIdentifyClick: disabled }),
-  setIsCoordinateToolOpen: (isOpen) => set({ isCoordinateToolOpen: isOpen }),
-  setIsMeasuring: (isMeasuring) => set({ isMeasuring }),
   setMapControls: (controls) => set({ mapControls: controls }),
 
   // Control visibility actions

@@ -6,7 +6,6 @@ import { FaPalette } from "react-icons/fa";
 import ThemeLayers from "../shared/ThemeLayers";
 import ThemeData from "../shared/ThemeData";
 import config from "./config.json";
-import { useDisableParcelClick } from "@/hooks/useDisableParcelClick";
 
 interface ChildCareFacilitiesProps {
   name?: string;
@@ -18,13 +17,12 @@ interface ChildCareFacilitiesProps {
 
 export default function ChildCareFacilities({ name = "Child Care Facilities", helpLink, hideHeader = false, onClose, onSidebarVisibility }: ChildCareFacilitiesProps) {
   const [layerVisibilityStates, setLayerVisibilityStates] = useState<Record<string, boolean>>({});
-  useDisableParcelClick(config.disableParcelClick);
 
   return (
     <PanelComponent icon={<FaPalette size={20} className="text-neutral/70" />} name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={onClose} onSidebarVisibility={onSidebarVisibility}>
       <div className="p-4">
         <p className="text-sm mb-4">View child care facilities across Simcoe County.</p>
-        <ThemeLayers layers={config.toggleLayers} themeId="childcare" onVisibilityChange={setLayerVisibilityStates} />
+        <ThemeLayers layers={config.toggleLayers} themeId="childcare" onVisibilityChange={setLayerVisibilityStates} suppressParcelClick={config.disableParcelClick} />
 
         <div className="divider my-2"></div>
 

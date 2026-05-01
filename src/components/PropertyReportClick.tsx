@@ -12,7 +12,7 @@ import { GeoJSON } from "ol/format";
 import { getArea } from "ol/sphere";
 import { getAxiosClient } from "@/lib/axiosInstance";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
-import { ParcelClickInteraction } from "@/utils/openlayers/ParcelClickInteraction";
+import { InteractionManager } from "@/utils/openlayers/InteractionManager";
 import ResultsPopup, { createPropertyResult, createCondoResult, type Result } from "@/components/ResultsPopup";
 import { getAxiosClient as getAxiosClientUtil } from "@/lib/axiosInstance";
 import { useInteractionManager } from "@/components/MapContainer";
@@ -75,7 +75,7 @@ interface ClickResult extends Result {
 
 export default function PropertyReportClick() {
   const map = useMapStore((s) => s.map);
-  const checkGlobalDisable = useMapStore((s) => s.checkGlobalDisable);
+  const checkGlobalDisable = useMapStore((s) => s.isToolActive);
   const showPopup = usePopupStore((s) => s.show);
   const hidePopup = usePopupStore((s) => s.hide);
   const urlParameters = useAppStore((state) => state.urlParameters);
@@ -386,7 +386,7 @@ export default function PropertyReportClick() {
       conditions: {
         maxScale: 20000,
         checkDisableFlags: checkGlobalDisable,
-        checkLayerFilters: ParcelClickInteraction.checkLayersForDisable,
+        checkLayerFilters: InteractionManager.checkLayersForDisable,
       },
       handler: async (coordinate) => {
         // Fetch parcel data and return results for aggregation

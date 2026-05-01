@@ -24,7 +24,6 @@ vi.mock("@/stores/mapStore", () => ({
         on: vi.fn(),
         un: vi.fn(),
       },
-      setDisableParcelClick: vi.fn(),
     };
     return selector ? selector(state) : state;
   }),
