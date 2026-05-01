@@ -68,10 +68,10 @@ interface CondoUnit {
   Address?: string;
 }
 
-interface ClickResult extends Result {
+type ClickResult = Result & {
   loadDetails?: () => Promise<void>;
   clearParcelLayer?: () => void;
-}
+};
 
 export default function PropertyReportClick() {
   const map = useMapStore((s) => s.map);
