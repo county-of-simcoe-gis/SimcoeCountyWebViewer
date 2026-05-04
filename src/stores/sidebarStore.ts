@@ -198,17 +198,15 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
 
   activateSidebarItem: (itemId, itemType) => {
     if (itemType === "themes") {
-      // Deactivate current tool and activate theme
+      // Activate theme (keep tool active if it is)
       set({
         activeTheme: itemId,
-        activeTool: null,
         activePanelId: itemId,
       });
     } else if (itemType === "tools") {
-      // Deactivate current theme and activate tool
+      // Activate tool (keep theme active if it is)
       set({
         activeTool: itemId,
-        activeTheme: null,
         activePanelId: itemId,
       });
     }
@@ -243,7 +241,6 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
         set({
           isOpen: true,
           activeTheme: theme.id,
-          activeTool: null,
           activePanelId: theme.id,
         });
         // Use name-based activation so hidden tabs don't shift the index
@@ -256,7 +253,9 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
           state.themes.map((t) => t.name),
         );
       }
-    } else if (defaultTool) {
+    }
+    
+    if (defaultTool) {
       // Find the tool by name or componentName (case-insensitive)
       const needle = defaultTool.toLowerCase();
       const tool = state.tools.find((t) => t.component?.toLowerCase() === needle || t.name.toLowerCase() === needle);
@@ -265,8 +264,7 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
         set({
           isOpen: true,
           activeTool: tool.id,
-          activeTheme: null,
-          activePanelId: tool.id,
+          activePanelId: tool.id, // Sets active panel to tool (overwrites theme panel if both provided, matching tab switch)
         });
         // Use name-based activation so hidden tabs don't shift the index
         get().setActiveTabByName("tools");

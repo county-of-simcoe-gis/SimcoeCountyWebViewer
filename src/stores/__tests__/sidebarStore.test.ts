@@ -124,25 +124,25 @@ describe("sidebarStore", () => {
   });
 
   describe("Active Items", () => {
-    it("should activate theme and deactivate tool via action", () => {
+    it("should activate theme without deactivating tool", () => {
       useSidebarStore.setState({ activeTool: "tool1", activeTheme: null, activePanelId: null });
 
       useSidebarStore.getState().activateSidebarItem("theme1", "themes");
 
       const state = useSidebarStore.getState();
       expect(state.activeTheme).toBe("theme1");
-      expect(state.activeTool).toBeNull();
+      expect(state.activeTool).toBe("tool1");
       expect(state.activePanelId).toBe("theme1");
     });
 
-    it("should activate tool and deactivate theme via action", () => {
+    it("should activate tool without deactivating theme", () => {
       useSidebarStore.setState({ activeTheme: "theme1", activeTool: null, activePanelId: null });
 
       useSidebarStore.getState().activateSidebarItem("tool1", "tools");
 
       const state = useSidebarStore.getState();
       expect(state.activeTool).toBe("tool1");
-      expect(state.activeTheme).toBeNull();
+      expect(state.activeTheme).toBe("theme1");
       expect(state.activePanelId).toBe("tool1");
     });
   });
@@ -281,7 +281,6 @@ describe("sidebarStore", () => {
 
       const state = useSidebarStore.getState();
       expect(state.activeTheme).toBe("1");
-      expect(state.activeTool).toBeNull();
       expect(state.activeTab).toBe(3); // themes tab
     });
 
@@ -293,20 +292,21 @@ describe("sidebarStore", () => {
     });
 
     it("should activate a default tool by componentName", () => {
+      useSidebarStore.setState({ activeTheme: "existing-theme" });
       useSidebarStore.getState().activateDefaultItems(undefined, "MeasureTool");
 
       const state = useSidebarStore.getState();
       expect(state.activeTool).toBe("1");
-      expect(state.activeTheme).toBeNull();
+      expect(state.activeTheme).toBe("existing-theme");
       expect(state.activeTab).toBe(1); // tools tab
     });
 
-    it("should prefer theme over tool when both provided", () => {
+    it("should allow both theme and tool when both provided", () => {
       useSidebarStore.getState().activateDefaultItems("ForestryTheme", "MeasureTool");
 
       const state = useSidebarStore.getState();
       expect(state.activeTheme).toBe("1");
-      expect(state.activeTool).toBeNull();
+      expect(state.activeTool).toBe("1");
     });
 
     it("should warn when default theme not found", () => {
