@@ -34,14 +34,31 @@ export default class MapControl extends Control {
   }
 
   setMap(map: Map | null) {
-    // Clean up previous render asynchronously to avoid React 18+ concurrency issues
+    // Clean up previous render asynchronously to avoid React 18+ concurrency issues.
+    //
+    // We use queueMicrotask (not setTimeout) so the inner root unmounts before
+    // the outer React tree can destroy the host DOM. The wrapper element lives
+    // inside `ol-overlaycontainer-stopevent`, which itself sits inside the map
+    // div owned by the outer React tree. On HMR / StrictMode double-mounts, a
+    // setTimeout(0) unmount can race with the outer tree being torn down — the
+    // inner root then commits deletions against fibers whose host parent has
+    // already been removed, throwing "Cannot read properties of null (reading
+    // 'removeChild')".
+    //
+    // The try/catch is defensive: if the host subtree has already been removed
+    // by the outer React tree, the unmount is a no-op for cleanup purposes and
+    // the error is harmless — but unhandled it surfaces as a runtime error
+    // overlay in development.
     if (this.root) {
       const rootToUnmount = this.root;
       this.root = null;
-      // Defer unmounting until after current render cycle completes
-      setTimeout(() => {
-        rootToUnmount.unmount();
-      }, 0);
+      queueMicrotask(() => {
+        try {
+          rootToUnmount.unmount();
+        } catch {
+          // Inner React tree was already torn down by an outer unmount.
+        }
+      });
     }
 
     super.setMap(map);

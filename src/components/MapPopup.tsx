@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
+import { createPortal } from "react-dom";
 import { Overlay } from "ol";
 import { useMapStore } from "@/stores/mapStore";
 import { usePopupStore } from "@/stores/popupStore";
@@ -22,18 +23,35 @@ export default function MapPopup() {
   const nextFeature = usePopupStore((s) => s.nextFeature);
   const prevFeature = usePopupStore((s) => s.prevFeature);
   const coordinates = usePopupStore((s) => s.coordinates);
-  const popupRef = useRef<HTMLDivElement>(null);
+  // Detached container element owned by OpenLayers (NOT rendered in the React
+  // tree). Using a portal into this element prevents React from trying to
+  // remove a DOM node that OL has reparented into its overlay container, which
+  // caused intermittent "Cannot read properties of null (reading 'removeChild')"
+  // errors during commit on map clicks.
+  const [popupEl, setPopupEl] = useState<HTMLDivElement | null>(null);
   const overlayRef = useRef<Overlay | null>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const activeInteractionIdsRef = useRef<number[]>([]);
   const hasBeenDraggedRef = useRef<boolean>(false);
 
+  // Create the detached popup container element once on the client.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const el = document.createElement("div");
+    el.className = "map-popup";
+    setPopupEl(el);
+    return () => {
+      // Detach from any parent OL may have appended it to.
+      el.parentNode?.removeChild(el);
+    };
+  }, []);
+
   // Initialize overlay
   useEffect(() => {
-    if (!map || !popupRef.current || overlayRef.current) return;
+    if (!map || !popupEl || overlayRef.current) return;
 
     const overlay = new Overlay({
-      element: popupRef.current,
+      element: popupEl,
       autoPan: false, // Don't automatically pan the map when popup opens
       positioning: "bottom-center",
       stopEvent: true, // Prevent map interactions when interacting with popup
@@ -50,7 +68,7 @@ export default function MapPopup() {
         overlayRef.current = null;
       }
     };
-  }, [map, setOverlay]);
+  }, [map, popupEl, setOverlay]);
 
   // Disable/enable map interactions when mouse enters/leaves the popup.
   // Uses mouseenter/mouseleave (not mouseover/mouseout) to avoid spurious
@@ -58,9 +76,9 @@ export default function MapPopup() {
   // activeInteractionIdsRef to be reset while interactions were still disabled,
   // permanently locking out map interactions after closing the popup.
   useEffect(() => {
-    if (!map || !popupRef.current || !isVisible) return;
+    if (!map || !popupEl || !isVisible) return;
 
-    const container = popupRef.current;
+    const container = popupEl;
     let interactionsDisabled = false;
 
     const handleMouseEnter = () => {
@@ -108,7 +126,7 @@ export default function MapPopup() {
       container.removeEventListener("mouseleave", handleMouseLeave);
       restoreAllInteractions();
     };
-  }, [map, isVisible]);
+  }, [map, popupEl, isVisible]);
 
   // Drag handler for popup header (matches legacy Popup.jsx implementation)
   const setupDrag = useCallback(() => {
@@ -190,16 +208,15 @@ export default function MapPopup() {
   // render, measure its bounds against the map viewport, and smoothly pan
   // the map so the popup is fully visible. Skipped after user drags.
   useEffect(() => {
-    if (!isVisible || !map || !popupRef.current || !coordinates || hasBeenDraggedRef.current) return;
+    if (!isVisible || !map || !popupEl || !coordinates || hasBeenDraggedRef.current) return;
 
     // Wait two frames so the overlay element has its final size/position.
     let cancelled = false;
     let raf2 = 0;
     const raf1 = requestAnimationFrame(() => {
       raf2 = requestAnimationFrame(() => {
-        if (cancelled || !popupRef.current || !map) return;
+        if (cancelled || !popupEl || !map) return;
 
-        const popupEl = popupRef.current;
         const mapEl = map.getTargetElement() as HTMLElement | null;
         if (!mapEl) return;
 
@@ -243,14 +260,19 @@ export default function MapPopup() {
       cancelAnimationFrame(raf1);
       cancelAnimationFrame(raf2);
     };
-  }, [isVisible, coordinates, map]);
+  }, [isVisible, coordinates, map, popupEl]);
+
+  // Toggle visibility on the detached container (OL also hides via
+  // setPosition(undefined), but this guarantees the empty shell isn't visible).
+  useEffect(() => {
+    if (!popupEl) return;
+    popupEl.style.display = isVisible && features.length > 0 ? "" : "none";
+  }, [popupEl, isVisible, features.length]);
+
+  if (!popupEl) return null;
 
   if (!isVisible || features.length === 0) {
-    return (
-      <div ref={popupRef} className="map-popup" style={{ display: "none" }}>
-        <div className="p-1.5 max-h-[350px] overflow-y-auto overscroll-contain touch-pan-y"></div>
-      </div>
-    );
+    return createPortal(<div className="p-1.5 max-h-[350px] overflow-y-auto overscroll-contain touch-pan-y"></div>, popupEl);
   }
 
   const currentFeature = features[selectedIndex];
@@ -289,8 +311,8 @@ export default function MapPopup() {
     hide();
   };
 
-  return (
-    <div ref={popupRef} className="map-popup">
+  return createPortal(
+    <>
       <div
         ref={headerRef}
         className="flex justify-between items-center h-[25px] p-1.5 bg-[image:linear-gradient(to_bottom,#3980cc,#2865a2)] border-b-2 border-b-accent text-white cursor-grab active:cursor-grabbing text-[15px] rounded-t select-none"
@@ -340,6 +362,7 @@ export default function MapPopup() {
       {currentFeature.layerName && <div className="text-[10px] text-[#666] bg-[#e8f4fd] border-b border-[#d0e8f7] py-1 px-2.5 font-medium">{currentFeature.layerName}</div>}
 
       <div className="p-1.5 max-h-[350px] overflow-y-auto overscroll-contain touch-pan-y">{currentFeature.content}</div>
-    </div>
+    </>,
+    popupEl,
   );
 }
