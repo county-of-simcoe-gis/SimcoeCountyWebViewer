@@ -618,11 +618,11 @@ export default function WeatherRadar(): React.ReactElement {
         <div className="flex gap-4 items-start">
           <div className="flex flex-col items-center text-xs">
             <div className="font-semibold">Rain (Summer)</div>
-            <Image className="bg-black p-1" src="/images/radarlegendrain.png" alt="Rain legend" width={90} height={238} />
+            <Image unoptimized className="bg-black p-1" src="/images/radarlegendrain.png" alt="Rain legend" width={90} height={238} />
           </div>
           <div className="flex flex-col items-center text-xs">
             <div className="font-semibold">Snow (Winter)</div>
-            <Image className="bg-black p-1" src="/images/radarlegendsnow.png" alt="Snow legend" width={90} height={238} />
+            <Image unoptimized className="bg-black p-1" src="/images/radarlegendsnow.png" alt="Snow legend" width={90} height={238} />
           </div>
         </div>
 

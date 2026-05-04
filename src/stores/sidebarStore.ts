@@ -10,7 +10,7 @@ export interface SidebarItem {
   name: string;
   type: "theme" | "tool";
   component?: string;
-  config?: Record<string, unknown>;
+  config?: Record<string, unknown> | string;
   imageName: string;
   description?: string;
   helpLink?: string;
@@ -85,13 +85,18 @@ interface SidebarState {
 }
 
 function convertToSidebarItem(component: SidebarComponent, type: "theme" | "tool"): SidebarItem {
-  let config = {};
-  try {
-    if (component.config) {
-      config = typeof component.config === "string" ? JSON.parse(component.config) : component.config;
+  let config: Record<string, unknown> | string = {};
+  if (component.config) {
+    if (typeof component.config === "string") {
+      try {
+        config = JSON.parse(component.config);
+      } catch (_e) {
+        // If it's not valid JSON, assume it's a file path or URL
+        config = component.config;
+      }
+    } else {
+      config = component.config;
     }
-  } catch (e) {
-    console.warn(`Failed to parse config for ${component.name}:`, e);
   }
 
   return {

@@ -820,7 +820,7 @@ export default function BasemapSwitcher() {
             onClick={onBasemapImageClick}
             title={`Click to select ${getCurrentBasemapName()}`}
           >
-            <Image src={getCurrentBasemapImage()} alt={getCurrentBasemapName()} width={70} height={49} className="block" style={{ width: "100%", height: "auto", borderRadius: 0 }} />
+            <Image unoptimized src={getCurrentBasemapImage()} alt={getCurrentBasemapName()} width={70} height={49} className="block" style={{ width: "100%", height: "auto", borderRadius: 0 }} />
           </button>
 
           {/* Settings button overlaid on top of image for imagery */}
@@ -859,7 +859,7 @@ export default function BasemapSwitcher() {
           title="Imagery"
         >
           <div className="text-[9px] font-bold mb-0 text-inherit whitespace-nowrap overflow-hidden text-ellipsis w-full">Imagery</div>
-          <Image className="rounded-[3px] border border-[#ddd] object-cover max-w-[72px] max-h-[50px]" src="/images/imagery-basemap.png" alt="Imagery" width={80} height={60} />
+          <Image unoptimized className="rounded-[3px] border border-[#ddd] object-cover max-w-[72px] max-h-[50px]" src="/images/imagery-basemap.png" alt="Imagery" width={80} height={60} />
         </div>
 
         {/* Topo Services */}
@@ -872,7 +872,7 @@ export default function BasemapSwitcher() {
               title={service.name}
             >
               <div className="text-[9px] font-bold mb-0 text-inherit whitespace-nowrap overflow-hidden text-ellipsis w-full">{service.name}</div>
-              <Image className="rounded-[3px] border border-[#ddd] object-cover max-w-[72px] max-h-[50px]" src={`/images/${service.image}`} alt={service.name} width={80} height={60} />
+              <Image unoptimized className="rounded-[3px] border border-[#ddd] object-cover max-w-[72px] max-h-[50px]" src={`/images/${service.image}`} alt={service.name} width={80} height={60} />
             </div>
           ))}
       </div>

@@ -21,7 +21,7 @@ function SlimButton({ title, icon, isSelected, isActive, hidden, onClick }: Slim
     <div className={`py-2.5 px-1.5 cursor-pointer rounded-sm mx-0.5 relative ${isSelected ? "bg-[image:var(--sc-gradient-active)] border border-[#90b5d5]" : "hover:bg-black/5"}`} onClick={onClick}>
       {isActive && <span className="h-2.5 w-2.5 bg-[rgb(120,204,50)] rounded-full inline-block absolute right-1.5" />}
       <button className="bg-transparent border-none p-0 cursor-pointer text-[9pt] flex flex-col items-center gap-1 w-full text-base-content">
-        <Image src={`/images/${icon}`} alt={title} width={32} height={32} />
+        <Image unoptimized src={`/images/${icon}`} alt={title} width={32} height={32} />
         <span className="text-[9pt] leading-none text-center whitespace-nowrap">{title}</span>
       </button>
     </div>

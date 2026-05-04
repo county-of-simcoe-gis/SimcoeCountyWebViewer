@@ -35,7 +35,7 @@
 
 import React, { createContext, useContext, useRef, useState, useCallback, useEffect, type ReactNode } from "react";
 import type { UseUrlParametersReturn, ComponentDependency, ParameterExecutionState } from "@/types/urlParameters";
-import { standardParameters, featureSelectionParameters, getParameterConfig } from "@/config/urlParametersConfig";
+import { standardParameters, featureSelectionParameters } from "@/config/urlParametersConfig";
 
 // ============================================================================
 // Context Definition
@@ -101,7 +101,7 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
    * Handlers are created lazily to avoid initialization issues.
    */
   const getHandler = useCallback((paramName: string): HandlerFn | null => {
-    console.log(`[getHandler] Looking for handler: "${paramName}"`);
+    // console.log(`[getHandler] Looking for handler: "${paramName}"`);
 
     // Return cached handler if available
     if (paramName in handlersRef.current) {
@@ -110,14 +110,14 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
     }
 
     // Create handler based on parameter config
-    const config = getParameterConfig(paramName);
-    console.log(`[getHandler] Config lookup for "${paramName}":`, config ? `Found (name=${config.name})` : "NOT FOUND");
+    // const config = getParameterConfig(paramName);
+    // console.log(`[getHandler] Config lookup for "${paramName}":`, config ? `Found (name=${config.name})` : "NOT FOUND");
 
     // Always create a lazy handler — even for unknown params, the default case
     // in createLazyHandler will check sidebarShortcutParams from config.
     const handler = createLazyHandler(paramName);
     handlersRef.current[paramName] = handler;
-    console.log(`[getHandler] Created lazy handler for: "${paramName}"`);
+    // console.log(`[getHandler] Created lazy handler for: "${paramName}"`);
     return handler;
   }, []);
 
@@ -334,7 +334,7 @@ function createLazyHandler(paramName: string): HandlerFn {
     // Use let so we can refresh the state reference in the wait loops
     let sidebarState = useSidebarStore.getState();
 
-    console.log(`[createLazyHandler] Executing handler for param: "${paramName}", value: "${value}"`);
+    // console.log(`[createLazyHandler] Executing handler for param: "${paramName}", value: "${value}"`);
 
     switch (paramName.toUpperCase()) {
       case "X":

@@ -363,7 +363,7 @@ export default function Sidebar() {
         >
           <div className="relative w-[60px] h-[60px] shrink-0 flex items-center justify-center bg-[image:linear-gradient(to_bottom,#f2f5f6,#e6e6e6)] rounded-sm border border-gray-300 mr-4 text-center pt-1.5">
             {tool.secure && <FaLock className="absolute top-0.5 left-0.5 text-[10px] text-gray-500 drop-shadow-sm" />}
-            <Image src={`/images/${tool.imageName}`} alt={tool.name} width={48} height={48} className="w-[48px] h-[48px] object-contain" />
+            <Image unoptimized src={`/images/${tool.imageName}`} alt={tool.name} width={48} height={48} className="w-[48px] h-[48px] object-contain" />
           </div>
           <div className="flex-1 flex flex-col justify-start min-h-[60px]">
             <div className="text-[15px] font-bold text-[#616161] mb-1.5 leading-tight">{tool.name}</div>
@@ -386,7 +386,7 @@ export default function Sidebar() {
         >
           <div className="relative w-[60px] h-[60px] shrink-0 flex items-center justify-center bg-[image:linear-gradient(to_bottom,#f2f5f6,#e6e6e6)] rounded-sm border border-gray-300 mr-4 text-center pt-1.5">
             {theme.secure && <FaLock className="absolute top-0.5 left-0.5 text-[10px] text-gray-500 drop-shadow-sm" />}
-            <Image src={`/images/${theme.imageName}`} alt={theme.name} width={50} height={50} className="w-[50px] h-[50px] object-contain opacity-70" />
+            <Image unoptimized src={`/images/${theme.imageName}`} alt={theme.name} width={50} height={50} className="w-[50px] h-[50px] object-contain opacity-70" />
           </div>
           <div className="flex-1 flex flex-col justify-start min-h-[60px]">
             <div className="text-[15px] font-bold text-[#616161] mb-1.5 leading-tight">{theme.name}</div>
@@ -406,7 +406,7 @@ export default function Sidebar() {
           {!hideLayers && (
             <Tab>
               <div className="tab-content">
-                <Image src="/images/legend-32x32.png" alt="Layers" width={32} height={32} className="tab-icon" />
+                <Image unoptimized src="/images/legend-32x32.png" alt="Layers" width={32} height={32} className="tab-icon" />
                 <div className="tab-text">Layers</div>
               </div>
             </Tab>
@@ -415,7 +415,7 @@ export default function Sidebar() {
             <Tab>
               <div className="tab-content">
                 {activeToolComponent && <span className="tab-dot" />}
-                <Image src="/images/tools-32x32.png" alt={appConfig?.toolsTitle || "Tools"} width={32} height={32} className="tab-icon" />
+                <Image unoptimized src="/images/tools-32x32.png" alt={appConfig?.toolsTitle || "Tools"} width={32} height={32} className="tab-icon" />
                 <div className="tab-text">{appConfig?.toolsTitle || "Tools"}</div>
               </div>
             </Tab>
@@ -424,7 +424,7 @@ export default function Sidebar() {
             <Tab>
               <div className="tab-content">
                 {isMyMapsEditing && <span className="tab-dot" />}
-                <Image src="/images/map-32x32.png" alt="My Maps" width={32} height={32} className="tab-icon" />
+                <Image unoptimized src="/images/map-32x32.png" alt="My Maps" width={32} height={32} className="tab-icon" />
                 <div className="tab-text">My Maps</div>
               </div>
             </Tab>
@@ -433,7 +433,7 @@ export default function Sidebar() {
             <Tab>
               <div className="tab-content">
                 {activeThemeComponent && <span className="tab-dot" />}
-                <Image
+                <Image unoptimized
                   src={singleTheme ? `/images/${singleTheme.imageName}` : "/images/theme-32x32.png"}
                   alt={singleTheme ? singleTheme.name : appConfig?.themesTitle || "Themes"}
                   width={32}
@@ -447,7 +447,7 @@ export default function Sidebar() {
           {!hideReports && (
             <Tab>
               <div className="tab-content">
-                <Image src="/images/report-32x32.png" alt="Reports" width={32} height={32} className="tab-icon" />
+                <Image unoptimized src="/images/report-32x32.png" alt="Reports" width={32} height={32} className="tab-icon" />
                 <div className="tab-text">Reports</div>
               </div>
             </Tab>
