@@ -172,6 +172,8 @@ const mockMapInstance = {
   removeControl: vi.fn(),
   addLayer: vi.fn(),
   removeLayer: vi.fn(),
+  addOverlay: vi.fn(),
+  removeOverlay: vi.fn(),
   getSize: vi.fn(() => [1024, 768]),
   getView: vi.fn(() => mockView),
   getInteractions: vi.fn(() => ({
