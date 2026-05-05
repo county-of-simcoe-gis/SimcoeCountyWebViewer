@@ -129,6 +129,9 @@ vi.mock("react-icons/fa", () => ({
   FaSortUp: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "sort-up-icon" }, "SortUp"),
   FaSortDown: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "sort-down-icon" }, "SortDown"),
   FaExchangeAlt: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "exchange-alt-icon" }, "ExchangeAlt"),
+
+  // LayerInformationTool icons
+  FaLayerGroup: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "layer-group-icon" }, "LayerGroup"),
 }));
 
 vi.mock("react-icons/md", () => ({

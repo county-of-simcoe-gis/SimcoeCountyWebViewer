@@ -433,7 +433,8 @@ export default function Sidebar() {
             <Tab>
               <div className="tab-content">
                 {activeThemeComponent && <span className="tab-dot" />}
-                <Image unoptimized
+                <Image
+                  unoptimized
                   src={singleTheme ? `/images/${singleTheme.imageName}` : "/images/theme-32x32.png"}
                   alt={singleTheme ? singleTheme.name : appConfig?.themesTitle || "Themes"}
                   width={32}
