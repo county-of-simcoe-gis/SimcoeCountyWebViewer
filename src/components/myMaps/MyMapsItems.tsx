@@ -22,7 +22,7 @@ const MyMapsItems: React.FC<MyMapsItemsProps> = ({ onLabelChange, onItemDelete, 
     <div data-testid="mymaps-item-container" className="flex flex-col bg-white rounded mb-2 overflow-hidden h-full">
       {/* Header */}
       <div data-testid="mymaps-items-header" className="flex items-center gap-1.5 py-2 px-3 bg-[#f8f9fa] border-b border-[#dee2e6] text-xs font-semibold text-[#495057]">
-        <Image src="/images/myMaps.png" alt="My Maps Icon" width={16} height={16} />
+        <Image unoptimized src="/images/myMaps.png" alt="My Maps Icon" width={16} height={16} />
         <span className="flex-1">My Items</span>
         {isEditing && <label className="text-[#007bff] text-[11px] font-medium bg-[#e3f2fd] py-[2px] px-1.5 rounded-[3px] border border-[#bbdefb]">Editing Mode On</label>}
       </div>

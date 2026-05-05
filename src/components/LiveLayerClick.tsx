@@ -293,16 +293,16 @@ export default function LiveLayerClick() {
             const managedLayer = managedLayerId ? useLayerManagerStore.getState().getLayer(managedLayerId) : null;
             const layerZIndex = managedLayer?.zIndex ?? 0;
 
-            for (const identifyFeature of identifyFeatures) {
+            for (let fi = 0; fi < identifyFeatures.length; fi++) {
+              const identifyFeature = identifyFeatures[fi];
               const layerName = identifyFeature.get("layerDisplayName") || tocLayer.displayName || "Feature";
               const properties = identifyFeature.getProperties();
 
               // Get a unique ID for this feature
-              let featureId = properties.OBJECTID || properties.objectid || properties.id || properties.ID;
+              // Prefer explicit ID fields, then OL's feature ID (GeoServer fid), then index-based fallback
+              let featureId = properties.OBJECTID || properties.objectid || properties.id || properties.ID || identifyFeature.getId();
               if (!featureId) {
-                // Generate a fallback ID from first property value
-                const firstValue = Object.values(properties).find((v) => v && typeof v !== "object");
-                featureId = firstValue ? String(firstValue) : "Unknown";
+                featureId = `${layerName}_${fi}`;
               }
 
               // Clean up properties (remove geometry, layerDisplayName, etc.)
@@ -345,14 +345,15 @@ export default function LiveLayerClick() {
         const themePromises = clickableThemeLayers.map(async (managedLayer) => {
           try {
             const identifyFeatures = await queryLiveLayer(managedLayer.layer, coordinate);
-            for (const identifyFeature of identifyFeatures) {
+            for (let fi = 0; fi < identifyFeatures.length; fi++) {
+              const identifyFeature = identifyFeatures[fi];
               const layerName = identifyFeature.get("layerDisplayName") || managedLayer.name || "Feature";
               const properties = identifyFeature.getProperties();
 
-              let featureId = properties.OBJECTID || properties.objectid || properties.id || properties.ID;
+              // Prefer explicit ID fields, then OL's feature ID (GeoServer fid), then index-based fallback
+              let featureId = properties.OBJECTID || properties.objectid || properties.id || properties.ID || identifyFeature.getId();
               if (!featureId) {
-                const firstValue = Object.values(properties).find((v) => v && typeof v !== "object");
-                featureId = firstValue ? String(firstValue) : "Unknown";
+                featureId = `${managedLayer.name}_${fi}`;
               }
 
               const cleanAttributes: Record<string, unknown> = {};

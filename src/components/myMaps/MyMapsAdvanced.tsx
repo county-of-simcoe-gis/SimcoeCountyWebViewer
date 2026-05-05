@@ -372,7 +372,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
                 setShowExportSubmenu(false);
               }}
             >
-              <Image src="/images/json.png" alt="KML" width={16} height={16} className="mr-2 shrink-0" />
+              <Image unoptimized src="/images/json.png" alt="KML" width={16} height={16} className="mr-2 shrink-0" />
               KML
             </div>
             <div
@@ -383,7 +383,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
                 setShowExportSubmenu(false);
               }}
             >
-              <Image src="/images/json.png" alt="ESRI JSON" width={16} height={16} className="mr-2 shrink-0" />
+              <Image unoptimized src="/images/json.png" alt="ESRI JSON" width={16} height={16} className="mr-2 shrink-0" />
               ESRIJson
             </div>
             <div
@@ -394,7 +394,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
                 setShowExportSubmenu(false);
               }}
             >
-              <Image src="/images/json.png" alt="GeoJSON" width={16} height={16} className="mr-2 shrink-0" />
+              <Image unoptimized src="/images/json.png" alt="GeoJSON" width={16} height={16} className="mr-2 shrink-0" />
               GeoJSON
             </div>
           </div>,
@@ -427,7 +427,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
                 setShowAdditionalMenu(false);
               }}
             >
-              <Image src="/images/myMaps/checkbox_on.png" alt="Show All" width={16} height={16} className="mr-2 shrink-0" />
+              <Image unoptimized src="/images/myMaps/checkbox_on.png" alt="Show All" width={16} height={16} className="mr-2 shrink-0" />
               Show All
             </div>
             <div
@@ -437,7 +437,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
                 setShowAdditionalMenu(false);
               }}
             >
-              <Image src="/images/myMaps/checkbox_off.png" alt="Hide All" width={16} height={16} className="mr-2 shrink-0" />
+              <Image unoptimized src="/images/myMaps/checkbox_off.png" alt="Hide All" width={16} height={16} className="mr-2 shrink-0" />
               Hide All
             </div>
             <div className="h-px bg-[#dee2e6] my-1"></div>
@@ -448,7 +448,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
                 setShowAdditionalMenu(false);
               }}
             >
-              <Image src="/images/myMaps/eraser.png" alt="Delete Selected" width={16} height={16} className="mr-2 shrink-0" />
+              <Image unoptimized src="/images/myMaps/eraser.png" alt="Delete Selected" width={16} height={16} className="mr-2 shrink-0" />
               Delete Selected
             </div>
             <div
@@ -458,7 +458,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
                 setShowAdditionalMenu(false);
               }}
             >
-              <Image src="/images/myMaps/eraser.png" alt="Delete Unselected" width={16} height={16} className="mr-2 shrink-0" />
+              <Image unoptimized src="/images/myMaps/eraser.png" alt="Delete Unselected" width={16} height={16} className="mr-2 shrink-0" />
               Delete Unselected
             </div>
             <div
@@ -468,7 +468,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
                 setShowAdditionalMenu(false);
               }}
             >
-              <Image src="/images/polygon.png" alt="Merge Polygons" width={16} height={16} className="mr-2 shrink-0" />
+              <Image unoptimized src="/images/polygon.png" alt="Merge Polygons" width={16} height={16} className="mr-2 shrink-0" />
               Merge Polygons
             </div>
             <div>
@@ -497,7 +497,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
                   }, 300);
                 }}
               >
-                <Image src="/images/json.png" alt="Export" width={16} height={16} className="mr-2 shrink-0" />
+                <Image unoptimized src="/images/json.png" alt="Export" width={16} height={16} className="mr-2 shrink-0" />
                 Export to ...
                 <span className="ml-auto text-[10px] text-[#6c757d]">▶</span>
               </div>

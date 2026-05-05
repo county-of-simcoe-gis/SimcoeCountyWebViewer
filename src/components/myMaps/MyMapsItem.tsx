@@ -111,7 +111,7 @@ const MyMapsItem: React.FC<MyMapsItemProps> = ({ item, onLabelChange, onDelete, 
 
       {/* Geometry type icon */}
       <div className="shrink-0 flex items-center justify-center w-5 h-5">
-        <Image src={`/images/measure/${getGeometryIcon()}`} alt={item.geometryType} width={16} height={16} />
+        <Image unoptimized src={`/images/measure/${getGeometryIcon()}`} alt={item.geometryType} width={16} height={16} />
       </div>
 
       {/* Label */}
@@ -133,7 +133,7 @@ const MyMapsItem: React.FC<MyMapsItemProps> = ({ item, onLabelChange, onDelete, 
               autoFocus
             />
             <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center justify-center w-4 h-4 opacity-60 pointer-events-none">
-              <Image src="/images/edit.png" alt="Edit" width={12} height={12} />
+              <Image unoptimized src="/images/edit.png" alt="Edit" width={12} height={12} />
             </div>
           </div>
         ) : (
@@ -142,7 +142,7 @@ const MyMapsItem: React.FC<MyMapsItemProps> = ({ item, onLabelChange, onDelete, 
               {item.label}
             </span>
             <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center justify-center w-4 h-4 opacity-60 pointer-events-none">
-              <Image src="/images/edit.png" alt="Edit" width={12} height={12} />
+              <Image unoptimized src="/images/edit.png" alt="Edit" width={12} height={12} />
             </div>
           </div>
         )}
@@ -157,7 +157,7 @@ const MyMapsItem: React.FC<MyMapsItemProps> = ({ item, onLabelChange, onDelete, 
           title="Delete item"
           type="button"
         >
-          <Image src="/images/myMaps/eraser.png" alt="Delete" width={16} height={16} />
+          <Image unoptimized src="/images/myMaps/eraser.png" alt="Delete" width={16} height={16} />
         </button>
 
         {/* Toolbox button */}
@@ -167,14 +167,14 @@ const MyMapsItem: React.FC<MyMapsItemProps> = ({ item, onLabelChange, onDelete, 
           title="Drawing options"
           type="button"
         >
-          <Image src="/images/toolbox.png" alt="Toolbox" width={16} height={16} />
+          <Image unoptimized src="/images/toolbox.png" alt="Toolbox" width={16} height={16} />
         </button>
       </div>
 
       {/* Label visibility indicator */}
       {item.labelVisible && (
         <div className="absolute top-[2px] right-[2px] w-3 h-3 opacity-60" title="Label is visible">
-          <Image src="/images/toc/label.png" alt="Label visible" width={12} height={12} />
+          <Image unoptimized src="/images/toc/label.png" alt="Label visible" width={12} height={12} />
         </div>
       )}
     </div>

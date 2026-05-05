@@ -86,7 +86,7 @@ const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ feat
         </div>
         {hasGeom && (
           <div className="flex gap-2 items-center">
-            <Image
+            <Image unoptimized
               src="/images/toc/zoom-in.png"
               width={16}
               height={16}

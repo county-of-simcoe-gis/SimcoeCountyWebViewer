@@ -221,7 +221,7 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
           <InfoWindowRow label="Has Zoning">
             {hasZoning ? "Yes" : "No"}
             {hasZoning && (
-              <Image src="/images/information.png" alt="View Zoning" title="View Zoning" width={16} height={16} className="inline-block -mb-0.5 ml-1.5 cursor-pointer" onClick={handleViewZoning} />
+              <Image unoptimized src="/images/information.png" alt="View Zoning" title="View Zoning" width={16} height={16} className="inline-block -mb-0.5 ml-1.5 cursor-pointer" onClick={handleViewZoning} />
             )}
           </InfoWindowRow>
         )}

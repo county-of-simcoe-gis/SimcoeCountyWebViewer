@@ -28,7 +28,7 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({ title, iconSrc, icon, 
     <div className={`w-full h-[43px] shrink-0 overflow-visible border-b border-base-300 ${className}`}>
       <div className="p-1.5 pt-1 mt-[3px] text-[17px] font-bold text-neutral bg-[#ececec] overflow-visible relative min-h-[29px] [text-shadow:0.5px_0.5px_#fff]">
         <div className="w-full flex items-center gap-1.5 max-h-[29px]">
-          {(icon || iconSrc) && <div className="w-9 shrink-0 flex items-center justify-center">{icon || <Image src={iconSrc!} alt="" width={32} height={32} />}</div>}
+          {(icon || iconSrc) && <div className="w-9 shrink-0 flex items-center justify-center">{icon || <Image unoptimized src={iconSrc!} alt="" width={32} height={32} />}</div>}
 
           {onHelp && (
             <button onClick={onHelp} className="bg-secondary border border-gray-300/70 p-px rounded-sm h-6 w-6 shrink-0 cursor-pointer" aria-label="Help">
