@@ -39,6 +39,10 @@ export interface ManagedLayer {
    * short-circuited unconditionally. Replaces the legacy `useDisableParcelClick(true)` pattern.
    */
   suppressParcelClickAlways: boolean;
+  /**
+   * While this layer is registered, contextmenu (right-click) events are suppressed.
+   */
+  suppressRightClick: boolean;
   metadata?: Record<string, unknown>;
   addedAt: Date;
 }
@@ -72,6 +76,8 @@ interface LayerManagerState {
       suppressParcelClick?: boolean;
       /** Always-on parcel-click suppression — see ManagedLayer.suppressParcelClickAlways */
       suppressParcelClickAlways?: boolean;
+      /** Right-click suppression — see ManagedLayer.suppressRightClick */
+      suppressRightClick?: boolean;
     },
   ) => string;
 
@@ -183,6 +189,7 @@ export const useLayerManagerStore = create<LayerManagerState>()(
 
       const suppressParcelClick = options.suppressParcelClick ?? false;
       const suppressParcelClickAlways = options.suppressParcelClickAlways ?? false;
+      const suppressRightClick = options.suppressRightClick ?? false;
 
       // Create managed layer object
       const managedLayer: ManagedLayer = {
@@ -196,6 +203,7 @@ export const useLayerManagerStore = create<LayerManagerState>()(
         clickable: options.clickable ?? false,
         suppressParcelClick,
         suppressParcelClickAlways,
+        suppressRightClick,
         metadata: options.metadata || {},
         addedAt: new Date(),
       };
@@ -204,6 +212,7 @@ export const useLayerManagerStore = create<LayerManagerState>()(
       // hit-tests (forEachFeatureAtPixel) can read them without going through the store.
       layer.set("suppressParcelClick", suppressParcelClick);
       layer.set("suppressParcelClickAlways", suppressParcelClickAlways);
+      layer.set("suppressRightClick", suppressRightClick);
 
       // Set the z-index on the actual OpenLayers layer
       layer.setZIndex(zIndex);

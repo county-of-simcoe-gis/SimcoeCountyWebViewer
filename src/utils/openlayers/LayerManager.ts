@@ -23,6 +23,12 @@ export interface AddLayerOptions {
    * `useDisableParcelClick(true)` pattern.
    */
   suppressParcelClickAlways?: boolean;
+  /**
+   * While the layer is registered, contextmenu (right-click) events are suppressed so the
+   * map context menu does not appear. Useful for tools that add their own click handler and
+   * want a clean map canvas.
+   */
+  suppressRightClick?: boolean;
 }
 
 /**
@@ -123,6 +129,7 @@ export class LayerManager {
       clickable: options.clickable,
       suppressParcelClick: options.suppressParcelClick,
       suppressParcelClickAlways: options.suppressParcelClickAlways,
+      suppressRightClick: options.suppressRightClick,
     });
 
     // console.log(`✅ Added layer "${name}" to map with category "${category}" (ID: ${layerId})`)
@@ -274,6 +281,15 @@ export class LayerManager {
   static hasAlwaysSuppressLayer(): boolean {
     const all = useLayerManagerStore.getState().getAllLayers();
     return all.some((l) => l.suppressParcelClickAlways);
+  }
+
+  /**
+   * Returns true if any registered layer has `suppressRightClick === true`.
+   * Used by the InteractionManager to suppress contextmenu events.
+   */
+  static hasRightClickSuppressLayer(): boolean {
+    const all = useLayerManagerStore.getState().getAllLayers();
+    return all.some((l) => l.suppressRightClick);
   }
 
   /**

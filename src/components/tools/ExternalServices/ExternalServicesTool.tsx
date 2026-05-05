@@ -153,7 +153,11 @@ export default function ExternalServicesTool({ name = "External Services", helpL
       style: iconStyle,
     });
 
-    const layerId = LayerManager.addLayer(vectorLayer, "Tools", "External Services Marker", { visible: true });
+    const layerId = LayerManager.addLayer(vectorLayer, "Tools", "External Services Marker", {
+      visible: true,
+      suppressParcelClickAlways: true,
+      suppressRightClick: true,
+    });
 
     if (layerId) {
       setMarkerLayerId(layerId);

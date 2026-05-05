@@ -194,6 +194,12 @@ export class InteractionManager extends Interaction {
       }
     }
 
+    // Suppress the right-click context menu when any registered layer requests it.
+    if (eventType === "contextmenu" && LayerManager.hasRightClickSuppressLayer()) {
+      event.originalEvent.preventDefault();
+      return false;
+    }
+
     const handlerFilter = InteractionManager.handlerFilter ?? (() => true);
     const allHandlers = useInteractionManagerStore.getState().handlers;
     const applicableHandlers = allHandlers.filter((h) => h.eventType === eventType && handlerFilter(h, event));
