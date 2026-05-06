@@ -44,7 +44,7 @@ export function makeLayer(
   maxScale = 100000000000,
   liveLayer = false,
   styleUrl = "",
-  callback
+  callback,
 ) {
   let newLayer = layer;
   let existingLayer = drawingHelpers.getLayerByName(layerId);
@@ -167,7 +167,7 @@ export async function getMap(sources, isReset, tocType, callback) {
                     defaultGroupName: default_group,
                   });
                 }
-              }
+              },
             );
           });
         else
@@ -205,7 +205,7 @@ export async function getMap(sources, isReset, tocType, callback) {
                   defaultGroupName: default_group,
                 });
               }
-            }
+            },
           );
         break;
       case "layer":
@@ -518,7 +518,7 @@ export function getGroupsESRI(options, callback) {
               },
               (result) => {
                 layerList.push(result);
-              }
+              },
             );
             layerIndex--;
             visibleLayers.push(currentLayer.name);
@@ -616,9 +616,9 @@ export async function getSingleLayer(options, callback) {
               newGroup.layers.push(retLayer);
               groupArray.push(newGroup);
               if (groupArray.length >= groups.length) callback({ groups: groupArray, defaultLayerName: groups[0] });
-            }
+            },
           );
-        }
+        },
       );
     });
   });
@@ -979,7 +979,7 @@ export async function buildLayerByGroup(group, layer, layerIndex, tocType, secur
           // elementId: layerNameOnly + "_" + group.value,
         };
         callback(returnLayer);
-      }
+      },
     );
   }
 }
@@ -1006,7 +1006,7 @@ export function acceptDisclaimer(layer, returnToFunction) {
           returnToFunction();
         },
         () => {},
-        { accept: { show: true, label: "OK" }, decline: { show: false } }
+        { accept: { show: true, label: "OK" }, decline: { show: false } },
       );
       return false;
     } else return true;
@@ -1024,7 +1024,7 @@ export function acceptDisclaimer(layer, returnToFunction) {
         window.acceptedDisclaimers = currentDisclaimers;
         returnToFunction();
       },
-      () => {}
+      () => {},
     );
     return false;
   } else {
@@ -1525,11 +1525,11 @@ export function sortLayers(layers, sortAlpha = false) {
 export function sortGroups(groups, callback = undefined) {
   let primaryGroups = Object.assign(
     [],
-    groups.filter((item) => item.primary)
+    groups.filter((item) => item.primary),
   );
   let nonPrimaryGroups = Object.assign(
     [],
-    groups.filter((item) => !item.primary)
+    groups.filter((item) => !item.primary),
   );
   primaryGroups.sort(sortGroupAlphaCompare);
   nonPrimaryGroups.sort(sortGroupAlphaCompare);
