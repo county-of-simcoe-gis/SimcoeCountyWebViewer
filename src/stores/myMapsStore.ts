@@ -3,6 +3,8 @@ import { Style } from "ol/style";
 import type { Feature } from "ol";
 import type { Geometry } from "ol/geom";
 import { styleToJSON, exportFeatures as exportFeaturesToFile, getDefaultLabelStyle } from "@/utils/myMapsHelpers";
+import { buildLegacySavePayload } from "@/utils/legacyMyMapsFormat";
+import { isOldOLStyleFormat, transformOLStyle } from "@/utils/storageMigration";
 import { v4 as uuidv4 } from "uuid";
 
 // Label style JSON representation for callouts and labels
@@ -434,27 +436,38 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => ({
     const state = get();
 
     try {
-      // Using local API endpoint - no external config needed
+      // Mirror the legacy save behavior: any items flagged `hasChanged` get a
+      // fresh UUID (and the same UUID swapped inside their featureGeoJSON
+      // string) before being shipped to the server.
+      const itemsForSave = state.items.map((item) => {
+        if (item.hasChanged || false) {
+          const oldId = item.id;
+          const newId = generateNewId();
+          return {
+            ...item,
+            id: newId,
+            hasChanged: false,
+            featureGeoJSON:
+              typeof item.featureGeoJSON === "string"
+                ? item.featureGeoJSON.replace(oldId, newId)
+                : JSON.stringify(item.featureGeoJSON).replace(oldId, newId),
+          };
+        }
+        return item;
+      });
 
-      // Prepare data similar to old app format
-      const dataToSave = {
-        items: state.items.map((item) => {
-          // Update any items that have changed to get new IDs like old app
-          if (item.hasChanged || false) {
-            const oldId = item.id;
-            const newId = generateNewId();
-            return {
-              ...item,
-              id: newId,
-              hasChanged: false,
-              featureGeoJSON: typeof item.featureGeoJSON === "string" ? item.featureGeoJSON.replace(oldId, newId) : JSON.stringify(item.featureGeoJSON).replace(oldId, newId),
-            };
-          }
-          return item;
-        }),
+      // Build the exact JSON shape the legacy app produces. This is the only
+      // place we serialize for the server — no other translators run on the
+      // save path, guaranteeing cross-compatibility with the legacy viewer.
+      const dataToSave = buildLegacySavePayload({
+        items: itemsForSave,
         drawType: state.drawType,
         drawColor: state.drawColor,
-      };
+        drawOpacity: state.drawOpacity,
+        drawStyle: state.drawStyle,
+        toolTipClass: state.toolTipClass,
+        toolTipId: state.toolTipId,
+      });
 
       // Make API call to new local endpoint using axios
       const { getAxiosClient } = await import("@/lib/axiosInstance");
@@ -559,10 +572,21 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => ({
 
               // Only add if item doesn't already exist
               if (searchItem === undefined) {
+                // Legacy MyMaps records store styles in OpenLayers' internal
+                // `_`-suffixed JSON shape. Normalize them to the new clean
+                // StyleJSON so the rest of the app can render them.
+                let normalizedStyle = typedItem.style;
+                if (isOldOLStyleFormat(normalizedStyle)) {
+                  normalizedStyle = transformOLStyle(
+                    normalizedStyle as Parameters<typeof transformOLStyle>[0]
+                  ) as MyMapsItem["style"];
+                }
+
                 itemsToAdd.push({
                   ...typedItem,
                   id: typedItem.id || generateNewId(),
                   visible: typedItem.visible !== undefined ? typedItem.visible : true,
+                  style: normalizedStyle as MyMapsItem["style"],
                 } as MyMapsItem);
               }
             }
