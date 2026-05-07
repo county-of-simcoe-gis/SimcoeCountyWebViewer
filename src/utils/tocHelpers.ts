@@ -627,7 +627,8 @@ export async function getGroupsFromArcGIS(source: TOCSource): Promise<TOCLayerGr
 }
 
 /**
- * Merges groups together, handling duplicate layers with priority logic
+ * Merges groups together. Layers with the same name are kept as SEPARATE entries
+ * (no dedup) — each TOC layer has a unique `id` and is addressable independently.
  */
 export function mergeGroupsTogether(targetGroup: TOCLayerGroup, sourceGroups: TOCLayerGroup[], alphaSort = true): TOCLayerGroup {
   sourceGroups.forEach((sourceGroup) => {
@@ -638,32 +639,10 @@ export function mergeGroupsTogether(targetGroup: TOCLayerGroup, sourceGroups: TO
         groupName: targetGroup.label,
       };
 
-      let isDuplicateLayer = false;
-      targetGroup.layers = targetGroup.layers.map((existingLayer) => {
-        if (newLayer.tocDisplayName === existingLayer.tocDisplayName) {
-          isDuplicateLayer = true;
-          // Priority logic: prefer secured/primary layers over non-primary groups
-          if ((newLayer.secured || sourceGroup.primary) && !targetGroup.primary) {
-            // Remove the discarded existing layer from the map if it has an OL layer
-            if (existingLayer.managedLayerId) {
-              LayerManager.removeLayer(existingLayer.managedLayerId);
-            }
-            return newLayer;
-          } else {
-            // Remove the discarded incoming layer from the map if it has an OL layer
-            if (newLayer.managedLayerId) {
-              LayerManager.removeLayer(newLayer.managedLayerId);
-            }
-            return existingLayer;
-          }
-        } else {
-          return existingLayer;
-        }
-      });
-
-      if (!isDuplicateLayer) {
-        targetGroup.layers.push(newLayer);
-      }
+      // Always append — never replace an existing layer based on name. Layers
+      // with the same display name from different sources are intentionally
+      // kept as independent entries.
+      targetGroup.layers.push(newLayer);
     });
   });
 
@@ -699,7 +678,8 @@ export function mergeGroupsTogether(targetGroup: TOCLayerGroup, sourceGroups: TO
 }
 
 /**
- * Merges multiple groups together, handling duplicates with priority logic
+ * Merges multiple groups together. Same-named layers from different sources are
+ * kept as SEPARATE entries (no dedup); each layer has a unique `id`.
  */
 export function mergeGroups(originalGroups: TOCLayerGroup[], newGroups: TOCLayerGroup[], alphaSort = true): TOCLayerGroup[] {
   let mergedGroups = [...originalGroups];
@@ -712,43 +692,13 @@ export function mergeGroups(originalGroups: TOCLayerGroup[], newGroups: TOCLayer
         isDuplicateGroup = true;
 
         newGroup.layers.forEach((sourceLayer) => {
-          let isDuplicateLayer = false;
-
-          existingGroup.layers = existingGroup.layers.map((existingLayer) => {
-            if (sourceLayer.tocDisplayName === existingLayer.tocDisplayName) {
-              isDuplicateLayer = true;
-              // Priority logic: prefer secured/primary layers
-              if ((sourceLayer.secured || newGroup.primary) && !existingGroup.primary) {
-                // Remove the discarded existing layer from the map if it has an OL layer
-                if (existingLayer.managedLayerId) {
-                  LayerManager.removeLayer(existingLayer.managedLayerId);
-                }
-                const updatedLayer = {
-                  ...sourceLayer,
-                  group: existingGroup.value,
-                  groupName: existingGroup.label,
-                };
-                return updatedLayer;
-              } else {
-                // Remove the discarded incoming layer from the map if it has an OL layer
-                if (sourceLayer.managedLayerId) {
-                  LayerManager.removeLayer(sourceLayer.managedLayerId);
-                }
-                return existingLayer;
-              }
-            } else {
-              return existingLayer;
-            }
-          });
-
-          if (!isDuplicateLayer) {
-            const newLayer = {
-              ...sourceLayer,
-              group: existingGroup.value,
-              groupName: existingGroup.label,
-            };
-            existingGroup.layers.push(newLayer);
-          }
+          const newLayer = {
+            ...sourceLayer,
+            group: existingGroup.value,
+            groupName: existingGroup.label,
+          };
+          // Always append — duplicates by name are allowed and tracked by id.
+          existingGroup.layers.push(newLayer);
         });
 
         return existingGroup;

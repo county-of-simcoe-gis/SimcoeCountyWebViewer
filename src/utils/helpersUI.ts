@@ -32,11 +32,12 @@ export function activateTab(tabName: TabName): void {
 }
 
 /**
- * Alternative approach: Use window timeout to ensure state changes are processed
+ * Alternative approach: Defer to a microtask so the caller's current
+ * synchronous state update batch flushes first before we activate the tab.
  * @param tabName - The name of the tab to activate
  */
 export function activateTabDelayed(tabName: TabName): void {
-  setTimeout(() => activateTab(tabName), 0);
+  queueMicrotask(() => activateTab(tabName));
 }
 
 /**

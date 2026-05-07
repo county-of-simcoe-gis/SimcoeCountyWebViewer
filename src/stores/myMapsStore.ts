@@ -207,7 +207,19 @@ const generateNewId = (): string => {
   return uuidv4();
 };
 
-export const useMyMapsStore = create<MyMapsState>((set, get) => ({
+export const useMyMapsStore = create<MyMapsState>((set, get) => {
+  // Debounced save: coalesces rapid color/style changes into a single
+  // localStorage write instead of spawning a fresh setTimeout per change.
+  let saveTimer: ReturnType<typeof setTimeout> | null = null;
+  const debouncedSave = () => {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      saveTimer = null;
+      get().saveToStorage();
+    }, 100);
+  };
+
+  return {
   // Initial state
   drawType: "Cancel",
   drawColor: "#e809e5",
@@ -230,8 +242,8 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => ({
 
   setDrawColor: (color) => {
     set({ drawColor: color });
-    // Auto-save when color changes
-    setTimeout(() => get().saveToStorage(), 100);
+    // Auto-save when color changes (debounced)
+    debouncedSave();
   },
 
   setDrawOpacity: (opacity) => set({ drawOpacity: opacity }),
@@ -845,7 +857,8 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => ({
   hasItems: () => get().items.length > 0,
 
   hasVisibleItems: () => get().items.some((item) => item.visible),
-}));
+  };
+});
 
 // Helper function to create a new MyMaps item
 export const createMyMapsItem = (feature: Feature<Geometry>, drawType: DrawType, label?: string, style?: StyleJSON): MyMapsItem => {

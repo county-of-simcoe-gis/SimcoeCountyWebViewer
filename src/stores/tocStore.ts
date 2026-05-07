@@ -217,7 +217,7 @@ interface TOCState {
   debugGroupSwitching: () => void;
 
   // Initialize OpenLayers layers for all TOC layers
-  initializeOpenLayersLayers: () => void;
+  initializeOpenLayersLayers: () => Promise<void>;
 
   // Alphabetical sorting
   sortLayersAlphabetically: () => void;
@@ -230,23 +230,25 @@ interface TOCState {
 
 /**
  * Helper: update a layer's properties across BOTH view types (LIST and FOLDER)
- * and the allLayers array. Call inside an immer set() callback with the draft.
- * This ensures legend/showLegend data is never lost when switching views.
+ * and the allLayers array, keyed by the layer's unique id. Call inside an
+ * immer set() callback with the draft. This ensures legend/showLegend data is
+ * never lost when switching views and respects layer identity (layers with the
+ * same name are intentionally independent and have different ids).
  *
- * Uses forEach (not find) so that ALL occurrences of the layer are updated —
- * in folder view the same layer can appear in more than one folder group,
- * and allLayers may contain duplicate entries for such layers.
+ * Uses forEach (not find) so that ALL occurrences of the SAME id are updated \u2014
+ * the same layer can appear in multiple folder groups and in the All Layers
+ * virtual group, all carrying the same id.
  */
-function updateLayerInAllViews(draft: TOCState, layerName: string, updater: (layer: TOCLayer) => void) {
+function updateLayerInAllViews(draft: TOCState, layerId: string, updater: (layer: TOCLayer) => void) {
   [draft.layerListGroups, draft.layerFolderGroups].forEach((groups) => {
     groups.forEach((g) => {
       g.layers.forEach((l) => {
-        if (l.name === layerName) updater(l);
+        if (l.id === layerId) updater(l);
       });
     });
   });
   draft.allLayers.forEach((l) => {
-    if (l.name === layerName) updater(l);
+    if (l.id === layerId) updater(l);
   });
 }
 
@@ -305,35 +307,15 @@ export const useTOCStore = create<TOCState>()(
     setLayerGroups: (type, groups) => {
       set((state) => {
         if (type === "LIST") {
-          // For LIST view, create an "All Layers" group that contains all layers flattened
+          // For LIST view, create an "All Layers" group that contains all layers flattened.
+          // No deduplication: layers with the same name are kept as separate entries.
+          // Each TOC layer already has a unique `id` so they're addressable independently.
           const allLayers: TOCLayer[] = [];
-          // Use tocDisplayName for dedup to match mergeGroups() duplicate detection
-          const seenLayers = new Map<string, number>();
 
           groups.forEach((group) => {
             group.layers.forEach((layer) => {
-              const key = layer.tocDisplayName;
-              const existingIndex = seenLayers.get(key);
-
-              if (existingIndex !== undefined) {
-                // Duplicate found — apply same priority logic as mergeGroups:
-                // prefer secured/primary layers over non-primary
-                const existingLayer = allLayers[existingIndex];
-                const existingGroup = groups.find((g) => g.value === existingLayer.group || g.label === existingLayer.groupName);
-                if ((layer.secured || group.primary) && !existingGroup?.primary) {
-                  // Incoming layer wins — keep its entry in the All Layers group
-                  // Do NOT remove the OL layer here; initializeOpenLayersLayers() manages
-                  // shared OL layers across groups and removing one would break all references.
-                  allLayers[existingIndex] = { ...layer };
-                } else {
-                  // Existing layer wins — skip the incoming duplicate
-                  // Do NOT remove the OL layer; it may be shared across groups.
-                }
-              } else {
-                seenLayers.set(key, allLayers.length);
-                // Create a copy of the layer to avoid mutating the original group's layer
-                allLayers.push({ ...layer });
-              }
+              // Create a copy of the layer to avoid mutating the original group's layer
+              allLayers.push({ ...layer });
             });
           });
 
@@ -968,9 +950,9 @@ export const useTOCStore = create<TOCState>()(
         if (layer) {
           const shouldShow = !layer.showLegend;
 
-          // Update the showLegend state in BOTH view types
+          // Update the showLegend state in BOTH view types (id-based)
           set((draft) => {
-            updateLayerInAllViews(draft, layerName, (l) => {
+            updateLayerInAllViews(draft, layer.id, (l) => {
               l.showLegend = shouldShow;
             });
           });
@@ -1462,16 +1444,16 @@ export const useTOCStore = create<TOCState>()(
 
     // Add legend fetching function
     fetchLayerLegend: async (layer: TOCLayer, group: TOCLayerGroup) => {
-      // Check if already fetching to prevent duplicate requests
+      // Check if already fetching to prevent duplicate requests (id-based)
       const state = get();
-      const existingLayer = state.allLayers.find((l) => l.name === layer.name);
+      const existingLayer = state.allLayers.find((l) => l.id === layer.id);
       if (existingLayer?.legendFetching) {
         return; // Already fetching, skip
       }
 
-      // Mark as fetching in BOTH view types
+      // Mark as fetching in BOTH view types (id-based)
       set((draft) => {
-        updateLayerInAllViews(draft, layer.name, (l) => {
+        updateLayerInAllViews(draft, layer.id, (l) => {
           l.legendFetching = true;
         });
       });
@@ -1493,7 +1475,7 @@ export const useTOCStore = create<TOCState>()(
               const img = new Image();
               img.onload = () => {
                 set((draft) => {
-                  updateLayerInAllViews(draft, layer.name, (l) => {
+                  updateLayerInAllViews(draft, layer.id, (l) => {
                     l.legendImage = blobUrl;
                     l.legendHeight = img.height || 20;
                     l.legendFetching = false;
@@ -1503,7 +1485,7 @@ export const useTOCStore = create<TOCState>()(
               img.onerror = async () => {
                 URL.revokeObjectURL(blobUrl);
                 set((draft) => {
-                  updateLayerInAllViews(draft, layer.name, (l) => {
+                  updateLayerInAllViews(draft, layer.id, (l) => {
                     l.legendFetching = false;
                   });
                 });
@@ -1513,7 +1495,7 @@ export const useTOCStore = create<TOCState>()(
             } catch (authErr) {
               console.warn(`Secured legend fetch failed for ${layer.name}:`, authErr);
               set((draft) => {
-                updateLayerInAllViews(draft, layer.name, (l) => {
+                updateLayerInAllViews(draft, layer.id, (l) => {
                   l.legendFetching = false;
                 });
               });
@@ -1524,7 +1506,7 @@ export const useTOCStore = create<TOCState>()(
             const img = new Image();
             img.onload = () => {
               set((draft) => {
-                updateLayerInAllViews(draft, layer.name, (l) => {
+                updateLayerInAllViews(draft, layer.id, (l) => {
                   l.legendImage = layer.styleUrl;
                   l.legendHeight = img.height || 20;
                   l.legendFetching = false;
@@ -1533,7 +1515,7 @@ export const useTOCStore = create<TOCState>()(
             };
             img.onerror = async () => {
               set((draft) => {
-                updateLayerInAllViews(draft, layer.name, (l) => {
+                updateLayerInAllViews(draft, layer.id, (l) => {
                   l.legendFetching = false;
                 });
               });
@@ -1549,7 +1531,7 @@ export const useTOCStore = create<TOCState>()(
         console.error("Error fetching layer legend:", error);
         // Clear fetching flag in BOTH view types on error
         set((draft) => {
-          updateLayerInAllViews(draft, layer.name, (l) => {
+          updateLayerInAllViews(draft, layer.id, (l) => {
             l.legendFetching = false;
           });
         });
@@ -1595,9 +1577,9 @@ export const useTOCStore = create<TOCState>()(
                   styleData = styleResponse.data;
                 }
 
-                // Update layer with legend object in BOTH view types
+                // Update layer with legend object in BOTH view types (id-based)
                 set((draft) => {
-                  updateLayerInAllViews(draft, layer.name, (l) => {
+                  updateLayerInAllViews(draft, layer.id, (l) => {
                     l.legendObj = styleData;
                     l.legendHeight = 100; // Default height for object legends
                   });
@@ -1614,7 +1596,7 @@ export const useTOCStore = create<TOCState>()(
 
         // Fallback: create a simple text legend in BOTH view types
         set((draft) => {
-          updateLayerInAllViews(draft, layer.name, (l) => {
+          updateLayerInAllViews(draft, layer.id, (l) => {
             l.legendObj = {
               type: "text",
               content: `Legend for ${layer.tocDisplayName}`,
@@ -1627,7 +1609,7 @@ export const useTOCStore = create<TOCState>()(
 
         // Fallback: create a simple text legend in BOTH view types
         set((draft) => {
-          updateLayerInAllViews(draft, layer.name, (l) => {
+          updateLayerInAllViews(draft, layer.id, (l) => {
             l.legendObj = {
               type: "text",
               content: `Legend for ${layer.tocDisplayName}`,
@@ -1798,26 +1780,34 @@ export const useTOCStore = create<TOCState>()(
       const map = useMapStore.getState().map;
       if (!map) {
         console.error("❌ Map not available during TOC layer initialization");
-        return;
+        return Promise.resolve();
       }
 
-      // Track created OpenLayers layers by layer name to avoid duplicates
+      // Track created OpenLayers layers by unique layer ID. The "All Layers"
+      // virtual group entries are created via `{ ...layer }` spread and inherit
+      // the source group entry's `id`, so they correctly share an OL layer with
+      // their source. Two genuinely separate TOC entries (different ids) each
+      // get their OWN OL layer \u2014 they're treated as independent layers even
+      // when their `name` matches.
       const createdLayers = new Map<string, { layer: Layer; managedLayerId: string }>();
+
+      // Track pending async layer creations so we can resolve once they all settle
+      const pendingLayerPromises: Promise<void>[] = [];
 
       groups.forEach((group) => {
         group.layers.forEach((layer) => {
-          // Check if we already created an OpenLayers layer for this layer name
-          const existingLayerInfo = createdLayers.get(layer.name);
+          // Check if we already created an OpenLayers layer for this layer id
+          const existingLayerInfo = createdLayers.get(layer.id);
 
           if (existingLayerInfo) {
-            // Reuse existing OpenLayers layer
+            // Reuse existing OpenLayers layer (same id \u2014 e.g. All Layers mirror)
 
             // Update the layer in the store to reference the shared OpenLayers layer
             set((state) => {
               const currentGroups = state.tocType === "LIST" ? state.layerListGroups : state.layerFolderGroups;
               const currentGroup = currentGroups.find((g) => g.label === group.label);
               if (currentGroup) {
-                const currentLayer = currentGroup.layers.find((l) => l.name === layer.name);
+                const currentLayer = currentGroup.layers.find((l) => l.id === layer.id);
                 if (currentLayer) {
                   currentLayer.layer = existingLayerInfo.layer;
                   currentLayer.managedLayerId = existingLayerInfo.managedLayerId;
@@ -1825,7 +1815,7 @@ export const useTOCStore = create<TOCState>()(
               }
 
               // Also update in allLayers
-              const allLayerItem = state.allLayers.find((l) => l.name === layer.name && l.groupName === group.label);
+              const allLayerItem = state.allLayers.find((l) => l.id === layer.id && l.groupName === group.label);
               if (allLayerItem) {
                 allLayerItem.layer = existingLayerInfo.layer;
                 allLayerItem.managedLayerId = existingLayerInfo.managedLayerId;
@@ -1834,6 +1824,14 @@ export const useTOCStore = create<TOCState>()(
           } else if (!layer.layer && group.wmsGroupUrl) {
             // Create new OpenLayers layer
             const serverUrl = group.wmsGroupUrl.split("/wms")[0] + "/wms";
+
+            // Wrap the callback-style getLayer in a promise so callers can
+            // await full layer initialization (no more arbitrary setTimeout waits).
+            let resolveLayerPromise: () => void = () => {};
+            const layerReadyPromise = new Promise<void>((resolve) => {
+              resolveLayerPromise = resolve;
+            });
+            pendingLayerPromises.push(layerReadyPromise);
 
             // Debug log for secured layer detection
             // if (layer.secured) {
@@ -1896,16 +1894,18 @@ export const useTOCStore = create<TOCState>()(
                   });
 
                   if (managedLayerId) {
-                    // Store the created layer info for reuse
-                    createdLayers.set(layer.name, { layer: typedLayer, managedLayerId });
+                    // Store the created layer info for reuse (keyed by unique id)
+                    createdLayers.set(layer.id, { layer: typedLayer, managedLayerId });
 
-                    // Update ALL TOC layer instances that represent this same server layer
+                    // Update all TOC layer entries that share this id (only the
+                    // source group entry and its mirror in the All Layers
+                    // virtual group). Entries with a different id are intentionally
+                    // independent and keep their own OL layer.
                     set((state) => {
-                      // Update in all groups (both LIST and FOLDER views)
                       const updateLayerInGroups = (groups: TOCLayerGroup[]) => {
                         groups.forEach((grp) => {
                           grp.layers.forEach((lyr) => {
-                            if (lyr.name === layer.name) {
+                            if (lyr.id === layer.id) {
                               lyr.layer = typedLayer;
                               lyr.managedLayerId = managedLayerId;
                             }
@@ -1918,7 +1918,7 @@ export const useTOCStore = create<TOCState>()(
 
                       // Update in allLayers
                       state.allLayers.forEach((allLayer) => {
-                        if (allLayer.name === layer.name) {
+                        if (allLayer.id === layer.id) {
                           allLayer.layer = typedLayer;
                           allLayer.managedLayerId = managedLayerId;
                         }
@@ -1928,11 +1928,14 @@ export const useTOCStore = create<TOCState>()(
                 } else {
                   console.error("❌ Failed to create OpenLayers layer for:", layer.name);
                 }
+                resolveLayerPromise();
               },
             );
           }
         });
       });
+
+      return Promise.all(pendingLayerPromises).then(() => undefined);
     },
 
     // Global opacity delegation to LayerManager
