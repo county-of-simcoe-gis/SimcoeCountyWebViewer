@@ -9,6 +9,7 @@ import type { MyMapsRecord } from "@/lib/myMaps";
 vi.mock("@/lib/myMaps", () => ({
   MyMapsService: {
     getMyMaps: vi.fn(),
+    updateLastImported: vi.fn().mockResolvedValue(undefined),
   },
 }));
 
@@ -18,11 +19,13 @@ vi.mock("@/lib/common", () => ({
 
 describe("GET /api/mymaps/[id]", () => {
   const mockGetMyMaps = vi.mocked(MyMapsService.getMyMaps);
+  const mockUpdateLastImported = vi.mocked(MyMapsService.updateLastImported);
   const mockIsHostAllowed = vi.mocked(isHostAllowed);
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockIsHostAllowed.mockReturnValue(true);
+    mockUpdateLastImported.mockResolvedValue(undefined);
   });
 
   afterEach(() => {

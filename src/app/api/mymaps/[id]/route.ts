@@ -1,6 +1,8 @@
 import prisma from "@/lib/prisma";
 
 /**
+ * @deprecated Use GET /api/public/mymaps/[id] instead.
+ *
  * GET /api/mymaps/[id]
  * Retrieve a MyMaps drawing by its UUID.
  * Returns the full record (id, json, date_created) or { error } if not found.

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import Switch from "react-switch";
 import Image from "next/image";
@@ -8,6 +8,7 @@ import copy from "copy-to-clipboard";
 import { useSession } from "next-auth/react";
 import { useConfig } from "@/hooks/useConfig";
 import { useMyMapsStore } from "@/stores/myMapsStore";
+import type { UserMyMapsEntry, MyMapsHistoryEntry } from "@/stores/myMapsStore";
 import { useToast } from "@/hooks/useToast";
 import "./MyMapsAdvanced.css";
 
@@ -20,15 +21,18 @@ interface MyMapsAdvancedProps {
 }
 
 const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDeleteAllClick, onMyMapsImport, onAdditionalToolsAction, hasItems }) => {
-  const { isEditing, editMode, importText, setImportText, saveToApi, importFromApi } = useMyMapsStore();
+  const { isEditing, editMode, importText, setImportText, saveToApi, importFromApi, fetchUserMaps, userMaps, getHistory } = useMyMapsStore();
   const { data: session } = useSession();
   const { config } = useConfig();
   const toast = useToast();
+  const isAuthenticated = !!session?.user?.email;
 
   const [open, setOpen] = useState(false);
   const [editOn, setEditOn] = useState(isEditing);
   const [editOption, setEditOption] = useState(editMode || "vertices");
   const [inputText, setInputText] = useState(importText);
+  const [myMapsName, setMyMapsName] = useState("");
+  const [selectedDropdownValue, setSelectedDropdownValue] = useState("manual");
   const [showAdditionalMenu, setShowAdditionalMenu] = useState(false);
   const [showExportSubmenu, setShowExportSubmenu] = useState(false);
   const [submenuPosition, setSubmenuPosition] = useState({ x: 0, y: 0 });
@@ -37,6 +41,43 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
   const exportMenuRef = useRef<HTMLDivElement>(null);
   const exportHoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const inputId = "mymaps-advanced-import-input";
+
+  // Fetch user maps when authenticated and panel opens
+  useEffect(() => {
+    if (open && isAuthenticated) {
+      fetchUserMaps();
+    }
+  }, [open, isAuthenticated, fetchUserMaps]);
+
+  // Build dropdown options
+  const dropdownOptions = useCallback((): { value: string; label: string }[] => {
+    const options: { value: string; label: string }[] = [
+      { value: "manual", label: "Enter ID Manually..." },
+    ];
+
+    if (isAuthenticated) {
+      userMaps.forEach((m: UserMyMapsEntry) => {
+        const dateStr = m.date_created
+          ? new Date(m.date_created).toLocaleDateString()
+          : "unknown date";
+        options.push({
+          value: m.id,
+          label: `${m.name || "(unnamed)"} — ${dateStr}`,
+        });
+      });
+    } else {
+      const history = getHistory();
+      history.forEach((entry: MyMapsHistoryEntry) => {
+        const dateStr = new Date(entry.date).toLocaleDateString();
+        options.push({
+          value: entry.id,
+          label: `${entry.id} — ${dateStr}`,
+        });
+      });
+    }
+
+    return options;
+  }, [isAuthenticated, userMaps, getHistory]);
 
   useEffect(() => {
     setEditOn(isEditing);
@@ -97,24 +138,32 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
   };
 
   const onImport = async () => {
-    if (!inputText.trim()) {
+    // Determine the ID to import — either from the dropdown selection or manual input
+    const idToImport = selectedDropdownValue !== "manual" ? selectedDropdownValue : inputText.trim();
+
+    if (!idToImport) {
       toast.warning("Please enter a MyMaps ID to import.");
       return;
     }
 
     try {
-      const result = await importFromApi(inputText.trim());
+      const result = await importFromApi(idToImport);
 
       if (result.success) {
-        // Show success message with green highlight
         toast.success(result.message || "Success! MyMaps imported.");
 
-        // Trigger the parent callback if provided for compatibility
         if (onMyMapsImport && result.data && typeof result.data === "object" && "id" in result.data && "json" in result.data) {
           onMyMapsImport(result.data as { id: string; json: string });
         }
 
-        // Clear the input after successful import
+        // If authenticated and a named map was selected, pre-fill the name input
+        if (isAuthenticated && selectedDropdownValue !== "manual") {
+          const selectedMap = userMaps.find((m) => m.id === selectedDropdownValue);
+          if (selectedMap?.name) {
+            setMyMapsName(selectedMap.name);
+          }
+        }
+
         setInputText("");
         setImportText("");
       } else {
@@ -127,13 +176,13 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
   };
 
   const onShare = () => {
-    if (!inputText.trim()) {
+    const shareId = selectedDropdownValue !== "manual" ? selectedDropdownValue : inputText.trim();
+    if (!shareId) {
       toast.warning("Please save your MyMaps first to get an ID to share.");
       return;
     }
 
-    // Create shareable URL like old app
-    const currentUrl = `${window.location.href.split("?")[0]}?MY_MAPS_ID=${inputText}`;
+    const currentUrl = `${window.location.href.split("?")[0]}?MY_MAPS_ID=${shareId}`;
 
     try {
       // Copy to clipboard
@@ -146,7 +195,8 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
   };
 
   const onSharePublic = () => {
-    if (!inputText.trim()) {
+    const shareId = selectedDropdownValue !== "manual" ? selectedDropdownValue : inputText.trim();
+    if (!shareId) {
       toast.warning("Please save your MyMaps first to get an ID to share.");
       return;
     }
@@ -157,7 +207,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
       return;
     }
 
-    const url = `${publicUrl}?MY_MAPS_ID=${inputText}`;
+    const url = `${publicUrl}?MY_MAPS_ID=${shareId}`;
 
     try {
       copy(url);
@@ -169,17 +219,30 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
   };
 
   const onSave = async () => {
+    // Validate name for authenticated saves
+    if (isAuthenticated && !myMapsName.trim()) {
+      toast.warning("Please enter a name for your MyMaps.");
+      return;
+    }
+
     try {
-      const result = await saveToApi();
+      const result = await saveToApi(
+        isAuthenticated
+          ? { myMapsName: myMapsName.trim(), isAuthenticated: true }
+          : undefined
+      );
 
       if (result.success && result.id) {
-        // Show success message
         toast.success(result.message || "MyMaps have been saved! Your ID has been saved to clipboard.");
 
-        // Update the input with the saved ID and add glow effect
         setInputText(result.id);
         setImportText(result.id);
         glowContainer(inputId);
+
+        // Refresh the user's maps list after authenticated save
+        if (isAuthenticated) {
+          fetchUserMaps();
+        }
       } else {
         toast.error(result.message || "Save failed. Please try again.");
       }
@@ -229,17 +292,65 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
         <div className="border-b border-[#d8dadc] pb-2.5">
           <label className="block font-bold">Import/Save</label>
           <div>
-            <input
-              className="mymaps-text-input bg-[url('/images/edit.png')] bg-no-repeat bg-[position:right_4px_center] bg-[length:16px_16px] bg-white text-[#367cc5] focus:outline-none focus:border-[#007bff] focus:shadow-[0_0_0_2px_rgba(0,123,255,0.4)]"
-              id={inputId}
-              type="text"
-              placeholder="Enter ID here"
-              onChange={onInputChange}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-              value={inputText}
-            />
-            <br />
+            {/* Dropdown for selecting existing MyMaps or entering manually */}
+            <select
+              className="select select-bordered select-sm w-full mb-1 text-[#367cc5]"
+              value={selectedDropdownValue}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSelectedDropdownValue(value);
+                if (value !== "manual") {
+                  setInputText(value);
+                  setImportText(value);
+                  // Pre-fill name for authenticated users
+                  if (isAuthenticated) {
+                    const selectedMap = userMaps.find((m) => m.id === value);
+                    if (selectedMap?.name) {
+                      setMyMapsName(selectedMap.name);
+                    }
+                  }
+                } else {
+                  setInputText("");
+                  setImportText("");
+                  setMyMapsName("");
+                }
+              }}
+            >
+              {dropdownOptions().map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+
+            {/* Manual ID input — visible only when "Enter ID Manually" is selected */}
+            {selectedDropdownValue === "manual" && (
+              <input
+                className="mymaps-text-input bg-[url('/images/edit.png')] bg-no-repeat bg-[position:right_4px_center] bg-[length:16px_16px] bg-white text-[#367cc5] focus:outline-none focus:border-[#007bff] focus:shadow-[0_0_0_2px_rgba(0,123,255,0.4)] mb-1"
+                id={inputId}
+                type="text"
+                placeholder="Enter ID here"
+                onChange={onInputChange}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                value={inputText}
+              />
+            )}
+
+            {/* Name input — visible only for authenticated users */}
+            {isAuthenticated && (
+              <input
+                className="input input-bordered input-sm w-full mb-1"
+                type="text"
+                placeholder="MyMaps name (required to save)"
+                maxLength={100}
+                value={myMapsName}
+                onChange={(e) => setMyMapsName(e.target.value)}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+              />
+            )}
+
             <div className="flex gap-[3px] flex-wrap">
               <button className="mymaps-action-btn" onClick={onImport} title="Load map items from an existing MyMaps ID">
                 Import

@@ -36,6 +36,9 @@ const mockMyMapsStore = {
   setImportText: vi.fn(),
   saveToApi: vi.fn(),
   importFromApi: vi.fn(),
+  fetchUserMaps: vi.fn(),
+  userMaps: [],
+  getHistory: vi.fn(() => []),
 };
 
 vi.mock("@/stores/myMapsStore", () => ({
@@ -77,6 +80,9 @@ describe("MyMapsAdvanced Component", () => {
     mockMyMapsStore.importText = "";
     mockMyMapsStore.saveToApi.mockResolvedValue({ success: true, id: "test-id-123", message: "Saved successfully" });
     mockMyMapsStore.importFromApi.mockResolvedValue({ success: true, message: "Imported successfully", data: { id: "test-id", json: "{}" } });
+    mockMyMapsStore.fetchUserMaps.mockResolvedValue(undefined);
+    mockMyMapsStore.userMaps = [];
+    mockMyMapsStore.getHistory.mockReturnValue([]);
 
     // Reset window method mocks
     mockConfirm.mockClear();
