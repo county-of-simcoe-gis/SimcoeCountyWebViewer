@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import { loadLayerGroupsFromSources } from "@/utils/tocHelpers";
+import { loadLayerGroupsFromSources, sortGroups } from "@/utils/tocHelpers";
 import { LayerHelpers } from "@/utils/openlayers/LayerHelpers";
 import { OL_DATA_TYPES } from "@/utils/openlayers/types";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
@@ -152,7 +152,7 @@ interface TOCState {
 
   // Actions
   setTocType: (type: "LIST" | "FOLDER") => void;
-  setLayerGroups: (type: "LIST" | "FOLDER", groups: TOCLayerGroup[]) => void;
+  setLayerGroups: (type: "LIST" | "FOLDER", groups: TOCLayerGroup[], options?: { preserveLayerOrder?: boolean }) => void;
   setSelectedGroup: (group: TOCLayerGroup | null) => void;
   setDefaultGroup: (group: TOCLayerGroup | null) => void;
   setFolderOpenState: (groupValue: string, isOpen: boolean) => void;
@@ -304,48 +304,67 @@ export const useTOCStore = create<TOCState>()(
       });
     },
 
-    setLayerGroups: (type, groups) => {
+    setLayerGroups: (type, groups, options) => {
+      const preserveLayerOrder = options?.preserveLayerOrder ?? false;
       set((state) => {
+        // Sort groups so primary source groups appear first, then alphabetical
+        const sortedGroups = sortGroups(groups);
+
         if (type === "LIST") {
           // For LIST view, create an "All Layers" group that contains all layers flattened.
           // No deduplication: layers with the same name are kept as separate entries.
           // Each TOC layer already has a unique `id` so they're addressable independently.
           const allLayers: TOCLayer[] = [];
 
-          groups.forEach((group) => {
+          sortedGroups.forEach((group) => {
             group.layers.forEach((layer) => {
               // Create a copy of the layer to avoid mutating the original group's layer
               allLayers.push({ ...layer });
             });
           });
 
-          // Sort by initialDrawIndex (descending) within each group to maintain relative order
-          // Primary groups come first, then sort by group value, then by initialDrawIndex
-          allLayers.sort((a, b) => {
-            // First, sort by group priority (primary groups first)
-            const groupA = groups.find((g) => g.value === a.group || g.label === a.groupName);
-            const groupB = groups.find((g) => g.value === b.group || g.label === b.groupName);
+          if (preserveLayerOrder) {
+            // When restoring saved layer order, sort by the saved drawIndex (descending)
+            // which was already applied to each layer before setLayerGroups was called
+            allLayers.sort((a, b) => b.drawIndex - a.drawIndex);
 
-            if (groupA?.primary && !groupB?.primary) return -1;
-            if (!groupA?.primary && groupB?.primary) return 1;
+            // Reassign sequential drawIndex/index but preserve initialDrawIndex
+            let allLayersIndex = allLayers.length;
+            allLayers.forEach((layer) => {
+              allLayersIndex--;
+              layer.drawIndex = allLayersIndex;
+              layer.index = allLayersIndex;
+              // Do NOT overwrite initialDrawIndex — it preserves the server's original order
+            });
+          } else {
+            // Sort by initialDrawIndex (descending) within each group to maintain relative order
+            // Primary groups come first, then sort by group value, then by initialDrawIndex
+            allLayers.sort((a, b) => {
+              // First, sort by group priority (primary groups first)
+              const groupA = sortedGroups.find((g) => g.value === a.group || g.label === a.groupName);
+              const groupB = sortedGroups.find((g) => g.value === b.group || g.label === b.groupName);
 
-            // Then sort by group name to keep groups together
-            const groupCompare = (a.groupName || a.group).localeCompare(b.groupName || b.group);
-            if (groupCompare !== 0) return groupCompare;
+              if (groupA?.primary && !groupB?.primary) return -1;
+              if (!groupA?.primary && groupB?.primary) return 1;
 
-            // Finally, within the same group, sort by initialDrawIndex (descending)
-            return b.initialDrawIndex - a.initialDrawIndex;
-          });
+              // Then sort by group name to keep groups together
+              const groupCompare = (a.groupName || a.group).localeCompare(b.groupName || b.group);
+              if (groupCompare !== 0) return groupCompare;
 
-          // Now set a consistent initialDrawIndex for the "All Layers" view
-          // This preserves the flattened order as the "initial order" for this group
-          let allLayersIndex = allLayers.length;
-          allLayers.forEach((layer) => {
-            allLayersIndex--;
-            layer.initialDrawIndex = allLayersIndex;
-            layer.drawIndex = allLayersIndex;
-            layer.index = allLayersIndex;
-          });
+              // Finally, within the same group, sort by initialDrawIndex (descending)
+              return b.initialDrawIndex - a.initialDrawIndex;
+            });
+
+            // Now set a consistent initialDrawIndex for the "All Layers" view
+            // This preserves the flattened order as the "initial order" for this group
+            let allLayersIndex = allLayers.length;
+            allLayers.forEach((layer) => {
+              allLayersIndex--;
+              layer.initialDrawIndex = allLayersIndex;
+              layer.drawIndex = allLayersIndex;
+              layer.index = allLayersIndex;
+            });
+          }
 
           // Create the special "All Layers" group
           const allLayersGroup: TOCLayerGroup = {
@@ -361,18 +380,28 @@ export const useTOCStore = create<TOCState>()(
           };
 
           // Set layerListGroups with All Layers first, then individual groups
-          state.layerListGroups = [allLayersGroup, ...groups];
+          state.layerListGroups = [allLayersGroup, ...sortedGroups];
         } else {
-          state.layerFolderGroups = groups;
+          state.layerFolderGroups = sortedGroups;
         }
 
         // Update all layers and layer count
         const allLayers: TOCLayer[] = [];
-        groups.forEach((group) => {
+        sortedGroups.forEach((group) => {
           allLayers.push(...group.layers);
         });
         state.allLayers = allLayers;
         state.layerCount = allLayers.length;
+
+        // Keep selectedGroup in sync — it may reference a stale object from
+        // the previous layerListGroups/layerFolderGroups array.
+        if (state.selectedGroup) {
+          const currentGroups = type === "LIST" ? state.layerListGroups : state.layerFolderGroups;
+          const updatedGroup = currentGroups.find((g) => g.value === state.selectedGroup!.value || g.label === state.selectedGroup!.label);
+          if (updatedGroup) {
+            state.selectedGroup = updatedGroup;
+          }
+        }
       });
     },
 
@@ -416,9 +445,9 @@ export const useTOCStore = create<TOCState>()(
             group.layers = [...group.layers].sort((a, b) => a.tocDisplayName.localeCompare(b.tocDisplayName));
           });
         } else {
-          // Return to initial sort order using initialDrawIndex when turning off alphabetical sort
+          // Return to the user's current custom order using drawIndex
           currentGroups.forEach((group) => {
-            group.layers = [...group.layers].sort((a, b) => b.initialDrawIndex - a.initialDrawIndex);
+            group.layers = [...group.layers].sort((a, b) => b.drawIndex - a.drawIndex);
           });
         }
 
@@ -533,6 +562,8 @@ export const useTOCStore = create<TOCState>()(
           // Update the layerManager store with the new order
           if (reorderedTocLayers.length > 0) {
             // Update z-indices on the reordered layers before assigning to draft
+            // Position 0 in the array is the TOP of the TOC (highest drawIndex)
+            // and calculateZIndex(category, 0) returns the max z-index, so idx maps directly.
             const updatedLayers = reorderedTocLayers.map((layer, idx) => {
               const newZIndex = calculateZIndex("TOC", idx);
               // Create a new object with updated z-index to ensure Immer can track changes
@@ -1026,10 +1057,38 @@ export const useTOCStore = create<TOCState>()(
           layers.splice(newIndex, 0, movedLayer);
 
           // Update draw indices (but not initialDrawIndex - that preserves original order)
-          layers.forEach((layer, index) => {
-            layer.drawIndex = index;
-            layer.index = index;
+          // Top of list (position 0) gets the highest drawIndex (drawn on top),
+          // matching the old app convention and OpenLayers z-index semantics.
+          const layerCount = layers.length;
+          layers.forEach((layer, i) => {
+            layer.drawIndex = layerCount - 1 - i;
+            layer.index = layerCount - 1 - i;
           });
+
+          // If the "All Layers" virtual group was reordered, propagate drawIndex
+          // changes back to the individual source groups so that saves capture the
+          // correct order and the allLayers array stays in sync.
+          if (group.value === "all_layers") {
+            layers.forEach((allLayer) => {
+              const sourceGroup = groups.find((g) => g.value === allLayer.group || g.label === allLayer.groupName);
+              if (sourceGroup) {
+                const sourceLayer = sourceGroup.layers.find((l) => l.name === allLayer.name);
+                if (sourceLayer) {
+                  sourceLayer.drawIndex = allLayer.drawIndex;
+                  sourceLayer.index = allLayer.index;
+                }
+              }
+            });
+
+            // Also update state.allLayers so handleSaveAllLayers sees the new order
+            state.allLayers = state.allLayers.map((al) => {
+              const updatedLayer = layers.find((l) => l.name === al.name && l.group === al.group);
+              if (updatedLayer) {
+                return { ...al, drawIndex: updatedLayer.drawIndex, index: updatedLayer.index };
+              }
+              return al;
+            });
+          }
         }
       });
 
@@ -1101,10 +1160,11 @@ export const useTOCStore = create<TOCState>()(
             // Add new layer at the beginning of the array (top of TOC)
             group.layers = [layerClone, ...group.layers];
 
-            // Update indices for all existing layers
+            // Update indices for all layers — top of array gets highest index
+            const count = group.layers.length;
             group.layers.forEach((l, idx) => {
-              l.drawIndex = idx;
-              l.index = idx;
+              l.drawIndex = count - 1 - idx;
+              l.index = count - 1 - idx;
             });
           }
         };
@@ -1148,10 +1208,11 @@ export const useTOCStore = create<TOCState>()(
             if (layerIndex !== -1) {
               group.layers.splice(layerIndex, 1);
 
-              // Update draw indices
+              // Update draw indices — top of array gets highest index
+              const count = group.layers.length;
               group.layers.forEach((layer, index) => {
-                layer.drawIndex = index;
-                layer.index = index;
+                layer.drawIndex = count - 1 - index;
+                layer.index = count - 1 - index;
               });
             }
           }

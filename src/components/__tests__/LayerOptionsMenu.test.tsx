@@ -26,6 +26,22 @@ vi.mock("@/stores/mapStore", () => ({
   useMapStore: Object.assign(
     vi.fn(() => ({
       map: null,
+      controlVisibility: {
+        rotate: false,
+        fullScreen: true,
+        zoomInOut: true,
+        currentLocation: true,
+        zoomExtent: true,
+        scale: true,
+        scaleLine: true,
+        basemap: true,
+        gitHubButton: true,
+        scaleSelector: false,
+        grid: true,
+        extentHistory: false,
+        attribution: true,
+        attributeTable: true,
+      },
     })),
     {
       getState: vi.fn(() => ({ map: null })),
@@ -188,6 +204,22 @@ describe("LayerOptionsMenu", () => {
           setZoom: vi.fn(),
           getResolution: vi.fn(() => 1000),
         })),
+      },
+      controlVisibility: {
+        rotate: false,
+        fullScreen: true,
+        zoomInOut: true,
+        currentLocation: true,
+        zoomExtent: true,
+        scale: true,
+        scaleLine: true,
+        basemap: true,
+        gitHubButton: true,
+        scaleSelector: false,
+        grid: true,
+        extentHistory: false,
+        attribution: true,
+        attributeTable: true,
       },
     };
     vi.mocked(useMapStore).mockImplementation(((selector?: any) => (typeof selector === "function" ? selector(mockMapStore) : mockMapStore)) as any);

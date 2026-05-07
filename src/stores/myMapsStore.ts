@@ -6,6 +6,7 @@ import { styleToJSON, exportFeatures as exportFeaturesToFile, getDefaultLabelSty
 import { buildLegacySavePayload } from "@/utils/legacyMyMapsFormat";
 import { isOldOLStyleFormat, transformOLStyle } from "@/utils/storageMigration";
 import { v4 as uuidv4 } from "uuid";
+import { setStorageItem, getStorageItem } from "@/utils/storage";
 
 // Label style JSON representation for callouts and labels
 export interface LabelStyleJSON {
@@ -752,7 +753,7 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => {
         drawingCounter: state.drawingCounter,
         config: state.config,
       };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+      setStorageItem(STORAGE_KEY, JSON.stringify(dataToSave));
       // console.log("💾 MyMaps saved to storage:", { itemCount: serializedItems.length });
     } catch (error) {
       console.error("Failed to save MyMaps to storage:", error);
@@ -761,7 +762,7 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => {
 
   loadFromStorage: () => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = getStorageItem(STORAGE_KEY);
       if (saved) {
         const data = JSON.parse(saved);
 

@@ -6,6 +6,7 @@ import { useSidebarStore } from "@/stores/sidebarStore";
 import { useURLModalStore } from "@/stores/urlModalStore";
 import { useAppStore } from "@/stores/appStore";
 import { useToastStore } from "@/hooks/useToast";
+import { getStorageItem } from "@/utils/storage";
 
 /**
  * All tab names in their default order
@@ -63,7 +64,7 @@ export function showURLWindow(url: string, showFooter = false, mode = "normal", 
   if (honorDontShow) {
     try {
       const storageKey = "sc_dontshowagain";
-      const stored = localStorage.getItem(storageKey);
+      const stored = getStorageItem(storageKey);
       if (stored) {
         const data = JSON.parse(stored);
         // Support both wrapped {value: [...]} format and plain array

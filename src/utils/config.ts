@@ -70,6 +70,7 @@ export interface AppConfig {
     showGrid: boolean;
     extentHistory: boolean;
     attribution: boolean;
+    attributeTable?: boolean;
   };
 
   // Storage keys

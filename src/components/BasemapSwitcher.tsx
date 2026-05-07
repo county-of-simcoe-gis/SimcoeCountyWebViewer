@@ -12,6 +12,7 @@ import "rc-slider/assets/index.css";
 import "@/styles/rc-slider-basemap.css";
 import { Layer } from "ol/layer";
 import { FaCog } from "react-icons/fa";
+import { setStorageItem, getStorageItem } from "@/utils/storage";
 import Image from "next/image";
 
 interface BasemapLayer {
@@ -75,6 +76,29 @@ function mergeServicesByName<T extends { name: string }>(local: T[], api: T[]): 
   const deduped = [...new Map(combined.reverse().map((item) => [item.name, item])).values()].reverse();
 
   return deduped;
+}
+
+const BASEMAP_STORAGE_KEY = "Saved Basemap Options";
+
+interface SavedBasemapOptions {
+  activeButton: string;
+  selectedTopoServiceName: string | null;
+  imagerySliderValue: number;
+  streetsCheckbox: boolean;
+}
+
+function saveBasemapOptions(options: SavedBasemapOptions): void {
+  try {
+    setStorageItem(BASEMAP_STORAGE_KEY, JSON.stringify(options));
+  } catch { /* ignore */ }
+}
+
+function loadBasemapOptions(): SavedBasemapOptions | null {
+  try {
+    const stored = getStorageItem(BASEMAP_STORAGE_KEY);
+    if (stored) return JSON.parse(stored) as SavedBasemapOptions;
+  } catch { /* ignore */ }
+  return null;
 }
 
 export default function BasemapSwitcher() {
@@ -174,6 +198,18 @@ export default function BasemapSwitcher() {
         if (data.topoServices && data.topoServices.length > 0) {
           const defaultService = data.topoServices.find((service) => service.name === "Topographic") || data.topoServices[0];
           setSelectedTopoService(defaultService);
+        }
+
+        // Restore saved basemap options from localStorage (overrides defaults)
+        const saved = loadBasemapOptions();
+        if (saved) {
+          setActiveButton(saved.activeButton);
+          setStreetsCheckbox(saved.streetsCheckbox);
+          setImagerySliderValue(saved.imagerySliderValue);
+          if (saved.selectedTopoServiceName && data.topoServices) {
+            const savedService = data.topoServices.find((s) => s.name === saved.selectedTopoServiceName);
+            if (savedService) setSelectedTopoService(savedService);
+          }
         }
       } catch (error) {
         console.error("BasemapSwitcher: Failed to load config:", error);
@@ -480,9 +516,12 @@ export default function BasemapSwitcher() {
         await applyBasemap(defaultService);
       }
 
-      // Set proper visibility based on the configured default basemap
-      if (config.defaultButton === "imagery") {
-        // Imagery is the default — hide topo, show imagery
+      // Set proper visibility based on saved basemap options OR the configured default
+      const saved = loadBasemapOptions();
+      const effectiveButton = saved?.activeButton || config.defaultButton;
+
+      if (effectiveButton === "imagery") {
+        // Imagery mode — hide topo, show imagery
         const baseMapLayers = LayerManager.getLayersByCategory("BaseMap");
         const topoLayers = baseMapLayers.filter((ml) => ml.metadata?.isBasemap === true);
         topoLayers.forEach((ml) => ml.layer.setVisible(false));
@@ -491,17 +530,19 @@ export default function BasemapSwitcher() {
           worldImageryLayerRef.current.setVisible(true);
         }
 
-        const maxValue = config.imageryServices?.length ? config.imageryServices.length - 1 : 0;
-        updateImageryLayers(maxValue);
-        setImagerySliderValue(maxValue);
+        const sliderValue = saved?.imagerySliderValue ?? (config.imageryServices?.length ? config.imageryServices.length - 1 : 0);
+        updateImageryLayers(sliderValue);
+        setImagerySliderValue(sliderValue);
 
         if (streetsLayerRef.current) {
-          streetsLayerRef.current.setVisible(streetsCheckbox);
+          const streets = saved?.streetsCheckbox ?? streetsCheckbox;
+          streetsLayerRef.current.setVisible(streets);
+          setStreetsCheckbox(streets);
         }
 
         setActiveButton("imagery");
       } else {
-        // Topo is the default — disable all imagery layers
+        // Topo mode — disable all imagery layers, apply saved topo service
         updateImageryLayers(-1);
         if (streetsLayerRef.current) {
           streetsLayerRef.current.setVisible(false);
@@ -509,6 +550,17 @@ export default function BasemapSwitcher() {
         if (worldImageryLayerRef.current) {
           worldImageryLayerRef.current.setVisible(false);
         }
+
+        // Apply saved topo service if different from the default
+        if (saved?.selectedTopoServiceName && config.topoServices) {
+          const savedService = config.topoServices.find((s) => s.name === saved.selectedTopoServiceName);
+          if (savedService) {
+            setSelectedTopoService(savedService);
+            await applyBasemap(savedService);
+          }
+        }
+
+        setActiveButton("topo");
       }
     };
 
@@ -653,6 +705,12 @@ export default function BasemapSwitcher() {
       streetsLayerRef.current.setVisible(event.target.checked);
     }
     setStreetsCheckbox(event.target.checked);
+    saveBasemapOptions({
+      activeButton,
+      selectedTopoServiceName: selectedTopoService?.name ?? null,
+      imagerySliderValue,
+      streetsCheckbox: event.target.checked,
+    });
   };
 
   const onTopoServiceSelect = (service: BasemapService) => {
@@ -664,12 +722,24 @@ export default function BasemapSwitcher() {
     applyBasemap(service);
     setTopoPanelOpen(false);
     setActiveButton("topo");
+    saveBasemapOptions({
+      activeButton: "topo",
+      selectedTopoServiceName: service.name,
+      imagerySliderValue,
+      streetsCheckbox,
+    });
   };
 
   const onImagerySelect = () => {
     setTopoPanelOpen(false);
     setActiveButton("imagery");
     enableImagery();
+    saveBasemapOptions({
+      activeButton: "imagery",
+      selectedTopoServiceName: selectedTopoService?.name ?? null,
+      imagerySliderValue,
+      streetsCheckbox,
+    });
   };
 
   // Helper to get URL parameter value case-insensitively

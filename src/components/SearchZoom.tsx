@@ -52,7 +52,7 @@ export const SearchZoom: React.FC = () => {
       });
       geoLayer.set("name", "sc-search-geo");
 
-      const geoLayerId = LayerManager.addLayer(geoLayer, "Graphics", "Search Geometry", {
+      const geoLayerId = LayerManager.addLayer(geoLayer, "Overlay", "Search Geometry", {
         index: 10,
         metadata: {
           isSearch: true,
@@ -78,7 +78,7 @@ export const SearchZoom: React.FC = () => {
       iconLayer.setStyle(pointStyle);
       iconLayer.set("name", "sc-search-icon");
 
-      const iconLayerId = LayerManager.addLayer(iconLayer, "Graphics", "Search Icon", {
+      const iconLayerId = LayerManager.addLayer(iconLayer, "Overlay", "Search Icon", {
         index: 11,
         metadata: {
           isSearch: true,
@@ -236,9 +236,6 @@ export const SearchZoom: React.FC = () => {
           console.log("SearchZoom: Adding features to layers");
           searchGeoLayerRef.current.getSource()?.addFeature(fullFeature);
           searchIconLayerRef.current.getSource()?.addFeature(pointFeature);
-
-          searchGeoLayerRef.current.setZIndex(300);
-          searchIconLayerRef.current.setZIndex(300);
 
           console.log("SearchZoom: Features added, feature counts:", {
             geoLayerFeatures: searchGeoLayerRef.current.getSource()?.getFeatures().length,
@@ -409,7 +406,6 @@ export const SearchZoom: React.FC = () => {
         // Add to icon layer
         if (searchIconLayerRef.current) {
           searchIconLayerRef.current.getSource()?.addFeature(feature);
-          searchIconLayerRef.current.setZIndex(100);
 
           // Zoom to the point
           const geometry = feature.getGeometry();

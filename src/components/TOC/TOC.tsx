@@ -10,7 +10,7 @@ import TOCHeader from "@/components/TOC/TOCHeader";
 import TOCListView from "@/components/TOC/TOCListView";
 import TOCFolderView from "@/components/TOC/TOCFolderView";
 import LayerOptionsMenu from "@/components/TOC/LayerOptionsMenu";
-import { saveToStorage, getItemsFromStorage } from "@/utils/storage";
+import { saveToStorage, getItemsFromStorage, setStorageItem, getStorageItem, removeStorageItem } from "@/utils/storage";
 import { showMessage } from "@/utils/helpersUI";
 import { sortLayers, sortGroupsLayers } from "@/utils/tocHelpers";
 
@@ -173,19 +173,33 @@ export default function TOC({ visible = true }: TOCProps) {
         return updatedGroup;
       });
 
-      // Sort layers based on current sort setting
+      // Apply saved order to the store — pass preserveLayerOrder so that
+      // setLayerGroups sorts the "All Layers" virtual group by the restored
+      // drawIndex values instead of re-sorting by initialDrawIndex (server order).
       if (type === "LIST") {
-        layerGroups = layerGroups.map((group) => ({
-          ...group,
-          layers: sortLayers(group.layers, sortAlpha),
-        }));
         // Filter out the "all_layers" group before setting, as the store will create it automatically
         const filteredGroups = layerGroups.filter((group) => group.value !== "all_layers");
-        setLayerGroups("LIST", filteredGroups);
+        if (sortAlpha) {
+          // Alpha sort: let sortLayers renumber — order comes from alphabetical comparison
+          const sorted = filteredGroups.map((group) => ({
+            ...group,
+            layers: sortLayers(group.layers, true),
+          }));
+          setLayerGroups("LIST", sorted);
+        } else {
+          // Preserve saved order: do NOT call sortLayers() here — it would
+          // renumber each group's drawIndex to 0..N-1 and destroy the global
+          // ordering info.  The saved drawIndex values are global z-indices
+          // that setLayerGroups needs intact to sort the flattened "All Layers".
+          setLayerGroups("LIST", filteredGroups, { preserveLayerOrder: true });
+        }
       } else {
         const sortedGroups = sortGroupsLayers(layerGroups, sortAlpha);
         setLayerGroups("FOLDER", sortedGroups);
       }
+
+      // Sync OpenLayers z-indices to match the restored layer order
+      useTOCStore.getState().updateLayerManagerZIndices();
     },
     [sortAlpha, updateLayerVisibility],
   );
@@ -197,7 +211,7 @@ export default function TOC({ visible = true }: TOCProps) {
 
       // Load saved TOC type from localStorage AFTER config initialization
       // This ensures the saved preference overrides the config default
-      const savedTocType = localStorage.getItem("TOC_Type");
+      const savedTocType = getStorageItem("TOC_Type");
       if (savedTocType && (savedTocType === "LIST" || savedTocType === "FOLDER")) {
         setTocType(savedTocType as "LIST" | "FOLDER");
       }
@@ -384,8 +398,8 @@ export default function TOC({ visible = true }: TOCProps) {
   const handleResetToDefault = () => {
     // Reset TOC to default state - this will reload layers from server with default visibility
     // Clear saved layer options from localStorage
-    localStorage.removeItem("Layers");
-    localStorage.removeItem("TOC_Type");
+    removeStorageItem("Layers");
+    removeStorageItem("TOC_Type");
 
     refreshTOC(true).then(async () => {
       // After TOC is reloaded, reinitialize OpenLayers layers.
@@ -421,8 +435,8 @@ export default function TOC({ visible = true }: TOCProps) {
 
   const handleClearSavedLayers = () => {
     // Clear saved layer states and TOC type from localStorage
-    localStorage.removeItem("Layers");
-    localStorage.removeItem("TOC_Type");
+    removeStorageItem("Layers");
+    removeStorageItem("TOC_Type");
 
     // Show success message
     showMessage("Clear", "Saved layers have been cleared.", "success");
@@ -430,18 +444,29 @@ export default function TOC({ visible = true }: TOCProps) {
 
   const handleSaveAllLayers = () => {
     // Save TOC type to localStorage
-    localStorage.setItem("TOC_Type", tocType);
+    setStorageItem("TOC_Type", tocType);
 
-    // Get all layers from the store (source of truth for current layer states)
-    const { allLayers } = useTOCStore.getState();
+    // Get layers from the active view's groups (includes reordered drawIndex values)
+    const { layerListGroups: currentListGroups, layerFolderGroups: currentFolderGroups } = useTOCStore.getState();
+    const activeGroups = tocType === "LIST" ? currentListGroups : currentFolderGroups;
+
+    // In LIST view the "All Layers" virtual group holds the user's reordered
+    // drawIndex values.  Read directly from individual source groups whose
+    // drawIndex was already synchronised by moveLayer().
+    // For FOLDER view just use the groups directly.
 
     // Group layers by their group value
     const layersByGroup = new Map<string, TOCLayer[]>();
-    allLayers.forEach((layer) => {
-      if (!layersByGroup.has(layer.group)) {
-        layersByGroup.set(layer.group, []);
-      }
-      layersByGroup.get(layer.group)!.push(layer);
+    activeGroups.forEach((group) => {
+      // Skip the virtual "All Layers" group — its layers are copies; the
+      // canonical state lives in the individual source groups.
+      if (group.value === "all_layers") return;
+      group.layers.forEach((layer) => {
+        if (!layersByGroup.has(group.value)) {
+          layersByGroup.set(group.value, []);
+        }
+        layersByGroup.get(group.value)!.push(layer);
+      });
     });
 
     // Get group metadata from either view (they should have the same groups)

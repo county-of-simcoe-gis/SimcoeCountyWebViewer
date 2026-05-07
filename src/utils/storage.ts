@@ -1,35 +1,90 @@
 // Local storage utilities for the Simcoe County Web Viewer
+// All localStorage access should go through these helpers so that
+// server-sync and any future format conversions happen in one place.
+
+import { setUserStorage } from "@/utils/userStorage";
+
+// ---------------------------------------------------------------------------
+// Raw key/value operations — single point of control for all localStorage I/O
+// ---------------------------------------------------------------------------
+
+/**
+ * Write a raw string value to localStorage and trigger server sync.
+ */
+export function setStorageItem(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+    setUserStorage();
+  } catch (error) {
+    console.error("Failed to set localStorage item:", error);
+  }
+}
+
+/**
+ * Read a raw string value from localStorage.
+ */
+export function getStorageItem(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch (error) {
+    console.error("Failed to get localStorage item:", error);
+    return null;
+  }
+}
+
+/**
+ * Remove a key from localStorage and trigger server sync.
+ */
+export function removeStorageItem(key: string): void {
+  try {
+    localStorage.removeItem(key);
+    setUserStorage();
+  } catch (error) {
+    console.error("Failed to remove localStorage item:", error);
+  }
+}
+
+/**
+ * Return all localStorage keys (filtering is left to the caller).
+ */
+export function getStorageKeys(): string[] {
+  try {
+    return Object.keys(localStorage);
+  } catch {
+    return [];
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Envelope-format operations (with expiration / timestamp wrapper)
+// ---------------------------------------------------------------------------
 
 /**
  * Save item to localStorage with optional expiration
  */
 export function saveToStorage(storageKey: string, item: unknown, options: { expires?: Date } = {}): void {
-  try {
-    const data = {
-      value: item,
-      expires: options.expires?.getTime() || null,
-      timestamp: Date.now(),
-    };
+  const data = {
+    value: item,
+    expires: options.expires?.getTime() || null,
+    timestamp: Date.now(),
+  };
 
-    localStorage.setItem(storageKey, JSON.stringify(data));
-  } catch (error) {
-    console.error("Failed to save to localStorage:", error);
-  }
+  setStorageItem(storageKey, JSON.stringify(data));
 }
 
 /**
  * Get item from localStorage, checking expiration
  */
 export function getItemsFromStorage<T = unknown>(key: string): T | null {
-  try {
-    const stored = localStorage.getItem(key);
-    if (!stored) return null;
+  const stored = getStorageItem(key);
+  if (!stored) return null;
 
+  try {
     const data = JSON.parse(stored);
 
     // Check if item has expired
     if (data.expires && Date.now() > data.expires) {
-      localStorage.removeItem(key);
+      removeStorageItem(key);
       return null;
     }
 
@@ -44,11 +99,7 @@ export function getItemsFromStorage<T = unknown>(key: string): T | null {
  * Remove item from localStorage
  */
 export function removeFromStorage(storageKey: string): void {
-  try {
-    localStorage.removeItem(storageKey);
-  } catch (error) {
-    console.error("Failed to remove from localStorage:", error);
-  }
+  removeStorageItem(storageKey);
 }
 
 /**
@@ -96,11 +147,12 @@ export function removeItemFromStorage<T>(storageKey: string, item: T): void {
  */
 export function cleanupStorage(): void {
   try {
-    const keys = Object.keys(localStorage);
+    const keys = getStorageKeys();
+    let removed = false;
 
     keys.forEach((key) => {
       try {
-        const stored = localStorage.getItem(key);
+        const stored = getStorageItem(key);
         if (!stored) return;
 
         const data = JSON.parse(stored);
@@ -108,11 +160,14 @@ export function cleanupStorage(): void {
         // Check if this is our format and if it's expired
         if (data.expires && Date.now() > data.expires) {
           localStorage.removeItem(key);
+          removed = true;
         }
       } catch {
         // Skip items that aren't in our format
       }
     });
+
+    if (removed) setUserStorage();
   } catch (error) {
     console.error("Failed to cleanup localStorage:", error);
   }
@@ -124,10 +179,10 @@ export function cleanupStorage(): void {
 export function getStorageSize(): number {
   try {
     let totalSize = 0;
-    const keys = Object.keys(localStorage);
+    const keys = getStorageKeys();
 
     keys.forEach((key) => {
-      const item = localStorage.getItem(key);
+      const item = getStorageItem(key);
       if (item) {
         totalSize += key.length + item.length;
       }
@@ -160,6 +215,7 @@ export function isStorageAvailable(): boolean {
 export function clearAllStorage(): void {
   try {
     localStorage.clear();
+    setUserStorage();
   } catch (error) {
     console.error("Failed to clear localStorage:", error);
   }

@@ -14,6 +14,7 @@ import { featureToGeoJSON, styleToJSON } from "@/utils/myMapsHelpers";
 import type { MyMapsItem as MyMapsItemType } from "@/types/myMaps";
 import { createMyMapsItem } from "@/stores/myMapsStore";
 import { usePopupStore } from "@/stores/popupStore";
+import { userStorageReady } from "@/utils/userStorage";
 
 /**
  * MyMapsService - Background service that manages MyMaps features on the map
@@ -272,8 +273,8 @@ export default function MyMapsService() {
   useEffect(() => {
     if (!map || drawingManagerRef.current) return;
 
-    // Load saved items from localStorage
-    loadFromStorage();
+    // Load saved items from localStorage (wait for server restore to complete first)
+    userStorageReady.then(() => loadFromStorage());
 
     // Initialize drawing manager with layer manager integration
     drawingManagerRef.current = new MyMapsDrawingManager(map, {

@@ -5,6 +5,7 @@ import { Layer } from "ol/layer";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { LayerHelpers, OL_DATA_TYPES } from "@/utils/openlayers";
 import { useMapStore } from "@/stores/mapStore";
+import { FaInfoCircle } from "react-icons/fa";
 
 interface ToggleLayerConfig {
   displayName: string;
@@ -16,6 +17,7 @@ interface ToggleLayerConfig {
   moreInfoUrlFieldName?: string;
   displayFieldName?: string;
   legendStyleName?: string;
+  description?: string;
 }
 
 interface ThemeLayersProps {
@@ -37,6 +39,7 @@ export default function ThemeLayers({ layers, themeId, popupLogoImage, onVisibil
   const [layerStates, setLayerStates] = useState<Record<string, boolean>>({});
   const [featureCounts, setFeatureCounts] = useState<Record<string, number | null>>({});
   const [legendUrls, setLegendUrls] = useState<Record<string, string>>({});
+  const [expandedInfoPanels, setExpandedInfoPanels] = useState<Record<string, boolean>>({});
   const layerRefsMap = useRef<Record<string, string>>({});
   const effectIdRef = useRef(0);
 
@@ -235,18 +238,42 @@ export default function ThemeLayers({ layers, themeId, popupLogoImage, onVisibil
 
       <div className="flex flex-col gap-2">
         {layers.map((layer) => (
-          <label key={layer.layerName} className="label cursor-pointer justify-start gap-2 p-0 min-h-0">
-            {/* Legend symbol - dynamically fetched from WMS GetLegendGraphic */}
-            {legendUrls[layer.layerName] ? (
-              <img src={legendUrls[layer.layerName]} alt="" className="w-5 h-5 object-contain flex-shrink-0" onError={(e) => (e.currentTarget.style.display = "none")} />
-            ) : null}
+          <div key={layer.layerName} className="flex flex-col">
+            <label className="label cursor-pointer justify-start gap-2 p-0 min-h-0">
+              {/* Legend symbol - dynamically fetched from WMS GetLegendGraphic */}
+              {legendUrls[layer.layerName] ? (
+                <img src={legendUrls[layer.layerName]} alt="" className="w-5 h-5 object-contain flex-shrink-0" onError={(e) => (e.currentTarget.style.display = "none")} />
+              ) : null}
 
-            <input type="checkbox" className="checkbox checkbox-sm" checked={layerStates[layer.layerName] || false} onChange={(e) => handleToggle(layer.layerName, e.target.checked)} />
-            <span className="label-text flex-1">{layer.displayName}</span>
+              <input type="checkbox" className="checkbox checkbox-sm" checked={layerStates[layer.layerName] || false} onChange={(e) => handleToggle(layer.layerName, e.target.checked)} />
+              <span className="label-text flex-1">{layer.displayName}</span>
 
-            {/* Feature count */}
-            {featureCounts[layer.layerName] !== undefined && featureCounts[layer.layerName] !== null && <span className="text-xs text-base-content/50">({featureCounts[layer.layerName]})</span>}
-          </label>
+              {/* Feature count */}
+              {featureCounts[layer.layerName] !== undefined && featureCounts[layer.layerName] !== null && <span className="text-xs text-base-content/50">({featureCounts[layer.layerName]})</span>}
+
+              {/* Info button - only shown when layer has a description */}
+              {layer.description && (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-xs btn-circle"
+                  title="Show Details"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setExpandedInfoPanels((prev) => ({ ...prev, [layer.layerName]: !prev[layer.layerName] }));
+                  }}
+                >
+                  <FaInfoCircle className={`w-4 h-4 ${expandedInfoPanels[layer.layerName] ? "text-info" : "text-base-content/40"}`} />
+                </button>
+              )}
+            </label>
+
+            {/* Collapsible description panel */}
+            {layer.description && expandedInfoPanels[layer.layerName] && (
+              <div className="ml-7 mt-1 mb-1 p-2 text-xs text-base-content/70 bg-base-200 rounded">
+                {layer.description}
+              </div>
+            )}
+          </div>
         ))}
       </div>
     </div>

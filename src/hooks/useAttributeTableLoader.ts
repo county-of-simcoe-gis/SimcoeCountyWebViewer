@@ -134,10 +134,15 @@ async function describeAndCount(tab: AttributeTableTab, signal: AbortSignal): Pr
   if (tab.sourceType === "arcgis") {
     const endpoint = parseArcgisLayerUrl(tab.wfsUrl);
     if (!endpoint) throw new Error("Could not parse ArcGIS layer URL.");
-    const [info, total] = await Promise.all([
-      describeArcgisLayer(endpoint, tab.secured, signal),
-      fetchArcgisCount({ endpoint, secured: tab.secured, signal }),
-    ]);
+    const info = await describeArcgisLayer(endpoint, tab.secured, signal);
+    const schema = schemaFromFields(info.fields);
+    const total = await fetchArcgisCount({
+      endpoint,
+      secured: tab.secured,
+      where: buildArcgisWhereFromFilters(tab.filters, schema),
+      bbox: tab.bboxFilterActive ? (getCurrentMapExtent() ?? undefined) : undefined,
+      signal,
+    });
     return {
       fields: info.fields,
       total,

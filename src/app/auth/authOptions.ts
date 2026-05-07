@@ -12,6 +12,7 @@ interface ExtendedToken extends JWT {
   roles?: string[];
   locations?: string[];
   email?: string;
+  oid?: string;
 }
 
 /**
@@ -192,10 +193,25 @@ export const authOptions: NextAuthOptions = {
         extendedToken.refreshToken = account.refresh_token;
         extendedToken.accessTokenExpires = account.expires_at ? account.expires_at * 1000 : undefined;
 
+        // Extract oid from the ID token (Azure AD always includes it there).
+        // The profile object may not carry oid because next-auth normalizes it.
+        let oid = (profile as { oid?: string }).oid;
+        if (!oid && account.id_token) {
+          try {
+            const payload = JSON.parse(Buffer.from(account.id_token.split(".")[1], "base64url").toString());
+            oid = payload.oid;
+          } catch {
+            // ignore decode failure
+          }
+        }
+        extendedToken.oid = oid || profile.sub;
+
         console.log("[NextAuth JWT] Profile received:", {
           sub: profile.sub,
           name: profile.name,
           email: profile.email,
+          oid: oid,
+          oid_source: oid ? (oid === (profile as { oid?: string }).oid ? "profile" : "id_token") : "fallback to sub",
           groups: profile.groups,
           groupsLength: profile.groups?.length || 0,
         });

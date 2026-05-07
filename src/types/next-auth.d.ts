@@ -35,6 +35,7 @@ declare module "next-auth" {
    */
   interface Profile {
     sub?: string;
+    oid?: string;
     name?: string;
     preferred_username?: string;
     email?: string;
@@ -54,5 +55,6 @@ declare module "next-auth/jwt" {
     roles?: string[];
     locations?: string[];
     email?: string;
+    oid?: string;
   }
 }

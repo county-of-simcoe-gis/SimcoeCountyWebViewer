@@ -24,6 +24,7 @@ interface LayerOptionsMenuProps {
 export default function LayerOptionsMenu({ layerInfo, group, position, onClose }: LayerOptionsMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const toast = useToast();
+  const attributeTableEnabled = useMapStore((s) => s.controlVisibility.attributeTable);
 
   // Always get the most current layer info from TOC store to avoid stale data
   const getCurrentLayerInfo = useCallback(() => {
@@ -533,11 +534,7 @@ export default function LayerOptionsMenu({ layerInfo, group, position, onClose }
   const attributeTableIdentifiable = layerInfo.liveLayer === true || layerInfo.isQueryable !== false;
   const attributeTableHasEndpoint = !!layerInfo.wfsUrl;
   const attributeTableAvailable = attributeTableIdentifiable && attributeTableHasEndpoint;
-  const attributeTableDisabledReason = !attributeTableIdentifiable
-    ? "Layer is not queryable"
-    : !attributeTableHasEndpoint
-      ? "Layer has no query endpoint configured"
-      : undefined;
+  const attributeTableDisabledReason = !attributeTableIdentifiable ? "Layer is not queryable" : !attributeTableHasEndpoint ? "Layer has no query endpoint configured" : undefined;
 
   const handleAttributeTable = () => {
     if (!attributeTableAvailable) return;
@@ -571,7 +568,7 @@ export default function LayerOptionsMenu({ layerInfo, group, position, onClose }
       id: "attribute-table",
       label: "Attribute Table",
       icon: <FaTable />,
-      show: true,
+      show: attributeTableEnabled,
       disabled: !attributeTableAvailable,
       title: attributeTableDisabledReason,
       onClick: handleAttributeTable,
@@ -644,9 +641,7 @@ export default function LayerOptionsMenu({ layerInfo, group, position, onClose }
           <button
             key={item.id}
             className={`flex items-center px-3 py-2 m-0 bg-transparent border-none w-full text-left text-sm transition-colors duration-100 ${
-              item.disabled
-                ? "text-[#999] cursor-not-allowed opacity-60"
-                : "text-[#333] cursor-pointer hover:bg-[#f8f9fa]"
+              item.disabled ? "text-[#999] cursor-not-allowed opacity-60" : "text-[#333] cursor-pointer hover:bg-[#f8f9fa]"
             }`}
             onClick={item.disabled ? undefined : item.onClick}
             disabled={item.disabled}

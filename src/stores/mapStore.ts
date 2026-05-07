@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import Map from "ol/Map";
+import { setStorageItem, getStorageItem } from "@/utils/storage";
 
 // Control visibility configuration
 export interface ControlVisibility {
@@ -16,6 +17,7 @@ export interface ControlVisibility {
   grid: boolean;
   extentHistory: boolean;
   attribution: boolean;
+  attributeTable: boolean;
 }
 
 const STORAGE_KEY_MAP_CONTROLS = "Map_Control_Settings";
@@ -105,6 +107,7 @@ const getDefaultControlVisibility = (config?: { controls?: Partial<ControlVisibi
     grid: config?.controls?.grid ?? true,
     extentHistory: config?.controls?.extentHistory ?? false,
     attribution: config?.controls?.attribution ?? true,
+    attributeTable: config?.controls?.attributeTable ?? true,
   };
 };
 
@@ -115,7 +118,7 @@ const loadControlVisibilityFromStorage = (config?: { controls?: Partial<ControlV
   }
 
   try {
-    const stored = localStorage.getItem(STORAGE_KEY_MAP_CONTROLS);
+    const stored = getStorageItem(STORAGE_KEY_MAP_CONTROLS);
     if (stored) {
       const parsed = JSON.parse(stored) as Partial<ControlVisibility>;
       // Merge with defaults to ensure all keys exist
@@ -164,7 +167,7 @@ export const useMapStore = create<MapState>((set, get) => ({
       // Save to localStorage
       if (typeof window !== "undefined") {
         try {
-          localStorage.setItem(STORAGE_KEY_MAP_CONTROLS, JSON.stringify(newVisibility));
+          setStorageItem(STORAGE_KEY_MAP_CONTROLS, JSON.stringify(newVisibility));
         } catch (e) {
           console.warn("Failed to save control settings to localStorage", e);
         }
@@ -181,7 +184,7 @@ export const useMapStore = create<MapState>((set, get) => ({
     // Save to localStorage
     if (typeof window !== "undefined") {
       try {
-        localStorage.setItem(STORAGE_KEY_MAP_CONTROLS, JSON.stringify(defaults));
+        setStorageItem(STORAGE_KEY_MAP_CONTROLS, JSON.stringify(defaults));
       } catch (e) {
         console.warn("Failed to save control settings to localStorage", e);
       }

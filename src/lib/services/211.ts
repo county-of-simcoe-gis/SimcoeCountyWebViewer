@@ -80,35 +80,31 @@ export async function getResults(category: string, subCategory: string, age: str
     },
   ];
 
-  // Add optional filters if not empty
+  // Always apply these filters to match the old SQL behavior where `ilike '%' || $1 || '%'`
+  // was always present. When the filter is empty, this acts as `ilike '%%'` which matches
+  // all non-null values — correctly excluding records with NULL in these columns.
   // cwdSimcategoryHeadinggroups contains group_name values (semicolon-delimited)
-  if (categoryFilter) {
-    andConditions.push({
-      cwdSimcategoryHeadinggroups: {
-        contains: categoryFilter,
-        mode: "insensitive",
-      },
-    });
-  }
+  andConditions.push({
+    cwdSimcategoryHeadinggroups: {
+      contains: categoryFilter,
+      mode: "insensitive",
+    },
+  });
 
   // cwdSimcategoryHeadings contains general_heading values (semicolon-delimited)
-  if (subCategoryFilter) {
-    andConditions.push({
-      cwdSimcategoryHeadings: {
-        contains: subCategoryFilter,
-        mode: "insensitive",
-      },
-    });
-  }
+  andConditions.push({
+    cwdSimcategoryHeadings: {
+      contains: subCategoryFilter,
+      mode: "insensitive",
+    },
+  });
 
-  if (ageFilter) {
-    andConditions.push({
-      ageCategory: {
-        contains: ageFilter,
-        mode: "insensitive",
-      },
-    });
-  }
+  andConditions.push({
+    ageCategory: {
+      contains: ageFilter,
+      mode: "insensitive",
+    },
+  });
 
   const whereClause = {
     AND: andConditions,

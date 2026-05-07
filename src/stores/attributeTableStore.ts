@@ -1,3 +1,5 @@
+import { setStorageItem, getStorageItem } from "@/utils/storage";
+
 /**
  * Attribute Table store
  * ----------------------------------------------------------------------------
@@ -182,7 +184,7 @@ function makeTab(layer: TOCLayer): AttributeTableTab {
 function readPersistedHeight(): number {
   if (typeof window === "undefined") return ATTRIBUTE_TABLE_DEFAULTS.defaultHeight;
   try {
-    const v = window.localStorage.getItem("sc.attributeTable.height");
+    const v = getStorageItem("sc.attributeTable.height");
     const n = v ? Number(v) : NaN;
     if (Number.isFinite(n) && n >= ATTRIBUTE_TABLE_DEFAULTS.minHeight) return n;
   } catch {
@@ -194,7 +196,7 @@ function readPersistedHeight(): number {
 function persistHeight(h: number): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem("sc.attributeTable.height", String(Math.round(h)));
+    setStorageItem("sc.attributeTable.height", String(Math.round(h)));
   } catch {
     /* ignore */
   }

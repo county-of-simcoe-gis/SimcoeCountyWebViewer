@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { Overlay } from "ol";
+import { setStorageItem, getStorageItem } from "@/utils/storage";
 
 const ALWAYS_REPORTS_TAB_KEY = "sc-always-reports-tab";
 
@@ -53,7 +54,7 @@ export const usePopupStore = create<PopupState>((set, get) => ({
   coordinates: null,
   selectedIndex: 0,
   onCloseCallback: null,
-  alwaysUseReportsTab: typeof window !== "undefined" && localStorage.getItem(ALWAYS_REPORTS_TAB_KEY) === "true",
+  alwaysUseReportsTab: typeof window !== "undefined" && getStorageItem(ALWAYS_REPORTS_TAB_KEY) === "true",
   rawResults: null,
   pendingPropertyLookup: null,
 
@@ -165,7 +166,7 @@ export const usePopupStore = create<PopupState>((set, get) => ({
 
   setAlwaysUseReportsTab: (value: boolean) => {
     if (typeof window !== "undefined") {
-      localStorage.setItem(ALWAYS_REPORTS_TAB_KEY, String(value));
+      setStorageItem(ALWAYS_REPORTS_TAB_KEY, String(value));
     }
     set({ alwaysUseReportsTab: value });
   },

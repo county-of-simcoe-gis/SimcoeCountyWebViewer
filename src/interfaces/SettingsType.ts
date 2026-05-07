@@ -56,6 +56,7 @@ export interface SettingsType {
       showGrid: boolean;
       extentHistory: boolean;
       attribution: boolean;
+      attributeTable?: boolean;
     };
     rightClickMenuVisibility?: {
       basic_mode: boolean;

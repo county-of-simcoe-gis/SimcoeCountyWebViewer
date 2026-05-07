@@ -12,6 +12,7 @@ import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { InteractionManager } from "@/utils/openlayers/InteractionManager";
 import { useUrlParameterContextOptional } from "@/contexts/UrlParameterContext";
 import { getPublicPath } from "@/utils/getPublicPath";
+import { getStorageItem } from "@/utils/storage";
 
 // OpenLayers imports
 import "ol/ol.css";
@@ -404,7 +405,7 @@ export default function MapContainer() {
 
     // Get stored extent or use defaults
     const storageExtentKey = "Map Extent";
-    const storedExtent = sessionStorage.getItem(storageExtentKey);
+    const storedExtent = getStorageItem(storageExtentKey);
     let extent = null;
     const centerCoords = Array.isArray(activeConfig.centerCoords) && activeConfig.centerCoords.length >= 2 ? activeConfig.centerCoords : [-8878504.68, 5543492.45];
     const defaultZoom = activeConfig.defaultZoom || 10;
@@ -465,6 +466,7 @@ export default function MapContainer() {
       grid: activeConfig.controls?.showGrid ?? true,
       extentHistory: activeConfig.controls?.extentHistory ?? false,
       attribution: activeConfig.controls?.attribution ?? true,
+      attributeTable: activeConfig.controls?.attributeTable ?? true,
     };
 
     // Add OpenLayers built-in controls based on configuration

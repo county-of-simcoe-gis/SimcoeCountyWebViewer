@@ -27,11 +27,13 @@ interface SpatialQueryResultsProps {
   highlightSource: VectorSource | null;
   /** Message shown when there are no sections / no results from any query */
   emptyMessage?: string;
+  /** When true, renders each property label above its value instead of inline */
+  stackedLayout?: boolean;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export default function SpatialQueryResults({ sections, highlightSource, emptyMessage = "No Results" }: SpatialQueryResultsProps) {
+export default function SpatialQueryResults({ sections, highlightSource, emptyMessage = "No Results", stackedLayout = false }: SpatialQueryResultsProps) {
   const totalFeatures = useMemo(() => sections.reduce((sum, s) => sum + s.features.length, 0), [sections]);
 
   if (sections.length === 0 || totalFeatures === 0) {
@@ -41,7 +43,7 @@ export default function SpatialQueryResults({ sections, highlightSource, emptyMe
   return (
     <div className="flex flex-col divide-y divide-base-300">
       {sections.map((section, idx) => (
-        <SectionPanel key={`${idx}-${section.title}`} section={section} highlightSource={highlightSource} />
+        <SectionPanel key={`${idx}-${section.title}`} section={section} highlightSource={highlightSource} stackedLayout={stackedLayout} />
       ))}
     </div>
   );
@@ -49,7 +51,7 @@ export default function SpatialQueryResults({ sections, highlightSource, emptyMe
 
 // ─── Section ─────────────────────────────────────────────────────────────────
 
-function SectionPanel({ section, highlightSource }: { section: FeatureSection; highlightSource: VectorSource | null }) {
+function SectionPanel({ section, highlightSource, stackedLayout }: { section: FeatureSection; highlightSource: VectorSource | null; stackedLayout: boolean }) {
   const [isOpen, setIsOpen] = useState(true);
 
   return (
@@ -67,7 +69,7 @@ function SectionPanel({ section, highlightSource }: { section: FeatureSection; h
             <div className="p-3 text-sm text-base-content/60">No Results</div>
           ) : (
             section.features.map((feature, idx) => (
-              <FeatureItem key={feature.getId()?.toString() ?? idx} feature={feature} featureTitleColumn={section.featureTitleColumn} highlightSource={highlightSource} />
+              <FeatureItem key={feature.getId()?.toString() ?? idx} feature={feature} featureTitleColumn={section.featureTitleColumn} highlightSource={highlightSource} stackedLayout={stackedLayout} />
             ))
           )}
         </div>
@@ -78,7 +80,17 @@ function SectionPanel({ section, highlightSource }: { section: FeatureSection; h
 
 // ─── Feature Item ────────────────────────────────────────────────────────────
 
-function FeatureItem({ feature, featureTitleColumn, highlightSource }: { feature: Feature<Geometry>; featureTitleColumn: string; highlightSource: VectorSource | null }) {
+function FeatureItem({
+  feature,
+  featureTitleColumn,
+  highlightSource,
+  stackedLayout,
+}: {
+  feature: Feature<Geometry>;
+  featureTitleColumn: string;
+  highlightSource: VectorSource | null;
+  stackedLayout: boolean;
+}) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const map = useMapStore((s) => s.map);
   const props = feature.getProperties();
@@ -118,16 +130,29 @@ function FeatureItem({ feature, featureTitleColumn, highlightSource }: { feature
       {/* Expandable detail */}
       {detailsOpen && (
         <div className="px-3 pb-3">
-          <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
-            {Object.entries(props)
-              .filter(([key]) => !isExcludedKey(key) && key !== featureTitleColumn)
-              .map(([key, value]) => (
-                <React.Fragment key={key}>
-                  <span className="font-semibold text-base-content/70 whitespace-nowrap">{toTitleCase(key)}</span>
-                  <span className="break-words">{value != null ? String(value) : ""}</span>
-                </React.Fragment>
-              ))}
-          </div>
+          {stackedLayout ? (
+            <div className="flex flex-col gap-2 text-xs">
+              {Object.entries(props)
+                .filter(([key]) => !isExcludedKey(key) && key !== featureTitleColumn)
+                .map(([key, value]) => (
+                  <div key={key}>
+                    <div className="font-semibold text-base-content/70">{toTitleCase(key)}</div>
+                    <div className="break-words">{value != null ? String(value) : ""}</div>
+                  </div>
+                ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+              {Object.entries(props)
+                .filter(([key]) => !isExcludedKey(key) && key !== featureTitleColumn)
+                .map(([key, value]) => (
+                  <React.Fragment key={key}>
+                    <span className="font-semibold text-base-content/70 whitespace-nowrap">{toTitleCase(key)}</span>
+                    <span className="break-words">{value != null ? String(value) : ""}</span>
+                  </React.Fragment>
+                ))}
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -12,6 +12,7 @@ import { useInteractionManager } from "@/components/MapContainer";
 import { useAppStore } from "@/stores/appStore";
 import { toLonLat } from "ol/proj";
 import { FaFileAlt, FaMapMarkerAlt, FaExclamationTriangle, FaInfoCircle, FaGoogle, FaEllipsisH, FaCompressArrowsAlt } from "react-icons/fa";
+import { FaMapLocationDot } from "react-icons/fa6";
 import { Vector as VectorLayer } from "ol/layer";
 import { getPublicPath } from "@/utils/getPublicPath";
 import { Vector as VectorSource } from "ol/source";
@@ -20,6 +21,7 @@ import { Feature } from "ol";
 import { Style, Icon, Fill, Stroke, Circle as CircleStyle } from "ol/style";
 import { showFeedbackWindow } from "@/utils/mapHelpers";
 import { featureToGeoJSON } from "@/utils/myMapsHelpers";
+import { setStorageItem } from "@/utils/storage";
 import Identify from "@/components/Identify/Identify";
 
 export const MapContextMenuContainer: React.FC = () => {
@@ -165,6 +167,15 @@ export const MapContextMenuContainer: React.FC = () => {
     closeSidebar();
   }, [closeSidebar]);
 
+  const handleSaveMapExtent = useCallback(() => {
+    if (!map) return;
+    const view = map.getView();
+    const extent = view.calculateExtent(map.getSize());
+    try {
+      setStorageItem("Map Extent", JSON.stringify(extent));
+    } catch { /* ignore */ }
+  }, [map]);
+
   // Get menu items based on config
   const getMenuItems = useCallback((): ContextMenuItem[] => {
     const visibility = config?.rightClickMenuVisibility || {};
@@ -216,6 +227,13 @@ export const MapContextMenuContainer: React.FC = () => {
         onClick: handleGoogleMaps,
       },
       {
+        id: "sc-floating-menu-save-map-extent",
+        label: "Save as Default Extent",
+        icon: <FaMapLocationDot />,
+        visible: visibility["sc-floating-menu-save-map-extent"] !== false,
+        onClick: handleSaveMapExtent,
+      },
+      {
         id: "sc-floating-menu-more",
         label: "More...",
         icon: <FaEllipsisH />,
@@ -223,7 +241,7 @@ export const MapContextMenuContainer: React.FC = () => {
         onClick: handleMore,
       },
     ];
-  }, [config, handlePropertyReport, handleAddMarker, handleReportProblem, handleIdentify, handleGoogleMaps, handleMore, handleSwitchToBasic]);
+  }, [config, handlePropertyReport, handleAddMarker, handleReportProblem, handleIdentify, handleGoogleMaps, handleSaveMapExtent, handleMore, handleSwitchToBasic]);
 
   // Handle context menu display
   const handleContextMenu = useCallback(

@@ -1,11 +1,15 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSession } from "next-auth/react";
 import { useAppStore } from "@/stores/appStore";
 import { useSidebarStore } from "@/stores/sidebarStore";
+import { useMapStore } from "@/stores/mapStore";
 import { useConfig } from "@/hooks/useConfig";
 import { useToastStore } from "@/hooks/useToast";
 import { showURLWindow } from "@/utils/helpersUI";
+import { enableUserStorage, getUserStorage, userStorageReady } from "@/utils/userStorage";
+import { getStorageItem } from "@/utils/storage";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import SidebarSlim from "@/components/SidebarSlim";
@@ -37,13 +41,41 @@ export default function Layout({ children }: LayoutProps) {
   const loadFromConfig = useSidebarStore((s) => s.loadFromConfig);
   const activateDefaultItems = useSidebarStore((s) => s.activateDefaultItems);
   const openSidebar = useSidebarStore((s) => s.openSidebar);
+  const attributeTableEnabled = useMapStore((s) => s.controlVisibility.attributeTable);
   const { config, loading: configLoading, error: configError } = useConfig();
+  const { data: session, status: sessionStatus } = useSession();
 
-  // Update app store when config changes
+  // --- User storage sync (restore localStorage from server for saveToServer users) ---
+  const userStorageFiredRef = useRef(false);
+  const [storageReady, setStorageReady] = useState(false);
+  useEffect(() => {
+    if (sessionStatus !== "authenticated" || userStorageFiredRef.current) return;
+    userStorageFiredRef.current = true;
+
+    const hasSaveRole = session?.user?.roles?.includes("saveToServer") ?? false;
+    enableUserStorage(hasSaveRole);
+
+    if (hasSaveRole) {
+      getUserStorage();
+    }
+
+    // Signal that localStorage is populated (or user doesn't have the role)
+    userStorageReady.then(() => setStorageReady(true));
+  }, [session, sessionStatus]);
+
+  // For unauthenticated users or while session is loading, mark ready immediately
+  useEffect(() => {
+    if (sessionStatus === "unauthenticated") {
+      setStorageReady(true);
+    }
+  }, [sessionStatus]);
+
+  // Update app store when config changes — wait for storageReady so localStorage
+  // contains server-restored values before TOC/stores read from it.
   useEffect(() => {
     setConfigLoading(configLoading);
 
-    if (config) {
+    if (config && storageReady) {
       setConfig(config);
       // Load sidebar items from config, including hide flags
       // console.log("Loading sidebar components from config:", {
@@ -81,7 +113,7 @@ export default function Layout({ children }: LayoutProps) {
       setConfigError(configError);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config, configLoading, configError, setConfig, setConfigLoading, setConfigError, loadFromConfig, activateDefaultItems]);
+  }, [config, configLoading, configError, storageReady, setConfig, setConfigLoading, setConfigError, loadFromConfig, activateDefaultItems]);
 
   // --- Startup popups (What's New + Feedback) --- run once when config arrives
   const startupFiredRef = useRef(false);
@@ -98,7 +130,7 @@ export default function Layout({ children }: LayoutProps) {
       // Check localStorage "don't show again" before displaying
       let isDismissed = false;
       try {
-        const stored = localStorage.getItem("sc_dontshowagain");
+        const stored = getStorageItem("sc_dontshowagain");
         if (stored) {
           const data = JSON.parse(stored);
           const items: Array<{ url?: string }> = Array.isArray(data) ? data : (data?.value ?? []);
@@ -164,7 +196,7 @@ export default function Layout({ children }: LayoutProps) {
       <LegendModal />
 
       {/* Attribute Table - bottom-docked, tabbed data grid per layer */}
-      <AttributeTablePanel />
+      {attributeTableEnabled && <AttributeTablePanel />}
 
       {/* Help Modal - displays README.md as help documentation */}
       <HelpModal />

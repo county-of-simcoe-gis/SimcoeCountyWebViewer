@@ -75,6 +75,11 @@ vi.mock("@/utils/myMapsHelpers", () => ({
   styleToJSON: vi.fn(() => ({ fill: { color: "#e809e5" } })),
 }));
 
+// Mock userStorageReady to resolve immediately so loadFromStorage is called
+vi.mock("@/utils/userStorage", () => ({
+  userStorageReady: Promise.resolve(),
+}));
+
 // Mock stores
 const mockMyMapsStore = {
   drawType: "Cancel",
@@ -196,10 +201,13 @@ describe("MyMapsService Component", () => {
       expect(MyMapsDrawingManager).not.toHaveBeenCalled();
     });
 
-    it("should initialize drawing manager when map becomes available", () => {
+    it("should initialize drawing manager when map becomes available", async () => {
       render(<MyMapsService />);
 
-      expect(mockMyMapsStore.loadFromStorage).toHaveBeenCalled();
+      // loadFromStorage is called inside userStorageReady.then(), so wait for the microtask
+      await vi.waitFor(() => {
+        expect(mockMyMapsStore.loadFromStorage).toHaveBeenCalled();
+      });
       expect(MyMapsDrawingManager).toHaveBeenCalledWith(mockMap, {
         onFeatureDrawn: expect.any(Function),
         onFeatureModified: expect.any(Function),

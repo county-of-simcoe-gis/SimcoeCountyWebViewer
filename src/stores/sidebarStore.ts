@@ -85,18 +85,20 @@ interface SidebarState {
 }
 
 function convertToSidebarItem(component: SidebarComponent, type: "theme" | "tool"): SidebarItem {
-  let config: Record<string, unknown> | string = {};
-  if (component.config) {
-    if (typeof component.config === "string") {
-      try {
-        config = JSON.parse(component.config);
-      } catch (_e) {
-        // If it's not valid JSON, assume it's a file path or URL
+  let config = {};
+  try {
+    if (component.config) {
+      if (typeof component.config === "string") {
+        // Skip file path references (e.g. "./configSolidWaste.json") — they aren't inline JSON
+        if (!component.config.startsWith("./") && !component.config.startsWith("../")) {
+          config = JSON.parse(component.config);
+        }
+      } else {
         config = component.config;
       }
-    } else {
-      config = component.config;
     }
+  } catch {
+    // ignore invalid JSON config
   }
 
   return {
@@ -259,7 +261,7 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
         );
       }
     }
-    
+
     if (defaultTool) {
       // Find the tool by name or componentName (case-insensitive)
       const needle = defaultTool.toLowerCase();

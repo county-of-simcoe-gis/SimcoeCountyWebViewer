@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import PanelComponent from "@/components/PanelComponent";
 import { useMapStore, type ControlVisibility } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
+import { getStorageKeys, getStorageItem, removeStorageItem } from "@/utils/storage";
 
 interface SettingsToolProps {
   name?: string;
@@ -39,6 +40,7 @@ const controlGroups = {
   other: [
     { key: "gitHubButton" as keyof ControlVisibility, label: "GitHub Button" },
     { key: "scaleSelector" as keyof ControlVisibility, label: "Scale Selector" },
+    { key: "attributeTable" as keyof ControlVisibility, label: "Attribute Table" },
   ],
 };
 
@@ -57,16 +59,13 @@ export default function SettingsTool({ name = "Settings", helpLink, hideHeader =
 
     const items: LocalStorageItem[] = [];
 
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (!key) continue;
-
+    for (const key of getStorageKeys()) {
       // Filter out Next-Auth tokens
       if (key.startsWith("next-auth") || key.startsWith("__Secure-next-auth") || key.includes("session-token") || key.includes("csrf-token")) {
         continue;
       }
 
-      const value = localStorage.getItem(key);
+      const value = getStorageItem(key);
       const size = value ? new Blob([value]).size : 0;
 
       items.push({ key, size });
@@ -100,10 +99,7 @@ export default function SettingsTool({ name = "Settings", helpLink, hideHeader =
     // Clear all except Next-Auth tokens
     const keysToRemove: string[] = [];
 
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (!key) continue;
-
+    for (const key of getStorageKeys()) {
       // Keep Next-Auth tokens
       if (key.startsWith("next-auth") || key.startsWith("__Secure-next-auth") || key.includes("session-token") || key.includes("csrf-token")) {
         continue;
@@ -112,7 +108,7 @@ export default function SettingsTool({ name = "Settings", helpLink, hideHeader =
       keysToRemove.push(key);
     }
 
-    keysToRemove.forEach((key) => localStorage.removeItem(key));
+    keysToRemove.forEach((key) => removeStorageItem(key));
 
     setShowClearAllModal(false);
     loadLocalStorageItems();
@@ -121,7 +117,7 @@ export default function SettingsTool({ name = "Settings", helpLink, hideHeader =
   const handleClearItem = (key: string) => {
     if (typeof window === "undefined") return;
 
-    localStorage.removeItem(key);
+    removeStorageItem(key);
     loadLocalStorageItems();
   };
 

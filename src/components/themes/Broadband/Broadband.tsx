@@ -144,25 +144,25 @@ export default function Broadband({ name = "Broadband", helpLink, hideHeader, on
               <span className="loading loading-spinner loading-sm" />
             </div>
           ) : (
-            <SpatialQueryResults sections={sections} highlightSource={highlightSourceRef.current} emptyMessage="Perform a search to see broadband results." />
+            <SpatialQueryResults sections={sections} highlightSource={highlightSourceRef.current} emptyMessage="Perform a search to see broadband results." stackedLayout />
           )}
         </div>
 
         {/* Footer links */}
         <div className="flex flex-wrap justify-center gap-2 px-3 py-2 border-t border-base-300 bg-base-200">
           {config.termsUrl && (
-            <button className="btn btn-sm btn-outline flex-1" onClick={() => showURLWindow(config.termsUrl, false, "normal", false, false, "Terms")}>
-              Terms
+            <button className="btn btn-md btn-neutral flex-1" onClick={() => showURLWindow(config.termsUrl, false, "normal", false, false, "Terms")}>
+              <span>Terms</span>
             </button>
           )}
           {config.aboutUrl && (
-            <a href={config.aboutUrl} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline flex-1">
-              About the Data
+            <a href={config.aboutUrl} target="_blank" rel="noopener noreferrer" className="btn btn-md btn-neutral flex-1">
+              <span>About the Data</span>
             </a>
           )}
           {config.contactUsEmail && (
-            <a href={`mailto:${config.contactUsEmail}`} className="btn btn-sm btn-outline flex-1">
-              Contact Us
+            <a href={`mailto:${config.contactUsEmail}`} className="btn btn-md btn-neutral flex-1">
+              <span>Contact Us</span>
             </a>
           )}
         </div>
