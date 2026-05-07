@@ -215,18 +215,22 @@ export default function TOC({ visible = true }: TOCProps) {
           });
         });
 
-      let cancelled = false;
+      // Mark initialized synchronously so re-renders triggered by the state
+      // updates above (initializeFromConfig / setTocType) don't cause this
+      // effect to attempt initialization again. We intentionally do NOT use a
+      // cancellation flag here — the TOC/Map stores are global singletons, so
+      // the initialization should run to completion regardless of any
+      // intermediate component re-renders.
+      setInitialized(true);
+
       (async () => {
         await refreshTOC();
-        if (cancelled) return;
         await whenMapReady();
-        if (cancelled) return;
 
         // initializeOpenLayersLayers now returns a Promise that resolves once
         // every async LayerHelpers.getLayer callback has settled — no more
         // arbitrary 500ms wait.
         await useTOCStore.getState().initializeOpenLayersLayers();
-        if (cancelled) return;
 
         const savedData = getItemsFromStorage<Record<string, SavedGroup>>("Layers");
         if (savedData !== undefined && savedData !== null) {
@@ -238,11 +242,6 @@ export default function TOC({ visible = true }: TOCProps) {
           urlParamContext.registerComponentReady("toc", { readinessType: "dataLoaded" });
         }
       })();
-
-      setInitialized(true);
-      return () => {
-        cancelled = true;
-      };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config, initialized, initializeFromConfig, refreshTOC, tocType]);
