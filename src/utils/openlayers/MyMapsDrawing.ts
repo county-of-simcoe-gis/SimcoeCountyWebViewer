@@ -134,8 +134,9 @@ export class MyMapsDrawingManager {
       // Notify component
       this.onFeatureDrawn(feature);
 
-      // Clear drawing after completion
-      setTimeout(() => this.clearDrawing(), 100);
+      // Clear drawing after OL finishes dispatching drawend (next microtask).
+      // Previously a 100ms setTimeout was used as an arbitrary guard.
+      queueMicrotask(() => this.clearDrawing());
     });
 
     // Register with centralized interaction store (which also adds to map)

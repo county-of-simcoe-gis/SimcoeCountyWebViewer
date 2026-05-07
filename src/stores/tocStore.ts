@@ -217,7 +217,7 @@ interface TOCState {
   debugGroupSwitching: () => void;
 
   // Initialize OpenLayers layers for all TOC layers
-  initializeOpenLayersLayers: () => void;
+  initializeOpenLayersLayers: () => Promise<void>;
 
   // Alphabetical sorting
   sortLayersAlphabetically: () => void;
@@ -1798,11 +1798,14 @@ export const useTOCStore = create<TOCState>()(
       const map = useMapStore.getState().map;
       if (!map) {
         console.error("❌ Map not available during TOC layer initialization");
-        return;
+        return Promise.resolve();
       }
 
       // Track created OpenLayers layers by layer name to avoid duplicates
       const createdLayers = new Map<string, { layer: Layer; managedLayerId: string }>();
+
+      // Track pending async layer creations so we can resolve once they all settle
+      const pendingLayerPromises: Promise<void>[] = [];
 
       groups.forEach((group) => {
         group.layers.forEach((layer) => {
@@ -1834,6 +1837,14 @@ export const useTOCStore = create<TOCState>()(
           } else if (!layer.layer && group.wmsGroupUrl) {
             // Create new OpenLayers layer
             const serverUrl = group.wmsGroupUrl.split("/wms")[0] + "/wms";
+
+            // Wrap the callback-style getLayer in a promise so callers can
+            // await full layer initialization (no more arbitrary setTimeout waits).
+            let resolveLayerPromise: () => void = () => {};
+            const layerReadyPromise = new Promise<void>((resolve) => {
+              resolveLayerPromise = resolve;
+            });
+            pendingLayerPromises.push(layerReadyPromise);
 
             // Debug log for secured layer detection
             // if (layer.secured) {
@@ -1928,11 +1939,14 @@ export const useTOCStore = create<TOCState>()(
                 } else {
                   console.error("❌ Failed to create OpenLayers layer for:", layer.name);
                 }
+                resolveLayerPromise();
               },
             );
           }
         });
       });
+
+      return Promise.all(pendingLayerPromises).then(() => undefined);
     },
 
     // Global opacity delegation to LayerManager

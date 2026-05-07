@@ -143,8 +143,11 @@ export async function exportMapWithSize(
     mapElement.style.height = `${height}px`;
     map.updateSize();
 
-    // Wait a moment for the map to re-render
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Wait for OpenLayers to finish rendering at the new size, instead of
+    // guessing with an arbitrary 100ms delay.
+    await new Promise<void>((resolve) => {
+      map.once("rendercomplete", () => resolve());
+    });
 
     // Export the resized map
     const blob = await exportMapAsImage(options);

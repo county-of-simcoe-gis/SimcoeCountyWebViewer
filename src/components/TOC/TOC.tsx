@@ -202,40 +202,47 @@ export default function TOC({ visible = true }: TOCProps) {
         setTocType(savedTocType as "LIST" | "FOLDER");
       }
 
-      refreshTOC().then(() => {
-        // Initialize OpenLayers layers after TOC is loaded
-        // Wait for map to be available before initializing layers
-        const waitForMap = () => {
-          const map = useMapStore.getState().map;
-          if (map) {
-            useTOCStore.getState().initializeOpenLayersLayers();
+      // Wait for map to be available via store subscription (no polling).
+      // Resolves immediately if the map is already initialized.
+      const whenMapReady = () =>
+        new Promise<void>((resolve) => {
+          if (useMapStore.getState().map) return resolve();
+          const unsubscribe = useMapStore.subscribe((state) => {
+            if (state.map) {
+              unsubscribe();
+              resolve();
+            }
+          });
+        });
 
-            // Apply saved layer options after map and layers are initialized
-            setTimeout(() => {
-              // Use a single storage key for both LIST and FOLDER views
-              const storageKey = "Layers";
-              const savedData = getItemsFromStorage<Record<string, SavedGroup>>(storageKey);
+      let cancelled = false;
+      (async () => {
+        await refreshTOC();
+        if (cancelled) return;
+        await whenMapReady();
+        if (cancelled) return;
 
-              if (savedData !== undefined && savedData !== null) {
-                // Apply saved options inline to avoid dependency issues
-                applySavedLayerOptions(tocType);
-              }
-              setSavedOptionsApplied(true);
+        // initializeOpenLayersLayers now returns a Promise that resolves once
+        // every async LayerHelpers.getLayer callback has settled — no more
+        // arbitrary 500ms wait.
+        await useTOCStore.getState().initializeOpenLayersLayers();
+        if (cancelled) return;
 
-              // Register TOC as ready for URL parameter processing
-              if (urlParamContext?.registerComponentReady) {
-                urlParamContext.registerComponentReady("toc", { readinessType: "dataLoaded" });
-              }
-            }, 500); // Small delay to ensure layers are fully initialized
-          } else {
-            setTimeout(waitForMap, 100);
-          }
-        };
+        const savedData = getItemsFromStorage<Record<string, SavedGroup>>("Layers");
+        if (savedData !== undefined && savedData !== null) {
+          applySavedLayerOptions(tocType);
+        }
+        setSavedOptionsApplied(true);
 
-        // Start waiting for map after a small delay
-        setTimeout(waitForMap, 100);
-      });
+        if (urlParamContext?.registerComponentReady) {
+          urlParamContext.registerComponentReady("toc", { readinessType: "dataLoaded" });
+        }
+      })();
+
       setInitialized(true);
+      return () => {
+        cancelled = true;
+      };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config, initialized, initializeFromConfig, refreshTOC, tocType]);
@@ -381,19 +388,20 @@ export default function TOC({ visible = true }: TOCProps) {
     localStorage.removeItem("Layers");
     localStorage.removeItem("TOC_Type");
 
-    refreshTOC(true).then(() => {
-      // After TOC is reloaded, reinitialize OpenLayers layers
-      const waitForMap = () => {
-        const map = useMapStore.getState().map;
-        if (map) {
-          useTOCStore.getState().initializeOpenLayersLayers();
-        } else {
-          setTimeout(waitForMap, 100);
-        }
-      };
-
-      // Start waiting for map after a small delay
-      setTimeout(waitForMap, 100);
+    refreshTOC(true).then(async () => {
+      // After TOC is reloaded, reinitialize OpenLayers layers.
+      // Wait for the map via store subscription instead of polling.
+      if (!useMapStore.getState().map) {
+        await new Promise<void>((resolve) => {
+          const unsubscribe = useMapStore.subscribe((state) => {
+            if (state.map) {
+              unsubscribe();
+              resolve();
+            }
+          });
+        });
+      }
+      await useTOCStore.getState().initializeOpenLayersLayers();
     });
   };
 
