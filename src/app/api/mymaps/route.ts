@@ -2,6 +2,9 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 
 /**
+ * @deprecated Use POST /api/public/mymaps (public saves with hash dedup)
+ * or POST /api/secure/mymaps (authenticated saves with upsert).
+ *
  * POST /api/mymaps
  * Save a MyMaps drawing to the database.
  * Expects a JSON body which gets stored as-is in the `json` column.

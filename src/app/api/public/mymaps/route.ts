@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MyMapsService } from '@/lib/myMaps';
+import { MyMapsService, computeJsonHash } from '@/lib/myMaps';
 import { isHostAllowed } from '@/lib/common';
 
 /**
- * POST /api/mymaps
- * Save My Maps drawing
+ * POST /api/public/mymaps
+ * Save My Maps drawing (public / non-authenticated).
+ * Uses SHA-256 hash deduplication: if an identical JSON payload already
+ * exists in the database, the existing record's ID is returned instead
+ * of creating a duplicate.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -20,8 +23,18 @@ export async function POST(request: NextRequest) {
 
     // Parse the JSON body
     const body = await request.json();
-    
-    // Insert the MyMaps record
+
+    // Compute hash for deduplication
+    const jsonString = JSON.stringify(body);
+    const hash = computeJsonHash(jsonString);
+
+    // Check if an identical record already exists
+    const existing = await MyMapsService.findByHash(hash);
+    if (existing) {
+      return NextResponse.json({ id: existing.id });
+    }
+
+    // No duplicate — insert a new record
     const id = await MyMapsService.insertMyMaps(body);
     
     return NextResponse.json({ id });

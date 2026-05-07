@@ -37,6 +37,11 @@ export async function GET(
         { status: 404 }
       );
     }
+
+    // Update lastimported timestamp (fire-and-forget)
+    MyMapsService.updateLastImported(id).catch((err) =>
+      console.error('Error updating lastimported:', err)
+    );
     
     return NextResponse.json(result);
 

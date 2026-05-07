@@ -86,6 +86,18 @@ export interface MyMapsConfig {
   nonPointCursorSize: number;
 }
 
+export interface MyMapsHistoryEntry {
+  id: string;
+  date: string; // ISO string
+}
+
+export interface UserMyMapsEntry {
+  id: string;
+  name: string | null;
+  date_created: Date | string | null;
+  lastimported: Date | string | null;
+}
+
 export interface MyMapsState {
   // Drawing state
   drawType: DrawType;
@@ -141,7 +153,7 @@ export interface MyMapsState {
   zoomToSelected: () => void;
   mergePolygons: () => { success: boolean; message?: string };
   exportToFile: (format: "KML" | "GeoJSON" | "EsriJSON") => { success: boolean; message?: string; count?: number };
-  saveToApi: () => Promise<{ success: boolean; message?: string; id?: string }>;
+  saveToApi: (options?: { myMapsName?: string; isAuthenticated?: boolean }) => Promise<{ success: boolean; message?: string; id?: string }>;
   importFromApi: (id: string) => Promise<{ success: boolean; message?: string; data?: unknown }>;
 
   // Actions - Edit mode
@@ -153,6 +165,14 @@ export interface MyMapsState {
   importItems: (jsonData: string) => boolean;
   saveToStorage: () => void;
   loadFromStorage: () => void;
+
+  // Actions - User maps (authenticated)
+  userMaps: UserMyMapsEntry[];
+  fetchUserMaps: () => Promise<void>;
+
+  // Actions - Local history (non-authenticated)
+  addToHistory: (id: string) => void;
+  getHistory: () => MyMapsHistoryEntry[];
 
   // Actions - UI
   setToolTipClass: (className: string) => void;
@@ -203,6 +223,7 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => ({
   importText: "",
   lastSavedId: null,
   config: DEFAULT_CONFIG,
+  userMaps: [],
 
   // Drawing actions
   setDrawType: (drawType) => set({ drawType }),
@@ -432,7 +453,7 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => ({
     }
   },
 
-  saveToApi: async () => {
+  saveToApi: async (options?: { myMapsName?: string; isAuthenticated?: boolean }) => {
     const state = get();
 
     try {
@@ -469,11 +490,24 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => ({
         toolTipId: state.toolTipId,
       });
 
-      // Make API call to new local endpoint using axios
       const { getAxiosClient } = await import("@/lib/axiosInstance");
-      const axiosClient = getAxiosClient("/api/mymaps");
-      const response = await axiosClient.post("/mymaps", dataToSave);
-      const result = response.data;
+
+      let result: { id?: string };
+
+      if (options?.isAuthenticated && options?.myMapsName) {
+        // Authenticated save — upsert by (email, name) via secure endpoint.
+        // The name is sent via a custom header so the JSON body stays pure.
+        const axiosClient = getAxiosClient("/api/secure/mymaps");
+        const response = await axiosClient.post("/secure/mymaps", dataToSave, {
+          headers: { "X-MyMaps-Name": options.myMapsName },
+        });
+        result = response.data;
+      } else {
+        // Public save — hash dedup handled server-side
+        const axiosClient = getAxiosClient("/api/public/mymaps");
+        const response = await axiosClient.post("/public/mymaps", dataToSave);
+        result = response.data;
+      }
 
       if (result.id) {
         // Copy ID to clipboard
@@ -481,6 +515,11 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => ({
           await navigator.clipboard.writeText(result.id);
         } catch (clipboardError) {
           console.warn("Failed to copy to clipboard:", clipboardError);
+        }
+
+        // Store in local history for non-authenticated users
+        if (!options?.isAuthenticated) {
+          get().addToHistory(result.id);
         }
 
         return {
@@ -513,16 +552,14 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => ({
         };
       }
 
-      // Using local API endpoint - no external config needed
-
-      // Make API call to new local endpoint using axios
+      // Make API call using public endpoint
       const { getAxiosClient } = await import("@/lib/axiosInstance");
-      const apiUrl = `/api/mymaps/${id}`;
+      const apiUrl = `/api/public/mymaps/${id}`;
       const axiosClient = getAxiosClient(apiUrl);
 
       let result;
       try {
-        const response = await axiosClient.get(`/mymaps/${id}`);
+        const response = await axiosClient.get(`/public/mymaps/${id}`);
         result = response.data;
       } catch (error) {
         // Handle 404 error specifically
@@ -600,6 +637,9 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => ({
 
             // Save to localStorage
             get().saveToStorage();
+
+            // Track in local history
+            get().addToHistory(id);
 
             return {
               success: true,
@@ -748,6 +788,52 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => ({
   setToolTipClass: (className) => set({ toolTipClass: className }),
 
   toggleAdvanced: () => set((state) => ({ showAdvanced: !state.showAdvanced })),
+
+  // User maps (authenticated) — fetch from /api/secure/mymaps/user
+  fetchUserMaps: async () => {
+    try {
+      const { getAxiosClient } = await import("@/lib/axiosInstance");
+      const axiosClient = getAxiosClient("/api/secure/mymaps/user");
+      const response = await axiosClient.get("/secure/mymaps/user");
+      set({ userMaps: response.data.maps || [] });
+    } catch (error) {
+      console.error("Error fetching user MyMaps:", error);
+      set({ userMaps: [] });
+    }
+  },
+
+  // Local history helpers (non-authenticated)
+  addToHistory: (id: string) => {
+    try {
+      const key = "simcoe-mymaps-history";
+      const raw = localStorage.getItem(key);
+      let history: MyMapsHistoryEntry[] = raw ? JSON.parse(raw) : [];
+
+      // Remove duplicate if already present
+      history = history.filter((entry) => entry.id !== id);
+
+      // Prepend new entry
+      history.unshift({ id, date: new Date().toISOString() });
+
+      // Trim to max 50
+      if (history.length > 50) {
+        history = history.slice(0, 50);
+      }
+
+      localStorage.setItem(key, JSON.stringify(history));
+    } catch (error) {
+      console.error("Error saving MyMaps history:", error);
+    }
+  },
+
+  getHistory: (): MyMapsHistoryEntry[] => {
+    try {
+      const raw = localStorage.getItem("simcoe-mymaps-history");
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  },
 
   // Getters
   getVisibleItems: () => get().items.filter((item) => item.visible),

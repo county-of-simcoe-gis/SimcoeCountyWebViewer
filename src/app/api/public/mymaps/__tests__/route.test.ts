@@ -1,14 +1,16 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { NextRequest } from "next/server";
 import { POST } from "@/app/api/public/mymaps/route";
-import { MyMapsService } from "@/lib/myMaps";
+import { MyMapsService, computeJsonHash } from "@/lib/myMaps";
 import { isHostAllowed } from "@/lib/common";
 
 // Mock dependencies
 vi.mock("@/lib/myMaps", () => ({
   MyMapsService: {
     insertMyMaps: vi.fn(),
+    findByHash: vi.fn(),
   },
+  computeJsonHash: vi.fn(() => "mock-hash-value"),
 }));
 
 vi.mock("@/lib/common", () => ({
@@ -17,12 +19,16 @@ vi.mock("@/lib/common", () => ({
 
 describe("POST /api/mymaps", () => {
   const mockInsertMyMaps = vi.mocked(MyMapsService.insertMyMaps);
+  const mockFindByHash = vi.mocked(MyMapsService.findByHash);
   const mockIsHostAllowed = vi.mocked(isHostAllowed);
+  const mockComputeJsonHash = vi.mocked(computeJsonHash);
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockIsHostAllowed.mockReturnValue(true);
-    mockInsertMyMaps.mockResolvedValue(123);
+    mockInsertMyMaps.mockResolvedValue("test-uuid-123");
+    mockFindByHash.mockResolvedValue(undefined);
+    mockComputeJsonHash.mockReturnValue("mock-hash-value");
   });
 
   afterEach(() => {
@@ -52,7 +58,7 @@ describe("POST /api/mymaps", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ id: 123 });
+      expect(data).toEqual({ id: "test-uuid-123" });
       expect(mockIsHostAllowed).toHaveBeenCalledWith("authorized-host.com");
       expect(mockInsertMyMaps).toHaveBeenCalledWith(mockBody);
     });
@@ -127,7 +133,7 @@ describe("POST /api/mymaps", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ id: 123 });
+      expect(data).toEqual({ id: "test-uuid-123" });
       expect(mockInsertMyMaps).toHaveBeenCalledWith(mockBody);
     });
 
@@ -144,7 +150,7 @@ describe("POST /api/mymaps", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ id: 123 });
+      expect(data).toEqual({ id: "test-uuid-123" });
       expect(mockInsertMyMaps).toHaveBeenCalledWith(mockBody);
     });
 
@@ -178,7 +184,7 @@ describe("POST /api/mymaps", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual({ id: 123 });
+      expect(data).toEqual({ id: "test-uuid-123" });
       expect(mockInsertMyMaps).toHaveBeenCalledWith(mockBody);
     });
   });

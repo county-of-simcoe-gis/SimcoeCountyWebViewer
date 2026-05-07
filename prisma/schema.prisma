@@ -15,7 +15,12 @@ model TblMymaps {
   id           String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   json         String?   @db.Text
   date_created DateTime? @db.Date
+  email        String?   @db.VarChar
+  name         String?   @db.VarChar
+  lastimported DateTime? @db.Timestamptz(6)
+  jsonhash     String?   @db.VarChar
 
+  @@unique([email, name])
   @@map("tbl_mymaps")
 }
 
