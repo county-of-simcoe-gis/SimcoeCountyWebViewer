@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import "@/app/globals.css";
 import "@/styles/openlayers.css";
 import AuthProvider from "@/app/auth/Provider";
@@ -8,15 +9,8 @@ import { ToastContainer } from "@/components/Toast";
 import { UrlParameterProvider } from "@/contexts/UrlParameterContext";
 import appConfig from "@/config.json";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const geistSans = GeistSans;
+const geistMono = GeistMono;
 
 // Initial metadata from local config.json. These values are overridden at
 // runtime by `updatePageMetadata` once the merged map config is loaded
