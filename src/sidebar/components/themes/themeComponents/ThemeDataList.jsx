@@ -60,14 +60,14 @@ class ThemeDataList extends Component {
         },
         (result) => {
           this.setState({ features: result });
-        }
+        },
       );
     } else {
       helpers.getWFSGeoJSON(
         { serverUrl: this.props.layerConfig.serverUrl, layerName: this.props.layerConfig.layerName, sortField: this.props.layerConfig.displayFieldName, secure: this.props.layerConfig.secured },
         (result) => {
           this.setState({ features: result });
-        }
+        },
       );
     }
   };
@@ -79,7 +79,7 @@ class ThemeDataList extends Component {
   itemClick = (feature) => {
     const extent = feature.getGeometry().getExtent();
     const center = getCenter(extent);
-    const entries = Object.entries(feature.getProperties());
+    const entries = helpers.FilterKeys(feature).map((key) => [key, feature.get(key)]);
     window.popup.show(center, <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={this.props.config.popupLogoImage} layerConfig={this.props.layerConfig} />);
     helpers.zoomToFeature(feature);
     window.map.getView().setCenter(center);
@@ -123,6 +123,4 @@ export default ThemeDataList;
 
 // IMPORT ALL IMAGES
 import { createImagesObject } from "../../../../helpers/imageHelper";
-const images = createImagesObject(
-  import.meta.glob('./images/*.{png,jpg,jpeg,svg,gif}', { eager: true, query: '?url', import: 'default' })
-);
+const images = createImagesObject(import.meta.glob("./images/*.{png,jpg,jpeg,svg,gif}", { eager: true, query: "?url", import: "default" }));

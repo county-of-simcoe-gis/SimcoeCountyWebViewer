@@ -470,7 +470,7 @@ export function showTerms(title = "Terms and Condition", messageText = "Message"
           console.log(err);
         }
       }}
-    />
+    />,
   );
 }
 
@@ -774,7 +774,7 @@ function pulsate(vectorLayer, color, feature, duration, mstyle, callback) {
             width: 2 + opacity,
           }),
         }),
-      })
+      }),
     );
 
     vectorContext.drawGeometry(flashGeom);
@@ -806,7 +806,7 @@ export function centerMap(coords, zoom) {
       center: newCoords,
       //extent: newExtent,
       zoom: 13,
-    })
+    }),
   );
 }
 
@@ -829,7 +829,7 @@ export function formatTitleCase(str, maxLength = undefined) {
       .split(/(?=[A-Z]{1}[a-z]+)|(?=[_ .])/)
       .join(" ")
       .replace(/[_.]/gm, "")
-      .toLowerCase()
+      .toLowerCase(),
   );
   if (maxLength && maxLength < formattedTitle.length) formattedTitle = formattedTitle.substring(0, maxLength) + "...";
   return formattedTitle;
@@ -883,7 +883,7 @@ export function createTextStyle(
   backgroundFillColor = null,
   backgroundStrokeColor = null,
   backgroundStrokeWidth = 2,
-  padding = null
+  padding = null,
 ) {
   offsetX = parseInt(offsetX, 10);
   offsetY = parseInt(offsetY, 10);
@@ -1313,6 +1313,7 @@ export function FilterKeys(feature) {
     "layerdisplayname",
     "geostasis[.].*",
     ".*fid.*",
+    "gdb.*",
   ];
   const featureProps = feature.getProperties();
 
@@ -1643,7 +1644,7 @@ export function loadConfig(configSecured = {}, callback) {
         JSON.stringify({
           center: settings.centerCoords,
           zoom: settings.defaultZoom,
-        })
+        }),
       );
       if (settings.sidebarToolComponents !== undefined) settings.sidebarToolComponents = mergeObjArray(config.sidebarToolComponents, settings.sidebarToolComponents);
       if (settings.sidebarThemeComponents !== undefined) settings.sidebarThemeComponents = mergeObjArray(config.sidebarThemeComponents, settings.sidebarThemeComponents);
@@ -1691,7 +1692,7 @@ export function getConfig(component, name) {
       break;
   }
   return configArray.filter(
-    (item) => (item.name !== undefined && item.name.toLowerCase() === name.toLowerCase()) || (item.componentName !== undefined && item.componentName.toLowerCase() === name.toLowerCase())
+    (item) => (item.name !== undefined && item.name.toLowerCase() === name.toLowerCase()) || (item.componentName !== undefined && item.componentName.toLowerCase() === name.toLowerCase()),
   )[0];
 }
 
