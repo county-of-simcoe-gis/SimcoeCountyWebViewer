@@ -53,7 +53,7 @@ const ThemeLayerToggler = (props) => {
         layerRef.current = layer;
 
         addMapClickEvent();
-      }
+      },
     );
   };
   const addMapClickEvent = () => {
@@ -61,7 +61,7 @@ const ThemeLayerToggler = (props) => {
       mapClickEventRef.current = window.map.on("click", onMapClick);
     } else {
       mapClickEventRef.current = window.map.on("click", (evt) => {
-        if (window.isDrawingOrEditing || !visible || window.isCoordinateToolOpen || window.isMeasuring) return;
+        if (window.isDrawingOrEditing || !layerRef.current.getVisible() || window.isCoordinateToolOpen || window.isMeasuring) return;
 
         var viewResolution = window.map.getView().getResolution();
         var url = layerRef.current.getSource().getFeatureInfoUrl(evt.coordinate, viewResolution, "EPSG:3857", {
@@ -79,7 +79,7 @@ const ThemeLayerToggler = (props) => {
               window.popup.show(
                 evt.coordinate,
                 <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={props.config.popupLogoImage} layerConfig={props.layerConfig} />,
-                layerConfig.displayName
+                layerConfig.displayName,
               );
             });
           });
@@ -131,7 +131,7 @@ const ThemeLayerToggler = (props) => {
         window.popup.show(
           center,
           <ThemePopupContent key={helpers.getUID()} values={entries} popupLogoImage={props.config.popupLogoImage} layerConfig={props.layerConfig} />,
-          props.layerConfig.displayName
+          props.layerConfig.displayName,
         );
       });
     });

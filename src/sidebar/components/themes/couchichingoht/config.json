@@ -1,0 +1,127 @@
+{
+  "themeColor": "#C9E7F9",
+  "expandInitialList": false,
+  "disableParcelClick": false,
+  "baseLayers": {
+    "defaultVisibility": true,
+    "opacity": 0.7,
+    "zIndex": 50,
+    "layers": []
+  },
+  "toggleLayers": [
+    {
+      "displayName": "Diagnostic Imaging",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:COHT_Diagnostic_Imaging",
+      "visible": false,
+      "expanded": true,
+      "zIndex": 202,
+      "legendStyleName": "",
+      "displayFieldName": "Name",
+      "UrlParameter": {
+        "parameterName": "Name",
+        "fieldName": "Name"
+      }
+    },
+    {
+      "displayName": "Drs. Office",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:COHT_Drs_Office",
+      "visible": false,
+      "expanded": false,
+      "zIndex": 203,
+      "legendStyleName": "",
+      "displayFieldName": "Address"
+    },
+    {
+      "displayName": "Health Care Clinic",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:COHT_Health_Care_Clinic",
+      "visible": false,
+      "expanded": false,
+      "zIndex": 204,
+      "legendStyleName": "",
+      "displayFieldName": "Name"
+    },
+    {
+      "displayName": "HNPLC",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:COHT_HNPLC",
+      "visible": false,
+      "expanded": false,
+      "zIndex": 205,
+      "legendStyleName": "",
+      "displayFieldName": "Name"
+    },
+    {
+      "displayName": "Hospital",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:COHT_Hospital",
+      "visible": false,
+      "expanded": false,
+      "zIndex": 206,
+      "legendStyleName": "",
+      "displayFieldName": "Name"
+    },
+    {
+      "displayName": "Indigenous Health Care Clinic",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:COHT_Indigenous_Health_Care_Clinic",
+      "visible": false,
+      "expanded": false,
+      "zIndex": 207,
+      "legendStyleName": "",
+      "displayFieldName": "Name"
+    },
+    {
+      "displayName": "Lab Services",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:COHT_Lab_Services",
+      "visible": false,
+      "expanded": false,
+      "zIndex": 208,
+      "legendStyleName": "",
+      "displayFieldName": "Name"
+    },
+    {
+      "displayName": "Orillia Midwives",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:COHT_Orillia_Midwives",
+      "visible": false,
+      "expanded": false,
+      "zIndex": 209,
+      "legendStyleName": "",
+      "displayFieldName": "Address"
+    },
+    {
+      "displayName": "Pharmacy",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:COHT_Pharmacy",
+      "visible": false,
+      "expanded": false,
+      "zIndex": 210,
+      "legendStyleName": "",
+      "displayFieldName": "Name"
+    },
+    {
+      "displayName": "Primary Care Services",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:COHT_Primary_Care_Services",
+      "visible": false,
+      "expanded": false,
+      "zIndex": 211,
+      "legendStyleName": "",
+      "displayFieldName": "Name"
+    },
+    {
+      "displayName": "Walk-In Clinic",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:COHT_Walk-In_Clinic",
+      "visible": false,
+      "expanded": false,
+      "zIndex": 212,
+      "legendStyleName": "",
+      "displayFieldName": "Address"
+    }
+  ]
+}
