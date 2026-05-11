@@ -355,7 +355,7 @@
       "componentName": "CouchichingOHT",
       "description": "Couchiching OHT theme",
       "imageName": "CouchichingOHT-logo.png",
-      "disable": true
+      "enabled": false
     }
   ],
   "sidebarShortcutParams": [
