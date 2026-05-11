@@ -1,7 +1,7 @@
 {
   "themeColor": "#C9E7F9",
   "expandInitialList": false,
-  "disableParcelClick": true,
+  "disableParcelClick": false,
   "baseLayers": {
     "defaultVisibility": true,
     "opacity": 0.7,
