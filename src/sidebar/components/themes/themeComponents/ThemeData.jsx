@@ -41,11 +41,11 @@ class ThemeData extends Component {
         <div>
           {this.props.config.toggleLayers.map((layerConfig) => (
             <ThemeDataList
-              key={helpers.getUID()}
+              key={layerConfig.layerName}
               config={this.props.config}
               layerConfig={layerConfig}
               ref={(data) => {
-                this.layerRefs.push(data);
+                if (data !== null) this.layerRefs.push(data);
               }}
               onlyFeaturesWithinMap={this.state.onlyFeaturesWithinMap}
             />

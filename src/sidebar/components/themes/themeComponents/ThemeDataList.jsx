@@ -45,6 +45,14 @@ class ThemeDataList extends Component {
     this._isMounted = false;
   }
 
+  componentDidUpdate(prevProps) {
+    if (prevProps.onlyFeaturesWithinMap !== this.props.onlyFeaturesWithinMap) {
+      this.setState({ onlyFeaturesWithinMap: this.props.onlyFeaturesWithinMap }, () => {
+        this.fetchFeatures();
+      });
+    }
+  }
+
   fetchFeatures = () => {
     if (!this._isMounted) return;
 
