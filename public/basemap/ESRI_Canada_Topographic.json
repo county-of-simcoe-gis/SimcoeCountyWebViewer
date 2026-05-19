@@ -23,6 +23,14 @@
   },
   "layers": [
     {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#ffffff"
+      },
+      "layout": {}
+    },
+    {
       "id": "Topo Layers/Landbase/<Null>/1",
       "type": "fill",
       "source": "esri",

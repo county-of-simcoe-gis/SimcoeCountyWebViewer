@@ -270,8 +270,8 @@ const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
   const rgbColor = `rgb(${color.r},${color.g},${color.b})`;
 
   return (
-    <fieldset className="sc-mymaps-buffer-container border border-[#cecece] rounded-[3px] p-2 mb-[5px] bg-[#f9f9f9] w-full box-border m-0">
-      <legend className="text-sm font-bold text-[#333] py-[2px] px-1.5 bg-[#f9f9f9] border border-[#cecece] rounded-[3px] flex items-center">
+    <fieldset className="sc-mymaps-buffer-container border border-base-300 rounded-[3px] p-2 mb-[5px] bg-base-200 w-full box-border m-0">
+      <legend className="text-sm font-bold text-base-content py-[2px] px-1.5 bg-base-200 border border-base-300 rounded-[3px] flex items-center">
         <AppImage src="/images/buffer.png" alt="buffer" className="w-4 h-4 block" />
         &nbsp; Buffer
       </legend>
@@ -279,7 +279,7 @@ const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
         <label style={{ gridColumnStart: "1" }}>Distance:</label>
         <label style={{ gridColumnStart: "2" }}>Units:</label>
 
-        <input type="number" className="bg-white text-[#367cc5]" value={distance} onChange={onDistanceChange} style={{ gridColumnStart: "1", gridRowStart: "2" }} />
+        <input type="number" className="bg-base-100 text-primary" value={distance} onChange={onDistanceChange} style={{ gridColumnStart: "1", gridRowStart: "2" }} />
 
         <select name="pointOutline" value={units} onChange={onUnitsChange} style={{ gridColumnStart: "2", gridRowStart: "2" }}>
           <option value="meters">Meters</option>
@@ -292,7 +292,7 @@ const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
 
         <button
           id="sc-mymaps-buffer-color-button-picker"
-          className="w-full h-[23px] border border-[#cecece] rounded-[3px] cursor-pointer my-[3px] box-border hover:border-[#367cc5]"
+          className="w-full h-[23px] border border-base-300 rounded-[3px] cursor-pointer my-[3px] box-border hover:border-primary"
           title="Change Buffer Color"
           onClick={onColorPickerButton}
           style={{
@@ -303,7 +303,7 @@ const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
         />
 
         <label
-          className={addMessageVisible ? "text-[#367cc5] cursor-pointer underline text-[11px] hover:no-underline" : "hidden"}
+          className={addMessageVisible ? "text-primary cursor-pointer underline text-[11px] hover:no-underline" : "hidden"}
           style={{
             gridColumn: "1 / 3",
             gridRowStart: "4",

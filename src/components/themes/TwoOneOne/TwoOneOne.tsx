@@ -464,7 +464,7 @@ export default function TwoOneOne({ name = "211 Community Services", helpLink, h
         {/* Search Input */}
         <div className="form-control">
           <label className="input input-bordered input-sm flex items-center gap-2">
-            <FaSearch className="text-base-content/50" />
+            <FaSearch className="text-base-content/70" />
             <input type="text" className="grow" placeholder={isFrench ? "Rechercher par mot-clé" : "Search by keyword"} value={searchText} onChange={(e) => setSearchText(e.target.value)} />
           </label>
         </div>
@@ -486,7 +486,7 @@ export default function TwoOneOne({ name = "211 Community Services", helpLink, h
               <span className="loading loading-spinner loading-md"></span>
             </div>
           ) : filteredResults.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-base-content/50">{isFrench ? "Aucun résultat trouvé" : "No Results Found"}</div>
+            <div className="flex items-center justify-center h-full text-base-content/70">{isFrench ? "Aucun résultat trouvé" : "No Results Found"}</div>
           ) : (
             <List<ListRowData>
               defaultHeight={256}
@@ -503,7 +503,7 @@ export default function TwoOneOne({ name = "211 Community Services", helpLink, h
           )}
         </div>
 
-        <div className="text-xs text-base-content/50 text-center">
+        <div className="text-xs text-base-content/70 text-center">
           {filteredResults.length} {isFrench ? "résultats" : "results"}
         </div>
       </div>

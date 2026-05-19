@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "node scripts/copy-readme.js && next dev",
     "build": "node scripts/copy-readme.js && next build",
+    "build:dev": "node scripts/copy-readme.js && dotenv -e .env.development -- next build",
     "start": "next start",
     "lint": "next lint",
     "copy-readme": "node scripts/copy-readme.js",
@@ -77,6 +78,7 @@
     "@vitest/coverage-v8": "^4.0.18",
     "cross-env": "^7.0.3",
     "daisyui": "^5.5.17",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
     "jsdom": "^26.1.0",

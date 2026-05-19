@@ -150,9 +150,9 @@ export default function GroupItem({
   }
 
   return (
-    <div className="border-0 border-[#ddd] rounded-[3px] mb-[5px]" key={`${id}-sc-toc-group-list-container`}>
+    <div className="border-0 border-base-300 rounded-[3px] mb-[5px]" key={`${id}-sc-toc-group-list-container`}>
       <div
-        className={`font-bold text-sm flex items-center bg-white w-[97%] border-0 border-[#ddd] cursor-pointer select-none p-0.5 pl-2.5 ${activeLayerCount > 0 ? "text-[#000080] font-extrabold" : "text-[#373737]"}`}
+        className={`font-bold text-sm flex items-center bg-base-100 w-[97%] border-0 border-base-300 cursor-pointer select-none p-0.5 pl-2.5 ${activeLayerCount > 0 ? "text-primary font-extrabold" : "text-base-content"}`}
         onClick={onHeaderClick}
       >
         <div className="flex items-center shrink-0">
@@ -166,7 +166,7 @@ export default function GroupItem({
       </div>
 
       <div className="absolute right-2 -mt-[18px] cursor-pointer" title="Group Options" onClick={onGroupOptionsClick}>
-        <FaEllipsisV size={16} className="opacity-70 text-[#666]" />
+        <FaEllipsisV size={16} className="text-base-content/70" />
       </div>
 
       {menuOpen && (
@@ -179,7 +179,7 @@ export default function GroupItem({
         </div>
       )}
 
-      <div className={panelOpen || (isGroupVisible() && searchText !== "") ? "relative pl-5 border-l-2 border-dotted border-[#ccc] ml-2.5" : "hidden"} key={`${id}-sc-toc-group-list-item-container`}>
+      <div className={panelOpen || (isGroupVisible() && searchText !== "") ? "relative pl-5 border-l-2 border-dotted border-base-300 ml-2.5" : "hidden"} key={`${id}-sc-toc-group-list-item-container`}>
         {getSortedLayers().map((layer, index) => (
           <LayerItem
             key={`${layer.name}-${index}`}

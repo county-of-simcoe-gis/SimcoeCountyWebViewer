@@ -618,11 +618,11 @@ export default function WeatherRadar(): React.ReactElement {
         <div className="flex gap-4 items-start">
           <div className="flex flex-col items-center text-xs">
             <div className="font-semibold">Rain (Summer)</div>
-            <Image unoptimized className="bg-black p-1" src="/images/radarlegendrain.png" alt="Rain legend" width={90} height={238} />
+            <Image className="bg-black p-1" src="/images/radarlegendrain.png" alt="Rain legend" width={90} height={238} />
           </div>
           <div className="flex flex-col items-center text-xs">
             <div className="font-semibold">Snow (Winter)</div>
-            <Image unoptimized className="bg-black p-1" src="/images/radarlegendsnow.png" alt="Snow legend" width={90} height={238} />
+            <Image className="bg-black p-1" src="/images/radarlegendsnow.png" alt="Snow legend" width={90} height={238} />
           </div>
         </div>
 
@@ -630,7 +630,7 @@ export default function WeatherRadar(): React.ReactElement {
           <div>Weather Data Provided by Environment Canada</div>
           <div className="mt-1">
             <a href="https://weather.gc.ca/" target="_blank" rel="noreferrer">
-              <Image src="https://weather.gc.ca/images/ecfip_e.gif" alt="Environment Canada" width={242} height={22} unoptimized className="mt-1" />
+              <Image src="https://weather.gc.ca/images/ecfip_e.gif" alt="Environment Canada" width={242} height={22} className="mt-1" />
             </a>
           </div>
         </div>

@@ -22,11 +22,11 @@ export default function ReportsNavBar() {
   const showToggle = currentReport?.source === "popupPopOut" || currentReport?.source === "propertyReport";
 
   return (
-    <div className="flex items-center justify-between py-1.5 px-2 bg-[#f5f5f5] border-b border-[#e0e0e0] gap-2 min-h-[36px]">
+    <div className="flex items-center justify-between py-1.5 px-2 bg-base-200 border-b border-base-300 gap-2 min-h-[36px]">
       {/* Back / Forward */}
       <div className="flex items-center gap-1">
         <button
-          className="bg-white border border-[#ddd] rounded px-1.5 py-1 cursor-pointer flex items-center justify-center transition-all text-[#333] hover:enabled:bg-[#e8e8e8] hover:enabled:border-[#ccc] disabled:opacity-35 disabled:cursor-default"
+          className="bg-base-100 border border-base-300 rounded px-1.5 py-1 cursor-pointer flex items-center justify-center transition-all text-base-content hover:enabled:bg-base-300 hover:enabled:border-base-content/30 disabled:opacity-35 disabled:cursor-default"
           disabled={!canGoBack}
           onClick={goBack}
           aria-label="Go back"
@@ -35,7 +35,7 @@ export default function ReportsNavBar() {
           <FaChevronLeft size={12} />
         </button>
         <button
-          className="bg-white border border-[#ddd] rounded px-1.5 py-1 cursor-pointer flex items-center justify-center transition-all text-[#333] hover:enabled:bg-[#e8e8e8] hover:enabled:border-[#ccc] disabled:opacity-35 disabled:cursor-default"
+          className="bg-base-100 border border-base-300 rounded px-1.5 py-1 cursor-pointer flex items-center justify-center transition-all text-base-content hover:enabled:bg-base-300 hover:enabled:border-base-content/30 disabled:opacity-35 disabled:cursor-default"
           disabled={!canGoForward}
           onClick={goForward}
           aria-label="Go forward"
@@ -47,7 +47,7 @@ export default function ReportsNavBar() {
 
       {/* "Always display" toggle — only for popup-originated content */}
       {showToggle && (
-        <div className="flex items-center gap-1.5 text-[11px] text-[#555] whitespace-nowrap">
+        <div className="flex items-center gap-1.5 text-[11px] text-base-content/70 whitespace-nowrap">
           <label htmlFor="sc-always-reports-toggle" className="cursor-pointer select-none">
             Always display popup info in Reports tab
           </label>

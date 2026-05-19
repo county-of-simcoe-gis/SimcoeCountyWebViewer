@@ -722,6 +722,80 @@ export function mergeGroups(originalGroups: TOCLayerGroup[], newGroups: TOCLayer
 }
 
 /**
+ * Build TOC layer groups from a direct layer source config entry (type: "layer").
+ * This handles individual layers specified directly in the config (e.g. WMTS, XYZ)
+ * rather than being discovered from a WMS/ArcGIS service.
+ */
+function getGroupsFromDirectLayer(source: TOCSource): TOCLayerGroup[] {
+  const layerName = source.layerName || source.name || "Unnamed Layer";
+  const displayName = source.name || layerName;
+  // If the config specifies "All Layers" (the virtual group), place the layer
+  // into an "Uncategorized" group instead to avoid creating a duplicate.
+  const groupNames = (source.groups || ["All Layers"]).map((g) => (g.toLowerCase() === "all layers" ? "Uncategorized" : g));
+
+  const generateUniqueLayerId = (name: string, groupName: string): string => {
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 8);
+    const safeName = name.replace(/[^a-zA-Z0-9]/g, "_");
+    const safeGroupName = groupName.replace(/[^a-zA-Z0-9]/g, "_");
+    return `toc_layer_${safeGroupName}_${safeName}_${timestamp}_${random}`;
+  };
+
+  const groups: TOCLayerGroup[] = [];
+
+  for (const groupName of groupNames) {
+    const layer: TOCLayer = {
+      id: generateUniqueLayerId(layerName, groupName),
+      name: layerName,
+      displayName,
+      tocDisplayName: displayName,
+      styleUrl: "",
+      height: 30,
+      drawIndex: source.index ?? 0,
+      index: source.index ?? 0,
+      initialDrawIndex: source.index ?? 0,
+      showLegend: false,
+      legendHeight: -1,
+      legendImage: null,
+      legendObj: null,
+      legendFetching: false,
+      visible: false,
+      layer: null,
+      metadataUrl: null,
+      opacity: 1,
+      minScale: 0,
+      maxScale: 100000000000,
+      liveLayer: false,
+      isQueryable: false,
+      groupName,
+      group: groupName,
+      userLayer: false,
+      secured: source.secure || false,
+      canDownload: false,
+      hasAttachments: false,
+      // Store direct layer properties for OpenLayers initialization
+      sourceType: source.sourceType || source.source,
+      layerUrl: source.layerUrl,
+      projection: source.projection || "EPSG:3857",
+    };
+
+    groups.push({
+      value: groupName,
+      label: groupName,
+      defaultGroup: false,
+      url: source.layerUrl,
+      prefix: "",
+      visibleLayers: [],
+      wmsGroupUrl: "",
+      customRestUrl: "",
+      layers: [layer],
+    });
+  }
+
+  return groups;
+}
+
+/**
  * Main function to load layer groups from all sources with proper merging
  */
 export async function loadLayerGroupsFromSources(sources: TOCSource[], config: Config): Promise<{ groups: TOCLayerGroup[]; defaultGroupName: string; failedSources: string[] }> {
@@ -765,6 +839,9 @@ export async function loadLayerGroupsFromSources(sources: TOCSource[], config: C
           break;
         case "arcgis":
           groups = await getGroupsFromArcGIS(source);
+          break;
+        case "layer":
+          groups = getGroupsFromDirectLayer(source);
           break;
         default:
           console.warn(`Unknown source type: ${source.type}`);

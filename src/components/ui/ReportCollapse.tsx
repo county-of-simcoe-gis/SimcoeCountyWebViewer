@@ -15,9 +15,9 @@ export interface ReportCollapseProps {
  */
 export const ReportCollapse: React.FC<ReportCollapseProps> = ({ title, children, defaultOpen = true, className = "" }) => {
   return (
-    <details className={`collapse collapse-arrow w-[337px] m-[5px] bg-[#e8e8e8] border-none rounded-none select-none ${className}`} open={defaultOpen || undefined}>
+    <details className={`collapse collapse-arrow w-[337px] m-[5px] bg-base-300 border-none rounded-none select-none ${className}`} open={defaultOpen || undefined}>
       <summary className="collapse-title font-bold text-[10pt] leading-[30px] min-h-[30px] py-[3px] px-[10px] cursor-pointer">{title}</summary>
-      <div className="collapse-content bg-white p-[5px] select-text cursor-default">{children}</div>
+      <div className="collapse-content bg-base-100 p-[5px] select-text cursor-default">{children}</div>
     </details>
   );
 };

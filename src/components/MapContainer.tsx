@@ -13,6 +13,7 @@ import { InteractionManager } from "@/utils/openlayers/InteractionManager";
 import { useUrlParameterContextOptional } from "@/contexts/UrlParameterContext";
 import { getPublicPath } from "@/utils/getPublicPath";
 import { getStorageItem } from "@/utils/storage";
+import { isMobile } from "@/utils/helpersBrowser";
 
 // OpenLayers imports
 import "ol/ol.css";
@@ -112,7 +113,7 @@ const LazyAttributionControl = lazy(dynamicControlImports.AttributionControl);
 const LazyMoreMenuButton = lazy(dynamicControlImports.MoreMenuButton);
 
 // Loading placeholder component
-const ControlLoadingPlaceholder = () => <div className="w-8 h-8 bg-gray-100 rounded" />;
+const ControlLoadingPlaceholder = () => <div className="w-8 h-8 bg-base-200 rounded" />;
 
 // Unified Interaction Handler System
 import type { MapBrowserEvent } from "ol";
@@ -290,6 +291,16 @@ export default function MapContainer() {
         setIsLoadingResults(true);
         setResultsCoordinate(coordinate);
         setAggregatedResults([]);
+
+        // On mobile the popup is a fixed bottom sheet that doesn't follow the
+        // map, so center the view on the tapped feature for context.
+        if (isMobile()) {
+          const map = useMapStore.getState().map;
+          if (map) {
+            map.getView().animate({ center: coordinate, duration: 300 });
+          }
+        }
+
         return generation;
       },
       onClickResults: (results, generation) => {

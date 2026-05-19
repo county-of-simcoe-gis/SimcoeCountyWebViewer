@@ -47,7 +47,7 @@ export default function GlobalURLModal() {
   if (!isOpen) return null;
 
   return (
-    <div className="absolute top-[62px] left-2.5 right-2.5 bottom-2.5 z-[200000] bg-white rounded-t-[5px] flex flex-col transition-[left] duration-300 ease-in-out shadow-[0_0_12px_2px_rgba(0,0,0,0.25)]">
+    <div className="absolute top-[62px] left-2.5 right-2.5 bottom-2.5 z-[200000] bg-base-100 rounded-t-[5px] flex flex-col transition-[left] duration-300 ease-in-out shadow-[0_0_12px_2px_rgba(0,0,0,0.25)]">
       {/* Header bar */}
       <div className="h-11 min-h-[44px] bg-[image:var(--sc-gradient-header)] rounded-t-[5px] flex items-center px-2 text-white select-none">
         <span className="flex-1 text-sm font-medium">{title}</span>
@@ -68,7 +68,7 @@ export default function GlobalURLModal() {
       </div>
 
       {/* Content area with iframe */}
-      <div className="flex-1 relative m-[7px] border border-[#ccc] overflow-hidden">
+      <div className="flex-1 relative m-[7px] border border-base-300 overflow-hidden">
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-base-200">
             <span className="loading loading-spinner loading-md"></span>
@@ -79,7 +79,7 @@ export default function GlobalURLModal() {
 
       {/* Footer with Close and Don't Show Again buttons */}
       {showFooter && (
-        <div className="w-full text-right px-3.5 py-2 border-t border-[#ccc] bg-white">
+        <div className="w-full text-right px-3.5 py-2 border-t border-base-300 bg-base-100">
           <button onClick={close} className="btn btn-sm btn-outline mr-[5px]">
             Close Window
           </button>

@@ -14,13 +14,13 @@ export interface InfoRowProps {
 
 // Tailwind class maps for style modes
 const LABEL_CLASSES = {
-  default: "font-semibold text-gray-800 min-w-[110px] shrink-0 pr-1.5",
-  table: "font-semibold text-gray-800 min-w-[160px] shrink-0 p-2 bg-gray-100 border border-gray-300 border-r-0",
+  default: "font-semibold text-base-content min-w-[110px] shrink-0 pr-1.5",
+  table: "font-semibold text-base-content min-w-[160px] shrink-0 p-2 bg-base-200 border border-base-300 border-r-0",
 } as const;
 
 const VALUE_CLASSES = {
-  default: "text-gray-600 flex-1 break-words [&_a]:text-blue-600 [&_a]:no-underline [&_a:hover]:text-blue-700 [&_a:hover]:underline",
-  table: "text-gray-600 flex-1 p-2 border border-gray-300 break-words [&_a]:text-blue-600 [&_a]:no-underline [&_a:hover]:text-blue-700 [&_a:hover]:underline",
+  default: "text-base-content/70 flex-1 break-words [&_a]:text-primary [&_a]:no-underline [&_a:hover]:text-primary/80 [&_a:hover]:underline",
+  table: "text-base-content/70 flex-1 p-2 border border-base-300 break-words [&_a]:text-primary [&_a]:no-underline [&_a:hover]:text-primary/80 [&_a:hover]:underline",
 } as const;
 
 export const InfoRow: React.FC<InfoRowProps> = ({ label, value, className = "", children, imageData = false, styleMode = "default" }) => {

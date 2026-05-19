@@ -5,6 +5,7 @@ import PanelComponent from "@/components/PanelComponent";
 import { useMapStore, type ControlVisibility } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
 import { getStorageKeys, getStorageItem, removeStorageItem } from "@/utils/storage";
+import { flushUserStorage } from "@/utils/userStorage";
 
 interface SettingsToolProps {
   name?: string;
@@ -109,6 +110,7 @@ export default function SettingsTool({ name = "Settings", helpLink, hideHeader =
     }
 
     keysToRemove.forEach((key) => removeStorageItem(key));
+    flushUserStorage();
 
     setShowClearAllModal(false);
     loadLocalStorageItems();
@@ -118,6 +120,7 @@ export default function SettingsTool({ name = "Settings", helpLink, hideHeader =
     if (typeof window === "undefined") return;
 
     removeStorageItem(key);
+    flushUserStorage();
     loadLocalStorageItems();
   };
 

@@ -55,3 +55,25 @@
 .layer-options-opacity-slider:focus::-moz-range-thumb {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(0, 123, 255, 0.25);
 }
+
+/* ──── Dark Mode Overrides ──── */
+
+[data-theme="dark"] .layer-options-opacity-slider {
+  background: #2a323c;
+}
+
+[data-theme="dark"] .layer-options-opacity-slider::-webkit-slider-thumb {
+  border-color: #1d232a;
+}
+
+[data-theme="dark"] .layer-options-opacity-slider::-moz-range-thumb {
+  border-color: #1d232a;
+}
+
+[data-theme="dark"] .layer-options-opacity-slider::-webkit-slider-track {
+  background: #2a323c;
+}
+
+[data-theme="dark"] .layer-options-opacity-slider::-moz-range-track {
+  background: #2a323c;
+}

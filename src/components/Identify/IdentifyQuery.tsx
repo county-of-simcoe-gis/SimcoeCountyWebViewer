@@ -79,27 +79,27 @@ export default function IdentifyQuery({ title, layerURL, layerId, where, fields,
   }, [layerURL, layerId, where, fields, secured]);
 
   if (isLoading) {
-    return <div className="p-2.5 text-xs text-[#666]">Loading {title}...</div>;
+    return <div className="p-2.5 text-xs text-base-content/70">Loading {title}...</div>;
   }
 
   if (error) {
     return (
-      <div className="p-2.5 text-xs text-[#c00]">
+      <div className="p-2.5 text-xs text-error">
         <strong>Error:</strong> {error}
       </div>
     );
   }
 
   if (features.length === 0) {
-    return <div className="p-2.5 text-xs text-[#666]">No results found for {title}.</div>;
+    return <div className="p-2.5 text-xs text-base-content/70">No results found for {title}.</div>;
   }
 
   return (
     <div className="p-[5px]">
-      <SectionTitle className="border-b-[#ccc]">{title}</SectionTitle>
+      <SectionTitle className="border-b-base-300">{title}</SectionTitle>
       {features.map((attrs, featureIdx) => (
         <div key={featureIdx} className="mb-2.5">
-          {features.length > 1 && <div className="font-bold text-xs text-[#333] mb-1">Feature {featureIdx + 1}</div>}
+          {features.length > 1 && <div className="font-bold text-xs text-base-content mb-1">Feature {featureIdx + 1}</div>}
           {Object.entries(attrs)
             .filter(([, value]) => value !== null && value !== undefined && value !== "")
             .map(([key, value]) => (

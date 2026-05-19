@@ -18,10 +18,10 @@ function SlimButton({ title, icon, isSelected, isActive, hidden, onClick }: Slim
   if (hidden) return null;
 
   return (
-    <div className={`py-2.5 px-1.5 cursor-pointer rounded-sm mx-0.5 relative ${isSelected ? "bg-[image:var(--sc-gradient-active)] border border-[#90b5d5]" : "hover:bg-black/5"}`} onClick={onClick}>
+    <div className={`py-2.5 px-1.5 cursor-pointer rounded-sm mx-0.5 relative ${isSelected ? "bg-[image:var(--sc-gradient-active)] border border-[#90b5d5]" : "hover:bg-black/5 dark:hover:bg-white/5"}`} onClick={onClick}>
       {isActive && <span className="h-2.5 w-2.5 bg-[rgb(120,204,50)] rounded-full inline-block absolute right-1.5" />}
       <button className="bg-transparent border-none p-0 cursor-pointer text-[9pt] flex flex-col items-center gap-1 w-full text-base-content">
-        <Image unoptimized src={`/images/${icon}`} alt={title} width={32} height={32} />
+        <Image src={`/images/${icon}`} alt={title} width={32} height={32} />
         <span className="text-[9pt] leading-none text-center whitespace-nowrap">{title}</span>
       </button>
     </div>
@@ -68,7 +68,7 @@ export default function SidebarSlim() {
   };
 
   return (
-    <div className="w-[65px] h-[calc(100vh-52px)] absolute top-[52px] left-0 text-center select-none pb-1.5 pl-0.5 pr-px bg-[image:var(--sc-gradient-default)] border-r border-gray-400 z-[1000] overflow-visible max-[770px]:hidden">
+    <div className="w-[65px] h-[calc(100vh-52px)] absolute top-[52px] left-0 text-center select-none pb-1.5 pl-0.5 pr-px bg-[image:var(--sc-gradient-default)] border-r border-base-300 z-[1000] overflow-visible max-[770px]:hidden">
       {!hideLayers && (
         <SlimButton
           title="Layers"
@@ -122,7 +122,7 @@ export default function SidebarSlim() {
 
       <div className="absolute bottom-0 pb-2.5 pl-0.5 pr-px w-[calc(100%-4px)]">
         <div
-          className={`py-2.5 px-1.5 cursor-pointer rounded-sm mx-0.5 relative ${isMoreMenuOpen ? "bg-[image:var(--sc-gradient-active)] border border-[#90b5d5]" : "hover:bg-black/5"}`}
+          className={`py-2.5 px-1.5 cursor-pointer rounded-sm mx-0.5 relative ${isMoreMenuOpen ? "bg-[image:var(--sc-gradient-active)] border border-[#90b5d5]" : "hover:bg-black/5 dark:hover:bg-white/5"}`}
           onClick={handleMoreClick}
         >
           <button className="flex flex-col items-center gap-1 bg-transparent border-none py-2.5 px-2 text-[9pt] cursor-pointer w-full text-base-content pointer-events-none" title="More Options">

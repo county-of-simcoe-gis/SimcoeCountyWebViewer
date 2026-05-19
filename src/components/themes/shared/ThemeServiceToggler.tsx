@@ -496,7 +496,7 @@ function ThemeServiceTogglerItem({ state, onToggle }: { state: ServiceLayerState
         {/* Legend icon / expand toggle */}
         {hasMultipleLegendEntries ? (
           <button
-            className="btn btn-ghost btn-xs px-0 min-h-0 h-auto text-base-content/50"
+            className="btn btn-ghost btn-xs px-0 min-h-0 h-auto text-base-content/70"
             onClick={(e) => {
               e.preventDefault();
               setShowLegend(!showLegend);
@@ -515,7 +515,7 @@ function ThemeServiceTogglerItem({ state, onToggle }: { state: ServiceLayerState
 
         <span className="label-text flex-1 text-sm">{state.config.name}</span>
 
-        {state.recordCount !== null && <span className="text-xs text-base-content/50">({state.recordCount})</span>}
+        {state.recordCount !== null && <span className="text-xs text-base-content/70">({state.recordCount})</span>}
       </label>
 
       {/* Expanded legend */}

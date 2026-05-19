@@ -5,6 +5,7 @@ import "@/app/globals.css";
 import "@/styles/openlayers.css";
 import AuthProvider from "@/app/auth/Provider";
 import ArcGISAuthProvider from "@/components/auth/ArcGISAuthProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastContainer } from "@/components/Toast";
 import { UrlParameterProvider } from "@/contexts/UrlParameterContext";
 import appConfig from "@/config.json";
@@ -30,15 +31,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>
           <ArcGISAuthProvider>
-            <UrlParameterProvider>
-              {children}
-              <ToastContainer />
-              <div id="datepicker-portal" className="z-[1100] relative" />
-            </UrlParameterProvider>
+            <ThemeProvider>
+              <UrlParameterProvider>
+                {children}
+                <ToastContainer />
+                <div id="datepicker-portal" className="z-[1100] relative" />
+              </UrlParameterProvider>
+            </ThemeProvider>
           </ArcGISAuthProvider>
         </AuthProvider>
       </body>

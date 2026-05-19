@@ -207,7 +207,7 @@ export default function Five11LayerToggler({ layer, visible, onVisibilityChange,
           {isLineLayer ? (
             <div className="w-6 h-1.5 bg-red-500 rounded"></div>
           ) : (
-            <Image unoptimized src={`/images/five11/${layer.imageName}`} alt={layer.displayName} width={32} height={32} className="object-contain" />
+            <Image src={`/images/five11/${layer.imageName}`} alt={layer.displayName} width={32} height={32} className="object-contain" />
           )}
         </div>
 

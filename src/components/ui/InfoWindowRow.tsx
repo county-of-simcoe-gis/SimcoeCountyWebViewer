@@ -26,17 +26,17 @@ export const InfoWindowRow: React.FC<InfoWindowRowProps> = ({ label, value, chil
   if (mode === "table") {
     return (
       <div className={`table-row w-full ${className}`}>
-        <div className="table-cell font-bold text-gray-800 text-[11px] p-0.5 break-words border border-[#f1efef] w-1/4">{label}</div>
-        <div className="table-cell text-gray-600 text-xs break-words p-0.5 w-3/4 border border-[#f1efef]">{content}</div>
+        <div className="table-cell font-bold text-base-content text-[11px] p-0.5 break-words border border-base-300 w-1/4">{label}</div>
+        <div className="table-cell text-base-content/70 text-xs break-words p-0.5 w-3/4 border border-base-300">{content}</div>
       </div>
     );
   }
 
   return (
     <div data-testid="info-row" className={`w-full ${className}`}>
-      <div className="font-bold text-gray-800 text-[11px]">{label}</div>
-      <div className="flex items-start gap-1 text-gray-600 border-b border-gray-100 pb-0.5 text-[11px] break-words min-h-[10px] [overflow-wrap:anywhere]">
-        <FaLevelUpAlt className="mt-0.5 text-gray-400 shrink-0 rotate-90" size={10} />
+      <div className="font-bold text-base-content text-[11px]">{label}</div>
+      <div className="flex items-start gap-1 text-base-content/70 border-b border-base-300 pb-0.5 text-[11px] break-words min-h-[10px] [overflow-wrap:anywhere]">
+        <FaLevelUpAlt className="mt-0.5 text-base-content/70 shrink-0 rotate-90" size={10} />
         <span>{content}</span>
       </div>
     </div>

@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { loadLayerGroupsFromSources, sortGroups } from "@/utils/tocHelpers";
 import { LayerHelpers } from "@/utils/openlayers/LayerHelpers";
-import { OL_DATA_TYPES } from "@/utils/openlayers/types";
+import { OL_DATA_TYPES, OLDataType } from "@/utils/openlayers/types";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { useLayerManagerStore } from "@/stores/layerManagerStore";
 import { useMapStore } from "@/stores/mapStore";
@@ -78,6 +78,9 @@ export interface TOCLayer {
   extendedProperties?: { keywords: Record<string, unknown> }; // Parsed GeoServer keywords (e.g. SAR, CATEGORY)
   wfsUrl?: string; // WFS query URL template for this layer
   serverUrl?: string; // Base GeoServer URL for this layer
+  sourceType?: string; // Source type override (e.g. "WMTS") for non-WMS layers
+  layerUrl?: string; // Direct URL for non-WMS layers (e.g. WMTS capabilities URL)
+  projection?: string; // Projection override for non-WMS layers
 }
 
 // Layer group interface based on the old app's group structure
@@ -112,6 +115,15 @@ export interface TOCSource {
   type: string;
   useRedFolder?: boolean;
   open?: boolean;
+  // Fields for type: "layer" (direct layer config, e.g. WMTS)
+  sourceType?: string;
+  source?: string;
+  name?: string;
+  layerName?: string;
+  tiled?: boolean;
+  index?: number;
+  projection?: string;
+  groups?: string[];
 }
 
 interface TOCState {
@@ -1882,9 +1894,13 @@ export const useTOCStore = create<TOCState>()(
                 allLayerItem.managedLayerId = existingLayerInfo.managedLayerId;
               }
             });
-          } else if (!layer.layer && group.wmsGroupUrl) {
-            // Create new OpenLayers layer
-            const serverUrl = group.wmsGroupUrl.split("/wms")[0] + "/wms";
+          } else if (!layer.layer && (group.wmsGroupUrl || layer.layerUrl)) {
+            // Determine source type and URL for this layer
+            // Direct layers (e.g. WMTS) store their own sourceType/URL;
+            // WMS layers derive from the group's wmsGroupUrl.
+            const isDirectLayer = !!layer.sourceType && !!layer.layerUrl;
+            const layerSourceType = isDirectLayer ? (layer.sourceType as OLDataType) : OL_DATA_TYPES.ImageWMS;
+            const layerUrl = isDirectLayer ? layer.layerUrl! : group.wmsGroupUrl.split("/wms")[0] + "/wms";
 
             // Wrap the callback-style getLayer in a promise so callers can
             // await full layer initialization (no more arbitrary setTimeout waits).
@@ -1907,11 +1923,11 @@ export const useTOCStore = create<TOCState>()(
             // Create OpenLayers layer
             LayerHelpers.getLayer(
               {
-                sourceType: OL_DATA_TYPES.ImageWMS,
-                url: serverUrl,
+                sourceType: layerSourceType,
+                url: layerUrl,
                 layerName: layer.name,
                 name: layer.name,
-                projection: "EPSG:3857",
+                projection: layer.projection || "EPSG:3857",
                 secured: !!layer.secured,
               },
               (olLayer: unknown) => {

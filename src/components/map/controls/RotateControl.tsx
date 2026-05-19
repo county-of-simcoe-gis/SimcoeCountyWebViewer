@@ -51,7 +51,7 @@ export const RotateControl = React.memo(({ map }: RotateControlProps) => {
         title={`Reset rotation ${hasRotation ? `(${Math.round(rotationDegrees)}°)` : ""}`}
         style={{ transform: `rotate(${rotationDegrees}deg)` }}
       >
-        <FaCompass size={18} className="text-gray-600 rotate-135" />
+        <FaCompass size={18} className="text-base-content rotate-135" />
       </MapControlButton>
     );
   }

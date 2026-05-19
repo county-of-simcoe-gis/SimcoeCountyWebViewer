@@ -59,7 +59,7 @@ export const AttributionControl = React.memo(({ map }: AttributionControlProps) 
   }
 
   return (
-    <div className="bg-white bg-opacity-80 text-xs text-gray-600 px-2 py-1 rounded shadow-sm max-w-xs">
+    <div className="bg-base-100/80 text-xs text-base-content/70 px-2 py-1 rounded shadow-sm max-w-xs">
       {attributions.map((attribution, index) => (
         <div key={index} className="leading-tight">
           {attribution}

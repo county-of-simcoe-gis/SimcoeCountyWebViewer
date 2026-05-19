@@ -232,8 +232,30 @@ export interface SidebarComponent {
  * Ported from the old app's mergeObjArray in helpers.js.
  */
 function mergeObjArray(targetArray: SidebarComponent[], sourceArray: SidebarComponent[]): SidebarComponent[] {
+  // Deduplicate source array by id — when multiple entries share the same id,
+  // merge them together (later entries override earlier ones). This handles
+  // API configs that include both simple enable/disable flags and componentName
+  // overrides for the same id.
+  const deduped = new Map<number, SidebarComponent>();
+  for (const item of sourceArray) {
+    const existing = deduped.get(item.id);
+    if (existing) {
+      // Merge: later entry overrides, but skip undefined/empty fields
+      const merged = { ...existing };
+      for (const [key, value] of Object.entries(item)) {
+        if (value !== undefined) {
+          (merged as Record<string, unknown>)[key] = value;
+        }
+      }
+      deduped.set(item.id, merged as SidebarComponent);
+    } else {
+      deduped.set(item.id, { ...item });
+    }
+  }
+  const dedupedSource = Array.from(deduped.values());
+
   const resultArray: SidebarComponent[] = [];
-  const remainingSource = [...sourceArray];
+  const remainingSource = [...dedupedSource];
 
   targetArray.forEach((targetObj) => {
     const sourceIndex = remainingSource.findIndex((source) => targetObj.id === source.id);

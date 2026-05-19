@@ -54,19 +54,19 @@ const IdentifyLayerComponent: React.FC<IdentifyLayerProps> = ({ layer, expanded 
   }, [layer]);
 
   return (
-    <div className="mb-[15px] border border-[#ddd] rounded overflow-hidden">
-      <div className="bg-[#f5f5f5] p-2.5 cursor-pointer flex justify-between items-center select-none hover:bg-[#e9e9e9]" onClick={handleToggle}>
+    <div className="mb-[15px] border border-base-300 rounded overflow-hidden">
+      <div className="bg-base-200 p-2.5 cursor-pointer flex justify-between items-center select-none hover:bg-base-300" onClick={handleToggle}>
         <div className="flex items-center gap-2 font-bold">
-          <span className="bg-[#007bff] text-white rounded-full w-6 h-6 flex items-center justify-center text-[11px] font-bold">{layer.features.length}</span>
+          <span className="bg-primary text-primary-content rounded-full w-6 h-6 flex items-center justify-center text-[11px] font-bold">{layer.features.length}</span>
           <span className="text-[13px]">{layer.type}</span>
         </div>
-        <div className={`transition-transform duration-200 text-[10px] text-[#666] ${open ? "rotate-180" : ""}`}>▼</div>
+        <div className={`transition-transform duration-200 text-[10px] text-base-content/70 ${open ? "rotate-180" : ""}`}>▼</div>
       </div>
-      <div className={open ? "p-[5px] bg-white" : "hidden"}>
+      <div className={open ? "p-[5px] bg-base-100" : "hidden"}>
         {allowExport && layer.features.length > 1 && (
-          <div className="text-[9pt] text-[dimgray] text-right px-2 py-[2px] pb-1 leading-[10px]">
+          <div className="text-[9pt] text-base-content/70 text-right px-2 py-[2px] pb-1 leading-[10px]">
             [&nbsp;
-            <span className="text-[#007bff] cursor-pointer no-underline hover:underline" onClick={handleExport}>
+            <span className="text-primary cursor-pointer no-underline hover:underline" onClick={handleExport}>
               Export to csv
             </span>
             &nbsp;]

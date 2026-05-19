@@ -11,6 +11,7 @@ import TOCListView from "@/components/TOC/TOCListView";
 import TOCFolderView from "@/components/TOC/TOCFolderView";
 import LayerOptionsMenu from "@/components/TOC/LayerOptionsMenu";
 import { saveToStorage, getItemsFromStorage, setStorageItem, getStorageItem, removeStorageItem } from "@/utils/storage";
+import { flushUserStorage } from "@/utils/userStorage";
 import { showMessage } from "@/utils/helpersUI";
 import { sortLayers, sortGroupsLayers } from "@/utils/tocHelpers";
 
@@ -246,6 +247,12 @@ export default function TOC({ visible = true }: TOCProps) {
         // arbitrary 500ms wait.
         await useTOCStore.getState().initializeOpenLayersLayers();
 
+        // Sync z-indices to match the final TOC order. ArcGIS layers are added
+        // to the map during source loading (before the global order is known),
+        // so their z-indices may be stale. This pass ensures all layers —
+        // ArcGIS and WMS — share a consistent, TOC-driven draw order.
+        useTOCStore.getState().updateLayerManagerZIndices();
+
         const savedData = getItemsFromStorage<Record<string, SavedGroup>>("Layers");
         if (savedData !== undefined && savedData !== null) {
           applySavedLayerOptions(tocType);
@@ -400,6 +407,7 @@ export default function TOC({ visible = true }: TOCProps) {
     // Clear saved layer options from localStorage
     removeStorageItem("Layers");
     removeStorageItem("TOC_Type");
+    flushUserStorage();
 
     refreshTOC(true).then(async () => {
       // After TOC is reloaded, reinitialize OpenLayers layers.
@@ -415,6 +423,7 @@ export default function TOC({ visible = true }: TOCProps) {
         });
       }
       await useTOCStore.getState().initializeOpenLayersLayers();
+      useTOCStore.getState().updateLayerManagerZIndices();
     });
   };
 
@@ -437,6 +446,7 @@ export default function TOC({ visible = true }: TOCProps) {
     // Clear saved layer states and TOC type from localStorage
     removeStorageItem("Layers");
     removeStorageItem("TOC_Type");
+    flushUserStorage();
 
     // Show success message
     showMessage("Clear", "Saved layers have been cleared.", "success");

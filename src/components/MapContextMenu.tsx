@@ -98,11 +98,11 @@ export const MapContextMenu: React.FC<MapContextMenuProps> = ({ x, y, items, onC
     <div
       ref={menuRef}
       data-testid="map-context-menu-container"
-      className="fixed z-[10000] bg-white border border-[#ccc] rounded shadow-[0_2px_8px_rgba(0,0,0,0.15)] min-w-[180px] overflow-hidden"
+      className="fixed z-[10000] bg-base-100 border border-base-300 rounded shadow-[0_2px_8px_rgba(0,0,0,0.15)] min-w-[180px] overflow-hidden"
       style={{ left: `${position.x}px`, top: `${position.y}px` }}
     >
       {showHeader && (
-        <div className="w-full h-[18px] py-[5px] px-2 text-neutral bg-[#ececec] border-b border-neutral flex items-center justify-between">
+        <div className="w-full h-[18px] py-[5px] px-2 text-neutral bg-base-300 border-b border-neutral flex items-center justify-between">
           <div className="font-bold text-center text-neutral text-ellipsis whitespace-nowrap overflow-hidden flex-1 text-[11px]">{title}</div>
           <div
             className="w-4 h-4 font-bold text-center p-0.5 text-white bg-secondary rounded-[3px] cursor-pointer text-[10px] leading-3 shrink-0 ml-2 hover:bg-[#5a92b8] flex items-center justify-center"
@@ -122,7 +122,7 @@ export const MapContextMenu: React.FC<MapContextMenuProps> = ({ x, y, items, onC
           return (
             <li
               key={item.id}
-              className={`py-2 px-3 cursor-pointer flex items-center gap-2 text-[10pt] border-b border-[#f0f0f0] select-none last:border-b-0 hover:bg-[#f5f5f5] ${item.disabled ? "opacity-50 cursor-not-allowed hover:bg-transparent" : ""}`}
+              className={`py-2 px-3 cursor-pointer flex items-center gap-2 text-[10pt] border-b border-base-200 select-none last:border-b-0 hover:bg-base-200 ${item.disabled ? "opacity-50 cursor-not-allowed hover:bg-transparent" : ""}`}
               data-testid={`map-context-menu-item${item.disabled ? " disabled" : ""}`}
               onClick={() => handleItemClick(item)}
               title={item.disabled ? "This option is not available" : undefined}

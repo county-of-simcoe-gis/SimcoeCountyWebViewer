@@ -67,6 +67,10 @@ vi.mock("@/utils/helpersUI", () => ({
   showURLWindow: vi.fn(),
 }));
 
+vi.mock("@/components/ThemeToggle", () => ({
+  default: () => <div data-testid="theme-toggle-mock">ThemeToggle</div>,
+}));
+
 type SidebarItem = {
   id: string;
   name: string;

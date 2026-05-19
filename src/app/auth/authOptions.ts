@@ -2,10 +2,10 @@ import { NextAuthOptions } from "next-auth";
 import AzureADProvider from "next-auth/providers/azure-ad";
 import { AuthorizeUser } from "@/lib/authorizeUser";
 import { getUserGroups } from "@/lib/microsoftGraph";
+import { setAccessToken, getAccessToken, clearAccessToken } from "@/lib/accessTokenCache";
 import { JWT } from "next-auth/jwt";
 
 interface ExtendedToken extends JWT {
-  accessToken?: string;
   refreshToken?: string;
   accessTokenExpires?: number;
   error?: string;
@@ -16,10 +16,15 @@ interface ExtendedToken extends JWT {
 }
 
 /**
- * Refreshes an expired Azure AD access token using the refresh token
+ * Refreshes an expired Azure AD access token using the refresh token from the JWT.
+ * The new access token is stored in the in-memory cache (not in the JWT cookie).
  */
 async function refreshAccessToken(token: ExtendedToken): Promise<ExtendedToken> {
   try {
+    if (!token.refreshToken) {
+      throw new Error("No refresh token available");
+    }
+
     console.log("[NextAuth] Refreshing expired access token...");
 
     const tenantId = process.env.AZURE_AD_TENANT_ID!;
@@ -38,7 +43,7 @@ async function refreshAccessToken(token: ExtendedToken): Promise<ExtendedToken> 
         client_id: clientId,
         client_secret: clientSecret,
         grant_type: "refresh_token",
-        refresh_token: token.refreshToken!,
+        refresh_token: token.refreshToken,
         scope: scope,
       }),
     });
@@ -50,13 +55,18 @@ async function refreshAccessToken(token: ExtendedToken): Promise<ExtendedToken> 
       throw refreshedTokens;
     }
 
+    const newExpiresAt = Date.now() + refreshedTokens.expires_in * 1000;
     console.log("[NextAuth] Token refreshed successfully, expires in:", refreshedTokens.expires_in, "seconds");
+
+    // Cache the new access token in memory (not in the JWT)
+    if (token.oid) {
+      setAccessToken(token.oid, refreshedTokens.access_token, newExpiresAt);
+    }
 
     return {
       ...token,
-      accessToken: refreshedTokens.access_token,
-      accessTokenExpires: Date.now() + refreshedTokens.expires_in * 1000,
-      refreshToken: refreshedTokens.refresh_token ?? token.refreshToken, // Fall back to old refresh token if not provided
+      accessTokenExpires: newExpiresAt,
+      refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
     };
   } catch (error) {
     console.error("[NextAuth] Error refreshing access token:", error);
@@ -157,7 +167,7 @@ export const authOptions: NextAuthOptions = {
       },
     },
     csrfToken: {
-      name: `${process.env.NODE_ENV === "production" ? "__Host-" : ""}scwv.csrf-token`,
+      name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}scwv.csrf-token`,
       options: {
         httpOnly: true,
         sameSite: "lax",
@@ -181,7 +191,7 @@ export const authOptions: NextAuthOptions = {
     jwt: async ({ token, account, profile }) => {
       const extendedToken = token as ExtendedToken;
 
-      // Initial sign in - store tokens from account and process profile
+      // Initial sign in - cache access token in memory, keep refresh token in JWT
       if (account && profile) {
         console.log("[NextAuth JWT] Account received:", {
           provider: account.provider,
@@ -189,7 +199,6 @@ export const authOptions: NextAuthOptions = {
           hasAccessToken: !!account.access_token,
           hasIdToken: !!account.id_token,
         });
-        extendedToken.accessToken = account.access_token;
         extendedToken.refreshToken = account.refresh_token;
         extendedToken.accessTokenExpires = account.expires_at ? account.expires_at * 1000 : undefined;
 
@@ -205,6 +214,12 @@ export const authOptions: NextAuthOptions = {
           }
         }
         extendedToken.oid = oid || profile.sub;
+
+        // Cache the access token in memory instead of storing it in the JWT cookie
+        if (extendedToken.oid && account.access_token) {
+          const expiresAt = extendedToken.accessTokenExpires ?? Date.now() + 3600 * 1000;
+          setAccessToken(extendedToken.oid, account.access_token, expiresAt);
+        }
 
         console.log("[NextAuth JWT] Profile received:", {
           sub: profile.sub,
@@ -244,37 +259,47 @@ export const authOptions: NextAuthOptions = {
         return extendedToken;
       }
 
-      // Subsequent requests - check if token needs refresh
-      // Return previous token if the access token has not expired yet
-      if (extendedToken.accessTokenExpires && Date.now() < extendedToken.accessTokenExpires - 5 * 60 * 1000) {
-        // Token still valid (expires in more than 5 minutes), return as-is
-        return extendedToken;
-      }
+      // Subsequent requests — refresh when:
+      // 1. The access token is expired or about to expire, OR
+      // 2. The in-memory cache is empty (e.g. after server restart)
+      //
+      // The JWT callback is the ONLY place that can persist a rotated refresh
+      // token back to the cookie, so all refresh logic must live here.
+      const cacheEmpty = extendedToken.oid ? !getAccessToken(extendedToken.oid) : false;
+      const tokenExpired = !extendedToken.accessTokenExpires || Date.now() >= extendedToken.accessTokenExpires - 5 * 60 * 1000;
 
-      // Access token has expired or is about to expire, try to refresh it
-      if (extendedToken.refreshToken) {
-        console.log("[NextAuth JWT] Access token expired, attempting refresh...");
+      if ((tokenExpired || cacheEmpty) && extendedToken.refreshToken) {
+        console.log(`[NextAuth JWT] Refreshing — expired: ${tokenExpired}, cache empty: ${cacheEmpty}`);
         return refreshAccessToken(extendedToken);
       }
 
-      // No refresh token available, return token with error
-      console.warn("[NextAuth JWT] Access token expired but no refresh token available");
-      return {
-        ...extendedToken,
-        error: "RefreshAccessTokenError",
-      };
+      if (tokenExpired && !extendedToken.refreshToken) {
+        console.warn("[NextAuth JWT] Access token expired but no refresh token available");
+        return {
+          ...extendedToken,
+          error: "RefreshAccessTokenError",
+        };
+      }
+
+      return extendedToken;
     },
     session: async ({ session, token }) => {
       const extendedToken = token as ExtendedToken;
+
+      // Read access token from in-memory cache (populated by the jwt callback).
+      // Never refresh here — only the jwt callback can persist a rotated
+      // refresh token back to the cookie.
+      const accessToken = extendedToken.oid ? getAccessToken(extendedToken.oid) ?? undefined : undefined;
+
       return {
         ...session,
-        accessToken: extendedToken.accessToken,
+        accessToken,
         error: extendedToken.error,
         user: {
           ...session.user,
           roles: extendedToken.roles,
           locations: extendedToken.locations,
-          accessToken: extendedToken.accessToken,
+          accessToken,
         },
       };
     },
@@ -293,5 +318,13 @@ export const authOptions: NextAuthOptions = {
     //   // Default to the baseUrl (which includes the basePath)
     //   return baseUrl;
     // },
+  },
+  events: {
+    signOut: async ({ token }) => {
+      const oid = (token as ExtendedToken).oid;
+      if (oid) {
+        clearAccessToken(oid);
+      }
+    },
   },
 };

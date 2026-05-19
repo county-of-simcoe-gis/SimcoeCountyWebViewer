@@ -53,7 +53,7 @@ export default function Header() {
   };
 
   return (
-    <div className="w-full border-b border-gray-300 flex items-center h-[52px] max-h-[52px] p-0 z-[1001] absolute left-0 top-0 right-0 bottom-auto bg-[image:var(--sc-gradient-default)]">
+    <div className="w-full border-b border-gray-300 dark:border-gray-700 flex items-center h-[52px] max-h-[52px] p-0 z-[1001] absolute left-0 top-0 right-0 bottom-auto bg-[image:var(--sc-gradient-default)]">
       {/* Burger Button */}
       <div
         className="cursor-pointer w-[65px] h-11 flex items-center justify-center pt-1 outline-none bg-transparent rounded transition-colors duration-150 hover:bg-black/10 active:bg-black/20"
@@ -63,11 +63,11 @@ export default function Header() {
         onKeyDown={(e) => e.key === "Enter" && handleBurgerClick()}
         aria-label="Toggle sidebar"
       >
-        <FaBars size={32} className="max-w-full max-h-full" />
+        <FaBars size={32} className="max-w-full max-h-full text-base-content" />
       </div>
 
       {/* Logo */}
-      <div className="flex items-center mr-2.5 shrink-0">
+      <div className="flex items-center mr-2.5 shrink-0 max-[770px]:hidden">
         <AppImage src={getLogoImage()} alt={config?.title || "Simcoe County"} height={50} className="h-[50px] object-contain" />
       </div>
 
@@ -85,11 +85,13 @@ export default function Header() {
       </div>
 
       {/* Profile Button */}
-      <ProfileButton />
+      <div className="max-[770px]:hidden">
+        <ProfileButton />
+      </div>
 
       {/* Feedback / Help Button */}
       <div
-        className="w-[60px] text-center flex flex-col items-center justify-center cursor-pointer px-1 text-xs text-[#5b5b5b] h-[52px] hover:bg-black hover:bg-opacity-5 mt-[5px]"
+        className="w-[60px] text-center flex flex-col items-center justify-center cursor-pointer px-1 text-xs text-neutral h-[52px] hover:bg-black/5 dark:hover:bg-white/5 mt-[5px] max-[770px]:hidden"
         onClick={onFeedbackClick}
         title={config?.showHelpButtonInsteadOfFeedback ? "Help" : "Feedback"}
       >

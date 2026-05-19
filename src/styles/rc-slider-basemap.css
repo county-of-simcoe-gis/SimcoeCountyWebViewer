@@ -50,3 +50,9 @@
   border-color: #23527c;
   background-color: #23527c;
 }
+
+/* ──── Dark Mode Overrides ──── */
+
+[data-theme="dark"] .basemap-slider-container .rc-slider-mark-text {
+  color: #6ea8cf !important;
+}

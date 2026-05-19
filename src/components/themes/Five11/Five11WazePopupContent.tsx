@@ -52,7 +52,7 @@ export default function Five11WazePopupContent({ properties, layerName }: Five11
           <span className="text-sm">{String(value)}</span>
         </div>
       ))}
-      {entries.length === 0 && <div className="text-sm text-base-content/50">No details available</div>}
+      {entries.length === 0 && <div className="text-sm text-base-content/70">No details available</div>}
     </div>
   );
 }

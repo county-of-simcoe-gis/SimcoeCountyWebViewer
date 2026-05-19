@@ -195,7 +195,7 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
   };
 
   return (
-    <div className="bg-white">
+    <div className="bg-base-100">
       <div className="relative overflow-x-hidden overflow-y-auto">
         {/* Address */}
         {address && <InfoWindowRow label="Address" value={address} />}
@@ -221,7 +221,7 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
           <InfoWindowRow label="Has Zoning">
             {hasZoning ? "Yes" : "No"}
             {hasZoning && (
-              <Image unoptimized src="/images/information.png" alt="View Zoning" title="View Zoning" width={16} height={16} className="inline-block -mb-0.5 ml-1.5 cursor-pointer" onClick={handleViewZoning} />
+              <Image src="/images/information.png" alt="View Zoning" title="View Zoning" width={16} height={16} className="inline-block -mb-0.5 ml-1.5 cursor-pointer" onClick={handleViewZoning} />
             )}
           </InfoWindowRow>
         )}
@@ -231,7 +231,7 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
           <InfoWindowRow label="Assessed Value">
             {}
             <img src={assessedValue} alt="Assessed Value" className="mb-0.5" style={{ height: "16px", minWidth: "300px" }} />
-            <div className="text-[9px] text-gray-600 pb-1">(may not reflect current market value)</div>
+            <div className="text-[9px] text-base-content/60 pb-1">(may not reflect current market value)</div>
           </InfoWindowRow>
         )}
 
@@ -253,7 +253,7 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
         {/* Identify adjacent features */}
         {feature?.getGeometry() && (
           <InfoWindowRow label="Identify">
-            <span className="text-[#337ab7] underline cursor-pointer select-none hover:text-[#23527c]" onClick={handleIdentifyAdjacent}>
+            <span className="text-primary underline cursor-pointer select-none hover:text-primary/80" onClick={handleIdentifyAdjacent}>
               Identify adjacent features
             </span>
           </InfoWindowRow>
@@ -265,7 +265,7 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
             ?.filter((item) => !item.secured || showSecuredExtensions)
             .map((item, idx) => (
               <InfoWindowRow key={`custom-identify-${idx}`} label={item.label}>
-                <span className="text-[#337ab7] underline cursor-pointer select-none hover:text-[#23527c]" onClick={() => handleCustomIdentify(item)}>
+                <span className="text-primary underline cursor-pointer select-none hover:text-primary/80" onClick={() => handleCustomIdentify(item)}>
                   {item.linkText}
                 </span>
               </InfoWindowRow>
@@ -274,14 +274,14 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
         {/* Tools */}
         <InfoWindowRow label="Tools">
           <div className="inline">
-            <span className="text-[#337ab7] underline cursor-pointer select-none mr-1 hover:text-[#23527c]" onClick={handleAddToMyMaps}>
+            <span className="text-primary underline cursor-pointer select-none mr-1 hover:text-primary/80" onClick={handleAddToMyMaps}>
               [Add to My Maps]
             </span>
-            <span className="text-[#337ab7] underline cursor-pointer select-none mr-1 hover:text-[#23527c]" onClick={handleShare}>
+            <span className="text-primary underline cursor-pointer select-none mr-1 hover:text-primary/80" onClick={handleShare}>
               [Share]
             </span>
             <span
-              className="text-[#337ab7] underline cursor-pointer select-none mr-1 hover:text-[#23527c]"
+              className="text-primary underline cursor-pointer select-none mr-1 hover:text-primary/80"
               onClick={() => {
                 const termsUrl = config?.termsUrl as string | undefined;
                 if (termsUrl) {
@@ -302,15 +302,15 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
       </div>
 
       {/* Action Buttons — sticky so the scroll container can't shift them away from the cursor */}
-      <div className="flex mt-1.5 w-full sticky bottom-0 bg-white pt-1 pb-0.5 z-10">
+      <div className="flex mt-1.5 w-full sticky bottom-0 bg-base-100 pt-1 pb-0.5 z-10">
         <button
-          className="btn btn-sm flex-[6] mr-1.5 min-h-8 rounded-sm border-gray-300 bg-gradient-to-b from-white to-gray-200 text-[#2d343c] text-xs font-normal shadow-none hover:border-[#80b9ff] hover:shadow-[0_0_5px_#80b9ff]"
+          className="btn btn-sm flex-[6] mr-1.5 min-h-8 rounded-sm border-base-300 bg-gradient-to-b from-base-100 to-base-300 text-base-content text-xs font-normal shadow-none hover:border-[#80b9ff] hover:shadow-[0_0_5px_#80b9ff]"
           onClick={handleMoreInfo}
         >
           More Information
         </button>
         <button
-          className="btn btn-sm flex-[4] min-h-8 rounded-sm border-gray-300 bg-gradient-to-b from-white to-gray-200 text-[#2d343c] text-xs font-normal shadow-none hover:border-[#80b9ff] hover:shadow-[0_0_5px_#80b9ff]"
+          className="btn btn-sm flex-[4] min-h-8 rounded-sm border-base-300 bg-gradient-to-b from-base-100 to-base-300 text-base-content text-xs font-normal shadow-none hover:border-[#80b9ff] hover:shadow-[0_0_5px_#80b9ff]"
           onClick={handleCloseClick}
         >
           Close

@@ -200,27 +200,19 @@ export default function CoordinatesTool({ name = "Coordinates", helpLink, hideHe
   );
 
   // Handle add to MyMaps
-  const onMyMapsClick = useCallback(
-    (x: string, y: string) => {
-      if (!x || !vectorLayerRef.current) return;
+  const onMyMapsClick = useCallback((x: string, y: string) => {
+    if (!x || !vectorLayerRef.current) return;
 
-      const features = vectorLayerRef.current.getSource()?.getFeatures();
-      if (features && features.length > 0) {
-        const feature = features[0];
-        const featureStyle = feature.getStyle();
-        const myMapsItem = createMyMapsItem(
-          feature,
-          "Buffer",
-          `X:${x}, Y:${y}`,
-          featureStyle instanceof Style ? styleToJSON(featureStyle) : undefined,
-        );
-        myMapsItem.featureGeoJSON = featureToGeoJSON(feature);
-        useMyMapsStore.getState().addItem(myMapsItem);
-        useEventStore.getState().emit("mymap-item-created", { item: myMapsItem });
-      }
-    },
-    [],
-  );
+    const features = vectorLayerRef.current.getSource()?.getFeatures();
+    if (features && features.length > 0) {
+      const feature = features[0];
+      const featureStyle = feature.getStyle();
+      const myMapsItem = createMyMapsItem(feature, "Buffer", `X:${x}, Y:${y}`, featureStyle instanceof Style ? styleToJSON(featureStyle) : undefined);
+      myMapsItem.featureGeoJSON = featureToGeoJSON(feature);
+      useMyMapsStore.getState().addItem(myMapsItem);
+      useEventStore.getState().emit("mymap-item-created", { item: myMapsItem });
+    }
+  }, []);
 
   // Copy to clipboard
   const copyToClipboard = useCallback((text: string) => {
@@ -470,7 +462,7 @@ function CustomCoordinatesSection({ title, projType, coords, setCoords, onZoomCl
 
         <div className="flex items-center gap-3 mt-2 text-xs">
           <button
-            className={`inline-flex items-center gap-1 hover:text-primary transition-colors ${hasCoords ? "text-base-content" : "text-base-content/40 cursor-not-allowed"}`}
+            className={`inline-flex items-center gap-1 hover:text-primary transition-colors ${hasCoords ? "text-base-content" : "text-base-content/50 cursor-not-allowed"}`}
             onClick={() => hasCoords && onZoomClick(projType, coords.x, coords.y)}
             title="Zoom to coordinates"
           >
@@ -478,7 +470,7 @@ function CustomCoordinatesSection({ title, projType, coords, setCoords, onZoomCl
             <span className="underline">Zoom</span>
           </button>
           <button
-            className={`inline-flex items-center gap-1 hover:text-primary transition-colors ${hasCoords ? "text-base-content" : "text-base-content/40 cursor-not-allowed"}`}
+            className={`inline-flex items-center gap-1 hover:text-primary transition-colors ${hasCoords ? "text-base-content" : "text-base-content/50 cursor-not-allowed"}`}
             onClick={() => hasCoords && onMyMapsClick(coords.x, coords.y)}
             title="Add to My Maps"
           >
@@ -486,7 +478,7 @@ function CustomCoordinatesSection({ title, projType, coords, setCoords, onZoomCl
             <span className="underline">My Maps</span>
           </button>
           <button
-            className={`inline-flex items-center gap-1 hover:text-primary transition-colors ${hasCoords ? "text-base-content" : "text-base-content/40 cursor-not-allowed"}`}
+            className={`inline-flex items-center gap-1 hover:text-primary transition-colors ${hasCoords ? "text-base-content" : "text-base-content/50 cursor-not-allowed"}`}
             onClick={() => hasCoords && copyToClipboard(`${coords.x}, ${coords.y}`)}
             title="Copy coordinates"
           >

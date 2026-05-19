@@ -204,15 +204,6 @@ export default function Zoning({ name = "Zoning", helpLink, hideHeader, onClose,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    if (lastResult?.geojson) {
-      loadReport(lastResult.geojson, lastResult.type, lastResult.name);
-    } else if (lastResult?.type === "Assessment Parcel" && lastResult?.name) {
-      // Assessment Parcel queries use ARN directly — no geojson needed
-      loadReport("", lastResult.type, lastResult.name);
-    }
-  }, [lastResult, loadReport]);
-
   // Auto-query when initialArn is provided (e.g. from property popup)
   const initialArnLoadedRef = useRef(false);
   useEffect(() => {
@@ -221,6 +212,22 @@ export default function Zoning({ name = "Zoning", helpLink, hideHeader, onClose,
       loadReport("", "Assessment Parcel", initialArn);
     }
   }, [initialArn, loadReport]);
+
+  // React to search results — but skip when component was opened with initialArn
+  // to prevent stale lastResult from overwriting the intended ARN query.
+  const lastResultRef = useRef(lastResult);
+  useEffect(() => {
+    // If opened with initialArn, ignore the lastResult that was already present on mount
+    if (initialArn && lastResult === lastResultRef.current) return;
+    lastResultRef.current = lastResult;
+
+    if (lastResult?.geojson) {
+      loadReport(lastResult.geojson, lastResult.type, lastResult.name);
+    } else if (lastResult?.type === "Assessment Parcel" && lastResult?.name) {
+      // Assessment Parcel queries use ARN directly — no geojson needed
+      loadReport("", lastResult.type, lastResult.name);
+    }
+  }, [lastResult, loadReport, initialArn]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
 

@@ -21,7 +21,7 @@ describe("InfoRow", () => {
     render(
       <InfoRow label="Test Label" value="Test Value">
         <button>Child Button</button>
-      </InfoRow>
+      </InfoRow>,
     );
 
     expect(screen.getByText("Child Button")).toBeInTheDocument();
@@ -50,7 +50,7 @@ describe("InfoRow", () => {
     // Table mode: label should have min-w-[160px] and bg-gray-100 classes
     const label = screen.getByText("Test Label:");
     expect(label.className).toContain("min-w-[160px]");
-    expect(label.className).toContain("bg-gray-100");
+    expect(label.className).toContain("bg-base-200");
   });
 
   it("hides value when imageData is true", () => {
@@ -187,7 +187,7 @@ describe("InfoRow", () => {
     render(
       <InfoRow label="Test Label">
         <button>Action</button>
-      </InfoRow>
+      </InfoRow>,
     );
 
     expect(screen.getByText("Test Label:")).toBeInTheDocument();
@@ -212,7 +212,7 @@ describe("InfoRowValue", () => {
     render(
       <InfoRowValue>
         <span>Child Content</span>
-      </InfoRowValue>
+      </InfoRowValue>,
     );
 
     expect(screen.getByText("Child Content")).toBeInTheDocument();
@@ -272,7 +272,7 @@ describe("InfoRowValue", () => {
     render(
       <InfoRowValue>
         <button>Click Me</button>
-      </InfoRowValue>
+      </InfoRowValue>,
     );
 
     expect(screen.getByText("Click Me")).toBeInTheDocument();

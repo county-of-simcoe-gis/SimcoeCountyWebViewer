@@ -155,9 +155,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
         const tocState = useTOCStore.getState();
         const groups = tocState.tocType === "LIST" ? tocState.layerListGroups : tocState.layerFolderGroups;
         for (const group of groups) {
-          const matchingLayers = group.layers.filter((layer) =>
-            layer.tocDisplayName.toUpperCase().includes(upperSearch)
-          );
+          const matchingLayers = group.layers.filter((layer) => layer.tocDisplayName.toUpperCase().includes(upperSearch));
           for (const layer of matchingLayers) {
             localResults.push({
               name: layer.tocDisplayName,
@@ -201,16 +199,11 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
   );
 
   // Merge local results with API results, deduplicating API results
-  const mergeResults = useCallback(
-    (localResults: SearchResult[], apiResults: SearchResult[]): SearchResult[] => {
-      // Deduplicate API results by location_id (skip nulls to avoid collapsing unrelated results)
-      const dedupedApi = apiResults.filter(
-        (item, index, self) => !item.location_id || index === self.findIndex((t) => t.location_id === item.location_id)
-      );
-      return [...localResults, ...dedupedApi];
-    },
-    [],
-  );
+  const mergeResults = useCallback((localResults: SearchResult[], apiResults: SearchResult[]): SearchResult[] => {
+    // Deduplicate API results by location_id (skip nulls to avoid collapsing unrelated results)
+    const dedupedApi = apiResults.filter((item, index, self) => !item.location_id || index === self.findIndex((t) => t.location_id === item.location_id));
+    return [...localResults, ...dedupedApi];
+  }, []);
 
   // Perform search — shows local results instantly, then merges API results
   const performSearch = useCallback(
@@ -614,10 +607,10 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
 
   return (
     <div className={`relative w-full ${className}`}>
-      <div className="flex w-full shadow-sm rounded-md overflow-hidden border border-gray-300">
+      <div className="flex w-full shadow-sm rounded-md overflow-hidden border border-base-300">
         {/* Search Types Dropdown */}
         {!hideTypeDropdown && (
-          <div className="relative border-r border-gray-300">
+          <div className="relative border-r border-base-300">
             {/* Hidden span used to measure selected label width for dynamic select sizing */}
             <span ref={measureSpanRef} className="invisible absolute whitespace-nowrap text-sm font-semibold pointer-events-none" aria-hidden="true">
               {selectedType.label}
@@ -625,7 +618,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
             <select
               value={selectedType.value}
               onChange={handleTypeChange}
-              className="h-[41px] px-3 font-semibold text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-orange-300 border-0 cursor-pointer appearance-none pr-8"
+              className="h-[41px] px-3 font-semibold text-sm bg-base-100 hover:bg-base-200 focus:outline-none focus:ring-1 focus:ring-orange-300 border-0 cursor-pointer appearance-none pr-8"
               style={{
                 width: selectWidth ? `${selectWidth}px` : undefined,
                 backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e")`,
@@ -664,7 +657,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
             }}
             placeholder={resolvedPlaceholder}
             disabled={disabled}
-            className="w-full h-[41px] text-lg pl-4 pr-20 bg-white border-0 focus:outline-none focus:ring-0 disabled:opacity-50"
+            className="w-full h-[41px] text-lg pl-4 pr-20 bg-base-100 border-0 focus:outline-none focus:ring-0 disabled:opacity-50"
             autoComplete="off"
             autoCorrect="off"
             autoCapitalize="off"
@@ -690,40 +683,43 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
 
       {/* Search Results Dropdown */}
       {isOpen && (
-        <div ref={dropdownRef} className="absolute top-full left-0 right-0 z-[99999999] mt-0.5 bg-white shadow-2xl border border-gray-300 border-t-0 rounded-b-md overflow-hidden">
-          <div className="h-[400px] flex flex-col">
+        <div
+          ref={dropdownRef}
+          className="absolute top-full left-0 right-0 z-[99999999] mt-0.5 bg-base-100 shadow-2xl border border-base-300 border-t-0 rounded-b-md overflow-hidden max-[770px]:fixed max-[770px]:left-0 max-[770px]:right-0 max-[770px]:top-[52px] max-[770px]:mt-0 max-[770px]:rounded-none max-[770px]:border-t"
+        >
+          <div className="h-[400px] max-[770px]:h-[calc(100vh-52px)] flex flex-col">
             {isLoading ? (
-              <div className="flex-1 flex flex-col items-center justify-center gap-3 text-gray-600">
+              <div className="flex-1 flex flex-col items-center justify-center gap-3 text-base-content/70">
                 <span className="loading loading-spinner loading-lg text-blue-600"></span>
                 <p className="text-sm font-medium">Searching...</p>
               </div>
             ) : searchResults.length === 0 && searchValue.length >= 2 ? (
-              <div className="flex-1 flex flex-col items-center justify-center gap-2 text-gray-600">
+              <div className="flex-1 flex flex-col items-center justify-center gap-2 text-base-content/70">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <p className="text-sm font-medium">No results found</p>
-                <p className="text-xs text-gray-500">Try adjusting your search terms</p>
+                <p className="text-xs text-base-content/70">Try adjusting your search terms</p>
               </div>
             ) : searchResults.length > 0 ? (
               <>
                 {/* Header for search history or results */}
                 {showHistory && searchValue.length === 0 ? (
-                  <div className="px-3 py-2.5 bg-gray-100 border-b border-gray-200 flex items-center justify-between">
+                  <div className="px-3 py-2.5 bg-base-200 border-b border-base-300 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <FaClock className="h-4 w-4 text-gray-600" />
-                      <span className="text-sm font-semibold text-gray-700">Recent Searches</span>
+                      <FaClock className="h-4 w-4 text-base-content/70" />
+                      <span className="text-sm font-semibold text-base-content">Recent Searches</span>
                     </div>
-                    <button onClick={handleDismissDropdown} className="btn btn-ghost btn-xs btn-circle text-gray-500 hover:text-gray-700 hover:bg-gray-200" aria-label="Close dropdown">
+                    <button onClick={handleDismissDropdown} className="btn btn-ghost btn-xs btn-circle text-base-content/70 hover:text-base-content hover:bg-base-300" aria-label="Close dropdown">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
                   </div>
                 ) : (
-                  <div className="px-3 py-2.5 bg-gray-100 border-b border-gray-200 flex items-center justify-between">
-                    <span className="text-sm font-semibold text-gray-700">{searchResults.length} Results</span>
-                    <button onClick={handleDismissDropdown} className="btn btn-ghost btn-xs btn-circle text-gray-500 hover:text-gray-700 hover:bg-gray-200" aria-label="Close dropdown">
+                  <div className="px-3 py-2.5 bg-base-200 border-b border-base-300 flex items-center justify-between">
+                    <span className="text-sm font-semibold text-base-content">{searchResults.length} Results</span>
+                    <button onClick={handleDismissDropdown} className="btn btn-ghost btn-xs btn-circle text-base-content/70 hover:text-base-content hover:bg-base-300" aria-label="Close dropdown">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
@@ -740,33 +736,33 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
                       <div
                         key={`${result.location_id || result.name}-${index}`}
                         className={`
-                          group flex items-center gap-3 px-3 py-2.5 border-b border-gray-200 cursor-pointer 
+                          group flex items-center gap-3 px-3 py-2.5 border-b border-base-200 cursor-pointer 
                           transition-all duration-150
-                          hover:bg-blue-50
-                          ${index === highlightedIndex ? "bg-blue-100" : ""}
+                          hover:bg-primary/10
+                          ${index === highlightedIndex ? "bg-primary/15" : ""}
                           last:border-b-0
                         `}
                         onClick={() => handleResultSelect(result)}
                       >
                         {/* Icon */}
-                        <div className="w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-lg bg-gray-100 group-hover:bg-blue-50 transition-colors duration-150">
+                        <div className="w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-lg bg-base-200 group-hover:bg-primary/10 transition-colors duration-150">
                           {getResultIcon(result)}
                         </div>
 
                         {/* Content */}
                         <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-gray-900 truncate leading-tight text-sm">
+                          <div className="font-semibold text-base-content truncate leading-tight text-sm">
                             {isHistoryItem
                               ? result.name
                               : result.name.split(new RegExp(`(${searchValue})`, "gi")).map((part, i) => (
-                                  <span key={i} className={part.toLowerCase() === searchValue.toLowerCase() ? "bg-yellow-200 px-0.5 rounded" : ""}>
+                                  <span key={i} className={part.toLowerCase() === searchValue.toLowerCase() ? "bg-yellow-200 dark:bg-yellow-700/50 px-0.5 rounded" : ""}>
                                     {part}
                                   </span>
                                 ))}
                           </div>
                           {displayInfo.subtitle && (
                             <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className="text-xs text-gray-600 truncate max-w-full">{displayInfo.subtitle}</span>
+                              <span className="text-xs text-base-content/60 truncate max-w-full">{displayInfo.subtitle}</span>
                             </div>
                           )}
                         </div>

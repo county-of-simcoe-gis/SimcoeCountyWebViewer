@@ -11,6 +11,7 @@ import { FaChevronLeft, FaChevronRight, FaExternalLinkAlt, FaTimes } from "react
 import PopupReportContent from "@/components/PopupReportContent";
 import ReportsFeatureList from "@/components/ReportsFeatureList";
 import type { Result } from "@/components/ResultsPopup";
+import { isMobile } from "@/utils/helpersBrowser";
 import "./MapPopup.css";
 
 export default function MapPopup() {
@@ -207,8 +208,9 @@ export default function MapPopup() {
   // Auto-pan: when the popup first opens (new coordinates), wait for it to
   // render, measure its bounds against the map viewport, and smoothly pan
   // the map so the popup is fully visible. Skipped after user drags.
+  // On mobile the popup is a fixed-position bottom sheet, so auto-pan is unnecessary.
   useEffect(() => {
-    if (!isVisible || !map || !popupEl || !coordinates || hasBeenDraggedRef.current) return;
+    if (!isVisible || !map || !popupEl || !coordinates || hasBeenDraggedRef.current || isMobile()) return;
 
     // Wait two frames so the overlay element has its final size/position.
     let cancelled = false;
@@ -264,9 +266,15 @@ export default function MapPopup() {
 
   // Toggle visibility on the detached container (OL also hides via
   // setPosition(undefined), but this guarantees the empty shell isn't visible).
+  // On mobile the popup is rendered directly in the React tree, so always hide
+  // the OL overlay element to prevent a phantom empty box on the map.
   useEffect(() => {
     if (!popupEl) return;
-    popupEl.style.display = isVisible && features.length > 0 ? "" : "none";
+    if (isMobile()) {
+      popupEl.style.display = "none";
+    } else {
+      popupEl.style.display = isVisible && features.length > 0 ? "" : "none";
+    }
   }, [popupEl, isVisible, features.length]);
 
   if (!popupEl) return null;
@@ -311,7 +319,8 @@ export default function MapPopup() {
     hide();
   };
 
-  return createPortal(
+  // Shared popup content used by both desktop (OL overlay portal) and mobile (fixed bottom sheet)
+  const popupContent = (
     <>
       <div
         ref={headerRef}
@@ -337,19 +346,19 @@ export default function MapPopup() {
 
       {/* Feature navigation for multiple features */}
       {hasMultipleFeatures && (
-        <div className="flex items-center justify-center gap-2 py-1.5 px-2.5 bg-[#f0f0f0] border-b border-[#e0e0e0]">
+        <div className="flex items-center justify-center gap-2 py-1.5 px-2.5 bg-base-200 border-b border-base-300">
           <button
-            className="bg-white border border-[#ddd] rounded py-1 px-2 cursor-pointer flex items-center justify-center transition-all duration-200 hover:bg-[#e8e8e8] hover:border-[#ccc]"
+            className="bg-base-100 border border-base-300 rounded py-1 px-2 cursor-pointer flex items-center justify-center transition-all duration-200 hover:bg-base-300 hover:border-base-content/30"
             onClick={prevFeature}
             aria-label="Previous feature"
           >
             <FaChevronLeft size={12} />
           </button>
-          <span className="text-xs text-[#666] font-medium min-w-[60px] text-center">
+          <span className="text-xs text-base-content/70 font-medium min-w-[60px] text-center">
             {selectedIndex + 1} of {features.length}
           </span>
           <button
-            className="bg-white border border-[#ddd] rounded py-1 px-2 cursor-pointer flex items-center justify-center transition-all duration-200 hover:bg-[#e8e8e8] hover:border-[#ccc]"
+            className="bg-base-100 border border-base-300 rounded py-1 px-2 cursor-pointer flex items-center justify-center transition-all duration-200 hover:bg-base-300 hover:border-base-content/30"
             onClick={nextFeature}
             aria-label="Next feature"
           >
@@ -359,10 +368,19 @@ export default function MapPopup() {
       )}
 
       {/* Layer name badge if available */}
-      {currentFeature.layerName && <div className="text-[10px] text-[#666] bg-[#e8f4fd] border-b border-[#d0e8f7] py-1 px-2.5 font-medium">{currentFeature.layerName}</div>}
+      {currentFeature.layerName && <div className="text-[10px] text-base-content/70 bg-info/10 border-b border-info/20 py-1 px-2.5 font-medium">{currentFeature.layerName}</div>}
 
-      <div className="p-1.5 max-h-[350px] overflow-y-auto overscroll-contain touch-pan-y">{currentFeature.content}</div>
-    </>,
-    popupEl,
+      <div className="p-1.5 max-h-[350px] max-[770px]:max-h-[35vh] overflow-y-auto overscroll-contain touch-pan-y">{currentFeature.content}</div>
+    </>
   );
+
+  // On mobile, render the popup as a fixed bottom sheet directly in the React
+  // tree instead of portalling into the OL overlay element. OL's overlay
+  // containers use CSS transform for positioning which breaks position:fixed
+  // on descendant elements, so we bypass the overlay entirely on mobile.
+  if (isMobile()) {
+    return <div className="fixed bottom-0 left-0 right-0 z-[1001] bg-base-100 rounded-t-lg shadow-[0_-2px_12px_rgba(0,0,0,0.2)] pointer-events-auto">{popupContent}</div>;
+  }
+
+  return createPortal(popupContent, popupEl);
 }

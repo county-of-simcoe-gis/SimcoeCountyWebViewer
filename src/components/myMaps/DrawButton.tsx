@@ -3,8 +3,6 @@
 import React from "react";
 import Image from "next/image";
 
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-
 interface DrawButtonProps {
   title: string;
   imageName: string;
@@ -23,13 +21,9 @@ const DrawButton: React.FC<DrawButtonProps> = ({ title, imageName, onClick, isAc
     }
   };
 
-  // For unoptimized images (SVGs), the custom loader is bypassed so we need to manually prepend basePath
-  const isUnoptimized = imageName.endsWith(".svg");
-  const imageSrc = isUnoptimized ? `${basePath}${imageName}` : imageName;
-
   return (
     <div
-      className={`flex items-center justify-center w-7 h-7 border border-[#ccc] bg-white rounded-[3px] cursor-pointer transition-all select-none hover:bg-[#f0f0f0] hover:border-[#999] focus:outline-2 focus:outline-[#007bff] focus:outline-offset-[1px] ${isActive ? "!bg-[#007bff] !border-[#0056b3] text-white hover:!bg-[#0056b3]" : ""} ${disabled ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
+      className={`flex items-center justify-center w-7 h-7 border border-base-300 bg-base-100 rounded-[3px] cursor-pointer transition-all select-none hover:bg-base-200 hover:border-base-content/40 focus:outline-2 focus:outline-primary focus:outline-offset-[1px] ${isActive ? "!bg-primary !border-primary text-white hover:!bg-primary/80" : ""} ${disabled ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
       title={title}
       onClick={handleClick}
       role="button"
@@ -41,7 +35,7 @@ const DrawButton: React.FC<DrawButtonProps> = ({ title, imageName, onClick, isAc
         }
       }}
     >
-      <Image src={imageSrc} alt={title} width={20} height={20} className={`w-4 h-4 object-contain ${isActive ? "brightness-0 invert" : ""}`} unoptimized={isUnoptimized} />
+      <Image src={imageName} alt={title} width={20} height={20} className={`w-4 h-4 object-contain ${isActive ? "brightness-0 invert" : ""}`} />
     </div>
   );
 };

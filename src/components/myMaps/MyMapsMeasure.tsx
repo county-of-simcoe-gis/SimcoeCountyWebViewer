@@ -147,8 +147,8 @@ const MyMapsMeasure: React.FC<MyMapsMeasureProps> = ({ visible, item }) => {
   }
 
   return (
-    <fieldset className="sc-mymaps-measure-container border border-[#cecece] rounded-[3px] p-2 mb-[5px] bg-[#f9f9f9] w-full box-border m-0">
-      <legend className="text-sm font-bold text-[#333] py-[2px] px-1.5 bg-[#f9f9f9] border border-[#cecece] rounded-[3px] flex items-center">
+    <fieldset className="sc-mymaps-measure-container border border-base-300 rounded-[3px] p-2 mb-[5px] bg-base-200 w-full box-border m-0">
+      <legend className="text-sm font-bold text-base-content py-[2px] px-1.5 bg-base-200 border border-base-300 rounded-[3px] flex items-center">
         <AppImage src="/images/measure.png" alt="measure" className="w-4 h-4 block mr-1" />
         &nbsp; Measure
       </legend>

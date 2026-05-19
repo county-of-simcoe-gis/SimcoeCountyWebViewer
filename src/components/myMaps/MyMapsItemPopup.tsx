@@ -119,7 +119,7 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({
           {/* Buffer */}
           {onBuffer && isMenuItemVisible("sc-floating-menu-buffer") && (
             <div className="popup-menu-item" onClick={() => handleMenuItemClick(() => onBuffer(item))} title="Create buffer around feature">
-              <Image unoptimized src="/images/buffer.png" alt="Buffer" width={16} height={16} />
+              <Image src="/images/buffer.png" alt="Buffer" width={16} height={16} />
               <span>Buffer</span>
             </div>
           )}
@@ -127,7 +127,7 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({
           {/* Symbolize */}
           {onSymbolize && isMenuItemVisible("sc-floating-menu-symbolizer") && (
             <div className="popup-menu-item" onClick={() => handleMenuItemClick(() => onSymbolize(item))} title="Change feature symbolization">
-              <Image unoptimized src="/images/symbolize.png" alt="Symbolize" width={16} height={16} />
+              <Image src="/images/symbolize.png" alt="Symbolize" width={16} height={16} />
               <span>Symbolize</span>
             </div>
           )}
@@ -137,7 +137,7 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({
             isMenuItemVisible("sc-floating-menu-measure") &&
             (item.geometryType === "LineString" || item.geometryType === "MultiLineString" || item.geometryType === "Polygon" || item.geometryType === "MultiPolygon") && (
               <div className="popup-menu-item" onClick={() => handleMenuItemClick(() => onMeasure(item))} title="Measure feature dimensions">
-                <Image unoptimized src="/images/measure.png" alt="Measure" width={16} height={16} />
+                <Image src="/images/measure.png" alt="Measure" width={16} height={16} />
                 <span>Measure</span>
               </div>
             )}
@@ -145,7 +145,7 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({
           {/* Zoom To */}
           {onZoomTo && isMenuItemVisible("sc-floating-menu-zoomto") && (
             <div className="popup-menu-item" onClick={() => handleMenuItemClick(() => onZoomTo(item))} title="Zoom map to this feature">
-              <Image unoptimized src="/images/zoom.png" alt="Zoom To" width={16} height={16} />
+              <Image src="/images/zoom.png" alt="Zoom To" width={16} height={16} />
               <span>Zoom To</span>
             </div>
           )}
@@ -153,7 +153,7 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({
           {/* Delete */}
           {onDelete && isMenuItemVisible("sc-floating-menu-delete") && (
             <div className="popup-menu-item-danger" onClick={() => handleMenuItemClick(() => onDelete(item))} title="Delete this feature">
-              <Image unoptimized src="/images/eraser.png" alt="Delete" width={16} height={16} />
+              <Image src="/images/eraser.png" alt="Delete" width={16} height={16} />
               <span>Delete</span>
             </div>
           )}
@@ -161,19 +161,19 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({
           {/* Show Geometry */}
           {onShowGeometry && isMenuItemVisible("sc-floating-menu-geometry") && (
             <div className="popup-menu-item" onClick={() => handleMenuItemClick(() => onShowGeometry(item))} title="Show geometry details">
-              <Image unoptimized src="/images/edit-vertices.png" alt="Show Geometry" width={16} height={16} />
+              <Image src="/images/edit-vertices.png" alt="Show Geometry" width={16} height={16} />
               <span>Show Geometry</span>
             </div>
           )}
 
-          <div className="h-px bg-[#e0e0e0] my-1" />
+          <div className="h-px bg-base-300 my-1" />
 
           {/* Export to */}
           {onExport && isMenuItemVisible("sc-floating-menu-export") && (
             <div className="popup-menu-item-parent" onMouseEnter={() => setShowExportSubmenu(true)} onMouseLeave={() => setShowExportSubmenu(false)} title="Export this feature">
-              <Image unoptimized src="/images/toc/download.png" alt="Export" width={16} height={16} />
+              <Image src="/images/toc/download.png" alt="Export" width={16} height={16} />
               <span>Export to ...</span>
-              <span className="text-[10px] text-[#999] ml-auto pl-2">▶</span>
+              <span className="text-[10px] text-base-content/70 ml-auto pl-2">▶</span>
 
               {/* Export Submenu */}
               {showExportSubmenu && (
@@ -201,19 +201,19 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({
           {/* Identify */}
           {onIdentify && isMenuItemVisible("sc-floating-menu-identify") && (
             <div className="popup-menu-item" onClick={() => handleMenuItemClick(() => onIdentify(item))} title="Identify feature properties">
-              <Image unoptimized src="/images/identify.png" alt="Identify" width={16} height={16} />
+              <Image src="/images/identify.png" alt="Identify" width={16} height={16} />
               <span>Identify</span>
             </div>
           )}
 
           {/* Extension Items — render each group as a submenu */}
-          {extensionGroups.size > 0 && <div className="h-px bg-[#e0e0e0] my-1" />}
+          {extensionGroups.size > 0 && <div className="h-px bg-base-300 my-1" />}
           {Array.from(extensionGroups.entries()).map(([groupName, groupItems]) => {
             // Items without a group name render inline (flat)
             if (!groupName) {
               return groupItems.map((ext) => (
                 <div key={ext.id} className="popup-menu-item" onClick={() => handleMenuItemClick(() => ext.onClick(item))} title={ext.label}>
-                  {ext.icon && <span className="inline-flex items-center justify-center w-4 h-4 shrink-0 text-[#555]">{ext.icon}</span>}
+                  {ext.icon && <span className="inline-flex items-center justify-center w-4 h-4 shrink-0 text-base-content/70">{ext.icon}</span>}
                   <span>{ext.label}</span>
                 </div>
               ));
@@ -223,13 +223,13 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({
             return (
               <div key={`ext-group-${groupName}`} className="popup-menu-item-parent" onMouseEnter={() => setOpenExtSubmenu(groupName)} onMouseLeave={() => setOpenExtSubmenu(null)} title={groupName}>
                 <span>{groupName}</span>
-                <span className="text-[10px] text-[#999] ml-auto pl-2">▶</span>
+                <span className="text-[10px] text-base-content/70 ml-auto pl-2">▶</span>
 
                 {openExtSubmenu === groupName && (
                   <div className="popup-submenu-container animate-submenuFadeIn">
                     {groupItems.map((ext) => (
                       <div key={ext.id} className="popup-submenu-item" onClick={() => handleMenuItemClick(() => ext.onClick(item))} title={ext.label}>
-                        {ext.icon && <span className="inline-flex items-center justify-center w-4 h-4 shrink-0 text-[#555]">{ext.icon}</span>}
+                        {ext.icon && <span className="inline-flex items-center justify-center w-4 h-4 shrink-0 text-base-content/70">{ext.icon}</span>}
                         <span>{ext.label}</span>
                       </div>
                     ))}
@@ -242,7 +242,7 @@ const MyMapsItemPopup: React.FC<MyMapsItemPopupProps> = ({
           {/* Report a Problem */}
           {onReportProblem && isMenuItemVisible("sc-floating-menu-report-problem") && (
             <div className="popup-menu-item" onClick={() => handleMenuItemClick(() => onReportProblem(item))} title="Report a problem with this feature">
-              <Image unoptimized src="/images/error.png" alt="Report Problem" width={16} height={16} />
+              <Image src="/images/error.png" alt="Report Problem" width={16} height={16} />
               <span>Report a Problem</span>
             </div>
           )}

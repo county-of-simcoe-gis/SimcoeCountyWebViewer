@@ -217,6 +217,25 @@ export default function LayerInfo({ layerURL, showDownload = false, secure = fal
           </fieldset>
         </div>
 
+        {/* URL Source Section */}
+        {layerURL && (
+          <div className="p-5 border-b border-gray-200 print:py-2.5 print:px-0 print:border-b print:border-gray-300 print:break-inside-avoid">
+            <fieldset className="border border-gray-300 rounded-md p-0 print:border-black print:rounded-none print:break-inside-avoid">
+              <legend className="text-lg font-semibold text-gray-800 px-2.5 print:text-black print:font-bold">URL Source</legend>
+              <div className="p-4 text-gray-600 leading-relaxed break-all print:py-2.5 print:px-2.5 print:text-black">
+                <a
+                  href={layerURL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 no-underline transition-colors duration-200 hover:text-blue-800 hover:underline print:text-black print:underline"
+                >
+                  {layerURL}
+                </a>
+              </div>
+            </fieldset>
+          </div>
+        )}
+
         {/* Attribute Fields Section */}
         {fields.length > 0 && (
           <div className="p-5 border-b border-gray-200 print:py-2.5 print:px-0 print:border-b print:border-gray-300 print:break-inside-avoid">

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { Feature } from "ol";
 import { FaHome, FaBuilding, FaLayerGroup } from "react-icons/fa";
 import RecordSelectorPopup, { RecordItem } from "@/components/RecordSelectorPopup";
 import PropertyPopup, { type PropertyInfo } from "@/components/PropertyPopup";
 import { InfoRow } from "@/components/common/InfoRow";
 import { isExcludedKey } from "@/utils/identifyHelpers";
+import { useFeatureHighlight } from "@/hooks/useFeatureHighlight";
 
 // Base interface for common result fields
 interface BaseResult extends RecordItem {
@@ -76,6 +77,21 @@ interface ResultsPopupProps {
 export default function ResultsPopup({ results, onClose, onClearParcelLayer, isLoadingResults = false, resultsError = null, onSelectResult }: ResultsPopupProps) {
   const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
   const [isLoadingContent, setIsLoadingContent] = useState(false);
+  const { highlightFeature, clearHighlight } = useFeatureHighlight();
+
+  const handleHoverRecord = useCallback(
+    (record: Result | null) => {
+      if (!record) {
+        clearHighlight();
+        return;
+      }
+      const feature = record.data?.feature;
+      if (feature) {
+        highlightFeature(feature);
+      }
+    },
+    [highlightFeature, clearHighlight],
+  );
 
   // Auto-select first result when results change
   useEffect(() => {
@@ -97,7 +113,7 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
     // Use custom sidebar icon if provided
     if (result.renderSidebarIcon) {
       return (
-        <div className={`text-sm flex items-center justify-center leading-none ${isSelected ? "text-white" : "text-[#666]"}`} data-testid="result-icon">
+        <div className={`text-sm flex items-center justify-center leading-none ${isSelected ? "text-white" : "text-base-content/70"}`} data-testid="result-icon">
           {result.renderSidebarIcon()}
         </div>
       );
@@ -119,7 +135,7 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
     }
 
     return (
-      <div className={`text-sm flex items-center justify-center leading-none ${isSelected ? "text-white" : "text-[#666]"}`} data-testid="result-icon">
+      <div className={`text-sm flex items-center justify-center leading-none ${isSelected ? "text-white" : "text-base-content/70"}`} data-testid="result-icon">
         <IconComponent />
       </div>
     );
@@ -149,25 +165,25 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
       case "property":
         return (
           <div className="flex flex-col gap-[3px] w-full">
-            <div className={`text-[10px] font-bold uppercase tracking-[0.5px] ${isSelected ? "text-white/90" : "text-[#1976d2]"}`}>Property</div>
-            <div className={`text-xs font-semibold whitespace-nowrap overflow-hidden text-ellipsis leading-[1.3] ${isSelected ? "text-white" : "text-[#333]"}`}>
+            <div className={`text-[10px] font-bold uppercase tracking-[0.5px] ${isSelected ? "text-white/90" : "text-primary"}`}>Property</div>
+            <div className={`text-xs font-semibold whitespace-nowrap overflow-hidden text-ellipsis leading-[1.3] ${isSelected ? "text-white" : "text-base-content"}`}>
               {result.data.Address || result.displayName}
             </div>
-            <div className={`text-[10px] font-mono whitespace-nowrap overflow-hidden text-ellipsis leading-[1.2] ${isSelected ? "text-white/80" : "text-[#666]"}`}>{result.data.ARN}</div>
+            <div className={`text-[10px] font-mono whitespace-nowrap overflow-hidden text-ellipsis leading-[1.2] ${isSelected ? "text-white/80" : "text-base-content/70"}`}>{result.data.ARN}</div>
           </div>
         );
 
       case "condo":
         return (
           <div className="flex flex-col gap-[3px] w-full">
-            <div className={`text-[10px] font-bold uppercase tracking-[0.5px] ${isSelected ? "text-white/90" : "text-[#1976d2]"}`}>Condo Unit</div>
-            <div className={`text-xs font-semibold whitespace-nowrap overflow-hidden text-ellipsis leading-[1.3] ${isSelected ? "text-white" : "text-[#333]"}`}>{result.displayName}</div>
+            <div className={`text-[10px] font-bold uppercase tracking-[0.5px] ${isSelected ? "text-white/90" : "text-primary"}`}>Condo Unit</div>
+            <div className={`text-xs font-semibold whitespace-nowrap overflow-hidden text-ellipsis leading-[1.3] ${isSelected ? "text-white" : "text-base-content"}`}>{result.displayName}</div>
             {result.data.UnitNumber && (
-              <div className={`text-[11px] font-medium whitespace-nowrap overflow-hidden text-ellipsis leading-[1.2] ${isSelected ? "text-white/90" : "text-[#1976d2]"}`}>
+              <div className={`text-[11px] font-medium whitespace-nowrap overflow-hidden text-ellipsis leading-[1.2] ${isSelected ? "text-white/90" : "text-primary"}`}>
                 Unit: {result.data.UnitNumber}
               </div>
             )}
-            <div className={`text-[10px] font-mono whitespace-nowrap overflow-hidden text-ellipsis leading-[1.2] ${isSelected ? "text-white/80" : "text-[#666]"}`}>{result.data.ARN}</div>
+            <div className={`text-[10px] font-mono whitespace-nowrap overflow-hidden text-ellipsis leading-[1.2] ${isSelected ? "text-white/80" : "text-base-content/70"}`}>{result.data.ARN}</div>
           </div>
         );
 
@@ -175,8 +191,8 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
       case "layer":
         return (
           <div className="flex flex-col gap-[3px] w-full">
-            <div className={`text-[10px] font-bold uppercase tracking-[0.5px] ${isSelected ? "text-white/90" : "text-[#1976d2]"}`}>{result.data.layerName}</div>
-            <div className={`text-xs font-semibold whitespace-nowrap overflow-hidden text-ellipsis leading-[1.3] ${isSelected ? "text-white" : "text-[#333]"}`}>{result.displayName}</div>
+            <div className={`text-[10px] font-bold uppercase tracking-[0.5px] ${isSelected ? "text-white/90" : "text-primary"}`}>{result.data.layerName}</div>
+            <div className={`text-xs font-semibold whitespace-nowrap overflow-hidden text-ellipsis leading-[1.3] ${isSelected ? "text-white" : "text-base-content"}`}>{result.displayName}</div>
           </div>
         );
     }
@@ -198,7 +214,7 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
           return <PropertyPopup propInfo={result.data.propInfo} feature={result.data.feature} onClose={onClose} onClearParcelLayer={onClearParcelLayer} />;
         }
         return (
-          <div className="flex items-center justify-center py-12 px-6 text-center text-[#666]">
+          <div className="flex items-center justify-center py-12 px-6 text-center text-base-content/70">
             <p>Loading property details...</p>
           </div>
         );
@@ -207,8 +223,8 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
       case "layer":
         return (
           <div className="px-5 pt-1.5 pb-5">
-            <h3 className="m-0 mb-2 text-[13px] font-semibold text-[#333] leading-normal">{result.data.layerName}</h3>
-            <p className="m-0 mb-4 text-xs text-[#666] font-mono">Feature ID: {result.data.featureId}</p>
+            <h3 className="m-0 mb-2 text-[13px] font-semibold text-base-content leading-normal">{result.data.layerName}</h3>
+            <p className="m-0 mb-4 text-xs text-base-content/70 font-mono">Feature ID: {result.data.featureId}</p>
             <div className="mt-4" data-testid="result-attributes">
               {Object.entries(result.data.attributes)
                 .filter(([key, value]) => !isExcludedKey(key) && key !== "bbox" && typeof value !== "object")
@@ -221,7 +237,7 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
 
       default:
         return (
-          <div className="flex items-center justify-center py-12 px-6 text-center text-[#666]">
+          <div className="flex items-center justify-center py-12 px-6 text-center text-base-content/70">
             <p>No details available for this result.</p>
           </div>
         );
@@ -241,6 +257,7 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
       isLoadingContent={isLoadingContent}
       recordsError={resultsError}
       emptyMessage="No results found at this location."
+      onHoverRecord={handleHoverRecord}
     />
   );
 }

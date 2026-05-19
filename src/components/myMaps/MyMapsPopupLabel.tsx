@@ -69,7 +69,7 @@ const MyMapsPopupLabel: React.FC<MyMapsPopupLabelProps> = ({ item, onLabelChange
     <div>
       <div className="table mb-[3px] w-full">
         <div className={`mymaps-popup-checkbox relative top-[3px] table-cell w-[120px] left-[2px]${isCheckboxDisabled ? " pointer-events-none opacity-40" : ""}`}>
-          <label className="text-[11px] font-[Arial,sans-serif] text-[#333] cursor-pointer m-0 select-none">
+          <label className="text-[11px] font-[Arial,sans-serif] text-base-content cursor-pointer m-0 select-none">
             <input className="relative top-[1.5px] mr-1 ml-0" type="checkbox" checked={showLabel} onChange={handleLabelVisibilityChange} disabled={isCheckboxDisabled} />
             Show Label
           </label>
@@ -91,7 +91,7 @@ const MyMapsPopupLabel: React.FC<MyMapsPopupLabelProps> = ({ item, onLabelChange
       </div>
       <div>
         <input
-          className="mymaps-popup-label-input w-[246px] h-8 py-[5px] pr-[30px] pl-[5px] text-base text-[#367cc5] rounded-[3px] outline-none border border-[#cecece] mt-[5px] box-border bg-[url('/images/edit.png')] bg-no-repeat bg-[position:calc(100%-8px)_center] bg-[length:16px_16px] bg-white focus:border-[#367cc5]"
+          className="mymaps-popup-label-input w-[246px] h-8 py-[5px] pr-[30px] pl-[5px] text-base text-primary rounded-[3px] outline-none border border-base-300 mt-[5px] box-border bg-[url('/images/edit.png')] bg-no-repeat bg-[position:calc(100%-8px)_center] bg-[length:16px_16px] bg-base-100 focus:border-primary"
           type="text"
           value={tempLabel}
           onChange={(e) => {

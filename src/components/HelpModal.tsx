@@ -116,14 +116,14 @@ export default function HelpModal() {
   return (
     <Modal isOpen={isOpen} onClose={closeHelp} className="max-w-[900px] w-full max-h-[90vh] overflow-y-auto p-0 flex flex-col animate-slideUp" portalTarget="body">
       {/* Header */}
-      <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between z-10 rounded-t-lg">
-        <h2 className="text-lg font-semibold text-gray-800 m-0">Help</h2>
+      <div className="sticky top-0 bg-base-100 border-b border-base-300 px-6 py-3 flex items-center justify-between z-10 rounded-t-lg">
+        <h2 className="text-lg font-semibold text-base-content m-0">Help</h2>
         <div className="flex items-center gap-2">
           <button className="btn btn-sm btn-ghost flex items-center gap-1" onClick={fetchReadmeContent} disabled={isLoading} title="Refresh content">
             <FaSync className={isLoading ? "animate-spin" : ""} size={14} />
           </button>
           <button
-            className="bg-gray-700 hover:bg-gray-800 text-white border-none w-8 h-8 rounded-full flex items-center justify-center text-base cursor-pointer transition-all duration-200 p-0 hover:scale-110 active:scale-95 shadow-lg"
+            className="bg-neutral hover:bg-neutral/80 text-neutral-content border-none w-8 h-8 rounded-full flex items-center justify-center text-base cursor-pointer transition-all duration-200 p-0 hover:scale-110 active:scale-95 shadow-lg"
             onClick={closeHelp}
             aria-label="Close help"
             title="Close (ESC)"

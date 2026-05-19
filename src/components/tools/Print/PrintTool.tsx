@@ -8,7 +8,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 import PanelComponent from "@/components/PanelComponent";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
@@ -375,7 +374,7 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
         <div className={isPrinting ? "inline-flex items-center text-xs text-[#666] mt-[10px]" : "hidden"}>
           {printProgress || "Processing..."}
           &nbsp;
-          <Image src={`${basePath}/images/loading20.gif`} alt="loading" width={20} height={20} unoptimized />
+          <Image src="/images/loading20.gif" alt="loading" width={20} height={20} />
         </div>
 
         {/* NO PRINT URL WARNING */}

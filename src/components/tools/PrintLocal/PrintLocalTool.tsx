@@ -3,7 +3,6 @@
 import React, { useState, useCallback } from "react";
 import Image from "next/image";
 
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 import PanelComponent from "@/components/PanelComponent";
 import { useMapStore } from "@/stores/mapStore";
 import { captureMapCanvas, type DecorationPosition, type MapDecorations } from "@/utils/openlayers/SimpleCanvasCapture";
@@ -482,7 +481,7 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
         <div className={isPrinting && !showPreview ? "inline-flex items-center text-xs text-[#666] mt-[10px]" : "hidden"}>
           {printProgress || "Processing..."}
           &nbsp;
-          <Image src={`${basePath}/images/loading20.gif`} alt="loading" width={20} height={20} unoptimized />
+          <Image src="/images/loading20.gif" alt="loading" width={20} height={20} />
         </div>
 
         {/* ADVANCED OPTIONS */}

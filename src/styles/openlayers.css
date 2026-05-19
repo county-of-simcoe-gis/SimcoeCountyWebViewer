@@ -220,3 +220,51 @@
   min-height: 50px !important;
   overflow: hidden;
 }
+
+/* ──── Dark Mode Overrides ──── */
+
+[data-theme="dark"] .ol-full-screen button {
+  background-color: rgba(29, 35, 42, 0.85) !important;
+  color: #d0d6e0 !important;
+}
+
+[data-theme="dark"] .ol-scale-line {
+  background: rgba(29, 35, 42, 0.85);
+  color: #d0d6e0;
+}
+
+[data-theme="dark"] .ol-scale-line-inner {
+  border-color: #d0d6e0;
+  color: #d0d6e0;
+}
+
+[data-theme="dark"] .app-map.loading::before {
+  background: rgba(29, 35, 42, 0.8);
+}
+
+[data-theme="dark"] .app-map.loading::after {
+  background: #1d232a;
+  color: #d0d6e0;
+}
+
+[data-theme="dark"] .ol-popup {
+  background-color: #1d232a;
+  border-color: #2a323c;
+}
+
+[data-theme="dark"] .ol-popup:after {
+  border-top-color: #1d232a;
+}
+
+[data-theme="dark"] .ol-popup:before {
+  border-top-color: #2a323c;
+}
+
+[data-theme="dark"] .popup-header {
+  background: linear-gradient(to bottom, #1e3a5f 0%, #162d4a 100%);
+}
+
+[data-theme="dark"] .ol-popup-content {
+  background-color: #1d232a !important;
+  color: #d0d6e0;
+}

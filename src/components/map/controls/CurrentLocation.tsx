@@ -32,7 +32,7 @@ export const CurrentLocationButton = React.memo(({ map }: CurrentLocationButtonP
 
   return (
     <MapControlButton onClick={zoomToCurrentLocation} title="Zoom to current location">
-      <FaCrosshairs size={18} className="text-gray-600" />
+      <FaCrosshairs size={18} className="text-base-content" />
     </MapControlButton>
   );
 });

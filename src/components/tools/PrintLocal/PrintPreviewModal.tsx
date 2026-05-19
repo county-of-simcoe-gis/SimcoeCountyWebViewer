@@ -3,8 +3,6 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-
 interface PrintPreviewModalProps {
   /** The preview image blob */
   previewBlob: Blob | null;
@@ -157,7 +155,7 @@ export default function PrintPreviewModal({ previewBlob, isOpen, mapTitle, setti
           >
             {isDownloading ? (
               <>
-                <Image src={`${basePath}/images/loading20.gif`} alt="loading" width={16} height={16} unoptimized />
+                <Image src="/images/loading20.gif" alt="loading" width={16} height={16} />
                 <span>Downloading...</span>
               </>
             ) : (

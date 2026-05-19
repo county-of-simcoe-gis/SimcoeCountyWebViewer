@@ -45,7 +45,13 @@ declare module "next-auth" {
 
 declare module "next-auth/jwt" {
   /**
-   * Extended JWT interface with custom properties
+   * Extended JWT interface with custom properties.
+   *
+   * accessToken is NOT stored in the JWT cookie (to keep cookie size small and
+   * avoid 431 errors). It is populated at runtime by the getToken() wrapper in
+   * authToken.ts from the server-side in-memory cache.
+   *
+   * refreshToken remains in the JWT cookie for standard OAuth2 token renewal.
    */
   interface JWT {
     accessToken?: string;

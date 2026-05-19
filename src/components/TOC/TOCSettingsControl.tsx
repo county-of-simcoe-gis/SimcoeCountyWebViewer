@@ -120,14 +120,14 @@ export default function TOCSettingsControl({
 
   return (
     <div className="relative">
-      <button className="bg-transparent border-none p-[3px] cursor-pointer rounded-[3px] hover:bg-[#e0e0e0]" onClick={toggleSettings} title="Layer Settings">
+      <button className="bg-transparent border-none p-[3px] cursor-pointer rounded-[3px] hover:bg-base-300" onClick={toggleSettings} title="Layer Settings">
         <FiSettings size={16} />
       </button>
 
       {showSettings && (
         <div className="fixed inset-0 z-[1000] bg-transparent" onClick={handleBackdropClick}>
           <div
-            className="fixed bg-white border border-[#ccc] rounded-[3px] shadow-md min-w-[200px] p-[5px] z-[1001]"
+            className="fixed bg-base-100 border border-base-300 rounded-[3px] shadow-md min-w-[200px] p-[5px] z-[1001]"
             onClick={handleSettingsMenuClick}
             style={{
               left: `${mousePosition.x}px`,
@@ -138,7 +138,7 @@ export default function TOCSettingsControl({
             <div className="mb-2 py-[3px]">
               <button
                 onClick={handleTOCTypeChange}
-                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-[#f0f0f0] flex items-center gap-1.5"
+                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-base-200 flex items-center gap-1.5"
               >
                 {tocType === "LIST" ? <FiFolder size={14} /> : <FiList size={14} />}
                 <span>Switch to {tocType === "LIST" ? "Folder" : "List"} View</span>
@@ -149,14 +149,14 @@ export default function TOCSettingsControl({
             <div className="mb-2 py-[3px] flex gap-[5px]">
               <button
                 onClick={handleSaveAllLayers}
-                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-[#f0f0f0] flex items-center gap-1.5 flex-1 justify-center"
+                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-base-200 flex items-center gap-1.5 flex-1 justify-center"
               >
                 <FiSave size={14} />
                 <span>Save Layers</span>
               </button>
               <button
                 onClick={handleClearSavedLayers}
-                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-[#f0f0f0] flex items-center gap-1.5 flex-1 justify-center"
+                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-base-200 flex items-center gap-1.5 flex-1 justify-center"
               >
                 <FiTrash2 size={14} />
                 <span>Clear</span>
@@ -167,7 +167,7 @@ export default function TOCSettingsControl({
             <div className="mb-2 py-[3px]">
               <button
                 onClick={handleResetToDefault}
-                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-[#f0f0f0] flex items-center gap-1.5"
+                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-base-200 flex items-center gap-1.5"
               >
                 <FiRefreshCw size={14} />
                 <span>Reset to Default</span>
@@ -178,7 +178,7 @@ export default function TOCSettingsControl({
             <div className="mb-2 py-[3px]">
               <button
                 onClick={handleTurnOffLayers}
-                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-[#f0f0f0] flex items-center gap-1.5"
+                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-base-200 flex items-center gap-1.5"
               >
                 <FiEyeOff size={14} />
                 <span>Turn off all Layers</span>
@@ -189,7 +189,7 @@ export default function TOCSettingsControl({
             <div className="mb-2 py-[3px]">
               <button
                 onClick={handleOpenLegend}
-                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-[#f0f0f0] flex items-center gap-1.5"
+                className="bg-transparent border-none text-left w-full p-[5px] cursor-pointer font-[Verdana,Arial,sans-serif] text-[9pt] rounded-[3px] hover:bg-base-200 flex items-center gap-1.5"
               >
                 <FiMap size={14} />
                 <span>Show Legend</span>
@@ -198,7 +198,7 @@ export default function TOCSettingsControl({
 
             {/* Global Opacity */}
             <div className="mb-2 py-[3px]">
-              <label className="block font-[Verdana,Arial,sans-serif] text-[9pt] mb-[3px] text-[#333]">Opacity: {Math.round(globalOpacity * 100)}%</label>
+              <label className="block font-[Verdana,Arial,sans-serif] text-[9pt] mb-[3px] text-base-content">Opacity: {Math.round(globalOpacity * 100)}%</label>
               <input type="range" min="0" max="1" step="0.1" value={globalOpacity} onChange={handleOpacityChange} className="w-full h-5" />
             </div>
 

@@ -21,10 +21,10 @@ const LegendItem: React.FC<LegendItemProps> = ({ layer, center = false }) => {
 
   return (
     <div className={`flex flex-col gap-2 ${center ? "items-center text-center" : ""}`}>
-      <label className="text-sm font-medium text-[#555] m-0">{layer.tocDisplayName}</label>
+      <label className="text-sm font-medium text-base-content/70 m-0">{layer.tocDisplayName}</label>
       {legendImage && legendImage !== "" && (
         <img
-          className={`max-w-[250px] w-fit h-auto border border-[#ddd] rounded ${center ? "mx-auto" : ""}`}
+          className={`max-w-[250px] w-fit h-auto border border-base-300 rounded ${center ? "mx-auto" : ""}`}
           src={legendImage}
           alt={layer.tocDisplayName}
           onError={(e) => {
@@ -71,7 +71,7 @@ const LegendRow: React.FC<LegendRowProps> = ({ legend }) => {
     <li className="flex items-center gap-2 select-none" style={{ height: `${legend.height}px` }} title={legend.label}>
       <img style={{ height: `${legend.height}px`, width: `${legend.width}px` }} src={`data:${legend.contentType};base64,${legend.imageData}`} alt="style" />
       <div
-        className="flex items-center text-[13px] text-[#444]"
+        className="flex items-center text-[13px] text-base-content"
         style={{
           height: `${legend.height}px`,
           width: `${220 - legend.width}px`,
@@ -95,8 +95,8 @@ interface GroupItemProps {
 const GroupItem: React.FC<GroupItemProps> = ({ group, center = false }) => {
   return (
     <div className="break-inside-avoid">
-      <fieldset className="border-2 border-[#ccc] rounded-lg p-[15px] m-0 bg-white">
-        <legend className="text-base font-semibold text-[#333] px-2.5">{group.label.replace(/_/g, " ")}</legend>
+      <fieldset className="border-2 border-base-300 rounded-lg p-[15px] m-0 bg-base-100">
+        <legend className="text-base font-semibold text-base-content px-2.5">{group.label.replace(/_/g, " ")}</legend>
         <div className="flex flex-col gap-[15px]">
           {group.layers.map((layer) => (
             <LegendItem key={layer.id} layer={layer} center={center} />
@@ -152,17 +152,20 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({ options, sele
 
   return (
     <div className="relative flex-1 max-w-[600px]" ref={dropdownRef}>
-      <div className="min-h-[38px] bg-white border border-[#ccc] rounded cursor-pointer flex items-center px-2 py-1 transition-colors hover:border-[#999]" onClick={() => setIsOpen(!isOpen)}>
+      <div
+        className="min-h-[38px] bg-base-100 border border-base-300 rounded cursor-pointer flex items-center px-2 py-1 transition-colors hover:border-base-content/40"
+        onClick={() => setIsOpen(!isOpen)}
+      >
         <div className="flex-1 flex flex-wrap gap-1">
           {selectedOptions.length === 0 ? (
-            <span className="text-[#999] p-1">Select groups...</span>
+            <span className="text-base-content/70 p-1">Select groups...</span>
           ) : (
             <div className="flex flex-wrap gap-1">
               {selectedOptions.map((option) => (
-                <span key={option.value} className="inline-flex items-center gap-1 bg-[#e1f0ff] border border-[#b3d9ff] rounded-sm px-1.5 py-0.5 text-[13px] text-[#333]">
+                <span key={option.value} className="inline-flex items-center gap-1 bg-primary/10 border border-primary/30 rounded-sm px-1.5 py-0.5 text-[13px] text-base-content">
                   {option.label}
                   <button
-                    className="bg-transparent border-none cursor-pointer p-0 flex items-center text-[#666] hover:text-[#333] transition-colors"
+                    className="bg-transparent border-none cursor-pointer p-0 flex items-center text-base-content/60 hover:text-base-content transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       removeOption(option);
@@ -178,7 +181,7 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({ options, sele
         <div className="flex items-center gap-2 pl-2">
           {selectedOptions.length > 0 && (
             <button
-              className="bg-transparent border-none cursor-pointer p-1 flex items-center text-[#999] hover:text-[#333] transition-colors"
+              className="bg-transparent border-none cursor-pointer p-1 flex items-center text-base-content/70 hover:text-base-content transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 clearAll();
@@ -188,17 +191,17 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({ options, sele
               <FaTimes size={14} />
             </button>
           )}
-          <FaChevronDown size={14} className={`text-[#666] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+          <FaChevronDown size={14} className={`text-base-content/60 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
         </div>
       </div>
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 bg-white border border-[#ccc] rounded mt-1 max-h-[300px] overflow-y-auto z-[1000] shadow-[0_2px_8px_rgba(0,0,0,0.15)]">
+        <div className="absolute top-full left-0 right-0 bg-base-100 border border-base-300 rounded mt-1 max-h-[300px] overflow-y-auto z-[1000] shadow-[0_2px_8px_rgba(0,0,0,0.15)]">
           {options.map((option) => {
             const isSelected = selectedOptions.some((o) => o.value === option.value);
             return (
               <div
                 key={option.value}
-                className={`px-3 py-2 cursor-pointer flex items-center gap-2 transition-colors hover:bg-base-200 ${isSelected ? "bg-[#e1f0ff]" : ""}`}
+                className={`px-3 py-2 cursor-pointer flex items-center gap-2 transition-colors hover:bg-base-200 ${isSelected ? "bg-primary/10" : ""}`}
                 onClick={() => toggleOption(option)}
               >
                 <input type="checkbox" checked={isSelected} onChange={() => {}} className="checkbox checkbox-xs checkbox-primary" />

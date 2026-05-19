@@ -27,6 +27,16 @@
   border-top: 10px solid white;
 }
 
+/* Dark mode overrides */
+[data-theme="dark"] .map-popup {
+  background-color: #1d232a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .map-popup::after {
+  border-top-color: #1d232a;
+}
+
 @keyframes popupFadeIn {
   from {
     opacity: 0;

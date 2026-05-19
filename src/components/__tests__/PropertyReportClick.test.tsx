@@ -66,6 +66,7 @@ vi.mock("ol/style", () => ({
   Style: vi.fn(function () {}),
   Stroke: vi.fn(function () {}),
   Fill: vi.fn(function () {}),
+  Circle: vi.fn(function () {}),
 }));
 
 vi.mock("ol/format", () => ({

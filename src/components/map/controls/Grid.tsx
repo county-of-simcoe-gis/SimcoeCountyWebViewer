@@ -64,7 +64,7 @@ const GridButtonComponent = ({ map }: GridButtonProps) => {
 
   return (
     <MapControlButton onClick={handleToggle} title={`${showGrid ? "Hide" : "Show"} map grid`}>
-      {showGrid ? <MdGridOff size={25} className="text-gray-500" /> : <MdGridOn size={25} className="text-gray-500" />}
+      {showGrid ? <MdGridOff size={25} className="text-base-content" /> : <MdGridOn size={25} className="text-base-content" />}
     </MapControlButton>
   );
 };

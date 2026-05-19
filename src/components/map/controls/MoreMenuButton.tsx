@@ -50,9 +50,9 @@ export const MoreMenuButton = React.memo(() => {
 
   return (
     <div ref={buttonRef}>
-      <MapControlButton onClick={handleClick} title="More options" className={`!w-[100px] !h-[30px] ${isMoreMenuOpen ? "ring-2 ring-[#90b5d5]" : ""}`}>
-        <RxDropdownMenu size={20} className="text-gray-600 pointer-events-none" />
-        <span className="text-sm text-gray-700 pointer-events-none">More</span>
+      <MapControlButton onClick={handleClick} title="More options" className={`!w-[100px] !h-[30px] ${isMoreMenuOpen ? "ring-2 ring-primary/50" : ""}`}>
+        <RxDropdownMenu size={20} className="text-base-content pointer-events-none" />
+        <span className="text-sm text-base-content pointer-events-none">More</span>
       </MapControlButton>
     </div>
   );

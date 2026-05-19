@@ -1,11 +1,25 @@
 import { getToken } from "@/lib/authToken";
+import { getAccessToken } from "@/lib/accessTokenCache";
 import { NextRequest, NextResponse } from "next/server";
 import { refreshAccessToken } from "@/app/auth/refreshToken";
 
 export async function GET(request: NextRequest) {
   const token = await getToken({ req: request });
 
-  return NextResponse.json({ accessToken: token?.accessToken, expires: token?.accessTokenExpires }, { status: 200 });
+  if (!token?.oid) {
+    return NextResponse.json({ error: "No token found" }, { status: 401 });
+  }
+
+  // Try the in-memory cache first; if empty, do a refresh
+  let accessToken = getAccessToken(token.oid);
+  if (!accessToken && token.refreshToken) {
+    const result = await refreshAccessToken(token);
+    if ("accessToken" in result) {
+      accessToken = result.accessToken;
+    }
+  }
+
+  return NextResponse.json({ accessToken: accessToken ?? null, expires: token.accessTokenExpires ?? null }, { status: 200 });
 }
 export async function POST(request: NextRequest) {
   try {
@@ -15,13 +29,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No token found" }, { status: 401 });
     }
 
-    const refreshedToken = await refreshAccessToken(token);
+    const result = await refreshAccessToken(token);
 
-    if (refreshedToken.error) {
-      return NextResponse.json({ error: refreshedToken.error }, { status: 401 });
+    if ("error" in result) {
+      return NextResponse.json({ error: result.error }, { status: 401 });
     }
 
-    return NextResponse.json(refreshedToken);
+    return NextResponse.json({ accessToken: result.accessToken, expires: result.expires });
   } catch (error) {
     console.error("Error refreshing token:", error);
     return NextResponse.json({ error: "Failed to refresh token" }, { status: 500 });

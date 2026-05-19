@@ -105,7 +105,7 @@ describe("ThemeDataList", () => {
     render(<ThemeDataList layerConfig={mockLayerConfig} onlyFeaturesWithinMap={false} isVisible={true} />);
 
     // Feature count in parentheses should be displayed
-    const countText = document.querySelector('[class*="text-base-content/50"]');
+    const countText = document.querySelector('[class*="text-base-content/70"]');
     expect(countText).toBeInTheDocument();
   });
 

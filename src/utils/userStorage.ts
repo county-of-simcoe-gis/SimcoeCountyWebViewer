@@ -11,16 +11,7 @@
 import { apiUrl } from "@/lib/axiosInstance";
 
 // Keys (or key substrings) that must NEVER be synced to the server.
-const EXCLUDED_KEY_PATTERNS = [
-  "scwv.",
-  "__Secure-",
-  "__Host-",
-  "next-auth",
-  "login.microsoftonline.com",
-  "login.windows.net",
-  "msal.",
-  "cacheVersion",
-];
+const EXCLUDED_KEY_PATTERNS = ["scwv.", "__Secure-", "__Host-", "next-auth", "login.microsoftonline.com", "login.windows.net", "msal.", "cacheVersion", "__storage_migrated_v1", "nextauth.message"];
 
 function isExcluded(key: string): boolean {
   return EXCLUDED_KEY_PATTERNS.some((pattern) => key.includes(pattern));
@@ -101,6 +92,38 @@ export async function getUserStorage(): Promise<void> {
   }
 }
 
+/** Build the JSON payload representing current syncable localStorage contents. */
+function buildSyncPayload(): string {
+  const dataKeys = Object.keys(localStorage).filter((key) => !isExcluded(key));
+  const data: Record<string, string> = {};
+  dataKeys.forEach((key) => {
+    const value = localStorage.getItem(key);
+    if (value !== null) data[key] = value;
+  });
+  return JSON.stringify(data);
+}
+
+/** Whether a beforeunload listener has been attached. */
+let _unloadListenerAttached = false;
+
+/** Attach a beforeunload handler that flushes any pending sync using sendBeacon. */
+function ensureUnloadListener(): void {
+  if (_unloadListenerAttached || typeof window === "undefined") return;
+  _unloadListenerAttached = true;
+
+  window.addEventListener("beforeunload", () => {
+    if (!_enabled || !_debounceTimer) return;
+    // Cancel the pending debounce — we'll send immediately via sendBeacon.
+    clearTimeout(_debounceTimer);
+    _debounceTimer = null;
+
+    const url = apiUrl("/api/secure/user/storage");
+    const payload = buildSyncPayload();
+    // sendBeacon guarantees delivery even during page unload.
+    navigator.sendBeacon(url, new Blob([payload], { type: "application/json" }));
+  });
+}
+
 /**
  * Push the current localStorage contents to the server.
  * Debounced — rapid successive calls collapse into a single request.
@@ -108,24 +131,19 @@ export async function getUserStorage(): Promise<void> {
 export function setUserStorage(): void {
   if (!_enabled) return;
 
+  ensureUnloadListener();
+
   if (_debounceTimer) clearTimeout(_debounceTimer);
 
   _debounceTimer = setTimeout(() => {
     _debounceTimer = null;
-
-    const dataKeys = Object.keys(localStorage).filter((key) => !isExcluded(key));
-    const data: Record<string, string> = {};
-    dataKeys.forEach((key) => {
-      const value = localStorage.getItem(key);
-      if (value !== null) data[key] = value;
-    });
 
     const url = apiUrl("/api/secure/user/storage");
     fetch(url, {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: buildSyncPayload(),
     }).catch((err) => {
       console.error("[UserStorage] Error saving user storage:", err);
     });
@@ -133,10 +151,40 @@ export function setUserStorage(): void {
 }
 
 /**
+ * Immediately flush any pending debounced sync to the server.
+ * Use this after explicit clear/reset operations to guarantee persistence.
+ */
+export function flushUserStorage(): void {
+  if (!_enabled) return;
+
+  // Cancel any pending debounce.
+  if (_debounceTimer) {
+    clearTimeout(_debounceTimer);
+    _debounceTimer = null;
+  }
+
+  const url = apiUrl("/api/secure/user/storage");
+  fetch(url, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: buildSyncPayload(),
+  }).catch((err) => {
+    console.error("[UserStorage] Error flushing user storage:", err);
+  });
+}
+
+/**
  * Clear the server-side stored values (sends an empty body).
  */
 export async function clearUserStorage(): Promise<void> {
   if (!_enabled) return;
+
+  // Cancel any pending debounce that would re-save stale data.
+  if (_debounceTimer) {
+    clearTimeout(_debounceTimer);
+    _debounceTimer = null;
+  }
 
   try {
     const url = apiUrl("/api/secure/user/storage");

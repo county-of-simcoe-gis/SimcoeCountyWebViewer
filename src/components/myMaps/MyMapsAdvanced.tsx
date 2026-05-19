@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
@@ -62,7 +62,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
           : "unknown date";
         options.push({
           value: m.id,
-          label: `${m.name || "(unnamed)"} — ${dateStr}`,
+          label: `${m.name || "(unnamed)"} â€” ${dateStr}`,
         });
       });
     } else {
@@ -71,7 +71,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
         const dateStr = new Date(entry.date).toLocaleDateString();
         options.push({
           value: entry.id,
-          label: `${entry.id} — ${dateStr}`,
+          label: `${entry.id} â€” ${dateStr}`,
         });
       });
     }
@@ -138,7 +138,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
   };
 
   const onImport = async () => {
-    // Determine the ID to import — either from the dropdown selection or manual input
+    // Determine the ID to import â€” either from the dropdown selection or manual input
     const idToImport = selectedDropdownValue !== "manual" ? selectedDropdownValue : inputText.trim();
 
     if (!idToImport) {
@@ -282,19 +282,19 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
   };
 
   return (
-    <div className="relative h-[30px] m-[5px] bg-[#e8e8e8] border border-[#ddd] cursor-pointer select-none leading-[30px] pl-[31px] mt-auto shrink-0">
+    <div className="relative h-[30px] m-[5px] bg-base-300 border border-base-300 cursor-pointer select-none leading-[30px] pl-[31px] mt-auto shrink-0">
       {/* Content that appears above when open */}
       <div
         data-testid="mymaps-advanced-content"
         data-state={open ? "open" : "closed"}
-        className={`absolute bottom-full left-0 right-0 border border-solid border-[#d8dadc] border-b-0 rounded-t-[5px] bg-white p-[5px] z-[10001] transition-all duration-[400ms] ease-in-out ${open ? "max-h-[500px] opacity-100 translate-y-0 p-[5px]" : "max-h-0 opacity-0 translate-y-[10px] !pt-0 !pb-0 overflow-hidden"}`}
+        className={`absolute bottom-full left-0 right-0 border border-solid border-base-300 border-b-0 rounded-t-[5px] bg-base-100 p-[5px] z-[10001] transition-all duration-[400ms] ease-in-out ${open ? "max-h-[500px] opacity-100 translate-y-0 p-[5px]" : "max-h-0 opacity-0 translate-y-[10px] !pt-0 !pb-0 overflow-hidden"}`}
       >
-        <div className="border-b border-[#d8dadc] pb-2.5">
+        <div className="border-b border-base-300 pb-2.5">
           <label className="block font-bold">Import/Save</label>
           <div>
             {/* Dropdown for selecting existing MyMaps or entering manually */}
             <select
-              className="select select-bordered select-sm w-full mb-1 text-[#367cc5]"
+              className="select select-bordered select-sm w-full mb-1 text-primary"
               value={selectedDropdownValue}
               onChange={(e) => {
                 const value = e.target.value;
@@ -323,10 +323,10 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
               ))}
             </select>
 
-            {/* Manual ID input — visible only when "Enter ID Manually" is selected */}
+            {/* Manual ID input â€” visible only when "Enter ID Manually" is selected */}
             {selectedDropdownValue === "manual" && (
               <input
-                className="mymaps-text-input bg-[url('/images/edit.png')] bg-no-repeat bg-[position:right_4px_center] bg-[length:16px_16px] bg-white text-[#367cc5] focus:outline-none focus:border-[#007bff] focus:shadow-[0_0_0_2px_rgba(0,123,255,0.4)] mb-1"
+                className="mymaps-text-input bg-[url('/images/edit.png')] bg-no-repeat bg-[position:right_4px_center] bg-[length:16px_16px] bg-base-100 text-primary focus:outline-none focus:border-primary focus:shadow-[0_0_0_2px_rgba(0,123,255,0.4)] mb-1"
                 id={inputId}
                 type="text"
                 placeholder="Enter ID here"
@@ -337,7 +337,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
               />
             )}
 
-            {/* Name input — visible only for authenticated users */}
+            {/* Name input â€” visible only for authenticated users */}
             {isAuthenticated && (
               <input
                 className="input input-bordered input-sm w-full mb-1"
@@ -376,7 +376,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
         </div>
 
         <div className="pt-[5px]">
-          <label className={`inline-table w-[175px] text-xs cursor-pointer ${editOn ? "font-bold" : ""} text-[#495057]`}>
+          <label className={`inline-table w-[175px] text-xs cursor-pointer ${editOn ? "font-bold" : ""} text-base-content`}>
             Edit Features
             <Switch
               className="relative top-[5px] ml-[5px]"
@@ -391,17 +391,17 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
             />
           </label>
 
-          <label style={{ marginRight: "15px", marginLeft: "15px" }} className="!inline text-xs text-[#495057] cursor-pointer select-none hover:text-[#007bff]">
+          <label style={{ marginRight: "15px", marginLeft: "15px" }} className="!inline text-xs text-base-content cursor-pointer select-none hover:text-primary">
             <input className="relative top-[2px] mr-1 cursor-pointer" type="radio" name="editOptions" value="vertices" checked={editOption === "vertices"} onChange={onEditOption} />
             Vertices
           </label>
-          <label className="!inline text-xs text-[#495057] cursor-pointer select-none hover:text-[#007bff]">
+          <label className="!inline text-xs text-base-content cursor-pointer select-none hover:text-primary">
             <input className="relative top-[2px] mr-1 cursor-pointer" type="radio" name="editOptions" value="translate" checked={editOption === "translate"} onChange={onEditOption} />
             Move
           </label>
         </div>
 
-        <div className="flex gap-1 pt-2.5 border-t border-[#d8dadc] mt-2.5 text-center">
+        <div className="flex gap-1 pt-2.5 border-t border-base-300 mt-2.5 text-center">
           <button
             className="mymaps-action-btn flex-1 w-full bg-[url('/images/myMaps/eraser.png')] bg-no-repeat bg-[position:8px_center] bg-[length:16px_16px] text-left disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => {
@@ -446,17 +446,10 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
         typeof window !== "undefined" &&
         createPortal(
           <div
-            className="mymaps-export-submenu-portal"
+            className="mymaps-export-submenu-portal fixed bg-base-100 border border-base-300 rounded shadow-[0_4px_12px_rgba(0,0,0,0.15)] min-w-[120px] z-[99999]"
             style={{
-              position: "fixed",
               left: submenuPosition.x,
               top: submenuPosition.y,
-              zIndex: 99999,
-              background: "white",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-              minWidth: "120px",
             }}
             onMouseEnter={() => {
               // Clear any pending close timeout when entering submenu
@@ -476,36 +469,36 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
             }}
           >
             <div
-              className="flex items-center py-2 px-3 text-xs text-[#495057] cursor-pointer transition-colors border-b border-[#f0f0f0] last:border-b-0 hover:bg-[#f8f9fa] hover:text-[#007bff] active:bg-[#e9ecef]"
+              className="flex items-center py-2 px-3 text-xs text-base-content cursor-pointer transition-colors border-b border-base-200 last:border-b-0 hover:bg-base-200 hover:text-primary active:bg-base-300"
               onClick={() => {
                 onAdditionalToolsAction("export-kml");
                 setShowAdditionalMenu(false);
                 setShowExportSubmenu(false);
               }}
             >
-              <Image unoptimized src="/images/json.png" alt="KML" width={16} height={16} className="mr-2 shrink-0" />
+              <Image src="/images/json.png" alt="KML" width={16} height={16} className="mr-2 shrink-0" />
               KML
             </div>
             <div
-              className="flex items-center py-2 px-3 text-xs text-[#495057] cursor-pointer transition-colors border-b border-[#f0f0f0] last:border-b-0 hover:bg-[#f8f9fa] hover:text-[#007bff] active:bg-[#e9ecef]"
+              className="flex items-center py-2 px-3 text-xs text-base-content cursor-pointer transition-colors border-b border-base-200 last:border-b-0 hover:bg-base-200 hover:text-primary active:bg-base-300"
               onClick={() => {
                 onAdditionalToolsAction("export-esri-json");
                 setShowAdditionalMenu(false);
                 setShowExportSubmenu(false);
               }}
             >
-              <Image unoptimized src="/images/json.png" alt="ESRI JSON" width={16} height={16} className="mr-2 shrink-0" />
+              <Image src="/images/json.png" alt="ESRI JSON" width={16} height={16} className="mr-2 shrink-0" />
               ESRIJson
             </div>
             <div
-              className="flex items-center py-2 px-3 text-xs text-[#495057] cursor-pointer transition-colors border-b border-[#f0f0f0] last:border-b-0 hover:bg-[#f8f9fa] hover:text-[#007bff] active:bg-[#e9ecef]"
+              className="flex items-center py-2 px-3 text-xs text-base-content cursor-pointer transition-colors border-b border-base-200 last:border-b-0 hover:bg-base-200 hover:text-primary active:bg-base-300"
               onClick={() => {
                 onAdditionalToolsAction("export-geo-json");
                 setShowAdditionalMenu(false);
                 setShowExportSubmenu(false);
               }}
             >
-              <Image unoptimized src="/images/json.png" alt="GeoJSON" width={16} height={16} className="mr-2 shrink-0" />
+              <Image src="/images/json.png" alt="GeoJSON" width={16} height={16} className="mr-2 shrink-0" />
               GeoJSON
             </div>
           </div>,
@@ -517,75 +510,67 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
         typeof window !== "undefined" &&
         createPortal(
           <div
-            className="mymaps-additional-menu-portal"
+            className="mymaps-additional-menu-portal fixed bg-base-100 border border-base-300 rounded shadow-[0_4px_12px_rgba(0,0,0,0.15)] min-w-[180px] z-[99999] -translate-y-full"
             style={{
-              position: "fixed",
               left: additionalMenuPosition.x,
               top: additionalMenuPosition.y,
-              zIndex: 99999,
-              background: "white",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-              minWidth: "180px",
-              transform: "translateY(-100%)", // Position above the button
             }}
           >
             <div
-              className="flex items-center py-2 px-3 text-xs text-[#495057] cursor-pointer transition-colors border-b border-[#f0f0f0] last:border-b-0 hover:bg-[#f8f9fa] hover:text-[#007bff] active:bg-[#e9ecef] relative"
+              className="flex items-center py-2 px-3 text-xs text-base-content cursor-pointer transition-colors border-b border-base-200 last:border-b-0 hover:bg-base-200 hover:text-primary active:bg-base-300 relative"
               onClick={() => {
                 onAdditionalToolsAction("show-all");
                 setShowAdditionalMenu(false);
               }}
             >
-              <Image unoptimized src="/images/myMaps/checkbox_on.png" alt="Show All" width={16} height={16} className="mr-2 shrink-0" />
+              <Image src="/images/myMaps/checkbox_on.png" alt="Show All" width={16} height={16} className="mr-2 shrink-0" />
               Show All
             </div>
             <div
-              className="flex items-center py-2 px-3 text-xs text-[#495057] cursor-pointer transition-colors border-b border-[#f0f0f0] last:border-b-0 hover:bg-[#f8f9fa] hover:text-[#007bff] active:bg-[#e9ecef] relative"
+              className="flex items-center py-2 px-3 text-xs text-base-content cursor-pointer transition-colors border-b border-base-200 last:border-b-0 hover:bg-base-200 hover:text-primary active:bg-base-300 relative"
               onClick={() => {
                 onAdditionalToolsAction("hide-all");
                 setShowAdditionalMenu(false);
               }}
             >
-              <Image unoptimized src="/images/myMaps/checkbox_off.png" alt="Hide All" width={16} height={16} className="mr-2 shrink-0" />
+              <Image src="/images/myMaps/checkbox_off.png" alt="Hide All" width={16} height={16} className="mr-2 shrink-0" />
               Hide All
             </div>
-            <div className="h-px bg-[#dee2e6] my-1"></div>
+            <div className="h-px bg-base-300 my-1"></div>
             <div
-              className="flex items-center py-2 px-3 text-xs text-[#495057] cursor-pointer transition-colors border-b border-[#f0f0f0] last:border-b-0 hover:bg-[#f8f9fa] hover:text-[#007bff] active:bg-[#e9ecef] relative"
+              className="flex items-center py-2 px-3 text-xs text-base-content cursor-pointer transition-colors border-b border-base-200 last:border-b-0 hover:bg-base-200 hover:text-primary active:bg-base-300 relative"
               onClick={() => {
                 onAdditionalToolsAction("delete-selected");
                 setShowAdditionalMenu(false);
               }}
             >
-              <Image unoptimized src="/images/myMaps/eraser.png" alt="Delete Selected" width={16} height={16} className="mr-2 shrink-0" />
+              <Image src="/images/myMaps/eraser.png" alt="Delete Selected" width={16} height={16} className="mr-2 shrink-0" />
               Delete Selected
             </div>
             <div
-              className="flex items-center py-2 px-3 text-xs text-[#495057] cursor-pointer transition-colors border-b border-[#f0f0f0] last:border-b-0 hover:bg-[#f8f9fa] hover:text-[#007bff] active:bg-[#e9ecef] relative"
+              className="flex items-center py-2 px-3 text-xs text-base-content cursor-pointer transition-colors border-b border-base-200 last:border-b-0 hover:bg-base-200 hover:text-primary active:bg-base-300 relative"
               onClick={() => {
                 onAdditionalToolsAction("delete-unselected");
                 setShowAdditionalMenu(false);
               }}
             >
-              <Image unoptimized src="/images/myMaps/eraser.png" alt="Delete Unselected" width={16} height={16} className="mr-2 shrink-0" />
+              <Image src="/images/myMaps/eraser.png" alt="Delete Unselected" width={16} height={16} className="mr-2 shrink-0" />
               Delete Unselected
             </div>
             <div
-              className="flex items-center py-2 px-3 text-xs text-[#495057] cursor-pointer transition-colors border-b border-[#f0f0f0] last:border-b-0 hover:bg-[#f8f9fa] hover:text-[#007bff] active:bg-[#e9ecef] relative"
+              className="flex items-center py-2 px-3 text-xs text-base-content cursor-pointer transition-colors border-b border-base-200 last:border-b-0 hover:bg-base-200 hover:text-primary active:bg-base-300 relative"
               onClick={() => {
                 onAdditionalToolsAction("merge-polygons");
                 setShowAdditionalMenu(false);
               }}
             >
-              <Image unoptimized src="/images/polygon.png" alt="Merge Polygons" width={16} height={16} className="mr-2 shrink-0" />
+              <Image src="/images/polygon.png" alt="Merge Polygons" width={16} height={16} className="mr-2 shrink-0" />
               Merge Polygons
             </div>
             <div>
               <div
                 ref={exportMenuRef}
-                className="flex items-center py-2 px-3 text-xs text-[#495057] cursor-pointer transition-colors border-b border-[#f0f0f0] last:border-b-0 hover:bg-[#f8f9fa] hover:text-[#007bff] active:bg-[#e9ecef] relative"
+                className="flex items-center py-2 px-3 text-xs text-base-content cursor-pointer transition-colors border-b border-base-200 last:border-b-0 hover:bg-base-200 hover:text-primary active:bg-base-300 relative"
                 onMouseEnter={(e) => {
                   // Clear any pending close timeout
                   if (exportHoverTimeoutRef.current) {
@@ -608,9 +593,9 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
                   }, 300);
                 }}
               >
-                <Image unoptimized src="/images/json.png" alt="Export" width={16} height={16} className="mr-2 shrink-0" />
+                <Image src="/images/json.png" alt="Export" width={16} height={16} className="mr-2 shrink-0" />
                 Export to ...
-                <span className="ml-auto text-[10px] text-[#6c757d]">▶</span>
+                <span className="ml-auto text-[10px] text-base-content/60">â–¶</span>
               </div>
             </div>
           </div>,

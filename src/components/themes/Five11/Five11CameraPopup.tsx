@@ -18,7 +18,7 @@ export default function Five11CameraPopup({ properties }: Five11CameraPopupProps
   };
 
   if (!imageUrl) {
-    return <div className="text-sm text-base-content/50">Camera feed unavailable</div>;
+    return <div className="text-sm text-base-content/70">Camera feed unavailable</div>;
   }
 
   // Add cache-busting parameter to URL
@@ -30,7 +30,12 @@ export default function Five11CameraPopup({ properties }: Five11CameraPopupProps
 
       <div className="relative">
         <a href={imageUrl} target="_blank" rel="noopener noreferrer" title="Open full size image">
-          <img src={cacheBustedUrl} alt={properties.Description || "Traffic Camera"} className="max-w-[280px] rounded-lg border border-base-300 hover:opacity-90 transition-opacity" onError={(e) => (e.currentTarget.style.display = "none")} />
+          <img
+            src={cacheBustedUrl}
+            alt={properties.Description || "Traffic Camera"}
+            className="max-w-[280px] rounded-lg border border-base-300 hover:opacity-90 transition-opacity"
+            onError={(e) => (e.currentTarget.style.display = "none")}
+          />
         </a>
       </div>
 

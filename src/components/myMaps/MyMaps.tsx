@@ -524,7 +524,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white rounded overflow-visible relative z-[10000]">
+    <div className="flex flex-col h-full bg-base-100 rounded overflow-visible relative z-[10000]">
       {/* Drawing Tools */}
       <ButtonBar isEditing={isEditing} />
 
@@ -577,12 +577,12 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
       <URLModal url={reportProblemUrl} title="Report a Problem" isOpen={isReportProblemModalOpen} onClose={handleCloseReportProblemModal} width="90vw" height="80vh" />
 
       {/* Status info */}
-      <div className="flex flex-wrap gap-3 py-1.5 px-3 bg-[#f1f3f4] border-t border-[#dee2e6] text-[11px] text-[#6c757d] mt-auto">
+      <div className="flex flex-wrap gap-3 py-1.5 px-3 bg-base-200 border-t border-base-300 text-[11px] text-base-content/60 mt-auto">
         <div className="flex items-center gap-1">
           Active Tool: <strong>{drawType === "Cancel" ? "None" : drawType}</strong>
         </div>
         <div className="flex items-center gap-1">
-          Color: <span className="w-3 h-3 border border-[#ccc] rounded-sm inline-block" style={{ backgroundColor: drawColor }} />
+          Color: <span className="w-3 h-3 border border-base-300 rounded-sm inline-block" style={{ backgroundColor: drawColor }} />
         </div>
       </div>
     </div>

@@ -52,7 +52,7 @@ export const FullscreenControl = React.memo(({ map }: FullscreenControlProps) =>
 
   return (
     <MapControlButton onClick={toggleFullscreen} title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>
-      {isFullscreen ? <FaCompress size={16} className="text-gray-600" /> : <FaExpand size={16} className="text-gray-600" />}
+      {isFullscreen ? <FaCompress size={16} className="text-base-content" /> : <FaExpand size={16} className="text-base-content" />}
     </MapControlButton>
   );
 });

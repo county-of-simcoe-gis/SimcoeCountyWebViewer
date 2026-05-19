@@ -11,7 +11,7 @@ import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
 import "@/styles/rc-slider-basemap.css";
 import { Layer } from "ol/layer";
-import { FaCog } from "react-icons/fa";
+import { MdManageHistory } from "react-icons/md";
 import { setStorageItem, getStorageItem } from "@/utils/storage";
 import Image from "next/image";
 
@@ -90,14 +90,18 @@ interface SavedBasemapOptions {
 function saveBasemapOptions(options: SavedBasemapOptions): void {
   try {
     setStorageItem(BASEMAP_STORAGE_KEY, JSON.stringify(options));
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 function loadBasemapOptions(): SavedBasemapOptions | null {
   try {
     const stored = getStorageItem(BASEMAP_STORAGE_KEY);
     if (stored) return JSON.parse(stored) as SavedBasemapOptions;
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return null;
 }
 
@@ -224,6 +228,10 @@ export default function BasemapSwitcher() {
     (basemapConfig: BasemapConfig) => {
       if (!map || !basemapConfig.imageryServices) return;
 
+      // Prevent duplicate imagery layers (e.g. from React StrictMode double-invocation)
+      const existingImagery = LayerManager.getLayersByCategory("BaseMap").filter((ml) => ml.metadata?.isImagery);
+      if (existingImagery.length > 0) return;
+
       basemapConfig.imageryServices.forEach((service, index) => {
         // Map service types to supported LayerHelpers types
         let sourceType: OLDataType;
@@ -282,6 +290,13 @@ export default function BasemapSwitcher() {
     (basemapConfig: BasemapConfig) => {
       if (!map || !basemapConfig.streetService) return;
 
+      // Prevent duplicate streets layers (e.g. from React StrictMode double-invocation)
+      const existingStreets = LayerManager.getLayersByCategory("BaseMap").find((ml) => ml.metadata?.isStreets);
+      if (existingStreets) {
+        streetsLayerRef.current = existingStreets.layer;
+        return;
+      }
+
       LayerHelpers.getLayer(
         {
           sourceType: OL_DATA_TYPES.TileImage,
@@ -317,6 +332,13 @@ export default function BasemapSwitcher() {
   const loadWorldImagery = useCallback(
     (basemapConfig: BasemapConfig) => {
       if (!map || !basemapConfig.worldImageryService) return;
+
+      // Prevent duplicate world imagery layers (e.g. from React StrictMode double-invocation)
+      const existingWorldImagery = LayerManager.getLayersByCategory("BaseMap").find((ml) => ml.metadata?.isWorldImagery);
+      if (existingWorldImagery) {
+        worldImageryLayerRef.current = existingWorldImagery.layer;
+        return;
+      }
 
       LayerHelpers.getLayer(
         {
@@ -522,34 +544,30 @@ export default function BasemapSwitcher() {
 
       if (effectiveButton === "imagery") {
         // Imagery mode — hide topo, show imagery
+        // Use LayerManager to toggle ALL layers by metadata (avoids stale-ref issues)
         const baseMapLayers = LayerManager.getLayersByCategory("BaseMap");
-        const topoLayers = baseMapLayers.filter((ml) => ml.metadata?.isBasemap === true);
-        topoLayers.forEach((ml) => ml.layer.setVisible(false));
-
-        if (worldImageryLayerRef.current) {
-          worldImageryLayerRef.current.setVisible(true);
-        }
+        const streets = saved?.streetsCheckbox ?? streetsCheckbox;
+        baseMapLayers.forEach((ml) => {
+          if (ml.metadata?.isBasemap) ml.layer.setVisible(false);
+          if (ml.metadata?.isWorldImagery) ml.layer.setVisible(true);
+          if (ml.metadata?.isStreets) ml.layer.setVisible(streets);
+        });
 
         const sliderValue = saved?.imagerySliderValue ?? (config.imageryServices?.length ? config.imageryServices.length - 1 : 0);
         updateImageryLayers(sliderValue);
         setImagerySliderValue(sliderValue);
-
-        if (streetsLayerRef.current) {
-          const streets = saved?.streetsCheckbox ?? streetsCheckbox;
-          streetsLayerRef.current.setVisible(streets);
-          setStreetsCheckbox(streets);
-        }
+        setStreetsCheckbox(streets);
 
         setActiveButton("imagery");
       } else {
         // Topo mode — disable all imagery layers, apply saved topo service
+        // Use LayerManager to toggle ALL layers by metadata
+        const baseMapLayers = LayerManager.getLayersByCategory("BaseMap");
+        baseMapLayers.forEach((ml) => {
+          if (ml.metadata?.isWorldImagery) ml.layer.setVisible(false);
+          if (ml.metadata?.isStreets) ml.layer.setVisible(false);
+        });
         updateImageryLayers(-1);
-        if (streetsLayerRef.current) {
-          streetsLayerRef.current.setVisible(false);
-        }
-        if (worldImageryLayerRef.current) {
-          worldImageryLayerRef.current.setVisible(false);
-        }
 
         // Apply saved topo service if different from the default
         if (saved?.selectedTopoServiceName && config.topoServices) {
@@ -648,23 +666,15 @@ export default function BasemapSwitcher() {
       // console.log(`🙈 Hidden topo layer: ${managedLayer.name}`);
     });
 
-    // Show world imagery (background)
-    if (worldImageryLayerRef.current) {
-      worldImageryLayerRef.current.setVisible(true);
-      // console.log("🌍 World imagery set visible");
-    } else {
-      console.warn("⚠️ worldImageryLayerRef.current is null!");
-    }
+    // Show world imagery and streets via LayerManager
+    // (ensures ALL instances are toggled, not just the ref)
+    basemapLayers.forEach((ml) => {
+      if (ml.metadata?.isWorldImagery) ml.layer.setVisible(true);
+      if (ml.metadata?.isStreets) ml.layer.setVisible(streetsCheckbox);
+    });
 
     // Show imagery layers
-    // console.log(`🖼️ About to update imagery layers with slider value: ${imagerySliderValue}`);
     updateImageryLayers(imagerySliderValue);
-
-    // Show streets if enabled
-    if (streetsLayerRef.current) {
-      streetsLayerRef.current.setVisible(streetsCheckbox);
-      // console.log(`🛣️ Streets set visible: ${streetsCheckbox}`);
-    }
 
     setActiveButton("imagery");
 
@@ -674,12 +684,13 @@ export default function BasemapSwitcher() {
   }, [imagerySliderValue, streetsCheckbox, updateImageryLayers]);
 
   const disableImagery = useCallback(() => {
-    if (streetsLayerRef.current) {
-      streetsLayerRef.current.setVisible(false);
-    }
-    if (worldImageryLayerRef.current) {
-      worldImageryLayerRef.current.setVisible(false);
-    }
+    // Use LayerManager to hide ALL world imagery and streets layers
+    // (refs may miss duplicates created by React StrictMode double-invocation)
+    const baseMapLayers = LayerManager.getLayersByCategory("BaseMap");
+    baseMapLayers.forEach((ml) => {
+      if (ml.metadata?.isWorldImagery) ml.layer.setVisible(false);
+      if (ml.metadata?.isStreets) ml.layer.setVisible(false);
+    });
     setImageryPanelOpen(false);
     updateImageryLayers(-1);
   }, [updateImageryLayers]);
@@ -803,18 +814,14 @@ export default function BasemapSwitcher() {
         managedLayer.layer.setVisible(false);
       });
 
-      // Show world imagery (background)
-      if (worldImageryLayerRef.current) {
-        worldImageryLayerRef.current.setVisible(true);
-      }
+      // Show world imagery and streets via LayerManager
+      baseMapLayers.forEach((ml) => {
+        if (ml.metadata?.isWorldImagery) ml.layer.setVisible(true);
+        if (ml.metadata?.isStreets) ml.layer.setVisible(streetsCheckbox);
+      });
 
       // Show imagery layers with correct target index
       updateImageryLayers(targetIndex);
-
-      // Show streets if enabled
-      if (streetsLayerRef.current) {
-        streetsLayerRef.current.setVisible(streetsCheckbox);
-      }
 
       setActiveButton("imagery");
       setImagerySliderValue(targetIndex);
@@ -881,7 +888,7 @@ export default function BasemapSwitcher() {
     <>
       <div
         id="sc-basemap-main-container"
-        className={`absolute right-[2px] top-0 w-[74px] bg-white border border-[#ccc] p-[2px] opacity-90 rounded z-[2] outline-none hover:opacity-100${!map ? " hidden" : ""}`}
+        className={`absolute right-[2px] top-0 w-[74px] bg-base-100 border border-base-300 p-[2px] opacity-90 rounded z-[2] outline-none hover:opacity-100${!map ? " hidden" : ""}`}
       >
         <div className="relative">
           <button
@@ -890,17 +897,17 @@ export default function BasemapSwitcher() {
             onClick={onBasemapImageClick}
             title={`Click to select ${getCurrentBasemapName()}`}
           >
-            <Image unoptimized src={getCurrentBasemapImage()} alt={getCurrentBasemapName()} width={70} height={49} className="block" style={{ width: "100%", height: "auto", borderRadius: 0 }} />
+            <Image src={getCurrentBasemapImage()} alt={getCurrentBasemapName()} width={70} height={49} className="block" style={{ width: "100%", height: "auto", borderRadius: 0 }} />
           </button>
 
           {/* Settings button overlaid on top of image for imagery */}
           {activeButton === "imagery" && (
             <button
-              className="absolute bottom-0 right-0 !bg-[#e0e0e0] !border !border-black rounded-sm cursor-pointer !p-px flex items-center justify-center text-[#333] transition-all duration-200 !w-5 !h-5 z-[3] hover:bg-[#d0d0d0] hover:text-black hover:scale-110"
+              className="absolute bottom-0 right-0 !bg-base-300 !border !border-base-content/50 rounded-sm cursor-pointer !p-px flex items-center justify-center text-base-content transition-all duration-200 !w-5 !h-5 z-[3] hover:bg-base-200 hover:text-base-content hover:scale-110"
               onClick={onSettingsClick}
               title="Imagery Settings"
             >
-              <FaCog size={14} className="ml-[1px]" />
+              <MdManageHistory size={14} className="ml-[1px]" />
             </button>
           )}
         </div>
@@ -908,7 +915,7 @@ export default function BasemapSwitcher() {
 
       {/* Imagery Slider Panel */}
       <div
-        className={`basemap-slider-container absolute right-[2px] w-[88px] h-[280px] top-[58px] bg-white rounded z-[2] border border-[#ccc] p-2 opacity-90 select-none transition-opacity duration-200 hover:opacity-100${!imageryPanelOpen ? " hidden" : ""}`}
+        className={`basemap-slider-container absolute right-[2px] w-[88px] h-[280px] top-[58px] bg-base-100 rounded z-[2] border border-base-300 p-2 opacity-90 select-none transition-opacity duration-200 hover:opacity-100${!imageryPanelOpen ? " hidden" : ""}`}
       >
         <label className="block text-[8pt] ml-2.5 pb-[5px] pt-0">
           <input className="w-[13px] h-[13px] p-0 m-0 align-middle relative -top-px scale-110" type="checkbox" checked={streetsCheckbox} onChange={onStreetsCheckbox} />
@@ -920,16 +927,16 @@ export default function BasemapSwitcher() {
 
       {/* Topo Options Panel */}
       <div
-        className={`absolute right-[2px] w-[120px] top-[47px] bg-white rounded z-[2] border border-[#ccc] p-1 opacity-90 select-none transition-opacity duration-200 flex flex-col gap-1.5 max-h-[400px] overflow-y-auto hover:opacity-100${!topoPanelOpen ? " hidden" : ""}`}
+        className={`absolute right-[2px] w-[120px] top-[47px] bg-base-100 rounded z-[2] border border-base-300 p-1 opacity-90 select-none transition-opacity duration-200 flex flex-col gap-1.5 max-h-[400px] overflow-y-auto hover:opacity-100${!topoPanelOpen ? " hidden" : ""}`}
       >
         {/* Imagery Option */}
         <div
-          className={`p-0 border border-[#ccc] rounded cursor-pointer bg-[#f9f9f9] transition-all duration-200 flex flex-col items-center text-center min-h-[70px] hover:bg-[#e5f3ff] hover:border-[#80b9ff] hover:shadow-[0_0_3px_#80b9ff]${activeButton === "imagery" ? " bg-[#d4edda] !border-[#28a745] text-[#155724] shadow-[0_0_3px_#28a745]" : ""}`}
+          className={`p-0 border border-base-300 rounded cursor-pointer bg-base-200 transition-all duration-200 flex flex-col items-center text-center min-h-[70px] hover:bg-primary/10 hover:border-primary/50 hover:shadow-[0_0_3px_rgba(0,123,255,0.3)]${activeButton === "imagery" ? " !bg-success/20 !border-success text-success-content shadow-[0_0_3px_rgba(40,167,69,0.3)]" : ""}`}
           onClick={onImagerySelect}
           title="Imagery"
         >
           <div className="text-[9px] font-bold mb-0 text-inherit whitespace-nowrap overflow-hidden text-ellipsis w-full">Imagery</div>
-          <Image unoptimized className="rounded-[3px] border border-[#ddd] object-cover max-w-[72px] max-h-[50px]" src="/images/imagery-basemap.png" alt="Imagery" width={80} height={60} />
+          <Image className="rounded-[3px] border border-base-300 object-cover max-w-[72px] max-h-[50px]" src="/images/imagery-basemap.png" alt="Imagery" width={80} height={60} />
         </div>
 
         {/* Topo Services */}
@@ -937,12 +944,12 @@ export default function BasemapSwitcher() {
           config.topoServices?.map((service) => (
             <div
               key={service.name}
-              className={`p-0 border border-[#ccc] rounded cursor-pointer bg-[#f9f9f9] transition-all duration-200 flex flex-col items-center text-center min-h-[70px] hover:bg-[#e5f3ff] hover:border-[#80b9ff] hover:shadow-[0_0_3px_#80b9ff]${selectedTopoService?.name === service.name && activeButton === "topo" ? " bg-[#d4edda] !border-[#28a745] text-[#155724] shadow-[0_0_3px_#28a745]" : ""}`}
+              className={`p-0 border border-base-300 rounded cursor-pointer bg-base-200 transition-all duration-200 flex flex-col items-center text-center min-h-[70px] hover:bg-primary/10 hover:border-primary/50 hover:shadow-[0_0_3px_rgba(0,123,255,0.3)]${selectedTopoService?.name === service.name && activeButton === "topo" ? " !bg-success/20 !border-success text-success-content shadow-[0_0_3px_rgba(40,167,69,0.3)]" : ""}`}
               onClick={() => onTopoServiceSelect(service)}
               title={service.name}
             >
               <div className="text-[9px] font-bold mb-0 text-inherit whitespace-nowrap overflow-hidden text-ellipsis w-full">{service.name}</div>
-              <Image unoptimized className="rounded-[3px] border border-[#ddd] object-cover max-w-[72px] max-h-[50px]" src={`/images/${service.image}`} alt={service.name} width={80} height={60} />
+              <Image className="rounded-[3px] border border-base-300 object-cover max-w-[72px] max-h-[50px]" src={`/images/${service.image}`} alt={service.name} width={80} height={60} />
             </div>
           ))}
       </div>

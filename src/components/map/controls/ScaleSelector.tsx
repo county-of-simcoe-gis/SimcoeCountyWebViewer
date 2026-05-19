@@ -38,10 +38,10 @@ export function ScaleSelector({ map }: ScaleSelectorProps) {
   };
 
   return (
-    <div className="flex items-center border border-gray-300 ol-scale-line rounded">
-      <label className="text-gray-700 text-xs">Scale:</label>
+    <div className="flex items-center border border-base-300 ol-scale-line rounded">
+      <label className="text-base-content text-xs">Scale:</label>
       <select
-        className="border border-gray-600 text-gray-700 text-xs rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
+        className="border border-base-content/40 text-base-content bg-base-100 text-xs rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer"
         onChange={(evt) => {
           onScaleClick(evt.target.value);
         }}

@@ -36,10 +36,10 @@ export const ZoomControls = React.memo(({ map }: ZoomControlsProps) => {
   return (
     <div className="flex flex-col gap-1">
       <MapControlButton onClick={zoomIn} title="Zoom in">
-        <FaPlus size={14} className="text-gray-600" />
+        <FaPlus size={14} className="text-base-content" />
       </MapControlButton>
       <MapControlButton onClick={zoomOut} title="Zoom out">
-        <FaMinus size={14} className="text-gray-600" />
+        <FaMinus size={14} className="text-base-content" />
       </MapControlButton>
     </div>
   );

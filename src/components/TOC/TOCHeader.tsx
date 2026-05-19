@@ -47,11 +47,11 @@ export default function TOCHeader({
   };
 
   return (
-    <div className="flex items-center p-[5px] bg-[#f5f5f5] border-b border-[#ddd] gap-[5px] font-[Verdana,Arial,sans-serif] text-[9pt]">
+    <div className="flex items-center p-[5px] bg-base-200 border-b border-base-300 gap-[5px] font-[Verdana,Arial,sans-serif] text-[9pt]">
       {/* Search Input */}
       <div className="flex-1 relative">
         <input
-          className="w-full py-[3px] pr-5 pl-[5px] border border-[#ccc] rounded-[3px] font-[Verdana,Arial,sans-serif] text-[9pt] bg-white focus:outline-1 focus:outline-primary focus:border-primary"
+          className="w-full py-[3px] pr-5 pl-[5px] border border-base-300 rounded-[3px] font-[Verdana,Arial,sans-serif] text-[9pt] bg-base-100 text-base-content focus:outline-1 focus:outline-primary focus:border-primary"
           type="text"
           placeholder={`Search ${layerCount} Layers...`}
           value={searchText}
@@ -59,7 +59,7 @@ export default function TOCHeader({
         />
         {searchText && (
           <button
-            className="absolute right-[5px] top-1/2 -translate-y-1/2 bg-transparent border-none text-base text-[#999] cursor-pointer w-4 h-4 flex items-center justify-center hover:text-[#666]"
+            className="absolute right-[5px] top-1/2 -translate-y-1/2 bg-transparent border-none text-base text-base-content/50 cursor-pointer w-4 h-4 flex items-center justify-center hover:text-base-content"
             onClick={() => onSearchChange("")}
             title="Clear search"
           >
@@ -85,7 +85,11 @@ export default function TOCHeader({
 
       {/* Help Button */}
       <div className="flex items-center">
-        <button onClick={() => showURLWindow(helpLink, false)} className="flex items-center justify-center w-5 h-5 bg-transparent border-none cursor-pointer rounded-[3px] hover:bg-[#e0e0e0]" title="Layer Help">
+        <button
+          onClick={() => showURLWindow(helpLink, false)}
+          className="flex items-center justify-center w-5 h-5 bg-transparent border-none cursor-pointer rounded-[3px] hover:bg-base-300"
+          title="Layer Help"
+        >
           <FaQuestionCircle size={16} />
         </button>
       </div>
@@ -93,7 +97,7 @@ export default function TOCHeader({
       {/* Loading Indicator */}
       {isLoading && (
         <div className="flex items-center justify-center ml-[5px]">
-          <div className="w-4 h-4 border-2 border-[#f3f3f3] border-t-[#3498db] rounded-full animate-spin"></div>
+          <div className="w-4 h-4 border-2 border-base-300 border-t-primary rounded-full animate-spin"></div>
         </div>
       )}
     </div>

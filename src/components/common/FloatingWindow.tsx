@@ -85,7 +85,7 @@ export default function FloatingWindow({ isOpen, title, onClose, children, heade
 
   return createPortal(
     <div
-      className={`fixed z-[200000] bg-white flex flex-col shadow-[0_0_12px_2px_rgba(0,0,0,0.25)] transition-all duration-300 ease-in-out print:static print:shadow-none print:rounded-none print:block print:inset-0 ${
+      className={`fixed z-[200000] bg-base-100 flex flex-col shadow-[0_0_12px_2px_rgba(0,0,0,0.25)] transition-all duration-300 ease-in-out print:static print:shadow-none print:rounded-none print:block print:inset-0 ${
         isMaximized ? "!top-0 !left-0 !right-0 !bottom-0 rounded-none" : "rounded-t-[5px]"
       }`}
       style={

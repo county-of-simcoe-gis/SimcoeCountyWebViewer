@@ -4,6 +4,7 @@ import React, { useState, useCallback } from "react";
 import { IdentifyFeature } from "./Identify";
 import { filterFeatureKeys } from "./IdentifyLayer";
 import { useMapStore } from "@/stores/mapStore";
+import { useFeatureHighlight } from "@/hooks/useFeatureHighlight";
 import Attachments from "@/components/common/Attachments";
 import Image from "next/image";
 
@@ -16,6 +17,7 @@ interface IdentifyFeatureItemProps {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ featureItem, layerName, minScale = 0 }) => {
   const map = useMapStore((s) => s.map);
+  const { highlightFeature, clearHighlight } = useFeatureHighlight();
   const [open, setOpen] = useState(false);
   const { feature, displayName } = featureItem;
 
@@ -52,21 +54,23 @@ const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ feat
     const attachmentUrl = feature.get("attachmentUrl") as string | undefined;
 
     if (keys.length === 0 && !attachmentUrl) {
-      return <div className="p-2.5 text-center text-[#999] italic">No attributes found</div>;
+      return <div className="p-2.5 text-center text-base-content/70 italic">No attributes found</div>;
     }
 
     return (
       <div className="flex flex-col gap-2">
-        {keys.filter((k) => k !== "attachmentUrl").map((key) => (
-          <div key={key} className="grid grid-cols-[140px_1fr] gap-2.5 py-[5px] border-b border-[#f0f0f0] last:border-b-0 max-[768px]:grid-cols-1 max-[768px]:gap-1">
-            <div className="font-semibold text-[#555] break-words max-[768px]:text-[11px]">{formatFieldName(key)}:</div>
-            <div className="text-[#333] break-words max-[768px]:text-[11px] max-[768px]:pl-2.5">{formatFieldValue(props[key])}</div>
-          </div>
-        ))}
+        {keys
+          .filter((k) => k !== "attachmentUrl")
+          .map((key) => (
+            <div key={key} className="grid grid-cols-[140px_1fr] gap-2.5 py-[5px] border-b border-base-200 last:border-b-0 max-[768px]:grid-cols-1 max-[768px]:gap-1">
+              <div className="font-semibold text-base-content/70 break-words max-[768px]:text-[11px]">{formatFieldName(key)}:</div>
+              <div className="text-base-content break-words max-[768px]:text-[11px] max-[768px]:pl-2.5">{formatFieldValue(props[key])}</div>
+            </div>
+          ))}
         {attachmentUrl && (
-          <div className="grid grid-cols-[140px_1fr] gap-2.5 py-[5px] border-b border-[#f0f0f0] last:border-b-0 max-[768px]:grid-cols-1 max-[768px]:gap-1">
-            <div className="font-semibold text-[#555] break-words max-[768px]:text-[11px]">Attachments:</div>
-            <div className="text-[#333] break-words max-[768px]:text-[11px] max-[768px]:pl-2.5">
+          <div className="grid grid-cols-[140px_1fr] gap-2.5 py-[5px] border-b border-base-200 last:border-b-0 max-[768px]:grid-cols-1 max-[768px]:gap-1">
+            <div className="font-semibold text-base-content/70 break-words max-[768px]:text-[11px]">Attachments:</div>
+            <div className="text-base-content break-words max-[768px]:text-[11px] max-[768px]:pl-2.5">
               <Attachments attachmentUrl={attachmentUrl} />
             </div>
           </div>
@@ -79,14 +83,14 @@ const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ feat
   const hasGeom = feature.getGeometry() !== undefined && feature.getGeometry() !== null;
 
   return (
-    <div className="mb-2.5 border border-[#e0e0e0] rounded-[3px] overflow-hidden">
-      <div className="bg-[#fafafa] py-2 px-2.5 flex justify-between items-center border-b border-[#e0e0e0]">
-        <div className="flex-1 cursor-pointer font-medium text-xs hover:text-[#007bff]" onClick={() => setOpen(!open)}>
+    <div className="mb-2.5 border border-base-300 rounded-[3px] overflow-hidden">
+      <div className="bg-base-200 py-2 px-2.5 flex justify-between items-center border-b border-base-300" onMouseEnter={() => highlightFeature(feature)} onMouseLeave={clearHighlight}>
+        <div className="flex-1 cursor-pointer font-medium text-xs hover:text-primary" onClick={() => setOpen(!open)}>
           {formatFieldName(displayName)}: {featureName}
         </div>
         {hasGeom && (
           <div className="flex gap-2 items-center">
-            <Image unoptimized
+            <Image
               src="/images/toc/zoom-in.png"
               width={16}
               height={16}

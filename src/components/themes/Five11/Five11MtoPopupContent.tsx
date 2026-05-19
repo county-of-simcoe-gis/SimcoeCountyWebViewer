@@ -65,7 +65,7 @@ export default function Five11MtoPopupContent({ properties }: Five11MtoPopupCont
           <span className="text-sm">{formatValue(key, value)}</span>
         </div>
       ))}
-      {entries.length === 0 && <div className="text-sm text-base-content/50">No details available</div>}
+      {entries.length === 0 && <div className="text-sm text-base-content/70">No details available</div>}
     </div>
   );
 }

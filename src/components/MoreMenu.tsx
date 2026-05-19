@@ -13,6 +13,7 @@ import { FaCamera, FaCommentDots, FaMap, FaQuestionCircle, FaFileContract, FaNew
 import { showFeedbackWindow } from "@/utils/mapHelpers";
 import { showURLWindow } from "@/utils/helpersUI";
 import { MenuList, MenuItem, MenuHeading } from "@/components/ui";
+import ThemeToggle from "@/components/ThemeToggle";
 
 interface MenuItem {
   id: string;
@@ -356,6 +357,9 @@ export default function MoreMenu() {
             ))}
           </>
         )}
+
+        {/* Theme Toggle */}
+        <ThemeToggle />
       </MenuList>
     </>
   ) : null;

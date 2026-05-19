@@ -249,7 +249,7 @@ export default function ThemeLayers({ layers, themeId, popupLogoImage, onVisibil
               <span className="label-text flex-1">{layer.displayName}</span>
 
               {/* Feature count */}
-              {featureCounts[layer.layerName] !== undefined && featureCounts[layer.layerName] !== null && <span className="text-xs text-base-content/50">({featureCounts[layer.layerName]})</span>}
+              {featureCounts[layer.layerName] !== undefined && featureCounts[layer.layerName] !== null && <span className="text-xs text-base-content/70">({featureCounts[layer.layerName]})</span>}
 
               {/* Info button - only shown when layer has a description */}
               {layer.description && (
@@ -262,17 +262,13 @@ export default function ThemeLayers({ layers, themeId, popupLogoImage, onVisibil
                     setExpandedInfoPanels((prev) => ({ ...prev, [layer.layerName]: !prev[layer.layerName] }));
                   }}
                 >
-                  <FaInfoCircle className={`w-4 h-4 ${expandedInfoPanels[layer.layerName] ? "text-info" : "text-base-content/40"}`} />
+                  <FaInfoCircle className={`w-4 h-4 ${expandedInfoPanels[layer.layerName] ? "text-info" : "text-base-content/70"}`} />
                 </button>
               )}
             </label>
 
             {/* Collapsible description panel */}
-            {layer.description && expandedInfoPanels[layer.layerName] && (
-              <div className="ml-7 mt-1 mb-1 p-2 text-xs text-base-content/70 bg-base-200 rounded">
-                {layer.description}
-              </div>
-            )}
+            {layer.description && expandedInfoPanels[layer.layerName] && <div className="ml-7 mt-1 mb-1 p-2 text-xs text-base-content/70 bg-base-200 rounded">{layer.description}</div>}
           </div>
         ))}
       </div>

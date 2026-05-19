@@ -159,7 +159,7 @@ export default function ThemeDataList({ layerConfig, onlyFeaturesWithinMap, isVi
         <FaTable className="text-base-content/70 w-4 h-4" />
         {legendUrl && <img src={legendUrl} alt="legend" className="w-5 h-5 object-contain" onError={(e) => (e.currentTarget.style.display = "none")} />}
         <span className="flex-1 text-sm font-medium truncate">{layerConfig.displayName}</span>
-        <span className="text-xs text-base-content/50">({features.length})</span>
+        <span className="text-xs text-base-content/70">({features.length})</span>
         {isExpanded ? <FaChevronDown className="w-3 h-3" /> : <FaChevronRight className="w-3 h-3" />}
       </div>
 
@@ -171,7 +171,7 @@ export default function ThemeDataList({ layerConfig, onlyFeaturesWithinMap, isVi
               <span className="loading loading-spinner loading-sm"></span>
             </div>
           ) : features.length === 0 ? (
-            <div className="p-2 text-sm text-base-content/50 text-center">No features found</div>
+            <div className="p-2 text-sm text-base-content/70 text-center">No features found</div>
           ) : (
             <div className="divide-y divide-base-200">
               {features.map((feature, index) => (

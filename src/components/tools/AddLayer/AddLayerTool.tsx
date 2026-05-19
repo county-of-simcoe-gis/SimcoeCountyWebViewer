@@ -953,7 +953,7 @@ export default function AddLayerTool({ name = "Add Data", helpLink, hideHeader =
                     onDragOver={handleDragOver}
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    <FaUpload size={32} className="text-base-content/50 mb-2" />
+                    <FaUpload size={32} className="text-base-content/70 mb-2" />
                     <span className="text-sm">{selectedFile ? selectedFile.name : "Drag and Drop or Click to Select File"}</span>
                     <input ref={fileInputRef} type="file" className="hidden" accept={supportedExtensions.map((ext) => `.${ext}`).join(",")} onChange={handleFileChange} />
                   </div>

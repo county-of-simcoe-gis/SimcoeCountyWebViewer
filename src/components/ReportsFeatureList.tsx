@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, useCallback, type ReactNode } from "react";
 import { FaHome, FaBuilding, FaLayerGroup, FaChevronDown, FaChevronRight } from "react-icons/fa";
 import type { Result, PropertyResult, CondoResult, IdentifyResult } from "@/components/ResultsPopup";
 import PropertyPopup from "@/components/PropertyPopup";
 import { InfoRow } from "@/components/common/InfoRow";
 import { isExcludedKey } from "@/utils/identifyHelpers";
+import { useFeatureHighlight } from "@/hooks/useFeatureHighlight";
 
 interface ReportsFeatureListProps {
   results: Result[];
@@ -103,13 +104,28 @@ export default function ReportsFeatureList({ results, onClose, onClearParcelLaye
     if (results.length > 0) return new Set([results[0].id]);
     return new Set();
   });
+  const { highlightFeature, clearHighlight } = useFeatureHighlight();
+
+  const handleMouseEnter = useCallback(
+    (result: Result) => {
+      const feature = result.data?.feature;
+      if (feature) {
+        highlightFeature(feature);
+      }
+    },
+    [highlightFeature],
+  );
+
+  const handleMouseLeave = useCallback(() => {
+    clearHighlight();
+  }, [clearHighlight]);
 
   if (results.length === 0) return null;
 
   // Single result — render directly without accordion chrome
   if (results.length === 1) {
     return (
-      <div className="w-full">
+      <div className="w-full" onMouseEnter={() => handleMouseEnter(results[0])} onMouseLeave={handleMouseLeave}>
         <FeatureContent result={results[0]} onClose={onClose} onClearParcelLayer={onClearParcelLayer} />
       </div>
     );
@@ -140,6 +156,8 @@ export default function ReportsFeatureList({ results, onClose, onClearParcelLaye
               <button
                 className={`flex items-center gap-2 w-full py-2.5 px-3 border-none cursor-pointer text-left text-[13px] transition-colors ${isExpanded ? "bg-[#e8f0fe] border-b border-[#d4e4f7]" : "bg-[#fafafa] hover:bg-[#f0f0f0]"}`}
                 onClick={() => togglePanel(result.id)}
+                onMouseEnter={() => handleMouseEnter(result)}
+                onMouseLeave={handleMouseLeave}
                 aria-expanded={isExpanded}
               >
                 <span className="shrink-0 text-[#888] flex items-center">{isExpanded ? <FaChevronDown size={10} /> : <FaChevronRight size={10} />}</span>

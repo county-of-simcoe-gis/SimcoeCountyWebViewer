@@ -36,9 +36,9 @@ export function LegendToggleButton({ showLegend, onToggleLegend, hasLegend, styl
       }}
     >
       {styleUrl === "" && !hasLegend ? (
-        <FaEyeSlash size={16} title="No Legend Available" className="opacity-70 text-[#666]" />
+        <FaEyeSlash size={16} title="No Legend Available" className="text-base-content/70" />
       ) : (
-        <FaListUl size={16} title={showLegend ? "Hide Legend" : "Show Legend"} className="opacity-70 text-[#666]" />
+        <FaListUl size={16} title={showLegend ? "Hide Legend" : "Show Legend"} className="text-base-content/70" />
       )}
     </div>
   );

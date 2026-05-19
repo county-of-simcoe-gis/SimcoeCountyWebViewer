@@ -1,5 +1,5 @@
 @reference "../../app/globals.css";
 
 .mymaps-footer-btn {
-  @apply bg-[#f8f9fa] border border-[#dee2e6] rounded-[3px] py-1 px-[5px] cursor-pointer text-[11px] font-[Arial,sans-serif] text-[#333] flex items-center justify-center gap-[3px] transition-all min-h-[24px] overflow-visible hover:bg-[#e9ecef] hover:border-[#adb5bd] active:bg-[#dee2e6] active:translate-y-px;
+  @apply bg-base-200 border border-base-300 rounded-[3px] py-1 px-[5px] cursor-pointer text-[11px] font-[Arial,sans-serif] text-base-content flex items-center justify-center gap-[3px] transition-all min-h-[24px] overflow-visible hover:bg-base-300 hover:border-base-content/30 active:bg-base-300 active:translate-y-px;
 }

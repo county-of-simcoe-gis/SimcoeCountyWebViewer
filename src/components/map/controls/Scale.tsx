@@ -17,7 +17,7 @@ export const ScaleDisplay = React.memo(({ map }: ScaleDisplayProps) => {
       const updateScale = () => {
         const newScale = getMapScale(map);
         setScale("1:" + newScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
-        
+
         // Only update scale line if it's visible
         if (controlVisibility.scaleLine) {
           // Find the ol-scale-line-inner element and update it with scale info
@@ -69,7 +69,7 @@ export const ScaleDisplay = React.memo(({ map }: ScaleDisplayProps) => {
   // Return null since we're directly manipulating the DOM
   if (!controlVisibility.scaleLine) {
     return (
-      <div className="text-gray-700 text-xs ol-scale-line" style={{ transform: "translateY(2em)" }}>
+      <div className="text-base-content text-xs ol-scale-line" style={{ transform: "translateY(2em)" }}>
         {scale}
       </div>
     );

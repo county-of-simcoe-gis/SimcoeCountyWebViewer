@@ -78,6 +78,26 @@
   display: none;
 }
 
+/* ──── Dark Mode Overrides ──── */
+
+[data-theme="dark"] .react-tabs__tab-list {
+  border-bottom-color: #2a323c !important;
+}
+
+[data-theme="dark"] .react-tabs__tab {
+  background: linear-gradient(to bottom, #1d232a 0%, #15191e 100%);
+  border-color: #2a323c;
+  border-right-color: #2a323c !important;
+  color: #a6adbb;
+}
+
+[data-theme="dark"] .react-tabs__tab--selected {
+  background: linear-gradient(to bottom, #1e293b 0%, #1e3a5f 100%) !important;
+  color: #e5e7eb !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 1px 1px 0px 0px #1a1a2e !important;
+}
+
 .react-tabs__tab-panel--selected {
   display: block;
 }

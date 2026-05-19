@@ -23,7 +23,7 @@ export function ZoomToExtentButton({ map, centerCoords, defaultZoom }: ZoomToExt
 
   return (
     <MapControlButton onClick={zoomFullExtent} title="Zoom to full extent" className="hover:scale-105">
-      <FaGlobe size={18} className="text-gray-600" />
+      <FaGlobe size={18} className="text-base-content" />
     </MapControlButton>
   );
 }

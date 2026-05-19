@@ -101,6 +101,7 @@ const themeComponents: Record<
 
 export default function Sidebar() {
   const isOpen = useSidebarStore((s) => s.isOpen);
+  const closeSidebar = useSidebarStore((s) => s.closeSidebar);
   const themes = useSidebarStore((s) => s.themes);
   const tools = useSidebarStore((s) => s.tools);
   const activeTheme = useSidebarStore((s) => s.activeTheme);
@@ -356,18 +357,18 @@ export default function Sidebar() {
       {visibleTools.map((tool) => (
         <div
           key={tool.id}
-          className={`flex items-start px-1.5 pb-1.5 pt-px border border-transparent border-b-gray-300 rounded-sm cursor-pointer bg-white select-none min-h-[72px] mt-1.5 text-[#505050] hover:border-[#90b5d5] hover:bg-[image:var(--sc-gradient-hover)] ${
+          className={`flex items-start px-1.5 pb-1.5 pt-px border border-transparent border-b-base-300 rounded-sm cursor-pointer bg-base-100 select-none min-h-[72px] mt-1.5 text-base-content hover:border-[#90b5d5] hover:bg-[image:var(--sc-gradient-hover)] ${
             activeTool === tool.id ? "bg-[image:var(--sc-gradient-active)] !border-[#90b5d5]" : ""
           }`}
           onClick={() => handleSidebarItemClick(tool.component || tool.name, tool.name, "tools")}
         >
-          <div className="relative w-[60px] h-[60px] shrink-0 flex items-center justify-center bg-[image:linear-gradient(to_bottom,#f2f5f6,#e6e6e6)] rounded-sm border border-gray-300 mr-4 text-center pt-1.5">
-            {tool.secure && <FaLock className="absolute top-0.5 left-0.5 text-[10px] text-gray-500 drop-shadow-sm" />}
-            <Image unoptimized src={`/images/${tool.imageName}`} alt={tool.name} width={48} height={48} className="w-[48px] h-[48px] object-contain" />
+          <div className="relative w-[60px] h-[60px] shrink-0 flex items-center justify-center bg-[image:linear-gradient(to_bottom,#f2f5f6,#e6e6e6)] dark:bg-[image:linear-gradient(to_bottom,#252d37,#1d232a)] rounded-sm border border-base-300 mr-4 text-center pt-1.5">
+            {tool.secure && <FaLock className="absolute top-0.5 left-0.5 text-[10px] text-base-content/50 drop-shadow-sm" />}
+            <Image src={`/images/${tool.imageName}`} alt={tool.name} width={48} height={48} className="w-[48px] h-[48px] object-contain" />
           </div>
           <div className="flex-1 flex flex-col justify-start min-h-[60px]">
-            <div className="text-[15px] font-bold text-[#616161] mb-1.5 leading-tight">{tool.name}</div>
-            <div className="text-[10px] text-gray-500 leading-snug text-left pl-[18px] pr-1 bg-[url('/images/arrow_curve.gif')] bg-no-repeat">{tool.description}</div>
+            <div className="text-[15px] font-bold text-base-content/80 mb-1.5 leading-tight">{tool.name}</div>
+            <div className="text-[10px] text-base-content/70 leading-snug text-left pl-[18px] pr-1 bg-[url('/images/arrow_curve.gif')] bg-no-repeat">{tool.description}</div>
           </div>
         </div>
       ))}
@@ -379,18 +380,18 @@ export default function Sidebar() {
       {visibleThemes.map((theme) => (
         <div
           key={theme.id}
-          className={`flex items-start px-1.5 pb-1.5 pt-px border border-transparent border-b-gray-300 rounded-sm cursor-pointer bg-white select-none min-h-[72px] mt-1.5 text-[#505050] hover:border-[#90b5d5] hover:bg-[image:var(--sc-gradient-hover)] ${
+          className={`flex items-start px-1.5 pb-1.5 pt-px border border-transparent border-b-base-300 rounded-sm cursor-pointer bg-base-100 select-none min-h-[72px] mt-1.5 text-base-content hover:border-[#90b5d5] hover:bg-[image:var(--sc-gradient-hover)] ${
             activeTheme === theme.id ? "bg-[image:var(--sc-gradient-active)] !border-[#90b5d5]" : ""
           }`}
           onClick={() => handleSidebarItemClick(theme.component || theme.name, theme.name, "themes")}
         >
-          <div className="relative w-[60px] h-[60px] shrink-0 flex items-center justify-center bg-[image:linear-gradient(to_bottom,#f2f5f6,#e6e6e6)] rounded-sm border border-gray-300 mr-4 text-center pt-1.5">
-            {theme.secure && <FaLock className="absolute top-0.5 left-0.5 text-[10px] text-gray-500 drop-shadow-sm" />}
-            <Image unoptimized src={`/images/${theme.imageName}`} alt={theme.name} width={50} height={50} className="w-[50px] h-[50px] object-contain opacity-70" />
+          <div className="relative w-[60px] h-[60px] shrink-0 flex items-center justify-center bg-[image:linear-gradient(to_bottom,#f2f5f6,#e6e6e6)] dark:bg-[image:linear-gradient(to_bottom,#252d37,#1d232a)] rounded-sm border border-base-300 mr-4 text-center pt-1.5">
+            {theme.secure && <FaLock className="absolute top-0.5 left-0.5 text-[10px] text-base-content/50 drop-shadow-sm" />}
+            <Image src={`/images/${theme.imageName}`} alt={theme.name} width={50} height={50} className="w-[50px] h-[50px] object-contain" />
           </div>
           <div className="flex-1 flex flex-col justify-start min-h-[60px]">
-            <div className="text-[15px] font-bold text-[#616161] mb-1.5 leading-tight">{theme.name}</div>
-            <div className="text-[10px] text-gray-500 leading-snug text-left pl-[18px] pr-1 bg-[url('/images/arrow_curve.gif')] bg-no-repeat">{theme.description}</div>
+            <div className="text-[15px] font-bold text-base-content/80 mb-1.5 leading-tight">{theme.name}</div>
+            <div className="text-[10px] text-base-content/70 leading-snug text-left pl-[18px] pr-1 bg-[url('/images/arrow_curve.gif')] bg-no-repeat">{theme.description}</div>
           </div>
         </div>
       ))}
@@ -398,156 +399,159 @@ export default function Sidebar() {
   );
 
   return (
-    <div
-      className={`absolute top-[52px] left-0 bottom-0 w-[370px] bg-base-200 border-r border-gray-400 z-[1000] overflow-hidden transition-transform duration-300 ease-in-out ${!isOpen ? "-translate-x-[370px]" : ""}`}
-    >
-      <Tabs selectedIndex={activeTab} onSelect={handleTabSelect} forceRenderTabPanel={true}>
-        <TabList>
+    <>
+      {/* Mobile overlay backdrop — visible only on mobile when sidebar is open */}
+      {isOpen && <div className="fixed inset-0 top-[52px] bg-black/30 z-[999] hidden max-[770px]:block" onClick={closeSidebar} aria-label="Close sidebar" />}
+      <div
+        className={`absolute top-[52px] left-0 bottom-0 w-[370px] bg-base-200 border-r border-base-300 z-[1000] overflow-hidden transition-transform duration-300 ease-in-out max-[770px]:fixed max-[770px]:h-[calc(100vh-52px)] ${!isOpen ? "-translate-x-[370px]" : ""}`}
+      >
+        <Tabs selectedIndex={activeTab} onSelect={handleTabSelect} forceRenderTabPanel={true}>
+          <TabList>
+            {!hideLayers && (
+              <Tab>
+                <div className="tab-content">
+                  <Image src="/images/legend-32x32.png" alt="Layers" width={32} height={32} className="tab-icon" />
+                  <div className="tab-text">Layers</div>
+                </div>
+              </Tab>
+            )}
+            {!hideTools && (
+              <Tab>
+                <div className="tab-content">
+                  {activeToolComponent && <span className="tab-dot" />}
+                  <Image src="/images/tools-32x32.png" alt={appConfig?.toolsTitle || "Tools"} width={32} height={32} className="tab-icon" />
+                  <div className="tab-text">{appConfig?.toolsTitle || "Tools"}</div>
+                </div>
+              </Tab>
+            )}
+            {!hideMyMaps && (
+              <Tab>
+                <div className="tab-content">
+                  {isMyMapsEditing && <span className="tab-dot" />}
+                  <Image src="/images/map-32x32.png" alt="My Maps" width={32} height={32} className="tab-icon" />
+                  <div className="tab-text">My Maps</div>
+                </div>
+              </Tab>
+            )}
+            {!hideThemes && (
+              <Tab>
+                <div className="tab-content">
+                  {activeThemeComponent && <span className="tab-dot" />}
+                  <Image
+                    src={singleTheme ? `/images/${singleTheme.imageName}` : "/images/theme-32x32.png"}
+                    alt={singleTheme ? singleTheme.name : appConfig?.themesTitle || "Themes"}
+                    width={32}
+                    height={32}
+                    className="tab-icon"
+                  />
+                  <div className="tab-text">{singleTheme ? singleTheme.name : appConfig?.themesTitle || "Themes"}</div>
+                </div>
+              </Tab>
+            )}
+            {!hideReports && (
+              <Tab>
+                <div className="tab-content">
+                  <Image src="/images/report-32x32.png" alt="Reports" width={32} height={32} className="tab-icon" />
+                  <div className="tab-text">Reports</div>
+                </div>
+              </Tab>
+            )}
+          </TabList>
+
           {!hideLayers && (
-            <Tab>
-              <div className="tab-content">
-                <Image unoptimized src="/images/legend-32x32.png" alt="Layers" width={32} height={32} className="tab-icon" />
-                <div className="tab-text">Layers</div>
+            <TabPanel>
+              <div className="h-[calc(100vh-130px)] max-h-[calc(100vh-130px)] overflow-hidden flex flex-col">
+                <Suspense fallback={<div className="p-5">Loading layers...</div>}>
+                  <TOC visible={activeTab === 0} />
+                </Suspense>
               </div>
-            </Tab>
+            </TabPanel>
           )}
+
           {!hideTools && (
-            <Tab>
-              <div className="tab-content">
-                {activeToolComponent && <span className="tab-dot" />}
-                <Image unoptimized src="/images/tools-32x32.png" alt={appConfig?.toolsTitle || "Tools"} width={32} height={32} className="tab-icon" />
-                <div className="tab-text">{appConfig?.toolsTitle || "Tools"}</div>
+            <TabPanel>
+              <div className="h-[calc(100vh-130px)] max-h-[calc(100vh-130px)] overflow-hidden flex flex-col">
+                {activeToolComponent ? activeToolComponent : visibleTools.length === 0 ? <div className="text-xs text-base-content/70">Loading tools...</div> : renderDefaultToolsContent()}
               </div>
-            </Tab>
+            </TabPanel>
           )}
+
           {!hideMyMaps && (
-            <Tab>
-              <div className="tab-content">
-                {isMyMapsEditing && <span className="tab-dot" />}
-                <Image unoptimized src="/images/map-32x32.png" alt="My Maps" width={32} height={32} className="tab-icon" />
-                <div className="tab-text">My Maps</div>
+            <TabPanel>
+              <div className="h-[calc(100vh-130px)] max-h-[calc(100vh-130px)] overflow-hidden flex flex-col">
+                <Suspense fallback={<div className="p-5">Loading MyMaps...</div>}>
+                  <MyMaps visible={activeTab === 2} />
+                </Suspense>
               </div>
-            </Tab>
+            </TabPanel>
           )}
+
           {!hideThemes && (
-            <Tab>
-              <div className="tab-content">
-                {activeThemeComponent && <span className="tab-dot" />}
-                <Image
-                  unoptimized
-                  src={singleTheme ? `/images/${singleTheme.imageName}` : "/images/theme-32x32.png"}
-                  alt={singleTheme ? singleTheme.name : appConfig?.themesTitle || "Themes"}
-                  width={32}
-                  height={32}
-                  className="tab-icon"
-                />
-                <div className="tab-text">{singleTheme ? singleTheme.name : appConfig?.themesTitle || "Themes"}</div>
+            <TabPanel>
+              <div className="h-[calc(100vh-130px)] max-h-[calc(100vh-130px)] overflow-hidden flex flex-col">
+                {activeThemeComponent ? activeThemeComponent : visibleThemes.length === 0 ? <div className="text-xs text-base-content/70">Loading themes...</div> : renderDefaultThemesContent()}
               </div>
-            </Tab>
+            </TabPanel>
           )}
+
           {!hideReports && (
-            <Tab>
-              <div className="tab-content">
-                <Image unoptimized src="/images/report-32x32.png" alt="Reports" width={32} height={32} className="tab-icon" />
-                <div className="tab-text">Reports</div>
-              </div>
-            </Tab>
-          )}
-        </TabList>
-
-        {!hideLayers && (
-          <TabPanel>
-            <div className="h-[calc(100vh-130px)] max-h-[calc(100vh-130px)] overflow-hidden flex flex-col">
-              <Suspense fallback={<div className="p-5">Loading layers...</div>}>
-                <TOC visible={activeTab === 0} />
-              </Suspense>
-            </div>
-          </TabPanel>
-        )}
-
-        {!hideTools && (
-          <TabPanel>
-            <div className="h-[calc(100vh-130px)] max-h-[calc(100vh-130px)] overflow-hidden flex flex-col">
-              {activeToolComponent ? activeToolComponent : visibleTools.length === 0 ? <div className="text-xs text-gray-500">Loading tools...</div> : renderDefaultToolsContent()}
-            </div>
-          </TabPanel>
-        )}
-
-        {!hideMyMaps && (
-          <TabPanel>
-            <div className="h-[calc(100vh-130px)] max-h-[calc(100vh-130px)] overflow-hidden flex flex-col">
-              <Suspense fallback={<div className="p-5">Loading MyMaps...</div>}>
-                <MyMaps visible={activeTab === 2} />
-              </Suspense>
-            </div>
-          </TabPanel>
-        )}
-
-        {!hideThemes && (
-          <TabPanel>
-            <div className="h-[calc(100vh-130px)] max-h-[calc(100vh-130px)] overflow-hidden flex flex-col">
-              {activeThemeComponent ? activeThemeComponent : visibleThemes.length === 0 ? <div className="text-xs text-gray-500">Loading themes...</div> : renderDefaultThemesContent()}
-            </div>
-          </TabPanel>
-        )}
-
-        {!hideReports && (
-          <TabPanel>
-            <div className="h-[calc(100vh-130px)] max-h-[calc(100vh-130px)] overflow-hidden flex flex-col">
-              <ReportsNavBar />
-              {currentReport ? (
-                <div className="h-full overflow-y-auto">
-                  <SectionTitle className="mb-2.5 border-gray-200 text-gray-800">{currentReport.title}</SectionTitle>
-                  <div className="text-xs">{currentReport.content}</div>
-                </div>
-              ) : (
-                <div>
-                  <div className="mb-2.5 font-bold text-xs">REPORTS</div>
-                  <div className="text-xs text-gray-500">No report currently loaded. Use the identify tool from the map context menu to generate a report.</div>
-                </div>
-              )}
-            </div>
-          </TabPanel>
-        )}
-      </Tabs>
-
-      {/* Content override for hidden tabs - renders on top of TabPanels when activeContentTab is set */}
-      {activeContentTab && (
-        <div className="absolute top-[78px] left-0 right-0 bottom-0 bg-base-200 z-10">
-          <div className="h-[calc(100vh-130px)] max-h-[calc(100vh-130px)] overflow-hidden flex flex-col">
-            {activeContentTab === "layers" && (
-              <Suspense fallback={<div className="p-5">Loading layers...</div>}>
-                <TOC visible={true} />
-              </Suspense>
-            )}
-            {activeContentTab === "tools" &&
-              (activeToolComponent ? activeToolComponent : visibleTools.length === 0 ? <div className="text-xs text-gray-500">Loading tools...</div> : renderDefaultToolsContent())}
-            {activeContentTab === "mymaps" && (
-              <Suspense fallback={<div className="p-5">Loading MyMaps...</div>}>
-                <MyMaps visible={true} />
-              </Suspense>
-            )}
-            {activeContentTab === "themes" &&
-              (activeThemeComponent ? activeThemeComponent : visibleThemes.length === 0 ? <div className="text-xs text-gray-500">Loading themes...</div> : renderDefaultThemesContent())}
-            {activeContentTab === "reports" && (
-              <>
+            <TabPanel>
+              <div className="h-[calc(100vh-130px)] max-h-[calc(100vh-130px)] overflow-hidden flex flex-col">
                 <ReportsNavBar />
                 {currentReport ? (
-                  <div className="h-full overflow-y-auto">
-                    <SectionTitle className="mb-2.5 border-gray-200 text-gray-800">{currentReport.title}</SectionTitle>
+                  <div key={currentReport.id} className="h-full overflow-y-auto">
+                    <SectionTitle className="mb-2.5 border-base-300 text-base-content">{currentReport.title}</SectionTitle>
                     <div className="text-xs">{currentReport.content}</div>
                   </div>
                 ) : (
                   <div>
                     <div className="mb-2.5 font-bold text-xs">REPORTS</div>
-                    <div className="text-xs text-gray-500">No report currently loaded. Use the identify tool from the map context menu to generate a report.</div>
+                    <div className="text-xs text-base-content/70">No report currently loaded. Use the identify tool from the map context menu to generate a report.</div>
                   </div>
                 )}
-              </>
-            )}
+              </div>
+            </TabPanel>
+          )}
+        </Tabs>
+
+        {/* Content override for hidden tabs - renders on top of TabPanels when activeContentTab is set */}
+        {activeContentTab && (
+          <div className="absolute top-[78px] left-0 right-0 bottom-0 bg-base-200 z-10">
+            <div className="h-[calc(100vh-130px)] max-h-[calc(100vh-130px)] overflow-hidden flex flex-col">
+              {activeContentTab === "layers" && (
+                <Suspense fallback={<div className="p-5">Loading layers...</div>}>
+                  <TOC visible={true} />
+                </Suspense>
+              )}
+              {activeContentTab === "tools" &&
+                (activeToolComponent ? activeToolComponent : visibleTools.length === 0 ? <div className="text-xs text-base-content/70">Loading tools...</div> : renderDefaultToolsContent())}
+              {activeContentTab === "mymaps" && (
+                <Suspense fallback={<div className="p-5">Loading MyMaps...</div>}>
+                  <MyMaps visible={true} />
+                </Suspense>
+              )}
+              {activeContentTab === "themes" &&
+                (activeThemeComponent ? activeThemeComponent : visibleThemes.length === 0 ? <div className="text-xs text-base-content/70">Loading themes...</div> : renderDefaultThemesContent())}
+              {activeContentTab === "reports" && (
+                <>
+                  <ReportsNavBar />
+                  {currentReport ? (
+                    <div key={currentReport.id} className="h-full overflow-y-auto">
+                      <SectionTitle className="mb-2.5 border-base-300 text-base-content">{currentReport.title}</SectionTitle>
+                      <div className="text-xs">{currentReport.content}</div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="mb-2.5 font-bold text-xs">REPORTS</div>
+                      <div className="text-xs text-base-content/70">No report currently loaded. Use the identify tool from the map context menu to generate a report.</div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 }

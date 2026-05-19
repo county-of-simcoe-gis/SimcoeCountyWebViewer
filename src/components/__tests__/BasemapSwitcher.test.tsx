@@ -10,8 +10,8 @@ vi.mock("next/image", () => ({
 }));
 
 // Mock react-icons
-vi.mock("react-icons/fa", () => ({
-  FaCog: () => <div data-testid="cog-icon" />,
+vi.mock("react-icons/md", () => ({
+  MdManageHistory: () => <div data-testid="manage-history-icon" />,
 }));
 
 // Create a comprehensive mock config that matches the actual structure

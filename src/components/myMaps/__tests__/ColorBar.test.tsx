@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+﻿import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import ColorBar from "@/components/myMaps/ColorBar";
@@ -86,7 +86,7 @@ describe("ColorBar Component", () => {
 
       const redColorItem = container.querySelector('[style*="background-color: rgb(255, 0, 0)"]') || container.querySelector('[style*="background-color: #ff0000"]');
       expect(redColorItem).toBeInTheDocument();
-      expect(redColorItem).toHaveClass("!border-[#007bff]");
+      expect(redColorItem).toHaveClass("!border-primary");
       expect(redColorItem).toContainHTML("✓");
     });
 
@@ -274,8 +274,8 @@ describe("ColorBar Component", () => {
 
       expect(redColorItem).toBeInTheDocument();
       expect(greenColorItem).toBeInTheDocument();
-      expect(redColorItem).toHaveClass("!border-[#007bff]");
-      expect(greenColorItem).not.toHaveClass("!border-[#007bff]");
+      expect(redColorItem).toHaveClass("!border-primary");
+      expect(greenColorItem).not.toHaveClass("!border-primary");
 
       mockMyMapsStore.drawColor = "#00ff00";
       rerender(<ColorBar />);
@@ -285,8 +285,8 @@ describe("ColorBar Component", () => {
 
       expect(redColorItem).toBeInTheDocument();
       expect(greenColorItem).toBeInTheDocument();
-      expect(redColorItem).not.toHaveClass("!border-[#007bff]");
-      expect(greenColorItem).toHaveClass("!border-[#007bff]");
+      expect(redColorItem).not.toHaveClass("!border-primary");
+      expect(greenColorItem).toHaveClass("!border-primary");
     });
 
     it("should handle edge case where drawColor is not in the color list", () => {
@@ -295,7 +295,7 @@ describe("ColorBar Component", () => {
 
       const colorItems = document.querySelectorAll('[data-testid="mymaps-color-item"]');
       colorItems.forEach((item) => {
-        expect(item).not.toHaveClass("!border-[#007bff]");
+        expect(item).not.toHaveClass("!border-primary");
         expect(item).not.toContainHTML("✓");
       });
     });
@@ -306,7 +306,7 @@ describe("ColorBar Component", () => {
 
       const colorItems = container.querySelectorAll('[data-testid="mymaps-color-item"]');
       colorItems.forEach((item) => {
-        expect(item).not.toHaveClass("!border-[#007bff]");
+        expect(item).not.toHaveClass("!border-primary");
       });
     });
   });
@@ -321,7 +321,7 @@ describe("ColorBar Component", () => {
       const redColorItem = container.querySelector('[style*="background-color: rgb(255, 0, 0)"]') || container.querySelector('[style*="background-color: #ff0000"]');
       // Note: The comparison might be case-sensitive, so this tests the exact matching
       expect(redColorItem).toBeInTheDocument();
-      expect(redColorItem).not.toHaveClass("!border-[#007bff]");
+      expect(redColorItem).not.toHaveClass("!border-primary");
     });
 
     it("should handle white and black colors properly", () => {
@@ -339,7 +339,7 @@ describe("ColorBar Component", () => {
 
       const updatedWhiteItem = container.querySelector('[style*="background-color: rgb(255, 255, 255)"]') || container.querySelector('[style*="background-color: #ffffff"]');
       expect(updatedWhiteItem).toBeInTheDocument();
-      expect(updatedWhiteItem).toHaveClass("!border-[#007bff]");
+      expect(updatedWhiteItem).toHaveClass("!border-primary");
     });
   });
 

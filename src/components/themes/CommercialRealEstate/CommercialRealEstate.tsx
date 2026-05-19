@@ -22,6 +22,8 @@ import type { Feature } from "ol";
 import type { Geometry } from "ol/geom";
 import type { EventsKey } from "ol/events";
 import { unByKey } from "ol/Observable";
+import { getCenter } from "ol/extent";
+import { usePopupStore } from "@/stores/popupStore";
 import { FaStar, FaChevronDown, FaChevronUp, FaPalette } from "react-icons/fa";
 
 interface CommercialRealEstateProps {
@@ -256,6 +258,11 @@ export default function CommercialRealEstate({ name = "Commercial Real Estate", 
       if (geometry) {
         const extent = geometry.getExtent();
         map.getView().fit(extent, { duration: 500, maxZoom: 18, padding: [50, 50, 50, 50] });
+        const coordinates = getCenter(extent);
+        const address = feature.get("Address") || "Unknown Address";
+        const municipality = feature.get("Municipality") || "";
+        const title = `${address}${municipality ? `, ${municipality}` : ""}`;
+        usePopupStore.getState().show(coordinates, <CREPopupContent feature={feature} />, title, "Commercial Real Estate");
       }
     },
     [map],
@@ -275,7 +282,7 @@ export default function CommercialRealEstate({ name = "Commercial Real Estate", 
                 Incentive Properties
                 <span className="badge badge-warning badge-xs font-bold">{incentiveFeatures.length}</span>
               </span>
-              {incentiveCollapsed ? <FaChevronDown className="w-3 h-3 text-base-content/50" /> : <FaChevronUp className="w-3 h-3 text-base-content/50" />}
+              {incentiveCollapsed ? <FaChevronDown className="w-3 h-3 text-base-content/70" /> : <FaChevronUp className="w-3 h-3 text-base-content/70" />}
             </button>
 
             {!incentiveCollapsed && (

@@ -13,9 +13,10 @@ const nextConfig: NextConfig = {
   // @arcgis/core ships as ESM — Next.js needs to transpile it for SSR/CSR compat
   transpilePackages: ["@arcgis/core"],
   images: {
-    // Custom loader prepends basePath for local images and passes external
-    // URLs through unchanged.  This replaces the built-in optimizer so
-    // images are served as-is (no /_next/image proxy).
+    // Custom loader automatically prepends basePath to local image paths.
+    // Do NOT add `unoptimized: true` — it skips the loader entirely and
+    // breaks basePath resolution. The loader returns direct URLs so images
+    // are served as-is without the /_next/image optimization proxy.
     loader: "custom",
     loaderFile: "./src/lib/imageLoader.ts",
     remotePatterns: [

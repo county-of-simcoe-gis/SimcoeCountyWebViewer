@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import "@/components/myMaps/MyMapsSymbolizer.css";
@@ -18,9 +18,9 @@ export const PointType: React.FC<PointTypeProps> = ({ visible, selectedPointStyl
 
   return (
     <>
-      <label className="col-start-1 col-end-3 self-center font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Style:</label>
+      <label className="col-start-1 col-end-3 self-center font-bold text-[11px] font-[Arial,sans-serif] text-base-content">Style:</label>
       <select
-        className="col-start-3 col-end-5 p-[2px] border border-[#cecece] rounded-[3px] text-[9pt] outline-none w-full box-border focus:border-[#367cc5]"
+        className="col-start-3 col-end-5 p-[2px] border border-base-300 rounded-[3px] text-[9pt] outline-none w-full box-border focus:border-primary"
         name="pointSymbols"
         value={selectedPointStyleDropDown}
         onChange={onPointStyleDropDown}
@@ -47,9 +47,9 @@ export const PolygonType: React.FC<PolygonTypeProps> = ({ visible, selectedPolyg
 
   return (
     <>
-      <label className="col-start-1 col-end-3 self-center font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Style:</label>
+      <label className="col-start-1 col-end-3 self-center font-bold text-[11px] font-[Arial,sans-serif] text-base-content">Style:</label>
       <select
-        className="col-start-3 col-end-5 p-[2px] border border-[#cecece] rounded-[3px] text-[9pt] outline-none w-full box-border focus:border-[#367cc5]"
+        className="col-start-3 col-end-5 p-[2px] border border-base-300 rounded-[3px] text-[9pt] outline-none w-full box-border focus:border-primary"
         name="polygonSymbols"
         value={selectedPolygonStyleDropDown}
         onChange={onPolygonStyleDropDown}
@@ -77,7 +77,7 @@ export const StyleSize: React.FC<StyleSizeProps> = ({ visible, sliderRadiusMin, 
 
   return (
     <>
-      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Size:</label>
+      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-base-content">Size:</label>
       <div className="mymaps-symbolizer-slider col-start-3 col-end-5 self-center w-full min-w-0 text-[7pt]">
         <input type="range" data-slider-type="size" className="w-full" min={sliderRadiusMin} max={sliderRadiusMax} value={radius} step="1" onChange={onRadiusSliderChange} />
       </div>
@@ -108,8 +108,8 @@ export const FillColor: React.FC<FillColorProps> = ({ visible, isPolygon, rgbFil
       <label
         className={
           isPolygon
-            ? "col-start-1 col-end-3 self-center font-bold text-[11px] font-[Arial,sans-serif] text-[#333]"
-            : "col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-[#333]"
+            ? "col-start-1 col-end-3 self-center font-bold text-[11px] font-[Arial,sans-serif] text-base-content"
+            : "col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-base-content"
         }
       >
         Color:
@@ -161,9 +161,9 @@ export const StrokeType: React.FC<StrokeTypeProps> = ({ visible = true, selected
 
   return (
     <>
-      <label className="col-start-1 col-end-3 self-center font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Outline:</label>
+      <label className="col-start-1 col-end-3 self-center font-bold text-[11px] font-[Arial,sans-serif] text-base-content">Outline:</label>
       <select
-        className="col-start-3 col-end-5 p-[2px] border border-[#cecece] rounded-[3px] text-[9pt] outline-none w-full box-border focus:border-[#367cc5]"
+        className="col-start-3 col-end-5 p-[2px] border border-base-300 rounded-[3px] text-[9pt] outline-none w-full box-border focus:border-primary"
         name="pointOutline"
         value={selectedStrokeTypeDropDown}
         onChange={onStrokeTypeDropDown}
@@ -199,7 +199,7 @@ export const StrokeColor: React.FC<StrokeColorProps> = ({
 
   return (
     <>
-      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Color:</label>
+      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-base-content">Color:</label>
       <div className="col-start-3 col-end-5 inline-flex items-center min-w-0">
         <button
           id="sc-mymaps-symbolizer-stroke-color-button"
@@ -245,7 +245,7 @@ export const StrokeWidth: React.FC<StrokeWidthProps> = ({ visible = true, stroke
 
   return (
     <>
-      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Width:</label>
+      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-base-content">Width:</label>
       <div className="mymaps-symbolizer-slider col-start-3 col-end-5 self-center w-full min-w-0 text-[7pt]">
         <input
           type="range"
@@ -279,7 +279,7 @@ export const Rotation: React.FC<RotationProps> = ({ visible, rotation, sliderRot
 
   return (
     <>
-      <label className="col-start-1 col-end-3 self-center font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Angle:</label>
+      <label className="col-start-1 col-end-3 self-center font-bold text-[11px] font-[Arial,sans-serif] text-base-content">Angle:</label>
       <div className="col-start-3 col-end-5 self-center">
         <div className="mymaps-symbolizer-slider col-start-2 col-end-5 w-full text-[7pt]">
           <input type="range" data-slider-type="rotation" min={sliderRotationMin} max={sliderRotationMax} value={rotation} step="0.1" onChange={onRotationSliderChange} />
@@ -304,7 +304,7 @@ export const LabelTextColor: React.FC<LabelTextColorProps> = ({ visible, textCol
 
   return (
     <>
-      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Text Color:</label>
+      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-base-content">Text Color:</label>
       <div className="col-start-3 col-end-5 inline-flex items-center">
         <button
           id="sc-mymaps-symbolizer-text-color-button"
@@ -339,9 +339,9 @@ export const LabelFontSize: React.FC<LabelFontSizeProps> = ({ visible, fontSize,
 
   return (
     <>
-      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Font Size:</label>
+      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-base-content">Font Size:</label>
       <select
-        className="sc-mymaps-style-dropdown col-start-3 col-end-5 p-[2px] border border-[#cecece] rounded-[3px] text-[9pt] outline-none w-full box-border focus:border-[#367cc5]"
+        className="sc-mymaps-style-dropdown col-start-3 col-end-5 p-[2px] border border-base-300 rounded-[3px] text-[9pt] outline-none w-full box-border focus:border-primary"
         name="labelFontSize"
         value={fontSize}
         onChange={onFontSizeChange}
@@ -367,7 +367,7 @@ export const LabelOutlineColor: React.FC<LabelOutlineColorProps> = ({ visible, o
 
   return (
     <>
-      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Outline Color:</label>
+      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-base-content">Outline Color:</label>
       <div className="col-start-3 col-end-5 inline-flex items-center">
         <button
           id="sc-mymaps-symbolizer-label-outline-color-button"
@@ -398,7 +398,7 @@ export const LabelOutlineWidth: React.FC<LabelOutlineWidthProps> = ({ visible, o
 
   return (
     <>
-      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">Outline Width:</label>
+      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-base-content">Outline Width:</label>
       <div className="mymaps-symbolizer-slider col-start-3 col-end-5 self-center w-full min-w-0 text-[7pt]">
         <input type="range" data-slider-type="label-outline-width" className="w-full" min={0} max={4} value={outlineWidth} step="0.5" onChange={onOutlineWidthChange} />
       </div>
@@ -423,7 +423,7 @@ const CalloutColorButton: React.FC<CalloutColorButtonProps> = ({ visible, label,
 
   return (
     <>
-      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-[#333]">{label}:</label>
+      <label className="col-start-1 col-end-3 self-center mr-[5px] text-right font-bold text-[11px] font-[Arial,sans-serif] text-base-content">{label}:</label>
       <div className="col-start-3 col-end-5 inline-flex items-center">
         <button
           id={buttonId}

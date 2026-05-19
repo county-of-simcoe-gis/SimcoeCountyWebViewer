@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Style, Circle as CircleStyle, RegularShape } from "ol/style";
@@ -590,7 +590,7 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
     // Use ref to get current colorPicker state to avoid stale closure issues
     const currentColorPicker = colorPickerRef.current;
 
-    console.log("🎨 MyMapsSymbolizer: handleColorChange called", {
+    console.log("ðŸŽ¨ MyMapsSymbolizer: handleColorChange called", {
       hexColor,
       colorType: currentColorPicker.colorType,
       labelColorType: currentColorPicker.labelColorType,
@@ -664,7 +664,7 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
   };
 
   const closeColorPicker = () => {
-    console.log("🔴 MyMapsSymbolizer: closeColorPicker called", {
+    console.log("ðŸ”´ MyMapsSymbolizer: closeColorPicker called", {
       wasVisible: colorPicker.visible,
       colorType: colorPicker.colorType,
       labelColorType: colorPicker.labelColorType,
@@ -677,7 +677,7 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
   // ============================================
 
   const handleLabelColorChange = (prev: SymbolizerState, labelColorType: string, hexColor: string): SymbolizerState => {
-    console.log("🏷️ MyMapsSymbolizer: handleLabelColorChange called", {
+    console.log("ðŸ·ï¸ MyMapsSymbolizer: handleLabelColorChange called", {
       labelColorType,
       hexColor,
       itemId: item.id,
@@ -818,7 +818,7 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
   // RENDER
   // ============================================
 
-  console.log("🎯 MyMapsSymbolizer render", {
+  console.log("ðŸŽ¯ MyMapsSymbolizer render", {
     visible,
     itemId: item.id,
     drawType: item.drawType,
@@ -838,8 +838,8 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
   const isCallout = item.drawType === "Callout";
 
   return (
-    <fieldset className="border border-[#cecece] rounded-[3px] p-2 mb-[5px] bg-[#f9f9f9] w-full box-border m-0">
-      <legend className="text-sm font-bold text-[#333] py-[2px] px-1.5 bg-[#f9f9f9] border border-[#cecece] rounded-[3px] flex items-center">
+    <fieldset className="border border-base-300 rounded-[3px] p-2 mb-[5px] bg-base-200 w-full box-border m-0">
+      <legend className="text-sm font-bold text-base-content py-[2px] px-1.5 bg-base-200 border border-base-300 rounded-[3px] flex items-center">
         {}
         <AppImage src="/images/symbolizer.png" alt="symbolizer" className="w-4 h-4 block mr-1" />
         Symbolizer
@@ -892,7 +892,7 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
         {/* LABEL STYLE SECTION */}
         {item.labelVisible && (
           <>
-            <div className="col-span-full font-bold text-[11px] text-[#333] border-t border-[#cecece] pt-2 mt-[5px] mb-[3px]">Label Style</div>
+            <div className="col-span-full font-bold text-[11px] text-base-content border-t border-base-300 pt-2 mt-[5px] mb-[3px]">Label Style</div>
 
             <LabelTextColor visible={true} textColor={state.labelStyle.textColor} onTextColorPickerButton={onTextColorPickerButton} />
 
@@ -905,7 +905,7 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
             {/* Callout-specific controls */}
             {item.drawType === "Callout" && (
               <>
-                <div className="col-span-full font-bold text-[11px] text-[#333] border-t border-[#cecece] pt-2 mt-[5px] mb-[3px]">Callout Style</div>
+                <div className="col-span-full font-bold text-[11px] text-base-content border-t border-base-300 pt-2 mt-[5px] mb-[3px]">Callout Style</div>
 
                 <CalloutBackgroundColor visible={true} backgroundColor={state.labelStyle.backgroundColor} onBackgroundColorPickerButton={onBackgroundColorPickerButton} />
 

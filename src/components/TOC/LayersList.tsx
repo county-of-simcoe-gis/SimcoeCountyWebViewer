@@ -120,7 +120,7 @@ export default function LayersList({ group, searchText, onLayerChange, onLegendT
 
   if (!group.layers || group.layers.length === 0) {
     return (
-      <div className="p-5 text-center text-[#666] italic">
+      <div className="p-5 text-center text-base-content/60 italic">
         <p className="m-0 text-[9pt] font-[Verdana,Arial,sans-serif]">No layers available in this group.</p>
       </div>
     );

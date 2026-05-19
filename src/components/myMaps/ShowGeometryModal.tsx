@@ -46,10 +46,10 @@ const ShowGeometryModal: React.FC<ShowGeometryModalProps> = ({ item, isOpen, onC
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-[500px] max-h-[80vh] p-0 flex flex-col overflow-hidden animate-popupFadeIn">
-      <div className="flex justify-between items-center py-4 px-5 border-b border-[#e0e0e0] bg-[#f8f9fa]">
-        <h3 className="m-0 text-lg font-semibold text-[#333]">Geometry (JSON)</h3>
+      <div className="flex justify-between items-center py-4 px-5 border-b border-base-300 bg-base-200">
+        <h3 className="m-0 text-lg font-semibold text-base-content">Geometry (JSON)</h3>
         <button
-          className="bg-transparent border-none text-2xl cursor-pointer text-[#666] p-0 w-8 h-8 flex items-center justify-center rounded transition-all hover:bg-[#e9ecef] hover:text-[#333]"
+          className="bg-transparent border-none text-2xl cursor-pointer text-base-content/60 p-0 w-8 h-8 flex items-center justify-center rounded transition-all hover:bg-base-300 hover:text-base-content"
           onClick={onClose}
           title="Close"
           type="button"
@@ -58,18 +58,18 @@ const ShowGeometryModal: React.FC<ShowGeometryModalProps> = ({ item, isOpen, onC
         </button>
       </div>
       <div className="p-5 flex-1 overflow-y-auto">
-        <div className="mb-4 text-[#555] text-sm leading-relaxed">Below is a JSON representation of the geometry selected.</div>
+        <div className="mb-4 text-base-content/70 text-sm leading-relaxed">Below is a JSON representation of the geometry selected.</div>
         <textarea
-          className="w-full min-h-[200px] p-3 border border-[#ddd] rounded font-mono text-xs leading-[1.4] resize-y bg-[#f8f9fa] text-[#333] overflow-auto whitespace-pre focus:outline-none focus:border-[#007bff] focus:shadow-[0_0_0_2px_rgba(0,123,255,0.25)]"
+          className="w-full min-h-[200px] p-3 border border-base-300 rounded font-mono text-xs leading-[1.4] resize-y bg-base-200 text-base-content overflow-auto whitespace-pre focus:outline-none focus:border-primary focus:shadow-[0_0_0_2px_rgba(0,123,255,0.25)]"
           value={geometryContent}
           readOnly
           rows={12}
           cols={50}
         />
       </div>
-      <div className="py-4 px-5 border-t border-[#e0e0e0] bg-[#f8f9fa] flex justify-end">
+      <div className="py-4 px-5 border-t border-base-300 bg-base-200 flex justify-end">
         <button
-          className="py-2 px-4 border-none rounded cursor-pointer text-sm font-medium transition-all min-w-[80px] bg-[#007bff] text-white hover:bg-[#0056b3] focus:outline-none focus:shadow-[0_0_0_2px_rgba(0,123,255,0.5)]"
+          className="py-2 px-4 border-none rounded cursor-pointer text-sm font-medium transition-all min-w-[80px] bg-primary text-primary-content hover:bg-primary/80 focus:outline-none focus:shadow-[0_0_0_2px_rgba(0,123,255,0.5)]"
           onClick={onClose}
           type="button"
         >

@@ -100,7 +100,7 @@ const MyMapsItem: React.FC<MyMapsItemProps> = ({ item, onLabelChange, onDelete, 
 
   return (
     <div
-      className={`flex items-center gap-1.5 py-1.5 px-2 border-b border-[#eee] border-l-2 border-l-transparent bg-white transition-all relative hover:bg-[#f0f8ff] hover:border-l-[#007bff] hover:translate-x-[2px] max-[768px]:py-1 max-[768px]:px-1.5 max-[768px]:gap-1 ${!item.visible ? "opacity-50" : ""} ${isEditing ? "bg-[#e3f2fd] !border-l-[3px] !border-l-[#2196f3]" : ""} ${isDeleting ? "opacity-0 translate-x-2.5 scale-95 transition-[opacity,transform] duration-[400ms] ease-in-out pointer-events-none" : ""}`}
+      className={`flex items-center gap-1.5 py-1.5 px-2 border-b border-base-300 border-l-2 border-l-transparent bg-base-100 transition-all relative hover:bg-primary/5 hover:border-l-primary hover:translate-x-[2px] max-[768px]:py-1 max-[768px]:px-1.5 max-[768px]:gap-1 ${!item.visible ? "opacity-50" : ""} ${isEditing ? "bg-primary/10 !border-l-[3px] !border-l-primary" : ""} ${isDeleting ? "opacity-0 translate-x-2.5 scale-95 transition-[opacity,transform] duration-[400ms] ease-in-out pointer-events-none" : ""}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -111,13 +111,13 @@ const MyMapsItem: React.FC<MyMapsItemProps> = ({ item, onLabelChange, onDelete, 
 
       {/* Geometry type icon */}
       <div className="shrink-0 flex items-center justify-center w-5 h-5">
-        <Image unoptimized src={`/images/measure/${getGeometryIcon()}`} alt={item.geometryType} width={16} height={16} />
+        <Image src={`/images/measure/${getGeometryIcon()}`} alt={item.geometryType} width={16} height={16} />
       </div>
 
       {/* Label */}
       <div className="flex-1 min-w-0 cursor-pointer mr-[2px]" onClick={handleLabelClick}>
         {isEditingLabel ? (
-          <div className="relative flex items-center border border-[#d0d0d0] rounded-sm bg-white p-0 focus-within:border-[#007bff] focus-within:shadow-[0_0_0_1px_rgba(0,123,255,0.25)]">
+          <div className="relative flex items-center border border-base-300 rounded-sm bg-base-100 p-0 focus-within:border-primary focus-within:shadow-[0_0_0_1px_rgba(0,123,255,0.25)]">
             <input
               type="text"
               value={tempLabel}
@@ -133,16 +133,16 @@ const MyMapsItem: React.FC<MyMapsItemProps> = ({ item, onLabelChange, onDelete, 
               autoFocus
             />
             <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center justify-center w-4 h-4 opacity-60 pointer-events-none">
-              <Image unoptimized src="/images/edit.png" alt="Edit" width={12} height={12} />
+              <Image src="/images/edit.png" alt="Edit" width={12} height={12} />
             </div>
           </div>
         ) : (
-          <div className="relative flex items-center border border-[#d0d0d0] rounded-sm bg-white py-[2px] px-1 min-h-[20px]">
-            <span className="flex-1 text-xs text-[#333] whitespace-nowrap overflow-hidden text-ellipsis pr-4 max-[768px]:text-[11px]" title={item.label}>
+          <div className="relative flex items-center border border-base-300 rounded-sm bg-base-100 py-[2px] px-1 min-h-[20px]">
+            <span className="flex-1 text-xs text-base-content whitespace-nowrap overflow-hidden text-ellipsis pr-4 max-[768px]:text-[11px]" title={item.label}>
               {item.label}
             </span>
             <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center justify-center w-4 h-4 opacity-60 pointer-events-none">
-              <Image unoptimized src="/images/edit.png" alt="Edit" width={12} height={12} />
+              <Image src="/images/edit.png" alt="Edit" width={12} height={12} />
             </div>
           </div>
         )}
@@ -152,29 +152,29 @@ const MyMapsItem: React.FC<MyMapsItemProps> = ({ item, onLabelChange, onDelete, 
       <div className="flex gap-1 shrink-0 ml-[2px]">
         {/* Delete button */}
         <button
-          className="w-6 h-6 border-none bg-transparent rounded-[3px] cursor-pointer flex items-center justify-center transition-all p-0 shrink-0 hover:bg-[#f0f0f0] hover:scale-105 active:scale-95 max-[768px]:w-[18px] max-[768px]:h-[18px]"
+          className="w-6 h-6 border-none bg-transparent rounded-[3px] cursor-pointer flex items-center justify-center transition-all p-0 shrink-0 hover:bg-base-200 hover:scale-105 active:scale-95 max-[768px]:w-[18px] max-[768px]:h-[18px]"
           onClick={handleDeleteClick}
           title="Delete item"
           type="button"
         >
-          <Image unoptimized src="/images/myMaps/eraser.png" alt="Delete" width={16} height={16} />
+          <Image src="/images/myMaps/eraser.png" alt="Delete" width={16} height={16} />
         </button>
 
         {/* Toolbox button */}
         <button
-          className="w-6 h-6 border-none bg-transparent rounded-[3px] cursor-pointer flex items-center justify-center transition-all p-0 shrink-0 hover:bg-[#f0f0f0] hover:scale-105 active:scale-95 max-[768px]:w-[18px] max-[768px]:h-[18px]"
+          className="w-6 h-6 border-none bg-transparent rounded-[3px] cursor-pointer flex items-center justify-center transition-all p-0 shrink-0 hover:bg-base-200 hover:scale-105 active:scale-95 max-[768px]:w-[18px] max-[768px]:h-[18px]"
           onClick={handleOptionsClick}
           title="Drawing options"
           type="button"
         >
-          <Image unoptimized src="/images/toolbox.png" alt="Toolbox" width={16} height={16} />
+          <Image src="/images/toolbox.png" alt="Toolbox" width={16} height={16} />
         </button>
       </div>
 
       {/* Label visibility indicator */}
       {item.labelVisible && (
         <div className="absolute top-[2px] right-[2px] w-3 h-3 opacity-60" title="Label is visible">
-          <Image unoptimized src="/images/toc/label.png" alt="Label visible" width={12} height={12} />
+          <Image src="/images/toc/label.png" alt="Label visible" width={12} height={12} />
         </div>
       )}
     </div>
