@@ -132,8 +132,6 @@ export class LayerManager {
       suppressRightClick: options.suppressRightClick,
     });
 
-    // console.log(`✅ Added layer "${name}" to map with category "${category}" (ID: ${layerId})`)
-
     return layerId;
   }
 

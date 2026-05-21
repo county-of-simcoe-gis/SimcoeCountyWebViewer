@@ -512,92 +512,73 @@ export const useTOCStore = create<TOCState>()(
       // Get all TOC layers currently in the LayerManager
       const tocLayers = layerManagerState.getLayersByCategory("TOC");
 
-      // Create a mapping of layer names to managed layers for quick lookup
-      const tocLayersMap = new Map<string, ManagedLayer>();
-      tocLayers.forEach((managedLayer) => {
-        // Use the layer's name property from OpenLayers properties if available
-        const layerProperties = (managedLayer.layer as unknown as { getProperties?: () => Record<string, unknown> }).getProperties?.();
-        const layerName = (typeof layerProperties?.name === "string" ? layerProperties.name : undefined) || managedLayer.name;
-        if (layerName) {
-          tocLayersMap.set(layerName, managedLayer);
-        }
-      });
+      if (tocLayers.length === 0) return;
 
-      // If we have TOC layers, reorder them based on the current TOC order
-      if (tocLayersMap.size > 0) {
-        useLayerManagerStore.setState((draft) => {
-          // Create new order for TOC layers based on current TOC layer order
-          const reorderedTocLayers: ManagedLayer[] = [];
+      // Create a mapping of managedLayerId to ManagedLayer for fast lookup.
+      // Using the unique managedLayerId (instead of layer name) avoids
+      // collisions when the same WMS layer name appears in multiple groups.
+      const tocLayersById = new Map<string, ManagedLayer>();
+      tocLayers.forEach((ml) => tocLayersById.set(ml.id, ml));
 
-          // For LIST view, use the "All Layers" group if it exists (which has all unique layers)
-          // For FOLDER view, process all groups
-          let layersToProcess: TOCLayer[] = [];
+      useLayerManagerStore.setState((draft) => {
+        // Collect TOC layers from ALL source groups (skip "All Layers"
+        // virtual group to avoid duplicates from spread copies).
+        // Each TOC layer entry carries a unique managedLayerId that maps
+        // 1-to-1 to a LayerManager entry, so duplicate layer NAMES across
+        // groups are handled correctly.
+        const reorderedTocLayers: ManagedLayer[] = [];
+        const consumed = new Set<string>();
 
-          if (tocState.tocType === "LIST") {
-            // Find the "All Layers" group which contains all unique layers in the correct order
-            const allLayersGroup = tocState.layerListGroups.find((g) => g.value === "all_layers");
-            if (allLayersGroup) {
-              layersToProcess = allLayersGroup.layers;
-            } else {
-              // Fallback: collect unique layers from all groups
-              const seenLayerNames = new Set<string>();
-              tocState.layerListGroups.forEach((group) => {
-                group.layers.forEach((layer) => {
-                  if (!seenLayerNames.has(layer.name)) {
-                    seenLayerNames.add(layer.name);
-                    layersToProcess.push(layer);
-                  }
-                });
-              });
-            }
-          } else {
-            // FOLDER view: collect unique layers from all groups in order
-            const seenLayerNames = new Set<string>();
-            tocState.layerFolderGroups.forEach((group) => {
-              group.layers.forEach((layer) => {
-                if (!seenLayerNames.has(layer.name)) {
-                  seenLayerNames.add(layer.name);
-                  layersToProcess.push(layer);
-                }
-              });
-            });
-          }
+        const groups = tocState.tocType === "LIST" ? tocState.layerListGroups : tocState.layerFolderGroups;
 
-          // Order the layers based on the processed list
-          layersToProcess.forEach((tocLayer) => {
-            const managedLayer = tocLayersMap.get(tocLayer.name);
+        groups.forEach((group) => {
+          // Skip the virtual "All Layers" group — its entries are mirrors
+          // of the source group entries and share the same managedLayerId.
+          if (group.value === "all_layers") return;
+
+          group.layers.forEach((tocLayer) => {
+            if (!tocLayer.managedLayerId || consumed.has(tocLayer.managedLayerId)) return;
+            const managedLayer = tocLayersById.get(tocLayer.managedLayerId);
             if (managedLayer) {
               reorderedTocLayers.push(managedLayer);
+              consumed.add(tocLayer.managedLayerId);
             }
           });
+        });
 
-          // Update the layerManager store with the new order
-          if (reorderedTocLayers.length > 0) {
-            // Update z-indices on the reordered layers before assigning to draft
-            // Position 0 in the array is the TOP of the TOC (highest drawIndex)
-            // and calculateZIndex(category, 0) returns the max z-index, so idx maps directly.
-            const updatedLayers = reorderedTocLayers.map((layer, idx) => {
-              const newZIndex = calculateZIndex("TOC", idx);
-              // Create a new object with updated z-index to ensure Immer can track changes
-              return {
-                ...layer,
-                zIndex: newZIndex,
-              };
-            });
-
-            draft.layers.TOC = updatedLayers;
-
-            // Update the actual OpenLayers layer z-indices
-            updatedLayers.forEach((layer, idx) => {
-              const newZIndex = calculateZIndex("TOC", idx);
-              layer.layer.setZIndex(newZIndex);
-            });
-
-            // Update next available z-index
-            draft.nextZIndex.TOC = calculateZIndex("TOC", updatedLayers.length);
+        // Append any managed TOC layers that weren't matched by a TOC
+        // entry (e.g. custom/user-added layers) so they are never dropped.
+        tocLayers.forEach((ml) => {
+          if (!consumed.has(ml.id)) {
+            reorderedTocLayers.push(ml);
+            consumed.add(ml.id);
           }
         });
-      }
+
+        if (reorderedTocLayers.length > 0) {
+          // Update z-indices on the reordered layers before assigning to draft.
+          // Position 0 in the array is the TOP of the TOC (highest drawIndex)
+          // and calculateZIndex(category, 0) returns the max z-index, so idx maps directly.
+          const updatedLayers = reorderedTocLayers.map((layer, idx) => {
+            const newZIndex = calculateZIndex("TOC", idx);
+            return {
+              ...layer,
+              zIndex: newZIndex,
+            };
+          });
+
+          draft.layers.TOC = updatedLayers;
+
+          // Update the actual OpenLayers layer z-indices
+          updatedLayers.forEach((layer, idx) => {
+            const newZIndex = calculateZIndex("TOC", idx);
+            layer.layer.setZIndex(newZIndex);
+          });
+
+          // Update next available z-index
+          draft.nextZIndex.TOC = calculateZIndex("TOC", updatedLayers.length);
+        }
+      });
     },
 
     setIsLoading: (loading) => {
@@ -1875,6 +1856,13 @@ export const useTOCStore = create<TOCState>()(
           if (existingLayerInfo) {
             // Reuse existing OpenLayers layer (same id \u2014 e.g. All Layers mirror)
 
+            // If the layer is still pending (async creation in progress from a
+            // previous iteration), skip the immediate store update \u2014 the
+            // callback from the first creation already calls
+            // updateLayerInGroups which updates ALL entries with matching
+            // layer.id across layerListGroups, layerFolderGroups, and allLayers.
+            if (!existingLayerInfo.layer) return;
+
             // Update the layer in the store to reference the shared OpenLayers layer
             set((state) => {
               const currentGroups = state.tocType === "LIST" ? state.layerListGroups : state.layerFolderGroups;
@@ -1909,6 +1897,13 @@ export const useTOCStore = create<TOCState>()(
               resolveLayerPromise = resolve;
             });
             pendingLayerPromises.push(layerReadyPromise);
+
+            // Reserve this layer.id synchronously BEFORE the async getLayer
+            // call. In LIST mode each layer appears twice ("All Layers" copy +
+            // source group). Without this, both iterations pass the
+            // createdLayers check before either callback fires, causing
+            // duplicate LayerManager registrations.
+            createdLayers.set(layer.id, { layer: null as unknown as Layer, managedLayerId: "" });
 
             // Debug log for secured layer detection
             // if (layer.secured) {

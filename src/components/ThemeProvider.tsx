@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { getStorageItem, setStorageItem } from "@/utils/storage";
 
 type Theme = "light" | "dark" | "system";
 
@@ -23,7 +24,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize theme from localStorage or system preference
   useEffect(() => {
-    const storedTheme = localStorage.getItem("theme") as Theme | null;
+    const storedTheme = getStorageItem("theme") as Theme | null;
     if (storedTheme && (storedTheme === "light" || storedTheme === "dark" || storedTheme === "system")) {
       setTheme(storedTheme);
     }
@@ -51,7 +52,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setEffectiveTheme(theme as "light" | "dark");
     }
 
-    localStorage.setItem("theme", theme);
+    setStorageItem("theme", theme);
   }, [theme]);
 
   // Update classes on the html element whenever effective theme changes

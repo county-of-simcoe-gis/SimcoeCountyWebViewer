@@ -144,32 +144,32 @@ describe("Five11", () => {
     expect(screen.getByText("Data from multiple agencies")).toBeInTheDocument();
   });
 
-  it("shows Hide All button when all Waze layers are visible", () => {
+  it("shows Show All button when all layers start hidden", () => {
     render(<Five11 onClose={mockOnClose} />);
-    // All waze layers start visible per config
-    const buttons = screen.getAllByText("Hide All");
+    // All layers start hidden per config
+    const buttons = screen.getAllByText("Show All");
     expect(buttons.length).toBeGreaterThanOrEqual(1);
   });
 
-  it("toggles all Waze layers when Hide All is clicked", () => {
+  it("toggles all Waze layers when Show All is clicked", () => {
     render(<Five11 onClose={mockOnClose} />);
-    // Both sections initially show "Hide All" since all layers start visible
-    const hideAllButtons = screen.getAllByText("Hide All");
-    // Click the first Hide All (Waze section)
-    fireEvent.click(hideAllButtons[0]);
+    // Both sections initially show "Show All" since all layers start hidden
+    const showAllButtons = screen.getAllByText("Show All");
+    // Click the first Show All (Waze section)
+    fireEvent.click(showAllButtons[0]);
 
-    // After toggling all off, the Waze section should show "Show All"
-    expect(screen.getByText("Show All")).toBeInTheDocument();
+    // After toggling all on, the Waze section should show "Hide All"
+    expect(screen.getByText("Hide All")).toBeInTheDocument();
   });
 
-  it("toggles all MTO layers when Hide All is clicked", () => {
+  it("toggles all MTO layers when Show All is clicked", () => {
     render(<Five11 onClose={mockOnClose} />);
-    const hideAllButtons = screen.getAllByText("Hide All");
-    // Click the second Hide All (MTO section)
-    fireEvent.click(hideAllButtons[1]);
+    const showAllButtons = screen.getAllByText("Show All");
+    // Click the second Show All (MTO section)
+    fireEvent.click(showAllButtons[1]);
 
-    // After toggling all MTO off, there should be a "Show All" in the MTO section
-    expect(screen.getByText("Show All")).toBeInTheDocument();
+    // After toggling all MTO on, there should be a "Hide All" in the MTO section
+    expect(screen.getByText("Hide All")).toBeInTheDocument();
   });
 
   it("toggles individual Waze layer visibility", () => {
@@ -177,9 +177,9 @@ describe("Five11", () => {
     const firstWazeLayer = five11Config.wazeToggleLayers[0];
     const checkbox = screen.getByTestId(`checkbox-${firstWazeLayer.layerName}`);
 
-    expect(checkbox).toBeChecked();
-    fireEvent.click(checkbox);
     expect(checkbox).not.toBeChecked();
+    fireEvent.click(checkbox);
+    expect(checkbox).toBeChecked();
   });
 
   it("toggles individual MTO layer visibility", () => {
@@ -187,9 +187,9 @@ describe("Five11", () => {
     const firstMtoLayer = five11Config.mtoToggleLayers[0];
     const checkbox = screen.getByTestId(`checkbox-${firstMtoLayer.layerName}`);
 
-    expect(checkbox).toBeChecked();
-    fireEvent.click(checkbox);
     expect(checkbox).not.toBeChecked();
+    fireEvent.click(checkbox);
+    expect(checkbox).toBeChecked();
   });
 
   it("registers map click handler on mount", () => {

@@ -25,23 +25,23 @@ interface LocalStorageItem {
 // Control display configuration with logical grouping
 const controlGroups = {
   navigation: [
-    { key: "rotate" as keyof ControlVisibility, label: "Rotate Map" },
-    { key: "fullScreen" as keyof ControlVisibility, label: "Full Screen" },
-    { key: "zoomInOut" as keyof ControlVisibility, label: "Zoom In/Out" },
-    { key: "currentLocation" as keyof ControlVisibility, label: "Current Location" },
-    { key: "zoomExtent" as keyof ControlVisibility, label: "Zoom to Extent" },
-    { key: "extentHistory" as keyof ControlVisibility, label: "Extent History" },
+    { key: "rotate" as keyof ControlVisibility, label: "Rotate Map", tooltip: "Shows a compass button to reset map rotation. Rotate the map with Alt+Shift+Drag or pinch/turn on touch devices" },
+    { key: "fullScreen" as keyof ControlVisibility, label: "Full Screen", tooltip: "Toggles full-screen mode for the map" },
+    { key: "zoomInOut" as keyof ControlVisibility, label: "Zoom In/Out", tooltip: "Shows zoom in (+) and zoom out (-) buttons. You can also zoom with the mouse wheel or +/- keys" },
+    { key: "currentLocation" as keyof ControlVisibility, label: "Current Location", tooltip: "Zooms to your current GPS location" },
+    { key: "zoomExtent" as keyof ControlVisibility, label: "Zoom to Extent", tooltip: "Zooms to the full extent of the map" },
+    { key: "extentHistory" as keyof ControlVisibility, label: "Extent History", tooltip: "Navigate back and forward through previous map extents" },
   ],
   display: [
-    { key: "scale" as keyof ControlVisibility, label: "Scale Text" },
-    { key: "scaleLine" as keyof ControlVisibility, label: "Scale Line" },
-    { key: "basemap" as keyof ControlVisibility, label: "Basemap Switcher" },
-    { key: "grid" as keyof ControlVisibility, label: "Grid" },
+    { key: "scale" as keyof ControlVisibility, label: "Scale Text", tooltip: "Shows the current map scale as text (e.g. 1:10,000)" },
+    { key: "scaleLine" as keyof ControlVisibility, label: "Scale Line", tooltip: "Shows a scale bar on the map" },
+    { key: "basemap" as keyof ControlVisibility, label: "Basemap Switcher", tooltip: "Shows the basemap switcher to change the background map" },
+    { key: "grid" as keyof ControlVisibility, label: "Grid", tooltip: "Toggles a coordinate grid overlay on the map" },
   ],
   other: [
-    { key: "gitHubButton" as keyof ControlVisibility, label: "GitHub Button" },
-    { key: "scaleSelector" as keyof ControlVisibility, label: "Scale Selector" },
-    { key: "attributeTable" as keyof ControlVisibility, label: "Attribute Table" },
+    { key: "gitHubButton" as keyof ControlVisibility, label: "GitHub Button", tooltip: "Shows a link to the project's GitHub repository" },
+    { key: "scaleSelector" as keyof ControlVisibility, label: "Scale Selector", tooltip: "Shows a dropdown to select a specific map scale" },
+    { key: "attributeTable" as keyof ControlVisibility, label: "Attribute Table", tooltip: "Shows an attribute table for querying layer data" },
   ],
 };
 
@@ -152,8 +152,8 @@ export default function SettingsTool({ name = "Settings", helpLink, hideHeader =
                 <span className="text-xs text-base-content/60">Map movement tools</span>
               </div>
               <div className="flex flex-col gap-1">
-                {controlGroups.navigation.map(({ key, label }) => (
-                  <label key={key} className="label cursor-pointer justify-start gap-3 rounded-lg px-2 py-1 hover:bg-base-200/60">
+                {controlGroups.navigation.map(({ key, label, tooltip }) => (
+                  <label key={key} className="label cursor-pointer justify-start gap-3 rounded-lg px-2 py-1 hover:bg-base-200/60" title={tooltip}>
                     <input type="checkbox" className="checkbox checkbox-sm" checked={controlVisibility[key]} onChange={() => handleControlToggle(key)} />
                     <span className="label-text text-xs">{label}</span>
                   </label>
@@ -168,8 +168,8 @@ export default function SettingsTool({ name = "Settings", helpLink, hideHeader =
                 <span className="text-xs text-base-content/60">Map visual aids</span>
               </div>
               <div className="flex flex-col gap-1">
-                {controlGroups.display.map(({ key, label }) => (
-                  <label key={key} className="label cursor-pointer justify-start gap-3 rounded-lg px-2 py-1 hover:bg-base-200/60">
+                {controlGroups.display.map(({ key, label, tooltip }) => (
+                  <label key={key} className="label cursor-pointer justify-start gap-3 rounded-lg px-2 py-1 hover:bg-base-200/60" title={tooltip}>
                     <input type="checkbox" className="checkbox checkbox-sm" checked={controlVisibility[key]} onChange={() => handleControlToggle(key)} />
                     <span className="label-text text-xs">{label}</span>
                   </label>
@@ -184,8 +184,8 @@ export default function SettingsTool({ name = "Settings", helpLink, hideHeader =
                 <span className="text-xs text-base-content/60">Misc controls</span>
               </div>
               <div className="flex flex-col gap-1">
-                {controlGroups.other.map(({ key, label }) => (
-                  <label key={key} className="label cursor-pointer justify-start gap-3 rounded-lg px-2 py-1 hover:bg-base-200/60">
+                {controlGroups.other.map(({ key, label, tooltip }) => (
+                  <label key={key} className="label cursor-pointer justify-start gap-3 rounded-lg px-2 py-1 hover:bg-base-200/60" title={tooltip}>
                     <input type="checkbox" className="checkbox checkbox-sm" checked={controlVisibility[key]} onChange={() => handleControlToggle(key)} />
                     <span className="label-text text-xs">{label}</span>
                   </label>
