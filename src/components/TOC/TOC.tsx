@@ -267,15 +267,6 @@ export default function TOC({ visible = true }: TOCProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config, initialized, initializeFromConfig, refreshTOC, tocType]);
 
-  // Apply saved options when TOC type changes
-  useEffect(() => {
-    if (initialized && savedOptionsApplied && (layerListGroups.length > 0 || layerFolderGroups.length > 0)) {
-      // Apply saved options when switching between LIST and FOLDER views
-      applySavedLayerOptions(tocType);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tocType, initialized, savedOptionsApplied, layerListGroups.length, layerFolderGroups.length]);
-
   const handleGroupDropDownChange = (selectedGroup: TOCLayerGroup) => {
     setSelectedGroup(selectedGroup);
   };
@@ -428,18 +419,7 @@ export default function TOC({ visible = true }: TOCProps) {
   };
 
   const handleTurnOffLayers = () => {
-    const visibleLayers = getAllVisibleLayers();
-    const { updateLayerVisibility: updateTOCLayerVisibility } = useTOCStore.getState();
-
-    visibleLayers.forEach((layer) => {
-      // Update TOC store first
-      updateTOCLayerVisibility(layer.name, layer.groupName, false);
-
-      // Then update OpenLayers layer if available
-      if (layer.managedLayerId) {
-        updateLayerVisibility(layer.managedLayerId, false);
-      }
-    });
+    useTOCStore.getState().setAllLayersVisibility(false);
   };
 
   const handleClearSavedLayers = () => {
@@ -578,17 +558,10 @@ export default function TOC({ visible = true }: TOCProps) {
   };
 
   const handleLayerVisibilityGroup = (group: TOCLayerGroup, visible: boolean) => {
-    // Turn on/off all layers in a group
-    const { updateLayerVisibility: updateTOCLayerVisibility } = useTOCStore.getState();
+    const { updateLayerVisibilityById } = useTOCStore.getState();
 
     group.layers.forEach((layer) => {
-      // Update TOC store first
-      updateTOCLayerVisibility(layer.name, group.label, visible);
-
-      // Then update OpenLayers layer if available
-      if (layer.managedLayerId) {
-        updateLayerVisibility(layer.managedLayerId, visible);
-      }
+      updateLayerVisibilityById(layer.id, visible);
     });
   };
 

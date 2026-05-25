@@ -385,6 +385,7 @@ describe('createMyMapsItem helper', () => {
   it('should create item with correct structure', () => {
     const mockFeature = {
       getId: vi.fn(() => 'feature-1'),
+      get: vi.fn(() => undefined),
       getProperties: vi.fn(() => ({ label: 'Test Label', drawType: 'Point' })),
       getGeometry: vi.fn(() => ({ getType: vi.fn(() => 'Point') }))
     }
@@ -409,6 +410,7 @@ describe('createMyMapsItem helper', () => {
   it('should handle missing feature properties', () => {
     const mockFeature = {
       getId: vi.fn(() => null),
+      get: vi.fn(() => undefined),
       getProperties: vi.fn(() => ({})),
       getGeometry: vi.fn(() => ({ getType: vi.fn(() => 'Point') }))
     }

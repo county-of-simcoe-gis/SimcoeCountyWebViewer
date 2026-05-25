@@ -306,7 +306,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
   // Handle item label changes
   const handleLabelChange = (id: string, label: string) => {
     updateItemLabel(id, label);
-    emit("mymap-item-updated", { id, label });
+    emit("mymap-label-change", { id, label });
   };
 
   // Handle item deletion

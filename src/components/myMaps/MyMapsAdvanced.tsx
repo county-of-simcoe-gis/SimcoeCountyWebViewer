@@ -51,18 +51,14 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
 
   // Build dropdown options
   const dropdownOptions = useCallback((): { value: string; label: string }[] => {
-    const options: { value: string; label: string }[] = [
-      { value: "manual", label: "Enter ID Manually..." },
-    ];
+    const options: { value: string; label: string }[] = [{ value: "manual", label: "Enter ID Manually..." }];
 
     if (isAuthenticated) {
       userMaps.forEach((m: UserMyMapsEntry) => {
-        const dateStr = m.date_created
-          ? new Date(m.date_created).toLocaleDateString()
-          : "unknown date";
+        const dateStr = m.date_created ? new Date(m.date_created).toLocaleDateString() : "unknown date";
         options.push({
           value: m.id,
-          label: `${m.name || "(unnamed)"} â€” ${dateStr}`,
+          label: `${m.name || "(unnamed)"} - ${dateStr}`,
         });
       });
     } else {
@@ -71,7 +67,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
         const dateStr = new Date(entry.date).toLocaleDateString();
         options.push({
           value: entry.id,
-          label: `${entry.id} â€” ${dateStr}`,
+          label: `${entry.id} - ${dateStr}`,
         });
       });
     }
@@ -138,7 +134,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
   };
 
   const onImport = async () => {
-    // Determine the ID to import â€” either from the dropdown selection or manual input
+    // Determine the ID to import — either from the dropdown selection or manual input
     const idToImport = selectedDropdownValue !== "manual" ? selectedDropdownValue : inputText.trim();
 
     if (!idToImport) {
@@ -226,11 +222,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
     }
 
     try {
-      const result = await saveToApi(
-        isAuthenticated
-          ? { myMapsName: myMapsName.trim(), isAuthenticated: true }
-          : undefined
-      );
+      const result = await saveToApi(isAuthenticated ? { myMapsName: myMapsName.trim(), isAuthenticated: true } : undefined);
 
       if (result.success && result.id) {
         toast.success(result.message || "MyMaps have been saved! Your ID has been saved to clipboard.");
@@ -323,7 +315,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
               ))}
             </select>
 
-            {/* Manual ID input â€” visible only when "Enter ID Manually" is selected */}
+            {/* Manual ID input — visible only when "Enter ID Manually" is selected */}
             {selectedDropdownValue === "manual" && (
               <input
                 className="mymaps-text-input bg-[url('/images/edit.png')] bg-no-repeat bg-[position:right_4px_center] bg-[length:16px_16px] bg-base-100 text-primary focus:outline-none focus:border-primary focus:shadow-[0_0_0_2px_rgba(0,123,255,0.4)] mb-1"
@@ -337,7 +329,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
               />
             )}
 
-            {/* Name input â€” visible only for authenticated users */}
+            {/* Name input — visible only for authenticated users */}
             {isAuthenticated && (
               <input
                 className="input input-bordered input-sm w-full mb-1"
@@ -595,7 +587,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
               >
                 <Image src="/images/json.png" alt="Export" width={16} height={16} className="mr-2 shrink-0" />
                 Export to ...
-                <span className="ml-auto text-[10px] text-base-content/60">â–¶</span>
+                <span className="ml-auto text-[10px] text-base-content/60">{"\u25B6"}</span>
               </div>
             </div>
           </div>,

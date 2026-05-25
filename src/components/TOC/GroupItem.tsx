@@ -47,9 +47,9 @@ export default function GroupItem({
 
   // Calculate active layer count using fresh store data
   const calculateActiveLayerCount = useCallback(() => {
-    // Get the latest layer visibility from the store's allLayers array
-    const groupLayerNames = group.layers.map((l) => l.name);
-    const visibleCount = allLayers.filter((layer) => groupLayerNames.includes(layer.name) && layer.visible).length;
+    // Match by unique ID to avoid counting same-named layers from other groups
+    const groupLayerIds = new Set(group.layers.map((l) => l.id));
+    const visibleCount = allLayers.filter((layer) => groupLayerIds.has(layer.id) && layer.visible).length;
     return visibleCount;
   }, [group.layers, allLayers]);
 

@@ -326,7 +326,7 @@ describe("MyMaps Component", () => {
       await user.click(screen.getByTestId("test-label-change"));
 
       expect(mockMyMapsStore.updateItemLabel).toHaveBeenCalledWith("test-id", "new-label");
-      expect(mockEventStore.emit).toHaveBeenCalledWith("mymap-item-updated", { id: "test-id", label: "new-label" });
+      expect(mockEventStore.emit).toHaveBeenCalledWith("mymap-label-change", { id: "test-id", label: "new-label" });
     });
 
     it("should handle item deletion", async () => {

@@ -62,6 +62,9 @@ describe("SettingsTool", () => {
         grid: false,
         gitHubButton: false,
         scaleSelector: true,
+        attribution: true,
+        attributeTable: true,
+        shareMap: true,
       },
     });
   });

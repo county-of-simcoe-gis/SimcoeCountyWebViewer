@@ -184,6 +184,8 @@ interface TOCState {
   // Layer manipulation
   updateLayerVisibility: (layerName: string, groupName: string, visible: boolean) => void;
   updateLayerVisibilityById: (layerId: string, visible: boolean) => void;
+  setAllLayersVisibility: (visible: boolean) => void;
+  setGroupLayersVisibility: (groupLabel: string, visible: boolean) => void;
   updateLayerOpacity: (layerName: string, groupName: string, opacity: number) => void;
   updateLayerOpacityById: (layerId: string, opacity: number) => void;
   toggleLayerLegend: (layerName: string, groupName: string) => void;
@@ -858,6 +860,15 @@ export const useTOCStore = create<TOCState>()(
         if (!foundInCurrent && !foundInOpposite) {
           console.warn(`⚠️ Layer ${layerName} not found in group ${groupName} in any view`);
         }
+
+        // Keep selectedGroup in sync so downstream components get fresh props
+        if (state.selectedGroup) {
+          const viewGroups = state.tocType === "LIST" ? state.layerListGroups : state.layerFolderGroups;
+          const updatedGroup = viewGroups.find((g) => g.value === state.selectedGroup!.value || g.label === state.selectedGroup!.label);
+          if (updatedGroup) {
+            state.selectedGroup = updatedGroup;
+          }
+        }
       });
 
       // Update OpenLayers layer visibility AFTER set() completes to avoid
@@ -914,6 +925,15 @@ export const useTOCStore = create<TOCState>()(
         if (allLayerItem) {
           allLayerItem.visible = visible;
         }
+
+        // Keep selectedGroup in sync so downstream components get fresh props
+        if (state.selectedGroup) {
+          const viewGroups = state.tocType === "LIST" ? state.layerListGroups : state.layerFolderGroups;
+          const updatedGroup = viewGroups.find((g) => g.value === state.selectedGroup!.value || g.label === state.selectedGroup!.label);
+          if (updatedGroup) {
+            state.selectedGroup = updatedGroup;
+          }
+        }
       });
 
       // Handle OpenLayers layer visibility
@@ -922,6 +942,119 @@ export const useTOCStore = create<TOCState>()(
       } else if (targetLayer.layer) {
         (targetLayer.layer as OpenLayersLayer).setVisible(visible);
       }
+    },
+
+    // Set visibility for ALL layers at once (single Immer set call)
+    setAllLayersVisibility: (visible) => {
+      // Collect managed layer IDs for OL updates AFTER commit
+      const olUpdates: { managedLayerId?: string; layer?: OpenLayersLayer }[] = [];
+
+      set((state) => {
+        const updateAllInGroups = (groups: TOCLayerGroup[]) => {
+          groups.forEach((group) => {
+            group.layers.forEach((layer) => {
+              if (layer.visible !== visible) {
+                layer.visible = visible;
+                // Capture OL info for post-commit update
+                if (layer.managedLayerId) {
+                  olUpdates.push({ managedLayerId: layer.managedLayerId });
+                } else if (layer.layer) {
+                  olUpdates.push({ layer: layer.layer as OpenLayersLayer });
+                }
+              }
+            });
+          });
+        };
+
+        updateAllInGroups(state.layerListGroups);
+        updateAllInGroups(state.layerFolderGroups);
+
+        state.allLayers.forEach((layer) => {
+          layer.visible = visible;
+        });
+
+        // Keep selectedGroup in sync
+        if (state.selectedGroup) {
+          const viewGroups = state.tocType === "LIST" ? state.layerListGroups : state.layerFolderGroups;
+          const updatedGroup = viewGroups.find((g) => g.value === state.selectedGroup!.value || g.label === state.selectedGroup!.label);
+          if (updatedGroup) {
+            state.selectedGroup = updatedGroup;
+          }
+        }
+      });
+
+      // Deduplicate and apply OL visibility changes after commit
+      const seen = new Set<string>();
+      olUpdates.forEach(({ managedLayerId, layer }) => {
+        if (managedLayerId) {
+          if (!seen.has(managedLayerId)) {
+            seen.add(managedLayerId);
+            LayerManager.setLayerVisibility(managedLayerId, visible);
+          }
+        } else if (layer) {
+          layer.setVisible(visible);
+        }
+      });
+    },
+
+    // Set visibility for all layers in a specific group (single Immer set call)
+    setGroupLayersVisibility: (groupLabel, visible) => {
+      // Collect the IDs of layers in the target group
+      const state = get();
+      const viewGroups = state.tocType === "LIST" ? state.layerListGroups : state.layerFolderGroups;
+      const targetGroup = viewGroups.find((g) => g.label === groupLabel || g.value === groupLabel);
+      if (!targetGroup) return;
+
+      const layerIds = new Set(targetGroup.layers.map((l) => l.id));
+      const olUpdates: { managedLayerId?: string; layer?: OpenLayersLayer }[] = [];
+
+      set((state) => {
+        const updateByIdInGroups = (groups: TOCLayerGroup[]) => {
+          groups.forEach((group) => {
+            group.layers.forEach((layer) => {
+              if (layerIds.has(layer.id) && layer.visible !== visible) {
+                layer.visible = visible;
+                if (layer.managedLayerId) {
+                  olUpdates.push({ managedLayerId: layer.managedLayerId });
+                } else if (layer.layer) {
+                  olUpdates.push({ layer: layer.layer as OpenLayersLayer });
+                }
+              }
+            });
+          });
+        };
+
+        updateByIdInGroups(state.layerListGroups);
+        updateByIdInGroups(state.layerFolderGroups);
+
+        state.allLayers.forEach((layer) => {
+          if (layerIds.has(layer.id)) {
+            layer.visible = visible;
+          }
+        });
+
+        // Keep selectedGroup in sync
+        if (state.selectedGroup) {
+          const currentViewGroups = state.tocType === "LIST" ? state.layerListGroups : state.layerFolderGroups;
+          const updatedGroup = currentViewGroups.find((g) => g.value === state.selectedGroup!.value || g.label === state.selectedGroup!.label);
+          if (updatedGroup) {
+            state.selectedGroup = updatedGroup;
+          }
+        }
+      });
+
+      // Deduplicate and apply OL visibility changes after commit
+      const seen = new Set<string>();
+      olUpdates.forEach(({ managedLayerId, layer }) => {
+        if (managedLayerId) {
+          if (!seen.has(managedLayerId)) {
+            seen.add(managedLayerId);
+            LayerManager.setLayerVisibility(managedLayerId, visible);
+          }
+        } else if (layer) {
+          layer.setVisible(visible);
+        }
+      });
     },
 
     // Update layer opacity by unique ID

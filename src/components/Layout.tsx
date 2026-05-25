@@ -63,9 +63,10 @@ export default function Layout({ children }: LayoutProps) {
     userStorageReady.then(() => setStorageReady(true));
   }, [session, sessionStatus]);
 
-  // For unauthenticated users or while session is loading, mark ready immediately
+  // For unauthenticated users, disable server sync (resolves userStorageReady) and mark ready
   useEffect(() => {
     if (sessionStatus === "unauthenticated") {
+      enableUserStorage(false);
       setStorageReady(true);
     }
   }, [sessionStatus]);

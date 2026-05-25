@@ -18,6 +18,7 @@ export interface ControlVisibility {
   extentHistory: boolean;
   attribution: boolean;
   attributeTable: boolean;
+  shareMap: boolean;
 }
 
 const STORAGE_KEY_MAP_CONTROLS = "Map_Control_Settings";
@@ -108,6 +109,7 @@ const getDefaultControlVisibility = (config?: { controls?: Partial<ControlVisibi
     extentHistory: config?.controls?.extentHistory ?? false,
     attribution: config?.controls?.attribution ?? true,
     attributeTable: config?.controls?.attributeTable ?? true,
+    shareMap: config?.controls?.shareMap ?? true,
   };
 };
 

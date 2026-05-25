@@ -894,14 +894,17 @@ export const createMyMapsItem = (feature: Feature<Geometry>, drawType: DrawType,
     }
   }
 
-  const defaultLabelStyle = getDefaultLabelStyle(drawType);
+  // Use labelStyle from feature properties if already set (e.g. by postProcessFeature),
+  // otherwise fall back to defaults
+  const featureLabelStyle = feature.get("labelStyle");
+  const labelStyle = featureLabelStyle || getDefaultLabelStyle(drawType);
 
   return {
     id,
     label: defaultLabel,
     labelVisible: drawType === "Text" || drawType === "Callout" || drawType === "Bearing" || drawType === "Measure",
     labelRotation,
-    labelStyle: defaultLabelStyle,
+    labelStyle,
     featureGeoJSON: "", // Will be set by calling code
     style: style || ({} as StyleJSON),
     visible: true,

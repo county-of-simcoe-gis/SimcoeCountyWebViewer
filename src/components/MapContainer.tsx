@@ -96,6 +96,7 @@ const dynamicControlImports = {
   FullscreenControl: () => import("@/components/map/controls/FullscreenControl").then((m) => ({ default: m.FullscreenControl })),
   AttributionControl: () => import("@/components/map/controls/AttributionControl").then((m) => ({ default: m.AttributionControl })),
   MoreMenuButton: () => import("@/components/map/controls/MoreMenuButton").then((m) => ({ default: m.MoreMenuButton })),
+  ShareMap: () => import("@/components/map/controls/ShareMap").then((m) => ({ default: m.ShareMap })),
 };
 
 // Create lazy components
@@ -111,6 +112,7 @@ const LazyRotateControl = lazy(dynamicControlImports.RotateControl);
 const LazyFullscreenControl = lazy(dynamicControlImports.FullscreenControl);
 const LazyAttributionControl = lazy(dynamicControlImports.AttributionControl);
 const LazyMoreMenuButton = lazy(dynamicControlImports.MoreMenuButton);
+const LazyShareMap = lazy(dynamicControlImports.ShareMap);
 
 // Loading placeholder component
 const ControlLoadingPlaceholder = () => <div className="w-8 h-8 bg-base-200 rounded" />;
@@ -993,6 +995,14 @@ export default function MapContainer() {
     );
   }, []);
 
+  const ShareMapWrapper = useCallback(({ map }: { map: Map }) => {
+    return (
+      <Suspense fallback={<ControlLoadingPlaceholder />}>
+        <LazyShareMap map={map} />
+      </Suspense>
+    );
+  }, []);
+
   // Define control configuration - memoized to prevent recreation on every render
   const controlsConfig: Record<string, ControlConfig> = useMemo(
     () => ({
@@ -1038,6 +1048,12 @@ export default function MapContainer() {
         zone: "top-left",
         order: 7,
         enabled: controlVisibility.grid,
+      },
+      shareMap: {
+        component: ShareMapWrapper,
+        zone: "top-left",
+        order: 8,
+        enabled: controlVisibility.shareMap,
       },
 
       // gitHubButton: {
@@ -1099,6 +1115,7 @@ export default function MapContainer() {
       ScaleDisplayWrapper,
       ScaleSelectorWrapper,
       AttributionControlWrapper,
+      ShareMapWrapper,
     ],
   );
 

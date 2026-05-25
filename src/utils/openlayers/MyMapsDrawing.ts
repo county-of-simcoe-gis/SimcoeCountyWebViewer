@@ -175,11 +175,17 @@ export class MyMapsDrawingManager {
 
     // Handle Callout type - apply callout style and set label properties
     if (drawType === "Callout" && geometry?.getType() === "LineString") {
+      const defaultLabelStyle = getDefaultLabelStyle("Callout");
       feature.setProperties({
         ...feature.getProperties(),
         label: "Enter Callout Text",
         labelVisible: true,
-        labelStyle: getDefaultLabelStyle("Callout"),
+        labelStyle: {
+          ...defaultLabelStyle,
+          lineColor: drawColor,
+          anchorColor: drawColor,
+          borderColor: drawColor,
+        },
       });
       // Apply callout style function
       const calloutStyleFn = getCalloutStyle({ drawColor });
@@ -920,7 +926,11 @@ export class MyMapsDrawingManager {
     if (feature.get("labelVisible")) {
       const featureStyle = feature.getStyle();
 
-      if (featureStyle instanceof Style) {
+      if (typeof featureStyle === "function") {
+        // Callout style functions read label from feature properties dynamically,
+        // so just trigger a redraw — no style replacement needed.
+        this.vectorSource.changed();
+      } else if (featureStyle instanceof Style) {
         const textStyle = featureStyle.getText();
         if (textStyle) {
           textStyle.setText(newLabel);

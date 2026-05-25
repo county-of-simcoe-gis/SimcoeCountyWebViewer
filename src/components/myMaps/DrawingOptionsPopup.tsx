@@ -1880,12 +1880,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
 
                 // Add the buffer feature directly to MyMaps store
                 const featureStyle = bufferFeature.getStyle();
-                const myMapsItem = createMyMapsItem(
-                  bufferFeature,
-                  "Buffer",
-                  label,
-                  featureStyle instanceof Style ? styleToJSON(featureStyle) : undefined,
-                );
+                const myMapsItem = createMyMapsItem(bufferFeature, "Buffer", label, featureStyle instanceof Style ? styleToJSON(featureStyle) : undefined);
                 myMapsItem.featureGeoJSON = featureToGeoJSON(bufferFeature);
                 useMyMapsStore.getState().addItem(myMapsItem);
                 emit("mymap-item-created", { item: myMapsItem });
@@ -2619,15 +2614,12 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       // Font size dropdown (for label text size)
       // Prefer explicit selector for stability, then fall back to legacy class detection.
       const explicitFontSizeSelect = symbolizerContainer.querySelector("select[name='labelFontSize']") as HTMLSelectElement | null;
-      const fontSizeDropdowns = explicitFontSizeSelect
-        ? [explicitFontSizeSelect]
-        : Array.from(symbolizerContainer.querySelectorAll(".sc-mymaps-style-dropdown")) as HTMLSelectElement[];
+      const fontSizeDropdowns = explicitFontSizeSelect ? [explicitFontSizeSelect] : (Array.from(symbolizerContainer.querySelectorAll(".sc-mymaps-style-dropdown")) as HTMLSelectElement[]);
 
       fontSizeDropdowns.forEach((selectElement) => {
         // When falling back to class-based discovery, verify this dropdown contains px values.
         const options = Array.from(selectElement.options);
-        const isFontSizeDropdown =
-          !!explicitFontSizeSelect || options.some((opt) => opt.value.includes("px") && !opt.value.includes("Normal") && !opt.value.includes("Dashed"));
+        const isFontSizeDropdown = !!explicitFontSizeSelect || options.some((opt) => opt.value.includes("px") && !opt.value.includes("Normal") && !opt.value.includes("Dashed"));
 
         if (isFontSizeDropdown) {
           // React sets <select value> via the DOM `.value` property, not the `selected`
@@ -3069,24 +3061,27 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
 
   // Track when activeTool changes for proper DOM sync
   const lastActiveToolRef = useRef<string | undefined>(undefined);
+  const lastLabelVisibleRef = useRef<boolean | undefined>(undefined);
 
   // Sync React content to overlay element when structure changes
   useEffect(() => {
     if (!overlayElementRef.current || !popupRef.current || !itemId) return;
 
-    // Check if item or activeTool changed
+    // Check if item, activeTool, or labelVisible changed
     const itemChanged = lastItemIdRef.current !== itemId;
     const toolChanged = lastActiveToolRef.current !== activeTool;
+    const labelVisibleChanged = lastLabelVisibleRef.current !== item?.labelVisible;
     lastItemIdRef.current = itemId || null;
     lastActiveToolRef.current = activeTool;
+    lastLabelVisibleRef.current = item?.labelVisible;
 
     // Reset drag flag when item changes (new feature selected)
     if (itemChanged) {
       hasBeenDraggedRef.current = false;
     }
 
-    // Copy content if item changed OR if activeTool changed (to show/hide tool components)
-    if ((itemChanged || toolChanged) && itemId) {
+    // Copy content if item changed, activeTool changed, or labelVisible toggled (to show/hide label style controls)
+    if ((itemChanged || toolChanged || labelVisibleChanged) && itemId) {
       // Preserve focus and cursor position before copying content
       const activeElement = overlayElementRef.current.querySelector(":focus") as HTMLInputElement;
       const cursorPosition = activeElement?.selectionStart || 0;
@@ -3110,7 +3105,7 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       // Re-attach all event listeners
       attachEventListeners();
     }
-  }, [itemId, activeTool, attachEventListeners]);
+  }, [itemId, activeTool, item?.labelVisible, attachEventListeners]);
 
   // Sync label value when it changes externally (without full DOM manipulation)
   useEffect(() => {
