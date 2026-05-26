@@ -128,6 +128,7 @@ vi.mock("react-icons/fa", () => ({
   FaSort: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "sort-icon" }, "Sort"),
   FaSortUp: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "sort-up-icon" }, "SortUp"),
   FaSortDown: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "sort-down-icon" }, "SortDown"),
+  FaMousePointer: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "mouse-pointer-icon" }, "MousePointer"),
   FaExchangeAlt: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "exchange-alt-icon" }, "ExchangeAlt"),
 
   // LayerInformationTool icons

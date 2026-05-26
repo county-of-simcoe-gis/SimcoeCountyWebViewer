@@ -48,7 +48,6 @@ export default function TOC({ visible = true }: TOCProps) {
   const searchText = useTOCStore((s) => s.searchText);
   const sortAlpha = useTOCStore((s) => s.sortAlpha);
   const isLoading = useTOCStore((s) => s.isLoading);
-  const layerCount = useTOCStore((s) => s.layerCount);
   const helpLink = useTOCStore((s) => s.helpLink);
   const setTocType = useTOCStore((s) => s.setTocType);
   const setSelectedGroup = useTOCStore((s) => s.setSelectedGroup);
@@ -59,6 +58,7 @@ export default function TOC({ visible = true }: TOCProps) {
   const initializeFromConfig = useTOCStore((s) => s.initializeFromConfig);
   const refreshTOC = useTOCStore((s) => s.refreshTOC);
   const toggleLayerLegendById = useTOCStore((s) => s.toggleLayerLegendById);
+  const updateLayerVisibilitiesBatch = useTOCStore((s) => s.updateLayerVisibilitiesBatch);
   const moveLayer = useTOCStore((s) => s.moveLayer);
   const getAllVisibleLayers = useTOCStore((s) => s.getAllVisibleLayers);
 
@@ -67,7 +67,6 @@ export default function TOC({ visible = true }: TOCProps) {
   const config = useAppStore((s) => s.config);
   const urlParameters = useAppStore((state) => state.urlParameters);
   const [initialized, setInitialized] = useState(false);
-  const [savedOptionsApplied, setSavedOptionsApplied] = useState(false);
   const expandLegendProcessedRef = useRef(false);
 
   // URL Parameter context for registering TOC readiness
@@ -257,7 +256,6 @@ export default function TOC({ visible = true }: TOCProps) {
         if (savedData !== undefined && savedData !== null) {
           applySavedLayerOptions(tocType);
         }
-        setSavedOptionsApplied(true);
 
         if (urlParamContext?.registerComponentReady) {
           urlParamContext.registerComponentReady("toc", { readinessType: "dataLoaded" });
@@ -440,10 +438,21 @@ export default function TOC({ visible = true }: TOCProps) {
     const { layerListGroups: currentListGroups, layerFolderGroups: currentFolderGroups } = useTOCStore.getState();
     const activeGroups = tocType === "LIST" ? currentListGroups : currentFolderGroups;
 
-    // In LIST view the "All Layers" virtual group holds the user's reordered
-    // drawIndex values.  Read directly from individual source groups whose
-    // drawIndex was already synchronised by moveLayer().
-    // For FOLDER view just use the groups directly.
+    // In LIST view the "All Layers" virtual group holds globally unique
+    // drawIndex values, while individual source groups only have per-group
+    // indices (0..N-1).  moveLayer() syncs the global values back to source
+    // groups when the user reorders, but if no reorder has happened the
+    // source groups still have overlapping per-group values.  Build a lookup
+    // from "All Layers" so the saved index is always globally unique.
+    const globalDrawIndexById = new Map<string, number>();
+    if (tocType === "LIST") {
+      const allLayersGroup = activeGroups.find((g) => g.value === "all_layers");
+      if (allLayersGroup) {
+        allLayersGroup.layers.forEach((layer) => {
+          globalDrawIndexById.set(layer.id, layer.drawIndex);
+        });
+      }
+    }
 
     // Group layers by their group value
     const layersByGroup = new Map<string, TOCLayer[]>();
@@ -484,12 +493,18 @@ export default function TOC({ visible = true }: TOCProps) {
 
       // Process each layer in the group
       layers.forEach((layer) => {
+        // In LIST view use the globally unique drawIndex from "All Layers"
+        // so that layers from different groups don't share the same index.
+        // Fall back to the source group's drawIndex (FOLDER view or if
+        // the layer wasn't found in the lookup).
+        const drawIndex = globalDrawIndexById.get(layer.id) ?? layer.drawIndex;
+
         // Save layer state
         const saveLayer = {
           name: layer.name,
           visible: layer.visible,
           opacity: layer.opacity,
-          index: layer.drawIndex,
+          index: drawIndex,
         };
 
         savedLayers[layer.name] = saveLayer;
@@ -618,32 +633,21 @@ export default function TOC({ visible = true }: TOCProps) {
           if (urlVisibleLayers) {
             const visibleLayerNames = urlVisibleLayers.split(",").map((name) => name.trim());
 
-            // Update layer visibility in the target group
-            const updatedLayers = targetGroup.layers.map((layer) => {
+            // Build batch updates for all layers that need visibility changes
+            const batchUpdates: Array<{ layerId: string; visible: boolean }> = [];
+
+            targetGroup.layers.forEach((layer) => {
               const shouldBeVisible = visibleLayerNames.includes(layer.tocDisplayName) || visibleLayerNames.includes(layer.name) || visibleLayerNames.includes(layer.displayName || layer.name);
 
               if (shouldBeVisible !== layer.visible) {
-                // Update layer visibility - first TOC store, then OpenLayers
-                const { updateLayerVisibility: updateTOCLayerVisibility } = useTOCStore.getState();
-                updateTOCLayerVisibility(layer.name, targetGroup.label, shouldBeVisible);
-
-                if (layer.managedLayerId) {
-                  updateLayerVisibility(layer.managedLayerId, shouldBeVisible);
-                }
+                batchUpdates.push({ layerId: layer.id, visible: shouldBeVisible });
               }
-
-              return layer;
             });
 
-            // Store the visible layers list in the group for reference
-            const updatedGroup = {
-              ...targetGroup,
-              visibleLayers: visibleLayerNames,
-              layers: updatedLayers,
-            };
-
-            // Update the group with the new layer visibility
-            setSelectedGroup(updatedGroup);
+            // Apply all visibility changes in a single store update
+            if (batchUpdates.length > 0) {
+              updateLayerVisibilitiesBatch(batchUpdates);
+            }
           }
 
           // Handle EXPAND_LEGEND parameter (only process once to avoid loops)
@@ -673,7 +677,7 @@ export default function TOC({ visible = true }: TOCProps) {
     selectedGroup,
     setSelectedGroup,
     toggleLayerLegendById,
-    updateLayerVisibility,
+    updateLayerVisibilitiesBatch,
   ]);
 
   // Handle URL parameters after TOC is initialized

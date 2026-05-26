@@ -75,7 +75,6 @@ function FeatureContent({ result, onClose, onClearParcelLayer }: { result: Resul
       const r = result as IdentifyResult;
       return (
         <div className="py-2.5 px-3">
-          <p className="text-[11px] text-[#999] mb-1.5">Feature ID: {r.data.featureId}</p>
           <div className="flex flex-col">
             {Object.entries(r.data.attributes)
               .filter(([key, value]) => !isExcludedKey(key) && key !== "bbox" && typeof value !== "object")

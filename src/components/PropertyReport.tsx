@@ -91,16 +91,15 @@ export default function PropertyReport({ arn, onZoomClick }: PropertyReportProps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [arn]);
 
-  /** Print Preview — posts to the legacy embed API and opens the report viewer. */
+  /** Print Preview — posts to the embed API and opens the report viewer. */
   const handlePrintPreview = async () => {
     if (!data) return;
 
     try {
       const reportName = "Public_Embedded";
-      const apiUrl = ((config as Record<string, unknown>)?.apiUrl as string) ?? "https://opengis.simcoe.ca/api_v2/";
       const reportUrl = ((config as Record<string, unknown>)?.reportUrl as string) ?? "https://opengis.simcoe.ca/reports/";
 
-      const res = await fetch(`${apiUrl}public/reports/embed/${reportName}`, {
+      const res = await fetch(toApiUrl(`/api/public/reports/embed/${reportName}`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ params: [{ name: "ARN", value: data.ARN, type: "text" }] }),

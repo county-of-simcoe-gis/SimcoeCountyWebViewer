@@ -76,6 +76,8 @@ export interface AttributeTableTab {
   bboxFilterActive: boolean;
   /** When true the grid shows only currently-selected rows. */
   selectionOnly: boolean;
+  /** When true the user can click/box-select features on the map to select rows. */
+  mapSelectActive: boolean;
   selection: Set<string>; // feature ids
   abortController: AbortController | null;
   capReached: boolean;
@@ -127,6 +129,7 @@ interface AttributeTableState {
   /** Invert selection across all currently-loaded rows. */
   invertSelection: (layerId: string) => void;
   setSelectionOnly: (layerId: string, active: boolean) => void;
+  setMapSelectActive: (layerId: string, active: boolean) => void;
 
   /** Bump tab counter without touching data — used after schema-only mutations. */
   touch: (layerId: string) => void;
@@ -145,9 +148,7 @@ function makeTab(layer: TOCLayer): AttributeTableTab {
   // tocHelpers/ThemeServiceToggler — read it so the grid can mint a
   // per-row attachments URL (replacing `#OBJECTID#`).
   const olLayer = layer.layer as { get?: (key: string) => unknown } | null;
-  const attachmentUrlTemplate = olLayer && typeof olLayer.get === "function"
-    ? ((olLayer.get("attachmentUrl") as string | null) ?? null)
-    : null;
+  const attachmentUrlTemplate = olLayer && typeof olLayer.get === "function" ? ((olLayer.get("attachmentUrl") as string | null) ?? null) : null;
   const hasAttachments = Boolean(layer.hasAttachments) && !!attachmentUrlTemplate;
 
   return {
@@ -175,6 +176,7 @@ function makeTab(layer: TOCLayer): AttributeTableTab {
     // map window so the initial fetch stays within the row cap.
     bboxFilterActive: false,
     selectionOnly: false,
+    mapSelectActive: false,
     selection: new Set<string>(),
     abortController: null,
     capReached: false,
@@ -300,6 +302,7 @@ export const useAttributeTableStore = create<AttributeTableState>((set, get) => 
               loadedCount: patch.store.length,
               capReached: patch.capReached,
               selection: new Set<string>(), // reset selection on reload
+              selectionOnly: false, // turn off when selection is cleared
               error: null,
             }
           : t,
@@ -364,6 +367,11 @@ export const useAttributeTableStore = create<AttributeTableState>((set, get) => 
   setSelectionOnly: (layerId, active) =>
     set((s) => ({
       tabs: s.tabs.map((t) => (t.layerId === layerId ? { ...t, selectionOnly: active } : t)),
+    })),
+
+  setMapSelectActive: (layerId, active) =>
+    set((s) => ({
+      tabs: s.tabs.map((t) => (t.layerId === layerId ? { ...t, mapSelectActive: active } : t)),
     })),
 
   touch: (layerId) =>

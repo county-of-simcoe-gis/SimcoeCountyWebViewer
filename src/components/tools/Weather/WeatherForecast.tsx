@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { FaSyncAlt, FaTimes } from "react-icons/fa";
 import config from "./config.json";
+import { apiUrl } from "@/lib/axiosInstance";
 
 type CityConfig = {
   code: string;
@@ -20,20 +21,6 @@ type WeatherForecastProps = {
   onClose?: () => void;
 };
 
-async function waitFor(predicate: () => boolean, timeoutSeconds: number, intervalMs = 250): Promise<void> {
-  const start = Date.now();
-  while (Date.now() - start < timeoutSeconds * 1000) {
-    if (predicate()) return;
-    await new Promise((r) => setTimeout(r, intervalMs));
-  }
-}
-
-function getApiBaseUrl(): string | null {
-  // Original: window.config.apiUrl
-  const w = window as unknown as { config?: { apiUrl?: string } };
-  const base = w?.config?.apiUrl;
-  return typeof base === "string" && base.length > 0 ? base : null;
-}
 
 function iconUrl(code?: string): string {
   return code ? `https://weather.gc.ca/weathericons/small/${code}.png` : "";
@@ -59,21 +46,16 @@ export default function WeatherForecast(props: WeatherForecastProps): React.Reac
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const urlForCity = useCallback((cityCode: string) => {
-    const base = getApiBaseUrl();
-    if (!base) return null;
-    return `${base}public/map/tool/weather/CityWeather/${cityCode}`;
+    return apiUrl(`/api/public/map/tool/weather/${cityCode}`);
   }, []);
 
   const refreshWeather = useCallback(async () => {
     setIsRefreshing(true);
     setCityInfo([]);
 
-    await waitFor(() => !!getApiBaseUrl(), 30);
-
     const results = await Promise.allSettled(
       cities.map(async (c) => {
         const url = urlForCity(c.code);
-        if (!url) throw new Error("apiUrl not available on window.config");
 
         const res = await fetch(url, { credentials: "include" });
         if (!res.ok) throw new Error(`HTTP ${res.status} for ${c.code}`);

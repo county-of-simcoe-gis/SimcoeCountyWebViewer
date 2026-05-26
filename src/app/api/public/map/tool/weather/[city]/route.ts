@@ -108,9 +108,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         ignoreDeclaration: true,
       });
       const parsed = parser.parse(xml);
-      // Environment Canada XML uses <siteData> as the root; return that if present
       const siteData = parsed?.siteData ? parsed.siteData : parsed;
-      return NextResponse.json(siteData, { status: 200 });
+      return NextResponse.json({ siteData }, { status: 200 });
     } catch (err) {
       console.error("XML parse error:", err);
       return new NextResponse(xml, { headers: { "Content-Type": "application/xml" } });

@@ -19,11 +19,13 @@ import Style from "ol/style/Style";
 import Stroke from "ol/style/Stroke";
 import Fill from "ol/style/Fill";
 import CircleStyle from "ol/style/Circle";
+import { intersects as extentIntersects } from "ol/extent";
 import { useMapStore } from "@/stores/mapStore";
 import { useLayerManagerStore } from "@/stores/layerManagerStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { fetchFeatureById } from "@/lib/attributeTable/wfs";
 import { fetchArcgisFeatureById, parseArcgisLayerUrl } from "@/lib/attributeTable/arcgis";
+import type { AttributeTableTab } from "@/stores/attributeTableStore";
 
 // Stable managed-layer IDs in the layer manager store. We keep them as
 // module constants so repeated calls to `getOrCreate…` always find the
@@ -150,10 +152,7 @@ async function fetchOneFeature(
  * layers without a primary key whose auto-generated fids (e.g.
  * `Library.fid--1574c53d_…`) cannot be re-queried by WFS featureID.
  */
-export function cacheGeometries(
-  layerId: string,
-  features: ReadonlyArray<{ id?: string | number; geometry?: unknown }>,
-): void {
+export function cacheGeometries(layerId: string, features: ReadonlyArray<{ id?: string | number; geometry?: unknown }>): void {
   if (features.length === 0) return;
   const map = useMapStore.getState().map;
   const mapProj = map ? map.getView().getProjection().getCode() : "EPSG:3857";
@@ -163,10 +162,7 @@ export function cacheGeometries(
   for (const f of features) {
     if (!f.geometry || f.id === undefined || f.id === null) continue;
     try {
-      const olFeat = fmt.readFeature(
-        { type: "Feature", id: f.id, geometry: f.geometry, properties: {} },
-        { featureProjection: mapProj, dataProjection: mapProj },
-      ) as Feature;
+      const olFeat = fmt.readFeature({ type: "Feature", id: f.id, geometry: f.geometry, properties: {} }, { featureProjection: mapProj, dataProjection: mapProj }) as Feature;
       const key = compoundId(layerId, String(f.id));
       olFeat.setId(key);
       lruTouch(key, olFeat);
@@ -229,10 +225,7 @@ export async function syncHighlight(params: { layerId: string; wfsUrl: string; t
     try {
       const f = await fetchOneFeature(wfsUrl, typeName, fid, secured, signal);
       if (!f || !f.geometry) continue;
-      const olFeat = fmt.readFeature(
-        { type: "Feature", id: f.id, geometry: f.geometry, properties: f.properties ?? {} },
-        { featureProjection: mapProj, dataProjection: mapProj },
-      ) as Feature;
+      const olFeat = fmt.readFeature({ type: "Feature", id: f.id, geometry: f.geometry, properties: f.properties ?? {} }, { featureProjection: mapProj, dataProjection: mapProj }) as Feature;
       const key = compoundId(layerId, fid);
       olFeat.setId(key);
       lruTouch(key, olFeat);
@@ -274,13 +267,7 @@ let hoverController: AbortController | null = null;
  * on `mouseenter` of a grid row and paired with {@link clearHover} on leave.
  * If the geometry is already in the LRU, this is fully synchronous.
  */
-export function setHoverFeature(params: {
-  layerId: string;
-  fid: string;
-  wfsUrl?: string;
-  typeName?: string;
-  secured?: boolean;
-}): void {
+export function setHoverFeature(params: { layerId: string; fid: string; wfsUrl?: string; typeName?: string; secured?: boolean }): void {
   const { layerId, fid, wfsUrl, typeName = "", secured = false } = params;
   const map = useMapStore.getState().map;
   if (!map) return;
@@ -318,10 +305,7 @@ export function setHoverFeature(params: {
     try {
       const f = await fetchOneFeature(wfsUrl, typeName, fid, secured, ctrl.signal);
       if (ctrl.signal.aborted || !f || !f.geometry) return;
-      const olFeat = fmt.readFeature(
-        { type: "Feature", id: f.id, geometry: f.geometry, properties: f.properties ?? {} },
-        { featureProjection: mapProj, dataProjection: mapProj },
-      ) as Feature;
+      const olFeat = fmt.readFeature({ type: "Feature", id: f.id, geometry: f.geometry, properties: f.properties ?? {} }, { featureProjection: mapProj, dataProjection: mapProj }) as Feature;
       olFeat.setId(wantedKey);
       lruTouch(wantedKey, olFeat);
       // Only add if this hover is still the active one.
@@ -385,10 +369,7 @@ export async function zoomToFeature(wfsUrl: string, typeName: string, layerId: s
     // Page fetches request srsName=EPSG:3857 (same as the map), so the
     // coordinates are already in the map projection — no transform needed.
     const mapProj = map.getView().getProjection().getCode();
-    feat = new GeoJSON().readFeature(
-      { type: "Feature", id: f.id, geometry: f.geometry, properties: f.properties ?? {} },
-      { featureProjection: mapProj, dataProjection: mapProj },
-    ) as Feature;
+    feat = new GeoJSON().readFeature({ type: "Feature", id: f.id, geometry: f.geometry, properties: f.properties ?? {} }, { featureProjection: mapProj, dataProjection: mapProj }) as Feature;
     feat.setId(key);
     lruTouch(key, feat);
   } else {
@@ -427,14 +408,7 @@ export function getCurrentMapExtent(): [number, number, number, number] | null {
  * Uses {@link getCachedFeatures} to pull geometries from the LRU first and
  * fall back to per-feature fetches for any missing ones.
  */
-export async function zoomToFeatures(params: {
-  layerId: string;
-  wfsUrl: string;
-  typeName: string;
-  fids: string[];
-  secured?: boolean;
-  signal?: AbortSignal;
-}): Promise<void> {
+export async function zoomToFeatures(params: { layerId: string; wfsUrl: string; typeName: string; fids: string[]; secured?: boolean; signal?: AbortSignal }): Promise<void> {
   const map = useMapStore.getState().map;
   if (!map || params.fids.length === 0) return;
 
@@ -468,14 +442,7 @@ export async function zoomToFeatures(params: {
  * the geometry LRU first and falling back to the WFS/ArcGIS feature-by-id
  * endpoint for any that are missing. Used by "Add selection to My Maps".
  */
-export async function getCachedFeatures(params: {
-  layerId: string;
-  wfsUrl: string;
-  typeName: string;
-  fids: string[];
-  secured?: boolean;
-  signal?: AbortSignal;
-}): Promise<Feature[]> {
+export async function getCachedFeatures(params: { layerId: string; wfsUrl: string; typeName: string; fids: string[]; secured?: boolean; signal?: AbortSignal }): Promise<Feature[]> {
   const { layerId, wfsUrl, typeName, fids, secured = false, signal } = params;
   const out: Feature[] = [];
   const missing: string[] = [];
@@ -501,10 +468,7 @@ export async function getCachedFeatures(params: {
     try {
       const f = await fetchOneFeature(wfsUrl, typeName, fid, secured, signal);
       if (!f || !f.geometry) continue;
-      const olFeat = fmt.readFeature(
-        { type: "Feature", id: f.id, geometry: f.geometry, properties: f.properties ?? {} },
-        { featureProjection: mapProj, dataProjection: mapProj },
-      ) as Feature;
+      const olFeat = fmt.readFeature({ type: "Feature", id: f.id, geometry: f.geometry, properties: f.properties ?? {} }, { featureProjection: mapProj, dataProjection: mapProj }) as Feature;
       const key = compoundId(layerId, fid);
       olFeat.setId(key);
       lruTouch(key, olFeat);
@@ -515,4 +479,40 @@ export async function getCachedFeatures(params: {
   }
 
   return out;
+}
+
+// ---------------------------------------------------------------------------
+// Spatial selection (click / box-select from map)
+// ---------------------------------------------------------------------------
+
+/**
+ * Select features from the tab's loaded data that intersect the given extent.
+ * Uses cached geometries from the LRU (populated during highlight operations)
+ * plus any vector layer source on the map. No server query needed.
+ *
+ * Used by the "Select from map" feature (click + DragBox).
+ */
+export function selectFeaturesByExtent(tab: AttributeTableTab, extent: [number, number, number, number]): string[] {
+  if (!tab.store) return [];
+
+  const matchedFids: string[] = [];
+  const layerId = tab.layerId;
+  const prefix = `${layerId}::`;
+
+  // Check geometries in the LRU cache
+  for (const [key, feat] of geomLRU.entries()) {
+    if (!key.startsWith(prefix)) continue;
+    const geom = feat.getGeometry();
+    if (!geom) continue;
+    const geomExtent = geom.getExtent();
+    if (extentIntersects(extent, geomExtent)) {
+      const fid = key.slice(prefix.length);
+      // Only include if this fid is in the loaded store
+      if (tab.store.fids.includes(fid)) {
+        matchedFids.push(fid);
+      }
+    }
+  }
+
+  return matchedFids;
 }

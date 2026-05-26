@@ -184,6 +184,7 @@ interface TOCState {
   // Layer manipulation
   updateLayerVisibility: (layerName: string, groupName: string, visible: boolean) => void;
   updateLayerVisibilityById: (layerId: string, visible: boolean) => void;
+  updateLayerVisibilitiesBatch: (updates: Array<{ layerId: string; visible: boolean }>) => void;
   setAllLayersVisibility: (visible: boolean) => void;
   setGroupLayersVisibility: (groupLabel: string, visible: boolean) => void;
   updateLayerOpacity: (layerName: string, groupName: string, opacity: number) => void;
@@ -942,6 +943,72 @@ export const useTOCStore = create<TOCState>()(
       } else if (targetLayer.layer) {
         (targetLayer.layer as OpenLayersLayer).setVisible(visible);
       }
+    },
+
+    // Batch update visibility for multiple layers in a single set() call
+    updateLayerVisibilitiesBatch: (updates) => {
+      if (updates.length === 0) return;
+
+      const state = get();
+      const updateMap = new Map(updates.map((u) => [u.layerId, u.visible]));
+      const olUpdates: { managedLayerId?: string; layer?: OpenLayersLayer; visible: boolean }[] = [];
+
+      // Capture OL layer info before set()
+      for (const { layerId, visible } of updates) {
+        const targetLayer = state.allLayers.find((l) => l.id === layerId);
+        if (targetLayer && targetLayer.visible !== visible) {
+          if (targetLayer.managedLayerId) {
+            olUpdates.push({ managedLayerId: targetLayer.managedLayerId, visible });
+          } else if (targetLayer.layer) {
+            olUpdates.push({ layer: targetLayer.layer as OpenLayersLayer, visible });
+          }
+        }
+      }
+
+      set((state) => {
+        const updateInGroups = (groups: TOCLayerGroup[]) => {
+          groups.forEach((group) => {
+            group.layers.forEach((layer) => {
+              const newVisible = updateMap.get(layer.id);
+              if (newVisible !== undefined && layer.visible !== newVisible) {
+                layer.visible = newVisible;
+              }
+            });
+          });
+        };
+
+        updateInGroups(state.layerListGroups);
+        updateInGroups(state.layerFolderGroups);
+
+        state.allLayers.forEach((layer) => {
+          const newVisible = updateMap.get(layer.id);
+          if (newVisible !== undefined) {
+            layer.visible = newVisible;
+          }
+        });
+
+        // Keep selectedGroup in sync
+        if (state.selectedGroup) {
+          const viewGroups = state.tocType === "LIST" ? state.layerListGroups : state.layerFolderGroups;
+          const updatedGroup = viewGroups.find((g) => g.value === state.selectedGroup!.value || g.label === state.selectedGroup!.label);
+          if (updatedGroup) {
+            state.selectedGroup = updatedGroup;
+          }
+        }
+      });
+
+      // Apply OL visibility changes after commit
+      const seen = new Set<string>();
+      olUpdates.forEach(({ managedLayerId, layer, visible }) => {
+        if (managedLayerId) {
+          if (!seen.has(managedLayerId)) {
+            seen.add(managedLayerId);
+            LayerManager.setLayerVisibility(managedLayerId, visible);
+          }
+        } else if (layer) {
+          layer.setVisible(visible);
+        }
+      });
     },
 
     // Set visibility for ALL layers at once (single Immer set call)

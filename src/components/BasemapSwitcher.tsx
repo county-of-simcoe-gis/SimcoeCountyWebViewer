@@ -485,8 +485,12 @@ export default function BasemapSwitcher() {
                 layer.set("print", shouldPrint);
                 layer.set("display", shouldDisplay);
 
-                // Ensure the layer visibility is set before adding to prevent flash of content
-                layer.setVisible(shouldDisplay);
+                // Print-only substitute layers (display: false, print: true) are kept
+                // visible so they are included by getPrintLayers(). They render behind
+                // the VectorTile display layers (lower z-index) so they are invisible
+                // on screen but available for MapFish which cannot render VectorTile.
+                const isVisible = shouldDisplay || shouldPrint;
+                layer.setVisible(isVisible);
 
                 // Add layer using LayerManager for proper z-index management
                 // Reverse index so last layer in config array gets the highest z-index (renders on top)
@@ -494,7 +498,7 @@ export default function BasemapSwitcher() {
                 LayerManager.addLayer(layer, "BaseMap", `${basemapService.name}_${i}`, {
                   index: reversedIndex,
                   opacity: opacity,
-                  visible: shouldDisplay,
+                  visible: isVisible,
                   metadata: {
                     isBasemap: true,
                     display: shouldDisplay,
@@ -663,7 +667,6 @@ export default function BasemapSwitcher() {
     const topoLayers = basemapLayers.filter((managedLayer) => managedLayer.metadata?.isBasemap === true);
     topoLayers.forEach((managedLayer) => {
       managedLayer.layer.setVisible(false);
-      // console.log(`🙈 Hidden topo layer: ${managedLayer.name}`);
     });
 
     // Show world imagery and streets via LayerManager

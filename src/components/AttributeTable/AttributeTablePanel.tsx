@@ -12,11 +12,11 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { FaTimes, FaTrash, FaDownload, FaMapMarkedAlt, FaFilter, FaWindowMinimize, FaChevronUp, FaEllipsisV, FaMapMarkerAlt, FaExchangeAlt, FaSearchPlus } from "react-icons/fa";
+import { FaTimes, FaTrash, FaDownload, FaMapMarkedAlt, FaFilter, FaWindowMinimize, FaChevronUp, FaEllipsisV, FaMapMarkerAlt, FaExchangeAlt, FaSearchPlus, FaMousePointer } from "react-icons/fa";
 import { ATTRIBUTE_TABLE_DEFAULTS, selectActiveTab, useAttributeTableStore } from "@/stores/attributeTableStore";
 import { useAttributeTableLoader } from "@/hooks/useAttributeTableLoader";
 import { isWorkerSupported, workerExportCsv } from "@/lib/attributeTable/workerClient";
-import { getCachedFeatures, zoomToFeatures } from "@/lib/attributeTable/mapIntegration";
+import { getCachedFeatures, zoomToFeatures, clearHighlightsForLayer } from "@/lib/attributeTable/mapIntegration";
 import { useMyMapsStore, createMyMapsItem } from "@/stores/myMapsStore";
 import { useToastStore } from "@/hooks/useToast";
 import { useEventStore } from "@/stores/eventStore";
@@ -24,6 +24,7 @@ import { activateTab } from "@/utils/helpersUI";
 import { featureToGeoJSON } from "@/utils/myMapsHelpers";
 import AttributeTableTabs from "./AttributeTableTabs";
 import AttributeTableGrid from "./AttributeTableGrid";
+import AttributeTableMapSelect from "./AttributeTableMapSelect";
 
 /**
  * Track the map element's on-screen rect so the panel can sit flush under
@@ -105,8 +106,21 @@ export default function AttributeTablePanel(): React.ReactElement | null {
   const setBboxFilterActive = useAttributeTableStore((s) => s.setBboxFilterActive);
   const invertSelection = useAttributeTableStore((s) => s.invertSelection);
   const setSelectionOnly = useAttributeTableStore((s) => s.setSelectionOnly);
+  const setMapSelectActive = useAttributeTableStore((s) => s.setMapSelectActive);
 
   const { loadMore } = useAttributeTableLoader();
+
+  // Track open tab IDs so we can clear map highlights when a tab is removed.
+  // Join to a primitive string so Zustand's default === comparison stays stable.
+  const tabLayerIdsKey = useAttributeTableStore((s) => s.tabs.map((t) => t.layerId).join("|"));
+  const prevTabIdsRef = useRef<Set<string>>(new Set(tabLayerIdsKey ? tabLayerIdsKey.split("|") : []));
+  useEffect(() => {
+    const current = new Set(tabLayerIdsKey ? tabLayerIdsKey.split("|") : []);
+    for (const id of prevTabIdsRef.current) {
+      if (!current.has(id)) clearHighlightsForLayer(id);
+    }
+    prevTabIdsRef.current = current;
+  }, [tabLayerIdsKey]);
 
   const resize = useVerticalResize(setHeight, height);
 
@@ -142,25 +156,13 @@ export default function AttributeTablePanel(): React.ReactElement | null {
         role="region"
         aria-label="Attribute Table (minimized)"
       >
-        <button
-          type="button"
-          className="btn btn-xs btn-ghost flex-1 justify-start"
-          onClick={() => toggleMinimized()}
-          title="Restore attribute table"
-          aria-label="Restore attribute table"
-        >
+        <button type="button" className="btn btn-xs btn-ghost flex-1 justify-start" onClick={() => toggleMinimized()} title="Restore attribute table" aria-label="Restore attribute table">
           <FaChevronUp size={10} />
           <span className="truncate font-semibold">Attribute Table</span>
           <span className="opacity-60 truncate">— {active.layerName}</span>
           {tabCount > 1 ? <span className="badge badge-xs badge-neutral ml-1">{tabCount} tabs</span> : null}
         </button>
-        <button
-          type="button"
-          className="btn btn-xs btn-ghost btn-square"
-          onClick={closeAll}
-          title="Close attribute table"
-          aria-label="Close attribute table"
-        >
+        <button type="button" className="btn btn-xs btn-ghost btn-square" onClick={closeAll} title="Close attribute table" aria-label="Close attribute table">
           <FaTimes size={10} />
         </button>
       </div>
@@ -259,12 +261,7 @@ export default function AttributeTablePanel(): React.ReactElement | null {
         // it sensibly. Point/Line/Polygon cover the WFS/ArcGIS common cases;
         // everything else falls back to Polygon (MyMaps treats buffer-like
         // geometries that way).
-        const drawType =
-          geomType === "Point" || geomType === "MultiPoint"
-            ? "Point"
-            : geomType === "LineString" || geomType === "MultiLineString"
-              ? "LineString"
-              : "Polygon";
+        const drawType = geomType === "Point" || geomType === "MultiPoint" ? "Point" : geomType === "LineString" || geomType === "MultiLineString" ? "LineString" : "Polygon";
 
         // Label resolution order:
         //   1. Value of the first schema column for this feature (if non-empty)
@@ -334,16 +331,21 @@ export default function AttributeTablePanel(): React.ReactElement | null {
         <div className="divider divider-horizontal mx-0" />
 
         <label className="label cursor-pointer gap-1 py-0">
-          <input
-            type="checkbox"
-            className="toggle toggle-xs"
-            checked={active.bboxFilterActive}
-            onChange={(e) => setBboxFilterActive(active.layerId, e.target.checked)}
-          />
+          <input type="checkbox" className="toggle toggle-xs" checked={active.bboxFilterActive} onChange={(e) => setBboxFilterActive(active.layerId, e.target.checked)} />
           <span className="flex items-center gap-1">
             <FaMapMarkedAlt size={10} /> Map extent
           </span>
         </label>
+
+        <button
+          type="button"
+          className={`btn btn-xs ${active.mapSelectActive ? "btn-primary" : "btn-ghost"}`}
+          onClick={() => setMapSelectActive(active.layerId, !active.mapSelectActive)}
+          title={active.mapSelectActive ? "Disable map selection (active)" : "Select features from map (click or Shift+drag)"}
+          aria-label="Select from map"
+        >
+          <FaMousePointer size={10} /> Select from map
+        </button>
 
         {Object.keys(active.filters).length > 0 ? (
           <button type="button" className="btn btn-xs btn-ghost" onClick={() => clearFilters(active.layerId)} title="Clear filters">
@@ -351,18 +353,10 @@ export default function AttributeTablePanel(): React.ReactElement | null {
           </button>
         ) : null}
 
-        {selectedCount > 0 ? (
+        {selectedCount > 0 || active.selectionOnly ? (
           <>
-            <span className="ml-1 opacity-70">
-              {selectedCount} selected
-            </span>
-            <button
-              type="button"
-              className="btn btn-xs btn-ghost"
-              onClick={() => invertSelection(active.layerId)}
-              title="Invert selection (loaded rows)"
-              aria-label="Invert selection"
-            >
+            <span className="ml-1 opacity-70">{selectedCount} selected</span>
+            <button type="button" className="btn btn-xs btn-ghost" onClick={() => invertSelection(active.layerId)} title="Invert selection (loaded rows)" aria-label="Invert selection">
               <FaExchangeAlt size={10} /> Invert
             </button>
             <button
@@ -382,16 +376,8 @@ export default function AttributeTablePanel(): React.ReactElement | null {
             >
               <FaSearchPlus size={10} /> Zoom
             </button>
-            <label
-              className="label cursor-pointer gap-1 py-0"
-              title="Show only selected rows in the grid"
-            >
-              <input
-                type="checkbox"
-                className="toggle toggle-xs"
-                checked={active.selectionOnly}
-                onChange={(e) => setSelectionOnly(active.layerId, e.target.checked)}
-              />
+            <label className="label cursor-pointer gap-1 py-0" title="Show only selected rows in the grid">
+              <input type="checkbox" className="toggle toggle-xs" checked={active.selectionOnly} onChange={(e) => setSelectionOnly(active.layerId, e.target.checked)} />
               <span className="flex items-center gap-1">
                 <FaFilter size={10} /> Only selected
               </span>
@@ -467,7 +453,15 @@ export default function AttributeTablePanel(): React.ReactElement | null {
       {capBanner ? (
         <div className="alert alert-warning rounded-none text-xs py-1 px-2">
           Maximum of {ATTRIBUTE_TABLE_DEFAULTS.rowCap.toLocaleString()} records reached ({active.totalCount?.toLocaleString()} match). Zoom in to a more focused area
-          {active.bboxFilterActive ? "" : <> or enable <span className="font-semibold">Map extent</span></>} to see all results.
+          {active.bboxFilterActive ? (
+            ""
+          ) : (
+            <>
+              {" "}
+              or enable <span className="font-semibold">Map extent</span>
+            </>
+          )}{" "}
+          to see all results.
         </div>
       ) : null}
 
@@ -475,6 +469,9 @@ export default function AttributeTablePanel(): React.ReactElement | null {
       <div className="flex-1 min-h-0">
         <AttributeTableGrid tab={active} onLoadMore={loadMore} />
       </div>
+
+      {/* Map selection interaction (when active) */}
+      {active.mapSelectActive && <AttributeTableMapSelect tab={active} />}
     </div>
   );
 }

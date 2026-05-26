@@ -125,7 +125,10 @@ async function fetchPageWithPkSafety(args: {
  * Describe the remote layer (schema + count) regardless of source type.
  * Returns a normalized `{ fields, total, implicitSortField }`.
  */
-async function describeAndCount(tab: AttributeTableTab, signal: AbortSignal): Promise<{
+async function describeAndCount(
+  tab: AttributeTableTab,
+  signal: AbortSignal,
+): Promise<{
   fields: WfsFieldDescriptor[];
   total: number;
   implicitSortField: string | null;
@@ -135,11 +138,9 @@ async function describeAndCount(tab: AttributeTableTab, signal: AbortSignal): Pr
     const endpoint = parseArcgisLayerUrl(tab.wfsUrl);
     if (!endpoint) throw new Error("Could not parse ArcGIS layer URL.");
     const info = await describeArcgisLayer(endpoint, tab.secured, signal);
-    const schema = schemaFromFields(info.fields);
     const total = await fetchArcgisCount({
       endpoint,
       secured: tab.secured,
-      where: buildArcgisWhereFromFilters(tab.filters, schema),
       bbox: tab.bboxFilterActive ? (getCurrentMapExtent() ?? undefined) : undefined,
       signal,
     });
@@ -156,7 +157,6 @@ async function describeAndCount(tab: AttributeTableTab, signal: AbortSignal): Pr
     fetchWfsCount({
       wfsUrl: tab.wfsUrl,
       layerName: tab.typeName,
-      cqlFilter: buildCqlFromFilters(tab.filters, tab.schema ?? schemaFromFields(tab.fields ?? [])),
       bbox: tab.bboxFilterActive ? (getCurrentMapExtent() ?? undefined) : undefined,
       signal,
     }),
@@ -263,7 +263,7 @@ export function useAttributeTableLoader(): { loadMore: () => Promise<void>; relo
         bbox,
         fields,
         schema,
-        filters: tab.filters,
+        filters: {},
         objectIdField: implicitSortField ?? undefined,
         supportsPagination,
         signal: ctrl.signal,
@@ -296,11 +296,13 @@ export function useAttributeTableLoader(): { loadMore: () => Promise<void>; relo
       });
 
       if (capReached && effectiveTotal > ATTRIBUTE_TABLE_DEFAULTS.rowCap) {
-        useToastStore.getState().addToast(
-          `${tab.layerName}: ${effectiveTotal.toLocaleString()} records match — showing first ${ATTRIBUTE_TABLE_DEFAULTS.rowCap.toLocaleString()}. Zoom in to a more focused area.`,
-          "warning",
-          6000,
-        );
+        useToastStore
+          .getState()
+          .addToast(
+            `${tab.layerName}: ${effectiveTotal.toLocaleString()} records match — showing first ${ATTRIBUTE_TABLE_DEFAULTS.rowCap.toLocaleString()}. Zoom in to a more focused area.`,
+            "warning",
+            6000,
+          );
       }
     } catch (err) {
       if ((err as { name?: string })?.name === "AbortError") return;
@@ -335,7 +337,7 @@ export function useAttributeTableLoader(): { loadMore: () => Promise<void>; relo
         bbox,
         fields: tab.fields,
         schema: tab.schema,
-        filters: tab.filters,
+        filters: {},
         objectIdField: tab.implicitSortField ?? undefined,
         signal: ctrl.signal,
       });
@@ -368,7 +370,7 @@ export function useAttributeTableLoader(): { loadMore: () => Promise<void>; relo
   const extentKey = active?.bboxFilterActive && currentExtent ? currentExtent.map((n) => Math.round(n * 10) / 10).join(",") : "";
 
   const lastKeyByTab = useRef<Map<string, string>>(new Map());
-  const activeKey = active ? `${active.sort ? `${active.sort.field}:${active.sort.direction}` : ""}|${JSON.stringify(active.filters)}|${active.bboxFilterActive ? 1 : 0}|${extentKey}` : "";
+  const activeKey = active ? `${active.sort ? `${active.sort.field}:${active.sort.direction}` : ""}|${active.bboxFilterActive ? 1 : 0}|${extentKey}` : "";
 
   useEffect(() => {
     if (!active) return;

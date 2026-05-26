@@ -1,7 +1,9 @@
 "use client";
 
 import { useCREStore } from "@/stores/creStore";
+import { useMapStore } from "@/stores/mapStore";
 import { PROPERTY_TYPES, PROPERTY_TYPE_COLORS, type PropertyType } from "./creObjects";
+import { fetchAllResults } from "./creHelpers";
 
 export default function CRESearchPropTypes() {
   const propertyLayers = useCREStore((s) => s.propertyLayers);
@@ -15,6 +17,11 @@ export default function CRESearchPropTypes() {
     if (layerState?.pointLayer) {
       layerState.pointLayer.setVisible(checked);
     }
+
+    // Re-fetch results to reflect the updated property type visibility
+    const map = useMapStore.getState().map;
+    const extent = map ? (map.getView().calculateExtent() as [number, number, number, number]) : null;
+    fetchAllResults(extent);
   };
 
   return (

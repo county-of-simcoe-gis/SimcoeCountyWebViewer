@@ -115,8 +115,7 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
   }, []);
 
   /**
-   * Get layers for printing
-   * Includes visible layers and layers with print: true (even if display: false)
+   * Get layers for printing — only includes visible layers
    */
   const getPrintLayers = useCallback((): Layer[] => {
     if (!map) return [];
@@ -124,14 +123,9 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
     const layers: Layer[] = [];
     map.getLayers().forEach((layer) => {
       const props = layer.getProperties();
-      // Include layer if:
-      // 1. It's visible (normal layers), OR
-      // 2. It has print: true (print-only layers that may not be visible)
-      // Exclude if print is explicitly false
       if (props.print === false) return;
-      if (layer.getVisible() || props.print === true) {
-        layers.push(layer as Layer);
-      }
+      if (!layer.getVisible()) return;
+      layers.push(layer as Layer);
     });
     return layers;
   }, [map]);

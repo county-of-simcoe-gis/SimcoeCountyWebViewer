@@ -3179,62 +3179,54 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
     }
   }, [isOpen, coordinate, map]);
 
-  // Apply old app's mouseover/mouseout interaction handling strategy
+  // Use mouseenter/mouseleave (not mouseover/mouseout) to disable map interactions
+  // while the cursor is over the popup. mouseenter/mouseleave do NOT bubble from
+  // child elements, which prevents spurious re-fires when innerHTML is replaced
+  // (e.g. during label visibility toggle). With mouseover, an innerHTML replacement
+  // could trigger a second mouseover → clear the stored interaction IDs (all already
+  // disabled) → mouseout then restores nothing → map permanently frozen.
   useEffect(() => {
     if (!map || !overlayElementRef.current || !isOpen) return;
 
     const container = overlayElementRef.current;
 
-    // Mouseover handler - disable ALL interactions and track active ones
-    const handleMouseOver = () => {
-      // console.log("🔒 Mouse over popup - disabling interactions");
+    const handleMouseEnter = () => {
+      // Guard: if interactions are already captured, don't re-scan (they'd all
+      // appear inactive and we'd lose the list of IDs to restore).
+      if ((window as unknown as { popupActive: boolean }).popupActive) return;
 
-      // Clear previous activeIds and rebuild (like old app)
       activeInteractionIdsRef.current = [];
 
       map.getInteractions().forEach((interaction) => {
         if (interaction.getActive()) {
-          // Store the ol_uid for precise restoration
           activeInteractionIdsRef.current.push((interaction as unknown as { ol_uid: number }).ol_uid);
           interaction.setActive(false);
-          // console.log("🔒 Disabled interaction:", interaction.constructor.name);
         }
       });
 
-      // Set global popup active flag
       (window as unknown as { popupActive: boolean }).popupActive = true;
-      console.log("🔒 Global popupActive set to TRUE");
     };
 
-    // Mouseout handler - restore only previously active interactions
-    const handleMouseOut = () => {
-      // console.log("🔓 Mouse out of popup - re-enabling interactions");
-
+    const handleMouseLeave = () => {
       map.getInteractions().forEach((interaction) => {
         const interactionUid = (interaction as unknown as { ol_uid: number }).ol_uid;
         if (activeInteractionIdsRef.current.includes(interactionUid)) {
           interaction.setActive(true);
-          // console.log("🔓 Re-enabled interaction:", interaction.constructor.name);
         }
       });
 
-      // Clear global popup active flag
       (window as unknown as { popupActive: boolean }).popupActive = false;
-      console.log("🔓 Global popupActive set to FALSE");
     };
 
-    // Use native DOM events exactly like old app
-    container.onmouseover = handleMouseOver;
-    container.onmouseout = handleMouseOut;
+    container.onmouseenter = handleMouseEnter;
+    container.onmouseleave = handleMouseLeave;
 
     return () => {
-      // Cleanup event listeners
       if (container) {
-        container.onmouseover = null;
-        container.onmouseout = null;
+        container.onmouseenter = null;
+        container.onmouseleave = null;
       }
 
-      // Clear popup active flag on cleanup
       (window as unknown as { popupActive: boolean }).popupActive = false;
     };
   }, [map, isOpen]);

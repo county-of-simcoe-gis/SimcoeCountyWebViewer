@@ -209,6 +209,12 @@ export const useCREStore = create<CREState>()(
         state.numRecords = 0;
         state.isLoading = false;
         state.activeTab = 0;
+        // Restore all property type layers to visible
+        PROPERTY_TYPES.forEach((pt) => {
+          if (state.propertyLayers[pt]) {
+            state.propertyLayers[pt].visible = true;
+          }
+        });
       }),
   })),
 );

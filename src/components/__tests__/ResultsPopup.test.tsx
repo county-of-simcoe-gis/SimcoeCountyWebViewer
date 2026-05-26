@@ -167,7 +167,7 @@ describe("ResultsPopup", () => {
         expect(result.displayName).toBe("Label Name");
       });
 
-      it("uses feature ID when no name attributes exist", () => {
+      it("uses layer name when no name attributes exist", () => {
         const attributes = {
           type: "Point",
           elevation: 100,
@@ -175,7 +175,7 @@ describe("ResultsPopup", () => {
 
         const result = createIdentifyResult("Test Layer", "feature_123", attributes);
 
-        expect(result.displayName).toBe("feature_123");
+        expect(result.displayName).toBe("Test Layer");
       });
     });
   });
@@ -459,7 +459,6 @@ describe("ResultsPopup", () => {
 
       await waitFor(() => {
         expect(screen.getByRole("heading", { name: "Test Layer" })).toBeInTheDocument();
-        expect(screen.getByText(/Feature ID: feature_123/i)).toBeInTheDocument();
 
         // Check attributes container structure
         const attrs = container.querySelector('[data-testid="result-attributes"]');
@@ -495,7 +494,6 @@ describe("ResultsPopup", () => {
       const { container } = render(<ResultsPopup results={results} onClose={mockOnClose} />);
 
       await waitFor(() => {
-        expect(screen.getByText(/Feature ID: feature_123/i)).toBeInTheDocument();
         // Check that attributes container has no InfoRow children
         const attrs = container.querySelector('[data-testid="result-attributes"]');
         expect(attrs).toBeInTheDocument();
@@ -528,8 +526,8 @@ describe("ResultsPopup", () => {
 
       render(<ResultsPopup results={results} onClose={mockOnClose} />);
 
-      // Should show identify result content first (auto-selected) - check for unique content element
-      expect(screen.getByText(/Feature ID: feature_123/i)).toBeInTheDocument();
+      // Should show identify result content first (auto-selected) - check for layer heading
+      expect(screen.getByRole("heading", { name: "Test Layer" })).toBeInTheDocument();
     });
   });
 

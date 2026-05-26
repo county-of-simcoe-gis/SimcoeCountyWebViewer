@@ -8,7 +8,7 @@ import { fromCircle } from "ol/geom/Polygon";
 import GeoJSON from "ol/format/GeoJSON";
 import proj4 from "proj4";
 import { register } from "ol/proj/proj4";
-import { getAxiosClient } from "@/lib/axiosInstance";
+import axiosInstance from "@/lib/axiosInstance";
 
 // Register NAD83 UTM Zone 17 projection (same as old app)
 proj4.defs("EPSG:26917", "+proj=utm +zone=17 +ellps=GRS80 +datum=NAD83 +units=m +no_defs");
@@ -42,32 +42,6 @@ export const getGeometryFromGeoJSON = (geoJSON: string): Geometry => {
  */
 export const bufferGeometry = async (geometry: Geometry, distanceMeters: number, callback: (bufferedGeometry: Geometry) => void): Promise<void> => {
   try {
-    // Get config for API URL
-    let apiUrl: string;
-    try {
-      // Try to get config from global window object (like old app)
-      const windowConfig = (window as { config?: { apiUrl?: string } }).config;
-      apiUrl = windowConfig?.apiUrl || "";
-
-      // Fallback: try to read from config file
-      if (!apiUrl) {
-        const axiosClient = getAxiosClient("/config.json");
-        const response = await axiosClient.get<{ apiUrl?: string }>("/config.json");
-        apiUrl = response.data.apiUrl || "";
-      }
-    } catch {
-      console.error("Could not load config, using fallback API URL");
-      apiUrl = "https://opengis.simcoe.ca/api_v2/";
-    }
-
-    if (!apiUrl) {
-      console.error("No API URL available, falling back to client-side buffering");
-      fallbackClientSideBuffer(geometry, distanceMeters, callback);
-      return;
-    }
-
-    const url = apiUrl + "public/map/geometry/buffer/";
-
     // Project geometry to UTM NAD83 for accuracy (same as old app)
     const utmGeometry = geometry.clone();
     utmGeometry.transform(webMercatorProj, nad83Proj);
@@ -82,9 +56,8 @@ export const bufferGeometry = async (geometry: Geometry, distanceMeters: number,
       srid: "26917",
     };
 
-    // Make API call
-    const axiosClient = getAxiosClient(url);
-    const response = await axiosClient.post<{ geojson: string }>(url, requestData);
+    // Make API call to internal NextJS route
+    const response = await axiosInstance.post<{ geojson: string }>("/public/map/geometry/buffer", requestData);
     const result = response.data;
 
     // Convert result back to geometry and transform to Web Mercator

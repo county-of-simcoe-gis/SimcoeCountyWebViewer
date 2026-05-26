@@ -883,7 +883,7 @@ function buildVectorLayer(layer: VectorLayer, map: Map): MapFishGeoJsonLayer[] |
             style: styles,
           };
 
-          const geoJsonString = FeatureHelpers.setFeatures([feature], OL_DATA_TYPES.GeoJSON, null, null);
+          const geoJsonString = FeatureHelpers.setFeatures([feature], OL_DATA_TYPES.GeoJSON, "EPSG:3857", null);
           if (geoJsonString) {
             const geoJsonFeature = JSON.parse(geoJsonString);
             itemLayer.geoJson = geoJsonFeature.features.map((f: { properties: unknown }) => {
@@ -917,8 +917,7 @@ async function configureTileLayer(layer: TileLayer): Promise<MapFishWMTSLayer | 
     throw new Error("Layer URLs not found");
   }
 
-  let tileUrl = urls[0];
-  tileUrl = tileUrl.includes("/MapServer/WMTS/") ? tileUrl.split("/WMTS/")[0] : tileUrl.split("/tile/")[0];
+  const rawTileUrl = urls[0];
 
   // Check for OpenStreetMap
   const sourceKey = (layerSource as { key_?: string }).key_ || "";
@@ -933,11 +932,52 @@ async function configureTileLayer(layer: TileLayer): Promise<MapFishWMTSLayer | 
     };
   }
 
-  const retLayer = await loadWMTSConfig(tileUrl, layer.getOpacity());
-  const layerIndex = layer.getZIndex() || 0;
-  const printIndex = layer.get("printIndex") || 0;
-  retLayer.customParams.zIndex = layerIndex + printIndex;
-  return retLayer;
+  // Determine if this is a simple XYZ tile source (e.g. imagery layers) vs a
+  // WMTS-capable ArcGIS MapServer.  XYZ sources have {z}/{y}/{x} or {TileMatrix}
+  // placeholders in their URL template.
+  const isXyzPattern = /\{[zZ]\}/.test(rawTileUrl) || /\{TileMatrix\}/.test(rawTileUrl);
+
+  // Strip the tile URL template down to the service base URL
+  let tileUrl = rawTileUrl;
+  tileUrl = tileUrl.includes("/MapServer/WMTS/") ? tileUrl.split("/WMTS/")[0] : tileUrl.split("/tile/")[0];
+
+  // Try WMTS capabilities first; if that fails for XYZ-type sources, fall back
+  // to an OSM-type layer definition that MapFish can render from the XYZ URL.
+  try {
+    const retLayer = await loadWMTSConfig(tileUrl, layer.getOpacity());
+    const layerIndex = layer.getZIndex() || 0;
+    const printIndex = layer.get("printIndex") || 0;
+    retLayer.customParams.zIndex = layerIndex + printIndex;
+    return retLayer;
+  } catch (wmtsError) {
+    if (!isXyzPattern) {
+      // Not an XYZ source and WMTS failed — nothing we can do
+      throw wmtsError;
+    }
+
+    // Fallback: convert XYZ tile URL to an OSM-type layer for MapFish.
+    // MapFish's OSM layer type can render any {z}/{x}/{y} tile endpoint.
+    console.warn(`[Print] WMTS capabilities unavailable for "${layer.get("name") || tileUrl}", using XYZ/OSM fallback`);
+
+    // Normalise the URL to the pattern MapFish expects:
+    // {z}/{x}/{y} (MapFish OSM type uses these internally)
+    const normalizedUrl = rawTileUrl.replace(/\{z\}/gi, "{z}").replace(/\{y\}/gi, "{y}").replace(/\{x\}/gi, "{x}");
+
+    // Derive the base URL (everything before /{z}) and the extension
+    const zIndex = normalizedUrl.indexOf("/{z}");
+    const baseURL = zIndex >= 0 ? normalizedUrl.substring(0, zIndex) : normalizedUrl;
+    const layerIndex = layer.getZIndex() || 0;
+    const printIndex = layer.get("printIndex") || 0;
+
+    return {
+      type: "OSM",
+      baseURL: baseURL + "/{z}/{x}/{y}",
+      imageExtension: "png",
+      customParams: {
+        zIndex: layerIndex + printIndex,
+      },
+    };
+  }
 }
 
 /**
@@ -967,13 +1007,9 @@ function configureImageLayer(layer: ImageLayer<ImageSource>, options: PrintReque
       fallbackUrl.searchParams.set("FORMAT", "PNG32");
       fallbackUrl.searchParams.set("TRANSPARENT", "true");
       fallbackUrl.searchParams.set("DPI", String(options.map.dpi || 96));
-      const printSize = !options.map.height
-        ? [800, 600]
-        : [parseInt(String(options.map.height)), parseInt(String(options.map.width))];
+      const printSize = !options.map.height ? [800, 600] : [parseInt(String(options.map.height)), parseInt(String(options.map.width))];
       fallbackUrl.searchParams.set("SIZE", `${printSize[0]},${printSize[1]}`);
-      const extent = options.map.bbox
-        ? options.map.bbox
-        : computeExtent(printSize[0], printSize[1], 72, options.map.scale || 1, options.map.center || [0, 0]);
+      const extent = options.map.bbox ? options.map.bbox : computeExtent(printSize[0], printSize[1], 72, options.map.scale || 1, options.map.center || [0, 0]);
       fallbackUrl.searchParams.set("BBOX", extent.join(","));
       fallbackUrl.searchParams.set("BBOXSR", "3857");
       fallbackUrl.searchParams.set("IMAGESR", "3857");
@@ -1044,7 +1080,7 @@ function configureWMSImageLayer(layer: ImageLayer<ImageSource>): MapFishWMSLayer
   return {
     type: "wms",
     baseURL,
-    serverType: source?.serverType_,
+    serverType: source?.serverType_ || (baseURL.includes("geoserver") ? "geoserver" : undefined),
     opacity: layer.getOpacity(),
     layers: [source?.params_?.LAYERS || ""],
     imageFormat: "image/png",
@@ -1060,17 +1096,34 @@ function configureWMSImageLayer(layer: ImageLayer<ImageSource>): MapFishWMSLayer
  * Get layer by type for MapFish
  */
 async function getLayerByType(layer: Layer, printOptions: PrintRequestAttributes, map: Map): Promise<MapFishLayer | MapFishLayer[] | undefined> {
+  const layerName = layer.get("name") || "unknown";
+
   if (layer instanceof VectorLayer) {
-    return buildVectorLayer(layer as VectorLayer, map);
+    try {
+      return buildVectorLayer(layer as VectorLayer, map);
+    } catch (error) {
+      console.warn(`[Print] Failed to build vector layer "${layerName}":`, error);
+      return undefined;
+    }
   } else if (layer instanceof ImageLayer) {
-    const sourceType = LayerHelpers.getLayerSourceType(layer.getSource()!);
-    if (sourceType === OL_DATA_TYPES.ImageArcGISRest) {
-      return configureImageLayer(layer, printOptions);
-    } else {
-      return configureWMSImageLayer(layer);
+    try {
+      const sourceType = LayerHelpers.getLayerSourceType(layer.getSource()!);
+      if (sourceType === OL_DATA_TYPES.ImageArcGISRest) {
+        return configureImageLayer(layer, printOptions);
+      } else {
+        return configureWMSImageLayer(layer);
+      }
+    } catch (error) {
+      console.warn(`[Print] Failed to build image layer "${layerName}":`, error);
+      return undefined;
     }
   } else if (layer instanceof TileLayer) {
-    return await configureTileLayer(layer);
+    try {
+      return await configureTileLayer(layer);
+    } catch (error) {
+      console.warn(`[Print] Failed to build tile layer "${layerName}":`, error);
+      return undefined;
+    }
   } else if (layer instanceof LayerGroup) {
     const layers: MapFishLayer[] = [];
     const groupLayers = layer.getLayers().getArray();
@@ -1078,25 +1131,30 @@ async function getLayerByType(layer: Layer, printOptions: PrintRequestAttributes
     for (const item of groupLayers) {
       if (item.getProperties().print === false) continue;
 
-      const retLayers = await getLayerByType(item, printOptions, map);
-      if (retLayers) {
-        if (Array.isArray(retLayers)) {
-          layers.push(...retLayers);
-        } else {
-          layers.push(retLayers);
+      try {
+        const retLayers = await getLayerByType(item, printOptions, map);
+        if (retLayers) {
+          if (Array.isArray(retLayers)) {
+            layers.push(...retLayers);
+          } else {
+            layers.push(retLayers);
+          }
         }
+      } catch (error) {
+        const itemName = item.get("name") || "unknown";
+        console.warn(`[Print] Skipping group child "${itemName}" due to error:`, error);
       }
     }
 
     return layers.length > 0 ? layers : undefined;
   }
 
-  console.warn("Unsupported Layer Type", layer);
+  console.warn("[Print] Unsupported Layer Type", layer);
   return undefined;
 }
 
 /**
- * Sort layers by zIndex
+ * Sort layers by zIndex (descending — MapFish renders first layer on top)
  */
 function sortLayers(layers: MapFishLayer[]): MapFishLayer[] {
   return layers.sort((a, b) => {
@@ -1238,23 +1296,28 @@ export async function buildPrintRequest(mapLayers: Layer[], printSelectedOption:
   for (const layer of mapLayers) {
     if (layer.getProperties().print === false) continue;
 
-    const retLayers = await getLayerByType(layer, printRequest.attributes, map);
-    if (retLayers) {
-      if (Array.isArray(retLayers)) {
-        mainMap.push(...retLayers);
-        retLayers.forEach((item) => {
-          const layerItem = item as MapFishWMTSLayer;
+    try {
+      const retLayers = await getLayerByType(layer, printRequest.attributes, map);
+      if (retLayers) {
+        if (Array.isArray(retLayers)) {
+          mainMap.push(...retLayers);
+          retLayers.forEach((item) => {
+            const layerItem = item as MapFishWMTSLayer;
+            if (layerItem.layer && isOverviewLayer(layerItem.layer)) {
+              overviewMap.push(item);
+            }
+          });
+        } else {
+          mainMap.push(retLayers);
+          const layerItem = retLayers as MapFishWMTSLayer;
           if (layerItem.layer && isOverviewLayer(layerItem.layer)) {
-            overviewMap.push(item);
+            overviewMap.push(retLayers);
           }
-        });
-      } else {
-        mainMap.push(retLayers);
-        const layerItem = retLayers as MapFishWMTSLayer;
-        if (layerItem.layer && isOverviewLayer(layerItem.layer)) {
-          overviewMap.push(retLayers);
         }
       }
+    } catch (error) {
+      const layerName = layer.get("name") || "unknown";
+      console.warn(`[Print] Skipping layer "${layerName}" due to error:`, error);
     }
   }
 

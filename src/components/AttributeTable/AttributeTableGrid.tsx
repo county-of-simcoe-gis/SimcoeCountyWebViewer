@@ -188,21 +188,54 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
 
   // --- Stable row refs (one object per loaded row, reused across renders) --
 
+  // Build an array of active column filters for the client-side pass.
+  const activeFilters = useMemo(() => {
+    const entries: Array<{ field: string; lower: string; isNumber: boolean }> = [];
+    for (const [field, value] of Object.entries(tab.filters)) {
+      if (!value) continue;
+      const col = tab.schema?.find((c) => c.name === field);
+      entries.push({ field, lower: value.toLowerCase(), isNumber: col?.type === "number" });
+    }
+    return entries;
+  }, [tab.filters, tab.schema]);
+
   const rows = useMemo<RowRef[]>(() => {
     // An array of `{ index }` is cheap (~40 bytes/row) and allows us to use
     // TanStack Table without materializing row objects.
     const out: RowRef[] = [];
-    if (tab.selectionOnly && tab.store) {
-      // Show only selected rows while "filter to selection" is on.
-      const fids = tab.store.fids;
-      for (let i = 0; i < tab.loadedCount; i++) {
-        if (tab.selection.has(fids[i])) out.push({ index: i });
+    const store = tab.store;
+    if (!store) return out;
+    for (let i = 0; i < tab.loadedCount; i++) {
+      // Selection-only filter
+      if (tab.selectionOnly && !tab.selection.has(store.fids[i])) continue;
+      // Client-side text/number column filters
+      if (activeFilters.length > 0) {
+        let match = true;
+        for (const f of activeFilters) {
+          const cell = store.getCell(i, f.field);
+          if (cell === null) {
+            match = false;
+            break;
+          }
+          if (f.isNumber) {
+            const n = Number(f.lower);
+            if (Number.isFinite(n) && cell !== n) {
+              match = false;
+              break;
+            }
+          } else {
+            if (!String(cell).toLowerCase().includes(f.lower)) {
+              match = false;
+              break;
+            }
+          }
+        }
+        if (!match) continue;
       }
-    } else {
-      for (let i = 0; i < tab.loadedCount; i++) out.push({ index: i });
+      out.push({ index: i });
     }
     return out;
-  }, [tab.loadedCount, tab.selectionOnly, tab.selection, tab.store]);
+  }, [tab.loadedCount, tab.selectionOnly, tab.selection, tab.store, activeFilters]);
 
   const table = useReactTable<RowRef>({
     data: rows,

@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { buildCqlFilterForType, numberWithCommas } from "../creHelpers";
+import { buildCqlFilterForType, numberWithCommas, fetchAllResults } from "../creHelpers";
 import { useCREStore } from "@/stores/creStore";
 import * as helpersUI from "@/utils/helpersUI";
+import { getAxiosClient } from "@/lib/axiosInstance";
 
 // Mock showMessage to avoid UI side effects
 vi.mock("@/utils/helpersUI", () => ({
@@ -146,6 +147,39 @@ describe("creHelpers", () => {
       expect(cql).toContain("Incentive = 'Yes'");
       expect(cql).toContain("_listprice >= 50000");
       expect(cql).toContain("_listprice <= 200000");
+    });
+  });
+
+  describe("fetchAllResults", () => {
+    it("skips invisible property types when fetching results", async () => {
+      // Hide "Farm" and "Industrial"
+      useCREStore.getState().setPropertyLayerVisible("Farm", false);
+      useCREStore.getState().setPropertyLayerVisible("Industrial", false);
+
+      const mockGet = vi.fn().mockResolvedValue({ data: { type: "FeatureCollection", features: [] } });
+      vi.mocked(getAxiosClient).mockReturnValue({ get: mockGet } as ReturnType<typeof getAxiosClient>);
+
+      await fetchAllResults(null);
+
+      // Should have been called 3 times (Vacant Land, Commercial, Institutional) — not 5
+      expect(mockGet).toHaveBeenCalledTimes(3);
+
+      // Verify none of the calls were for Farm or Industrial
+      const urls = mockGet.mock.calls.map((call: [string]) => call[0]);
+      urls.forEach((url: string) => {
+        expect(url).not.toContain("Farm");
+        expect(url).not.toContain("Industrial");
+      });
+    });
+
+    it("fetches all property types when all are visible", async () => {
+      const mockGet = vi.fn().mockResolvedValue({ data: { type: "FeatureCollection", features: [] } });
+      vi.mocked(getAxiosClient).mockReturnValue({ get: mockGet } as ReturnType<typeof getAxiosClient>);
+
+      await fetchAllResults(null);
+
+      // All 5 property types should be fetched
+      expect(mockGet).toHaveBeenCalledTimes(5);
     });
   });
 });

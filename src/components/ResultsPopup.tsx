@@ -224,7 +224,6 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
         return (
           <div className="px-5 pt-1.5 pb-5">
             <h3 className="m-0 mb-2 text-[13px] font-semibold text-base-content leading-normal">{result.data.layerName}</h3>
-            <p className="m-0 mb-4 text-xs text-base-content/70 font-mono">Feature ID: {result.data.featureId}</p>
             <div className="mt-4" data-testid="result-attributes">
               {Object.entries(result.data.attributes)
                 .filter(([key, value]) => !isExcludedKey(key) && key !== "bbox" && typeof value !== "object")
@@ -300,7 +299,7 @@ export function createCondoResult(arn: string, unitNumber: string | undefined, a
 // Helper function to create an identify result
 export function createIdentifyResult(layerName: string, featureId: string, attributes: Record<string, unknown>, feature?: Feature, layerZIndex?: number): IdentifyResult {
   // Try to create a meaningful display name from attributes
-  const displayName = String(attributes.name || attributes.NAME || attributes.label || featureId);
+  const displayName = String(attributes.name || attributes.NAME || attributes.label || layerName);
 
   return {
     id: `identify_${layerName}_${featureId}`,

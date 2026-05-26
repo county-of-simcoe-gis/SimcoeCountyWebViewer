@@ -139,7 +139,10 @@ export async function fetchAllResults(mapExtent?: [number, number, number, numbe
   const extent = state.onlyInMapChecked ? mapExtent : null;
 
   try {
-    const promises = PROPERTY_TYPES.map(async (propType) => {
+    // Only fetch for visible property types
+    const visibleTypes = PROPERTY_TYPES.filter((pt) => state.propertyLayers[pt]?.visible !== false);
+
+    const promises = visibleTypes.map(async (propType) => {
       const cql = buildCqlFilterForType(propType);
       const features = await fetchWfsFeatures(cql, extent);
       if (features.length > 0) {
