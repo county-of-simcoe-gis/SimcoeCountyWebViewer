@@ -5,6 +5,11 @@ import { IdentifyFeature } from "./Identify";
 import { filterFeatureKeys } from "./IdentifyLayer";
 import { useMapStore } from "@/stores/mapStore";
 import { useFeatureHighlight } from "@/hooks/useFeatureHighlight";
+import { useMyMapsStore, createMyMapsItem, type DrawType } from "@/stores/myMapsStore";
+import { useEventStore } from "@/stores/eventStore";
+import { featureToGeoJSON } from "@/utils/myMapsHelpers";
+import { useToastStore } from "@/hooks/useToast";
+import { activateTab } from "@/utils/helpersUI";
 import Attachments from "@/components/common/Attachments";
 import Image from "next/image";
 
@@ -36,6 +41,19 @@ const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ feat
       });
     }
   }, [map, feature, minScale]);
+
+  const handleAddToMyMaps = useCallback(() => {
+    const geom = feature.getGeometry();
+    const geomType = geom?.getType() || "Point";
+    const drawType: DrawType = (geomType === "LineString" || geomType === "Polygon" || geomType === "Point") ? geomType : "Polygon";
+    const label = feature.get(displayName) || layerName || "Identified Feature";
+    const myMapsItem = createMyMapsItem(feature, drawType, String(label));
+    myMapsItem.featureGeoJSON = featureToGeoJSON(feature);
+    useMyMapsStore.getState().addItem(myMapsItem);
+    useEventStore.getState().emit("mymap-item-created", { item: myMapsItem });
+    activateTab("mymaps");
+    useToastStore.getState().addToast("Feature added to MyMaps", "success");
+  }, [feature, displayName, layerName]);
 
   const formatFieldName = (fieldName: string): string => {
     // Convert field name to title case and replace underscores with spaces
@@ -88,8 +106,15 @@ const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ feat
         <div className="flex-1 cursor-pointer font-medium text-xs hover:text-primary" onClick={() => setOpen(!open)}>
           {formatFieldName(displayName)}: {featureName}
         </div>
-        {hasGeom && (
-          <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center">
+          <span
+            className="text-primary text-[10px] cursor-pointer no-underline hover:underline whitespace-nowrap select-none"
+            onClick={handleAddToMyMaps}
+            title="Add to My Maps"
+          >
+            [Add to My Maps]
+          </span>
+          {hasGeom && (
             <Image
               src="/images/toc/zoom-in.png"
               width={16}
@@ -99,8 +124,8 @@ const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ feat
               onClick={onZoomClick}
               title="Zoom to feature"
             />
-          </div>
-        )}
+          )}
+        </div>
       </div>
       <div className={open ? "p-2.5 bg-white" : "hidden"}>{renderFeatureContent()}</div>
     </div>

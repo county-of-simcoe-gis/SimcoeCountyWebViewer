@@ -1331,7 +1331,7 @@ export default function MapContainer() {
 
   return (
     <InteractionManagerContext.Provider value={interactionManager}>
-      <div ref={mapRef} id="map" className={`app-map ${!isOpen ? "sidebar-closed" : ""}`} />
+      <div ref={mapRef} id="map" className={`app-map ${!isOpen ? "sidebar-closed" : ""} ${!controlVisibility.scaleLine ? "no-scale-line" : ""}`} />
       <PropertyReportClick />
       <LiveLayerClick />
       <MapPopup />

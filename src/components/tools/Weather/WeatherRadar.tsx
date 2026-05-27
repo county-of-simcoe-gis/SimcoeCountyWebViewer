@@ -10,7 +10,8 @@ import "react-datepicker/dist/react-datepicker.css";
 
 import ImageLayer from "ol/layer/Image";
 import Static from "ol/source/ImageStatic";
-import { addLayer, removeLayer, getLayer } from "@/utils/openlayers/LayerManager";
+import { LayerManager } from "@/utils/openlayers/LayerManager";
+import { useMapStore } from "@/stores/mapStore";
 
 import { getRadarImages, type RadarImage } from "@/lib/weather";
 import { useToast } from "@/hooks/useToast";
@@ -68,10 +69,10 @@ function getRadarDate(img: RadarImage): Date | null {
 }
 
 export default function WeatherRadar(): React.ReactElement {
-  // single managed layer id (from LayerManager) or fallback OL layer
-  const layerIdRef = useRef<string | null>(null);
+  // One managed layer per station code (max 3: CASKR, CASBI, CASET)
+  // Maps station code -> LayerManager layer ID
+  const stationLayerIdsRef = useRef<Map<string, string>>(new Map());
   const toast = useToast();
-  const fallbackOlLayerRef = useRef<ImageLayer<Static> | null>(null);
   // frame lookup: key = `${time.getTime()}_${code}` -> frame info
   const frameLookupRef = useRef<Map<string, { url: string; extent: [number, number, number, number]; date: Date; code: string; timeId?: string | number }>>(new Map());
   const refreshIntervalRef = useRef<number | null>(null);
@@ -125,31 +126,14 @@ export default function WeatherRadar(): React.ReactElement {
   }, [radarDate]);
 
   const clearLayers = useCallback(() => {
-    // Remove single managed layer via LayerManager first
-    try {
-      if (layerIdRef.current) {
-        try {
-          removeLayer(layerIdRef.current);
-        } catch {}
-        layerIdRef.current = null;
-      }
-    } catch {}
+    // Remove all station layers via LayerManager
+    for (const layerId of stationLayerIdsRef.current.values()) {
+      try {
+        LayerManager.removeLayer(layerId);
+      } catch {}
+    }
 
-    // As a safety-net, also scan map for any leftover layers tagged with this instance id
-    try {
-      const map = (window as unknown as { map?: import("ol/Map").default }).map;
-      if (map) {
-        const allLayers = map.getLayers?.().getArray?.() ?? [];
-        for (const l of allLayers) {
-          try {
-            if (l?.get?.("__wr_instance") === instanceIdRef.current) map.removeLayer(l);
-          } catch {}
-        }
-      }
-    } catch {}
-
-    // clear fallback OL layer reference
-    fallbackOlLayerRef.current = null;
+    stationLayerIdsRef.current.clear();
     frameLookupRef.current.clear();
     frameDatesRef.current = [];
   }, []);
@@ -161,56 +145,31 @@ export default function WeatherRadar(): React.ReactElement {
     if (CASET) selected.add("CASET");
 
     const target = radarDateRef.current;
-    // Single layer: find a matching frame for current date + selected code
-    try {
-      const codes = Array.from(selected);
-      if (codes.length === 0) {
-        // nothing selected -> hide layer
-        if (layerIdRef.current) {
-          const managed = getLayer(layerIdRef.current) as { layer?: ImageLayer<Static> } | null;
-          const layer = managed?.layer ?? null;
-          if (layer) layer.setVisible(false);
-        } else if (fallbackOlLayerRef.current) {
-          fallbackOlLayerRef.current.setVisible(false);
-        }
-        return;
-      }
 
-      // prefer first selected code (UI allows multiple, but showing one layer)
-      const preferred = codes[0];
-      const key = `${target.getTime()}_${preferred}`;
-      const frame = frameLookupRef.current.get(key) ?? null;
+    // For each station layer, show/hide based on checkbox + frame availability at current date
+    for (const [code, layerId] of stationLayerIdsRef.current.entries()) {
+      try {
+        const managed = LayerManager.getLayer(layerId);
+        if (!managed) continue;
+        const layer = managed.layer as ImageLayer<Static>;
 
-      if (frame) {
-        // ensure layer shows this frame
-        const applyFrame = (layer: ImageLayer<Static>) => {
-          try {
-            layer.setVisible(true);
-            layer.setProperties({ radarCode: frame.code, radarDate: frame.date, timeId: frame.timeId });
-            const src = new Static({ url: frame.url, projection: "EPSG:3857", imageExtent: frame.extent });
-            layer.setSource(src);
-            if (layer.setOpacity) layer.setOpacity(opacity);
-          } catch {}
-        };
-
-        if (layerIdRef.current) {
-          const managed = getLayer(layerIdRef.current) as { layer?: ImageLayer<Static> } | null;
-          const layer = managed?.layer ?? null;
-          if (layer) applyFrame(layer);
-        } else if (fallbackOlLayerRef.current) {
-          applyFrame(fallbackOlLayerRef.current);
+        if (!selected.has(code)) {
+          layer.setVisible(false);
+          continue;
         }
-      } else {
-        // no matching frame -> hide layer
-        if (layerIdRef.current) {
-          const managed = getLayer(layerIdRef.current) as { layer?: ImageLayer<Static> } | null;
-          const layer = managed?.layer ?? null;
-          if (layer) layer.setVisible(false);
-        } else if (fallbackOlLayerRef.current) {
-          fallbackOlLayerRef.current.setVisible(false);
+        const key = `${target.getTime()}_${code}`;
+        const frame = frameLookupRef.current.get(key) ?? null;
+        if (frame) {
+          layer.setVisible(true);
+          layer.setProperties({ radarCode: frame.code, radarDate: frame.date, timeId: frame.timeId });
+          const src = new Static({ url: frame.url, projection: "EPSG:3857", imageExtent: frame.extent });
+          layer.setSource(src);
+          layer.setOpacity(opacity);
+        } else {
+          layer.setVisible(false);
         }
-      }
-    } catch {}
+      } catch {}
+    }
   }, [CASKR, CASBI, CASET, opacity]);
 
   useEffect(() => {
@@ -219,19 +178,16 @@ export default function WeatherRadar(): React.ReactElement {
 
   useEffect(() => {
     try {
-      if (layerIdRef.current) {
-        const managed = getLayer(layerIdRef.current) as { layer?: ImageLayer<Static> } | null;
-        const layer = managed?.layer ?? null;
-        if (layer && layer.setOpacity) layer.setOpacity(opacity);
-      } else if (fallbackOlLayerRef.current && fallbackOlLayerRef.current.setOpacity) {
-        fallbackOlLayerRef.current.setOpacity(opacity);
+      for (const layerId of stationLayerIdsRef.current.values()) {
+        const managed = LayerManager.getLayer(layerId);
+        if (managed) LayerManager.setLayerOpacity(layerId, opacity);
       }
     } catch {}
   }, [opacity]);
 
   const fetchRadarImages = useCallback(
     async (reason: "mount" | "manual" | "interval" | "update" = "manual") => {
-      const map = (window as unknown as { map?: import("ol/Map").default }).map;
+      const map = useMapStore.getState().map;
       if (!map) return;
 
       // Throttle: avoid rapid repeated fetches (e.g., UI stuck firing events)
@@ -251,7 +207,7 @@ export default function WeatherRadar(): React.ReactElement {
 
         // ✅ dedupe fetches: if same range and we already have a layer, skip
         const fetchKey = `${from.getTime()}_${to.getTime()}_${timeSetting}`;
-        if (fetchKey === lastFetchKeyRef.current && (layerIdRef.current !== null || fallbackOlLayerRef.current !== null) && reason !== "manual") {
+        if (fetchKey === lastFetchKeyRef.current && stationLayerIdsRef.current.size > 0 && reason !== "manual") {
           setIsLoading(false);
           inFlightRef.current = false;
           return;
@@ -290,63 +246,35 @@ export default function WeatherRadar(): React.ReactElement {
         frameDates.sort((a, b) => a.getTime() - b.getTime());
         frameDatesRef.current = frameDates;
 
-        // If we have frames, ensure a single layer exists and point it at the last frame
+        // If we have frames, create one OL layer per station code via LayerManager
         if (frameDatesRef.current.length > 0) {
-          const last = frameDatesRef.current[frameDatesRef.current.length - 1];
-          // pick preferred code if available
-          const preferredCode = getRadarCode(result?.[result.length - 1] ?? {}) || Array.from(new Set(Array.from(frameLookupRef.current.values()).map((f) => f.code)))[0];
-          const lastKey = `${last.getTime()}_${preferredCode}`;
-          const lastFrame = frameLookupRef.current.get(lastKey) ?? Array.from(frameLookupRef.current.values())[0];
+          // Collect unique station codes from the data
+          const stationCodes = new Set(Array.from(frameLookupRef.current.values()).map((f) => f.code));
 
-          if (lastFrame) {
-            // create or update the single layer
-            if (!layerIdRef.current && !fallbackOlLayerRef.current) {
-              const layer = new ImageLayer({
-                source: new Static({ url: lastFrame.url, projection: "EPSG:3857", imageExtent: lastFrame.extent }),
-                zIndex: 10000,
-                visible: true,
-                opacity,
-              });
-              layer.setProperties({ radarCode: lastFrame.code, radarDate: lastFrame.date, timeId: lastFrame.timeId, __wr_instance: instanceIdRef.current });
+          for (const code of stationCodes) {
+            if (stationLayerIdsRef.current.has(code)) continue; // already created
 
-              try {
-                const layerId = addLayer(layer, "Tools" as unknown as import("@/stores/layerManagerStore").LayerCategory, "Weather Radar", {
-                  visible: true,
-                  opacity,
-                  metadata: { source: "weatherRadar", instance: instanceIdRef.current },
-                });
-                if (layerId) {
-                  layerIdRef.current = layerId;
-                } else {
-                  map.addLayer(layer);
-                  fallbackOlLayerRef.current = layer;
-                }
-              } catch {
-                try {
-                  map.addLayer(layer);
-                  fallbackOlLayerRef.current = layer;
-                } catch {}
-              }
-            } else {
-              // update existing layer source to lastFrame
-              try {
-                if (layerIdRef.current) {
-                  const managed = getLayer(layerIdRef.current) as { layer?: ImageLayer<Static> } | null;
-                  const layer = managed?.layer ?? null;
-                  if (layer) {
-                    const src = new Static({ url: lastFrame.url, projection: "EPSG:3857", imageExtent: lastFrame.extent });
-                    layer.setSource(src);
-                    layer.setProperties({ radarCode: lastFrame.code, radarDate: lastFrame.date, timeId: lastFrame.timeId });
-                    if (layer.setOpacity) layer.setOpacity(opacity);
-                  }
-                } else if (fallbackOlLayerRef.current) {
-                  const layer = fallbackOlLayerRef.current;
-                  const src = new Static({ url: lastFrame.url, projection: "EPSG:3857", imageExtent: lastFrame.extent });
-                  layer.setSource(src);
-                  layer.setProperties({ radarCode: lastFrame.code, radarDate: lastFrame.date, timeId: lastFrame.timeId });
-                  if (layer.setOpacity) layer.setOpacity(opacity);
-                }
-              } catch {}
+            // Find any frame for this code to initialize the layer
+            const initFrame = Array.from(frameLookupRef.current.values()).find((f) => f.code === code);
+            if (!initFrame) continue;
+
+            const layer = new ImageLayer({
+              source: new Static({ url: initFrame.url, projection: "EPSG:3857", imageExtent: initFrame.extent }),
+              visible: true,
+              opacity,
+            });
+            layer.setProperties({
+              radarCode: code,
+              radarDate: initFrame.date,
+              timeId: initFrame.timeId,
+            });
+
+            const layerId = LayerManager.addLayer(layer, "Tools", `Weather Radar ${code}`, {
+              id: `weather-radar-${code}-${instanceIdRef.current}`,
+              metadata: { radarCode: code },
+            });
+            if (layerId) {
+              stationLayerIdsRef.current.set(code, layerId);
             }
           }
         }

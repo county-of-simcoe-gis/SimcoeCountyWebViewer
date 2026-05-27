@@ -63,6 +63,11 @@
   right: 0em;
 }
 
+/* When ScaleLine is hidden, drop the bottom-right zone to the bottom */
+.no-scale-line .map-control-zone-bottom-right {
+  bottom: 0.5em;
+}
+
 .map-control-zone-bottom-right .map-control-zone-content {
   flex-direction: column-reverse;
   align-items: flex-end;

@@ -18,6 +18,7 @@ import type { MyMapsItem, StyleJSON } from "@/types/myMaps";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { useMapStore } from "@/stores/mapStore";
 import { useInteractionManagerStore } from "@/stores/interactionManagerStore";
+import { hexToRgba } from "@/utils/openlayers/ColorHelpers";
 
 export class MyMapsDrawingManager {
   private map: Map;
@@ -204,7 +205,7 @@ export class MyMapsDrawingManager {
 
     return new Style({
       fill: new Fill({
-        color: this.hexToRgba(drawColor, 0.3),
+        color: hexToRgba(drawColor, 0.3),
       }),
       stroke: new Stroke({
         color: drawColor,
@@ -234,7 +235,7 @@ export class MyMapsDrawingManager {
   private getDefaultStyle(color: string): Style {
     return new Style({
       fill: new Fill({
-        color: this.hexToRgba(color, 0.3),
+        color: hexToRgba(color, 0.3),
       }),
       stroke: new Stroke({
         color: color,
@@ -251,13 +252,6 @@ export class MyMapsDrawingManager {
         }),
       }),
     });
-  }
-
-  private hexToRgba(hex: string, alpha: number): string {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
   public clearDrawing() {

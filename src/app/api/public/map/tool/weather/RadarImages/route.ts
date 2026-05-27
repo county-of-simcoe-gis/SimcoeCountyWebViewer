@@ -57,13 +57,25 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     try {
       const results = await sqlTabular.selectAllWithValues(sqlQuery, values);
 
+      if (!results || results.length === 0) {
+        console.warn(`RadarImages: No results for range ${fromDate} to ${toDate}`);
+      }
+
       return NextResponse.json(results || []);
     } catch (dbErr) {
-      console.error("Database error fetching radar images:", dbErr);
-      return NextResponse.json({ error: "Failed to fetch radar images" }, { status: 500 });
+      const errMsg = dbErr instanceof Error ? dbErr.message : String(dbErr);
+      console.error("Database error fetching radar images:", errMsg);
+      return NextResponse.json(
+        { error: "Failed to fetch radar images", detail: errMsg },
+        { status: 500 },
+      );
     }
   } catch (error) {
-    console.error("Error in RadarImages handler:", error);
-    return NextResponse.json({ error: "Failed to fetch radar images" }, { status: 500 });
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error("Error in RadarImages handler:", errMsg);
+    return NextResponse.json(
+      { error: "Failed to fetch radar images", detail: errMsg },
+      { status: 500 },
+    );
   }
 }

@@ -1,5 +1,6 @@
 // Export all OpenLayers helper types and classes
 export * from "@/utils/openlayers/types";
+export * from "@/utils/openlayers/ColorHelpers";
 export * from "@/utils/openlayers/FeatureHelpers";
 export * from "@/utils/openlayers/LayerHelpers";
 export * from "@/utils/openlayers/InteractionManager";

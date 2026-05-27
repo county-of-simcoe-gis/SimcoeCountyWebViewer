@@ -27,17 +27,11 @@ import {
   CalloutAnchorColor,
 } from "./MyMapsSymbolizerComponents";
 import { getPointStyle, getLineStringStyle, getPolygonStyle, extractPointTypeFromStyle, getDefaultLabelStyle, type LabelStyleOptions } from "./myMapsStyles";
+import { type ColorRGB, parseOLColor, hexToRgb, rgbToHex, normalizeColorToHex, extractFontSize } from "@/utils/openlayers/ColorHelpers";
 
 interface MyMapsSymbolizerProps {
   visible: boolean;
   item: MyMapsItem;
-}
-
-interface ColorRGB {
-  r: number;
-  g: number;
-  b: number;
-  a: number;
 }
 
 interface LabelStyleState {
@@ -84,71 +78,6 @@ const SLIDER_STROKE_WIDTH_MAX = 10;
 const SLIDER_ROTATION_MIN = 0;
 const SLIDER_ROTATION_MAX = 6.28319;
 
-// Helper function to convert hex to RGB
-const hexToRgb = (hex: string): ColorRGB => {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result
-    ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16),
-        a: 1,
-      }
-    : { r: 0, g: 0, b: 0, a: 1 };
-};
-
-// Helper to convert RGB to hex
-const rgbToHex = (rgb: ColorRGB): string => {
-  const toHex = (n: number) => {
-    const hex = Math.round(n).toString(16);
-    return hex.length === 1 ? "0" + hex : hex;
-  };
-  return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
-};
-
-// Extract px font size from OpenLayers font strings like "bold 14px arial"
-const extractFontSize = (font?: string): string | undefined => {
-  if (!font) return undefined;
-  const match = font.match(/(\d+(?:\.\d+)?)px/i);
-  return match ? `${match[1]}px` : undefined;
-};
-
-const normalizeColorToHex = (color: unknown): string | undefined => {
-  if (!color) return undefined;
-
-  if (Array.isArray(color) && color.length >= 3) {
-    const [r, g, b] = color;
-    if (typeof r === "number" && typeof g === "number" && typeof b === "number") {
-      return rgbToHex({ r, g, b, a: 1 });
-    }
-    return undefined;
-  }
-
-  if (typeof color !== "string") return undefined;
-  const normalized = color.trim();
-
-  const hexMatch = normalized.match(/^#([a-f\d]{3}|[a-f\d]{6})$/i);
-  if (hexMatch) {
-    const hex = hexMatch[1];
-    if (hex.length === 3) {
-      return `#${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`;
-    }
-    return `#${hex}`;
-  }
-
-  const rgbMatch = normalized.match(/^rgba?\s*\(\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)(?:\s*,\s*(\d+(?:\.\d+)?))?\s*\)$/i);
-  if (rgbMatch) {
-    return rgbToHex({
-      r: Number(rgbMatch[1]),
-      g: Number(rgbMatch[2]),
-      b: Number(rgbMatch[3]),
-      a: 1,
-    });
-  }
-
-  return undefined;
-};
-
 const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) => {
   const { updateItem } = useMyMapsStore();
   const { emit } = useEventStore();
@@ -188,19 +117,15 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
 
             const fill = imageStyle.getFill();
             if (fill) {
-              const fillColorArray = fill.getColor() as [number, number, number, number];
-              if (Array.isArray(fillColorArray)) {
-                fillColor = { r: fillColorArray[0], g: fillColorArray[1], b: fillColorArray[2], a: fillColorArray[3] || 0.8 };
-              }
+              const parsed = parseOLColor(fill.getColor());
+              if (parsed) fillColor = parsed;
             }
 
             const stroke = imageStyle.getStroke();
             if (stroke) {
               strokeWidth = stroke.getWidth() || 1;
-              const strokeColorArray = stroke.getColor() as [number, number, number, number];
-              if (Array.isArray(strokeColorArray)) {
-                strokeColor = { r: strokeColorArray[0], g: strokeColorArray[1], b: strokeColorArray[2], a: strokeColorArray[3] || 0.8 };
-              }
+              const parsed = parseOLColor(stroke.getColor());
+              if (parsed) strokeColor = parsed;
             }
           } else if (imageStyle instanceof RegularShape) {
             radius = imageStyle.getRadius();
@@ -210,19 +135,15 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
 
             const fill = imageStyle.getFill();
             if (fill) {
-              const fillColorArray = fill.getColor() as [number, number, number, number];
-              if (Array.isArray(fillColorArray)) {
-                fillColor = { r: fillColorArray[0], g: fillColorArray[1], b: fillColorArray[2], a: fillColorArray[3] || 0.8 };
-              }
+              const parsed = parseOLColor(fill.getColor());
+              if (parsed) fillColor = parsed;
             }
 
             const stroke = imageStyle.getStroke();
             if (stroke) {
               strokeWidth = stroke.getWidth() || 1;
-              const strokeColorArray = stroke.getColor() as [number, number, number, number];
-              if (Array.isArray(strokeColorArray)) {
-                strokeColor = { r: strokeColorArray[0], g: strokeColorArray[1], b: strokeColorArray[2], a: strokeColorArray[3] || 0.8 };
-              }
+              const parsed = parseOLColor(stroke.getColor());
+              if (parsed) strokeColor = parsed;
             }
           }
         }
@@ -233,17 +154,57 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
 
         if (styleStroke && !item.style.getImage()) {
           strokeWidth = styleStroke.getWidth() || 1;
-          const strokeColorArray = styleStroke.getColor() as [number, number, number, number];
-          if (Array.isArray(strokeColorArray)) {
-            strokeColor = { r: strokeColorArray[0], g: strokeColorArray[1], b: strokeColorArray[2], a: strokeColorArray[3] || 0.8 };
-          }
+          const parsed = parseOLColor(styleStroke.getColor());
+          if (parsed) strokeColor = parsed;
         }
 
         if (styleFill && !item.style.getImage()) {
-          const fillColorArray = styleFill.getColor() as [number, number, number, number];
-          if (Array.isArray(fillColorArray)) {
-            fillColor = { r: fillColorArray[0], g: fillColorArray[1], b: fillColorArray[2], a: fillColorArray[3] || 0.8 };
+          const parsed = parseOLColor(styleFill.getColor());
+          if (parsed) fillColor = parsed;
+        }
+      } else if (typeof item.style === "object") {
+        // Handle plain JSON style object (e.g. from serialization/storage)
+        const styleObj = item.style as Record<string, unknown>;
+        const imageObj = styleObj.image as Record<string, unknown> | undefined;
+
+        if (imageObj) {
+          if (typeof imageObj.radius === "number") radius = imageObj.radius;
+          if (typeof imageObj.type === "string") {
+            pointType = imageObj.type;
+            extractedPointType = true;
           }
+          if (typeof imageObj.rotation === "number") rotation = imageObj.rotation;
+
+          const imgFill = imageObj.fill as Record<string, unknown> | undefined;
+          if (imgFill?.color) {
+            const parsed = parseOLColor(imgFill.color);
+            if (parsed) fillColor = parsed;
+          }
+
+          const imgStroke = imageObj.stroke as Record<string, unknown> | undefined;
+          if (imgStroke) {
+            if (typeof imgStroke.width === "number") strokeWidth = imgStroke.width;
+            const parsed = parseOLColor(imgStroke.color);
+            if (parsed) strokeColor = parsed;
+          }
+        }
+
+        // Also check top-level fill/stroke.
+        // For points with an image, the old serialization format stores the
+        // user-chosen colors at the top level while image.stroke may hold a
+        // default (#fff). Top-level values override image values when present.
+        // For polygons/lines (no image), these are the only source.
+        const objStroke = styleObj.stroke as Record<string, unknown> | undefined;
+        if (objStroke) {
+          if (typeof objStroke.width === "number") strokeWidth = objStroke.width;
+          const parsed = parseOLColor(objStroke.color);
+          if (parsed) strokeColor = parsed;
+        }
+
+        const objFill = styleObj.fill as Record<string, unknown> | undefined;
+        if (objFill?.color) {
+          const parsed = parseOLColor(objFill.color);
+          if (parsed) fillColor = parsed;
         }
       }
     }
@@ -324,10 +285,13 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
 
   const [state, setState] = useState<SymbolizerState>(getInitialState);
 
-  // Update state when item changes
+  // Re-initialize state when the item changes or the symbolizer becomes visible
+  // (the item's style may have been modified while the symbolizer was hidden)
   useEffect(() => {
-    setState(getInitialState());
-  }, [item.id, getInitialState]);
+    if (visible) {
+      setState(getInitialState());
+    }
+  }, [item.id, visible, getInitialState]);
 
   // Update item with new style
   const updateItemStyle = useCallback(
@@ -818,12 +782,14 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
   // RENDER
   // ============================================
 
-  console.log("ðŸŽ¯ MyMapsSymbolizer render", {
+  console.log("MyMapsSymbolizer render", {
     visible,
     itemId: item.id,
     drawType: item.drawType,
     labelVisible: item.labelVisible,
     colorPickerVisible: colorPicker.visible,
+    labelStyle: item.labelStyle,
+    style: item.style,
   });
 
   if (!visible) {

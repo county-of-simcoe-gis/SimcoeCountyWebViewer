@@ -103,7 +103,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     try {
       const parser = new XMLParser({
         ignoreAttributes: false,
-        attributeNamePrefix: "$",
+        attributeNamePrefix: "",
+        attributesGroupName: "$",
+        numberParseOptions: {
+          leadingZeros: false,
+        },
         textNodeName: "#text",
         ignoreDeclaration: true,
       });

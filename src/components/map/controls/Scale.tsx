@@ -62,17 +62,21 @@ export const ScaleDisplay = React.memo(({ map }: ScaleDisplayProps) => {
         view.un("change:center", updateScale);
         map.un("moveend", updateScale);
         map.un("rendercomplete", updateScale);
+
+        // Restore ScaleLine DOM — remove injected scale ratio text
+        const scaleLineInner = document.querySelector(".ol-scale-line-inner");
+        if (scaleLineInner) {
+          const text = scaleLineInner.textContent || "";
+          const cleaned = text.replace(/\s*1:[0-9,]+/, "").trim();
+          scaleLineInner.textContent = cleaned;
+        }
       };
     }
   }, [map, controlVisibility.scaleLine]);
 
   // Return null since we're directly manipulating the DOM
   if (!controlVisibility.scaleLine) {
-    return (
-      <div className="text-base-content text-xs ol-scale-line" style={{ transform: "translateY(2em)" }}>
-        {scale}
-      </div>
-    );
+    return <div className="text-base-content text-xs">{scale}</div>;
   } else {
     return null;
   }

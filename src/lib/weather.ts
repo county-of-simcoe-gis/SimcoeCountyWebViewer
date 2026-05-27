@@ -3,14 +3,15 @@ import axiosInstance from "./axiosInstance";
 // Types for Radar Images API
 export interface RadarImage {
   RADAR_STATION_CODE: string;
+  RADAR_CODE?: string;
   RADAR_DESCRIPTION: string;
   RADAR_DATE: string;
-  MAP_IMAGE: {
-    extent: number[];
-    href: string;
-  };
+  JS_MAPIMAGE: string;
   FILE_NAME: string;
   MINUTES_SINCE_2015: number;
+  TIME_ID?: number;
+  // allow additional fields from different API versions
+  [key: string]: unknown;
 }
 
 // Types for Weather Forecast API

@@ -1,6 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { getMapScale } from "@/utils/mapHelpers";
 import Map from "ol/Map";
+
+// Scale denominator at zoom level 0 for EPSG:3857 (Web Mercator)
+const EPSG3857_SCALE_AT_ZOOM0 = 591657527.591555;
+
+function scaleToZoom(scaleValue: number): number {
+  return Math.log2(EPSG3857_SCALE_AT_ZOOM0 / scaleValue);
+}
+
+function zoomToScale(zoom: number): number {
+  return Math.round(EPSG3857_SCALE_AT_ZOOM0 / Math.pow(2, zoom));
+}
 
 // React component for scale selector
 interface ScaleSelectorProps {
@@ -9,7 +20,18 @@ interface ScaleSelectorProps {
 
 export function ScaleSelector({ map }: ScaleSelectorProps) {
   const [scale, setScale] = useState(0);
-  const mapScales = [{ value: 250 }, { value: 500 }, { value: 1000 }, { value: 2000 }, { value: 5000 }, { value: 10000 }, { value: 25000 }, { value: 50000 }];
+
+  const mapScales = useMemo(() => {
+    if (!map) return [];
+    const view = map.getView();
+    const minZoom = Math.ceil(view.getMinZoom());
+    const maxZoom = Math.floor(view.getMaxZoom());
+    const scales: { value: number }[] = [];
+    for (let z = maxZoom; z >= minZoom; z--) {
+      scales.push({ value: zoomToScale(z) });
+    }
+    return scales;
+  }, [map]);
 
   useEffect(() => {
     if (map) {
@@ -29,10 +51,8 @@ export function ScaleSelector({ map }: ScaleSelectorProps) {
   const onScaleClick = (value: string) => {
     if (!map) return;
 
-    // Convert scale to zoom level - this is an approximation
-    // You may need to adjust this based on your map's projection and configuration
     const scaleValue = Number(value);
-    const zoom = Math.log2(591657527.591555 / scaleValue);
+    const zoom = scaleToZoom(scaleValue);
 
     map.getView().setZoom(zoom);
   };

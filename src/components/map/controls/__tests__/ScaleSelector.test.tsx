@@ -12,6 +12,8 @@ const mockView = {
   getZoom: vi.fn(),
   getResolution: vi.fn(),
   getCenter: vi.fn(),
+  getMinZoom: vi.fn(),
+  getMaxZoom: vi.fn(),
   on: vi.fn(),
   un: vi.fn(),
 };
@@ -21,6 +23,8 @@ describe("ScaleSelector", () => {
     vi.clearAllMocks();
     mockMap.getView = vi.fn().mockReturnValue(mockView);
     mockView.getZoom.mockReturnValue(12);
+    mockView.getMinZoom.mockReturnValue(0);
+    mockView.getMaxZoom.mockReturnValue(20);
   });
 
   it("renders scale selector dropdown", () => {
@@ -87,13 +91,49 @@ describe("ScaleSelector", () => {
     expect(mockView.setZoom).not.toHaveBeenCalled();
   });
 
-  it("contains common scale options", () => {
+  it("generates scale options from the map zoom levels", () => {
     render(<ScaleSelector map={mockMap} />);
 
-    // Should have various scale options
-    expect(screen.getByText("1:250")).toBeInTheDocument();
-    expect(screen.getByText("1:1,000")).toBeInTheDocument();
-    expect(screen.getByText("1:25,000")).toBeInTheDocument();
+    // minZoom=0, maxZoom=20 → 21 zoom-derived options + 1 current scale option
+    const options = screen.getAllByRole("option");
+    expect(options).toHaveLength(22);
+
+    // z=20: round(591657527.591555 / 2^20) = 564
+    expect(screen.getByText("1:564")).toBeInTheDocument();
+    // z=10: round(591657527.591555 / 2^10) = 577791
+    expect(screen.getByText("1:577,791")).toBeInTheDocument();
+  });
+
+  it("limits options to the map maxZoom", () => {
+    mockView.getMaxZoom.mockReturnValue(15);
+
+    render(<ScaleSelector map={mockMap} />);
+
+    // minZoom=0, maxZoom=15 → 16 zoom-derived options + 1 current scale
+    const options = screen.getAllByRole("option");
+    expect(options).toHaveLength(17);
+
+    // z=15 (18056) should be the most zoomed-in option
+    expect(screen.getByText("1:18,056")).toBeInTheDocument();
+    // z=20 (564) should not exist
+    expect(screen.queryByText("1:564")).not.toBeInTheDocument();
+  });
+
+  it("limits options to the map minZoom", () => {
+    mockView.getMinZoom.mockReturnValue(16);
+    mockView.getMaxZoom.mockReturnValue(20);
+
+    render(<ScaleSelector map={mockMap} />);
+
+    // z=16 through z=20 → 5 zoom-derived options + 1 current scale
+    const options = screen.getAllByRole("option");
+    expect(options).toHaveLength(6);
+
+    // z=16 (9028) and z=20 (564) should be present
+    expect(screen.getByText("1:9,028")).toBeInTheDocument();
+    expect(screen.getByText("1:564")).toBeInTheDocument();
+    // z=15 (18056) should be excluded
+    expect(screen.queryByText("1:18,056")).not.toBeInTheDocument();
   });
 
   it("has proper styling", () => {

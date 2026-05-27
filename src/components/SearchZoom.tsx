@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useRef } from "react";
+import React, { useEffect, useCallback, useRef } from "react";
 import { useMapStore } from "@/stores/mapStore";
 import { useSearchStore } from "@/stores/searchStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
@@ -9,10 +9,18 @@ import { Vector as VectorSource } from "ol/source";
 import { Icon, Style } from "ol/style";
 import { Feature } from "ol";
 import { Point } from "ol/geom";
-import { transform } from "ol/proj";
+import { transform, toLonLat } from "ol/proj";
 import { GeoJSON } from "ol/format";
 import { getPublicPath } from "@/utils/getPublicPath";
 import { getHighlightStyles } from "@/utils/highlightStyles";
+import { usePopupStore } from "@/stores/popupStore";
+import { useMyMapsStore, createMyMapsItem } from "@/stores/myMapsStore";
+import { useEventStore } from "@/stores/eventStore";
+import { featureToGeoJSON } from "@/utils/myMapsHelpers";
+import { useToastStore } from "@/hooks/useToast";
+import { activateTab } from "@/utils/helpersUI";
+import { InteractionManager } from "@/utils/openlayers/InteractionManager";
+import { createIdentifyResult, type IdentifyResult } from "@/components/ResultsPopup";
 
 interface SearchResult {
   name: string;
@@ -34,6 +42,8 @@ export const SearchZoom: React.FC = () => {
   const searchIconLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const geoLayerIdRef = useRef<string | null>(null);
   const iconLayerIdRef = useRef<string | null>(null);
+  // Store the current search feature so the map click handler can show the popup
+  const currentSearchFeatureRef = useRef<{ feature: Feature; name: string } | null>(null);
 
   // Initialize search layers
   const initSearchLayers = useCallback(() => {
@@ -97,6 +107,58 @@ export const SearchZoom: React.FC = () => {
     }
   }, [map]);
 
+  // Keep a ref to the clear function so popup content can call it
+  const clearSearchLayersRef = useRef<() => void>(() => {});
+
+  // Build an IdentifyResult with custom renderContent for the search popup buttons
+  const buildSearchResult = useCallback(
+    (feature: Feature, coordinates: number[], resultName: string): IdentifyResult => {
+      const result = createIdentifyResult("Search Result", `search-${Date.now()}`, { name: resultName }, feature, 99999);
+
+      result.renderContent = () => {
+        const handleRemoveMarkers = () => {
+          clearSearchLayersRef.current();
+          usePopupStore.getState().hide();
+        };
+
+        const handleAddToMyMaps = () => {
+          const geom = feature.getGeometry();
+          const geomType = geom?.getType() || "Point";
+          const drawType = (geomType === "LineString" || geomType === "Polygon" || geomType === "Point") ? geomType as "Point" | "LineString" | "Polygon" : "Polygon" as const;
+          const myMapsItem = createMyMapsItem(feature, drawType, resultName);
+          myMapsItem.featureGeoJSON = featureToGeoJSON(feature);
+          useMyMapsStore.getState().addItem(myMapsItem);
+          useEventStore.getState().emit("mymap-item-created", { item: myMapsItem });
+          activateTab("mymaps");
+          useToastStore.getState().addToast("Feature added to MyMaps", "success");
+        };
+
+        const handleDirections = () => {
+          const lonLat = toLonLat(coordinates);
+          const url = `https://www.google.com/maps?saddr=Current+Location&daddr=${lonLat[1]},${lonLat[0]}`;
+          window.open(url, "_blank");
+        };
+
+        return (
+          <div className="flex flex-col gap-1">
+            <button className="btn btn-sm btn-outline btn-primary w-full" onClick={handleRemoveMarkers}>
+              Remove Markers
+            </button>
+            <button className="btn btn-sm btn-outline btn-primary w-full" onClick={handleAddToMyMaps}>
+              Add to My Maps
+            </button>
+            <button className="btn btn-sm btn-outline btn-primary w-full" onClick={handleDirections}>
+              Directions to Here
+            </button>
+          </div>
+        );
+      };
+
+      return result;
+    },
+    [],
+  );
+
   // Clear search layers
   const clearSearchLayers = useCallback(() => {
     console.log("SearchZoom: clearSearchLayers called");
@@ -113,6 +175,9 @@ export const SearchZoom: React.FC = () => {
       console.log("SearchZoom: Cleared icon layer", { beforeCount, afterCount: iconSource?.getFeatures().length || 0 });
     }
   }, []);
+
+  // Keep clearSearchLayersRef in sync
+  clearSearchLayersRef.current = clearSearchLayers;
 
   // Convert coordinates from lat/long to web mercator
   const toWebMercator = (coords: [number, number]): [number, number] => {
@@ -355,6 +420,9 @@ export const SearchZoom: React.FC = () => {
           }
         }
 
+        // Store the feature so the map click handler can show the popup
+        currentSearchFeatureRef.current = { feature: fullFeature, name: result.name };
+
         setLastResult(result);
       } catch (error) {
         console.error("Error handling location result:", error);
@@ -416,6 +484,9 @@ export const SearchZoom: React.FC = () => {
           }
         }
 
+        // Store the feature so the map click handler can show the popup
+        currentSearchFeatureRef.current = { feature, name: result.name };
+
         setLastResult(result);
       } catch (error) {
         console.error("Error handling geocoded result:", error);
@@ -423,6 +494,39 @@ export const SearchZoom: React.FC = () => {
     },
     [map, initSearchLayers, clearSearchLayers, setLastResult],
   );
+
+  // Register a search-feature click handler in the InteractionManager so it
+  // participates in the aggregation pipeline (preventing the empty-result hide).
+  useEffect(() => {
+    if (!map) return;
+
+    InteractionManager.registerHandler({
+      id: "search-feature-click",
+      eventType: "singleclick",
+      priority: 5, // Higher priority than property-report-click (10) — lower number = higher priority
+      handler: async (_coordinate, pixel) => {
+        // Check if the click hit a feature on one of the search layers
+        let hitSearchFeature = false;
+        map.forEachFeatureAtPixel(pixel, (_feature, layer) => {
+          if (layer === searchGeoLayerRef.current || layer === searchIconLayerRef.current) {
+            hitSearchFeature = true;
+          }
+        });
+
+        if (hitSearchFeature && currentSearchFeatureRef.current) {
+          const { feature, name } = currentSearchFeatureRef.current;
+          const result = buildSearchResult(feature, Array.from(_coordinate), name);
+          return [result];
+        }
+
+        return [];
+      },
+    });
+
+    return () => {
+      InteractionManager.unregisterHandler("search-feature-click");
+    };
+  }, [map, buildSearchResult]);
 
   // Initialize layers when map is available
   // Use a ref to track if we've initialized to handle React StrictMode double-mount
