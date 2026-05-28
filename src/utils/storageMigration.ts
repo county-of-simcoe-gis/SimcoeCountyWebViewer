@@ -7,7 +7,7 @@
  *  1. Key renames  ("myMaps" → "simcoe-mymaps-data", "Map Control Settings" → "Map_Control_Settings")
  *  2. Envelope wrapping  (raw JSON → {value, expires, timestamp} for keys that go through storage.ts)
  *  3. MyMaps style format  (OL internal fill_/stroke_ → clean fill/stroke JSON)
- *  4. Layers consolidation  ("Layers" + "Layers_Folder_View" → single "Layers" envelope)
+ *  4. Layers migration  ("Layers" + "Layers_Folder_View" → envelope-wrapped, kept as separate keys)
  *  5. TOC_Type preservation  (same format as old app — raw string, kept as-is)
  *  6. ArcGIS_Token  (localStorage → sessionStorage)
  *  7. Cleanup only of keys whose data has been successfully migrated elsewhere
@@ -39,10 +39,9 @@ const ENVELOPE_KEYS = ["searchHistory", "sc_dontshowagain"] as const;
  * under the same name — those are converted in place.
  */
 const MIGRATED_SOURCE_KEYS = [
-  "myMaps",              // data moved to "simcoe-mymaps-data"
+  "myMaps", // data moved to "simcoe-mymaps-data"
   "Map Control Settings", // data moved to "Map_Control_Settings"
-  "Layers_Folder_View",  // data merged into "Layers"
-  "ArcGIS_Token",        // data moved to sessionStorage
+  "ArcGIS_Token", // data moved to sessionStorage
 ];
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -54,13 +53,7 @@ const MIGRATED_SOURCE_KEYS = [
 function isEnvelopeFormat(raw: string): boolean {
   try {
     const parsed = JSON.parse(raw);
-    return (
-      parsed !== null &&
-      typeof parsed === "object" &&
-      !Array.isArray(parsed) &&
-      "value" in parsed &&
-      "timestamp" in parsed
-    );
+    return parsed !== null && typeof parsed === "object" && !Array.isArray(parsed) && "value" in parsed && "timestamp" in parsed;
   } catch {
     return false;
   }
@@ -160,11 +153,7 @@ export function transformOLStyle(old: OldOLStyle): NewStyleJSON {
 
   if (old.image_) {
     const img = old.image_;
-    const imageType: "circle" | "regularShape" | "icon" = img.src_
-      ? "icon"
-      : img.points_ !== undefined
-        ? "regularShape"
-        : "circle";
+    const imageType: "circle" | "regularShape" | "icon" = img.src_ ? "icon" : img.points_ !== undefined ? "regularShape" : "circle";
 
     result.image = { type: imageType };
 
@@ -338,65 +327,39 @@ function migrateEnvelopeKeys(): void {
   }
 }
 
-// ─── Layer keys consolidation ───────────────────────────────────────────────
+// ─── Layer keys migration ───────────────────────────────────────────────────
 
 /**
  * The old app stored layer state in two separate keys depending on view mode:
  *   "Layers"              — list-view layer state (raw JSON)
  *   "Layers_Folder_View"  — folder-view layer state (raw JSON)
  *
- * The new app uses a single "Layers" key (envelope-wrapped) for both views.
+ * The new app uses the same two keys but envelope-wrapped.
  * "TOC_Type" is preserved as-is (the new app reads it directly).
  *
  * Migration strategy:
- *  - If TOC_Type is "FOLDER" and Layers_Folder_View exists → use folder data
- *  - Otherwise prefer the "Layers" key (list view is the default)
- *  - Merge the two if both exist: take the primary view's data and add any
- *    groups from the secondary view that aren't already present
- *  - Wrap the merged result in the storage.ts envelope
+ *  - If "Layers" exists in raw format → wrap in envelope
+ *  - If "Layers_Folder_View" exists in raw format → wrap in envelope
  */
 function migrateLayerKeys(): void {
-  const tocType = localStorage.getItem("TOC_Type"); // "LIST" | "FOLDER" | null
   const rawLayers = localStorage.getItem("Layers");
   const rawFolderLayers = localStorage.getItem("Layers_Folder_View");
 
-  // Already in new envelope format — nothing to do
-  if (rawLayers && isEnvelopeFormat(rawLayers)) return;
-
-  const listData = safeParse(rawLayers) as Record<string, unknown> | undefined;
-  const folderData = safeParse(rawFolderLayers) as Record<string, unknown> | undefined;
-
-  if (!listData && !folderData) return; // nothing to migrate
-
-  // Pick primary data based on TOC_Type, with list as default
-  let merged: Record<string, unknown>;
-  if (tocType === "FOLDER" && folderData) {
-    merged = { ...folderData };
-    // Add any list-view groups that aren't in the folder data
+  // Migrate list-view data to envelope format
+  if (rawLayers && !isEnvelopeFormat(rawLayers)) {
+    const listData = safeParse(rawLayers) as Record<string, unknown> | undefined;
     if (listData) {
-      for (const [key, value] of Object.entries(listData)) {
-        if (!(key in merged)) {
-          merged[key] = value;
-        }
-      }
+      saveToStorage("Layers", listData);
     }
-  } else if (listData) {
-    merged = { ...listData };
-    // Add any folder-view groups that aren't in the list data
-    if (folderData) {
-      for (const [key, value] of Object.entries(folderData)) {
-        if (!(key in merged)) {
-          merged[key] = value;
-        }
-      }
-    }
-  } else {
-    // Only folder data exists but TOC_Type isn't FOLDER — use it anyway
-    merged = { ...folderData! };
   }
 
-  // Save with envelope wrapper
-  saveToStorage("Layers", merged);
+  // Migrate folder-view data to envelope format
+  if (rawFolderLayers && !isEnvelopeFormat(rawFolderLayers)) {
+    const folderData = safeParse(rawFolderLayers) as Record<string, unknown> | undefined;
+    if (folderData) {
+      saveToStorage("Layers_Folder_View", folderData);
+    }
+  }
 }
 
 // ─── ArcGIS Token migration ────────────────────────────────────────────────
@@ -453,7 +416,10 @@ export function migrateFromLegacyStorage(): boolean {
   // fresh install with no localStorage at all.
   const hasOldMyMaps = localStorage.getItem("myMaps") !== null;
   const hasOldControls = localStorage.getItem("Map Control Settings") !== null;
-  const hasOldFolderView = localStorage.getItem("Layers_Folder_View") !== null;
+  const hasOldFolderView = (() => {
+    const raw = localStorage.getItem("Layers_Folder_View");
+    return raw !== null && !isEnvelopeFormat(raw);
+  })();
   const hasOldArcGISToken = localStorage.getItem("ArcGIS_Token") !== null;
   const hasOldEnvelopeData = [...ENVELOPE_KEYS, "Layers" as const].some((key) => {
     const raw = localStorage.getItem(key);
@@ -479,9 +445,9 @@ export function migrateFromLegacyStorage(): boolean {
     migrateRenamedKeys();
     console.log("[storageMigration] ✓ Renamed keys migrated");
 
-    // 3. Consolidate layer keys (Layers + Layers_Folder_View → single Layers envelope)
+    // 3. Migrate layer keys to envelope format
     migrateLayerKeys();
-    console.log("[storageMigration] ✓ Layer keys consolidated");
+    console.log("[storageMigration] ✓ Layer keys migrated");
 
     // 4. Re-wrap same-name keys in storage.ts envelope (searchHistory, sc_dontshowagain)
     migrateEnvelopeKeys();

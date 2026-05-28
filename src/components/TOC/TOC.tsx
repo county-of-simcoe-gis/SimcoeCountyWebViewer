@@ -82,8 +82,8 @@ export default function TOC({ visible = true }: TOCProps) {
   // Function to apply saved layer options from localStorage
   const applySavedLayerOptions = useCallback(
     (type: "LIST" | "FOLDER") => {
-      // Use a single storage key for both LIST and FOLDER views
-      const storageKey = "Layers";
+      // Each view uses its own storage key so saves are independent
+      const storageKey = type === "LIST" ? "Layers" : "Layers_Folder_View";
       const savedData = getItemsFromStorage<Record<string, SavedGroup>>(storageKey);
 
       if (savedData === undefined || savedData === null) {
@@ -252,9 +252,15 @@ export default function TOC({ visible = true }: TOCProps) {
         // ArcGIS and WMS — share a consistent, TOC-driven draw order.
         useTOCStore.getState().updateLayerManagerZIndices();
 
-        const savedData = getItemsFromStorage<Record<string, SavedGroup>>("Layers");
-        if (savedData !== undefined && savedData !== null) {
-          applySavedLayerOptions(tocType);
+        // Apply saved layer options for BOTH views so each view's
+        // order/visibility is independent and fully restored.
+        const savedListData = getItemsFromStorage<Record<string, SavedGroup>>("Layers");
+        const savedFolderData = getItemsFromStorage<Record<string, SavedGroup>>("Layers_Folder_View");
+        if (savedListData !== undefined && savedListData !== null) {
+          applySavedLayerOptions("LIST");
+        }
+        if (savedFolderData !== undefined && savedFolderData !== null) {
+          applySavedLayerOptions("FOLDER");
         }
 
         if (urlParamContext?.registerComponentReady) {
@@ -423,6 +429,7 @@ export default function TOC({ visible = true }: TOCProps) {
   const handleClearSavedLayers = () => {
     // Clear saved layer states and TOC type from localStorage
     removeStorageItem("Layers");
+    removeStorageItem("Layers_Folder_View");
     removeStorageItem("TOC_Type");
     flushUserStorage();
 
@@ -434,104 +441,57 @@ export default function TOC({ visible = true }: TOCProps) {
     // Save TOC type to localStorage
     setStorageItem("TOC_Type", tocType);
 
-    // Get layers from the active view's groups (includes reordered drawIndex values)
+    // Get layers from BOTH views so we can save them independently
     const { layerListGroups: currentListGroups, layerFolderGroups: currentFolderGroups } = useTOCStore.getState();
-    const activeGroups = tocType === "LIST" ? currentListGroups : currentFolderGroups;
 
-    // In LIST view the "All Layers" virtual group holds globally unique
-    // drawIndex values, while individual source groups only have per-group
-    // indices (0..N-1).  moveLayer() syncs the global values back to source
-    // groups when the user reorders, but if no reorder has happened the
-    // source groups still have overlapping per-group values.  Build a lookup
-    // from "All Layers" so the saved index is always globally unique.
-    const globalDrawIndexById = new Map<string, number>();
-    if (tocType === "LIST") {
-      const allLayersGroup = activeGroups.find((g) => g.value === "all_layers");
-      if (allLayersGroup) {
-        allLayersGroup.layers.forEach((layer) => {
-          globalDrawIndexById.set(layer.id, layer.drawIndex);
+    // Helper: build a save-ready groups object from a set of TOC groups
+    const buildSaveData = (sourceGroups: TOCLayerGroup[], globalDrawIndexById?: Map<string, number>) => {
+      const groups: Record<string, unknown> = {};
+
+      sourceGroups.forEach((group) => {
+        if (group.value === "all_layers") return;
+
+        const savedLayers: Record<string, unknown> = {};
+        group.layers.forEach((layer) => {
+          const drawIndex = globalDrawIndexById?.get(layer.id) ?? layer.drawIndex;
+          savedLayers[layer.name] = {
+            name: layer.name,
+            visible: layer.visible,
+            opacity: layer.opacity,
+            index: drawIndex,
+          };
         });
-      }
+
+        groups[group.value] = {
+          name: group.label,
+          value: group.value,
+          label: group.label,
+          defaultGroup: group.defaultGroup,
+          visibleLayers: group.visibleLayers,
+          panelOpen: true,
+          wmsGroupUrl: group.wmsGroupUrl,
+          customRestUrl: group.customRestUrl,
+          prefix: group.prefix,
+          layers: savedLayers,
+        };
+      });
+
+      return groups;
+    };
+
+    // LIST view: use global drawIndex from "All Layers" so saved indices
+    // are unique across all groups (not per-group 0..N-1).
+    const globalDrawIndexById = new Map<string, number>();
+    const allLayersGroup = currentListGroups.find((g) => g.value === "all_layers");
+    if (allLayersGroup) {
+      allLayersGroup.layers.forEach((layer) => {
+        globalDrawIndexById.set(layer.id, layer.drawIndex);
+      });
     }
 
-    // Group layers by their group value
-    const layersByGroup = new Map<string, TOCLayer[]>();
-    activeGroups.forEach((group) => {
-      // Skip the virtual "All Layers" group — its layers are copies; the
-      // canonical state lives in the individual source groups.
-      if (group.value === "all_layers") return;
-      group.layers.forEach((layer) => {
-        if (!layersByGroup.has(group.value)) {
-          layersByGroup.set(group.value, []);
-        }
-        layersByGroup.get(group.value)!.push(layer);
-      });
-    });
-
-    // Get group metadata from either view (they should have the same groups)
-    const groupMetadata = new Map<string, TOCLayerGroup>();
-    const allGroups = tocType === "LIST" ? layerListGroups : layerFolderGroups;
-    allGroups.forEach((group) => {
-      if (group.value !== "all_layers") {
-        groupMetadata.set(group.value, group);
-      }
-    });
-
-    // Prepare the groups object to save
-    const groups: Record<string, unknown> = {};
-
-    // Process each group
-    layersByGroup.forEach((layers, groupValue) => {
-      const groupMeta = groupMetadata.get(groupValue);
-      if (!groupMeta) {
-        // Skip if we don't have metadata for this group
-        return;
-      }
-
-      // Prepare saved layers object for this group
-      const savedLayers: Record<string, unknown> = {};
-
-      // Process each layer in the group
-      layers.forEach((layer) => {
-        // In LIST view use the globally unique drawIndex from "All Layers"
-        // so that layers from different groups don't share the same index.
-        // Fall back to the source group's drawIndex (FOLDER view or if
-        // the layer wasn't found in the lookup).
-        const drawIndex = globalDrawIndexById.get(layer.id) ?? layer.drawIndex;
-
-        // Save layer state
-        const saveLayer = {
-          name: layer.name,
-          visible: layer.visible,
-          opacity: layer.opacity,
-          index: drawIndex,
-        };
-
-        savedLayers[layer.name] = saveLayer;
-      });
-
-      // Prepare saved group object
-      const savedGroup = {
-        name: groupMeta.label,
-        value: groupMeta.value,
-        label: groupMeta.label,
-        defaultGroup: groupMeta.defaultGroup,
-        visibleLayers: groupMeta.visibleLayers,
-        panelOpen: true, // Default to true, can be customized based on UI state if tracked
-        wmsGroupUrl: groupMeta.wmsGroupUrl,
-        customRestUrl: groupMeta.customRestUrl,
-        prefix: groupMeta.prefix,
-        layers: savedLayers,
-      };
-
-      groups[groupValue] = savedGroup;
-    });
-
-    // Use a single storage key for both LIST and FOLDER views
-    const storageKey = "Layers";
-
-    // Save to localStorage using the storage utility
-    saveToStorage(storageKey, groups);
+    // Save BOTH views to separate storage keys
+    saveToStorage("Layers", buildSaveData(currentListGroups, globalDrawIndexById));
+    saveToStorage("Layers_Folder_View", buildSaveData(currentFolderGroups));
 
     // Show success message
     showMessage("Save", "Layers have been saved.", "success");

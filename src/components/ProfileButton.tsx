@@ -156,7 +156,7 @@ export default function ProfileButton() {
 
           {/* Version */}
           <div className="px-4 py-2 border-t border-base-300">
-            <p className="text-xs text-base-content/70 text-center">v{APP_VERSION}</p>
+            <p className="text-xs text-base-content/70 text-center">Version {APP_VERSION}</p>
           </div>
         </div>
       )}

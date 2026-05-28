@@ -178,7 +178,7 @@ describe("LotAndConcessionTool", () => {
 
       render(<LotAndConcessionTool onClose={mockOnClose} />);
 
-      expect(screen.getByText("Geographic Township:")).toBeInTheDocument();
+      expect(screen.getByText("Township:")).toBeInTheDocument();
       expect(screen.getByRole("combobox")).toBeInTheDocument();
     });
 

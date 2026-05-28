@@ -152,7 +152,7 @@ export function buildLayerFromWMS(group: Partial<TOCLayerGroup> & { secure?: boo
   // Check if layer is queryable (from WMS capabilities)
   // Default to true unless explicitly disabled
   const isQueryable = wmsLayer.queryable !== false;
-  let displayName = (allKeywords["DISPLAY_NAME"] as string) || layerTitle;
+  let displayName = ((allKeywords["DISPLAY_NAME"] as string) || layerTitle).trim();
   const opacity = (allKeywords["OPACITY"] as number) || 1;
   const disclaimerTitle = (allKeywords["DISCLAIMER_TITLE"] as string) || "";
   const disclaimerUrl = (allKeywords["DISCLAIMER_URL"] as string) || "";
@@ -199,7 +199,7 @@ export function buildLayerFromWMS(group: Partial<TOCLayerGroup> & { secure?: boo
     id: generateUniqueLayerId(layerNameOnly, group.label || ""),
     name: layerNameOnly,
     displayName,
-    tocDisplayName: layerTitle,
+    tocDisplayName: layerTitle.trim(),
     styleUrl,
     height: 30,
     drawIndex: layerIndex,
@@ -727,8 +727,8 @@ export function mergeGroups(originalGroups: TOCLayerGroup[], newGroups: TOCLayer
  * rather than being discovered from a WMS/ArcGIS service.
  */
 function getGroupsFromDirectLayer(source: TOCSource): TOCLayerGroup[] {
-  const layerName = source.layerName || source.name || "Unnamed Layer";
-  const displayName = source.name || layerName;
+  const layerName = (source.layerName || source.name || "Unnamed Layer").trim();
+  const displayName = (source.name || layerName).trim();
   // If the config specifies "All Layers" (the virtual group), place the layer
   // into an "Uncategorized" group instead to avoid creating a duplicate.
   const groupNames = (source.groups || ["All Layers"]).map((g) => (g.toLowerCase() === "all layers" ? "Uncategorized" : g));
@@ -1138,15 +1138,15 @@ export async function buildESRILayer(options: BuildESRILayerOptions, callback: (
   // DOWNLOAD
   const canDownload = layer.options.canDownload !== undefined ? layer.options.canDownload : false;
   // DISPLAY NAME
-  let displayName = layer.options.displayName;
-  if (displayName === "" || displayName === undefined) displayName = layerTitle;
+  let displayName = layer.options.displayName?.trim();
+  if (displayName === "" || displayName === undefined) displayName = layerTitle.trim();
 
   if (group.prefix !== undefined && group.prefix !== "") {
     displayName = `${group.prefix} - ${displayName}`;
   }
 
   // TOC DISPLAY NAME
-  const tocDisplayName = layerTitle;
+  const tocDisplayName = layerTitle.trim();
   // HAS ATTACHMENTS
   const hasAttachments = layer.hasAttachments || false;
   // OPACITY

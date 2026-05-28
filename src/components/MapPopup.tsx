@@ -226,6 +226,10 @@ export default function MapPopup() {
         const popupRect = popupEl.getBoundingClientRect();
 
         const margin = 20; // px padding from viewport edges
+
+        // Account for popup sidebar on the left (desktop only) since the popup can extend underneath it and be cut off. The sidebar is 220px wide, but we add a small margin to ensure the popup isn't flush against the sidebar edge. On mobile the sidebar is hidden when the popup is open, so no need to account for it.
+        const sidebarOffset = 220;
+
         let deltaX = 0;
         let deltaY = 0;
 
@@ -236,8 +240,8 @@ export default function MapPopup() {
           deltaY = mapRect.bottom - margin - popupRect.bottom; // pan map up
         }
 
-        if (popupRect.left < mapRect.left + margin) {
-          deltaX = mapRect.left + margin - popupRect.left; // pan map right
+        if (popupRect.left < mapRect.left + sidebarOffset + margin) {
+          deltaX = mapRect.left + sidebarOffset + margin - popupRect.left; // pan map right
         } else if (popupRect.right > mapRect.right - margin) {
           deltaX = mapRect.right - margin - popupRect.right; // pan map left
         }

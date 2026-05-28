@@ -339,26 +339,21 @@ export default function LotAndConcessionTool({ name = "Lot And Concession", help
 
   return (
     <PanelComponent name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={handleClose} onSidebarVisibility={onSidebarVisibility}>
-      <div className="flex flex-col h-full p-3 gap-3">
-        <div className="text-[13px] text-[#6b7280]">
-          Locate civic addresses within the County using the form below.
-        </div>
+      <div className="flex flex-col min-h-full p-3 gap-3">
+        <div className="text-[13px] text-[#6b7280]">Locate civic addresses within the County using the form below.</div>
 
-        <div className="bg-base-200 border border-base-300 rounded-lg p-4 mb-3">
-          <div className="mb-3">
-            <label htmlFor="lot-number" className="block mb-1 text-[13px] font-semibold text-[#374151]">Lot Number:</label>
-            <input
-              id="lot-number"
-              type="text"
-              placeholder="Enter Lot Number"
-              className="input input-bordered w-full input-sm"
-              onChange={(e) => setLotNumber(e.target.value)}
-              value={lotNumber}
-            />
+        <div className="bg-base-200 border border-base-300 rounded-lg p-4 mb-3 shrink-0">
+          <div className="mb-3 flex items-center gap-2">
+            <label htmlFor="lot-number" className="text-[13px] font-semibold text-[#374151] whitespace-nowrap w-28 shrink-0">
+              Lot:
+            </label>
+            <input id="lot-number" type="text" placeholder="Enter Lot Number" className="input input-bordered w-full input-sm" onChange={(e) => setLotNumber(e.target.value)} value={lotNumber} />
           </div>
 
-          <div className="mb-3">
-            <label htmlFor="concession-number" className="block mb-1 text-[13px] font-semibold text-[#374151]">Concession Number:</label>
+          <div className="mb-3 flex items-center gap-2">
+            <label htmlFor="concession-number" className="text-[13px] font-semibold text-[#374151] whitespace-nowrap w-28 shrink-0">
+              Concession:
+            </label>
             <input
               id="concession-number"
               type="text"
@@ -369,8 +364,10 @@ export default function LotAndConcessionTool({ name = "Lot And Concession", help
             />
           </div>
 
-          <div className="mb-3">
-            <label htmlFor="township-select" className="block mb-1 text-[13px] font-semibold text-[#374151]">Geographic Township:</label>
+          <div className="mb-3 flex items-center gap-2">
+            <label htmlFor="township-select" className="text-[13px] font-semibold text-[#374151] whitespace-nowrap w-28 shrink-0">
+              Township:
+            </label>
             <select
               id="township-select"
               className="select select-bordered w-full select-sm"
@@ -389,12 +386,7 @@ export default function LotAndConcessionTool({ name = "Lot And Concession", help
           </div>
 
           <div className="flex gap-2 justify-end mt-3">
-            <button
-              type="button"
-              className="btn btn-primary btn-sm"
-              onClick={handleSearch}
-              disabled={isSearching}
-            >
+            <button type="button" className="btn btn-primary btn-sm" onClick={handleSearch} disabled={isSearching}>
               {isSearching ? (
                 <>
                   <span className="loading loading-spinner loading-xs"></span>
@@ -404,18 +396,14 @@ export default function LotAndConcessionTool({ name = "Lot And Concession", help
                 "Search"
               )}
             </button>
-            <button
-              type="button"
-              className="btn btn-outline btn-sm"
-              onClick={handleClear}
-            >
+            <button type="button" className="btn btn-outline btn-sm" onClick={handleClear}>
               Clear
             </button>
           </div>
         </div>
 
         {features.length === 0 && !isSearching && (
-          <div className="flex items-start gap-[10px] py-3 px-4 bg-blue-100 border border-blue-300 rounded-lg text-xs text-blue-800">
+          <div className="flex items-start gap-[10px] py-3 px-4 bg-blue-100 border border-blue-300 rounded-lg text-xs text-blue-800 shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
@@ -423,7 +411,7 @@ export default function LotAndConcessionTool({ name = "Lot And Concession", help
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto pr-1">
+        <div className="flex-1 min-h-[150px] max-h-[45vh] overflow-y-auto pr-1">
           {features.map((feature) => (
             <Results key={getUID()} feature={feature} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} onFeatureClick={handleFeatureClick} />
           ))}

@@ -2,20 +2,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import ThemePopupContent from "../ThemePopupContent";
 
-// Mock popupStore
-const mockHide = vi.fn();
-vi.mock("@/stores/popupStore", () => ({
-  usePopupStore: () => ({
-    hide: mockHide,
-  }),
+// Mock showURLWindow
+const mockShowURLWindow = vi.fn();
+vi.mock("@/utils/helpersUI", () => ({
+  showURLWindow: (...args: unknown[]) => mockShowURLWindow(...args),
 }));
-
-// Mock window.open
-const mockWindowOpen = vi.fn();
-Object.defineProperty(window, "open", {
-  value: mockWindowOpen,
-  writable: true,
-});
 
 describe("ThemePopupContent", () => {
   beforeEach(() => {
@@ -61,7 +52,7 @@ describe("ThemePopupContent", () => {
     const button = screen.getByRole("button", { name: /more information/i });
     fireEvent.click(button);
 
-    expect(mockWindowOpen).toHaveBeenCalledWith("https://example.com", "_blank");
+    expect(mockShowURLWindow).toHaveBeenCalledWith("https://example.com", false, "normal", false, false, "More Information");
   });
 
   it("renders logo image when popupLogoImage is provided", () => {
@@ -101,12 +92,10 @@ describe("ThemePopupContent", () => {
     expect(screen.queryByText("_internalField:")).not.toBeInTheDocument();
   });
 
-  it("calls hide when Close button is clicked", () => {
+  it("renders URL values as clickable links", () => {
     render(<ThemePopupContent properties={mockProperties} />);
 
-    const closeButton = screen.getByRole("button", { name: /close/i });
-    fireEvent.pointerDown(closeButton);
-
-    expect(mockHide).toHaveBeenCalled();
+    const linkButton = screen.getByRole("button", { name: /click to open/i });
+    expect(linkButton).toBeInTheDocument();
   });
 });

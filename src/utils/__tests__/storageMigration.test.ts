@@ -1,9 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import {
-  migrateFromLegacyStorage,
-  isOldOLStyleFormat,
-  transformOLStyle,
-} from "../storageMigration";
+import { migrateFromLegacyStorage, isOldOLStyleFormat, transformOLStyle } from "../storageMigration";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -292,7 +288,7 @@ describe("migrateFromLegacyStorage", () => {
     expect(parsed.value).toEqual(layers);
   });
 
-  it("migrates Layers_Folder_View into Layers when TOC_Type is FOLDER", () => {
+  it("migrates Layers_Folder_View into envelope format", () => {
     const folderData = {
       "simcoe:Emergency": { label: "Emergency", layers: { "Fire Stations": { visible: true, opacity: 1, index: 0 } } },
     };
@@ -301,31 +297,30 @@ describe("migrateFromLegacyStorage", () => {
 
     migrateFromLegacyStorage();
 
-    const parsed = parseEnvelope("Layers");
+    const parsed = parseEnvelope("Layers_Folder_View");
     expect(parsed.value).toEqual(folderData);
-    // Folder view source key cleaned up
-    expect(localStorage.getItem("Layers_Folder_View")).toBeNull();
   });
 
-  it("prefers list-view Layers when TOC_Type is LIST", () => {
-    const listData = { "group1": { label: "Group 1", layers: { "L1": { visible: true, opacity: 1, index: 0 } } } };
-    const folderData = { "group2": { label: "Group 2", layers: { "L2": { visible: false, opacity: 0.5, index: 1 } } } };
+  it("migrates both Layers and Layers_Folder_View independently", () => {
+    const listData = { group1: { label: "Group 1", layers: { L1: { visible: true, opacity: 1, index: 0 } } } };
+    const folderData = { group2: { label: "Group 2", layers: { L2: { visible: false, opacity: 0.5, index: 1 } } } };
     localStorage.setItem("TOC_Type", "LIST");
     localStorage.setItem("Layers", JSON.stringify(listData));
     localStorage.setItem("Layers_Folder_View", JSON.stringify(folderData));
 
     migrateFromLegacyStorage();
 
-    const parsed = parseEnvelope("Layers");
-    // Primary is list data, but folder groups not in list are also merged
-    expect(parsed.value["group1"]).toEqual(listData["group1"]);
-    expect(parsed.value["group2"]).toEqual(folderData["group2"]);
+    const parsedLayers = parseEnvelope("Layers");
+    expect(parsedLayers.value["group1"]).toEqual(listData["group1"]);
+
+    const parsedFolder = parseEnvelope("Layers_Folder_View");
+    expect(parsedFolder.value["group2"]).toEqual(folderData["group2"]);
   });
 
-  it("merges folder-view groups into list-view data when both exist (FOLDER mode)", () => {
-    const listData = { "shared": { label: "Shared", layers: { "L1": { visible: true, opacity: 1, index: 0 } } } };
+  it("keeps list and folder data separate when both exist (FOLDER mode)", () => {
+    const listData = { shared: { label: "Shared", layers: { L1: { visible: true, opacity: 1, index: 0 } } } };
     const folderData = {
-      "shared": { label: "Shared Folder", layers: { "L1": { visible: false, opacity: 0.5, index: 0 } } },
+      shared: { label: "Shared Folder", layers: { L1: { visible: false, opacity: 0.5, index: 0 } } },
       "folder-only": { label: "Folder Only", layers: {} },
     };
     localStorage.setItem("TOC_Type", "FOLDER");
@@ -334,20 +329,22 @@ describe("migrateFromLegacyStorage", () => {
 
     migrateFromLegacyStorage();
 
-    const parsed = parseEnvelope("Layers");
-    // FOLDER is primary, so "shared" comes from folderData
-    expect(parsed.value["shared"].label).toBe("Shared Folder");
-    expect(parsed.value["folder-only"]).toEqual(folderData["folder-only"]);
+    const parsedLayers = parseEnvelope("Layers");
+    expect(parsedLayers.value["shared"].label).toBe("Shared");
+
+    const parsedFolder = parseEnvelope("Layers_Folder_View");
+    expect(parsedFolder.value["shared"].label).toBe("Shared Folder");
+    expect(parsedFolder.value["folder-only"]).toEqual(folderData["folder-only"]);
   });
 
-  it("uses Layers_Folder_View even when TOC_Type is LIST if no Layers key exists", () => {
-    const folderData = { "g1": { label: "G1", layers: {} } };
+  it("wraps Layers_Folder_View in envelope even when no Layers key exists", () => {
+    const folderData = { g1: { label: "G1", layers: {} } };
     localStorage.setItem("Layers_Folder_View", JSON.stringify(folderData));
     // No TOC_Type set, no "Layers" key
 
     migrateFromLegacyStorage();
 
-    const parsed = parseEnvelope("Layers");
+    const parsed = parseEnvelope("Layers_Folder_View");
     expect(parsed.value).toEqual(folderData);
   });
 
@@ -399,8 +396,11 @@ describe("migrateFromLegacyStorage", () => {
     // Migrated source keys should be removed
     expect(localStorage.getItem("myMaps")).toBeNull();
     expect(localStorage.getItem("Map Control Settings")).toBeNull();
-    expect(localStorage.getItem("Layers_Folder_View")).toBeNull();
     expect(localStorage.getItem("ArcGIS_Token")).toBeNull();
+
+    // Layers_Folder_View should be preserved (wrapped in envelope)
+    expect(localStorage.getItem("Layers_Folder_View")).toBeTruthy();
+    expect(parseEnvelope("Layers_Folder_View")).toBeTruthy();
 
     // These keys should still exist (not aggressively deleted)
     expect(localStorage.getItem("TOC_Type")).toBe("LIST");
@@ -503,21 +503,26 @@ describe("migrateFromLegacyStorage", () => {
 
   it("handles a full migration scenario with all key types", () => {
     // Old MyMaps data
-    localStorage.setItem("myMaps", JSON.stringify({
-      items: [{
-        id: "item1",
-        label: "Drawing 1",
-        labelVisible: true,
-        labelRotation: 0,
-        featureGeoJSON: '{"type":"Feature","geometry":{"type":"Point","coordinates":[0,0]}}',
-        style: { fill_: { color_: [255, 0, 0, 0.5] }, stroke_: { color_: [0, 0, 0, 1], width_: 2 } },
-        visible: true,
-        drawType: "Polygon",
-        geometryType: "Polygon",
-      }],
-      drawColor: "#00ff00",
-      drawOpacity: 0.6,
-    }));
+    localStorage.setItem(
+      "myMaps",
+      JSON.stringify({
+        items: [
+          {
+            id: "item1",
+            label: "Drawing 1",
+            labelVisible: true,
+            labelRotation: 0,
+            featureGeoJSON: '{"type":"Feature","geometry":{"type":"Point","coordinates":[0,0]}}',
+            style: { fill_: { color_: [255, 0, 0, 0.5] }, stroke_: { color_: [0, 0, 0, 1], width_: 2 } },
+            visible: true,
+            drawType: "Polygon",
+            geometryType: "Polygon",
+          },
+        ],
+        drawColor: "#00ff00",
+        drawOpacity: 0.6,
+      }),
+    );
 
     // Old controls
     localStorage.setItem("Map Control Settings", JSON.stringify({ rotate: true, fullScreen: false }));
@@ -527,8 +532,8 @@ describe("migrateFromLegacyStorage", () => {
 
     // Old layers (raw) — list and folder views
     localStorage.setItem("TOC_Type", "FOLDER");
-    localStorage.setItem("Layers", JSON.stringify({ "group1": { label: "G1", layers: {} } }));
-    localStorage.setItem("Layers_Folder_View", JSON.stringify({ "group2": { label: "G2", layers: {} } }));
+    localStorage.setItem("Layers", JSON.stringify({ group1: { label: "G1", layers: {} } }));
+    localStorage.setItem("Layers_Folder_View", JSON.stringify({ group2: { label: "G2", layers: {} } }));
 
     // Old dont-show (raw)
     localStorage.setItem("sc_dontshowagain", JSON.stringify([{ url: "https://help.com" }]));
@@ -558,16 +563,18 @@ describe("migrateFromLegacyStorage", () => {
     expect(parseEnvelope("searchHistory").value).toEqual([{ name: "Barrie", dateAdded: "1/1/2025" }]);
     expect(parseEnvelope("sc_dontshowagain").value).toEqual([{ url: "https://help.com" }]);
 
-    // Verify layer consolidation (FOLDER mode: folder data is primary, list groups merged)
+    // Verify layer migration (both keys kept separate)
     const layersParsed = parseEnvelope("Layers");
-    expect(layersParsed.value["group2"]).toEqual({ label: "G2", layers: {} });
-    expect(layersParsed.value["group1"]).toEqual({ label: "G1", layers: {} }); // merged from list
+    expect(layersParsed.value["group1"]).toEqual({ label: "G1", layers: {} });
+
+    const folderParsed = parseEnvelope("Layers_Folder_View");
+    expect(folderParsed.value["group2"]).toEqual({ label: "G2", layers: {} });
 
     // Verify TOC_Type preserved
     expect(localStorage.getItem("TOC_Type")).toBe("FOLDER");
 
-    // Verify Layers_Folder_View cleaned up (data merged into Layers)
-    expect(localStorage.getItem("Layers_Folder_View")).toBeNull();
+    // Verify Layers_Folder_View preserved (not deleted)
+    expect(localStorage.getItem("Layers_Folder_View")).toBeTruthy();
 
     // Verify ArcGIS token moved to sessionStorage
     expect(sessionStorage.getItem("ArcGIS_Token")).toBeTruthy();
@@ -592,7 +599,7 @@ describe("migrateFromLegacyStorage", () => {
 
     const result = migrateFromLegacyStorage();
     expect(result).toBe(true);
-    expect(parseEnvelope("Layers")).toBeTruthy();
+    expect(parseEnvelope("Layers_Folder_View")).toBeTruthy();
   });
 
   it("detects ArcGIS_Token in localStorage as trigger for migration", () => {

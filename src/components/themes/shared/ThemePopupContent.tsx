@@ -1,9 +1,10 @@
 "use client";
 
-import { usePopupStore } from "@/stores/popupStore";
-import { FaExternalLinkAlt, FaTimes } from "react-icons/fa";
+import { FaExternalLinkAlt } from "react-icons/fa";
 import { isExcludedKey } from "@/utils/identifyHelpers";
 import AppImage from "@/components/shared/AppImage";
+import { showURLWindow } from "@/utils/helpersUI";
+import type { ReactNode } from "react";
 
 interface ThemePopupContentProps {
   properties: Record<string, unknown>;
@@ -12,8 +13,6 @@ interface ThemePopupContentProps {
 }
 
 export default function ThemePopupContent({ properties, moreInfoUrlFieldName, popupLogoImage }: ThemePopupContentProps) {
-  const { hide } = usePopupStore();
-
   // Find the URL field value if specified
   let moreInfoUrl = "";
   if (moreInfoUrlFieldName && properties[moreInfoUrlFieldName]) {
@@ -27,12 +26,12 @@ export default function ThemePopupContent({ properties, moreInfoUrlFieldName, po
 
   const handleMoreInfo = () => {
     if (moreInfoUrl) {
-      window.open(moreInfoUrl, "_blank");
+      showURLWindow(moreInfoUrl, false, "normal", false, false, "More Information");
     }
   };
 
   return (
-    <div className="min-w-[280px] max-w-[400px]">
+    <div className="min-w-[280px] max-w-[400px] pr-2">
       {/* Logo if provided */}
       {popupLogoImage && (
         <div className="text-center mb-3">
@@ -49,36 +48,19 @@ export default function ThemePopupContent({ properties, moreInfoUrlFieldName, po
         {displayEntries.map(([key, value]) => (
           <div key={key} className="flex gap-2 py-1 border-b border-base-200 last:border-0">
             <span className="font-medium text-xs text-base-content/70 min-w-[80px]">{formatLabel(key)}:</span>
-            <span className="text-sm text-base-content flex-1">{formatValue(value)}</span>
+            <span className="text-sm text-base-content flex-1 min-w-0 break-words">{formatValue(value)}</span>
           </div>
         ))}
       </div>
 
-      {/* Action buttons — shrink-0 keeps them from being squeezed when the
-          outer popup adds a scrollbar. The Close button fires on pointerdown
-          (rather than click) because the button's focus state can introduce a
-          1–2 px layout shift in the outer popup, causing a scrollbar to appear
-          between mousedown and mouseup; the resulting horizontal reflow moves
-          the button out from under the cursor and the click is lost. Acting on
-          pointerdown commits the close before any layout change can happen. */}
-      <div className="flex gap-2 mt-4 shrink-0">
-        {moreInfoUrl && (
-          <button className="btn btn-sm btn-primary flex-1" onClick={handleMoreInfo}>
+      {moreInfoUrl && (
+        <div className="mt-4 shrink-0">
+          <button className="btn btn-sm btn-primary w-full" onClick={handleMoreInfo}>
             <FaExternalLinkAlt className="w-3 h-3" />
             More Information
           </button>
-        )}
-        <button
-          className="btn btn-sm btn-outline flex-1"
-          onPointerDown={(e) => {
-            e.preventDefault();
-            hide();
-          }}
-        >
-          <FaTimes className="w-3 h-3" />
-          Close
-        </button>
-      </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -93,7 +75,7 @@ function formatLabel(key: string): string {
 }
 
 // Helper to format values for display
-function formatValue(value: unknown): string {
+function formatValue(value: unknown): ReactNode {
   if (value === null || value === undefined) {
     return "-";
   }
@@ -103,5 +85,13 @@ function formatValue(value: unknown): string {
   if (typeof value === "object") {
     return JSON.stringify(value);
   }
-  return String(value);
+  const str = String(value);
+  if (/^https?:\/\//i.test(str)) {
+    return (
+      <button className="link link-primary text-sm" onClick={() => showURLWindow(str, false, "normal", false, false, "Information")}>
+        Click to Open
+      </button>
+    );
+  }
+  return str;
 }

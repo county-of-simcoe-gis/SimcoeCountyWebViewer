@@ -462,7 +462,7 @@ function CustomCoordinatesSection({ title, projType, coords, setCoords, onZoomCl
 
         <div className="flex items-center gap-3 mt-2 text-xs">
           <button
-            className={`inline-flex items-center gap-1 hover:text-primary transition-colors ${hasCoords ? "text-base-content" : "text-base-content/50 cursor-not-allowed"}`}
+            className={`inline-flex items-center gap-1 hover:text-primary transition-colors ${hasCoords ? "text-base-content cursor-pointer" : "text-base-content/50 cursor-not-allowed"}`}
             onClick={() => hasCoords && onZoomClick(projType, coords.x, coords.y)}
             title="Zoom to coordinates"
           >
@@ -470,7 +470,7 @@ function CustomCoordinatesSection({ title, projType, coords, setCoords, onZoomCl
             <span className="underline">Zoom</span>
           </button>
           <button
-            className={`inline-flex items-center gap-1 hover:text-primary transition-colors ${hasCoords ? "text-base-content" : "text-base-content/50 cursor-not-allowed"}`}
+            className={`inline-flex items-center gap-1 hover:text-primary transition-colors ${hasCoords ? "text-base-content cursor-pointer" : "text-base-content/50 cursor-not-allowed"}`}
             onClick={() => hasCoords && onMyMapsClick(coords.x, coords.y)}
             title="Add to My Maps"
           >
@@ -478,7 +478,7 @@ function CustomCoordinatesSection({ title, projType, coords, setCoords, onZoomCl
             <span className="underline">My Maps</span>
           </button>
           <button
-            className={`inline-flex items-center gap-1 hover:text-primary transition-colors ${hasCoords ? "text-base-content" : "text-base-content/50 cursor-not-allowed"}`}
+            className={`inline-flex items-center gap-1 hover:text-primary transition-colors ${hasCoords ? "text-base-content cursor-pointer" : "text-base-content/50 cursor-not-allowed"}`}
             onClick={() => hasCoords && copyToClipboard(`${coords.x}, ${coords.y}`)}
             title="Copy coordinates"
           >

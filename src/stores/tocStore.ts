@@ -148,6 +148,9 @@ interface TOCState {
   // Layer visibility state per group for category switching
   groupLayerVisibilityStates: Record<string, Record<string, boolean>>;
 
+  // Layer visibility state per view (LIST / FOLDER) for independent views
+  viewLayerVisibilityStates: Record<string, Record<string, boolean>>;
+
   // Search and filtering
   searchText: string;
   sortAlpha: boolean;
@@ -279,6 +282,7 @@ export const useTOCStore = create<TOCState>()(
     lastSelectedListGroup: null,
     folderOpenStates: {},
     groupLayerVisibilityStates: {},
+    viewLayerVisibilityStates: {},
     searchText: "",
     sortAlpha: false,
     isLoading: false,
@@ -291,12 +295,71 @@ export const useTOCStore = create<TOCState>()(
       set((state) => {
         const previousType = state.tocType;
 
+        // Save current view's layer visibility states
+        const viewStates: Record<string, boolean> = {};
+        state.allLayers.forEach((layer) => {
+          viewStates[layer.id] = layer.visible;
+        });
+        state.viewLayerVisibilityStates[previousType] = viewStates;
+
         // Save current state when leaving LIST view
         if (previousType === "LIST" && state.selectedGroup) {
           state.lastSelectedListGroup = state.selectedGroup;
         }
 
         state.tocType = type;
+
+        // Restore target view's layer visibility states
+        const savedViewStates = state.viewLayerVisibilityStates[type];
+        if (savedViewStates) {
+          state.allLayers.forEach((layer) => {
+            if (savedViewStates.hasOwnProperty(layer.id)) {
+              layer.visible = savedViewStates[layer.id];
+            }
+          });
+          // Also sync to group layer arrays
+          state.layerListGroups.forEach((g) => {
+            g.layers.forEach((l) => {
+              if (savedViewStates.hasOwnProperty(l.id)) {
+                l.visible = savedViewStates[l.id];
+              }
+            });
+          });
+          state.layerFolderGroups.forEach((g) => {
+            g.layers.forEach((l) => {
+              if (savedViewStates.hasOwnProperty(l.id)) {
+                l.visible = savedViewStates[l.id];
+              }
+            });
+          });
+        } else {
+          // First visit to this view — default all layers to OFF
+          state.allLayers.forEach((layer) => {
+            layer.visible = false;
+          });
+          state.layerListGroups.forEach((g) => {
+            g.layers.forEach((l) => {
+              l.visible = false;
+            });
+          });
+          state.layerFolderGroups.forEach((g) => {
+            g.layers.forEach((l) => {
+              l.visible = false;
+            });
+          });
+        }
+
+        // Apply current sort order to the target view's groups
+        const targetGroups = type === "LIST" ? state.layerListGroups : state.layerFolderGroups;
+        if (state.sortAlpha) {
+          targetGroups.forEach((group) => {
+            group.layers = [...group.layers].sort((a, b) => a.tocDisplayName.localeCompare(b.tocDisplayName));
+          });
+        } else {
+          targetGroups.forEach((group) => {
+            group.layers = [...group.layers].sort((a, b) => b.drawIndex - a.drawIndex);
+          });
+        }
 
         // When switching to LIST view, restore last selected group or default to "All Layers"
         if (type === "LIST" && state.layerListGroups.length > 0) {
@@ -317,6 +380,23 @@ export const useTOCStore = create<TOCState>()(
           state.selectedGroup = null;
         }
       });
+
+      // Update OpenLayers layer visibility to match restored/defaulted state
+      const currentState = get();
+      const updatedOL = new Set<string>();
+      currentState.allLayers.forEach((layer) => {
+        if (!updatedOL.has(layer.name)) {
+          updatedOL.add(layer.name);
+          if (layer.managedLayerId) {
+            LayerManager.setLayerVisibility(layer.managedLayerId, layer.visible);
+          } else if (layer.layer) {
+            (layer.layer as OpenLayersLayer).setVisible(layer.visible);
+          }
+        }
+      });
+
+      // Update LayerManager z-indices to match the new view's group ordering
+      currentState.updateLayerManagerZIndices();
     },
 
     setLayerGroups: (type, groups, options) => {
@@ -523,20 +603,32 @@ export const useTOCStore = create<TOCState>()(
       const tocLayersById = new Map<string, ManagedLayer>();
       tocLayers.forEach((ml) => tocLayersById.set(ml.id, ml));
 
-      useLayerManagerStore.setState((draft) => {
-        // Collect TOC layers from ALL source groups (skip "All Layers"
-        // virtual group to avoid duplicates from spread copies).
-        // Each TOC layer entry carries a unique managedLayerId that maps
-        // 1-to-1 to a LayerManager entry, so duplicate layer NAMES across
-        // groups are handled correctly.
-        const reorderedTocLayers: ManagedLayer[] = [];
-        const consumed = new Set<string>();
+      // Build the reordered layer list from TOC state.
+      const reorderedTocLayers: ManagedLayer[] = [];
+      const consumed = new Set<string>();
 
-        const groups = tocState.tocType === "LIST" ? tocState.layerListGroups : tocState.layerFolderGroups;
+      const groups = tocState.tocType === "LIST" ? tocState.layerListGroups : tocState.layerFolderGroups;
 
+      // In LIST view with "All Layers" selected, use its ordering directly
+      // so that reordering within "All Layers" is reflected on the map.
+      // Otherwise iterate source groups (each group maintains its own
+      // independent order).
+      const useAllLayers = tocState.tocType === "LIST" && tocState.selectedGroup?.value === "all_layers";
+
+      if (useAllLayers) {
+        const allLayersGroup = groups.find((g) => g.value === "all_layers");
+        if (allLayersGroup) {
+          allLayersGroup.layers.forEach((tocLayer) => {
+            if (!tocLayer.managedLayerId || consumed.has(tocLayer.managedLayerId)) return;
+            const managedLayer = tocLayersById.get(tocLayer.managedLayerId);
+            if (managedLayer) {
+              reorderedTocLayers.push(managedLayer);
+              consumed.add(tocLayer.managedLayerId);
+            }
+          });
+        }
+      } else {
         groups.forEach((group) => {
-          // Skip the virtual "All Layers" group — its entries are mirrors
-          // of the source group entries and share the same managedLayerId.
           if (group.value === "all_layers") return;
 
           group.layers.forEach((tocLayer) => {
@@ -548,40 +640,42 @@ export const useTOCStore = create<TOCState>()(
             }
           });
         });
+      }
 
-        // Append any managed TOC layers that weren't matched by a TOC
-        // entry (e.g. custom/user-added layers) so they are never dropped.
-        tocLayers.forEach((ml) => {
-          if (!consumed.has(ml.id)) {
-            reorderedTocLayers.push(ml);
-            consumed.add(ml.id);
-          }
-        });
-
-        if (reorderedTocLayers.length > 0) {
-          // Update z-indices on the reordered layers before assigning to draft.
-          // Position 0 in the array is the TOP of the TOC (highest drawIndex)
-          // and calculateZIndex(category, 0) returns the max z-index, so idx maps directly.
-          const updatedLayers = reorderedTocLayers.map((layer, idx) => {
-            const newZIndex = calculateZIndex("TOC", idx);
-            return {
-              ...layer,
-              zIndex: newZIndex,
-            };
-          });
-
-          draft.layers.TOC = updatedLayers;
-
-          // Update the actual OpenLayers layer z-indices
-          updatedLayers.forEach((layer, idx) => {
-            const newZIndex = calculateZIndex("TOC", idx);
-            layer.layer.setZIndex(newZIndex);
-          });
-
-          // Update next available z-index
-          draft.nextZIndex.TOC = calculateZIndex("TOC", updatedLayers.length);
+      // Append any managed TOC layers that weren't matched by a TOC
+      // entry (e.g. custom/user-added layers) so they are never dropped.
+      tocLayers.forEach((ml) => {
+        if (!consumed.has(ml.id)) {
+          reorderedTocLayers.push(ml);
+          consumed.add(ml.id);
         }
       });
+
+      if (reorderedTocLayers.length > 0) {
+        // Update z-indices on the reordered layers before assigning to draft.
+        // Position 0 in the array is the TOP of the TOC (highest drawIndex)
+        // and calculateZIndex(category, 0) returns the max z-index, so idx maps directly.
+        const updatedLayers = reorderedTocLayers.map((layer, idx) => {
+          const newZIndex = calculateZIndex("TOC", idx);
+          return {
+            ...layer,
+            zIndex: newZIndex,
+          };
+        });
+
+        // Update the LayerManager store state
+        useLayerManagerStore.setState((draft) => {
+          draft.layers.TOC = updatedLayers;
+          draft.nextZIndex.TOC = calculateZIndex("TOC", updatedLayers.length);
+        });
+
+        // Apply z-indices to the actual OpenLayers layers AFTER setState()
+        // completes to avoid OL mutations inside Immer (same pattern as
+        // updateLayerVisibility).
+        updatedLayers.forEach((layer) => {
+          layer.layer.setZIndex(layer.zIndex);
+        });
+      }
     },
 
     setIsLoading: (loading) => {
@@ -621,20 +715,109 @@ export const useTOCStore = create<TOCState>()(
 
     // Group switching with layer visibility management
     switchToGroup: (group) => {
+      // Inline save/restore logic in a SINGLE set() to avoid nested set()
+      // calls whose changes get overwritten by the outer set().
+      const savedStates = get().groupLayerVisibilityStates[group.value];
+      const isAllLayersGroup = group.value === "all_layers";
+
       set((state) => {
         const currentGroup = state.selectedGroup;
 
-        // Save current group's layer states if there is one
+        // ── Save current group's visibility states ──
         if (currentGroup) {
-          state.saveGroupLayerStates(currentGroup);
+          const groupStates: Record<string, boolean> = {};
+          if (currentGroup.value === "all_layers") {
+            state.allLayers.forEach((layer) => {
+              groupStates[layer.id] = layer.visible;
+            });
+          } else {
+            currentGroup.layers.forEach((layer) => {
+              const allLayerItem = state.allLayers.find((l) => l.id === layer.id);
+              groupStates[layer.id] = allLayerItem ? allLayerItem.visible : layer.visible;
+            });
+          }
+          state.groupLayerVisibilityStates[currentGroup.value] = groupStates;
         }
 
-        // Set the new selected group
+        // ── Set the new selected group ──
         state.selectedGroup = group;
 
-        // Restore the new group's layer states
-        state.restoreGroupLayerStates(group);
+        // ── Restore the new group's visibility states ──
+        const updateVis = (layerId: string, visible: boolean) => {
+          const al = state.allLayers.find((l) => l.id === layerId);
+          if (al) al.visible = visible;
+          state.layerListGroups.forEach((g) => {
+            const l = g.layers.find((x) => x.id === layerId);
+            if (l) l.visible = visible;
+          });
+          state.layerFolderGroups.forEach((g) => {
+            const l = g.layers.find((x) => x.id === layerId);
+            if (l) l.visible = visible;
+          });
+        };
+
+        if (isAllLayersGroup) {
+          if (savedStates) {
+            Object.keys(savedStates).forEach((layerId) => {
+              updateVis(layerId, savedStates[layerId]);
+            });
+          }
+        } else {
+          const currentGroupLayerNames = new Set(group.layers.map((l) => l.name));
+          state.allLayers.forEach((layer) => {
+            if (!currentGroupLayerNames.has(layer.name)) {
+              updateVis(layer.id, false);
+            }
+          });
+          if (savedStates) {
+            group.layers.forEach((layer) => {
+              if (savedStates.hasOwnProperty(layer.id)) {
+                updateVis(layer.id, savedStates[layer.id]);
+              } else {
+                updateVis(layer.id, layer.visible);
+              }
+            });
+          } else {
+            // First visit to this group — default all layers to OFF
+            group.layers.forEach((layer) => {
+              updateVis(layer.id, false);
+            });
+          }
+        }
       });
+
+      // Update OpenLayers layer visibility AFTER state commit
+      const currentState = get();
+      if (isAllLayersGroup) {
+        const updated = new Set<string>();
+        currentState.allLayers.forEach((layer) => {
+          if (!updated.has(layer.name)) {
+            updated.add(layer.name);
+            if (layer.managedLayerId) {
+              LayerManager.setLayerVisibility(layer.managedLayerId, layer.visible);
+            } else if (layer.layer) {
+              (layer.layer as OpenLayersLayer).setVisible(layer.visible);
+            }
+          }
+        });
+      } else {
+        const updated = new Set<string>();
+        const groupLayerNames = new Set(group.layers.map((l) => l.name));
+        currentState.allLayers.forEach((layer) => {
+          if (!updated.has(layer.name)) {
+            updated.add(layer.name);
+            const shouldBeVisible = groupLayerNames.has(layer.name) ? layer.visible : false;
+            if (layer.managedLayerId) {
+              LayerManager.setLayerVisibility(layer.managedLayerId, shouldBeVisible);
+            } else if (layer.layer) {
+              (layer.layer as OpenLayersLayer).setVisible(shouldBeVisible);
+            }
+          }
+        });
+      }
+
+      // Update map z-indices to match the new group's layer ordering
+      get().updateLayerManagerZIndices();
     },
 
     saveGroupLayerStates: (group) => {
@@ -1258,29 +1441,13 @@ export const useTOCStore = create<TOCState>()(
             layer.index = layerCount - 1 - i;
           });
 
-          // If the "All Layers" virtual group was reordered, propagate drawIndex
-          // changes back to the individual source groups so that saves capture the
-          // correct order and the allLayers array stays in sync.
-          if (group.value === "all_layers") {
-            layers.forEach((allLayer) => {
-              const sourceGroup = groups.find((g) => g.value === allLayer.group || g.label === allLayer.groupName);
-              if (sourceGroup) {
-                const sourceLayer = sourceGroup.layers.find((l) => l.name === allLayer.name);
-                if (sourceLayer) {
-                  sourceLayer.drawIndex = allLayer.drawIndex;
-                  sourceLayer.index = allLayer.index;
-                }
-              }
-            });
-
-            // Also update state.allLayers so handleSaveAllLayers sees the new order
-            state.allLayers = state.allLayers.map((al) => {
-              const updatedLayer = layers.find((l) => l.name === al.name && l.group === al.group);
-              if (updatedLayer) {
-                return { ...al, drawIndex: updatedLayer.drawIndex, index: updatedLayer.index };
-              }
-              return al;
-            });
+          // Keep selectedGroup in sync so downstream components get fresh props
+          if (state.selectedGroup) {
+            const viewGroups = state.tocType === "LIST" ? state.layerListGroups : state.layerFolderGroups;
+            const updatedGroup = viewGroups.find((g) => g.value === state.selectedGroup!.value || g.label === state.selectedGroup!.label);
+            if (updatedGroup) {
+              state.selectedGroup = updatedGroup;
+            }
           }
         }
       });
@@ -1690,6 +1857,7 @@ export const useTOCStore = create<TOCState>()(
         // Reset any saved visibility states
         set((state) => {
           state.groupLayerVisibilityStates = {};
+          state.viewLayerVisibilityStates = {};
         });
       }
 

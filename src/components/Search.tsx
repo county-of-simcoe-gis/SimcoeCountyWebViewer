@@ -27,6 +27,7 @@ interface SearchResult {
   fullName?: string;
   layerGroupName?: string;
   layerGroup?: string;
+  layerName?: string;
   index?: number;
   geojson?: string;
   geojson_point?: string;
@@ -162,6 +163,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
               type: "Map Layer",
               layerGroupName: group.label,
               layerGroup: group.value,
+              layerName: layer.name,
             });
           }
         }
@@ -414,7 +416,29 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
       // Show layer in TOC
       const groupName = result.layerGroupName || result.layerGroup || "";
       if (groupName) {
-        useTOCStore.getState().updateLayerVisibility(result.name, groupName, true);
+        // Open sidebar on the Layers tab so the user can see the activated layer
+        const sidebarState = useSidebarStore.getState();
+        sidebarState.openSidebar();
+        sidebarState.setActiveTab(0); // 0 = layers tab
+        sidebarState.setActiveContentTab(null);
+
+        // Switch to the correct group BEFORE activating the layer, because
+        // switchToGroup restores saved visibility states and would overwrite it
+        const tocState = useTOCStore.getState();
+        if (tocState.tocType === "LIST") {
+          const targetGroup = tocState.layerListGroups.find((g) => g.label === groupName || g.value === groupName);
+          if (targetGroup && tocState.selectedGroup?.value !== targetGroup.value) {
+            tocState.switchToGroup(targetGroup);
+          }
+        } else if (tocState.tocType === "FOLDER") {
+          const targetGroup = tocState.layerFolderGroups.find((g) => g.label === groupName || g.value === groupName);
+          if (targetGroup) {
+            tocState.setFolderOpenState(targetGroup.value, true);
+          }
+        }
+
+        // Activate the layer after the group switch so it isn't overwritten
+        useTOCStore.getState().updateLayerVisibility(result.layerName || result.name, groupName, true);
       }
     } else if (result.location_id) {
       // Handle location-based result
