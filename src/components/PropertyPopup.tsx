@@ -14,6 +14,7 @@ import { useSidebarStore } from "@/stores/sidebarStore";
 import { useMyMapsStore, createMyMapsItem } from "@/stores/myMapsStore";
 import { useEventStore } from "@/stores/eventStore";
 import { featureToGeoJSON, styleToJSON } from "@/utils/myMapsHelpers";
+import { bufferGeometry } from "@/utils/openlayers/BufferHelpers";
 import { useToastStore } from "@/hooks/useToast";
 import { useToast } from "@/hooks/useToast";
 import PropertyReport from "@/components/PropertyReport";
@@ -174,7 +175,7 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
     activateTab("reports");
   };
 
-  const handleIdentifyAdjacent = () => {
+  const handleIdentifyAdjacent = async () => {
     const geom = feature?.getGeometry();
     if (!geom) return;
 
@@ -183,15 +184,18 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
     onClose?.();
     usePopupStore.getState().hide();
 
-    // Load the Identify component with the parcel geometry into the Reports tab
-    useReportsStore.getState().setReport({
-      id: `identify-adjacent-${arn}-${Date.now()}`,
-      title: "Identify Adjacent Features",
-      content: <Identify geometry={geom} />,
-      createdAt: new Date(),
-      source: "identifyAdjacent",
+    // Buffer the parcel geometry by 1 meter so adjacent features are included
+    bufferGeometry(geom, 1, (bufferedGeom) => {
+      // Load the Identify component with the buffered geometry into the Reports tab
+      useReportsStore.getState().setReport({
+        id: `identify-adjacent-${arn}-${Date.now()}`,
+        title: "Identify Adjacent Features",
+        content: <Identify geometry={bufferedGeom} />,
+        createdAt: new Date(),
+        source: "identifyAdjacent",
+      });
+      activateTab("reports");
     });
-    activateTab("reports");
   };
 
   return (

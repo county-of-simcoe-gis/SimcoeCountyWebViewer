@@ -21,7 +21,7 @@ import { useMyMapsStore, createMyMapsItem } from "@/stores/myMapsStore";
 import { useToastStore } from "@/hooks/useToast";
 import { useEventStore } from "@/stores/eventStore";
 import { activateTab } from "@/utils/helpersUI";
-import { featureToGeoJSON } from "@/utils/myMapsHelpers";
+import { createDefaultDrawStyle, featureToGeoJSON, styleToJSON } from "@/utils/myMapsHelpers";
 import AttributeTableTabs from "./AttributeTableTabs";
 import AttributeTableGrid from "./AttributeTableGrid";
 import AttributeTableMapSelect from "./AttributeTableMapSelect";
@@ -246,6 +246,7 @@ export default function AttributeTablePanel(): React.ReactElement | null {
       }
 
       const addItem = useMyMapsStore.getState().addItem;
+      const drawColor = useMyMapsStore.getState().drawColor;
       const safeName = active.layerName.replace(/[^a-z0-9_\-\s]+/gi, "").trim();
       // Pick the first non-utility column as the "label column". The schema
       // already excludes geometry fields, so the first entry is the natural
@@ -281,7 +282,11 @@ export default function AttributeTablePanel(): React.ReactElement | null {
         }
         if (!label) label = shortFid || `${safeName} ${i + 1}`;
 
-        const item = createMyMapsItem(f, drawType, label, undefined);
+        // Give the feature a visible default MyMaps style. Without this the
+        // item is created with an empty style object and renders invisibly.
+        const defaultStyle = styleToJSON(createDefaultDrawStyle({ drawColor, geometryType: drawType === "Point" ? "Point" : drawType === "LineString" ? "LineString" : "Polygon" }));
+
+        const item = createMyMapsItem(f, drawType, label, defaultStyle);
         item.featureGeoJSON = featureToGeoJSON(f);
         addItem(item);
         useEventStore.getState().emit("mymap-item-created", { item });

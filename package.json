@@ -1,6 +1,6 @@
 {
   "name": "simcoecountywebviewernextjs",
-  "version": "20260528.1",
+  "version": "20260529.1",
   "private": true,
   "scripts": {
     "dev": "node scripts/copy-readme.js && next dev",

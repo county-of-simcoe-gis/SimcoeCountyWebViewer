@@ -38,16 +38,13 @@ export default function TOCListView({ id, visible, layerGroups, selectedGroup, s
     <div id={`${id}-container-main`} className="h-full flex flex-col">
       {/* Groups Dropdown */}
       <div className="p-[5px] border-b border-base-300 bg-base-200">
-        <div id={`${id}-groups-dropdown`} title="Click here for more layers">
+        <div id={`${id}-groups-dropdown`}>
           <select
             id={`${id}-select`}
             className="w-full h-[30px] px-2 border border-base-300 rounded-[3px] text-[9pt] font-[Verdana,Arial,sans-serif] bg-base-100 text-base-content cursor-pointer focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25"
             value={selectedGroup?.value || ""}
             onChange={handleGroupChange}
           >
-            <option value="" disabled>
-              Click Here for more Layers...
-            </option>
             {layerGroups.map((group) => (
               <option key={group.value} value={group.value}>
                 {group.label}

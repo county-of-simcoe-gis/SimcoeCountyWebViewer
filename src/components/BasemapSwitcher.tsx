@@ -485,11 +485,12 @@ export default function BasemapSwitcher() {
                 layer.set("print", shouldPrint);
                 layer.set("display", shouldDisplay);
 
-                // Print-only substitute layers (display: false, print: true) are kept
-                // visible so they are included by getPrintLayers(). They render behind
-                // the VectorTile display layers (lower z-index) so they are invisible
-                // on screen but available for MapFish which cannot render VectorTile.
-                const isVisible = shouldDisplay || shouldPrint;
+                // Live-map visibility is driven solely by the display flag. Print-only
+                // substitute layers (display: false, print: true) are kept hidden so they
+                // do not request tiles on pan/zoom. The print tool includes them via their
+                // display: false flag (see getPrintLayers) for MapFish, which cannot render
+                // the VectorTile display layers.
+                const isVisible = shouldDisplay;
                 layer.setVisible(isVisible);
 
                 // Add layer using LayerManager for proper z-index management

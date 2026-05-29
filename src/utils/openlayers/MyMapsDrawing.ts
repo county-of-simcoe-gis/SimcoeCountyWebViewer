@@ -509,7 +509,7 @@ export class MyMapsDrawingManager {
   }
 
   private styleFromJSON(styleJson: StyleJSON, pointType?: string): Style {
-    if (!styleJson) return this.getDefaultStyle("#e809e5");
+    if (!styleJson || Object.keys(styleJson).length === 0) return this.getDefaultStyle("#e809e5");
 
     const styleConfig: {
       fill?: Fill;

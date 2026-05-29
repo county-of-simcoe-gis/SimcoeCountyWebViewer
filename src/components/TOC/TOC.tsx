@@ -54,7 +54,8 @@ export default function TOC({ visible = true }: TOCProps) {
   const setSearchText = useTOCStore((s) => s.setSearchText);
   const setSortAlpha = useTOCStore((s) => s.setSortAlpha);
   const setGlobalOpacity = useTOCStore((s) => s.setGlobalOpacity);
-  const getGlobalOpacity = useTOCStore((s) => s.getGlobalOpacity);
+  // Subscribe to the reactive globalOpacity value so the slider re-renders on change.
+  const globalOpacity = useLayerManagerStore((s) => s.globalOpacity);
   const initializeFromConfig = useTOCStore((s) => s.initializeFromConfig);
   const refreshTOC = useTOCStore((s) => s.refreshTOC);
   const toggleLayerLegendById = useTOCStore((s) => s.toggleLayerLegendById);
@@ -687,7 +688,7 @@ export default function TOC({ visible = true }: TOCProps) {
         tocType={tocType}
         searchText={searchText}
         sortAlpha={sortAlpha}
-        globalOpacity={getGlobalOpacity()}
+        globalOpacity={globalOpacity}
         isLoading={isLoading}
         layerCount={displayedLayerCount}
         helpLink={helpLink}
