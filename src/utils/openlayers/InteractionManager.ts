@@ -38,6 +38,7 @@ import { useMapStore } from "@/stores/mapStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 
 const PROPERTY_REPORT_HANDLER_ID = "property-report-click";
+const MYMAPS_HANDLER_ID = "mymaps-feature-click";
 const DOUBLE_CLICK_THRESHOLD_MS = 300;
 
 /** ID of a logical handler (e.g. "property-report-click") that is currently disabled. */
@@ -277,11 +278,22 @@ export class InteractionManager extends Interaction {
   ): Result[] {
     const suppressLayerIds = LayerManager.getSuppressLayerIds();
     let propertyReportSuppressed = false;
+    let mymapsExclusive = false;
     const propertyReportResults: Result[] = [];
     const otherResults: Result[] = [];
 
     for (const { handler, result } of entries) {
       if (!Array.isArray(result) || result.length === 0) continue;
+      // A MyMaps feature hit is exclusive: the MyMaps drawing popup renders
+      // itself via the `mymap-show-drawing-options` event, so every identify /
+      // property-report result for this click must be dropped to avoid a second
+      // popup opening for an underlying TOC-layer feature. The MyMaps handler
+      // returns a sentinel result purely to signal this hit; it is never
+      // rendered through the aggregated results.
+      if (handler.id === MYMAPS_HANDLER_ID) {
+        mymapsExclusive = true;
+        continue;
+      }
       const isPropertyReport = handler.id === PROPERTY_REPORT_HANDLER_ID;
       for (const r of result) {
         if (process.env.NODE_ENV !== "production" && !r.layerId) {
@@ -299,6 +311,8 @@ export class InteractionManager extends Interaction {
         }
       }
     }
+
+    if (mymapsExclusive) return [];
 
     const flat = propertyReportSuppressed ? otherResults : [...propertyReportResults, ...otherResults];
     flat.sort((a, b) => (b.layerZIndex ?? 0) - (a.layerZIndex ?? 0));

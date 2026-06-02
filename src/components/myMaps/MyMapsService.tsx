@@ -6,6 +6,7 @@ import { useMapStore } from "@/stores/mapStore";
 import { useEventStore } from "@/stores/eventStore";
 import { useLayerManagerStore } from "@/stores/layerManagerStore";
 import { useInteractionManagerStore } from "@/stores/interactionManagerStore";
+import type { InteractionResult } from "@/stores/interactionManagerStore";
 import { MyMapsDrawingManager } from "@/utils/openlayers/MyMapsDrawing";
 import { Feature } from "ol";
 import { getCenter } from "ol/extent";
@@ -358,7 +359,26 @@ export default function MyMapsService() {
 
         if (clickedFeature) {
           handleFeatureClicked(clickedFeature, coordinate);
+          // Return a sentinel result so the InteractionManager's aggregation can
+          // recognise a MyMaps feature was hit and drop every identify /
+          // property-report result for this click. The MyMaps drawing popup
+          // renders itself via the `mymap-show-drawing-options` event above; this
+          // result is never displayed, it only signals exclusivity.
+          const hitFeature = clickedFeature as Feature;
+          const sentinel: InteractionResult = {
+            id: "mymaps-feature-hit",
+            displayName: "MyMaps Feature",
+            type: "identify",
+            layerId: managedLayerIdRef.current ?? undefined,
+            data: {
+              layerName: MyMapsDrawingManager.LAYER_NAME,
+              featureId: String(hitFeature.getId() ?? ""),
+              attributes: {},
+            },
+          };
+          return [sentinel];
         }
+        return [];
       },
     });
 
