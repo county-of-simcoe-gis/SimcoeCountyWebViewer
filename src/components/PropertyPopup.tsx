@@ -120,7 +120,7 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
           onZoomClick={
             feature
               ? () => {
-                  const map = (window as unknown as { map?: { getView: () => { fit: (extent: unknown, size: unknown) => void } }; getSize: () => unknown }).map;
+                  const map = (window as unknown as { map?: { getView: () => { fit: (extent: unknown, size: unknown) => void }; getSize: () => unknown } }).map;
                   const geom = feature.getGeometry();
                   if (map && geom) {
                     map.getView().fit(geom.getExtent(), map.getSize());
@@ -153,7 +153,7 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
     }
   };
 
-  const handleCustomIdentify = (item: NonNullable<NonNullable<typeof config>["propertyReport"]>["customIdentify"] extends Array<infer T> ? T : never) => {
+  const handleCustomIdentify = (item: NonNullable<NonNullable<NonNullable<typeof config>["propertyReport"]>["customIdentify"]>[number]) => {
     if (!item) return;
     const whereClause = item.whereFormat.replace("{arn}", arn);
 
@@ -289,7 +289,9 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
               onClick={() => {
                 const termsUrl = config?.termsUrl as string | undefined;
                 if (termsUrl) {
-                  window.open(termsUrl, "_blank");
+                  import("@/utils/helpersUI").then(({ showURLWindow }) => {
+                    showURLWindow(termsUrl, false, "normal", false, false, "Terms and Conditions");
+                  });
                 }
               }}
             >
