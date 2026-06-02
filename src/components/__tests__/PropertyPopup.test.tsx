@@ -6,6 +6,7 @@ import { Polygon } from "ol/geom";
 import { useReportsStore } from "@/stores/reportsStore";
 import { useMyMapsStore } from "@/stores/myMapsStore";
 import { useAppStore } from "@/stores/appStore";
+import { useURLModalStore } from "@/stores/urlModalStore";
 import { useToastStore } from "@/hooks/useToast";
 
 describe("PropertyPopup", () => {
@@ -170,17 +171,19 @@ describe("PropertyPopup", () => {
     expect(addedItem.label).toBe("123 Test Street");
   });
 
-  it("opens terms URL in new window", () => {
-    const windowOpenSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+  it("opens terms URL in modal window", async () => {
+    useURLModalStore.getState().close();
 
     render(<PropertyPopup propInfo={defaultPropInfo} feature={mockFeature} onClose={mockOnClose} onClearParcelLayer={mockOnClearParcelLayer} />);
 
     const termsButton = screen.getByText("[Terms]");
     fireEvent.click(termsButton);
 
-    expect(windowOpenSpy).toHaveBeenCalledWith("https://example.com/terms", "_blank");
-
-    windowOpenSpy.mockRestore();
+    await waitFor(() => {
+      const state = useURLModalStore.getState();
+      expect(state.isOpen).toBe(true);
+      expect(state.url).toBe("https://example.com/terms");
+    });
   });
 
   it("shows more information when button is clicked", () => {
