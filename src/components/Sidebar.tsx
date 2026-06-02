@@ -110,6 +110,8 @@ export default function Sidebar() {
   const activeContentTab = useSidebarStore((s) => s.activeContentTab);
   const setActiveTab = useSidebarStore((s) => s.setActiveTab);
   const activateSidebarItem = useSidebarStore((s) => s.activateSidebarItem);
+  const setActiveTool = useSidebarStore((s) => s.setActiveTool);
+  const setActiveTheme = useSidebarStore((s) => s.setActiveTheme);
   const openSidebar = useSidebarStore((s) => s.openSidebar);
   const pendingActivation = useSidebarStore((s) => s.pendingActivation);
   const clearPendingActivation = useSidebarStore((s) => s.clearPendingActivation);
@@ -138,6 +140,17 @@ export default function Sidebar() {
   const [activeToolComponent, setActiveToolComponent] = useState<React.ReactNode>(null);
   const [activeThemeComponent, setActiveThemeComponent] = useState<React.ReactNode>(null);
 
+  // Close handlers clear both the local component and the store-level active flag so the
+  // tab indicator (green dot) doesn't reappear when tools/themes lists are rebuilt (e.g. switching layouts).
+  const handleCloseTool = useCallback(() => {
+    setActiveToolComponent(null);
+    setActiveTool(null);
+  }, [setActiveTool]);
+  const handleCloseTheme = useCallback(() => {
+    setActiveThemeComponent(null);
+    setActiveTheme(null);
+  }, [setActiveTheme]);
+
   // Sync theme component when activeTheme changes (for URL parameter activation)
   useEffect(() => {
     if (activeTheme && visibleThemes.length > 0) {
@@ -150,13 +163,7 @@ export default function Sidebar() {
           console.log(`[Sidebar] Syncing theme component for: ${theme.name} (${componentName})`);
           const component = (
             <Suspense fallback={<div className="p-5">Loading theme...</div>}>
-              <ThemeComponent
-                name={theme.name}
-                hideHeader={isSingleTheme}
-                config={theme.config}
-                onClose={() => setActiveThemeComponent(null)}
-                onSidebarVisibility={() => console.log("Toggle sidebar visibility")}
-              />
+              <ThemeComponent name={theme.name} hideHeader={isSingleTheme} config={theme.config} onClose={handleCloseTheme} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
             </Suspense>
           );
           setActiveThemeComponent(component);
@@ -177,13 +184,7 @@ export default function Sidebar() {
       if (ThemeComponent) {
         setActiveThemeComponent(
           <Suspense fallback={<div className="p-5">Loading theme...</div>}>
-            <ThemeComponent
-              name={singleTheme.name}
-              hideHeader={true}
-              config={singleTheme.config}
-              onClose={() => setActiveThemeComponent(null)}
-              onSidebarVisibility={() => console.log("Toggle sidebar visibility")}
-            />
+            <ThemeComponent name={singleTheme.name} hideHeader={true} config={singleTheme.config} onClose={handleCloseTheme} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
           </Suspense>,
         );
       }
@@ -202,7 +203,7 @@ export default function Sidebar() {
           console.log(`[Sidebar] Syncing tool component for: ${tool.name} (${componentName})`);
           const component = (
             <Suspense fallback={<div className="p-5">Loading tool...</div>}>
-              <ToolComponent name={tool.name} config={tool.config} onClose={() => setActiveToolComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
+              <ToolComponent name={tool.name} config={tool.config} onClose={handleCloseTool} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
             </Suspense>
           );
           setActiveToolComponent(component);
@@ -312,7 +313,7 @@ export default function Sidebar() {
       if (ToolComponent) {
         const component = (
           <Suspense fallback={<div className="p-5">Loading tool...</div>}>
-            <ToolComponent name={displayName} options={options} onClose={() => setActiveToolComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
+            <ToolComponent name={displayName} options={options} onClose={handleCloseTool} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
           </Suspense>
         );
         setActiveToolComponent(component);
@@ -322,7 +323,7 @@ export default function Sidebar() {
           <div className="p-5">
             <h3>{displayName}</h3>
             <p>This tool is not yet implemented.</p>
-            <button className="btn btn-sm btn-primary" onClick={() => setActiveToolComponent(null)}>
+            <button className="btn btn-sm btn-primary" onClick={handleCloseTool}>
               Close
             </button>
           </div>,
@@ -333,7 +334,7 @@ export default function Sidebar() {
       if (ThemeComponent) {
         const component = (
           <Suspense fallback={<div className="p-5">Loading theme...</div>}>
-            <ThemeComponent name={displayName} hideHeader={isSingleTheme} onClose={() => setActiveThemeComponent(null)} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
+            <ThemeComponent name={displayName} hideHeader={isSingleTheme} onClose={handleCloseTheme} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
           </Suspense>
         );
         setActiveThemeComponent(component);
@@ -343,7 +344,7 @@ export default function Sidebar() {
           <div className="p-5">
             <h3>{displayName}</h3>
             <p>This theme is not yet implemented.</p>
-            <button className="btn btn-sm btn-primary" onClick={() => setActiveThemeComponent(null)}>
+            <button className="btn btn-sm btn-primary" onClick={handleCloseTheme}>
               Close
             </button>
           </div>,

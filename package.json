@@ -3,7 +3,7 @@
   "version": "20260529.1",
   "private": true,
   "scripts": {
-    "dev": "node scripts/copy-readme.js && next dev",
+    "dev": "node scripts/copy-readme.js && cross-env NODE_EXTRA_CA_CERTS=certs/netskope-ca.pem next dev",
     "build": "node scripts/copy-readme.js && next build",
     "build:dev": "node scripts/copy-readme.js && dotenv -e .env.development -- next build",
     "start": "next start",

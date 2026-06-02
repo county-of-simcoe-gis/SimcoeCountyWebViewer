@@ -48,3 +48,6 @@ tsc-output.txt
 
 # Generated help content
 public/README.md
+
+# Corporate TLS-inspection CA bundle (machine/environment-specific, may rotate)
+/certs/
