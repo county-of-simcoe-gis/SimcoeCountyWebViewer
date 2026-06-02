@@ -1025,10 +1025,18 @@ export class MyMapsDrawingManager {
         newStyle = this.styleFromJSON(styleOrJSON, pointType);
       }
 
-      // Preserve existing text style if feature has a label
-      const currentStyle = feature.getStyle() as Style;
-      if (currentStyle && currentStyle.getText() && feature.get("labelVisible")) {
-        const currentText = currentStyle.getText();
+      // Preserve existing text style if feature has a label.
+      // Note: some feature types (e.g. callout) use a Style[] array rather than
+      // a single Style, so guard against getText not being a function.
+      if (feature.get("labelVisible")) {
+        const currentStyle = feature.getStyle();
+        let currentText: ReturnType<Style["getText"]> | undefined;
+        if (currentStyle instanceof Style) {
+          currentText = currentStyle.getText();
+        } else if (Array.isArray(currentStyle)) {
+          const styleWithText = currentStyle.find((s) => s instanceof Style && !!s.getText());
+          currentText = styleWithText?.getText();
+        }
         if (currentText) {
           newStyle.setText(currentText);
         }
