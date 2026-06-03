@@ -26,7 +26,7 @@
     "@types/react-window": "^1.8.8",
     "@types/uuid": "^10.0.0",
     "adm-zip": "^0.5.16",
-    "axios": "^1.12.2",
+    "axios": "^1.17.0",
     "canvas": "^3.2.0",
     "copy-to-clipboard": "^3.3.3",
     "fast-xml-parser": "^4.3.9",
@@ -87,7 +87,7 @@
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "typescript": "^5",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.8"
   },
   "overrides": {
     "effect": "3.20.0"
