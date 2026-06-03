@@ -211,6 +211,7 @@ export function buildLayerFromWMS(group: Partial<TOCLayerGroup> & { secure?: boo
     legendObj: null,
     legendFetching: false,
     visible: layerVisible,
+    defaultVisible: layerVisible,
     layer: null, // Will be populated when map integration is added
     metadataUrl,
     opacity: typeof opacity === "number" ? opacity : 1,
@@ -760,6 +761,7 @@ function getGroupsFromDirectLayer(source: TOCSource): TOCLayerGroup[] {
       legendObj: null,
       legendFetching: false,
       visible: false,
+      defaultVisible: false,
       layer: null,
       metadataUrl: null,
       opacity: 1,
@@ -1308,6 +1310,7 @@ export async function buildESRILayer(options: BuildESRILayerOptions, callback: (
         legendObj: layer.legend || null,
         legendFetching: false,
         visible: layerVisible,
+        defaultVisible: layerVisible,
         layer: olLayer,
         managedLayerId: managedLayerId || undefined, // Store the managed layer ID from LayerManager
         metadataUrl: metadataUrl,

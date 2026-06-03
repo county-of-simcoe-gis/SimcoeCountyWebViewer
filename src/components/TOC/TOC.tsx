@@ -60,7 +60,6 @@ export default function TOC({ visible = true }: TOCProps) {
   const refreshTOC = useTOCStore((s) => s.refreshTOC);
   const toggleLayerLegendById = useTOCStore((s) => s.toggleLayerLegendById);
   const updateLayerVisibilitiesBatch = useTOCStore((s) => s.updateLayerVisibilitiesBatch);
-  const moveLayer = useTOCStore((s) => s.moveLayer);
   const getAllVisibleLayers = useTOCStore((s) => s.getAllVisibleLayers);
 
   const updateLayerVisibility = useLayerManagerStore((s) => s.updateLayerVisibility);
@@ -95,7 +94,12 @@ export default function TOC({ visible = true }: TOCProps) {
       const savedDataArray = Object.entries(savedData);
 
       // Get current layer groups from the store
-      const { layerListGroups, layerFolderGroups, setLayerGroups, updateLayerVisibility: updateTOCVisibility, updateLayerOpacityById } = useTOCStore.getState();
+      const { layerListGroups, layerFolderGroups, setLayerGroups, updateLayerOpacityById, tocType: activeType } = useTOCStore.getState();
+
+      // The OpenLayers map reflects a single (active) view. Only sync map layer
+      // visibility while restoring that view — restoring the inactive view must
+      // not push its (independent) visibility onto the shared map layers.
+      const isActiveView = type === activeType;
 
       let layerGroups = type === "LIST" ? [...layerListGroups] : [...layerFolderGroups];
 
@@ -137,7 +141,13 @@ export default function TOC({ visible = true }: TOCProps) {
           const savedLayer = savedLayers[layer.name];
 
           if (savedLayer !== undefined) {
-            // Create a new layer object with updated properties
+            // Create a new layer object with updated properties.
+            // NOTE: visibility is applied here on the per-layer object and then
+            // committed via setLayerGroups below. We intentionally do NOT call
+            // the name-based updateLayerVisibility() here — it would update every
+            // same-named layer across BOTH views, corrupting independent per-view
+            // visibility when duplicate layer names exist (e.g. two "Assessment
+            // Parcel" layers).
             const updatedLayer = {
               ...layer,
               visible: savedLayer.visible,
@@ -146,14 +156,13 @@ export default function TOC({ visible = true }: TOCProps) {
               drawIndex: savedLayer.index,
             };
 
-            // Update the TOC store and OpenLayers layer visibility
-            updateTOCVisibility(layer.name, group.label, savedLayer.visible);
-
-            // Update opacity using the ID-based method
+            // Update opacity using the ID-based method (unique per layer)
             updateLayerOpacityById(layer.id, savedLayer.opacity);
 
-            // Update OpenLayers layer visibility if available
-            if (layer.managedLayerId) {
+            // Sync this specific OpenLayers layer's visibility — only for the
+            // active view, and keyed by the unique managedLayerId so duplicate
+            // names don't collide.
+            if (isActiveView && layer.managedLayerId) {
               updateLayerVisibility(layer.managedLayerId, savedLayer.visible);
             }
 
@@ -263,6 +272,12 @@ export default function TOC({ visible = true }: TOCProps) {
         if (savedFolderData !== undefined && savedFolderData !== null) {
           applySavedLayerOptions("FOLDER");
         }
+
+        // Seed per-view visibility snapshots from the now-restored group state
+        // (server-saved → localStorage-saved → config-default). This guarantees
+        // the first LIST↔FOLDER switch preserves restored visibility instead of
+        // resetting a view to config defaults.
+        useTOCStore.getState().seedViewVisibilityStatesFromGroups();
 
         if (urlParamContext?.registerComponentReady) {
           urlParamContext.registerComponentReady("toc", { readinessType: "dataLoaded" });
@@ -392,12 +407,6 @@ export default function TOC({ visible = true }: TOCProps) {
     });
   };
 
-  const handleSortEnd = ({ oldIndex, newIndex }: { oldIndex: number; newIndex: number }) => {
-    if (selectedGroup) {
-      moveLayer(selectedGroup.label, oldIndex, newIndex);
-    }
-  };
-
   const handleResetToDefault = () => {
     // Reset TOC to default state - this will reload layers from server with default visibility
     // Clear saved layer options from localStorage
@@ -491,8 +500,10 @@ export default function TOC({ visible = true }: TOCProps) {
     }
 
     // Save BOTH views to separate storage keys
-    saveToStorage("Layers", buildSaveData(currentListGroups, globalDrawIndexById));
-    saveToStorage("Layers_Folder_View", buildSaveData(currentFolderGroups));
+    const listSave = buildSaveData(currentListGroups, globalDrawIndexById);
+    const folderSave = buildSaveData(currentFolderGroups);
+    saveToStorage("Layers", listSave);
+    saveToStorage("Layers_Folder_View", folderSave);
 
     // Show success message
     showMessage("Save", "Layers have been saved.", "success");
@@ -728,7 +739,6 @@ export default function TOC({ visible = true }: TOCProps) {
           onLayerOptionsClick={handleLayerOptionsClick}
           onLayerVisibilityGroup={handleLayerVisibilityGroup}
           onGroupFolderToggle={handleGroupFolderToggle}
-          onSortEnd={handleSortEnd}
         />
       )}
 

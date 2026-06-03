@@ -58,6 +58,7 @@ export interface TOCLayer {
   legendObj: unknown | null;
   legendFetching?: boolean; // Flag to prevent duplicate legend fetches
   visible: boolean;
+  defaultVisible: boolean; // Config-default visibility, used when a view is first opened with no saved state
   layer: unknown | null; // OpenLayers layer object
   managedLayerId?: string; // ID from LayerManager for proper layer management
   metadataUrl: string | null;
@@ -241,6 +242,9 @@ interface TOCState {
   sortLayersAlphabetically: () => void;
   updateLayerManagerZIndices: () => void;
 
+  // Seed per-view visibility snapshots from current group state (server/localStorage/config)
+  seedViewVisibilityStatesFromGroups: () => void;
+
   // Global opacity delegation to LayerManager
   setGlobalOpacity: (opacity: number) => void;
   getGlobalOpacity: () => number;
@@ -333,18 +337,21 @@ export const useTOCStore = create<TOCState>()(
             });
           });
         } else {
-          // First visit to this view — default all layers to OFF
+          // First visit to this view — fall back to each layer's config-default
+          // visibility (NOT all-off). Server/localStorage-saved state is seeded
+          // into viewLayerVisibilityStates at startup, so this branch only runs
+          // when a view genuinely has no saved or seeded state.
           state.allLayers.forEach((layer) => {
-            layer.visible = false;
+            layer.visible = layer.defaultVisible;
           });
           state.layerListGroups.forEach((g) => {
             g.layers.forEach((l) => {
-              l.visible = false;
+              l.visible = l.defaultVisible;
             });
           });
           state.layerFolderGroups.forEach((g) => {
             g.layers.forEach((l) => {
-              l.visible = false;
+              l.visible = l.defaultVisible;
             });
           });
         }
@@ -381,17 +388,19 @@ export const useTOCStore = create<TOCState>()(
         }
       });
 
-      // Update OpenLayers layer visibility to match restored/defaulted state
+      // Update OpenLayers layer visibility to match restored/defaulted state.
+      // Dedup by managedLayerId (NOT layer name) so that distinct layers which
+      // happen to share a name across groups each get their visibility applied.
       const currentState = get();
       const updatedOL = new Set<string>();
       currentState.allLayers.forEach((layer) => {
-        if (!updatedOL.has(layer.name)) {
-          updatedOL.add(layer.name);
-          if (layer.managedLayerId) {
+        if (layer.managedLayerId) {
+          if (!updatedOL.has(layer.managedLayerId)) {
+            updatedOL.add(layer.managedLayerId);
             LayerManager.setLayerVisibility(layer.managedLayerId, layer.visible);
-          } else if (layer.layer) {
-            (layer.layer as OpenLayersLayer).setVisible(layer.visible);
           }
+        } else if (layer.layer) {
+          (layer.layer as OpenLayersLayer).setVisible(layer.visible);
         }
       });
 
@@ -676,6 +685,29 @@ export const useTOCStore = create<TOCState>()(
           layer.layer.setZIndex(layer.zIndex);
         });
       }
+    },
+
+    seedViewVisibilityStatesFromGroups: () => {
+      // Capture each view's CURRENT layer visibility (which already reflects
+      // server-saved → localStorage-saved → config-default precedence applied at
+      // startup) into the per-view snapshots. This ensures the first switch
+      // between LIST and FOLDER restores the saved/seeded state instead of
+      // falling through to the config-default first-visit branch in setTocType.
+      set((state) => {
+        const buildSnapshot = (groups: TOCLayerGroup[]): Record<string, boolean> => {
+          const snapshot: Record<string, boolean> = {};
+          groups.forEach((group) => {
+            if (group.value === "all_layers") return;
+            group.layers.forEach((layer) => {
+              snapshot[layer.id] = layer.visible;
+            });
+          });
+          return snapshot;
+        };
+
+        state.viewLayerVisibilityStates.LIST = buildSnapshot(state.layerListGroups);
+        state.viewLayerVisibilityStates.FOLDER = buildSnapshot(state.layerFolderGroups);
+      });
     },
 
     setIsLoading: (loading) => {

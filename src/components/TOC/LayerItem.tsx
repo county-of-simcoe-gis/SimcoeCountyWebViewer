@@ -202,20 +202,13 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
           <FaUser size={16} className="opacity-70 text-[#666]" />
         </div>
 
-        {/* Drag handle - only shown in LIST view */}
+        {/* Drag handle - only shown in LIST view. The actual draggable element is the
+            row wrapper in LayersList, which sets the correct "index:id" payload that the
+            drop handler expects. This handle is purely a visual affordance. */}
         {showDragHandle && (
           <div
             className="cursor-grab flex items-center justify-center ml-auto mr-2 p-1 rounded-[3px] transition-all duration-200 min-w-5 min-h-5 hover:bg-black/10 active:cursor-grabbing active:bg-black/15"
             title="Drag to reorder layer"
-            draggable
-            onDragStart={(e) => {
-              e.dataTransfer.effectAllowed = "move";
-              e.dataTransfer.setData("text/plain", layerInfo.id);
-              e.currentTarget.style.cursor = "grabbing";
-            }}
-            onDragEnd={(e) => {
-              e.currentTarget.style.cursor = "grab";
-            }}
           >
             <FaGripVertical size={14} className="opacity-60 text-[#666]" />
           </div>

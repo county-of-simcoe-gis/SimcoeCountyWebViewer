@@ -98,6 +98,7 @@ describe("LayerOptionsMenu", () => {
     legendImage: null,
     legendObj: null,
     visible: true,
+    defaultVisible: true,
     layer: null,
     managedLayerId: "managed-layer-id",
     metadataUrl: "https://example.com/metadata",
