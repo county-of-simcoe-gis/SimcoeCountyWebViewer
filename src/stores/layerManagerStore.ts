@@ -217,11 +217,7 @@ export const useLayerManagerStore = create<LayerManagerState>()(
       // Set the z-index on the actual OpenLayers layer
       layer.setZIndex(zIndex);
 
-      // Apply global opacity to the new layer only if it's a TOC layer
-      if (category === "TOC") {
-        const currentOpacity = layer.getOpacity();
-        layer.setOpacity(currentOpacity * get().globalOpacity);
-      }
+      // New layers use their own configured opacity (global slider only affects layers present at the time it is moved)
 
       set((draft) => {
         // Insert layer at the specified index
@@ -369,13 +365,8 @@ export const useLayerManagerStore = create<LayerManagerState>()(
       if (!layer) return false;
 
       // Update the OpenLayers layer directly (outside of Immer)
-      // Only apply global opacity if this is a TOC layer
       if (layer.layer) {
-        if (layer.category === "TOC") {
-          layer.layer.setOpacity(opacity * state.globalOpacity);
-        } else {
-          layer.layer.setOpacity(opacity);
-        }
+        layer.layer.setOpacity(opacity);
       }
 
       set((draft) => {
@@ -596,23 +587,12 @@ export const useLayerManagerStore = create<LayerManagerState>()(
       }
     },
 
-    // Set global opacity and apply to all TOC layers only
+    // Set global opacity – only stores the slider value. Per-layer opacity is
+    // overwritten by tocStore.setGlobalOpacity via updateLayerOpacityById.
     setGlobalOpacity: (opacity) => {
-      // Clamp opacity between 0 and 1
       const clampedOpacity = Math.max(0, Math.min(1, opacity));
-
       set((draft) => {
         draft.globalOpacity = clampedOpacity;
-      });
-
-      // Apply the new global opacity ONLY to TOC category layers
-      const state = get();
-      const tocLayers = state.getLayersByCategory("TOC");
-      tocLayers.forEach((managedLayer) => {
-        if (managedLayer.layer) {
-          // Apply both individual layer opacity and global opacity
-          managedLayer.layer.setOpacity(managedLayer.opacity * clampedOpacity);
-        }
       });
     },
 

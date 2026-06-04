@@ -14,6 +14,7 @@ import { saveSharedItem, getSharedItem, setStorageItem, getStorageItem, removeSt
 import { flushUserStorage } from "@/utils/userStorage";
 import { showMessage } from "@/utils/helpersUI";
 import { sortLayers, sortGroupsLayers } from "@/utils/tocHelpers";
+import { LegendObject } from "@/stores/legendStore";
 
 interface TOCProps {
   visible?: boolean;
@@ -609,7 +610,10 @@ export default function TOC({ visible = true }: TOCProps) {
     const allGroups = allGroupsData.map((group) => ({
       label: group.label,
       value: group.value,
-      layers: group.layers,
+      layers: group.layers.map((layer) => ({
+        ...layer,
+        legendObj: layer.legendObj as LegendObject | undefined,
+      })),
     }));
 
     let groupsToSelect;

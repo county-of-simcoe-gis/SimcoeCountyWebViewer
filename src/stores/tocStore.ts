@@ -2427,9 +2427,16 @@ export const useTOCStore = create<TOCState>()(
       return Promise.all(pendingLayerPromises).then(() => undefined);
     },
 
-    // Global opacity delegation to LayerManager
+    // Global opacity: store the value then overwrite every TOC layer's individual opacity
     setGlobalOpacity: (opacity: number) => {
+      // Store in LayerManager so the slider display value stays in sync
       useLayerManagerStore.getState().setGlobalOpacity(opacity);
+
+      // Overwrite each TOC layer's stored opacity (matches legacy behaviour)
+      const state = get();
+      state.allLayers.forEach((layer) => {
+        state.updateLayerOpacityById(layer.id, opacity);
+      });
     },
 
     getGlobalOpacity: () => {
