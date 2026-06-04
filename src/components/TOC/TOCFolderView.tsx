@@ -16,7 +16,6 @@ interface TOCFolderViewProps {
   onLayerOptionsClick: (evt: React.MouseEvent, layerInfo: TOCLayer) => void;
   onLayerVisibilityGroup: (group: TOCLayerGroup, visible: boolean) => void;
   onGroupFolderToggle: (groupValue: string, isOpen: boolean) => void;
-  onSortEnd?: ({ oldIndex, newIndex }: { oldIndex: number; newIndex: number }) => void;
 }
 
 export default function TOCFolderView({

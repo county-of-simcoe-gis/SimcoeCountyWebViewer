@@ -58,6 +58,7 @@ export interface TOCLayer {
   legendObj: unknown | null;
   legendFetching?: boolean; // Flag to prevent duplicate legend fetches
   visible: boolean;
+  defaultVisible: boolean; // Config-default visibility, used when a view is first opened with no saved state
   layer: unknown | null; // OpenLayers layer object
   managedLayerId?: string; // ID from LayerManager for proper layer management
   metadataUrl: string | null;
@@ -241,6 +242,9 @@ interface TOCState {
   sortLayersAlphabetically: () => void;
   updateLayerManagerZIndices: () => void;
 
+  // Seed per-view visibility snapshots from current group state (server/localStorage/config)
+  seedViewVisibilityStatesFromGroups: () => void;
+
   // Global opacity delegation to LayerManager
   setGlobalOpacity: (opacity: number) => void;
   getGlobalOpacity: () => number;
@@ -333,18 +337,21 @@ export const useTOCStore = create<TOCState>()(
             });
           });
         } else {
-          // First visit to this view — default all layers to OFF
+          // First visit to this view — fall back to each layer's config-default
+          // visibility (NOT all-off). Server/localStorage-saved state is seeded
+          // into viewLayerVisibilityStates at startup, so this branch only runs
+          // when a view genuinely has no saved or seeded state.
           state.allLayers.forEach((layer) => {
-            layer.visible = false;
+            layer.visible = layer.defaultVisible;
           });
           state.layerListGroups.forEach((g) => {
             g.layers.forEach((l) => {
-              l.visible = false;
+              l.visible = l.defaultVisible;
             });
           });
           state.layerFolderGroups.forEach((g) => {
             g.layers.forEach((l) => {
-              l.visible = false;
+              l.visible = l.defaultVisible;
             });
           });
         }
@@ -381,17 +388,19 @@ export const useTOCStore = create<TOCState>()(
         }
       });
 
-      // Update OpenLayers layer visibility to match restored/defaulted state
+      // Update OpenLayers layer visibility to match restored/defaulted state.
+      // Dedup by managedLayerId (NOT layer name) so that distinct layers which
+      // happen to share a name across groups each get their visibility applied.
       const currentState = get();
       const updatedOL = new Set<string>();
       currentState.allLayers.forEach((layer) => {
-        if (!updatedOL.has(layer.name)) {
-          updatedOL.add(layer.name);
-          if (layer.managedLayerId) {
+        if (layer.managedLayerId) {
+          if (!updatedOL.has(layer.managedLayerId)) {
+            updatedOL.add(layer.managedLayerId);
             LayerManager.setLayerVisibility(layer.managedLayerId, layer.visible);
-          } else if (layer.layer) {
-            (layer.layer as OpenLayersLayer).setVisible(layer.visible);
           }
+        } else if (layer.layer) {
+          (layer.layer as OpenLayersLayer).setVisible(layer.visible);
         }
       });
 
@@ -407,16 +416,33 @@ export const useTOCStore = create<TOCState>()(
 
         if (type === "LIST") {
           // For LIST view, create an "All Layers" group that contains all layers flattened.
-          // No deduplication: layers with the same name are kept as separate entries.
-          // Each TOC layer already has a unique `id` so they're addressable independently.
-          const allLayers: TOCLayer[] = [];
-
+          // DEDUPLICATION (LIST only): the same physical layer can be published
+          // under multiple workspaces (e.g. an unsecured "simcoe:Bruce_Trail"
+          // and a secured "simcoe-secured:Bruce_Trail"), or appear in several
+          // config groups. The flattened "All Layers" list must show each layer
+          // ONCE. When duplicates (same display name) exist, the SECURED — then
+          // primary — variant wins and the others are dropped. This mirrors the
+          // legacy app's mergeGroupsTogether() behavior. FOLDER view is NOT
+          // deduped (it renders real groups directly, below), so per-group
+          // duplicates remain available there.
+          const dedupKey = (layer: TOCLayer): string => layer.tocDisplayName || layer.displayName || layer.name;
+          // Priority score: secured (+2) outranks primary group (+1) outranks plain (0).
+          // A strictly higher score replaces the incumbent; ties keep the first
+          // seen, preserving group/sort order.
+          const deduped = new Map<string, { layer: TOCLayer; priority: number }>();
           sortedGroups.forEach((group) => {
+            const groupPriority = group.primary ? 1 : 0;
             group.layers.forEach((layer) => {
-              // Create a copy of the layer to avoid mutating the original group's layer
-              allLayers.push({ ...layer });
+              const key = dedupKey(layer);
+              const priority = (layer.secured ? 2 : 0) + groupPriority;
+              const existing = deduped.get(key);
+              if (!existing || priority > existing.priority) {
+                // Create a copy of the layer to avoid mutating the original group's layer
+                deduped.set(key, { layer: { ...layer }, priority });
+              }
             });
           });
+          const allLayers: TOCLayer[] = Array.from(deduped.values(), (e) => e.layer);
 
           if (preserveLayerOrder) {
             // When restoring saved layer order, sort by the saved drawIndex (descending)
@@ -676,6 +702,29 @@ export const useTOCStore = create<TOCState>()(
           layer.layer.setZIndex(layer.zIndex);
         });
       }
+    },
+
+    seedViewVisibilityStatesFromGroups: () => {
+      // Capture each view's CURRENT layer visibility (which already reflects
+      // server-saved → localStorage-saved → config-default precedence applied at
+      // startup) into the per-view snapshots. This ensures the first switch
+      // between LIST and FOLDER restores the saved/seeded state instead of
+      // falling through to the config-default first-visit branch in setTocType.
+      set((state) => {
+        const buildSnapshot = (groups: TOCLayerGroup[]): Record<string, boolean> => {
+          const snapshot: Record<string, boolean> = {};
+          groups.forEach((group) => {
+            if (group.value === "all_layers") return;
+            group.layers.forEach((layer) => {
+              snapshot[layer.id] = layer.visible;
+            });
+          });
+          return snapshot;
+        };
+
+        state.viewLayerVisibilityStates.LIST = buildSnapshot(state.layerListGroups);
+        state.viewLayerVisibilityStates.FOLDER = buildSnapshot(state.layerFolderGroups);
+      });
     },
 
     setIsLoading: (loading) => {
@@ -2378,9 +2427,16 @@ export const useTOCStore = create<TOCState>()(
       return Promise.all(pendingLayerPromises).then(() => undefined);
     },
 
-    // Global opacity delegation to LayerManager
+    // Global opacity: store the value then overwrite every TOC layer's individual opacity
     setGlobalOpacity: (opacity: number) => {
+      // Store in LayerManager so the slider display value stays in sync
       useLayerManagerStore.getState().setGlobalOpacity(opacity);
+
+      // Overwrite each TOC layer's stored opacity (matches legacy behaviour)
+      const state = get();
+      state.allLayers.forEach((layer) => {
+        state.updateLayerOpacityById(layer.id, opacity);
+      });
     },
 
     getGlobalOpacity: () => {

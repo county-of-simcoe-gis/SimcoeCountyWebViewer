@@ -270,9 +270,13 @@ describe("migrateFromLegacyStorage", () => {
     expect(typeof parsed.timestamp).toBe("number");
   });
 
-  // ─── Layer key consolidation ─────────────────────────────────────
+  // ─── Layer key compatibility (raw legacy format, NOT envelope) ──────
+  //
+  // "Layers" / "Layers_Folder_View" are shared with the legacy apps and synced
+  // to the same server row, so the new app reads/writes them in the RAW legacy
+  // format. Migration must therefore leave them untouched (no envelope wrap).
 
-  it("wraps raw Layers object in storage envelope", () => {
+  it("leaves raw Layers object untouched (no envelope wrap)", () => {
     const layers = {
       "simcoe:Emergency Services": {
         name: "Emergency",
@@ -281,14 +285,18 @@ describe("migrateFromLegacyStorage", () => {
       },
     };
     localStorage.setItem("Layers", JSON.stringify(layers));
+    // Trigger migration via an unrelated legacy key
+    localStorage.setItem("Map Control Settings", JSON.stringify({ rotate: false }));
 
     migrateFromLegacyStorage();
 
     const parsed = parseEnvelope("Layers");
-    expect(parsed.value).toEqual(layers);
+    // Still raw — no { value, timestamp } wrapper
+    expect(parsed).toEqual(layers);
+    expect(parsed.value).toBeUndefined();
   });
 
-  it("migrates Layers_Folder_View into envelope format", () => {
+  it("leaves raw Layers_Folder_View untouched (no envelope wrap)", () => {
     const folderData = {
       "simcoe:Emergency": { label: "Emergency", layers: { "Fire Stations": { visible: true, opacity: 1, index: 0 } } },
     };
@@ -298,10 +306,11 @@ describe("migrateFromLegacyStorage", () => {
     migrateFromLegacyStorage();
 
     const parsed = parseEnvelope("Layers_Folder_View");
-    expect(parsed.value).toEqual(folderData);
+    expect(parsed).toEqual(folderData);
+    expect(parsed.value).toBeUndefined();
   });
 
-  it("migrates both Layers and Layers_Folder_View independently", () => {
+  it("keeps Layers and Layers_Folder_View independent and raw", () => {
     const listData = { group1: { label: "Group 1", layers: { L1: { visible: true, opacity: 1, index: 0 } } } };
     const folderData = { group2: { label: "Group 2", layers: { L2: { visible: false, opacity: 0.5, index: 1 } } } };
     localStorage.setItem("TOC_Type", "LIST");
@@ -311,10 +320,10 @@ describe("migrateFromLegacyStorage", () => {
     migrateFromLegacyStorage();
 
     const parsedLayers = parseEnvelope("Layers");
-    expect(parsedLayers.value["group1"]).toEqual(listData["group1"]);
+    expect(parsedLayers["group1"]).toEqual(listData["group1"]);
 
     const parsedFolder = parseEnvelope("Layers_Folder_View");
-    expect(parsedFolder.value["group2"]).toEqual(folderData["group2"]);
+    expect(parsedFolder["group2"]).toEqual(folderData["group2"]);
   });
 
   it("keeps list and folder data separate when both exist (FOLDER mode)", () => {
@@ -330,22 +339,24 @@ describe("migrateFromLegacyStorage", () => {
     migrateFromLegacyStorage();
 
     const parsedLayers = parseEnvelope("Layers");
-    expect(parsedLayers.value["shared"].label).toBe("Shared");
+    expect(parsedLayers["shared"].label).toBe("Shared");
 
     const parsedFolder = parseEnvelope("Layers_Folder_View");
-    expect(parsedFolder.value["shared"].label).toBe("Shared Folder");
-    expect(parsedFolder.value["folder-only"]).toEqual(folderData["folder-only"]);
+    expect(parsedFolder["shared"].label).toBe("Shared Folder");
+    expect(parsedFolder["folder-only"]).toEqual(folderData["folder-only"]);
   });
 
-  it("wraps Layers_Folder_View in envelope even when no Layers key exists", () => {
+  it("leaves Layers_Folder_View raw even when no Layers key exists", () => {
     const folderData = { g1: { label: "G1", layers: {} } };
     localStorage.setItem("Layers_Folder_View", JSON.stringify(folderData));
-    // No TOC_Type set, no "Layers" key
+    // Trigger migration via an unrelated legacy key
+    localStorage.setItem("Map Control Settings", JSON.stringify({ rotate: false }));
 
     migrateFromLegacyStorage();
 
     const parsed = parseEnvelope("Layers_Folder_View");
-    expect(parsed.value).toEqual(folderData);
+    expect(parsed).toEqual(folderData);
+    expect(parsed.value).toBeUndefined();
   });
 
   it("wraps raw sc_dontshowagain array in storage envelope", () => {
@@ -563,12 +574,12 @@ describe("migrateFromLegacyStorage", () => {
     expect(parseEnvelope("searchHistory").value).toEqual([{ name: "Barrie", dateAdded: "1/1/2025" }]);
     expect(parseEnvelope("sc_dontshowagain").value).toEqual([{ url: "https://help.com" }]);
 
-    // Verify layer migration (both keys kept separate)
+    // Verify layer keys kept raw and separate (cross-app compatible)
     const layersParsed = parseEnvelope("Layers");
-    expect(layersParsed.value["group1"]).toEqual({ label: "G1", layers: {} });
+    expect(layersParsed["group1"]).toEqual({ label: "G1", layers: {} });
 
     const folderParsed = parseEnvelope("Layers_Folder_View");
-    expect(folderParsed.value["group2"]).toEqual({ label: "G2", layers: {} });
+    expect(folderParsed["group2"]).toEqual({ label: "G2", layers: {} });
 
     // Verify TOC_Type preserved
     expect(localStorage.getItem("TOC_Type")).toBe("FOLDER");

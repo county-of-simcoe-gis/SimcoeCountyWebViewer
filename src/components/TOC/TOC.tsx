@@ -10,10 +10,11 @@ import TOCHeader from "@/components/TOC/TOCHeader";
 import TOCListView from "@/components/TOC/TOCListView";
 import TOCFolderView from "@/components/TOC/TOCFolderView";
 import LayerOptionsMenu from "@/components/TOC/LayerOptionsMenu";
-import { saveToStorage, getItemsFromStorage, setStorageItem, getStorageItem, removeStorageItem } from "@/utils/storage";
+import { saveSharedItem, getSharedItem, setStorageItem, getStorageItem, removeStorageItem } from "@/utils/storage";
 import { flushUserStorage } from "@/utils/userStorage";
 import { showMessage } from "@/utils/helpersUI";
 import { sortLayers, sortGroupsLayers } from "@/utils/tocHelpers";
+import { LegendObject } from "@/stores/legendStore";
 
 interface TOCProps {
   visible?: boolean;
@@ -60,7 +61,6 @@ export default function TOC({ visible = true }: TOCProps) {
   const refreshTOC = useTOCStore((s) => s.refreshTOC);
   const toggleLayerLegendById = useTOCStore((s) => s.toggleLayerLegendById);
   const updateLayerVisibilitiesBatch = useTOCStore((s) => s.updateLayerVisibilitiesBatch);
-  const moveLayer = useTOCStore((s) => s.moveLayer);
   const getAllVisibleLayers = useTOCStore((s) => s.getAllVisibleLayers);
 
   const updateLayerVisibility = useLayerManagerStore((s) => s.updateLayerVisibility);
@@ -83,9 +83,11 @@ export default function TOC({ visible = true }: TOCProps) {
   // Function to apply saved layer options from localStorage
   const applySavedLayerOptions = useCallback(
     (type: "LIST" | "FOLDER") => {
-      // Each view uses its own storage key so saves are independent
+      // Each view uses its own storage key so saves are independent.
+      // These keys are shared with the legacy apps, so read them in the raw
+      // legacy format (saveSharedItem/getSharedItem bypass the envelope).
       const storageKey = type === "LIST" ? "Layers" : "Layers_Folder_View";
-      const savedData = getItemsFromStorage<Record<string, SavedGroup>>(storageKey);
+      const savedData = getSharedItem<Record<string, SavedGroup>>(storageKey);
 
       if (savedData === undefined || savedData === null) {
         return;
@@ -94,8 +96,62 @@ export default function TOC({ visible = true }: TOCProps) {
       // Convert to array for easier filtering
       const savedDataArray = Object.entries(savedData);
 
+      // Build a flat "layer name -> savedLayer" lookup spanning ALL saved
+      // groups (including the virtual "opengis:all_layers" group). The legacy
+      // app's LIST view stores every layer flat under a single
+      // "opengis:all_layers" group, so matching saved data by real group value
+      // alone would miss them entirely. Falling back to this name-based lookup
+      // lets legacy LIST saves restore correctly in the new app.
+      //
+      // PRECEDENCE: the same layer name can appear in BOTH the flat
+      // "opengis:all_layers" group AND a real category group, often with
+      // different visibility. The flat "opengis:all_layers" group is the
+      // authoritative legacy source of truth, so it must WIN. We therefore
+      // populate the lookup from the real groups first, then let
+      // "opengis:all_layers" overwrite — otherwise a later real group with
+      // visible:false would clobber the correct visible:true from the flat
+      // group (e.g. losing a user-enabled "Bruce Trail" layer).
+      const flatSavedLayers: Record<string, SavedLayer> = {};
+      savedDataArray.forEach(([groupKey, grp]) => {
+        if (groupKey === "opengis:all_layers") return;
+        const grpLayers = grp && (grp as SavedGroup).layers;
+        if (grpLayers && typeof grpLayers === "object") {
+          Object.entries(grpLayers as Record<string, SavedLayer>).forEach(([layerName, sl]) => {
+            flatSavedLayers[layerName] = sl;
+          });
+        }
+      });
+      const allLayersGroup = savedData["opengis:all_layers"] as SavedGroup | undefined;
+      if (allLayersGroup?.layers && typeof allLayersGroup.layers === "object") {
+        Object.entries(allLayersGroup.layers as Record<string, SavedLayer>).forEach(([layerName, sl]) => {
+          flatSavedLayers[layerName] = sl;
+        });
+      }
+
+      // SECURED-PREFIX PRIORITY: the same physical layer can be published under
+      // multiple workspace prefixes (e.g. "simcoe:Bruce_Trail" and
+      // "simcoe-secured:Bruce_Trail"). A given config (MAP_ID) may expose only
+      // the unsecured variant, but the user enabled the SECURED one in the
+      // legacy app. We therefore index every saved key by its base layer name
+      // (the part after the ":") and remember any "secured"-prefixed variant
+      // that was saved visible. During matching, a visible secured sibling
+      // takes priority and turns the layer on, regardless of the unsecured
+      // variant's saved (false) state.
+      const baseLayerName = (fullName: string): string => (fullName.includes(":") ? (fullName.split(":").pop() ?? fullName) : fullName);
+      const securedVisibleByBase: Record<string, SavedLayer> = {};
+      Object.keys(flatSavedLayers).forEach((key) => {
+        if (/secured/i.test(key) && flatSavedLayers[key]?.visible) {
+          securedVisibleByBase[baseLayerName(key)] = flatSavedLayers[key];
+        }
+      });
+
       // Get current layer groups from the store
-      const { layerListGroups, layerFolderGroups, setLayerGroups, updateLayerVisibility: updateTOCVisibility, updateLayerOpacityById } = useTOCStore.getState();
+      const { layerListGroups, layerFolderGroups, setLayerGroups, updateLayerOpacityById, tocType: activeType } = useTOCStore.getState();
+
+      // The OpenLayers map reflects a single (active) view. Only sync map layer
+      // visibility while restoring that view — restoring the inactive view must
+      // not push its (independent) visibility onto the shared map layers.
+      const isActiveView = type === activeType;
 
       let layerGroups = type === "LIST" ? [...layerListGroups] : [...layerFolderGroups];
 
@@ -134,10 +190,35 @@ export default function TOC({ visible = true }: TOCProps) {
 
         // Map through layers and apply saved settings
         const updatedLayers = group.layers.map((layer) => {
-          const savedLayer = savedLayers[layer.name];
+          // Precedence depends on the view's storage shape:
+          //  - LIST (legacy) stores the authoritative state flat under
+          //    "opengis:all_layers" (captured in flatSavedLayers), so it must
+          //    win over any per-group entry, which may carry stale/false
+          //    visibility for the same layer name.
+          //  - FOLDER stores per-group state, so the matched group wins, with
+          //    the flat lookup only as a fallback.
+          let savedLayer = type === "LIST" ? (flatSavedLayers[layer.name] ?? savedLayers[layer.name]) : (savedLayers[layer.name] ?? flatSavedLayers[layer.name]);
+
+          // SECURED-PREFIX PRIORITY (LIST only): if a "secured"-prefixed sibling
+          // of this layer (same base name) was saved visible, it wins and turns
+          // the layer on — even when this config exposes only the unsecured
+          // variant (saved false). This reconciles cross-config duplicates where
+          // the user enabled the secured copy in the legacy app.
+          if (type === "LIST") {
+            const securedSibling = securedVisibleByBase[baseLayerName(layer.name)];
+            if (securedSibling) {
+              savedLayer = savedLayer !== undefined ? { ...savedLayer, visible: true } : securedSibling;
+            }
+          }
 
           if (savedLayer !== undefined) {
-            // Create a new layer object with updated properties
+            // Create a new layer object with updated properties.
+            // NOTE: visibility is applied here on the per-layer object and then
+            // committed via setLayerGroups below. We intentionally do NOT call
+            // the name-based updateLayerVisibility() here — it would update every
+            // same-named layer across BOTH views, corrupting independent per-view
+            // visibility when duplicate layer names exist (e.g. two "Assessment
+            // Parcel" layers).
             const updatedLayer = {
               ...layer,
               visible: savedLayer.visible,
@@ -146,14 +227,13 @@ export default function TOC({ visible = true }: TOCProps) {
               drawIndex: savedLayer.index,
             };
 
-            // Update the TOC store and OpenLayers layer visibility
-            updateTOCVisibility(layer.name, group.label, savedLayer.visible);
-
-            // Update opacity using the ID-based method
+            // Update opacity using the ID-based method (unique per layer)
             updateLayerOpacityById(layer.id, savedLayer.opacity);
 
-            // Update OpenLayers layer visibility if available
-            if (layer.managedLayerId) {
+            // Sync this specific OpenLayers layer's visibility — only for the
+            // active view, and keyed by the unique managedLayerId so duplicate
+            // names don't collide.
+            if (isActiveView && layer.managedLayerId) {
               updateLayerVisibility(layer.managedLayerId, savedLayer.visible);
             }
 
@@ -211,8 +291,11 @@ export default function TOC({ visible = true }: TOCProps) {
       initializeFromConfig(config);
 
       // Load saved TOC type from localStorage AFTER config initialization
-      // This ensures the saved preference overrides the config default
-      const savedTocType = getStorageItem("TOC_Type");
+      // This ensures the saved preference overrides the config default.
+      // "TOC_Type" is shared with the legacy apps, which store it
+      // JSON-stringified (e.g. '"LIST"'), so strip any surrounding quotes.
+      const rawTocType = getStorageItem("TOC_Type");
+      const savedTocType = rawTocType?.replace(/^"|"$/g, "");
       if (savedTocType && (savedTocType === "LIST" || savedTocType === "FOLDER")) {
         setTocType(savedTocType as "LIST" | "FOLDER");
       }
@@ -255,14 +338,20 @@ export default function TOC({ visible = true }: TOCProps) {
 
         // Apply saved layer options for BOTH views so each view's
         // order/visibility is independent and fully restored.
-        const savedListData = getItemsFromStorage<Record<string, SavedGroup>>("Layers");
-        const savedFolderData = getItemsFromStorage<Record<string, SavedGroup>>("Layers_Folder_View");
+        const savedListData = getSharedItem<Record<string, SavedGroup>>("Layers");
+        const savedFolderData = getSharedItem<Record<string, SavedGroup>>("Layers_Folder_View");
         if (savedListData !== undefined && savedListData !== null) {
           applySavedLayerOptions("LIST");
         }
         if (savedFolderData !== undefined && savedFolderData !== null) {
           applySavedLayerOptions("FOLDER");
         }
+
+        // Seed per-view visibility snapshots from the now-restored group state
+        // (server-saved → localStorage-saved → config-default). This guarantees
+        // the first LIST↔FOLDER switch preserves restored visibility instead of
+        // resetting a view to config defaults.
+        useTOCStore.getState().seedViewVisibilityStatesFromGroups();
 
         if (urlParamContext?.registerComponentReady) {
           urlParamContext.registerComponentReady("toc", { readinessType: "dataLoaded" });
@@ -392,12 +481,6 @@ export default function TOC({ visible = true }: TOCProps) {
     });
   };
 
-  const handleSortEnd = ({ oldIndex, newIndex }: { oldIndex: number; newIndex: number }) => {
-    if (selectedGroup) {
-      moveLayer(selectedGroup.label, oldIndex, newIndex);
-    }
-  };
-
   const handleResetToDefault = () => {
     // Reset TOC to default state - this will reload layers from server with default visibility
     // Clear saved layer options from localStorage
@@ -480,19 +563,40 @@ export default function TOC({ visible = true }: TOCProps) {
       return groups;
     };
 
-    // LIST view: use global drawIndex from "All Layers" so saved indices
-    // are unique across all groups (not per-group 0..N-1).
-    const globalDrawIndexById = new Map<string, number>();
+    // LIST view: the legacy app stores the entire LIST as a single flat
+    // "opengis:all_layers" group (every layer keyed by name with its global
+    // drawIndex). We mirror that exact format so saves are interoperable in
+    // BOTH directions — legacy can read new-app LIST saves and vice versa.
+    const listSave: Record<string, unknown> = {};
     const allLayersGroup = currentListGroups.find((g) => g.value === "all_layers");
     if (allLayersGroup) {
+      const savedLayers: Record<string, unknown> = {};
       allLayersGroup.layers.forEach((layer) => {
-        globalDrawIndexById.set(layer.id, layer.drawIndex);
+        savedLayers[layer.name] = {
+          name: layer.name,
+          visible: layer.visible,
+          opacity: layer.opacity,
+          index: layer.drawIndex,
+        };
       });
+      listSave["opengis:all_layers"] = {
+        name: "All Layers",
+        value: "opengis:all_layers",
+        label: "All Layers",
+        defaultGroup: false,
+        visibleLayers: allLayersGroup.visibleLayers,
+        panelOpen: true,
+        wmsGroupUrl: "",
+        customRestUrl: allLayersGroup.customRestUrl,
+        prefix: "",
+        layers: savedLayers,
+      };
     }
 
-    // Save BOTH views to separate storage keys
-    saveToStorage("Layers", buildSaveData(currentListGroups, globalDrawIndexById));
-    saveToStorage("Layers_Folder_View", buildSaveData(currentFolderGroups));
+    // FOLDER view: keyed by real config group values (matches legacy folder format).
+    const folderSave = buildSaveData(currentFolderGroups);
+    saveSharedItem("Layers", listSave);
+    saveSharedItem("Layers_Folder_View", folderSave);
 
     // Show success message
     showMessage("Save", "Layers have been saved.", "success");
@@ -506,7 +610,10 @@ export default function TOC({ visible = true }: TOCProps) {
     const allGroups = allGroupsData.map((group) => ({
       label: group.label,
       value: group.value,
-      layers: group.layers,
+      layers: group.layers.map((layer) => ({
+        ...layer,
+        legendObj: layer.legendObj as LegendObject | undefined,
+      })),
     }));
 
     let groupsToSelect;
@@ -728,7 +835,6 @@ export default function TOC({ visible = true }: TOCProps) {
           onLayerOptionsClick={handleLayerOptionsClick}
           onLayerVisibilityGroup={handleLayerVisibilityGroup}
           onGroupFolderToggle={handleGroupFolderToggle}
-          onSortEnd={handleSortEnd}
         />
       )}
 
