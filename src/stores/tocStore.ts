@@ -245,6 +245,10 @@ interface TOCState {
   // Seed per-view visibility snapshots from current group state (server/localStorage/config)
   seedViewVisibilityStatesFromGroups: () => void;
 
+  // Push the active view's committed group visibility onto the shared OL map,
+  // enforcing LIST dedup winners (and forcing suppressed duplicates off).
+  syncActiveViewVisibilityToMap: () => void;
+
   // Global opacity delegation to LayerManager
   setGlobalOpacity: (opacity: number) => void;
   getGlobalOpacity: () => number;
@@ -389,20 +393,41 @@ export const useTOCStore = create<TOCState>()(
       });
 
       // Update OpenLayers layer visibility to match restored/defaulted state.
-      // Dedup by managedLayerId (NOT layer name) so that distinct layers which
-      // happen to share a name across groups each get their visibility applied.
+      // The map reflects a SINGLE (active) view, so only push visibility onto the
+      // shared OL layers when this call is for the active view. Setting the
+      // inactive view's groups must update store state only — otherwise the
+      // inactive view's (independent) visibility would clobber the map (e.g.
+      // applySavedLayerOptions("FOLDER") overriding the active LIST state and
+      // leaving an on-by-default layer invisible until toggled).
       const currentState = get();
-      const updatedOL = new Set<string>();
-      currentState.allLayers.forEach((layer) => {
-        if (layer.managedLayerId) {
-          if (!updatedOL.has(layer.managedLayerId)) {
-            updatedOL.add(layer.managedLayerId);
-            LayerManager.setLayerVisibility(layer.managedLayerId, layer.visible);
+      if (type === currentState.tocType) {
+        const updatedOL = new Set<string>();
+
+        // Build a set of winner layer ids from the virtual "all_layers" group (LIST only).
+        // In LIST view, force suppressed duplicates OFF (only the deduped winner
+        // shown in the virtual "all_layers" group should render).
+        let winnerIds: Set<string> | undefined;
+        if (currentState.tocType === "LIST") {
+          const allLayersGroup = currentState.layerListGroups.find((g) => g.value === "all_layers");
+          if (allLayersGroup) {
+            winnerIds = new Set(allLayersGroup.layers.map((l) => l.id));
           }
-        } else if (layer.layer) {
-          (layer.layer as OpenLayersLayer).setVisible(layer.visible);
         }
-      });
+
+        currentState.allLayers.forEach((layer) => {
+          if (layer.managedLayerId) {
+            if (!updatedOL.has(layer.managedLayerId)) {
+              updatedOL.add(layer.managedLayerId);
+              // In LIST, only winners (present in all_layers) render; force suppressed duplicates off
+              const shouldBeVisible = winnerIds ? (winnerIds.has(layer.id) ? layer.visible : false) : layer.visible;
+              LayerManager.setLayerVisibility(layer.managedLayerId, shouldBeVisible);
+            }
+          } else if (layer.layer) {
+            const shouldBeVisible = winnerIds ? (winnerIds.has(layer.id) ? layer.visible : false) : layer.visible;
+            (layer.layer as OpenLayersLayer).setVisible(shouldBeVisible);
+          }
+        });
+      }
 
       // Update LayerManager z-indices to match the new view's group ordering
       currentState.updateLayerManagerZIndices();
@@ -727,6 +752,49 @@ export const useTOCStore = create<TOCState>()(
       });
     },
 
+    syncActiveViewVisibilityToMap: () => {
+      // The OpenLayers map reflects a SINGLE (active) view. Push the active
+      // view's COMMITTED group visibility onto the shared OL layers, keyed by
+      // unique managedLayerId so duplicate names never collide.
+      //
+      // LIST dedup: only the deduped winner (present in the virtual
+      // "all_layers" group) should render; suppressed duplicates are forced
+      // OFF. We resolve each managed layer with WINNER-WINS semantics so the
+      // winner's intended visibility is applied regardless of iteration order
+      // (a loser must never downgrade a winner's ON state).
+      const state = get();
+
+      let winnerIds: Set<string> | undefined;
+      if (state.tocType === "LIST") {
+        const allLayersGroup = state.layerListGroups.find((g) => g.value === "all_layers");
+        if (allLayersGroup) {
+          winnerIds = new Set(allLayersGroup.layers.map((l) => l.id));
+        }
+      }
+
+      // Resolve desired visibility per managedLayerId (winner-wins).
+      const desiredByManaged = new Map<string, { visible: boolean; isWinner: boolean }>();
+      state.allLayers.forEach((layer) => {
+        if (!layer.managedLayerId) return;
+        const isWinner = winnerIds ? winnerIds.has(layer.id) : true;
+        const shouldBeVisible = isWinner ? layer.visible : false;
+        const existing = desiredByManaged.get(layer.managedLayerId);
+        if (!existing || (isWinner && !existing.isWinner)) {
+          desiredByManaged.set(layer.managedLayerId, { visible: shouldBeVisible, isWinner });
+        }
+      });
+      desiredByManaged.forEach((d, managedLayerId) => {
+        LayerManager.setLayerVisibility(managedLayerId, d.visible);
+      });
+
+      // Fallback for any layers tracked by raw OL reference (no managedLayerId).
+      state.allLayers.forEach((layer) => {
+        if (layer.managedLayerId || !layer.layer) return;
+        const isWinner = winnerIds ? winnerIds.has(layer.id) : true;
+        (layer.layer as OpenLayersLayer).setVisible(isWinner ? layer.visible : false);
+      });
+    },
+
     setIsLoading: (loading) => {
       set((state) => {
         state.isLoading = loading;
@@ -838,29 +906,36 @@ export const useTOCStore = create<TOCState>()(
       // Update OpenLayers layer visibility AFTER state commit
       const currentState = get();
       if (isAllLayersGroup) {
+        // All Layers group: apply each layer's visibility to its own OL layer.
+        // In LIST view, the visible "all_layers" group shows only deduped winners;
+        // force suppressed duplicates (present in allLayers but not in the group) off.
+        const winnerIds = new Set(group.layers.map((l) => l.id));
         const updated = new Set<string>();
         currentState.allLayers.forEach((layer) => {
-          if (!updated.has(layer.name)) {
-            updated.add(layer.name);
-            if (layer.managedLayerId) {
-              LayerManager.setLayerVisibility(layer.managedLayerId, layer.visible);
-            } else if (layer.layer) {
-              (layer.layer as OpenLayersLayer).setVisible(layer.visible);
-            }
+          if (layer.managedLayerId && !updated.has(layer.managedLayerId)) {
+            updated.add(layer.managedLayerId);
+            const shouldBeVisible = winnerIds.has(layer.id) ? layer.visible : false;
+            LayerManager.setLayerVisibility(layer.managedLayerId, shouldBeVisible);
+          } else if (layer.layer && !updated.has(layer.id)) {
+            updated.add(layer.id);
+            const shouldBeVisible = winnerIds.has(layer.id) ? layer.visible : false;
+            (layer.layer as OpenLayersLayer).setVisible(shouldBeVisible);
           }
         });
       } else {
+        // Specific group: hide all layers not in this group; show/hide group layers per state.
+        // Use layer id (not name) for membership to handle duplicate names correctly.
+        const groupLayerIds = new Set(group.layers.map((l) => l.id));
         const updated = new Set<string>();
-        const groupLayerNames = new Set(group.layers.map((l) => l.name));
         currentState.allLayers.forEach((layer) => {
-          if (!updated.has(layer.name)) {
-            updated.add(layer.name);
-            const shouldBeVisible = groupLayerNames.has(layer.name) ? layer.visible : false;
-            if (layer.managedLayerId) {
-              LayerManager.setLayerVisibility(layer.managedLayerId, shouldBeVisible);
-            } else if (layer.layer) {
-              (layer.layer as OpenLayersLayer).setVisible(shouldBeVisible);
-            }
+          if (layer.managedLayerId && !updated.has(layer.managedLayerId)) {
+            updated.add(layer.managedLayerId);
+            const shouldBeVisible = groupLayerIds.has(layer.id) ? layer.visible : false;
+            LayerManager.setLayerVisibility(layer.managedLayerId, shouldBeVisible);
+          } else if (layer.layer && !updated.has(layer.id)) {
+            updated.add(layer.id);
+            const shouldBeVisible = groupLayerIds.has(layer.id) ? layer.visible : false;
+            (layer.layer as OpenLayersLayer).setVisible(shouldBeVisible);
           }
         });
       }
@@ -983,41 +1058,40 @@ export const useTOCStore = create<TOCState>()(
       const currentState = get();
 
       if (isAllLayersGroup) {
-        // For "All Layers", update all layers based on their current visibility state
-        // Use a Set to track which layers we've already updated to avoid duplicates
+        // For "All Layers", update all layers based on their current visibility state.
+        // In LIST view, the visible "all_layers" group shows only deduped winners;
+        // force suppressed duplicates (present in allLayers but not in the group) off.
+        const winnerIds = new Set(group.layers.map((l) => l.id));
         const updatedLayers = new Set<string>();
 
         currentState.allLayers.forEach((layer) => {
-          // Only update each unique layer name once (since they share OpenLayers layers)
-          if (!updatedLayers.has(layer.name)) {
-            updatedLayers.add(layer.name);
-
-            if (layer.managedLayerId) {
-              LayerManager.setLayerVisibility(layer.managedLayerId, layer.visible);
-            } else if (layer.layer) {
-              (layer.layer as OpenLayersLayer).setVisible(layer.visible);
-            }
+          // Dedup by managedLayerId so each independent OL layer is updated once
+          if (layer.managedLayerId && !updatedLayers.has(layer.managedLayerId)) {
+            updatedLayers.add(layer.managedLayerId);
+            const shouldBeVisible = winnerIds.has(layer.id) ? layer.visible : false;
+            LayerManager.setLayerVisibility(layer.managedLayerId, shouldBeVisible);
+          } else if (layer.layer && !updatedLayers.has(layer.id)) {
+            updatedLayers.add(layer.id);
+            const shouldBeVisible = winnerIds.has(layer.id) ? layer.visible : false;
+            (layer.layer as OpenLayersLayer).setVisible(shouldBeVisible);
           }
         });
       } else {
-        // For specific groups, update all layers (hide non-group, show/hide group layers based on state)
-        // Use a Set to track which layers we've already updated to avoid duplicates
+        // For specific groups, hide all layers not in this group; show/hide group layers per state.
+        // Use layer id (not name) for membership to handle duplicate names correctly.
+        const groupLayerIds = new Set(group.layers.map((l) => l.id));
         const updatedLayers = new Set<string>();
-        const currentGroupLayerNames = new Set(group.layers.map((l) => l.name));
 
         currentState.allLayers.forEach((layer) => {
-          // Only update each unique layer name once (since they share OpenLayers layers)
-          if (!updatedLayers.has(layer.name)) {
-            updatedLayers.add(layer.name);
-
-            // Check if this layer name exists in the current group
-            const shouldBeVisible = currentGroupLayerNames.has(layer.name) ? layer.visible : false;
-
-            if (layer.managedLayerId) {
-              LayerManager.setLayerVisibility(layer.managedLayerId, shouldBeVisible);
-            } else if (layer.layer) {
-              (layer.layer as OpenLayersLayer).setVisible(shouldBeVisible);
-            }
+          // Dedup by managedLayerId so each independent OL layer is updated once
+          if (layer.managedLayerId && !updatedLayers.has(layer.managedLayerId)) {
+            updatedLayers.add(layer.managedLayerId);
+            const shouldBeVisible = groupLayerIds.has(layer.id) ? layer.visible : false;
+            LayerManager.setLayerVisibility(layer.managedLayerId, shouldBeVisible);
+          } else if (layer.layer && !updatedLayers.has(layer.id)) {
+            updatedLayers.add(layer.id);
+            const shouldBeVisible = groupLayerIds.has(layer.id) ? layer.visible : false;
+            (layer.layer as OpenLayersLayer).setVisible(shouldBeVisible);
           }
         });
       }

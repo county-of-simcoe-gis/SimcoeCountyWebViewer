@@ -281,6 +281,13 @@ export default function TOC({ visible = true }: TOCProps) {
 
       // Sync OpenLayers z-indices to match the restored layer order
       useTOCStore.getState().updateLayerManagerZIndices();
+
+      // Re-assert the active view's COMMITTED visibility onto the map. The
+      // per-layer updateVisibility() calls above run BEFORE setLayerGroups
+      // recomputes the LIST dedup winners, so on their own they leave
+      // suppressed duplicates visible and can miss the winner. This final pass
+      // applies winner-wins visibility from the now-committed group state.
+      useTOCStore.getState().syncActiveViewVisibilityToMap();
     },
     [sortAlpha, updateLayerVisibility],
   );
@@ -388,15 +395,11 @@ export default function TOC({ visible = true }: TOCProps) {
     const currentTOCLayer = useTOCStore.getState().getLayerById(layer.id);
     const isOpacityChange = currentTOCLayer && Math.abs(currentTOCLayer.opacity - layer.opacity) > 0.01;
 
-    // More robust visibility change detection: check if visibility ACTUALLY changed
-    // For LayerManager layers, check the actual OpenLayers layer visibility
-    let actualCurrentVisibility = currentTOCLayer?.visible || false;
-    if (layer.managedLayerId) {
-      const managedLayer = useLayerManagerStore.getState().getLayer(layer.managedLayerId);
-      if (managedLayer) {
-        actualCurrentVisibility = managedLayer.visible;
-      }
-    }
+    // Visibility change detection: compare against the TOC store's current state
+    // (the displayed checkbox state) rather than the managed layer's actual
+    // visibility. This ensures toggles always honor user intent even when the
+    // map is temporarily out of sync (e.g. during dedup reconciliation).
+    const actualCurrentVisibility = currentTOCLayer?.visible || false;
 
     const isVisibilityChange = layer.visible !== actualCurrentVisibility;
 
