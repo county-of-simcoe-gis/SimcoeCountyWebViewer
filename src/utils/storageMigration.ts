@@ -334,32 +334,17 @@ function migrateEnvelopeKeys(): void {
  *   "Layers"              — list-view layer state (raw JSON)
  *   "Layers_Folder_View"  — folder-view layer state (raw JSON)
  *
- * The new app uses the same two keys but envelope-wrapped.
- * "TOC_Type" is preserved as-is (the new app reads it directly).
+ * The new app reads and writes these SAME keys in the SAME raw legacy format
+ * (via saveSharedItem/getSharedItem) so saves are fully interoperable between
+ * the legacy apps and this app, including through the shared server-side
+ * storage row. "TOC_Type" is likewise read directly.
  *
- * Migration strategy:
- *  - If "Layers" exists in raw format → wrap in envelope
- *  - If "Layers_Folder_View" exists in raw format → wrap in envelope
+ * Therefore NO conversion is required — the legacy raw data is already in the
+ * format the new app expects. This is intentionally a no-op (kept for clarity
+ * and so the migration list reads completely).
  */
 function migrateLayerKeys(): void {
-  const rawLayers = localStorage.getItem("Layers");
-  const rawFolderLayers = localStorage.getItem("Layers_Folder_View");
-
-  // Migrate list-view data to envelope format
-  if (rawLayers && !isEnvelopeFormat(rawLayers)) {
-    const listData = safeParse(rawLayers) as Record<string, unknown> | undefined;
-    if (listData) {
-      saveToStorage("Layers", listData);
-    }
-  }
-
-  // Migrate folder-view data to envelope format
-  if (rawFolderLayers && !isEnvelopeFormat(rawFolderLayers)) {
-    const folderData = safeParse(rawFolderLayers) as Record<string, unknown> | undefined;
-    if (folderData) {
-      saveToStorage("Layers_Folder_View", folderData);
-    }
-  }
+  // No-op: "Layers" / "Layers_Folder_View" use the raw legacy format natively.
 }
 
 // ─── ArcGIS Token migration ────────────────────────────────────────────────

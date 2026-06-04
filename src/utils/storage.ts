@@ -95,6 +95,63 @@ export function getItemsFromStorage<T = unknown>(key: string): T | null {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Shared (cross-app) operations — RAW legacy format, no envelope
+// ---------------------------------------------------------------------------
+//
+// A handful of keys ("Layers", "Layers_Folder_View", "TOC_Type") are read and
+// written by BOTH the legacy SimcoeCountyWebViewer apps and this NextJS app,
+// and they are synced to the SAME server-side row (usp_get/set_user_storage).
+// The legacy apps store these values RAW (`JSON.stringify(item)` with no
+// wrapper) and read them back with a plain `JSON.parse`. To stay byte-for-byte
+// compatible — so a save in either app restores correctly in the other — these
+// helpers deliberately bypass the {value, expires, timestamp} envelope used by
+// saveToStorage/getItemsFromStorage above.
+
+/**
+ * Save a value for a key that is shared with the legacy apps.
+ * Writes the RAW JSON (no envelope) and triggers server sync, exactly like the
+ * old app's `helpers.saveToStorage`.
+ */
+export function saveSharedItem(storageKey: string, item: unknown): void {
+  setStorageItem(storageKey, JSON.stringify(item));
+}
+
+/**
+ * Read a value for a key that is shared with the legacy apps.
+ *
+ * Accepts BOTH formats for resilience:
+ *  - raw legacy JSON (what the legacy apps and this app now write), and
+ *  - the older {value, expires, timestamp} envelope that a previous build of
+ *    this app may have written (so already-migrated users keep working until
+ *    their next save converges back to raw format).
+ *
+ * Returns `null` when the key is absent or unparseable.
+ */
+export function getSharedItem<T = unknown>(key: string): T | null {
+  const stored = getStorageItem(key);
+  if (!stored) return null;
+
+  try {
+    const data = JSON.parse(stored);
+
+    // Backwards-compat: unwrap a legacy envelope from older NextJS builds.
+    if (data !== null && typeof data === "object" && !Array.isArray(data) && "value" in data && "timestamp" in data) {
+      const envelope = data as { value: unknown; expires?: number | null };
+      if (envelope.expires && Date.now() > envelope.expires) {
+        removeStorageItem(key);
+        return null;
+      }
+      return envelope.value as T;
+    }
+
+    return data as T;
+  } catch (error) {
+    console.error("Failed to read shared localStorage item:", error);
+    return null;
+  }
+}
+
 /**
  * Remove item from localStorage
  */

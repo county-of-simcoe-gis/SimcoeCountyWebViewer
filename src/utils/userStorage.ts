@@ -22,6 +22,14 @@ function isExcluded(key: string): boolean {
 /** Set to `true` once we confirm the user has the saveToServer role. */
 let _enabled = false;
 
+/**
+ * Set to `true` once the initial server->localStorage restore has finished
+ * (or once we've determined no restore is needed). Until this is true we must
+ * NOT POST localStorage to the server, otherwise a sparse boot-time payload
+ * would clobber the richer data already stored on the server.
+ */
+let _restoreComplete = false;
+
 /** Debounce timer for `setUserStorage`. */
 let _debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -37,10 +45,14 @@ export const userStorageReady: Promise<void> = new Promise((resolve) => {
  */
 export function enableUserStorage(enabled: boolean): void {
   _enabled = enabled;
-  if (!enabled && _readyResolve) {
-    // Not applicable — resolve immediately so callers don't hang.
-    _readyResolve();
-    _readyResolve = undefined;
+  if (!enabled) {
+    // No server sync for this session — nothing to restore, so writes are safe.
+    _restoreComplete = true;
+    if (_readyResolve) {
+      // Not applicable — resolve immediately so callers don't hang.
+      _readyResolve();
+      _readyResolve = undefined;
+    }
   }
 }
 
@@ -68,7 +80,16 @@ export async function getUserStorage(): Promise<void> {
 
     let data = await res.json();
 
-    // The server may return the blob as a JSON string — parse it once more.
+    // The server may return the blob as a JSON string — parse it once.
+    if (typeof data === "string") {
+      try {
+        data = JSON.parse(data);
+      } catch {
+        // not valid JSON — ignore
+      }
+    }
+
+    // It may STILL be a string if double-encoded — parse again.
     if (typeof data === "string") {
       try {
         data = JSON.parse(data);
@@ -87,6 +108,8 @@ export async function getUserStorage(): Promise<void> {
   } catch (error) {
     console.error("[UserStorage] Error fetching user storage:", error);
   } finally {
+    // The initial restore is now complete — writes back to the server are safe.
+    _restoreComplete = true;
     _readyResolve?.();
     _readyResolve = undefined;
   }
@@ -112,7 +135,8 @@ function ensureUnloadListener(): void {
   _unloadListenerAttached = true;
 
   window.addEventListener("beforeunload", () => {
-    if (!_enabled || !_debounceTimer) return;
+    // Never flush before the initial restore completed — would clobber server data.
+    if (!_enabled || !_restoreComplete || !_debounceTimer) return;
     // Cancel the pending debounce — we'll send immediately via sendBeacon.
     clearTimeout(_debounceTimer);
     _debounceTimer = null;
@@ -135,8 +159,13 @@ export function setUserStorage(): void {
 
   if (_debounceTimer) clearTimeout(_debounceTimer);
 
-  _debounceTimer = setTimeout(() => {
+  _debounceTimer = setTimeout(async () => {
     _debounceTimer = null;
+
+    // Wait for the initial server->localStorage restore before pushing back, so
+    // we never overwrite richer server data with a sparse boot-time payload.
+    await userStorageReady;
+    if (!_restoreComplete) return;
 
     const url = apiUrl("/api/secure/user/storage");
     fetch(url, {
@@ -155,7 +184,7 @@ export function setUserStorage(): void {
  * Use this after explicit clear/reset operations to guarantee persistence.
  */
 export function flushUserStorage(): void {
-  if (!_enabled) return;
+  if (!_enabled || !_restoreComplete) return;
 
   // Cancel any pending debounce.
   if (_debounceTimer) {
