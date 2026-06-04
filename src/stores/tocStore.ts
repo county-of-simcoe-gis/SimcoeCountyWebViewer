@@ -416,16 +416,33 @@ export const useTOCStore = create<TOCState>()(
 
         if (type === "LIST") {
           // For LIST view, create an "All Layers" group that contains all layers flattened.
-          // No deduplication: layers with the same name are kept as separate entries.
-          // Each TOC layer already has a unique `id` so they're addressable independently.
-          const allLayers: TOCLayer[] = [];
-
+          // DEDUPLICATION (LIST only): the same physical layer can be published
+          // under multiple workspaces (e.g. an unsecured "simcoe:Bruce_Trail"
+          // and a secured "simcoe-secured:Bruce_Trail"), or appear in several
+          // config groups. The flattened "All Layers" list must show each layer
+          // ONCE. When duplicates (same display name) exist, the SECURED — then
+          // primary — variant wins and the others are dropped. This mirrors the
+          // legacy app's mergeGroupsTogether() behavior. FOLDER view is NOT
+          // deduped (it renders real groups directly, below), so per-group
+          // duplicates remain available there.
+          const dedupKey = (layer: TOCLayer): string => layer.tocDisplayName || layer.displayName || layer.name;
+          // Priority score: secured (+2) outranks primary group (+1) outranks plain (0).
+          // A strictly higher score replaces the incumbent; ties keep the first
+          // seen, preserving group/sort order.
+          const deduped = new Map<string, { layer: TOCLayer; priority: number }>();
           sortedGroups.forEach((group) => {
+            const groupPriority = group.primary ? 1 : 0;
             group.layers.forEach((layer) => {
-              // Create a copy of the layer to avoid mutating the original group's layer
-              allLayers.push({ ...layer });
+              const key = dedupKey(layer);
+              const priority = (layer.secured ? 2 : 0) + groupPriority;
+              const existing = deduped.get(key);
+              if (!existing || priority > existing.priority) {
+                // Create a copy of the layer to avoid mutating the original group's layer
+                deduped.set(key, { layer: { ...layer }, priority });
+              }
             });
           });
+          const allLayers: TOCLayer[] = Array.from(deduped.values(), (e) => e.layer);
 
           if (preserveLayerOrder) {
             // When restoring saved layer order, sort by the saved drawIndex (descending)
