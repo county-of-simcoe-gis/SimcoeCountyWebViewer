@@ -12,6 +12,8 @@ import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import { Style, Circle, Fill, Stroke } from "ol/style";
 import { fromLonLat } from "ol/proj";
+import { containsCoordinate } from "ol/extent";
+import { unByKey } from "ol/Observable";
 import { useMapStore } from "@/stores/mapStore";
 import { usePopupStore } from "@/stores/popupStore";
 import { useInteractionManagerStore, type InteractionResult } from "@/stores/interactionManagerStore";
@@ -131,6 +133,7 @@ export default function TwoOneOne({ name = "211 Community Services", helpLink, h
   const layerIdRef = useRef<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const isFrenchRef = useRef(isFrench);
+  const filterResultsRef = useRef<() => void>(() => {});
 
   // Keep isFrench ref updated for use in click handler
   useEffect(() => {
@@ -282,12 +285,17 @@ export default function TwoOneOne({ name = "211 Community Services", helpLink, h
       filtered = filtered.filter((item) => item.organizationProgramName?.toLowerCase().includes(searchLower) || item.address?.toLowerCase().includes(searchLower));
     }
 
-    // Filter by map extent
-    if (onlyInMapExtent && map && vectorSourceRef.current) {
+    // Filter by map extent - check coordinates directly so it always reflects the current extent
+    if (onlyInMapExtent && map) {
       const extent = map.getView().calculateExtent(map.getSize());
-      const featuresInExtent = vectorSourceRef.current.getFeaturesInExtent(extent);
-      const idsInExtent = new Set(featuresInExtent.map((f) => f.get("recordNumber")));
-      filtered = filtered.filter((item) => idsInExtent.has(item.recordNumber));
+      filtered = filtered.filter((item) => {
+        if (!item.latitude || !item.longitude) return false;
+        const lat = parseFloat(item.latitude.replace(",", "."));
+        const lon = parseFloat(item.longitude.replace(",", "."));
+        if (isNaN(lat) || isNaN(lon)) return false;
+        const coords = fromLonLat([lon, Math.abs(lat)]);
+        return containsCoordinate(extent, coords);
+      });
     }
 
     setFilteredResults(filtered);
@@ -336,8 +344,23 @@ export default function TwoOneOne({ name = "211 Community Services", helpLink, h
   }, [fetchResults]);
 
   useEffect(() => {
+    filterResultsRef.current = filterResults;
+  }, [filterResults]);
+
+  useEffect(() => {
     filterResults();
   }, [filterResults]);
+
+  // Re-filter on map pan/zoom when "only in map extent" is active
+  useEffect(() => {
+    if (!map || !onlyInMapExtent) return;
+
+    const key = map.on("moveend", () => {
+      filterResultsRef.current();
+    });
+
+    return () => unByKey(key);
+  }, [map, onlyInMapExtent]);
 
   useEffect(() => {
     updateMapFeatures();
