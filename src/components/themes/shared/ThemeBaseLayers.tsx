@@ -174,23 +174,22 @@ export default function ThemeBaseLayers({ config, themeId, popupLogoImage }: The
 
   return (
     <div className="space-y-4">
-      <div className="form-control">
-        <label className="label cursor-pointer justify-start gap-2 p-0">
-          <input type="checkbox" className="checkbox checkbox-sm" checked={visible} onChange={(e) => setVisible(e.target.checked)} />
-          <span className="label-text font-semibold">Show Base Layers</span>
-        </label>
+      <div className="flex items-start gap-2">
+        <input type="checkbox" className="checkbox checkbox-xs mt-1" checked={visible} onChange={(e) => setVisible(e.target.checked)} />
+        <span className="text-xs font-semibold whitespace-nowrap mt-1">Show Base Layers</span>
+        {visible && (
+          <div className="flex items-start gap-1 flex-1 min-w-0">
+            <div className="flex flex-col flex-1 min-w-0">
+              <input type="range" min="0" max="1" step="0.01" value={opacity} onChange={(e) => setOpacity(parseFloat(e.target.value))} className="range range-xs w-full" />
+              <span className="text-xs text-base-content/50 text-center leading-tight">Transparency</span>
+            </div>
+            <span className="text-xs whitespace-nowrap w-8 text-right mt-0.5">{Math.round(opacity * 100)}%</span>
+          </div>
+        )}
       </div>
 
       {visible && (
         <>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text text-xs">Opacity</span>
-              <span className="label-text text-xs">{Math.round(opacity * 100)}%</span>
-            </label>
-            <input type="range" min="0" max="1" step="0.01" value={opacity} onChange={(e) => setOpacity(parseFloat(e.target.value))} className="range range-sm" />
-          </div>
-
           {/* Dynamic legend - shows WMS GetLegendGraphic for each layer */}
           {config.useDynamicLegend !== false && <DynamicLegend layers={config.layers} />}
 
