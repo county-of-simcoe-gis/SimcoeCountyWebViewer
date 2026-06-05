@@ -20,8 +20,11 @@ import { Point } from "ol/geom";
 import { Feature } from "ol";
 import { Style, Icon, Fill, Stroke, Circle as CircleStyle } from "ol/style";
 import { showFeedbackWindow } from "@/utils/mapHelpers";
-import { featureToGeoJSON } from "@/utils/myMapsHelpers";
+import { featureToGeoJSON, styleToJSON } from "@/utils/myMapsHelpers";
 import { setStorageItem } from "@/utils/storage";
+import { useEventStore } from "@/stores/eventStore";
+import { useToastStore } from "@/hooks/useToast";
+import { activateTab } from "@/utils/helpersUI";
 import Identify from "@/components/Identify/Identify";
 
 export const MapContextMenuContainer: React.FC = () => {
@@ -52,8 +55,6 @@ export const MapContextMenuContainer: React.FC = () => {
   }, []);
 
   const handleAddMarker = useCallback(() => {
-    console.log("Add Marker clicked at:", coordinateRef.current);
-
     if (!map) return;
 
     const coordinate = coordinateRef.current;
@@ -84,18 +85,18 @@ export const MapContextMenuContainer: React.FC = () => {
     feature.setStyle(pointStyle);
 
     // Create MyMaps item using the helper function
-    const myMapsItem = createMyMapsItem(feature, "Point", label, undefined);
+    const myMapsItem = createMyMapsItem(feature, "Point", label, styleToJSON(pointStyle));
 
     // Set the featureGeoJSON from the actual feature
     myMapsItem.featureGeoJSON = featureToGeoJSON(feature);
 
-    // Set the style directly as a Style object for proper rendering
-    myMapsItem.style = pointStyle;
-
     // Add item to MyMaps store
     addItem(myMapsItem);
 
-    console.log("Point marker added to MyMaps at:", coordinate, "with label:", label);
+    // Notify MyMaps drawing layer and open the MyMaps panel
+    useEventStore.getState().emit("mymap-item-created", { item: myMapsItem });
+    activateTab("mymaps");
+    useToastStore.getState().addToast("Marker added to My Maps", "success");
   }, [map, addItem, drawColor]);
 
   const handleReportProblem = useCallback(() => {
@@ -173,7 +174,9 @@ export const MapContextMenuContainer: React.FC = () => {
     const extent = view.calculateExtent(map.getSize());
     try {
       setStorageItem("Map Extent", JSON.stringify(extent));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, [map]);
 
   // Get menu items based on config
