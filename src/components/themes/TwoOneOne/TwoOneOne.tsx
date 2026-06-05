@@ -406,7 +406,7 @@ export default function TwoOneOne({ name = "211 Community Services", helpLink, h
           data: {
             layerName: "211 Community Services",
             featureId: item.recordNumber || String(Date.now()),
-            attributes: item,
+            attributes: item as unknown as Record<string, unknown>,
           },
         };
 
