@@ -174,8 +174,8 @@ describe("Five11", () => {
 
   it("toggles individual Waze layer visibility", () => {
     render(<Five11 onClose={mockOnClose} />);
-    const firstWazeLayer = five11Config.wazeToggleLayers[0];
-    const checkbox = screen.getByTestId(`checkbox-${firstWazeLayer.layerName}`);
+    const hiddenWazeLayer = five11Config.wazeToggleLayers.find((l) => !l.visible)!;
+    const checkbox = screen.getByTestId(`checkbox-${hiddenWazeLayer.layerName}`);
 
     expect(checkbox).not.toBeChecked();
     fireEvent.click(checkbox);
@@ -184,8 +184,8 @@ describe("Five11", () => {
 
   it("toggles individual MTO layer visibility", () => {
     render(<Five11 onClose={mockOnClose} />);
-    const firstMtoLayer = five11Config.mtoToggleLayers[0];
-    const checkbox = screen.getByTestId(`checkbox-${firstMtoLayer.layerName}`);
+    const hiddenMtoLayer = five11Config.mtoToggleLayers.find((l) => !l.visible)!;
+    const checkbox = screen.getByTestId(`checkbox-${hiddenMtoLayer.layerName}`);
 
     expect(checkbox).not.toBeChecked();
     fireEvent.click(checkbox);

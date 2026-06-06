@@ -124,7 +124,7 @@ describe("Forestry", () => {
   it("renders opacity slider for base layers", () => {
     render(<Forestry onClose={mockOnClose} />);
 
-    expect(screen.getByText("Opacity")).toBeInTheDocument();
+    expect(screen.getByText("Transparency")).toBeInTheDocument();
     expect(screen.getByRole("slider")).toBeInTheDocument();
   });
 

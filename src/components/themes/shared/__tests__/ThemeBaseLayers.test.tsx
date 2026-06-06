@@ -143,6 +143,6 @@ describe("ThemeBaseLayers", () => {
   it("shows opacity label", () => {
     render(<ThemeBaseLayers config={mockConfig} themeId="test-theme" />);
 
-    expect(screen.getByText("Opacity")).toBeInTheDocument();
+    expect(screen.getByText("Transparency")).toBeInTheDocument();
   });
 });
