@@ -42,6 +42,12 @@ export interface ThemeServiceTogglerProps {
   toggleLayersShowAll?: boolean;
   onLayerVisibilityChange?: (layer: Layer) => void;
   onMapClick?: (evt: unknown) => void;
+  /**
+   * When true, layers added by this toggler will NOT be queried by LiveLayerClick.
+   * Use this when the parent theme registers its own dedicated click handler
+   * (e.g. AppTrack) to prevent a duplicate generic popup alongside the custom one.
+   */
+  suppressLiveLayerClick?: boolean;
 }
 
 /** A single layer entry from ArcGIS MapServer capabilities */
@@ -102,6 +108,7 @@ export default function ThemeServiceToggler({
   toggleLayersTitle = "LAYERS",
   toggleLayersShowAll = false,
   onLayerVisibilityChange,
+  suppressLiveLayerClick = false,
 }: ThemeServiceTogglerProps) {
   useSession(); // Ensure auth session is available for API calls
   const [layers, setLayers] = useState<ServiceLayerState[]>([]);
@@ -246,7 +253,7 @@ export default function ThemeServiceToggler({
         const layerId = LayerManager.addLayer(olLayer, "Themes", layerConfig.name, {
           visible: layerConfig.defaultVisibility,
           index: 0,
-          clickable: true,
+          clickable: !suppressLiveLayerClick,
           metadata: {
             themeId: toggleLayersKey || "theme-service",
             layerType: "toggle",
@@ -276,7 +283,7 @@ export default function ThemeServiceToggler({
 
       return layerStates;
     },
-    [serviceConfig.serviceUrl, serviceConfig.zIndex, serviceConfig.secure, toggleLayersKey],
+    [serviceConfig.serviceUrl, serviceConfig.zIndex, serviceConfig.secure, toggleLayersKey, suppressLiveLayerClick],
   );
 
   // ---------- Record Count Fetch ----------

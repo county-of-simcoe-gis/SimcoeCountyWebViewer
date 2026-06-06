@@ -124,7 +124,7 @@ describe("SolidWasteFacilities", () => {
   it("renders opacity slider for base layers", () => {
     render(<SolidWasteFacilities onClose={mockOnClose} />);
 
-    expect(screen.getByText("Opacity")).toBeInTheDocument();
+    expect(screen.getByText("Transparency")).toBeInTheDocument();
     expect(screen.getByRole("slider")).toBeInTheDocument();
   });
 

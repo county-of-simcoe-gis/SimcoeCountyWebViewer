@@ -2,6 +2,11 @@
 @plugin "@tailwindcss/typography";
 @plugin "daisyui";
 
+/* Configure dark: variant to respond to [data-theme="dark"] (set by ThemeProvider)
+   instead of Tailwind v4's default @media (prefers-color-scheme: dark).
+   This ensures manually selecting "Light" in the app overrides the OS dark preference. */
+@variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /* Simcoe County custom DaisyUI theme */
 @plugin "daisyui/theme" {
   name: "simcoe";

@@ -103,7 +103,7 @@ export default function ProfileButton() {
 
       {/* Dropdown Menu */}
       {isDropdownOpen && (
-        <div className="animate-dropdownFadeIn absolute right-0 top-[52px] bg-base-100 border border-base-300 shadow-lg rounded-b-md min-w-[220px] z-50">
+        <div className="animate-dropdownFadeIn absolute right-0 top-[52px] bg-base-100 border border-base-300 shadow-lg rounded-b-md min-w-[220px] z-50 max-h-[calc(100vh-60px)] overflow-y-auto">
           {/* User Info Section */}
           <div className="px-4 py-3 border-b border-base-300">
             <div className="flex items-center gap-3">

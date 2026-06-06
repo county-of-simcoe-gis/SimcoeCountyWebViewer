@@ -497,7 +497,7 @@ export default function Sidebar() {
 
           {!hideReports && (
             <TabPanel>
-              <div className="h-[calc(100vh-130px)] max-h-[calc(100vh-130px)] overflow-hidden flex flex-col">
+              <div className="h-[calc(100vh-130px)] max-h-[calc(100vh-130px)] overflow-hidden flex flex-col ml-[5px]">
                 <ReportsNavBar />
                 {currentReport ? (
                   <div key={currentReport.id} className="h-full overflow-y-auto">
@@ -534,7 +534,7 @@ export default function Sidebar() {
               {activeContentTab === "themes" &&
                 (activeThemeComponent ? activeThemeComponent : visibleThemes.length === 0 ? <div className="text-xs text-base-content/70">Loading themes...</div> : renderDefaultThemesContent())}
               {activeContentTab === "reports" && (
-                <>
+                <div className="ml-[5px]">
                   <ReportsNavBar />
                   {currentReport ? (
                     <div key={currentReport.id} className="h-full overflow-y-auto">
@@ -547,7 +547,7 @@ export default function Sidebar() {
                       <div className="text-xs text-base-content/70">No report currently loaded. Use the identify tool from the map context menu to generate a report.</div>
                     </div>
                   )}
-                </>
+                </div>
               )}
             </div>
           </div>
