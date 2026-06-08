@@ -331,7 +331,10 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
     setIsDrawing(false);
     setFeature(null);
 
-    setActiveToolId(null);
+    // Only release the active tool ID if this tool owns it
+    if (useMapStore.getState().activeToolId === "measure") {
+      setActiveToolId(null);
+    }
   }, [map, setActiveToolId]);
 
   // Add interaction
@@ -517,7 +520,10 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
         reset();
         setGeometryType(type);
         setUnitType(newUnitType);
-        setActiveToolId(null);
+        // reset() already guards this, but guard here too in case reset() is skipped
+        if (useMapStore.getState().activeToolId === "measure") {
+          setActiveToolId(null);
+        }
       } else {
         setGeometryType(type);
         setUnitType(newUnitType);
@@ -669,7 +675,11 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
         LayerManager.removeLayer(layerIdRef.current);
         layerIdRef.current = null;
       }
-      setActiveToolId(null);
+      // Only release the active tool ID if this tool owns it — don't stomp
+      // on another tool's ID (e.g. MyMaps drawing started after measure closed)
+      if (useMapStore.getState().activeToolId === "measure") {
+        setActiveToolId(null);
+      }
     };
   }, [map, setActiveToolId]);
 
