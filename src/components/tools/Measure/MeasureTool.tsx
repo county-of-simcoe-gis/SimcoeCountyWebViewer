@@ -163,6 +163,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
   const [unitMeters, setUnitMeters] = useState<number | string>(-1);
   const [feature, setFeature] = useState<Feature<Geometry> | null>(null);
   const [activeTool, setActiveTool] = useState(false);
+  const [isDrawing, setIsDrawing] = useState(false);
 
   // Refs for OpenLayers objects and IDs
   const vectorSourceRef = useRef<VectorSource | null>(null);
@@ -181,11 +182,13 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
   const activeToolRef = useRef(false);
   const hideTooltipsRef = useRef(false);
   const geometryTypeRef = useRef<GeometryType>("");
+  const enableSnappingRef = useRef(false);
 
   // Keep refs in sync with state
   activeToolRef.current = activeTool;
   hideTooltipsRef.current = hideTooltips;
   geometryTypeRef.current = geometryType;
+  enableSnappingRef.current = enableSnapping;
 
   // Tooltip messages
   const continuePolygonMsg = "Click to continue drawing the polygon";
@@ -325,6 +328,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
     if (measureTooltipElementRef.current) measureTooltipElementRef.current.className = "hidden";
     if (helpTooltipElementRef.current) helpTooltipElementRef.current.className = "hidden";
     setActiveTool(false);
+    setIsDrawing(false);
     setFeature(null);
 
     setActiveToolId(null);
@@ -417,10 +421,11 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
       hidePopup();
       setActiveToolId("measure");
       vectorSourceRef.current?.clear();
+      setIsDrawing(true);
       setFeature(evt.feature);
       sketchRef.current = evt.feature;
 
-      let tooltipCoord: Coordinate = evt.coordinate as Coordinate;
+      let tooltipCoord: Coordinate = [0, 0];
 
       listenerRef.current = sketchRef.current.getGeometry()!.on("change", (changeEvt) => {
         const geom = changeEvt.target;
@@ -469,6 +474,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
         measureTooltipRef.current.setPosition(undefined);
       }
       if (measureTooltipElementRef.current) measureTooltipElementRef.current.className = "hidden";
+      setIsDrawing(false);
       setFeature(sketchRef.current);
       sketchRef.current = null;
 
@@ -482,7 +488,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
     drawRef.current = draw;
 
     // Add snap interaction if enabled
-    if (enableSnapping) {
+    if (enableSnappingRef.current) {
       const snapSources = getVisibleVectorSources();
       if (snapSources.length > 0) {
         const combinedSource = new VectorSource();
@@ -502,7 +508,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
         snapRef.current = snap;
       }
     }
-  }, [map, geometryType, isDrawingOrEditing, enableSnapping, setActiveToolId, hidePopup, formatLength, formatArea, formatCircle, pointerMoveHandler, onMouseOutEvent, getVisibleVectorSources]);
+  }, [map, geometryType, isDrawingOrEditing, setActiveToolId, hidePopup, formatLength, formatArea, formatCircle, pointerMoveHandler, onMouseOutEvent, getVisibleVectorSources]);
 
   // Handle geometry button click
   const onGeometryButtonClick = useCallback(
@@ -567,6 +573,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
       myMapsItem.featureGeoJSON = featureToGeoJSON(featureToAdd);
       useMyMapsStore.getState().addItem(myMapsItem);
       useEventStore.getState().emit("mymap-item-created", { item: myMapsItem });
+      showMessage("My Maps", `"${label}" has been added to My Maps.`, "success", 3000);
       // Reset interaction if user is still measuring to prevent error after click
       if (activeTool && geometryType !== "" && geometryType !== "Clear") {
         addInteraction();
@@ -668,7 +675,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
 
   // Trigger addInteraction when geometry type changes
   useEffect(() => {
-    if (geometryType && geometryType !== "Clear" && geometryType !== "" && map) {
+    if (geometryType && geometryType !== "Clear" && map) {
       addInteraction();
     }
   }, [geometryType, map, addInteraction]);
@@ -728,14 +735,7 @@ export default function MeasureTool({ name = "Measure", helpLink, hideHeader = f
           {unitList
             .filter((unit) => unit.type === unitType)
             .map((unit) => (
-              <MeasureResult
-                key={unit.abbreviation}
-                unitDetails={unit}
-                feature={feature}
-                addToMyMaps={addToMyMaps}
-                getConvertedValue={getConvertedValue}
-                isMeasuring={activeTool && sketchRef.current !== null}
-              />
+              <MeasureResult key={unit.abbreviation} unitDetails={unit} feature={feature} addToMyMaps={addToMyMaps} getConvertedValue={getConvertedValue} isMeasuring={isDrawing} />
             ))}
         </div>
       </div>
