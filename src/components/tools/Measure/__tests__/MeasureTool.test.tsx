@@ -374,6 +374,7 @@ describe("MeasureTool", () => {
       const setActiveToolId = vi.fn();
       useMapStore.setState({
         map: mockMap as unknown as ReturnType<typeof useMapStore.getState>["map"],
+        activeToolId: "measure",
         setActiveToolId,
       });
       const user = userEvent.setup();
