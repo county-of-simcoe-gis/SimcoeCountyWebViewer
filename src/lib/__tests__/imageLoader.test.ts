@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import imageLoader from "@/lib/imageLoader";
 
 // The module reads process.env.NEXT_PUBLIC_BASE_PATH at the top level,

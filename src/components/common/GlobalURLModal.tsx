@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useURLModalStore } from "@/stores/urlModalStore";
-import { appendToStorage } from "@/utils/storage";
+import { appendSharedArrayItem } from "@/utils/storage";
 import { FaExternalLinkAlt, FaTimes } from "react-icons/fa";
 
 /**
@@ -20,7 +20,7 @@ export default function GlobalURLModal() {
 
   const handleDontShowAgain = useCallback(() => {
     const storageKey = "sc_dontshowagain";
-    appendToStorage(storageKey, { url, dateAdded: new Date().toLocaleString() });
+    appendSharedArrayItem(storageKey, { url, dateAdded: new Date().toLocaleString() });
     close();
   }, [url, close]);
 

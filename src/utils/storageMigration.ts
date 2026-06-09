@@ -5,17 +5,16 @@
  *
  * Key differences handled:
  *  1. Key renames  ("myMaps" → "simcoe-mymaps-data", "Map Control Settings" → "Map_Control_Settings")
- *  2. Envelope wrapping  (raw JSON → {value, expires, timestamp} for keys that go through storage.ts)
- *  3. MyMaps style format  (OL internal fill_/stroke_ → clean fill/stroke JSON)
- *  4. Layers migration  ("Layers" + "Layers_Folder_View" → envelope-wrapped, kept as separate keys)
- *  5. TOC_Type preservation  (same format as old app — raw string, kept as-is)
- *  6. ArcGIS_Token  (localStorage → sessionStorage)
- *  7. Cleanup only of keys whose data has been successfully migrated elsewhere
+ *  2. MyMaps style format  (OL internal fill_/stroke_ → clean fill/stroke JSON)
+ *  3. Layers / Layers_Folder_View / TOC_Type  (raw legacy format — no conversion needed)
+ *  4. ArcGIS_Token  (localStorage → sessionStorage)
+ *  5. Cleanup only of keys whose data has been successfully migrated elsewhere
+ *
+ * "searchHistory" and "sc_dontshowagain" are stored as plain JSON arrays in
+ * both the legacy and NextJS apps, so they require no migration.
  *
  * The migration is idempotent — a sentinel key prevents it from running twice.
  */
-
-import { saveToStorage } from "./storage";
 
 // ─── constants ──────────────────────────────────────────────────────────────
 
@@ -25,13 +24,6 @@ const MIGRATION_SENTINEL = "__storage_migrated_v1";
 const RENAMED_KEYS: Record<string, string> = {
   "Map Control Settings": "Map_Control_Settings",
 };
-
-/**
- * Same-name keys that need to be re-wrapped in the storage.ts envelope.
- * Note: "Layers" is handled separately in migrateLayerKeys() because of
- * the Layers_Folder_View consolidation, so it is NOT listed here.
- */
-const ENVELOPE_KEYS = ["searchHistory", "sc_dontshowagain"] as const;
 
 /**
  * Keys that are safe to remove after migration because their data has been
@@ -306,27 +298,6 @@ function migrateRenamedKeys(): void {
   }
 }
 
-// ─── Envelope-wrap migration ────────────────────────────────────────────────
-
-/**
- * For keys that use the storage.ts utilities (which wrap in an envelope),
- * re-save old raw-format values through saveToStorage so they get the
- * {value, expires, timestamp} wrapper.
- */
-function migrateEnvelopeKeys(): void {
-  for (const key of ENVELOPE_KEYS) {
-    const raw = localStorage.getItem(key);
-    if (!raw) continue;
-    if (isEnvelopeFormat(raw)) continue; // already in new format
-
-    const data = safeParse(raw);
-    if (data === undefined) continue;
-
-    // Re-save through the storage utility to wrap in envelope
-    saveToStorage(key, data);
-  }
-}
-
 // ─── Layer keys migration ───────────────────────────────────────────────────
 
 /**
@@ -406,12 +377,12 @@ export function migrateFromLegacyStorage(): boolean {
     return raw !== null && !isEnvelopeFormat(raw);
   })();
   const hasOldArcGISToken = localStorage.getItem("ArcGIS_Token") !== null;
-  const hasOldEnvelopeData = [...ENVELOPE_KEYS, "Layers" as const].some((key) => {
-    const raw = localStorage.getItem(key);
+  const hasOldLayers = (() => {
+    const raw = localStorage.getItem("Layers");
     return raw !== null && !isEnvelopeFormat(raw);
-  });
+  })();
 
-  if (!hasOldMyMaps && !hasOldControls && !hasOldEnvelopeData && !hasOldFolderView && !hasOldArcGISToken) {
+  if (!hasOldMyMaps && !hasOldControls && !hasOldLayers && !hasOldFolderView && !hasOldArcGISToken) {
     // No old data detected — mark as migrated (fresh install) and exit
     localStorage.setItem(MIGRATION_SENTINEL, new Date().toISOString());
     return false;
@@ -430,19 +401,15 @@ export function migrateFromLegacyStorage(): boolean {
     migrateRenamedKeys();
     console.log("[storageMigration] ✓ Renamed keys migrated");
 
-    // 3. Migrate layer keys to envelope format
+    // 3. Migrate layer keys (no-op — raw legacy format is already compatible)
     migrateLayerKeys();
-    console.log("[storageMigration] ✓ Layer keys migrated");
+    console.log("[storageMigration] ✓ Layer keys confirmed compatible");
 
-    // 4. Re-wrap same-name keys in storage.ts envelope (searchHistory, sc_dontshowagain)
-    migrateEnvelopeKeys();
-    console.log("[storageMigration] ✓ Envelope keys migrated");
-
-    // 5. Migrate ArcGIS token from localStorage → sessionStorage
+    // 4. Migrate ArcGIS token from localStorage → sessionStorage
     migrateArcGISToken();
     console.log("[storageMigration] ✓ ArcGIS token migrated to sessionStorage");
 
-    // 6. Clean up only the source keys whose data was copied elsewhere.
+    // 5. Clean up only the source keys whose data was copied elsewhere.
     //    TOC_Type, avlLive, SIMCOE_MAPS_APPTRACK_SCREEN_SIZE, and other
     //    old keys are left in place — they are either still used by the new
     //    app or harmless. The user can clear them from the Settings tool.

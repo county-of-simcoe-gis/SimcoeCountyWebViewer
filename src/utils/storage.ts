@@ -199,6 +199,56 @@ export function removeItemFromStorage<T>(storageKey: string, item: T): void {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Shared array helpers — cross-app compatible, raw format (no envelope)
+// ---------------------------------------------------------------------------
+//
+// "searchHistory" and "sc_dontshowagain" are written by BOTH legacy apps and
+// this NextJS app as plain JSON arrays.  These helpers keep that contract so
+// either app can read what the other wrote.
+
+/**
+ * Append an item to a raw-format array shared with the legacy apps.
+ *
+ * Reads via {@link getSharedItem} (handles any old envelope data transparently),
+ * then writes the updated array as raw JSON via {@link saveSharedItem}.
+ * A `dateAdded` field is stamped automatically if absent, matching legacy
+ * `appendToStorage` behaviour.
+ */
+export function appendSharedArrayItem<T extends object>(storageKey: string, item: T, limit?: number): void {
+  try {
+    const existing = getSharedItem<T[]>(storageKey) ?? [];
+
+    const stamped: T = "dateAdded" in item ? item : { ...item, dateAdded: new Date().toLocaleString() };
+
+    // De-duplicate: drop any prior entry that stringifies identically
+    const filtered = existing.filter((e) => JSON.stringify(e) !== JSON.stringify(stamped));
+
+    filtered.unshift(stamped);
+
+    if (limit !== undefined && filtered.length > limit) {
+      filtered.splice(limit);
+    }
+
+    saveSharedItem(storageKey, filtered);
+  } catch (error) {
+    console.error("Failed to append shared array item:", error);
+  }
+}
+
+/**
+ * Remove a specific item from a raw-format array shared with the legacy apps.
+ */
+export function removeSharedArrayItem<T>(storageKey: string, item: T): void {
+  try {
+    const existing = getSharedItem<T[]>(storageKey) ?? [];
+    const filtered = existing.filter((e) => JSON.stringify(e) !== JSON.stringify(item));
+    saveSharedItem(storageKey, filtered);
+  } catch (error) {
+    console.error("Failed to remove shared array item:", error);
+  }
+}
+
 /**
  * Clean up expired items from localStorage
  */

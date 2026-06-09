@@ -258,16 +258,18 @@ describe("migrateFromLegacyStorage", () => {
 
   // ─── Envelope wrapping ─────────────────────────────────────────────
 
-  it("wraps raw searchHistory array in storage envelope", () => {
+  it("leaves raw searchHistory as-is (no envelope wrap)", () => {
     const history = [{ name: "test", dateAdded: "1/1/2025" }];
     localStorage.setItem("searchHistory", JSON.stringify(history));
+    // Trigger migration via an unrelated legacy key
+    localStorage.setItem("Map Control Settings", JSON.stringify({ rotate: false }));
 
     migrateFromLegacyStorage();
 
+    // Should be untouched — raw array, no envelope wrapper
     const parsed = parseEnvelope("searchHistory");
-    expect(parsed.value).toEqual(history);
-    expect(parsed.expires).toBeNull();
-    expect(typeof parsed.timestamp).toBe("number");
+    expect(Array.isArray(parsed)).toBe(true);
+    expect(parsed).toEqual(history);
   });
 
   // ─── Layer key compatibility (raw legacy format, NOT envelope) ──────
@@ -359,17 +361,21 @@ describe("migrateFromLegacyStorage", () => {
     expect(parsed.value).toBeUndefined();
   });
 
-  it("wraps raw sc_dontshowagain array in storage envelope", () => {
+  it("leaves raw sc_dontshowagain as-is (no envelope wrap)", () => {
     const urls = [{ url: "https://example.com", dateAdded: "1/1/2025" }];
     localStorage.setItem("sc_dontshowagain", JSON.stringify(urls));
+    // Trigger migration via an unrelated legacy key
+    localStorage.setItem("Map Control Settings", JSON.stringify({ rotate: false }));
 
     migrateFromLegacyStorage();
 
+    // Should be untouched — raw array, no envelope wrapper
     const parsed = parseEnvelope("sc_dontshowagain");
-    expect(parsed.value).toEqual(urls);
+    expect(Array.isArray(parsed)).toBe(true);
+    expect(parsed).toEqual(urls);
   });
 
-  it("does not re-wrap already-enveloped data", () => {
+  it("leaves previously-enveloped searchHistory untouched (getSharedItem handles read-side unwrap)", () => {
     const enveloped = { value: [{ name: "test" }], expires: null, timestamp: 1234567890 };
     localStorage.setItem("searchHistory", JSON.stringify(enveloped));
 
@@ -378,8 +384,9 @@ describe("migrateFromLegacyStorage", () => {
 
     migrateFromLegacyStorage();
 
+    // Migration does not touch searchHistory at all — envelope preserved as-is.
+    // getSharedItem() will unwrap it transparently on first read.
     const parsed = parseEnvelope("searchHistory");
-    // Timestamp should be preserved from original envelope, not overwritten
     expect(parsed.timestamp).toBe(1234567890);
   });
 
@@ -570,9 +577,14 @@ describe("migrateFromLegacyStorage", () => {
     expect(localStorage.getItem("Map_Control_Settings")).toBeTruthy();
     expect(localStorage.getItem("Map Control Settings")).toBeNull();
 
-    // Verify envelope wrapping
-    expect(parseEnvelope("searchHistory").value).toEqual([{ name: "Barrie", dateAdded: "1/1/2025" }]);
-    expect(parseEnvelope("sc_dontshowagain").value).toEqual([{ url: "https://help.com" }]);
+    // Verify searchHistory and sc_dontshowagain left as raw arrays (cross-app compatible)
+    const searchHistoryParsed = parseEnvelope("searchHistory");
+    expect(Array.isArray(searchHistoryParsed)).toBe(true);
+    expect(searchHistoryParsed).toEqual([{ name: "Barrie", dateAdded: "1/1/2025" }]);
+
+    const dontShowParsed = parseEnvelope("sc_dontshowagain");
+    expect(Array.isArray(dontShowParsed)).toBe(true);
+    expect(dontShowParsed).toEqual([{ url: "https://help.com" }]);
 
     // Verify layer keys kept raw and separate (cross-app compatible)
     const layersParsed = parseEnvelope("Layers");
