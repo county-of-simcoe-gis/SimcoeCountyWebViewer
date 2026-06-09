@@ -186,12 +186,12 @@ export default function CommercialRealEstate({ name = "Commercial Real Estate", 
                 id: `cre_${propType}_${featureId}`,
                 type: "layer" as const,
                 displayName,
+                renderContent: () => <CREPopupContent feature={feature} />,
                 data: {
                   layerName: "Commercial Real Estate",
                   featureId: String(featureId),
                   attributes: feature.getProperties(),
                   feature,
-                  renderContent: () => <CREPopupContent feature={feature} />,
                 },
               });
             });

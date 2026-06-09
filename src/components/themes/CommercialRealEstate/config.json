@@ -24,7 +24,7 @@
       "visible": true,
       "zIndex": 208,
       "expanded": false,
-      "description": "Housing Support Agencies help people who are looking for affordable rental housing or at risk of losing their current housing."
+      "description": "Designated commercial district where local businesses and property owners work together, often through a municipal levy, to fund improvements, promotions, events, and initiatives that strengthen the area’s economic vitality."
     },
     {
       "serverUrl": "https://opengis.simcoe.ca/geoserver/",
@@ -35,7 +35,7 @@
       "visible": true,
       "zIndex": 207,
       "expanded": false,
-      "description": "Employment Ontario Employment Services are available across the County of Simcoe to help newcomers look for a job, plan their careers, explore starting their own business and obtain referrals to community programs and services."
+      "description": "Programs, grants, tax supports, or other tools offered by a municipality to encourage investment, development, business growth, revitalization, or other community economic development goals."
     }
   ]
 }

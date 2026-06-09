@@ -74,19 +74,21 @@ const MyMapsPopupLabel: React.FC<MyMapsPopupLabelProps> = ({ item, onLabelChange
             Show Label
           </label>
         </div>
-        <div className="mymaps-popup-slider mymaps-slider text-[7pt] table-cell pl-5 relative align-top w-[130px]">
-          <input
-            type="range"
-            min="0"
-            max="360"
-            step="1"
-            value={labelRotation}
-            onChange={handleRotationChange}
-            onClick={(e) => e.stopPropagation()}
-            onMouseDown={(e) => e.stopPropagation()}
-            onMouseUp={(e) => e.stopPropagation()}
-          />
-          <label className="absolute -right-[13px] top-4 text-[7pt] w-full text-center">Rotate Label</label>
+        <div className="mymaps-popup-slider mymaps-slider text-[7pt] table-cell pl-5 align-top w-[130px]">
+          <div className="flex flex-col items-center">
+            <input
+              type="range"
+              min="0"
+              max="360"
+              step="1"
+              value={labelRotation}
+              onChange={handleRotationChange}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onMouseUp={(e) => e.stopPropagation()}
+            />
+            <label className="text-[7pt] text-center">Rotate Label</label>
+          </div>
         </div>
       </div>
       <div>

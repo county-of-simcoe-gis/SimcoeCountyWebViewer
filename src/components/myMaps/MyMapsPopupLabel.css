@@ -2,7 +2,7 @@
 
 .mymaps-slider input[type="range"] {
   -webkit-appearance: none;
-  padding: 8px 0;
+  padding-top: 8px;
   margin: 0;
   cursor: pointer;
   background: transparent;
@@ -66,24 +66,4 @@
   background: #ccc;
 }
 
-@-moz-document url-prefix() {
-  .mymaps-popup-slider input[type="range"] {
-    border: 1px solid white;
-    outline: 1px solid white;
-    outline-offset: -1px;
-  }
 
-  .mymaps-popup-slider {
-    position: absolute;
-    left: 106px;
-    top: -2px;
-    width: 30px;
-  }
-
-  .mymaps-popup-slider-label {
-    position: relative;
-    right: -31px;
-    top: -7px;
-    font-size: 7pt;
-  }
-}
