@@ -166,6 +166,7 @@ class PropertyReportClick extends Component {
 
     // LISTEN FOR CALLS
     window.emitter.addListener("showPropertyReport", (coords, zoomToFeature = true) => this.onPropertyEmitter(coords, zoomToFeature));
+    window.emitter.addListener("popupClosing", this.clearSelectedParcel);
   }
 
   onPropertyEmitter = (coords, zoomToFeature) => {
@@ -203,8 +204,12 @@ class PropertyReportClick extends Component {
     helpers.addAppStat("Property Click Share", "click");
   };
 
-  onCloseClick = () => {
+  clearSelectedParcel = () => {
     parcelLayer.getSource().clear();
+  };
+
+  onCloseClick = () => {
+    this.clearSelectedParcel();
     window.popup.hide();
   };
 

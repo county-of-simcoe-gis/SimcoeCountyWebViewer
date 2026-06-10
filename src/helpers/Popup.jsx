@@ -154,7 +154,7 @@ export default class Popup extends Overlay {
         // that.closer.blur();
         evt.preventDefault();
       },
-      false
+      false,
     );
 
     this.content = document.createElement("div");
@@ -333,14 +333,14 @@ export default class Popup extends Overlay {
         function (event) {
           scrollStartPos = this.scrollTop + event.touches[0].pageY;
         },
-        false
+        false,
       );
       elm.addEventListener(
         "touchmove",
         function (event) {
           this.scrollTop = scrollStartPos - event.touches[0].pageY;
         },
-        false
+        false,
       );
     }
   }
@@ -353,6 +353,7 @@ export default class Popup extends Overlay {
     this.contentArray = [];
     this.contentIndex = 0;
     window.activeClick = null;
+    window.popupActive = false;
     const containers = document.getElementsByClassName("ol-overlay-container ol-selectable");
     Array.prototype.forEach.call(containers, (el) => {
       if (el && el.childNodes && el.childNodes[0] && el.childNodes[0] && el.childNodes[0].id === "sc-window-popup") el.classList.add("sc-hidden");
@@ -366,12 +367,11 @@ export default class Popup extends Overlay {
       closeCallback();
     }
 
-    // PATCH FOR MOBILE TO RE-ENABLE MAP INTERACTIONS
-    if (helpers.isMobile()) {
-      window.map.getInteractions().forEach((interaction) => {
-        if (this.activeIds.includes(interaction.ol_uid)) interaction.setActive(true);
-      });
-    }
+    // Re-enable any interactions that were active before popup hover disabled them.
+    window.map.getInteractions().forEach((interaction) => {
+      if (this.activeIds.includes(interaction.ol_uid)) interaction.setActive(true);
+    });
+    this.activeIds = [];
 
     return this;
   }
