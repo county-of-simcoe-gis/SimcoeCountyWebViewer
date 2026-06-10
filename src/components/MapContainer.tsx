@@ -858,7 +858,7 @@ export default function MapContainer() {
     if (hasCoordParams) return;
 
     // Don't override if there's a stored extent from a previous session
-    const storedExtent = sessionStorage.getItem("Map Extent");
+    const storedExtent = getStorageItem("Map Extent");
     if (storedExtent) return;
 
     // Don't override if the user has already navigated away from the initial view
