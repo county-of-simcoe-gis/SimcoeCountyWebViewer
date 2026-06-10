@@ -337,7 +337,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
       // importFromApi already adds items to the store with deduplication.
       // Calling importItems here again was causing duplicate keys when both
       // set() calls raced against each other in React 18 concurrent mode.
-      emit("mymap-items-imported", { count: useMyMapsStore.getState().items.length });
+      emit("mymap-items-imported", { count: useMyMapsStore.getState().items?.length ?? 0 });
     },
     [emit],
   );

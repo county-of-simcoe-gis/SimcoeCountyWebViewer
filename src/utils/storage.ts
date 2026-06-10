@@ -136,8 +136,10 @@ export function getSharedItem<T = unknown>(key: string): T | null {
     const data = JSON.parse(stored);
 
     // Backwards-compat: unwrap a legacy envelope from older NextJS builds.
-    if (data !== null && typeof data === "object" && !Array.isArray(data) && "value" in data && "timestamp" in data) {
-      const envelope = data as { value: unknown; expires?: number | null };
+    // Matches both the full {value, timestamp} envelope and the bare {value: [...]}
+    // wrapper that some legacy data uses (no timestamp required).
+    if (data !== null && typeof data === "object" && !Array.isArray(data) && "value" in data) {
+      const envelope = data as { value: unknown; expires?: number | null; timestamp?: unknown };
       if (envelope.expires && Date.now() > envelope.expires) {
         removeStorageItem(key);
         return null;
