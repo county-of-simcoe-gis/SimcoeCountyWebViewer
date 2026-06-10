@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { FaSearch, FaMapMarkerAlt, FaTools, FaPalette, FaLayerGroup, FaMapPin, FaHome, FaMapMarkedAlt, FaClock, FaBuilding, FaRoad } from "react-icons/fa";
 import { useConfig } from "@/hooks/useConfig";
 import axiosInstance from "@/lib/axiosInstance";
-import { appendToStorage, getItemsFromStorage, removeItemFromStorage } from "@/utils/storage";
+import { appendSharedArrayItem, getSharedItem, removeSharedArrayItem } from "@/utils/storage";
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { useTOCStore } from "@/stores/tocStore";
 import { useSearchStore } from "@/stores/searchStore";
@@ -95,7 +95,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
   const loadSearchHistory = useCallback(() => {
     if (!config?.storageKeys?.SearchHistory) return [];
 
-    const history = getItemsFromStorage<SearchResult[]>(config.storageKeys.SearchHistory) || [];
+    const history = getSharedItem<SearchResult[]>(config.storageKeys.SearchHistory) ?? [];
     return history.slice(0, 6); // Limit to 6 items
   }, [config]);
 
@@ -402,7 +402,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
 
     // Save to search history
     if (config?.storageKeys?.SearchHistory) {
-      appendToStorage(config.storageKeys.SearchHistory, result, 25);
+      appendSharedArrayItem(config.storageKeys.SearchHistory, result, 25);
     }
 
     // Handle different result types
@@ -497,7 +497,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
         // Only allow deleting history items when search is empty (showing history)
         if (showHistory && searchValue.length === 0 && highlightedIndex >= 0 && config?.storageKeys?.SearchHistory) {
           const result = searchResults[highlightedIndex];
-          removeItemFromStorage(config.storageKeys.SearchHistory, result);
+          removeSharedArrayItem(config.storageKeys.SearchHistory, result);
 
           // Refresh the displayed history
           const updatedHistory = loadSearchHistory();
@@ -551,7 +551,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
     if (!config?.storageKeys?.SearchHistory) return;
 
     // Remove from storage
-    removeItemFromStorage(config.storageKeys.SearchHistory, result);
+    removeSharedArrayItem(config.storageKeys.SearchHistory, result);
 
     // Refresh the displayed history
     const updatedHistory = loadSearchHistory();

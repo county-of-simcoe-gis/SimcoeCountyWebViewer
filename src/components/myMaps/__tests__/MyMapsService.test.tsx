@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { render } from "@testing-library/react";
 import MyMapsService from "@/components/myMaps/MyMapsService";
 import { useMyMapsStore } from "@/stores/myMapsStore";
-import { useMapStore } from "@/stores/mapStore";
 import { useEventStore } from "@/stores/eventStore";
 import { MyMapsDrawingManager } from "@/utils/openlayers/MyMapsDrawing";
 

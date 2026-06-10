@@ -6,15 +6,13 @@ import { useSidebarStore } from "@/stores/sidebarStore";
 import { useURLModalStore } from "@/stores/urlModalStore";
 import { useAppStore } from "@/stores/appStore";
 import { useToastStore } from "@/hooks/useToast";
-import { getStorageItem } from "@/utils/storage";
+import { getSharedItem } from "@/utils/storage";
 import { apiUrl } from "@/lib/axiosInstance";
 
 /**
  * All tab names in their default order
  */
-const ALL_TAB_NAMES = ["layers", "tools", "mymaps", "themes", "reports"] as const;
-
-type TabName = (typeof ALL_TAB_NAMES)[number];
+type TabName = "layers" | "tools" | "mymaps" | "themes" | "reports";
 
 /**
  * Activate a sidebar tab by name. Works even if the tab button is hidden -
@@ -64,15 +62,8 @@ export function showURLWindow(url: string, showFooter = false, mode = "normal", 
   // If honorDontShow is true, check localStorage to see if the user has opted out
   if (honorDontShow) {
     try {
-      const storageKey = "sc_dontshowagain";
-      const stored = getStorageItem(storageKey);
-      if (stored) {
-        const data = JSON.parse(stored);
-        // Support both wrapped {value: [...]} format and plain array
-        const items: Array<{ url?: string }> = Array.isArray(data) ? data : (data?.value ?? []);
-        const isDontShow = items.some((item) => item.url?.toLowerCase() === url.toLowerCase());
-        if (isDontShow) return;
-      }
+      const items = getSharedItem<Array<{ url?: string }>>("sc_dontshowagain") ?? [];
+      if (items.some((item) => item.url?.toLowerCase() === url.toLowerCase())) return;
     } catch (e) {
       console.error("Error checking dont-show storage:", e);
     }

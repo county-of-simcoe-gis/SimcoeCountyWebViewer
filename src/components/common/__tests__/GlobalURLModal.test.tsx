@@ -5,7 +5,7 @@ import { useURLModalStore } from "@/stores/urlModalStore";
 
 // Mock storage util
 vi.mock("@/utils/storage", () => ({
-  appendToStorage: vi.fn(),
+  appendSharedArrayItem: vi.fn(),
 }));
 
 beforeEach(() => {
@@ -73,12 +73,12 @@ describe("GlobalURLModal", () => {
     });
 
     it("saves to storage and closes when Don't Show Again is clicked", async () => {
-      const { appendToStorage } = await import("@/utils/storage");
+      const { appendSharedArrayItem } = await import("@/utils/storage");
       useURLModalStore.getState().open("https://example.com", "Info", { showFooter: true });
       render(<GlobalURLModal />);
 
       fireEvent.click(screen.getByText(/Don.t Show this Again/));
-      expect(appendToStorage).toHaveBeenCalledWith("sc_dontshowagain", expect.objectContaining({ url: "https://example.com" }));
+      expect(appendSharedArrayItem).toHaveBeenCalledWith("sc_dontshowagain", expect.objectContaining({ url: "https://example.com" }));
       expect(useURLModalStore.getState().isOpen).toBe(false);
     });
   });

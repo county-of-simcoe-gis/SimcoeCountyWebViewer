@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import React from "react";
 import IdentifyLayer from "@/components/Identify/IdentifyLayer";
@@ -8,13 +8,9 @@ import type { IdentifyResult, IdentifyFeature } from "@/components/Identify/Iden
 
 // Mock dependencies
 vi.mock("@/stores/appStore", () => ({
-  useAppStore: Object.assign(
-    (selector: (s: Record<string, unknown>) => unknown) =>
-      selector({ config: { allowIdentifyExport: true } }),
-    {
-      getState: () => ({ config: { allowIdentifyExport: true } }),
-    }
-  ),
+  useAppStore: Object.assign((selector: (s: Record<string, unknown>) => unknown) => selector({ config: { allowIdentifyExport: true } }), {
+    getState: () => ({ config: { allowIdentifyExport: true } }),
+  }),
 }));
 
 vi.mock("@/utils/helpersBrowser", () => ({
@@ -22,9 +18,7 @@ vi.mock("@/utils/helpersBrowser", () => ({
 }));
 
 vi.mock("@/components/Identify/IdentifyFeatureItem", () => ({
-  default: ({ featureItem }: { featureItem: IdentifyFeature }) => (
-    <div data-testid="feature-item">{featureItem.displayName}</div>
-  ),
+  default: ({ featureItem }: { featureItem: IdentifyFeature }) => <div data-testid="feature-item">{featureItem.displayName}</div>,
 }));
 
 function createMockLayer(featureCount: number): IdentifyResult {

@@ -592,7 +592,9 @@ describe("MyMaps Component", () => {
 
       await user.click(screen.getByTestId("test-import"));
 
-      expect(mockMyMapsStore.importItems).toHaveBeenCalledWith("{}");
+      // importFromApi (called inside MyMapsAdvanced) now handles item insertion;
+      // handleMyMapsImport only emits the notification event.
+      expect(mockEventStore.emit).toHaveBeenCalledWith("mymap-items-imported", expect.objectContaining({ count: expect.any(Number) }));
     });
 
     it("should handle additional tools actions", async () => {
