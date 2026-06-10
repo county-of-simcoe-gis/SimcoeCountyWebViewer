@@ -634,9 +634,20 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => {
             });
 
             if (itemsToAdd.length > 0) {
-              // Add only new items to current state (same logic as old app)
-              set({
-                items: [...itemsToAdd, ...currentState.items],
+              // Deduplicate within itemsToAdd itself (guard against malformed source data)
+              const seenIds = new Set<string>();
+              const uniqueItemsToAdd = itemsToAdd.filter((item) => {
+                if (seenIds.has(item.id)) return false;
+                seenIds.add(item.id);
+                return true;
+              });
+
+              // Use functional update so we always merge against the latest state,
+              // even if another set() ran during the async API call.
+              set((state) => {
+                const existingIds = new Set(state.items.map((i) => i.id));
+                const trulyNew = uniqueItemsToAdd.filter((i) => !existingIds.has(i.id));
+                return { items: [...trulyNew, ...state.items] };
               });
 
               // Save to localStorage
@@ -773,8 +784,17 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => {
             }
           }
 
+          // Deduplicate items on load to recover from any previously persisted corrupt state.
+          const rawItems: MyMapsItem[] = data.items || [];
+          const seenIds = new Set<string>();
+          const dedupedItems = rawItems.filter((item) => {
+            if (!item.id || seenIds.has(item.id)) return false;
+            seenIds.add(item.id);
+            return true;
+          });
+
           set({
-            items: data.items || [],
+            items: dedupedItems,
             drawColor: data.drawColor || "#e809e5",
             drawOpacity: data.drawOpacity || 0.8,
             drawingCounter,

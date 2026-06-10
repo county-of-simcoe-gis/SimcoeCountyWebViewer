@@ -42,7 +42,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
   const [isReportProblemModalOpen, setIsReportProblemModalOpen] = useState(false);
 
   // Store hooks
-  const { drawType, drawColor, isEditing, items, setDrawType, updateItemLabel, removeItem, setEditMode, toolTipId, toolTipClass, importItems, hasItems, saveToApi, importFromApi } = useMyMapsStore();
+  const { drawType, drawColor, isEditing, items, setDrawType, updateItemLabel, removeItem, setEditMode, toolTipId, toolTipClass, hasItems, saveToApi, importFromApi } = useMyMapsStore();
   const { map } = useMapStore();
   const { config } = useAppStore();
   const urlParameters = useAppStore((state) => state.urlParameters);
@@ -333,13 +333,13 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
 
   // Handle import from Advanced panel
   const handleMyMapsImport = useCallback(
-    (result: { id: string; json: string }) => {
-      const success = importItems(result.json);
-      if (success) {
-        emit("mymap-items-imported", { count: items.length });
-      }
+    (_result: { id: string; json: string }) => {
+      // importFromApi already adds items to the store with deduplication.
+      // Calling importItems here again was causing duplicate keys when both
+      // set() calls raced against each other in React 18 concurrent mode.
+      emit("mymap-items-imported", { count: useMyMapsStore.getState().items.length });
     },
-    [importItems, items.length, emit],
+    [emit],
   );
 
   // Utility function to create feature from GeoJSON
@@ -411,8 +411,8 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
             // Check for feature ID to zoom to specific feature
             const featureId = urlParameters.MY_MAPS_FEATURE_ID;
             if (featureId) {
-              // Find the item with the specified feature ID
-              const item = items.find((item) => item.id === featureId);
+              // Read items directly from store to avoid stale closure
+              const item = useMyMapsStore.getState().items.find((item) => item.id === featureId);
 
               if (item) {
                 const feature = getFeatureFromGeoJSON(item.featureGeoJSON);
@@ -431,7 +431,11 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
         showMessage("MyMaps Import", "Error occurred while importing MyMaps. Please try again.", true);
       }
     }
-  }, [urlParameters, importFromApi, items, showMessage, handleMyMapsImport, getFeatureFromGeoJSON, zoomToFeature]);
+    // `items` is intentionally omitted from deps – reading it via the store avoids
+    // re-creating this callback (and re-firing the effect) on every item change,
+    // which would otherwise re-trigger the URL-param import loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlParameters, importFromApi, showMessage, handleMyMapsImport, getFeatureFromGeoJSON, zoomToFeature]);
 
   // Handle URL parameters after component is loaded
   useEffect(() => {
