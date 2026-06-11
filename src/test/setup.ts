@@ -8,6 +8,7 @@ import React from "react";
 // without a real <SessionProvider />.
 vi.mock("next-auth/react", () => ({
   useSession: vi.fn(() => ({ data: null, status: "unauthenticated" })),
+  getSession: vi.fn(() => Promise.resolve(null)),
   signIn: vi.fn(),
   signOut: vi.fn(),
   SessionProvider: ({ children }: { children: React.ReactNode }) => children,
