@@ -2376,10 +2376,16 @@ export const useTOCStore = create<TOCState>()(
           } else if (!layer.layer && (group.wmsGroupUrl || layer.layerUrl)) {
             // Determine source type and URL for this layer
             // Direct layers (e.g. WMTS) store their own sourceType/URL;
-            // WMS layers derive from the group's wmsGroupUrl.
+            // GeoServer WMS layers use layer.serverUrl (set by buildLayerFromWMS) to avoid
+            // picking up the wrong base URL when layers are merged across source types
+            // (e.g. a GeoServer layer merged into a group whose wmsGroupUrl is an ArcGIS URL).
             const isDirectLayer = !!layer.sourceType && !!layer.layerUrl;
             const layerSourceType = isDirectLayer ? (layer.sourceType as OLDataType) : OL_DATA_TYPES.ImageWMS;
-            const layerUrl = isDirectLayer ? layer.layerUrl! : group.wmsGroupUrl.split("/wms")[0] + "/wms";
+            const layerUrl = isDirectLayer
+              ? layer.layerUrl!
+              : layer.serverUrl
+                ? `${layer.serverUrl}wms` // serverUrl has trailing "/", e.g. "https://host/geoserver/"
+                : group.wmsGroupUrl.split("/wms")[0] + "/wms";
 
             // Wrap the callback-style getLayer in a promise so callers can
             // await full layer initialization (no more arbitrary setTimeout waits).
