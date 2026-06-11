@@ -311,9 +311,10 @@ export default function Sidebar() {
     if (type === "tools") {
       const ToolComponent = toolComponents[componentName];
       if (ToolComponent) {
+        const toolItem = visibleTools.find((t) => t.name === displayName) ?? visibleTools.find((t) => (t.component || t.name) === componentName);
         const component = (
           <Suspense fallback={<div className="p-5">Loading tool...</div>}>
-            <ToolComponent name={displayName} options={options} onClose={handleCloseTool} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
+            <ToolComponent name={displayName} config={toolItem?.config} options={options} onClose={handleCloseTool} onSidebarVisibility={() => console.log("Toggle sidebar visibility")} />
           </Suspense>
         );
         setActiveToolComponent(component);

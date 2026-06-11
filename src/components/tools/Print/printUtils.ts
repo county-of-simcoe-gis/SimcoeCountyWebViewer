@@ -3,6 +3,8 @@
  * Ported from SimcoeCountyWebViewer printRequest/utils.js
  */
 
+import type { PrintSize } from "./printConfig";
+
 /**
  * Convert RGB values to hexadecimal color string
  * @param r - Red value (0-255)
@@ -248,6 +250,28 @@ export function radiansToDegrees(radians: number): number {
   return radians * (180 / Math.PI);
 }
 
+/**
+ * Merge print sizes using legacy append/overwrite behavior from the old app.
+ */
+export function mergePrintSizes(defaultSizes: PrintSize[], configuredSizes?: PrintSize[], append?: boolean, overwrite?: boolean): PrintSize[] {
+  const safeDefaults = Array.isArray(defaultSizes) ? [...defaultSizes] : [];
+  const safeConfigured = Array.isArray(configuredSizes) ? [...configuredSizes] : [];
+
+  if (safeConfigured.length === 0) {
+    return safeDefaults;
+  }
+
+  if (overwrite) {
+    return safeConfigured;
+  }
+
+  if (append === false) {
+    return [...safeConfigured, ...safeDefaults];
+  }
+
+  return [...safeDefaults, ...safeConfigured];
+}
+
 const printUtils = {
   rgbToHex,
   stringToColour,
@@ -259,6 +283,7 @@ const printUtils = {
   getBaseUrl,
   degreesToRadians,
   radiansToDegrees,
+  mergePrintSizes,
 };
 
 export default printUtils;

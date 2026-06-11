@@ -30,9 +30,13 @@ vi.mock("../printRequest", () => ({
 }));
 
 // Mock printUtils
-vi.mock("../printUtils", () => ({
-  getBaseUrl: vi.fn().mockReturnValue("https://print.example.com"),
-}));
+vi.mock("../printUtils", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../printUtils")>();
+  return {
+    ...actual,
+    getBaseUrl: vi.fn().mockReturnValue("https://print.example.com"),
+  };
+});
 
 // Mock mapHelpers
 vi.mock("@/utils/mapHelpers", () => ({
@@ -313,6 +317,128 @@ describe("PrintTool", () => {
 
       const titleInput = screen.getByPlaceholderText("Enter map title");
       expect(titleInput).toHaveValue("Custom Title");
+    });
+
+    it("updates print UI when config changes after mount", () => {
+      useMapStore.setState({ map: mockMap as unknown as ReturnType<typeof useMapStore.getState>["map"] });
+
+      const { rerender } = render(<PrintTool onClose={mockOnClose} />);
+
+      expect(screen.getByPlaceholderText("Enter map title")).toHaveValue("County of Simcoe - Web Map");
+
+      rerender(
+        <PrintTool
+          onClose={mockOnClose}
+          config={{
+            mapTitle: "One Call Request",
+            overwrite: true,
+            printSizes: [
+              {
+                value: "One Call",
+                label: "One Call Request",
+                size: [570, 389],
+                layout: "one call",
+                overview: false,
+                type: "report",
+              },
+            ],
+          }}
+        />,
+      );
+
+      expect(screen.getByPlaceholderText("Enter map title")).toHaveValue("One Call Request");
+      const paperSizeSelect = screen.getAllByRole("combobox")[0] as HTMLSelectElement;
+      const optionValues = Array.from(paperSizeSelect.options).map((option) => option.value);
+      expect(optionValues).toEqual(["One Call"]);
+      expect(paperSizeSelect).toHaveValue("One Call");
+    });
+
+    it("uses only configured print sizes when overwrite is true", () => {
+      useMapStore.setState({ map: mockMap as unknown as ReturnType<typeof useMapStore.getState>["map"] });
+
+      render(
+        <PrintTool
+          onClose={mockOnClose}
+          config={{
+            overwrite: true,
+            printSizes: [
+              {
+                value: "One Call",
+                label: "One Call Request",
+                size: [570, 389],
+                layout: "one call",
+                overview: false,
+                type: "report",
+              },
+            ],
+          }}
+        />,
+      );
+
+      const paperSizeSelect = screen.getAllByRole("combobox")[0] as HTMLSelectElement;
+      const optionValues = Array.from(paperSizeSelect.options).map((option) => option.value);
+
+      expect(optionValues).toEqual(["One Call"]);
+      expect(paperSizeSelect).toHaveValue("One Call");
+    });
+
+    it("prepends configured print sizes when append is false", () => {
+      useMapStore.setState({ map: mockMap as unknown as ReturnType<typeof useMapStore.getState>["map"] });
+
+      render(
+        <PrintTool
+          onClose={mockOnClose}
+          config={{
+            append: false,
+            printSizes: [
+              {
+                value: "One Call",
+                label: "One Call Request",
+                size: [570, 389],
+                layout: "one call",
+                overview: false,
+                type: "report",
+              },
+            ],
+          }}
+        />,
+      );
+
+      const paperSizeSelect = screen.getAllByRole("combobox")[0] as HTMLSelectElement;
+      const optionValues = Array.from(paperSizeSelect.options).map((option) => option.value);
+
+      expect(optionValues[0]).toBe("One Call");
+      expect(optionValues).toContain("8X11 Portrait");
+      expect(paperSizeSelect).toHaveValue("One Call");
+    });
+
+    it("appends configured print sizes after defaults when append is not set", () => {
+      useMapStore.setState({ map: mockMap as unknown as ReturnType<typeof useMapStore.getState>["map"] });
+
+      render(
+        <PrintTool
+          onClose={mockOnClose}
+          config={{
+            printSizes: [
+              {
+                value: "One Call",
+                label: "One Call Request",
+                size: [570, 389],
+                layout: "one call",
+                overview: false,
+                type: "report",
+              },
+            ],
+          }}
+        />,
+      );
+
+      const paperSizeSelect = screen.getAllByRole("combobox")[0] as HTMLSelectElement;
+      const optionValues = Array.from(paperSizeSelect.options).map((option) => option.value);
+
+      expect(optionValues[0]).toBe("8X11 Portrait");
+      expect(optionValues[optionValues.length - 1]).toBe("One Call");
+      expect(paperSizeSelect).toHaveValue("8X11 Portrait");
     });
   });
 });

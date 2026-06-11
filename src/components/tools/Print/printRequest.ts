@@ -983,7 +983,7 @@ async function configureTileLayer(layer: TileLayer): Promise<MapFishWMTSLayer | 
 /**
  * Configure image layer for MapFish
  */
-function configureImageLayer(layer: ImageLayer<ImageSource>, options: PrintRequestAttributes): MapFishImageLayer {
+function configureImageLayer(layer: ImageLayer<ImageSource>, options: PrintRequestAttributes, map: Map): MapFishImageLayer {
   const source = layer.getSource() as {
     image_?: { src_: string };
     getUrl?: () => string | undefined;
@@ -1006,10 +1006,35 @@ function configureImageLayer(layer: ImageLayer<ImageSource>, options: PrintReque
       fallbackUrl.searchParams.set("F", "image");
       fallbackUrl.searchParams.set("FORMAT", "PNG32");
       fallbackUrl.searchParams.set("TRANSPARENT", "true");
-      fallbackUrl.searchParams.set("DPI", String(options.map.dpi || 96));
-      const printSize = !options.map.height ? [800, 600] : [parseInt(String(options.map.height)), parseInt(String(options.map.width))];
-      fallbackUrl.searchParams.set("SIZE", `${printSize[0]},${printSize[1]}`);
+      const mapSize = map.getSize() || [800, 600];
+      const printSize = !options.map.height || !options.map.width ? mapSize : [parseInt(String(options.map.height)), parseInt(String(options.map.width))];
       const extent = options.map.bbox ? options.map.bbox : computeExtent(printSize[0], printSize[1], 72, options.map.scale || 1, options.map.center || [0, 0]);
+
+      // Match old-app output sizing logic: scale from current view size/bbox to requested print extent + DPI.
+      const viewExtent = map.getView().calculateExtent(mapSize);
+      const viewDPI = 96;
+      let outputDPI = options.map.dpi || 96;
+      let outputSize = [
+        parseInt(String((mapSize[0] / ((viewExtent[0] - viewExtent[2]) / (extent[0] - extent[2]))) * (outputDPI / viewDPI))),
+        parseInt(String((mapSize[1] / ((viewExtent[1] - viewExtent[3]) / (extent[1] - extent[3]))) * (outputDPI / viewDPI))),
+      ];
+
+      // Defensive fallback when the extent math yields invalid dimensions.
+      if (!Number.isFinite(outputSize[0]) || !Number.isFinite(outputSize[1]) || outputSize[0] <= 0 || outputSize[1] <= 0) {
+        outputSize = [printSize[0], printSize[1]];
+      }
+
+      if (outputSize[0] > 4096 || outputSize[1] > 4096) {
+        const outputScaler = 4096 / Math.max(outputSize[0], outputSize[1]);
+        outputDPI = parseInt(String(outputDPI * outputScaler));
+        outputSize = [parseInt(String(outputSize[0] * outputScaler)), parseInt(String(outputSize[1] * outputScaler))];
+      }
+
+      fallbackUrl.searchParams.set("F", "image");
+      fallbackUrl.searchParams.set("FORMAT", "PNG32");
+      fallbackUrl.searchParams.set("TRANSPARENT", "true");
+      fallbackUrl.searchParams.set("SIZE", outputSize.join(","));
+      fallbackUrl.searchParams.set("DPI", String(outputDPI));
       fallbackUrl.searchParams.set("BBOX", extent.join(","));
       fallbackUrl.searchParams.set("BBOXSR", "3857");
       fallbackUrl.searchParams.set("IMAGESR", "3857");
@@ -1033,7 +1058,8 @@ function configureImageLayer(layer: ImageLayer<ImageSource>, options: PrintReque
   const urlSIZE = (urlParams.get("SIZE") || "800,600").split(",");
   const urlBBOX = (urlParams.get("BBOX") || "0,0,0,0").split(",");
 
-  const printSize = !options.map.height ? [800, 600] : [parseInt(String(options.map.height)), parseInt(String(options.map.width))];
+  const mapSize = map.getSize() || [800, 600];
+  const printSize = !options.map.height || !options.map.width ? mapSize : [parseInt(String(options.map.height)), parseInt(String(options.map.width))];
 
   const extent = options.map.bbox ? options.map.bbox : computeExtent(printSize[0], printSize[1], 72, options.map.scale || 1, options.map.center || [0, 0]);
 
@@ -1109,7 +1135,7 @@ async function getLayerByType(layer: Layer, printOptions: PrintRequestAttributes
     try {
       const sourceType = LayerHelpers.getLayerSourceType(layer.getSource()!);
       if (sourceType === OL_DATA_TYPES.ImageArcGISRest) {
-        return configureImageLayer(layer, printOptions);
+        return configureImageLayer(layer, printOptions, map);
       } else {
         return configureWMSImageLayer(layer);
       }

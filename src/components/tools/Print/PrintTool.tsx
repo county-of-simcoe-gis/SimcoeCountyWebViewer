@@ -5,7 +5,7 @@
  * Ported from SimcoeCountyWebViewer Print.jsx
  */
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 
 import PanelComponent from "@/components/PanelComponent";
@@ -14,7 +14,7 @@ import { useAppStore } from "@/stores/appStore";
 import { getMapScale } from "@/utils/mapHelpers";
 import { printConfig, PrintSize, PrintFormat } from "./printConfig";
 import { buildPrintRequest, PrintState } from "./printRequest";
-import { getBaseUrl } from "./printUtils";
+import { getBaseUrl, mergePrintSizes } from "./printUtils";
 import { useToast } from "@/hooks/useToast";
 import { Layer } from "ol/layer";
 
@@ -28,6 +28,8 @@ interface PrintToolProps {
     originUrl?: string;
     printLogo?: string;
     printSizes?: PrintSize[];
+    append?: boolean;
+    overwrite?: boolean;
     printFormats?: PrintFormat[];
     mapTitle?: string;
     termsOfUse?: string;
@@ -44,7 +46,9 @@ interface PrintStatusResponse {
   error?: string;
 }
 
-export default function PrintTool({ name = "Print", helpLink, hideHeader = false, onClose, onSidebarVisibility, config = {}, options = {} }: PrintToolProps) {
+const EMPTY_PRINT_CONFIG: NonNullable<PrintToolProps["config"]> = {};
+
+export default function PrintTool({ name = "Print", helpLink, hideHeader = false, onClose, onSidebarVisibility, config = EMPTY_PRINT_CONFIG, options = {} }: PrintToolProps) {
   const { map } = useMapStore();
   const appConfig = useAppStore((state) => state.config);
   const printUrl = appConfig?.printUrl || "";
@@ -74,9 +78,6 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
   const [isPrinting, setIsPrinting] = useState<boolean>(false);
   const [printProgress, setPrintProgress] = useState<string>("");
 
-  // Track if initial config has been applied
-  const initializedRef = useRef(false);
-
   // Initialize map-related values
   useEffect(() => {
     if (map) {
@@ -93,26 +94,26 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
     }
   }, [map]);
 
-  // Apply configuration overrides (only once on mount)
+  // Apply configuration overrides whenever config changes.
+  // Use a stable EMPTY_PRINT_CONFIG default so this effect is not triggered by object recreation.
   useEffect(() => {
-    if (initializedRef.current) return;
-    initializedRef.current = true;
+    const mergedSizes = mergePrintSizes(printConfig.printSizes, config.printSizes, config.append, config.overwrite);
+    const mergedFormats = config.printFormats && config.printFormats.length > 0 ? config.printFormats : printConfig.printFormats;
 
     if (config.originUrl) setOriginUrl(config.originUrl);
     if (config.printLogo) setPrintLogo(config.printLogo);
     else if (appConfig?.printLogo) setPrintLogo(appConfig.printLogo);
-    if (config.printSizes) {
-      setPrintSizes(config.printSizes);
-      setPrintSizeSelectedOption(config.printSizes[0]);
-    }
-    if (config.printFormats) {
-      setPrintFormats(config.printFormats);
-      setPrintFormatSelectedOption(config.printFormats[0]);
-    }
-    if (config.mapTitle) setMapTitle(config.mapTitle);
-    if (config.termsOfUse) setTermsOfUse(config.termsOfUse);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
+    setPrintSizes(mergedSizes);
+    setPrintSizeSelectedOption(mergedSizes[0] || printConfig.printSizes[0]);
+
+    setPrintFormats(mergedFormats);
+    setPrintFormatSelectedOption(mergedFormats[0] || printConfig.printFormats[0]);
+
+    // Use undefined check (not truthy) so empty-string values from config are still applied
+    if (config.mapTitle !== undefined) setMapTitle(config.mapTitle);
+    if (config.termsOfUse !== undefined) setTermsOfUse(config.termsOfUse);
+  }, [config, appConfig?.printLogo]);
 
   /**
    * Get layers for printing — includes visible layers plus hidden print-only
