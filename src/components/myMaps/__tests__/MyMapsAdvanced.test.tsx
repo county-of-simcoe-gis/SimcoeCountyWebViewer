@@ -4,11 +4,6 @@ import { userEvent } from "@testing-library/user-event";
 import MyMapsAdvanced from "@/components/myMaps/MyMapsAdvanced";
 import { useToastStore } from "@/hooks/useToast";
 
-// Mock copy-to-clipboard
-vi.mock("copy-to-clipboard", () => ({
-  default: vi.fn(() => true),
-}));
-
 // Mock next/image
 vi.mock("next/image", () => ({
   default: ({ src, alt, width, height, className }: { src: string; alt: string; width: number; height: number; className?: string }) => (
@@ -47,6 +42,7 @@ vi.mock("@/stores/myMapsStore", () => ({
 
 // Mock window methods
 const mockConfirm = vi.fn();
+const mockClipboardWriteText = vi.fn();
 
 // Mock window location
 Object.defineProperty(window, "location", {
@@ -74,6 +70,10 @@ describe("MyMapsAdvanced Component", () => {
 
     // Re-establish window method stubs (needed because global test setup calls vi.restoreAllMocks())
     vi.stubGlobal("confirm", mockConfirm);
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: mockClipboardWriteText },
+      configurable: true,
+    });
 
     mockMyMapsStore.isEditing = false;
     mockMyMapsStore.editMode = "vertices";
@@ -87,6 +87,8 @@ describe("MyMapsAdvanced Component", () => {
     // Reset window method mocks
     mockConfirm.mockClear();
     mockConfirm.mockReturnValue(true);
+    mockClipboardWriteText.mockClear();
+    mockClipboardWriteText.mockResolvedValue(undefined);
 
     // Clear toast store before each test
     useToastStore.setState({ toasts: [] });
@@ -337,8 +339,6 @@ describe("MyMapsAdvanced Component", () => {
     });
 
     it("should handle share operation", async () => {
-      const mockCopy = await import("copy-to-clipboard");
-
       render(<MyMapsAdvanced {...defaultProps} />);
 
       const trigger = screen.getByText("Advanced Options");
@@ -350,7 +350,9 @@ describe("MyMapsAdvanced Component", () => {
       const shareButton = screen.getByText("Share");
       await user.click(shareButton);
 
-      expect(mockCopy.default).toHaveBeenCalledWith("http://localhost:3000/test?MY_MAPS_ID=share-id-123");
+      await waitFor(() => {
+        expect(mockClipboardWriteText).toHaveBeenCalledWith("http://localhost:3000/test?MY_MAPS_ID=share-id-123");
+      });
       expect(useToastStore.getState().toasts).toContainEqual(expect.objectContaining({ message: "MyMaps link has been saved to clipboard.", type: "success" }));
     });
 

@@ -45,6 +45,7 @@ vi.mock("react-icons/fa", () => ({
   FaInfoCircle: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "info-circle-icon" }, "InfoCircle"),
   FaDownload: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "download-icon" }, "Download"),
   FaLock: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "lock-icon" }, "Lock"),
+  FaCog: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "cog-icon" }, "Cog"),
   FaUser: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "user-icon" }, "User"),
   FaEllipsisV: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "ellipsis-v-icon" }, "EllipsisV"),
   FaEyeSlash: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "eye-slash-icon" }, "EyeSlash"),

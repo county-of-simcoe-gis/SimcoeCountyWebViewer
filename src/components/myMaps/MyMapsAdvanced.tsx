@@ -4,12 +4,13 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import Switch from "react-switch";
 import Image from "next/image";
-import copy from "copy-to-clipboard";
+import { FaCog, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { useSession } from "next-auth/react";
 import { useConfig } from "@/hooks/useConfig";
 import { useMyMapsStore } from "@/stores/myMapsStore";
 import type { UserMyMapsEntry, MyMapsHistoryEntry } from "@/stores/myMapsStore";
 import { useToast } from "@/hooks/useToast";
+import { copyToClipboard } from "@/utils/myMapsHelpers";
 import "./MyMapsAdvanced.css";
 
 interface MyMapsAdvancedProps {
@@ -171,7 +172,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
     }
   };
 
-  const onShare = () => {
+  const onShare = async () => {
     const shareId = selectedDropdownValue !== "manual" ? selectedDropdownValue : inputText.trim();
     if (!shareId) {
       toast.warning("Please save your MyMaps first to get an ID to share.");
@@ -180,17 +181,17 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
 
     const currentUrl = `${window.location.href.split("?")[0]}?MY_MAPS_ID=${shareId}`;
 
-    try {
-      // Copy to clipboard
-      copy(currentUrl);
+    const copied = await copyToClipboard(currentUrl);
+
+    if (copied) {
       toast.success("MyMaps link has been saved to clipboard.");
-    } catch (error) {
-      console.error("Failed to copy to clipboard:", error);
+    } else {
+      console.error("Failed to copy to clipboard.");
       alert("Failed to copy link to clipboard. Please copy this URL manually: " + currentUrl);
     }
   };
 
-  const onSharePublic = () => {
+  const onSharePublic = async () => {
     const shareId = selectedDropdownValue !== "manual" ? selectedDropdownValue : inputText.trim();
     if (!shareId) {
       toast.warning("Please save your MyMaps first to get an ID to share.");
@@ -205,11 +206,12 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
 
     const url = `${publicUrl}?MY_MAPS_ID=${shareId}`;
 
-    try {
-      copy(url);
+    const copied = await copyToClipboard(url);
+
+    if (copied) {
       toast.success("Public MyMaps link has been saved to clipboard.");
-    } catch (error) {
-      console.error("Failed to copy to clipboard:", error);
+    } else {
+      console.error("Failed to copy to clipboard.");
       alert("Failed to copy link to clipboard. Please copy this URL manually: " + url);
     }
   };
@@ -427,11 +429,16 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
 
       {/* Trigger button always at bottom */}
       <button
-        className="block w-full -ml-[31px] pl-7 font-bold pt-px border-none bg-transparent cursor-pointer text-inherit h-[30px] leading-[30px] transition-colors bg-[position:5px_center,calc(100%-25px)_9px] bg-no-repeat hover:bg-black/5"
-        style={{ backgroundImage: `url('/images/myMaps/settings.png'), url('${open ? "/images/up.png" : "/images/down.png"}')` }}
+        className="block w-full -ml-[31px] font-bold pt-px border-none bg-transparent cursor-pointer text-inherit h-[30px] leading-[30px] transition-colors hover:bg-black/5"
         onClick={() => setOpen(!open)}
       >
-        Advanced Options
+        <span className="flex h-full items-center justify-between px-[5px] pl-7">
+          <span className="flex items-center gap-[6px]">
+            <FaCog size={12} className="shrink-0 text-base-content/70" aria-hidden="true" />
+            <span>Advanced Options</span>
+          </span>
+          {open ? <FaChevronUp size={10} className="shrink-0 text-base-content/60" aria-hidden="true" /> : <FaChevronDown size={10} className="shrink-0 text-base-content/60" aria-hidden="true" />}
+        </span>
       </button>
 
       {/* Export submenu rendered as portal */}

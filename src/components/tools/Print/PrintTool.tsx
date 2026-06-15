@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import { FaCog, FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 import PanelComponent from "@/components/PanelComponent";
 import { useMapStore } from "@/stores/mapStore";
@@ -361,11 +362,16 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
 
           {/* ADVANCED OPTIONS */}
           <div
-            className={`h-[30px] w-[205px] bg-[#c9e7f9] border border-[#ddd] cursor-pointer select-none leading-[30px] pl-9 bg-[position:5px_center,188px_center] bg-no-repeat bg-[length:20px,12px] text-xs rounded-[3px] transition-colors hover:bg-[#b9d7e9] ${advancedOptionsOpen ? "rounded-b-none" : ""}`}
-            style={{ backgroundImage: `url('/images/settings.png'), url('${advancedOptionsOpen ? "/images/collapsed.png" : "/images/down.png"}')` }}
+            className={`h-[30px] w-[205px] bg-[#c9e7f9] border border-[#ddd] cursor-pointer select-none text-xs rounded-[3px] transition-colors hover:bg-[#b9d7e9] ${advancedOptionsOpen ? "rounded-b-none" : ""}`}
             onClick={() => setAdvancedOptionsOpen(!advancedOptionsOpen)}
           >
-            Advanced Print Options
+            <span className="flex h-full items-center justify-between px-[8px]">
+              <span className="flex items-center gap-[6px]">
+                <FaCog size={12} className="shrink-0 text-[#4a90d9]" aria-hidden="true" />
+                <span className="leading-[30px]">Advanced Print Options</span>
+              </span>
+              {advancedOptionsOpen ? <FaChevronUp size={10} className="shrink-0 text-[#555]" aria-hidden="true" /> : <FaChevronDown size={10} className="shrink-0 text-[#555]" aria-hidden="true" />}
+            </span>
           </div>
         </div>
 

@@ -136,7 +136,7 @@ npm test -- --coverage
 - OpenLayers components are thoroughly mocked with realistic behavior
 - Store hooks use vi.mock with controllable state
 - DOM APIs and browser features are mocked appropriately
-- External dependencies (copy-to-clipboard, next/image) are mocked
+- External dependencies (navigator.clipboard, next/image) are mocked
 
 ### Test Structure
 
