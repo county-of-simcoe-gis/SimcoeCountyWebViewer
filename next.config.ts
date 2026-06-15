@@ -1,10 +1,12 @@
 import type { NextConfig } from "next";
+import path from "path";
 import packageJson from "./package.json";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || undefined;
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  outputFileTracingRoot: path.join(__dirname),
   env: {
     NEXT_PUBLIC_APP_VERSION: packageJson.version,
   },

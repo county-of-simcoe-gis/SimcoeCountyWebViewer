@@ -361,7 +361,8 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
 
           {/* ADVANCED OPTIONS */}
           <div
-            className={`h-[30px] w-[205px] bg-[#c9e7f9] border border-[#ddd] cursor-pointer select-none leading-[30px] pl-9 bg-[url('/images/settings.png'),url('${advancedOptionsOpen ? "/images/collapsed.png" : "/images/down.png"}')] bg-[position:5px_center,188px_center] bg-no-repeat bg-[length:20px,12px] text-xs rounded-[3px] transition-colors hover:bg-[#b9d7e9] ${advancedOptionsOpen ? "rounded-b-none" : ""}`}
+            className={`h-[30px] w-[205px] bg-[#c9e7f9] border border-[#ddd] cursor-pointer select-none leading-[30px] pl-9 bg-[position:5px_center,188px_center] bg-no-repeat bg-[length:20px,12px] text-xs rounded-[3px] transition-colors hover:bg-[#b9d7e9] ${advancedOptionsOpen ? "rounded-b-none" : ""}`}
+            style={{ backgroundImage: `url('/images/settings.png'), url('${advancedOptionsOpen ? "/images/collapsed.png" : "/images/down.png"}')` }}
             onClick={() => setAdvancedOptionsOpen(!advancedOptionsOpen)}
           >
             Advanced Print Options
