@@ -427,7 +427,8 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
 
       {/* Trigger button always at bottom */}
       <button
-        className={`block w-full -ml-[31px] pl-7 font-bold pt-px border-none bg-transparent cursor-pointer text-inherit text-inherit h-[30px] leading-[30px] transition-colors bg-[url('/images/myMaps/settings.png'),url('${open ? "/images/up.png" : "/images/down.png"}')] bg-[position:5px_center,calc(100%-25px)_9px] bg-no-repeat hover:bg-black/5`}
+        className="block w-full -ml-[31px] pl-7 font-bold pt-px border-none bg-transparent cursor-pointer text-inherit h-[30px] leading-[30px] transition-colors bg-[position:5px_center,calc(100%-25px)_9px] bg-no-repeat hover:bg-black/5"
+        style={{ backgroundImage: `url('/images/myMaps/settings.png'), url('${open ? "/images/up.png" : "/images/down.png"}')` }}
         onClick={() => setOpen(!open)}
       >
         Advanced Options

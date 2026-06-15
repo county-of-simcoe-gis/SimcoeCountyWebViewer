@@ -486,7 +486,8 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
 
         {/* ADVANCED OPTIONS */}
         <div
-          className={`h-[30px] w-[205px] bg-[#c9e7f9] border border-[#ddd] cursor-pointer select-none leading-[30px] pl-9 bg-[url('/images/settings.png'),url('${advancedOptionsOpen ? "/images/collapsed.png" : "/images/down.png"}')] bg-[position:5px_center,185px_center] bg-no-repeat bg-[length:24px_24px,16px_16px] mt-[10px] text-[11px]`}
+          className="h-[30px] w-[205px] bg-[#c9e7f9] border border-[#ddd] cursor-pointer select-none leading-[30px] pl-9 bg-[position:5px_center,185px_center] bg-no-repeat bg-[length:24px_24px,16px_16px] mt-[10px] text-[11px]"
+          style={{ backgroundImage: `url('/images/settings.png'), url('${advancedOptionsOpen ? "/images/collapsed.png" : "/images/down.png"}')` }}
           onClick={() => setAdvancedOptionsOpen(!advancedOptionsOpen)}
         >
           Advanced Print Options
