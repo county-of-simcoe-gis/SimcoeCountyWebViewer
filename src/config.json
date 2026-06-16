@@ -465,6 +465,14 @@
       "description": "View Live Feeds from the MTO and Waze.",
       "imageName": "511.png",
       "disable": false
+    },
+    {
+      "id": 12,
+      "name": "Couchiching OHT",
+      "componentName": "CouchichingOHT",
+      "description": "View Couchiching Ontario Health Team healthcare locations across the County.",
+      "imageName": "CouchichingOHT-logo.png",
+      "enabled": true
     }
   ],
   "sidebarShortcutParams": [

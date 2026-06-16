@@ -1,8 +1,118 @@
-import { describe, it, expect } from "vitest";
-import { parseArcGISFeature, parseESRIDescription, getFormattedProjection, getDownloadUrl, getServerUrl } from "@/lib/layerInfo";
+import axios from "axios";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { fetchLayerInfo, parseArcGISFeature, parseESRIDescription, getFormattedProjection, getDownloadUrl, getServerUrl, downloadLayerFile } from "@/lib/layerInfo";
 import type { ArcGISFeatureInfo, LayerInfoData } from "@/types/layerInfo";
+import { getAccessToken } from "@/utils/auth";
+
+vi.mock("axios", () => ({
+  default: {
+    get: vi.fn(),
+  },
+}));
+
+vi.mock("@/utils/auth", () => ({
+  getAccessToken: vi.fn(),
+}));
+
+const mockedAxiosGet = vi.mocked(axios.get);
+const mockedGetAccessToken = vi.mocked(getAccessToken);
+
+const sampleFeatureType: LayerInfoData = {
+  name: "roads",
+  title: "Roads",
+  nativeCRS: { "@class": "Projected", $: "EPSG:4326" },
+  nativeBoundingBox: {
+    minx: 0,
+    maxx: 1,
+    miny: 0,
+    maxy: 1,
+    crs: { "@class": "projected", $: "EPSG:4326" },
+  },
+  attributes: { attribute: [] },
+};
 
 describe("layerInfo", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  describe("request authentication", () => {
+    it("adds bearer token for secure metadata requests when token exists", async () => {
+      mockedGetAccessToken.mockResolvedValue("secure-token");
+      mockedAxiosGet.mockResolvedValue({ data: { featureType: sampleFeatureType } });
+
+      await fetchLayerInfo("https://opengis2.simcoe.ca/geoserver/rest/layers/roads.json", {}, true);
+
+      expect(mockedAxiosGet).toHaveBeenCalledWith(
+        "https://opengis2.simcoe.ca/geoserver/rest/layers/roads.json",
+        expect.objectContaining({
+          headers: expect.objectContaining({ Authorization: "Bearer secure-token" }),
+        }),
+      );
+    });
+
+    it("preserves caller headers when adding bearer token", async () => {
+      mockedGetAccessToken.mockResolvedValue("secure-token");
+      mockedAxiosGet.mockResolvedValue({ data: { featureType: sampleFeatureType } });
+
+      await fetchLayerInfo("https://opengis2.simcoe.ca/geoserver/rest/layers/roads.json", { headers: { Accept: "application/json" } }, true);
+
+      expect(mockedAxiosGet).toHaveBeenCalledWith(
+        "https://opengis2.simcoe.ca/geoserver/rest/layers/roads.json",
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Accept: "application/json",
+            Authorization: "Bearer secure-token",
+          }),
+        }),
+      );
+    });
+
+    it("still sends secure metadata request without Authorization when token is missing", async () => {
+      mockedGetAccessToken.mockResolvedValue(undefined);
+      mockedAxiosGet.mockResolvedValue({ data: { featureType: sampleFeatureType } });
+
+      await fetchLayerInfo("https://opengis2.simcoe.ca/geoserver/rest/layers/roads.json", {}, true);
+
+      const [, config] = mockedAxiosGet.mock.calls[0];
+      const headers = (config as { headers?: Record<string, unknown> } | undefined)?.headers;
+      expect(headers?.Authorization).toBeUndefined();
+    });
+
+    it("does not request token for non-secure metadata requests", async () => {
+      mockedAxiosGet.mockResolvedValue({ data: { featureType: sampleFeatureType } });
+
+      await fetchLayerInfo("https://opengis.simcoe.ca/geoserver/rest/layers/roads.json", {}, false);
+
+      expect(mockedGetAccessToken).not.toHaveBeenCalled();
+    });
+
+    it("adds bearer token for secure download requests when token exists", async () => {
+      mockedGetAccessToken.mockResolvedValue("secure-token");
+      mockedAxiosGet.mockResolvedValue({ data: new Uint8Array([1, 2, 3]) });
+
+      const createObjectURLSpy = vi.spyOn(window.URL, "createObjectURL").mockReturnValue("blob:mock-url");
+      const revokeObjectURLSpy = vi.spyOn(window.URL, "revokeObjectURL").mockImplementation(() => undefined);
+
+      await downloadLayerFile("https://opengis2.simcoe.ca/geoserver/wfs", "roads", true);
+
+      expect(mockedAxiosGet).toHaveBeenCalledWith(
+        "https://opengis2.simcoe.ca/geoserver/wfs",
+        expect.objectContaining({
+          responseType: "blob",
+          headers: expect.objectContaining({ Authorization: "Bearer secure-token" }),
+        }),
+      );
+
+      createObjectURLSpy.mockRestore();
+      revokeObjectURLSpy.mockRestore();
+    });
+  });
+
   describe("parseESRIDescription", () => {
     it("strips HTML tags from description", () => {
       expect(parseESRIDescription("<p>Hello <b>World</b></p>")).toEqual({ description: "Hello World" });

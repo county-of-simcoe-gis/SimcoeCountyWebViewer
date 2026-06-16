@@ -34,6 +34,7 @@ const SolidWasteFacilitiesTheme = lazy(() => import("@/components/themes/SolidWa
 const ImmigrationServicesTheme = lazy(() => import("@/components/themes/ImmigrationServices/ImmigrationServices"));
 const BroadbandTheme = lazy(() => import("@/components/themes/Broadband/Broadband"));
 const ZoningTheme = lazy(() => import("@/components/themes/Zoning/Zoning"));
+const CouchichingOHTTheme = lazy(() => import("@/components/themes/CouchichingOHT/CouchichingOHT"));
 const Five11Theme = lazy(() => import("@/components/themes/Five11/Five11"));
 const CommercialRealEstateTheme = lazy(() => import("@/components/themes/CommercialRealEstate/CommercialRealEstate"));
 
@@ -97,6 +98,7 @@ const themeComponents: Record<
   CommercialRealEstate: CommercialRealEstateTheme,
   Broadband: BroadbandTheme,
   Zoning: ZoningTheme,
+  CouchichingOHT: CouchichingOHTTheme,
 };
 
 export default function Sidebar() {

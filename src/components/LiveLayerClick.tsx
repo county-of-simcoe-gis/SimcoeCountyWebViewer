@@ -100,6 +100,8 @@ export interface LiveLayerResult {
   attributes: Record<string, unknown>;
   feature: Feature<Geometry>;
   layerZIndex?: number;
+  layerId?: string;
+  displayName?: string;
   /** True when this result comes from a theme layer (uses ThemePopupContent) */
   isThemeLayer?: boolean;
   /** Optional theme-specific popup metadata */
@@ -292,6 +294,7 @@ export default function LiveLayerClick() {
             const managedLayerId = tocLayer.managedLayerId;
             const managedLayer = managedLayerId ? useLayerManagerStore.getState().getLayer(managedLayerId) : null;
             const layerZIndex = managedLayer?.zIndex ?? 0;
+            const displayFieldName = tocLayer.layer?.get("displayFieldName");
 
             for (let fi = 0; fi < identifyFeatures.length; fi++) {
               const identifyFeature = identifyFeatures[fi];
@@ -319,6 +322,8 @@ export default function LiveLayerClick() {
                 attributes: cleanAttributes,
                 feature: identifyFeature,
                 layerZIndex,
+                layerId: managedLayerId || undefined,
+                displayName: displayFieldName ? cleanAttributes[String(displayFieldName)] as string | undefined : undefined,
               });
             }
           }
@@ -345,6 +350,7 @@ export default function LiveLayerClick() {
         const themePromises = clickableThemeLayers.map(async (managedLayer) => {
           try {
             const identifyFeatures = await queryLiveLayer(managedLayer.layer, coordinate);
+            const displayFieldName = managedLayer.layer.get("displayFieldName");
             for (let fi = 0; fi < identifyFeatures.length; fi++) {
               const identifyFeature = identifyFeatures[fi];
               const layerName = identifyFeature.get("layerDisplayName") || managedLayer.name || "Feature";
@@ -369,6 +375,8 @@ export default function LiveLayerClick() {
                 attributes: cleanAttributes,
                 feature: identifyFeature,
                 layerZIndex: managedLayer.zIndex,
+                layerId: managedLayer.id,
+                displayName: displayFieldName ? cleanAttributes[String(displayFieldName)] as string | undefined : undefined,
                 isThemeLayer: true,
                 moreInfoUrlFieldName: managedLayer.layer.get("moreInfoUrlFieldName") || undefined,
                 popupLogoImage: (managedLayer.metadata?.popupLogoImage as string) || undefined,
@@ -418,7 +426,10 @@ export default function LiveLayerClick() {
 
           // Convert to InteractionResult format, passing through layer z-index for sorting
           const results = liveLayerResults.map((result) => {
-            const identifyResult = createIdentifyResult(result.layerName, result.featureId, result.attributes, result.feature, result.layerZIndex);
+            const identifyResult = createIdentifyResult(result.layerName, result.featureId, result.attributes, result.feature, result.layerZIndex, {
+              layerId: result.layerId,
+              displayName: result.displayName,
+            });
 
             // Attach themed popup rendering for theme layers
             if (result.isThemeLayer) {

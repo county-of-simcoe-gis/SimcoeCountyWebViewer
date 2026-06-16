@@ -103,6 +103,7 @@ export default function ThemeLayers({ layers, themeId, popupLogoImage, onVisibil
                   olLayer.setProperties({
                     wfsUrl: wfsUrl,
                     clickable: true,
+                    displayFieldName: layerConfig.displayFieldName,
                     moreInfoUrlFieldName: layerConfig.moreInfoUrlFieldName,
                   });
                 }

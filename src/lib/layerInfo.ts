@@ -3,7 +3,30 @@
  */
 
 import axios from "axios";
+import type { AxiosRequestConfig } from "axios";
 import type { LayerInfoData, LayerInfoResponse, ArcGISFeatureInfo, LayerInfoNativeCRS } from "@/types/layerInfo";
+import { getAccessToken } from "@/utils/auth";
+
+async function buildRequestConfig(baseConfig: AxiosRequestConfig = {}, useBearerToken: boolean = false): Promise<AxiosRequestConfig> {
+  const config: AxiosRequestConfig = { ...baseConfig };
+
+  if (!useBearerToken) {
+    return config;
+  }
+
+  const token = await getAccessToken();
+  if (!token) {
+    console.warn("Layer info request marked secure but no bearer token was available; sending request without Authorization header");
+    return config;
+  }
+
+  config.headers = {
+    ...(config.headers as Record<string, unknown>),
+    Authorization: `Bearer ${token}`,
+  };
+
+  return config;
+}
 
 /**
  * Fetches layer information from a URL
@@ -16,12 +39,7 @@ export async function fetchLayerInfo(url: string, params: Record<string, unknown
       return null;
     }
 
-    const config: Record<string, unknown> = { ...params };
-
-    if (useBearerToken) {
-      // Add bearer token if needed - implement based on your auth system
-      // config.headers = { Authorization: `Bearer ${token}` };
-    }
+    const config = await buildRequestConfig(params as AxiosRequestConfig, useBearerToken);
 
     console.log(`Fetching layer info from: ${url} (depth: ${_depth})`);
     const response = await axios.get<LayerInfoResponse | ArcGISFeatureInfo>(url, config);
@@ -189,14 +207,12 @@ export function getServerUrl(layerURL: string): string {
  */
 export async function downloadLayerFile(url: string, fileName: string, useBearerToken: boolean = false): Promise<void> {
   try {
-    const config: Record<string, unknown> = {
-      responseType: "blob",
-    };
-
-    if (useBearerToken) {
-      // Add bearer token if needed
-      // config.headers = { Authorization: `Bearer ${token}` };
-    }
+    const config = await buildRequestConfig(
+      {
+        responseType: "blob",
+      },
+      useBearerToken,
+    );
 
     const response = await axios.get(url, config);
     const blob = new Blob([response.data]);

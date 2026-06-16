@@ -297,15 +297,24 @@ export function createCondoResult(arn: string, unitNumber: string | undefined, a
 }
 
 // Helper function to create an identify result
-export function createIdentifyResult(layerName: string, featureId: string, attributes: Record<string, unknown>, feature?: Feature, layerZIndex?: number): IdentifyResult {
-  // Try to create a meaningful display name from attributes
-  const displayName = String(attributes.name || attributes.NAME || attributes.label || layerName);
+export function createIdentifyResult(
+  layerName: string,
+  featureId: string,
+  attributes: Record<string, unknown>,
+  feature?: Feature,
+  layerZIndex?: number,
+  options?: { layerId?: string; displayName?: string },
+): IdentifyResult {
+  // Try to create a meaningful display name from attributes, with caller override for
+  // layers that expose a configured display field such as Name or Address.
+  const displayName = String(options?.displayName || attributes.name || attributes.Name || attributes.NAME || attributes.address || attributes.Address || attributes.label || layerName);
 
   return {
     id: `identify_${layerName}_${featureId}`,
     type: "identify",
     displayName,
     layerZIndex,
+    layerId: options?.layerId,
     data: {
       layerName,
       featureId,

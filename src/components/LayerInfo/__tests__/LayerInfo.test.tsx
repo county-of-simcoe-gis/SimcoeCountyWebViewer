@@ -213,6 +213,17 @@ describe("LayerInfo", () => {
         expect(screen.getByText(/Generated on:/)).toBeInTheDocument();
       });
     });
+
+    it("removes token from displayed URL source for secured ArcGIS layers", async () => {
+      const securedArcgisUrl = "https://maps.simcoe.ca/arcgis/rest/services/Public/MapServer/0?f=json&token=secret-token";
+      render(<LayerInfo layerURL={securedArcgisUrl} secure={true} />);
+
+      await waitFor(() => {
+        expect(screen.getByText("URL Source")).toBeInTheDocument();
+        expect(screen.getByText("https://maps.simcoe.ca/arcgis/rest/services/Public/MapServer/0?f=json")).toBeInTheDocument();
+        expect(screen.queryByText(securedArcgisUrl)).not.toBeInTheDocument();
+      });
+    });
   });
 
   describe("Header Buttons", () => {
@@ -417,11 +428,19 @@ describe("LayerInfo", () => {
   });
 
   describe("Security and Parameters", () => {
-    it("passes secure flag to fetchLayerInfo", async () => {
+    it("does not use bearer token for non-geoserver URL even when secure", async () => {
       render(<LayerInfo layerURL="https://example.com/layer" secure={true} />);
 
       await waitFor(() => {
-        expect(layerInfoLib.fetchLayerInfo).toHaveBeenCalledWith("https://example.com/layer", {}, true);
+        expect(layerInfoLib.fetchLayerInfo).toHaveBeenCalledWith("https://example.com/layer", {}, false);
+      });
+    });
+
+    it("uses bearer token for secured geoserver URL", async () => {
+      render(<LayerInfo layerURL="https://geoserver.example.com/rest/layer" secure={true} />);
+
+      await waitFor(() => {
+        expect(layerInfoLib.fetchLayerInfo).toHaveBeenCalledWith("https://geoserver.example.com/rest/layer", {}, true);
       });
     });
 

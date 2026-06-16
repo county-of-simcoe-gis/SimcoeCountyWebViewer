@@ -71,6 +71,7 @@ describe("LayerInfoModal", () => {
       isOpen: false,
       layerURL: null,
       showDownload: false,
+      secured: false,
     });
     // Setup default mock implementation
     vi.mocked(layerInfoLib.fetchLayerInfo).mockResolvedValue(mockLayerData);
@@ -101,7 +102,7 @@ describe("LayerInfoModal", () => {
     });
 
     it("does not render when layerURL is null", () => {
-      useLayerInfoStore.setState({ isOpen: true, layerURL: null, showDownload: false });
+      useLayerInfoStore.setState({ isOpen: true, layerURL: null, showDownload: false, secured: false });
 
       const { container } = render(<LayerInfoModal />);
       expect(container.firstChild).toBeNull();
@@ -163,6 +164,17 @@ describe("LayerInfoModal", () => {
       await waitFor(() => {
         // Check for the download section by looking for the fieldset legend
         expect(screen.getByRole("button", { name: /download/i })).toBeInTheDocument();
+      });
+    });
+
+    it("passes secured flag to LayerInfo component", async () => {
+      const testURL = "https://geoserver.example.com/rest/layer";
+      useLayerInfoStore.getState().openLayerInfo(testURL, false, true);
+
+      render(<LayerInfoModal />);
+
+      await waitFor(() => {
+        expect(layerInfoLib.fetchLayerInfo).toHaveBeenCalledWith(testURL, {}, true);
       });
     });
   });

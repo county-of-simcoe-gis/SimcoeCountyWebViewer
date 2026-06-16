@@ -143,7 +143,7 @@ export function openLayerInfo(
   layer: TOCLayer,
   options: {
     showDownload?: boolean;
-  } = {}
+  } = {},
 ): boolean {
   const layerUrl = constructLayerInfoUrl(layer);
 
@@ -153,10 +153,11 @@ export function openLayerInfo(
   }
 
   const { showDownload = layer.canDownload ?? false } = options;
+  const secured = layer.secured ?? false;
 
   // Open the layer info modal
   const { openLayerInfo: openModal } = useLayerInfoStore.getState();
-  openModal(layerUrl, showDownload);
+  openModal(layerUrl, showDownload, secured);
 
   return true;
 }

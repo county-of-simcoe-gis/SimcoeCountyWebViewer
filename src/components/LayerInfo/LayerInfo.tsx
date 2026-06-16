@@ -37,11 +37,8 @@ export default function LayerInfo({ layerURL, showDownload = false, secure = fal
         setLoading(true);
         setError(null);
 
-        // Check if we should use bearer token
-        let useBearerToken = secure;
-        if (layerURL.indexOf("token=") !== -1) {
-          useBearerToken = false;
-        }
+        const isGeoServerLayer = !!config?.geoserverUrl && layerURL.includes(config.geoserverUrl);
+        const useBearerToken = secure && isGeoServerLayer && !layerURL.includes("token=");
 
         const data = await fetchLayerInfo(layerURL, params, useBearerToken);
 
@@ -132,6 +129,23 @@ export default function LayerInfo({ layerURL, showDownload = false, secure = fal
   }
 
   const shouldShowDownload = showDownload && layerInfo.name !== "Assessment Parcel" && layerInfo.namespace;
+
+  const getDisplaySourceUrl = (url: string): string => {
+    const isArcGISUrl = url.includes("/arcgis/rest/services") || url.includes("/MapServer") || url.includes("/FeatureServer");
+    if (!secure || !isArcGISUrl) {
+      return url;
+    }
+
+    try {
+      const parsedUrl = new URL(url);
+      parsedUrl.searchParams.delete("token");
+      return parsedUrl.toString();
+    } catch {
+      return url;
+    }
+  };
+
+  const displayLayerUrl = layerURL ? getDisplaySourceUrl(layerURL) : "";
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -229,7 +243,7 @@ export default function LayerInfo({ layerURL, showDownload = false, secure = fal
                   rel="noopener noreferrer"
                   className="text-blue-600 no-underline transition-colors duration-200 hover:text-blue-800 hover:underline print:text-black print:underline"
                 >
-                  {layerURL}
+                  {displayLayerUrl}
                 </a>
               </div>
             </fieldset>
