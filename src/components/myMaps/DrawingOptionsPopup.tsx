@@ -273,6 +273,20 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
     }
   }, [isOpen, item?.labelRotation, item]); // Watch for rotation changes
 
+  // Sync symbolizer content when labelVisible changes (show/hide label style rows).
+  // Replaces only the child .mymaps-symbolizer-container — NOT the overlay container —
+  // so no mouseout fires on the overlay, preventing interaction/drag lockup.
+  useEffect(() => {
+    if (!overlayElementRef.current || !popupRef.current || !item || !isOpen) return;
+    const reactSymbolizer = popupRef.current.querySelector(".mymaps-symbolizer-container");
+    const overlaySymbolizer = overlayElementRef.current.querySelector(".mymaps-symbolizer-container");
+    if (reactSymbolizer && overlaySymbolizer) {
+      overlaySymbolizer.innerHTML = reactSymbolizer.innerHTML;
+      attachSymbolizerListeners(overlayElementRef.current, item, updateItem, emit);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item?.labelVisible, isOpen]);
+
   // Cleanup overlay only on unmount
   useEffect(() => {
     return () => {
