@@ -437,23 +437,39 @@ export const useTOCStore = create<TOCState>()(
       const preserveLayerOrder = options?.preserveLayerOrder ?? false;
       set((state) => {
         // Sort groups so primary source groups appear first, then alphabetical
-        const sortedGroups = sortGroups(groups);
+        const sortedGroupsRaw = sortGroups(groups);
+
+        // DEDUPLICATION helpers shared by both the per-category groups and the
+        // virtual "All Layers" group.
+        // Priority score: secured (+2) outranks primary group (+1) outranks plain (0).
+        // A strictly higher score replaces the incumbent; ties keep the first seen.
+        const dedupKey = (layer: TOCLayer): string => layer.tocDisplayName || layer.displayName || layer.name;
+        const dedupLayers = (layers: TOCLayer[], groupPriority: number): TOCLayer[] => {
+          const map = new Map<string, { layer: TOCLayer; priority: number }>();
+          layers.forEach((layer) => {
+            const key = dedupKey(layer);
+            const priority = (layer.secured ? 2 : 0) + groupPriority;
+            const existing = map.get(key);
+            if (!existing || priority > existing.priority) {
+              map.set(key, { layer: { ...layer }, priority });
+            }
+          });
+          return Array.from(map.values(), (e) => e.layer);
+        };
+
+        // Apply deduplication to every individual group so that selecting a
+        // specific category in the TOC doesn't reveal duplicate entries.
+        const sortedGroups = sortedGroupsRaw.map((group) => ({
+          ...group,
+          layers: dedupLayers(group.layers, group.primary ? 1 : 0),
+        }));
 
         if (type === "LIST") {
-          // For LIST view, create an "All Layers" group that contains all layers flattened.
-          // DEDUPLICATION (LIST only): the same physical layer can be published
-          // under multiple workspaces (e.g. an unsecured "simcoe:Bruce_Trail"
-          // and a secured "simcoe-secured:Bruce_Trail"), or appear in several
-          // config groups. The flattened "All Layers" list must show each layer
-          // ONCE. When duplicates (same display name) exist, the SECURED — then
-          // primary — variant wins and the others are dropped. This mirrors the
-          // legacy app's mergeGroupsTogether() behavior. FOLDER view is NOT
-          // deduped (it renders real groups directly, below), so per-group
-          // duplicates remain available there.
-          const dedupKey = (layer: TOCLayer): string => layer.tocDisplayName || layer.displayName || layer.name;
-          // Priority score: secured (+2) outranks primary group (+1) outranks plain (0).
-          // A strictly higher score replaces the incumbent; ties keep the first
-          // seen, preserving group/sort order.
+          // For LIST view, create an "All Layers" group that contains all layers
+          // flattened across every category. The cross-group pass deduplicates
+          // the same layer appearing in *multiple* categories; the per-group pass
+          // above already removed duplicates *within* each category. FOLDER view
+          // is NOT deduped (it renders raw source groups directly, below).
           const deduped = new Map<string, { layer: TOCLayer; priority: number }>();
           sortedGroups.forEach((group) => {
             const groupPriority = group.primary ? 1 : 0;
@@ -462,7 +478,7 @@ export const useTOCStore = create<TOCState>()(
               const priority = (layer.secured ? 2 : 0) + groupPriority;
               const existing = deduped.get(key);
               if (!existing || priority > existing.priority) {
-                // Create a copy of the layer to avoid mutating the original group's layer
+                // Create a copy of the layer to avoid mutating the individual group's layer
                 deduped.set(key, { layer: { ...layer }, priority });
               }
             });
