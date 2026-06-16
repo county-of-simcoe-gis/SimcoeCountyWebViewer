@@ -15,7 +15,7 @@ export const ZoomControls = React.memo(({ map }: ZoomControlsProps) => {
     const currentZoom = view.getZoom();
     if (currentZoom !== undefined) {
       view.animate({
-        zoom: currentZoom + 1,
+        zoom: Math.round(currentZoom) + 1,
         duration: 250,
       });
     }
@@ -27,7 +27,7 @@ export const ZoomControls = React.memo(({ map }: ZoomControlsProps) => {
     const currentZoom = view.getZoom();
     if (currentZoom !== undefined) {
       view.animate({
-        zoom: currentZoom - 1,
+        zoom: Math.round(currentZoom) - 1,
         duration: 250,
       });
     }

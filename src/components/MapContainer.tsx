@@ -448,6 +448,7 @@ export default function MapContainer() {
         center: centerCoords,
         zoom: defaultZoom,
         maxZoom: activeConfig.maxZoom || 20,
+        constrainResolution: true,
       }),
       interactions: defaultInteractions({
         keyboard: true,
