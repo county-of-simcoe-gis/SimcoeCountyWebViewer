@@ -7247,7 +7247,7 @@
       "minzoom": 13,
       "layout": {
         "text-font": [
-          "Palatino Linotype Bold"
+          "serif"
         ],
         "text-size": 10.6667,
         "text-anchor": "bottom-left",
@@ -7585,7 +7585,7 @@
       "minzoom": 11,
       "layout": {
         "text-font": [
-          "Palatino Linotype Bold"
+          "serif"
         ],
         "text-size": 13.3333,
         "text-letter-spacing": 0.06,
@@ -7611,7 +7611,7 @@
       "minzoom": 10,
       "layout": {
         "text-font": [
-          "Palatino Linotype Bold"
+          "serif"
         ],
         "text-size": 12.6667,
         "text-letter-spacing": 0.06,
@@ -7993,7 +7993,7 @@
         "symbol-placement": "line",
         "symbol-spacing": 1000,
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 12,
         "text-anchor": "bottom",
@@ -8025,7 +8025,7 @@
         "symbol-placement": "line",
         "symbol-spacing": 1000,
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 10.6667,
         "text-anchor": "bottom",
@@ -8057,7 +8057,7 @@
         "symbol-placement": "line",
         "symbol-spacing": 1000,
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 10.6667,
         "text-anchor": "bottom",
@@ -8084,7 +8084,7 @@
         "symbol-placement": "line",
         "symbol-spacing": 1000,
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 10.6667,
         "text-anchor": "bottom",
@@ -8110,7 +8110,7 @@
         "symbol-placement": "line",
         "symbol-spacing": 1000,
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 10.6667,
         "text-anchor": "bottom",
@@ -8150,7 +8150,7 @@
         "symbol-placement": "line",
         "symbol-spacing": 1000,
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 10.6667,
         "text-field": "{_name}",
@@ -8182,7 +8182,7 @@
       "maxzoom": 11,
       "layout": {
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 10.6667,
         "text-field": "{_name}",
@@ -8206,7 +8206,7 @@
       "maxzoom": 11,
       "layout": {
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 10,
         "text-field": "{_name}",
@@ -8230,7 +8230,7 @@
       "maxzoom": 9,
       "layout": {
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 10,
         "text-field": "{_name}",
@@ -8254,7 +8254,7 @@
       "maxzoom": 9,
       "layout": {
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 10,
         "text-letter-spacing": 0.1,
@@ -8278,7 +8278,7 @@
       "minzoom": 12,
       "layout": {
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 11.3333,
         "text-field": "{_name}",
@@ -8301,7 +8301,7 @@
       "minzoom": 12,
       "layout": {
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 11.3333,
         "text-field": "{_name}",
@@ -8324,7 +8324,7 @@
       "minzoom": 14,
       "layout": {
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 9.33333,
         "text-field": "{_name}",
@@ -8347,7 +8347,7 @@
       "minzoom": 10,
       "layout": {
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 10.6667,
         "text-field": "{_name}",
@@ -8370,7 +8370,7 @@
       "minzoom": 10,
       "layout": {
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 13.3333,
         "text-field": "{_name}",
@@ -8393,7 +8393,7 @@
       "minzoom": 10,
       "layout": {
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 12,
         "text-field": "{_name}",
@@ -8426,7 +8426,7 @@
         "symbol-placement": "line",
         "symbol-spacing": 1000,
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 12,
         "text-field": "{_name}",
@@ -8457,7 +8457,7 @@
       "minzoom": 11,
       "layout": {
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 12,
         "text-field": "{_name}",
@@ -8480,7 +8480,7 @@
       "minzoom": 9,
       "layout": {
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 12,
         "text-anchor": "bottom-left",
@@ -8567,7 +8567,7 @@
       "minzoom": 12,
       "layout": {
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 12,
         "text-anchor": "bottom-left",
@@ -8596,7 +8596,7 @@
       "minzoom": 9,
       "layout": {
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 12,
         "text-anchor": "bottom-left",
@@ -8625,7 +8625,7 @@
       "minzoom": 11,
       "layout": {
         "text-font": [
-          "Masinahikan Regular"
+          "serif"
         ],
         "text-size": 14.6667,
         "text-anchor": "bottom-left",
@@ -8654,7 +8654,7 @@
       "minzoom": 13,
       "layout": {
         "text-font": [
-          "Masinahikan Regular"
+          "serif"
         ],
         "text-size": 14.6667,
         "text-anchor": "bottom-left",
@@ -8684,7 +8684,7 @@
       "minzoom": 12,
       "layout": {
         "text-font": [
-          "Masinahikan Regular"
+          "serif"
         ],
         "text-size": 14,
         "text-anchor": "bottom-left",
@@ -8713,7 +8713,7 @@
       "minzoom": 11,
       "layout": {
         "text-font": [
-          "Masinahikan Regular"
+          "serif"
         ],
         "text-anchor": "bottom-left",
         "text-justify": "left",
@@ -8739,7 +8739,7 @@
       "minzoom": 11,
       "layout": {
         "text-font": [
-          "Masinahikan Regular"
+          "serif"
         ],
         "text-size": 14,
         "text-anchor": "bottom-left",
@@ -8768,7 +8768,7 @@
       "minzoom": 10,
       "layout": {
         "text-font": [
-          "Masinahikan Regular"
+          "serif"
         ],
         "text-size": 14,
         "text-anchor": "bottom-left",
@@ -8797,7 +8797,7 @@
       "minzoom": 9,
       "layout": {
         "text-font": [
-          "Masinahikan Regular"
+          "serif"
         ],
         "text-size": 14,
         "text-anchor": "bottom-left",
@@ -8826,7 +8826,7 @@
       "minzoom": 7,
       "layout": {
         "text-font": [
-          "Masinahikan Regular"
+          "serif"
         ],
         "text-anchor": "bottom-left",
         "text-justify": "left",
@@ -9208,7 +9208,7 @@
       "minzoom": 6,
       "layout": {
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 12,
         "text-field": "{_name4}",
@@ -9231,7 +9231,7 @@
       "minzoom": 4,
       "layout": {
         "text-font": [
-          "Palatino Linotype Bold Italic"
+          "serif"
         ],
         "text-size": 12,
         "text-anchor": "bottom-left",
