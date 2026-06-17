@@ -368,7 +368,7 @@ export default function Sidebar() {
         >
           <div className="relative w-[60px] h-[60px] shrink-0 flex items-center justify-center bg-[image:linear-gradient(to_bottom,#f2f5f6,#e6e6e6)] dark:bg-[image:linear-gradient(to_bottom,#252d37,#1d232a)] rounded-sm border border-base-300 mr-4 text-center pt-1.5">
             {tool.secure && <FaLock className="absolute top-0.5 left-0.5 text-[10px] text-base-content/50 drop-shadow-sm" />}
-            <Image src={`/images/${tool.imageName}`} alt={tool.name} width={48} height={48} className="w-[48px] h-[48px] object-contain" />
+            <Image src={`/images/${tool.imageName}`} alt={tool.name || ""} width={48} height={48} className="w-[48px] h-[48px] object-contain" />
           </div>
           <div className="flex-1 flex flex-col justify-start min-h-[60px]">
             <div className="text-[15px] font-bold text-base-content/80 mb-1.5 leading-tight">{tool.name}</div>

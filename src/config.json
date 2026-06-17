@@ -472,7 +472,7 @@
       "componentName": "CouchichingOHT",
       "description": "View Couchiching Ontario Health Team healthcare locations across the County.",
       "imageName": "CouchichingOHT-logo.png",
-      "enabled": true
+      "disable": true
     }
   ],
   "sidebarShortcutParams": [

@@ -125,6 +125,7 @@ export interface TOCSource {
   index?: number;
   projection?: string;
   groups?: string[];
+  descriptionOverride?: string;
 }
 
 interface TOCState {

@@ -17,9 +17,10 @@ interface PanelComponentProps {
   children: React.ReactNode;
   allowClick?: boolean;
   icon?: React.ReactNode;
+  controls?: React.ReactNode;
 }
 
-export default function PanelComponent({ name, helpLink, hideHeader = false, onClose, onSidebarVisibility, children, icon }: PanelComponentProps) {
+export default function PanelComponent({ name, helpLink, hideHeader = false, onClose, onSidebarVisibility, children, icon, controls }: PanelComponentProps) {
   const closeSidebar = useSidebarStore((s) => s.closeSidebar);
 
   useEffect(() => {
@@ -51,14 +52,17 @@ export default function PanelComponent({ name, helpLink, hideHeader = false, onC
           onClose={onClose}
           onHelp={helpLink ? handleHelpClick : undefined}
           controls={
-            <button
-              className="border border-gray-300/70 p-1 rounded-sm ml-1.5 cursor-pointer inline-flex items-center justify-center align-top bg-base-300 w-6 h-6 text-gray-700"
-              title="Minimize Panel"
-              aria-label="Minimize Panel"
-              onClick={handleSidebarVisibility}
-            >
-              <FaChevronLeft size={14} />
-            </button>
+            <>
+              {controls}
+              <button
+                className="border border-gray-300/70 p-1 rounded-sm ml-1.5 cursor-pointer inline-flex items-center justify-center align-top bg-base-300 w-6 h-6 text-gray-700"
+                title="Minimize Panel"
+                aria-label="Minimize Panel"
+                onClick={handleSidebarVisibility}
+              >
+                <FaChevronLeft size={14} />
+              </button>
+            </>
           }
         />
       )}

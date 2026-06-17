@@ -516,14 +516,14 @@ export async function getGroupsFromArcGIS(source: TOCSource): Promise<TOCLayerGr
       if (item.subLayers && item.subLayers.length > 0) continue;
 
       // Parse the description for config options (CATEGORY, VISIBLE, LIVELAYER, etc.)
-      const layerOptions = parseESRIDescription(item.description || "");
-
+      // Prefer a source-level `descriptionOverride` when provided in config.
+      const layerOptions = parseESRIDescription(source.descriptionOverride || item.description || "");
       // Determine visibility: if visibleLayers is specified in config, use that
       // list. Otherwise fall back to the ArcGIS service's defaultVisibility.
       // A VISIBLE=TRUE flag in the ESRI description can also override.
       const visibleLayers = source.group?.visibleLayers || [];
       let visible = visibleLayers.length > 0 ? visibleLayers.includes(item.name) : (item.defaultVisibility ?? false);
-      if (layerOptions.isVisible) visible = true;
+      if (layerOptions.isVisible !== null) visible = layerOptions.isVisible;
 
       // Swap min/max scale (ArcGIS convention is inverted)
       const origMin = item.minScale || 0;
@@ -892,10 +892,10 @@ export async function loadLayerGroupsFromSources(sources: TOCSource[], config: C
  */
 interface ESRILayerOptions {
   isGroupOn: string;
-  isLiveLayer: boolean;
-  isVisible: boolean;
-  isOpen: boolean;
-  sar: boolean;
+  isLiveLayer: boolean | null;
+  isVisible: boolean | null;
+  isOpen: boolean | null;
+  sar: boolean | null;
   description: string;
   refreshInterval: string;
   modalURL: string;
@@ -906,10 +906,10 @@ export function parseESRIDescription(description: string): ESRILayerOptions {
   const descriptionParts = description.replace(/(<([^>]+)>)/gi, "").split("#");
   const returnObj: ESRILayerOptions = {
     isGroupOn: "",
-    isLiveLayer: false,
-    isVisible: false,
-    isOpen: false,
-    sar: false,
+    isLiveLayer: null,
+    isVisible: null,
+    isOpen: null,
+    sar: null,
     description: "",
     refreshInterval: "",
     modalURL: "",

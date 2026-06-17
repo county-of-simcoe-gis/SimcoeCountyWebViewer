@@ -110,6 +110,7 @@ export interface AppConfig {
       primary: boolean;
       urlType: string;
       type: string;
+      descriptionOverride?: string;
     }>;
     helpLink: string;
     layerInfoURL: string;
@@ -305,10 +306,10 @@ export class AuthenticationRequiredError extends Error {
 /**
  * Load configuration from the map API and translate using JSONTranslation
  */
-async function loadConfigFromApi(mapId: string): Promise<Partial<AppConfig> | null> {
+async function loadConfigFromApi(mapId: string, mapVersion?: string): Promise<Partial<AppConfig> | null> {
   try {
     // Determine which API endpoint to use
-    const apiUrl = mapId && mapId.trim() !== "" ? `/api/map/${mapId}` : `/api/map`; // Use default map endpoint
+    const apiUrl = mapId && mapId.trim() !== "" ? (mapVersion ? `/api/map/${mapId}/${mapVersion}` : `/api/map/${mapId}`) : `/api/map`; // Use default map endpoint
 
     // console.log(`Loading config from API: ${apiUrl}`);
 
@@ -344,6 +345,11 @@ async function loadConfigFromApi(mapId: string): Promise<Partial<AppConfig> | nu
 
     // Convert SettingsType to AppConfig format
     const apiConfig = convertSettingsToAppConfig(translatedSettings);
+
+    // If the API wrapper indicates draft/published metadata, map it to config.draft
+    if (mapConfig.published === false) {
+      (apiConfig as Record<string, unknown>).draft = true;
+    }
 
     // console.log("Successfully loaded and translated config from API:", apiConfig);
     return apiConfig;
@@ -549,6 +555,7 @@ export async function loadConfig(configSecured: Record<string, unknown> = {}): P
     // Process URL parameters
     const queryString = window.location.search;
     let mapId = config.mapId;
+    let mapVersionVar: string | undefined = undefined;
     let loaderType = "DEFAULT"; // MAPID, ARCGIS, GEOSERVER
     let geoserverUrl = config.toc.geoserverLayerGroupsUrl;
     let geoserverUrlType = config.toc.geoserverLayerGroupsUrlType;
@@ -563,6 +570,13 @@ export async function loadConfig(configSecured: Record<string, unknown> = {}): P
       const url_geoserverUrl = urlParams.get("GEO_URL");
       const url_esriServiceUrl = urlParams.get("ARCGIS_SERVICE");
       const viewerMode = urlParams.get("MODE");
+      const url_mapVersion = urlParams.get("MAP_VERSION");
+
+      if (url_mapVersion !== null) {
+        mapVersionVar = url_mapVersion;
+        // keep mapVersion on the returned config so consumers can inspect it
+        (config as Record<string, unknown>).mapVersion = url_mapVersion;
+      }
 
       if (url_geoserverUrlType !== null) geoserverUrlType = url_geoserverUrlType;
       if (url_mapId !== null) {
@@ -618,7 +632,7 @@ export async function loadConfig(configSecured: Record<string, unknown> = {}): P
     if (shouldLoadFromApi) {
       config.toc.loaderType = "MAPID";
       try {
-        const apiConfig = await loadConfigFromApi(config.mapId);
+        const apiConfig = await loadConfigFromApi(config.mapId, mapVersionVar);
         if (apiConfig) {
           // Preserve local config values that the API doesn't provide
           const localKeywords = config.toc?.keywords || {};
@@ -645,7 +659,7 @@ export async function loadConfig(configSecured: Record<string, unknown> = {}): P
             if (apiToc.esriServiceUrl) config.toc.esriServiceUrl = apiToc.esriServiceUrl;
             if (apiToc.layerInfoURL) config.toc.layerInfoURL = apiToc.layerInfoURL;
 
-            // Sources: replace only if API provides non-empty sources
+            // Sources: replace only if API provides non-empty sources.
             if (Array.isArray(apiToc.sources) && apiToc.sources.length > 0) {
               config.toc.sources = apiToc.sources;
             } else {

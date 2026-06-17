@@ -67,7 +67,7 @@ export default function Header() {
       </div>
 
       {/* Logo */}
-      <div className="flex items-center mr-2.5 shrink-0 max-[770px]:hidden">
+      <div className={`flex items-center mr-2.5 shrink-0 max-[770px]:hidden ${config?.draft ? "sc-draft-header" : ""}`}>
         <AppImage src={getLogoImage()} alt={config?.title || "Simcoe County"} height={50} className="h-[50px] object-contain" />
       </div>
 
