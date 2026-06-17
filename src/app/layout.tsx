@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "@/app/globals.css";
@@ -8,22 +7,9 @@ import ArcGISAuthProvider from "@/components/auth/ArcGISAuthProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastContainer } from "@/components/Toast";
 import { UrlParameterProvider } from "@/contexts/UrlParameterContext";
-import appConfig from "@/config.json";
 
 const geistSans = GeistSans;
 const geistMono = GeistMono;
-
-// Initial metadata from local config.json. These values are overridden at
-// runtime by `updatePageMetadata` once the merged map config is loaded
-// (see `useConfig` hook), which may pull values from the map settings API.
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-export const metadata: Metadata = {
-  title: appConfig.title,
-  description: appConfig.description,
-  icons: {
-    icon: appConfig.favicon ? `${basePath}/${appConfig.favicon}` : `${basePath}/favicon.ico`,
-  },
-};
 
 export default function RootLayout({
   children,

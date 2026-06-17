@@ -51,3 +51,4 @@ public/README.md
 
 # Corporate TLS-inspection CA bundle (machine/environment-specific, may rotate)
 /certs/
+.vscode/settings.json

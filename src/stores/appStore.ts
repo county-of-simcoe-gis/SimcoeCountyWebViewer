@@ -43,7 +43,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   mapLoading: true,
   sidebarLoading: true,
   headerLoading: true,
-  configLoading: true,
+  configLoading: false,
   config: null,
   configError: null,
   appInfo: {

@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useCallback } from "react";
 import { signIn, getSession } from "next-auth/react";
-import { loadConfig, getConfig, updatePageMetadata, AuthenticationRequiredError, type AppConfig } from "@/utils/config";
+import { loadConfig, updatePageMetadata, AuthenticationRequiredError, type AppConfig } from "@/utils/config";
 import { useToastStore } from "@/hooks/useToast";
+import { useAppStore } from "@/stores/appStore";
 
 interface UseConfigReturn {
   config: AppConfig | null;
@@ -14,20 +15,26 @@ interface UseConfigReturn {
  * React hook for loading and managing application configuration
  */
 export function useConfig(): UseConfigReturn {
-  const [config, setConfig] = useState<AppConfig | null>(getConfig());
-  const [loading, setLoading] = useState<boolean>(!config);
-  const [error, setError] = useState<string | null>(null);
+  const config = useAppStore((state) => state.config);
+  const loading = useAppStore((state) => state.configLoading);
+  const error = useAppStore((state) => state.configError);
+  const setConfig = useAppStore((state) => state.setConfig);
+  const setConfigLoading = useAppStore((state) => state.setConfigLoading);
+  const setConfigError = useAppStore((state) => state.setConfigError);
 
   const loadAppConfig = useCallback(async () => {
+    const currentState = useAppStore.getState();
+
+    if (currentState.config || currentState.configLoading) {
+      return;
+    }
+
     try {
-      setLoading(true);
-      setError(null);
+      setConfigLoading(true);
+      setConfigError(null);
 
       const loadedConfig = await loadConfig();
       setConfig(loadedConfig);
-
-      // Update page metadata (title, favicon)
-      updatePageMetadata(loadedConfig);
     } catch (err) {
       // Check if this is an authentication required error for a secured map
       if (err instanceof AuthenticationRequiredError) {
@@ -37,11 +44,7 @@ export function useConfig(): UseConfigReturn {
         const session = await getSession();
         if (session) {
           console.warn(`Authenticated user does not have access to map "${err.mapId}" - falling back to default config`);
-          useToastStore.getState().addToast(
-            `You don't have access to the map "${err.mapId}". Loading the default map instead.`,
-            "warning",
-            8000,
-          );
+          useToastStore.getState().addToast(`You don't have access to the map "${err.mapId}". Loading the default map instead.`, "warning", 8000);
           // Remove MAP_ID from URL so the fallback load doesn't retry the same map
           if (typeof window !== "undefined") {
             const url = new URL(window.location.href);
@@ -52,10 +55,9 @@ export function useConfig(): UseConfigReturn {
           try {
             const defaultConfig = await loadConfig();
             setConfig(defaultConfig);
-            updatePageMetadata(defaultConfig);
           } catch (fallbackErr) {
             const errorMessage = fallbackErr instanceof Error ? fallbackErr.message : "Failed to load configuration";
-            setError(errorMessage);
+            setConfigError(errorMessage);
             console.error("Error loading fallback config:", fallbackErr);
           }
           return;
@@ -68,14 +70,16 @@ export function useConfig(): UseConfigReturn {
       }
 
       const errorMessage = err instanceof Error ? err.message : "Failed to load configuration";
-      setError(errorMessage);
+      setConfigError(errorMessage);
       console.error("Error loading config:", err);
     } finally {
-      setLoading(false);
+      setConfigLoading(false);
     }
-  }, []);
+  }, [setConfig, setConfigLoading, setConfigError]);
 
   const reloadConfig = async () => {
+    setConfig(null);
+    setConfigError(null);
     await loadAppConfig();
   };
 
@@ -84,6 +88,13 @@ export function useConfig(): UseConfigReturn {
       loadAppConfig();
     }
   }, [config, loadAppConfig]);
+
+  useEffect(() => {
+    console.log("Config updated:", config);
+    if (config) {
+      updatePageMetadata(config);
+    }
+  }, [config]);
 
   return {
     config,

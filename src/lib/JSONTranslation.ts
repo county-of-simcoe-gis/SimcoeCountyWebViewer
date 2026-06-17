@@ -32,7 +32,19 @@ const translationTable: { [section: string]: Mapping } = {
     children: {
       favicon: { sourceKey: "favicon" },
       title: {
-        transform: (src: unknown) => (src as { title?: string; name?: string }).title || (src as { title?: string; name?: string }).name,
+        transform: (src: unknown) => {
+          const rawConfig = src as Record<string, unknown>;
+          // Try General.title first (for sectioned payloads)
+          if (rawConfig.General && typeof rawConfig.General === "object") {
+            const general = rawConfig.General as { title?: string; name?: string };
+            if (general.title) return general.title;
+            if (general.name) return general.name;
+          }
+          // Fall back to root-level title/name (for flat payloads)
+          if (rawConfig.title) return rawConfig.title;
+          if (rawConfig.name) return rawConfig.name;
+          return undefined;
+        },
         reverse: (value: unknown) => value,
       },
       allowIdentifyExport: { sourceKey: "allowIdentifyExport" },
