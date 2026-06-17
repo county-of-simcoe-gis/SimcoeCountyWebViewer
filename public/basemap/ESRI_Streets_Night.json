@@ -3874,7 +3874,7 @@
       "minzoom": 13,
       "layout": {
         "text-size": 10.6667,
-        "text-font": ["Palatino Linotype Bold"],
+        "text-font": ["serif"],
         "text-justify": "left",
         "text-optional": true,
         "text-anchor": "bottom-left",
@@ -4307,7 +4307,7 @@
       "minzoom": 11,
       "layout": {
         "text-size": 10.6667,
-        "text-font": ["Palatino Linotype Bold Italic"],
+        "text-font": ["serif"],
         "text-letter-spacing": 0.1,
         "text-optional": true,
         "symbol-placement": "line",
@@ -4475,7 +4475,7 @@
       "minzoom": 9,
       "layout": {
         "text-size": 12,
-        "text-font": ["Palatino Linotype Bold Italic"],
+        "text-font": ["serif"],
         "text-justify": "left",
         "text-optional": true,
         "text-anchor": "bottom-left",
@@ -4530,7 +4530,7 @@
       "minzoom": 12,
       "layout": {
         "text-size": 12,
-        "text-font": ["Palatino Linotype Bold Italic"],
+        "text-font": ["serif"],
         "text-justify": "left",
         "text-optional": true,
         "text-anchor": "bottom-left",
@@ -4549,7 +4549,7 @@
       "minzoom": 9,
       "layout": {
         "text-size": 12,
-        "text-font": ["Palatino Linotype Bold Italic"],
+        "text-font": ["serif"],
         "text-justify": "left",
         "text-optional": true,
         "text-anchor": "bottom-left",
@@ -4568,7 +4568,7 @@
       "minzoom": 11,
       "layout": {
         "text-size": 14.6667,
-        "text-font": ["Masinahikan Regular"],
+        "text-font": ["serif"],
         "text-justify": "left",
         "text-optional": true,
         "text-anchor": "bottom-left",
@@ -4587,7 +4587,7 @@
       "minzoom": 13,
       "layout": {
         "text-size": 14.6667,
-        "text-font": ["Masinahikan Regular"],
+        "text-font": ["serif"],
         "text-letter-spacing": 0.1,
         "text-justify": "left",
         "text-optional": true,
@@ -4607,7 +4607,7 @@
       "minzoom": 12,
       "layout": {
         "text-size": 14,
-        "text-font": ["Masinahikan Regular"],
+        "text-font": ["serif"],
         "text-justify": "left",
         "text-optional": true,
         "text-anchor": "bottom-left",
@@ -4624,7 +4624,7 @@
       "source-layer": "Geonames",
       "filter": ["==", "_label_class4", 4],
       "minzoom": 11,
-      "layout": { "text-font": ["Masinahikan Regular"], "text-justify": "left", "text-optional": true, "text-anchor": "bottom-left", "text-offset": [0.0589256, 0.241074], "text-field": "{_name4}" },
+      "layout": { "text-font": ["serif"], "text-justify": "left", "text-optional": true, "text-anchor": "bottom-left", "text-offset": [0.0589256, 0.241074], "text-field": "{_name4}" },
       "paint": { "text-color": "#989898" },
       "showProperties": false
     },
@@ -4637,7 +4637,7 @@
       "minzoom": 11,
       "layout": {
         "text-size": 14,
-        "text-font": ["Masinahikan Regular"],
+        "text-font": ["serif"],
         "text-justify": "left",
         "text-optional": true,
         "text-anchor": "bottom-left",
@@ -4656,7 +4656,7 @@
       "minzoom": 10,
       "layout": {
         "text-size": 14,
-        "text-font": ["Masinahikan Regular"],
+        "text-font": ["serif"],
         "text-justify": "left",
         "text-optional": true,
         "text-anchor": "bottom-left",
@@ -4675,7 +4675,7 @@
       "minzoom": 9,
       "layout": {
         "text-size": 14,
-        "text-font": ["Masinahikan Regular"],
+        "text-font": ["serif"],
         "text-justify": "left",
         "text-optional": true,
         "text-anchor": "bottom-left",
@@ -4692,7 +4692,7 @@
       "source-layer": "Geonames",
       "filter": ["==", "_label_class", 0],
       "minzoom": 7,
-      "layout": { "text-font": ["Masinahikan Regular"], "text-justify": "left", "text-optional": true, "text-anchor": "bottom-left", "text-offset": [0.0589256, 0.241074], "text-field": "{_name}" },
+      "layout": { "text-font": ["serif"], "text-justify": "left", "text-optional": true, "text-anchor": "bottom-left", "text-offset": [0.0589256, 0.241074], "text-field": "{_name}" },
       "paint": { "text-color": "#989898" },
       "showProperties": false
     },
