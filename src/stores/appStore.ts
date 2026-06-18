@@ -34,6 +34,10 @@ interface AppState {
   setUrlParameters: (params: Record<string, string>) => void;
   setUrlParametersLoaded: (loaded: boolean) => void;
 
+  // Permissions
+  permissions: Record<string, "granted" | "prompt" | "denied" | "unknown">;
+  setPermissionState: (api: string, state: "granted" | "prompt" | "denied" | "unknown") => void;
+
   // Computed
   isAnyLoading: () => boolean;
 }
@@ -53,6 +57,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   urlParameters: {},
   urlParametersLoaded: false,
+  permissions: {},
 
   // Actions
   setMapLoading: (loading) => set({ mapLoading: loading }),
@@ -67,6 +72,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     })),
   setUrlParameters: (params) => set({ urlParameters: params, urlParametersLoaded: true }),
   setUrlParametersLoaded: (loaded) => set({ urlParametersLoaded: loaded }),
+
+  // Permissions
+  setPermissionState: (api, permState) =>
+    set((state) => ({ permissions: { ...state.permissions, [api]: permState } })),
 
   // Computed
   isAnyLoading: () => {

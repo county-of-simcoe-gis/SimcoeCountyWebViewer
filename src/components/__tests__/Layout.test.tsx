@@ -17,6 +17,51 @@ vi.mock("@/components/Search", () => ({
   default: () => <div data-testid="search-component" />,
 }));
 
+// Mock other heavy/visual components to avoid pulling in CSS files
+vi.mock("@/components/Sidebar", () => ({
+  default: () => <div data-testid="sidebar" />,
+}));
+
+vi.mock("@/components/SidebarSlim", () => ({
+  default: () => <div data-testid="sidebar-slim" />,
+}));
+
+vi.mock("@/components/myMaps/MyMapsService", () => ({
+  default: () => <div data-testid="mymaps-service" />,
+}));
+
+vi.mock("@/components/myMaps/GlobalDrawingOptionsPopup", () => ({
+  default: () => <div data-testid="global-drawing-options" />,
+}));
+
+vi.mock("@/components/LayerInfo/LayerInfoModal", () => ({
+  default: () => <div data-testid="layer-info-modal" />,
+}));
+
+vi.mock("@/components/Legend/LegendModal", () => ({
+  default: () => <div data-testid="legend-modal" />,
+}));
+
+vi.mock("@/components/AttributeTable/AttributeTablePanel", () => ({
+  default: () => <div data-testid="attribute-table" />,
+}));
+
+vi.mock("@/components/HelpModal", () => ({
+  default: () => <div data-testid="help-modal" />,
+}));
+
+vi.mock("@/components/MoreMenu", () => ({
+  default: () => <div data-testid="more-menu" />,
+}));
+
+vi.mock("@/components/common/GlobalURLModal", () => ({
+  default: () => <div data-testid="global-url-modal" />,
+}));
+
+vi.mock("@/components/GoogleAnalytics", () => ({
+  default: () => <div data-testid="google-analytics" />,
+}));
+
 vi.mock("@/stores/myMapsStore", () => ({
   useMyMapsStore: Object.assign(
     vi.fn(() => ({
@@ -68,6 +113,9 @@ const mockAppStoreState = {
   setHeaderLoading: vi.fn(),
   setSidebarLoading: vi.fn(),
   setMapLoading: vi.fn(),
+  // Permissions API helpers used by usePermissions
+  setPermissionState: vi.fn(),
+  permissions: {},
 };
 
 vi.mock("@/stores/appStore", () => ({

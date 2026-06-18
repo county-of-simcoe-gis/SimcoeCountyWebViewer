@@ -229,6 +229,9 @@ const mockAppStore = {
     mapId: "test-map-id",
   },
   urlParameters: {},
+  // Permissions API helpers used by usePermissions
+  setPermissionState: vi.fn(),
+  permissions: {},
 };
 
 vi.mock("@/stores/myMapsStore", () => ({

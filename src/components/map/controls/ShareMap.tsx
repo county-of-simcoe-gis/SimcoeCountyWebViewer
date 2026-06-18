@@ -4,6 +4,7 @@ import Map from "ol/Map";
 import { MapControlButton } from "@/components/ui/MapControlButton";
 import { useTOCStore } from "@/stores/tocStore";
 import { useSidebarStore } from "@/stores/sidebarStore";
+import { useAppStore } from "@/stores/appStore";
 import { getStorageItem } from "@/utils/storage";
 
 interface ShareMapProps {
@@ -38,8 +39,9 @@ export const ShareMap = React.memo(({ map }: ShareMapProps) => {
     // Active layers (comma-separated tocDisplayName values)
     const visibleLayers = useTOCStore.getState().getAllVisibleLayers();
     if (visibleLayers.length > 0) {
-      const layerNames = visibleLayers.map((layer) => layer.tocDisplayName || layer.displayName || layer.name);
-      params.set("LAYERS", layerNames.join(","));
+      const layerNames = new Set(visibleLayers.map((layer) => layer.tocDisplayName || layer.displayName || layer.name));
+
+      params.set("LAYERS", Array.from(layerNames).join(","));
     }
 
     // Basemap state from localStorage
@@ -75,6 +77,16 @@ export const ShareMap = React.memo(({ map }: ShareMapProps) => {
       const tool = sidebarState.tools.find((t) => t.id === sidebarState.activeTool || t.component === sidebarState.activeTool || t.name === sidebarState.activeTool);
       if (tool) {
         params.set("TOOL", tool.name);
+      }
+    }
+
+    // Active map configuration (MAP_ID / MAP_VERSION)
+    const appConfig = useAppStore.getState().config;
+    if (appConfig && appConfig.mapId) {
+      params.set("MAP_ID", appConfig.mapId);
+      const mapVersion = (appConfig as Record<string, unknown>).mapVersion;
+      if (mapVersion) {
+        params.set("MAP_VERSION", String(mapVersion));
       }
     }
 

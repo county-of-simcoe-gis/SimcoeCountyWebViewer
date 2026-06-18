@@ -3,6 +3,7 @@ import { fromLonLat } from "ol/proj";
 import { FaCrosshairs } from "react-icons/fa";
 import Map from "ol/Map";
 import { MapControlButton } from "@/components/ui/MapControlButton";
+import { useToast } from "@/hooks/useToast";
 
 // React component for the current location button
 interface CurrentLocationButtonProps {
@@ -10,6 +11,8 @@ interface CurrentLocationButtonProps {
 }
 
 export const CurrentLocationButton = React.memo(({ map }: CurrentLocationButtonProps) => {
+  const toast = useToast();
+
   const zoomToCurrentLocation = () => {
     if (!map) return;
 
@@ -25,6 +28,11 @@ export const CurrentLocationButton = React.memo(({ map }: CurrentLocationButtonP
       },
       (err) => {
         console.error("Error getting current location:", err);
+        if (err && (err.code === 1 || (err as any).PERMISSION_DENIED)) {
+          toast.warning("Geolocation permission denied.");
+        } else {
+          toast.error("Could not get current location.");
+        }
       },
       options,
     );

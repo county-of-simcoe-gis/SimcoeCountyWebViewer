@@ -35,6 +35,9 @@ vi.mock("@/config.json", () => ({
 // Mock useAppStore
 const mockAppStoreState = {
   setMapLoading: vi.fn(),
+  // Permissions API helpers used by usePermissions
+  setPermissionState: vi.fn(),
+  permissions: {},
   urlParameters: {},
   config: {
     centerCoords: [-8878504.68, 5543492.45],

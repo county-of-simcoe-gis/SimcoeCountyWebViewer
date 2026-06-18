@@ -7,6 +7,7 @@ import { useSidebarStore } from "@/stores/sidebarStore";
 import { useMapStore } from "@/stores/mapStore";
 import { useConfig } from "@/hooks/useConfig";
 import { useToastStore } from "@/hooks/useToast";
+import { usePermissions } from "@/hooks/usePermissions";
 import { showURLWindow } from "@/utils/helpersUI";
 import { enableUserStorage, getUserStorage, userStorageReady } from "@/utils/userStorage";
 import { getStorageItem } from "@/utils/storage";
@@ -44,6 +45,7 @@ export default function Layout({ children }: LayoutProps) {
   const attributeTableEnabled = useMapStore((s) => s.controlVisibility.attributeTable);
   const { config, loading: configLoading, error: configError } = useConfig();
   const { data: session, status: sessionStatus } = useSession();
+  const { checkAllPermissions } = usePermissions();
 
   // --- User storage sync (restore localStorage from server for saveToServer users) ---
   const userStorageFiredRef = useRef(false);
@@ -53,9 +55,20 @@ export default function Layout({ children }: LayoutProps) {
     userStorageFiredRef.current = true;
 
     const hasSaveRole = session?.user?.roles?.includes("saveToServer") ?? false;
-    enableUserStorage(hasSaveRole);
+    // Only enable server-backed user storage when MAP_ID equals "app_track"
+    let isAppTrack = false;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const mapIdParam = params.get("MAP_ID") ?? params.get("map_id") ?? "";
+      isAppTrack = (mapIdParam || "").toLowerCase() === "app_track";
+    } catch {
+      isAppTrack = false;
+    }
 
-    if (hasSaveRole) {
+    const shouldEnable = hasSaveRole && isAppTrack;
+    enableUserStorage(shouldEnable);
+
+    if (shouldEnable) {
       getUserStorage();
     }
 
@@ -115,6 +128,13 @@ export default function Layout({ children }: LayoutProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config, configLoading, configError, storageReady, setConfig, setConfigLoading, setConfigError, loadFromConfig, activateDefaultItems]);
+
+  // Run permission checks early on app mount so features can warn the user
+  useEffect(() => {
+    checkAllPermissions();
+    // We intentionally run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // --- Startup popups (What's New + Feedback) --- run once when config arrives
   const startupFiredRef = useRef(false);

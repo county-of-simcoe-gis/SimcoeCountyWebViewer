@@ -105,6 +105,9 @@ export const createMockAppStore = (overrides = {}) => ({
   setHeaderLoading: vi.fn(),
   setConfigLoading: vi.fn(),
   setAppInfo: vi.fn(),
+  // Permissions API helpers used by usePermissions hook
+  setPermissionState: vi.fn(),
+  permissions: {},
   isAnyLoading: vi.fn(() => false),
   ...overrides,
 });

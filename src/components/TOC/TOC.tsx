@@ -759,7 +759,7 @@ export default function TOC({ visible = true }: TOCProps) {
         handleURLParameters();
       }, 200); // Slightly longer delay to ensure groups are loaded
     }
-  }, [initialized, urlParameters, handleURLParameters]);
+  }, [initialized, urlParameters]);
 
   // Reset expandLegendProcessed when URL parameters change (for new page loads)
   useEffect(() => {
@@ -774,7 +774,7 @@ export default function TOC({ visible = true }: TOCProps) {
         handleURLParameters();
       }, 100);
     }
-  }, [initialized, layerListGroups.length, layerFolderGroups.length, urlParameters, handleURLParameters]);
+  }, [initialized, layerListGroups.length, layerFolderGroups.length, urlParameters]);
 
   // Get current layer groups
   const currentGroups = tocType === "LIST" ? layerListGroups : layerFolderGroups;
