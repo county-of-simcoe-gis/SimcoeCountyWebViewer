@@ -2,8 +2,8 @@ import { create } from "zustand";
 import { Style } from "ol/style";
 import type { Feature } from "ol";
 import type { Geometry } from "ol/geom";
-import { styleToJSON, exportFeatures as exportFeaturesToFile, getDefaultLabelStyle } from "@/utils/myMapsHelpers";
-import { buildLegacySavePayload } from "@/utils/legacyMyMapsFormat";
+import { exportFeatures as exportFeaturesToFile, getDefaultLabelStyle } from "@/utils/myMapsHelpers";
+import { buildSavePayload } from "@/utils/myMapsFormat";
 import { isOldOLStyleFormat, transformOLStyle } from "@/utils/storageMigration";
 import { v4 as uuidv4 } from "uuid";
 import { setStorageItem, getStorageItem } from "@/utils/storage";
@@ -194,18 +194,53 @@ const DEFAULT_CONFIG: MyMapsConfig = {
   nonPointCursorSize: 1,
 };
 
-// Storage key for persistence
-const STORAGE_KEY = "simcoe-mymaps-data";
+const STORAGE_KEY = "myMaps";
 
-// Generate unique ID
+// Generate unique ID using UUID v4
 const generateId = (): string => {
-  return "mymaps_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-};
-
-// Helper function to generate new GUID using same format as old app
-const generateNewId = (): string => {
   return uuidv4();
 };
+
+function extractAlpha(color: unknown): number | undefined {
+  if (Array.isArray(color) && color.length === 4 && typeof color[3] === "number") {
+    return color[3];
+  }
+  if (typeof color === "string") {
+    const m = color.match(/rgba?\s*\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*([\d.]+)\s*\)/);
+    if (m) return parseFloat(m[1]);
+  }
+  return undefined;
+}
+
+function normalizeStoredItem(item: MyMapsItem): MyMapsItem {
+  let normalizedStyle = item.style;
+  let fillAlpha = item.fillAlpha;
+  let strokeAlpha = item.strokeAlpha;
+
+  if (isOldOLStyleFormat(normalizedStyle)) {
+    const legacyStyle = normalizedStyle as Parameters<typeof transformOLStyle>[0];
+    normalizedStyle = transformOLStyle(legacyStyle) as MyMapsItem["style"];
+
+    if (fillAlpha === undefined) {
+      fillAlpha = extractAlpha(legacyStyle.fill_?.color_);
+    }
+
+    if (strokeAlpha === undefined) {
+      strokeAlpha = extractAlpha(legacyStyle.stroke_?.color_);
+      if (strokeAlpha === undefined && legacyStyle.image_?.stroke_?.color_) {
+        strokeAlpha = extractAlpha(legacyStyle.image_.stroke_.color_);
+      }
+    }
+  }
+
+  return {
+    ...item,
+    style: normalizedStyle,
+    visible: item.visible !== false,
+    ...(fillAlpha !== undefined && { fillAlpha }),
+    ...(strokeAlpha !== undefined && { strokeAlpha }),
+  };
+}
 
 export const useMyMapsStore = create<MyMapsState>((set, get) => {
   // Debounced save: coalesces rapid color/style changes into a single
@@ -472,7 +507,7 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => {
         const itemsForSave = state.items.map((item) => {
           if (item.hasChanged || false) {
             const oldId = item.id;
-            const newId = generateNewId();
+            const newId = generateId();
             return {
               ...item,
               id: newId,
@@ -483,10 +518,10 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => {
           return item;
         });
 
-        // Build the exact JSON shape the legacy app produces. This is the only
+        // Build the exact JSON shape the current app produces. This is the only
         // place we serialize for the server — no other translators run on the
-        // save path, guaranteeing cross-compatibility with the legacy viewer.
-        const dataToSave = buildLegacySavePayload({
+        // save path, guaranteeing cross-compatibility.
+        const dataToSave = buildSavePayload({
           items: itemsForSave,
           drawType: state.drawType,
           drawColor: state.drawColor,
@@ -625,7 +660,7 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => {
 
                   itemsToAdd.push({
                     ...typedItem,
-                    id: typedItem.id || generateNewId(),
+                    id: typedItem.id || generateId(),
                     visible: typedItem.visible !== undefined ? typedItem.visible : true,
                     style: normalizedStyle as MyMapsItem["style"],
                   } as MyMapsItem);
@@ -735,28 +770,17 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => {
       try {
         const state = get();
 
-        // Convert OpenLayers Style objects to JSON for proper serialization
-        const serializedItems = state.items.map((item) => {
-          if (item.style instanceof Style) {
-            // Convert OpenLayers Style to JSON
-            return {
-              ...item,
-              style: styleToJSON(item.style),
-            };
-          }
-          // If style is already JSON or null, keep as-is
-          return item;
-        });
-
-        const dataToSave = {
-          items: serializedItems,
+        const dataToSave = buildSavePayload({
+          items: state.items,
+          drawType: state.drawType,
           drawColor: state.drawColor,
           drawOpacity: state.drawOpacity,
-          drawingCounter: state.drawingCounter,
-          config: state.config,
-        };
+          drawStyle: state.drawStyle,
+          toolTipClass: state.toolTipClass,
+          toolTipId: state.toolTipId,
+        });
+
         setStorageItem(STORAGE_KEY, JSON.stringify(dataToSave));
-        // console.log("💾 MyMaps saved to storage:", { itemCount: serializedItems.length });
       } catch (error) {
         console.error("Failed to save MyMaps to storage:", error);
       }
@@ -765,6 +789,7 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => {
     loadFromStorage: () => {
       try {
         const saved = getStorageItem(STORAGE_KEY);
+
         if (saved) {
           const data = JSON.parse(saved);
 
@@ -787,7 +812,7 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => {
           // Deduplicate items on load to recover from any previously persisted corrupt state.
           const rawItems: MyMapsItem[] = data.items || [];
           const seenIds = new Set<string>();
-          const dedupedItems = rawItems.filter((item) => {
+          const dedupedItems = rawItems.map(normalizeStoredItem).filter((item) => {
             if (!item.id || seenIds.has(item.id)) return false;
             seenIds.add(item.id);
             return true;
@@ -795,13 +820,14 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => {
 
           set({
             items: dedupedItems,
+            drawType: data.drawType || "Cancel",
             drawColor: data.drawColor || "#e809e5",
             drawOpacity: data.drawOpacity || 0.8,
             drawingCounter,
             config: { ...DEFAULT_CONFIG, ...data.config },
+            toolTipClass: data.toolTipClass || data.tooltipClass || get().toolTipClass,
+            toolTipId: data.toolTipId || get().toolTipId,
           });
-
-          // console.log("📥 MyMaps loaded from storage:", { itemCount: data.items?.length || 0 });
         }
       } catch (error) {
         console.error("Failed to load MyMaps from storage:", error);

@@ -213,6 +213,24 @@ describe("MyMapsService Component", () => {
       });
     });
 
+    it("should not reinitialize drawing manager when drawType changes", async () => {
+      const { rerender } = render(<MyMapsService />);
+
+      await vi.waitFor(() => {
+        expect(mockMyMapsStore.loadFromStorage).toHaveBeenCalledTimes(1);
+      });
+
+      expect(MyMapsDrawingManager).toHaveBeenCalledTimes(1);
+      expect(mockDrawingManager.cleanup).not.toHaveBeenCalled();
+
+      mockMyMapsStore.drawType = "Point";
+      rerender(<MyMapsService />);
+
+      expect(MyMapsDrawingManager).toHaveBeenCalledTimes(1);
+      expect(mockDrawingManager.cleanup).not.toHaveBeenCalled();
+      expect(mockMyMapsStore.loadFromStorage).toHaveBeenCalledTimes(1);
+    });
+
     it("should register vector layer with layer manager", () => {
       render(<MyMapsService />);
 

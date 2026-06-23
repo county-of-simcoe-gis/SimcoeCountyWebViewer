@@ -1,19 +1,15 @@
 /**
- * Tests for legacy MyMaps save format compatibility.
+ * Tests for MyMaps save format serialization.
  *
- * These tests guarantee that JSON saved by the new Next.js app can be
- * imported by the legacy SimcoeCountyWebViewer and vice-versa. Any change
- * that breaks these tests is a critical regression because production stores
- * thousands of MyMaps records in the legacy shape.
+ * These tests guarantee that JSON saved by this app can be
+ * imported by the SimcoeCountyWebViewer and vice-versa. Any change
+ * that breaks these tests is a critical regression because the shared
+ * format is used by all existing saved MyMaps records.
  */
 
 import { describe, it, expect } from "vitest";
 import { Style, Fill, Stroke, Circle as CircleStyle, RegularShape } from "ol/style";
-import {
-  buildLegacySavePayload,
-  featureGeoJSONToLegacy,
-  styleToLegacyJSON,
-} from "@/utils/legacyMyMapsFormat";
+import { buildSavePayload, serializeFeatureGeoJSON, serializeStyle } from "@/utils/myMapsFormat";
 import type { MyMapsItem, StyleJSON } from "@/stores/myMapsStore";
 
 const baseLabelStyle = {
@@ -27,13 +23,13 @@ const baseLabelStyle = {
   anchorColor: "#333333",
 };
 
-describe("styleToLegacyJSON", () => {
+describe("serializeStyle", () => {
   it("converts an OL Style with stroke into the legacy `_`-suffixed shape", () => {
     const style = new Style({
       stroke: new Stroke({ color: [115, 216, 255, 0.45], width: 8 }),
     });
 
-    const result = styleToLegacyJSON(style) as Record<string, unknown>;
+    const result = serializeStyle(style) as Record<string, unknown>;
 
     expect(result).toMatchObject({
       geometry_: null,
@@ -53,7 +49,7 @@ describe("styleToLegacyJSON", () => {
       stroke: new Stroke({ color: [25, 77, 51, 0.3], width: 6 }),
     });
 
-    const result = styleToLegacyJSON(style) as Record<string, unknown>;
+    const result = serializeStyle(style) as Record<string, unknown>;
 
     expect(result).toMatchObject({
       fill_: { color_: [251, 158, 0, 0.4] },
@@ -71,7 +67,7 @@ describe("styleToLegacyJSON", () => {
       }),
     });
 
-    const result = styleToLegacyJSON(style) as { image_: Record<string, unknown> };
+    const result = serializeStyle(style) as { image_: Record<string, unknown> };
 
     expect(result.image_).toBeDefined();
     expect(result.image_).toMatchObject({
@@ -92,7 +88,7 @@ describe("styleToLegacyJSON", () => {
       }),
     });
 
-    const result = styleToLegacyJSON(style) as { image_: Record<string, unknown> };
+    const result = serializeStyle(style) as { image_: Record<string, unknown> };
 
     expect(result.image_).toMatchObject({
       points_: 4,
@@ -105,7 +101,7 @@ describe("styleToLegacyJSON", () => {
       stroke: { color: [196, 81, 0, 0.45], width: 5.5 },
     };
 
-    const result = styleToLegacyJSON(styleJson) as Record<string, unknown>;
+    const result = serializeStyle(styleJson) as Record<string, unknown>;
 
     expect(result.stroke_).toMatchObject({ color_: [196, 81, 0, 0.45], width_: 5.5 });
     expect(result.fill_).toBeNull();
@@ -122,7 +118,7 @@ describe("styleToLegacyJSON", () => {
       },
     };
 
-    const result = styleToLegacyJSON(styleJson) as { image_: Record<string, unknown> };
+    const result = serializeStyle(styleJson) as { image_: Record<string, unknown> };
 
     expect(result.image_).toMatchObject({
       radius_: 36,
@@ -137,24 +133,30 @@ describe("styleToLegacyJSON", () => {
       stroke_: { color_: [0, 0, 0, 1], width_: 2, lineDash_: null },
     };
 
-    expect(styleToLegacyJSON(legacyShape)).toBe(legacyShape);
+    expect(serializeStyle(legacyShape)).toBe(legacyShape);
   });
 
   it("returns null for null/undefined", () => {
-    expect(styleToLegacyJSON(null)).toBeNull();
-    expect(styleToLegacyJSON(undefined)).toBeNull();
+    expect(serializeStyle(null)).toBeNull();
+    expect(serializeStyle(undefined)).toBeNull();
   });
 });
 
-describe("featureGeoJSONToLegacy", () => {
+describe("serializeFeatureGeoJSON", () => {
   it("rewrites the properties block to the legacy schema", () => {
     const input = JSON.stringify({
       type: "Feature",
-      geometry: { type: "LineString", coordinates: [[0, 0], [1, 1]] },
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [0, 0],
+          [1, 1],
+        ],
+      },
       properties: { id: "stale", drawType: "LineString", originalDrawType: "LineString" },
     });
 
-    const out = featureGeoJSONToLegacy(input, {
+    const out = serializeFeatureGeoJSON(input, {
       id: "uuid-1",
       label: "Drawing 3",
       labelVisible: false,
@@ -185,7 +187,7 @@ describe("featureGeoJSONToLegacy", () => {
       id: "Assessment Parcel.fid--abc",
     });
 
-    const out = featureGeoJSONToLegacy(input, {
+    const out = serializeFeatureGeoJSON(input, {
       id: "uuid-parcel",
       label: "77 KING ROAD",
       labelVisible: false,
@@ -214,7 +216,7 @@ describe("featureGeoJSONToLegacy", () => {
       properties: { id: "x", drawType: "Point", originalDrawType: "Point" },
     });
 
-    const out = featureGeoJSONToLegacy(input, {
+    const out = serializeFeatureGeoJSON(input, {
       id: "uuid-2",
       label: "Drawing 2",
       labelVisible: false,
@@ -226,7 +228,7 @@ describe("featureGeoJSONToLegacy", () => {
   });
 });
 
-describe("buildLegacySavePayload", () => {
+describe("buildSavePayload", () => {
   function makeItem(overrides: Partial<MyMapsItem> = {}): MyMapsItem {
     return {
       id: "uuid-1",
@@ -255,7 +257,7 @@ describe("buildLegacySavePayload", () => {
       stroke: new Stroke({ color: [232, 9, 229, 0.8], width: 3 }),
     });
 
-    const payload = buildLegacySavePayload({
+    const payload = buildSavePayload({
       items: [makeItem()],
       drawType: "Cancel",
       drawColor: "#e809e5",
@@ -265,18 +267,7 @@ describe("buildLegacySavePayload", () => {
       toolTipId: "tooltip-uuid",
     });
 
-    expect(Object.keys(payload).sort()).toEqual(
-      [
-        "drawColor",
-        "drawOpacity",
-        "drawStyle",
-        "drawType",
-        "items",
-        "toolTipClass",
-        "toolTipId",
-        "tooltipClass",
-      ].sort()
-    );
+    expect(Object.keys(payload).sort()).toEqual(["drawColor", "drawOpacity", "drawStyle", "drawType", "items", "toolTipClass", "toolTipId", "tooltipClass"].sort());
     expect(payload.drawType).toBe("Cancel");
     expect(payload.drawColor).toBe("#e809e5");
     expect(payload.drawOpacity).toBe(0.8);
@@ -288,7 +279,7 @@ describe("buildLegacySavePayload", () => {
   });
 
   it("each item carries the exact legacy field set, in the legacy style shape", () => {
-    const payload = buildLegacySavePayload({
+    const payload = buildSavePayload({
       items: [makeItem()],
       drawType: "Cancel",
       drawColor: "#e809e5",
@@ -302,21 +293,7 @@ describe("buildLegacySavePayload", () => {
     expect(items).toHaveLength(1);
     const item = items[0];
 
-    expect(Object.keys(item).sort()).toEqual(
-      [
-        "drawType",
-        "featureGeoJSON",
-        "geometryType",
-        "id",
-        "isParcel",
-        "label",
-        "labelRotation",
-        "labelStyle",
-        "labelVisible",
-        "style",
-        "visible",
-      ].sort()
-    );
+    expect(Object.keys(item).sort()).toEqual(["drawType", "featureGeoJSON", "geometryType", "id", "isParcel", "label", "labelRotation", "labelStyle", "labelVisible", "style", "visible"].sort());
 
     // The `style` field must be in legacy `_` shape
     const style = item.style as Record<string, unknown>;
@@ -350,7 +327,7 @@ describe("buildLegacySavePayload", () => {
     // saved by the new app gets read back as a CIRCLE.
     const crossItem = makeItem({ pointType: "cross", strokeType: "dash" });
 
-    const payload = buildLegacySavePayload({
+    const payload = buildSavePayload({
       items: [crossItem],
       drawType: "Cancel",
       drawColor: "#e809e5",
@@ -370,7 +347,7 @@ describe("buildLegacySavePayload", () => {
       style: { stroke: { color: [196, 81, 0, 0.45], width: 5.5 } } as StyleJSON,
     });
 
-    const payload = buildLegacySavePayload({
+    const payload = buildSavePayload({
       items: [cleanStyleItem],
       drawType: "Cancel",
       drawColor: "#3174ba",
@@ -386,7 +363,7 @@ describe("buildLegacySavePayload", () => {
   });
 
   it("emits null drawStyle when state has no drawStyle (matches legacy null handling)", () => {
-    const payload = buildLegacySavePayload({
+    const payload = buildSavePayload({
       items: [],
       drawType: "Cancel",
       drawColor: "#3174ba",

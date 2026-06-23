@@ -21,7 +21,7 @@ export interface ControlVisibility {
   shareMap: boolean;
 }
 
-const STORAGE_KEY_MAP_CONTROLS = "Map_Control_Settings";
+const STORAGE_KEY_MAP_CONTROLS = "Map Control Settings";
 
 // Map interaction states that were previously window variables
 interface MapState {
@@ -121,9 +121,9 @@ const loadControlVisibilityFromStorage = (config?: { controls?: Partial<ControlV
 
   try {
     const stored = getStorageItem(STORAGE_KEY_MAP_CONTROLS);
+
     if (stored) {
       const parsed = JSON.parse(stored) as Partial<ControlVisibility>;
-      // Merge with defaults to ensure all keys exist
       return { ...getDefaultControlVisibility(config), ...parsed };
     }
   } catch (e) {

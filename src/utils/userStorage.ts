@@ -11,7 +11,7 @@
 import { apiUrl } from "@/lib/axiosInstance";
 
 // Keys (or key substrings) that must NEVER be synced to the server.
-const EXCLUDED_KEY_PATTERNS = ["scwv.", "__Secure-", "__Host-", "next-auth", "login.microsoftonline.com", "login.windows.net", "msal.", "cacheVersion", "__storage_migrated_v1", "nextauth.message"];
+const EXCLUDED_KEY_PATTERNS = ["scwv.", "__Secure-", "__Host-", "next-auth", "login.microsoftonline.com", "login.windows.net", "msal.", "cacheVersion", "nextauth.message"];
 
 function isExcluded(key: string): boolean {
   return EXCLUDED_KEY_PATTERNS.some((pattern) => key.includes(pattern));

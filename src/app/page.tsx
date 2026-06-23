@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import Layout from "@/components/Layout";
 import { useAppStore } from "@/stores/appStore";
 import { getAllURLParameters } from "@/utils/helpersUrl";
-import { migrateFromLegacyStorage } from "@/utils/storageMigration";
 import packageJson from "../../package.json";
 
 export default function Home() {
@@ -30,9 +29,6 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    // Migrate old-app localStorage data before any stores read it
-    migrateFromLegacyStorage();
-
     // Initialize URL parameters from current URL
     const urlParams = getAllURLParameters();
     setUrlParameters(urlParams);

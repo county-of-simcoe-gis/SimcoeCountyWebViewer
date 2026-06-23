@@ -136,7 +136,7 @@ export interface ValidationResult {
 // Constants
 export const MYMAPS_CONSTANTS = {
   LAYER_NAME: 'local:myMaps',
-  STORAGE_KEY: 'simcoe-mymaps-data',
+  STORAGE_KEY: 'myMaps',
   DEFAULT_COLORS: [
     '#000000', // Black
     '#e90808', // Red

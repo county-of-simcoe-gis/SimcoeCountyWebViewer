@@ -143,7 +143,7 @@ export default function MyMapsService() {
         return;
       }
 
-      const featureDrawType = feature.get("drawType") || drawType;
+      const featureDrawType = feature.get("drawType") || "Point";
 
       // Generate label based on draw type
       let label = "";
@@ -194,7 +194,7 @@ export default function MyMapsService() {
         emit("mymap-show-drawing-options", { item: freshItem, coordinate });
       }, 200);
     },
-    [drawType, addItem, emit, setDrawType, getNextDrawingNumber],
+    [addItem, emit, setDrawType, getNextDrawingNumber],
   );
 
   const handleFeatureModified = React.useCallback(
@@ -270,6 +270,15 @@ export default function MyMapsService() {
     [removeItem, emit, getPopupStyleFromFeature, extractLabelStyleFromFeature], // Remove drawType from dependencies to avoid stale closures
   );
 
+  // Keep manager callbacks up to date without forcing manager re-initialization.
+  const handleFeatureDrawnRef = useRef(handleFeatureDrawn);
+  const handleFeatureModifiedRef = useRef(handleFeatureModified);
+
+  useEffect(() => {
+    handleFeatureDrawnRef.current = handleFeatureDrawn;
+    handleFeatureModifiedRef.current = handleFeatureModified;
+  }, [handleFeatureDrawn, handleFeatureModified]);
+
   // Initialize drawing manager when map is available
   useEffect(() => {
     if (!map || drawingManagerRef.current) return;
@@ -279,8 +288,8 @@ export default function MyMapsService() {
 
     // Initialize drawing manager with layer manager integration
     drawingManagerRef.current = new MyMapsDrawingManager(map, {
-      onFeatureDrawn: handleFeatureDrawn,
-      onFeatureModified: handleFeatureModified,
+      onFeatureDrawn: (feature) => handleFeatureDrawnRef.current(feature),
+      onFeatureModified: (feature) => handleFeatureModifiedRef.current(feature),
     });
 
     // Register the MyMaps layer with the layer manager for proper z-index ordering
@@ -314,7 +323,7 @@ export default function MyMapsService() {
         managedLayerIdRef.current = null;
       }
     };
-  }, [map, loadFromStorage, handleFeatureDrawn, handleFeatureModified, addLayer, removeLayer]);
+  }, [map, loadFromStorage, addLayer, removeLayer]);
 
   // Register MyMaps feature-click handler through the unified interaction system.
   // This replaces the old direct map.on("singleclick") in MyMapsDrawing so that the
