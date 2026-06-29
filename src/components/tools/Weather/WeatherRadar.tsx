@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import Image from "next/image";
 import { FaSyncAlt, FaPlay, FaPause } from "react-icons/fa";
 import Slider from "rc-slider";
@@ -72,6 +73,12 @@ export default function WeatherRadar(): React.ReactElement {
   // One managed layer per station code (max 3: CASKR, CASBI, CASET)
   // Maps station code -> LayerManager layer ID
   const stationLayerIdsRef = useRef<Map<string, string>>(new Map());
+  // Tracks the URL currently loaded on each station's OL layer (keyed by station code)
+  const stationCurrentUrlRef = useRef<Map<string, string>>(new Map());
+  // Tracks the opacity currently set on each station's layer (keyed by station code)
+  const stationCurrentOpacityRef = useRef<Map<string, number>>(new Map());
+  // Cache of Static source instances keyed by URL — reused when revisiting a frame so OL doesn't re-fetch
+  const sourceCacheRef = useRef<Map<string, Static>>(new Map());
   const toast = useToast();
   // frame lookup: key = `${time.getTime()}_${code}` -> frame info
   const frameLookupRef = useRef<Map<string, { url: string; extent: [number, number, number, number]; date: Date; code: string; timeId?: string | number }>>(new Map());
@@ -105,7 +112,7 @@ export default function WeatherRadar(): React.ReactElement {
   // playback: frame-by-frame (real images)
   const frameDatesRef = useRef<Date[]>([]);
   const playTimerRef = useRef<number | null>(null);
-  const PLAY_MS = 250; // ✅ adjust playback speed here
+  const PLAY_MS = 500; // 2 frames per second
 
   const computeRange = useCallback((): { from: Date; to: Date } => {
     if (timeSetting === "last3hours") {
@@ -134,6 +141,9 @@ export default function WeatherRadar(): React.ReactElement {
     }
 
     stationLayerIdsRef.current.clear();
+    stationCurrentUrlRef.current.clear();
+    stationCurrentOpacityRef.current.clear();
+    sourceCacheRef.current.clear();
     frameLookupRef.current.clear();
     frameDatesRef.current = [];
   }, []);
@@ -162,9 +172,19 @@ export default function WeatherRadar(): React.ReactElement {
         if (frame) {
           layer.setVisible(true);
           layer.setProperties({ radarCode: frame.code, radarDate: frame.date, timeId: frame.timeId });
-          const src = new Static({ url: frame.url, projection: "EPSG:3857", imageExtent: frame.extent });
-          layer.setSource(src);
-          layer.setOpacity(opacity);
+          if (stationCurrentUrlRef.current.get(code) !== frame.url) {
+            let src = sourceCacheRef.current.get(frame.url);
+            if (!src) {
+              src = new Static({ url: frame.url, projection: "EPSG:3857", imageExtent: frame.extent });
+              sourceCacheRef.current.set(frame.url, src);
+            }
+            layer.setSource(src);
+            stationCurrentUrlRef.current.set(code, frame.url);
+          }
+          if (stationCurrentOpacityRef.current.get(code) !== opacity) {
+            layer.setOpacity(opacity);
+            stationCurrentOpacityRef.current.set(code, opacity);
+          }
         } else {
           layer.setVisible(false);
         }
@@ -174,16 +194,17 @@ export default function WeatherRadar(): React.ReactElement {
 
   useEffect(() => {
     applyVisibility();
-  }, [radarDate, CASKR, CASBI, CASET, applyVisibility]);
+    const map = useMapStore.getState().map;
+    if (map) {
+      map.render();
 
-  useEffect(() => {
-    try {
-      for (const layerId of stationLayerIdsRef.current.values()) {
-        const managed = LayerManager.getLayer(layerId);
-        if (managed) LayerManager.setLayerOpacity(layerId, opacity);
-      }
-    } catch {}
-  }, [opacity]);
+      // Force immediate canvas redraw via requestAnimationFrame
+      requestAnimationFrame(() => {
+        map.render();
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [radarDate, CASKR, CASBI, CASET, opacity]);
 
   const fetchRadarImages = useCallback(
     async (reason: "mount" | "manual" | "interval" | "update" = "manual") => {
@@ -244,7 +265,13 @@ export default function WeatherRadar(): React.ReactElement {
 
         // Build frame list for playback + slider snapping
         frameDates.sort((a, b) => a.getTime() - b.getTime());
-        frameDatesRef.current = frameDates;
+
+        // Deduplicate frame dates: keep only unique timestamps
+        // (API returns one entry per station per time, but playback needs unique times only)
+        const uniqueTimestamps = new Set(frameDates.map((d) => d.getTime()));
+        frameDatesRef.current = Array.from(uniqueTimestamps)
+          .sort((a, b) => a - b)
+          .map((ts) => new Date(ts));
 
         // If we have frames, create one OL layer per station code via LayerManager
         if (frameDatesRef.current.length > 0) {
@@ -259,7 +286,6 @@ export default function WeatherRadar(): React.ReactElement {
             if (!initFrame) continue;
 
             const layer = new ImageLayer({
-              source: new Static({ url: initFrame.url, projection: "EPSG:3857", imageExtent: initFrame.extent }),
               visible: true,
               opacity,
             });
@@ -293,7 +319,7 @@ export default function WeatherRadar(): React.ReactElement {
 
         applyVisibility();
       } catch (err) {
-        console.error("Radar fetch error:", err);
+        // Silently fail on fetch error
       } finally {
         setIsLoading(false);
         inFlightRef.current = false;
@@ -366,7 +392,9 @@ export default function WeatherRadar(): React.ReactElement {
       if (!isPlayingRef.current) return;
 
       idx = (idx + 1) % frameDatesRef.current.length;
-      updateRadarDate(frameDatesRef.current[idx]);
+      flushSync(() => {
+        updateRadarDate(frameDatesRef.current[idx]);
+      });
     }, PLAY_MS);
 
     return () => {

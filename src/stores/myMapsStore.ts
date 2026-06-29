@@ -820,7 +820,9 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => {
 
           set({
             items: dedupedItems,
-            drawType: data.drawType || "Cancel",
+            // Always start in a neutral tool state on app load; restoring an
+            // active draw tool (especially Eraser) causes unintended startup behavior.
+            drawType: "Cancel",
             drawColor: data.drawColor || "#e809e5",
             drawOpacity: data.drawOpacity || 0.8,
             drawingCounter,

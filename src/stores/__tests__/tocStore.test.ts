@@ -313,6 +313,122 @@ describe("tocStore", () => {
   });
 
   describe("Layer Operations", () => {
+    it("should switch to target LIST group when adding a layer to an inactive group", () => {
+      const groupA: TOCLayerGroup = {
+        ...mockGroup,
+        value: "group_a",
+        label: "Group A",
+        layers: [{ ...mockLayer, id: "group_a_layer", group: "group_a", groupName: "Group A", visible: true }],
+      };
+      const groupB: TOCLayerGroup = {
+        ...mockGroup,
+        value: "group_b",
+        label: "Group B",
+        layers: [{ ...mockLayer, id: "group_b_layer", group: "group_b", groupName: "Group B", visible: false }],
+      };
+
+      useTOCStore.setState({
+        tocType: "LIST",
+        layerListGroups: [groupA, groupB],
+        layerFolderGroups: [groupA, groupB],
+        selectedGroup: groupA,
+        groupLayerVisibilityStates: {},
+      });
+
+      const addedLayer: TOCLayer = {
+        ...mockLayer,
+        id: "new_group_b_layer",
+        name: "new_group_b_layer",
+        group: "group_b",
+        groupName: "Group B",
+        visible: true,
+      };
+
+      useTOCStore.getState().addCustomLayer(addedLayer, "Group B");
+
+      const state = useTOCStore.getState();
+      expect(state.selectedGroup?.value).toBe("group_b");
+      expect(state.groupLayerVisibilityStates["group_a"]).toBeDefined();
+      const updatedGroupB = state.layerListGroups.find((g) => g.value === "group_b");
+      expect(updatedGroupB?.layers.some((l) => l.id === "new_group_b_layer")).toBe(true);
+      expect(updatedGroupB?.layers.find((l) => l.id === "new_group_b_layer")?.visible).toBe(true);
+    });
+
+    it("should not switch groups when adding a layer to the currently selected LIST group", () => {
+      const groupA: TOCLayerGroup = {
+        ...mockGroup,
+        value: "group_a",
+        label: "Group A",
+        layers: [{ ...mockLayer, id: "group_a_layer", group: "group_a", groupName: "Group A", visible: true }],
+      };
+      const groupB: TOCLayerGroup = {
+        ...mockGroup,
+        value: "group_b",
+        label: "Group B",
+        layers: [{ ...mockLayer, id: "group_b_layer", group: "group_b", groupName: "Group B", visible: false }],
+      };
+
+      useTOCStore.setState({
+        tocType: "LIST",
+        layerListGroups: [groupA, groupB],
+        layerFolderGroups: [groupA, groupB],
+        selectedGroup: groupA,
+        groupLayerVisibilityStates: {},
+      });
+
+      const addedLayer: TOCLayer = {
+        ...mockLayer,
+        id: "new_group_a_layer",
+        name: "new_group_a_layer",
+        group: "group_a",
+        groupName: "Group A",
+        visible: true,
+      };
+
+      useTOCStore.getState().addCustomLayer(addedLayer, "Group A");
+
+      const state = useTOCStore.getState();
+      expect(state.selectedGroup?.value).toBe("group_a");
+      expect(state.groupLayerVisibilityStates["group_a"]).toBeUndefined();
+    });
+
+    it("should not auto-switch selected group in FOLDER mode", () => {
+      const groupA: TOCLayerGroup = {
+        ...mockGroup,
+        value: "group_a",
+        label: "Group A",
+        layers: [{ ...mockLayer, id: "group_a_layer", group: "group_a", groupName: "Group A", visible: true }],
+      };
+      const groupB: TOCLayerGroup = {
+        ...mockGroup,
+        value: "group_b",
+        label: "Group B",
+        layers: [{ ...mockLayer, id: "group_b_layer", group: "group_b", groupName: "Group B", visible: false }],
+      };
+
+      useTOCStore.setState({
+        tocType: "FOLDER",
+        layerListGroups: [groupA, groupB],
+        layerFolderGroups: [groupA, groupB],
+        selectedGroup: groupA,
+        groupLayerVisibilityStates: {},
+      });
+
+      const addedLayer: TOCLayer = {
+        ...mockLayer,
+        id: "new_group_b_layer_folder",
+        name: "new_group_b_layer_folder",
+        group: "group_b",
+        groupName: "Group B",
+        visible: true,
+      };
+
+      useTOCStore.getState().addCustomLayer(addedLayer, "Group B");
+
+      const state = useTOCStore.getState();
+      expect(state.selectedGroup?.value).toBe("group_a");
+    });
+
     it("should update layer visibility", () => {
       const mockOLLayer = { setVisible: vi.fn() };
       const layer = { ...mockLayer, layer: mockOLLayer, visible: false };

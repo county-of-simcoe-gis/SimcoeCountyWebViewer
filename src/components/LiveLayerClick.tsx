@@ -13,7 +13,7 @@ import { useLayerManagerStore } from "@/stores/layerManagerStore";
 import ThemePopupContent from "@/components/themes/shared/ThemePopupContent";
 import type TileWMS from "ol/source/TileWMS";
 import type ImageWMS from "ol/source/ImageWMS";
-import type BaseLayer from "ol/layer/Base";
+import type Layer from "ol/layer/Layer";
 import type { Feature } from "ol";
 import type { Geometry } from "ol/geom";
 
@@ -117,20 +117,16 @@ export default function LiveLayerClick() {
 
   // Query a single live layer for features at coordinate
   const queryLiveLayer = useCallback(
-    async (layer: BaseLayer, coordinate: number[]): Promise<Feature<Geometry>[]> => {
+    async (layer: Layer, coordinate: number[]): Promise<Feature<Geometry>[]> => {
       const displayName = layer.get("tocDisplayName") || layer.get("displayName") || layer.get("name");
-      console.log(`LiveLayerClick: Starting query for "${displayName}" at coordinate:`, coordinate);
 
       if (!map) {
-        console.log(`LiveLayerClick: No map available for "${displayName}"`);
         return [];
       }
 
       const viewResolution = map.getView().getResolution();
       const source = layer.getSource() as TileWMS | ImageWMS;
       const isArcGISLayer = layer.get("isArcGIS") || false;
-
-      console.log(`LiveLayerClick: "${displayName}" - isArcGIS: ${isArcGISLayer}, hasSource: ${!!source}`);
 
       // Get layer properties
       const secured = layer.get("secured");
@@ -150,10 +146,8 @@ export default function LiveLayerClick() {
       // Build URL based on layer type
       if (isArcGISLayer) {
         const wfsUrl = layer.get("wfsUrl");
-        console.log(`LiveLayerClick: "${displayName}" - wfsUrl template:`, wfsUrl);
 
         if (!wfsUrl) {
-          console.log(`LiveLayerClick: "${displayName}" - No wfsUrl configured`);
           return [];
         }
 
@@ -169,12 +163,9 @@ export default function LiveLayerClick() {
           .replace("#TOLERANCE#", String(tolerance >= 10 ? tolerance : 10))
           .replace("#EXTENT#", extent.join(","))
           .replace("#RESOLUTION#", arcgisResolution);
-
-        console.log(`LiveLayerClick: "${displayName}" - Built ArcGIS URL:`, url);
       } else {
         // WMS GetFeatureInfo
         if (!source || !source.getFeatureInfoUrl) {
-          console.log(`LiveLayerClick: "${displayName}" - No source or getFeatureInfoUrl method`);
           return [];
         }
 
@@ -182,30 +173,22 @@ export default function LiveLayerClick() {
           INFO_FORMAT: "application/json",
           FEATURE_COUNT: 50,
         });
-
-        console.log(`LiveLayerClick: "${displayName}" - Built WMS URL:`, url);
       }
 
       if (!url) {
-        console.log(`LiveLayerClick: "${displayName}" - URL generation failed`);
         return [];
       }
 
       try {
-        console.log(`LiveLayerClick: "${displayName}" - Making request...`);
         const axiosClient = getAxiosClient(url);
         const response = await axiosClient.get(url, { ...axiosConfig });
         let result = response.data;
-
-        console.log(`LiveLayerClick: "${displayName}" - Response received, type:`, typeof result);
 
         // Parse string responses
         if (typeof result === "string") {
           try {
             result = JSON.parse(result);
-            console.log(`LiveLayerClick: "${displayName}" - Parsed string response`);
           } catch {
-            console.log(`LiveLayerClick: "${displayName}" - Failed to parse string response`);
             return [];
           }
         }
@@ -213,17 +196,12 @@ export default function LiveLayerClick() {
         // Parse features based on layer type
         let features: Feature<Geometry>[];
         if (isArcGISLayer) {
-          console.log(`LiveLayerClick: "${displayName}" - Parsing as ArcGIS identify`);
           features = parseESRIIdentify(result);
         } else {
-          console.log(`LiveLayerClick: "${displayName}" - Parsing as GeoJSON`);
           features = new GeoJSON().readFeatures(result);
         }
 
-        console.log(`LiveLayerClick: "${displayName}" - Found ${features.length} features`);
-
         if (features.length === 0) {
-          console.log(`LiveLayerClick: "${displayName}" - No features found`);
           return [];
         }
 
@@ -246,7 +224,6 @@ export default function LiveLayerClick() {
           }
         }
 
-        console.log(`LiveLayerClick: "${displayName}" - Returning ${features.length} feature(s)`);
         return features;
       } catch (error) {
         console.error(`LiveLayerClick: "${displayName}" - Error identifying features:`, error);
@@ -259,138 +236,112 @@ export default function LiveLayerClick() {
   // Query all visible live layers at coordinate
   const queryAllLiveLayers = useCallback(
     async (coordinate: number[]): Promise<LiveLayerResult[]> => {
-      console.log(`LiveLayerClick: Total TOC layers: ${allLayers.length}`);
+      type IdentifyCandidate = {
+        name: string;
+        layer: Layer;
+        layerId?: string;
+        layerZIndex: number;
+        isThemeLayer?: boolean;
+        displayFieldName?: string;
+        moreInfoUrlFieldName?: string;
+        popupLogoImage?: string;
+      };
 
-      const visibleLiveLayers = allLayers.filter((tocLayer) => {
-        const hasLayer = !!tocLayer.layer;
-        const isVisible = tocLayer.visible;
-        const isLiveLayer = tocLayer.liveLayer;
-        // Also check the clickable property from LayerManager (central click gating)
-        const managedLayer = tocLayer.managedLayerId ? useLayerManagerStore.getState().getLayer(tocLayer.managedLayerId) : null;
-        const isClickable = managedLayer ? managedLayer.clickable : true; // default true if not in LayerManager
-        // Per-layer log commented out — floods console with 180+ lines per click
-        // console.log(`LiveLayerClick: Layer ${tocLayer.displayName}, hasLayer: ${hasLayer}, visible: ${isVisible}, liveLayer: ${isLiveLayer}, clickable: ${isClickable}`);
-        return hasLayer && isVisible && isLiveLayer && isClickable;
-      });
+      const layerManagerState = useLayerManagerStore.getState();
+      const managedLayersById = new Map(layerManagerState.getAllLayers().map((layer) => [layer.id, layer]));
 
-      console.log(`LiveLayerClick: Found ${visibleLiveLayers.length} visible live layers to query`);
-      if (visibleLiveLayers.length > 0) {
-        console.log(
-          "LiveLayerClick: Live layers to query:",
-          visibleLiveLayers.map((l) => l.displayName),
-        );
-      }
+      const liveLayerCandidates: IdentifyCandidate[] = allLayers
+        .filter((tocLayer) => tocLayer.layer && tocLayer.visible && tocLayer.liveLayer)
+        .flatMap((tocLayer) => {
+          const managedLayer = tocLayer.managedLayerId ? managedLayersById.get(tocLayer.managedLayerId) : null;
 
-      // Query all layers in parallel
-      const results: LiveLayerResult[] = [];
-      const identifyPromises = visibleLiveLayers.map(async (tocLayer) => {
-        // Per-layer query logs commented out to reduce console noise
-        // console.log(`LiveLayerClick: Querying layer ${index + 1}/${visibleLiveLayers.length}: ${tocLayer.displayName}`);
-        try {
-          const identifyFeatures = await queryLiveLayer(tocLayer.layer, coordinate);
-
-          if (identifyFeatures.length > 0) {
-            // Look up layer z-index from LayerManager for sorting
-            const managedLayerId = tocLayer.managedLayerId;
-            const managedLayer = managedLayerId ? useLayerManagerStore.getState().getLayer(managedLayerId) : null;
-            const layerZIndex = managedLayer?.zIndex ?? 0;
-            const displayFieldName = tocLayer.layer?.get("displayFieldName");
-
-            for (let fi = 0; fi < identifyFeatures.length; fi++) {
-              const identifyFeature = identifyFeatures[fi];
-              const layerName = identifyFeature.get("layerDisplayName") || tocLayer.displayName || "Feature";
-              const properties = identifyFeature.getProperties();
-
-              // Get a unique ID for this feature
-              // Prefer explicit ID fields, then OL's feature ID (GeoServer fid), then index-based fallback
-              let featureId = properties.OBJECTID || properties.objectid || properties.id || properties.ID || identifyFeature.getId();
-              if (!featureId) {
-                featureId = `${layerName}_${fi}`;
-              }
-
-              // Clean up properties (remove geometry, layerDisplayName, etc.)
-              const cleanAttributes: Record<string, unknown> = {};
-              Object.entries(properties).forEach(([key, value]) => {
-                if (key !== "geometry" && key !== "layerDisplayName" && key !== "bbox" && typeof value !== "object") {
-                  cleanAttributes[key] = value;
-                }
-              });
-
-              results.push({
-                layerName,
-                featureId: String(featureId),
-                attributes: cleanAttributes,
-                feature: identifyFeature,
-                layerZIndex,
-                layerId: managedLayerId || undefined,
-                displayName: displayFieldName ? cleanAttributes[String(displayFieldName)] as string | undefined : undefined,
-              });
+          // Keep TOC live-layer behavior but use LayerManager clickability when available.
+          if (managedLayer) {
+            if (!managedLayer.visible || !managedLayer.clickable) {
+              return [];
             }
+
+            return [
+              {
+                name: tocLayer.displayName || managedLayer.name,
+                layer: managedLayer.layer as Layer,
+                layerId: managedLayer.id,
+                layerZIndex: managedLayer.zIndex,
+                displayFieldName: String(managedLayer.layer.get("displayFieldName") || "") || undefined,
+              },
+            ];
+          }
+
+          return [
+            {
+              name: tocLayer.displayName,
+              layer: tocLayer.layer as Layer,
+              layerZIndex: Number((tocLayer.layer as Layer).getZIndex?.() ?? 0),
+              displayFieldName: String((tocLayer.layer as Layer).get("displayFieldName") || "") || undefined,
+            },
+          ];
+        });
+
+      const themeLayerCandidates: IdentifyCandidate[] = layerManagerState
+        .getLayersByCategory("Themes")
+        .filter((managedLayer) => managedLayer.visible && managedLayer.clickable)
+        .map((managedLayer) => ({
+          name: managedLayer.name,
+          layer: managedLayer.layer as Layer,
+          layerId: managedLayer.id,
+          layerZIndex: managedLayer.zIndex,
+          isThemeLayer: true,
+          displayFieldName: String(managedLayer.layer.get("displayFieldName") || "") || undefined,
+          moreInfoUrlFieldName: String(managedLayer.layer.get("moreInfoUrlFieldName") || "") || undefined,
+          popupLogoImage: typeof managedLayer.metadata?.popupLogoImage === "string" ? managedLayer.metadata.popupLogoImage : undefined,
+        }));
+
+      const identifyCandidates = [...liveLayerCandidates, ...themeLayerCandidates];
+
+      // Query all candidates in parallel.
+      const results: LiveLayerResult[] = [];
+      const identifyPromises = identifyCandidates.map(async (candidate) => {
+        try {
+          const identifyFeatures = await queryLiveLayer(candidate.layer, coordinate);
+          if (identifyFeatures.length === 0) return;
+
+          for (let fi = 0; fi < identifyFeatures.length; fi++) {
+            const identifyFeature = identifyFeatures[fi];
+            const layerName = identifyFeature.get("layerDisplayName") || candidate.name || "Feature";
+            const properties = identifyFeature.getProperties();
+
+            // Prefer explicit ID fields, then OL's feature ID (GeoServer fid), then index-based fallback.
+            let featureId = properties.OBJECTID || properties.objectid || properties.id || properties.ID || identifyFeature.getId();
+            if (!featureId) {
+              featureId = `${candidate.name}_${fi}`;
+            }
+
+            const cleanAttributes: Record<string, unknown> = {};
+            Object.entries(properties).forEach(([key, value]) => {
+              if (key !== "geometry" && key !== "layerDisplayName" && key !== "bbox" && typeof value !== "object") {
+                cleanAttributes[key] = value;
+              }
+            });
+
+            results.push({
+              layerName,
+              featureId: String(featureId),
+              attributes: cleanAttributes,
+              feature: identifyFeature,
+              layerZIndex: candidate.layerZIndex,
+              layerId: candidate.layerId,
+              displayName: candidate.displayFieldName ? (cleanAttributes[String(candidate.displayFieldName)] as string | undefined) : undefined,
+              isThemeLayer: candidate.isThemeLayer,
+              moreInfoUrlFieldName: candidate.moreInfoUrlFieldName,
+              popupLogoImage: candidate.popupLogoImage,
+            });
           }
         } catch (error) {
-          console.error(`LiveLayerClick: Error querying live layer ${tocLayer.displayName}:`, error);
+          console.error(`LiveLayerClick: Error querying layer ${candidate.name}:`, error);
         }
       });
 
-      // Wait for all identify results
       await Promise.all(identifyPromises);
-
-      // Also query clickable theme layers from LayerManager (not in TOC store)
-      const clickableThemeLayers = useLayerManagerStore
-        .getState()
-        .getLayersByCategory("Themes")
-        .filter((ml) => ml.clickable && ml.visible);
-
-      if (clickableThemeLayers.length > 0) {
-        console.log(
-          `LiveLayerClick: Found ${clickableThemeLayers.length} clickable theme layers:`,
-          clickableThemeLayers.map((l) => l.name),
-        );
-
-        const themePromises = clickableThemeLayers.map(async (managedLayer) => {
-          try {
-            const identifyFeatures = await queryLiveLayer(managedLayer.layer, coordinate);
-            const displayFieldName = managedLayer.layer.get("displayFieldName");
-            for (let fi = 0; fi < identifyFeatures.length; fi++) {
-              const identifyFeature = identifyFeatures[fi];
-              const layerName = identifyFeature.get("layerDisplayName") || managedLayer.name || "Feature";
-              const properties = identifyFeature.getProperties();
-
-              // Prefer explicit ID fields, then OL's feature ID (GeoServer fid), then index-based fallback
-              let featureId = properties.OBJECTID || properties.objectid || properties.id || properties.ID || identifyFeature.getId();
-              if (!featureId) {
-                featureId = `${managedLayer.name}_${fi}`;
-              }
-
-              const cleanAttributes: Record<string, unknown> = {};
-              Object.entries(properties).forEach(([key, value]) => {
-                if (key !== "geometry" && key !== "layerDisplayName" && key !== "bbox" && typeof value !== "object") {
-                  cleanAttributes[key] = value;
-                }
-              });
-
-              results.push({
-                layerName,
-                featureId: String(featureId),
-                attributes: cleanAttributes,
-                feature: identifyFeature,
-                layerZIndex: managedLayer.zIndex,
-                layerId: managedLayer.id,
-                displayName: displayFieldName ? cleanAttributes[String(displayFieldName)] as string | undefined : undefined,
-                isThemeLayer: true,
-                moreInfoUrlFieldName: managedLayer.layer.get("moreInfoUrlFieldName") || undefined,
-                popupLogoImage: (managedLayer.metadata?.popupLogoImage as string) || undefined,
-              });
-            }
-          } catch (error) {
-            console.error(`LiveLayerClick: Error querying theme layer ${managedLayer.name}:`, error);
-          }
-        });
-
-        await Promise.all(themePromises);
-      }
-
-      console.log(`LiveLayerClick: Finished querying all layers, found ${results.length} results`);
 
       return results;
     },
@@ -416,14 +367,10 @@ export default function LiveLayerClick() {
         checkDisableFlags: isToolActive,
       },
       handler: async (coordinate) => {
-        console.log("LiveLayerClick: Handler triggered at coordinate:", coordinate);
-
         // Query all live layers
         const liveLayerResults = await queryAllLiveLayers(coordinate);
 
         if (liveLayerResults.length > 0) {
-          console.log(`LiveLayerClick: Found ${liveLayerResults.length} live layer results`);
-
           // Convert to InteractionResult format, passing through layer z-index for sorting
           const results = liveLayerResults.map((result) => {
             const identifyResult = createIdentifyResult(result.layerName, result.featureId, result.attributes, result.feature, result.layerZIndex, {
@@ -443,7 +390,6 @@ export default function LiveLayerClick() {
 
           return results;
         } else {
-          console.log("LiveLayerClick: No live layer results found");
           return [];
         }
       },

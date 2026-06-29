@@ -13,6 +13,10 @@ import PanelComponent from "@/components/PanelComponent";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
 import { getMapScale } from "@/utils/mapHelpers";
+import { LayerHelpers, OL_DATA_TYPES } from "@/utils/openlayers";
+import type { OLDataType } from "@/utils/openlayers/types";
+import { LayerManager } from "@/utils/openlayers/LayerManager";
+import { getBasemapPrintOnlyDescriptors } from "@/components/basemapPrintOnlyRegistry";
 import { printConfig, PrintSize, PrintFormat } from "./printConfig";
 import { buildPrintRequest, PrintState } from "./printRequest";
 import { getBaseUrl, mergePrintSizes } from "./printUtils";
@@ -45,6 +49,48 @@ interface PrintStatusResponse {
   status: "running" | "waiting" | "finished" | "error";
   downloadURL?: string;
   error?: string;
+}
+
+function createLayerFromPrintOnlyDescriptor(descriptor: {
+  sourceType: OLDataType;
+  basemapLayerName: string;
+  url: string;
+  extent?: number[];
+  minZoom?: number;
+  maxZoom?: number;
+  rootPath?: string;
+  opacity: number;
+  printOrder: number;
+}): Promise<Layer | null> {
+  return new Promise((resolve) => {
+    try {
+      LayerHelpers.getLayer(
+        {
+          sourceType: descriptor.sourceType,
+          url: descriptor.url,
+          name: descriptor.basemapLayerName,
+          extent: descriptor.extent,
+          minZoom: descriptor.minZoom,
+          maxZoom: descriptor.maxZoom,
+          rootPath: descriptor.rootPath,
+        },
+        (layer) => {
+          layer.setOpacity(descriptor.opacity);
+          layer.setVisible(false);
+          layer.set("print", true);
+          layer.set("display", false);
+          layer.set("isBasemapPrintOnlySubstitute", true);
+          // Keep basemap substitutes below operational layers while still preserving
+          // relative order among substitute entries.
+          layer.set("fixedPrintIndex", 0);
+          layer.setZIndex(descriptor.printOrder);
+          resolve(layer as Layer);
+        },
+      );
+    } catch {
+      resolve(null);
+    }
+  });
 }
 
 const EMPTY_PRINT_CONFIG: NonNullable<PrintToolProps["config"]> = {};
@@ -120,7 +166,7 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
    * Get layers for printing — includes visible layers plus hidden print-only
    * substitute layers (display: false, print: true).
    */
-  const getPrintLayers = useCallback((): Layer[] => {
+  const getPrintLayers = useCallback(async (): Promise<Layer[]> => {
     if (!map) return [];
 
     const layers: Layer[] = [];
@@ -132,6 +178,34 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
       if (!layer.getVisible() && props.display !== false) return;
       layers.push(layer as Layer);
     });
+
+    // Include print-only basemap substitutes only while a topo basemap is active.
+    const hasVisibleTopoBasemap = LayerManager.getLayersByCategory("BaseMap").some((managedLayer) => managedLayer.metadata?.isBasemap === true && managedLayer.layer.getVisible());
+    if (hasVisibleTopoBasemap) {
+      const descriptors = getBasemapPrintOnlyDescriptors();
+      if (descriptors.length > 0) {
+        const substituteLayers = await Promise.all(
+          descriptors
+            .sort((a, b) => b.printOrder - a.printOrder)
+            .map((descriptor) =>
+              createLayerFromPrintOnlyDescriptor({
+                sourceType: descriptor.sourceType === OL_DATA_TYPES.VectorTile ? OL_DATA_TYPES.XYZ : descriptor.sourceType,
+                basemapLayerName: descriptor.basemapLayerName,
+                url: descriptor.url,
+                extent: descriptor.extent,
+                minZoom: descriptor.minZoom,
+                maxZoom: descriptor.maxZoom,
+                rootPath: descriptor.rootPath,
+                opacity: descriptor.opacity,
+                printOrder: descriptor.printOrder,
+              }),
+            ),
+        );
+
+        layers.push(...substituteLayers.filter((layer): layer is Layer => Boolean(layer)));
+      }
+    }
+
     return layers;
   }, [map]);
 
@@ -206,7 +280,7 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
       setPrintProgress("Preparing print request...");
 
       // Get visible layers
-      const printLayers = getPrintLayers();
+      const printLayers = await getPrintLayers();
 
       // Check for secured layers
       let useBearerToken = false;

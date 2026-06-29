@@ -3,6 +3,10 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import CoordinatesTool from "../CoordinatesTool";
 import { useMapStore } from "@/stores/mapStore";
+import { activateTab } from "@/utils/helpersUI";
+
+const mockAddItem = vi.fn();
+const mockCreateMyMapsItem = vi.fn(() => ({}));
 
 // Mock LayerManager
 const mockAddLayer = vi.fn().mockReturnValue("mock-layer-id");
@@ -44,6 +48,24 @@ vi.mock("@/utils/helpersBrowser", () => ({
   glowContainer: () => {},
 }));
 
+vi.mock("@/utils/helpersUI", () => ({
+  activateTab: vi.fn(),
+}));
+
+vi.mock("@/stores/myMapsStore", () => ({
+  useMyMapsStore: {
+    getState: () => ({
+      addItem: mockAddItem,
+    }),
+  },
+  createMyMapsItem: (...args: unknown[]) => mockCreateMyMapsItem(...args),
+}));
+
+vi.mock("@/utils/myMapsHelpers", () => ({
+  featureToGeoJSON: () => ({ type: "Feature", geometry: null, properties: {} }),
+  styleToJSON: () => ({}),
+}));
+
 // Mock OpenLayers modules
 vi.mock("ol/proj", () => ({
   transform: (coords: number[]) => coords,
@@ -66,9 +88,14 @@ vi.mock("ol/proj/Projection", () => ({
 vi.mock("ol/layer", () => ({
   Vector: class MockVectorLayer {
     getSource() {
+      const mockFeature = {
+        getStyle: () => null,
+        getGeometry: () => null,
+      };
+
       return {
         clear: () => {},
-        getFeatures: () => [{ clone: () => ({}) }],
+        getFeatures: () => [mockFeature],
         addFeature: () => {},
       };
     }
@@ -310,6 +337,23 @@ describe("CoordinatesTool", () => {
       const copyButtons = screen.getAllByTitle("Copy coordinates");
       expect(copyButtons.length).toBe(4);
       expect(copyButtons[0]).toBeInTheDocument();
+    });
+
+    it("activates the My Maps tab after adding a feature", async () => {
+      useMapStore.setState({ map: mockMap as unknown as ReturnType<typeof useMapStore.getState>["map"] });
+      const user = userEvent.setup();
+
+      render(<CoordinatesTool onClose={mockOnClose} />);
+
+      const xInputs = screen.getAllByPlaceholderText("(listening for input)");
+      await user.type(xInputs[0], "123");
+      await user.type(xInputs[1], "456");
+
+      const myMapsButtons = screen.getAllByTitle("Add to My Maps");
+      await user.click(myMapsButtons[0]);
+
+      expect(mockAddItem).toHaveBeenCalled();
+      expect(activateTab).toHaveBeenCalledWith("mymaps");
     });
   });
 

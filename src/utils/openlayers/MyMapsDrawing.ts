@@ -8,17 +8,20 @@ import type { Type as GeometryType } from "ol/geom/Geometry";
 import { Modify, Translate } from "ol/interaction";
 import GeoJSON from "ol/format/GeoJSON";
 import { fromCircle } from "ol/geom/Polygon";
-import { Style, Fill, Stroke, Circle as CircleStyle, Text, RegularShape } from "ol/style";
+import { Style, Fill, Stroke, Circle as CircleStyle, Text, RegularShape, Icon } from "ol/style";
 import { Feature } from "ol";
 import type { FeatureLike } from "ol/Feature";
 import { Circle, LineString, MultiPolygon, Point } from "ol/geom";
 import { asArray } from "ol/color";
+import type { EventsKey } from "ol/events";
+import { unByKey } from "ol/Observable";
 import { generateUID, convertLineToArrow, getBearing, getCalloutStyle, getDefaultLabelStyle, type LabelStyle } from "@/utils/myMapsHelpers";
 import type { MyMapsItem, StyleJSON } from "@/types/myMaps";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { useMapStore } from "@/stores/mapStore";
 import { useInteractionManagerStore } from "@/stores/interactionManagerStore";
 import { hexToRgba } from "@/utils/openlayers/ColorHelpers";
+import { getPublicPath } from "@/utils/getPublicPath";
 
 export class MyMapsDrawingManager {
   private map: Map;
@@ -27,6 +30,9 @@ export class MyMapsDrawingManager {
   private drawInteraction: Draw | null = null;
   private modifyInteraction: Modify | null = null;
   private translateInteraction: Translate | null = null;
+  private eraserPreviewFeature: Feature | null = null;
+  private eraserPointerMoveEvent: EventsKey | null = null;
+  private eraserPointerLeaveHandler: (() => void) | null = null;
   public static readonly LAYER_NAME = "MyMaps Drawing Layer";
 
   // Highlight layer for hover effects (like old app)
@@ -255,6 +261,8 @@ export class MyMapsDrawingManager {
   }
 
   public clearDrawing() {
+    this.clearEraserPreview();
+
     if (this.drawInteraction) {
       useInteractionManagerStore.getState().unregisterInteraction("myMaps-draw");
       this.drawInteraction = null;
@@ -263,6 +271,68 @@ export class MyMapsDrawingManager {
     if (!this.isEditing()) {
       useMapStore.getState().setActiveToolId(null);
     }
+  }
+
+  public startEraserPreview() {
+    this.clearEraserPreview();
+
+    const previewFeature = new Feature({
+      geometry: new Point([0, 0]),
+      __mymapsPreview: true,
+    });
+    previewFeature.setStyle(this.getEraserPreviewStyle());
+    this.eraserPreviewFeature = previewFeature;
+    this.vectorSource.addFeature(previewFeature);
+
+    this.eraserPointerMoveEvent = this.map.on("pointermove", (event: { coordinate: number[]; dragging?: boolean }) => {
+      if (event.dragging || !this.eraserPreviewFeature) return;
+
+      const geometry = this.eraserPreviewFeature.getGeometry();
+      if (geometry instanceof Point) {
+        geometry.setCoordinates(event.coordinate);
+      }
+
+      if (!this.vectorSource.hasFeature(this.eraserPreviewFeature)) {
+        this.vectorSource.addFeature(this.eraserPreviewFeature);
+      }
+    });
+
+    this.eraserPointerLeaveHandler = () => {
+      if (this.eraserPreviewFeature && this.vectorSource.hasFeature(this.eraserPreviewFeature)) {
+        this.vectorSource.removeFeature(this.eraserPreviewFeature);
+      }
+    };
+
+    this.map.getViewport().addEventListener("mouseleave", this.eraserPointerLeaveHandler);
+  }
+
+  public clearEraserPreview() {
+    if (this.eraserPointerMoveEvent) {
+      unByKey(this.eraserPointerMoveEvent);
+      this.eraserPointerMoveEvent = null;
+    }
+
+    if (this.eraserPointerLeaveHandler) {
+      this.map.getViewport().removeEventListener("mouseleave", this.eraserPointerLeaveHandler);
+      this.eraserPointerLeaveHandler = null;
+    }
+
+    if (this.eraserPreviewFeature && this.vectorSource.hasFeature(this.eraserPreviewFeature)) {
+      this.vectorSource.removeFeature(this.eraserPreviewFeature);
+    }
+    this.eraserPreviewFeature = null;
+  }
+
+  private getEraserPreviewStyle(): Style {
+    return new Style({
+      image: new Icon({
+        src: getPublicPath("/images/eraser.png"),
+        anchor: [0.5, 0.5],
+        anchorXUnits: "fraction",
+        anchorYUnits: "fraction",
+        scale: 0.8,
+      }),
+    });
   }
 
   public startEditing(mode: "vertices" | "translate") {

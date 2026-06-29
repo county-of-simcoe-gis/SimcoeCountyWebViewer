@@ -444,7 +444,13 @@ export const useTOCStore = create<TOCState>()(
         // virtual "All Layers" group.
         // Priority score: secured (+2) outranks primary group (+1) outranks plain (0).
         // A strictly higher score replaces the incumbent; ties keep the first seen.
-        const dedupKey = (layer: TOCLayer): string => layer.tocDisplayName || layer.displayName || layer.name;
+        const dedupKey = (layer: TOCLayer): string => {
+          if (layer.userLayer) {
+            return `user:${layer.id}`;
+          }
+
+          return layer.tocDisplayName || layer.displayName || layer.name;
+        };
         const dedupLayers = (layers: TOCLayer[], groupPriority: number): TOCLayer[] => {
           const map = new Map<string, { layer: TOCLayer; priority: number }>();
           layers.forEach((layer) => {
@@ -1600,6 +1606,7 @@ export const useTOCStore = create<TOCState>()(
     addCustomLayer: (layer, groupName) => {
       // Get the OpenLayers layer from the TOCLayer object
       const olLayer = layer.layer as Layer;
+      let autoSwitchTargetGroupValue: string | null = null;
 
       if (olLayer) {
         // New custom layers should always go at the top (index 0)
@@ -1690,7 +1697,25 @@ export const useTOCStore = create<TOCState>()(
             state.selectedGroup = { ...updatedGroup }; // Create new reference to trigger re-render
           }
         }
+
+        // If a layer is added to a different LIST group, auto-switch to it so
+        // the same visibility/state behavior applies as manual group switching.
+        if (state.tocType === "LIST" && state.selectedGroup) {
+          const targetGroup = state.layerListGroups.find((g) => g.value === layer.group || g.label === groupName);
+          if (targetGroup && targetGroup.value !== state.selectedGroup.value) {
+            autoSwitchTargetGroupValue = targetGroup.value;
+          }
+        }
       });
+
+      if (autoSwitchTargetGroupValue) {
+        const targetGroup = get().layerListGroups.find((g) => g.value === autoSwitchTargetGroupValue);
+        if (targetGroup) {
+          get().switchToGroup(targetGroup);
+          // Keep Add Data behavior: newly added layer should be active by default.
+          get().updateLayerVisibilityById(layer.id, true);
+        }
+      }
 
       // Update z-indices in LayerManager to match the new order
       LayerManager.reorderCategory("TOC");

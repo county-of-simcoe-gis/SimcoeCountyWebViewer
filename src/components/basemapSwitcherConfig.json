@@ -16,6 +16,14 @@
       "index": 0,
       "layers": [
         {
+          "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
+          "type": "ESRI_TILED",
+          "isOverlay": true,
+          "fullExtent": [-9127039.9939, 5219474.5973000005, -8607132.7041, 5807644.523699999],
+          "display": false,
+          "print": true
+        },
+        {
           "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Topo_Cache/MapServer/tile/{z}/{y}/{x}",
           "type": "SIMCOE_TILED",
           "isOverlay": true,

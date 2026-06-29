@@ -64,7 +64,7 @@
     "scaleSelector": false,
     "showGrid": true,
     "extentHistory": true,
-    "attribution": true,
+    "attribution": false,
     "attributeTable": true
   },
   "mapTheme": "SIMCOE_COUNTY",

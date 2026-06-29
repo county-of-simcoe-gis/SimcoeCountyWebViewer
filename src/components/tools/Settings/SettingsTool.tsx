@@ -83,8 +83,7 @@ export default function SettingsTool({ name = "Settings", helpLink, hideHeader =
   };
 
   const handleResetToDefaults = () => {
-    const appConfig = useAppStore.getState().config;
-    resetControlVisibilityToDefaults(appConfig);
+    resetControlVisibilityToDefaults();
   };
 
   const handleReloadPage = () => {

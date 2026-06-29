@@ -358,7 +358,11 @@ export default function MyMapsService() {
         map.forEachFeatureAtPixel(
           pixel as [number, number],
           (feature) => {
-            clickedFeature = feature as Feature;
+            const hitFeature = feature as Feature;
+            if (hitFeature.get("__mymapsPreview") === true) {
+              return false;
+            }
+            clickedFeature = hitFeature;
             return true;
           },
           {
@@ -432,6 +436,7 @@ export default function MyMapsService() {
       drawingManagerRef.current.clearDrawing();
     } else if (drawType === "Eraser") {
       drawingManagerRef.current.clearDrawing();
+      drawingManagerRef.current.startEraserPreview();
       useMapStore.getState().setActiveToolId("mymaps-eraser");
     } else {
       drawingManagerRef.current.startDrawing(drawType, drawColor, drawStyle || undefined);

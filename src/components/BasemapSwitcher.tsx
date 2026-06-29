@@ -13,6 +13,7 @@ import "@/styles/rc-slider-basemap.css";
 import { Layer } from "ol/layer";
 import { MdManageHistory } from "react-icons/md";
 import { setStorageItem, getStorageItem } from "@/utils/storage";
+import { setBasemapPrintOnlyDescriptors, type BasemapPrintOnlyDescriptor } from "@/components/basemapPrintOnlyRegistry";
 import Image from "next/image";
 
 interface BasemapLayer {
@@ -410,6 +411,8 @@ export default function BasemapSwitcher() {
         LayerManager.removeLayer(managedLayer.id);
       });
 
+      const printOnlyDescriptors: BasemapPrintOnlyDescriptor[] = [];
+
       // Create and add new basemap layers
       const layerCreationPromises = basemapService.layers.map((layerConfig, i) => {
         return new Promise<void>((resolve) => {
@@ -485,11 +488,30 @@ export default function BasemapSwitcher() {
                 layer.set("print", shouldPrint);
                 layer.set("display", shouldDisplay);
 
-                // Live-map visibility is driven solely by the display flag. Print-only
-                // substitute layers (display: false, print: true) are kept hidden so they
-                // do not request tiles on pan/zoom. The print tool includes them via their
-                // display: false flag (see getPrintLayers) for MapFish, which cannot render
-                // the VectorTile display layers.
+                // Print-only basemap layers are substituted during print-request assembly
+                // and should never be added to the live map.
+                if (!shouldDisplay && shouldPrint) {
+                  const reversedIndex = basemapService.layers.length - 1 - i;
+                  printOnlyDescriptors.push({
+                    id: `${basemapService.name}_${i}`,
+                    basemapServiceName: basemapService.name,
+                    basemapLayerName: `${basemapService.name}_${i}`,
+                    sourceType: sourceType as OLDataType,
+                    url: layerConfig.url,
+                    extent: layerConfig.fullExtent,
+                    minZoom: layerConfig.minZoom,
+                    maxZoom: layerConfig.maxZoom,
+                    rootPath: layerConfig.rootPath,
+                    spritePath: layerConfig.spritePath,
+                    pngPath: layerConfig.pngPath,
+                    opacity,
+                    printOrder: reversedIndex,
+                  });
+                  resolve();
+                  return;
+                }
+
+                // Live-map visibility is driven solely by the display flag.
                 const isVisible = shouldDisplay;
                 layer.setVisible(isVisible);
 
@@ -519,6 +541,9 @@ export default function BasemapSwitcher() {
       });
 
       await Promise.all(layerCreationPromises);
+
+      // Replace print-only descriptors for the currently active basemap.
+      setBasemapPrintOnlyDescriptors(printOnlyDescriptors);
 
       // Layers are now added via LayerManager, so no need to add them directly to the map
       // console.log(`🎯 Basemap "${basemapService.name}" applied with proper z-index management`);

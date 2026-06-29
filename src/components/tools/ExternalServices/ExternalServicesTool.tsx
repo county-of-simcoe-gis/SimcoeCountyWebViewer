@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { FaExclamationCircle } from "react-icons/fa";
 import PanelComponent from "@/components/PanelComponent";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
@@ -56,6 +57,7 @@ export default function ExternalServicesTool({ name = "External Services", helpL
   const [coords, setCoords] = useState<[number, number]>([0, 0]);
   const [address, setAddress] = useState<string>("");
   const [isLoadingAddress, setIsLoadingAddress] = useState<boolean>(false);
+  const [hasSearched, setHasSearched] = useState<boolean>(false);
   const [markerLayerId, setMarkerLayerId] = useState<string | null>(null);
 
   // Convert Web Mercator coordinates to Lat/Long
@@ -67,7 +69,7 @@ export default function ExternalServicesTool({ name = "External Services", helpL
   // Fetch address from parcel data
   const fetchAddress = useCallback(
     async (coords: number[]) => {
-      const parcelLayerUrl = (appConfig as Record<string, unknown>)?.parcelLayer as { url?: string } | undefined;
+      const parcelLayerUrl = (appConfig as Record<string, unknown>)?.parcelLayer as { url?: string; rollNumberFieldName?: string } | undefined;
       const propertyReportUrl = (appConfig as Record<string, unknown>)?.propertyReportUrl as string | undefined;
 
       if (!parcelLayerUrl?.url || !propertyReportUrl) {
@@ -75,6 +77,7 @@ export default function ExternalServicesTool({ name = "External Services", helpL
         return;
       }
 
+      setHasSearched(true);
       setIsLoadingAddress(true);
       setAddress("");
 
@@ -93,8 +96,15 @@ export default function ExternalServicesTool({ name = "External Services", helpL
         const feature = geoJSON[0];
 
         if (feature) {
-          const arn = feature.get("arn");
-          const infoURL = `${propertyReportUrl}${arn}`;
+          const rollNumberField = parcelLayerUrl.rollNumberFieldName ?? "ARN";
+          const properties = feature.getProperties();
+          const arnKey = Object.keys(properties).find((k) => k.toLowerCase() === rollNumberField.toLowerCase());
+          const arn = arnKey ? feature.get(arnKey) : undefined;
+          if (!arn) {
+            setIsLoadingAddress(false);
+            return;
+          }
+          const infoURL = `${getPublicPath(propertyReportUrl)}${arn}`;
           const infoResponse = await axiosClient.get(infoURL);
 
           if (infoResponse.data.Address) {
@@ -214,7 +224,27 @@ export default function ExternalServicesTool({ name = "External Services", helpL
         {isLoadingAddress && (
           <div className="flex items-center gap-2 text-primary">
             <span className="loading loading-spinner loading-sm"></span>
-            <span>Loading address...</span>
+            <span>Looking up address...</span>
+          </div>
+        )}
+
+        {!isLoadingAddress && address && (
+          <div className="alert alert-info py-2 px-3">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                fillRule="evenodd"
+                d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-2.003 3.5-4.697 3.5-8.327a8 8 0 10-16 0c0 3.63 1.556 6.324 3.5 8.327a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <span className="text-xs font-medium">{address}</span>
+          </div>
+        )}
+
+        {!isLoadingAddress && hasSearched && !address && (
+          <div className="alert alert-warning py-2 px-3">
+            <FaExclamationCircle className="h-4 w-4 shrink-0" />
+            <span className="text-xs">No parcel found — search links will use coordinates instead</span>
           </div>
         )}
 
@@ -239,13 +269,11 @@ interface ServiceGroupComponentProps {
 function ServiceGroupComponent({ group, coords, address, isLoadingAddress }: ServiceGroupComponentProps) {
   const buildUrl = useCallback(
     (link: ServiceLink): string => {
-      if (link.requiresPropertyInfo && !address) return "#";
-
-      // Safe template string replacement
+      const addressValue = link.requiresPropertyInfo && !address ? `${coords[1].toFixed(6)},${coords[0].toFixed(6)}` : address;
       return link.url
         .replace(/\$\{x\}/g, String(coords[0]))
         .replace(/\$\{y\}/g, String(coords[1]))
-        .replace(/\$\{address\}/g, encodeURIComponent(address));
+        .replace(/\$\{address\}/g, encodeURIComponent(addressValue));
     },
     [coords, address],
   );
@@ -260,7 +288,7 @@ function ServiceGroupComponent({ group, coords, address, isLoadingAddress }: Ser
       <div className="p-2 space-y-1">
         {group.links.map((link) => {
           const url = buildUrl(link);
-          const isDisabled = link.requiresPropertyInfo && (!address || isLoadingAddress);
+          const isDisabled = isLoadingAddress;
 
           return (
             <a

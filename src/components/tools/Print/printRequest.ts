@@ -374,10 +374,17 @@ function textToSymbolizer(olText: Text | null, options: { skipHalo?: boolean; dr
 
   // Get the label rotation - use text style rotation, or fallback to feature's labelRotation
   const textStyleRotation = olText.getRotation?.() || 0;
-  let labelRotationDegrees = textStyleRotation !== 0 ? radiansToDegrees(textStyleRotation) : options.featureLabelRotation || 0;
+  const hasStyleRotation = textStyleRotation !== 0;
+  const hasFeatureRotation = options.featureLabelRotation !== undefined && options.featureLabelRotation !== null;
+  let labelRotationDegrees = hasStyleRotation ? radiansToDegrees(textStyleRotation) : Number(options.featureLabelRotation || 0);
+
+  // Bearing/Measure features store the raw bearing in featureLabelRotation.
+  // Prefer that value to avoid ambiguity with potentially pre-adjusted style rotation.
+  if ((options.drawType === "Bearing" || options.drawType === "Measure") && hasFeatureRotation) {
+    labelRotationDegrees = Number(options.featureLabelRotation || 0);
+  }
 
   // Apply bearing rotation adjustment for Bearing and Measure tools
-  // The original app uses: rotation > 180 ? rotation + 90 : rotation - 90
   if (options.drawType === "Bearing" || options.drawType === "Measure") {
     labelRotationDegrees = labelRotationDegrees > 180 ? labelRotationDegrees + 90 : labelRotationDegrees - 90;
   }
@@ -594,11 +601,25 @@ function createTextBackgroundLayer(
   // Get rotation from text style (in radians) or from feature's labelRotation (in degrees)
   // Use feature's labelRotation as fallback since style functions may not preserve rotation
   const textStyleRotation = textStyle.getRotation?.() || 0;
-  let rotationDegrees = textStyleRotation !== 0 ? radiansToDegrees(textStyleRotation) : featureLabelRotation || 0;
+  const hasStyleRotation = textStyleRotation !== 0;
+  const hasFeatureRotation = featureLabelRotation !== undefined && featureLabelRotation !== null;
+  let rotationDegrees = hasStyleRotation ? radiansToDegrees(textStyleRotation) : Number(featureLabelRotation || 0);
+
+  // Bearing/Measure features store the raw bearing in featureLabelRotation.
+  // Prefer that value to avoid ambiguity with potentially pre-adjusted style rotation.
+  if ((drawType === "Bearing" || drawType === "Measure") && hasFeatureRotation) {
+    rotationDegrees = Number(featureLabelRotation || 0);
+  }
 
   // Apply bearing rotation adjustment for Bearing and Measure tools (same as textToSymbolizer)
   if (drawType === "Bearing" || drawType === "Measure") {
     rotationDegrees = rotationDegrees > 180 ? rotationDegrees + 90 : rotationDegrees - 90;
+  }
+
+  // Callout labels render with opposite polygon rotation direction from text in MapFish.
+  // Flip the background box rotation so it matches the text orientation.
+  if (drawType === "Callout") {
+    rotationDegrees = -rotationDegrees;
   }
 
   // Convert to radians for the rotation calculation
@@ -1302,19 +1323,23 @@ export async function buildPrintRequest(mapLayers: Layer[], printSelectedOption:
   const mainMap: MapFishLayer[] = [];
   const overviewMap: MapFishLayer[] = [];
 
-  // Set print index for layer ordering
-  let layerOrder = 0;
+  // Set print index by zIndex ranking so highest zIndex gets lowest printIndex.
+  const orderedLayers: Layer[] = [];
   mapLayers.forEach((layer) => {
     if (layer instanceof LayerGroup) {
       layer.getLayers().forEach((item) => {
-        layerOrder++;
-        item.setProperties({ printIndex: layerOrder });
+        orderedLayers.push(item as unknown as Layer);
       });
     } else {
-      layerOrder++;
-      layer.setProperties({ printIndex: layerOrder });
+      orderedLayers.push(layer);
     }
   });
+
+  orderedLayers
+    .sort((a, b) => (b.getZIndex() || 0) - (a.getZIndex() || 0))
+    .forEach((layer, index) => {
+      layer.setProperties({ printIndex: index + 1 });
+    });
 
   // Process each layer
   // Note: Layers with print=false are skipped

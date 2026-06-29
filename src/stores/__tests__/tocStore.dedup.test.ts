@@ -3,7 +3,7 @@ import { useTOCStore, type TOCLayer, type TOCLayerGroup } from "@/stores/tocStor
 
 /**
  * Tests for LIST view layer deduplication with secured-priority.
- * 
+ *
  * Context: The same physical layer can be published under multiple workspace
  * prefixes (e.g. "simcoe:Bruce_Trail" and "simcoe-secured:Bruce_Trail"), or
  * appear in multiple config groups. The LIST view's virtual "All Layers" group
@@ -47,6 +47,7 @@ describe("tocStore - LIST view deduplication", () => {
         legendImage: null,
         legendObj: null,
         visible: false,
+        defaultVisible: false,
         layer: null,
         metadataUrl: null,
         opacity: 1,
@@ -123,6 +124,7 @@ describe("tocStore - LIST view deduplication", () => {
         legendImage: null,
         legendObj: null,
         visible: true,
+        defaultVisible: true,
         layer: null,
         metadataUrl: null,
         opacity: 1,
@@ -198,6 +200,7 @@ describe("tocStore - LIST view deduplication", () => {
         legendImage: null,
         legendObj: null,
         visible: false,
+        defaultVisible: false,
         layer: null,
         metadataUrl: null,
         opacity: 0.8,
@@ -273,6 +276,7 @@ describe("tocStore - LIST view deduplication", () => {
         legendImage: null,
         legendObj: null,
         visible: false,
+        defaultVisible: false,
         layer: null,
         metadataUrl: null,
         opacity: 1,
@@ -349,6 +353,7 @@ describe("tocStore - LIST view deduplication", () => {
         legendImage: null,
         legendObj: null,
         visible: true,
+        defaultVisible: true,
         layer: null,
         metadataUrl: null,
         opacity: 1,
@@ -421,6 +426,7 @@ describe("tocStore - LIST view deduplication", () => {
         legendImage: null,
         legendObj: null,
         visible: true,
+        defaultVisible: true,
         layer: null,
         metadataUrl: null,
         opacity: 1,
@@ -473,6 +479,143 @@ describe("tocStore - LIST view deduplication", () => {
       // Should dedupe using displayName fallback
       expect(allLayersGroup!.layers).toHaveLength(1);
     });
+
+    it("should keep a user-added layer separate from a published layer with the same TOC name", () => {
+      const publishedLayer: TOCLayer = {
+        id: "published_layer",
+        name: "simcoe:Roads",
+        displayName: "Roads",
+        tocDisplayName: "Roads",
+        styleUrl: "",
+        height: 0,
+        drawIndex: 0,
+        index: 0,
+        initialDrawIndex: 0,
+        showLegend: false,
+        legendHeight: 0,
+        legendImage: null,
+        legendObj: null,
+        visible: false,
+        defaultVisible: false,
+        layer: null,
+        metadataUrl: null,
+        opacity: 1,
+        minScale: 0,
+        maxScale: 0,
+        liveLayer: false,
+        groupName: "Transportation",
+        group: "Transportation",
+        userLayer: false,
+        secured: false,
+      };
+
+      const userLayer: TOCLayer = {
+        ...publishedLayer,
+        id: "user_layer",
+        name: "user:roads",
+        groupName: "Custom Layers",
+        group: "Custom Layers",
+        userLayer: true,
+        visible: true,
+      };
+
+      const publishedGroup: TOCLayerGroup = {
+        value: "Transportation",
+        label: "Transportation",
+        defaultGroup: false,
+        url: "http://test.com/wms",
+        prefix: "",
+        visibleLayers: [],
+        wmsGroupUrl: "http://test.com/wms",
+        customRestUrl: "",
+        layers: [publishedLayer],
+      };
+
+      const userGroup: TOCLayerGroup = {
+        value: "Custom Layers",
+        label: "Custom Layers",
+        defaultGroup: false,
+        url: "",
+        prefix: "",
+        visibleLayers: [],
+        wmsGroupUrl: "",
+        customRestUrl: "",
+        layers: [userLayer],
+      };
+
+      useTOCStore.getState().setLayerGroups("LIST", [publishedGroup, userGroup]);
+
+      const state = useTOCStore.getState();
+      const allLayersGroup = state.layerListGroups.find((g) => g.value === "all_layers");
+
+      expect(allLayersGroup).toBeDefined();
+      expect(allLayersGroup!.layers).toHaveLength(2);
+      expect(allLayersGroup!.layers.map((layer) => layer.id)).toEqual(expect.arrayContaining(["published_layer", "user_layer"]));
+    });
+
+    it("should keep multiple user-added layers with the same TOC name in one LIST group", () => {
+      const firstUserLayer: TOCLayer = {
+        id: "user_layer_1",
+        name: "user:roads:1",
+        displayName: "Roads",
+        tocDisplayName: "Roads",
+        styleUrl: "",
+        height: 0,
+        drawIndex: 1,
+        index: 1,
+        initialDrawIndex: 1,
+        showLegend: false,
+        legendHeight: 0,
+        legendImage: null,
+        legendObj: null,
+        visible: true,
+        defaultVisible: true,
+        layer: null,
+        metadataUrl: null,
+        opacity: 1,
+        minScale: 0,
+        maxScale: 0,
+        liveLayer: false,
+        groupName: "Custom Layers",
+        group: "Custom Layers",
+        userLayer: true,
+        secured: false,
+      };
+
+      const secondUserLayer: TOCLayer = {
+        ...firstUserLayer,
+        id: "user_layer_2",
+        name: "user:roads:2",
+        visible: false,
+        drawIndex: 0,
+        index: 0,
+        initialDrawIndex: 0,
+      };
+
+      const userGroup: TOCLayerGroup = {
+        value: "Custom Layers",
+        label: "Custom Layers",
+        defaultGroup: false,
+        url: "",
+        prefix: "",
+        visibleLayers: [],
+        wmsGroupUrl: "",
+        customRestUrl: "",
+        layers: [firstUserLayer, secondUserLayer],
+      };
+
+      useTOCStore.getState().setLayerGroups("LIST", [userGroup]);
+
+      const state = useTOCStore.getState();
+      const allLayersGroup = state.layerListGroups.find((g) => g.value === "all_layers");
+      const customGroup = state.layerListGroups.find((g) => g.value === "Custom Layers");
+
+      expect(allLayersGroup).toBeDefined();
+      expect(allLayersGroup!.layers).toHaveLength(2);
+      expect(customGroup).toBeDefined();
+      expect(customGroup!.layers).toHaveLength(2);
+      expect(customGroup!.layers.map((layer) => layer.id)).toEqual(["user_layer_1", "user_layer_2"]);
+    });
   });
 
   describe("FOLDER view dedup behavior", () => {
@@ -492,6 +635,7 @@ describe("tocStore - LIST view deduplication", () => {
         legendImage: null,
         legendObj: null,
         visible: true,
+        defaultVisible: true,
         layer: null,
         metadataUrl: null,
         opacity: 1,
@@ -570,6 +714,7 @@ describe("tocStore - LIST view deduplication", () => {
         legendImage: null,
         legendObj: null,
         visible: false,
+        defaultVisible: false,
         layer: null,
         metadataUrl: null,
         opacity: 1,

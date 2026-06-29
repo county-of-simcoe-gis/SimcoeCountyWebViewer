@@ -13,6 +13,7 @@ import { useMapStore } from "@/stores/mapStore";
 import { useMyMapsStore, createMyMapsItem } from "@/stores/myMapsStore";
 import { useEventStore } from "@/stores/eventStore";
 import { featureToGeoJSON, styleToJSON } from "@/utils/myMapsHelpers";
+import { activateTab } from "@/utils/helpersUI";
 import { getMapScale } from "@/utils/mapHelpers";
 import { getPublicPath } from "@/utils/getPublicPath";
 import { glowContainer } from "@/utils/helpersBrowser";
@@ -211,6 +212,7 @@ export default function CoordinatesTool({ name = "Coordinates", helpLink, hideHe
       myMapsItem.featureGeoJSON = featureToGeoJSON(feature);
       useMyMapsStore.getState().addItem(myMapsItem);
       useEventStore.getState().emit("mymap-item-created", { item: myMapsItem });
+      activateTab("mymaps");
     }
   }, []);
 

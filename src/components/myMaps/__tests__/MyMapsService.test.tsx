@@ -48,6 +48,7 @@ const mockDrawingManager = {
   loadFeatures: vi.fn(),
   startDrawing: vi.fn(),
   clearDrawing: vi.fn(),
+  startEraserPreview: vi.fn(),
   startEditing: vi.fn(),
   clearEditing: vi.fn(),
   highlightFeature: vi.fn(),
@@ -450,6 +451,7 @@ describe("MyMapsService Component", () => {
       rerender(<MyMapsService />);
 
       expect(mockDrawingManager.clearDrawing).toHaveBeenCalled();
+      expect(mockDrawingManager.startEraserPreview).toHaveBeenCalled();
     });
 
     it("should handle editing mode changes", () => {

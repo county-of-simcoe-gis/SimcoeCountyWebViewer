@@ -43,6 +43,10 @@ interface MapState {
   // Control visibility (runtime state)
   controlVisibility: ControlVisibility;
 
+  // Control visibility defaults (captured at map initialization)
+  // Used when "Reset to Defaults" is clicked — ensures reset uses the actual loaded map config
+  mapControlDefaults: ControlVisibility | null;
+
   // Loading tracking (previously window.loaded array)
   loadedItems: string[];
 
@@ -140,6 +144,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   activeToolId: null,
   mapControls: null,
   controlVisibility: getDefaultControlVisibility(),
+  mapControlDefaults: null,
   loadedItems: [],
   currentExtent: null,
   currentZoom: null,
@@ -179,8 +184,12 @@ export const useMapStore = create<MapState>((set, get) => ({
     });
   },
 
-  resetControlVisibilityToDefaults: (config) => {
-    const defaults = getDefaultControlVisibility(config);
+  resetControlVisibilityToDefaults: () => {
+    const state = get();
+    // Use stored map defaults (captured at map initialization)
+    // Falls back to config-based defaults if not yet initialized
+    const defaults = state.mapControlDefaults || getDefaultControlVisibility();
+
     set({ controlVisibility: defaults });
 
     // Save to localStorage
@@ -194,8 +203,9 @@ export const useMapStore = create<MapState>((set, get) => ({
   },
 
   initControlVisibility: (config) => {
+    const defaults = getDefaultControlVisibility(config);
     const visibility = loadControlVisibilityFromStorage(config);
-    set({ controlVisibility: visibility });
+    set({ controlVisibility: visibility, mapControlDefaults: defaults });
   },
 
   // Loading management
