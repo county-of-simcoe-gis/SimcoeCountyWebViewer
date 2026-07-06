@@ -3,6 +3,15 @@ import { JSONToSettings } from "@/lib/JSONTranslation";
 import type { SettingsType } from "@/interfaces/SettingsType";
 import { getAxiosClient } from "@/lib/axiosInstance";
 import localConfig from "@/config.json";
+import { getPublicPath } from "@/utils/getPublicPath";
+
+function resolveInternalUrl(url: string): string {
+  if (!url) return url;
+  if (/^https?:\/\//i.test(url) || url.startsWith("//")) return url;
+
+  const normalized = url.startsWith("/") ? url : `/${url}`;
+  return getPublicPath(normalized);
+}
 
 export interface AppConfig {
   // Basic app settings
@@ -395,7 +404,7 @@ function convertSettingsToAppConfig(settings: SettingsType & Record<string, unkn
     if (general.showTermsOnStartup !== undefined) config.showTermsOnStartup = general.showTermsOnStartup;
     if (general.showWhatsNewPopupOnStartup !== undefined) config.showWhatsNewPopupOnStartup = general.showWhatsNewPopupOnStartup;
     if (general.termsUrl) config.termsUrl = general.termsUrl;
-    if (general.helpUrl) config.helpUrl = general.helpUrl;
+    if (general.helpUrl) config.helpUrl = resolveInternalUrl(general.helpUrl);
     if (general.feedbackUrl) config.feedbackUrl = general.feedbackUrl;
     if (general.whatsNewUrl) config.whatsNewUrl = general.whatsNewUrl;
 
@@ -435,7 +444,7 @@ function convertSettingsToAppConfig(settings: SettingsType & Record<string, unkn
       if (layers.tocType && layers.tocType.trim() !== "") config.toc.tocType = layers.tocType;
       if (layers.defaultGroup && layers.defaultGroup.trim() !== "") config.toc.default_group = layers.defaultGroup;
       if (hasMeaningfulSources && layers.sources) config.toc.sources = layers.sources;
-      if (layers.helpLink && layers.helpLink.trim() !== "") config.toc.helpLink = layers.helpLink;
+      if (layers.helpLink && layers.helpLink.trim() !== "") config.toc.helpLink = resolveInternalUrl(layers.helpLink);
     } else {
       // API Layers section has no meaningful data to override local config
     }
@@ -653,7 +662,7 @@ export async function loadConfig(configSecured: Record<string, unknown> = {}): P
             // Only override fields that the API actually provides
             if (apiToc.tocType) config.toc.tocType = apiToc.tocType;
             if (apiToc.default_group) config.toc.default_group = apiToc.default_group;
-            if (apiToc.helpLink) config.toc.helpLink = apiToc.helpLink;
+            if (apiToc.helpLink) config.toc.helpLink = resolveInternalUrl(apiToc.helpLink);
             if (apiToc.geoserverLayerGroupsUrl) config.toc.geoserverLayerGroupsUrl = apiToc.geoserverLayerGroupsUrl;
             if (apiToc.geoserverLayerGroupsUrlType) config.toc.geoserverLayerGroupsUrlType = apiToc.geoserverLayerGroupsUrlType;
             if (apiToc.esriServiceUrl) config.toc.esriServiceUrl = apiToc.esriServiceUrl;

@@ -21,7 +21,6 @@ import GlobalDrawingOptionsPopup from "@/components/myMaps/GlobalDrawingOptionsP
 import LayerInfoModal from "@/components/LayerInfo/LayerInfoModal";
 import LegendModal from "@/components/Legend/LegendModal";
 import AttributeTablePanel from "@/components/AttributeTable/AttributeTablePanel";
-import HelpModal from "@/components/HelpModal";
 import MoreMenu from "@/components/MoreMenu";
 import GlobalURLModal from "@/components/common/GlobalURLModal";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
@@ -218,9 +217,6 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Attribute Table - bottom-docked, tabbed data grid per layer */}
       {attributeTableEnabled && <AttributeTablePanel />}
-
-      {/* Help Modal - displays README.md as help documentation */}
-      <HelpModal />
 
       {/* More Menu - displays themes, tools, and other options */}
       <MoreMenu />

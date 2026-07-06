@@ -65,6 +65,7 @@ vi.mock("@/utils/mapHelpers", () => ({
 
 vi.mock("@/utils/helpersUI", () => ({
   showURLWindow: vi.fn(),
+  showHelpWindow: vi.fn(),
 }));
 
 vi.mock("@/components/ThemeToggle", () => ({

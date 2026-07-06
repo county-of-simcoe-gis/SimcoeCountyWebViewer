@@ -59,7 +59,6 @@ describe("HelpModal", () => {
       });
 
       expect(screen.getByLabelText("Close help")).toBeInTheDocument();
-      expect(screen.getByTitle("Refresh content")).toBeInTheDocument();
     });
 
     it("renders Help heading in the modal header", async () => {
@@ -180,31 +179,6 @@ describe("HelpModal", () => {
 
       // Still only 1 call — content was cached in component state
       expect(fetchFn).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("Refresh", () => {
-    it("re-fetches content when refresh button is clicked", async () => {
-      const fetchFn = mockFetch([
-        { ok: true, text: "# Initial Content" },
-        { ok: true, text: "# Updated Content" },
-      ]);
-
-      useHelpModalStore.getState().openHelp();
-      render(<HelpModal />);
-
-      await waitFor(() => {
-        expect(screen.getByTestId("markdown-content")).toBeInTheDocument();
-      });
-
-      // Click refresh
-      fireEvent.click(screen.getByTitle("Refresh content"));
-
-      await waitFor(() => {
-        expect(fetchFn).toHaveBeenCalledTimes(2);
-      });
-
-      expect(screen.getByTestId("markdown-content").textContent).toContain("Updated Content");
     });
   });
 

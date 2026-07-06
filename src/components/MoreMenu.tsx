@@ -5,13 +5,12 @@ import { createPortal } from "react-dom";
 import { useSession } from "next-auth/react";
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { useLegendStore } from "@/stores/legendStore";
-import { useHelpModalStore } from "@/stores/helpModalStore";
 import { useMapStore } from "@/stores/mapStore";
 import { useTOCStore } from "@/stores/tocStore";
 import { useAppStore } from "@/stores/appStore";
 import { FaCamera, FaCommentDots, FaMap, FaQuestionCircle, FaFileContract, FaNewspaper, FaPalette, FaTools, FaDrawPolygon } from "react-icons/fa";
 import { showFeedbackWindow } from "@/utils/mapHelpers";
-import { showURLWindow } from "@/utils/helpersUI";
+import { showURLWindow, showHelpWindow } from "@/utils/helpersUI";
 import { MenuList, MenuItem, MenuHeading } from "@/components/ui";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -189,7 +188,7 @@ export default function MoreMenu() {
       groupsToSelect = selectedGroups.length > 0 ? selectedGroups : allGroups;
     }
 
-    openLegend(allGroups, groupsToSelect);
+    openLegend(allGroups as never[], groupsToSelect as never[]);
   }, [closeMoreMenu, openLegend]);
 
   // Handle URL window
@@ -279,7 +278,7 @@ export default function MoreMenu() {
       id: "help",
       name: "Help",
       icon: <FaQuestionCircle />,
-      onClick: () => useHelpModalStore.getState().openHelp(),
+      onClick: () => showHelpWindow(),
     });
 
     // Terms and Conditions

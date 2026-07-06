@@ -172,7 +172,7 @@
         "useRedFolder": true
       }
     ],
-    "helpLink": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers",
+    "helpLink": "/help",
     "layerInfoURL": "https://opengis.simcoe.ca/layerInfo/?URL=",
     "keywords": {
       "DEFAULT_GROUP": {

@@ -86,7 +86,7 @@ export default function TOCHeader({
       {/* Help Button */}
       <div className="flex items-center">
         <button
-          onClick={() => showURLWindow(helpLink, false)}
+          onClick={() => showURLWindow(helpLink + "#layers", false)}
           className="flex items-center justify-center w-5 h-5 bg-transparent border-none cursor-pointer rounded-[3px] hover:bg-base-300"
           title="Layer Help"
         >

@@ -2,8 +2,6 @@
 
 An interactive web mapping application for exploring geographic data, property information, and community services across Simcoe County.
 
-![Application Overview](images/help/overview.png)
-
 ---
 
 ## Table of Contents
@@ -18,12 +16,13 @@ An interactive web mapping application for exploring geographic data, property i
   - [My Maps](#my-maps)
   - [Themes](#themes)
   - [Reports](#reports)
+- [Attribute Table](#attribute-table)
 - [Property Information](#property-information)
 - [Right-Click Context Menu](#right-click-context-menu)
 - [More Menu](#more-menu)
 - [Map Legend](#map-legend)
 - [Printing](#printing)
-- [Drawing & Annotation](#drawing--annotation)
+- [Drawing & Annotation](#drawing-annotation)
 - [Signing In](#signing-in)
 - [URL Sharing & Deep Linking](#url-sharing--deep-linking)
 - [Developer Guide](#developer-guide)
@@ -32,258 +31,309 @@ An interactive web mapping application for exploring geographic data, property i
 
 ## Getting Started
 
-When the application loads, the map displays centred on Simcoe County with the default topographic basemap. The main interface consists of:
+When the application loads, the map opens to Simcoe County using the default topographic basemap. The main interface consists of:
 
-- **Header bar** at the top with the search bar, logo, and profile button
-- **Sidebar** on the left for Layers, Tools, My Maps, Themes, and Reports
-- **Map area** in the centre with zoom controls and a basemap switcher
-- **Slim sidebar** icons along the left edge when the sidebar is collapsed
+- **Header bar** with the search box, logo, and profile button
+- **Sidebar** for Layers, Tools, My Maps, Themes, and Reports
+- **Map area** with navigation controls, a share button, and the basemap switcher
+- **Slim sidebar** icons along the left edge when the full sidebar is collapsed
 
-Click the **☰ hamburger menu** in the top-left corner (or a tab icon on the slim sidebar) to open the sidebar.
+Click the **☰ hamburger menu** in the top-left corner, or use a slim sidebar icon, to open the main sidebar.
 
 ---
 
 ## Searching
 
-![Search Bar](images/help/search.png)
+![Search Bar](images/documentation/search-bar-expanded.png)
 
-The search bar at the top of the header supports multiple search types:
+The search bar supports both live map content and service-backed searches. Depending on the current configuration, available search types can include:
 
-- **Addresses** — Type a street address to find and zoom to a property
-- **Parcels** — Search by Assessment Roll Number (ARN)
-- **Map Layers** — Find and toggle layers by name
-- **Tools & Themes** — Quickly open any tool or theme
-- **Road Segments** — Search for a specific road segment
-- **Open Street Map** — Search OSM data
+- **Address** searches
+- **Parcel** searches by Assessment Roll Number (ARN)
+- **Map Layer** searches
+- **Tool** searches
+- **Theme** searches
+- **Road Segment** searches
+- **Open Street Map** searches
 
-Use the **filter dropdown** (left of the search input) to narrow results to a specific type. Begin typing at least 2 characters to see results. Your last 6 searches are remembered and shown when the search bar is focused.
+Use the filter dropdown at the left side of the search box to limit results to a single type, or leave it on **All** to search across everything at once.
 
-Click a result to zoom to that location and place a marker on the map.
+Useful behavior:
+
+- Start typing at least 2 characters to see results.
+- Matching tools, themes, and layers can appear immediately from local app data.
+- The last 6 searches are stored and shown when the search box receives focus.
+- Selecting a result zooms the map and, where applicable, opens the matching layer, tool, theme, or location.
 
 ---
 
 ## Map Navigation
 
-| Action               | Desktop                                      | Mobile         |
-| -------------------- | -------------------------------------------- | -------------- |
-| Pan                  | Click and drag                               | Touch and drag |
-| Zoom in/out          | Mouse wheel or **+/−** buttons               | Pinch to zoom  |
-| Zoom to full extent  | Click the home/extent button                 | Same           |
-| Previous/next extent | Back/forward extent buttons                  | Same           |
-| Current location     | Click the GPS button to fly to your location | Same           |
-| Full screen          | Click the full-screen toggle                 | Same           |
+![Map Controls](images/documentation/map-controls.png)
 
-Additional controls such as the coordinate grid, scale display, and rotation reset can be toggled from **Tools → Settings**.
+| Action                  | Desktop                                       | Mobile         |
+| ----------------------- | --------------------------------------------- | -------------- |
+| Pan                     | Click and drag                                | Touch and drag |
+| Zoom in or out          | Mouse wheel or **+/−** buttons                | Pinch to zoom  |
+| Zoom to full extent     | Click the home or extent button               | Same           |
+| Previous or next extent | Use the back and forward extent buttons       | Same           |
+| Current location        | Click the GPS button to zoom to your location | Same           |
+| Reset rotation          | Click the rotation reset control when visible | Same           |
+| Full screen             | Click the full-screen toggle                  | Same           |
+| Share current view      | Click the share button to copy a deep link    | Same           |
+
+Additional controls such as the coordinate grid, scale display, and scale selector can be turned on or off from **Tools → Settings**.
 
 ---
 
 ## Basemap Switcher
 
-![Basemap Switcher](images/help/basemap-switcher.png)
+![Basemap Switcher](images/documentation/basemap-switcher.gif)
 
-Located in the **bottom-right corner** of the map. Switch between two modes:
+The basemap switcher is located in the **bottom-right corner** of the map.
 
 ### Topographic Basemaps
 
-- **Topographic** (default) — ESRI World Topo with Canadian styling
-- **Light Grey** — Minimal light grey basemap
-- **Streets** — Street-focused dark theme
+- **Topographic** — Default county topographic view with Canadian styling
+- **Light Grey** — Minimal light-grey base for thematic overlays
+- **Streets** — Street-focused dark basemap
 - **LIO Topographic** — Ontario LIO cartographic tiles
 - **Open Street Map** — Standard OSM tiles
 
-### Imagery (Aerial Photos)
+### Imagery
 
-Switch to the Imagery tab to view aerial photography. A **year slider** lets you scrub through historical imagery from **1954 to 2024**, plus a current Google satellite layer.
+Switch to the **Imagery** view to browse aerial photography. A year slider lets you move through imagery from **1954 to 2025** plus current world imagery.
 
-Toggle the **Streets Overlay** checkbox to show street names on top of imagery.
+Use the **Streets Overlay** checkbox to show street labels on top of imagery.
 
 ---
 
 ## Sidebar
 
-The sidebar contains five tabs, accessible from the tab icons at the top of the panel or from the slim sidebar when the panel is collapsed.
+The sidebar contains five main tabs. You can open them from the full sidebar or from the slim icon bar when the sidebar is collapsed.
 
 ### Layers
 
-![Layers Panel](images/help/layers.png)
+![Layers Panel](images/documentation/toc-view-layer-options.gif)
 
-The Layers tab (Table of Contents) lets you manage which data layers are visible on the map.
+The Layers tab, also called the Table of Contents, controls the map layers that are currently available.
 
-- **Search** layers by name using the search box at the top
-- **Toggle visibility** using the checkbox next to each layer
-- **Expand a layer** to view its inline legend
-- **Layer options** (three-dot menu or right-click) provide: Layer Info (metadata), Zoom to Layer, Download, Attribute Table, Opacity slider, and Remove Layer
-- **Settings** (gear icon) allow you to sort alphabetically, switch between list and folder view, adjust global opacity, save/reset layer states, and open the full map legend
+- Search layers by name.
+- Toggle layer visibility with the checkbox beside each layer.
+- Expand a layer to view its inline legend.
+- Use the layer menu to access **Layer Info**, **Zoom to Layer**, **Download**, **Attribute Table**, **Opacity**, and **Remove Layer** when available.
+- Adjust per-layer opacity directly in the layer list.
+- Open the settings menu to switch between **List** and **Folder** view, sort alphabetically, adjust global opacity, save or reset layer state, and open the full legend.
 
 ### Tools
 
-The Tools tab contains utilities for interacting with the map:
+The Tools tab contains the current tools available in the application:
 
-| Tool                   | Description                                                                                                                          |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| **Measure**            | Measure distance or area on the map. Supports line, polygon, circle, rectangle, and compass bearing. Multiple unit options available |
-| **Coordinates**        | View live coordinates as your mouse moves. Input a coordinate to zoom to it. Supports Web Mercator, Lat/Long, NAD83, and NAD27       |
-| **Print**              | Generate a PDF or PNG of the current map view (server-side). Options include page size, title, and resolution                        |
-| **Print Local (Beta)** | Client-side print with preview. Add decorations like a scale bar, north arrow, and attributions                                      |
-| **Add Data**           | Import your own data files (GeoJSON, KML, GPX, Shapefile, CSV) or connect to external WMS/WFS/ArcGIS services                        |
-| **Lot and Concession** | Search parcels by geographic township, lot number, and concession                                                                    |
-| **External Services**  | Click the map to get links to Google Maps, Google Street View, Bing Maps, and other services at that location                        |
-| **Weather**            | View Environment Canada radar imagery and weather forecasts                                                                          |
-| **Settings**           | Toggle map controls on/off and manage locally saved data                                                                             |
-| **Available Maps**     | Browse and switch between different map configurations                                                                               |
+| Tool                                | Description                                                                                            |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| **Measure**                         | Measure distance, area, circles, rectangles, and compass bearings in multiple units.                   |
+| **Coordinates**                     | Read live coordinates from the map and zoom to entered coordinates in multiple coordinate systems.     |
+| **Print**                           | Create a server-side PDF or image print of the current map.                                            |
+| **Add Data**                        | Add your own GeoJSON, KML, GPX, Shapefile, or CSV files, or connect to WMS, WFS, and ArcGIS services.  |
+| **Lot and Concession**              | Search parcels by township, lot, and concession.                                                       |
+| **External Services (Street View)** | Open links to Google Maps, Google Street View, Bing Maps, and related services for a clicked location. |
+| **Weather**                         | View Environment Canada radar and forecast information.                                                |
+| **Settings**                        | Control visible map widgets and manage locally stored application data.                                |
+| **Available Maps**                  | Browse and switch to other map configurations made available in the application.                       |
 
 ### My Maps
 
-![My Maps Panel](images/help/mymaps.png)
+![My Maps Panel](images/documentation/my-maps-drawing-demo.gif)
 
-My Maps is a full-featured drawing and annotation toolkit. See [Drawing & Annotation](#drawing--annotation) for details.
+My Maps is the application's drawing and annotation workspace. Use it to sketch map notes, highlight areas, drop markers, and export your work. See [Drawing & Annotation](#drawing-annotation) for the full workflow.
 
 ### Themes
 
-Themes are pre-configured map views focused on a specific topic. Activating a theme loads relevant layers and may open a custom sidebar panel. Available themes include:
+Themes are pre-configured map experiences focused on specific topics. Activating a theme can turn on related layers and open theme-specific content.
 
-- **Solid Waste Facilities** — Waste facilities, bag tag purchase locations
-- **Forestry** — County forests, recreation, conservation areas, parks
-- **Child Care Facilities** — Licensed child care providers
-- **Immigration Services** — Resources for newcomers
-- **Commercial Real Estate** — Commercial property listings
-- **211 Community Services** — Community services across Simcoe County
-- **Zoning** — Zoning information for properties
-- **Broadband** — Broadband coverage data
-- **511 Live Feeds** — Live traffic feeds from MTO and Waze
+Current themes include:
 
-Additional themes may be available when signed in.
+- **Solid Waste Facilities** — Waste facilities and bag tag purchase locations
+- **Forestry** — County forests, recreation features, and related park information
+- **Child Care Facilities** — Licensed child care providers and related information
+- **Immigration Services** — Newcomer and settlement resources
+- **211 Community Services** — Community support services across Simcoe County
+- **511 Live Feeds** — Live traffic-related feeds from MTO and Waze
 
 ### Reports
 
-The Reports tab displays results from the **Identify** tool, property reports, and other query results. Use the back/forward buttons to navigate through your report history.
+The Reports tab collects results from **Identify**, property reports, and other query-driven panels. Use the back and forward buttons at the top of the tab to move through recent report history.
+
+---
+
+## Attribute Table
+
+![Attribute Table](images/documentation/attribute-table-demo.gif)
+
+The Attribute Table opens as a docked panel along the bottom of the map for layers that support tabular inspection.
+
+You can typically open it from a layer's options menu. Once open, it supports:
+
+- Multiple open layer tabs
+- Row highlighting and map-linked selection
+- Zooming the map to selected rows or visible results
+- Selection, invert selection, and clear selection actions
+- Filter clearing and map-based selection tools
+- CSV export for selected records
+- Minimize, restore, resize, or close the table panel
+
+This is useful when you need to inspect or export feature data without leaving the map.
 
 ---
 
 ## Property Information
 
-![Property Popup](images/help/property-popup.png)
+![Property Popup](images/documentation/parcel-click-popup.png)
 
-**Click on any parcel** (when zoomed in sufficiently) to see a quick property popup with:
+Click a parcel, when zoomed in far enough, to open the quick property popup. Depending on the property and available data, it can include:
 
 - Address and Assessment Roll Number (ARN)
 - Assessed value
 - Waste collection day
-- Broadband coverage
-- Quick action buttons: **Add to My Maps**, **Share** (copies a URL with the property ARN), and **Terms**
+- Broadband coverage details
+- Quick actions such as **Add to My Maps**, **Share**, and **Terms**
 
-Click **"More Information"** to open a full property report in the Reports tab, which includes emergency services, waste collection details, nearby schools, closest fire hydrant, hospital, and more.
+Click **More Information** to open the full property report in the Reports tab. Full reports can include emergency services, waste details, nearby schools, the nearest fire hydrant, hospital information, and other property-related details.
 
-For **condominiums**, a record selector appears to let you choose a specific unit.
+For condominium properties, a record selector lets you choose the specific unit to inspect.
 
 ---
 
 ## Right-Click Context Menu
 
-![Context Menu](images/help/context-menu.png)
+![Context Menu](images/documentation/right-click-menu.png)
 
-Right-click anywhere on the map to access:
+Right-click on the map to open the context menu.
 
-| Option               | Description                                                                       |
-| -------------------- | --------------------------------------------------------------------------------- |
-| **Switch To Basic**  | Collapse the sidebar for a minimal map view                                       |
-| **Property Report**  | View property details for the parcel at the clicked point                         |
-| **Add Marker Point** | Drop a marker and add it to My Maps                                               |
-| **Report a Problem** | Submit feedback about something at this location                                  |
-| **Identify**         | Query all visible layers at the clicked point and show results in the Reports tab |
-| **More...**          | Open the More Menu                                                                |
+| Option                     | Description                                                                |
+| -------------------------- | -------------------------------------------------------------------------- |
+| **Switch To Basic**        | Collapse the sidebar for a minimal map view.                               |
+| **Property Report**        | Open a property report for the clicked parcel or location.                 |
+| **Add Marker Point**       | Drop a marker and send it to My Maps.                                      |
+| **Report a Problem**       | Open the feedback flow for the clicked location.                           |
+| **Identify**               | Query visible layers at the clicked point and send the results to Reports. |
+| **Save as Default Extent** | Save the current map extent as your default starting view.                 |
+| **More...**                | Open the More Menu.                                                        |
 
 ---
 
 ## More Menu
 
-The More Menu provides quick access to all themes, tools, and additional options. Open it from the **slim sidebar** (bottom icon) or the right-click context menu.
+![More Menu](images/documentation/more-menu.png)
 
-The **Other** section includes:
+Open the More Menu from the slim sidebar's bottom button or from the right-click context menu.
 
-- **What's New** — View recent updates and changes
-- **Feedback** — Submit feedback about the application
+The menu provides quick access to:
+
 - **Take a Screenshot** — Save the current map view as a PNG image
-- **Map Legend** — Open the full legend for all visible layers
+- **Themes** — Open a theme directly
+- **Tools** — Open a tool directly
+- **What's New** — Open the current release notes page when configured
+- **Feedback** — Open the feedback form when configured
+- **Map Legend** — Open the full legend modal
 - **Help** — Open this help documentation
-- **Terms and Conditions** — View the terms of use
+- **Terms and Conditions** — Open the terms of use page when configured
 
 ---
 
 ## Map Legend
 
-The legend displays the symbology for all currently visible layers, organized by layer group. Open it from the **More Menu → Map Legend** or from the **Layers settings** (gear icon → Open Legend).
+The legend displays symbology for the currently visible layers, organized by layer group.
 
-The legend modal is print-friendly — use your browser's print function to generate a hard copy.
+You can open it from either of these paths:
+
+- **More Menu → Map Legend**
+- **Layers → Settings → Open Legend**
+
+The legend modal is print-friendly, so you can use your browser's print tools for a hard copy if needed.
 
 ---
 
 ## Printing
 
-Two print options are available under **Tools**:
-
-### Print (Server-Side)
-
-Generates a high-quality PDF or PNG using the print server. Configure the page size (Letter, Tabloid, etc.), orientation, map title, and resolution (DPI). An advanced option lets you force a specific scale.
-
-### Print Local (Beta)
-
-A client-side alternative that generates the print directly in your browser. Preview the output before downloading. Add optional decorations: scale bar, north arrow, and attribution text with configurable positioning.
+Generate a server-side PDF or image output of the current map view. Options include page size, orientation, title, resolution, and advanced scale control.
 
 ---
 
 ## Drawing & Annotation
 
-![Drawing Tools](images/help/drawing-tools.png)
-
-The **My Maps** tab provides a full drawing toolkit:
+![Drawing Tools](images/documentation/mymaps-feature-menu.png)
+The **My Maps** tab provides drawing and annotation workflow.
 
 ### Drawing Tools
 
-Select a shape from the toolbar — **Point**, **Line**, **Polygon**, **Circle**, **Rectangle**, **Arrow**, **Text**, **Callout**, or **Bearing** — then draw on the map. Hold **Shift** while drawing lines or polygons for freehand mode. Choose a draw colour from the colour palette before you begin.
+Choose a shape from the toolbar and draw directly on the map:
+
+- **Point**
+- **Line**
+- **Polygon**
+- **Circle**
+- **Rectangle**
+- **Arrow**
+- **Text**
+- **Callout**
+- **Bearing**
+
+Hold **Shift** while drawing lines or polygons to switch into freehand mode. Choose a draw colour before starting when you want a consistent symbol style.
 
 ### Managing Drawn Features
 
-Each drawn feature appears in the items list. Click a feature's label to rename it. Use the options menu (three-dot icon) on any feature to:
+Each feature appears in the My Maps item list. You can rename items and open a feature menu with actions such as:
 
-- **Buffer** — Create a buffer zone around the feature
-- **Symbolize** — Customize point size, stroke, fill colour, and opacity
-- **Measure** — Calculate the feature's length or area
-- **Zoom To** — Centre the map on the feature
-- **Show Geometry** — View the feature's coordinates
-- **Export** — Download as GeoJSON, KML, or EsriJSON
-- **Identify** — Query layers at the feature's location
-- **Delete** — Remove the feature
+- **Buffer**
+- **Symbolize**
+- **Measure**
+- **Zoom To**
+- **Show Geometry**
+- **Export** as GeoJSON, KML, or EsriJSON
+- **Identify**
+- **Delete**
 
-### Saving & Sharing
+### Advanced Editing
 
-Use the **Advanced** panel to toggle vertex editing or translate/move mode. Save your drawings to the server for later retrieval using a unique My Maps ID, or export all features at once.
+Use the **Advanced** panel to turn on vertex editing or translate and move mode. You can also export all My Maps features together when you want to keep a copy of your work.
 
 ---
 
 ## Signing In
 
-Click the **profile button** in the top-right corner of the header to sign in with your County of Simcoe account (Azure AD). Signing in unlocks additional tools and themes that are not available to public users.
-
-When signed in, the profile dropdown shows your name, email, assigned roles, and application version.
+Use the profile button in the top-right corner to sign in with a County of Simcoe account through Azure AD.
 
 ---
 
 ## URL Sharing & Deep Linking
 
-Share specific map views by adding parameters to the URL:
+Use the **Share map** control in the map toolbar to copy a URL that preserves the current map state, including map center, zoom, visible layers, active theme or tool, basemap selection, and map configuration when available.
 
-| Parameter | Example               | Description                                                          |
-| --------- | --------------------- | -------------------------------------------------------------------- |
-| `ARN`     | `?ARN=431001012345`   | Zoom to and show property info for a specific roll number            |
-| `SEARCH`  | `?SEARCH=123+Main+St` | Auto-run a search on page load                                       |
-| `TAB`     | `?TAB=tools`          | Open a specific sidebar tab (layers, tools, mymaps, themes, reports) |
-| `THEME`   | `?THEME=Forestry`     | Activate a specific theme                                            |
-| `MAP_ID`  | `?MAP_ID=5`           | Load a specific map configuration                                    |
-| `MUNI`    | `?MUNI=Barrie`        | Filter searches to a specific municipality                           |
-| `MYMAPS`  | `?MYMAPS=true`        | Open the My Maps tab on load                                         |
+You can also build links manually with query parameters.
 
-You can also share a direct link to a property using the **Share** button in the property popup.
+| Parameter                      | Example                                                  | Description                                                                     |
+| ------------------------------ | -------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `ARN`                          | `?ARN=431001012345`                                      | Zoom to and show property information for a specific roll number.               |
+| `TAB`                          | `?TAB=tools`                                             | Open a sidebar tab such as `layers`, `tools`, `mymaps`, `themes`, or `reports`. |
+| `TOOL`                         | `?TOOL=Measure`                                          | Open a tool directly.                                                           |
+| `THEME`                        | `?THEME=Forestry`                                        | Activate a theme directly.                                                      |
+| `MUNI`                         | `?MUNI=Barrie`                                           | Limit search behavior to a municipality.                                        |
+| `Q`                            | `?Q=123+Main+St`                                         | Supply a search query.                                                          |
+| `QT`                           | `?Q=123+Main+St&QT=Address`                              | Set the search type for the query.                                              |
+| `X`, `Y`                       | `?X=-8895000&Y=5532000`                                  | Center the map on specific coordinates.                                         |
+| `ZOOM`                         | `?X=-8895000&Y=5532000&ZOOM=12`                          | Set the initial zoom level.                                                     |
+| `XMIN`, `YMIN`, `XMAX`, `YMAX` | `?XMIN=-8900000&YMIN=5525000&XMAX=-8890000&YMAX=5535000` | Open the map to a specific extent instead of a center point.                    |
+| `SR`                           | `?X=-8895000&Y=5532000&SR=3857`                          | Define the spatial reference used by coordinate parameters.                     |
+| `LAYERS`                       | `?LAYERS=Assessment Parcels,Roads`                       | Turn on specific layers by name.                                                |
+| `TOCTYPE`                      | `?TOCTYPE=FOLDER`                                        | Set the Layers tab to `LIST` or `FOLDER` mode.                                  |
+| `GROUP`                        | `?TOCTYPE=LIST&GROUP=Property`                           | Activate a specific layer group.                                                |
+| `EXPAND_LEGEND`                | `?LAYERS=Assessment Parcels&EXPAND_LEGEND=true`          | Expand legends for matching layers on load.                                     |
+| `BASEMAP`                      | `?BASEMAP=topo`                                          | Set the basemap mode, such as `topo` or `imagery`.                              |
+| `NAME`                         | `?BASEMAP=topo&NAME=Light+Grey`                          | Choose a named basemap within the active basemap mode.                          |
+| `SLIDER_OPEN`                  | `?BASEMAP=imagery&SLIDER_OPEN=true`                      | Open the imagery year slider when the map loads.                                |
+
+The property popup's **Share** button can also generate a direct property link.
 
 ---
 
@@ -298,18 +348,19 @@ npm run dev
 
 ### Scripts
 
-| Command              | Description                                           |
-| -------------------- | ----------------------------------------------------- |
-| `npm run dev`        | Start development server                              |
-| `npm run build`      | Production build                                      |
-| `npm start`          | Start production server                               |
-| `npm run lint`       | Run ESLint                                            |
-| `npm test`           | Run unit tests (Vitest + React Testing Library + MSW) |
-| `npm run test:watch` | Run tests in watch mode                               |
-| `npm run test:ui`    | Run tests with Vitest UI                              |
-| `npm run e2e`        | Run Playwright E2E tests                              |
+| Command              | Description                                                 |
+| -------------------- | ----------------------------------------------------------- |
+| `npm run dev`        | Start the development server.                               |
+| `npm run build`      | Create a production build.                                  |
+| `npm start`          | Start the production server.                                |
+| `npm run lint`       | Run ESLint.                                                 |
+| `npm test`           | Run unit tests with Vitest, React Testing Library, and MSW. |
+| `npm run test:watch` | Run unit tests in watch mode.                               |
+| `npm run test:ui`    | Run tests with the Vitest UI.                               |
+| `npm run e2e`        | Run Playwright end-to-end tests.                            |
 
 ### Notes
 
-- Tests run in JSDOM. Global setup is in `src/test/setup.ts` with MSW in `src/test/testServer.ts`.
-- Path alias `@/*` is supported in tests via `vitest.config.ts`.
+- Tests run in JSDOM.
+- Global test setup lives in `src/test/setup.ts` with MSW support in `src/test/testServer.ts`.
+- The `@/*` path alias is available in both the app and tests.

@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { FaTimes, FaSync } from "react-icons/fa";
+import { FaTimes } from "react-icons/fa";
 import { useHelpModalStore } from "@/stores/helpModalStore";
 import { resolveImageSrc } from "@/components/shared/AppImage";
 import { Modal } from "@/components/ui/Modal";
@@ -75,7 +75,7 @@ export default function HelpModal() {
   };
 
   // Custom image component to handle relative paths
-  const ImageComponent: React.FC<React.ImgHTMLAttributes<HTMLImageElement>> = ({ src, alt, ...props }) => {
+  const ImageComponent = ({ src, alt, node: _node, ...props }: React.ImgHTMLAttributes<HTMLImageElement> & { node?: unknown }) => {
     if (!src || typeof src !== "string") return <img alt={alt} {...props} />;
 
     const imageSrc = resolveImageSrc(src.startsWith("/") ? src : `/${src}`);
@@ -84,7 +84,7 @@ export default function HelpModal() {
   };
 
   // Custom link component — external links open in new tab
-  const LinkComponent: React.FC<React.AnchorHTMLAttributes<HTMLAnchorElement>> = ({ href, children, ...props }) => {
+  const LinkComponent = ({ href, children, node: _node, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { node?: unknown }) => {
     if (!href) return <a {...props}>{children}</a>;
 
     if (href.startsWith("#")) {
@@ -114,33 +114,21 @@ export default function HelpModal() {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={closeHelp} className="max-w-[900px] w-full max-h-[90vh] overflow-y-auto p-0 flex flex-col animate-slideUp" portalTarget="body">
-      {/* Header */}
-      <div className="sticky top-0 bg-base-100 border-b border-base-300 px-6 py-3 flex items-center justify-between z-10 rounded-t-lg">
-        <h2 className="text-lg font-semibold text-base-content m-0">Help</h2>
-        <div className="flex items-center gap-2">
-          <button className="btn btn-sm btn-ghost flex items-center gap-1" onClick={fetchReadmeContent} disabled={isLoading} title="Refresh content">
-            <FaSync className={isLoading ? "animate-spin" : ""} size={14} />
-          </button>
-          <button
-            className="bg-neutral hover:bg-neutral/80 text-neutral-content border-none w-8 h-8 rounded-full flex items-center justify-center text-base cursor-pointer transition-all duration-200 p-0 hover:scale-110 active:scale-95 shadow-lg"
-            onClick={closeHelp}
-            aria-label="Close help"
-            title="Close (ESC)"
-          >
-            <FaTimes />
-          </button>
-        </div>
+    <Modal isOpen={isOpen} onClose={closeHelp} className="max-w-[95vw] max-h-[95vh] p-0 flex flex-col overflow-hidden" portalTarget="body">
+      <div className="flex justify-between items-center px-5 py-4 border-b border-base-300 bg-base-200 shrink-0">
+        <h3 className="m-0 text-lg font-semibold text-base-content max-w-[calc(100%-40px)] overflow-hidden text-ellipsis whitespace-nowrap">Help</h3>
+        <button className="btn btn-sm btn-ghost btn-circle text-2xl" onClick={closeHelp} title="Close" type="button" aria-label="Close help">
+          <FaTimes />
+        </button>
       </div>
 
-      {/* Content */}
-      <div className="p-6">
+      <div className="flex-1 relative overflow-y-auto bg-base-200">
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
+          <div className="flex items-center justify-center py-12 text-base-content/60">
             <span className="loading loading-spinner loading-lg text-primary" />
           </div>
         ) : (
-          <div className="prose prose-blue max-w-none">
+          <div className="prose prose-blue max-w-none bg-base-100 px-5 py-4 min-h-full">
             <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
               {content}
             </ReactMarkdown>
